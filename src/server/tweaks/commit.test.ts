@@ -37,6 +37,7 @@ const FIXTURES = path.join(
   "design-system",
   "__fixtures__"
 );
+
 const PAGE = `<!doctype html>
 <html>
 <head>
@@ -104,6 +105,7 @@ function fakeRunner(): AgentRunner {
         cancel: () => undefined,
         done: new Promise(() => undefined),
       };
+
       return handle;
     },
     get: () => undefined,
@@ -116,7 +118,11 @@ function call(method: string, url: string, body?: unknown): Promise<Response> {
   const headers: Record<string, string> = {
     "x-studio-token": config.studioToken,
   };
-  if (body !== undefined) headers["content-type"] = "application/json";
+
+  if (body !== undefined) {
+    headers["content-type"] = "application/json";
+  }
+
   return Promise.resolve(
     app.request(url, {
       method,
@@ -141,8 +147,10 @@ async function create(
     kind,
     ...(packId ? { packId } : {}),
   });
+
   expect(created.status).toBe(200);
   const project = ((await created.json()) as { project: Project }).project;
+
   return { project, workTree: projects.mainDirection(project).workTree };
 }
 
@@ -208,10 +216,12 @@ describe("tweaks state", { timeout: 30000 }, () => {
     const { project, workTree } = await create("html");
     await writeFile(path.join(workTree, "index.html"), PAGE);
     await defineTweaks(workTree, CONTROLS);
+
     const response = await call(
       "GET",
       `/api/projects/${project.id}/d/main/tweaks`
     );
+
     const state = (await response.json()) as TweaksState;
     expect(state.controls.map((control) => control.id)).toEqual([
       "gap",
@@ -237,6 +247,7 @@ describe("tweaks commit: HTML", { timeout: 30000 }, () => {
       accent: "#ff3366",
       wide: true,
     });
+
     expect(response.status).toBe(200);
     const result = (await response.json()) as CommitTweaksResult;
     expect(result.version.title).toBe("Tweak: Gap, Accent, Wide layout");
@@ -249,11 +260,14 @@ describe("tweaks commit: HTML", { timeout: 30000 }, () => {
     const expected = PAGE.replace("--accent: #0f6b5c", "--accent: #ff3366")
       .replace("--wide: 0;", "--wide: 1;")
       .replace("--gap: 20px;", "--gap: 32px;");
+
     expect(await read(workTree, "index.html")).toBe(expected);
     expect(expected).toContain("--gap:  24px");
+
     const saved = JSON.parse(await read(workTree, TWEAKS_FILE)) as {
       controls: TweakControl[];
     };
+
     expect(saved.controls.map((control) => control.default)).toEqual([
       32,
       "#ff3366",
@@ -354,8 +368,10 @@ describe("tweaks commit: React", { timeout: 30000 }, () => {
 describe("tweaks commit: design-system token", { timeout: 30000 }, () => {
   it("updates tokens.json and regenerates tokens.css instead of the page", async () => {
     const { project, workTree } = await create("html", "test-pack");
+
     const page =
       '<!doctype html>\n<html><head><title>T</title></head><body><button style="border-radius: var(--radius-md)">Go</button></body></html>\n';
+
     await writeFile(path.join(workTree, "index.html"), page);
     await defineTweaks(workTree, [
       {
@@ -373,9 +389,11 @@ describe("tweaks commit: design-system token", { timeout: 30000 }, () => {
     const cssBefore = await read(workTree, TOKENS_CSS_FILE);
     const response = await commit(project, { radius: 13 });
     expect(response.status).toBe(200);
+
     const tokens = JSON.parse(await read(workTree, TOKENS_FILE)) as {
       radius: { md: { $value: string } };
     };
+
     expect(tokens.radius.md.$value).toBe("13px");
     const cssAfter = await read(workTree, TOKENS_CSS_FILE);
     expect(cssAfter).not.toBe(cssBefore);
@@ -390,8 +408,10 @@ describe(
   () => {
     it("updates tokens.json and the page :root override together", async () => {
       const { project, workTree } = await create("html", "test-pack");
+
       const page =
         '<!doctype html>\n<html><head><title>T</title><style>:root { --radius-md: 8px; }</style></head><body><button style="border-radius: var(--radius-md)">Go</button></body></html>\n';
+
       await writeFile(path.join(workTree, "index.html"), page);
       await defineTweaks(workTree, [
         {
@@ -411,9 +431,11 @@ describe(
       expect(
         ((await response.json()) as CommitTweaksResult).state.current
       ).toEqual({ radius: 13 });
+
       const tokens = JSON.parse(await read(workTree, TOKENS_FILE)) as {
         radius: { md: { $value: string } };
       };
+
       expect(tokens.radius.md.$value).toBe("13px");
       expect(await read(workTree, "index.html")).toBe(
         page.replace("--radius-md: 8px;", "--radius-md: 13px;")
@@ -429,6 +451,7 @@ describe("commitTitle", () => {
       (_, i) =>
         ({ ...CONTROLS[1], id: `c${i}`, label: `L${i}` }) as TweakControl
     );
+
     expect(commitTitle(many)).toBe("Tweak: L0, L1, L2, L3 +2 more");
   });
 });

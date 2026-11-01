@@ -27,6 +27,7 @@ interface State {
 type Handler = (s: State, a: number[], rel: boolean) => void;
 
 const IMPLICIT: Record<string, string> = { M: "L", m: "l" };
+
 const ARGS: Record<string, number> = {
   A: 7,
   M: 2,
@@ -42,10 +43,12 @@ const ARGS: Record<string, number> = {
 function move(s: State, x: number, y: number, kind: "M" | "L"): void {
   s.x = x;
   s.y = y;
+
   if (kind === "M") {
     s.sx = x;
     s.sy = y;
   }
+
   s.out.push(kind === "M" ? { x, y, moveTo: true } : { x, y });
   s.cubic = null;
   s.quad = null;
@@ -99,9 +102,11 @@ function arcCenter(
   const dy = (y1 - y2) / 2;
   const px = cos * dx + sin * dy;
   const py = -sin * dx + cos * dy;
+
   const grow = Math.sqrt(
     Math.max(1, (px * px) / (rx * rx) + (py * py) / (ry * ry))
   );
+
   const ax = rx * grow;
   const ay = ry * grow;
   const num = ax * ax * ay * ay - ax * ax * py * py - ay * ay * px * px;
@@ -109,17 +114,27 @@ function arcCenter(
   const root = (large === sweep ? -1 : 1) * Math.sqrt(Math.max(0, num / den));
   const cxp = (root * ax * py) / ay;
   const cyp = (-root * ay * px) / ax;
+
   const angle = (ux: number, uy: number, vx: number, vy: number): number =>
     Math.atan2(ux * vy - uy * vx, ux * vx + uy * vy);
+
   const start = angle(1, 0, (px - cxp) / ax, (py - cyp) / ay);
+
   let delta = angle(
     (px - cxp) / ax,
     (py - cyp) / ay,
     (-px - cxp) / ax,
     (-py - cyp) / ay
   );
-  if (!sweep && delta > 0) delta -= 2 * Math.PI;
-  if (sweep && delta < 0) delta += 2 * Math.PI;
+
+  if (!sweep && delta > 0) {
+    delta -= 2 * Math.PI;
+  }
+
+  if (sweep && delta < 0) {
+    delta += 2 * Math.PI;
+  }
+
   return {
     cx: cos * cxp - sin * cyp + (x1 + x2) / 2,
     cy: sin * cxp + cos * cyp + (y1 + y2) / 2,
@@ -140,9 +155,12 @@ function arc(
   x: number,
   y: number
 ): void {
-  if ((s.x === x && s.y === y) || rx === 0 || ry === 0)
+  if ((s.x === x && s.y === y) || rx === 0 || ry === 0) {
     return move(s, x, y, "L");
+  }
+
   const phi = (rotation * Math.PI) / 180;
+
   const c = arcCenter(
     s.x,
     s.y,
@@ -154,19 +172,24 @@ function arc(
     x,
     y
   );
+
   const parts = Math.max(
     1,
     Math.ceil(Math.abs(c.delta) / (Math.PI / 2) - 1e-9)
   );
+
   const step = c.delta / parts;
   const t = (4 / 3) * Math.tan(step / 4);
   const cos = Math.cos(phi);
   const sin = Math.sin(phi);
+
   const at = (a: number, ox = 0, oy = 0): [number, number] => {
     const ex = c.rx * Math.cos(a) + ox;
     const ey = c.ry * Math.sin(a) + oy;
+
     return [c.cx + cos * ex - sin * ey, c.cy + sin * ex + cos * ey];
   };
+
   for (let index = 0; index < parts; index += 1) {
     const a1 = c.start + index * step;
     const a2 = a1 + step;
@@ -175,6 +198,7 @@ function arc(
     const [ex, ey] = index === parts - 1 ? [x, y] : at(a2);
     cubic(s, x1, y1, x2, y2, ex, ey);
   }
+
   s.cubic = null;
 }
 
@@ -234,11 +258,18 @@ function apply(point: PathPoint, m: Matrix): PathPoint {
   const [a, b, c, d, e, f] = m;
   const tx = (x: number, y: number): number => a * x + c * y + e;
   const ty = (x: number, y: number): number => b * x + d * y + f;
-  if ("close" in point) return point;
-  if (!("curve" in point))
+
+  if ("close" in point) {
+    return point;
+  }
+
+  if (!("curve" in point)) {
     return { ...point, x: tx(point.x, point.y), y: ty(point.x, point.y) };
+  }
+
   const at = { x: tx(point.x, point.y), y: ty(point.x, point.y) };
-  if (point.curve.type === "quadratic")
+
+  if (point.curve.type === "quadratic") {
     return {
       ...at,
       curve: {
@@ -247,7 +278,10 @@ function apply(point: PathPoint, m: Matrix): PathPoint {
         y1: ty(point.curve.x1, point.curve.y1),
       },
     };
+  }
+
   const { x1, y1, x2, y2 } = point.curve;
+
   return {
     ...at,
     curve: {
@@ -269,23 +303,41 @@ function step(
   const upper = cmd.toUpperCase();
   const count = ARGS[upper];
   const handler = HANDLERS[upper];
-  if (!count || !handler) return null;
+
+  if (!count || !handler) {
+    return null;
+  }
+
   const args = tokens.slice(i, i + count).map(Number);
-  if (args.length < count || args.some((n) => !Number.isFinite(n))) return null;
+
+  if (args.length < count || args.some((n) => !Number.isFinite(n))) {
+    return null;
+  }
+
   if (
     upper === "A" &&
     [args[3], args[4]].some((flag) => flag !== 0 && flag !== 1)
-  )
+  ) {
     return null;
-  if (s.out.length === 0 && upper !== "M") return null;
+  }
+
+  if (s.out.length === 0 && upper !== "M") {
+    return null;
+  }
+
   handler(s, args, cmd !== upper);
+
   return i + count;
 }
 
 export function parsePath(d: string, matrix: Matrix): PathPoint[] | null {
-  if (!d.trim() || /[^AMLHVCSQTZamlhvcsqtz\d\s,.eE+-]/.test(d)) return null;
+  if (!d.trim() || /[^AMLHVCSQTZamlhvcsqtz\d\s,.eE+-]/.test(d)) {
+    return null;
+  }
+
   const tokens =
     d.match(/[a-zA-Z]|[-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?/g) ?? [];
+
   const s: State = {
     x: 0,
     y: 0,
@@ -295,20 +347,33 @@ export function parsePath(d: string, matrix: Matrix): PathPoint[] | null {
     quad: null,
     out: [],
   };
+
   let cmd = "";
   let i = 0;
+
   while (i < tokens.length) {
     const token = tokens[i] ?? "";
+
     if (/[a-z]/i.test(token)) {
       cmd = token;
       i += 1;
-      if (cmd === "Z" || cmd === "z") close(s);
+
+      if (cmd === "Z" || cmd === "z") {
+        close(s);
+      }
+
       continue;
     }
+
     const next = step(s, cmd, tokens, i);
-    if (next === null) return null;
+
+    if (next === null) {
+      return null;
+    }
+
     i = next;
     cmd = IMPLICIT[cmd] ?? cmd;
   }
+
   return s.out.length > 1 ? s.out.map((point) => apply(point, matrix)) : null;
 }

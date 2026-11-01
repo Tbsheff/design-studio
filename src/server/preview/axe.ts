@@ -29,12 +29,14 @@ const AXE_RULES = [
 ];
 
 const NODES_PER_RULE = 3;
+
 const REVIEW_EXTRA_RULES = [
   "svg-img-alt",
   "role-img-alt",
   "area-alt",
   "object-alt",
 ];
+
 export const SHARED_AXE_RULES: readonly string[] = [
   ...new Set([...AXE_RULES, ...REVIEW_EXTRA_RULES]),
 ];
@@ -61,14 +63,22 @@ export function loadAxeSource(): Promise<string> {
     const file =
       packagedResource("axe.min.js") ??
       createRequire(import.meta.url).resolve("axe-core/axe.min.js");
+
     axeSource = readFile(file, "utf-8");
   }
+
   return axeSource;
 }
 
 function severityForImpact(impact: string | null | undefined): QualitySeverity {
-  if (impact === "critical" || impact === "serious") return "high";
-  if (impact === "moderate") return "medium";
+  if (impact === "critical" || impact === "serious") {
+    return "high";
+  }
+
+  if (impact === "moderate") {
+    return "medium";
+  }
+
   return "low";
 }
 
@@ -91,6 +101,7 @@ function nodeFinding(
   viewport: CheckViewport
 ): QualityFinding {
   const detail = firstLine(node.failureSummary);
+
   return {
     check: "a11y",
     severity: severityForImpact(violation.impact),
@@ -122,6 +133,7 @@ function axeRunExpression(rules: readonly string[]): string {
 
 export async function runSharedAxe(page: AxePage): Promise<AxeViolation[]> {
   await page.evaluate(`${await loadAxeSource()}\n;0`);
+
   return page.evaluate<AxeViolation[]>(axeRunExpression(SHARED_AXE_RULES));
 }
 
@@ -130,6 +142,7 @@ export function pickRules<T extends { id: string }>(
   rules: readonly string[]
 ): T[] {
   const wanted = new Set(rules);
+
   return violations.filter((violation) => wanted.has(violation.id));
 }
 
@@ -139,5 +152,6 @@ export async function runAxe(
   shared?: () => Promise<AxeViolation[]>
 ): Promise<QualityFinding[]> {
   const violations = await (shared ? shared() : runSharedAxe(page));
+
   return axeFindings(pickRules(violations, AXE_RULES), viewport);
 }

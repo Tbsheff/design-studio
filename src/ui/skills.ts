@@ -11,6 +11,7 @@ function fetchSkillCatalog(fresh = false): Promise<SkillCatalog> {
     request = api.listSkills().then(
       (catalog) => {
         lastCatalog = catalog;
+
         return catalog;
       },
       (error: unknown) => {
@@ -19,6 +20,7 @@ function fetchSkillCatalog(fresh = false): Promise<SkillCatalog> {
       }
     );
   }
+
   return request;
 }
 
@@ -30,22 +32,30 @@ export function useSkillCatalog(): {
   const [catalog, setCatalog] = useState<SkillCatalog | null>(
     () => lastCatalog
   );
+
   const [error, setError] = useState<string | null>(null);
+
   const load = useCallback((fresh: boolean) => {
     let live = true;
     fetchSkillCatalog(fresh).then(
       (result) => {
-        if (!live) return;
+        if (!live) {
+          return;
+        }
+
         setCatalog(result);
         setError(null);
       },
       (err: unknown) => live && setError(errorText(err))
     );
+
     return () => {
       live = false;
     };
   }, []);
+
   useEffect(() => load(false), [load]);
+
   return { catalog, error, reload: () => void load(true) };
 }
 

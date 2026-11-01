@@ -6,11 +6,17 @@ import { patchHtml } from "./html.js";
 
 function locOf(source: string, marker: string): { line: number; col: number } {
   const annotated = annotateHtml(source, "index.html", { injectBridge: false });
+
   const pattern = new RegExp(
     `<${marker} data-studio-loc="index\\.html:(\\d+):(\\d+)"`
   );
+
   const match = pattern.exec(annotated);
-  if (!match) throw new Error(`no loc for ${marker}`);
+
+  if (!match) {
+    throw new Error(`no loc for ${marker}`);
+  }
+
   return { line: Number(match[1]), col: Number(match[2]) };
 }
 
@@ -31,9 +37,13 @@ function errorCode(run: () => unknown): string | null {
   try {
     run();
   } catch (error) {
-    if (error instanceof DirectEditError) return error.code;
+    if (error instanceof DirectEditError) {
+      return error.code;
+    }
+
     throw error;
   }
+
   return null;
 }
 
@@ -54,6 +64,7 @@ describe("patchHtml style", () => {
     const result = patchHtml(PAGE, locOf(PAGE, "h1"), {
       style: { color: "var(--primary)", "margin-top": "var(--space-4, 16px)" },
     });
+
     expect(result.code).toContain(
       '<h1 style="color: var(--primary); margin-top: var(--space-4, 16px);" class="title">Hello</h1>'
     );
@@ -63,6 +74,7 @@ describe("patchHtml style", () => {
     const result = patchHtml(PAGE, locOf(PAGE, "h1"), {
       style: { color: "#123456", "font-size": "20px" },
     });
+
     expect(result.code).toContain(
       '<h1 style="color: #123456; font-size: 20px;" class="title">Hello</h1>'
     );
@@ -79,6 +91,7 @@ describe("patchHtml style", () => {
     const result = patchHtml(PAGE, locOf(PAGE, "p"), {
       style: { color: "blue", "font-size": "14px" },
     });
+
     expect(result.code).toContain(
       `<p id="intro" style="color: blue; margin: 0 auto; font-family: 'A;B', serif; font-size: 14px;">Intro <b>bold</b></p>`
     );
@@ -91,6 +104,7 @@ describe("patchHtml style", () => {
     const result = patchHtml(PAGE, locOf(PAGE, "p"), {
       style: { color: null },
     });
+
     expect(result.code).toContain(
       `<p id="intro" style="margin: 0 auto; font-family: 'A;B', serif;">`
     );
@@ -98,11 +112,13 @@ describe("patchHtml style", () => {
 
   it("removes the whole attribute when no declaration is left", () => {
     const source = '<body><div class="a" style="color: red">x</div></body>';
+
     const result = patchHtml(
       source,
       { line: 1, col: 7 },
       { style: { color: null } }
     );
+
     expect(result.code).toBe('<body><div class="a">x</div></body>');
   });
 
@@ -110,6 +126,7 @@ describe("patchHtml style", () => {
     const result = patchHtml(PAGE, locOf(PAGE, "h1"), {
       style: { color: null },
     });
+
     expect(result.code).toBe(PAGE);
   });
 
@@ -117,6 +134,7 @@ describe("patchHtml style", () => {
     const result = patchHtml(PAGE, locOf(PAGE, "img"), {
       style: { width: "50%" },
     });
+
     expect(result.code).toContain(
       '<img style="width: 50%;" src="a.png" alt="x > y">'
     );
@@ -126,6 +144,7 @@ describe("patchHtml style", () => {
     const result = patchHtml(PAGE, locOf(PAGE, "br"), {
       style: { height: "2px" },
     });
+
     expect(result.code).toContain('<br style="height: 2px;"/>');
   });
 
@@ -133,6 +152,7 @@ describe("patchHtml style", () => {
     const result = patchHtml(PAGE, locOf(PAGE, "h1"), {
       style: { "font-family": '"Inter" & co' },
     });
+
     expect(result.code).toContain(
       'style="font-family: &quot;Inter&quot; &amp; co;"'
     );
@@ -141,11 +161,13 @@ describe("patchHtml style", () => {
   it("decodes an entity-encoded style before merging", () => {
     const source =
       '<body><p style="font-family: &quot;X&quot;; color: red">t</p></body>';
+
     const result = patchHtml(
       source,
       { line: 1, col: 7 },
       { style: { color: "blue" } }
     );
+
     expect(result.code).toBe(
       '<body><p style="font-family: &quot;X&quot;; color: blue;">t</p></body>'
     );
@@ -154,11 +176,13 @@ describe("patchHtml style", () => {
   it("keeps url() values with semicolons intact", () => {
     const source =
       '<body><div style="background-image: url(data:image/png;base64,AAAA); color: red">t</div></body>';
+
     const result = patchHtml(
       source,
       { line: 1, col: 7 },
       { style: { color: "blue" } }
     );
+
     expect(result.code).toContain(
       'style="background-image: url(data:image/png;base64,AAAA); color: blue;"'
     );
@@ -166,11 +190,13 @@ describe("patchHtml style", () => {
 
   it("finds elements inside template content", () => {
     const source = "<body><template><span>a</span></template></body>";
+
     const result = patchHtml(
       source,
       { line: 1, col: 17 },
       { style: { color: "red" } }
     );
+
     expect(result.code).toBe(
       '<body><template><span style="color: red;">a</span></template></body>'
     );
@@ -190,6 +216,7 @@ describe("patchHtml text", () => {
     const result = patchHtml(PAGE, locOf(PAGE, "h1"), {
       text: "Bye <now> & then",
     });
+
     expect(result.code).toContain(
       '<h1 class="title">Bye &lt;now&gt; &amp; then</h1>'
     );
@@ -212,11 +239,13 @@ describe("patchHtml text", () => {
 
   it("refuses an element with child elements", () => {
     let caught: unknown;
+
     try {
       patchHtml(PAGE, locOf(PAGE, "p"), { text: "x" });
     } catch (error) {
       caught = error;
     }
+
     expect(caught).toBeInstanceOf(DirectEditError);
     expect((caught as DirectEditError).code).toBe("text_not_editable");
     expect((caught as DirectEditError).message).toBe(
@@ -236,9 +265,11 @@ describe("patchHtml text", () => {
 
   it("writes unicode text and keeps unicode elsewhere", () => {
     const source = "<body>\n<p>café \u{1F600}</p><h2>日本</h2>\n</body>";
+
     const result = patchHtml(source, locOf(source, "h2"), {
       text: "\u{1F680} naïve 中文",
     });
+
     expect(result.code).toBe(
       "<body>\n<p>café \u{1F600}</p><h2>\u{1F680} naïve 中文</h2>\n</body>"
     );
@@ -249,6 +280,7 @@ describe("patchHtml text", () => {
       style: { color: "red" },
       text: "Both",
     });
+
     expect(result.code).toContain(
       '<h1 style="color: red;" class="title">Both</h1>'
     );
@@ -260,6 +292,7 @@ describe("patchHtml byte fidelity", () => {
   it("keeps every byte outside the edit with CRLF line ends and a BOM", () => {
     const source =
       "﻿<!doctype html>\r\n<html>\r\n<body>\r\n  <!-- note -->\r\n  <h1   data-x='1'>Hi</h1>\r\n  <p>Téxt</p>\r\n</body>\r\n</html>\r\n";
+
     const h1 = locOf(source, "h1");
     const styled = patchHtml(source, h1, { style: { color: "red" } });
     const at = source.indexOf("<h1") + 3;
@@ -275,10 +308,12 @@ describe("patchHtml byte fidelity", () => {
 
   it("matches the loc that the preview annotation produces for every element", () => {
     const tags = ["h1", "img", "br", "b"];
+
     for (const tag of tags) {
       const result = patchHtml(PAGE, locOf(PAGE, tag), {
         style: { opacity: "0.5" },
       });
+
       expect(result.tag).toBe(tag);
       expect(result.code).toContain(`<${tag} style="opacity: 0.5;"`);
     }
@@ -301,6 +336,7 @@ describe("patchHtml stale selection", () => {
       tag: "h1",
       text: "Changed",
     });
+
     expect(result.code).toContain('<h1 class="title">Changed</h1>');
   });
 });

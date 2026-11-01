@@ -24,7 +24,10 @@ import { uiStore, useUi } from "./storage";
 import { isTypingTarget } from "./typingTarget";
 
 installRouting();
-if (uiStore.get().activeProjectId) void prefetchStudio();
+
+if (uiStore.get().activeProjectId) {
+  void prefetchStudio();
+}
 
 class ScreenBoundary extends Component<
   { children: ReactNode },
@@ -37,7 +40,10 @@ class ScreenBoundary extends Component<
   }
 
   render() {
-    if (this.state.error === null) return this.props.children;
+    if (this.state.error === null) {
+      return this.props.children;
+    }
+
     return (
       <div className="boot">
         <div className="boot-card" role="alert">
@@ -53,8 +59,10 @@ class ScreenBoundary extends Component<
 }
 
 const LAYER_EVENT = "studio:command-layer";
+
 const DesktopApp =
   "studioDesktop" in window ? lazy(() => import("./DesktopApp")) : null;
+
 const McpToasts = lazy(() => import("./components/McpToasts"));
 
 function useCommandLayer() {
@@ -63,9 +71,14 @@ function useCommandLayer() {
     const toggle = (next: unknown) =>
       (next === "palette" || next === "shortcuts") &&
       setLayer((cur) => (cur === next ? null : next));
+
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Meta" || e.key === "Control") prefetchCommandLayer();
+      if (e.key === "Meta" || e.key === "Control") {
+        prefetchCommandLayer();
+      }
+
       const mod = e.metaKey || e.ctrlKey;
+
       const next =
         mod &&
         !e.altKey &&
@@ -78,19 +91,26 @@ function useCommandLayer() {
               (e.ctrlKey || !isTypingTarget(e.target))
             ? "shortcuts"
             : null;
-      if (!next || e.repeat) return;
+
+      if (!next || e.repeat) {
+        return;
+      }
+
       e.preventDefault();
       e.stopPropagation();
       toggle(next);
     };
+
     const onOpen = (e: Event) => toggle((e as CustomEvent<unknown>).detail);
     window.addEventListener("keydown", onKey, true);
     window.addEventListener(LAYER_EVENT, onOpen);
+
     return () => {
       window.removeEventListener("keydown", onKey, true);
       window.removeEventListener(LAYER_EVENT, onOpen);
     };
   }, []);
+
   return (
     layer && (
       <Suspense fallback={null}>
@@ -135,7 +155,11 @@ export function App() {
       </div>
     );
   }
-  if (!ready) return <div className="boot muted">Connecting…</div>;
+
+  if (!ready) {
+    return <div className="boot muted">Connecting…</div>;
+  }
+
   const notice = (
     <>
       {layer}
@@ -149,6 +173,7 @@ export function App() {
       )}
     </>
   );
+
   if (ui.activeProjectId) {
     return (
       <>
@@ -163,6 +188,7 @@ export function App() {
       </>
     );
   }
+
   if (ui.screen === "new-design-system") {
     return (
       <>
@@ -185,6 +211,7 @@ export function App() {
       </>
     );
   }
+
   if (ui.screen === "design-systems") {
     return (
       <>
@@ -195,6 +222,7 @@ export function App() {
       </>
     );
   }
+
   return (
     <>
       {notice}

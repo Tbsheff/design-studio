@@ -9,6 +9,7 @@ import { Icon } from "./Icon";
 import { isFolderProject, projectBadge, useThumbnail } from "./ProjectGrid";
 
 export { ProjectGrid } from "./ProjectGrid";
+
 export { PackCards } from "./HomePopovers";
 
 const FILTERS: { id: HomeFilter; label: string }[] = [
@@ -26,9 +27,14 @@ export const FILTER_EMPTY: Record<HomeFilter, string> = {
 };
 
 function filterTest(filter: HomeFilter): (project: Project) => boolean {
-  if (filter === "systems")
+  if (filter === "systems") {
     return (project) => Boolean(project.designSystemFor);
-  if (filter === "all") return () => true;
+  }
+
+  if (filter === "all") {
+    return () => true;
+  }
+
   return (project) =>
     !project.designSystemFor &&
     isFolderProject(project) === (filter === "apps");
@@ -38,8 +44,12 @@ export function filterLibrary(
   projects: Project[] | null,
   filter: HomeFilter
 ): Project[] | null {
-  if (!projects) return projects;
+  if (!projects) {
+    return projects;
+  }
+
   const test = filterTest(filter);
+
   return projects.filter(
     (project) => !project.designSystemDeleted && test(project)
   );
@@ -80,18 +90,22 @@ function useLastRun(project: Project): LastRun | null {
     )
       .then(({ runs }) => {
         const run = [...runs].sort((a, b) => b.startedAt - a.startedAt)[0];
-        if (live && run)
+
+        if (live && run) {
           setLast({
             prompt: run.request.prompt,
             route: run.request.canvas?.path ?? null,
             at: run.startedAt,
           });
+        }
       })
       .catch(() => undefined);
+
     return () => {
       live = false;
     };
   }, [project.id]);
+
   return last;
 }
 
@@ -100,7 +114,9 @@ function routeLine(project: Project, last: LastRun | null): string {
     project.app?.appDir && project.app.appDir !== "."
       ? project.app.appDir
       : null;
+
   const route = last?.route ?? (project.app ? null : project.entry);
+
   return [dir, route].filter(Boolean).join(" · ");
 }
 
@@ -125,6 +141,7 @@ export function ContinueCard({
   const badge = projectBadge(project);
   const line = routeLine(project, last);
   const server = project.app && health ? SERVER_TEXT[health.state] : undefined;
+
   return (
     <section className="home-continue" aria-label="Continue">
       <button

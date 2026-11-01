@@ -20,8 +20,11 @@ function ClarifyQuestionField({
   const radios = useRovingRadioGroup(item.options, picked, onAnswer);
   const firstRef = useRef<HTMLButtonElement | null>(null);
   useEffect(() => {
-    if (first) firstRef.current?.focus();
+    if (first) {
+      firstRef.current?.focus();
+    }
   }, [first]);
+
   return (
     <div className="clarify-q">
       <span className="clarify-legend" id={legendId}>
@@ -37,6 +40,7 @@ function ClarifyQuestionField({
           {item.options.map((option, index) => {
             const props = radios.item(option);
             const on = picked === option;
+
             return (
               <button
                 key={option}
@@ -49,7 +53,10 @@ function ClarifyQuestionField({
                 }
                 ref={(element) => {
                   props.ref(element);
-                  if (index === 0) firstRef.current = element;
+
+                  if (index === 0) {
+                    firstRef.current = element;
+                  }
                 }}
                 onClick={() => onAnswer(option)}
               >
@@ -87,6 +94,7 @@ export function ClarifyForm({
   onCancel: () => void;
 }) {
   const [answers, setAnswers] = useState<Record<string, string>>({});
+
   const submit = (event: FormEvent) => {
     event.preventDefault();
     onBuild(
@@ -96,8 +104,10 @@ export function ClarifyForm({
       }))
     );
   };
+
   const set = (id: string, value: string) =>
     setAnswers((current) => ({ ...current, [id]: value }));
+
   return (
     <form
       className="clarify"

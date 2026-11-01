@@ -15,11 +15,13 @@ export interface PortSet {
 }
 
 export const VITE_PORT_RANGE = 200;
+
 export const DEFAULT_PORTS: PortSet = {
   studio: DEFAULT_STUDIO_PORT,
   preview: DEFAULT_PREVIEW_PORT,
   viteBase: DEFAULT_VITE_PORT_BASE,
 };
+
 const FALLBACK_COUNT = 40;
 const FALLBACK_STUDIO_START = 4570;
 const FALLBACK_VITE_START = 8200;
@@ -37,18 +39,27 @@ export function portIsFree(port: number): Promise<boolean> {
 
 async function setIsFree(set: PortSet): Promise<boolean> {
   const ports = [set.studio, set.preview, set.viteBase];
+
   for (const port of ports) {
-    if (!(await portIsFree(port))) return false;
+    if (!(await portIsFree(port))) {
+      return false;
+    }
   }
+
   return true;
 }
 
 export async function waitForFree(set: PortSet, ms: number): Promise<boolean> {
   const deadline = Date.now() + ms;
+
   while (!(await setIsFree(set))) {
-    if (Date.now() > deadline) return false;
+    if (Date.now() > deadline) {
+      return false;
+    }
+
     await new Promise((resolve) => setTimeout(resolve, 200));
   }
+
   return true;
 }
 
@@ -61,8 +72,12 @@ export function fallbackSets(): PortSet[] {
 }
 
 function isPortSet(value: unknown): value is PortSet {
-  if (typeof value !== "object" || value === null) return false;
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
   const record = value as Record<string, unknown>;
+
   return ["studio", "preview", "viteBase"].every((key) =>
     Number.isInteger(record[key])
   );
@@ -71,6 +86,7 @@ function isPortSet(value: unknown): value is PortSet {
 export function readSavedPorts(file: string): PortSet | null {
   try {
     const parsed: unknown = JSON.parse(readFileSync(file, "utf-8"));
+
     return isPortSet(parsed) ? parsed : null;
   } catch {
     return null;
@@ -88,8 +104,12 @@ export async function pickPorts(saved: PortSet | null): Promise<PortSet> {
     DEFAULT_PORTS,
     ...fallbackSets(),
   ];
+
   for (const candidate of candidates) {
-    if (await setIsFree(candidate)) return candidate;
+    if (await setIsFree(candidate)) {
+      return candidate;
+    }
   }
+
   throw new Error("No free studio port pair found");
 }

@@ -65,32 +65,46 @@ async function frameOf(page: Page): Promise<Frame> {
 async function compareRects(page: Page, selector: string) {
   const frame = await frameOf(page);
   const iframe = await page.locator("iframe.frame.front").boundingBox();
-  if (!iframe) throw new Error("no iframe box");
+
+  if (!iframe) {
+    throw new Error("no iframe box");
+  }
+
   const width = Number(
     await page.locator("iframe.frame.front").getAttribute("width")
   );
+
   const zoom = iframe.width / width;
+
   const el = await frame.evaluate((sel) => {
     const r = document.querySelector(sel)?.getBoundingClientRect();
+
     return r ? { x: r.x, y: r.y, width: r.width, height: r.height } : null;
   }, selector);
+
   const box = await page
     .locator(".overlay .box.selected")
     .first()
     .boundingBox();
-  if (!el || !box) throw new Error("missing rect");
+
+  if (!el || !box) {
+    throw new Error("missing rect");
+  }
+
   const expected = {
     x: iframe.x + el.x * zoom,
     y: iframe.y + el.y * zoom,
     width: el.width * zoom,
     height: el.height * zoom,
   };
+
   const delta = Math.max(
     Math.abs(expected.x - box.x),
     Math.abs(expected.y - box.y),
     Math.abs(expected.width - box.width),
     Math.abs(expected.height - box.height)
   );
+
   return { zoom, expected, box, delta };
 }
 
@@ -104,6 +118,7 @@ test("AC-25 click nested span, image, button and links to select them", async ({
   const urlBefore = raw.url();
   await setSelectMode(page, true);
   const results: Record<string, unknown>[] = [];
+
   for (const [selector, tag] of [
     ["span.inner", "span"],
     ["b.deep", "b"],
@@ -131,13 +146,18 @@ test("AC-25 click nested span, image, button and links to select them", async ({
       frameUrlSame: current.url() === urlBefore,
       title: await current.title(),
     });
-    if (!chipText?.startsWith(tag))
+
+    if (!chipText?.startsWith(tag)) {
       console.log(`[AC-25 mismatch] ${selector} -> ${chipText} ${chip}`);
+    }
+
     expect(chipText?.startsWith(tag)).toBe(true);
   }
+
   const frameCount = page
     .frames()
     .filter((f) => f.url().includes(PREVIEW_FRAGMENT)).length;
+
   const finalFrame = await frameOf(page);
   const scrollY = await finalFrame.evaluate(() => window.scrollY);
   evidence("AC-25", {
@@ -148,10 +168,12 @@ test("AC-25 click nested span, image, button and links to select them", async ({
     urlBefore: urlBefore.split("?")[0],
     urlAfter: finalFrame.url().split("?")[0],
   });
+
   for (const row of results) {
     expect(row.frameUrlSame).toBe(true);
     expect(row.title).toBe("Fixture");
   }
+
   expect(scrollY).toBe(0);
 });
 
@@ -162,16 +184,20 @@ test("AC-26 selection highlight matches the element and leaves the DOM unchanged
   const frame = frontFrame(page);
   await expect(frame.locator("h1")).toContainText("Fixture");
   const fileBefore = readFileSync(path.join(folder, "index.html"), "utf-8");
+
   const domBefore = await (
     await frameOf(page)
   ).evaluate(() => document.documentElement.outerHTML);
+
   await setSelectMode(page, true);
   await frame.locator("p.card-body").first().hover();
   await frame.locator("h2.card-title").first().click();
   await expect(page.locator(".overlay .box.selected")).toHaveCount(1);
+
   const domAfterSelect = await (
     await frameOf(page)
   ).evaluate(() => document.documentElement.outerHTML);
+
   const at100 = await compareRects(page, "h2.card-title");
   await page.getByLabel("Zoom", { exact: true }).selectOption("0.5");
   await expect
@@ -187,9 +213,11 @@ test("AC-26 selection highlight matches the element and leaves the DOM unchanged
   const scrolled = await (await frameOf(page)).evaluate(() => window.scrollY);
   await page.screenshot({ path: evidencePath("AC-26-scrolled.png") });
   await setSelectMode(page, false);
+
   const domEnd = await (
     await frameOf(page)
   ).evaluate(() => document.documentElement.outerHTML);
+
   const fileAfter = readFileSync(path.join(folder, "index.html"), "utf-8");
   evidence("AC-26", {
     projectId: project.id,
@@ -228,13 +256,19 @@ test("AC-30 AC-32 AC-27 shift-select two elements, one prompt, one version with 
     .click({ modifiers: ["Shift"] });
   await expect(page.locator(".overlay .box.selected")).toHaveCount(2);
   await expect(page.locator(".chip")).toHaveCount(2);
+
   const otherColorsBefore = await frame
     .locator("h1, p, button, a")
     .evaluateAll((els) => els.map((el) => getComputedStyle(el).color));
+
   await sendPrompt(page, "color #c00");
   const runs = await api.waitForRuns(project.id, 1);
   const run = runs[0];
-  if (!run) throw new Error("run missing");
+
+  if (!run) {
+    throw new Error("run missing");
+  }
+
   await expect
     .poll(() =>
       frame
@@ -242,9 +276,11 @@ test("AC-30 AC-32 AC-27 shift-select two elements, one prompt, one version with 
         .evaluateAll((els) => els.map((el) => getComputedStyle(el).color))
     )
     .toEqual(["rgb(204, 0, 0)", "rgb(204, 0, 0)"]);
+
   const otherColorsAfter = await frame
     .locator("h1, p, button, a")
     .evaluateAll((els) => els.map((el) => getComputedStyle(el).color));
+
   const versionsAfter = await api.versions(project.id, main.id);
   const after = readFileSync(file, "utf-8");
   const diff = changedLines(before, after);

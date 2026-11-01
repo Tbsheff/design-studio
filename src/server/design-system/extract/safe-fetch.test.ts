@@ -18,6 +18,7 @@ async function serve(handler: http.RequestListener): Promise<string> {
   const server = http.createServer(handler);
   servers.push(server);
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+
   return `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
 }
 
@@ -62,13 +63,15 @@ describe("address checks", () => {
     ]) {
       expect(isBlockedAddress(address, false), address).toBe(true);
     }
+
     for (const address of [
       "93.184.216.34",
       "8.8.8.8",
       "172.32.0.1",
       "2606:4700::1111",
-    ])
+    ]) {
       expect(isBlockedAddress(address, false), address).toBe(false);
+    }
   });
 
   it("the loopback allow opens only loopback", () => {
@@ -96,6 +99,7 @@ describe("address checks", () => {
     ]) {
       expect(() => checkUrl(url, false), url).toThrow(FetchBlockedError);
     }
+
     expect(checkUrl("https://example.com/a", false).href).toBe(
       "https://example.com/a"
     );
@@ -110,10 +114,12 @@ describe("safeFetch", () => {
     await expect(safeFetch(`${base}/`, policy())).rejects.toThrow(
       FetchBlockedError
     );
+
     const fetched = await safeFetch(
       `${base}/`,
       policy({ allowLoopback: true })
     );
+
     expect(fetched.body.toString()).toBe("<html></html>");
   });
 
@@ -122,6 +128,7 @@ describe("safeFetch", () => {
       { address: "93.184.216.34", family: 4 },
       { address: "10.0.0.7", family: 4 },
     ];
+
     await expect(
       safeFetch("http://rebind.example.com/", policy({ resolve }))
     ).rejects.toThrow(/private or local address \(10\.0\.0\.7\)/);
@@ -138,20 +145,23 @@ describe("safeFetch", () => {
 
   it("re-checks every redirect hop and blocks a redirect to a private host", async () => {
     const base = await serve((req, res) => {
-      if (req.url === "/to-private")
+      if (req.url === "/to-private") {
         res.writeHead(302, { location: "http://10.0.0.1/admin" }).end();
-      else if (req.url === "/to-metadata")
+      } else if (req.url === "/to-metadata") {
         res
           .writeHead(301, {
             location: "http://169.254.169.254/latest/meta-data/",
           })
           .end();
-      else if (req.url === "/to-file")
+      } else if (req.url === "/to-file") {
         res.writeHead(302, { location: "file:///etc/passwd" }).end();
-      else if (req.url === "/hop")
+      } else if (req.url === "/hop") {
         res.writeHead(302, { location: "/ok" }).end();
-      else res.end("ok");
+      } else {
+        res.end("ok");
+      }
     });
+
     const loopback = policy({ allowLoopback: true });
     await expect(safeFetch(`${base}/to-private`, loopback)).rejects.toThrow(
       FetchBlockedError
@@ -170,6 +180,7 @@ describe("safeFetch", () => {
       const n = Number(req.url?.slice(1) ?? 0);
       res.writeHead(302, { location: `/${n + 1}` }).end();
     });
+
     await expect(
       safeFetch(`${base}/0`, policy({ allowLoopback: true }))
     ).rejects.toThrow(/more than 3 times/);
@@ -180,6 +191,7 @@ describe("safeFetch", () => {
       res.write(Buffer.alloc(600 * 1024, 97));
       res.end(Buffer.alloc(600 * 1024, 97));
     });
+
     await expect(
       safeFetch(
         `${base}/`,
@@ -219,10 +231,13 @@ describe("safeFetch", () => {
 
   it("refuses a compressed body and non-2xx answers", async () => {
     const base = await serve((req, res) => {
-      if (req.url === "/gz")
+      if (req.url === "/gz") {
         res.writeHead(200, { "content-encoding": "gzip" }).end("x");
-      else res.writeHead(404).end("no");
+      } else {
+        res.writeHead(404).end("no");
+      }
     });
+
     await expect(
       safeFetch(`${base}/gz`, policy({ allowLoopback: true }))
     ).rejects.toThrow(/compressed/);

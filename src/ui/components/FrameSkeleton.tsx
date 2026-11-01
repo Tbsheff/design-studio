@@ -33,7 +33,7 @@ export function FrameSkeleton({
   page?: string;
   missing?: string;
 }) {
-  if (missing)
+  if (missing) {
     return (
       <div
         className="frame-skeleton idle"
@@ -45,6 +45,8 @@ export function FrameSkeleton({
         </div>
       </div>
     );
+  }
+
   return (
     <div
       className="frame-skeleton"
@@ -75,7 +77,9 @@ export function FirstBuildCover({
   step: string | null | undefined;
   path: string | undefined;
 }) {
-  if (wait === "missing")
+  if (wait === "missing") {
     return <FrameSkeleton step={null} missing={pageFileOf(path)} />;
+  }
+
   return covered ? <FrameSkeleton step={step ?? null} /> : null;
 }

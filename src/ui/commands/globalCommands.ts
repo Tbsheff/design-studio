@@ -14,7 +14,11 @@ export function focusNewProject(): void {
 
 async function openFolder(): Promise<void> {
   const picked = await pickFolder({ title: "Open a folder" });
-  if (picked.kind === "canceled") return;
+
+  if (picked.kind === "canceled") {
+    return;
+  }
+
   goHome();
   requestOpenApp(picked.kind === "picked" ? picked.path : "");
 }
@@ -57,6 +61,7 @@ const THEME_COMMANDS: Command[] = [
 export function globalCommands(openShortcuts: () => void): Command[] {
   const inProject = uiStore.get().activeProjectId !== null;
   const home = () => uiStore.set({ activeProjectId: null, screen: "home" });
+
   return [
     {
       id: "go.home",

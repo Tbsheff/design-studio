@@ -18,26 +18,34 @@ export function useFolderChooser(
 ): FolderChooser {
   const [unsupported, setUnsupported] = useState(() => !hasNativePicker());
   const [picking, setPicking] = useState(false);
+
   const choose = async (
     title: string,
     defaultPath?: string
   ): Promise<ChooseResult> => {
     setPicking(true);
+
     try {
       const outcome = await pickFolder({
         title,
         ...(defaultPath ? { defaultPath } : {}),
       });
-      if (outcome.kind === "unsupported") setUnsupported(true);
+
+      if (outcome.kind === "unsupported") {
+        setUnsupported(true);
+      }
+
       return outcome.kind === "picked"
         ? { path: outcome.path, unsupported: false }
         : { path: null, unsupported: outcome.kind === "unsupported" };
     } catch (err) {
       onError(errorText(err));
+
       return { path: null, unsupported: false };
     } finally {
       setPicking(false);
     }
   };
+
   return { choose, unsupported, picking };
 }

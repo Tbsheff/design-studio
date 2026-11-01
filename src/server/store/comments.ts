@@ -127,8 +127,12 @@ function emptyFile(): CommentFile {
 }
 
 function isCommentFile(value: unknown): value is CommentFile {
-  if (typeof value !== "object" || value === null) return false;
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
   const file = value as Partial<CommentFile>;
+
   return typeof file.nextN === "number" && Array.isArray(file.comments);
 }
 
@@ -137,13 +141,22 @@ export function reorderSubset<T extends { id: string }>(
   ids: string[]
 ): T[] {
   const wanted = new Set(ids);
-  if (wanted.size !== ids.length)
+
+  if (wanted.size !== ids.length) {
     throw new BadRequestError("ids must be unique");
+  }
+
   const byId = new Map(items.map((item) => [item.id, item]));
-  for (const id of ids)
-    if (!byId.has(id)) throw new NotFoundError(`comment ${id} not found`);
+
+  for (const id of ids) {
+    if (!byId.has(id)) {
+      throw new NotFoundError(`comment ${id} not found`);
+    }
+  }
+
   const ordered = ids.map((id) => byId.get(id) as T);
   let cursor = 0;
+
   return items.map((item) =>
     wanted.has(item.id) ? (ordered[cursor++] as T) : item
   );
@@ -165,12 +178,17 @@ export function createCommentStore(
     );
 
   const read = async (file: string): Promise<CommentFile> => {
-    if (!existsSync(file)) return emptyFile();
+    if (!existsSync(file)) {
+      return emptyFile();
+    }
+
     try {
       const parsed: unknown = JSON.parse(await readFile(file, "utf-8"));
+
       return isCommentFile(parsed) ? parsed : emptyFile();
     } catch (error) {
       console.error("[comments] unreadable file", file, error);
+
       return emptyFile();
     }
   };
@@ -188,10 +206,12 @@ export function createCommentStore(
     change: (data: CommentFile) => T
   ): Promise<T> => {
     const file = fileOf(projectId, directionId);
+
     return lock(file, async () => {
       const data = await read(file);
       const before = JSON.stringify(data);
       const result = change(data);
+
       if (JSON.stringify(data) !== before) {
         await write(file, data);
         bus.emit({
@@ -201,13 +221,18 @@ export function createCommentStore(
           comments: data.comments,
         });
       }
+
       return result;
     });
   };
 
   const find = (data: CommentFile, commentId: string): DesignComment => {
     const comment = data.comments.find((item) => item.id === commentId);
-    if (!comment) throw new NotFoundError(`comment ${commentId} not found`);
+
+    if (!comment) {
+      throw new NotFoundError(`comment ${commentId} not found`);
+    }
+
     return comment;
   };
 
@@ -216,8 +241,10 @@ export function createCommentStore(
     status: CommentStatus,
     actor: CommentActor
   ): void => {
-    if (!canTransition(comment.status, status, actor))
+    if (!canTransition(comment.status, status, actor)) {
       throw new ConflictError(`bad_transition: ${comment.status} -> ${status}`);
+    }
+
     comment.status = status;
     comment.updatedAt = Date.now();
   };
@@ -228,25 +255,35 @@ export function createCommentStore(
   ): void => {
     const loc = comment.target.sourceLoc;
     const next = loc && comment.status !== "resolved" ? remap(loc) : null;
-    if (!loc || !next || (next.line === loc.line && next.col === loc.col))
+
+    if (!loc || !next || (next.line === loc.line && next.col === loc.col)) {
       return;
+    }
+
     comment.target = { ...comment.target, sourceLoc: next };
     const own = comment.context?.source;
+
     if (
       comment.context &&
       own &&
       own.file === loc.file &&
       own.line === loc.line &&
       own.col === loc.col
-    )
+    ) {
       comment.context = { ...comment.context, source: { ...own, ...next } };
+    }
   };
 
   return {
     async followSource(projectId, directionId, remap) {
-      if (!existsSync(fileOf(projectId, directionId))) return;
+      if (!existsSync(fileOf(projectId, directionId))) {
+        return;
+      }
+
       await mutate(projectId, directionId, (data) => {
-        for (const comment of data.comments) followed(comment, remap);
+        for (const comment of data.comments) {
+          followed(comment, remap);
+        }
       });
     },
 
@@ -257,6 +294,7 @@ export function createCommentStore(
     create(projectId, directionId, input) {
       return mutate(projectId, directionId, (data) => {
         const now = Date.now();
+
         const comment: DesignComment = {
           id: nanoid(10),
           n: data.nextN,
@@ -275,8 +313,10 @@ export function createCommentStore(
           ...(input.frame ? { frame: input.frame } : {}),
           ...(input.from ? { from: input.from } : {}),
         };
+
         data.nextN += 1;
         data.comments.push(comment);
+
         return comment;
       });
     },
@@ -284,15 +324,30 @@ export function createCommentStore(
     update(projectId, directionId, commentId, input, actor = "user") {
       return mutate(projectId, directionId, (data) => {
         const comment = find(data, commentId);
-        if (input.status !== undefined) move(comment, input.status, actor);
-        if (input.text !== undefined) comment.text = input.text;
-        if (input.target !== undefined) comment.target = input.target;
-        if (input.context !== undefined) comment.context = input.context;
+
+        if (input.status !== undefined) {
+          move(comment, input.status, actor);
+        }
+
+        if (input.text !== undefined) {
+          comment.text = input.text;
+        }
+
+        if (input.target !== undefined) {
+          comment.target = input.target;
+        }
+
+        if (input.context !== undefined) {
+          comment.context = input.context;
+        }
+
         if (input.status === "queued") {
           delete comment.runId;
           delete comment.versionId;
         }
+
         comment.updatedAt = Date.now();
+
         return comment;
       });
     },
@@ -308,10 +363,13 @@ export function createCommentStore(
       return mutate(projectId, directionId, (data) => {
         const comment = find(data, commentId);
         const replies = comment.replies ?? [];
-        if (replies.length >= COMMENT_REPLIES_MAX)
+
+        if (replies.length >= COMMENT_REPLIES_MAX) {
           throw new BadRequestError(
             `a comment can have at most ${COMMENT_REPLIES_MAX} replies`
           );
+        }
+
         const now = Date.now();
         comment.replies = [
           ...replies,
@@ -323,6 +381,7 @@ export function createCommentStore(
           },
         ];
         comment.updatedAt = now;
+
         return comment;
       });
     },
@@ -331,11 +390,19 @@ export function createCommentStore(
       return mutate(projectId, directionId, (data) => {
         const comment = find(data, commentId);
         const replies = comment.replies ?? [];
-        if (!replies.some((reply) => reply.id === replyId))
+
+        if (!replies.some((reply) => reply.id === replyId)) {
           throw new NotFoundError(`reply ${replyId} not found`);
+        }
+
         comment.replies = replies.filter((reply) => reply.id !== replyId);
-        if (comment.replies.length === 0) delete comment.replies;
+
+        if (comment.replies.length === 0) {
+          delete comment.replies;
+        }
+
         comment.updatedAt = Date.now();
+
         return comment;
       });
     },
@@ -343,6 +410,7 @@ export function createCommentStore(
     reorder(projectId, directionId, ids) {
       return mutate(projectId, directionId, (data) => {
         data.comments = reorderSubset(data.comments, ids);
+
         return data.comments;
       });
     },
@@ -350,15 +418,19 @@ export function createCommentStore(
     markSent(projectId, directionId, ids, runId) {
       return mutate(projectId, directionId, (data) => {
         const sent = ids.map((id) => find(data, id));
+
         for (const comment of sent) {
-          if (!isSendable(comment.status))
+          if (!isSendable(comment.status)) {
             throw new ConflictError(
               `bad_transition: ${comment.status} -> sent`
             );
+          }
+
           move(comment, "sent", "server");
           comment.runId = runId;
           delete comment.versionId;
         }
+
         return sent;
       });
     },
@@ -368,7 +440,11 @@ export function createCommentStore(
         const moved = ids
           .map((id) => find(data, id))
           .filter((comment) => comment.status === "draft");
-        for (const comment of moved) move(comment, "queued", "server");
+
+        for (const comment of moved) {
+          move(comment, "queued", "server");
+        }
+
         return moved;
       });
     },
@@ -376,18 +452,23 @@ export function createCommentStore(
     finishRun(projectId, directionId, outcome) {
       return mutate(projectId, directionId, (data) => {
         const next = statusAfterRun(outcome.status);
+
         const touched = data.comments.filter(
           (comment) =>
             comment.status === "sent" && comment.runId === outcome.runId
         );
+
         for (const comment of touched) {
           move(comment, next, "server");
-          if (next === "resolved") comment.versionId = outcome.versionId;
-          else {
+
+          if (next === "resolved") {
+            comment.versionId = outcome.versionId;
+          } else {
             delete comment.runId;
             delete comment.versionId;
           }
         }
+
         return touched;
       });
     },

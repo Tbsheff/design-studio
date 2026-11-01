@@ -25,9 +25,14 @@ export function highlight(code: string): ReactNode[] {
   const out: ReactNode[] = [];
   let at = 0;
   let index = 0;
+
   for (const match of code.matchAll(TOKEN)) {
     const start = match.index ?? 0;
-    if (start > at) out.push(code.slice(at, start));
+
+    if (start > at) {
+      out.push(code.slice(at, start));
+    }
+
     const kind = match[1]
       ? "comment"
       : match[2]
@@ -37,6 +42,7 @@ export function highlight(code: string): ReactNode[] {
           : match[4]
             ? "attr"
             : "punct";
+
     out.push(
       <span key={index} className={`tok-${kind}`}>
         {match[0]}
@@ -45,7 +51,11 @@ export function highlight(code: string): ReactNode[] {
     index += 1;
     at = start + match[0].length;
   }
-  if (at < code.length) out.push(code.slice(at));
+
+  if (at < code.length) {
+    out.push(code.slice(at));
+  }
+
   return out;
 }
 
@@ -57,8 +67,9 @@ function useSnippet(
   const [snippet, setSnippet] = useState<Snippet>({ kind: "loading" });
   const [tick, setTick] = useState(0);
   useProjectEvents(projectId, (event) => {
-    if (event.type === "version.created" && event.directionId === directionId)
+    if (event.type === "version.created" && event.directionId === directionId) {
       setTick((value) => value + 1);
+    }
   });
   const source = selection?.source ?? null;
   const fallback = selection?.outerHTML ?? "";
@@ -72,14 +83,19 @@ function useSnippet(
         line: 0,
         exact: false,
       });
+
       return;
     }
+
     let live = true;
     setSnippet((prev) => (prev.kind === "ready" ? prev : { kind: "loading" }));
     api
       .elementSource(projectId, directionId, source)
       .then((result) => {
-        if (!live) return;
+        if (!live) {
+          return;
+        }
+
         setSnippet(
           result.code === null
             ? {
@@ -102,10 +118,12 @@ function useSnippet(
         (err: unknown) =>
           live && setSnippet({ kind: "error", message: errorText(err) })
       );
+
     return () => {
       live = false;
     };
   }, [projectId, directionId, key, tick, fallback]);
+
   return snippet;
 }
 
@@ -127,7 +145,11 @@ function OpenInEditor({
       .catch(() => setEditors([]));
   }, []);
   const editor = editors?.[0];
-  if (!editor) return null;
+
+  if (!editor) {
+    return null;
+  }
+
   return (
     <>
       <button
@@ -153,10 +175,15 @@ function OpenInEditor({
 function CopySnippet({ code }: { code: string }) {
   const [copied, setCopied] = useState(false);
   useEffect(() => {
-    if (!copied) return;
+    if (!copied) {
+      return;
+    }
+
     const timer = window.setTimeout(() => setCopied(false), 1500);
+
     return () => window.clearTimeout(timer);
   }, [copied]);
+
   return (
     <button
       type="button"
@@ -173,12 +200,15 @@ function CopySnippet({ code }: { code: string }) {
 
 export function InspectorCode({ projectId, directionId, selection }: Props) {
   const snippet = useSnippet(projectId, directionId, selection);
-  if (!selection)
+
+  if (!selection) {
     return (
       <p className="ins-hint">
         Select an element on the canvas to see its source code.
       </p>
     );
+  }
+
   return (
     <div className="ins-code">
       <div className="ins-code-bar">

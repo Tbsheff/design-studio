@@ -26,6 +26,7 @@ async function shoot(page: Page, name: string): Promise<void> {
       path: path.join(SHOTS, `skills-${name}-${width}.png`),
     });
   }
+
   await page.setViewportSize({ width: 1600, height: 1000 });
 }
 
@@ -39,11 +40,17 @@ async function createWithAdvanced(page: Page, api: StudioApi) {
   await expect(list.locator(".skill-tag")).toHaveText(["Needs shell"]);
   await clickCreate(page);
   await expect(page.locator(".topbar")).toBeVisible();
+
   const project = (await api.projects()).find(
     (p) => p.name === "Bakery landing page"
   );
-  if (!project) throw new Error("project not created");
+
+  if (!project) {
+    throw new Error("project not created");
+  }
+
   await api.waitForRuns(project.id, 1);
+
   return project;
 }
 
@@ -190,6 +197,7 @@ test("skills: empty state names ~/.claude/skills", async ({ page }) => {
   const home = claudeHomeFor(readState().dataDir);
   renameSync(path.join(home, "skills"), path.join(home, "skills.off"));
   renameSync(path.join(home, "settings.json"), path.join(home, "settings.off"));
+
   try {
     const api = await openHome(page);
     expect((await api.call<SkillCatalog>("GET", "/api/skills")).skills).toEqual(
@@ -221,6 +229,7 @@ test("skills: empty state names ~/.claude/skills", async ({ page }) => {
 
 function writeBulkSkills(home: string, count: number): string[] {
   const dirs: string[] = [];
+
   for (let index = 1; index <= count; index += 1) {
     const name = `bulk-${String(index).padStart(2, "0")}`;
     const dir = path.join(home, "skills", name);
@@ -232,6 +241,7 @@ function writeBulkSkills(home: string, count: number): string[] {
     );
     dirs.push(dir);
   }
+
   return dirs;
 }
 
@@ -245,22 +255,32 @@ async function checkPickerFits(page: Page, height: number): Promise<void> {
   const pop = await picker.boundingBox();
   const composer = await page.locator(".composer").boundingBox();
   const panel = await page.locator("aside").last().boundingBox();
-  if (!pop || !composer || !panel) throw new Error("missing boxes");
+
+  if (!pop || !composer || !panel) {
+    throw new Error("missing boxes");
+  }
+
   expect(pop.y).toBeGreaterThanOrEqual(Math.max(0, panel.y) - 1);
   expect(pop.y + pop.height).toBeLessThanOrEqual(composer.y + 12);
   expect(pop.y + pop.height).toBeLessThanOrEqual(height);
   const list = picker.locator(".skill-opts");
+
   const sizes = await list.evaluate((el) => ({
     scroll: el.scrollHeight,
     client: el.clientHeight,
   }));
+
   expect(sizes.scroll).toBeGreaterThan(sizes.client);
   await page.keyboard.press("ArrowUp");
   const last = picker.getByRole("option").last();
   await expect(last).toHaveAttribute("aria-selected", "true");
   const listBox = await list.boundingBox();
   const lastBox = await last.boundingBox();
-  if (!listBox || !lastBox) throw new Error("missing list boxes");
+
+  if (!listBox || !lastBox) {
+    throw new Error("missing list boxes");
+  }
+
   expect(lastBox.y + lastBox.height).toBeLessThanOrEqual(
     listBox.y + listBox.height + 1
   );
@@ -278,15 +298,21 @@ test("skills: a long skill list scrolls inside the picker and fits the panel", a
 }) => {
   const home = claudeHomeFor(readState().dataDir);
   const dirs = writeBulkSkills(home, 82);
+
   try {
     const api = await openHome(page);
     await page.getByLabel("Describe the design").fill("Long skills page");
     await clickCreate(page);
     await expect(page.locator(".topbar")).toBeVisible();
+
     const project = (await api.projects()).find(
       (p) => p.name === "Long skills page"
     );
-    if (!project) throw new Error("project not created");
+
+    if (!project) {
+      throw new Error("project not created");
+    }
+
     await api.waitForRuns(project.id, 1);
     await expect(page.getByTestId("skills-indicator")).toHaveText("85 skills");
     await checkPickerFits(page, 1221);
@@ -296,6 +322,8 @@ test("skills: a long skill list scrolls inside the picker and fits the panel", a
     await page.keyboard.press("Enter");
     await expect(page.locator(".composer .skill-chip")).toHaveText(["bulk-80"]);
   } finally {
-    for (const dir of dirs) rmSync(dir, { recursive: true, force: true });
+    for (const dir of dirs) {
+      rmSync(dir, { recursive: true, force: true });
+    }
   }
 });

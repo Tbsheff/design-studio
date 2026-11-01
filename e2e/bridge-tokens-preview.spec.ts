@@ -19,6 +19,7 @@ import {
 
 const ORIGIN = "http://bridge-tokens.localhost:4998";
 const TOKEN = "tokens-preview-token";
+
 const PACK_DIR = path.join(
   path.dirname(fileURLToPath(import.meta.url)),
   "..",
@@ -28,6 +29,7 @@ const PACK_DIR = path.join(
   "__fixtures__",
   "test-pack"
 );
+
 const PAGE = `<!doctype html><html class="page"><head>
 <link rel="stylesheet" href="/design-system/tokens.css">
 <script src="/__studio/bridge.js"></script>
@@ -72,7 +74,11 @@ async function tokensCss(): Promise<string> {
   const parsed = parseTokenFile(
     await readFile(path.join(PACK_DIR, "tokens.json"), "utf-8")
   );
-  if (!parsed.file) throw new Error(parsed.error ?? "bad fixture");
+
+  if (!parsed.file) {
+    throw new Error(parsed.error ?? "bad fixture");
+  }
+
   return compileTokens(parsed.file).css;
 }
 
@@ -80,15 +86,22 @@ async function openPage(page: Page): Promise<void> {
   const [bridge, css] = await Promise.all([loadBridgeScript(), tokensCss()]);
   await page.route(`${ORIGIN}/**`, async (route) => {
     const url = new URL(route.request().url());
-    if (url.pathname === "/__studio/bridge.js")
+
+    if (url.pathname === "/__studio/bridge.js") {
       return route.fulfill({ contentType: "text/javascript", body: bridge });
-    if (url.pathname === "/__studio/changes")
+    }
+
+    if (url.pathname === "/__studio/changes") {
       return route.fulfill({
         contentType: "application/json",
         body: '{"changedAt":0}',
       });
-    if (url.pathname === "/design-system/tokens.css")
+    }
+
+    if (url.pathname === "/design-system/tokens.css") {
       return route.fulfill({ contentType: "text/css", body: css });
+    }
+
     return route.fulfill({ contentType: "text/html", body: PAGE });
   });
   await page.goto(
@@ -121,6 +134,7 @@ function probe(page: Page): Promise<Probe> {
     const root = document.documentElement;
     const rootStyle = getComputedStyle(root);
     const preview = document.getElementById(id);
+
     return {
       primary: rootStyle.getPropertyValue("--primary").trim(),
       ring: rootStyle.getPropertyValue("--ring").trim(),
@@ -142,6 +156,7 @@ async function previewCss(
 ): Promise<string> {
   const result = await previewTokens(workTree, { changes });
   expect(result.errors).toEqual([]);
+
   return result.css;
 }
 
@@ -158,6 +173,7 @@ test("tokens-preview overrides token values live and survives head mutations", a
     { path: "color.primary", value: "#ff0000" },
     { path: "radius.md", value: "13px" },
   ]);
+
   await send(page, { type: "tokens-preview", css: "ignored" }, "wrong-token");
   expect((await probe(page)).previewCount).toBe(0);
 

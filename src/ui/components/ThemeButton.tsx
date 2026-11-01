@@ -7,6 +7,7 @@ const ThemeMenu = lazy(() => import("./ThemeMenu"));
 export function ThemeButton() {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLButtonElement>(null);
+
   return (
     <span className="theme-anchor">
       <button
@@ -27,7 +28,10 @@ export function ThemeButton() {
             trigger={ref}
             onClose={(refocus) => {
               setOpen(false);
-              if (refocus) ref.current?.focus();
+
+              if (refocus) {
+                ref.current?.focus();
+              }
             }}
           />
         </Suspense>

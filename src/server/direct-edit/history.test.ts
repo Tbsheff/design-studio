@@ -28,7 +28,9 @@ import { createEditHistory, type EditHistory } from "./history.js";
 
 const PAGE =
   '<!doctype html>\n<html>\n<head><title>T</title></head>\n<body>\n  <h1 class="t">Hello</h1>\n  <p>One <b>two</b></p>\n</body>\n</html>\n';
+
 const H1 = { file: "index.html", line: 5, col: 3 };
+
 const EDITS: Record<string, string>[] = [
   { color: "red" },
   { "font-size": "20px" },
@@ -62,7 +64,11 @@ function call(method: string, url: string, body?: unknown): Promise<Response> {
   const headers: Record<string, string> = {
     "x-studio-token": config.studioToken,
   };
-  if (body !== undefined) headers["content-type"] = "application/json";
+
+  if (body !== undefined) {
+    headers["content-type"] = "application/json";
+  }
+
   return Promise.resolve(
     app.request(url, {
       method,
@@ -77,12 +83,14 @@ async function setupProject(): Promise<{ project: Project; file: string }> {
     prompt: "A page",
     kind: "html",
   });
+
   const project = ((await created.json()) as { project: Project }).project;
   const workTree = projects.mainDirection(project).workTree;
   await writeFile(path.join(workTree, "index.html"), PAGE);
   expect(
     (await call("POST", `/api/projects/${project.id}/d/main/keep`)).status
   ).toBe(200);
+
   return { project, file: path.join(workTree, "index.html") };
 }
 
@@ -95,6 +103,7 @@ async function edit(
     `/api/projects/${project.id}/d/main/direct-edit`,
     { source: H1, selector: "h1", style }
   );
+
   expect(response.status).toBe(200);
 }
 
@@ -144,7 +153,11 @@ describe("edit history", { timeout: 30000 }, () => {
     const { project, file } = await setupProject();
     const seen: StudioEvent[] = [];
     bus.subscribe(project.id, (event) => seen.push(event));
-    for (const style of EDITS) await edit(project, style);
+
+    for (const style of EDITS) {
+      await edit(project, style);
+    }
+
     const end = await readFile(file, "utf-8");
     expect(end).not.toBe(PAGE);
     expect(await stateOf(project)).toEqual({
@@ -155,11 +168,13 @@ describe("edit history", { timeout: 30000 }, () => {
     });
 
     const undone: Version[] = [];
+
     for (let index = 0; index < 3; index += 1) {
       const response = await step(project, "undo");
       expect(response.status).toBe(200);
       undone.push(((await response.json()) as { version: Version }).version);
     }
+
     expect(await readFile(file, "utf-8")).toBe(PAGE);
     expect(undone.map((version) => version.title)).toEqual([
       "Undo: Edit h1: color",
@@ -180,8 +195,10 @@ describe("edit history", { timeout: 30000 }, () => {
     });
     expect((await step(project, "undo")).status).toBe(422);
 
-    for (let index = 0; index < 3; index += 1)
+    for (let index = 0; index < 3; index += 1) {
       expect((await step(project, "redo")).status).toBe(200);
+    }
+
     expect(await readFile(file, "utf-8")).toBe(end);
     expect(await stateOf(project)).toMatchObject({
       canUndo: true,
@@ -196,10 +213,12 @@ describe("edit history", { timeout: 30000 }, () => {
     const { project, file } = await setupProject();
     await edit(project, { color: "red" });
     await edit(project, { color: "blue" });
+
     const changed = (await readFile(file, "utf-8")).replace(
       "Hello",
       "Hello from the agent"
     );
+
     await writeFile(file, changed);
     const response = await step(project, "undo");
     expect(response.status).toBe(409);
@@ -293,6 +312,7 @@ describe("edit history", { timeout: 30000 }, () => {
       bus: { emit: (event) => ({ ...event, seq: 0, ts: 0 }) as StudioEvent },
       limit: 2,
     });
+
     for (const label of ["a", "b", "c"]) {
       small.record({
         projectId: "p",
@@ -302,6 +322,7 @@ describe("edit history", { timeout: 30000 }, () => {
         files: [{ file: "/x", relative: "x.html", before: "1", after: label }],
       });
     }
+
     small.record({
       projectId: "p",
       directionId: "main",

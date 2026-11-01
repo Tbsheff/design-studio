@@ -22,13 +22,18 @@ export interface FrameMenuItem {
 }
 
 function portItem(root: HTMLElement | null): FrameMenuItem[] {
-  if (!portAvailable()) return [];
+  if (!portAvailable()) {
+    return [];
+  }
+
   const frame = root?.closest<HTMLElement>("[data-frame-id]") ?? null;
+
   const run = () =>
     openPortDialog({
       frameId: frame?.dataset.frameId ?? null,
       directionId: frame?.dataset.directionId ?? null,
     });
+
   return [{ id: "port-to-app", label: "Move to app…", icon: "react", run }];
 }
 
@@ -41,13 +46,18 @@ export function FrameMoreMenu({
 }) {
   const menu = useMenu();
   useEffect(() => {
-    if (menu.open)
+    if (menu.open) {
       menu.root.current
         ?.querySelector<HTMLButtonElement>('[role="menuitem"]:not(:disabled)')
         ?.focus();
+    }
   }, [menu.open, menu.root]);
   const items = menu.open ? [...portItem(menu.root.current), ...own] : own;
-  if (items.length === 0 && !portAvailable()) return null;
+
+  if (items.length === 0 && !portAvailable()) {
+    return null;
+  }
+
   return (
     <div className="frame-menu-root" ref={menu.root}>
       <button
@@ -114,8 +124,13 @@ function elementHandleAt(e: ReactPointerEvent): Element | null {
 
 function passToElementHandle(e: ReactPointerEvent): boolean {
   const handle = elementHandleAt(e);
-  if (!handle) return false;
+
+  if (!handle) {
+    return false;
+  }
+
   e.stopPropagation();
+
   const {
     clientX,
     clientY,
@@ -131,6 +146,7 @@ function passToElementHandle(e: ReactPointerEvent): boolean {
     metaKey,
     ctrlKey,
   } = e;
+
   handle.dispatchEvent(
     new PointerEvent("pointerdown", {
       bubbles: true,
@@ -151,6 +167,7 @@ function passToElementHandle(e: ReactPointerEvent): boolean {
       ctrlKey,
     })
   );
+
   return true;
 }
 
@@ -189,12 +206,21 @@ function menuKeys(
   close: (refocus: boolean) => void
 ) {
   const step = MENU_STEP[event.key];
-  if (event.key === "Tab") close(false);
-  if (!step) return;
+
+  if (event.key === "Tab") {
+    close(false);
+  }
+
+  if (!step) {
+    return;
+  }
+
   event.preventDefault();
+
   const items = Array.from(
     event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="menuitem"]')
   );
+
   const index = items.indexOf(document.activeElement as HTMLButtonElement);
   items[step(Math.max(0, index), items.length)]?.focus();
 }
@@ -203,11 +229,17 @@ function useMenu() {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
+
   const close = useCallback((refocus: boolean) => {
     setOpen(false);
-    if (refocus) trigger.current?.focus();
+
+    if (refocus) {
+      trigger.current?.focus();
+    }
   }, []);
+
   usePopover(open, root, close);
+
   return { open, setOpen, root, trigger, close };
 }
 
@@ -251,11 +283,13 @@ function UseInMenu({
 }) {
   const menu = useMenu();
   useEffect(() => {
-    if (menu.open)
+    if (menu.open) {
       menu.root.current
         ?.querySelector<HTMLButtonElement>('[role="menuitem"]')
         ?.focus();
+    }
   }, [menu.open, menu.root]);
+
   return (
     <div className="frame-menu-root" ref={menu.root}>
       <button
@@ -305,8 +339,10 @@ function UseInMenu({
 }
 
 function shortRejection(error: string): string {
-  if (!error.startsWith("Rejected:"))
+  if (!error.startsWith("Rejected:")) {
     return error.length > 60 ? `${error.slice(0, 60)}…` : error;
+  }
+
   return /another file|other files/.test(error)
     ? "Rejected: changed another file"
     : "Rejected: changed code outside the element";
@@ -327,10 +363,15 @@ export function VariationControls({
   const [error, setError] = useState<string | null>(null);
   const [keeping, setKeeping] = useState(false);
   const status = variation.status;
+
   const keep = async () => {
-    if (variation.keepBlocked || keeping) return;
+    if (variation.keepBlocked || keeping) {
+      return;
+    }
+
     setKeeping(true);
     setError(null);
+
     try {
       await variation.onKeep();
     } catch (err) {
@@ -341,10 +382,15 @@ export function VariationControls({
       setKeeping(false);
     }
   };
+
   const mix = async (to: string) => {
-    if (!element) return;
+    if (!element) {
+      return;
+    }
+
     setMixing(true);
     setError(null);
+
     try {
       await variation.onMix(to, element);
       onMixed();
@@ -356,6 +402,7 @@ export function VariationControls({
       setMixing(false);
     }
   };
+
   return (
     <>
       {!variation.error && (
@@ -415,6 +462,7 @@ export function VariationControls({
 
 export function pageName(path: string | undefined): string {
   const clean = (path ?? "").replace(/^\/+/, "").replace(/\.html$/, "");
+
   return clean || "index";
 }
 
@@ -446,30 +494,43 @@ export function FramePageMenu({
   loader.current = listPages;
   const hasPages = listPages !== null;
   useEffect(() => {
-    if (!menu.open) return;
+    if (!menu.open) {
+      return;
+    }
+
     setDraft(path);
     setInvalid(false);
     input.current?.focus();
     input.current?.select();
     const load = loader.current;
-    if (!load) return;
+
+    if (!load) {
+      return;
+    }
+
     let alive = true;
     load()
       .then((list) => alive && setPages(list))
       .catch(() => alive && setPages([]));
+
     return () => {
       alive = false;
     };
   }, [menu.open, path, hasPages]);
+
   const apply = (raw: string) => {
     const clean = cleanFramePath(raw);
+
     if (clean === null) {
       setInvalid(true);
+
       return;
     }
+
     onPath(clean);
     menu.close(true);
   };
+
   return (
     <div className="frame-menu-root" ref={menu.root}>
       <button

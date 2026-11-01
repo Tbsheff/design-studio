@@ -35,6 +35,7 @@ export function evidence(ac: string, data: unknown): void {
 
 export function evidencePath(name: string): string {
   mkdirSync(EVIDENCE_DIR, { recursive: true });
+
   return path.join(EVIDENCE_DIR, name);
 }
 
@@ -57,13 +58,16 @@ export async function createProject(
   kind: "html" | "react"
 ): Promise<{ api: StudioApi; project: Project }> {
   const api = await openHome(page);
+
   const { project } = await api.call<{ project: Project }>(
     "POST",
     "/api/projects",
     { prompt, kind }
   );
+
   await api.waitForRuns(project.id, 1, 120_000);
   await openStudio(page, project.id);
+
   return { api, project: await api.project(project.id) };
 }
 
@@ -72,16 +76,21 @@ export async function importHtmlFixture(
   html: string
 ): Promise<{ api: StudioApi; project: Project; folder: string }> {
   const api = await openHome(page);
+
   const folder = realpathSync(
     mkdtempSync(path.join(os.tmpdir(), "ac edit fixture "))
   );
+
   writeFileSync(path.join(folder, "index.html"), html);
+
   const { project } = await api.call<{ project: Project }>(
     "POST",
     "/api/projects/import",
     { path: folder }
   );
+
   await openStudio(page, project.id);
+
   return { api, project, folder };
 }
 
@@ -97,6 +106,7 @@ export async function startRun(
     `/api/projects/${pid}/d/${did}/runs`,
     { prompt, mode: "edit", ...extra }
   );
+
   return runId;
 }
 
@@ -106,13 +116,21 @@ export async function waitRun(
   timeoutMs = 60_000
 ): Promise<RunSummary> {
   const deadline = Date.now() + timeoutMs;
+
   for (;;) {
     const { summary } = await api.call<{ summary: RunSummary | null }>(
       "GET",
       `/api/runs/${runId}`
     );
-    if (summary && summary.status !== "running") return summary;
-    if (Date.now() > deadline) throw new Error(`run ${runId} still running`);
+
+    if (summary && summary.status !== "running") {
+      return summary;
+    }
+
+    if (Date.now() > deadline) {
+      throw new Error(`run ${runId} still running`);
+    }
+
     await new Promise((resolve) => setTimeout(resolve, 100));
   }
 }
@@ -125,6 +143,7 @@ export async function runStatus(
     "GET",
     `/api/runs/${runId}`
   );
+
   return summary?.status ?? "pending";
 }
 
@@ -136,11 +155,13 @@ export function runFile(projectId: string, runId: string): RunSummary {
     "runs",
     `${runId}.json`
   );
+
   return JSON.parse(readFileSync(file, "utf-8")) as RunSummary;
 }
 
 export function git(projectId: string, args: string[]): string {
   const gitDir = path.join(readState().dataDir, "projects", projectId, "git");
+
   return execFileSync("git", args, {
     env: { ...process.env, GIT_DIR: gitDir },
     encoding: "utf-8",
@@ -151,10 +172,15 @@ export async function previewFrame(page: Page, origin: string): Promise<Frame> {
   await expect
     .poll(() => page.frames().some((frame) => frame.url().includes(origin)))
     .toBe(true);
+
   const frame = page
     .frames()
     .find((candidate) => candidate.url().includes(origin));
-  if (!frame) throw new Error("preview frame not found");
+
+  if (!frame) {
+    throw new Error("preview frame not found");
+  }
+
   return frame;
 }
 
@@ -166,9 +192,13 @@ export function changedLines(
   const b = after.split("\n");
   const max = Math.max(a.length, b.length);
   const out: { index: number; before: string; after: string }[] = [];
-  for (let index = 0; index < max; index += 1)
-    if (a[index] !== b[index])
+
+  for (let index = 0; index < max; index += 1) {
+    if (a[index] !== b[index]) {
       out.push({ index, before: a[index] ?? "", after: b[index] ?? "" });
+    }
+  }
+
   return out;
 }
 

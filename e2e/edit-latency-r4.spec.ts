@@ -61,12 +61,15 @@ const RUN_ID = String(process.ppid);
 function saveResults(name: string, value: Stats): void {
   mkdirSync(path.dirname(RESULTS_FILE), { recursive: true });
   let saved: { runId?: string; results?: Record<string, Stats> } = {};
+
   try {
     saved = JSON.parse(readFileSync(RESULTS_FILE, "utf-8"));
   } catch {
     saved = {};
   }
+
   const kept = saved.runId === RUN_ID ? (saved.results ?? {}) : {};
+
   const method = {
     clocks:
       "visible = rAF poll inside the preview frame (performance.timeOrigin + now) minus the trigger event stamp in the studio page (performance.timeOrigin + event.timeStamp); two documents, one browser clock. bytes = Node Date.now() poll of the file every 2 ms minus Node Date.now() just before Playwright sends the input; one Node clock, includes Playwright dispatch.",
@@ -81,6 +84,7 @@ function saveResults(name: string, value: Stats): void {
     undo: "Cmd+Z keydown -> the new preview frame is front (studio page rAF), then font-size is checked in the frame; key -> file",
     samples: `${SAMPLES} measured samples per type after one discarded warm-up edit; p95 of 7 samples is the max`,
   };
+
   const body = {
     runId: RUN_ID,
     measuredAt: new Date().toISOString(),
@@ -88,14 +92,17 @@ function saveResults(name: string, value: Stats): void {
     method,
     results: { ...kept, [name]: value },
   };
+
   writeFileSync(RESULTS_FILE, `${JSON.stringify(body, null, 2)}\n`);
 }
 
 function stats(values: number[]): Stats {
   const sorted = [...values].sort((a, b) => a - b);
+
   const at = (q: number): number =>
     sorted[Math.min(sorted.length - 1, Math.ceil(q * sorted.length) - 1)] ??
     NaN;
+
   return {
     n: sorted.length,
     median: at(0.5),
@@ -112,6 +119,7 @@ function record(name: string, values: number[]): Stats {
   console.log(
     `[edit-latency-r4] ${name}: median ${Math.round(s.median)} p95 ${Math.round(s.p95)} max ${Math.round(s.max)} ms ${JSON.stringify(s.samples)}`
   );
+
   return s;
 }
 
@@ -121,6 +129,7 @@ function armStamps(): void {
     __seen: Record<number, number>;
     __caretMs?: number;
   };
+
   w.__stamp = {};
   w.__seen = {};
   window.addEventListener("message", (event) => {
@@ -128,19 +137,24 @@ function armStamps(): void {
       latencySeen?: number;
       latencyId?: number;
     } | null;
+
     if (
       typeof data?.latencySeen === "number" &&
       typeof data.latencyId === "number"
-    )
+    ) {
       w.__seen[data.latencyId] = data.latencySeen;
+    }
   });
+
   const keep = (event: Event) => {
     const key =
       event.type === "keydown"
         ? `key:${(event as KeyboardEvent).key}`
         : event.type;
+
     w.__stamp[key] = performance.timeOrigin + event.timeStamp;
   };
+
   for (const type of [
     "keydown",
     "pointerdown",
@@ -148,25 +162,32 @@ function armStamps(): void {
     "pointerup",
     "input",
     "dblclick",
-  ])
+  ]) {
     window.addEventListener(type, keep, true);
+  }
+
   window.addEventListener(
     "dblclick",
     (event) => {
       const from = event.timeStamp;
       w.__caretMs = undefined;
+
       const tick = (now: number) => {
         const selection = window.getSelection();
         const active = document.activeElement;
+
         if (
           active instanceof HTMLElement &&
           active.isContentEditable &&
           selection &&
           selection.rangeCount > 0
-        )
+        ) {
           w.__caretMs = now - from;
-        else if (now - from < 2000) requestAnimationFrame(tick);
+        } else if (now - from < 2000) {
+          requestAnimationFrame(tick);
+        }
       };
+
       requestAnimationFrame(tick);
     },
     true
@@ -194,10 +215,16 @@ async function bytesAt(
   ok: (source: string) => boolean
 ): Promise<number> {
   const deadline = Date.now() + 5000;
+
   for (;;) {
-    if (ok(readFileSync(file, "utf-8"))) return Date.now();
-    if (Date.now() > deadline)
+    if (ok(readFileSync(file, "utf-8"))) {
+      return Date.now();
+    }
+
+    if (Date.now() > deadline) {
       throw new Error(`expected bytes never reached ${file}`);
+    }
+
     await new Promise((resolve) => setTimeout(resolve, 2));
   }
 }
@@ -219,23 +246,32 @@ async function watch(
   await target.evaluate(
     (node, [p, key]) => {
       const el = node as HTMLElement;
+
       const done = (): boolean => {
-        if (p.kind === "style")
+        if (p.kind === "style") {
           return getComputedStyle(el).getPropertyValue(p.prop) === p.want;
-        if (p.kind === "index")
+        }
+
+        if (p.kind === "index") {
           return [...(el.parentElement?.children ?? [])].indexOf(el) === p.want;
+        }
+
         return (el.textContent ?? "").includes(p.want);
       };
+
       const report = (at: number) =>
         window.top?.postMessage({ latencySeen: at, latencyId: key }, "*");
+
       const check = () =>
         done()
           ? report(performance.timeOrigin + performance.now())
           : requestAnimationFrame(check);
+
       check();
     },
     [probe, id] as const
   );
+
   return async () => {
     const seen = await page.waitForFunction(
       (key) =>
@@ -244,6 +280,7 @@ async function watch(
       id,
       { timeout: 5000 }
     );
+
     return (await seen.jsonValue()) as number;
   };
 }
@@ -253,16 +290,23 @@ async function watchSwap(page: Page): Promise<() => Promise<number>> {
   const id = watchId;
   await page.evaluate((key) => {
     const w = window as unknown as { __seen: Record<number, number> };
+
     const front = () =>
       document.querySelector("iframe.frame.front")?.getAttribute("src") ?? "";
+
     const from = front();
+
     const check = () => {
-      if (front() !== from && !document.querySelector("iframe.frame.back"))
+      if (front() !== from && !document.querySelector("iframe.frame.back")) {
         w.__seen[key] = performance.timeOrigin + performance.now();
-      else requestAnimationFrame(check);
+      } else {
+        requestAnimationFrame(check);
+      }
     };
+
     check();
   }, id);
+
   return async () => {
     const seen = await page.waitForFunction(
       (key) =>
@@ -271,6 +315,7 @@ async function watchSwap(page: Page): Promise<() => Promise<number>> {
       id,
       { timeout: 5000 }
     );
+
     return (await seen.jsonValue()) as number;
   };
 }
@@ -310,6 +355,7 @@ async function htmlProject(page: Page, title: string): Promise<Ctx> {
   await expect(frontFrame(page).locator("#c1")).toHaveText("Card one");
   await keepFixture(page);
   await expect(page.locator("iframe.frame.back")).toHaveCount(0);
+
   return { api, file, pid: project.id, did: main.id };
 }
 
@@ -337,11 +383,13 @@ async function fontSample(
   const field = page.getByLabel("Font size", { exact: true });
   const needle = `font-size: ${size}px`;
   expect(readFileSync(ctx.file, "utf-8")).not.toContain(needle);
+
   const seen = await watch(frontFrame(page).locator("h1"), {
     kind: "style",
     prop: "font-size",
     want: `${size}px`,
   });
+
   await clearStamps(page);
   await field.fill(String(size));
   const visible = (await seen()) - (await stampOf(page, "input"));
@@ -349,6 +397,7 @@ async function fontSample(
   await field.press("Enter");
   const bytes = (await bytesAt(ctx.file, (s) => s.includes(needle))) - t0;
   await settled(page, ctx);
+
   return { visible, bytes };
 }
 
@@ -358,11 +407,13 @@ test("edit latency R4: number field font size", async ({ page }) => {
   await fontSample(page, ctx, 29);
   const visible: number[] = [];
   const bytes: number[] = [];
+
   for (let i = 0; i < SAMPLES; i += 1) {
     const sample = await fontSample(page, ctx, 33 + i);
     visible.push(sample.visible);
     bytes.push(sample.bytes);
   }
+
   expect(record("font-size visible", visible).p95).toBeLessThanOrEqual(
     TARGET_MS
   );
@@ -379,18 +430,23 @@ async function flexSample(
     .poll(() => readFileSync(ctx.file, "utf-8"))
     .not.toContain("flex-direction: column");
   await settled(page, ctx);
+
   const seen = await watch(frontFrame(page).locator(".cards"), {
     kind: "style",
     prop: "flex-direction",
     want: "column",
   });
+
   await clearStamps(page);
   const t0 = Date.now();
   await layout.getByRole("button", { name: "Vertical" }).click();
+
   const bytes =
     (await bytesAt(ctx.file, (s) => s.includes("flex-direction: column"))) - t0;
+
   const visible = (await seen()) - (await stampOf(page, "pointerdown"));
   await settled(page, ctx);
+
   return { visible, bytes };
 }
 
@@ -412,11 +468,13 @@ test("edit latency R4: flex direction row to column", async ({ page }) => {
   await flexSample(page, ctx);
   const visible: number[] = [];
   const bytes: number[] = [];
+
   for (let i = 0; i < SAMPLES; i += 1) {
     const sample = await flexSample(page, ctx);
     visible.push(sample.visible);
     bytes.push(sample.bytes);
   }
+
   expect(record("flex-direction visible", visible).p95).toBeLessThanOrEqual(
     TARGET_MS
   );
@@ -434,6 +492,7 @@ async function caretMs(page: Page): Promise<number> {
       )
     )
     .not.toBeNull();
+
   return h1.evaluate(
     () => (window as unknown as { __caretMs: number }).__caretMs
   );
@@ -461,6 +520,7 @@ async function textSample(
   await settled(page, ctx);
   await expect(h1).toHaveText(text);
   await expect(h1).not.toHaveAttribute("contenteditable");
+
   return { caret, bytes };
 }
 
@@ -469,12 +529,14 @@ async function textRuns(page: Page, ctx: Ctx, label: string): Promise<void> {
   await textSample(page, ctx, `${label} warm`, `<h1>${label} warm</h1>`);
   const caret: number[] = [];
   const bytes: number[] = [];
+
   for (let i = 0; i < SAMPLES; i += 1) {
     const text = `${label} ${i}`;
     const sample = await textSample(page, ctx, text, `<h1>${text}</h1>`);
     caret.push(sample.caret);
     bytes.push(sample.bytes);
   }
+
   const key = label.toLowerCase().replace(/\s+/g, "-");
   expect(
     record(`${key} dblclick-caret visible`, caret).p95
@@ -493,24 +555,28 @@ test("edit latency R4: inline text edit on canvas, React", async ({ page }) => {
   test.setTimeout(240_000);
   await page.addInitScript(armStamps);
   const api = await openHome(page);
+
   const project = await createProjectViaUi(
     page,
     api,
     "Latency Inline React",
     "react"
   );
+
   await expect(frontFrame(page).locator("h1")).toHaveText(
     "Latency Inline React",
     { timeout: 90_000 }
   );
   await api.waitForRuns(project.id, 1);
   const main = mainDirection(project);
+
   const ctx: Ctx = {
     api,
     file: path.join(main.workTree, "src", "App.tsx"),
     pid: project.id,
     did: main.id,
   };
+
   await textRuns(page, ctx, "Text react");
 });
 
@@ -521,25 +587,33 @@ async function resizeSample(
 ): Promise<{ visible: number; bytes: number }> {
   const handle = page.locator(".resize-handle.e");
   const card = frontFrame(page).locator("#c1");
+
   const start = await card.evaluate((el) =>
     Math.round(parseFloat(getComputedStyle(el).width))
   );
+
   const want = start + 4 + delta;
   const needle = `width: ${want}px`;
   expect(readFileSync(ctx.file, "utf-8")).not.toContain(needle);
   const box = await handle.boundingBox();
-  if (!box) throw new Error("no resize handle");
+
+  if (!box) {
+    throw new Error("no resize handle");
+  }
+
   const x = box.x + box.width / 2;
   const y = box.y + box.height / 2;
   await page.mouse.move(x, y);
   await page.mouse.down();
   await page.mouse.move(x + 4, y, { steps: 2 });
   await expect(card).toHaveCSS("width", `${start + 4}px`);
+
   const seen = await watch(card, {
     kind: "style",
     prop: "width",
     want: `${want}px`,
   });
+
   await clearStamps(page);
   await page.mouse.move(x + 4 + delta, y);
   const visible = (await seen()) - (await stampOf(page, "pointermove"));
@@ -548,6 +622,7 @@ async function resizeSample(
   const bytes = (await bytesAt(ctx.file, (s) => s.includes(needle))) - t0;
   await settled(page, ctx);
   await expect(page.getByTestId("resize-label")).toHaveCount(0);
+
   return { visible, bytes };
 }
 
@@ -565,11 +640,13 @@ test("edit latency R4: resize handle drag", async ({ page }) => {
   await resizeSample(page, ctx, 16);
   const visible: number[] = [];
   const bytes: number[] = [];
+
   for (let i = 0; i < SAMPLES; i += 1) {
     const sample = await resizeSample(page, ctx, i % 2 === 0 ? -30 : 26);
     visible.push(sample.visible);
     bytes.push(sample.bytes);
   }
+
   expect(record("resize visible", visible).p95).toBeLessThanOrEqual(TARGET_MS);
   record("resize bytes", bytes);
 });
@@ -599,6 +676,7 @@ async function renameSample(
     "false"
   );
   await expect(page.locator(".layers-row", { hasText: to })).toHaveCount(1);
+
   return { visible, bytes };
 }
 
@@ -610,6 +688,7 @@ test("edit latency R4: layers rename", async ({ page }) => {
   name = "Warm name";
   const visible: number[] = [];
   const bytes: number[] = [];
+
   for (let i = 0; i < SAMPLES; i += 1) {
     const next = `Title ${i}`;
     const sample = await renameSample(page, ctx, name, next);
@@ -617,6 +696,7 @@ test("edit latency R4: layers rename", async ({ page }) => {
     visible.push(sample.visible);
     bytes.push(sample.bytes);
   }
+
   expect(record("rename visible", visible).p95).toBeLessThanOrEqual(TARGET_MS);
   record("rename bytes", bytes);
 });
@@ -638,11 +718,14 @@ async function moveSample(
   const key = down ? "Alt+ArrowDown" : "Alt+ArrowUp";
   const t0 = Date.now();
   await page.keyboard.press(key);
+
   const bytes =
     (await bytesAt(ctx.file, (s) => order(s).join() === want.join())) - t0;
+
   const visible =
     (await seen()) -
     (await stampOf(page, down ? "key:ArrowDown" : "key:ArrowUp"));
+
   await expect(
     frontFrame(page)
       .locator(".cards > article")
@@ -650,6 +733,7 @@ async function moveSample(
   ).toHaveText("Card one");
   await settled(page, ctx);
   await expect(page.getByLabel("Text content")).toHaveValue("Card one");
+
   return { visible, bytes };
 }
 
@@ -659,11 +743,13 @@ test("edit latency R4: Alt+Down and Alt+Up move", async ({ page }) => {
   await moveSample(page, ctx, true);
   const visible: number[] = [];
   const bytes: number[] = [];
+
   for (let i = 0; i < SAMPLES; i += 1) {
     const sample = await moveSample(page, ctx, i % 2 === 1);
     visible.push(sample.visible);
     bytes.push(sample.bytes);
   }
+
   expect(record("move visible", visible).p95).toBeLessThanOrEqual(TARGET_MS);
   record("move bytes", bytes);
 });
@@ -691,6 +777,7 @@ async function undoSample(
   const visible = (await seen()) - (await stampOf(page, "key:z"));
   await expect(frontFrame(page).locator("h1")).toHaveCSS("font-size", "32px");
   await settled(page, ctx);
+
   return { visible, bytes };
 }
 
@@ -699,11 +786,13 @@ test("edit latency R4: Cmd+Z undo", async ({ page }) => {
   await undoSample(page, ctx, 41);
   const visible: number[] = [];
   const bytes: number[] = [];
+
   for (let i = 0; i < SAMPLES; i += 1) {
     const sample = await undoSample(page, ctx, 43 + i);
     visible.push(sample.visible);
     bytes.push(sample.bytes);
   }
+
   expect(record("undo visible", visible).p95).toBeLessThanOrEqual(TARGET_MS);
   record("undo bytes", bytes);
 });

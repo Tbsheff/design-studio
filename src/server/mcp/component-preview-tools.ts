@@ -48,16 +48,20 @@ async function previewResponse(
   url: string
 ): Promise<{ png: Buffer; meta: string }> {
   const res = await deps.request("GET", url);
-  if (res.ok)
+
+  if (res.ok) {
     return {
       png: Buffer.from(await res.arrayBuffer()),
       meta: decodeURIComponent(
         res.headers.get(COMPONENT_PREVIEW_PROPS_HEADER) ?? ""
       ),
     };
+  }
+
   const body = (await res.json().catch(() => null)) as {
     message?: unknown;
   } | null;
+
   throw new EditError(
     typeof body?.message === "string"
       ? body.message
@@ -81,17 +85,22 @@ const componentPreview = defineTool(
       input.projectId,
       input.directionId
     );
-    if (project.kind !== "react")
+
+    if (project.kind !== "react") {
       throw new EditError(
         "This is an HTML project. It has no component kit to preview."
       );
+    }
+
     const query = input.id
       ? `id=${encodeURIComponent(input.id)}`
       : `name=${encodeURIComponent(input.name ?? "")}${input.file ? `&file=${encodeURIComponent(input.file)}` : ""}`;
+
     const { png, meta } = await previewResponse(
       deps,
       `${base(project, direction.id)}/component-preview?${query}`
     );
+
     return {
       result: {
         content: [

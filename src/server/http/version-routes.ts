@@ -32,8 +32,10 @@ const png = (bytes: Buffer, headers: Record<string, string> = {}): Response =>
   });
 
 const gone = (error: unknown): Response => {
-  if (error instanceof Error && error.name === "AbortError")
+  if (error instanceof Error && error.name === "AbortError") {
     return new Response(null, { status: 499 });
+  }
+
   throw error;
 };
 
@@ -45,16 +47,20 @@ async function versionThumbs(
   signal: AbortSignal
 ): Promise<VersionThumbs> {
   const dir = path.join(deps.projects.projectDir(projectId), "thumbs");
+
   const shot = (id: string) =>
     deps.thumbnails.version(projectId, id, signal).then(
       () => path.join(dir, versionThumbName(id)),
       () => null
     );
+
   const [fromPath, toPath] = await Promise.all([shot(from), shot(to)]);
   const viewport = clampViewport(THUMB_VIEWPORT.width, THUMB_VIEWPORT.height);
+
   const mask = await deps.thumbnails
     .diff(projectId, from, to, viewport, signal)
     .catch(() => null);
+
   return {
     from: fromPath,
     to: toPath,
@@ -77,6 +83,7 @@ export function registerVersionRoutes(app: Hono, deps: VersionRouteDeps): void {
       width: Number(c.req.query("w") ?? 1280),
       height: Number(c.req.query("h") ?? 800),
     };
+
     return thumbnails
       .diff(
         c.req.param("pid"),
@@ -94,12 +101,19 @@ export function registerVersionRoutes(app: Hono, deps: VersionRouteDeps): void {
 
   app.get("/api/projects/:pid/versions/:vid/changes/:other", async (c) => {
     const project = await projects.get(c.req.param("pid"));
-    if (!versions.diffFiles)
+
+    if (!versions.diffFiles) {
       return c.json({ error: "version diffs are not available" }, 501);
+    }
+
     const from = c.req.param("vid");
     const to = c.req.param("other");
     const changes = await versions.diffFiles(project, from, to);
-    if (c.req.query("thumbs") !== "1") return c.json(changes);
+
+    if (c.req.query("thumbs") !== "1") {
+      return c.json(changes);
+    }
+
     return c.json({
       ...changes,
       thumbs: await versionThumbs(deps, project.id, from, to, c.req.raw.signal),
@@ -111,6 +125,7 @@ export function registerVersionRoutes(app: Hono, deps: VersionRouteDeps): void {
     const name = parseVersionName(body.name);
     const project = await projects.get(c.req.param("pid"));
     const version = await versions.get(project, c.req.param("vid"));
+
     return c.json({
       id: version.id,
       name: await names.set(project.id, version.id, name),

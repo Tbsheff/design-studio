@@ -36,18 +36,25 @@ async function call(
   const headers: Record<string, string> = {
     [STUDIO_TOKEN_HEADER]: getSession().token,
   };
-  if (body !== undefined) headers["content-type"] = "application/json";
+
+  if (body !== undefined) {
+    headers["content-type"] = "application/json";
+  }
+
   const res = await fetch(path, {
     method,
     headers,
     ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
   });
+
   if (!res.ok) {
     const parsed = (await res.json().catch(() => null)) as {
       error?: string;
     } | null;
+
     throw new Error(parsed?.error ?? `${res.status} ${res.statusText}`);
   }
+
   return res;
 }
 
@@ -55,6 +62,7 @@ function fileName(res: Response, fallback: string): string {
   const match = /filename="([^"]+)"/.exec(
     res.headers.get("content-disposition") ?? ""
   );
+
   return match?.[1] ?? fallback;
 }
 
@@ -70,6 +78,7 @@ export const exportApi = {
     request: ExportRequest
   ): Promise<ExportedFile> => {
     const res = await call("POST", `${p(pid)}/export`, request);
+
     return {
       blob: await res.blob(),
       name: fileName(res, `export.${request.format}`),
@@ -88,6 +97,7 @@ export const exportApi = {
       "GET",
       `${p(pid)}/handoff/${encodeURIComponent(folder)}/zip`
     );
+
     return {
       blob: await res.blob(),
       name: fileName(res, `${folder}.zip`),
@@ -138,6 +148,7 @@ export interface ExportPrefs {
 }
 
 const DEFAULT_PREFS: ExportPrefs = { format: "png", scale: 2, scope: "page" };
+
 const FORMATS: ExportFormat[] = [
   "png",
   "pdf",
@@ -153,6 +164,7 @@ export function readExportPrefs(): ExportPrefs {
     const raw = JSON.parse(
       localStorage.getItem(PREFS_KEY) ?? "{}"
     ) as Partial<ExportPrefs>;
+
     return {
       format: FORMATS.includes(raw.format as ExportFormat)
         ? (raw.format as ExportFormat)
@@ -200,6 +212,7 @@ export function frameRoute(frame: ExportFrame): string {
 
 function choiceNames(frames: CanvasFrame[]): string[] {
   const names = frames.map((frame) => toExport(frame).name);
+
   return names.map((name, index) =>
     names.filter((other) => other === name).length < 2
       ? name
@@ -213,12 +226,16 @@ export function canvasFrameChoices(
 ): FrameChoice[] {
   const layout =
     canvasStore.get(projectId) ?? defaultLayout(uiStore.get().viewport);
+
   const active = activeFrame(layout);
+
   const own = layout.frames.filter(
     (frame) => !frame.directionId || frame.directionId === directionId
   );
+
   const list = own.length > 0 ? own : [active];
   const names = choiceNames(list);
+
   return list.map((frame, index) => ({
     id: frame.id,
     frame: toExport(frame, names[index]),
@@ -260,7 +277,9 @@ export function onOpenExport(
 ): () => void {
   const listener = (event: Event) =>
     handler((event as CustomEvent<OpenExportDetail>).detail ?? {});
+
   window.addEventListener(OPEN_EVENT, listener);
+
   return () => window.removeEventListener(OPEN_EVENT, listener);
 }
 

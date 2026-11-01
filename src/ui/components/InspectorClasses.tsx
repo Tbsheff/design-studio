@@ -40,32 +40,40 @@ export function useElementClasses(
       col === undefined
     ) {
       setInfo(NO_CLASSES);
+
       return;
     }
+
     let live = true;
     api
       .elementClasses(projectId, directionId, { file, line, col }, variant)
       .then((result) => {
-        if (live)
+        if (live) {
           setInfo({
             tailwind: result.tailwind,
             element: result.element ?? null,
             variants: result.variants ?? null,
           });
+        }
       })
       .catch(() => {
-        if (live) setInfo(NO_CLASSES);
+        if (live) {
+          setInfo(NO_CLASSES);
+        }
       });
+
     return () => {
       live = false;
     };
   }, [projectId, directionId, file, line, col, savedAt, variant]);
+
   return info;
 }
 
 export function domClasses(outerHTML: string): string[] {
   const raw =
     /^<[^>]*\bclass="([^"]*)"/.exec(outerHTML.slice(0, 4000))?.[1] ?? "";
+
   return raw.split(/\s+/).filter(Boolean);
 }
 
@@ -76,10 +84,14 @@ export function ClassLine({
   info: TailwindOutcome | null;
   resolved: string[];
 }) {
-  if (!info || info.mode === "none") return null;
+  if (!info || info.mode === "none") {
+    return null;
+  }
+
   const own = info.classes.length > 0;
   const list = own ? info.classes : resolved;
   const text = list.length > 0 ? list.join(" ") : "No classes yet";
+
   return (
     <InspectorSection
       title="Classes"

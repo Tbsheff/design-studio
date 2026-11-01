@@ -25,6 +25,7 @@ function TriggerLabel({ pack }: { pack: PackSummary | null }) {
       </>
     );
   }
+
   return (
     <>
       <Swatches swatches={keySwatches(pack)} max={3} size="sm" />
@@ -41,8 +42,12 @@ export function PackPicker({ state, value, onChange, onNew }: Props) {
 
   const close = useCallback((refocus: boolean) => {
     setOpen(false);
-    if (refocus) trigger.current?.focus();
+
+    if (refocus) {
+      trigger.current?.focus();
+    }
   }, []);
+
   usePopover(open, root, close);
 
   const choose = (pack: PackSummary | null) => {

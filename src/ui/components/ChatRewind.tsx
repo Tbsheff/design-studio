@@ -35,6 +35,7 @@ function TurnButton({
   onClick: () => void;
 }) {
   const off = tip !== null;
+
   return (
     <button
       type="button"
@@ -45,7 +46,10 @@ function TurnButton({
       data-tip-side="top"
       onClick={(event) => {
         event.stopPropagation();
-        if (!off) onClick();
+
+        if (!off) {
+          onClick();
+        }
       }}
     >
       <Icon name={icon} size={14} />
@@ -103,13 +107,19 @@ function MessageEditor({
   const ref = useRef<HTMLTextAreaElement | null>(null);
   useEffect(() => {
     const area = ref.current;
-    if (!area) return;
+
+    if (!area) {
+      return;
+    }
+
     area.focus();
     area.setSelectionRange(area.value.length, area.value.length);
   }, []);
   const ready = text.trim() !== "";
+
   const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     event.stopPropagation();
+
     if (event.key === "Escape") {
       event.preventDefault();
       onCancel();
@@ -119,9 +129,13 @@ function MessageEditor({
       !event.nativeEvent.isComposing
     ) {
       event.preventDefault();
-      if (ready) onSend(text.trim());
+
+      if (ready) {
+        onSend(text.trim());
+      }
     }
   };
+
   return (
     <div className="msg-editor" data-testid="message-editor">
       <textarea
@@ -162,11 +176,16 @@ function TitleField({
 }) {
   const [text, setText] = useState(initial);
   const done = useRef(false);
+
   const finish = (value: string | null) => {
-    if (done.current) return;
+    if (done.current) {
+      return;
+    }
+
     done.current = true;
     onDone(value);
   };
+
   return (
     <input
       autoFocus
@@ -180,8 +199,12 @@ function TitleField({
       onBlur={() => finish(text.trim())}
       onKeyDown={(event) => {
         event.stopPropagation();
-        if (event.key === "Enter") finish(text.trim());
-        else if (event.key === "Escape") finish(null);
+
+        if (event.key === "Enter") {
+          finish(text.trim());
+        } else if (event.key === "Escape") {
+          finish(null);
+        }
       }}
     />
   );
@@ -203,13 +226,23 @@ export function UserTurn({
   const [mode, setMode] = useState<Mode>("idle");
   const [renameFailed, setRenameFailed] = useState(false);
   const request = run.request;
-  if (!rewind || !actions || !request || request.retryOf)
+
+  if (!rewind || !actions || !request || request.retryOf) {
     return <UserMessage run={run} title={title} />;
+  }
+
   const restore = () => {
-    if (!rewind.restoreVersionId) return;
-    if (actions.dirtyCount() > 0) setMode("confirm");
-    else actions.onRestore(rewind.restoreVersionId);
+    if (!rewind.restoreVersionId) {
+      return;
+    }
+
+    if (actions.dirtyCount() > 0) {
+      setMode("confirm");
+    } else {
+      actions.onRestore(rewind.restoreVersionId);
+    }
   };
+
   const tools = (
     <span className="msg-actions" data-testid="message-actions">
       <TurnButton
@@ -232,6 +265,7 @@ export function UserTurn({
       />
     </span>
   );
+
   const editor =
     mode === "edit" && rewind.forkBase ? (
       <MessageEditor
@@ -239,11 +273,14 @@ export function UserTurn({
         onCancel={() => setMode("idle")}
         onSend={(prompt) => {
           setMode("idle");
-          if (rewind.forkBase)
+
+          if (rewind.forkBase) {
             void actions.onEditResend(run, prompt, rewind.forkBase);
+          }
         }}
       />
     ) : null;
+
   const titleSlot =
     mode === "rename" ? (
       <TitleField
@@ -251,13 +288,16 @@ export function UserTurn({
         onDone={(next) => {
           setMode("idle");
           setRenameFailed(false);
-          if (next !== null && next !== (title ?? ""))
+
+          if (next !== null && next !== (title ?? "")) {
             actions
               .onRename(run.runId, next)
               .catch(() => setRenameFailed(true));
+          }
         }}
       />
     ) : undefined;
+
   return (
     <>
       <UserMessage
@@ -279,8 +319,10 @@ export function UserTurn({
           onCancel={() => setMode("idle")}
           onConfirm={() => {
             setMode("idle");
-            if (rewind.restoreVersionId)
+
+            if (rewind.restoreVersionId) {
               actions.onRestore(rewind.restoreVersionId);
+            }
           }}
         />
       )}

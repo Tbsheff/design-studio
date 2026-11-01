@@ -33,14 +33,17 @@ export interface ExecResult {
 
 export function userEnv(extra: Record<string, string> = {}): NodeJS.ProcessEnv {
   const env: NodeJS.ProcessEnv = {};
+
   for (const [key, value] of Object.entries(process.env)) {
     if (
       !key.startsWith("GIT_") &&
       !key.startsWith("STUDIO_") &&
       !key.startsWith("ANTHROPIC_")
-    )
+    ) {
       env[key] = value;
+    }
   }
+
   return {
     ...env,
     GIT_TERMINAL_PROMPT: "0",
@@ -58,23 +61,30 @@ export function execTool(
   options: ExecOptions
 ): Promise<ExecResult> {
   const timeoutMs = options.timeoutMs ?? READ_TIMEOUT_MS;
+
   return new Promise((resolve, reject) => {
     const child = spawn(binary, args, {
       cwd: options.cwd,
       env: userEnv(options.env),
       stdio: ["pipe", "pipe", "pipe"],
     });
+
     const out: Buffer[] = [];
     const err: Buffer[] = [];
     let size = 0;
     let timedOut = false;
+
     const timer = setTimeout(() => {
       timedOut = true;
       child.kill("SIGKILL");
     }, timeoutMs);
+
     child.stdout.on("data", (chunk: Buffer) => {
       size += chunk.length;
-      if (size <= 64 * 1024 * 1024) out.push(chunk);
+
+      if (size <= 64 * 1024 * 1024) {
+        out.push(chunk);
+      }
     });
     child.stderr.on("data", (chunk: Buffer) => err.push(chunk));
     child.once("error", (error) => {
@@ -91,9 +101,11 @@ export function execTool(
       clearTimeout(timer);
       const stdout = Buffer.concat(out).toString("utf-8");
       const stderr = Buffer.concat(err).toString("utf-8").trim();
+
       const name =
         `${path.basename(binary)} ${args.find((arg) => !arg.startsWith("-") && !arg.includes("=")) ?? ""}`.trim();
-      if (timedOut)
+
+      if (timedOut) {
         return reject(
           new UserGitError(
             `${name} took longer than ${Math.round(timeoutMs / 1000)} s and was stopped. If git asks for a password or a signing passphrase, it cannot ask from here.`,
@@ -101,7 +113,9 @@ export function execTool(
             stderr
           )
         );
-      if (code !== 0 && !options.allowFail)
+      }
+
+      if (code !== 0 && !options.allowFail) {
         return reject(
           new UserGitError(
             `${name} failed: ${stderr.split("\n").slice(-3).join(" ") || `exit ${code}`}`,
@@ -109,6 +123,8 @@ export function execTool(
             stderr
           )
         );
+      }
+
       resolve({ stdout, stderr, code });
     });
     child.stdin.on("error", () => undefined);
@@ -129,13 +145,21 @@ export async function findOnPath(
   searchPath = process.env.PATH ?? ""
 ): Promise<string | null> {
   for (const dir of searchPath.split(path.delimiter)) {
-    if (!dir) continue;
+    if (!dir) {
+      continue;
+    }
+
     const candidate = path.join(dir, name);
+
     const found = await access(candidate, constants.X_OK).then(
       () => true,
       () => false
     );
-    if (found) return candidate;
+
+    if (found) {
+      return candidate;
+    }
   }
+
   return null;
 }

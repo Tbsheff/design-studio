@@ -12,8 +12,11 @@ interface Props {
 
 function groupByOrigin(skills: SkillInfo[]): [string, SkillInfo[]][] {
   const groups = new Map<string, SkillInfo[]>();
-  for (const skill of skills)
+
+  for (const skill of skills) {
     groups.set(skill.origin, [...(groups.get(skill.origin) ?? []), skill]);
+  }
+
   return [...groups.entries()];
 }
 
@@ -25,6 +28,7 @@ function originLabel(origin: string): string {
 
 function matches(skill: SkillInfo, query: string): boolean {
   const needle = query.trim().toLowerCase();
+
   return (
     needle === "" ||
     skill.id.toLowerCase().includes(needle) ||
@@ -85,11 +89,14 @@ export function SkillsChecklist({ disabled, allowBash, onChange }: Props) {
   useEffect(reload, []);
 
   const skills = catalog?.skills ?? [];
+
   const groups = useMemo(
     () => groupByOrigin(skills.filter((skill) => matches(skill, query))),
     [skills, query]
   );
+
   const onCount = skills.filter((skill) => !disabled.includes(skill.id)).length;
+
   const bashCount = skills.filter(
     (skill) => skill.needsBash && !disabled.includes(skill.id)
   ).length;
@@ -98,6 +105,7 @@ export function SkillsChecklist({ disabled, allowBash, onChange }: Props) {
     const rest = disabled.filter((item) => item !== id);
     onChange(on ? rest : [...rest, id]);
   };
+
   const setAll = (on: boolean) =>
     onChange(on ? [] : skills.map((skill) => skill.id));
 

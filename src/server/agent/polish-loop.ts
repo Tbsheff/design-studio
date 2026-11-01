@@ -51,13 +51,19 @@ export function recordCheck(
     medium: 0,
     low: 0,
   };
-  for (const finding of findings) counts[finding.severity] += 1;
+
+  for (const finding of findings) {
+    counts[finding.severity] += 1;
+  }
+
   const record = {
     at: log.toolOrder.length,
     counts,
     blocking: findings.filter(isBlocking),
   };
+
   log.checks.push(record);
+
   return record;
 }
 
@@ -94,9 +100,14 @@ interface CheckStep {
 export function checkSteps(log: LoopLog): CheckStep[] {
   let loop = 0;
   let previous = 0;
+
   return log.checks.map((check) => {
-    if (editBetween(log, previous, check.at)) loop += 1;
+    if (editBetween(log, previous, check.at)) {
+      loop += 1;
+    }
+
     previous = check.at;
+
     return { loop, counts: check.counts, blocking: check.blocking.length };
   });
 }
@@ -110,6 +121,7 @@ export function missingShots(
   viewports: readonly CheckViewport[]
 ): CheckViewport[] {
   const after = lastEditIndex(log);
+
   return viewports.filter(
     (viewport) =>
       !log.shots.some((shot) => shot.viewport === viewport && shot.at > after)
@@ -118,6 +130,7 @@ export function missingShots(
 
 function checkedAfterLastEdit(log: LoopLog): boolean {
   const last = log.checks.at(-1);
+
   return last !== undefined && last.at > lastEditIndex(log);
 }
 
@@ -139,8 +152,12 @@ interface LoopBudget {
 }
 
 function budgetLow(budget: LoopBudget): boolean {
-  if (budget.capUsd === null) return false;
+  if (budget.capUsd === null) {
+    return false;
+  }
+
   const left = budget.capUsd > 0 ? 1 - budget.spentUsd / budget.capUsd : 0;
+
   return left < MIN_BUDGET_LEFT;
 }
 
@@ -149,16 +166,27 @@ export function decideLoop(
   config: ResolvedRunConfig,
   budget: LoopBudget
 ): LoopDecision {
-  if (budgetLow(budget)) return { stop: true, reason: "budget" };
-  if (budget.continuations >= MAX_CONTINUATIONS)
+  if (budgetLow(budget)) {
+    return { stop: true, reason: "budget" };
+  }
+
+  if (budget.continuations >= MAX_CONTINUATIONS) {
     return { stop: true, reason: "continuations" };
+  }
+
   const verified = checkedAfterLastEdit(log);
   const missing = missingShots(log, config.preset.checks.viewports);
   const blocking = verified ? (log.checks.at(-1)?.blocking ?? []) : [];
   const complete = verified && missing.length === 0;
-  if (complete && blocking.length === 0) return { stop: true, reason: "clean" };
-  if (complete && loopsDone(log) >= MAX_FIX_LOOPS)
+
+  if (complete && blocking.length === 0) {
+    return { stop: true, reason: "clean" };
+  }
+
+  if (complete && loopsDone(log) >= MAX_FIX_LOOPS) {
     return { stop: true, reason: "loops" };
+  }
+
   return { stop: false, missing, blocking, verified };
 }
 
@@ -175,38 +203,49 @@ export function continuationPrompt(
   log: LoopLog
 ): string {
   const done = loopsDone(log);
+
   const lines = [
     `<studio-continue>`,
     `The run is not finished. Fix loops done: ${done} of ${MAX_FIX_LOOPS}.`,
   ];
-  if (done >= MAX_FIX_LOOPS)
+
+  if (done >= MAX_FIX_LOOPS) {
     lines.push(
       "- No fix loops are left. Do not edit again; only run the checks below."
     );
-  if (!decision.verified)
+  }
+
+  if (!decision.verified) {
     lines.push(
       "- You edited after your last render_check. Run mcp__studio__render_check again."
     );
-  if (decision.missing.length)
+  }
+
+  if (decision.missing.length) {
     lines.push(
       `- Take screenshots from=0 after your last edit at: ${decision.missing.join(", ")}. Look at every image.`
     );
+  }
+
   if (decision.blocking.length && done < MAX_FIX_LOOPS) {
     lines.push(
       `- These high and medium findings remain. Fix them with Edit, then run render_check and all screenshots again:`
     );
     lines.push(...decision.blocking.slice(0, LISTED_FINDINGS).map(findingText));
   }
+
   lines.push(
     "Then reply with the loops run, the findings per loop, and what is left.",
     "</studio-continue>"
   );
+
   return lines.join("\n");
 }
 
 function stepLabel(step: CheckStep, index: number): string {
   const name =
     step.loop === 0 ? (index === 0 ? "start" : "recheck") : `loop ${step.loop}`;
+
   return `${name} ${step.counts.high} high / ${step.counts.medium} medium / ${step.counts.low} low`;
 }
 
@@ -224,9 +263,12 @@ export function loopReport(
 ): string {
   const steps =
     checkSteps(log).map(stepLabel).join("; ") || "no render_check ran";
+
   const stop = reason
     ? `Stopped: ${STOP_TEXT[reason]}.`
     : "Stopped before the loop finished.";
+
   const left = log.checks.at(-1)?.blocking.length ?? 0;
+
   return `Studio check log: ${loopsDone(log)} fix loop(s), ${continuations} studio continuation(s). Checks: ${steps}. ${stop} ${left} blocking high or medium finding(s) left (generic-layout and visual-diff do not block).`;
 }

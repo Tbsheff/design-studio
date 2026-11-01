@@ -49,17 +49,30 @@ const presenceSchema = z
   .strict();
 
 function parseBaseHash(raw: unknown): string | null | undefined {
-  if (raw === undefined) return undefined;
-  if (raw === null) return null;
-  if (typeof raw !== "string" || !/^[0-9a-f]{16}$/.test(raw))
+  if (raw === undefined) {
+    return undefined;
+  }
+
+  if (raw === null) {
+    return null;
+  }
+
+  if (typeof raw !== "string" || !/^[0-9a-f]{16}$/.test(raw)) {
     throw new BadRequestError("baseHash must be a hash string or null");
+  }
+
   return raw;
 }
 
 function parsePresence(raw: unknown): CanvasPresence {
   const parsed = presenceSchema.safeParse(raw);
-  if (!parsed.success) throw new BadRequestError("invalid canvas presence");
+
+  if (!parsed.success) {
+    throw new BadRequestError("invalid canvas presence");
+  }
+
   const data = parsed.data;
+
   return {
     directionId:
       data.directionId && isDirectionRef(data.directionId)
@@ -83,6 +96,7 @@ export function registerCanvasRoutes(app: Hono, deps: CanvasRouteDeps): void {
   app.get("/api/projects/:pid/canvas", async (c) => {
     const project = await projects.get(c.req.param("pid"));
     const snapshot = await canvas.read(project);
+
     return c.json({ directionId: canvas.ownerOf(project).id, ...snapshot });
   });
 
@@ -90,20 +104,29 @@ export function registerCanvasRoutes(app: Hono, deps: CanvasRouteDeps): void {
     const body = await readBody(c);
     const project = await projects.get(c.req.param("pid"));
     const file = parseCanvasFile(body.canvas);
-    if (!file)
+
+    if (!file) {
       throw new BadRequestError("canvas must be an object with a frames list");
+    }
+
     const writer =
       body.writer === undefined
         ? undefined
         : writerSchema.safeParse(body.writer);
-    if (writer && !writer.success) throw new BadRequestError("invalid writer");
+
+    if (writer && !writer.success) {
+      throw new BadRequestError("invalid writer");
+    }
+
     const baseHash = parseBaseHash(body.baseHash);
     const source = body.migrate === true ? "migrate" : "user";
+
     const snapshot = await canvas.write(project, file, {
       source,
       baseHash,
       ...(writer?.data ? { writer: writer.data } : {}),
     });
+
     return c.json({ directionId: canvas.ownerOf(project).id, ...snapshot });
   });
 
@@ -111,6 +134,7 @@ export function registerCanvasRoutes(app: Hono, deps: CanvasRouteDeps): void {
     const body = await readBody(c);
     const project = await projects.get(c.req.param("pid"));
     canvas.setPresence(project.id, parsePresence(body));
+
     return c.body(null, 204);
   });
 }

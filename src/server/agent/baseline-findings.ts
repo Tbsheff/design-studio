@@ -28,13 +28,16 @@ async function capture(
   runId: string
 ): Promise<void> {
   const { log: _log, ...rest } = run;
+
   const state: RunToolState = {
     ...rest,
     baseline: null,
     lastFindings: [],
     lastChecks: [],
   };
+
   const report = await buildCheckReport(preview, ctx, run.config, state);
+
   const body: BaselineFindings = {
     at: Date.now(),
     url: defaultShotTarget(ctx)?.url ?? null,
@@ -47,6 +50,7 @@ async function capture(
     ],
     items: checkItems(report.results),
   };
+
   await mkdir(runsDir, { recursive: true });
   await writeFile(
     path.join(runsDir, baselineFindingsFile(runId)),
@@ -62,12 +66,17 @@ export function captureBaselineFindings(
   runId: string
 ): void {
   const shots = run.baseline;
-  if (!shots || !wantsBaseline(ctx, run)) return;
+
+  if (!shots || !wantsBaseline(ctx, run)) {
+    return;
+  }
+
   const job = capture(preview, ctx, run, runsDir, runId).catch(
     (error: unknown) =>
       console.warn(
         `[agent] baseline check failed: ${error instanceof Error ? error.message : String(error)}`
       )
   );
+
   run.baseline = Promise.all([shots, job]).then(([found]) => found);
 }

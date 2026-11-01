@@ -16,9 +16,11 @@ export function usePublishCli() {
   const [cli, setCli] = useState<PublishCliState | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
   const run = useCallback(async (task: () => Promise<PublishCliState>) => {
     setBusy(true);
     setError(null);
+
     try {
       setCli(await task());
     } catch (err) {
@@ -27,18 +29,24 @@ export function usePublishCli() {
       setBusy(false);
     }
   }, []);
+
   useEffect(() => {
     void run(() => publishApi.cli());
   }, [run]);
   const waiting = cli?.login.running === true;
   useEffect(() => {
-    if (!waiting) return;
+    if (!waiting) {
+      return;
+    }
+
     const timer = window.setInterval(
       () => void publishApi.cli().then(setCli, () => undefined),
       2000
     );
+
     return () => window.clearInterval(timer);
   }, [waiting]);
+
   return { cli, busy, error, run };
 }
 
@@ -60,6 +68,7 @@ function InstallStep({
   run: Cli["run"];
 }) {
   const old = cli.installed && !cli.versionOk;
+
   return (
     <div className="publish-step" data-testid="publish-install">
       <p className="publish-step-text">
@@ -96,6 +105,7 @@ function SignInStep({
 }) {
   const [keyring, setKeyring] = useState(cli.keyring);
   const [narrow, setNarrow] = useState(true);
+
   if (cli.login.running) {
     return (
       <div className="publish-step" data-testid="publish-signing-in">
@@ -126,6 +136,7 @@ function SignInStep({
       </div>
     );
   }
+
   return (
     <div className="publish-step" data-testid="publish-sign-in">
       <p className="publish-step-text">
@@ -250,11 +261,15 @@ export function PublishSetupBody({
   backend: BackendHook;
 }) {
   const { cli, busy, error, run } = state;
-  if (!cli)
+
+  if (!cli) {
     return (
       <p className="field-help">{error ?? "Looking for the Cloudflare CLI…"}</p>
     );
+  }
+
   const installed = cli.installed && cli.versionOk;
+
   return (
     <>
       {!installed ? (
@@ -277,6 +292,7 @@ export function PublishSetupBody({
 export default function PublishSetup() {
   const state = usePublishCli();
   const backend = usePublishBackend();
+
   return (
     <section className="ship-settings publish-settings" aria-label="Publishing">
       <h3>Publishing</h3>

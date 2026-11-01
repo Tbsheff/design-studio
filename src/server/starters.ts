@@ -60,7 +60,11 @@ export const SAMPLE_NAME = "Sample: Kiln Coffee";
 
 export function findStarter(id: unknown): Starter {
   const starter = STARTERS.find((candidate) => candidate.id === id);
-  if (!starter) throw new BadRequestError(`unknown starter: ${String(id)}`);
+
+  if (!starter) {
+    throw new BadRequestError(`unknown starter: ${String(id)}`);
+  }
+
   return starter;
 }
 

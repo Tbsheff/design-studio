@@ -26,25 +26,35 @@ export function CardMenu({
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     ref.current?.querySelector<HTMLButtonElement>('[role="menuitem"]')?.focus();
+
     const onDown = (event: globalThis.MouseEvent) => {
-      if (!ref.current?.contains(event.target as Node)) onClose(false);
+      if (!ref.current?.contains(event.target as Node)) {
+        onClose(false);
+      }
     };
+
     document.addEventListener("mousedown", onDown);
+
     return () => document.removeEventListener("mousedown", onDown);
   }, [onClose]);
+
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     const items = [
       ...(ref.current?.querySelectorAll<HTMLButtonElement>(
         '[role="menuitem"]'
       ) ?? []),
     ];
+
     const index = items.indexOf(document.activeElement as HTMLButtonElement);
+
     if (event.key === "Escape" || event.key === "Tab") {
       event.preventDefault();
       event.stopPropagation();
       onClose(true);
+
       return;
     }
+
     const next =
       event.key === "ArrowDown"
         ? index + 1
@@ -55,16 +65,23 @@ export function CardMenu({
             : event.key === "End"
               ? items.length - 1
               : null;
-    if (next === null) return;
+
+    if (next === null) {
+      return;
+    }
+
     event.preventDefault();
     items[(next + items.length) % items.length]?.focus();
   };
+
   const style =
     typeof at === "string"
       ? undefined
       : { left: at.x, top: at.y, right: "auto" };
+
   const mode =
     typeof at === "string" ? (at === "keys" ? " instant" : "") : " at-pointer";
+
   const item = (
     action: CardAction,
     label: string,
@@ -83,6 +100,7 @@ export function CardMenu({
       {keys && <kbd aria-hidden="true">{keys}</kbd>}
     </button>
   );
+
   return (
     <div
       ref={ref}
@@ -123,10 +141,12 @@ export function RenameField({
     ref.current?.focus();
     ref.current?.select();
   }, []);
+
   const submit = (event: FormEvent) => {
     event.preventDefault();
     onDone(value.trim() && value.trim() !== project.name ? value.trim() : null);
   };
+
   return (
     <form className="project-rename" onSubmit={submit}>
       <input

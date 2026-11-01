@@ -100,6 +100,7 @@ function markAdded(): void {
 
 function subscribeAdded(listener: () => void): () => void {
   addedListeners.add(listener);
+
   return () => {
     addedListeners.delete(listener);
   };
@@ -118,9 +119,16 @@ function pinTarget(
   zoom: number,
   frame: { width: number }
 ): { rect: Rect; offset?: PinOffset } {
-  if (comment.drawing) return { rect };
-  if (rect.height > LABEL_MAX_H) return { rect, offset: comment.target.offset };
+  if (comment.drawing) {
+    return { rect };
+  }
+
+  if (rect.height > LABEL_MAX_H) {
+    return { rect, offset: comment.target.offset };
+  }
+
   const fitsRight = rect.x + rect.width + PIN_SIZE / zoom <= frame.width;
+
   return fitsRight
     ? { rect }
     : { rect: { ...rect, x: rect.x + rect.width - 1, width: 1 } };
@@ -144,10 +152,12 @@ function useShown(
 ): DesignComment[] {
   const showResolved = control.showResolved;
   const activeKey = active ? JSON.stringify(active) : "";
+
   return useMemo(() => {
     const frame: ActiveFrame | null = activeKey
       ? (JSON.parse(activeKey) as ActiveFrame)
       : null;
+
     return control.comments.filter(
       (c) =>
         (hasPin(c.status) ||
@@ -168,6 +178,7 @@ function drawingAnchor(drawing: CommentDrawing): Rect {
   const points = drawing.strokes[0]?.points ?? [];
   const x = points[0] ?? drawing.box.x;
   const y = points[1] ?? drawing.box.y;
+
   return {
     x,
     y: y - PIN_SIZE / 2,
@@ -201,14 +212,18 @@ function CommentPin({
   initial: string | null;
   control: CommentsControl;
 }) {
-  if (!rect || !visible(rect, frame) || control.openId === comment.id)
+  if (!rect || !visible(rect, frame) || control.openId === comment.id) {
     return null;
+  }
+
   const pin = pinTarget(comment, rect, zoom, frame);
   const place = pinPlacement(pin.rect, zoom, frame, pin.offset);
   const replies = comment.replies?.length ?? 0;
+
   const repliesLabel = replies
     ? `, ${replies} ${replies === 1 ? "reply" : "replies"}`
     : "";
+
   return (
     <div
       className={`comment-pin-wrap${place.flip ? " flip" : ""}`}
@@ -258,8 +273,12 @@ function pinClick(
   event: { shiftKey: boolean; metaKey: boolean; ctrlKey: boolean }
 ): void {
   const multi = event.shiftKey || event.metaKey || event.ctrlKey;
-  if (multi && canPickForChat(comment.status)) control.togglePick(comment.id);
-  else control.setOpenId(comment.id);
+
+  if (multi && canPickForChat(comment.status)) {
+    control.togglePick(comment.id);
+  } else {
+    control.setOpenId(comment.id);
+  }
 }
 
 function drawingCrumb(pageName: string) {
@@ -267,7 +286,10 @@ function drawingCrumb(pageName: string) {
 }
 
 function threadCrumb(comment: DesignComment, pageName: string) {
-  if (comment.drawing) return drawingCrumb(pageName);
+  if (comment.drawing) {
+    return drawingCrumb(pageName);
+  }
+
   return comment.context ? breadcrumbOf(pageName, [comment.context]) : null;
 }
 
@@ -347,7 +369,8 @@ export function CommentModePill({
   control: CommentsControl | undefined;
 }) {
   const added = useJustAdded();
-  if (added && mode.available)
+
+  if (added && mode.available) {
     return (
       <div
         className="comment-mode-pill"
@@ -357,10 +380,16 @@ export function CommentModePill({
         Comment added
       </div>
     );
-  if (!mode.on || !mode.available) return null;
+  }
+
+  if (!mode.on || !mode.available) {
+    return null;
+  }
+
   const repin = control?.repinId
     ? control.comments.find((comment) => comment.id === control.repinId)
     : undefined;
+
   return (
     <>
       <div
@@ -382,11 +411,13 @@ function usePick() {
     selection: SelectionContext;
     offset?: PinOffset;
   } | null>(null);
+
   const setPick = useCallback(
     (selection: SelectionContext | null, offset?: PinOffset) =>
       setPicked(selection ? { selection, offset } : null),
     []
   );
+
   return {
     pick: picked?.selection ?? null,
     pickOffset: picked?.offset,
@@ -403,9 +434,11 @@ export function CommentLayer(props: Props) {
   const feedbackInput = useRef<HTMLTextAreaElement>(null);
   const initial = useProfileInitial();
   const orphans = useRef(createOrphanTracker(ORPHAN_GRACE_MS));
+
   const pending = useRef(
     new Map<string, (contexts: (SelectionContext | null)[]) => void>()
   );
+
   const recheck = useRef<number | null>(null);
   const retargeted = useRef(new Map<string, string>());
   const live = useRef({ control, commentMode: props.commentMode });
@@ -413,10 +446,12 @@ export function CommentLayer(props: Props) {
 
   const shown = useShown(control, props.activeFrame);
   const tracked = useMemo(() => shown.filter((c) => !c.drawing), [shown]);
+
   const queries = useMemo<AnchorQuery[]>(
     () => tracked.map(anchorQueryOf),
     [tracked]
   );
+
   const queryKey = JSON.stringify(queries);
   const queriesRef = useRef(queries);
   queriesRef.current = queries;
@@ -424,7 +459,11 @@ export function CommentLayer(props: Props) {
   const frameOf = useCallback(
     (token: string | null): BridgeFrame | null => {
       const slot = frames.slots.find((s) => s.token === token);
-      if (!slot) return null;
+
+      if (!slot) {
+        return null;
+      }
+
       return {
         key: slot.token,
         token: slot.token,
@@ -435,18 +474,21 @@ export function CommentLayer(props: Props) {
     },
     [frames.slots, frames.elements, props.kind]
   );
+
   const frameOfRef = useRef(frameOf);
   frameOfRef.current = frameOf;
   const frontRef = useRef(frames.frontToken);
   frontRef.current = frames.frontToken;
 
   const readyTokens = useRef(new Set<string>());
+
   const track = useCallback((frameTarget: BridgeFrame | null) => {
-    if (frameTarget && readyTokens.current.has(frameTarget.token))
+    if (frameTarget && readyTokens.current.has(frameTarget.token)) {
       postToFrame(frameTarget, {
         type: "track-anchors",
         anchors: queriesRef.current,
       });
+    }
   }, []);
 
   useEffect(() => {
@@ -460,7 +502,9 @@ export function CommentLayer(props: Props) {
 
   useEffect(
     () => () => {
-      if (recheck.current !== null) window.clearTimeout(recheck.current);
+      if (recheck.current !== null) {
+        window.clearTimeout(recheck.current);
+      }
     },
     []
   );
@@ -470,20 +514,35 @@ export function CommentLayer(props: Props) {
       const { control: current } = live.current;
       const next: Record<string, Rect> = {};
       let missing = false;
+
       const state = {
         orphans: orphans.current,
         retargeted: retargeted.current,
         now: Date.now(),
       };
+
       for (const report of reports) {
         const comment = current.comments.find((c) => c.id === report.id);
-        if (!comment) continue;
-        if (report.rect) next[report.id] = report.rect;
+
+        if (!comment) {
+          continue;
+        }
+
+        if (report.rect) {
+          next[report.id] = report.rect;
+        }
+
         const review = reviewReport(comment, report, state);
-        if (review.patch) void current.update(comment.id, review.patch);
+
+        if (review.patch) {
+          void current.update(comment.id, review.patch);
+        }
+
         missing ||= review.missing;
       }
+
       setRects(next);
+
       if (missing && recheck.current === null) {
         recheck.current = window.setTimeout(() => {
           recheck.current = null;
@@ -503,16 +562,23 @@ export function CommentLayer(props: Props) {
       if (message.type === "ready") {
         readyTokens.current.add(source.token);
         track(source);
+
         return;
       }
-      if (source.token !== frontRef.current) return;
-      if (message.type === "anchor-rects") onReports(message.anchors);
-      else if (message.type === "anchor-contexts") {
+
+      if (source.token !== frontRef.current) {
+        return;
+      }
+
+      if (message.type === "anchor-rects") {
+        onReports(message.anchors);
+      } else if (message.type === "anchor-contexts") {
         const resolve = pending.current.get(message.requestId);
         pending.current.delete(message.requestId);
         resolve?.(message.contexts);
       } else if (message.type === "select" && live.current.commentMode) {
         const repinId = live.current.control.repinId;
+
         if (repinId) {
           void live.current.control.repin(
             repinId,
@@ -534,10 +600,13 @@ export function CommentLayer(props: Props) {
     control.describeRef.current = (anchorList) =>
       new Promise((resolve) => {
         const target = frameOfRef.current(frontRef.current);
+
         if (!target) {
           resolve([]);
+
           return;
         }
+
         const requestId = Math.random().toString(36).slice(2);
         pending.current.set(requestId, resolve);
         postToFrame(target, {
@@ -546,16 +615,20 @@ export function CommentLayer(props: Props) {
           anchors: anchorList,
         });
       });
+
     return () => {
       control.describeRef.current = null;
     };
   }, [control.describeRef]);
 
   useEffect(() => {
-    if (!props.commentMode) setPick(null);
+    if (!props.commentMode) {
+      setPick(null);
+    }
   }, [props.commentMode]);
 
   const selKey = selectionKey(props.selection);
+
   const feedbackOpen =
     !props.commentMode &&
     props.selection.length > 0 &&
@@ -571,13 +644,17 @@ export function CommentLayer(props: Props) {
   useEffect(() => {
     const hide = () => setDismissedKey(selKey);
     window.addEventListener(INLINE_PROMPT_OPEN_EVENT, hide);
+
     return () => window.removeEventListener(INLINE_PROMPT_OPEN_EVENT, hide);
   }, [selKey]);
 
   const modeKey = `${props.commentMode}:${props.selectMode}:${props.editing}`;
   const lastMode = useRef(modeKey);
   useEffect(() => {
-    if (lastMode.current === modeKey) return;
+    if (lastMode.current === modeKey) {
+      return;
+    }
+
     lastMode.current = modeKey;
     setDismissedKey(selKey);
   }, [modeKey, selKey]);
@@ -589,24 +666,35 @@ export function CommentLayer(props: Props) {
         event.metaKey ||
         event.ctrlKey ||
         event.altKey
-      )
+      ) {
         return;
+      }
+
       if ((event.key === "f" || event.key === "F") && feedbackOpen) {
         event.preventDefault();
         setFeedbackActive(true);
         feedbackInput.current?.focus();
       } else if (event.key === "Escape") {
-        if (feedbackOpen) setDismissedKey(selKey);
-        if (live.current.control.openId) live.current.control.setOpenId(null);
+        if (feedbackOpen) {
+          setDismissedKey(selKey);
+        }
+
+        if (live.current.control.openId) {
+          live.current.control.setOpenId(null);
+        }
       }
     };
+
     window.addEventListener("keydown", onKey);
+
     return () => window.removeEventListener("keydown", onKey);
   }, [feedbackOpen, selKey]);
 
   const pinned = shown.filter((c) => c.status !== "orphaned");
+
   const rectOf = (comment: DesignComment): Rect | undefined =>
     comment.drawing ? drawingAnchor(comment.drawing) : rects[comment.id];
+
   const open = openComment(control);
   const openRect = open ? (open.drawing?.box ?? rects[open.id] ?? null) : null;
   const lastSelected = props.selection[props.selection.length - 1];
@@ -635,17 +723,21 @@ export function CommentLayer(props: Props) {
           )
         );
         finish();
+
         return true;
       }
+
       const ok = await control.add(selections, input.text, input.toClaude, {
         mentions: input.mentions,
         attachmentIds: input.attachmentIds,
         ...(offset ? { offset } : {}),
       });
+
       if (ok) {
         markAdded();
         finish();
       }
+
       return ok;
     };
 
@@ -659,6 +751,7 @@ export function CommentLayer(props: Props) {
     images: true,
     steer: Boolean(tools.onSteer),
   };
+
   const many = props.selection.length > 1;
 
   return (

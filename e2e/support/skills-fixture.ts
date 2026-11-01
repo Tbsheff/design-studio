@@ -25,7 +25,10 @@ export function claudeHomeFor(dataDir: string): string {
 }
 
 export function writeSkillsFixture(home: string): void {
-  if (existsSync(path.join(home, "settings.json"))) return;
+  if (existsSync(path.join(home, "settings.json"))) {
+    return;
+  }
+
   skill(
     path.join(home, "skills", "brand-voice"),
     "brand-voice",
@@ -39,6 +42,7 @@ export function writeSkillsFixture(home: string): void {
     "Run `bash scripts/build.sh` to render."
   );
   mkdirSync(path.join(home, "skills", "notes-only"), { recursive: true });
+
   const plugin = path.join(
     home,
     "plugins",
@@ -47,6 +51,7 @@ export function writeSkillsFixture(home: string): void {
     "demo-plugin",
     "1.0.0"
   );
+
   mkdirSync(path.join(plugin, ".claude-plugin"), { recursive: true });
   writeFileSync(
     path.join(plugin, ".claude-plugin", "plugin.json"),

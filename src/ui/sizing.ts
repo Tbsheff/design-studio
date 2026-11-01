@@ -1,7 +1,9 @@
 import type { StyleValues } from "./cssValues";
 
 export type Axis = "width" | "height";
+
 export type SizeMode = "hug" | "fill" | "fixed";
+
 export type AxisRole = "main" | "cross" | "none";
 
 export interface ParentLayout {
@@ -29,6 +31,7 @@ export function isGridDisplay(display: string): boolean {
 export function parentLayout(styles: Record<string, string>): ParentLayout {
   const display = (styles["parent-display"] ?? "").trim();
   const direction = (styles["parent-flex-direction"] ?? "").trim();
+
   return {
     flex: isFlexDisplay(display),
     grid: display === "grid" || display === "inline-grid",
@@ -37,14 +40,22 @@ export function parentLayout(styles: Record<string, string>): ParentLayout {
 }
 
 export function axisRole(axis: Axis, parent: ParentLayout): AxisRole {
-  if (!parent.flex) return "none";
+  if (!parent.flex) {
+    return "none";
+  }
+
   return (axis === "width") === parent.row ? "main" : "cross";
 }
 
 export function flexGrow(flex: string): number {
   const first = flex.trim().split(/\s+/)[0] ?? "";
-  if (first === "auto") return 1;
+
+  if (first === "auto") {
+    return 1;
+  }
+
   const grow = Number(first);
+
   return Number.isFinite(grow) ? grow : 0;
 }
 
@@ -82,8 +93,13 @@ export function sizeFacts(styles: Record<string, string>): SizeFacts {
 
 function stretchesByDefault(values: Values, facts: SizeFacts): boolean {
   const self = values["align-self"].trim();
-  if (self === "stretch") return true;
+
+  if (self === "stretch") {
+    return true;
+  }
+
   const inherits = self === "" || self === "auto" || self === "normal";
+
   return (
     inherits &&
     (facts.parentAlignItems === "" ||
@@ -97,8 +113,15 @@ const STRETCHY = new Set(["", "auto", "normal", "stretch", "legacy"]);
 function gridStretches(axis: Axis, values: Values, facts: SizeFacts): boolean {
   const self =
     axis === "width" ? facts.justifySelf : values["align-self"].trim();
-  if (self === "stretch") return true;
-  if (!STRETCHY.has(self)) return false;
+
+  if (self === "stretch") {
+    return true;
+  }
+
+  if (!STRETCHY.has(self)) {
+    return false;
+  }
+
   return STRETCHY.has(
     axis === "width" ? facts.parentJustifyItems : facts.parentAlignItems
   );
@@ -111,17 +134,35 @@ function naturalMode(
   facts: SizeFacts
 ): SizeMode {
   const role = axisRole(axis, parent);
-  if (role === "main") return flexGrow(values.flex) > 0 ? "fill" : "hug";
-  if (role === "cross")
+
+  if (role === "main") {
+    return flexGrow(values.flex) > 0 ? "fill" : "hug";
+  }
+
+  if (role === "cross") {
     return stretchesByDefault(values, facts) ? "fill" : "hug";
-  if (parent.grid) return gridStretches(axis, values, facts) ? "fill" : "hug";
+  }
+
+  if (parent.grid) {
+    return gridStretches(axis, values, facts) ? "fill" : "hug";
+  }
+
   return axis === "width" && BLOCK_DISPLAYS.has(facts.display) ? "fill" : "hug";
 }
 
 function authoredMode(size: string): SizeMode | null {
-  if (size === "" || size === "auto") return null;
-  if (size === "100%") return "fill";
-  if (HUG_VALUES.has(size)) return "hug";
+  if (size === "" || size === "auto") {
+    return null;
+  }
+
+  if (size === "100%") {
+    return "fill";
+  }
+
+  if (HUG_VALUES.has(size)) {
+    return "hug";
+  }
+
   return "fixed";
 }
 
@@ -132,11 +173,19 @@ export function sizeModeOf(
   facts?: SizeFacts
 ): SizeMode {
   const role = axisRole(axis, parent);
-  if (role === "main" && flexGrow(values.flex) > 0) return "fill";
+
+  if (role === "main" && flexGrow(values.flex) > 0) {
+    return "fill";
+  }
+
   if (!facts) {
-    if (role === "cross" && values["align-self"] === "stretch") return "fill";
+    if (role === "cross" && values["align-self"] === "stretch") {
+      return "fill";
+    }
+
     return authoredMode(values[axis].trim()) ?? "fixed";
   }
+
   return (
     authoredMode(facts.authored[axis]) ??
     naturalMode(axis, values, parent, facts)
@@ -149,6 +198,7 @@ function clearing(
   parent: ParentLayout
 ): Partial<StyleValues> {
   const role = axisRole(axis, parent);
+
   return {
     ...(role === "main" && flexGrow(values.flex) > 0 ? { flex: "" } : {}),
     ...(role === "cross" && values["align-self"] === "stretch"
@@ -165,11 +215,17 @@ function fillPatch(
 ): Partial<StyleValues> {
   const role = axisRole(axis, parent);
   const size = facts.authored[axis] ? { [axis]: "" } : {};
-  if (role === "main") return { flex: "1", ...size };
-  if (role === "cross")
+
+  if (role === "main") {
+    return { flex: "1", ...size };
+  }
+
+  if (role === "cross") {
     return stretchesByDefault(values, facts)
       ? { [axis]: "" }
       : { "align-self": "stretch", [axis]: "" };
+  }
+
   return { [axis]: "100%" };
 }
 
@@ -182,9 +238,19 @@ export function sizePatch(
   facts?: SizeFacts
 ): Partial<StyleValues> {
   const clear = clearing(axis, values, parent);
-  if (mode === "fixed") return { [axis]: usedPx, ...clear };
-  if (!facts) return legacyPatch(axis, mode, values, parent, clear);
-  if (mode === "fill") return fillPatch(axis, values, parent, facts);
+
+  if (mode === "fixed") {
+    return { [axis]: usedPx, ...clear };
+  }
+
+  if (!facts) {
+    return legacyPatch(axis, mode, values, parent, clear);
+  }
+
+  if (mode === "fill") {
+    return fillPatch(axis, values, parent, facts);
+  }
+
   const natural = naturalMode(
     axis,
     {
@@ -196,12 +262,15 @@ export function sizePatch(
     parent,
     facts
   );
+
   const ruleSize = facts.authored[axis];
+
   const sizedByRule =
     ruleSize !== "" &&
     ruleSize !== values[axis].trim() &&
     authoredMode(ruleSize) !== "hug" &&
     authoredMode(ruleSize) !== null;
+
   return {
     [axis]: natural === "hug" && !sizedByRule ? "" : "fit-content",
     ...clear,
@@ -216,12 +285,22 @@ function legacyPatch(
   clear: Partial<StyleValues>
 ): Partial<StyleValues> {
   const role = axisRole(axis, parent);
+
   const authoredSize =
     HUG_VALUES.has(values[axis].trim()) || values[axis].trim() === "100%";
-  if (mode === "hug") return { [axis]: "fit-content", ...clear };
-  if (role === "main")
+
+  if (mode === "hug") {
+    return { [axis]: "fit-content", ...clear };
+  }
+
+  if (role === "main") {
     return { flex: "1", ...(authoredSize ? { [axis]: "" } : {}) };
-  if (role === "cross") return { "align-self": "stretch", [axis]: "" };
+  }
+
+  if (role === "cross") {
+    return { "align-self": "stretch", [axis]: "" };
+  }
+
   return { [axis]: "100%" };
 }
 
@@ -234,23 +313,32 @@ const AXIS_VALUES = ["flex-start", "center", "flex-end"] as const;
 
 export function alignSlot(value: string): number | null {
   const v = value.trim();
+
   if (
     v === "flex-start" ||
     v === "start" ||
     v === "left" ||
     v === "normal" ||
     v === "self-start"
-  )
+  ) {
     return 0;
-  if (v === "center") return 1;
-  if (v === "flex-end" || v === "end" || v === "right" || v === "self-end")
+  }
+
+  if (v === "center") {
+    return 1;
+  }
+
+  if (v === "flex-end" || v === "end" || v === "right" || v === "self-end") {
     return 2;
+  }
+
   return null;
 }
 
 export function alignCell(col: number, row: number, isRow: boolean): AlignCell {
   const across = AXIS_VALUES[col] ?? "flex-start";
   const down = AXIS_VALUES[row] ?? "flex-start";
+
   return isRow
     ? { justify: across, align: down }
     : { justify: down, align: across };
@@ -262,10 +350,15 @@ export function activeCell(
   isRow: boolean
 ): { col: number; row: number } | null {
   const j = alignSlot(justify);
+
   const a =
     align.trim() === "normal" || align.trim() === "stretch"
       ? null
       : alignSlot(align);
-  if (j === null || a === null) return null;
+
+  if (j === null || a === null) {
+    return null;
+  }
+
   return isRow ? { col: j, row: a } : { col: a, row: j };
 }

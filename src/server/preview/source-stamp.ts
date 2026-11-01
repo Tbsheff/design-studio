@@ -28,6 +28,7 @@ const SKIP_DIRS = new Set([
   ".next",
   ".turbo",
 ]);
+
 const WALK_CAP = 3000;
 const MEMO_MS = 200;
 
@@ -35,16 +36,24 @@ async function treeStamp(root: string): Promise<SourceStamp> {
   const parts: string[] = [];
   let newest = 0;
   let left = WALK_CAP;
+
   const walk = async (dir: string): Promise<void> => {
     const entries = await readdir(dir, { withFileTypes: true }).catch(() => []);
     await Promise.all(
       entries.map(async (entry) => {
-        if (left-- <= 0) return;
+        if (left-- <= 0) {
+          return;
+        }
+
         const full = path.join(dir, entry.name);
+
         if (entry.isDirectory()) {
-          if (!SKIP_DIRS.has(entry.name)) await walk(full);
+          if (!SKIP_DIRS.has(entry.name)) {
+            await walk(full);
+          }
         } else if (entry.isFile()) {
           const info = await stat(full).catch(() => null);
+
           if (info) {
             parts.push(`${full}:${info.size}:${info.mtimeMs}`);
             newest = Math.max(newest, info.mtimeMs);
@@ -53,7 +62,9 @@ async function treeStamp(root: string): Promise<SourceStamp> {
       })
     );
   };
+
   await walk(root);
+
   return {
     key: createHash("sha1")
       .update(parts.sort().join("|"))
@@ -106,22 +117,32 @@ export class SourceStamps {
   ): void {
     const index = this.owners.findIndex((owner) => owner.prefix === prefix);
     const owner = { prefix, key, workTree, appDir };
-    if (index === -1) this.owners.push(owner);
-    else this.owners[index] = owner;
+
+    if (index === -1) {
+      this.owners.push(owner);
+    } else {
+      this.owners[index] = owner;
+    }
+
     this.owners.sort((a, b) => b.prefix.length - a.prefix.length);
   }
 
   forget(url: string): void {
     for (let index = this.owners.length - 1; index >= 0; index -= 1) {
       const owner = this.owners[index];
-      if (owner && owner.appDir === null && url.startsWith(owner.prefix))
+
+      if (owner && owner.appDir === null && url.startsWith(owner.prefix)) {
         this.owners.splice(index, 1);
+      }
     }
   }
 
   forgetKey(key: string): void {
-    for (let index = this.owners.length - 1; index >= 0; index -= 1)
-      if (this.owners[index]?.key === key) this.owners.splice(index, 1);
+    for (let index = this.owners.length - 1; index >= 0; index -= 1) {
+      if (this.owners[index]?.key === key) {
+        this.owners.splice(index, 1);
+      }
+    }
   }
 
   bump(key: string): void {
@@ -130,15 +151,23 @@ export class SourceStamps {
 
   bumpProject(projectId: string): void {
     this.epochs.set(projectId, (this.epochs.get(projectId) ?? 0) + 1);
-    for (const owner of this.owners)
-      if (owner.key.startsWith(`${projectId}:`)) this.bump(owner.key);
+
+    for (const owner of this.owners) {
+      if (owner.key.startsWith(`${projectId}:`)) {
+        this.bump(owner.key);
+      }
+    }
   }
 
   landed(url: string, href: string): void {
     const from = url.split("#")[0] ?? url;
     const to = pathOf(href);
-    if (to === pathOf(from)) this.landedAt.delete(from);
-    else this.landedAt.set(from, to);
+
+    if (to === pathOf(from)) {
+      this.landedAt.delete(from);
+    } else {
+      this.landedAt.set(from, to);
+    }
   }
 
   stampFor(
@@ -146,11 +175,18 @@ export class SourceStamps {
     settled: (key: string) => Promise<void>
   ): Promise<SourceStamp | null> {
     const known = this.memo.get(url);
-    if (known && Date.now() - known.at < MEMO_MS) return known.stamp;
+
+    if (known && Date.now() - known.at < MEMO_MS) {
+      return known.stamp;
+    }
+
     const stamp = this.compute(url, settled);
     this.memo.set(url, { at: Date.now(), stamp });
-    if (this.memo.size > 200)
+
+    if (this.memo.size > 200) {
       this.memo.delete(this.memo.keys().next().value as string);
+    }
+
     return stamp;
   }
 
@@ -158,17 +194,27 @@ export class SourceStamps {
     url: string,
     settled: (key: string) => Promise<void>
   ): Promise<SourceStamp | null> {
-    if (isStateHost(url)) return null;
+    if (isStateHost(url)) {
+      return null;
+    }
+
     const owner = this.owners.find((candidate) =>
       url.startsWith(candidate.prefix)
     );
-    if (!owner) return null;
+
+    if (!owner) {
+      return null;
+    }
+
     await settled(owner.key);
     const generation = this.generations.get(owner.key) ?? 0;
+
     if (owner.appDir === null) {
       const tree = await treeStamp(owner.workTree);
+
       return { key: `g${generation}:${tree.key}`, newest: tree.newest };
     }
+
     return (
       (await this.routeStamp(owner, url)) ?? {
         key: `g${generation}`,
@@ -182,6 +228,7 @@ export class SourceStamps {
     url: string
   ): Promise<SourceStamp | null> {
     const appDir = owner.appDir as string;
+
     const paths = [
       ...new Set(
         [pathOf(url), this.landedAt.get(url.split("#")[0] ?? url)].filter(
@@ -189,13 +236,19 @@ export class SourceStamps {
         )
       ),
     ];
+
     const stamps = await Promise.all(
       paths.map((pathname) =>
         this.routes.stamp(owner.workTree, appDir, pathname).catch(() => null)
       )
     );
-    if (stamps.some((stamp) => stamp === null)) return null;
+
+    if (stamps.some((stamp) => stamp === null)) {
+      return null;
+    }
+
     const epoch = this.epochs.get(owner.key.split(":")[0] ?? "") ?? 0;
+
     return {
       key: `e${epoch}:${stamps.map((stamp) => stamp?.key).join("+")}`,
       newest: Math.max(...stamps.map((stamp) => stamp?.newest ?? 0)),

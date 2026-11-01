@@ -16,6 +16,7 @@ const TEXT_KEYS = [
   "letter-spacing",
   "text-transform",
 ];
+
 const STACK_FRAMES = 4;
 
 export interface MatchResult {
@@ -36,6 +37,7 @@ function fiberOf(element: Element): HostFiber | null {
   const key = Object.keys(element).find((name) =>
     name.startsWith("__reactFiber$")
   );
+
   return key
     ? ((element as unknown as Record<string, HostFiber>)[key] ?? null)
     : null;
@@ -44,10 +46,17 @@ function fiberOf(element: Element): HostFiber | null {
 function jsxSite(element: Element): string | null {
   const fiber = fiberOf(element);
   const source = fiber?._debugSource;
-  if (source && typeof source.fileName === "string")
+
+  if (source && typeof source.fileName === "string") {
     return `${source.fileName}:${String(source.lineNumber)}:${String(source.columnNumber)}`;
+  }
+
   const stack = fiber?._debugStack?.stack;
-  if (typeof stack !== "string" || stack === "") return null;
+
+  if (typeof stack !== "string" || stack === "") {
+    return null;
+  }
+
   return stack
     .split("\n")
     .slice(1, 1 + STACK_FRAMES)
@@ -56,13 +65,19 @@ function jsxSite(element: Element): string | null {
 
 function componentKey(element: Element, useLoc: boolean): string | null {
   const loc = useLoc ? element.getAttribute(SOURCE_LOC_ATTR) : null;
-  if (loc) return `loc:${loc}`;
+
+  if (loc) {
+    return `loc:${loc}`;
+  }
+
   const site = jsxSite(element);
+
   return site ? `${element.tagName}|${site}` : null;
 }
 
 function classKey(element: Element): string | null {
   const classes = [...element.classList].sort();
+
   return classes.length > 0 ? classes.join(" ") : null;
 }
 
@@ -74,8 +89,12 @@ function ownText(element: Element): boolean {
 }
 
 function textKey(element: Element): string | null {
-  if (!ownText(element)) return null;
+  if (!ownText(element)) {
+    return null;
+  }
+
   const computed = window.getComputedStyle(element);
+
   return TEXT_KEYS.map((key) => computed.getPropertyValue(key)).join("|");
 }
 
@@ -83,8 +102,14 @@ function keyFor(
   by: MatchKind,
   useLoc: boolean
 ): (element: Element) => string | null {
-  if (by === "classes") return classKey;
-  if (by === "text-style") return textKey;
+  if (by === "classes") {
+    return classKey;
+  }
+
+  if (by === "text-style") {
+    return textKey;
+  }
+
   return (element) => componentKey(element, useLoc);
 }
 
@@ -110,23 +135,32 @@ export function matchingElements(
 ): MatchResult {
   const key = keyFor(by, options.useLoc);
   const wanted = key(base);
-  if (wanted === null) return { elements: [base], note: MISSING[by] };
+
+  if (wanted === null) {
+    return { elements: [base], note: MISSING[by] };
+  }
+
   const elements: Element[] = [];
   let more = false;
+
   for (const element of Array.from(document.body.querySelectorAll("*"))) {
     if (
       element !== base &&
       (!candidate(element) ||
         options.skip?.(element) ||
         key(element) !== wanted)
-    )
+    ) {
       continue;
+    }
+
     if (elements.length >= MATCH_SELECT_MAX) {
       more = true;
       break;
     }
+
     elements.push(element);
   }
+
   return more
     ? { elements, note: `Selected the first ${MATCH_SELECT_MAX} matches.` }
     : { elements };
@@ -141,6 +175,7 @@ export function isMatchKind(value: unknown): value is MatchKind {
 
 export function pathOf(element: Element): string {
   const parts: string[] = [];
+
   for (
     let node: Element | null = element;
     node?.parentElement && node !== document.body;
@@ -150,6 +185,7 @@ export function pathOf(element: Element): string {
       `${node.tagName.toLowerCase()}:nth-child(${Array.prototype.indexOf.call(node.parentElement.children, node) + 1})`
     );
   }
+
   return ["body", ...parts].join(" > ");
 }
 
@@ -159,13 +195,19 @@ export function exposeHeadlessMatch(useLoc: boolean): void {
     by: MatchKind
   ) => {
     let base: Element | null = null;
+
     try {
       base = document.querySelector(selector);
     } catch {
       return { found: false, paths: [] };
     }
-    if (!base) return { found: false, paths: [] };
+
+    if (!base) {
+      return { found: false, paths: [] };
+    }
+
     const result = matchingElements(base, by, { useLoc });
+
     return {
       found: true,
       paths: result.elements.map(pathOf),

@@ -9,14 +9,21 @@ function humanize(raw: string): string {
     .replace(/([a-z])([A-Z])/g, "$1 $2")
     .trim()
     .toLowerCase();
+
   return words.charAt(0).toUpperCase() + words.slice(1);
 }
 
 export function prettyToolName(name: string): string {
   const parts = name.split("__");
-  if (parts[0] === "mcp" && parts.length >= 3)
+
+  if (parts[0] === "mcp" && parts.length >= 3) {
     return humanize(parts.slice(2).join(" "));
-  if (/^[a-z]/.test(name) || name.includes("_")) return humanize(name);
+  }
+
+  if (/^[a-z]/.test(name) || name.includes("_")) {
+    return humanize(name);
+  }
+
   return name;
 }
 
@@ -31,41 +38,69 @@ function isAbsolutePath(value: string): boolean {
 function relativePath(file: string, workTree: string | null): string {
   const norm = file.replace(/\\/g, "/");
   const root = workTree?.replace(/\\/g, "/").replace(/\/+$/, "");
-  if (root && norm.startsWith(`${root}/`)) return norm.slice(root.length + 1);
+
+  if (root && norm.startsWith(`${root}/`)) {
+    return norm.slice(root.length + 1);
+  }
+
   return isAbsolutePath(norm) ? baseName(norm) : norm;
 }
 
 function pathInput(input: unknown): string | null {
-  if (!input || typeof input !== "object") return null;
+  if (!input || typeof input !== "object") {
+    return null;
+  }
+
   const o = input as Record<string, unknown>;
+
   for (const key of PATH_KEYS) {
     const v = o[key];
-    if (typeof v === "string" && v) return v;
+
+    if (typeof v === "string" && v) {
+      return v;
+    }
   }
+
   return null;
 }
 
 export function toolTarget(input: unknown, workTree: string | null): string {
   const file = pathInput(input);
-  if (file) return relativePath(file, workTree);
+
+  if (file) {
+    return relativePath(file, workTree);
+  }
+
   const raw = shortInput(input);
+
   return isAbsolutePath(raw) ? relativePath(raw, workTree) : raw;
 }
 
 export const SKILL_TOOL = "Skill";
 
 export function skillToolName(input: unknown): string {
-  if (!input || typeof input !== "object") return "";
+  if (!input || typeof input !== "object") {
+    return "";
+  }
+
   const value = (input as Record<string, unknown>)["skill"];
-  if (typeof value !== "string") return "";
+
+  if (typeof value !== "string") {
+    return "";
+  }
+
   return value.startsWith("personal:")
     ? value.slice("personal:".length)
     : value;
 }
 
 export function toolLabel(name: string, input: unknown): string {
-  if (name !== SKILL_TOOL) return prettyToolName(name);
+  if (name !== SKILL_TOOL) {
+    return prettyToolName(name);
+  }
+
   const skill = skillToolName(input);
+
   return skill ? `Skill · ${skill}` : "Skill";
 }
 
@@ -122,10 +157,12 @@ export interface ToolTally {
 
 export function toolTally(names: Iterable<string>): ToolTally[] {
   const counts = new Map<string, number>();
+
   for (const name of names) {
     const label = toolGroupLabel(name);
     counts.set(label, (counts.get(label) ?? 0) + 1);
   }
+
   return [...counts].map(([label, count]) => ({ label, count }));
 }
 
@@ -134,12 +171,25 @@ export function toolSubject(
   input: unknown,
   workTree: string | null
 ): string {
-  if (name === SKILL_TOOL) return skillToolName(input);
-  if (name === "TodoWrite") return "";
+  if (name === SKILL_TOOL) {
+    return skillToolName(input);
+  }
+
+  if (name === "TodoWrite") {
+    return "";
+  }
+
   if (input && typeof input === "object") {
     const record = input as Record<string, unknown>;
-    if (typeof record["viewport"] === "string") return record["viewport"];
-    if (name.startsWith("mcp__") && !pathInput(input)) return "";
+
+    if (typeof record["viewport"] === "string") {
+      return record["viewport"];
+    }
+
+    if (name.startsWith("mcp__") && !pathInput(input)) {
+      return "";
+    }
   }
+
   return toolTarget(input, workTree);
 }

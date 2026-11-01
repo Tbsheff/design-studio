@@ -184,46 +184,57 @@ describe("discoverSkills cache", () => {
 
   it("keeps folder order with many skills read at once", async () => {
     const many = path.join(root, "many-home");
+
     const names = Array.from(
       { length: 85 },
       (_, index) => `s-${String(index).padStart(2, "0")}`
     );
+
     await Promise.all(
       names.map((name) =>
         skill(path.join(many, "skills", name), name, `Skill ${name}.`)
       )
     );
-    for (let pass = 0; pass < 3; pass += 1)
+
+    for (let pass = 0; pass < 3; pass += 1) {
       expect((await discoverSkills(many)).skills.map((s) => s.id)).toEqual(
         names.map((name) => `personal:${name}`)
       );
+    }
   });
 });
 
 describe("prepareSkills", () => {
   it("links only skill folders into generated plugins and skips turned-off skills", async () => {
     const out = path.join(root, "out");
+
     const prepared = await prepareSkills({
       root: out,
       disabled: ["personal:design-kit"],
       home,
     });
+
     expect(prepared.enabled).toEqual(["personal:linked", "ctx:ctx-stats"]);
     expect(prepared.pluginDirs).toHaveLength(2);
+
     for (const dir of prepared.pluginDirs) {
       expect(readdirSync(dir).sort()).toEqual([".claude-plugin", "skills"]);
+
       const manifest = JSON.parse(
         readFileSync(path.join(dir, ".claude-plugin", "plugin.json"), "utf-8")
       ) as Record<string, unknown>;
+
       expect(Object.keys(manifest).sort()).toEqual([
         "description",
         "name",
         "version",
       ]);
     }
+
     const ctxDir = prepared.pluginDirs.find((dir) =>
       path.basename(dir).startsWith("ctx-")
     );
+
     expect(
       ctxDir && readlinkSync(path.join(ctxDir, "skills", "ctx-stats"))
     ).toBe(prepared.catalog.skills[2]?.sourcePath);
@@ -231,11 +242,13 @@ describe("prepareSkills", () => {
       path.join(root, "elsewhere", "linked"),
       prepared.catalog.skills[2]?.sourcePath,
     ]);
+
     const again = await prepareSkills({
       root: out,
       disabled: ["personal:design-kit"],
       home,
     });
+
     expect(again.pluginDirs).toEqual(prepared.pluginDirs);
   });
 
@@ -245,6 +258,7 @@ describe("prepareSkills", () => {
       disabled: ["personal:design-kit", "personal:linked", "ctx:ctx-stats"],
       home,
     });
+
     expect(prepared).toMatchObject({
       enabled: [],
       pluginDirs: [],

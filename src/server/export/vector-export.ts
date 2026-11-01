@@ -31,8 +31,13 @@ const PPTX_TYPE =
 
 function noteOf(notes: string[]): string | null {
   const unique = [...new Set(notes)];
-  if (unique.length === 0) return null;
+
+  if (unique.length === 0) {
+    return null;
+  }
+
   const text = unique.join("; ");
+
   return `${text.charAt(0).toUpperCase()}${text.slice(1)}`;
 }
 
@@ -42,6 +47,7 @@ export async function exportVector(
   request: VectorRequest
 ): Promise<VectorFile> {
   const slides = request.format === "pptx" && !request.selector;
+
   const regions = await captureVector(preview, url, {
     frames: request.frames,
     scope: request.format === "pptx" ? "frame" : request.scope,
@@ -49,13 +55,18 @@ export async function exportVector(
     slides,
     native: request.format === "pptx",
   });
+
   const notes = regions.flatMap((region) => region.scan.notes);
+
   if (request.format === "pptx") {
     const deck = await buildPptx(regions, request.name);
-    if (deck.textBoxes + deck.shapes + deck.pictures === 0)
+
+    if (deck.textBoxes + deck.shapes + deck.pictures === 0) {
       notes.push(
         "no text or simple shapes were found, so slides are pictures only"
       );
+    }
+
     return {
       bytes: deck.bytes,
       type: PPTX_TYPE,
@@ -64,6 +75,7 @@ export async function exportVector(
       count: deck.slides,
     };
   }
+
   const files = regions.map((region, index) => ({
     name: `${index + 1}-${exportFileStem(region.frame.name).toLowerCase()}${region.frame.path ? `-${exportFileStem(region.frame.path)}` : ""}.svg`,
     data: Buffer.from(
@@ -73,8 +85,10 @@ export async function exportVector(
       })
     ),
   }));
+
   const [only] = files;
-  if (files.length === 1 && only)
+
+  if (files.length === 1 && only) {
     return {
       bytes: only.data,
       type: "image/svg+xml",
@@ -82,6 +96,8 @@ export async function exportVector(
       note: noteOf(notes),
       count: 1,
     };
+  }
+
   return {
     bytes: zipFiles(files),
     type: "application/zip",

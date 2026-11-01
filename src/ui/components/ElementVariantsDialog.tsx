@@ -27,6 +27,7 @@ export function ElementVariantsDialog({
   useEffect(() => noteRef.current?.focus(), []);
   const budget = budgetFor(project, project.settings.defaultLevel, count);
   const start = () => onStart(note, count);
+
   return (
     <section
       className="variation-card element-variants"
@@ -35,8 +36,13 @@ export function ElementVariantsDialog({
       aria-labelledby="element-variants-title"
       data-testid="element-variants-dialog"
       onKeyDown={(e) => {
-        if (e.key === "Escape") onCancel();
-        if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) start();
+        if (e.key === "Escape") {
+          onCancel();
+        }
+
+        if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+          start();
+        }
       }}
     >
       <header className="variation-card-head">
@@ -74,6 +80,7 @@ export function ElementVariantsDialog({
         <span>Variants</span>
         {COUNTS.map((value) => {
           const over = value > max;
+
           return (
             <button
               key={value}

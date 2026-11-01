@@ -50,6 +50,7 @@ function ThumbButton({
   onPick: (value: Thumb | null) => void;
 }) {
   const label = value === "up" ? "Good response" : "Bad response";
+
   return (
     <button
       type="button"
@@ -81,8 +82,11 @@ function FileChips({
   reviews: boolean;
 }) {
   const action = reviews ? "Review the changes" : "Open run details";
-  if (changes.length === 0)
+
+  if (changes.length === 0) {
     return quiet ? <p className="run-no-changes">No files changed.</p> : null;
+  }
+
   return (
     <ul
       className="run-changes"
@@ -110,19 +114,26 @@ function FileChips({
 
 function stopNote(run: RunView): string | null {
   const summary = run.summary;
-  if (!summary || run.status === "running" || run.status === "completed")
+
+  if (!summary || run.status === "running" || run.status === "completed") {
     return null;
+  }
+
   const restored = summary.restoredFiles ?? [];
+
   const putBack =
     restored.length > 0
       ? `Put back ${restored.map(baseName).join(", ")}: the write was cut off.`
       : "";
+
   const saved = summary.versionId ? "Saved what it changed as a version." : "";
+
   return [putBack, saved].filter(Boolean).join(" ") || null;
 }
 
 function StopNote({ run }: { run: RunView }) {
   const note = stopNote(run);
+
   return note ? (
     <p className="run-no-changes" data-testid="run-stop-note">
       {note}
@@ -140,12 +151,15 @@ export const RunFeedbackRow = memo(function RunFeedbackRow({
   onReview?: (() => void) | undefined;
 }) {
   const [feedback, setFeedback] = useRunFeedback(run.runId);
+
   const changes = useMemo(
     () => (run.status === "running" ? [] : fileChanges(run.tools)),
     [run.status, run.tools]
   );
+
   const summary = run.summary;
   const done = run.status === "completed";
+
   return (
     <div className="run-feedback">
       <FileChips

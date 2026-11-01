@@ -35,24 +35,38 @@ function useShowFrame(o: PointInput) {
     },
     []
   );
+
   return useCallback(
     (frameId: string, selector: string | undefined): boolean => {
       const cur = latest.current;
       const frame = cur.frames.layout.frames.find((f) => f.id === frameId);
-      if (!frame) return false;
+
+      if (!frame) {
+        return false;
+      }
+
       timers.current.forEach((t) => window.clearTimeout(t));
-      if (frame.hidden)
+
+      if (frame.hidden) {
         cur.frames.update((l) => setFrameHidden(l, frame.id, false));
+      }
+
       cur.frames.activate(frame);
       cur.clearSelection();
+
       const later = (ms: number, fn: () => void) =>
         timers.current.push(window.setTimeout(fn, ms));
+
       later(ZOOM_AT_MS, () => latest.current.zoom("selection"));
-      if (selector)
-        for (const ms of SELECT_AT_MS)
+
+      if (selector) {
+        for (const ms of SELECT_AT_MS) {
           later(ms, () =>
             latest.current.post({ type: "select-selector", selector })
           );
+        }
+      }
+
       return true;
     },
     []
@@ -66,26 +80,39 @@ export function useCanvasPoint(o: PointInput): McpPointBadge {
     if (
       event.type === "canvas.point" &&
       Date.now() - event.at <= POINT_FRESH_MS
-    )
+    ) {
       showFrame(event.frameId, event.selector);
+    }
+
     if (
       event.type === "mcp.point" &&
       Date.now() - event.point.at < MCP_POINT_MS
-    )
+    ) {
       setPoint(event.point);
+    }
   });
   useEffect(() => {
-    if (!point) return;
+    if (!point) {
+      return;
+    }
+
     const timer = window.setTimeout(
       () => setPoint(null),
       Math.max(0, point.at + MCP_POINT_MS - Date.now())
     );
+
     return () => window.clearTimeout(timer);
   }, [point]);
+
   const show = useCallback(() => {
-    if (point) showFrame(point.frameId, point.selector);
+    if (point) {
+      showFrame(point.frameId, point.selector);
+    }
+
     setPoint(null);
   }, [point, showFrame]);
+
   const dismiss = useCallback(() => setPoint(null), []);
+
   return { point, show, dismiss };
 }

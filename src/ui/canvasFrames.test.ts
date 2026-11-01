@@ -92,7 +92,9 @@ describe("frames per direction", () => {
       frames: [{ id: "f1", width: 1440, height: 900, x: 0, y: 0 }],
       activeId: "f1",
     };
+
     expect(parseLayout(old)).toEqual(old);
+
     const stored = {
       frames: [
         {
@@ -116,6 +118,7 @@ describe("frames per direction", () => {
       ],
       activeId: "f1",
     };
+
     expect(parseLayout(stored)?.frames).toEqual([
       {
         id: "f1",
@@ -137,6 +140,7 @@ describe("frames per direction", () => {
       "main",
       false
     );
+
     expect(layout.activeId).toBe("f1");
     expect(layout.frames.map((f) => [f.id, f.directionId, f.x, f.y])).toEqual([
       ["f1", "main", 0, 0],
@@ -160,6 +164,7 @@ describe("frames per direction", () => {
       "main",
       false
     );
+
     const kept = keepDirection(placed, "vc", group);
     expect(kept.frames.map((f) => f.directionId)).toEqual(["main", "vc"]);
     expect(kept.activeId).toBe("f4");
@@ -180,16 +185,19 @@ describe("frames per direction", () => {
       "main",
       false
     );
+
     expect(followDirection(placed, "vb").activeId).toBe("f3");
     expect(followDirection(placed, "main")).toBe(placed);
     const rebound = followDirection(placed, "other");
     expect(rebound.frames.find((f) => f.id === "f1")?.directionId).toBe(
       "other"
     );
+
     const unbound = addFrame(defaultLayout(desktop), {
       width: 390,
       height: 844,
     });
+
     expect(followDirection(unbound, "any")).toBe(unbound);
   });
 
@@ -203,6 +211,7 @@ describe("frames per direction", () => {
     expect(cleanFramePath(" /about.html ")).toBe("about.html");
     expect(cleanFramePath("docs/intro.html")).toBe("docs/intro.html");
     expect(cleanFramePath("")).toBe("");
+
     for (const bad of [
       "../x.html",
       "a/../../b",
@@ -212,8 +221,10 @@ describe("frames per direction", () => {
       "a?b",
       "%2e%2e/x",
       "a b",
-    ])
+    ]) {
       expect(cleanFramePath(bad)).toBeNull();
+    }
+
     const layout = setFramePath(defaultLayout(desktop), "f1", "about.html");
     expect(layout.frames[0]?.path).toBe("about.html");
     expect(setFramePath(layout, "f1", "../x")).toBe(layout);

@@ -85,14 +85,24 @@ function failed(tool: ToolRow): boolean {
 }
 
 function toolState(tool: ToolRow, running = true): ToolState {
-  if (tool.durationMs === null) return running ? "pending" : "stopped";
-  if (tool.denied || planHeld(tool)) return "denied";
-  if (canceled(tool)) return "stopped";
+  if (tool.durationMs === null) {
+    return running ? "pending" : "stopped";
+  }
+
+  if (tool.denied || planHeld(tool)) {
+    return "denied";
+  }
+
+  if (canceled(tool)) {
+    return "stopped";
+  }
+
   return tool.isError ? "error" : "done";
 }
 
 function shortName(target: string): string {
   const parts = target.split("/");
+
   return parts[parts.length - 1] || target;
 }
 
@@ -128,12 +138,17 @@ function quiet(tool: ToolRow): boolean {
 }
 
 function sameRow(a: ToolRow, b: ToolRow, workTree: string | null): boolean {
-  if (!quiet(a) || !quiet(b)) return false;
+  if (!quiet(a) || !quiet(b)) {
+    return false;
+  }
+
   if (
     toolGroupLabel(a.name) === CHECK_GROUP &&
     toolGroupLabel(b.name) === CHECK_GROUP
-  )
+  ) {
     return true;
+  }
+
   return (
     a.name === b.name &&
     toolSubject(a.name, a.input, workTree) ===
@@ -146,20 +161,24 @@ export function groupRepeats(
   workTree: string | null
 ): RowGroup[] {
   const groups: RowGroup[] = [];
+
   for (const tool of tools) {
     const last = groups.at(-1);
+
     if (last && sameRow(last.tool, tool, workTree)) {
       last.count += 1;
       last.durationMs = (last.durationMs ?? 0) + (tool.durationMs ?? 0);
       last.members.push(tool);
-    } else
+    } else {
       groups.push({
         tool,
         count: 1,
         durationMs: tool.durationMs,
         members: [tool],
       });
+    }
   }
+
   return groups;
 }
 
@@ -171,13 +190,19 @@ function checkParts(members: ToolRow[], workTree: string | null): string {
         .replace(/ check$/, "")
         .toLowerCase()
   );
+
   return [...new Set(parts)].join(", ");
 }
 
 function ToolStateIcon({ tool, state }: { tool: ToolRow; state: ToolState }) {
-  if (state === "pending") return <span className="spinner" />;
-  if (state === "stopped" || state === "denied")
+  if (state === "pending") {
+    return <span className="spinner" />;
+  }
+
+  if (state === "stopped" || state === "denied") {
     return <Icon name="close" size={14} />;
+  }
+
   return (
     <Icon
       name={state === "error" ? "alert" : (TOOL_ICON[tool.name] ?? "code")}
@@ -207,7 +232,7 @@ export function DiffBadge({
 }
 
 export function DiffView({ diff }: { diff: ToolDiff }) {
-  if (diff.hunks.length === 0)
+  if (diff.hunks.length === 0) {
     return (
       <p className="diff-empty text-xs">
         {diff.truncated
@@ -215,11 +240,14 @@ export function DiffView({ diff }: { diff: ToolDiff }) {
           : "No line changes."}
       </p>
     );
+  }
+
   return (
     <div className="diff-view" data-testid="diff-view">
       {diff.hunks.map((hunk, index) => {
         let oldLine = hunk.oldStart;
         let newLine = hunk.newStart;
+
         return (
           <div
             key={`${hunk.oldStart}-${hunk.newStart}-${index}`}
@@ -233,6 +261,7 @@ export function DiffView({ diff }: { diff: ToolDiff }) {
             {hunk.lines.map((line, lineIndex) => {
               const oldNo = line.kind === "add" ? "" : String(oldLine++);
               const newNo = line.kind === "del" ? "" : String(newLine++);
+
               return (
                 <div
                   key={lineIndex}
@@ -311,6 +340,7 @@ function CheckDetail({
     <ul className="tool-check-list flex flex-col gap-1 text-xs">
       {members.map((tool) => {
         const subject = toolSubject(tool.name, tool.input, workTree);
+
         return (
           <li key={tool.toolUseId} className="wrap-anywhere">
             <span className="text-foreground">{toolVerb(tool.name)}</span>
@@ -334,10 +364,18 @@ function ToolDetail({
   target: string;
   state: ToolState;
 }) {
-  if (tool.diff) return <DiffView diff={tool.diff} />;
+  if (tool.diff) {
+    return <DiffView diff={tool.diff} />;
+  }
+
   const edits = shellEdits(tool);
-  if (edits.length > 0) return <ShellEditDetail tool={tool} diffs={edits} />;
+
+  if (edits.length > 0) {
+    return <ShellEditDetail tool={tool} diffs={edits} />;
+  }
+
   const detail = tool.summary || (state === "pending" ? "Running" : "");
+
   return (
     <div className="flex flex-col gap-1 text-xs">
       {target && (
@@ -361,6 +399,7 @@ function ToolDetail({
 function rowView(group: RowGroup, workTree: string | null) {
   const { tool, members } = group;
   const edits = shellEdits(tool);
+
   if (
     new Set(
       members.map(
@@ -368,20 +407,24 @@ function rowView(group: RowGroup, workTree: string | null) {
           `${member.name}|${toolSubject(member.name, member.input, workTree)}`
       )
     ).size > 1
-  )
+  ) {
     return {
       edits,
       target: checkParts(members, workTree),
       totals: null,
       verb: CHECK_GROUP,
     };
-  if (edits.length === 0)
+  }
+
+  if (edits.length === 0) {
     return {
       edits,
       target: toolSubject(tool.name, tool.input, workTree),
       totals: tool.diff ?? null,
       verb: toolVerb(tool.name),
     };
+  }
+
   return {
     edits,
     target:
@@ -409,6 +452,7 @@ function ToolMeta({
     group.durationMs >= SHOW_MS_FROM
       ? group.durationMs
       : null;
+
   return (
     <>
       {group.count > 1 && (
@@ -445,6 +489,7 @@ function ToolItem({
   const isSkill = tool.name === SKILL_TOOL;
   const { edits, target, totals, verb } = rowView(group, workTree);
   const mixed = verb === CHECK_GROUP;
+
   return (
     <Action
       className={`tool-row ${state} ${isSkill ? "skill-tool" : ""}`}
@@ -490,6 +535,7 @@ function ToolItem({
 function GroupSummary({ tools }: { tools: ToolRow[] }) {
   const errors = tools.filter(failed).length;
   const total = tools.reduce((sum, t) => sum + (t.durationMs ?? 0), 0);
+
   return (
     <>
       <span>
@@ -515,7 +561,11 @@ export function ToolChips({
   flat?: boolean;
 }) {
   const [open, setOpen] = useState<boolean | null>(null);
-  if (tools.length === 0) return null;
+
+  if (tools.length === 0) {
+    return null;
+  }
+
   const rows = (
     <div className="tool-list flex flex-col">
       {groupRepeats(tools, workTree).map((group) => (
@@ -528,9 +578,13 @@ export function ToolChips({
       ))}
     </div>
   );
-  if (flat || tools.length < COLLAPSE_AFTER)
+
+  if (flat || tools.length < COLLAPSE_AFTER) {
     return <div className="tools tool-chips">{rows}</div>;
+  }
+
   const expanded = open ?? (running || tools.some(failed));
+
   return (
     <ChainOfThought
       className="tools -ml-2"
@@ -559,12 +613,14 @@ export interface FileChange {
 
 export function fileChanges(tools: ToolRow[]): FileChange[] {
   const byPath = new Map<string, FileChange>();
+
   for (const tool of tools) {
     const diffs = tool.diff
       ? tool.isError
         ? []
         : [tool.diff]
       : (tool.diffs ?? []);
+
     for (const diff of diffs) {
       const entry = byPath.get(diff.path) ?? {
         path: diff.path,
@@ -572,12 +628,14 @@ export function fileChanges(tools: ToolRow[]): FileChange[] {
         removed: 0,
         created: false,
       };
+
       entry.added += diff.added;
       entry.removed += diff.removed;
       entry.created ||= diff.created;
       byPath.set(diff.path, entry);
     }
   }
+
   return [...byPath.values()];
 }
 
@@ -589,6 +647,7 @@ export function ToolSummary({
   children: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+
   const label = useMemo(
     () =>
       toolTally(
@@ -600,8 +659,13 @@ export function ToolSummary({
         .join(", "),
     [tools]
   );
+
   const failedCount = useMemo(() => tools.filter(failed).length, [tools]);
-  if (tools.length === 0) return null;
+
+  if (tools.length === 0) {
+    return null;
+  }
+
   return (
     <div
       className="tool-summary"
@@ -635,10 +699,15 @@ export function ToolSummary({
 function useElapsed(since: number, active: boolean): number {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    if (!active) return;
+    if (!active) {
+      return;
+    }
+
     const id = window.setInterval(() => setNow(Date.now()), 1000);
+
     return () => window.clearInterval(id);
   }, [active]);
+
   return Math.max(0, now - since);
 }
 
@@ -648,20 +717,38 @@ function statusLabel(
   now: number,
   offline: boolean
 ): string {
-  if (offline) return "Lost the connection. Reconnecting…";
-  if (run.permissions.length > 0) return "Waiting for your answer";
+  if (offline) {
+    return "Lost the connection. Reconnecting…";
+  }
+
+  if (run.permissions.length > 0) {
+    return "Waiting for your answer";
+  }
+
   if (run.retry) {
     const seconds = Math.max(0, Math.ceil((run.retry.until - now) / 1000));
+
     return `Retrying in ${seconds}s (${run.retry.attempt}/${run.retry.max})`;
   }
+
   const pending = [...run.tools].reverse().find((t) => t.durationMs === null);
+
   if (pending) {
     const target = toolSubject(pending.name, pending.input, workTree);
+
     return `${LIVE_VERB[pending.name] ?? toolVerb(pending.name)}${target ? ` ${shortName(target)}` : ""}`;
   }
+
   const last = run.parts.at(-1);
-  if (last?.kind === "thinking" && last.open) return "Thinking";
-  if (last?.kind === "text" && last.open) return "Writing a reply";
+
+  if (last?.kind === "thinking" && last.open) {
+    return "Thinking";
+  }
+
+  if (last?.kind === "text" && last.open) {
+    return "Writing a reply";
+  }
+
   return run.parts.length > 0 ? "Working" : "Starting";
 }
 
@@ -669,18 +756,29 @@ export function runStepText(
   run: RunView | null,
   workTree: string | null
 ): string | null {
-  if (!run) return null;
+  if (!run) {
+    return null;
+  }
+
   const todo = run.todos?.find(
     (item) => item.status === "in_progress" && !item.skipped
   );
-  if (todo) return todo.activeForm || todo.content;
-  if (run.retry) return "Waiting to retry";
+
+  if (todo) {
+    return todo.activeForm || todo.content;
+  }
+
+  if (run.retry) {
+    return "Waiting to retry";
+  }
+
   return statusLabel(run, workTree, Date.now(), false);
 }
 
 function elapsedText(ms: number): string {
   const seconds = Math.floor(ms / 1000);
   const minutes = Math.floor(seconds / 60);
+
   return minutes > 0 ? `${minutes}m ${seconds % 60}s` : `${seconds}s`;
 }
 
@@ -696,6 +794,7 @@ export function LiveStatus({
   onStop?: () => void;
 }) {
   const elapsed = useElapsed(run.startedAt, true);
+
   return (
     <div
       className="ui-status live-status"

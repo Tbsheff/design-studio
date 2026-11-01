@@ -29,7 +29,9 @@ export function moveFocus(event: KeyboardEvent<HTMLElement>, selector: string) {
   const items = [
     ...event.currentTarget.querySelectorAll<HTMLElement>(selector),
   ];
+
   const at = items.indexOf(document.activeElement as HTMLElement);
+
   const next =
     event.key === "ArrowDown"
       ? at + 1
@@ -40,7 +42,11 @@ export function moveFocus(event: KeyboardEvent<HTMLElement>, selector: string) {
           : event.key === "End"
             ? items.length - 1
             : null;
-  if (next === null || items.length === 0) return;
+
+  if (next === null || items.length === 0) {
+    return;
+  }
+
   event.preventDefault();
   items[(next + items.length) % items.length]?.focus();
 }
@@ -72,8 +78,10 @@ export function Pop({
       root.current?.querySelector<HTMLElement>(
         '[aria-checked="true"], [aria-pressed="true"]'
       ) ?? root.current?.querySelector<HTMLElement>(FOCUS_ITEMS);
+
     first?.focus();
   }, []);
+
   return (
     <div
       ref={root}
@@ -87,6 +95,7 @@ export function Pop({
           event.preventDefault();
           onClose(true);
         }
+
         onKeyDown?.(event);
       }}
     >
@@ -149,6 +158,7 @@ export function PlusMenu({
     onClose(false);
     action();
   };
+
   return (
     <Pop
       trigger={trigger}
@@ -244,8 +254,10 @@ function rampColor(step: number, index: number): string {
 function fontNames(pack: PackSummary): string {
   const clean = (family: string) =>
     family.split(",")[0]?.replace(/['"]/g, "").trim() ?? "";
+
   const display = clean(pack.fonts.display);
   const body = clean(pack.fonts.body);
+
   return display === body || !body ? display : `${display} / ${body}`;
 }
 
@@ -328,6 +340,7 @@ export function PackCards({
   onPick: (pack: PackSummary | null) => void;
 }) {
   useEffect(() => loadPackFonts(packs), [packs]);
+
   return (
     <div className="home-pack-grid">
       {includeNone && (
@@ -417,6 +430,7 @@ export function ModelPopover({
   closing?: boolean;
 }) {
   const { designs } = settings;
+
   return (
     <Pop
       trigger={trigger}

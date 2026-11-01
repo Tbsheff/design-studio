@@ -17,7 +17,10 @@ function readStart(absolute: string): Uint8Array | null {
 }
 
 function sameBytes(a: Uint8Array | null, b: Uint8Array | null): boolean {
-  if (a === null || b === null) return a === b;
+  if (a === null || b === null) {
+    return a === b;
+  }
+
   return Buffer.from(a).equals(Buffer.from(b));
 }
 
@@ -27,34 +30,55 @@ export function createCutWriteGuard() {
 
   return {
     start(toolUseId: string, relative: string, absolute: string): void {
-      if (!open.has(toolUseId))
+      if (!open.has(toolUseId)) {
         open.set(toolUseId, { relative, absolute, bytes: readStart(absolute) });
+      }
     },
 
     finish(toolUseId: string, isError: boolean): void {
       const entry = open.get(toolUseId);
-      if (!entry) return;
+
+      if (!entry) {
+        return;
+      }
+
       open.delete(toolUseId);
-      if (!isError) cut.delete(entry.relative);
-      else if (!cut.has(entry.relative)) cut.set(entry.relative, entry);
+
+      if (!isError) {
+        cut.delete(entry.relative);
+      } else if (!cut.has(entry.relative)) {
+        cut.set(entry.relative, entry);
+      }
     },
 
     async restore(): Promise<string[]> {
       const entries = new Map(cut);
-      for (const entry of open.values())
-        if (!entries.has(entry.relative)) entries.set(entry.relative, entry);
+
+      for (const entry of open.values()) {
+        if (!entries.has(entry.relative)) {
+          entries.set(entry.relative, entry);
+        }
+      }
+
       open.clear();
       cut.clear();
       const restored: string[] = [];
+
       for (const entry of entries.values()) {
-        if (sameBytes(readStart(entry.absolute), entry.bytes)) continue;
-        if (entry.bytes === null) await rm(entry.absolute, { force: true });
-        else {
+        if (sameBytes(readStart(entry.absolute), entry.bytes)) {
+          continue;
+        }
+
+        if (entry.bytes === null) {
+          await rm(entry.absolute, { force: true });
+        } else {
           await mkdir(path.dirname(entry.absolute), { recursive: true });
           await writeFile(entry.absolute, entry.bytes);
         }
+
         restored.push(entry.relative);
       }
+
       return restored;
     },
   };

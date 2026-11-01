@@ -32,14 +32,23 @@ function menuKeys(
   event: KeyboardEvent<HTMLElement>,
   close: (refocus: boolean) => void
 ): void {
-  if (event.key === "Tab") close(false);
+  if (event.key === "Tab") {
+    close(false);
+  }
+
   const steps: Record<string, number> = { ArrowDown: 1, ArrowUp: -1 };
   const step = steps[event.key];
-  if (!step) return;
+
+  if (!step) {
+    return;
+  }
+
   event.preventDefault();
+
   const items = Array.from(
     event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="menuitem"]')
   );
+
   const index = items.indexOf(document.activeElement as HTMLButtonElement);
   items[(Math.max(0, index) + step + items.length) % items.length]?.focus();
 }
@@ -52,6 +61,7 @@ function writeWhenReady(text: Promise<string>): Promise<void> {
     const blob = text.then(
       (value) => new Blob([value], { type: "text/plain" })
     );
+
     return navigator.clipboard
       .write([new ClipboardItem({ "text/plain": blob })])
       .catch(async (error: unknown) => {
@@ -61,6 +71,7 @@ function writeWhenReady(text: Promise<string>): Promise<void> {
         });
       });
   }
+
   return text.then((value) => navigator.clipboard.writeText(value));
 }
 
@@ -85,6 +96,7 @@ function TriggerContent({
       </>
     );
   }
+
   return busy ? <span className="spinner" /> : <Icon name={icon} size={14} />;
 }
 
@@ -99,27 +111,39 @@ export function CopyCodeMenu({
   const root = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
   const timer = useRef<number | null>(null);
+
   const close = useCallback((refocus: boolean) => {
     setOpen(false);
-    if (refocus) trigger.current?.focus();
+
+    if (refocus) {
+      trigger.current?.focus();
+    }
   }, []);
+
   usePopover(open, root, close);
   useEffect(
     () => () => {
-      if (timer.current !== null) window.clearTimeout(timer.current);
+      if (timer.current !== null) {
+        window.clearTimeout(timer.current);
+      }
     },
     []
   );
   useEffect(() => {
-    if (open)
+    if (open) {
       root.current
         ?.querySelector<HTMLButtonElement>('[role="menuitem"]')
         ?.focus();
+    }
   }, [open]);
 
   const settle = (next: State) => {
     setState(next);
-    if (timer.current !== null) window.clearTimeout(timer.current);
+
+    if (timer.current !== null) {
+      window.clearTimeout(timer.current);
+    }
+
     timer.current = window.setTimeout(
       () => setState({ kind: "idle" }),
       RESET_MS
@@ -128,12 +152,17 @@ export function CopyCodeMenu({
 
   const copy = async (label: string, produce: () => Promise<string | null>) => {
     const text = produce().then((value) => {
-      if (!value) throw new Error("Nothing to copy");
+      if (!value) {
+        throw new Error("Nothing to copy");
+      }
+
       return value;
     });
+
     const written = writeWhenReady(text);
     close(true);
     setState({ kind: "busy" });
+
     try {
       await written;
       settle({ kind: "copied", label });
@@ -146,7 +175,10 @@ export function CopyCodeMenu({
   };
 
   const code = (format: CopyCodeFormat) => async () => {
-    if (!directionId) return null;
+    if (!directionId) {
+      return null;
+    }
+
     return (
       await exportApi.copyCode(projectId, {
         directionId,
@@ -186,12 +218,14 @@ export function CopyCodeMenu({
         : state.kind === "failed"
           ? `Copy failed: ${state.message}`
           : "Copy as code";
+
   const icon: IconName =
     state.kind === "copied"
       ? "check"
       : state.kind === "failed"
         ? "alert"
         : "code";
+
   return (
     <div className="copy-code-root" ref={root}>
       <button

@@ -23,9 +23,11 @@ async function post<T>(path: string, body?: unknown): Promise<T> {
     },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
+
   if (!res.ok) {
     let message = `POST ${path} failed: ${res.status}`;
     let code: string | undefined;
+
     try {
       const data = (await res.json()) as { error?: string; message?: string };
       message = data.error ?? data.message ?? message;
@@ -33,8 +35,10 @@ async function post<T>(path: string, body?: unknown): Promise<T> {
     } catch {
       message = `${message} ${res.statusText}`;
     }
+
     throw new ApiError(res.status, message, code);
   }
+
   return (await res.json()) as T;
 }
 
@@ -67,7 +71,10 @@ export function groupOf(
   project: Project | null,
   groupId: string | null
 ): Direction[] {
-  if (!project || !groupId) return [];
+  if (!project || !groupId) {
+    return [];
+  }
+
   return project.directions
     .filter((direction) => direction.variation?.groupId === groupId)
     .sort((a, b) => (a.variation?.index ?? 0) - (b.variation?.index ?? 0));

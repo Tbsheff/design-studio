@@ -29,6 +29,7 @@ export function linksPath(workTree: string): string {
 
 export async function readLinksAt(workTree: string): Promise<LinksFile> {
   const text = await readFile(linksPath(workTree), "utf-8").catch(() => null);
+
   return (text === null ? null : parseLinksText(text)) ?? emptyLinksFile();
 }
 
@@ -44,8 +45,10 @@ export function createLinksService(
   written?: LinksWritten
 ): LinksService {
   const lock = createKeyedMutex();
+
   const keyOf = (project: Project): string =>
     `${project.id}/${canvasOwner(project).id}/links`;
+
   const read = (project: Project): Promise<LinksFile> =>
     readLinksAt(canvasOwner(project).workTree);
 
@@ -70,13 +73,22 @@ export function createLinksService(
       return lock(keyOf(project), async () => {
         const current = await read(project);
         const next = change(current);
-        if (next === null) return current;
+
+        if (next === null) {
+          return current;
+        }
+
         const text = serializeLinksFile(next);
         const saved = parseLinksText(text) ?? emptyLinksFile();
-        if (text === serializeLinksFile(current)) return saved;
+
+        if (text === serializeLinksFile(current)) {
+          return saved;
+        }
+
         await writeAtomic(linksPath(canvasOwner(project).workTree), text);
         emit(project, saved, source);
         written?.(project, current, saved, source);
+
         return saved;
       });
     },

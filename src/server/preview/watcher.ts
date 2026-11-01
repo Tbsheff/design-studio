@@ -19,6 +19,7 @@ const IGNORED_SEGMENTS = new Set([
   ".next",
   ".turbo",
 ]);
+
 const COALESCE_MS = 20;
 const STATUS_INTERVAL_MS = 500;
 
@@ -57,7 +58,11 @@ interface DirectionWatch {
 
 function isIgnored(root: string, target: string): boolean {
   const relative = path.relative(root, target);
-  if (relative === "" || relative.startsWith("..")) return false;
+
+  if (relative === "" || relative.startsWith("..")) {
+    return false;
+  }
+
   return relative
     .split(path.sep)
     .some((segment) => IGNORED_SEGMENTS.has(segment));
@@ -90,26 +95,41 @@ export class WatcherManager {
 
   async flushed(key: string): Promise<void> {
     const entry = this.watches.get(key);
-    if (!entry || (!entry.flushTimer && entry.pending.size === 0)) return;
+
+    if (!entry || (!entry.flushTimer && entry.pending.size === 0)) {
+      return;
+    }
+
     await new Promise((resolve) => setTimeout(resolve, COALESCE_MS + 5));
   }
 
   watch(project: Project, direction: Direction): void {
     const key = watchKey(project.id, direction.id);
     const existing = this.watches.get(key);
-    if (existing && existing.root === path.resolve(direction.workTree)) return;
-    if (existing) this.unwatch(project.id, direction.id);
-    const root = path.resolve(direction.workTree);
-    if (nativeTreeWatch(project)) {
-      this.watchNative(project, direction, root);
+
+    if (existing && existing.root === path.resolve(direction.workTree)) {
       return;
     }
+
+    if (existing) {
+      this.unwatch(project.id, direction.id);
+    }
+
+    const root = path.resolve(direction.workTree);
+
+    if (nativeTreeWatch(project)) {
+      this.watchNative(project, direction, root);
+
+      return;
+    }
+
     const watcher: FSWatcher = watch(root, {
       ignored: (target: string) => isIgnored(root, target),
       ignoreInitial: true,
       awaitWriteFinish: false,
       persistent: true,
     });
+
     const entry = this.entryFor(
       project,
       direction,
@@ -117,6 +137,7 @@ export class WatcherManager {
       watcher,
       new Promise<void>((resolve) => watcher.once("ready", () => resolve()))
     );
+
     const watchedAt = Date.now();
     watcher.once("ready", () => void this.recordEarlyWrites(entry, watchedAt));
     const onPath = (target: string): void => this.record(entry, target);
@@ -159,15 +180,23 @@ export class WatcherManager {
     root: string
   ): void {
     let entry: DirectionWatch | null = null;
+
     const native = watchTree(
       root,
       { recursive: true, persistent: true },
       (_event, name) => {
-        if (!entry || !name) return;
+        if (!entry || !name) {
+          return;
+        }
+
         const target = path.join(root, name.toString());
-        if (!isIgnored(root, target)) this.record(entry, target);
+
+        if (!isIgnored(root, target)) {
+          this.record(entry, target);
+        }
       }
     );
+
     native.on("error", () => undefined);
     entry = this.entryFor(
       project,
@@ -194,11 +223,22 @@ export class WatcherManager {
   unwatch(projectId: string, directionId: string): void {
     const key = watchKey(projectId, directionId);
     const entry = this.watches.get(key);
-    if (!entry) return;
+
+    if (!entry) {
+      return;
+    }
+
     this.watches.delete(key);
     entry.closed = true;
-    if (entry.flushTimer) clearTimeout(entry.flushTimer);
-    if (entry.statusTimer) clearTimeout(entry.statusTimer);
+
+    if (entry.flushTimer) {
+      clearTimeout(entry.flushTimer);
+    }
+
+    if (entry.statusTimer) {
+      clearTimeout(entry.statusTimer);
+    }
+
     void entry.watcher.close();
   }
 
@@ -208,8 +248,15 @@ export class WatcherManager {
     await Promise.all(
       entries.map(async (entry) => {
         entry.closed = true;
-        if (entry.flushTimer) clearTimeout(entry.flushTimer);
-        if (entry.statusTimer) clearTimeout(entry.statusTimer);
+
+        if (entry.flushTimer) {
+          clearTimeout(entry.flushTimer);
+        }
+
+        if (entry.statusTimer) {
+          clearTimeout(entry.statusTimer);
+        }
+
         await entry.watcher.close();
       })
     );
@@ -221,43 +268,66 @@ export class WatcherManager {
   ): Promise<void> {
     const walk = async (dir: string): Promise<void> => {
       const items = await readdir(dir, { withFileTypes: true }).catch(() => []);
+
       for (const item of items) {
         const target = path.join(dir, item.name);
-        if (entry.closed || isIgnored(entry.root, target)) continue;
-        if (item.isDirectory()) await walk(target);
-        else if (
+
+        if (entry.closed || isIgnored(entry.root, target)) {
+          continue;
+        }
+
+        if (item.isDirectory()) {
+          await walk(target);
+        } else if (
           item.isFile() &&
           ((await stat(target).catch(() => null))?.mtimeMs ?? 0) >= since
-        )
+        ) {
           this.record(entry, target);
+        }
       }
     };
+
     await walk(entry.root);
   }
 
   private record(entry: DirectionWatch, target: string): void {
-    if (entry.closed) return;
+    if (entry.closed) {
+      return;
+    }
+
     const relative = path
       .relative(entry.root, target)
       .split(path.sep)
       .join("/");
-    if (!relative || relative.startsWith("..")) return;
+
+    if (!relative || relative.startsWith("..")) {
+      return;
+    }
+
     entry.pending.add(relative);
-    if (!entry.flushTimer)
+
+    if (!entry.flushTimer) {
       entry.flushTimer = setTimeout(() => this.flush(entry), COALESCE_MS);
+    }
   }
 
   private flush(entry: DirectionWatch): void {
     entry.flushTimer = null;
-    if (entry.closed || entry.pending.size === 0) return;
+
+    if (entry.closed || entry.pending.size === 0) {
+      return;
+    }
+
     const paths = [...entry.pending].sort();
     entry.pending.clear();
+
     const reload =
       this.deps.needsReload?.({
         projectId: entry.projectId,
         root: entry.root,
         paths,
       }) ?? false;
+
     this.deps.bus.emit({
       type: "files.changed",
       projectId: entry.projectId,
@@ -272,20 +342,30 @@ export class WatcherManager {
       root: entry.root,
       paths,
     });
-    for (const changed of paths) entry.statusPaths.add(changed);
+
+    for (const changed of paths) {
+      entry.statusPaths.add(changed);
+    }
+
     this.scheduleStatus(entry);
   }
 
   private scheduleStatus(entry: DirectionWatch): void {
-    if (entry.statusTimer) return;
-    if (entry.statusRunning) {
-      entry.statusQueued = true;
+    if (entry.statusTimer) {
       return;
     }
+
+    if (entry.statusRunning) {
+      entry.statusQueued = true;
+
+      return;
+    }
+
     const wait = Math.max(
       0,
       entry.lastStatusAt + STATUS_INTERVAL_MS - Date.now()
     );
+
     entry.statusTimer = setTimeout(() => {
       entry.statusTimer = null;
       void this.emitStatus(entry);
@@ -293,22 +373,29 @@ export class WatcherManager {
   }
 
   private async emitStatus(entry: DirectionWatch): Promise<void> {
-    if (entry.closed) return;
+    if (entry.closed) {
+      return;
+    }
+
     entry.statusRunning = true;
     entry.lastStatusAt = Date.now();
     const paths = [...entry.statusPaths];
     entry.statusPaths.clear();
+
     try {
       const project = await this.deps.projects.get(entry.projectId);
+
       const direction = project.directions.find(
         (item) => item.id === entry.directionId
       );
+
       if (direction && !entry.closed) {
         const status = await this.deps.versions.status(
           project,
           direction,
           paths
         );
+
         if (!entry.closed) {
           this.deps.bus.emit({
             type: "status.changed",
@@ -320,9 +407,13 @@ export class WatcherManager {
       }
     } catch {
       entry.lastStatusAt = Date.now();
-      for (const changed of paths) entry.statusPaths.add(changed);
+
+      for (const changed of paths) {
+        entry.statusPaths.add(changed);
+      }
     } finally {
       entry.statusRunning = false;
+
       if (entry.statusQueued && !entry.closed) {
         entry.statusQueued = false;
         this.scheduleStatus(entry);

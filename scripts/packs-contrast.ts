@@ -11,6 +11,7 @@ import type {
 } from "../src/shared/contracts.js";
 
 type Rgb = { r: number; g: number; b: number; inGamut: boolean };
+
 type Pair = { fg: string; bg: string; min: number };
 
 const PAIRS: Pair[] = [
@@ -30,7 +31,11 @@ function parseOklch(value: string): Rgb {
   const m = /^oklch\(\s*([\d.]+)%\s+([\d.]+)\s+([\d.]+)\s*\)$/.exec(
     value.trim()
   );
-  if (!m) throw new Error(`not oklch(L% C H): ${value}`);
+
+  if (!m) {
+    throw new Error(`not oklch(L% C H): ${value}`);
+  }
+
   const L = Number(m[1]) / 100;
   const C = Number(m[2]);
   const h = (Number(m[3]) * Math.PI) / 180;
@@ -44,17 +49,20 @@ function parseOklch(value: string): Rgb {
   const bl = -0.0041960863 * l - 0.7034186147 * mm + 1.707614701 * s;
   const eps = 0.0005;
   const inGamut = [r, g, bl].every((c) => c >= -eps && c <= 1 + eps);
+
   return { r, g, b: bl, inGamut };
 }
 
 function luminance(c: Rgb): number {
   const k = (x: number) => Math.min(1, Math.max(0, x));
+
   return 0.2126 * k(c.r) + 0.7152 * k(c.g) + 0.0722 * k(c.b);
 }
 
 function ratio(a: Rgb, b: Rgb): number {
   const la = luminance(a);
   const lb = luminance(b);
+
   return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
 }
 
@@ -70,53 +78,88 @@ for (const id of readdirSync(packsDir).sort()) {
   const dir = path.join(packsDir, id);
   const tokensPath = path.join(dir, "tokens.json");
   const packPath = path.join(dir, "pack.json");
+
   if (!existsSync(tokensPath) || !existsSync(packPath)) {
     errors.push(`${id}: missing tokens.json or pack.json`);
     continue;
   }
+
   const tokens = JSON.parse(readFileSync(tokensPath, "utf-8")) as TokenFile;
   const pack = JSON.parse(readFileSync(packPath, "utf-8")) as PackManifest;
-  if (pack.id !== id) errors.push(`${id}: pack.id is ${pack.id}`);
+
+  if (pack.id !== id) {
+    errors.push(`${id}: pack.id is ${pack.id}`);
+  }
+
   for (const [group, names] of Object.entries(REQUIRED_TOKENS)) {
     const g = tokens[group] as TokenGroup | undefined;
+
     for (const name of names) {
-      if (!g || !isToken(g[name]))
+      if (!g || !isToken(g[name])) {
         errors.push(`${id}: missing ${group}.${name}`);
+      }
     }
   }
+
   const colors = tokens.color;
+
   const modes: ("light" | "dark")[] =
     pack.mode === "dark" ? ["dark"] : ["light", "dark"];
+
   const resolve = (name: string, mode: "light" | "dark"): Rgb => {
     const t = colors[name];
-    if (!isToken(t)) throw new Error(`${id}: color.${name} missing`);
+
+    if (!isToken(t)) {
+      throw new Error(`${id}: color.${name} missing`);
+    }
+
     const dark = t.$extensions?.["studio.modes"]?.dark;
     const v = pack.mode === "light" && mode === "dark" ? dark : t.$value;
-    if (!v) throw new Error(`${id}: color.${name} has no ${mode} value`);
+
+    if (!v) {
+      throw new Error(`${id}: color.${name} has no ${mode} value`);
+    }
+
     return parseOklch(v);
   };
+
   for (const [name, t] of Object.entries(colors)) {
-    if (!isToken(t)) continue;
+    if (!isToken(t)) {
+      continue;
+    }
+
     const dark = t.$extensions?.["studio.modes"]?.dark;
-    if (pack.mode === "light" && !dark)
+
+    if (pack.mode === "light" && !dark) {
       errors.push(`${id}: color.${name} has no dark mode`);
-    if (pack.mode === "dark" && t.$extensions?.["studio.modes"])
+    }
+
+    if (pack.mode === "dark" && t.$extensions?.["studio.modes"]) {
       errors.push(`${id}: dark pack color.${name} has modes`);
+    }
+
     for (const v of [t.$value, dark]) {
-      if (!v) continue;
+      if (!v) {
+        continue;
+      }
+
       try {
-        if (!parseOklch(v).inGamut)
+        if (!parseOklch(v).inGamut) {
           errors.push(`${id}: color.${name} ${v} is outside sRGB`);
+        }
       } catch (e) {
         errors.push(`${id}: ${(e as Error).message}`);
       }
     }
   }
+
   const primary = colors.primary;
+
   const primaryIsLink =
     isToken(primary) &&
     /link/i.test(primary.$description ?? "") &&
     !/never text/i.test(primary.$description ?? "");
+
   const pairs: Pair[] = primaryIsLink
     ? [
         ...PAIRS,
@@ -124,26 +167,37 @@ for (const id of readdirSync(packsDir).sort()) {
         { fg: "primary", bg: "surface", min: 4.6 },
       ]
     : PAIRS;
+
   for (const mode of modes) {
     let low = Infinity;
+
     for (const p of pairs) {
       const r = ratio(resolve(p.fg, mode), resolve(p.bg, mode));
-      if (p.min > 3) low = Math.min(low, r);
+
+      if (p.min > 3) {
+        low = Math.min(low, r);
+      }
+
       const ok = r >= p.min;
-      if (!ok)
+
+      if (!ok) {
         errors.push(
           `${id} ${mode}: ${p.fg} on ${p.bg} = ${r.toFixed(2)} < ${p.min}`
         );
+      }
+
       rows.push(
         `| ${id} | ${mode} | ${p.fg} / ${p.bg} | ${r.toFixed(2)} | ${ok ? "pass" : "FAIL"} |`
       );
     }
+
     summary.push(`| ${id} | ${mode} | ${low.toFixed(2)} |`);
   }
 }
 
 const verbose = process.argv.includes("--all");
-if (verbose)
+
+if (verbose) {
   console.log(
     [
       "| pack | mode | pair | ratio | result |",
@@ -151,11 +205,15 @@ if (verbose)
       ...rows,
     ].join("\n")
   );
+}
+
 console.log(
   ["| pack | mode | min text ratio |", "|---|---|---|", ...summary].join("\n")
 );
+
 if (errors.length) {
   console.log(`\n${errors.length} problem(s):\n${errors.join("\n")}`);
   process.exit(1);
 }
+
 console.log("\nall packs pass");

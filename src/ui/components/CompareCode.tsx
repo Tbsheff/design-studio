@@ -26,11 +26,16 @@ const OPEN_ALL_MAX = 8;
 
 function hunkRows(hunk: PatchHunk): Line[] {
   const at = { old: hunk.oldStart, new: hunk.newStart };
+
   return hunk.lines.map((line) => {
-    if (line.sign === "+")
+    if (line.sign === "+") {
       return { kind: "add", oldNo: null, newNo: at.new++, text: line.text };
-    if (line.sign === "-")
+    }
+
+    if (line.sign === "-") {
       return { kind: "del", oldNo: at.old++, newNo: null, text: line.text };
+    }
+
     return { kind: "ctx", oldNo: at.old++, newNo: at.new++, text: line.text };
   });
 }
@@ -63,10 +68,12 @@ function useHunkReview(
   to: string
 ): HunkReview {
   const pair = `${projectId}/${directionId}/${from}/${to}`;
+
   const [store, setStore] = useState<{
     pair: string;
     states: Record<string, HunkState | undefined>;
   }>({ pair, states: {} });
+
   const update = useCallback(
     (
       key: string,
@@ -74,14 +81,17 @@ function useHunkReview(
     ) =>
       setStore((prev) => {
         const states = prev.pair === pair ? prev.states : {};
+
         return { pair, states: { ...states, [key]: next(states[key]) } };
       }),
     [pair]
   );
+
   const put = useCallback(
     (key: string, next: HunkState | undefined) => update(key, () => next),
     [update]
   );
+
   const keep = useCallback(
     (key: string) =>
       update(key, (prev) =>
@@ -89,6 +99,7 @@ function useHunkReview(
       ),
     [update]
   );
+
   const undo = useCallback(
     (key: string, file: string, hunk: number) => {
       put(key, { kind: "busy" });
@@ -100,35 +111,42 @@ function useHunkReview(
     },
     [projectId, directionId, from, to, put]
   );
+
   useProjectEvents(projectId, (event) => {
     if (
       event.type !== "version.created" ||
       event.version.directionId !== directionId
-    )
+    ) {
       return;
+    }
+
     const back = event.version.title;
     setStore((prev) => {
       const hit = Object.entries(prev.states).find(
         ([, state]) =>
           state?.kind === "undone" && back === `Undo: ${state.title}`
       );
+
       return hit
         ? { ...prev, states: { ...prev.states, [hit[0]]: undefined } }
         : prev;
     });
   });
+
   return { states: store.pair === pair ? store.states : {}, keep, undo };
 }
 
 function HunkStatus({ state }: { state: HunkState | undefined }) {
-  if (state?.kind === "kept")
+  if (state?.kind === "kept") {
     return (
       <span className="hunk-status kept">
         <Icon name="check" size={12} />
         Kept
       </span>
     );
-  if (state?.kind === "undone")
+  }
+
+  if (state?.kind === "undone") {
     return (
       <span
         className="hunk-status undone"
@@ -138,6 +156,8 @@ function HunkStatus({ state }: { state: HunkState | undefined }) {
         Undone
       </span>
     );
+  }
+
   return null;
 }
 
@@ -151,6 +171,7 @@ function HunkHead(props: {
 }) {
   const { state } = props;
   const settled = state?.kind === "undone" || state?.kind === "busy";
+
   return (
     <div className="hunk-head diff-gap" role="row">
       <span className="hunk-range truncate">{props.header}</span>
@@ -224,6 +245,7 @@ function HunkBlock({
 }) {
   const key = hunkKey(file.path, hunk.index);
   const state = review.states[key];
+
   return (
     <div
       className={`hunk ${state?.kind ?? ""}`}
@@ -257,15 +279,20 @@ function FilePatch({
   file: VersionFileDiff;
   review: HunkReview;
 }) {
-  if (file.binary)
+  if (file.binary) {
     return (
       <div className="diff-view compare-code-note">
         Binary file. No text diff.
       </div>
     );
+  }
+
   const hunks = splitHunks(file.patch);
-  if (hunks.length === 0)
+
+  if (hunks.length === 0) {
     return <div className="diff-view compare-code-note">No line changes.</div>;
+  }
+
   return (
     <div
       className="diff-view compare-code-view"
@@ -294,6 +321,7 @@ function FileSection({
   review: HunkReview;
 }) {
   const name = file.oldPath ? `${file.oldPath} → ${file.path}` : file.path;
+
   return (
     <li className="compare-code-file">
       <button
@@ -324,6 +352,7 @@ function useChanges(projectId: string, from: string, to: string) {
     changes: VersionChanges | null;
     error: string | null;
   } | null>(null);
+
   const key = `${projectId}/${from}/${to}`;
   useEffect(() => {
     let live = true;
@@ -335,10 +364,12 @@ function useChanges(projectId: string, from: string, to: string) {
       (error: unknown) =>
         live && setState({ key, changes: null, error: errorText(error) })
     );
+
     return () => {
       live = false;
     };
   }, [projectId, from, to, key]);
+
   return state?.key === key ? state : null;
 }
 
@@ -346,6 +377,7 @@ function Pair({ older, newer }: { older: Version; newer: Version }) {
   const index = indexVersions([older, newer]);
   const a = displayTitle(older, index);
   const b = displayTitle(newer, index);
+
   return (
     <div
       className="compare-code-summary"
@@ -369,6 +401,7 @@ function Summary({ changes }: { changes: VersionChanges }) {
   const add = changes.files.reduce((sum, file) => sum + file.additions, 0);
   const del = changes.files.reduce((sum, file) => sum + file.deletions, 0);
   const more = changes.totalFiles - changes.files.length;
+
   return (
     <div className="compare-code-summary">
       <span>
@@ -396,39 +429,55 @@ export default function CompareCode({
   newer: Version;
 }) {
   const state = useChanges(projectId, older.id, newer.id);
+
   const review = useHunkReview(
     projectId,
     newer.directionId,
     older.id,
     newer.id
   );
+
   const [toggled, setToggled] = useState<Set<string>>(() => new Set());
-  if (!state)
+
+  if (!state) {
     return (
       <div className="compare-code-empty" role="status">
         Loading the code diff…
       </div>
     );
-  if (state.error || !state.changes)
+  }
+
+  if (state.error || !state.changes) {
     return (
       <div className="stage-message" role="alert">
         {state.error ?? "Could not load the code diff."}
       </div>
     );
+  }
+
   const { changes } = state;
-  if (changes.files.length === 0)
+
+  if (changes.files.length === 0) {
     return (
       <div className="compare-code-empty">
         These versions have the same files.
       </div>
     );
+  }
+
   const openByDefault = changes.files.length <= OPEN_ALL_MAX;
+
   const toggle = (path: string) =>
     setToggled((prev) => {
       const next = new Set(prev);
-      if (!next.delete(path)) next.add(path);
+
+      if (!next.delete(path)) {
+        next.add(path);
+      }
+
       return next;
     });
+
   return (
     <div className="compare-code">
       <Pair older={older} newer={newer} />

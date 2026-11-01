@@ -34,11 +34,14 @@ function groupRun(runs: RunMap, directionId: string): GroupRun {
   const list = Object.values(runs)
     .filter((run) => run.directionId === directionId)
     .sort((a, b) => a.startedAt - b.startedAt);
+
   const latest = list[list.length - 1];
+
   const costUsd = list.reduce(
     (sum, run) => sum + (run.summary?.costUsd ?? 0),
     0
   );
+
   return {
     status: latest?.status ?? null,
     costUsd,
@@ -63,9 +66,11 @@ function useShownGroup(
   const groupId = direction?.variation?.groupId ?? state.groupId;
   const group = groupOf(project, groupId);
   const ids = group.map((d) => d.id);
+
   const onCanvas = useSyncExternalStore(canvasStore.subscribe, () =>
     framesOnCanvas(project.id, ids)
   );
+
   return direction?.variation || onCanvas > 0 ? group : [];
 }
 
@@ -85,23 +90,31 @@ function VariationBar({
 }: TopProps & { group: Direction[] }) {
   const [cancelError, setCancelError] = useState<string | null>(null);
   const first = group[0]?.variation;
-  if (!first) return null;
+
+  if (!first) {
+    return null;
+  }
+
   const variation =
     direction?.variation?.groupId === first.groupId
       ? direction.variation
       : null;
+
   const groupRuns = group.map((d) => groupRun(runs ?? {}, d.id));
   const total = groupRuns.reduce((sum, run) => sum + run.costUsd, 0);
   const anyRunning = groupRuns.some((run) => run.running);
+
   const firstRun = Object.values(runs ?? {}).find(
     (run) =>
       run.request?.variation && group.some((d) => d.id === run.directionId)
   );
+
   const budget = budgetFor(
     project,
     firstRun?.request?.level ?? project.settings.defaultLevel,
     group.length
   );
+
   const showAll = () => {
     state.keepNotice(null);
     showVariationFrames(
@@ -111,14 +124,17 @@ function VariationBar({
       false
     );
   };
+
   const cancelAll = async () => {
     setCancelError(null);
+
     try {
       await state.cancelAll(first.groupId);
     } catch (err) {
       setCancelError(`Could not cancel the runs. ${errorText(err)} Try again.`);
     }
   };
+
   return (
     <>
       <div className="variation-bar" data-testid="variation-bar">
@@ -184,6 +200,7 @@ function VariationBar({
 export function VariationsTop(props: TopProps) {
   const { state, project, direction } = props;
   const group = useShownGroup(project, state, direction);
+
   return (
     <>
       {group.length > 0 && <VariationBar {...props} group={group} />}
@@ -211,13 +228,15 @@ export function VariationsTop(props: TopProps) {
             onCancel={() => state.askElement(null)}
             onStart={(note, count) => {
               const element = state.ask;
-              if (element)
+
+              if (element) {
                 void state.proposeElement(
                   element,
                   note,
                   count,
                   project.settings.defaultLevel
                 );
+              }
             }}
           />
         </div>
@@ -258,10 +277,15 @@ export function canvasVariations({
     variationOf: (directionId) => {
       const direction = project.directions.find((d) => d.id === directionId);
       const variation = direction?.variation;
-      if (!direction || !variation) return undefined;
+
+      if (!direction || !variation) {
+        return undefined;
+      }
+
       const group = groupOf(project, variation.groupId);
       const run = groupRun(runs, directionId);
-      if (variation.scope)
+
+      if (variation.scope) {
         return elementVariation({
           state,
           project,
@@ -272,6 +296,8 @@ export function canvasVariations({
           group,
           run,
         });
+      }
+
       return {
         label: variation.label,
         title: variation.title,
@@ -323,12 +349,26 @@ function keepBlocker(
   run: GroupRun,
   error: string | null
 ): string | null {
-  if (variation.settled === "kept") return "Already kept in the main design";
-  if (variation.settled === "discarded") return "Another variant was kept";
-  if (run.running) return "Wait for this variant to finish";
-  if (error || run.status === "failed")
+  if (variation.settled === "kept") {
+    return "Already kept in the main design";
+  }
+
+  if (variation.settled === "discarded") {
+    return "Another variant was kept";
+  }
+
+  if (run.running) {
+    return "Wait for this variant to finish";
+  }
+
+  if (error || run.status === "failed") {
     return "This variant failed, so it cannot be kept";
-  if (run.status !== "completed") return "This variant has no finished run";
+  }
+
+  if (run.status !== "completed") {
+    return "This variant has no finished run";
+  }
+
   return null;
 }
 
@@ -344,6 +384,7 @@ function elementVariation({
 }: ElementVariationInput): FrameVariation {
   const error =
     variation.rejected ?? (run.status === "failed" ? run.error : null);
+
   return {
     label: variation.label,
     title: variation.title,

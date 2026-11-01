@@ -19,15 +19,19 @@ export type CssEdit =
 
 const PX_TOLERANCE = 0.5;
 const COLOR_TOLERANCE = 0.02;
+
 const V3_SPACING = [
   0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 16, 20, 24,
   28, 32, 36, 40, 44, 48, 52, 56, 60, 64, 72, 80, 96,
 ];
+
 const V4_HALVES = [0.5, 1.5, 2.5, 3.5];
+
 const V3_OPACITY = new Set([
   0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95,
   100,
 ]);
+
 const FRACTIONS: Array<[number, string]> = [
   [50, "1/2"],
   [100 / 3, "1/3"],
@@ -45,6 +49,7 @@ const FRACTIONS: Array<[number, string]> = [
   [700 / 12, "7/12"],
   [1100 / 12, "11/12"],
 ];
+
 const KEYWORDS: Record<string, Record<string, string>> = {
   display: {
     flex: "flex",
@@ -190,6 +195,7 @@ const KEYWORDS: Record<string, Record<string, string>> = {
     none: "border-none",
   },
 };
+
 const SINGLE_PROPS: Record<string, SingleGroup> = {
   color: "color",
   "background-color": "bg",
@@ -227,6 +233,7 @@ const SINGLE_PROPS: Record<string, SingleGroup> = {
   "background-position": "bg-position",
   "background-repeat": "bg-repeat",
 };
+
 const BOX_PROPS: Record<string, [SidedGroup, Side]> = {
   "padding-top": ["padding", "t"],
   "padding-right": ["padding", "r"],
@@ -285,8 +292,13 @@ function themeVar(
   ns: ThemeNamespace
 ): string | null {
   const name = varName(value);
-  if (!name) return null;
+
+  if (!name) {
+    return null;
+  }
+
   const hit = theme.vars.get(name);
+
   return hit && hit.ns === ns ? hit.name : null;
 }
 
@@ -295,7 +307,10 @@ function arbitraryVar(
   name: string,
   hint: string
 ): string {
-  if (theme.version === 4) return hint ? `(${hint}:${name})` : `(${name})`;
+  if (theme.version === 4) {
+    return hint ? `(${hint}:${name})` : `(${name})`;
+  }
+
   return hint ? `[${hint}:var(${name})]` : `[var(${name})]`;
 }
 
@@ -305,16 +320,20 @@ function nearestNamed(
   tolerance: number
 ): string | null {
   let best: { name: string; diff: number } | null = null;
+
   for (const [name, value] of map) {
     const diff = Math.abs(value - target);
+
     if (
       diff <= tolerance &&
       (!best ||
         diff < best.diff ||
         (diff === best.diff && name.length < best.name.length))
-    )
+    ) {
       best = { name, diff };
+    }
   }
+
   return best?.name ?? null;
 }
 
@@ -323,22 +342,38 @@ function trimNumber(value: number): string {
 }
 
 function spacingStep(px: number, theme: TailwindTheme): string | null {
-  if (px === 0) return "0";
-  if (Math.abs(px - 1) <= 0.01 && theme.spacingPx !== 1) return "px";
+  if (px === 0) {
+    return "0";
+  }
+
+  if (Math.abs(px - 1) <= 0.01 && theme.spacingPx !== 1) {
+    return "px";
+  }
+
   const base = theme.spacingPx;
+
   if (theme.version === 3) {
     const step = V3_SPACING.find(
       (step) => Math.abs(step * 4 - px) <= PX_TOLERANCE
     );
+
     return step === undefined ? null : trimNumber(step);
   }
+
   const whole = Math.round(px / base);
-  if (whole > 0 && Math.abs(whole * base - px) <= PX_TOLERANCE)
+
+  if (whole > 0 && Math.abs(whole * base - px) <= PX_TOLERANCE) {
     return String(whole);
+  }
+
   const half = V4_HALVES.find(
     (step) => Math.abs(step * base - px) <= PX_TOLERANCE
   );
-  if (half !== undefined) return trimNumber(half);
+
+  if (half !== undefined) {
+    return trimNumber(half);
+  }
+
   return nearestNamed(theme.spacing, px, PX_TOLERANCE);
 }
 
@@ -352,21 +387,39 @@ function spacingValue(
   allowAuto: boolean
 ): SideValue {
   const text = value.trim();
-  if (allowAuto && text === "auto") return signed("auto", false);
+
+  if (allowAuto && text === "auto") {
+    return signed("auto", false);
+  }
+
   const named = themeVar(theme, text, "spacing");
-  if (named !== null) return signed(named, false);
+
+  if (named !== null) {
+    return signed(named, false);
+  }
+
   const variable = varName(text);
-  if (variable) return signed(arbitraryVar(theme, variable, ""), false);
+
+  if (variable) {
+    return signed(arbitraryVar(theme, variable, ""), false);
+  }
+
   const px = lengthToPx(text);
+
   if (px !== null && Number.isFinite(px)) {
     const step = spacingStep(Math.abs(px), theme);
-    if (step !== null) return signed(step, px < 0);
+
+    if (step !== null) {
+      return signed(step, px < 0);
+    }
   }
+
   return signed(arbitrary(text), false);
 }
 
 function dimsValue(value: string, side: Side, theme: TailwindTheme): SideValue {
   const text = value.trim().toLowerCase();
+
   const keyword: Record<string, string> = {
     auto: "auto",
     "100%": "full",
@@ -375,48 +428,92 @@ function dimsValue(value: string, side: Side, theme: TailwindTheme): SideValue {
     "max-content": "max",
     none: "none",
   };
-  if (keyword[text]) return signed(keyword[text], false);
+
+  if (keyword[text]) {
+    return signed(keyword[text], false);
+  }
+
   const horizontal = side === "w" || side === "minw" || side === "maxw";
-  if (horizontal && text === "100vw") return signed("screen", false);
-  if (!horizontal && text === "100vh") return signed("screen", false);
-  if (text === "100dvh" || text === "100svh" || text === "100lvh")
+
+  if (horizontal && text === "100vw") {
+    return signed("screen", false);
+  }
+
+  if (!horizontal && text === "100vh") {
+    return signed("screen", false);
+  }
+
+  if (text === "100dvh" || text === "100svh" || text === "100lvh") {
     return signed(text.slice(3), false);
+  }
+
   const pct = percent(text);
+
   if (pct !== null) {
     const fraction = FRACTIONS.find(([share]) => Math.abs(share - pct) < 0.05);
-    if (fraction) return signed(fraction[1], false);
+
+    if (fraction) {
+      return signed(fraction[1], false);
+    }
+
     return signed(arbitrary(text), false);
   }
+
   return spacingValue(value, theme, false);
 }
 
 function insetValue(value: string, theme: TailwindTheme): SideValue {
   const text = value.trim().toLowerCase();
-  if (text === "100%") return signed("full", false);
+
+  if (text === "100%") {
+    return signed("full", false);
+  }
+
   const pct = percent(text);
+
   if (pct !== null && pct !== 0) {
     const fraction = FRACTIONS.find(
       ([share]) => Math.abs(share - Math.abs(pct)) < 0.05
     );
+
     return fraction
       ? signed(fraction[1], pct < 0)
       : signed(arbitrary(text), false);
   }
+
   return spacingValue(value, theme, true);
 }
 
 function radiusValue(value: string, theme: TailwindTheme): SideValue {
   const text = value.trim();
   const named = themeVar(theme, text, "radius");
-  if (named !== null) return signed(named, false);
+
+  if (named !== null) {
+    return signed(named, false);
+  }
+
   const variable = varName(text);
-  if (variable) return signed(arbitraryVar(theme, variable, ""), false);
+
+  if (variable) {
+    return signed(arbitraryVar(theme, variable, ""), false);
+  }
+
   const px = lengthToPx(text);
-  if (px === null)
+
+  if (px === null) {
     return signed(percent(text) === 50 ? "full" : arbitrary(text), false);
-  if (px === 0) return signed("none", false);
-  if (px >= 9999) return signed("full", false);
+  }
+
+  if (px === 0) {
+    return signed("none", false);
+  }
+
+  if (px >= 9999) {
+    return signed("full", false);
+  }
+
   const step = nearestNamed(theme.radius, px, PX_TOLERANCE);
+
   return signed(step ?? arbitrary(text), false);
 }
 
@@ -434,10 +531,22 @@ interface ColorHit {
 }
 
 function betterHit(hit: ColorHit, best: ColorHit | null): boolean {
-  if (!best || hit.diff < best.diff - 1e-6) return true;
-  if (Math.abs(hit.diff - best.diff) > 1e-6) return false;
-  if (hit.project !== best.project) return hit.project;
-  if (hit.rank !== best.rank) return hit.rank < best.rank;
+  if (!best || hit.diff < best.diff - 1e-6) {
+    return true;
+  }
+
+  if (Math.abs(hit.diff - best.diff) > 1e-6) {
+    return false;
+  }
+
+  if (hit.project !== best.project) {
+    return hit.project;
+  }
+
+  if (hit.rank !== best.rank) {
+    return hit.rank < best.rank;
+  }
+
   return hit.name.length < best.name.length;
 }
 
@@ -446,19 +555,34 @@ function nearestColor(
   theme: TailwindTheme
 ): string | null {
   let best: ColorHit | null = null;
+
   for (const entry of theme.colors) {
-    if (!entry.color) continue;
+    if (!entry.color) {
+      continue;
+    }
+
     const hit = {
       name: entry.name,
       diff: colorDistance(target.color, entry.color),
       project: entry.project,
       rank: entry.rank,
     };
-    if (hit.diff <= COLOR_TOLERANCE && betterHit(hit, best)) best = hit;
+
+    if (hit.diff <= COLOR_TOLERANCE && betterHit(hit, best)) {
+      best = hit;
+    }
   }
-  if (!best) return null;
-  if (target.alpha >= 0.999) return best.name;
+
+  if (!best) {
+    return null;
+  }
+
+  if (target.alpha >= 0.999) {
+    return best.name;
+  }
+
   const share = target.alpha * 100;
+
   return Math.abs(share - Math.round(share)) < 0.05
     ? `${best.name}/${Math.round(share)}`
     : `${best.name}/[${trimNumber(target.alpha)}]`;
@@ -471,38 +595,73 @@ function colorSuffix(
 ): string {
   const text = value.trim();
   const word = COLOR_WORDS[text.toLowerCase()];
-  if (word) return word;
+
+  if (word) {
+    return word;
+  }
+
   const named = themeVar(theme, text, "color");
-  if (named !== null) return named;
+
+  if (named !== null) {
+    return named;
+  }
+
   const variable = varName(text);
-  if (variable) return arbitraryVar(theme, variable, hint);
+
+  if (variable) {
+    return arbitraryVar(theme, variable, hint);
+  }
+
   const parsed = parseColor(text);
+
   return (parsed && nearestColor(parsed, theme)) ?? arbitrary(text);
 }
 
 function fontSizeToken(value: string, theme: TailwindTheme): string {
   const text = value.trim();
   const named = themeVar(theme, text, "text");
-  if (named !== null) return `text-${named}`;
+
+  if (named !== null) {
+    return `text-${named}`;
+  }
+
   const variable = varName(text);
-  if (variable) return `text-${arbitraryVar(theme, variable, "length")}`;
+
+  if (variable) {
+    return `text-${arbitraryVar(theme, variable, "length")}`;
+  }
+
   const px = lengthToPx(text);
   const step = px === null ? null : nearestNamed(theme.text, px, PX_TOLERANCE);
+
   return `text-${step ?? arbitrary(text)}`;
 }
 
 function fontWeightToken(value: string, theme: TailwindTheme): string {
   const text = value.trim().toLowerCase();
   const named = themeVar(theme, text, "font-weight");
-  if (named !== null) return `font-${named}`;
+
+  if (named !== null) {
+    return `font-${named}`;
+  }
+
   const number =
     text === "normal" ? 400 : text === "bold" ? 700 : plainNumber(text);
+
   if (number !== null) {
     const step = nearestNamed(theme.fontWeight, number, 0);
-    if (step !== null) return `font-${step}`;
+
+    if (step !== null) {
+      return `font-${step}`;
+    }
   }
+
   const variable = varName(text);
-  if (variable) return `font-${arbitraryVar(theme, variable, "number")}`;
+
+  if (variable) {
+    return `font-${arbitraryVar(theme, variable, "number")}`;
+  }
+
   return `font-${arbitrary(text)}`;
 }
 
@@ -515,48 +674,85 @@ function firstFamily(stack: string): string {
 
 function fontFamilyToken(value: string, theme: TailwindTheme): string {
   const named = themeVar(theme, value, "font");
-  if (named !== null) return `font-${named}`;
+
+  if (named !== null) {
+    return `font-${named}`;
+  }
+
   const first = firstFamily(value);
-  for (const [name, stack] of theme.font)
-    if (firstFamily(stack) === first) return `font-${name}`;
+
+  for (const [name, stack] of theme.font) {
+    if (firstFamily(stack) === first) {
+      return `font-${name}`;
+    }
+  }
+
   const variable = varName(value);
-  if (variable) return `font-${arbitraryVar(theme, variable, "family-name")}`;
+
+  if (variable) {
+    return `font-${arbitraryVar(theme, variable, "family-name")}`;
+  }
+
   return `font-${arbitrary(value.replace(/["']/g, ""))}`;
 }
 
 function leadingToken(value: string, theme: TailwindTheme): string {
   const text = value.trim();
   const named = themeVar(theme, text, "leading");
-  if (named !== null) return `leading-${named}`;
+
+  if (named !== null) {
+    return `leading-${named}`;
+  }
+
   const pct = percent(text);
   const number = pct !== null ? pct / 100 : plainNumber(text);
+
   if (number !== null) {
-    if (Math.abs(number - 1) < 0.005) return "leading-none";
+    if (Math.abs(number - 1) < 0.005) {
+      return "leading-none";
+    }
+
     const step = nearestNamed(theme.leading, number, 0.005);
+
     return `leading-${step ?? arbitrary(trimNumber(number))}`;
   }
+
   const px = lengthToPx(text);
+
   if (px !== null) {
     const steps = px / (theme.version === 4 ? theme.spacingPx : 4);
     const whole = Math.round(steps);
+
     const fits =
       Math.abs(whole * (theme.version === 4 ? theme.spacingPx : 4) - px) <=
       PX_TOLERANCE;
-    if (fits && (theme.version === 4 ? whole > 0 : whole >= 3 && whole <= 10))
+
+    if (fits && (theme.version === 4 ? whole > 0 : whole >= 3 && whole <= 10)) {
       return `leading-${whole}`;
+    }
   }
+
   return `leading-${arbitrary(text)}`;
 }
 
 function trackingToken(value: string, theme: TailwindTheme): string {
   const text = value.trim();
   const named = themeVar(theme, text, "tracking");
-  if (named !== null) return `tracking-${named}`;
+
+  if (named !== null) {
+    return `tracking-${named}`;
+  }
+
   const em = emValue(text) ?? (lengthToPx(text) === 0 ? 0 : null);
+
   if (em !== null) {
     const step = nearestNamed(theme.tracking, em, 0.0015);
-    if (step !== null) return `tracking-${step}`;
+
+    if (step !== null) {
+      return `tracking-${step}`;
+    }
   }
+
   return `tracking-${arbitrary(text)}`;
 }
 
@@ -564,30 +760,44 @@ function opacityToken(value: string, theme: TailwindTheme): string {
   const pct = percent(value);
   const number = pct !== null ? pct : (plainNumber(value) ?? Number.NaN) * 100;
   const whole = Math.round(number);
+
   if (
     Number.isFinite(number) &&
     Math.abs(number - whole) < 0.01 &&
     whole >= 0 &&
     whole <= 100 &&
     (theme.version === 4 || V3_OPACITY.has(whole))
-  )
+  ) {
     return `opacity-${whole}`;
+  }
+
   return `opacity-${arbitrary(value)}`;
 }
 
 function borderWidthToken(value: string, theme: TailwindTheme): string {
   const px = lengthToPx(value);
+
   if (px !== null) {
-    if (Math.abs(px - 1) < 0.01) return "border";
+    if (Math.abs(px - 1) < 0.01) {
+      return "border";
+    }
+
     const whole = Math.round(px);
+
     if (
       Math.abs(px - whole) < 0.01 &&
       (theme.version === 4 ? whole >= 0 : [0, 2, 4, 8].includes(whole))
-    )
+    ) {
       return `border-${whole}`;
+    }
   }
+
   const variable = varName(value);
-  if (variable) return `border-${arbitraryVar(theme, variable, "length")}`;
+
+  if (variable) {
+    return `border-${arbitraryVar(theme, variable, "length")}`;
+  }
+
   return `border-${arbitrary(value)}`;
 }
 
@@ -598,8 +808,13 @@ function normalizeShadow(value: string): string {
       /(rgba?|hsla?|oklch|oklab)\([^()]*\)|#[0-9a-f]{3,8}\b/g,
       (match) => {
         const parsed = parseColor(match);
-        if (!parsed) return match;
+
+        if (!parsed) {
+          return match;
+        }
+
         const { l, c, h } = parsed.color;
+
         return `c(${l.toFixed(2)},${c.toFixed(2)},${(c > 0.01 ? (h ?? 0) : 0).toFixed(0)},${parsed.alpha.toFixed(2)})`;
       }
     )
@@ -611,23 +826,47 @@ function normalizeShadow(value: string): string {
 
 function shadowToken(value: string, theme: TailwindTheme): string {
   const text = value.trim();
-  if (text === "none") return "shadow-none";
-  const named = themeVar(theme, text, "shadow");
-  if (named !== null) return named === "" ? "shadow" : `shadow-${named}`;
-  const normalized = normalizeShadow(text);
-  for (const [name, themeValue] of theme.shadow) {
-    if (normalizeShadow(themeValue) === normalized)
-      return name === "" ? "shadow" : `shadow-${name}`;
+
+  if (text === "none") {
+    return "shadow-none";
   }
+
+  const named = themeVar(theme, text, "shadow");
+
+  if (named !== null) {
+    return named === "" ? "shadow" : `shadow-${named}`;
+  }
+
+  const normalized = normalizeShadow(text);
+
+  for (const [name, themeValue] of theme.shadow) {
+    if (normalizeShadow(themeValue) === normalized) {
+      return name === "" ? "shadow" : `shadow-${name}`;
+    }
+  }
+
   return `shadow-${arbitrary(text)}`;
 }
 
 function flexToken(value: string): string {
   const text = value.trim().replace(/\s+/g, " ");
-  if (/^(1|1 1 0%|1 1 0px|1 1 0)$/.test(text)) return "flex-1";
-  if (/^(auto|1 1 auto)$/.test(text)) return "flex-auto";
-  if (/^(initial|0 1 auto)$/.test(text)) return "flex-initial";
-  if (/^(none|0 0 auto)$/.test(text)) return "flex-none";
+
+  if (/^(1|1 1 0%|1 1 0px|1 1 0)$/.test(text)) {
+    return "flex-1";
+  }
+
+  if (/^(auto|1 1 auto)$/.test(text)) {
+    return "flex-auto";
+  }
+
+  if (/^(initial|0 1 auto)$/.test(text)) {
+    return "flex-initial";
+  }
+
+  if (/^(none|0 0 auto)$/.test(text)) {
+    return "flex-none";
+  }
+
   return `flex-${arbitrary(text)}`;
 }
 
@@ -643,9 +882,17 @@ function singleToken(
   theme: TailwindTheme
 ): string {
   const keyword = KEYWORDS[prop]?.[value.trim().toLowerCase()];
-  if (keyword) return keyword;
+
+  if (keyword) {
+    return keyword;
+  }
+
   const image = IMAGE_TOKENS[prop];
-  if (image) return image(value);
+
+  if (image) {
+    return image(value);
+  }
+
   switch (prop) {
     case "color":
       return `text-${colorSuffix(value, theme, "color")}`;
@@ -688,15 +935,31 @@ function splitValues(value: string): string[] {
   const parts: string[] = [];
   let depth = 0;
   let current = "";
+
   for (const char of value.trim()) {
-    if (char === "(") depth += 1;
-    if (char === ")") depth -= 1;
+    if (char === "(") {
+      depth += 1;
+    }
+
+    if (char === ")") {
+      depth -= 1;
+    }
+
     if (/\s/.test(char) && depth === 0) {
-      if (current) parts.push(current);
+      if (current) {
+        parts.push(current);
+      }
+
       current = "";
-    } else current += char;
+    } else {
+      current += char;
+    }
   }
-  if (current) parts.push(current);
+
+  if (current) {
+    parts.push(current);
+  }
+
   return parts;
 }
 
@@ -705,8 +968,11 @@ function cornerValues(
 ): Record<"tl" | "tr" | "br" | "bl", string> | null {
   const parts = splitValues(value);
   const [a, b = a, c = a, d = b] = parts;
-  if (!a || !b || !c || !d || parts.length > 4 || value.includes("/"))
+
+  if (!a || !b || !c || !d || parts.length > 4 || value.includes("/")) {
     return null;
+  }
+
   return { tl: a, tr: b, br: c, bl: d };
 }
 
@@ -715,7 +981,11 @@ function boxValues(
 ): Record<"t" | "r" | "b" | "l", string> | null {
   const parts = splitValues(value);
   const [a, b = a, c = a, d = b] = parts;
-  if (!a || !b || !c || !d || parts.length > 4) return null;
+
+  if (!a || !b || !c || !d || parts.length > 4) {
+    return null;
+  }
+
   return { t: a, r: b, b: c, l: d };
 }
 
@@ -725,9 +995,18 @@ function sidedValue(
   value: string,
   theme: TailwindTheme
 ): SideValue {
-  if (group === "radius") return radiusValue(value, theme);
-  if (group === "dims") return dimsValue(value, side, theme);
-  if (group === "inset") return insetValue(value, theme);
+  if (group === "radius") {
+    return radiusValue(value, theme);
+  }
+
+  if (group === "dims") {
+    return dimsValue(value, side, theme);
+  }
+
+  if (group === "inset") {
+    return insetValue(value, theme);
+  }
+
   return spacingValue(value, theme, group === "margin");
 }
 
@@ -737,11 +1016,13 @@ function shorthandEdits(
   theme: TailwindTheme
 ): CssEdit[] | null {
   const group: SidedGroup = prop === "border-radius" ? "radius" : prop;
+
   const sides =
     prop === "border-radius"
       ? (["tl", "tr", "br", "bl"] as const)
       : (["t", "r", "b", "l"] as const);
-  if (value === null)
+
+  if (value === null) {
     return [
       {
         kind: "sided",
@@ -749,15 +1030,22 @@ function shorthandEdits(
         values: Object.fromEntries(sides.map((side) => [side, null])),
       },
     ];
+  }
+
   const parts =
     prop === "border-radius" ? cornerValues(value) : boxValues(value);
-  if (!parts) return null;
+
+  if (!parts) {
+    return null;
+  }
+
   const values = Object.fromEntries(
     Object.entries(parts).map(([side, part]) => [
       side,
       sidedValue(group, side as Side, part, theme),
     ])
   );
+
   return [{ kind: "sided", group, values }];
 }
 
@@ -765,10 +1053,16 @@ function gapEdits(
   value: string | null,
   theme: TailwindTheme
 ): CssEdit[] | null {
-  if (value === null)
+  if (value === null) {
     return [{ kind: "sided", group: "gap", values: { x: null, y: null } }];
+  }
+
   const [row, column = row] = splitValues(value);
-  if (!row || !column) return null;
+
+  if (!row || !column) {
+    return null;
+  }
+
   return [
     {
       kind: "sided",
@@ -787,8 +1081,10 @@ export function cssEdits(
   theme: TailwindTheme
 ): CssEdit[] | null {
   const box = BOX_PROPS[prop];
+
   if (box) {
     const [group, side] = box;
+
     return [
       {
         kind: "sided",
@@ -799,11 +1095,21 @@ export function cssEdits(
       },
     ];
   }
-  if (prop === "border-radius" || prop === "padding" || prop === "margin")
+
+  if (prop === "border-radius" || prop === "padding" || prop === "margin") {
     return shorthandEdits(prop, value, theme);
-  if (prop === "gap") return gapEdits(value, theme);
+  }
+
+  if (prop === "gap") {
+    return gapEdits(value, theme);
+  }
+
   const group = SINGLE_PROPS[prop];
-  if (!group) return null;
+
+  if (!group) {
+    return null;
+  }
+
   return [
     {
       kind: "single",
@@ -819,6 +1125,7 @@ export function cssClass(
   theme: TailwindTheme
 ): string | null {
   const group = SINGLE_PROPS[prop];
+
   return group ? singleToken(prop, value, theme) : null;
 }
 
@@ -826,6 +1133,7 @@ const GAP_SIDE: Partial<Record<Side, string>> = {
   x: "column-gap",
   y: "row-gap",
 };
+
 const SHORTHAND: Partial<Record<SidedGroup, string>> = {
   padding: "padding",
   margin: "margin",
@@ -835,19 +1143,27 @@ const SHORTHAND: Partial<Record<SidedGroup, string>> = {
 
 function sidedProps(group: SidedGroup, sides: Side[]): string[] {
   const props = sides.flatMap((side) => {
-    if (group === "gap") return [GAP_SIDE[side] ?? ""];
+    if (group === "gap") {
+      return [GAP_SIDE[side] ?? ""];
+    }
+
     return Object.entries(BOX_PROPS)
       .filter(
         ([, [boxGroup, boxSide]]) => boxGroup === group && boxSide === side
       )
       .map(([prop]) => prop);
   });
+
   const shorthand = SHORTHAND[group];
+
   return [...props, ...(shorthand ? [shorthand] : [])].filter(Boolean);
 }
 
 export function classProps(cls: Classified): string[] {
-  if (cls.kind === "sided") return sidedProps(cls.group, cls.sides);
+  if (cls.kind === "sided") {
+    return sidedProps(cls.group, cls.sides);
+  }
+
   return Object.entries(SINGLE_PROPS)
     .filter(([, group]) => group === cls.group)
     .map(([prop]) => prop);

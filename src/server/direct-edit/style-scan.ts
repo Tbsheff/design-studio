@@ -40,10 +40,13 @@ export async function scanPageStyles(
     const ready = await page.evaluate<boolean>(
       `typeof ${HEADLESS_SCAN} === 'function'`
     );
-    if (!ready)
+
+    if (!ready) {
       throw new Error(
         "This page has no studio bridge script, so its styles cannot be scanned"
       );
+    }
+
     return page.evaluate<StyleScanResult>(
       `${HEADLESS_SCAN}(${JSON.stringify(query)})`
     );
@@ -53,9 +56,13 @@ export async function scanPageStyles(
 export function tokenLookupFor(
   entries: CompiledTokenEntry[]
 ): TokenLookup | null {
-  if (entries.length === 0) return null;
+  if (entries.length === 0) {
+    return null;
+  }
+
   return (property, value) => {
     const state = tokenFieldState(property, value, entries);
+
     return state.kind === "token" ? state.match.cssVar : null;
   };
 }
@@ -87,6 +94,7 @@ function siteCount(hits: StyleHit[]): number {
 
 function withHex(row: StyleValueRow): StyleValueRow {
   const hex = row.kind === "color" ? hexOf(row.value) : null;
+
   return hex && hex !== row.value ? { ...row, hex } : row;
 }
 
@@ -95,6 +103,7 @@ export function styleReport(
   lookup: TokenLookup | null
 ): StyleReport {
   const values = summarizeHits(result.hits, lookup).map(withHex);
+
   return {
     value: result.value,
     elements: result.elements,

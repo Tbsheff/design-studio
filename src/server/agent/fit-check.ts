@@ -8,6 +8,7 @@ import {
 
 const SIZE_WORDS =
   /\b(small|compact|tiny|mini|little|narrow|minimal|slim)\b(?:\W+\w+){0,5}?\W+(cards?|widgets?|panels?|tiles?|box(?:es)?|sections?|blocks?|modules?|summary|summaries|lists?|banners?|components?|callouts?)\b/i;
+
 const MAX_WIDTH_SHARE = 0.5;
 const MAX_HEIGHT_PX = 450;
 const SAME_CARD = 0.6;
@@ -16,18 +17,24 @@ const LISTED = 4;
 
 export function sizeWord(request: string): string | null {
   const match = SIZE_WORDS.exec(request);
+
   return match ? `${match[1]?.toLowerCase()} ${match[2]?.toLowerCase()}` : null;
 }
 
 function counts(rows: readonly string[]): Map<string, number> {
   const map = new Map<string, number>();
-  for (const row of rows) map.set(row, (map.get(row) ?? 0) + 1);
+
+  for (const row of rows) {
+    map.set(row, (map.get(row) ?? 0) + 1);
+  }
+
   return map;
 }
 
 function overlap(a: readonly string[], b: readonly string[]): number {
   const other = new Set(b);
   const shared = new Set(a.filter((row) => other.has(row))).size;
+
   return shared / Math.max(1, new Set([...a, ...b]).size);
 }
 
@@ -41,15 +48,18 @@ export function newCard(
 ): LayoutCard | null {
   const base = counts(baseline.rows ?? []);
   const old = baseline.cards ?? [];
+
   const fresh = (now.cards ?? []).filter(
     (card) =>
       newRows(card, base) > 0 &&
       !old.some((prior) => overlap(prior.rows, card.rows) >= SAME_CARD)
   );
+
   const area = (card: LayoutCard) => card.box.width * card.box.height;
   fresh.sort(
     (a, b) => newRows(b, base) - newRows(a, base) || area(a) - area(b)
   );
+
   return fresh[0] ?? null;
 }
 
@@ -65,6 +75,7 @@ export function repeatedRows(
   const base = counts(baseline.rows ?? []);
   const all = counts(now.rows ?? []);
   const mine = counts(card.rows);
+
   return [...mine.keys()].filter(
     (row) =>
       meaningful(row) &&
@@ -77,6 +88,7 @@ const fmt = (value: number) => value.toLocaleString("en-US");
 
 function cardLabel(card: LayoutCard): string {
   const first = card.rows[0];
+
   return `${first ? `"${first}" ` : ""}(${card.name}, ${fmt(card.box.width)}x${fmt(card.box.height)} at ${card.box.x},${card.box.y})`;
 }
 
@@ -86,14 +98,23 @@ function sizeFinding(
   word: string
 ): QualityFinding | null {
   const content = now.contentWidth ?? now.columnBox?.width ?? now.mainBox.width;
-  if (content <= 0) return null;
+
+  if (content <= 0) {
+    return null;
+  }
+
   const share = card.box.width / content;
   const limit = Math.round(content * MAX_WIDTH_SHARE);
-  if (share <= MAX_WIDTH_SHARE && card.box.height <= MAX_HEIGHT_PX) return null;
+
+  if (share <= MAX_WIDTH_SHARE && card.box.height <= MAX_HEIGHT_PX) {
+    return null;
+  }
+
   const tall =
     card.box.height > MAX_HEIGHT_PX
       ? ` and ${fmt(card.box.height)} px tall (more than ${MAX_HEIGHT_PX} px)`
       : ` (height ${fmt(card.box.height)} px)`;
+
   return {
     check: "size-request",
     severity: "high",
@@ -110,6 +131,7 @@ const GENERIC_WORDS = new Set(
     " "
   )
 );
+
 const ACTION_ROW =
   /^(view|open|see|show|upload|add|go|more|all|download|edit|new|create|manage)\b(?:\W+\w+){0,2}\W*$/i;
 
@@ -128,16 +150,26 @@ function namesContent(
       (word) => word.length >= 3 && !GENERIC_WORDS.has(word)
     )
   );
-  if (asked.size === 0) return false;
+
+  if (asked.size === 0) {
+    return false;
+  }
+
   const hits = (rows: readonly string[]) =>
     new Set(rows.flatMap(words).filter((word) => asked.has(word)));
-  if (hits(repeated).size > 0) return true;
+
+  if (hits(repeated).size > 0) {
+    return true;
+  }
+
   const onPage = hits(baseline.rows ?? []);
+
   return [...hits(card.rows.slice(0, 1))].some((word) => onPage.has(word));
 }
 
 function addsSomething(card: LayoutCard, baseline: LayoutRegion): boolean {
   const base = counts(baseline.rows ?? []);
+
   return card.rows
     .slice(1)
     .some(
@@ -154,21 +186,32 @@ function duplicateFinding(
   const enough =
     repeated.length >= 2 ||
     (repeated.length === 1 && card.rows.filter(meaningful).length <= 2);
-  if (!enough) return null;
+
+  if (!enough) {
+    return null;
+  }
+
   const named = namesContent(request, card, repeated, baseline);
-  if (named && addsSomething(card, baseline)) return null;
+
+  if (named && addsSomething(card, baseline)) {
+    return null;
+  }
+
   const listed = repeated
     .slice(0, LISTED)
     .map((row) => `"${row}"`)
     .join(", ");
+
   const more =
     repeated.length > LISTED ? ` and ${repeated.length - LISTED} more` : "";
+
   const base = {
     check: "duplicate-data" as const,
     viewport: "desktop" as const,
     selector: card.name,
     source: null,
   };
+
   if (named) {
     return {
       ...base,
@@ -177,6 +220,7 @@ function duplicateFinding(
       fix: "Keep the items the request asks for. Make the element a compact summary of them that adds what the page does not show yet: for example the latest 3 items with date and status, a count, or who signed. Do not replace the items with only a count or a button.",
     };
   }
+
   return {
     ...base,
     severity: "high",
@@ -190,17 +234,26 @@ export function fitFindings(
   now: LayoutRegion | null,
   request: string
 ): QualityFinding[] {
-  if (!baseline?.rows || !now?.rows) return [];
+  if (!baseline?.rows || !now?.rows) {
+    return [];
+  }
+
   const card = newCard(baseline, now);
-  if (!card) return [];
+
+  if (!card) {
+    return [];
+  }
+
   const word = sizeWord(request);
   const size = word ? sizeFinding(card, now, word) : null;
+
   const dup = duplicateFinding(
     card,
     repeatedRows(card, baseline, now),
     baseline,
     request
   );
+
   return [size, dup].filter(
     (finding): finding is QualityFinding => finding !== null
   );

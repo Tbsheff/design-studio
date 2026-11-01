@@ -42,13 +42,25 @@ function fromSetupWindow(event: IpcMainInvokeEvent): boolean {
 }
 
 async function applyFix(action: FixAction, inputs: CheckInputs): Promise<void> {
-  if (action === "copy-claude") clipboard.writeText("claude");
-  if (action === "copy-claude-install")
+  if (action === "copy-claude") {
+    clipboard.writeText("claude");
+  }
+
+  if (action === "copy-claude-install") {
     clipboard.writeText(CLAUDE_INSTALL_COMMAND);
-  if (action === "open-terminal") await shell.openPath(TERMINAL_APP);
-  if (action === "reveal-data") shell.showItemInFolder(inputs.dataDir);
-  if (action === "install-clt")
+  }
+
+  if (action === "open-terminal") {
+    await shell.openPath(TERMINAL_APP);
+  }
+
+  if (action === "reveal-data") {
+    shell.showItemInFolder(inputs.dataDir);
+  }
+
+  if (action === "install-clt") {
     execFile("/usr/bin/xcode-select", ["--install"], () => undefined);
+  }
 }
 
 function isFixAction(value: unknown): value is FixAction {
@@ -60,11 +72,17 @@ function isFixAction(value: unknown): value is FixAction {
 
 export function registerSetupIpc(): void {
   ipcMain.handle("setup:run", async (event) => {
-    if (!fromSetupWindow(event) || !current) return [];
+    if (!fromSetupWindow(event) || !current) {
+      return [];
+    }
+
     return runChecks(await current.options.inputs());
   });
   ipcMain.handle("setup:fix", async (event, action: unknown) => {
-    if (!fromSetupWindow(event) || !current || !isFixAction(action)) return;
+    if (!fromSetupWindow(event) || !current || !isFixAction(action)) {
+      return;
+    }
+
     await applyFix(action, await current.options.inputs());
   });
   ipcMain.handle("setup:info", (event) =>
@@ -73,15 +91,19 @@ export function registerSetupIpc(): void {
       : null
   );
   ipcMain.handle("setup:continue", (event) => {
-    if (fromSetupWindow(event)) current?.window.close();
+    if (fromSetupWindow(event)) {
+      current?.window.close();
+    }
   });
 }
 
 export function openSetupWindow(options: SetupWindowOptions): Promise<void> {
   if (current) {
     current.window.focus();
+
     return Promise.resolve();
   }
+
   const window = new BrowserWindow({
     width: 600,
     height: 680,
@@ -99,7 +121,9 @@ export function openSetupWindow(options: SetupWindowOptions): Promise<void> {
       nodeIntegration: false,
     },
   });
+
   console.log(`[desktop] window: setup (${options.continueLabel})`);
+
   return new Promise((resolve) => {
     current = { window, options };
     window.once("ready-to-show", () => window.show());
@@ -115,5 +139,6 @@ export async function setupNeeded(
   inputs: CheckInputs
 ): Promise<{ needed: boolean; results: CheckResult[] }> {
   const results = await runChecks(inputs);
+
   return { needed: needsAttention(results), results };
 }

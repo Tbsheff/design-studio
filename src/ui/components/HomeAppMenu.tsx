@@ -20,14 +20,23 @@ function attachRequest(chip: AppChip): {
   env: Record<string, string>;
 } {
   const found = chip.inspection;
-  if (!found) throw new Error("The folder is still being checked.");
+
+  if (!found) {
+    throw new Error("The folder is still being checked.");
+  }
+
   const parsed = parseEnvText(chip.env);
-  if (parsed.bad.length > 0)
+
+  if (parsed.bad.length > 0) {
     throw new Error(`Use KEY=value lines. Not valid: ${parsed.bad[0] ?? ""}`);
-  if (chip.mode === "url" && !chip.url.trim())
+  }
+
+  if (chip.mode === "url" && !chip.url.trim()) {
     throw new Error(
       "Type the URL of your running dev server, or let the studio start next dev."
     );
+  }
+
   return {
     folder: found.path,
     appDir: chip.appDir ?? found.appDir ?? ".",
@@ -41,18 +50,25 @@ export async function openChip(
   tokensOnly = false
 ): Promise<string> {
   const found = chip.inspection;
-  if (!found?.kind || found.problem)
+
+  if (!found?.kind || found.problem) {
     throw new Error(
       found?.problem ??
         "Pick a Next.js app, a Vite app or a folder with an index.html."
     );
-  if (tokensOnly || found.kind !== "next")
+  }
+
+  if (tokensOnly || found.kind !== "next") {
     return (
       found.projectId ??
       (await api.importProject(found.path, { skipApp: true })).project.id
     );
-  if (found.projectId && chip.mode === "start" && !chip.env.trim())
+  }
+
+  if (found.projectId && chip.mode === "start" && !chip.env.trim()) {
     return found.projectId;
+  }
+
   return (await api.attachApp(attachRequest(chip))).project.id;
 }
 
@@ -60,7 +76,10 @@ function keepEnter(
   event: KeyboardEvent<HTMLInputElement>,
   run?: () => void
 ): void {
-  if (event.key !== "Enter") return;
+  if (event.key !== "Enter") {
+    return;
+  }
+
   event.preventDefault();
   run?.();
 }
@@ -78,13 +97,19 @@ export async function runInProject(
   }
 ): Promise<void> {
   const project = await api.getProject(projectId);
+
   const main =
     project.directions.find((direction) => direction.id === "main") ??
     project.directions[0];
-  if (!main) throw new Error("The project has no direction to edit.");
+
+  if (!main) {
+    throw new Error("The project has no direction to edit.");
+  }
+
   const uploaded = await Promise.all(
     input.images.map((file) => api.uploadAttachment(projectId, file))
   );
+
   const request = {
     prompt: input.prompt,
     mode: "edit" as const,
@@ -96,17 +121,21 @@ export async function runInProject(
       ? { referenceUrls: input.referenceUrls }
       : {}),
   };
+
   for (let attempt = 0; ; attempt += 1) {
     try {
       await api.startRun(projectId, main.id, request);
+
       return;
     } catch (err) {
       if (
         !(err instanceof ApiError) ||
         err.status !== 409 ||
         attempt >= RETRY_LIMIT
-      )
+      ) {
         throw err;
+      }
+
       await wait(RETRY_MS);
     }
   }
@@ -120,8 +149,13 @@ function Candidates({
   onChange: (patch: Partial<AppChip>) => void;
 }) {
   const found = chip.inspection;
-  if (!found || found.candidates.length < 2) return null;
+
+  if (!found || found.candidates.length < 2) {
+    return null;
+  }
+
   const chosen = chip.appDir ?? found.appDir;
+
   return (
     <div className="ui-menu-section" role="radiogroup" aria-label="App">
       <span className="ui-menu-label">
@@ -157,6 +191,7 @@ function DevServer({
 }) {
   const [envOpen, setEnvOpen] = useState(() => chip.env.trim() !== "");
   const mode = (next: RunMode) => () => onChange({ mode: next });
+
   return (
     <div className="ui-menu-section home-app-server">
       <span className="ui-menu-label">Dev server</span>
@@ -237,6 +272,7 @@ export function AppMenu({
 }: AppMenuProps) {
   const found = chip.inspection;
   const problem = chip.error ?? found?.problem ?? null;
+
   return (
     <Pop
       trigger={trigger}
@@ -299,11 +335,16 @@ export function FolderPathPop({
   onPick: (path: string) => void;
 }) {
   const [value, setValue] = useState("");
+
   const submit = () => {
-    if (!value.trim()) return;
+    if (!value.trim()) {
+      return;
+    }
+
     onPick(value.trim());
     onClose(true);
   };
+
   return (
     <Pop
       trigger={trigger}

@@ -27,15 +27,23 @@ function targetOf(query: (key: string) => string | undefined): {
   const id = query("id");
   const name = query("name");
   const file = query("file");
+
   if (id) {
-    if (id.length > TEXT_MAX || id.includes("\0"))
+    if (id.length > TEXT_MAX || id.includes("\0")) {
       throw new BadRequestError("invalid component id");
+    }
+
     return { id };
   }
-  if (!name || !NAME_RE.test(name))
+
+  if (!name || !NAME_RE.test(name)) {
     throw new BadRequestError("pass id, or name (and file)");
-  if (file && (file.length > TEXT_MAX || file.includes("\0")))
+  }
+
+  if (file && (file.length > TEXT_MAX || file.includes("\0"))) {
     throw new BadRequestError("invalid file");
+  }
+
   return { name, ...(file ? { file } : {}) };
 }
 
@@ -45,19 +53,25 @@ export function registerComponentPreviewRoutes(
 ): void {
   app.get("/api/projects/:pid/d/:did/component-preview", async (c) => {
     const target = targetOf((key) => c.req.query(key));
+
     const { project, direction } = await deps.loadDirection(
       c.req.param("pid"),
       c.req.param("did")
     );
+
     let result;
+
     try {
       result = await deps.previews.render(project, direction, target);
     } catch (error) {
-      if (error instanceof PreviewTargetError)
+      if (error instanceof PreviewTargetError) {
         throw new NotFoundError(error.message);
+      }
+
       throw error;
     }
-    if (!result.ok)
+
+    if (!result.ok) {
       return c.json(
         {
           error: "no-preview",
@@ -66,9 +80,14 @@ export function registerComponentPreviewRoutes(
         },
         422
       );
+    }
+
     const etag = `"${result.hash}"`;
-    if (c.req.header("if-none-match") === etag)
+
+    if (c.req.header("if-none-match") === etag) {
       return c.body(null, 304, { etag, "cache-control": "private, no-cache" });
+    }
+
     const meta = encodeURIComponent(
       JSON.stringify({
         component: result.component,
@@ -77,6 +96,7 @@ export function registerComponentPreviewRoutes(
         cached: result.cached,
       })
     );
+
     return c.body(new Uint8Array(result.png), 200, {
       "content-type": "image/png",
       "cache-control": "private, no-cache",

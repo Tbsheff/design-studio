@@ -19,8 +19,10 @@ export function serveWorker<Q, R>(
   handle: (request: Q) => Promise<WorkerAnswer<R>>
 ): void {
   port.on("message", (message: WorkerRequest<Q>) => {
-    if (typeof message !== "object" || message === null || !("id" in message))
+    if (typeof message !== "object" || message === null || !("id" in message)) {
       return;
+    }
+
     handle(message.request).then(
       ({ result, transfer }) =>
         port.postMessage(

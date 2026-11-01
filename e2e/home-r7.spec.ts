@@ -12,15 +12,18 @@ test("R7 trash: a deleted project shows in Trash, Restore brings it back, Delete
 }) => {
   const trashCalls: string[] = [];
   page.on("request", (request) => {
-    if (new URL(request.url()).pathname.startsWith("/api/trash"))
+    if (new URL(request.url()).pathname.startsWith("/api/trash")) {
       trashCalls.push(`${request.method()} ${new URL(request.url()).pathname}`);
+    }
   });
   const api = await openHome(page);
+
   const { project } = await api.call<{ project: Project }>(
     "POST",
     "/api/projects/from-starter",
     { starterId: "form" }
   );
+
   const workTree = mainDirection(project).workTree;
   await expect
     .poll(
@@ -28,10 +31,12 @@ test("R7 trash: a deleted project shows in Trash, Restore brings it back, Delete
       { timeout: 15_000 }
     )
     .not.toBeNull();
+
   const first = await api.call<TrashedProject>(
     "DELETE",
     `/api/projects/${project.id}`
   );
+
   await page.reload();
   await expect(
     page.getByRole("heading", { name: "Start a new project" })
@@ -60,12 +65,14 @@ test("R7 trash: a deleted project shows in Trash, Restore brings it back, Delete
     "DELETE",
     `/api/projects/${project.id}`
   );
+
   const trashed = path.join(
     readState().dataDir,
     "trash",
     "projects",
     second.trashId
   );
+
   expect(existsSync(trashed)).toBe(true);
   await page.reload();
   await page.getByRole("button", { name: "Trash", exact: true }).click();
@@ -82,9 +89,11 @@ test("R7 trash: a deleted project shows in Trash, Restore brings it back, Delete
   await again
     .getByRole("button", { name: `Delete ${project.name} forever` })
     .click();
+
   const confirm = page.getByRole("dialog", {
     name: `Delete “${project.name}” forever?`,
   });
+
   await expect(confirm).toContainText("Files in your folder stay.");
   await confirm.getByRole("button", { name: "Delete forever" }).click();
   await expect(confirm).toHaveCount(0);

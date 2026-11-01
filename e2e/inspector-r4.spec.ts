@@ -26,6 +26,7 @@ async function openProject(
     "/api/projects",
     { prompt, kind: "html", ...(packId ? { packId } : {}) }
   );
+
   await api.waitForRuns(project.id, 1);
   await page.evaluate((id) => {
     const raw = localStorage.getItem("design-studio.ui.v1");
@@ -37,6 +38,7 @@ async function openProject(
   }, project.id);
   await page.reload();
   await expect(frontFrame(page).locator("h1")).toHaveText(prompt);
+
   return api.project(project.id);
 }
 
@@ -88,15 +90,23 @@ async function fileChangedAt(
   timeoutMs: number
 ): Promise<number> {
   const end = Date.now() + timeoutMs;
+
   while (Date.now() < end) {
-    if (readFileSync(file, "utf-8").includes(needle)) return Date.now();
+    if (readFileSync(file, "utf-8").includes(needle)) {
+      return Date.now();
+    }
+
     await new Promise((resolve) => setTimeout(resolve, 5));
   }
+
   throw new Error(`file never contained ${needle}`);
 }
 
 async function shot(page: Page, name: string, section: string): Promise<void> {
-  if (!SHOTS) return;
+  if (!SHOTS) {
+    return;
+  }
+
   mkdirSync(SHOTS, { recursive: true });
   const target = page.getByRole("region", { name: section });
   await target.scrollIntoViewIfNeeded();
@@ -160,6 +170,7 @@ test("Inspector R4: auto layout, sizing, align self and timing", async ({
   await selectCards(page);
   const vertical = layout.getByRole("button", { name: "Vertical" });
   await stampOnPress(vertical);
+
   const repaint = frame.locator(".cards").evaluate(
     (el) =>
       new Promise<number>((resolve) => {
@@ -167,15 +178,19 @@ test("Inspector R4: auto layout, sizing, align self and timing", async ({
           getComputedStyle(el).flexDirection === "column"
             ? resolve(performance.timeOrigin + performance.now())
             : requestAnimationFrame(check);
+
         check();
       })
   );
+
   await vertical.click();
   const bytesAt = await fileChangedAt(file, "flex-direction: column", 5000);
   const paintedAt = await repaint;
+
   const pressAt = await page.evaluate(
     () => (window as unknown as { __pressAt: number }).__pressAt
   );
+
   const previewMs = Math.round(paintedAt - pressAt);
   const fileMs = Math.round(bytesAt - pressAt);
   console.log(
@@ -229,9 +244,11 @@ test("Inspector R4: math, per-corner radius, shadow read back and scroll", async
   await selectInFrame(page, "h1");
   const size = page.getByLabel("Font size", { exact: true });
   await size.fill("12+4");
+
   const sent = page.waitForRequest(
     (req) => req.url().endsWith("/direct-edit") && req.method() === "POST"
   );
+
   const enterAt = Date.now();
   await size.press("Enter");
   await sent;
@@ -264,18 +281,21 @@ test("Inspector R4: math, per-corner radius, shadow read back and scroll", async
 
   await selectCard(page);
   await page.getByRole("button", { name: "Independent corners" }).click();
+
   const corners: [string, string][] = [
     ["Top left radius", "4"],
     ["Top right radius", "8"],
     ["Bottom right radius", "12"],
     ["Bottom left radius", "16"],
   ];
+
   for (const [label, value] of corners) {
     const field = page.getByLabel(label, { exact: true });
     await field.fill(value);
     await field.press("Enter");
     await settled(page);
   }
+
   await expect
     .poll(() => lineOf(file, "First idea"))
     .toContain("border-radius: 4px 8px 12px 16px");
@@ -326,12 +346,14 @@ test("Inspector R4: math, per-corner radius, shadow read back and scroll", async
     "Shadow 1 color",
     "Layer blur",
   ];
+
   const read = () =>
     Promise.all(
       fields.map((label) =>
         page.getByLabel(label, { exact: true }).inputValue()
       )
     );
+
   const before = await read();
   expect(before).toEqual(["-4px", "8px", "12px", "0", "var(--line)", "2px"]);
 
@@ -355,11 +377,14 @@ test("Inspector R4: math, per-corner radius, shadow read back and scroll", async
       .evaluate((el) => el.scrollTo(0, el.scrollHeight));
     const blurField = page.getByLabel("Layer blur", { exact: true });
     await expect(blurField).toBeVisible();
+
     const reach = await blurField.evaluate((el) => {
       const r = el.getBoundingClientRect();
+
       const prompt = document
         .querySelector(".panel.right .prompt")
         ?.getBoundingClientRect();
+
       return {
         hit:
           document.elementFromPoint(
@@ -370,6 +395,7 @@ test("Inspector R4: math, per-corner radius, shadow read back and scroll", async
         promptTop: prompt?.top ?? Infinity,
       };
     });
+
     expect(reach, `${width}x${height}`).toMatchObject({ hit: true });
     expect(reach.bottom, `${width}x${height}`).toBeLessThanOrEqual(
       reach.promptTop
@@ -381,12 +407,14 @@ test("Inspector R4: a shadow color token stays a token after reload", async ({
   page,
 }) => {
   const api = await openHome(page);
+
   const project = await openProject(
     page,
     api,
     "Kiln Token Shadow",
     "editorial"
   );
+
   const file = path.join(mainDirection(project).workTree, "index.html");
   await selectInFrame(page, "h1");
   await page
@@ -397,9 +425,11 @@ test("Inspector R4: a shadow color token stays a token after reload", async ({
     .poll(() => lineOf(file, "<h1"))
     .toContain("box-shadow: 0 4px 12px 0 rgb(0 0 0 / 0.12)");
   await settled(page);
+
   const opener = page.getByRole("button", {
     name: "Choose shadow 1 color token",
   });
+
   await opener.evaluate((el) => el.scrollIntoView({ block: "center" }));
   await opener.click();
   await page

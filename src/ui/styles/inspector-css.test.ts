@@ -14,9 +14,12 @@ function declarations(
   const out: { prop: string; value: string; line: number }[] = [];
   source.split("\n").forEach((text, index) => {
     const match = /^\s*([a-z-]+)\s*:\s*([^;]+);/.exec(text);
-    if (match?.[1] && match[2])
+
+    if (match?.[1] && match[2]) {
       out.push({ prop: match[1], value: match[2], line: index + 1 });
+    }
   });
+
   return out;
 }
 
@@ -25,10 +28,13 @@ describe("inspector.css spacing", () => {
     const spacing = declarations(css).filter((d) =>
       /^(padding|margin|gap|row-gap|column-gap)(-|$)/.test(d.prop)
     );
+
     expect(spacing.length).toBeGreaterThan(20);
+
     const raw = spacing
       .filter((d) => /\d(\.\d+)?px\b/.test(d.value))
       .map((d) => `${d.line}: ${d.prop}: ${d.value}`);
+
     expect(raw).toEqual([]);
   });
 

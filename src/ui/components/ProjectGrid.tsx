@@ -38,6 +38,7 @@ const SORT_LABELS: Record<HomeSort, string> = {
   name: "Name",
   created: "Created",
 };
+
 const SORT_OPTIONS = HOME_SORTS.map((sort) => ({
   value: sort,
   label: SORT_LABELS[sort],
@@ -48,12 +49,15 @@ const runCache = new Map<string, Promise<boolean>>();
 
 export function useLastRunFailed(project: Project): boolean {
   const key = `${project.id}/${project.updatedAt}`;
+
   const [failed, setFailed] = useState<{ key: string; on: boolean } | null>(
     null
   );
+
   useEffect(() => {
     let live = true;
     let pending = runCache.get(key);
+
     if (!pending) {
       pending = json<{ runs: RunSummary[] }>(
         "GET",
@@ -62,23 +66,28 @@ export function useLastRunFailed(project: Project): boolean {
       pending.catch(() => runCache.delete(key));
       runCache.set(key, pending);
     }
+
     pending.then(
       (on) => live && setFailed({ key, on }),
       () => undefined
     );
+
     return () => {
       live = false;
     };
   }, [key, project.id]);
+
   return failed?.key === key && failed.on;
 }
 
 function warmOpen(project: Project, withPreview: boolean): void {
   void prefetchStudio();
+
   const did =
     uiStore.get().directionByProject[project.id] ??
     project.directions[0]?.id ??
     null;
+
   warmProject(project.id, withPreview ? did : null);
 }
 
@@ -87,9 +96,13 @@ export function useThumbnail(project: Project): string | null {
   const key = thumb ? `${project.id}/${thumb.versionId}` : null;
   const [url, setUrl] = useState<{ key: string; url: string } | null>(null);
   useEffect(() => {
-    if (!key || !thumb) return;
+    if (!key || !thumb) {
+      return;
+    }
+
     let live = true;
     let pending = thumbCache.get(key);
+
     if (!pending) {
       pending = api
         .thumbnail(project.id, thumb.versionId)
@@ -97,15 +110,21 @@ export function useThumbnail(project: Project): string | null {
       pending.catch(() => thumbCache.delete(key));
       thumbCache.set(key, pending);
     }
+
     pending.then(
       (next) => live && setUrl({ key, url: next }),
       () => undefined
     );
+
     return () => {
       live = false;
     };
   }, [key, project.id, thumb]);
-  if (url) return url.url;
+
+  if (url) {
+    return url.url;
+  }
+
   return null;
 }
 
@@ -140,6 +159,7 @@ export type MenuAt = { x: number; y: number } | "button" | "keys" | null;
 
 const menusChunk = import("./ProjectCardMenus");
 const CardMenu = lazy(() => menusChunk.then((m) => ({ default: m.CardMenu })));
+
 const RenameField = lazy(() =>
   menusChunk.then((m) => ({ default: m.RenameField }))
 );
@@ -172,8 +192,10 @@ export function projectBadge(project: Project): {
   tone: string;
 } {
   const type = projectTypeOf(project);
+
   const tone =
     type === "html" && isFolderProject(project) ? "html" : TYPE_TONE[type];
+
   return { label: TYPE_LABELS[type], tone };
 }
 
@@ -202,6 +224,7 @@ export function HealthCell({
   runFailed?: boolean;
 }) {
   const state = health?.state ?? "static";
+
   if (runFailed && state !== "install" && state !== "failed") {
     return (
       <span
@@ -213,7 +236,11 @@ export function HealthCell({
       </span>
     );
   }
-  if (state === "static") return null;
+
+  if (state === "static") {
+    return null;
+  }
+
   return (
     <span
       className={`project-health ${state}`}
@@ -247,16 +274,26 @@ function ProjectCard({
 
   const closeMenu = (refocus: boolean) => {
     setMenu(null);
-    if (refocus) openRef.current?.focus();
+
+    if (refocus) {
+      openRef.current?.focus();
+    }
   };
 
   const pick = (action: CardAction) => {
     closeMenu(action === "duplicate" || action === "reveal");
-    if (action === "rename") setRenaming(true);
-    else if (action === "open") actions.onOpen(project);
-    else if (action === "duplicate") actions.onDuplicate(project);
-    else if (action === "reveal") actions.onReveal(project);
-    else actions.onDelete(project);
+
+    if (action === "rename") {
+      setRenaming(true);
+    } else if (action === "open") {
+      actions.onOpen(project);
+    } else if (action === "duplicate") {
+      actions.onDuplicate(project);
+    } else if (action === "reveal") {
+      actions.onReveal(project);
+    } else {
+      actions.onDelete(project);
+    }
   };
 
   const onContextMenu = (event: MouseEvent<HTMLDivElement>) => {
@@ -271,6 +308,7 @@ function ProjectCard({
 
   const onKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
     const mod = event.metaKey || event.ctrlKey;
+
     if (event.key === "F2") {
       event.preventDefault();
       setRenaming(true);
@@ -292,10 +330,14 @@ function ProjectCard({
   const finishRename = (name: string | null) => {
     setRenaming(false);
     window.requestAnimationFrame(() => openRef.current?.focus());
-    if (name) void actions.onRename(project, name);
+
+    if (name) {
+      void actions.onRename(project, name);
+    }
   };
 
   const badge = projectBadge(project);
+
   const meta = (
     <span className="project-meta">
       <span className={`home-badge ${badge.tone}`}>{badge.label}</span>
@@ -465,6 +507,7 @@ function ProjectListTools({
   canOpen: boolean;
 }) {
   const { homeSort } = useUi();
+
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "ArrowDown" && canOpen) {
       event.preventDefault();
@@ -478,6 +521,7 @@ function ProjectListTools({
       onQuery("");
     }
   };
+
   return (
     <div className="home-list-tools">
       <label className="home-search">
@@ -511,6 +555,7 @@ function ProjectListTools({
 
 function ViewTools() {
   const { view, favoritesOnly } = useHomeView();
+
   return (
     <>
       <button
@@ -575,6 +620,7 @@ function ViewTools() {
 
 function useHomeView() {
   const prefs = useHomePrefs();
+
   return {
     view: prefs.view,
     favoritesOnly: prefs.favoritesOnly,
@@ -653,12 +699,18 @@ function ProjectListStates({
 function useGridFocus(shown: Project[]) {
   const gridRef = useRef<HTMLDivElement>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
+
   const active = shown.some((project) => project.id === activeId)
     ? activeId
     : (shown[0]?.id ?? null);
+
   const focusAt = (index: number) => {
     const target = shown[index];
-    if (!target) return;
+
+    if (!target) {
+      return;
+    }
+
     setActiveId(target.id);
     gridRef.current
       ?.querySelector<HTMLButtonElement>(
@@ -666,22 +718,30 @@ function useGridFocus(shown: Project[]) {
       )
       ?.focus();
   };
+
   const onGridKey = (event: KeyboardEvent<HTMLDivElement>) => {
     if (
       !(event.target instanceof HTMLElement) ||
       !event.target.classList.contains("project-open")
-    )
+    ) {
       return;
+    }
+
     const next = nextGridIndex(
       event.key,
       shown.findIndex((project) => project.id === active),
       shown.length,
       gridColumns(gridRef.current)
     );
-    if (next === null) return;
+
+    if (next === null) {
+      return;
+    }
+
     event.preventDefault();
     focusAt(next);
   };
+
   return { gridRef, active, setActiveId, focusAt, onGridKey };
 }
 
@@ -702,27 +762,40 @@ export function ProjectGrid({
   const { homeSort } = useUi();
   const { view, favoritesOnly, favorites } = useHomeView();
   const matched = sortProjects(filterProjects(projects ?? [], query), homeSort);
+
   const shown = favoritesOnly
     ? matched.filter((project) => favorites.includes(project.id))
     : matched;
+
   const { gridRef, active, setActiveId, focusAt, onGridKey } =
     useGridFocus(shown);
+
   const total = projects?.length ?? 0;
   const first = shown[0];
+
   const gridActions: CardActions = {
     ...actions,
     onDelete: (project) => {
       const index = shown.findIndex((item) => item.id === project.id);
+
       const hadFocus =
         gridRef.current?.contains(document.activeElement) ?? false;
+
       actions.onDelete(project);
-      if (!hadFocus) return;
+
+      if (!hadFocus) {
+        return;
+      }
+
       window.requestAnimationFrame(() => {
         const buttons =
           gridRef.current?.querySelectorAll<HTMLButtonElement>(".project-open");
-        if (buttons && buttons.length > 0)
+
+        if (buttons && buttons.length > 0) {
           buttons[Math.min(index, buttons.length - 1)]?.focus();
-        else searchRef.current?.focus();
+        } else {
+          searchRef.current?.focus();
+        }
       });
     },
   };

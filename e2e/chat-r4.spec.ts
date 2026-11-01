@@ -9,8 +9,10 @@ import {
 } from "./support/studio";
 
 const HOLD_MS = 1500;
+
 const composer = (page: Page) =>
   page.locator('.prompt [data-slot="composer-input"]');
+
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function finishedRun(
@@ -28,6 +30,7 @@ async function finishedRun(
       { timeout: 30_000 }
     )
     .not.toMatch(/^(none|running)$/);
+
   return found as RunSummary;
 }
 
@@ -58,8 +61,10 @@ for (const [where, hold] of Object.entries(holds)) {
     await page.route(
       /\/api\/projects\/[^/]+\/d\/[^/]+\/runs$/,
       async (route) => {
-        if (route.request().method() !== "POST" || held)
+        if (route.request().method() !== "POST" || held) {
           return route.fallback();
+        }
+
         held = true;
         await hold(route);
         released = Date.now();
@@ -75,10 +80,12 @@ for (const [where, hold] of Object.entries(holds)) {
     await composer(page).press("Escape");
 
     const run = page.locator("[data-run-id]").last();
+
     const shownAt = await page.waitForFunction(
       (text) => {
         const runs = Array.from(document.querySelectorAll("[data-run-id]"));
         const last = runs.at(-1);
+
         return last?.textContent?.includes(text) &&
           last.querySelector(".run-foot .status.canceled")
           ? Date.now()
@@ -87,6 +94,7 @@ for (const [where, hold] of Object.entries(holds)) {
       prompt,
       { polling: "raf", timeout: 10_000 }
     );
+
     const stoppedMs = (await shownAt.jsonValue()) - Math.max(escAt, released);
     console.log(
       `[chat-r4] ${where}: Esc or response, whichever is later -> Stopped shown ${stoppedMs} ms`
@@ -97,10 +105,12 @@ for (const [where, hold] of Object.entries(holds)) {
     const summary = await finishedRun(api, project.id, prompt);
     expect(summary.status).toBe("canceled");
     await sleep(1200);
+
     const detail = await api.call<{ events: StudioEvent[] }>(
       "GET",
       `/api/runs/${summary.id}`
     );
+
     expect(
       detail.events.filter((event) => event.type === "run.tool.started").length
     ).toBeLessThanOrEqual(1);

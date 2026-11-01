@@ -86,12 +86,14 @@ const publishInput = z
   .strict();
 
 const listInput = z.object({ projectId }).strict();
+
 const unpublishInput = z
   .object({
     projectId,
     publicationId: id("Publication id from list_publications."),
   })
   .strict();
+
 const rollbackInput = z
   .object({
     projectId,
@@ -105,21 +107,29 @@ async function frameRefs(
   input: z.output<typeof publishInput>,
   project: Awaited<ReturnType<typeof loadTarget>>["project"]
 ) {
-  if (!input.frames) return {};
+  if (!input.frames) {
+    return {};
+  }
+
   const all =
     (
       await readProjectCanvas(project, (pid) =>
         deps.projects.projectDir(pid)
       ).catch(() => null)
     )?.canvas?.frames ?? [];
+
   const picked = input.frames.map((ref) => {
     const found = findFrame(all, ref);
-    if (!found)
+
+    if (!found) {
       throw new EditError(
         `No frame ${ref} on the canvas. Call canvas_list for frame ids.`
       );
+    }
+
     return found;
   });
+
   return {
     frames: picked.map((f) => ({
       name: f.label?.trim() || `${f.width} × ${f.height}`,
@@ -136,12 +146,15 @@ export function planDetail(plan: PublishPlan): string {
     plan.pages.length > 4
       ? `${plan.pages.slice(0, 4).join(", ")} and ${plan.pages.length - 4} more`
       : plan.pages.join(", ");
+
   const what =
     plan.kind === "site"
       ? `${plan.pages.length} page${plan.pages.length === 1 ? "" : "s"} (${pages})`
       : `PNG images of ${plan.pages.length} frame${plan.pages.length === 1 ? "" : "s"} (${pages})${plan.comments ? ` and ${plan.comments} comment${plan.comments === 1 ? "" : "s"}` : ""}`;
+
   const changed =
     plan.changedFiles === null ? "" : ` (${plan.changedFiles} changed)`;
+
   return `Anyone with the URL can open ${oneLine(what, 220)}: ${plan.fileCount} file${plan.fileCount === 1 ? "" : "s"}${changed}, ${publishSize(plan.bytes)}, at ${plan.url ?? plan.urlPattern}. Password ${plan.password ? "on" : "off"}. ${publishExpiryText(plan.expiresAt)}. Viewer comments ${plan.viewerComments ? "on" : "off"}. ${plan.noindex ? "noindex" : "Search engines may list it"}. Version ${plan.versionId.slice(0, 7)}.${plan.backend === "local" ? " Target: local test server." : ""}`;
 }
 
@@ -190,12 +203,16 @@ const publishDesign = defineTool(
       input.projectId,
       input.directionId
     );
-    if (!deps.approvals.windowOpen())
+
+    if (!deps.approvals.windowOpen()) {
       throw new EditError(
         "Design Studio is not open, so nobody can approve this publish. Ask the user to open the project in Design Studio, or to click Share > Publish there."
       );
+    }
+
     const refs = await frameRefs(deps, input, project);
     const base = `/api/projects/${encodeURIComponent(project.id)}`;
+
     const plan = await studioCall<PublishPlan>(
       deps,
       "POST",
@@ -213,6 +230,7 @@ const publishDesign = defineTool(
         ...refs,
       }
     );
+
     await approve(deps, {
       tool: "publish_design",
       action: plan.republishOf
@@ -223,17 +241,21 @@ const publishDesign = defineTool(
       title: `${client} wants to publish “${oneLine(plan.title, 80)}” on a public URL`,
       detail: planDetail(plan),
     });
+
     const done = await studioCall<{ publication: Publication }>(
       deps,
       "POST",
       `${base}/publish`,
       { planId: plan.id }
     );
-    if (done.publication.status !== "live")
+
+    if (done.publication.status !== "live") {
       throw new EditError(
         done.publication.error ??
           "Publish failed. Ask the user to look at Share > Publish in Design Studio."
       );
+    }
+
     return {
       result: ok({
         publication: publicationView(done.publication),
@@ -254,11 +276,13 @@ const listPublications = defineTool(
   },
   async (deps, input) => {
     const { project } = await loadTarget(deps, input.projectId);
+
     const list = await studioCall<PublicationList>(
       deps,
       "GET",
       `/api/projects/${encodeURIComponent(project.id)}/publications`
     );
+
     return {
       result: ok({ publications: list.publications.map(publicationView) }),
     };
@@ -266,8 +290,10 @@ const listPublications = defineTool(
 );
 
 function unpublishDetail(p: Publication): string {
-  if (p.backend === "app")
+  if (p.backend === "app") {
     return `${p.url ?? "Its URL"} stops working at once (410) and its files are deleted from R2. View counts and comments stay.`;
+  }
+
   return `This deletes the old Cloudflare Worker ${p.workerName ?? ""}. ${p.url ?? "Its URL"} stops working at once.`;
 }
 
@@ -281,11 +307,15 @@ async function findPublication(
     "GET",
     `/api/projects/${encodeURIComponent(projectIdValue)}/publications`
   );
+
   const found = list.publications.find((p) => p.id === publicationId);
-  if (!found)
+
+  if (!found) {
     throw new EditError(
       `No publication ${publicationId}. Call list_publications.`
     );
+  }
+
   return found;
 }
 
@@ -302,11 +332,14 @@ const unpublishDesign = defineTool(
   async (deps, input, client) => {
     const { project } = await loadTarget(deps, input.projectId);
     const found = await findPublication(deps, project.id, input.publicationId);
+
     if (found.status !== "removed") {
-      if (!deps.approvals.windowOpen())
+      if (!deps.approvals.windowOpen()) {
         throw new EditError(
           "Design Studio is not open, so nobody can approve this unpublish."
         );
+      }
+
       await approve(deps, {
         tool: "unpublish_design",
         action: "Unpublish a design",
@@ -316,11 +349,13 @@ const unpublishDesign = defineTool(
         detail: unpublishDetail(found),
       });
     }
+
     const done = await studioCall<{ publication: Publication }>(
       deps,
       "DELETE",
       `/api/projects/${encodeURIComponent(project.id)}/publications/${encodeURIComponent(found.id)}`
     );
+
     return { result: ok({ publication: publicationView(done.publication) }) };
   }
 );
@@ -338,21 +373,27 @@ const rollbackPublication = defineTool(
     const { project } = await loadTarget(deps, input.projectId);
     const found = await findPublication(deps, project.id, input.publicationId);
     const version = found.versions.find((v) => v.id === input.versionId);
-    if (!version)
+
+    if (!version) {
       throw new EditError(
         `Publication ${found.id} has no published version ${input.versionId}. Call list_publications for versions.`
       );
+    }
+
     if (!version.live) {
-      if (!deps.approvals.windowOpen())
+      if (!deps.approvals.windowOpen()) {
         throw new EditError(
           "Design Studio is not open, so nobody can approve this rollback."
         );
+      }
+
       const when = version.committedAt
         ? new Date(version.committedAt)
             .toISOString()
             .slice(0, 16)
             .replace("T", " ")
         : "an earlier time";
+
       await approve(deps, {
         tool: "rollback_publication",
         action: "Roll back a published design",
@@ -362,12 +403,14 @@ const rollbackPublication = defineTool(
         detail: `${found.url ?? "Its URL"} goes back to the version published ${when} (source version ${version.sourceVersion.slice(0, 7)}, ${version.fileCount} files). Anyone with the URL sees it at once.`,
       });
     }
+
     const done = await studioCall<{ publication: Publication }>(
       deps,
       "POST",
       `/api/projects/${encodeURIComponent(project.id)}/publications/${encodeURIComponent(found.id)}/rollback`,
       { versionId: version.id }
     );
+
     return { result: ok({ publication: publicationView(done.publication) }) };
   }
 );

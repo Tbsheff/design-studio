@@ -22,6 +22,7 @@ interface RawSource {
 }
 
 type RawTarget = Omit<ArrangeTargetFacts, "source"> & RawSource;
+
 type RawParent = Omit<ArrangeParentFacts, "source"> & RawSource;
 
 type RawProbe =
@@ -118,25 +119,37 @@ export async function probeArrange(
     viewport,
     probeExpression(selectors)
   );
-  if ("error" in raw) throw new ArrangeProbeError(raw.error);
+
+  if ("error" in raw) {
+    throw new ArrangeProbeError(raw.error);
+  }
+
   const sources = new Map<string, ProbedSource>();
+
   const targets = raw.targets.map(({ loc, usedAt, usedBy, ...rest }) => {
     sources.set(
       rest.selector,
       sourceEntry({ loc, usedAt, usedBy, tag: rest.tag })
     );
+
     return { ...rest, source: parseLoc(loc) };
   });
+
   let parent: ArrangeParentFacts | null = null;
+
   if (raw.parent) {
     const { loc, usedAt, usedBy, ...rest } = raw.parent;
-    if (!sources.has(rest.selector))
+
+    if (!sources.has(rest.selector)) {
       sources.set(
         rest.selector,
         sourceEntry({ loc, usedAt, usedBy, tag: rest.tag })
       );
+    }
+
     parent = { ...rest, source: parseLoc(loc) };
   }
+
   return {
     facts: {
       targets,

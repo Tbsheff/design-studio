@@ -16,26 +16,36 @@ interface Remapper {
 
 function remapperOf(files: SourceFileChange[]): Remapper {
   const maps = new Map<string, LineMap>();
+
   const mapOf = (file: string): LineMap | null => {
     const change = files.find((item) => item.relative === file);
-    if (!change) return null;
+
+    if (!change) {
+      return null;
+    }
+
     let map = maps.get(file);
+
     if (!map) {
       map = lineMapOf(change.before, change.after);
       maps.set(file, map);
     }
+
     return map;
   };
+
   return {
     remap: (loc) => {
       const map = mapOf(loc.file);
       const line = map?.line(loc.line) ?? null;
+
       return map && line !== null
         ? { file: loc.file, line, col: map.col(loc.line, loc.col) }
         : null;
     },
     removed: (loc) => {
       const map = mapOf(loc.file);
+
       return map !== null && map.line(loc.line) === null;
     },
   };
@@ -46,24 +56,41 @@ function movedLoc(
   moves: Remapper
 ): string | null | undefined {
   const match = raw === undefined ? null : LOC.exec(raw);
-  if (!match) return raw;
+
+  if (!match) {
+    return raw;
+  }
+
   const loc = {
     file: match[1] ?? "",
     line: Number(match[2]),
     col: Number(match[3]),
   };
-  if (moves.removed(loc)) return null;
+
+  if (moves.removed(loc)) {
+    return null;
+  }
+
   const next = moves.remap(loc);
+
   return next ? `${loc.file}:${next.line}:${next.col}` : raw;
 }
 
 function movedLockKey(key: string, moves: Remapper): string | null {
   const match = LOCK_KEY.exec(key);
-  if (!match) return key;
+
+  if (!match) {
+    return key;
+  }
+
   const [, page = "", use, own, nth = ""] = match;
   const nextUse = movedLoc(use, moves);
   const nextOwn = movedLoc(own, moves);
-  if (nextUse === null || nextOwn === null) return null;
+
+  if (nextUse === null || nextOwn === null) {
+    return null;
+  }
+
   return `${page}${nextUse === undefined ? "" : `use:${nextUse}|`}loc:${nextOwn}${nth}`;
 }
 
@@ -73,8 +100,11 @@ async function followLocks(
   moves: Remapper
 ): Promise<void> {
   const locks = configuredLayerLocks();
-  if (!locks || (await locks.read(projectId, directionId)).keys.length === 0)
+
+  if (!locks || (await locks.read(projectId, directionId)).keys.length === 0) {
     return;
+  }
+
   await locks.update(projectId, directionId, (keys) =>
     keys
       .map((key) => movedLockKey(key, moves))

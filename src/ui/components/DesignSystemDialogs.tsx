@@ -27,10 +27,17 @@ export function ChangePackDialog({
   const title = currentId ? "Change design system" : "Add design system";
 
   const choose = async (packId: string | undefined) => {
-    if (!packId || busy) return;
-    if (packId === currentId) return onClose();
+    if (!packId || busy) {
+      return;
+    }
+
+    if (packId === currentId) {
+      return onClose();
+    }
+
     setBusy(true);
     setError(null);
+
     try {
       await onApply(packId);
       onClose();
@@ -137,9 +144,13 @@ export function SavePackDialog({
   const dialog = useModalDialog(() => (busy ? false : onClose()));
 
   const submit = async () => {
-    if (!name.trim() || busy) return;
+    if (!name.trim() || busy) {
+      return;
+    }
+
     setBusy(true);
     setError(null);
+
     try {
       await onSave(name.trim(), asNew);
       onClose();

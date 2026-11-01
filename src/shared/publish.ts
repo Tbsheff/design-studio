@@ -2,10 +2,14 @@ import type { ExportFrame } from "./export.js";
 
 export const CF_MIN_VERSION = "1.0.0-beta.26";
 export const CF_INSTALL_COMMAND = "npm i -g cf";
+
 export const CF_NODE_RANGE =
   "Node.js 22.23, 24.22 or 26.12 or later in that line";
+
 export const PUBLISH_EXPIRY_DAYS = [0, 1, 7, 30] as const;
+
 export type PublishExpiryDays = (typeof PUBLISH_EXPIRY_DAYS)[number];
+
 export const PUBLISH_DEFAULT_EXPIRY_DAYS: PublishExpiryDays = 7;
 export const PUBLISH_PASSWORD_MIN = 8;
 export const PUBLISH_PASSWORD_MAX = 128;
@@ -158,6 +162,7 @@ export type SetupStepId =
   | "key"
   | "deploy"
   | "health";
+
 export type SetupStepStatus =
   | "pending"
   | "running"
@@ -188,8 +193,14 @@ export interface PublishBackendState {
 }
 
 export function publishSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  if (bytes < 1024) {
+    return `${bytes} B`;
+  }
+
+  if (bytes < 1024 * 1024) {
+    return `${(bytes / 1024).toFixed(1)} KB`;
+  }
+
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
@@ -197,12 +208,24 @@ export function publishExpiryText(
   expiresAt: number | null,
   now = Date.now()
 ): string {
-  if (expiresAt === null) return "No end date";
+  if (expiresAt === null) {
+    return "No end date";
+  }
+
   const left = expiresAt - now;
-  if (left <= 0) return "Ended";
+
+  if (left <= 0) {
+    return "Ended";
+  }
+
   const days = Math.round(left / 86_400_000);
-  if (days >= 2) return `Ends in ${days} days`;
+
+  if (days >= 2) {
+    return `Ends in ${days} days`;
+  }
+
   const hours = Math.max(1, Math.round(left / 3_600_000));
+
   return `Ends in ${hours} h`;
 }
 
@@ -213,6 +236,7 @@ interface CfVersionParts {
 
 function splitVersion(v: string): CfVersionParts {
   const [core = "", pre = ""] = v.trim().replace(/^v/, "").split("-", 2);
+
   return {
     core: core.split(".").map((n) => Number(n) || 0),
     pre: pre ? pre.split(".") : [],
@@ -222,30 +246,46 @@ function splitVersion(v: string): CfVersionParts {
 function comparePart(p: string, q: string): number {
   const pn = Number(p);
   const qn = Number(q);
+
   return Math.sign(
     Number.isFinite(pn) && Number.isFinite(qn) ? pn - qn : p.localeCompare(q)
   );
 }
 
 function comparePre(x: string[], y: string[]): number {
-  if (x.length === 0 || y.length === 0)
+  if (x.length === 0 || y.length === 0) {
     return y.length - x.length === 0 ? 0 : x.length === 0 ? 1 : -1;
+  }
+
   for (let i = 0; i < Math.max(x.length, y.length); i += 1) {
     const p = x[i];
     const q = y[i];
-    if (p === undefined || q === undefined) return p === undefined ? -1 : 1;
+
+    if (p === undefined || q === undefined) {
+      return p === undefined ? -1 : 1;
+    }
+
     const d = comparePart(p, q);
-    if (d !== 0) return d;
+
+    if (d !== 0) {
+      return d;
+    }
   }
+
   return 0;
 }
 
 export function compareCfVersion(a: string, b: string): number {
   const x = splitVersion(a);
   const y = splitVersion(b);
+
   for (let i = 0; i < 3; i += 1) {
     const d = (x.core[i] ?? 0) - (y.core[i] ?? 0);
-    if (d !== 0) return Math.sign(d);
+
+    if (d !== 0) {
+      return Math.sign(d);
+    }
   }
+
   return comparePre(x.pre, y.pre);
 }

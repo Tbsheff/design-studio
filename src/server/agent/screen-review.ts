@@ -14,6 +14,7 @@ const SIZES = [
   { name: "desktop", box: { width: 1440, height: 900 } },
   { name: "mobile", box: { width: 390, height: 844 } },
 ] as const;
+
 const LISTED = 8;
 
 export interface ScreenReviewInput {
@@ -32,8 +33,10 @@ export interface ScreenReview {
 }
 
 function wantsScreenReview(ctx: AgentRunContext, run: RunToolState): boolean {
-  if (ctx.project.app || ctx.request.mode !== "edit" || !ctx.previewUrl)
+  if (ctx.project.app || ctx.request.mode !== "edit" || !ctx.previewUrl) {
     return false;
+  }
+
   return (
     run.config.preset.checks.screenshots && Boolean(run.config.preset.screens)
   );
@@ -52,14 +55,23 @@ export async function unseenScreens(
   input: Pick<ScreenReviewInput, "preview" | "ctx" | "run">
 ): Promise<RunScreen[]> {
   const { ctx, run } = input;
-  if (!wantsScreenReview(ctx, run)) return [];
+
+  if (!wantsScreenReview(ctx, run)) {
+    return [];
+  }
+
   const firstEdit = (run.log?.toolOrder ?? []).findIndex((name) =>
     EDIT_TOOL_NAMES.has(name)
   );
-  if (firstEdit === -1) return [];
+
+  if (firstEdit === -1) {
+    return [];
+  }
+
   const screens = await runScreens(input.preview, ctx, run.config, run).catch(
     () => []
   );
+
   return screens.length > 1
     ? screens.filter((screen) => !shotOf(run, screen, firstEdit))
     : [];
@@ -76,6 +88,7 @@ async function shotsOf(
         input.runsDir,
         `${input.runId}-studio-screen-${index + 1}-${name}`
       );
+
       const tiles = await input.preview.screenshotTiles(screen.url, {
         viewport: box,
         tileHeight: box.height,
@@ -85,8 +98,13 @@ async function shotsOf(
         fresh: true,
         ...(screen.prepare ? { prepare: screen.prepare } : {}),
       });
+
       const file = tiles.paths[0];
-      if (!file) throw new Error("no tile");
+
+      if (!file) {
+        throw new Error("no tile");
+      }
+
       return {
         mime: "image/png" as const,
         data: (await readFile(file)).toString("base64"),
@@ -105,13 +123,16 @@ export async function studioScreenReview(
       shotsOf(input, screen, index).catch(() => [] as ImagePart[])
     )
   );
+
   const labels = new Set(screens.map((screen) => screen.label));
+
   const findings = input.run.lastFindings.filter(
     (finding) =>
       isBlocking(finding) &&
       finding.screen !== undefined &&
       labels.has(finding.screen)
   );
+
   return { screens, images: shots.flat(), findings };
 }
 
@@ -120,8 +141,12 @@ function findingLine(finding: QualityFinding): string {
 }
 
 export function screenReviewPrompt(review: ScreenReview): string | null {
-  if (review.images.length === 0) return null;
+  if (review.images.length === 0) {
+    return null;
+  }
+
   const names = review.screens.map((screen) => `"${screen.label}"`).join(", ");
+
   return [
     "<studio-continue>",
     `You finished without a screenshot of ${review.screens.length} screen(s): ${names}. The studio took them at 1440 px and 390 px (attached, one image per size, top of the page).`,

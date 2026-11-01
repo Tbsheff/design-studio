@@ -3,10 +3,12 @@ import { shell, type Session, type WebContents } from "electron";
 import { VITE_PORT_RANGE, type PortSet } from "./ports.js";
 
 const EXTERNAL_PROTOCOLS = new Set(["http:", "https:", "mailto:"]);
+
 const ALLOWED_PERMISSIONS = new Set([
   "clipboard-read",
   "clipboard-sanitized-write",
 ]);
+
 const LOOPBACK_HOSTS = new Set(["127.0.0.1", "localhost"]);
 
 function parse(raw: string): URL | null {
@@ -27,17 +29,30 @@ function isVitePort(port: number, ports: PortSet): boolean {
 
 export function isInternalUrl(raw: string, ports: PortSet | null): boolean {
   const url = parse(raw);
-  if (!ports || !url || url.protocol !== "http:") return false;
+
+  if (!ports || !url || url.protocol !== "http:") {
+    return false;
+  }
+
   const port = Number(url.port);
-  if (url.hostname === "127.0.0.1" && port === ports.studio) return true;
-  if (isPreviewHost(url.hostname) && port === ports.preview) return true;
+
+  if (url.hostname === "127.0.0.1" && port === ports.studio) {
+    return true;
+  }
+
+  if (isPreviewHost(url.hostname) && port === ports.preview) {
+    return true;
+  }
+
   return LOOPBACK_HOSTS.has(url.hostname) && isVitePort(port, ports);
 }
 
 export function openExternally(raw: string): void {
   const url = parse(raw);
-  if (url && EXTERNAL_PROTOCOLS.has(url.protocol))
+
+  if (url && EXTERNAL_PROTOCOLS.has(url.protocol)) {
     void shell.openExternal(url.href);
+  }
 }
 
 export function guardContents(
@@ -45,12 +60,16 @@ export function guardContents(
   ports: () => PortSet | null
 ): void {
   contents.on("will-navigate", (event, url) => {
-    if (isInternalUrl(url, ports())) return;
+    if (isInternalUrl(url, ports())) {
+      return;
+    }
+
     event.preventDefault();
     openExternally(url);
   });
   contents.setWindowOpenHandler(({ url }) => {
     openExternally(url);
+
     return { action: "deny" };
   });
 }

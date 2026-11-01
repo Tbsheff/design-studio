@@ -6,14 +6,19 @@ import { chromium, type Page } from "playwright-core";
 const base = process.env.STUDIO_URL ?? "http://127.0.0.1:4970";
 const out = path.resolve(process.argv[2] ?? "/tmp/polish-r3");
 const prefix = process.argv[3] ?? "after";
+
 mkdirSync(out, { recursive: true });
 
 async function shot(page: Page, name: string, full = false): Promise<void> {
   await page.waitForTimeout(400);
   const chat = page.locator("aside.panel.right").first();
-  if (full || (await chat.count()) === 0)
+
+  if (full || (await chat.count()) === 0) {
     await page.screenshot({ path: path.join(out, `${prefix}-${name}.png`) });
-  else await chat.screenshot({ path: path.join(out, `${prefix}-${name}.png`) });
+  } else {
+    await chat.screenshot({ path: path.join(out, `${prefix}-${name}.png`) });
+  }
+
   console.log(`${prefix}-${name}.png`);
 }
 
@@ -33,15 +38,20 @@ async function main(): Promise<void> {
       "--disable-features=IsolateOrigins,site-per-process",
     ],
   });
+
   const page = await browser.newPage({
     viewport: { width: 1440, height: 900 },
     deviceScaleFactor: 2,
   });
+
   await page.goto(base);
+
   const token =
     (await page.locator('meta[name="studio-token"]').getAttribute("content")) ??
     "";
+
   await page.evaluate(() => localStorage.clear());
+
   const created = await page.evaluate(
     async (t) =>
       (
@@ -56,6 +66,7 @@ async function main(): Promise<void> {
       ).json(),
     token
   );
+
   const projectId = created.project.id as string;
   await page.goto(base);
   await page
@@ -73,10 +84,15 @@ async function main(): Promise<void> {
     .locator(".run-foot .status.completed")
     .nth(1)
     .waitFor({ timeout: 20_000 });
+
   const editRow = page
     .locator('.tool-row[data-tool="Edit"] .tool-trigger')
     .last();
-  if (await editRow.count()) await editRow.click();
+
+  if (await editRow.count()) {
+    await editRow.click();
+  }
+
   await shot(page, "chat-diff");
 
   await typeAndSend(page, "[slow] Add a long event schedule [todo] [steps]");
@@ -84,23 +100,32 @@ async function main(): Promise<void> {
   await page.waitForTimeout(1200);
   await shot(page, "chat-live");
   const box = page.locator(".prompt textarea");
+
   if (prefix !== "before") {
     await box.fill("Use a serif heading");
     await box.press("Enter");
     await box.fill("Then tighten the cards");
     await box.press("Enter");
   }
+
   await box.fill("Also make the heading larger");
   await shot(page, "composer-running");
   await shot(page, "studio-running", true);
   await box.fill("");
-  if (prefix === "before") await page.keyboard.press("Escape");
+
+  if (prefix === "before") {
+    await page.keyboard.press("Escape");
+  }
+
   const stop = page.getByRole("button", { name: /^(Cancel|Stop)$/ });
-  if (await stop.count())
+
+  if (await stop.count()) {
     await stop
       .first()
       .click()
       .catch(() => undefined);
+  }
+
   await page.waitForTimeout(800);
   await shot(page, "chat-stopped");
 
@@ -108,7 +133,11 @@ async function main(): Promise<void> {
     const discardFirst = page
       .locator(".banner")
       .getByRole("button", { name: "Discard" });
-    if (await discardFirst.count()) await discardFirst.click();
+
+    if (await discardFirst.count()) {
+      await discardFirst.click();
+    }
+
     await box.fill("");
     await typeAndSend(page, "Run the tests [bash]");
     await page.getByTestId("permission-prompt").waitFor();
@@ -161,7 +190,11 @@ async function main(): Promise<void> {
   const discard = page
     .locator(".banner")
     .getByRole("button", { name: "Discard" });
-  if (await discard.count()) await discard.click();
+
+  if (await discard.count()) {
+    await discard.click();
+  }
+
   await typeAndSend(page, "[fail] Add an opening hours table");
   await page.locator(".run-error").first().waitFor({ timeout: 20_000 });
   await shot(page, "chat-error");

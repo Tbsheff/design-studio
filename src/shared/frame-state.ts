@@ -6,6 +6,7 @@ export const FRAME_STATE_KINDS = [
   "error",
   "mock",
 ] as const;
+
 export type FrameStateKind = (typeof FRAME_STATE_KINDS)[number];
 
 export const DEFAULT_FRAME_STATE = "default";
@@ -18,6 +19,7 @@ export const MAX_MOCK_BODY = 200_000;
 
 const STATE_ID_RE = /^[a-z][a-z0-9-]{0,23}$/;
 const HOST_LABEL_PREFIX = "s-";
+
 const PREVIEW_HOST_RE =
   /^(?:s-([a-z][a-z0-9-]{0,23})\.)?(p-[0-9a-f]{2,128}\.localhost)$/;
 
@@ -95,7 +97,11 @@ export function stateOfHost(
   hostname: string
 ): { state: string | null; base: string } | null {
   const match = PREVIEW_HOST_RE.exec(hostname.toLowerCase());
-  if (!match?.[2]) return null;
+
+  if (!match?.[2]) {
+    return null;
+  }
+
   return { state: match[1] ?? null, base: match[2] };
 }
 
@@ -104,19 +110,30 @@ export function withFrameStateHost(
   stateId: string | null | undefined
 ): string {
   let parsed: URL;
+
   try {
     parsed = new URL(url);
   } catch {
     return url;
   }
+
   const host = stateOfHost(parsed.hostname);
-  if (!host) return url;
+
+  if (!host) {
+    return url;
+  }
+
   const wanted =
     stateId && stateId !== DEFAULT_FRAME_STATE && isFrameStateId(stateId)
       ? `${HOST_LABEL_PREFIX}${stateId}.${host.base}`
       : host.base;
-  if (wanted === parsed.hostname) return url;
+
+  if (wanted === parsed.hostname) {
+    return url;
+  }
+
   parsed.hostname = wanted;
+
   return parsed.toString();
 }
 
@@ -124,33 +141,54 @@ export function stateLabel(
   view: FrameStatesView | null,
   stateId: string | undefined
 ): string | null {
-  if (!stateId || stateId === DEFAULT_FRAME_STATE) return null;
+  if (!stateId || stateId === DEFAULT_FRAME_STATE) {
+    return null;
+  }
+
   return view?.states.find((state) => state.id === stateId)?.name ?? stateId;
 }
 
 export function cleanMockRule(raw: unknown): MockRule | null {
-  if (!raw || typeof raw !== "object") return null;
+  if (!raw || typeof raw !== "object") {
+    return null;
+  }
+
   const rule = raw as Record<string, unknown>;
   const path = typeof rule.path === "string" ? rule.path.trim() : "";
-  if (!path.startsWith("/") || path.length > 300 || /\s/.test(path))
+
+  if (!path.startsWith("/") || path.length > 300 || /\s/.test(path)) {
     return null;
+  }
+
   const out: MockRule = { path };
-  if (typeof rule.method === "string" && /^[A-Za-z]{3,7}$/.test(rule.method))
+
+  if (typeof rule.method === "string" && /^[A-Za-z]{3,7}$/.test(rule.method)) {
     out.method = rule.method.toUpperCase();
+  }
+
   if (
     typeof rule.status === "number" &&
     Number.isInteger(rule.status) &&
     rule.status >= 100 &&
     rule.status <= 599
-  )
+  ) {
     out.status = rule.status;
+  }
+
   if (rule.body !== undefined) {
     const size = JSON.stringify(rule.body)?.length ?? 0;
-    if (size > MAX_MOCK_BODY) return null;
+
+    if (size > MAX_MOCK_BODY) {
+      return null;
+    }
+
     out.body = rule.body;
   }
-  if (typeof rule.delayMs === "number" && rule.delayMs >= 0)
+
+  if (typeof rule.delayMs === "number" && rule.delayMs >= 0) {
     out.delayMs = Math.min(Math.round(rule.delayMs), 30_000);
+  }
+
   return out;
 }
 
@@ -159,8 +197,12 @@ export function mockRuleMatches(
   method: string,
   pathname: string
 ): boolean {
-  if (rule.method && rule.method !== method.toUpperCase()) return false;
+  if (rule.method && rule.method !== method.toUpperCase()) {
+    return false;
+  }
+
   const pattern = rule.path.split("?")[0] ?? rule.path;
+
   return pattern.endsWith("*")
     ? pathname.startsWith(pattern.slice(0, -1))
     : pathname === pattern;

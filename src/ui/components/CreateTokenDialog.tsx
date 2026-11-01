@@ -42,10 +42,15 @@ function suggestName(
   entries: CompiledTokenEntry[]
 ): string {
   const taken = new Set(entries.map((entry) => entry.cssVar));
+
   for (let n = 0; n < 1000; n += 1) {
     const name = SERIES[group](n);
-    if (!taken.has(cssVarFor(group, name))) return name;
+
+    if (!taken.has(cssVarFor(group, name))) {
+      return name;
+    }
   }
+
   return "";
 }
 
@@ -54,12 +59,20 @@ function nameError(
   name: string,
   entries: CompiledTokenEntry[]
 ): string | null {
-  if (!name) return "Enter a name";
-  if (!TOKEN_NAME_PATTERN.test(name))
+  if (!name) {
+    return "Enter a name";
+  }
+
+  if (!TOKEN_NAME_PATTERN.test(name)) {
     return "Use lowercase letters, digits and single hyphens";
+  }
+
   const cssVar = cssVarFor(group, name);
-  if (entries.some((entry) => entry.cssVar === cssVar))
+
+  if (entries.some((entry) => entry.cssVar === cssVar)) {
     return `${cssVar} already exists`;
+  }
+
   return null;
 }
 
@@ -68,9 +81,14 @@ function valueError(
   value: string,
   optional: boolean
 ): string | null {
-  if (!value.trim()) return optional ? null : "Enter a value";
-  if (group === "color" && !isValidColor(value))
+  if (!value.trim()) {
+    return optional ? null : "Enter a value";
+  }
+
+  if (group === "color" && !isValidColor(value)) {
     return "Enter a valid CSS color";
+  }
+
   return null;
 }
 
@@ -85,8 +103,10 @@ function problemsOf(f: {
   const serverName = f.failure?.field === "name" ? f.failure.message : null;
   const nameProblem = nameError(f.group, f.name, f.entries) ?? serverName;
   const valueProblem = valueError(f.group, f.value, false);
+
   const darkProblem =
     f.group === "color" ? valueError(f.group, f.dark, true) : null;
+
   return {
     nameProblem,
     valueProblem,
@@ -103,8 +123,10 @@ function serverError(err: unknown): {
     err instanceof ApiError &&
     err.status === 409 &&
     err.code === "token_exists"
-  )
+  ) {
     return { field: "name", message: err.message };
+  }
+
   return {
     field: "form",
     message: `Could not create the token. ${errorText(err)} Try again.`,
@@ -129,6 +151,7 @@ function ValueRow({
   onChange,
 }: ValueRowProps) {
   const paint = swatch && value && isValidColor(value) ? value : "transparent";
+
   return (
     <label className="field tk-row">
       <span>
@@ -187,17 +210,21 @@ export function CreateTokenDialog({
   const group = TOKEN_GROUP_FOR_PROPERTY[request.prop] ?? "color";
   const color = group === "color";
   const [name, setName] = useState(() => suggestName(group, entries));
+
   const [value, setValue] = useState(() =>
     color ? displayColor(request.value) : request.value
   );
+
   const [dark, setDark] = useState("");
   const [apply, setApply] = useState(true);
   const [touched, setTouched] = useState(false);
   const [busy, setBusy] = useState(false);
+
   const [failure, setFailure] = useState<{
     field: "name" | "form";
     message: string;
   } | null>(null);
+
   const { nameProblem, valueProblem, darkProblem, invalid } = problemsOf({
     group,
     name,
@@ -210,9 +237,14 @@ export function CreateTokenDialog({
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     setTouched(true);
-    if (invalid || busy) return;
+
+    if (invalid || busy) {
+      return;
+    }
+
     setBusy(true);
     setFailure(null);
+
     try {
       await onSubmit({
         group,
@@ -229,12 +261,17 @@ export function CreateTokenDialog({
   };
 
   const dialog = useModalDialog(() => {
-    if (busy) return false;
+    if (busy) {
+      return false;
+    }
+
     onClose();
   });
 
   const onKeyDown = (e: KeyboardEvent) => {
-    if (e.key === "Escape") e.stopPropagation();
+    if (e.key === "Escape") {
+      e.stopPropagation();
+    }
   };
 
   return (

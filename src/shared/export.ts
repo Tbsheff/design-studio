@@ -8,9 +8,13 @@ export type ExportFormat =
   | "handoff"
   | "svg"
   | "pptx";
+
 export type ExportScale = 1 | 2 | 3;
+
 export type ExportScope = "page" | "frame";
+
 export type CopyCodeFormat = "html" | "tailwind";
+
 export type EditorId = "cursor" | "vscode" | "zed";
 
 export const EXPORT_SCALES: readonly ExportScale[] = [1, 2, 3];
@@ -86,11 +90,19 @@ export const EXPORT_NOTE_HEADER = "x-studio-export-note";
 
 export function cleanExportPath(raw: string): string | null {
   const value = raw.trim().replace(/^\/+/, "");
-  if (value === "") return "";
-  if (value.length > EXPORT_PATH_MAX || /[\\\s#?:]|%2e|%2f|%5c/i.test(value))
+
+  if (value === "") {
+    return "";
+  }
+
+  if (value.length > EXPORT_PATH_MAX || /[\\\s#?:]|%2e|%2f|%5c/i.test(value)) {
     return null;
-  if (value.split("/").some((part) => part === ".." || part === "."))
+  }
+
+  if (value.split("/").some((part) => part === ".." || part === ".")) {
     return null;
+  }
+
   return value;
 }
 

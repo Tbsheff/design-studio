@@ -26,15 +26,19 @@ import {
 
 function radiusValue(token: string, text: string): string | null {
   const length = normalizeLength(text);
-  if (token === "radius.pill")
+
+  if (token === "radius.pill") {
     return (length && lengthPx(length) >= 100) || /^(50%|100%)$/.test(text)
       ? "9999px"
       : null;
+  }
+
   return length && lengthPx(length) <= 64 ? length : null;
 }
 
 function scaleValue(text: string): string | null {
   const length = normalizeLength(text);
+
   return length && lengthPx(length) > 0 && lengthPx(length) <= 400
     ? length
     : null;
@@ -58,22 +62,32 @@ const SIMPLE_CALC =
 
 function simpleCalc(text: string): string {
   const match = SIMPLE_CALC.exec(text);
-  if (!match) return text;
+
+  if (!match) {
+    return text;
+  }
+
   const px = (value: string, unit: string) =>
     Number(value) * (unit === "rem" ? 16 : 1);
+
   const total =
     px(match[1]!, match[2]!) +
     (match[3] === "-" ? -1 : 1) * px(match[4]!, match[5]!);
+
   return total >= 0 ? `${Math.round(total * 100) / 100}px` : text;
 }
 
 export function validValue(token: string, raw: string): string | null {
   const validate = VALIDATORS[token.split(".")[0] ?? ""];
+
   return validate ? validate(token, simpleCalc(raw.trim())) : null;
 }
 
 export function matchVarName(name: string, value: string): NameMatch | null {
-  if (normalizeColor(value)) return matchColorName(name);
+  if (normalizeColor(value)) {
+    return matchColorName(name);
+  }
+
   return (
     matchFontName(name) ??
     matchShadowName(name) ??
@@ -94,12 +108,18 @@ export function candidate(
     values.value === undefined
       ? undefined
       : (validValue(match.token, values.value) ?? undefined);
+
   const dark =
     values.dark === undefined || !match.token.startsWith("color.")
       ? undefined
       : (validValue(match.token, values.dark) ?? undefined);
-  if (value === undefined && dark === undefined) return null;
+
+  if (value === undefined && dark === undefined) {
+    return null;
+  }
+
   const confidence = cap === "medium" ? "medium" : match.confidence;
+
   return {
     token: match.token,
     ...(value !== undefined ? { value } : {}),
@@ -117,29 +137,42 @@ export function candidatesFromVars(
 ): Candidate[] {
   const out: Candidate[] = [];
   const names = new Set([...props.root.keys(), ...props.dark.keys()]);
+
   for (const name of names) {
     const rootRaw = props.root.get(name);
     const darkRaw = props.dark.get(name);
+
     const value =
       rootRaw === undefined ? undefined : resolveVars(rootRaw, [props.root]);
+
     const dark =
       darkRaw === undefined
         ? undefined
         : resolveVars(darkRaw, [props.dark, props.root]);
+
     const match = matchVarName(name, value ?? dark ?? "");
-    if (!match) continue;
+
+    if (!match) {
+      continue;
+    }
+
     const found = candidate(
       match,
       { value, dark },
       source,
       `${label}: ${name}`
     );
-    if (found) out.push(found);
+
+    if (found) {
+      out.push(found);
+    }
   }
+
   return out;
 }
 
 const EXTRA_NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
 const LENGTH_GROUPS: Array<[RegExp, string, RegExp]> = [
   [/breakpoint|screen|^bp-/, "breakpoint", /^(breakpoint|screen|bp)-?/],
   [/radius|rounded/, "radius", /^(radius|rounded)-?/],
@@ -151,6 +184,7 @@ function extraName(raw: string, prefix: RegExp): string | null {
   const name =
     raw.replace(/^--/, "").toLowerCase().replace(prefix, "") ||
     raw.replace(/^--/, "").toLowerCase();
+
   return EXTRA_NAME.test(name) && name.length <= 48 ? name : null;
 }
 
@@ -162,9 +196,11 @@ export function extraToken(
 ): ExtraToken | null {
   const bare = varName.replace(/^--/, "").toLowerCase();
   const color = normalizeColor(value);
+
   if (color) {
     const name = extraName(varName, /^(?!)/);
     const darkColor = dark === undefined ? null : normalizeColor(dark);
+
     return name
       ? {
           group: "color",
@@ -177,32 +213,43 @@ export function extraToken(
         }
       : null;
   }
+
   const shadow = /shadow|elevation/.test(bare) ? normalizeShadow(value) : null;
+
   if (shadow) {
     const name = extraName(varName, /^(shadow|elevation)-?/);
+
     return name
       ? { group: "shadow", name, type: "shadow", value: shadow, evidence }
       : null;
   }
+
   const length = normalizeLength(value);
+
   if (length) {
     const [, group, prefix] = LENGTH_GROUPS.find(([test]) =>
       test.test(bare)
     ) ?? [null, "size", /^size-?/];
+
     const name = extraName(varName, prefix);
+
     return name
       ? { group, name, type: "dimension", value: length, evidence }
       : null;
   }
+
   const font = /font|family|typeface/.test(bare)
     ? fontStack(value, genericFor(value))
     : null;
+
   if (font) {
     const name = extraName(varName, /^font-(family-)?/);
+
     return name
       ? { group: "font", name, type: "fontFamily", value: font, evidence }
       : null;
   }
+
   return null;
 }
 
@@ -212,16 +259,20 @@ function resolvedPair(
 ): { value?: string; dark?: string } {
   const rootRaw = props.root.get(name);
   const darkRaw = props.dark.get(name);
+
   const value =
     rootRaw === undefined ? undefined : resolveVars(rootRaw, [props.root]);
+
   const followed =
     rootRaw === undefined && darkRaw === undefined
       ? undefined
       : resolveVars(darkRaw ?? rootRaw!, [props.dark, props.root]);
+
   const dark =
     darkRaw !== undefined || (followed !== undefined && followed !== value)
       ? followed
       : undefined;
+
   return {
     ...(value !== undefined ? { value } : {}),
     ...(dark !== undefined ? { dark } : {}),
@@ -235,13 +286,16 @@ export function harvestCssVars(
 ): { candidates: Candidate[]; extras: ExtraToken[] } {
   const candidates: Candidate[] = [];
   const extras: ExtraToken[] = [];
+
   for (const name of new Set([...props.root.keys(), ...props.dark.keys()])) {
     const { value, dark } = resolvedPair(props, name);
     const evidence = `${label}: ${name}`;
     const match = matchVarName(name, value ?? dark ?? "");
+
     const found = match
       ? candidate(match, { value, dark }, source, evidence)
       : null;
+
     if (found) {
       candidates.push({
         ...found,
@@ -250,9 +304,14 @@ export function harvestCssVars(
       });
       continue;
     }
+
     const extra =
       value === undefined ? null : extraToken(name, value, dark, evidence);
-    if (extra) extras.push(extra);
+
+    if (extra) {
+      extras.push(extra);
+    }
   }
+
   return { candidates, extras };
 }

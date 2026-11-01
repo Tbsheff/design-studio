@@ -22,18 +22,28 @@ let dir = "";
 let grandchildPid = 0;
 
 afterEach(() => {
-  if (grandchildPid && alive(grandchildPid))
+  if (grandchildPid && alive(grandchildPid)) {
     process.kill(grandchildPid, "SIGKILL");
+  }
+
   grandchildPid = 0;
-  if (dir) rmSync(dir, { recursive: true, force: true });
+
+  if (dir) {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 async function waitForFile(file: string, timeoutMs: number): Promise<string> {
   const deadline = Date.now() + timeoutMs;
+
   while (Date.now() < deadline) {
-    if (existsSync(file)) return readFileSync(file, "utf-8");
+    if (existsSync(file)) {
+      return readFileSync(file, "utf-8");
+    }
+
     await new Promise((resolve) => setTimeout(resolve, 50));
   }
+
   throw new Error(`no ${file} within ${timeoutMs}ms`);
 }
 
@@ -42,11 +52,13 @@ describe("spawnDetachedToLog", () => {
     dir = mkdtempSync(path.join(os.tmpdir(), "logged-spawn-"));
     const logPath = path.join(dir, "server.log");
     const exitPath = path.join(dir, "exit.txt");
+
     const writer = [
       `process.on('exit', (code) => require('node:fs').writeFileSync(${JSON.stringify(exitPath)}, String(code)));`,
       "let line = 0;",
       `setTimeout(() => { const timer = setInterval(() => { console.log('line ' + line); console.error('err ' + line); line += 1; if (line === ${LINES}) clearInterval(timer); }, 10); }, 300);`,
     ].join("\n");
+
     const starter = path.join(dir, "starter.ts");
     writeFileSync(
       starter,

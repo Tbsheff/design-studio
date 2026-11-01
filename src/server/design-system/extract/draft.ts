@@ -92,18 +92,23 @@ export function parseDraftRequest(
   imageCount: number
 ): DraftRequest {
   const parsed = draftRequestSchema.safeParse(raw);
-  if (!parsed.success)
+
+  if (!parsed.success) {
     throw new BadRequestError(
       `invalid request: ${formatIssues("", parsed.error)
         .map((line) => line.trim())
         .join("; ")}`
     );
+  }
+
   const request = {
     ...parsed.data,
     urls: parsed.data.urls.filter((url) => url !== ""),
   };
+
   const blank = (value: string | undefined) =>
     value === undefined || value.trim() === "";
+
   if (
     request.urls.length === 0 &&
     blank(request.designMd) &&
@@ -116,6 +121,7 @@ export function parseDraftRequest(
       "Add at least one source: a website, DESIGN.md, a brief, a tokens file, a folder or an image."
     );
   }
+
   return request;
 }
 
@@ -130,6 +136,7 @@ function nameFromUrl(url: string): string | null {
   try {
     const host = new URL(url).hostname.replace(/^www\./, "");
     const label = host.split(".")[0] ?? "";
+
     return /^[a-z0-9-]{1,40}$/i.test(label) && !/^\d+$/.test(label)
       ? titleCase(label.replace(/-/g, " "))
       : null;
@@ -145,16 +152,23 @@ function nameFromBrief(brief: string | undefined): string | null {
     .split(/\s+/)
     .filter(Boolean)
     .slice(0, 4);
+
   return words.length > 0 ? titleCase(words.join(" ")).slice(0, 60) : null;
 }
 
 export function draftName(request: DraftRequest): string {
   const given = request.name?.trim();
-  if (given) return given;
+
+  if (given) {
+    return given;
+  }
+
   const fromUrl = request.urls
     .map(nameFromUrl)
     .find((name): name is string => name !== null);
+
   const fromMd = request.designMd ? firstHeading(request.designMd) : null;
+
   const fromFile = request.tokensFile
     ? titleCase(
         path
@@ -164,6 +178,7 @@ export function draftName(request: DraftRequest): string {
           .trim()
       ) || null
     : null;
+
   const fromFolder = request.folderPath
     ? titleCase(
         path
@@ -172,6 +187,7 @@ export function draftName(request: DraftRequest): string {
           .trim()
       ) || null
     : null;
+
   return (
     fromUrl ??
     fromMd ??
@@ -191,13 +207,20 @@ export function chooseMode(
   harvests: Harvest[],
   urlHarvests: UrlHarvest[]
 ): "light" | "dark" {
-  if (request.mode !== "auto") return request.mode;
+  if (request.mode !== "auto") {
+    return request.mode;
+  }
+
   const bg = harvests
     .flatMap((harvest) => harvest.candidates)
     .find(
       (candidate) => candidate.token === "color.bg" && candidate.value
     )?.value;
-  if (bg !== undefined) return (lightnessOf(bg) ?? 1) < 0.35 ? "dark" : "light";
+
+  if (bg !== undefined) {
+    return (lightnessOf(bg) ?? 1) < 0.35 ? "dark" : "light";
+  }
+
   return urlHarvests.some((item) => item.harvest.darkHint) ? "dark" : "light";
 }
 
@@ -221,8 +244,12 @@ function evidence(
         `- ${source.kind}: ${source.label} — ${source.ok ? `${source.found} values` : `failed: ${source.error ?? "unknown error"}`}`
     ),
   ];
+
   for (const item of urlHarvests) {
-    if (item.snapshot.failures.length === 0) continue;
+    if (item.snapshot.failures.length === 0) {
+      continue;
+    }
+
     lines.push(
       "",
       `### ${item.snapshot.url} stylesheets that failed`,
@@ -230,6 +257,7 @@ function evidence(
       ...item.snapshot.failures.map((failure) => `- ${failure}`)
     );
   }
+
   if (folder) {
     lines.push(
       "",
@@ -237,14 +265,17 @@ function evidence(
       "",
       ...folder.files.slice(0, 200).map((file) => `- ${file}`)
     );
-    if (folder.skipped.length > 0)
+
+    if (folder.skipped.length > 0) {
       lines.push(
         "",
         "### Folder files skipped",
         "",
         ...folder.skipped.map((item) => `- ${item}`)
       );
+    }
   }
+
   lines.push(
     "",
     "## Tokens",
@@ -252,17 +283,22 @@ function evidence(
     "| Token | Source | Confidence | Evidence |",
     "| --- | --- | --- | --- |"
   );
-  for (const entry of coverage.tokens)
+
+  for (const entry of coverage.tokens) {
     lines.push(
       `| ${entry.token} | ${entry.source} | ${entry.confidence} | ${entry.evidence.replace(/\|/g, "/").slice(0, 160)} |`
     );
-  if (files.length > 0)
+  }
+
+  if (files.length > 0) {
     lines.push(
       "",
       "## Snapshot files",
       "",
       ...files.map((file) => `- ${file.path}`)
     );
+  }
+
   return `${lines.join("\n")}\n`;
 }
 
@@ -289,6 +325,7 @@ async function readUrls(
 ): Promise<UrlHarvest[]> {
   checkDraftUrls(request, allowLoopback);
   const out: UrlHarvest[] = [];
+
   for (const url of request.urls) {
     try {
       const harvested = await harvestUrl(url, deps.fetcher);
@@ -300,10 +337,12 @@ async function readUrls(
         found: harvested.harvest.candidates.length,
       });
     } catch (error) {
-      if (error instanceof FetchBlockedError)
+      if (error instanceof FetchBlockedError) {
         throw new BadRequestError(
           `Cannot read ${url.slice(0, 200)}: ${error.message}`
         );
+      }
+
       reports.push({
         kind: "url",
         label: url,
@@ -313,12 +352,14 @@ async function readUrls(
       });
     }
   }
+
   return out;
 }
 
 function snapshotFiles(urlHarvests: UrlHarvest[]): DraftFile[] {
   return urlHarvests.flatMap((item, index) => {
     const dir = `${SOURCE_DIR}/url-${index + 1}`;
+
     return [
       { path: `${dir}/page.html.txt`, content: item.snapshot.html },
       ...item.snapshot.stylesheets.map((sheet, sheetIndex) => ({
@@ -341,6 +382,7 @@ function readTokensFile(
   out: Harvested
 ): void {
   const label = path.basename(file.name);
+
   try {
     const harvest = harvestTokensFile(file.text, label);
     out.harvests.push(harvest);
@@ -351,8 +393,10 @@ function readTokensFile(
       found: harvest.candidates.length + (harvest.extras?.length ?? 0),
     });
   } catch (error) {
-    if (error instanceof TokensFileError)
+    if (error instanceof TokensFileError) {
       throw new BadRequestError(`${label}: ${error.message}`);
+    }
+
     throw error;
   }
 }
@@ -361,10 +405,13 @@ async function readFolder(folderPath: string, out: Harvested): Promise<void> {
   try {
     out.folder = await scanFolder(folderPath);
   } catch (error) {
-    if (error instanceof FolderScanError)
+    if (error instanceof FolderScanError) {
       throw new BadRequestError(error.message);
+    }
+
     throw error;
   }
+
   out.harvests.push(out.folder.harvest);
   out.reports.push({
     kind: "folder",
@@ -379,7 +426,10 @@ function readText(
   kind: "design-md" | "brief",
   out: Harvested
 ): void {
-  if (!text?.trim()) return;
+  if (!text?.trim()) {
+    return;
+  }
+
   const label = kind === "design-md" ? "DESIGN.md" : "brief";
   const harvest = harvestDesignText(text, kind, label);
   out.harvests.push(harvest);
@@ -397,9 +447,15 @@ async function harvestAll(
     folder: null,
     urlHarvests: [],
   };
-  if (request.tokensFile) readTokensFile(request.tokensFile, out);
-  if (request.folderPath?.trim())
+
+  if (request.tokensFile) {
+    readTokensFile(request.tokensFile, out);
+  }
+
+  if (request.folderPath?.trim()) {
     await readFolder(request.folderPath.trim(), out);
+  }
+
   out.urlHarvests = await readUrls(
     request,
     deps,
@@ -409,18 +465,22 @@ async function harvestAll(
   out.harvests.push(...out.urlHarvests.map((item) => item.harvest));
   readText(request.designMd, "design-md", out);
   readText(request.brief, "brief", out);
-  if (options.imageCount > 0)
+
+  if (options.imageCount > 0) {
     out.reports.push({
       kind: "images",
       label: `${options.imageCount} image${options.imageCount === 1 ? "" : "s"}`,
       ok: true,
       found: 0,
     });
+  }
+
   if (!out.reports.some((report) => report.ok)) {
     throw new BadRequestError(
       `Could not read any source. ${out.reports.map((report) => `${report.label}: ${report.error ?? "failed"}`).join("; ")}`
     );
   }
+
   return out;
 }
 
@@ -447,6 +507,7 @@ function sourceFiles(
   coverage: Coverage
 ): DraftFile[] {
   const snapshots = snapshotFiles(harvested.urlHarvests);
+
   return [
     ...snapshots,
     ...(request.tokensFile
@@ -483,8 +544,11 @@ export async function draftBase(
   request: DraftRequest
 ): Promise<LoadedPack> {
   const base: LoadedPack | null = await registry.get(request.basePackId);
-  if (!base)
+
+  if (!base) {
     throw new BadRequestError(`unknown base pack: ${request.basePackId}`);
+  }
+
   return base;
 }
 
@@ -495,6 +559,7 @@ export async function buildDraft(
 ): Promise<Draft> {
   const base = await draftBase(deps.registry, request);
   const harvested = await harvestAll(request, deps, options);
+
   return assembleDraft(request, base, harvested);
 }
 
@@ -513,6 +578,7 @@ export function assembleDraft(
   const mode = chooseMode(request, harvested.harvests, harvested.urlHarvests);
   const mapped = mapDraft(base, harvested.harvests, mode, harvested.reports);
   const pastedMd = request.designMd?.trim() ? request.designMd : null;
+
   const designMd =
     pastedMd ??
     composeDraftDesignMd({
@@ -523,10 +589,12 @@ export function assembleDraft(
       tokens: mapped.tokens,
       coverage: mapped.coverage,
     });
+
   const imported =
     harvested.urlHarvests.length === 0 &&
     !harvested.folder &&
     (request.tokensFile !== undefined || pastedMd !== null);
+
   return {
     name,
     mode,

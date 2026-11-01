@@ -75,13 +75,23 @@ export function dynamicNames(route: string): string[] {
 }
 
 export function cleanParams(raw: unknown): Record<string, string> {
-  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
-  const out: Record<string, string> = {};
-  for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
-    if (!/^[A-Za-z_][\w-]{0,40}$/.test(key) || typeof value !== "string")
-      continue;
-    const clean = value.trim().slice(0, FLOW_PARAM_MAX);
-    if (/^[\w.~-]+(?:\/[\w.~-]+)*$/.test(clean)) out[key] = clean;
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+    return {};
   }
+
+  const out: Record<string, string> = {};
+
+  for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
+    if (!/^[A-Za-z_][\w-]{0,40}$/.test(key) || typeof value !== "string") {
+      continue;
+    }
+
+    const clean = value.trim().slice(0, FLOW_PARAM_MAX);
+
+    if (/^[\w.~-]+(?:\/[\w.~-]+)*$/.test(clean)) {
+      out[key] = clean;
+    }
+  }
+
   return out;
 }

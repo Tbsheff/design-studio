@@ -20,7 +20,11 @@ export function createWarmQueue(
   return {
     add(project, direction, after) {
       const key = keyOf(project, direction);
-      if (jobs.has(key)) return;
+
+      if (jobs.has(key)) {
+        return;
+      }
+
       const job: Job = {
         run: null,
         start() {
@@ -36,11 +40,15 @@ export function createWarmQueue(
               )
             )
             .finally(() => {
-              if (jobs.get(key) === job) jobs.delete(key);
+              if (jobs.get(key) === job) {
+                jobs.delete(key);
+              }
             });
+
           return job.run;
         },
       };
+
       jobs.set(key, job);
       chain = chain.then(() => job.start());
     },

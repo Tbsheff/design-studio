@@ -113,7 +113,7 @@ export async function targetOf(
   direction: Direction,
   input: TargetInput
 ): Promise<InsertTarget> {
-  if (input.targetSource)
+  if (input.targetSource) {
     return {
       source: await resolveSourceLoc(
         direction.workTree,
@@ -121,15 +121,24 @@ export async function targetOf(
         input.targetSource
       ),
     };
+  }
+
   const sel = input.targetSelector ?? "";
   const url = await pageUrl(deps, project, direction, input.path);
   const element = await describeElement(deps.preview, url, sel);
-  if (!element) throw new EditError(`No element matches ${sel} on the page.`);
+
+  if (!element) {
+    throw new EditError(`No element matches ${sel} on the page.`);
+  }
+
   const probed = await probeOwners(deps.preview, url, sel).catch(() => null);
-  if (!element.source && !probed?.owners.length)
+
+  if (!element.source && !probed?.owners.length) {
     throw new EditError(
       `${sel} has no source location. Pass targetSource with the file:line:col of the JSX tag.`
     );
+  }
+
   return {
     source: element.source,
     tag: element.tag,
@@ -148,7 +157,9 @@ async function knownNames(
     "GET",
     `${base(project, direction.id)}/insert/components`
   ).catch(() => null);
+
   const names = [...new Set((list?.components ?? []).map((item) => item.name))];
+
   return names.length > 0
     ? ` Components: ${names.slice(0, 40).join(", ")}${names.length > 40 ? ", …" : ""}.`
     : "";
@@ -168,12 +179,16 @@ const insertComponent = defineTool(
       input.projectId,
       input.directionId
     );
-    if (project.kind !== "react")
+
+    if (project.kind !== "react") {
       throw new EditError(
         "This is an HTML project. It has no component kit to insert from; use write_file or edit_element."
       );
+    }
+
     refuseWhileRunning(deps, project, direction);
     const target = await targetOf(deps, project, direction, input);
+
     const body = {
       component: {
         name: input.name,
@@ -184,7 +199,9 @@ const insertComponent = defineTool(
       ...(input.props ? { props: input.props } : {}),
       ...(input.text !== undefined ? { text: input.text } : {}),
     };
+
     let result: InsertComponentResult;
+
     try {
       result = await studioCall<InsertComponentResult>(
         deps,
@@ -200,6 +217,7 @@ const insertComponent = defineTool(
           : message
       );
     }
+
     const output = ok({
       file: result.file,
       jsx: result.jsx,
@@ -210,6 +228,7 @@ const insertComponent = defineTool(
       versionId: result.version?.id ?? null,
       title: result.version?.title ?? null,
     });
+
     return {
       result: output,
       activity: versionActivity(

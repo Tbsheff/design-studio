@@ -36,10 +36,22 @@ export function elementVariantsBlocker(
   project: Pick<Project, "app"> | null,
   selection: readonly SelectionContext[]
 ): string | null {
-  if (isAttachedApp(project)) return ATTACHED_APP_VARIANTS_REASON;
-  if (selection.length === 0) return "Select one element first";
-  if (selection.length > 1) return "Select only one element";
-  if (!selection[0]?.source) return "This element has no source location";
+  if (isAttachedApp(project)) {
+    return ATTACHED_APP_VARIANTS_REASON;
+  }
+
+  if (selection.length === 0) {
+    return "Select one element first";
+  }
+
+  if (selection.length > 1) {
+    return "Select only one element";
+  }
+
+  if (!selection[0]?.source) {
+    return "This element has no source location";
+  }
+
   return null;
 }
 
@@ -58,11 +70,23 @@ export function elementVariantsIntent(prompt: string): number | null {
     /\b(?:try|make|show|give me|generate|create|explore)\s+(?:a\s+)?(\d|two|three|four|some|few|couple)?\s*(?:of\s+)?(?:different\s+|other\s+|more\s+|new\s+)?(versions?|variants?|variations?|options|takes)\b(\s+(?:of|for)\s+(?:this|that|the|it)\b)?/i.exec(
       prompt
     );
-  if (!match) return null;
+
+  if (!match) {
+    return null;
+  }
+
   const word = (match[1] ?? "").toLowerCase();
   const noun = (match[2] ?? "").toLowerCase();
-  if ((noun === "options" || noun === "takes") && !match[3]) return null;
-  if (!word && !noun.endsWith("s")) return null;
+
+  if ((noun === "options" || noun === "takes") && !match[3]) {
+    return null;
+  }
+
+  if (!word && !noun.endsWith("s")) {
+    return null;
+  }
+
   const count = /^\d$/.test(word) ? Number(word) : (NUMBER_WORDS[word] ?? 3);
+
   return Math.max(2, Math.min(4, count));
 }

@@ -70,17 +70,23 @@ async function pageOf(
   viewport: { width: number; height: number };
   page: string | undefined;
 }> {
-  if (!deps.ctx.previewUrl)
+  if (!deps.ctx.previewUrl) {
     throw new Error(
       "Preview is not running for this direction, so elements cannot be found."
     );
+  }
+
   const frames = input.frame
     ? ((await readCanvasAt(canvasOwner(deps.ctx.project).workTree)).canvas
         ?.frames ?? [])
     : [];
+
   const frame = input.frame ? findFrame(frames, input.frame) : null;
-  if (input.frame && !frame && input.frame !== "f1")
+
+  if (input.frame && !frame && input.frame !== "f1") {
     throw new Error(`No frame ${input.frame} on the canvas.`);
+  }
+
   const remembered =
     input.frame === undefined &&
     input.path === undefined &&
@@ -90,7 +96,9 @@ async function pageOf(
           input.selector.trim()
         )
       : undefined;
+
   const page = input.path || remembered || frame?.path || undefined;
+
   return {
     url: withPagePath(deps.ctx.previewUrl, page),
     viewport: frame
@@ -105,19 +113,24 @@ export async function runSelectMatching(
   args: z.input<typeof schema>
 ): Promise<ToolText> {
   const parsed = schema.safeParse(args);
-  if (!parsed.success)
+
+  if (!parsed.success) {
     return text(
       `select_matching: ${parsed.error.issues.map((issue) => `${issue.path.join(".") || "input"}: ${issue.message}`).join("; ")}`,
       true
     );
+  }
+
   try {
     const target = await pageOf(deps, parsed.data);
+
     const report = await selectMatchingOnPage(deps.preview, {
       ...target,
       scope: scopeOf(deps.ctx.project.id, deps.ctx.direction.id),
       selector: parsed.data.selector,
       by: parsed.data.by,
     });
+
     return text(JSON.stringify(report, null, 2));
   } catch (error) {
     return text(

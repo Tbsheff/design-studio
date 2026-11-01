@@ -11,10 +11,17 @@ export function onProbePage<T>(
   task: (page: ProbePage) => Promise<T>,
   options?: PeekOptions
 ): Promise<T> {
-  if (preview.peekPage) return preview.peekPage(url, viewport, task, options);
-  if (!preview.withPage) throw new Error("rendering is not available");
+  if (preview.peekPage) {
+    return preview.peekPage(url, viewport, task, options);
+  }
+
+  if (!preview.withPage) {
+    throw new Error("rendering is not available");
+  }
+
   return preview.withPage(url, viewport, async (page) => {
     await waitForPage(page);
+
     return task(page);
   });
 }

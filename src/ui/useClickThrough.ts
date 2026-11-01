@@ -28,11 +28,17 @@ export function useClickThrough(port: Port, enabled: boolean): ClickThrough {
 
   const send = useCallback(() => {
     const p = pending.current;
-    if (!p) return;
-    if (Date.now() - p.at > GIVE_UP_MS) {
-      pending.current = null;
+
+    if (!p) {
       return;
     }
+
+    if (Date.now() - p.at > GIVE_UP_MS) {
+      pending.current = null;
+
+      return;
+    }
+
     live.current.port.post({ type: "select-at", x: p.x, y: p.y });
   }, []);
 
@@ -44,9 +50,15 @@ export function useClickThrough(port: Port, enabled: boolean): ClickThrough {
   useEffect(
     () =>
       port.listen((msg) => {
-        if (!pending.current) return;
-        if (msg.type === "ready") later(SETTLE_MS);
-        else if (msg.type === "select") pending.current = null;
+        if (!pending.current) {
+          return;
+        }
+
+        if (msg.type === "ready") {
+          later(SETTLE_MS);
+        } else if (msg.type === "select") {
+          pending.current = null;
+        }
       }),
     [port.listen, later]
   );
@@ -58,7 +70,10 @@ export function useClickThrough(port: Port, enabled: boolean): ClickThrough {
 
   return useCallback(
     (point) => {
-      if (!live.current.enabled) return;
+      if (!live.current.enabled) {
+        return;
+      }
+
       timers.current.forEach((t) => window.clearTimeout(t));
       timers.current = [];
       pending.current = { x: point.x, y: point.y, at: Date.now() };

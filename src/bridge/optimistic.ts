@@ -94,7 +94,10 @@ function query(selector: string): Element | null {
 }
 
 function cleanClasses(list: unknown): string[] {
-  if (!Array.isArray(list)) return [];
+  if (!Array.isArray(list)) {
+    return [];
+  }
+
   return list
     .filter(
       (name): name is string =>
@@ -109,16 +112,22 @@ function emptySpec(): Spec {
 
 function specOf(patch: DomPatch, keys: ReadonlySet<string>): Spec {
   const spec = emptySpec();
+
   for (const [prop, value] of Object.entries(patch.style ?? {})) {
     if (
       keys.has(prop) &&
       (value === null || (typeof value === "string" && value.length <= 200))
-    )
+    ) {
       spec.style.set(prop, value);
+    }
   }
+
   mergeClasses(spec, patch.classes);
-  if (typeof patch.text === "string" && patch.text.length <= MAX_TEXT)
+
+  if (typeof patch.text === "string" && patch.text.length <= MAX_TEXT) {
     spec.text = patch.text;
+  }
+
   return spec;
 }
 
@@ -127,6 +136,7 @@ function mergeClasses(spec: Spec, delta: ClassDelta | undefined): void {
     spec.add.delete(name);
     spec.remove.add(name);
   }
+
   for (const name of cleanClasses(delta?.add)) {
     spec.remove.delete(name);
     spec.add.add(name);
@@ -134,8 +144,12 @@ function mergeClasses(spec: Spec, delta: ClassDelta | undefined): void {
 }
 
 function soleTextNode(element: Element): Text | null {
-  if (element.childNodes.length !== 1) return null;
+  if (element.childNodes.length !== 1) {
+    return null;
+  }
+
   const node = element.firstChild;
+
   return node instanceof Text ? node : null;
 }
 
@@ -153,57 +167,103 @@ function newHold(element: StyledElement): Hold {
 }
 
 function adoptPreview(hold: Hold, released: Released): void {
-  if (released.hadAttribute !== null) hold.hadAttribute = released.hadAttribute;
-  for (const [prop, backup] of released.props)
-    if (!hold.props.has(prop)) hold.props.set(prop, backup);
-  if (released.textNodes) hold.element.replaceChildren(...released.textNodes);
+  if (released.hadAttribute !== null) {
+    hold.hadAttribute = released.hadAttribute;
+  }
+
+  for (const [prop, backup] of released.props) {
+    if (!hold.props.has(prop)) {
+      hold.props.set(prop, backup);
+    }
+  }
+
+  if (released.textNodes) {
+    hold.element.replaceChildren(...released.textNodes);
+  }
 }
 
 function setStyle(hold: Hold, spec: Spec): void {
   const style = hold.element.style;
+
   for (const [prop, value] of spec.style) {
-    if (!hold.props.has(prop))
+    if (!hold.props.has(prop)) {
       hold.props.set(prop, {
         value: style.getPropertyValue(prop),
         priority: style.getPropertyPriority(prop),
       });
-    if (value === null) style.removeProperty(prop);
-    else style.setProperty(prop, value, "important");
+    }
+
+    if (value === null) {
+      style.removeProperty(prop);
+    } else {
+      style.setProperty(prop, value, "important");
+    }
   }
 }
 
 function setClasses(hold: Hold, spec: Spec): void {
   const list = hold.element.classList;
+
   for (const name of spec.remove) {
-    if (!list.contains(name)) continue;
+    if (!list.contains(name)) {
+      continue;
+    }
+
     list.remove(name);
-    if (hold.addedByUs.has(name)) hold.addedByUs.delete(name);
-    else hold.removedByUs.add(name);
+
+    if (hold.addedByUs.has(name)) {
+      hold.addedByUs.delete(name);
+    } else {
+      hold.removedByUs.add(name);
+    }
   }
+
   for (const name of spec.add) {
-    if (list.contains(name)) continue;
+    if (list.contains(name)) {
+      continue;
+    }
+
     list.add(name);
-    if (hold.removedByUs.has(name)) hold.removedByUs.delete(name);
-    else hold.addedByUs.add(name);
+
+    if (hold.removedByUs.has(name)) {
+      hold.removedByUs.delete(name);
+    } else {
+      hold.addedByUs.add(name);
+    }
   }
 }
 
 function setText(hold: Hold, spec: Spec): void {
-  if (spec.text === null) return;
+  if (spec.text === null) {
+    return;
+  }
+
   const node = hold.textNode ?? soleTextNode(hold.element);
-  if (!node) return;
+
+  if (!node) {
+    return;
+  }
+
   if (hold.textNode === null) {
     hold.textNode = node;
     hold.textOriginal = node.nodeValue;
   }
-  if (node.nodeValue !== spec.text) node.nodeValue = spec.text;
+
+  if (node.nodeValue !== spec.text) {
+    node.nodeValue = spec.text;
+  }
 }
 
 function recordExpected(hold: Hold, spec: Spec): void {
-  if (spec.style.size === 0) return;
+  if (spec.style.size === 0) {
+    return;
+  }
+
   const computed = window.getComputedStyle(hold.element);
-  for (const prop of spec.style.keys())
+
+  for (const prop of spec.style.keys()) {
     hold.expected.set(prop, computed.getPropertyValue(prop));
+  }
 }
 
 function paint(hold: Hold, spec: Spec): void {
@@ -215,6 +275,7 @@ function paint(hold: Hold, spec: Spec): void {
 
 function isOurs(hold: Hold, prop: string, value: string | null): boolean {
   const style = hold.element.style;
+
   return (
     value !== null &&
     style.getPropertyPriority(prop) === "important" &&
@@ -225,22 +286,32 @@ function isOurs(hold: Hold, prop: string, value: string | null): boolean {
 function restoreProp(hold: Hold, prop: string): void {
   const original = hold.props.get(prop);
   const style = hold.element.style;
-  if (!original || original.value === "") style.removeProperty(prop);
-  else style.setProperty(prop, original.value, original.priority);
+
+  if (!original || original.value === "") {
+    style.removeProperty(prop);
+  } else {
+    style.setProperty(prop, original.value, original.priority);
+  }
 }
 
 function tidyStyleAttribute(hold: Hold): void {
-  if (!hold.hadAttribute && hold.element.getAttribute("style") === "")
+  if (!hold.hadAttribute && hold.element.getAttribute("style") === "") {
     hold.element.removeAttribute("style");
+  }
 }
 
 function liftOurStyle(hold: Hold, spec: Spec): string[] {
   const lifted: string[] = [];
+
   for (const [prop, value] of spec.style) {
-    if (!isOurs(hold, prop, value)) continue;
+    if (!isOurs(hold, prop, value)) {
+      continue;
+    }
+
     restoreProp(hold, prop);
     lifted.push(prop);
   }
+
   return lifted;
 }
 
@@ -257,45 +328,75 @@ function samePixels(got: string, want: string): boolean {
 
 function styleMismatch(hold: Hold): string | null {
   const computed = window.getComputedStyle(hold.element);
+
   for (const [prop, want] of hold.expected) {
     const got = computed.getPropertyValue(prop);
-    if (got !== want && !samePixels(got, want))
+
+    if (got !== want && !samePixels(got, want)) {
       return `${prop} is ${got || "unset"} on the page, not ${want}`;
+    }
   }
+
   return null;
 }
 
 function contentMismatch(hold: Hold, spec: Spec): string | null {
   const list = hold.element.classList;
   const missing = [...spec.add].filter((name) => !list.contains(name));
-  if (missing.length > 0)
+
+  if (missing.length > 0) {
     return `the page does not have the class ${missing.join(" ")}`;
+  }
+
   const extra = [...spec.remove].filter((name) => list.contains(name));
-  if (extra.length > 0)
+
+  if (extra.length > 0) {
     return `the page still has the class ${extra.join(" ")}`;
+  }
+
   if (
     spec.text !== null &&
     hold.textNode &&
     (hold.element.textContent ?? "") !== spec.text
-  )
+  ) {
     return "the page shows different text";
+  }
+
   return null;
 }
 
 function rollback(hold: Hold): void {
-  for (const prop of hold.props.keys()) restoreProp(hold, prop);
+  for (const prop of hold.props.keys()) {
+    restoreProp(hold, prop);
+  }
+
   tidyStyleAttribute(hold);
   const list = hold.element.classList;
-  for (const name of hold.addedByUs) list.remove(name);
-  for (const name of hold.removedByUs) list.add(name);
-  if (hold.textNode && hold.textOriginal !== null)
+
+  for (const name of hold.addedByUs) {
+    list.remove(name);
+  }
+
+  for (const name of hold.removedByUs) {
+    list.add(name);
+  }
+
+  if (hold.textNode && hold.textOriginal !== null) {
     hold.textNode.nodeValue = hold.textOriginal;
+  }
 }
 
 function touches(entry: Entry, record: MutationRecord): boolean {
   const element = entry.hold?.element;
-  if (!element) return false;
-  if (record.type === "attributes") return record.target === element;
+
+  if (!element) {
+    return false;
+  }
+
+  if (record.type === "attributes") {
+    return record.target === element;
+  }
+
   return entry.spec.text !== null && element.contains(record.target);
 }
 
@@ -313,7 +414,11 @@ export function createOptimistic(deps: OptimisticDeps): Optimistic {
 
   const quiet = (work: () => void): void => {
     const before = observer?.takeRecords() ?? [];
-    if (before.length > 0) noteChanges(before);
+
+    if (before.length > 0) {
+      noteChanges(before);
+    }
+
     work();
     observer?.takeRecords();
   };
@@ -331,7 +436,10 @@ export function createOptimistic(deps: OptimisticDeps): Optimistic {
       Math.round(performance.now() - entry.startedAt),
       reason
     );
-    if (entries.size === 0) stopWatching();
+
+    if (entries.size === 0) {
+      stopWatching();
+    }
   };
 
   const holderOf = (element: Element): Entry | undefined =>
@@ -339,12 +447,22 @@ export function createOptimistic(deps: OptimisticDeps): Optimistic {
 
   const takeOver = (entry: Entry, element: StyledElement): Hold => {
     const previous = holderOf(element);
-    if (!previous?.hold) return newHold(element);
+
+    if (!previous?.hold) {
+      return newHold(element);
+    }
+
     const hold = previous.hold;
     previous.hold = null;
-    for (const [prop, value] of previous.spec.style)
-      if (!entry.spec.style.has(prop)) entry.spec.style.set(prop, value);
+
+    for (const [prop, value] of previous.spec.style) {
+      if (!entry.spec.style.has(prop)) {
+        entry.spec.style.set(prop, value);
+      }
+    }
+
     entries.delete(previous.id);
+
     return hold;
   };
 
@@ -367,25 +485,38 @@ export function createOptimistic(deps: OptimisticDeps): Optimistic {
 
   const reconcile = (entry: Entry, final: boolean): void => {
     const hold = entry.hold;
-    if (!hold) return;
+
+    if (!hold) {
+      return;
+    }
+
     let settled = false;
     let reason: string | null = null;
     quiet(() => {
       const lifted = liftOurStyle(hold, entry.spec);
       reason = styleMismatch(hold) ?? contentMismatch(hold, entry.spec);
       settled = reason === null || final;
-      if (!settled)
-        for (const prop of lifted)
+
+      if (!settled) {
+        for (const prop of lifted) {
           hold.element.style.setProperty(
             prop,
             entry.spec.style.get(prop) ?? "",
             "important"
           );
-      else tidyStyleAttribute(hold);
+        }
+      } else {
+        tidyStyleAttribute(hold);
+      }
     });
-    if (!settled) return;
-    if (reason === null) finish(entry, "confirmed");
-    else
+
+    if (!settled) {
+      return;
+    }
+
+    if (reason === null) {
+      finish(entry, "confirmed");
+    } else {
       finish(
         entry,
         entry.sawChange ? "mismatch" : "timeout",
@@ -393,51 +524,77 @@ export function createOptimistic(deps: OptimisticDeps): Optimistic {
           ? `Saved, but ${reason}.`
           : "The page did not update after the save."
       );
+    }
   };
 
   const replaced = (entry: Entry): void => {
     const hold = entry.hold;
-    if (!hold || hold.element.isConnected) return;
+
+    if (!hold || hold.element.isConnected) {
+      return;
+    }
+
     entry.hold = null;
     const next = query(entry.patch.selector);
-    if (isStyled(next)) place(entry, next);
+
+    if (isStyled(next)) {
+      place(entry, next);
+    }
   };
 
   const sweep = (): void => {
     frame = 0;
     const now = performance.now();
+
     for (const entry of [...entries.values()]) {
       replaced(entry);
+
       if (!entry.hold) {
-        if (now - entry.startedAt > PENDING_TIMEOUT_MS)
+        if (now - entry.startedAt > PENDING_TIMEOUT_MS) {
           finish(
             entry,
             "timeout",
             "The element left the page before the save."
           );
+        }
+
         continue;
       }
+
       if (entry.state === "pending") {
-        if (now - entry.startedAt > PENDING_TIMEOUT_MS)
+        if (now - entry.startedAt > PENDING_TIMEOUT_MS) {
           settleFailed(entry, "The save did not answer.");
+        }
+
         continue;
       }
-      if (deps.previewing(entry.hold.element)) entry.writtenAt = now;
-      else reconcile(entry, isOverdue(entry, now));
+
+      if (deps.previewing(entry.hold.element)) {
+        entry.writtenAt = now;
+      } else {
+        reconcile(entry, isOverdue(entry, now));
+      }
     }
   };
 
   const schedule = (): void => {
-    if (frame === 0) frame = window.requestAnimationFrame(sweep);
+    if (frame === 0) {
+      frame = window.requestAnimationFrame(sweep);
+    }
   };
 
   function noteChanges(records: MutationRecord[]): void {
     const now = performance.now();
+
     for (const entry of entries.values()) {
-      if (!records.some((record) => touches(entry, record))) continue;
+      if (!records.some((record) => touches(entry, record))) {
+        continue;
+      }
+
       entry.sawChange = true;
       entry.changedAt = now;
     }
+
     schedule();
   }
 
@@ -449,7 +606,10 @@ export function createOptimistic(deps: OptimisticDeps): Optimistic {
   }
 
   const watch = (): void => {
-    if (observer) return;
+    if (observer) {
+      return;
+    }
+
     observer = new MutationObserver(noteChanges);
     observer.observe(document.documentElement, {
       subtree: true,
@@ -462,7 +622,10 @@ export function createOptimistic(deps: OptimisticDeps): Optimistic {
   };
 
   function settleFailed(entry: Entry, reason: string): void {
-    if (entry.hold) quiet(() => entry.hold && rollback(entry.hold));
+    if (entry.hold) {
+      quiet(() => entry.hold && rollback(entry.hold));
+    }
+
     finish(entry, "mismatch", reason);
   }
 
@@ -470,10 +633,19 @@ export function createOptimistic(deps: OptimisticDeps): Optimistic {
     patch: DomPatch,
     element: StyledElement
   ): Promise<boolean> => {
-    if (patch.trusted) return true;
-    if (patch.tag && element.tagName.toLowerCase() !== patch.tag.toLowerCase())
+    if (patch.trusted) {
+      return true;
+    }
+
+    if (
+      patch.tag &&
+      element.tagName.toLowerCase() !== patch.tag.toLowerCase()
+    ) {
       return false;
+    }
+
     const source = await deps.sourceOf(element);
+
     return (
       patch.loc !== undefined &&
       (source.own === patch.loc || source.usedAt === patch.loc)
@@ -486,10 +658,13 @@ export function createOptimistic(deps: OptimisticDeps): Optimistic {
       entries.has(id) ||
       entries.size >= MAX_ENTRIES ||
       typeof patch?.selector !== "string"
-    )
+    ) {
       return;
+    }
+
     const element = query(patch.selector);
     const now = performance.now();
+
     const entry: Entry = {
       id,
       patch,
@@ -501,22 +676,30 @@ export function createOptimistic(deps: OptimisticDeps): Optimistic {
       sawChange: false,
       changedAt: now,
     };
-    if (!isStyled(element))
+
+    if (!isStyled(element)) {
       return deps.report(
         id,
         "skipped",
         0,
         "No element matches the selector in this frame."
       );
+    }
+
     entries.set(id, entry);
     void verified(patch, element).then((ok) => {
-      if (entries.get(id) !== entry) return;
-      if (!ok || !element.isConnected)
+      if (entries.get(id) !== entry) {
+        return;
+      }
+
+      if (!ok || !element.isConnected) {
         return finish(
           entry,
           "skipped",
           "The element in this frame is not the edited one."
         );
+      }
+
       watch();
       place(entry, element);
     });
@@ -529,27 +712,39 @@ export function createOptimistic(deps: OptimisticDeps): Optimistic {
     reason: string | undefined
   ): void => {
     const entry = entries.get(id);
-    if (!entry) return;
-    if (!ok)
+
+    if (!entry) {
+      return;
+    }
+
+    if (!ok) {
       return settleFailed(
         entry,
         typeof reason === "string" ? reason.slice(0, 300) : "The save failed."
       );
+    }
+
     entry.state = "written";
     entry.writtenAt = performance.now();
     mergeClasses(entry.spec, classes);
     const hold = entry.hold;
-    if (hold)
+
+    if (hold) {
       quiet(() => {
         setClasses(hold, entry.spec);
         hold.element.setAttribute("data-studio-pending", "written");
       });
+    }
+
     schedule();
   };
 
   const drop = (): void => {
     for (const entry of [...entries.values()]) {
-      if (entry.hold) quiet(() => entry.hold && rollback(entry.hold));
+      if (entry.hold) {
+        quiet(() => entry.hold && rollback(entry.hold));
+      }
+
       finish(entry, "skipped", "Dropped for undo or discard.");
     }
   };

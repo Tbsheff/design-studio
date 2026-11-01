@@ -16,10 +16,12 @@ const START_TIMEOUT_MS = 60_000;
 const CLOSE_TIMEOUT_MS = 3_000;
 const MAX_TEXT = 20_000;
 const OWN_URL = fileURLToPath(import.meta.url);
+
 const RUNNER_FILE = path.join(
   path.dirname(OWN_URL),
   `vite-runner${path.extname(OWN_URL)}`
 );
+
 const TSX_LOADER = path.join(
   REPO_ROOT,
   "node_modules",
@@ -90,20 +92,33 @@ function text(value: unknown): string | undefined {
 }
 
 function readMessage(raw: unknown): RunnerToParent | null {
-  if (typeof raw !== "object" || raw === null) return null;
+  if (typeof raw !== "object" || raw === null) {
+    return null;
+  }
+
   const message = raw as Record<string, unknown>;
-  if (message.type === "ready") return { type: "ready" };
-  if (message.type === "failed")
+
+  if (message.type === "ready") {
+    return { type: "ready" };
+  }
+
+  if (message.type === "failed") {
     return {
       type: "failed",
       code: text(message.code) ?? null,
       message: text(message.message) ?? "Vite failed",
     };
-  if (message.type !== "build-error") return null;
+  }
+
+  if (message.type !== "build-error") {
+    return null;
+  }
+
   const line =
     typeof message.line === "number" && Number.isFinite(message.line)
       ? message.line
       : undefined;
+
   return {
     type: "build-error",
     message: text(message.message) ?? "Build error",
@@ -119,31 +134,46 @@ function waitForReady(child: ChildProcess): Promise<void> {
       () => finish(new StartError("Vite did not start in time", null)),
       START_TIMEOUT_MS
     );
+
     const finish = (error: Error | null): void => {
       clearTimeout(timer);
       child.off("message", onMessage);
       child.off("exit", onExit);
-      if (error) reject(error);
-      else resolve();
+
+      if (error) {
+        reject(error);
+      } else {
+        resolve();
+      }
     };
+
     const onMessage = (raw: unknown): void => {
       const message = readMessage(raw);
-      if (message?.type === "ready") finish(null);
-      if (message?.type === "failed")
+
+      if (message?.type === "ready") {
+        finish(null);
+      }
+
+      if (message?.type === "failed") {
         finish(new StartError(message.message, message.code));
+      }
     };
+
     const onExit = (code: number | null): void =>
       finish(
         new StartError(`Vite process exited with code ${String(code)}`, null)
       );
+
     child.on("message", onMessage);
     child.once("exit", onExit);
   });
 }
 
 function stopChild(child: ChildProcess): Promise<void> {
-  if (child.exitCode !== null || child.signalCode !== null)
+  if (child.exitCode !== null || child.signalCode !== null) {
     return Promise.resolve();
+  }
+
   return new Promise((resolve) => {
     const timer = setTimeout(() => child.kill("SIGKILL"), CLOSE_TIMEOUT_MS);
     child.once("exit", () => {
@@ -151,15 +181,19 @@ function stopChild(child: ChildProcess): Promise<void> {
       resolve();
     });
     const closeMessage: ParentToRunner = { type: "close" };
-    if (child.connected)
+
+    if (child.connected) {
       child.send(closeMessage, (error) => error && child.kill("SIGKILL"));
-    else child.kill("SIGTERM");
+    } else {
+      child.kill("SIGTERM");
+    }
   });
 }
 
 function isPortInUse(error: unknown): boolean {
   const code = (error as { code?: unknown }).code;
   const message = error instanceof Error ? error.message : "";
+
   return code === "EADDRINUSE" || /already in use|EADDRINUSE/i.test(message);
 }
 
@@ -176,28 +210,45 @@ export class ViteManager {
 
   pid(key: string): Promise<number | undefined> | null {
     const entry = this.running.get(key);
+
     return entry ? entry.then((item) => item.child.pid) : null;
   }
 
   ensure(target: ViteTarget): Promise<RunningVite> {
-    if (this.stopped)
+    if (this.stopped) {
       return Promise.reject(new Error("Preview service is stopped"));
+    }
+
     const existing = this.running.get(target.key);
-    if (existing) return existing;
+
+    if (existing) {
+      return existing;
+    }
+
     const starting = this.start(target).catch((error: unknown) => {
       this.running.delete(target.key);
       throw error;
     });
+
     this.running.set(target.key, starting);
+
     return starting;
   }
 
   async stopOne(key: string): Promise<void> {
     const entry = this.running.get(key);
-    if (!entry) return;
+
+    if (!entry) {
+      return;
+    }
+
     this.running.delete(key);
     const running = await entry.catch(() => null);
-    if (!running) return;
+
+    if (!running) {
+      return;
+    }
+
     this.reservedPorts.delete(running.port);
     await stopChild(running.child);
     rmSync(running.home, { recursive: true, force: true });
@@ -213,9 +264,17 @@ export class ViteManager {
 
   async notifyChanged(key: string, files: string[]): Promise<void> {
     const entry = this.running.get(key);
-    if (!entry) return;
+
+    if (!entry) {
+      return;
+    }
+
     const running = await entry.catch(() => null);
-    if (!running?.child.connected) return;
+
+    if (!running?.child.connected) {
+      return;
+    }
+
     const message: ParentToRunner = { type: "notify", files };
     running.child.send(message, () => undefined);
   }
@@ -223,12 +282,18 @@ export class ViteManager {
   private async nextFreePort(): Promise<number> {
     for (let offset = 0; offset < MAX_PORT_ATTEMPTS; offset += 1) {
       const port = this.deps.vitePortBase + offset;
-      if (this.reservedPorts.has(port)) continue;
+
+      if (this.reservedPorts.has(port)) {
+        continue;
+      }
+
       if (await portIsFree(port)) {
         this.reservedPorts.add(port);
+
         return port;
       }
     }
+
     throw new Error(`No free Vite port from ${this.deps.vitePortBase}`);
   }
 
@@ -250,12 +315,18 @@ export class ViteManager {
   private watchChild(target: ViteTarget, running: RunningVite): void {
     running.child.on("message", (raw: unknown) => {
       const message = readMessage(raw);
-      if (message?.type === "build-error") this.emitBuildError(target, message);
+
+      if (message?.type === "build-error") {
+        this.emitBuildError(target, message);
+      }
     });
     running.child.once("exit", () => {
       const current = this.running.get(target.key);
       void current?.then((entry) => {
-        if (entry !== running) return;
+        if (entry !== running) {
+          return;
+        }
+
         this.running.delete(target.key);
         this.reservedPorts.delete(running.port);
         rmSync(running.home, { recursive: true, force: true });
@@ -269,6 +340,7 @@ export class ViteManager {
     bridgeScript: string
   ): Promise<RunningVite> {
     const home = mkdtempSync(path.join(os.tmpdir(), "studio-vite-"));
+
     const child = fork(RUNNER_FILE, [], {
       cwd: path.resolve(target.root),
       env: childEnv(home),
@@ -276,6 +348,7 @@ export class ViteManager {
       stdio: ["ignore", "inherit", "inherit", "ipc"],
       serialization: "json",
     });
+
     const init: ParentToRunner = {
       type: "init",
       root: path.resolve(target.root),
@@ -283,6 +356,7 @@ export class ViteManager {
       cacheDir: path.resolve(target.cacheDir),
       bridgeScript,
     };
+
     try {
       const ready = waitForReady(child);
       child.send(init);
@@ -292,28 +366,38 @@ export class ViteManager {
       rmSync(home, { recursive: true, force: true });
       throw error;
     }
+
     return { child, home, port, url: `http://127.0.0.1:${port}/` };
   }
 
   private async start(target: ViteTarget): Promise<RunningVite> {
     const bridgeScript = await this.deps.bridgeScript();
     let lastError: unknown = null;
+
     for (let attempt = 0; attempt < MAX_START_ATTEMPTS; attempt += 1) {
       const port = await this.nextFreePort();
+
       try {
         const running = await this.spawn(target, port, bridgeScript);
+
         if (this.stopped) {
           await stopChild(running.child);
           throw new Error("Preview service is stopped");
         }
+
         this.watchChild(target, running);
+
         return running;
       } catch (error) {
         lastError = error;
         this.reservedPorts.delete(port);
-        if (!isPortInUse(error)) break;
+
+        if (!isPortInUse(error)) {
+          break;
+        }
       }
     }
+
     throw lastError instanceof Error
       ? lastError
       : new Error("Vite server failed to start");

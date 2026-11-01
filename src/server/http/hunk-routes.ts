@@ -21,28 +21,37 @@ const FILE_MAX = 300;
 const HUNK_MAX = 10_000;
 
 function versionId(raw: unknown, label: string): string {
-  if (typeof raw !== "string" || !SHA.test(raw))
+  if (typeof raw !== "string" || !SHA.test(raw)) {
     throw new BadRequestError(`${label} must be a version id`);
+  }
+
   return raw;
 }
 
 export function parseHunkRequest(raw: unknown): HunkRevertRequest {
   const body = (raw ?? {}) as Record<string, unknown>;
   const file = typeof body.file === "string" ? body.file.trim() : "";
-  if (file === "" || file.length > FILE_MAX)
+
+  if (file === "" || file.length > FILE_MAX) {
     throw new BadRequestError("file must be a project-relative path");
+  }
+
   const hunk = body.hunk;
+
   if (
     typeof hunk !== "number" ||
     !Number.isInteger(hunk) ||
     hunk < 1 ||
     hunk > HUNK_MAX
-  )
+  ) {
     throw new BadRequestError("hunk must be a whole number from 1");
+  }
+
   const from =
     body.from === undefined || body.from === null
       ? undefined
       : versionId(body.from, "from");
+
   return {
     to: versionId(body.to, "to"),
     file,
@@ -54,6 +63,7 @@ export function parseHunkRequest(raw: unknown): HunkRevertRequest {
 export function registerHunkRoutes(app: Hono, deps: HunkRouteDeps): void {
   app.post("/api/projects/:pid/d/:did/hunks/revert", async (c) => {
     const request = parseHunkRequest(await deps.readBody(c));
+
     try {
       return c.json(
         await deps.withDirection(
@@ -64,13 +74,17 @@ export function registerHunkRoutes(app: Hono, deps: HunkRouteDeps): void {
         )
       );
     } catch (error) {
-      if (error instanceof HunkStaleError)
+      if (error instanceof HunkStaleError) {
         return c.json({ error: error.message, code: "hunk_stale" }, 409);
-      if (error instanceof DirectEditError)
+      }
+
+      if (error instanceof DirectEditError) {
         return c.json(
           { error: error.code, message: error.message },
           error.status
         );
+      }
+
       throw error;
     }
   });

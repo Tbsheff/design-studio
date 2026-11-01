@@ -75,6 +75,7 @@ function legacyParts(summary: RunSummary): RunPart[] {
     kind: "tool",
     toolUseId: t.toolUseId,
   }));
+
   return summary.finalText
     ? [...tools, { kind: "text", text: summary.finalText }]
     : tools;
@@ -110,12 +111,16 @@ export function shownPending(
   runs: RunView[],
   directionId: string | null
 ): RunView | null {
-  if (!pending || pending.directionId !== directionId) return null;
+  if (!pending || pending.directionId !== directionId) {
+    return null;
+  }
+
   const started = runs.some(
     (run) =>
       run.startedAt >= pending.startedAt - PENDING_CLOCK_SLACK_MS &&
       run.request?.prompt === pending.request?.prompt
   );
+
   return started ? null : pending;
 }
 
@@ -140,13 +145,19 @@ function finishedView(prev: RunView | undefined, event: RunSummary): RunView {
   const title = event.title ?? prev?.summary?.title;
   const summary = title ? { ...event, title } : event;
   const finished = runFromSummary(summary);
-  if (!prev) return finished;
+
+  if (!prev) {
+    return finished;
+  }
+
   const parts =
     summary.parts ?? withFinalText(closeParts(prev.parts), summary.finalText);
+
   const tools =
     prev.tools.length >= finished.tools.length
       ? mergeTools(prev.tools, finished.tools)
       : finished.tools;
+
   return {
     ...finished,
     parts,
@@ -223,16 +234,26 @@ function applyControlEvent(run: RunView, event: StudioEvent): void {
 }
 
 export function applyRunEvent(runs: RunMap, event: StudioEvent): RunMap {
-  if (!event.type.startsWith("run.") || !("runId" in event)) return runs;
+  if (!event.type.startsWith("run.") || !("runId" in event)) {
+    return runs;
+  }
+
   const runId = event.runId;
   const prev = runs[runId];
-  if (event.type === "run.finished")
+
+  if (event.type === "run.finished") {
     return { ...runs, [runId]: finishedView(prev, event.summary) };
-  if (prev?.summary) return runs;
+  }
+
+  if (prev?.summary) {
+    return runs;
+  }
+
   const run: RunView = prev
     ? { ...prev, directionId: prev.directionId ?? event.directionId ?? null }
     : emptyRun(runId, event.directionId ?? null, event.ts);
-  if (event.type === "run.stopping")
+
+  if (event.type === "run.stopping") {
     return {
       ...runs,
       [runId]: {
@@ -243,29 +264,51 @@ export function applyRunEvent(runs: RunMap, event: StudioEvent): RunMap {
         retry: null,
       },
     };
-  if (run.status === "canceled" && isPartEvent(event)) return runs;
+  }
+
+  if (run.status === "canceled" && isPartEvent(event)) {
+    return runs;
+  }
+
   if (isPartEvent(event)) {
     run.parts = applyPartEvent(run.parts, event);
-    if (event.type === "run.text.delta" || event.type === "run.thinking.delta")
+
+    if (
+      event.type === "run.text.delta" ||
+      event.type === "run.thinking.delta"
+    ) {
       run.retry = null;
+    }
   }
+
   if (event.type === "run.started") {
     run.request = event.request;
     run.startedAt = event.ts;
-    if (run.status !== "canceled") run.status = "running";
+
+    if (run.status !== "canceled") {
+      run.status = "running";
+    }
   }
+
   applyToolEvent(run, event);
   applyControlEvent(run, event);
+
   return { ...runs, [runId]: run };
 }
 
 function mergeTools(live: ToolRow[], final: ToolRow[]): ToolRow[] {
   const byId = new Map(final.map((t) => [t.toolUseId, t]));
+
   return live.map((t) => {
     const f = byId.get(t.toolUseId);
-    if (!f) return t;
+
+    if (!f) {
+      return t;
+    }
+
     const diff = f.diff ?? t.diff;
     const diffs = f.diffs ?? t.diffs;
+
     return {
       ...t,
       durationMs: f.durationMs ?? t.durationMs,
@@ -279,10 +322,20 @@ function mergeTools(live: ToolRow[], final: ToolRow[]): ToolRow[] {
 }
 
 export function shortInput(input: unknown): string {
-  if (input === null || input === undefined) return "";
-  if (typeof input === "string") return input.slice(0, 80);
-  if (typeof input !== "object") return String(input);
+  if (input === null || input === undefined) {
+    return "";
+  }
+
+  if (typeof input === "string") {
+    return input.slice(0, 80);
+  }
+
+  if (typeof input !== "object") {
+    return String(input);
+  }
+
   const o = input as Record<string, unknown>;
+
   for (const key of [
     "file_path",
     "path",
@@ -293,8 +346,12 @@ export function shortInput(input: unknown): string {
     "query",
   ]) {
     const v = o[key];
-    if (typeof v === "string") return v.slice(0, 80);
+
+    if (typeof v === "string") {
+      return v.slice(0, 80);
+    }
   }
+
   return JSON.stringify(input).slice(0, 80);
 }
 

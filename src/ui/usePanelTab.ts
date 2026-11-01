@@ -29,6 +29,7 @@ const MAX_PROJECTS = 100;
 function readAll(): Record<string, PanelTab> {
   try {
     const raw: unknown = JSON.parse(localStorage.getItem(TAB_KEY) ?? "{}");
+
     return raw && typeof raw === "object"
       ? (raw as Record<string, PanelTab>)
       : {};
@@ -39,6 +40,7 @@ function readAll(): Record<string, PanelTab> {
 
 function readTab(projectId: string): PanelTab | null {
   const raw = readAll()[projectId];
+
   return TABS.find((tab) => tab === raw) ?? null;
 }
 
@@ -47,6 +49,7 @@ function writeTab(projectId: string, tab: PanelTab): void {
   delete all[projectId];
   all[projectId] = tab;
   const kept = Object.entries(all).slice(-MAX_PROJECTS);
+
   try {
     localStorage.setItem(TAB_KEY, JSON.stringify(Object.fromEntries(kept)));
   } catch {
@@ -60,7 +63,10 @@ export function usePanelTab(projectId: string, eligible: boolean) {
   const [tab, setTab] = useState<PanelTab>(chosen.current ?? "chat");
 
   useEffect(() => {
-    if (!eligible || chosen.current !== null || autoSwitched.current) return;
+    if (!eligible || chosen.current !== null || autoSwitched.current) {
+      return;
+    }
+
     autoSwitched.current = true;
     setTab("design");
   }, [eligible]);

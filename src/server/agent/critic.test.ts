@@ -16,14 +16,16 @@ import { createFakePreview, createTempProject } from "./test-fakes.js";
 import { runDesignReview, type StudioToolDeps } from "./tools.js";
 
 const roots: string[] = [];
+
 const PNG = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
   "base64"
 );
 
 afterEach(async () => {
-  while (roots.length)
+  while (roots.length) {
     await rm(roots.pop() as string, { recursive: true, force: true });
+  }
 });
 
 const ISSUES = [
@@ -49,7 +51,10 @@ function fakeQuery(
   seen: Options[]
 ): typeof query {
   const fn = ({ options }: { options?: Options }) => {
-    if (options) seen.push(options);
+    if (options) {
+      seen.push(options);
+    }
+
     async function* run(): AsyncGenerator<SDKMessage> {
       yield {
         type: "result",
@@ -59,8 +64,10 @@ function fakeQuery(
         total_cost_usd: costUsd,
       } as unknown as SDKMessage;
     }
+
     return Object.assign(run(), { close: () => undefined });
   };
+
   return fn as unknown as typeof query;
 }
 
@@ -77,9 +84,12 @@ async function deps(
     const file = `${request.outPrefix}-1.png`;
     await mkdir(path.dirname(file), { recursive: true });
     await writeFile(file, PNG);
+
     return { paths: [file], pageHeight: 800, from: 0, to: 800 };
   };
+
   const config = resolveRunConfig(temp.project.settings, level);
+
   const run: RunToolState = {
     config,
     spentUsd: () => 0.3,
@@ -98,6 +108,7 @@ async function deps(
     lastChecks: [],
     baseline: null,
   };
+
   return {
     preview,
     ctx: {
@@ -159,9 +170,11 @@ describe("critic reply parsing", () => {
         { kind: "prefer", area: "layout", rule: "Hierarchy over boxes" },
       ],
     });
+
     expect(text).toContain("<request>\nA pricing page");
     expect(text).toContain("[medium] tap-target @mobile: small");
     expect(text).toContain("prefer (layout): Hierarchy over boxes");
+
     const diffOnly = criticText({
       request: "x",
       findings: [
@@ -176,6 +189,7 @@ describe("critic reply parsing", () => {
       ],
       tasteRules: [],
     });
+
     expect(diffOnly).not.toContain("0% of pixels changed");
   });
 });
@@ -212,8 +226,10 @@ describe("design_review tool", () => {
   it("caps the critic call and reports the budget only when the project sets a spending limit", async () => {
     const seen: Options[] = [];
     const d = await deps("polish", JSON.stringify(ISSUES), seen, 1.5);
+
     const text = ((await runDesignReview(d)).content[0] as { text: string })
       .text;
+
     expect(text).toMatch(/Budget: about \$0\.34 of \$1\.50 used/);
     expect(seen[0]).toMatchObject({ maxBudgetUsd: 0.15, maxTurns: 1 });
   });

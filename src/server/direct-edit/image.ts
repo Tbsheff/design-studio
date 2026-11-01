@@ -63,6 +63,7 @@ const loc = z
     col: z.number().int().min(1),
   })
   .strict();
+
 const focal = z
   .string()
   .trim()
@@ -70,6 +71,7 @@ const focal = z
     /^(\d{1,3}(\.\d+)?%|left|right|center|top|bottom)(\s+(\d{1,3}(\.\d+)?%|left|right|center|top|bottom))?$/,
     'focal must be "x% y%", for example "50% 30%"'
   );
+
 const requestSchema = z
   .object({
     target: z
@@ -143,6 +145,7 @@ const BLOCKED = new Set([
   ".next",
   ".vite",
 ]);
+
 const FIT_SIZE: Record<ImageFit, string> = {
   cover: "cover",
   contain: "contain",
@@ -151,6 +154,7 @@ const FIT_SIZE: Record<ImageFit, string> = {
 
 export function parseSetImage(raw: unknown): ParsedImageRequest {
   const parsed = requestSchema.safeParse(raw);
+
   if (!parsed.success) {
     const issue = parsed.error.issues[0];
     throw new DirectEditError(
@@ -160,6 +164,7 @@ export function parseSetImage(raw: unknown): ParsedImageRequest {
         : "The image request is not valid"
     );
   }
+
   return parsed.data;
 }
 
@@ -171,13 +176,17 @@ function assetHome(
   project: Project,
   page: string | null
 ): { dir: string; rooted: boolean } {
-  if (project.app)
+  if (project.app) {
     return {
       dir: path.posix.join(project.app.appDir.replace(/\\/g, "/"), "public"),
       rooted: true,
     };
-  if (project.kind === "react" && !(page && isHtml(page)))
+  }
+
+  if (project.kind === "react" && !(page && isHtml(page))) {
     return { dir: "public", rooted: true };
+  }
+
   return { dir: "assets", rooted: false };
 }
 
@@ -190,41 +199,59 @@ export async function planAsset(
   const home = assetHome(project, page);
   const suffix = `-${createHash("sha256").update(image.bytes).digest("hex").slice(0, 10)}.${image.ext}`;
   const root = await realpath(workTree);
+
   const same = (
     await readdir(path.join(root, ...home.dir.split("/"))).catch(
       () => [] as string[]
     )
   ).find((entry) => entry.endsWith(suffix));
+
   const name = same ?? `${image.stem}${suffix}`;
   const relative = path.posix.normalize(path.posix.join(home.dir, name));
+
   if (
     relative.startsWith("..") ||
     relative.split("/").some((part) => BLOCKED.has(part))
-  )
+  ) {
     throw new DirectEditError(
       "invalid_source",
       `The studio cannot write ${relative}.`
     );
+  }
+
   const file = path.join(root, ...relative.split("/"));
   const exists = Boolean(await stat(file).catch(() => null));
+
   const src = home.rooted
     ? `/${name}`
     : path.posix.relative(path.posix.dirname(page ?? "index.html"), relative);
+
   return { file, relative, bytes: image.bytes, exists, src };
 }
 
 export async function loadImage(
   request: ParsedImageRequest
 ): Promise<ImageBytes | null> {
-  if (request.image)
+  if (request.image) {
     return imageFromBase64(request.image.data, request.image.name);
-  if (request.url) return imageFromUrl(request.url);
+  }
+
+  if (request.url) {
+    return imageFromUrl(request.url);
+  }
+
   return null;
 }
 
 function modeOf(request: ParsedImageRequest): ImagePlan["mode"] {
-  if (request.mode && request.mode !== "auto") return request.mode;
-  if (request.target.tag.toLowerCase() === "img") return "img";
+  if (request.mode && request.mode !== "auto") {
+    return request.mode;
+  }
+
+  if (request.target.tag.toLowerCase() === "img") {
+    return "img";
+  }
+
   return request.target.background ? "background" : "insert";
 }
 
@@ -234,15 +261,35 @@ function styleFor(
   asset: AssetPlan | null
 ): Record<string, string> {
   const style: Record<string, string> = {};
+
   if (mode === "img") {
-    if (request.fit) style["object-fit"] = request.fit;
-    if (request.focal) style["object-position"] = request.focal;
+    if (request.fit) {
+      style["object-fit"] = request.fit;
+    }
+
+    if (request.focal) {
+      style["object-position"] = request.focal;
+    }
+
     return style;
   }
-  if (asset) style["background-image"] = `url(${asset.src})`;
-  if (request.fit) style["background-size"] = FIT_SIZE[request.fit];
-  if (request.focal) style["background-position"] = request.focal;
-  if (asset || request.fit) style["background-repeat"] = "no-repeat";
+
+  if (asset) {
+    style["background-image"] = `url(${asset.src})`;
+  }
+
+  if (request.fit) {
+    style["background-size"] = FIT_SIZE[request.fit];
+  }
+
+  if (request.focal) {
+    style["background-position"] = request.focal;
+  }
+
+  if (asset || request.fit) {
+    style["background-repeat"] = "no-repeat";
+  }
+
   return style;
 }
 
@@ -251,9 +298,15 @@ function attrsFor(
   asset: AssetPlan | null
 ): AttrChanges {
   const attrs: AttrChanges = {};
-  if (asset)
+
+  if (asset) {
     Object.assign(attrs, { src: asset.src, srcset: null, srcSet: null });
-  if (request.alt !== undefined) attrs.alt = request.alt ?? "";
+  }
+
+  if (request.alt !== undefined) {
+    attrs.alt = request.alt ?? "";
+  }
+
   return attrs;
 }
 
@@ -263,14 +316,17 @@ function titleOf(
   request: ParsedImageRequest,
   asset: AssetPlan | null
 ): string {
-  if (mode === "insert")
+  if (mode === "insert") {
     return `Insert image ${request.position === "after" ? "after" : "into"} ${tag}`;
+  }
+
   const parts = [
     ...(asset ? ["replace"] : []),
     ...(request.fit ? [`fit ${request.fit}`] : []),
     ...(request.focal ? ["focal point"] : []),
     ...(request.alt !== undefined ? ["alt text"] : []),
   ];
+
   return `${mode === "background" ? "Background image" : "Image"} of ${tag}: ${parts.join(", ") || "no change"}`;
 }
 
@@ -282,16 +338,25 @@ async function useSiteOf(
   owners: ParsedImageRequest["target"]["owners"]
 ): Promise<SourceLoc | null> {
   const named = (owners ?? []).filter((item) => /^[A-Z]/.test(item.name));
-  if (named.length === 0) return null;
+
+  if (named.length === 0) {
+    return null;
+  }
+
   const { root } = await loadLibrary(scope.project, scope.workTree);
+
   for (const owner of named) {
     const use = await ownerUseSite(
       { workTree: scope.workTree, previewOrigin: scope.previewOrigin },
       root,
       owner
     ).catch(() => null);
-    if (use) return use;
+
+    if (use) {
+      return use;
+    }
   }
+
   return null;
 }
 
@@ -305,13 +370,21 @@ async function sourceFor(
           target.owners?.length ? null : Promise.reject(error)
       )
     : null;
-  if (own && target.source) return { source: target.source, target: own };
+
+  if (own && target.source) {
+    return { source: target.source, target: own };
+  }
+
   const use =
     (await useSiteOf(scope, target.owners)) ??
     (target.html
       ? await findImageSource(scope.project, scope.workTree, target.html)
       : null);
-  if (!use) throw new DirectEditError("element_not_found", NO_SOURCE);
+
+  if (!use) {
+    throw new DirectEditError("element_not_found", NO_SOURCE);
+  }
+
   return { source: use, target: await resolveSource(scope.workTree, use.file) };
 }
 
@@ -323,18 +396,24 @@ async function planReplace(
 ): Promise<ImagePlan> {
   const { source, target } = await sourceFor(scope, request.target);
   const original = await readFile(target.file, "utf-8");
+
   const asset = image
     ? await planAsset(scope.project, scope.workTree, target.relative, image)
     : null;
+
   const html = isHtml(target.relative);
   const typescript = path.extname(target.relative).toLowerCase() === ".tsx";
+
   const element = html
     ? null
     : jsxTagName(jsxElementAt(original, source, typescript));
+
   const style = styleFor(mode, request, asset);
+
   const theme = await themeForFile(scope.workTree, target.relative, original, {
     projectKind: scope.project.kind,
   });
+
   const base = {
     source,
     selector: request.target.selector ?? "",
@@ -342,18 +421,22 @@ async function planReplace(
       ? { component: element.name }
       : { tag: request.target.tag.toLowerCase() }),
   };
+
   const styled =
     Object.keys(style).length > 0
       ? patchSource(target.relative, original, { ...base, style }, theme).code
       : original;
+
   const attrs = mode === "img" ? attrsFor(request, asset) : {};
   const position = { line: source.line, col: source.col };
+
   const code =
     Object.keys(attrs).length === 0
       ? styled
       : html
         ? setHtmlAttrs(styled, position, attrs)
         : setJsxAttrs(styled, position, typescript, attrs);
+
   return {
     target,
     original,
@@ -375,11 +458,15 @@ function snippetFor(
     /[&"<>{}]/g,
     (char) => `&#${char.charCodeAt(0)};`
   );
-  if (html)
+
+  if (html) {
     return tailwind
       ? `<img src="${src}" alt="${safeAlt}" class="block h-auto max-w-full object-${fit}">`
       : `<img src="${src}" alt="${safeAlt}" style="display: block; max-width: 100%; height: auto; object-fit: ${fit}">`;
+  }
+
   const jsxAlt = /[&"<>{}]/.test(alt) ? `{${JSON.stringify(alt)}}` : `"${alt}"`;
+
   return tailwind
     ? `<img src="${src}" alt=${jsxAlt} className="block h-auto max-w-full object-${fit}" />`
     : `<img src="${src}" alt=${jsxAlt} style={{ display: 'block', maxWidth: '100%', height: 'auto', objectFit: '${fit}' }} />`;
@@ -390,28 +477,36 @@ async function planInsertImage(
   request: ParsedImageRequest,
   image: ImageBytes | null
 ): Promise<ImagePlan> {
-  if (!image)
+  if (!image) {
     throw new DirectEditError(
       "invalid_request",
       "Pass an image file or url to insert an image."
     );
+  }
+
   const page = request.target.source?.file ?? null;
+
   const known = page
     ? await resolveSource(scope.workTree, page).catch(() => null)
     : null;
+
   const text = known ? await readFile(known.file, "utf-8") : "";
+
   const tailwind = known
     ? (await themeForFile(scope.workTree, known.relative, text, {
         projectKind: scope.project.kind,
       })) !== null
     : false;
+
   const asset = await planAsset(
     scope.project,
     scope.workTree,
     known?.relative ?? page,
     image
   );
+
   const html = page ? isHtml(page) : scope.project.kind === "html";
+
   const jsx = snippetFor(
     html,
     tailwind,
@@ -419,7 +514,9 @@ async function planInsertImage(
     request.alt ?? "",
     request.fit ?? "cover"
   );
+
   const { source, tag, selector, owners } = request.target;
+
   const plan = await planInsertJsx(scope, {
     target: {
       source,
@@ -430,6 +527,7 @@ async function planInsertImage(
     position: request.position ?? "inside",
     jsx,
   });
+
   return {
     target: plan.target,
     original: plan.original,
@@ -447,17 +545,24 @@ export async function planSetImage(
   image: ImageBytes | null
 ): Promise<ImagePlan> {
   const mode = modeOf(request);
-  if (mode === "insert") return planInsertImage(scope, request, image);
+
+  if (mode === "insert") {
+    return planInsertImage(scope, request, image);
+  }
+
   const work =
     Boolean(image || request.fit || request.focal) ||
     (mode === "img" && request.alt !== undefined);
-  if (!work)
+
+  if (!work) {
     throw new DirectEditError(
       "invalid_request",
       mode === "background"
         ? "A background image has no alt text. Pass an image, fit or focal."
         : "Pass an image, fit, focal or alt."
     );
+  }
+
   return planReplace(scope, request, mode, image);
 }
 
@@ -466,12 +571,16 @@ export async function writeImagePlan(plan: ImagePlan): Promise<void> {
     await mkdir(path.dirname(plan.asset.file), { recursive: true });
     await writeFile(plan.asset.file, plan.asset.bytes, { flag: "wx" }).catch(
       (error: NodeJS.ErrnoException) => {
-        if (error.code !== "EEXIST") throw error;
+        if (error.code !== "EEXIST") {
+          throw error;
+        }
       }
     );
   }
-  if (plan.code !== plan.original)
+
+  if (plan.code !== plan.original) {
     await writeAtomic(plan.target.file, plan.code);
+  }
 }
 
 export function planChanged(plan: ImagePlan): boolean {
@@ -489,6 +598,7 @@ export async function applySetImage(
   const request = parseSetImage(raw);
   const head = assertCanEdit(deps, project, direction);
   const plan = await planSetImage(scope, request, await loadImage(request));
+
   const base = {
     file: plan.target.relative,
     asset: plan.asset?.relative ?? null,
@@ -497,22 +607,28 @@ export async function applySetImage(
     title: plan.title,
     ...(plan.select ? { select: plan.select } : {}),
   };
-  if (!planChanged(plan))
+
+  if (!planChanged(plan)) {
     return {
       ...base,
       version: await deps.versions.get(project, head),
       changed: false,
     };
+  }
+
   await savesSettled(project.id);
   await writeImagePlan(plan);
+
   const files = [
     plan.target.relative,
     ...(plan.asset ? [plan.asset.relative] : []),
   ];
+
   const meta: VersionMeta = {
     kind: "manual",
     prompt: `Image: ${plan.title} at ${plan.target.relative}${plan.asset ? ` (${plan.asset.relative})` : ""}`,
   };
+
   const version = saveDeferred(
     deps,
     project,
@@ -521,6 +637,7 @@ export async function applySetImage(
     plan.title,
     meta
   );
+
   deps.history?.record({
     projectId: project.id,
     directionId: direction.id,
@@ -536,5 +653,6 @@ export async function applySetImage(
     ],
   });
   await publishVersion(deps, project, direction, version);
+
   return { ...base, version, changed: true };
 }

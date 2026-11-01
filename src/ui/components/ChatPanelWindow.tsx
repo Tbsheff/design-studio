@@ -38,12 +38,21 @@ function nextCount(
   since: number
 ): number {
   const last = items.at(-1)?.key ?? null;
-  if (state.last === null || last === state.last) return state.count;
+
+  if (state.last === null || last === state.last) {
+    return state.count;
+  }
+
   const at = items.findLastIndex((item) => item.key === state.last);
-  if (at === -1) return state.count;
+
+  if (at === -1) {
+    return state.count;
+  }
+
   const live = items
     .slice(at + 1)
     .filter((item) => item.at >= since - CLOCK_SLACK_MS).length;
+
   return state.count + live;
 }
 
@@ -54,37 +63,62 @@ export function useHistoryWindow<T extends Item>(
 ): HistoryWindow<T> {
   const { viewportRef } = useConversation();
   const [since] = useState(() => Date.now());
+
   const [state, setState] = useState<WindowState>({
     reset: resetKey,
     count: FIRST,
     last: null,
   });
+
   const last = items.at(-1)?.key ?? null;
+
   const count =
     state.reset === resetKey ? nextCount(state, items, since) : FIRST;
-  if (state.reset !== resetKey)
+
+  if (state.reset !== resetKey) {
     setState({ reset: resetKey, count: FIRST, last: null });
-  else if (state.last !== last) setState({ ...state, count, last });
+  } else if (state.last !== last) {
+    setState({ ...state, count, last });
+  }
+
   const revealAt =
     reveal === null ? -1 : items.findIndex((item) => item.key === reveal);
+
   const need = revealAt === -1 ? 0 : items.length - revealAt;
-  if (need > count && state.reset === resetKey)
+
+  if (need > count && state.reset === resetKey) {
     setState((prev) => ({ ...prev, count: Math.max(prev.count, need) }));
+  }
+
   const start = Math.max(0, items.length - Math.max(count, need));
   const fromBottom = useRef<number | null>(null);
   const shortBy = start - STEP;
+
   const more = useCallback(() => {
     const v = viewportRef.current;
-    if (v) fromBottom.current = v.scrollHeight - v.scrollTop;
+
+    if (v) {
+      fromBottom.current = v.scrollHeight - v.scrollTop;
+    }
+
     setState((prev) => ({ ...prev, count: prev.count + STEP }));
-    if (shortBy <= 0) requestOlderRuns();
+
+    if (shortBy <= 0) {
+      requestOlderRuns();
+    }
   }, [viewportRef, shortBy]);
+
   useLayoutEffect(() => {
     const v = viewportRef.current;
-    if (!v || fromBottom.current === null) return;
+
+    if (!v || fromBottom.current === null) {
+      return;
+    }
+
     v.scrollTop = v.scrollHeight - fromBottom.current;
     fromBottom.current = null;
   }, [start, items.length, viewportRef]);
+
   return { shown: start > 0 ? items.slice(start) : items, hidden: start, more };
 }
 
@@ -102,27 +136,40 @@ export function EarlierRuns({
   useEffect(() => {
     const el = ref.current;
     const root = viewportRef.current;
-    if (!el || !root || !shown || older.loading) return;
+
+    if (!el || !root || !shown || older.loading) {
+      return;
+    }
+
     let frame = 0;
+
     const observer = new IntersectionObserver(
       (entries) => {
         if (
           wasAtBottomRef.current ||
           !entries.some((entry) => entry.isIntersecting)
-        )
+        ) {
           return;
+        }
+
         cancelAnimationFrame(frame);
         frame = requestAnimationFrame(onMore);
       },
       { root, rootMargin: `${NEAR_TOP_PX}px 0px 0px 0px` }
     );
+
     observer.observe(el);
+
     return () => {
       cancelAnimationFrame(frame);
       observer.disconnect();
     };
   }, [hidden, shown, older.loading, onMore, viewportRef, wasAtBottomRef]);
-  if (!shown) return null;
+
+  if (!shown) {
+    return null;
+  }
+
   return (
     <button
       ref={ref}

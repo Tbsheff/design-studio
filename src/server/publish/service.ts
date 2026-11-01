@@ -92,13 +92,18 @@ function expiryOf(
   input: PublishPlanInput,
   prior: PublicationRecord | null
 ): number | null {
-  if (input.expiresInDays === undefined)
+  if (input.expiresInDays === undefined) {
     return prior ? prior.expiresAt : Date.now() + 7 * 86_400_000;
-  if (!PUBLISH_EXPIRY_DAYS.includes(input.expiresInDays))
+  }
+
+  if (!PUBLISH_EXPIRY_DAYS.includes(input.expiresInDays)) {
     throw new BadRequestError(
       `expiresInDays must be one of ${PUBLISH_EXPIRY_DAYS.join(", ")}`
     );
+  }
+
   const days: PublishExpiryDays = input.expiresInDays;
+
   return days === 0 ? null : Date.now() + days * 86_400_000;
 }
 
@@ -110,14 +115,19 @@ function passwordOf(
     if (
       input.password.length < PUBLISH_PASSWORD_MIN ||
       input.password.length > PUBLISH_PASSWORD_MAX
-    )
+    ) {
       throw new BadRequestError(
         `The password must be ${PUBLISH_PASSWORD_MIN} to ${PUBLISH_PASSWORD_MAX} characters.`
       );
+    }
+
     return { hash: hashPassword(input.password), on: true };
   }
-  if (prior && input.keepPassword !== false)
+
+  if (prior && input.keepPassword !== false) {
     return { hash: undefined, on: prior.password };
+  }
+
   return { hash: null, on: false };
 }
 
@@ -129,15 +139,25 @@ function directionOf(project: Project, raw: unknown): Direction {
           project.directions.find((d) => d.id === "main") ??
           project.directions[0]
         )?.id;
+
   const direction = project.directions.find((d) => d.id === did);
-  if (!direction) throw new NotFoundError("direction not found");
+
+  if (!direction) {
+    throw new NotFoundError("direction not found");
+  }
+
   return direction;
 }
 
 function statusOf(remote: RemotePublication): Publication["status"] {
-  if (remote.revokedAt !== null) return "removed";
-  if (remote.expiresAt !== null && remote.expiresAt < Date.now())
+  if (remote.revokedAt !== null) {
+    return "removed";
+  }
+
+  if (remote.expiresAt !== null && remote.expiresAt < Date.now()) {
     return "ended";
+  }
+
   return remote.currentVersion ? "live" : "failed";
 }
 
@@ -148,6 +168,7 @@ export function mergeRemote(
 ): PublicationRecord {
   const url = new URL(remote.path, baseUrl).href;
   const live = remote.versions.find((v) => v.id === remote.currentVersion);
+
   return {
     ...record,
     title: remote.title,
@@ -182,19 +203,24 @@ async function uploadMissing(
   missing: string[]
 ): Promise<number> {
   const bySha = new Map(files.map((f) => [f.sha256, f]));
+
   const queue = missing
     .map((sha) => bySha.get(sha))
     .filter((f): f is StagedFile => Boolean(f));
+
   let sent = 0;
+
   const worker = async () => {
     for (let next = queue.shift(); next; next = queue.shift()) {
       await client.upload(pid, next.sha256, next.abs, next.size);
       sent += 1;
     }
   };
+
   await Promise.all(
     Array.from({ length: Math.min(UPLOAD_PARALLEL, queue.length) }, worker)
   );
+
   return sent;
 }
 
@@ -214,6 +240,7 @@ interface PlanArgs {
 function planOf(a: PlanArgs): PublishPlan {
   const known = a.prior?.hashes ? new Set(a.prior.hashes) : null;
   const now = Date.now();
+
   return {
     id: a.id,
     projectId: a.project.id,
@@ -256,11 +283,13 @@ export function createPublishService(deps: PublishDeps): PublishService {
 
   const sweep = async (): Promise<void> => {
     const now = Date.now();
+
     const old = [...plans.values()]
       .filter((p) => p.plan.planExpiresAt < now)
       .concat(
         [...plans.values()].slice(0, Math.max(0, plans.size - MAX_PLANS + 1))
       );
+
     for (const held of old) {
       plans.delete(held.plan.id);
       await rm(held.stage, { recursive: true, force: true });
@@ -272,8 +301,11 @@ export function createPublishService(deps: PublishDeps): PublishService {
     raw: unknown
   ): Promise<PublicationRecord> => {
     const found = await store.get(assertSafeId(String(raw), "publicationId"));
-    if (!found || found.projectId !== projectId)
+
+    if (!found || found.projectId !== projectId) {
       throw new NotFoundError("publication not found");
+    }
+
     return found;
   };
 
@@ -281,16 +313,24 @@ export function createPublishService(deps: PublishDeps): PublishService {
     projectId: string,
     raw: unknown
   ): Promise<PublicationRecord | null> => {
-    if (raw === undefined || raw === null) return null;
+    if (raw === undefined || raw === null) {
+      return null;
+    }
+
     const found = await owned(projectId, raw);
-    if (found.status === "removed")
+
+    if (found.status === "removed") {
       throw new BadRequestError(
         "This publication was unpublished. Publish it as a new link."
       );
-    if (found.backend !== "app")
+    }
+
+    if (found.backend !== "app") {
       throw new BadRequestError(
         "This publication uses an old per-design Worker. Publish it as a new link, then unpublish the old one."
       );
+    }
+
     return found;
   };
 
@@ -306,11 +346,15 @@ export function createPublishService(deps: PublishDeps): PublishService {
       typeof input.versionId === "string"
         ? input.versionId
         : direction.headVersionId;
-    if (!versionId)
+
+    if (!versionId) {
       throw new BadRequestError("Save a version before you publish it.");
+    }
+
     const source = await resolveSource(deps, project.id, versionId);
     const assets = path.join(stage, "assets");
     await mkdir(assets, { recursive: true });
+
     return kindOf(project) === "site"
       ? buildSite(deps, source, assets)
       : buildViewer(deps, {
@@ -329,21 +373,28 @@ export function createPublishService(deps: PublishDeps): PublishService {
     input: PublishPlanInput
   ): Promise<PublishPlan> => {
     const endpoint = await backend.endpoint();
+
     const project = await deps.projects.get(
       assertSafeId(projectId, "projectId")
     );
+
     const prior = await priorOf(project.id, input.publicationId);
+
     const direction = directionOf(
       project,
       input.directionId ?? prior?.directionId
     );
+
     await sweep();
     const id = nanoid(12);
     const stage = path.join(stagingRoot, id);
+
     try {
       const viewerComments =
         input.viewerComments ?? prior?.viewerComments ?? false;
+
       const pass = passwordOf(input, prior);
+
       const built = await buildFor(
         project,
         direction,
@@ -352,10 +403,12 @@ export function createPublishService(deps: PublishDeps): PublishService {
         stage,
         viewerComments
       );
+
       const files = await stageManifest(
         path.join(stage, "assets"),
         built.files
       );
+
       const result = planOf({
         id,
         project,
@@ -368,6 +421,7 @@ export function createPublishService(deps: PublishDeps): PublishService {
         viewerComments,
         endpoint,
       });
+
       plans.set(id, {
         plan: result,
         stage,
@@ -377,6 +431,7 @@ export function createPublishService(deps: PublishDeps): PublishService {
         frameIds: built.frameIds,
         withComments: input.comments ?? prior?.withComments ?? false,
       });
+
       return result;
     } catch (error) {
       await rm(stage, { recursive: true, force: true });
@@ -390,6 +445,7 @@ export function createPublishService(deps: PublishDeps): PublishService {
     prior: PublicationRecord | null
   ): PublicationRecord => {
     const p = held.plan;
+
     return {
       id: remote.id,
       projectId: p.projectId,
@@ -441,6 +497,7 @@ export function createPublishService(deps: PublishDeps): PublishService {
     const p = held.plan;
     const prior = p.republishOf ? await store.get(p.republishOf) : null;
     const project = await deps.projects.get(p.projectId);
+
     const created = prior
       ? null
       : await studioErrors(() =>
@@ -451,12 +508,15 @@ export function createPublishService(deps: PublishDeps): PublishService {
             kind: p.kind,
           })
         );
+
     const pid = prior?.id ?? (created as RemotePublication).id;
+
     let record = baseRecord(
       held,
       created ?? ({ id: pid } as RemotePublication),
       prior
     );
+
     try {
       const version = await studioErrors(() =>
         client.createVersion(pid, {
@@ -469,12 +529,15 @@ export function createPublishService(deps: PublishDeps): PublishService {
           })),
         })
       );
+
       const sent = await studioErrors(() =>
         uploadMissing(client, pid, held.files, version.missing)
       );
+
       const remote = await studioErrors(() =>
         client.commit(pid, version.versionId, settingsOf(held))
       );
+
       record = {
         ...mergeRemote(record, remote, endpoint.url),
         hashes: held.files.map((f) => f.sha256),
@@ -490,6 +553,7 @@ export function createPublishService(deps: PublishDeps): PublishService {
         updatedAt: Date.now(),
       };
     }
+
     return store.put(record);
   };
 
@@ -498,13 +562,19 @@ export function createPublishService(deps: PublishDeps): PublishService {
     planId: string
   ): Promise<Publication> => {
     const held = plans.get(assertSafeId(planId, "planId"));
-    if (!held || held.plan.projectId !== projectId)
+
+    if (!held || held.plan.projectId !== projectId) {
       throw new NotFoundError("This publish check ended. Check it again.");
-    if (held.plan.planExpiresAt < Date.now())
+    }
+
+    if (held.plan.planExpiresAt < Date.now()) {
       throw new BadRequestError(
         "This publish check is older than 30 minutes. Check it again."
       );
+    }
+
     plans.delete(planId);
+
     try {
       return toPublication(
         await lock(held.plan.republishOf ?? `new:${planId}`, () => push(held))
@@ -516,21 +586,27 @@ export function createPublishService(deps: PublishDeps): PublishService {
 
   const list = async (projectId: string): Promise<PublicationList> => {
     const records = await store.list(assertSafeId(projectId, "projectId"));
-    if (!records.some((r) => r.backend === "app"))
+
+    if (!records.some((r) => r.backend === "app")) {
       return { publications: records.map(toPublication), backendError: null };
+    }
+
     try {
       const endpoint = await backend.endpoint();
+
       const remote = new Map(
         (await remoteClient(endpoint).list(projectId)).publications.map((r) => [
           r.id,
           r,
         ])
       );
+
       const merged = records.map((r) =>
         r.backend === "app" && remote.has(r.id)
           ? mergeRemote(r, remote.get(r.id) as RemotePublication, endpoint.url)
           : r
       );
+
       return { publications: merged.map(toPublication), backendError: null };
     } catch (error) {
       return {
@@ -544,14 +620,19 @@ export function createPublishService(deps: PublishDeps): PublishService {
     found: PublicationRecord
   ): Promise<PublicationRecord> => {
     const ready = await cli.ready(found.accountId ?? undefined);
+
     const out = await runCf(
       ready.bin,
       ["workers", "delete", found.workerName as string, "--force"],
       { cwd: store.dir, accountId: found.accountId }
     );
+
     const text = scrubCliText(`${out.stderr}\n${out.stdout}`, deps.secrets);
-    if (out.code !== 0 && !/not found|does not exist|10007/i.test(text))
+
+    if (out.code !== 0 && !/not found|does not exist|10007/i.test(text)) {
       throw new BadRequestError(cliFailure(out, "Unpublish failed."));
+    }
+
     return {
       ...found,
       status: "removed",
@@ -566,15 +647,23 @@ export function createPublishService(deps: PublishDeps): PublishService {
     id: string
   ): Promise<Publication> => {
     const found = await owned(projectId, id);
-    if (found.status === "removed") return toPublication(found);
+
+    if (found.status === "removed") {
+      return toPublication(found);
+    }
+
     return toPublication(
       await lock(found.id, async () => {
-        if (found.backend !== "app")
+        if (found.backend !== "app") {
           return store.put(await unpublishLegacy(found));
+        }
+
         const endpoint = await backend.endpoint();
+
         const out = await studioErrors(() =>
           remoteClient(endpoint).revoke(found.id)
         );
+
         return store.put({
           ...mergeRemote(found, out.publication, endpoint.url),
           status: "removed",
@@ -591,19 +680,24 @@ export function createPublishService(deps: PublishDeps): PublishService {
     versionId: string
   ): Promise<Publication> => {
     const found = await owned(projectId, id);
-    if (found.backend !== "app")
+
+    if (found.backend !== "app") {
       throw new BadRequestError(
         "Old per-design Workers have no versions to roll back to."
       );
+    }
+
     return toPublication(
       await lock(found.id, async () => {
         const endpoint = await backend.endpoint();
+
         const remote = await studioErrors(() =>
           remoteClient(endpoint).rollback(
             found.id,
             assertSafeId(versionId, "versionId")
           )
         );
+
         return store.put({
           ...mergeRemote(found, remote, endpoint.url),
           updatedAt: Date.now(),
@@ -617,7 +711,11 @@ export function createPublishService(deps: PublishDeps): PublishService {
     id: string
   ): Promise<PublicationComment[]> => {
     const found = await owned(projectId, id);
-    if (found.backend !== "app") return [];
+
+    if (found.backend !== "app") {
+      return [];
+    }
+
     return (
       await studioErrors(async () =>
         remoteClient(await backend.endpoint()).comments(found.id)

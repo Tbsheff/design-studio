@@ -15,10 +15,15 @@ const NEUTRAL_SWATCH = "#ffffff";
 
 function useDraftText(value: string, onChange: (next: string) => void) {
   const [text, setText] = useState<string | null>(null);
+
   const change = (next: string) => {
     setText(next);
-    if (next.trim() !== "") onChange(next.trim());
+
+    if (next.trim() !== "") {
+      onChange(next.trim());
+    }
   };
+
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter") {
       event.preventDefault();
@@ -30,6 +35,7 @@ function useDraftText(value: string, onChange: (next: string) => void) {
       event.currentTarget.blur();
     }
   };
+
   return {
     shown: text ?? value,
     change,
@@ -46,6 +52,7 @@ export function TextValue({
   mono,
 }: ValueProps & { mono?: boolean }) {
   const t = useDraftText(value, onChange);
+
   return (
     <div
       className={`ins-field tkp-field ${mono ? "mono" : ""}`}
@@ -76,6 +83,7 @@ export function ColorValue({
 }: ValueProps & { swatch: string; suffix?: string }) {
   const t = useDraftText(value, onChange);
   const hex = colorToHex(swatch) ?? colorHex(swatch);
+
   return (
     <div className="ins-field color tkp-field" data-tip={value}>
       <span
@@ -112,12 +120,17 @@ export function ColorValue({
 
 function stepFor(unit: string, shift: boolean): number {
   const base = unit === "rem" || unit === "em" ? 0.0625 : 1;
+
   return base * (shift ? 10 : 1);
 }
 
 function stepped(value: string, steps: number, shift: boolean): string | null {
   const parsed = parseNumber(value);
-  if (!parsed) return null;
+
+  if (!parsed) {
+    return null;
+  }
+
   return formatNumber(
     parsed.value + steps * stepFor(parsed.unit, shift),
     parsed.unit
@@ -126,27 +139,43 @@ function stepped(value: string, steps: number, shift: boolean): string | null {
 
 function useScrub(value: string, onChange: (next: string) => void) {
   const start = useRef<{ x: number; value: string } | null>(null);
+
   const onPointerDown = (event: PointerEvent<HTMLElement>) => {
-    if (event.button !== 0 || !parseNumber(value)) return;
+    if (event.button !== 0 || !parseNumber(value)) {
+      return;
+    }
+
     event.preventDefault();
     start.current = { x: event.clientX, value };
     event.currentTarget.setPointerCapture(event.pointerId);
   };
+
   const onPointerMove = (event: PointerEvent<HTMLElement>) => {
     const s = start.current;
-    if (!s) return;
+
+    if (!s) {
+      return;
+    }
+
     const next = stepped(
       s.value,
       Math.round((event.clientX - s.x) / SCRUB_PX_PER_STEP),
       event.shiftKey
     );
-    if (next) onChange(next);
+
+    if (next) {
+      onChange(next);
+    }
   };
+
   const onPointerUp = (event: PointerEvent<HTMLElement>) => {
     start.current = null;
-    if (event.currentTarget.hasPointerCapture(event.pointerId))
+
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
+    }
   };
+
   return {
     onPointerDown,
     onPointerMove,
@@ -165,18 +194,26 @@ export function DimensionValue({
 }: ValueProps & { short: string; id: string }) {
   const t = useDraftText(value, onChange);
   const scrub = useScrub(value, onChange);
+
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key !== "ArrowUp" && event.key !== "ArrowDown")
+    if (event.key !== "ArrowUp" && event.key !== "ArrowDown") {
       return t.onKeyDown(event);
+    }
+
     const next = stepped(
       t.shown,
       event.key === "ArrowUp" ? 1 : -1,
       event.shiftKey
     );
-    if (!next) return;
+
+    if (!next) {
+      return;
+    }
+
     event.preventDefault();
     t.change(next);
   };
+
   return (
     <div className="ins-field tkp-field" data-tip={value}>
       <label

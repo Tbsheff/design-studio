@@ -11,14 +11,23 @@ function locOf(
   file = "App.tsx"
 ): { line: number; col: number } {
   const tagged = tagJsxSource(source, file, file);
-  if (!tagged) throw new Error("no tags");
+
+  if (!tagged) {
+    throw new Error("no tags");
+  }
+
   const pattern = new RegExp(
     `<${tag} data-studio-loc="${file.replace(".", "\\.")}:(\\d+):(\\d+)"`,
     "g"
   );
+
   const matches = [...tagged.code.matchAll(pattern)];
   const match = matches[nth];
-  if (!match) throw new Error(`no loc for ${tag}`);
+
+  if (!match) {
+    throw new Error(`no loc for ${tag}`);
+  }
+
   return { line: Number(match[1]), col: Number(match[2]) };
 }
 
@@ -26,9 +35,13 @@ function errorCode(run: () => unknown): string | null {
   try {
     run();
   } catch (error) {
-    if (error instanceof DirectEditError) return error.code;
+    if (error instanceof DirectEditError) {
+      return error.code;
+    }
+
     throw error;
   }
+
   return null;
 }
 
@@ -68,6 +81,7 @@ describe("patchJsx style", () => {
     const result = patchJsx(APP, locOf(APP, "h1"), {
       style: { color: "var(--primary)", "padding-top": "var(--space-4, 16px)" },
     });
+
     expect(result.code).toContain(
       `<h1 style={{ color: 'var(--primary)', paddingTop: 'var(--space-4, 16px)' }}>Hello world</h1>`
     );
@@ -77,6 +91,7 @@ describe("patchJsx style", () => {
     const result = patchJsx(APP, locOf(APP, "h1"), {
       style: { "font-size": "20px", color: "#fff" },
     });
+
     expect(result.code).toContain(
       `<h1 style={{ fontSize: '20px', color: '#fff' }}>Hello world</h1>`
     );
@@ -91,6 +106,7 @@ describe("patchJsx style", () => {
     const result = patchJsx(APP, locOf(APP, "p"), {
       style: { color: "blue", "padding-top": "2px" },
     });
+
     expect(result.code).toContain(
       `<p style={{ color: "blue", padding: 8, marginTop: '4px', paddingTop: "2px" }}>Intro</p>`
     );
@@ -98,11 +114,13 @@ describe("patchJsx style", () => {
 
   it("replaces a numeric value with a string", () => {
     const source = `const a = <div style={{ opacity: 1, width: 10 }}>x</div>;`;
+
     const result = patchJsx(
       source,
       { line: 1, col: 11 },
       { style: { width: "50%" } }
     );
+
     expect(result.code).toBe(
       `const a = <div style={{ opacity: 1, width: '50%' }}>x</div>;`
     );
@@ -112,36 +130,45 @@ describe("patchJsx style", () => {
     const middle = patchJsx(APP, locOf(APP, "p"), {
       style: { padding: null } as Record<string, string | null>,
     });
+
     expect(middle.code).toContain(
       `<p style={{ color: "red", marginTop: '4px' }}>`
     );
+
     const last = patchJsx(APP, locOf(APP, "p"), {
       style: { "margin-top": null },
     });
+
     expect(last.code).toContain(`<p style={{ color: "red", padding: 8 }}>`);
+
     const tail = patchJsx(APP, locOf(APP, "p"), {
       style: { "margin-top": null, color: "blue" },
     });
+
     expect(tail.code).toContain(`<p style={{ color: "blue", padding: 8 }}>`);
   });
 
   it("removes the style prop when nothing is left", () => {
     const source = `const a = <div id="a" style={{ color: 'red' }}>x</div>;`;
+
     const result = patchJsx(
       source,
       { line: 1, col: 11 },
       { style: { color: null } }
     );
+
     expect(result.code).toBe(`const a = <div id="a">x</div>;`);
   });
 
   it("replaces the content when every property is removed and one is added", () => {
     const source = `const a = <div style={{ color: 'red' }}>x</div>;`;
+
     const result = patchJsx(
       source,
       { line: 1, col: 11 },
       { style: { color: null, width: "1px" } }
     );
+
     expect(result.code).toBe(
       `const a = <div style={{ width: '1px' }}>x</div>;`
     );
@@ -149,11 +176,13 @@ describe("patchJsx style", () => {
 
   it("matches string keys written in kebab case", () => {
     const source = `const a = <div style={{ 'font-size': 12 }}>x</div>;`;
+
     const result = patchJsx(
       source,
       { line: 1, col: 11 },
       { style: { "font-size": "14px" } }
     );
+
     expect(result.code).toBe(
       `const a = <div style={{ 'font-size': '14px' }}>x</div>;`
     );
@@ -163,6 +192,7 @@ describe("patchJsx style", () => {
     const result = patchJsx(APP, locOf(APP, "em"), {
       style: { color: "red", width: "1px" },
     });
+
     expect(result.code).toContain(
       `<em style={{ ...styles.box, color: 'red', width: '1px' }}>e</em>`
     );
@@ -180,6 +210,7 @@ describe("patchJsx style", () => {
     const result = patchJsx(APP, locOf(APP, "img"), {
       style: { width: "10px" },
     });
+
     expect(result.code).toContain(
       `<img style={{ width: '10px' }} src="a.png" />`
     );
@@ -209,11 +240,13 @@ describe("patchJsx text", () => {
 
   it("refuses text when the element has children", () => {
     let caught: unknown;
+
     try {
       patchJsx(APP, locOf(APP, "div"), { text: "x" });
     } catch (error) {
       caught = error;
     }
+
     expect(caught).toBeInstanceOf(DirectEditError);
     expect((caught as DirectEditError).code).toBe("text_not_editable");
     expect((caught as DirectEditError).message).toBe(
@@ -252,9 +285,11 @@ describe("patchJsx scope", () => {
         patchJsx(APP, { line: 13, col: 5 }, { style: { color: "red" } })
       )
     ).toBe("element_not_found");
+
     const result = patchJsx(APP, locOf(APP, "span"), {
       style: { color: "red" },
     });
+
     expect(result.code).toContain('<Card title="x">');
     expect(result.code).toContain("    <>\n");
     expect(result.code).toContain(
@@ -264,12 +299,14 @@ describe("patchJsx scope", () => {
 
   it("parses plain JSX without the typescript plugin", () => {
     const source = `export const A = () => <div>hi</div>;\n`;
+
     const result = patchJsx(
       source,
       locOf(source, "div", 0, "A.jsx"),
       { text: "yo" },
       { typescript: false }
     );
+
     expect(result.code).toBe(`export const A = () => <div>yo</div>;\n`);
   });
 
@@ -298,6 +335,7 @@ describe("patchJsx stale selection", () => {
       tag: "h1",
       style: { color: "blue" },
     });
+
     expect(result.code).toContain(
       `<h1 style={{ color: 'blue' }}>Hello world</h1>`
     );

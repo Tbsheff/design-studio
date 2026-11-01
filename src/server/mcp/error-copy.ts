@@ -40,8 +40,12 @@ const RULES: [RegExp, string][] = [
 ];
 
 export function mcpErrorText(message: string): string {
-  for (const [pattern, replacement] of RULES)
-    if (pattern.test(message)) return message.replace(pattern, replacement);
+  for (const [pattern, replacement] of RULES) {
+    if (pattern.test(message)) {
+      return message.replace(pattern, replacement);
+    }
+  }
+
   return message
     .replace(/,? ?or ask the agent/gi, "")
     .replace(/ask the agent to /gi, "use write_file to ");

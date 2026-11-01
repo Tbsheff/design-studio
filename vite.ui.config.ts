@@ -7,6 +7,7 @@ import { defineConfig, type Plugin } from "vite";
 import { DEFAULT_STUDIO_PORT } from "./src/shared/contracts";
 
 const root = fileURLToPath(new URL(".", import.meta.url));
+
 const PRELOAD_FONTS = [
   "inter-latin-wght-normal.woff2",
   "source-serif-4-latin-opsz-normal.woff2",
@@ -22,11 +23,16 @@ function preloadFonts(): Plugin {
         const assets = Object.values(ctx.bundle ?? {}).filter(
           (item) => item.type === "asset"
         );
+
         return PRELOAD_FONTS.flatMap((font) => {
           const asset = assets.find((item) =>
             item.originalFileNames.some((name) => name.endsWith(`/${font}`))
           );
-          if (!asset) return [];
+
+          if (!asset) {
+            return [];
+          }
+
           return [
             {
               tag: "link",

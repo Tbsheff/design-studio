@@ -53,10 +53,13 @@ function useTweaksState(o: Options) {
     key: string;
     state: TweaksState;
   } | null>(null);
+
   const [loadError, setLoadError] = useState<string | null>(null);
+
   const headVersionId =
     o.project?.directions.find((x) => x.id === o.directionId)?.headVersionId ??
     null;
+
   const stamp = changeStamp(o.lastChange, o.directionId);
   const key = `${o.projectId}:${o.directionId}`;
   const live = useRef(key);
@@ -64,12 +67,19 @@ function useTweaksState(o: Options) {
 
   useEffect(() => {
     const directionId = o.directionId;
-    if (!directionId) return;
+
+    if (!directionId) {
+      return;
+    }
+
     const want = `${o.projectId}:${directionId}`;
     api
       .getTweaks(o.projectId, directionId)
       .then((state) => {
-        if (live.current !== want) return;
+        if (live.current !== want) {
+          return;
+        }
+
         setLoaded({ key: want, state });
         setLoadError(null);
       })
@@ -82,7 +92,9 @@ function useTweaksState(o: Options) {
     (state: TweaksState) => setLoaded({ key: live.current, state }),
     []
   );
+
   const state = loaded?.key === key ? loaded.state : null;
+
   return { state, loadError, replace };
 }
 
@@ -101,12 +113,18 @@ export function useTweaks(o: Options) {
   opts.current = o;
 
   const stopPreview = useCallback(() => {
-    if (frame.current !== null) window.cancelAnimationFrame(frame.current);
+    if (frame.current !== null) {
+      window.cancelAnimationFrame(frame.current);
+    }
+
     frame.current = null;
   }, []);
 
   const schedulePreview = useCallback(() => {
-    if (frame.current !== null) return;
+    if (frame.current !== null) {
+      return;
+    }
+
     frame.current = window.requestAnimationFrame(() => {
       frame.current = null;
       broadcastTweakCss(
@@ -145,12 +163,19 @@ export function useTweaks(o: Options) {
     (control: TweakControl, value: TweakValue) => {
       const map = pendingRef.current;
       const last = history.current[history.current.length - 1];
-      if (!last || last.id !== control.id)
+
+      if (!last || last.id !== control.id) {
         history.current.push({ id: control.id, before: map[control.id] });
+      }
+
       const next = { ...map };
-      if (value === baseValue(stateRef.current, control))
+
+      if (value === baseValue(stateRef.current, control)) {
         delete next[control.id];
-      else next[control.id] = value;
+      } else {
+        next[control.id] = value;
+      }
+
       apply(next);
     },
     [apply]
@@ -168,23 +193,37 @@ export function useTweaks(o: Options) {
 
   const undoLast = useCallback(() => {
     const step = history.current.pop();
-    if (!step) return;
+
+    if (!step) {
+      return;
+    }
+
     const next = { ...pendingRef.current };
-    if (step.before === undefined) delete next[step.id];
-    else next[step.id] = step.before;
+
+    if (step.before === undefined) {
+      delete next[step.id];
+    } else {
+      next[step.id] = step.before;
+    }
+
     apply(next);
   }, [apply]);
 
   const commit = useCallback(async () => {
     const { projectId, directionId } = opts.current;
     const values = pendingRef.current;
-    if (!directionId || Object.keys(values).length === 0) return;
+
+    if (!directionId || Object.keys(values).length === 0) {
+      return;
+    }
+
     stopPreview();
     broadcastTweakCss(
       tweaksPreviewCss(stateRef.current?.controls ?? [], values)
     );
     setCommitting(true);
     setCommitError(null);
+
     try {
       const result = await api.commitTweaks(projectId, directionId, values);
       replace(result.state);
@@ -204,24 +243,37 @@ export function useTweaks(o: Options) {
 
   const confirmLeave = useCallback(() => {
     const count = Object.keys(pendingRef.current).length;
-    if (count === 0) return true;
+
+    if (count === 0) {
+      return true;
+    }
+
     const ok = window.confirm(
       `Discard ${count} tweak ${count === 1 ? "change" : "changes"}?`
     );
-    if (ok) discard();
+
+    if (ok) {
+      discard();
+    }
+
     return ok;
   }, [discard]);
 
   const count = Object.keys(pending).length;
+
   const undoChain = (canUndo: boolean, fallback: () => void) => ({
     canUndo: canUndo || count > 0,
     onUndo: () =>
       Object.keys(pendingRef.current).length > 0 ? undoLast() : fallback(),
   });
+
   const values = useMemo(() => {
     const out: TweakMap = {};
-    for (const control of state?.controls ?? [])
+
+    for (const control of state?.controls ?? []) {
       out[control.id] = pending[control.id] ?? baseValue(state, control);
+    }
+
     return out;
   }, [state, pending]);
 

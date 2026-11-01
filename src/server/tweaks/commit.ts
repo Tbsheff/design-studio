@@ -60,6 +60,7 @@ const requestSchema = z
     ),
   })
   .strict();
+
 const TITLE_LABELS = 4;
 
 interface PlannedValue {
@@ -79,10 +80,12 @@ interface TweakPlan {
 export function commitTitle(controls: TweakControl[]): string {
   const labels = controls.map((control) => control.label);
   const shown = labels.slice(0, TITLE_LABELS).join(", ");
+
   const more =
     labels.length > TITLE_LABELS
       ? ` +${labels.length - TITLE_LABELS} more`
       : "";
+
   return `Tweak: ${shown}${more}`;
 }
 
@@ -95,16 +98,21 @@ function commitMeta(values: PlannedValue[]): VersionMeta {
 
 function parseRequest(raw: unknown): Record<string, TweakValue> {
   const parsed = requestSchema.safeParse(raw);
-  if (!parsed.success)
+
+  if (!parsed.success) {
     throw new DirectEditError(
       "invalid_request",
       describeZodError(parsed.error)
     );
-  if (Object.keys(parsed.data.values).length === 0)
+  }
+
+  if (Object.keys(parsed.data.values).length === 0) {
     throw new DirectEditError(
       "invalid_request",
       "values must name at least one control"
     );
+  }
+
   return parsed.data.values;
 }
 
@@ -113,19 +121,26 @@ function planValues(
   values: Record<string, TweakValue>
 ): PlannedValue[] {
   const byId = new Map(controls.map((control) => [control.id, control]));
+
   return Object.entries(values).map(([id, value]) => {
     const control = byId.get(id);
-    if (!control)
+
+    if (!control) {
       throw new DirectEditError(
         "unknown_tweak",
         `No tweak control has id ${id}`
       );
+    }
+
     const css = tweakCss(control, value);
-    if (css === null)
+
+    if (css === null) {
       throw new DirectEditError(
         "invalid_tweak_value",
         `${control.label}: ${JSON.stringify(value)} is not a valid value for this ${control.type} control`
       );
+    }
+
     return { control, value: parseTweakCss(control, css) ?? value, css };
   });
 }
@@ -135,21 +150,28 @@ function planCssWrites(
   sources: StyleSource[]
 ): { relative: string; text: string }[] {
   const edits = new Map<string, { source: StyleSource; edits: CssEdit[] }>();
+
   for (const { control, css } of values) {
     const found = declarationsFor(sources, control.cssVar);
+
     if (found.length === 0) {
       throw new DirectEditError(
         "tweak_not_declared",
         `${control.cssVar} is not declared in a top-level :root rule, so ${control.label} cannot be saved`
       );
     }
+
     for (const { source, decl } of found) {
-      if (decl.value === css) continue;
+      if (decl.value === css) {
+        continue;
+      }
+
       const entry = edits.get(source.relative) ?? { source, edits: [] };
       entry.edits.push({ start: decl.start, end: decl.end, text: css });
       edits.set(source.relative, entry);
     }
   }
+
   return [...edits.values()].map(({ source, edits: list }) => ({
     relative: source.relative,
     text: applyEdits(source.text, list),
@@ -161,6 +183,7 @@ function withDefaults(
   values: PlannedValue[]
 ): TweakControl[] {
   const next = new Map(values.map((item) => [item.control.id, item.value]));
+
   return controls.map((control) =>
     next.has(control.id)
       ? ({ ...control, default: next.get(control.id) } as TweakControl)
@@ -174,28 +197,44 @@ async function planTweakCommit(
 ): Promise<TweakPlan> {
   const requested = parseRequest(raw);
   const read = await readTweaksFile(workTree);
-  if (read.error) throw new DirectEditError("invalid_request", read.error);
-  if (!read.file || read.text === null)
+
+  if (read.error) {
+    throw new DirectEditError("invalid_request", read.error);
+  }
+
+  if (!read.file || read.text === null) {
     throw new DirectEditError(
       "no_tweaks",
       `${TWEAKS_FILE} does not exist; ask the agent to define tweaks first`
     );
+  }
+
   const values = planValues(read.file.controls, requested);
+
   const [sources, tokens] = await Promise.all([
     loadStyleSources(workTree),
     tokenVarPaths(workTree),
   ]);
+
   const tokenChanges: TokenChange[] = [];
   const varValues: PlannedValue[] = [];
+
   for (const item of values) {
     const token = tokens.get(item.control.cssVar);
-    if (token) tokenChanges.push({ path: token.path, value: item.css });
-    if (!token || declarationsFor(sources, item.control.cssVar).length > 0)
+
+    if (token) {
+      tokenChanges.push({ path: token.path, value: item.css });
+    }
+
+    if (!token || declarationsFor(sources, item.control.cssVar).length > 0) {
       varValues.push(item);
+    }
   }
+
   const tweaksText = serializeTweaks({
     controls: withDefaults(read.file.controls, values),
   });
+
   return {
     values,
     tokenChanges,
@@ -210,17 +249,25 @@ async function writePlan(
   plan: TweakPlan,
   tokensText: string | null
 ): Promise<string[]> {
-  for (const write of plan.cssWrites)
+  for (const write of plan.cssWrites) {
     await writeAtomic(path.join(workTree, write.relative), write.text);
-  if (plan.tweaksChanged)
+  }
+
+  if (plan.tweaksChanged) {
     await writeFileAtomic(path.join(workTree, TWEAKS_FILE), plan.tweaksText);
-  if (tokensText !== null) await writeTokensText(workTree, tokensText);
+  }
+
+  if (tokensText !== null) {
+    await writeTokensText(workTree, tokensText);
+  }
+
   const designFiles =
     tokensText === null
       ? []
       : DESIGN_FILES.filter((relative) =>
           existsSync(path.join(workTree, relative))
         );
+
   return [
     ...new Set([
       TWEAKS_FILE,
@@ -239,25 +286,36 @@ export async function commitTweaks(
   assertCanEdit(deps, project, direction);
   const workTree = direction.workTree;
   const plan = await planTweakCommit(workTree, raw);
+
   const tokensText =
     plan.tokenChanges.length > 0
       ? await plannedTokensText(workTree, plan.tokenChanges)
       : null;
-  if (tokensText === null && plan.cssWrites.length === 0 && !plan.tweaksChanged)
+
+  if (
+    tokensText === null &&
+    plan.cssWrites.length === 0 &&
+    !plan.tweaksChanged
+  ) {
     throw new DirectEditError(
       "no_change",
       "The tweak values are already saved"
     );
+  }
+
   const touched = [
     TWEAKS_FILE,
     ...plan.cssWrites.map((write) => write.relative),
     ...(tokensText === null ? [] : DESIGN_FILES),
   ];
+
   const snapshots = await Promise.all(
     touched.map((relative) => readSnapshot(workTree, relative))
   );
+
   let version: Version | null;
   let paths: string[];
+
   try {
     paths = await writePlan(workTree, plan, tokensText);
     version = await deps.versions.commitFile(
@@ -267,17 +325,22 @@ export async function commitTweaks(
       commitTitle(plan.values.map((item) => item.control)),
       commitMeta(plan.values)
     );
-    if (version === null)
+
+    if (version === null) {
       throw new DirectEditError(
         "no_change",
         "The tweaks did not change any tracked file"
       );
+    }
   } catch (error) {
     await restoreSnapshots(workTree, snapshots);
     throw error;
   } finally {
-    if (tokensText !== null) invalidateTokenSource(workTree);
+    if (tokensText !== null) {
+      invalidateTokenSource(workTree);
+    }
   }
+
   await publishVersion(deps, project, direction, version);
   const files = await changesOf(workTree, paths, snapshots);
   deps.history?.record({
@@ -287,6 +350,7 @@ export async function commitTweaks(
     versionId: version.id,
     files,
   });
+
   return { state: await readTweaksState(workTree), version };
 }
 
@@ -298,10 +362,15 @@ async function changesOf(
   const changes = await Promise.all(
     paths.map(async (relative): Promise<EditFileChange | null> => {
       const after = (await readSnapshot(workTree, relative)).content;
-      if (after === null) return null;
+
+      if (after === null) {
+        return null;
+      }
+
       const before =
         snapshots.find((snapshot) => snapshot.relative === relative)?.content ??
         null;
+
       return {
         file: path.join(workTree, relative),
         relative,
@@ -311,5 +380,6 @@ async function changesOf(
       };
     })
   );
+
   return changes.filter((change): change is EditFileChange => change !== null);
 }

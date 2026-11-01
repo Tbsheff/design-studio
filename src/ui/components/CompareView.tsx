@@ -49,6 +49,7 @@ const MODES: { id: Mode; label: string; tip: string }[] = [
   },
   { id: "code", label: "Code", tip: "The line changes in each changed file" },
 ];
+
 const MODE_KEY = "design-studio.compare-mode";
 
 const STACK_GAIN = 1.25;
@@ -56,6 +57,7 @@ const STACK_GAIN = 1.25;
 function savedMode(): Mode {
   try {
     const value = localStorage.getItem(MODE_KEY);
+
     return MODES.some((mode) => mode.id === value) ? (value as Mode) : "side";
   } catch {
     return "side";
@@ -76,18 +78,31 @@ function ModeSwitch({
         : event.key === "ArrowLeft" || event.key === "ArrowUp"
           ? -1
           : 0;
-    if (delta === 0) return;
+
+    if (delta === 0) {
+      return;
+    }
+
     event.preventDefault();
+
     const index =
       (MODES.findIndex((item) => item.id === mode) + delta + MODES.length) %
       MODES.length;
+
     const next = MODES[index];
-    if (!next) return;
+
+    if (!next) {
+      return;
+    }
+
     onMode(next.id);
+
     const buttons =
       event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="radio"]');
+
     buttons[index]?.focus();
   };
+
   return (
     <div
       className="segmented compare-modes"
@@ -116,6 +131,7 @@ function ModeSwitch({
 function SidePane(props: BoardProps & { side: "A" | "B" }) {
   const version = props.side === "A" ? props.older : props.newer;
   const title = props.side === "A" ? props.olderTitle : props.newerTitle;
+
   return (
     <div className="compare-pane">
       <div
@@ -172,43 +188,59 @@ export function CompareView({
   const [scale, setScale] = useState(0.5);
   const [stacked, setStacked] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
   const [older, newer] =
     left.createdAt <= right.createdAt ? [left, right] : [right, left];
+
   const index = useMemo(
     () => indexVersions(versions ?? [left, right]),
     [versions, left, right]
   );
+
   const setMode = (next: Mode) => {
     setModeState(next);
+
     try {
       localStorage.setItem(MODE_KEY, next);
     } catch {
       return;
     }
   };
+
   useLayoutEffect(() => {
     const el = ref.current;
-    if (!el) return;
+
+    if (!el) {
+      return;
+    }
+
     const measure = () => {
       const fit = (w: number, h: number) =>
         Math.max(0.1, Math.min(1, w / viewport.width, h / viewport.height));
+
       const single = fit(el.clientWidth - 32, el.clientHeight - 76);
+
       if (mode !== "side") {
         setStacked(false);
         setScale(single);
+
         return;
       }
+
       const across = fit((el.clientWidth - 48) / 2, el.clientHeight - 76);
       const down = fit(el.clientWidth - 32, (el.clientHeight - 48) / 2 - 36);
       const stack = down > across * STACK_GAIN;
       setStacked(stack);
       setScale(stack ? down : across);
     };
+
     const ro = new ResizeObserver(measure);
     ro.observe(el);
     measure();
+
     return () => ro.disconnect();
   }, [viewport.width, viewport.height, mode]);
+
   const board: BoardProps = {
     projectId,
     kind,
@@ -220,6 +252,7 @@ export function CompareView({
     scale,
     onError: setError,
   };
+
   return (
     <div className="canvas">
       <div className="toolbar">

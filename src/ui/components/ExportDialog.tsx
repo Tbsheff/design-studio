@@ -117,14 +117,23 @@ const RADIO_STEP: Record<string, (index: number, count: number) => number> = {
 
 function onRadioKey(event: KeyboardEvent<HTMLDivElement>): void {
   const step = RADIO_STEP[event.key];
-  if (!step) return;
+
+  if (!step) {
+    return;
+  }
+
   const radios = Array.from(
     event.currentTarget.querySelectorAll<HTMLButtonElement>(
       '[role="radio"]:not(:disabled)'
     )
   );
+
   const index = radios.indexOf(document.activeElement as HTMLButtonElement);
-  if (index < 0) return;
+
+  if (index < 0) {
+    return;
+  }
+
   event.preventDefault();
   const next = radios[step(index, radios.length)];
   next?.focus();
@@ -170,10 +179,15 @@ function Segmented<T extends string | number>({
 function useElapsed(status: Status): number {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    if (status.kind !== "busy") return;
+    if (status.kind !== "busy") {
+      return;
+    }
+
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
+
     return () => window.clearInterval(timer);
   }, [status.kind]);
+
   return status.kind === "busy"
     ? Math.max(0, Math.floor((now - status.startedAt) / 1000))
     : 0;
@@ -184,20 +198,28 @@ function useCopied(): [string | null, (key: string, text: string) => void] {
   const timer = useRef<number | null>(null);
   useEffect(
     () => () => {
-      if (timer.current !== null) window.clearTimeout(timer.current);
+      if (timer.current !== null) {
+        window.clearTimeout(timer.current);
+      }
     },
     []
   );
+
   const copy = (key: string, text: string) => {
     void navigator.clipboard.writeText(text).then(
       () => {
         setCopied(key);
-        if (timer.current !== null) window.clearTimeout(timer.current);
+
+        if (timer.current !== null) {
+          window.clearTimeout(timer.current);
+        }
+
         timer.current = window.setTimeout(() => setCopied(null), 1500);
       },
       () => setCopied(null)
     );
   };
+
   return [copied, copy];
 }
 
@@ -214,10 +236,12 @@ function HandoffResultView({
 }) {
   const [copied, copy] = useCopied();
   const folder = result.path.split("/").pop() ?? "";
+
   const run = (task: () => Promise<void>) =>
     void task().catch((error: unknown) =>
       onError(error instanceof Error ? error.message : String(error))
     );
+
   return (
     <div className="export-handoff-result">
       <div className="export-path" data-tip={result.path}>
@@ -301,10 +325,12 @@ function ConnectClaudeCode() {
       (e: unknown) =>
         live && setError(e instanceof Error ? e.message : String(e))
     );
+
     return () => {
       live = false;
     };
   }, []);
+
   const change = async (input: {
     enabled?: boolean;
     edits?: boolean;
@@ -312,6 +338,7 @@ function ConnectClaudeCode() {
   }) => {
     setBusy(true);
     setError(null);
+
     try {
       setStatus(await exportApi.setMcp(input));
     } catch (e) {
@@ -320,8 +347,10 @@ function ConnectClaudeCode() {
       setBusy(false);
     }
   };
+
   const on = status?.enabled === true;
   const edits = status?.edits === true;
+
   return (
     <section className="export-connect" aria-label="Connect to Claude Code">
       <div className="export-connect-head">
@@ -422,20 +451,26 @@ interface Options {
 
 function useExportOptions(target: ExportTarget): Options {
   const initial = useMemo(readExportPrefs, []);
+
   const [format, setFormat] = useState<ExportFormat>(
     target.format ?? (target.selector ? "png" : initial.format)
   );
+
   const [scale, setScale] = useState<ExportScale>(initial.scale);
   const [scope, setScope] = useState<ExportScope>(initial.scope);
+
   const frames = useMemo(
     () => canvasFrameChoices(target.projectId, target.directionId),
     [target.projectId, target.directionId]
   );
+
   const [picked, setPicked] = useState<Set<string>>(
     () => new Set(frames.map((f) => f.id))
   );
+
   const selectionOnly =
     Boolean(target.selector) && (format === "png" || format === "svg");
+
   return {
     projectId: target.projectId,
     format,
@@ -461,8 +496,13 @@ function useExportOptions(target: ExportTarget): Options {
     toggle: (id) =>
       setPicked((prev) => {
         const next = new Set(prev);
-        if (next.has(id)) next.delete(id);
-        else next.add(id);
+
+        if (next.has(id)) {
+          next.delete(id);
+        } else {
+          next.add(id);
+        }
+
         return next;
       }),
   };
@@ -471,16 +511,21 @@ function useExportOptions(target: ExportTarget): Options {
 function useEditors(active: boolean): EditorInfo[] {
   const [editors, setEditors] = useState<EditorInfo[]>([]);
   useEffect(() => {
-    if (!active || editors.length > 0) return;
+    if (!active || editors.length > 0) {
+      return;
+    }
+
     let live = true;
     exportApi.editors().then(
       (list) => live && setEditors(list),
       () => undefined
     );
+
     return () => {
       live = false;
     };
   }, [active, editors.length]);
+
   return editors;
 }
 
@@ -490,8 +535,10 @@ async function exportOnce(
 ): Promise<Status> {
   const selectionFrame =
     options.frames.find((f) => f.active)?.frame ?? options.chosen[0];
+
   const useSelection =
     options.selectionOnly && target.selector && selectionFrame;
+
   const file = await exportApi.exportFile(target.projectId, {
     format: options.format as Exclude<ExportFormat, "handoff">,
     versionId: target.versionId,
@@ -500,7 +547,9 @@ async function exportOnce(
     scope: options.scope,
     ...(useSelection ? { selector: target.selector } : {}),
   });
+
   downloadBlob(file.blob, file.name);
+
   return {
     kind: "done",
     text: `Saved ${file.name}`,
@@ -549,6 +598,7 @@ function FrameList({ options }: { options: Options }) {
 function OptionFields({ options }: { options: Options }) {
   const { format, chosen, scale, scope, selectionOnly } = options;
   const first = chosen[0];
+
   return (
     <>
       {selectionOnly ? (
@@ -598,6 +648,7 @@ function OptionFields({ options }: { options: Options }) {
 
 function StatusLine({ status, handoff }: { status: Status; handoff: boolean }) {
   const elapsed = useElapsed(status);
+
   return (
     <div className="export-status" aria-live="polite">
       {status.kind === "busy" ? (
@@ -634,7 +685,10 @@ function actionLabel(
   status: Status,
   rebuilt: boolean
 ): string {
-  if (status.kind === "error") return "Try again";
+  if (status.kind === "error") {
+    return "Try again";
+  }
+
   return rebuilt ? "Rebuild handoff" : info.action;
 }
 
@@ -646,14 +700,20 @@ export function ExportDialog({ target, onClose }: Props) {
   const editors = useEditors(format === "handoff");
   const busy = status.kind === "busy";
   const dialog = useModalDialog(() => (busy ? false : onClose()));
+
   const info =
     FORMATS.find((f) => f.id === format) ?? (FORMATS[0] as FormatInfo);
+
   const canRun = !busy && (!options.needsFrames || options.chosen.length > 0);
   const shown = format === "handoff" ? handoff : null;
 
   const run = async () => {
-    if (!canRun) return;
+    if (!canRun) {
+      return;
+    }
+
     setStatus({ kind: "busy", startedAt: Date.now() });
+
     try {
       if (format === "handoff") {
         setHandoff(
@@ -663,8 +723,10 @@ export function ExportDialog({ target, onClose }: Props) {
           })
         );
         setStatus({ kind: "idle" });
+
         return;
       }
+
       setStatus(await exportOnce(target, options));
     } catch (error) {
       setStatus({

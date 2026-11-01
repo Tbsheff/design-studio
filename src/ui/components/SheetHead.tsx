@@ -17,8 +17,11 @@ export function PanelHead({
   children?: ReactNode;
 }) {
   const sheet = useContext(SheetSlot);
-  if (sheet)
+
+  if (sheet) {
     return sheet.slot && children ? createPortal(children, sheet.slot) : null;
+  }
+
   return (
     <div className={className}>
       <strong className={titleClassName}>{title}</strong>

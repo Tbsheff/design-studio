@@ -64,16 +64,28 @@ export function scoreOutput(score: ReferenceScore) {
 }
 
 async function checkImage(file: string): Promise<string> {
-  if (!path.isAbsolute(file))
+  if (!path.isAbsolute(file)) {
     throw new EditError("image must be an absolute path.");
+  }
+
   const mime = mimeOfPath(file);
-  if (!mime)
+
+  if (!mime) {
     throw new EditError(
       "image must be a .png, .jpg, .jpeg, .gif or .webp file."
     );
+  }
+
   const info = await stat(file).catch(() => null);
-  if (!info?.isFile()) throw new EditError(`No file at ${file}.`);
-  if (info.size > MAX_BYTES) throw new EditError("image is larger than 20 MB.");
+
+  if (!info?.isFile()) {
+    throw new EditError(`No file at ${file}.`);
+  }
+
+  if (info.size > MAX_BYTES) {
+    throw new EditError("image is larger than 20 MB.");
+  }
+
   return mime;
 }
 
@@ -83,14 +95,19 @@ async function frameOf(
   input: Input
 ) {
   const all = (await deps.canvas.read(target.project)).canvas?.frames ?? [];
+
   if (input.frame) {
     const found = findFrame(all, input.frame);
-    if (!found)
+
+    if (!found) {
       throw new EditError(
         `No frame ${input.frame} on the canvas. Call canvas_list for frame ids.`
       );
+    }
+
     return found;
   }
+
   return (
     all
       .filter(
@@ -118,6 +135,7 @@ const compareTool = defineTool(
     const page = input.path ?? frame?.path;
     const url = await pageUrl(deps, target.project, target.direction, page);
     const stem = `${target.project.id}-${(frame?.id ?? "page").replace(/[^A-Za-z0-9_-]/g, "")}-${Date.now().toString(36)}`;
+
     const score = await compareToReference({
       preview: deps.preview,
       url,
@@ -127,6 +145,7 @@ const compareTool = defineTool(
       outDir: path.join(deps.dataDir, "reference"),
       stem,
     });
+
     return {
       result: ok({
         frame: frame

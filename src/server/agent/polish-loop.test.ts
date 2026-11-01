@@ -17,6 +17,7 @@ import {
 
 const polish = resolveRunConfig(DEFAULT_SETTINGS, "polish");
 const budget = { spentUsd: 0.3, capUsd: 1.5, continuations: 0 };
+
 const finding = (
   severity: QualityFinding["severity"],
   check: QualityFinding["check"] = "tap-target"
@@ -173,7 +174,11 @@ describe("continuation prompt and report", () => {
     check(log, [finding("high"), finding("medium", "a11y")]);
     tool(log, "Edit");
     const decision = decideLoop(log, polish, budget);
-    if (decision.stop) throw new Error("expected continue");
+
+    if (decision.stop) {
+      throw new Error("expected continue");
+    }
+
     const text = continuationPrompt(decision, log);
     expect(text).toMatch(
       /^<studio-continue>\nThe run is not finished\. Fix loops done: 0 of 3\./
@@ -184,7 +189,11 @@ describe("continuation prompt and report", () => {
     check(verified, [finding("high"), finding("medium", "a11y")]);
     shootAll(verified);
     const next = decideLoop(verified, polish, budget);
-    if (next.stop) throw new Error("expected continue");
+
+    if (next.stop) {
+      throw new Error("expected continue");
+    }
+
     const listed = continuationPrompt(next, verified);
     expect(listed).toContain("- [high] tap-target @mobile: tap-target high");
     expect(listed).toContain("- [medium] a11y @mobile: a11y medium");
@@ -199,7 +208,11 @@ describe("continuation prompt and report", () => {
     round(log, [finding("medium")]);
     tool(log, "Edit");
     const decision = decideLoop(log, polish, budget);
-    if (decision.stop) throw new Error("expected continue");
+
+    if (decision.stop) {
+      throw new Error("expected continue");
+    }
+
     const text = continuationPrompt(decision, log);
     expect(text).toContain("No fix loops are left. Do not edit again");
     expect(text).not.toContain("These high and medium findings remain");

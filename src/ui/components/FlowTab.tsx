@@ -11,12 +11,16 @@ const DEPTHS = [0, 1, 2] as const;
 
 export function flowSummary(result: FlowResult): string {
   const added = result.frames.filter((frame) => frame.added).length;
+
   const parts = [
     `${result.frames.length} frames (${added} new)`,
     `${result.links.length} ${result.links.length === 1 ? "link" : "links"}`,
   ];
-  if (result.skipped.length > 0)
+
+  if (result.skipped.length > 0) {
     parts.push(`${result.skipped.length} not linked`);
+  }
+
   return parts.join(", ");
 }
 
@@ -34,6 +38,7 @@ function useRoutesAndParams(projectId: string) {
       .then((result) => setParams(result.params))
       .catch(() => undefined);
   }, [projectId]);
+
   return { routes, params, setParams, error, setError };
 }
 
@@ -63,47 +68,58 @@ function FlowResultView({ result }: { result: FlowResult }) {
 export default function FlowTab({ projectId }: { projectId: string }) {
   const { routes, params, setParams, error, setError } =
     useRoutesAndParams(projectId);
+
   const [filter, setFilter] = useState("");
   const [chosen, setChosen] = useState<string[]>([]);
   const [depth, setDepth] = useState<number>(1);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<FlowResult | null>(null);
+
   const shown = useMemo(() => {
     const needle = filter.trim().toLowerCase();
+
     const found = (routes ?? []).filter(
       (route) =>
         needle === "" ||
         route.route.toLowerCase().includes(needle) ||
         route.file.toLowerCase().includes(needle)
     );
+
     const picked = (route: AppRoute) =>
       chosen.includes(route.route)
         ? chosen.indexOf(route.route)
         : chosen.length;
+
     return [...found].sort((a, b) => picked(a) - picked(b)).slice(0, 200);
   }, [routes, filter, chosen]);
+
   const names = [...new Set(chosen.flatMap(dynamicNames))];
+
   const toggle = (route: string) =>
     setChosen((list) =>
       list.includes(route)
         ? list.filter((item) => item !== route)
         : [...list, route]
     );
+
   const build = () => {
     setBusy(true);
     setError(null);
     const single = chosen.length === 1 && depth > 0;
+
     const input = {
       ...(single ? { from: chosen[0] as string } : { routes: chosen }),
       depth,
       params,
     };
+
     api
       .buildFlow(projectId, input)
       .then(setResult)
       .catch((err: unknown) => setError(errorText(err)))
       .finally(() => setBusy(false));
   };
+
   return (
     <div className="app-routes flow-tab">
       <input
@@ -118,6 +134,7 @@ export default function FlowTab({ projectId }: { projectId: string }) {
       <div className="flow-routes" role="list" aria-label="Routes in the flow">
         {shown.map((route) => {
           const at = chosen.indexOf(route.route);
+
           return (
             <button
               key={`${route.route}|${route.file}`}

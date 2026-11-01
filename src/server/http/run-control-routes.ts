@@ -44,20 +44,29 @@ const answerSchema = z.union([
 
 async function parse<T>(schema: z.ZodType<T>, text: string): Promise<T> {
   let body: unknown;
+
   try {
     body = text.trim() === "" ? {} : JSON.parse(text);
   } catch {
     throw new BadRequestError("body must be JSON");
   }
+
   const result = schema.safeParse(body);
-  if (!result.success)
+
+  if (!result.success) {
     throw new BadRequestError(result.error.issues[0]?.message ?? "bad body");
+  }
+
   return result.data;
 }
 
 function activeHandle(runner: AgentRunner, raw: string): RunHandle {
   const handle = runner.get(assertSafeId(raw, "runId"));
-  if (!handle) throw new NotFoundError("run is not active");
+
+  if (!handle) {
+    throw new NotFoundError("run is not active");
+  }
+
   return handle;
 }
 
@@ -65,24 +74,35 @@ export function registerRunControlRoutes(app: Hono, runner: AgentRunner): void {
   app.put("/api/runs/:runId/queue", async (c) => {
     const handle = activeHandle(runner, c.req.param("runId"));
     const { items } = await parse(queueSchema, await c.req.text());
-    if (!handle.setQueue?.(items))
+
+    if (!handle.setQueue?.(items)) {
       return c.json({ error: "run_finished" }, 409);
+    }
+
     return c.json({ ok: true });
   });
 
   app.post("/api/runs/:runId/steer", async (c) => {
     const handle = activeHandle(runner, c.req.param("runId"));
     const { text } = await parse(steerSchema, await c.req.text());
-    if (!handle.steer?.(text)) return c.json({ error: "run_finished" }, 409);
+
+    if (!handle.steer?.(text)) {
+      return c.json({ error: "run_finished" }, 409);
+    }
+
     return c.json({ ok: true });
   });
 
   app.post("/api/runs/:runId/permissions/:requestId", async (c) => {
     const handle = activeHandle(runner, c.req.param("runId"));
     const requestId = c.req.param("requestId");
-    if (!/^[A-Za-z0-9_-]{1,120}$/.test(requestId))
+
+    if (!/^[A-Za-z0-9_-]{1,120}$/.test(requestId)) {
       throw new BadRequestError("bad request id");
+    }
+
     const decision = await parse(answerSchema, await c.req.text());
+
     if (
       !handle.answer?.(
         requestId,
@@ -101,6 +121,7 @@ export function registerRunControlRoutes(app: Hono, runner: AgentRunner): void {
     ) {
       throw new NotFoundError("permission request is not open");
     }
+
     return c.json({ ok: true });
   });
 }

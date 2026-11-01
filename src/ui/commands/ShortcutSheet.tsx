@@ -11,6 +11,7 @@ import { IS_MAC, Keys } from "./keys";
 
 const MARK_MS = 900;
 const DESKTOP = typeof window !== "undefined" && "studioDesktop" in window;
+
 const GROUPS: KeyGroup[] = [
   "General",
   "Run and chat",
@@ -34,8 +35,12 @@ export function ShortcutSheet({ onClose }: { onClose: () => void }) {
 
   useEffect(() => {
     const live = timers.current;
+
     const onKey = (event: KeyboardEvent) => {
-      if (event.repeat) return;
+      if (event.repeat) {
+        return;
+      }
+
       if (
         event.key === "Escape" &&
         rootRef.current?.contains(document.activeElement)
@@ -43,11 +48,18 @@ export function ShortcutSheet({ onClose }: { onClose: () => void }) {
         event.preventDefault();
         event.stopPropagation();
         onClose();
+
         return;
       }
+
       const ids = pressedIds(event);
-      if (ids.length === 0) return;
+
+      if (ids.length === 0) {
+        return;
+      }
+
       setMarked((prev) => new Set([...prev, ...ids]));
+
       for (const id of ids) {
         window.clearTimeout(live.get(id));
         live.set(
@@ -57,22 +69,30 @@ export function ShortcutSheet({ onClose }: { onClose: () => void }) {
             setMarked((prev) => {
               const next = new Set(prev);
               next.delete(id);
+
               return next;
             });
           }, MARK_MS)
         );
       }
     };
+
     window.addEventListener("keydown", onKey, true);
+
     return () => {
       window.removeEventListener("keydown", onKey, true);
-      for (const timer of live.values()) window.clearTimeout(timer);
+
+      for (const timer of live.values()) {
+        window.clearTimeout(timer);
+      }
+
       live.clear();
     };
   }, [onClose]);
 
   const groups = useMemo(() => {
     const needle = query.trim().toLowerCase();
+
     const shown = (KEYMAP as readonly KeyBinding[]).filter(
       (entry) =>
         (DESKTOP || !entry.desktop) &&
@@ -80,6 +100,7 @@ export function ShortcutSheet({ onClose }: { onClose: () => void }) {
           entry.label.toLowerCase().includes(needle) ||
           entry.keys.some((k) => k.toLowerCase().includes(needle)))
     );
+
     return GROUPS.map((group) => ({
       group,
       entries: shown.filter((entry) => entry.group === group),

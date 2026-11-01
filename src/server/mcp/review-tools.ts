@@ -112,7 +112,9 @@ const reviewFrame = defineTool(
       input.projectId,
       input.directionId
     );
+
     const size = input.viewport ? VIEWPORTS[input.viewport] : {};
+
     const review = await studioCall<ReviewResult>(
       deps,
       "POST",
@@ -124,7 +126,9 @@ const reviewFrame = defineTool(
         ...size,
       }
     );
+
     const fixable = review.findings.filter((finding) => finding.fix).length;
+
     return {
       result: ok({
         frame: review.frame,
@@ -152,17 +156,21 @@ const applyFix = defineTool(
       input.projectId,
       input.directionId
     );
+
     refuseWhileRunning(deps, project, direction);
     const ids = input.findingIds ?? [input.findingId ?? ""];
+
     const result = await studioCall<ReviewFixResult>(
       deps,
       "POST",
       `${base(project, direction.id)}/review/fix`,
       { findingIds: ids, ...(input.allowShared ? { allowShared: true } : {}) }
     );
+
     const warning = result.shared
       ? `This fix changed shared file${result.shared.length === 1 ? "" : "s"} ${result.shared.join(", ")}, used outside this page. Check the other pages, or undo.`
       : undefined;
+
     const output = ok({
       applied: result.applied,
       skipped: result.skipped,
@@ -171,8 +179,13 @@ const applyFix = defineTool(
       title: result.version?.title ?? null,
       ...(warning ? { warning } : {}),
     });
-    if (result.applied.length === 0) return { result: output };
+
+    if (result.applied.length === 0) {
+      return { result: output };
+    }
+
     const summary = `Applied ${result.applied.length} review ${result.applied.length === 1 ? "fix" : "fixes"}`;
+
     return {
       result: output,
       activity: versionActivity(project, direction, summary, result.version),

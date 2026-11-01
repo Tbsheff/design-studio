@@ -65,12 +65,19 @@ function text(raw: unknown): string | null {
 
 function parseRoute(raw: unknown): string | null {
   const value = text(raw);
-  if (value === null) return null;
+
+  if (value === null) {
+    return null;
+  }
+
   const route = cleanPortRoute(value);
-  if (!route)
+
+  if (!route) {
     throw new BadRequestError(
       "route must be an app path like /classes or /(design)/classes: lower-case letters, digits and dashes"
     );
+  }
+
   return route;
 }
 
@@ -80,6 +87,7 @@ function parsePaths(raw: unknown): string[] | null {
     : typeof raw === "string"
       ? raw.split(",")
       : [];
+
   const paths = [
     ...new Set(
       list
@@ -88,20 +96,27 @@ function parsePaths(raw: unknown): string[] | null {
         .map(sourcePagePath)
     ),
   ];
-  if (paths.length > PORT_FLOW_MAX_PAGES)
+
+  if (paths.length > PORT_FLOW_MAX_PAGES) {
     throw new BadRequestError(
       `paths can list at most ${PORT_FLOW_MAX_PAGES} pages`
     );
+  }
+
   return paths.length > 0 ? paths : null;
 }
 
 function parseQuery(raw: Record<string, unknown>): PortQuery {
   const sourceProjectId = text(raw.sourceProjectId);
-  if (!sourceProjectId)
+
+  if (!sourceProjectId) {
     throw new BadRequestError("sourceProjectId is required");
+  }
+
   const sourceDirectionId = text(raw.sourceDirectionId);
   const targetProjectId = text(raw.targetProjectId);
   const paths = parsePaths(raw.paths);
+
   return {
     sourceProjectId: assertSafeId(sourceProjectId, "sourceProjectId"),
     sourceDirectionId:
@@ -124,12 +139,15 @@ async function planInput(
   query: PortQuery
 ): Promise<PortPlanInput> {
   const source = await deps.projects.get(query.sourceProjectId);
+
   const sourceDirection = query.sourceDirectionId
     ? deps.projects.directionOf(source, query.sourceDirectionId)
     : deps.projects.mainDirection(source);
+
   const targetProject = query.targetProjectId
     ? await deps.projects.get(query.targetProjectId)
     : null;
+
   const target = targetProject
     ? {
         project: targetProject,
@@ -137,6 +155,7 @@ async function planInput(
         route: query.route,
       }
     : null;
+
   return {
     source: { project: source, direction: sourceDirection, path: query.path },
     target,
@@ -148,28 +167,42 @@ function assertTarget(
   input: PortPlanInput
 ): asserts input is StartableInput {
   const target = input.target;
-  if (!target) throw new BadRequestError("targetProjectId is required");
-  if (!target.project.app)
+
+  if (!target) {
+    throw new BadRequestError("targetProjectId is required");
+  }
+
+  if (!target.project.app) {
     throw new BadRequestError(
       `${target.project.name} is not an attached app. Pick a project made with Open app.`
     );
-  if (!target.route) throw new BadRequestError("route is required");
-  if (target.project.id === input.source.project.id)
+  }
+
+  if (!target.route) {
+    throw new BadRequestError("route is required");
+  }
+
+  if (target.project.id === input.source.project.id) {
     throw new BadRequestError(
       "The target app must be another project than the prototype."
     );
-  if (deps.isRunning(target.project.id, target.direction.id))
+  }
+
+  if (deps.isRunning(target.project.id, target.direction.id)) {
     throw new ConflictError(
       `A run is in progress in ${target.project.name}. Try again when it finishes.`
     );
+  }
 }
 
 function assertNewRoutes(flow: PortFlowPlan): void {
   const taken = flow.pages.filter((page) => page.routeExists);
-  if (taken.length > 0)
+
+  if (taken.length > 0) {
     throw new ConflictError(
       `The app already has ${taken.map((page) => `${page.route} (${page.routeFile})`).join(", ")}. Pick a new base path.`
     );
+  }
 }
 
 function levelFor(project: Project): RunLevel {
@@ -191,6 +224,7 @@ function portPrompt(
 ): string {
   const target = plan.target;
   const file = target?.routeFile ? ` (file \`${target.routeFile}\`)` : "";
+
   return [
     `${PORT_LEVEL_LABEL}: move the prototype page ${plan.source.path} from the project "${input.source.project.name}" into this app as the route ${target?.route ?? ""}${file}.`,
     `<port-plan>\n${portPlanText(plan)}\n</port-plan>`,
@@ -206,18 +240,22 @@ async function flowPrompt(
     SOURCE_TEXT_MAX,
     Math.floor(FLOW_SOURCE_MAX / Math.max(1, flow.pages.length))
   );
+
   const pages = await Promise.all(
     flow.pages.map(async (page) => {
       const html = await readSourcePage(
         input.source.direction.workTree,
         page.path
       );
+
       return `<port-plan path="${page.path}">\n${portPlanText(page.plan)}\n</port-plan>\n\n<prototype-source path="${page.path}">\n${cut(html, max)}\n</prototype-source>`;
     })
   );
+
   const files = flow.pages
     .map((page) => `\`${page.routeFile ?? page.route}\``)
     .join(", ");
+
   return [
     `${PORT_LEVEL_LABEL}: move the ${flow.pages.length} prototype pages of a flow from the project "${input.source.project.name}" into this app as ${flow.pages.length} routes under ${flow.base}. Write these route files: ${files}.`,
     `<port-flow>\n${portFlowText(flow)}\n</port-flow>`,
@@ -232,9 +270,11 @@ function startResult(
   plan: PortPlan | null
 ): PortStartResult {
   const { project, direction, route } = input.target;
+
   const routeFile = flow
     ? (flow.pages[0]?.routeFile ?? null)
     : (plan?.target?.routeFile ?? null);
+
   const result: PortStartResult = {
     runId,
     projectId: project.id,
@@ -242,12 +282,15 @@ function startResult(
     route: route ?? "",
     routeFile,
   };
-  if (flow)
+
+  if (flow) {
     result.routes = flow.pages.map((page) => ({
       path: page.path,
       route: page.route,
       routeFile: page.routeFile,
     }));
+  }
+
   return result;
 }
 
@@ -257,16 +300,21 @@ async function startFlow(
   paths: string[] | null
 ): Promise<PortStartResult> {
   const flow = await buildFlowPlan({ ...input, paths });
-  if (flow.pages.length === 0)
+
+  if (flow.pages.length === 0) {
     throw new BadRequestError("Pick at least one page to move.");
+  }
+
   assertNewRoutes(flow);
   const { project, direction } = input.target;
+
   const request = {
     prompt: await flowPrompt(input, flow),
     mode: "edit",
     level: levelFor(project),
     task: PORT_TASK,
   } satisfies RunRequest;
+
   return startResult(
     await deps.startRun(project, direction, request),
     input,
@@ -280,21 +328,27 @@ async function startPage(
   input: StartableInput
 ): Promise<PortStartResult> {
   const plan = await buildPortPlan(input);
-  if (plan.target?.routeExists)
+
+  if (plan.target?.routeExists) {
     throw new ConflictError(
       `The app already has the route ${input.target.route} (${plan.target.routeFile}). Pick a new path.`
     );
+  }
+
   const html = await readSourcePage(
     input.source.direction.workTree,
     input.source.path
   );
+
   const { project, direction } = input.target;
+
   const request = {
     prompt: portPrompt(input, plan, html),
     mode: "edit",
     level: levelFor(project),
     task: PORT_TASK,
   } satisfies RunRequest;
+
   return startResult(
     await deps.startRun(project, direction, request),
     input,
@@ -304,7 +358,10 @@ async function startPage(
 }
 
 function wantsFlow(query: PortQuery): boolean {
-  if (query.flow) return true;
+  if (query.flow) {
+    return true;
+  }
+
   return (
     query.paths !== null &&
     !(query.paths.length === 1 && query.paths[0] === query.path)
@@ -314,11 +371,14 @@ function wantsFlow(query: PortQuery): boolean {
 export function registerPortRoutes(app: Hono, deps: PortRouteDeps): void {
   app.get("/api/port/plan", async (c) => {
     const repeated = c.req.queries("paths");
+
     const query = parseQuery({
       ...c.req.query(),
       ...(repeated && repeated.length > 1 ? { paths: repeated } : {}),
     });
+
     const input = await planInput(deps, query);
+
     return c.json(
       query.flow || query.paths
         ? await buildFlowPlan({ ...input, paths: query.paths })
@@ -330,6 +390,7 @@ export function registerPortRoutes(app: Hono, deps: PortRouteDeps): void {
     const query = parseQuery(await deps.readBody(c));
     const input = await planInput(deps, query);
     assertTarget(deps, input);
+
     return c.json(
       wantsFlow(query)
         ? await startFlow(deps, input, query.paths)

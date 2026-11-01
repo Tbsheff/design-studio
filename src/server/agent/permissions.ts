@@ -50,6 +50,7 @@ export const SWAP_INSTANCE_TOOL = "mcp__studio__swap_instance";
 export const SET_IMAGE_TOOL = "mcp__studio__set_image";
 const LIST_LOCKS_MCP = "mcp__studio__list_locked_layers";
 const COMPARE_REFERENCE_TOOL = "mcp__studio__compare_to_reference";
+
 const STUDIO_EDIT_TOOLS_R13 = [
   "mcp__studio__import_figma_frame",
   "mcp__studio__set_layer_state",
@@ -57,7 +58,9 @@ const STUDIO_EDIT_TOOLS_R13 = [
   "mcp__studio__boolean_shapes",
   "mcp__studio__paint_shape",
 ];
+
 export const STUDIO_HELP_TOOL = "mcp__studio__studio_help";
+
 const DIRECT_EDIT_TOOLS = new Set<string>([
   EDIT_ELEMENT_TOOL,
   SET_TOKEN_TOOL,
@@ -72,7 +75,9 @@ const DIRECT_EDIT_TOOLS = new Set<string>([
   SET_IMAGE_TOOL,
   ...STUDIO_EDIT_TOOLS_R13,
 ]);
+
 export const BASH_EDIT_TOOL = "studio:bash-edit";
+
 export const EDIT_TOOL_NAMES: ReadonlySet<string> = new Set<string>([
   "Write",
   "Edit",
@@ -80,6 +85,7 @@ export const EDIT_TOOL_NAMES: ReadonlySet<string> = new Set<string>([
   BASH_EDIT_TOOL,
   ...DIRECT_EDIT_TOOLS,
 ]);
+
 const STUDIO_MCP_TOOLS = [
   "mcp__studio__screenshot",
   "mcp__studio__render_check",
@@ -132,6 +138,7 @@ const READ_ONLY_TOOLS = new Set(READ_TOOLS);
 const SKILL_TOOL = "Skill";
 const TODO_TOOL = "TodoWrite";
 const WRITE_TOOLS = ["Write", "Edit"];
+
 const PATH_TOOLS = new Set([
   "Read",
   "Write",
@@ -141,15 +148,18 @@ const PATH_TOOLS = new Set([
   "Glob",
   "Grep",
 ]);
+
 const PATH_FIELDS = ["file_path", "path", "notebook_path"] as const;
 const PATTERN_FIELDS = ["pattern", "glob"] as const;
 const BLOCKED_SEGMENTS = new Set([".git", "node_modules"]);
+
 const WRITE_PATH_TOOLS = new Set([
   "Write",
   "Edit",
   "MultiEdit",
   "NotebookEdit",
 ]);
+
 const PACKAGE_TOOLS = new Set([
   "npm",
   "npx",
@@ -166,13 +176,16 @@ const PACKAGE_TOOLS = new Set([
   "gem",
   "corepack",
 ]);
+
 const GO_INSTALL_VERBS = new Set(["get", "install"]);
+
 const INLINE_CODE_PATTERNS = [
   /\b(sh|bash|zsh|dash)\s+(-\w*\s+)*-\w*c\b/,
   /(^|[^\w-])eval(\s|$)/,
   /\bnode\s+(-\S+\s+)*(-e|--eval|-p|--print)\b/,
   /\bpython[0-9.]*\s+(-\S+\s+)*-c\b/,
 ];
+
 const EXECUTED_CONFIG_PATTERNS = [
   /^vite\.config\./,
   /^vitest\.config\./,
@@ -189,6 +202,7 @@ const EXECUTED_CONFIG_PATTERNS = [
   /^turbo\.json$/,
   /^pnpm-workspace\.yaml$/,
 ];
+
 const SECRET_FILE_PATTERNS = [
   /^\.env$/,
   /^\.env\.(?!example$|sample$|template$)/,
@@ -197,8 +211,10 @@ const SECRET_FILE_PATTERNS = [
   /^\.netrc$/,
   /^credentials(\.json)?$/,
 ];
+
 const SECRET_IN_COMMAND =
   /(^|[\s'"=/])\.env(\.(?!example\b|sample\b|template\b)[\w.-]+)?(?=$|[\s'";|&)])/;
+
 const SECRET_MESSAGE =
   "Design Studio keeps secrets files (.env, keys, credentials) away from the agent. Ask the user to change it by hand.";
 
@@ -228,8 +244,15 @@ export function builtinToolNames(policy: ToolSet): string[] {
     policy.mode === "critique"
       ? [...READ_TOOLS, TODO_TOOL]
       : [...READ_TOOLS, ...WRITE_TOOLS, TODO_TOOL];
-  if (policy.allowBash && policy.mode !== "critique") names.push("Bash");
-  if (skillsOn(policy)) names.push(SKILL_TOOL);
+
+  if (policy.allowBash && policy.mode !== "critique") {
+    names.push("Bash");
+  }
+
+  if (skillsOn(policy)) {
+    names.push(SKILL_TOOL);
+  }
+
   return names;
 }
 
@@ -240,13 +263,19 @@ export function permittedToolNames(policy: ToolSet): string[] {
 function realpathNearest(target: string): string {
   const remainder: string[] = [];
   let current = target;
+
   for (;;) {
     try {
       const real = realpathSync(current);
+
       return remainder.length ? path.join(real, ...remainder.reverse()) : real;
     } catch {
       const parent = path.dirname(current);
-      if (parent === current) return target;
+
+      if (parent === current) {
+        return target;
+      }
+
       remainder.push(path.basename(current));
       current = parent;
     }
@@ -258,27 +287,43 @@ function workTreeRoot(workTree: string): string {
 }
 
 export function checkPathInside(workTree: string, raw: string): string | null {
-  if (raw.startsWith("~")) return `Path ${raw} is outside the work tree.`;
+  if (raw.startsWith("~")) {
+    return `Path ${raw} is outside the work tree.`;
+  }
+
   const root = workTreeRoot(workTree);
   const absolute = path.isAbsolute(raw) ? raw : path.resolve(root, raw);
   const real = realpathNearest(path.normalize(absolute));
   const relative = path.relative(root, real);
-  if (relative === "") return null;
+
+  if (relative === "") {
+    return null;
+  }
+
   if (relative.startsWith("..") || path.isAbsolute(relative)) {
     return `Path ${raw} is outside the work tree.`;
   }
+
   const segments = relative.split(path.sep);
   const blocked = segments.find((segment) => BLOCKED_SEGMENTS.has(segment));
-  if (blocked) return `Path ${raw} is inside ${blocked}, which is off limits.`;
+
+  if (blocked) {
+    return `Path ${raw} is inside ${blocked}, which is off limits.`;
+  }
+
   return null;
 }
 
 function isInsideDir(dir: string, raw: string): boolean {
-  if (!path.isAbsolute(raw)) return false;
+  if (!path.isAbsolute(raw)) {
+    return false;
+  }
+
   const relative = path.relative(
     realpathNearest(dir),
     realpathNearest(path.normalize(raw))
   );
+
   return (
     relative === "" ||
     (!relative.startsWith("..") && !path.isAbsolute(relative))
@@ -286,10 +331,14 @@ function isInsideDir(dir: string, raw: string): boolean {
 }
 
 function checkPattern(raw: string): string | null {
-  if (path.isAbsolute(raw) || raw.startsWith("~"))
+  if (path.isAbsolute(raw) || raw.startsWith("~")) {
     return `Pattern ${raw} must be relative to the work tree.`;
-  if (raw.split(/[\\/]/).includes(".."))
+  }
+
+  if (raw.split(/[\\/]/).includes("..")) {
     return `Pattern ${raw} must not leave the work tree.`;
+  }
+
   return null;
 }
 
@@ -308,21 +357,27 @@ function hasGoInstall(tokens: string[]): boolean {
 }
 
 export function isInstallCommand(command: string): boolean {
-  if (INLINE_CODE_PATTERNS.some((pattern) => pattern.test(command)))
+  if (INLINE_CODE_PATTERNS.some((pattern) => pattern.test(command))) {
     return true;
+  }
+
   const tokens = commandTokens(command);
+
   if (
     tokens.some(
       (token) =>
         PACKAGE_TOOLS.has(token) || token === "curl" || token === "wget"
     )
-  )
+  ) {
     return true;
+  }
+
   return hasGoInstall(tokens);
 }
 
 export function isSecretFile(file: string): boolean {
   const name = path.basename(file).toLowerCase();
+
   return SECRET_FILE_PATTERNS.some((pattern) => pattern.test(name));
 }
 
@@ -332,23 +387,34 @@ function checkSecretFiles(
 ): string | null {
   for (const field of PATH_FIELDS) {
     const value = input[field];
-    if (typeof value !== "string") continue;
+
+    if (typeof value !== "string") {
+      continue;
+    }
+
     const absolute = path.isAbsolute(value)
       ? value
       : path.resolve(workTreeRoot(workTree), value);
-    if (isSecretFile(value) || isSecretFile(realpathNearest(absolute)))
+
+    if (isSecretFile(value) || isSecretFile(realpathNearest(absolute))) {
       return SECRET_MESSAGE;
+    }
   }
+
   for (const field of PATTERN_FIELDS) {
     const value = input[field];
-    if (typeof value === "string" && /(^|\/)\.env(\.|$|\*)/.test(value))
+
+    if (typeof value === "string" && /(^|\/)\.env(\.|$|\*)/.test(value)) {
       return SECRET_MESSAGE;
+    }
   }
+
   return null;
 }
 
 export function isExecutedConfigFile(file: string): boolean {
   const name = path.basename(file).toLowerCase();
+
   return EXECUTED_CONFIG_PATTERNS.some((pattern) => pattern.test(name));
 }
 
@@ -358,10 +424,15 @@ function checkExecutedConfig(
 ): string | null {
   for (const field of PATH_FIELDS) {
     const value = input[field];
-    if (typeof value !== "string") continue;
+
+    if (typeof value !== "string") {
+      continue;
+    }
+
     const absolute = path.isAbsolute(value)
       ? value
       : path.resolve(workTreeRoot(workTree), value);
+
     if (
       isExecutedConfigFile(value) ||
       isExecutedConfigFile(realpathNearest(absolute))
@@ -369,6 +440,7 @@ function checkExecutedConfig(
       return `Design Studio does not let the agent change ${path.basename(value)}: build tools run this file as code. Ask the user to change it by hand.`;
     }
   }
+
   return null;
 }
 
@@ -378,10 +450,12 @@ export const GENERATED_TOKENS_MESSAGE =
 function isGeneratedTokensFile(workTree: string, raw: string): boolean {
   const root = workTreeRoot(workTree);
   const absolute = path.isAbsolute(raw) ? raw : path.resolve(root, raw);
+
   const relative = path
     .relative(root, realpathNearest(path.normalize(absolute)))
     .split(path.sep)
     .join("/");
+
   return relative.toLowerCase() === TOKENS_CSS_FILE.toLowerCase();
 }
 
@@ -390,6 +464,7 @@ const TWEAKS_FILE_MESSAGE = `${TWEAKS_FILE} is owned by the studio; change the c
 function relativeToRoot(workTree: string, raw: string): string {
   const root = workTreeRoot(workTree);
   const absolute = path.isAbsolute(raw) ? raw : path.resolve(root, raw);
+
   return path
     .relative(root, realpathNearest(path.normalize(absolute)))
     .split(path.sep)
@@ -405,6 +480,7 @@ export const STUDIO_DIR_MESSAGE = `${CANVAS_DIR}/ is owned by the studio; change
 
 function isStudioDir(workTree: string, raw: string): boolean {
   const relative = relativeToRoot(workTree, raw);
+
   return relative === CANVAS_DIR || relative.startsWith(`${CANVAS_DIR}/`);
 }
 
@@ -413,17 +489,29 @@ function checkReadOnlyDirs(
   input: Record<string, unknown>
 ): string | null {
   const dirs = (policy.readOnlyDirs ?? []).map((dir) => dir.toLowerCase());
-  if (dirs.length === 0) return null;
+
+  if (dirs.length === 0) {
+    return null;
+  }
+
   for (const field of PATH_FIELDS) {
     const value = input[field];
-    if (typeof value !== "string") continue;
+
+    if (typeof value !== "string") {
+      continue;
+    }
+
     const relative = relativeToRoot(policy.workTree, value);
+
     const inside = dirs.find(
       (dir) => relative === dir || relative.startsWith(`${dir}/`)
     );
-    if (inside)
+
+    if (inside) {
       return `${inside}/ holds the untrusted source material of this design system. It is read only; change the design-system files instead.`;
+    }
   }
+
   return null;
 }
 
@@ -433,13 +521,20 @@ function checkGeneratedFile(
 ): string | null {
   for (const field of PATH_FIELDS) {
     const value = input[field];
-    if (typeof value === "string" && isGeneratedTokensFile(workTree, value))
+
+    if (typeof value === "string" && isGeneratedTokensFile(workTree, value)) {
       return GENERATED_TOKENS_MESSAGE;
-    if (typeof value === "string" && isTweaksFile(workTree, value))
+    }
+
+    if (typeof value === "string" && isTweaksFile(workTree, value)) {
       return TWEAKS_FILE_MESSAGE;
-    if (typeof value === "string" && isStudioDir(workTree, value))
+    }
+
+    if (typeof value === "string" && isStudioDir(workTree, value)) {
       return STUDIO_DIR_MESSAGE;
+    }
   }
+
   return null;
 }
 
@@ -448,7 +543,10 @@ function deny(message: string): PermissionResult {
 }
 
 function readableSkillDirs(policy: ToolPolicy, toolName: string): string[] {
-  if (!READ_ONLY_TOOLS.has(toolName) || !skillsOn(policy)) return [];
+  if (!READ_ONLY_TOOLS.has(toolName) || !skillsOn(policy)) {
+    return [];
+  }
+
   return policy.skillDirs ?? [];
 }
 
@@ -458,24 +556,47 @@ function checkPathFields(
   input: Record<string, unknown>
 ): string | null {
   const skillDirs = readableSkillDirs(policy, toolName);
+
   for (const field of PATH_FIELDS) {
     const value = input[field];
-    if (value === undefined || value === null) continue;
-    if (typeof value !== "string") return `Field ${field} must be a string.`;
-    if (skillDirs.some((dir) => isInsideDir(dir, value))) continue;
+
+    if (value === undefined || value === null) {
+      continue;
+    }
+
+    if (typeof value !== "string") {
+      return `Field ${field} must be a string.`;
+    }
+
+    if (skillDirs.some((dir) => isInsideDir(dir, value))) {
+      continue;
+    }
+
     const problem = checkPathInside(policy.workTree, value);
-    if (problem) return problem;
+
+    if (problem) {
+      return problem;
+    }
   }
+
   return null;
 }
 
 function checkPatternFields(input: Record<string, unknown>): string | null {
   for (const field of PATTERN_FIELDS) {
     const value = input[field];
-    if (typeof value !== "string") continue;
+
+    if (typeof value !== "string") {
+      continue;
+    }
+
     const problem = checkPattern(value);
-    if (problem) return problem;
+
+    if (problem) {
+      return problem;
+    }
   }
+
   return null;
 }
 
@@ -491,13 +612,22 @@ function checkSkill(
   policy: ToolPolicy,
   input: Record<string, unknown>
 ): string | null {
-  if (policy.skillsOff) return policy.skillsOff;
+  if (policy.skillsOff) {
+    return policy.skillsOff;
+  }
+
   const requested = input["skill"];
-  if (typeof requested !== "string") return null;
+
+  if (typeof requested !== "string") {
+    return null;
+  }
+
   const enabled = policy.skills ?? [];
+
   const known = enabled.some(
     (name) => name === requested || name.endsWith(`:${requested}`)
   );
+
   return known ? null : `Skill ${requested} is not turned on for this project.`;
 }
 
@@ -521,20 +651,30 @@ const READ_ONLY_COMMANDS = new Set([
   "uniq",
   "jq",
 ]);
+
 const FIND_WRITES = /\s-(delete|exec|execdir|ok|okdir|fprint\w*|fls)\b/;
 
 function writesInsideDir(dir: string, command: string): boolean {
   const pattern = new RegExp(
     `(^|[\\s'"=:(/.])${dir.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(/|[\\s'")]|$)`
   );
-  if (!pattern.test(command)) return false;
-  if (/[>]|\btee\b/.test(command)) return true;
+
+  if (!pattern.test(command)) {
+    return false;
+  }
+
+  if (/[>]|\btee\b/.test(command)) {
+    return true;
+  }
+
   const segments = command
     .split(/&&|\|\||;|\||\n/)
     .map((part) => part.trim())
     .filter(Boolean);
+
   return segments.some((segment) => {
     const word = segment.replace(/^(\w+=\S*\s+)*/, "").split(/\s+/)[0] ?? "";
+
     return (
       !READ_ONLY_COMMANDS.has(word) ||
       (word === "find" && FIND_WRITES.test(segment))
@@ -569,6 +709,7 @@ const GIT_READ_VERBS = new Set([
   "version",
   "help",
 ]);
+
 const GIT_MESSAGE =
   "Design Studio keeps its own versions, so the agent may only read git (status, diff, log, show). Ask the user to run other git commands by hand.";
 
@@ -577,29 +718,43 @@ function gitVerb(segment: string): string | null {
     .replace(/^(\w+=\S*\s+)*/, "")
     .split(/\s+/)
     .filter(Boolean);
+
   const at = words.findIndex((word) => path.basename(word) === "git");
-  if (at === -1) return null;
+
+  if (at === -1) {
+    return null;
+  }
+
   let index = at + 1;
+
   while (
     index < words.length &&
     (words[index] ?? "").startsWith("-") &&
     words[index] !== "--version"
-  )
+  ) {
     index += words[index] === "-C" || words[index] === "-c" ? 2 : 1;
+  }
+
   return words[index] ?? "";
 }
 
 function writesGit(command: string): boolean {
-  if (writesInsideDir(".git", command)) return true;
+  if (writesInsideDir(".git", command)) {
+    return true;
+  }
+
   return command.split(/&&|\|\||;|\||\n|\$\(|`/).some((segment) => {
     const verb = gitVerb(segment.trim());
+
     return verb !== null && !GIT_READ_VERBS.has(verb);
   });
 }
 
 const CLOUD_CLIS = new Set(["cf", "cloudflare", "wrangler"]);
+
 const RUNNER_PREFIX =
   /^(?:\w+=\S*\s+)*(?:(?:npx|bunx|pnpx)\s+(?:-\S+\s+)*|(?:pnpm|yarn)\s+dlx\s+(?:-\S+\s+)*)?/;
+
 const CLOUD_MESSAGE =
   "Publishing to Cloudflare runs only from Share > Publish in Design Studio, after the user confirms what goes public. Do not call cf or wrangler.";
 
@@ -607,6 +762,7 @@ function callsCloudCli(command: string): boolean {
   return command.split(/&&|\|\||;|\||\n|\$\(|`|\(/).some((segment) => {
     const word =
       segment.trim().replace(RUNNER_PREFIX, "").split(/\s+/, 1)[0] ?? "";
+
     return CLOUD_CLIS.has((word.split("/").pop() ?? "").replace(/@.*$/, ""));
   });
 }
@@ -616,16 +772,33 @@ function checkBash(
   input: Record<string, unknown>
 ): string | null {
   const command = input["command"];
-  if (typeof command !== "string") return "Bash needs a command string.";
-  if (SECRET_IN_COMMAND.test(command)) return SECRET_MESSAGE;
-  if (writesGit(command)) return GIT_MESSAGE;
-  if (callsCloudCli(command)) return CLOUD_MESSAGE;
+
+  if (typeof command !== "string") {
+    return "Bash needs a command string.";
+  }
+
+  if (SECRET_IN_COMMAND.test(command)) {
+    return SECRET_MESSAGE;
+  }
+
+  if (writesGit(command)) {
+    return GIT_MESSAGE;
+  }
+
+  if (callsCloudCli(command)) {
+    return CLOUD_MESSAGE;
+  }
+
   const readOnly = touchesReadOnlyDir(policy, command);
-  if (readOnly)
+
+  if (readOnly) {
     return `${readOnly}/ holds the untrusted source material of this design system. Shell commands may only read it (cat, ls, grep, find, head); change the design-system files instead.`;
+  }
+
   if (!policy.allowInstall && isInstallCommand(command)) {
     return "Package managers, downloads and inline code (sh -c, eval, node -e, python -c) are turned off for this project.";
   }
+
   return null;
 }
 
@@ -634,15 +807,28 @@ export function bashWriteProblem(
   relative: string
 ): string | null {
   const input = { file_path: relative };
-  if (relative.split("/").some((segment) => BLOCKED_SEGMENTS.has(segment)))
+
+  if (relative.split("/").some((segment) => BLOCKED_SEGMENTS.has(segment))) {
     return `${relative} is inside .git or node_modules, which is off limits.`;
-  if (isSecretFile(relative)) return SECRET_MESSAGE;
+  }
+
+  if (isSecretFile(relative)) {
+    return SECRET_MESSAGE;
+  }
+
   const problem = checkReadOnlyDirs(
     { ...policy, mode: "edit", allowBash: true },
     input
   );
-  if (problem) return problem;
-  if (policy.allowInstall) return null;
+
+  if (problem) {
+    return problem;
+  }
+
+  if (policy.allowInstall) {
+    return null;
+  }
+
   return isExecutedConfigFile(relative)
     ? `Package installs are off in this project, so the agent may not change ${path.basename(relative)}: build tools run this file as code. Ask the user to change it by hand.`
     : null;
@@ -657,6 +843,7 @@ const PLAN_BLOCKED = new Set<string>([
   ADD_FLOW_TOOL,
   ...DIRECT_EDIT_TOOLS,
 ]);
+
 const CRITIQUE_BLOCKED = new Set<string>([
   TWEAKS_TOOL,
   CANVAS_PLACE_TOOL,
@@ -674,26 +861,47 @@ function findToolProblem(
   toolName: string,
   input: Record<string, unknown>
 ): string | null {
-  if (!permittedToolNames(policy).includes(toolName))
+  if (!permittedToolNames(policy).includes(toolName)) {
     return `Tool ${toolName} is not available in Design Studio.`;
-  if (policy.plan && PLAN_BLOCKED.has(toolName)) return PLAN_MODE_DENY;
+  }
+
+  if (policy.plan && PLAN_BLOCKED.has(toolName)) {
+    return PLAN_MODE_DENY;
+  }
+
   if (PATH_TOOLS.has(toolName)) {
     const problem =
       checkPathTool(policy, toolName, input) ??
       checkSecretFiles(policy.workTree, input);
-    if (problem) return problem;
+
+    if (problem) {
+      return problem;
+    }
   }
+
   if (WRITE_PATH_TOOLS.has(toolName)) {
     const problem =
       checkExecutedConfig(policy.workTree, input) ??
       checkGeneratedFile(policy.workTree, input) ??
       checkReadOnlyDirs(policy, input);
-    if (problem) return problem;
+
+    if (problem) {
+      return problem;
+    }
   }
-  if (policy.mode === "critique" && CRITIQUE_BLOCKED.has(toolName))
+
+  if (policy.mode === "critique" && CRITIQUE_BLOCKED.has(toolName)) {
     return `${toolName.replace("mcp__studio__", "")} is not available in critique runs.`;
-  if (toolName === "Bash") return checkBash(policy, input);
-  if (toolName === SKILL_TOOL) return checkSkill(policy, input);
+  }
+
+  if (toolName === "Bash") {
+    return checkBash(policy, input);
+  }
+
+  if (toolName === SKILL_TOOL) {
+    return checkSkill(policy, input);
+  }
+
   return null;
 }
 
@@ -703,7 +911,11 @@ export function evaluateToolUse(
   input: Record<string, unknown>
 ): PermissionResult {
   const problem = findToolProblem(policy, toolName, input);
-  if (problem !== null) return deny(problem);
+
+  if (problem !== null) {
+    return deny(problem);
+  }
+
   return { behavior: "allow", updatedInput: input };
 }
 
@@ -714,11 +926,14 @@ export function createCanUseTool(
 ): CanUseTool {
   return async (toolName, input, options) => {
     const checked = evaluateToolUse(policy, toolName, input);
+
     const result =
       checked.behavior === "allow" && toolName === "Bash" && bashGate
         ? await bashGate(options.toolUseID, input)
         : checked;
+
     onDecision?.(toolName, result);
+
     return result;
   };
 }
@@ -773,24 +988,36 @@ export function createPreToolUseGuard(
   bashGate?: ToolGate
 ): HookCallback {
   return async (hookInput) => {
-    if (hookInput.hook_event_name !== "PreToolUse") return {};
+    if (hookInput.hook_event_name !== "PreToolUse") {
+      return {};
+    }
+
     const toolInput = hookInput.tool_input;
+
     const record =
       toolInput && typeof toolInput === "object"
         ? (toolInput as Record<string, unknown>)
         : {};
+
     const checked = evaluateToolUse(policy, hookInput.tool_name, record);
+
     const result =
       checked.behavior === "allow" && hookInput.tool_name === "Bash" && bashGate
         ? await bashGate(hookInput.tool_use_id, record)
         : checked;
+
     onDecision?.(hookInput.tool_name, result);
+
     if (result.behavior === "allow") {
-      if (beforeChange && canChangePreview(hookInput.tool_name))
+      if (beforeChange && canChangePreview(hookInput.tool_name)) {
         await beforeChange();
+      }
+
       await onAllowed?.(hookInput.tool_use_id, hookInput.tool_name, record);
+
       return {};
     }
+
     return {
       hookSpecificOutput: {
         hookEventName: "PreToolUse",

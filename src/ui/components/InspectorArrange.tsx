@@ -102,14 +102,23 @@ const OK_MS = 3000;
 
 function isAbsolute(selection: SelectionContext): boolean {
   const position = selection.styles.position ?? "";
+
   return position === "absolute" || position === "fixed";
 }
 
 export function arrangeShown(selection: SelectionContext[]): boolean {
-  if (selection.length > 1) return true;
+  if (selection.length > 1) {
+    return true;
+  }
+
   const only = selection[0];
-  if (!only) return false;
+
+  if (!only) {
+    return false;
+  }
+
   const parent = parentLayout(only.styles);
+
   return isAbsolute(only) || parent.flex || parent.grid;
 }
 
@@ -117,33 +126,43 @@ function minCount(
   action: ArrangeAction,
   selection: SelectionContext[]
 ): number {
-  if ("align" in action) return 1;
-  if ("distribute" in action)
+  if ("align" in action) {
+    return 1;
+  }
+
+  if ("distribute" in action) {
     return selection.length > 0 && selection.every(isAbsolute) ? 3 : 2;
+  }
+
   return 2;
 }
 
 function successText(result: ArrangeResult): string {
   const styles = result.writes.flatMap((w) => Object.entries(w.style));
+
   const set = styles
     .filter(([, value]) => value !== null)
     .map(([prop, value]) => `${prop}: ${value}`);
+
   const removed = [
     ...new Set(
       styles.filter(([, value]) => value === null).map(([prop]) => prop)
     ),
   ];
+
   const wrote =
     result.classes.length > 0
       ? `Wrote ${result.classes.join(" ")}`
       : set.length > 0
         ? `Wrote ${set.join("; ")}`
         : "";
+
   const parts = [
     wrote,
     removed.length > 0 ? `Removed ${removed.join(", ")}` : "",
     result.note,
   ];
+
   return parts.filter(Boolean).join(". ") || "Arranged";
 }
 
@@ -154,6 +173,7 @@ function frameRequest(projectId: string): {
   const frame = activeFrame(
     canvasStore.get(projectId) ?? defaultLayout(uiStore.get().viewport)
   );
+
   return {
     ...(frame.path ? { path: frame.path } : {}),
     viewport: { width: frame.width, height: frame.height },
@@ -162,13 +182,19 @@ function frameRequest(projectId: string): {
 
 function commitWrites(props: Props, result: ArrangeResult): void {
   const selected = new Set(props.selection.map((s) => s.selector));
+
   for (const entry of result.writes) {
-    if (!selected.has(entry.selector)) continue;
+    if (!selected.has(entry.selector)) {
+      continue;
+    }
+
     const style = Object.fromEntries(
       Object.entries(entry.style).map(([prop, value]) => [prop, value ?? ""])
     );
+
     props.onCommitted({ selector: entry.selector, style });
   }
+
   props.port.current?.refreshRects();
 }
 
@@ -179,27 +205,38 @@ function useArrange(props: Props) {
   const [message, setMessage] = useState<Message | null>(null);
   const busyRef = useRef(false);
   useEffect(() => {
-    if (message?.kind !== "ok") return;
+    if (message?.kind !== "ok") {
+      return;
+    }
+
     const timer = window.setTimeout(() => setMessage(null), OK_MS);
+
     return () => window.clearTimeout(timer);
   }, [message]);
   const key = props.selection.map((s) => s.selector).join("\n");
   useEffect(() => setMessage(null), [key]);
+
   const run = async (action: ArrangeAction) => {
     const cur = latest.current;
-    if (!cur.directionId || busyRef.current || cur.selection.length === 0)
+
+    if (!cur.directionId || busyRef.current || cur.selection.length === 0) {
       return;
+    }
+
     busyRef.current = true;
     setBusy(true);
     setMessage(null);
+
     try {
       await cur.control.current?.settle();
       const targets = cur.selection.map((s) => ({ selector: s.selector }));
+
       const result = await arrangeRequest(cur.projectId, cur.directionId, {
         targets,
         action,
         ...frameRequest(cur.projectId),
       });
+
       commitWrites(cur, result);
       setMessage(
         result.changed
@@ -213,11 +250,15 @@ function useArrange(props: Props) {
       setBusy(false);
     }
   };
+
   return { busy, message, run };
 }
 
 function chordOf(event: KeyboardEvent): string | null {
-  if (event.metaKey || event.repeat || !event.altKey) return null;
+  if (event.metaKey || event.repeat || !event.altKey) {
+    return null;
+  }
+
   return `${event.ctrlKey ? "Ctrl+" : ""}Alt+${event.shiftKey ? "Shift+" : ""}${event.code}`;
 }
 
@@ -232,19 +273,30 @@ function useArrangeKeys(
     const ready = () =>
       latest.current.active &&
       Boolean(root.current && !root.current.closest("[inert]"));
+
     const fire = (chord: string | null, event?: Event) => {
       const action = chord ? ARRANGE_SHORTCUTS[chord] : undefined;
-      if (!action || !ready()) return;
+
+      if (!action || !ready()) {
+        return;
+      }
+
       event?.preventDefault();
       latest.current.run(action);
     };
+
     const onKey = (event: KeyboardEvent) => {
-      if (!isTypingTarget(event.target)) fire(chordOf(event), event);
+      if (!isTypingTarget(event.target)) {
+        fire(chordOf(event), event);
+      }
     };
+
     const onForwarded = (event: Event) =>
       fire((event as CustomEvent<{ key?: string }>).detail?.key ?? null);
+
     window.addEventListener("keydown", onKey);
     window.addEventListener(PREVIEW_ARRANGE_KEY_EVENT, onForwarded);
+
     return () => {
       window.removeEventListener("keydown", onKey);
       window.removeEventListener(PREVIEW_ARRANGE_KEY_EVENT, onForwarded);
@@ -266,6 +318,7 @@ function ToolButton({
   const tip = why
     ? `${tool.label}: ${why}`
     : `${tool.label} ${shortcutLabel(tool.key, IS_MAC)}`;
+
   return (
     <button
       type="button"
@@ -294,7 +347,10 @@ function ToolButton({
 }
 
 function ArrangeMessage({ message }: { message: Message | null }) {
-  if (!message) return null;
+  if (!message) {
+    return null;
+  }
+
   if (message.kind === "ok") {
     return (
       <p className="ins-arrange-ok" role="status">
@@ -303,6 +359,7 @@ function ArrangeMessage({ message }: { message: Message | null }) {
       </p>
     );
   }
+
   return (
     <div
       className={`ins-multi-note ins-arrange-note ${message.kind}`}
@@ -325,8 +382,10 @@ function ArrangeBar({
 }) {
   const button = (tool: Tool) => {
     const need = minCount(tool.action, selection);
+
     const why =
       selection.length < need ? `select ${need} or more elements` : null;
+
     return (
       <ToolButton
         key={tool.key}
@@ -337,6 +396,7 @@ function ArrangeBar({
       />
     );
   };
+
   return (
     <div className="ins-tools ins-arrange" role="toolbar" aria-label="Arrange">
       {ALIGN_TOOLS.map(button)}
@@ -349,10 +409,13 @@ function ArrangeBar({
 export function InspectorArrange(props: Props) {
   const root = useRef<HTMLDivElement>(null);
   const arrange = useArrange(props);
+
   const active =
     props.editable && props.selection.length > 0 && props.directionId !== null;
+
   useArrangeKeys(root, active, (action) => void arrange.run(action));
   const shown = props.showBar && active && arrangeShown(props.selection);
+
   return (
     <div
       ref={root}

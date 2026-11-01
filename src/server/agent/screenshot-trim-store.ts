@@ -9,6 +9,7 @@ import type {
 } from "@anthropic-ai/claude-agent-sdk";
 
 export const PROMPT_CACHE_TTL_MS = 5 * 60 * 1000;
+
 export const OLD_SCREENSHOT_NOTE =
   "[A screenshot from an earlier run was here. It was removed to save context; take a new screenshot to see the page now.]";
 
@@ -18,14 +19,19 @@ interface Block {
 }
 
 function trimToolResult(block: Block): Block {
-  if (block.type !== "tool_result" || !Array.isArray(block.content))
+  if (block.type !== "tool_result" || !Array.isArray(block.content)) {
     return block;
+  }
+
   let removed = false;
+
   const content = (block.content as Block[]).filter((part) => {
     const image = part?.type === "image";
     removed ||= image;
+
     return !image;
   });
+
   return removed
     ? {
         ...block,
@@ -38,8 +44,11 @@ export function withoutOldScreenshots(
   entry: SessionStoreEntry
 ): SessionStoreEntry {
   const message = entry["message"] as { content?: unknown } | undefined;
-  if (entry.type !== "user" || !message || !Array.isArray(message.content))
+
+  if (entry.type !== "user" || !message || !Array.isArray(message.content)) {
     return entry;
+  }
+
   return {
     ...entry,
     message: {
@@ -55,24 +64,31 @@ async function findTranscript(
 ): Promise<string | null> {
   const name = `${key.sessionId}.jsonl`;
   const direct = path.join(projectsDir, key.projectKey, name);
+
   if (
     await stat(direct).then(
       () => true,
       () => false
     )
-  )
+  ) {
     return direct;
+  }
+
   const dirs = await readdir(projectsDir).catch(() => [] as string[]);
+
   for (const dir of dirs) {
     const candidate = path.join(projectsDir, dir, name);
+
     if (
       await stat(candidate).then(
         () => true,
         () => false
       )
-    )
+    ) {
       return candidate;
+    }
   }
+
   return null;
 }
 
@@ -89,18 +105,28 @@ export function createScreenshotTrimStore(
 ): SessionStore {
   const projectsDir = path.join(claudeHome, "projects");
   const files = new Map<string, string>();
+
   const fileFor = async (key: SessionKey): Promise<string | null> => {
     const known =
       files.get(key.sessionId) ?? (await findTranscript(projectsDir, key));
-    if (known) files.set(key.sessionId, known);
+
+    if (known) {
+      files.set(key.sessionId, known);
+    }
+
     return known;
   };
+
   return {
     append: async (key, entries) => {
-      if (key.subpath || entries.length === 0) return;
+      if (key.subpath || entries.length === 0) {
+        return;
+      }
+
       const file =
         (await fileFor(key)) ??
         path.join(projectsDir, key.projectKey, `${key.sessionId}.jsonl`);
+
       await mkdir(path.dirname(file), { recursive: true });
       await appendFile(
         file,
@@ -108,15 +134,24 @@ export function createScreenshotTrimStore(
       );
     },
     load: async (key) => {
-      if (key.subpath) return null;
+      if (key.subpath) {
+        return null;
+      }
+
       const file = await fileFor(key);
-      if (!file) return null;
+
+      if (!file) {
+        return null;
+      }
+
       const [text, info] = await Promise.all([
         readFile(file, "utf-8"),
         stat(file),
       ]);
+
       const entries = parseEntries(text);
       const cacheCold = now() - info.mtimeMs > PROMPT_CACHE_TTL_MS;
+
       return cacheCold ? entries.map(withoutOldScreenshots) : entries;
     },
   };

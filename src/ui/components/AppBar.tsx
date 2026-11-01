@@ -36,6 +36,7 @@ interface AppBarProps {
 
 const POLL_OPEN_MS = 1500;
 const POLL_CLOSED_MS = 5000;
+
 const STATE_TEXT: Record<AppServerStatus["state"], string> = {
   idle: "Not started",
   starting: "Starting",
@@ -52,18 +53,24 @@ function useAppState(
   const [status, setStatus] = useState<AppServerStatus | null>(initial);
   const [current, setCurrent] = useState<AttachedApp | null>(null);
   const [logs, setLogs] = useState<AppLogLine[]>([]);
+
   const [firstVersion, setFirstVersion] = useState<FirstVersionState | null>(
     null
   );
+
   const [tick, setTick] = useState(0);
   const settled = status?.state === "ready" && !firstVersion?.pending;
   useEffect(() => {
     let alive = true;
+
     const load = () =>
       api
         .appState(projectId)
         .then((state) => {
-          if (!alive) return;
+          if (!alive) {
+            return;
+          }
+
           setStatus(state.status);
           setCurrent(state.app);
           setLogs(state.logs);
@@ -71,16 +78,20 @@ function useAppState(
           publishAppStatus(projectId, state.status);
         })
         .catch(() => undefined);
+
     void load();
+
     const timer = window.setInterval(
       load,
       open || !settled ? POLL_OPEN_MS : POLL_CLOSED_MS
     );
+
     return () => {
       alive = false;
       window.clearInterval(timer);
     };
   }, [projectId, open, tick, settled]);
+
   return {
     status,
     app: current,
@@ -93,10 +104,15 @@ function useAppState(
 function useSecondsSince(startedAt: number | null): number {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    if (startedAt === null) return;
+    if (startedAt === null) {
+      return;
+    }
+
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
+
     return () => window.clearInterval(timer);
   }, [startedAt]);
+
   return startedAt === null
     ? 0
     : Math.max(0, Math.round((now - startedAt) / 1000));
@@ -106,6 +122,7 @@ function prepTip(firstVersion: FirstVersionState): string {
   const files = firstVersion.files
     ? ` of ${firstVersion.files.toLocaleString("en-US")} files`
     : "";
+
   return `Saving the first version${files} so edits can be undone. Screenshots work now; edits wait for it. About ${firstVersion.etaSeconds} s left.`;
 }
 
@@ -117,7 +134,8 @@ function PrepChip({
   const seconds = useSecondsSince(
     firstVersion?.pending ? firstVersion.startedAt : null
   );
-  if (firstVersion?.error)
+
+  if (firstVersion?.error) {
     return (
       <span
         className="app-prep-chip failed"
@@ -126,7 +144,12 @@ function PrepChip({
         Not saved
       </span>
     );
-  if (!firstVersion?.pending) return null;
+  }
+
+  if (!firstVersion?.pending) {
+    return null;
+  }
+
   return (
     <span
       className="app-prep-chip"
@@ -155,8 +178,10 @@ function RoutesTab({
       .then((result) => setRoutes(result.routes))
       .catch((err: unknown) => setError(errorText(err)));
   }, [projectId]);
+
   const matches = useMemo(() => {
     const needle = filter.trim().toLowerCase();
+
     return (routes ?? []).filter(
       (route) =>
         needle === "" ||
@@ -164,14 +189,21 @@ function RoutesTab({
         route.file.toLowerCase().includes(needle)
     );
   }, [routes, filter]);
+
   const shown = matches.slice(0, 200);
+
   const addCustom = (event: FormEvent) => {
     event.preventDefault();
     const route = cleanRoute(custom);
-    if (!route || /[[\]]/.test(route)) return;
+
+    if (!route || /[[\]]/.test(route)) {
+      return;
+    }
+
     onAddRoute(route);
     setCustom("");
   };
+
   return (
     <div className="app-routes">
       <input
@@ -187,10 +219,18 @@ function RoutesTab({
         onChange={(e) => setFilter(e.target.value)}
         onKeyDown={(e) => {
           const first = shown[0];
-          if (e.key !== "Enter" || !first || e.nativeEvent.isComposing) return;
+
+          if (e.key !== "Enter" || !first || e.nativeEvent.isComposing) {
+            return;
+          }
+
           e.preventDefault();
-          if (first.dynamic) setCustom(first.route);
-          else onAddRoute(first.route);
+
+          if (first.dynamic) {
+            setCustom(first.route);
+          } else {
+            onAddRoute(first.route);
+          }
         }}
       />
       {error && <div className="alert error small">{error}</div>}
@@ -253,8 +293,12 @@ function LogsTab({ logs, managed }: { logs: AppLogLine[]; managed: boolean }) {
   const ref = useRef<HTMLPreElement>(null);
   useEffect(() => {
     const el = ref.current;
-    if (el) el.scrollTop = el.scrollHeight;
+
+    if (el) {
+      el.scrollTop = el.scrollHeight;
+    }
   }, [logs.length]);
+
   return (
     <pre ref={ref} className="app-logs" aria-label="Dev server log">
       {!managed && (
@@ -284,6 +328,7 @@ function envSuggestion(
   const fix = status?.doctor?.causes.find(
     (cause) => cause.fix?.kind === "set-env"
   )?.fix;
+
   return fix?.kind === "set-env" ? fix.env : null;
 }
 
@@ -302,13 +347,17 @@ function SettingsTab({
   const [env, setEnv] = useState(() => envText(app.env));
   const [note, setNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
   const save = (event: FormEvent) => {
     event.preventDefault();
     const parsed = parseEnvText(env);
+
     if (parsed.bad.length > 0) {
       setNote(`Use KEY=value lines. Not valid: ${parsed.bad[0] ?? ""}`);
+
       return;
     }
+
     setBusy(true);
     setNote(null);
     api
@@ -320,6 +369,7 @@ function SettingsTab({
       .catch((err: unknown) => setNote(errorText(err)))
       .finally(() => setBusy(false));
   };
+
   return (
     <form className="app-settings" onSubmit={save}>
       <label className="field">
@@ -384,6 +434,7 @@ function SettingsTab({
 }
 
 type Tab = "routes" | "flow" | "logs" | "settings";
+
 const TABS: { id: Tab; label: string }[] = [
   { id: "routes", label: "Routes" },
   { id: "flow", label: "Flow" },
@@ -393,7 +444,11 @@ const TABS: { id: Tab; label: string }[] = [
 
 function stateText(status: AppServerStatus | null, managed: boolean): string {
   const state = status?.state ?? "idle";
-  if (managed) return STATE_TEXT[state];
+
+  if (managed) {
+    return STATE_TEXT[state];
+  }
+
   return state === "ready"
     ? "Answers"
     : state === "failed"
@@ -405,8 +460,13 @@ function stateText(status: AppServerStatus | null, managed: boolean): string {
 
 function statusLine(status: AppServerStatus | null, managed: boolean): string {
   const parts = [stateText(status, managed)];
-  if (status?.upstream) parts.push(status.upstream);
+
+  if (status?.upstream) {
+    parts.push(status.upstream);
+  }
+
   parts.push(managed ? "started by the studio" : "your dev server");
+
   return parts.join(" · ");
 }
 
@@ -419,7 +479,7 @@ function ServerButtons({
   managed: boolean;
   control: (action: "start" | "stop" | "restart") => void;
 }) {
-  if (!managed)
+  if (!managed) {
     return state === "starting" ? null : (
       <button
         type="button"
@@ -429,7 +489,10 @@ function ServerButtons({
         Check again
       </button>
     );
+  }
+
   const running = state === "ready";
+
   return (
     <>
       {state !== "starting" && (
@@ -474,19 +537,25 @@ function AppPanel({
     logs,
     refresh,
   } = useAppState(projectId, true, initial);
+
   const state = status?.state ?? "idle";
   const managed = (status?.mode ?? app.mode) === "managed";
+
   const control = (action: "start" | "stop" | "restart") =>
     void api
       .appControl(projectId, action)
       .then(refresh)
       .catch(() => undefined);
+
   const settingsApp = fresh ?? app;
+
   const addRoute = (route: string) => {
     onAddRoute(route);
     onClose();
   };
+
   useEscape(onClose);
+
   return (
     <div className="app-panel" role="dialog" aria-label="App">
       <div className="app-panel-head">
@@ -553,33 +622,46 @@ function useEscape(onClose: () => void): void {
   close.current = onClose;
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (event.key !== "Escape" || event.defaultPrevented) return;
+      if (event.key !== "Escape" || event.defaultPrevented) {
+        return;
+      }
+
       event.stopImmediatePropagation();
       event.preventDefault();
       close.current();
     };
+
     window.addEventListener("keydown", onKey, true);
+
     return () => window.removeEventListener("keydown", onKey, true);
   }, []);
 }
 
 function usePanelFocus(setOpen: (open: boolean) => void) {
   const opener = useRef<HTMLElement | null>(null);
+
   const remember = useCallback(() => {
     const active = document.activeElement;
     opener.current =
       active instanceof HTMLElement && active !== document.body ? active : null;
   }, []);
+
   const close = () => {
     setOpen(false);
     const back = opener.current;
     requestAnimationFrame(() => {
-      if (document.activeElement && document.activeElement !== document.body)
+      if (document.activeElement && document.activeElement !== document.body) {
         return;
-      if (back?.isConnected) back.focus();
-      else focusStageQuietly();
+      }
+
+      if (back?.isConnected) {
+        back.focus();
+      } else {
+        focusStageQuietly();
+      }
     });
   };
+
   return { remember, close };
 }
 
@@ -599,24 +681,32 @@ function useOpenRequests(
       );
       setOpen(true);
     };
+
     window.addEventListener(APP_PANEL_EVENT, show);
+
     return () => window.removeEventListener(APP_PANEL_EVENT, show);
   }, [setTab, setOpen, remember]);
 }
 
 function useAlerts(status: AppServerStatus | null, open: boolean) {
   const [hidden, setHidden] = useState<string | null>(null);
+
   const cause =
     status?.doctor?.causes.find((item) => item.severity === "error") ?? null;
+
   const doctorKey = cause
     ? `doctor|${status?.startedAt ?? 0}|${cause.kind}|${cause.title}`
     : null;
+
   const showDoctor = doctorKey !== null && doctorKey !== hidden && !open;
+
   const failKey =
     status?.state === "failed"
       ? `${status.startedAt ?? 0}|${status.message ?? ""}`
       : null;
+
   const failed = failKey !== null && failKey !== hidden && !open && !showDoctor;
+
   return { cause, doctorKey, showDoctor, failKey, failed, setHidden };
 }
 
@@ -628,17 +718,21 @@ export default function AppBar({ projectId, app, onAddRoute }: AppBarProps) {
   const managed = (status?.mode ?? app.mode) === "managed";
   const focus = usePanelFocus(setOpen);
   useOpenRequests(setTab, setOpen, focus.remember);
+
   const { cause, doctorKey, showDoctor, failKey, failed, setHidden } =
     useAlerts(status, open);
+
   const retry = () =>
     void api
       .appControl(projectId, managed ? "restart" : "start")
       .then(refresh)
       .catch(() => undefined);
+
   const showLog = () => {
     setTab("logs");
     setOpen(true);
   };
+
   return (
     <div className="app-bar-root">
       {showDoctor && cause && (

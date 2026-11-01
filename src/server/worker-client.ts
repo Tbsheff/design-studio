@@ -12,6 +12,7 @@ const TSX_LOADER = path.join(
   "dist",
   "loader.mjs"
 );
+
 const MAX_FAILURES = 3;
 
 interface Pending<R> {
@@ -21,6 +22,7 @@ interface Pending<R> {
 
 export function siblingWorkerFile(moduleUrl: string, name: string): string {
   const own = fileURLToPath(moduleUrl);
+
   return path.join(path.dirname(own), `${name}${path.extname(own)}`);
 }
 
@@ -43,9 +45,14 @@ export class WorkerClient<Q, R> {
 
   run(request: Q, transfer: Transferable[] = []): Promise<R> {
     const worker = this.failures >= MAX_FAILURES ? null : this.spawn();
-    if (!worker) return this.options.inProcess(request);
+
+    if (!worker) {
+      return this.options.inProcess(request);
+    }
+
     const id = this.nextId++;
     this.clearIdle();
+
     return new Promise<R>((resolve, reject) => {
       this.pending.set(id, { resolve, reject });
       worker.ref();
@@ -61,19 +68,27 @@ export class WorkerClient<Q, R> {
     const worker = this.worker;
     this.worker = null;
     this.clearIdle();
-    if (worker) await worker.terminate();
+
+    if (worker) {
+      await worker.terminate();
+    }
   }
 
   private spawn(): Worker | null {
-    if (this.worker) return this.worker;
+    if (this.worker) {
+      return this.worker;
+    }
+
     try {
       const execArgv = this.options.file.endsWith(".ts")
         ? ["--import", pathToFileURL(TSX_LOADER).href]
         : [];
+
       const worker = new Worker(this.options.file, {
         workerData: this.options.workerData,
         execArgv,
       });
+
       worker.unref();
       worker.on("message", (reply: WorkerReply<R>) => this.settle(reply));
       worker.on("error", (error) => this.fail(worker, error));
@@ -84,6 +99,7 @@ export class WorkerClient<Q, R> {
         )
       );
       this.worker = worker;
+
       return worker;
     } catch (error) {
       console.error(
@@ -91,28 +107,51 @@ export class WorkerClient<Q, R> {
         error
       );
       this.failures = MAX_FAILURES;
+
       return null;
     }
   }
 
   private settle(reply: WorkerReply<R>): void {
-    if (typeof reply !== "object" || reply === null || !("id" in reply)) return;
+    if (typeof reply !== "object" || reply === null || !("id" in reply)) {
+      return;
+    }
+
     const waiting = this.pending.get(reply.id);
-    if (!waiting) return;
+
+    if (!waiting) {
+      return;
+    }
+
     this.pending.delete(reply.id);
-    if (this.pending.size === 0) this.rest();
-    if ("error" in reply) waiting.reject(new Error(reply.error));
-    else waiting.resolve(reply.result);
+
+    if (this.pending.size === 0) {
+      this.rest();
+    }
+
+    if ("error" in reply) {
+      waiting.reject(new Error(reply.error));
+    } else {
+      waiting.resolve(reply.result);
+    }
   }
 
   private rest(): void {
     const worker = this.worker;
     worker?.unref();
     const idleMs = this.options.idleMs;
-    if (!worker || idleMs === undefined) return;
+
+    if (!worker || idleMs === undefined) {
+      return;
+    }
+
     this.idleTimer = setTimeout(() => {
       this.idleTimer = null;
-      if (this.worker !== worker || this.pending.size > 0) return;
+
+      if (this.worker !== worker || this.pending.size > 0) {
+        return;
+      }
+
       this.worker = null;
       void worker.terminate();
     }, idleMs);
@@ -120,21 +159,33 @@ export class WorkerClient<Q, R> {
   }
 
   private clearIdle(): void {
-    if (this.idleTimer) clearTimeout(this.idleTimer);
+    if (this.idleTimer) {
+      clearTimeout(this.idleTimer);
+    }
+
     this.idleTimer = null;
   }
 
   private fail(worker: Worker, error: Error): void {
-    if (this.worker !== worker) return;
+    if (this.worker !== worker) {
+      return;
+    }
+
     this.worker = null;
     this.failures += 1;
-    if (this.failures >= MAX_FAILURES)
+
+    if (this.failures >= MAX_FAILURES) {
       console.error(
         `[${this.options.label}] worker failed ${this.failures} times; running in process`,
         error
       );
+    }
+
     const waiting = [...this.pending.values()];
     this.pending.clear();
-    for (const item of waiting) item.reject(error);
+
+    for (const item of waiting) {
+      item.reject(error);
+    }
   }
 }

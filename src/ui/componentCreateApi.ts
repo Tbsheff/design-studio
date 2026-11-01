@@ -31,7 +31,9 @@ export function apiMessage(error: unknown): string {
     error instanceof ApiError &&
     error.data &&
     typeof (error.data as { message?: unknown }).message === "string"
-  )
+  ) {
     return (error.data as { message: string }).message;
+  }
+
   return error instanceof Error ? error.message : String(error);
 }

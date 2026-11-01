@@ -34,6 +34,7 @@ import { loadDesignSystemPromptContext } from "../design-system/state.js";
 import { BadRequestError, NotFoundError } from "../store/errors.js";
 
 type Node = DefaultTreeAdapterMap["node"];
+
 type Element = DefaultTreeAdapterMap["element"];
 
 export interface PageFacts {
@@ -55,6 +56,7 @@ export interface PageFacts {
 
 const SKIP_TAGS = new Set(["script", "style", "template", "noscript", "head"]);
 const HEADING = /^h[1-6]$/;
+
 const BLOCK_TAGS = new Set([
   "header",
   "nav",
@@ -73,11 +75,13 @@ const BLOCK_TAGS = new Set([
   "p",
   "figure",
 ]);
+
 const STEP_TEXT_MAX = 28;
 const META_TEXT_MAX = 16;
 const LIST_MAX = 24;
 const TEXTS_PER_SECTION = 6;
 const CURRENT_CLASS = /(^|\s)(on|active|current|is-active|selected)(\s|$)/;
+
 const COLOR_LITERAL =
   /#[0-9a-f]{3,8}\b|\b(?:oklch|oklab|rgba?|hsla?|lab|lch)\([^)]*\)/gi;
 
@@ -103,6 +107,7 @@ function clean(text: string): string {
 
 function isHidden(el: Element): boolean {
   const style = (attr(el, "style") ?? "").replace(/\s+/g, "");
+
   return (
     attr(el, "hidden") !== null ||
     attr(el, "aria-hidden") === "true" ||
@@ -112,19 +117,25 @@ function isHidden(el: Element): boolean {
 
 function isDecor(el: Element): boolean {
   const style = (attr(el, "style") ?? "").replace(/\s+/g, "");
+
   return el.tagName === "svg" && /position:absolute/i.test(style);
 }
 
 function textOf(node: Node): string {
-  if (node.nodeName === "#text" && "value" in node) return node.value;
+  if (node.nodeName === "#text" && "value" in node) {
+    return node.value;
+  }
+
   if (
     !isElement(node) ||
     SKIP_TAGS.has(node.tagName) ||
     isHidden(node) ||
     isDecor(node) ||
     node.tagName === "svg"
-  )
+  ) {
     return " ";
+  }
+
   return kids(node).map(textOf).join(" ");
 }
 
@@ -151,16 +162,21 @@ const INLINE = new Set([
 ]);
 
 function lines(node: Node): string {
-  if (node.nodeName === "#text" && "value" in node)
+  if (node.nodeName === "#text" && "value" in node) {
     return node.value.replace(/\s+/g, " ");
+  }
+
   if (
     !isElement(node) ||
     SKIP_TAGS.has(node.tagName) ||
     isHidden(node) ||
     node.tagName === "svg"
-  )
+  ) {
     return "";
+  }
+
   const inner = kids(node).map(lines).join("");
+
   return INLINE.has(node.tagName) ? ` ${inner} ` : `\n${inner}\n`;
 }
 
@@ -176,14 +192,23 @@ function descendants(
   skip: Set<string> = SKIP_TAGS
 ): Element[] {
   const out: Element[] = [];
+
   const walk = (node: Node): void => {
     for (const child of childElements(node)) {
-      if (skip.has(child.tagName)) continue;
-      if (keep(child)) out.push(child);
+      if (skip.has(child.tagName)) {
+        continue;
+      }
+
+      if (keep(child)) {
+        out.push(child);
+      }
+
       walk(child);
     }
   };
+
   walk(el);
+
   return out;
 }
 
@@ -198,6 +223,7 @@ function className(el: Element): string | null {
 function labelOf(el: Element): string {
   const name = attr(el, "data-name");
   const cls = className(el)?.split(" ")[0];
+
   return `${el.tagName}${cls ? `.${cls}` : ""}${name ? ` "${name}"` : ""}`;
 }
 
@@ -207,11 +233,17 @@ function uniq(values: string[], max = LIST_MAX): string[] {
 
 function contentRoot(doc: Node): Element | null {
   const body = find(doc, (el) => el.tagName === "body");
-  if (!body) return null;
+
+  if (!body) {
+    return null;
+  }
+
   const blocks = childElements(body).filter(
     (el) => !isHidden(el) && !SKIP_TAGS.has(el.tagName)
   );
+
   const only = blocks.length === 1 ? blocks[0] : undefined;
+
   return only && (only.tagName === "main" || only.tagName === "div")
     ? only
     : body;
@@ -224,6 +256,7 @@ function sectionsOf(root: Element): PortSection[] {
       const heading = HEADING.test(el.tagName)
         ? el
         : find(el, (child) => HEADING.test(child.tagName) && !isHidden(child));
+
       return {
         tag: el.tagName,
         label: labelOf(el),
@@ -240,18 +273,27 @@ function stepsOf(root: Element): { steps: string[]; current: string | null } {
       (el.tagName === "ol" || /step/i.test(attr(el, "class") ?? "")) &&
       childElements(el).length >= 2
   );
-  if (!list) return { steps: [], current: null };
+
+  if (!list) {
+    return { steps: [], current: null };
+  }
+
   const items = childElements(list).filter(
     (el) => el.tagName === "li" || el.tagName === "a"
   );
+
   const texts = items.map((el) => clean(textOf(el)));
-  if (texts.some((text) => !text || text.length > STEP_TEXT_MAX))
+
+  if (texts.some((text) => !text || text.length > STEP_TEXT_MAX)) {
     return { steps: [], current: null };
+  }
+
   const current = items.find(
     (el) =>
       CURRENT_CLASS.test(attr(el, "class") ?? "") ||
       attr(el, "aria-current") !== null
   );
+
   return { steps: texts, current: current ? clean(textOf(current)) : null };
 }
 
@@ -265,15 +307,23 @@ function repeatOf(items: Element[]): PortRepeat | null {
       find(item, (el) => HEADING.test(el.tagName) && !isHidden(el))
     )
     .map((el) => (el ? clean(textOf(el)) : ""));
+
   const withHeading = headings.filter(Boolean).length;
-  if (withHeading < items.length) return null;
+
+  if (withHeading < items.length) {
+    return null;
+  }
+
   const first = items[0] as Element;
+
   const inner =
     childElements(first).length === 1
       ? (childElements(first)[0] as Element)
       : first;
+
   const link =
     first.tagName === "a" ? first : find(first, (el) => el.tagName === "a");
+
   return {
     role: "card",
     count: items.length,
@@ -287,28 +337,43 @@ function repeatOf(items: Element[]): PortRepeat | null {
 
 function repeatsOf(root: Element): PortRepeat[] {
   const out: PortRepeat[] = [];
+
   const walk = (el: Element): void => {
     const groups = new Map<string, Element[]>();
-    for (const child of childElements(el).filter((item) => !isHidden(item)))
+
+    for (const child of childElements(el).filter((item) => !isHidden(item))) {
       groups.set(signature(child), [
         ...(groups.get(signature(child)) ?? []),
         child,
       ]);
+    }
+
     const found = [...groups.values()]
       .filter((items) => items.length >= 2)
       .map(repeatOf)
       .filter((item): item is PortRepeat => item !== null);
+
     out.push(...found);
-    if (found.length === 0) childElements(el).forEach(walk);
+
+    if (found.length === 0) {
+      childElements(el).forEach(walk);
+    }
   };
+
   walk(root);
+
   return out;
 }
 
 function isAction(el: Element): boolean {
-  if (el.tagName === "button" || attr(el, "role") === "button") return true;
-  if (el.tagName === "input")
+  if (el.tagName === "button" || attr(el, "role") === "button") {
+    return true;
+  }
+
+  if (el.tagName === "input") {
     return ["submit", "button"].includes(attr(el, "type") ?? "");
+  }
+
   return (
     el.tagName === "a" && /\b(btn|button|cta)\b/i.test(attr(el, "class") ?? "")
   );
@@ -316,16 +381,18 @@ function isAction(el: Element): boolean {
 
 function imagesOf(root: Element, skipped: string[]): PortImage[] {
   const out: PortImage[] = [];
+
   for (const el of descendants(
     root,
     (item) => item.tagName === "img" || item.tagName === "svg"
   )) {
-    if (isHidden(el))
+    if (isHidden(el)) {
       skipped.push(
         `hidden ${el.tagName}${attr(el, "src") ? ` ${attr(el, "src")}` : ""}`
       );
-    else if (isDecor(el)) skipped.push(`absolute decorative ${labelOf(el)}`);
-    else
+    } else if (isDecor(el)) {
+      skipped.push(`absolute decorative ${labelOf(el)}`);
+    } else {
       out.push(
         el.tagName === "img"
           ? { src: attr(el, "src") ?? "", alt: attr(el, "alt") ?? "" }
@@ -334,22 +401,30 @@ function imagesOf(root: Element, skipped: string[]): PortImage[] {
               alt: clean(textOf(el)),
             }
       );
+    }
   }
+
   return out;
 }
 
 function linksOf(root: Element): PortLink[] {
   const seen = new Set<string>();
   const out: PortLink[] = [];
+
   for (const el of descendants(
     root,
     (item) => item.tagName === "a" && Boolean(attr(item, "href"))
   )) {
     const href = attr(el, "href") as string;
-    if (seen.has(href)) continue;
+
+    if (seen.has(href)) {
+      continue;
+    }
+
     seen.add(href);
     out.push({ href, text: clean(textOf(el)).slice(0, 80) });
   }
+
   return out.slice(0, LIST_MAX);
 }
 
@@ -365,21 +440,29 @@ function styleText(doc: Node): string {
 
 function tokenDefs(css: string): Map<string, string> {
   const defs = new Map<string, string>();
-  for (const match of css.matchAll(/(--[\w-]+)\s*:\s*([^;}]+)/g))
-    if (!defs.has(match[1] as string))
+
+  for (const match of css.matchAll(/(--[\w-]+)\s*:\s*([^;}]+)/g)) {
+    if (!defs.has(match[1] as string)) {
       defs.set(match[1] as string, clean(match[2] as string));
+    }
+  }
+
   return defs;
 }
 
 function tokenUses(css: string): Map<string, number> {
   const uses = new Map<string, number>();
-  for (const match of css.matchAll(/var\(\s*(--[\w-]+)/g))
+
+  for (const match of css.matchAll(/var\(\s*(--[\w-]+)/g)) {
     uses.set(match[1] as string, (uses.get(match[1] as string) ?? 0) + 1);
+  }
+
   return uses;
 }
 
 function rawColorCount(css: string): number {
   const withoutDefs = css.replace(/--[\w-]+\s*:\s*[^;}]+/g, "");
+
   return withoutDefs.match(COLOR_LITERAL)?.length ?? 0;
 }
 
@@ -390,17 +473,32 @@ function roleHints(
 ): Map<PortKitRole, string> {
   const roles = new Map<PortKitRole, string>();
   const cards = repeats.filter((item) => item.role === "card");
-  if (cards[0])
+
+  if (cards[0]) {
     roles.set(
       "card",
       `${cards[0].count} repeated ${cards[0].tag}${cards[0].className ? `.${cards[0].className.split(" ")[0]}` : ""} blocks with a heading (${cards[0].headings.slice(0, 4).join(", ")})`
     );
+  }
+
   const badge = badgeHint(root, cards[0] ?? null);
-  if (badge) roles.set("badge", badge);
+
+  if (badge) {
+    roles.set("badge", badge);
+  }
+
   const button = buttonHint(root, css);
-  if (button) roles.set("button", button);
-  for (const [role, hint] of domHints(root))
-    if (!roles.has(role)) roles.set(role, hint);
+
+  if (button) {
+    roles.set("button", button);
+  }
+
+  for (const [role, hint] of domHints(root)) {
+    if (!roles.has(role)) {
+      roles.set(role, hint);
+    }
+  }
+
   return roles;
 }
 
@@ -411,12 +509,20 @@ function badgeHint(root: Element, card: PortRepeat | null): string | null {
       /\b(badge|tag|pill|chip|status)\b/i.test(attr(el, "class") ?? "") &&
       !isHidden(el)
   );
-  if (named) return `${labelOf(named)} "${clean(textOf(named)).slice(0, 40)}"`;
-  if (!card) return null;
+
+  if (named) {
+    return `${labelOf(named)} "${clean(textOf(named)).slice(0, 40)}"`;
+  }
+
+  if (!card) {
+    return null;
+  }
+
   const cardEl = find(
     root,
     (el) => signature(el) === `${card.tag}.${card.className ?? ""}`
   );
+
   const meta = cardEl
     ? find(
         cardEl,
@@ -424,6 +530,7 @@ function badgeHint(root: Element, card: PortRepeat | null): string | null {
           !HEADING.test(el.tagName) && el.tagName !== "p" && isShortMeta(el)
       )
     : null;
+
   return meta
     ? `short meta text in each card (${labelOf(meta)}: ${ownTexts(meta).join(" · ")})`
     : null;
@@ -431,6 +538,7 @@ function badgeHint(root: Element, card: PortRepeat | null): string | null {
 
 function isShortMeta(el: Element): boolean {
   const texts = ownTexts(el);
+
   return (
     texts.length >= 1 &&
     texts.length <= 3 &&
@@ -441,12 +549,16 @@ function isShortMeta(el: Element): boolean {
 
 function buttonHint(root: Element, css: string): string | null {
   const actions = descendants(root, isAction).filter((el) => !isHidden(el));
-  if (actions[0])
+
+  if (actions[0]) {
     return `${actions.length} action${actions.length === 1 ? "" : "s"} (${uniq(
       actions.map((el) => clean(textOf(el))),
       4
     ).join(", ")})`;
+  }
+
   const rule = /(^|[}\s,])(\.(?:btn|button|cta)[\w-]*)\s*[{,:]/m.exec(css);
+
   return rule
     ? `the page CSS defines ${rule[2]} for actions (the flow pages use it), no button on this page`
     : null;
@@ -483,6 +595,7 @@ const DOM_ROLES: {
 function domHints(root: Element): [PortKitRole, string][] {
   return DOM_ROLES.flatMap(({ role, test, what }) => {
     const count = descendants(root, (el) => test(el) && !isHidden(el)).length;
+
     return count > 0
       ? [[role, `${count} ${what}`] as [PortKitRole, string]]
       : [];
@@ -494,6 +607,7 @@ export function readPageFacts(html: string): PageFacts {
   const root = contentRoot(doc);
   const css = styleText(doc);
   const titleEl = descendants(doc, (el) => el.tagName === "title", NO_SKIP)[0];
+
   const title = titleEl
     ? clean(
         kids(titleEl)
@@ -501,7 +615,8 @@ export function readPageFacts(html: string): PageFacts {
           .join("")
       ) || null
     : null;
-  if (!root)
+
+  if (!root) {
     return {
       title,
       sections: [],
@@ -518,16 +633,20 @@ export function readPageFacts(html: string): PageFacts {
       skipped: [],
       roles: new Map(),
     };
+  }
+
   const skipped: string[] = [];
   const { steps, current } = stepsOf(root);
   const repeats = repeatsOf(root);
   const defs = tokenDefs(css);
+
   const tokens = [...tokenUses(css)].map(([name, uses]) => ({
     name,
     value: defs.get(name) ?? null,
     uses,
     target: null,
   }));
+
   return {
     title,
     sections: sectionsOf(root),
@@ -575,11 +694,19 @@ function targetToken(
 ): string | null {
   const names = new Set(entries.map((entry) => entry.cssVar));
   const key = token.name.replace(/^--/, "");
+
   const named = [...(TOKEN_NAMES[key] ?? []), `--${key}`].find((name) =>
     names.has(name)
   );
-  if (named) return named;
-  if (!token.value) return null;
+
+  if (named) {
+    return named;
+  }
+
+  if (!token.value) {
+    return null;
+  }
+
   return matchColor(token.value, entries)[0]?.cssVar ?? null;
 }
 
@@ -587,7 +714,10 @@ export function mapTokens(
   tokens: PortToken[],
   entries: CompiledTokenEntry[]
 ): PortToken[] {
-  if (entries.length === 0) return tokens;
+  if (entries.length === 0) {
+    return tokens;
+  }
+
   return tokens.map((token) => ({
     ...token,
     target: targetToken(token, entries),
@@ -604,6 +734,7 @@ function list(label: string, values: string[]): string {
 
 export function portPlanText(plan: PortPlan): string {
   const target = plan.target;
+
   const head = [
     `Source: ${plan.source.path}${plan.source.title ? ` ("${plan.source.title}")` : ""}`,
     target
@@ -613,6 +744,7 @@ export function portPlanText(plan: PortPlan): string {
       ? `Steps: ${plan.steps.join(" > ")}${plan.currentStep ? ` (this page: ${plan.currentStep})` : ""}`
       : "",
   ];
+
   const parts = [
     head.filter(Boolean).join("\n"),
     list(
@@ -658,7 +790,9 @@ export function portPlanText(plan: PortPlan): string {
     list("Leave out", plan.skipped),
     `Inline styles in the prototype: ${plan.inlineStyles}. Raw colors in its CSS: ${plan.rawColors}. Do not copy either.`,
   ];
+
   const text = parts.filter(Boolean).join("\n\n");
+
   return text.length > PLAN_TEXT_MAX
     ? `${text.slice(0, PLAN_TEXT_MAX)}\n[plan cut]`
     : text;
@@ -689,10 +823,13 @@ const SOURCE_MAX = 400_000;
 export function sourcePagePath(raw: string): string {
   const clean = cleanFramePath(raw);
   const page = clean || "index.html";
-  if (clean === null || !/\.html?$/i.test(page))
+
+  if (clean === null || !/\.html?$/i.test(page)) {
     throw new BadRequestError(
       "path must be an HTML page in the source project, like index.html"
     );
+  }
+
   return page;
 }
 
@@ -701,9 +838,11 @@ export async function readSourcePage(
   pagePath: string
 ): Promise<string> {
   const page = sourcePagePath(pagePath);
+
   const html = await readFile(path.join(workTree, page), "utf-8").catch(() => {
     throw new NotFoundError(`No page ${page} in the source project`);
   });
+
   return html.slice(0, SOURCE_MAX);
 }
 
@@ -714,8 +853,10 @@ async function kitFor(
 ): Promise<Pick<PortPlan, "kit" | "missing">> {
   const kit: PortPlan["kit"] = [];
   const missing: PortPlan["missing"] = [];
+
   for (const [role, reason] of roles) {
     const names = KIT_NAMES[role];
+
     const found = await searchComponents(project, workTree, {
       query: role,
       limit: 40,
@@ -724,7 +865,8 @@ async function kitFor(
         result.components.find((item) => names.includes(item.name)) ?? null,
       () => null
     );
-    if (found)
+
+    if (found) {
       kit.push({
         role,
         name: found.name,
@@ -733,12 +875,14 @@ async function kitFor(
         parts: found.parts.slice(0, 8),
         reason,
       });
-    else
+    } else {
       missing.push({
         role,
         reason: `${reason}; the app has no ${names.join(" or ")} component`,
       });
+    }
   }
+
   return { kit, missing };
 }
 
@@ -754,6 +898,7 @@ async function targetOf(
 ): Promise<PortTarget> {
   const { project, direction, route } = input;
   const app = project.app ?? null;
+
   const base: PortTarget = {
     projectId: project.id,
     name: project.name,
@@ -762,25 +907,41 @@ async function targetOf(
     routeFile: null,
     routeExists: false,
   };
-  if (!app || !route) return base;
+
+  if (!app || !route) {
+    return base;
+  }
+
   const routes = await listAppRoutes(direction.workTree, app.appDir).catch(
     () => []
   );
+
   const existing = routes.find((item) => item.route === portRouteUrl(route));
-  if (existing) return { ...base, routeFile: existing.file, routeExists: true };
-  if (app.framework !== "next") return base;
+
+  if (existing) {
+    return { ...base, routeFile: existing.file, routeExists: true };
+  }
+
+  if (app.framework !== "next") {
+    return base;
+  }
+
   const router = appRouterDir(path.join(direction.workTree, app.appDir));
+
   const routerRel = router
     ? path.relative(direction.workTree, router).split(path.sep).join("/")
     : path.posix.join(app.appDir, "app");
+
   return { ...base, routeFile: `${routerRel}${route}/page.tsx` };
 }
 
 export async function buildPortPlan(input: PortPlanInput): Promise<PortPlan> {
   const { source, target } = input;
+
   const facts = readPageFacts(
     await readSourcePage(source.direction.workTree, source.path)
   );
+
   const [targetInfo, kitInfo, designSystem] = await Promise.all([
     target ? targetOf(target) : Promise.resolve(null),
     target
@@ -793,7 +954,9 @@ export async function buildPortPlan(input: PortPlanInput): Promise<PortPlan> {
         ).catch(() => null)
       : Promise.resolve(null),
   ]);
+
   const { roles: _roles, title, ...rest } = facts;
+
   return {
     source: {
       projectId: source.project.id,
@@ -820,8 +983,10 @@ const LINK_ATTRS: Record<string, PortFlowLinkKind> = {
   action: "form",
   formaction: "form",
 };
+
 const PAGE_LITERAL =
   /["'`]((?:\.\/)?[\w-][\w./-]*\.html?)((?:[?#][^"'`\s]*)?)/gi;
+
 const EXTERNAL = /^(?:[a-z][a-z0-9+.-]*:|\/\/|#)/i;
 
 function pageRef(
@@ -830,13 +995,22 @@ function pageRef(
   raw: string
 ): PageRef | null {
   const href = raw.trim();
-  if (!href || EXTERNAL.test(href)) return null;
+
+  if (!href || EXTERNAL.test(href)) {
+    return null;
+  }
+
   const split = /^([^?#]*)(.*)$/.exec(href);
   const file = split?.[1] ?? "";
-  if (!/\.html?$/i.test(file) || file.startsWith("/")) return null;
+
+  if (!/\.html?$/i.test(file) || file.startsWith("/")) {
+    return null;
+  }
+
   const page = cleanFramePath(
     path.posix.normalize(path.posix.join(path.posix.dirname(from), file))
   );
+
   return page ? { kind, href, page, rest: split?.[2] ?? "" } : null;
 }
 
@@ -848,32 +1022,44 @@ function literals(code: string): string[] {
 
 function elementRefs(from: string, el: Element): PageRef[] {
   const out: (PageRef | null)[] = [];
+
   for (const item of el.attrs) {
     const kind = LINK_ATTRS[item.name];
-    if (kind && el.tagName !== "link")
+
+    if (kind && el.tagName !== "link") {
       out.push(pageRef(from, kind, item.value));
-    else if (item.name.startsWith("on"))
+    } else if (item.name.startsWith("on")) {
       out.push(
         ...literals(item.value).map((href) => pageRef(from, "script", href))
       );
+    }
   }
+
   if (el.tagName === "script") {
     const code = kids(el)
       .map((child) => ("value" in child ? child.value : ""))
       .join("");
+
     out.push(...literals(code).map((href) => pageRef(from, "script", href)));
   }
+
   return out.filter((ref): ref is PageRef => ref !== null);
 }
 
 function pageRefs(from: string, html: string): PageRef[] {
   const seen = new Set<string>();
+
   return descendants(parse(html), () => true, NO_SKIP)
     .flatMap((el) => elementRefs(from, el))
     .filter((ref) => {
       const key = `${ref.kind} ${ref.href}`;
-      if (seen.has(key)) return false;
+
+      if (seen.has(key)) {
+        return false;
+      }
+
       seen.add(key);
+
       return true;
     });
 }
@@ -890,25 +1076,34 @@ async function crawlFlow(workTree: string, entry: string): Promise<FlowPage[]> {
       refs: pageRefs(entry, await readSourcePage(workTree, entry)),
     },
   ];
+
   const seen = new Set([entry]);
+
   for (
     let index = 0;
     index < pages.length && pages.length < PORT_FLOW_MAX_PAGES;
     index += 1
   ) {
     for (const ref of (pages[index] as FlowPage).refs) {
-      if (seen.has(ref.page) || pages.length >= PORT_FLOW_MAX_PAGES) continue;
+      if (seen.has(ref.page) || pages.length >= PORT_FLOW_MAX_PAGES) {
+        continue;
+      }
+
       seen.add(ref.page);
       const html = await readSourcePage(workTree, ref.page).catch(() => null);
-      if (html !== null)
+
+      if (html !== null) {
         pages.push({ path: ref.page, refs: pageRefs(ref.page, html) });
+      }
     }
   }
+
   return pages;
 }
 
 async function rootPages(workTree: string): Promise<string[]> {
   const names = await readdir(workTree).catch(() => [] as string[]);
+
   return names.filter((name) => /\.html?$/i.test(name)).sort();
 }
 
@@ -919,24 +1114,37 @@ function flowRoutes(
 ): Map<string, string> {
   const routes = new Map<string, string>([[entry, base]]);
   const used = new Set<string>();
+
   for (const page of order.filter((item) => item !== entry)) {
     const slug = portPageSlug(page);
     let name = slug;
-    for (let n = 2; used.has(name); n += 1) name = `${slug}-${n}`;
+
+    for (let n = 2; used.has(name); n += 1) {
+      name = `${slug}-${n}`;
+    }
+
     used.add(name);
     const route = cleanPortRoute(`${base}/${name}`);
-    if (!route)
+
+    if (!route) {
       throw new BadRequestError(
         `The route for ${page} under ${base} is too deep. Use a shorter route path.`
       );
+    }
+
     routes.set(page, route);
   }
+
   return routes;
 }
 
 function pickPages(order: string[], paths: string[] | null): string[] {
-  if (!paths) return order;
+  if (!paths) {
+    return order;
+  }
+
   const wanted = new Set(paths.map(sourcePagePath));
+
   return [
     ...order.filter((page) => wanted.has(page)),
     ...[...wanted].filter((page) => !order.includes(page)),
@@ -949,11 +1157,13 @@ function flowLinks(
   routes: Map<string, string>
 ): PortFlowLink[] {
   const chosen = new Set(picked);
+
   return crawled
     .filter((page) => chosen.has(page.path))
     .flatMap((page) =>
       page.refs.flatMap((ref) => {
         const route = routes.get(ref.page);
+
         return route
           ? [
               {
@@ -980,10 +1190,12 @@ async function flowPage(
   route: string
 ): Promise<PortFlowPage> {
   const target = input.target ? { ...input.target, route } : null;
+
   const plan = await buildPortPlan({
     source: { ...input.source, path: page },
     target,
   });
+
   return {
     path: page,
     title: plan.source.title,
@@ -1001,11 +1213,12 @@ async function addPicked(
   picked: string[]
 ): Promise<void> {
   for (const page of picked) {
-    if (!crawled.some((item) => item.path === page))
+    if (!crawled.some((item) => item.path === page)) {
       crawled.push({
         path: page,
         refs: pageRefs(page, await readSourcePage(workTree, page)),
       });
+    }
   }
 }
 
@@ -1016,22 +1229,28 @@ export async function buildFlowPlan(
   const entry = sourcePagePath(source.path);
   const workTree = source.direction.workTree;
   const crawled = await crawlFlow(workTree, entry);
+
   const picked = pickPages(
     crawled.map((page) => page.path),
     input.paths
   );
+
   await addPicked(workTree, crawled, picked);
   const order = crawled.map((page) => page.path);
+
   const base =
     target?.route ??
     suggestPortRoute(
       entry,
       readPageFacts(await readSourcePage(workTree, entry)).title
     );
+
   const routes = flowRoutes(entry, order, base);
+
   const pages = await Promise.all(
     picked.map((page) => flowPage(input, page, routes.get(page) as string))
   );
+
   return {
     source: {
       projectId: source.project.id,
@@ -1060,10 +1279,12 @@ export function portFlowText(flow: PortFlowPlan): string {
     (page) =>
       `- ${page.path} -> ${page.route}${page.routeFile ? ` (file ${page.routeFile})` : ""}`
   );
+
   const links = flow.links.map(
     (link) =>
       `- ${link.from} [${link.kind}] ${link.href} -> ${link.to}${link.ported ? "" : " (page not ported in this run: keep this app path)"}`
   );
+
   return [
     `Base route: ${flow.base}`,
     `Pages in flow order (${flow.pages.length} route files):\n${pages.join("\n")}`,

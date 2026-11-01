@@ -18,6 +18,7 @@ const api = (): ThemeApi | undefined =>
 
 const subscribe = (notify: () => void) => {
   window.addEventListener("studio-theme", notify);
+
   return () => window.removeEventListener("studio-theme", notify);
 };
 
@@ -53,12 +54,20 @@ export default function ThemeMenu({
     ref.current
       ?.querySelector<HTMLButtonElement>('[aria-checked="true"]')
       ?.focus();
+
     const onDown = (event: MouseEvent) => {
       const target = event.target as Node;
-      if (!ref.current?.contains(target) && !trigger.current?.contains(target))
+
+      if (
+        !ref.current?.contains(target) &&
+        !trigger.current?.contains(target)
+      ) {
         onClose(false);
+      }
     };
+
     document.addEventListener("mousedown", onDown);
+
     return () => document.removeEventListener("mousedown", onDown);
   }, [onClose, trigger]);
 
@@ -68,13 +77,17 @@ export default function ThemeMenu({
         '[role="menuitemradio"]'
       ) ?? []),
     ];
+
     const index = items.indexOf(document.activeElement as HTMLButtonElement);
+
     if (event.key === "Escape" || event.key === "Tab") {
       event.preventDefault();
       event.stopPropagation();
       onClose(event.key === "Escape");
+
       return;
     }
+
     const next =
       event.key === "ArrowDown"
         ? index + 1
@@ -85,7 +98,11 @@ export default function ThemeMenu({
             : event.key === "End"
               ? items.length - 1
               : null;
-    if (next === null) return;
+
+    if (next === null) {
+      return;
+    }
+
     event.preventDefault();
     items[(next + items.length) % items.length]?.focus();
   };

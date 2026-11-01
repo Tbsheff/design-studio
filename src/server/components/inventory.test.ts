@@ -12,16 +12,19 @@ const dirs: string[] = [];
 function tree(files: Record<string, string>): string {
   const root = mkdtempSync(path.join(os.tmpdir(), "inventory-"));
   dirs.push(root);
+
   for (const [rel, text] of Object.entries(files)) {
     mkdirSync(path.dirname(path.join(root, rel)), { recursive: true });
     writeFileSync(path.join(root, rel), text);
   }
+
   return root;
 }
 
 afterEach(() => {
-  for (const dir of dirs.splice(0))
+  for (const dir of dirs.splice(0)) {
     rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 const BUTTON = `import type { ReactNode } from 'react';
@@ -58,16 +61,19 @@ describe("listComponents", () => {
       "src/App.tsx": APP,
       "node_modules/x/Bad.tsx": BUTTON,
     });
+
     const found = await listComponents(root, "react");
     expect(found.map((item) => [item.name, item.uses, item.file])).toEqual([
       ["Button", 2, "src/components/Button.tsx"],
       ["Card", 2, "src/components/Card.tsx"],
     ]);
+
     const tagged = tagJsxSource(
       BUTTON,
       path.join(root, "src/components/Button.tsx"),
       "src/components/Button.tsx"
     );
+
     const loc = /data-studio-loc="([^"]+)"/.exec(tagged?.code ?? "")?.[1];
     expect(found[0]?.selector).toBe(`[data-studio-loc="${loc}"]`);
   });
@@ -80,10 +86,12 @@ describe("listComponents", () => {
 <nav data-name="Top nav"><a class="link">x</a></nav>
 <script>const t = '<div class="ghost"></div><div class="ghost"></div>';</script>
 </body>`;
+
     const root = tree({
       "index.html": html,
       "source/url-1/page.html": '<i class="evil"></i><i class="evil"></i>',
     });
+
     const found = await listComponents(root, "html");
     expect(found.map((item) => [item.name, item.selector, item.uses])).toEqual([
       ["Card", ".card", 2],

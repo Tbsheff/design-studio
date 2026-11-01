@@ -39,6 +39,7 @@ export interface UiState {
 }
 
 export type HomeSort = "recent" | "name" | "created";
+
 export const HOME_SORTS: readonly HomeSort[] = ["recent", "name", "created"];
 
 const KEY = "design-studio.ui.v1";
@@ -64,6 +65,7 @@ const defaults: UiState = {
 
 function libraryFromOf(value: unknown): LibraryFrom | null {
   const from = value as Partial<LibraryFrom> | null | undefined;
+
   return typeof from?.projectId === "string" &&
     typeof from.directionId === "string"
     ? { projectId: from.projectId, directionId: from.directionId }
@@ -73,8 +75,13 @@ function libraryFromOf(value: unknown): LibraryFrom | null {
 function loadUiState(): UiState {
   try {
     const raw = localStorage.getItem(KEY);
-    if (!raw) return defaults;
+
+    if (!raw) {
+      return defaults;
+    }
+
     const parsed = JSON.parse(raw) as Partial<UiState>;
+
     return {
       activeProjectId: parsed.activeProjectId ?? null,
       screen:
@@ -137,6 +144,7 @@ export const uiStore = {
   },
   subscribe: (l: () => void) => {
     listeners.add(l);
+
     return () => {
       listeners.delete(l);
     };
@@ -156,15 +164,20 @@ export interface DraftStore {
 export function createDraftStore(initial = ""): DraftStore {
   let value = initial;
   const draftListeners = new Set<() => void>();
+
   return {
     get: () => value,
     set: (next) => {
-      if (next === value) return;
+      if (next === value) {
+        return;
+      }
+
       value = next;
       draftListeners.forEach((l) => l());
     },
     subscribe: (l) => {
       draftListeners.add(l);
+
       return () => {
         draftListeners.delete(l);
       };
@@ -194,9 +207,13 @@ export const homeVariations = {
     homeIntent = intent;
   },
   take: (projectId: string): HomeVariationsIntent | null => {
-    if (homeIntent?.projectId !== projectId) return null;
+    if (homeIntent?.projectId !== projectId) {
+      return null;
+    }
+
     const intent = homeIntent;
     homeIntent = null;
+
     return intent;
   },
 };

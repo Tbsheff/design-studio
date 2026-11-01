@@ -109,6 +109,7 @@ function plural(count: number, one: string, many = `${one}s`): string {
 function hostLabel(url: string): string {
   try {
     const parsed = new URL(url);
+
     return `${parsed.host}${parsed.pathname === "/" ? "" : parsed.pathname}`.slice(
       0,
       80
@@ -123,22 +124,35 @@ export function planSources(
   imageCount: number
 ): DraftSourceStatus[] {
   const list: DraftSourceStatus[] = [];
+
   const add = (id: string, kind: DraftSourceStatus["kind"], label: string) =>
     list.push({ id, kind, label, state: "queued", detail: "Waiting" });
-  if (request.designMd?.trim()) add("design-md", "design-md", "DESIGN.md");
-  if (request.brief?.trim()) add("brief", "brief", "Brief");
-  if (request.tokensFile)
+
+  if (request.designMd?.trim()) {
+    add("design-md", "design-md", "DESIGN.md");
+  }
+
+  if (request.brief?.trim()) {
+    add("brief", "brief", "Brief");
+  }
+
+  if (request.tokensFile) {
     add("tokens-file", "tokens-file", path.basename(request.tokensFile.name));
-  if (request.folderPath?.trim())
+  }
+
+  if (request.folderPath?.trim()) {
     add(
       "folder",
       "folder",
       path.basename(request.folderPath.trim()) || request.folderPath.trim()
     );
+  }
+
   request.urls.forEach((url, index) =>
     add(`url-${index + 1}`, "url", hostLabel(url))
   );
-  if (imageCount > 0)
+
+  if (imageCount > 0) {
     list.push({
       id: "images",
       kind: "images",
@@ -146,26 +160,56 @@ export function planSources(
       state: "read",
       detail: `${plural(imageCount, "image")}: used by the AI step`,
     });
+  }
+
   return list;
 }
 
 function countDetail(harvest: Harvest): { detail: string; total: number } {
   const groups = new Map<string, number>();
+
   for (const candidate of harvest.candidates) {
     const group = candidate.token.split(".")[0] ?? "";
     groups.set(group, (groups.get(group) ?? 0) + 1);
   }
+
   const parts: string[] = [];
   const at = (group: string) => groups.get(group) ?? 0;
-  if (at("color")) parts.push(plural(at("color"), "color"));
-  if (at("font")) parts.push(plural(at("font"), "font"));
-  if (at("text")) parts.push(plural(at("text"), "type size"));
-  if (at("space")) parts.push(plural(at("space"), "space step"));
-  if (at("radius")) parts.push(plural(at("radius"), "radius", "radii"));
-  if (at("shadow")) parts.push(plural(at("shadow"), "shadow"));
+
+  if (at("color")) {
+    parts.push(plural(at("color"), "color"));
+  }
+
+  if (at("font")) {
+    parts.push(plural(at("font"), "font"));
+  }
+
+  if (at("text")) {
+    parts.push(plural(at("text"), "type size"));
+  }
+
+  if (at("space")) {
+    parts.push(plural(at("space"), "space step"));
+  }
+
+  if (at("radius")) {
+    parts.push(plural(at("radius"), "radius", "radii"));
+  }
+
+  if (at("shadow")) {
+    parts.push(plural(at("shadow"), "shadow"));
+  }
+
   const extras = harvest.extras?.length ?? 0;
-  if (extras) parts.push(plural(extras, "extra token"));
-  if (harvest.googleFontsUrl) parts.push("Google Fonts link");
+
+  if (extras) {
+    parts.push(plural(extras, "extra token"));
+  }
+
+  if (harvest.googleFontsUrl) {
+    parts.push("Google Fonts link");
+  }
+
   return {
     detail: parts.join(", "),
     total: harvest.candidates.length + extras,
@@ -175,12 +219,17 @@ function countDetail(harvest: Harvest): { detail: string; total: number } {
 const UNMAPPED_SHOWN = 8;
 
 function unmappedNote(unmapped: string[] | undefined): string | undefined {
-  if (!unmapped || unmapped.length === 0) return undefined;
+  if (!unmapped || unmapped.length === 0) {
+    return undefined;
+  }
+
   const shown = unmapped.slice(0, UNMAPPED_SHOWN).join(", ");
+
   const more =
     unmapped.length > UNMAPPED_SHOWN
       ? `, and ${unmapped.length - UNMAPPED_SHOWN} more`
       : "";
+
   return `Not mapped (${unmapped.length}): ${shown}${more}.`;
 }
 
@@ -192,6 +241,7 @@ function harvested(
 ): SourceResult {
   const result = harvestedState(harvest, kind, label, thinText);
   const note = unmappedNote(harvest.unmapped);
+
   return note ? { ...result, note } : result;
 }
 
@@ -202,14 +252,19 @@ function harvestedState(
   thinText: string
 ): SourceResult {
   const { detail, total } = countDetail(harvest);
+
   const report: SourceReport = {
     kind: harvest.source,
     label,
     ok: true,
     found: total,
   };
-  if (total >= THIN_VALUES) return { state: "read", detail, harvest, report };
-  if (kind === "brief")
+
+  if (total >= THIN_VALUES) {
+    return { state: "read", detail, harvest, report };
+  }
+
+  if (kind === "brief") {
     return {
       state: "read",
       detail:
@@ -219,13 +274,17 @@ function harvestedState(
       harvest,
       report,
     };
-  if (kind === "design-md")
+  }
+
+  if (kind === "design-md") {
     return {
       state: "read",
       detail: total > 0 ? `Used as DESIGN.md. ${detail}` : "Used as DESIGN.md",
       harvest,
       report,
     };
+  }
+
   return {
     state: "thin",
     detail:
@@ -246,50 +305,65 @@ export function urlProblem(error: unknown): {
   detail: string;
 } {
   const message = errorText(error);
-  if (error instanceof FetchBlockedError)
+
+  if (error instanceof FetchBlockedError) {
     return {
       state: "blocked",
       detail: `This address is on a private or local network, so the studio does not read it. ${PASTE_HINT}`,
     };
+  }
+
   if (
     /\b(401|403|407|429|451)\b|forbidden|captcha|challenge|access denied|bot/i.test(
       message
     )
-  )
+  ) {
     return {
       state: "blocked",
       detail: `This site blocks automated reading. ${PASTE_HINT}`,
     };
-  if (/\b404\b|\b410\b/.test(message))
+  }
+
+  if (/\b404\b|\b410\b/.test(message)) {
     return {
       state: "failed",
       detail:
         'The site answered "page not found". Check the address and make a new draft.',
     };
+  }
+
   if (
     /time limit|timed? ?out|ETIMEDOUT|SiteTimeLimit/i.test(message) ||
     (error instanceof Error && error.name === "SiteTimeLimitError")
-  )
+  ) {
     return {
       state: "failed",
       detail: `The site did not answer in time. ${PASTE_HINT}`,
     };
-  if (/ENOTFOUND|EAI_AGAIN|has no address/i.test(message))
+  }
+
+  if (/ENOTFOUND|EAI_AGAIN|has no address/i.test(message)) {
     return {
       state: "failed",
       detail: "The studio could not find this site. Check the address.",
     };
-  if (/ECONNREFUSED/i.test(message))
+  }
+
+  if (/ECONNREFUSED/i.test(message)) {
     return {
       state: "failed",
       detail:
         "Nothing answered at this address. Check that the site is up and the address is right.",
     };
-  if (/ECONNRESET|socket hang up/i.test(message))
+  }
+
+  if (/ECONNRESET|socket hang up/i.test(message)) {
     return {
       state: "failed",
       detail: `The site closed the connection. ${PASTE_HINT}`,
     };
+  }
+
   return {
     state: "failed",
     detail: `The studio could not read this site. ${PASTE_HINT}`,
@@ -300,12 +374,15 @@ function urlNote(result: UrlHarvest): string | undefined {
   const notes = (result.notes ?? []).filter(
     (note) => !result.blocked || !note.includes(result.blocked)
   );
-  if (result.screenshot)
+
+  if (result.screenshot) {
     notes.push(
       result.screenshot.length <= MAX_SHOT_BYTES
         ? "The page screenshot goes to the AI step."
         : "The page screenshot was too large for the AI step."
     );
+  }
+
   return notes.length > 0 ? notes.join(" ") : undefined;
 }
 
@@ -314,7 +391,9 @@ function urlResult(result: UrlHarvest): SourceResult {
     result.method === "browser"
       ? PASTE_HINT
       : `The site may set its styles with JavaScript. ${PASTE_HINT}`;
+
   const base = harvested(result.harvest, "url", result.snapshot.url, thinText);
+
   const extra = {
     url: result,
     report: {
@@ -325,9 +404,11 @@ function urlResult(result: UrlHarvest): SourceResult {
     },
     ...(result.method ? { method: result.method } : {}),
   };
+
   const note = urlNote(result);
   const withNote = note ? { note } : {};
-  if (result.blocked)
+
+  if (result.blocked) {
     return {
       ...base,
       ...extra,
@@ -335,6 +416,8 @@ function urlResult(result: UrlHarvest): SourceResult {
       state: "blocked",
       detail: `This site blocks automated reading (${result.blocked}). The studio kept what a plain read found${base.detail && base.state === "read" ? `: ${base.detail}` : ""}. ${PASTE_HINT}`,
     };
+  }
+
   return { ...base, ...extra, ...withNote };
 }
 
@@ -358,20 +441,25 @@ async function readSource(
       error: errorText(error),
     },
   });
-  if (source.kind === "design-md")
+
+  if (source.kind === "design-md") {
     return harvested(
       harvestDesignText(request.designMd ?? "", "design-md", "DESIGN.md"),
       "design-md",
       "DESIGN.md",
       ""
     );
-  if (source.kind === "brief")
+  }
+
+  if (source.kind === "brief") {
     return harvested(
       harvestDesignText(request.brief ?? "", "brief", "brief"),
       "brief",
       "brief",
       ""
     );
+  }
+
   if (source.kind === "tokens-file" && request.tokensFile) {
     try {
       return harvested(
@@ -381,18 +469,22 @@ async function readSource(
         "The base pack fills the rest."
       );
     } catch (error) {
-      if (error instanceof TokensFileError)
+      if (error instanceof TokensFileError) {
         return failed(
           `The studio could not read this tokens file: ${error.message}. Export it again from Figma (Variables JSON), Tokens Studio or as DTCG JSON or CSS.`,
           error,
           "tokens-file"
         );
+      }
+
       throw error;
     }
   }
+
   if (source.kind === "folder" && request.folderPath) {
     try {
       const folder = await scanFolder(request.folderPath.trim());
+
       return {
         ...harvested(
           folder.harvest,
@@ -403,22 +495,28 @@ async function readSource(
         folder,
       };
     } catch (error) {
-      if (error instanceof FolderScanError)
+      if (error instanceof FolderScanError) {
         return failed(
           `${error.message.replace(/\.$/, "")}. Choose another folder.`,
           error,
           "folder"
         );
+      }
+
       throw error;
     }
   }
+
   const index = Number(source.id.replace("url-", "")) - 1;
   const url = request.urls[index] ?? "";
+
   try {
     const result = await harvestUrl(url, fetcher);
+
     return urlResult(result);
   } catch (error) {
     const problem = urlProblem(error);
+
     return {
       state: problem.state,
       detail: problem.detail,
@@ -434,7 +532,10 @@ async function readSource(
 }
 
 function pendingGroups(entries: CoverageEntry[], done: boolean): KitGroup[] {
-  if (done) return [];
+  if (done) {
+    return [];
+  }
+
   const filled = (prefixes: string[]) =>
     entries.some(
       (entry) =>
@@ -442,6 +543,7 @@ function pendingGroups(entries: CoverageEntry[], done: boolean): KitGroup[] {
         entry.source !== "derived" &&
         prefixes.some((prefix) => entry.token.startsWith(prefix))
     );
+
   const groups: Record<KitGroup, boolean> = {
     colors: filled(["color."]),
     type: filled(["font.", "text."]),
@@ -449,6 +551,7 @@ function pendingGroups(entries: CoverageEntry[], done: boolean): KitGroup[] {
     radius: filled(["radius.", "shadow."]),
     components: filled(["color."]),
   };
+
   return KIT_GROUPS.filter((group) => !groups[group]);
 }
 
@@ -456,8 +559,14 @@ async function readJson<T>(file: string): Promise<T | null> {
   try {
     return JSON.parse(await readFile(file, "utf-8")) as T;
   } catch (error) {
-    if (isNodeError(error) && error.code === "ENOENT") return null;
-    if (error instanceof SyntaxError) return null;
+    if (isNodeError(error) && error.code === "ENOENT") {
+      return null;
+    }
+
+    if (error instanceof SyntaxError) {
+      return null;
+    }
+
     throw error;
   }
 }
@@ -465,8 +574,11 @@ async function readJson<T>(file: string): Promise<T | null> {
 async function writeFiles(workTree: string, files: DraftFile[]): Promise<void> {
   for (const file of files) {
     const target = path.join(workTree, file.path);
-    if (!target.startsWith(workTree + path.sep))
+
+    if (!target.startsWith(workTree + path.sep)) {
       throw new Error(`draft file outside the work tree: ${file.path}`);
+    }
+
     await mkdir(path.dirname(target), { recursive: true });
     await writeFile(target, file.content);
   }
@@ -479,22 +591,27 @@ async function updateMeta(
 ): Promise<void> {
   const file = path.join(workTree, META_FILE);
   const meta = (await readJson<Record<string, unknown>>(file)) ?? {};
+
   const listed = Array.isArray(meta.attachments)
     ? (meta.attachments as unknown[])
     : [];
+
   const shots = job.shots.map((item) => ({
     id: item.id,
     name: item.name,
     mime: item.mime,
     from: "website screenshot",
   }));
+
   const extra = job.logo ? [job.logo] : [];
+
   const next = {
     ...meta,
     inputs: draft.inputs,
     attachments: [...listed, ...shots],
     files: [KIT_PAGE_FILE, ...extra, ...draft.files.map((item) => item.path)],
   };
+
   await writeFile(file, `${JSON.stringify(next, null, 2)}\n`);
 }
 
@@ -508,7 +625,10 @@ interface Job {
 }
 
 function staleState(state: DraftSourcesState): DraftSourcesState {
-  if (state.done) return state;
+  if (state.done) {
+    return state;
+  }
+
   const sources = state.sources.map((source) =>
     FINAL_STATES.has(source.state)
       ? source
@@ -519,6 +639,7 @@ function staleState(state: DraftSourcesState): DraftSourcesState {
             "The studio stopped before it read this source. Make a new draft to try again.",
         }
   );
+
   return {
     ...state,
     sources,
@@ -536,6 +657,7 @@ function staleState(state: DraftSourcesState): DraftSourcesState {
 function merge(job: Job): Harvested {
   const out = emptyHarvested();
   const ordered = ["tokens-file", "folder", "url", "design-md", "brief"];
+
   const done = job.planned
     .map((source) => ({ source, result: job.results.get(source.id) }))
     .filter(
@@ -547,25 +669,40 @@ function merge(job: Job): Harvested {
         ordered.indexOf(a.source.kind) - ordered.indexOf(b.source.kind) ||
         a.source.order - b.source.order
     );
+
   for (const { result } of done) {
-    if (result.harvest) out.harvests.push(result.harvest);
-    if (result.url) out.urlHarvests.push(result.url);
-    if (result.folder) out.folder = result.folder;
+    if (result.harvest) {
+      out.harvests.push(result.harvest);
+    }
+
+    if (result.url) {
+      out.urlHarvests.push(result.url);
+    }
+
+    if (result.folder) {
+      out.folder = result.folder;
+    }
+
     out.reports.push(result.report);
   }
+
   const images = job.state.sources.find((source) => source.kind === "images");
-  if (images)
+
+  if (images) {
     out.reports.push({
       kind: "images",
       label: images.detail.split(":")[0] ?? "images",
       ok: true,
       found: 0,
     });
+  }
+
   return out;
 }
 
 export function createLiveDrafts(deps: LiveDraftDeps): LiveDrafts {
   const jobs = new Map<string, Job>();
+
   const stateFile = (projectId: string) =>
     path.join(deps.projectDir(projectId), STATE_FILE);
 
@@ -600,6 +737,7 @@ export function createLiveDrafts(deps: LiveDraftDeps): LiveDrafts {
       const merged = merge(job);
       const logo = job.logo ?? undefined;
       const first = assembleDraft(input.request, input.base, merged, [], logo);
+
       const draft = done
         ? first
         : assembleDraft(
@@ -609,19 +747,26 @@ export function createLiveDrafts(deps: LiveDraftDeps): LiveDrafts {
             pendingGroups(first.coverage.tokens, done),
             logo
           );
+
       const pack = await deps.library.updateUserPack(input.packId, {
         ...draft.pack,
         draft: true,
       });
+
       await applyPack(project, direction.workTree, pack);
+
       const files = done
         ? draft.files
         : draft.files.filter((file) => file.path.endsWith("coverage.json"));
+
       await writeFiles(direction.workTree, [
         { path: KIT_PAGE_FILE, content: draft.kitHtml },
         ...files,
       ]);
-      if (done) await updateMeta(direction.workTree, draft, job);
+
+      if (done) {
+        await updateMeta(direction.workTree, draft, job);
+      }
     });
   };
 
@@ -632,11 +777,17 @@ export function createLiveDrafts(deps: LiveDraftDeps): LiveDrafts {
   ): Promise<void> => {
     await rebuild(projectId, input, job, true);
     job.state = { ...job.state, done: true, finishedAt: Date.now() };
+
     const read =
       [...job.results.values()].some((result) => result.report.ok) ||
       job.state.sources.some((source) => source.kind === "images");
+
     await deps.commit(await deps.getProject(projectId), "Read sources");
-    if (job.state.improve.state !== "waiting") return;
+
+    if (job.state.improve.state !== "waiting") {
+      return;
+    }
+
     if (!read) {
       job.state = {
         ...job.state,
@@ -646,15 +797,19 @@ export function createLiveDrafts(deps: LiveDraftDeps): LiveDrafts {
             "No source could be read. Fix the sources above, or use Improve with AI.",
         },
       };
+
       return;
     }
+
     job.state = { ...job.state, improve: { state: "started" } };
     await save(projectId, job);
+
     try {
       const started = await deps.startImprove(projectId);
       job.state = { ...job.state, improve: started.start };
       const runId = started.start.runId;
-      if (runId && started.ended)
+
+      if (runId && started.ended) {
         void started.ended
           .then((status) => improveEnded(projectId, runId, status))
           .catch((error: unknown) =>
@@ -663,6 +818,7 @@ export function createLiveDrafts(deps: LiveDraftDeps): LiveDrafts {
               error
             )
           );
+      }
     } catch (error) {
       job.state = {
         ...job.state,
@@ -681,13 +837,20 @@ export function createLiveDrafts(deps: LiveDraftDeps): LiveDrafts {
   ): Promise<void> => {
     const done: DraftImproveStart = { state: "done", runId, status };
     const live = jobs.get(projectId);
+
     if (live?.state.improve.runId === runId) {
       live.state = { ...live.state, improve: done };
       await save(projectId, live);
+
       return;
     }
+
     const stored = await readJson<DraftSourcesState>(stateFile(projectId));
-    if (stored?.improve.runId !== runId) return;
+
+    if (stored?.improve.runId !== runId) {
+      return;
+    }
+
     const next = { ...stored, improve: done };
     await writeFile(stateFile(projectId), `${JSON.stringify(next, null, 2)}\n`);
     deps.emit(await deps.getProject(projectId), next);
@@ -700,7 +863,8 @@ export function createLiveDrafts(deps: LiveDraftDeps): LiveDrafts {
     result: SourceResult
   ): Promise<void> => {
     const shot = result.url?.screenshot;
-    if (shot && shot.length <= MAX_SHOT_BYTES)
+
+    if (shot && shot.length <= MAX_SHOT_BYTES) {
       job.shots.push(
         await deps.saveAttachment(projectId, {
           name: `${source.id}-screenshot.png`,
@@ -708,8 +872,14 @@ export function createLiveDrafts(deps: LiveDraftDeps): LiveDrafts {
           bytes: new Uint8Array(shot),
         })
       );
+    }
+
     const logo = result.url?.logo;
-    if (!logo || job.logo) return;
+
+    if (!logo || job.logo) {
+      return;
+    }
+
     const relative = `${SOURCE_DIR}/${source.id}/${LOGO_FILE}`;
     await deps.withMain(projectId, async (_project, direction) => {
       await mkdir(path.join(direction.workTree, SOURCE_DIR, source.id), {
@@ -733,6 +903,7 @@ export function createLiveDrafts(deps: LiveDraftDeps): LiveDrafts {
     });
     await job.chain;
     let result: SourceResult;
+
     try {
       result = await readSource(source, input.request, deps.fetcher);
     } catch (error) {
@@ -748,6 +919,7 @@ export function createLiveDrafts(deps: LiveDraftDeps): LiveDrafts {
         },
       };
     }
+
     job.chain = job.chain.then(async () => {
       job.results.set(source.id, result);
       await keepPageImages(projectId, job, source, result).catch(
@@ -779,14 +951,19 @@ export function createLiveDrafts(deps: LiveDraftDeps): LiveDrafts {
     const projectId = input.project.id;
     const local = job.planned.filter((source) => source.kind !== "url");
     const urls = job.planned.filter((source) => source.kind === "url");
-    for (const source of local) await runSource(projectId, input, job, source);
+
+    for (const source of local) {
+      await runSource(projectId, input, job, source);
+    }
+
     const queue = [...urls];
     await Promise.all(
       Array.from(
         { length: Math.min(URL_CONCURRENCY, queue.length) },
         async () => {
-          for (let next = queue.shift(); next; next = queue.shift())
+          for (let next = queue.shift(); next; next = queue.shift()) {
             await runSource(projectId, input, job, next);
+          }
         }
       )
     );
@@ -807,13 +984,16 @@ export function createLiveDrafts(deps: LiveDraftDeps): LiveDrafts {
     start(input) {
       const projectId = input.project.id;
       const fresh = this.plan(input.request, input.imageCount);
+
       const state: DraftSourcesState =
         input.autoImprove === false
           ? { ...fresh, improve: { state: "skipped", reason: IMPROVE_IN_APP } }
           : fresh;
+
       const planned = state.sources
         .map((source, order) => ({ ...source, order }))
         .filter((source) => source.kind !== "images");
+
       const job: Job = {
         state,
         planned,
@@ -822,6 +1002,7 @@ export function createLiveDrafts(deps: LiveDraftDeps): LiveDrafts {
         shots: [],
         logo: null,
       };
+
       jobs.set(projectId, job);
       void save(projectId, job)
         .then(() => run(input, job))
@@ -840,12 +1021,18 @@ export function createLiveDrafts(deps: LiveDraftDeps): LiveDrafts {
     },
     async read(projectId) {
       const live = jobs.get(projectId);
-      if (live) return live.state;
+
+      if (live) {
+        return live.state;
+      }
+
       const stored = await readJson<DraftSourcesState>(stateFile(projectId));
+
       return stored ? staleState(stored) : null;
     },
     isReading(projectId) {
       const job = jobs.get(projectId);
+
       return job !== undefined && !job.state.done;
     },
   };

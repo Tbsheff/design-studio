@@ -125,6 +125,7 @@ interface Rect {
 }
 
 const RELATIONS = ["below", "rightOf", "leftOf", "above"] as const;
+
 type Relation = (typeof RELATIONS)[number];
 
 class PlaceError extends Error {}
@@ -165,10 +166,13 @@ export function findFrame(
   ref: string
 ): CanvasFileFrame | null {
   const key = ref.trim();
+
   if (key.startsWith("@")) {
     const label = key.slice(1).trim().toLowerCase();
+
     return frames.find((frame) => frame.label?.toLowerCase() === label) ?? null;
   }
+
   return (
     frames.find((frame) => frame.id === key) ??
     frames.find((frame) => frame.label?.toLowerCase() === key.toLowerCase()) ??
@@ -191,16 +195,28 @@ export function overlapWarnings(
 ): string[] {
   const shown = frames.filter((frame) => !frame.hidden);
   const warnings: string[] = [];
+
   for (const id of ids) {
     const frame = shown.find((item) => item.id === id);
-    if (!frame) continue;
+
+    if (!frame) {
+      continue;
+    }
+
     for (const other of shown) {
-      if (other.id === frame.id || !overlaps(frame, other)) continue;
+      if (other.id === frame.id || !overlaps(frame, other)) {
+        continue;
+      }
+
       const pair = [frame.id, other.id].sort().join(" and ");
       const line = `${pair} overlap. Move one with canvas_place (for example rightOf or below the other).`;
-      if (!warnings.includes(line)) warnings.push(line);
+
+      if (!warnings.includes(line)) {
+        warnings.push(line);
+      }
     }
   }
+
   return warnings;
 }
 
@@ -211,18 +227,22 @@ function sizeOf(
 ): { width: number; height: number } {
   const preset = spec.viewport ? CANVAS_VIEWPORTS[spec.viewport] : null;
   const base = existing ?? ref ?? null;
+
   const width =
     spec.width ??
     preset?.width ??
     base?.width ??
     CANVAS_VIEWPORTS.desktop.width;
+
   const height =
     spec.height ??
     preset?.height ??
     base?.height ??
     CANVAS_VIEWPORTS.desktop.height;
+
   const clamp = (n: number) =>
     Math.round(Math.min(CANVAS_MAX_SIDE, Math.max(CANVAS_MIN_SIDE, n)));
+
   return { width: clamp(width), height: clamp(height) };
 }
 
@@ -234,11 +254,15 @@ function relationOf(
       typeof spec[relation] === "string" &&
       (spec[relation] as string).trim() !== ""
   );
-  if (found.length > 1)
+
+  if (found.length > 1) {
     throw new PlaceError(
       `Use one of below, rightOf, leftOf or above, not ${found.join(" and ")}.`
     );
+  }
+
   const relation = found[0];
+
   return relation ? { relation, ref: spec[relation] as string } : null;
 }
 
@@ -248,9 +272,18 @@ function relativeSpot(
   size: { width: number; height: number },
   gap: number
 ): { x: number; y: number } {
-  if (relation === "below") return { x: ref.x, y: ref.y + ref.height + gap };
-  if (relation === "above") return { x: ref.x, y: ref.y - gap - size.height };
-  if (relation === "rightOf") return { x: ref.x + ref.width + gap, y: ref.y };
+  if (relation === "below") {
+    return { x: ref.x, y: ref.y + ref.height + gap };
+  }
+
+  if (relation === "above") {
+    return { x: ref.x, y: ref.y - gap - size.height };
+  }
+
+  if (relation === "rightOf") {
+    return { x: ref.x + ref.width + gap, y: ref.y };
+  }
+
   return { x: ref.x - gap - size.width, y: ref.y };
 }
 
@@ -259,9 +292,14 @@ function besideAll(
   gap: number
 ): { x: number; y: number } {
   const shown = frames.filter((frame) => !frame.hidden);
-  if (shown.length === 0) return { x: 0, y: 0 };
+
+  if (shown.length === 0) {
+    return { x: 0, y: 0 };
+  }
+
   const right = Math.max(...shown.map((frame) => frame.x + frame.width));
   const top = Math.min(...shown.map((frame) => frame.y));
+
   return { x: right + gap, y: top };
 }
 
@@ -274,10 +312,13 @@ function resolveRef(
   ref: string
 ): CanvasFileFrame {
   const found = findFrame(frames, ref);
-  if (!found)
+
+  if (!found) {
     throw new PlaceError(
       `No frame ${ref}. Call canvas_list for the ids and labels.`
     );
+  }
+
   return found;
 }
 
@@ -288,20 +329,26 @@ function spotOf(
 ): { x: number; y: number; width: number; height: number } {
   const relative = relationOf(spec);
   const ref = relative ? resolveRef(frames, relative.ref) : null;
-  if (ref && existing && ref.id === existing.id)
+
+  if (ref && existing && ref.id === existing.id) {
     throw new PlaceError(
       `A frame cannot be placed relative to itself (${ref.id}).`
     );
+  }
+
   const size = sizeOf(spec, existing, ref);
   const gap = Math.round(Math.min(2000, Math.max(0, spec.gap ?? CANVAS_GAP)));
   const others = frames.filter((frame) => frame.id !== existing?.id);
+
   const fallback = existing
     ? { x: existing.x, y: existing.y }
     : besideAll(others, gap);
+
   const spot =
     ref && relative
       ? relativeSpot(relative.relation, ref, size, gap)
       : fallback;
+
   return {
     ...size,
     x: clampCoord(spec.x ?? spot.x),
@@ -314,18 +361,29 @@ function pathOf(
   existing: CanvasFileFrame | null
 ): string | undefined {
   const raw = spec.path === undefined ? existing?.path : spec.path;
-  if (raw === undefined) return undefined;
+
+  if (raw === undefined) {
+    return undefined;
+  }
+
   const path = cleanFramePath(raw);
-  if (path === null)
+
+  if (path === null) {
     throw new PlaceError(
       `Path ${raw} is not a page inside the project. Use a relative path like states/empty.html, with no "..", "?" or "#".`
     );
+  }
+
   return path || undefined;
 }
 
 function nextFrameLabel(frames: readonly CanvasFileFrame[]): string {
   let n = frames.length + 1;
-  while (frames.some((frame) => frame.label === `Frame ${n}`)) n += 1;
+
+  while (frames.some((frame) => frame.label === `Frame ${n}`)) {
+    n += 1;
+  }
+
   return `Frame ${n}`;
 }
 
@@ -334,8 +392,14 @@ function labelOf(
   existing: CanvasFileFrame | null,
   frames: readonly CanvasFileFrame[]
 ): string | undefined {
-  if (spec.label !== undefined) return cleanFrameLabel(spec.label) ?? undefined;
-  if (existing) return existing.label;
+  if (spec.label !== undefined) {
+    return cleanFrameLabel(spec.label) ?? undefined;
+  }
+
+  if (existing) {
+    return existing.label;
+  }
+
   return spec.path === undefined ? nextFrameLabel(frames) : undefined;
 }
 
@@ -349,10 +413,23 @@ function withOptional(
   }
 ): CanvasFileFrame {
   const out = { ...frame };
-  if (extra.directionId) out.directionId = extra.directionId;
-  if (extra.path) out.path = extra.path;
-  if (extra.label) out.label = extra.label;
-  if (extra.hidden) out.hidden = true;
+
+  if (extra.directionId) {
+    out.directionId = extra.directionId;
+  }
+
+  if (extra.path) {
+    out.path = extra.path;
+  }
+
+  if (extra.label) {
+    out.label = extra.label;
+  }
+
+  if (extra.hidden) {
+    out.hidden = true;
+  }
+
   return out;
 }
 
@@ -362,16 +439,21 @@ function placeOne(
   directionId: string
 ): CanvasFileFrame {
   const existing = spec.frame ? resolveRef(frames, spec.frame) : null;
-  if (!existing && frames.length >= CANVAS_MAX_FRAMES)
+
+  if (!existing && frames.length >= CANVAS_MAX_FRAMES) {
     throw new PlaceError(
       `The canvas has the most frames it can hold (${CANVAS_MAX_FRAMES}). Move or reuse a frame instead.`
     );
+  }
+
   const spot = spotOf(frames, spec, existing);
+
   const base: CanvasFileFrame = {
     id: existing?.id ?? nextFrameId(frames),
     ...spot,
     order: existing?.order ?? frames.length,
   };
+
   return withOptional(base, {
     directionId: existing ? existing.directionId : directionId,
     path: pathOf(spec, existing),
@@ -387,6 +469,7 @@ export function applyPlacement(
 ): { file: CanvasFile; placed: CanvasFileFrame[] } {
   let frames = [...file.frames];
   const placed: CanvasFileFrame[] = [];
+
   for (const spec of specs) {
     const frame = placeOne(frames, spec, directionId);
     const at = frames.findIndex((item) => item.id === frame.id);
@@ -395,9 +478,14 @@ export function applyPlacement(
         ? [...frames, frame]
         : frames.map((item) => (item.id === frame.id ? frame : item));
     const done = placed.findIndex((item) => item.id === frame.id);
-    if (done === -1) placed.push(frame);
-    else placed[done] = frame;
+
+    if (done === -1) {
+      placed.push(frame);
+    } else {
+      placed[done] = frame;
+    }
   }
+
   return { file: { ...file, frames }, placed };
 }
 
@@ -406,6 +494,7 @@ export async function canvasList(ctx: CanvasToolContext): Promise<ToolText> {
   const { canvas } = await ctx.canvas.read(ctx.project);
   const presence = ctx.canvas.presence(ctx.project.id);
   const frames = canvas?.frames ?? [];
+
   return text({
     frames: frames.map((frame) => describeFrame(frame, owner.id)),
     lofi: canvas?.lofi ?? [],
@@ -433,9 +522,17 @@ function withoutQuery(spec: PlaceSpec): {
 } {
   const raw = spec.path;
   const cut = raw === undefined ? -1 : raw.search(/[?#]/);
-  if (raw === undefined || cut < 0) return { spec, note: null };
+
+  if (raw === undefined || cut < 0) {
+    return { spec, note: null };
+  }
+
   const page = raw.slice(0, cut);
-  if (cleanFramePath(page) === null) return { spec, note: null };
+
+  if (cleanFramePath(page) === null) {
+    return { spec, note: null };
+  }
+
   return {
     spec: { ...spec, path: page },
     note: `Path ${raw} is placed as ${page.trim() || "the entry page"}: a frame loads its page without a query string or #hash, so ${raw.slice(cut)} is not kept. Show that state with its own page, or with set_frame_state in an attached app.`,
@@ -450,17 +547,26 @@ export async function canvasPlace(
   const cleaned = input.map(withoutQuery);
   const specs = cleaned.map((item) => item.spec);
   const notes = cleaned.flatMap((item) => (item.note ? [item.note] : []));
-  if (ctx.plan)
+
+  if (ctx.plan) {
     return failure(
       "Plan mode is on, so the canvas stays as it is. Describe the frames in the plan."
     );
-  if (ctx.mode === "critique")
+  }
+
+  if (ctx.mode === "critique") {
     return failure(
       "canvas_place is not available in critique runs. Use canvas_point to show a frame."
     );
-  if (specs.length === 0) return failure("Pass at least one frame to place.");
+  }
+
+  if (specs.length === 0) {
+    return failure("Pass at least one frame to place.");
+  }
+
   let placed: CanvasFileFrame[] = [];
   let warnings: string[] = [];
+
   try {
     const result = await ctx.canvas.update(
       ctx.project,
@@ -470,6 +576,7 @@ export async function canvasPlace(
           specs,
           ctx.direction.id
         );
+
         placed = next.placed;
         warnings = [
           ...notes,
@@ -478,10 +585,12 @@ export async function canvasPlace(
             placed.map((frame) => frame.id)
           ),
         ];
+
         return next.file;
       },
       { source: "agent" }
     );
+
     return text({
       warnings,
       placed: placed.map((frame) =>
@@ -490,15 +599,22 @@ export async function canvasPlace(
       frames: result.canvas?.frames.length ?? 0,
     });
   } catch (error) {
-    if (error instanceof PlaceError) return failure(error.message);
+    if (error instanceof PlaceError) {
+      return failure(error.message);
+    }
+
     throw error;
   }
 }
 
 function seedDefault(file: CanvasFile, ctx: CanvasToolContext): CanvasFile {
-  if (file.frames.length > 0) return file;
+  if (file.frames.length > 0) {
+    return file;
+  }
+
   const presence = ctx.canvas.presence(ctx.project.id);
   const size = presence?.liveSize ?? CANVAS_VIEWPORTS.desktop;
+
   return {
     ...file,
     frames: [
@@ -520,21 +636,27 @@ export async function canvasPoint(
 ): Promise<ToolText> {
   const { canvas } = await ctx.canvas.read(ctx.project);
   const frames = canvas?.frames ?? [];
+
   const frame =
     frames.length === 0 && (args.frame === "f1" || args.frame === "")
       ? null
       : findFrame(frames, args.frame);
-  if (frames.length > 0 && !frame)
+
+  if (frames.length > 0 && !frame) {
     return failure(
       `No frame ${args.frame}. Call canvas_list for the ids and labels.`
     );
+  }
+
   const id = frame?.id ?? "f1";
   const selector = args.selector?.trim() || undefined;
   ctx.canvas.point(ctx.project, id, selector);
   const where = frame?.label ? `${id} (${frame.label})` : id;
+
   const open = ctx.canvas.presence(ctx.project.id)
     ? ""
     : " The studio window is not open now, so the user sees it the next time they look.";
+
   return text(
     `Showing ${where}${selector ? `, element ${selector}` : ""} on the user's canvas.${open}`
   );

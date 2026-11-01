@@ -21,6 +21,7 @@ let flushLongFrames: () => void = () => undefined;
 export function desktopBoot(): DesktopBoot | null {
   const boot = (window as unknown as { studioDesktop?: { boot?: DesktopBoot } })
     .studioDesktop?.boot;
+
   return boot && typeof boot.startedAt === "number" ? boot : null;
 }
 
@@ -29,7 +30,10 @@ function afterPaint(fn: () => void): void {
 }
 
 export function reportAppStart(screen: "home" | "studio"): void {
-  if (appStartSent) return;
+  if (appStartSent) {
+    return;
+  }
+
   appStartSent = true;
   afterPaint(() => {
     const boot = desktopBoot();
@@ -64,47 +68,77 @@ export function reportFirstToken(
 }
 
 function longFrameType(): string | null {
-  if (typeof PerformanceObserver === "undefined") return null;
+  if (typeof PerformanceObserver === "undefined") {
+    return null;
+  }
+
   const types = PerformanceObserver.supportedEntryTypes ?? [];
-  if (types.includes("long-animation-frame")) return "long-animation-frame";
+
+  if (types.includes("long-animation-frame")) {
+    return "long-animation-frame";
+  }
+
   return types.includes("longtask") ? "longtask" : null;
 }
 
 export function watchLongFrames(): () => void {
   const type = longFrameType();
-  if (!type) return () => undefined;
+
+  if (!type) {
+    return () => undefined;
+  }
+
   let count = 0;
   let worst = 0;
   let timer: number | undefined;
+
   const flush = () => {
     window.clearTimeout(timer);
     timer = undefined;
-    if (count === 0) return;
+
+    if (count === 0) {
+      return;
+    }
+
     const sample: Omit<TelemetrySample, "ts"> = {
       kind: "frame.long",
       ...scope,
       ms: Math.round(worst),
       detail: { count, type, screen: scope.projectId ? "studio" : "home" },
     };
+
     count = 0;
     worst = 0;
     sendTelemetry(sample);
   };
+
   flushLongFrames = flush;
+
   const observer = new PerformanceObserver((list) => {
     for (const entry of list.getEntries()) {
-      if (entry.duration < LONG_FRAME_MS) continue;
+      if (entry.duration < LONG_FRAME_MS) {
+        continue;
+      }
+
       count += 1;
       worst = Math.max(worst, entry.duration);
     }
-    if (count > 0 && timer === undefined)
+
+    if (count > 0 && timer === undefined) {
       timer = window.setTimeout(flush, FLUSH_MS);
+    }
   });
+
   observer.observe({ type, buffered: true });
+
   const onHide = () => {
-    if (document.visibilityState === "hidden") flush();
+    if (document.visibilityState === "hidden") {
+      flush();
+    }
   };
+
   document.addEventListener("visibilitychange", onHide);
+
   return () => {
     document.removeEventListener("visibilitychange", onHide);
     observer.disconnect();
@@ -116,8 +150,12 @@ export function watchLongFrames(): () => void {
 export function setTelemetryScope(next: Scope): () => void {
   flushLongFrames();
   scope = next;
+
   return () => {
-    if (scope !== next) return;
+    if (scope !== next) {
+      return;
+    }
+
     flushLongFrames();
     scope = {};
   };

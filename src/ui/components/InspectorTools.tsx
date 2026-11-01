@@ -102,6 +102,7 @@ function ToolButton({
 
 function VariantsButton() {
   const blocked = commandBlocker(TRY_VARIANTS_COMMAND);
+
   return (
     <button
       type="button"
@@ -121,6 +122,7 @@ function VariantsButton() {
 
 function VectorButtons() {
   const { tool, available } = useVectorTool();
+
   return (
     <>
       {VECTOR_TOOLS.map((item) => (
@@ -146,8 +148,10 @@ function VectorButtons() {
 export function InspectorTools(props: Props) {
   const [notice, setNotice] = useState<string | null>(null);
   const last = props.selection.at(-1);
+
   const htmlSource =
     props.selection.length === 1 && isHtmlFile(last?.source?.file);
+
   const insertTip = !last
     ? "Select a parent element first"
     : !htmlSource
@@ -155,28 +159,46 @@ export function InspectorTools(props: Props) {
       : undefined;
 
   const select = () => {
-    if (props.onSelectMode) return props.onSelectMode();
-    if (!canvasSelectMode()) runCommand("tool.select");
+    if (props.onSelectMode) {
+      return props.onSelectMode();
+    }
+
+    if (!canvasSelectMode()) {
+      runCommand("tool.select");
+    }
   };
+
   const directSelect = () => {
-    if (last)
+    if (last) {
       props.port.current?.post({
         type: "select-relative",
         selector: last.selector,
         move: "child",
       });
+    }
   };
+
   const history = (redo: boolean) => {
     const own = redo ? props.onRedo : props.onUndo;
-    if (own) return own();
+
+    if (own) {
+      return own();
+    }
+
     window.dispatchEvent(
       new CustomEvent(PREVIEW_HISTORY_EVENT, { detail: { redo } })
     );
   };
+
   const insert = async (kind: InsertKind) => {
     const source = last?.source;
-    if (!props.directionId || !last || !source) return;
+
+    if (!props.directionId || !last || !source) {
+      return;
+    }
+
     setNotice(null);
+
     try {
       await props.control.current?.settle();
       await api.directEdit(props.projectId, props.directionId, {

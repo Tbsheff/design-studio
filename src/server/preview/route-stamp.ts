@@ -18,14 +18,17 @@ export type { ContentStamp } from "./route-graph.js";
 
 const SEGMENT_FILES =
   /^(layout|template|loading|error|not-found)\.(tsx|ts|jsx|js)$/;
+
 const GLOBAL_FILES =
   /^(next\.config|tailwind\.config|postcss\.config|middleware|proxy|instrumentation)\.(ts|js|mjs|cjs)$|^\.env(\..+)?$|^package\.json$|^tsconfig\.json$/;
+
 const ROUTES_MS = 3000;
 const FIRST_WAIT_MS = 400;
 const WORKER_FILE = siblingWorkerFile(import.meta.url, "route-graph-worker");
 
 async function filesIn(dir: string, pattern: RegExp): Promise<string[]> {
   const entries = await readdir(dir, { withFileTypes: true }).catch(() => []);
+
   return entries
     .filter((entry) => entry.isFile() && pattern.test(entry.name))
     .map((entry) => path.join(dir, entry.name));
@@ -40,8 +43,10 @@ function graphClient(
   idleMs: number
 ): WorkerClient<GraphRequest, GraphReply> {
   let inProcess: RouteGraph | null = null;
+
   const answer = (request: GraphRequest) =>
     answerGraph((inProcess ??= new RouteGraph(cacheDir)), request);
+
   return new WorkerClient({
     file: WORKER_FILE,
     label,
@@ -73,9 +78,14 @@ export class RouteStamps {
   private routeList(workTree: string, appDir: string): Promise<AppRoute[]> {
     const key = `${workTree}|${appDir}`;
     const known = this.routes.get(key);
-    if (known && Date.now() - known.at < ROUTES_MS) return known.list;
+
+    if (known && Date.now() - known.at < ROUTES_MS) {
+      return known.list;
+    }
+
     const list = listAppRoutes(workTree, appDir).catch(() => []);
     this.routes.set(key, { at: Date.now(), list });
+
     return list;
   }
 
@@ -85,8 +95,13 @@ export class RouteStamps {
     pathname: string
   ): Promise<ContentStamp | null> {
     const key = `${workTree}|${appDir}|${pathname}`;
-    if (this.built.has(key)) return this.compute(workTree, appDir, pathname);
+
+    if (this.built.has(key)) {
+      return this.compute(workTree, appDir, pathname);
+    }
+
     let pending = this.building.get(key);
+
     if (!pending) {
       pending = this.compute(workTree, appDir, pathname)
         .catch(() => null)
@@ -96,6 +111,7 @@ export class RouteStamps {
         });
       this.building.set(key, pending);
     }
+
     return Promise.race([
       pending,
       new Promise<null>((resolve) =>
@@ -117,8 +133,10 @@ export class RouteStamps {
   async close(): Promise<void> {
     await Promise.all(
       [this.graph, this.usageGraph].map(async (client) => {
-        if (client.started)
+        if (client.started) {
           await client.run({ kind: "flush" }).catch(() => null);
+        }
+
         await client.close();
       })
     );
@@ -133,10 +151,15 @@ export class RouteStamps {
       await this.routeList(workTree, appDir),
       pathname
     );
+
     const pageFile = page
       ? path.join(workTree, page)
       : await this.notFoundFile(workTree, appDir);
-    if (!pageFile) return null;
+
+    if (!pageFile) {
+      return null;
+    }
+
     return (await this.graph.run({
       kind: "stamp",
       workTree,
@@ -149,7 +172,11 @@ export class RouteStamps {
     appDir: string
   ): Promise<string | null> {
     const routerDir = appRouterDir(path.join(workTree, appDir));
-    if (!routerDir) return null;
+
+    if (!routerDir) {
+      return null;
+    }
+
     return (
       (await filesIn(routerDir, /^not-found\.(tsx|ts|jsx|js)$/))[0] ?? null
     );
@@ -163,22 +190,29 @@ export class RouteStamps {
     const appRoot = path.join(workTree, appDir);
     const routerDir = appRouterDir(appRoot) ?? appRoot;
     const dirs: string[] = [];
+
     for (
       let dir = path.dirname(pageFile);
       dir.startsWith(routerDir);
       dir = path.dirname(dir)
     ) {
       dirs.push(dir);
-      if (dir === routerDir) break;
+
+      if (dir === routerDir) {
+        break;
+      }
     }
+
     const segment = await Promise.all(
       dirs.map((dir) => filesIn(dir, SEGMENT_FILES))
     );
+
     const globals = await Promise.all(
       [appRoot, path.join(appRoot, "src")].map((dir) =>
         filesIn(dir, GLOBAL_FILES)
       )
     );
+
     return [pageFile, ...segment.flat(), ...globals.flat()];
   }
 }

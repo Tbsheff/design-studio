@@ -28,8 +28,10 @@ const ALT_EDIT = "Evening hours for families";
 async function snapshotAll(api: StudioApi) {
   const projects = await api.projects();
   const out = [];
+
   for (const project of projects.sort((a, b) => a.id.localeCompare(b.id))) {
     const directions = [];
+
     for (const direction of project.directions) {
       const versions = await api.versions(project.id, direction.id);
       directions.push({
@@ -44,12 +46,14 @@ async function snapshotAll(api: StudioApi) {
         ]),
       });
     }
+
     const runs = (await api.runs(project.id)).map((run) => [
       run.id,
       run.status,
       run.request.prompt,
       run.finalText,
     ]);
+
     out.push({
       id: project.id,
       name: project.name,
@@ -58,6 +62,7 @@ async function snapshotAll(api: StudioApi) {
       runs,
     });
   }
+
   return out;
 }
 
@@ -73,12 +78,17 @@ test("F: restart keeps projects, directions, versions and messages", async ({
   await expect(frontFrame(page).locator(".mock-edit")).toHaveText([MAIN_EDIT]);
   await api.waitForRuns(project.id, 2);
   const head = (await api.project(project.id)).directions[0]?.headVersionId;
-  if (!head) throw new Error("no head");
+
+  if (!head) {
+    throw new Error("no head");
+  }
+
   const alt = await api.call<{ id: string }>(
     "POST",
     `/api/projects/${project.id}/directions`,
     { fromVersionId: head, name: "Alt" }
   );
+
   await api.call("POST", `/api/projects/${project.id}/d/${alt.id}/runs`, {
     prompt: ALT_EDIT,
     mode: "edit",
@@ -120,13 +130,17 @@ test("F: restart keeps projects, directions, versions and messages", async ({
   expect(listenMs).toBeLessThan(3000);
 
   await page.reload();
+
   const token = await page
     .locator('meta[name="studio-token"]')
     .getAttribute("content");
+
   expect(token).not.toBe(api.token);
+
   const fresh = new (api.constructor as new (token: string) => StudioApi)(
     token ?? ""
   );
+
   expect(await snapshotAll(fresh)).toEqual(before);
 
   await expect(page.locator(".topbar")).toContainText(CREATE_PROMPT);

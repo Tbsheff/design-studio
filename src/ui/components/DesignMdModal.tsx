@@ -16,13 +16,18 @@ function jumpTo(
   if (editor) {
     editor.focus();
     editor.setSelectionRange(item.offset, item.offset);
+
     const lineHeight =
       Number.parseFloat(getComputedStyle(editor).lineHeight) || 20;
+
     editor.scrollTop = Math.max(0, item.line * lineHeight - lineHeight);
   }
+
   const heading = preview?.querySelectorAll("h1, h2, h3")[index];
-  if (heading instanceof HTMLElement && preview)
+
+  if (heading instanceof HTMLElement && preview) {
     preview.scrollTop = heading.offsetTop - preview.offsetTop - 8;
+  }
 }
 
 function Outline({
@@ -71,6 +76,7 @@ function UnsavedBar({
 }) {
   const keep = useRef<HTMLButtonElement>(null);
   useEffect(() => keep.current?.focus(), []);
+
   return (
     <div
       className="modal-foot dmd-unsaved"
@@ -131,16 +137,22 @@ export function DesignMdModal({
   const dirty = content !== null && original !== null && content !== original;
   const state = useRef({ dirty, asking });
   state.current = { dirty, asking };
+
   const requestClose = () => {
     if (state.current.asking) {
       setAsking(false);
+
       return false;
     }
+
     if (!state.current.dirty) {
       onClose();
+
       return;
     }
+
     setAsking(true);
+
     return false;
   };
 
@@ -152,13 +164,19 @@ export function DesignMdModal({
   const outline = useMemo(() => outlineOf(shown), [shown]);
 
   useEffect(() => {
-    if (loaded) editor.current?.focus();
+    if (loaded) {
+      editor.current?.focus();
+    }
   }, [loaded]);
 
   const save = async () => {
-    if (content === null) return;
+    if (content === null) {
+      return;
+    }
+
     setSaving(true);
     setError(null);
+
     try {
       await api.putDesignMd(projectId, content);
       onClose();

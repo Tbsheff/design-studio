@@ -38,6 +38,7 @@ let opCount = 0;
 
 function eachList(raw: string, change: (list: Shadow[]) => Shadow[]): string {
   const list = parseShadows(raw);
+
   return list ? formatShadows(change(list)) : raw;
 }
 
@@ -75,6 +76,7 @@ function writeShadows(
   } else {
     edit.preview({ "box-shadow": formatShadows(change(view.list)) });
   }
+
   edit.commit();
 }
 
@@ -82,29 +84,39 @@ function mixedFields(lists: Shadow[][]): Set<string> {
   const first = lists[0] ?? [];
   const mixed = new Set<string>();
   first.forEach((shadow, index) => {
-    for (const field of FIELDS)
-      if (lists.some((list) => list[index]?.[field] !== shadow[field]))
+    for (const field of FIELDS) {
+      if (lists.some((list) => list[index]?.[field] !== shadow[field])) {
         mixed.add(`${index}.${field}`);
+      }
+    }
   });
+
   return mixed;
 }
 
 function shadowView(edit: DirectEdit): ShadowView | null {
   if (!edit.mixed.has("box-shadow")) {
     const list = parseShadows(edit.values["box-shadow"]);
+
     return list ? { list, mixed: null } : null;
   }
+
   const lists = (edit.each ?? []).map((values) =>
     parseShadows(values["box-shadow"])
   );
+
   const first = lists[0];
+
   if (
     !first ||
     first.length === 0 ||
     lists.some((list) => list === null || list.length !== first.length)
-  )
+  ) {
     return null;
+  }
+
   const mixed = mixedFields(lists as Shadow[][]);
+
   return {
     list: first.map((shadow, index) => ({
       ...shadow,
@@ -130,11 +142,13 @@ function ShadowRow({
   const { list } = view;
   const shadow = list[index] as Shadow;
   const n = index + 1;
+
   const replace = (patch: Partial<Shadow>) => ({
     "box-shadow": formatShadows(
       list.map((s, i) => (i === index ? { ...s, ...patch } : s))
     ),
   });
+
   const fieldEdit = (
     field: Field,
     value: string,
@@ -151,9 +165,12 @@ function ShadowRow({
         mixed: view.mixed?.has(`${index}.${field}`) ?? false,
       }
     );
+
   const ui = useTokenUi();
+
   const colorUi = useMemo(() => {
     const request = ui?.requestCreate;
+
     return ui
       ? {
           ...ui,
@@ -164,7 +181,9 @@ function ShadowRow({
         }
       : null;
   }, [ui]);
+
   const colorEdit = fieldEdit("color", shadow.color, (color) => ({ color }));
+
   return (
     <li className="ins-shadow" aria-label={`Shadow ${n}`}>
       <div className="ins-shadow-head">
@@ -235,6 +254,7 @@ const BLUR_PART: ShiftPart = {
 
 function LayerBlur({ edit }: { edit: DirectEdit }) {
   const filter = edit.values.filter;
+
   const blur = proxyEdit(
     edit,
     "width",
@@ -243,6 +263,7 @@ function LayerBlur({ edit }: { edit: DirectEdit }) {
     ["filter"],
     { part: BLUR_PART }
   );
+
   return (
     <NumberField
       id="ins-layer-blur"
@@ -256,9 +277,11 @@ function LayerBlur({ edit }: { edit: DirectEdit }) {
 function useScrollInOnMount(on: boolean) {
   const ref = useRef<HTMLSpanElement>(null);
   useEffect(() => {
-    if (on)
+    if (on) {
       ref.current?.closest("section")?.scrollIntoView({ block: "nearest" });
+    }
   }, []);
+
   return ref;
 }
 
@@ -271,6 +294,7 @@ export function EffectsSection({
 }) {
   const view = shadowView(edit);
   const anchor = useScrollInOnMount(revealed);
+
   return (
     <InspectorSection title="Effects">
       <span ref={anchor} hidden />

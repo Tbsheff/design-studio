@@ -35,19 +35,32 @@ function CheckScreenshot({
     api
       .projectFile(projectId, filePath)
       .then((blob) => {
-        if (!alive) return;
+        if (!alive) {
+          return;
+        }
+
         objectUrl = URL.createObjectURL(blob);
         setSrc(objectUrl);
       })
       .catch(() => alive && setFailed(true));
+
     return () => {
       alive = false;
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
+
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
     };
   }, [projectId, filePath]);
-  if (failed)
+
+  if (failed) {
     return <div className="muted small-text">Screenshot not available</div>;
-  if (!src) return null;
+  }
+
+  if (!src) {
+    return null;
+  }
+
   return (
     <img
       className="check-shot"
@@ -62,6 +75,7 @@ const SHOT_SUFFIX = /-(?:desktop|tablet|mobile)\.png$/;
 function directionOf(results: RenderCheckResult[] | null): string | null {
   const shot = results?.find((r) => r.screenshotPath)?.screenshotPath;
   const name = shot?.split(/[\\/]/).pop() ?? "";
+
   return SHOT_SUFFIX.test(name) ? name.replace(SHOT_SUFFIX, "") : null;
 }
 
@@ -74,7 +88,11 @@ function useOldKeys(
   useEffect(() => {
     let alive = true;
     setKeys(null);
-    if (!did) return;
+
+    if (!did) {
+      return;
+    }
+
     api
       .listRuns(projectId)
       .then((runs) => {
@@ -83,17 +101,21 @@ function useOldKeys(
             r.directionId === did &&
             (r.finalCheck as FinalCheckWithBaseline | undefined)?.baseline
         );
-        if (alive)
+
+        if (alive) {
           setKeys(
             (run?.finalCheck as FinalCheckWithBaseline | undefined)?.baseline
               ?.keys ?? null
           );
+        }
       })
       .catch(() => undefined);
+
     return () => {
       alive = false;
     };
   }, [projectId, did, results]);
+
   return keys;
 }
 
@@ -110,11 +132,17 @@ function hideOld(
 ): { shown: ShownResult[]; hidden: number } {
   const counts = keyCounts(keys ?? []);
   let hidden = 0;
+
   const keep = (key: string) => {
     const old = takeKey(counts, `error|${key}`);
-    if (old) hidden += 1;
+
+    if (old) {
+      hidden += 1;
+    }
+
     return !old;
   };
+
   const shown = (results ?? []).map((result) => ({
     result,
     problems: [...result.pageErrors, ...result.consoleErrors].filter((p) =>
@@ -125,6 +153,7 @@ function hideOld(
     ),
     overflow: result.horizontalOverflow && keep(`${result.viewport}|overflow`),
   }));
+
   return { shown, hidden };
 }
 
@@ -135,6 +164,7 @@ export function RenderCheckPanel({
   onClose,
 }: Props) {
   const { shown, hidden } = hideOld(results, useOldKeys(projectId, results));
+
   return (
     <div
       className="check-panel"
@@ -161,10 +191,12 @@ export function RenderCheckPanel({
         )}
         {shown.map(({ result: r, problems, layout, overflow }) => {
           const ok = problems.length === 0 && !overflow;
+
           const layoutTotal = Math.max(
             layout.length,
             (r.layoutTotal ?? 0) - ((r.layout ?? []).length - layout.length)
           );
+
           return (
             <div key={`${r.viewport}-${r.width}`} className="check-row">
               <div className="row">

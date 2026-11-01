@@ -22,10 +22,13 @@ export class StudioApi {
       },
       body: body === undefined ? undefined : JSON.stringify(body),
     });
-    if (!res.ok)
+
+    if (!res.ok) {
       throw new Error(
         `${method} ${route} -> ${res.status} ${await res.text()}`
       );
+    }
+
     return (await res.json()) as T;
   }
 
@@ -59,14 +62,21 @@ export class StudioApi {
     timeoutMs = 60_000
   ): Promise<RunSummary[]> {
     const deadline = Date.now() + timeoutMs;
+
     for (;;) {
       const runs = await this.runs(pid);
       const finished = runs.filter((run) => run.status !== "running");
-      if (finished.length >= count) return runs;
-      if (Date.now() > deadline)
+
+      if (finished.length >= count) {
+        return runs;
+      }
+
+      if (Date.now() > deadline) {
         throw new Error(
           `expected ${count} finished runs, saw ${finished.length}`
         );
+      }
+
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
   }
@@ -74,15 +84,21 @@ export class StudioApi {
 
 export async function openHome(page: Page): Promise<StudioApi> {
   await page.goto("/");
+
   const token = await page
     .locator('meta[name="studio-token"]')
     .getAttribute("content");
-  if (!token) throw new Error("studio token meta tag missing");
+
+  if (!token) {
+    throw new Error("studio token meta tag missing");
+  }
+
   await page.evaluate(() => localStorage.removeItem("design-studio.ui.v1"));
   await page.goto("/");
   await expect(
     page.getByRole("heading", { name: "New project" })
   ).toBeVisible();
+
   return new StudioApi(token);
 }
 
@@ -98,8 +114,10 @@ export async function openFolderByPath(
 export async function clickCreate(page: Page): Promise<void> {
   const prompt = await page.getByLabel("Describe the design").inputValue();
   await page.getByRole("button", { name: "Create", exact: true }).click();
-  if (needsQuestions(prompt))
+
+  if (needsQuestions(prompt)) {
     await page.getByRole("button", { name: "Skip questions" }).click();
+  }
 }
 
 export async function createProjectViaUi(
@@ -115,10 +133,15 @@ export async function createProjectViaUi(
     .click();
   await clickCreate(page);
   await expect(page.locator(".topbar")).toBeVisible();
+
   const created = (await api.projects()).find(
     (project) => !before.has(project.id)
   );
-  if (!created) throw new Error("created project not found");
+
+  if (!created) {
+    throw new Error("created project not found");
+  }
+
   return created;
 }
 
@@ -128,8 +151,11 @@ export function frontFrame(page: Page): FrameLocator {
 
 export async function setSelectMode(page: Page, on: boolean): Promise<void> {
   const button = page.getByRole("button", { name: /^Select/ });
-  if ((await button.getAttribute("aria-pressed")) !== String(on))
+
+  if ((await button.getAttribute("aria-pressed")) !== String(on)) {
     await button.click();
+  }
+
   await expect(button).toHaveAttribute("aria-pressed", String(on));
 }
 
@@ -143,8 +169,13 @@ export async function selectInFrame(
       __studioPicked?: string | null;
       __studioPickWatch?: boolean;
     };
+
     w.__studioPicked = null;
-    if (w.__studioPickWatch) return;
+
+    if (w.__studioPickWatch) {
+      return;
+    }
+
     w.__studioPickWatch = true;
     window.addEventListener("message", (event) => {
       const data = event.data as {
@@ -152,12 +183,14 @@ export async function selectInFrame(
         type?: string;
         selection?: { selector?: string };
       } | null;
+
       if (
         data?.ns === "studio" &&
         data.type === "select" &&
         data.selection?.selector
-      )
+      ) {
         w.__studioPicked = data.selection.selector;
+      }
     });
   });
   await frontFrame(page).locator(selector).first().click();
@@ -166,9 +199,11 @@ export async function selectInFrame(
       page.evaluate(() => {
         const picked = (window as unknown as { __studioPicked?: string | null })
           .__studioPicked;
+
         const boxes = [
           ...document.querySelectorAll<HTMLElement>(".overlay .box.selected"),
         ];
+
         return (
           Boolean(picked) &&
           boxes.length === 1 &&
@@ -181,15 +216,21 @@ export async function selectInFrame(
 
 export async function openRunSettings(page: Page): Promise<void> {
   const trigger = page.getByTestId("run-settings");
-  if ((await trigger.getAttribute("aria-expanded")) !== "true")
+
+  if ((await trigger.getAttribute("aria-expanded")) !== "true") {
     await trigger.click();
+  }
+
   await expect(page.getByTestId("run-settings-popover")).toBeVisible();
 }
 
 export async function closeRunSettings(page: Page): Promise<void> {
   const trigger = page.getByTestId("run-settings");
-  if ((await trigger.getAttribute("aria-expanded")) === "true")
+
+  if ((await trigger.getAttribute("aria-expanded")) === "true") {
     await page.keyboard.press("Escape");
+  }
+
   await expect(page.getByTestId("run-settings-popover")).toHaveCount(0);
 }
 
@@ -199,10 +240,12 @@ export async function chooseRunSetting(
 ): Promise<void> {
   await openRunSettings(page);
   const popover = page.getByTestId("run-settings-popover");
+
   const target =
     "testId" in testIdOrName
       ? popover.getByTestId(testIdOrName.testId)
       : popover.getByRole("radio", { name: testIdOrName.radio });
+
   await target.click();
 }
 
@@ -218,21 +261,35 @@ export async function headVersion(
   did: string
 ): Promise<Version> {
   const project = await api.project(pid);
+
   const direction = project.directions.find(
     (candidate) => candidate.id === did
   );
-  if (!direction?.headVersionId) throw new Error("direction has no head");
+
+  if (!direction?.headVersionId) {
+    throw new Error("direction has no head");
+  }
+
   const versions = await api.versions(pid, did);
+
   const head = versions.find(
     (version) => version.id === direction.headVersionId
   );
-  if (!head) throw new Error("head version not listed");
+
+  if (!head) {
+    throw new Error("head version not listed");
+  }
+
   return head;
 }
 
 export function mainDirection(project: Project): Direction {
   const main = project.directions[0];
-  if (!main) throw new Error("project has no direction");
+
+  if (!main) {
+    throw new Error("project has no direction");
+  }
+
   return main;
 }
 

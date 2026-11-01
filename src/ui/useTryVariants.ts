@@ -14,6 +14,7 @@ export function useTryVariants(
   const blocker = project
     ? elementVariantsBlocker(project, selection)
     : "Wait for the design to load";
+
   useCommands(() => [
     {
       id: TRY_VARIANTS_COMMAND,
@@ -23,15 +24,21 @@ export function useTryVariants(
       slash: "variants",
       keywords: "try versions options alternatives element",
       run: () => {
-        if (selection[0]) variations.askElement(selection[0]);
+        if (selection[0]) {
+          variations.askElement(selection[0]);
+        }
       },
       ...(blocker ? { disabled: blocker } : {}),
     },
   ]);
+
   return async (prompt: string, count: number, level: RunLevel) => {
     const element = selection[0];
-    if (blocker || !element)
+
+    if (blocker || !element) {
       throw new Error(blocker ?? "Select one element first");
+    }
+
     await variations.proposeElement(element, prompt, count, level);
   };
 }

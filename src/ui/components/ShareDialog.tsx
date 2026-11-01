@@ -72,12 +72,26 @@ const EXPIRIES: { id: ShareExpiryHours; label: string }[] = [
 const sessionTokens = new Map<string, string>();
 
 function endsText(link: ShareLink, now: number): string {
-  if (link.revokedAt !== null) return "Turned off";
+  if (link.revokedAt !== null) {
+    return "Turned off";
+  }
+
   const left = link.expiresAt - now;
-  if (left <= 0) return "Ended";
+
+  if (left <= 0) {
+    return "Ended";
+  }
+
   const hours = Math.round(left / 3600_000);
-  if (hours >= 48) return `Ends in ${Math.round(hours / 24)} days`;
-  if (hours >= 1) return `Ends in ${hours} h`;
+
+  if (hours >= 48) {
+    return `Ends in ${Math.round(hours / 24)} days`;
+  }
+
+  if (hours >= 1) {
+    return `Ends in ${hours} h`;
+  }
+
   return `Ends in ${Math.max(1, Math.round(left / 60_000))} min`;
 }
 
@@ -90,6 +104,7 @@ function LinkUrls({
 }) {
   const local = server.localUrl ? shareUrl(server.localUrl, token) : null;
   const lan = server.lanUrl ? shareUrl(server.lanUrl, token) : null;
+
   return (
     <div className="share-urls">
       {local && (
@@ -111,7 +126,10 @@ function LinkUrls({
 }
 
 function offNote(links: ShareLink[], server: ShareServerState): string | null {
-  if (!links.some((l) => !l.active)) return null;
+  if (!links.some((l) => !l.active)) {
+    return null;
+  }
+
   return server.running
     ? "Viewers of a link that is off see a page that says it no longer works."
     : "No link is on, so the share server is off and old addresses do not answer.";
@@ -183,10 +201,13 @@ function linkMeta(link: ShareLink, now: number): string {
     `${link.frames.length} frame${link.frames.length === 1 ? "" : "s"}`,
     `${link.comments} comment${link.comments === 1 ? "" : "s"}`,
   ];
-  if (link.live && link.active)
+
+  if (link.live && link.active) {
     parts.unshift(
       `Live · ${link.viewers} viewer${link.viewers === 1 ? "" : "s"}`
     );
+  }
+
   return [...parts, endsText(link, now)].join(" · ");
 }
 
@@ -209,6 +230,7 @@ function LinkRow({
   copied,
 }: RowProps & { link: ShareLink }) {
   const token = sessionTokens.get(link.id);
+
   return (
     <li
       className={`share-link${link.active ? "" : " off"}`}
@@ -254,10 +276,14 @@ function LinkRow({
 }
 
 function LinkList({ links, ...rest }: RowProps & { links: ShareLink[] }) {
-  if (links.length === 0) return null;
+  if (links.length === 0) {
+    return null;
+  }
+
   const notes = [hiddenNote(links), offNote(links, rest.server)].filter(
     (note): note is string => note !== null
   );
+
   return (
     <div className="share-links-group">
       <ul className="share-links" aria-label="Share links">
@@ -317,35 +343,45 @@ function LanSwitch({
 
 function useShares(projectId: string) {
   const [links, setLinks] = useState<ShareLink[]>([]);
+
   const [server, setServer] = useState<ShareServerState>({
     running: false,
     lan: false,
     localUrl: null,
     lanUrl: null,
   });
+
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
   const reload = useCallback(async () => {
     const list = await shareApi.list(projectId);
     setLinks(list.links);
     setServer(list.server);
   }, [projectId]);
+
   useEffect(() => {
     reload().catch((err: unknown) => setError(errorText(err)));
   }, [reload]);
   const watching = links.some((l) => l.live && l.active);
   useEffect(() => {
-    if (!watching) return;
+    if (!watching) {
+      return;
+    }
+
     const timer = window.setInterval(
       () => void reload().catch(() => undefined),
       3000
     );
+
     return () => window.clearInterval(timer);
   }, [watching, reload]);
+
   const act = useCallback(
     async (task: () => Promise<unknown>) => {
       setBusy(true);
       setError(null);
+
       try {
         await task();
         await reload();
@@ -358,6 +394,7 @@ function useShares(projectId: string) {
     },
     [reload, projectId]
   );
+
   return { links, server, error, busy, act };
 }
 
@@ -366,13 +403,16 @@ function useCopyNew(links: ShareLink[], server: ShareServerState) {
   const [id, setId] = useState<string | null>(null);
   useEffect(() => {
     const token = pending ? sessionTokens.get(pending) : undefined;
+
     if (
       !pending ||
       !token ||
       !server.localUrl ||
       !links.some((l) => l.id === pending)
-    )
+    ) {
       return;
+    }
+
     setPending(null);
     document
       .querySelector<HTMLElement>(`[data-link-id="${pending}"] .copy-btn`)
@@ -381,6 +421,7 @@ function useCopyNew(links: ShareLink[], server: ShareServerState) {
       setId(ok ? pending : null)
     );
   }, [pending, links, server.localUrl]);
+
   return { id, made: setPending };
 }
 
@@ -423,6 +464,7 @@ export default function ShareDialog({
   const dialog = useModalDialog(onClose);
   const [mode, setMode] = useState<ShareMode>(target.mode ?? "link");
   const tabs = <ShareTabs mode={mode} onMode={setMode} />;
+
   return (
     <dialog
       ref={dialog.ref}
@@ -474,12 +516,15 @@ function LinkShare({
     () => canvasFrameChoices(target.projectId, target.directionId),
     [target.projectId, target.directionId]
   );
+
   const [picked, setPicked] = useState<Set<string>>(
     () => new Set(frames.slice(0, SHARE_MAX_FRAMES).map((f) => f.id))
   );
+
   const [expiry, setExpiry] = useState<ShareExpiryHours>(
     SHARE_DEFAULT_EXPIRY_HOURS
   );
+
   const [liveView, setLiveView] = useState(false);
   const shares = useShares(target.projectId);
   const now = Date.now();
@@ -488,24 +533,35 @@ function LinkShare({
   const live = shares.links.filter((l) => l.active);
   const shown = [...live, ...shares.links.filter((l) => !l.active).slice(0, 3)];
   const versionId = target.versionId;
+
   const canCreate =
     Boolean(versionId) &&
     chosen.length > 0 &&
     chosen.length <= SHARE_MAX_FRAMES &&
     !shares.busy;
+
   const copied = useCopyNew(shares.links, shares.server);
 
   const toggle = (id: string) =>
     setPicked((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+
       return next;
     });
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
-    if (!canCreate || !versionId) return;
+
+    if (!canCreate || !versionId) {
+      return;
+    }
+
     void shares.act(async () => {
       const made = await shareApi.create(target.projectId, {
         directionId: target.directionId,
@@ -515,6 +571,7 @@ function LinkShare({
         expiresInHours: expiry,
         live: liveView,
       });
+
       sessionTokens.set(made.link.id, made.token);
       copied.made(made.link.id);
     });

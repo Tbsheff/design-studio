@@ -39,8 +39,12 @@ export function canTransition(
   to: CommentStatus,
   actor: CommentActor
 ): boolean {
-  if (from === to) return true;
+  if (from === to) {
+    return true;
+  }
+
   const table = actor === "user" ? USER_TRANSITIONS : SERVER_TRANSITIONS;
+
   return table[from].includes(to);
 }
 
@@ -110,8 +114,12 @@ interface AnchorResolution<E> {
 }
 
 function textMatches(text: string, snippet: string): boolean {
-  if (!snippet) return false;
+  if (!snippet) {
+    return false;
+  }
+
   const clean = normalizeText(text);
+
   return (
     clean === snippet ||
     (snippet.length >= TEXT_SNIPPET_MAX && clean.startsWith(snippet))
@@ -130,9 +138,12 @@ function soleCandidate<E>(
   if (
     !query.textSnippet ||
     textMatches(dom.textOf(candidate), query.textSnippet)
-  )
+  ) {
     return candidate;
+  }
+
   const byText = byTextMatch(query, dom);
+
   return byText !== null && byText !== candidate ? null : candidate;
 }
 
@@ -141,13 +152,26 @@ function bySourceLoc<E>(
   dom: AnchorDom<E>,
   sameTag: (element: E) => boolean
 ): E | null {
-  if (!query.sourceLoc) return null;
+  if (!query.sourceLoc) {
+    return null;
+  }
+
   const candidates = dom.bySource(query.sourceLoc).filter(sameTag);
-  if (candidates.length === 1)
+
+  if (candidates.length === 1) {
     return soleCandidate(candidates[0] as E, query, dom);
-  if (candidates.length === 0) return null;
+  }
+
+  if (candidates.length === 0) {
+    return null;
+  }
+
   const bySelector = dom.bySelector(query.selector);
-  if (bySelector !== null && candidates.includes(bySelector)) return bySelector;
+
+  if (bySelector !== null && candidates.includes(bySelector)) {
+    return bySelector;
+  }
+
   return only(
     candidates.filter((element) =>
       textMatches(dom.textOf(element), query.textSnippet)
@@ -156,7 +180,10 @@ function bySourceLoc<E>(
 }
 
 function byTextMatch<E>(query: AnchorQuery, dom: AnchorDom<E>): E | null {
-  if (!query.textSnippet) return null;
+  if (!query.textSnippet) {
+    return null;
+  }
+
   return (
     dom
       .byTag(query.tag.toLowerCase())
@@ -170,20 +197,34 @@ export function resolveAnchor<E>(
   dom: AnchorDom<E>
 ): AnchorResolution<E> | null {
   const tag = query.tag.toLowerCase();
+
   const sameTag = (element: E): boolean =>
     dom.tagOf(element).toLowerCase() === tag;
+
   const source = bySourceLoc(query, dom, sameTag);
-  if (source !== null) return { element: source, via: "source" };
+
+  if (source !== null) {
+    return { element: source, via: "source" };
+  }
+
   const found = dom.bySelector(query.selector);
   const selector = found !== null && sameTag(found) ? found : null;
+
   const textAgrees =
     selector !== null &&
     (!query.textSnippet ||
       textMatches(dom.textOf(selector), query.textSnippet));
-  if (selector !== null && textAgrees)
+
+  if (selector !== null && textAgrees) {
     return { element: selector, via: "selector" };
+  }
+
   const text = byTextMatch(query, dom);
-  if (text !== null) return { element: text, via: "text" };
+
+  if (text !== null) {
+    return { element: text, via: "text" };
+  }
+
   return selector !== null ? { element: selector, via: "selector" } : null;
 }
 
@@ -194,17 +235,23 @@ export interface OrphanTracker {
 
 export function createOrphanTracker(graceMs: number): OrphanTracker {
   const missingSince = new Map<string, number>();
+
   return {
     observe(id, found, now) {
       if (found) {
         missingSince.delete(id);
+
         return false;
       }
+
       const since = missingSince.get(id);
+
       if (since === undefined) {
         missingSince.set(id, now);
+
         return false;
       }
+
       return now - since >= graceMs;
     },
     forget(id) {
@@ -217,7 +264,9 @@ export function commentPrompt(comments: { n: number; text: string }[]): string {
   const lines = comments.map(
     (comment) => `#${comment.n} ${normalizeText(comment.text)}`
   );
+
   const noun = comments.length === 1 ? "comment" : "comments";
+
   return [`Address ${comments.length} ${noun}:`, ...lines].join("\n");
 }
 
@@ -225,7 +274,11 @@ export function agentText(
   comment: Pick<DesignComment, "text" | "replies">
 ): string {
   const replies = comment.replies ?? [];
-  if (replies.length === 0) return comment.text;
+
+  if (replies.length === 0) {
+    return comment.text;
+  }
+
   return [
     comment.text,
     "Replies:",
@@ -240,8 +293,10 @@ export function strokesBox(
   let minY = Infinity;
   let maxX = -Infinity;
   let maxY = -Infinity;
+
   for (const stroke of strokes) {
     const pad = stroke.width / 2;
+
     for (let i = 0; i + 1 < stroke.points.length; i += 2) {
       const x = stroke.points[i] as number;
       const y = stroke.points[i + 1] as number;
@@ -251,7 +306,11 @@ export function strokesBox(
       maxY = Math.max(maxY, y + pad);
     }
   }
-  if (minX === Infinity) return null;
+
+  if (minX === Infinity) {
+    return null;
+  }
+
   return {
     x: Math.round(minX),
     y: Math.round(minY),
@@ -277,8 +336,12 @@ export function canPickForChat(status: CommentStatus): boolean {
 }
 
 export function frameText(frame: CommentFrame | undefined): string {
-  if (!frame) return "entry page (/)";
+  if (!frame) {
+    return "entry page (/)";
+  }
+
   const page = `/${frame.path.replace(/^\/+/, "")}`;
+
   return frame.label ? `${frame.label} (${page})` : page;
 }
 
@@ -288,12 +351,22 @@ function elementWhere(
   const context = comment.context;
   const loc = context?.source ?? comment.target.sourceLoc ?? null;
   const parts = [`selector ${context?.selector ?? comment.target.selector}`];
-  if (loc) parts.push(`source ${loc.file}:${loc.line}`);
+
+  if (loc) {
+    parts.push(`source ${loc.file}:${loc.line}`);
+  }
+
   const component =
     context?.usedBy?.name ?? context?.component ?? context?.owners?.[0]?.name;
-  if (component) parts.push(`in <${component}>`);
-  if (context?.usedAt)
+
+  if (component) {
+    parts.push(`in <${component}>`);
+  }
+
+  if (context?.usedAt) {
     parts.push(`used at ${context.usedAt.file}:${context.usedAt.line}`);
+  }
+
   return parts;
 }
 
@@ -301,26 +374,33 @@ function drawingWhere(
   drawing: NonNullable<DesignComment["drawing"]>
 ): string[] {
   const { box } = drawing;
+
   return [`drawing ${box.width} × ${box.height} at ${box.x}, ${box.y}`];
 }
 
 export function describeComment(comment: DesignComment): string {
   const head = `#${comment.n}${comment.author ? ` (from ${comment.from === "viewer" ? "share link viewer " : ""}${comment.author})` : ""}: ${normalizeText(comment.text)}`;
+
   const where = comment.drawing
     ? drawingWhere(comment.drawing)
     : elementWhere(comment);
+
   const snippet = comment.target.textSnippet
     ? ` "${comment.target.textSnippet}"`
     : "";
+
   const lines = [
     head,
     `   ${comment.target.tag}${snippet} · ${where.join(" · ")}`,
     `   frame ${frameText(comment.frame)}`,
   ];
-  for (const reply of comment.replies ?? [])
+
+  for (const reply of comment.replies ?? []) {
     lines.push(
       `   reply${reply.author ? ` from ${reply.author}` : ""}: ${normalizeText(reply.text)}`
     );
+  }
+
   return lines.join("\n");
 }
 
@@ -332,6 +412,7 @@ export function chatPrompt(
     comments.length === 1
       ? "Fix this comment. Change only what it asks for."
       : `Fix these ${comments.length} comments. Change only what each one asks for.`;
+
   return [head, ...comments.map(describeComment), ...notes].join("\n");
 }
 
@@ -341,6 +422,7 @@ function normPath(value: string): string {
 
 function isEntry(ref: string): boolean {
   const path = normPath(ref);
+
   return path === "" || /^index\.html?$/i.test(path);
 }
 
@@ -354,13 +436,19 @@ export function matchesFrame(
   canvasFrame?: CommentFrame | null
 ): boolean {
   const frame = comment.frame ?? { path: "" };
-  if (canvasFrame)
+
+  if (canvasFrame) {
     return frame.id
       ? frame.id === canvasFrame.id
       : samePage(frame.path, canvasFrame.path);
+  }
+
   const want = ref.trim();
-  if (want.startsWith("@"))
+
+  if (want.startsWith("@")) {
     return frame.label?.toLowerCase() === want.slice(1).toLowerCase();
+  }
+
   return frame.id === want || samePage(frame.path, want);
 }
 
@@ -378,15 +466,24 @@ export function filterComments(
       (status === "open"
         ? comment.status !== "resolved"
         : comment.status === status);
+
     return statusOk && (!frame || matchesFrame(comment, frame, canvasFrame));
   });
 }
 
 export function commentsDone(text: string): number[] | null {
   const line = /Done:([^\n]*)/i.exec(text);
-  if (!line) return null;
+
+  if (!line) {
+    return null;
+  }
+
   const match = /^\s*((?:#\d+(?:\s*,\s*|\s+and\s+|\s*))+)/.exec(line[1] ?? "");
-  if (!match?.[1]) return [];
+
+  if (!match?.[1]) {
+    return [];
+  }
+
   return [
     ...new Set([...match[1].matchAll(/#(\d+)/g)].map((m) => Number(m[1]))),
   ];

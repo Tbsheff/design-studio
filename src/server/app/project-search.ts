@@ -29,14 +29,17 @@ export interface ProjectSearchInput {
 const ROUTE_TTL_MS = 15_000;
 const ROUTE_APPS = 3;
 const ROUTE_LIMIT = 8;
+
 const routeCache = new Map<
   string,
   { at: number; routes: Promise<RouteHit[]> }
 >();
+
 const runCache = new Map<
   string,
   { key: number; at: number; failed: Promise<boolean> }
 >();
+
 const RUN_FAILED: ProjectHealth = { level: "failed", note: "Last run failed" };
 
 function recency(project: Project): number {
@@ -52,16 +55,26 @@ function hasInstall(workTree: string, appDir: string): boolean {
 
 function serverHealth(status: AppServerStatus): ProjectHealth {
   const cause = status.doctor?.causes.find((item) => item.severity === "error");
-  if (status.state === "failed")
+
+  if (status.state === "failed") {
     return {
       level: "warn",
       note: cause?.title ?? status.message ?? "Dev server failed",
     };
-  if (cause) return { level: "warn", note: cause.title };
-  if (status.state === "ready")
+  }
+
+  if (cause) {
+    return { level: "warn", note: cause.title };
+  }
+
+  if (status.state === "ready") {
     return { level: "ok", note: "Dev server ready" };
-  if (status.state === "starting")
+  }
+
+  if (status.state === "starting") {
     return { level: "busy", note: "Dev server starting" };
+  }
+
   return { level: "off", note: "Dev server not running" };
 }
 
@@ -71,19 +84,29 @@ export function projectHealth(
   runFailed = false
 ): ProjectHealth | null {
   const folder = project.imported?.sourcePath;
-  if (folder && !project.imported?.created && !existsSync(folder))
+
+  if (folder && !project.imported?.created && !existsSync(folder)) {
     return { level: "warn", note: "Folder not found" };
-  if (!project.app) return runFailed ? RUN_FAILED : null;
+  }
+
+  if (!project.app) {
+    return runFailed ? RUN_FAILED : null;
+  }
+
   const main = project.directions[0];
+
   if (
     main &&
     project.app.mode === "managed" &&
     !hasInstall(main.workTree, project.app.appDir)
-  )
+  ) {
     return { level: "warn", note: "Needs install" };
+  }
+
   const server = status
     ? serverHealth(status)
     : { level: "off" as const, note: "Dev server not running" };
+
   return runFailed && server.level !== "warn" ? RUN_FAILED : server;
 }
 
@@ -91,29 +114,42 @@ function lastRunFailed(
   project: Project,
   deps: ProjectSearchDeps
 ): Promise<boolean> {
-  if (!deps.runsDir) return Promise.resolve(false);
+  if (!deps.runsDir) {
+    return Promise.resolve(false);
+  }
+
   const cached = runCache.get(project.id);
+
   if (
     cached &&
     cached.key === project.updatedAt &&
     Date.now() - cached.at < ROUTE_TTL_MS
-  )
+  ) {
     return cached.failed;
+  }
+
   const failed = latestRunStatus(deps.runsDir(project.id)).then(
     (status) => status === "failed",
     () => false
   );
+
   runCache.set(project.id, { key: project.updatedAt, at: Date.now(), failed });
+
   return failed;
 }
 
 function placeOf(project: Project): string | null {
   const appDir = project.app?.appDir ?? "";
-  if (appDir && appDir !== ".") return appDir;
+
+  if (appDir && appDir !== ".") {
+    return appDir;
+  }
+
   const folder =
     project.imported && !project.imported.created
       ? project.imported.sourcePath
       : null;
+
   return folder ? folder.replace(/^\/(Users|home)\/[^/]+/, "~") : null;
 }
 
@@ -122,6 +158,7 @@ async function hitOf(
   deps: ProjectSearchDeps
 ): Promise<ProjectHit> {
   const type = projectTypeOf(project);
+
   return {
     id: project.id,
     name: project.name,
@@ -141,8 +178,13 @@ async function hitOf(
 
 function appRoutes(project: Project): Promise<RouteHit[]> {
   const cached = routeCache.get(project.id);
-  if (cached && Date.now() - cached.at < ROUTE_TTL_MS) return cached.routes;
+
+  if (cached && Date.now() - cached.at < ROUTE_TTL_MS) {
+    return cached.routes;
+  }
+
   const main = project.directions[0];
+
   const routes =
     main && project.app
       ? listAppRoutes(main.workTree, project.app.appDir).then((list) =>
@@ -155,21 +197,27 @@ function appRoutes(project: Project): Promise<RouteHit[]> {
           }))
         )
       : Promise.resolve([]);
+
   routeCache.set(project.id, {
     at: Date.now(),
     routes: routes.catch(() => []),
   });
+
   return routes.catch(() => []);
 }
 
 function matchRoutes(routes: RouteHit[], query: string): RouteHit[] {
-  if (!query) return routes.slice(0, ROUTE_LIMIT);
+  if (!query) {
+    return routes.slice(0, ROUTE_LIMIT);
+  }
+
   const scored = routes
     .map((route) => ({
       route,
       score: fuzzyScore(`${route.route} ${route.file}`, query),
     }))
     .filter((r): r is { route: RouteHit; score: number } => r.score !== null);
+
   return scored
     .sort((a, b) => b.score - a.score)
     .slice(0, ROUTE_LIMIT)
@@ -182,6 +230,7 @@ function routesFor(
   nameHit: boolean
 ): RouteHit[] {
   const found = matchRoutes(routes, query);
+
   return found.length > 0 || !nameHit ? found : routes.slice(0, 4);
 }
 
@@ -194,11 +243,14 @@ function routeSources(
   const current = projectId
     ? all.find((p) => p.id === projectId && p.app)
     : undefined;
+
   const apps = query ? matched.filter((p) => p.app) : [];
   const fallback = query.startsWith("/") ? all.filter((p) => p.app) : [];
+
   const list = [current, ...apps, ...fallback].filter(
     (p): p is Project => p !== undefined
   );
+
   return list
     .filter((p, i) => list.findIndex((x) => x.id === p.id) === i)
     .slice(0, ROUTE_APPS);
@@ -210,9 +262,11 @@ export async function searchProjects(
 ): Promise<ProjectSearchResult> {
   const query = (input.query ?? "").trim().slice(0, 100);
   const limit = Math.min(Math.max(input.limit ?? 20, 1), 100);
+
   const all = (await deps.projects.list())
     .filter((p) => !p.designSystemDeleted)
     .sort((a, b) => recency(b) - recency(a));
+
   const matched = query
     ? all
         .map((p) => ({
@@ -223,9 +277,11 @@ export async function searchProjects(
         .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
         .map((r) => r.p)
     : all;
+
   const sources = routeSources(all, matched, input.projectId, query);
   const routeQuery = query.replace(/^\//, "");
   const named = new Set(query ? matched.map((p) => p.id) : []);
+
   const routes = (
     await Promise.all(
       sources.map(async (p) =>
@@ -233,6 +289,7 @@ export async function searchProjects(
       )
     )
   ).flat();
+
   return {
     query,
     projects: await Promise.all(

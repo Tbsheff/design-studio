@@ -39,7 +39,10 @@ const SEVERITY_WORD: Record<ReviewSeverity, string> = {
 };
 
 function fixBlocked(live: boolean, running: boolean): string | null {
-  if (!live) return "Fixes work on the live design";
+  if (!live) {
+    return "Fixes work on the live design";
+  }
+
   return running ? "A run is editing this design" : null;
 }
 
@@ -55,6 +58,7 @@ function grouped(findings: ReviewFinding[]): [ReviewKind, ReviewFinding[]][] {
 
 function FindingRow({ finding, a }: { finding: ReviewFinding; a: Actions }) {
   const busy = a.fixing?.includes(finding.id) ?? false;
+
   return (
     <li className="review-row">
       <button
@@ -134,6 +138,7 @@ function Group({
   a: Actions;
 }) {
   const fixable = list.filter((finding) => finding.fix);
+
   return (
     <section className="review-group" aria-label={REVIEW_KIND_LABEL[kind]}>
       <div className="review-group-head">
@@ -166,10 +171,15 @@ function Group({
 
 function Summary({ review }: { review: ReviewState }) {
   const result = review.result;
-  if (!result) return null;
+
+  if (!result) {
+    return null;
+  }
+
   const parts = (["high", "medium", "low"] as const)
     .filter((sev) => result.counts[sev] > 0)
     .map((sev) => `${result.counts[sev]} ${sev}`);
+
   return (
     <div className="review-summary">
       <span>{parts.length > 0 ? parts.join(" · ") : "No findings"}</span>
@@ -193,6 +203,7 @@ function Body({
   a: Actions;
 }) {
   const result = review.result;
+
   return (
     <div className="review-body">
       {!live && (
@@ -225,15 +236,24 @@ function useEscapeClose(
   latest.current = onClose;
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape" || e.defaultPrevented) return;
+      if (e.key !== "Escape" || e.defaultPrevented) {
+        return;
+      }
+
       const inPanel =
         e.target instanceof Node && panel.current?.contains(e.target);
-      if (!inPanel && isTypingTarget(e.target)) return;
+
+      if (!inPanel && isTypingTarget(e.target)) {
+        return;
+      }
+
       latest.current();
     };
+
     const onFrameEscape = () => latest.current();
     window.addEventListener("keydown", onKey);
     window.addEventListener(PREVIEW_ESCAPE_EVENT, onFrameEscape);
+
     return () => {
       window.removeEventListener("keydown", onKey);
       window.removeEventListener(PREVIEW_ESCAPE_EVENT, onFrameEscape);
@@ -244,6 +264,7 @@ function useEscapeClose(
 export default function ReviewPanel(p: Props) {
   const panel = useRef<HTMLDivElement>(null);
   useEscapeClose(panel, p.onClose);
+
   const a: Actions = {
     fixBlocked: fixBlocked(p.live, p.running),
     fixing: p.review.fixing,
@@ -252,6 +273,7 @@ export default function ReviewPanel(p: Props) {
     onAsk: p.onAsk,
     onFix: (list) => void p.review.fix(list),
   };
+
   return (
     <div ref={panel} className="review-panel" role="region" aria-label="Review">
       <div className="review-head">

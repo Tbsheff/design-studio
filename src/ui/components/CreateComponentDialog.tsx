@@ -32,18 +32,21 @@ const TAG_NAMES: Record<string, string> = {
 function suggestName(selection: SelectionContext[]): string {
   const tag = (selection[0]?.tag ?? "div").toLowerCase();
   const base = TAG_NAMES[tag] ?? (selection.length > 1 ? "Row" : "Block");
+
   return selection[0]?.component && /^[A-Z]/.test(selection[0].component)
     ? `${selection[0].component}Item`
     : base;
 }
 
 function targetOf(selection: SelectionContext): InsertTarget {
-  if (selection.usedAt && selection.usedBy?.root)
+  if (selection.usedAt && selection.usedBy?.root) {
     return {
       source: selection.usedAt,
       tag: selection.usedBy.name.toLowerCase(),
       selector: selection.selector,
     };
+  }
+
   return {
     source: selection.source,
     tag: selection.tag.toLowerCase(),
@@ -58,6 +61,7 @@ function fileHint(
   known: ComponentFolder | undefined
 ): string {
   const kebab = known?.kebab ?? /(^|\/)(ui|packages)(\/|$)/.test(folder);
+
   return `${folder}/${kebab ? name.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase() : name}.tsx`;
 }
 
@@ -70,7 +74,10 @@ function useFolders(ids: Props["ids"]) {
     componentCreateApi
       .folders(ids.projectId, ids.directionId)
       .then((list) => {
-        if (!live) return;
+        if (!live) {
+          return;
+        }
+
         setFolders(list.folders);
         setNote(list.folders.length ? null : (list.note ?? null));
         setFolder(
@@ -80,10 +87,12 @@ function useFolders(ids: Props["ids"]) {
         );
       })
       .catch(() => live && setFolders([]));
+
     return () => {
       live = false;
     };
   }, [ids.projectId, ids.directionId]);
+
   return { folders, folder, setFolder, note };
 }
 
@@ -97,26 +106,38 @@ export default function CreateComponentDialog({
   const { folders, folder, setFolder, note } = useFolders(ids);
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
+
   const nameProblem = COMPONENT_NAME.test(name)
     ? null
     : "Use a PascalCase name such as StatRow";
+
   const dialog = useModalDialog(() => {
-    if (busy) return false;
+    if (busy) {
+      return false;
+    }
+
     onClose();
   });
+
   const count = selection.length;
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
-    if (nameProblem || busy || !folder) return;
+
+    if (nameProblem || busy || !folder) {
+      return;
+    }
+
     setBusy(true);
     setFailure(null);
+
     try {
       const result = await componentCreateApi.create(
         ids.projectId,
         ids.directionId,
         { targets: selection.map(targetOf), name, folder }
       );
+
       const props = result.props.map((prop) => prop.name).join(", ");
       onDone(
         `Created ${result.name} in ${result.file}${props ? ` with ${props}` : ""}, used ${result.select.length} time${result.select.length === 1 ? "" : "s"}.`
@@ -129,7 +150,9 @@ export default function CreateComponentDialog({
   };
 
   const onKeyDown = (event: KeyboardEvent) => {
-    if (event.key === "Escape") event.stopPropagation();
+    if (event.key === "Escape") {
+      event.stopPropagation();
+    }
   };
 
   return (

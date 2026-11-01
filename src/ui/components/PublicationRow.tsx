@@ -10,13 +10,26 @@ import { publishApi } from "../publishApi";
 import { CopyButton } from "./CopyButton";
 
 function statusText(p: Publication, now: number): string {
-  if (p.status === "removed") return "Unpublished";
-  if (p.status === "failed") return "Failed";
-  if (p.status === "ended") return "Ended";
-  if (p.status === "publishing") return "Publishing…";
+  if (p.status === "removed") {
+    return "Unpublished";
+  }
+
+  if (p.status === "failed") {
+    return "Failed";
+  }
+
+  if (p.status === "ended") {
+    return "Ended";
+  }
+
+  if (p.status === "publishing") {
+    return "Publishing…";
+  }
+
   const views = p.views
     ? `${p.views.total} view${p.views.total === 1 ? "" : "s"}, ${p.views.last7} this week`
     : null;
+
   return [
     publishExpiryText(p.expiresAt, now),
     p.password ? "Password" : "Public",
@@ -90,6 +103,7 @@ function Comments({
 }) {
   const [list, setList] = useState<PublicationComment[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+
   const load = useCallback(async () => {
     try {
       setList((await publishApi.comments(projectId, p.id)).comments);
@@ -97,9 +111,11 @@ function Comments({
       setError(errorText(err));
     }
   }, [projectId, p.id]);
+
   useEffect(() => {
     void load();
   }, [load]);
+
   const remove = async (cid: string) => {
     try {
       await publishApi.deleteComment(projectId, p.id, cid);
@@ -109,6 +125,7 @@ function Comments({
       setError(errorText(err));
     }
   };
+
   return (
     <div className="publish-comments" data-testid="publish-comments">
       {error && <p className="publish-error">{error}</p>}
@@ -150,6 +167,7 @@ function RowActions({
 }) {
   const app = p.backend === "app";
   const toggle = (name: string) => setOpen(open === name ? null : name);
+
   return (
     <>
       {app && p.versions.length > 1 && (
@@ -214,6 +232,7 @@ export function PublicationRow({
 }: RowProps) {
   const [open, setOpen] = useState<string | null>(null);
   const active = p.status !== "removed";
+
   return (
     <li
       className={`share-link${p.status === "live" ? "" : " off"}`}

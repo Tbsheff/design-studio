@@ -9,6 +9,7 @@ export function todoProgress(todos: TodoItem[]): {
 } {
   const done = todos.filter((todo) => todo.status === "completed").length;
   const active = todos.some((todo) => todo.status === "in_progress");
+
   return {
     current: Math.min(todos.length, done + (active ? 1 : 0)),
     total: todos.length,
@@ -20,14 +21,18 @@ function rowState(todo: TodoItem): {
   label: string;
   tag: string | null;
 } {
-  if (todo.skipped)
+  if (todo.skipped) {
     return { className: "skipped", label: "skipped", tag: "Skipped" };
-  if (todo.status === "completed")
+  }
+
+  if (todo.status === "completed") {
     return {
       className: todo.by === "run" ? "completed by-run" : "completed",
       label: todo.by === "run" ? "done, not shown by a step" : "done",
       tag: todo.by === "run" ? "Unverified" : null,
     };
+  }
+
   return {
     className: todo.status,
     label: todo.status === "in_progress" ? "in progress" : "to do",
@@ -36,8 +41,14 @@ function rowState(todo: TodoItem): {
 }
 
 function TodoMark({ todo, running }: { todo: TodoItem; running: boolean }) {
-  if (todo.skipped) return <Icon name="minus" size={12} />;
-  if (todo.status === "completed") return <Icon name="check" size={12} />;
+  if (todo.skipped) {
+    return <Icon name="minus" size={12} />;
+  }
+
+  if (todo.status === "completed") {
+    return <Icon name="check" size={12} />;
+  }
+
   return todo.status === "in_progress" && running ? (
     <span className="spinner" />
   ) : null;
@@ -45,6 +56,7 @@ function TodoMark({ todo, running }: { todo: TodoItem; running: boolean }) {
 
 function TodoRow({ todo, running }: { todo: TodoItem; running: boolean }) {
   const view = rowState(todo);
+
   return (
     <li
       className={`todo-item ${view.className}`}
@@ -77,13 +89,20 @@ export const TodoPanel = memo(function TodoPanel({
 }) {
   const [choice, setChoice] = useState<boolean | null>(null);
   const [ranWith, setRanWith] = useState(running);
+
   if (ranWith !== running) {
     setRanWith(running);
     setChoice(null);
   }
+
   const open = choice ?? running;
-  if (todos.length === 0) return null;
+
+  if (todos.length === 0) {
+    return null;
+  }
+
   const { current, total } = todoProgress(todos);
+
   return (
     <section
       className="todo-panel"

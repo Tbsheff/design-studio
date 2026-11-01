@@ -50,54 +50,79 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function toChange(raw: z.infer<typeof changeSchema>): TokenChange {
   const change: TokenChange = { path: raw.path };
-  if (raw.value !== undefined) change.value = raw.value;
-  if (raw.darkValue !== undefined) change.darkValue = raw.darkValue;
+
+  if (raw.value !== undefined) {
+    change.value = raw.value;
+  }
+
+  if (raw.darkValue !== undefined) {
+    change.darkValue = raw.darkValue;
+  }
+
   return change;
 }
 
 export function parseTokenChanges(raw: unknown): TokenChange[] {
   const parsed = requestSchema.safeParse(raw);
+
   if (!parsed.success) {
     const detail = parsed.error.issues
       .map((issue) => `${issue.path.join(".") || "(root)"}: ${issue.message}`)
       .join("; ");
+
     throw invalid(`Invalid token changes: ${detail}`);
   }
+
   const changes = parsed.data.changes.map(toChange);
   const seen = new Set<string>();
+
   for (const change of changes) {
-    if (seen.has(change.path))
+    if (seen.has(change.path)) {
       throw invalid(`${change.path} appears more than once`);
+    }
+
     seen.add(change.path);
   }
+
   return changes;
 }
 
 function tokenNodeAt(file: TokenFile, path: string): TokenNode | null {
   let node: unknown = file;
+
   for (const segment of path.split(".")) {
     if (
       !isRecord(node) ||
       segment.startsWith("$") ||
       !Object.hasOwn(node, segment)
-    )
+    ) {
       return null;
+    }
+
     node = node[segment];
   }
+
   return isRecord(node) && "$value" in node ? node : null;
 }
 
 function checkValue(group: string, label: string, value: string): void {
-  if (WHOLE_ALIAS.test(value)) return;
+  if (WHOLE_ALIAS.test(value)) {
+    return;
+  }
+
   const check = Object.hasOwn(VALUE_CHECKS, group)
     ? VALUE_CHECKS[group as TokenGroupName]
     : null;
+
   const problem = check
     ? check(value)
     : UNSAFE.test(value)
       ? "must not contain ; { } < > or \\"
       : null;
-  if (problem) throw invalid(`${label} "${value}" ${problem}`);
+
+  if (problem) {
+    throw invalid(`${label} "${value}" ${problem}`);
+  }
 }
 
 export function validateTokenChanges(
@@ -112,14 +137,23 @@ export function validateTokenChanges(
         404
       );
     }
+
     const group = change.path.split(".")[0] ?? "";
-    if (change.value !== undefined)
+
+    if (change.value !== undefined) {
       checkValue(group, `${change.path} value`, change.value);
-    if (typeof change.darkValue !== "string") continue;
-    if (group !== "color")
+    }
+
+    if (typeof change.darkValue !== "string") {
+      continue;
+    }
+
+    if (group !== "color") {
       throw invalid(
         `${change.path}: darkValue is only allowed for color tokens`
       );
+    }
+
     checkValue(group, `${change.path} darkValue`, change.darkValue);
   }
 }
@@ -134,11 +168,21 @@ function setDark(node: TokenNode, dark: string): void {
 
 function removeDark(node: TokenNode): void {
   const extensions = node.$extensions;
-  if (!isRecord(extensions) || !isRecord(extensions[MODES])) return;
+
+  if (!isRecord(extensions) || !isRecord(extensions[MODES])) {
+    return;
+  }
+
   const modes = extensions[MODES];
   delete modes.dark;
-  if (Object.keys(modes).length === 0) delete extensions[MODES];
-  if (Object.keys(extensions).length === 0) delete node.$extensions;
+
+  if (Object.keys(modes).length === 0) {
+    delete extensions[MODES];
+  }
+
+  if (Object.keys(extensions).length === 0) {
+    delete node.$extensions;
+  }
 }
 
 export function applyTokenChanges(
@@ -146,13 +190,25 @@ export function applyTokenChanges(
   changes: TokenChange[]
 ): TokenFile {
   const next = structuredClone(file);
+
   for (const change of changes) {
     const node = tokenNodeAt(next, change.path);
-    if (node === null) continue;
-    if (change.value !== undefined) node.$value = change.value;
-    if (change.darkValue === null) removeDark(node);
-    else if (change.darkValue !== undefined) setDark(node, change.darkValue);
+
+    if (node === null) {
+      continue;
+    }
+
+    if (change.value !== undefined) {
+      node.$value = change.value;
+    }
+
+    if (change.darkValue === null) {
+      removeDark(node);
+    } else if (change.darkValue !== undefined) {
+      setDark(node, change.darkValue);
+    }
   }
+
   return next;
 }
 

@@ -31,11 +31,13 @@ interface AgentRunnerDeps {
 
 function claudeExecutableOption(): { claudeExecutable?: string } {
   const executable = process.env.STUDIO_CLAUDE_PATH;
+
   return executable ? { claudeExecutable: executable } : {};
 }
 
 export function createAgentRunner(deps: AgentRunnerDeps): AgentRunner {
   const canvas = deps.canvas ? { canvas: deps.canvas } : {};
+
   const driver =
     deps.config.agentMode === "mock"
       ? createMockDriver({ ...canvas, preview: deps.preview })
@@ -47,9 +49,11 @@ export function createAgentRunner(deps: AgentRunnerDeps): AgentRunner {
           exportsRoot: path.join(deps.config.dataDir, "exports"),
           ...claudeExecutableOption(),
         });
+
   const registry = packRegistry(undefined, {
     userDir: path.join(deps.config.dataDir, "packs"),
   });
+
   return createRunLifecycle(
     { ...deps, beforeCommit: designSystemBeforeCommit(deps.bus, registry) },
     driver
@@ -70,8 +74,13 @@ export function designSystemBeforeCommit(
           )
       );
     }
+
     const result = await syncDesignSystem(direction.workTree);
-    if (result.errors.length === 0) return;
+
+    if (result.errors.length === 0) {
+      return;
+    }
+
     bus.emit({
       type: "preview.build-error",
       projectId: project.id,

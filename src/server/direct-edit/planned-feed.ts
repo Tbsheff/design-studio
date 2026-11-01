@@ -27,6 +27,7 @@ const listeners = new Set<Listener>();
 
 export function onPlannedEdit(listener: Listener): () => void {
   listeners.add(listener);
+
   return () => listeners.delete(listener);
 }
 
@@ -65,17 +66,23 @@ export function domPatchOf(
     request.variant ||
     request.move !== undefined ||
     request.insert !== undefined
-  )
+  ) {
     return null;
+  }
+
   const style =
     request.style && Object.keys(request.style).length > 0
       ? (request.style as Record<string, string | null>)
       : undefined;
+
   const delta =
     patch.tailwind?.mode === "classes" ? patch.tailwind.delta : undefined;
+
   const classes =
     delta && delta.add.length + delta.remove.length > 0 ? delta : undefined;
+
   const text = textOf(request, patch);
+
   const dom: DomPatch = {
     selector: request.selector,
     loc: `${request.source.file}:${request.source.line}:${request.source.col}`,
@@ -84,6 +91,7 @@ export function domPatchOf(
     ...(classes ? { classes } : {}),
     ...(text !== undefined ? { text } : {}),
   };
+
   return hasChange(dom) ? dom : null;
 }
 
@@ -93,9 +101,14 @@ export function announcePlanned(
   patches: (DomPatch | null)[]
 ): string | null {
   const kept = patches.filter((patch): patch is DomPatch => patch !== null);
-  if (kept.length === 0) return null;
+
+  if (kept.length === 0) {
+    return null;
+  }
+
   const id = randomBytes(6).toString("hex");
   emit({ kind: "planned", projectId, directionId, id, patches: kept });
+
   return id;
 }
 
@@ -104,5 +117,7 @@ export function withdrawPlanned(
   directionId: string,
   id: string | null
 ): void {
-  if (id) emit({ kind: "unplanned", projectId, directionId, id });
+  if (id) {
+    emit({ kind: "unplanned", projectId, directionId, id });
+  }
 }

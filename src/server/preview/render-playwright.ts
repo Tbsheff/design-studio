@@ -28,27 +28,38 @@ interface NetworkTracker {
 
 function trackNetwork(page: Page): NetworkTracker {
   const tracker: NetworkTracker = { inflight: new Map(), lastAt: Date.now() };
+
   const done = (request: object) => {
     tracker.inflight.delete(request);
     tracker.lastAt = Date.now();
   };
+
   page.on("request", (request) => {
-    if (STREAM_TYPES.has(request.resourceType())) return;
+    if (STREAM_TYPES.has(request.resourceType())) {
+      return;
+    }
+
     tracker.inflight.set(request, Date.now());
     tracker.lastAt = Date.now();
   });
   page.on("response", (response) => {
-    if (DATA_TYPES.has(response.request().resourceType()))
+    if (DATA_TYPES.has(response.request().resourceType())) {
       done(response.request());
+    }
   });
   page.on("requestfinished", done);
   page.on("requestfailed", done);
+
   return tracker;
 }
 
 function networkBusy(tracker: NetworkTracker, now: number): boolean {
-  for (const started of tracker.inflight.values())
-    if (now - started < LONG_REQUEST_MS) return true;
+  for (const started of tracker.inflight.values()) {
+    if (now - started < LONG_REQUEST_MS) {
+      return true;
+    }
+  }
+
   return now - tracker.lastAt < QUIET_MS;
 }
 
@@ -56,20 +67,24 @@ async function networkQuiet(
   tracker: NetworkTracker,
   deadline: number
 ): Promise<void> {
-  while (Date.now() < deadline && networkBusy(tracker, Date.now()))
+  while (Date.now() < deadline && networkBusy(tracker, Date.now())) {
     await new Promise((resolve) => setTimeout(resolve, 25));
+  }
 }
 
 function collectErrors(page: Page): RenderErrors {
   const errors: RenderErrors = { consoleErrors: [], pageErrors: [] };
   page.on("console", (message) => {
-    if (message.type() !== "error" || isFaviconMiss(message.location().url))
+    if (message.type() !== "error" || isFaviconMiss(message.location().url)) {
       return;
+    }
+
     errors.consoleErrors.push(message.text());
   });
   page.on("pageerror", (error) =>
     errors.pageErrors.push(error.stack ?? error.message)
   );
+
   return errors;
 }
 
@@ -81,7 +96,11 @@ async function clearOrigin(
   url: string
 ): Promise<void> {
   await context.clearCookies().catch(() => undefined);
-  if (!/^https?:/.test(url)) return;
+
+  if (!/^https?:/.test(url)) {
+    return;
+  }
+
   const origin = new URL(url).origin;
   const session = await context.newCDPSession(page).catch(() => null);
   await session
@@ -98,6 +117,7 @@ function wrapPage(context: BrowserContext, page: Page): RenderPage {
   const errors = collectErrors(page);
   const network = trackNetwork(page);
   let nav: { loadMs: number; idleMs: number } | null = null;
+
   return {
     async reset() {
       network.inflight.clear();
@@ -139,8 +159,12 @@ function wrapPage(context: BrowserContext, page: Page): RenderPage {
 export function createPlaywrightBackend(): RenderBackend {
   let browserPromise: Promise<Browser> | null = null;
   let closed = false;
+
   const browser = (): Promise<Browser> => {
-    if (closed) return Promise.reject(new Error("Browser pool is closed"));
+    if (closed) {
+      return Promise.reject(new Error("Browser pool is closed"));
+    }
+
     if (!browserPromise) {
       const pending: Promise<Browser> = import("playwright-core")
         .then(({ chromium }) =>
@@ -149,8 +173,11 @@ export function createPlaywrightBackend(): RenderBackend {
         .then(
           (launched) => {
             launched.on("disconnected", () => {
-              if (browserPromise === pending) browserPromise = null;
+              if (browserPromise === pending) {
+                browserPromise = null;
+              }
             });
+
             return launched;
           },
           (error: unknown) => {
@@ -158,10 +185,13 @@ export function createPlaywrightBackend(): RenderBackend {
             throw error;
           }
         );
+
       browserPromise = pending;
     }
+
     return browserPromise;
   };
+
   return {
     name: "playwright",
     reusablePages: true,
@@ -170,12 +200,14 @@ export function createPlaywrightBackend(): RenderBackend {
     },
     async open(viewport) {
       const { scale, ...size } = viewport;
+
       const context = await (
         await browser()
       ).newContext({
         viewport: size,
         ...(scale && scale !== 1 ? { deviceScaleFactor: scale } : {}),
       });
+
       return wrapPage(context, await context.newPage());
     },
     async close() {

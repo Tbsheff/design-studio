@@ -31,8 +31,10 @@ function swatch(pack: PackSummary, name: string): string | undefined {
 
 function ModeSwatches({ pack }: { pack: PackSummary }) {
   const light = pack.mode === "light" ? pack.swatches : null;
+
   const dark =
     pack.mode === "dark" ? pack.swatches : (pack.darkSwatches ?? null);
+
   return (
     <span className="lib-modes" data-testid="mode-swatches">
       {light && (
@@ -60,6 +62,7 @@ function LibraryCard({
 }) {
   const display = fontStack(pack.fonts.display, SERIF);
   const body = fontStack(pack.fonts.body, SANS);
+
   return (
     <li>
       <button
@@ -97,11 +100,15 @@ function LibraryCard({
 }
 
 function Problems({ problems }: { problems: PackProblem[] }) {
-  if (problems.length === 0) return null;
+  if (problems.length === 0) {
+    return null;
+  }
+
   const title =
     problems.length === 1
       ? "1 design system could not load"
       : `${problems.length} design systems could not load`;
+
   return (
     <details className="lib-problems">
       <summary>{title}</summary>
@@ -128,6 +135,7 @@ function Group({
   empty?: React.ReactNode;
 }) {
   const id = `lib-${title.toLowerCase().replace(/\W+/g, "-")}`;
+
   return (
     <section className="lib-group" aria-labelledby={id}>
       <h2 id={id}>
@@ -153,18 +161,26 @@ function Group({
 function useToast(): [string | null, (text: string) => void] {
   const [toast, setToast] = useState<{ id: number; text: string } | null>(null);
   useEffect(() => {
-    if (!toast) return;
+    if (!toast) {
+      return;
+    }
+
     const timer = setTimeout(
       () => setToast((current) => (current?.id === toast.id ? null : current)),
       TOAST_MS
     );
+
     return () => clearTimeout(timer);
   }, [toast]);
+
   return [toast?.text ?? null, (text) => setToast({ id: Date.now(), text })];
 }
 
 function existingOf(error: unknown): PackSummary | null {
-  if (!(error instanceof ApiError) || error.code !== "pack_exists") return null;
+  if (!(error instanceof ApiError) || error.code !== "pack_exists") {
+    return null;
+  }
+
   return (
     ((error.data as { existing?: PackSummary } | undefined)?.existing as
       | PackSummary
@@ -209,13 +225,18 @@ export function DesignSystems({ from }: { from: LibraryFrom | null }) {
   const importFile = async (file: File) => {
     setImporting(true);
     setImportError(null);
+
     try {
       const result = await api.importPack(file);
       imported(result.pack, result.replaced);
     } catch (err) {
       const existing = existingOf(err);
-      if (existing) setDialog({ kind: "conflict", file, existing });
-      else setImportError(errorText(err));
+
+      if (existing) {
+        setDialog({ kind: "conflict", file, existing });
+      } else {
+        setImportError(errorText(err));
+      }
     } finally {
       setImporting(false);
     }
@@ -277,7 +298,10 @@ export function DesignSystems({ from }: { from: LibraryFrom | null }) {
               onChange={(e) => {
                 const file = e.target.files?.[0];
                 e.target.value = "";
-                if (file) void importFile(file);
+
+                if (file) {
+                  void importFile(file);
+                }
               }}
             />
             <button

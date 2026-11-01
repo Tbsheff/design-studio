@@ -13,8 +13,14 @@ export function canPolishRun(
   headVersionId: string | null
 ): boolean {
   const summary = run.summary;
-  if (!summary || summary.status !== "completed" || !headVersionId)
+
+  if (!summary || summary.status !== "completed" || !headVersionId) {
     return false;
-  if (summary.level === "polish") return false;
+  }
+
+  if (summary.level === "polish") {
+    return false;
+  }
+
   return summary.versionId === headVersionId;
 }

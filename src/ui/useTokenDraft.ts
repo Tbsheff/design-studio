@@ -51,12 +51,17 @@ function substitute(
   good: PendingMap
 ): TokenChange[] {
   return changes.flatMap((change) => {
-    if (bad[change.path] === undefined) return [change];
+    if (bad[change.path] === undefined) {
+      return [change];
+    }
+
     const last = good[change.path];
+
     const same =
       last &&
       last.value === change.value &&
       last.darkValue === change.darkValue;
+
     return last && !same ? [{ path: change.path, ...last }] : [];
   });
 }
@@ -69,28 +74,39 @@ async function previewWithFallback(
 ): Promise<PreviewOutcome> {
   const errors: Record<string, string> = {};
   let rest = changes;
+
   for (let i = 0; i < MAX_PREVIEW_TRIES && rest.length > 0; i += 1) {
     let messages: string[];
+
     try {
       const result = await api.previewTokens(pid, did, rest);
+
       if (result.errors.length === 0) {
-        for (const change of rest)
+        for (const change of rest) {
           good[change.path] = {
             value: change.value,
             darkValue: change.darkValue,
           };
+        }
+
         return { css: result.css, errors };
       }
+
       messages = result.errors;
     } catch (err) {
       messages = [errorText(err)];
     }
+
     const bad = errorPaths(messages, rest);
-    if (Object.keys(bad).length === 0)
+
+    if (Object.keys(bad).length === 0) {
       return { css: null, errors: { ...errors, "": messages.join("; ") } };
+    }
+
     Object.assign(errors, bad);
     rest = substitute(rest, bad, good);
   }
+
   return { css: rest.length === 0 ? "" : null, errors };
 }
 
@@ -118,7 +134,11 @@ export function useTokenDraft(o: Options) {
 
   const stopPreview = useCallback(() => {
     seq.current += 1;
-    if (timer.current !== null) window.clearTimeout(timer.current);
+
+    if (timer.current !== null) {
+      window.clearTimeout(timer.current);
+    }
+
     timer.current = null;
   }, []);
 
@@ -128,28 +148,42 @@ export function useTokenDraft(o: Options) {
     const my = ++seq.current;
     const { projectId, directionId } = opts.current;
     const changes = toChanges(pendingRef.current);
+
     if (changes.length === 0 || !directionId) {
       setErrors({});
       broadcastTokenCss("");
+
       return;
     }
+
     const outcome = await previewWithFallback(
       projectId,
       directionId,
       changes,
       good.current
     );
-    if (my !== seq.current) return;
+
+    if (my !== seq.current) {
+      return;
+    }
+
     setErrors(outcome.errors);
-    if (outcome.css !== null) broadcastTokenCss(outcome.css);
+
+    if (outcome.css !== null) {
+      broadcastTokenCss(outcome.css);
+    }
   }, []);
 
   const schedule = useCallback(() => {
-    if (timer.current !== null) return;
+    if (timer.current !== null) {
+      return;
+    }
+
     const wait = Math.max(
       0,
       PREVIEW_THROTTLE_MS - (Date.now() - lastSent.current)
     );
+
     timer.current = window.setTimeout(() => void runPreview(), wait);
   }, [runPreview]);
 
@@ -185,12 +219,15 @@ export function useTokenDraft(o: Options) {
     (entry: CompiledTokenEntry, field: TokenField, value: string | null) => {
       const map = pendingRef.current;
       const last = history.current[history.current.length - 1];
-      if (!last || last.path !== entry.path || last.field !== field)
+
+      if (!last || last.path !== entry.path || last.field !== field) {
         history.current.push({
           path: entry.path,
           field,
           before: map[entry.path],
         });
+      }
+
       const base = rawToken(opts.current.tokens?.file ?? null, entry);
       apply(
         setPending(
@@ -213,7 +250,10 @@ export function useTokenDraft(o: Options) {
 
   const undoLast = useCallback(() => {
     const step = history.current.pop();
-    if (step) apply(setPending(pendingRef.current, step.path, step.before));
+
+    if (step) {
+      apply(setPending(pendingRef.current, step.path, step.before));
+    }
   }, [apply]);
 
   const setTheme = useCallback((next: ThemeChoice) => broadcastTheme(next), []);
@@ -222,10 +262,15 @@ export function useTokenDraft(o: Options) {
   const commit = useCallback(async () => {
     const { projectId, directionId, tokens } = opts.current;
     const changes = toChanges(pendingRef.current);
-    if (!directionId || changes.length === 0) return;
+
+    if (!directionId || changes.length === 0) {
+      return;
+    }
+
     stopPreview();
     setCommitting(true);
     setCommitError(null);
+
     try {
       const result = await api.updateTokens(projectId, directionId, changes);
       tokens?.replace(result.state);
@@ -245,15 +290,24 @@ export function useTokenDraft(o: Options) {
 
   const confirmLeave = useCallback(() => {
     const count = Object.keys(pendingRef.current).length;
-    if (count === 0) return true;
+
+    if (count === 0) {
+      return true;
+    }
+
     const ok = window.confirm(
       `Discard ${count} token ${count === 1 ? "change" : "changes"}?`
     );
-    if (ok) reset();
+
+    if (ok) {
+      reset();
+    }
+
     return ok;
   }, [reset]);
 
   const count = Object.keys(pending).length;
+
   const effective = useMemo(
     () => overlayTokens(o.tokens, pending),
     [o.tokens, pending]

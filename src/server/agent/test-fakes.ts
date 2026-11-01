@@ -27,6 +27,7 @@ interface FakeBus extends EventBus {
 export function createFakeBus(): FakeBus {
   const events: StudioEvent[] = [];
   const listeners = new Set<(event: StudioEvent) => void>();
+
   return {
     events,
     emit(input: StudioEventInput) {
@@ -35,8 +36,13 @@ export function createFakeBus(): FakeBus {
         seq: events.length + 1,
         ts: Date.now(),
       } as StudioEvent;
+
       events.push(event);
-      for (const listener of listeners) listener(event);
+
+      for (const listener of listeners) {
+        listener(event);
+      }
+
       return event;
     },
     since(projectId, afterSeq) {
@@ -46,6 +52,7 @@ export function createFakeBus(): FakeBus {
     },
     subscribe(_projectId, listener) {
       listeners.add(listener);
+
       return () => listeners.delete(listener);
     },
   };
@@ -81,8 +88,13 @@ export function createFakeProjects(
       const direction = store.current.directions.find(
         (candidate) => candidate.id === directionId
       );
-      if (!direction) throw new Error(`direction ${directionId} not found`);
+
+      if (!direction) {
+        throw new Error(`direction ${directionId} not found`);
+      }
+
       Object.assign(direction, patch);
+
       return structuredClone(direction);
     },
     projectDir(projectId) {
@@ -93,6 +105,7 @@ export function createFakeProjects(
     readDesignMd: async () => null,
     writeDesignMd: () => notImplemented("writeDesignMd"),
   };
+
   return store;
 }
 
@@ -109,12 +122,14 @@ interface FakeVersions extends VersionStore {
 
 export function createFakeVersions(): FakeVersions {
   const versions: Version[] = [];
+
   const store: FakeVersions = {
     commits: [],
     statusCalls: 0,
     async ensureRepo() {},
     async commit(_project, direction: Direction, title, meta) {
       store.commits.push({ title, meta, directionId: direction.id });
+
       const version: Version = {
         id: `v${versions.length + 1}`,
         directionId: direction.id,
@@ -124,7 +139,9 @@ export function createFakeVersions(): FakeVersions {
         createdAt: Date.now(),
         changedFiles: [],
       };
+
       versions.push(version);
+
       return version;
     },
     async list() {
@@ -132,11 +149,16 @@ export function createFakeVersions(): FakeVersions {
     },
     async get(_project, versionId) {
       const version = versions.find((candidate) => candidate.id === versionId);
-      if (!version) throw new Error("not found");
+
+      if (!version) {
+        throw new Error("not found");
+      }
+
       return version;
     },
     async status() {
       store.statusCalls += 1;
+
       return { dirty: true, changed: ["index.html"] };
     },
     commitFile: () => notImplemented("commitFile"),
@@ -146,6 +168,7 @@ export function createFakeVersions(): FakeVersions {
     snapshot: () => notImplemented("snapshot"),
     exportZip: () => notImplemented("exportZip"),
   };
+
   return store;
 }
 
@@ -199,8 +222,10 @@ export async function createTempProject(
   const root = await realpath(
     await mkdtemp(path.join(os.tmpdir(), "studio-agent-"))
   );
+
   const workTree = path.join(root, "work");
   await mkdir(workTree, { recursive: true });
+
   const direction: Direction = {
     id: "d1",
     name: "main",
@@ -211,6 +236,7 @@ export async function createTempProject(
     sessionId: null,
     createdAt: Date.now(),
   };
+
   const project: Project = {
     id: "p1",
     name: "Test",
@@ -222,5 +248,6 @@ export async function createTempProject(
     settings: { ...DEFAULT_SETTINGS, ...settings },
     directions: [direction],
   };
+
   return { root, workTree, project, direction };
 }

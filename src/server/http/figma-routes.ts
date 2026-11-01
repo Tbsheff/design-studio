@@ -57,6 +57,7 @@ const loc = z
     col: z.number().int().min(1),
   })
   .strict();
+
 const target = z
   .object({
     source: loc.nullable(),
@@ -73,6 +74,7 @@ const target = z
       .optional(),
   })
   .strict();
+
 const requestSchema = z
   .object({
     nodes: z.string().min(2).max(FIGMA_NODES_MAX_BYTES).optional(),
@@ -92,6 +94,7 @@ const requestSchema = z
 
 export function parseFigmaImportRequest(raw: unknown): FigmaImportRequest {
   const parsed = requestSchema.safeParse(raw);
+
   if (!parsed.success) {
     const issue = parsed.error.issues[0];
     throw new FigmaInputError(
@@ -100,21 +103,31 @@ export function parseFigmaImportRequest(raw: unknown): FigmaImportRequest {
         : "The Figma import request is not valid"
     );
   }
+
   return parsed.data as FigmaImportRequest;
 }
 
 export async function figmaNodesText(
   request: FigmaImportRequest
 ): Promise<string> {
-  if ("nodes" in request && typeof request.nodes === "string")
+  if ("nodes" in request && typeof request.nodes === "string") {
     return request.nodes;
+  }
+
   const link = "link" in request ? parseFigmaLink(request.link) : null;
-  if (!link)
+
+  if (!link) {
     throw new FigmaInputError(
       "This is not a Figma file link. Copy the link to one frame (right-click the frame > Copy link)."
     );
+  }
+
   const text = await fetchFigmaNodes(link);
-  if (!request.nodeId && link.nodeId) request.nodeId = link.nodeId;
+
+  if (!request.nodeId && link.nodeId) {
+    request.nodeId = link.nodeId;
+  }
+
   return text;
 }
 
@@ -127,24 +140,37 @@ export async function applyFigmaImport(
 ): Promise<FigmaImportResult | FigmaImportPreview> {
   const request = parseFigmaImportRequest(raw);
   const doc = parseFigmaNodes(await figmaNodesText(request));
+
   const prepared = await prepareFigmaImport(scope, doc, {
     nodeId: request.nodeId,
     target: request.target,
     position: request.position,
   });
-  if (!request.dryRun) assertCanEdit(deps, scope.project, scope.direction);
+
+  if (!request.dryRun) {
+    assertCanEdit(deps, scope.project, scope.direction);
+  }
+
   const plan = await planInsertJsx(scope, prepared.insert);
-  if (request.dryRun) return prepared.preview;
+
+  if (request.dryRun) {
+    return prepared.preview;
+  }
+
   const { project, direction } = scope;
+
   const title = `Import Figma frame ${prepared.preview.frame.name}`.slice(
     0,
     120
   );
+
   const at = plan.select[0];
+
   const meta: VersionMeta = {
     kind: "manual",
     prompt: `Import Figma frame ${prepared.preview.frame.id}: ${request.position} ${at ? `${at.file}:${at.line}:${at.col}` : plan.target.relative}`,
   };
+
   const version = await writeAndCommitAll(
     deps,
     project,
@@ -153,6 +179,7 @@ export async function applyFigmaImport(
     title,
     meta
   );
+
   deps.history?.record({
     projectId: project.id,
     directionId: direction.id,
@@ -168,6 +195,7 @@ export async function applyFigmaImport(
     ],
   });
   await publishVersion(deps, project, direction, version);
+
   return {
     file: plan.target.relative,
     version,
@@ -181,10 +209,14 @@ export async function applyFigmaImport(
 }
 
 function failure(c: Context, error: unknown): Response {
-  if (error instanceof FigmaInputError)
+  if (error instanceof FigmaInputError) {
     return c.json({ error: "figma_input", message: error.message }, 400);
-  if (error instanceof DirectEditError)
+  }
+
+  if (error instanceof DirectEditError) {
     return c.json({ error: error.code, message: error.message }, error.status);
+  }
+
   throw error;
 }
 
@@ -193,6 +225,7 @@ export function registerFigmaRoutes(app: Hono, deps: FigmaRouteDeps): void {
     const body = await deps.readBody(c);
     const pid = c.req.param("pid");
     const did = c.req.param("did");
+
     const run = async (project: Project, direction: Direction) =>
       applyFigmaImport(
         deps.editDeps,
@@ -208,15 +241,19 @@ export function registerFigmaRoutes(app: Hono, deps: FigmaRouteDeps): void {
         },
         body
       );
+
     try {
       const dry =
         typeof body === "object" &&
         body !== null &&
         (body as { dryRun?: unknown }).dryRun === true;
+
       if (dry) {
         const { project, direction } = await deps.loadDirection(pid, did);
+
         return c.json(await run(project, direction));
       }
+
       return c.json(await deps.withDirection(pid, did, run));
     } catch (error) {
       return failure(c, error);

@@ -25,6 +25,7 @@ interface CenterProps {
 
 export function CenterView(props: CenterProps) {
   const { left, right } = props;
+
   if (props.compareOpen && left && right) {
     return (
       <CompareView
@@ -37,6 +38,7 @@ export function CenterView(props: CenterProps) {
       />
     );
   }
+
   return <Canvas {...props.canvas} />;
 }
 
@@ -54,6 +56,7 @@ export function runStoppedUnsaved(
     (latest, version) => Math.max(latest, version.createdAt),
     0
   );
+
   return runs.some((run) => run.startedAt > head && STOPPED.has(run.status));
 }
 
@@ -65,7 +68,10 @@ export function UnfinishedSlot(props: {
   onKeep: () => void;
   onDiscard: () => void;
 }) {
-  if (!props.visible) return null;
+  if (!props.visible) {
+    return null;
+  }
+
   return (
     <UnfinishedBanner
       count={props.count}
@@ -113,8 +119,10 @@ export function StudioBoot({
   message: string | null;
   onExit: () => void;
 }) {
-  if (message === null)
+  if (message === null) {
     return <div className="boot muted">Loading project…</div>;
+  }
+
   return (
     <div className="boot">
       <div className="boot-card">

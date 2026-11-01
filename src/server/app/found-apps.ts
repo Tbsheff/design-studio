@@ -16,6 +16,7 @@ const MAX_DEPTH = 2;
 const TIME_BOX_MS = 1000;
 const CACHE_MS = 60_000;
 const MAX_APPS = 60;
+
 const SKIP = new Set([
   "node_modules",
   "Library",
@@ -41,22 +42,32 @@ async function classify(
   dir: string
 ): Promise<{ kind: FoundAppKind; apps: string[] } | "package" | null> {
   const pkg = await readPackage(dir);
+
   if (pkg) {
     const detected = await detectApp(dir);
-    if (detected.framework === "next")
+
+    if (detected.framework === "next") {
       return {
         kind: "next",
         apps: detected.candidates.map((candidate) => candidate.appDir),
       };
-    if (frameworkOf(pkg) === "vite") return { kind: "vite", apps: [] };
+    }
+
+    if (frameworkOf(pkg) === "vite") {
+      return { kind: "vite", apps: [] };
+    }
   }
-  if (existsSync(path.join(dir, "index.html")))
+
+  if (existsSync(path.join(dir, "index.html"))) {
     return { kind: "html", apps: [] };
+  }
+
   return pkg ? "package" : null;
 }
 
 async function childDirs(dir: string): Promise<string[]> {
   const entries = await readdir(dir, { withFileTypes: true }).catch(() => []);
+
   return entries
     .filter(
       (entry) =>
@@ -74,16 +85,21 @@ async function scanRoot(
   deadline: number
 ): Promise<void> {
   let level = [root];
+
   for (let depth = 1; depth <= MAX_DEPTH && level.length > 0; depth += 1) {
     const next: string[] = [];
+
     for (const parent of level) {
       for (const dir of await childDirs(parent)) {
         if (Date.now() > deadline || found.apps.length >= MAX_APPS) {
           found.truncated = true;
+
           return;
         }
+
         const kind = await classify(dir);
-        if (kind && kind !== "package")
+
+        if (kind && kind !== "package") {
           found.apps.push({
             path: dir,
             name: path.basename(dir),
@@ -91,9 +107,12 @@ async function scanRoot(
             apps: kind.apps,
             root: path.relative(home, root),
           });
-        else if (!kind) next.push(dir);
+        } else if (!kind) {
+          next.push(dir);
+        }
       }
     }
+
     level = next;
   }
 }
@@ -106,14 +125,24 @@ async function scanHome(home: string): Promise<Scan> {
     truncated: false,
     scannedAt: Date.now(),
   };
+
   const deadline = Date.now() + TIME_BOX_MS;
+
   for (const name of ROOTS) {
     const root = await realpath(path.join(home, name)).catch(() => null);
-    if (!root || !inside(home, root) || scan.roots.includes(root)) continue;
+
+    if (!root || !inside(home, root) || scan.roots.includes(root)) {
+      continue;
+    }
+
     scan.roots.push(root);
     await scanRoot(home, root, scan, deadline);
-    if (scan.truncated) break;
+
+    if (scan.truncated) {
+      break;
+    }
   }
+
   return scan;
 }
 
@@ -132,11 +161,16 @@ export async function findApps(
 ): Promise<FoundApps> {
   const home = await realpath(os.homedir());
   const hit = cache.get(home);
+
   const scan =
     hit && !options.fresh && Date.now() - hit.at < CACHE_MS
       ? hit.scan
       : await scanHome(home);
-  if (scan !== hit?.scan) cache.set(home, { at: Date.now(), scan });
+
+  if (scan !== hit?.scan) {
+    cache.set(home, { at: Date.now(), scan });
+  }
+
   return {
     ...scan,
     apps: scan.apps.map((app) => ({

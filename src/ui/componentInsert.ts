@@ -26,8 +26,10 @@ export function insertError(error: unknown): string {
     error instanceof ApiError &&
     error.data &&
     typeof (error.data as { message?: unknown }).message === "string"
-  )
+  ) {
     return (error.data as { message: string }).message;
+  }
+
   return error instanceof Error ? error.message : String(error);
 }
 
@@ -49,7 +51,9 @@ export const insertBus = {
     host = next;
   },
   clear(owner: InsertHost): void {
-    if (host === owner) host = null;
+    if (host === owner) {
+      host = null;
+    }
   },
   get: (): InsertHost | null => host,
 };

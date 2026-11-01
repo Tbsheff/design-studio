@@ -19,6 +19,7 @@ const STRINGS = [
   "password",
   "publicationId",
 ] as const;
+
 const BOOLEANS = [
   "keepPassword",
   "comments",
@@ -28,19 +29,34 @@ const BOOLEANS = [
 
 function planInput(raw: Record<string, unknown>): PublishPlanInput {
   const input: PublishPlanInput = {};
-  for (const key of STRINGS)
-    if (typeof raw[key] === "string") input[key] = raw[key];
-  for (const key of BOOLEANS)
-    if (typeof raw[key] === "boolean") input[key] = raw[key];
-  if (Array.isArray(raw.frames))
+
+  for (const key of STRINGS) {
+    if (typeof raw[key] === "string") {
+      input[key] = raw[key];
+    }
+  }
+
+  for (const key of BOOLEANS) {
+    if (typeof raw[key] === "boolean") {
+      input[key] = raw[key];
+    }
+  }
+
+  if (Array.isArray(raw.frames)) {
     input.frames = raw.frames as PublishPlanInput["frames"];
-  if (Array.isArray(raw.frameIds))
+  }
+
+  if (Array.isArray(raw.frameIds)) {
     input.frameIds = raw.frameIds.filter(
       (id): id is string => typeof id === "string"
     );
-  if (typeof raw.expiresInDays === "number")
+  }
+
+  if (typeof raw.expiresInDays === "number") {
     input.expiresInDays =
       raw.expiresInDays as PublishPlanInput["expiresInDays"];
+  }
+
   return input;
 }
 
@@ -55,6 +71,7 @@ function registerSetupRoutes(
 
   app.post("/api/publish/login", async (c) => {
     const body = await deps.readBody(c);
+
     return c.json(
       await service.cli.startLogin(
         body.keyring !== false,
@@ -72,8 +89,11 @@ function registerSetupRoutes(
 
   app.put("/api/publish/settings", async (c) => {
     const body = await deps.readBody(c);
-    if (body.accountId !== null && typeof body.accountId !== "string")
+
+    if (body.accountId !== null && typeof body.accountId !== "string") {
       throw new BadRequestError("accountId must be a string or null");
+    }
+
     return c.json(await service.cli.setAccount(body.accountId));
   });
 
@@ -84,6 +104,7 @@ function registerSetupRoutes(
   app.post("/api/publish/backend/setup", async (c) => {
     const body = await deps.readBody(c);
     const mode = body.mode === "local" ? "local" : "cloudflare";
+
     return c.json(await service.backend.start(mode));
   });
 }
@@ -108,8 +129,11 @@ export function registerPublishRoutes(
 
   app.post("/api/projects/:pid/publish", async (c) => {
     const body = await deps.readBody(c);
-    if (typeof body.planId !== "string")
+
+    if (typeof body.planId !== "string") {
       throw new BadRequestError("planId is required");
+    }
+
     return c.json({
       publication: await service.publish(pidOf(c), body.planId),
     });
@@ -123,8 +147,11 @@ export function registerPublishRoutes(
 
   app.post("/api/projects/:pid/publications/:id/rollback", async (c) => {
     const body = await deps.readBody(c);
-    if (typeof body.versionId !== "string")
+
+    if (typeof body.versionId !== "string") {
       throw new BadRequestError("versionId is required");
+    }
+
     return c.json({
       publication: await service.rollback(
         pidOf(c),
@@ -144,6 +171,7 @@ export function registerPublishRoutes(
       c.req.param("id"),
       c.req.param("cid")
     );
+
     return c.json({ ok: true });
   });
 

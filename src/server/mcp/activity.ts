@@ -34,12 +34,17 @@ export interface ActivityLog {
 
 function clean(text: string, max: number): string {
   const flat = text.replace(/[\p{Cc}\s]+/gu, " ").trim();
+
   return flat.length > max ? `${flat.slice(0, max - 1)}…` : flat;
 }
 
 function isActivity(value: unknown): value is McpActivity {
-  if (typeof value !== "object" || value === null) return false;
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
   const item = value as Partial<McpActivity>;
+
   return (
     typeof item.id === "string" &&
     typeof item.summary === "string" &&
@@ -51,19 +56,27 @@ function isActivity(value: unknown): value is McpActivity {
 export function createActivityLog(dataDir: string, bus: EventBus): ActivityLog {
   const cache = new Map<string, McpActivity[]>();
   const chains = new Map<string, Promise<unknown>>();
+
   const fileOf = (projectId: string) =>
     path.join(dataDir, "projects", assertSafeId(projectId, "projectId"), FILE);
 
   const load = async (projectId: string): Promise<McpActivity[]> => {
     const cached = cache.get(projectId);
-    if (cached) return cached;
+
+    if (cached) {
+      return cached;
+    }
+
     const parsed: unknown = JSON.parse(
       await readFile(fileOf(projectId), "utf-8").catch(() => "[]")
     );
+
     const items = Array.isArray(parsed)
       ? parsed.filter(isActivity).slice(-ACTIVITY_KEEP)
       : [];
+
     cache.set(projectId, items);
+
     return items;
   };
 
@@ -82,7 +95,9 @@ export function createActivityLog(dataDir: string, bus: EventBus): ActivityLog {
     const next = (chains.get(projectId) ?? Promise.resolve())
       .catch(() => undefined)
       .then(fn);
+
     chains.set(projectId, next);
+
     return next;
   };
 
@@ -101,9 +116,11 @@ export function createActivityLog(dataDir: string, bus: EventBus): ActivityLog {
           frameId: draft.frameId ?? null,
           at: Date.now(),
         };
+
         const items = [...(await load(draft.projectId)), activity].slice(
           -ACTIVITY_KEEP
         );
+
         cache.set(draft.projectId, items);
         await save(draft.projectId, items);
         bus.emit({
@@ -112,6 +129,7 @@ export function createActivityLog(dataDir: string, bus: EventBus): ActivityLog {
           ...(draft.directionId ? { directionId: draft.directionId } : {}),
           activity,
         });
+
         return activity;
       });
     },
@@ -120,10 +138,12 @@ export function createActivityLog(dataDir: string, bus: EventBus): ActivityLog {
       serial(projectId, async () => {
         const items = (await load(projectId)).map((item) => {
           const moved = item.versionId ? remapped[item.versionId] : undefined;
+
           return moved
             ? { ...item, versionId: moved.id, beforeVersionId: moved.parentId }
             : item;
         });
+
         cache.set(projectId, items);
         await save(projectId, items);
       }),

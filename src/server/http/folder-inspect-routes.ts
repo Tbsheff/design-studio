@@ -33,6 +33,7 @@ interface InspectDeps {
 
 function expandHome(raw: string): string {
   const home = process.env.HOME ?? "";
+
   return home && (raw === "~" || raw.startsWith("~/"))
     ? path.join(home, raw.slice(1))
     : raw;
@@ -42,12 +43,21 @@ async function realFolder(
   raw: string
 ): Promise<{ path: string } | { problem: string }> {
   const input = expandHome(raw.trim());
-  if (!path.isAbsolute(input))
+
+  if (!path.isAbsolute(input)) {
     return { problem: "Use a full path that starts with / (or ~/)." };
+  }
+
   const real = await realpath(input).catch(() => null);
-  if (!real) return { problem: `No folder at ${input}.` };
-  if (!(await stat(real)).isDirectory())
+
+  if (!real) {
+    return { problem: `No folder at ${input}.` };
+  }
+
+  if (!(await stat(real)).isDirectory()) {
     return { problem: `${real} is a file, not a folder.` };
+  }
+
   return { path: real };
 }
 
@@ -56,14 +66,23 @@ async function plainKind(folder: string): Promise<FolderKind | null> {
     path.join(folder, "package.json"),
     "utf-8"
   ).catch(() => null);
+
   let pkg: Record<string, unknown> | null = null;
+
   try {
     pkg = pkgText ? (JSON.parse(pkgText) as Record<string, unknown>) : null;
   } catch {
     pkg = null;
   }
-  if (frameworkOf(pkg) === "vite") return "vite";
-  if (pkgText && (await findTokenFile(folder)) !== null) return "tokens";
+
+  if (frameworkOf(pkg) === "vite") {
+    return "vite";
+  }
+
+  if (pkgText && (await findTokenFile(folder)) !== null) {
+    return "tokens";
+  }
+
   return existsSync(path.join(folder, "index.html")) ? "html" : null;
 }
 
@@ -72,6 +91,7 @@ async function memberDetection(
   appDir: string
 ): Promise<AppDetection> {
   const pkg = await readPackage(path.join(root, appDir));
+
   return {
     framework: "next",
     appDir,
@@ -94,10 +114,12 @@ function chooseAppDir(
     detected.candidates.some((candidate) => candidate.appDir === wanted)
       ? wanted
       : null;
+
   const preferred =
     detected.candidates.find((candidate) =>
       PREFERRED_APP.test(candidate.appDir)
     ) ?? detected.candidates[0];
+
   return chosen ?? detected.appDir ?? preferred?.appDir ?? null;
 }
 
@@ -117,30 +139,41 @@ export async function inspectFolder(
     projectId: null,
     problem: null,
   };
+
   const found = await realFolder(raw);
-  if ("problem" in found) return { ...empty, problem: found.problem };
+
+  if ("problem" in found) {
+    return { ...empty, problem: found.problem };
+  }
+
   const workspace = await nextAppWorkspace(found.path);
   const folder = workspace?.root ?? found.path;
+
   const detected = workspace
     ? await memberDetection(folder, workspace.appDir)
     : await detectApp(folder);
+
   const kind = detected.framework === "next" ? "next" : await plainKind(folder);
   const appDir = kind === "next" ? chooseAppDir(detected, wanted) : null;
   const vite = kind === "vite";
+
   const hint = appDir
     ? installHint(folder, appDir)
     : vite
       ? installHint(folder, ".")
       : null;
+
   const existing = (await projects.list()).find(
     (project) =>
       project.imported?.sourcePath === folder &&
       (kind !== "next" || project.app?.appDir === appDir)
   );
+
   const problem =
     kind === null
       ? "This folder has no Next.js app, no Vite app and no index.html. Add the name of your app folder to the path."
       : null;
+
   return {
     path: folder,
     name: path.basename(folder),
@@ -168,13 +201,16 @@ export function registerFolderInspectRoutes(
   app.post("/api/folders/inspect", async (c) => {
     const body = await deps.readBody(c);
     const raw = body.path;
+
     if (
       typeof raw !== "string" ||
       raw.trim() === "" ||
       raw.length > MAX_PATH ||
       raw.includes("\0")
-    )
+    ) {
       throw new BadRequestError("path is required");
+    }
+
     return c.json(
       await inspectFolder(
         deps.projects,
@@ -196,6 +232,7 @@ export function registerFolderInspectRoutes(
     const list = (await deps.projects.list()).filter(
       (project) => !project.designSystemFor && project.imported
     );
+
     return c.json(
       await Promise.all(
         list.map((project) => projectHealth(project, deps.preview.apps))
@@ -206,11 +243,15 @@ export function registerFolderInspectRoutes(
   app.post("/api/projects/:pid/reveal", async (c) => {
     const project = await deps.projects.get(c.req.param("pid"));
     const folder = project.imported?.sourcePath;
-    if (!folder)
+
+    if (!folder) {
       throw new BadRequestError(
         "Only an opened folder or app can be shown in Finder"
       );
+    }
+
     await revealInFinder(folder);
+
     return c.json({ ok: true });
   });
 }

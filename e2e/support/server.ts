@@ -10,6 +10,7 @@ export const ROOT = path.resolve(
   "..",
   ".."
 );
+
 const E2E_PORT_OFFSET = Number(process.env.STUDIO_E2E_PORT_OFFSET ?? 0);
 const E2E_GROUP = process.env.STUDIO_E2E_GROUP ?? "default";
 export const STUDIO_PORT = 4270 + E2E_PORT_OFFSET;
@@ -17,17 +18,21 @@ export const PREVIEW_PORT = 4271 + E2E_PORT_OFFSET;
 export const VITE_PORT_BASE = 5300 + E2E_PORT_OFFSET * 10;
 export const BASE_URL = `http://127.0.0.1:${STUDIO_PORT}`;
 export const PREVIEW_FRAGMENT = `.localhost:${PREVIEW_PORT}/`;
+
 export function previewOriginFor(projectId: string): string {
   const hex = [...Buffer.from(projectId, "utf-8")]
     .map((byte) => byte.toString(16).padStart(2, "0"))
     .join("");
+
   return `http://p-${hex}.localhost:${PREVIEW_PORT}`;
 }
+
 const STATE_FILE = path.join(
   ROOT,
   "test-results",
   `e2e-state-${E2E_GROUP}.json`
 );
+
 const LOG_DIR = path.join(ROOT, "test-results", `server-logs-${E2E_GROUP}`);
 
 interface E2eState {
@@ -52,15 +57,23 @@ async function waitForHttp(
   isAlive: () => boolean
 ): Promise<void> {
   const deadline = Date.now() + timeoutMs;
+
   while (Date.now() < deadline) {
-    if (!isAlive()) throw new Error("studio server exited during startup");
+    if (!isAlive()) {
+      throw new Error("studio server exited during startup");
+    }
+
     try {
       const res = await fetch(url);
-      if (res.ok) return;
+
+      if (res.ok) {
+        return;
+      }
     } catch {
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
   }
+
   throw new Error(`studio server did not answer ${url} within ${timeoutMs}ms`);
 }
 
@@ -70,13 +83,17 @@ function serverCommand(): {
   env: Record<string, string>;
 } {
   const packagedApp = process.env.STUDIO_E2E_APP;
-  if (!packagedApp)
+
+  if (!packagedApp) {
     return {
       file: path.join(ROOT, "node_modules", ".bin", "tsx"),
       args: ["src/server/index.ts"],
       env: {},
     };
+  }
+
   const resources = path.join(packagedApp, "Contents", "Resources");
+
   return {
     file: path.join(packagedApp, "Contents", "MacOS", "Design Studio"),
     args: [path.join(resources, "server", "index.js")],
@@ -92,11 +109,14 @@ export async function startServer(
   dataDir: string
 ): Promise<{ pid: number; listenMs: number }> {
   mkdirSync(LOG_DIR, { recursive: true });
+
   const claudeHome =
     process.env.STUDIO_E2E_CLAUDE_HOME ?? claudeHomeFor(dataDir);
+
   writeSkillsFixture(claudeHome);
   const started = Date.now();
   const command = serverCommand();
+
   const child = spawnDetachedToLog(
     command.file,
     command.args,
@@ -117,19 +137,25 @@ export async function startServer(
     },
     path.join(LOG_DIR, `server-${Date.now()}.log`)
   );
+
   let alive = true;
   child.on("exit", () => {
     alive = false;
   });
   child.unref();
   await waitForHttp(`${BASE_URL}/`, 90_000, () => alive);
-  if (child.pid === undefined) throw new Error("studio server has no pid");
+
+  if (child.pid === undefined) {
+    throw new Error("studio server has no pid");
+  }
+
   return { pid: child.pid, listenMs: Date.now() - started };
 }
 
 function processAlive(pid: number): boolean {
   try {
     process.kill(pid, 0);
+
     return true;
   } catch {
     return false;
@@ -137,22 +163,36 @@ function processAlive(pid: number): boolean {
 }
 
 export async function stopServer(pid: number): Promise<void> {
-  if (!processAlive(pid)) return;
+  if (!processAlive(pid)) {
+    return;
+  }
+
   try {
     process.kill(-pid, "SIGTERM");
   } catch {
     process.kill(pid, "SIGTERM");
   }
+
   const deadline = Date.now() + 10_000;
-  while (processAlive(pid) && Date.now() < deadline)
+
+  while (processAlive(pid) && Date.now() < deadline) {
     await new Promise((resolve) => setTimeout(resolve, 100));
-  if (processAlive(pid)) process.kill(-pid, "SIGKILL");
+  }
+
+  if (processAlive(pid)) {
+    process.kill(-pid, "SIGKILL");
+  }
+
   for (let attempt = 0; attempt < 50; attempt += 1) {
     const free = await fetch(`${BASE_URL}/`).then(
       () => false,
       () => true
     );
-    if (free) return;
+
+    if (free) {
+      return;
+    }
+
     await new Promise((resolve) => setTimeout(resolve, 100));
   }
 }

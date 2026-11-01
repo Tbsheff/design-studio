@@ -90,30 +90,46 @@ async function moveAbsolute(deps: EditDeps, input: MoveInput): Promise<Done> {
     input.projectId,
     input.directionId
   );
+
   refuseWhileRunning(deps, project, direction);
+
   const element = await sourceElement(
     deps,
     await pageUrl(deps, project, direction, input.path),
     input.selector
   );
+
   const position = element.styles.position ?? "";
-  if (position !== "absolute" && position !== "fixed")
+
+  if (position !== "absolute" && position !== "fixed") {
     throw new EditError(NOT_ABSOLUTE);
+  }
+
   const style: Record<string, string> = {};
-  if (input.left !== undefined) style.left = `${Math.round(input.left)}px`;
-  if (input.top !== undefined) style.top = `${Math.round(input.top)}px`;
+
+  if (input.left !== undefined) {
+    style.left = `${Math.round(input.left)}px`;
+  }
+
+  if (input.top !== undefined) {
+    style.top = `${Math.round(input.top)}px`;
+  }
+
   const target = element.component
     ? { component: element.component }
     : { tag: element.tag.toLowerCase() };
+
   const result = await studioCall<DirectEditResult>(
     deps,
     "POST",
     `${base(project, direction.id)}/direct-edit`,
     { source: element.source, selector: input.selector, ...target, style }
   );
+
   const summary = `Moved ${element.tag} to ${Object.entries(style)
     .map(([key, value]) => `${key} ${value}`)
     .join(", ")}`;
+
   return {
     result: ok({
       file: result.file,
@@ -144,33 +160,42 @@ const moveElement = defineTool(
       "Reorder an element among its siblings, like a drag on the studio canvas inside an auto layout (flex, grid) or a normal flow parent: it moves the JSX or HTML of the element to just before or after another element, with the same code path as the canvas drag. Pass copy to duplicate the element at that place instead (Alt+drag). Both elements must be in the same file; elements made by .map() are refused. To move an absolute or fixed element, pass left and/or top in px instead of before or after: it writes left and top like a canvas drag. One call makes one version, so the user can undo it.",
   },
   async (deps: EditDeps, input): Promise<Done> => {
-    if (input.before === undefined && input.after === undefined)
+    if (input.before === undefined && input.after === undefined) {
       return moveAbsolute(deps, input);
+    }
+
     const { project, direction } = await loadTarget(
       deps,
       input.projectId,
       input.directionId
     );
+
     refuseWhileRunning(deps, project, direction);
     const url = await pageUrl(deps, project, direction, input.path);
     const refSelector = (input.before ?? input.after) as string;
+
     const [element, ref] = await Promise.all([
       sourceElement(deps, url, input.selector),
       sourceElement(deps, url, refSelector),
     ]);
+
     const place = { ...siteOf(ref), selector: refSelector };
+
     const body = {
       op: input.copy ? "duplicate" : "move",
       targets: [{ ...siteOf(element), selector: input.selector }],
       ...(input.before ? { before: place } : { after: place }),
     };
+
     const result = await studioCall<StructureEditResult>(
       deps,
       "POST",
       `${base(project, direction.id)}/direct-edit`,
       body
     );
+
     const summary = `${input.copy ? "Copied" : "Moved"} ${element.tag} ${input.before ? "before" : "after"} ${ref.tag}`;
+
     return {
       result: ok({
         files: result.files,

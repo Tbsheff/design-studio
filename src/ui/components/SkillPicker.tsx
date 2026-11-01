@@ -28,6 +28,7 @@ import type { SlashChoice, SlashSection } from "./SlashMenu";
 
 function matches(skill: SkillInfo, query: string): boolean {
   const needle = query.trim().toLowerCase();
+
   return (
     needle === "" ||
     skill.id.toLowerCase().includes(needle) ||
@@ -39,11 +40,16 @@ function useDismiss(onClose: () => void) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const onDown = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        onClose();
+      }
     };
+
     document.addEventListener("mousedown", onDown);
+
     return () => document.removeEventListener("mousedown", onDown);
   }, [onClose]);
+
   return ref;
 }
 
@@ -54,30 +60,43 @@ function useFitAbove(ref: RefObject<HTMLDivElement | null>, max: number) {
     const fit = () => {
       const pop = ref.current;
       const anchor = pop?.parentElement;
-      if (!pop || !anchor) return;
+
+      if (!pop || !anchor) {
+        return;
+      }
+
       const bounds = pop.closest("aside")?.getBoundingClientRect() ?? {
         top: 0,
       };
+
       const room =
         anchor.getBoundingClientRect().top - Math.max(0, bounds.top) - POP_GAP;
+
       pop.style.maxHeight = `${Math.max(120, Math.min(max, room))}px`;
     };
+
     fit();
     window.addEventListener("resize", fit);
+
     return () => window.removeEventListener("resize", fit);
   }, [ref, max]);
 }
 
 function shownCommands(commands: readonly Command[], query: string): Command[] {
   const tokens = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
-  if (tokens.length === 0)
+
+  if (tokens.length === 0) {
     return [...commands].sort((a, b) =>
       (a.slash ?? "").localeCompare(b.slash ?? "")
     );
+  }
+
   const hits = commands.filter((c) => {
     const words = (c.slash ?? "").toLowerCase().split(/[\s-]+/);
+
     return tokens.every((t) => words.some((w) => w.startsWith(t)));
   });
+
   return rank(hits, tokens.join(" "), (c) => ({
     title: c.slash ?? c.title,
   })).map((r) => r.item);
@@ -120,11 +139,22 @@ function skillStatus(
   error: string | null,
   enabled: number
 ): string | null {
-  if (error) return `Could not load skills (${error}). Type / again to retry.`;
-  if (!catalog) return "Loading skills…";
-  if (catalog.skills.length === 0) return NO_SKILLS_TEXT;
-  if (enabled === 0)
+  if (error) {
+    return `Could not load skills (${error}). Type / again to retry.`;
+  }
+
+  if (!catalog) {
+    return "Loading skills…";
+  }
+
+  if (catalog.skills.length === 0) {
+    return NO_SKILLS_TEXT;
+  }
+
+  if (enabled === 0) {
     return "All skills are off for this project. Turn some on with the skills count below.";
+  }
+
   return null;
 }
 
@@ -145,13 +175,17 @@ export function useSlashSections({
 }: SlashSourceProps) {
   const { catalog, error } = useSkillCatalog();
   const on = enabledSkills(catalog, disabled);
+
   const all = on.filter(
     (skill) => skill.modelInvocable && !exclude.includes(skill.id)
   );
+
   const manualCount = on.filter((skill) => !skill.modelInvocable).length;
   const status = skillStatus(catalog, error, all.length);
+
   const sections = (query: string): SlashSection[] => {
     const skills = all.filter((skill) => matches(skill, query));
+
     return [
       {
         label: "Commands",
@@ -169,6 +203,7 @@ export function useSlashSections({
       },
     ];
   };
+
   const note =
     manualCount > 0 ? (
       <span
@@ -178,6 +213,7 @@ export function useSlashSections({
         {plural(manualCount, "manual-only skill")} not listed
       </span>
     ) : null;
+
   return { sections, note };
 }
 
@@ -188,7 +224,10 @@ export function SkillChips({
   ids: string[];
   onRemove: (id: string) => void;
 }) {
-  if (ids.length === 0) return null;
+  if (ids.length === 0) {
+    return null;
+  }
+
   return (
     <div className="skill-chips" aria-label="Skills for this message">
       {ids.map((id) => (
@@ -230,8 +269,10 @@ export function SkillsIndicator({
   const [pending, setPending] = useState<string[] | null>(null);
   const disabled = pending ?? settings.disabledSkills ?? [];
   const count = enabledSkills(catalog, disabled).length;
+
   const save = (next: string[]) => {
     setPending(next);
+
     return api.updateSettings(projectId, { disabledSkills: next }).then(
       (project) => {
         setError(null);
@@ -244,6 +285,7 @@ export function SkillsIndicator({
       }
     );
   };
+
   return (
     <span className="skills-ind-wrap">
       <button
@@ -288,9 +330,12 @@ function IndicatorPop(props: {
   useEffect(() => {
     const onKey = (e: globalThis.KeyboardEvent) =>
       e.key === "Escape" && props.onClose();
+
     window.addEventListener("keydown", onKey);
+
     return () => window.removeEventListener("keydown", onKey);
   }, [props]);
+
   return (
     <div
       ref={ref}

@@ -24,6 +24,7 @@ function changedLines(
   const a = before.split("\n");
   const b = after.split("\n");
   expect(b.length).toBe(a.length);
+
   return a.flatMap((line, index) =>
     line === b[index] ? [] : [{ before: line, after: b[index] ?? "" }]
   );
@@ -33,10 +34,15 @@ async function vitePage(page: Page, origin: string): Promise<Frame> {
   await expect
     .poll(() => page.frames().some((frame) => frame.url().startsWith(origin)))
     .toBe(true);
+
   const frame = page
     .frames()
     .find((candidate) => candidate.url().startsWith(origin));
-  if (!frame) throw new Error("vite frame not found");
+
+  if (!frame) {
+    throw new Error("vite frame not found");
+  }
+
   return frame;
 }
 
@@ -51,12 +57,15 @@ async function settledHead(
   did: string
 ): Promise<number> {
   await expect(page.locator(".ins-status.saving")).toHaveCount(0);
+
   const head = async () =>
     (await api.project(pid)).directions.find((d) => d.id === did)
       ?.headVersionId ?? null;
+
   const versions = await api.versions(pid, did);
   await expect.poll(head).toBe(versions[0]?.id ?? null);
   await expect(page.locator("li.version")).toHaveCount(versions.length);
+
   return versions.length;
 }
 
@@ -66,6 +75,7 @@ async function blurFields(page: Page): Promise<void> {
 
 async function screenshotInspector(page: Page): Promise<void> {
   mkdirSync(REVIEW_DIR, { recursive: true });
+
   for (const [width, height] of [
     [1440, 900],
     [800, 934],
@@ -84,6 +94,7 @@ async function screenshotInspector(page: Page): Promise<void> {
     });
     await page.locator(".ins-scroll").evaluate((el) => el.scrollTo(0, 0));
   }
+
   await page.setViewportSize({ width: 1600, height: 1000 });
 }
 
@@ -91,12 +102,14 @@ test("Direct edit: HTML style, text, undo, and element with children", async ({
   page,
 }) => {
   const api = await openHome(page);
+
   const project = await createProjectViaUi(
     page,
     api,
     "Harbor Direct Edit",
     "html"
   );
+
   const main = mainDirection(project);
   const frame = frontFrame(page);
   await expect(frame.locator("h1")).toHaveText("Harbor Direct Edit");
@@ -123,6 +136,7 @@ test("Direct edit: HTML style, text, undo, and element with children", async ({
   const srcBefore = await page
     .locator("iframe.frame.front")
     .getAttribute("src");
+
   const fontSize = page.getByLabel("Font size", { exact: true });
   await fontSize.fill("48");
   await fontSize.press("Enter");
@@ -197,12 +211,14 @@ test("Direct edit: React color change uses HMR and Undo restores App.tsx", async
   page,
 }) => {
   const api = await openHome(page);
+
   const project = await createProjectViaUi(
     page,
     api,
     "Orbit Direct Edit",
     "react"
   );
+
   const main = mainDirection(project);
   const frame = frontFrame(page);
   await expect(frame.locator("h1")).toHaveText("Orbit Direct Edit", {
@@ -216,6 +232,7 @@ test("Direct edit: React color change uses HMR and Undo restores App.tsx", async
   await vite.evaluate(() => {
     (window as unknown as { __directMarker?: number }).__directMarker = 7;
   });
+
   const srcBefore = await page
     .locator("iframe.frame.front")
     .getAttribute("src");
@@ -253,12 +270,15 @@ test("Direct edit: React color change uses HMR and Undo restores App.tsx", async
 
 async function overlayMatchesH1(page: Page): Promise<number> {
   const box = await page.locator(".overlay .box.selected").boundingBox();
+
   const zoom = await page
     .locator(".artboard")
     .evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).a);
+
   const h1 = await frontFrame(page)
     .locator("h1")
     .evaluate((el) => el.getBoundingClientRect().height);
+
   return box ? Math.abs(box.height - h1 * zoom) : Number.POSITIVE_INFINITY;
 }
 
@@ -267,12 +287,14 @@ test("Direct edit: selection box follows the h1 after a font-size edit", async (
 }) => {
   await page.setViewportSize({ width: 800, height: 934 });
   const api = await openHome(page);
+
   const project = await createProjectViaUi(
     page,
     api,
     "Harbor Overlay Rects",
     "html"
   );
+
   const main = mainDirection(project);
   const frame = frontFrame(page);
   await expect(frame.locator("h1")).toHaveText("Harbor Overlay Rects");
@@ -282,9 +304,11 @@ test("Direct edit: selection box follows the h1 after a font-size edit", async (
   await selectInFrame(page, "h1");
   await expect(page.locator(".overlay .box.selected")).toHaveCount(1);
   const before = await page.locator(".overlay .box.selected").boundingBox();
+
   const srcBefore = await page
     .locator("iframe.frame.front")
     .getAttribute("src");
+
   const fontSize = page.getByLabel("Font size", { exact: true });
   await fontSize.fill("40");
   await fontSize.press("Enter");

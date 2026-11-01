@@ -48,15 +48,18 @@ async function openFigmaImport(
     import("react-dom/client"),
     import("./components/FigmaImportDialog"),
   ]);
+
   const host = document.createElement("div");
   document.body.append(host);
   const root = createRoot(host);
+
   const close = () => {
     queueMicrotask(() => {
       root.unmount();
       host.remove();
     });
   };
+
   root.render(
     createElement(dialog.default, {
       ids,
@@ -75,25 +78,34 @@ export async function pasteJsx(
   notify: (message: string) => void
 ): Promise<void> {
   const jsx = (await clipboardText())?.trim();
-  if (jsx === undefined)
+
+  if (jsx === undefined) {
     return notify(
       "The studio cannot read the clipboard. Allow clipboard access, then try again."
     );
-  if (looksLikeFigmaNodes(jsx) || looksLikeFigmaLink(jsx))
+  }
+
+  if (looksLikeFigmaNodes(jsx) || looksLikeFigmaLink(jsx)) {
     return openFigmaImport(ids, selection, jsx, notify);
-  if (!jsx.startsWith("<"))
+  }
+
+  if (!jsx.startsWith("<")) {
     return notify(
       "The clipboard has no JSX. Copy a snippet such as <Card>…</Card> or Figma nodes JSON, then try again."
     );
+  }
+
   const position: JsxInsertPosition = VOID.has(selection.tag.toLowerCase())
     ? "after"
     : "inside";
+
   try {
     const result = await insertApi.insertJsx(ids.projectId, ids.directionId, {
       target: targetOf(selection),
       position,
       jsx,
     });
+
     const added = result.imports.filter((item) => item.added).length;
     notify(
       `${result.title}${added > 0 ? `, ${added} import${added === 1 ? "" : "s"} added` : ""}.`

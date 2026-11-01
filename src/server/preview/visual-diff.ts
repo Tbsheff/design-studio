@@ -26,13 +26,16 @@ interface VisualDiff {
 
 function cropTo(png: PNG, width: number, height: number): Buffer {
   const out = Buffer.alloc(width * height * 4);
-  for (let y = 0; y < height; y += 1)
+
+  for (let y = 0; y < height; y += 1) {
     png.data.copy(
       out,
       y * width * 4,
       y * png.width * 4,
       y * png.width * 4 + width * 4
     );
+  }
+
   return out;
 }
 
@@ -46,8 +49,10 @@ function maskRect(
   const x1 = Math.min(width, Math.ceil(rect.x + rect.width + MASK_MARGIN));
   const y0 = Math.max(0, Math.floor(rect.y - MASK_MARGIN));
   const y1 = Math.min(height, Math.ceil(rect.y + rect.height + MASK_MARGIN));
-  for (let y = y0; y < y1; y += 1)
+
+  for (let y = y0; y < y1; y += 1) {
     data.fill(0, (y * width + x0) * 4, (y * width + x1) * 4);
+  }
 }
 
 function comparedHeightFor(
@@ -56,32 +61,45 @@ function comparedHeightFor(
   masks: ProbeRect[]
 ): number {
   const common = Math.min(before.height, after.height);
-  if (before.height === after.height || masks.length === 0) return common;
+
+  if (before.height === after.height || masks.length === 0) {
+    return common;
+  }
+
   const firstMaskTop = Math.min(...masks.map((rect) => rect.y)) - MASK_MARGIN;
+
   return Math.max(0, Math.min(common, Math.floor(firstMaskTop)));
 }
 
 function bandsOf(diff: Buffer, width: number, height: number): DiffBand[] {
   const bands: DiffBand[] = [];
+
   for (let y = 0; y < height; y += BAND_HEIGHT) {
     const bandHeight = Math.min(BAND_HEIGHT, height - y);
     let changed = 0;
+
     for (let row = y; row < y + bandHeight; row += 1) {
-      for (let x = 0; x < width; x += 1)
+      for (let x = 0; x < width; x += 1) {
         if (
           diff[(row * width + x) * 4] === 255 &&
           diff[(row * width + x) * 4 + 1] === 0
-        )
+        ) {
           changed += 1;
+        }
+      }
     }
+
     const pct = (changed / (width * bandHeight)) * 100;
-    if (pct >= 0.5)
+
+    if (pct >= 0.5) {
       bands.push({
         y,
         height: bandHeight,
         changedPct: Math.round(pct * 10) / 10,
       });
+    }
   }
+
   return bands;
 }
 
@@ -92,27 +110,37 @@ export function diffImages(
 ): VisualDiff {
   const width = Math.min(before.width, after.width);
   const height = comparedHeightFor(before, after, masks);
+
   const base = {
     comparedHeight: height,
     beforeHeight: before.height,
     afterHeight: after.height,
   };
-  if (height === 0 || width === 0) return { ...base, changedPct: 0, bands: [] };
+
+  if (height === 0 || width === 0) {
+    return { ...base, changedPct: 0, bands: [] };
+  }
+
   const a = cropTo(before, width, height);
   const b = cropTo(after, width, height);
+
   for (const rect of masks) {
     maskRect(a, width, height, rect);
     maskRect(b, width, height, rect);
   }
+
   const diff = Buffer.alloc(width * height * 4);
+
   const changed = pixelmatch(a, b, diff, width, height, {
     threshold: 0.1,
     diffMask: true,
     diffColor: [255, 0, 0],
     diffColorAlt: [255, 0, 0],
   });
+
   const grown = masks.length === 0 ? Math.abs(before.height - after.height) : 0;
   const pct = ((changed + grown * width) / (width * (height + grown))) * 100;
+
   return {
     ...base,
     changedPct: Math.round(pct * 10) / 10,
@@ -122,12 +150,15 @@ export function diffImages(
 
 function grownBands(from: number, rows: number): DiffBand[] {
   const bands: DiffBand[] = [];
-  for (let y = from; y < from + rows; y += BAND_HEIGHT)
+
+  for (let y = from; y < from + rows; y += BAND_HEIGHT) {
     bands.push({
       y,
       height: Math.min(BAND_HEIGHT, from + rows - y),
       changedPct: 100,
     });
+  }
+
   return bands;
 }
 
@@ -141,12 +172,16 @@ export interface DiffMask {
 export function diffMask(before: PNG, after: PNG): DiffMask {
   const width = Math.min(before.width, after.width);
   const height = Math.min(before.height, after.height);
+
   const out = new PNG({
     width: Math.max(1, width),
     height: Math.max(1, height),
   });
-  if (width === 0 || height === 0)
+
+  if (width === 0 || height === 0) {
     return { png: PNG.sync.write(out), width, height, changed: 0 };
+  }
+
   const changed = pixelmatch(
     cropTo(before, width, height),
     cropTo(after, width, height),
@@ -160,6 +195,7 @@ export function diffMask(before: PNG, after: PNG): DiffMask {
       diffColorAlt: [255, 0, 0],
     }
   );
+
   return { png: PNG.sync.write(out), width, height, changed };
 }
 
@@ -168,7 +204,10 @@ export async function readPng(file: string): Promise<PNG> {
 }
 
 function describeBands(bands: DiffBand[]): string {
-  if (bands.length === 0) return "";
+  if (bands.length === 0) {
+    return "";
+  }
+
   return `; changed bands: ${bands
     .slice(0, 5)
     .map((band) => `y=${band.y}-${band.y + band.height} (${band.changedPct}%)`)
@@ -184,10 +223,13 @@ export function diffFinding(
     diff.beforeHeight === diff.afterHeight
       ? ""
       : ` Page height changed from ${diff.beforeHeight} to ${diff.afterHeight} px; compared the top ${diff.comparedHeight} px.`;
+
   const unexpected = targeted && diff.changedPct >= UNEXPECTED_CHANGE_PCT;
+
   const scope = targeted
     ? "outside the selected elements"
     : "versus the previous version";
+
   return {
     check: "visual-diff",
     severity: unexpected ? "medium" : "low",
@@ -207,21 +249,27 @@ export function resizePng(source: PNG, width: number, height: number): PNG {
   const out = new PNG({ width, height });
   const sx = source.width / width;
   const sy = source.height / height;
+
   for (let y = 0; y < height; y += 1) {
     const y0 = Math.floor(y * sy);
+
     const y1 = Math.max(
       y0 + 1,
       Math.min(source.height, Math.floor((y + 1) * sy))
     );
+
     for (let x = 0; x < width; x += 1) {
       const x0 = Math.floor(x * sx);
+
       const x1 = Math.max(
         x0 + 1,
         Math.min(source.width, Math.floor((x + 1) * sx))
       );
+
       averageInto(source, out.data, (y * width + x) * 4, { x0, x1, y0, y1 });
     }
   }
+
   return out;
 }
 
@@ -235,6 +283,7 @@ function averageInto(
   let g = 0;
   let b = 0;
   let count = 0;
+
   for (let y = box.y0; y < box.y1; y += 1) {
     for (let x = box.x0; x < box.x1; x += 1) {
       const i = (y * source.width + x) * 4;
@@ -245,6 +294,7 @@ function averageInto(
       count += 1;
     }
   }
+
   target[at] = Math.round(r / count);
   target[at + 1] = Math.round(g / count);
   target[at + 2] = Math.round(b / count);
@@ -252,9 +302,13 @@ function averageInto(
 }
 
 export function topOf(png: PNG, height: number): PNG {
-  if (png.height <= height) return png;
+  if (png.height <= height) {
+    return png;
+  }
+
   const out = new PNG({ width: png.width, height });
   png.data.copy(out.data, 0, 0, png.width * height * 4);
+
   return out;
 }
 
@@ -326,16 +380,24 @@ function isRed(mask: Buffer, index: number): boolean {
 
 function backgroundOf(png: PNG): [number, number, number] {
   const bins = new Uint32Array(4096);
+
   for (let i = 0; i < png.data.length; i += 4) {
     const bin =
       ((png.data[i] ?? 0) >> 4) * 256 +
       ((png.data[i + 1] ?? 0) >> 4) * 16 +
       ((png.data[i + 2] ?? 0) >> 4);
+
     bins[bin] = (bins[bin] ?? 0) + 1;
   }
+
   let best = 0;
-  for (let bin = 1; bin < bins.length; bin += 1)
-    if ((bins[bin] ?? 0) > (bins[best] ?? 0)) best = bin;
+
+  for (let bin = 1; bin < bins.length; bin += 1) {
+    if ((bins[bin] ?? 0) > (bins[best] ?? 0)) {
+      best = bin;
+    }
+  }
+
   return [
     ((best >> 8) << 4) + 8,
     (((best >> 4) & 15) << 4) + 8,
@@ -356,8 +418,11 @@ function markContent(
   background: readonly number[],
   into: Uint8Array
 ): void {
-  for (let p = 0; p < into.length; p += 1)
-    if (colorGap(png, p * 4, background) > BACKGROUND_TOLERANCE) into[p] = 1;
+  for (let p = 0; p < into.length; p += 1) {
+    if (colorGap(png, p * 4, background) > BACKGROUND_TOLERANCE) {
+      into[p] = 1;
+    }
+  }
 }
 
 function contentDiff(a: PNG, b: PNG): ContentMap {
@@ -371,16 +436,24 @@ function contentDiff(a: PNG, b: PNG): ContentMap {
   const content = new Uint8Array(a.width * a.height);
   const backA = backgroundOf(a);
   const backB = backgroundOf(b);
+
   if (
     Math.max(
       ...backA.map((value, index) => Math.abs(value - (backB[index] ?? 0)))
     ) > BACKGROUND_TOLERANCE
-  )
+  ) {
     content.fill(1);
+  }
+
   markContent(a, backA, content);
   markContent(b, backB, content);
-  for (let p = 0; p < content.length; p += 1)
-    if (content[p] && isRed(mask, p)) content[p] = 2;
+
+  for (let p = 0; p < content.length; p += 1) {
+    if (content[p] && isRed(mask, p)) {
+      content[p] = 2;
+    }
+  }
+
   return { width: a.width, height: a.height, cells: content };
 }
 
@@ -390,23 +463,34 @@ function contentDiffersPct(
 ): number {
   let union = 0;
   let differs = 0;
+
   for (let y = box.y0; y < box.y1; y += 1) {
     for (let x = box.x0; x < box.x1; x += 1) {
       const value = content.cells[y * content.width + x] ?? 0;
-      if (value > 0) union += 1;
-      if (value === 2) differs += 1;
+
+      if (value > 0) {
+        union += 1;
+      }
+
+      if (value === 2) {
+        differs += 1;
+      }
     }
   }
+
   return union === 0 ? 0 : (differs / union) * 100;
 }
 
 function luminance(png: PNG): Float32Array {
   const out = new Float32Array(png.width * png.height);
-  for (let p = 0; p < out.length; p += 1)
+
+  for (let p = 0; p < out.length; p += 1) {
     out[p] =
       0.299 * (png.data[p * 4] ?? 0) +
       0.587 * (png.data[p * 4 + 1] ?? 0) +
       0.114 * (png.data[p * 4 + 2] ?? 0);
+  }
+
   return out;
 }
 
@@ -415,36 +499,46 @@ function sobelAt(lum: Float32Array, width: number, at: number): number {
   const tr = lum[at - width + 1] ?? 0;
   const bl = lum[at + width - 1] ?? 0;
   const br = lum[at + width + 1] ?? 0;
+
   const gx =
     tr + 2 * (lum[at + 1] ?? 0) + br - tl - 2 * (lum[at - 1] ?? 0) - bl;
+
   const gy =
     bl + 2 * (lum[at + width] ?? 0) + br - tl - 2 * (lum[at - width] ?? 0) - tr;
+
   return Math.hypot(gx, gy);
 }
 
 function edgesOf(png: PNG): Uint8Array {
   const lum = luminance(png);
   const out = new Uint8Array(png.width * png.height);
+
   for (let y = 1; y < png.height - 1; y += 1) {
-    for (let x = 1; x < png.width - 1; x += 1)
-      if (sobelAt(lum, png.width, y * png.width + x) > EDGE_THRESHOLD)
+    for (let x = 1; x < png.width - 1; x += 1) {
+      if (sobelAt(lum, png.width, y * png.width + x) > EDGE_THRESHOLD) {
         out[y * png.width + x] = 1;
+      }
+    }
   }
+
   return out;
 }
 
 function spreadRows(src: Uint8Array, plane: Plane, radius: number): Uint8Array {
   const out = new Uint8Array(src.length);
+
   for (let y = 0; y < plane.height; y += 1) {
     for (let x = 0; x < plane.width; x += 1) {
-      if (src[y * plane.width + x])
+      if (src[y * plane.width + x]) {
         out.fill(
           1,
           y * plane.width + Math.max(0, x - radius),
           y * plane.width + Math.min(plane.width, x + radius + 1)
         );
+      }
     }
   }
+
   return out;
 }
 
@@ -454,14 +548,20 @@ function spreadColumns(
   radius: number
 ): Uint8Array {
   const out = new Uint8Array(src.length);
+
   for (let y = 0; y < plane.height; y += 1) {
     const from = Math.max(0, y - radius) * plane.width;
     const to = Math.min(plane.height - 1, y + radius) * plane.width;
+
     for (let x = 0; x < plane.width; x += 1) {
-      if (src[y * plane.width + x])
-        for (let at = from + x; at <= to + x; at += plane.width) out[at] = 1;
+      if (src[y * plane.width + x]) {
+        for (let at = from + x; at <= to + x; at += plane.width) {
+          out[at] = 1;
+        }
+      }
     }
   }
+
   return out;
 }
 
@@ -475,8 +575,13 @@ function nearOf(edges: Uint8Array, plane: Plane): Uint8Array {
 
 function missesOf(edges: Uint8Array, near: Uint8Array): Uint8Array {
   const out = new Uint8Array(edges.length);
-  for (let p = 0; p < edges.length; p += 1)
-    if (edges[p] && !near[p]) out[p] = 1;
+
+  for (let p = 0; p < edges.length; p += 1) {
+    if (edges[p] && !near[p]) {
+      out[p] = 1;
+    }
+  }
+
   return out;
 }
 
@@ -486,9 +591,13 @@ function sumOf(
   box: Box = { x0: 0, x1: plane.width, y0: 0, y1: plane.height }
 ): number {
   let total = 0;
-  for (let y = box.y0; y < box.y1; y += 1)
-    for (let x = box.x0; x < box.x1; x += 1)
+
+  for (let y = box.y0; y < box.y1; y += 1) {
+    for (let x = box.x0; x < box.x1; x += 1) {
       total += values[y * plane.width + x] ?? 0;
+    }
+  }
+
   return total;
 }
 
@@ -496,6 +605,7 @@ function matchEdges(reference: PNG, render: PNG): EdgeMatch {
   const plane = { width: reference.width, height: reference.height };
   const edgesA = edgesOf(reference);
   const edgesB = edgesOf(render);
+
   return {
     ...plane,
     edgesA,
@@ -511,10 +621,16 @@ function edgeScoreOf(
 ): number {
   const totalA = sumOf(match.edgesA, match, box);
   const totalB = sumOf(match.edgesB, match, box);
-  if (totalA + totalB === 0) return 100;
+
+  if (totalA + totalB === 0) {
+    return 100;
+  }
+
   const recall = totalA === 0 ? 0 : 1 - sumOf(match.missA, match, box) / totalA;
+
   const precision =
     totalB === 0 ? 0 : 1 - sumOf(match.missB, match, box) / totalB;
+
   return precision + recall === 0
     ? 0
     : 100 * ((2 * precision * recall) / (precision + recall)) ** EDGE_POWER;
@@ -522,6 +638,7 @@ function edgeScoreOf(
 
 function scaledTo(png: PNG, width: number, ratio: PNG): PNG {
   const height = Math.max(1, Math.round((ratio.height * width) / ratio.width));
+
   return png.width === width && png.height === height
     ? png
     : resizePng(png, width, height);
@@ -537,30 +654,39 @@ export function diffPictures(reference: PNG, render: PNG): PictureDiff {
     Math.min(COMPARE_WIDTH, reference.width),
     reference
   );
+
   const b = scaledTo(render, a.width, reference);
   const { width, height } = a;
   const mask = Buffer.alloc(width * height * 4);
+
   const changed = pixelmatch(a.data, b.data, mask, width, height, {
     threshold: 0.15,
     diffMask: true,
     diffColor: [255, 0, 0],
     diffColorAlt: [255, 0, 0],
   });
+
   const contentWidth = Math.min(CONTENT_WIDTH, reference.width);
+
   const content = contentDiff(
     scaledTo(reference, contentWidth, reference),
     scaledTo(render, contentWidth, reference)
   );
+
   const edgeWidth = Math.min(EDGE_WIDTH, reference.width);
+
   const edges = matchEdges(
     scaledTo(reference, edgeWidth, reference),
     scaledTo(render, edgeWidth, reference)
   );
+
   const contentScore = 100 - contentDiffersPct(content);
   const edgeScore = edgeScoreOf(edges);
+
   const regions = gridRegions({ mask, width, height }, content, edges).map(
     (region) => scaleRegion(region, reference.width / width)
   );
+
   return {
     differsPct: round1((changed / (width * height)) * 100),
     contentScore: round1(contentScore),
@@ -584,9 +710,15 @@ function cellBox(plane: Plane, row: number, col: number): Box {
 
 function changedPct(grid: Plane & { mask: Buffer }, box: Box): number {
   let changed = 0;
-  for (let y = box.y0; y < box.y1; y += 1)
-    for (let x = box.x0; x < box.x1; x += 1)
-      if (isRed(grid.mask, y * grid.width + x)) changed += 1;
+
+  for (let y = box.y0; y < box.y1; y += 1) {
+    for (let x = box.x0; x < box.x1; x += 1) {
+      if (isRed(grid.mask, y * grid.width + x)) {
+        changed += 1;
+      }
+    }
+  }
+
   return round1(
     (changed / Math.max(1, (box.x1 - box.x0) * (box.y1 - box.y0))) * 100
   );
@@ -608,6 +740,7 @@ function gridRegions(
   edges: EdgeMatch
 ): PictureRegion[] {
   const regions: (PictureRegion & { weight: number })[] = [];
+
   for (let row = 0; row < GRID; row += 1) {
     for (let col = 0; col < GRID; col += 1) {
       const box = cellBox(grid, row, col);
@@ -626,6 +759,7 @@ function gridRegions(
       });
     }
   }
+
   return regions
     .sort((left, right) => left.weight - right.weight)
     .map(({ weight: _weight, ...region }) => region);
@@ -635,41 +769,50 @@ const PANEL_WIDTH = 720;
 const GAP = 8;
 
 function blit(target: PNG, source: PNG, left: number): void {
-  for (let y = 0; y < source.height; y += 1)
+  for (let y = 0; y < source.height; y += 1) {
     source.data.copy(
       target.data,
       (y * target.width + left) * 4,
       y * source.width * 4,
       (y + 1) * source.width * 4
     );
+  }
 }
 
 function tinted(render: PNG, diff: PictureDiff): PNG {
   const out = new PNG({ width: render.width, height: render.height });
+
   for (let y = 0; y < render.height; y += 1) {
     const my = Math.min(
       diff.maskHeight - 1,
       Math.floor((y * diff.maskHeight) / render.height)
     );
+
     for (let x = 0; x < render.width; x += 1) {
       const mx = Math.min(
         diff.maskWidth - 1,
         Math.floor((x * diff.maskWidth) / render.width)
       );
+
       const i = (y * render.width + x) * 4;
       const red = isRed(diff.mask, my * diff.maskWidth + mx);
-      for (let c = 0; c < 3; c += 1)
+
+      for (let c = 0; c < 3; c += 1) {
         out.data[i + c] = Math.round(
           (render.data[i + c] ?? 0) * 0.35 + 255 * 0.65
         );
+      }
+
       if (red) {
         out.data[i] = 230;
         out.data[i + 1] = Math.round((out.data[i + 1] ?? 0) * 0.3);
         out.data[i + 2] = Math.round((out.data[i + 2] ?? 0) * 0.3);
       }
+
       out.data[i + 3] = 255;
     }
   }
+
   return out;
 }
 
@@ -679,10 +822,12 @@ export function pictureSheet(
   diff: PictureDiff
 ): Buffer {
   const width = Math.min(PANEL_WIDTH, reference.width);
+
   const height = Math.max(
     1,
     Math.round((reference.height * width) / reference.width)
   );
+
   const ref = resizePng(reference, width, height);
   const got = resizePng(render, width, height);
   const sheet = new PNG({ width: width * 3 + GAP * 2, height });
@@ -690,5 +835,6 @@ export function pictureSheet(
   blit(sheet, ref, 0);
   blit(sheet, got, width + GAP);
   blit(sheet, tinted(got, diff), (width + GAP) * 2);
+
   return PNG.sync.write(sheet);
 }

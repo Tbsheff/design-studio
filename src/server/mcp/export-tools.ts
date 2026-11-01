@@ -65,6 +65,7 @@ const schema = z
   .strict();
 
 type Input = z.output<typeof schema>;
+
 type Loaded = Awaited<ReturnType<typeof loadTarget>>;
 
 const DEFAULT_FRAME: ExportFrame = {
@@ -79,23 +80,32 @@ async function framesFor(
   refs: string[] | undefined
 ): Promise<ExportFrame[]> {
   const all = (await deps.canvas.read(target.project)).canvas?.frames ?? [];
+
   const toExport = (frame: (typeof all)[number]): ExportFrame => ({
     name: frame.label?.trim() || `${frame.width} × ${frame.height}`,
     width: frame.width,
     height: frame.height,
     ...(frame.path ? { path: frame.path } : {}),
   });
+
   if (refs) {
     return refs.map((ref) => {
       const found = findFrame(all, ref);
-      if (!found && all.length === 0 && ref === "f1") return DEFAULT_FRAME;
-      if (!found)
+
+      if (!found && all.length === 0 && ref === "f1") {
+        return DEFAULT_FRAME;
+      }
+
+      if (!found) {
         throw new EditError(
           `No frame ${ref} on the canvas. Call canvas_list for frame ids.`
         );
+      }
+
       return toExport(found);
     });
   }
+
   const own = all
     .filter(
       (frame) =>
@@ -103,6 +113,7 @@ async function framesFor(
         (!frame.directionId || frame.directionId === target.direction.id)
     )
     .sort((a, b) => a.order - b.order);
+
   return own.length > 0
     ? own.slice(0, EXPORT_MAX_FRAMES).map(toExport)
     : [DEFAULT_FRAME];
@@ -114,8 +125,12 @@ async function cssSelector(
   frame: ExportFrame,
   raw: string | undefined
 ): Promise<string | undefined> {
-  if (!raw || !isLayerRef(raw)) return raw;
+  if (!raw || !isLayerRef(raw)) {
+    return raw;
+  }
+
   const url = await pageUrl(deps, target.project, target.direction, frame.path);
+
   try {
     return await resolveLayerRef(
       deps.preview,
@@ -125,7 +140,10 @@ async function cssSelector(
       raw.trim()
     );
   } catch (error) {
-    if (error instanceof LayerRefError) throw new EditError(error.message);
+    if (error instanceof LayerRefError) {
+      throw new EditError(error.message);
+    }
+
     throw error;
   }
 }
@@ -133,16 +151,23 @@ async function cssSelector(
 async function run(deps: EditDeps, input: Input) {
   const target = await loadTarget(deps, input.projectId, input.directionId);
   const versionId = input.versionId ?? target.direction.headVersionId;
-  if (!versionId)
+
+  if (!versionId) {
     throw new EditError("This direction has no saved version yet.");
-  if (input.selector && input.format === "pptx")
+  }
+
+  if (input.selector && input.format === "pptx") {
     throw new EditError("selector works with format svg only.");
+  }
+
   const all = await framesFor(deps, target, input.frames);
   const [first] = all;
   const frames = input.selector && first ? [first] : all;
+
   const css = first
     ? await cssSelector(deps, target, first, input.selector)
     : undefined;
+
   const output = await studioFile(
     deps,
     "POST",
@@ -156,10 +181,12 @@ async function run(deps: EditDeps, input: Input) {
       ...(css ? { selector: css } : {}),
     }
   );
+
   const folder = path.join(deps.dataDir, "exports", target.project.id);
   await mkdir(folder, { recursive: true });
   const file = await writeUnique(folder, output.name, output.bytes);
   const format = input.format.toUpperCase();
+
   return {
     result: ok({
       file,

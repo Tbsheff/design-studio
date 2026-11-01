@@ -10,6 +10,7 @@ export function locText(source: SourceLoc): string {
 
 function shortPath(file: string): string {
   const parts = file.split("/");
+
   return parts.length > 2 ? parts.slice(-2).join("/") : file;
 }
 
@@ -23,16 +24,25 @@ export function SourceLink({
   source: SourceLoc | null;
 }) {
   const [note, setNote] = useState<string | null>(null);
-  if (!source) return <span className="ins-source" />;
+
+  if (!source) {
+    return <span className="ins-source" />;
+  }
+
   const text = locText(source);
+
   const open = () => {
-    if (!directionId) return;
+    if (!directionId) {
+      return;
+    }
+
     setNote(null);
     api
       .openSource(projectId, directionId, text)
       .then((result) => setNote(`Opened ${result.path}`))
       .catch((err: unknown) => setNote(errorText(err)));
   };
+
   return (
     <>
       <button

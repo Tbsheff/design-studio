@@ -26,40 +26,56 @@ export function usePackActions({
   onCommitted,
 }: Options): { actions: DesignSystemActions; toast: Toast | null } {
   const [toast, setToast] = useState<Toast | null>(null);
+
   const show = useCallback(
     (text: string) => setToast({ id: Date.now(), text }),
     []
   );
 
   useEffect(() => {
-    if (!toast) return;
+    if (!toast) {
+      return;
+    }
+
     const timer = setTimeout(
       () => setToast((current) => (current?.id === toast.id ? null : current)),
       TOAST_MS
     );
+
     return () => clearTimeout(timer);
   }, [toast]);
 
   const actions = useMemo<DesignSystemActions>(
     () => ({
       onApply: async (packId) => {
-        if (!directionId) return;
+        if (!directionId) {
+          return;
+        }
+
         const result = await api.applyPack(projectId, directionId, packId);
         setProject(result.project);
         onCommitted();
         show(result.notice ?? `${result.version.title}.`);
       },
       onSave: async (name, packId, asNew, force) => {
-        if (!directionId) return;
+        if (!directionId) {
+          return;
+        }
+
         const result = await api.savePack(projectId, directionId, {
           name,
           ...(packId ? { packId } : {}),
           ...(asNew ? { asNew: true } : {}),
           ...(force ? { force: true } : {}),
         });
+
         refreshPacks();
         setProject(result.project);
-        if (result.version) onCommitted();
+
+        if (result.version) {
+          onCommitted();
+        }
+
         show(`Saved ${result.pack.name} to your library.`);
       },
     }),

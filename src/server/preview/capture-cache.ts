@@ -37,6 +37,7 @@ export class CaptureCache<T> {
 
   peek(key: string, stamp: string | null): T | null {
     const entry = stamp ? this.entries.get(key) : undefined;
+
     return entry && entry.stamp === stamp && Date.now() - entry.at < MAX_AGE_MS
       ? entry.value
       : null;
@@ -48,13 +49,16 @@ export class CaptureCache<T> {
     outFiles: string[]
   ): Promise<T | null> {
     const entry = stamp ? this.entries.get(key) : undefined;
+
     if (
       !entry ||
       entry.stamp !== stamp ||
       Date.now() - entry.at >= MAX_AGE_MS ||
       entry.files.length !== outFiles.length
-    )
+    ) {
       return null;
+    }
+
     try {
       await Promise.all(
         entry.files.map((file, index) =>
@@ -63,10 +67,13 @@ export class CaptureCache<T> {
       );
     } catch {
       this.entries.delete(key);
+
       return null;
     }
+
     this.entries.delete(key);
     this.entries.set(key, entry);
+
     return entry.value;
   }
 
@@ -76,10 +83,14 @@ export class CaptureCache<T> {
     value: T,
     files: string[]
   ): Promise<void> {
-    if (!stamp) return;
+    if (!stamp) {
+      return;
+    }
+
     const kept = files.map((file, index) =>
       path.join(this.dir, `${key}-${index}${path.extname(file)}`)
     );
+
     try {
       await Promise.all(
         files.map((file, index) => cloneFile(file, kept[index] as string))
@@ -87,11 +98,17 @@ export class CaptureCache<T> {
     } catch {
       return;
     }
+
     this.entries.delete(key);
     this.entries.set(key, { stamp, at: Date.now(), value, files: kept });
+
     while (this.entries.size > MAX_ENTRIES) {
       const oldest = this.entries.keys().next().value;
-      if (oldest === undefined) break;
+
+      if (oldest === undefined) {
+        break;
+      }
+
       this.entries.delete(oldest);
     }
   }

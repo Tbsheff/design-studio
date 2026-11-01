@@ -12,6 +12,7 @@ import { publishApi } from "../publishApi";
 export function usePublishBackend() {
   const [backend, setBackend] = useState<PublishBackendState | null>(null);
   const [error, setError] = useState<string | null>(null);
+
   const load = useCallback(async (check = false) => {
     try {
       setBackend(await publishApi.backend(check));
@@ -20,15 +21,21 @@ export function usePublishBackend() {
       setError(errorText(err));
     }
   }, []);
+
   useEffect(() => {
     void load(true);
   }, [load]);
   const running = backend?.running === true;
   useEffect(() => {
-    if (!running) return;
+    if (!running) {
+      return;
+    }
+
     const timer = window.setInterval(() => void load(), 1000);
+
     return () => window.clearInterval(timer);
   }, [running, load]);
+
   const setup = useCallback(async (mode: PublishBackendMode) => {
     try {
       setError(null);
@@ -37,6 +44,7 @@ export function usePublishBackend() {
       setError(errorText(err));
     }
   }, []);
+
   return { backend, error, load, setup };
 }
 
@@ -75,10 +83,18 @@ function StepRow({ step }: { step: SetupStep }) {
 }
 
 function summary(backend: PublishBackendState): string {
-  if (backend.running) return "Setting up. Each step shows its result below.";
-  if (backend.ready && backend.url)
+  if (backend.running) {
+    return "Setting up. Each step shows its result below.";
+  }
+
+  if (backend.ready && backend.url) {
     return `Ready. One Worker serves every published design at ${backend.url}${backend.mode === "local" ? " (local test server)" : ""}.`;
-  if (backend.error) return backend.error;
+  }
+
+  if (backend.error) {
+    return backend.error;
+  }
+
   return "Not set up. Setup makes an R2 bucket, a D1 database and one publish Worker in your Cloudflare account. A re-run is safe.";
 }
 
@@ -90,14 +106,19 @@ export function BackendSetup({
   cli: PublishCliState | null;
 }) {
   const { backend, error, setup, load } = hook;
-  if (!backend)
+
+  if (!backend) {
     return (
       <p className="field-help">{error ?? "Reading the publish setup…"}</p>
     );
+  }
+
   const cfReady = Boolean(
     cli?.installed && cli.versionOk && cli.signedIn && cli.accountId
   );
+
   const busy = backend.running;
+
   return (
     <div
       className="publish-step publish-backend"

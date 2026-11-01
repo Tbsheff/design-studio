@@ -9,8 +9,13 @@ import { parseDirectEditRequest } from "./validate.js";
 
 function locAt(source: string, needle: string): { line: number; col: number } {
   const index = source.indexOf(`<${needle}`);
-  if (index < 0) throw new Error(`no ${needle}`);
+
+  if (index < 0) {
+    throw new Error(`no ${needle}`);
+  }
+
   const before = source.slice(0, index);
+
   return {
     line: before.split("\n").length,
     col: index - before.lastIndexOf("\n"),
@@ -25,7 +30,11 @@ function taggedLoc(
   const match = new RegExp(
     `<${tag} data-studio-loc="${file.replace(".", "\\.")}:(\\d+):(\\d+)"`
   ).exec(code);
-  if (!match) throw new Error(`no loc for ${tag}`);
+
+  if (!match) {
+    throw new Error(`no loc for ${tag}`);
+  }
+
   return { line: Number(match[1]), col: Number(match[2]) };
 }
 
@@ -36,10 +45,13 @@ function failure(run: () => unknown): { code: string; message: string } | null {
   try {
     run();
   } catch (error) {
-    if (error instanceof DirectEditError)
+    if (error instanceof DirectEditError) {
       return { code: error.code, message: error.message };
+    }
+
     throw error;
   }
+
   return null;
 }
 
@@ -88,6 +100,7 @@ describe("patchHtml move", () => {
       htmlLoc(PAGE, 'article class="card" id="one"'),
       { move: "down", tag: "article" }
     );
+
     const one = '<article class="card" id="one"><h3>One</h3></article>';
     const two = '<article class="card" id="two"><h3>Two</h3>\n      </article>';
     const between = "\n      <!-- note -->\n      ";
@@ -112,9 +125,11 @@ describe("patchHtml move", () => {
       result.code.indexOf('id="two"')
     );
     expect(result.moved).toEqual(htmlLoc(result.code, "section"));
+
     const back = patchHtml(result.code, htmlLoc(result.code, "section"), {
       move: "down",
     });
+
     expect(back.code).toBe(PAGE);
   });
 
@@ -150,15 +165,18 @@ describe("patchHtml rename and visibility", () => {
     const named = patchHtml(PAGE, htmlLoc(PAGE, "section"), {
       name: "Hero title",
     });
+
     expect(named.code).toBe(
       PAGE.replace(
         '<section id="three">',
         '<section data-name="Hero title" id="three">'
       )
     );
+
     const renamed = patchHtml(named.code, htmlLoc(named.code, "section"), {
       name: "Hero",
     });
+
     expect(renamed.code).toBe(
       PAGE.replace(
         '<section id="three">',
@@ -176,10 +194,13 @@ describe("patchHtml rename and visibility", () => {
       const hidden = patchHtml(PAGE, htmlLoc(PAGE, marker), {
         style: { display: "none" },
       });
+
       expect(hidden.code).toContain("display: none");
+
       const shown = patchHtml(hidden.code, htmlLoc(hidden.code, marker), {
         style: { display: null },
       });
+
       expect(shown.code).toBe(PAGE);
     }
   });
@@ -216,8 +237,10 @@ describe("patchJsx move", () => {
       jsxLoc(APP, 'article className="card" id="one"'),
       { move: "down" }
     );
+
     const one =
       '<article className="card" id="one">\n        <h3>One</h3>\n      </article>';
+
     const two = '<article className="card" id="two"><h3>Two</h3></article>';
     expect(result.code).toBe(
       APP.replace(`${one}\n      ${two}`, `${two}\n      ${one}`)
@@ -225,11 +248,13 @@ describe("patchJsx move", () => {
     expect(result.moved).toEqual(
       jsxLoc(result.code, 'article className="card" id="one"')
     );
+
     const back = patchJsx(
       result.code,
       jsxLoc(result.code, 'article className="card" id="one"'),
       { move: "up" }
     );
+
     expect(back.code).toBe(APP);
   });
 
@@ -239,6 +264,7 @@ describe("patchJsx move", () => {
       jsxLoc(APP, 'article className="card" id="two"'),
       { move: "down" }
     );
+
     expect(result.code.indexOf("<Card")).toBeLessThan(
       result.code.indexOf('id="two"')
     );
@@ -280,9 +306,11 @@ describe("patchJsx rename and visibility", () => {
     expect(named.code).toBe(
       APP.replace("<h3>One", '<h3 data-name="Hero title">One')
     );
+
     const renamed = patchJsx(named.code, jsxLoc(named.code, "h3"), {
       name: "Hero",
     });
+
     expect(renamed.code).toBe(
       APP.replace("<h3>One", '<h3 data-name="Hero">One')
     );
@@ -299,6 +327,7 @@ describe("patchJsx rename and visibility", () => {
     const hidden = patchJsx(APP, jsxLoc(APP, "h3"), {
       style: { display: "none" },
     });
+
     expect(hidden.code).toContain(`<h3 style={{ display: 'none' }}>`);
     expect(
       patchJsx(hidden.code, jsxLoc(hidden.code, "h3"), {
@@ -336,6 +365,7 @@ describe("parseDirectEditRequest name and move", () => {
         failure(() => parseDirectEditRequest({ ...base, name }))?.code
       ).toBe("invalid_request");
     }
+
     expect(
       failure(() => parseDirectEditRequest({ ...base, move: "left" }))?.code
     ).toBe("invalid_request");

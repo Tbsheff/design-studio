@@ -73,25 +73,34 @@ function segmentsOf(run: RunView): Segment[] {
   run.parts.forEach((part, index) => {
     if (part.kind === "tool") {
       const tool = byId.get(part.toolUseId);
-      if (!tool) return;
+
+      if (!tool) {
+        return;
+      }
+
       const last = segments.at(-1);
-      if (last?.kind === "tools") last.tools.push(tool);
-      else
+
+      if (last?.kind === "tools") {
+        last.tools.push(tool);
+      } else {
         segments.push({
           kind: "tools",
           key: `tools-${part.toolUseId}`,
           tools: [tool],
         });
-    } else if (part.kind === "user")
+      }
+    } else if (part.kind === "user") {
       segments.push({ kind: "user", key: `user-${part.id}`, text: part.text });
-    else
+    } else {
       segments.push({
         kind: part.kind,
         key: `${part.kind}-${index}`,
         text: part.text,
         open: Boolean(part.open),
       });
+    }
   });
+
   return segments;
 }
 
@@ -125,7 +134,7 @@ function SegmentView({
   running: boolean;
   workTree: string | null;
 }) {
-  if (segment.kind === "tools")
+  if (segment.kind === "tools") {
     return (
       <ToolSegment
         tools={segment.tools}
@@ -133,9 +142,16 @@ function SegmentView({
         workTree={workTree}
       />
     );
-  if (segment.kind === "user") return <SentWhileRunning text={segment.text} />;
-  if (segment.kind === "thinking")
+  }
+
+  if (segment.kind === "user") {
+    return <SentWhileRunning text={segment.text} />;
+  }
+
+  if (segment.kind === "thinking") {
     return <Thinking text={segment.text} live={running && segment.open} />;
+  }
+
   return (
     <AssistantText text={segment.text} streaming={running && segment.open} />
   );
@@ -151,23 +167,39 @@ function layoutOf(segments: Segment[], running: boolean): RunLayout {
   let lastTool = -1;
   let lastText = -1;
   segments.forEach((segment, index) => {
-    if (segment.kind === "tools") lastTool = index;
-    if (segment.kind === "text" && segment.text.trim()) lastText = index;
+    if (segment.kind === "tools") {
+      lastTool = index;
+    }
+
+    if (segment.kind === "text" && segment.text.trim()) {
+      lastText = index;
+    }
   });
+
   const reply =
     !running && lastText !== -1 && lastText < lastTool
       ? segments[lastText]
       : undefined;
+
   const steps: Segment[] = [];
   const sent: Segment[] = [];
   const tail: Segment[] = [];
   segments.forEach((segment, index) => {
-    if (segment === reply) return;
-    if (segment.kind === "user")
+    if (segment === reply) {
+      return;
+    }
+
+    if (segment.kind === "user") {
       (index <= lastTool ? sent : tail).push(segment);
-    else (index <= lastTool ? steps : tail).push(segment);
+    } else {
+      (index <= lastTool ? steps : tail).push(segment);
+    }
   });
-  if (reply) tail.unshift(reply);
+
+  if (reply) {
+    tail.unshift(reply);
+  }
+
   return { steps, sent, tail };
 }
 
@@ -184,6 +216,7 @@ function RunParts({
     () => layoutOf(segmentsOf(run), running),
     [run.parts, run.tools, running]
   );
+
   return (
     <>
       {layout.steps.length > 0 && (
@@ -248,6 +281,7 @@ function hasComments(run: RunView): boolean {
     run.summary?.request?.comments,
     run.summary?.request?.commentIds,
   ];
+
   return lists.some((list) => (list?.length ?? 0) > 0);
 }
 
@@ -272,11 +306,13 @@ const RunEntry = memo(function RunEntry({
 }: EntryProps) {
   const runId = run.runId;
   const details = useCallback(() => onDetails(runId), [onDetails, runId]);
+
   const review = useMemo(
     () =>
       onReview && reviewVersionId ? () => onReview(reviewVersionId) : undefined,
     [onReview, reviewVersionId]
   );
+
   const onUndo = useMemo(
     () =>
       actions && undoVersionId
@@ -284,11 +320,14 @@ const RunEntry = memo(function RunEntry({
         : undefined,
     [actions, undoVersionId]
   );
+
   const running = run.status === "running";
+
   const rewind = useMemo(
     () => ({ restoreTip, restoreVersionId, forkBase, editTip }),
     [restoreTip, restoreVersionId, forkBase, editTip]
   );
+
   return (
     <div className="run flex min-w-0 flex-col gap-3.5" data-run-id={runId}>
       <UserTurn
@@ -373,10 +412,15 @@ function StickOnNewRun({ runId }: { runId: string | null }) {
   useEffect(() => {
     if (first.current) {
       first.current = false;
+
       return;
     }
-    if (runId) stickToBottom();
+
+    if (runId) {
+      stickToBottom();
+    }
   }, [runId, stickToBottom]);
+
   return null;
 }
 
@@ -397,6 +441,7 @@ function WindowedTimeline({
 }: TimelineProps) {
   const { shown, hidden, more } = useHistoryWindow(items, resetKey, reveal);
   const inView = reveal !== null && shown.some((item) => item.key === reveal);
+
   return (
     <>
       <EarlierRuns hidden={hidden} onMore={more} />
@@ -409,6 +454,7 @@ function WindowedTimeline({
 function useLatest<T>(value: T): { readonly current: T } {
   const ref = useRef(value);
   ref.current = value;
+
   return ref;
 }
 
@@ -439,7 +485,7 @@ function turnProps(
   title: string | undefined,
   actions: TurnActions | null
 ): TurnProps {
-  if (!rewind || !actions)
+  if (!rewind || !actions) {
     return {
       title,
       restoreTip: null,
@@ -448,11 +494,15 @@ function turnProps(
       editTip: null,
       actions: null,
     };
+  }
+
   const running = run.status === "running" || !run.summary;
   const versionId = run.summary?.versionId ?? null;
+
   const forkBase = running
     ? null
     : forkBaseOf({ versionId, startedAt: run.startedAt }, rewind.versions);
+
   const restoreTip =
     running || rewind.locked
       ? WAIT_TIP
@@ -462,11 +512,13 @@ function turnProps(
             versionId === rewind.headRestoredFrom
           ? "The code is already at this message"
           : null;
+
   const editTip = running
     ? WAIT_TIP
     : forkBase === null
       ? "No earlier version to start from"
       : null;
+
   return {
     title,
     restoreTip,
@@ -482,6 +534,7 @@ function undoProps(
   rewind: RewindControl | undefined
 ): { undoVersionId: string | null; undoTip: string | null } {
   const versionId = run.summary?.versionId;
+
   const parentId =
     rewind &&
     run.status === "failed" &&
@@ -489,7 +542,11 @@ function undoProps(
     versionId === rewind.headVersionId
       ? rewind.versions.find((version) => version.id === versionId)?.parentId
       : null;
-  if (!rewind || !parentId) return { undoVersionId: null, undoTip: null };
+
+  if (!rewind || !parentId) {
+    return { undoVersionId: null, undoTip: null };
+  }
+
   return {
     undoVersionId: parentId,
     undoTip: rewind.locked
@@ -505,7 +562,11 @@ function reviewOf(
   rewind: RewindControl | undefined
 ): string | null {
   const versionId = run.summary?.versionId;
-  if (!rewind || !versionId || run.status === "running") return null;
+
+  if (!rewind || !versionId || run.status === "running") {
+    return null;
+  }
+
   return rewind.versions.some(
     (version) => version.id === versionId && version.parentId !== null
   )
@@ -519,13 +580,18 @@ function useRunSearch(available: boolean) {
   const open = useLive(chatSearchOpen);
   const [query, setQuery] = useState("");
   const [target, setTarget] = useState<string | null>(null);
+
   const close = useCallback(() => {
     chatSearchOpen.set(false);
     setQuery("");
   }, []);
+
   useEffect(() => {
     chatSearchAvailable.set(available);
-    if (!available) chatSearchOpen.set(false);
+
+    if (!available) {
+      chatSearchOpen.set(false);
+    }
   }, [available]);
   useEffect(
     () => () => {
@@ -534,6 +600,7 @@ function useRunSearch(available: boolean) {
     },
     []
   );
+
   const pick = useCallback(
     (runId: string) => {
       close();
@@ -541,11 +608,14 @@ function useRunSearch(available: boolean) {
     },
     [close]
   );
+
   const found = useCallback(() => setTarget(null), []);
+
   const dismiss = useCallback(() => {
     close();
     focusChatSearchButton();
   }, [close]);
+
   return {
     open: open && available,
     query,
@@ -568,17 +638,25 @@ function ScrollToRun({
 }) {
   const { viewportRef, wasAtBottomRef } = useConversation();
   useEffect(() => {
-    if (!runId || !shown) return;
+    if (!runId || !shown) {
+      return;
+    }
+
     const el = viewportRef.current?.querySelector<HTMLElement>(
       `[data-run-id="${CSS.escape(runId)}"]`
     );
-    if (!el) return;
+
+    if (!el) {
+      return;
+    }
+
     wasAtBottomRef.current = false;
     el.scrollIntoView({ block: "start" });
     el.dataset.found = "";
     window.setTimeout(() => delete el.dataset.found, FOUND_MS);
     onDone();
   }, [runId, shown, onDone, viewportRef, wasAtBottomRef]);
+
   return null;
 }
 
@@ -611,11 +689,13 @@ const RUN_ANNOUNCE: Record<RunView["status"], string> = {
 function RunAnnouncer({ run }: { run: RunView | undefined }) {
   const queued = run?.status === "running" ? run.queue.length : 0;
   const asking = run?.status === "running" ? run.permissions[0] : undefined;
+
   const text = !run
     ? ""
     : asking
       ? `The agent needs your answer: ${asking.title}`
       : `${RUN_ANNOUNCE[run.status]}${queued ? `. ${queued} queued` : ""}`;
+
   return (
     <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
       {text}
@@ -636,16 +716,21 @@ function usePolish(
 ): PolishProps {
   const polishRef = useLatest(onPolish);
   const retryRef = useLatest(onRetry);
+
   const retry = useCallback(
     (run: RunView) => retryRef.current?.(run),
     [retryRef]
   );
+
   const approveRef = useLatest(onApprovePlan);
+
   const approve = useCallback(
     (run: RunView) => approveRef.current?.(run),
     [approveRef]
   );
+
   const startPolish = useCallback(() => polishRef.current(), [polishRef]);
+
   return useMemo(
     () => ({
       headVersionId,
@@ -662,6 +747,7 @@ function useTurnActions(rewind: RewindControl | undefined) {
   const [titles, setTitles] = useState<Record<string, string>>({});
   const rewindRef = useLatest(rewind);
   const hasRewind = rewind !== undefined;
+
   const actions = useMemo<TurnActions | null>(
     () =>
       hasRewind
@@ -679,6 +765,7 @@ function useTurnActions(rewind: RewindControl | undefined) {
         : null,
     [hasRewind, rewindRef]
   );
+
   return { titles, actions };
 }
 
@@ -702,15 +789,19 @@ export function ChatPanel({
   const workTree = direction?.workTree ?? null;
   const headVersionId = direction?.headVersionId ?? null;
   const detailsRef = useLatest(onDetails);
+
   const openDetails = useCallback(
     (runId: string) => detailsRef.current(runId),
     [detailsRef]
   );
+
   const reviewRef = useLatest(onReview);
+
   const openReview = useCallback(
     (versionId: string) => reviewRef.current?.(versionId),
     [reviewRef]
   );
+
   const polish = usePolish(
     headVersionId,
     running || busy,
@@ -718,11 +809,13 @@ export function ChatPanel({
     onRetry,
     onApprovePlan
   );
+
   const { titles, actions } = useTurnActions(rewind);
   const search = useRunSearch(runs.length > 1);
   const lastId = runs.at(-1)?.runId;
   const timeline = useMemo(() => timelineOf(runs, mcp), [runs, mcp]);
   const isOffline = Boolean(offline);
+
   const renderRun = (run: RunView) => (
     <RunEntry
       key={run.runId}
@@ -744,6 +837,7 @@ export function ChatPanel({
       )}
     />
   );
+
   return (
     <div className="chat-wrap">
       <RunAnnouncer run={pending ?? runs.at(-1)} />

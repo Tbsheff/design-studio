@@ -60,6 +60,7 @@ async function htmlProject(
   await expect(frontFrame(page).locator("#c1")).toHaveText("Card one");
   await keepFixture(page);
   await expect(page.locator("iframe.frame.back")).toHaveCount(0);
+
   return { api, file, pid: project.id, did: main.id };
 }
 
@@ -83,7 +84,11 @@ async function focusPreview(page: Page): Promise<void> {
   const frame = await (
     await page.locator("iframe.frame.front").elementHandle()
   )?.contentFrame();
-  if (!frame) throw new Error("no preview frame");
+
+  if (!frame) {
+    throw new Error("no preview frame");
+  }
+
   await frame.evaluate(() => window.focus());
   await expect
     .poll(() => page.evaluate(() => document.activeElement?.tagName))
@@ -120,6 +125,7 @@ test("R4-4: a 40 px handle drag at 50% zoom changes the width field and the file
     page,
     "Resize Handles Page"
   );
+
   await page.getByLabel("Zoom", { exact: true }).selectOption("0.5");
   await expect
     .poll(() =>
@@ -144,7 +150,11 @@ test("R4-4: a 40 px handle drag at 50% zoom changes the width field and the file
     "nwse-resize"
   );
   const box = await handle.boundingBox();
-  if (!box) throw new Error("no handle");
+
+  if (!box) {
+    throw new Error("no handle");
+  }
+
   const x = box.x + box.width / 2;
   const y = box.y + box.height / 2;
   await page.mouse.move(x, y);
@@ -274,9 +284,11 @@ test("R4-4: Enter on a layers row selects the first child, Shift+Enter the paren
   await expect(promo).toHaveAttribute("aria-selected", "true");
   await expect(tree).toBeFocused();
   await page.keyboard.press("Enter");
+
   const child = page
     .locator(".layers-row", { hasText: "Promo" })
     .filter({ hasNotText: "#promo" });
+
   await expect(child).toHaveAttribute("aria-selected", "true");
   await expect(page.locator(".ins-tag")).toHaveText("p");
   await expect(page.getByLabel("Layer name")).toHaveCount(0);
@@ -338,7 +350,11 @@ test("R4-4: rename writes data-name, hide and show restore the bytes, drag reord
   const c2 = page.locator(".layers-row", { hasText: "#c2" });
   const from = await c3.boundingBox();
   const to = await c2.boundingBox();
-  if (!from || !to) throw new Error("no rows");
+
+  if (!from || !to) {
+    throw new Error("no rows");
+  }
+
   await page.mouse.move(from.x + 40, from.y + from.height / 2);
   await page.mouse.down();
   await page.mouse.move(from.x + 40, from.y + from.height / 2 - 8, {

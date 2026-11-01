@@ -27,22 +27,30 @@ export function createStrokeBuilder(
   const points = [round(x), round(y)];
   let lastX = x;
   let lastY = y;
+
   return {
     add(rawX, rawY) {
       const nextX = lastX + (rawX - lastX) * (1 - SMOOTHING);
       const nextY = lastY + (rawY - lastY) * (1 - SMOOTHING);
-      if (Math.hypot(nextX - lastX, nextY - lastY) < minStep) return false;
+
+      if (Math.hypot(nextX - lastX, nextY - lastY) < minStep) {
+        return false;
+      }
+
       lastX = nextX;
       lastY = nextY;
       points.push(round(nextX), round(nextY));
+
       return true;
     },
     end(rawX, rawY) {
       if (
         points.length >= 4 &&
         Math.hypot(rawX - lastX, rawY - lastY) < minStep / 2
-      )
+      ) {
         return;
+      }
+
       lastX = rawX;
       lastY = rawY;
       points.push(round(rawX), round(rawY));
@@ -61,11 +69,20 @@ function round(value: number): number {
 
 export function strokePath(points: number[]): string {
   const count = points.length / 2;
-  if (count === 0) return "";
+
+  if (count === 0) {
+    return "";
+  }
+
   const x0 = points[0] as number;
   const y0 = points[1] as number;
-  if (count === 1) return `M${x0} ${y0}l0.01 0`;
+
+  if (count === 1) {
+    return `M${x0} ${y0}l0.01 0`;
+  }
+
   let path = `M${x0} ${y0}`;
+
   for (let i = 1; i < count - 1; i += 1) {
     const x = points[i * 2] as number;
     const y = points[i * 2 + 1] as number;
@@ -73,6 +90,7 @@ export function strokePath(points: number[]): string {
     const my = (y + (points[i * 2 + 3] as number)) / 2;
     path += `Q${x} ${y} ${round(mx)} ${round(my)}`;
   }
+
   return `${path}L${points[(count - 1) * 2]} ${points[(count - 1) * 2 + 1]}`;
 }
 
@@ -82,7 +100,11 @@ function traceStroke(ctx: CanvasRenderingContext2D, points: number[]): void {
   const y0 = points[1] as number;
   ctx.beginPath();
   ctx.moveTo(x0, y0);
-  if (count === 1) ctx.lineTo(x0 + 0.01, y0);
+
+  if (count === 1) {
+    ctx.lineTo(x0 + 0.01, y0);
+  }
+
   for (let i = 1; i < count - 1; i += 1) {
     const x = points[i * 2] as number;
     const y = points[i * 2 + 1] as number;
@@ -93,11 +115,13 @@ function traceStroke(ctx: CanvasRenderingContext2D, points: number[]): void {
       (y + (points[i * 2 + 3] as number)) / 2
     );
   }
-  if (count > 1)
+
+  if (count > 1) {
     ctx.lineTo(
       points[(count - 1) * 2] as number,
       points[(count - 1) * 2 + 1] as number
     );
+  }
 }
 
 export function paintStrokes(
@@ -107,14 +131,20 @@ export function paintStrokes(
 ): void {
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
+
   for (const stroke of strokes) {
-    if (stroke.points.length < 2) continue;
+    if (stroke.points.length < 2) {
+      continue;
+    }
+
     traceStroke(ctx, stroke.points);
+
     if (halo) {
       ctx.strokeStyle = HALO;
       ctx.lineWidth = stroke.width + 3;
       ctx.stroke();
     }
+
     ctx.strokeStyle = stroke.color;
     ctx.lineWidth = stroke.width;
     ctx.stroke();
@@ -128,9 +158,14 @@ export function renderDrawingPng(drawing: CommentDrawing): Promise<Blob> {
   canvas.width = Math.max(1, Math.round(width * scale));
   canvas.height = Math.max(1, Math.round(height * scale));
   const ctx = canvas.getContext("2d");
-  if (!ctx) return Promise.reject(new Error("Canvas is not available"));
+
+  if (!ctx) {
+    return Promise.reject(new Error("Canvas is not available"));
+  }
+
   ctx.scale(scale, scale);
   paintStrokes(ctx, drawing.strokes, true);
+
   return new Promise((resolve, reject) =>
     canvas.toBlob(
       (blob) =>
@@ -150,14 +185,19 @@ export interface PenAnchor {
 }
 
 function penSegment(from: PenAnchor, to: PenAnchor): string {
-  if (!from.hout && !to.hin) return `L${round(to.x)} ${round(to.y)}`;
+  if (!from.hout && !to.hin) {
+    return `L${round(to.x)} ${round(to.y)}`;
+  }
+
   const a = from.hout ?? from;
   const b = to.hin ?? to;
+
   return `C${round(a.x)} ${round(a.y)} ${round(b.x)} ${round(b.y)} ${round(to.x)} ${round(to.y)}`;
 }
 
 function shiftAnchor(anchor: PenAnchor, dx: number, dy: number): PenAnchor {
   const move = (p: { x: number; y: number }) => ({ x: p.x + dx, y: p.y + dy });
+
   return {
     x: anchor.x + dx,
     y: anchor.y + dy,
@@ -176,12 +216,22 @@ export function penPath(
     dx === 0 && dy === 0
       ? anchors
       : anchors.map((anchor) => shiftAnchor(anchor, dx, dy));
+
   const first = moved[0];
-  if (!first) return "";
+
+  if (!first) {
+    return "";
+  }
+
   let d = `M${round(first.x)} ${round(first.y)}`;
-  for (let i = 1; i < moved.length; i += 1)
+
+  for (let i = 1; i < moved.length; i += 1) {
     d += penSegment(moved[i - 1] as PenAnchor, moved[i] as PenAnchor);
-  if (closed && moved.length > 1)
+  }
+
+  if (closed && moved.length > 1) {
     d += `${penSegment(moved[moved.length - 1] as PenAnchor, first)}Z`;
+  }
+
   return d;
 }

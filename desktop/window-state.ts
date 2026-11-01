@@ -24,8 +24,12 @@ export interface WindowStateFile {
 const MIN_OVERLAP_PX = 100;
 
 function isRect(value: unknown): value is Rect {
-  if (typeof value !== "object" || value === null) return false;
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
   const record = value as Record<string, unknown>;
+
   return ["x", "y", "width", "height"].every((key) =>
     Number.isFinite(record[key])
   );
@@ -50,25 +54,33 @@ export function layoutKey(displays: DisplayInfo[]): string {
 }
 
 export function parseStateFile(raw: unknown): WindowStateFile {
-  if (isState(raw))
+  if (isState(raw)) {
     return {
       last: "legacy",
       layouts: {
         legacy: { bounds: raw.bounds, maximized: Boolean(raw.maximized) },
       },
     };
-  if (typeof raw !== "object" || raw === null)
+  }
+
+  if (typeof raw !== "object" || raw === null) {
     return { last: null, layouts: {} };
+  }
+
   const record = raw as { last?: unknown; layouts?: unknown };
   const layouts: Record<string, WindowState> = {};
+
   if (typeof record.layouts === "object" && record.layouts !== null) {
-    for (const [key, value] of Object.entries(record.layouts))
-      if (isState(value))
+    for (const [key, value] of Object.entries(record.layouts)) {
+      if (isState(value)) {
         layouts[key] = {
           bounds: value.bounds,
           maximized: Boolean(value.maximized),
         };
+      }
+    }
   }
+
   return {
     last:
       typeof record.last === "string" && layouts[record.last]
@@ -82,9 +94,11 @@ function overlap(bounds: Rect, area: Rect): boolean {
   const x =
     Math.min(bounds.x + bounds.width, area.x + area.width) -
     Math.max(bounds.x, area.x);
+
   const y =
     Math.min(bounds.y + bounds.height, area.y + area.height) -
     Math.max(bounds.y, area.y);
+
   return x > MIN_OVERLAP_PX && y > MIN_OVERLAP_PX;
 }
 
@@ -97,9 +111,17 @@ export function pickState(
   displays: DisplayInfo[]
 ): WindowState | null {
   const exact = file.layouts[layoutKey(displays)];
-  if (exact && visible(exact.bounds, displays)) return exact;
+
+  if (exact && visible(exact.bounds, displays)) {
+    return exact;
+  }
+
   const last = file.last ? file.layouts[file.last] : undefined;
-  if (last && visible(last.bounds, displays)) return last;
+
+  if (last && visible(last.bounds, displays)) {
+    return last;
+  }
+
   return null;
 }
 
@@ -109,5 +131,6 @@ export function recordState(
   state: WindowState
 ): WindowStateFile {
   const key = layoutKey(displays);
+
   return { last: key, layouts: { ...file.layouts, [key]: state } };
 }

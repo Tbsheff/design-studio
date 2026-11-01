@@ -19,8 +19,14 @@ interface Props {
 }
 
 function hintOf(item: SwapCandidate): string {
-  if (item.drop.length > 0) return `drops ${item.drop.join(", ")}`;
-  if (item.add.length > 0) return `adds ${item.add.join(", ")}`;
+  if (item.drop.length > 0) {
+    return `drops ${item.drop.join(", ")}`;
+  }
+
+  if (item.add.length > 0) {
+    return `adds ${item.add.join(", ")}`;
+  }
+
   return "all props fit";
 }
 
@@ -45,10 +51,12 @@ export default function SwapInstanceMenu({
         (error: unknown) =>
           live && setList({ from: "", candidates: [], note: apiMessage(error) })
       );
+
     return () => {
       live = false;
     };
   }, [projectId, directionId, use]);
+
   const pick = (item: SwapCandidate) => {
     setBusy(item.name);
     componentCreateApi
@@ -62,6 +70,7 @@ export default function SwapInstanceMenu({
       .catch((error: unknown) => onDone({ ok: false, text: apiMessage(error) }))
       .finally(onClose);
   };
+
   return (
     <div
       ref={root}

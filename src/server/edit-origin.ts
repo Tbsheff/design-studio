@@ -21,7 +21,11 @@ export function isOutsideRequest(): boolean {
 
 export function stampOrigin<T extends VersionMeta>(meta: T): T {
   const origin = store.getStore();
-  if (!origin || meta.origin) return meta;
+
+  if (!origin || meta.origin) {
+    return meta;
+  }
+
   return { ...meta, origin: "mcp", client: origin.client };
 }
 

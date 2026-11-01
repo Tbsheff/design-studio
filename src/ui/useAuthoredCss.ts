@@ -21,20 +21,30 @@ export function requestAuthoredCss(
   selector: string
 ): Promise<AuthoredCss | null> {
   const listen = port?.listen;
-  if (!port || !listen) return Promise.resolve(null);
+
+  if (!port || !listen) {
+    return Promise.resolve(null);
+  }
+
   const requestId = Math.random().toString(36).slice(2);
+
   return new Promise((resolve) => {
     const stop = listen((message) => {
-      if (message.type !== "authored" || message.requestId !== requestId)
+      if (message.type !== "authored" || message.requestId !== requestId) {
         return;
+      }
+
       finish(parseAuthoredReply(message));
     });
+
     const timer = window.setTimeout(() => finish(null), REPLY_TIMEOUT_MS);
+
     function finish(result: AuthoredCss | null) {
       window.clearTimeout(timer);
       stop();
       resolve(result);
     }
+
     port.post({ type: "request-authored", requestId, selector });
   });
 }
@@ -45,17 +55,25 @@ export function useAuthoredCss(
 ): AuthoredCssState {
   const [css, setCss] = useState<AuthoredCss | null>(null);
   const live = useRef(true);
+
   const request = useCallback(async () => {
     const result = await requestAuthoredCss(port.current, selector);
-    if (live.current && result) setCss(result);
+
+    if (live.current && result) {
+      setCss(result);
+    }
+
     return result;
   }, [port, selector]);
+
   useEffect(() => {
     live.current = true;
     void request();
+
     return () => {
       live.current = false;
     };
   }, [request]);
+
   return { css, request };
 }

@@ -12,12 +12,14 @@ import {
 import type { GitChoice } from "./git-choice.js";
 
 export type CheckStatus = "ok" | "warn" | "fail";
+
 export type FixAction =
   | "install-clt"
   | "copy-claude"
   | "copy-claude-install"
   | "open-terminal"
   | "reveal-data";
+
 export const FIX_ACTIONS: readonly FixAction[] = [
   "install-clt",
   "copy-claude",
@@ -25,6 +27,7 @@ export const FIX_ACTIONS: readonly FixAction[] = [
   "open-terminal",
   "reveal-data",
 ];
+
 export const CLAUDE_INSTALL_COMMAND = "npm i -g @anthropic-ai/claude-code";
 
 export interface CheckResult {
@@ -53,6 +56,7 @@ const AUTH_TIMEOUT_MS = 15_000;
 const NETWORK_TIMEOUT_MS = 5000;
 const DISK_FAIL_BYTES = 1024 ** 3;
 const DISK_WARN_BYTES = 5 * 1024 ** 3;
+
 const GIT_DETAIL: Record<GitChoice["kind"], string> = {
   system: "Command Line Tools git.",
   bundled:
@@ -62,6 +66,7 @@ const GIT_DETAIL: Record<GitChoice["kind"], string> = {
 
 export function checkGit(git: GitChoice): CheckResult {
   const fixes: FixAction[] = git.kind === "system" ? [] : ["install-clt"];
+
   return {
     id: "git",
     label: "Git",
@@ -84,6 +89,7 @@ function runAuthStatus(
       (error, stdout) => {
         const timedOut =
           !!error && (error as { killed?: boolean }).killed === true;
+
         resolve({ stdout: String(stdout ?? ""), timedOut, failed: !!error });
       }
     );
@@ -93,6 +99,7 @@ function runAuthStatus(
 function parseLoggedIn(stdout: string): boolean | null {
   try {
     const parsed = JSON.parse(stdout) as { loggedIn?: unknown };
+
     return typeof parsed.loggedIn === "boolean" ? parsed.loggedIn : null;
   } catch {
     return null;
@@ -111,32 +118,42 @@ export async function checkClaude(
 ): Promise<CheckResult> {
   const base = { id: "claude" as const, label: "Claude Code", required: true };
   const binary = setup.location?.path;
-  if (!binary || !existsSync(binary))
+
+  if (!binary || !existsSync(binary)) {
     return {
       ...base,
       status: "fail",
       detail: INSTALL_DETAIL,
       fixes: ["copy-claude-install", "open-terminal"],
     };
+  }
+
   const found = await claudeVersion(binary, env);
   const fit = compareClaudeVersion(found, setup.expectedVersion);
-  if (fit === "older" && found && setup.expectedVersion)
+
+  if (fit === "older" && found && setup.expectedVersion) {
     return {
       ...base,
       status: "fail",
       detail: olderDetail(found, setup.expectedVersion),
       fixes: ["copy-claude-install", "open-terminal"],
     };
+  }
+
   const result = await runAuthStatus(binary, env);
-  if (result.timedOut)
+
+  if (result.timedOut) {
     return {
       ...base,
       status: "warn",
       detail: "No answer in 15 s. A Keychain prompt may be open.",
       fixes: [],
     };
+  }
+
   const loggedIn = parseLoggedIn(result.stdout);
-  if (!loggedIn)
+
+  if (!loggedIn) {
     return {
       ...base,
       status: "fail",
@@ -144,21 +161,29 @@ export async function checkClaude(
         "Not logged in. Run `claude` in Terminal and log in, then recheck.",
       fixes: ["copy-claude", "open-terminal"],
     };
+  }
+
   const version = found ? ` Claude Code ${found}.` : "";
-  if (fit === "newer")
+
+  if (fit === "newer") {
     return {
       ...base,
       status: "warn",
       detail: `Logged in.${version} It is newer than ${setup.expectedVersion}, the version Design Studio was tested with.`,
       fixes: [],
     };
+  }
+
   return { ...base, status: "ok", detail: `Logged in.${version}`, fixes: [] };
 }
 
 function existingAncestor(dir: string): string {
   let current = path.resolve(dir);
-  while (!existsSync(current) && path.dirname(current) !== current)
+
+  while (!existsSync(current) && path.dirname(current) !== current) {
     current = path.dirname(current);
+  }
+
   return current;
 }
 
@@ -166,8 +191,10 @@ export async function checkDisk(dataDir: string): Promise<CheckResult> {
   const stats = await statfs(existingAncestor(dataDir));
   const free = stats.bavail * stats.bsize;
   const gb = (free / 1024 ** 3).toFixed(1);
+
   const status: CheckStatus =
     free < DISK_FAIL_BYTES ? "fail" : free < DISK_WARN_BYTES ? "warn" : "ok";
+
   return {
     id: "disk",
     label: "Disk space",
@@ -187,11 +214,13 @@ export async function checkNetwork(
     required: false,
     fixes: [],
   };
+
   try {
     await fetchFn("https://api.anthropic.com/", {
       method: "HEAD",
       signal: AbortSignal.timeout(NETWORK_TIMEOUT_MS),
     });
+
     return { ...base, status: "ok", detail: "Reachable." };
   } catch {
     return {
@@ -207,10 +236,13 @@ export function checkDesignMemory(env: NodeJS.ProcessEnv): CheckResult {
   const dir =
     env.DESIGN_MEMORY_HOME ||
     path.join(env.HOME ?? os.homedir(), ".design-memory");
+
   const found = existsSync(dir);
+
   const detail = found
     ? `Found at ${dir}.`
     : `Not found at ${dir}. Optional: taste rules stay off.`;
+
   return {
     id: "design-memory",
     label: "Design memory library",
@@ -227,6 +259,7 @@ export async function runChecks(inputs: CheckInputs): Promise<CheckResult[]> {
     checkDisk(inputs.dataDir),
     checkNetwork(),
   ]);
+
   return [
     checkGit(inputs.git),
     claude,

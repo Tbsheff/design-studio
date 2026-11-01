@@ -35,7 +35,11 @@ function frameKey(frame: CanvasFrame): string {
 
 function elementName(selection: readonly SelectionContext[]): string | null {
   const first = selection[0];
-  if (!first) return null;
+
+  if (!first) {
+    return null;
+  }
+
   return first.component ?? first.usedBy?.name ?? first.tag;
 }
 
@@ -45,6 +49,7 @@ function stage(): HTMLElement | null {
 
 function refOf(frame: CanvasFrame): RunCanvasRef {
   const inView = inViewIds(stage()).filter((id) => id !== frame.id);
+
   return {
     frameId: frame.id,
     path: frame.path ?? "",
@@ -63,11 +68,13 @@ export function useRunCanvas(
   const stored = useSyncExternalStore(canvasStore.subscribe, () =>
     canvasStore.get(projectId)
   );
+
   const frame = activeFrame(stored ?? defaultLayout(uiStore.get().viewport));
   const states = useFrameStates(projectId, Boolean(project?.app));
   const [removed, setRemoved] = useState<string | null>(null);
   const key = frameKey(frame);
   const off = removed === key;
+
   const chip = off
     ? null
     : {
@@ -80,5 +87,6 @@ export function useRunCanvas(
         ),
         onRemove: () => setRemoved(key),
       };
+
   return { chip, current: () => (off ? undefined : refOf(frame)) };
 }

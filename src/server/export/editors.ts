@@ -20,7 +20,10 @@ function installed(app: string): boolean {
 }
 
 export function listEditors(): EditorInfo[] {
-  if (process.platform !== "darwin") return [];
+  if (process.platform !== "darwin") {
+    return [];
+  }
+
   return EDITORS.filter((editor) => installed(editor.app)).map(
     ({ id, name }) => ({ id, name })
   );
@@ -32,10 +35,15 @@ export function openInEditor(
   file?: string
 ): Promise<void> {
   const editor = EDITORS.find((e) => e.id === id);
-  if (!editor)
+
+  if (!editor) {
     throw new BadRequestError("editor must be cursor, vscode or zed");
-  if (process.platform !== "darwin" || !installed(editor.app))
+  }
+
+  if (process.platform !== "darwin" || !installed(editor.app)) {
     throw new BadRequestError(`${editor.name} is not installed`);
+  }
+
   return new Promise((resolve, reject) => {
     execFile(
       "/usr/bin/open",
@@ -48,8 +56,10 @@ export function openInEditor(
 }
 
 export function revealInFinder(target: string): Promise<void> {
-  if (process.platform !== "darwin")
+  if (process.platform !== "darwin") {
     return Promise.reject(new BadRequestError("Reveal works on macOS only"));
+  }
+
   return new Promise((resolve, reject) => {
     execFile("/usr/bin/open", ["-R", target], { timeout: 10_000 }, (error) =>
       error ? reject(new Error("could not reveal the folder")) : resolve()

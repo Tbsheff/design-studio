@@ -20,6 +20,7 @@ export function saveResult(name: string, data: unknown): string {
   mkdirSync(RESULTS_DIR, { recursive: true });
   const file = path.join(RESULTS_DIR, `${name}.json`);
   writeFileSync(file, `${JSON.stringify(data, null, 2)}\n`);
+
   return file;
 }
 
@@ -28,28 +29,42 @@ export function treeHash(
   skip: (relative: string) => boolean = () => false
 ): { hash: string; files: Map<string, string> } {
   const files = new Map<string, string>();
+
   const walk = (dir: string): void => {
     for (const name of readdirSync(dir).sort()) {
       const full = path.join(dir, name);
       const relative = path.relative(root, full);
-      if (skip(relative)) continue;
+
+      if (skip(relative)) {
+        continue;
+      }
+
       const info = lstatSync(full);
-      if (info.isSymbolicLink())
+
+      if (info.isSymbolicLink()) {
         files.set(relative, `link:${readlinkSync(full)}`);
-      else if (info.isDirectory()) {
+      } else if (info.isDirectory()) {
         files.set(`${relative}/`, `dir:${info.mode}`);
         walk(full);
-      } else
+      } else {
         files.set(
           relative,
           `${info.mode}:${createHash("sha256").update(readFileSync(full)).digest("hex")}`
         );
+      }
     }
   };
-  if (existsSync(root)) walk(root);
+
+  if (existsSync(root)) {
+    walk(root);
+  }
+
   const hash = createHash("sha256");
-  for (const [key, value] of [...files.entries()].sort())
+
+  for (const [key, value] of [...files.entries()].sort()) {
     hash.update(`${key}\0${value}\n`);
+  }
+
   return { hash: hash.digest("hex"), files };
 }
 
@@ -59,14 +74,17 @@ export function diffTrees(
 ): { added: string[]; removed: string[]; changed: string[] } {
   const added = [...after.keys()].filter((key) => !before.has(key));
   const removed = [...before.keys()].filter((key) => !after.has(key));
+
   const changed = [...after.keys()].filter(
     (key) => before.has(key) && before.get(key) !== after.get(key)
   );
+
   return { added, removed, changed };
 }
 
 export function p95(values: number[]): number {
   const sorted = [...values].sort((a, b) => a - b);
+
   return (
     sorted[Math.min(sorted.length - 1, Math.ceil(0.95 * sorted.length) - 1)] ??
     NaN
@@ -75,6 +93,7 @@ export function p95(values: number[]): number {
 
 export function p50(values: number[]): number {
   const sorted = [...values].sort((a, b) => a - b);
+
   return (
     sorted[Math.min(sorted.length - 1, Math.ceil(0.5 * sorted.length) - 1)] ??
     NaN
@@ -86,8 +105,13 @@ export async function frameByUrl(page: Page, fragment: string) {
     const frame = page
       .frames()
       .find((candidate) => candidate.url().includes(fragment));
-    if (frame) return frame;
+
+    if (frame) {
+      return frame;
+    }
+
     await page.waitForTimeout(100);
   }
+
   throw new Error(`no frame with url containing ${fragment}`);
 }

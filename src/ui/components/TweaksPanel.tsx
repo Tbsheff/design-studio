@@ -26,10 +26,12 @@ interface Group {
 
 function groupControls(controls: TweakControl[]): Group[] {
   const groups = new Map<string, TweakControl[]>();
+
   for (const control of controls) {
     const label = control.group ?? "General";
     groups.set(label, [...(groups.get(label) ?? []), control]);
   }
+
   return [...groups].map(([label, list]) => ({ label, controls: list }));
 }
 
@@ -38,13 +40,21 @@ function slug(value: string): string {
 }
 
 function readout(control: TweakControl, value: TweakValue): string {
-  if (control.type === "range") return `${value}${control.unit ?? ""}`;
-  if (control.type === "toggle") return value === true ? "On" : "Off";
-  if (control.type === "select")
+  if (control.type === "range") {
+    return `${value}${control.unit ?? ""}`;
+  }
+
+  if (control.type === "toggle") {
+    return value === true ? "On" : "Off";
+  }
+
+  if (control.type === "select") {
     return (
       control.options.find((option) => option.value === value)?.label ??
       String(value)
     );
+  }
+
   return String(value);
 }
 
@@ -60,6 +70,7 @@ function RangeInput({
   onEdit: EditFn;
 }) {
   const id = `twk-${control.id}`;
+
   return (
     <input
       id={id}
@@ -151,18 +162,24 @@ function ControlInput({
   value: TweakValue;
   onEdit: EditFn;
 }) {
-  if (control.type === "range")
+  if (control.type === "range") {
     return (
       <RangeInput control={control} value={Number(value)} onEdit={onEdit} />
     );
-  if (control.type === "toggle")
+  }
+
+  if (control.type === "toggle") {
     return (
       <ToggleInput control={control} value={value === true} onEdit={onEdit} />
     );
-  if (control.type === "select")
+  }
+
+  if (control.type === "select") {
     return (
       <SelectInput control={control} value={String(value)} onEdit={onEdit} />
     );
+  }
+
   return <ColorInput control={control} value={String(value)} onEdit={onEdit} />;
 }
 
@@ -178,6 +195,7 @@ function ControlRow({
   draft: TweaksDraft;
 }) {
   const labelFor = control.type === "color" ? undefined : `twk-${control.id}`;
+
   return (
     <li
       className={`twk-row twk-row-${control.type} ${changed ? "changed" : ""}`}
@@ -208,7 +226,10 @@ function ControlRow({
 }
 
 function Footer({ draft }: { draft: TweaksDraft }) {
-  if (draft.count === 0 && !draft.commitError) return null;
+  if (draft.count === 0 && !draft.commitError) {
+    return null;
+  }
+
   return (
     <div className="twk-footer">
       {draft.commitError && (
@@ -279,7 +300,10 @@ function EmptyState({
 }
 
 function Problems({ problems }: { problems: string[] }) {
-  if (problems.length === 0) return null;
+  if (problems.length === 0) {
+    return null;
+  }
+
   return (
     <div className="twk-problems" role="status">
       <Icon name="alert" size={13} />
@@ -340,11 +364,14 @@ function Header({
 
 export function TweaksPanel({ draft, running, onSuggest }: Props) {
   const state = draft.state;
+
   const groups = useMemo(
     () => groupControls(state?.controls ?? []),
     [state?.controls]
   );
+
   const hasControls = groups.length > 0;
+
   return (
     <div className="twk">
       <Header

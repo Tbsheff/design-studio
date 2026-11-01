@@ -130,8 +130,14 @@ function levelModel(
 }
 
 function criticModelFor(preset: LevelPreset, model: string): string | null {
-  if (!preset.criticModel) return null;
-  if (preset.quickCritic) return preset.criticModel;
+  if (!preset.criticModel) {
+    return null;
+  }
+
+  if (preset.quickCritic) {
+    return preset.criticModel;
+  }
+
   return model.toLowerCase().includes("opus") ? model : preset.criticModel;
 }
 
@@ -142,13 +148,16 @@ export function resolveRunConfig(
   const preset = LEVEL_PRESETS[level];
   const model = levelModel(preset, settings);
   const maxBudgetUsd = settings.maxBudgetUsd ?? null;
+
   const criticReserve =
     preset.criticBudgetUsd *
     (preset.criticMaxCalls + (preset.regressionCheck ? 1 : 0));
+
   const agentBudgetUsd =
     maxBudgetUsd === null
       ? null
       : Math.round(Math.max(0.01, maxBudgetUsd - criticReserve) * 100) / 100;
+
   return {
     level,
     model,
@@ -176,6 +185,7 @@ function designSystemTask(config: ResolvedRunConfig): ResolvedRunConfig {
     screenshots: true,
     critic: false,
   };
+
   return {
     ...config,
     agentBudgetUsd: config.maxBudgetUsd,
@@ -195,6 +205,7 @@ function designSystemTask(config: ResolvedRunConfig): ResolvedRunConfig {
 }
 
 const PORT_TASK_TURNS = 40;
+
 const PORT_HINT =
   "Moves a prototype page into the app as one route with kit components and token classes, then checks it once with a review and a fix loop.";
 
@@ -208,6 +219,7 @@ function portTask(config: ResolvedRunConfig): ResolvedRunConfig {
     critic: false,
     fixLoops: 1,
   };
+
   return {
     ...config,
     agentBudgetUsd: config.maxBudgetUsd,
@@ -233,13 +245,23 @@ export function withRunTask(
   config: ResolvedRunConfig,
   task: RunTask | PortTask | undefined
 ): ResolvedRunConfig {
-  if (task === PORT_TASK) return portTask(config);
-  if (task === "design-system") return designSystemTask(config);
-  if (task !== "tweaks") return config;
+  if (task === PORT_TASK) {
+    return portTask(config);
+  }
+
+  if (task === "design-system") {
+    return designSystemTask(config);
+  }
+
+  if (task !== "tweaks") {
+    return config;
+  }
+
   const maxBudgetUsd =
     config.maxBudgetUsd === null
       ? null
       : Math.min(TWEAKS_TASK_BUDGET_USD, config.maxBudgetUsd);
+
   const checks: LevelChecks = {
     ...config.preset.checks,
     viewports: ["desktop", "mobile"],
@@ -248,6 +270,7 @@ export function withRunTask(
     critic: false,
     fixLoops: 1,
   };
+
   return {
     ...config,
     model: WIREFRAME_MODEL,

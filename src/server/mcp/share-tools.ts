@@ -56,6 +56,7 @@ const createInput = z
   .strict();
 
 const listInput = z.object({ projectId }).strict();
+
 const revokeInput = z
   .object({
     projectId,
@@ -70,26 +71,35 @@ async function pickFrames(
   deps: EditDeps,
   input: z.output<typeof createInput>
 ): Promise<{ frames: ExportFrame[]; ids: string[] } | undefined> {
-  if (!input.frames) return undefined;
+  if (!input.frames) {
+    return undefined;
+  }
+
   const { project } = await loadTarget(
     deps,
     input.projectId,
     input.directionId
   );
+
   const all =
     (
       await readProjectCanvas(project, (id) =>
         deps.projects.projectDir(id)
       ).catch(() => null)
     )?.canvas?.frames ?? [];
+
   const picked = input.frames.map((ref) => {
     const found = findFrame(all, ref);
-    if (!found)
+
+    if (!found) {
       throw new EditError(
         `No frame ${ref} on the canvas. Call canvas_list for frame ids.`
       );
+    }
+
     return found;
   });
+
   return {
     frames: picked.map((found) => ({
       name: found.label?.trim() || `${found.width} × ${found.height}`,
@@ -114,25 +124,34 @@ const createShare = defineTool(
       input.projectId,
       input.directionId
     );
-    if (!direction.headVersionId)
+
+    if (!direction.headVersionId) {
       throw new EditError("This direction has no saved version to share yet.");
+    }
+
     const picked = await pickFrames(deps, input);
     const frames = picked?.frames;
-    if (!deps.approvals.windowOpen())
+
+    if (!deps.approvals.windowOpen()) {
       throw new EditError(
         "Design Studio is not open, so nobody can approve this share link. Ask the user to open the project in Design Studio, or to click Share there."
       );
+    }
+
     const names = frames
       ? frames.map((f) => f.name).join(", ")
       : "every visible frame";
+
     const before = await studioCall<ShareList>(
       deps,
       "GET",
       `/api/projects/${encodeURIComponent(project.id)}/shares`
     );
+
     const reach = before.server.lan
       ? "Allow on local network is ON, so other devices on your network can open it too."
       : "It serves on this computer only (127.0.0.1); local network access stays off.";
+
     await approve(deps, {
       tool: "create_share_link",
       action: "Turn on a read-only share link",
@@ -141,6 +160,7 @@ const createShare = defineTool(
       title: `${client} wants to share “${oneLine(input.title || project.name, 80)}” as a read-only link`,
       detail: `Anyone with the link can see ${input.live ? "live PNG snapshots (new ones after each saved version, with their cursors on your canvas)" : "PNG snapshots"} of ${oneLine(names, 200)} and add comments for ${input.expiresInHours} h. ${reach} You can revoke it from Share.`,
     });
+
     const created = await studioCall<ShareCreated>(
       deps,
       "POST",
@@ -153,7 +173,9 @@ const createShare = defineTool(
         ...(input.title ? { title: input.title } : {}),
       }
     );
+
     const base = created.server.localUrl;
+
     return {
       result: ok({
         link: created.link,
@@ -175,11 +197,13 @@ const listShares = defineTool(
   },
   async (deps, input) => {
     const { project } = await loadTarget(deps, input.projectId);
+
     const list = await studioCall<ShareList>(
       deps,
       "GET",
       `/api/projects/${encodeURIComponent(project.id)}/shares`
     );
+
     return {
       result: ok({
         links: list.links.map((l) => ({
@@ -211,11 +235,13 @@ const revokeShare = defineTool(
   },
   async (deps, input) => {
     const { project } = await loadTarget(deps, input.projectId);
+
     const done = await studioCall<{ link: unknown }>(
       deps,
       "DELETE",
       `/api/projects/${encodeURIComponent(project.id)}/shares/${encodeURIComponent(input.shareId)}`
     );
+
     return { result: ok(done) };
   }
 );

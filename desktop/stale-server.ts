@@ -27,6 +27,7 @@ function readRecord(file: string): ServerPidRecord | null {
     const parsed = JSON.parse(
       readFileSync(file, "utf-8")
     ) as Partial<ServerPidRecord>;
+
     return Number.isInteger(parsed.pid) ? (parsed as ServerPidRecord) : null;
   } catch {
     return null;
@@ -40,7 +41,9 @@ function orphanCommand(pid: number): string {
       ["-o", "ppid=,command=", "-p", String(pid)],
       { encoding: "utf-8" }
     ).trim();
+
     const match = /^(\d+)\s+(.*)$/s.exec(out);
+
     return match && match[1] === "1" ? (match[2] ?? "") : "";
   } catch {
     return "";
@@ -50,6 +53,7 @@ function orphanCommand(pid: number): string {
 function groupAlive(pid: number): boolean {
   try {
     process.kill(-pid, 0);
+
     return true;
   } catch {
     return false;
@@ -66,21 +70,30 @@ function signalGroup(pid: number, signal: NodeJS.Signals): void {
 
 async function waitGroupGone(pid: number, ms: number): Promise<boolean> {
   const deadline = Date.now() + ms;
-  while (groupAlive(pid) && Date.now() < deadline)
+
+  while (groupAlive(pid) && Date.now() < deadline) {
     await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+
   return !groupAlive(pid);
 }
 
 export async function cleanStaleServer(file: string): Promise<number | null> {
   const record = readRecord(file);
   clearServerPid(file);
+
   if (
     !record ||
     !SERVER_MARKERS.some((marker) => orphanCommand(record.pid).includes(marker))
-  )
+  ) {
     return null;
+  }
+
   signalGroup(record.pid, "SIGTERM");
-  if (!(await waitGroupGone(record.pid, KILL_WAIT_MS)))
+
+  if (!(await waitGroupGone(record.pid, KILL_WAIT_MS))) {
     signalGroup(record.pid, "SIGKILL");
+  }
+
   return record.pid;
 }

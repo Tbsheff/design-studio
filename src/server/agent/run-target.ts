@@ -71,12 +71,21 @@ function segmentsOf(value: string): string[] {
 
 function segmentMatches(pattern: string[], actual: string[]): boolean {
   for (const [index, part] of pattern.entries()) {
-    if (/^\[\[?\.\.\./.test(part))
+    if (/^\[\[?\.\.\./.test(part)) {
       return part.startsWith("[[") || actual.length > index;
+    }
+
     const value = actual[index];
-    if (value === undefined) return false;
-    if (!part.startsWith("[") && part !== value) return false;
+
+    if (value === undefined) {
+      return false;
+    }
+
+    if (!part.startsWith("[") && part !== value) {
+      return false;
+    }
   }
+
   return pattern.length === actual.length;
 }
 
@@ -85,10 +94,15 @@ export function matchRouteFile(
   framePath: string
 ): string | null {
   const actual = segmentsOf(framePath.split("?")[0] ?? "");
+
   const exact = routes.find(
     (route) => segmentsOf(route.route).join("/") === actual.join("/")
   );
-  if (exact) return exact.file;
+
+  if (exact) {
+    return exact.file;
+  }
+
   return (
     routes.find(
       (route) =>
@@ -102,15 +116,19 @@ async function routeFileOf(
   direction: Direction,
   framePath: string
 ): Promise<string | null> {
-  if (project.app)
+  if (project.app) {
     return matchRouteFile(
       await listAppRoutes(direction.workTree, project.app.appDir).catch(
         () => []
       ),
       framePath
     );
-  if (project.kind === "html")
+  }
+
+  if (project.kind === "html") {
     return framePath || project.entry || "index.html";
+  }
+
   return null;
 }
 
@@ -134,8 +152,10 @@ function inViewOf(
   const ids = (ref.inView ?? [])
     .filter((id) => id !== ref.frameId)
     .slice(0, MAX_IN_VIEW);
+
   return ids.flatMap((id) => {
     const saved = frames.find((frame) => frame.id === id);
+
     return saved
       ? [
           frameOf(saved, {
@@ -164,13 +184,18 @@ export async function resolveRunTarget(
   direction: Direction,
   ref: RunCanvasRef | undefined
 ): Promise<RunTarget | null> {
-  if (!ref) return null;
+  if (!ref) {
+    return null;
+  }
+
   const frames = ((await deps.canvas.read(project).catch(() => null))?.canvas
     ?.frames ?? []) as SavedFrame[];
+
   const saved = frames.find((frame) => frame.id === ref.frameId) ?? null;
   const frame = frameOf(saved, ref);
   const view = await statesOf(deps, project);
   const state = view ? stateOfFrame(view, frame.id) : DEFAULT_FRAME_STATE;
+
   return {
     ...frame,
     state,
@@ -195,8 +220,10 @@ export function targetLabel(
 ): string {
   const page = target.path ? `/${target.path}` : "the entry page";
   const frame = target.frameId ? ` (frame ${target.frameId})` : "";
+
   const state =
     target.state !== DEFAULT_FRAME_STATE ? `, state ${target.state}` : "";
+
   return `${page}${frame}${state}`;
 }
 
@@ -220,15 +247,21 @@ export function defaultShotTarget(
   ctx: Pick<AgentRunContext, "previewUrl" | "target">,
   state?: string
 ): ShotTarget | null {
-  if (!ctx.previewUrl) return null;
+  if (!ctx.previewUrl) {
+    return null;
+  }
+
   const target = ctx.target;
-  if (!target)
+
+  if (!target) {
     return shotOf(ctx.previewUrl, {
       path: "",
       state: state ?? DEFAULT_FRAME_STATE,
       frameId: null,
       size: null,
     });
+  }
+
   return shotOf(ctx.previewUrl, {
     path: target.path,
     state: state ?? target.state,
@@ -246,9 +279,12 @@ async function namedFrame(
     ? (((await deps.canvas.read(ctx.project)).canvas?.frames ??
         []) as SavedFrame[])
     : [];
+
   const saved = findFrame(frames, ref);
+
   if (saved) {
     const view = deps ? await statesOf(deps, ctx.project) : null;
+
     return {
       frame: frameOf(saved, {
         frameId: saved.id,
@@ -259,13 +295,17 @@ async function namedFrame(
       state: view ? stateOfFrame(view, saved.id) : DEFAULT_FRAME_STATE,
     };
   }
+
   const target = ctx.target;
+
   if (
     target &&
     (ref === target.id ||
       ref.replace(/^@/, "").toLowerCase() === target.label?.toLowerCase())
-  )
+  ) {
     return { frame: target, state: target.state };
+  }
+
   throw new Error(
     `No frame ${ref} on the canvas. Use canvas_list for the frame ids.`
   );
@@ -276,9 +316,13 @@ export async function resolveShotTarget(
   ctx: Pick<AgentRunContext, "project" | "previewUrl" | "target">,
   args: ShotArgs
 ): Promise<ShotTarget | null> {
-  if (!ctx.previewUrl) return null;
+  if (!ctx.previewUrl) {
+    return null;
+  }
+
   if (args.frame) {
     const { frame, state } = await namedFrame(deps, ctx, args.frame);
+
     return shotOf(ctx.previewUrl, {
       path: args.path === undefined ? frame.path : pathArg(args.path),
       state: args.state ?? state,
@@ -286,22 +330,28 @@ export async function resolveShotTarget(
       size: { width: frame.width, height: frame.height },
     });
   }
-  if (args.path !== undefined)
+
+  if (args.path !== undefined) {
     return shotOf(ctx.previewUrl, {
       path: pathArg(args.path),
       state: args.state ?? ctx.target?.state ?? DEFAULT_FRAME_STATE,
       frameId: null,
       size: null,
     });
+  }
+
   return defaultShotTarget(ctx, args.state);
 }
 
 function pathArg(raw: string): string {
   const clean = cleanFramePath(raw);
-  if (clean === null)
+
+  if (clean === null) {
     throw new Error(
       `path ${raw} is not a page path. Pass a path such as /settings or about.html.`
     );
+  }
+
   return clean;
 }
 
@@ -310,8 +360,13 @@ export function isContextFrame(
   ref: string
 ): boolean {
   const target = ctx.target;
-  if (!target) return false;
+
+  if (!target) {
+    return false;
+  }
+
   const key = ref.trim();
+
   return (
     key === target.id ||
     key.replace(/^@/, "").toLowerCase() === target.label?.toLowerCase()
@@ -329,9 +384,13 @@ export function editPage(
   ctx: Pick<AgentRunContext, "previewUrl" | "target">,
   page: string | undefined
 ): EditPage | null {
-  if (!ctx.previewUrl) return null;
+  if (!ctx.previewUrl) {
+    return null;
+  }
+
   const target = ctx.target;
-  if (page !== undefined)
+
+  if (page !== undefined) {
     return {
       url: pageUrl(
         ctx.previewUrl,
@@ -342,8 +401,12 @@ export function editPage(
       frameId: null,
       size: null,
     };
-  if (!target)
+  }
+
+  if (!target) {
     return { url: ctx.previewUrl, path: undefined, frameId: null, size: null };
+  }
+
   return {
     url: pageUrl(ctx.previewUrl, target.path, target.state),
     path: target.path || undefined,
@@ -357,7 +420,11 @@ export function editPageUrl(
   page: string | undefined
 ): string {
   const found = editPage(ctx, page);
-  if (!found) throw new Error("Preview is not running for this direction.");
+
+  if (!found) {
+    throw new Error("Preview is not running for this direction.");
+  }
+
   return found.url;
 }
 
@@ -369,20 +436,24 @@ export async function describeTargetLayout(
   >
 ): Promise<void> {
   const target = ctx.target;
+
   if (
     !target ||
     !ctx.previewUrl ||
     !ctx.project.app ||
     ctx.request.mode !== "edit" ||
     target.layout !== undefined
-  )
+  ) {
     return;
+  }
+
   const [layout, owner] = await Promise.all([
     probeLayout(preview, pageUrl(ctx.previewUrl, target.path, target.state)),
     target.routeFile
       ? pageOwner(ctx.direction.workTree, target.routeFile)
       : Promise.resolve(null),
   ]);
+
   target.layout = layout;
   target.owner = owner;
 }

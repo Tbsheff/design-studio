@@ -24,6 +24,7 @@ interface TreeFrames {
 
 function useHoveredNode(hover: LiveStore<HoverBox | null>): number | null {
   const read = () => hover.get()?.node ?? null;
+
   return useSyncExternalStore(hover.subscribe, read, read);
 }
 
@@ -44,12 +45,14 @@ export function CanvasLayersPanel({
 }) {
   const hasSelection = selection.length > 0;
   const hoveredNode = useHoveredNode(frames.hover);
+
   const menuState = {
     count: selection.length,
     hasSource: selectionTargets(selection) !== null,
     canPaste: edits.canPaste,
     busy: edits.busy,
   };
+
   const actions = edits.enabled
     ? {
         onRename: edits.renameNode,
@@ -61,6 +64,7 @@ export function CanvasLayersPanel({
         menuItems: () => structureMenuItems(menuState, edits.structureKey),
       }
     : null;
+
   return (
     <LayersPanel
       tree={edits.tree ?? frames.tree}
@@ -85,7 +89,10 @@ export function EditNotice({
 }: {
   edits: Pick<LayerEdits, "notice" | "clearNotice">;
 }) {
-  if (!edits.notice) return null;
+  if (!edits.notice) {
+    return null;
+  }
+
   return (
     <div className="edit-notice" role="status">
       <span>{edits.notice}</span>
@@ -121,12 +128,16 @@ export function useLayersWatch(
         e.shiftKey ||
         e.code !== "Digit1" ||
         isTypingTarget(e.target)
-      )
+      ) {
         return;
+      }
+
       e.preventDefault();
       toggle.current();
     };
+
     window.addEventListener("keydown", onKey);
+
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 }
@@ -142,13 +153,23 @@ export function useSelectMoveKeys(
     const onKey = (e: KeyboardEvent) => {
       const cur = live.current;
       const last = cur.selection.at(-1);
-      if (!cur.selectMode || !last || !canvasHasKeys()) return;
+
+      if (!cur.selectMode || !last || !canvasHasKeys()) {
+        return;
+      }
+
       const move = selectMoveOf(e);
-      if (!move) return;
+
+      if (!move) {
+        return;
+      }
+
       e.preventDefault();
       cur.selectRelative(last.selector, move);
     };
+
     window.addEventListener("keydown", onKey);
+
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 }

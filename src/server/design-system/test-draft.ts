@@ -14,10 +14,14 @@ export function draftDesignMd(name: string, todos: number): string {
       "",
       `Concrete rules for ${section.toLowerCase()}.`
     );
-    if (index < todos)
+
+    if (index < todos) {
       lines.push(`${TODO_MARK} fill in ${section.toLowerCase()}._`);
+    }
+
     lines.push("");
   });
+
   return lines.join("\n");
 }
 
@@ -26,7 +30,11 @@ export async function writeTestDraft(
   options: { todos: number; packId?: string }
 ): Promise<void> {
   const pack = await packRegistry().get(options.packId ?? "modern-minimal");
-  if (!pack) throw new Error("missing base pack");
+
+  if (!pack) {
+    throw new Error("missing base pack");
+  }
+
   await mkdir(path.join(workTree, "design-system"), { recursive: true });
   await writeFile(path.join(workTree, TOKENS_FILE), pack.tokensText);
   await writeFile(

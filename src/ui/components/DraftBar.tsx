@@ -36,8 +36,12 @@ function useDraftInfo(
     check: null,
     error: null,
   });
+
   useEffect(() => {
-    if (!projectId) return;
+    if (!projectId) {
+      return;
+    }
+
     let live = true;
     api
       .getDesignSystemDraft(projectId)
@@ -51,21 +55,26 @@ function useDraftInfo(
           live &&
           setState({ coverage: null, check: null, error: errorText(err) })
       );
+
     return () => {
       live = false;
     };
   }, [projectId, lastChange, runStatus]);
+
   return state;
 }
 
 function cssVarOf(token: string): string {
   const [group, name] = token.split(".");
+
   return group === "color" ? `--${name}` : `--${group}-${name}`;
 }
 
 function Fallbacks({ tokens }: { tokens: string[] }) {
-  if (tokens.length === 0)
+  if (tokens.length === 0) {
     return <span className="draft-fallbacks">No fallback tokens</span>;
+  }
+
   return (
     <span
       className="draft-fallbacks"
@@ -94,28 +103,41 @@ function SaveAnyway({
   const popId = useId();
   useFitPopover(popRef, toggleRef, open);
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      return;
+    }
+
     confirmRef.current?.focus();
+
     const onKey = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
+      if (event.key !== "Escape") {
+        return;
+      }
+
       setOpen(false);
       toggleRef.current?.focus();
     };
+
     const onDown = (event: MouseEvent) => {
       const target = event.target as Node;
+
       if (
         !popRef.current?.contains(target) &&
         !toggleRef.current?.contains(target)
-      )
+      ) {
         setOpen(false);
+      }
     };
+
     window.addEventListener("keydown", onKey);
     window.addEventListener("mousedown", onDown);
+
     return () => {
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("mousedown", onDown);
     };
   }, [open]);
+
   return (
     <span className="draft-save-anyway">
       <button
@@ -183,10 +205,20 @@ function saveReason(
   reading: boolean,
   running: boolean
 ): string | null {
-  if (reading) return "Save is off while the studio reads your sources.";
-  if (running) return "Save is off while the AI works on this design system.";
-  if (!check || check.passed) return null;
+  if (reading) {
+    return "Save is off while the studio reads your sources.";
+  }
+
+  if (running) {
+    return "Save is off while the AI works on this design system.";
+  }
+
+  if (!check || check.passed) {
+    return null;
+  }
+
   const count = check.problems.length;
+
   return `Save is off: the check found ${count} problem${count === 1 ? "" : "s"}. Improve with AI fixes them.`;
 }
 
@@ -197,8 +229,10 @@ function guessedKeys(coverage: DesignSystemCoverage): string[] | null {
     !coverage.tokens.some(
       (entry) => entry.source === "folder" || entry.source === "tokens-file"
     )
-  )
+  ) {
     return null;
+  }
+
   return KEY_TOKENS.filter(
     (token) =>
       coverage.tokens.find((entry) => entry.token === token)?.verified !== true
@@ -207,10 +241,17 @@ function guessedKeys(coverage: DesignSystemCoverage): string[] | null {
 
 function Guessed({ coverage }: { coverage: DesignSystemCoverage }) {
   const keys = guessedKeys(coverage);
-  if (keys === null) return null;
-  if (keys.length === 0)
+
+  if (keys === null) {
+    return null;
+  }
+
+  if (keys.length === 0) {
     return <span className="draft-fallbacks">Key tokens checked</span>;
+  }
+
   const names = keys.map(cssVarOf).join(", ");
+
   return (
     <span
       className="draft-fallbacks"
@@ -281,9 +322,11 @@ function SaveControls({
   const reasonId = useId();
   const reason = saveReason(check, reading, running);
   const failing = check !== null && !check.passed;
+
   const save = async (force: boolean) => {
     setBusy(true);
     setSaveError(null);
+
     try {
       await onSave(force);
     } catch (err) {
@@ -292,7 +335,9 @@ function SaveControls({
       setBusy(false);
     }
   };
+
   const describedBy = ready ? readyId : reason ? reasonId : undefined;
+
   return (
     <>
       {saveError && (
@@ -343,16 +388,24 @@ export function DraftBar({
 }: Props) {
   const packId = project.designSystemFor ?? null;
   const { packs } = usePacks();
+
   const { coverage, check, error } = useDraftInfo(
     packId ? project.id : null,
     lastChange,
     lastRun?.status
   );
+
   const readyId = useId();
-  if (!packId) return null;
+
+  if (!packId) {
+    return null;
+  }
+
   const name =
     state?.manifest?.name ?? findPack(packs, packId)?.name ?? project.name;
+
   const ready = Boolean(check?.passed) && improvePassed(lastRun);
+
   return (
     <div className="draft-bar" role="region" aria-label="Design system draft">
       {ready && (

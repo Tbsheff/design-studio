@@ -44,6 +44,7 @@ function shortLoc(source: { file: string; line: number }): string {
 
 export function dataTextPrompt(text: string, data: TextFromData): string {
   const shown = text.length > 80 ? `${text.slice(0, 79)}…` : text;
+
   return `The text "${shown}" comes from data: ${data.expression} in ${loc(data)}. Change it to: `;
 }
 
@@ -60,6 +61,7 @@ function useTextSource(
   const { projectId, directionId } = edit.scope;
   const source = selection.source;
   const savedAt = edit.status.kind === "saved" ? edit.status.at : 0;
+
   const key = JSON.stringify([
     source,
     selection.text,
@@ -67,18 +69,24 @@ function useTextSource(
     selection.owners?.map((owner) => owner.stack) ?? [],
     savedAt,
   ]);
+
   const hints = textHints(selection);
   useEffect(() => {
-    if (!directionId || !source) return setAnswer(null);
+    if (!directionId || !source) {
+      return setAnswer(null);
+    }
+
     let live = true;
     api
       .textSource(projectId, directionId, source, hints)
       .then((next) => live && setAnswer(next))
       .catch(() => live && setAnswer({ reason: "" }));
+
     return () => {
       live = false;
     };
   }, [projectId, directionId, key]);
+
   return answer;
 }
 
@@ -99,6 +107,7 @@ function SourceTextRow({
       edit.revertText();
     }
   };
+
   return (
     <>
       <div className="ins-field wide">
@@ -137,8 +146,11 @@ export function DataTextNote({
   edit: TextEditScope;
 }) {
   const answer = useTextSource(edit, selection);
-  if (answer && "found" in answer)
+
+  if (answer && "found" in answer) {
     return <SourceTextRow found={answer.found} edit={edit} />;
+  }
+
   if (!answer && edit.scope.directionId && selection.source) {
     return (
       <div className="ins-data-text wide" role="status">
@@ -146,6 +158,7 @@ export function DataTextNote({
       </div>
     );
   }
+
   return (
     <DataTextAsk
       data={data}
@@ -165,6 +178,7 @@ function DataTextAsk({
   reason: string | null;
 }) {
   const { ask } = useInspectorApp();
+
   return (
     <div className="ins-data-text wide" role="note">
       <span>
@@ -198,6 +212,7 @@ export function SharedSourceNote({
   onToggle: () => void;
 }) {
   const what = shared.name ?? shared.file.split("/").pop() ?? shared.file;
+
   if (editingUse && shared.use) {
     return (
       <div className="ins-shared" role="note">
@@ -211,6 +226,7 @@ export function SharedSourceNote({
       </div>
     );
   }
+
   return (
     <div className="ins-shared" role="note">
       <span>

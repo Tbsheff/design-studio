@@ -19,10 +19,15 @@ async function viteFrame(page: Page, origin: string): Promise<Frame> {
   await expect
     .poll(() => page.frames().some((frame) => frame.url().startsWith(origin)))
     .toBe(true);
+
   const frame = page
     .frames()
     .find((candidate) => candidate.url().startsWith(origin));
-  if (!frame) throw new Error("vite frame not found");
+
+  if (!frame) {
+    throw new Error("vite frame not found");
+  }
+
   return frame;
 }
 
@@ -41,9 +46,11 @@ test("B: React mock edit through selection uses HMR without reload", async ({
   const previewBefore = (await api.preview(project.id, main.id)).url;
   const origin = new URL(previewBefore).origin;
   expect(origin).toMatch(/^http:\/\/127\.0\.0\.1:\d+$/);
+
   const iframeSrcBefore = await page
     .locator("iframe.frame.front")
     .getAttribute("src");
+
   expect(iframeSrcBefore?.startsWith(origin)).toBe(true);
 
   const appFile = path.join(main.workTree, "src", "App.tsx");

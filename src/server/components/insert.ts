@@ -81,11 +81,13 @@ const loc = z
     col: z.number().int().min(1),
   })
   .strict();
+
 const propValue = z.union([
   z.string().max(PROP_TEXT_MAX),
   z.number(),
   z.boolean(),
 ]);
+
 const requestSchema = z
   .object({
     component: z
@@ -144,10 +146,12 @@ const VOID_TAGS = new Set([
   "textarea",
   "select",
 ]);
+
 const SAFE_ATTR = /^[^"\\{}<>\n]*$/;
 
 export function parseInsertRequest(raw: unknown): InsertComponentRequest {
   const parsed = requestSchema.safeParse(raw);
+
   if (!parsed.success) {
     const issue = parsed.error.issues[0];
     throw new DirectEditError(
@@ -157,6 +161,7 @@ export function parseInsertRequest(raw: unknown): InsertComponentRequest {
         : "The insert request is not valid"
     );
   }
+
   return parsed.data as InsertComponentRequest;
 }
 
@@ -169,11 +174,17 @@ function pickEntry(
       entry.name === component.name &&
       (!component.file || entry.file === component.file)
   );
-  if (matches.length === 1) return matches[0] as LibraryEntry;
-  if (matches.length === 0)
+
+  if (matches.length === 1) {
+    return matches[0] as LibraryEntry;
+  }
+
+  if (matches.length === 0) {
     throw refuse(
       `The project has no exported component named ${component.name}${component.file ? ` in ${component.file}` : ""}. List the components to see the names`
     );
+  }
+
   throw refuse(
     `More than one component is named ${component.name} (${matches.map((entry) => entry.file).join(", ")}). Pass its file too`
   );
@@ -181,23 +192,41 @@ function pickEntry(
 
 export function humanize(name: string): string {
   const words = name.replace(/([a-z0-9])([A-Z])/g, "$1 $2").split(" ");
+
   return words
     .map((word, index) => (index === 0 ? word : word.toLowerCase()))
     .join(" ");
 }
 
 function attribute(name: string, value: PropValue): string {
-  if (value === true) return ` ${name}`;
-  if (typeof value === "string" && SAFE_ATTR.test(value))
+  if (value === true) {
+    return ` ${name}`;
+  }
+
+  if (typeof value === "string" && SAFE_ATTR.test(value)) {
     return ` ${name}="${value}"`;
+  }
+
   return ` ${name}={${JSON.stringify(value)}}`;
 }
 
 function requiredValue(spec: PropSpec): PropValue {
-  if (spec.default !== undefined) return spec.default;
-  if (spec.control === "select") return spec.options?.[0] ?? "";
-  if (spec.control === "boolean") return false;
-  if (spec.control === "number") return 0;
+  if (spec.default !== undefined) {
+    return spec.default;
+  }
+
+  if (spec.control === "select") {
+    return spec.options?.[0] ?? "";
+  }
+
+  if (spec.control === "boolean") {
+    return false;
+  }
+
+  if (spec.control === "number") {
+    return 0;
+  }
+
   return humanize(spec.name.charAt(0).toUpperCase() + spec.name.slice(1));
 }
 
@@ -206,18 +235,26 @@ export function propsFor(
   given: Record<string, PropValue>
 ): Record<string, PropValue> {
   const out: Record<string, PropValue> = {};
+
   for (const spec of schema?.props ?? []) {
     if (
       spec.optional ||
       spec.name === "asChild" ||
       spec.from === "variant" ||
       spec.name in given
-    )
+    ) {
       continue;
+    }
+
     out[spec.name] = requiredValue(spec);
   }
-  for (const [name, value] of Object.entries(given))
-    if (name !== "children") out[name] = value;
+
+  for (const [name, value] of Object.entries(given)) {
+    if (name !== "children") {
+      out[name] = value;
+    }
+  }
+
   return out;
 }
 
@@ -231,14 +268,21 @@ export function jsxFor(
   request: InsertComponentRequest
 ): string {
   const given = request.props ?? {};
+
   const attrs = Object.entries(propsFor(schema, given))
     .map(([name, value]) => attribute(name, value))
     .join("");
-  if (!entry.children) return `<${entry.name}${attrs} />`;
+
+  if (!entry.children) {
+    return `<${entry.name}${attrs} />`;
+  }
+
   const fromProps = typeof given.children === "string" ? given.children : null;
+
   const text = (request.text ?? fromProps ?? humanize(entry.name))
     .replace(/\s+/g, " ")
     .trim();
+
   return text
     ? `<${entry.name}${attrs}>${childText(text)}</${entry.name}>`
     : `<${entry.name}${attrs} />`;
@@ -254,29 +298,45 @@ function isNode(value: unknown): value is t.Node {
 
 function childNodes(node: t.Node): t.Node[] {
   const out: t.Node[] = [];
+
   for (const [key, value] of Object.entries(node)) {
-    if (key === "loc" || key.endsWith("Comments") || key === "extra") continue;
-    if (Array.isArray(value)) out.push(...value.filter(isNode));
-    else if (isNode(value)) out.push(value);
+    if (key === "loc" || key.endsWith("Comments") || key === "extra") {
+      continue;
+    }
+
+    if (Array.isArray(value)) {
+      out.push(...value.filter(isNode));
+    } else if (isNode(value)) {
+      out.push(value);
+    }
   }
+
   return out;
 }
 
 function rootJsx(ast: t.File, start: number, end: number): t.JSXElement | null {
   let found: t.JSXElement | null = null;
   const stack: t.Node[] = [ast.program];
+
   while (stack.length > 0) {
     const node = stack.pop() as t.Node;
     const at = node.start ?? 0;
-    if ((node.end ?? 0) < start || at > end) continue;
+
+    if ((node.end ?? 0) < start || at > end) {
+      continue;
+    }
+
     if (
       node.type === "JSXElement" &&
       at >= start &&
       (!found || at < (found.start ?? 0))
-    )
+    ) {
       found = node;
+    }
+
     stack.push(...childNodes(node));
   }
+
   return found;
 }
 
@@ -286,8 +346,13 @@ function sameStart(
   tag: string | undefined
 ): boolean {
   const start = root?.openingElement.loc?.start;
-  if (!root || !start || start.line !== at.line) return false;
+
+  if (!root || !start || start.line !== at.line) {
+    return false;
+  }
+
   const name = root.openingElement.name;
+
   return (
     start.column + 1 === at.col ||
     (name.type === "JSXIdentifier" && name.name === tag)
@@ -302,15 +367,23 @@ function rootOwner(
   entries: LibraryEntry[]
 ): LibraryEntry | null {
   const ast = parseModuleFile(code, file);
-  if (!ast) return null;
+
+  if (!ast) {
+    return null;
+  }
+
   for (const declared of declaredComponents(ast)) {
-    if (!sameStart(rootJsx(ast, declared.start, declared.end), at, tag))
+    if (!sameStart(rootJsx(ast, declared.start, declared.end), at, tag)) {
       continue;
+    }
+
     const entry = entries.find(
       (item) => item.absolute === file && item.local === declared.name
     );
+
     return entry?.children ? entry : null;
   }
+
   return null;
 }
 
@@ -323,6 +396,7 @@ async function useSiteTarget(
   const found = (request.target.owners ?? []).find(
     (item) => item.name === owner.local || item.name === owner.name
   );
+
   const use = found
     ? await ownerUseSite(
         { workTree: scope.workTree, previewOrigin: scope.previewOrigin },
@@ -330,7 +404,11 @@ async function useSiteTarget(
         found
       ).catch(() => null)
     : null;
-  if (use) return use;
+
+  if (use) {
+    return use;
+  }
+
   throw refuse(
     `This is the top element of <${owner.name}> in ${owner.file}, so the insert would change every ${owner.name}. Select the ${owner.name} on the page, or pass the file:line:col of the <${owner.name}> tag where the page uses it`
   );
@@ -354,6 +432,7 @@ function tagMatches(
 ): boolean {
   try {
     structureDoc(relative, code).node(at, "into", tag);
+
     return true;
   } catch (error) {
     return !(
@@ -368,6 +447,7 @@ async function nearestUseSite(
   request: TargetRequest
 ): Promise<SourceLoc | null> {
   const owner = request.target.owners?.find((item) => /^[A-Z]/.test(item.name));
+
   return owner
     ? ownerUseSite(
         { workTree: scope.workTree, previewOrigin: scope.previewOrigin },
@@ -382,6 +462,7 @@ async function retargeted(
   use: SourceLoc
 ): Promise<ResolvedTarget> {
   const target = await resolveSource(scope.workTree, use.file);
+
   return {
     target,
     code: await readFile(target.file, "utf-8"),
@@ -398,16 +479,22 @@ export async function resolveTarget(
   entries: LibraryEntry[]
 ): Promise<ResolvedTarget> {
   const source = request.target.source;
+
   if (!source) {
     const use = await nearestUseSite(scope, root, request);
-    if (!use)
+
+    if (!use) {
       throw refuse(
         "This element has no source location and no component use site the studio can find; pass targetSource"
       );
+    }
+
     return retargeted(scope, use);
   }
+
   const first = await resolveSource(scope.workTree, source.file);
   const code = await readFile(first.file, "utf-8");
+
   const plain = {
     target: first,
     code,
@@ -415,6 +502,7 @@ export async function resolveTarget(
     tag: request.target.tag,
     usedAt: null,
   };
+
   const owner = rootOwner(
     code,
     first.file,
@@ -422,11 +510,17 @@ export async function resolveTarget(
     request.target.tag,
     entries
   );
-  if (owner)
+
+  if (owner) {
     return retargeted(scope, await useSiteTarget(scope, root, request, owner));
-  if (tagMatches(first.relative, code, source, request.target.tag))
+  }
+
+  if (tagMatches(first.relative, code, source, request.target.tag)) {
     return plain;
+  }
+
   const use = await nearestUseSite(scope, root, request);
+
   return use ? retargeted(scope, use) : plain;
 }
 
@@ -435,18 +529,22 @@ const ALIAS_LIKE = /^(@\/|~\/|#|@[\w.-]+\/[\w.-]+\/)/;
 export function seenImports(specifiers: Map<string, string[]>): SeenImport[] {
   const out: SeenImport[] = [];
   const done = new Set<string>();
+
   for (const [from, list] of specifiers) {
     for (const specifier of list) {
       if (
         done.has(specifier) ||
         !ALIAS_LIKE.test(specifier) ||
         out.length >= 200
-      )
+      ) {
         continue;
+      }
+
       done.add(specifier);
       out.push({ specifier, from });
     }
   }
+
   return out;
 }
 
@@ -465,44 +563,60 @@ export async function planInsertComponent(
   raw: unknown
 ): Promise<InsertPlan> {
   const request = parseInsertRequest(raw);
-  if (scope.project.kind !== "react")
+
+  if (scope.project.kind !== "react") {
     throw refuse(
       "This is an HTML project. It has no component kit to insert from; ask the agent to add the markup"
     );
+  }
+
   const library = await loadLibrary(scope.project, scope.workTree);
   const entry = pickEntry(library.entries, request.component);
+
   const resolved = await resolveTarget(
     scope,
     library.root,
     request,
     library.entries
   );
-  if (resolved.target.file === entry.absolute)
+
+  if (resolved.target.file === entry.absolute) {
     throw refuse(
       `${entry.name} cannot be placed inside its own file, ${entry.file}`
     );
+  }
+
   const doc = structureDoc(resolved.target.relative, resolved.code);
+
   const node = doc.node(
     resolved.at,
     request.position === "inside" ? "into" : "ref",
     resolved.tag
   );
-  if (request.position === "inside" && VOID_TAGS.has(node.tag))
+
+  if (request.position === "inside" && VOID_TAGS.has(node.tag)) {
     throw refuse(
       `<${node.tag}> cannot hold other elements; insert after it instead`
     );
+  }
+
   const ts = await loadTypeScript();
+
   const schema = await componentSchema(scope.workTree, {
     file: entry.absolute,
     name: entry.local,
   });
+
   const jsx = jsxFor(entry, schema, request);
   const ast = parseModuleFile(resolved.code, resolved.target.file);
-  if (!ast)
+
+  if (!ast) {
     throw new DirectEditError(
       "parse_failed",
       "The target file could not be parsed"
     );
+  }
+
   const need: ImportNeed = {
     name: entry.name,
     kind: entry.kind,
@@ -512,22 +626,28 @@ export async function planInsertComponent(
     seen: seenImports(library.specifiers),
     allowPaths: scope.project.app?.framework === "next",
   };
+
   const importPlan = planImport(ts, resolved.code, ast, need);
+
   const place =
     request.position === "inside" ? { into: node } : { after: node };
+
   const plan = planInsert(resolved.code, {
     pieces: [jsx],
     place,
     closeTag: doc.closeTag,
     ...(importPlan.splice ? { extras: [importPlan.splice] } : {}),
   });
+
   const positions = plan.select.map((offset) => positionAt(plan.code, offset));
   doc.verify(plan.code, positions);
+
   const select = positions.map((position) => ({
     file: resolved.target.relative,
     ...position,
     tag: entry.name,
   }));
+
   return {
     target: resolved.target,
     original: resolved.code,
@@ -553,10 +673,12 @@ export async function applyInsertComponent(
   const plan = await planInsertComponent(scope, raw);
   const at = plan.select[0];
   const where = at ? `${at.file}:${at.line}:${at.col}` : plan.target.relative;
+
   const meta: VersionMeta = {
     kind: "manual",
     prompt: `Insert component: ${plan.request.component.name} ${plan.request.position} ${where}`,
   };
+
   const version = await writeAndCommitAll(
     deps,
     project,
@@ -565,6 +687,7 @@ export async function applyInsertComponent(
     plan.title,
     meta
   );
+
   deps.history?.record({
     projectId: project.id,
     directionId: direction.id,
@@ -580,6 +703,7 @@ export async function applyInsertComponent(
     ],
   });
   await publishVersion(deps, project, direction, version);
+
   return {
     file: plan.target.relative,
     version,

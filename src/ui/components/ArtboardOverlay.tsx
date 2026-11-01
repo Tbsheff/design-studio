@@ -31,6 +31,7 @@ function ResizeHandles({
 }) {
   const live = control.live;
   const compact = Math.min(rect.width, rect.height) * zoom < COMPACT_PX;
+
   return (
     <div
       className={`resize-frame${live ? " active" : ""}${compact ? " compact" : ""}`}
@@ -78,7 +79,10 @@ export function SnapGuides({
   guides: SnapGuide[];
   full?: boolean;
 }) {
-  if (guides.length === 0) return null;
+  if (guides.length === 0) {
+    return null;
+  }
+
   return (
     <div
       className={`snap-guides${full ? " full" : ""}`}
@@ -109,6 +113,7 @@ function Measurements({
   to: SelectionContext["rect"];
 }) {
   const lines = measureBetween(from, to);
+
   return (
     <div className="measure" data-testid="measure">
       <div
@@ -151,8 +156,10 @@ export function ArtboardOverlay({
 }: Props) {
   const anchor = unionBox(selection.map((s) => s.rect));
   const measuring = hover?.altKey && anchor && !hover.fromTree;
+
   const onSelected =
     hover !== null && selection.some((s) => sameRect(s.rect, hover.rect));
+
   return (
     <div className="overlay">
       {hover && !measuring && !onSelected && (
@@ -177,6 +184,7 @@ export function ArtboardOverlay({
       {selection.map((s) => {
         const live =
           resize?.target?.selector === s.selector ? resize.live : null;
+
         return (
           <div
             key={s.selector}

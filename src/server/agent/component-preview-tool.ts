@@ -42,19 +42,27 @@ export async function runComponentPreview(
   args: z.input<typeof schema>
 ): Promise<{ content: ToolContent[]; isError?: boolean }> {
   const parsed = schema.safeParse(args);
-  if (!parsed.success)
+
+  if (!parsed.success) {
     return text(
       `component_preview: ${parsed.error.issues.map((issue) => `${issue.path.join(".") || "input"}: ${issue.message}`).join("; ")}`,
       true
     );
+  }
+
   const { project, direction } = deps.ctx;
+
   try {
     const result = await componentPreviewsFor(deps.preview).render(
       project,
       direction,
       { name: parsed.data.name, file: parsed.data.file }
     );
-    if (!result.ok) return text(result.reason, true);
+
+    if (!result.ok) {
+      return text(result.reason, true);
+    }
+
     return {
       content: [
         {

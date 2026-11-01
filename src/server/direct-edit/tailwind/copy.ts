@@ -75,24 +75,43 @@ function arbitrary(value: string): string {
 
 function legacyClass(prop: string, value: string): string {
   const keyword = KEYWORDS[prop]?.[value];
-  if (keyword) return keyword;
+
+  if (keyword) {
+    return keyword;
+  }
+
   const prefix = PREFIX[prop];
-  if (prefix) return `${prefix}-[${arbitrary(value)}]`;
+
+  if (prefix) {
+    return `${prefix}-[${arbitrary(value)}]`;
+  }
+
   return `[${prop}:${arbitrary(value)}]`;
 }
 
 function borderParts(value: string): Array<[string, string]> {
-  if (value.trim() === "none") return [["border-width", "0px"]];
+  if (value.trim() === "none") {
+    return [["border-width", "0px"]];
+  }
+
   const parts = value.trim().split(/\s+(?![^(]*\))/);
   const out: Array<[string, string]> = [];
   const color: string[] = [];
+
   for (const part of parts) {
-    if (BORDER_STYLES.has(part)) out.push(["border-style", part]);
-    else if (/^-?[\d.]+(px|rem|em)?$/.test(part))
+    if (BORDER_STYLES.has(part)) {
+      out.push(["border-style", part]);
+    } else if (/^-?[\d.]+(px|rem|em)?$/.test(part)) {
       out.push(["border-width", part]);
-    else color.push(part);
+    } else {
+      color.push(part);
+    }
   }
-  if (color.length > 0) out.push(["border-color", color.join(" ")]);
+
+  if (color.length > 0) {
+    out.push(["border-color", color.join(" ")]);
+  }
+
   return out;
 }
 
@@ -123,11 +142,13 @@ export function tailwindClassesFor(
 ): string[] {
   const edits: ClassEdit[] = [];
   const extra: string[] = [];
+
   const hasBorder = styles.some(
     ([prop]) =>
       prop === "border" ||
       /^border(-(top|right|bottom|left))?-width$/.test(prop)
   );
+
   const expanded = styles
     .flatMap(([prop, value]): Array<[string, string]> =>
       prop === "border" ? borderParts(value) : [[prop, value]]
@@ -137,13 +158,19 @@ export function tailwindClassesFor(
         hasBorder ||
         !/^border-(top|right|bottom|left)-(style|color)$/.test(prop)
     );
+
   for (const [prop, value] of expanded) {
     const mapped = isMappedProperty(prop) ? cssEdits(prop, value, theme) : null;
-    if (mapped)
+
+    if (mapped) {
       edits.push(...mapped.map((edit) => ({ ...edit, variants: "" })));
-    else extra.push(legacyClass(prop, value));
+    } else {
+      extra.push(legacyClass(prop, value));
+    }
   }
+
   const planned =
     edits.length > 0 ? planClassEdit(blankSite(), edits, theme).classes : [];
+
   return [...planned, ...extra];
 }

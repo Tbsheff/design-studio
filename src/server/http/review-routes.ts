@@ -35,6 +35,7 @@ interface ReviewRouteDeps {
 }
 
 const side = z.number().int().min(200).max(4000);
+
 const reviewSchema = z
   .object({
     frame: z.string().trim().min(1).max(60).optional(),
@@ -44,6 +45,7 @@ const reviewSchema = z
     height: side.optional(),
   })
   .strict();
+
 const fixSchema = z
   .object({
     findingIds: z.array(z.string().min(1).max(80)).min(1).max(REVIEW_FIX_MAX),
@@ -53,6 +55,7 @@ const fixSchema = z
 
 function parse<S extends z.ZodType>(schema: S, body: unknown): z.output<S> {
   const parsed = schema.safeParse(body ?? {});
+
   if (!parsed.success) {
     const issue = parsed.error.issues[0];
     throw new BadRequestError(
@@ -61,6 +64,7 @@ function parse<S extends z.ZodType>(schema: S, body: unknown): z.output<S> {
         : "body is not valid"
     );
   }
+
   return parsed.data;
 }
 
@@ -70,18 +74,26 @@ async function currentReview(
   direction: Direction
 ): Promise<ReviewResult> {
   const last = lastReview(project.id, direction.id);
-  if (!last)
+
+  if (!last) {
     throw new BadRequestError(
       "Run a review of this frame first (review_frame or the Review panel)."
     );
-  if (last.versionId === direction.headVersionId) return last;
+  }
+
+  if (last.versionId === direction.headVersionId) {
+    return last;
+  }
+
   const fresh = await runReview(deps.preview, {
     project,
     direction,
     frame: last.frame,
     rules: await deps.rulesFor(project, direction),
   });
+
   rememberReview(fresh);
+
   return fresh;
 }
 
@@ -96,40 +108,49 @@ export async function fixFindings(
   const byId = new Map(review.findings.map((finding) => [finding.id, finding]));
   const chosen: ReviewFinding[] = [];
   const skipped: ReviewFixResult["skipped"] = [];
+
   for (const id of new Set(ids)) {
     const finding = byId.get(id);
-    if (!finding)
+
+    if (!finding) {
       skipped.push({
         id,
         reason:
           "This finding is gone from the latest review. Run the review again.",
       });
-    else if (!finding.fix)
+    } else if (!finding.fix) {
       skipped.push({
         id,
         reason:
           "This finding needs judgment, so it has no direct fix. Ask the agent or edit it yourself.",
       });
-    else if (finding.shared && !allowShared)
+    } else if (finding.shared && !allowShared) {
       skipped.push({
         id,
         reason: `The fix edits the shared file ${finding.shared}, outside the page's own route folder, so it changes every page that uses it. Pass allowShared: true to apply it.`,
       });
-    else chosen.push(finding);
+    } else {
+      chosen.push(finding);
+    }
   }
-  if (chosen.length === 0)
+
+  if (chosen.length === 0) {
     return { applied: [], skipped, files: [], version: null };
+  }
+
   const done = await applyFindingFixes(
     deps.editDeps,
     project,
     direction,
     chosen
   );
+
   const shared = [
     ...new Set(
       chosen.flatMap((finding) => (finding.shared ? [finding.shared] : []))
     ),
   ];
+
   return {
     applied: chosen.map((finding) => finding.id),
     skipped,
@@ -139,8 +160,10 @@ export async function fixFindings(
 }
 
 function editError(c: Context, error: unknown): Response {
-  if (error instanceof DirectEditError)
+  if (error instanceof DirectEditError) {
     return c.json({ error: error.code, message: error.message }, error.status);
+  }
+
   throw error;
 }
 
@@ -150,33 +173,40 @@ export function registerReviewRoutes(app: Hono, deps: ReviewRouteDeps): void {
       c.req.param("pid"),
       c.req.param("did")
     );
+
     return c.json({ review: lastReview(project.id, direction.id) });
   });
 
   app.post("/api/projects/:pid/d/:did/review", async (c) => {
     const input = parse(reviewSchema, await deps.readBody(c));
+
     const { project, direction } = await deps.loadDirection(
       c.req.param("pid"),
       c.req.param("did")
     );
+
     const frame = await resolveReviewFrame(
       deps.canvas,
       project,
       direction,
       input
     );
+
     const result = await runReview(deps.preview, {
       project,
       direction,
       frame,
       rules: await deps.rulesFor(project, direction),
     });
+
     rememberReview(result);
+
     return c.json(result);
   });
 
   app.post("/api/projects/:pid/d/:did/review/fix", async (c) => {
     const input = parse(fixSchema, await deps.readBody(c));
+
     try {
       return c.json(
         await deps.withDirection(

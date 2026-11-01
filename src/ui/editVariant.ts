@@ -16,12 +16,16 @@ function emit(): void {
 export const editVariantStore = {
   get: (): string => prefix,
   set: (next: string): void => {
-    if (next === prefix) return;
+    if (next === prefix) {
+      return;
+    }
+
     prefix = next;
     emit();
   },
   subscribe: (listener: () => void): (() => void) => {
     listeners.add(listener);
+
     return () => {
       listeners.delete(listener);
     };
@@ -34,8 +38,9 @@ export function useEditVariant(): string {
 
 export function fitFrameTo(width: number | null): void {
   const viewport = uiStore.get().viewport;
+
   if (width === null) {
-    if (restore && viewport.width === restore.set)
+    if (restore && viewport.width === restore.set) {
       uiStore.set({
         viewport: {
           preset: "custom",
@@ -43,16 +48,24 @@ export function fitFrameTo(width: number | null): void {
           height: viewport.height,
         },
       });
+    }
+
     restore = null;
+
     return;
   }
-  if (!restore || viewport.width !== restore.set)
+
+  if (!restore || viewport.width !== restore.set) {
     restore = { width: viewport.width, set: width };
-  else restore = { ...restore, set: width };
-  if (viewport.width !== width)
+  } else {
+    restore = { ...restore, set: width };
+  }
+
+  if (viewport.width !== width) {
     uiStore.set({
       viewport: { preset: "custom", width, height: viewport.height },
     });
+  }
 }
 
 export function postForceState(
@@ -73,7 +86,10 @@ export function postForceState(
 }
 
 export function resetEditVariant(port: PreviewPort | null): void {
-  if (prefix === "") return;
+  if (prefix === "") {
+    return;
+  }
+
   editVariantStore.set("");
   fitFrameTo(null);
   postForceState(port, null, "");
@@ -91,5 +107,6 @@ export const VariantScopeContext = createContext<VariantScope>({
 
 export function useInherited(prop: DirectStyleProperty): boolean {
   const scope = useContext(VariantScopeContext);
+
   return scope.prefix !== "" && !scope.props.has(prop);
 }

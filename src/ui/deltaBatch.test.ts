@@ -5,30 +5,35 @@ import { createDeltaBatcher, mergeDeltas } from "./deltaBatch";
 import { applyRunEvent, runText, type RunMap } from "./runState";
 
 let seq = 0;
+
 const base = () => ({
   seq: ++seq,
   ts: 1000 + seq,
   projectId: "p1",
   directionId: "d1",
 });
+
 const delta = (runId: string, text: string): StudioEvent => ({
   ...base(),
   type: "run.text.delta",
   runId,
   text,
 });
+
 const block = (runId: string, text: string): StudioEvent => ({
   ...base(),
   type: "run.text",
   runId,
   text,
 });
+
 const started = (runId: string): StudioEvent => ({
   ...base(),
   type: "run.started",
   runId,
   request: { prompt: "x", mode: "edit" },
 });
+
 const finished = (runId: string, finalText: string): StudioEvent => ({
   ...base(),
   type: "run.finished",
@@ -50,6 +55,7 @@ function harness() {
   let runs: RunMap = {};
   let updates = 0;
   const queued: (() => void)[] = [];
+
   const batcher = createDeltaBatcher(
     (fn) => {
       updates += 1;
@@ -58,17 +64,21 @@ function harness() {
     (fn) => {
       let live = true;
       queued.push(() => live && fn());
+
       return () => {
         live = false;
       };
     }
   );
+
   return {
     batcher,
     runs: () => runs,
     updates: () => updates,
     frame: () => {
-      for (const fn of queued.splice(0)) fn();
+      for (const fn of queued.splice(0)) {
+        fn();
+      }
     },
   };
 }
@@ -81,8 +91,11 @@ describe("delta batcher", () => {
   it("applies many deltas in one update per frame", () => {
     const h = harness();
     h.batcher.push(started("r1"));
-    for (const word of ["a ", "b ", "c ", "d"])
+
+    for (const word of ["a ", "b ", "c ", "d"]) {
       h.batcher.push(delta("r1", word));
+    }
+
     expect(h.updates()).toBe(1);
     h.frame();
     expect(h.updates()).toBe(2);
@@ -100,8 +113,13 @@ describe("delta batcher", () => {
       block("r1", "World"),
       finished("r1", "Hello\n\nWorld"),
     ];
+
     const h = harness();
-    for (const event of events) h.batcher.push(event);
+
+    for (const event of events) {
+      h.batcher.push(event);
+    }
+
     h.frame();
     expect(h.runs()).toEqual(direct(events));
   });
@@ -110,10 +128,15 @@ describe("delta batcher", () => {
     const text = "one two three four five six seven eight nine ten";
     const small = text.split(/(?<= )/).map((part) => delta("r1", part));
     const big = [delta("r1", text.slice(0, 20)), delta("r1", text.slice(20))];
+
     for (const chunks of [small, big]) {
       const h = harness();
       h.batcher.push(started("r1"));
-      for (const event of chunks) h.batcher.push(event);
+
+      for (const event of chunks) {
+        h.batcher.push(event);
+      }
+
       h.frame();
       expect(runText(h.runs().r1!)).toBe(text);
     }
@@ -128,8 +151,13 @@ describe("delta batcher", () => {
       delta("r1", "b"),
       delta("r2", "y"),
     ];
+
     const h = harness();
-    for (const event of events) h.batcher.push(event);
+
+    for (const event of events) {
+      h.batcher.push(event);
+    }
+
     h.frame();
     expect(runText(h.runs().r1!)).toBe("ab");
     expect(runText(h.runs().r2!)).toBe("xy");
@@ -160,14 +188,17 @@ describe("delta batcher", () => {
       StudioEvent,
       { type: "run.text.delta" }
     >;
+
     const b = delta("r2", "b") as Extract<
       StudioEvent,
       { type: "run.text.delta" }
     >;
+
     const c = delta("r1", "c") as Extract<
       StudioEvent,
       { type: "run.text.delta" }
     >;
+
     expect(
       mergeDeltas(mergeDeltas(mergeDeltas([], a), b), c).map((e) => e.text)
     ).toEqual(["a", "b", "c"]);

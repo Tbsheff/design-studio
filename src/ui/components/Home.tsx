@@ -77,36 +77,46 @@ import { StableText } from "./StableText";
 import { ThemeButton } from "./ThemeButton";
 
 const clarifyChunk = import("./ClarifyForm");
+
 const ClarifyForm = lazy(() =>
   clarifyChunk.then((m) => ({ default: m.ClarifyForm }))
 );
+
 const libraryChunk = import("./HomeLibrary");
 const loadTrash = () => import("./HomeTrash");
 const loadSlash = () => import("./HomeSlash");
 const HomeTrash = lazy(loadTrash);
 const loadPops = () => import("./HomePopovers");
 const PlusMenu = lazy(() => loadPops().then((m) => ({ default: m.PlusMenu })));
+
 const PackPopover = lazy(() =>
   loadPops().then((m) => ({ default: m.PackPopover }))
 );
+
 const ModelPopover = lazy(() =>
   loadPops().then((m) => ({ default: m.ModelPopover }))
 );
+
 const LevelPopover = lazy(() =>
   loadPops().then((m) => ({ default: m.LevelPopover }))
 );
+
 const loadTemplates = () => import("./HomeTemplates");
 const loadExtras = () => import("./HomeExtras");
 const loadAppMenu = () => import("./HomeAppMenu");
 const AppMenu = lazy(() => loadAppMenu().then((m) => ({ default: m.AppMenu })));
+
 const FolderPathPop = lazy(() =>
   loadAppMenu().then((m) => ({ default: m.FolderPathPop }))
 );
+
 const HomeDoctor = lazy(() => import("./HomeDoctor"));
 const HomeEmpty = lazy(() => import("./HomeEmpty"));
 
 type Busy = "create" | "ask" | "starter" | null;
+
 type Pop = "plus" | "pack" | "level" | "model" | "folder" | null;
+
 type LibraryModule = typeof import("./HomeLibrary");
 
 const EXAMPLES = [
@@ -116,25 +126,33 @@ const EXAMPLES = [
   "Turn my notes into a one-page brief",
   "A mobile onboarding flow for a running app",
 ];
+
 const EXAMPLE_MS = 3500;
+
 const LEVEL_LABEL: Record<RunLevel, string> = {
   wireframe: "Wireframe",
   prototype: "Prototype",
   polish: "Polish",
 };
+
 const PLACEHOLDER =
   "Describe what to design. Drop an app folder, an image or a link to build on it.";
 
 function useModule<T>(load: () => Promise<T>, enabled: boolean): T | null {
   const [mod, setMod] = useState<T | null>(null);
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled) {
+      return;
+    }
+
     let live = true;
     void load().then((loaded) => live && setMod(loaded));
+
     return () => {
       live = false;
     };
   }, [enabled, load]);
+
   return mod;
 }
 
@@ -143,13 +161,18 @@ const loadLibrary = () => libraryChunk;
 function useExample(paused: boolean, fixed: boolean): string {
   const [index, setIndex] = useState(0);
   useEffect(() => {
-    if (paused || fixed) return;
+    if (paused || fixed) {
+      return;
+    }
+
     const timer = window.setInterval(
       () => setIndex((n) => (n + 1) % EXAMPLES.length),
       EXAMPLE_MS
     );
+
     return () => window.clearInterval(timer);
   }, [paused, fixed]);
+
   return fixed ? PLACEHOLDER : (EXAMPLES[index] ?? "");
 }
 
@@ -178,10 +201,15 @@ function PromptArea({
   const example = useExample(value !== "", placeholder === null);
   useLayoutEffect(() => {
     const el = ref.current;
-    if (!el) return;
+
+    if (!el) {
+      return;
+    }
+
     el.style.height = "auto";
     el.style.height = `${Math.min(320, el.scrollHeight)}px`;
   }, [value]);
+
   return (
     <textarea
       ref={ref}
@@ -193,9 +221,13 @@ function PromptArea({
       onChange={(e) => onChange(e.target.value)}
       onPaste={onPaste}
       onKeyDown={(e) => {
-        if (menuKeys.current?.(e)) return;
-        if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing)
+        if (menuKeys.current?.(e)) {
+          return;
+        }
+
+        if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
           onSubmit(e);
+        }
       }}
       placeholder={placeholder ?? example}
     />
@@ -208,9 +240,12 @@ function focusPrompt(home: HTMLElement | null, atEnd = false): void {
     const area = document.querySelector<HTMLTextAreaElement>(
       '[aria-label="Describe the design"]'
     );
+
     area?.focus();
-    if (atEnd && area)
+
+    if (atEnd && area) {
       area.setSelectionRange(area.value.length, area.value.length);
+    }
   });
 }
 
@@ -237,6 +272,7 @@ function SendButton({
   label: string;
 }) {
   const working = busy === "create" || busy === "ask";
+
   return (
     <button
       className="icon-btn send home-send"
@@ -318,7 +354,10 @@ function PillSelect({
 }
 
 function DropHint({ on }: { on: boolean }) {
-  if (!on) return null;
+  if (!on) {
+    return null;
+  }
+
   return (
     <div className="home-drop-hint" aria-hidden="true">
       <Icon name="image" size={16} />
@@ -332,14 +371,17 @@ function folderLabel(
   location: string | null
 ): string {
   const folders = list?.folders ?? [];
+
   const match =
     folders.find((folder) => folder.path === location) ??
     folders.find((folder) => folder.default);
+
   return match?.label ?? "Design Studio";
 }
 
 function modelSummary(model: string, count: number): string {
   const extra = count > 1 ? ` · ${count}×` : "";
+
   return `${modelLabel(model).replace(/^Claude /, "")}${extra}`;
 }
 
@@ -353,7 +395,11 @@ function StarterRow({
   onOpen: (starter: Starter) => void;
 }) {
   const starter = template?.starter;
-  if (!template || !starter) return null;
+
+  if (!template || !starter) {
+    return null;
+  }
+
   return (
     <div className="home-starter-row">
       <span className="ui-chip">{template.label} starter</span>
@@ -440,7 +486,9 @@ function AppSlot({
       </button>
     );
   }
+
   const blocker = chipBlocker(chip);
+
   if (blocker) {
     return (
       <button
@@ -452,7 +500,11 @@ function AppSlot({
       </button>
     );
   }
-  if (!chip.inspection?.kind || chipProblem(chip)) return null;
+
+  if (!chip.inspection?.kind || chipProblem(chip)) {
+    return null;
+  }
+
   return (
     <span
       className={`home-badge ${chip.inspection.kind === "next" ? "next" : chip.inspection.kind === "vite" ? "vite" : "html"}`}
@@ -506,6 +558,7 @@ function ComposerBar({
   const modelRef = useRef<HTMLButtonElement>(null);
   const levelRef = useRef<HTMLButtonElement>(null);
   const folderRef = useRef<HTMLButtonElement>(null);
+
   const closePop = useCallback(
     (refocus: boolean) => {
       const trigger = {
@@ -515,13 +568,19 @@ function ComposerBar({
         model: modelRef,
         folder: folderRef,
       }[pop ?? "model"];
+
       setPop(null);
-      if (refocus) trigger.current?.focus();
+
+      if (refocus) {
+        trigger.current?.focus();
+      }
     },
     [pop]
   );
+
   const togglePop = (next: Exclude<Pop, null>) =>
     setPop((current) => (current === next ? null : next));
+
   useEffect(
     () =>
       setPop((current) =>
@@ -529,10 +588,12 @@ function ComposerBar({
       ),
     [app.folderPop]
   );
+
   const closeFolder = (refocus: boolean) => {
     closePop(refocus);
     app.onFolderClose();
   };
+
   return (
     <div className="home-composer-bar">
       <input
@@ -696,11 +757,20 @@ function useOpenAppRequests(
   useEffect(() => {
     const take = () => {
       const request = takeOpenAppRequest();
-      if (!request) return;
-      if (request.path) handlers.current.onPath(request.path);
-      else handlers.current.onPick();
+
+      if (!request) {
+        return;
+      }
+
+      if (request.path) {
+        handlers.current.onPath(request.path);
+      } else {
+        handlers.current.onPick();
+      }
     };
+
     take();
+
     return onOpenAppRequest(take);
   }, []);
 }
@@ -711,10 +781,22 @@ function homeSendBlocker(
   asking: boolean,
   chip: AppChip | null
 ): string | null {
-  if (busy !== null) return "Working on it";
-  if (chip) return chip.checking ? "Checking the folder" : chipProblem(chip);
-  if (asking) return "Answer or skip the questions below";
-  if (!prompt.trim()) return EMPTY_PROMPT;
+  if (busy !== null) {
+    return "Working on it";
+  }
+
+  if (chip) {
+    return chip.checking ? "Checking the folder" : chipProblem(chip);
+  }
+
+  if (asking) {
+    return "Answer or skip the questions below";
+  }
+
+  if (!prompt.trim()) {
+    return EMPTY_PROMPT;
+  }
+
   return null;
 }
 
@@ -735,12 +817,14 @@ async function createFromHome(input: HomeCreateInput): Promise<Project> {
     ...(input.designMd.trim() ? { designMd: input.designMd } : {}),
     ...(input.packId ? { packId: input.packId } : {}),
   };
+
   const fanOut = input.designCount > 1;
   const level = input.settings.defaultLevel;
   const where = input.location ? { parentPath: input.location } : {};
   const referenceUrls = input.references.map((reference) => reference.url);
   const refs = referenceUrls.length > 0 ? { referenceUrls } : {};
   const separateRun = !fanOut && input.images.length > 0;
+
   const { project } = await api.createProject({
     prompt: input.prompt,
     kind: input.kind,
@@ -751,20 +835,25 @@ async function createFromHome(input: HomeCreateInput): Promise<Project> {
     ...(fanOut || separateRun ? { startRun: false } : {}),
     ...refs,
   });
-  if (fanOut)
+
+  if (fanOut) {
     homeVariations.set({
       projectId: project.id,
       prompt: input.prompt,
       count: input.designCount,
       level,
     });
+  }
+
   const main =
     project.directions.find((direction) => direction.id === "main") ??
     project.directions[0];
+
   if (separateRun && main) {
     const uploaded = await Promise.all(
       input.images.map((image) => api.uploadAttachment(project.id, image.file))
     );
+
     await api.startRun(project.id, main.id, {
       prompt: input.prompt,
       mode: "edit",
@@ -773,6 +862,7 @@ async function createFromHome(input: HomeCreateInput): Promise<Project> {
       ...refs,
     });
   }
+
   return project;
 }
 
@@ -785,15 +875,22 @@ interface DoctorGate {
 
 const INSTALL_DETAIL =
   "Dependencies are not installed. Run the command below, then check again.";
+
 const SHELL_SAFE = /^[\w./-]+$/;
 
 function shellPath(dir: string, homeDir: string | null): string {
   const short = shortHome(dir, homeDir);
-  if (short === "~") return "~";
+
+  if (short === "~") {
+    return "~";
+  }
+
   if (short.startsWith("~/")) {
     const rest = short.slice(2);
+
     return SHELL_SAFE.test(rest) ? `~/${rest}` : `~/${JSON.stringify(rest)}`;
   }
+
   return SHELL_SAFE.test(short) ? short : JSON.stringify(short);
 }
 
@@ -802,7 +899,11 @@ function homeCommand(
   homeDir: string | null
 ): string | null {
   const match = command?.match(/^cd ("(?:[^"\\]|\\.)*") && (.+)$/);
-  if (!match?.[1] || !match[2]) return command;
+
+  if (!match?.[1] || !match[2]) {
+    return command;
+  }
+
   try {
     return `cd ${shellPath(JSON.parse(match[1]) as string, homeDir)} && ${match[2]}`;
   } catch {
@@ -837,6 +938,7 @@ function healthProblem(
   homeDir: string | null
 ): DoctorProblem {
   const label = project.app?.framework === "next" ? "Next.js" : "Vite";
+
   return {
     name: project.name,
     place,
@@ -862,15 +964,23 @@ function healthProblem(
 function useDoctorGate() {
   const [gate, setGate] = useState<DoctorGate | null>(null);
   const close = useCallback(() => setGate(null), []);
+
   const check = async () => {
-    if (!gate) return;
+    if (!gate) {
+      return;
+    }
+
     setGate({ ...gate, checking: true });
     const fixed = await gate.check().catch(() => false);
+
     if (fixed) {
       setGate(null);
       gate.proceed();
-    } else setGate({ ...gate, checking: false });
+    } else {
+      setGate({ ...gate, checking: false });
+    }
   };
+
   return {
     gate,
     open: (next: Omit<DoctorGate, "checking">) =>
@@ -912,12 +1022,17 @@ function Library({
   onPickPack: (id: string | null) => void;
 }) {
   const { filter } = useHomePrefs();
-  if (!lib)
+
+  if (!lib) {
     return <div className="home-continue placeholder" aria-hidden="true" />;
+  }
+
   const latest = [...projects]
     .filter((project) => !project.designSystemFor)
     .sort((a, b) => b.updatedAt - a.updatedAt)[0];
+
   const systems = filter === "systems";
+
   const systemActions = systems && (
     <>
       <button
@@ -940,6 +1055,7 @@ function Library({
       </button>
     </>
   );
+
   return (
     <>
       {latest && (
@@ -1038,8 +1154,10 @@ function promptPlaceholder(
   chip: AppChip | null,
   empty: boolean
 ): string | null {
-  if (chip)
+  if (chip) {
     return `Describe a change to ${chipName(chip)}, or press Return to open it`;
+  }
+
   return empty ? PLACEHOLDER : null;
 }
 
@@ -1077,11 +1195,15 @@ function ChipMenuSlot({
   onChange: (patch: Partial<AppChip>) => void;
   onTokensOnly: () => void;
 }) {
-  if (!shown || !chip) return null;
+  if (!shown || !chip) {
+    return null;
+  }
+
   const trigger = {
     current:
       chipRef.current?.querySelector<HTMLElement>(".home-chip-app") ?? null,
   };
+
   return (
     <Suspense fallback={null}>
       <AppMenu
@@ -1136,6 +1258,7 @@ function HomeOverlays({
   onToastDone: () => void;
 }) {
   const gate = doctor.gate;
+
   return (
     <>
       {trashOpen && (
@@ -1193,6 +1316,7 @@ function LibraryArea({
       </Suspense>
     );
   }
+
   return (
     <>
       {children && <div className="home-library">{children}</div>}
@@ -1227,6 +1351,7 @@ function useChipFlow({
   const app = useAppChip();
   const [folderPop, setFolderPop] = useState(false);
   const [appMenu, setAppMenu] = useState(false);
+
   const putFolder = useCallback(
     (path: string) => {
       app.set(path);
@@ -1235,39 +1360,62 @@ function useChipFlow({
     },
     [app, homeRef, setFormError]
   );
+
   const takeDrop = (data: DataTransfer): boolean => {
     const folder = droppedFolder(data);
-    if (!folder) return false;
-    if ("path" in folder) putFolder(folder.path);
-    else
+
+    if (!folder) {
+      return false;
+    }
+
+    if ("path" in folder) {
+      putFolder(folder.path);
+    } else {
       setFormError("Drop a folder in the desktop app, or use Add app folder.");
+    }
+
     return true;
   };
+
   const addAppFolder = async () => {
     if (!hasNativePicker()) {
       setFolderPop((open) => !open);
+
       return;
     }
+
     const picked = await pickFolder({ title: "Choose your app folder" });
-    if (picked.kind === "picked") putFolder(picked.path);
+
+    if (picked.kind === "picked") {
+      putFolder(picked.path);
+    }
   };
+
   useOpenAppRequests(putFolder, () => void addAppFolder());
 
   const chipCandidates = app.chip?.inspection?.candidates.length ?? 0;
   const chipPicked = app.chip?.appDir ?? null;
   useEffect(() => {
-    if (chipCandidates > 1 && chipPicked === null) setAppMenu(true);
+    if (chipCandidates > 1 && chipPicked === null) {
+      setAppMenu(true);
+    }
   }, [chipCandidates, chipPicked]);
 
   const openChip = async (text: string, tokensOnly = false) => {
     const chip = app.chip;
-    if (!chip) return;
+
+    if (!chip) {
+      return;
+    }
+
     setBusy("create");
     setFormError(null);
+
     try {
       const mod = await loadAppMenu();
       const pid = await mod.openChip(chip, tokensOnly);
-      if (text)
+
+      if (text) {
         await mod.runInProject(pid, {
           prompt: text,
           level,
@@ -1276,6 +1424,8 @@ function useChipFlow({
             (reference) => reference.url
           ),
         });
+      }
+
       onOpen(pid);
     } catch (err) {
       setFormError(errorText(err));
@@ -1287,7 +1437,11 @@ function useChipFlow({
     const chip = app.chip;
     const found = chip?.inspection;
     const install = chipBlocker(chip);
-    if (!chip || !found || !install) return;
+
+    if (!chip || !found || !install) {
+      return;
+    }
+
     doctor.open({
       problem: installProblem(
         found.name,
@@ -1305,11 +1459,20 @@ function useChipFlow({
 
   const submitChip = (text: string) => {
     const chip = app.chip;
-    if (!chip || chip.checking) return;
+
+    if (!chip || chip.checking) {
+      return;
+    }
+
     const problem = chipProblem(chip);
-    if (problem) setFormError(problem);
-    else if (chipBlocker(chip)) chipDoctor(text);
-    else void openChip(text);
+
+    if (problem) {
+      setFormError(problem);
+    } else if (chipBlocker(chip)) {
+      chipDoctor(text);
+    } else {
+      void openChip(text);
+    }
   };
 
   return {
@@ -1332,23 +1495,36 @@ function useRootDrop(
   setFormError: (message: string | null) => void
 ) {
   const [windowDrag, setWindowDrag] = useState(false);
+
   const rootDrop = {
     onDragOver: (event: DragEvent<HTMLDivElement>) => {
-      if (!hasFiles(event)) return;
+      if (!hasFiles(event)) {
+        return;
+      }
+
       event.preventDefault();
       setWindowDrag(true);
     },
     onDragLeave: (event: DragEvent<HTMLDivElement>) => {
-      if (!event.relatedTarget) setWindowDrag(false);
+      if (!event.relatedTarget) {
+        setWindowDrag(false);
+      }
     },
     onDrop: (event: DragEvent<HTMLDivElement>) => {
       setWindowDrag(false);
-      if (event.defaultPrevented || !hasFiles(event)) return;
+
+      if (event.defaultPrevented || !hasFiles(event)) {
+        return;
+      }
+
       event.preventDefault();
-      if (!takeDrop(event.dataTransfer))
+
+      if (!takeDrop(event.dataTransfer)) {
         setFormError("Drop images or a folder on the prompt.");
+      }
     },
   };
+
   return { windowDrag, rootDrop };
 }
 
@@ -1374,11 +1550,13 @@ function useOpenFlows({
   const openStarter = async (starter: Starter) => {
     setBusy("starter");
     setFormError(null);
+
     try {
       const { project } = await api.createFromStarter(
         starter.id,
         location ?? undefined
       );
+
       onOpen(project.id);
     } catch (err) {
       setFormError(`Could not open ${starter.name}: ${errorText(err)}`);
@@ -1388,6 +1566,7 @@ function useOpenFlows({
 
   const openSample = async () => {
     setBusy("starter");
+
     try {
       const { project } = await api.createSample(location ?? undefined);
       onOpen(project.id);
@@ -1399,8 +1578,11 @@ function useOpenFlows({
 
   const openProject = (project: Project) => {
     const state = health.get(project.id);
-    if (!state || (state.state !== "install" && state.state !== "failed"))
+
+    if (!state || (state.state !== "install" && state.state !== "failed")) {
       return onOpen(project.id);
+    }
+
     doctor.open({
       problem: healthProblem(
         project,
@@ -1414,6 +1596,7 @@ function useOpenFlows({
         const fresh = (await projectsApi.health()).find(
           (item) => item.projectId === project.id
         );
+
         return (
           !fresh || (fresh.state !== "install" && fresh.state !== "failed")
         );
@@ -1430,9 +1613,11 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
   const [kind, setKind] = useState<ProjectKind>("html");
   const [busy, setBusy] = useState<Busy>(null);
   const [formError, setFormError] = useState<string | null>(null);
+
   const [settingsDraft, setSettingsDraft] = useState(() =>
     toDraft(DEFAULT_SETTINGS)
   );
+
   const [designMd, setDesignMd] = useState("");
   const [designs, setDesigns] = useState(1);
   const maxDesigns = maxVariationsFor(kind);
@@ -1442,16 +1627,20 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
   const prefs = useHomePrefs();
   const pack = findPack(packs.packs, lastPackId);
   const [advancedOpened, setAdvancedOpened] = useState(0);
+
   const [template, setTemplate] = useState<{
     id: string;
     label: string;
     starter: Starter | null;
   } | null>(null);
+
   const chooser = useFolderChooser(setFormError);
   const homeRef = useRef<HTMLDivElement>(null);
+
   const slashKeys = useRef<((e: KeyboardEvent<HTMLElement>) => boolean) | null>(
     null
   );
+
   const { workspaces, addFolder } = useWorkspaces(setFormError);
   const [questions, setQuestions] = useState<ClarifyQuestion[] | null>(null);
   const [query, setQuery] = useState("");
@@ -1462,10 +1651,12 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
   const { projects, listError, loadProjects, searchRef } = useHomeProjects();
   const health = useAppHealth(projects);
   const homeDir = homeOf(workspaces);
+
   const attached = useRef<{
     images: ImageDraft[];
     references: ReferenceDraft[];
   }>({ images: [], references: [] });
+
   const flow = useChipFlow({
     onOpen,
     setBusy,
@@ -1476,6 +1667,7 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
     attached,
     doctor,
   });
+
   const {
     app,
     folderPop,
@@ -1489,6 +1681,7 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
     chipDoctor,
     submitChip,
   } = flow;
+
   const shownAppMenu = usePresence(appMenu ? "menu" : null);
   const templates = useModule(loadTemplates, prefs.templatesShown);
   const extras = useModule(loadExtras, true);
@@ -1496,10 +1689,14 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
   const listed = projects !== null || listError !== null;
   const empty = isEmpty(projects);
   useEffect(() => {
-    if (!listed) return;
+    if (!listed) {
+      return;
+    }
+
     reportAppStart("home");
     prefetchScreensWhenIdle();
   }, [listed]);
+
   const {
     images,
     references,
@@ -1511,15 +1708,19 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
     onPromptPaste,
     dropHandlers,
   } = useComposerAttachments(setFormError, takeDrop);
+
   attached.current = { images, references };
   const { windowDrag, rootDrop } = useRootDrop(takeDrop, setFormError);
+
   const showToast = useCallback(
     (next: Omit<HomeToastState, "id">) => setToast({ ...next, id: Date.now() }),
     []
   );
+
   const clearToast = useCallback(() => setToast(null), []);
 
   const location = locationFor(workspaces, lastLocation);
+
   const { openStarter, openSample, openProject } = useOpenFlows({
     onOpen,
     setBusy,
@@ -1529,18 +1730,24 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
     homeDir,
     doctor,
   });
+
   const setLocation = (path: string | null) =>
     uiStore.set({ lastLocation: path });
+
   const locationLabel = folderLabel(workspaces, location);
 
   const build = async (finalPrompt: string) => {
     const parsed = parseDraft(settingsDraft);
+
     if ("error" in parsed) {
       setFormError(parsed.error);
+
       return;
     }
+
     setBusy("create");
     setFormError(null);
+
     try {
       const project = await createFromHome({
         prompt: finalPrompt,
@@ -1553,6 +1760,7 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
         images,
         references,
       });
+
       onOpen(project.id);
     } catch (err) {
       setFormError(errorText(err));
@@ -1563,25 +1771,42 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
   const create = async (e: FormEvent) => {
     e.preventDefault();
     const text = prompt.trim();
-    if (busy !== null) return;
-    if (app.chip) return submitChip(text);
-    if (!text) return;
-    if (questions !== null) {
-      document.querySelector<HTMLFormElement>("form.clarify")?.requestSubmit();
+
+    if (busy !== null) {
       return;
     }
+
+    if (app.chip) {
+      return submitChip(text);
+    }
+
+    if (!text) {
+      return;
+    }
+
+    if (questions !== null) {
+      document.querySelector<HTMLFormElement>("form.clarify")?.requestSubmit();
+
+      return;
+    }
+
     if (needsQuestions(text)) {
       setBusy("ask");
       setFormError(null);
+
       const asked = await api
         .clarify(text)
         .catch(() => ({ questions: [] as ClarifyQuestion[] }));
+
       setBusy(null);
+
       if (asked.questions.length > 0) {
         setQuestions(asked.questions);
+
         return;
       }
     }
+
     await build(text);
   };
 
@@ -1595,14 +1820,24 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
   const pickTemplate = (picked: HomeTemplate, starter: Starter | null) => {
     if (template?.id === picked.id) {
       setTemplate(null);
+
       return;
     }
+
     setTemplate({ id: picked.id, label: picked.label, starter });
     setPrompt(picked.prompt);
     setQuestions(null);
-    if (picked.kind) setKind(picked.kind);
+
+    if (picked.kind) {
+      setKind(picked.kind);
+    }
+
     const level = picked.level;
-    if (level) setSettingsDraft((d) => ({ ...d, defaultLevel: level }));
+
+    if (level) {
+      setSettingsDraft((d) => ({ ...d, defaultLevel: level }));
+    }
+
     focusPrompt(null, true);
   };
 
@@ -1612,13 +1847,16 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
   };
 
   const modelValue = modelSummary(settingsDraft.model, designCount);
+
   const modelSizes = MODEL_OPTIONS.map((option) =>
     modelSummary(option.id, designCount)
   );
+
   const openAdvanced = () => {
     setAdvancedOpened((n) => n + 1);
     focusIn(".advanced summary");
   };
+
   const plusActions = {
     onAttachFile: () => fileRef.current?.click(),
     onLinkCode: () => void addAppFolder(),
@@ -1629,12 +1867,14 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
     onSkills: openAdvanced,
     onLocation: () => focusIn("#new-project-location"),
   };
+
   const sendBlocker = homeSendBlocker(
     busy,
     prompt,
     questions !== null,
     app.chip
   );
+
   const modelSettings: ModelSettings = {
     model: settingsDraft.model,
     onModel: (model) => setSettingsDraft((d) => ({ ...d, model })),
@@ -1644,7 +1884,9 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
     designs: { value: designCount, max: maxDesigns, onChange: setDesigns },
     onMore: openAdvanced,
   };
+
   const slashMod = useModule(loadSlash, prompt.startsWith("/"));
+
   const chipLead: ReactNode = app.chip ? (
     <AppChipView
       chip={app.chip}
@@ -1653,6 +1895,7 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
       onRemove={app.clear}
     />
   ) : null;
+
   return (
     <div
       className="home"

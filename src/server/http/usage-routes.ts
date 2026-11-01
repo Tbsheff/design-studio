@@ -16,19 +16,26 @@ export function registerUsageRoutes(app: Hono, deps: UsageRouteDeps): void {
   const edges = deps.preview?.usageEdges;
   app.get("/api/projects/:pid/usage", async (c) => {
     const file = c.req.query("file") ?? "";
-    if (!file.trim() || file.length > FILE_MAX)
+
+    if (!file.trim() || file.length > FILE_MAX) {
       throw new BadRequestError(
         "file is required: a source path like components/auth/panel.tsx"
       );
+    }
+
     const project = await deps.projects.get(
       assertSafeId(c.req.param("pid"), "projectId")
     );
+
     const did = c.req.query("directionId");
+
     const direction = did
       ? deps.projects.directionOf(project, assertSafeId(did, "directionId"))
       : deps.projects.mainDirection(project);
+
     const usedAt = c.req.query("usedAt")?.trim().slice(0, FILE_MAX);
     const route = c.req.query("route")?.trim().slice(0, FILE_MAX);
+
     return c.json(
       await componentUsage(project, direction.workTree, file, edges, {
         ...(usedAt ? { usedAt } : {}),

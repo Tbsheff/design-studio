@@ -36,13 +36,19 @@ async function call<T>(
   const headers: Record<string, string> = {
     "x-studio-token": config.studioToken,
   };
-  if (body !== undefined) headers["content-type"] = "application/json";
+
+  if (body !== undefined) {
+    headers["content-type"] = "application/json";
+  }
+
   const response = await app.request(url, {
     method,
     headers,
     body: body === undefined ? undefined : JSON.stringify(body),
   });
+
   expect(response.status, await response.clone().text()).toBe(expected);
+
   return (await response.json()) as T;
 }
 
@@ -71,6 +77,7 @@ describe("telemetry routes", { timeout: 30000 }, () => {
       "/api/projects",
       { prompt: "A page", kind: "html", startRun: false }
     );
+
     await call("POST", "/api/telemetry", {
       kind: "app.start",
       ms: 120,
@@ -103,15 +110,18 @@ describe("telemetry routes", { timeout: 30000 }, () => {
       "GET",
       "/api/telemetry?scope=app"
     );
+
     expect(appOnly.map((sample) => sample.kind)).toEqual([
       "app.start",
       "frame.long",
     ]);
     expect(appOnly[0]).not.toHaveProperty("projectId");
+
     const ofProject = await call<TelemetrySample[]>(
       "GET",
       `/api/telemetry?projectId=${project.id}`
     );
+
     expect(ofProject.map((sample) => sample.kind)).toEqual([
       "edit.commit",
       "run.first_token",

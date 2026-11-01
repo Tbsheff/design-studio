@@ -28,6 +28,7 @@ export function tapFindings(
 ): QualityFinding[] {
   return hits.map((hit) => {
     const smallest = Math.min(hit.width, hit.height);
+
     return {
       check: "tap-target",
       severity: smallest < 24 ? "high" : "medium",
@@ -52,7 +53,10 @@ export function placeholderFindings(
   mode: PlaceholderMode,
   viewport: CheckViewport
 ): QualityFinding[] {
-  if (mode === "off") return [];
+  if (mode === "off") {
+    return [];
+  }
+
   return hits.map((hit) => ({
     check: "placeholder",
     severity: placeholderSeverity(hit, mode),
@@ -105,12 +109,17 @@ function navFinding(
   other: NavSummary,
   viewport: CheckViewport
 ): QualityFinding | null {
-  if (desktop.visibleLinks < 2) return null;
+  if (desktop.visibleLinks < 2) {
+    return null;
+  }
+
   if (
     other.visibleLinks >= Math.min(2, desktop.visibleLinks) ||
     other.menuControl
-  )
+  ) {
     return null;
+  }
+
   return {
     check: "nav-mobile",
     severity: "high",
@@ -126,7 +135,11 @@ export function navFindings(
   results: Pick<RenderCheckResult, "viewport" | "nav">[]
 ): QualityFinding[] {
   const desktop = results.find((result) => result.viewport === "desktop")?.nav;
-  if (!desktop) return [];
+
+  if (!desktop) {
+    return [];
+  }
+
   return results
     .filter((result) => result.viewport !== "desktop" && result.nav)
     .map((result) =>
@@ -153,12 +166,18 @@ export function capFindings(
   const kept: QualityFinding[] = [];
   const counts = new Map<QualityCheckName, number>();
   const omitted: Partial<Record<QualityCheckName, number>> = {};
+
   for (const finding of sortFindings(findings)) {
     const seen = counts.get(finding.check) ?? 0;
     counts.set(finding.check, seen + 1);
-    if (seen < cap) kept.push(finding);
-    else omitted[finding.check] = (omitted[finding.check] ?? 0) + 1;
+
+    if (seen < cap) {
+      kept.push(finding);
+    } else {
+      omitted[finding.check] = (omitted[finding.check] ?? 0) + 1;
+    }
   }
+
   return { findings: kept, omitted };
 }
 
@@ -170,6 +189,10 @@ export function countSeverities(
     medium: 0,
     low: 0,
   };
-  for (const finding of findings) counts[finding.severity] += 1;
+
+  for (const finding of findings) {
+    counts[finding.severity] += 1;
+  }
+
   return counts;
 }

@@ -13,8 +13,12 @@ type StreamKind = "text" | "thinking";
 function lastOpenIndex(parts: readonly RunPart[], kind: StreamKind): number {
   for (let index = parts.length - 1; index >= 0; index -= 1) {
     const part = parts[index];
-    if (part?.kind === kind && part.open) return index;
+
+    if (part?.kind === kind && part.open) {
+      return index;
+    }
   }
+
   return -1;
 }
 
@@ -24,11 +28,14 @@ function appendDelta(
   text: string
 ): RunPart[] {
   const last = parts.at(-1);
-  if (last && last.kind === kind && last.open)
+
+  if (last && last.kind === kind && last.open) {
     return [
       ...parts.slice(0, -1),
       { kind, text: last.text + text, open: true },
     ];
+  }
+
   return [...parts, { kind, text, open: true }];
 }
 
@@ -38,9 +45,14 @@ function closeBlock(
   text: string
 ): RunPart[] {
   const index = lastOpenIndex(parts, kind);
-  if (index === -1) return [...parts, { kind, text }];
+
+  if (index === -1) {
+    return [...parts, { kind, text }];
+  }
+
   const next = [...parts];
   next[index] = { kind, text };
+
   return next;
 }
 
@@ -83,8 +95,14 @@ const PART_EVENT_TYPES = new Set([
 
 export function closeParts(parts: readonly RunPart[]): RunPart[] {
   return parts.flatMap((part): RunPart[] => {
-    if (part.kind !== "text" && part.kind !== "thinking") return [part];
-    if (!part.text) return [];
+    if (part.kind !== "text" && part.kind !== "thinking") {
+      return [part];
+    }
+
+    if (!part.text) {
+      return [];
+    }
+
     return [{ kind: part.kind, text: part.text }];
   });
 }
@@ -94,16 +112,27 @@ export function withFinalText(
   finalText: string
 ): RunPart[] {
   const text = finalText.trim();
-  if (!text) return [...parts];
+
+  if (!text) {
+    return [...parts];
+  }
+
   const texts = parts.filter(
     (part): part is Extract<RunPart, { kind: "text" }> => part.kind === "text"
   );
-  if (texts.some((part) => part.text.trim() === text)) return [...parts];
+
+  if (texts.some((part) => part.text.trim() === text)) {
+    return [...parts];
+  }
+
   const last = texts.at(-1);
+
   if (last && text.startsWith(last.text.trim())) {
     const rest = text.slice(last.text.trim().length).trim();
+
     return rest ? [...parts, { kind: "text", text: rest }] : [...parts];
   }
+
   return [...parts, { kind: "text", text }];
 }
 

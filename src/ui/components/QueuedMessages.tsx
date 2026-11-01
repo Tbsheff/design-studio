@@ -8,10 +8,17 @@ function move(
   from: number,
   to: number
 ): QueuedMessage[] {
-  if (to < 0 || to >= items.length || from === to) return items;
+  if (to < 0 || to >= items.length || from === to) {
+    return items;
+  }
+
   const next = [...items];
   const [item] = next.splice(from, 1);
-  if (item) next.splice(to, 0, item);
+
+  if (item) {
+    next.splice(to, 0, item);
+  }
+
   return next;
 }
 
@@ -36,18 +43,28 @@ function QueuedItem({
 }) {
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(item.text);
+
   const finish = (save: boolean) => {
     setEditing(false);
-    if (save && text.trim() && text !== item.text) onChange(text);
-    else setText(item.text);
+
+    if (save && text.trim() && text !== item.text) {
+      onChange(text);
+    } else {
+      setText(item.text);
+    }
   };
+
   const onKey = (event: KeyboardEvent<HTMLLIElement>) => {
-    if (editing || !event.altKey) return;
+    if (editing || !event.altKey) {
+      return;
+    }
+
     if (event.key === "ArrowUp" || event.key === "ArrowDown") {
       event.preventDefault();
       onMove(index + (event.key === "ArrowUp" ? -1 : 1));
     }
   };
+
   return (
     <li
       className="queued-item"
@@ -126,7 +143,11 @@ export function QueuedMessages({
   onChange: (items: QueuedMessage[]) => void;
 }) {
   const [dragFrom, setDragFrom] = useState<number | null>(null);
-  if (items.length === 0) return null;
+
+  if (items.length === 0) {
+    return null;
+  }
+
   return (
     <div className="queued" aria-label="Queued messages" role="group">
       <span className="queued-head">Queued · sent at the next step</span>
@@ -150,7 +171,10 @@ export function QueuedMessages({
             onMove={(to) => onChange(move(items, index, to))}
             onDragStart={() => setDragFrom(index)}
             onDropAt={() => {
-              if (dragFrom !== null) onChange(move(items, dragFrom, index));
+              if (dragFrom !== null) {
+                onChange(move(items, dragFrom, index));
+              }
+
               setDragFrom(null);
             }}
           />

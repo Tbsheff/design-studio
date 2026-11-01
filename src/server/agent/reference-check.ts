@@ -44,56 +44,83 @@ function gifSize(bytes: Buffer): Size | null {
 
 function jpegSize(bytes: Buffer): Size | null {
   let at = 2;
+
   while (at + 9 < bytes.length && bytes[at] === 0xff) {
     const marker = bytes[at + 1] ?? 0;
     const length = bytes.readUInt16BE(at + 2);
+
     if (
       marker >= 0xc0 &&
       marker <= 0xcf &&
       marker !== 0xc4 &&
       marker !== 0xc8 &&
       marker !== 0xcc
-    )
+    ) {
       return {
         height: bytes.readUInt16BE(at + 5),
         width: bytes.readUInt16BE(at + 7),
       };
+    }
+
     at += 2 + length;
   }
+
   return null;
 }
 
 function webpSize(bytes: Buffer): Size | null {
-  if (bytes.length < 30 || bytes.toString("ascii", 8, 12) !== "WEBP")
+  if (bytes.length < 30 || bytes.toString("ascii", 8, 12) !== "WEBP") {
     return null;
+  }
+
   const chunk = bytes.toString("ascii", 12, 16);
-  if (chunk === "VP8X")
+
+  if (chunk === "VP8X") {
     return {
       width: 1 + bytes.readUIntLE(24, 3),
       height: 1 + bytes.readUIntLE(27, 3),
     };
+  }
+
   if (chunk === "VP8L") {
     const bits = bytes.readUInt32LE(21);
+
     return { width: (bits & 0x3fff) + 1, height: ((bits >> 14) & 0x3fff) + 1 };
   }
-  if (chunk === "VP8 ")
+
+  if (chunk === "VP8 ") {
     return {
       width: bytes.readUInt16LE(26) & 0x3fff,
       height: bytes.readUInt16LE(28) & 0x3fff,
     };
+  }
+
   return null;
 }
 
 export function pictureSize(bytes: Buffer, mime: string): Size | null {
-  if (mime === "image/png") return pngSize(bytes);
-  if (mime === "image/gif") return gifSize(bytes);
-  if (mime === "image/jpeg") return jpegSize(bytes);
-  if (mime === "image/webp") return webpSize(bytes);
+  if (mime === "image/png") {
+    return pngSize(bytes);
+  }
+
+  if (mime === "image/gif") {
+    return gifSize(bytes);
+  }
+
+  if (mime === "image/jpeg") {
+    return jpegSize(bytes);
+  }
+
+  if (mime === "image/webp") {
+    return webpSize(bytes);
+  }
+
   return null;
 }
 
 export function mimeOfPath(file: string): string | null {
   const ext = path.extname(file).slice(1).toLowerCase();
+
   const map: Record<string, string> = {
     png: "image/png",
     jpg: "image/jpeg",
@@ -101,6 +128,7 @@ export function mimeOfPath(file: string): string | null {
     gif: "image/gif",
     webp: "image/webp",
   };
+
   return map[ext] ?? null;
 }
 
@@ -108,6 +136,7 @@ export function renderSize(natural: Size, frameWidth?: number): Size {
   const width =
     frameWidth ??
     Math.round(natural.width / Math.ceil(natural.width / REFERENCE_MAX_WIDTH));
+
   return {
     width,
     height: Math.max(
@@ -130,8 +159,10 @@ async function decodeInBrowser(
     page,
     `<!doctype html><style>html,body{margin:0;background:#fff}img{display:block;width:${size.width}px;height:${size.height}px}</style><img src="${src}">`
   );
+
   try {
     await preview.screenshot(pathToFileURL(page).href, size, out);
+
     return topOf(PNG.sync.read(await readFile(out)), size.height);
   } finally {
     await Promise.all([rm(page, { force: true }), rm(out, { force: true })]);
@@ -147,17 +178,23 @@ async function loadReference(
 ): Promise<PNG> {
   const bytes = await readFile(file);
   const natural = pictureSize(bytes, mime);
-  if (!natural || natural.width < 1 || natural.height < 1)
+
+  if (!natural || natural.width < 1 || natural.height < 1) {
     throw new Error(
       `${path.basename(file)} is not a PNG, JPEG, GIF or WebP picture the studio can read.`
     );
+  }
+
   const size = renderSize(natural, frameWidth);
+
   if (mime === "image/png") {
     const png = PNG.sync.read(bytes);
+
     return png.width === size.width && png.height === size.height
       ? png
       : resizePng(png, size.width, size.height);
   }
+
   return decodeInBrowser(preview, file, size, scratch);
 }
 
@@ -177,6 +214,7 @@ export async function compareToReference(
   const started = Date.now();
   await mkdir(input.outDir, { recursive: true });
   const scratch = path.join(input.outDir, input.stem);
+
   const reference = await loadReference(
     input.preview,
     input.file,
@@ -184,23 +222,28 @@ export async function compareToReference(
     input.frameWidth,
     scratch
   );
+
   const renderPath = `${scratch}-render.png`;
   await input.preview.screenshot(
     input.url,
     { width: reference.width, height: reference.height },
     renderPath
   );
+
   const shot = topOf(
     PNG.sync.read(await readFile(renderPath)),
     reference.height
   );
+
   const render =
     shot.width === reference.width && shot.height === reference.height
       ? shot
       : resizePng(shot, reference.width, reference.height);
+
   const diff = diffPictures(reference, render);
   const diffPath = `${scratch}-diff.png`;
   await writeFile(diffPath, pictureSheet(reference, render, diff));
+
   return {
     score: diff.score,
     contentScore: diff.contentScore,
@@ -221,6 +264,7 @@ export function scoreLines(score: ReferenceScore, listed = 4): string[] {
       (region) => region.contentDiffersPct >= 10 || region.edgeMatchPct < 85
     )
     .slice(0, listed);
+
   return worst.map(
     (region) =>
       `- ${region.name} (x ${region.x}-${region.x + region.width}, y ${region.y}-${region.y + region.height}): ${region.contentDiffersPct}% of content differs, edges ${region.edgeMatchPct}/100`
@@ -266,11 +310,19 @@ export interface ReferencePassInput {
 function passTarget(
   input: ReferencePassInput
 ): { url: string; attachment: Attachment; frameWidth?: number } | null {
-  if (input.ctx.request.mode !== "edit") return null;
+  if (input.ctx.request.mode !== "edit") {
+    return null;
+  }
+
   const attachment = referenceAttachment(input.ctx.attachments);
   const url = defaultShotTarget(input.ctx)?.url;
-  if (!attachment || !url) return null;
+
+  if (!attachment || !url) {
+    return null;
+  }
+
   const frameWidth = input.ctx.target?.width;
+
   return { url, attachment, ...(frameWidth ? { frameWidth } : {}) };
 }
 
@@ -286,8 +338,13 @@ export async function runReferencePass(
   input: ReferencePassInput
 ): Promise<ReferenceRecord | null> {
   const target = passTarget(input);
-  if (!target) return null;
+
+  if (!target) {
+    return null;
+  }
+
   const name = plainAttachmentName(target.attachment.name);
+
   const compare = (stem: string) =>
     compareToReference({
       preview: input.preview,
@@ -298,21 +355,31 @@ export async function runReferencePass(
       outDir: input.runsDir,
       stem: `${input.runId}-${stem}`,
     });
+
   try {
     const first = await compare("reference");
+
     const record: ReferenceRecord = {
       score: first.score,
       fixLoop: false,
       diffPath: first.diffPath,
       name,
     };
-    if (first.score >= REFERENCE_LOW_SCORE || !input.continueWith)
+
+    if (first.score >= REFERENCE_LOW_SCORE || !input.continueWith) {
       return record;
+    }
+
     const ran = await input.continueWith(referenceFixPrompt(first, name), [
       await sheetImage(first),
     ]);
-    if (!ran) return record;
+
+    if (!ran) {
+      return record;
+    }
+
     const second = await compare("reference-after");
+
     return {
       score: second.score,
       before: first.score,
@@ -323,6 +390,7 @@ export async function runReferencePass(
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.warn(`[agent] reference check failed: ${message}`);
+
     return { score: null, fixLoop: false, name, error: message.slice(0, 300) };
   }
 }

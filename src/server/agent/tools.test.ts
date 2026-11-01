@@ -18,14 +18,16 @@ import {
 } from "./tools.js";
 
 const roots: string[] = [];
+
 const PNG = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
   "base64"
 );
 
 afterEach(async () => {
-  while (roots.length)
+  while (roots.length) {
     await rm(roots.pop() as string, { recursive: true, force: true });
+  }
 });
 
 async function deps(requests: TileRequest[]): Promise<StudioToolDeps> {
@@ -36,7 +38,11 @@ async function deps(requests: TileRequest[]): Promise<StudioToolDeps> {
     requests.push(request);
     const paths = [`${request.outPrefix}-1.png`, `${request.outPrefix}-2.png`];
     await mkdir(path.dirname(request.outPrefix), { recursive: true });
-    for (const file of paths) await writeFile(file, PNG);
+
+    for (const file of paths) {
+      await writeFile(file, PNG);
+    }
+
     return {
       paths,
       pageHeight: 5000,
@@ -44,6 +50,7 @@ async function deps(requests: TileRequest[]): Promise<StudioToolDeps> {
       to: request.from + 2 * request.tileHeight,
     };
   };
+
   const ctx: AgentRunContext = {
     project: temp.project,
     direction: temp.direction,
@@ -52,6 +59,7 @@ async function deps(requests: TileRequest[]): Promise<StudioToolDeps> {
     designMd: null,
     previewUrl: "http://preview.test/index.html",
   };
+
   return { preview, ctx, runsDir: path.join(temp.root, "runs"), runId: "r1" };
 }
 
@@ -59,11 +67,13 @@ describe("screenshot tool", () => {
   it("returns MCP image blocks the model can see, at the 390px mobile size, from an offset", async () => {
     const requests: TileRequest[] = [];
     const d = await deps(requests);
+
     const result = await takeScreenshot(
       d,
       { shots: 0, checks: 0, mobileShots: 1 },
       { viewport: "mobile", from: 1200 }
     );
+
     const [first, second, text] = result.content;
     expect(first).toEqual({
       type: "image",
@@ -90,10 +100,12 @@ describe("screenshot tool", () => {
     const requests: TileRequest[] = [];
     const d = await deps(requests);
     const counters = { shots: 0, checks: 0 };
+
     const first = await takeScreenshot(d, counters, {
       viewport: "mobile",
       from: 1500,
     });
+
     await takeScreenshot(d, counters, { viewport: "mobile", from: 1500 });
     expect(requests.map((request) => request.from)).toEqual([0, 1500]);
     expect((first.content.at(-1) as { text: string }).text).toContain(
@@ -103,11 +115,13 @@ describe("screenshot tool", () => {
 
   it("says so when there is no preview", async () => {
     const d = await deps([]);
+
     const result = await takeScreenshot(
       { ...d, ctx: { ...d.ctx, previewUrl: null } },
       { shots: 0, checks: 0 },
       { viewport: "desktop", from: 0 }
     );
+
     expect(result).toMatchObject({ isError: true });
   });
 });
@@ -118,9 +132,11 @@ describe("render_check tool", () => {
     const counters = { shots: 0, checks: 0 };
     await runRenderCheck(d, counters);
     await runRenderCheck(d, counters);
+
     const saved = JSON.parse(
       await readFile(path.join(d.runsDir, "r1-check-2.json"), "utf-8")
     );
+
     expect(saved).toHaveLength(2);
     expect(saved[0]).toMatchObject({
       viewport: "desktop",
@@ -136,6 +152,7 @@ describe("render_check quality report", () => {
     const seen: unknown[] = [];
     d.preview.renderCheck = async (_project, _direction, options) => {
       seen.push(options);
+
       const base = {
         width: 1440,
         height: 900,
@@ -147,6 +164,7 @@ describe("render_check quality report", () => {
         layoutTotal: 0,
         screenshotPath: "",
       };
+
       return [
         {
           ...base,
@@ -172,10 +190,12 @@ describe("render_check quality report", () => {
         },
       ];
     };
+
     const config = resolveRunConfig(
       { ...d.ctx.project.settings, maxBudgetUsd: 1.5 },
       "polish"
     );
+
     const run: RunToolState = {
       config,
       spentUsd: () => 1.2,
@@ -185,6 +205,7 @@ describe("render_check quality report", () => {
       lastChecks: [],
       baseline: null,
     };
+
     const result = await runRenderCheck({ ...d, run }, { shots: 0, checks: 0 });
     const text = (result.content[0] as { text: string }).text;
     expect(seen[0]).toMatchObject({
@@ -199,6 +220,7 @@ describe("render_check quality report", () => {
     ).toEqual(["a11y", "nav-mobile"]);
     expect(body.timingsMs.total).toBeGreaterThanOrEqual(0);
     expect(text).toContain("Budget: about $1.30 of $1.50 used, 13% left.");
+
     const unlimited = await runRenderCheck(
       {
         ...d,
@@ -209,6 +231,7 @@ describe("render_check quality report", () => {
       },
       { shots: 0, checks: 0 }
     );
+
     expect((unlimited.content[0] as { text: string }).text).not.toMatch(
       /Budget|\nnull/
     );
@@ -235,6 +258,7 @@ describe("render_check in wireframe runs", () => {
     const seen: unknown[] = [];
     d.preview.renderCheck = async (_project, _direction, options) => {
       seen.push(options);
+
       const base = {
         width: 1440,
         height: 900,
@@ -246,6 +270,7 @@ describe("render_check in wireframe runs", () => {
         layoutTotal: 0,
         screenshotPath: "",
       };
+
       return [
         {
           ...base,
@@ -260,7 +285,9 @@ describe("render_check in wireframe runs", () => {
         },
       ];
     };
+
     const config = resolveRunConfig(d.ctx.project.settings, "wireframe");
+
     const run: RunToolState = {
       config,
       spentUsd: () => 0,
@@ -270,6 +297,7 @@ describe("render_check in wireframe runs", () => {
       lastChecks: [],
       baseline: null,
     };
+
     const result = await runRenderCheck({ ...d, run }, { shots: 0, checks: 0 });
     const text = (result.content[0] as { text: string }).text;
     expect(seen[0]).toMatchObject({ quality: false, placeholder: "off" });
@@ -312,11 +340,13 @@ describe("design system tools", () => {
   it("shoots the dark theme when asked and says so", async () => {
     const requests: TileRequest[] = [];
     const d = await deps(requests);
+
     const result = await takeScreenshot(
       d,
       { shots: 0, checks: 0 },
       { viewport: "desktop", from: 0, theme: "dark" }
     );
+
     expect(requests[0]).toMatchObject({ theme: "dark" });
     expect(requests[0]?.outPrefix).toBe(
       path.join(d.runsDir, "r1-shot-1-desktop-dark")
@@ -336,6 +366,7 @@ describe("design system tools", () => {
     const d = await deps([]);
     const refused = await runDesignSystemCheck(d);
     expect(refused).toMatchObject({ isError: true });
+
     const backing = {
       ...d,
       ctx: {
@@ -343,6 +374,7 @@ describe("design system tools", () => {
         project: { ...d.ctx.project, designSystemFor: "user-kit" },
       },
     };
+
     await writeTestDraft(backing.ctx.direction.workTree, { todos: 1 });
     const failing = await runDesignSystemCheck(backing);
     expect((failing.content[0] as { text: string }).text).toMatch(

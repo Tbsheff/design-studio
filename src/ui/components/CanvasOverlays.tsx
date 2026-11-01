@@ -21,27 +21,41 @@ export function PresentLayer({
   const root = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = root.current;
-    if (fullscreen && el?.requestFullscreen)
+
+    if (fullscreen && el?.requestFullscreen) {
       void el.requestFullscreen().catch(() => undefined);
+    }
+
     const onKey = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
+      if (event.key !== "Escape") {
+        return;
+      }
+
       event.preventDefault();
       event.stopImmediatePropagation();
       onClose();
     };
+
     const onFullscreen = () => {
-      if (fullscreen && !document.fullscreenElement) onClose();
+      if (fullscreen && !document.fullscreenElement) {
+        onClose();
+      }
     };
+
     window.addEventListener("keydown", onKey, true);
     document.addEventListener("fullscreenchange", onFullscreen);
     root.current?.querySelector<HTMLButtonElement>(".present-close")?.focus();
+
     return () => {
       window.removeEventListener("keydown", onKey, true);
       document.removeEventListener("fullscreenchange", onFullscreen);
-      if (document.fullscreenElement)
+
+      if (document.fullscreenElement) {
         void document.exitFullscreen().catch(() => undefined);
+      }
     };
   }, [fullscreen, onClose]);
+
   return (
     <div
       ref={root}
@@ -83,22 +97,32 @@ export function TweakPrompt({
   useEffect(() => {
     const onDown = (event: MouseEvent) => {
       const target = event.target as Element;
+
       if (
         !root.current?.contains(target) &&
         !target.closest?.('[aria-label="Tweak"]')
-      )
+      ) {
         onClose();
+      }
     };
+
     document.addEventListener("mousedown", onDown);
+
     return () => document.removeEventListener("mousedown", onDown);
   }, [onClose]);
+
   const send = () => {
     const prompt = text.trim();
-    if (!prompt) return;
+
+    if (!prompt) {
+      return;
+    }
+
     onSend(prompt);
     setText("");
     onClose();
   };
+
   return (
     <form
       ref={root}
@@ -117,7 +141,10 @@ export function TweakPrompt({
         value={text}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={(e) => {
-          if (e.key !== "Escape") return;
+          if (e.key !== "Escape") {
+            return;
+          }
+
           e.preventDefault();
           e.stopPropagation();
           onClose();
@@ -150,12 +177,17 @@ export function FrameSnapLayer({
     frameSnapStore.subscribe,
     frameSnapStore.get
   );
-  if (view.guides.length === 0 && view.spacing.length === 0) return null;
+
+  if (view.guides.length === 0 && view.spacing.length === 0) {
+    return null;
+  }
+
   const style = {
     left: -origin.x,
     top: -origin.y,
     translate: `${view.shift.x}px ${view.shift.y}px`,
   };
+
   return (
     <div
       className="snap-guides frame-snap"
@@ -193,20 +225,30 @@ export function MarqueeLayer({
   useEffect(
     () =>
       listen((message) => {
-        if (message.type === "marquee") setRect(message.rect);
-        else if (message.type === "ready" || message.type === "mode-exited")
+        if (message.type === "marquee") {
+          setRect(message.rect);
+        } else if (message.type === "ready" || message.type === "mode-exited") {
           setRect(null);
+        }
       }),
     [listen]
   );
   const shown = rect !== null;
   useEffect(() => {
-    if (!shown) return;
+    if (!shown) {
+      return;
+    }
+
     const clear = () => setRect(null);
     window.addEventListener("pointerup", clear);
+
     return () => window.removeEventListener("pointerup", clear);
   }, [shown]);
-  if (!rect) return null;
+
+  if (!rect) {
+    return null;
+  }
+
   return (
     <div className="overlay" aria-hidden="true">
       <div

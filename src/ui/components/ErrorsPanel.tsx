@@ -34,6 +34,7 @@ function countText(n: number): string {
 export function fixPrompt(e: BuildError): string {
   const where = e.file ? ` in ${e.file}${e.line ? `:${e.line}` : ""}` : "";
   const what = e.source === "build" ? "build error" : `${e.source} error`;
+
   return `Fix this ${what}${where}:\n\n${e.message}`;
 }
 
@@ -76,11 +77,17 @@ function ErrorsChip({
 export function ErrorsPanel({ errors, onSendToAgent, onClear, pane }: Props) {
   const [open, setOpen] = useState(false);
   useEffect(() => {
-    if (pane === "design") setOpen(false);
+    if (pane === "design") {
+      setOpen(false);
+    }
   }, [pane]);
   const shown = errors.filter((e) => !isDevNoise(e));
-  if (shown.length === 0) return null;
-  if (!open)
+
+  if (shown.length === 0) {
+    return null;
+  }
+
+  if (!open) {
     return (
       <ErrorsChip
         count={shown.length}
@@ -88,6 +95,8 @@ export function ErrorsPanel({ errors, onSendToAgent, onClear, pane }: Props) {
         onClear={onClear}
       />
     );
+  }
+
   return (
     <div className="errors" role="region" aria-label="Preview errors">
       <div className="section-head">

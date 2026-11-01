@@ -14,7 +14,11 @@ const ACTIVE_GLOBAL = `SELECT p.data FROM preferences p LEFT JOIN retired r ON r
 
 export function tasteHome(env: NodeJS.ProcessEnv = process.env): string {
   const raw = env.DESIGN_MEMORY_HOME ?? "~/.design-memory";
-  if (raw === "~") return os.homedir();
+
+  if (raw === "~") {
+    return os.homedir();
+  }
+
   return raw.startsWith("~/")
     ? path.join(os.homedir(), raw.slice(2))
     : path.resolve(raw);
@@ -23,8 +27,11 @@ export function tasteHome(env: NodeJS.ProcessEnv = process.env): string {
 function toRule(data: string): TasteRule | null {
   const parsed = JSON.parse(data) as Partial<TasteRule>;
   const rule = typeof parsed.rule === "string" ? parsed.rule.trim() : "";
-  if (!rule || (parsed.kind !== "prefer" && parsed.kind !== "avoid"))
+
+  if (!rule || (parsed.kind !== "prefer" && parsed.kind !== "avoid")) {
     return null;
+  }
+
   return {
     kind: parsed.kind,
     area:
@@ -34,13 +41,22 @@ function toRule(data: string): TasteRule | null {
 }
 
 export function loadTasteRules(home: string = tasteHome()): TasteRule[] {
-  if (process.env.STUDIO_TASTE === "0") return [];
+  if (process.env.STUDIO_TASTE === "0") {
+    return [];
+  }
+
   const file = path.join(home, "library.sqlite3");
-  if (!existsSync(file)) return [];
+
+  if (!existsSync(file)) {
+    return [];
+  }
+
   let db: DatabaseSync | null = null;
+
   try {
     db = new DatabaseSync(file, { readOnly: true });
     const rows = db.prepare(ACTIVE_GLOBAL).all() as Array<{ data: string }>;
+
     return rows
       .map((row) => toRule(row.data))
       .filter((rule): rule is TasteRule => rule !== null);
@@ -48,6 +64,7 @@ export function loadTasteRules(home: string = tasteHome()): TasteRule[] {
     console.warn(
       `[agent] taste library not loaded: ${error instanceof Error ? error.message : String(error)}`
     );
+
     return [];
   } finally {
     db?.close();

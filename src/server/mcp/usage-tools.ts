@@ -58,14 +58,25 @@ const getComponentUsage = defineTool(
   },
   async (deps, input) => {
     const query = new URLSearchParams({ file: input.file });
-    if (input.directionId) query.set("directionId", input.directionId);
-    if (input.usedAt) query.set("usedAt", input.usedAt);
-    if (input.route) query.set("route", input.route);
+
+    if (input.directionId) {
+      query.set("directionId", input.directionId);
+    }
+
+    if (input.usedAt) {
+      query.set("usedAt", input.usedAt);
+    }
+
+    if (input.route) {
+      query.set("route", input.route);
+    }
+
     const usage = await studioCall<ComponentUsage>(
       deps,
       "GET",
       `/api/projects/${encodeURIComponent(input.projectId)}/usage?${query.toString()}`
     );
+
     return { result: ok(usage) };
   }
 );

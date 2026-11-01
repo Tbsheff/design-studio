@@ -63,10 +63,13 @@ async function existingFolder(
     target.includes("\0") ||
     target.length > MAX_PATH_LENGTH ||
     !path.isAbsolute(target)
-  )
+  ) {
     return null;
+  }
+
   try {
     const real = await realpath(target);
+
     return (await stat(real)).isDirectory() ? real : null;
   } catch {
     return null;
@@ -78,6 +81,7 @@ function cleanTitle(title: string | undefined): string {
     .replace(/[\u0000-\u001f\u007f]/g, " ")
     .trim()
     .slice(0, MAX_TITLE_LENGTH);
+
   return text || "Choose a folder";
 }
 
@@ -108,40 +112,57 @@ export function createFolderPicker(
         (error, stdout, stderr) => {
           if (!error) {
             resolve({ status: "picked", path: stdout.trim() });
+
             return;
           }
-          if (error.killed || error.signal === "SIGTERM")
+
+          if (error.killed || error.signal === "SIGTERM") {
             resolve({ status: "timeout" });
-          else if (
+          } else if (
             USER_CANCELED.test(stderr) ||
             USER_CANCELED.test(error.message)
-          )
+          ) {
             resolve({ status: "canceled" });
-          else
+          } else {
             resolve({
               status: "failed",
               error: stderr.trim() || error.message,
             });
+          }
         }
       );
     });
 
   return {
     async pick(input) {
-      if (platform !== "darwin") return { status: "unsupported" };
-      if (open) return { status: "busy" };
+      if (platform !== "darwin") {
+        return { status: "unsupported" };
+      }
+
+      if (open) {
+        return { status: "busy" };
+      }
+
       open = true;
+
       try {
         const start = await existingFolder(input.defaultPath);
+
         const result = await runScript(
           start ? [cleanTitle(input.title), start] : [cleanTitle(input.title)]
         );
-        if (result.status !== "picked") return result;
+
+        if (result.status !== "picked") {
+          return result;
+        }
+
         const chosen =
           result.path.length > 1
             ? result.path.replace(/\/+$/, "")
             : result.path;
+
         const real = await existingFolder(chosen);
+
         return real
           ? { status: "picked", path: real }
           : { status: "failed", error: `picked folder not found: ${chosen}` };

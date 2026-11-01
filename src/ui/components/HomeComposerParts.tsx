@@ -17,15 +17,20 @@ export const IMAGE_TYPES = [
   "image/gif",
   "image/webp",
 ];
+
 export const MAX_IMAGES = 4;
 export const MAX_REFERENCES = 3;
 export const MAX_IMAGE_BYTES = Math.floor(3.75 * 1024 * 1024);
 
 export function imageProblem(file: File): string | null {
-  if (!IMAGE_TYPES.includes(file.type))
+  if (!IMAGE_TYPES.includes(file.type)) {
     return `${file.name} is not a PNG, JPEG, GIF or WebP image.`;
-  if (file.size > MAX_IMAGE_BYTES)
+  }
+
+  if (file.size > MAX_IMAGE_BYTES) {
     return `${file.name} is larger than 3.75 MB. Attach a smaller image.`;
+  }
+
   return null;
 }
 
@@ -64,9 +69,14 @@ export interface ReferenceDraft {
 
 export function soleUrl(text: string): ReferenceDraft | null {
   const trimmed = text.trim();
-  if (!/^https?:\/\/\S+$/i.test(trimmed)) return null;
+
+  if (!/^https?:\/\/\S+$/i.test(trimmed)) {
+    return null;
+  }
+
   try {
     const url = new URL(trimmed);
+
     return { url: url.href, host: url.host.replace(/^www\./, "") };
   } catch {
     return null;
@@ -90,7 +100,10 @@ export function ComposerChips({
   onRemoveImage: (id: string) => void;
   onRemoveReference: (url: string) => void;
 }) {
-  if (!lead && images.length === 0 && references.length === 0) return null;
+  if (!lead && images.length === 0 && references.length === 0) {
+    return null;
+  }
+
   return (
     <ul className="home-chips" aria-label="Attached to this prompt">
       {lead}
@@ -152,17 +165,31 @@ export function useComposerAttachments(
   );
 
   const addImages = (picked: File[]) => {
-    if (picked.length === 0) return;
+    if (picked.length === 0) {
+      return;
+    }
+
     const problems = picked
       .map(imageProblem)
       .filter((problem): problem is string => problem !== null);
-    if (problems.length > 0) setFormError(problems.join(" "));
+
+    if (problems.length > 0) {
+      setFormError(problems.join(" "));
+    }
+
     const files = picked.filter((file) => imageProblem(file) === null);
-    if (files.length === 0) return;
+
+    if (files.length === 0) {
+      return;
+    }
+
     setImages((current) => {
       const room = Math.max(0, MAX_IMAGES - current.length);
-      if (files.length > room)
+
+      if (files.length > room) {
         setFormError(`You can attach up to ${MAX_IMAGES} images.`);
+      }
+
       return [
         ...current,
         ...files.slice(0, room).map((file) => ({
@@ -176,11 +203,16 @@ export function useComposerAttachments(
 
   const addReference = (reference: ReferenceDraft) => {
     setReferences((current) => {
-      if (current.some((item) => item.url === reference.url)) return current;
-      if (current.length >= MAX_REFERENCES) {
-        setFormError(`You can add up to ${MAX_REFERENCES} reference pages.`);
+      if (current.some((item) => item.url === reference.url)) {
         return current;
       }
+
+      if (current.length >= MAX_REFERENCES) {
+        setFormError(`You can add up to ${MAX_REFERENCES} reference pages.`);
+
+        return current;
+      }
+
       return [...current, reference];
     });
   };
@@ -188,18 +220,26 @@ export function useComposerAttachments(
   const removeImage = (id: string) =>
     setImages((current) => {
       const gone = current.find((image) => image.id === id);
-      if (gone) URL.revokeObjectURL(gone.url);
+
+      if (gone) {
+        URL.revokeObjectURL(gone.url);
+      }
+
       return current.filter((image) => image.id !== id);
     });
 
   const onPromptPaste = (event: ClipboardEvent<HTMLTextAreaElement>) => {
     const files = imageFiles(event.clipboardData.files);
+
     if (files.length > 0) {
       event.preventDefault();
       addImages(files);
+
       return;
     }
+
     const reference = soleUrl(event.clipboardData.getData("text/plain"));
+
     if (reference) {
       event.preventDefault();
       addReference(reference);
@@ -211,38 +251,56 @@ export function useComposerAttachments(
       ![...event.dataTransfer.types].some(
         (type) => type === "Files" || type === "text/uri-list"
       )
-    )
+    ) {
       return;
+    }
+
     event.preventDefault();
     event.dataTransfer.dropEffect = "copy";
-    if (!dragging) setDragging(true);
+
+    if (!dragging) {
+      setDragging(true);
+    }
   };
 
   const onDrop = (event: DragEvent<HTMLFormElement>) => {
     event.preventDefault();
     setDragging(false);
-    if (onFolder?.(event.dataTransfer)) return;
-    const files = Array.from(event.dataTransfer.files);
-    if (files.length > 0) {
-      addImages(files);
+
+    if (onFolder?.(event.dataTransfer)) {
       return;
     }
+
+    const files = Array.from(event.dataTransfer.files);
+
+    if (files.length > 0) {
+      addImages(files);
+
+      return;
+    }
+
     const reference = soleUrl(
       event.dataTransfer.getData("text/uri-list").split("\n")[0] ?? ""
     );
-    if (reference) addReference(reference);
+
+    if (reference) {
+      addReference(reference);
+    }
   };
 
   const removeReference = (url: string) =>
     setReferences((current) => current.filter((item) => item.url !== url));
+
   const dropHandlers = {
     onDragOver,
     onDrop,
     onDragLeave: (event: DragEvent<HTMLFormElement>) => {
-      if (!event.currentTarget.contains(event.relatedTarget as Node | null))
+      if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
         setDragging(false);
+      }
     },
   };
+
   return {
     images,
     references,

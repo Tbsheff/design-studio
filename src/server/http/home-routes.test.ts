@@ -57,6 +57,7 @@ let shots: number;
 function solidPng(width: number, height: number, shade: number): Buffer {
   const png = new PNG({ width, height });
   png.data.fill(shade);
+
   return PNG.sync.write(png);
 }
 
@@ -72,6 +73,7 @@ function fakePreview(): PreviewService {
         file,
         solidPng(request.viewport.width, request.viewport.height, shots * 40)
       );
+
       return {
         paths: [file],
         pageHeight: request.viewport.height,
@@ -86,11 +88,13 @@ function fakeRunner(): AgentRunner {
   return {
     start(ctx) {
       started.push(ctx);
+
       const handle: RunHandle = {
         runId: `run${started.length}`,
         cancel: () => undefined,
         done: new Promise(() => undefined),
       };
+
       return handle;
     },
     get: () => undefined,
@@ -105,7 +109,9 @@ function build(extra: Partial<ServerConfig> = {}): void {
   bus = observed.bus;
   const thumbnails = createThumbnailService({ projects, preview, versions });
   observed.observe((event) => {
-    if (wantsThumbnail(event)) thumbnails.schedule(event.projectId);
+    if (wantsThumbnail(event)) {
+      thumbnails.schedule(event.projectId);
+    }
   });
   app = createApp({
     config: { ...config, ...extra },
@@ -127,13 +133,19 @@ async function call<T>(
   const headers: Record<string, string> = {
     "x-studio-token": config.studioToken,
   };
-  if (body !== undefined) headers["content-type"] = "application/json";
+
+  if (body !== undefined) {
+    headers["content-type"] = "application/json";
+  }
+
   const response = await app.request(url, {
     method,
     headers,
     body: body === undefined ? undefined : JSON.stringify(body),
   });
+
   expect(response.status, await response.clone().text()).toBe(expected);
+
   return (response.headers.get("content-type") ?? "").includes("json")
     ? ((await response.json()) as T)
     : (undefined as T);
@@ -152,10 +164,18 @@ async function waitFor<T>(
   timeoutMs = 5000
 ): Promise<T> {
   const deadline = Date.now() + timeoutMs;
+
   for (;;) {
     const value = await read();
-    if (value) return value;
-    if (Date.now() > deadline) throw new Error("timed out");
+
+    if (value) {
+      return value;
+    }
+
+    if (Date.now() > deadline) {
+      throw new Error("timed out");
+    }
+
     await new Promise((resolve) => setTimeout(resolve, 25));
   }
 }
@@ -188,20 +208,26 @@ describe("home routes", { timeout: 30000 }, () => {
       "form",
       "docs",
     ]);
+
     for (const { id } of list) {
       const project = await fromStarter(id);
+
       const html = await readFile(
         path.join(projects.mainDirection(project).workTree, "index.html"),
         "utf-8"
       );
+
       expect(html).toContain("<h1");
+
       const history = await call<Version[]>(
         "GET",
         `/api/projects/${project.id}/d/main/versions`
       );
+
       expect(history).toHaveLength(1);
       expect(history[0]?.title).toMatch(/^Starter: /);
     }
+
     expect(started).toHaveLength(0);
     await call(
       "POST",
@@ -217,10 +243,12 @@ describe("home routes", { timeout: 30000 }, () => {
       "/api/projects/sample",
       {}
     );
+
     const history = await call<Version[]>(
       "GET",
       `/api/projects/${project.id}/d/main/versions`
     );
+
     expect(history.map((version) => version.title)).toEqual([
       "Sample edit: new headline",
       "Starter: Landing page",
@@ -237,11 +265,13 @@ describe("home routes", { timeout: 30000 }, () => {
   it("renames a project without touching its folder", async () => {
     const project = await fromStarter("form");
     const folder = projects.mainDirection(project).workTree;
+
     const renamed = await call<Project>(
       "PATCH",
       `/api/projects/${project.id}`,
       { name: "  Studio booking  " }
     );
+
     expect(renamed.name).toBe("Studio booking");
     expect((await projects.get(project.id)).name).toBe("Studio booking");
     expect(projects.mainDirection(renamed).workTree).toBe(folder);
@@ -250,10 +280,12 @@ describe("home routes", { timeout: 30000 }, () => {
 
   it("duplicates a project with the same head version in a new folder", async () => {
     const project = await fromStarter("docs");
+
     const { project: copy } = await call<{ project: Project }>(
       "POST",
       `/api/projects/${project.id}/duplicate`
     );
+
     expect(copy.id).not.toBe(project.id);
     expect(copy.name).toBe("Docs copy");
     expect(head(copy)).toBe(head(project));
@@ -268,31 +300,39 @@ describe("home routes", { timeout: 30000 }, () => {
         "utf-8"
       )
     );
+
     const status = await call<{ dirty: boolean; changed: string[] }>(
       "GET",
       `/api/projects/${copy.id}/d/main/status`
     );
+
     expect(status.changed).toEqual([]);
+
     const history = await call<Version[]>(
       "GET",
       `/api/projects/${copy.id}/d/main/versions`
     );
+
     expect(history[0]?.id).toBe(head(project));
+
     const again = await call<{ project: Project }>(
       "POST",
       `/api/projects/${copy.id}/duplicate`
     );
+
     expect(again.project.name).toBe("Docs copy 2");
   });
 
   it("duplicates every direction at its own head with its comments, and never writes into the source", async () => {
     const project = await fromStarter("docs");
     const sourceTree = projects.mainDirection(project).workTree;
+
     const extra = await call<Direction>(
       "POST",
       `/api/projects/${project.id}/directions`,
       { name: "Bold" }
     );
+
     await projects.updateDirection(project.id, extra.id, {
       variation: {
         groupId: "g1",
@@ -309,32 +349,40 @@ describe("home routes", { timeout: 30000 }, () => {
       "<h1>Bold direction</h1>\n"
     );
     const withExtra = await projects.get(project.id);
+
     const extraNow = withExtra.directions.find(
       (direction) => direction.id === extra.id
     ) as Direction;
+
     const bold = await versions.commit(withExtra, extraNow, "Bold run", {
       kind: "run",
     });
+
     await projects.updateDirection(project.id, extra.id, {
       headVersionId: bold?.id ?? null,
     });
+
     const target = {
       selector: "h1",
       tag: "h1",
       textSnippet: "x",
       rectHint: { x: 0, y: 0, width: 10, height: 10 },
     };
-    for (const did of ["main", extra.id])
+
+    for (const did of ["main", extra.id]) {
       await call("POST", `/api/projects/${project.id}/d/${did}/comments`, {
         text: `note on ${did}`,
         target,
       });
+    }
+
     const source = await projects.get(project.id);
     expect(
       source.directions.find((direction) => direction.id === extra.id)
         ?.headVersionId
     ).not.toBe(head(source));
     const sourceListing = (await readdir(sourceTree)).sort();
+
     const sourceDirections = (
       await readdir(path.join(projects.projectDir(project.id), "directions"))
     ).sort();
@@ -343,6 +391,7 @@ describe("home routes", { timeout: 30000 }, () => {
       "POST",
       `/api/projects/${project.id}/duplicate`
     );
+
     expect(
       copy.directions.map((direction) => [
         direction.id,
@@ -358,9 +407,11 @@ describe("home routes", { timeout: 30000 }, () => {
         direction.branch,
       ])
     );
+
     const copiedExtra = copy.directions.find(
       (direction) => direction.id === extra.id
     ) as Direction;
+
     expect(copiedExtra.variation?.title).toBe("Bold");
     expect(copiedExtra.sessionId).toBeNull();
     expect(copiedExtra.workTree).toBe(
@@ -375,23 +426,29 @@ describe("home routes", { timeout: 30000 }, () => {
         "utf-8"
       )
     ).toBe(await readFile(path.join(sourceTree, "index.html"), "utf-8"));
+
     for (const direction of source.directions) {
       const status = await call<{ changed: string[] }>(
         "GET",
         `/api/projects/${copy.id}/d/${direction.id}/status`
       );
+
       expect(status.changed).toEqual([]);
+
       const before = await call<DesignComment[]>(
         "GET",
         `/api/projects/${project.id}/d/${direction.id}/comments`
       );
+
       const after = await call<DesignComment[]>(
         "GET",
         `/api/projects/${copy.id}/d/${direction.id}/comments`
       );
+
       expect(after).toHaveLength(1);
       expect(after).toEqual(before);
     }
+
     expect((await readdir(sourceTree)).sort()).toEqual(sourceListing);
     expect(
       (
@@ -412,10 +469,12 @@ describe("home routes", { timeout: 30000 }, () => {
     await waitFor(async () => (await projects.get(second.id)).thumbnail);
     const a = await call<TrashedProject>("DELETE", `/api/projects/${first.id}`);
     await new Promise((resolve) => setTimeout(resolve, 5));
+
     const b = await call<TrashedProject>(
       "DELETE",
       `/api/projects/${second.id}`
     );
+
     const list = await call<TrashItem[]>("GET", "/api/trash");
     expect(list.map((item) => item.trashId)).toEqual([b.trashId, a.trashId]);
     expect(list[1]).toMatchObject({
@@ -425,9 +484,11 @@ describe("home routes", { timeout: 30000 }, () => {
       folderStays: true,
     });
     expect(list[1]?.trashedAt).toBeGreaterThan(0);
+
     const png = await app.request(`/api/trash/${a.trashId}/thumbnail`, {
       headers: { "x-studio-token": config.studioToken },
     });
+
     expect(png.status).toBe(200);
     expect(png.headers.get("content-type")).toBe("image/png");
 
@@ -436,8 +497,10 @@ describe("home routes", { timeout: 30000 }, () => {
         method: "DELETE",
         headers: { "x-studio-token": config.studioToken },
       });
+
       expect([400, 404]).toContain(response.status);
     }
+
     await call("DELETE", "/api/trash/nope-123", undefined, 404);
     expect(
       (await app.request(`/api/trash/${a.trashId}`, { method: "DELETE" }))
@@ -484,10 +547,12 @@ describe("home routes", { timeout: 30000 }, () => {
     running.add(`${project.id}/main`);
     await call("DELETE", `/api/projects/${project.id}`, undefined, 409);
     running.clear();
+
     const trashed = await call<TrashedProject>(
       "DELETE",
       `/api/projects/${project.id}`
     );
+
     expect(trashed.projectId).toBe(project.id);
     expect((await projects.list()).map((item) => item.id)).not.toContain(
       project.id
@@ -510,38 +575,47 @@ describe("home routes", { timeout: 30000 }, () => {
       directionId: "main",
       status: { dirty: false, changed: [] },
     });
+
     const { project: back } = await call<{ project: Project }>(
       "POST",
       `/api/trash/${trashed.trashId}/restore`
     );
+
     expect(back.id).toBe(project.id);
     expect(head(back)).toBe(head(project));
     expect((await projects.list()).map((item) => item.id)).toContain(
       project.id
     );
+
     const events = await readFile(
       path.join(projects.projectDir(project.id), "events.jsonl"),
       "utf-8"
     );
+
     expect(events).toContain("status.changed");
     await call("POST", `/api/trash/${trashed.trashId}/restore`, undefined, 404);
   });
 
   it("saves a half-size thumbnail of the head after a new version and serves it", async () => {
     const project = await fromStarter("landing");
+
     const first = await waitFor(
       async () => (await projects.get(project.id)).thumbnail
     );
+
     expect(first.versionId).toBe(head(project));
+
     const bytes = await waitFor(async () => {
       const response = await app.request(
         `/api/projects/${project.id}/thumbnail/${first.versionId}`,
         { headers: { "x-studio-token": config.studioToken } }
       );
+
       return response.status === 200
         ? Buffer.from(await response.arrayBuffer())
         : null;
     });
+
     const png = PNG.sync.read(bytes);
     expect([png.width, png.height]).toEqual([640, 400]);
     const updated = await projects.get(project.id);
@@ -550,13 +624,18 @@ describe("home routes", { timeout: 30000 }, () => {
       path.join(projects.mainDirection(project).workTree, "index.html"),
       "<h1>Second</h1>"
     );
+
     const version = await versions.commit(
       updated,
       projects.mainDirection(updated),
       "Run 2",
       { kind: "run" }
     );
-    if (!version) throw new Error("no version");
+
+    if (!version) {
+      throw new Error("no version");
+    }
+
     await projects.updateDirection(project.id, "main", {
       headVersionId: version.id,
     });
@@ -566,19 +645,26 @@ describe("home routes", { timeout: 30000 }, () => {
       directionId: "main",
       version,
     });
+
     const second = await waitFor<ProjectThumbnail>(async () => {
       const thumb = (await projects.get(project.id)).thumbnail;
+
       return thumb && thumb.versionId === version.id ? thumb : null;
     });
+
     expect(second.versionId).not.toBe(first.versionId);
+
     const files = await readdir(
       path.join(projects.projectDir(project.id), "thumbs")
     );
+
     expect(files).toEqual([`${version.id}.png`]);
+
     const status = await call<{ dirty: boolean; changed: string[] }>(
       "GET",
       `/api/projects/${project.id}/d/main/status`
     );
+
     expect(status.changed).toEqual([]);
   });
 
@@ -588,8 +674,10 @@ describe("home routes", { timeout: 30000 }, () => {
       "/api/clarify",
       { prompt: "A page for my bakery" }
     );
+
     expect(short.questions.length).toBeGreaterThan(0);
     expect(short.questions.length).toBeLessThanOrEqual(3);
+
     const long = await call<{ questions: ClarifyQuestion[] }>(
       "POST",
       "/api/clarify",
@@ -598,6 +686,7 @@ describe("home routes", { timeout: 30000 }, () => {
           "A pricing page for a developer tool with three tiers, a comparison table and an FAQ",
       }
     );
+
     expect(long.questions).toHaveLength(0);
   });
 
@@ -613,9 +702,11 @@ describe("home routes", { timeout: 30000 }, () => {
     expect(
       await call<{ dismissed: boolean }>("GET", "/api/onboarding")
     ).toEqual({ dismissed: true });
+
     const saved = JSON.parse(
       await readFile(path.join(config.dataDir, PREFERENCES_FILE), "utf-8")
     ) as Record<string, unknown>;
+
     expect(saved).toEqual({
       version: 1,
       projectsDir: config.projectsDir,
@@ -630,9 +721,11 @@ describe("home routes", { timeout: 30000 }, () => {
         '<html><head><title>Northwind Tea</title><script>alert(1)</script></head><body><nav><a href="#">Shop</a></nav><h1>Loose leaf, shipped fresh</h1><p>Three blends a month.</p></body></html>'
       );
     });
+
     await new Promise<void>((resolve) =>
       server.listen(0, "127.0.0.1", resolve)
     );
+
     try {
       build({ fetchAllowLoopback: true });
       const url = `http://127.0.0.1:${(server.address() as AddressInfo).port}/`;
@@ -646,11 +739,13 @@ describe("home routes", { timeout: 30000 }, () => {
         url,
         title: "Northwind Tea",
       });
+
       const text = buildUserText({
         request: request!,
         designMd: null,
         designSystem: null,
       });
+
       expect(text).toContain("<reference-page");
       expect(text).toContain("# Loose leaf, shipped fresh");
       expect(text).toContain("Three blends a month.");

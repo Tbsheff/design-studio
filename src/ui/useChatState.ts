@@ -7,14 +7,20 @@ export function promptHistoryOf(
   runs: readonly Pick<RunView, "request">[]
 ): string[] {
   const prompts: string[] = [];
+
   for (const run of runs) {
     const request = run.request;
+
     const prompt =
       request && !request.task && !request.variation && !request.retryOf
         ? request.prompt.trim()
         : "";
-    if (prompt && prompts.at(-1) !== prompt) prompts.push(prompt);
+
+    if (prompt && prompts.at(-1) !== prompt) {
+      prompts.push(prompt);
+    }
   }
+
   return prompts;
 }
 
@@ -27,10 +33,12 @@ export function useChatState(runs: readonly RunView[]): {
   const last = runs.at(-1) ?? null;
   const todoList = last?.todos ?? null;
   const running = last?.status === "running";
+
   const todos = useMemo(
     () =>
       todoList && todoList.length > 0 ? { todos: todoList, running } : null,
     [todoList, running]
   );
+
   return { history, todos, contextTokens: last?.contextTokens ?? null };
 }

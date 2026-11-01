@@ -22,17 +22,24 @@ export function buildAppRules(
   workTree: string
 ): string | null {
   const app = project.app;
-  if (!app) return null;
+
+  if (!app) {
+    return null;
+  }
+
   const appRoot =
     app.appDir === "." ? "the working directory" : `\`${app.appDir}/\``;
+
   const framework =
     app.framework === "next"
       ? "Next.js (app router). Pages are `app/**/page.tsx` under the app root; route groups in parentheses do not change the URL"
       : "Vite";
+
   const server =
     app.mode === "url"
       ? `runs at ${app.url ?? "the URL the user gave"}; the user owns it`
       : "is started by the studio";
+
   return `## Project kind: attached ${app.framework === "next" ? "Next.js" : "Vite"} app
 - This is the user's real app, not a copy. The working directory is the folder the user attached: \`${workTree}\`. The app root is ${appRoot}.
 - Framework: ${framework}. Shared packages (for example \`packages/ui\`) are part of the working directory; reuse their components and Tailwind classes instead of writing new CSS.
@@ -173,7 +180,10 @@ const SELECTION_TOKEN_RULE = `- When the message has <selected-elements>, use th
 const CRITIQUE_TOKEN_RULE = `- In a critique, flag hard-coded colors, fonts, sizes, spacing, radii and shadows that a token covers, and name the token to use.`;
 
 function fontsRule(url: string | null): string[] {
-  if (!url) return [];
+  if (!url) {
+    return [];
+  }
+
   return [
     `- Fonts: link this stylesheet in HTML \`<head>\` (React projects already load it from index.html): \`<link rel="stylesheet" href="${url}">\``,
   ];
@@ -192,7 +202,11 @@ function tokenLine(
 ): TokenLine {
   const raw = (entry.source?.value ?? entry.value).trim();
   const ramp = RAMP_STEP.exec(entry.cssVar);
-  if (ramp?.[1]) return { key: ramp[1], text: ramp[2] ?? "" };
+
+  if (ramp?.[1]) {
+    return { key: ramp[1], text: ramp[2] ?? "" };
+  }
+
   return {
     key: entry.cssVar,
     text: raw.startsWith("var(") ? entry.cssVar : `${entry.cssVar}: ${raw}`,
@@ -202,20 +216,29 @@ function tokenLine(
 function appTokenLines(entries: DesignSystemPromptContext["entries"]): string {
   const ramps = new Map<string, string[]>();
   const lines: string[] = [];
+
   for (const entry of entries) {
-    if (SKIPPED_TOKEN.test(entry.cssVar)) continue;
+    if (SKIPPED_TOKEN.test(entry.cssVar)) {
+      continue;
+    }
+
     const line = tokenLine(entry);
+
     if (line.key === entry.cssVar) {
       lines.push(line.text);
       continue;
     }
+
     const steps = ramps.get(line.key);
-    if (steps) steps.push(line.text);
-    else {
+
+    if (steps) {
+      steps.push(line.text);
+    } else {
       ramps.set(line.key, [line.text]);
       lines.push(`\u0000${line.key}`);
     }
   }
+
   return lines
     .map((line) =>
       line.startsWith("\u0000")
@@ -234,6 +257,7 @@ function buildAppTokensBlock(
 This folder is the user's app. Its design tokens are the CSS custom properties in \`${file}\` (Tailwind \`@theme\`, \`:root\` and \`.dark\` blocks). The list below names every token. It shows a value only when the token is not a reference to another token; scales such as \`--color-x-{50,100}\` are one line. Read the file for references and \`.dark\` values. Prefer the semantic tokens (text, surface, border, action) over raw scale steps.
 - Use these tokens (Tailwind utilities such as \`bg-primary\`, or \`var(--token)\`) for colors, fonts, sizes, spacing, radii and shadows. Do not hard-code a value that a token covers.
 ${mode === "critique" ? "- In a critique, flag hard-coded values that a token covers, and name the token." : `- Change a token only when the user asks for it. Then edit only that declaration in \`${file}\` and keep the rest of the file as it is.`}`;
+
   return `${rules}\n\n<app_tokens file="${file}">\n${appTokenLines(designSystem.entries)}\n</app_tokens>`;
 }
 
@@ -242,9 +266,12 @@ function buildDesignSystemBlock(
   mode: RunMode,
   designSystem: DesignSystemPromptContext
 ): string {
-  if (designSystem.source)
+  if (designSystem.source) {
     return buildAppTokensBlock(mode, designSystem, designSystem.source.file);
+  }
+
   const kindRule = project.kind === "html" ? HTML_LINK_RULE : REACT_IMPORT_RULE;
+
   const modeRules =
     mode === "critique"
       ? [CRITIQUE_TOKEN_RULE]
@@ -253,12 +280,17 @@ function buildDesignSystemBlock(
           ...fontsRule(designSystem.googleFontsUrl),
           SELECTION_TOKEN_RULE,
         ];
+
   const parts = [[DESIGN_SYSTEM_RULES, ...modeRules].join("\n")];
-  if (designSystem.designMd && designSystem.designMd.trim())
+
+  if (designSystem.designMd && designSystem.designMd.trim()) {
     parts.push(`<design_md>\n${designSystem.designMd.trim()}\n</design_md>`);
+  }
+
   parts.push(
     `<design_tokens>\n${tokenTable(designSystem.entries)}\n</design_tokens>`
   );
+
   return parts.join("\n\n");
 }
 
@@ -289,6 +321,7 @@ function skillsRule(allowBash: boolean): string {
   const shell = allowBash
     ? ""
     : " Shell commands are off in this project. Load a skill that uses a shell anyway for its guidance: follow its design rules and skip only its shell or script steps.";
+
   return `## Skills
 Some of the user's Claude skills are available through the Skill tool. Each skill you load costs time and context, so load only these:
 - The skills in the <recommended-skills> block, when the message has one, unless one clearly does not fit the request.
@@ -309,10 +342,12 @@ export function buildTasteBlock(rules: TasteRule[], mode: RunMode): string {
     (rule) =>
       `- ${rule.kind === "prefer" ? "Prefer" : "Avoid"} (${rule.area}): ${rule.rule}`
   );
+
   const head =
     mode === "critique"
       ? `${TASTE_RULES}\n${CRITIQUE_TASTE_RULE}`
       : TASTE_RULES;
+
   return `${head}\n\n<taste>\n${lines.join("\n")}\n</taste>`;
 }
 
@@ -324,6 +359,7 @@ export function buildDesignRulesBlock(
     mode === "critique"
       ? "- In a critique, name each place the design breaks one of these rules."
       : "- Follow every rule in each change, also when DESIGN.md prose, the taste block or a skill says otherwise. When the request conflicts with a rule, follow the rule and say so in one line of your reply. Do not change the rules block in DESIGN.md: only the user changes these rules.";
+
   return `## Design rules (hard rules)\nThe user locked these rules for this project. Review checks the ones it can test on the page (classes, raw colors, fonts, component use) and lists each break.\n${duty}\n\n<design_rules>\n${rules.map((rule) => `- ${rule.text}`).join("\n")}\n</design_rules>`;
 }
 
@@ -338,11 +374,14 @@ export function buildSystemPrompt(
   const kindRules =
     buildAppRules(project, project.directions[0]?.workTree ?? ".") ??
     (project.kind === "html" ? HTML_RULES : REACT_RULES);
+
   const shellAllowed = true;
+
   const policy = `## Project policy
 - ${project.app ? "Entry route" : "Entry file"}: \`${project.entry}\`.
 - Shell commands: ${shellAllowed && project.settings.allowBash ? "allowed" : "not available"}.
 - Package installs: ${shellAllowed && project.settings.allowInstall ? "allowed when the request needs them" : "not allowed"}.${project.designSystemFor && project.settings.allowBash ? "\n- `source/` is read only, also for shell commands: read it, never write, move or delete inside it." : ""}`;
+
   const sections =
     mode === "critique"
       ? [
@@ -370,18 +409,32 @@ export function buildSystemPrompt(
           directEditRules(project),
           EDIT_REPLY_RULES,
         ];
-  if (skillCount > 0)
+
+  if (skillCount > 0) {
     sections.push(
       skillsRule(
         shellAllowed && project.settings.allowBash && mode !== "critique"
       )
     );
-  if (tasteRules.length > 0) sections.push(buildTasteBlock(tasteRules, mode));
-  if (designSystem)
+  }
+
+  if (tasteRules.length > 0) {
+    sections.push(buildTasteBlock(tasteRules, mode));
+  }
+
+  if (designSystem) {
     sections.push(buildDesignSystemBlock(project, mode, designSystem));
-  if (designRules.length > 0)
+  }
+
+  if (designRules.length > 0) {
     sections.push(buildDesignRulesBlock(designRules, mode));
+  }
+
   const draft = buildDesignSystemDraftBlock(project);
-  if (draft) sections.push(draft);
+
+  if (draft) {
+    sections.push(draft);
+  }
+
   return sections.join("\n\n");
 }

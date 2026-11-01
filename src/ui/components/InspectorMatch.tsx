@@ -57,6 +57,7 @@ export interface InspectorMatchProps {
 }
 
 type Scope = "selection" | "page";
+
 type Status =
   | { kind: "idle" }
   | { kind: "busy"; text: string }
@@ -66,18 +67,21 @@ type Status =
 const REPLY_MS = 5000;
 const ROWS_SHOWN = 6;
 const PICK_SHOWN = 8;
+
 const KIND_LABEL: Record<StyleKind, string> = {
   color: "Colors",
   "font-size": "Font sizes",
   radius: "Radii",
   spacing: "Spacing",
 };
+
 const KIND_EXAMPLE: Record<StyleKind, string> = {
   color: "--accent or bg-accent",
   "font-size": "--text-lg or text-lg",
   radius: "--radius or rounded-lg",
   spacing: "--space-4 or p-4",
 };
+
 const CUSTOM_PROP = /(--[\w-]+)\s*:\s*([^;]+)/g;
 
 interface PageVar {
@@ -87,9 +91,15 @@ interface PageVar {
 
 function parseVars(css: string[]): PageVar[] {
   const found = new Map<string, string>();
-  for (const text of css)
-    for (const match of text.matchAll(CUSTOM_PROP))
-      if (match[1] && match[2]) found.set(match[1], match[2].trim());
+
+  for (const text of css) {
+    for (const match of text.matchAll(CUSTOM_PROP)) {
+      if (match[1] && match[2]) {
+        found.set(match[1], match[2].trim());
+      }
+    }
+  }
+
   return [...found].map(([name, value]) => ({ name, value }));
 }
 
@@ -99,16 +109,22 @@ function usePageVars(
 ): PageVar[] {
   const [vars, setVars] = useState<PageVar[]>([]);
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      return;
+    }
+
     let live = true;
     void requestAuthoredCss(port.current, "html").then((css) => {
-      if (live && css)
+      if (live && css) {
         setVars(parseVars([...css.rules.map((rule) => rule.css), css.inline]));
+      }
     });
+
     return () => {
       live = false;
     };
   }, [port, open]);
+
   return vars;
 }
 
@@ -122,15 +138,24 @@ function requestStyles(
   select: boolean
 ): Promise<{ result: StyleScanResult; selected: number } | null> {
   const listen = port?.listen;
-  if (!port || !listen) return Promise.resolve(null);
+
+  if (!port || !listen) {
+    return Promise.resolve(null);
+  }
+
   const requestId = Math.random().toString(36).slice(2);
+
   return new Promise((resolve) => {
     const stop = listen((message) => {
-      if (message.type !== "styles-found" || message.requestId !== requestId)
+      if (message.type !== "styles-found" || message.requestId !== requestId) {
         return;
+      }
+
       finish({ result: message.result, selected: message.selected });
     });
+
     const timer = window.setTimeout(() => finish(null), REPLY_MS);
+
     function finish(
       value: { result: StyleScanResult; selected: number } | null
     ) {
@@ -138,14 +163,19 @@ function requestStyles(
       stop();
       resolve(value);
     }
+
     port.post({ type: "find-styles", requestId, query, select });
   });
 }
 
 function lookupFor(tokens: DesignTokens | null): TokenLookup | null {
-  if (!tokens || tokens.entries.length === 0) return null;
+  if (!tokens || tokens.entries.length === 0) {
+    return null;
+  }
+
   return (property, value) => {
     const state = tokenFieldState(property, value, tokens.entries, tokens.mode);
+
     return state.kind === "token" ? state.match.cssVar : null;
   };
 }
@@ -162,19 +192,29 @@ function useStyleScan(
   useEffect(() => {
     let live = true;
     void requestStyles(port.current, queryRef.current, false).then((reply) => {
-      if (live) setHits(reply ? reply.result.hits : []);
+      if (live) {
+        setHits(reply ? reply.result.hits : []);
+      }
     });
+
     return () => {
       live = false;
     };
   }, [port, key, nonce]);
   useEffect(() => {
     const listen = port.current?.listen;
-    if (!listen) return;
+
+    if (!listen) {
+      return;
+    }
+
     return listen((message) => {
-      if (message.type === "ready") setNonce((n) => n + 1);
+      if (message.type === "ready") {
+        setNonce((n) => n + 1);
+      }
     });
   }, [port]);
+
   return { hits, refresh: useCallback(() => setNonce((n) => n + 1), []) };
 }
 
@@ -189,7 +229,7 @@ function StateTag({
   row: StyleValueRow;
   onReplace: () => void;
 }) {
-  if (row.state === "raw")
+  if (row.state === "raw") {
     return (
       <button
         type="button"
@@ -202,7 +242,9 @@ function StateTag({
         raw
       </button>
     );
-  if (row.state === "palette")
+  }
+
+  if (row.state === "palette") {
     return (
       <span
         className="sm-tag mixed"
@@ -211,8 +253,11 @@ function StateTag({
         {row.tokens[0] ?? "palette"}
       </span>
     );
+  }
+
   const token = row.tokens[0] ?? "";
   const more = row.tokens.length > 1 ? ` +${row.tokens.length - 1}` : "";
+
   return (
     <span
       className={`sm-tag ${row.state === "mixed" ? "mixed" : "token"}`}
@@ -240,7 +285,11 @@ function designCandidates(
   mode: TokenMode
 ): Candidate[] {
   const property = row.properties[0];
-  if (!property || !TOKEN_GROUP_FOR_PROPERTY[property]) return [];
+
+  if (!property || !TOKEN_GROUP_FOR_PROPERTY[property]) {
+    return [];
+  }
+
   return matchForProperty(property, row.value, entries, mode).map((match) => ({
     token: match.cssVar,
     value: match.value,
@@ -249,9 +298,12 @@ function designCandidates(
 }
 
 function sameValue(kind: StyleKind, a: string, b: string): boolean {
-  if (kind === "color")
+  if (kind === "color") {
     return colorHex(a) !== null && colorHex(a) === colorHex(b);
+  }
+
   const px = lengthToPx(a);
+
   return px !== null && px === lengthToPx(b);
 }
 
@@ -278,25 +330,30 @@ function varCandidates(row: StyleValueRow, vars: PageVar[]): Candidate[] {
 
 function uniqueTokens(list: Candidate[]): Candidate[] {
   const seen = new Set<string>();
+
   return list.filter((c) => !seen.has(c.token) && Boolean(seen.add(c.token)));
 }
 
 function classCandidates(row: StyleValueRow, page: StyleHit[]): Candidate[] {
   const seen = new Map<string, Candidate>();
+
   for (const hit of page) {
     if (
       !hit.cls ||
       isRawClass(hit.cls) ||
       kindOf(hit.property) !== row.kind ||
       seen.has(hit.cls)
-    )
+    ) {
       continue;
+    }
+
     seen.set(hit.cls, {
       token: hit.cls,
       value: hit.value,
       hint: hit.value === row.value ? "same value" : "",
     });
   }
+
   return [...seen.values()].sort(
     (a, b) =>
       Number(b.value === row.value) - Number(a.value === row.value) ||
@@ -305,7 +362,10 @@ function classCandidates(row: StyleValueRow, page: StyleHit[]): Candidate[] {
 }
 
 function Swatch({ kind, value }: { kind: StyleKind; value: string }) {
-  if (kind !== "color") return null;
+  if (kind !== "color") {
+    return null;
+  }
+
   return (
     <span
       className="sm-swatch"
@@ -329,6 +389,7 @@ function TokenPicker(props: {
     input.current?.closest(".sm-picker")?.scrollIntoView({ block: "nearest" });
   }, []);
   const filter = text.trim().toLowerCase();
+
   const shown = props.candidates
     .filter(
       (c) =>
@@ -337,6 +398,7 @@ function TokenPicker(props: {
         c.hint.toLowerCase().includes(filter)
     )
     .slice(0, PICK_SHOWN);
+
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Escape") {
       event.preventDefault();
@@ -351,6 +413,7 @@ function TokenPicker(props: {
       );
     }
   };
+
   return (
     <div
       className="sm-picker"
@@ -434,23 +497,32 @@ function RowMenu({
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
+
   const close = useCallback((refocus: boolean) => {
     setOpen(false);
-    if (refocus) trigger.current?.focus();
+
+    if (refocus) {
+      trigger.current?.focus();
+    }
   }, []);
+
   usePopover(open, root, close);
   useEffect(() => {
-    if (open)
+    if (open) {
       root.current
         ?.querySelector<HTMLButtonElement>('[role="menuitem"]')
         ?.focus();
+    }
   }, [open]);
+
   const run = (task: () => void) => () => {
     close(false);
     task();
   };
+
   const raws = row.classes.filter(isRawClass).slice(0, 2);
   const named = row.classes.filter((cls) => !isRawClass(cls)).slice(0, 2);
+
   return (
     <div className="sm-menu-root" ref={root}>
       <button
@@ -550,8 +622,13 @@ function KindGroup({
   replaceLabel: string;
 }) {
   const [all, setAll] = useState(false);
-  if (rows.length === 0) return null;
+
+  if (rows.length === 0) {
+    return null;
+  }
+
   const shown = all ? rows : rows.slice(0, ROWS_SHOWN);
+
   return (
     <div className="sm-group">
       <h4 className="sm-group-head">{KIND_LABEL[kind]}</h4>
@@ -610,7 +687,10 @@ function ScopeToggle({
 }
 
 function StatusLine({ status }: { status: Status }) {
-  if (status.kind === "idle") return null;
+  if (status.kind === "idle") {
+    return null;
+  }
+
   return (
     <p
       className={`sm-status ${status.kind}`}
@@ -631,22 +711,29 @@ function useReplace(
     async (hits: StyleHit[], token: string) => {
       const matches = matchesOf(hits);
       const unlocated = unlocatedCount(hits);
-      if (matches.length === 0)
+
+      if (matches.length === 0) {
         return setStatus({
           kind: "error",
           text: "These elements have no source location, so they cannot be changed here.",
         });
+      }
+
       setStatus({ kind: "busy", text: `Replacing ${matches.length} values…` });
+
       try {
         await props.drain();
+
         const result = await replaceStyle(props.projectId, props.directionId, {
           matches,
           token,
         });
+
         const extra =
           unlocated > 0
             ? `. ${unlocated} without a source location left as they are`
             : "";
+
         setStatus({
           kind: result.replaced > 0 ? "done" : "error",
           text: `${replaceSummary(result, token)}${extra}.`,
@@ -661,8 +748,10 @@ function useReplace(
 }
 
 function selectedText(count: number, total: number): string {
-  if (count === 0)
+  if (count === 0) {
     return "No element on this page has a source location for that value.";
+  }
+
   return total > count
     ? `Selected ${count} of ${total} elements (the first ${count}).`
     : `Selected ${count} ${count === 1 ? "element" : "elements"}.`;
@@ -673,6 +762,7 @@ function focusRow(key: string): void {
     const row = document.querySelector<HTMLElement>(
       `.sm-section [data-row="${CSS.escape(key)}"]`
     );
+
     (row?.querySelector<HTMLElement>('[aria-haspopup="menu"]') ?? row)?.focus();
   });
 }
@@ -683,39 +773,49 @@ function InspectorMatch(props: InspectorMatchProps) {
   const [picking, setPicking] = useState<StyleValueRow | null>(null);
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const selectors = props.selection.map((s) => s.selector);
+
   const query = useMemo<StyleQuery>(
     () => (scope === "page" ? {} : { within: selectors }),
     [scope, selectors.join("\n")]
   );
+
   const scanned = useStyleScan(
     props.port,
     query,
     `${scope}|${selectors.join("\n")}`
   );
+
   const page = useStyleScan(props.port, {}, "page");
   const vars = usePageVars(props.port, picking !== null);
   const lookup = useMemo(() => lookupFor(props.tokens), [props.tokens]);
+
   const rows = useMemo(
     () => summarizeHits(scanned.hits ?? [], lookup),
     [scanned.hits, lookup]
   );
+
   const refreshAll = useCallback(() => {
     scanned.refresh();
     page.refresh();
   }, [scanned.refresh, page.refresh]);
+
   const replace = useReplace(props, setStatus, refreshAll);
   const pageWide = scope === "page" || single;
+
   const replaceLabel = pageWide
     ? "Replace on page with token…"
     : "Replace in selection with token…";
+
   const selectBy = useCallback(
     async (row: StyleValueRow, extra: StyleQuery) => {
       setStatus({ kind: "busy", text: "Finding matches…" });
+
       const reply = await requestStyles(
         props.port.current,
         { property: row.kind, ...extra },
         true
       );
+
       setStatus(
         reply
           ? {
@@ -730,6 +830,7 @@ function InspectorMatch(props: InspectorMatchProps) {
     },
     [props.port]
   );
+
   const actions: RowActions = {
     selectValue: (row) => void selectBy(row, { value: row.value }),
     selectClass: (row, cls) => void selectBy(row, { className: cls }),
@@ -738,9 +839,11 @@ function InspectorMatch(props: InspectorMatchProps) {
       setPicking(row);
     },
   };
+
   const targets = picking
     ? hitsForRow(pageWide ? (page.hits ?? []) : (scanned.hits ?? []), picking)
     : [];
+
   const candidates = picking
     ? uniqueTokens([
         ...varCandidates(picking, vars),
@@ -750,21 +853,28 @@ function InspectorMatch(props: InspectorMatchProps) {
           : []),
       ])
     : [];
+
   const closePicker = () => {
-    if (picking) focusRow(rowKey(picking));
+    if (picking) {
+      focusRow(rowKey(picking));
+    }
+
     setPicking(null);
   };
+
   const pick = (token: string) => {
     const hits = targets;
     closePicker();
     void replace(hits, token);
   };
+
   const title =
     scope === "page"
       ? "Page values"
       : props.selection.length > 1
         ? "Selection values"
         : "Values";
+
   return (
     <InspectorSection
       title={title}

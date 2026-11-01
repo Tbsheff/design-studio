@@ -29,8 +29,10 @@ const PAGE = `<!doctype html>
 </body>
 </html>
 `;
+
 const SHEET =
   ".card { transform: rotate(2deg); filter: blur(2px); border-radius: 4px; }\n";
+
 const EXPECTED_COPY = [
   ".card {\n  transform: rotate(2deg);\n  filter: blur(2px);\n  border-radius: 4px;\n}",
   ".card {\n  padding: 24px;\n}",
@@ -42,7 +44,11 @@ async function extrasProject(page: Page): Promise<void> {
   const project = await createProjectViaUi(page, api, "Extras Seed", "html");
   await api.waitForRuns(project.id, 1);
   const main = project.directions[0];
-  if (!main) throw new Error("no direction");
+
+  if (!main) {
+    throw new Error("no direction");
+  }
+
   writeFileSync(path.join(main.workTree, "extras.css"), SHEET);
   writeFileSync(path.join(main.workTree, "index.html"), PAGE);
   await expect(frontFrame(page).locator("h1")).toHaveText("Extras Page");
@@ -56,7 +62,11 @@ async function selectCard(page: Page): Promise<void> {
   await setSelectMode(page, true);
   const card = frontFrame(page).locator("article.card");
   const box = await card.boundingBox();
-  if (!box) throw new Error("card not visible");
+
+  if (!box) {
+    throw new Error("card not visible");
+  }
+
   await card.click({ position: { x: 12, y: box.height / 2 } });
   await expect(page.locator(".ins-tag")).toHaveText("article");
 }

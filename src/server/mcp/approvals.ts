@@ -55,6 +55,7 @@ export function approvalKey(list: readonly McpApprovalRecord[]): string {
 
 function clean(text: string, max: number): string {
   const flat = text.replace(/[\p{Cc}\s]+/gu, " ").trim();
+
   return flat.length > max ? `${flat.slice(0, max - 1)}…` : flat;
 }
 
@@ -68,7 +69,9 @@ export function createApprovalQueue(options: QueueOptions = {}): ApprovalQueue {
   let lastPoll = 0;
 
   const changed = (): void => {
-    for (const wake of [...waiters, ...watchers]) wake();
+    for (const wake of [...waiters, ...watchers]) {
+      wake();
+    }
   };
 
   const list = (): McpApprovalRecord[] =>
@@ -76,11 +79,16 @@ export function createApprovalQueue(options: QueueOptions = {}): ApprovalQueue {
 
   const finish = (id: string, outcome: McpApprovalOutcome): boolean => {
     const item = pending.get(id);
-    if (!item) return false;
+
+    if (!item) {
+      return false;
+    }
+
     pending.delete(id);
     item.settle(outcome);
     options.events?.resolved(item.approval, outcome);
     changed();
+
     return true;
   };
 
@@ -91,10 +99,17 @@ export function createApprovalQueue(options: QueueOptions = {}): ApprovalQueue {
 
   return {
     ask(input) {
-      if (!windowOpen()) return Promise.resolve("closed");
-      if (pending.size >= MAX_PENDING) return Promise.resolve("deny");
+      if (!windowOpen()) {
+        return Promise.resolve("closed");
+      }
+
+      if (pending.size >= MAX_PENDING) {
+        return Promise.resolve("deny");
+      }
+
       const id = randomBytes(9).toString("base64url");
       const createdAt = now();
+
       const approval: McpApprovalRecord = {
         id,
         tool: input.tool,
@@ -106,6 +121,7 @@ export function createApprovalQueue(options: QueueOptions = {}): ApprovalQueue {
         createdAt,
         expiresAt: createdAt + timeoutMs,
       };
+
       return new Promise<McpApprovalOutcome>((resolve) => {
         const timer = setTimeout(() => finish(id, "timeout"), timeoutMs);
         timer.unref?.();
@@ -125,8 +141,12 @@ export function createApprovalQueue(options: QueueOptions = {}): ApprovalQueue {
     async poll(seen, waitMs, signal) {
       polls += 1;
       lastPoll = now();
+
       try {
-        if (approvalKey(list()) !== seen || waitMs <= 0) return list();
+        if (approvalKey(list()) !== seen || waitMs <= 0) {
+          return list();
+        }
+
         await new Promise<void>((resolve) => {
           const done = (): void => {
             clearTimeout(timer);
@@ -134,10 +154,12 @@ export function createApprovalQueue(options: QueueOptions = {}): ApprovalQueue {
             signal?.removeEventListener("abort", done);
             resolve();
           };
+
           const timer = setTimeout(done, waitMs);
           waiters.add(done);
           signal?.addEventListener("abort", done);
         });
+
         return list();
       } finally {
         polls -= 1;
@@ -146,6 +168,7 @@ export function createApprovalQueue(options: QueueOptions = {}): ApprovalQueue {
     },
     watch(onChange) {
       watchers.add(onChange);
+
       return () => {
         watchers.delete(onChange);
       };

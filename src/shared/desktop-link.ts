@@ -36,8 +36,12 @@ export type DesktopLinkMessage =
 export function isDesktopLinkMessage(
   value: unknown
 ): value is DesktopLinkMessage {
-  if (typeof value !== "object" || value === null) return false;
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
   const record = value as { type?: unknown; kind?: unknown };
+
   return (
     record.type === DESKTOP_MESSAGE &&
     (record.kind === "hello" ||
@@ -98,27 +102,37 @@ interface PickFolderRequest {
 export function parsePickFolderRequest(
   value: unknown
 ): PickFolderRequest | null {
-  if (typeof value !== "object" || value === null || Array.isArray(value))
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
     return null;
+  }
+
   const record = value as Record<string, unknown>;
-  if (record.title !== undefined && typeof record.title !== "string")
+
+  if (record.title !== undefined && typeof record.title !== "string") {
     return null;
+  }
+
   if (
     record.defaultPath !== undefined &&
     record.defaultPath !== null &&
     typeof record.defaultPath !== "string"
-  )
+  ) {
     return null;
+  }
+
   const title =
     (typeof record.title === "string" ? record.title : "")
       .replace(/[\u0000-\u001f\u007f]/g, " ")
       .trim()
       .slice(0, MAX_PICK_TITLE) || "Choose a folder";
+
   const raw = typeof record.defaultPath === "string" ? record.defaultPath : "";
+
   const defaultPath =
     raw.startsWith("/") && raw.length <= MAX_PICK_PATH && !raw.includes("\0")
       ? raw
       : null;
+
   return { title, defaultPath };
 }
 
@@ -130,25 +144,40 @@ export function isProjectId(value: unknown): value is string {
 
 export function parseDeepLink(raw: string): DesktopCommand | null {
   let url: URL;
+
   try {
     url = new URL(raw);
   } catch {
     return null;
   }
-  if (url.protocol !== "designstudio:") return null;
+
+  if (url.protocol !== "designstudio:") {
+    return null;
+  }
+
   const action = url.hostname || url.pathname.replace(/^\/+/, "");
+
   if (action === "open") {
     const projectId = url.searchParams.get("project");
+
     return isProjectId(projectId) ? { type: "open-project", projectId } : null;
   }
-  if (action === "new") return { type: "new-project" };
+
+  if (action === "new") {
+    return { type: "new-project" };
+  }
+
   return null;
 }
 
 export function isDesktopContext(value: unknown): value is DesktopContext {
-  if (typeof value !== "object" || value === null) return false;
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
   const record = value as Partial<DesktopContext>;
   const idOrNull = (id: unknown) => id === null || isProjectId(id);
+
   return (
     idOrNull(record.projectId) &&
     idOrNull(record.directionId) &&

@@ -24,23 +24,33 @@ export function useEscapeStop(active: boolean, onStop: () => void): void {
   const stop = useRef(onStop);
   stop.current = onStop;
   useEffect(() => {
-    if (!active) return;
+    if (!active) {
+      return;
+    }
+
     const onKey = (event: KeyboardEvent) => {
       if (
         !isStopKey(event) ||
         event.defaultPrevented ||
         event.repeat ||
         overlayOpen()
-      )
+      ) {
         return;
+      }
+
       event.preventDefault();
       stop.current();
     };
+
     const onFrameStop = () => {
-      if (!overlayOpen()) stop.current();
+      if (!overlayOpen()) {
+        stop.current();
+      }
     };
+
     window.addEventListener("keydown", onKey, { capture: true });
     window.addEventListener(PREVIEW_STOP_EVENT, onFrameStop);
+
     return () => {
       window.removeEventListener("keydown", onKey, { capture: true });
       window.removeEventListener(PREVIEW_STOP_EVENT, onFrameStop);

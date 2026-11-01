@@ -29,6 +29,7 @@ export function lockPath(dataDir: string): string {
 function pidAlive(pid: number): boolean {
   try {
     process.kill(pid, 0);
+
     return true;
   } catch (error) {
     return (error as NodeJS.ErrnoException).code === "EPERM";
@@ -36,8 +37,12 @@ function pidAlive(pid: number): boolean {
 }
 
 function isLockInfo(value: unknown): value is LockInfo {
-  if (typeof value !== "object" || value === null) return false;
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
   const record = value as Record<string, unknown>;
+
   return (
     Number.isInteger(record.pid) &&
     Number.isInteger(record.port) &&
@@ -50,6 +55,7 @@ export function readLock(dataDir: string): LockInfo | null {
     const parsed: unknown = JSON.parse(
       readFileSync(lockPath(dataDir), "utf-8")
     );
+
     return isLockInfo(parsed) ? parsed : null;
   } catch {
     return null;
@@ -61,6 +67,7 @@ export function liveHolder(
   self = process.pid
 ): LockInfo | null {
   const holder = readLock(dataDir);
+
   return holder && holder.pid !== self && pidAlive(holder.pid) ? holder : null;
 }
 
@@ -69,30 +76,45 @@ function writeExclusive(file: string, info: LockInfo): boolean {
     const fd = openSync(file, "wx");
     writeSync(fd, `${JSON.stringify(info)}\n`);
     closeSync(fd);
+
     return true;
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "EEXIST") return false;
+    if ((error as NodeJS.ErrnoException).code === "EEXIST") {
+      return false;
+    }
+
     throw error;
   }
 }
 
 export function acquireDataLock(dataDir: string, port: number): () => void {
   const file = lockPath(dataDir);
+
   const info: LockInfo = {
     pid: process.pid,
     port,
     startedAt: new Date().toISOString(),
   };
+
   for (let attempt = 0; attempt < 2; attempt += 1) {
-    if (writeExclusive(file, info)) return () => releaseDataLock(dataDir);
+    if (writeExclusive(file, info)) {
+      return () => releaseDataLock(dataDir);
+    }
+
     const holder = liveHolder(dataDir);
-    if (holder) throw new DataDirLockedError(dataDir, holder);
+
+    if (holder) {
+      throw new DataDirLockedError(dataDir, holder);
+    }
+
     rmSync(file, { force: true });
   }
+
   throw new Error(`could not take the data folder lock ${file}`);
 }
 
 function releaseDataLock(dataDir: string): void {
-  if (readLock(dataDir)?.pid === process.pid)
+  if (readLock(dataDir)?.pid === process.pid) {
     rmSync(lockPath(dataDir), { force: true });
+  }
 }

@@ -94,10 +94,18 @@ export function inspectorEmptyReason(
   selection: SelectionContext[],
   editable: boolean
 ): string | null {
-  if (selection.length === 0) return EMPTY_HINT;
-  if (selection.length === 1 && !selection[0]?.source)
+  if (selection.length === 0) {
+    return EMPTY_HINT;
+  }
+
+  if (selection.length === 1 && !selection[0]?.source) {
     return "This element has no source location. Ask the agent to change it in Chat.";
-  if (!editable) return "Switch the canvas to Live to edit styles directly.";
+  }
+
+  if (!editable) {
+    return "Switch the canvas to Live to edit styles directly.";
+  }
+
   return null;
 }
 
@@ -141,10 +149,13 @@ function SessionHeader({
   onDone: (action: SessionAction) => void;
 }) {
   const blockedDiscard = session.blocked !== null;
+
   const run = async (action: SessionAction) => {
-    if (await (action === "save" ? session.save() : session.discard()))
+    if (await (action === "save" ? session.save() : session.discard())) {
       onDone(action);
+    }
   };
+
   return (
     <div className="edit-head">
       <h2 className="edit-title">Edit</h2>
@@ -195,6 +206,7 @@ function LeavePrompt({ session }: { session: EditSession }) {
 
 function LeaveDialog({ session }: { session: EditSession }) {
   const dialog = useModalDialog(() => void session.answer("cancel"));
+
   return (
     <dialog
       ref={dialog.ref}
@@ -283,20 +295,27 @@ function Tabs({
   const refs = useRef<Partial<Record<InspectorTab, HTMLButtonElement | null>>>(
     {}
   );
+
   const onKeyDown = (event: KeyboardEvent) => {
     const at = TABS.findIndex((t) => t.id === tab);
+
     const target = {
       ArrowRight: at + 1,
       ArrowLeft: at - 1,
       Home: 0,
       End: TABS.length - 1,
     }[event.key];
-    if (target === undefined) return;
+
+    if (target === undefined) {
+      return;
+    }
+
     event.preventDefault();
     const next = TABS[(target + TABS.length) % TABS.length]?.id ?? "simple";
     onTab(next);
     refs.current[next]?.focus();
   };
+
   return (
     <div
       className="edit-tabs"
@@ -328,13 +347,16 @@ function Tabs({
 
 function ComponentSection(props: InspectorProps) {
   const target = props.selection[0];
+
   if (
     props.selection.length !== 1 ||
     !target ||
     !props.directionId ||
     (!target.owners?.length && !target.usedAt)
-  )
+  ) {
     return null;
+  }
+
   return (
     <Suspense fallback={null}>
       <InspectorProps
@@ -350,13 +372,16 @@ function ComponentSection(props: InspectorProps) {
 
 function ImageSection(props: InspectorProps) {
   const target = props.selection[0];
+
   if (
     props.selection.length !== 1 ||
     !target ||
     !props.directionId ||
     !imageKindOf(target)
-  )
+  ) {
     return null;
+  }
+
   return (
     <Suspense fallback={null}>
       <InspectorImage
@@ -374,26 +399,33 @@ function ImageSection(props: InspectorProps) {
 function useUseSite(props: InspectorProps) {
   const [componentFor, setComponentFor] = useState<string | null>(null);
   const target = props.selection.length === 1 ? props.selection[0] : undefined;
+
   const shared =
     target && props.appDir ? sharedSourceOf(target, props.appDir) : null;
+
   const use =
     shared?.use && shared.name
       ? { source: shared.use, component: shared.name }
       : null;
+
   const component = useElementClasses(
     props.projectId,
     props.directionId,
     use ? (target?.source ?? null) : null,
     0
   );
+
   const editingUse =
     Boolean(use) &&
     component.element?.forwardsClassName !== false &&
     componentFor !== target?.selector;
+
   const effective =
     target && use && editingUse ? { ...target, ...use, usedAt: null } : target;
+
   const toggle = () =>
     setComponentFor(editingUse ? (target?.selector ?? null) : null);
+
   return {
     editingUse,
     effective,
@@ -406,6 +438,7 @@ function SimpleTab(props: InspectorProps) {
   const site = useUseSite(props);
   const reason = inspectorEmptyReason(props.selection, props.editable);
   const target = props.selection[0];
+
   if (
     reason &&
     target &&
@@ -425,9 +458,12 @@ function SimpleTab(props: InspectorProps) {
       </div>
     );
   }
-  if (reason || !target)
+
+  if (reason || !target) {
     return <EmptyState reason={reason ?? ""} notice={props.notice} />;
-  if (props.selection.length > 1)
+  }
+
+  if (props.selection.length > 1) {
     return (
       <SimpleMultiEditor
         key={props.selection.map((s) => s.selector).join("\n")}
@@ -435,6 +471,8 @@ function SimpleTab(props: InspectorProps) {
         component={<VectorSection {...props} />}
       />
     );
+  }
+
   return (
     <SimpleEditor
       key={`${target.selector}|${variant}${site.editingUse ? "|use" : ""}`}
@@ -461,7 +499,10 @@ function vectorShown(selection: SelectionContext[]): boolean {
 }
 
 function VectorSection(props: InspectorProps) {
-  if (!vectorShown(props.selection)) return null;
+  if (!vectorShown(props.selection)) {
+    return null;
+  }
+
   return (
     <Suspense fallback={null}>
       <InspectorVector
@@ -495,12 +536,14 @@ function ComponentsTab({
 }: {
   components: InspectorProps["components"];
 }) {
-  if (!components)
+  if (!components) {
     return (
       <p className="ins-hint edit-tab-empty">
         Components show for projects with a component list.
       </p>
     );
+  }
+
   return (
     <div className="edit-components">
       <ComponentsPanel {...components} active />
@@ -520,18 +563,32 @@ const UNSHARED_PROPS = new Set([
 ]);
 
 function sameButRect(a: SelectionContext, b: SelectionContext): boolean {
-  if (a === b) return true;
+  if (a === b) {
+    return true;
+  }
+
   const left = a as unknown as Record<string, unknown>;
   const right = b as unknown as Record<string, unknown>;
   const keys = new Set([...Object.keys(left), ...Object.keys(right)]);
-  for (const key of keys)
-    if (key !== "rect" && left[key] !== right[key]) return false;
+
+  for (const key of keys) {
+    if (key !== "rect" && left[key] !== right[key]) {
+      return false;
+    }
+  }
+
   return true;
 }
 
 function sameSelection(a: SelectionContext[], b: SelectionContext[]): boolean {
-  if (a === b) return true;
-  if (a.length !== b.length || vectorShown(b)) return false;
+  if (a === b) {
+    return true;
+  }
+
+  if (a.length !== b.length || vectorShown(b)) {
+    return false;
+  }
+
   return a.every((item, i) => sameButRect(item, b[i] as SelectionContext));
 }
 
@@ -539,18 +596,25 @@ function sameShared(a: object, b: object): boolean {
   const left = a as Record<string, unknown>;
   const right = b as Record<string, unknown>;
   const keys = new Set([...Object.keys(left), ...Object.keys(right)]);
+
   for (const key of keys) {
-    if (UNSHARED_PROPS.has(key) || left[key] === right[key]) continue;
+    if (UNSHARED_PROPS.has(key) || left[key] === right[key]) {
+      continue;
+    }
+
     if (
       key === "selection" &&
       sameSelection(
         left[key] as SelectionContext[],
         right[key] as SelectionContext[]
       )
-    )
+    ) {
       continue;
+    }
+
     return false;
   }
+
   return true;
 }
 
@@ -561,19 +625,24 @@ function useStableCallbacks<P extends object>(props: P): P {
   latest.current = props;
   const wrappers = useRef(new Map<string, AnyFn>());
   const out: Record<string, unknown> = {};
+
   for (const [key, value] of Object.entries(props)) {
     if (typeof value !== "function") {
       out[key] = value;
       continue;
     }
+
     let wrapper = wrappers.current.get(key);
+
     if (!wrapper) {
       wrapper = (...args: never[]) =>
         (latest.current as Record<string, AnyFn | undefined>)[key]?.(...args);
       wrappers.current.set(key, wrapper);
     }
+
     out[key] = wrapper;
   }
+
   return out as P;
 }
 
@@ -586,7 +655,10 @@ function useSessionHandle(
   session: EditSession
 ) {
   useEffect(() => {
-    if (!ref) return;
+    if (!ref) {
+      return;
+    }
+
     ref.current = {
       dirty: session.dirty,
       count: session.count,
@@ -598,7 +670,9 @@ function useSessionHandle(
   });
   useEffect(
     () => () => {
-      if (ref) ref.current = null;
+      if (ref) {
+        ref.current = null;
+      }
     },
     [ref]
   );
@@ -609,20 +683,25 @@ export function Inspector(raw: InspectorProps) {
   const [ownTab, setOwnTab] = useState<InspectorTab>("simple");
   const tab = props.tab ?? ownTab;
   const onTab = props.onTab ?? setOwnTab;
+
   const session = useEditSession({
     projectId: props.projectId,
     directionId: props.directionId,
     control: props.control,
     port: props.port,
     onEnded: (action, result) => {
-      if (props.onSessionEnd) props.onSessionEnd(action, result);
-      else if (action === "discard" && props.selection.length > 0)
+      if (props.onSessionEnd) {
+        props.onSessionEnd(action, result);
+      } else if (action === "discard" && props.selection.length > 0) {
         props.onStale("");
+      }
     },
   });
+
   useSessionHandle(props.session, session);
   const port = props.port;
   useEffect(() => () => resetEditVariant(port.current), [port]);
+
   return (
     <InspectorAppContext.Provider
       value={{

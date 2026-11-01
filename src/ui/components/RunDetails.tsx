@@ -33,9 +33,11 @@ function preciseUsd(n: number): string {
 
 function costText(s: NonNullable<RunView["summary"]>): string {
   const roundingHidesCost = s.costUsd !== Number(s.costUsd.toFixed(2));
+
   const shown = roundingHidesCost
     ? `${formatUsd(s.costUsd)} (${preciseUsd(s.costUsd)})`
     : formatUsd(s.costUsd);
+
   return s.status === "canceled" ? `${shown} (estimate)` : shown;
 }
 
@@ -49,6 +51,7 @@ export function RunDetails({
   onClose: () => void;
 }) {
   const s = run.summary;
+
   const rows: [string, string][] = s
     ? [
         ["Status", STATUS_TEXT[s.status] ?? s.status],
@@ -68,6 +71,7 @@ export function RunDetails({
         ["Status", STATUS_TEXT[run.status] ?? run.status],
         ["Started", formatTime(run.startedAt)],
       ];
+
   const skills = [
     ...new Set(
       run.tools
@@ -75,17 +79,23 @@ export function RunDetails({
         .map((t) => skillToolName(t.input) || "unknown")
     ),
   ];
+
   rows.push(["Skills used", skills.length > 0 ? skills.join(", ") : "None"]);
   const anyError = run.tools.some((t) => t.isError);
   const closeButton = useRef<HTMLButtonElement>(null);
   useReturnFocusOnUnmount();
   useEffect(() => closeButton.current?.focus(), []);
+
   const onKeyDown = (e: KeyboardEvent) => {
-    if (e.key !== "Escape") return;
+    if (e.key !== "Escape") {
+      return;
+    }
+
     e.preventDefault();
     e.stopPropagation();
     onClose();
   };
+
   return (
     <div
       className="drawer"

@@ -17,12 +17,20 @@ export function ContextMeter({
   tokens: number | null;
   model: string;
 }) {
-  if (tokens === null || tokens <= 0) return null;
+  if (tokens === null || tokens <= 0) {
+    return null;
+  }
+
   const share = contextShare(tokens, model);
-  if (share < SHOW_FROM) return null;
+
+  if (share < SHOW_FROM) {
+    return null;
+  }
+
   const percent = Math.round(share * 100);
   const window = contextWindowFor(model);
   const tone = share >= 0.9 ? "danger" : share >= 0.7 ? "warn" : "";
+
   return (
     <span
       className={`context-meter ${tone}`}

@@ -17,6 +17,7 @@ const VOID_TAGS = new Set([
   "audio",
   "iframe",
 ]);
+
 const TEXT_TAGS = new Set([
   "p",
   "h1",
@@ -40,8 +41,15 @@ const TEXT_TAGS = new Set([
 
 export function insideTarget(element: Element): boolean {
   const tag = element.tagName.toLowerCase();
-  if (VOID_TAGS.has(tag) || element.closest("svg")) return false;
-  if (!TEXT_TAGS.has(tag)) return true;
+
+  if (VOID_TAGS.has(tag) || element.closest("svg")) {
+    return false;
+  }
+
+  if (!TEXT_TAGS.has(tag)) {
+    return true;
+  }
+
   return (
     element.children.length > 0 &&
     !Array.from(element.childNodes).some(
@@ -54,7 +62,12 @@ export function insideTarget(element: Element): boolean {
 
 export function dropElement(x: number, y: number): Element | null {
   const element = document.elementFromPoint(x, y);
-  if (!element || element === document.documentElement) return document.body;
+
+  if (!element || element === document.documentElement) {
+    return document.body;
+  }
+
   const svg = element.closest("svg");
+
   return svg?.parentElement ?? element;
 }

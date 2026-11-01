@@ -51,7 +51,9 @@ const COVERED = new Set<string>([
   "flex-basis",
   "flex-flow",
 ]);
+
 const NOT_BORDER_BOX = /^border-(collapse|spacing|image)/;
+
 const IMAGE_VALUE =
   /(url|gradient|image|image-set|element|cross-fade|paint)\s*\(/i;
 
@@ -64,20 +66,30 @@ function splitTopLevel(
   let quote: string | null = null;
   let depth = 0;
   let start = 0;
+
   for (let index = 0; index < text.length; index += 1) {
     const char = text[index];
+
     if (quote !== null) {
-      if (char === "\\") index += 1;
-      else if (char === quote) quote = null;
-    } else if (char === '"' || char === "'") quote = char;
-    else if (char === "(") depth += 1;
-    else if (char === ")") depth = Math.max(0, depth - 1);
-    else if (char === separator && depth === 0 && parts.length < limit) {
+      if (char === "\\") {
+        index += 1;
+      } else if (char === quote) {
+        quote = null;
+      }
+    } else if (char === '"' || char === "'") {
+      quote = char;
+    } else if (char === "(") {
+      depth += 1;
+    } else if (char === ")") {
+      depth = Math.max(0, depth - 1);
+    } else if (char === separator && depth === 0 && parts.length < limit) {
       parts.push(text.slice(start, index));
       start = index + 1;
     }
   }
+
   parts.push(text.slice(start));
+
   return parts;
 }
 
@@ -85,6 +97,7 @@ export function parseDeclarations(
   css: string
 ): { prop: string; value: string }[] {
   const out: { prop: string; value: string }[] = [];
+
   for (const chunk of splitTopLevel(
     css.replace(/\/\*[\s\S]*?\*\//g, ""),
     ";"
@@ -92,17 +105,23 @@ export function parseDeclarations(
     const [rawProp = "", rawValue] = splitTopLevel(chunk, ":", 1);
     const prop = rawProp.trim();
     const value = rawValue?.trim() ?? "";
-    if (prop === "" || value === "") continue;
+
+    if (prop === "" || value === "") {
+      continue;
+    }
+
     out.push({
       prop: prop.startsWith("--") ? prop : prop.toLowerCase(),
       value,
     });
   }
+
   return out;
 }
 
 function isColorOnly(value: string): boolean {
   const plain = value.replace(/\s*!important\s*$/i, "").trim();
+
   return (
     !IMAGE_VALUE.test(plain) &&
     splitTopLevel(plain, " ").filter((part) => part !== "").length === 1
@@ -110,22 +129,37 @@ function isColorOnly(value: string): boolean {
 }
 
 export function isCoveredDeclaration(prop: string, value: string): boolean {
-  if (prop === "background") return isColorOnly(value);
-  if (COVERED.has(prop)) return true;
+  if (prop === "background") {
+    return isColorOnly(value);
+  }
+
+  if (COVERED.has(prop)) {
+    return true;
+  }
+
   return prop.startsWith("border-") && !NOT_BORDER_BOX.test(prop);
 }
 
 export function otherStyles(css: AuthoredCss): AuthoredDeclaration[] {
   const winners = new Map<string, AuthoredDeclaration>();
+
   const take = (text: string, source: string) => {
     for (const { prop, value } of parseDeclarations(text)) {
-      if (isCoveredDeclaration(prop, value)) continue;
+      if (isCoveredDeclaration(prop, value)) {
+        continue;
+      }
+
       winners.delete(prop);
       winners.set(prop, { prop, value, source });
     }
   };
-  for (const rule of css.rules) take(rule.css, rule.source ?? rule.selector);
+
+  for (const rule of css.rules) {
+    take(rule.css, rule.source ?? rule.selector);
+  }
+
   take(css.inline, INLINE_SOURCE);
+
   return [...winners.values()];
 }
 
@@ -133,13 +167,17 @@ function block(head: string, css: string): string {
   const lines = parseDeclarations(css).map(
     ({ prop, value }) => `  ${prop}: ${value};`
   );
+
   return `${head} {\n${lines.join("\n")}\n}`;
 }
 
 export function formatCopyCss(css: AuthoredCss): string {
   const blocks = css.rules.map((rule) => block(rule.selector, rule.css));
-  if (parseDeclarations(css.inline).length > 0)
+
+  if (parseDeclarations(css.inline).length > 0) {
     blocks.push(block("/* inline */", css.inline));
+  }
+
   return blocks.join("\n\n");
 }
 
@@ -151,40 +189,66 @@ export function parseAuthoredReply(message: {
   rules?: unknown;
   inline?: unknown;
 }): AuthoredCss | null {
-  if (!Array.isArray(message.rules)) return null;
+  if (!Array.isArray(message.rules)) {
+    return null;
+  }
+
   const inline = cappedString(message.inline, MAX_BYTES);
-  if (inline === null) return null;
+
+  if (inline === null) {
+    return null;
+  }
+
   const rules: AuthoredRule[] = [];
   let bytes = 0;
+
   for (const raw of message.rules.slice(0, MAX_RULES)) {
-    if (!raw || typeof raw !== "object") continue;
+    if (!raw || typeof raw !== "object") {
+      continue;
+    }
+
     const entry = raw as Record<string, unknown>;
     const selector = cappedString(entry.selector, MAX_SELECTOR);
     const ruleCss = cappedString(entry.css, MAX_BYTES);
+
     const source =
       entry.source === null ? null : cappedString(entry.source, MAX_SOURCE);
+
     if (
       selector === null ||
       ruleCss === null ||
       (source === null && entry.source !== null)
-    )
+    ) {
       continue;
+    }
+
     bytes += selector.length + ruleCss.length;
-    if (bytes > MAX_BYTES) break;
+
+    if (bytes > MAX_BYTES) {
+      break;
+    }
+
     rules.push({ selector, css: ruleCss, source });
   }
+
   return { rules, inline };
 }
 
 export function parseSelectionPath(raw: unknown): string[] {
-  if (!Array.isArray(raw)) return [];
+  if (!Array.isArray(raw)) {
+    return [];
+  }
+
   const path = raw.slice(-MAX_PATH);
+
   if (
     !path.every(
       (label): label is string => typeof label === "string" && label !== ""
     )
-  )
+  ) {
     return [];
+  }
+
   return path.map((label) => label.slice(0, MAX_LABEL));
 }
 
@@ -203,8 +267,13 @@ export function pathCrumbs(path: string[]): PathCrumb[] {
 
 export function collapseCrumbs(crumbs: PathCrumb[], max = 4): Crumb[] {
   const nodes = crumbs.map((crumb): Crumb => ({ kind: "node", ...crumb }));
-  if (crumbs.length <= max) return nodes;
+
+  if (crumbs.length <= max) {
+    return nodes;
+  }
+
   const keep = max - 1;
+
   return [
     nodes[0] as Crumb,
     { kind: "gap", hidden: crumbs.slice(1, crumbs.length - keep) },

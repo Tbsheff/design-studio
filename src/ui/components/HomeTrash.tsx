@@ -24,7 +24,10 @@ const trashApi = {
 function useTrashThumb(item: TrashItem): string | null {
   const [url, setUrl] = useState<string | null>(null);
   useEffect(() => {
-    if (!item.thumbnail) return;
+    if (!item.thumbnail) {
+      return;
+    }
+
     let made: string | null = null;
     let live = true;
     void fetch(`/api/trash/${encodeURIComponent(item.trashId)}/thumbnail`, {
@@ -32,16 +35,24 @@ function useTrashThumb(item: TrashItem): string | null {
     })
       .then((response) => (response.ok ? response.blob() : null))
       .then((blob) => {
-        if (!blob || !live) return;
+        if (!blob || !live) {
+          return;
+        }
+
         made = URL.createObjectURL(blob);
         setUrl(made);
       })
       .catch(() => undefined);
+
     return () => {
       live = false;
-      if (made) URL.revokeObjectURL(made);
+
+      if (made) {
+        URL.revokeObjectURL(made);
+      }
     };
   }, [item.trashId, item.thumbnail]);
+
   return url;
 }
 
@@ -57,6 +68,7 @@ function TrashRow({
   onDelete: () => void;
 }) {
   const thumb = useTrashThumb(item);
+
   return (
     <li className="trash-row" data-trash-id={item.trashId}>
       <div className="trash-thumb" aria-hidden="true">
@@ -119,16 +131,20 @@ function ConfirmDelete({
   onConfirm: () => void;
 }) {
   const dialog = useModalDialog(() => (busy ? false : onCancel()));
+
   const title =
     confirm.kind === "one"
       ? `Delete “${confirm.item.name}” forever?`
       : "Empty the trash?";
+
   const what =
     confirm.kind === "one"
       ? "Its versions, runs and comments leave the app. You cannot undo this."
       : `${confirm.count === 1 ? "1 project" : `${confirm.count} projects`} and their versions, runs and comments leave the app. You cannot undo this.`;
+
   const folders =
     confirm.kind === "one" ? confirm.item.folderStays : confirm.folderStays;
+
   return (
     <dialog
       ref={dialog.ref}
@@ -201,6 +217,7 @@ export default function HomeTrash({
       .then(setItems)
       .catch((err: unknown) => setError(errorText(err)));
   };
+
   useEffect(load, []);
 
   const drop = (trashId: string) =>
@@ -211,6 +228,7 @@ export default function HomeTrash({
   const restore = async (item: TrashItem) => {
     setBusy(item.trashId);
     setError(null);
+
     try {
       await api.restoreProject(item.trashId);
       drop(item.trashId);
@@ -231,9 +249,13 @@ export default function HomeTrash({
   };
 
   const confirmDelete = async () => {
-    if (!confirm) return;
+    if (!confirm) {
+      return;
+    }
+
     setBusy("confirm");
     setConfirmError(null);
+
     try {
       if (confirm.kind === "one") {
         await trashApi.remove(confirm.item.trashId);
@@ -248,6 +270,7 @@ export default function HomeTrash({
             : `Deleted ${deleted} projects forever.`
         );
       }
+
       setConfirm(null);
       window.requestAnimationFrame(() =>
         dialog.ref.current
@@ -264,6 +287,7 @@ export default function HomeTrash({
   };
 
   const count = items?.length ?? 0;
+
   return (
     <dialog
       ref={dialog.ref}

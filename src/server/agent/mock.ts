@@ -55,6 +55,7 @@ const MOCK_USAGE = {
   cacheReadTokens: 0,
   cacheWriteTokens: 0,
 };
+
 const DELTA_DELAY_MS = 20;
 const SLOW_STEP_MS = 1500;
 const STEP_TOOL_MS = 900;
@@ -68,6 +69,7 @@ const MOCK_TODO_STEPS = [
   "Write the cards",
   "Check mobile",
 ];
+
 export const MOCK_CONTEXT_TOKENS = 24_000;
 
 function mockTodos(current: number) {
@@ -85,16 +87,19 @@ function mockTodos(current: number) {
 
 export function longReply(): string {
   const sections: string[] = [];
+
   for (let n = 1; n <= LONG_SECTIONS; n += 1) {
     const code = Array.from(
       { length: 18 },
       (_, line) =>
         `  .card-${n}-${line} { padding: ${line * 2}px; border-radius: 8px; color: var(--ink); }`
     ).join("\n");
+
     sections.push(
       `## Section ${n}: layout notes\n\nThe hero keeps one clear action and the cards keep a steady rhythm. This paragraph explains why the spacing scale matters for section ${n}, how the type sizes relate, and which tokens the page uses so that the reader can follow the change without opening the code.\n\n- Keep the heading short and specific.\n- Use one accent color for actions.\n- Check the mobile layout at 390 px.\n\n\`\`\`css\n${code}\n\`\`\`\n\nAfter the code, a short summary closes section ${n} and leads into the next one.`
     );
   }
+
   return sections.join("\n\n");
 }
 
@@ -107,21 +112,28 @@ class MockAbortError extends Error {
 
 function sleep(ms: number, signal: AbortSignal): Promise<void> {
   return new Promise((resolve, reject) => {
-    if (signal.aborted) return reject(new MockAbortError());
+    if (signal.aborted) {
+      return reject(new MockAbortError());
+    }
+
     const timer = setTimeout(() => {
       signal.removeEventListener("abort", onAbort);
       resolve();
     }, ms);
+
     function onAbort() {
       clearTimeout(timer);
       reject(new MockAbortError());
     }
+
     signal.addEventListener("abort", onAbort, { once: true });
   });
 }
 
 function throwIfAborted(signal: AbortSignal): void {
-  if (signal.aborted) throw new MockAbortError();
+  if (signal.aborted) {
+    throw new MockAbortError();
+  }
 }
 
 function escapeHtml(value: string): string {
@@ -138,8 +150,10 @@ function escapeJsxText(value: string): string {
 }
 
 const SKILL_TAG = /\[skill:([^\]\s]+)\]/g;
+
 const MOCK_TAGS =
   /\[(slow|fail|tweaks|ds-fail-once|ds-fail-always|think|steps|bash|todo|edit1|long|retry|canvas|states)\]/g;
+
 const SKILL_LINE = /^Use the (\S+) skill\.$/gm;
 
 export function mockSkillRequests(prompt: string): string[] {
@@ -147,6 +161,7 @@ export function mockSkillRequests(prompt: string): string[] {
     ...prompt.matchAll(SKILL_TAG),
     ...prompt.matchAll(SKILL_LINE),
   ].map((match) => match[1] ?? "");
+
   return [...new Set(ids.filter(Boolean))];
 }
 
@@ -162,6 +177,7 @@ export function cleanPrompt(prompt: string): string {
 async function exists(file: string): Promise<boolean> {
   try {
     await stat(file);
+
     return true;
   } catch {
     return false;
@@ -170,6 +186,7 @@ async function exists(file: string): Promise<boolean> {
 
 function landingPage(title: string): string {
   const heading = escapeHtml(title);
+
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -225,12 +242,14 @@ interface MockFlags {
 
 async function mockShellWrite(absolute: string): Promise<void> {
   const current = await readFile(absolute, "utf-8").catch(() => null);
+
   const next =
     current === null
       ? "MOCK_VALUE=1\n"
       : current.includes("<h1")
         ? current.replace(/(<h1[^>]*>)[^<]*/, "$1Edited by a shell command")
         : `${current.trimEnd()}\n/* edited by a shell command */\n`;
+
   await mkdir(path.dirname(absolute), { recursive: true });
   await writeFile(absolute, next);
 }
@@ -259,6 +278,7 @@ class MockSession {
   async say(text: string): Promise<void> {
     const words = text.split(" ");
     const chunkSize = Math.max(1, Math.ceil(words.length / 5));
+
     for (let index = 0; index < words.length; index += chunkSize) {
       throwIfAborted(this.signal);
       const chunk = words.slice(index, index + chunkSize).join(" ");
@@ -267,6 +287,7 @@ class MockSession {
       );
       await sleep(DELTA_DELAY_MS, this.signal);
     }
+
     this.sink.text(text);
   }
 
@@ -280,6 +301,7 @@ class MockSession {
       this.sink.textDelta(text.slice(index, index + chunkSize));
       await sleep(delayMs, this.signal);
     }
+
     this.sink.text(text);
   }
 
@@ -297,6 +319,7 @@ class MockSession {
       this.sink.thinkingDelta(`${word} `);
       await sleep(DELTA_DELAY_MS / 2, this.signal);
     }
+
     this.sink.thinking(text);
   }
 
@@ -316,7 +339,10 @@ class MockSession {
 
   async deliverQueued(): Promise<void> {
     const taken = this.input.inbox?.take() ?? [];
-    if (taken.length > 0) await this.say(`Noted: ${queuedText(taken)}`);
+
+    if (taken.length > 0) {
+      await this.say(`Noted: ${queuedText(taken)}`);
+    }
   }
 
   async bash(command: string): Promise<void> {
@@ -324,14 +350,18 @@ class MockSession {
     const toolUseId = `mock_tool_${this.toolCounter}`;
     const input = { command };
     this.sink.toolStarted(toolUseId, "Bash", input);
+
     const gate =
       this.input.ask && !this.input.ctx.project.settings.autoApprove
         ? createBashGate(this.input.ask, undefined, this.input.commandRules)
         : null;
+
     const decision = gate
       ? await gate(toolUseId, input)
       : { behavior: "allow" as const };
+
     throwIfAborted(this.signal);
+
     if (decision.behavior === "deny") {
       this.sink.toolFinished(toolUseId, true, decision.message);
       this.sink.sent({
@@ -345,8 +375,10 @@ class MockSession {
       await this.say(
         `Okay, I will not run \`${command}\`. ${decision.message}`
       );
+
       return;
     }
+
     await writeFile(
       path.join(this.workTree, MOCK_BASH_OUTPUT),
       `ran: ${command}\n`
@@ -359,24 +391,33 @@ class MockSession {
     const files = targets.split(",").filter(Boolean);
     this.toolCounter += 1;
     const toolUseId = `mock_tool_${this.toolCounter}`;
+
     const input = {
       command: `python3 scripts/patch.py ${files.map((file) => path.basename(file)).join(" ")}`,
     };
+
     const settings = this.input.ctx.project.settings;
+
     const policy: ToolPolicy = {
       workTree: this.workTree,
       mode: "edit",
       allowBash: settings.allowBash,
       allowInstall: settings.allowInstall,
     };
+
     this.sink.toolStarted(toolUseId, "Bash", input);
     await this.sink.beforeWrite(toolUseId, "Bash", input);
-    for (const file of files)
+
+    for (const file of files) {
       await mockShellWrite(path.resolve(this.workTree, file));
+    }
+
     const result = await this.sink.bashFinished?.(toolUseId, (relative) =>
       bashWriteProblem(policy, relative)
     );
+
     this.sink.toolFinished(toolUseId, false, `Bash ${input.command}`);
+
     return result?.message ?? null;
   }
 
@@ -396,27 +437,38 @@ class MockSession {
   ): Promise<void> {
     const absolute = path.resolve(this.workTree, relativePath);
     const problem = checkPathInside(this.workTree, absolute);
-    if (problem) throw new Error(problem);
+
+    if (problem) {
+      throw new Error(problem);
+    }
+
     this.toolCounter += 1;
     const toolUseId = `mock_tool_${this.toolCounter}`;
     this.sink.toolStarted(toolUseId, toolName, { file_path: absolute });
     this.sink.beforeWrite(toolUseId, toolName, { file_path: absolute });
+
     try {
       await mkdir(path.dirname(absolute), { recursive: true });
+
       if (this.flags.slow) {
         const step = Math.ceil(content.length / 3);
+
         for (let part = 1; part <= 3; part += 1) {
           throwIfAborted(this.signal);
           await writeFile(
             absolute,
             content.slice(0, Math.min(content.length, step * part))
           );
-          if (part < 3) await sleep(SLOW_STEP_MS, this.signal);
+
+          if (part < 3) {
+            await sleep(SLOW_STEP_MS, this.signal);
+          }
         }
       } else {
         throwIfAborted(this.signal);
         await writeFile(absolute, content);
       }
+
       this.sink.toolFinished(toolUseId, false, `${toolName} ${relativePath}`);
       await this.deliverQueued();
     } catch (error) {
@@ -427,36 +479,57 @@ class MockSession {
       );
       throw error;
     }
+
     this.writes += 1;
-    if (this.flags.fail && this.writes === 1)
+
+    if (this.flags.fail && this.writes === 1) {
       throw new Error("Mock failure after first write.");
+    }
   }
 }
 
 function lineColToOffset(source: string, line: number, col: number): number {
   let offset = 0;
+
   for (let current = 1; current < line; current += 1) {
     const next = source.indexOf("\n", offset);
-    if (next === -1) return -1;
+
+    if (next === -1) {
+      return -1;
+    }
+
     offset = next + 1;
   }
+
   return offset + col - 1;
 }
 
 function findOpenTagEnd(source: string, start: number): number {
   let quote: string | null = null;
   let braceDepth = 0;
+
   for (let index = start + 1; index < source.length; index += 1) {
     const char = source[index];
+
     if (quote) {
-      if (char === quote) quote = null;
+      if (char === quote) {
+        quote = null;
+      }
+
       continue;
     }
-    if (char === '"' || char === "'") quote = char;
-    else if (char === "{") braceDepth += 1;
-    else if (char === "}") braceDepth -= 1;
-    else if (char === ">" && braceDepth === 0) return index;
+
+    if (char === '"' || char === "'") {
+      quote = char;
+    } else if (char === "{") {
+      braceDepth += 1;
+    } else if (char === "}") {
+      braceDepth -= 1;
+    } else if (char === ">" && braceDepth === 0) {
+      return index;
+    }
   }
+
   return -1;
 }
 
@@ -465,6 +538,7 @@ function parseColorRequest(prompt: string): string | null {
     /\bcolou?r\s+(#[0-9a-fA-F]{3,8}\b|(?:rgb|rgba|hsl|hsla|oklch)\([^)]*\)|[a-zA-Z]+)/i.exec(
       prompt
     );
+
   return match?.[1] ?? null;
 }
 
@@ -472,28 +546,39 @@ function setInlineColor(openTag: string, color: string, jsx: boolean): string {
   const selfClosing = openTag.endsWith("/>");
   const body = openTag.slice(0, selfClosing ? -2 : -1);
   const close = selfClosing ? "/>" : ">";
+
   if (jsx) {
     const jsxStyle = /style=\{\{([\s\S]*?)\}\}/.exec(body);
+
     if (jsxStyle) {
       const inner = (jsxStyle[1] ?? "")
         .replace(/,?\s*color\s*:\s*(['"]).*?\1/, "")
         .trim()
         .replace(/^,\s*/, "");
+
       const next = inner ? `color: '${color}', ${inner}` : `color: '${color}'`;
+
       return `${body.replace(jsxStyle[0], `style={{ ${next} }}`)}${close}`;
     }
+
     return `${body.trimEnd()} style={{ color: '${color}' }}${selfClosing ? " " : ""}${close}`;
   }
+
   const htmlStyle = /style=(["'])([\s\S]*?)\1/.exec(body);
+
   if (htmlStyle) {
     const quote = htmlStyle[1] ?? '"';
+
     const rules = (htmlStyle[2] ?? "")
       .split(";")
       .map((rule) => rule.trim())
       .filter((rule) => rule && !/^color\s*:/i.test(rule));
+
     rules.push(`color: ${color}`);
+
     return `${body.replace(htmlStyle[0], `style=${quote}${rules.join("; ")}${quote}`)}${close}`;
   }
+
   return `${body.trimEnd()} style="color: ${color}"${selfClosing ? " " : ""}${close}`;
 }
 
@@ -503,24 +588,36 @@ function replaceFirstText(
   text: string
 ): string | null {
   let cursor = from;
+
   for (let guard = 0; guard < 200 && cursor < source.length; guard += 1) {
     const nextTag = source.indexOf("<", cursor);
     const segmentEnd = nextTag === -1 ? source.length : nextTag;
     const segment = source.slice(cursor, segmentEnd);
+
     if (segment.trim() && !/^\s*\{/.test(segment)) {
       const leading = segment.length - segment.trimStart().length;
       const trailing = segment.length - segment.trimEnd().length;
+
       return (
         source.slice(0, cursor + leading) +
         text +
         source.slice(segmentEnd - trailing)
       );
     }
-    if (nextTag === -1 || source.startsWith("</", nextTag)) return null;
+
+    if (nextTag === -1 || source.startsWith("</", nextTag)) {
+      return null;
+    }
+
     const tagEnd = findOpenTagEnd(source, nextTag);
-    if (tagEnd === -1) return null;
+
+    if (tagEnd === -1) {
+      return null;
+    }
+
     cursor = tagEnd + 1;
   }
+
   return null;
 }
 
@@ -530,33 +627,50 @@ function applySelectionEdit(
   prompt: string,
   jsx: boolean
 ): string | null {
-  if (!selection.source) return null;
+  if (!selection.source) {
+    return null;
+  }
+
   const start = lineColToOffset(
     source,
     selection.source.line,
     selection.source.col
   );
-  if (start < 0 || source[start] !== "<") return null;
+
+  if (start < 0 || source[start] !== "<") {
+    return null;
+  }
+
   const openEnd = findOpenTagEnd(source, start);
-  if (openEnd === -1) return null;
+
+  if (openEnd === -1) {
+    return null;
+  }
+
   const color = parseColorRequest(prompt);
+
   if (color) {
     const openTag = source.slice(start, openEnd + 1);
+
     return (
       source.slice(0, start) +
       setInlineColor(openTag, color, jsx) +
       source.slice(openEnd + 1)
     );
   }
+
   const text = jsx
     ? escapeJsxText(cleanPrompt(prompt))
     : escapeHtml(cleanPrompt(prompt));
+
   return replaceFirstText(source, openEnd + 1, text);
 }
 
 function resolveSelectionFile(workTree: string, file: string): string {
-  if (path.isAbsolute(file) && checkPathInside(workTree, file) === null)
+  if (path.isAbsolute(file) && checkPathInside(workTree, file) === null) {
     return file;
+  }
+
   return path.resolve(workTree, file.replace(/^\/+/, ""));
 }
 
@@ -564,12 +678,17 @@ function groupSelectionsByFile(
   selections: SelectionContext[]
 ): Map<string, SelectionContext[]> {
   const byFile = new Map<string, SelectionContext[]>();
+
   for (const selection of selections) {
-    if (!selection.source) continue;
+    if (!selection.source) {
+      continue;
+    }
+
     const list = byFile.get(selection.source.file) ?? [];
     list.push(selection);
     byFile.set(selection.source.file, list);
   }
+
   return byFile;
 }
 
@@ -586,6 +705,7 @@ function compareSelectionsBottomUp(
 async function runCritique(session: MockSession): Promise<string> {
   const finalText = `Critique: tighten the hierarchy, check contrast on secondary text, and test the layout at 375px.`;
   await session.say(finalText);
+
   return finalText;
 }
 
@@ -599,6 +719,7 @@ async function editSelectionFile(
   const absolute = resolveSelectionFile(workTree, file);
   let source = await readFile(absolute, "utf-8");
   const ordered = [...selections].sort(compareSelectionsBottomUp);
+
   for (const selection of ordered) {
     const next = applySelectionEdit(
       source,
@@ -606,8 +727,12 @@ async function editSelectionFile(
       prompt,
       /\.(jsx|tsx)$/.test(file)
     );
-    if (next !== null) source = next;
+
+    if (next !== null) {
+      source = next;
+    }
   }
+
   await session.writeFileAsTool(
     "Edit",
     path.relative(workTree, absolute),
@@ -622,11 +747,14 @@ async function runSelectionEdit(
   prompt: string
 ): Promise<string> {
   await session.say(`Updating ${selections.length} selected element(s).`);
+
   for (const [file, fileSelections] of groupSelectionsByFile(selections)) {
     await editSelectionFile(session, workTree, file, fileSelections, prompt);
   }
+
   const finalText = "Updated the selected element(s).";
   await session.say(finalText);
+
   return finalText;
 }
 
@@ -648,18 +776,24 @@ async function runCommentEdit(
   await session.say(`Addressing ${comments.length} comment(s).`);
   const placed = comments.filter(isPlaced);
   const byFile = new Map<string, PlacedComment[]>();
-  for (const comment of placed)
+
+  for (const comment of placed) {
     byFile.set(comment.element.source.file, [
       ...(byFile.get(comment.element.source.file) ?? []),
       comment,
     ]);
+  }
+
   const done: number[] = [];
+
   for (const [file, fileComments] of byFile) {
     const absolute = resolveSelectionFile(workTree, file);
     let source = await readFile(absolute, "utf-8");
+
     const ordered = [...fileComments].sort((a, b) =>
       compareSelectionsBottomUp(a.element, b.element)
     );
+
     for (const comment of ordered) {
       const next = applySelectionEdit(
         source,
@@ -667,29 +801,38 @@ async function runCommentEdit(
         comment.text,
         /\.(jsx|tsx)$/.test(file)
       );
-      if (next === null) continue;
+
+      if (next === null) {
+        continue;
+      }
+
       source = next;
       done.push(comment.n);
     }
+
     await session.writeFileAsTool(
       "Edit",
       path.relative(workTree, absolute),
       source
     );
   }
+
   const finalText = `Done: ${
     done
       .sort((a, b) => a - b)
       .map((n) => `#${n}`)
       .join(", ") || "none"
   }.`;
+
   await session.say(finalText);
+
   return finalText;
 }
 
 function appendParagraph(source: string, text: string): string {
   const paragraph = `  <p class="mock-edit">${escapeHtml(text)}</p>\n`;
   const closeBody = source.lastIndexOf("</body>");
+
   return closeBody === -1
     ? `${source}${paragraph}`
     : `${source.slice(0, closeBody)}${paragraph}${source.slice(closeBody)}`;
@@ -705,8 +848,10 @@ async function writeHtmlChange(
       `Creating a landing page for "${text}" with a hero, a call to action, and three cards.`
     );
     await session.writeFileAsTool("Write", "index.html", landingPage(text));
+
     return "Created `index.html`.";
   }
+
   await session.say(`Adding a note for "${text}".`);
   const source = await readFile(indexPath, "utf-8");
   await session.writeFileAsTool(
@@ -714,6 +859,7 @@ async function writeHtmlChange(
     "index.html",
     appendParagraph(source, text)
   );
+
   return "Added a paragraph to `index.html`.";
 }
 
@@ -725,13 +871,16 @@ async function runHeadingEdit(
   const indexPath = path.join(workTree, "index.html");
   const source = await readFile(indexPath, "utf-8");
   await session.say(`Changing the heading to "${text}".`);
+
   const next = source.replace(
     /(<h1\b[^>]*>)[^<\n]*(<\/h1>)/,
     `$1${escapeHtml(text)}$2`
   );
+
   await session.writeFileAsTool("Edit", "index.html", next);
   const finalText = "Changed the heading in `index.html`.";
   await session.say(finalText);
+
   return finalText;
 }
 
@@ -745,7 +894,9 @@ async function runHtmlEdit(
     path.join(workTree, "index.html"),
     text
   );
+
   await session.say(finalText);
+
   return finalText;
 }
 
@@ -755,22 +906,28 @@ async function runReactEdit(
   text: string
 ): Promise<string> {
   const appPath = path.join(workTree, "src", "App.tsx");
+
   const current = (await exists(appPath))
     ? await readFile(appPath, "utf-8")
     : "";
+
   const heading = /(<h1\b[^>]*>)([\s\S]*?)(<\/h1>)/.exec(current);
   await session.say(`Setting the heading to "${text}".`);
+
   if (heading) {
     const next = current.replace(
       heading[0],
       `${heading[1]}${escapeJsxText(text)}${heading[3]}`
     );
+
     await session.writeFileAsTool("Edit", "src/App.tsx", next);
   } else {
     await session.writeFileAsTool("Edit", "src/App.tsx", reactApp(text));
   }
+
   const finalText = "Updated `src/App.tsx`.";
   await session.say(finalText);
+
   return finalText;
 }
 
@@ -804,12 +961,14 @@ async function runLevelChecks(
   for (const [name, input] of MOCK_LEVEL_STEPS[level]) {
     const viewport =
       typeof input["viewport"] === "string" ? ` ${input["viewport"]}` : "";
+
     await session.fakeTool(name, input, `${name}${viewport}`);
   }
 }
 
 function wantsLevelChecks(input: DriverInput): boolean {
   const request = input.ctx.request;
+
   return (
     request.mode === "edit" &&
     !request.plan &&
@@ -820,6 +979,7 @@ function wantsLevelChecks(input: DriverInput): boolean {
 
 function wantsTweaks(input: DriverInput): boolean {
   const request = input.ctx.request;
+
   return (
     request.mode === "edit" &&
     (request.task === "tweaks" || request.prompt.includes(MOCK_TWEAKS_TAG))
@@ -832,16 +992,20 @@ async function runMockScenario(
   canvas: CanvasService | undefined,
   preview: PreviewService | undefined
 ): Promise<string> {
-  if (wantsDesignSystemCheck(input.ctx))
+  if (wantsDesignSystemCheck(input.ctx)) {
     return runMockDesignSystem(
       session,
       input.ctx.direction.workTree,
       input.ctx.request.prompt,
       (await buildUserMessageParts(input.ctx)).images.length
     );
-  if (wantsMockCanvas(input))
+  }
+
+  if (wantsMockCanvas(input)) {
     return runMockCanvas(session, mockCanvasContext(input, canvas));
-  if (wantsMockLinks(input))
+  }
+
+  if (wantsMockLinks(input)) {
     return runMockLinks(
       session,
       mockCanvasContext(input, canvas),
@@ -850,19 +1014,31 @@ async function runMockScenario(
         : undefined,
       input.ctx.request.prompt
     );
-  if (wantsMockDirect(input)) return runMockDirect(session, input, preview);
-  if (wantsMockStates(input))
+  }
+
+  if (wantsMockDirect(input)) {
+    return runMockDirect(session, input, preview);
+  }
+
+  if (wantsMockStates(input)) {
     return runMockStates(session, input, mockCanvasContext(input, canvas));
+  }
+
   const tweaksOnly = input.ctx.request.task === "tweaks";
   let finalText = tweaksOnly ? "" : await runMockEdit(input, session);
-  if (wantsTweaks(input))
+
+  if (wantsTweaks(input)) {
     finalText =
       `${finalText} ${await runMockTweaks(session, input.ctx.project.kind, input.ctx.direction.workTree)}`.trim();
-  if (wantsLevelChecks(input) && !tweaksOnly)
+  }
+
+  if (wantsLevelChecks(input) && !tweaksOnly) {
     await runLevelChecks(
       session,
       levelOf(input.ctx.request, input.ctx.project.settings)
     );
+  }
+
   return finalText;
 }
 
@@ -872,6 +1048,7 @@ async function runPlan(
   text: string
 ): Promise<string> {
   await session.say(`Planning "${text}" before any change.`);
+
   const policy: ToolPolicy = {
     workTree,
     mode: "edit",
@@ -879,6 +1056,7 @@ async function runPlan(
     allowInstall: false,
     plan: true,
   };
+
   const target = { file_path: path.join(workTree, "index.html") };
   session.toolCounterNext();
   const toolUseId = session.lastToolId();
@@ -891,6 +1069,7 @@ async function runPlan(
   );
   const plan = `Plan:\n\n1. Keep the hero and make "${text}" the heading.\n2. Tighten the card copy.\n3. Check mobile at 390 px.`;
   await session.say(plan);
+
   return plan;
 }
 
@@ -935,6 +1114,7 @@ function styleOpenTag(
   const selfClosing = openTag.endsWith("/>");
   let body = openTag.slice(0, selfClosing ? -2 : -1).replace(/\s+$/, "");
   const close = selfClosing ? " />" : ">";
+
   if (jsx) {
     const css = `background: '${look.background}', color: '${look.color}', borderRadius: '${look.radius}', padding: '${look.padding}', border: '${look.border}'`;
     body = /style=\{\{/.test(body)
@@ -946,6 +1126,7 @@ function styleOpenTag(
       ? body.replace(/\sstyle="/, ` style="${css}; `)
       : `${body} style="${css}"`;
   }
+
   return `${body} data-variant="${label}"${close}`;
 }
 
@@ -956,8 +1137,11 @@ async function runElementVariantMock(
 ): Promise<string> {
   const scope = request.scope;
   const variation = request.variation;
-  if (!scope || !variation)
+
+  if (!scope || !variation) {
     throw new Error("runElementVariantMock needs a scope and a variation");
+  }
+
   await session.say(
     `Trying option ${variation.label} of the ${scope.tag}: ${variation.title}.`
   );
@@ -965,9 +1149,13 @@ async function runElementVariantMock(
   const end = source.length - scope.suffixLength;
   const element = source.slice(scope.start, end);
   const openEnd = findOpenTagEnd(element, 0);
-  if (!element.startsWith("<") || openEnd === -1)
+
+  if (!element.startsWith("<") || openEnd === -1) {
     throw new Error(`mock: no element at ${scope.file}:${scope.startLine}`);
+  }
+
   const jsx = /\.(jsx|tsx)$/.test(scope.file);
+
   const changed =
     styleOpenTag(
       element.slice(0, openEnd + 1),
@@ -975,7 +1163,9 @@ async function runElementVariantMock(
       variation.index,
       jsx
     ) + element.slice(openEnd + 1);
+
   let next = source.slice(0, scope.start) + changed + source.slice(end);
+
   if (
     request.prompt.includes("[escape]") &&
     variation.index === variation.count - 1
@@ -984,9 +1174,11 @@ async function runElementVariantMock(
       ? `\n// mock variant ${variation.label} also edited outside the element\n`
       : `\n<!-- mock variant ${variation.label} also edited outside the element -->\n`;
   }
+
   await session.writeFileAsTool("Edit", scope.file, next);
   const finalText = `Wrote option ${variation.label} of the ${scope.tag} (${variation.title}).`;
   await session.say(finalText);
+
   return finalText;
 }
 
@@ -998,11 +1190,20 @@ function runMockEdit(
   const prompt = ctx.request.prompt;
   const workTree = ctx.direction.workTree;
   const text = cleanPrompt(prompt) || "Untitled";
-  if (ctx.request.mode === "critique") return runCritique(session);
-  if (ctx.request.plan) return runPlan(session, workTree, text);
-  if (ctx.request.variation && ctx.request.scope)
+
+  if (ctx.request.mode === "critique") {
+    return runCritique(session);
+  }
+
+  if (ctx.request.plan) {
+    return runPlan(session, workTree, text);
+  }
+
+  if (ctx.request.variation && ctx.request.scope) {
     return runElementVariantMock(session, workTree, ctx.request);
-  if (ctx.request.variation || ctx.request.reference)
+  }
+
+  if (ctx.request.variation || ctx.request.reference) {
     return runVariationMock(
       session,
       ctx.request,
@@ -1010,14 +1211,26 @@ function runMockEdit(
       workTree,
       text
     );
-  if (ctx.request.comments?.length)
+  }
+
+  if (ctx.request.comments?.length) {
     return runCommentEdit(session, workTree, ctx.request.comments);
+  }
+
   const selection = ctx.request.selection;
-  if (selection?.length)
+
+  if (selection?.length) {
     return runSelectionEdit(session, workTree, selection, prompt);
-  if (ctx.project.kind === "html" && prompt.includes("[edit1]"))
+  }
+
+  if (ctx.project.kind === "html" && prompt.includes("[edit1]")) {
     return runHeadingEdit(session, workTree, text);
-  if (ctx.project.kind === "html") return runHtmlEdit(session, workTree, text);
+  }
+
+  if (ctx.project.kind === "html") {
+    return runHtmlEdit(session, workTree, text);
+  }
+
   return runReactEdit(session, workTree, text);
 }
 
@@ -1027,7 +1240,10 @@ async function withMockReference(
   preview: PreviewService | undefined,
   outcome: DriverOutcome
 ): Promise<DriverOutcome> {
-  if (!preview || outcome.status !== "completed") return outcome;
+  if (!preview || outcome.status !== "completed") {
+    return outcome;
+  }
+
   const continueWith = async (
     text: string,
     images: unknown[]
@@ -1044,8 +1260,10 @@ async function withMockReference(
     await session.say(
       "Mock fix loop: compared the frame with the reference picture again."
     );
+
     return true;
   };
+
   const reference = await runReferencePass({
     preview,
     ctx: input.ctx,
@@ -1053,7 +1271,9 @@ async function withMockReference(
     runId: input.runId,
     continueWith,
   });
+
   const finalCheck = withReference(outcome.finalCheck, reference);
+
   return reference && finalCheck
     ? {
         ...outcome,
@@ -1070,10 +1290,12 @@ async function runMock(
 ): Promise<DriverOutcome> {
   const startedAt = Date.now();
   const prompt = input.ctx.request.prompt;
+
   const flags: MockFlags = {
     slow: prompt.includes("[slow]"),
     fail: prompt.includes("[fail]"),
   };
+
   const session = new MockSession(input, flags);
   await input.sink.sessionStarted(
     input.ctx.direction.sessionId ??
@@ -1088,7 +1310,11 @@ async function runMock(
     promptHash: "mock",
     resume: input.ctx.direction.sessionId,
   });
-  for (const skill of mockSkillRequests(prompt)) await session.useSkill(skill);
+
+  for (const skill of mockSkillRequests(prompt)) {
+    await session.useSkill(skill);
+  }
+
   if (prompt.includes("[steps]")) {
     await session.fakeTool(
       "Read",
@@ -1104,21 +1330,38 @@ async function runMock(
       STEP_TOOL_MS
     );
   }
-  if (prompt.includes("[bash]")) await session.bash("npm test");
+
+  if (prompt.includes("[bash]")) {
+    await session.bash("npm test");
+  }
+
   const shellWrites = [...prompt.matchAll(/\[bash-write:([^\]\s]+)\]/g)].map(
     (match) => match[1] ?? ""
   );
+
   const shellNotes: string[] = [];
+
   for (const target of shellWrites) {
     const note = await session.bashWrite(target);
-    if (note) shellNotes.push(note);
+
+    if (note) {
+      shellNotes.push(note);
+    }
   }
+
   if (prompt.includes("[retry]")) {
     input.sink.retry(1, 5, 2000, "Overloaded (529)");
     await sleep(2000, input.signal);
   }
-  if (prompt.includes("[long]")) await session.stream(longReply(), 96, 8);
-  if (prompt.includes("[slowlong]")) await session.stream(longReply(), 64, 60);
+
+  if (prompt.includes("[long]")) {
+    await session.stream(longReply(), 96, 8);
+  }
+
+  if (prompt.includes("[slowlong]")) {
+    await session.stream(longReply(), 64, 60);
+  }
+
   if (prompt.includes("[todo]")) {
     await session.fakeTool(
       "TodoWrite",
@@ -1139,6 +1382,7 @@ async function runMock(
       STEP_TOOL_MS
     );
   }
+
   if (prompt.includes("[think]")) {
     await session.think("Thinking A: the page needs a clear heading first.");
     await session.fakeTool(
@@ -1148,11 +1392,16 @@ async function runMock(
     );
     await session.think("Thinking B: keep the cards, then write the change.");
   }
+
   const finalText =
     shellWrites.length > 0
       ? shellNotes.join("\n\n") || "Edited the files with a shell command."
       : await runMockScenario(input, session, canvas, preview);
-  if (shellWrites.length > 0) await session.say(finalText);
+
+  if (shellWrites.length > 0) {
+    await session.say(finalText);
+  }
+
   const outcome: DriverOutcome = {
     status: prompt.includes("[budget]") ? "budget_exceeded" : "completed",
     usage: { ...MOCK_USAGE },
@@ -1162,8 +1411,11 @@ async function runMock(
     finalText,
     error: null,
   };
-  if (!wantsDesignSystemCheck(input.ctx))
+
+  if (!wantsDesignSystemCheck(input.ctx)) {
     return withMockReference(input, session, preview, outcome);
+  }
+
   return enforceDesignSystemCheck({
     workTree: input.ctx.direction.workTree,
     first: outcome,
@@ -1178,11 +1430,13 @@ async function runMock(
         resume: input.ctx.direction.sessionId,
         continuation: round,
       });
+
       const fixed = await runMockDesignSystemFix(
         session,
         input.ctx.direction.workTree,
         prompt
       );
+
       return { ...total, finalText: fixed, durationMs: Date.now() - startedAt };
     },
   });
@@ -1200,8 +1454,10 @@ export function createMockDriver(
       if (
         input.signal.aborted &&
         input.ctx.request.prompt.includes("[slowstop]")
-      )
+      ) {
         await new Promise((resolve) => setTimeout(resolve, MOCK_SLOW_STOP_MS));
+      }
+
       throw error;
     }
   };

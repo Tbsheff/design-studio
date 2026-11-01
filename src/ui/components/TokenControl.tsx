@@ -44,19 +44,27 @@ function RawMenu({
   onCreate: (() => void) | null;
 }) {
   const list = useRef<HTMLDivElement>(null);
+
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+    if (event.key !== "ArrowDown" && event.key !== "ArrowUp") {
+      return;
+    }
+
     event.preventDefault();
+
     const items = [
       ...(list.current?.querySelectorAll<HTMLButtonElement>(
         '[role="menuitem"]'
       ) ?? []),
     ];
+
     const at = items.indexOf(document.activeElement as HTMLButtonElement);
     const next = event.key === "ArrowDown" ? at + 1 : at - 1;
     items[(next + items.length) % items.length]?.focus();
   };
+
   const snap = state.snap;
+
   return (
     <div
       className="tk-menu"
@@ -99,17 +107,28 @@ function RawMenu({
 }
 
 function stateTip(state: TokenFieldState, name: string | null): string {
-  if (state.kind === "token") return name ?? state.match.cssVar;
-  if (state.kind === "raw")
+  if (state.kind === "token") {
+    return name ?? state.match.cssVar;
+  }
+
+  if (state.kind === "raw") {
     return state.snap
       ? `Raw value, near ${state.snap.cssVar}`
       : "Raw value, not a design token";
+  }
+
   return "Design tokens";
 }
 
 function miniLabel(state: TokenFieldState, label: string): string {
-  if (state.kind === "token") return `${label}: token ${state.match.cssVar}`;
-  if (state.kind === "raw") return `${label}: raw value`;
+  if (state.kind === "token") {
+    return `${label}: token ${state.match.cssVar}`;
+  }
+
+  if (state.kind === "raw") {
+    return `${label}: raw value`;
+  }
+
   return `${label}: choose a token`;
 }
 
@@ -129,6 +148,7 @@ function FieldButton({
   const current = state.kind === "token" ? state.match.cssVar : null;
   const entry = current ? entryFor(ui.entries, current) : undefined;
   const name = current ? (entry ? tokenShortName(entry) : current) : null;
+
   return (
     <button
       type="button"
@@ -186,12 +206,15 @@ function Control({
     edit.preview(Object.fromEntries(props.map((p) => [p, `var(${cssVar})`])));
     edit.commit();
   };
+
   const toggle = (view: View) =>
     pop.view === view ? pop.close(false) : pop.open(view);
+
   const current = state.kind === "token" ? state.match.cssVar : null;
   const nearest = state.kind === "raw" ? (state.nearest?.cssVar ?? null) : null;
   const near = state.kind === "raw" && state.snap ? "near" : "";
   const request = ui.requestCreate;
+
   const create = request
     ? () => {
         pop.close(false);
@@ -256,7 +279,10 @@ function Control({
 
 export function TokenControl(props: ControlProps) {
   const ui = useTokenUi();
-  if (!ui || tokensForProperty(props.prop, ui.entries).length === 0)
+
+  if (!ui || tokensForProperty(props.prop, ui.entries).length === 0) {
     return null;
+  }
+
   return <Control {...props} ui={ui} />;
 }

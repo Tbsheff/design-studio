@@ -37,6 +37,7 @@ const INHERITED = [
   "cursor",
   "visibility",
 ];
+
 const ROOT_TYPE = [
   "color",
   "font-family",
@@ -45,6 +46,7 @@ const ROOT_TYPE = [
   "line-height",
   "letter-spacing",
 ];
+
 const OWN = [
   "display",
   "position",
@@ -238,12 +240,24 @@ function sides(
   short: string
 ): void {
   const values = names.map((name) => map.get(name));
-  if (values.some((value) => value === undefined)) return;
+
+  if (values.some((value) => value === undefined)) {
+    return;
+  }
+
   const [top, right, bottom, left] = values as [string, string, string, string];
-  for (const name of names) map.delete(name);
-  if (top === right && top === bottom && top === left) map.set(short, top);
-  else if (top === bottom && right === left) map.set(short, `${top} ${right}`);
-  else map.set(short, `${top} ${right} ${bottom} ${left}`);
+
+  for (const name of names) {
+    map.delete(name);
+  }
+
+  if (top === right && top === bottom && top === left) {
+    map.set(short, top);
+  } else if (top === bottom && right === left) {
+    map.set(short, `${top} ${right}`);
+  } else {
+    map.set(short, `${top} ${right} ${bottom} ${left}`);
+  }
 }
 
 const SIDES = ["top", "right", "bottom", "left"];
@@ -254,21 +268,32 @@ function compactBorder(map: Map<string, string>): void {
     map.get(`border-${side}-style`),
     map.get(`border-${side}-color`),
   ]);
+
   const touched = parts.some((part) =>
     part.some((value) => value !== undefined)
   );
-  if (!touched) return;
+
+  if (!touched) {
+    return;
+  }
+
   const clear = () => {
-    for (const side of SIDES)
-      for (const part of ["width", "style", "color"])
+    for (const side of SIDES) {
+      for (const part of ["width", "style", "color"]) {
         map.delete(`border-${side}-${part}`);
+      }
+    }
   };
+
   if (parts.every((part) => part[1] === "none" || part[0] === "0px")) {
     clear();
     map.set("border", "none");
+
     return;
   }
+
   const first = parts[0];
+
   if (
     first &&
     first.every((value) => value !== undefined) &&
@@ -306,17 +331,21 @@ function compact(styles: [string, string][]): [string, string][] {
   );
   compactBorder(map);
   const rowGap = map.get("row-gap");
+
   if (rowGap !== undefined && rowGap === map.get("column-gap")) {
     map.delete("row-gap");
     map.delete("column-gap");
     map.set("gap", rowGap);
   }
+
   const ox = map.get("overflow-x");
+
   if (ox !== undefined && ox === map.get("overflow-y")) {
     map.delete("overflow-x");
     map.delete("overflow-y");
     map.set("overflow", ox);
   }
+
   return [...map.entries()].filter(([, value]) => value !== "");
 }
 
@@ -324,34 +353,53 @@ function renderHtml(root: StyledNode): string {
   const rules: string[] = [];
   const names = new Map<string, string>();
   let count = 0;
+
   const open = (node: StyledNode, depth: number): string => {
     const pad = "  ".repeat(depth);
-    if (node.raw) return `${pad}${node.raw}`;
+
+    if (node.raw) {
+      return `${pad}${node.raw}`;
+    }
+
     const styles = compact(node.styles);
+
     const attrs = node.attrs
       .map(([name, value]) => ` ${name}="${escapeAttr(value)}"`)
       .join("");
+
     let cls = "";
+
     if (styles.length > 0) {
       const body = styles
         .map(([prop, value]) => `  ${prop}: ${value};`)
         .join("\n");
+
       let name = names.get(body);
+
       if (!name) {
         count += 1;
         name = count === 1 ? "el" : `el-${count}`;
         names.set(body, name);
         rules.push(`.${name} {\n${body}\n}`);
       }
+
       cls = ` class="${name}"`;
     }
+
     const head = `<${node.tag}${cls}${attrs}>`;
-    if (VOID.has(node.tag)) return `${pad}${head}`;
+
+    if (VOID.has(node.tag)) {
+      return `${pad}${head}`;
+    }
+
     const kids = node.children.filter(
       (child) => typeof child !== "string" || child.trim() !== ""
     );
-    if (kids.length === 1 && typeof kids[0] === "string")
+
+    if (kids.length === 1 && typeof kids[0] === "string") {
       return `${pad}${head}${escapeText(kids[0].trim())}</${node.tag}>`;
+    }
+
     const inner = kids
       .map((child) =>
         typeof child === "string"
@@ -359,32 +407,48 @@ function renderHtml(root: StyledNode): string {
           : open(child, depth + 1)
       )
       .join("\n");
+
     return `${pad}${head}\n${inner}\n${pad}</${node.tag}>`;
   };
+
   const markup = open(root, 0);
+
   return `<style>\n${rules.join("\n")}\n</style>\n${markup}\n`;
 }
 
 function renderTailwind(root: StyledNode, theme: TailwindTheme): string {
   const open = (node: StyledNode, depth: number): string => {
     const pad = "  ".repeat(depth);
-    if (node.raw) return `${pad}${node.raw}`;
+
+    if (node.raw) {
+      return `${pad}${node.raw}`;
+    }
+
     const classes = tailwindClassesFor(
       compact(node.styles).filter(
         ([prop, value]) => !(prop === "box-sizing" && value === "border-box")
       ),
       theme
     );
+
     const attrs = node.attrs
       .map(([name, value]) => ` ${name}="${escapeAttr(value)}"`)
       .join("");
+
     const head = `<${node.tag}${classes.length > 0 ? ` class="${escapeAttr(classes.join(" "))}"` : ""}${attrs}>`;
-    if (VOID.has(node.tag)) return `${pad}${head}`;
+
+    if (VOID.has(node.tag)) {
+      return `${pad}${head}`;
+    }
+
     const kids = node.children.filter(
       (child) => typeof child !== "string" || child.trim() !== ""
     );
-    if (kids.length === 1 && typeof kids[0] === "string")
+
+    if (kids.length === 1 && typeof kids[0] === "string") {
       return `${pad}${head}${escapeText(kids[0].trim())}</${node.tag}>`;
+    }
+
     const inner = kids
       .map((child) =>
         typeof child === "string"
@@ -392,8 +456,10 @@ function renderTailwind(root: StyledNode, theme: TailwindTheme): string {
           : open(child, depth + 1)
       )
       .join("\n");
+
     return `${pad}${head}\n${inner}\n${pad}</${node.tag}>`;
   };
+
   return `${open(root, 0)}\n`;
 }
 
@@ -405,18 +471,24 @@ export async function copyAsCode(
   format: CopyCodeFormat,
   theme: TailwindTheme | null = null
 ): Promise<string> {
-  if (!preview.withPage)
+  if (!preview.withPage) {
     throw new Error("this preview backend cannot read the page");
+  }
+
   const tree = await preview.withPage(
     withPagePath(url, frame.path),
     { width: frame.width, height: frame.height },
     async (page) => {
       await waitForPage(page);
+
       return page.evaluate<StyledNode | null>(collectExpression(selector));
     }
   );
-  if (!tree)
+
+  if (!tree) {
     throw new BadRequestError("The selected element is not on this page");
+  }
+
   return format === "tailwind"
     ? renderTailwind(tree, theme ?? (await defaultTailwindTheme()))
     : renderHtml(tree);

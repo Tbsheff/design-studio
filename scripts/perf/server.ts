@@ -13,13 +13,18 @@ import { createVersionStore } from "../../src/server/store/versions.js";
 
 async function main(): Promise<void> {
   const uiDir = process.env.PERF_UI_DIR;
-  if (!uiDir) throw new Error("PERF_UI_DIR is required");
+
+  if (!uiDir) {
+    throw new Error("PERF_UI_DIR is required");
+  }
+
   const config = loadConfig();
   await mkdir(path.join(config.dataDir, "projects"), { recursive: true });
   const versions = createVersionStore(config);
   const projects = createProjectStore(config, versions);
   const bus = createEventBus(config.dataDir);
   const preview = createPreviewService({ config, bus, projects, versions });
+
   const runner = createAgentRunner({
     config,
     bus,
@@ -27,6 +32,7 @@ async function main(): Promise<void> {
     versions,
     preview,
   });
+
   const app = createApp({
     config,
     bus,
@@ -36,13 +42,16 @@ async function main(): Promise<void> {
     preview,
     uiDir: path.resolve(uiDir),
   });
+
   const server = serve(
     { fetch: app.fetch, port: config.studioPort, hostname: "127.0.0.1" },
     () => {
       console.log(`perf server ready ${config.studioOrigin}`);
     }
   );
+
   await preview.start();
+
   const stop = (): void => {
     server.close();
     preview
@@ -50,6 +59,7 @@ async function main(): Promise<void> {
       .catch(() => undefined)
       .finally(() => process.exit(0));
   };
+
   process.on("SIGINT", stop);
   process.on("SIGTERM", stop);
 }

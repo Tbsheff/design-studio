@@ -71,6 +71,7 @@ export const layerStateShape = {
     .optional()
     .describe('New layer name, written as data-name. null or "" removes it.'),
 };
+
 export const listLocksShape = { path: layerStateShape.path };
 
 const layerStateSchema = z
@@ -86,6 +87,7 @@ const layerStateSchema = z
 
 const RUN_NOTE =
   "The run saves this change in its version, like your file edits.";
+
 const VIEWPORT = { width: 1440, height: 900 };
 
 function text(message: string, isError = false): ToolText {
@@ -107,10 +109,16 @@ async function resolved(
 ): Promise<{ url: string; selector: string }> {
   const scope = scopeOf(deps.ctx.project.id, deps.ctx.direction.id);
   const raw = input.selector.trim();
+
   const page =
     input.path ?? (isLayerRef(raw) ? memoPage(scope, raw) : undefined);
+
   const url = editPageUrl(deps.ctx, page);
-  if (!isLayerRef(raw)) return { url, selector: raw };
+
+  if (!isLayerRef(raw)) {
+    return { url, selector: raw };
+  }
+
   const paths = await resolveLayerRefs(
     deps.preview,
     url,
@@ -119,6 +127,7 @@ async function resolved(
     [raw],
     input.hidden === undefined && input.name === undefined
   );
+
   return { url, selector: paths.get(raw) ?? raw };
 }
 
@@ -127,28 +136,41 @@ async function writeEdit(
   raw: Record<string, unknown>
 ): Promise<string | null> {
   const workTree = deps.ctx.direction.workTree;
+
   const origin = deps.ctx.previewUrl
     ? new URL(deps.ctx.previewUrl).origin
     : null;
+
   const plan = await planDirectEdit(
     workTree,
     parseDirectEditRequest(raw),
     await knownTokenVars(workTree),
     { projectKind: deps.ctx.project.kind, previewOrigin: async () => origin }
   );
+
   const problem = writeProblem(deps.ctx, plan.target.relative);
-  if (problem) throw new Error(problem);
-  if (plan.patch.code === plan.original) return null;
+
+  if (problem) {
+    throw new Error(problem);
+  }
+
+  if (plan.patch.code === plan.original) {
+    return null;
+  }
+
   const { project, direction } = deps.ctx;
+
   const id = announcePlanned(project.id, direction.id, [
     domPatchOf(plan.request, plan.patch),
   ]);
+
   try {
     await writeAtomic(plan.target.file, plan.patch.code);
   } catch (error) {
     withdrawPlanned(project.id, direction.id, id);
     throw error;
   }
+
   return plan.target.relative;
 }
 
@@ -158,22 +180,39 @@ async function sourceEdits(
   selector: string,
   input: Input
 ): Promise<string[]> {
-  if (input.hidden === undefined && input.name === undefined) return [];
+  if (input.hidden === undefined && input.name === undefined) {
+    return [];
+  }
+
   const blocked = refusal(deps.ctx, LAYER_STATE_TOOL);
-  if (blocked) throw new Error(blocked);
+
+  if (blocked) {
+    throw new Error(blocked);
+  }
+
   const element = await describeElement(deps.preview, url, selector);
-  if (!element)
+
+  if (!element) {
     throw new Error(`No element matches ${input.selector} on the page.`);
-  if (!element.source)
+  }
+
+  if (!element.source) {
     throw new Error(
       `${input.selector} has no source location, so it cannot be renamed or hidden here. Edit the file instead.`
     );
+  }
+
   const target = { source: element.source, selector, tag: element.tag };
   const lines: string[] = [];
-  if (input.name !== undefined)
+
+  if (input.name !== undefined) {
     lines.push(await renameEdit(deps, target, input.name));
-  if (input.hidden !== undefined)
+  }
+
+  if (input.hidden !== undefined) {
     lines.push(await hideEdit(deps, target, input.hidden));
+  }
+
   return [...lines, RUN_NOTE];
 }
 
@@ -190,7 +229,11 @@ async function renameEdit(
 ): Promise<string> {
   const name = raw === null || raw === "" ? null : raw;
   const file = await writeEdit(deps, { ...target, name });
-  if (!file) return "The name was already set.";
+
+  if (!file) {
+    return "The name was already set.";
+  }
+
   return `${name ? `Renamed ${target.tag} to "${name}"` : `Removed the name of ${target.tag}`} in ${file}.`;
 }
 
@@ -203,6 +246,7 @@ async function hideEdit(
     ...target,
     style: { display: hidden ? "none" : null },
   });
+
   return file
     ? `${hidden ? "Hid" : "Showed"} ${target.tag} in ${file}.`
     : "The layer was already in that state.";
@@ -215,16 +259,25 @@ async function lockEdit(
   locked: boolean
 ): Promise<string> {
   const store = configuredLayerLocks();
-  if (!store) throw new Error("Layer locks are not available in this run.");
+
+  if (!store) {
+    throw new Error("Layer locks are not available in this run.");
+  }
+
   const { project, direction } = deps.ctx;
   const current = await store.read(project.id, direction.id);
   const probe = await probeLock(deps.preview, url, selector, current.keys);
-  if (!probe.found)
+
+  if (!probe.found) {
     throw new Error(`No element matches ${selector} on the page.`);
+  }
+
   const delta = lockDelta(probe, locked);
+
   const view = await store.update(project.id, direction.id, (keys) =>
     applyDelta(keys, delta)
   );
+
   return lockOutcome(probe, locked, view.keys.length);
 }
 
@@ -233,24 +286,33 @@ export async function runSetLayerState(
   args: z.input<typeof layerStateSchema>
 ): Promise<ToolText> {
   const parsed = layerStateSchema.safeParse(args);
-  if (!parsed.success)
+
+  if (!parsed.success) {
     return text(
       `${LAYER_STATE_TOOL}: ${parsed.error.issues.map((issue) => `${issue.path.join(".") || "input"}: ${issue.message}`).join("; ")}`,
       true
     );
-  if (!deps.ctx.previewUrl)
+  }
+
+  if (!deps.ctx.previewUrl) {
     return text(
       "Preview is not running for this direction, so layers cannot be found.",
       true
     );
+  }
+
   const input = parsed.data;
+
   try {
     const target = await resolved(deps, input);
     const lines = await sourceEdits(deps, target.url, target.selector, input);
-    if (input.locked !== undefined)
+
+    if (input.locked !== undefined) {
       lines.unshift(
         await lockEdit(deps, target.url, target.selector, input.locked)
       );
+    }
+
     return text(lines.join(" "));
   } catch (error) {
     return text(`${LAYER_STATE_TOOL} failed: ${describeError(error)}`, true);
@@ -262,9 +324,14 @@ export async function runListLockedLayers(
   args: { path?: string | undefined }
 ): Promise<ToolText> {
   const store = configuredLayerLocks();
-  if (!store) return text("Layer locks are not available in this run.", true);
+
+  if (!store) {
+    return text("Layer locks are not available in this run.", true);
+  }
+
   try {
     const view = await store.read(deps.ctx.project.id, deps.ctx.direction.id);
+
     const probe =
       view.keys.length > 0 && deps.ctx.previewUrl
         ? await probeLock(
@@ -274,6 +341,7 @@ export async function runListLockedLayers(
             view.keys
           ).catch(() => null)
         : null;
+
     return text(
       describeLocks(view.keys, probe?.resolved ?? null, probe?.page ?? null)
     );

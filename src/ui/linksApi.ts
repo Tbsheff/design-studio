@@ -27,17 +27,20 @@ async function call<T>(
     },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
+
   if (!res.ok) {
     const data = (await res.json().catch(() => null)) as {
       error?: string;
       message?: string;
     } | null;
+
     throw new ApiError(
       res.status,
       data?.message ?? data?.error ?? `${method} ${path} failed: ${res.status}`,
       data?.error
     );
   }
+
   return (await res.json()) as T;
 }
 
@@ -57,10 +60,12 @@ const EMPTY = emptyLinksFile();
 
 function entryOf(projectId: string): Entry {
   let entry = entries.get(projectId);
+
   if (!entry) {
     entry = { file: EMPTY, loaded: false, loading: false, requestedAt: 0 };
     entries.set(projectId, entry);
   }
+
   return entry;
 }
 
@@ -71,7 +76,11 @@ function setFile(projectId: string, file: LinksFile): void {
 
 function load(projectId: string): void {
   const entry = entryOf(projectId);
-  if (entry.loaded || entry.loading) return;
+
+  if (entry.loaded || entry.loading) {
+    return;
+  }
+
   entry.loading = true;
   entry.requestedAt = Date.now();
   call<{ links: LinksFile }>("GET", base(projectId))
@@ -86,9 +95,16 @@ function load(projectId: string): void {
 }
 
 function receive(event: StudioEvent): void {
-  if (event.type !== "links.changed") return;
+  if (event.type !== "links.changed") {
+    return;
+  }
+
   const entry = entryOf(event.projectId);
-  if (!entry.loaded || event.ts < entry.requestedAt) return;
+
+  if (!entry.loaded || event.ts < entry.requestedAt) {
+    return;
+  }
+
   setFile(event.projectId, event.links);
 }
 
@@ -100,6 +116,7 @@ async function write(
 ): Promise<LinksFile> {
   const { links } = await call<{ links: LinksFile }>(method, path, body);
   setFile(projectId, links);
+
   return links;
 }
 
@@ -112,7 +129,9 @@ export const linksApi = {
       links: LinksFile;
       link: PrototypeLink | null;
     }>("POST", base(projectId), link);
+
     setFile(projectId, links);
+
     return saved;
   },
   update: (
@@ -130,6 +149,7 @@ export const linksApi = {
 
 function subscribe(listener: () => void): () => void {
   listeners.add(listener);
+
   return () => {
     listeners.delete(listener);
   };
@@ -138,6 +158,7 @@ function subscribe(listener: () => void): () => void {
 export function useLinks(projectId: string): LinksFile {
   useEffect(() => load(projectId), [projectId]);
   useProjectEvents(projectId, receive);
+
   return useSyncExternalStore(
     subscribe,
     () => entries.get(projectId)?.file ?? EMPTY
@@ -159,12 +180,15 @@ export function useImplicitLinks(
     const at = ++seq.current;
     call<{ implicit: PrototypeLink[] }>("GET", `${base(projectId)}/implicit`)
       .then(({ implicit }) => {
-        if (at === seq.current) setLinks(implicit);
+        if (at === seq.current) {
+          setLinks(implicit);
+        }
       })
       .catch((error: unknown) =>
         console.error("[links] implicit load failed", error)
       );
   };
+
   const later = () => {
     window.clearTimeout(timer.current);
     timer.current = window.setTimeout(
@@ -172,25 +196,35 @@ export function useImplicitLinks(
       IMPLICIT_DEBOUNCE_MS
     );
   };
+
   const mountedAt = useRef(Date.now());
   const lastKey = useRef(framesKey);
   useEffect(() => {
     fetchNow.current();
+
     return () => window.clearTimeout(timer.current);
   }, [projectId]);
   useEffect(() => {
     const before = lastKey.current;
     lastKey.current = framesKey;
-    if (before !== "" && before !== framesKey) later();
+
+    if (before !== "" && before !== framesKey) {
+      later();
+    }
   }, [framesKey]);
   useProjectEvents(projectId, (event) => {
-    if (event.ts < mountedAt.current - REPLAY_SLACK_MS) return;
+    if (event.ts < mountedAt.current - REPLAY_SLACK_MS) {
+      return;
+    }
+
     if (
       event.type === "files.changed" ||
       event.type === "links.changed" ||
       event.type === "version.created"
-    )
+    ) {
       later();
+    }
   });
+
   return links;
 }

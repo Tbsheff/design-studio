@@ -16,11 +16,13 @@ const SKIP = new Set([
   ".DS_Store",
   ".studio",
 ]);
+
 const TREE_MAX = 3000;
 export const MENTION_MAX = 10;
 const FILE_MAX_BYTES = 20_000;
 
 const TREE_CACHE_MS = 30_000;
+
 const trees = new Map<
   string,
   { stamp: number; at: number; list: Promise<string[]> }
@@ -29,51 +31,82 @@ const trees = new Map<
 export function listWorkTree(root: string): Promise<string[]> {
   const stamp = treeStamp(root);
   const known = trees.get(root);
-  if (known && known.stamp === stamp && Date.now() - known.at < TREE_CACHE_MS)
+
+  if (known && known.stamp === stamp && Date.now() - known.at < TREE_CACHE_MS) {
     return known.list;
+  }
+
   const list = walkWorkTree(root);
   trees.set(root, { stamp, at: Date.now(), list });
   list.catch(() => trees.delete(root));
-  if (trees.size > 50) trees.delete(trees.keys().next().value as string);
+
+  if (trees.size > 50) {
+    trees.delete(trees.keys().next().value as string);
+  }
+
   return list;
 }
 
 async function walkWorkTree(root: string): Promise<string[]> {
   const out: string[] = [];
+
   const walk = async (dir: string): Promise<void> => {
-    if (out.length >= TREE_MAX) return;
+    if (out.length >= TREE_MAX) {
+      return;
+    }
+
     const items = await readdir(dir, { withFileTypes: true }).catch(() => []);
     items.sort((a, b) => a.name.localeCompare(b.name));
+
     for (const item of items) {
       if (
         out.length >= TREE_MAX ||
         SKIP.has(item.name) ||
         item.name.startsWith(".")
-      )
+      ) {
         continue;
+      }
+
       const full = path.join(dir, item.name);
-      if (item.isDirectory()) await walk(full);
-      else if (item.isFile())
+
+      if (item.isDirectory()) {
+        await walk(full);
+      } else if (item.isFile()) {
         out.push(path.relative(root, full).split(path.sep).join("/"));
+      }
     }
   };
+
   await walk(root);
+
   return out;
 }
 
 const COMPONENT_NAME = /^[A-Z][A-Za-z0-9]{0,47}$/;
 
 function optionalText(value: unknown, max: number): string | null {
-  if (value === null || value === undefined) return null;
-  if (typeof value !== "string" || value.length > max || /[\n\r<>]/.test(value))
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  if (
+    typeof value !== "string" ||
+    value.length > max ||
+    /[\n\r<>]/.test(value)
+  ) {
     throw new BadRequestError("component mention fields must be short text");
+  }
+
   return value;
 }
 
 function parseComponentMention(record: Record<string, unknown>): RunMention {
   const name = record["name"];
-  if (typeof name !== "string" || !COMPONENT_NAME.test(name))
+
+  if (typeof name !== "string" || !COMPONENT_NAME.test(name)) {
     throw new BadRequestError("a component mention needs a name like Button");
+  }
+
   return {
     kind: "component",
     name,
@@ -83,20 +116,28 @@ function parseComponentMention(record: Record<string, unknown>): RunMention {
 }
 
 export function parseMentions(raw: unknown): RunMention[] | undefined {
-  if (raw === undefined) return undefined;
-  if (!Array.isArray(raw) || raw.length > MENTION_MAX)
+  if (raw === undefined) {
+    return undefined;
+  }
+
+  if (!Array.isArray(raw) || raw.length > MENTION_MAX) {
     throw new BadRequestError(
       `mentions must be an array of up to ${MENTION_MAX}`
     );
+  }
+
   return raw.map((item: unknown): RunMention => {
     const record =
       item && typeof item === "object" ? (item as Record<string, unknown>) : {};
+
     if (
       record["kind"] === "file" &&
       typeof record["path"] === "string" &&
       record["path"].length <= 500
-    )
+    ) {
       return { kind: "file", path: record["path"] };
+    }
+
     if (
       record["kind"] === "token" &&
       typeof record["name"] === "string" &&
@@ -106,7 +147,11 @@ export function parseMentions(raw: unknown): RunMention[] | undefined {
     ) {
       return { kind: "token", name: record["name"], value: record["value"] };
     }
-    if (record["kind"] === "component") return parseComponentMention(record);
+
+    if (record["kind"] === "component") {
+      return parseComponentMention(record);
+    }
+
     throw new BadRequestError(
       "each mention must be a file path, a token or a component"
     );
@@ -119,26 +164,42 @@ export async function readMentionFiles(
 ): Promise<MentionFile[]> {
   const files: MentionFile[] = [];
   const paths = new Set<string>();
+
   for (const mention of mentions ?? []) {
-    if (mention.kind === "file") paths.add(mention.path);
-    else if (mention.kind === "component" && mention.file)
+    if (mention.kind === "file") {
+      paths.add(mention.path);
+    } else if (mention.kind === "component" && mention.file) {
       paths.add(mention.file);
+    }
   }
+
   for (const mentionPath of paths) {
-    if (checkPathInside(workTree, mentionPath) !== null) continue;
+    if (checkPathInside(workTree, mentionPath) !== null) {
+      continue;
+    }
+
     const absolute = path.resolve(workTree, mentionPath);
     const info = await stat(absolute).catch(() => null);
-    if (!info?.isFile()) continue;
+
+    if (!info?.isFile()) {
+      continue;
+    }
+
     const text = (await readFile(absolute, "utf-8").catch(() => "")).slice(
       0,
       FILE_MAX_BYTES
     );
-    if (text.includes("\u0000")) continue;
+
+    if (text.includes("\u0000")) {
+      continue;
+    }
+
     files.push({
       path: mentionPath,
       text,
       truncated: info.size > FILE_MAX_BYTES,
     });
   }
+
   return files;
 }

@@ -34,6 +34,7 @@ const SHORTHANDS: Record<string, DirectStyleProperty[]> = {
 
 const LINTED = Object.keys(TOKEN_GROUP_FOR_PROPERTY) as DirectStyleProperty[];
 const CSS_WIDE = /^(inherit|initial|unset|revert|revert-layer|currentcolor)$/i;
+
 const BORDER_KEYWORDS =
   /^(none|hidden|solid|dashed|dotted|double|groove|ridge|inset|outset|thin|medium|thick|inherit|initial|unset|revert|revert-layer|currentcolor|0|[\d.]+[a-z%]*)$/i;
 
@@ -47,27 +48,49 @@ export function authoredProps(
   css: AuthoredCss | null
 ): Map<DirectStyleProperty, string> {
   const out = new Map<DirectStyleProperty, string>();
-  if (!css) return out;
+
+  if (!css) {
+    return out;
+  }
+
   const take = (text: string) => {
     for (const { prop, value } of parseDeclarations(text)) {
-      if (prop === "border" && !borderHasColor(value)) continue;
+      if (prop === "border" && !borderHasColor(value)) {
+        continue;
+      }
+
       const targets =
         SHORTHANDS[prop] ??
         (LINTED.includes(prop as DirectStyleProperty)
           ? [prop as DirectStyleProperty]
           : []);
-      for (const target of targets) out.set(target, value);
+
+      for (const target of targets) {
+        out.set(target, value);
+      }
     }
   };
-  for (const rule of css.rules) take(rule.css);
+
+  for (const rule of css.rules) {
+    take(rule.css);
+  }
+
   take(css.inline);
+
   return out;
 }
 
 function kindOf(prop: DirectStyleProperty): LintKind {
   const group = TOKEN_GROUP_FOR_PROPERTY[prop];
-  if (group === "color") return "color";
-  if (group === "font") return "font";
+
+  if (group === "color") {
+    return "color";
+  }
+
+  if (group === "font") {
+    return "font";
+  }
+
   return "size";
 }
 
@@ -77,6 +100,7 @@ function fontFallback(
 ): TokenMatch | null {
   const pool = tokensForProperty(prop, entries);
   const entry = pool.find((item) => item.cssVar === "--font-body") ?? pool[0];
+
   return entry
     ? {
         cssVar: entry.cssVar,
@@ -90,6 +114,7 @@ function fontFallback(
 
 function noBorder(values: StyleValues): boolean {
   const style = values["border-style"] ?? "";
+
   return (
     style === "" ||
     style === "none" ||
@@ -109,13 +134,20 @@ function issueFor(
     /var\(/.test(authored) ||
     CSS_WIDE.test(authored.trim()) ||
     isUnsetValue(value)
-  )
+  ) {
     return null;
+  }
+
   const group = TOKEN_GROUP_FOR_PROPERTY[prop];
-  if (!group || tokensForProperty(prop, entries).length === 0) return null;
+
+  if (!group || tokensForProperty(prop, entries).length === 0) {
+    return null;
+  }
+
   const best = matchForProperty(prop, value, entries, mode)[0];
   const kind = kindOf(prop);
-  if (kind === "color")
+
+  if (kind === "color") {
     return best
       ? {
           kind,
@@ -125,10 +157,14 @@ function issueFor(
           deltaE: Math.round(best.distance * 1000) / 10,
         }
       : null;
+  }
+
   if (kind === "font") {
     const token = best?.exact ? best : fontFallback(prop, entries);
+
     return token ? { kind, props: [prop], value, token, deltaE: null } : null;
   }
+
   return best && isSnappable(group, best)
     ? { kind, props: [prop], value, token: best, deltaE: null }
     : null;
@@ -142,22 +178,39 @@ export function lintValues(
   dirty: readonly DirectStyleProperty[] = []
 ): LintIssue[] {
   const authored = authoredProps(css);
-  for (const prop of dirty) authored.set(prop, values[prop]);
+
+  for (const prop of dirty) {
+    authored.set(prop, values[prop]);
+  }
+
   const issues: LintIssue[] = [];
+
   for (const prop of LINTED) {
     const source = authored.get(prop);
-    if (source === undefined || (prop === "border-color" && noBorder(values)))
+
+    if (source === undefined || (prop === "border-color" && noBorder(values))) {
       continue;
+    }
+
     const issue = issueFor(prop, values[prop], source, entries, mode);
-    if (!issue) continue;
+
+    if (!issue) {
+      continue;
+    }
+
     const same = issues.find(
       (item) =>
         item.token.cssVar === issue.token.cssVar &&
         item.value === issue.value &&
         item.kind === issue.kind
     );
-    if (same) same.props.push(prop);
-    else issues.push(issue);
+
+    if (same) {
+      same.props.push(prop);
+    } else {
+      issues.push(issue);
+    }
   }
+
   return issues;
 }

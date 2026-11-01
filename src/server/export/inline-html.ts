@@ -126,19 +126,25 @@ export async function inlineHtml(
   kind: ProjectKind,
   secrets: string[]
 ): Promise<InlinedHtml> {
-  if (!preview.withPage)
+  if (!preview.withPage) {
     throw new Error("this preview backend cannot export HTML");
+  }
+
   const result = await preview.withPage(
     withPagePath(url, frame.path),
     { width: frame.width, height: frame.height },
     async (page) => {
       await waitForPage(page);
+
       return page.evaluate<InlinedHtml>(inlineExpression(kind));
     }
   );
+
   for (const secret of secrets) {
-    if (secret && result.html.includes(secret))
+    if (secret && result.html.includes(secret)) {
       throw new Error("export stopped: the page holds a studio secret");
+    }
   }
+
   return result;
 }

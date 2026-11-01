@@ -57,7 +57,10 @@ function ThemeToggle({
 }
 
 function Footer({ draft }: { draft: TokenDraft }) {
-  if (draft.count === 0 && !draft.commitError) return null;
+  if (draft.count === 0 && !draft.commitError) {
+    return null;
+  }
+
   return (
     <div className="tkp-footer">
       {draft.commitError && (
@@ -96,9 +99,16 @@ function Footer({ draft }: { draft: TokenDraft }) {
 function useSwatch(entries: CompiledTokenEntry[]) {
   return useCallback(
     (value: string, dark: boolean) => {
-      if (!aliasPath(value) && !varTarget(value)) return value;
+      if (!aliasPath(value) && !varTarget(value)) {
+        return value;
+      }
+
       const entry = referencedEntry(value, entries);
-      if (!entry) return "";
+
+      if (!entry) {
+        return "";
+      }
+
       return dark && entry.darkValue ? entry.darkValue : entry.value;
     },
     [entries]
@@ -108,6 +118,7 @@ function useSwatch(entries: CompiledTokenEntry[]) {
 export function TokensPanel({ tokens, draft }: Props) {
   const [query, setQuery] = useState("");
   const file = tokens.file;
+
   const bases = useMemo(
     () =>
       new Map(
@@ -115,22 +126,27 @@ export function TokensPanel({ tokens, draft }: Props) {
       ),
     [tokens.entries, file]
   );
+
   const baseOf = useCallback(
     (entry: CompiledTokenEntry): RawToken =>
       bases.get(entry.path) ?? rawToken(file, entry),
     [bases, file]
   );
+
   const shownOf = useCallback(
     (entry: CompiledTokenEntry) =>
       shownRaw(baseOf(entry), draft.pending[entry.path]),
     [baseOf, draft.pending]
   );
+
   const sections = useMemo(
     () => tokenSections(tokens.entries, shownOf, query),
     [tokens.entries, shownOf, query]
   );
+
   const swatchFor = useSwatch(draft.effective?.entries ?? tokens.entries);
   const showDark = tokens.mode === "light";
+
   return (
     <div className="tkp">
       <PanelHead

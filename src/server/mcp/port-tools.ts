@@ -68,12 +68,27 @@ function planQuery(input: z.infer<typeof schema>): URLSearchParams {
     sourceProjectId: input.projectId,
     path: input.path ?? "index.html",
   });
-  if (input.directionId) query.set("sourceDirectionId", input.directionId);
-  if (input.targetProjectId)
+
+  if (input.directionId) {
+    query.set("sourceDirectionId", input.directionId);
+  }
+
+  if (input.targetProjectId) {
     query.set("targetProjectId", input.targetProjectId);
-  if (input.route) query.set("route", input.route);
-  if (input.flow) query.set("flow", "1");
-  for (const page of input.paths ?? []) query.append("paths", page);
+  }
+
+  if (input.route) {
+    query.set("route", input.route);
+  }
+
+  if (input.flow) {
+    query.set("flow", "1");
+  }
+
+  for (const page of input.paths ?? []) {
+    query.append("paths", page);
+  }
+
   return query;
 }
 
@@ -92,6 +107,7 @@ const getPortPlan = defineTool(
       "GET",
       `/api/port/plan?${planQuery(input).toString()}`
     );
+
     return { result: ok(plan) };
   }
 );

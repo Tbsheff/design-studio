@@ -44,11 +44,16 @@ export function CompareFrame({
             `Could not load this version. ${errorText(err)} Close compare and try again.`
           )
       );
+
     return () => {
       alive = false;
     };
   }, [projectId, version.id]);
-  if (!slot) return null;
+
+  if (!slot) {
+    return null;
+  }
+
   return (
     <iframe
       ref={(el) => {

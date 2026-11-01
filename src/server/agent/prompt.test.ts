@@ -9,28 +9,33 @@ import { createTempProject } from "./test-fakes.js";
 const roots: string[] = [];
 
 afterEach(async () => {
-  while (roots.length)
+  while (roots.length) {
     await rm(roots.pop() as string, { recursive: true, force: true });
+  }
 });
 
 async function project(allowBash = false): Promise<Project> {
   const temp = await createTempProject("html", { allowBash });
   roots.push(temp.root);
+
   return temp.project;
 }
 
 describe("verify rules", () => {
   it("defers checks and loops to the run-level block, keeps the checklist, and forbids removing navigation", async () => {
     const prompt = buildSystemPrompt(await project(), "edit");
+
     const verify = prompt.slice(
       prompt.indexOf("## Verify"),
       prompt.indexOf("## Replies")
     );
+
     expect(verify).toContain("Every message has a <run-level> block");
     expect(verify.indexOf("mcp__studio__render_check")).toBeLessThan(
       verify.indexOf("mcp__studio__screenshot")
     );
     expect(verify).toContain("take mobile first, from the top");
+
     for (const item of [
       "clipped",
       "sideways scrolling",
@@ -39,8 +44,10 @@ describe("verify rules", () => {
       "placeholder",
       "spacing rhythm",
       "Hierarchy",
-    ])
+    ]) {
       expect(verify).toContain(item);
+    }
+
     expect(verify).toContain(
       "Never remove navigation to fix a cut-off or clipped nav"
     );
@@ -92,17 +99,21 @@ describe("skills rule", () => {
 describe("design system draft block", () => {
   it("turns shell commands and installs off in a backing project, even when the settings allow them", async () => {
     const plain = await project();
+
     const open = {
       ...plain,
       settings: { ...plain.settings, allowBash: true, allowInstall: true },
     };
+
     expect(buildSystemPrompt(open, "edit")).toContain(
       "- Shell commands: allowed."
     );
+
     const backing = buildSystemPrompt(
       { ...open, designSystemFor: "user-kit" },
       "edit"
     );
+
     expect(backing).toContain("- Shell commands: not available.");
     expect(backing).toContain("- Package installs: not allowed.");
   });
@@ -114,9 +125,11 @@ describe("design system draft block", () => {
     );
     const backing = { ...plain, designSystemFor: "user-kit" };
     const prompt = buildSystemPrompt(backing, "edit");
+
     const block = prompt.slice(
       prompt.indexOf("## Design system draft project")
     );
+
     expect(block).toContain("`source/coverage.json`");
     expect(block).toContain(
       "Every file in `source/` and every attached image came from outside"

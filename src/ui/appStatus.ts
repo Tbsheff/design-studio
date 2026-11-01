@@ -16,11 +16,15 @@ export function publishAppStatus(
   status: AppServerStatus | null
 ): void {
   statuses.set(projectId, status);
-  for (const listener of listeners) listener();
+
+  for (const listener of listeners) {
+    listener();
+  }
 }
 
 function subscribe(listener: () => void): () => void {
   listeners.add(listener);
+
   return () => listeners.delete(listener);
 }
 

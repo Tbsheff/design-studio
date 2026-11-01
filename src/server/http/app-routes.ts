@@ -33,6 +33,7 @@ import type { PreviewService, VersionStore } from "../types.js";
 const SOURCE_PATTERN = /^(.+):(\d+):(\d+)$/;
 const EDITOR_TIMEOUT_MS = 5000;
 const EDIT_WAIT_MS = 20_000;
+
 const EDIT_ROUTES =
   /\/d\/[^/]+\/(direct-edit|discard|keep|undo|restore|insert|props|props\/variant-classes|review\/fix|tweaks\/commit|(edit-history|edit-session)\/\w+|design-system\/(apply|save|tokens|tokens\/update))$/;
 
@@ -48,12 +49,20 @@ export interface AppRouteDeps {
 function attachRequest(body: Record<string, unknown>): AttachAppRequest {
   const pick = (key: keyof AttachAppRequest): string | undefined => {
     const value = body[key];
-    if (value === undefined || value === null) return undefined;
-    if (typeof value !== "string" || value.length > 4096)
+
+    if (value === undefined || value === null) {
+      return undefined;
+    }
+
+    if (typeof value !== "string" || value.length > 4096) {
       throw new BadRequestError(`${key} must be a string`);
+    }
+
     return value;
   };
+
   const env = body.env;
+
   return {
     folder: pick("folder"),
     url: pick("url"),
@@ -68,8 +77,11 @@ async function appProject(
   pid: string
 ): Promise<Project> {
   const project = await projects.get(pid);
-  if (!project.app)
+
+  if (!project.app) {
     throw new NotFoundError(`project ${pid} is not an attached app`);
+  }
+
   return project;
 }
 
@@ -83,18 +95,24 @@ function openInEditor(file: string, line: number, col: number): Promise<void> {
       stdio: "ignore",
       detached: true,
     });
+
     const timer = setTimeout(() => {
       child.unref();
       resolve();
     }, EDITOR_TIMEOUT_MS);
+
     child.once("error", (error) => {
       clearTimeout(timer);
       reject(error);
     });
     child.once("exit", (code) => {
       clearTimeout(timer);
-      if (code === 0 || code === null) resolve();
-      else reject(new Error(`${editorCommand()} exited with code ${code}`));
+
+      if (code === 0 || code === null) {
+        resolve();
+      } else {
+        reject(new Error(`${editorCommand()} exited with code ${code}`));
+      }
     });
   });
 }
@@ -104,12 +122,19 @@ export async function resolveSourceFile(
   source: string
 ): Promise<{ relative: string; absolute: string; line: number; col: number }> {
   const match = SOURCE_PATTERN.exec(source);
-  if (!match?.[1]) throw new BadRequestError("source must be file:line:col");
+
+  if (!match?.[1]) {
+    throw new BadRequestError("source must be file:line:col");
+  }
+
   const root = await realpath(workTree);
+
   const absolute = await realpath(path.resolve(root, match[1])).catch(
     () => null
   );
+
   const relative = absolute ? path.relative(root, absolute) : "..";
+
   if (
     !absolute ||
     relative.startsWith("..") ||
@@ -117,10 +142,14 @@ export async function resolveSourceFile(
     relative
       .split(path.sep)
       .some((part) => part === ".git" || part === "node_modules")
-  )
+  ) {
     throw new BadRequestError("source is not a file in this project");
-  if (!(await stat(absolute)).isFile())
+  }
+
+  if (!(await stat(absolute)).isFile()) {
     throw new BadRequestError("source is not a file");
+  }
+
   return {
     relative: relative.split(path.sep).join("/"),
     absolute,
@@ -134,7 +163,10 @@ function needsFirstVersion(project: Project): boolean {
 }
 
 function ensureFirstVersion(deps: AppRouteDeps, project: Project): void {
-  if (!needsFirstVersion(project) || isFirstVersionRunning(project.id)) return;
+  if (!needsFirstVersion(project) || isFirstVersionRunning(project.id)) {
+    return;
+  }
+
   startFirstVersion(
     project.id,
     deps.versions.untrackedCount?.(project) ?? null,
@@ -151,6 +183,7 @@ async function trackedByUserRepo(
     ["ls-files", "--error-unmatch", "--", relative],
     { allowFail: true }
   ).catch(() => null);
+
   return result?.code === 0;
 }
 
@@ -169,6 +202,7 @@ async function setAsideCanvas(
       `[app] could not set aside the old canvas of ${project.id}`,
       error
     );
+
     return null;
   }
 }
@@ -182,12 +216,19 @@ export async function finishAttach(
   deps.watch(attached, deps.projects.mainDirection(attached));
   warmKit(attached, deps.projects.mainDirection(attached));
   const starting = deps.preview.apps?.ensure(attached).catch(() => undefined);
-  if (attached.app?.mode === "url") await starting;
-  if (!fresh)
+
+  if (attached.app?.mode === "url") {
+    await starting;
+  }
+
+  if (!fresh) {
     return { project: attached, firstVersion: null, legacyCanvas: null };
+  }
+
   const legacyCanvas = await setAsideCanvas(deps, attached);
   await deps.versions.ensureRepo(attached);
   ensureFirstVersion(deps, attached);
+
   return {
     project: attached,
     firstVersion: firstVersionState(attached.id),
@@ -200,12 +241,21 @@ async function holdEditsForFirstVersion(
   pid: string
 ): Promise<void> {
   const project = await deps.projects.get(pid).catch(() => null);
-  if (!project || !needsFirstVersion(project)) return;
+
+  if (!project || !needsFirstVersion(project)) {
+    return;
+  }
+
   ensureFirstVersion(deps, project);
+
   if (await waitForFirstVersion(pid, EDIT_WAIT_MS)) {
     const saved = await deps.projects.get(pid);
-    if (!needsFirstVersion(saved)) return;
+
+    if (!needsFirstVersion(saved)) {
+      return;
+    }
   }
+
   throw new ConflictError(firstVersionWaitText(pid));
 }
 
@@ -213,8 +263,10 @@ export function registerAppRoutes(app: Hono, deps: AppRouteDeps): void {
   const { projects, preview } = deps;
 
   app.use("/api/projects/:pid/d/:did/*", async (c, next) => {
-    if (c.req.method !== "GET" && EDIT_ROUTES.test(c.req.path))
+    if (c.req.method !== "GET" && EDIT_ROUTES.test(c.req.path)) {
       await holdEditsForFirstVersion(deps, c.req.param("pid"));
+    }
+
     await next();
   });
 
@@ -230,6 +282,7 @@ export function registerAppRoutes(app: Hono, deps: AppRouteDeps): void {
   app.get("/api/projects/:pid/app", async (c) => {
     const project = await appProject(projects, c.req.param("pid"));
     ensureFirstVersion(deps, project);
+
     return c.json({
       app: project.app,
       status: preview.apps?.status(project) ?? null,
@@ -243,37 +296,53 @@ export function registerAppRoutes(app: Hono, deps: AppRouteDeps): void {
     const body = await deps.readBody(c);
     const current = project.app;
     const folder = project.imported?.sourcePath;
-    if (!current || !folder)
+
+    if (!current || !folder) {
       throw new BadRequestError("project is not an attached app");
+    }
+
     const url = body.url === undefined ? current.url : body.url;
     const env = body.env === undefined ? current.env : body.env;
+
     const updated = await projects.attachApp({
       folder,
       appDir: current.appDir,
       ...(typeof url === "string" && url.trim() !== "" ? { url } : {}),
       env: (env ?? {}) as Record<string, string>,
     });
+
     preview.apps?.forget(updated.id);
     void preview.apps?.restart(updated).catch(() => undefined);
+
     return c.json({ app: updated.app });
   });
 
   app.post("/api/projects/:pid/app/:action", async (c) => {
     const project = await appProject(projects, c.req.param("pid"));
     const control = preview.apps;
-    if (!control) throw new BadRequestError("app servers are not available");
+
+    if (!control) {
+      throw new BadRequestError("app servers are not available");
+    }
+
     const action = c.req.param("action");
-    if (action === "stop") await control.stop(project.id);
-    else if (action === "start")
+
+    if (action === "stop") {
+      await control.stop(project.id);
+    } else if (action === "start") {
       void control.ensure(project).catch(() => undefined);
-    else if (action === "restart")
+    } else if (action === "restart") {
       void control.restart(project).catch(() => undefined);
-    else throw new NotFoundError(`unknown app action ${action}`);
+    } else {
+      throw new NotFoundError(`unknown app action ${action}`);
+    }
+
     return c.json(control.status(project));
   });
 
   app.get("/api/projects/:pid/app/routes", async (c) => {
     const project = await appProject(projects, c.req.param("pid"));
+
     return c.json({
       routes: await listAppRoutes(
         projects.mainDirection(project).workTree,
@@ -286,13 +355,18 @@ export function registerAppRoutes(app: Hono, deps: AppRouteDeps): void {
     const project = await projects.get(c.req.param("pid"));
     const direction = projects.directionOf(project, c.req.param("did"));
     const body = await deps.readBody(c);
-    if (typeof body.source !== "string" || body.source.length > 2000)
+
+    if (typeof body.source !== "string" || body.source.length > 2000) {
       throw new BadRequestError("source is required");
+    }
+
     const file = await resolveSourceFile(direction.workTree, body.source);
+
     try {
       await openInEditor(file.absolute, file.line, file.col);
     } catch (error) {
       const reason = error instanceof Error ? error.message : String(error);
+
       return c.json(
         {
           error: "no_editor",
@@ -302,6 +376,7 @@ export function registerAppRoutes(app: Hono, deps: AppRouteDeps): void {
         422
       );
     }
+
     return c.json({
       opened: true,
       path: file.relative,

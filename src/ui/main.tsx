@@ -35,13 +35,17 @@ import "./styles/shell.css";
 
 const desktop = (window as unknown as { studioDesktop?: { platform: string } })
   .studioDesktop;
-if (desktop?.platform === "darwin")
+
+if (desktop?.platform === "darwin") {
   document.documentElement.dataset.shell = "mac";
+}
 
 watchLongFrames();
+
 void import("./tipGuard").then((m) => m.installTipGuard());
 
 const root = document.getElementById("root");
+
 if (root) {
   createRoot(root).render(
     <StrictMode>

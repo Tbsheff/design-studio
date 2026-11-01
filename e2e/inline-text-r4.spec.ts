@@ -15,6 +15,7 @@ import {
 } from "./support/studio";
 
 const h1 = (page: Page) => frontFrame(page).locator("h1");
+
 const composer = (page: Page) =>
   page.locator('.prompt [data-slot="composer-input"]');
 
@@ -26,10 +27,12 @@ async function newProject(page: Page, name: string, kind: "html" | "react") {
   });
   await api.waitForRuns(project.id, 1);
   const main = mainDirection(project);
+
   const file = path.join(
     main.workTree,
     kind === "react" ? path.join("src", "App.tsx") : "index.html"
   );
+
   return { api, project, file };
 }
 
@@ -43,22 +46,34 @@ async function armCommitProbe(page: Page): Promise<void> {
       __commitAt?: number;
       __commitProbe?: boolean;
     };
+
     w.__commitAt = 0;
-    if (w.__commitProbe) return;
+
+    if (w.__commitProbe) {
+      return;
+    }
+
     w.__commitProbe = true;
     window.addEventListener("message", (event) => {
-      if ((event.data as { type?: string } | null)?.type === "text-commit")
+      if ((event.data as { type?: string } | null)?.type === "text-commit") {
         w.__commitAt = Date.now();
+      }
     });
   });
 }
 
 async function bytesOnDisk(file: string, needle: string): Promise<number> {
   const deadline = Date.now() + 5000;
+
   for (;;) {
-    if (readFileSync(file, "utf-8").includes(needle)) return Date.now();
-    if (Date.now() > deadline)
+    if (readFileSync(file, "utf-8").includes(needle)) {
+      return Date.now();
+    }
+
+    if (Date.now() > deadline) {
       throw new Error(`${needle} never reached ${file}`);
+    }
+
     await new Promise((resolve) => setTimeout(resolve, 2));
   }
 }
@@ -66,6 +81,7 @@ async function bytesOnDisk(file: string, needle: string): Promise<number> {
 async function caretReady(page: Page): Promise<boolean> {
   return h1(page).evaluate((el) => {
     const selection = window.getSelection();
+
     return (
       document.activeElement === el &&
       (el as HTMLElement).isContentEditable &&
@@ -80,6 +96,7 @@ async function editH1(page: Page): Promise<number> {
   const started = Date.now();
   await h1(page).dblclick();
   await expect.poll(() => caretReady(page), { intervals: [5] }).toBe(true);
+
   return Date.now() - started;
 }
 
@@ -94,6 +111,7 @@ async function swapped(page: Page, before: string | null): Promise<void> {
 
 function stats(values: number[]): { median: number; max: number } {
   const sorted = [...values].sort((a, b) => a - b);
+
   return {
     median: sorted[Math.floor(sorted.length / 2)] ?? 0,
     max: sorted.at(-1) ?? 0,
@@ -107,18 +125,23 @@ function armCaretProbe(): void {
     (event) => {
       const from = event.timeStamp;
       w.__caretMs = undefined;
+
       const tick = (now: number) => {
         const selection = window.getSelection();
         const active = document.activeElement;
+
         if (
           active instanceof HTMLElement &&
           active.isContentEditable &&
           selection &&
           selection.rangeCount > 0
-        )
+        ) {
           w.__caretMs = now - from;
-        else if (now - from < 2000) requestAnimationFrame(tick);
+        } else if (now - from < 2000) {
+          requestAnimationFrame(tick);
+        }
       };
+
       requestAnimationFrame(tick);
     },
     true
@@ -129,11 +152,13 @@ test("R4-1: dblclick, type, Cmd+Enter writes the h1 to the source in under 200 m
   page,
 }) => {
   await page.addInitScript(armCaretProbe);
+
   const { api, project, file } = await newProject(
     page,
     "Inline Harbor",
     "html"
   );
+
   const runsBefore = await runCount(api, project.id);
   await selectInFrame(page, "h1");
   await armCommitProbe(page);
@@ -141,6 +166,7 @@ test("R4-1: dblclick, type, Cmd+Enter writes the h1 to the source in under 200 m
   const fromCommit: number[] = [];
   const caret: number[] = [];
   const caretInFrame: number[] = [];
+
   for (let i = 1; i <= 5; i += 1) {
     const text = `Inline Harbor ${i}`;
     caret.push(await editH1(page));
@@ -165,9 +191,11 @@ test("R4-1: dblclick, type, Cmd+Enter writes the h1 to the source in under 200 m
     const pressed = Date.now();
     await page.keyboard.press("Meta+Enter");
     const onDisk = await bytesOnDisk(file, `<h1>${text}</h1>`);
+
     const commitAt = await page.evaluate(
       () => (window as unknown as { __commitAt: number }).__commitAt
     );
+
     fromKey.push(onDisk - pressed);
     fromCommit.push(onDisk - commitAt);
     await swapped(page, src);
@@ -176,6 +204,7 @@ test("R4-1: dblclick, type, Cmd+Enter writes the h1 to the source in under 200 m
     await expect(page.getByLabel("Text content")).toHaveValue(text);
     await expect(page.locator(".ins-status.saving")).toHaveCount(0);
   }
+
   const key = stats(fromKey);
   const commit = stats(fromCommit);
   const dbl = stats(caret);
@@ -205,6 +234,7 @@ test("R4-1: Esc cancels, keeps select mode, restores the text; blur commits; Ent
     "Inline Esc Probe",
     "html"
   );
+
   const runsBefore = await runCount(api, project.id);
   const original = readFileSync(file, "utf-8");
   await selectInFrame(page, "h1");
@@ -268,6 +298,7 @@ test("R4-1: inline edit is off while a run is active", async ({ page }) => {
     "Inline Run Probe",
     "html"
   );
+
   await composer(page).fill("Walk while editing [steps]");
   await composer(page).press("Meta+Enter");
   await expect(
@@ -299,8 +330,10 @@ test("R4-1: React project, two inline edits in a row write App.tsx", async ({
     "Inline Orbit",
     "react"
   );
+
   const runsBefore = await runCount(api, project.id);
   await selectInFrame(page, "h1");
+
   for (const text of ["Inline Orbit One", "Inline Orbit Two"]) {
     await editH1(page);
     await page.keyboard.press("Meta+A");
@@ -312,6 +345,7 @@ test("R4-1: React project, two inline edits in a row write App.tsx", async ({
     await expect(page.getByLabel("Text content")).toHaveValue(text);
     await expect(page.locator(".ins-status.saving")).toHaveCount(0);
   }
+
   await page.waitForTimeout(500);
   await expect(h1(page)).toHaveText("Inline Orbit Two");
   await setSelectMode(page, false);
@@ -320,12 +354,15 @@ test("R4-1: React project, two inline edits in a row write App.tsx", async ({
 
 async function boxMatchesH1(page: Page): Promise<number> {
   const found = await page.locator(".overlay .box.selected").boundingBox();
+
   const zoom = await page
     .locator(".artboard")
     .evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).a);
+
   const height = await h1(page).evaluate(
     (el) => el.getBoundingClientRect().height
   );
+
   return found
     ? Math.abs(found.height - height * zoom)
     : Number.POSITIVE_INFINITY;
@@ -339,6 +376,7 @@ test("R4-1: a quick second edit survives the frame swap; the box follows growing
     "Inline Swap Probe",
     "html"
   );
+
   const runsBefore = await runCount(api, project.id);
   await selectInFrame(page, "h1");
 
@@ -371,7 +409,8 @@ test("R4-1: a quick second edit survives the frame swap; the box follows growing
   await expect.poll(() => boxMatchesH1(page)).toBeLessThan(2);
   const after = await page.locator(".overlay .box.selected").boundingBox();
   const shot = await page.locator(".overlay .box.selected").boundingBox();
-  if (shot)
+
+  if (shot) {
     await page.screenshot({
       path: path.join(ROOT, "design-review", "inline-text-editing.png"),
       clip: {
@@ -381,6 +420,8 @@ test("R4-1: a quick second edit survives the frame swap; the box follows growing
         height: shot.height + 48,
       },
     });
+  }
+
   expect((after?.height ?? 0) > (before?.height ?? 0)).toBe(true);
   await page.keyboard.press("Escape");
   await expect(h1(page)).toHaveText("Swap First");
@@ -409,6 +450,7 @@ test("R4-1: a failed write shows in the inspector and restores the text; a run s
     "Inline Error Probe",
     "html"
   );
+
   const main = mainDirection(project);
   const original = readFileSync(file, "utf-8");
   await selectInFrame(page, "h1");

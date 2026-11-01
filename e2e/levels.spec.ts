@@ -19,7 +19,9 @@ async function createProject(api: StudioApi, prompt: string): Promise<Project> {
     "/api/projects",
     { prompt, kind: "html" }
   );
+
   await api.waitForRuns(project.id, 1);
+
   return project;
 }
 
@@ -48,12 +50,16 @@ async function expectLevel(page: Page, level: RunLevel): Promise<void> {
 
 async function openHeadMore(page: Page) {
   const head = page.locator("li.version.head");
+
   if (
     (await page.getByRole("menu", { name: "More version actions" }).count()) > 0
-  )
+  ) {
     await page.keyboard.press("Escape");
+  }
+
   await head.hover();
   await head.getByRole("button", { name: /^More actions for/ }).click();
+
   return head;
 }
 
@@ -90,9 +96,11 @@ test("level control: Prototype by default, keyboard and click change it, choice 
   await page.keyboard.press("ArrowRight");
   await expectLevel(page, "polish");
   await expect(page.getByTestId("level-option-polish")).toBeFocused();
+
   const outline = await page
     .getByTestId("level-option-polish")
     .evaluate((el) => getComputedStyle(el).outlineStyle);
+
   expect(outline).not.toBe("none");
   await page.keyboard.press("ArrowRight");
   await expectLevel(page, "wireframe");
@@ -203,9 +211,11 @@ test("wireframe run shows its level; Polish this on the head starts a polish run
     page.getByRole("menu", { name: "More version actions" })
   ).toBeVisible();
   await expect(page.getByTestId("version-polish-this")).toHaveCount(0);
+
   const headVersion = (await api.versions(project.id, did)).find(
     (version) => version.id === polishRun?.versionId
   );
+
   expect(headVersion?.meta.level).toBe("polish");
 });
 

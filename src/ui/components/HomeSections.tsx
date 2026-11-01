@@ -15,10 +15,12 @@ export function useOnboarding(): { show: boolean; dismiss: () => void } {
       .then((state) => setShow(!state.dismissed))
       .catch(() => setShow(false));
   }, []);
+
   const dismiss = () => {
     setShow(false);
     void api.dismissOnboarding().catch(() => undefined);
   };
+
   return { show, dismiss };
 }
 
@@ -41,10 +43,15 @@ export function HomeToast({
 }) {
   const [held, setHeld] = useState(false);
   useEffect(() => {
-    if (!toast || held || toast.action || toast.error) return;
+    if (!toast || held || toast.action || toast.error) {
+      return;
+    }
+
     const timer = window.setTimeout(onDone, TOAST_MS);
+
     return () => window.clearTimeout(timer);
   }, [toast, held, onDone]);
+
   return (
     <div className="ds-toast-slot" role="status" aria-live="polite">
       {toast && (
@@ -104,8 +111,11 @@ interface ActionDeps {
 
 function removedText(project: Project, homeDir: string | null): string {
   const folder = project.imported?.sourcePath;
-  if (!folder || project.imported?.created)
+
+  if (!folder || project.imported?.created) {
     return `Moved “${project.name}” to Trash`;
+  }
+
   return `Removed “${project.name}” from Design Studio. Its files stay in ${shortenHome(folder.replace(/^\/private(?=\/)/, ""), homeDir)}.`;
 }
 
@@ -150,6 +160,7 @@ export function useProjectActions({
     onDelete: async (project) => {
       try {
         const trashed = await projectsApi.trash(project);
+
         const undo = () =>
           void projectsApi.restore(trashed.trashId).catch((err: unknown) =>
             showToast({
@@ -157,6 +168,7 @@ export function useProjectActions({
               error: true,
             })
           );
+
         showToast({
           text: removedText(project, homeDir),
           action: { label: "Undo", run: undo },
@@ -186,6 +198,7 @@ export function useHomeProjects() {
     error: listError,
     reload: loadProjects,
   } = useProjects({ watch: true });
+
   const searchRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -195,14 +208,22 @@ export function useHomeProjects() {
         event.ctrlKey ||
         event.altKey ||
         isEditable(event.target)
-      )
+      ) {
         return;
-      if (!searchRef.current) return;
+      }
+
+      if (!searchRef.current) {
+        return;
+      }
+
       event.preventDefault();
       searchRef.current.focus();
     };
+
     window.addEventListener("keydown", onKey);
+
     return () => window.removeEventListener("keydown", onKey);
   }, []);
+
   return { projects, listError, loadProjects, searchRef };
 }

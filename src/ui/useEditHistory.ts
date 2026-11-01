@@ -33,6 +33,7 @@ const EMPTY: EditHistoryState = {
   undoLabel: null,
   redoLabel: null,
 };
+
 const TOAST_MS = 2400;
 const REFRESH_WINDOW_MS = 3000;
 const SWAPPED_FRAME_RENDER_MS = 80;
@@ -68,9 +69,17 @@ export function isHistoryStep(version: Version | undefined): boolean {
 
 export function stepToast(kind: HistoryKind, label: string | null): string {
   const word = kind === "undo" ? "Undid" : "Redid";
-  if (!label) return kind === "undo" ? "Undid the last edit" : "Redid the edit";
+
+  if (!label) {
+    return kind === "undo" ? "Undid the last edit" : "Redid the edit";
+  }
+
   const phrase = historyPhrase(label);
-  if (phrase) return `${word} ${phrase}`;
+
+  if (phrase) {
+    return `${word} ${phrase}`;
+  }
+
   return `${word} ${label.charAt(0).toLowerCase()}${label.slice(1)}`;
 }
 
@@ -81,6 +90,7 @@ export function refreshedSelection(
 ): SelectionContext[] {
   return prev.map((item) => {
     const context = contexts[selectors.indexOf(item.selector)];
+
     return context
       ? {
           ...item,
@@ -113,12 +123,18 @@ export function useEditHistory(o: Options) {
   const mountedAt = useRef(Date.now());
 
   const load = useCallback(() => {
-    if (!directionId) return apply(EMPTY);
+    if (!directionId) {
+      return apply(EMPTY);
+    }
+
     const key = `${projectId}/${directionId}`;
+
     if (loading.current?.key === key) {
       loading.current.again = true;
+
       return;
     }
+
     const mine = { key, again: false };
     loading.current = mine;
     const started = generation.current;
@@ -128,14 +144,21 @@ export function useEditHistory(o: Options) {
         if (
           generation.current === started &&
           opts.current.directionId === directionId
-        )
+        ) {
           apply(next);
+        }
       })
       .catch(() => undefined)
       .finally(() => {
-        if (loading.current !== mine) return;
+        if (loading.current !== mine) {
+          return;
+        }
+
         loading.current = null;
-        if (mine.again) load();
+
+        if (mine.again) {
+          load();
+        }
       });
   }, [projectId, directionId, apply]);
 
@@ -144,8 +167,9 @@ export function useEditHistory(o: Options) {
     if (
       event.type === "edit-history.changed" &&
       event.ts >= mountedAt.current - REPLAY_SLACK_MS
-    )
+    ) {
       load();
+    }
   });
   useEffect(() => () => window.clearTimeout(toastTimer.current), []);
 
@@ -158,25 +182,33 @@ export function useEditHistory(o: Options) {
   const runStep = useCallback(
     async (kind: HistoryKind, fallback?: () => unknown) => {
       const cur = opts.current;
+
       if (!cur.directionId) {
         await fallback?.();
+
         return;
       }
+
       generation.current += 1;
       let known = stateRef.current;
+
       try {
         await cur.before();
         known = await api.editHistory(cur.projectId, cur.directionId);
         apply(known);
+
         if (!(kind === "undo" ? known.canUndo : known.canRedo)) {
           await fallback?.();
+
           return;
         }
+
         const result = await api.editHistoryStep(
           cur.projectId,
           cur.directionId,
           kind
         );
+
         apply(result.state);
         showToast(
           stepToast(kind, kind === "undo" ? known.undoLabel : known.redoLabel)
@@ -187,7 +219,10 @@ export function useEditHistory(o: Options) {
       } finally {
         generation.current += 1;
       }
-      if (stateRef.current === known) load();
+
+      if (stateRef.current === known) {
+        load();
+      }
     },
     [apply, load, showToast]
   );
@@ -203,15 +238,19 @@ export function useEditHistory(o: Options) {
     enabled: state.canRedo && !o.locked,
     onRedo: () => step("redo"),
   };
+
   const head = o.versions.find(
     (version) => version.id === o.direction?.headVersionId
   );
+
   const versionFallback = (fallback: () => void) =>
     isHistoryStep(head) ? () => showToast(NOTHING_TO_UNDO) : fallback;
+
   const undoChain = (canUndo: boolean, fallback: () => void) => ({
     canUndo: canUndo || (state.canUndo && !o.locked),
     onUndo: () => step("undo", versionFallback(fallback)),
   });
+
   return { state, toast, step, undoChain, redo };
 }
 
@@ -226,6 +265,7 @@ function sameStyles(
   b: Record<string, string>
 ): boolean {
   const keys = Object.keys(a);
+
   return (
     keys.length === Object.keys(b).length &&
     keys.every((key) => a[key] === b[key])
@@ -239,6 +279,7 @@ function stylesMoved(
 ): boolean {
   return prev.some((item) => {
     const context = contexts[selectors.indexOf(item.selector)];
+
     return (
       context !== null &&
       context !== undefined &&
@@ -262,21 +303,34 @@ export function useSelectionRefresh(
   const timers = useRef(new Set<number>());
 
   const refresh = useCallback(() => {
-    if (Date.now() > deadline.current || current.current.length === 0) return;
-    const describe = describeRef.current;
-    if (!describe) {
-      setSelection([]);
+    if (Date.now() > deadline.current || current.current.length === 0) {
       return;
     }
+
+    const describe = describeRef.current;
+
+    if (!describe) {
+      setSelection([]);
+
+      return;
+    }
+
     const selectors = current.current.map((item) => item.selector);
+
     const queries = current.current.map((item, index) =>
       anchorQueryOf({ id: String(index), target: targetFromSelection(item) })
     );
+
     describe(queries)
       .then((contexts) => {
-        if (Date.now() > deadline.current) return;
-        if (stylesMoved(current.current, selectors, contexts))
+        if (Date.now() > deadline.current) {
+          return;
+        }
+
+        if (stylesMoved(current.current, selectors, contexts)) {
           dropDrafts.current();
+        }
+
         setSelection((prev) => refreshedSelection(prev, selectors, contexts));
       })
       .catch(() => undefined);
@@ -289,6 +343,7 @@ export function useSelectionRefresh(
           timers.current.delete(id);
           refresh();
         }, ms);
+
         timers.current.add(id);
       }
     },
@@ -297,21 +352,31 @@ export function useSelectionRefresh(
 
   useEffect(() => {
     let paintQueued = false;
+
     const onPainted = () => {
-      if (paintQueued || Date.now() > deadline.current) return;
+      if (paintQueued || Date.now() > deadline.current) {
+        return;
+      }
+
       paintQueued = true;
       window.setTimeout(() => {
         paintQueued = false;
         refresh();
       }, SWAPPED_FRAME_RENDER_MS);
     };
+
     const onInput = (event: Event) => {
-      if (event instanceof KeyboardEvent && historyKeyOf(event)) return;
+      if (event instanceof KeyboardEvent && historyKeyOf(event)) {
+        return;
+      }
+
       deadline.current = 0;
     };
+
     window.addEventListener(PREVIEW_PAINTED_EVENT, onPainted);
     window.addEventListener("keydown", onInput, true);
     window.addEventListener("pointerdown", onInput, true);
+
     return () => {
       window.removeEventListener(PREVIEW_PAINTED_EVENT, onPainted);
       window.removeEventListener("keydown", onInput, true);
@@ -320,7 +385,10 @@ export function useSelectionRefresh(
   }, [refresh]);
 
   useEffect(() => {
-    if (!change || change.directionId !== directionId) return;
+    if (!change || change.directionId !== directionId) {
+      return;
+    }
+
     deadline.current = Math.max(
       deadline.current,
       Date.now() + CHANGE_WINDOW_MS
@@ -330,7 +398,9 @@ export function useSelectionRefresh(
 
   useEffect(
     () => () => {
-      for (const id of timers.current) window.clearTimeout(id);
+      for (const id of timers.current) {
+        window.clearTimeout(id);
+      }
     },
     []
   );
@@ -338,7 +408,10 @@ export function useSelectionRefresh(
   return useCallback(
     (now: boolean) => {
       deadline.current = Date.now() + REFRESH_WINDOW_MS;
-      if (now) refresh();
+
+      if (now) {
+        refresh();
+      }
     },
     [refresh]
   );

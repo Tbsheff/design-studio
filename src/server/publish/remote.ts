@@ -35,8 +35,14 @@ const TIMEOUT_MS = 60_000;
 const UPLOAD_TIMEOUT_MS = 170_000;
 
 function toStudioError(error: RemoteError): Error {
-  if (error.status === 404) return new NotFoundError(error.message);
-  if (error.status === 409) return new ConflictError(error.message);
+  if (error.status === 404) {
+    return new NotFoundError(error.message);
+  }
+
+  if (error.status === 409) {
+    return new ConflictError(error.message);
+  }
+
   return new BadRequestError(error.message);
 }
 
@@ -49,6 +55,7 @@ async function send<T>(
   timeoutMs = TIMEOUT_MS
 ): Promise<T> {
   let res: Response;
+
   try {
     res = await fetch(new URL(path, endpoint.url), {
       method,
@@ -65,13 +72,16 @@ async function send<T>(
       `The publish Worker at ${new URL(endpoint.url).host} did not answer${error instanceof Error && error.name === "TimeoutError" ? " in time" : ""}.`
     );
   }
+
   const text = await res.text();
   let parsed: unknown = null;
+
   try {
     parsed = text ? JSON.parse(text) : null;
   } catch {
     parsed = null;
   }
+
   if (!res.ok) {
     const info = (parsed ?? {}) as { error?: unknown; code?: unknown };
     throw new RemoteError(
@@ -82,6 +92,7 @@ async function send<T>(
         : `The publish Worker answered ${res.status}.`
     );
   }
+
   return parsed as T;
 }
 
@@ -97,9 +108,12 @@ export function remoteClient(endpoint: Endpoint) {
     value?: unknown
   ): Promise<T> => {
     const payload = value === undefined ? undefined : jsonBody(value);
+
     return send<T>(endpoint, method, path, payload?.body, payload?.headers);
   };
+
   const id = (pid: string) => encodeURIComponent(pid);
+
   return {
     health: () => call<HealthReply>("GET", "/api/health"),
     list: (projectId?: string) =>

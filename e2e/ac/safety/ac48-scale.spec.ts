@@ -22,6 +22,7 @@ const PAINT_PROBE = () => {
   const w = window as unknown as {
     __painted: { token: string; receivedAt: number }[];
   };
+
   w.__painted = [];
   window.addEventListener("message", (event) => {
     const data = event.data as {
@@ -29,8 +30,10 @@ const PAINT_PROBE = () => {
       type?: string;
       token?: string;
     } | null;
-    if (data?.ns === "studio" && data.type === "painted")
+
+    if (data?.ns === "studio" && data.type === "painted") {
       w.__painted.push({ token: data.token ?? "", receivedAt: Date.now() });
+    }
   });
 };
 
@@ -48,25 +51,36 @@ class EventTap {
         `${BASE_URL}/api/projects/${pid}/events?token=${token}&after=0`,
         { signal: this.controller.signal }
       );
+
       const reader = res.body!.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
+
       for (;;) {
         const { value, done } = await reader.read();
-        if (done) return;
+
+        if (done) {
+          return;
+        }
+
         buffer += decoder.decode(value, { stream: true });
         let index = buffer.indexOf("\n\n");
+
         while (index >= 0) {
           const chunk = buffer.slice(0, index);
           buffer = buffer.slice(index + 2);
+
           const data = chunk
             .split("\n")
             .find((line) => line.startsWith("data: "));
-          if (data)
+
+          if (data) {
             this.events.push({
               receivedAt: Date.now(),
               event: JSON.parse(data.slice(6)) as StudioEvent,
             });
+          }
+
           index = buffer.indexOf("\n\n");
         }
       }
@@ -81,13 +95,19 @@ class EventTap {
     timeoutMs = 20_000
   ): Promise<number> {
     const deadline = Date.now() + timeoutMs;
+
     while (Date.now() < deadline) {
       const hit = this.events.find(
         (entry) => entry.event.type === type && entry.receivedAt >= after
       );
-      if (hit) return hit.receivedAt;
+
+      if (hit) {
+        return hit.receivedAt;
+      }
+
       await new Promise((resolve) => setTimeout(resolve, 5));
     }
+
     return NaN;
   }
 
@@ -99,6 +119,7 @@ class EventTap {
 async function frontToken(page: Page): Promise<string> {
   const src =
     (await page.locator("iframe.frame.front").getAttribute("src")) ?? "";
+
   return new URL(src).searchParams.get("__studio_token") ?? "";
 }
 
@@ -112,6 +133,7 @@ async function paintedAfter(
       const w = window as unknown as {
         __painted: { token: string; receivedAt: number }[];
       };
+
       return (
         w.__painted.find(
           (entry) => entry.token === t && entry.receivedAt >= (a as number)
@@ -120,28 +142,34 @@ async function paintedAfter(
     },
     [token, after] as const
   );
+
   return (await handle.jsonValue()) as number;
 }
 
 async function timeStatus(api: StudioApi, pid: string): Promise<number[]> {
   const out: number[] = [];
+
   for (let i = 0; i < 10; i += 1) {
     const t0 = performance.now();
     await api.status(pid, "main");
     out.push(performance.now() - t0);
   }
+
   return out;
 }
 
 function timeGitAdd(project: Project): number[] {
   const gitDir = path.join(readState().dataDir, "projects", project.id, "git");
+
   const env = {
     ...process.env,
     GIT_DIR: gitDir,
     GIT_WORK_TREE: mainDirection(project).workTree,
     GIT_INDEX_FILE: path.join(gitDir, "index-main"),
   };
+
   const out: number[] = [];
+
   for (let i = 0; i < 10; i += 1) {
     const t0 = performance.now();
     execFileSync("git", ["add", "-A", "--", "."], {
@@ -150,6 +178,7 @@ function timeGitAdd(project: Project): number[] {
     });
     out.push(performance.now() - t0);
   }
+
   return out;
 }
 
@@ -161,6 +190,7 @@ async function measure(page: Page, api: StudioApi, project: Project) {
   const paint: number[] = [];
   const filesChanged: number[] = [];
   const statusChanged: number[] = [];
+
   for (let i = 0; i < SAMPLES; i += 1) {
     const text = `Scale sample ${i}`;
     await page.waitForTimeout(Number(process.env.AC48_GAP_MS ?? 700));
@@ -174,15 +204,18 @@ async function measure(page: Page, api: StudioApi, project: Project) {
     filesChanged.push((await tap.firstAfter("files.changed", t0)) - t0);
     statusChanged.push((await tap.firstAfter("status.changed", t0)) - t0);
   }
+
   tap.close();
   await page.waitForTimeout(1000);
   const status = await timeStatus(api, project.id);
   const gitAdd = timeGitAdd(project);
+
   const summarize = (values: number[]) => ({
     p50: Math.round(p50(values)),
     p95: Math.round(p95(values)),
     samples: values.map(Math.round),
   });
+
   return {
     paint: summarize(paint),
     filesChanged: summarize(filesChanged),
@@ -209,6 +242,7 @@ test("AC-48: single-file change cost does not grow with 3,000 extra files", asyn
   await api.waitForRuns(large.id, 1);
   await expect(frontFrame(page).locator("h1")).toHaveText("Scale large");
   const root = mainDirection(large).workTree;
+
   for (let i = 0; i < EXTRA_FILES; i += 1) {
     const dir = path.join(root, "bulk", `d${String(i % 30).padStart(2, "0")}`);
     mkdirSync(dir, { recursive: true });
@@ -217,6 +251,7 @@ test("AC-48: single-file change cost does not grow with 3,000 extra files", asyn
       `extra file ${i}\n${"x".repeat(200)}\n`
     );
   }
+
   const coldStart = performance.now();
   await expect
     .poll(async () => (await api.status(large.id, "main")).changed.length, {
@@ -241,6 +276,7 @@ test("AC-48: single-file change cost does not grow with 3,000 extra files", asyn
     small: smallResult,
     large: largeResult,
   };
+
   saveResult(
     `ac48-${process.env.AC48_GAP_MS ?? 700}-${test.info().repeatEachIndex}`,
     result

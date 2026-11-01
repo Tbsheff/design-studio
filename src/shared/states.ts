@@ -23,6 +23,7 @@ export function pageLabel(path: string): string {
 export function statePrefix(path: string): string {
   const file = path.split("/").pop() ?? "";
   const stem = file.replace(/\.[a-z0-9]+$/i, "");
+
   return stem === "" || stem === "index"
     ? ""
     : `${stem.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-`;
@@ -33,17 +34,30 @@ export function statesPrompt(path: string): string {
 }
 
 export function parseStatesRequest(raw: unknown): StatesRequest | null {
-  if (!raw || typeof raw !== "object") return null;
+  if (!raw || typeof raw !== "object") {
+    return null;
+  }
+
   const r = raw as Record<string, unknown>;
   const path = typeof r.path === "string" ? cleanFramePath(r.path) : null;
+
   const side = (v: unknown) =>
     typeof v === "number" && Number.isInteger(v) && v >= 200 && v <= 4000
       ? v
       : null;
+
   const width = side(r.width);
   const height = side(r.height);
-  if (path === null || !isFrameId(r.frame) || width === null || height === null)
+
+  if (
+    path === null ||
+    !isFrameId(r.frame) ||
+    width === null ||
+    height === null
+  ) {
     return null;
+  }
+
   return { path, frame: r.frame, width, height };
 }
 
@@ -53,10 +67,12 @@ export function statesTaskBlock(
 ): string {
   const prefix = statePrefix(states.path);
   const page = pageLabel(states.path);
+
   const files =
     kind === "html"
       ? `Write one page per state: \`states/${prefix}<state>.html\` (lowercase, dashes, for example \`states/${prefix}validation-error.html\`). Start from the markup, styles, fonts and token links of ${page}; fix relative links with \`../\`. Change only what the state changes. Keep the real copy and tokens.`
       : `Add one route per state. In the root component, switch on \`window.location.pathname\` and render the page in that state for \`/states/${prefix}<state>\`, with the same components and tokens. Do not add a router or any package. The frame path is \`states/${prefix}<state>\`.`;
+
   return [
     `<states-task page="${page}" frame="${states.frame}" width="${states.width}" height="${states.height}">`,
     `Make the UI states of ${page}. Each state is its own page and its own canvas frame.`,

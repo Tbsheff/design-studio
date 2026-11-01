@@ -23,15 +23,20 @@ function useApprovalFeed(): [
     const settle = (ids: Set<string>) =>
       setCards((prev) =>
         prev.map((card) => {
-          if (card.outcome || ids.has(card.approval.id)) return card;
+          if (card.outcome || ids.has(card.approval.id)) {
+            return card;
+          }
+
           const outcome =
             answered.current.get(card.approval.id) ??
             (Date.now() >= card.approval.expiresAt - 1000
               ? "timeout"
               : "closed");
+
           return { ...card, outcome };
         })
       );
+
     return appStream().onApprovals((poll) => {
       settle(new Set(poll.pending.map((item) => item.id)));
       setCards((prev) => [
@@ -42,6 +47,7 @@ function useApprovalFeed(): [
       ]);
     });
   }, []);
+
   const mark = (id: string, outcome: McpApprovalOutcome) => {
     answered.current.set(id, outcome);
     setCards((prev) =>
@@ -50,20 +56,26 @@ function useApprovalFeed(): [
       )
     );
   };
+
   const drop = (id: string) =>
     setCards((prev) => prev.filter((card) => card.approval.id !== id));
+
   return [cards, mark, drop];
 }
 
 function topModal(): HTMLDialogElement | null {
   const open = document.querySelectorAll<HTMLDialogElement>("dialog:modal");
+
   return open[open.length - 1] ?? null;
 }
 
 function useTopModal(watch: boolean): HTMLDialogElement | null {
   const [modal, setModal] = useState<HTMLDialogElement | null>(null);
   useEffect(() => {
-    if (!watch) return setModal(null);
+    if (!watch) {
+      return setModal(null);
+    }
+
     const check = () => setModal(topModal());
     check();
     const observer = new MutationObserver(check);
@@ -73,13 +85,16 @@ function useTopModal(watch: boolean): HTMLDialogElement | null {
       attributes: true,
       attributeFilter: ["open"],
     });
+
     return () => observer.disconnect();
   }, [watch]);
+
   return modal;
 }
 
 function typingFocus(): boolean {
   const active = document.activeElement;
+
   return (
     active instanceof HTMLElement &&
     (active.isContentEditable ||
@@ -90,7 +105,9 @@ function typingFocus(): boolean {
 }
 
 function showOnTop(element: HTMLDivElement | null): void {
-  if (element && !element.matches(":popover-open")) element.showPopover();
+  if (element && !element.matches(":popover-open")) {
+    element.showPopover();
+  }
 }
 
 function Toast({
@@ -107,17 +124,23 @@ function Toast({
   const dropRef = useRef(onDrop);
   dropRef.current = onDrop;
   useEffect(() => {
-    if (!card.outcome) return;
+    if (!card.outcome) {
+      return;
+    }
+
     const timer = window.setTimeout(() => dropRef.current(), DONE_MS);
+
     return () => window.clearTimeout(timer);
   }, [card.outcome]);
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (focus && !card.outcome && !typingFocus())
+    if (focus && !card.outcome && !typingFocus()) {
       ref.current
         ?.querySelector<HTMLButtonElement>(".permission-actions .btn.primary")
         ?.focus({ preventScroll: true });
+    }
   }, []);
+
   return (
     <div ref={ref} className="mcp-toast" data-testid="mcp-toast">
       <div className="mcp-toast-head">
@@ -145,13 +168,18 @@ export default function McpToasts() {
   const [cards, mark, drop] = useApprovalFeed();
   const inlineProject = useInlineApprovalProject();
   const modal = useTopModal(cards.length > 0);
+
   const shown = cards.filter(
     (card) =>
       modal !== null ||
       card.approval.projectId === null ||
       card.approval.projectId !== inlineProject
   );
-  if (shown.length === 0) return null;
+
+  if (shown.length === 0) {
+    return null;
+  }
+
   const toasts = shown.map((card) => (
     <Toast
       key={card.approval.id}
@@ -161,6 +189,7 @@ export default function McpToasts() {
       onDrop={() => drop(card.approval.id)}
     />
   ));
+
   if (!modal) {
     return (
       <div className="mcp-toasts" role="status" aria-live="polite">
@@ -168,6 +197,7 @@ export default function McpToasts() {
       </div>
     );
   }
+
   return createPortal(
     <div
       ref={showOnTop}

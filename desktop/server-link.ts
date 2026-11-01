@@ -40,7 +40,9 @@ export class ServerLink {
     this.origin = origin;
     this.active.clear();
     child.on("message", (raw: unknown) => {
-      if (isDesktopLinkMessage(raw)) this.handle(raw);
+      if (isDesktopLinkMessage(raw)) {
+        this.handle(raw);
+      }
     });
     child.once("exit", () => this.active.clear());
   }
@@ -52,12 +54,13 @@ export class ServerLink {
     } else if (message.kind === "run-started") {
       this.active.set(message.run.runId, message.run);
     } else if (message.kind === "mcp-approval") {
-      if (isProjectId(message.projectId) && typeof message.title === "string")
+      if (isProjectId(message.projectId) && typeof message.title === "string") {
         this.onApproval({
           projectId: message.projectId,
           approvalId: message.approvalId,
           title: message.title.slice(0, 200),
         });
+      }
     } else {
       this.active.delete(message.run.runId);
       this.onFinished({
@@ -74,11 +77,18 @@ export class ServerLink {
   }
 
   async project(projectId: string): Promise<Project | null> {
-    if (!this.token || !this.origin || !isProjectId(projectId)) return null;
+    if (!this.token || !this.origin || !isProjectId(projectId)) {
+      return null;
+    }
+
     const res = await fetch(`${this.origin}/api/projects/${projectId}`, {
       headers: { "x-studio-token": this.token },
     }).catch(() => null);
-    if (!res?.ok) return null;
+
+    if (!res?.ok) {
+      return null;
+    }
+
     return (await res.json()) as Project;
   }
 
@@ -87,11 +97,19 @@ export class ServerLink {
     directionId: string | null
   ): Promise<string | null> {
     const project = await this.project(projectId);
-    if (!project || !this.dataDir) return null;
+
+    if (!project || !this.dataDir) {
+      return null;
+    }
+
     const direction =
       project.directions.find((item) => item.id === directionId) ??
       project.directions[0];
-    if (!direction) return null;
+
+    if (!direction) {
+      return null;
+    }
+
     return allowedRevealPath(
       direction.workTree,
       this.dataDir,
@@ -102,6 +120,7 @@ export class ServerLink {
 
 function inside(child: string, parent: string): boolean {
   const relative = path.relative(parent, child);
+
   return (
     relative === "" ||
     (!relative.startsWith("..") && !path.isAbsolute(relative))
@@ -114,8 +133,14 @@ export function allowedRevealPath(
   importedFrom: string | null
 ): string | null {
   const resolved = path.resolve(target);
-  if (inside(resolved, path.resolve(dataDir))) return resolved;
-  if (importedFrom && inside(resolved, path.resolve(importedFrom)))
+
+  if (inside(resolved, path.resolve(dataDir))) {
     return resolved;
+  }
+
+  if (importedFrom && inside(resolved, path.resolve(importedFrom))) {
+    return resolved;
+  }
+
   return null;
 }

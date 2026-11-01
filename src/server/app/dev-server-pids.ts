@@ -18,6 +18,7 @@ type Records = Record<string, DevServerRecord>;
 function alive(pid: number): boolean {
   try {
     process.kill(pid, 0);
+
     return true;
   } catch (error) {
     return (error as NodeJS.ErrnoException).code === "EPERM";
@@ -36,8 +37,12 @@ function commandOf(pid: number): Promise<string | null> {
 }
 
 async function isOurNext(record: DevServerRecord): Promise<boolean> {
-  if (!alive(record.pid)) return false;
+  if (!alive(record.pid)) {
+    return false;
+  }
+
   const command = await commandOf(record.pid);
+
   return (
     command !== null &&
     command.includes("next") &&
@@ -59,10 +64,15 @@ function signalGroup(pid: number, signal: NodeJS.Signals): void {
 
 async function waitGone(pid: number, ms: number): Promise<boolean> {
   const deadline = Date.now() + ms;
+
   while (Date.now() < deadline) {
-    if (!alive(pid)) return true;
+    if (!alive(pid)) {
+      return true;
+    }
+
     await new Promise((resolve) => setTimeout(resolve, 100));
   }
+
   return !alive(pid);
 }
 
@@ -77,6 +87,7 @@ export class DevServerPids {
   private async read(): Promise<Records> {
     try {
       const parsed = JSON.parse(await readFile(this.file, "utf-8")) as Records;
+
       return parsed && typeof parsed === "object" ? parsed : {};
     } catch {
       return {};
@@ -92,7 +103,9 @@ export class DevServerPids {
       await writeFile(temp, `${JSON.stringify(records, null, 2)}\n`);
       await rename(temp, this.file);
     });
+
     this.queue = next.catch(() => undefined);
+
     return next;
   }
 
@@ -104,7 +117,9 @@ export class DevServerPids {
 
   forget(projectId: string, pid: number): Promise<void> {
     return this.change((records) => {
-      if (records[projectId]?.pid === pid) delete records[projectId];
+      if (records[projectId]?.pid === pid) {
+        delete records[projectId];
+      }
     }).catch(() => undefined);
   }
 
@@ -114,7 +129,11 @@ export class DevServerPids {
 
   async reap(projectId: string, log: (line: string) => void): Promise<void> {
     const record = (await this.read())[projectId];
-    if (!record) return;
+
+    if (!record) {
+      return;
+    }
+
     await this.stopStale(record, log);
     await this.forget(projectId, record.pid);
   }
@@ -133,12 +152,19 @@ export class DevServerPids {
     record: DevServerRecord,
     log: (line: string) => void
   ): Promise<void> {
-    if (!(await isOurNext(record))) return;
+    if (!(await isOurNext(record))) {
+      return;
+    }
+
     log(
       `Stopping the next dev (PID ${record.pid}, port ${record.port}) that an earlier Design Studio started in ${record.appRoot}.`
     );
     signalGroup(record.pid, "SIGTERM");
-    if (await waitGone(record.pid, STOP_WAIT_MS)) return;
+
+    if (await waitGone(record.pid, STOP_WAIT_MS)) {
+      return;
+    }
+
     signalGroup(record.pid, "SIGKILL");
     await waitGone(record.pid, 1000);
   }

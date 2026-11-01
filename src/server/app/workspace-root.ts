@@ -21,6 +21,7 @@ export function hasWorkspaceMarker(dir: string): boolean {
 
 function globPattern(glob: string): RegExp {
   const clean = glob.replace(/^\.\//, "").replace(/\/+$/, "");
+
   const body = clean
     .split("/")
     .map((part) =>
@@ -29,14 +30,17 @@ function globPattern(glob: string): RegExp {
         : part.replace(/[.+^${}()|[\]\\]/g, "\\$&").replace(/\*/g, "[^/]*")
     )
     .join("/");
+
   return new RegExp(`^${body}$`);
 }
 
 function isMember(rel: string, globs: string[]): boolean {
   const include = globs.filter((glob) => !glob.startsWith("!"));
+
   const exclude = globs
     .filter((glob) => glob.startsWith("!"))
     .map((glob) => glob.slice(1));
+
   return (
     include.some((glob) => globPattern(glob).test(rel)) &&
     !exclude.some((glob) => globPattern(glob).test(rel))
@@ -49,10 +53,17 @@ async function rootAt(
 ): Promise<WorkspaceRoot | null | "none"> {
   const pkg = await readPackage(dir);
   const globs = await workspaceGlobs(dir, pkg);
-  if (globs === null && !existsSync(path.join(dir, "turbo.json")))
+
+  if (globs === null && !existsSync(path.join(dir, "turbo.json"))) {
     return "none";
+  }
+
   const rel = path.relative(dir, folder).split(path.sep).join("/");
-  if (!isMember(rel, globs ?? TURBO_ONLY_GLOBS)) return null;
+
+  if (!isMember(rel, globs ?? TURBO_ONLY_GLOBS)) {
+    return null;
+  }
+
   return {
     root: dir,
     appDir: rel,
@@ -66,24 +77,41 @@ export async function findWorkspaceRoot(
 ): Promise<WorkspaceRoot | null> {
   const home = process.env.HOME ? path.resolve(process.env.HOME) : null;
   let dir = path.dirname(folder);
+
   for (let up = 0; up < MAX_LEVELS_UP; up += 1) {
-    if (dir === home || dir === path.dirname(dir)) return null;
+    if (dir === home || dir === path.dirname(dir)) {
+      return null;
+    }
+
     const found = await rootAt(dir, folder);
-    if (found !== "none") return found;
-    if (existsSync(path.join(dir, ".git"))) return null;
+
+    if (found !== "none") {
+      return found;
+    }
+
+    if (existsSync(path.join(dir, ".git"))) {
+      return null;
+    }
+
     dir = path.dirname(dir);
   }
+
   return null;
 }
 
 export async function nextAppWorkspace(
   folder: string
 ): Promise<WorkspaceRoot | null> {
-  if (frameworkOf(await readPackage(folder)) !== "next") return null;
+  if (frameworkOf(await readPackage(folder)) !== "next") {
+    return null;
+  }
+
   if (
     !existsSync(path.join(folder, "app")) &&
     !existsSync(path.join(folder, "src", "app"))
-  )
+  ) {
     return null;
+  }
+
   return findWorkspaceRoot(folder);
 }

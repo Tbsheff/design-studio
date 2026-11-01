@@ -33,9 +33,11 @@ async function pickDirection(
 
 async function toggleHeadCompare(page: Page): Promise<void> {
   await showVersions(page);
+
   const headRow = page
     .locator("li.version")
     .filter({ has: page.locator(".badge", { hasText: "Head" }) });
+
   await headRow.getByRole("button", { name: "Compare" }).click();
   await expect(
     headRow.getByRole("button", { name: "Comparing" })
@@ -53,18 +55,25 @@ test("D: two directions, separate edits, compare, resume one", async ({
   const forkPoint = await headVersion(api, project.id, directionA.id);
 
   await showVersions(page);
+
   const headRow = page
     .locator("li.version")
     .filter({ has: page.locator(".badge", { hasText: "Head" }) });
+
   await headRow.getByRole("button", { name: "Branch" }).click();
   await page.getByLabel("Direction name").fill("Direction B");
   await page.getByRole("button", { name: "Create direction" }).click();
   await expect(page.locator(".topbar")).toContainText("/ Direction B");
   const withB = await api.project(project.id);
+
   const directionB = withB.directions.find(
     (direction) => direction.name === "Direction B"
   );
-  if (!directionB) throw new Error("direction B missing");
+
+  if (!directionB) {
+    throw new Error("direction B missing");
+  }
+
   expect(directionB.workTree).not.toBe(directionA.workTree);
   expect(directionB.parentVersionId).toBe(forkPoint.id);
   await expect(
@@ -102,11 +111,14 @@ test("D: two directions, separate edits, compare, resume one", async ({
     path.join(directionB.workTree, "index.html"),
     "utf-8"
   );
+
   const bHeadBefore = await headVersion(api, project.id, directionB.id);
   const aHeadBefore = await headVersion(api, project.id, directionA.id);
+
   const aSessionBefore = (await api.project(project.id)).directions.find(
     (d) => d.id === directionA.id
   )?.sessionId;
+
   expect(aSessionBefore).toBeTruthy();
 
   await sendPrompt(page, EDIT_A2);
@@ -122,10 +134,12 @@ test("D: two directions, separate edits, compare, resume one", async ({
   const resumed = runs.find((run) => run.request.prompt === EDIT_A2);
   expect(resumed?.directionId).toBe(directionA.id);
   expect(resumed?.sessionId).toBe(aSessionBefore);
+
   const aFile = readFileSync(
     path.join(directionA.workTree, "index.html"),
     "utf-8"
   );
+
   expect(aFile).toContain(EDIT_A);
   expect(aFile).toContain(EDIT_A2);
   expect(aFile).not.toContain(EDIT_B);

@@ -43,8 +43,10 @@ function send(message: RunnerToParent): Promise<void> {
   return new Promise((resolve) => {
     if (!process.send) {
       resolve();
+
       return;
     }
+
     process.send(message, undefined, {}, () => resolve());
   });
 }
@@ -56,10 +58,12 @@ function buildConfig(init: RunnerInit, sync: ChangeSync): InlineConfig {
   const realRoot = realOrSelf(root);
   const configFile = findConfigFile(root);
   const rootCandidates = [...new Set([realRoot, root])];
+
   const onBuildError = async (error: BuildErrorPayload): Promise<void> => {
     const file = error.file
       ? (relativeInside(rootCandidates, error.file) ?? error.file)
       : undefined;
+
     await send({
       type: "build-error",
       message: error.message,
@@ -69,18 +73,25 @@ function buildConfig(init: RunnerInit, sync: ChangeSync): InlineConfig {
     });
     await new Promise((resolve) => setTimeout(resolve, BUILD_ERROR_LEAD_MS));
   };
+
   const allow = new Set<string>([
     searchForWorkspaceRoot(root),
     root,
     realRoot,
     path.resolve(init.cacheDir),
   ]);
+
   const nodeModules = path.join(root, "node_modules");
-  if (existsSync(nodeModules)) allow.add(realOrSelf(nodeModules));
+
+  if (existsSync(nodeModules)) {
+    allow.add(realOrSelf(nodeModules));
+  }
+
   const studioPlugins: Plugin[] = [
     sourceTagsPlugin(rootCandidates),
     bridgePlugin(() => Promise.resolve(init.bridgeScript), onBuildError, sync),
   ];
+
   return {
     root,
     configFile,
@@ -103,12 +114,14 @@ async function start(
   sync: ChangeSync
 ): Promise<ViteDevServer> {
   const server = await createServer(buildConfig(init, sync));
+
   try {
     await server.listen(init.port);
   } catch (error) {
     await server.close().catch(() => undefined);
     throw error;
   }
+
   return server;
 }
 
@@ -117,6 +130,7 @@ function failAndExit(error: unknown): void {
     typeof (error as { code?: unknown }).code === "string"
       ? (error as { code: string }).code
       : null;
+
   const message = error instanceof Error ? error.message : String(error);
   void send({ type: "failed", code, message }).finally(() => process.exit(1));
 }
@@ -131,12 +145,16 @@ function main(): void {
         server = started;
         void send({ type: "ready" });
       }, failAndExit);
+
       return;
     }
+
     if (raw.type === "notify") {
       void sync.notify(raw.files).catch(() => undefined);
+
       return;
     }
+
     if (raw.type === "close") {
       const closing = server ? server.close() : Promise.resolve();
       void closing.finally(() => process.exit(0));

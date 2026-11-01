@@ -96,18 +96,22 @@ export interface PackLibrary {
 
 function parseFields(raw: unknown, label: string): CreateUserPackInput {
   const parsed = fieldsSchema.safeParse(raw);
-  if (!parsed.success)
+
+  if (!parsed.success) {
     throw new BadRequestError(
       `invalid ${label}: ${formatIssues("", parsed.error)
         .map((line) => line.trim())
         .join("; ")}`
     );
+  }
+
   return parsed.data as CreateUserPackInput;
 }
 
 function tokensTextOf(value: CreateUserPackInput["tokensJson"]): string {
   const text =
     typeof value === "string" ? value : JSON.stringify(value, null, 2);
+
   return text.endsWith("\n") ? text : `${text}\n`;
 }
 
@@ -132,26 +136,43 @@ export function buildPackFiles(
     ...(input.draft ? { draft: true } : {}),
     ...(input.copiedFrom ? { copiedFrom: input.copiedFrom } : {}),
   };
+
   const manifest = manifestSchema.safeParse(candidate);
-  if (!manifest.success)
+
+  if (!manifest.success) {
     throw new BadRequestError(
       `invalid pack.json: ${formatIssues("pack.json", manifest.error).join("; ")}`
     );
+  }
+
   const tokensText = tokensTextOf(input.tokensJson);
-  if (Buffer.byteLength(tokensText) > MAX_TOKENS_BYTES)
+
+  if (Buffer.byteLength(tokensText) > MAX_TOKENS_BYTES) {
     throw new BadRequestError("tokens.json is larger than 512 KB");
+  }
+
   const parsed = parseTokenFile(tokensText);
-  if (!parsed.file)
+
+  if (!parsed.file) {
     throw new BadRequestError(
       `invalid tokens.json: ${parsed.error ?? "not a token file"}`
     );
+  }
+
   const compiled = compileTokens(parsed.file, { mode: input.mode });
-  if (compiled.errors.length > 0)
+
+  if (compiled.errors.length > 0) {
     throw new BadRequestError(
       `invalid tokens.json: ${buildErrorMessage(compiled.errors)}`
     );
+  }
+
   const prose = removeTokenBlock(input.designMd.replace(/\r\n/g, "\n")).trim();
-  if (prose === "") throw new BadRequestError("DESIGN.md is empty");
+
+  if (prose === "") {
+    throw new BadRequestError("DESIGN.md is empty");
+  }
+
   return {
     manifest: manifest.data as PackManifest,
     tokensText,
@@ -161,6 +182,7 @@ export function buildPackFiles(
 
 function inputOf(pack: LoadedPack): CreateUserPackInput {
   const { manifest } = pack;
+
   return {
     name: manifest.name,
     description: manifest.description,
@@ -189,6 +211,7 @@ async function writeStaged(userDir: string, files: PackFiles): Promise<string> {
   );
   await writeFile(path.join(staged, "tokens.json"), files.tokensText);
   await writeFile(path.join(staged, DESIGN_MD_FILE), files.designMd);
+
   return staged;
 }
 
@@ -201,31 +224,45 @@ function isTaken(error: unknown): boolean {
 
 export function createPackLibrary(registry: PackRegistry): PackLibrary {
   const lock = createKeyedMutex();
+
   const userDir = (): string => {
-    if (!registry.userDir)
+    if (!registry.userDir) {
       throw new BadRequestError("this server has no user pack library");
+    }
+
     return registry.userDir;
   };
 
   const requirePack = async (id: string): Promise<LoadedPack> => {
     const pack = await registry.get(id);
-    if (!pack) throw new NotFoundError(`unknown pack: ${id}`);
+
+    if (!pack) {
+      throw new NotFoundError(`unknown pack: ${id}`);
+    }
+
     return pack;
   };
 
   const requireUserPack = async (id: string): Promise<LoadedPack> => {
     const pack = await requirePack(id);
-    if (pack.source !== "user")
+
+    if (pack.source !== "user") {
       throw new BadRequestError(
         `${pack.manifest.name} is a built-in design system and cannot be changed`
       );
+    }
+
     return pack;
   };
 
   const loaded = async (id: string): Promise<LoadedPack> => {
     registry.invalidate();
     const pack = await registry.get(id);
-    if (!pack) throw new Error(`user pack ${id} was written but did not load`);
+
+    if (!pack) {
+      throw new Error(`user pack ${id} was written but did not load`);
+    }
+
     return pack;
   };
 
@@ -235,23 +272,34 @@ export function createPackLibrary(registry: PackRegistry): PackLibrary {
       await mkdir(root, { recursive: true });
       const base = `${USER_PACK_PREFIX}${slugify(input.name)}`;
       const files = buildPackFiles(base, input);
+
       for (let attempt = 1; attempt <= MAX_SLUG_SUFFIX; attempt += 1) {
         const id = slugCandidate(base, attempt);
-        if (existsSync(path.join(root, id)) || (await registry.get(id)))
+
+        if (existsSync(path.join(root, id)) || (await registry.get(id))) {
           continue;
+        }
+
         const staged = await writeStaged(root, {
           ...files,
           manifest: { ...files.manifest, id },
         });
+
         try {
           await rename(staged, path.join(root, id));
+
           return await loaded(id);
         } catch (error) {
           await rm(staged, { recursive: true, force: true });
-          if (isTaken(error)) continue;
+
+          if (isTaken(error)) {
+            continue;
+          }
+
           throw error;
         }
       }
+
       throw new BadRequestError(`too many design systems named ${input.name}`);
     });
 
@@ -265,12 +313,14 @@ export function createPackLibrary(registry: PackRegistry): PackLibrary {
       const target = path.join(root, id);
       const staged = await writeStaged(root, files);
       const old = path.join(root, tempName("old"));
+
       try {
         await rename(target, old);
       } catch (error) {
         await rm(staged, { recursive: true, force: true });
         throw error;
       }
+
       try {
         await rename(staged, target);
       } catch (error) {
@@ -278,7 +328,9 @@ export function createPackLibrary(registry: PackRegistry): PackLibrary {
         await rm(staged, { recursive: true, force: true });
         throw error;
       }
+
       await rm(old, { recursive: true, force: true });
+
       return loaded(id);
     });
 
@@ -287,6 +339,7 @@ export function createPackLibrary(registry: PackRegistry): PackLibrary {
 
     async detail(id) {
       const pack = await requirePack(id);
+
       return {
         summary: pack.summary,
         tokensJson: pack.tokensText,
@@ -301,25 +354,32 @@ export function createPackLibrary(registry: PackRegistry): PackLibrary {
 
     async updateUserPack(id, raw) {
       const current = await requireUserPack(id);
-      if (typeof raw !== "object" || raw === null || Array.isArray(raw))
+
+      if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {
         throw new BadRequestError("body must be a JSON object");
+      }
+
       const given = Object.fromEntries(
         Object.entries(raw as UpdateUserPackInput).filter(
           ([, value]) => value !== undefined
         )
       );
+
       const patch = parseFields(
         { ...inputOf(current), ...given },
         "design system"
       );
+
       return replace(id, patch);
     },
 
     async duplicatePack(id, name) {
       const source = await requirePack(id);
+
       const copyName =
         name?.trim() ||
         `${source.manifest.name.slice(0, NAME_MAX - COPY_SUFFIX.length)}${COPY_SUFFIX}`;
+
       return create(
         parseFields(
           {
@@ -351,20 +411,26 @@ export function createPackLibrary(registry: PackRegistry): PackLibrary {
     async exportPack(id) {
       const pack = await requirePack(id);
       const names = ["pack.json", "tokens.json", DESIGN_MD_FILE];
+
       const entries = await Promise.all(
         names.map(async (name) => ({
           name: `${id}/${name}`,
           data: await readFile(path.join(pack.dir, name)),
         }))
       );
+
       return { fileName: `${id}.zip`, bytes: zipFiles(entries) };
     },
 
     async importPack(bytes, mode) {
       const zip = readPackZip(bytes);
       const conflict = findImportConflict(await registry.list(), zip);
-      if (conflict && mode === "ask") throw new PackExistsError(conflict);
-      if (conflict && mode === "replace")
+
+      if (conflict && mode === "ask") {
+        throw new PackExistsError(conflict);
+      }
+
+      if (conflict && mode === "replace") {
         return {
           pack: await this.updateUserPack(conflict.id, {
             ...zip.input,
@@ -372,6 +438,8 @@ export function createPackLibrary(registry: PackRegistry): PackLibrary {
           }),
           replaced: true,
         };
+      }
+
       return {
         pack: await create(parseFields(zip.input, "design system")),
         replaced: false,
@@ -380,6 +448,7 @@ export function createPackLibrary(registry: PackRegistry): PackLibrary {
 
     async checkPack(id) {
       const pack = await requirePack(id);
+
       return checkDesignSystemFiles(
         {
           tokensText: pack.tokensText,

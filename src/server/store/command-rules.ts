@@ -23,15 +23,20 @@ export function createCommandRuleStore(
     path.join(projectDir(projectId), "command-rules.json");
 
   const read = async (file: string): Promise<string[]> => {
-    if (!existsSync(file)) return [];
+    if (!existsSync(file)) {
+      return [];
+    }
+
     try {
       const parsed: unknown = JSON.parse(await readFile(file, "utf-8"));
       const rules = (parsed as { rules?: unknown } | null)?.rules;
+
       return Array.isArray(rules)
         ? rules.filter((rule): rule is string => typeof rule === "string")
         : [];
     } catch (error) {
       console.error("[command-rules] unreadable file", file, error);
+
       return [];
     }
   };
@@ -48,10 +53,15 @@ export function createCommandRuleStore(
     change: (rules: string[]) => string[]
   ): Promise<string[]> => {
     const file = fileOf(projectId);
+
     return lock(file, async () => {
       const before = await read(file);
       const after = change(before);
-      if (after !== before) await write(file, after);
+
+      if (after !== before) {
+        await write(file, after);
+      }
+
       return after;
     });
   };
@@ -60,8 +70,10 @@ export function createCommandRuleStore(
     list: (projectId) => read(fileOf(projectId)),
     add: (projectId, rule) =>
       mutate(projectId, (rules) => {
-        if (!rule || rule.length > RULE_MAX_CHARS || rules.includes(rule))
+        if (!rule || rule.length > RULE_MAX_CHARS || rules.includes(rule)) {
           return rules;
+        }
+
         return [...rules, rule].slice(-COMMAND_RULES_MAX);
       }),
     remove: (projectId, rule) =>

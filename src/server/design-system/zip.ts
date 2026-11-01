@@ -7,14 +7,21 @@ export interface ZipEntry {
 
 const CRC_TABLE = Array.from({ length: 256 }, (_, n) => {
   let c = n;
-  for (let k = 0; k < 8; k += 1) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+
+  for (let k = 0; k < 8; k += 1) {
+    c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+  }
+
   return c >>> 0;
 });
 
 function crc32(data: Buffer): number {
   let crc = 0xffffffff;
-  for (const byte of data)
+
+  for (const byte of data) {
     crc = (CRC_TABLE[(crc ^ byte) & 0xff] ?? 0) ^ (crc >>> 8);
+  }
+
   return (crc ^ 0xffffffff) >>> 0;
 }
 
@@ -23,10 +30,12 @@ function dosTime(date: Date): { time: number; day: number } {
     (date.getHours() << 11) |
     (date.getMinutes() << 5) |
     Math.floor(date.getSeconds() / 2);
+
   const day =
     ((Math.max(1980, date.getFullYear()) - 1980) << 9) |
     ((date.getMonth() + 1) << 5) |
     date.getDate();
+
   return { time, day };
 }
 
@@ -35,6 +44,7 @@ export function zipFiles(entries: ZipEntry[], date: Date = new Date()): Buffer {
   const locals: Buffer[] = [];
   const centrals: Buffer[] = [];
   let offset = 0;
+
   for (const entry of entries) {
     const name = Buffer.from(entry.name, "utf-8");
     const packed = deflateRawSync(entry.data);
@@ -69,6 +79,7 @@ export function zipFiles(entries: ZipEntry[], date: Date = new Date()): Buffer {
     centrals.push(central, name);
     offset += local.length + name.length + packed.length;
   }
+
   const centralSize = centrals.reduce((sum, part) => sum + part.length, 0);
   const end = Buffer.alloc(22);
   end.writeUInt32LE(0x06054b50, 0);
@@ -76,6 +87,7 @@ export function zipFiles(entries: ZipEntry[], date: Date = new Date()): Buffer {
   end.writeUInt16LE(entries.length, 10);
   end.writeUInt32LE(centralSize, 12);
   end.writeUInt32LE(offset, 16);
+
   return Buffer.concat([...locals, ...centrals, end]);
 }
 
@@ -97,8 +109,13 @@ const S_IFREG = 0o100000;
 
 function findEnd(bytes: Buffer): number {
   const stop = Math.max(0, bytes.length - EOCD_MIN - MAX_COMMENT);
-  for (let at = bytes.length - EOCD_MIN; at >= stop; at -= 1)
-    if (bytes.readUInt32LE(at) === EOCD_SIGNATURE) return at;
+
+  for (let at = bytes.length - EOCD_MIN; at >= stop; at -= 1) {
+    if (bytes.readUInt32LE(at) === EOCD_SIGNATURE) {
+      return at;
+    }
+  }
+
   throw new ZipError("not a zip file");
 }
 
@@ -108,7 +125,10 @@ function inflate(
   size: number,
   limit: number
 ): Buffer {
-  if (method === 0) return packed;
+  if (method === 0) {
+    return packed;
+  }
+
   try {
     return inflateRawSync(packed, {
       maxOutputLength: Math.min(size, limit) + 1,
@@ -131,11 +151,14 @@ interface CentralEntry {
 }
 
 function readCentral(bytes: Buffer, at: number, end: number): CentralEntry {
-  if (at + 46 > end || bytes.readUInt32LE(at) !== CENTRAL_SIGNATURE)
+  if (at + 46 > end || bytes.readUInt32LE(at) !== CENTRAL_SIGNATURE) {
     throw new ZipError("not a zip file");
+  }
+
   const nameLength = bytes.readUInt16LE(at + 28);
   const skip = bytes.readUInt16LE(at + 30) + bytes.readUInt16LE(at + 32);
   const madeByUnix = bytes.readUInt16LE(at + 4) >> 8 === 3;
+
   return {
     name: bytes.subarray(at + 46, at + 46 + nameLength).toString("utf-8"),
     flags: bytes.readUInt16LE(at + 8),
@@ -151,19 +174,30 @@ function readCentral(bytes: Buffer, at: number, end: number): CentralEntry {
 
 function checkEntry(entry: CentralEntry, limits: UnzipLimits): void {
   const { name } = entry;
-  if (entry.flags & 0x1) throw new ZipError("encrypted zips are not supported");
-  if (entry.method !== 0 && entry.method !== 8)
+
+  if (entry.flags & 0x1) {
+    throw new ZipError("encrypted zips are not supported");
+  }
+
+  if (entry.method !== 0 && entry.method !== 8) {
     throw new ZipError(
       `${name} uses a compression method that is not supported`
     );
-  if (name.endsWith("/"))
+  }
+
+  if (name.endsWith("/")) {
     throw new ZipError(`folder entries are not allowed: ${name}`);
-  if (entry.unixMode !== 0 && (entry.unixMode & S_IFMT) !== S_IFREG)
+  }
+
+  if (entry.unixMode !== 0 && (entry.unixMode & S_IFMT) !== S_IFREG) {
     throw new ZipError(`${name} is not a regular file`);
-  if (entry.size > limits.maxEntryBytes)
+  }
+
+  if (entry.size > limits.maxEntryBytes) {
     throw new ZipError(
       `${name} is larger than ${Math.round(limits.maxEntryBytes / 1024)} KB`
     );
+  }
 }
 
 function readData(
@@ -173,26 +207,35 @@ function readData(
   limits: UnzipLimits
 ): Buffer {
   const { localAt } = entry;
+
   if (
     localAt + 30 > centralStart ||
     bytes.readUInt32LE(localAt) !== LOCAL_SIGNATURE
-  )
+  ) {
     throw new ZipError("not a zip file");
+  }
+
   const dataAt =
     localAt +
     30 +
     bytes.readUInt16LE(localAt + 26) +
     bytes.readUInt16LE(localAt + 28);
-  if (dataAt + entry.packedSize > centralStart)
+
+  if (dataAt + entry.packedSize > centralStart) {
     throw new ZipError("not a zip file");
+  }
+
   const data = inflate(
     bytes.subarray(dataAt, dataAt + entry.packedSize),
     entry.method,
     entry.size,
     limits.maxEntryBytes
   );
-  if (data.length !== entry.size || crc32(data) !== entry.crc)
+
+  if (data.length !== entry.size || crc32(data) !== entry.crc) {
     throw new ZipError(`${entry.name} is damaged`);
+  }
+
   return Buffer.from(data);
 }
 
@@ -200,21 +243,32 @@ function readDirectory(
   bytes: Buffer,
   limits: UnzipLimits
 ): { count: number; centralStart: number; end: number } {
-  if (bytes.length < EOCD_MIN) throw new ZipError("not a zip file");
+  if (bytes.length < EOCD_MIN) {
+    throw new ZipError("not a zip file");
+  }
+
   const end = findEnd(bytes);
   const count = bytes.readUInt16LE(end + 10);
   const centralSize = bytes.readUInt32LE(end + 12);
   const centralStart = bytes.readUInt32LE(end + 16);
+
   if (
     count === 0xffff ||
     centralStart === 0xffffffff ||
     bytes.readUInt16LE(end + 4) !== 0 ||
     bytes.readUInt16LE(end + 8) !== count
-  )
+  ) {
     throw new ZipError("zip64 and multi-part zips are not supported");
-  if (count > limits.maxEntries)
+  }
+
+  if (count > limits.maxEntries) {
     throw new ZipError(`the zip has more than ${limits.maxEntries} entries`);
-  if (centralStart + centralSize > end) throw new ZipError("not a zip file");
+  }
+
+  if (centralStart + centralSize > end) {
+    throw new ZipError("not a zip file");
+  }
+
   return { count, centralStart, end };
 }
 
@@ -224,22 +278,30 @@ export function unzipFiles(bytes: Buffer, limits: UnzipLimits): ZipEntry[] {
   const seen = new Set<string>();
   let total = 0;
   let at = centralStart;
+
   for (let index = 0; index < count; index += 1) {
     const entry = readCentral(bytes, at, end);
     at = entry.next;
     checkEntry(entry, limits);
-    if (seen.has(entry.name))
+
+    if (seen.has(entry.name)) {
       throw new ZipError(`${entry.name} is in the zip more than once`);
+    }
+
     seen.add(entry.name);
     total += entry.size;
-    if (total > limits.maxTotalBytes)
+
+    if (total > limits.maxTotalBytes) {
       throw new ZipError(
         `the zip contents are larger than ${Math.round(limits.maxTotalBytes / 1024)} KB`
       );
+    }
+
     entries.push({
       name: entry.name,
       data: readData(bytes, entry, centralStart, limits),
     });
   }
+
   return entries;
 }

@@ -21,8 +21,13 @@ export function sameFolderOrRoot(
   workspace: WorkspaceRoot | null
 ): boolean {
   const source = project.imported?.sourcePath;
-  if (source === undefined) return false;
+
+  if (source === undefined) {
+    return false;
+  }
+
   const resolved = path.resolve(source);
+
   return (
     resolved === folder ||
     (workspace !== null &&
@@ -38,13 +43,18 @@ export function workspaceFields(
   const root = project.imported?.sourcePath
     ? path.resolve(project.imported.sourcePath)
     : null;
+
   const appDir = project.app?.appDir ?? null;
   const inWorkspace = root !== null && appDir !== null && appDir !== ".";
+
   const fields: WorkspaceFields = {
     workspaceRoot: inWorkspace ? root : null,
     appDir,
   };
-  if (inWorkspace && root !== opened)
+
+  if (inWorkspace && root !== opened) {
     fields.openedAs = `Opened as part of the ${path.basename(root)} monorepo at ${root}, with ${appDir} as the app.`;
+  }
+
   return fields;
 }

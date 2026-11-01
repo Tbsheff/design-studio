@@ -30,6 +30,7 @@ export const RULE_TARGETS: Record<string, string> = {
 
 const CLASS_TOKEN =
   /^(?:[a-z0-9-]+:)*!?-?[a-z][a-z0-9-]*(?:-[a-z0-9.\/%]+|\[[^\]\s]+\])*$/i;
+
 const BARE_CLASSES = new Set([
   "border",
   "rounded",
@@ -58,19 +59,28 @@ function cleanLine(raw: string): string {
 
 export function targetSelector(raw: string): string | null {
   const quoted = /^`([^`]+)`$/.exec(raw.trim());
-  if (quoted?.[1]) return quoted[1].trim();
+
+  if (quoted?.[1]) {
+    return quoted[1].trim();
+  }
+
   const word = raw.trim().toLowerCase().replace(/\s+/g, " ");
+
   const single =
     word.endsWith("es") && RULE_TARGETS[word.slice(0, -2)]
       ? word.slice(0, -2)
       : word.endsWith("s")
         ? word.slice(0, -1)
         : word;
+
   return RULE_TARGETS[single] ?? RULE_TARGETS[word] ?? null;
 }
 
 function isClass(token: string): boolean {
-  if (!CLASS_TOKEN.test(token)) return false;
+  if (!CLASS_TOKEN.test(token)) {
+    return false;
+  }
+
   return token.includes("-") || token.includes(":") || BARE_CLASSES.has(token);
 }
 
@@ -79,8 +89,13 @@ function classGroups(spec: string): string[][] | null {
     .replace(/`/g, "")
     .split(/[\s,]+/)
     .filter(Boolean);
-  if (tokens.length === 0) return null;
+
+  if (tokens.length === 0) {
+    return null;
+  }
+
   const groups = tokens.map((token) => token.split("|").filter(Boolean));
+
   return groups.every((alts) => alts.length > 0 && alts.every(isClass))
     ? groups
     : null;
@@ -90,10 +105,18 @@ function classRule(line: string, text: string): ClassRule | null {
   const colon = /^(`[^`]+`|[a-z][a-z ]{1,30}?)\s*:\s*(.+)$/i.exec(line);
   const bare = colon ? null : /^([a-z]+)\s+(.+)$/i.exec(line);
   const match = colon ?? bare;
-  if (!match?.[1] || !match[2]) return null;
+
+  if (!match?.[1] || !match[2]) {
+    return null;
+  }
+
   const selector = targetSelector(match[1]);
   const classes = selector ? classGroups(match[2]) : null;
-  if (!selector || !classes) return null;
+
+  if (!selector || !classes) {
+    return null;
+  }
+
   return {
     id: ruleId(text),
     kind: "class",
@@ -109,17 +132,23 @@ function tokenRule(line: string, text: string): TokenRule | null {
     /^(?:no|never(?: use)?)\s+(?:raw\s+|hard-?coded\s+)?(?:hex|colou?rs?|colou?r values)(?:\s+values)?$/i.test(
       line
     )
-  )
+  ) {
     return { id: ruleId(text), kind: "token", text, scope: "color" };
-  if (/^colou?rs?\s*:\s*tokens?(?:\s+only)?$/i.test(line))
+  }
+
+  if (/^colou?rs?\s*:\s*tokens?(?:\s+only)?$/i.test(line)) {
     return { id: ruleId(text), kind: "token", text, scope: "color" };
+  }
+
   if (
     /^(?:no|never(?: use)?)\s+(?:raw|arbitrary|hard-?coded)\s+values$/i.test(
       line
     ) ||
     /^tokens?\s+only$/i.test(line)
-  )
+  ) {
     return { id: ruleId(text), kind: "token", text, scope: "any" };
+  }
+
   return null;
 }
 
@@ -134,17 +163,23 @@ function fontRule(line: string, text: string): FontRule | null {
   const named =
     /^fonts?\s*:\s*(.+)$/i.exec(line) ??
     /^only\s+(?:use\s+)?(.+?)(?:\s+fonts?)?$/i.exec(line);
+
   const families = named?.[1] ? familyList(named[1]) : [];
+
   if (
     families.length === 0 ||
     families.some((family) => family.split(" ").length > 3)
-  )
+  ) {
     return null;
+  }
+
   if (
     !/^fonts?\s*:/i.test(line) &&
     families.some((family) => isClass(family) || /^[a-z]/.test(family))
-  )
+  ) {
     return null;
+  }
+
   return { id: ruleId(text), kind: "font", text, families };
 }
 
@@ -153,8 +188,13 @@ function componentRule(line: string, text: string): ComponentRule | null {
     /^use\s+(?:the\s+)?(?:(\S+)\s+)?<?([A-Z][A-Za-z0-9]*)>?(?:\s+from\s+(\S+?))?\s*[,;]?\s*(?:not|instead of|never)\s+(?:a\s+|an\s+|raw\s+|plain\s+)*<([a-z][a-z0-9-]*)\s*\/?>/.exec(
       line
     );
-  if (!match?.[2] || !match[4]) return null;
+
+  if (!match?.[2] || !match[4]) {
+    return null;
+  }
+
   const module = (match[3] ?? match[1] ?? "").replace(/[`'",]/g, "") || null;
+
   return {
     id: ruleId(text),
     kind: "component",
@@ -167,14 +207,18 @@ function componentRule(line: string, text: string): ComponentRule | null {
 
 export function parseRuleLine(raw: string): DesignRule | null {
   const line = cleanLine(raw);
+
   if (
     !line ||
     line.startsWith("#") ||
     line.startsWith("//") ||
     /^```/.test(line)
-  )
+  ) {
     return null;
+  }
+
   const text = line;
+
   return (
     tokenRule(line, text) ??
     componentRule(line, text) ??
@@ -186,13 +230,22 @@ export function parseRuleLine(raw: string): DesignRule | null {
 export function parseRules(text: string): DesignRule[] {
   const seen = new Set<string>();
   const out: DesignRule[] = [];
+
   for (const line of text.replace(/\r\n/g, "\n").split("\n")) {
     const rule = parseRuleLine(line);
-    if (!rule || seen.has(rule.id)) continue;
+
+    if (!rule || seen.has(rule.id)) {
+      continue;
+    }
+
     seen.add(rule.id);
     out.push(rule);
-    if (out.length >= DESIGN_RULES_MAX) break;
+
+    if (out.length >= DESIGN_RULES_MAX) {
+      break;
+    }
   }
+
   return out;
 }
 

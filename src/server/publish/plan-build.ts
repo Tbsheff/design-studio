@@ -50,6 +50,7 @@ export function titleOf(raw: unknown, fallback: string): string {
           .trim()
           .slice(0, 120)
       : "";
+
   return text || fallback;
 }
 
@@ -73,6 +74,7 @@ export async function buildViewer(
 ): Promise<Built> {
   const given = a.input.frames ?? a.prior?.frames ?? undefined;
   const ids = a.input.frameIds ?? a.prior?.frameIds ?? undefined;
+
   const { frames, ids: frameIds } = await framesOf(
     deps,
     a.source.project,
@@ -80,9 +82,13 @@ export async function buildViewer(
     given,
     ids
   );
-  if (frames.length > PUBLISH_MAX_FRAMES)
+
+  if (frames.length > PUBLISH_MAX_FRAMES) {
     throw new BadRequestError(`publish at most ${PUBLISH_MAX_FRAMES} frames`);
+  }
+
   const shotsDir = path.join(a.stage, "shots");
+
   const shots: ShareFrame[] = await captureShare(
     deps.preview,
     a.source,
@@ -90,13 +96,16 @@ export async function buildViewer(
     shotsDir,
     frameIds
   );
+
   const withComments = a.input.comments ?? a.prior?.withComments ?? false;
+
   const comments = withComments
     ? viewerComments(
         await deps.comments.list(a.source.project.id, a.direction.id),
         shots
       )
     : [];
+
   const page = {
     title: titleOf(a.input.title, a.prior?.title ?? a.source.project.name),
     versionLabel:
@@ -107,9 +116,11 @@ export async function buildViewer(
     comments,
     ...(a.viewerComments ? { commentsHref: "~/comments" } : {}),
   };
+
   const out = await writeViewer(a.assets, shotsDir, page);
   await rm(shotsDir, { recursive: true, force: true });
   const pages = shots.map((s) => `${s.name}${s.path ? ` (${s.path})` : ""}`);
+
   return {
     kind: "viewer",
     pages,
@@ -128,6 +139,7 @@ export async function buildSite(
   assets: string
 ): Promise<Built> {
   const root = await deps.versions.snapshot(source.project, source.version.id);
+
   const out = await buildSiteBundle(root, assets, deps.secrets).catch(
     (error: unknown) => {
       throw error instanceof BundleError
@@ -135,13 +147,16 @@ export async function buildSite(
         : error;
     }
   );
+
   const absolute = await rootRefPages(assets, out.files);
+
   const warnings =
     absolute.length > 0
       ? [
           `${absolute.slice(0, 3).join(", ")}${absolute.length > 3 ? ` and ${absolute.length - 3} more` : ""} link to paths that start with /. Those links break under the published address; use relative paths.`,
         ]
       : [];
+
   return {
     kind: "site",
     pages: out.pages,
@@ -169,6 +184,7 @@ export async function stageManifest(
   files: string[]
 ): Promise<StagedFile[]> {
   const out: StagedFile[] = [];
+
   for (const relative of files) {
     const abs = path.join(assets, relative);
     out.push({
@@ -178,5 +194,6 @@ export async function stageManifest(
       size: (await stat(abs)).size,
     });
   }
+
   return out;
 }

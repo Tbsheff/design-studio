@@ -39,6 +39,7 @@ async function newProject(
   const project = await createProjectViaUi(page, api, name, "html");
   await expect(frontFrame(page).locator("h1")).toHaveText(name);
   await api.waitForRuns(project.id, 1);
+
   return { api, project };
 }
 
@@ -60,19 +61,26 @@ async function pixelAt(
   y: number
 ): Promise<{ width: number; height: number; rgba: number[]; around: number }> {
   const data = readFileSync(file).toString("base64");
+
   return page.evaluate(
     async ({ data, x, y }) => {
       const bytes = Uint8Array.from(atob(data), (char) => char.charCodeAt(0));
+
       const bitmap = await createImageBitmap(
         new Blob([bytes], { type: "image/png" })
       );
+
       const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
       const ctx = canvas.getContext("2d") as OffscreenCanvasRenderingContext2D;
       ctx.drawImage(bitmap, 0, 0);
       const rgba = Array.from(ctx.getImageData(x, y, 1, 1).data);
       const corner = ctx.getImageData(0, 0, 20, 20).data;
       let around = 0;
-      for (let i = 3; i < corner.length; i += 4) around += corner[i] as number;
+
+      for (let i = 3; i < corner.length; i += 4) {
+        around += corner[i] as number;
+      }
+
       return { width: bitmap.width, height: bitmap.height, rgba, around };
     },
     { data, x, y }
@@ -96,16 +104,19 @@ async function expectSentImage(
   y: number
 ): Promise<void> {
   const runId = (await comments(api, project))[0]?.runId as string;
+
   const log = await api.call<{
     sent: { imageCount: number; text: string }[];
     summary: { request: { attachmentIds?: string[] } };
   }>("GET", `/api/runs/${runId}`);
+
   expect(log.sent.length).toBeGreaterThan(0);
   expect(log.sent[0]?.imageCount).toBe(1);
   expect(log.sent[0]?.text).toContain("<drawing>");
   expect(log.summary.request.attachmentIds).toEqual(comment.attachmentIds);
 
   const attachmentId = comment.attachmentIds?.[0] as string;
+
   const meta = JSON.parse(
     readFileSync(
       path.join(
@@ -118,6 +129,7 @@ async function expectSentImage(
       "utf-8"
     )
   ) as Attachment;
+
   expect(meta.mime).toBe("image/png");
   const pixel = await pixelAt(page, meta.path, 400, y);
   expect([pixel.width, pixel.height]).toEqual([
@@ -141,12 +153,17 @@ test("Draw: a stroke plus a comment sends one image attachment that shows the st
   await expect(page.getByTestId("draw-bar")).toBeVisible();
   const surface = page.getByTestId("draw-canvas");
   const box = await surface.boundingBox();
-  if (!box) throw new Error("no drawing surface");
+
+  if (!box) {
+    throw new Error("no drawing surface");
+  }
+
   const frameWidth = Number(
     await surface.evaluate((el) =>
       (el as HTMLCanvasElement).style.width.replace("px", "")
     )
   );
+
   const scale = box.width / frameWidth;
 
   await stroke(
@@ -256,9 +273,11 @@ test("Comments: replies under a comment, Resolve and Reopen, and the Show resolv
 
   await page.getByRole("tab", { name: "Comments" }).click();
   const panel = page.getByTestId("comments-panel");
+
   const first = panel
     .getByTestId("comment-row")
     .filter({ hasText: "Warmer title" });
+
   await expect(first.getByTestId("comment-reply")).toHaveText([
     "Use the brand orange",
     "Keep it one line",
@@ -311,9 +330,11 @@ test("Comments: replies under a comment, Resolve and Reopen, and the Show resolv
     })
     .toBe("resolved");
   const runs = await api.runs(project.id);
+
   const run = runs.find(
     (candidate) => candidate.request.comments?.length === 1
   );
+
   expect(run?.request.comments?.[0]?.text).toBe(
     "Warmer title\nReplies:\n- Use the brand orange"
   );

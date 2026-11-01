@@ -17,17 +17,24 @@ let counter = 0;
 
 function nextId(): string {
   counter += 1;
+
   return `ui-${Date.now().toString(36)}-${counter}`;
 }
 
 export function domPatchFor(req: DirectEditRequest): DomPatch | null {
-  if (req.variant || req.move !== undefined || req.insert !== undefined)
+  if (req.variant || req.move !== undefined || req.insert !== undefined) {
     return null;
+  }
+
   const style =
     req.style && Object.keys(req.style).length > 0
       ? (req.style as Record<string, string | null>)
       : undefined;
-  if (!style && req.text === undefined) return null;
+
+  if (!style && req.text === undefined) {
+    return null;
+  }
+
   return {
     selector: req.selector,
     trusted: true,
@@ -41,14 +48,23 @@ function watchResult(
   id: string,
   onProblem: (reason: string) => void
 ): void {
-  if (!port.listen) return;
+  if (!port.listen) {
+    return;
+  }
+
   const stop = port.listen((message: BridgeToParent) => {
-    if (message.type !== "optimistic-result" || message.id !== id) return;
+    if (message.type !== "optimistic-result" || message.id !== id) {
+      return;
+    }
+
     stop();
     window.clearTimeout(timer);
-    if (message.outcome === "mismatch" || message.outcome === "timeout")
+
+    if (message.outcome === "mismatch" || message.outcome === "timeout") {
       onProblem(message.reason ?? "The page does not show the saved edit.");
+    }
   });
+
   const timer = window.setTimeout(stop, RESULT_WAIT_MS);
 }
 
@@ -63,10 +79,15 @@ export function startOptimistic(
   onProblem: (reason: string) => void
 ): OptimisticEdit {
   const patch = domPatchFor(req);
-  if (!port || !patch) return NOOP;
+
+  if (!port || !patch) {
+    return NOOP;
+  }
+
   const id = nextId();
   port.post({ type: "optimistic-apply", id, patch, written: false });
   watchResult(port, id, onProblem);
+
   return {
     saved: (tailwind) =>
       port.post({

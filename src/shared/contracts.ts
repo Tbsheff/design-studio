@@ -4,6 +4,7 @@ import type { LinkQuery, LinkRectReport, LinksFile } from "./links";
 import type { StatesRequest } from "./states";
 import type { StyleQuery, StyleScanResult } from "./style-search";
 import type { EditScope } from "./usage-scope";
+
 export type ProjectKind = "html" | "react";
 
 export interface ProjectSettings {
@@ -371,9 +372,11 @@ export interface Attachment {
 }
 
 export type RunMode = "edit" | "critique";
+
 export type RunTask = "tweaks" | "design-system" | "port";
 
 export type RunEffort = "low" | "medium" | "high";
+
 export const RUN_EFFORTS: readonly RunEffort[] = ["low", "medium", "high"];
 
 export type RunMention =
@@ -1403,7 +1406,9 @@ export interface LayerNode {
 }
 
 export const MATCH_KINDS = ["component", "classes", "text-style"] as const;
+
 export type MatchKind = (typeof MATCH_KINDS)[number];
+
 export const MATCH_SELECT_MAX = 200;
 
 export const LAYER_TREE_MAX = 5000;
@@ -1439,16 +1444,27 @@ export function appKeyOf(
   },
   typing: boolean
 ): AppKey | null {
-  if (event.altKey) return null;
+  if (event.altKey) {
+    return null;
+  }
+
   const modKey =
     (event.metaKey || event.ctrlKey) && !event.shiftKey
       ? MOD_APP_KEYS[event.code]
       : undefined;
-  if (modKey) return modKey;
-  if (event.key === "?" && !event.metaKey && (event.ctrlKey || !typing))
+
+  if (modKey) {
+    return modKey;
+  }
+
+  if (event.key === "?" && !event.metaKey && (event.ctrlKey || !typing)) {
     return "shortcuts";
-  if (event.key === "F6" && !event.metaKey && !event.ctrlKey)
+  }
+
+  if (event.key === "F6" && !event.metaKey && !event.ctrlKey) {
     return event.shiftKey ? "prev-region" : "next-region";
+  }
+
   return null;
 }
 
@@ -1459,9 +1475,18 @@ export function selectMoveOf(event: {
   ctrlKey: boolean;
   altKey: boolean;
 }): SelectMove | null {
-  if (event.metaKey || event.ctrlKey || event.altKey) return null;
-  if (event.key === "Enter") return event.shiftKey ? "parent" : "child";
-  if (event.key === "Tab") return event.shiftKey ? "prev" : "next";
+  if (event.metaKey || event.ctrlKey || event.altKey) {
+    return null;
+  }
+
+  if (event.key === "Enter") {
+    return event.shiftKey ? "parent" : "child";
+  }
+
+  if (event.key === "Tab") {
+    return event.shiftKey ? "prev" : "next";
+  }
+
   return null;
 }
 
@@ -1482,16 +1507,19 @@ const MOD_ZOOM_KEYS: Record<string, ZoomKey> = {
   "-": "out",
   _: "out",
 };
+
 const MOD_ZOOM_CODES: Record<string, ZoomKey> = {
   Digit0: "actual",
   Digit1: "fit",
   Digit2: "selection",
 };
+
 const SHIFT_ZOOM_CODES: Record<string, ZoomKey> = {
   Digit0: "actual",
   Digit1: "fit",
   Digit2: "selection",
 };
+
 const BARE_ZOOM_KEYS: Record<string, ZoomKey> = {
   "=": "in",
   "+": "in",
@@ -1499,11 +1527,18 @@ const BARE_ZOOM_KEYS: Record<string, ZoomKey> = {
 };
 
 export function zoomKeyOf(event: ZoomKeyInput): ZoomKey | null {
-  if (event.altKey) return null;
-  if (event.ctrlKey || event.metaKey)
+  if (event.altKey) {
+    return null;
+  }
+
+  if (event.ctrlKey || event.metaKey) {
     return MOD_ZOOM_CODES[event.code] ?? MOD_ZOOM_KEYS[event.key] ?? null;
-  if (event.shiftKey && SHIFT_ZOOM_CODES[event.code])
+  }
+
+  if (event.shiftKey && SHIFT_ZOOM_CODES[event.code]) {
     return SHIFT_ZOOM_CODES[event.code] ?? null;
+  }
+
   return BARE_ZOOM_KEYS[event.key] ?? null;
 }
 
@@ -1792,6 +1827,7 @@ export interface TailwindOutcome {
 export type ReorderMove = "up" | "down";
 
 export const INSERT_KINDS = ["text", "frame", "rect", "ellipse"] as const;
+
 export type InsertKind = (typeof INSERT_KINDS)[number];
 
 export interface DirectEditBatch {
@@ -1807,6 +1843,7 @@ export const STRUCTURE_OPS = [
   "clear",
   "group",
 ] as const;
+
 export type StructureOp = (typeof STRUCTURE_OPS)[number];
 
 export interface StructureTarget {
@@ -1904,6 +1941,7 @@ export function projectPreviewHost(projectId: string): string {
   const hex = [...new TextEncoder().encode(projectId)]
     .map((byte) => byte.toString(16).padStart(2, "0"))
     .join("");
+
   return `p-${hex}${PREVIEW_HOST_SUFFIX}`;
 }
 

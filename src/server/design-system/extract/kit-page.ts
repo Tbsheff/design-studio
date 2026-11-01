@@ -87,11 +87,16 @@ const PENDING_STYLE = `
     @media (prefers-reduced-motion: reduce) { .skel, .kit-reading::before { animation: none; } }`;
 
 function skeleton(group: KitGroup): string {
-  if (group === "colors")
+  if (group === "colors") {
     return `        <div class="skel-grid">\n${Array.from({ length: 12 }, () => '          <div class="skel"></div>').join("\n")}\n        </div>`;
-  if (group === "components")
+  }
+
+  if (group === "components") {
     return `        <div class="skel-grid">\n${Array.from({ length: 3 }, () => '          <div class="skel wide"></div>').join("\n")}\n        </div>`;
+  }
+
   const rows = group === "type" ? 6 : 4;
+
   return `        <div class="skel-rows">\n${Array.from({ length: rows }, () => '          <div class="skel line"></div>').join("\n")}\n        </div>`;
 }
 
@@ -101,8 +106,10 @@ function section(
   pending: ReadonlySet<KitGroup>,
   body: string
 ): string {
-  if (!pending.has(group))
+  if (!pending.has(group)) {
     return `      <section aria-label="${label}">\n        <h2>${label}</h2>\n${body}\n      </section>`;
+  }
+
   return `      <section aria-label="${label}" data-pending="${group}" aria-busy="true">\n        <h2>${label}</h2>\n${skeleton(group)}\n      </section>`;
 }
 
@@ -167,7 +174,10 @@ function components(name: string): string {
 }
 
 function logoBlock(src: string | undefined): string {
-  if (!src) return "";
+  if (!src) {
+    return "";
+  }
+
   return `\n        <figure class="kit-logo"><img src="${escapeHtml(src)}" alt="Logo from the website"><figcaption>Logo from the website</figcaption></figure>`;
 }
 
@@ -180,17 +190,21 @@ export function renderKitPage(input: {
 }): string {
   const name = escapeHtml(input.name);
   const pending = new Set(input.pending ?? []);
+
   const reading =
     pending.size > 0
       ? '\n        <p class="kit-reading" role="status">Reading your sources. Each group fills in when a source is read.</p>'
       : "";
+
   const fonts = input.googleFontsUrl
     ? `\n    <link rel="preconnect" href="https://fonts.googleapis.com">\n    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n    <link rel="stylesheet" href="${escapeHtml(input.googleFontsUrl)}">`
     : "";
+
   const palettes =
     input.mode === "dark"
       ? palette("Colors", "")
       : `${palette("Light", "")}\n${palette("Dark", " dark")}`;
+
   const typeRows = [...REQUIRED_TOKENS.text]
     .reverse()
     .map(
@@ -198,24 +212,28 @@ export function renderKitPage(input: {
         `        <div class="type-row"><code>--text-${step}</code><span style="font-size: var(--text-${step})">The quick brown fox</span></div>`
     )
     .join("\n");
+
   const spaceRows = REQUIRED_TOKENS.space
     .map(
       (step) =>
         `        <div class="scale-row"><code>--space-${step}</code><div class="bar" style="width: var(--space-${step})"></div></div>`
     )
     .join("\n");
+
   const radii = REQUIRED_TOKENS.radius
     .map(
       (step) =>
         `        <div class="box" style="border-radius: var(--radius-${step})">--radius-${step}</div>`
     )
     .join("\n");
+
   const shadows = REQUIRED_TOKENS.shadow
     .map(
       (step) =>
         `        <div class="box" style="box-shadow: var(--shadow-${step}); border-radius: var(--radius-md)">--shadow-${step}</div>`
     )
     .join("\n");
+
   return `<!doctype html>
 <html lang="en">
   <head>

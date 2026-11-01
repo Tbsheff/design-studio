@@ -36,8 +36,10 @@ const FIXTURES = path.join(
   path.dirname(fileURLToPath(import.meta.url)),
   "__fixtures__"
 );
+
 const PAGE =
   '<!doctype html>\n<html>\n<head><title>T</title></head>\n<body>\n  <h1 class="t">Hello</h1>\n  <p>One <b>two</b></p>\n</body>\n</html>\n';
+
 const H1 = { file: "index.html", line: 5, col: 3 };
 const P = { file: "index.html", line: 6, col: 3 };
 const DESIGN_FILES = [TOKENS_FILE, TOKENS_CSS_FILE, "DESIGN.md"];
@@ -58,6 +60,7 @@ function fakeRunner(): AgentRunner {
         cancel: () => undefined,
         done: new Promise(() => undefined),
       };
+
       return handle;
     },
     get: () => undefined,
@@ -70,7 +73,11 @@ function call(method: string, url: string, body?: unknown): Promise<Response> {
   const headers: Record<string, string> = {
     "x-studio-token": config.studioToken,
   };
-  if (body !== undefined) headers["content-type"] = "application/json";
+
+  if (body !== undefined) {
+    headers["content-type"] = "application/json";
+  }
+
   return Promise.resolve(
     app.request(url, {
       method,
@@ -88,6 +95,7 @@ async function setup(
     kind: "html",
     ...(withPack ? { packId: "test-pack" } : {}),
   });
+
   expect(created.status).toBe(200);
   const project = ((await created.json()) as { project: Project }).project;
   const workTree = projects.mainDirection(project).workTree;
@@ -95,6 +103,7 @@ async function setup(
   expect(
     (await call("POST", `/api/projects/${project.id}/d/main/keep`)).status
   ).toBe(200);
+
   return { project, workTree };
 }
 
@@ -134,8 +143,11 @@ async function errorOf(
 
 function expectPureInsertion(before: string, after: string): void {
   let prefix = 0;
-  while (prefix < before.length && before[prefix] === after[prefix])
+
+  while (prefix < before.length && before[prefix] === after[prefix]) {
     prefix += 1;
+  }
+
   expect(after.slice(after.length - (before.length - prefix))).toBe(
     before.slice(prefix)
   );
@@ -174,20 +186,24 @@ afterEach(async () => {
 describe("direct edit token references", { timeout: 30000 }, () => {
   it("accepts a known token and a token with a fallback", async () => {
     const { project, workTree } = await setup();
+
     const response = await directEdit(project, {
       source: H1,
       selector: "h1",
       style: { color: "var(--primary)" },
     });
+
     expect(response.status).toBe(200);
     expect(
       await readFile(path.join(workTree, "index.html"), "utf-8")
     ).toContain('<h1 style="color: var(--primary);" class="t">');
+
     const fallback = await directEdit(project, {
       source: P,
       selector: "p",
       style: { "margin-top": "var(--space-4, 16px)" },
     });
+
     expect(fallback.status).toBe(200);
     expect(
       await readFile(path.join(workTree, "index.html"), "utf-8")
@@ -196,29 +212,35 @@ describe("direct edit token references", { timeout: 30000 }, () => {
 
   it("refuses an unknown token and a var() without a name", async () => {
     const { project, workTree } = await setup();
+
     const unknown = await directEdit(project, {
       source: H1,
       selector: "h1",
       style: { color: "var(--nope)" },
     });
+
     expect(await errorOf(unknown)).toEqual({
       status: 422,
       error: "unknown_token",
     });
+
     const nested = await directEdit(project, {
       source: H1,
       selector: "h1",
       style: { color: "var(--primary, var(--nope))" },
     });
+
     expect(await errorOf(nested)).toEqual({
       status: 422,
       error: "unknown_token",
     });
+
     const bad = await directEdit(project, {
       source: H1,
       selector: "h1",
       style: { color: "var(primary)" },
     });
+
     expect(await errorOf(bad)).toEqual({ status: 422, error: "invalid_token" });
     expect(await readFile(path.join(workTree, "index.html"), "utf-8")).toBe(
       PAGE
@@ -227,11 +249,13 @@ describe("direct edit token references", { timeout: 30000 }, () => {
 
   it("allows any token name when the direction has no design system", async () => {
     const { project, workTree } = await setup(false);
+
     const response = await directEdit(project, {
       source: H1,
       selector: "h1",
       style: { color: "var(--whatever)" },
     });
+
     expect(response.status).toBe(200);
     expect(
       await readFile(path.join(workTree, "index.html"), "utf-8")
@@ -242,6 +266,7 @@ describe("direct edit token references", { timeout: 30000 }, () => {
 describe("create token", { timeout: 60000 }, () => {
   it("adds a token to each group and recompiles tokens.css and DESIGN.md in one version", async () => {
     const { project, workTree } = await setup();
+
     const cases = [
       {
         group: "color",
@@ -270,14 +295,17 @@ describe("create token", { timeout: 60000 }, () => {
         cssVar: "--shadow-glow",
       },
     ];
+
     for (const item of cases) {
       const before = await readFile(path.join(workTree, TOKENS_FILE), "utf-8");
       const count = (await listVersions(project)).length;
+
       const response = await createTokenCall(project, {
         group: item.group,
         name: item.name,
         value: item.value,
       });
+
       expect(
         response.status,
         `${item.group}: ${await response.clone().text()}`
@@ -307,11 +335,13 @@ describe("create token", { timeout: 60000 }, () => {
 
   it("keeps the file order of a group with numeric keys", async () => {
     const { project, workTree } = await setup();
+
     const response = await createTokenCall(project, {
       group: "space",
       name: "wide",
       value: "4rem",
     });
+
     expect(response.status, await response.clone().text()).toBe(200);
     const text = await readFile(path.join(workTree, TOKENS_FILE), "utf-8");
     const space = text.slice(text.indexOf('"space"'));
@@ -322,17 +352,21 @@ describe("create token", { timeout: 60000 }, () => {
 
   it("accepts digit-led names like space 7 and text 5xl", async () => {
     const { project, workTree } = await setup();
+
     const space = await createTokenCall(project, {
       group: "space",
       name: "7",
       value: "1.75rem",
     });
+
     expect(space.status, await space.clone().text()).toBe(200);
+
     const text = await createTokenCall(project, {
       group: "text",
       name: "5xl",
       value: "4rem",
     });
+
     expect(text.status, await text.clone().text()).toBe(200);
     const css = await readFile(path.join(workTree, TOKENS_CSS_FILE), "utf-8");
     expect(css).toContain("--space-7:");
@@ -341,6 +375,7 @@ describe("create token", { timeout: 60000 }, () => {
 
   it("stores a dark value and a description on a color token", async () => {
     const { project, workTree } = await setup();
+
     const response = await createTokenCall(project, {
       group: "color",
       name: "brand-2",
@@ -348,19 +383,24 @@ describe("create token", { timeout: 60000 }, () => {
       darkValue: "#ffaa77",
       description: "Second brand colour.",
     });
+
     expect(response.status).toBe(200);
     const result = (await response.json()) as CreateTokenResult;
+
     const tokens = JSON.parse(
       await readFile(path.join(workTree, TOKENS_FILE), "utf-8")
     ) as TokenFile;
+
     expect(tokens.color["brand-2"]).toEqual({
       $value: "#ff5500",
       $description: "Second brand colour.",
       $extensions: { "studio.modes": { dark: "#ffaa77" } },
     });
+
     const entry = result.state.entries.find(
       (item) => item.cssVar === "--brand-2"
     );
+
     expect(entry?.darkValue).toMatch(/^oklch\(/);
     expect(
       await readFile(path.join(workTree, TOKENS_CSS_FILE), "utf-8")
@@ -370,6 +410,7 @@ describe("create token", { timeout: 60000 }, () => {
   it("refuses bad names, bad values and a dark value on a non-color group", async () => {
     const { project, workTree } = await setup();
     const before = await readAll(workTree, DESIGN_FILES);
+
     const bodies = [
       { group: "color", name: "Brand", value: "#fff" },
       { group: "color", name: "a_b", value: "#fff" },
@@ -389,12 +430,14 @@ describe("create token", { timeout: 60000 }, () => {
       { group: "space", name: "x", value: "4px", darkValue: "8px" },
       { group: "color", name: "x", value: "#fff", extra: true },
     ];
+
     for (const body of bodies) {
       expect(
         await errorOf(await createTokenCall(project, body)),
         JSON.stringify(body)
       ).toEqual({ status: 422, error: "invalid_request" });
     }
+
     expect(await readAll(workTree, DESIGN_FILES)).toEqual(before);
   });
 
@@ -460,6 +503,7 @@ describe("create token", { timeout: 60000 }, () => {
     const seen: StudioEvent[] = [];
     bus.subscribe(project.id, (event) => seen.push(event));
     const count = (await listVersions(project)).length;
+
     const response = await createTokenCall(project, {
       group: "color",
       name: "brand-2",
@@ -471,6 +515,7 @@ describe("create token", { timeout: 60000 }, () => {
         style: { color: "var(--brand-2)" },
       },
     });
+
     expect(response.status).toBe(200);
     const result = (await response.json()) as CreateTokenResult;
     expect(result.version.title).toBe(
@@ -507,6 +552,7 @@ describe("create token", { timeout: 60000 }, () => {
   it("writes nothing when the apply edit cannot be patched", async () => {
     const { project, workTree } = await setup();
     const before = await readAll(workTree, [...DESIGN_FILES, "index.html"]);
+
     const stale = await createTokenCall(project, {
       group: "color",
       name: "brand-2",
@@ -518,16 +564,19 @@ describe("create token", { timeout: 60000 }, () => {
         style: { color: "var(--brand-2)" },
       },
     });
+
     expect(await errorOf(stale)).toEqual({
       status: 422,
       error: "stale_selection",
     });
+
     const unknown = await createTokenCall(project, {
       group: "color",
       name: "brand-2",
       value: "#ff5500",
       apply: { source: H1, selector: "h1", style: { color: "var(--brand-3)" } },
     });
+
     expect(await errorOf(unknown)).toEqual({
       status: 422,
       error: "unknown_token",
@@ -541,6 +590,7 @@ describe("create token", { timeout: 60000 }, () => {
     const { project, workTree } = await setup();
     const files = [...DESIGN_FILES, "index.html"];
     const before = await readAll(workTree, files);
+
     const response = await createTokenCall(project, {
       group: "color",
       name: "brand-2",
@@ -552,6 +602,7 @@ describe("create token", { timeout: 60000 }, () => {
         style: { "background-color": "var(--brand-2)" },
       },
     });
+
     expect(response.status).toBe(200);
     const changed = await readAll(workTree, files);
     changed.forEach((content, index) =>
@@ -560,9 +611,11 @@ describe("create token", { timeout: 60000 }, () => {
     const undo = await call("POST", `/api/projects/${project.id}/d/main/undo`);
     expect(undo.status).toBe(200);
     expect(await readAll(workTree, files)).toEqual(before);
+
     const state = (await (
       await call("GET", `/api/projects/${project.id}/d/main/design-system`)
     ).json()) as CreateTokenResult["state"];
+
     expect(state.entries.some((entry) => entry.cssVar === "--brand-2")).toBe(
       false
     );
@@ -571,6 +624,7 @@ describe("create token", { timeout: 60000 }, () => {
   it("keeps a linear history when create-token and direct-edit calls run at once", async () => {
     const { project, workTree } = await setup();
     const head = (await listVersions(project))[0] as Version;
+
     const creates = [1, 2, 3, 4, 5].map((index) =>
       createTokenCall(project, {
         group: "color",
@@ -583,6 +637,7 @@ describe("create token", { timeout: 60000 }, () => {
         },
       })
     );
+
     const edits = [
       directEdit(project, {
         source: P,
@@ -590,26 +645,35 @@ describe("create token", { timeout: 60000 }, () => {
         style: { "font-size": "18px" },
       }),
     ];
+
     const responses = await Promise.all([...creates, ...edits]);
     expect(responses.map((response) => response.status)).toEqual([
       200, 200, 200, 200, 200, 200,
     ]);
+
     const results = (await Promise.all(
       responses.map((response) => response.json())
     )) as (CreateTokenResult | DirectEditResult)[];
+
     const list = await listVersions(project);
+
     const added = list.slice(
       0,
       list.indexOf(list.find((version) => version.id === head.id) as Version)
     );
+
     expect(added).toHaveLength(6);
+
     for (let index = 0; index < added.length; index++) {
       expect(added[index]?.parentId).toBe((added[index + 1] ?? head).id);
     }
+
     expect(new Set(results.map((result) => result.version.id)).size).toBe(6);
+
     const tokens = JSON.parse(
       await readFile(path.join(workTree, TOKENS_FILE), "utf-8")
     ) as TokenFile;
+
     expect(
       [1, 2, 3, 4, 5].every(
         (index) => tokens.color[`brand-${index}`] !== undefined
@@ -633,6 +697,7 @@ describe("insertToken", () => {
     const empty = insertToken('{\n  "color": {}\n}\n', "color", "x", {
       $value: "#fff",
     });
+
     expect(empty).toBe(
       '{\n  "color": {\n    "x": {\n      "$value": "#fff"\n    }\n  }\n}\n'
     );

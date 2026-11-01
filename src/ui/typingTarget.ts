@@ -1,5 +1,8 @@
 export function isTypingTarget(target: EventTarget | null): boolean {
-  if (!(target instanceof HTMLElement)) return false;
+  if (!(target instanceof HTMLElement)) {
+    return false;
+  }
+
   return (
     target.isContentEditable ||
     ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName) ||
@@ -20,8 +23,14 @@ const NON_TEXT_INPUTS = new Set([
 ]);
 
 export function editsText(target: EventTarget | null): boolean {
-  if (!(target instanceof HTMLElement)) return false;
-  if (target.isContentEditable || target.tagName === "TEXTAREA") return true;
+  if (!(target instanceof HTMLElement)) {
+    return false;
+  }
+
+  if (target.isContentEditable || target.tagName === "TEXTAREA") {
+    return true;
+  }
+
   return (
     target instanceof HTMLInputElement && !NON_TEXT_INPUTS.has(target.type)
   );
@@ -32,6 +41,7 @@ const ARROW_OWNERS =
 
 export function inspectorButtonFocused(): HTMLButtonElement | null {
   const active = document.activeElement;
+
   return active instanceof HTMLButtonElement &&
     active.closest(".inspector") &&
     !active.closest(ARROW_OWNERS)
@@ -41,6 +51,7 @@ export function inspectorButtonFocused(): HTMLButtonElement | null {
 
 export function canvasHasKeys(): boolean {
   const active = document.activeElement;
+
   return (
     !active ||
     active === document.body ||

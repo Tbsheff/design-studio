@@ -16,8 +16,10 @@ export function improveRequest(
   defaultLevel: RunLevel | undefined
 ): RunRequest {
   const trimmed = focus.trim();
+
   const level: RunLevel =
     !defaultLevel || defaultLevel === "wireframe" ? "prototype" : defaultLevel;
+
   return {
     prompt: trimmed ? `${IMPROVE_PROMPT}\n\nFocus: ${trimmed}` : IMPROVE_PROMPT,
     mode: "edit",
@@ -51,8 +53,10 @@ export function ImproveControl({ running, run, onImprove }: ImproveProps) {
   const primary = !improvePassed(run);
   const [focus, setFocus] = useState("");
   const [busy, setBusy] = useState(false);
+
   const start = async () => {
     setBusy(true);
+
     try {
       await onImprove(focus);
       setFocus("");
@@ -60,12 +64,16 @@ export function ImproveControl({ running, run, onImprove }: ImproveProps) {
       setBusy(false);
     }
   };
+
   return (
     <form
       className="draft-improve"
       onSubmit={(event) => {
         event.preventDefault();
-        if (!running && !busy) void start();
+
+        if (!running && !busy) {
+          void start();
+        }
       }}
     >
       <input
@@ -90,15 +98,23 @@ export function ImproveControl({ running, run, onImprove }: ImproveProps) {
 
 function runNote(run: RunView | null): string | null {
   const summary = run?.summary;
-  if (!summary || summary.status === "running") return null;
+
+  if (!summary || summary.status === "running") {
+    return null;
+  }
+
   if (
     summary.status === "failed" &&
     summary.designSystemCheck &&
     !summary.designSystemCheck.passed
-  )
+  ) {
     return `The last AI run stopped: the check still failed after ${summary.designSystemCheck.rounds} fix round(s).`;
-  if (summary.status === "failed" || summary.status === "budget_exceeded")
+  }
+
+  if (summary.status === "failed" || summary.status === "budget_exceeded") {
     return `The last AI run did not finish: ${summary.error ?? summary.status}`;
+  }
+
   return null;
 }
 
@@ -122,12 +138,24 @@ const MORE = /^(\d+) more .+ not listed\.?$/;
 
 function problemText(rule: DesignSystemCheckRule, message: string): string {
   const more = MORE.exec(message)?.[1];
-  if (more) return `And ${more} more`;
-  if (rule !== "design-md") return message;
+
+  if (more) {
+    return `And ${more} more`;
+  }
+
+  if (rule !== "design-md") {
+    return message;
+  }
+
   const todo = /to-do line:\s*_?\s*To do:\s*(.+?)_?\s*$/i.exec(message);
   const found = todo?.[1];
-  if (!found) return message;
+
+  if (!found) {
+    return message;
+  }
+
   const text = found.trim().replace(/\.$/, "");
+
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
@@ -154,8 +182,13 @@ export function CheckStatus({
   const toggleRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   useFitPopover(listRef, toggleRef, open);
-  if (!check) return null;
+
+  if (!check) {
+    return null;
+  }
+
   const note = runNote(run);
+
   if (check.passed) {
     return (
       <span className="draft-check passed" role="status">
@@ -163,7 +196,9 @@ export function CheckStatus({
       </span>
     );
   }
+
   const count = check.problems.length;
+
   return (
     <span className="draft-check failed">
       <button

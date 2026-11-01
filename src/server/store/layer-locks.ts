@@ -37,11 +37,17 @@ export interface LayerLockDeps {
 
 async function readState(file: string): Promise<LayerStateFile> {
   const text = await readFile(file, "utf-8").catch(() => null);
-  if (text === null) return { locks: {} };
+
+  if (text === null) {
+    return { locks: {} };
+  }
+
   try {
     const parsed = JSON.parse(text) as Partial<LayerStateFile> | null;
+
     const locks =
       parsed?.locks && typeof parsed.locks === "object" ? parsed.locks : {};
+
     return {
       locks: Object.fromEntries(
         Object.entries(locks).map(([did, keys]) => [did, cleanLockKeys(keys)])
@@ -58,6 +64,7 @@ function same(a: string[], b: string[]): boolean {
 
 export function createLayerLockStore(deps: LayerLockDeps): LayerLockStore {
   const lock = createKeyedMutex();
+
   const fileOf = (projectId: string) =>
     path.join(deps.projectDir(projectId), FILE);
 
@@ -67,6 +74,7 @@ export function createLayerLockStore(deps: LayerLockDeps): LayerLockStore {
   ): Promise<LayerLocksView> => {
     const did = assertSafeId(directionId, "directionId");
     const state = await readState(fileOf(projectId));
+
     return { directionId: did, keys: state.locks[did] ?? [] };
   };
 
@@ -81,9 +89,17 @@ export function createLayerLockStore(deps: LayerLockDeps): LayerLockStore {
       const state = await readState(file);
       const before = state.locks[did] ?? [];
       const keys = cleanLockKeys(change(before));
-      if (same(before, keys)) return { directionId: did, keys };
-      if (keys.length === 0) delete state.locks[did];
-      else state.locks[did] = keys;
+
+      if (same(before, keys)) {
+        return { directionId: did, keys };
+      }
+
+      if (keys.length === 0) {
+        delete state.locks[did];
+      } else {
+        state.locks[did] = keys;
+      }
+
       await writeAtomic(file, `${JSON.stringify(state, null, 2)}\n`);
       deps.bus.emit({
         type: "layer-locks.changed",
@@ -91,6 +107,7 @@ export function createLayerLockStore(deps: LayerLockDeps): LayerLockStore {
         directionId: did,
         keys,
       });
+
       return { directionId: did, keys };
     });
 

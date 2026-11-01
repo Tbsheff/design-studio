@@ -173,6 +173,7 @@ function shownKey(
   key: KeyId | undefined
 ): Pick<MenuItemConstructorOptions, "accelerator" | "registerAccelerator"> {
   const shown = key ? accelerator(key) : undefined;
+
   return shown ? { accelerator: shown, registerAccelerator: false } : {};
 }
 
@@ -203,6 +204,7 @@ function viewMenu(
   state: MenuState
 ): MenuItemConstructorOptions {
   const command = (item: CommandItem) => commandItem(actions, state, item);
+
   const zoom = (
     id: string,
     label: string,
@@ -215,6 +217,7 @@ function viewMenu(
     enabled: state.inProject,
     click: () => actions.zoom(key),
   });
+
   return {
     label: "View",
     submenu: [
@@ -263,6 +266,7 @@ function canvasMenu(
   state: MenuState
 ): MenuItemConstructorOptions {
   const command = (item: CommandItem) => commandItem(actions, state, item);
+
   return {
     label: "Canvas",
     submenu: [
@@ -289,6 +293,7 @@ function goMenu(
   state: MenuState
 ): MenuItemConstructorOptions {
   const command = (item: CommandItem) => commandItem(actions, state, item);
+
   return {
     label: "Go",
     submenu: [
@@ -354,7 +359,8 @@ export function buildDockMenu(
   const items: MenuItemConstructorOptions[] = [
     { label: "New Project", click: newProject },
   ];
-  if (recents.length > 0)
+
+  if (recents.length > 0) {
     items.push(
       { type: "separator" },
       ...recents.map((recent) => ({
@@ -362,5 +368,7 @@ export function buildDockMenu(
         click: () => open(recent.id),
       }))
     );
+  }
+
   return Menu.buildFromTemplate(items);
 }

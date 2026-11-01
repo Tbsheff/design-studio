@@ -82,19 +82,34 @@ function freshDraft(plan: ShipPrepare, mode: ShipMode): Draft {
 
 function modeBlock(plan: ShipPrepare, mode: ShipMode): string | null {
   const repo = plan.repo;
-  if (!repo || mode === "branch") return null;
-  if (!repo.remote) return "The repo has no remote.";
-  if (mode === "pr" && !repo.gh)
+
+  if (!repo || mode === "branch") {
+    return null;
+  }
+
+  if (!repo.remote) {
+    return "The repo has no remote.";
+  }
+
+  if (mode === "pr" && !repo.gh) {
     return "Install the GitHub CLI (gh) to open pull requests.";
-  if (mode === "pr" && !repo.github) return "The remote is not on GitHub.";
+  }
+
+  if (mode === "pr" && !repo.github) {
+    return "The remote is not on GitHub.";
+  }
+
   return null;
 }
 
 function DiffView({ file }: { file: ShipFile | null }) {
-  if (!file)
+  if (!file) {
     return <div className="ship-diff empty">Pick a file to see its diff.</div>;
+  }
+
   const all = file.diff.replace(/\n$/, "").split("\n");
   const start = all.findIndex((line) => line.startsWith("@@"));
+
   const lines =
     start === -1
       ? [
@@ -105,6 +120,7 @@ function DiffView({ file }: { file: ShipFile | null }) {
               : "No text changes.",
         ]
       : all.slice(start);
+
   return (
     <div className="ship-diff" aria-label={`Diff of ${file.path}`}>
       {(file.refused || file.conflict) && (
@@ -144,20 +160,28 @@ function DiffView({ file }: { file: ShipFile | null }) {
 
 function footNote(plan: ShipPrepare | null): string {
   const format = plan?.format;
+
   const hooks =
     format && format.skipped.length > 0
       ? `Repo hooks skipped (${format.skipped.join(", ")}).`
       : "Git hooks do not run.";
-  if (!format)
+
+  if (!format) {
     return `${hooks} .env files, secrets and node_modules never ship.`;
+  }
+
   return format.tool
     ? `Formats with ${format.tool} first. ${hooks}`
     : `No formatter found, so files ship unformatted. ${hooks}`;
 }
 
 function formatFact(format: NonNullable<ShipResult["format"]>): string {
-  if (!format.tool) return "Not formatted (no biome or prettier config)";
+  if (!format.tool) {
+    return "Not formatted (no biome or prettier config)";
+  }
+
   const count = format.formatted.length;
+
   return count === 0
     ? `${format.tool}: no change needed`
     : `${format.tool} reformatted ${count === 1 ? "1 file" : `${count} files`}`;
@@ -258,12 +282,14 @@ interface Fields {
 
 function fieldsOf(plan: ShipPrepare, draft: Draft): Fields {
   const title = draft.title ?? plan.defaults.title;
+
   const vars = {
     ...plan.vars,
     issue: draft.issue,
     title,
     files: plan.files.filter((f) => draft.files.has(f.path)).map((f) => f.path),
   };
+
   return {
     title,
     branch:
@@ -274,13 +300,18 @@ function fieldsOf(plan: ShipPrepare, draft: Draft): Fields {
 }
 
 function conflictHint(plan: ShipPrepare): string {
-  if (plan.base?.kind === "last-ship")
+  if (plan.base?.kind === "last-ship") {
     return "Your checked-out commit does not have the last ship yet, so some files differ from this base. Merge that branch and pull, or pick “When attached” to ship all studio changes again.";
+  }
+
   return "Some files have your own changes that differ from the studio base. They cannot ship until you commit or undo them. Pick a file to see why.";
 }
 
 function leadText(plan: ShipPrepare | null): string {
-  if (!plan?.repo) return "Commit studio changes to a new branch in your repo.";
+  if (!plan?.repo) {
+    return "Commit studio changes to a new branch in your repo.";
+  }
+
   return `Makes a new branch from ${plan.repo.branch ?? plan.repo.head.slice(0, 7)} in ${plan.repo.root}. Your checked-out branch, files and index do not change.`;
 }
 
@@ -289,18 +320,23 @@ function shipRequestOf(
   draft: Draft | null,
   fields: Fields | null
 ): ShipRequest | null {
-  if (!plan?.base || !plan.headVersionId || plan.blocked || !draft || !fields)
+  if (!plan?.base || !plan.headVersionId || plan.blocked || !draft || !fields) {
     return null;
+  }
+
   if (
     draft.files.size === 0 ||
     !fields.branch.trim() ||
     !fields.commitMessage.trim() ||
     modeBlock(plan, draft.mode)
-  )
+  ) {
     return null;
+  }
+
   const files = plan.files
     .filter((f) => draft.files.has(f.path))
     .map((f) => f.path);
+
   return {
     baseVersionId: plan.base.versionId,
     headVersionId: plan.headVersionId,
@@ -314,8 +350,14 @@ function shipRequestOf(
 }
 
 function actionLabel(mode: ShipMode): string {
-  if (mode === "pr") return "Open pull request";
-  if (mode === "push") return "Push branch";
+  if (mode === "pr") {
+    return "Open pull request";
+  }
+
+  if (mode === "push") {
+    return "Push branch";
+  }
+
   return "Create branch";
 }
 
@@ -331,7 +373,10 @@ function usePlan(projectId: string, baseId: string | undefined) {
     shipApi
       .prepare(projectId, baseId)
       .then((next) => {
-        if (!live) return;
+        if (!live) {
+          return;
+        }
+
         setPlan(next);
         setDraft((prev) => freshDraft(next, prev?.mode ?? "branch"));
         setFocus(
@@ -339,10 +384,12 @@ function usePlan(projectId: string, baseId: string | undefined) {
         );
       })
       .catch((err: unknown) => live && setLoadError(errorText(err)));
+
     return () => {
       live = false;
     };
   }, [projectId, baseId]);
+
   return { plan, draft, setDraft, focus, setFocus, loadError };
 }
 
@@ -418,6 +465,7 @@ function ModePicker({
       <legend>When done</legend>
       {MODES.map((item) => {
         const why = modeBlock(plan, item.id);
+
         return (
           <label
             key={item.id}
@@ -553,15 +601,28 @@ function PlanView({
 }) {
   const patch = (next: Partial<Draft>) =>
     setDraft((prev) => (prev ? { ...prev, ...next } : prev));
+
   const toggle = (file: string) =>
     setDraft((prev) => {
-      if (!prev) return prev;
+      if (!prev) {
+        return prev;
+      }
+
       const files = new Set(prev.files);
-      if (!files.delete(file)) files.add(file);
+
+      if (!files.delete(file)) {
+        files.add(file);
+      }
+
       return { ...prev, files };
     });
-  if (plan.bases.length === 0) return <ShipEmpty text={plan.blocked} />;
+
+  if (plan.bases.length === 0) {
+    return <ShipEmpty text={plan.blocked} />;
+  }
+
   const bases = plan.bases.map((b) => ({ value: b.versionId, label: b.title }));
+
   return (
     <>
       <div className="field ship-base">
@@ -599,29 +660,42 @@ function PlanView({
 
 export default function ShipDialog({ projectId, onClose }: Props) {
   const [baseId, setBaseId] = useState<string | undefined>(undefined);
+
   const { plan, draft, setDraft, focus, setFocus, loadError } = usePlan(
     projectId,
     baseId
   );
+
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ShipResult | null>(null);
+
   const dialog = useModalDialog(() => {
-    if (busy) return false;
+    if (busy) {
+      return false;
+    }
+
     onClose();
   });
+
   const fields = useMemo(
     () => (plan && draft ? fieldsOf(plan, draft) : null),
     [plan, draft]
   );
+
   const count = draft?.files.size ?? 0;
   const request = shipRequestOf(plan, draft, fields);
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
-    if (!request || busy) return;
+
+    if (!request || busy) {
+      return;
+    }
+
     setBusy(true);
     setError(null);
+
     try {
       setResult(await shipApi.ship(projectId, request));
     } catch (err) {
@@ -632,6 +706,7 @@ export default function ShipDialog({ projectId, onClose }: Props) {
   };
 
   const shown = error ?? loadError;
+
   return (
     <dialog
       ref={dialog.ref}

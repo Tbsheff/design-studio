@@ -57,11 +57,13 @@ export const MOCK_TWEAK_CONTROLS: TweakControl[] = [
 
 const ROOT_RULE =
   ":root { --tw-accent: #0f6b5c; --tw-radius: 12px; --tw-gap: 24px; }";
+
 const HTML_RULES = `${ROOT_RULE}
     h1 { color: var(--tw-accent); }
     .cta { background: var(--tw-accent); border-radius: var(--tw-radius); }
     .card { border-radius: var(--tw-radius); }
     .cards { gap: var(--tw-gap); }`;
+
 const REACT_RULES = `
 ${ROOT_RULE}
 
@@ -83,9 +85,13 @@ async function readOptional(file: string): Promise<string | null> {
 }
 
 export function withMockTweakStyles(html: string): string {
-  if (html.includes("data-mock-tweaks")) return html;
+  if (html.includes("data-mock-tweaks")) {
+    return html;
+  }
+
   const block = `  <style data-mock-tweaks>\n    ${HTML_RULES}\n  </style>\n`;
   const close = html.search(/<\/head>/i);
+
   return close === -1
     ? `${block}${html}`
     : `${html.slice(0, close)}${block}${html.slice(close)}`;
@@ -98,17 +104,23 @@ async function addVars(
 ): Promise<void> {
   if (kind === "html") {
     const html = await readOptional(path.join(workTree, "index.html"));
-    if (html !== null && !html.includes("data-mock-tweaks"))
+
+    if (html !== null && !html.includes("data-mock-tweaks")) {
       await writer.writeFileAsTool(
         "Edit",
         "index.html",
         withMockTweakStyles(html)
       );
+    }
+
     return;
   }
+
   const css = (await readOptional(path.join(workTree, "src", "App.css"))) ?? "";
-  if (!css.includes("--tw-accent:"))
+
+  if (!css.includes("--tw-accent:")) {
     await writer.writeFileAsTool("Edit", "src/App.css", `${css}${REACT_RULES}`);
+  }
 }
 
 export async function runMockTweaks(
@@ -126,5 +138,6 @@ export async function runMockTweaks(
   writer.sink.toolStarted(toolUseId, TWEAKS_TOOL, input);
   const result = await defineTweaks(workTree, MOCK_TWEAK_CONTROLS);
   writer.sink.toolFinished(toolUseId, !result.ok, result.text);
+
   return "Defined 3 tweaks: Accent, Corner radius, Card gap.";
 }

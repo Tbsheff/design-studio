@@ -24,10 +24,22 @@ export interface PreviewMenuItem {
 const EDGE = 8;
 
 function step(key: string, index: number, count: number): number | null {
-  if (key === "ArrowDown") return (index + 1) % count;
-  if (key === "ArrowUp") return (index - 1 + count) % count;
-  if (key === "Home") return 0;
-  if (key === "End") return count - 1;
+  if (key === "ArrowDown") {
+    return (index + 1) % count;
+  }
+
+  if (key === "ArrowUp") {
+    return (index - 1 + count) % count;
+  }
+
+  if (key === "Home") {
+    return 0;
+  }
+
+  if (key === "End") {
+    return count - 1;
+  }
+
   return null;
 }
 
@@ -48,7 +60,11 @@ export function PreviewMenu({
 
   useLayoutEffect(() => {
     const el = ref.current;
-    if (!el) return;
+
+    if (!el) {
+      return;
+    }
+
     const clamp = () => {
       const width = el.offsetWidth;
       const height = el.offsetHeight;
@@ -62,22 +78,28 @@ export function PreviewMenu({
         y: Math.max(EDGE, Math.min(at.y, window.innerHeight - height - EDGE)),
       });
     };
+
     clamp();
     el.querySelector<HTMLButtonElement>('[role="menuitem"]')?.focus({
       preventScroll: true,
     });
     const observer = new ResizeObserver(clamp);
     observer.observe(el);
+
     return () => observer.disconnect();
   }, [at]);
 
   useEffect(() => {
     const onDown = (event: MouseEvent) => {
-      if (!ref.current?.contains(event.target as Node)) onClose();
+      if (!ref.current?.contains(event.target as Node)) {
+        onClose();
+      }
     };
+
     window.addEventListener("mousedown", onDown, true);
     window.addEventListener("blur", onClose);
     window.addEventListener("resize", onClose);
+
     return () => {
       window.removeEventListener("mousedown", onDown, true);
       window.removeEventListener("blur", onClose);
@@ -90,19 +112,26 @@ export function PreviewMenu({
       event.preventDefault();
       event.stopPropagation();
       onClose();
+
       return;
     }
+
     const buttons = [
       ...(ref.current?.querySelectorAll<HTMLButtonElement>(
         '[role="menuitem"]'
       ) ?? []),
     ];
+
     const next = step(
       event.key,
       buttons.indexOf(document.activeElement as HTMLButtonElement),
       buttons.length
     );
-    if (next === null) return;
+
+    if (next === null) {
+      return;
+    }
+
     event.preventDefault();
     buttons[next]?.focus();
   };
@@ -145,7 +174,10 @@ function MenuRow({
         data-tip={item.disabled}
         data-tip-align="end"
         onClick={() => {
-          if (item.disabled) return;
+          if (item.disabled) {
+            return;
+          }
+
           onClose();
           void item.run();
         }}

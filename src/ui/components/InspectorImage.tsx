@@ -47,6 +47,7 @@ const FIT_LABEL: Record<ImageFit, string> = {
   contain: "Contain",
   fill: "Fill",
 };
+
 const FIT_TIP: Record<ImageFit, string> = {
   cover: "Fill the box and crop the edges",
   contain: "Show the whole image inside the box",
@@ -56,9 +57,14 @@ const FIT_TIP: Record<ImageFit, string> = {
 function attrOf(html: string, name: string): string | null {
   const open = /^<[^>]*>/.exec(html)?.[0] ?? "";
   const match = new RegExp(`\\s${name}="([^"]*)"`, "i").exec(open);
-  if (!match) return null;
+
+  if (!match) {
+    return null;
+  }
+
   const node = document.createElement("textarea");
   node.innerHTML = match[1] ?? "";
+
   return node.value;
 }
 
@@ -70,7 +76,11 @@ function currentFit(
     (background
       ? selection.styles["background-size"]
       : selection.styles["object-fit"]) ?? "";
-  if (raw === "cover" || raw === "contain" || raw === "fill") return raw;
+
+  if (raw === "cover" || raw === "contain" || raw === "fill") {
+    return raw;
+  }
+
   return background && /^100% 100%$/.test(raw) ? "fill" : null;
 }
 
@@ -80,9 +90,11 @@ function sourceName(selection: SelectionContext, background: boolean): string {
         selection.styles["background-image"] ?? ""
       )?.[1] ?? "")
     : (attrOf(selection.outerHTML, "src") ?? "");
+
   const nextUrl = /\/_next\/image\?(?:.*&)?url=([^&]+)/.exec(raw)?.[1];
   const path = nextUrl ? decodeURIComponent(nextUrl) : raw;
   const last = path.split(/[?#]/)[0]?.split("/").pop() ?? "";
+
   return last.startsWith("data:") || last === ""
     ? "Inline image"
     : decodeURIComponent(last).slice(0, 60);
@@ -92,8 +104,9 @@ function useImageSet(props: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [placed, setPlaced] = useState<string | null>(null);
+
   const reselect = () => {
-    for (const wait of RESELECT_AFTER_MS)
+    for (const wait of RESELECT_AFTER_MS) {
       window.setTimeout(
         () =>
           props.port?.current?.post({
@@ -102,31 +115,45 @@ function useImageSet(props: Props) {
           }),
         wait
       );
+    }
   };
+
   const queue = useRef<Promise<void>>(Promise.resolve());
   const pending = useRef(0);
+
   const send = async (
     change: Omit<SetImageRequest, "target">,
     file?: Blob | null
   ) => {
     try {
       const image = file ? await fileData(file) : undefined;
+
       const result = await imageApi.set(props.projectId, props.directionId, {
         target: imageTargetOf(props.selection),
         ...change,
         ...(image ? { image } : {}),
       });
-      if (result.src) setPlaced(result.src.split("/").pop() ?? null);
-      if (result.changed) reselect();
+
+      if (result.src) {
+        setPlaced(result.src.split("/").pop() ?? null);
+      }
+
+      if (result.changed) {
+        reselect();
+      }
     } catch (failure) {
       setError(imageError(failure));
     }
   };
+
   const run = (
     change: Omit<SetImageRequest, "target">,
     file?: Blob | null
   ): Promise<void> => {
-    if (!props.editable) return Promise.resolve();
+    if (!props.editable) {
+      return Promise.resolve();
+    }
+
     setError(null);
     pending.current += 1;
     setBusy(true);
@@ -134,10 +161,15 @@ function useImageSet(props: Props) {
       .then(() => send(change, file))
       .finally(() => {
         pending.current -= 1;
-        if (pending.current === 0) setBusy(false);
+
+        if (pending.current === 0) {
+          setBusy(false);
+        }
       });
+
     return queue.current;
   };
+
   return { busy, error, run, setError, placed };
 }
 
@@ -145,15 +177,27 @@ function usePasteImage(enabled: boolean, onImage: (file: File) => void) {
   const live = useRef(onImage);
   live.current = onImage;
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled) {
+      return;
+    }
+
     const onPaste = (event: ClipboardEvent) => {
-      if (isTypingTarget(event.target)) return;
+      if (isTypingTarget(event.target)) {
+        return;
+      }
+
       const file = imageFileOf(event.clipboardData?.items);
-      if (!file) return;
+
+      if (!file) {
+        return;
+      }
+
       event.preventDefault();
       live.current(file);
     };
+
     document.addEventListener("paste", onPaste);
+
     return () => document.removeEventListener("paste", onPaste);
   }, [enabled]);
 }
@@ -169,25 +213,34 @@ function FocalPad({
 }) {
   const [drag, setDrag] = useState<string | null>(null);
   const point = focalOf(drag ?? value);
+
   const at = (event: PointerEvent<HTMLDivElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
+
     return focalText(
       ((event.clientX - rect.left) / rect.width) * 100,
       ((event.clientY - rect.top) / rect.height) * 100
     );
   };
+
   const onKey = (event: KeyboardEvent<HTMLDivElement>) => {
     const step = event.shiftKey ? 10 : 5;
+
     const move = {
       ArrowLeft: [-step, 0],
       ArrowRight: [step, 0],
       ArrowUp: [0, -step],
       ArrowDown: [0, step],
     }[event.key];
-    if (!move) return;
+
+    if (!move) {
+      return;
+    }
+
     event.preventDefault();
     onPick(focalText(point.x + (move[0] ?? 0), point.y + (move[1] ?? 0)));
   };
+
   return (
     <div
       className={`img-focal${disabled ? " off" : ""}`}
@@ -197,13 +250,19 @@ function FocalPad({
       aria-valuetext={focalText(point.x, point.y)}
       data-tip="Click or drag to set the part of the image that stays in view"
       onPointerDown={(event) => {
-        if (disabled) return;
+        if (disabled) {
+          return;
+        }
+
         event.currentTarget.setPointerCapture(event.pointerId);
         setDrag(at(event));
       }}
       onPointerMove={(event) => drag !== null && setDrag(at(event))}
       onPointerUp={(event) => {
-        if (drag === null) return;
+        if (drag === null) {
+          return;
+        }
+
         const next = at(event);
         setDrag(null);
         onPick(next);
@@ -228,10 +287,15 @@ function AltField({
   onSave: (alt: string) => void;
 }) {
   const [text, setText] = useState<string | null>(null);
+
   const commit = () => {
-    if (text !== null && text !== initial) onSave(text);
+    if (text !== null && text !== initial) {
+      onSave(text);
+    }
+
     setText(null);
   };
+
   return (
     <div className="ins-field wide">
       <label htmlFor="img-alt" className="ins-scrub static">
@@ -248,8 +312,13 @@ function AltField({
         onChange={(event) => setText(event.target.value)}
         onBlur={commit}
         onKeyDown={(event) => {
-          if (event.key === "Enter") event.currentTarget.blur();
-          if (event.key === "Escape") setText(null);
+          if (event.key === "Enter") {
+            event.currentTarget.blur();
+          }
+
+          if (event.key === "Escape") {
+            setText(null);
+          }
         }}
       />
     </div>
@@ -262,30 +331,42 @@ export default function InspectorImage(props: Props) {
   const { busy, error, run, setError, placed } = useImageSet(props);
   const [alt, setAlt] = useState<string | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
+
   const [fit, setFit] = useState<ImageFit | null>(() =>
     currentFit(props.selection, background)
   );
+
   const [focal, setFocal] = useState(
     () =>
       (background
         ? props.selection.styles["background-position"]
         : props.selection.styles["object-position"]) ?? "50% 50%"
   );
+
   usePasteImage(props.editable && kind !== null, (file) => void run({}, file));
-  if (!kind) return null;
+
+  if (!kind) {
+    return null;
+  }
+
   const disabled = !props.editable;
+
   const paste = async () => {
     try {
       const blob = await clipboardImage();
-      if (blob) await run({}, blob);
-      else
+
+      if (blob) {
+        await run({}, blob);
+      } else {
         setError("The clipboard has no image. Copy an image, then try again.");
+      }
     } catch {
       setError(
         "The studio cannot read the clipboard. Allow clipboard access, then try again."
       );
     }
   };
+
   return (
     <InspectorSection
       title={background ? "Background image" : "Image"}
@@ -325,7 +406,10 @@ export default function InspectorImage(props: Props) {
             onChange={(event) => {
               const file = event.target.files?.[0];
               event.target.value = "";
-              if (file) void run({}, file);
+
+              if (file) {
+                void run({}, file);
+              }
             }}
           />
         </div>

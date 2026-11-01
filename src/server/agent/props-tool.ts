@@ -71,6 +71,7 @@ async function useSite(
 ): Promise<{ file: string; line: number; col: number } | string> {
   if (input.source) {
     const match = LOC.exec(input.source);
+
     return match
       ? {
           file: match[1] as string,
@@ -79,15 +80,25 @@ async function useSite(
         }
       : "source must be file:line:col.";
   }
-  if (!input.selector) return "Pass selector or source.";
-  if (!deps.ctx.previewUrl)
+
+  if (!input.selector) {
+    return "Pass selector or source.";
+  }
+
+  if (!deps.ctx.previewUrl) {
     return "Preview is not running for this direction. Pass source instead.";
+  }
+
   const probed = await probeOwners(
     deps.preview,
     editPageUrl(deps.ctx, input.path),
     input.selector
   );
-  if (!probed) return `No element matches ${input.selector} on the page.`;
+
+  if (!probed) {
+    return `No element matches ${input.selector} on the page.`;
+  }
+
   const instance = await resolveInstance(
     {
       workTree: deps.ctx.direction.workTree,
@@ -95,6 +106,7 @@ async function useSite(
     },
     { owners: probed.owners, usedAt: probed.usedAt }
   );
+
   return instance
     ? instance.use
     : `${input.selector} is not inside a component instance with props. Pass source (file:line:col of the JSX tag) or edit the JSX instead.`;
@@ -105,34 +117,55 @@ export async function runSetProps(
   args: z.input<typeof schema>
 ): Promise<ToolText> {
   const blocked = refusal(deps.ctx, "set_props");
-  if (blocked) return text(blocked, true);
+
+  if (blocked) {
+    return text(blocked, true);
+  }
+
   const parsed = schema.safeParse(args);
-  if (!parsed.success)
+
+  if (!parsed.success) {
     return text(
       `set_props: ${parsed.error.issues.map((issue) => `${issue.path.join(".") || "input"}: ${issue.message}`).join("; ")}`,
       true
     );
+  }
+
   try {
     const source = await useSite(deps, parsed.data);
-    if (typeof source === "string") return text(source, true);
+
+    if (typeof source === "string") {
+      return text(source, true);
+    }
+
     const request = parseSetProps({ source, props: parsed.data.props });
+
     const { target, original, instance, plan } = await planSetProps(
       deps.ctx.direction.workTree,
       request
     );
+
     const problem = writeProblem(deps.ctx, target.relative);
-    if (problem) return text(problem, true);
-    if (plan.code === original)
+
+    if (problem) {
+      return text(problem, true);
+    }
+
+    if (plan.code === original) {
       return text(
         `<${instance.tag}> at ${target.relative}:${instance.use.line} already has these props.`
       );
+    }
+
     await writeAtomic(target.file, plan.code);
+
     const parts = [
       ...plan.changed.map(
         (name) => `${name}=${JSON.stringify(parsed.data.props[name])}`
       ),
       ...plan.removed.map((name) => `removed ${name}`),
     ];
+
     return text(
       `Set <${instance.tag}> ${parts.join(", ")} at ${target.relative}:${instance.use.line}. The run saves this change in its version, like your file edits.`
     );

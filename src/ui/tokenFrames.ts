@@ -20,6 +20,7 @@ type FrameSource = () => BridgeFrame;
 const sources = new Map<string, FrameSource>();
 const liveTokens = new Set<string>();
 const HOLD_FALLBACK_MS = 4000;
+
 interface HoldState {
   timer: number | null;
   expired: boolean;
@@ -46,15 +47,18 @@ function createChannel(type: CssMessage): CssChannel {
 const tokenChannel = createChannel("tokens-preview");
 const tweakChannel = createChannel("tweaks-preview");
 const channels = [tokenChannel, tweakChannel];
+
 const current: { theme: ThemeChoice; pointer: boolean } = {
   theme: null,
   pointer: false,
 };
 
 type SharePointerMessage = Extract<BridgeToParent, { type: "share-pointer" }>;
+
 const pointerListeners = new Set<
   (frame: BridgeFrame, message: SharePointerMessage) => void
 >();
+
 const canvas: { front: string | null; swapping: boolean } = {
   front: null,
   swapping: false,
@@ -66,7 +70,11 @@ function holding(channel: CssChannel): boolean {
 
 function endHold(channel: CssChannel): void {
   const hold = channel.hold;
-  if (hold.timer !== null) window.clearTimeout(hold.timer);
+
+  if (hold.timer !== null) {
+    window.clearTimeout(hold.timer);
+  }
+
   hold.timer = null;
   hold.expired = false;
   hold.fresh.clear();
@@ -74,11 +82,16 @@ function endHold(channel: CssChannel): void {
 }
 
 function releaseHold(channel: CssChannel): void {
-  if (!holding(channel)) return;
+  if (!holding(channel)) {
+    return;
+  }
+
   const front = canvas.front;
   const freshFront = front !== null && channel.hold.painted.has(front);
-  if (freshFront || (channel.hold.expired && !canvas.swapping))
+
+  if (freshFront || (channel.hold.expired && !canvas.swapping)) {
     broadcastCss(channel, "");
+  }
 }
 
 function expireHold(channel: CssChannel): void {
@@ -93,10 +106,18 @@ function registerTokenFrame(
   live: boolean
 ): () => void {
   sources.set(token, source);
-  if (live) liveTokens.add(token);
-  else liveTokens.delete(token);
+
+  if (live) {
+    liveTokens.add(token);
+  } else {
+    liveTokens.delete(token);
+  }
+
   return () => {
-    if (sources.get(token) !== source) return;
+    if (sources.get(token) !== source) {
+      return;
+    }
+
     sources.delete(token);
     liveTokens.delete(token);
   };
@@ -105,7 +126,10 @@ function registerTokenFrame(
 export function postToLiveFrames(body: ParentMessageBody): void {
   for (const token of liveTokens) {
     const frame = sources.get(token)?.();
-    if (frame?.element) postToFrame(frame, body);
+
+    if (frame?.element) {
+      postToFrame(frame, body);
+    }
   }
 }
 
@@ -117,15 +141,25 @@ function tokenFrames(): BridgeFrame[] {
 
 function broadcastCss(channel: CssChannel, css: string): void {
   endHold(channel);
-  if (css === channel.css) return;
+
+  if (css === channel.css) {
+    return;
+  }
+
   channel.css = css;
-  for (const frame of tokenFrames())
+
+  for (const frame of tokenFrames()) {
     postToFrame(frame, { type: channel.type, css });
+  }
 }
 
 function holdUntilReload(channel: CssChannel): void {
   endHold(channel);
-  if (channel.css === "") return;
+
+  if (channel.css === "") {
+    return;
+  }
+
   channel.hold.timer = window.setTimeout(
     () => expireHold(channel),
     HOLD_FALLBACK_MS
@@ -152,15 +186,23 @@ const themeListeners = new Set<() => void>();
 
 function subscribeTheme(listener: () => void): () => void {
   themeListeners.add(listener);
+
   return () => themeListeners.delete(listener);
 }
 
 export function broadcastTheme(theme: ThemeChoice): void {
   const changed = current.theme !== theme;
   current.theme = theme;
-  for (const frame of tokenFrames())
+
+  for (const frame of tokenFrames()) {
     postToFrame(frame, { type: "set-theme", theme });
-  if (changed) for (const listener of themeListeners) listener();
+  }
+
+  if (changed) {
+    for (const listener of themeListeners) {
+      listener();
+    }
+  }
 }
 
 export function useCanvasTheme(): ThemeChoice {
@@ -168,28 +210,41 @@ export function useCanvasTheme(): ThemeChoice {
 }
 
 export function setSharePointer(on: boolean): void {
-  if (current.pointer === on) return;
+  if (current.pointer === on) {
+    return;
+  }
+
   current.pointer = on;
-  for (const frame of tokenFrames())
+
+  for (const frame of tokenFrames()) {
     postToFrame(frame, { type: "share-pointer", on });
+  }
 }
 
 export function onSharePointer(
   listener: (frame: BridgeFrame, message: SharePointerMessage) => void
 ): () => void {
   pointerListeners.add(listener);
+
   return () => pointerListeners.delete(listener);
 }
 
 function syncTokenFrame(frame: BridgeFrame): void {
   for (const channel of channels) {
-    if (holding(channel)) channel.hold.fresh.add(frame.token);
-    else if (channel.css !== "")
+    if (holding(channel)) {
+      channel.hold.fresh.add(frame.token);
+    } else if (channel.css !== "") {
       postToFrame(frame, { type: channel.type, css: channel.css });
+    }
   }
-  if (current.theme !== null)
+
+  if (current.theme !== null) {
     postToFrame(frame, { type: "set-theme", theme: current.theme });
-  if (current.pointer) postToFrame(frame, { type: "share-pointer", on: true });
+  }
+
+  if (current.pointer) {
+    postToFrame(frame, { type: "share-pointer", on: true });
+  }
 }
 
 function onTokenFrameMessage(
@@ -198,15 +253,27 @@ function onTokenFrameMessage(
 ): void {
   if (message.type === "ready") {
     syncTokenFrame(frame);
+
     return;
   }
+
   if (message.type === "share-pointer") {
-    for (const listener of pointerListeners) listener(frame, message);
+    for (const listener of pointerListeners) {
+      listener(frame, message);
+    }
+
     return;
   }
-  if (message.type !== "painted") return;
+
+  if (message.type !== "painted") {
+    return;
+  }
+
   for (const channel of channels) {
-    if (!channel.hold.fresh.has(frame.token)) continue;
+    if (!channel.hold.fresh.has(frame.token)) {
+      continue;
+    }
+
     channel.hold.painted.add(frame.token);
     releaseHold(channel);
   }
@@ -215,7 +282,10 @@ function onTokenFrameMessage(
 export function setCanvasFront(front: string | null, swapping: boolean): void {
   canvas.front = front;
   canvas.swapping = swapping;
-  for (const channel of channels) releaseHold(channel);
+
+  for (const channel of channels) {
+    releaseHold(channel);
+  }
 }
 
 export function useTokenFrameSync(): void {
@@ -226,6 +296,7 @@ export function useTokenFrameSync(): void {
         endHold(channel);
         channel.css = "";
       }
+
       broadcastTheme(null);
     },
     []
@@ -252,6 +323,7 @@ export function useTokenFrames(
         live
       )
     );
+
     return () => offs.forEach((off) => off());
   }, [slots, elements, kind, live]);
 }

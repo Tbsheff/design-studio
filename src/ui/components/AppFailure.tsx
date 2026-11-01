@@ -24,7 +24,10 @@ function useInstallHint(
 ): FolderInspection | null {
   const [hint, setHint] = useState<FolderInspection | null>(null);
   useEffect(() => {
-    if (!managed) return;
+    if (!managed) {
+      return;
+    }
+
     let live = true;
     api
       .getProject(projectId)
@@ -35,17 +38,24 @@ function useInstallHint(
       )
       .then((result) => live && setHint(result))
       .catch(() => live && setHint(null));
+
     return () => {
       live = false;
     };
   }, [projectId, app.appDir, managed, retries]);
+
   return hint;
 }
 
 function InstallFix({ hint }: { hint: FolderInspection | null }) {
   const install = hint?.install;
-  if (!hint || hint.depsInstalled !== false || !install) return null;
+
+  if (!hint || hint.depsInstalled !== false || !install) {
+    return null;
+  }
+
   const full = `cd ${JSON.stringify(install.dir)} && ${install.command}`;
+
   return (
     <div className="app-fail-fix">
       <span className="app-fail-label">
@@ -73,11 +83,17 @@ function UrlForm({
   const [url, setUrl] = useState(
     app.mode === "url" ? (app.url ?? "") : suggested
   );
+
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
   const save = (event: FormEvent) => {
     event.preventDefault();
-    if (!url.trim()) return;
+
+    if (!url.trim()) {
+      return;
+    }
+
     setBusy(true);
     setError(null);
     api
@@ -86,6 +102,7 @@ function UrlForm({
       .catch((err: unknown) => setError(errorText(err)))
       .finally(() => setBusy(false));
   };
+
   return (
     <form className="app-fail-url" onSubmit={save}>
       <label className="app-fail-label" htmlFor="app-fail-url">
@@ -128,10 +145,12 @@ export function AppFailure({
   const managed = status.mode === "managed";
   const [retries, setRetries] = useState(0);
   const hint = useInstallHint(projectId, app, managed, retries);
+
   const retry = () => {
     setRetries((n) => n + 1);
     onRetry();
   };
+
   return (
     <div className="app-fail" role="alert">
       <div className="app-fail-head">

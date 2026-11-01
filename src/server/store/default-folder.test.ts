@@ -80,6 +80,7 @@ describe("default projects folder", () => {
   it("validates a new default like other folder inputs", async () => {
     const store = createDefaultFolderStore(dataDir, fallback);
     await writeFile(path.join(root, "file.txt"), "x");
+
     for (const bad of [
       "",
       "relative/dir",
@@ -89,10 +90,13 @@ describe("default projects folder", () => {
       path.join(dataDir, "projects"),
       `${root}\0x`,
     ]) {
-      if (bad === path.join(dataDir, "projects"))
+      if (bad === path.join(dataDir, "projects")) {
         await mkdir(bad, { recursive: true });
+      }
+
       await expect(store.set(bad), bad).rejects.toThrow();
     }
+
     expect(existsSync(path.join(dataDir, PREFERENCES_FILE))).toBe(false);
   });
 
@@ -109,10 +113,12 @@ describe("default projects folder", () => {
 
   it("shows the default first in the folder list and hides a saved copy of it", async () => {
     const defaultFolder = createDefaultFolderStore(dataDir, fallback);
+
     const workspaces = createWorkspaceStore(dataDir, {
       homeDir: root,
       defaultFolder,
     });
+
     await defaultFolder.ensure();
     await workspaces.add({ path: fallback });
     const other = path.join(root, "other");

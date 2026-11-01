@@ -20,10 +20,13 @@ import {
 import type { Project, RunSummary } from "../src/shared/contracts.js";
 
 const [sourceArg, feedArg, portArg] = process.argv.slice(2);
-if (!sourceArg || !feedArg)
+
+if (!sourceArg || !feedArg) {
   throw new Error(
     "usage: tsx scripts/update-check.ts <0.1.0 .app> <folder with latest-mac.yml and the 0.1.1 zip> [port]"
   );
+}
+
 const sourceApp: string = sourceArg;
 const feedDir: string = feedArg;
 const PORT = Number(portArg ?? 8799);
@@ -45,22 +48,28 @@ function serveFeed(
   dir: string
 ): Promise<{ close: () => void; hits: string[] }> {
   const hits: string[] = [];
+
   const server = createServer((req, res) => {
     const name = decodeURIComponent(
       (req.url ?? "/").split("?")[0] ?? "/"
     ).replace(/^\/+/, "");
+
     hits.push(`${req.method} /${name}`);
     const file = path.join(dir, path.basename(name));
+
     if (!name || !existsSync(file) || !statSync(file).isFile()) {
       res.writeHead(404).end();
+
       return;
     }
+
     res.writeHead(200, {
       "content-length": statSync(file).size,
       "content-type": name.endsWith(".yml") ? "text/yaml" : "application/zip",
     });
     createReadStream(file).pipe(res);
   });
+
   return new Promise((resolve) =>
     server.listen(PORT, "127.0.0.1", () =>
       resolve({ close: () => server.close(), hits })
@@ -75,7 +84,11 @@ function shipItLogs(): string {
     "Caches",
     "dev.designstudio.app.ShipIt"
   );
-  if (!existsSync(dir)) return "(no ShipIt cache folder)";
+
+  if (!existsSync(dir)) {
+    return "(no ShipIt cache folder)";
+  }
+
   return ["ShipIt_stderr.log", "ShipIt_stdout.log"]
     .map((name) => path.join(dir, name))
     .filter((file) => existsSync(file))
@@ -93,8 +106,13 @@ type Recorded = {
 
 function testEnv(work: string): Record<string, string> {
   const env: Record<string, string> = {};
-  for (const [key, value] of Object.entries(process.env))
-    if (value !== undefined && key !== "ELECTRON_RUN_AS_NODE") env[key] = value;
+
+  for (const [key, value] of Object.entries(process.env)) {
+    if (value !== undefined && key !== "ELECTRON_RUN_AS_NODE") {
+      env[key] = value;
+    }
+  }
+
   return {
     ...env,
     STUDIO_AGENT: "mock",
@@ -111,14 +129,18 @@ async function studioApi(
   app: ElectronApplication
 ): Promise<<T>(method: string, route: string, body?: unknown) => Promise<T>> {
   let page = await app.firstWindow();
+
   for (let i = 0; i < 120 && !page.url().startsWith("http"); i += 1) {
     await sleep(500);
     page = app.windows().find((w) => w.url().startsWith("http")) ?? page;
   }
+
   const origin = new URL(page.url()).origin;
+
   const token =
     (await page.locator('meta[name="studio-token"]').getAttribute("content")) ??
     "";
+
   return async <T>(
     method: string,
     route: string,
@@ -129,7 +151,11 @@ async function studioApi(
       headers: { "x-studio-token": token, "content-type": "application/json" },
       body: body === undefined ? undefined : JSON.stringify(body),
     });
-    if (!res.ok) throw new Error(`${method} ${route} ${res.status}`);
+
+    if (!res.ok) {
+      throw new Error(`${method} ${route} ${res.status}`);
+    }
+
     return (await res.json()) as T;
   };
 }
@@ -146,6 +172,7 @@ async function recordUpdates(
         buttons?: string[];
       }[],
     };
+
     (globalThis as unknown as { __rec: typeof rec }).__rec = rec;
     electronApp.on("studio-update" as "ready", (event: unknown) =>
       rec.updates.push(event)
@@ -156,14 +183,17 @@ async function recordUpdates(
         detail?: string;
         buttons?: string[];
       };
+
       rec.dialogs.push({
         message: options.message,
         detail: options.detail,
         buttons: options.buttons,
       });
+
       return { response: 0, checkboxChecked: false };
     }) as typeof dialog.showMessageBox;
   });
+
   return () =>
     app.evaluate(() => (globalThis as unknown as { __rec: Recorded }).__rec);
 }
@@ -176,17 +206,27 @@ async function startSlowRun(
     "/api/projects",
     { prompt: "Update check page", kind: "html" }
   );
+
   const main = project.directions[0];
-  if (!main) throw new Error("no direction");
+
+  if (!main) {
+    throw new Error("no direction");
+  }
+
   const running = async () =>
     (
       await call<RunSummary[]>("GET", `/api/projects/${project.id}/runs`)
     ).filter((run) => run.status === "running").length;
-  for (let i = 0; i < 60 && (await running()) > 0; i += 1) await sleep(500);
+
+  for (let i = 0; i < 60 && (await running()) > 0; i += 1) {
+    await sleep(500);
+  }
+
   await call("POST", `/api/projects/${project.id}/d/${main.id}/runs`, {
     prompt: "Slow edit during update [slow]",
     mode: "edit",
   });
+
   return running;
 }
 
@@ -196,10 +236,12 @@ async function waitForState(
   stop: () => boolean
 ): Promise<Recorded> {
   let state = await rec();
+
   for (let i = 0; i < 240 && !stop() && !done(state); i += 1) {
     await sleep(500);
     state = await rec().catch(() => state);
   }
+
   return state;
 }
 
@@ -216,6 +258,7 @@ async function driveUpdate(
   await app.evaluate(({ Menu }) =>
     Menu.getApplicationMenu()?.getMenuItemById("check-updates")?.click()
   );
+
   const deferred = await waitForState(
     rec,
     (state) =>
@@ -224,11 +267,13 @@ async function driveUpdate(
       ),
     exited
   );
+
   console.log(`[update] events so far: ${JSON.stringify(deferred.updates)}`);
   console.log(`[update] dialogs so far: ${JSON.stringify(deferred.dialogs)}`);
   console.log(
     `[update] active runs while deferred: ${await running()}; app still running: ${!exited()}`
   );
+
   const final = await waitForState(
     rec,
     (state) =>
@@ -236,21 +281,25 @@ async function driveUpdate(
       state.dialogs.length >= 3,
     exited
   );
+
   console.log(`[update] events: ${JSON.stringify(final.updates)}`);
   console.log(`[update] dialogs: ${JSON.stringify(final.dialogs)}`);
 }
 
 async function versionAfter(appCopy: string): Promise<string> {
   let version = plistVersion(appCopy);
+
   for (let i = 0; i < 60 && version !== "0.1.1"; i += 1) {
     await sleep(1000);
     version = plistVersion(appCopy);
   }
+
   return version;
 }
 
 function updaterLog(work: string): string {
   const file = path.join(work, "user-data", "logs", "updater.log");
+
   return existsSync(file)
     ? readFileSync(file, "utf-8").split("\n").slice(-30).join("\n")
     : "(none)";
@@ -260,7 +309,11 @@ function stopRelaunched(appCopy: string): void {
   const relaunched = spawnSync("pgrep", ["-f", appCopy], {
     encoding: "utf-8",
   }).stdout.trim();
-  if (!relaunched) return;
+
+  if (!relaunched) {
+    return;
+  }
+
   console.log(
     `[update] app pids still running ${relaunched.split("\n").join(" ")}: stopping them`
   );
@@ -271,17 +324,20 @@ async function main(): Promise<void> {
   const work = realpathSync(
     mkdtempSync(path.join(os.tmpdir(), "studio update check "))
   );
+
   const appCopy = path.join(work, "Applications", "Design Studio.app");
   mkdirSync(path.dirname(appCopy), { recursive: true });
   execFileSync("ditto", [sourceApp, appCopy]);
   console.log(`[update] old app ${appCopy} version ${plistVersion(appCopy)}`);
   const feed = await serveFeed(feedDir);
+
   const app = await electron.launch({
     executablePath: path.join(appCopy, "Contents", "MacOS", "Design Studio"),
     args: [],
     env: testEnv(work),
     timeout: 120_000,
   });
+
   let exited = false;
   app.process().on("exit", () => {
     exited = true;
@@ -289,7 +345,11 @@ async function main(): Promise<void> {
   await driveUpdate(app, () => exited).catch((error: unknown) =>
     console.error("[update] driver error", error)
   );
-  for (let i = 0; i < 120 && !exited; i += 1) await sleep(500);
+
+  for (let i = 0; i < 120 && !exited; i += 1) {
+    await sleep(500);
+  }
+
   console.log(`[update] app process exited: ${exited}`);
   console.log(
     `[update] app version on disk after: ${await versionAfter(appCopy)}`
@@ -298,7 +358,11 @@ async function main(): Promise<void> {
   console.log(`[update] updater log:\n${updaterLog(work)}`);
   console.log(`[update] ${shipItLogs()}`);
   stopRelaunched(appCopy);
-  if (!exited) await app.close().catch(() => undefined);
+
+  if (!exited) {
+    await app.close().catch(() => undefined);
+  }
+
   feed.close();
   console.log(`[update] work ${work}`);
 }

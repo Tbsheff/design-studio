@@ -24,11 +24,18 @@ async function waitFor<T>(
   timeoutMs: number
 ): Promise<T> {
   const deadline = Date.now() + timeoutMs;
+
   for (;;) {
     const value = await fn().catch(() => null);
-    if (value !== null) return value;
-    if (Date.now() > deadline)
+
+    if (value !== null) {
+      return value;
+    }
+
+    if (Date.now() > deadline) {
       throw new Error(`timed out waiting for ${label}`);
+    }
+
     await sleep(500);
   }
 }
@@ -37,8 +44,10 @@ async function main(): Promise<void> {
   const work = realpathSync(
     mkdtempSync(path.join(os.tmpdir(), "studio real smoke "))
   );
+
   const dataDir = path.join(work, "data");
   const log = createWriteStream(path.join(work, "server.log"));
+
   const server = spawn(
     path.join(ROOT, "node_modules", ".bin", "tsx"),
     ["src/server/index.ts"],
@@ -56,8 +65,10 @@ async function main(): Promise<void> {
       stdio: ["ignore", "pipe", "pipe"],
     }
   );
+
   server.stdout.pipe(log);
   server.stderr.pipe(log);
+
   const browser = await chromium.launch({
     channel: "chrome",
     headless: true,
@@ -66,20 +77,25 @@ async function main(): Promise<void> {
       "--disable-features=IsolateOrigins,site-per-process",
     ],
   });
+
   try {
     await waitFor(
       "server",
       async () => ((await fetch(`${BASE}/`)).ok ? true : null),
       60_000
     );
+
     const page = await browser.newPage({
       viewport: { width: 1600, height: 1000 },
     });
+
     await page.goto(BASE);
+
     const token =
       (await page
         .locator('meta[name="studio-token"]')
         .getAttribute("content")) ?? "";
+
     const call = async <T>(
       method: string,
       route: string,
@@ -93,10 +109,14 @@ async function main(): Promise<void> {
         },
         body: body === undefined ? undefined : JSON.stringify(body),
       });
-      if (!res.ok)
+
+      if (!res.ok) {
         throw new Error(`${method} ${route} ${res.status} ${await res.text()}`);
+      }
+
       return (await res.json()) as T;
     };
+
     const finished = async (
       pid: string,
       count: number
@@ -108,6 +128,7 @@ async function main(): Promise<void> {
             "GET",
             `/api/projects/${pid}/runs`
           );
+
           return runs.filter((run) => run.status !== "running").length >= count
             ? runs
             : null;
@@ -124,6 +145,7 @@ async function main(): Promise<void> {
         settings: { model: MODEL, maxBudgetUsd: BUDGET },
       }
     );
+
     console.log(
       `[smoke] project ${project.id} model ${project.settings.model} budget ${project.settings.maxBudgetUsd}`
     );
@@ -159,20 +181,24 @@ async function main(): Promise<void> {
           (tool) =>
             `${tool.name}:${path.relative(project.directions[0]?.workTree ?? "", String((tool.input as { file_path?: unknown }).file_path ?? ""))}`
         );
+
       console.log(
         `[smoke] run "${run.request.prompt}" status=${run.status} cost=$${run.costUsd.toFixed(4)} turns-tools=${run.toolCalls.length} durationMs=${run.durationMs} writes=${JSON.stringify(writes)} selection=${run.request.selection?.length ?? 0} error=${run.error}`
       );
     }
+
     const versions = await call<Version[]>(
       "GET",
       `/api/projects/${project.id}/d/main/versions`
     );
+
     console.log(
       `[smoke] versions: ${versions.length} ${JSON.stringify(versions.map((v) => [v.id.slice(0, 7), v.meta.kind, v.changedFiles]))}`
     );
     const total = runs.reduce((sum, run) => sum + run.costUsd, 0);
     console.log(`[smoke] total cost $${total.toFixed(4)}`);
     const [newest, previous] = versions;
+
     if (newest && previous) {
       const diff = execFileSync(
         "git",
@@ -185,6 +211,7 @@ async function main(): Promise<void> {
           encoding: "utf-8",
         }
       );
+
       const full = execFileSync(
         "git",
         ["diff", "-U0", previous.id, newest.id],
@@ -196,11 +223,13 @@ async function main(): Promise<void> {
           encoding: "utf-8",
         }
       );
+
       console.log(
         `[smoke] diff stat between edit and create versions:\n${diff}`
       );
       console.log(`[smoke] diff:\n${full}`);
     }
+
     console.log(`[smoke] data dir: ${dataDir}`);
   } finally {
     await browser.close();

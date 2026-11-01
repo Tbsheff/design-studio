@@ -18,11 +18,16 @@ function TweaksPrompt({
   onSuggest?: (prompt?: string) => void;
 }) {
   const [text, setText] = useState("");
+
   const send = () => {
-    if (!onSuggest || running) return;
+    if (!onSuggest || running) {
+      return;
+    }
+
     onSuggest(text.trim() || undefined);
     setText("");
   };
+
   return (
     <div className="ins-tweaks-empty">
       <p className="ins-tweaks-text">
@@ -41,7 +46,10 @@ function TweaksPrompt({
           onKeyDown={(event) => {
             if (event.key === "Enter" && !event.shiftKey) {
               event.preventDefault();
-              if (text.trim()) send();
+
+              if (text.trim()) {
+                send();
+              }
             }
           }}
         />
@@ -79,13 +87,16 @@ export function InspectorTweaks({
   blocked?: boolean;
 }) {
   const controls = tweaks?.draft.state?.controls.length ?? 0;
-  if (!tweaks || (tweaks.draft.state && controls === 0))
+
+  if (!tweaks || (tweaks.draft.state && controls === 0)) {
     return (
       <TweaksPrompt
         running={(tweaks?.running ?? false) || blocked}
         onSuggest={tweaks?.onSuggest}
       />
     );
+  }
+
   return (
     <TweaksPanel
       draft={tweaks.draft}

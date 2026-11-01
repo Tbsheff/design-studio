@@ -18,17 +18,23 @@ function useInView(
   const [seen, setSeen] = useState(false);
   useEffect(() => {
     const el = ref.current;
+
     if (!enabled || !el) {
       setSeen(false);
+
       return;
     }
+
     const io = new IntersectionObserver(
       (entries) => setSeen(entries.some((entry) => entry.isIntersecting)),
       { rootMargin: "64px 0px" }
     );
+
     io.observe(el);
+
     return () => io.disconnect();
   }, [ref, enabled]);
+
   return seen;
 }
 
@@ -40,15 +46,21 @@ export function VersionThumb({
   onOpen,
 }: Props) {
   const ref = useRef<HTMLSpanElement>(null);
+
   const [result, setResult] = useState<ThumbResult | undefined>(() =>
     cachedThumb(projectId, versionId)
   );
+
   const [loaded, setLoaded] = useState(false);
   const inView = useInView(ref, active && result === undefined);
   useEffect(() => {
-    if (!inView || result !== undefined) return;
+    if (!inView || result !== undefined) {
+      return;
+    }
+
     return requestThumb(projectId, versionId, setResult);
   }, [inView, result, projectId, versionId]);
+
   const state =
     result === undefined
       ? "loading"
@@ -57,6 +69,7 @@ export function VersionThumb({
         : loaded
           ? "ready"
           : "loading";
+
   return (
     <span
       ref={ref}

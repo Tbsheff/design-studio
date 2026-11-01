@@ -32,7 +32,11 @@ async function contextOf(
     input.projectId,
     input.directionId
   );
-  if (busy) refuseWhileRunning(deps, project, direction);
+
+  if (busy) {
+    refuseWhileRunning(deps, project, direction);
+  }
+
   return { canvas: deps.canvas, project, direction, mode: "edit", plan: false };
 }
 
@@ -66,6 +70,7 @@ const listLinksTool = defineTool(
   },
   async (deps, input) => {
     const ctx = await contextOf(deps, input, false);
+
     return {
       result: await listLinks(
         ctx,
@@ -87,7 +92,11 @@ const addLinkTool = defineTool(
     const { projectId: _project, directionId: _direction, ...spec } = input;
     const done = await addLink(ctx, spec, probeOf(deps, ctx));
     const refused = failed(done);
-    if (refused || !done.link) return refused ?? { result: done.result };
+
+    if (refused || !done.link) {
+      return refused ?? { result: done.result };
+    }
+
     return {
       result: done.result,
       activity: {
@@ -122,7 +131,11 @@ const removeLinkTool = defineTool(
     const ctx = await contextOf(deps, input, true);
     const done = await removeLink(ctx, input.linkId);
     const refused = failed(done);
-    if (refused) return refused;
+
+    if (refused) {
+      return refused;
+    }
+
     return {
       result: done.result,
       activity: {
@@ -152,8 +165,15 @@ const setStartTool = defineTool(
     const ctx = await contextOf(deps, input, true);
     const done = await setStartFrame(ctx, input.frame);
     const refused = failed(done);
-    if (refused) return refused;
-    if (!done.frame) throw new EditError(`No frame ${input.frame}.`);
+
+    if (refused) {
+      return refused;
+    }
+
+    if (!done.frame) {
+      throw new EditError(`No frame ${input.frame}.`);
+    }
+
     return {
       result: done.result,
       activity: {
@@ -188,12 +208,17 @@ const keepLinksTool = defineTool(
   },
   async (deps, input) => {
     const ctx = await contextOf(deps, input, true);
+
     const result = await keepLinks(
       ctx,
       input.linkIds && input.linkIds.length > 0 ? input.linkIds : "all",
       probeOf(deps, ctx)
     );
-    if (result.isError) return { result };
+
+    if (result.isError) {
+      return { result };
+    }
+
     return {
       result,
       activity: {

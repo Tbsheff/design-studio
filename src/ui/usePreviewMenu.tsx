@@ -45,33 +45,45 @@ async function copyCss(
   selector: string
 ): Promise<void> {
   const css = await requestAuthoredCss(port, selector);
-  if (css)
+
+  if (css) {
     await navigator.clipboard
       .writeText(formatCopyCss(css))
       .catch(() => undefined);
+  }
 }
 
 function structureItems(o: Options): PreviewMenuItem[] {
   const edits = o.edits;
-  if (!edits.enabled) return [];
+
+  if (!edits.enabled) {
+    return [];
+  }
+
   const state = {
     count: o.selection.length,
     hasSource: selectionTargets(o.selection) !== null,
     canPaste: edits.canPaste,
     busy: edits.busy,
   };
+
   return structureMenuItems(state, edits.structureKey, true);
 }
 
 function pasteItem(o: Options, target: SelectionContext): PreviewMenuItem[] {
-  if (!o.edits.enabled || !o.ids.directionId) return [];
+  if (!o.edits.enabled || !o.ids.directionId) {
+    return [];
+  }
+
   const blocked =
     !target.source && !target.owners?.length
       ? "This element has no source location"
       : o.edits.busy
         ? "Wait for the last edit to finish"
         : null;
+
   const ids = { projectId: o.ids.projectId, directionId: o.ids.directionId };
+
   return [
     {
       id: "paste-jsx",
@@ -85,12 +97,17 @@ function pasteItem(o: Options, target: SelectionContext): PreviewMenuItem[] {
 }
 
 function createItem(o: Options, open: () => void): PreviewMenuItem[] {
-  if (!o.edits.enabled || !o.ids.directionId) return [];
+  if (!o.edits.enabled || !o.ids.directionId) {
+    return [];
+  }
+
   const blocked = createBlocker(o);
+
   const label =
     o.selection.length > 1
       ? `Create component from ${o.selection.length}…`
       : "Create component…";
+
   return [
     {
       id: "create-component",
@@ -103,10 +120,14 @@ function createItem(o: Options, open: () => void): PreviewMenuItem[] {
 }
 
 function createBlocker(o: Options): string | null {
-  if (o.ids.kind !== "react")
+  if (o.ids.kind !== "react") {
     return "Components need a React project. This is a plain HTML page";
-  if (o.selection.some((item) => !item.source && !item.owners?.length))
+  }
+
+  if (o.selection.some((item) => !item.source && !item.owners?.length)) {
     return "An element has no source location";
+  }
+
   return o.edits.busy ? "Wait for the last edit to finish" : null;
 }
 
@@ -181,15 +202,18 @@ export function usePreviewMenu(o: Options) {
   const [at, setAt] = useState<{ x: number; y: number } | null>(null);
   const latest = useRef(o);
   latest.current = o;
+
   const onContextMenu = useCallback(
     (point: { x: number; y: number }) => setAt(point),
     []
   );
+
   const close = useCallback(() => setAt(null), []);
   const [creating, setCreating] = useState<SelectionContext[] | null>(null);
   const target = o.selection.at(-1);
   const openCreate = () => setCreating(latest.current.selection);
   const directionId = o.ids.directionId;
+
   const dialog =
     creating && directionId ? (
       <Suspense fallback={null}>
@@ -201,8 +225,10 @@ export function usePreviewMenu(o: Options) {
         />
       </Suspense>
     ) : null;
+
   const items =
     at && target ? menuItems(latest.current, target, openCreate) : [];
+
   const menu = (
     <>
       {at && target ? (
@@ -216,5 +242,6 @@ export function usePreviewMenu(o: Options) {
       {dialog}
     </>
   );
+
   return { onContextMenu, menu };
 }

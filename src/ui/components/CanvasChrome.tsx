@@ -49,6 +49,7 @@ export interface CanvasShell {
 }
 
 type SetSelectMode = (update: (m: boolean) => boolean) => void;
+
 type CommentTool = {
   available: boolean;
   on: boolean;
@@ -70,19 +71,33 @@ function useShellSync(
   useEffect(() => {
     const before = wasOn.current;
     wasOn.current = comment.on;
-    if (!comment.on || before) return;
+
+    if (!comment.on || before) {
+      return;
+    }
+
     void Promise.resolve(onPane.current?.("comments")).then((moved) => {
-      if (moved === false) commentRef.current.setOn(false);
+      if (moved === false) {
+        commentRef.current.setOn(false);
+      }
     });
   }, [comment.on]);
   const prevPane = useRef(pane);
   useEffect(() => {
     const before = prevPane.current;
     prevPane.current = pane;
-    if (before === pane) return;
-    if (pane !== "comments" && commentRef.current.on)
+
+    if (before === pane) {
+      return;
+    }
+
+    if (pane !== "comments" && commentRef.current.on) {
       commentRef.current.setOn(false);
-    if (before === "design") setSelectMode(() => false);
+    }
+
+    if (before === "design") {
+      setSelectMode(() => false);
+    }
   }, [pane, setSelectMode]);
 }
 
@@ -99,12 +114,16 @@ export function useShellPane(
   const editOpen = shell ? shell.pane === "design" : layersOpenSetting;
   const hostReady = !shell || shell.layersHost !== null;
   const layersOpen = editOpen && live && hostReady;
+
   const toggleEdit = () =>
     shell?.onPane(shell.pane === "design" ? "chat" : "design");
+
   const closeLayers = () =>
     shell ? shell.onPane("chat") : uiStore.set({ layersOpen: false });
+
   const place = (panel: ReactNode) =>
     shell?.layersHost ? createPortal(panel, shell.layersHost) : panel;
+
   return { layersOpen, picking, toggleEdit, closeLayers, place };
 }
 
@@ -113,12 +132,14 @@ function fileNameOf(
   kind: ProjectKind,
   directionName: string | null
 ): string {
-  if (kind === "html")
+  if (kind === "html") {
     return (
       (frame.path || "index.html")
         .replace(/\.html$/, "")
         .replace(/^.*\//, "") || "index"
     );
+  }
+
   return directionName ?? "Design";
 }
 
@@ -128,22 +149,38 @@ function toolOf(
   select: boolean,
   proto: boolean
 ): CanvasTool {
-  if (proto) return "prototype";
-  if (comment) return "comment";
-  if (pane === "design") return "edit";
+  if (proto) {
+    return "prototype";
+  }
+
+  if (comment) {
+    return "comment";
+  }
+
+  if (pane === "design") {
+    return "edit";
+  }
+
   return select ? "select" : null;
 }
 
 function reloadFrames(stage: HTMLElement | null) {
   stage?.querySelectorAll<HTMLIFrameElement>("iframe.frame").forEach((el) => {
     const src = el.src;
-    if (src) el.src = src;
+
+    if (src) {
+      el.src = src;
+    }
   });
 }
 
 function scopeOf(selection: SelectionContext[]): string | null {
-  if (selection.length > 1) return `${selection.length} elements`;
+  if (selection.length > 1) {
+    return `${selection.length} elements`;
+  }
+
   const first = selection[0];
+
   return first ? `the ${first.tag}` : null;
 }
 
@@ -193,19 +230,29 @@ function addAndShow(p: ChromeProps, size: { width: number; height: number }) {
       (frame) => frame.id
     )
   );
+
   p.addFrame(size);
+
   const added = canvasStore
     .get(p.projectId)
     ?.frames.find((frame) => !before.has(frame.id));
-  if (!added) return;
+
+  if (!added) {
+    return;
+  }
+
   p.frames.activate(added);
   p.zoom.zoomToActive?.();
 }
 
 function useFileMenu(p: ChromeProps) {
   const [pages, setPages] = useState<string[]>([]);
+
   const load = () => {
-    if (p.kind !== "html" || !p.directionId) return;
+    if (p.kind !== "html" || !p.directionId) {
+      return;
+    }
+
     void api
       .workTreeFiles(p.projectId, p.directionId)
       .then(({ files }) =>
@@ -213,7 +260,9 @@ function useFileMenu(p: ChromeProps) {
       )
       .catch(() => setPages([]));
   };
+
   const current = p.active.path || "index.html";
+
   const groups = (): MenuGroup[] => [
     {
       label: "Pages",
@@ -229,11 +278,16 @@ function useFileMenu(p: ChromeProps) {
       label: "Frames",
       items: p.layout.frames.map((f, i) => {
         const info = p.label(f);
+
         const show = () => {
-          if (f.hidden) p.frames.update((l) => setFrameHidden(l, f.id, false));
+          if (f.hidden) {
+            p.frames.update((l) => setFrameHidden(l, f.id, false));
+          }
+
           p.frames.activate(f);
           p.zoom.zoomToActive?.();
         };
+
         return {
           id: `frame-${f.id}`,
           label: `${info.number ?? i + 1}  ${info.badge?.title ?? frameBaseName(f)}`,
@@ -254,6 +308,7 @@ function useFileMenu(p: ChromeProps) {
       })),
     },
   ];
+
   return { load, groups };
 }
 
@@ -272,19 +327,26 @@ function useRulersKey() {
         e.altKey ||
         e.repeat ||
         isTypingTarget(e.target)
-      )
+      ) {
         return;
-      if (document.querySelector(".play-layer, .present-layer")) return;
+      }
+
+      if (document.querySelector(".play-layer, .present-layer")) {
+        return;
+      }
+
       e.preventDefault();
       toggleRulers();
     };
+
     window.addEventListener("keydown", onKey);
+
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 }
 
 function barShell(shell: CanvasShell | undefined) {
-  if (!shell)
+  if (!shell) {
     return {
       paneCollapsed: false,
       onExpandPane: NOOP,
@@ -294,6 +356,8 @@ function barShell(shell: CanvasShell | undefined) {
       onShip: null,
       onShareLink: null,
     };
+  }
+
   return shell;
 }
 
@@ -302,6 +366,7 @@ export function CanvasChrome(p: ChromeProps) {
     PresentMode,
     "new-window" | "play"
   > | null>(null);
+
   const [tweakOpen, setTweakOpen] = useState(false);
   const closePresent = useCallback(() => setPresent(null), []);
   const closeTweak = useCallback(() => setTweakOpen(false), []);
@@ -309,26 +374,56 @@ export function CanvasChrome(p: ChromeProps) {
   useRulersKey();
   const shell = p.shell;
   const viewOpen = p.ui.viewRowOpen || p.view.source.kind === "version";
+
   const onTool = (next: Exclude<CanvasTool, null>) => {
-    if (next === "prototype") return p.proto.set(!p.proto.on);
+    if (next === "prototype") {
+      return p.proto.set(!p.proto.on);
+    }
+
     const leavingProto = p.proto.on;
     p.proto.set(false);
-    if (next === "edit" && leavingProto && shell?.pane === "design") return;
-    if (next === "comment") return p.comment.toggle();
-    if (next === "edit") return p.toggleEdit();
+
+    if (next === "edit" && leavingProto && shell?.pane === "design") {
+      return;
+    }
+
+    if (next === "comment") {
+      return p.comment.toggle();
+    }
+
+    if (next === "edit") {
+      return p.toggleEdit();
+    }
+
     const editing = shell?.pane === "design";
     p.comment.setOn(false);
-    if (editing) shell?.onPane("chat");
+
+    if (editing) {
+      shell?.onPane("chat");
+    }
+
     p.setSelectMode((m) => editing || !m);
   };
+
   const onPresent = (mode: PresentMode) => {
-    if (mode === "play") return p.proto.play();
-    if (!p.presentUrl) return;
-    if (mode === "new-window") window.open(p.presentUrl, "_blank", "noopener");
-    else setPresent(mode);
+    if (mode === "play") {
+      return p.proto.play();
+    }
+
+    if (!p.presentUrl) {
+      return;
+    }
+
+    if (mode === "new-window") {
+      window.open(p.presentUrl, "_blank", "noopener");
+    } else {
+      setPresent(mode);
+    }
   };
+
   const onTweak = shell?.onTweak ?? null;
   const bar = barShell(shell);
+
   return (
     <>
       <CanvasTopBar

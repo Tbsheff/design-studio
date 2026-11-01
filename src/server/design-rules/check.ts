@@ -20,12 +20,14 @@ import {
 } from "./probe.js";
 
 const COLOR_VALUE = /^(#|rgb|hsl|oklch|oklab|lab|lch)/i;
+
 const RADIUS = [
   "border-top-left-radius",
   "border-top-right-radius",
   "border-bottom-right-radius",
   "border-bottom-left-radius",
 ];
+
 const DIRECT: Record<string, DirectStyleProperty> = {
   height: "height",
   width: "width",
@@ -44,17 +46,23 @@ const DIRECT: Record<string, DirectStyleProperty> = {
 };
 
 function probeRule(rule: DesignRule): ProbeRule | null {
-  if (rule.kind === "class")
+  if (rule.kind === "class") {
     return {
       id: rule.id,
       kind: "class",
       selector: rule.selector,
       classes: rule.classes,
     };
-  if (rule.kind === "font")
+  }
+
+  if (rule.kind === "font") {
     return { id: rule.id, kind: "font", families: rule.families };
-  if (rule.kind === "component")
+  }
+
+  if (rule.kind === "component") {
     return { id: rule.id, kind: "component", name: rule.name, tag: rule.tag };
+  }
+
   return null;
 }
 
@@ -66,7 +74,11 @@ export async function probeRules(
   const probe = rules
     .map(probeRule)
     .filter((rule): rule is ProbeRule => rule !== null);
-  if (probe.length === 0) return { hits: [], scanned: {} };
+
+  if (probe.length === 0) {
+    return { hits: [], scanned: {} };
+  }
+
   return page.evaluate<RulesProbeResult>(
     rulesProbeExpression({ rules: probe, app })
   );
@@ -77,7 +89,10 @@ function label(hit: RuleHitElement): string {
 }
 
 function missText(miss: RuleMiss): string {
-  if (!miss.prop) return `the class ${miss.cls} is missing`;
+  if (!miss.prop) {
+    return `the class ${miss.cls} is missing`;
+  }
+
   return `${miss.prop} is ${miss.actual}, ${miss.cls} gives ${miss.expected}`;
 }
 
@@ -97,12 +112,14 @@ function collapse(
 ): RuleMiss[] {
   const parts = misses.filter((miss) => miss.prop && props.includes(miss.prop));
   const first = parts[0];
+
   const even =
     first &&
     parts.length === props.length &&
     parts.every(
       (miss) => miss.actual === first.actual && miss.expected === first.expected
     );
+
   return even
     ? [
         ...misses.filter((miss) => !parts.includes(miss)),
@@ -124,7 +141,9 @@ function radiusStyle(
   const corners = misses.filter(
     (miss) => miss.prop && RADIUS.includes(miss.prop)
   );
+
   const value = corners[0]?.expected;
+
   return value &&
     corners.length === RADIUS.length &&
     corners.every((miss) => miss.expected === value)
@@ -137,6 +156,7 @@ function gapStyle(
 ): Partial<Record<DirectStyleProperty, string>> {
   const row = misses.find((miss) => miss.prop === "row-gap");
   const column = misses.find((miss) => miss.prop === "column-gap");
+
   return row?.expected && row.expected === column?.expected
     ? { gap: row.expected }
     : {};
@@ -151,16 +171,23 @@ function classStyle(
         !miss.prop ||
         (miss.expected !== null && COLOR_VALUE.test(miss.expected))
     )
-  )
+  ) {
     return null;
+  }
+
   const style: Partial<Record<DirectStyleProperty, string>> = {
     ...radiusStyle(misses),
     ...gapStyle(misses),
   };
+
   for (const miss of misses) {
     const prop = miss.prop ? DIRECT[miss.prop] : undefined;
-    if (prop && miss.expected) style[prop] = miss.expected;
+
+    if (prop && miss.expected) {
+      style[prop] = miss.expected;
+    }
   }
+
   const covered = misses.every(
     (miss) =>
       (miss.prop && DIRECT[miss.prop]) ||
@@ -168,14 +195,20 @@ function classStyle(
       miss.prop === "row-gap" ||
       miss.prop === "column-gap"
   );
+
   return covered && Object.keys(style).length > 0 ? style : null;
 }
 
 function classFix(hit: RuleHitElement): ReviewFix | null {
   const source = parseLoc(hit.loc);
   const style = classStyle(hit.misses);
-  if (!source || !style) return null;
+
+  if (!source || !style) {
+    return null;
+  }
+
   const classes = [...new Set(hit.misses.map((miss) => miss.cls))];
+
   return {
     label: `Use ${classes.join(" ")}`,
     edit: { source, selector: hit.selector, tag: hit.tag, style },
@@ -197,6 +230,7 @@ function head(
 
 function classDraft(rule: ClassRule, hit: RuleHitElement): Draft {
   const fix = classFix(hit);
+
   return {
     ...head(rule, hit),
     key: `${rule.id}|${hit.selector}`,
@@ -221,6 +255,7 @@ function fontDraft(rule: FontRule, hit: RuleHitElement): Draft {
 
 function componentDraft(rule: ComponentRule, hit: RuleHitElement): Draft {
   const from = rule.module ? ` from ${rule.module}` : "";
+
   return {
     ...head(rule, hit),
     key: `${rule.id}|${hit.selector}`,
@@ -236,17 +271,31 @@ export function ruleDrafts(
   hits: RuleHitElement[]
 ): Draft[] {
   const byId = new Map(rules.map((rule) => [rule.id, rule]));
+
   return hits.flatMap((hit) => {
     const rule = byId.get(hit.ruleId);
-    if (rule?.kind === "class") return [classDraft(rule, hit)];
-    if (rule?.kind === "font") return [fontDraft(rule, hit)];
-    if (rule?.kind === "component") return [componentDraft(rule, hit)];
+
+    if (rule?.kind === "class") {
+      return [classDraft(rule, hit)];
+    }
+
+    if (rule?.kind === "font") {
+      return [fontDraft(rule, hit)];
+    }
+
+    if (rule?.kind === "component") {
+      return [componentDraft(rule, hit)];
+    }
+
     return [];
   });
 }
 
 function tokenScopeHits(rule: TokenRule, draft: Draft): boolean {
-  if (draft.kind !== "off-token") return false;
+  if (draft.kind !== "off-token") {
+    return false;
+  }
+
   return rule.scope === "any" || /raw color/.test(draft.message);
 }
 
@@ -254,10 +303,18 @@ export function applyTokenRules(rules: DesignRule[], drafts: Draft[]): Draft[] {
   const tokenRules = rules.filter(
     (rule): rule is TokenRule => rule.kind === "token"
   );
-  if (tokenRules.length === 0) return drafts;
+
+  if (tokenRules.length === 0) {
+    return drafts;
+  }
+
   return drafts.map((draft) => {
     const rule = tokenRules.find((item) => tokenScopeHits(item, draft));
-    if (!rule) return draft;
+
+    if (!rule) {
+      return draft;
+    }
+
     return {
       ...draft,
       kind: "rule",
@@ -277,6 +334,7 @@ export function ruleHits(
 ): DesignRuleHit[] {
   return rules.map((rule) => {
     const mine = drafts.filter((draft) => draft.rule?.id === rule.id);
+
     return {
       ruleId: rule.id,
       count: mine.reduce((sum, draft) => sum + (draft.copies ?? 1), 0),

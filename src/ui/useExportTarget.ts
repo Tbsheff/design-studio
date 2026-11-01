@@ -15,11 +15,16 @@ export function useExportTarget(
   const [target, setTarget] = useState<ExportTarget | null>(null);
   const latest = useRef({ direction, versions });
   latest.current = { direction, versions };
+
   const open = useCallback(
     (detail: OpenExportDetail = {}) => {
       const { direction: current, versions: list } = latest.current;
       const versionId = detail.versionId ?? current?.headVersionId ?? null;
-      if (!versionId) return;
+
+      if (!versionId) {
+        return;
+      }
+
       const version = list.find((v) => v.id === versionId);
       setTarget({
         projectId,
@@ -34,8 +39,10 @@ export function useExportTarget(
     },
     [projectId]
   );
+
   useEffect(() => onOpenExport(open), [open]);
   const close = useCallback(() => setTarget(null), []);
+
   return {
     target,
     open,

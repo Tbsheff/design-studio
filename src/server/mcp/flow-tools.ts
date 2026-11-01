@@ -32,6 +32,7 @@ const listRouteLinksTool = defineTool(
   },
   async (deps, input) => {
     const { project } = await loadTarget(deps, input.projectId);
+
     return {
       result: {
         content: [
@@ -88,17 +89,23 @@ const addFlowTool = defineTool(
     description: `Lay out app route frames left to right (the same code as Flow in the studio) and make prototype links from the links in their source. Pass routes, or from with depth. Frames already on the canvas are reused. ${FLOW_NOTE}`,
   },
   async (deps, input) => {
-    if (!input.routes && !input.from)
+    if (!input.routes && !input.from) {
       throw new EditError("Pass routes or from.");
+    }
+
     const { project, direction } = await loadTarget(
       deps,
       input.projectId,
       input.directionId
     );
+
     refuseWhileRunning(deps, project, direction);
     const flowDeps = configuredFlowDeps(deps.canvas);
-    if (!flowDeps)
+
+    if (!flowDeps) {
       throw new EditError("Design Studio is still starting. Try again.");
+    }
+
     const done = await buildFlow(
       flowDeps,
       project,
@@ -111,7 +118,9 @@ const addFlowTool = defineTool(
       },
       "agent"
     );
+
     const first = done.frames[0]?.id;
+
     return {
       result: { content: [{ type: "text", text: describeFlow(done) }] },
       activity: {

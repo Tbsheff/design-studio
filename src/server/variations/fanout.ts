@@ -36,10 +36,17 @@ export function variationName(
   taken: ReadonlySet<string>
 ): string {
   const base = `Variation ${label}`;
-  if (!taken.has(base)) return base;
+
+  if (!taken.has(base)) {
+    return base;
+  }
+
   for (let round = 2; ; round += 1) {
     const candidate = `${base} (${round})`;
-    if (!taken.has(candidate)) return candidate;
+
+    if (!taken.has(candidate)) {
+      return candidate;
+    }
   }
 }
 
@@ -65,15 +72,18 @@ export async function fanOut(
   input: FanOutInput
 ): Promise<VariationStartItem[]> {
   const taken = new Set(input.takenNames);
+
   const created: {
     brief: VariationBrief;
     index: number;
     direction: Direction | null;
     error: string | null;
   }[] = [];
+
   for (const [index, brief] of input.briefs.entries()) {
     const name = variationName(brief.label, taken);
     taken.add(name);
+
     const variation: DirectionVariation = {
       ...brief,
       groupId: input.groupId,
@@ -82,6 +92,7 @@ export async function fanOut(
       prompt: input.prompt,
       ...(input.scope ? { scope: input.scope } : {}),
     };
+
     try {
       created.push({
         brief,
@@ -98,6 +109,7 @@ export async function fanOut(
       });
     }
   }
+
   const started = await Promise.allSettled(
     created.map(async (item) =>
       item.direction
@@ -108,13 +120,16 @@ export async function fanOut(
         : null
     )
   );
+
   return created.map((item, index) => {
     const outcome = started[index];
     const runId = outcome?.status === "fulfilled" ? outcome.value : null;
+
     const runError =
       outcome?.status === "rejected"
         ? `Could not start the run: ${describe(outcome.reason)}`
         : null;
+
     return {
       label: item.brief.label,
       directionId: item.direction?.id ?? null,
@@ -132,6 +147,7 @@ interface GroupRegistry {
 
 export function createGroupRegistry(): GroupRegistry {
   const groups = new Map<string, Set<string>>();
+
   return {
     remember(groupId, runIds) {
       groups.set(groupId, new Set(runIds));

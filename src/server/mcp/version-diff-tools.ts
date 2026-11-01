@@ -51,14 +51,21 @@ const diffVersions = defineTool(
       input.projectId,
       input.directionId
     );
+
     const to = input.to ?? direction.headVersionId;
-    if (!to) throw new EditError("This direction has no saved version yet.");
+
+    if (!to) {
+      throw new EditError("This direction has no saved version yet.");
+    }
+
     const query = input.thumbnails === false ? "" : "?thumbs=1";
+
     const changes = await studioCall<VersionChanges>(
       deps,
       "GET",
       `/api/projects/${encodeURIComponent(project.id)}/versions/${input.from}/changes/${to}${query}`
     );
+
     return { result: ok(changes) };
   }
 );

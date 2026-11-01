@@ -41,6 +41,7 @@ const BUTTON = { x: 100, y: 120, width: 160, height: 48 };
 function pagePng(width: number, height: number, buttonShade: number): Buffer {
   const png = new PNG({ width, height });
   png.data.fill(255);
+
   for (let y = BUTTON.y; y < BUTTON.y + BUTTON.height; y += 1) {
     for (let x = BUTTON.x; x < BUTTON.x + BUTTON.width; x += 1) {
       const at = (y * width + x) * 4;
@@ -49,6 +50,7 @@ function pagePng(width: number, height: number, buttonShade: number): Buffer {
       png.data[at + 2] = 40;
     }
   }
+
   return PNG.sync.write(png);
 }
 
@@ -59,7 +61,11 @@ function fakePreview(): PreviewService {
       `http://127.0.0.1:0/s/${versionId}/`,
     async screenshotTiles(url, request) {
       shots.push({ url, request });
-      if (gate) await gate;
+
+      if (gate) {
+        await gate;
+      }
+
       const file = `${request.outPrefix}-1.png`;
       await mkdir(path.dirname(file), { recursive: true });
       const shade = url.includes(changedVersion) ? 200 : 20;
@@ -67,6 +73,7 @@ function fakePreview(): PreviewService {
         file,
         pagePng(request.viewport.width, request.viewport.height, shade)
       );
+
       return {
         paths: [file],
         pageHeight: request.viewport.height,
@@ -96,7 +103,11 @@ async function request(
   const headers: Record<string, string> = token
     ? { "x-studio-token": token }
     : {};
-  if (body !== undefined) headers["content-type"] = "application/json";
+
+  if (body !== undefined) {
+    headers["content-type"] = "application/json";
+  }
+
   return app.request(url, {
     method,
     headers,
@@ -109,19 +120,27 @@ async function makeProject(
 ): Promise<{ project: Project; list: Version[] }> {
   let project = await projects.create({ name: "Diff", kind: "html" });
   await versions.ensureRepo(project);
+
   for (const [index, html] of pages.entries()) {
     project = await projects.get(project.id);
     const main = projects.mainDirection(project);
     await writeFile(path.join(main.workTree, "index.html"), html);
+
     const version = await versions.commit(project, main, `Step ${index + 1}`, {
       kind: "manual",
     });
-    if (!version) throw new Error("no version");
+
+    if (!version) {
+      throw new Error("no version");
+    }
+
     await projects.updateDirection(project.id, main.id, {
       headVersionId: version.id,
     });
   }
+
   project = await projects.get(project.id);
+
   return {
     project,
     list: await versions.list(project, projects.mainDirection(project)),
@@ -162,6 +181,7 @@ describe("version thumbnails", () => {
       "<h1>One</h1>",
       "<h1>Two</h1>",
     ]);
+
     const older = list[list.length - 1] as Version;
     expect(
       (
@@ -174,11 +194,13 @@ describe("version thumbnails", () => {
       ).status
     ).toBe(403);
     expect(shots).toHaveLength(0);
+
     const [a, b] = await Promise.all(
       [1, 2].map(() =>
         request("GET", `/api/projects/${project.id}/versions/${older.id}/thumb`)
       )
     );
+
     expect([a?.status, b?.status]).toEqual([200, 200]);
     expect(shots).toHaveLength(1);
     expect(shots[0]?.url).toContain(`/s/${older.id}/`);
@@ -212,10 +234,15 @@ describe("version thumbnails", () => {
     const main = projects.mainDirection(project);
     await rm(path.join(main.workTree, "index.html"));
     await writeFile(path.join(main.workTree, "notes.md"), "no page");
+
     const empty = await versions.commit(project, main, "No page", {
       kind: "manual",
     });
-    if (!empty) throw new Error("no version");
+
+    if (!empty) {
+      throw new Error("no version");
+    }
+
     expect(
       (
         await request(
@@ -233,17 +260,23 @@ describe("version thumbnails", () => {
       "<h1>Two</h1>",
       "<h1>Three</h1>",
     ]);
+
     let open!: () => void;
     gate = new Promise((resolve) => {
       open = resolve;
     });
     const first = thumbnails.version(project.id, (list[0] as Version).id);
-    for (let n = 0; n < 200 && shots.length === 0; n += 1)
+
+    for (let n = 0; n < 200 && shots.length === 0; n += 1) {
       await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+
     const controller = new AbortController();
+
     const second = thumbnails
       .version(project.id, (list[1] as Version).id, controller.signal)
       .catch((error: unknown) => error);
+
     expect(shots).toHaveLength(1);
     controller.abort();
     open();
@@ -257,6 +290,7 @@ describe("version thumbnails", () => {
       "<h1>One</h1>",
       "<h1>Two</h1>",
     ]);
+
     const headId = (list[0] as Version).id;
     await projects.setThumbnail(project.id, {
       versionId: headId,
@@ -270,11 +304,13 @@ describe("version thumbnails", () => {
       new Date(1000),
       new Date(1000)
     );
+
     for (let n = 0; n < THUMB_KEEP + 5; n += 1) {
       const file = path.join(dir, `v-old${String(n).padStart(4, "0")}.png`);
       await writeFile(file, "x");
       await utimes(file, new Date(2000 + n * 1000), new Date(2000 + n * 1000));
     }
+
     await writeFile(path.join(dir, ".raw-stale-1.png"), "x");
     await writeFile(path.join(dir, "stale-head.png"), "x");
     const older = (list[1] as Version).id;
@@ -302,12 +338,15 @@ describe("version diff mask", () => {
       "<button>Go</button>",
       '<button style="background:red">Go</button>',
     ]);
+
     const [after, before] = list as [Version, Version];
     changedVersion = after.id;
+
     const response = await request(
       "GET",
       `/api/projects/${project.id}/versions/${before.id}/diff/${after.id}?w=640&h=400`
     );
+
     expect(response.status).toBe(200);
     expect(shots.map((shot) => shot.request.viewport)).toEqual([
       { width: 640, height: 400 },
@@ -317,18 +356,27 @@ describe("version diff mask", () => {
     expect([mask.width, mask.height]).toEqual([640, 400]);
     let inside = 0;
     let outside = 0;
+
     for (let y = 0; y < mask.height; y += 1) {
       for (let x = 0; x < mask.width; x += 1) {
-        if ((mask.data[(y * mask.width + x) * 4 + 3] ?? 0) === 0) continue;
+        if ((mask.data[(y * mask.width + x) * 4 + 3] ?? 0) === 0) {
+          continue;
+        }
+
         const within =
           x >= BUTTON.x &&
           x < BUTTON.x + BUTTON.width &&
           y >= BUTTON.y &&
           y < BUTTON.y + BUTTON.height;
-        if (within) inside += 1;
-        else outside += 1;
+
+        if (within) {
+          inside += 1;
+        } else {
+          outside += 1;
+        }
       }
     }
+
     expect(inside).toBe(BUTTON.width * BUTTON.height);
     expect(outside).toBe(0);
     expect(Number(response.headers.get("x-changed-pct"))).toBeCloseTo(3, 0);
@@ -349,8 +397,10 @@ describe("version names", () => {
     const { project, list } = await makeProject(["<h1>One</h1>"]);
     const id = (list[0] as Version).id;
     const listUrl = `/api/projects/${project.id}/d/main/versions`;
+
     const rename = (name: unknown) =>
       request("PATCH", `/api/projects/${project.id}/versions/${id}`, { name });
+
     expect(await (await rename("  Hero   with photo ")).json()).toEqual({
       id,
       name: "Hero with photo",
@@ -368,9 +418,11 @@ describe("version names", () => {
         )
       ).status
     ).toBe(404);
+
     const status = (await (
       await request("GET", `/api/projects/${project.id}/d/main/status`)
     ).json()) as { changed: string[] };
+
     expect(status.changed).toEqual([]);
     expect(await (await rename("   ")).json()).toEqual({ id, name: null });
     expect(
@@ -384,9 +436,11 @@ describe("version names", () => {
       path.join(projects.projectDir(project.id), "version-names.json"),
       '{"abc": 12'
     );
+
     const listed = (await (
       await request("GET", `/api/projects/${project.id}/d/main/versions`)
     ).json()) as Version[];
+
     expect(listed).toHaveLength(1);
     expect(listed[0]?.name).toBeUndefined();
   });

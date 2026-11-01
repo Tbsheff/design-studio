@@ -40,22 +40,30 @@ export function candidateNames(node: FigmaNode, doc: FigmaDocument): string[] {
   const meta = node.componentId
     ? doc.components.get(node.componentId)
     : undefined;
+
   const setName = meta?.componentSetId
     ? doc.componentSets.get(meta.componentSetId)
     : undefined;
+
   const raw = [
     setName,
     meta && !meta.name.includes("=") ? meta.name : undefined,
     node.name,
   ].filter((name): name is string => Boolean(name));
+
   const out: string[] = [];
+
   for (const name of raw) {
     const head = name.split("/")[0] ?? name;
     const words = head.split(/[^A-Za-z0-9]+/).filter(Boolean);
-    for (const option of [pascal(head), pascal(words.at(-1) ?? "")])
-      if (/^[A-Z][A-Za-z0-9]*$/.test(option) && !out.includes(option))
+
+    for (const option of [pascal(head), pascal(words.at(-1) ?? "")]) {
+      if (/^[A-Z][A-Za-z0-9]*$/.test(option) && !out.includes(option)) {
         out.push(option);
+      }
+    }
   }
+
   return out;
 }
 
@@ -67,35 +75,51 @@ function rank(entry: LibraryEntry): number {
 
 function byName(entries: LibraryEntry[]): Map<string, LibraryEntry> {
   const map = new Map<string, LibraryEntry>();
+
   for (const entry of [...entries].sort(
     (a, b) => rank(a) - rank(b) || b.uses - a.uses
-  ))
-    if (!map.has(entry.name)) map.set(entry.name, entry);
+  )) {
+    if (!map.has(entry.name)) {
+      map.set(entry.name, entry);
+    }
+  }
+
   return map;
 }
 
 function variantProps(node: FigmaNode, source: string): Record<string, string> {
   const props: Record<string, string> = {};
+
   for (const [key, property] of Object.entries(
     node.componentProperties ?? {}
   )) {
-    if (property.type !== "VARIANT" || typeof property.value !== "string")
+    if (property.type !== "VARIANT" || typeof property.value !== "string") {
       continue;
+    }
+
     const prop = kebab(key.split("#")[0] ?? key).replace(
       /-([a-z])/g,
       (_, letter: string) => letter.toUpperCase()
     );
+
     const value = kebab(property.value);
-    if (!prop || !value || SKIP_VALUES.has(value)) continue;
+
+    if (!prop || !value || SKIP_VALUES.has(value)) {
+      continue;
+    }
+
     const quoted = value.includes("-")
       ? `["']${value}["']`
       : `(?:["']${value}["']|\\b${value})`;
+
     if (
       new RegExp(`\\b${prop}\\s*:`).test(source) &&
       new RegExp(`${quoted}\\s*:`).test(source)
-    )
+    ) {
       props[prop] = value;
+    }
   }
+
   return props;
 }
 
@@ -104,30 +128,44 @@ export async function loadKit(
   workTree: string,
   doc: FigmaDocument
 ): Promise<KitMatcher | null> {
-  if (project.kind !== "react") return null;
+  if (project.kind !== "react") {
+    return null;
+  }
+
   const library = await loadLibrary(project, workTree).catch(() => null);
-  if (!library || library.entries.length === 0) return null;
+
+  if (!library || library.entries.length === 0) {
+    return null;
+  }
+
   const names = byName(library.entries);
   const texts = new Map<string, string>();
+
   const sourceOf = (entry: LibraryEntry) => {
-    if (!texts.has(entry.absolute))
+    if (!texts.has(entry.absolute)) {
       texts.set(
         entry.absolute,
         library.texts.get(entry.absolute) ?? safeRead(entry.absolute)
       );
+    }
+
     return texts.get(entry.absolute) ?? "";
   };
+
   return {
     match(node) {
       for (const name of candidateNames(node, doc)) {
         const entry = names.get(name);
-        if (entry)
+
+        if (entry) {
           return {
             name: entry.name,
             file: entry.file,
             props: variantProps(node, sourceOf(entry)),
           };
+        }
       }
+
       return null;
     },
     imports(uses) {

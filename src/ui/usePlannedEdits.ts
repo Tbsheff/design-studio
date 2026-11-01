@@ -22,10 +22,15 @@ export function usePlannedEdits(
       !directionId ||
       event.directionId !== directionId ||
       Date.now() - event.ts > FRESH_MS
-    )
+    ) {
       return;
+    }
+
     if (event.type === "edit.planned") {
-      if (counts.current.size > 200) counts.current.clear();
+      if (counts.current.size > 200) {
+        counts.current.clear();
+      }
+
       counts.current.set(event.id, event.patches.length);
       event.patches.forEach((patch, index) =>
         postToLiveFrames({
@@ -36,14 +41,17 @@ export function usePlannedEdits(
         })
       );
     }
+
     if (event.type === "edit.unplanned") {
-      for (const id of patchIds(event.id, counts.current.get(event.id) ?? 0))
+      for (const id of patchIds(event.id, counts.current.get(event.id) ?? 0)) {
         postToLiveFrames({
           type: "optimistic-settle",
           id,
           ok: false,
           reason: "The edit was not saved.",
         });
+      }
+
       counts.current.delete(event.id);
     }
   });

@@ -62,7 +62,11 @@ export function canvasOwner(project: Project): Direction {
     project.directions.find(
       (candidate) => candidate.id === MAIN_DIRECTION_ID
     ) ?? project.directions[0];
-  if (!direction) throw new Error(`project ${project.id} has no directions`);
+
+  if (!direction) {
+    throw new Error(`project ${project.id} has no directions`);
+  }
+
   return direction;
 }
 
@@ -90,10 +94,13 @@ export async function readProjectCanvas(
   const text = await readFile(canvasFileOf(project, projectDir), "utf-8").catch(
     () => null
   );
-  if (text === null)
+
+  if (text === null) {
     return project.app && projectDir
       ? readCanvasAt(canvasOwner(project).workTree)
       : { canvas: null, text: null };
+  }
+
   return { canvas: parseCanvasText(text), text };
 }
 
@@ -103,6 +110,7 @@ function setAsideName(now: Date): string {
     .replace(/\.\d+Z$/, "")
     .replace(/[-:]/g, "")
     .replace("T", "-");
+
   return CANVAS_FILE.replace(/\.json$/, `.old-${stamp}.json`);
 }
 
@@ -111,28 +119,42 @@ export async function setAsideLegacyCanvas(
   projectDir: ProjectDirOf,
   tracked: (workTree: string, relative: string) => Promise<boolean>
 ): Promise<LegacyCanvasNotice | null> {
-  if (!project.app) return null;
+  if (!project.app) {
+    return null;
+  }
+
   const own = canvasFileOf(project, projectDir);
+
   if (
     await readFile(own, "utf-8").then(
       () => true,
       () => false
     )
-  )
+  ) {
     return null;
+  }
+
   const workTree = canvasOwner(project).workTree;
   const legacy = await readCanvasAt(workTree);
-  if (legacy.text === null) return null;
+
+  if (legacy.text === null) {
+    return null;
+  }
+
   const frames = legacy.canvas?.frames.length ?? 0;
+
   if (await tracked(workTree, CANVAS_FILE)) {
     await writeAtomic(own, serializeCanvasFile(emptyCanvasFile()));
+
     return { file: CANVAS_FILE, movedTo: null, frames };
   }
+
   const movedTo = setAsideName(new Date());
   await rename(
     canvasPath(workTree),
     path.join(workTree, ...movedTo.split("/"))
   );
+
   return { file: CANVAS_FILE, movedTo, frames };
 }
 
@@ -144,13 +166,18 @@ export async function readCanvasAt(
   workTree: string
 ): Promise<{ canvas: CanvasFile | null; text: string | null }> {
   const text = await readFile(canvasPath(workTree), "utf-8").catch(() => null);
-  if (text === null) return { canvas: null, text: null };
+
+  if (text === null) {
+    return { canvas: null, text: null };
+  }
+
   return { canvas: parseCanvasText(text), text };
 }
 
 export async function writeAtomic(target: string, text: string): Promise<void> {
   await mkdir(path.dirname(target), { recursive: true });
   const temp = `${target}.${randomBytes(4).toString("hex")}.tmp`;
+
   try {
     await writeFile(temp, text);
     await rename(temp, target);
@@ -167,14 +194,20 @@ export function createCanvasService(
   const lock = createKeyedMutex();
   const presences = new Map<string, CanvasPresence>();
   const listeners = new Set<LayoutListener>();
+
   const links = createLinksService(bus, (project, before, after, source) => {
-    for (const listener of listeners)
+    for (const listener of listeners) {
       listener(project, { kind: "links", before, after }, source);
+    }
   });
 
   const snapshotOf = async (project: Project): Promise<CanvasSnapshot> => {
     const { canvas, text } = await readProjectCanvas(project, projectDir);
-    if (canvas === null || text === null) return { canvas: null, hash: null };
+
+    if (canvas === null || text === null) {
+      return { canvas: null, hash: null };
+    }
+
     return { canvas, hash: hashOf(serializeCanvasFile(canvas)) };
   };
 
@@ -204,13 +237,21 @@ export function createCanvasService(
     const current = await readFile(file, "utf-8").catch(() => null);
     const saved = parseCanvasText(text) ?? emptyCanvasFile();
     const snapshot = { canvas: saved, hash: hashOf(text) };
-    if (current === text) return snapshot;
+
+    if (current === text) {
+      return snapshot;
+    }
+
     await writeAtomic(file, text);
     emit(project, snapshot, write);
+
     const before =
       (current === null ? null : parseCanvasText(current)) ?? emptyCanvasFile();
-    for (const listener of listeners)
+
+    for (const listener of listeners) {
       listener(project, { kind: "canvas", before, after: saved }, write.source);
+    }
+
     return snapshot;
   };
 
@@ -228,9 +269,12 @@ export function createCanvasService(
       return lock(keyOf(project), async () => {
         if (write.baseHash !== undefined) {
           const current = await snapshotOf(project);
-          if (current.hash !== write.baseHash)
+
+          if (current.hash !== write.baseHash) {
             throw new ConflictError("canvas_stale");
+          }
         }
+
         return store(project, canvas, write);
       });
     },
@@ -239,7 +283,11 @@ export function createCanvasService(
       return lock(keyOf(project), async () => {
         const current = await snapshotOf(project);
         const next = change(current.canvas ?? emptyCanvasFile());
-        if (next === null) return current;
+
+        if (next === null) {
+          return current;
+        }
+
         return store(project, next, write);
       });
     },
@@ -256,7 +304,11 @@ export function createCanvasService(
 
     presence(projectId) {
       const found = presences.get(projectId);
-      if (!found || Date.now() - found.at > PRESENCE_TTL_MS) return null;
+
+      if (!found || Date.now() - found.at > PRESENCE_TTL_MS) {
+        return null;
+      }
+
       return found;
     },
 

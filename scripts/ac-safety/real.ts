@@ -28,6 +28,7 @@ const ROOT = path.resolve(
   "..",
   ".."
 );
+
 const PORT = 4580;
 const BASE = `http://127.0.0.1:${PORT}`;
 const MODEL = "claude-haiku-5-5";
@@ -35,6 +36,7 @@ const RUN_BUDGET = 0.4;
 const SPEND_CAP = 2.6;
 const EVIDENCE = path.join(ROOT, "verification", "ac-safety-evidence");
 const EVIDENCE_NAME = process.env.AC_EVIDENCE ?? "real";
+
 const only = new Set(
   (process.env.AC_ONLY ?? "attach,critique,escape,design,bash").split(",")
 );
@@ -65,8 +67,11 @@ async function call<T>(
     },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
-  if (!res.ok)
+
+  if (!res.ok) {
     throw new Error(`${method} ${route} ${res.status} ${await res.text()}`);
+  }
+
   return (await res.json()) as T;
 }
 
@@ -76,11 +81,18 @@ async function waitFor<T>(
   timeoutMs: number
 ): Promise<T> {
   const deadline = Date.now() + timeoutMs;
+
   for (;;) {
     const value = await fn().catch(() => null);
-    if (value !== null) return value;
-    if (Date.now() > deadline)
+
+    if (value !== null) {
+      return value;
+    }
+
+    if (Date.now() > deadline) {
       throw new Error(`timed out waiting for ${label}`);
+    }
+
     await sleep(500);
   }
 }
@@ -95,25 +107,34 @@ async function finishRun(
         summary: RunSummary | null;
         events: StudioEvent[];
       }>("GET", `/api/runs/${runId}`);
+
       return got.summary && got.summary.status !== "running" ? got : null;
     },
     600_000
   );
+
   const summary = run.summary as RunSummary;
   spent += summary.costUsd;
   console.log(
     `[real] run ${runId} status=${summary.status} cost=$${summary.costUsd.toFixed(4)} total=$${spent.toFixed(4)} tools=${summary.toolCalls.map((t) => `${t.name}${t.isError ? "(err)" : ""}`).join(",")}`
   );
-  if (spent > SPEND_CAP)
+
+  if (spent > SPEND_CAP) {
     throw new Error(`spend cap reached: $${spent.toFixed(4)}`);
+  }
+
   return { summary, events: run.events };
 }
 
 function toolView(summary: RunSummary, events: StudioEvent[]) {
   const finished = new Map<string, string>();
-  for (const event of events)
-    if (event.type === "run.tool.finished")
+
+  for (const event of events) {
+    if (event.type === "run.tool.finished") {
       finished.set(event.toolUseId, event.summary);
+    }
+  }
+
   return summary.toolCalls.map((tool) => ({
     name: tool.name,
     input: JSON.stringify(tool.input).slice(0, 160),
@@ -148,6 +169,7 @@ async function importFolder(
     "/api/projects/import",
     { path: folder }
   );
+
   const file = path.join(dataDir, "projects", project.id, "project.json");
   const stored = JSON.parse(readFileSync(file, "utf-8")) as Project;
   stored.settings = {
@@ -158,6 +180,7 @@ async function importFolder(
     ...settings,
   };
   writeFileSync(file, `${JSON.stringify(stored, null, 2)}\n`);
+
   return call<Project>("GET", `/api/projects/${project.id}`);
 }
 
@@ -169,6 +192,7 @@ function gitInit(folder: string): void {
     GIT_COMMITTER_NAME: "ac",
     GIT_COMMITTER_EMAIL: "ac@example.test",
   };
+
   execFileSync("git", ["init", "-q"], { cwd: folder, env });
   execFileSync("git", ["add", "-A"], { cwd: folder, env });
   execFileSync("git", ["commit", "-q", "-m", "user commit"], {
@@ -180,6 +204,7 @@ function gitInit(folder: string): void {
 function h1Of(file: string): string {
   const html = readFileSync(file, "utf-8");
   const match = /<h1\b[^>]*>([\s\S]*?)<\/h1>/i.exec(html);
+
   return (match?.[1] ?? "").replace(/<[^>]+>/g, "").trim();
 }
 
@@ -199,36 +224,47 @@ async function openOffline(browser: Browser, indexFile: string) {
   const context = await browser.newContext();
   await context.route("**/*", (route) => {
     const url = new URL(route.request().url());
-    if (url.protocol === "file:" || url.protocol === "data:")
-      return route.continue();
-    if (["fonts.googleapis.com", "fonts.gstatic.com"].includes(url.hostname)) {
-      allowed.push(url.href);
+
+    if (url.protocol === "file:" || url.protocol === "data:") {
       return route.continue();
     }
+
+    if (["fonts.googleapis.com", "fonts.gstatic.com"].includes(url.hostname)) {
+      allowed.push(url.href);
+
+      return route.continue();
+    }
+
     blocked.push(url.href);
+
     return route.abort();
   });
   const page = await context.newPage();
   page.on("pageerror", (error) => pageErrors.push(error.message));
   await page.goto(pathToFileURL(indexFile).href);
   await page.waitForTimeout(800);
+
   const h1 = await page
     .locator("h1")
     .first()
     .textContent()
     .catch(() => null);
+
   const bodyHeight = await page.evaluate(() => document.body.scrollHeight);
   await context.close();
+
   return { h1, bodyHeight, blocked, allowed, pageErrors };
 }
 
 const work = realpathSync(
   mkdtempSync(path.join(os.tmpdir(), "ac safety real "))
 );
+
 const dataDir = path.join(work, "data");
 
 async function main(): Promise<void> {
   const log = createWriteStream(path.join(work, "server.log"));
+
   const server = spawn(
     path.join(ROOT, "node_modules", ".bin", "tsx"),
     ["src/server/index.ts"],
@@ -247,19 +283,23 @@ async function main(): Promise<void> {
       stdio: ["ignore", "pipe", "pipe"],
     }
   );
+
   server.stdout.pipe(log);
   server.stderr.pipe(log);
   const browser = await chromium.launch({ channel: "chrome", headless: true });
   report.work = work;
+
   try {
     await waitFor(
       "server",
       async () => ((await fetch(`${BASE}/`)).ok ? true : null),
       60_000
     );
+
     const page = await browser.newPage({
       viewport: { width: 1600, height: 1000 },
     });
+
     await page.goto(BASE);
     token =
       (await page
@@ -275,8 +315,10 @@ async function main(): Promise<void> {
       '<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>Test page</title>\n<style>\nbody { font-family: system-ui, sans-serif; margin: 0; padding: 48px; }\nh1 { font-size: 48px; }\n</style>\n</head>\n<body>\n<h1>Hello</h1>\n<p>A small test page.</p>\n</body>\n</html>\n'
     );
     gitInit(folder);
+
     const inFolder = (relative: string) =>
       relative === "orbit site" || relative.startsWith(`orbit site${path.sep}`);
+
     const parentBefore = treeHash(parent, inFolder);
     const gitBefore = treeHash(path.join(folder, ".git"));
     const main = await importFolder(folder, {});
@@ -301,6 +343,7 @@ async function main(): Promise<void> {
         .getByPlaceholder("Describe a change")
         .fill("set the h1 to the word shown in the attached image");
       await page.getByRole("button", { name: "Send" }).click();
+
       const runs = await waitFor(
         "attach run listed",
         async () => {
@@ -308,17 +351,21 @@ async function main(): Promise<void> {
             "GET",
             `/api/projects/${main.id}/runs`
           );
+
           return list.length >= 1 ? list : null;
         },
         30_000
       );
+
       const run = await finishRun((runs[0] as RunSummary).id);
+
       const attachmentsDir = path.join(
         dataDir,
         "projects",
         main.id,
         "attachments"
       );
+
       report.ac39 = {
         run: runView(run.summary, run.events),
         h1: h1Of(path.join(folder, "index.html")),
@@ -337,9 +384,11 @@ async function main(): Promise<void> {
         folder,
         (r) => r === ".git" || r.startsWith(`.git${path.sep}`)
       );
+
       const versionsBefore = (
         await call<Version[]>("GET", `/api/projects/${main.id}/d/main/versions`)
       ).length;
+
       const { runId } = await call<{ runId: string }>(
         "POST",
         `/api/projects/${main.id}/d/main/runs`,
@@ -349,25 +398,33 @@ async function main(): Promise<void> {
           mode: "critique",
         }
       );
+
       const run = await finishRun(runId);
+
       const workAfter = treeHash(
         folder,
         (r) => r === ".git" || r.startsWith(`.git${path.sep}`)
       );
+
       const versionsAfter = (
         await call<Version[]>("GET", `/api/projects/${main.id}/d/main/versions`)
       ).length;
+
       const runsDir = path.join(dataDir, "projects", main.id, "runs");
+
       const shots = readdirSync(runsDir).filter(
         (f) => f.startsWith(runId) && f.endsWith(".png")
       );
+
       const magic = shots.map((f) =>
         readFileSync(path.join(runsDir, f)).subarray(0, 8).toString("hex")
       );
+
       const status = await call<{ dirty: boolean; changed: string[] }>(
         "GET",
         `/api/projects/${main.id}/d/main/status`
       );
+
       report.ac41_43 = {
         run: runView(run.summary, run.events),
         shots,
@@ -392,6 +449,7 @@ async function main(): Promise<void> {
           mode: "edit",
         }
       );
+
       const run = await finishRun(runId);
       report.ac52 = {
         run: runView(run.summary, run.events),
@@ -411,6 +469,7 @@ async function main(): Promise<void> {
         path.join(parent, "notes.txt"),
         "Project brief: Orbit Coffee\n"
       );
+
       const { runId } = await call<{ runId: string }>(
         "POST",
         `/api/projects/${main.id}/d/main/runs`,
@@ -420,6 +479,7 @@ async function main(): Promise<void> {
           mode: "edit",
         }
       );
+
       const run = await finishRun(runId);
       report.ac52_second = {
         run: runView(run.summary, run.events),
@@ -452,6 +512,7 @@ async function main(): Promise<void> {
         "# DESIGN.md\n\n## Color\n- The primary color MUST be exactly #0B6E4F. Use it for the main button and headings.\n\n## Type\n- The font MUST be Georgia, serif for all text. Do not load web fonts.\n\n## Tone\n- Calm and literary.\n"
       );
       const design = await importFolder(designFolder, {});
+
       const { runId } = await call<{ runId: string }>(
         "POST",
         `/api/projects/${design.id}/d/main/runs`,
@@ -461,23 +522,29 @@ async function main(): Promise<void> {
           mode: "edit",
         }
       );
+
       const run = await finishRun(runId);
       const html = readFileSync(path.join(designFolder, "index.html"), "utf-8");
+
       const css =
         [...html.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi)]
           .map((m) => m[1])
           .join("\n") +
         [...html.matchAll(/style="([^"]*)"/gi)].map((m) => m[1]).join("\n");
+
       const previewUrl = (
         await call<{ url: string }>(
           "GET",
           `/api/projects/${design.id}/d/main/preview`
         )
       ).url;
+
       const probe = await browser.newPage({
         viewport: { width: 1440, height: 900 },
       });
+
       await probe.goto(previewUrl);
+
       const computed = await probe.evaluate(() => ({
         bodyFont: getComputedStyle(document.body).fontFamily,
         h1Font: getComputedStyle(document.querySelector("h1") ?? document.body)
@@ -485,19 +552,25 @@ async function main(): Promise<void> {
         h1Color: getComputedStyle(document.querySelector("h1") ?? document.body)
           .color,
       }));
+
       await probe.close();
+
       const versions = await call<Version[]>(
         "GET",
         `/api/projects/${design.id}/d/main/versions`
       );
+
       const head = versions[0] as Version;
+
       const exportRes = await fetch(
         `${BASE}/api/projects/${design.id}/versions/${head.id}/export`,
         { headers: { "x-studio-token": token } }
       );
+
       const exportDir = realpathSync(
         mkdtempSync(path.join(os.tmpdir(), "ac real export "))
       );
+
       writeFileSync(
         path.join(exportDir, "export.zip"),
         new Uint8Array(await exportRes.arrayBuffer())
@@ -508,10 +581,12 @@ async function main(): Promise<void> {
         "-d",
         path.join(exportDir, "out"),
       ]);
+
       const exported = readFileSync(
         path.join(exportDir, "out", "index.html"),
         "utf-8"
       );
+
       report.ac40 = {
         run: runView(run.summary, run.events),
         cssHasPrimary: /#0b6e4f/i.test(css),
@@ -551,10 +626,12 @@ async function main(): Promise<void> {
         path.join(bashFolder, "package.json"),
         '{ "name": "bash-test", "private": true, "version": "0.0.0" }\n'
       );
+
       const bash = await importFolder(bashFolder, {
         allowBash: true,
         allowInstall: false,
       });
+
       const { runId } = await call<{ runId: string }>(
         "POST",
         `/api/projects/${bash.id}/d/main/runs`,
@@ -564,6 +641,7 @@ async function main(): Promise<void> {
           mode: "edit",
         }
       );
+
       const run = await finishRun(runId);
       report.ac53 = {
         settings: bash.settings,
@@ -579,6 +657,7 @@ async function main(): Promise<void> {
       };
       save();
     }
+
     if (only.has("bash2")) {
       const bashFolder = path.join(work, "bash2 parent", "site");
       mkdirSync(bashFolder, { recursive: true });
@@ -590,10 +669,12 @@ async function main(): Promise<void> {
         path.join(bashFolder, "package.json"),
         '{ "name": "bash-test", "private": true, "version": "0.0.0" }\n'
       );
+
       const bash = await importFolder(bashFolder, {
         allowBash: true,
         allowInstall: false,
       });
+
       const { runId } = await call<{ runId: string }>(
         "POST",
         `/api/projects/${bash.id}/d/main/runs`,
@@ -603,6 +684,7 @@ async function main(): Promise<void> {
           mode: "edit",
         }
       );
+
       const run = await finishRun(runId);
       report.ac53_second = {
         run: runView(run.summary, run.events),
@@ -613,12 +695,16 @@ async function main(): Promise<void> {
   } finally {
     save();
     await browser.close();
+
     try {
-      if (server.pid) process.kill(-server.pid, "SIGTERM");
+      if (server.pid) {
+        process.kill(-server.pid, "SIGTERM");
+      }
     } catch {
       server.kill("SIGTERM");
     }
   }
+
   console.log(
     `[real] total spend $${spent.toFixed(4)}; evidence ${path.join(EVIDENCE, `${EVIDENCE_NAME}.json`)}; work ${work}`
   );

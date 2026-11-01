@@ -20,7 +20,11 @@ const ARROW =
 
 function hueOf(id: string): number {
   let h = 0;
-  for (const ch of id) h = (h * 31 + ch.charCodeAt(0)) % 360;
+
+  for (const ch of id) {
+    h = (h * 31 + ch.charCodeAt(0)) % 360;
+  }
+
   return h;
 }
 
@@ -39,25 +43,42 @@ async function readEvents(
   onEvent: (event: SharePresenceEvent) => void
 ): Promise<void> {
   const reader = res.body?.getReader();
-  if (!reader) return;
+
+  if (!reader) {
+    return;
+  }
+
   const decoder = new TextDecoder();
   let buffer = "";
+
   for (;;) {
     const { value, done } = await reader.read();
-    if (done) return;
+
+    if (done) {
+      return;
+    }
+
     buffer += decoder.decode(value, { stream: true });
     let cut = buffer.indexOf("\n\n");
+
     while (cut >= 0) {
       const block = buffer.slice(0, cut);
       buffer = buffer.slice(cut + 2);
       cut = buffer.indexOf("\n\n");
-      if (/^event: ping/m.test(block)) continue;
+
+      if (/^event: ping/m.test(block)) {
+        continue;
+      }
+
       const data = block
         .split("\n")
         .filter((line) => line.startsWith("data:"))
         .map((line) => line.slice(5).trimStart())
         .join("\n");
-      if (data) onEvent(JSON.parse(data) as SharePresenceEvent);
+
+      if (data) {
+        onEvent(JSON.parse(data) as SharePresenceEvent);
+      }
     }
   }
 }
@@ -72,7 +93,11 @@ class CursorLayer {
 
   set(list: SharePresenceCursor[]): void {
     this.cursors.clear();
-    for (const c of list) this.cursors.set(`${c.linkId}:${c.viewer}`, c);
+
+    for (const c of list) {
+      this.cursors.set(`${c.linkId}:${c.viewer}`, c);
+    }
+
     this.kick();
   }
 
@@ -94,11 +119,16 @@ class CursorLayer {
   }
 
   private kick(): void {
-    if (!this.raf) this.raf = window.requestAnimationFrame(() => this.paint());
+    if (!this.raf) {
+      this.raf = window.requestAnimationFrame(() => this.paint());
+    }
   }
 
   private host(stage: HTMLElement): HTMLDivElement {
-    if (this.layer && this.layer.parentElement === stage) return this.layer;
+    if (this.layer && this.layer.parentElement === stage) {
+      return this.layer;
+    }
+
     this.layer?.remove();
     const layer = document.createElement("div");
     layer.className = "share-cursors";
@@ -106,6 +136,7 @@ class CursorLayer {
     stage.append(layer);
     this.layer = layer;
     this.nodes.clear();
+
     return layer;
   }
 
@@ -115,6 +146,7 @@ class CursorLayer {
     layer: HTMLDivElement
   ): HTMLDivElement {
     let el = this.nodes.get(key);
+
     if (!el) {
       el = document.createElement("div");
       el.className = "share-cursor";
@@ -125,8 +157,13 @@ class CursorLayer {
       layer.append(el);
       this.nodes.set(key, el);
     }
+
     const label = el.querySelector("span") as HTMLSpanElement;
-    if (label.textContent !== cursor.name) label.textContent = cursor.name;
+
+    if (label.textContent !== cursor.name) {
+      label.textContent = cursor.name;
+    }
+
     return el;
   }
 
@@ -141,10 +178,13 @@ class CursorLayer {
       : cursor.frame === 0
         ? stage.querySelector<HTMLElement>(".artboard[data-frame-id]")
         : null;
+
     if (!frame || frame.offsetWidth === 0) {
       el.hidden = true;
+
       return;
     }
+
     const r = frame.getBoundingClientRect();
     const scale = r.width / frame.offsetWidth;
     const below = cursor.y > frame.offsetHeight;
@@ -156,22 +196,29 @@ class CursorLayer {
   private paint(): void {
     this.raf = 0;
     const stage = this.stage();
+
     if (!stage || this.cursors.size === 0) {
       this.layer?.remove();
       this.layer = null;
       this.nodes.clear();
+
       return;
     }
+
     const layer = this.host(stage);
     const box = stage.getBoundingClientRect();
+
     for (const [key, el] of this.nodes) {
       if (!this.cursors.has(key)) {
         el.remove();
         this.nodes.delete(key);
       }
     }
-    for (const [key, cursor] of this.cursors)
+
+    for (const [key, cursor] of this.cursors) {
       this.place(this.node(key, cursor, layer), cursor, stage, box);
+    }
+
     this.raf = window.requestAnimationFrame(() => this.paint());
   }
 }
@@ -181,9 +228,14 @@ function studioPointer(projectId: string, stage: () => HTMLElement | null) {
   let pending: StudioCursorInput | null | undefined;
   let timer = 0;
   let lastFrame: string | null = null;
+
   const flush = () => {
     timer = 0;
-    if (pending === undefined) return;
+
+    if (pending === undefined) {
+      return;
+    }
+
     const body = pending ?? { frameId: null, x: 0, y: 0 };
     pending = undefined;
     void fetch(`/api/projects/${encodeURIComponent(projectId)}/share-cursor`, {
@@ -192,13 +244,19 @@ function studioPointer(projectId: string, stage: () => HTMLElement | null) {
       body: JSON.stringify(body),
     }).catch(() => undefined);
   };
+
   const queue = (value: StudioCursorInput | null) => {
     pending = value;
-    if (!timer) timer = window.setTimeout(flush, SEND_MS);
+
+    if (!timer) {
+      timer = window.setTimeout(flush, SEND_MS);
+    }
   };
+
   const at = (from: Element | null, clientX: number, clientY: number) => {
     const root = stage();
     const target = from?.closest<HTMLElement>(FRAME_SELECTOR) ?? null;
+
     if (
       !root ||
       !target ||
@@ -206,8 +264,10 @@ function studioPointer(projectId: string, stage: () => HTMLElement | null) {
       target.offsetWidth === 0
     ) {
       onLeave();
+
       return;
     }
+
     const r = target.getBoundingClientRect();
     const scale = r.width / target.offsetWidth;
     lastFrame = target.dataset.frameId ?? null;
@@ -217,38 +277,56 @@ function studioPointer(projectId: string, stage: () => HTMLElement | null) {
       y: Math.max(0, (clientY - r.top) / scale),
     });
   };
+
   const onMove = (event: PointerEvent) =>
     at(
       event.target instanceof Element ? event.target : null,
       event.clientX,
       event.clientY
     );
+
   const onFrame = (
     frame: BridgeFrame,
     message: { x: number; y: number; inside: boolean }
   ) => {
     const iframe = frame.element;
-    if (!message.inside || !iframe || iframe.offsetWidth === 0) return;
+
+    if (!message.inside || !iframe || iframe.offsetWidth === 0) {
+      return;
+    }
+
     const r = iframe.getBoundingClientRect();
     const scale = r.width / iframe.offsetWidth;
     at(iframe, r.left + message.x * scale, r.top + message.y * scale);
   };
+
   function onLeave() {
-    if (lastFrame !== null) queue(null);
+    if (lastFrame !== null) {
+      queue(null);
+    }
+
     lastFrame = null;
   }
+
   let offFrame: (() => void) | null = null;
+
   return {
     set(next: boolean) {
-      if (next === on) return;
+      if (next === on) {
+        return;
+      }
+
       on = next;
       setSharePointer(on);
+
       if (on) {
         document.addEventListener("pointermove", onMove, true);
         document.documentElement.addEventListener("pointerleave", onLeave);
         offFrame = onSharePointer(onFrame);
+
         return;
       }
+
       document.removeEventListener("pointermove", onMove, true);
       document.documentElement.removeEventListener("pointerleave", onLeave);
       offFrame?.();
@@ -272,14 +350,21 @@ export function startShareLive(
     if (event.type === "state") {
       layer.set(event.cursors);
       pointer.set(event.wantCursor);
-    } else if (event.type === "cursor") layer.put(event.cursor);
-    else if (event.type === "leave") layer.drop(event.linkId, event.viewer);
+    } else if (event.type === "cursor") {
+      layer.put(event.cursor);
+    } else if (event.type === "leave") {
+      layer.drop(event.linkId, event.viewer);
+    }
   };
 
   const connect = () => {
     window.clearTimeout(retry);
     control?.abort();
-    if (stopped) return;
+
+    if (stopped) {
+      return;
+    }
+
     const own = new AbortController();
     control = own;
     void fetch(
@@ -289,7 +374,10 @@ export function startShareLive(
       .then((res) => (res.ok ? readEvents(res, handle) : undefined))
       .catch(() => undefined)
       .finally(() => {
-        if (control !== own || stopped) return;
+        if (control !== own || stopped) {
+          return;
+        }
+
         layer.set([]);
         pointer.set(false);
         retry = window.setTimeout(connect, RETRY_MS);
@@ -300,9 +388,11 @@ export function startShareLive(
     if (
       (event as CustomEvent<{ projectId?: string }>).detail?.projectId ===
       projectId
-    )
+    ) {
       connect();
+    }
   };
+
   window.addEventListener(SHARES_CHANGED, onChanged);
   connect();
 

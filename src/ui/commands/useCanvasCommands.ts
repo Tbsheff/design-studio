@@ -61,6 +61,7 @@ const ZOOMS: { key: ZoomKey; title: string; keyId: KeyId; keywords: string }[] =
 
 function canvasCommands(a: CanvasActions): Command[] {
   const needLive = a.live ? {} : { disabled: "Only in the live preview" };
+
   const out: Command[] = [
     ...ZOOMS.map((z) => ({
       id: `view.zoom-${z.key}`,
@@ -136,7 +137,8 @@ function canvasCommands(a: CanvasActions): Command[] {
       ...(a.checking ? { disabled: "Checking now" } : {}),
     },
   ];
-  if (a.comment.available)
+
+  if (a.comment.available) {
     out.push({
       id: "tool.comment",
       title: a.comment.on ? "Stop commenting" : "Add comments",
@@ -146,7 +148,9 @@ function canvasCommands(a: CanvasActions): Command[] {
       keywords: "pin feedback note",
       run: a.comment.toggle,
     });
-  if (a.draw)
+  }
+
+  if (a.draw) {
     out.push({
       id: "tool.draw",
       title: a.draw.on ? "Stop drawing" : "Draw on the design",
@@ -156,7 +160,9 @@ function canvasCommands(a: CanvasActions): Command[] {
       keywords: "pen sketch stroke",
       run: a.draw.toggle,
     });
-  if (a.lofi)
+  }
+
+  if (a.lofi) {
     out.push({
       id: "view.lofi",
       title: a.lofi.on ? "Turn off the lo-fi look" : "Turn on the lo-fi look",
@@ -165,7 +171,9 @@ function canvasCommands(a: CanvasActions): Command[] {
       keywords: "wireframe grayscale sketch hand drawn",
       run: a.lofi.toggle,
     });
-  if (a.dark)
+  }
+
+  if (a.dark) {
     out.push({
       id: "view.dark",
       title: a.dark.on ? "Preview the default mode" : "Preview dark mode",
@@ -174,6 +182,8 @@ function canvasCommands(a: CanvasActions): Command[] {
       keywords: "theme light",
       run: a.dark.toggle,
     });
+  }
+
   return out;
 }
 

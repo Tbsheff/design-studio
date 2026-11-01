@@ -51,8 +51,10 @@ export function designSystemContinuation(
 }
 
 export function designSystemReport(check: DesignSystemRunCheck): string {
-  if (check.passed)
+  if (check.passed) {
     return `Design system check: passed${check.rounds > 0 ? ` after ${check.rounds} studio fix round(s)` : ""}.`;
+  }
+
   return `Design system check: failed after ${check.rounds} studio fix round(s), ${check.problems.length} problem(s) left: ${check.problems.map((problem) => problem.message).join(" ")}`;
 }
 
@@ -63,16 +65,23 @@ function finished(
   const finalText = [total.finalText, designSystemReport(check)]
     .filter(Boolean)
     .join("\n\n");
-  if (check.passed) return { ...total, finalText, designSystemCheck: check };
+
+  if (check.passed) {
+    return { ...total, finalText, designSystemCheck: check };
+  }
+
   const shown = check.problems
     .slice(0, ERROR_PROBLEMS)
     .map((problem) => problem.message)
     .join(" ");
+
   const more =
     check.problems.length > ERROR_PROBLEMS
       ? ` (+${check.problems.length - ERROR_PROBLEMS} more)`
       : "";
+
   const error = `Design system check failed: ${check.problems.length} problem(s) after ${check.rounds} fix round(s). ${shown}${more}`;
+
   return {
     ...total,
     status: "failed",
@@ -88,19 +97,32 @@ export async function enforceDesignSystemCheck(
   const check = input.check ?? checkDesignSystem;
   const maxRounds = input.maxRounds ?? MAX_DESIGN_SYSTEM_ROUNDS;
   let total = input.first;
+
   for (let rounds = 0; ; rounds += 1) {
-    if (input.signal.aborted) return total;
+    if (input.signal.aborted) {
+      return total;
+    }
+
     const result = await check(input.workTree);
-    if (total.status !== "completed")
+
+    if (total.status !== "completed") {
       return { ...total, designSystemCheck: { ...result, rounds } };
-    if (result.passed || rounds >= maxRounds)
+    }
+
+    if (result.passed || rounds >= maxRounds) {
       return finished(total, { ...result, rounds });
+    }
+
     const next = await input.continueWith(
       designSystemContinuation(result, rounds + 1, maxRounds),
       rounds + 1,
       total
     );
-    if (!next) return finished(total, { ...result, rounds });
+
+    if (!next) {
+      return finished(total, { ...result, rounds });
+    }
+
     total = next;
   }
 }

@@ -37,11 +37,17 @@ export function chooseBackend(
   env: NodeJS.ProcessEnv = process.env
 ): RenderBackendName {
   const forced = env[RENDER_BACKEND_ENV];
-  if (forced === "playwright" || forced === "electron") return forced;
-  if (forced)
+
+  if (forced === "playwright" || forced === "electron") {
+    return forced;
+  }
+
+  if (forced) {
     throw new Error(
       `${RENDER_BACKEND_ENV} must be "playwright" or "electron", got "${forced}"`
     );
+  }
+
   return env[RENDER_IPC_ENV] === "1" || env[RENDER_SOCKET_ENV]
     ? "electron"
     : "playwright";
@@ -52,8 +58,11 @@ export async function createRenderBackend(
 ): Promise<RenderBackend> {
   if (chooseBackend(env) === "electron") {
     const { createElectronBackend } = await import("./render-electron.js");
+
     return createElectronBackend(env);
   }
+
   const { createPlaywrightBackend } = await import("./render-playwright.js");
+
   return createPlaywrightBackend();
 }

@@ -22,6 +22,7 @@ function elementLabel(selection: SelectionContext): string {
   const firstClass = /^<[^>]*\bclass="([^"\s]+)/.exec(
     selection.outerHTML.slice(0, 4000)
   )?.[1];
+
   return firstClass ? `${selection.tag}.${firstClass}` : selection.tag;
 }
 
@@ -30,13 +31,24 @@ const GAP_CRUMB_PX = 28;
 function fitCount(el: HTMLOListElement, total: number): number {
   const items = Array.from(el.children) as HTMLElement[];
   const first = items[0];
-  if (!first || el.scrollWidth <= el.clientWidth + 1) return total;
+
+  if (!first || el.scrollWidth <= el.clientWidth + 1) {
+    return total;
+  }
+
   const gap = GAP_CRUMB_PX + (items[1]?.offsetWidth ?? 0);
+
   for (let cut = 1; cut <= total; cut += 1) {
     const start = items[cut * 2]?.offsetLeft ?? el.scrollWidth;
-    if (el.scrollWidth - (start - first.offsetLeft) + gap <= el.clientWidth + 1)
+
+    if (
+      el.scrollWidth - (start - first.offsetLeft) + gap <=
+      el.clientWidth + 1
+    ) {
       return total - cut;
+    }
   }
+
   return 0;
 }
 
@@ -47,21 +59,36 @@ function useFitCount(
   const [shown, setShown] = useState(total);
   useLayoutEffect(() => {
     const el = list.current;
-    if (!el || shown === 0 || el.scrollWidth <= el.clientWidth + 1) return;
+
+    if (!el || shown === 0 || el.scrollWidth <= el.clientWidth + 1) {
+      return;
+    }
+
     setShown(shown === total ? fitCount(el, total) : shown - 1);
   }, [list, shown, total]);
   useEffect(() => {
     const el = list.current;
-    if (!el) return;
+
+    if (!el) {
+      return;
+    }
+
     let width = el.clientWidth;
+
     const observer = new ResizeObserver(() => {
-      if (el.clientWidth === width) return;
+      if (el.clientWidth === width) {
+        return;
+      }
+
       width = el.clientWidth;
       setShown(total);
     });
+
     observer.observe(el);
+
     return () => observer.disconnect();
   }, [list, total]);
+
   return Math.min(shown, total);
 }
 
@@ -81,7 +108,11 @@ function HiddenCrumbs({
   onSelect: (levels: number) => void;
 }) {
   const nearest = hidden.at(-1);
-  if (!nearest) return null;
+
+  if (!nearest) {
+    return null;
+  }
+
   return (
     <>
       <li>
@@ -105,21 +136,29 @@ function InspectorBreadcrumbView({ selection, port }: Props) {
   const list = useRef<HTMLOListElement>(null);
   const path = pathCrumbs(parseSelectionPath(selection.path));
   const count = useFitCount(list, path.length);
-  if (path.length === 0) return null;
+
+  if (path.length === 0) {
+    return null;
+  }
+
   const select = (levels: number) => {
-    for (let step = 0; step < levels; step += 1)
+    for (let step = 0; step < levels; step += 1) {
       port.current?.post({
         type: "select-relative",
         selector: selection.selector,
         move: "parent",
       });
+    }
+
     list.current
       ?.closest(".studio")
       ?.querySelector<HTMLElement>(".stage")
       ?.focus({ preventScroll: true });
   };
+
   const cut = path.length - count;
   const current = elementLabel(selection);
+
   return (
     <nav className="ins-crumbs" aria-label="Element path">
       <ol ref={list}>

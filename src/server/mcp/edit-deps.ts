@@ -49,7 +49,9 @@ async function failure(res: Response): Promise<EditError> {
     error?: string;
     message?: string;
   } | null;
+
   const code = parsed?.error ?? `${res.status}`;
+
   return new EditError(
     REFUSALS[code] ?? mcpErrorText(parsed?.message ?? code),
     code
@@ -63,7 +65,11 @@ export async function studioCall<T>(
   body?: unknown
 ): Promise<T> {
   const res = await deps.request(method, url, body);
-  if (!res.ok) throw await failure(res);
+
+  if (!res.ok) {
+    throw await failure(res);
+  }
+
   return (await res.json()) as T;
 }
 
@@ -74,10 +80,15 @@ export async function studioFile(
   body?: unknown
 ): Promise<{ bytes: Buffer; name: string; note: string | null }> {
   const res = await deps.request(method, url, body);
-  if (!res.ok) throw await failure(res);
+
+  if (!res.ok) {
+    throw await failure(res);
+  }
+
   const match = /filename="([^"]+)"/.exec(
     res.headers.get("content-disposition") ?? ""
   );
+
   return {
     bytes: Buffer.from(await res.arrayBuffer()),
     name: path.basename(match?.[1] ?? "export.bin"),
@@ -91,17 +102,24 @@ export async function loadTarget(
   directionId?: string
 ): Promise<{ project: Project; direction: Direction }> {
   const project = await deps.projects.get(projectId);
-  if (project.designSystemFor && project.designSystemDeleted)
+
+  if (project.designSystemFor && project.designSystemDeleted) {
     throw new EditError("project not found");
+  }
+
   const direction = directionId
     ? project.directions.find((d) => d.id === directionId)
     : (project.directions.find((d) => d.id === "main") ??
       project.directions[0]);
-  if (!direction)
+
+  if (!direction) {
     throw new EditError(
       `direction ${directionId ?? "main"} not found in project ${project.id}`
     );
+  }
+
   warmKit(project, direction);
+
   return { project, direction };
 }
 
@@ -110,21 +128,30 @@ export function refuseWhileRunning(
   project: Project,
   direction: Direction
 ): void {
-  if (deps.runner.isRunning(project.id, direction.id))
+  if (deps.runner.isRunning(project.id, direction.id)) {
     throw new EditError(RUN_BUSY);
+  }
 }
 
 export async function approve(deps: EditDeps, ask: ApprovalAsk): Promise<void> {
   const outcome = await deps.approvals.ask(ask);
-  if (outcome === "allow") return;
-  if (outcome === "closed")
+
+  if (outcome === "allow") {
+    return;
+  }
+
+  if (outcome === "closed") {
     throw new EditError(
       "Design Studio is not open, so nobody can approve this write. Open the Design Studio window, or write to ~/Downloads or the projects folder."
     );
-  if (outcome === "timeout")
+  }
+
+  if (outcome === "timeout") {
     throw new EditError(
       `Nobody answered the approval prompt in Design Studio within ${APPROVAL_TIMEOUT_MS / 1000} seconds, so it was refused. Ask the user to watch for the prompt, then call the tool again.`
     );
+  }
+
   throw new EditError("The user denied this write in Design Studio.");
 }
 
@@ -133,14 +160,17 @@ export async function outputFolder(
   raw: unknown
 ): Promise<{ folder: string; trusted: boolean }> {
   const downloads = await downloadsFolder();
+
   const folder = await safeFolder(
     raw === undefined ? downloads : raw,
     deps.dataDir
   );
+
   const projects = await safeFolder(
     await deps.projectsFolder(),
     deps.dataDir
   ).catch(() => null);
+
   return {
     folder,
     trusted:
@@ -154,9 +184,13 @@ export async function exportFolder(
   projectId: string,
   raw: unknown
 ): Promise<{ folder: string; trusted: boolean }> {
-  if (raw !== undefined) return outputFolder(deps, raw);
+  if (raw !== undefined) {
+    return outputFolder(deps, raw);
+  }
+
   const folder = path.join(deps.dataDir, "exports", projectId);
   await mkdir(folder, { recursive: true });
+
   return { folder, trusted: true };
 }
 
@@ -167,18 +201,24 @@ export async function writeUnique(
 ): Promise<string> {
   const ext = path.extname(name);
   const stem = name.slice(0, name.length - ext.length) || "export";
+
   for (let n = 1; n < 1000; n += 1) {
     const target = path.join(
       folder,
       n === 1 ? `${stem}${ext}` : `${stem}-${n}${ext}`
     );
+
     try {
       await writeFile(target, bytes, { flag: "wx" });
+
       return target;
     } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
+      if ((error as NodeJS.ErrnoException).code !== "EEXIST") {
+        throw error;
+      }
     }
   }
+
   throw new EditError(`no free file name for ${name} in ${folder}`);
 }
 
@@ -190,5 +230,6 @@ export function short(text: string, max = 4000): string {
 
 export function oneLine(text: string, max = 80): string {
   const flat = text.replace(/\s+/g, " ").trim();
+
   return flat.length > max ? `${flat.slice(0, max - 1)}…` : flat;
 }

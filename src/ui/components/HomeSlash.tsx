@@ -37,22 +37,37 @@ export function HomeSlashMenu({
     groups: [levelGroup(level, onLevel), modelGroup(model, null, onModel)],
     label: "Settings",
   });
+
   keys.current = slash.onKeyDown;
+
   const input = () =>
     home.current?.querySelector<HTMLElement>(
       '[aria-label="Describe the design"]'
     ) ?? null;
+
   const attrs: Record<string, string | undefined> = slash.inputProps;
   useLayoutEffect(() => {
     const area = input();
-    if (!area) return;
+
+    if (!area) {
+      return;
+    }
+
     for (const name of INPUT_ATTRS) {
       const value = attrs[name];
-      if (value) area.setAttribute(name, value);
-      else area.removeAttribute(name);
+
+      if (value) {
+        area.setAttribute(name, value);
+      } else {
+        area.removeAttribute(name);
+      }
     }
   });
-  if (!slash.open) return null;
+
+  if (!slash.open) {
+    return null;
+  }
+
   return (
     <SlashMenu
       view={slash.view}

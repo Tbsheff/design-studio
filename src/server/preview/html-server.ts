@@ -70,6 +70,7 @@ function frameAncestors(studioOrigin: string): string {
     "http://127.0.0.1:5173",
     "http://localhost:5173",
   ]);
+
   return `frame-ancestors ${[...origins].join(" ")}`;
 }
 
@@ -78,7 +79,10 @@ function hostMatchesProject(
   projectId: string,
   port: number
 ): boolean {
-  if (!hostHeader) return false;
+  if (!hostHeader) {
+    return false;
+  }
+
   return (
     hostHeader.toLowerCase() === `${projectPreviewHost(projectId)}:${port}`
   );
@@ -86,6 +90,7 @@ function hostMatchesProject(
 
 function isInside(root: string, target: string): boolean {
   const relative = path.relative(root, target);
+
   return (
     relative === "" ||
     (!relative.startsWith("..") && !path.isAbsolute(relative))
@@ -94,14 +99,20 @@ function isInside(root: string, target: string): boolean {
 
 function decodeRelative(rawPath: string): string | null {
   const segments: string[] = [];
+
   for (const segment of rawPath.split("/")) {
-    if (segment === "") continue;
+    if (segment === "") {
+      continue;
+    }
+
     let decoded: string;
+
     try {
       decoded = decodeURIComponent(segment);
     } catch {
       return null;
     }
+
     if (
       decoded === "." ||
       decoded === ".." ||
@@ -111,8 +122,10 @@ function decodeRelative(rawPath: string): string | null {
     ) {
       return null;
     }
+
     segments.push(decoded);
   }
+
   return segments.join("/");
 }
 
@@ -121,28 +134,47 @@ async function resolveFile(
   relative: string
 ): Promise<{ file: string; relative: string } | null> {
   let rootReal: string;
+
   try {
     rootReal = await realpath(root);
   } catch {
     return null;
   }
+
   let candidate = path.resolve(rootReal, relative);
   let candidateRelative = relative;
-  if (!isInside(rootReal, candidate)) return null;
+
+  if (!isInside(rootReal, candidate)) {
+    return null;
+  }
+
   try {
     let real = await realpath(candidate);
-    if (!isInside(rootReal, real)) return null;
+
+    if (!isInside(rootReal, real)) {
+      return null;
+    }
+
     let info = await stat(real);
+
     if (info.isDirectory()) {
       candidate = path.join(candidate, "index.html");
       candidateRelative = candidateRelative
         ? `${candidateRelative}/index.html`
         : "index.html";
       real = await realpath(candidate);
-      if (!isInside(rootReal, real)) return null;
+
+      if (!isInside(rootReal, real)) {
+        return null;
+      }
+
       info = await stat(real);
     }
-    if (!info.isFile()) return null;
+
+    if (!info.isFile()) {
+      return null;
+    }
+
     return { file: real, relative: candidateRelative };
   } catch {
     return null;
@@ -156,37 +188,50 @@ function listenOn(
   appProxy: AppProxy | undefined
 ): Promise<http.Server> {
   const honoListener = getRequestListener(app.fetch);
+
   const appProjectOf = async (
     req: http.IncomingMessage
   ): Promise<string | null> => {
     const projectId = appProxy?.projectOf(req) ?? null;
-    if (!projectId || !SAFE_ID.test(projectId)) return null;
+
+    if (!projectId || !SAFE_ID.test(projectId)) {
+      return null;
+    }
+
     return (await appProxy?.isApp(projectId).catch(() => false))
       ? projectId
       : null;
   };
+
   return new Promise<http.Server>((resolve, reject) => {
     const instance = http.createServer((req, res) => {
       void appProjectOf(req)
         .then((projectId) => {
-          if (projectId && appProxy)
+          if (projectId && appProxy) {
             return appProxy.handle(req, res, projectId);
+          }
+
           return honoListener(req, res);
         })
         .catch(() => {
-          if (!res.headersSent)
+          if (!res.headersSent) {
             res.writeHead(500, { "content-type": "text/plain; charset=utf-8" });
+          }
+
           res.end("Preview error");
         });
     });
+
     instance.on(
       "upgrade",
       (req: http.IncomingMessage, socket, head: Buffer) => {
         void appProjectOf(req)
           .then(async (projectId) => {
-            if (projectId && appProxy)
+            if (projectId && appProxy) {
               await appProxy.upgrade(req, socket, head, projectId);
-            else socket.destroy();
+            } else {
+              socket.destroy();
+            }
           })
           .catch(() => socket.destroy());
       }
@@ -207,6 +252,7 @@ export async function startHtmlServer(
   options: HtmlServerOptions
 ): Promise<HtmlServer> {
   const app = new Hono();
+
   const securityHeaders = {
     "content-security-policy": frameAncestors(options.studioOrigin),
     "x-content-type-options": "nosniff",
@@ -216,6 +262,7 @@ export async function startHtmlServer(
 
   app.get(BRIDGE_SCRIPT_PATH, async (c) => {
     const script = await options.bridgeScript();
+
     return c.body(script, 200, {
       ...securityHeaders,
       "content-type": "text/javascript; charset=utf-8",
@@ -230,8 +277,10 @@ export async function startHtmlServer(
     key: string,
     prefix: string
   ) => {
-    if (!SAFE_ID.test(projectId) || !SAFE_ID.test(key))
+    if (!SAFE_ID.test(projectId) || !SAFE_ID.test(key)) {
       return c.text("Not found", 404, securityHeaders);
+    }
+
     if (!hostMatchesProject(c.req.header("host"), projectId, options.port)) {
       return c.text(
         "This preview origin does not belong to that project",
@@ -239,43 +288,63 @@ export async function startHtmlServer(
         securityHeaders
       );
     }
+
     const root = await options
       .resolveRoot(kind, projectId, key)
       .catch(() => null);
-    if (!root) return c.text("Not found", 404, securityHeaders);
+
+    if (!root) {
+      return c.text("Not found", 404, securityHeaders);
+    }
+
     const relative = decodeRelative(c.req.path.slice(prefix.length));
-    if (relative === null) return c.text("Bad path", 400, securityHeaders);
+
+    if (relative === null) {
+      return c.text("Bad path", 400, securityHeaders);
+    }
+
     const resolved = await resolveFile(root, relative || "index.html");
-    if (!resolved) return c.text("Not found", 404, securityHeaders);
+
+    if (!resolved) {
+      return c.text("Not found", 404, securityHeaders);
+    }
+
     const extension = path.extname(resolved.file).toLowerCase();
     const contentType = CONTENT_TYPES[extension] ?? "application/octet-stream";
+
     const headers = {
       ...securityHeaders,
       "content-type": contentType,
       "cache-control": "no-store",
     };
+
     if (extension === ".html" || extension === ".htm") {
       const source = await readFile(resolved.file, "utf-8");
       const annotated = annotateHtml(source, resolved.relative);
+
       return c.body(
         await injectForPreview(root, resolved.relative, annotated),
         200,
         headers
       );
     }
+
     const bytes = await readFile(resolved.file);
+
     return c.body(new Uint8Array(bytes), 200, headers);
   };
 
   app.get("/d/:pid/:did/*", (c) => {
     const pid = c.req.param("pid");
     const did = c.req.param("did");
+
     return serveFrom(c, "direction", pid, did, `/d/${pid}/${did}`);
   });
 
   app.get("/s/:pid/:sha/*", (c) => {
     const pid = c.req.param("pid");
     const sha = c.req.param("sha");
+
     return serveFrom(c, "snapshot", pid, sha, `/s/${pid}/${sha}`);
   });
 
@@ -288,11 +357,14 @@ export async function startHtmlServer(
     options.hostname ?? "127.0.0.1",
     options.appProxy
   );
+
   const port =
     (primary.address() as { port?: number } | null)?.port ?? options.port;
+
   const loopbackV6 = await listenOn(app, port, "::1", options.appProxy).catch(
     () => null
   );
+
   const servers = loopbackV6 ? [primary, loopbackV6] : [primary];
 
   return {

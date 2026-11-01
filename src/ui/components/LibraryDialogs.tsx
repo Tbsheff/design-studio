@@ -8,10 +8,15 @@ import { Icon } from "./Icon";
 function useBusyAction(onClose: () => void) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
   const run = async (task: () => Promise<void>) => {
-    if (busy) return;
+    if (busy) {
+      return;
+    }
+
     setBusy(true);
     setError(null);
+
     try {
       await task();
       onClose();
@@ -20,6 +25,7 @@ function useBusyAction(onClose: () => void) {
       setBusy(false);
     }
   };
+
   return { busy, error, run };
 }
 
@@ -54,7 +60,10 @@ function Head({
 }
 
 function ErrorLine({ error }: { error: string | null }) {
-  if (!error) return null;
+  if (!error) {
+    return null;
+  }
+
   return (
     <div className="alert error small" role="alert">
       {error}
@@ -74,11 +83,15 @@ export function RenamePackDialog({
   const [name, setName] = useState(pack.name);
   const action = useBusyAction(onClose);
   const dialog = useModalDialog(() => (action.busy ? false : onClose()));
+
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    if (name.trim() && name.trim() !== pack.name)
+
+    if (name.trim() && name.trim() !== pack.name) {
       void action.run(() => onRename(name.trim()));
+    }
   };
+
   return (
     <dialog
       ref={dialog.ref}
@@ -139,6 +152,7 @@ export function DeletePackDialog({
 }) {
   const action = useBusyAction(onClose);
   const dialog = useModalDialog(() => (action.busy ? false : onClose()));
+
   return (
     <dialog
       ref={dialog.ref}
@@ -189,6 +203,7 @@ export function ImportConflictDialog({
 }) {
   const action = useBusyAction(onClose);
   const dialog = useModalDialog(() => (action.busy ? false : onClose()));
+
   return (
     <dialog
       ref={dialog.ref}

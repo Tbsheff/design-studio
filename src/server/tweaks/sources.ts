@@ -13,8 +13,11 @@ import {
 } from "./css-vars.js";
 
 type ParentNode = DefaultTreeAdapterMap["parentNode"];
+
 type ChildNode = DefaultTreeAdapterMap["childNode"];
+
 type Element = DefaultTreeAdapterMap["element"];
+
 type Template = DefaultTreeAdapterMap["template"];
 
 export type SourceKind = "css" | "html" | "script";
@@ -46,6 +49,7 @@ const SKIP_DIRS = new Set([
   "build",
   "coverage",
 ]);
+
 const KIND_BY_EXTENSION: Record<string, SourceKind> = {
   ".css": "css",
   ".html": "html",
@@ -55,6 +59,7 @@ const KIND_BY_EXTENSION: Record<string, SourceKind> = {
   ".ts": "script",
   ".js": "script",
 };
+
 const MAX_FILES = 400;
 const MAX_BYTES = 1_000_000;
 const MAX_DEPTH = 6;
@@ -64,22 +69,32 @@ function isElement(node: ChildNode | ParentNode): node is Element {
 }
 
 function childrenOf(node: ParentNode): ChildNode[] {
-  if (isElement(node) && node.tagName === "template")
+  if (isElement(node) && node.tagName === "template") {
     return (node as Template).content.childNodes;
+  }
+
   return node.childNodes;
 }
 
 function collectStyleRegions(node: ParentNode, out: CssRegion[]): void {
   for (const child of childrenOf(node)) {
-    if (!isElement(child)) continue;
-    if (child.tagName === "style") {
-      const text = child.childNodes[0];
-      const location =
-        text && "sourceCodeLocation" in text ? text.sourceCodeLocation : null;
-      if (location)
-        out.push({ start: location.startOffset, end: location.endOffset });
+    if (!isElement(child)) {
       continue;
     }
+
+    if (child.tagName === "style") {
+      const text = child.childNodes[0];
+
+      const location =
+        text && "sourceCodeLocation" in text ? text.sourceCodeLocation : null;
+
+      if (location) {
+        out.push({ start: location.startOffset, end: location.endOffset });
+      }
+
+      continue;
+    }
+
     collectStyleRegions(child, out);
   }
 }
@@ -87,6 +102,7 @@ function collectStyleRegions(node: ParentNode, out: CssRegion[]): void {
 export function htmlStyleRegions(html: string): CssRegion[] {
   const regions: CssRegion[] = [];
   collectStyleRegions(parse(html, { sourceCodeLocationInfo: true }), regions);
+
   return regions;
 }
 
@@ -96,20 +112,31 @@ async function walk(
   depth: number,
   out: string[]
 ): Promise<void> {
-  if (depth > MAX_DEPTH || out.length >= MAX_FILES) return;
+  if (depth > MAX_DEPTH || out.length >= MAX_FILES) {
+    return;
+  }
+
   let entries;
+
   try {
     entries = await readdir(dir, { withFileTypes: true });
   } catch {
     return;
   }
+
   entries.sort((a, b) => a.name.localeCompare(b.name));
+
   for (const entry of entries) {
-    if (out.length >= MAX_FILES) return;
+    if (out.length >= MAX_FILES) {
+      return;
+    }
+
     const full = path.join(dir, entry.name);
+
     if (entry.isDirectory()) {
-      if (!SKIP_DIRS.has(entry.name.toLowerCase()))
+      if (!SKIP_DIRS.has(entry.name.toLowerCase())) {
         await walk(root, full, depth + 1, out);
+      }
     } else if (
       entry.isFile() &&
       KIND_BY_EXTENSION[path.extname(entry.name).toLowerCase()]
@@ -125,14 +152,24 @@ async function loadSource(
 ): Promise<StyleSource | null> {
   const file = path.join(workTree, relative);
   const info = await stat(file);
-  if (info.size > MAX_BYTES) return null;
+
+  if (info.size > MAX_BYTES) {
+    return null;
+  }
+
   const text = await readFile(file, "utf-8");
+
   const kind =
     KIND_BY_EXTENSION[path.extname(relative).toLowerCase()] ?? "script";
-  if (kind === "css")
+
+  if (kind === "css") {
     return { relative, kind, text, regions: [{ start: 0, end: text.length }] };
-  if (kind === "html")
+  }
+
+  if (kind === "html") {
     return { relative, kind, text, regions: htmlStyleRegions(text) };
+  }
+
   return { relative, kind, text, regions: [] };
 }
 
@@ -142,11 +179,13 @@ export async function loadStyleSources(
   const files: string[] = [];
   await walk(workTree, workTree, 0, files);
   const generated = TOKENS_CSS_FILE.toLowerCase();
+
   const sources = await Promise.all(
     files
       .filter((relative) => relative.toLowerCase() !== generated)
       .map((relative) => loadSource(workTree, relative).catch(() => null))
   );
+
   return sources.filter((source): source is StyleSource => source !== null);
 }
 
@@ -161,10 +200,15 @@ export function declarationsFor(
   name: string
 ): FoundDeclaration[] {
   const out: FoundDeclaration[] = [];
+
   for (const source of sources) {
     const decl = lastDeclarationOf(rootDeclarationsOf(source), name);
-    if (decl) out.push({ source, decl });
+
+    if (decl) {
+      out.push({ source, decl });
+    }
   }
+
   return out;
 }
 

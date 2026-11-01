@@ -57,11 +57,17 @@ export async function dropOutsideApp<T extends { selector: string | null }>(
       )
     ),
   ];
-  if (selectors.length === 0) return findings;
+
+  if (selectors.length === 0) {
+    return findings;
+  }
+
   const outside = await page
     .evaluate<boolean[]>(outsideAppExpression(selectors))
     .catch(() => selectors.map(() => false));
+
   const drop = new Set(selectors.filter((_, index) => outside[index] === true));
+
   return drop.size
     ? findings.filter(
         (finding) => !finding.selector || !drop.has(finding.selector)

@@ -28,9 +28,11 @@ const STATUS: Record<string, VersionFileDiff["status"]> = {
 export function parseNameStatus(text: string): Entry[] {
   const parts = text.split("\0").filter((part) => part !== "");
   const entries: Entry[] = [];
+
   for (let i = 0; i < parts.length;) {
     const code = (parts[i] ?? "").charAt(0);
     const status = STATUS[code] ?? "modified";
+
     if (code === "R" || code === "C") {
       const oldPath = parts[i + 1] ?? "";
       entries.push({
@@ -44,6 +46,7 @@ export function parseNameStatus(text: string): Entry[] {
       i += 2;
     }
   }
+
   return entries;
 }
 
@@ -56,12 +59,19 @@ function countLines(patch: string): {
   let deletions = 0;
   let inHunk = false;
   let binary = false;
+
   for (const line of patch.split("\n")) {
-    if (line.startsWith("@@")) inHunk = true;
-    else if (!inHunk && line.startsWith("Binary files ")) binary = true;
-    else if (inHunk && line.startsWith("+")) additions += 1;
-    else if (inHunk && line.startsWith("-")) deletions += 1;
+    if (line.startsWith("@@")) {
+      inHunk = true;
+    } else if (!inHunk && line.startsWith("Binary files ")) {
+      binary = true;
+    } else if (inHunk && line.startsWith("+")) {
+      additions += 1;
+    } else if (inHunk && line.startsWith("-")) {
+      deletions += 1;
+    }
   }
+
   return { additions, deletions, binary };
 }
 
@@ -73,6 +83,7 @@ async function fileDiff(
   room: number
 ): Promise<VersionFileDiff> {
   const paths = entry.oldPath ? [entry.oldPath, entry.path] : [entry.path];
+
   const full = await git([
     "diff",
     "--no-color",
@@ -84,9 +95,11 @@ async function fileDiff(
     "--",
     ...paths,
   ]);
+
   const counts = countLines(full);
   const limit = Math.min(FILE_MAX, Math.max(0, room));
   const cut = full.length > limit;
+
   return {
     ...entry,
     ...counts,
@@ -103,20 +116,24 @@ export async function diffVersionFiles(
   const entries = parseNameStatus(
     await git(["diff", "--name-status", "-z", "-M", from, to])
   );
+
   const shown = entries.slice(0, MAX_FILES);
   const files: VersionFileDiff[] = [];
   let used = 0;
+
   for (let start = 0; start < shown.length; start += PARALLEL) {
     const batch = await Promise.all(
       shown
         .slice(start, start + PARALLEL)
         .map((entry) => fileDiff(git, from, to, entry, TOTAL_MAX - used))
     );
+
     for (const file of batch) {
       used += file.patch.length;
       files.push(file);
     }
   }
+
   return {
     from,
     to,

@@ -55,6 +55,7 @@ const workspacesFileSchema = z
   .strict();
 
 type StoredFolder = z.infer<typeof storedFolderSchema>;
+
 type WorkspacesFile = z.infer<typeof workspacesFileSchema>;
 
 const labelSchema = z
@@ -88,10 +89,13 @@ async function isFolder(target: string): Promise<boolean> {
 
 function parseLabel(raw: string): string {
   const parsed = labelSchema.safeParse(raw);
-  if (!parsed.success)
+
+  if (!parsed.success) {
     throw new BadRequestError(
       parsed.error.issues[0]?.message ?? "invalid label"
     );
+  }
+
   return parsed.data;
 }
 
@@ -105,35 +109,49 @@ export function createWorkspaceStore(
 
   const read = async (): Promise<WorkspacesFile> => {
     let raw: string;
+
     try {
       raw = await readFile(file, "utf-8");
     } catch (error) {
-      if (isNodeError(error) && error.code === "ENOENT")
+      if (isNodeError(error) && error.code === "ENOENT") {
         return { version: 1, folders: [] };
+      }
+
       throw error;
     }
+
     let json: unknown;
+
     try {
       json = JSON.parse(raw);
     } catch {
       console.error(
         `[workspaces] ${file} is not JSON; starting with no saved folders`
       );
+
       return { version: 1, folders: [] };
     }
+
     const parsed = workspacesFileSchema.safeParse(json);
-    if (parsed.success) return parsed.data;
+
+    if (parsed.success) {
+      return parsed.data;
+    }
+
     console.error(
       `[workspaces] ${file} failed validation; keeping only valid entries`
     );
+
     const folders = Array.isArray((json as { folders?: unknown })?.folders)
       ? (json as { folders: unknown[] }).folders
       : [];
+
     return {
       version: 1,
       folders: folders
         .flatMap((entry) => {
           const result = storedFolderSchema.safeParse(entry);
+
           return result.success ? [result.data] : [];
         })
         .slice(0, MAX_WORKSPACES),
@@ -156,8 +174,12 @@ export function createWorkspaceStore(
   });
 
   const defaultRow = async (): Promise<WorkspaceFolder | null> => {
-    if (!options.defaultFolder) return null;
+    if (!options.defaultFolder) {
+      return null;
+    }
+
     const folderPath = await options.defaultFolder.current();
+
     return {
       id: DEFAULT_WORKSPACE_ID,
       path: folderPath,
@@ -169,30 +191,44 @@ export function createWorkspaceStore(
   };
 
   const refuseDefault = (id: string): void => {
-    if (options.defaultFolder && id === DEFAULT_WORKSPACE_ID)
+    if (options.defaultFolder && id === DEFAULT_WORKSPACE_ID) {
       throw new BadRequestError("the default folder always stays in the list");
+    }
   };
 
   const resolveFolder = async (raw: string): Promise<string> => {
-    if (typeof raw !== "string" || raw.trim() === "")
+    if (typeof raw !== "string" || raw.trim() === "") {
       throw new BadRequestError("path is required");
-    if (raw.includes("\0") || raw.length > MAX_PATH_LENGTH)
+    }
+
+    if (raw.includes("\0") || raw.length > MAX_PATH_LENGTH) {
       throw new BadRequestError("invalid path");
-    if (!path.isAbsolute(raw))
+    }
+
+    if (!path.isAbsolute(raw)) {
       throw new BadRequestError("path must be absolute");
+    }
+
     let real: string;
+
     try {
       real = await realpath(path.resolve(raw));
     } catch {
       throw new BadRequestError(`folder not found: ${raw}`);
     }
-    if (!(await isFolder(real)))
+
+    if (!(await isFolder(real))) {
       throw new BadRequestError(`not a folder: ${real}`);
+    }
+
     const dataRoot = path.resolve(dataDir);
-    if (real === dataRoot || real.startsWith(dataRoot + path.sep))
+
+    if (real === dataRoot || real.startsWith(dataRoot + path.sep)) {
       throw new BadRequestError(
         "cannot save a folder inside the studio data dir"
       );
+    }
+
     return real;
   };
 
@@ -200,11 +236,13 @@ export function createWorkspaceStore(
     async list(): Promise<WorkspaceList> {
       const data = await read();
       const fallback = await defaultRow();
+
       const saved = await Promise.all(
         data.folders
           .filter((folder) => folder.path !== fallback?.path)
           .map(present)
       );
+
       return { homeDir, folders: fallback ? [fallback, ...saved] : saved };
     },
 
@@ -213,24 +251,34 @@ export function createWorkspaceStore(
       label?: string;
     }): Promise<WorkspaceFolder> {
       const real = await resolveFolder(input.path);
+
       const label =
         input.label === undefined
           ? path.basename(real) || real
           : parseLabel(input.label);
+
       return lock("file", async () => {
         const data = await read();
         const existing = data.folders.find((folder) => folder.path === real);
-        if (existing) return present(existing);
-        if (data.folders.length >= MAX_WORKSPACES)
+
+        if (existing) {
+          return present(existing);
+        }
+
+        if (data.folders.length >= MAX_WORKSPACES) {
           throw new BadRequestError(`at most ${MAX_WORKSPACES} saved folders`);
+        }
+
         const folder: StoredFolder = {
           id: workspaceId(),
           path: real,
           label: parseLabel(label),
           addedAt: Date.now(),
         };
+
         data.folders.push(folder);
         await write(data);
+
         return present(folder);
       });
     },
@@ -239,12 +287,18 @@ export function createWorkspaceStore(
       assertSafeId(id, "workspaceId");
       refuseDefault(id);
       const clean = parseLabel(label);
+
       return lock("file", async () => {
         const data = await read();
         const folder = data.folders.find((candidate) => candidate.id === id);
-        if (!folder) throw new NotFoundError(`folder ${id} not found`);
+
+        if (!folder) {
+          throw new NotFoundError(`folder ${id} not found`);
+        }
+
         folder.label = clean;
         await write(data);
+
         return present(folder);
       });
     },
@@ -252,11 +306,15 @@ export function createWorkspaceStore(
     async remove(id: string): Promise<void> {
       assertSafeId(id, "workspaceId");
       refuseDefault(id);
+
       return lock("file", async () => {
         const data = await read();
         const next = data.folders.filter((candidate) => candidate.id !== id);
-        if (next.length === data.folders.length)
+
+        if (next.length === data.folders.length) {
           throw new NotFoundError(`folder ${id} not found`);
+        }
+
         await write({ ...data, folders: next });
       });
     },

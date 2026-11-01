@@ -21,26 +21,38 @@ const PLACEHOLDER =
   "One rule per line, for example:\ncontrols: h-9 rounded-md\ncards: rounded-xl p-6\nno raw hex\nfont: Inter\nuse Button from @/components/ui/button, not <button>\nKeep labels short and plain.";
 
 function originText(state: DesignRulesState): string {
-  if (state.origin === "design-md")
+  if (state.origin === "design-md") {
     return "Saved in the rules block of DESIGN.md. Save makes a version you can undo.";
-  if (state.origin === "studio")
+  }
+
+  if (state.origin === "studio") {
     return "Saved in the studio. The app repo does not change.";
-  if (state.origin === "app-docs")
+  }
+
+  if (state.origin === "app-docs") {
     return `Read from ${state.file ?? "the app docs"}. Save keeps your copy in the studio; the app repo does not change.`;
+  }
+
   return "No rules yet. Write some, or import them from the project docs.";
 }
 
 function hitText(rule: DesignRule, hit: DesignRuleHit | undefined): string {
-  if (rule.kind === "text" || !hit) return "";
+  if (rule.kind === "text" || !hit) {
+    return "";
+  }
+
   return hit.count === 0
     ? "Pass"
     : `${hit.count} ${hit.count === 1 ? "break" : "breaks"}`;
 }
 
 function hitTip(rule: DesignRule, hit: DesignRuleHit | undefined): string {
-  if (rule.kind === "text")
+  if (rule.kind === "text") {
     return `${rule.text}. The agent and the critic get this rule. Review cannot check it.`;
+  }
+
   const sample = hit?.samples[0];
+
   return sample
     ? `${rule.text}. First break: ${sample.element}${sample.source ? ` at ${sample.source}` : ""}`
     : rule.text;
@@ -55,6 +67,7 @@ function RuleRow({
 }) {
   const tone =
     rule.kind === "text" || !hit ? "idle" : hit.count === 0 ? "ok" : "bad";
+
   return (
     <li className="rules-row" data-tone={tone} data-tip={hitTip(rule, hit)}>
       <span className="ui-chip rules-kind">
@@ -68,10 +81,16 @@ function RuleRow({
 
 function liveFrame(projectId: string) {
   const layout = canvasStore.get(projectId);
-  if (!layout) return undefined;
+
+  if (!layout) {
+    return undefined;
+  }
+
   const frame = activeFrame(layout);
+
   const side = (value: number) =>
     Math.min(4000, Math.max(200, Math.round(value)));
+
   return {
     frame: frame.id,
     ...(frame.path ? { path: frame.path } : {}),
@@ -100,12 +119,16 @@ export default function RulesEditor({ projectId, directionId }: Props) {
     let live = true;
     rulesApi.get(projectId, directionId).then(
       (next) => {
-        if (!live) return;
+        if (!live) {
+          return;
+        }
+
         setState(next);
         setText(next.text);
       },
       (err: unknown) => live && setError(errorText(err))
     );
+
     return () => {
       live = false;
     };
@@ -115,6 +138,7 @@ export default function RulesEditor({ projectId, directionId }: Props) {
     setBusy(kind);
     setError(null);
     setNote(null);
+
     try {
       if (kind === "test") {
         setResult(
@@ -138,7 +162,7 @@ export default function RulesEditor({ projectId, directionId }: Props) {
     }
   };
 
-  if (!state)
+  if (!state) {
     return (
       <section className="rules-editor" aria-label="Design rules">
         {error ? (
@@ -148,13 +172,17 @@ export default function RulesEditor({ projectId, directionId }: Props) {
         )}
       </section>
     );
+  }
+
   const dirty = text.trim() !== state.text.trim();
   const hits = new Map(result?.hits.map((hit) => [hit.ruleId, hit]) ?? []);
   const rules = result?.rules ?? state.rules;
+
   const imported =
     state.imported && !text.includes(state.imported.trim())
       ? state.imported
       : null;
+
   return (
     <section className="rules-editor" aria-label="Design rules">
       <div className="rules-head">

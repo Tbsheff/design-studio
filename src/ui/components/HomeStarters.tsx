@@ -30,10 +30,15 @@ export function StarterGallery({
       .then(setStarters)
       .catch(() => setStarters([]));
   }, []);
-  if (starters !== null && starters.length === 0) return null;
+
+  if (starters !== null && starters.length === 0) {
+    return null;
+  }
+
   const pick = async (starter: Starter) => {
     setBusy(starter.id);
     setError(null);
+
     try {
       await onPick(starter);
     } catch (err) {
@@ -42,6 +47,7 @@ export function StarterGallery({
       setBusy(null);
     }
   };
+
   return (
     <section
       className="home-starters"
@@ -106,9 +112,11 @@ export function FirstRunPanel({
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
   const sample = async () => {
     setBusy(true);
     setError(null);
+
     try {
       await onSample();
     } catch (err) {
@@ -116,6 +124,7 @@ export function FirstRunPanel({
       setBusy(false);
     }
   };
+
   return (
     <section className="ui-notice info first-run" aria-label="First steps">
       <Icon name="sparkle" size={16} />

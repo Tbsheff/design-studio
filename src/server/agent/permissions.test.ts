@@ -39,7 +39,11 @@ async function decide(
     signal,
     toolUseID: "tool_1",
   } as Parameters<ReturnType<typeof createCanUseTool>>[2]);
-  if (!result) throw new Error("canUseTool returned no decision");
+
+  if (!result) {
+    throw new Error("canUseTool returned no decision");
+  }
+
   return result;
 }
 
@@ -278,6 +282,7 @@ describe("canUseTool", () => {
 
   it("denies install bypasses when installs are off", async () => {
     const bash = { allowBash: true };
+
     const bypasses = [
       "sh -c 'npm install x'",
       'bash -lc "npm i x"',
@@ -300,12 +305,14 @@ describe("canUseTool", () => {
       'eval "npm i x"',
       "npm run build",
     ];
+
     for (const command of bypasses) {
       expect({
         command,
         behavior: (await decide("Bash", { command }, bash)).behavior,
       }).toEqual({ command, behavior: "deny" });
     }
+
     expect(
       (await decide("Bash", { command: "go build ./..." }, bash)).behavior
     ).toBe("allow");
@@ -335,6 +342,7 @@ describe("canUseTool", () => {
       "package.json",
       ".npmrc",
     ];
+
     for (const file of blocked) {
       for (const tool of ["Write", "Edit", "MultiEdit"]) {
         const result = await decide(tool, {
@@ -343,17 +351,21 @@ describe("canUseTool", () => {
           old_string: "a",
           new_string: "b",
         });
+
         expect({ file, tool, behavior: result.behavior }).toEqual({
           file,
           tool,
           behavior: "deny",
         });
-        if (tool !== "MultiEdit")
+
+        if (tool !== "MultiEdit") {
           expect(result).toMatchObject({
             message: expect.stringContaining("run this file as code"),
           });
+        }
       }
     }
+
     expect(
       (await decide("Read", { file_path: "vite.config.ts" })).behavior
     ).toBe("allow");
@@ -383,6 +395,7 @@ describe("canUseTool", () => {
 describe("PreToolUse guard", () => {
   it("denies the same inputs as canUseTool", async () => {
     const guard = createPreToolUseGuard(policy());
+
     const base = {
       session_id: "s",
       transcript_path: "",
@@ -390,6 +403,7 @@ describe("PreToolUse guard", () => {
       hook_event_name: "PreToolUse" as const,
       tool_use_id: "t",
     };
+
     const denied = await guard(
       {
         ...base,
@@ -399,9 +413,11 @@ describe("PreToolUse guard", () => {
       "t",
       { signal }
     );
+
     expect(denied).toMatchObject({
       hookSpecificOutput: { permissionDecision: "deny" },
     });
+
     const allowed = await guard(
       {
         ...base,
@@ -411,6 +427,7 @@ describe("PreToolUse guard", () => {
       "t",
       { signal }
     );
+
     expect(allowed).toEqual({});
   });
 });

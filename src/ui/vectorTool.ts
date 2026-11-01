@@ -12,6 +12,7 @@ import { IS_MAC } from "./commands/keys";
 import { isTypingTarget } from "./typingTarget";
 
 export type { VectorToolId };
+
 export const PREVIEW_TOOL_KEY_EVENT = "studio:preview-tool-key";
 
 interface State {
@@ -24,8 +25,14 @@ const listeners = new Set<() => void>();
 
 function emit(next: Partial<State>): void {
   state = { ...state, ...next };
-  if (!state.available) state = { ...state, tool: null };
-  for (const listener of listeners) listener();
+
+  if (!state.available) {
+    state = { ...state, tool: null };
+  }
+
+  for (const listener of listeners) {
+    listener();
+  }
 }
 
 export const vectorTool = {
@@ -35,10 +42,13 @@ export const vectorTool = {
   toggle: (tool: VectorToolId) =>
     emit({ tool: state.available && state.tool !== tool ? tool : null }),
   setAvailable: (available: boolean) => {
-    if (available !== state.available) emit({ available });
+    if (available !== state.available) {
+      emit({ available });
+    }
   },
   subscribe(listener: () => void) {
     listeners.add(listener);
+
     return () => listeners.delete(listener);
   },
 };
@@ -92,24 +102,35 @@ export function useVectorToolKeys(available: boolean): void {
         event.defaultPrevented ||
         isTypingTarget(event.target) ||
         document.querySelector(".play-bar")
-      )
+      ) {
         return;
+      }
+
       const tool = vectorToolKeyOf(event);
-      if (!tool || !vectorTool.get().available) return;
+
+      if (!tool || !vectorTool.get().available) {
+        return;
+      }
+
       event.preventDefault();
       vectorTool.toggle(tool);
     };
+
     const onForwarded = (event: Event) => {
       const tool = (event as CustomEvent<{ tool?: VectorToolId }>).detail?.tool;
+
       if (
         tool &&
         vectorTool.get().available &&
         !document.querySelector(".play-bar")
-      )
+      ) {
         vectorTool.toggle(tool);
+      }
     };
+
     window.addEventListener("keydown", onKey);
     window.addEventListener(PREVIEW_TOOL_KEY_EVENT, onForwarded);
+
     return () => {
       window.removeEventListener("keydown", onKey);
       window.removeEventListener(PREVIEW_TOOL_KEY_EVENT, onForwarded);
@@ -125,10 +146,14 @@ export function useVectorToolGuards(
   const stop = useRef(stopOthers);
   stop.current = stopOthers;
   useEffect(() => {
-    if (tool) stop.current();
+    if (tool) {
+      stop.current();
+    }
   }, [tool]);
   useEffect(() => {
-    if (otherOn) vectorTool.set(null);
+    if (otherOn) {
+      vectorTool.set(null);
+    }
   }, [otherOn]);
 }
 

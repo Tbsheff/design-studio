@@ -6,6 +6,7 @@ import { chromium, type Page } from "playwright-core";
 const base = process.env.STUDIO_URL ?? "http://127.0.0.1:4970";
 const out = path.resolve(process.argv[2] ?? "/tmp/polish-r2");
 const prefix = process.argv[3] ?? "after";
+
 mkdirSync(out, { recursive: true });
 
 async function shot(page: Page, name: string): Promise<void> {
@@ -27,15 +28,20 @@ async function main(): Promise<void> {
       "--disable-features=IsolateOrigins,site-per-process",
     ],
   });
+
   const page = await browser.newPage({
     viewport: { width: 1440, height: 900 },
     deviceScaleFactor: 2,
   });
+
   await page.goto(base);
+
   const token =
     (await page.locator('meta[name="studio-token"]').getAttribute("content")) ??
     "";
+
   await page.evaluate(() => localStorage.clear());
+
   const project = await page.evaluate(
     async (t) =>
       (
@@ -47,6 +53,7 @@ async function main(): Promise<void> {
       ).json(),
     token
   );
+
   await page.goto(base);
   await page
     .locator(
@@ -61,11 +68,14 @@ async function main(): Promise<void> {
   await page.frameLocator("iframe.frame.front").locator("h1").first().click();
   await page.locator(".overlay .box.selected").first().waitFor();
   const frameBox = await page.locator("iframe.frame.front").boundingBox();
-  if (frameBox)
+
+  if (frameBox) {
     await page.mouse.move(
       frameBox.x + frameBox.width * 0.5,
       frameBox.y + Math.min(frameBox.height, 700) * 0.6
     );
+  }
+
   await shot(page, "canvas-select");
 
   if (await exists(page, '[aria-label="Layers"]')) {
@@ -75,6 +85,7 @@ async function main(): Promise<void> {
       .filter({ hasText: /\w/ })
       .nth(1)
       .boundingBox();
+
     if (cta) {
       await page.keyboard.down("Alt");
       await page.mouse.move(cta.x + cta.width / 2, cta.y + cta.height / 2);
@@ -82,6 +93,7 @@ async function main(): Promise<void> {
       await shot(page, "canvas-measure");
       await page.keyboard.up("Alt");
     }
+
     await page.getByRole("button", { name: "Layers", exact: true }).click();
     await page.locator(".layers-row").first().waitFor();
     await shot(page, "canvas-layers");
@@ -94,6 +106,7 @@ async function main(): Promise<void> {
         .click();
       await page.getByRole("menuitem", { name: size }).click();
     }
+
     await page.keyboard.press("Shift+Digit1");
     await shot(page, "canvas-frames");
     await page.getByRole("button", { name: "Add frame", exact: true }).click();

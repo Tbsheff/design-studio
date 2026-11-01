@@ -44,6 +44,7 @@ import { projectOfUrl } from "./render-wait.js";
 import { expandScrollRoot } from "./scroll-root.js";
 
 const SERVER_TOKEN = "server";
+
 const QUIET_EXPRESSION = `new Promise((resolve) => {
   let timer = 0;
   const observer = new MutationObserver(() => { clearTimeout(timer); timer = setTimeout(done, 80); });
@@ -52,6 +53,7 @@ const QUIET_EXPRESSION = `new Promise((resolve) => {
   observer.observe(document, { subtree: true, childList: true, attributes: true, characterData: true });
   requestAnimationFrame(() => requestAnimationFrame(() => { clearTimeout(timer); timer = setTimeout(done, 80); }));
 })`;
+
 const WAIT_FOR_HYDRATION_EXPRESSION = `new Promise((resolve) => {
   const isNext = Boolean(window.__next_f || document.querySelector('script[src*="/_next/"]'));
   const hydrated = () => {
@@ -63,8 +65,10 @@ const WAIT_FOR_HYDRATION_EXPRESSION = `new Promise((resolve) => {
   const started = Date.now();
   const timer = setInterval(() => { if (hydrated() || Date.now() - started > 5000) { clearInterval(timer); resolve(true); } }, 50);
 })`;
+
 const OVERFLOW_EXPRESSION =
   "document.documentElement.scrollWidth > window.innerWidth + 1";
+
 const PAGE_HEIGHT_EXPRESSION =
   "Math.max(document.documentElement.scrollHeight, document.body ? document.body.scrollHeight : 0)";
 
@@ -120,6 +124,7 @@ async function timed<T>(
   task: () => Promise<T>
 ): Promise<T> {
   const started = Date.now();
+
   try {
     return await task();
   } finally {
@@ -133,10 +138,15 @@ function wantsAxe(viewport: CheckViewport): boolean {
 
 function capProbeFindings(findings: QualityFinding[]): QualityFinding[] {
   const seen = new Map<string, number>();
+
   return findings.filter((finding) => {
-    if (!CAPPED_AFTER_FILTER.has(finding.check)) return true;
+    if (!CAPPED_AFTER_FILTER.has(finding.check)) {
+      return true;
+    }
+
     const count = (seen.get(finding.check) ?? 0) + 1;
     seen.set(finding.check, count);
+
     return count <= PROBE_CAP;
   });
 }
@@ -149,6 +159,7 @@ async function inspectQuality(
   shared?: () => Promise<AxeViolation[]>
 ): Promise<PageInspection> {
   const placeholder = options.placeholder ?? "off";
+
   const probe = await timed(timings, "probe", () =>
     page.evaluate<QualityProbeResult>(
       qualityProbeExpression({
@@ -161,15 +172,18 @@ async function inspectQuality(
       })
     )
   );
+
   const axe =
     options.quality && wantsAxe(spec.viewport)
       ? await timed(timings, "axe", () => runAxe(page, spec.viewport, shared))
       : [];
+
   const placeholders = placeholderFindings(
     probe.placeholder,
     placeholder,
     spec.viewport
   );
+
   const found = options.quality
     ? [
         ...axe,
@@ -179,11 +193,13 @@ async function inspectQuality(
         ...duplicateFindings(probe.duplicates ?? [], spec.viewport),
       ]
     : placeholders;
+
   const quality = options.appOnly
     ? capProbeFindings(
         await timed(timings, "appSource", () => dropOutsideApp(page, found))
       )
     : found;
+
   return {
     quality,
     nav: probe.nav,
@@ -224,7 +240,9 @@ export function planTiles(
     0,
     Math.min(Math.floor(from), Math.max(0, pageHeight - 1))
   );
+
   const tiles: { y: number; height: number }[] = [];
+
   for (
     let y = start;
     y < pageHeight && tiles.length < maxTiles;
@@ -232,6 +250,7 @@ export function planTiles(
   ) {
     tiles.push({ y, height: Math.min(tileHeight, pageHeight - y) });
   }
+
   return tiles;
 }
 
@@ -243,6 +262,7 @@ const STILL_EXPRESSION = `(async () => {
   await document.fonts?.ready;
   return true;
 })()`;
+
 const DARK_THEME_EXPRESSION = `(() => { document.documentElement.setAttribute('data-theme', 'dark'); document.documentElement.classList.add('dark'); return true; })()`;
 
 const EMPTY_PROBE: LayoutProbeResult = { findings: [], total: 0 };
@@ -265,6 +285,7 @@ function withServerBridgeParams(url: string, parentOrigin: string): string {
   const target = new URL(url);
   target.searchParams.set(BRIDGE_TOKEN_PARAM, SERVER_TOKEN);
   target.searchParams.set(BRIDGE_PARENT_ORIGIN_PARAM, parentOrigin);
+
   return target.toString();
 }
 
@@ -274,7 +295,11 @@ function withInspection(
   started: number
 ): Partial<RenderCheckResult> {
   timings["total"] = Date.now() - started;
-  if (!inspection) return { timingsMs: timings };
+
+  if (!inspection) {
+    return { timingsMs: timings };
+  }
+
   return {
     quality: inspection.quality,
     nav: inspection.nav,
@@ -309,7 +334,10 @@ async function settleApp(page: RenderPage): Promise<void> {
   const waited = await page
     .evaluate<boolean>(WAIT_FOR_HYDRATION_EXPRESSION)
     .catch(() => false);
-  if (waited) await settle(page);
+
+  if (waited) {
+    await settle(page);
+  }
 }
 
 const CAPTURE_DIR = path.join(
@@ -326,11 +354,15 @@ function usable(
   stamp: SourceStamp | null,
   fresh: boolean | undefined
 ): string | null {
-  if (!stamp) return null;
+  if (!stamp) {
+    return null;
+  }
+
   return fresh && stamp.newest === null ? null : stamp.key;
 }
 
 type CachedCheck = Omit<RenderCheckResult, "screenshotPath">;
+
 type CachedTiles = Omit<TileResult, "paths"> & { count: number };
 
 function checkKey(
@@ -351,6 +383,7 @@ function checkKey(
 
 function tileKey(url: string, request: TileRequest): string {
   const { outPrefix: _out, fresh: _fresh, oneOff: _oneOff, ...rest } = request;
+
   return cacheKey({ url, ...rest });
 }
 
@@ -368,8 +401,10 @@ export class BrowserPool {
   private readonly peeks = new PeekPages(
     async (url, viewport) => {
       const page = await this.pages.hold(viewport);
+
       try {
         await this.landPeek(page, url);
+
         return page;
       } catch (error) {
         await this.pages.release(page);
@@ -406,11 +441,15 @@ export class BrowserPool {
   ) {}
 
   backend(): Promise<RenderBackend> {
-    if (this.closed) return Promise.reject(new Error("Browser pool is closed"));
+    if (this.closed) {
+      return Promise.reject(new Error("Browser pool is closed"));
+    }
+
     this.backendPromise ??= this.backendFactory().catch((error: unknown) => {
       this.backendPromise = null;
       throw error;
     });
+
     return this.backendPromise;
   }
 
@@ -460,18 +499,24 @@ export class BrowserPool {
   ): Promise<T> {
     const withAxe = async (page: RenderPage): Promise<T> => {
       const stamp = (await this.stamps.stampFor(url))?.key ?? null;
+
       const shared: RenderPage = Object.assign(
         Object.create(page) as RenderPage,
         { axe: () => this.sharedAxe(page, url, viewport, "", stamp) }
       );
+
       return task(shared);
     };
-    if (!oneOff && /^https?:/.test(url))
+
+    if (!oneOff && /^https?:/.test(url)) {
       return this.peeks.capture(url, viewport, withAxe);
+    }
+
     return this.pages.lease(viewport, async (page) => {
       await page.goto(withServerBridgeParams(url, this.parentOrigin));
       await settle(page);
       await this.noteLanded(page, url);
+
       return withAxe(page);
     });
   }
@@ -483,20 +528,31 @@ export class BrowserPool {
     prepare: string,
     stamp: string | null
   ): Promise<AxeViolation[]> {
-    if (!stamp) return runSharedAxe(page);
+    if (!stamp) {
+      return runSharedAxe(page);
+    }
+
     const key = cacheKey({
       url,
       width: size.width,
       height: size.height,
       prepare,
     });
+
     const known = this.axeRuns.get(key);
-    if (known?.stamp === stamp) return known.run;
+
+    if (known?.stamp === stamp) {
+      return known.run;
+    }
+
     const run = runSharedAxe(page);
     this.axeRuns.set(key, { stamp, run });
     run.catch(() => this.axeRuns.delete(key));
-    if (this.axeRuns.size > 400)
+
+    if (this.axeRuns.size > 400) {
       this.axeRuns.delete(this.axeRuns.keys().next().value as string);
+    }
+
     return run;
   }
 
@@ -509,6 +565,7 @@ export class BrowserPool {
       await mkdir(path.dirname(outPath), { recursive: true });
       await expandScrollRoot(page);
       await page.screenshot(outPath);
+
       return outPath;
     });
   }
@@ -521,20 +578,25 @@ export class BrowserPool {
   ): Promise<(string | null)[]> {
     return this.withPage(url, viewport, async (page) => {
       await expandScrollRoot(page);
+
       const clips = await page.evaluate<(RenderClip | null)[]>(
         elementClipsExpression(selectors)
       );
+
       await mkdir(path.dirname(outPrefix), { recursive: true });
       const out: (string | null)[] = [];
+
       for (const [index, clip] of clips.entries()) {
         if (!clip) {
           out.push(null);
           continue;
         }
+
         const outPath = `${outPrefix}-${index}.png`;
         await page.screenshot(outPath, clip);
         out.push(outPath);
       }
+
       return out;
     });
   }
@@ -549,9 +611,11 @@ export class BrowserPool {
     const before = await this.stamps.stampFor(url);
     const stamp = usable(before, request.fresh);
     const known = this.tiles.peek(key, stamp);
+
     if (known) {
       const paths = tilePaths(request.outPrefix, known.count, ext);
-      if (await this.tiles.hit(key, stamp, paths))
+
+      if (await this.tiles.hit(key, stamp, paths)) {
         return {
           paths,
           pageHeight: known.pageHeight,
@@ -559,10 +623,13 @@ export class BrowserPool {
           to: known.to,
           cached: true,
         };
+      }
     }
+
     const result = await this.captureTiles(url, request, ext);
     const keep = await this.storable(url, before, started);
-    if (keep)
+
+    if (keep) {
       await this.tiles.store(
         key,
         keep,
@@ -574,6 +641,8 @@ export class BrowserPool {
         },
         result.paths
       );
+    }
+
     return result;
   }
 
@@ -586,34 +655,44 @@ export class BrowserPool {
       url,
       request.viewport,
       async (page) => {
-        if (request.prepare)
+        if (request.prepare) {
           await page.evaluate(request.prepare).catch(() => undefined);
+        }
+
         if (request.theme === "dark") {
           await page.evaluate(DARK_THEME_EXPRESSION);
           await settle(page);
         }
+
         if (request.still) {
           await page.evaluate(STILL_EXPRESSION).catch(() => undefined);
           await settle(page);
         }
+
         await expandScrollRoot(page);
         const pageHeight = await page.evaluate<number>(PAGE_HEIGHT_EXPRESSION);
+
         const tiles = planTiles(
           pageHeight,
           request.tileHeight,
           request.from,
           request.maxTiles
         );
+
         await mkdir(path.dirname(request.outPrefix), { recursive: true });
         const paths = tilePaths(request.outPrefix, tiles.length, ext);
-        for (const [index, tile] of tiles.entries())
+
+        for (const [index, tile] of tiles.entries()) {
           await page.screenshot(paths[index] as string, {
             x: 0,
             y: tile.y,
             width: request.viewport.width,
             height: tile.height,
           });
+        }
+
         const last = tiles[tiles.length - 1];
+
         return {
           paths,
           pageHeight,
@@ -636,24 +715,35 @@ export class BrowserPool {
       page.goto(withServerBridgeParams(state.url, this.parentOrigin))
     );
     const nav = page.lastNav?.();
-    if (nav)
+
+    if (nav) {
       Object.assign(state.timings, { load: nav.loadMs, idle: nav.idleMs });
+    }
+
     await timed(state.timings, "settle", () => settle(page));
-    if (options.appOnly)
+
+    if (options.appOnly) {
       await timed(state.timings, "hydrate", () => settleApp(page));
+    }
+
     await this.noteLanded(page, state.url);
-    if (options.prepare)
+
+    if (options.prepare) {
       await timed(state.timings, "prepare", () =>
         page.evaluate(options.prepare as string)
       );
+    }
+
     state.horizontalOverflow =
       await page.evaluate<boolean>(OVERFLOW_EXPRESSION);
     state.probe = await page
       .evaluate<LayoutProbeResult>(layoutProbeExpression())
       .catch((error: unknown) => {
         state.pageErrors.push(`layout probe failed: ${errorText(error)}`);
+
         return EMPTY_PROBE;
       });
+
     if (options.appOnly && state.probe.findings.length) {
       const kept = await dropOutsideApp(page, state.probe.findings);
       state.probe = {
@@ -665,8 +755,10 @@ export class BrowserPool {
         ),
       };
     }
+
     const shared = () =>
       this.sharedAxe(page, state.url, spec, options.prepare ?? "", state.stamp);
+
     state.inspection = await inspectQuality(
       page,
       spec,
@@ -675,6 +767,7 @@ export class BrowserPool {
       shared
     ).catch((error: unknown) => {
       state.pageErrors.push(`quality probe failed: ${errorText(error)}`);
+
       return null;
     });
     await timed(state.timings, "screenshot", async () => {
@@ -694,13 +787,16 @@ export class BrowserPool {
     const before = await this.stamps.stampFor(url);
     const stamp = usable(before, options.fresh);
     const known = await this.checks.hit(key, stamp, [screenshotPath]);
-    if (known)
+
+    if (known) {
       return {
         ...known,
         screenshotPath,
         cached: true,
         timingsMs: { cached: Date.now() - started },
       };
+    }
+
     const result = await this.renderViewport(
       url,
       spec,
@@ -709,11 +805,14 @@ export class BrowserPool {
       started,
       before?.key ?? null
     );
+
     const keep = await this.storable(url, before, started);
+
     if (keep) {
       const { screenshotPath: _path, ...value } = result;
       await this.checks.store(key, keep, value, [screenshotPath]);
     }
+
     return result;
   }
 
@@ -723,16 +822,28 @@ export class BrowserPool {
     started: number
   ): Promise<string | null> {
     const after = await this.stamps.stampFor(url);
-    if (!after) return null;
-    if (after.newest !== null)
+
+    if (!after) {
+      return null;
+    }
+
+    if (after.newest !== null) {
       return after.newest < started - SETTLE_GUARD_MS ? after.key : null;
+    }
+
     return before?.key === after.key ? after.key : null;
   }
 
   private async noteLanded(page: RenderPage, url: string): Promise<void> {
-    if (!this.stamps.landed) return;
+    if (!this.stamps.landed) {
+      return;
+    }
+
     const href = await page.evaluate<string>("location.href").catch(() => null);
-    if (href) this.stamps.landed(url, href);
+
+    if (href) {
+      this.stamps.landed(url, href);
+    }
   }
 
   private async renderViewport(
@@ -744,6 +855,7 @@ export class BrowserPool {
     stamp: string | null
   ): Promise<RenderCheckResult> {
     const backend = await this.backend();
+
     const state: ViewportState = {
       url,
       horizontalOverflow: false,
@@ -753,6 +865,7 @@ export class BrowserPool {
       pageErrors: [],
       stamp: options.fresh ? null : stamp,
     };
+
     let consoleErrors: string[] = [];
     await this.pages.lease(
       { width: spec.width, height: spec.height },
@@ -772,6 +885,7 @@ export class BrowserPool {
         state.pageErrors.unshift(...collected.pageErrors);
       }
     );
+
     return {
       viewport: spec.viewport,
       width: spec.width,
@@ -798,9 +912,11 @@ export class BrowserPool {
     options: RenderCheckOptions = {}
   ): Promise<RenderCheckResult[]> {
     await mkdir(outDir, { recursive: true });
+
     const specs = options.viewports
       ? options.viewports.map((viewport) => VIEWPORT_SPECS[viewport])
       : RENDER_VIEWPORTS;
+
     return Promise.all(
       specs.map((spec) =>
         this.checkViewport(
@@ -820,6 +936,7 @@ export class BrowserPool {
     selectionLocs: string[]
   ): Promise<InspectResult> {
     const spec = VIEWPORT_SPECS[viewport];
+
     return this.withPage(
       url,
       { width: spec.width, height: spec.height },
@@ -832,9 +949,11 @@ export class BrowserPool {
             cap: 0,
           })
         );
+
         await mkdir(path.dirname(outPath), { recursive: true });
         await expandScrollRoot(page);
         await page.screenshot(outPath);
+
         return {
           path: outPath,
           selectionRects: probe.selectionRects,

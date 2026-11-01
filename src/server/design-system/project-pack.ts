@@ -58,6 +58,7 @@ const APPLY_FILES = [TOKENS_FILE, PACK_FILE, TOKENS_CSS_FILE, DESIGN_MD_FILE];
 const applySchema = z
   .object({ packId: z.string().trim().min(1).max(64) })
   .strict();
+
 const saveSchema = z
   .object({
     name: z.string().trim().min(1).max(80),
@@ -82,14 +83,21 @@ async function readOptional(file: string): Promise<string | null> {
   try {
     return await readFile(file, "utf-8");
   } catch (error) {
-    if (isNodeError(error) && error.code === "ENOENT") return null;
+    if (isNodeError(error) && error.code === "ENOENT") {
+      return null;
+    }
+
     throw error;
   }
 }
 
 export function parseApplyRequest(raw: unknown): { packId: string } {
   const parsed = applySchema.safeParse(raw);
-  if (!parsed.success) throw new BadRequestError("packId is required");
+
+  if (!parsed.success) {
+    throw new BadRequestError("packId is required");
+  }
+
   return parsed.data;
 }
 
@@ -100,12 +108,15 @@ export function parseSaveRequest(raw: unknown): {
   force?: boolean;
 } {
   const parsed = saveSchema.safeParse(raw);
-  if (!parsed.success)
+
+  if (!parsed.success) {
     throw new BadRequestError(
       `invalid request: ${formatIssues("", parsed.error)
         .map((line) => line.trim())
         .join("; ")}`
     );
+  }
+
   return parsed.data;
 }
 
@@ -113,8 +124,11 @@ async function currentNotes(
   workTree: string
 ): Promise<{ notes: string; previous: PackManifest | null }> {
   const designMd = await readOptional(path.join(workTree, DESIGN_MD_FILE));
-  if (!(await hasTokensFile(workTree)))
+
+  if (!(await hasTokensFile(workTree))) {
     return { notes: designMd?.trim() ?? "", previous: null };
+  }
+
   return {
     notes: designMd === null ? "" : splitDesignMd(designMd).notes,
     previous: await readManifest(workTree),
@@ -123,6 +137,7 @@ async function currentNotes(
 
 function applyTitle(previous: PackManifest | null, pack: LoadedPack): string {
   const switching = previous !== null && previous.id !== pack.manifest.id;
+
   return `${switching ? "Switch to" : "Apply"} ${pack.manifest.name} design system`;
 }
 
@@ -138,21 +153,28 @@ export async function applyPackToDirection(
       "The agent is editing this direction; wait for the run to finish"
     );
   }
+
   const workTree = direction.workTree;
   const { notes, previous } = await currentNotes(workTree);
+
   const tracked = wiresReact(project)
     ? [...APPLY_FILES, ...WIRED_FILES]
     : APPLY_FILES;
+
   const snapshots = await Promise.all(
     tracked.map((relative) => readSnapshot(workTree, relative))
   );
+
   const title = applyTitle(previous, pack);
+
   const meta: VersionMeta = {
     kind: "manual",
     prompt: `${title} (${pack.manifest.id})`,
   };
+
   let written: string[];
   let version: Version | null;
+
   try {
     written = await applyPack(project, workTree, pack, { userDesignMd: notes });
     version = await deps.versions.commitFile(
@@ -162,22 +184,28 @@ export async function applyPackToDirection(
       title,
       meta
     );
-    if (version === null)
+
+    if (version === null) {
       throw new DirectEditError(
         "no_change",
         `${pack.manifest.name} is already applied`
       );
+    }
   } catch (error) {
     await restoreSnapshots(workTree, snapshots);
     throw error;
   } finally {
     invalidateTokenSource(workTree);
   }
-  if (deps.projects.mainDirection(project).id === direction.id)
+
+  if (deps.projects.mainDirection(project).id === direction.id) {
     await deps.projects.setPackId(project.id, pack.manifest.id);
+  }
+
   await publishVersion(deps, project, direction, version);
   const updated = await deps.projects.get(project.id);
   const wired = project.kind !== "react" || wiresReact(project);
+
   return {
     project: updated,
     state: await readDesignSystemState(
@@ -193,16 +221,21 @@ export async function applyPackToDirection(
 
 function parseManifestText(text: string): PackManifest {
   let raw: unknown;
+
   try {
     raw = JSON.parse(text);
   } catch {
     throw new BadRequestError("design-system/pack.json is not valid JSON");
   }
+
   const parsed = manifestSchema.safeParse(raw);
-  if (!parsed.success)
+
+  if (!parsed.success) {
     throw new BadRequestError(
       `design-system/pack.json is invalid: ${formatIssues("pack.json", parsed.error).join("; ")}`
     );
+  }
+
   return parsed.data as PackManifest;
 }
 
@@ -211,8 +244,12 @@ async function saveTarget(
   requested: string | undefined,
   onDisk: PackManifest
 ): Promise<string | undefined> {
-  if (requested !== undefined) return requested;
+  if (requested !== undefined) {
+    return requested;
+  }
+
   const named = await library.registry.get(onDisk.id);
+
   return named?.source === "user" ? named.manifest.id : undefined;
 }
 
@@ -225,6 +262,7 @@ async function pointAtSavedPack(
   const workTree = direction.workTree;
   const snapshot = await readSnapshot(workTree, PACK_FILE);
   let version: Version | null;
+
   try {
     await writeFileAtomic(
       path.join(workTree, PACK_FILE),
@@ -244,12 +282,18 @@ async function pointAtSavedPack(
     await restoreSnapshots(workTree, [snapshot]);
     throw error;
   }
+
   if (
     deps.projects.mainDirection(project).id === direction.id &&
     project.packId !== saved.manifest.id
-  )
+  ) {
     await deps.projects.setPackId(project.id, saved.manifest.id);
-  if (version) await publishVersion(deps, project, direction, version);
+  }
+
+  if (version) {
+    await publishVersion(deps, project, direction, version);
+  }
+
   return version;
 }
 
@@ -261,24 +305,35 @@ export async function saveDirectionPack(
   raw: unknown
 ): Promise<SavePackResult> {
   const request = parseSaveRequest(raw);
+
   if (deps.runner.isRunning(project.id, direction.id)) {
     throw new DirectEditError(
       "run_in_progress",
       "The agent is editing this direction; wait for the run to finish"
     );
   }
+
   const workTree = direction.workTree;
+
   if (project.designSystemFor && request.force !== true) {
     const check = await checkDesignSystem(workTree);
-    if (!check.passed) throw new SaveCheckError(check.problems.length);
+
+    if (!check.passed) {
+      throw new SaveCheckError(check.problems.length);
+    }
   }
+
   const tokensText = await readOptional(path.join(workTree, TOKENS_FILE));
   const manifestText = await readOptional(path.join(workTree, PACK_FILE));
-  if (tokensText === null || manifestText === null)
+
+  if (tokensText === null || manifestText === null) {
     throw new NotFoundError("This direction has no design system");
+  }
+
   const manifest = parseManifestText(manifestText);
   const designMd = await readOptional(path.join(workTree, DESIGN_MD_FILE));
   const prose = designMd === null ? "" : splitDesignMd(designMd).prose.trim();
+
   const input = {
     name: request.name,
     description: manifest.description,
@@ -294,16 +349,22 @@ export async function saveDirectionPack(
     license: manifest.license,
     draft: false,
   };
-  if (request.asNew && request.packId !== undefined)
+
+  if (request.asNew && request.packId !== undefined) {
     throw new BadRequestError("asNew and packId cannot be used together");
+  }
+
   const target = request.asNew
     ? undefined
     : await saveTarget(library, request.packId, manifest);
+
   const saved =
     target === undefined
       ? await library.createUserPack(input)
       : await library.updateUserPack(target, input);
+
   const version = await pointAtSavedPack(deps, project, direction, saved);
+
   return {
     pack: saved.summary,
     created: target === undefined,

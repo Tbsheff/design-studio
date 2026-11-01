@@ -11,13 +11,17 @@ export function CopyCssButton({ authored }: { authored: AuthoredCssState }) {
   const timer = useRef<number | null>(null);
   useEffect(
     () => () => {
-      if (timer.current !== null) window.clearTimeout(timer.current);
+      if (timer.current !== null) {
+        window.clearTimeout(timer.current);
+      }
     },
     []
   );
+
   const copy = async () => {
     const css = await authored.request();
     let next: "copied" | "failed" = "failed";
+
     if (css) {
       try {
         await navigator.clipboard.writeText(formatCopyCss(css));
@@ -26,16 +30,23 @@ export function CopyCssButton({ authored }: { authored: AuthoredCssState }) {
         next = "failed";
       }
     }
+
     setState(next);
-    if (timer.current !== null) window.clearTimeout(timer.current);
+
+    if (timer.current !== null) {
+      window.clearTimeout(timer.current);
+    }
+
     timer.current = window.setTimeout(() => setState("idle"), COPIED_MS);
   };
+
   const label =
     state === "copied"
       ? "Copied"
       : state === "failed"
         ? "Copy failed"
         : "Copy CSS";
+
   return (
     <button
       type="button"
@@ -55,7 +66,11 @@ export function CopyCssButton({ authored }: { authored: AuthoredCssState }) {
 export function InspectorOtherStyles({ css }: { css: AuthoredCss | null }) {
   const [open, setOpen] = useState(false);
   const rows = css ? otherStyles(css) : [];
-  if (rows.length === 0) return null;
+
+  if (rows.length === 0) {
+    return null;
+  }
+
   return (
     <section className="ins-section ins-other" aria-label="Other styles">
       <button

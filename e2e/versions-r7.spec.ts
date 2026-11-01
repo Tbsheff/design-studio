@@ -15,12 +15,15 @@ import {
 
 const PROMPT =
   "A landing page for a small independent bookshop: hero, featured books, events calendar, newsletter signup";
+
 const SHORT = "A landing page for a small independent bookshop";
+
 const BUTTONS = [
   { id: "b1", x: 80, y: 120 },
   { id: "b2", x: 320, y: 120 },
   { id: "b3", x: 560, y: 120 },
 ];
+
 const BUTTON_SIZE = { width: 160, height: 48 };
 const TOLERANCE = 2;
 
@@ -28,6 +31,7 @@ function fixture(changedBg: string): string {
   const places = BUTTONS.map(
     (b) => `#${b.id}{left:${b.x}px;top:${b.y}px}`
   ).join("");
+
   return `<!doctype html><html><head><meta charset="utf-8"><style>
 html,body{margin:0;background:#ffffff}
 button{position:absolute;width:${BUTTON_SIZE.width}px;height:${BUTTON_SIZE.height}px;margin:0;padding:0;border:0;border-radius:8px;background:#2a4bd7;color:#ffffff;font:600 16px/48px sans-serif}
@@ -38,9 +42,11 @@ ${places}#b2{background:${changedBg}}
 function trackThumbs(page: Page): { count: () => number } {
   let count = 0;
   page.on("request", (request) => {
-    if (/\/versions\/[^/]+\/thumb$/.test(new URL(request.url()).pathname))
+    if (/\/versions\/[^/]+\/thumb$/.test(new URL(request.url()).pathname)) {
       count += 1;
+    }
   });
+
   return { count: () => count };
 }
 
@@ -50,6 +56,7 @@ async function seedRunProject(page: Page, api: StudioApi): Promise<Project> {
     "/api/projects",
     { prompt: PROMPT, kind: "html", packId: "editorial" }
   );
+
   await api.waitForRuns(project.id, 1);
   await api.call(
     "POST",
@@ -64,6 +71,7 @@ async function seedRunProject(page: Page, api: StudioApi): Promise<Project> {
       ),
     project.id
   );
+
   return project;
 }
 
@@ -91,10 +99,13 @@ test("R7-1: rows show lazy thumbnails, a hidden panel fetches none, and a rename
   await expect(rows).toHaveCount(3);
   const thumbsInRows = rows.locator('[data-testid="version-thumb"]');
   await expect(thumbsInRows).toHaveCount(3);
+
   for (const box of await thumbsInRows.evaluateAll((els) =>
     els.map((el) => el.getBoundingClientRect())
-  ))
+  )) {
     expect([box.width, box.height]).toEqual([56, 35]);
+  }
+
   await expect
     .poll(
       async () =>
@@ -104,14 +115,18 @@ test("R7-1: rows show lazy thumbnails, a hidden panel fetches none, and a rename
       { timeout: 60_000 }
     )
     .toEqual(["ready", "ready", "none"]);
+
   for (const box of await thumbsInRows.evaluateAll((els) =>
     els.map((el) => el.getBoundingClientRect())
-  ))
+  )) {
     expect([box.width, box.height]).toEqual([56, 35]);
+  }
+
   const natural = await rows
     .first()
     .locator("img")
     .evaluate((img: HTMLImageElement) => [img.naturalWidth, img.naturalHeight]);
+
   expect(natural).toEqual([640, 400]);
   const fetched = thumbs.count();
   expect(fetched).toBeLessThanOrEqual(3);
@@ -119,6 +134,7 @@ test("R7-1: rows show lazy thumbnails, a hidden panel fetches none, and a rename
   const runRow = rows.filter({
     has: page.locator(".version-kind", { hasText: "Run" }),
   });
+
   const title = runRow.locator(".version-toggle");
   await expect(title).toHaveText(SHORT);
   await title.dblclick();
@@ -148,6 +164,7 @@ test("R7-1: rows show lazy thumbnails, a hidden panel fetches none, and a rename
   const tokensRow = rows.filter({
     has: page.locator(".version-kind", { hasText: "Tokens" }),
   });
+
   await tokensRow.locator(".version-toggle").focus();
   await page.keyboard.press("F2");
   await tokensRow
@@ -171,6 +188,7 @@ test("R7-1: rows show lazy thumbnails, a hidden panel fetches none, and a rename
     .locator("li.version")
     .filter({ hasText: "Zoom fit hero v2" })
     .locator(".version-toggle");
+
   await named.dblclick();
   await page.getByRole("textbox", { name: "Version name" }).fill("   ");
   await page.keyboard.press("Enter");
@@ -205,11 +223,13 @@ test("R7-2: the diff mask marks only the changed button; slider and overlay mode
   page,
 }) => {
   const api = await openHome(page);
+
   const { project } = await api.call<{ project: Project }>(
     "POST",
     "/api/projects/from-starter",
     { starterId: "form" }
   );
+
   const main = mainDirection(project);
   const file = path.join(main.workTree, project.entry || "index.html");
   writeFileSync(file, fixture("#2a4bd7"));
@@ -217,30 +237,43 @@ test("R7-2: the diff mask marks only the changed button; slider and overlay mode
   writeFileSync(file, fixture("#d7442a"));
   await api.call("POST", `/api/projects/${project.id}/d/${main.id}/keep`);
   const [after, before] = await api.versions(project.id, main.id);
-  if (!after || !before) throw new Error("expected two kept versions");
+
+  if (!after || !before) {
+    throw new Error("expected two kept versions");
+  }
 
   const res = await fetch(
     `${BASE_URL}/api/projects/${project.id}/versions/${before.id}/diff/${after.id}?w=1280&h=800`,
     { headers: { "x-studio-token": api.token } }
   );
+
   expect(res.status).toBe(200);
   const mask = PNG.sync.read(Buffer.from(await res.arrayBuffer()));
   expect([mask.width, mask.height]).toEqual([1280, 800]);
   const target = BUTTONS[1] as (typeof BUTTONS)[number];
   let inside = 0;
   const outside: [number, number][] = [];
+
   for (let y = 0; y < mask.height; y += 1) {
     for (let x = 0; x < mask.width; x += 1) {
-      if ((mask.data[(y * mask.width + x) * 4 + 3] ?? 0) === 0) continue;
+      if ((mask.data[(y * mask.width + x) * 4 + 3] ?? 0) === 0) {
+        continue;
+      }
+
       const within =
         x >= target.x - TOLERANCE &&
         x < target.x + BUTTON_SIZE.width + TOLERANCE &&
         y >= target.y - TOLERANCE &&
         y < target.y + BUTTON_SIZE.height + TOLERANCE;
-      if (within) inside += 1;
-      else outside.push([x, y]);
+
+      if (within) {
+        inside += 1;
+      } else {
+        outside.push([x, y]);
+      }
     }
   }
+
   expect(outside.slice(0, 5)).toEqual([]);
   expect(inside).toBeGreaterThan(BUTTON_SIZE.width * BUTTON_SIZE.height * 0.6);
   expect(
@@ -263,10 +296,12 @@ test("R7-2: the diff mask marks only the changed button; slider and overlay mode
   await showVersions(page);
   const rows = page.locator("li.version");
   await expect(rows).toHaveCount(3);
+
   for (const index of [0, 1]) {
     await rows.nth(index).hover();
     await rows.nth(index).getByRole("button", { name: "Compare" }).click();
   }
+
   await page
     .getByRole("button", { name: "Compare", exact: true })
     .first()
@@ -279,12 +314,20 @@ test("R7-2: the diff mask marks only the changed button; slider and overlay mode
   const hit = await handle.boundingBox();
   expect(hit?.width ?? 0).toBeGreaterThanOrEqual(28);
   await handle.focus();
-  for (let n = 0; n < 5; n += 1) await page.keyboard.press("ArrowRight");
+
+  for (let n = 0; n < 5; n += 1) {
+    await page.keyboard.press("ArrowRight");
+  }
+
   await expect(handle).toHaveAttribute("aria-valuenow", "60");
   await page.keyboard.press("Shift+ArrowLeft");
   await expect(handle).toHaveAttribute("aria-valuenow", "50");
   const board = await page.getByTestId("compare-slider").boundingBox();
-  if (!board) throw new Error("no slider board");
+
+  if (!board) {
+    throw new Error("no slider board");
+  }
+
   await page.mouse.move(
     board.x + board.width * 0.5,
     board.y + board.height / 2

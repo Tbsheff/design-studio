@@ -12,6 +12,7 @@ type Command = { type: string } & Record<string, unknown>;
 
 function appVersion(): string {
   const arg = process.argv.find((value) => value.startsWith(VERSION_FLAG));
+
   return arg ? arg.slice(VERSION_FLAG.length) : '';
 }
 
@@ -22,10 +23,14 @@ interface Boot {
 
 function bootTimes(): Boot | null {
   const arg = process.argv.find((value) => value.startsWith(BOOT_FLAG));
-  if (!arg) return null;
+
+  if (!arg) { return null; }
+
   try {
     const parsed = JSON.parse(arg.slice(BOOT_FLAG.length)) as Partial<Boot>;
-    if (typeof parsed.startedAt !== 'number' || typeof parsed.marks !== 'object' || parsed.marks === null) return null;
+
+    if (typeof parsed.startedAt !== 'number' || typeof parsed.marks !== 'object' || parsed.marks === null) { return null; }
+
     return { startedAt: parsed.startedAt, marks: { ...parsed.marks } };
   } catch {
     return null;
@@ -36,14 +41,16 @@ const queued: Command[] = [];
 let deliver: ((command: Command) => void) | null = null;
 
 ipcRenderer.on(COMMAND_CHANNEL, (_event, command: Command) => {
-  if (deliver) deliver(command);
-  else queued.push(command);
+  if (deliver) { deliver(command); }
+  else { queued.push(command); }
 });
 
 function onCommand(handler: (command: Command) => void): void {
-  if (typeof handler !== 'function' || deliver) return;
+  if (typeof handler !== 'function' || deliver) { return; }
+
   deliver = handler;
-  for (const command of queued.splice(0)) handler(command);
+
+  for (const command of queued.splice(0)) { handler(command); }
 }
 
 function setContext(context: unknown): void {
@@ -55,6 +62,7 @@ async function pickFolder(options: unknown): Promise<string | null> {
   const title = typeof record.title === 'string' ? record.title : undefined;
   const defaultPath = typeof record.defaultPath === 'string' ? record.defaultPath : undefined;
   const chosen: unknown = await ipcRenderer.invoke(PICK_FOLDER_CHANNEL, { title, defaultPath });
+
   return typeof chosen === 'string' ? chosen : null;
 }
 
@@ -72,7 +80,7 @@ function pathForFile(file: unknown): string {
 }
 
 function openDropped(folder: unknown): void {
-  if (typeof folder === 'string' && folder) ipcRenderer.send(DROP_FOLDER_CHANNEL, folder);
+  if (typeof folder === 'string' && folder) { ipcRenderer.send(DROP_FOLDER_CHANNEL, folder); }
 }
 
 contextBridge.exposeInMainWorld('studioDesktop', Object.freeze({ platform: process.platform, version: appVersion(), boot: bootTimes(), onCommand, setContext, pickFolder, revealExport, pathForFile, openDropped }));
@@ -84,6 +92,7 @@ const THEMES = ['system', 'light', 'dark'];
 function savedTheme(): string {
   try {
     const value: unknown = ipcRenderer.sendSync(THEME_GET_CHANNEL);
+
     return typeof value === 'string' && THEMES.includes(value) ? value : 'system';
   } catch {
     return 'system';
@@ -91,7 +100,7 @@ function savedTheme(): string {
 }
 
 function setTheme(value: unknown): void {
-  if (typeof value === 'string' && THEMES.includes(value)) ipcRenderer.send(THEME_SET_CHANNEL, value);
+  if (typeof value === 'string' && THEMES.includes(value)) { ipcRenderer.send(THEME_SET_CHANNEL, value); }
 }
 
 contextBridge.exposeInMainWorld('studioThemeHost', Object.freeze({ initial: savedTheme(), set: setTheme }));

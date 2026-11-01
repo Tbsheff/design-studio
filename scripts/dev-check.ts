@@ -41,8 +41,10 @@ const REPO_ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   ".."
 );
+
 const EDIT_COUNT = 5;
 const BRIDGE_TOKEN = "devcheck-token";
+
 const HOST =
   process.env.DEV_CHECK_HOST === "localhost" ? "localhost" : "127.0.0.1";
 
@@ -67,6 +69,7 @@ function freePort(): Promise<number> {
 function createBus(): EventBus & { events: StudioEvent[] } {
   const events: StudioEvent[] = [];
   const listeners = new Map<string, Set<(event: StudioEvent) => void>>();
+
   return {
     events,
     emit(input: StudioEventInput): StudioEvent {
@@ -75,9 +78,13 @@ function createBus(): EventBus & { events: StudioEvent[] } {
         seq: events.length + 1,
         ts: Date.now(),
       } as StudioEvent;
+
       events.push(event);
-      for (const listener of listeners.get(input.projectId) ?? [])
+
+      for (const listener of listeners.get(input.projectId) ?? []) {
         listener(event);
+      }
+
       return event;
     },
     since(projectId: string, afterSeq: number): StudioEvent[] {
@@ -92,6 +99,7 @@ function createBus(): EventBus & { events: StudioEvent[] } {
       const set = listeners.get(projectId) ?? new Set();
       set.add(listener);
       listeners.set(projectId, set);
+
       return () => set.delete(listener);
     },
   };
@@ -112,6 +120,7 @@ function makeProject(
     sessionId: null,
     createdAt: Date.now(),
   };
+
   return {
     id,
     name: id,
@@ -129,11 +138,16 @@ function createProjectStore(dataDir: string, all: Project[]): ProjectStore {
   const unsupported = (): never => {
     throw new Error("not supported in dev-check");
   };
+
   return {
     list: async () => all,
     get: async (projectId) => {
       const found = all.find((project) => project.id === projectId);
-      if (!found) throw new Error(`no project ${projectId}`);
+
+      if (!found) {
+        throw new Error(`no project ${projectId}`);
+      }
+
       return found;
     },
     create: unsupported,
@@ -153,6 +167,7 @@ function createVersionStore(): VersionStore {
   const unsupported = (): never => {
     throw new Error("not supported in dev-check");
   };
+
   return {
     ensureRepo: async () => undefined,
     commit: async () => null,
@@ -179,8 +194,12 @@ function waitForEvent(
       unsubscribe();
       reject(new Error(`timed out waiting for event on ${projectId}`));
     }, timeoutMs);
+
     const unsubscribe = bus.subscribe(projectId, (event) => {
-      if (!match(event)) return;
+      if (!match(event)) {
+        return;
+      }
+
       clearTimeout(timer);
       unsubscribe();
       resolve(event);
@@ -295,12 +314,14 @@ function startWrapperServer(port: number): Promise<Server> {
         new URL(req.url ?? "/", "http://wrapper.local").searchParams.get(
           "src"
         ) ?? "about:blank";
+
       res.writeHead(200, {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-store",
       });
       res.end(wrapperHtml(src.replace(/"/g, "&quot;")));
     });
+
     server.once("error", reject);
     server.listen(port, "127.0.0.1", () => resolve(server));
   });
@@ -319,6 +340,7 @@ async function waitForMessage(
   timeoutMs = 15_000
 ): Promise<BridgeMessage> {
   const deadline = Date.now() + timeoutMs;
+
   while (Date.now() < deadline) {
     const found = (await messages(page))
       .slice(after)
@@ -326,19 +348,30 @@ async function waitForMessage(
         (message) =>
           message.data.type === type && message.data.token === BRIDGE_TOKEN
       );
-    if (found) return found;
+
+    if (found) {
+      return found;
+    }
+
     await new Promise((resolve) => setTimeout(resolve, 10));
   }
+
   throw new Error(`no bridge message ${type}`);
 }
 
 async function previewFrame(page: Page, origin: string): Promise<Frame> {
   const deadline = Date.now() + 10_000;
+
   while (Date.now() < deadline) {
     const frame = page.frames().find((item) => item.url().startsWith(origin));
-    if (frame) return frame;
+
+    if (frame) {
+      return frame;
+    }
+
     await new Promise((resolve) => setTimeout(resolve, 20));
   }
+
   throw new Error(`no frame for ${origin}`);
 }
 
@@ -357,6 +390,7 @@ async function openInWrapper(
   await waitForMessage(page, "ready");
   await waitForMessage(page, "painted");
   const readyMs = Date.now() - started;
+
   return { frame: await previewFrame(page, target.origin), readyMs };
 }
 
@@ -375,10 +409,12 @@ async function checkSelect(
   await new Promise((resolve) => setTimeout(resolve, 50));
   await frame.locator("#title").click();
   const message = await waitForMessage(page, "select", before, 5_000);
+
   const selection = message.data.selection as {
     selector: string;
     source: unknown;
   };
+
   await page.evaluate((token) => {
     const iframe = document.getElementById("preview") as HTMLIFrameElement;
     iframe.contentWindow?.postMessage(
@@ -386,12 +422,14 @@ async function checkSelect(
       "*"
     );
   }, BRIDGE_TOKEN);
+
   return { selector: selection.selector, source: selection.source };
 }
 
 function stats(values: number[]): string {
   const sorted = [...values].sort((a, b) => a - b);
   const median = sorted[Math.floor(sorted.length / 2)] ?? 0;
+
   return `values=[${values.join(", ")}] median=${median} max=${sorted[sorted.length - 1] ?? 0}`;
 }
 
@@ -405,6 +443,7 @@ async function main(): Promise<void> {
 
   const previewPort = await freePort();
   const studioPort = await freePort();
+
   const config: ServerConfig = {
     dataDir,
     projectsDir: path.join(tmp, "Design Studio"),
@@ -416,25 +455,33 @@ async function main(): Promise<void> {
     studioOrigin: `http://${HOST}:${studioPort}`,
     previewOrigin: `http://${HOST}:${previewPort}`,
   };
+
   const htmlProject = makeProject("phtml", "html", htmlTree);
   const reactProject = makeProject("preact", "react", reactTree);
   const bus = createBus();
   const projects = createProjectStore(dataDir, [htmlProject, reactProject]);
+
   const service = createPreviewService({
     config,
     bus,
     projects,
     versions: createVersionStore(),
   });
+
   const report: string[] = [];
   const failures: string[] = [];
+
   const check = (ok: boolean, label: string): void => {
     report.push(`${ok ? "PASS" : "FAIL"} ${label}`);
-    if (!ok) failures.push(label);
+
+    if (!ok) {
+      failures.push(label);
+    }
   };
 
   const browser = await chromium.launch({ channel: "chrome", headless: true });
   const wrapperServer = await startWrapperServer(studioPort);
+
   try {
     await service.start();
     const htmlDirection = htmlProject.directions[0] as Direction;
@@ -466,16 +513,20 @@ async function main(): Promise<void> {
       !htmlBody.includes(config.studioToken),
       "html never contains the studio token"
     );
+
     const traversal = await fetch(
       `${new URL(htmlUrl).origin}/d/phtml/main/..%2f..%2f..%2fetc%2fpasswd`
     );
+
     check(
       traversal.status === 400 || traversal.status === 404,
       `path traversal blocked (status ${traversal.status})`
     );
+
     const traversal2 = await fetch(
       `${new URL(htmlUrl).origin}/d/phtml/main/%2e%2e/%2e%2e/etc/passwd`
     );
+
     check(
       [400, 403, 404].includes(traversal2.status),
       `encoded dot traversal blocked (status ${traversal2.status})`
@@ -484,9 +535,11 @@ async function main(): Promise<void> {
     const page = await browser.newPage();
     const htmlOpen = await openInWrapper(page, config.studioOrigin, htmlUrl);
     report.push(`html iframe load to painted: ${htmlOpen.readyMs}ms`);
+
     const htmlLocCount = await htmlOpen.frame
       .locator("[data-studio-loc]")
       .count();
+
     check(
       htmlLocCount >= 4,
       `html DOM has data-studio-loc (${htmlLocCount} elements)`
@@ -500,9 +553,11 @@ async function main(): Promise<void> {
       htmlReady.origin === new URL(htmlUrl).origin,
       "html ready posted from the project preview origin"
     );
+
     const wrongHost = await fetch(
       htmlUrl.replace(new URL(htmlUrl).host, `127.0.0.1:${config.previewPort}`)
     );
+
     check(
       wrongHost.status === 403,
       `bare preview host refused for project paths (status ${wrongHost.status})`
@@ -521,6 +576,7 @@ async function main(): Promise<void> {
     await service.directionUrl(htmlProject, htmlDirection);
     await new Promise((resolve) => setTimeout(resolve, 300));
     const htmlLatencies: number[] = [];
+
     for (let edit = 1; edit <= EDIT_COUNT; edit += 1) {
       const waiting = waitForEvent(
         bus,
@@ -528,27 +584,35 @@ async function main(): Promise<void> {
         (event) => event.type === "files.changed",
         3_000
       );
+
       const writtenAt = Date.now();
       await writeFile(
         path.join(htmlTree, "index.html"),
         htmlSource(`Edit ${edit}`)
       );
       const event = await waiting;
+
       if (event.type === "files.changed") {
         htmlLatencies.push(event.changedAt - writtenAt);
-        if (edit === 1)
+
+        if (edit === 1) {
           report.push(
             `html files.changed paths ${JSON.stringify(event.paths)}`
           );
+        }
       }
+
       await new Promise((resolve) => setTimeout(resolve, 120));
     }
+
     report.push(`html write -> files.changed ms: ${stats(htmlLatencies)}`);
     check(Math.max(...htmlLatencies) < 250, "html files.changed under 250ms");
+
     const statusEvents = bus.events.filter(
       (event) =>
         event.type === "status.changed" && event.projectId === htmlProject.id
     );
+
     check(
       statusEvents.length >= 1,
       `status.changed emitted (${statusEvents.length} for ${EDIT_COUNT} edits)`
@@ -558,6 +622,7 @@ async function main(): Promise<void> {
       service.directionUrl(reactProject, reactDirection),
       service.directionUrl(reactProject, reactDirection),
     ]);
+
     report.push(`react url ${reactUrl}`);
     check(
       reactUrlConcurrent === reactUrl,
@@ -566,16 +631,20 @@ async function main(): Promise<void> {
     const reactOpen = await openInWrapper(page, config.studioOrigin, reactUrl);
     report.push(`react iframe load to painted: ${reactOpen.readyMs}ms`);
     await reactOpen.frame.waitForSelector("#title", { timeout: 15_000 });
+
     const reactLocCount = await reactOpen.frame
       .locator("[data-studio-loc]")
       .count();
+
     check(
       reactLocCount >= 3,
       `react DOM has data-studio-loc (${reactLocCount} elements)`
     );
+
     const reactTitleLoc = await reactOpen.frame
       .locator("#title")
       .getAttribute("data-studio-loc");
+
     check(reactTitleLoc === "src/App.tsx:4:7", `react h1 loc ${reactTitleLoc}`);
     const reactSelect = await checkSelect(page, reactOpen.frame);
     check(
@@ -587,22 +656,27 @@ async function main(): Promise<void> {
     await reactOpen.frame.evaluate(() => {
       (window as unknown as { __hmrMarker: number }).__hmrMarker = 1;
     });
+
     const readyCountBefore = (await messages(page)).filter(
       (message) => message.data.type === "ready"
     ).length;
+
     await new Promise((resolve) => setTimeout(resolve, 300));
     const reactLatencies: number[] = [];
+
     for (let edit = 1; edit <= EDIT_COUNT; edit += 1) {
       const label = `Edit ${edit}`;
       await reactOpen.frame.evaluate((expected) => {
         const scope = window as unknown as { __seenAt?: number };
         scope.__seenAt = undefined;
+
         const observer = new MutationObserver(() => {
           if (document.getElementById("title")?.textContent === expected) {
             scope.__seenAt = performance.timeOrigin + performance.now();
             observer.disconnect();
           }
         });
+
         observer.observe(document.body, {
           subtree: true,
           childList: true,
@@ -617,34 +691,43 @@ async function main(): Promise<void> {
         undefined,
         { timeout: 5_000, polling: 10 }
       );
+
       const seenAt = await reactOpen.frame.evaluate(
         () => (window as unknown as { __seenAt: number }).__seenAt
       );
+
       reactLatencies.push(Math.round(seenAt - writtenAt));
       await new Promise((resolve) => setTimeout(resolve, 150));
     }
+
     report.push(
       `react write -> HMR applied in DOM ms: ${stats(reactLatencies)}`
     );
     check(Math.max(...reactLatencies) < 750, "react HMR under 750ms");
+
     const marker = await reactOpen.frame.evaluate(
       () => (window as unknown as { __hmrMarker?: number }).__hmrMarker
     );
+
     const readyCountAfter = (await messages(page)).filter(
       (message) => message.data.type === "ready"
     ).length;
+
     check(
       marker === 1 && readyCountAfter === readyCountBefore,
       "react page kept state (HMR, no full reload) across 5 edits"
     );
+
     const reactUrlAfter = await service.directionUrl(
       reactProject,
       reactDirection
     );
+
     const alive = await fetch(reactUrlAfter).then(
       (response) => response.status,
       () => 0
     );
+
     check(
       reactUrlAfter === reactUrl && alive === 200,
       `vite server alive after ${EDIT_COUNT} edits (same URL, status ${alive})`
@@ -656,6 +739,7 @@ async function main(): Promise<void> {
       (event) => event.type === "preview.build-error",
       5_000
     ).catch(() => null);
+
     await writeFile(
       path.join(reactTree, "src", "App.tsx"),
       "export function App() {\n  return <main><h1>broken</main>;\n}\n"
@@ -665,11 +749,13 @@ async function main(): Promise<void> {
       errorEvent !== null,
       "preview.build-error emitted for a syntax error"
     );
+
     if (errorEvent && errorEvent.type === "preview.build-error") {
       report.push(
         `build-error file=${errorEvent.file} line=${errorEvent.line} message=${errorEvent.message.split("\n")[0]}`
       );
     }
+
     await writeFile(
       path.join(reactTree, "src", "App.tsx"),
       appSource("Recovered")
@@ -686,21 +772,26 @@ async function main(): Promise<void> {
       );
 
     const checks = await service.renderCheck(reactProject, reactDirection);
+
     for (const result of checks) {
       report.push(
         `renderCheck react ${result.viewport} ok=${result.ok} overflow=${result.horizontalOverflow} console=${JSON.stringify(result.consoleErrors)} page=${result.pageErrors.length}`
       );
     }
+
     const htmlChecks = await service.renderCheck(htmlProject, htmlDirection);
+
     for (const result of htmlChecks) {
       report.push(
         `renderCheck html ${result.viewport} ok=${result.ok} overflow=${result.horizontalOverflow} console=${JSON.stringify(result.consoleErrors)} page=${result.pageErrors.length}`
       );
     }
+
     const reactFiles = (await readdir(reactTree, { recursive: true }))
       .map(String)
       .filter((file) => !file.startsWith("node_modules"))
       .sort();
+
     check(
       JSON.stringify(reactFiles) ===
         JSON.stringify([
@@ -716,11 +807,13 @@ async function main(): Promise<void> {
     );
     const htmlSnapshotDir = path.join(tmp, "snapshots", "html-abc123");
     await cp(htmlTree, htmlSnapshotDir, { recursive: true });
+
     const htmlSnapshotUrl = await service.snapshotUrl(
       htmlProject,
       "abc123",
       htmlSnapshotDir
     );
+
     const snapshotResponse = await fetch(htmlSnapshotUrl);
     const snapshotBody = await snapshotResponse.text();
     check(
@@ -737,14 +830,17 @@ async function main(): Promise<void> {
         !source.includes(`${path.sep}node_modules`) &&
         path.basename(source) !== "vite.config.ts",
     });
+
     const reactSnapshotUrl = await service.snapshotUrl(
       reactProject,
       "def456",
       reactSnapshotDir
     );
+
     const snapshotLink = await lstat(
       path.join(reactSnapshotDir, "node_modules")
     );
+
     check(
       snapshotLink.isSymbolicLink(),
       "react snapshot node_modules is a symlink"
@@ -753,27 +849,33 @@ async function main(): Promise<void> {
       new URL(reactSnapshotUrl).port !== new URL(reactUrl).port,
       `react snapshot has its own Vite server ${reactSnapshotUrl}`
     );
+
     const snapshotOpen = await openInWrapper(
       page,
       config.studioOrigin,
       reactSnapshotUrl
     );
+
     report.push(
       `react snapshot (no vite.config, inline react plugin) load to painted: ${snapshotOpen.readyMs}ms`
     );
     await snapshotOpen.frame.waitForSelector("#title", { timeout: 15_000 });
+
     const snapshotLoc = await snapshotOpen.frame
       .locator("#title")
       .getAttribute("data-studio-loc");
+
     check(
       snapshotLoc === "src/App.tsx:4:7",
       `react snapshot h1 loc ${snapshotLoc}`
     );
+
     const shot = await service.screenshot(
       htmlUrl,
       { width: 800, height: 600 },
       path.join(tmp, "shot.png")
     );
+
     check(shot.endsWith("shot.png"), "screenshot written");
   } finally {
     await browser.close().catch(() => undefined);
@@ -781,10 +883,12 @@ async function main(): Promise<void> {
     await new Promise<void>((resolve) => wrapperServer.close(() => resolve()));
     await service.stop();
   }
+
   const stillListening = await fetch(config.previewOrigin).then(
     () => true,
     () => false
   );
+
   check(!stillListening, "html server closed by stop()");
   await rm(tmp, { recursive: true, force: true });
   console.log(report.join("\n"));

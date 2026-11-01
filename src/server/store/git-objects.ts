@@ -67,6 +67,7 @@ export function comparePaths(a: string, b: string): number {
 function parseTree(body: Buffer): TreeEntry[] {
   const entries: TreeEntry[] = [];
   let at = 0;
+
   while (at < body.length) {
     const space = body.indexOf(0x20, at);
     const nul = body.indexOf(0, space);
@@ -77,6 +78,7 @@ function parseTree(body: Buffer): TreeEntry[] {
     });
     at = nul + 21;
   }
+
   return entries;
 }
 
@@ -95,16 +97,24 @@ function parseCommit(body: Buffer): CommitInfo {
   const header = split === -1 ? text : text.slice(0, split);
   const parents: string[] = [];
   let tree = "";
+
   for (const line of header.split("\n")) {
-    if (line.startsWith("tree ")) tree = line.slice(5);
-    if (line.startsWith("parent ")) parents.push(line.slice(7));
+    if (line.startsWith("tree ")) {
+      tree = line.slice(5);
+    }
+
+    if (line.startsWith("parent ")) {
+      parents.push(line.slice(7));
+    }
   }
+
   return { tree, parents, message: split === -1 ? "" : text.slice(split + 2) };
 }
 
 function timezone(date: Date): string {
   const offset = -date.getTimezoneOffset();
   const abs = Math.abs(offset);
+
   return `${offset < 0 ? "-" : "+"}${String(Math.floor(abs / 60)).padStart(2, "0")}${String(abs % 60).padStart(2, "0")}`;
 }
 
@@ -129,6 +139,7 @@ class BatchReader {
 
   async read(sha: string): Promise<RawObject | null> {
     const child = await this.start();
+
     return new Promise((resolve, reject) => {
       this.queue.push({ sha, resolve, reject });
       child.stdin.write(`${sha}\n`);
@@ -141,12 +152,16 @@ class BatchReader {
   }
 
   private async start(): Promise<ChildProcessWithoutNullStreams> {
-    if (this.child) return this.child;
+    if (this.child) {
+      return this.child;
+    }
+
     const child = spawn(await this.binary(), ["cat-file", "--batch"], {
       env: this.env,
       cwd: this.cwd,
       stdio: ["pipe", "pipe", "pipe"],
     });
+
     this.child = child;
     child.stdout.on("data", (chunk: Buffer) => this.consume(chunk));
     child.stdin.on("error", () => undefined);
@@ -154,31 +169,49 @@ class BatchReader {
       this.fail(child, new Error("git cat-file stopped"))
     );
     child.once("error", (error) => this.fail(child, error));
+
     return child;
   }
 
   private fail(child: ChildProcessWithoutNullStreams, error: Error): void {
-    if (this.child === child) this.child = null;
+    if (this.child === child) {
+      this.child = null;
+    }
+
     this.buffer = Buffer.alloc(0);
-    for (const pending of this.queue.splice(0)) pending.reject(error);
+
+    for (const pending of this.queue.splice(0)) {
+      pending.reject(error);
+    }
   }
 
   private consume(chunk: Buffer): void {
     this.buffer =
       this.buffer.length === 0 ? chunk : Buffer.concat([this.buffer, chunk]);
+
     for (;;) {
       const pending = this.queue[0];
       const eol = this.buffer.indexOf(0x0a);
-      if (!pending || eol === -1) return;
+
+      if (!pending || eol === -1) {
+        return;
+      }
+
       const header = this.buffer.toString("utf-8", 0, eol).split(" ");
+
       if (header[1] === "missing") {
         this.buffer = this.buffer.subarray(eol + 1);
         this.queue.shift();
         pending.resolve(null);
         continue;
       }
+
       const size = Number(header[2]);
-      if (this.buffer.length < eol + 1 + size + 1) return;
+
+      if (this.buffer.length < eol + 1 + size + 1) {
+        return;
+      }
+
       const body = Buffer.from(this.buffer.subarray(eol + 1, eol + 1 + size));
       this.buffer = this.buffer.subarray(eol + 1 + size + 1);
       this.queue.shift();
@@ -210,25 +243,43 @@ export class ObjectStore {
 
   async readBlob(sha: string): Promise<Buffer> {
     const object = await this.reader.read(sha);
-    if (!object || object.type !== "blob")
+
+    if (!object || object.type !== "blob") {
       throw new Error(`blob ${sha} not found`);
+    }
+
     return object.body;
   }
 
   async readTree(sha: string): Promise<TreeEntry[]> {
     const known = this.trees.get(sha);
-    if (known) return known;
+
+    if (known) {
+      return known;
+    }
+
     const object = await this.reader.read(sha);
-    if (!object || object.type !== "tree")
+
+    if (!object || object.type !== "tree") {
       throw new Error(`tree ${sha} not found`);
+    }
+
     return this.remember(this.trees, sha, parseTree(object.body));
   }
 
   async readCommit(sha: string): Promise<CommitInfo | null> {
     const known = this.commits.get(sha);
-    if (known) return known;
+
+    if (known) {
+      return known;
+    }
+
     const object = await this.reader.read(sha);
-    if (!object || object.type !== "commit") return null;
+
+    if (!object || object.type !== "commit") {
+      return null;
+    }
+
     return this.remember(this.commits, sha, parseCommit(object.body));
   }
 
@@ -239,6 +290,7 @@ export class ObjectStore {
   async writeTree(entries: TreeEntry[]): Promise<string> {
     const sha = await this.writeLoose("tree", serializeTree(entries));
     this.remember(this.trees, sha, sortTree(entries));
+
     return sha;
   }
 
@@ -254,9 +306,11 @@ export class ObjectStore {
       `author ${author}`,
       `committer ${author}`,
     ].join("\n");
+
     const body = Buffer.from(`${header}\n\n${message}`);
     const sha = await this.writeLoose("commit", body);
     this.remember(this.commits, sha, { tree, parents, message });
+
     return sha;
   }
 
@@ -264,15 +318,20 @@ export class ObjectStore {
     const loose = await readFile(path.join(this.gitDir, ref), "utf-8").catch(
       () => null
     );
+
     if (loose !== null) {
       const value = loose.trim();
+
       return /^[0-9a-f]{40}$/.test(value) ? value : null;
     }
+
     const packed = await readFile(
       path.join(this.gitDir, "packed-refs"),
       "utf-8"
     ).catch(() => "");
+
     const line = packed.split("\n").find((entry) => entry.endsWith(` ${ref}`));
+
     return line ? line.slice(0, 40) : null;
   }
 
@@ -285,13 +344,18 @@ export class ObjectStore {
     const target = path.join(this.gitDir, ref);
     await mkdir(path.dirname(target), { recursive: true });
     const lock = `${target}.lock`;
+
     const handle = await open(lock, "wx").catch(() => {
       throw new RefConflictError(`${ref} is locked`);
     });
+
     try {
       const current = await this.readRef(ref);
-      if ((current ?? null) !== expected)
+
+      if ((current ?? null) !== expected) {
         throw new RefConflictError(`${ref} moved`);
+      }
+
       await handle.writeFile(`${next}\n`);
       await handle.close();
       await rename(lock, target);
@@ -300,14 +364,21 @@ export class ObjectStore {
       await rm(lock, { force: true });
       throw error;
     }
+
     const log = path.join(this.gitDir, "logs", ref);
-    if (existsSync(log))
+
+    if (existsSync(log)) {
       await appendFile(log, `${expected ?? ZERO_SHA} ${next} ${ident}\n`);
+    }
   }
 
   private remember<T>(map: Map<string, T>, sha: string, value: T): T {
-    if (map.size > MAX_CACHED) map.clear();
+    if (map.size > MAX_CACHED) {
+      map.clear();
+    }
+
     map.set(sha, value);
+
     return value;
   }
 
@@ -315,7 +386,11 @@ export class ObjectStore {
     const sha = gitHash(type, body);
     const dir = path.join(this.gitDir, "objects", sha.slice(0, 2));
     const target = path.join(dir, sha.slice(2));
-    if (existsSync(target)) return sha;
+
+    if (existsSync(target)) {
+      return sha;
+    }
+
     await mkdir(dir, { recursive: true });
     const temp = path.join(dir, `tmp_obj_${randomBytes(6).toString("hex")}`);
     await writeFile(
@@ -327,9 +402,12 @@ export class ObjectStore {
       { mode: 0o444 }
     );
     await link(temp, target).catch((error: NodeJS.ErrnoException) => {
-      if (error.code !== "EEXIST") throw error;
+      if (error.code !== "EEXIST") {
+        throw error;
+      }
     });
     await rm(temp, { force: true });
+
     return sha;
   }
 }

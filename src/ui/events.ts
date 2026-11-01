@@ -21,7 +21,10 @@ export function useProjectEvents(
   handler.current = onEvent;
 
   useEffect(() => {
-    if (!projectId) return;
+    if (!projectId) {
+      return;
+    }
+
     return hub.subscribe(projectId, (event) => handler.current(event));
   }, [projectId]);
 
@@ -30,9 +33,11 @@ export function useProjectEvents(
       projectId ? hub.watchState(projectId, onChange) : () => undefined,
     [projectId]
   );
+
   const read = useCallback(
     () => (projectId ? hub.state(projectId) : "connecting"),
     [projectId]
   );
+
   return useSyncExternalStore(watch, read, read);
 }

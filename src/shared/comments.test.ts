@@ -62,6 +62,7 @@ describe("resolveAnchor", () => {
       selector: "body > p",
       text: "Other",
     };
+
     const heading: FakeElement = { ...h1, loc: "index.html:7:3" };
     expect(resolveAnchor(query(), dom([shifted, heading]))).toEqual({
       element: heading,
@@ -76,6 +77,7 @@ describe("resolveAnchor", () => {
       selector: `ul > li:nth-of-type(${n})`,
       text: `Item ${n}`,
     }));
+
     const result = resolveAnchor(
       query({
         tag: "li",
@@ -85,6 +87,7 @@ describe("resolveAnchor", () => {
       }),
       dom(items)
     );
+
     expect(result).toEqual({ element: items[1], via: "source" });
   });
 
@@ -95,6 +98,7 @@ describe("resolveAnchor", () => {
       selector: `ul > li:nth-of-type(${n})`,
       text: `Item ${n}`,
     }));
+
     const result = resolveAnchor(
       query({
         tag: "li",
@@ -104,6 +108,7 @@ describe("resolveAnchor", () => {
       }),
       dom(items)
     );
+
     expect(result).toEqual({ element: items[2], via: "source" });
   });
 
@@ -114,12 +119,14 @@ describe("resolveAnchor", () => {
       selector: "body > main > p",
       text: "New eyebrow",
     };
+
     const lede: FakeElement = {
       tag: "p",
       loc: "index.html:8:5",
       selector: "body > main > p:nth-of-type(2)",
       text: "A calm lede",
     };
+
     const result = resolveAnchor(
       query({
         tag: "p",
@@ -129,6 +136,7 @@ describe("resolveAnchor", () => {
       }),
       dom([inserted, lede])
     );
+
     expect(result).toEqual({ element: lede, via: "text" });
   });
 
@@ -147,6 +155,7 @@ describe("resolveAnchor", () => {
       selector: "section > h1",
       text: "  Hello\n world ",
     };
+
     expect(resolveAnchor(query(), dom([other]))).toEqual({
       element: other,
       via: "text",
@@ -160,6 +169,7 @@ describe("resolveAnchor", () => {
       selector: "section > h2",
       text: "Hello world",
     };
+
     expect(resolveAnchor(query(), dom([other]))).toBeNull();
   });
 
@@ -170,6 +180,7 @@ describe("resolveAnchor", () => {
       selector: "x",
       text: "",
     };
+
     expect(
       resolveAnchor(
         query({ sourceLoc: null, selector: "nope", textSnippet: "" }),
@@ -180,12 +191,14 @@ describe("resolveAnchor", () => {
 
   it("matches a long snippet by prefix", () => {
     const long = "a".repeat(120);
+
     const element: FakeElement = {
       tag: "p",
       loc: null,
       selector: "p",
       text: long,
     };
+
     expect(
       resolveAnchor(
         query({
@@ -210,8 +223,10 @@ describe("status transitions", () => {
   ];
 
   it("lets only the server send or settle comments", () => {
-    for (const from of all)
+    for (const from of all) {
       expect(canTransition(from, "sent", "user")).toBe(from === "sent");
+    }
+
     expect(canTransition("queued", "sent", "server")).toBe(true);
     expect(canTransition("draft", "sent", "server")).toBe(true);
     expect(canTransition("sent", "resolved", "server")).toBe(true);
@@ -235,8 +250,10 @@ describe("status transitions", () => {
 
   it("maps run status to the next comment status", () => {
     expect(statusAfterRun("completed")).toBe("resolved");
-    for (const status of ["failed", "canceled", "budget_exceeded"])
+
+    for (const status of ["failed", "canceled", "budget_exceeded"]) {
       expect(statusAfterRun(status)).toBe("queued");
+    }
   });
 });
 
@@ -264,6 +281,7 @@ describe("helpers", () => {
       source: { file: "index.html", line: 5, col: 3 },
       ancestors: [],
     });
+
     expect(target).toEqual({
       selector: "body > h1",
       tag: "h1",

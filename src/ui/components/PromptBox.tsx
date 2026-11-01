@@ -136,10 +136,12 @@ const SEND_LABEL: Record<SendState, string> = {
 function useMorph(key: string): boolean {
   const last = useRef<string | null>(null);
   const morphed = useRef(false);
+
   if (last.current !== key) {
     morphed.current = last.current !== null;
     last.current = key;
   }
+
   return morphed.current;
 }
 
@@ -166,11 +168,13 @@ interface SendView {
 
 const QUEUE_TIP = `Queue (↵) · Send now (${MOD_LABEL}↵) · Stop (${MOD_LABEL}.)`;
 const STOP_KEYS = IS_MAC ? "Meta+." : "Control+.";
+
 const SEND_CLASS: Record<SendState, string> = {
   send: "icon-btn send send-btn",
   queue: "icon-btn send send-btn",
   stop: "icon-btn send-btn stop-btn",
 };
+
 const SEND_ICON: Record<SendState, IconName> = {
   send: "arrowUp",
   queue: "history",
@@ -190,12 +194,16 @@ function isPlainEscape(event: KeyboardEvent<HTMLDivElement>): boolean {
 
 function leaveComposer(input: HTMLElement): void {
   const stage = document.querySelector<HTMLElement>(".stage");
-  if (stage) stage.focus({ preventScroll: true });
-  else input.blur();
+
+  if (stage) {
+    stage.focus({ preventScroll: true });
+  } else {
+    input.blur();
+  }
 }
 
 function sendView(props: SendProps): SendView {
-  if (props.running && !props.hasDraft)
+  if (props.running && !props.hasDraft) {
     return {
       state: "stop",
       busy: false,
@@ -204,7 +212,9 @@ function sendView(props: SendProps): SendView {
       keys: STOP_KEYS,
       onClick: props.onStop,
     };
-  if (props.running)
+  }
+
+  if (props.running) {
     return {
       state: "queue",
       busy: false,
@@ -212,6 +222,8 @@ function sendView(props: SendProps): SendView {
       tip: QUEUE_TIP,
       onClick: props.onQueue,
     };
+  }
+
   return {
     state: "send",
     busy: props.sending,
@@ -225,6 +237,7 @@ function SendButton(props: SendProps) {
   const view = sendView(props);
   const key = view.busy ? "busy" : view.state;
   const morph = useMorph(key);
+
   return (
     <button
       type="button"
@@ -254,7 +267,10 @@ function SendButton(props: SendProps) {
 }
 
 function ReasonText({ id, text }: { id: string; text: string | null }) {
-  if (!text) return null;
+  if (!text) {
+    return null;
+  }
+
   return (
     <span id={id} className="sr-only">
       {text}
@@ -301,6 +317,7 @@ const MODE_ICON: Record<ComposerMode, IconName> = {
   plan: "doc",
   critique: "eye",
 };
+
 const MODES: readonly ComposerMode[] = ["edit", "plan", "critique"];
 
 function modeGroup(
@@ -357,7 +374,10 @@ function inputPlaceholder(
   running: boolean,
   waitReason: string | null | undefined
 ): string {
-  if (waitReason) return waitReason;
+  if (waitReason) {
+    return waitReason;
+  }
+
   return running
     ? RUNNING_PLACEHOLDER
     : `${INPUT_COPY[mode].placeholder} (${MOD_LABEL}↵ to send)`;
@@ -378,6 +398,7 @@ function sendStatus(state: {
   empty: boolean;
 }): SendStatus {
   const blocker = state.running ? null : sendBlocker(state);
+
   return {
     tip: blocker ?? `Send (${MOD_LABEL}↵)`,
     spoken: blocker === EMPTY_REASON ? null : blocker,
@@ -390,16 +411,30 @@ function sendBlocker(state: {
   uploading: boolean;
   empty: boolean;
 }): string | null {
-  if (state.waitReason) return state.waitReason;
-  if (state.loading) return "Wait for the design to load";
-  if (state.uploading) return "Wait for the images to upload";
-  if (state.empty) return EMPTY_REASON;
+  if (state.waitReason) {
+    return state.waitReason;
+  }
+
+  if (state.loading) {
+    return "Wait for the design to load";
+  }
+
+  if (state.uploading) {
+    return "Wait for the images to upload";
+  }
+
+  if (state.empty) {
+    return EMPTY_REASON;
+  }
+
   return null;
 }
 
 function sendErrorText(err: unknown): string {
-  if (err instanceof TypeError)
+  if (err instanceof TypeError) {
     return "Could not reach the studio. Your message is still here. Check that the studio runs, then send again.";
+  }
+
   return errorText(err);
 }
 
@@ -407,9 +442,18 @@ function designsBlocker(
   mode: ComposerMode,
   selectionCount: number
 ): string | null {
-  if (mode === "critique") return "Critique makes one review.";
-  if (mode === "plan") return "Plan makes one plan.";
-  if (selectionCount > 0) return "Variations need an empty selection.";
+  if (mode === "critique") {
+    return "Critique makes one review.";
+  }
+
+  if (mode === "plan") {
+    return "Plan makes one plan.";
+  }
+
+  if (selectionCount > 0) {
+    return "Variations need an empty selection.";
+  }
+
   return null;
 }
 
@@ -423,15 +467,18 @@ export function PromptBox(props: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const reasonId = useId();
   const [skillIds, setSkillIds] = useState<string[]>([]);
+
   const runLevel = useRunLevel(
     props.projectId,
     props.settings.defaultLevel,
     props.onSettingsSaved
   );
+
   const draft = useDraft(props.draft);
   const setDraft = props.draft.set;
 
   useComposerFocus(props.running, !props.disabled);
+
   const focusInput = () =>
     window.requestAnimationFrame(() =>
       document
@@ -440,6 +487,7 @@ export function PromptBox(props: Props) {
         )
         ?.focus()
     );
+
   useCommands(() =>
     composerCommands({
       mode,
@@ -450,6 +498,7 @@ export function PromptBox(props: Props) {
       focus: focusInput,
     })
   );
+
   const slashSource = useSlashSections({
     disabled: props.settings.disabledSkills ?? [],
     exclude: skillIds,
@@ -464,14 +513,17 @@ export function PromptBox(props: Props) {
   const addFiles = (list: Iterable<File>) => {
     let room = MAX_IMAGES - files.length;
     const problems = new Set<string>();
+
     for (const file of list) {
       const problem =
         imageProblem(file) ??
         (room <= 0 ? `You can attach up to ${MAX_IMAGES} images.` : null);
+
       if (problem) {
         problems.add(problem);
         continue;
       }
+
       room -= 1;
       const localId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
       const previewUrl = URL.createObjectURL(file);
@@ -494,18 +546,28 @@ export function PromptBox(props: Props) {
           )
         );
     }
-    if (problems.size > 0) setError([...problems].join(" "));
+
+    if (problems.size > 0) {
+      setError([...problems].join(" "));
+    }
   };
 
   const removeFile = (localId: string) =>
     setFiles((prev) => {
       const f = prev.find((x) => x.localId === localId);
-      if (f) URL.revokeObjectURL(f.previewUrl);
+
+      if (f) {
+        URL.revokeObjectURL(f.previewUrl);
+      }
+
       return prev.filter((x) => x.localId !== localId);
     });
 
   const chooseModel = (model: string) => {
-    if (model === props.model) return;
+    if (model === props.model) {
+      return;
+    }
+
     setError(null);
     api
       .updateSettings(props.projectId, { model })
@@ -514,6 +576,7 @@ export function PromptBox(props: Props) {
         setError(`Could not save the model: ${errorText(err)}`)
       );
   };
+
   const slash = useSlashMenu({
     draft,
     setDraft,
@@ -527,12 +590,15 @@ export function PromptBox(props: Props) {
     note: slashSource.note,
     label: "Settings, commands and skills",
   });
+
   const promptRef = useRef<HTMLDivElement>(null);
+
   const insertMention = () => {
     slash.close();
     setDraft(draft === "" || /\s$/.test(draft) ? `${draft}@` : `${draft} @`);
     focusInput();
   };
+
   const designs = props.variations && {
     value: props.variations.count,
     max: props.variations.max,
@@ -547,7 +613,9 @@ export function PromptBox(props: Props) {
     maxImages: MAX_IMAGES,
     focus: focusInput,
   });
+
   const uploading = files.some((f) => !f.attachment && !f.error);
+
   const mentions = useMentions({
     projectId: props.projectId,
     directionId: props.directionId,
@@ -557,30 +625,42 @@ export function PromptBox(props: Props) {
     components: props.components,
     request: props.mentionRequest,
   });
+
   const historySearch = useHistorySearch(props.history ?? []);
+
   const onKeyCapture = (event: KeyboardEvent<HTMLDivElement>) => {
     const inInput = (event.target as HTMLElement).matches(
       '[data-slot="composer-input"]'
     );
+
     if (inInput && event.ctrlKey && !event.metaKey && event.key === "r") {
       event.preventDefault();
       historySearch.start();
+
       return;
     }
-    if (inInput && (slash.onKeyDown(event) || mentions.onKeyDown(event)))
+
+    if (inInput && (slash.onKeyDown(event) || mentions.onKeyDown(event))) {
       return;
+    }
+
     if (inInput && isPlainEscape(event)) {
       event.preventDefault();
       leaveComposer(event.target as HTMLElement);
+
       return;
     }
+
     if (inInput && isModeCycleKey(event)) {
       event.preventDefault();
       setMode(nextMode(mode));
+
       return;
     }
+
     keys.onKeyDown(event);
   };
+
   const keys = useComposerKeys({
     draft,
     setDraft,
@@ -591,7 +671,9 @@ export function PromptBox(props: Props) {
     onQueueChange: props.onQueueChange,
     onSteer: props.onSteer,
   });
+
   const emptyDraft = draft.trim() === "" && skillIds.length === 0;
+
   const status = sendStatus({
     running: props.running,
     waitReason: props.waitReason,
@@ -599,6 +681,7 @@ export function PromptBox(props: Props) {
     uploading,
     empty: emptyDraft,
   });
+
   const canSend = sendReady({
     running: props.running,
     blocked: props.disabled || Boolean(props.waitReason),
@@ -607,25 +690,34 @@ export function PromptBox(props: Props) {
   });
 
   const send = async () => {
-    if (!canSend) return;
+    if (!canSend) {
+      return;
+    }
+
     setSending(true);
     setError(null);
     const sentDraft = draft;
+
     try {
       const ids = files.flatMap((f) => (f.attachment ? [f.attachment.id] : []));
+
       const prompt = [draft.trim(), skillInstruction(skillIds)]
         .filter(Boolean)
         .join("\n\n");
+
       const fanOut =
         mode === "edit" &&
         props.variations &&
         props.variations.count > 1 &&
         props.selection.length === 0;
+
       const elementCount =
         mode === "edit" && props.selection.length === 1
           ? elementVariantsIntent(prompt)
           : null;
+
       const onElement = props.variations?.onElement;
+
       const sent =
         elementCount && onElement
           ? onElement(prompt, elementCount, runLevel.level)
@@ -640,6 +732,7 @@ export function PromptBox(props: Props) {
                 mentions.mentions,
                 prefill.linked
               );
+
       setDraft("");
       await sent;
       mentions.clear();
@@ -649,7 +742,10 @@ export function PromptBox(props: Props) {
       setSkillIds([]);
       keys.resetHistory();
     } catch (err) {
-      if (!props.draft.get().trim()) setDraft(sentDraft);
+      if (!props.draft.get().trim()) {
+        setDraft(sentDraft);
+      }
+
       setError(sendErrorText(err));
     } finally {
       setSending(false);
@@ -658,17 +754,25 @@ export function PromptBox(props: Props) {
 
   useDesktopCommand((command) => {
     if (command.type === "run") {
-      if (canSend) void send();
-      else
+      if (canSend) {
+        void send();
+      } else {
         document
           .querySelector<HTMLTextAreaElement>(".prompt textarea")
           ?.focus();
+      }
+
       return true;
     }
+
     if (command.type === "stop") {
-      if (props.running) props.onCancel();
+      if (props.running) {
+        props.onCancel();
+      }
+
       return true;
     }
+
     return false;
   });
 
@@ -676,6 +780,7 @@ export function PromptBox(props: Props) {
     const images = Array.from(e.clipboardData.files).filter((f) =>
       f.type.startsWith("image/")
     );
+
     if (images.length > 0) {
       e.preventDefault();
       addFiles(images);
@@ -834,7 +939,10 @@ export function PromptBox(props: Props) {
             multiple
             hidden
             onChange={(e) => {
-              if (e.target.files) addFiles(Array.from(e.target.files));
+              if (e.target.files) {
+                addFiles(Array.from(e.target.files));
+              }
+
               e.target.value = "";
             }}
           />

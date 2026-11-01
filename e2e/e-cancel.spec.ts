@@ -31,9 +31,11 @@ async function cancelMidWrite(
       intervals: [50],
     })
     .toBe(true);
+
   const running = (await api.runs(pid)).find(
     (run) => run.request.prompt === prompt
   );
+
   expect(running?.status).toBe("running");
   await page.getByRole("button", { name: "Stop", exact: true }).click();
   await expect
@@ -43,11 +45,17 @@ async function cancelMidWrite(
           ?.status
     )
     .toBe("canceled");
+
   const run = (await api.runs(pid)).find(
     (candidate) => candidate.request.prompt === prompt
   );
-  if (!run) throw new Error("canceled run missing");
+
+  if (!run) {
+    throw new Error("canceled run missing");
+  }
+
   expect(run.versionId).toBeNull();
+
   return run;
 }
 

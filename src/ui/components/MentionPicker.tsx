@@ -25,13 +25,22 @@ export function mentionLabel(mention: RunMention): string {
 }
 
 export function mentionIcon(mention: RunMention): IconName {
-  if (mention.kind === "file") return "file";
+  if (mention.kind === "file") {
+    return "file";
+  }
+
   return mention.kind === "token" ? "token" : "component";
 }
 
 export function mentionTitle(mention: RunMention): string {
-  if (mention.kind === "file") return mention.path;
-  if (mention.kind === "token") return `${mention.name}: ${mention.value}`;
+  if (mention.kind === "file") {
+    return mention.path;
+  }
+
+  if (mention.kind === "token") {
+    return `${mention.name}: ${mention.value}`;
+  }
+
   return mention.file
     ? `@${mention.name} · ${mention.file}`
     : `@${mention.name}`;
@@ -39,6 +48,7 @@ export function mentionTitle(mention: RunMention): string {
 
 export function mentionQueryOf(draft: string): string | null {
   const match = /(?:^|\s)@([^\s@]*)$/.exec(draft);
+
   return match ? (match[1] ?? "") : null;
 }
 
@@ -60,17 +70,22 @@ export function useMentionPicker(
   query: string | null
 ) {
   const [active, setActive] = useState(0);
+
   const shown = useMemo(
     () => (query === null ? [] : rankMentions(options, query)),
     [options, query]
   );
+
   useEffect(() => setActive(0), [query]);
+
   const current =
     shown[Math.min(active, Math.max(0, shown.length - 1))] ?? null;
+
   const move = (step: 1 | -1) =>
     setActive((index) =>
       shown.length === 0 ? 0 : (index + step + shown.length) % shown.length
     );
+
   return { open: query !== null, shown, current, move, setActive };
 }
 
@@ -90,11 +105,13 @@ export function MentionList({
   className?: string;
 }) {
   useEffect(() => {
-    if (current)
+    if (current) {
       document
         .getElementById(`mention-${current.key}`)
         ?.scrollIntoView({ block: "nearest" });
+    }
   }, [current]);
+
   return (
     <div
       className={`skill-pop mention-pop ${className ?? ""}`}
@@ -149,11 +166,15 @@ export function MentionChips({
   mentions: RunMention[];
   onRemove: (key: string) => void;
 }) {
-  if (mentions.length === 0) return null;
+  if (mentions.length === 0) {
+    return null;
+  }
+
   return (
     <div className="skill-chips" aria-label="Mentions for this message">
       {mentions.map((mention) => {
         const key = mentionKey(mention);
+
         return (
           <span
             key={key}

@@ -91,10 +91,12 @@ async function prepared(
   title?: string
 ): Promise<ShipPrepare> {
   const { project } = await loadTarget(deps, pid);
+
   const query = new URLSearchParams({
     ...(base ? { base } : {}),
     ...(title?.trim() ? { title: title.trim() } : {}),
   }).toString();
+
   return studioCall<ShipPrepare>(
     deps,
     "GET",
@@ -162,12 +164,14 @@ function approvalDetail(
   files: string[]
 ): string {
   const remote = repo.remote ?? "the remote";
+
   const doing =
     mode === "pr"
       ? `push it to ${remote} and open a pull request “${oneLine(title, 80)}”`
       : mode === "push"
         ? `push it to ${remote}`
         : "keep it local (no push)";
+
   return `Commit on a new branch from ${repo.branch ?? repo.head.slice(0, 7)} and ${doing}. Your checked-out branch and files do not change. ${plan.format?.note ?? "Git hooks do not run."} Files: ${oneLine(files.join(", "), 300)}`;
 }
 
@@ -185,21 +189,30 @@ const ship = defineTool(
       input.baseVersionId,
       input.title
     );
-    if (plan.blocked || !plan.base || !plan.headVersionId || !plan.repo)
+
+    if (plan.blocked || !plan.base || !plan.headVersionId || !plan.repo) {
       throw new EditError(plan.blocked ?? "Nothing to ship.");
+    }
+
     const files =
       input.files ??
       plan.files.filter((f) => !f.refused && !f.conflict).map((f) => f.path);
-    if (files.length === 0)
+
+    if (files.length === 0) {
       throw new EditError(
         "No file can be shipped. Call prepare_ship to see the refused files and conflicts."
       );
+    }
+
     const branch = input.branch ?? plan.defaults.branch;
     const title = input.title ?? plan.defaults.title;
-    if (!deps.approvals.windowOpen())
+
+    if (!deps.approvals.windowOpen()) {
       throw new EditError(
         "Design Studio is not open, so nobody can approve this ship. Ask the user to open the project in Design Studio, or to click Ship there."
       );
+    }
+
     await approve(deps, {
       tool: "ship",
       action: "Commit studio changes to a new branch in your repo",
@@ -208,6 +221,7 @@ const ship = defineTool(
       title: `${client} wants to ship ${files.length} file${files.length === 1 ? "" : "s"} as branch ${oneLine(branch, 80)}`,
       detail: approvalDetail(plan, plan.repo, input.mode, title, files),
     });
+
     const result = await studioCall<ShipResult>(
       deps,
       "POST",
@@ -224,6 +238,7 @@ const ship = defineTool(
         client,
       }
     );
+
     return { result: ok(result) };
   }
 );

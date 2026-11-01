@@ -17,7 +17,11 @@ export function withLofi(
   on: boolean
 ): CanvasFile | null {
   const has = file.lofi.includes(directionId);
-  if (has === on) return null;
+
+  if (has === on) {
+    return null;
+  }
+
   return {
     ...file,
     lofi: on

@@ -28,15 +28,18 @@ function fileName(file: RepoContextFile): string {
 
 function label(file: RepoContextFile): string {
   const note = USE_NOTE[file.use];
+
   return `${file.path}${note ? ` (${note})` : ""}`;
 }
 
 function tipFor(files: RepoContextFile[]): string {
   const read = files.filter(sent).map(label).join(", ");
+
   const skipped = files
     .filter((file) => !sent(file))
     .map(label)
     .join(", ");
+
   return `Each run reads ${read}.${skipped ? ` Not sent: ${skipped}.` : ""} Lines that look like secrets are left out.`;
 }
 
@@ -46,7 +49,10 @@ function useRunContext(
 ): RepoContextFile[] {
   const [files, setFiles] = useState<RepoContextFile[]>([]);
   useEffect(() => {
-    if (!directionId) return;
+    if (!directionId) {
+      return;
+    }
+
     let live = true;
     const url = `/api/projects/${encodeURIComponent(projectId)}/d/${encodeURIComponent(directionId)}/run-context`;
     fetch(url, { headers: { [STUDIO_TOKEN_HEADER]: getSession().token } })
@@ -55,10 +61,12 @@ function useRunContext(
       )
       .then((state) => live && setFiles(state?.files ?? []))
       .catch(() => live && setFiles([]));
+
     return () => {
       live = false;
     };
   }, [projectId, directionId]);
+
   return files;
 }
 
@@ -71,8 +79,13 @@ export default function RepoContextChip({
 }) {
   const files = useRunContext(projectId, directionId);
   const shown = files.filter(sent);
-  if (!shown.length) return null;
+
+  if (!shown.length) {
+    return null;
+  }
+
   const names = [...new Set(shown.map(fileName))].join(", ");
+
   return (
     <div className="chips repo-context flex flex-wrap gap-1 px-2 pt-2">
       <Chip

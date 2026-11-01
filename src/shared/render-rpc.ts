@@ -60,8 +60,12 @@ const RENDER_OPS: readonly RenderOp[] = [
 ];
 
 export function isRenderRequest(value: unknown): value is RenderRequest {
-  if (typeof value !== "object" || value === null) return false;
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
   const record = value as Partial<RenderRequest>;
+
   return (
     record.type === RENDER_MESSAGE &&
     Number.isInteger(record.id) &&
@@ -72,8 +76,12 @@ export function isRenderRequest(value: unknown): value is RenderRequest {
 }
 
 export function isRenderResponse(value: unknown): value is RenderResponse {
-  if (typeof value !== "object" || value === null) return false;
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
   const record = value as Partial<RenderResponse>;
+
   return (
     record.type === RENDER_MESSAGE &&
     Number.isInteger(record.id) &&

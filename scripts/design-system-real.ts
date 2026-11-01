@@ -20,6 +20,7 @@ const PORT = 4480;
 const BASE = `http://127.0.0.1:${PORT}`;
 const MODEL = process.env.SMOKE_MODEL ?? "claude-haiku-5-5";
 const BUDGET = Number(process.env.SMOKE_BUDGET ?? 0.45);
+
 const FIXTURE = path.join(
   ROOT,
   "src",
@@ -38,11 +39,18 @@ async function waitFor<T>(
   timeoutMs: number
 ): Promise<T> {
   const deadline = Date.now() + timeoutMs;
+
   for (;;) {
     const value = await fn().catch(() => null);
-    if (value !== null) return value;
-    if (Date.now() > deadline)
+
+    if (value !== null) {
+      return value;
+    }
+
+    if (Date.now() > deadline) {
       throw new Error(`timed out waiting for ${label}`);
+    }
+
     await sleep(1000);
   }
 }
@@ -51,8 +59,10 @@ async function main(): Promise<void> {
   const work = realpathSync(
     mkdtempSync(path.join(os.tmpdir(), "studio ds real "))
   );
+
   const dataDir = path.join(work, "data");
   const log = createWriteStream(path.join(work, "server.log"));
+
   const server = spawn(
     path.join(ROOT, "node_modules", ".bin", "tsx"),
     ["src/server/index.ts"],
@@ -70,18 +80,23 @@ async function main(): Promise<void> {
       stdio: ["ignore", "pipe", "pipe"],
     }
   );
+
   server.stdout.pipe(log);
   server.stderr.pipe(log);
+
   try {
     const html = await waitFor(
       "server",
       async () => {
         const res = await fetch(`${BASE}/`);
+
         return res.ok ? res.text() : null;
       },
       60_000
     );
+
     const token = /name="studio-token" content="([^"]+)"/.exec(html)?.[1] ?? "";
+
     const call = async <T>(
       method: string,
       route: string,
@@ -95,10 +110,14 @@ async function main(): Promise<void> {
         },
         body: body === undefined ? undefined : JSON.stringify(body),
       });
-      if (!res.ok)
+
+      if (!res.ok) {
         throw new Error(`${method} ${route} ${res.status} ${await res.text()}`);
+      }
+
       return (await res.json()) as T;
     };
+
     const draft = await call<DesignSystemDraftResult>(
       "POST",
       "/api/design-systems/draft",
@@ -110,15 +129,18 @@ async function main(): Promise<void> {
         },
       }
     );
+
     const pid = draft.project.id;
     await call("PATCH", `/api/projects/${pid}/settings`, {
       model: MODEL,
       maxBudgetUsd: BUDGET,
     });
+
     const before = await call<DesignSystemDraftInfo>(
       "GET",
       `/api/projects/${pid}/design-system-draft`
     );
+
     console.log(
       `[ds-smoke] draft ${draft.pack.id} coverage ${before.coverage?.score} check ${before.check.passed ? "passed" : `${before.check.problems.length} problems`} model ${MODEL} limit $${BUDGET}`
     );
@@ -128,6 +150,7 @@ async function main(): Promise<void> {
       task: "design-system",
       level: "prototype",
     });
+
     const runs = await waitFor(
       "the run",
       async () => {
@@ -135,20 +158,25 @@ async function main(): Promise<void> {
           "GET",
           `/api/projects/${pid}/runs`
         );
+
         return list.length > 0 && list.every((run) => run.status !== "running")
           ? list
           : null;
       },
       1_200_000
     );
+
     const run = runs[0] as RunSummary;
+
     const after = await call<DesignSystemDraftInfo>(
       "GET",
       `/api/projects/${pid}/design-system-draft`
     );
+
     const tools = run.toolCalls.map((tool) =>
       tool.name.replace("mcp__studio__", "")
     );
+
     console.log(
       `[ds-smoke] status=${run.status} cost=$${run.costUsd.toFixed(4)} durationMs=${run.durationMs} error=${run.error}`
     );

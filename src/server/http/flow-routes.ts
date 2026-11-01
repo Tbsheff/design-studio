@@ -24,9 +24,13 @@ export function flowInputOf(body: Record<string, unknown>): FlowInput {
         .filter((item): item is string => typeof item === "string")
         .slice(0, 24)
     : undefined;
+
   const from = typeof body.from === "string" ? body.from : undefined;
-  if (!from && (!routes || routes.length === 0))
+
+  if (!from && (!routes || routes.length === 0)) {
     throw new BadRequestError("pass routes or from");
+  }
+
   return {
     ...(routes && routes.length > 0 ? { routes } : {}),
     ...(from ? { from } : {}),
@@ -39,6 +43,7 @@ export function flowInputOf(body: Record<string, unknown>): FlowInput {
 
 export function registerFlowRoutes(app: Hono, deps: FlowRouteDeps): void {
   const { projects, canvas, readBody } = deps;
+
   const flowDeps = (): FlowDeps => ({
     canvas,
     projectDir: (id) => projects.projectDir(id),
@@ -48,18 +53,24 @@ export function registerFlowRoutes(app: Hono, deps: FlowRouteDeps): void {
   app.get("/api/projects/:pid/flow/links", async (c) => {
     const project = await projects.get(c.req.param("pid"));
     const route = c.req.query("route");
-    if (!route) throw new BadRequestError("route is required");
+
+    if (!route) {
+      throw new BadRequestError("route is required");
+    }
+
     return c.json(await listRouteLinks(project, route));
   });
 
   app.get("/api/projects/:pid/flow/params", async (c) => {
     const project = await projects.get(c.req.param("pid"));
+
     return c.json({ params: await readFlowParams(flowDeps(), project) });
   });
 
   app.post("/api/projects/:pid/flow", async (c) => {
     const project = await projects.get(c.req.param("pid"));
     const direction = canvas.ownerOf(project);
+
     return c.json(
       await buildFlow(
         flowDeps(),

@@ -100,14 +100,20 @@ function useFork(
   const [from, setFrom] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
+
   const start = (versionId: string) => {
     setFrom(versionId);
     setName(`${directionName ?? "Direction"} variant`);
     setError(null);
   };
+
   const submit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!from || !name.trim()) return;
+
+    if (!from || !name.trim()) {
+      return;
+    }
+
     try {
       await onNewDirection(from, name.trim());
       setFrom(null);
@@ -115,6 +121,7 @@ function useFork(
       setError(err instanceof Error ? err.message : String(err));
     }
   };
+
   return {
     from,
     name,
@@ -128,6 +135,7 @@ function useFork(
 
 function titleOf(id: string, index: VersionIndex): string {
   const v = index.get(id);
+
   return v ? displayTitle(v, index) : id.slice(0, 7);
 }
 
@@ -241,7 +249,10 @@ function VersionsEmpty({
   count: number;
   loading: boolean;
 }) {
-  if (count > 0) return null;
+  if (count > 0) {
+    return null;
+  }
+
   if (loading) {
     return (
       <div className="version-skeletons" role="status" aria-busy="true">
@@ -258,6 +269,7 @@ function VersionsEmpty({
       </div>
     );
   }
+
   return (
     <div className="empty-note">
       No versions yet. Send a prompt and the first run saves one here.
@@ -271,13 +283,17 @@ function useHeadFocus(headVersionId: string | null) {
     const id = window.requestAnimationFrame(() => {
       const lost =
         !document.activeElement || document.activeElement === document.body;
-      if (lost)
+
+      if (lost) {
         ref.current
           ?.querySelector<HTMLElement>(".version.head .version-toggle")
           ?.focus({ preventScroll: true });
+      }
     });
+
     return () => window.cancelAnimationFrame(id);
   }, [headVersionId]);
+
   return ref;
 }
 
@@ -287,6 +303,7 @@ function compareSides(
 ): Map<string, "A" | "B"> {
   const picked = sorted.filter((v) => compare.includes(v.id));
   const [newer, older] = picked;
+
   return picked.length === 2 && newer && older
     ? new Map([
         [older.id, "A" as const],
@@ -297,28 +314,42 @@ function compareSides(
 
 export function VersionsPanel(props: Props) {
   const { project, directionId, versions } = props;
+
   const direction =
     project.directions.find((x) => x.id === directionId) ?? null;
+
   const fork = useFork(direction?.name, props.onNewDirection);
   const [expanded, setExpanded] = useState<string | null>(null);
+
   const [renamed, setRenamed] = useState<{
     source: Version[];
     names: Map<string, string | null>;
   } | null>(null);
+
   const named = useMemo(() => {
-    if (!renamed || renamed.source !== versions) return versions;
+    if (!renamed || renamed.source !== versions) {
+      return versions;
+    }
+
     return versions.map((v) => {
-      if (!renamed.names.has(v.id)) return v;
+      if (!renamed.names.has(v.id)) {
+        return v;
+      }
+
       const { name: _old, ...rest } = v;
       const name = renamed.names.get(v.id);
+
       return name ? { ...rest, name } : rest;
     });
   }, [versions, renamed]);
+
   const sorted = useMemo(
     () => [...named].sort((a, b) => b.createdAt - a.createdAt),
     [named]
   );
+
   const index = useMemo(() => indexVersions(named), [named]);
+
   const rename = (v: Version, name: string | null) => {
     setRenamed((prev) => ({
       source: versions,
@@ -329,11 +360,14 @@ export function VersionsPanel(props: Props) {
     }));
     void props.onRename?.(v, name);
   };
+
   const locked = props.busy || props.running;
   const headVersionId = direction?.headVersionId ?? null;
+
   const listRef = useHeadFocus(
     sorted.some((v) => v.id === headVersionId) ? headVersionId : null
   );
+
   const sides = compareSides(sorted, props.compare);
 
   return (

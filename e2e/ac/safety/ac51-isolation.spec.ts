@@ -29,6 +29,7 @@ async function probeFrame(
   return frame.evaluate(
     async ([studioOrigin, otherPath, otherUrl]) => {
       const out: Record<string, unknown> = {};
+
       const attempt = async (
         name: string,
         fn: () => unknown
@@ -39,6 +40,7 @@ async function probeFrame(
           out[name] = { ok: false, error: String(error).slice(0, 140) };
         }
       };
+
       await attempt("origin", () => location.origin);
       await attempt("hrefHasStudioToken", () =>
         location.href.includes("__studio_token")
@@ -83,6 +85,7 @@ async function probeFrame(
           headers: { "content-type": "text/plain" },
           body: JSON.stringify({ prompt: "csrf no-cors", kind: "html" }),
         });
+
         return res.type;
       });
       await attempt("formPostCreateProject", async () => {
@@ -102,17 +105,23 @@ async function probeFrame(
         document.body.appendChild(form);
         form.submit();
         await new Promise((resolve) => setTimeout(resolve, 1500));
+
         return "submitted";
       });
-      if (otherPath)
+
+      if (otherPath) {
         await attempt(
           "fetchOtherProjectPreview",
           async () => (await fetch(otherPath)).status
         );
-      if (otherUrl)
+      }
+
+      if (otherUrl) {
         await attempt("fetchOtherProjectOrigin", async () =>
           (await (await fetch(otherUrl)).text()).slice(0, 40)
         );
+      }
+
       return out;
     },
     [studio, otherPreviewPath, otherOriginUrl] as const
@@ -132,13 +141,17 @@ async function serverSideChecks(
     },
     body: JSON.stringify({ prompt: "csrf with token", kind: "html" }),
   });
+
   const getWithPreviewOrigin = await fetch(`${BASE_URL}/api/projects`, {
     headers: { "x-studio-token": api.token, origin: previewOrigin },
   });
+
   const sessionSameSite = await fetch(`${BASE_URL}/api/session`, {
     headers: { "sec-fetch-site": "same-site", origin: previewOrigin },
   });
+
   const sessionNoHeader = await fetch(`${BASE_URL}/api/session`);
+
   return {
     postCreateWithValidTokenButPreviewOrigin: postWithPreviewOrigin.status,
     getProjectsWithValidTokenButPreviewOrigin: getWithPreviewOrigin.status,
@@ -152,11 +165,15 @@ async function waitForMarker(
   timeoutMs: number
 ): Promise<Record<string, unknown> | null> {
   const deadline = Date.now() + timeoutMs;
+
   while (Date.now() < deadline) {
-    if (existsSync(file))
+    if (existsSync(file)) {
       return JSON.parse(readFileSync(file, "utf-8")) as Record<string, unknown>;
+    }
+
     await new Promise((resolve) => setTimeout(resolve, 200));
   }
+
   return null;
 }
 
@@ -167,6 +184,7 @@ function listenerPid(port: number): number | null {
       ["-nP", `-iTCP:${port}`, "-sTCP:LISTEN", "-t"],
       { encoding: "utf-8" }
     ).trim();
+
     return out ? Number(out.split("\n")[0]) : null;
   } catch {
     return null;
@@ -182,28 +200,34 @@ test("AC-51: preview frames cannot reach studio credentials or API", async ({
 }) => {
   test.setTimeout(300_000);
   const api = await openHome(page);
+
   const first = await createProjectViaUi(
     page,
     api,
     "Isolation other project",
     "html"
   );
+
   await api.waitForRuns(first.id, 1);
   await page.getByRole("button", { name: "Projects" }).click();
   const html = await createProjectViaUi(page, api, "Isolation html", "html");
   await api.waitForRuns(html.id, 1);
   await expect(frontFrame(page).locator("h1")).toHaveText("Isolation html");
+
   const htmlFrame = await frameByUrl(
     page,
     `${previewOriginFor(html.id)}/d/${html.id}/`
   );
+
   const projectsBefore = (await api.projects()).length;
+
   const htmlProbe = await probeFrame(
     htmlFrame,
     BASE_URL,
     `/d/${first.id}/main/index.html`,
     `${previewOriginFor(first.id)}/d/${first.id}/main/index.html`
   );
+
   const htmlSandbox = await page
     .locator("iframe.frame.front")
     .getAttribute("sandbox");
@@ -218,13 +242,17 @@ test("AC-51: preview frames cannot reach studio credentials or API", async ({
   const reactOrigin = new URL(reactUrl).origin;
   const reactFrame = await frameByUrl(page, reactOrigin);
   const reactProbe = await probeFrame(reactFrame, BASE_URL, null);
+
   const reactSandbox = await page
     .locator("iframe.frame.front")
     .getAttribute("sandbox");
+
   const dataDir = readState().dataDir;
+
   const viteFsProbe = await reactFrame.evaluate(
     async (targets) => {
       const out: Record<string, string> = {};
+
       for (const [name, url] of Object.entries(targets)) {
         try {
           const res = await fetch(url);
@@ -234,6 +262,7 @@ test("AC-51: preview frames cannot reach studio credentials or API", async ({
           out[name] = String(error).slice(0, 80);
         }
       }
+
       return out;
     },
     {
@@ -244,11 +273,14 @@ test("AC-51: preview frames cannot reach studio credentials or API", async ({
       otherProjectJson: `/@fs${dataDir}/projects/${first.id}/project.json`,
     }
   );
+
   await page.waitForTimeout(500);
   const projectsAfter = await api.projects();
+
   const csrfProjects = projectsAfter.filter((project) =>
     /csrf/i.test(project.name)
   );
+
   const server = await serverSideChecks(api, previewOriginFor(html.id));
   const serverVite = await serverSideChecks(api, reactOrigin);
   const studioCookies = await cookiesOf(page);
@@ -257,6 +289,7 @@ test("AC-51: preview frames cannot reach studio credentials or API", async ({
     os.tmpdir(),
     `ac51-vite-config-marker-${react.id}.json`
   );
+
   rmSync(marker, { force: true });
   const viteConfig = path.join(mainDirection(react).workTree, "vite.config.ts");
   const originalConfig = readFileSync(viteConfig, "utf-8");
@@ -274,19 +307,24 @@ export default defineConfig({ plugins: [react()] });
   );
   let viteConfigMarker = await waitForMarker(marker, 30_000);
   let markerSource = "vite restart after config edit";
+
   if (!viteConfigMarker) {
     await api.call("POST", `/api/projects/${react.id}/d/main/keep`);
+
     const head =
       (await api.project(react.id)).directions[0]?.headVersionId ?? null;
+
     const direction = await api.call<{ id: string }>(
       "POST",
       `/api/projects/${react.id}/directions`,
       { fromVersionId: head, name: "Config probe" }
     );
+
     await api.preview(react.id, direction.id);
     viteConfigMarker = await waitForMarker(marker, 60_000);
     markerSource = "new direction from version with edited config";
   }
+
   const studioListener = listenerPid(STUDIO_PORT);
   writeFileSync(viteConfig, originalConfig);
 
@@ -309,6 +347,7 @@ export default defineConfig({ plugins: [react()] });
       statePid: readState().pid,
     },
   };
+
   saveResult("ac51", result);
 
   for (const probe of [htmlProbe, reactProbe]) {
@@ -320,17 +359,20 @@ export default defineConfig({ plugins: [react()] });
     expect((probe.fetchProjectsGuessedToken as { ok: boolean }).ok).toBe(false);
     expect((probe.fetchApiSession as { ok: boolean }).ok).toBe(false);
   }
+
   expect(csrfProjects).toHaveLength(0);
   expect(server.postCreateWithValidTokenButPreviewOrigin).toBe(403);
   expect(serverVite.postCreateWithValidTokenButPreviewOrigin).toBe(403);
   expect(server.getSessionSameSite).toBe(403);
   expect(htmlProbe.fetchOtherProjectPreview).toEqual({ ok: true, value: 403 });
   expect((htmlProbe.fetchOtherProjectOrigin as { ok: boolean }).ok).toBe(false);
+
   const configMarker = viteConfigMarker as {
     pid: number;
     studioDataDirEnv: string | null;
     studioPortEnv: string | null;
   } | null;
+
   if (configMarker) {
     expect(
       configMarker.pid,

@@ -27,19 +27,26 @@ function signatureOf(projects: Project[] | null): string {
 
 function onListChange(): void {
   const next = signatureOf(projectsApi.get().projects);
-  if (next === listSignature) return;
+
+  if (next === listSignature) {
+    return;
+  }
+
   listSignature = next;
   void refreshProjectHits(lastCurrent, true);
 }
 
 function subscribe(listener: () => void): () => void {
   listeners.add(listener);
+
   if (!stopList) {
     listSignature = signatureOf(projectsApi.get().projects);
     stopList = projectsApi.subscribe(onListChange);
   }
+
   return () => {
     listeners.delete(listener);
+
     if (listeners.size === 0) {
       stopList?.();
       stopList = null;
@@ -52,23 +59,33 @@ export function refreshProjectHits(
   fresh = false
 ): Promise<void> {
   lastCurrent = current;
+
   if (loading && fresh) {
     again = current;
+
     return loading;
   }
+
   loading ??= api
     .searchProjects("", current, ALL_LIMIT)
     .then((result) => {
       latest = result;
-      for (const listener of listeners) listener();
+
+      for (const listener of listeners) {
+        listener();
+      }
     })
     .catch(() => undefined)
     .finally(() => {
       loading = null;
       const next = again;
       again = undefined;
-      if (next !== undefined) void refreshProjectHits(next);
+
+      if (next !== undefined) {
+        void refreshProjectHits(next);
+      }
     });
+
   return loading;
 }
 
@@ -84,8 +101,11 @@ export function useProjectHits(
   refresh = true
 ): ProjectSearchResult | null {
   useEffect(() => {
-    if (refresh) void refreshProjectHits(current);
+    if (refresh) {
+      void refreshProjectHits(current);
+    }
   }, [current, refresh]);
+
   return useSyncExternalStore(subscribe, () => latest);
 }
 
@@ -98,10 +118,15 @@ export function useRouteHits(
     query: string;
     routes: RouteHit[];
   } | null>(null);
+
   const text = query.trim();
   useEffect(() => {
-    if (!text) return;
+    if (!text) {
+      return;
+    }
+
     let live = true;
+
     const timer = window.setTimeout(() => {
       api
         .searchProjects(text, current, 8)
@@ -110,11 +135,16 @@ export function useRouteHits(
         )
         .catch(() => undefined);
     }, ROUTE_DELAY_MS);
+
     return () => {
       live = false;
       window.clearTimeout(timer);
     };
   }, [text, current]);
-  if (!text) return fallback;
+
+  if (!text) {
+    return fallback;
+  }
+
   return found?.routes ?? [];
 }

@@ -55,7 +55,9 @@ const waiting: ThumbRequest[] = [];
 let inFlight = 0;
 
 function forget(request: ThumbRequest): void {
-  if (requests.get(request.key) === request) requests.delete(request.key);
+  if (requests.get(request.key) === request) {
+    requests.delete(request.key);
+  }
 }
 
 function finish(
@@ -64,25 +66,44 @@ function finish(
   cache: boolean
 ): void {
   forget(request);
-  if (cache) thumbs.set(request.key, result);
-  for (const listener of request.listeners) listener(result);
+
+  if (cache) {
+    thumbs.set(request.key, result);
+  }
+
+  for (const listener of request.listeners) {
+    listener(result);
+  }
 }
 
 function pump(): void {
   while (inFlight < MAX_THUMB_FETCHES && waiting.length > 0) {
     const request = waiting.shift();
-    if (!request) return;
+
+    if (!request) {
+      return;
+    }
+
     request.started = true;
     inFlight += 1;
     fetchPng(request.url, request.controller.signal)
       .then(async (res) => {
-        if (res.status === 404) return finish(request, null, true);
-        if (!res.ok) return finish(request, null, false);
+        if (res.status === 404) {
+          return finish(request, null, true);
+        }
+
+        if (!res.ok) {
+          return finish(request, null, false);
+        }
+
         finish(request, URL.createObjectURL(await res.blob()), true);
       })
       .catch(() => {
-        if (!request.controller.signal.aborted) finish(request, null, false);
-        else forget(request);
+        if (!request.controller.signal.aborted) {
+          finish(request, null, false);
+        } else {
+          forget(request);
+        }
       })
       .finally(() => {
         inFlight -= 1;
@@ -101,11 +122,15 @@ export function requestThumb(
   onResult: (result: ThumbResult) => void
 ): () => void {
   const key = `${pid}/${vid}`;
+
   if (thumbs.has(key)) {
     onResult(thumbs.get(key) ?? null);
+
     return () => undefined;
   }
+
   let request = requests.get(key);
+
   if (!request) {
     request = {
       key,
@@ -117,15 +142,25 @@ export function requestThumb(
     requests.set(key, request);
     waiting.push(request);
   }
+
   const live = request;
   live.listeners.add(onResult);
   pump();
+
   return () => {
     live.listeners.delete(onResult);
-    if (live.listeners.size > 0 || requests.get(key) !== live) return;
+
+    if (live.listeners.size > 0 || requests.get(key) !== live) {
+      return;
+    }
+
     requests.delete(key);
-    if (live.started) live.controller.abort();
-    else waiting.splice(waiting.indexOf(live), 1);
+
+    if (live.started) {
+      live.controller.abort();
+    } else {
+      waiting.splice(waiting.indexOf(live), 1);
+    }
   };
 }
 
@@ -145,12 +180,14 @@ export async function versionDiff(
     `${base(pid, beforeId)}/diff/${encodeURIComponent(afterId)}?w=${viewport.width}&h=${viewport.height}`,
     signal
   );
+
   if (!res.ok) {
     const body = (await res.json().catch(() => ({}))) as { error?: string };
     throw new Error(
       body.error ?? `Could not compare these versions (${res.status}).`
     );
   }
+
   return {
     url: URL.createObjectURL(await res.blob()),
     changedPct: Number(res.headers.get("x-changed-pct") ?? 0),

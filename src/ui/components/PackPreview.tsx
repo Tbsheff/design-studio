@@ -10,9 +10,12 @@ type Mode = "light" | "dark";
 
 function varsFor(entries: CompiledTokenEntry[], mode: Mode): CSSProperties {
   const vars: Record<string, string> = {};
-  for (const entry of entries)
+
+  for (const entry of entries) {
     vars[entry.cssVar] =
       mode === "dark" ? (entry.darkValue ?? entry.value) : entry.value;
+  }
+
   return vars as CSSProperties;
 }
 
@@ -146,6 +149,7 @@ export function PackPreview({
 }) {
   const dual =
     pack.mode === "light" && entries.some((entry) => entry.darkValue !== null);
+
   return (
     <div className="pv">
       <div className={`pv-modes ${dual ? "two" : ""}`}>

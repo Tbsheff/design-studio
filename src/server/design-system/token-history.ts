@@ -16,10 +16,18 @@ async function readChanges(
   snapshots: FileSnapshot[]
 ): Promise<EditFileChange[] | null> {
   const changes: EditFileChange[] = [];
+
   for (const before of snapshots) {
     const after = await readSnapshot(workTree, before.relative);
-    if (before.content === after.content) continue;
-    if (before.content === null || after.content === null) return null;
+
+    if (before.content === after.content) {
+      continue;
+    }
+
+    if (before.content === null || after.content === null) {
+      return null;
+    }
+
     changes.push({
       file: path.join(workTree, before.relative),
       relative: before.relative,
@@ -27,6 +35,7 @@ async function readChanges(
       after: after.content,
     });
   }
+
   return changes;
 }
 
@@ -37,7 +46,10 @@ export function recordTokenEdit(
   version: Version,
   files: EditFileChange[] | null
 ): void {
-  if (files === null || files.length === 0) return;
+  if (files === null || files.length === 0) {
+    return;
+  }
+
   deps.history?.record({
     projectId: project.id,
     directionId: direction.id,

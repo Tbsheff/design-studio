@@ -27,8 +27,10 @@ class FakeSource implements EventSourceLike {
   }
   send(event: Partial<StudioEvent> & { type: string; seq: number }): void {
     const msg = { data: JSON.stringify(event) } as MessageEvent<string>;
-    for (const listener of this.listeners.get(event.type) ?? [])
+
+    for (const listener of this.listeners.get(event.type) ?? []) {
       listener(msg as unknown as Event);
+    }
   }
 }
 
@@ -36,19 +38,25 @@ function setup() {
   const sources: FakeSource[] = [];
   const timers: (() => void)[] = [];
   const deferred: (() => void)[] = [];
+
   const hub = createEventHub({
     open: (projectId, after) => {
       const source = new FakeSource(projectId, after);
       sources.push(source);
+
       return source;
     },
     setTimer: (fn) => timers.push(fn),
     clearTimer: () => undefined,
     defer: (fn) => deferred.push(fn),
   });
+
   const flushDeferred = () => {
-    for (const fn of deferred.splice(0)) fn();
+    for (const fn of deferred.splice(0)) {
+      fn();
+    }
   };
+
   return { hub, sources, timers, flushDeferred };
 }
 

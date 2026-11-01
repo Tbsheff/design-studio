@@ -14,7 +14,11 @@ const MAX_RECENTS = 8;
 export function readRecents(file: string): RecentProject[] {
   try {
     const parsed: unknown = JSON.parse(readFileSync(file, "utf-8"));
-    if (!Array.isArray(parsed)) return [];
+
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+
     return parsed
       .filter(
         (item): item is RecentProject =>

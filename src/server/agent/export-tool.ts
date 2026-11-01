@@ -43,6 +43,7 @@ export const exportFrameShape = {
 };
 
 const schema = z.object(exportFrameShape).strict();
+
 type ToolText = {
   content: { type: "text"; text: string }[];
   isError?: boolean;
@@ -53,6 +54,7 @@ const DEFAULT_FRAME: ExportFrame = {
   width: 1440,
   height: 900,
 };
+
 const text = (message: string, isError = false): ToolText => ({
   content: [{ type: "text", text: message }],
   ...(isError ? { isError: true } : {}),
@@ -63,26 +65,35 @@ async function framesFor(
   refs: string[] | undefined
 ): Promise<ExportFrame[] | string> {
   const all = await canvasFrames(deps);
+
   const toExport = (frame: (typeof all)[number]): ExportFrame => ({
     name: frame.label?.trim() || `${frame.width} × ${frame.height}`,
     width: frame.width,
     height: frame.height,
     ...(frame.path ? { path: frame.path } : {}),
   });
+
   if (refs) {
     const out: ExportFrame[] = [];
+
     for (const ref of refs) {
       const found = findFrame(all, ref);
+
       if (!found && all.length === 0 && ref === "f1") {
         out.push(DEFAULT_FRAME);
         continue;
       }
-      if (!found)
+
+      if (!found) {
         return `No frame ${ref} on the canvas. Call canvas_list for frame ids.`;
+      }
+
       out.push(toExport(found));
     }
+
     return out;
   }
+
   const own = all
     .filter(
       (frame) =>
@@ -90,6 +101,7 @@ async function framesFor(
         (!frame.directionId || frame.directionId === deps.ctx.direction.id)
     )
     .sort((a, b) => a.order - b.order);
+
   return own.length > 0
     ? own.slice(0, EXPORT_MAX_FRAMES).map(toExport)
     : [DEFAULT_FRAME];
@@ -103,15 +115,21 @@ async function writeExport(
   await mkdir(folder, { recursive: true });
   const ext = path.extname(name);
   const stem = name.slice(0, name.length - ext.length);
+
   for (let n = 1; n < 1000; n += 1) {
     const target = path.join(folder, n === 1 ? name : `${stem}-${n}${ext}`);
+
     try {
       await writeFile(target, bytes, { flag: "wx" });
+
       return target;
     } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
+      if ((error as NodeJS.ErrnoException).code !== "EEXIST") {
+        throw error;
+      }
     }
   }
+
   throw new Error(`no free file name for ${name}`);
 }
 
@@ -120,24 +138,39 @@ export async function runExportFrame(
   args: z.input<typeof schema>
 ): Promise<ToolText> {
   const parsed = schema.safeParse(args);
-  if (!parsed.success)
+
+  if (!parsed.success) {
     return text(
       `export_frame: ${parsed.error.issues.map((issue) => `${issue.path.join(".") || "input"}: ${issue.message}`).join("; ")}`,
       true
     );
+  }
+
   const input = parsed.data;
-  if (!deps.exportsDir)
+
+  if (!deps.exportsDir) {
     return text("export_frame is not available in this run.", true);
-  if (input.selector && input.format === "pptx")
+  }
+
+  if (input.selector && input.format === "pptx") {
     return text("selector works with format svg only.", true);
+  }
+
   const { project, direction } = deps.ctx;
+
   try {
     const frames = await framesFor(deps, input.frames);
-    if (typeof frames === "string") return text(frames, true);
+
+    if (typeof frames === "string") {
+      return text(frames, true);
+    }
+
     const picked = input.selector ? frames.slice(0, 1) : frames;
+
     const url =
       deps.ctx.previewUrl ??
       (await deps.preview.directionUrl(project, direction));
+
     const out = await exportVector(deps.preview, url, {
       format: input.format,
       frames: picked,
@@ -146,11 +179,13 @@ export async function runExportFrame(
       name: project.name,
       stem: exportFileStem(project.name),
     });
+
     const file = await writeExport(
       path.join(deps.exportsDir, project.id),
       out.name,
       out.bytes
     );
+
     return text(
       JSON.stringify({
         file,

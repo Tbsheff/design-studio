@@ -37,7 +37,10 @@ async function readOptional(file: string): Promise<string | null> {
   try {
     return await readFile(file, "utf-8");
   } catch (error) {
-    if ((error as { code?: unknown }).code === "ENOENT") return null;
+    if ((error as { code?: unknown }).code === "ENOENT") {
+      return null;
+    }
+
     throw error;
   }
 }
@@ -46,7 +49,11 @@ export async function readManifest(
   workTree: string
 ): Promise<PackManifest | null> {
   const text = await readOptional(path.join(workTree, PACK_FILE));
-  if (text === null) return null;
+
+  if (text === null) {
+    return null;
+  }
+
   try {
     return JSON.parse(text) as PackManifest;
   } catch {
@@ -63,6 +70,7 @@ export async function hasTokensFile(workTree: string): Promise<boolean> {
     readOptional(path.join(workTree, TOKENS_FILE)),
     readOptional(path.join(workTree, PACK_FILE)),
   ]);
+
   return tokens !== null && manifest !== null;
 }
 
@@ -70,14 +78,18 @@ export async function readDesignSystemFiles(
   workTree: string
 ): Promise<DesignSystemFiles | null> {
   const text = await readOptional(path.join(workTree, TOKENS_FILE));
+
   if (
     text === null ||
     (await readOptional(path.join(workTree, PACK_FILE))) === null
-  )
+  ) {
     return null;
+  }
+
   const manifest = await readManifest(workTree);
   const parsed = parseTokenFile(text);
-  if (!parsed.file)
+
+  if (!parsed.file) {
     return {
       tokens: null,
       manifest,
@@ -85,7 +97,10 @@ export async function readDesignSystemFiles(
       css: null,
       errors: [parsed.error ?? "tokens.json is invalid"],
     };
+  }
+
   const compiled = compileTokens(parsed.file, { mode: modeOf(manifest) });
+
   return {
     tokens: parsed.file,
     manifest,
@@ -101,8 +116,13 @@ async function writeIfChanged(
   content: string
 ): Promise<boolean> {
   const file = path.join(workTree, relative);
-  if ((await readOptional(file)) === content) return false;
+
+  if ((await readOptional(file)) === content) {
+    return false;
+  }
+
   await writeFileAtomic(file, content);
+
   return true;
 }
 
@@ -111,7 +131,11 @@ async function syncDesignMd(
   entries: CompiledTokenEntry[]
 ): Promise<boolean> {
   const current = await readOptional(path.join(workTree, DESIGN_MD_FILE));
-  if (current === null) return false;
+
+  if (current === null) {
+    return false;
+  }
+
   return writeIfChanged(
     workTree,
     DESIGN_MD_FILE,
@@ -121,13 +145,25 @@ async function syncDesignMd(
 
 async function syncUnlocked(workTree: string): Promise<SyncResult> {
   const files = await readDesignSystemFiles(workTree);
-  if (!files) return { present: false, changed: [], errors: [] };
-  if (files.errors.length > 0 || files.css === null)
+
+  if (!files) {
+    return { present: false, changed: [], errors: [] };
+  }
+
+  if (files.errors.length > 0 || files.css === null) {
     return { present: true, changed: [], errors: files.errors };
+  }
+
   const changed: string[] = [];
-  if (await writeIfChanged(workTree, TOKENS_CSS_FILE, files.css))
+
+  if (await writeIfChanged(workTree, TOKENS_CSS_FILE, files.css)) {
     changed.push(TOKENS_CSS_FILE);
-  if (await syncDesignMd(workTree, files.entries)) changed.push(DESIGN_MD_FILE);
+  }
+
+  if (await syncDesignMd(workTree, files.entries)) {
+    changed.push(DESIGN_MD_FILE);
+  }
+
   return { present: true, changed, errors: [] };
 }
 
@@ -138,5 +174,6 @@ export function syncDesignSystem(workTree: string): Promise<SyncResult> {
 export function buildErrorMessage(errors: string[]): string {
   const shown = errors.slice(0, 8).join("; ");
   const more = errors.length > 8 ? ` (and ${errors.length - 8} more)` : "";
+
   return `design-system/tokens.json does not compile: ${shown}${more}`;
 }

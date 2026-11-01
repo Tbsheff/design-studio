@@ -20,7 +20,11 @@ export class RenderHost {
 
   private page(pageId: string): PageState {
     const state = this.pages.get(pageId);
-    if (!state) throw new Error(`unknown render page ${pageId}`);
+
+    if (!state) {
+      throw new Error(`unknown render page ${pageId}`);
+    }
+
     return state;
   }
 
@@ -30,36 +34,54 @@ export class RenderHost {
     const state = await this.pool.open(args.width, args.height, args.scale);
     const pageId = `p${this.nextPage++}`;
     this.pages.set(pageId, state);
+
     return { pageId };
   }
 
   private async closePage(pageId: string): Promise<null> {
     const state = this.pages.get(pageId);
     this.pages.delete(pageId);
-    if (state) await this.pool.close(state);
+
+    if (state) {
+      await this.pool.close(state);
+    }
+
     return null;
   }
 
   private async dispatch(request: RenderRequest): Promise<unknown> {
     const args = request.args as Record<string, unknown> & { pageId: string };
-    if (request.op === "open")
+
+    if (request.op === "open") {
       return this.open(request.args as RenderOps["open"]["args"]);
-    if (request.op === "close") return this.closePage(args.pageId);
+    }
+
+    if (request.op === "close") {
+      return this.closePage(args.pageId);
+    }
+
     const state = this.page(args.pageId);
+
     if (request.op === "goto") {
       const goto = request.args as RenderOps["goto"]["args"];
       await this.pool.goto(state, goto.url, goto.timeoutMs, goto.settleMs);
+
       return null;
     }
-    if (request.op === "evaluate")
+
+    if (request.op === "evaluate") {
       return this.pool.evaluate(
         state,
         (request.args as RenderOps["evaluate"]["args"]).expression
       );
+    }
+
     if (request.op === "screenshot") {
       const shot = request.args as RenderOps["screenshot"]["args"];
+
       return this.pool.screenshot(state, shot.path, shot.clip);
     }
+
     return {
       consoleErrors: [...state.errors.consoleErrors],
       pageErrors: [...state.errors.pageErrors],
@@ -93,15 +115,23 @@ export class RenderHost {
 
 export function serveChild(host: RenderHost, child: ChildProcess): void {
   child.on("message", (raw: unknown) => {
-    if (!isRenderRequest(raw)) return;
+    if (!isRenderRequest(raw)) {
+      return;
+    }
+
     void host.handle(raw).then((response) => {
-      if (child.connected) child.send(response);
+      if (child.connected) {
+        child.send(response);
+      }
     });
   });
 }
 
 function tokenMatches(expected: string, given: string | undefined): boolean {
-  if (!given || given.length !== expected.length) return false;
+  if (!given || given.length !== expected.length) {
+    return false;
+  }
+
   return timingSafeEqual(Buffer.from(expected), Buffer.from(given));
 }
 
@@ -124,16 +154,22 @@ function serveSocket(
   socket.on("data", (chunk: string) => {
     buffer += chunk;
     let newline = buffer.indexOf("\n");
+
     while (newline >= 0) {
       const line = buffer.slice(0, newline);
       buffer = buffer.slice(newline + 1);
       const parsed = parseLine(line);
+
       if (!isRenderRequest(parsed) || !tokenMatches(token, parsed.token)) {
         socket.destroy();
+
         return;
       }
+
       void host.handle(parsed).then((response) => {
-        if (!socket.destroyed) socket.write(`${JSON.stringify(response)}\n`);
+        if (!socket.destroyed) {
+          socket.write(`${JSON.stringify(response)}\n`);
+        }
       });
       newline = buffer.indexOf("\n");
     }
@@ -147,6 +183,7 @@ export function listenSocket(
 ): Promise<net.Server> {
   rmSync(socketPath, { force: true });
   const server = net.createServer((socket) => serveSocket(host, socket, token));
+
   return new Promise((resolve, reject) => {
     server.once("error", reject);
     server.listen(socketPath, () => {

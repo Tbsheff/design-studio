@@ -28,17 +28,25 @@ function isAstNode(value: unknown): value is AstNode {
 
 function walk(node: AstNode, visit: (node: AstNode) => void): void {
   visit(node);
+
   for (const key of Object.keys(node)) {
     if (
       key === "loc" ||
       key === "leadingComments" ||
       key === "trailingComments" ||
       key === "innerComments"
-    )
+    ) {
       continue;
+    }
+
     const value = node[key];
+
     if (Array.isArray(value)) {
-      for (const item of value) if (isAstNode(item)) walk(item, visit);
+      for (const item of value) {
+        if (isAstNode(item)) {
+          walk(item, visit);
+        }
+      }
     } else if (isAstNode(value)) {
       walk(value, visit);
     }
@@ -47,10 +55,18 @@ function walk(node: AstNode, visit: (node: AstNode) => void): void {
 
 function hasLocAttribute(opening: AstNode): boolean {
   const attributes = opening.attributes;
-  if (!Array.isArray(attributes)) return false;
+
+  if (!Array.isArray(attributes)) {
+    return false;
+  }
+
   return attributes.some((attr: unknown) => {
-    if (!isAstNode(attr) || attr.type !== "JSXAttribute") return false;
+    if (!isAstNode(attr) || attr.type !== "JSXAttribute") {
+      return false;
+    }
+
     const name = attr.name;
+
     return (
       isAstNode(name) &&
       name.type === "JSXIdentifier" &&
@@ -80,28 +96,52 @@ export function tagJsxSource(
   const plugins: ParserPlugin[] = /\.tsx$/i.test(id)
     ? ["jsx", "typescript"]
     : ["jsx"];
+
   let ast: unknown;
+
   try {
     ast = parse(code, { sourceType: "module", plugins, errorRecovery: false });
   } catch {
     return null;
   }
-  if (!isAstNode(ast)) return null;
+
+  if (!isAstNode(ast)) {
+    return null;
+  }
+
   const magic = new MagicString(code);
   let changed = false;
   walk(ast, (node) => {
-    if (node.type !== "JSXOpeningElement") return;
+    if (node.type !== "JSXOpeningElement") {
+      return;
+    }
+
     const name = node.name;
-    if (!isHostElementName(name)) return;
-    if (hasLocAttribute(node)) return;
+
+    if (!isHostElementName(name)) {
+      return;
+    }
+
+    if (hasLocAttribute(node)) {
+      return;
+    }
+
     const insertAt = name.end;
     const start = node.loc?.start;
-    if (typeof insertAt !== "number" || !start) return;
+
+    if (typeof insertAt !== "number" || !start) {
+      return;
+    }
+
     const loc = `${relPath}:${start.line}:${start.column + 1}`;
     magic.appendLeft(insertAt, ` ${SOURCE_LOC_ATTR}="${escapeAttr(loc)}"`);
     changed = true;
   });
-  if (!changed) return null;
+
+  if (!changed) {
+    return null;
+  }
+
   return {
     code: magic.toString(),
     map: magic.generateMap({ hires: true, source: id, includeContent: true }),

@@ -50,27 +50,45 @@ export function frameSrc(
   const url = new URL(previewUrl, window.location.href);
   url.searchParams.set(BRIDGE_TOKEN_PARAM, token);
   url.searchParams.set(BRIDGE_PARENT_ORIGIN_PARAM, window.location.origin);
-  if (extra)
-    for (const [k, v] of Object.entries(extra)) url.searchParams.set(k, v);
+
+  if (extra) {
+    for (const [k, v] of Object.entries(extra)) {
+      url.searchParams.set(k, v);
+    }
+  }
+
   return url.toString();
 }
 
 export function postToFrame(frame: BridgeFrame, body: ParentMessageBody): void {
   const win = frame.element?.contentWindow;
-  if (!win) return;
+
+  if (!win) {
+    return;
+  }
+
   const target = frameOrigin(frame);
-  if (target === "") return;
+
+  if (target === "") {
+    return;
+  }
+
   const message = {
     ns: "studio",
     token: frame.token,
     ...body,
   } as ParentToBridge;
+
   win.postMessage(message, target);
 }
 
 function isBridgeMessage(data: unknown): data is BridgeToParent {
-  if (!data || typeof data !== "object") return false;
+  if (!data || typeof data !== "object") {
+    return false;
+  }
+
   const m = data as { ns?: unknown; token?: unknown; type?: unknown };
+
   return (
     m.ns === "studio" &&
     typeof m.token === "string" &&
@@ -89,18 +107,33 @@ export function useBridge(
 
   useEffect(() => {
     const listener = (event: MessageEvent) => {
-      if (!isBridgeMessage(event.data)) return;
+      if (!isBridgeMessage(event.data)) {
+        return;
+      }
+
       const frame = framesRef
         .current()
         .find(
           (f) => f.element !== null && event.source === f.element.contentWindow
         );
-      if (!frame) return;
-      if (event.origin !== frameOrigin(frame)) return;
-      if (event.data.token !== frame.token) return;
+
+      if (!frame) {
+        return;
+      }
+
+      if (event.origin !== frameOrigin(frame)) {
+        return;
+      }
+
+      if (event.data.token !== frame.token) {
+        return;
+      }
+
       handlerRef.current(frame, event.data);
     };
+
     window.addEventListener("message", listener);
+
     return () => window.removeEventListener("message", listener);
   }, []);
 }

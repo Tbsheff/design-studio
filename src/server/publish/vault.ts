@@ -29,17 +29,27 @@ function ipcAvailable(): boolean {
 function askDesktop(op: VaultRequest["op"], data: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const id = randomBytes(8).toString("hex");
+
     const timer = setTimeout(() => {
       process.off("message", onMessage);
       reject(new Error("The desktop app did not answer the Keychain request."));
     }, IPC_TIMEOUT_MS);
+
     const onMessage = (raw: unknown) => {
-      if (!isVaultReply(raw) || raw.id !== id) return;
+      if (!isVaultReply(raw) || raw.id !== id) {
+        return;
+      }
+
       clearTimeout(timer);
       process.off("message", onMessage);
-      if (raw.ok) resolve(raw.data);
-      else reject(new Error(raw.error ?? "The Keychain refused the request."));
+
+      if (raw.ok) {
+        resolve(raw.data);
+      } else {
+        reject(new Error(raw.error ?? "The Keychain refused the request."));
+      }
     };
+
     process.on("message", onMessage);
     process.send?.({
       type: VAULT_MESSAGE,
@@ -63,12 +73,14 @@ export function createKeyVault(dir: string): KeyVault {
   let keychain: boolean | null = null;
 
   const kind = async (): Promise<"keychain" | "file"> => {
-    if (keychain === null)
+    if (keychain === null) {
       keychain =
         ipcAvailable() &&
         (await askDesktop("probe", "")
           .then((v) => v === "yes")
           .catch(() => false));
+    }
+
     return keychain ? "keychain" : "file";
   };
 
@@ -77,17 +89,22 @@ export function createKeyVault(dir: string): KeyVault {
     async get() {
       if ((await kind()) === "keychain") {
         const sealed = await readFile(sealedFile, "utf-8").catch(() => null);
+
         return sealed ? askDesktop("open", sealed.trim()) : null;
       }
+
       const plain = await readFile(plainFile, "utf-8").catch(() => null);
+
       return plain ? plain.trim() : null;
     },
     async set(value) {
       if ((await kind()) === "keychain") {
         await writePrivate(sealedFile, await askDesktop("seal", value));
         await rm(plainFile, { force: true });
+
         return;
       }
+
       await writePrivate(plainFile, value);
     },
     async clear() {

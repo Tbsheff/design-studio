@@ -28,7 +28,8 @@ export function designSystemRef(
   state: DesignSystemState | null
 ): DesignSystemRef {
   const backing = Boolean(project.designSystemFor);
-  if (!state)
+
+  if (!state) {
     return {
       projectId,
       directionId,
@@ -36,6 +37,8 @@ export function designSystemRef(
       name: null,
       backing,
     };
+  }
+
   return {
     projectId,
     directionId,
@@ -74,6 +77,7 @@ function ValueCell({ value, color }: { value: string; color: boolean }) {
 
 function TokenRow({ entry }: { entry: CompiledTokenEntry }) {
   const color = entry.type === "color";
+
   return (
     <li className="ds-row">
       <code className="ds-var">{entry.cssVar}</code>
@@ -88,12 +92,14 @@ function TokenRow({ entry }: { entry: CompiledTokenEntry }) {
 }
 
 function TokenList({ load }: { load: Load }) {
-  if (load.error)
+  if (load.error) {
     return (
       <div className="alert error small" role="alert">
         Could not load tokens. {load.error} Close this panel and open it again.
       </div>
     );
+  }
+
   if (!load.state) {
     return (
       <div className="ds-loading" role="status">
@@ -101,7 +107,9 @@ function TokenList({ load }: { load: Load }) {
       </div>
     );
   }
+
   const { entries, errors } = load.state;
+
   return (
     <>
       {errors.length > 0 && (
@@ -132,7 +140,10 @@ function useDesignSystem(ref: DesignSystemRef, open: boolean): Load {
   const [load, setLoad] = useState<Load>({ state: null, error: null });
   const { projectId, directionId } = ref;
   useEffect(() => {
-    if (!open || !directionId) return;
+    if (!open || !directionId) {
+      return;
+    }
+
     let live = true;
     api
       .getDesignSystem(projectId, directionId)
@@ -142,10 +153,12 @@ function useDesignSystem(ref: DesignSystemRef, open: boolean): Load {
           live &&
           setLoad((prev) => ({ state: prev.state, error: errorText(err) }))
       );
+
     return () => {
       live = false;
     };
   }, [open, projectId, directionId]);
+
   return load;
 }
 
@@ -172,6 +185,7 @@ function ChipDialogs({
     const from = system.directionId
       ? { projectId: system.projectId, directionId: system.directionId }
       : null;
+
     return (
       <ChangePackDialog
         currentId={system.packId}
@@ -181,6 +195,7 @@ function ChipDialogs({
       />
     );
   }
+
   if (dialog === "save") {
     return (
       <SavePackDialog
@@ -192,6 +207,7 @@ function ChipDialogs({
       />
     );
   }
+
   return null;
 }
 
@@ -212,22 +228,30 @@ export function DesignSystemChip({
   const { packs } = usePacks();
   const load = useDesignSystem(system, open);
   const pack = findPack(packs, system.packId);
+
   const name =
     system.name ??
     pack?.name ??
     load.state?.manifest?.name ??
     system.packId ??
     "";
+
   const close = useCallback((refocus: boolean) => {
     setOpen(false);
-    if (refocus) trigger.current?.focus();
+
+    if (refocus) {
+      trigger.current?.focus();
+    }
   }, []);
+
   usePopover(open, root, close);
   useFitPopover(popover, trigger, open);
+
   const openDialog = (next: Dialog) => {
     close(false);
     setDialog(next);
   };
+
   const dialogs = (
     <ChipDialogs
       dialog={dialog}
@@ -238,7 +262,11 @@ export function DesignSystemChip({
       onClose={() => setDialog(null)}
     />
   );
-  if (!system.directionId) return null;
+
+  if (!system.directionId) {
+    return null;
+  }
+
   if (!system.packId) {
     return (
       <>

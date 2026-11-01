@@ -32,20 +32,24 @@ function useLoad<T>(load: () => Promise<T>, key: string): Load<T> {
     load()
       .then((value) => live && setState({ value, error: null }))
       .catch((err) => live && setState({ value: null, error: errorText(err) }));
+
     return () => {
       live = false;
     };
   }, [key]);
+
   return state;
 }
 
 function CheckResult({ check }: { check: Load<DesignSystemCheckResult> }) {
-  if (check.error)
+  if (check.error) {
     return (
       <div className="alert error small">
         Could not run the check. {check.error}
       </div>
     );
+  }
+
   if (!check.value) {
     return (
       <div className="lib-check" role="status">
@@ -53,6 +57,7 @@ function CheckResult({ check }: { check: Load<DesignSystemCheckResult> }) {
       </div>
     );
   }
+
   if (check.value.passed) {
     return (
       <div className="lib-check ok" role="status">
@@ -61,13 +66,17 @@ function CheckResult({ check }: { check: Load<DesignSystemCheckResult> }) {
       </div>
     );
   }
+
   const { problems } = check.value;
   const byRule = new Map<string, string[]>();
-  for (const problem of problems)
+
+  for (const problem of problems) {
     byRule.set(problem.rule, [
       ...(byRule.get(problem.rule) ?? []),
       problem.message,
     ]);
+  }
+
   return (
     <div className="lib-check fail" role="status">
       <strong>
@@ -102,6 +111,7 @@ function ActionBar({
 }) {
   const user = pack.source === "user";
   const usable = !pack.draft;
+
   return (
     <div className="lib-actions" aria-label="Actions" role="group">
       {actions.onApply && usable && (
@@ -199,15 +209,21 @@ export function PackDetailDialog({
     () => api.getPack(pack.id),
     `${pack.id}:${pack.name}`
   );
+
   const check = useLoad<DesignSystemCheckResult>(
     () => api.checkPack(pack.id),
     `${pack.id}:${pack.name}`
   );
+
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const dialog = useModalDialog(() => (busy ? false : onClose()));
+
   const run = (task: () => Promise<void>) => {
-    if (busy) return;
+    if (busy) {
+      return;
+    }
+
     setBusy(true);
     setError(null);
     task()

@@ -74,20 +74,29 @@ export function usePrototype(o: Options) {
   const [arrows, setArrows] = useState(true);
   const [playing, setPlaying] = useState(false);
   const saved = useLinks(o.projectId);
+
   const implicit = useImplicitLinks(
     o.projectId,
     o.frames.map((frame) => `${frame.id}:${frame.path ?? ""}`).join(",")
   );
+
   const file = withImplicit(saved, implicit);
   const clear = useRef(o.clearSelection);
   clear.current = o.clearSelection;
   const lastActive = useRef(o.active.id);
   useEffect(() => {
-    if (lastActive.current === o.active.id) return;
+    if (lastActive.current === o.active.id) {
+      return;
+    }
+
     lastActive.current = o.active.id;
-    if (on) clear.current();
+
+    if (on) {
+      clear.current();
+    }
   }, [o.active.id, on]);
   const startId = playStartOf(file, o.frames, startFrameOf(file, o.frames));
+
   const states = useLinkRects({
     kind: o.kind,
     file,
@@ -103,6 +112,7 @@ export function usePrototype(o: Options) {
     },
     passive: o.passive,
   });
+
   const drag = useLinkDrag((selection, frameId) => {
     void linksApi
       .add(o.projectId, {
@@ -112,40 +122,58 @@ export function usePrototype(o: Options) {
       })
       .catch((error: unknown) => o.notify(errorMessage(error)));
   });
+
   const frameTitle = (frame: CanvasFrame) =>
     frame.label ?? frame.path ?? frameName(frame);
+
   const titleById = (id: string) => {
     const frame = o.frames.find((item) => item.id === id);
+
     return frame ? frameTitle(frame) : "missing frame";
   };
+
   const linkTitle = (link: PrototypeLink) =>
     `${sourceName(link.from)} in ${titleById(link.from.frame)} → ${isBackTarget(link.to) ? "Back" : titleById(link.to.frame)}`;
+
   const urls = useRef(new Map<string, Promise<string>>());
   const frameStates = useCurrentFrameStates();
+
   const withState = (frame: CanvasFrame, url: string): string =>
     frameStates
       ? withFrameStateHost(url, frameStateOf(frameStates.view, frame.id))
       : url;
+
   const urlOf = (frame: CanvasFrame): Promise<string | null> =>
     baseUrlOf(frame).then((url) => (url ? withState(frame, url) : null));
+
   const baseUrlOf = (frame: CanvasFrame): Promise<string | null> => {
     const did = frameDirection(frame, o.directionId);
-    if (!did) return Promise.resolve(null);
-    if (did === o.directionId && o.baseUrl)
+
+    if (!did) {
+      return Promise.resolve(null);
+    }
+
+    if (did === o.directionId && o.baseUrl) {
       return Promise.resolve(withFramePath(o.baseUrl, frame.path));
+    }
+
     let url = urls.current.get(did);
+
     if (!url) {
       url = api.directionPreview(o.projectId, did).then((result) => result.url);
       urls.current.set(did, url);
       url.catch(() => urls.current.delete(did));
     }
+
     return url
       .then((base) => withFramePath(base, frame.path))
       .catch(() => null);
   };
+
   const play = () => setPlaying(true);
   const single = o.selection.length === 1 ? o.selection[0] : undefined;
   const selected = on ? linkOfSelection(states, single, o.active.id) : null;
+
   const artboard: ReactNode = on ? (
     <>
       <LinkArrows
@@ -166,6 +194,7 @@ export function usePrototype(o: Options) {
       )}
     </>
   ) : null;
+
   const stage: ReactNode = (
     <>
       {on && (
@@ -199,6 +228,7 @@ export function usePrototype(o: Options) {
       )}
     </>
   );
+
   return {
     play,
     artboard,

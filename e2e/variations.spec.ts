@@ -17,6 +17,7 @@ import {
 
 const SHOTS = process.env.STUDIO_VARIATIONS_SHOTS === "1";
 const SHOT_DIR = path.resolve("design-review");
+
 const EDITED_BRIEF =
   "Poster bands in yellow and black, condensed caps, giant opening hours, loud and dense.";
 
@@ -30,13 +31,17 @@ function pane(page: Page, label: string) {
 
 async function paneFrame(page: Page, label: string) {
   const id = await pane(page, label).getAttribute("data-direction-id");
+
   return page.frameLocator(
     `.artboard[data-direction-id="${id}"] > iframe.front, .canvas-frame[data-direction-id="${id}"] > iframe.passive:not(.next)`
   );
 }
 
 async function shot(page: Page, name: string): Promise<void> {
-  if (!SHOTS) return;
+  if (!SHOTS) {
+    return;
+  }
+
   for (const size of [
     { width: 1440, height: 900 },
     { width: 800, height: 934 },
@@ -50,6 +55,7 @@ async function shot(page: Page, name: string): Promise<void> {
       ),
     });
   }
+
   await page.setViewportSize({ width: 1600, height: 1000 });
 }
 
@@ -62,12 +68,14 @@ async function runDetail(
 
 test("variations: fan-out, live grid, keep, mix", async ({ page }) => {
   const api = await openHome(page);
+
   const project = await createProjectViaUi(
     page,
     api,
     "Spoke and Wheel bike repair",
     "html"
   );
+
   await api.waitForRuns(project.id, 1);
   await api.call("PATCH", `/api/projects/${project.id}/settings`, {
     maxBudgetUsd: 0.5,
@@ -110,6 +118,7 @@ test("variations: fan-out, live grid, keep, mix", async ({ page }) => {
     "Variation B",
     "Variation C",
   ]);
+
   for (const direction of group) {
     const versions = await api.versions(project.id, direction.id);
     expect(
@@ -117,15 +126,18 @@ test("variations: fan-out, live grid, keep, mix", async ({ page }) => {
     ).toHaveLength(1);
   }
 
-  for (const label of ["A", "B", "C"])
+  for (const label of ["A", "B", "C"]) {
     await expect(
       (await paneFrame(page, label)).locator("body")
     ).toHaveAttribute("data-variation", label);
+  }
+
   const layouts = await Promise.all(
     ["A", "B", "C"].map(async (label) =>
       (await paneFrame(page, label)).locator("body").getAttribute("class")
     )
   );
+
   expect(new Set(layouts).size).toBe(3);
   await expect(
     (await paneFrame(page, "B")).locator(".variation-brief")
@@ -193,12 +205,14 @@ test("variations: React fan-out caps at 3 and runs one Vite server per direction
   page,
 }) => {
   const api = await openHome(page);
+
   const project = await createProjectViaUi(
     page,
     api,
     "Spoke and Wheel React",
     "react"
   );
+
   await api.waitForRuns(project.id, 1, 120_000);
   await openRunSettings(page);
   await expect(
@@ -214,19 +228,24 @@ test("variations: React fan-out caps at 3 and runs one Vite server per direction
   await card.getByRole("button", { name: "Start 3 variations" }).click();
   await expect(page.getByTestId("variation-frame")).toHaveCount(3);
   await api.waitForRuns(project.id, 4, 120_000);
-  for (const label of ["A", "B", "C"])
+
+  for (const label of ["A", "B", "C"]) {
     await expect(
       (await paneFrame(page, label)).locator(`main[data-variation="${label}"]`)
     ).toBeVisible({ timeout: 60_000 });
+  }
+
   const group = (await api.project(project.id)).directions.filter(
     (direction) => direction.variation
   );
+
   const ports = await Promise.all(
     group.map(
       async (direction) =>
         new URL((await api.preview(project.id, direction.id)).url).port
     )
   );
+
   expect(new Set(ports).size).toBe(3);
   await expect(page.locator("iframe")).toHaveCount(4);
 });

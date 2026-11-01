@@ -20,14 +20,22 @@ export default async function globalSetup(): Promise<void> {
   if (stateExists()) {
     const previous = readState();
     await stopServer(previous.pid).catch(() => undefined);
-    if (previous.renderHostPid) stopRenderHost(previous.renderHostPid);
+
+    if (previous.renderHostPid) {
+      stopRenderHost(previous.renderHostPid);
+    }
   }
-  if (!existsSync(path.join(ROOT, "dist", "ui", "index.html")))
+
+  if (!existsSync(path.join(ROOT, "dist", "ui", "index.html"))) {
     execFileSync("npm", ["run", "build:ui"], { cwd: ROOT, stdio: "inherit" });
+  }
+
   const renderHostPid = await startE2eRenderer();
+
   const workDir = realpathSync(
     mkdtempSync(path.join(os.tmpdir(), "studio ac safety "))
   );
+
   const dataDir = path.join(workDir, "data");
   const { pid, listenMs } = await startServer(dataDir);
   console.log(

@@ -25,13 +25,18 @@ export function useStudioTokens(o: Options) {
     o.redo
   );
   const { confirmLeave } = draft;
+
   const guard = useCallback(
     <A extends unknown[]>(fn: (...args: A) => unknown) =>
       async (...args: A): Promise<void> => {
-        if (confirmLeave()) await fn(...args);
+        if (confirmLeave()) {
+          await fn(...args);
+        }
       },
     [confirmLeave]
   );
+
   const panel = o.tokens ? { tokens: o.tokens, draft } : null;
+
   return { draft, guard, panel };
 }

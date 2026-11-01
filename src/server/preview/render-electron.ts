@@ -26,13 +26,17 @@ interface Transport {
 }
 
 function ipcTransport(): Transport {
-  if (!process.send)
+  if (!process.send) {
     throw new Error("electron render backend needs the app IPC channel");
+  }
+
   return {
     send: (request) => process.send?.(request),
     onResponse: (handler) => {
       process.on("message", (raw: unknown) => {
-        if (isRenderResponse(raw)) handler(raw);
+        if (isRenderResponse(raw)) {
+          handler(raw);
+        }
       });
     },
     close: () => undefined,
@@ -48,15 +52,22 @@ function socketTransport(socketPath: string): Transport {
   socket.on("data", (chunk: string) => {
     buffer += chunk;
     let newline = buffer.indexOf("\n");
+
     while (newline >= 0) {
       const line = buffer.slice(0, newline);
       buffer = buffer.slice(newline + 1);
       const parsed: unknown = JSON.parse(line);
-      if (isRenderResponse(parsed))
-        for (const handler of handlers) handler(parsed);
+
+      if (isRenderResponse(parsed)) {
+        for (const handler of handlers) {
+          handler(parsed);
+        }
+      }
+
       newline = buffer.indexOf("\n");
     }
   });
+
   return {
     send: (request) => socket.write(`${JSON.stringify(request)}\n`),
     onResponse: (handler) => handlers.push(handler),
@@ -75,22 +86,33 @@ function createClient(transport: Transport, token: string | undefined) {
   let nextId = 1;
   transport.onResponse((response) => {
     const waiter = pending.get(response.id);
-    if (!waiter) return;
+
+    if (!waiter) {
+      return;
+    }
+
     pending.delete(response.id);
     clearTimeout(waiter.timer);
-    if (response.ok) waiter.resolve(response.value);
-    else waiter.reject(new Error(response.error));
+
+    if (response.ok) {
+      waiter.resolve(response.value);
+    } else {
+      waiter.reject(new Error(response.error));
+    }
   });
+
   return function call<K extends RenderOp>(
     op: K,
     args: RenderOps[K]["args"]
   ): Promise<RenderOps[K]["result"]> {
     const id = nextId++;
+
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
         pending.delete(id);
         reject(new Error(`render ${op} timed out after ${OP_TIMEOUT_MS} ms`));
       }, OP_TIMEOUT_MS);
+
       timer.unref();
       pending.set(id, {
         resolve: resolve as (value: unknown) => void,
@@ -114,10 +136,12 @@ export function createElectronBackend(
   const socketPath = env[RENDER_SOCKET_ENV];
   const transport = socketPath ? socketTransport(socketPath) : ipcTransport();
   const call = createClient(transport, env[RENDER_TOKEN_ENV]);
+
   return {
     name: "electron",
     async open(viewport): Promise<RenderPage> {
       const { pageId } = await call("open", viewport);
+
       return {
         goto: (url) =>
           call("goto", {

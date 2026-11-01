@@ -49,8 +49,15 @@ interface TypedProject {
 }
 
 export function projectTypeOf(project: TypedProject): ProjectType {
-  if (project.designSystemFor) return "design-system";
-  if (project.app) return project.app.framework;
+  if (project.designSystemFor) {
+    return "design-system";
+  }
+
+  if (project.app) {
+    return project.app.framework;
+  }
+
   const folder = Boolean(project.imported && !project.imported.created);
+
   return folder && project.kind === "react" ? "vite" : project.kind;
 }

@@ -147,8 +147,11 @@ type ParsedControls =
 
 export function parseControls(raw: unknown): ParsedControls {
   const result = tweakControlsSchema.safeParse(raw);
-  if (!result.success)
+
+  if (!result.success) {
     return { controls: null, error: describeZodError(result.error) };
+  }
+
   return { controls: result.data as TweakControl[], error: null };
 }
 
@@ -157,6 +160,7 @@ export function parseTweaksText(text: string): {
   error: string | null;
 } {
   let raw: unknown;
+
   try {
     raw = JSON.parse(text);
   } catch (error) {
@@ -165,12 +169,16 @@ export function parseTweaksText(text: string): {
       error: `tweaks.json is not valid JSON: ${error instanceof Error ? error.message : String(error)}`,
     };
   }
+
   const result = tweaksFileSchema.safeParse(raw);
-  if (!result.success)
+
+  if (!result.success) {
     return {
       file: null,
       error: `tweaks.json is invalid: ${describeZodError(result.error)}`,
     };
+  }
+
   return {
     file: { controls: result.data.controls as TweakControl[] },
     error: null,

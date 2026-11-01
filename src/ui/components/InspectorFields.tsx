@@ -38,7 +38,10 @@ function ColorFieldView({ prop, label, short, edit }: FieldProps) {
   const inherited = useInherited(prop);
 
   const settle = () => {
-    if (text !== null && !isValidColor(text)) edit.revert([prop]);
+    if (text !== null && !isValidColor(text)) {
+      edit.revert([prop]);
+    }
+
     setText(null);
     edit.commit();
   };
@@ -56,6 +59,7 @@ function ColorFieldView({ prop, label, short, edit }: FieldProps) {
   };
 
   const id = `ins-${prop}-${label.replace(/\W+/g, "-").toLowerCase()}`;
+
   return (
     <div className={`ins-field color ${inherited ? "inherited" : ""}`}>
       <label htmlFor={id} className="ins-scrub static">
@@ -73,7 +77,10 @@ function ColorFieldView({ prop, label, short, edit }: FieldProps) {
         onChange={(event) => {
           const next = event.target.value;
           setText(next);
-          if (isValidColor(next)) edit.preview({ [prop]: next.trim() });
+
+          if (isValidColor(next)) {
+            edit.preview({ [prop]: next.trim() });
+          }
         }}
         onKeyDown={onKeyDown}
         onBlur={settle}
@@ -108,10 +115,13 @@ function SelectFieldView({
   options,
 }: FieldProps & { options: string[] }) {
   const value = edit.values[prop];
+
   const list =
     value && !options.includes(value) ? [value, ...options] : options;
+
   const id = `ins-${prop}`;
   const inherited = useInherited(prop);
+
   return (
     <div className={`ins-field select ${inherited ? "inherited" : ""}`}>
       <label htmlFor={id} className="ins-scrub static">
@@ -141,13 +151,20 @@ const ALIGN: { value: string; icon: IconName; label: string }[] = [
 ];
 
 function alignOf(value: string): string {
-  if (value === "start") return "left";
-  if (value === "end") return "right";
+  if (value === "start") {
+    return "left";
+  }
+
+  if (value === "end") {
+    return "right";
+  }
+
   return value;
 }
 
 function AlignFieldView({ edit }: { edit: DirectEdit }) {
   const current = alignOf(edit.values["text-align"]);
+
   return (
     <div
       className="segmented icons ins-align"
@@ -179,6 +196,7 @@ const OPEN_KEY = "studio.inspector.sections";
 function readOpen(): Record<string, boolean> {
   try {
     const raw: unknown = JSON.parse(localStorage.getItem(OPEN_KEY) ?? "{}");
+
     return raw && typeof raw === "object"
       ? (raw as Record<string, boolean>)
       : {};
@@ -194,16 +212,19 @@ export function useSectionOpen(
   initial = true
 ): [boolean, () => void] {
   const [open, setOpen] = useState(() => sectionOpen[title] ?? initial);
+
   const toggle = () => {
     const next = !open;
     sectionOpen[title] = next;
     setOpen(next);
+
     try {
       localStorage.setItem(OPEN_KEY, JSON.stringify(sectionOpen));
     } catch {
       return;
     }
   };
+
   return [open, toggle];
 }
 
@@ -225,8 +246,10 @@ export function InspectorSection({
   initialOpen,
 }: SectionProps) {
   const [open, toggle] = useSectionOpen(title, initialOpen);
+
   const hasBody =
     children !== null && children !== undefined && children !== false;
+
   return (
     <section
       className={`ins-section ${open ? "" : "closed"} ${className ?? ""}`}
@@ -254,10 +277,12 @@ export function InspectorSection({
 }
 
 export const ColorField = memo(ColorFieldView, sameField);
+
 export const SelectField = memo(
   SelectFieldView,
   (a, b) => sameField(a, b) && a.options.join() === b.options.join()
 );
+
 export const AlignField = memo(AlignFieldView, (a, b) =>
   sameEditValues(a.edit, b.edit, ["text-align"])
 );

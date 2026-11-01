@@ -58,9 +58,13 @@ export function snapTarget(
   mode: TokenMode
 ): string | null {
   const group = TOKEN_GROUP_FOR_PROPERTY[prop];
-  if (!group || group === "font" || varName(value) || isUnsetValue(value))
+
+  if (!group || group === "font" || varName(value) || isUnsetValue(value)) {
     return null;
+  }
+
   const best = matchForProperty(prop, value, entries, mode)[0];
+
   return isSnappable(group, best) ? best.cssVar : null;
 }
 
@@ -69,6 +73,7 @@ export function useSnapSetting(
 ): [boolean, (on: boolean) => void] {
   const ui = useUi();
   const on = ui.snapByProject[projectId] ?? true;
+
   const set = useCallback(
     (next: boolean) =>
       uiStore.set((s) => ({
@@ -76,6 +81,7 @@ export function useSnapSetting(
       })),
     [projectId]
   );
+
   return [on, set];
 }
 
@@ -87,25 +93,38 @@ export function useTokenSnap(tokens: DesignTokens | null, snapOn: boolean) {
 
   const rewrite = useCallback((style: Partial<StyleValues>) => {
     const { tokens: t, snapOn: on } = live.current;
+
     if (!t || !on) {
       setNote(null);
+
       return style;
     }
+
     const out: Partial<StyleValues> = { ...style };
     const raw: Partial<StyleValues> = {};
     let cssVar: string | null = null;
+
     for (const [prop, value] of Object.entries(style) as [
       DirectStyleProperty,
       string,
     ][]) {
-      if (kept.current[prop] === value) continue;
+      if (kept.current[prop] === value) {
+        continue;
+      }
+
       const target = snapTarget(prop, value, t.entries, t.mode);
-      if (!target) continue;
+
+      if (!target) {
+        continue;
+      }
+
       out[prop] = `var(${target})`;
       raw[prop] = value;
       cssVar = cssVar ?? target;
     }
+
     setNote(cssVar ? { cssVar, raw } : null);
+
     return out;
   }, []);
 
@@ -117,8 +136,12 @@ export function useTokenSnap(tokens: DesignTokens | null, snapOn: boolean) {
   const dismiss = useCallback(() => setNote(null), []);
 
   useEffect(() => {
-    if (!note) return;
+    if (!note) {
+      return;
+    }
+
     const id = window.setTimeout(() => setNote(null), NOTE_MS);
+
     return () => window.clearTimeout(id);
   }, [note]);
 

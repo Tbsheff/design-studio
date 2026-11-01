@@ -10,8 +10,13 @@ export function McpPointBadge({
   frameName: (frameId: string) => string;
 }) {
   const { point } = badge;
-  if (!point) return null;
+
+  if (!point) {
+    return null;
+  }
+
   const where = point.label ?? frameName(point.frameId);
+
   return (
     <div
       className="mcp-point"

@@ -34,8 +34,12 @@ export function mockCanvasContext(
   input: DriverInput,
   canvas: CanvasService | undefined
 ): CanvasToolContext | null {
-  if (!canvas) return null;
+  if (!canvas) {
+    return null;
+  }
+
   const { ctx } = input;
+
   return {
     canvas,
     project: ctx.project,
@@ -47,6 +51,7 @@ export function mockCanvasContext(
 
 function firstLine(result: ToolText): string {
   const body = result.content.map((part) => part.text).join("\n");
+
   return body.length > 400 ? `${body.slice(0, 400)}…` : body;
 }
 
@@ -65,6 +70,7 @@ export async function mockCanvasTool(
     result.isError === true,
     firstLine(result)
   );
+
   return result;
 }
 
@@ -92,6 +98,7 @@ export function mockPoint(
   selector?: string
 ): Promise<ToolText> {
   const args = selector ? { frame, selector } : { frame };
+
   return mockCanvasTool(session, CANVAS_POINT_TOOL, args, () =>
     canvasPoint(ctx, args)
   );
@@ -105,19 +112,28 @@ export async function runMockCanvas(
   session: MockToolSession,
   ctx: CanvasToolContext | null
 ): Promise<string> {
-  if (!ctx) return "The canvas is not available in this run.";
+  if (!ctx) {
+    return "The canvas is not available in this run.";
+  }
+
   await mockList(session, ctx);
+
   const placed = await mockPlace(session, ctx, [
     { frame: "f1", label: "Desktop" },
     { label: "Mobile", viewport: "mobile", rightOf: "@Desktop" },
     { label: "Tablet", viewport: "tablet", x: 0, y: 0 },
   ]);
+
   const warned = /overlap/.test(
     placed.content.map((part) => part.text).join(" ")
   );
-  if (warned)
+
+  if (warned) {
     await mockPlace(session, ctx, [{ frame: "@Tablet", rightOf: "@Mobile" }]);
+  }
+
   await mockPoint(session, ctx, "@Mobile", "h1");
+
   return warned
     ? "Placed Desktop, Mobile and Tablet frames in a row; the Tablet frame overlapped Desktop, so I moved it right of Mobile. Showing the Mobile frame."
     : "Placed Desktop, Mobile and Tablet frames. Showing the Mobile frame.";
@@ -125,6 +141,7 @@ export async function runMockCanvas(
 
 export const MOCK_STATES_TAG = "[states]";
 const MOCK_STATES = ["empty", "loading", "error", "success"] as const;
+
 const STATE_TEXT: Record<string, string> = {
   empty: "Nothing here yet. Add your first item to get started.",
   loading: "Loading your items…",
@@ -142,6 +159,7 @@ export interface MockWriteSession extends MockToolSession {
 
 export function wantsMockStates(input: DriverInput): boolean {
   const request = input.ctx.request;
+
   return (
     request.mode === "edit" &&
     (request.states !== undefined || request.prompt.includes(MOCK_STATES_TAG))
@@ -160,6 +178,7 @@ export function mockStatePage(page: string, state: string): string {
   const withBase = /<head[^>]*>/i.test(page)
     ? page.replace(/<head[^>]*>/i, (tag) => `${tag}\n<base href="../">`)
     : `<base href="../">\n${page}`;
+
   return /<body[^>]*>/i.test(withBase)
     ? withBase.replace(/<body[^>]*>/i, (tag) => `${tag}\n${stateBanner(state)}`)
     : `${withBase}\n${stateBanner(state)}`;
@@ -167,12 +186,17 @@ export function mockStatePage(page: string, state: string): string {
 
 const REACT_STATE_PAGE =
   '<!doctype html><html><head><meta charset="utf-8"><title>State</title></head><body><h1>App</h1></body></html>';
+
 const EMPTY_PAGE = "<!doctype html><html><head></head><body></body></html>";
 
 async function statesSource(input: DriverInput): Promise<string> {
-  if (input.ctx.project.kind === "react") return REACT_STATE_PAGE;
+  if (input.ctx.project.kind === "react") {
+    return REACT_STATE_PAGE;
+  }
+
   const pagePath =
     input.ctx.request.states?.path || input.ctx.project.entry || "index.html";
+
   return readFile(
     path.join(input.ctx.direction.workTree, pagePath),
     "utf-8"
@@ -188,6 +212,7 @@ async function rowBelowAll(
   const others = frames.filter((f) => !labels.includes(f.label ?? ""));
   const bottom = Math.max(0, ...others.map((f) => f.y + f.height));
   const x = frames.find((f) => f.id === sourceId)?.x ?? 0;
+
   return labels.map((label, index) => ({
     frame: `@${label}`,
     ...(index === 0
@@ -207,22 +232,30 @@ export async function runMockStates(
     width: 1440,
     height: 900,
   };
+
   const react = input.ctx.project.kind === "react";
   const page = await statesSource(input);
   const prefix = statePrefix(source.path);
+
   const files = MOCK_STATES.map((state) => ({
     state,
     file: `states/${prefix}${state}.html`,
   }));
-  for (const { state, file } of files)
+
+  for (const { state, file } of files) {
     await session.writeFileAsTool(
       "Write",
       react ? `public/${file}` : file,
       mockStatePage(page, state)
     );
-  if (!ctx)
+  }
+
+  if (!ctx) {
     return `Wrote ${files.length} state pages. The canvas is not available in this run.`;
+  }
+
   const labels = files.map(({ state }) => titleOf(state));
+
   const specs: PlaceSpec[] = files.map(({ file }, index) => ({
     label: labels[index],
     path: file,
@@ -232,10 +265,15 @@ export async function runMockStates(
       ? { below: source.frame }
       : { rightOf: `@${labels[index - 1] ?? ""}` }),
   }));
+
   const placed = await mockPlace(session, ctx, specs);
-  if (/overlap/.test(placed.content.map((part) => part.text).join(" ")))
+
+  if (/overlap/.test(placed.content.map((part) => part.text).join(" "))) {
     await mockPlace(session, ctx, await rowBelowAll(ctx, labels, source.frame));
+  }
+
   await mockPoint(session, ctx, `@${titleOf(MOCK_STATES[0])}`);
+
   return `Made ${files.length} states of ${source.path || "the entry page"}: ${MOCK_STATES.map(titleOf).join(", ")}. Each has its own frame under the page.`;
 }
 
@@ -252,22 +290,31 @@ export async function runMockLinks(
   probe: LinkProbe | undefined,
   prompt: string
 ): Promise<string> {
-  if (!ctx) return "The canvas is not available in this run.";
+  if (!ctx) {
+    return "The canvas is not available in this run.";
+  }
+
   await mockCanvasTool(session, LIST_LINKS_TOOL, {}, () =>
     listLinks(ctx, probe)
   );
   const match = MOCK_LINKS_RE.exec(prompt);
-  if (!match) return "Say [links] <fromFrame> <selector> -> <toFrame>.";
+
+  if (!match) {
+    return "Say [links] <fromFrame> <selector> -> <toFrame>.";
+  }
+
   const spec = {
     fromFrame: match[1] as string,
     selector: match[2] as string,
     toFrame: match[3] as string,
   };
+
   const result = await mockCanvasTool(
     session,
     EDIT_LINKS_TOOL,
     { add: [spec] },
     () => editLinks(ctx, { add: [spec] }, probe)
   );
+
   return result.content.map((part) => part.text).join("\n");
 }

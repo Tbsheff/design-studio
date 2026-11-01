@@ -40,8 +40,10 @@ const useSchema = z
   .strict();
 
 function editError(c: Context, error: unknown): Response {
-  if (error instanceof DirectEditError)
+  if (error instanceof DirectEditError) {
     return c.json({ error: error.code, message: error.message }, error.status);
+  }
+
   throw error;
 }
 
@@ -54,6 +56,7 @@ export function registerComponentCreateRoutes(
       c.req.param("pid"),
       c.req.param("did")
     );
+
     return c.json(await componentFolders(project, direction.workTree));
   });
 
@@ -61,12 +64,16 @@ export function registerComponentCreateRoutes(
     "/api/projects/:pid/d/:did/components/swap-candidates",
     async (c) => {
       const parsed = useSchema.safeParse(await deps.readBody(c));
-      if (!parsed.success)
+
+      if (!parsed.success) {
         throw new BadRequestError("use must be { file, line, col }");
+      }
+
       const { project, direction } = await deps.loadDirection(
         c.req.param("pid"),
         c.req.param("did")
       );
+
       try {
         return c.json(
           await swapCandidates(project, direction.workTree, parsed.data.use)
@@ -83,6 +90,7 @@ export function registerComponentCreateRoutes(
   ) =>
     app.post(route, async (c) => {
       const body = await deps.readBody(c);
+
       try {
         const result = await deps.withDirection(
           c.req.param("pid") as string,
@@ -103,11 +111,13 @@ export function registerComponentCreateRoutes(
               body
             )
         );
+
         return c.json(result);
       } catch (error) {
         return editError(c, error);
       }
     });
+
   editRoute(
     "/api/projects/:pid/d/:did/components/create",
     applyCreateComponent

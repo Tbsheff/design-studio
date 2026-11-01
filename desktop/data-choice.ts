@@ -18,17 +18,27 @@ export async function chooseDataDir(
   input: DataChoiceInput
 ): Promise<DataChoice> {
   const holder = liveHolder(input.preferred, -1);
-  if (!holder) return { dir: input.preferred };
+
+  if (!holder) {
+    return { dir: input.preferred };
+  }
+
   const detail = holderText(input.preferred, holder);
-  if (input.explicit)
+
+  if (input.explicit) {
     return {
       quit: `${detail}\n\nStop the other server, or set STUDIO_DATA_DIR to another folder.`,
     };
+  }
+
   const separateHolder = liveHolder(input.separate, -1);
-  if (separateHolder)
+
+  if (separateHolder) {
     return {
       quit: `${detail}\n\n${holderText(input.separate, separateHolder)}`,
     };
+  }
+
   const { response } = await dialog.showMessageBox({
     type: "warning",
     message: "Studio data folder is in use",
@@ -37,5 +47,6 @@ export async function chooseDataDir(
     defaultId: 0,
     cancelId: 1,
   });
+
   return response === 0 ? { dir: input.separate } : { quit: "" };
 }

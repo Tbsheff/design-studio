@@ -17,13 +17,31 @@ export function nextRadioOption<T>(
   isDisabled: (option: T) => boolean = () => false
 ): T | null {
   const enabled = options.filter((option) => !isDisabled(option));
-  if (enabled.length === 0) return null;
-  if (key === "Home") return enabled[0] ?? null;
-  if (key === "End") return enabled[enabled.length - 1] ?? null;
+
+  if (enabled.length === 0) {
+    return null;
+  }
+
+  if (key === "Home") {
+    return enabled[0] ?? null;
+  }
+
+  if (key === "End") {
+    return enabled[enabled.length - 1] ?? null;
+  }
+
   const step = STEP[key];
-  if (step === undefined) return null;
+
+  if (step === undefined) {
+    return null;
+  }
+
   const at = enabled.indexOf(current);
-  if (at === -1) return enabled[step > 0 ? 0 : enabled.length - 1] ?? null;
+
+  if (at === -1) {
+    return enabled[step > 0 ? 0 : enabled.length - 1] ?? null;
+  }
+
   return enabled[(at + step + enabled.length) % enabled.length] ?? null;
 }
 
@@ -34,19 +52,30 @@ export function useRovingRadioGroup<T extends string | number>(
   isDisabled?: (option: T) => boolean
 ) {
   const refs = useRef(new Map<T, HTMLButtonElement | null>());
+
   const onKeyDown = (event: KeyboardEvent) => {
     const next = nextRadioOption(options, value, event.key, isDisabled);
-    if (next === null) return;
+
+    if (next === null) {
+      return;
+    }
+
     event.preventDefault();
-    if (next !== value) onChange(next);
+
+    if (next !== value) {
+      onChange(next);
+    }
+
     refs.current.get(next)?.focus();
   };
+
   const item = (option: T) => ({
     ref: (el: HTMLButtonElement | null) => {
       refs.current.set(option, el);
     },
     tabIndex: option === value ? 0 : -1,
   });
+
   return { onKeyDown, item };
 }
 
@@ -65,6 +94,7 @@ export function LevelControl({
 }: Props) {
   const baseId = useId();
   const radios = useRovingRadioGroup(RUN_LEVELS, value, onChange);
+
   return (
     <div
       className="segmented level-control"
@@ -75,6 +105,7 @@ export function LevelControl({
     >
       {RUN_LEVELS.map((level) => {
         const on = level === value;
+
         return (
           <button
             key={level}
@@ -116,13 +147,18 @@ export function levelGist(level: RunLevel): {
   cost: string | null;
 } {
   const match = /^(.*?) \(usually ([^,)]+)/.exec(LEVEL_PRESETS[level].hint);
-  if (!match) return { hint: levelShortHint(level), cost: null };
+
+  if (!match) {
+    return { hint: levelShortHint(level), cost: null };
+  }
+
   return { hint: match[1] ?? "", cost: (match[2] ?? "").replace(" to ", "–") };
 }
 
 export function levelShortHint(level: RunLevel): string {
   const hint = LEVEL_PRESETS[level].hint;
   const match = /^(.*?) \(usually ([^,)]+)/.exec(hint);
+
   return match ? `${match[1]}, ${match[2]}` : (hint.split(". ")[0] ?? hint);
 }
 
@@ -144,6 +180,7 @@ export function ChoiceItem({
   onPick: () => void;
 }) {
   const id = useId();
+
   return (
     <button
       type="button"

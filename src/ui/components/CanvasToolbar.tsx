@@ -67,14 +67,23 @@ const RADIO_STEP: Record<string, (index: number, count: number) => number> = {
 
 function onRadioGroupKey(event: KeyboardEvent<HTMLDivElement>) {
   const step = RADIO_STEP[event.key];
-  if (!step) return;
+
+  if (!step) {
+    return;
+  }
+
   const radios = Array.from(
     event.currentTarget.querySelectorAll<HTMLButtonElement>(
       '[role="radio"]:not(:disabled)'
     )
   );
+
   const index = radios.indexOf(document.activeElement as HTMLButtonElement);
-  if (index < 0) return;
+
+  if (index < 0) {
+    return;
+  }
+
   event.preventDefault();
   const next = radios[step(index, radios.length)];
   next?.focus();
@@ -85,6 +94,7 @@ function ViewportControls({ viewport }: { viewport: Viewport }) {
   const [customW, setCustomW] = useState(String(viewport.width));
   const [customH, setCustomH] = useState(String(viewport.height));
   const [shown, setShown] = useState(`${viewport.width}x${viewport.height}`);
+
   if (shown !== `${viewport.width}x${viewport.height}`) {
     setShown(`${viewport.width}x${viewport.height}`);
     setCustomW(String(viewport.width));
@@ -96,17 +106,22 @@ function ViewportControls({ viewport }: { viewport: Viewport }) {
       200,
       Math.min(4000, Number.parseInt(customW, 10) || viewport.width)
     );
+
     const h = Math.max(
       200,
       Math.min(4000, Number.parseInt(customH, 10) || viewport.height)
     );
+
     setCustomW(String(w));
     setCustomH(String(h));
     uiStore.set({ viewport: { preset: "custom", width: w, height: h } });
   };
 
   const onDimKey = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key !== "Enter") return;
+    if (e.key !== "Enter") {
+      return;
+    }
+
     e.preventDefault();
     applyCustom();
   };
@@ -326,6 +341,7 @@ function RulersSwitch({ on, onToggle }: { on: boolean; onToggle: () => void }) {
 
 export function VectorToolButtons() {
   const { tool, available } = useVectorTool();
+
   return (
     <div
       className="ui-tools topbar-tools vector-tools"

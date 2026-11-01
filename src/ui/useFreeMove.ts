@@ -58,6 +58,7 @@ function place(s: Session, drag: FreeMoveDrag, zoom: number): Placed {
   const base = s.start.rect;
   const moved = { ...base, x: base.x + drag.dx, y: base.y + drag.dy };
   const absolute = s.start.mode === "absolute";
+
   const snapped =
     !absolute || drag.free || s.candidates.length === 0
       ? { rect: moved, guides: [], spacing: [] }
@@ -68,7 +69,9 @@ function place(s: Session, drag: FreeMoveDrag, zoom: number): Placed {
           x: "move",
           y: "move",
         });
+
   const box = snapped.rect;
+
   return {
     dx: Math.round(box.x - base.x),
     dy: Math.round(box.y - base.y),
@@ -87,6 +90,7 @@ function transformOf(s: Session, dx: number, dy: number): string {
     s.start.transform && s.start.transform !== "none"
       ? ` ${s.start.transform}`
       : "";
+
   return `translate(${dx}px, ${dy}px)${own}`;
 }
 
@@ -97,17 +101,24 @@ function absoluteStyle(
 ): Record<string, string> {
   const style: Record<string, string> = {};
   const { fromRight, fromBottom } = s.start;
-  if (dx !== 0 || s.start.convert)
+
+  if (dx !== 0 || s.start.convert) {
     style[fromRight ? "right" : "left"] =
       `${Math.round(s.start.left + (fromRight ? -dx : dx))}px`;
-  if (dy !== 0 || s.start.convert)
+  }
+
+  if (dy !== 0 || s.start.convert) {
     style[fromBottom ? "bottom" : "top"] =
       `${Math.round(s.start.top + (fromBottom ? -dy : dy))}px`;
-  if (s.start.convert)
+  }
+
+  if (s.start.convert) {
     Object.assign(style, {
       position: "absolute",
       width: `${Math.round(s.start.rect.width)}px`,
     });
+  }
+
   return style;
 }
 
@@ -120,7 +131,10 @@ export function useFreeMove(o: Options): LiveStore<FreeMoveView | null> {
 
   useEffect(() => {
     const end = (committing: boolean) => {
-      if (!session.current) return;
+      if (!session.current) {
+        return;
+      }
+
       session.current = null;
       setView(null);
       document.body.classList.remove("element-moving");
@@ -128,16 +142,22 @@ export function useFreeMove(o: Options): LiveStore<FreeMoveView | null> {
       live.current.post({ type: "preview-reset" });
       live.current.holdSwap?.(false, !committing);
     };
+
     const onKey = (event: KeyboardEvent) => {
-      if (event.key !== "Escape" || !session.current) return;
+      if (event.key !== "Escape" || !session.current) {
+        return;
+      }
+
       event.preventDefault();
       event.stopImmediatePropagation();
       live.current.post({ type: "move-cancel" });
       end(false);
     };
+
     const begin = (start: FreeMoveStart) => {
       const cur = live.current;
       const target = cur.selection.length === 1 ? cur.selection[0] : undefined;
+
       if (
         !cur.enabled ||
         !cur.directionId ||
@@ -145,16 +165,20 @@ export function useFreeMove(o: Options): LiveStore<FreeMoveView | null> {
         target.selector !== start.selector
       ) {
         cur.post({ type: "move-cancel" });
+
         if (
           cur.enabled &&
           !target?.source &&
           target?.selector === start.selector
-        )
+        ) {
           cur.onError(
             "This element has no source location, so it cannot move here."
           );
+        }
+
         return;
       }
+
       session.current = {
         start,
         target,
@@ -173,9 +197,14 @@ export function useFreeMove(o: Options): LiveStore<FreeMoveView | null> {
         copy: false,
       });
     };
+
     const update = (drag: FreeMoveDrag) => {
       const s = session.current;
-      if (!s) return;
+
+      if (!s) {
+        return;
+      }
+
       const placed = place(s, drag, live.current.zoom);
       live.current.post({
         type: "preview-style",
@@ -188,33 +217,55 @@ export function useFreeMove(o: Options): LiveStore<FreeMoveView | null> {
       });
       setView(placed.view);
     };
+
     const drop = (drag: FreeMoveDrag) => {
       const s = session.current;
-      if (!s) return;
+
+      if (!s) {
+        return;
+      }
+
       const placed = place(s, drag, live.current.zoom);
       const write = commitPlan(s, drag, placed);
       end(write !== null);
-      if (write) void write();
+
+      if (write) {
+        void write();
+      }
     };
+
     const commitPlan = (
       s: Session,
       drag: FreeMoveDrag,
       placed: Placed
     ): (() => Promise<void>) | null => {
       const cur = live.current;
+
       if (drag.note || cur.busy) {
-        if (drag.note || drag.insert || placed.dx !== 0 || placed.dy !== 0)
+        if (drag.note || drag.insert || placed.dx !== 0 || placed.dy !== 0) {
           cur.onError(drag.note ?? "Wait for the last edit to finish.");
+        }
+
         return null;
       }
+
       const target = selectionTargets([s.target])?.[0];
-      if (!target) return null;
+
+      if (!target) {
+        return null;
+      }
+
       if (s.start.mode === "flow") {
         const ref = drag.insert?.ref;
-        if (!ref) return null;
+
+        if (!ref) {
+          return null;
+        }
+
         const self = drag.insert?.self
           ? { ...drag.insert.self, selector: target.selector }
           : target;
+
         return () =>
           cur.applyStructure({
             op: drag.alt ? "duplicate" : "move",
@@ -222,53 +273,76 @@ export function useFreeMove(o: Options): LiveStore<FreeMoveView | null> {
             ...(drag.insert?.after ? { after: ref } : { before: ref }),
           });
       }
-      if (placed.dx === 0 && placed.dy === 0) return null;
+
+      if (placed.dx === 0 && placed.dy === 0) {
+        return null;
+      }
+
       const style = absoluteStyle(s, placed.dx, placed.dy);
-      if (drag.alt)
+
+      if (drag.alt) {
         return () =>
           cur.applyStructure({ op: "duplicate", targets: [target], style });
+      }
+
       return () => saveStyle(s.target, style);
     };
+
     const saveStyle = async (
       target: SelectionContext,
       style: Record<string, string>
     ) => {
       const cur = live.current;
       const req = buildEditRequest(target, style);
-      if (!req || !cur.directionId) return;
+
+      if (!req || !cur.directionId) {
+        return;
+      }
+
       const selector = target.selector;
       cur.setSelection((prev) => mergeCommit(prev, { selector, style }));
+
       const optimistic = startOptimistic(
         { post: cur.post, refreshRects: cur.refreshRects },
         req,
         (message) => live.current.onError(message)
       );
+
       try {
         const result = await api.directEdit(
           cur.projectId,
           cur.directionId,
           req
         );
+
         optimistic.saved(result.tailwind);
         live.current.refreshRects();
       } catch (err) {
         optimistic.failed(errorText(err));
+
         const back = Object.fromEntries(
           Object.keys(style).map((key) => [key, target.styles[key] ?? ""])
         );
+
         live.current.setSelection((prev) =>
           mergeCommit(prev, { selector, style: back })
         );
         live.current.onError(errorText(err));
       }
     };
+
     const stop = o.listen((message) => {
-      if (message.type === "move-start") begin(message.move);
-      else if (message.type === "move-live") update(message.drag);
-      else if (message.type === "move-drop") drop(message.drag);
-      else if (message.type === "move-cancel" || message.type === "ready")
+      if (message.type === "move-start") {
+        begin(message.move);
+      } else if (message.type === "move-live") {
+        update(message.drag);
+      } else if (message.type === "move-drop") {
+        drop(message.drag);
+      } else if (message.type === "move-cancel" || message.type === "ready") {
         end(false);
+      }
     });
+
     return () => {
       stop();
       end(false);

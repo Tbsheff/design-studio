@@ -19,7 +19,10 @@ import { InspectorSection } from "./InspectorFields";
 import { NumberField } from "./NumberField";
 
 export function MultiNote({ reason }: { reason: string | null }) {
-  if (!reason) return null;
+  if (!reason) {
+    return null;
+  }
+
   return (
     <div className="ins-multi-note" role="note">
       <Icon name="alert" size={14} />
@@ -62,29 +65,42 @@ export function MultiCreateTokenHost({
   request,
   onClose,
 }: HostProps) {
-  if (!tokens || !request) return null;
+  if (!tokens || !request) {
+    return null;
+  }
+
   const submit = async (
     input: CreateTokenSubmit
   ): Promise<CreateTokenResult> => {
-    if (!directionId) throw new Error("No direction selected");
+    if (!directionId) {
+      throw new Error("No direction selected");
+    }
+
     await edit.drain();
+
     const result = await api.createToken(projectId, directionId, {
       group: input.group,
       name: input.name,
       value: input.value,
       ...(input.darkValue ? { darkValue: input.darkValue } : {}),
     });
+
     tokens.replace(result.state);
+
     if (input.apply) {
       const cssVar = cssVarFor(input.group, input.name);
+
       const style: Partial<StyleValues> = Object.fromEntries(
         request.targets.map((p) => [p, `var(${cssVar})`])
       );
+
       edit.preview(style);
       edit.commit();
     }
+
     return result;
   };
+
   return (
     <CreateTokenDialog
       request={request}
@@ -112,6 +128,7 @@ const MATCH_OPTIONS: { by: MatchKind; label: string; tip: string }[] = [
     tip: "Select text with the same font, size, weight, line height and tracking",
   },
 ];
+
 const MATCH_WAIT_MS = 5000;
 const MATCH_NOTE_MS = 6000;
 
@@ -121,18 +138,25 @@ const matchSubs = new Set<() => void>();
 
 function setMatchNote(text: string | null): void {
   matchNote = text ? { text, at: Date.now() } : null;
-  for (const sub of matchSubs) sub();
+
+  for (const sub of matchSubs) {
+    sub();
+  }
 }
 
 function subscribeMatch(sub: () => void): () => void {
   matchSubs.add(sub);
+
   return () => matchSubs.delete(sub);
 }
 
 function matchedText(
   message: Extract<BridgeToParent, { type: "matched" }>
 ): string {
-  if (message.note) return message.note;
+  if (message.note) {
+    return message.note;
+  }
+
   return message.count <= 1
     ? "No other element matches."
     : `Selected ${message.count} matching elements.`;
@@ -142,16 +166,23 @@ function askMatching(port: PreviewPort, selector: string, by: MatchKind): void {
   matchSeq += 1;
   const requestId = `match-${matchSeq}`;
   setMatchNote(null);
+
   const stop = port.listen?.((message) => {
-    if (message.type !== "matched" || message.requestId !== requestId) return;
+    if (message.type !== "matched" || message.requestId !== requestId) {
+      return;
+    }
+
     done();
     setMatchNote(matchedText(message));
   });
+
   const timer = window.setTimeout(() => done(), MATCH_WAIT_MS);
+
   function done(): void {
     window.clearTimeout(timer);
     stop?.();
   }
+
   port.post({ type: "select-matching", requestId, selector, by });
 }
 
@@ -164,8 +195,13 @@ function SelectMatchingView({
 }) {
   const note = useSyncExternalStore(subscribeMatch, () => matchNote);
   const base = selection.at(-1);
-  if (!base) return null;
+
+  if (!base) {
+    return null;
+  }
+
   const fresh = note && Date.now() - note.at < MATCH_NOTE_MS ? note.text : null;
+
   return (
     <InspectorSection title="Select matching">
       <div

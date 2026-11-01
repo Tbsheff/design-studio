@@ -13,28 +13,53 @@ export function hasShellMeta(command: string): boolean {
 
 export function ruleForCommand(command: string): string {
   const trimmed = command.trim();
-  if (trimmed === "" || hasShellMeta(trimmed)) return trimmed;
+
+  if (trimmed === "" || hasShellMeta(trimmed)) {
+    return trimmed;
+  }
+
   const parts = words(trimmed);
+
   return parts.length >= 2
     ? `${parts.slice(0, 3).join(" ")}${PREFIX_SUFFIX}`
     : trimmed;
 }
 
 function prefixOf(rule: string): string[] | null {
-  if (!rule.endsWith(PREFIX_SUFFIX)) return null;
+  if (!rule.endsWith(PREFIX_SUFFIX)) {
+    return null;
+  }
+
   const head = rule.slice(0, -PREFIX_SUFFIX.length);
-  if (hasShellMeta(head)) return null;
+
+  if (hasShellMeta(head)) {
+    return null;
+  }
+
   const parts = words(head);
+
   return parts.length > 0 ? parts : null;
 }
 
 export function ruleMatches(rule: string, command: string): boolean {
   const trimmed = command.trim();
-  if (trimmed === "") return false;
+
+  if (trimmed === "") {
+    return false;
+  }
+
   const prefix = prefixOf(rule);
-  if (!prefix) return rule === trimmed;
-  if (hasShellMeta(trimmed)) return false;
+
+  if (!prefix) {
+    return rule === trimmed;
+  }
+
+  if (hasShellMeta(trimmed)) {
+    return false;
+  }
+
   const parts = words(trimmed);
+
   return (
     parts.length >= prefix.length &&
     prefix.every((word, index) => parts[index] === word)

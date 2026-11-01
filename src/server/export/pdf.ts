@@ -18,6 +18,7 @@ function rgbOnWhite(png: Buffer): {
 } {
   const image = PNG.sync.read(png);
   const rgb = Buffer.alloc(image.width * image.height * 3);
+
   for (let i = 0, j = 0; i < image.data.length; i += 4, j += 3) {
     const alpha = (image.data[i + 3] ?? 255) / 255;
     rgb[j] = Math.round((image.data[i] ?? 0) * alpha + 255 * (1 - alpha));
@@ -28,6 +29,7 @@ function rgbOnWhite(png: Buffer): {
       (image.data[i + 2] ?? 0) * alpha + 255 * (1 - alpha)
     );
   }
+
   return { width: image.width, height: image.height, data: rgb };
 }
 
@@ -35,6 +37,7 @@ function pageSize(page: PdfPage): { width: number; height: number } {
   const width = page.cssWidth * PT_PER_PX;
   const height = page.cssHeight * PT_PER_PX;
   const fit = Math.min(1, MAX_PAGE_PT / Math.max(width, height));
+
   return {
     width: Math.round(width * fit * 100) / 100,
     height: Math.round(height * fit * 100) / 100,
@@ -45,27 +48,38 @@ export function imagesToPdf(pages: PdfPage[], title: string): Buffer {
   const chunks: Buffer[] = [];
   const offsets: number[] = [];
   let length = 0;
+
   const push = (part: string | Buffer): void => {
     const bytes = typeof part === "string" ? Buffer.from(part, "latin1") : part;
     chunks.push(bytes);
     length += bytes.length;
   };
+
   const object = (id: number, body: string | Buffer[], dict?: string): void => {
     offsets[id] = length;
+
     if (typeof body === "string") {
       push(`${id} 0 obj\n${body}\nendobj\n`);
+
       return;
     }
+
     push(`${id} 0 obj\n${dict ?? ""}\nstream\n`);
-    for (const part of body) push(part);
+
+    for (const part of body) {
+      push(part);
+    }
+
     push("\nendstream\nendobj\n");
   };
 
   push("%PDF-1.4\n%\xE2\xE3\xCF\xD3\n");
   const pageIds = pages.map((_, index) => 4 + index * 3);
+
   const safeTitle = title
     .replace(/[^\x20-\x7E]/g, "")
     .replace(/[\\()]/g, (char) => `\\${char}`);
+
   object(1, "<< /Type /Catalog /Pages 2 0 R >>");
   object(
     2,
@@ -98,10 +112,14 @@ export function imagesToPdf(pages: PdfPage[], title: string): Buffer {
   const count = 4 + pages.length * 3;
   const xrefAt = length;
   push(`xref\n0 ${count}\n0000000000 65535 f \n`);
-  for (let id = 1; id < count; id += 1)
+
+  for (let id = 1; id < count; id += 1) {
     push(`${String(offsets[id] ?? 0).padStart(10, "0")} 00000 n \n`);
+  }
+
   push(
     `trailer\n<< /Size ${count} /Root 1 0 R /Info 3 0 R >>\nstartxref\n${xrefAt}\n%%EOF\n`
   );
+
   return Buffer.concat(chunks);
 }

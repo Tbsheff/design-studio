@@ -21,7 +21,11 @@ export async function componentThumb(
     `${base(projectId, directionId)}/${encodeURIComponent(id)}/thumb?v=${encodeURIComponent(version)}`,
     { headers: { [STUDIO_TOKEN_HEADER]: getSession().token } }
   );
-  if (!res.ok) return null;
+
+  if (!res.ok) {
+    return null;
+  }
+
   return URL.createObjectURL(await res.blob());
 }
 
@@ -42,16 +46,22 @@ export function useComponents(
     version: "0",
     error: null,
   });
+
   const changedAt =
     lastChange && lastChange.directionId === directionId
       ? lastChange.changedAt
       : 0;
+
   const seq = useRef(0);
   const [attempt, setAttempt] = useState(0);
   useEffect(() => {
-    if (!directionId) return;
+    if (!directionId) {
+      return;
+    }
+
     const my = ++seq.current;
     const version = String(changedAt);
+
     const timer = window.setTimeout(
       () => {
         json<{ components: ComponentInfo[] }>(
@@ -59,25 +69,29 @@ export function useComponents(
           base(projectId, directionId)
         ).then(
           (result) => {
-            if (my === seq.current)
+            if (my === seq.current) {
               setState({ components: result.components, version, error: null });
+            }
           },
           (error: unknown) => {
-            if (my === seq.current)
+            if (my === seq.current) {
               setState((prev) => ({
                 ...prev,
                 error: error instanceof Error ? error.message : String(error),
               }));
+            }
           }
         );
       },
       changedAt === 0 ? 0 : REFRESH_MS
     );
+
     return () => window.clearTimeout(timer);
   }, [projectId, directionId, changedAt, attempt]);
   useEffect(
     () => setState({ components: null, version: "0", error: null }),
     [projectId, directionId]
   );
+
   return { ...state, retry: () => setAttempt((n) => n + 1) };
 }

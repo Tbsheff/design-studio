@@ -52,17 +52,28 @@ async function linkNodeModules(
   snapshotDir: string
 ): Promise<void> {
   const target = path.join(snapshotDir, "node_modules");
+
   const present = await lstat(target).then(
     () => true,
     () => false
   );
-  if (present) return;
+
+  if (present) {
+    return;
+  }
+
   const source = project.directions
     .map((direction) => path.join(direction.workTree, "node_modules"))
     .find((candidate) => existsSync(candidate));
-  if (!source) return;
+
+  if (!source) {
+    return;
+  }
+
   await symlink(source, target, "dir").catch((error: unknown) => {
-    if ((error as { code?: unknown }).code !== "EEXIST") throw error;
+    if ((error as { code?: unknown }).code !== "EEXIST") {
+      throw error;
+    }
   });
 }
 
@@ -71,6 +82,7 @@ function lazily<T>(load: () => Promise<T>): {
   loaded: () => Promise<T> | null;
 } {
   let pending: Promise<T> | null = null;
+
   return {
     get: () => {
       if (!pending) {
@@ -79,6 +91,7 @@ function lazily<T>(load: () => Promise<T>): {
           throw error;
         });
       }
+
       return pending;
     },
     loaded: () => pending,
@@ -96,9 +109,16 @@ export async function recompileOnTokensChange(
   bus: EventBus,
   change: DirectionChange
 ): Promise<void> {
-  if (!change.paths.includes(TOKENS_FILE)) return;
+  if (!change.paths.includes(TOKENS_FILE)) {
+    return;
+  }
+
   const result = await syncDesignSystem(change.root);
-  if (result.errors.length === 0) return;
+
+  if (result.errors.length === 0) {
+    return;
+  }
+
   bus.emit({
     type: "preview.build-error",
     projectId: change.projectId,
@@ -112,7 +132,10 @@ export function withDesignSystemWarning(
   results: RenderCheckResult[],
   problem: string | null
 ): RenderCheckResult[] {
-  if (problem === null) return results;
+  if (problem === null) {
+    return results;
+  }
+
   return results.map((result) => ({
     ...result,
     ok: false,
@@ -126,11 +149,13 @@ const STYLE_FILE = /\.(css|scss|sass|less)$/i;
 function onlyStyles(paths: string[]): boolean {
   return paths.length > 0 && paths.every((file) => STYLE_FILE.test(file));
 }
+
 const WATCH_LAG_MS = 150;
 const MTIME_TRUST_MS = 2000;
 
 async function writtenAt(files: string[], fallback: number): Promise<number> {
   const now = Date.now();
+
   const times = await Promise.all(
     files.map((file) =>
       stat(file).then(
@@ -139,20 +164,24 @@ async function writtenAt(files: string[], fallback: number): Promise<number> {
       )
     )
   );
+
   const trusted = times.every(
     (time): time is number =>
       time !== null && time >= now - MTIME_TRUST_MS && time <= now
   );
+
   return trusted && times.length > 0 ? Math.max(...times) : fallback;
 }
 
 export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
   const { config, bus, projects, versions } = deps;
   const snapshotRoots = new Map<string, string>();
+
   const forwardToVite = (change: DirectionChange): void => {
     const files = change.paths.map((relative) =>
       path.join(change.root, ...relative.split("/"))
     );
+
     noteTreeChange(change.root, files);
     const seenAt = Date.now() - WATCH_LAG_MS;
     void Promise.all([writtenAt(files, seenAt), writesKeptLayout(change)])
@@ -182,23 +211,28 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
       )
       .catch(() => undefined);
   };
+
   const appSourcesShifted = (change: {
     projectId: string;
     root: string;
     paths: string[];
   }): boolean => {
     const upstream = apps.upstreamOf(change.projectId);
+
     return upstream
       ? sourcesShifted(upstream, change.root, change.paths)
       : false;
   };
+
   const stamps = new SourceStamps(
     path.join(config.dataDir, "cache", "route-graph")
   );
+
   const onChanged = (change: DirectionChange): void => {
     stamps.bump(`${change.projectId}:${change.directionId}`);
     forwardToVite(change);
   };
+
   const watchers = new WatcherManager({
     bus,
     projects,
@@ -206,29 +240,36 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
     onChanged,
     needsReload: appSourcesShifted,
   });
+
   const stampFor = (url: string): Promise<SourceStamp | null> =>
     stamps.stampFor(url, (key) => watchers.flushed(key));
+
   const vite = lazily<ViteManager>(async () => {
     const { ViteManager: Manager } = await import("./vite-manager.js");
+
     return new Manager({
       bus,
       vitePortBase: config.vitePortBase,
       bridgeScript: loadBridgeScript,
     });
   });
+
   const browsers = lazily<BrowserPool>(async () => {
     const { BrowserPool: Pool } = await import("./browser.js");
+
     return new Pool(config.previewOrigin, undefined, {
       stampFor,
       landed: (url: string, href: string) => stamps.landed(url, href),
     });
   });
+
   onSourceChange((change) => {
     const kept = noteLayoutKeepingWrite(
       change.projectId,
       change.directionId,
       change.files
     );
+
     browsers
       .loaded()
       ?.then((pool) =>
@@ -241,31 +282,47 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
       )
       .catch(() => undefined);
   });
+
   const viteUrl = async (target: ViteTarget): Promise<string> =>
     (await vite.get()).url(target);
+
   const apps = new AppServers({
     bus,
     portBase: config.appPortBase ?? config.vitePortBase + 400,
     portCount: config.appPortCount ?? 200,
     dataDir: config.dataDir,
   });
+
   const appCache = new Map<string, { project: Project | null; at: number }>();
+
   const appProjectOf = async (projectId: string): Promise<Project | null> => {
     const cached = appCache.get(projectId);
-    if (cached && Date.now() - cached.at < APP_CACHE_MS) return cached.project;
+
+    if (cached && Date.now() - cached.at < APP_CACHE_MS) {
+      return cached.project;
+    }
+
     const project = await projects.get(projectId).catch(() => null);
     const value = project?.app ? project : null;
     appCache.set(projectId, { project: value, at: Date.now() });
+
     return value;
   };
+
   const appTarget = async (projectId: string): Promise<AppTarget | null> => {
     const project = await appProjectOf(projectId);
     const main = project?.directions[0];
-    if (!project?.app || !main) return null;
+
+    if (!project?.app || !main) {
+      return null;
+    }
+
     const upstream =
       apps.upstreamOf(project.id) ?? (await apps.ensure(project));
+
     return { upstream, workTree: main.workTree, appDir: project.app.appDir };
   };
+
   const appProxy = createAppProxy({
     port: config.previewPort,
     studioOrigin: config.studioOrigin,
@@ -274,14 +331,18 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
     isApp: async (projectId) => (await appProjectOf(projectId)) !== null,
     stateFor: async (projectId, stateId) => {
       const project = await appProjectOf(projectId);
+
       const resolved = project
         ? await resolveFrameState(projects.projectDir(project.id), stateId)
         : null;
+
       return resolved ? { resolved, env: project?.app?.env } : null;
     },
   });
+
   const appUrl = (project: Project): string =>
     `${projectPreviewOrigin(project.id, config.previewPort)}/`;
+
   let htmlServer: HtmlServer | null = null;
   let starting: Promise<void> | null = null;
 
@@ -292,16 +353,23 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
   ): Promise<string | null> => {
     if (kind === "direction") {
       const project = await projects.get(projectId);
+
       return (
         project.directions.find((direction) => direction.id === key)
           ?.workTree ?? null
       );
     }
+
     const registered = snapshotRoots.get(`${projectId}/${key}`);
-    if (registered) return registered;
+
+    if (registered) {
+      return registered;
+    }
+
     const project = await projects.get(projectId);
     const dir = await versions.snapshot(project, key);
     snapshotRoots.set(`${projectId}/${key}`, dir);
+
     return dir;
   };
 
@@ -320,12 +388,15 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
         throw error;
       });
     }
+
     return starting;
   };
 
   const usageEdges = (workTree: string, roots: string[]) =>
     stamps.edges(workTree, roots);
+
   let browserWarm: Promise<void> | null = null;
+
   const warmBrowser = (): void => {
     browserWarm ??= browsers
       .get()
@@ -342,6 +413,7 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
     watchers.watch(project, direction);
     warmBrowser();
     const key = `${project.id}:${direction.id}`;
+
     if (project.app) {
       appCache.delete(project.id);
       void apps
@@ -354,13 +426,17 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
         direction.workTree,
         project.app.appDir
       );
+
       return appUrl(project);
     }
+
     if (project.kind === "html") {
       const base = `${projectPreviewOrigin(project.id, config.previewPort)}/d/${encodeURIComponent(project.id)}/${encodeURIComponent(direction.id)}/`;
       stamps.register(base, key, direction.workTree, null);
+
       return `${base}${encodeEntry(project.entry || "index.html")}`;
     }
+
     const url = await viteUrl({
       key: `d:${project.id}:${direction.id}`,
       root: direction.workTree,
@@ -372,7 +448,9 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
       projectId: project.id,
       directionId: direction.id,
     });
+
     stamps.register(`${new URL(url).origin}/`, key, direction.workTree, null);
+
     return url;
   };
 
@@ -383,11 +461,17 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
     page?: string
   ): Promise<string> => {
     snapshotRoots.set(`${project.id}/${versionId}`, snapshotDir);
-    if (project.app) return appUrl(project);
+
+    if (project.app) {
+      return appUrl(project);
+    }
+
     if (project.kind === "html") {
       return `${projectPreviewOrigin(project.id, config.previewPort)}/s/${encodeURIComponent(project.id)}/${encodeURIComponent(versionId)}/${encodeEntry(page ?? (project.entry || "index.html"))}`;
     }
+
     await linkNodeModules(project, snapshotDir);
+
     const url = await viteUrl({
       key: `s:${project.id}:${versionId}`,
       root: snapshotDir,
@@ -398,7 +482,9 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
       ),
       projectId: project.id,
     });
+
     stamps.forget(url);
+
     return url;
   };
 
@@ -409,6 +495,7 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
     page?: string
   ): Promise<{ url: string; release: () => Promise<void> }> => {
     const key = `s:${project.id}:${versionId}`;
+
     const owned =
       project.kind !== "html" &&
       !project.app &&
@@ -416,7 +503,9 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
         (await vite.loaded()?.then((manager) => manager.pid(key) !== null)) ??
         false
       );
+
     const url = await snapshotUrl(project, versionId, snapshotDir, page);
+
     return {
       url,
       release: async () =>
@@ -433,7 +522,11 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
   ): Promise<RenderCheckResult[]> => {
     const { url: pageUrl, filePrefix, ...checks } = options ?? {};
     const url = pageUrl ?? (await directionUrl(project, direction));
-    if (project.app) await apps.ensure(project);
+
+    if (project.app) {
+      await apps.ensure(project);
+    }
+
     const results = await (
       await browsers.get()
     ).renderCheck(
@@ -442,6 +535,7 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
       filePrefix ?? direction.id,
       checks
     );
+
     const problem =
       project.kind === "html"
         ? await designSystemLinkProblem(
@@ -449,6 +543,7 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
             project.entry || "index.html"
           )
         : null;
+
     return withDesignSystemWarning(results, problem);
   };
 
@@ -485,7 +580,11 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
       watchers.unwatchOf(project.id, direction.id);
       stamps.forgetKey(`${project.id}:${direction.id}`);
       appCache.delete(project.id);
-      if (project.app) await apps.stop(project.id);
+
+      if (project.app) {
+        await apps.stop(project.id);
+      }
+
       await vite
         .loaded()
         ?.then((manager) => manager.stopOne(`d:${project.id}:${direction.id}`));
@@ -496,15 +595,18 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
       logs: (projectId) => apps.logs(projectId),
       ensure: async (project) => {
         appCache.delete(project.id);
+
         return apps.ensure(project);
       },
       stop: (projectId) => {
         stamps.bumpProject(projectId);
+
         return apps.stop(projectId);
       },
       restart: async (project) => {
         appCache.delete(project.id);
         stamps.bumpProject(project.id);
+
         return apps.restart(project);
       },
       forget: (projectId) => appCache.delete(projectId),

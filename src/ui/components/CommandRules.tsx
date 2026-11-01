@@ -4,8 +4,10 @@ import { errorText, json } from "../api";
 
 const rulesPath = (projectId: string) =>
   `/api/projects/${encodeURIComponent(projectId)}/command-rules`;
+
 const listRules = (projectId: string) =>
   json<{ rules: string[] }>("GET", rulesPath(projectId));
+
 const removeRule = (projectId: string, rule: string) =>
   json<{ rules: string[] }>("POST", `${rulesPath(projectId)}/remove`, { rule });
 
@@ -18,12 +20,17 @@ export function CommandRules({ projectId }: { projectId: string }) {
     let live = true;
     listRules(projectId).then(
       (result) => {
-        if (live) setRules(result.rules);
+        if (live) {
+          setRules(result.rules);
+        }
       },
       (err: unknown) => {
-        if (live) setError(errorText(err));
+        if (live) {
+          setError(errorText(err));
+        }
       }
     );
+
     return () => {
       live = false;
     };
@@ -32,6 +39,7 @@ export function CommandRules({ projectId }: { projectId: string }) {
   const remove = async (rule: string) => {
     setBusy(rule);
     setError(null);
+
     try {
       setRules((await removeRule(projectId, rule)).rules);
     } catch (err) {

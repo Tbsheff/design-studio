@@ -51,42 +51,71 @@ const REGIONS = [
 ];
 
 function regionOf(element: Element | null): number {
-  if (!element) return -1;
-  if (element.closest(".canvas .toolbar")) return 0;
-  if (element.closest(".canvas .stage")) return 1;
-  if (element.closest(".prompt")) return 3;
-  if (element.closest(".pane-left")) return 2;
+  if (!element) {
+    return -1;
+  }
+
+  if (element.closest(".canvas .toolbar")) {
+    return 0;
+  }
+
+  if (element.closest(".canvas .stage")) {
+    return 1;
+  }
+
+  if (element.closest(".prompt")) {
+    return 3;
+  }
+
+  if (element.closest(".pane-left")) {
+    return 2;
+  }
+
   return -1;
 }
 
 export function moveRegion(step: 1 | -1): void {
   const from = regionOf(document.activeElement);
+
   for (let i = 1; i <= REGIONS.length; i += 1) {
     const index =
       ((((from < 0 ? (step === 1 ? -1 : 0) : from) + step * i) %
         REGIONS.length) +
         REGIONS.length) %
       REGIONS.length;
+
     const target = document.querySelector<HTMLElement>(REGIONS[index] ?? "");
-    if (!target || target.getClientRects().length === 0) continue;
+
+    if (!target || target.getClientRects().length === 0) {
+      continue;
+    }
+
     target.focus({ preventScroll: true });
+
     return;
   }
 }
 
 function stepDirection(a: StudioActions, step: 1 | -1): (() => void) | null {
-  if (a.directions.length < 2) return null;
+  if (a.directions.length < 2) {
+    return null;
+  }
+
   const at = a.directions.findIndex((d) => d.id === a.directionId);
+
   const next =
     a.directions[(at + step + a.directions.length) % a.directions.length];
+
   return next ? () => a.onDirection(next.id) : null;
 }
 
 function studioCommands(a: StudioActions): Command[] {
   const next = stepDirection(a, 1);
   const prev = stepDirection(a, -1);
+
   const noDirection =
     a.directions.length < 2 ? "Only one direction" : undefined;
+
   return [
     {
       id: "go.home",
@@ -261,8 +290,12 @@ const KEYED: [KeyId, string][] = [
 function useStudioKeys(): void {
   useEffect(() => {
     listenForCommands();
+
     const onKey = (event: KeyboardEvent) => {
-      if (event.defaultPrevented || event.repeat) return;
+      if (event.defaultPrevented || event.repeat) {
+        return;
+      }
+
       if (
         event.key === "F6" &&
         !event.metaKey &&
@@ -271,19 +304,29 @@ function useStudioKeys(): void {
       ) {
         event.preventDefault();
         moveRegion(event.shiftKey ? -1 : 1);
+
         return;
       }
-      if (document.querySelector('[role="dialog"][aria-modal="true"]')) return;
+
+      if (document.querySelector('[role="dialog"][aria-modal="true"]')) {
+        return;
+      }
+
       const hit = KEYED.find(([key]) => matchesKey(key, event, IS_MAC));
+
       if (
         !hit ||
         (isTypingTarget(event.target) && !event.metaKey && !event.ctrlKey)
-      )
+      ) {
         return;
+      }
+
       event.preventDefault();
       runCommand(hit[1]);
     };
+
     window.addEventListener("keydown", onKey);
+
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 }
@@ -292,5 +335,6 @@ export function useStudioCommands() {
   const actions = useRef<StudioActions | null>(null);
   useCommands(() => (actions.current ? studioCommands(actions.current) : []));
   useStudioKeys();
+
   return actions;
 }

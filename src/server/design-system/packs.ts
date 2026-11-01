@@ -40,6 +40,7 @@ const PACKS_DIR = resourcePath(
   "packs",
   path.join(path.dirname(fileURLToPath(import.meta.url)), "packs")
 );
+
 export const DESIGN_MD_FILE = "DESIGN.md";
 const REACT_ENTRY_FILE = "src/main.tsx";
 export const REACT_TOKENS_IMPORT = "import '../design-system/tokens.css';";
@@ -135,24 +136,34 @@ function parseManifest(
 ): PackManifest | null {
   if (text === null) {
     errors.push("pack.json is missing");
+
     return null;
   }
+
   let raw: unknown;
+
   try {
     raw = JSON.parse(text);
   } catch {
     errors.push("pack.json is not valid JSON");
+
     return null;
   }
+
   const parsed = manifestSchema.safeParse(raw);
+
   if (!parsed.success) {
     errors.push(...formatIssues("pack.json", parsed.error));
+
     return null;
   }
-  if (parsed.data.id !== folderId)
+
+  if (parsed.data.id !== folderId) {
     errors.push(
       `pack.json id "${parsed.data.id}" must match the folder name "${folderId}"`
     );
+  }
+
   return parsed.data as PackManifest;
 }
 
@@ -162,6 +173,7 @@ function swatchesOf(
 ): PackSummary["swatches"] {
   return SWATCH_TOKENS.flatMap((name) => {
     const entry = entries.find((item) => item.path === `color.${name}`);
+
     return entry
       ? [{ name, value: resolveEntryValue(entries, entry, dark) }]
       : [];
@@ -175,8 +187,10 @@ function darkSwatchesOf(
   if (
     mode !== "light" ||
     !entries.some((entry) => entry.type === "color" && entry.darkValue)
-  )
+  ) {
     return {};
+  }
+
   return { darkSwatches: swatchesOf(entries, true) };
 }
 
@@ -186,27 +200,38 @@ async function loadPack(
 ): Promise<PackLoadResult> {
   const id = path.basename(dir);
   const errors: string[] = [];
-  if (source === "user" && !id.startsWith(USER_PACK_PREFIX))
+
+  if (source === "user" && !id.startsWith(USER_PACK_PREFIX)) {
     errors.push(
       `user pack folder "${id}" must start with "${USER_PACK_PREFIX}"`
     );
+  }
+
   const manifest = parseManifest(
     await readText(path.join(dir, "pack.json")),
     id,
     errors
   );
+
   const designMd = await readText(path.join(dir, DESIGN_MD_FILE));
-  if (designMd === null || designMd.trim() === "")
+
+  if (designMd === null || designMd.trim() === "") {
     errors.push("DESIGN.md is missing or empty");
+  }
+
   const tokens = await loadTokens(dir, manifest?.mode ?? "light", errors);
-  if (errors.length > 0 || !manifest || !tokens || designMd === null)
+
+  if (errors.length > 0 || !manifest || !tokens || designMd === null) {
     return { id, source, pack: null, errors };
+  }
+
   const summary: PackSummary = {
     ...manifest,
     source,
     swatches: swatchesOf(tokens.entries),
     ...darkSwatchesOf(manifest.mode, tokens.entries),
   };
+
   return {
     id,
     source,
@@ -224,17 +249,24 @@ async function loadTokens(
   "tokensText" | "tokens" | "entries" | "css"
 > | null> {
   const tokensText = await readText(path.join(dir, "tokens.json"));
+
   if (tokensText === null) {
     errors.push("tokens.json is missing");
+
     return null;
   }
+
   const parsed = parseTokenFile(tokensText);
+
   if (!parsed.file) {
     errors.push(parsed.error ?? "tokens.json is invalid");
+
     return null;
   }
+
   const compiled = compileTokens(parsed.file, { mode });
   errors.push(...compiled.errors.map((error) => `tokens.json ${error}`));
+
   return {
     tokensText,
     tokens: parsed.file,
@@ -244,8 +276,12 @@ async function loadTokens(
 }
 
 async function packFolders(dir: string): Promise<string[]> {
-  if (!existsSync(dir)) return [];
+  if (!existsSync(dir)) {
+    return [];
+  }
+
   const entries = await readdir(dir, { withFileTypes: true });
+
   return entries
     .filter((entry) => entry.isDirectory() && !entry.name.startsWith("."))
     .map((entry) => entry.name)
@@ -265,8 +301,10 @@ export async function loadAllPacks(
 
 function logSkipped(result: PackLoadResult): void {
   const shown = result.errors.slice(0, 5).join("; ");
+
   const more =
     result.errors.length > 5 ? ` (+${result.errors.length - 5} more)` : "";
+
   console.error(
     `[packs] skipping ${result.source === "user" ? "user " : ""}pack ${result.id}: ${shown}${more}`
   );
@@ -281,6 +319,7 @@ async function folderStamp(dir: string): Promise<string> {
       )
     )
   );
+
   return parts.join("|");
 }
 
@@ -289,22 +328,32 @@ function createUserPackCache(userDir: string): {
   clear(): void;
 } {
   let cache = new Map<string, { stamp: string; result: PackLoadResult }>();
+
   return {
     async load() {
       const next = new Map<string, { stamp: string; result: PackLoadResult }>();
+
       for (const name of await packFolders(userDir)) {
         const dir = path.join(userDir, name);
         const stamp = await folderStamp(dir);
         const known = cache.get(name);
+
         if (known && known.stamp === stamp) {
           next.set(name, known);
           continue;
         }
+
         const result = await loadPack(dir, "user");
-        if (!result.pack) logSkipped(result);
+
+        if (!result.pack) {
+          logSkipped(result);
+        }
+
         next.set(name, { stamp, result });
       }
+
       cache = next;
+
       return [...next.values()].map((item) => item.result);
     },
     clear() {
@@ -319,18 +368,32 @@ export function createPackRegistry(
 ): PackRegistry {
   const userDir = options.userDir ?? null;
   let loading: Promise<PackLoadResult[]> | null = null;
+
   const loadBuiltin = (): Promise<PackLoadResult[]> => {
     loading ??= loadAllPacks(dir).then((results) => {
-      for (const result of results) if (!result.pack) logSkipped(result);
+      for (const result of results) {
+        if (!result.pack) {
+          logSkipped(result);
+        }
+      }
+
       return results;
     });
+
     return loading;
   };
+
   const user = userDir ? createUserPackCache(userDir) : null;
+
   const loadAll = async (): Promise<PackLoadResult[]> => {
     const builtin = await loadBuiltin();
-    if (!user) return builtin;
+
+    if (!user) {
+      return builtin;
+    }
+
     const taken = new Set(builtin.map((result) => result.id));
+
     const users = (await user.load()).map((result) =>
       taken.has(result.id)
         ? {
@@ -340,8 +403,10 @@ export function createPackRegistry(
           }
         : result
     );
+
     return [...builtin, ...users];
   };
+
   return {
     dir,
     userDir,
@@ -379,10 +444,12 @@ export function packRegistry(
   const userDir = options.userDir ? path.resolve(options.userDir) : null;
   const key = `${path.resolve(dir)}\0${userDir ?? ""}`;
   let registry = registries.get(key);
+
   if (!registry) {
     registry = createPackRegistry(path.resolve(dir), { userDir });
     registries.set(key, registry);
   }
+
   return registry;
 }
 
@@ -401,7 +468,10 @@ function composeDesignMd(pack: LoadedPack, userNotes?: string): string {
 }
 
 function addTokensImport(source: string): string {
-  if (source.includes("design-system/tokens.css")) return source;
+  if (source.includes("design-system/tokens.css")) {
+    return source;
+  }
+
   return `${REACT_TOKENS_IMPORT}\n${source}`;
 }
 
@@ -417,14 +487,24 @@ const STUDIO_FONT_BLOCK =
   /\n[ \t]*<link rel="preconnect" href="https:\/\/fonts\.googleapis\.com">\s*<link rel="preconnect" href="https:\/\/fonts\.gstatic\.com" crossorigin>\s*<link rel="stylesheet" href="https:\/\/fonts\.googleapis\.com\/[^"]*">/;
 
 function setFontLinks(html: string, url: string | undefined): string {
-  if (STUDIO_FONT_BLOCK.test(html))
+  if (STUDIO_FONT_BLOCK.test(html)) {
     return html.replace(STUDIO_FONT_BLOCK, () =>
       url ? `\n    ${fontLinkTags(url)}` : ""
     );
-  if (!url || html.includes("fonts.googleapis.com")) return html;
+  }
+
+  if (!url || html.includes("fonts.googleapis.com")) {
+    return html;
+  }
+
   const head = /<head[^>]*>/i.exec(html);
-  if (!head) return html;
+
+  if (!head) {
+    return html;
+  }
+
   const at = head.index + head[0].length;
+
   return `${html.slice(0, at)}\n    ${fontLinkTags(url)}${html.slice(at)}`;
 }
 
@@ -433,9 +513,17 @@ async function patchFile(
   patch: (source: string) => string
 ): Promise<boolean> {
   const source = await readText(file);
-  if (source === null) return false;
+
+  if (source === null) {
+    return false;
+  }
+
   const next = patch(source);
-  if (next !== source) await writeFileAtomic(file, next);
+
+  if (next !== source) {
+    await writeFileAtomic(file, next);
+  }
+
   return next !== source;
 }
 
@@ -444,14 +532,19 @@ async function wireReact(
   manifest: PackManifest
 ): Promise<string[]> {
   const written: string[] = [];
-  if (await patchFile(path.join(workTree, REACT_ENTRY_FILE), addTokensImport))
+
+  if (await patchFile(path.join(workTree, REACT_ENTRY_FILE), addTokensImport)) {
     written.push(REACT_ENTRY_FILE);
+  }
+
   if (
     await patchFile(path.join(workTree, "index.html"), (html) =>
       setFontLinks(html, manifest.fonts.googleFontsUrl)
     )
-  )
+  ) {
     written.push("index.html");
+  }
+
   return written;
 }
 
@@ -471,6 +564,7 @@ export const WIRED_FILES = [REACT_ENTRY_FILE, "index.html"];
 async function keepRules(file: string, next: string): Promise<string> {
   const current = await readText(file);
   const rules = current === null ? null : extractRulesBlock(current);
+
   return rules === null || extractRulesBlock(next) !== null
     ? next
     : upsertRulesBlock(next, rules);
@@ -500,7 +594,10 @@ export async function applyPack(
     )
   );
   const written = [TOKENS_FILE, PACK_FILE, TOKENS_CSS_FILE, DESIGN_MD_FILE];
-  if (wiresReact(project))
+
+  if (wiresReact(project)) {
     written.push(...(await wireReact(workTree, pack.manifest)));
+  }
+
   return written;
 }

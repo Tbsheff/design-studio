@@ -27,7 +27,9 @@ interface Doc {
 function docPaths(project: Project): string[] {
   const appDir =
     project.app?.appDir.replace(/^\.\/?/, "").replace(/\/+$/, "") ?? "";
+
   const dirs = appDir ? ["", appDir] : [""];
+
   return dirs.flatMap((dir) =>
     DOC_FILES.map((file) => (dir ? `${dir}/${file}` : file))
   );
@@ -43,6 +45,7 @@ async function readDocs(
       text: await readOptional(path.join(direction.workTree, file)),
     }))
   );
+
   return docs.filter(
     (doc): doc is Doc => doc.text !== null && doc.text.trim() !== ""
   );
@@ -51,8 +54,12 @@ async function readDocs(
 function explicitBlock(docs: Doc[]): { file: string; text: string } | null {
   for (const doc of docs) {
     const block = extractRulesBlock(doc.text);
-    if (block !== null) return { file: doc.file, text: block };
+
+    if (block !== null) {
+      return { file: doc.file, text: block };
+    }
   }
+
   return null;
 }
 
@@ -71,6 +78,7 @@ function state(
   const derived = deriveRules(
     docs.filter((doc) => extractRulesBlock(doc.text) === null)
   );
+
   return {
     text,
     rules: parseRules(text),
@@ -86,22 +94,30 @@ export async function loadDesignRules(
   place: RulesPlace
 ): Promise<DesignRulesState> {
   const docs = await readDocs(place.project, place.direction);
+
   if (place.project.app) {
     const own = await readOptional(
       path.join(place.studioDir, STUDIO_RULES_FILE)
     );
-    if (own !== null) return state(own, "studio", null, docs);
+
+    if (own !== null) {
+      return state(own, "studio", null, docs);
+    }
   }
+
   const block = explicitBlock(
     place.project.app ? docs : docs.filter((doc) => doc.file === "DESIGN.md")
   );
-  if (block)
+
+  if (block) {
     return state(
       block.text,
       place.project.app ? "app-docs" : "design-md",
       block.file,
       docs
     );
+  }
+
   return state("", "none", null, docs);
 }
 
@@ -110,13 +126,17 @@ export async function saveDesignRules(
   text: string
 ): Promise<{ file: string; inRepo: boolean }> {
   const clean = `${text.replace(/\r\n/g, "\n").trim()}\n`;
+
   if (place.project.app) {
     const file = path.join(place.studioDir, STUDIO_RULES_FILE);
     await writeFileAtomic(file, clean);
+
     return { file, inRepo: false };
   }
+
   const file = path.join(place.direction.workTree, "DESIGN.md");
   const current = (await readOptional(file)) ?? "";
   await writeFileAtomic(file, upsertRulesBlock(current, clean));
+
   return { file: "DESIGN.md", inRepo: true };
 }

@@ -20,6 +20,7 @@ function isSkippedDir(name: string): boolean {
 
 function routeGroup(name: string): string | null {
   const match = /^\(([^.)][^)]*)\)$/.exec(name);
+
   return match?.[1] ?? null;
 }
 
@@ -27,8 +28,12 @@ export function appRouterDir(appRoot: string): string | null {
   for (const candidate of [
     path.join(appRoot, "app"),
     path.join(appRoot, "src", "app"),
-  ])
-    if (existsSync(candidate)) return candidate;
+  ]) {
+    if (existsSync(candidate)) {
+      return candidate;
+    }
+  }
+
   return null;
 }
 
@@ -38,16 +43,25 @@ export async function listAppRoutes(
 ): Promise<AppRoute[]> {
   const appRoot = path.join(workTree, appDir);
   const routerDir = appRouterDir(appRoot);
-  if (!routerDir) return [];
+
+  if (!routerDir) {
+    return [];
+  }
+
   const routes: AppRoute[] = [];
+
   const walk = async (
     dir: string,
     segments: string[],
     group: string | null,
     depth: number
   ): Promise<void> => {
-    if (depth > MAX_DEPTH || routes.length >= MAX_ROUTES) return;
+    if (depth > MAX_DEPTH || routes.length >= MAX_ROUTES) {
+      return;
+    }
+
     const entries = await readdir(dir, { withFileTypes: true }).catch(() => []);
+
     for (const entry of entries) {
       if (entry.isFile() && PAGE_FILE.test(entry.name)) {
         const route = `/${segments.join("/")}`;
@@ -62,8 +76,12 @@ export async function listAppRoutes(
         });
       }
     }
+
     for (const entry of entries) {
-      if (!entry.isDirectory() || isSkippedDir(entry.name)) continue;
+      if (!entry.isDirectory() || isSkippedDir(entry.name)) {
+        continue;
+      }
+
       const named = routeGroup(entry.name);
       await walk(
         path.join(dir, entry.name),
@@ -73,7 +91,9 @@ export async function listAppRoutes(
       );
     }
   };
+
   await walk(routerDir, [], null, 0);
+
   return routes.sort(
     (a, b) =>
       Number(a.dynamic) - Number(b.dynamic) || a.route.localeCompare(b.route)

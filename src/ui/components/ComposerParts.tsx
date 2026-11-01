@@ -34,7 +34,10 @@ export function SelectionChips({
   selection: SelectionContext[];
   onRemove: (selector: string) => void;
 }) {
-  if (selection.length === 0) return null;
+  if (selection.length === 0) {
+    return null;
+  }
+
   return (
     <div className="chips flex flex-wrap gap-1 px-2 pt-2">
       {selection.map((s) => (
@@ -72,7 +75,11 @@ function ThumbState({ file }: { file: PendingAttachment }) {
       </AttachmentOverlay>
     );
   }
-  if (file.attachment) return null;
+
+  if (file.attachment) {
+    return null;
+  }
+
   return (
     <AttachmentOverlay className="rounded-outer">
       <AttachmentProgress className="size-5" />
@@ -84,8 +91,12 @@ function ThumbState({ file }: { file: PendingAttachment }) {
 const NAME_ROOM = 30;
 
 function shortName(name: string): string {
-  if (name.length <= NAME_ROOM) return name;
+  if (name.length <= NAME_ROOM) {
+    return name;
+  }
+
   const tail = name.slice(-12);
+
   return `${name.slice(0, NAME_ROOM - tail.length - 1)}…${tail}`;
 }
 
@@ -93,32 +104,53 @@ const plainUploads = new WeakMap<PendingAttachment, UploadedAttachment>();
 
 function unmark(file: PendingAttachment): void {
   const plain = plainUploads.get(file);
-  if (plain) file.attachment = plain;
+
+  if (plain) {
+    file.attachment = plain;
+  }
 }
 
 async function markAsReference(file: PendingAttachment): Promise<void> {
   const projectId = projectFromPath(window.location.pathname);
-  if (!projectId || !file.attachment) throw new Error("Open a project first");
+
+  if (!projectId || !file.attachment) {
+    throw new Error("Open a project first");
+  }
+
   const blob = await (await fetch(file.previewUrl)).blob();
+
   const uploaded = await api.uploadAttachment(
     projectId,
     new File([blob], asReferenceName(file.name), {
       type: blob.type || file.attachment.mime,
     })
   );
-  if (!plainUploads.has(file)) plainUploads.set(file, file.attachment);
+
+  if (!plainUploads.has(file)) {
+    plainUploads.set(file, file.attachment);
+  }
+
   file.attachment = uploaded;
 }
 
 function useReferenceToggle(files: PendingAttachment[]) {
   const [busy, setBusy] = useState<string | null>(null);
   const [, setTick] = useState(0);
+
   const toggle = async (file: PendingAttachment) => {
-    if (busy || !file.attachment) return;
+    if (busy || !file.attachment) {
+      return;
+    }
+
     const on = isReferenceName(file.attachment.name);
     files.forEach(unmark);
-    if (on) return setTick((n) => n + 1);
+
+    if (on) {
+      return setTick((n) => n + 1);
+    }
+
     setBusy(file.localId);
+
     try {
       await markAsReference(file);
     } catch (error) {
@@ -128,6 +160,7 @@ function useReferenceToggle(files: PendingAttachment[]) {
       setTick((n) => n + 1);
     }
   };
+
   return { busy, toggle };
 }
 
@@ -140,8 +173,12 @@ function ReferenceToggle({
   busy: boolean;
   onToggle: () => void;
 }) {
-  if (!file.attachment || file.error) return null;
+  if (!file.attachment || file.error) {
+    return null;
+  }
+
   const on = isReferenceName(file.attachment.name);
+
   return (
     <button
       type="button"
@@ -174,7 +211,11 @@ export function AttachmentThumbs({
   onRemove: (localId: string) => void;
 }) {
   const reference = useReferenceToggle(files);
-  if (files.length === 0) return null;
+
+  if (files.length === 0) {
+    return null;
+  }
+
   return (
     <div className="thumbs flex flex-wrap gap-2 px-2 pt-2">
       {files.map((f, index) => (

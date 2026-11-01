@@ -59,7 +59,10 @@ export function playStartOf(
   frames: readonly CanvasFrame[],
   startId: string
 ): string {
-  if (file.start || hasOutgoing(file, startId)) return startId;
+  if (file.start || hasOutgoing(file, startId)) {
+    return startId;
+  }
+
   return (
     frames.find((frame) => !frame.hidden && hasOutgoing(file, frame.id))?.id ??
     startId
@@ -70,8 +73,10 @@ function protoHint(
   frames: readonly CanvasFrame[],
   hasSelection: boolean
 ): string {
-  if (new Set(frames.map((frame) => framePage(frame.path))).size < 2)
+  if (new Set(frames.map((frame) => framePage(frame.path))).size < 2) {
     return "Add a page first: ask in chat, or Add frame in the page menu, then pick its page.";
+  }
+
   return hasSelection
     ? "Drag the + handle to a frame to link it."
     : "Click an element, then drag its + handle to a frame.";
@@ -92,8 +97,13 @@ function clamp(value: number, min: number, max: number): number {
 
 function startPoint(state: LinkState, from: Box): Point | null {
   const rect = state.rect;
-  if (!rect) return null;
+
+  if (!rect) {
+    return null;
+  }
+
   const y = clamp(rect.y + rect.height / 2, 0, from.height);
+
   return {
     x: from.x + clamp(rect.x + rect.width, 0, from.width),
     y: from.y + y,
@@ -102,20 +112,25 @@ function startPoint(state: LinkState, from: Box): Point | null {
 
 function arrowPath(start: Point, target: Box): { d: string; end: Point } {
   const toRight = target.x >= start.x;
+
   if (!toRight) {
     const end = { x: target.x + target.width / 2, y: target.y };
     const lift = Math.max(120, Math.abs(start.y - end.y) / 2 + 120);
     const top = Math.min(start.y, end.y) - lift;
+
     return {
       d: `M ${start.x} ${start.y} C ${start.x + 80} ${top}, ${end.x} ${top}, ${end.x} ${end.y}`,
       end,
     };
   }
+
   const end = {
     x: target.x,
     y: clamp(start.y, target.y + 24, target.y + target.height - 24),
   };
+
   const reach = Math.max(60, (end.x - start.x) / 2);
+
   return {
     d: `M ${start.x} ${start.y} C ${start.x + reach} ${start.y}, ${end.x - reach} ${end.y}, ${end.x} ${end.y}`,
     end,
@@ -127,8 +142,10 @@ function bounds(frames: CanvasFrame[], active: CanvasFrame): Box {
   const minX = Math.min(0, ...boxes.map((b) => b.x)) - PAD;
   const minY = Math.min(0, ...boxes.map((b) => b.y)) - PAD;
   const maxX = Math.max(active.width, ...boxes.map((b) => b.x + b.width)) + PAD;
+
   const maxY =
     Math.max(active.height, ...boxes.map((b) => b.y + b.height)) + PAD;
+
   return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
 }
 
@@ -187,19 +204,26 @@ export function LinkArrows({
   dropTarget,
 }: ArrowProps) {
   const view = bounds(frames, active);
+
   const frameBox = (id: string) => {
     const frame = frames.find((item) => item.id === id);
+
     return frame ? boxOf(frame, active) : null;
   };
+
   const start = frameBox(startId);
   const drop = dropTarget ? frameBox(dropTarget) : null;
   const brokenByFrame = new Map<string, LinkState[]>();
-  for (const state of states)
-    if (state.issue && state.issue !== "from-frame-missing")
+
+  for (const state of states) {
+    if (state.issue && state.issue !== "from-frame-missing") {
       brokenByFrame.set(state.link.from.frame, [
         ...(brokenByFrame.get(state.link.from.frame) ?? []),
         state,
       ]);
+    }
+  }
+
   return (
     <div className="link-layer" aria-hidden="true">
       <svg
@@ -227,18 +251,25 @@ export function LinkArrows({
           states.map((state) => {
             const from = frameBox(state.link.from.frame);
             const begin = from ? startPoint(state, from) : null;
-            if (!from || !begin || !state.rect) return null;
+
+            if (!from || !begin || !state.rect) {
+              return null;
+            }
+
             const rect = {
               x: from.x + state.rect.x,
               y: from.y + state.rect.y,
               width: state.rect.width,
               height: state.rect.height,
             };
+
             const target = isBackTarget(state.link.to)
               ? null
               : frameBox(state.link.to.frame);
+
             const broken = state.issue !== null;
             const cls = `link-arrow${broken ? " broken" : ""}${state.link.implicit ? " implicit" : ""}${state.link.action ? " overlay" : ""}${state.link.id === selectedId ? " selected" : ""}`;
+
             return (
               <g
                 key={state.link.id}
@@ -285,7 +316,11 @@ export function LinkArrows({
       )}
       {[...brokenByFrame].map(([frameId, list]) => {
         const box = frameBox(frameId);
-        if (!box) return null;
+
+        if (!box) {
+          return null;
+        }
+
         return (
           <span
             key={frameId}
@@ -309,9 +344,16 @@ function frameUnder(x: number, y: number, exclude: string): string | null {
   for (const element of document.elementsFromPoint(x, y)) {
     const host = element.closest<HTMLElement>("[data-frame-id]");
     const id = host?.dataset.frameId;
-    if (id && id !== exclude) return id;
-    if (id === exclude && host?.classList.contains("artboard")) return null;
+
+    if (id && id !== exclude) {
+      return id;
+    }
+
+    if (id === exclude && host?.classList.contains("artboard")) {
+      return null;
+    }
   }
+
   return null;
 }
 
@@ -321,12 +363,16 @@ export function useLinkDrag(
   const [drag, setDrag] = useState<LinkDrag | null>(null);
   const dropRef = useRef(onDrop);
   dropRef.current = onDrop;
+
   const begin = (
     event: ReactPointerEvent<HTMLElement>,
     selection: SelectionContext,
     activeId: string
   ) => {
-    if (event.button !== 0) return;
+    if (event.button !== 0) {
+      return;
+    }
+
     event.preventDefault();
     event.stopPropagation();
     const handle = event.currentTarget;
@@ -334,30 +380,38 @@ export function useLinkDrag(
     const from = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
     handle.setPointerCapture(event.pointerId);
     setDrag({ from, to: from, target: null });
+
     const move = (e: PointerEvent) =>
       setDrag({
         from,
         to: { x: e.clientX, y: e.clientY },
         target: frameUnder(e.clientX, e.clientY, activeId),
       });
+
     const up = (e: PointerEvent) => {
       handle.removeEventListener("pointermove", move);
       handle.removeEventListener("pointerup", up);
       handle.removeEventListener("pointercancel", cancel);
       setDrag(null);
       const target = frameUnder(e.clientX, e.clientY, activeId);
-      if (target) dropRef.current(selection, target);
+
+      if (target) {
+        dropRef.current(selection, target);
+      }
     };
+
     const cancel = () => {
       handle.removeEventListener("pointermove", move);
       handle.removeEventListener("pointerup", up);
       handle.removeEventListener("pointercancel", cancel);
       setDrag(null);
     };
+
     handle.addEventListener("pointermove", move);
     handle.addEventListener("pointerup", up);
     handle.addEventListener("pointercancel", cancel);
   };
+
   return { drag, begin };
 }
 
@@ -375,6 +429,7 @@ export function LinkHandle({
   ) => void;
 }) {
   const r = selection.rect;
+
   return (
     <div
       className="link-handle-anchor"
@@ -395,7 +450,10 @@ export function LinkHandle({
 }
 
 export function LinkDragLine({ drag }: { drag: LinkDrag | null }) {
-  if (!drag) return null;
+  if (!drag) {
+    return null;
+  }
+
   return createPortal(
     <svg className="link-drag-line" aria-hidden="true">
       <line x1={drag.from.x} y1={drag.from.y} x2={drag.to.x} y2={drag.to.y} />
@@ -407,6 +465,7 @@ export function LinkDragLine({ drag }: { drag: LinkDrag | null }) {
 
 export function linkSourceOf(selection: SelectionContext, frame: CanvasFrame) {
   const text = cleanLinkText(selection.text);
+
   return {
     frame: frame.id,
     path: frame.path ?? "",
@@ -433,7 +492,10 @@ export function linkOfSelection(
   selection: SelectionContext | undefined,
   activeId: string
 ): LinkState | null {
-  if (!selection) return null;
+  if (!selection) {
+    return null;
+  }
+
   return (
     states.find(
       (state) =>
@@ -465,9 +527,11 @@ const DURATIONS = [150, 200, 320, 500, 800, 1200];
 
 function motionOptions(link: PrototypeLink) {
   const duration = linkDuration(link);
+
   const durations = DURATIONS.includes(duration)
     ? DURATIONS
     : [...DURATIONS, duration].sort((a, b) => a - b);
+
   return {
     actions: LINK_ACTIONS.filter(
       (action) => action === "navigate" || !isBackTarget(link.to)
@@ -494,8 +558,10 @@ function targetOptions(
 ): UiSelectOption[] {
   const options = frames.filter((frame) => frame.id !== link.from.frame);
   const target = isBackTarget(link.to) ? null : link.to.frame;
+
   const missing =
     target && !options.some((frame) => frame.id === target) ? target : null;
+
   return [
     ...options.map((frame) => ({
       value: frame.id,
@@ -520,11 +586,15 @@ function LinkEditor({
   onError: (message: string) => void;
 }) {
   const link = state.link;
+
   const fail = (error: unknown) =>
     onError(error instanceof Error ? error.message : String(error));
+
   const change = (next: { to?: LinkTarget } & LinkMotion) => {
-    if (!link.implicit)
+    if (!link.implicit) {
       return void linksApi.update(projectId, link.id, next).catch(fail);
+    }
+
     const { to, ...motion } = next;
     void linksApi
       .keep(projectId, [link.id], motion)
@@ -536,11 +606,16 @@ function LinkEditor({
                 item.from.selector === link.from.selector
             )
           : undefined;
-        if (kept && to) return linksApi.update(projectId, kept.id, { to });
+
+        if (kept && to) {
+          return linksApi.update(projectId, kept.id, { to });
+        }
       })
       .catch(fail);
   };
+
   const opts = motionOptions(link);
+
   return (
     <div className="proto-editor" data-testid="link-editor">
       {link.implicit && (
@@ -623,6 +698,7 @@ function LinkEditor({
 
 function rowMeta(link: PrototypeLink): string {
   const action = linkAction(link);
+
   return action === "navigate"
     ? transitionLabel(link.transition)
     : `${ACTION_LABELS[action]}, ${transitionLabel(link.transition).toLowerCase()}`;
@@ -641,6 +717,7 @@ function LinkList({
 }) {
   const fail = (error: unknown) =>
     onError(error instanceof Error ? error.message : String(error));
+
   return (
     <div
       className="proto-list ui-popover"
@@ -699,17 +776,22 @@ export function PrototypeBar(bar: BarProps) {
     ...bar,
     frameTitle: (frame: CanvasFrame) => frameTitle(frame, bar.frames),
   };
+
   const [listOpen, setListOpen] = useState(false);
   const broken = p.states.filter((state) => state.issue !== null).length;
   const found = p.states.filter((state) => state.link.implicit).length;
   const savedCount = p.file.links.length - found;
+
   const fail = (error: unknown) =>
     p.onError(error instanceof Error ? error.message : String(error));
+
   const starts = p.frames.map((frame) => ({
     value: frame.id,
     label: p.frameTitle(frame),
   }));
+
   const startId = playStartOf(p.file, p.frames, p.startId);
+
   return (
     <div
       className="proto-bar"

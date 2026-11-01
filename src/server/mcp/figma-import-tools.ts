@@ -93,25 +93,44 @@ const schema = z
   );
 
 async function resolveNodesFile(raw: string, dataDir: string): Promise<string> {
-  if (raw.includes("\0")) throw new EditError("nodesFile is not a valid path");
+  if (raw.includes("\0")) {
+    throw new EditError("nodesFile is not a valid path");
+  }
+
   const expanded = raw.startsWith("~/")
     ? path.join(homedir(), raw.slice(2))
     : raw;
-  if (!path.isAbsolute(expanded))
+
+  if (!path.isAbsolute(expanded)) {
     throw new EditError("nodesFile must be an absolute path");
+  }
+
   const file = await realpath(expanded).catch(() => null);
-  if (!file) throw new EditError(`nodesFile not found: ${raw}`);
+
+  if (!file) {
+    throw new EditError(`nodesFile not found: ${raw}`);
+  }
+
   const info = await stat(file);
-  if (!info.isFile()) throw new EditError(`nodesFile is not a file: ${file}`);
-  if (!/\.json$/i.test(file))
+
+  if (!info.isFile()) {
+    throw new EditError(`nodesFile is not a file: ${file}`);
+  }
+
+  if (!/\.json$/i.test(file)) {
     throw new EditError(
       "nodesFile must be a .json file with the body of GET /v1/files/:key/nodes"
     );
-  if (info.size > FIGMA_NODES_MAX_BYTES)
+  }
+
+  if (info.size > FIGMA_NODES_MAX_BYTES) {
     throw new EditError(
       `${path.basename(file)} is larger than 10 MB. Export one frame with ?ids=<node id>.`
     );
+  }
+
   await safeFolder(path.dirname(file), dataDir);
+
   return file;
 }
 
@@ -122,10 +141,12 @@ async function readNodesFile(
   projectId: string
 ): Promise<string> {
   const file = await resolveNodesFile(raw, deps.dataDir);
+
   const projects = await safeFolder(
     await deps.projectsFolder(),
     deps.dataDir
   ).catch(() => null);
+
   if (projects === null || !isInside(file, projects)) {
     await approve(deps, {
       tool: "import_figma_frame",
@@ -137,6 +158,7 @@ async function readNodesFile(
         "The studio reads this JSON file and writes the frame as markup into the page. It does not connect to Figma.",
     });
   }
+
   return readFile(file, "utf-8");
 }
 
@@ -144,6 +166,7 @@ function summary(stats: FigmaImportResult["stats"]): string {
   const kit = stats.kit
     .map((use) => `${use.layer} -> <${use.component}>`)
     .join(", ");
+
   return `${stats.layers} layers, ${stats.tokens} token colors, ${stats.rawColors.length} raw colors${kit ? `, kit: ${kit}` : ""}${stats.images ? `, ${stats.images} image placeholders` : ""}`;
 }
 
@@ -157,14 +180,20 @@ const importFigmaFrame = defineTool(
       input.projectId,
       input.directionId
     );
-    if (!input.dryRun) refuseWhileRunning(deps, project, direction);
+
+    if (!input.dryRun) {
+      refuseWhileRunning(deps, project, direction);
+    }
+
     const nodes = await readNodesFile(
       deps,
       input.nodesFile,
       client,
       project.id
     );
+
     const target = await targetOf(deps, project, direction, input);
+
     const body = {
       nodes,
       ...(input.nodeId ? { nodeId: input.nodeId } : {}),
@@ -172,7 +201,9 @@ const importFigmaFrame = defineTool(
       position: input.position,
       ...(input.dryRun ? { dryRun: true } : {}),
     };
+
     let result: FigmaImportResult | FigmaImportPreview;
+
     try {
       result = await studioCall<FigmaImportResult | FigmaImportPreview>(
         deps,
@@ -185,7 +216,8 @@ const importFigmaFrame = defineTool(
         error instanceof Error ? error.message : String(error)
       );
     }
-    if (!("version" in result))
+
+    if (!("version" in result)) {
       return {
         result: ok({
           dryRun: true,
@@ -195,9 +227,12 @@ const importFigmaFrame = defineTool(
           stats: result.stats,
         }),
       };
+    }
+
     const at = result.select.map(
       (item) => `${item.file}:${item.line}:${item.col}`
     );
+
     const output = ok({
       file: result.file,
       title: result.title,
@@ -207,6 +242,7 @@ const importFigmaFrame = defineTool(
       imports: result.imports,
       versionId: result.version?.id ?? null,
     });
+
     return {
       result: output,
       activity: versionActivity(

@@ -21,6 +21,7 @@ export function listenersOn(port: number): number[] {
 
 export async function killListeners(ports: number[]): Promise<number[]> {
   const pids = [...new Set(ports.flatMap(listenersOn))];
+
   for (const pid of pids) {
     try {
       process.kill(pid, "SIGTERM");
@@ -28,13 +29,21 @@ export async function killListeners(ports: number[]): Promise<number[]> {
       continue;
     }
   }
+
   const deadline = Date.now() + 10_000;
+
   while (
     Date.now() < deadline &&
     ports.some((port) => listenersOn(port).length > 0)
-  )
+  ) {
     await new Promise((resolve) => setTimeout(resolve, 200));
-  for (const port of ports)
-    for (const pid of listenersOn(port)) process.kill(pid, "SIGKILL");
+  }
+
+  for (const port of ports) {
+    for (const pid of listenersOn(port)) {
+      process.kill(pid, "SIGKILL");
+    }
+  }
+
   return pids;
 }

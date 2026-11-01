@@ -20,6 +20,7 @@ import {
 } from "./support/studio";
 
 const REVIEW_DIR = path.join(ROOT, "design-review");
+
 const SIZES = [
   [1440, 900],
   [800, 934],
@@ -35,6 +36,7 @@ async function openProject(page: Page, api: StudioApi): Promise<Project> {
       packId: "editorial",
     }
   );
+
   await api.waitForRuns(project.id, 1);
   await page.evaluate((id) => {
     const raw = localStorage.getItem("design-studio.ui.v1");
@@ -46,6 +48,7 @@ async function openProject(page: Page, api: StudioApi): Promise<Project> {
   }, project.id);
   await page.reload();
   await expect(page.locator(".topbar")).toBeVisible();
+
   return api.project(project.id);
 }
 
@@ -56,12 +59,15 @@ async function settledCount(
   did: string
 ): Promise<number> {
   await expect(page.locator(".ins-status.saving")).toHaveCount(0);
+
   const head = async () =>
     (await api.project(pid)).directions.find((d) => d.id === did)
       ?.headVersionId ?? null;
+
   const versions = await api.versions(pid, did);
   await expect.poll(head).toBe(versions[0]?.id ?? null);
   await expect(page.locator("li.version")).toHaveCount(versions.length);
+
   return versions.length;
 }
 
@@ -72,6 +78,7 @@ async function shoot(
   close: () => Promise<void>
 ): Promise<void> {
   mkdirSync(REVIEW_DIR, { recursive: true });
+
   for (const [width, height] of SIZES) {
     await page.setViewportSize({ width, height });
     await page.waitForTimeout(250);
@@ -82,6 +89,7 @@ async function shoot(
     });
     await close();
   }
+
   await page.setViewportSize({ width: 1600, height: 1000 });
   await page.waitForTimeout(250);
 }
@@ -89,13 +97,17 @@ async function shoot(
 function nearAccent(entries: CompiledTokenEntry[]): string {
   const accent = entries.find((entry) => entry.cssVar === "--accent");
   const base = accent ? parse(accent.value) : undefined;
-  if (!base || base.mode !== "oklch")
+
+  if (!base || base.mode !== "oklch") {
     throw new Error("accent token is not oklch");
+  }
+
   const hex = formatHex({ ...base, l: base.l - 0.012 });
   const best = matchColor(hex, entries)[0];
   expect(best?.cssVar).toBe("--accent");
   expect(best?.distance).toBeGreaterThan(COLOR_EXACT_DELTA);
   expect(best?.distance).toBeLessThan(COLOR_SNAP_DELTA);
+
   return hex;
 }
 
@@ -108,10 +120,12 @@ test("token snap: picker, auto-snap, raw badge, create token with apply, undo", 
   const indexFile = path.join(main.workTree, "index.html");
   const tokensJson = path.join(main.workTree, "design-system", "tokens.json");
   const tokensCss = path.join(main.workTree, "design-system", "tokens.css");
+
   const state = await api.call<{ entries: CompiledTokenEntry[] }>(
     "GET",
     `/api/projects/${project.id}/d/${main.id}/design-system`
   );
+
   await expect(frontFrame(page).locator("h1")).toHaveText("Token Snap Journal");
 
   await selectInFrame(page, "h1");
@@ -122,9 +136,11 @@ test("token snap: picker, auto-snap, raw badge, create token with apply, undo", 
   const snapToggle = page.getByRole("button", { name: "Snap to tokens" });
   await expect(snapToggle).toHaveAttribute("aria-pressed", "true");
   const color = page.getByLabel("Text color", { exact: true });
+
   const pickerButton = page.getByRole("button", {
     name: "Choose text color token",
   });
+
   await expect(pickerButton).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Choose font size token" })
@@ -199,11 +215,13 @@ test("token snap: picker, auto-snap, raw badge, create token with apply, undo", 
   );
 
   const dialog = page.getByRole("dialog", { name: "Create token" });
+
   const openDialog = async () => {
     await rawBadge.click();
     await menu.getByRole("menuitem", { name: "Create token…" }).click();
     await expect(dialog).toBeVisible();
   };
+
   await shoot(page, "create-dialog", openDialog, async () => {
     await dialog.getByRole("button", { name: "Cancel" }).click();
     await expect(dialog).toBeHidden();
@@ -225,9 +243,11 @@ test("token snap: picker, auto-snap, raw badge, create token with apply, undo", 
   await expect
     .poll(() => readFileSync(indexFile, "utf-8"))
     .toContain("color: var(--brand-2)");
+
   const created = JSON.parse(readFileSync(tokensJson, "utf-8")) as {
     color: Record<string, { $value?: string }>;
   };
+
   expect(formatHex(created.color["brand-2"]?.$value ?? "")).toBe(far);
   expect(readFileSync(tokensCss, "utf-8")).toContain("--brand-2");
   expect(await settledCount(page, api, project.id, main.id)).toBe(
@@ -236,6 +256,7 @@ test("token snap: picker, auto-snap, raw badge, create token with apply, undo", 
   await expect(
     page.getByRole("button", { name: "Text color: token --brand-2" })
   ).toBeVisible();
+
   const h1Hex = async () =>
     formatHex(
       parse(
@@ -244,6 +265,7 @@ test("token snap: picker, auto-snap, raw badge, create token with apply, undo", 
           .evaluate((el) => getComputedStyle(el).color)
       ) ?? "#000"
     );
+
   await expect.poll(h1Hex).toBe(far);
 
   await page.locator(".ins-header .ins-tag").click();

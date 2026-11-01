@@ -34,6 +34,7 @@ function sourceOf(library: Library, entry: LibraryEntry): ComponentSource {
   const index = library.scan.findIndex((dir) =>
     entry.absolute.startsWith(dir + path.sep)
   );
+
   return index >= 0 && index < library.scan.length - 1 ? "package" : "app";
 }
 
@@ -46,27 +47,45 @@ function tierOf(
   query: string,
   fileText: (file: string) => string
 ): number {
-  if (!query) return 0;
+  if (!query) {
+    return 0;
+  }
+
   const name = words(entry.name);
-  if (name === query) return 0;
-  if (name.startsWith(query)) return 1;
-  if (name.includes(query)) return 2;
+
+  if (name === query) {
+    return 0;
+  }
+
+  if (name.startsWith(query)) {
+    return 1;
+  }
+
+  if (name.includes(query)) {
+    return 2;
+  }
+
   if (
     words(entry.folder).includes(query) ||
     words(path.posix.basename(entry.file)).includes(query)
-  )
+  ) {
     return 3;
+  }
+
   return fileText(entry.absolute).includes(query) ? 4 : -1;
 }
 
 function textIndex(library: Library): (file: string) => string {
   const flat = new Map<string, string>();
+
   return (file) => {
     let text = flat.get(file);
+
     if (text === undefined) {
       text = words(library.texts.get(file) ?? "");
       flat.set(file, text);
     }
+
     return text;
   };
 }
@@ -77,12 +96,21 @@ function rank(library: Library, request: ComponentListQuery): Ranked[] {
   const wanted = request.source ?? "all";
   const out: Ranked[] = [];
   const locals = new Set(library.locals);
+
   for (const entry of [...library.entries, ...library.locals]) {
     const source = sourceOf(library, entry);
-    if (wanted !== "all" && source !== wanted) continue;
+
+    if (wanted !== "all" && source !== wanted) {
+      continue;
+    }
+
     const tier = tierOf(entry, query, fileText);
-    if (tier >= 0) out.push({ entry, source, tier, local: locals.has(entry) });
+
+    if (tier >= 0) {
+      out.push({ entry, source, tier, local: locals.has(entry) });
+    }
   }
+
   return out.sort(
     (a, b) =>
       Number(a.source === "app") - Number(b.source === "app") ||
@@ -95,13 +123,18 @@ function rank(library: Library, request: ComponentListQuery): Ranked[] {
 }
 
 function offsetOf(cursor: string | undefined): number {
-  if (!cursor) return 0;
+  if (!cursor) {
+    return 0;
+  }
+
   const value = Number(cursor);
+
   return Number.isInteger(value) && value >= 0 ? value : 0;
 }
 
 function appTarget(project: Project, library: Library): string {
   const appRoot = library.scan.at(-1) ?? library.root;
+
   return path.join(
     appRoot,
     project.app?.framework === "next" ? "app" : "",
@@ -118,13 +151,25 @@ function knownSpecifier(
   const byFile = library.imports.get(
     entry.kind === "default" ? `default:${entry.local}` : entry.name
   );
-  if (!byFile) return null;
+
+  if (!byFile) {
+    return null;
+  }
+
   const counts = new Map<string, number>();
-  for (const specifier of byFile.values())
+
+  for (const specifier of byFile.values()) {
     counts.set(specifier, (counts.get(specifier) ?? 0) + 1);
+  }
+
   const resolves = importResolver(ts, need);
-  for (const [specifier] of [...counts].sort((a, b) => b[1] - a[1]))
-    if (resolves(specifier)) return specifier;
+
+  for (const [specifier] of [...counts].sort((a, b) => b[1] - a[1])) {
+    if (resolves(specifier)) {
+      return specifier;
+    }
+  }
+
   return null;
 }
 
@@ -133,14 +178,22 @@ function seenOf(
 ): ImportNeed["seen"] {
   const out: ImportNeed["seen"] = [];
   const done = new Set<string>();
+
   for (const [from, list] of library.specifiers) {
     for (const specifier of list) {
-      if (out.length >= SEEN_MAX) return out;
-      if (done.has(specifier) || !ALIAS_LIKE.test(specifier)) continue;
+      if (out.length >= SEEN_MAX) {
+        return out;
+      }
+
+      if (done.has(specifier) || !ALIAS_LIKE.test(specifier)) {
+        continue;
+      }
+
       done.add(specifier);
       out.push({ specifier, from });
     }
   }
+
   return out;
 }
 
@@ -159,6 +212,7 @@ function importLine(
     seen: [],
     allowPaths: project.app?.framework === "next",
   };
+
   const specifier =
     knownSpecifier(ts, library, entry, need) ??
     pickSpecifier(
@@ -166,6 +220,7 @@ function importLine(
       { ...need, seen: seenOf(library) },
       importResolver(ts, need)
     );
+
   return entry.kind === "default"
     ? `import ${entry.name} from '${specifier}';`
     : `import { ${entry.name} } from '${specifier}';`;
@@ -182,11 +237,17 @@ function cachedImportLine(
 ): string {
   const key = `${project.id}:${library.root}:${entry.kind}:${entry.name}:${entry.absolute}`;
   let line = importLines.get(key);
+
   if (line === undefined) {
     line = importLine(ts, project, library, entry);
-    if (importLines.size >= IMPORT_LINES_MAX) importLines.clear();
+
+    if (importLines.size >= IMPORT_LINES_MAX) {
+      importLines.clear();
+    }
+
     importLines.set(key, line);
   }
+
   return line;
 }
 
@@ -206,11 +267,14 @@ export async function searchComponents(
   const library = await loadLibrary(project, workTree);
   const ranked = rank(library, request);
   const offset = offsetOf(request.cursor);
+
   const limit = Math.min(
     Math.max(request.limit ?? DEFAULT_LIMIT, 1),
     COMPONENT_LIST_MAX
   );
+
   const page = ranked.slice(offset, offset + limit);
+
   const [ts, schemas] = await Promise.all([
     loadTypeScript(),
     componentSchemas(
@@ -218,9 +282,11 @@ export async function searchComponents(
       page.map(({ entry }) => ({ file: entry.absolute, name: entry.local }))
     ),
   ]);
+
   const components: ComponentListItem[] = page.map(
     ({ entry, source, local }, index) => {
       const schema = schemas[index] ?? null;
+
       const base = schema ?? {
         name: entry.name,
         file: entry.file,
@@ -230,14 +296,17 @@ export async function searchComponents(
         asChild: false,
         note: null,
       };
+
       const example = jsxFor(entry, schema, {
         component: { name: entry.name },
         target: { source: null },
         position: "inside",
       });
+
       const importText = local
         ? `not exported: use it inside ${entry.file}`
         : cachedImportLine(ts, project, library, entry);
+
       return {
         ...base,
         name: entry.name,
@@ -252,7 +321,9 @@ export async function searchComponents(
       };
     }
   );
+
   const next = offset + page.length;
+
   return {
     components,
     total: ranked.length,

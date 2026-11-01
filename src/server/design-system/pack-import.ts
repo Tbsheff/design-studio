@@ -26,14 +26,21 @@ export class PackExistsError extends ConflictError {
 }
 
 export function parseImportMode(value: unknown): ImportMode {
-  if (value === undefined || value === null || value === "") return "ask";
-  if (value === "ask" || value === "replace" || value === "copy") return value;
+  if (value === undefined || value === null || value === "") {
+    return "ask";
+  }
+
+  if (value === "ask" || value === "replace" || value === "copy") {
+    return value;
+  }
+
   throw new BadRequestError("mode must be ask, replace or copy");
 }
 
 function splitName(name: string): { folder: string; file: string } {
   const parts = name.split("/");
   const [folder, file] = parts;
+
   if (
     parts.length !== 2 ||
     !folder ||
@@ -45,28 +52,37 @@ function splitName(name: string): { folder: string; file: string } {
       `unexpected file in the zip: ${name.slice(0, 120)}. A design system zip has only <id>/pack.json, <id>/tokens.json and <id>/DESIGN.md`
     );
   }
+
   return { folder, file };
 }
 
 function readManifest(text: string): PackManifest {
   let raw: unknown;
+
   try {
     raw = JSON.parse(text);
   } catch {
     throw new BadRequestError("pack.json in the zip is not valid JSON");
   }
+
   const parsed = manifestSchema.safeParse(raw);
-  if (!parsed.success)
+
+  if (!parsed.success) {
     throw new BadRequestError(
       `invalid pack.json in the zip: ${formatIssues("pack.json", parsed.error).join("; ")}`
     );
+  }
+
   return parsed.data as PackManifest;
 }
 
 export function readPackZip(bytes: Buffer): PackZip {
-  if (bytes.length > MAX_IMPORT_ZIP_BYTES)
+  if (bytes.length > MAX_IMPORT_ZIP_BYTES) {
     throw new BadRequestError("the zip is larger than 2 MB");
+  }
+
   let entries;
+
   try {
     entries = unzipFiles(bytes, {
       maxEntries: PACK_FILES.length,
@@ -74,22 +90,35 @@ export function readPackZip(bytes: Buffer): PackZip {
       maxTotalBytes: MAX_FILE_BYTES * PACK_FILES.length,
     });
   } catch (error) {
-    if (error instanceof ZipError) throw new BadRequestError(error.message);
+    if (error instanceof ZipError) {
+      throw new BadRequestError(error.message);
+    }
+
     throw error;
   }
+
   const files = new Map<string, string>();
   let folderId: string | null = null;
+
   for (const entry of entries) {
     const { folder, file } = splitName(entry.name);
-    if (folderId !== null && folder !== folderId)
+
+    if (folderId !== null && folder !== folderId) {
       throw new BadRequestError("the zip must hold one design system folder");
+    }
+
     folderId = folder;
     files.set(file, entry.data.toString("utf-8"));
   }
+
   const missing = PACK_FILES.filter((file) => !files.has(file));
-  if (folderId === null || missing.length > 0)
+
+  if (folderId === null || missing.length > 0) {
     throw new BadRequestError(`the zip has no ${missing.join(", ")}`);
+  }
+
   const manifest = readManifest(files.get("pack.json") ?? "");
+
   return {
     folderId,
     input: {
@@ -113,6 +142,7 @@ export function findImportConflict(
 ): PackSummary | null {
   const name = zip.input.name.trim().toLowerCase();
   const users = packs.filter((pack) => pack.source === "user");
+
   return (
     users.find((pack) => pack.id === zip.folderId) ??
     users.find((pack) => pack.name.trim().toLowerCase() === name) ??

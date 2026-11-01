@@ -218,6 +218,7 @@ const SCRIPT = `
 
 function frameFigure(base: string, frame: ShareFrame, index: number): string {
   const label = `${escapeHtml(frame.name)}${frame.path ? ` · /${escapeHtml(frame.path)}` : ""} · ${frame.width} × ${frame.height}`;
+
   return `<figure><figcaption>${label}</figcaption><div class="shot" data-i="${index}" data-w="${frame.width}" data-h="${frame.cssHeight}"><img src="${base}/f/${index}" alt="${escapeHtml(frame.name)} frame" width="${frame.width}" height="${frame.cssHeight}"></div></figure>`;
 }
 
@@ -225,20 +226,28 @@ const HOUR = 3_600_000;
 
 function endsInText(expiresAt: number, now = Date.now()): string {
   const left = expiresAt - now;
-  if (left < HOUR)
+
+  if (left < HOUR) {
     return `Ends in ${Math.max(1, Math.ceil(left / 60_000))} min`;
-  if (left < 48 * HOUR) return `Ends in ${Math.round(left / HOUR)} h`;
+  }
+
+  if (left < 48 * HOUR) {
+    return `Ends in ${Math.round(left / HOUR)} h`;
+  }
+
   return `Ends in ${Math.round(left / (24 * HOUR))} days`;
 }
 
 export function viewerHtml(data: ViewerData, nonce: string): string {
   const expires = endsInText(data.expiresAt);
+
   const widths = data.frames
     .map(
       (f, i) =>
         `figure:nth-of-type(${i + 1}) { width: min(100%, ${f.width}px); }`
     )
     .join("\n");
+
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -285,10 +294,12 @@ p { margin: 0; color: var(--muted); }`;
 export function goneHtml(reason: "revoked" | "expired", nonce: string): string {
   const title =
     reason === "revoked" ? "This link was turned off" : "This link has ended";
+
   const body =
     reason === "revoked"
       ? "The person who shared it turned it off. Ask them for a new link."
       : "Its time ran out. Ask the person who shared it for a new link.";
+
   return `<!doctype html>
 <html lang="en">
 <head>

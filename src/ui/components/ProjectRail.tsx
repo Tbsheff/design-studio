@@ -26,6 +26,7 @@ import "../styles/project-nav.css";
 
 const KEY = "design-studio.rail.v1";
 const MINI_MAX = 8;
+
 const GROUPS: { title: string; test: (hit: ProjectHit) => boolean }[] = [
   { title: "Apps", test: (hit) => hit.type === "next" || hit.type === "vite" },
   {
@@ -36,6 +37,7 @@ const GROUPS: { title: string; test: (hit: ProjectHit) => boolean }[] = [
 ];
 
 type RailState = "open" | "mini";
+
 const listeners = new Set<() => void>();
 
 function readRail(): RailState {
@@ -50,12 +52,15 @@ let railState: RailState = readRail();
 
 export function setRail(next: RailState): void {
   railState = next;
+
   try {
     localStorage.setItem(KEY, next);
   } catch {
     return;
   } finally {
-    for (const listener of listeners) listener();
+    for (const listener of listeners) {
+      listener();
+    }
   }
 }
 
@@ -67,6 +72,7 @@ export function useRail(): RailState {
   return useSyncExternalStore(
     (listener) => {
       listeners.add(listener);
+
       return () => listeners.delete(listener);
     },
     () => railState
@@ -80,7 +86,10 @@ function floating(): boolean {
 }
 
 function pickProject(id: string): void {
-  if (railState === "open" && floating()) setRail("mini");
+  if (railState === "open" && floating()) {
+    setRail("mini");
+  }
+
   openProject(id);
 }
 
@@ -89,22 +98,32 @@ function useFloatingDismiss(
   rail: RefObject<HTMLElement | null>
 ): void {
   useEffect(() => {
-    if (state !== "open") return;
+    if (state !== "open") {
+      return;
+    }
+
     const close = () => floating() && setRail("mini");
+
     const onPointer = (event: PointerEvent) => {
-      if (!rail.current?.contains(event.target as Node)) close();
+      if (!rail.current?.contains(event.target as Node)) {
+        close();
+      }
     };
+
     const onKey = (event: KeyboardEvent) => {
       if (
         event.key === "Escape" &&
         !event.defaultPrevented &&
         !document.querySelector('[role="dialog"][aria-modal="true"]')
-      )
+      ) {
         close();
+      }
     };
+
     window.addEventListener("pointerdown", onPointer, true);
     window.addEventListener("keydown", onKey);
     window.addEventListener("blur", close);
+
     return () => {
       window.removeEventListener("pointerdown", onPointer, true);
       window.removeEventListener("keydown", onKey);
@@ -114,18 +133,28 @@ function useFloatingDismiss(
 }
 
 function moveFocus(event: ReactKeyboardEvent<HTMLElement>): void {
-  if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+  if (event.key !== "ArrowDown" && event.key !== "ArrowUp") {
+    return;
+  }
+
   const items = [
     ...event.currentTarget.querySelectorAll<HTMLElement>(".prail-item"),
   ];
+
   const at = items.indexOf(document.activeElement as HTMLElement);
-  if (at < 0 && !(document.activeElement instanceof HTMLInputElement)) return;
+
+  if (at < 0 && !(document.activeElement instanceof HTMLInputElement)) {
+    return;
+  }
+
   event.preventDefault();
+
   const next =
     at < 0
       ? 0
       : (at + (event.key === "ArrowDown" ? 1 : -1) + items.length) %
         items.length;
+
   items[next]?.focus();
 }
 
@@ -137,10 +166,17 @@ function useStageFocusOnClose(
   useEffect(() => {
     const closed = last.current === "open" && state !== "open";
     last.current = state;
-    if (!closed) return;
-    const active = document.activeElement;
-    if (active && active !== document.body && !rail.current?.contains(active))
+
+    if (!closed) {
       return;
+    }
+
+    const active = document.activeElement;
+
+    if (active && active !== document.body && !rail.current?.contains(active)) {
+      return;
+    }
+
     document
       .querySelector<HTMLElement>(".canvas .stage")
       ?.focus({ preventScroll: true });
@@ -167,15 +203,24 @@ function useRailKeys(onOpened: () => void): void {
         event.defaultPrevented ||
         event.repeat ||
         !matchesKey("project-rail", event, IS_MAC)
-      )
+      ) {
         return;
-      if (document.querySelector('[role="dialog"][aria-modal="true"]')) return;
+      }
+
+      if (document.querySelector('[role="dialog"][aria-modal="true"]')) {
+        return;
+      }
+
       event.preventDefault();
       toggleRail();
-      if (railState === "open")
+
+      if (railState === "open") {
         window.requestAnimationFrame(() => opened.current());
+      }
     };
+
     window.addEventListener("keydown", onKey);
+
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 }
@@ -192,6 +237,7 @@ function tipOf(hit: ProjectHit, current: boolean): string {
   const parts = [hit.name, KIND_LABEL[hit.type], hit.health?.note].filter(
     Boolean
   );
+
   return current ? `${parts.join(" · ")} (open)` : parts.join(" · ");
 }
 
@@ -206,10 +252,12 @@ function MiniRail({
 }) {
   const top = hits.slice(0, MINI_MAX);
   const current = hits.find((hit) => hit.id === projectId);
+
   const shown =
     current && !top.includes(current)
       ? [...top.slice(0, MINI_MAX - 1), current]
       : top;
+
   return (
     <>
       <div className="prail-top">
@@ -296,14 +344,17 @@ function OpenRail({
   find: RefObject<HTMLInputElement | null>;
 }) {
   const [filter, setFilter] = useState("");
+
   const shown = useMemo(() => {
     const needle = filter.trim().toLowerCase();
+
     return needle
       ? hits.filter((hit) =>
           `${hit.name} ${hit.place ?? ""}`.toLowerCase().includes(needle)
         )
       : hits;
   }, [hits, filter]);
+
   return (
     <>
       <div className="prail-head">
@@ -332,9 +383,10 @@ function OpenRail({
           onChange={(e) => setFilter(e.target.value)}
           onKeyDown={(e) => {
             const first = shown[0];
-            if (e.key === "Enter" && first && !e.nativeEvent.isComposing)
+
+            if (e.key === "Enter" && first && !e.nativeEvent.isComposing) {
               pickProject(first.id);
-            else if (e.key === "Escape" && filter) {
+            } else if (e.key === "Escape" && filter) {
               e.preventDefault();
               e.stopPropagation();
               setFilter("");
@@ -345,7 +397,11 @@ function OpenRail({
       <nav className="prail-list" aria-label="Projects">
         {GROUPS.map((group) => {
           const items = shown.filter(group.test);
-          if (items.length === 0) return null;
+
+          if (items.length === 0) {
+            return null;
+          }
+
           return (
             <div
               key={group.title}
@@ -393,16 +449,22 @@ export function ProjectRail({ projectId, onHome, onNewPrototype }: RailProps) {
   useFloatingDismiss(state, aside);
   useStageFocusOnClose(state, aside);
   useEffect(() => {
-    if (state === "open" && document.activeElement instanceof HTMLIFrameElement)
+    if (
+      state === "open" &&
+      document.activeElement instanceof HTMLIFrameElement
+    ) {
       find.current?.focus();
+    }
   }, [state]);
   useEffect(() => noteProjectOpened(projectId), [projectId]);
   useEffect(() => {
     const onFocus = () => void refreshProjectHits(projectId);
     window.addEventListener("focus", onFocus);
+
     return () => window.removeEventListener("focus", onFocus);
   }, [projectId]);
   const hits = result?.projects ?? [];
+
   return (
     <aside
       ref={aside}

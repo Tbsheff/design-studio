@@ -38,14 +38,20 @@ export function timelineOf(
     at: run.startedAt,
     run,
   }));
-  if (!feed) return items;
-  for (const card of feed.approvals)
+
+  if (!feed) {
+    return items;
+  }
+
+  for (const card of feed.approvals) {
     items.push({
       kind: "approval",
       key: `approval-${card.approval.id}`,
       at: card.approval.createdAt,
       card,
     });
+  }
+
   const singles: TimelineItem[] = feed.activity.map((entry) => ({
     kind: "block",
     key: `mcp-${entry.id}`,
@@ -53,21 +59,26 @@ export function timelineOf(
     client: entry.client,
     entries: [entry],
   }));
+
   const sorted = [...items, ...singles].sort((a, b) => a.at - b.at);
   const out: TimelineItem[] = [];
+
   for (const item of sorted) {
     const last = out.at(-1);
+
     if (
       item.kind === "block" &&
       last?.kind === "block" &&
       last.client === item.client
-    )
+    ) {
       last.entries.push(...item.entries);
-    else
+    } else {
       out.push(
         item.kind === "block" ? { ...item, entries: [...item.entries] } : item
       );
+    }
   }
+
   return out;
 }
 
@@ -104,11 +115,16 @@ const TOOL_ICONS: Record<string, IconName> = {
 function useNow(stepMs: number, active: boolean): number {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    if (!active) return;
+    if (!active) {
+      return;
+    }
+
     setNow(Date.now());
     const id = window.setInterval(() => setNow(Date.now()), stepMs);
+
     return () => window.clearInterval(id);
   }, [stepMs, active]);
+
   return now;
 }
 
@@ -125,6 +141,7 @@ function ActivityRow({
 }) {
   const [undone, setUndone] = useState(false);
   const before = entry.versionId ? entry.beforeVersionId : null;
+
   return (
     <li className="mcp-row" data-testid="mcp-row" data-tool={entry.tool}>
       <span className="mcp-row-icon" aria-hidden="true">
@@ -169,8 +186,11 @@ function ActivityRow({
 function DisconnectButton() {
   const [state, setState] = useState<"idle" | "busy" | "done">("idle");
   const [error, setError] = useState<string | null>(null);
-  if (state === "done")
+
+  if (state === "done") {
     return <span className="mcp-block-note">Edits off</span>;
+  }
+
   return (
     <>
       {error && (
@@ -218,6 +238,7 @@ export function McpBlock({
   const now = useNow(10_000, Date.now() - lastAt < MCP_ACTIVE_MS);
   const active = now - lastAt < MCP_ACTIVE_MS;
   const hidden = open ? 0 : Math.max(0, entries.length - FOLD_AT);
+
   return (
     <section
       className="mcp-block"
@@ -280,6 +301,7 @@ const OUTCOME_TEXT: Record<McpApprovalOutcome, string> = {
 
 function countdown(ms: number): string {
   const total = Math.max(0, Math.ceil(ms / 1000));
+
   return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, "0")}`;
 }
 
@@ -297,8 +319,10 @@ export function McpApproval({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const now = useNow(1000, card.outcome === null && local === null);
+
   const outcome =
     card.outcome ?? local ?? (now >= approval.expiresAt ? "timeout" : null);
+
   if (outcome) {
     return (
       <div
@@ -323,6 +347,7 @@ export function McpApproval({
       </div>
     );
   }
+
   const answer = (allow: boolean) => {
     setBusy(true);
     setError(null);
@@ -332,10 +357,15 @@ export function McpApproval({
       .catch((err: unknown) => {
         setBusy(false);
         const text = errorText(err);
-        if (/not open/.test(text)) setLocal("timeout");
-        else setError(text);
+
+        if (/not open/.test(text)) {
+          setLocal("timeout");
+        } else {
+          setError(text);
+        }
       });
   };
+
   return (
     <section
       className={`permission mcp-approval${compact ? " compact" : ""}`}
@@ -392,7 +422,10 @@ export function McpItem({
   item: Exclude<TimelineItem, { kind: "run" }>;
   mcp: McpFeedControl | null;
 }) {
-  if (item.kind === "approval") return <McpApproval card={item.card} />;
+  if (item.kind === "approval") {
+    return <McpApproval card={item.card} />;
+  }
+
   return (
     <McpBlock
       client={item.client}
@@ -407,10 +440,15 @@ export function McpEditStrip({ mcp }: { mcp: McpFeedControl | null }) {
   const last = mcp?.activity.at(-1) ?? null;
   const now = useNow(10_000, last !== null);
   const [open, setOpen] = useState(false);
-  if (!mcp || !last || now - last.at > RECENT_MS) return null;
+
+  if (!mcp || !last || now - last.at > RECENT_MS) {
+    return null;
+  }
+
   const entries = mcp.activity
     .filter((entry) => entry.client === last.client)
     .slice(-FOLD_AT);
+
   return (
     <section
       className="mcp-edit-strip"

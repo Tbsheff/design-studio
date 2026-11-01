@@ -50,11 +50,15 @@ const EMPTY: SessionView = {
   dirty: false,
   blocked: null,
 };
+
 const UNDO_PROMPT = 'Undo of "';
 const REFRESH_MS = 120;
 
 export function unsavedLabel(count: number): string {
-  if (count === 0) return "No unsaved edits";
+  if (count === 0) {
+    return "No unsaved edits";
+  }
+
   return count === 1 ? "1 unsaved edit" : `${count} unsaved edits`;
 }
 
@@ -62,11 +66,15 @@ function netSteps(versions: Version[], base: string, fallback: number): number {
   const byId = new Map(versions.map((version) => [version.id, version]));
   let net = 0;
   let at = versions[0];
+
   while (at && at.id !== base) {
-    if (at.meta.kind === "manual" && at.meta.origin === undefined)
+    if (at.meta.kind === "manual" && at.meta.origin === undefined) {
       net += at.meta.prompt?.startsWith(UNDO_PROMPT) ? -1 : 1;
+    }
+
     at = at.parentId ? byId.get(at.parentId) : undefined;
   }
+
   return at ? net : fallback;
 }
 
@@ -80,6 +88,7 @@ async function readSession(
     directionId,
     base
   );
+
   const view = {
     base,
     count: state.count,
@@ -87,10 +96,15 @@ async function readSession(
     dirty: state.dirty,
     blocked: state.blocked,
   };
-  if (!state.dirty || state.count === 0) return view;
+
+  if (!state.dirty || state.count === 0) {
+    return view;
+  }
+
   const versions = await api
     .listVersions(projectId, directionId)
     .catch(() => null);
+
   return {
     ...view,
     net: versions ? netSteps(versions, base, state.count) : state.count,
@@ -115,7 +129,10 @@ export function useEditSession(o: Options) {
   const exitResolve = useRef<((leave: boolean) => void) | null>(null);
 
   const begin = useCallback(() => {
-    if (!directionId) return setView(EMPTY);
+    if (!directionId) {
+      return setView(EMPTY);
+    }
+
     api
       .editSession(projectId, directionId)
       .then(
@@ -130,12 +147,18 @@ export function useEditSession(o: Options) {
 
   const refresh = useCallback(() => {
     const base = viewRef.current.base;
-    if (!directionId || !base) return;
+
+    if (!directionId || !base) {
+      return;
+    }
+
     window.clearTimeout(timer.current);
     timer.current = window.setTimeout(() => {
       readSession(projectId, directionId, base)
         .then((next) => {
-          if (viewRef.current.base === base) setView(next);
+          if (viewRef.current.base === base) {
+            setView(next);
+          }
         })
         .catch(() => undefined);
     }, REFRESH_MS);
@@ -143,50 +166,66 @@ export function useEditSession(o: Options) {
 
   useEffect(() => () => window.clearTimeout(timer.current), []);
   useProjectEvents(projectId, (event) => {
-    if (event.directionId !== undefined && event.directionId !== directionId)
+    if (event.directionId !== undefined && event.directionId !== directionId) {
       return;
+    }
+
     const outside =
       event.type === "version.created" &&
       (event.version.meta.kind !== "manual" ||
         event.version.meta.origin === "mcp");
+
     if (
       event.type === "version.created" &&
       outside &&
       viewRef.current.count === 0
     ) {
       setView(fresh(event.version.id));
+
       return;
     }
+
     if (
       event.type === "edit-history.changed" ||
       event.type === "version.created"
-    )
+    ) {
       refresh();
+    }
   });
 
   const end = useCallback(async (action: SessionAction): Promise<boolean> => {
     const cur = opts.current;
     const base = viewRef.current.base;
-    if (!cur.directionId || !base) return true;
+
+    if (!cur.directionId || !base) {
+      return true;
+    }
+
     setBusy(action);
     setError(null);
+
     try {
       await cur.control.current?.settle();
+
       if (action === "discard") {
         cur.port.current?.post({ type: "preview-reset" });
         cur.port.current?.post({ type: "optimistic-drop" });
       }
+
       const result = await api.endEditSession(
         cur.projectId,
         cur.directionId,
         action,
         base
       );
+
       setView(fresh(result.headVersionId));
       cur.onEnded?.(action, result);
+
       return true;
     } catch (err) {
       setError(errorText(err));
+
       return false;
     } finally {
       setBusy(null);
@@ -200,10 +239,17 @@ export function useEditSession(o: Options) {
   }, []);
 
   const requestExit = useCallback((): Promise<boolean> => {
-    if (viewRef.current.count === 0) return Promise.resolve(true);
-    if (!viewRef.current.dirty || viewRef.current.net <= 0) return end("save");
+    if (viewRef.current.count === 0) {
+      return Promise.resolve(true);
+    }
+
+    if (!viewRef.current.dirty || viewRef.current.net <= 0) {
+      return end("save");
+    }
+
     exitResolve.current?.(false);
     setAsking(true);
+
     return new Promise<boolean>((resolve) => {
       exitResolve.current = resolve;
     });
@@ -211,9 +257,15 @@ export function useEditSession(o: Options) {
 
   const answer = useCallback(
     async (choice: SessionAction | "cancel") => {
-      if (choice === "cancel") return close(false);
+      if (choice === "cancel") {
+        return close(false);
+      }
+
       const ok = await end(choice);
-      if (ok) close(true);
+
+      if (ok) {
+        close(true);
+      }
     },
     [end, close]
   );

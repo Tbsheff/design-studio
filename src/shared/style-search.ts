@@ -1,6 +1,7 @@
 import type { SourceLoc, Version } from "./contracts.js";
 
 export const STYLE_KINDS = ["color", "font-size", "radius", "spacing"] as const;
+
 export type StyleKind = (typeof STYLE_KINDS)[number];
 
 export const KIND_PROPERTIES = {
@@ -21,9 +22,11 @@ export const KIND_PROPERTIES = {
 } as const satisfies Record<StyleKind, readonly string[]>;
 
 export type SearchProperty = (typeof KIND_PROPERTIES)[StyleKind][number];
+
 export const SEARCH_PROPERTIES: readonly SearchProperty[] = STYLE_KINDS.flatMap(
   (kind) => KIND_PROPERTIES[kind]
 );
+
 export const INHERITED_PROPERTIES: ReadonlySet<string> = new Set([
   "color",
   "font-size",
@@ -107,12 +110,16 @@ export interface StyleReplaceResult {
 }
 
 const T_SHIRT = /^(?:\d?xs|sm|base|md|lg|\d?xl)$/;
+
 const TEXT_OTHER =
   /^(?:left|center|right|justify|start|end|wrap|nowrap|balance|pretty|ellipsis|clip)$/;
+
 const BG_OTHER =
   /^(?:fixed|local|scroll|clip|origin|repeat|no-repeat|cover|contain|auto|center|top|bottom|left|right|none|linear|gradient|blend|radial|conic|size|position)/;
+
 const BORDER_OTHER =
   /^(?:\d+|\[\d[^\]]*\]|solid|dashed|dotted|double|hidden|none|collapse|separate|spacing.*)$/;
+
 const SPACING_CLASS: Record<string, RegExp> = {
   "padding-top": /^p[ty]?-/,
   "padding-bottom": /^p[by]?-/,
@@ -140,37 +147,58 @@ export function kindOf(property: SearchProperty): StyleKind {
 export function queryProperties(
   property: StyleQuery["property"]
 ): SearchProperty[] {
-  if (!property) return [...SEARCH_PROPERTIES];
+  if (!property) {
+    return [...SEARCH_PROPERTIES];
+  }
+
   return isStyleKind(property) ? [...KIND_PROPERTIES[property]] : [property];
 }
 
 function utility(raw: string): string | null {
-  if (raw.includes(":")) return null;
+  if (raw.includes(":")) {
+    return null;
+  }
+
   return raw.replace(/^!|!$/g, "");
 }
 
 function isFontSizeSuffix(suffix: string): boolean {
-  if (T_SHIRT.test(suffix)) return true;
+  if (T_SHIRT.test(suffix)) {
+    return true;
+  }
+
   return /^\[(?:length:)?[\d.]/.test(suffix);
 }
 
 function textClassProperty(suffix: string): "color" | "font-size" | null {
-  if (TEXT_OTHER.test(suffix)) return null;
+  if (TEXT_OTHER.test(suffix)) {
+    return null;
+  }
+
   return isFontSizeSuffix(suffix) ? "font-size" : "color";
 }
 
 function setsProperty(cls: string, property: SearchProperty): boolean {
-  if (property === "color" || property === "font-size")
+  if (property === "color" || property === "font-size") {
     return (
       cls.startsWith("text-") && textClassProperty(cls.slice(5)) === property
     );
-  if (property === "background-color")
+  }
+
+  if (property === "background-color") {
     return cls.startsWith("bg-") && !BG_OTHER.test(cls.slice(3));
+  }
+
   if (property === "border-color") {
     const match = /^border-(?:[xytrblse]-)?(.+)$/.exec(cls);
+
     return match !== null && !BORDER_OTHER.test(match[1] ?? "");
   }
-  if (property === "border-radius") return /^rounded(?:-|$)/.test(cls);
+
+  if (property === "border-radius") {
+    return /^rounded(?:-|$)/.test(cls);
+  }
+
   return SPACING_CLASS[property]?.test(cls) ?? false;
 }
 
@@ -180,8 +208,12 @@ export function classForProperty(
 ): string | null {
   for (let index = classes.length - 1; index >= 0; index -= 1) {
     const cls = utility(classes[index] ?? "");
-    if (cls && setsProperty(cls, property)) return classes[index] ?? null;
+
+    if (cls && setsProperty(cls, property)) {
+      return classes[index] ?? null;
+    }
   }
+
   return null;
 }
 
@@ -201,11 +233,19 @@ export function isUnsetComputed(
   value: string
 ): boolean {
   const flat = value.trim().toLowerCase();
-  if (flat === "" || flat === "normal" || flat === "auto" || flat === "none")
+
+  if (flat === "" || flat === "normal" || flat === "auto" || flat === "none") {
     return true;
-  if (property === "color" || property === "font-size") return false;
-  if (flat === "transparent" || /^rgba\(\s*0,\s*0,\s*0,\s*0\s*\)$/.test(flat))
+  }
+
+  if (property === "color" || property === "font-size") {
+    return false;
+  }
+
+  if (flat === "transparent" || /^rgba\(\s*0,\s*0,\s*0,\s*0\s*\)$/.test(flat)) {
     return true;
+  }
+
   return /^0(?:px)?(?:\s+0(?:px)?)*$/.test(flat);
 }
 
@@ -231,10 +271,20 @@ export function tokenOfHit(
   hit: StyleHit,
   lookup: TokenLookup | null
 ): string | null {
-  if (hit.cls) return isRawClass(hit.cls) ? null : hit.cls;
+  if (hit.cls) {
+    return isRawClass(hit.cls) ? null : hit.cls;
+  }
+
   const inlineVar = hit.inline ? VAR_IN.exec(hit.inline)?.[1] : undefined;
-  if (inlineVar) return inlineVar;
-  if (hit.inline) return null;
+
+  if (inlineVar) {
+    return inlineVar;
+  }
+
+  if (hit.inline) {
+    return null;
+  }
+
   return lookup ? lookup(hit.property, hit.value) : null;
 }
 
@@ -251,8 +301,14 @@ interface RowDraft {
 }
 
 function stateOf(draft: RowDraft): ValueState {
-  if (draft.raw === 0 && draft.palette === 0) return "token";
-  if (draft.palette === draft.total) return "palette";
+  if (draft.raw === 0 && draft.palette === 0) {
+    return "token";
+  }
+
+  if (draft.palette === draft.total) {
+    return "palette";
+  }
+
   return draft.raw === draft.total ? "raw" : "mixed";
 }
 
@@ -261,10 +317,12 @@ export function summarizeHits(
   lookup: TokenLookup | null = null
 ): StyleValueRow[] {
   const rows = new Map<string, RowDraft>();
+
   for (const hit of hits) {
     const kind = kindOf(hit.property);
     const key = `${kind}|${hit.value}`;
     let draft = rows.get(key);
+
     if (!draft) {
       draft = {
         kind,
@@ -279,16 +337,31 @@ export function summarizeHits(
       };
       rows.set(key, draft);
     }
+
     draft.selectors.add(hit.selector);
     draft.properties.add(hit.property);
-    if (hit.cls) draft.classes.add(hit.cls);
+
+    if (hit.cls) {
+      draft.classes.add(hit.cls);
+    }
+
     const token = tokenOfHit(hit, lookup);
-    if (token) draft.tokens.add(token);
-    else draft.raw += 1;
-    if (token && hit.cls === token && isPaletteClass(token)) draft.palette += 1;
+
+    if (token) {
+      draft.tokens.add(token);
+    } else {
+      draft.raw += 1;
+    }
+
+    if (token && hit.cls === token && isPaletteClass(token)) {
+      draft.palette += 1;
+    }
+
     draft.total += 1;
   }
+
   const order = (kind: StyleKind) => STYLE_KINDS.indexOf(kind);
+
   return [...rows.values()]
     .map((draft) => ({
       kind: draft.kind,
@@ -349,9 +422,14 @@ export function replaceSummary(
     result.replaced === 0
       ? "Nothing replaced"
       : `Replaced ${result.replaced === 1 ? "1 value" : `${result.replaced} values`} with ${token}`;
-  if (result.skipped.length === 0) return done;
+
+  if (result.skipped.length === 0) {
+    return done;
+  }
+
   const skips = result.skipped
     .map((skip) => `${skip.count} ${skip.reason}`)
     .join("; ");
+
   return `${done}. Skipped ${skips}`;
 }

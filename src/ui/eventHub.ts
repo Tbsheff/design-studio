@@ -85,20 +85,32 @@ export function createEventHub(deps: HubDeps): EventHub {
   const channels = new Map<string, Channel>();
 
   const setState = (channel: Channel, state: ConnectionState) => {
-    if (channel.state === state) return;
+    if (channel.state === state) {
+      return;
+    }
+
     channel.state = state;
-    for (const fn of [...channel.stateListeners]) fn();
+
+    for (const fn of [...channel.stateListeners]) {
+      fn();
+    }
   };
 
   const receive = (channel: Channel, msg: MessageEvent<string>) => {
     let event: StudioEvent;
+
     try {
       event = JSON.parse(msg.data) as StudioEvent;
     } catch {
       return;
     }
-    if (typeof event.seq !== "number" || event.seq <= channel.lastSeq) return;
+
+    if (typeof event.seq !== "number" || event.seq <= channel.lastSeq) {
+      return;
+    }
+
     channel.lastSeq = event.seq;
+
     for (const listener of [...channel.listeners]) {
       try {
         listener(event);
@@ -109,20 +121,34 @@ export function createEventHub(deps: HubDeps): EventHub {
   };
 
   const connect = (projectId: string, channel: Channel) => {
-    if (channels.get(projectId) !== channel) return;
+    if (channels.get(projectId) !== channel) {
+      return;
+    }
+
     const es = deps.open(projectId, channel.lastSeq);
     channel.source = es;
+
     const onMessage = (msg: Event) =>
       receive(channel, msg as MessageEvent<string>);
+
     es.onopen = () => {
       channel.retryDelay = 500;
       setState(channel, "open");
     };
+
     es.onmessage = onMessage;
-    for (const type of EVENT_TYPES) es.addEventListener(type, onMessage);
+
+    for (const type of EVENT_TYPES) {
+      es.addEventListener(type, onMessage);
+    }
+
     es.onerror = () => {
       es.close();
-      if (channels.get(projectId) !== channel) return;
+
+      if (channels.get(projectId) !== channel) {
+        return;
+      }
+
       setState(channel, "reconnecting");
       deps.clearTimer(channel.retryTimer);
       channel.retryTimer = deps.setTimer(
@@ -135,10 +161,13 @@ export function createEventHub(deps: HubDeps): EventHub {
 
   const channelFor = (projectId: string): Channel => {
     const existing = channels.get(projectId);
+
     if (existing) {
       existing.closing = false;
+
       return existing;
     }
+
     const channel: Channel = {
       listeners: new Set(),
       stateListeners: new Set(),
@@ -149,8 +178,10 @@ export function createEventHub(deps: HubDeps): EventHub {
       retryDelay: 500,
       closing: false,
     };
+
     channels.set(projectId, channel);
     connect(projectId, channel);
+
     return channel;
   };
 
@@ -159,12 +190,20 @@ export function createEventHub(deps: HubDeps): EventHub {
       channel.listeners.size > 0 ||
       channel.stateListeners.size > 0 ||
       channel.closing
-    )
+    ) {
       return;
+    }
+
     channel.closing = true;
     deps.defer(() => {
-      if (!channel.closing || channels.get(projectId) !== channel) return;
-      if (channel.listeners.size > 0 || channel.stateListeners.size > 0) return;
+      if (!channel.closing || channels.get(projectId) !== channel) {
+        return;
+      }
+
+      if (channel.listeners.size > 0 || channel.stateListeners.size > 0) {
+        return;
+      }
+
       channels.delete(projectId);
       deps.clearTimer(channel.retryTimer);
       channel.source?.close();
@@ -176,6 +215,7 @@ export function createEventHub(deps: HubDeps): EventHub {
     subscribe(projectId, listener) {
       const channel = channelFor(projectId);
       channel.listeners.add(listener);
+
       return () => {
         channel.listeners.delete(listener);
         release(projectId, channel);
@@ -184,6 +224,7 @@ export function createEventHub(deps: HubDeps): EventHub {
     watchState(projectId, onChange) {
       const channel = channelFor(projectId);
       channel.stateListeners.add(onChange);
+
       return () => {
         channel.stateListeners.delete(onChange);
         release(projectId, channel);

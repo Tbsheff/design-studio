@@ -80,6 +80,7 @@ const LAYOUT_CSS: Record<string, string> = {
 function variationPage(title: string, variation: MockVariation): string {
   const look = lookFor(variation.index);
   const heading = escape(title);
+
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -108,8 +109,10 @@ function variationPage(title: string, variation: MockVariation): string {
 
 function variationApp(title: string, variation: MockVariation): string {
   const look = lookFor(variation.index);
+
   const text = (value: string) =>
     escape(value).replace(/\{/g, "&#123;").replace(/\}/g, "&#125;");
+
   return `export default function App() {
   return (
     <main data-variation="${escape(variation.label)}" className="variation-${look.layout}" style={{ fontFamily: ${JSON.stringify(look.font)}, background: '${look.paper}', color: '${look.ink}', minHeight: '100vh', padding: 48 }}>
@@ -131,6 +134,7 @@ function withReferenceSection(
 ): string {
   const section = referenceSection(reference);
   const closeBody = source.lastIndexOf("</body>");
+
   return closeBody === -1
     ? `${source}${section}`
     : `${source.slice(0, closeBody)}${section}${source.slice(closeBody)}`;
@@ -162,32 +166,42 @@ export async function runVariationMock(
 ): Promise<string> {
   const variation = request.variation;
   const reference = request.reference;
+
   if (variation) {
     await writer.say(`Building option ${variation.label}: ${variation.title}.`);
-    if (kind === "html")
+
+    if (kind === "html") {
       await writer.writeFileAsTool(
         "Write",
         "index.html",
         variationPage(title, variation)
       );
-    else
+    } else {
       await writer.writeFileAsTool(
         "Write",
         "src/App.tsx",
         variationApp(title, variation)
       );
+    }
+
     const finalText = `Wrote option ${variation.label} (${variation.title}).`;
     await writer.say(finalText);
+
     return finalText;
   }
-  if (!reference)
+
+  if (!reference) {
     throw new Error("runVariationMock needs a variation or a reference");
+  }
+
   await writer.say(
     `Adapting the ${reference.tag} from ${reference.fromLabel}.`
   );
+
   if (kind === "html") {
     const current =
       (await readOptional(path.join(workTree, "index.html"))) ?? "";
+
     await writer.writeFileAsTool(
       "Edit",
       "index.html",
@@ -196,6 +210,7 @@ export async function runVariationMock(
   } else {
     const current =
       (await readOptional(path.join(workTree, "src", "App.tsx"))) ?? "";
+
     const marker = `<p className="mock-mix" data-from="${escape(reference.fromLabel)}">Adapted ${escape(reference.tag)} from ${escape(reference.fromLabel)}.</p>`;
     await writer.writeFileAsTool(
       "Edit",
@@ -203,7 +218,9 @@ export async function runVariationMock(
       current.replace(/(<\/main>)/, `  ${marker}\n    $1`)
     );
   }
+
   const finalText = `Adapted the ${reference.tag} from ${reference.fromLabel}.`;
   await writer.say(finalText);
+
   return finalText;
 }

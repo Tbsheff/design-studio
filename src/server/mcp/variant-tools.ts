@@ -39,13 +39,16 @@ const keepVariant = defineTool(
   async (deps, input) => {
     const project = await deps.projects.get(input.projectId);
     const variant = project.directions.find((d) => d.id === input.directionId);
+
     if (
       !variant?.variation?.scope ||
       variant.variation.groupId !== input.groupId
-    )
+    ) {
       throw new EditError(
         "No element variant with that groupId and directionId. Call list_variants."
       );
+    }
+
     const kept = await studioCall<{
       versionId: string;
       directionId: string;
@@ -56,11 +59,14 @@ const keepVariant = defineTool(
       `/api/projects/${encodeURIComponent(project.id)}/variations/${encodeURIComponent(input.groupId)}/keep`,
       { directionId: input.directionId }
     );
+
     const latest = await deps.projects.get(project.id);
     const target = latest.directions.find((d) => d.id === kept.directionId);
+
     const version: Version | null = target
       ? await deps.versions.get(latest, kept.versionId).catch(() => null)
       : null;
+
     return {
       result: ok({
         kept: kept.label,
@@ -86,16 +92,24 @@ const PAGE_NOTE =
 
 function pageGroups(project: Project): Map<string, Direction[]> {
   const groups = new Map<string, Direction[]>();
+
   for (const direction of project.directions) {
     const variation = direction.variation;
-    if (!variation || variation.scope) continue;
+
+    if (!variation || variation.scope) {
+      continue;
+    }
+
     groups.set(variation.groupId, [
       ...(groups.get(variation.groupId) ?? []),
       direction,
     ]);
   }
-  for (const list of groups.values())
+
+  for (const list of groups.values()) {
     list.sort((a, b) => (a.variation?.index ?? 0) - (b.variation?.index ?? 0));
+  }
+
   return groups;
 }
 
@@ -104,10 +118,13 @@ function pageVariation(
   directionId: string
 ): { direction: Direction; group: Direction[] } {
   const direction = project.directions.find((item) => item.id === directionId);
-  if (!direction?.variation || direction.variation.scope)
+
+  if (!direction?.variation || direction.variation.scope) {
     throw new EditError(
       `No page variation with directionId ${directionId}. Call list_page_variations.`
     );
+  }
+
   return {
     direction,
     group: pageGroups(project).get(direction.variation.groupId) ?? [direction],
@@ -122,10 +139,12 @@ function refuseRunning(
   const running = directions.filter((item) =>
     deps.runner.isRunning(project.id, item.id)
   );
-  if (running.length > 0)
+
+  if (running.length > 0) {
     throw new EditError(
       `${running.map((item) => item.variation?.label ?? item.name).join(", ")} still ${running.length === 1 ? "runs" : "run"}. Wait for the run to finish, or stop it in the studio, then try again.`
     );
+  }
 }
 
 async function settle(
@@ -135,14 +154,22 @@ async function settle(
   keptId: string | null
 ): Promise<void> {
   for (const direction of directions) {
-    if (!direction.variation) continue;
+    if (!direction.variation) {
+      continue;
+    }
+
     const settled = direction.id === keptId ? "kept" : "discarded";
-    if (direction.variation.settled === settled) continue;
+
+    if (direction.variation.settled === settled) {
+      continue;
+    }
+
     const updated = await deps.projects.updateDirection(
       project.id,
       direction.id,
       { variation: { ...direction.variation, settled } }
     );
+
     deps.bus.emit({
       type: "direction.updated",
       projectId: project.id,
@@ -164,16 +191,24 @@ async function dropFrames(
       const frames = file.frames.filter(
         (frame) => !frame.directionId || !drop.has(frame.directionId)
       );
+
       removed = file.frames.length - frames.length;
-      if (removed === 0) return null;
-      if (frames.length === 0)
+
+      if (removed === 0) {
+        return null;
+      }
+
+      if (frames.length === 0) {
         throw new EditError(
           "The canvas needs at least one frame, so this variation frame stays."
         );
+      }
+
       return { ...file, frames };
     },
     { source: "agent" }
   );
+
   return removed;
 }
 
@@ -197,6 +232,7 @@ const listPageVariations = defineTool(
   async (deps, input) => {
     const project = await deps.projects.get(input.projectId);
     const frames = (await deps.canvas.read(project)).canvas?.frames ?? [];
+
     const groups = [...pageGroups(project)].map(([groupId, list]) => ({
       groupId,
       prompt: list[0]?.variation?.prompt ?? "",
@@ -212,6 +248,7 @@ const listPageVariations = defineTool(
           .map((frame) => frame.id),
       })),
     }));
+
     return {
       result: ok(
         groups.length > 0
@@ -235,12 +272,15 @@ const keepPageVariation = defineTool(
     const { direction, group } = pageVariation(project, input.directionId);
     refuseRunning(deps, project, group);
     const others = group.filter((item) => item.id !== direction.id);
+
     const removed = await dropFrames(
       deps,
       project,
       new Set(others.map((item) => item.id))
     );
+
     await settle(deps, project, group, direction.id);
+
     return {
       result: ok({
         kept: labelOf(direction),
@@ -271,16 +311,21 @@ const discardPageVariation = defineTool(
     const project = await deps.projects.get(input.projectId);
     const { direction, group } = pageVariation(project, input.directionId);
     refuseRunning(deps, project, [direction]);
+
     const open = group.filter(
       (item) =>
         item.id !== direction.id && item.variation?.settled !== "discarded"
     );
-    if (open.length === 0)
+
+    if (open.length === 0) {
       throw new EditError(
         "This is the last open variation of its group. Use keep_page_variation to keep it."
       );
+    }
+
     const removed = await dropFrames(deps, project, new Set([direction.id]));
     await settle(deps, project, [direction], null);
+
     return {
       result: ok({
         discarded: labelOf(direction),

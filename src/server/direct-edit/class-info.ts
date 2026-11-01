@@ -42,13 +42,24 @@ function variantClasses(
 ): Pick<VariantSupport, "props" | "set"> {
   const props = new Set<string>();
   const set: string[] = [];
+
   for (const token of classes) {
     const parsed = parseClass(token);
-    if (parsed.variants !== variant) continue;
+
+    if (parsed.variants !== variant) {
+      continue;
+    }
+
     set.push(token);
     const cls = classify(parsed, theme);
-    if (cls) for (const prop of classProps(cls)) props.add(prop);
+
+    if (cls) {
+      for (const prop of classProps(cls)) {
+        props.add(prop);
+      }
+    }
   }
+
   return { props: [...props], set };
 }
 
@@ -58,7 +69,8 @@ function classSupport(
   variant: string
 ): VariantSupport {
   const breakpoints = breakpointsOf(theme);
-  if (!tailwind || tailwind.mode !== "classes")
+
+  if (!tailwind || tailwind.mode !== "classes") {
     return {
       mode: "none",
       reason:
@@ -67,6 +79,8 @@ function classSupport(
       props: [],
       set: [],
     };
+  }
+
   return {
     mode: "classes",
     reason: null,
@@ -85,28 +99,36 @@ export async function elementClassInfo(
 ): Promise<ElementClassInfo> {
   const target = await resolveSource(workTree, loc.file);
   const code = await readFile(target.file, "utf-8");
+
   const theme = await themeForFile(workTree, target.relative, code, {
     projectKind,
   });
+
   const extension = path.extname(target.relative).toLowerCase();
   const position = { line: loc.line, col: loc.col };
   const html = extension === ".html" || extension === ".htm";
   const typescript = extension === ".tsx";
   const variant = normalizeVariant(rawVariant) ?? "";
+
   const tailwind = html
     ? htmlClassInfo(code, position, theme)
     : jsxClassInfo(code, position, typescript, theme);
+
   const element = html
     ? null
     : jsxElementInfo(code, position, typescript, target.relative);
-  if (theme)
+
+  if (theme) {
     return {
       tailwind,
       element,
       variants: classSupport(tailwind, theme, variant),
     };
+  }
+
   if (html) {
     const decls = variant ? htmlVariantProps(code, position, variant) : [];
+
     return {
       tailwind,
       element,
@@ -119,6 +141,7 @@ export async function elementClassInfo(
       },
     };
   }
+
   return {
     tailwind,
     element,

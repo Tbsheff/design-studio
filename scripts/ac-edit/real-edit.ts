@@ -23,16 +23,21 @@ const ROOT = path.resolve(
   "..",
   ".."
 );
+
 const PORT = 4480;
 const PREVIEW_PORT = 4481;
 const BASE = `http://127.0.0.1:${PORT}`;
 const MODEL = "claude-haiku-5-5";
 const BUDGET = 0.5;
+
 const CREATE_PROMPT =
   "A landing page for a neighborhood bakery with a hero and three product cards. Each card has a short title and one sentence.";
+
 const SELECT_PROMPT = "Make this title red.";
+
 const FOLLOW_PROMPT =
   'Change the text of the main call-to-action button to "Order now".';
+
 const OUT = path.join(ROOT, "verification", "ac-edit-evidence");
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -43,11 +48,18 @@ async function waitFor<T>(
   timeoutMs: number
 ): Promise<T> {
   const deadline = Date.now() + timeoutMs;
+
   for (;;) {
     const value = await fn().catch(() => null);
-    if (value !== null) return value;
-    if (Date.now() > deadline)
+
+    if (value !== null) {
+      return value;
+    }
+
+    if (Date.now() > deadline) {
       throw new Error(`timed out waiting for ${label}`);
+    }
+
     await sleep(500);
   }
 }
@@ -72,6 +84,7 @@ interface ElementColor {
 
 async function colorMap(page: Page): Promise<ElementColor[]> {
   const frame = await previewFrame(page);
+
   return frame.evaluate(() =>
     [...document.body.querySelectorAll("*")]
       .filter((el) => !["SCRIPT", "STYLE"].includes(el.tagName))
@@ -85,8 +98,13 @@ async function colorMap(page: Page): Promise<ElementColor[]> {
 
 function isRed(color: string): boolean {
   const match = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(color);
-  if (!match) return false;
+
+  if (!match) {
+    return false;
+  }
+
   const [r, g, b] = [Number(match[1]), Number(match[2]), Number(match[3])];
+
   return r >= 150 && g <= 90 && b <= 90;
 }
 
@@ -95,17 +113,21 @@ function toolSummary(run: RunSummary, workTree: string): string[] {
     const file = String(
       (tool.input as { file_path?: unknown }).file_path ?? ""
     );
+
     return `${tool.name}${file ? `:${path.relative(workTree, file)}` : ""}${tool.isError ? ":error" : ""}`;
   });
 }
 
 async function main(): Promise<void> {
   mkdirSync(OUT, { recursive: true });
+
   const work = realpathSync(
     mkdtempSync(path.join(os.tmpdir(), "studio ac edit real "))
   );
+
   const dataDir = path.join(work, "data");
   const log = createWriteStream(path.join(work, "server.log"));
+
   const server = spawn(
     path.join(ROOT, "node_modules", ".bin", "tsx"),
     ["src/server/index.ts"],
@@ -124,24 +146,30 @@ async function main(): Promise<void> {
       stdio: ["ignore", "pipe", "pipe"],
     }
   );
+
   server.stdout.pipe(log);
   server.stderr.pipe(log);
   const browser = await chromium.launch({ channel: "chrome", headless: true });
   const report: Record<string, unknown> = { model: MODEL, dataDir };
+
   try {
     await waitFor(
       "server",
       async () => ((await fetch(`${BASE}/`)).ok ? true : null),
       60_000
     );
+
     const page = await browser.newPage({
       viewport: { width: 1600, height: 1000 },
     });
+
     await page.goto(BASE);
+
     const token =
       (await page
         .locator('meta[name="studio-token"]')
         .getAttribute("content")) ?? "";
+
     const call = async <T>(
       method: string,
       route: string,
@@ -155,10 +183,14 @@ async function main(): Promise<void> {
         },
         body: body === undefined ? undefined : JSON.stringify(body),
       });
-      if (!res.ok)
+
+      if (!res.ok) {
         throw new Error(`${method} ${route} ${res.status} ${await res.text()}`);
+      }
+
       return (await res.json()) as T;
     };
+
     const finished = async (
       pid: string,
       count: number
@@ -170,18 +202,22 @@ async function main(): Promise<void> {
             "GET",
             `/api/projects/${pid}/runs`
           );
+
           return runs.filter((run) => run.status !== "running").length >= count
             ? runs
             : null;
         },
         600_000
       );
+
     const gitDir = (pid: string) => path.join(dataDir, "projects", pid, "git");
+
     const diffBetween = (pid: string, a: string, b: string) =>
       execFileSync("git", ["diff", "-U0", a, b], {
         env: { ...process.env, GIT_DIR: gitDir(pid) },
         encoding: "utf-8",
       });
+
     const sortedVersions = async (pid: string) =>
       [
         ...(await call<Version[]>(
@@ -199,6 +235,7 @@ async function main(): Promise<void> {
         settings: { model: MODEL, maxBudgetUsd: BUDGET },
       }
     );
+
     const workTree = project.directions[0]?.workTree ?? "";
     report.projectId = project.id;
     await page.evaluate(
@@ -213,16 +250,21 @@ async function main(): Promise<void> {
     await finished(project.id, 1);
     await sleep(1500);
     let frame = await previewFrame(page);
+
     const target = await frame.evaluate(() => {
       const headings = [...document.querySelectorAll("h2, h3, h4")];
       const counts = new Map<string, Element[]>();
+
       for (const heading of headings) {
         const key = `${heading.tagName}|${heading.parentElement?.className ?? ""}`;
         counts.set(key, [...(counts.get(key) ?? []), heading]);
       }
+
       const group =
         [...counts.values()].sort((a, b) => b.length - a.length)[0] ?? headings;
+
       const chosen = group[0];
+
       return chosen
         ? {
             loc: chosen.getAttribute("data-studio-loc"),
@@ -232,7 +274,11 @@ async function main(): Promise<void> {
           }
         : null;
     });
-    if (!target?.loc) throw new Error("no card title found");
+
+    if (!target?.loc) {
+      throw new Error("no card title found");
+    }
+
     report.target = target;
     const colorsBefore = await colorMap(page);
 
@@ -251,13 +297,16 @@ async function main(): Promise<void> {
     frame = await previewFrame(page);
     const v1 = await sortedVersions(project.id);
     const [createVersion, selectVersion] = v1;
+
     const selectDiff =
       createVersion && selectVersion
         ? diffBetween(project.id, createVersion.id, selectVersion.id)
         : "";
+
     const sameShape =
       colorsBefore.length === colorsAfter.length &&
       colorsBefore.every((el, index) => el.tag === colorsAfter[index]?.tag);
+
     const colorChanges = sameShape
       ? colorsBefore.flatMap((el, index) =>
           el.color !== colorsAfter[index]?.color
@@ -265,8 +314,10 @@ async function main(): Promise<void> {
             : []
         )
       : null;
+
     const targetAfter =
       colorChanges?.filter((change) => change.text === target.text) ?? [];
+
     report.ac28 = {
       selectDiff,
       changedLineCount: selectDiff
@@ -284,16 +335,22 @@ async function main(): Promise<void> {
     };
 
     const chip = page.locator(".chip button");
-    if (await chip.count()) await chip.first().click();
+
+    if (await chip.count()) {
+      await chip.first().click();
+    }
+
     await page.getByPlaceholder("Describe a change").fill(FOLLOW_PROMPT);
     await page.getByRole("button", { name: "Send" }).click();
     const runs = await finished(project.id, 3);
     const v2 = await sortedVersions(project.id);
     const followVersion = v2[v2.length - 1];
+
     const followDiff =
       selectVersion && followVersion
         ? diffBetween(project.id, selectVersion.id, followVersion.id)
         : "";
+
     const fileLines = execFileSync(
       "git",
       ["show", `${followVersion?.id}:index.html`],
@@ -302,6 +359,7 @@ async function main(): Promise<void> {
         encoding: "utf-8",
       }
     ).split("\n").length;
+
     const ordered = [...runs].sort((a, b) => a.startedAt - b.startedAt);
     report.runs = ordered.map((run) => ({
       prompt: run.request.prompt,
@@ -336,6 +394,7 @@ async function main(): Promise<void> {
     );
     console.log(JSON.stringify(report, null, 2));
     await browser.close();
+
     try {
       process.kill(-(server.pid ?? 0), "SIGTERM");
     } catch {

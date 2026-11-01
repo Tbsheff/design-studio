@@ -51,20 +51,30 @@ function shortText(raw: unknown): string | null {
 }
 
 export function parseEditScope(raw: unknown): EditScope | undefined {
-  if (raw === undefined || raw === null || typeof raw !== "object")
+  if (raw === undefined || raw === null || typeof raw !== "object") {
     return undefined;
+  }
+
   const value = raw as Record<string, unknown>;
+
   const choice =
     value.choice === "this" || value.choice === "all" ? value.choice : null;
+
   const file = shortText(value.file);
-  if (!choice || !file) return undefined;
+
+  if (!choice || !file) {
+    return undefined;
+  }
+
   const routes = Array.isArray(value.routes)
     ? value.routes
         .map(shortText)
         .filter((route): route is string => route !== null)
         .slice(0, EDIT_SCOPE_ROUTES_MAX)
     : [];
+
   const callSite = parseSite(value.callSite);
+
   return {
     choice,
     file,
@@ -75,17 +85,24 @@ export function parseEditScope(raw: unknown): EditScope | undefined {
 }
 
 function parseSite(raw: unknown): EditScopeSite | undefined {
-  if (raw === undefined || raw === null || typeof raw !== "object")
+  if (raw === undefined || raw === null || typeof raw !== "object") {
     return undefined;
+  }
+
   const value = raw as Record<string, unknown>;
   const file = shortText(value.file);
+
   const kind =
     value.kind === "page" ||
     value.kind === "component" ||
     value.kind === "layout"
       ? value.kind
       : null;
-  if (!file || !kind) return undefined;
+
+  if (!file || !kind) {
+    return undefined;
+  }
+
   return { file, kind, pageFile: shortText(value.pageFile) };
 }
 

@@ -53,6 +53,7 @@ import {
 import { createKeyedMutex } from "./mutex.js";
 
 const MAIN_DIRECTION_ID = "main";
+
 const DEFAULT_TEMPLATE_DIR = resourcePath(
   path.join("templates", "react-vite"),
   path.resolve(
@@ -62,6 +63,7 @@ const DEFAULT_TEMPLATE_DIR = resourcePath(
     "react-vite"
   )
 );
+
 const PREBUILT_TEMPLATE_DIR = "react-template";
 
 const directionId = customAlphabet("0123456789abcdefghijklmnopqrstuvwxyz", 8);
@@ -118,13 +120,16 @@ export interface ImportOptions {
 }
 
 const ENV_KEY = /^[A-Z_][A-Z0-9_]{0,63}$/;
+
 const BLOCKED_ENV_KEY =
   /^(STUDIO_|ANTHROPIC_|CLAUDE_|NODE_OPTIONS$|PATH$|HOME$)/;
+
 const MAX_ENV_KEYS = 64;
 const LOOPBACK_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
 
 export function cleanAppUrl(raw: string): string {
   let url: URL;
+
   try {
     url = new URL(raw.trim());
   } catch {
@@ -132,36 +137,57 @@ export function cleanAppUrl(raw: string): string {
       "url must be a full http URL, for example http://localhost:3000"
     );
   }
-  if (url.protocol !== "http:" && url.protocol !== "https:")
+
+  if (url.protocol !== "http:" && url.protocol !== "https:") {
     throw new BadRequestError("url must use http or https");
-  if (!LOOPBACK_HOSTS.has(url.hostname))
+  }
+
+  if (!LOOPBACK_HOSTS.has(url.hostname)) {
     throw new BadRequestError(
       "url must point at a dev server on this computer (localhost or 127.0.0.1)"
     );
-  if (url.username || url.password)
+  }
+
+  if (url.username || url.password) {
     throw new BadRequestError("url must not hold a user name or password");
+  }
+
   return url.origin;
 }
 
 function cleanAppEnv(raw: unknown): Record<string, string> | undefined {
-  if (raw === undefined || raw === null) return undefined;
-  if (typeof raw !== "object" || Array.isArray(raw))
+  if (raw === undefined || raw === null) {
+    return undefined;
+  }
+
+  if (typeof raw !== "object" || Array.isArray(raw)) {
     throw new BadRequestError("env must be an object of strings");
+  }
+
   const entries = Object.entries(raw as Record<string, unknown>);
-  if (entries.length > MAX_ENV_KEYS)
+
+  if (entries.length > MAX_ENV_KEYS) {
     throw new BadRequestError(`env takes at most ${MAX_ENV_KEYS} keys`);
+  }
+
   const env: Record<string, string> = {};
+
   for (const [key, value] of entries) {
-    if (!ENV_KEY.test(key) || BLOCKED_ENV_KEY.test(key))
+    if (!ENV_KEY.test(key) || BLOCKED_ENV_KEY.test(key)) {
       throw new BadRequestError(`env key ${key} is not allowed`);
+    }
+
     if (
       typeof value !== "string" ||
       value.length > 4000 ||
       value.includes("\0")
-    )
+    ) {
       throw new BadRequestError(`env ${key} must be a short string`);
+    }
+
     env[key] = value;
   }
+
   return env;
 }
 
@@ -169,11 +195,14 @@ function migrateSettings(
   project: Pick<Project, "settings" | "settingsVersion">
 ): ProjectSettings {
   const settings = { ...DEFAULT_SETTINGS, ...project.settings };
+
   if (
     (project.settingsVersion ?? 1) < SETTINGS_VERSION &&
     settings.maxBudgetUsd === LEGACY_DEFAULT_BUDGET_USD
-  )
+  ) {
     settings.maxBudgetUsd = null;
+  }
+
   return settings;
 }
 
@@ -181,12 +210,18 @@ function attachmentProblem(name: string, mime: string): string | null {
   const allowed = ATTACHMENT_IMAGE_TYPES[mime.toLowerCase()];
   const extension = path.extname(name).slice(1).toLowerCase();
   const message = `Attachments must be PNG, JPEG, GIF or WebP images. "${name || "file"}" (${mime || "unknown type"}) is not allowed.`;
-  if (!allowed) return message;
+
+  if (!allowed) {
+    return message;
+  }
+
   if (
     extension !== "" &&
     !Object.values(ATTACHMENT_IMAGE_TYPES).flat().includes(extension)
-  )
+  ) {
     return message;
+  }
+
   return null;
 }
 
@@ -202,13 +237,15 @@ function runNpmInstall(cwd: string): Promise<void> {
       ["install", "--no-audit", "--no-fund"],
       { cwd, maxBuffer: 64 * 1024 * 1024 },
       (error, _stdout, stderr) => {
-        if (error)
+        if (error) {
           reject(
             new Error(
               `npm install failed in ${cwd}: ${stderr.trim() || error.message}`
             )
           );
-        else resolve();
+        } else {
+          resolve();
+        }
       }
     );
   });
@@ -233,24 +270,35 @@ async function prebuiltMatches(
   prebuilt: string,
   cacheDir: string
 ): Promise<boolean> {
-  if (!existsSync(path.join(prebuilt, "node_modules"))) return false;
+  if (!existsSync(path.join(prebuilt, "node_modules"))) {
+    return false;
+  }
+
   const [wanted, shipped] = await Promise.all([
     readFile(path.join(cacheDir, "package.json"), "utf-8"),
     readFile(path.join(prebuilt, "package.json"), "utf-8"),
   ]);
+
   return wanted === shipped;
 }
 
 async function installTemplateModules(cacheDir: string): Promise<void> {
   const prebuilt = packagedResource(PREBUILT_TEMPLATE_DIR);
-  if (prebuilt && (await prebuiltMatches(prebuilt, cacheDir)))
+
+  if (prebuilt && (await prebuiltMatches(prebuilt, cacheDir))) {
     return copyPrebuiltModules(prebuilt, cacheDir);
+  }
+
   return runNpmInstall(cacheDir);
 }
 
 function extensionFor(name: string, mime: string): string {
   const fromName = path.extname(name).slice(1).toLowerCase();
-  if (/^[a-z0-9]{1,8}$/.test(fromName)) return fromName;
+
+  if (/^[a-z0-9]{1,8}$/.test(fromName)) {
+    return fromName;
+  }
+
   return MIME_EXTENSIONS[mime] ?? "bin";
 }
 
@@ -260,7 +308,11 @@ async function linkNodeModules(
 ): Promise<void> {
   const real = await realpath(sourceModules);
   const link = path.join(workTree, "node_modules");
-  if (existsSync(link)) return;
+
+  if (existsSync(link)) {
+    return;
+  }
+
   await symlink(real, link, "dir");
 }
 
@@ -269,11 +321,16 @@ async function readJson(file: string): Promise<unknown> {
 }
 
 function hasViteDependency(pkg: unknown): boolean {
-  if (typeof pkg !== "object" || pkg === null) return false;
+  if (typeof pkg !== "object" || pkg === null) {
+    return false;
+  }
+
   const record = pkg as Record<string, unknown>;
+
   return ["dependencies", "devDependencies", "peerDependencies"].some(
     (field) => {
       const deps = record[field];
+
       return typeof deps === "object" && deps !== null && "vite" in deps;
     }
   );
@@ -284,37 +341,52 @@ async function pickAppDir(
   requested: string | undefined
 ): Promise<string> {
   let appDir: string | null;
+
   if (typeof requested === "string" && requested.trim() !== "") {
     appDir = cleanAppDir(requested);
-    if (appDir === null)
+
+    if (appDir === null) {
       throw new BadRequestError(
         "appDir must be a folder inside the attached folder"
       );
+    }
   } else {
     const detection = await detectApp(folder);
-    if (detection.appDir === null && detection.candidates.length > 1)
+
+    if (detection.appDir === null && detection.candidates.length > 1) {
       throw new PickAppError(detection.candidates);
+    }
+
     appDir = detection.framework === "next" ? detection.appDir : null;
   }
-  if (appDir === null)
+
+  if (appDir === null) {
     throw new BadRequestError(
       "no Next.js app found: the folder or one of its apps/* folders needs a package.json with a next dependency and an app/ folder"
     );
+  }
+
   const appRoot = await realpath(path.join(folder, appDir)).catch(() => null);
+
   if (
     !appRoot ||
     (appRoot !== folder && !appRoot.startsWith(folder + path.sep))
-  )
+  ) {
     throw new BadRequestError(
       `appDir ${appDir} is not a folder inside ${folder}`
     );
+  }
+
   const pkg = (await readJson(path.join(appRoot, "package.json")).catch(
     () => null
   )) as Record<string, unknown> | null;
-  if (frameworkOf(pkg) !== "next")
+
+  if (frameworkOf(pkg) !== "next") {
     throw new BadRequestError(
       `${appDir} has no next dependency in its package.json`
     );
+  }
+
   return appDir;
 }
 
@@ -326,9 +398,14 @@ async function workspaceAppDir(
     typeof requested === "string" && requested.trim() !== ""
       ? cleanAppDir(requested)
       : ".";
-  if (sub === null) return null;
+
+  if (sub === null) {
+    return null;
+  }
+
   const target = await realpath(path.join(folder, sub)).catch(() => null);
   const workspace = target ? await nextAppWorkspace(target) : null;
+
   return workspace && workspace.root !== folder
     ? { root: workspace.root, appDir: workspace.appDir }
     : null;
@@ -348,8 +425,10 @@ export function createProjectStore(
 
   const projectDir = (projectId: string): string =>
     path.join(projectsRoot, assertSafeId(projectId, "projectId"));
+
   const projectFile = (projectId: string): string =>
     path.join(projectDir(projectId), "project.json");
+
   const attachmentsDir = (projectId: string): string =>
     path.join(projectDir(projectId), "attachments");
 
@@ -357,24 +436,32 @@ export function createProjectStore(
     templateInstall ??= (async () => {
       const modules = path.join(templateCacheDir, "node_modules");
       const marker = path.join(templateCacheDir, ".studio-installed");
+
       const pkg = await readFile(
         path.join(templateDir, "package.json"),
         "utf-8"
       );
+
       const installedFor = existsSync(marker)
         ? await readFile(marker, "utf-8")
         : null;
-      if (installedFor === pkg && existsSync(modules)) return modules;
+
+      if (installedFor === pkg && existsSync(modules)) {
+        return modules;
+      }
+
       await mkdir(templateCacheDir, { recursive: true });
       await writeFile(path.join(templateCacheDir, "package.json"), pkg);
       await installDeps(templateCacheDir);
       await mkdir(modules, { recursive: true });
       await writeFile(marker, pkg);
+
       return modules;
     })().catch((error: unknown) => {
       templateInstall = null;
       throw error;
     });
+
     return templateInstall;
   };
 
@@ -382,10 +469,13 @@ export function createProjectStore(
     try {
       const project = (await readJson(projectFile(projectId))) as Project;
       project.settings = migrateSettings(project);
+
       return project;
     } catch (error) {
-      if (isNodeError(error) && error.code === "ENOENT")
+      if (isNodeError(error) && error.code === "ENOENT") {
         throw new NotFoundError(`project ${projectId} not found`);
+      }
+
       throw error;
     }
   };
@@ -403,10 +493,13 @@ export function createProjectStore(
     const direction = project.directions.find(
       (candidate) => candidate.id === id
     );
-    if (!direction)
+
+    if (!direction) {
       throw new NotFoundError(
         `direction ${id} not found in project ${project.id}`
       );
+    }
+
     return direction;
   };
 
@@ -415,8 +508,11 @@ export function createProjectStore(
       project.directions.find(
         (candidate) => candidate.id === MAIN_DIRECTION_ID
       ) ?? project.directions[0];
-    if (!direction)
+
+    if (!direction) {
       throw new NotFoundError(`project ${project.id} has no directions`);
+    }
+
     return direction;
   };
 
@@ -456,26 +552,38 @@ export function createProjectStore(
   });
 
   const resolveUserFolder = async (sourcePath: string): Promise<string> => {
-    if (typeof sourcePath !== "string" || sourcePath.trim() === "")
+    if (typeof sourcePath !== "string" || sourcePath.trim() === "") {
       throw new BadRequestError("path is required");
-    if (sourcePath.includes("\0")) throw new BadRequestError("invalid path");
+    }
+
+    if (sourcePath.includes("\0")) {
+      throw new BadRequestError("invalid path");
+    }
+
     let folder: string;
+
     try {
       folder = await realpath(path.resolve(sourcePath));
     } catch {
       throw new BadRequestError(`folder not found: ${sourcePath}`);
     }
-    if (!(await stat(folder)).isDirectory())
+
+    if (!(await stat(folder)).isDirectory()) {
       throw new BadRequestError(`not a folder: ${folder}`);
-    if (isInsideDataDir(folder))
+    }
+
+    if (isInsideDataDir(folder)) {
       throw new BadRequestError(
         "cannot use a folder inside the studio data dir"
       );
+    }
+
     return folder;
   };
 
   const isInsideDataDir = (folder: string): boolean => {
     const dataRoot = path.resolve(config.dataDir);
+
     return folder === dataRoot || folder.startsWith(dataRoot + path.sep);
   };
 
@@ -485,16 +593,24 @@ export function createProjectStore(
   ): Promise<string> => {
     for (let attempt = 1; attempt <= MAX_SLUG_SUFFIX; attempt += 1) {
       const candidate = path.join(parent, slugCandidate(slug, attempt));
-      if (path.dirname(candidate) !== parent)
+
+      if (path.dirname(candidate) !== parent) {
         throw new BadRequestError("invalid project folder name");
+      }
+
       try {
         await mkdir(candidate);
+
         return candidate;
       } catch (error) {
-        if (isNodeError(error) && error.code === "EEXIST") continue;
+        if (isNodeError(error) && error.code === "EEXIST") {
+          continue;
+        }
+
         throw error;
       }
     }
+
     throw new ConflictError(`no free folder name for ${slug} in ${parent}`);
   };
 
@@ -510,6 +626,7 @@ export function createProjectStore(
   ): Promise<Project> => {
     const id = nanoid(10);
     const now = Date.now();
+
     const project = newProject(
       id,
       input.name,
@@ -517,13 +634,19 @@ export function createProjectStore(
       newDirection(MAIN_DIRECTION_ID, "Main", folder, now),
       now
     );
+
     project.imported = input.created
       ? { sourcePath: folder, created: true }
       : { sourcePath: folder };
     project.settings = { ...project.settings, ...input.settings };
-    if (input.designSystemFor) project.designSystemFor = input.designSystemFor;
+
+    if (input.designSystemFor) {
+      project.designSystemFor = input.designSystemFor;
+    }
+
     await mkdir(attachmentsDir(id), { recursive: true });
     await writeProject(project);
+
     return project;
   };
 
@@ -538,6 +661,7 @@ export function createProjectStore(
         keepEnv && project.app?.env ? { ...app, env: project.app.env } : app;
       project.updatedAt = Date.now();
       await writeProject(project);
+
       return project;
     });
 
@@ -547,21 +671,28 @@ export function createProjectStore(
     mainDirection,
 
     async list(): Promise<Project[]> {
-      if (!existsSync(projectsRoot)) return [];
+      if (!existsSync(projectsRoot)) {
+        return [];
+      }
+
       const entries = await readdir(projectsRoot, { withFileTypes: true });
       const projects: Project[] = [];
+
       for (const entry of entries) {
         if (
           !entry.isDirectory() ||
           !existsSync(path.join(projectsRoot, entry.name, "project.json"))
-        )
+        ) {
           continue;
+        }
+
         try {
           projects.push(await readProject(entry.name));
         } catch (error) {
           console.error(`[projects] cannot read project ${entry.name}`, error);
         }
       }
+
       return projects.sort((a, b) => b.updatedAt - a.updatedAt);
     },
 
@@ -572,15 +703,19 @@ export function createProjectStore(
       kind: ProjectKind;
       settings?: Partial<ProjectSettings>;
     }): Promise<Project> {
-      if (input.kind !== "html" && input.kind !== "react")
+      if (input.kind !== "html" && input.kind !== "react") {
         throw new BadRequestError("kind must be html or react");
+      }
+
       const id = nanoid(10);
       const now = Date.now();
+
       const workTree = path.join(
         projectDir(id),
         "directions",
         MAIN_DIRECTION_ID
       );
+
       const project = newProject(
         id,
         input.name.trim() || "Untitled",
@@ -588,41 +723,53 @@ export function createProjectStore(
         newDirection(MAIN_DIRECTION_ID, "Main", workTree, now),
         now
       );
+
       project.settings = { ...project.settings, ...input.settings };
+
       try {
         await mkdir(workTree, { recursive: true });
         await mkdir(attachmentsDir(id), { recursive: true });
+
         if (input.kind === "react") {
           await cp(templateDir, workTree, { recursive: true });
           await linkNodeModules(workTree, await ensureTemplateModules());
         }
+
         await writeProject(project);
       } catch (error) {
         await rm(projectDir(id), { recursive: true, force: true });
         throw error;
       }
+
       return project;
     },
 
     async attachApp(input: AttachAppRequest): Promise<Project> {
-      if (typeof input.folder !== "string" || input.folder.trim() === "")
+      if (typeof input.folder !== "string" || input.folder.trim() === "") {
         throw new BadRequestError(
           "folder is required: the app code must be on this computer so routes and click-to-source can read it"
         );
+      }
+
       const opened = await resolveUserFolder(input.folder);
       const workspace = await workspaceAppDir(opened, input.appDir);
+
       const folder = workspace
         ? await resolveUserFolder(workspace.root).catch(() => opened)
         : opened;
+
       const url =
         typeof input.url === "string" && input.url.trim() !== ""
           ? cleanAppUrl(input.url)
           : undefined;
+
       const env = cleanAppEnv(input.env);
+
       const appDir = await pickAppDir(
         folder,
         folder === opened ? input.appDir : workspace?.appDir
       );
+
       const app: AttachedApp = {
         framework: "next",
         appDir,
@@ -630,30 +777,39 @@ export function createProjectStore(
         ...(url ? { url } : {}),
         ...(env ? { env } : {}),
       };
+
       const existing = (await this.list()).find(
         (project) =>
           project.app &&
           project.imported?.sourcePath === folder &&
           project.app.appDir === appDir
       );
-      if (existing) return updateApp(existing.id, app, input.env === undefined);
+
+      if (existing) {
+        return updateApp(existing.id, app, input.env === undefined);
+      }
+
       const fallbackName =
         appDir === "."
           ? path.basename(folder)
           : `${path.basename(folder)} ${path.basename(appDir)}`;
+
       const name = (
         typeof input.name === "string" && input.name.trim() !== ""
           ? input.name.trim()
           : fallbackName
       ).slice(0, 120);
+
       const project = await registerFolder(folder, {
         name,
         kind: "react",
         created: false,
       });
+
       project.app = app;
       project.entry = "/";
       await writeProject(project);
+
       return project;
     },
 
@@ -662,17 +818,25 @@ export function createProjectStore(
       options: ImportOptions = {}
     ): Promise<Project> {
       const folder = await resolveUserFolder(sourcePath);
-      if (options.appDir)
+
+      if (options.appDir) {
         return this.attachApp({ folder, appDir: options.appDir });
-      if (!options.skipApp && (await detectApp(folder)).framework === "next")
+      }
+
+      if (!options.skipApp && (await detectApp(folder)).framework === "next") {
         return this.attachApp({ folder });
+      }
+
       const packageFile = path.join(folder, "package.json");
       const hasPackage = existsSync(packageFile);
+
       const isVite =
         hasPackage &&
         hasViteDependency(await readJson(packageFile).catch(() => null));
+
       const appWithTokens =
         hasPackage && !isVite && (await findTokenFile(folder)) !== null;
+
       if (
         !isVite &&
         !appWithTokens &&
@@ -682,6 +846,7 @@ export function createProjectStore(
           "folder needs a package.json with a vite dependency or an index.html"
         );
       }
+
       return registerFolder(folder, {
         name: path.basename(folder),
         kind: isVite ? "react" : "html",
@@ -696,22 +861,28 @@ export function createProjectStore(
       settings?: Partial<ProjectSettings>;
       designSystemFor?: string;
     }): Promise<Project> {
-      if (input.kind !== "html" && input.kind !== "react")
+      if (input.kind !== "html" && input.kind !== "react") {
         throw new BadRequestError("kind must be html or react");
+      }
+
       if (
         typeof input.parentPath !== "string" ||
         !path.isAbsolute(input.parentPath)
-      )
+      ) {
         throw new BadRequestError("parentPath must be an absolute path");
+      }
+
       const parent = await resolveUserFolder(input.parentPath);
       const name = input.name.trim() || "Untitled";
       const folder = await makeNewSubfolder(parent, slugify(name));
       let project: Project | null = null;
+
       try {
         if (input.kind === "react") {
           await cp(templateDir, folder, { recursive: true });
           await linkNodeModules(folder, await ensureTemplateModules());
         }
+
         project = await registerFolder(folder, {
           name,
           kind: input.kind,
@@ -719,11 +890,15 @@ export function createProjectStore(
           settings: input.settings,
           designSystemFor: input.designSystemFor,
         });
+
         return project;
       } catch (error) {
         await rm(folder, { recursive: true, force: true });
-        if (project)
+
+        if (project) {
           await rm(projectDir(project.id), { recursive: true, force: true });
+        }
+
         throw error;
       }
     },
@@ -738,10 +913,15 @@ export function createProjectStore(
     async discardCreated(projectId: string): Promise<void> {
       await lock(projectId, async () => {
         const project = await readProject(projectId);
+
         const folder = project.imported?.created
           ? project.imported.sourcePath
           : null;
-        if (folder) await rm(folder, { recursive: true, force: true });
+
+        if (folder) {
+          await rm(folder, { recursive: true, force: true });
+        }
+
         await rm(projectDir(projectId), { recursive: true, force: true });
       });
     },
@@ -750,18 +930,25 @@ export function createProjectStore(
       projectId: string,
       parentPath: string
     ): Promise<Project> {
-      if (typeof parentPath !== "string" || !path.isAbsolute(parentPath))
+      if (typeof parentPath !== "string" || !path.isAbsolute(parentPath)) {
         throw new BadRequestError("parentPath must be an absolute path");
+      }
+
       const parent = await resolveUserFolder(parentPath);
+
       return lock(projectId, async () => {
         const project = await readProject(projectId);
         const main = mainDirection(project);
         const from = main.workTree;
-        if (project.imported !== null || !isInsideDataDir(path.resolve(from)))
+
+        if (project.imported !== null || !isInsideDataDir(path.resolve(from))) {
           throw new BadRequestError(
             `project ${projectId} is not in the hidden folder`
           );
+        }
+
         const folder = await makeNewSubfolder(parent, slugify(project.name));
+
         try {
           await cp(from, folder, {
             recursive: true,
@@ -769,6 +956,7 @@ export function createProjectStore(
             force: false,
             preserveTimestamps: true,
           });
+
           const moved: Direction = {
             ...main,
             workTree: folder,
@@ -776,6 +964,7 @@ export function createProjectStore(
             sessionCostUsd: 0,
             sessionResetReason: "move",
           };
+
           project.directions = project.directions.map((direction) =>
             direction.id === main.id ? moved : direction
           );
@@ -785,6 +974,7 @@ export function createProjectStore(
           await rm(folder, { recursive: true, force: true });
           throw error;
         }
+
         await rm(from, { recursive: true, force: true }).catch(
           (error: unknown) =>
             console.error(
@@ -792,6 +982,7 @@ export function createProjectStore(
               error
             )
         );
+
         return project;
       });
     },
@@ -808,22 +999,29 @@ export function createProjectStore(
       input: { name: string; fromVersionId: string | null }
     ): Promise<Direction> {
       const project = await readProject(projectId);
-      if (project.app)
+
+      if (project.app) {
         throw new BadRequestError(
           "An attached app has one direction: the app folder itself. Directions and variations copy the folder, so they are off for attached apps."
         );
+      }
+
       const id = directionId();
       const workTree = path.join(projectDir(projectId), "directions", id);
+
       const direction = newDirection(
         id,
         input.name.trim() || `Direction ${project.directions.length + 1}`,
         workTree,
         Date.now()
       );
+
       let source = mainDirection(project);
       const fromVersionId = input.fromVersionId ?? source.headVersionId;
+
       try {
         await mkdir(workTree, { recursive: true });
+
         if (fromVersionId) {
           const version = await versions.get(project, fromVersionId);
           source =
@@ -833,20 +1031,25 @@ export function createProjectStore(
           await versions.checkoutInto(project, version.id, workTree);
           direction.parentVersionId = version.id;
         }
+
         if (project.kind === "react") {
           const sourceModules = path.join(source.workTree, "node_modules");
-          if (existsSync(sourceModules))
+
+          if (existsSync(sourceModules)) {
             await linkNodeModules(workTree, sourceModules);
+          }
         }
       } catch (error) {
         await rm(workTree, { recursive: true, force: true });
         throw error;
       }
+
       return lock(projectId, async () => {
         const latest = await readProject(projectId);
         latest.directions.push(direction);
         latest.updatedAt = Date.now();
         await writeProject(latest);
+
         return direction;
       });
     },
@@ -858,12 +1061,17 @@ export function createProjectStore(
     ): Promise<Direction> {
       return lock(projectId, async () => {
         const project = await readProject(projectId);
+
         const index = project.directions.findIndex(
           (candidate) => candidate.id === id
         );
+
         const current = project.directions[index];
-        if (index < 0 || current === undefined)
+
+        if (index < 0 || current === undefined) {
           throw new NotFoundError(`direction ${id} not found`);
+        }
+
         const updated: Direction = {
           ...current,
           ...patch,
@@ -871,9 +1079,11 @@ export function createProjectStore(
           workTree: current.workTree,
           branch: current.branch,
         };
+
         project.directions[index] = updated;
         project.updatedAt = Date.now();
         await writeProject(project);
+
         return updated;
       });
     },
@@ -887,20 +1097,28 @@ export function createProjectStore(
         project.settings = { ...project.settings, ...patch };
         project.updatedAt = Date.now();
         await writeProject(project);
+
         return project;
       });
     },
 
     rename(projectId: string, name: string): Promise<Project> {
       const trimmed = typeof name === "string" ? name.trim() : "";
-      if (trimmed === "") throw new BadRequestError("name is required");
-      if (trimmed.length > 120)
+
+      if (trimmed === "") {
+        throw new BadRequestError("name is required");
+      }
+
+      if (trimmed.length > 120) {
         throw new BadRequestError("name must be 120 characters or less");
+      }
+
       return lock(projectId, async () => {
         const project = await readProject(projectId);
         project.name = trimmed;
         project.updatedAt = Date.now();
         await writeProject(project);
+
         return project;
       });
     },
@@ -910,7 +1128,10 @@ export function createProjectStore(
       thumbnail: ProjectThumbnail
     ): Promise<void> {
       return lock(projectId, async () => {
-        if (!existsSync(projectFile(projectId))) return;
+        if (!existsSync(projectFile(projectId))) {
+          return;
+        }
+
         const project = await readProject(projectId);
         project.thumbnail = thumbnail;
         await writeProject(project);
@@ -936,6 +1157,7 @@ export function createProjectStore(
         project.designSystemDeleted = true;
         project.updatedAt = Date.now();
         await writeProject(project);
+
         return project;
       });
     },
@@ -946,6 +1168,7 @@ export function createProjectStore(
         project.packId = packId;
         project.updatedAt = Date.now();
         await writeProject(project);
+
         return project;
       });
     },
@@ -955,26 +1178,35 @@ export function createProjectStore(
       file: { name: string; mime: string; bytes: Uint8Array }
     ): Promise<Attachment> {
       const problem = attachmentProblem(file.name, file.mime);
-      if (problem) throw new BadRequestError(problem);
+
+      if (problem) {
+        throw new BadRequestError(problem);
+      }
+
       await readProject(projectId);
       const id = nanoid(12);
       const dir = attachmentsDir(projectId);
       await mkdir(dir, { recursive: true });
+
       const filePath = path.join(
         dir,
         `${id}.${extensionFor(file.name, file.mime)}`
       );
+
       await writeFile(filePath, file.bytes);
+
       const attachment: Attachment = {
         id,
         name: path.basename(file.name || id),
         mime: file.mime || "application/octet-stream",
         path: filePath,
       };
+
       await writeFileAtomic(
         path.join(dir, `${id}.json`),
         JSON.stringify(attachment)
       );
+
       return attachment;
     },
 
@@ -986,24 +1218,31 @@ export function createProjectStore(
         attachmentsDir(projectId),
         `${assertSafeId(attachmentId, "attachmentId")}.json`
       );
+
       try {
         return (await readJson(file)) as Attachment;
       } catch (error) {
-        if (isNodeError(error) && error.code === "ENOENT")
+        if (isNodeError(error) && error.code === "ENOENT") {
           throw new NotFoundError(`attachment ${attachmentId} not found`);
+        }
+
         throw error;
       }
     },
 
     async readDesignMd(projectId: string): Promise<string | null> {
       const project = await readProject(projectId);
+
       try {
         return await readFile(
           path.join(mainDirection(project).workTree, DESIGN_MD_FILE),
           "utf-8"
         );
       } catch (error) {
-        if (isNodeError(error) && error.code === "ENOENT") return null;
+        if (isNodeError(error) && error.code === "ENOENT") {
+          return null;
+        }
+
         throw error;
       }
     },

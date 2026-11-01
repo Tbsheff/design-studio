@@ -168,7 +168,11 @@ export const FIGMA_LAYERS_MAX = 600;
 
 export function looksLikeFigmaNodes(text: string): boolean {
   const head = text.trimStart();
-  if (!head.startsWith("{")) return false;
+
+  if (!head.startsWith("{")) {
+    return false;
+  }
+
   return (
     /"(nodes|document)"\s*:/.test(head.slice(0, 4000)) ||
     (/"type"\s*:\s*"(FRAME|COMPONENT|INSTANCE|GROUP|SECTION)"/.test(

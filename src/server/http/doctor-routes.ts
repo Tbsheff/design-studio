@@ -42,8 +42,11 @@ async function appProject(
   pid: string
 ): Promise<Project> {
   const project = await projects.get(pid);
-  if (!project.app)
+
+  if (!project.app) {
     throw new NotFoundError(`project ${pid} is not an attached app`);
+  }
+
   return project;
 }
 
@@ -51,7 +54,11 @@ function control(
   preview: PreviewService
 ): Required<Pick<AppControl, "doctor">> & AppControl {
   const apps = preview.apps;
-  if (!apps?.doctor) throw new BadRequestError("app servers are not available");
+
+  if (!apps?.doctor) {
+    throw new BadRequestError("app servers are not available");
+  }
+
   return apps as Required<Pick<AppControl, "doctor">> & AppControl;
 }
 
@@ -62,15 +69,20 @@ async function reattach(
 ): Promise<void> {
   const app = project.app;
   const folder = project.imported?.sourcePath;
-  if (!app || !folder)
+
+  if (!app || !folder) {
     throw new BadRequestError("project is not an attached app");
+  }
+
   const url = patch.url ?? (app.mode === "url" ? app.url : undefined);
+
   const updated = await deps.projects.attachApp({
     folder,
     appDir: app.appDir,
     ...(url ? { url } : {}),
     env: patch.env ?? app.env ?? {},
   });
+
   const apps = control(deps.preview);
   apps.forget(updated.id);
   void apps.restart(updated).catch(() => undefined);
@@ -82,16 +94,21 @@ async function applyFix(
   cause: DoctorCause
 ): Promise<string> {
   const fix = cause.fix;
-  if (!fix)
+
+  if (!fix) {
     throw new BadRequestError(
       `The ${cause.kind} problem has no one-click fix. ${cause.command ? `Run ${cause.command}.` : cause.detail}`
     );
+  }
+
   if (fix.kind === "set-env") {
     await reattach(deps, project, {
       env: { ...(project.app?.env ?? {}), ...fix.env },
     });
+
     return `Set ${Object.keys(fix.env).join(", ")} for next dev. The dev server restarts.`;
   }
+
   if (fix.kind === "copy-env-example") {
     await copyFile(fix.from, fix.to, constants.COPYFILE_EXCL).catch(
       (error: unknown) => {
@@ -103,15 +120,20 @@ async function applyFix(
     void control(deps.preview)
       .restart(project)
       .catch(() => undefined);
+
     return "Copied .env.example to .env.local with its example values. Put real values in it yourself. The dev server restarts.";
   }
+
   if (fix.kind === "use-url") {
     await reattach(deps, project, { url: fix.url });
+
     return `The studio now uses the dev server at ${fix.url}.`;
   }
+
   void control(deps.preview)
     .restart(project)
     .catch(() => undefined);
+
   return "The dev server restarts on a free port.";
 }
 
@@ -123,6 +145,7 @@ export async function readDoctor(
   const project = await appProject(deps.projects, pid);
   const apps = control(deps.preview);
   const doctor = await apps.doctor(project, fresh);
+
   return { status: apps.status(project), doctor };
 }
 
@@ -131,15 +154,20 @@ export async function fixApp(
   pid: string,
   kind: unknown
 ): Promise<AppFixResult> {
-  if (typeof kind !== "string" || !KINDS.includes(kind as DoctorCauseKind))
+  if (typeof kind !== "string" || !KINDS.includes(kind as DoctorCauseKind)) {
     throw new BadRequestError(`kind must be one of ${KINDS.join(", ")}`);
+  }
+
   const project = await appProject(deps.projects, pid);
   const doctor = await control(deps.preview).doctor(project, false);
   const cause = doctor.causes.find((item) => item.kind === kind);
-  if (!cause)
+
+  if (!cause) {
     throw new ConflictError(
       `The doctor does not see a ${kind} problem now. Read app_doctor again.`
     );
+  }
+
   return { kind: cause.kind, applied: await applyFix(deps, project, cause) };
 }
 

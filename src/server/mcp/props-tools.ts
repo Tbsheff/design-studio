@@ -125,17 +125,24 @@ export async function useSiteOf(
     await pageUrl(deps, project, direction, page),
     sel
   );
-  if (!probed) throw new EditError(`No element matches ${sel} on the page.`);
+
+  if (!probed) {
+    throw new EditError(`No element matches ${sel} on the page.`);
+  }
+
   const { instance } = await studioCall<{ instance: ComponentInstance | null }>(
     deps,
     "POST",
     `${base(project, direction.id)}/props/instance`,
     { owners: probed.owners, usedAt: probed.usedAt }
   );
-  if (!instance)
+
+  if (!instance) {
     throw new EditError(
       `${sel} is not inside a component instance with props that the studio can find. Pass source with the file:line:col of the component's JSX tag (read_file shows it), or use edit_element for classes and text.`
     );
+  }
+
   return instance;
 }
 
@@ -147,30 +154,42 @@ type ListedComponent = ComponentSchemaList["components"][number];
 
 function sharedNotes(items: ListedComponent[]): Map<string, string[]> {
   const byNote = new Map<string, string[]>();
-  for (const item of items)
-    if (item.note)
+
+  for (const item of items) {
+    if (item.note) {
       byNote.set(item.note, [...(byNote.get(item.note) ?? []), item.name]);
+    }
+  }
+
   return new Map([...byNote].filter(([, names]) => names.length > 1));
 }
 
 function compactList(list: ComponentSchemaList): unknown {
   const notes = sharedNotes(list.components);
   const firstOfFile = new Map<string, string>();
+
   const components = list.components.map((item) => {
     const { note, parts, ...rest } = item as ListedComponent & {
       parts?: string[];
     };
+
     const first = firstOfFile.get(item.file);
-    if (!first) firstOfFile.set(item.file, item.name);
+
+    if (!first) {
+      firstOfFile.set(item.file, item.name);
+    }
+
     return {
       ...rest,
       ...(note && !notes.has(note) ? { note } : {}),
       ...(first ? { sameFileAs: first } : parts ? { parts } : {}),
     };
   });
+
   const shared = [...notes].map(
     ([note, names]) => `${names.join(", ")}: ${note}`
   );
+
   return {
     ...list,
     components,
@@ -194,21 +213,30 @@ const listComponents = defineTool(
       input.projectId,
       input.directionId
     );
-    if (project.kind !== "react")
+
+    if (project.kind !== "react") {
       return {
         result: ok({
           components: [],
           note: "This is an HTML project; it has no React components.",
         }),
       };
+    }
+
     const params = new URLSearchParams({ limit: String(input.limit ?? 20) });
-    for (const key of ["query", "source", "cursor"] as const)
-      if (input[key]) params.set(key, input[key] as string);
+
+    for (const key of ["query", "source", "cursor"] as const) {
+      if (input[key]) {
+        params.set(key, input[key] as string);
+      }
+    }
+
     const list = await studioCall<ComponentSchemaList>(
       deps,
       "GET",
       `${base(project, direction.id)}/props/components?${params}`
     );
+
     return { result: ok(compactList(list)) };
   }
 );
@@ -227,7 +255,9 @@ const setProps = defineTool(
       input.projectId,
       input.directionId
     );
+
     refuseWhileRunning(deps, project, direction);
+
     const source = input.source
       ? await resolveSourceLoc(
           direction.workTree,
@@ -243,14 +273,17 @@ const setProps = defineTool(
             input.selector ?? ""
           )
         ).use;
+
     const result = await studioCall<SetPropsResult>(
       deps,
       "POST",
       `${base(project, direction.id)}/props`,
       { source, props: input.props }
     );
+
     const tag = result.instance?.tag ?? "component";
-    if (result.changed.length === 0 && result.removed.length === 0)
+
+    if (result.changed.length === 0 && result.removed.length === 0) {
       return {
         result: ok({
           changed: false,
@@ -259,9 +292,12 @@ const setProps = defineTool(
           note: "Every prop already had that value.",
         }),
       };
+    }
+
     const words = Object.entries(input.props)
       .map(([name, value]) => `${name} ${valueText(value)}`)
       .join(", ");
+
     const output = ok({
       changed: true,
       file: result.file,
@@ -272,6 +308,7 @@ const setProps = defineTool(
       versionId: result.version?.id ?? null,
       title: result.version?.title ?? null,
     });
+
     return {
       result: output,
       activity: versionActivity(

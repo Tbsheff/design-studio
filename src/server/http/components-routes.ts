@@ -23,19 +23,30 @@ export function registerComponentRoutes(
       c.req.param("pid"),
       c.req.param("did")
     );
+
     return c.json({ components: await deps.service.list(project, direction) });
   });
 
   app.get("/api/projects/:pid/d/:did/components/:id/thumb", async (c) => {
     const id = c.req.param("id");
-    if (!ID_RE.test(id)) throw new BadRequestError("invalid component id");
+
+    if (!ID_RE.test(id)) {
+      throw new BadRequestError("invalid component id");
+    }
+
     const version = (c.req.query("v") ?? "0").slice(0, 40);
+
     const { project, direction } = await deps.loadDirection(
       c.req.param("pid"),
       c.req.param("did")
     );
+
     const png = await deps.service.thumb(project, direction, id, version);
-    if (!png) throw new NotFoundError("no thumbnail for this component");
+
+    if (!png) {
+      throw new NotFoundError("no thumbnail for this component");
+    }
+
     return c.body(new Uint8Array(png), 200, {
       "content-type": "image/png",
       "cache-control": "private, max-age=3600",

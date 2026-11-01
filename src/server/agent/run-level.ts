@@ -121,11 +121,16 @@ function editBody(
   limited: boolean,
   context: RunLevelContext
 ): string {
-  if (level === "wireframe") return wireframeEdit(context);
+  if (level === "wireframe") {
+    return wireframeEdit(context);
+  }
+
   if (level === "polish") {
     const body = polishEdit(context);
+
     return `${limited ? body : body.replace(POLISH_BUDGET_STOP, "")}\n- ${REPLY_RULE}`;
   }
+
   return `${prototypeEdit(context)}\n- ${limited ? STOP_RULE : STOP_RULE_NO_LIMIT}\n- ${REPLY_RULE}`;
 }
 
@@ -141,15 +146,26 @@ REQUIRED steps, in this order:
 6. Reply in two to four sentences: the route and file, the kit components you used, and any prototype part you could not port.`;
 
 function taskBody(config: ResolvedRunConfig): string | null {
-  if (config.task === PORT_TASK) return PORT_STEPS;
-  if (config.task === "tweaks") return TWEAKS_TASK;
-  if (config.task === "design-system") return DESIGN_SYSTEM_TASK;
+  if (config.task === PORT_TASK) {
+    return PORT_STEPS;
+  }
+
+  if (config.task === "tweaks") {
+    return TWEAKS_TASK;
+  }
+
+  if (config.task === "design-system") {
+    return DESIGN_SYSTEM_TASK;
+  }
+
   return null;
 }
 
 function budgetLine(config: ResolvedRunConfig): string {
-  if (config.maxBudgetUsd === null)
+  if (config.maxBudgetUsd === null) {
     return `No spending limit for this run; at most ${config.maxTurns} turns.`;
+  }
+
   return `Budget for this run: $${config.maxBudgetUsd.toFixed(2)}, at most ${config.maxTurns} turns.`;
 }
 
@@ -163,6 +179,7 @@ export function buildRunLevelBlock(
       ? CRITIQUE_SCOPE[config.level]
       : (taskBody(config) ??
         editBody(config.level, config.maxBudgetUsd !== null, context));
+
   return `<run-level>\n${body}\n${budgetLine(config)}\n</run-level>`;
 }
 

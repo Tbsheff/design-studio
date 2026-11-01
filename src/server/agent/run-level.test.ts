@@ -18,6 +18,7 @@ describe("run-level block", () => {
   it("tells a wireframe run to stay grayscale and structural, skip skills and screenshots, and use layout and behavior taste only", () => {
     const text = block("wireframe");
     expect(text).toMatch(/^<run-level>\nLevel: WIREFRAME/);
+
     for (const part of [
       "grayscale",
       "system font stack",
@@ -25,8 +26,10 @@ describe("run-level block", () => {
       "do NOT call the Skill tool",
       "layout and behavior areas",
       "No screenshots",
-    ])
+    ]) {
       expect(text).toContain(part);
+    }
+
     expect(text).toContain("No spending limit for this run; at most 12 turns.");
     expect(block("wireframe", "edit", 0.15)).toContain(
       "Budget for this run: $0.15, at most 12 turns."
@@ -55,6 +58,7 @@ describe("run-level block", () => {
 
   it("asks a polish run for three sizes, states, the critic, full fix rounds with re-shots, one layout change and the exact stop rule", () => {
     const text = block("polish");
+
     for (const part of [
       "390, 768 and 1440 px",
       "hover and focus-visible",
@@ -71,8 +75,10 @@ describe("run-level block", () => {
       "duplicate-content",
       "no high and no medium findings, or after 3 fix rounds. If you stop early",
       "the findings per loop",
-    ])
+    ]) {
       expect(text).toContain(part);
+    }
+
     expect(text).not.toMatch(/budget|20%/i);
     expect(block("polish", "edit", 1.5)).toContain(
       "no high and no medium findings, or after 3 fix rounds, or when less than 20% of the budget is left"
@@ -94,6 +100,7 @@ describe("run-level block", () => {
       resolveRunConfig(DEFAULT_SETTINGS, "prototype"),
       "edit"
     );
+
     expect(parts.text).toMatch(/^<run-level>[\s\S]*<\/run-level>\n\nBuild it$/);
   });
 });
@@ -104,6 +111,7 @@ describe("design system task", () => {
       resolveRunConfig({ ...DEFAULT_SETTINGS, maxBudgetUsd: 1 }, "polish"),
       "design-system"
     );
+
     expect(config).toMatchObject({
       level: "polish",
       task: "design-system",

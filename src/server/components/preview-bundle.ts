@@ -23,6 +23,7 @@ export class BundleError extends Error {}
 const REACT_SPEC = /^(react|react-dom)(\/.*)?$/;
 const EMPTY_SPEC = /^(server-only|client-only)$/;
 const NEXT_STUB = /^next\/(link|image|navigation|router|dynamic)$/;
+
 const ASSET_LOADERS = {
   ".css": "empty",
   ".scss": "empty",
@@ -70,6 +71,7 @@ export default router;`,
 
 function previewPlugin(appDir: string): Plugin {
   const appRequire = createRequire(path.join(appDir, "package.json"));
+
   return {
     name: "studio-preview",
     setup(build) {
@@ -102,8 +104,12 @@ function previewPlugin(appDir: string): Plugin {
 }
 
 function nodeSource(node: SampleNode | string): string {
-  if (typeof node === "string") return JSON.stringify(node);
+  if (typeof node === "string") {
+    return JSON.stringify(node);
+  }
+
   const children = node.children.map(nodeSource).join(", ");
+
   return `React.createElement(part(${JSON.stringify(node.exportName)}), ${JSON.stringify(node.props)}${children ? `, ${children}` : ""})`;
 }
 
@@ -136,7 +142,11 @@ function firstError(
   errors: { text: string; location: { file: string; line: number } | null }[]
 ): string {
   const error = errors[0];
-  if (!error) return "esbuild failed";
+
+  if (!error) {
+    return "esbuild failed";
+  }
+
   return error.location
     ? `${error.text} (${error.location.file}:${error.location.line})`
     : error.text;
@@ -144,6 +154,7 @@ function firstError(
 
 export async function bundlePreview(request: BundleRequest): Promise<string> {
   const { build } = await import("esbuild");
+
   try {
     const result = await build({
       stdin: {
@@ -168,11 +179,19 @@ export async function bundlePreview(request: BundleRequest): Promise<string> {
       plugins: [previewPlugin(request.appDir)],
       logLevel: "silent",
     });
+
     const output = result.outputFiles[0];
-    if (!output) throw new BundleError("esbuild produced no output");
+
+    if (!output) {
+      throw new BundleError("esbuild produced no output");
+    }
+
     return output.text;
   } catch (error) {
-    if (error instanceof BundleError) throw error;
+    if (error instanceof BundleError) {
+      throw error;
+    }
+
     const errors = (
       error as {
         errors?: {
@@ -181,6 +200,7 @@ export async function bundlePreview(request: BundleRequest): Promise<string> {
         }[];
       }
     ).errors;
+
     throw new BundleError(
       errors
         ? firstError(errors)

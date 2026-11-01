@@ -29,7 +29,10 @@ export async function previewOriginOf(
   project: Project,
   direction: Direction
 ): Promise<string | null> {
-  if (project.kind !== "react") return null;
+  if (project.kind !== "react") {
+    return null;
+  }
+
   try {
     return new URL(await preview.directionUrl(project, direction)).origin;
   } catch {
@@ -43,6 +46,7 @@ export function registerInsertRoutes(app: Hono, deps: InsertRouteDeps): void {
       c.req.param("pid"),
       c.req.param("did")
     );
+
     return c.json(await listInsertable(project, direction.workTree));
   });
 
@@ -57,6 +61,7 @@ export function registerInsertRoutes(app: Hono, deps: InsertRouteDeps): void {
   ) =>
     app.post(route, async (c) => {
       const body = await deps.readBody(c);
+
       try {
         const result = await deps.withDirection(
           c.req.param("pid") as string,
@@ -77,16 +82,20 @@ export function registerInsertRoutes(app: Hono, deps: InsertRouteDeps): void {
               body
             )
         );
+
         return c.json(result);
       } catch (error) {
-        if (error instanceof DirectEditError)
+        if (error instanceof DirectEditError) {
           return c.json(
             { error: error.code, message: error.message },
             error.status
           );
+        }
+
         throw error;
       }
     });
+
   insertRoute("/api/projects/:pid/d/:did/insert", applyInsertComponent);
   insertRoute("/api/projects/:pid/d/:did/insert/jsx", applyInsertJsx);
   insertRoute("/api/projects/:pid/d/:did/insert/clear-text", applyClearText);

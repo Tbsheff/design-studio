@@ -13,6 +13,7 @@ import {
 } from "./text-source-files.js";
 
 export const ANY = Symbol("any");
+
 export type Step = string | number | typeof ANY;
 
 export interface Candidate {
@@ -49,6 +50,7 @@ interface Binding {
 
 const MAX_HOPS = 8;
 const MAP_METHODS = new Set(["map", "flatMap"]);
+
 const SAME_ITEMS = new Set([
   "filter",
   "slice",
@@ -61,13 +63,16 @@ const SAME_ITEMS = new Set([
   "findLast",
   "at",
 ]);
+
 const STATE_HOOKS = new Set(["useState", "useRef"]);
 const I18N_CALLS = new Set(["t", "formatMessage", "translate", "$t"]);
+
 const NAMESPACE_HOOKS = new Set([
   "useTranslations",
   "getTranslations",
   "useTranslation",
 ]);
+
 const WRAPPERS = new Set([
   "TSAsExpression",
   "TSSatisfiesExpression",
@@ -79,8 +84,11 @@ const WRAPPERS = new Set([
 
 export function unwrap(node: t.Node): t.Node {
   let current = node;
-  while (WRAPPERS.has(current.type))
+
+  while (WRAPPERS.has(current.type)) {
     current = (current as t.TSAsExpression).expression;
+  }
+
   return current;
 }
 
@@ -89,10 +97,14 @@ function lineOf(node: t.Node): number {
 }
 
 function noteStuck(ctx: TraceContext, mod: TextModule, node: t.Node): void {
-  if (ctx.stuck) return;
+  if (ctx.stuck) {
+    return;
+  }
+
   const text = mod.code
     .slice(node.start ?? 0, node.end ?? 0)
     .replace(/\s+/g, " ");
+
   ctx.stuck = {
     file: mod.relative,
     line: lineOf(node),
@@ -101,21 +113,38 @@ function noteStuck(ctx: TraceContext, mod: TextModule, node: t.Node): void {
 }
 
 function keyOf(node: t.Node, computed: boolean): Step | null {
-  if (!computed && node.type === "Identifier") return node.name;
-  if (node.type === "StringLiteral") return node.value;
-  if (node.type === "NumericLiteral") return node.value;
+  if (!computed && node.type === "Identifier") {
+    return node.name;
+  }
+
+  if (node.type === "StringLiteral") {
+    return node.value;
+  }
+
+  if (node.type === "NumericLiteral") {
+    return node.value;
+  }
+
   return computed ? ANY : null;
 }
 
 function nameOf(node: t.Node | null | undefined): string | null {
-  if (!node) return null;
-  if (node.type === "Identifier") return node.name;
+  if (!node) {
+    return null;
+  }
+
+  if (node.type === "Identifier") {
+    return node.name;
+  }
+
   if (
     node.type === "MemberExpression" &&
     !node.computed &&
     node.property.type === "Identifier"
-  )
+  ) {
     return node.property.name;
+  }
+
   return null;
 }
 
@@ -134,11 +163,20 @@ export async function trace(
   steps: Step[]
 ): Promise<Candidate[]> {
   ctx.budget -= 1;
-  if (ctx.budget <= 0) return [];
+
+  if (ctx.budget <= 0) {
+    return [];
+  }
+
   const node = unwrap(raw);
   const tracer = TRACERS[node.type];
-  if (tracer) return tracer(ctx, mod, node, steps);
+
+  if (tracer) {
+    return tracer(ctx, mod, node, steps);
+  }
+
   noteStuck(ctx, mod, node);
+
   return [];
 }
 
@@ -153,34 +191,48 @@ const traceString: Tracer = async (_ctx, mod, node, steps) =>
 
 const traceTemplate: Tracer = async (ctx, mod, node, steps) => {
   const template = node as t.TemplateLiteral;
-  if (steps.length > 0) return [];
-  if (template.expressions.length > 0) {
-    noteStuck(ctx, mod, template);
+
+  if (steps.length > 0) {
     return [];
   }
+
+  if (template.expressions.length > 0) {
+    noteStuck(ctx, mod, template);
+
+    return [];
+  }
+
   return literal(mod, template, template.quasis[0]?.value.cooked ?? "");
 };
 
 const traceObject: Tracer = async (ctx, mod, node, steps) => {
   const [step, ...rest] = steps;
-  if (step === undefined || step === ANY) return [];
+
+  if (step === undefined || step === ANY) {
+    return [];
+  }
+
   const found: Promise<Candidate[]>[] = [];
+
   for (const property of (node as t.ObjectExpression).properties) {
-    if (property.type === "SpreadElement")
+    if (property.type === "SpreadElement") {
       found.push(trace(ctx, mod, property.argument, steps));
-    else if (
+    } else if (
       property.type === "ObjectProperty" &&
       keyOf(property.key, property.computed) === step
-    )
+    ) {
       found.push(trace(ctx, mod, property.value, rest));
+    }
   }
+
   return all(found);
 };
 
 const traceArray: Tracer = async (ctx, mod, node, steps) => {
   const [step, ...rest] = steps;
   const elements = (node as t.ArrayExpression).elements;
-  if (step === ANY)
+
+  if (step === ANY) {
     return all(
       elements.flatMap((element) =>
         element && element.type !== "SpreadElement"
@@ -188,7 +240,10 @@ const traceArray: Tracer = async (ctx, mod, node, steps) => {
           : []
       )
     );
+  }
+
   const element = typeof step === "number" ? elements[step] : undefined;
+
   return element && element.type !== "SpreadElement"
     ? trace(ctx, mod, element, rest)
     : [];
@@ -197,16 +252,22 @@ const traceArray: Tracer = async (ctx, mod, node, steps) => {
 const traceMember: Tracer = async (ctx, mod, node, steps) => {
   const member = node as t.MemberExpression;
   const key = keyOf(member.property, member.computed);
-  if (key === null) return [];
+
+  if (key === null) {
+    return [];
+  }
+
   return trace(ctx, mod, member.object, [key, ...steps]);
 };
 
 const traceBranches: Tracer = async (ctx, mod, node, steps) => {
   const branch = node as t.ConditionalExpression | t.LogicalExpression;
+
   const sides =
     branch.type === "ConditionalExpression"
       ? [branch.consequent, branch.alternate]
       : [branch.left, branch.right];
+
   return all(sides.map((side) => trace(ctx, mod, side, steps)));
 };
 
@@ -214,22 +275,31 @@ function returnedOf(fn: t.Node | undefined): t.Node | null {
   if (
     !fn ||
     (fn.type !== "ArrowFunctionExpression" && fn.type !== "FunctionExpression")
-  )
+  ) {
     return null;
-  if (fn.body.type !== "BlockStatement") return fn.body;
+  }
+
+  if (fn.body.type !== "BlockStatement") {
+    return fn.body;
+  }
+
   const last = fn.body.body.find(
     (statement) => statement.type === "ReturnStatement"
   );
+
   return last?.type === "ReturnStatement" ? (last.argument ?? null) : null;
 }
 
 const traceCall: Tracer = async (ctx, mod, node, steps) => {
   const call = node as t.CallExpression;
+
   const method =
     call.callee.type === "MemberExpression" ? nameOf(call.callee) : null;
+
   const target =
     call.callee.type === "MemberExpression" ? call.callee.object : null;
-  if (target && method && SAME_ITEMS.has(method))
+
+  if (target && method && SAME_ITEMS.has(method)) {
     return trace(
       ctx,
       mod,
@@ -238,25 +308,44 @@ const traceCall: Tracer = async (ctx, mod, node, steps) => {
         ? [ANY, ...steps]
         : steps
     );
+  }
+
   if (target && method && MAP_METHODS.has(method) && steps[0] === ANY) {
     const returned = returnedOf(call.arguments[0] as t.Node | undefined);
-    if (returned) return trace(ctx, mod, returned, steps.slice(1));
+
+    if (returned) {
+      return trace(ctx, mod, returned, steps.slice(1));
+    }
   }
+
   const callee = nameOf(call.callee);
-  if (callee && I18N_CALLS.has(callee) && steps.length === 0)
+
+  if (callee && I18N_CALLS.has(callee) && steps.length === 0) {
     return i18nCandidates(ctx, mod, call);
+  }
+
   noteStuck(ctx, mod, call);
+
   return [];
 };
 
 const traceIdentifier: Tracer = async (ctx, mod, node, steps) => {
   const binding = findBinding(mod, node as t.Identifier);
+
   if (!binding) {
     noteStuck(ctx, mod, node);
+
     return [];
   }
-  if (binding.kind === "import") return traceImport(ctx, mod, binding, steps);
-  if (binding.kind === "param") return traceParam(ctx, mod, binding, steps);
+
+  if (binding.kind === "import") {
+    return traceImport(ctx, mod, binding, steps);
+  }
+
+  if (binding.kind === "param") {
+    return traceParam(ctx, mod, binding, steps);
+  }
+
   return traceDeclarator(ctx, mod, binding, steps);
 };
 
@@ -283,12 +372,18 @@ function objectPatternPath(
   name: string
 ): PatternHit | null {
   for (const property of pattern.properties) {
-    if (property.type !== "ObjectProperty") continue;
+    if (property.type !== "ObjectProperty") {
+      continue;
+    }
+
     const key = keyOf(property.key, property.computed);
     const inner = key === null ? null : patternPath(property.value, name);
-    if (inner && key !== null)
+
+    if (inner && key !== null) {
       return { steps: [key, ...inner.steps], fallback: inner.fallback };
+    }
   }
+
   return null;
 }
 
@@ -298,19 +393,34 @@ function arrayPatternPath(
 ): PatternHit | null {
   for (const [index, element] of pattern.elements.entries()) {
     const inner = element ? patternPath(element, name) : null;
-    if (inner)
+
+    if (inner) {
       return { steps: [index, ...inner.steps], fallback: inner.fallback };
+    }
   }
+
   return null;
 }
 
 function patternPath(pattern: t.Node, name: string): PatternHit | null {
-  if (pattern.type === "Identifier")
+  if (pattern.type === "Identifier") {
     return pattern.name === name ? { steps: [], fallback: null } : null;
-  if (pattern.type === "ObjectPattern") return objectPatternPath(pattern, name);
-  if (pattern.type === "ArrayPattern") return arrayPatternPath(pattern, name);
-  if (pattern.type !== "AssignmentPattern") return null;
+  }
+
+  if (pattern.type === "ObjectPattern") {
+    return objectPatternPath(pattern, name);
+  }
+
+  if (pattern.type === "ArrayPattern") {
+    return arrayPatternPath(pattern, name);
+  }
+
+  if (pattern.type !== "AssignmentPattern") {
+    return null;
+  }
+
   const inner = patternPath(pattern.left, name);
+
   return inner
     ? {
         steps: inner.steps,
@@ -330,7 +440,8 @@ function isFunction(node: t.Node): node is t.Function {
 function paramBinding(fn: t.Function, name: string): Binding | null {
   for (const [index, param] of fn.params.entries()) {
     const hit = patternPath(param, name);
-    if (hit)
+
+    if (hit) {
       return {
         kind: "param",
         owner: fn,
@@ -338,7 +449,9 @@ function paramBinding(fn: t.Function, name: string): Binding | null {
         fallback: hit.fallback,
         index,
       };
+    }
   }
+
   return null;
 }
 
@@ -347,6 +460,7 @@ function statementDeclarators(statement: t.Node): t.VariableDeclarator[] {
     statement.type === "ExportNamedDeclaration" && statement.declaration
       ? statement.declaration
       : statement;
+
   return target.type === "VariableDeclaration" ? target.declarations : [];
 }
 
@@ -355,12 +469,14 @@ function blockBinding(block: t.Node, name: string): Binding | null {
     block.type === "Program" || block.type === "BlockStatement"
       ? block.body
       : [];
+
   for (const statement of body) {
     if (statement.type === "ImportDeclaration") {
       const specifier = statement.specifiers.find(
         (item) => item.local.name === name
       );
-      if (specifier)
+
+      if (specifier) {
         return {
           kind: "import",
           owner: specifier,
@@ -368,10 +484,13 @@ function blockBinding(block: t.Node, name: string): Binding | null {
           fallback: null,
           index: 0,
         };
+      }
     }
+
     for (const declarator of statementDeclarators(statement)) {
       const hit = patternPath(declarator.id, name);
-      if (hit)
+
+      if (hit) {
         return {
           kind: "declarator",
           owner: declarator,
@@ -379,8 +498,10 @@ function blockBinding(block: t.Node, name: string): Binding | null {
           fallback: hit.fallback,
           index: 0,
         };
+      }
     }
   }
+
   return null;
 }
 
@@ -389,8 +510,12 @@ export function findBinding(mod: TextModule, id: t.Identifier): Binding | null {
     const found = isFunction(node)
       ? paramBinding(node, id.name)
       : blockBinding(node, id.name);
-    if (found) return found;
+
+    if (found) {
+      return found;
+    }
   }
+
   return null;
 }
 
@@ -401,12 +526,19 @@ async function traceDeclarator(
   steps: Step[]
 ): Promise<Candidate[]> {
   const declarator = binding.owner as t.VariableDeclarator;
+
   const fromDefault = binding.fallback
     ? trace(ctx, mod, binding.fallback, steps)
     : Promise.resolve([]);
+
   const init = declarator.init ? unwrap(declarator.init) : null;
-  if (!init) return fromDefault;
+
+  if (!init) {
+    return fromDefault;
+  }
+
   const hook = init.type === "CallExpression" ? nameOf(init.callee) : null;
+
   if (
     init.type === "CallExpression" &&
     hook &&
@@ -414,13 +546,16 @@ async function traceDeclarator(
     binding.steps[0] === 0
   ) {
     const first = init.arguments[0];
+
     const initial = first
       ? (
           await trace(ctx, mod, first, [...binding.steps.slice(1), ...steps])
         ).map((candidate) => ({ ...candidate, state: true }))
       : [];
+
     return [...(await fromDefault), ...initial];
   }
+
   return all([
     fromDefault,
     trace(ctx, mod, init, [...binding.steps, ...steps]),
@@ -429,13 +564,17 @@ async function traceDeclarator(
 
 function mapSource(mod: TextModule, fn: t.Node): t.Node | null {
   const call = mod.parents.get(fn);
+
   if (
     call?.type !== "CallExpression" ||
     call.arguments[0] !== fn ||
     call.callee.type !== "MemberExpression"
-  )
+  ) {
     return null;
+  }
+
   const method = nameOf(call.callee);
+
   return method &&
     (MAP_METHODS.has(method) || SAME_ITEMS.has(method) || method === "forEach")
     ? call.callee.object
@@ -443,12 +582,20 @@ function mapSource(mod: TextModule, fn: t.Node): t.Node | null {
 }
 
 export function componentName(mod: TextModule, fn: t.Node): string | null {
-  if (fn.type === "FunctionDeclaration" && fn.id) return fn.id.name;
-  for (let node = mod.parents.get(fn); node; node = mod.parents.get(node)) {
-    if (node.type === "VariableDeclarator")
-      return node.id.type === "Identifier" ? node.id.name : null;
-    if (node.type !== "CallExpression" && !WRAPPERS.has(node.type)) return null;
+  if (fn.type === "FunctionDeclaration" && fn.id) {
+    return fn.id.name;
   }
+
+  for (let node = mod.parents.get(fn); node; node = mod.parents.get(node)) {
+    if (node.type === "VariableDeclarator") {
+      return node.id.type === "Identifier" ? node.id.name : null;
+    }
+
+    if (node.type !== "CallExpression" && !WRAPPERS.has(node.type)) {
+      return null;
+    }
+  }
+
   return null;
 }
 
@@ -460,13 +607,17 @@ async function traceParam(
 ): Promise<Candidate[]> {
   const fn = binding.owner;
   const items = mapSource(mod, fn);
-  if (items)
+
+  if (items) {
     return binding.index === 0
       ? trace(ctx, mod, items, [ANY, ...binding.steps, ...steps])
       : [];
+  }
+
   const name = componentName(mod, fn);
   const full = [...binding.steps, ...steps];
   const [prop, ...rest] = full;
+
   if (
     binding.index !== 0 ||
     !name ||
@@ -474,9 +625,12 @@ async function traceParam(
     typeof prop !== "string"
   ) {
     noteStuck(ctx, mod, fn);
+
     return [];
   }
+
   const fallback = binding.steps.length === 1 ? binding.fallback : null;
+
   return traceProp(ctx, { mod, name, prop, rest, fallback });
 }
 
@@ -489,17 +643,25 @@ interface PropQuery {
 }
 
 function tagName(name: t.JSXOpeningElement["name"]): string {
-  if (name.type === "JSXIdentifier") return name.name;
-  if (name.type === "JSXMemberExpression") return name.property.name;
+  if (name.type === "JSXIdentifier") {
+    return name.name;
+  }
+
+  if (name.type === "JSXMemberExpression") {
+    return name.property.name;
+  }
+
   return name.name.name;
 }
 
 function usesIn(mod: TextModule, name: string): t.JSXOpeningElement[] {
   const found: t.JSXOpeningElement[] = [];
   walkNodes(mod.ast, (node) => {
-    if (node.type === "JSXOpeningElement" && tagName(node.name) === name)
+    if (node.type === "JSXOpeningElement" && tagName(node.name) === name) {
       found.push(node);
+    }
   });
+
   return found;
 }
 
@@ -519,17 +681,25 @@ async function traceUse(
       item.name.type === "JSXIdentifier" &&
       item.name.name === query.prop
   );
-  if (!attribute)
+
+  if (!attribute) {
     return {
       found: [],
       missing: !use.attributes.some(
         (item) => item.type === "JSXSpreadAttribute"
       ),
     };
+  }
+
   const value = attribute.value;
-  if (!value) return { found: [], missing: false };
+
+  if (!value) {
+    return { found: [], missing: false };
+  }
+
   const found = await trace(ctx, mod, value, query.rest);
   const key = useKey(mod, use);
+
   return {
     found: found.map((candidate) => ({
       ...candidate,
@@ -543,27 +713,40 @@ async function traceProp(
   ctx: TraceContext,
   query: PropQuery
 ): Promise<Candidate[]> {
-  if (ctx.hops >= MAX_HOPS) return [];
+  if (ctx.hops >= MAX_HOPS) {
+    return [];
+  }
+
   ctx.hops += 1;
   ctx.files ??= jsxFiles(ctx.root);
   const escaped = query.name.replace(/[$]/g, "\\$");
+
   const hits = await filesMentioning(
     await ctx.files,
     new RegExp(`<(?:[\\w$]+\\.)?${escaped}[\\s/>]`)
   );
+
   const found: Candidate[] = [];
   let missing = false;
+
   for (const file of hits) {
     const mod = await ctx.load(file);
-    if (!mod) continue;
+
+    if (!mod) {
+      continue;
+    }
+
     for (const use of usesIn(mod, query.name)) {
       const result = await traceUse(ctx, mod, use, query);
       found.push(...result.found);
       missing ||= result.missing;
     }
   }
-  if (missing && query.fallback)
+
+  if (missing && query.fallback) {
     found.push(...(await trace(ctx, query.mod, query.fallback, query.rest)));
+  }
+
   return found;
 }
 
@@ -575,26 +758,37 @@ async function traceImport(
 ): Promise<Candidate[]> {
   const specifier = binding.owner as t.ImportDeclaration["specifiers"][number];
   const declaration = mod.parents.get(specifier);
-  if (declaration?.type !== "ImportDeclaration") return [];
+
+  if (declaration?.type !== "ImportDeclaration") {
+    return [];
+  }
+
   const resolved = resolveModule(
     await loadTypeScript(),
     declaration.source.value,
     mod.file,
     ctx.root
   );
+
   const target = resolved ? await ctx.load(resolved) : null;
+
   if (!target) {
     noteStuck(ctx, mod, declaration);
+
     return [];
   }
-  if (target.json)
+
+  if (target.json) {
     return specifier.type === "ImportSpecifier"
       ? trace(ctx, target, target.ast, [importedName(specifier), ...steps])
       : trace(ctx, target, target.ast, steps);
+  }
+
   const exported = exportedValue(
     target,
     specifier.type === "ImportSpecifier" ? importedName(specifier) : "default"
   );
+
   return exported ? trace(ctx, target, exported, steps) : [];
 }
 
@@ -604,10 +798,12 @@ function resolveModule(
   from: string,
   root: string
 ): string | null {
-  if (specifier.endsWith(".json"))
+  if (specifier.endsWith(".json")) {
     return specifier.startsWith(".")
       ? path.resolve(path.dirname(from), specifier)
       : null;
+  }
+
   return resolveImport(ts, specifier, from, root);
 }
 
@@ -618,15 +814,22 @@ function importedName(specifier: t.ImportSpecifier): string {
 }
 
 function exportedValue(mod: TextModule, name: string): t.Node | null {
-  if (mod.ast.type !== "File") return null;
+  if (mod.ast.type !== "File") {
+    return null;
+  }
+
   const body = mod.ast.program.body;
   let local = name;
+
   for (const statement of body) {
     if (name === "default" && statement.type === "ExportDefaultDeclaration") {
-      if (statement.declaration.type !== "Identifier")
+      if (statement.declaration.type !== "Identifier") {
         return statement.declaration;
+      }
+
       local = statement.declaration.name;
     }
+
     if (statement.type === "ExportNamedDeclaration" && !statement.source) {
       const spec = statement.specifiers.find(
         (item) =>
@@ -635,42 +838,65 @@ function exportedValue(mod: TextModule, name: string): t.Node | null {
             ? item.exported.name
             : item.exported.value) === name
       );
-      if (spec?.type === "ExportSpecifier") local = spec.local.name;
+
+      if (spec?.type === "ExportSpecifier") {
+        local = spec.local.name;
+      }
     }
   }
+
   const binding = blockBinding(mod.ast.program, local);
+
   const declarator =
     binding?.kind === "declarator" && binding.steps.length === 0
       ? (binding.owner as t.VariableDeclarator)
       : null;
+
   return declarator?.init ?? null;
 }
 
 function namespaceOf(mod: TextModule, call: t.CallExpression): string | null {
-  if (call.callee.type !== "Identifier") return null;
+  if (call.callee.type !== "Identifier") {
+    return null;
+  }
+
   const binding = findBinding(mod, call.callee);
+
   const init =
     binding?.kind === "declarator"
       ? (binding.owner as t.VariableDeclarator).init
       : null;
+
   const inner = init?.type === "AwaitExpression" ? init.argument : init;
+
   if (
     inner?.type !== "CallExpression" ||
     !NAMESPACE_HOOKS.has(nameOf(inner.callee) ?? "")
-  )
+  ) {
     return null;
+  }
+
   const first = inner.arguments[0];
+
   return first?.type === "StringLiteral" ? first.value : null;
 }
 
 function messageKey(call: t.CallExpression): string | null {
   const first = call.arguments[0];
-  if (first?.type === "StringLiteral") return first.value;
-  if (first?.type !== "ObjectExpression") return null;
+
+  if (first?.type === "StringLiteral") {
+    return first.value;
+  }
+
+  if (first?.type !== "ObjectExpression") {
+    return null;
+  }
+
   const id = first.properties.find(
     (item): item is t.ObjectProperty =>
       item.type === "ObjectProperty" && keyOf(item.key, item.computed) === "id"
   );
+
   return id?.value.type === "StringLiteral" ? id.value.value : null;
 }
 
@@ -680,20 +906,34 @@ async function i18nCandidates(
   call: t.CallExpression
 ): Promise<Candidate[]> {
   const key = messageKey(call);
+
   if (!key) {
     noteStuck(ctx, mod, call);
+
     return [];
   }
+
   const namespace = namespaceOf(mod, call);
   const full = namespace ? `${namespace}.${key}` : key;
   const found: Candidate[] = [];
+
   for (const file of await messageFiles(ctx.root)) {
     const messages = await ctx.load(file);
-    if (!messages?.json) continue;
+
+    if (!messages?.json) {
+      continue;
+    }
+
     found.push(...(await trace(ctx, messages, messages.ast, full.split("."))));
-    if (full.includes("."))
+
+    if (full.includes(".")) {
       found.push(...(await trace(ctx, messages, messages.ast, [full])));
+    }
   }
-  if (found.length === 0) noteStuck(ctx, mod, call);
+
+  if (found.length === 0) {
+    noteStuck(ctx, mod, call);
+  }
+
   return found;
 }

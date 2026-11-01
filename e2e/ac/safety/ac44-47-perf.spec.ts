@@ -28,9 +28,11 @@ interface Stats {
 
 function stats(values: number[]): Stats {
   const sorted = [...values].sort((a, b) => a - b);
+
   const at = (q: number): number =>
     sorted[Math.min(sorted.length - 1, Math.ceil(q * sorted.length) - 1)] ??
     NaN;
+
   return {
     n: sorted.length,
     p50: at(0.5),
@@ -45,6 +47,7 @@ const PROBE = () => {
     __painted: { token: string; receivedAt: number; sinceNav: number }[];
     __selects: { at: number; drawnAt: number | null }[];
   };
+
   w.__painted = [];
   w.__selects = [];
   window.addEventListener("message", (event) => {
@@ -54,32 +57,49 @@ const PROBE = () => {
       token?: string;
       at?: number;
     } | null;
-    if (!data || data.ns !== "studio") return;
-    if (data.type === "painted")
+
+    if (!data || data.ns !== "studio") {
+      return;
+    }
+
+    if (data.type === "painted") {
       w.__painted.push({
         token: data.token ?? "",
         receivedAt: Date.now(),
         sinceNav: performance.now(),
       });
-    if (data.type === "select")
+    }
+
+    if (data.type === "select") {
       w.__selects.push({ at: data.at ?? 0, drawnAt: null });
+    }
   });
+
   const watchOverlay = () => {
     const overlay = document.querySelector(".overlay");
+
     if (!overlay) {
       requestAnimationFrame(watchOverlay);
+
       return;
     }
+
     new MutationObserver(() => {
       const pending = w.__selects.filter((entry) => entry.drawnAt === null);
+
       if (
         pending.length === 0 ||
         !document.querySelector(".overlay .box.selected")
-      )
+      ) {
         return;
+      }
+
       requestAnimationFrame(() => {
         const drawnAt = performance.timeOrigin + performance.now();
-        for (const entry of pending) entry.drawnAt = drawnAt;
+
+        for (const entry of pending) {
+          entry.drawnAt = drawnAt;
+        }
       });
     }).observe(overlay, {
       subtree: true,
@@ -88,12 +108,14 @@ const PROBE = () => {
       attributeFilter: ["style"],
     });
   };
+
   document.addEventListener("DOMContentLoaded", watchOverlay);
 };
 
 async function frontToken(page: Page): Promise<string> {
   const src =
     (await page.locator("iframe.frame.front").getAttribute("src")) ?? "";
+
   return new URL(src).searchParams.get("__studio_token") ?? "";
 }
 
@@ -107,6 +129,7 @@ async function paintedAfter(
       const w = window as unknown as {
         __painted: { token: string; receivedAt: number }[];
       };
+
       return (
         w.__painted.find(
           (entry) => entry.token === t && entry.receivedAt >= (a as number)
@@ -115,12 +138,14 @@ async function paintedAfter(
     },
     [token, after] as const
   );
+
   return (await handle.jsonValue()) as number;
 }
 
 async function measureHtml(page: Page, file: string): Promise<number[]> {
   const original = readFileSync(file, "utf-8");
   const out: number[] = [];
+
   for (let i = 0; i < SAMPLES; i += 1) {
     const text = `Latency sample ${i}`;
     const next = original.replace(/<h1>[^<]*<\/h1>/, `<h1>${text}</h1>`);
@@ -131,12 +156,14 @@ async function measureHtml(page: Page, file: string): Promise<number[]> {
     const token = await frontToken(page);
     out.push((await paintedAfter(page, token, t0)) - t0);
   }
+
   return out;
 }
 
 async function measureReact(page: Page, file: string): Promise<number[]> {
   const original = readFileSync(file, "utf-8");
   const out: number[] = [];
+
   for (let i = 0; i < SAMPLES; i += 1) {
     const text = `React sample ${i}`;
     const next = original.replace(/<h1>[^<]*<\/h1>/, `<h1>${text}</h1>`);
@@ -148,12 +175,14 @@ async function measureReact(page: Page, file: string): Promise<number[]> {
     out.push((await paintedAfter(page, token, t0)) - t0);
     expect(await frontToken(page)).toBe(token);
   }
+
   return out;
 }
 
 async function measureSelect(page: Page): Promise<number[]> {
   await setSelectMode(page, true);
   const targets = ["h1", ".lede", ".cta", ".card h2"];
+
   for (let i = 0; i < SAMPLES; i += 1) {
     await frontFrame(page)
       .locator(targets[i % targets.length] ?? "h1")
@@ -163,6 +192,7 @@ async function measureSelect(page: Page): Promise<number[]> {
       const w = window as unknown as {
         __selects: { drawnAt: number | null }[];
       };
+
       return (
         w.__selects.length >= n &&
         w.__selects.every((entry) => entry.drawnAt !== null)
@@ -170,25 +200,33 @@ async function measureSelect(page: Page): Promise<number[]> {
     }, i + 1);
     await page.waitForTimeout(60);
   }
+
   await setSelectMode(page, false);
+
   const selects = await page.evaluate(
     () =>
       (window as unknown as { __selects: { at: number; drawnAt: number }[] })
         .__selects
   );
+
   return selects.map((entry) => entry.drawnAt - entry.at);
 }
 
 async function measureOpen(page: Page): Promise<number[]> {
   const out: number[] = [];
+
   for (let i = 0; i < SAMPLES; i += 1) {
     await page.reload();
+
     const handle = await page.waitForFunction(() => {
       const w = window as unknown as { __painted: { sinceNav: number }[] };
+
       return w.__painted[0]?.sinceNav ?? null;
     });
+
     out.push((await handle.jsonValue()) as number);
   }
+
   return out;
 }
 
@@ -197,6 +235,7 @@ async function measureHttp(
 ): Promise<{ index: number[]; projects: number[] }> {
   const index: number[] = [];
   const projects: number[] = [];
+
   for (let i = 0; i < SAMPLES; i += 1) {
     let t0 = performance.now();
     await (await fetch(`${BASE_URL}/`)).text();
@@ -205,6 +244,7 @@ async function measureHttp(
     await api.projects();
     projects.push(performance.now() - t0);
   }
+
   return { index, projects };
 }
 
@@ -216,14 +256,18 @@ async function telemetry(
     "GET",
     `/api/telemetry?projectId=${pid}`
   );
+
   const out: Record<string, number[]> = {};
+
   for (const sample of samples) {
     const key =
       sample.kind === "preview.latency"
         ? `preview.latency.${String(sample.detail?.kind ?? "")}`
         : sample.kind;
+
     (out[key] ??= []).push(sample.ms);
   }
+
   return out;
 }
 
@@ -237,31 +281,37 @@ test("AC-44..47 + AC-50: latency p95 over 20 samples", async ({
   const html = await createProjectViaUi(page, api, "Latency HTML page", "html");
   await expect(frontFrame(page).locator("h1")).toHaveText("Latency HTML page");
   await api.waitForRuns(html.id, 1);
+
   const htmlSamples = await measureHtml(
     page,
     path.join(mainDirection(html).workTree, "index.html")
   );
+
   const selectSamples = await measureSelect(page);
   const openSamples = await measureOpen(page);
   const http = await measureHttp(api);
   const htmlTelemetry = await telemetry(api, html.id);
 
   await page.getByRole("button", { name: "Projects" }).click();
+
   const react = await createProjectViaUi(
     page,
     api,
     "Latency React page",
     "react"
   );
+
   await expect(frontFrame(page).locator("h1")).toHaveText(
     "Latency React page",
     { timeout: 60_000 }
   );
   await api.waitForRuns(react.id, 1);
+
   const reactSamples = await measureReact(
     page,
     path.join(mainDirection(react).workTree, "src", "App.tsx")
   );
+
   const reactTelemetry = await telemetry(api, react.id);
 
   const results = {
@@ -288,6 +338,7 @@ test("AC-44..47 + AC-50: latency p95 over 20 samples", async ({
       )
     ),
   };
+
   const runSummaries = [
     ...(await api.runs(html.id)),
     ...(await api.runs(react.id)),
@@ -301,6 +352,7 @@ test("AC-44..47 + AC-50: latency p95 over 20 samples", async ({
       ms: call.finishedAt === null ? null : call.finishedAt - call.startedAt,
     })),
   }));
+
   const telemetryKinds = [
     ...new Set(
       (await api.call<TelemetrySample[]>("GET", "/api/telemetry")).map(
@@ -308,6 +360,7 @@ test("AC-44..47 + AC-50: latency p95 over 20 samples", async ({
       )
     ),
   ];
+
   saveResult(`perf-${testInfo.repeatEachIndex}`, {
     ...results,
     runSummaries,

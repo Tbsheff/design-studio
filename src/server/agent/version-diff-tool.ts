@@ -43,22 +43,31 @@ export async function runDiffVersions(
   args: { from: string; to?: string | undefined }
 ): Promise<ToolText> {
   const parsed = z.object(diffVersionsShape).strict().safeParse(args);
-  if (!parsed.success)
+
+  if (!parsed.success) {
     return text(
       `diff_versions: ${parsed.error.issues.map((issue) => `${issue.path.join(".") || "input"}: ${issue.message}`).join("; ")}`,
       true
     );
+  }
+
   const to = parsed.data.to ?? deps.headVersionId;
-  if (!to)
+
+  if (!to) {
     return text(
       "diff_versions: this direction has no saved version yet.",
       true
     );
+  }
+
   const projectDir = path.dirname(deps.runsDir);
+
   const thumb = (id: string): string | null => {
     const file = path.join(projectDir, "thumbs", versionThumbName(id));
+
     return existsSync(file) ? file : null;
   };
+
   try {
     const changes = await diffVersionFiles(
       async (gitArgs) =>
@@ -67,6 +76,7 @@ export async function runDiffVersions(
       parsed.data.from,
       to
     );
+
     return text(
       JSON.stringify(
         {

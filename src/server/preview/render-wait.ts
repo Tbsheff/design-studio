@@ -20,6 +20,7 @@ export function noteRenderedPage(
   const list = (pages.get(projectId) ?? []).filter(
     (item) => item !== (page ?? "")
   );
+
   list.unshift(page ?? "");
   pages.set(projectId, list.slice(0, PAGES_MAX));
 }
@@ -33,13 +34,19 @@ export function startRender(
   render: (signal: AbortSignal) => Promise<void>
 ): void {
   const before = jobs.get(projectId);
-  if (before && !before.started) return;
+
+  if (before && !before.started) {
+    return;
+  }
+
   before?.controller.abort();
+
   const job: RenderJob = {
     started: false,
     controller: new AbortController(),
     done: Promise.resolve(),
   };
+
   job.done = (async () => {
     await before?.done;
     await new Promise((done) => setTimeout(done, WATCH_DELAY_MS));
@@ -47,11 +54,13 @@ export function startRender(
     await render(job.controller.signal);
   })()
     .catch((error: unknown) => {
-      if (!job.controller.signal.aborted)
+      if (!job.controller.signal.aborted) {
         console.error("[render-wait] warm failed", error);
+      }
     })
     .finally(() => {
       lastDone.set(projectId, Date.now());
+
       if (jobs.get(projectId) === job) {
         jobs.delete(projectId);
         pending.delete(projectId);
@@ -76,7 +85,11 @@ async function latestJobs(projectId?: string): Promise<void> {
           (job): job is Promise<void> => job !== undefined
         )
       : [...pending.values()];
-    if (current.length === 0) return;
+
+    if (current.length === 0) {
+      return;
+    }
+
     await Promise.all(current);
   }
 }
@@ -86,6 +99,7 @@ const PREVIEW_HOST = /^p-((?:[0-9a-f]{2})+)\.localhost$/;
 export function projectOfUrl(url: string): string | undefined {
   try {
     const hex = PREVIEW_HOST.exec(new URL(url).hostname)?.[1];
+
     return hex ? Buffer.from(hex, "hex").toString("utf-8") : undefined;
   } catch {
     return undefined;
@@ -97,16 +111,23 @@ export function renderSettledFor(url: string): Promise<boolean> {
 }
 
 export async function renderSettled(projectId?: string): Promise<boolean> {
-  if (projectId ? !pending.has(projectId) : pending.size === 0) return true;
+  if (projectId ? !pending.has(projectId) : pending.size === 0) {
+    return true;
+  }
+
   let timer: NodeJS.Timeout | undefined;
+
   const timeout = new Promise<false>((done) => {
     timer = setTimeout(() => done(false), SETTLE_MAX_MS);
     timer.unref();
   });
+
   const settled = await Promise.race([
     latestJobs(projectId).then(() => true as const),
     timeout,
   ]);
+
   clearTimeout(timer);
+
   return settled;
 }

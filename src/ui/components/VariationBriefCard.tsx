@@ -46,6 +46,7 @@ function BriefRows({
   onRemove: Props["onRemove"];
 }) {
   const canRemove = briefs.length > VARIATION_MIN;
+
   return (
     <ol className="variation-briefs">
       {briefs.map((brief, index) => (
@@ -99,6 +100,7 @@ function BudgetLine({
   const budget = budgetFor(project, draft.level, count);
   const briefCost = draft.result?.costUsd ?? 0;
   const limited = budget.perRun !== null && budget.total !== null;
+
   return (
     <p className="variation-budget" data-testid="variation-budget">
       {LEVEL_PRESETS[draft.level].label} ·{" "}
@@ -116,7 +118,10 @@ function BudgetLine({
 }
 
 function briefsInvalid(briefs: VariationBrief[] | null): boolean {
-  if (!briefs) return true;
+  if (!briefs) {
+    return true;
+  }
+
   return briefs.some(
     (brief) =>
       !brief.title.trim() ||
@@ -130,7 +135,7 @@ function CardBody({
   onEdit,
   onRemove,
 }: Pick<Props, "draft" | "onEdit" | "onRemove">) {
-  if (draft.briefs)
+  if (draft.briefs) {
     return (
       <BriefRows
         briefs={draft.briefs}
@@ -139,7 +144,12 @@ function CardBody({
         onRemove={onRemove}
       />
     );
-  if (!draft.loading) return null;
+  }
+
+  if (!draft.loading) {
+    return null;
+  }
+
   return (
     <>
       <p className="variation-card-status" role="status">
@@ -163,6 +173,7 @@ export function VariationBriefCard({
 }: Props) {
   const count = draft.briefs?.length ?? draft.count;
   const busy = draft.starting;
+
   return (
     <section
       className="variation-card"

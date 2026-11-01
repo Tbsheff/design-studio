@@ -37,11 +37,13 @@ import {
 } from "./edit-kit.js";
 
 const DEFAULT_VIEWPORT = { width: 1440, height: 900 };
+
 const property = z
   .enum([...STYLE_KINDS, ...SEARCH_PROPERTIES] as [string, ...string[]])
   .describe(
     "A kind (color, font-size, radius, spacing) or one CSS property (color, background-color, border-color, font-size, border-radius, padding-top … margin-left, gap). Leave out for all of them."
   );
+
 const value = z
   .string()
   .trim()
@@ -50,11 +52,13 @@ const value = z
   .describe(
     'Value to match, for example "#1c1f23", "14px" or "0.75rem". It is compared with the computed value, so 1rem finds 16px, and colors compare in one color space with a small delta: #009966 also finds rgb(0, 153, 102) and the lab()/oklch() colors of Tailwind v4.'
   );
+
 const frame = frameRef
   .optional()
   .describe(
     "Canvas frame id or @label from canvas_list. Its page, size and direction are used. Default f1, the entry page."
   );
+
 const source = z
   .object({
     file: z.string().min(1).max(1000),
@@ -62,6 +66,7 @@ const source = z
     col: z.number().int().min(1),
   })
   .strict();
+
 const match = z
   .object({
     source,
@@ -137,14 +142,18 @@ async function frameTarget(
   const loaded = await loadTarget(deps, input.projectId, input.directionId);
   const frames = (await deps.canvas.read(loaded.project)).canvas?.frames ?? [];
   const found = findFrame(frames, ref);
-  if (!found && !(frames.length === 0 && ref === "f1"))
+
+  if (!found && !(frames.length === 0 && ref === "f1")) {
     throw new EditError(
       `No frame ${ref} on the canvas. Use canvas_list for the frame ids.`
     );
+  }
+
   const { project, direction } =
     found?.directionId && input.directionId === undefined
       ? await loadTarget(deps, input.projectId, found.directionId)
       : loaded;
+
   return {
     project,
     direction,
@@ -181,6 +190,7 @@ async function scanFrame(
     target.direction,
     target.page
   );
+
   return scanPageStyles(deps.preview, url, target.viewport, query);
 }
 
@@ -197,14 +207,17 @@ const findStyles = defineTool(
   async (deps, input): Promise<Done> => {
     const target = await frameTarget(deps, input);
     const result = await scanFrame(deps, target, queryOf(input));
+
     const report = styleReport(
       result,
       tokenLookupFor(await tokenEntriesFor(target.project, target.direction))
     );
+
     const note =
       report.unlocated > 0
         ? `${report.unlocated} matching element(s) have no source location and cannot be replaced.`
         : undefined;
+
     return {
       result: ok({
         frame: target.frameId,
@@ -228,27 +241,34 @@ const replaceStyle = defineTool(
   async (deps, input): Promise<Done> => {
     const target = await frameTarget(deps, input);
     refuseWhileRunning(deps, target.project, target.direction);
+
     const matches =
       input.matches ??
       matchesOf((await scanFrame(deps, target, queryOf(input))).hits).slice(
         0,
         STYLE_REPLACE_MAX
       );
-    if (matches.length === 0)
+
+    if (matches.length === 0) {
       return {
         result: ok({
           replaced: 0,
           note: `No element in frame ${target.frameId} with a source location uses ${input.value ?? "that value"}.`,
         }),
       };
+    }
+
     const body = { replaceStyle: { matches, token: input.token } };
+
     const result = await studioCall<StyleReplaceResult>(
       deps,
       "POST",
       `${base(target.project, target.direction.id)}/direct-edit`,
       body
     );
+
     const summary = replaceSummary(result, input.token);
+
     const output = {
       replaced: result.replaced,
       elements: result.sites,
@@ -260,6 +280,7 @@ const replaceStyle = defineTool(
       versionId: result.replaced > 0 ? (result.version?.id ?? null) : null,
       summary,
     };
+
     return {
       result: ok(output),
       ...(result.replaced > 0

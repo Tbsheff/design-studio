@@ -13,7 +13,10 @@ const decoder = new TextDecoder("utf-8", { fatal: true });
 const LAYOUT_FILES_IN_EVERY_VERSION = new Set([CANVAS_FILE, LINKS_FILE]);
 
 function textOf(bytes: Uint8Array | null): string | null | undefined {
-  if (bytes === null) return null;
+  if (bytes === null) {
+    return null;
+  }
+
   try {
     return decoder.decode(bytes);
   } catch {
@@ -34,8 +37,11 @@ async function changeOf(
     fileAt(project, version.parentId, relative),
     fileAt(project, version.id, relative),
   ]).then(([a, b]) => [textOf(a), textOf(b)]);
-  if (before === undefined || after === undefined || after === null)
+
+  if (before === undefined || after === undefined || after === null) {
     return null;
+  }
+
   return {
     file: path.join(direction.workTree, relative),
     relative,
@@ -53,13 +59,16 @@ async function runChanges(
 ): Promise<EditFileChange[] | null> {
   const total = version.changedFilesTotal ?? version.changedFiles.length;
   const fileAt = versions.fileAt?.bind(versions);
+
   if (
     !fileAt ||
     total === 0 ||
     total > MAX_RUN_FILES ||
     version.changedFiles.length < total
-  )
+  ) {
     return null;
+  }
+
   const changes = await Promise.all(
     version.changedFiles
       .filter((relative) => !LAYOUT_FILES_IN_EVERY_VERSION.has(relative))
@@ -67,12 +76,18 @@ async function runChanges(
         changeOf(fileAt, project, direction, version, relative)
       )
   );
-  if (changes.some((change) => change === null)) return null;
+
+  if (changes.some((change) => change === null)) {
+    return null;
+  }
+
   const files = changes as EditFileChange[];
+
   const bytes = files.reduce(
     (sum, change) => sum + change.before.length + change.after.length,
     0
   );
+
   return bytes > MAX_RUN_BYTES ? null : files;
 }
 
@@ -92,13 +107,17 @@ export async function recordRunInHistory(
   const version = (await versions.list(project, direction)).find(
     (item) => item.id === versionId
   );
+
   const files = hasParent(version)
     ? await runChanges(versions, project, direction, version).catch(() => null)
     : null;
+
   if (!version || !files) {
     history.clear(project.id, direction.id);
+
     return;
   }
+
   history.record({
     projectId: project.id,
     directionId: direction.id,

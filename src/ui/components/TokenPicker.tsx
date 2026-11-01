@@ -32,7 +32,8 @@ function Preview({
   mode: TokenMode;
 }) {
   const value = modeValue(entry, mode);
-  if (entry.type === "color")
+
+  if (entry.type === "color") {
     return (
       <span
         className="tk-swatch"
@@ -40,7 +41,9 @@ function Preview({
         aria-hidden="true"
       />
     );
-  if (entry.type === "fontFamily")
+  }
+
+  if (entry.type === "fontFamily") {
     return (
       <span
         className="tk-glyph"
@@ -50,8 +53,11 @@ function Preview({
         Aa
       </span>
     );
+  }
+
   const px = lengthToPx(value);
   const size = px === null ? 0 : Math.min(16, Math.max(2, px / 4));
+
   return (
     <span className="tk-bar-wrap" aria-hidden="true">
       <span className="tk-bar" style={{ width: `${size}px` }} />
@@ -61,11 +67,21 @@ function Preview({
 
 function pxNote(entry: CompiledTokenEntry, mode: TokenMode): string {
   const value = modeValue(entry, mode);
-  if (entry.type === "color") return colorHex(value) ?? value;
-  if (entry.type === "fontFamily")
+
+  if (entry.type === "color") {
+    return colorHex(value) ?? value;
+  }
+
+  if (entry.type === "fontFamily") {
     return value.split(",")[0]?.replace(/['"]/g, "").trim() ?? value;
-  if (entry.type !== "dimension" || value.endsWith("px")) return value;
+  }
+
+  if (entry.type !== "dimension" || value.endsWith("px")) {
+    return value;
+  }
+
   const px = lengthToPx(value);
+
   return px === null ? value : `${value} · ${Math.round(px * 100) / 100}px`;
 }
 
@@ -74,7 +90,11 @@ function filterEntries(
   query: string
 ): CompiledTokenEntry[] {
   const q = query.trim().toLowerCase();
-  if (!q) return entries;
+
+  if (!q) {
+    return entries;
+  }
+
   return entries.filter(
     (entry) =>
       entry.cssVar.toLowerCase().includes(q) ||
@@ -88,6 +108,7 @@ function startIndex(
   nearest: string | null
 ): number {
   const at = list.findIndex((entry) => entry.cssVar === (current ?? nearest));
+
   return Math.max(0, at);
 }
 
@@ -101,9 +122,11 @@ export function TokenPicker({
 }: PickerProps) {
   const [query, setQuery] = useState("");
   const list = useMemo(() => filterEntries(entries, query), [entries, query]);
+
   const [active, setActive] = useState(() =>
     startIndex(entries, current, nearest)
   );
+
   const id = useId();
   const index = Math.min(active, Math.max(0, list.length - 1));
   const chosen = list[index];
@@ -115,7 +138,9 @@ export function TokenPicker({
       Home: 0,
       End: list.length - 1,
     };
+
     const next = moves[event.key];
+
     if (next !== undefined) {
       event.preventDefault();
       setActive(Math.min(list.length - 1, Math.max(0, next)));

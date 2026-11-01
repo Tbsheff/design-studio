@@ -27,12 +27,18 @@ async function place(
   file: File
 ): Promise<void> {
   const selection = drop.selection;
-  if (!selection) return;
+
+  if (!selection) {
+    return;
+  }
+
   const { fileData, imageApi, imageError, imageTargetOf } =
     await import("./imageApi");
+
   try {
     const image = await fileData(file);
     const kind = imageKindOf(selection);
+
     const request: SetImageRequest = {
       target: imageTargetOf(selection),
       image,
@@ -44,6 +50,7 @@ async function place(
             alt: "",
           }),
     };
+
     const result = await imageApi.set(o.projectId, directionId, request);
     o.notify(`${result.title}.`);
   } catch (error) {
@@ -52,13 +59,22 @@ async function place(
 }
 
 function refusal(o: Options, drop: FileDrop): string | null {
-  if (!drop.files[0])
+  if (!drop.files[0]) {
     return "Drop an image file: PNG, JPEG, WebP, AVIF, GIF or SVG.";
-  if (!o.enabled || !o.directionId)
+  }
+
+  if (!o.enabled || !o.directionId) {
     return "Edits are paused here. Wait for the run to finish, or open the latest version.";
-  if (!drop.selection) return "Drop the image on an element in the frame.";
-  if (!drop.selection.source && !drop.selection.owners?.length)
+  }
+
+  if (!drop.selection) {
+    return "Drop the image on an element in the frame.";
+  }
+
+  if (!drop.selection.source && !drop.selection.owners?.length) {
     return NO_SOURCE;
+  }
+
   return null;
 }
 
@@ -79,12 +95,21 @@ export function useImageDrop(o: Options): void {
       if (
         msg.type !== "file-drop" ||
         frame.token !== live.current.frames.frontToken
-      )
+      ) {
         return;
+      }
+
       const cur = live.current;
       const problem = refusal(cur, msg);
-      if (problem) return cur.notify(problem);
-      if (busy.current) return;
+
+      if (problem) {
+        return cur.notify(problem);
+      }
+
+      if (busy.current) {
+        return;
+      }
+
       busy.current = true;
       void place(
         cur,

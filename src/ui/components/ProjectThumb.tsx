@@ -20,9 +20,13 @@ function useThumb(hit: ProjectHit): string | null {
   const key = hit.thumbnail ? `${hit.id}/${hit.thumbnail}` : null;
   const [url, setUrl] = useState<{ key: string; url: string } | null>(null);
   useEffect(() => {
-    if (!key || !hit.thumbnail) return;
+    if (!key || !hit.thumbnail) {
+      return;
+    }
+
     let live = true;
     let pending = cache.get(key);
+
     if (!pending) {
       pending = api
         .thumbnail(hit.id, hit.thumbnail)
@@ -30,14 +34,17 @@ function useThumb(hit: ProjectHit): string | null {
       pending.catch(() => cache.delete(key));
       cache.set(key, pending);
     }
+
     pending.then(
       (next) => live && setUrl({ key, url: next }),
       () => undefined
     );
+
     return () => {
       live = false;
     };
   }, [key, hit.id, hit.thumbnail]);
+
   return url && url.key === key ? url.url : null;
 }
 
@@ -49,6 +56,7 @@ export function ProjectThumb({
   className?: string;
 }) {
   const url = useThumb(hit);
+
   return (
     <span
       className={`pnav-thumb${className ? ` ${className}` : ""}`}
@@ -79,7 +87,10 @@ export function HealthDot({
   hit: ProjectHit;
   className?: string;
 }) {
-  if (!hit.health) return null;
+  if (!hit.health) {
+    return null;
+  }
+
   return (
     <span
       className={`pnav-dot${className ? ` ${className}` : ""}`}

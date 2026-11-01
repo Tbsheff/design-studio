@@ -32,21 +32,27 @@ export function noteTreeWrite(
   complete: boolean
 ): void {
   const root = path.resolve(workTree);
+
   if (complete) {
     noteTreeChange(
       root,
       relatives.map((relative) => path.join(root, ...relative.split("/")))
     );
+
     return;
   }
+
   treeStamps.set(root, treeStamp(root) + 1);
   treeLogs.delete(root);
 }
 
 export function treeChangesSince(root: string, stamp: number): string[] | null {
   const log = treeLogs.get(root) ?? [];
-  if (stamp < treeStamp(root) && (log[0]?.stamp ?? Infinity) > stamp + 1)
+
+  if (stamp < treeStamp(root) && (log[0]?.stamp ?? Infinity) > stamp + 1) {
     return null;
+  }
+
   return log.filter((item) => item.stamp > stamp).flatMap((item) => item.paths);
 }
 
@@ -56,11 +62,15 @@ export function treeStamp(root: string): number {
 
 export function onSourceChange(listener: Listener): () => void {
   listeners.add(listener);
+
   return () => listeners.delete(listener);
 }
 
 export function emitSourceChange(change: SourceChange): void {
-  if (change.files.length === 0) return;
+  if (change.files.length === 0) {
+    return;
+  }
+
   for (const listener of listeners) {
     try {
       listener(change);

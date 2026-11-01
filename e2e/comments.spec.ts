@@ -16,6 +16,7 @@ import {
 } from "./support/studio";
 
 const REVIEW_DIR = path.join(ROOT, "design-review");
+
 const SIZES = [
   [1440, 900],
   [800, 934],
@@ -34,8 +35,11 @@ async function statuses(api: StudioApi, project: Project): Promise<string[]> {
 
 async function setCommentMode(page: Page, on: boolean): Promise<void> {
   const button = page.getByRole("button", { name: "Comment", exact: true });
-  if ((await button.getAttribute("aria-pressed")) !== String(on))
+
+  if ((await button.getAttribute("aria-pressed")) !== String(on)) {
     await page.keyboard.press("c");
+  }
+
   await expect(button).toHaveAttribute("aria-pressed", String(on));
 }
 
@@ -70,11 +74,16 @@ async function expectPinOn(
   await expect
     .poll(async () => {
       const box = await pin(page, n).boundingBox();
+
       const target = await frontFrame(page)
         .locator(selector)
         .first()
         .boundingBox();
-      if (!box || !target) return Number.POSITIVE_INFINITY;
+
+      if (!box || !target) {
+        return Number.POSITIVE_INFINITY;
+      }
+
       return Math.max(
         Math.abs(box.x + box.width + 4 - target.x),
         Math.abs(box.y - target.y)
@@ -85,6 +94,7 @@ async function expectPinOn(
 
 async function shoot(page: Page, name: string): Promise<void> {
   mkdirSync(REVIEW_DIR, { recursive: true });
+
   for (const [width, height] of SIZES) {
     await page.setViewportSize({ width, height });
     await page.waitForTimeout(400);
@@ -92,6 +102,7 @@ async function shoot(page: Page, name: string): Promise<void> {
       path: path.join(REVIEW_DIR, `comments-${name}-${width}x${height}.png`),
     });
   }
+
   await page.setViewportSize({ width: 1600, height: 1000 });
   await page.waitForTimeout(200);
 }
@@ -104,6 +115,7 @@ async function newProject(
   const project = await createProjectViaUi(page, api, name, "html");
   await expect(frontFrame(page).locator("h1")).toHaveText(name);
   await api.waitForRuns(project.id, 1);
+
   return {
     api,
     project,
@@ -201,9 +213,11 @@ test("Comments: queue two pins, survive reload and zoom, send in one run", async
     .toEqual(["resolved", "resolved"]);
   const runs = await api.runs(project.id);
   expect(runs.length).toBe(runsBefore + 1);
+
   const run = runs.find(
     (candidate) => candidate.request.comments?.length === 2
   );
+
   expect(run?.status).toBe("completed");
   expect(run?.finalText).toBe("Done: #1, #2.");
   await expect(frontFrame(page).locator("h1")).toHaveText("Welcome to Harbor");
@@ -311,9 +325,11 @@ test("Comments: quick feedback popover in select mode", async ({ page }) => {
   );
   const feedback = page.getByTestId("comment-feedback");
   await expect(feedback).toBeVisible();
+
   const input = feedback.getByRole("textbox", {
     name: "Feedback on selection",
   });
+
   await expect(input).not.toBeFocused();
   await page.getByLabel("Text content").click();
   await expect(page.getByLabel("Text content")).toBeFocused();

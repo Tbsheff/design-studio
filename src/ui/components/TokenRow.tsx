@@ -37,7 +37,11 @@ function AliasChip({
   swatch: string | null;
 }) {
   const target = aliasPath(value) ?? varTarget(value);
-  if (!target) return null;
+
+  if (!target) {
+    return null;
+  }
+
   return (
     <span className="tk-chip tkp-alias" data-tip={`Alias of ${target}`}>
       {swatch && (
@@ -59,6 +63,7 @@ function DarkSlot({
   onEdit,
 }: Pick<RowProps, "entry" | "shown" | "swatchFor" | "onEdit">) {
   const name = entry.cssVar;
+
   if (shown.darkValue === null) {
     return (
       <button
@@ -72,6 +77,7 @@ function DarkSlot({
       </button>
     );
   }
+
   return (
     <div className="tkp-dark">
       <ColorValue
@@ -105,7 +111,8 @@ function ValueEditor({
   const label = `${entry.cssVar} value`;
   const invalid = error !== undefined;
   const change = (next: string) => onEdit(entry, "value", next);
-  if (entry.type === "color")
+
+  if (entry.type === "color") {
     return (
       <ColorValue
         label={label}
@@ -115,8 +122,11 @@ function ValueEditor({
         onChange={change}
       />
     );
+  }
+
   if (entry.type === "dimension") {
     const short = SHORT[entry.path.split(".")[0] ?? ""] ?? "D";
+
     return (
       <DimensionValue
         id={`tkp-${entry.path}`}
@@ -128,6 +138,7 @@ function ValueEditor({
       />
     );
   }
+
   return (
     <TextValue
       label={label}
@@ -144,8 +155,10 @@ function tokenTitle(entry: CompiledTokenEntry): string {
     const dark = entry.source.darkLine
       ? `, dark line ${entry.source.darkLine}`
       : "";
+
     return `${entry.cssVar}: ${entry.source.file} line ${entry.source.line}${dark}`;
   }
+
   return `${entry.cssVar} (${entry.path})${entry.description ? `: ${entry.description}` : ""}`;
 }
 
@@ -161,6 +174,7 @@ export const TokenRow = memo(function TokenRow(props: RowProps) {
   const changed = rowChanged(pending);
   const color = entry.type === "color";
   const dark = color && props.showDark;
+
   return (
     <li
       className={`tkp-row ${changed ? "changed" : ""} ${dark ? "has-dark" : ""}`}

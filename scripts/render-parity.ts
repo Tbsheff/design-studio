@@ -38,18 +38,24 @@ import type {
 import type { RenderErrors } from "../src/shared/render-rpc.js";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+
 const SIZES = [
   { width: 390, height: 844 },
   { width: 768, height: 1024 },
   { width: 1440, height: 900 },
 ];
+
 const REAL_PAGES = ["g-after-polish.html", "h-after-polish.html"];
+
 const REAL_PAGES_DIR =
   process.env.STUDIO_PARITY_PAGES_DIR ??
   path.join(ROOT, "design-review", "taste-runs", "levels");
+
 const LIMIT_PCT = 0.5;
 const BACKENDS = ["chrome", "electron", "playwrightElectron"] as const;
+
 type Backend = (typeof BACKENDS)[number];
+
 type Shots = Record<Backend, PNG>;
 
 interface PixelRow {
@@ -63,19 +69,24 @@ interface PixelRow {
 function collectPages(work: string): Map<string, string> {
   const pages = new Map<string, string>();
   const fixtures = path.join(ROOT, "e2e", "fixtures");
+
   for (const name of readdirSync(fixtures).filter((file) =>
     file.endsWith(".html")
-  ))
+  )) {
     pages.set(
       `fixture/${name}`,
       readFileSync(path.join(fixtures, name), "utf-8")
     );
+  }
+
   for (const name of REAL_PAGES) {
     const source = path.join(REAL_PAGES_DIR, name);
+
     if (!existsSync(source)) {
       console.log(`[render-parity] skip real/${name}: ${source} not found`);
       continue;
     }
+
     const dir = path.join(work, "data", "projects", name.replace(".html", ""));
     mkdirSync(dir, { recursive: true });
     cpSync(source, path.join(dir, "index.html"));
@@ -84,6 +95,7 @@ function collectPages(work: string): Map<string, string> {
       readFileSync(path.join(dir, "index.html"), "utf-8")
     );
   }
+
   return pages;
 }
 
@@ -92,12 +104,14 @@ function serve(pages: Map<string, string>): Promise<Server> {
     const key = decodeURIComponent(
       (req.url ?? "").split("?")[0]?.slice(1) ?? ""
     );
+
     const body = pages.get(key);
     res.writeHead(body ? 200 : 404, {
       "content-type": "text/html; charset=utf-8",
     });
     res.end(body ?? "");
   });
+
   return new Promise((resolve) =>
     server.listen(0, "127.0.0.1", () => resolve(server))
   );
@@ -109,12 +123,14 @@ function wrapElectronPage(page: Page): RenderPage {
     if (
       message.type() === "error" &&
       !message.location().url.endsWith("/favicon.ico")
-    )
+    ) {
       errors.consoleErrors.push(message.text());
+    }
   });
   page.on("pageerror", (error) =>
     errors.pageErrors.push(error.stack ?? error.message)
   );
+
   return {
     async goto(url) {
       await page.goto(url, {
@@ -144,6 +160,7 @@ function wrapElectronPage(page: Page): RenderPage {
 function playwrightOnElectron(app: ElectronApplication): RenderBackend {
   let counter = 0;
   let queue: Promise<unknown> = Promise.resolve();
+
   const openOne = async (viewport: {
     width: number;
     height: number;
@@ -163,19 +180,23 @@ function playwrightOnElectron(app: ElectronApplication): RenderBackend {
             backgroundThrottling: false,
           },
         });
+
         void window.loadURL("about:blank");
       },
       { ...viewport, counter }
     );
     const page = await opened;
     await page.setViewportSize(viewport);
+
     return wrapElectronPage(page);
   };
+
   return {
     name: "playwright",
     open(viewport) {
       const next = queue.then(() => openOne(viewport));
       queue = next.catch(() => undefined);
+
       return next;
     },
     close: async () => undefined,
@@ -185,15 +206,20 @@ function playwrightOnElectron(app: ElectronApplication): RenderBackend {
 function diffPct(a: PNG, b: PNG): number {
   const width = Math.min(a.width, b.width);
   const height = Math.min(a.height, b.height);
+
   const crop = (image: PNG) => {
     const out = new PNG({ width, height });
     PNG.bitblt(image, out, 0, 0, width, height, 0, 0);
+
     return out.data;
   };
+
   const changed = pixelmatch(crop(a), crop(b), undefined, width, height, {
     threshold: 0.1,
   });
+
   const area = Math.max(a.width * a.height, b.width * b.height);
+
   return ((changed + area - width * height) / area) * 100;
 }
 
@@ -203,6 +229,7 @@ function findingKeys(
 ): string[] {
   const clean = (text: string) =>
     normalize ? text.replace(/\d+x\d+ px/g, "NxN px") : text;
+
   return results
     .flatMap((result) => [
       `${result.viewport} ok=${result.ok} overflow=${result.horizontalOverflow} layout=${result.layoutTotal} console=${result.consoleErrors.length} page=${result.pageErrors.length}`,
@@ -232,9 +259,11 @@ async function shoot(
         size,
         path.join(dir, backend, `${size.width}.png`)
       );
+
       return [backend, PNG.sync.read(readFileSync(file))] as const;
     })
   );
+
   return Object.fromEntries(entries) as unknown as Shots;
 }
 
@@ -261,6 +290,7 @@ async function checks(
         ] as const
     )
   );
+
   return Object.fromEntries(entries) as Record<Backend, RenderCheckResult[]>;
 }
 
@@ -271,12 +301,18 @@ async function main(): Promise<void> {
   const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
   const host = await startRenderHost();
   const env: Record<string, string> = {};
-  for (const [key, value] of Object.entries(process.env))
-    if (value !== undefined && key !== "ELECTRON_RUN_AS_NODE") env[key] = value;
+
+  for (const [key, value] of Object.entries(process.env)) {
+    if (value !== undefined && key !== "ELECTRON_RUN_AS_NODE") {
+      env[key] = value;
+    }
+  }
+
   const pwApp = await electron.launch({
     args: [path.join(ROOT, "desktop", "dist", "render-host.js")],
     env,
   });
+
   const pools: Record<Backend, BrowserPool> = {
     chrome: new BrowserPool(base, async () => createPlaywrightBackend()),
     electron: new BrowserPool(base, async () =>
@@ -286,7 +322,9 @@ async function main(): Promise<void> {
       playwrightOnElectron(pwApp)
     ),
   };
+
   const pixels: PixelRow[] = [];
+
   const findings: {
     page: string;
     pipelineSame: boolean;
@@ -295,10 +333,12 @@ async function main(): Promise<void> {
     count: number;
     engineDiff: string[];
   }[] = [];
+
   try {
     for (const name of pages.keys()) {
       const url = `${base}/${encodeURIComponent(name)}`;
       const dir = path.join(work, "shots", name.replace("/", "-"));
+
       for (const size of SIZES) {
         const shots = await shoot(pools, url, size, dir);
         pixels.push({
@@ -313,13 +353,16 @@ async function main(): Promise<void> {
           ).join(" / "),
         });
       }
+
       const results = await checks(pools, url, dir);
+
       const raw = Object.fromEntries(
         BACKENDS.map((backend) => [
           backend,
           findingKeys(results[backend], false),
         ])
       ) as Record<Backend, string[]>;
+
       const chromeSet = new Set(raw.chrome);
       findings.push({
         page: name,
@@ -339,6 +382,7 @@ async function main(): Promise<void> {
     stopRenderHost(host.pid);
     server.close();
   }
+
   const worstPipeline = Math.max(...pixels.map((row) => row.pipelinePct));
   const worstEngine = Math.max(...pixels.map((row) => row.enginePct));
   const out = path.join(ROOT, "test-results", "render-parity.json");
@@ -350,14 +394,19 @@ async function main(): Promise<void> {
   console.log(
     "page                                     width  pipeline  engine   sizes (chrome / electron / playwright-on-electron)"
   );
-  for (const row of pixels)
+
+  for (const row of pixels) {
     console.log(
       `${row.page.padEnd(40)} ${String(row.width).padStart(5)}  ${row.pipelinePct.toFixed(3).padStart(7)}%  ${row.enginePct.toFixed(3).padStart(6)}%  ${row.sizes}`
     );
-  for (const row of findings)
+  }
+
+  for (const row of findings) {
     console.log(
       `${row.page.padEnd(40)} findings ${row.count}: pipeline ${row.pipelineSame ? "same" : "DIFFERENT"}, engine ${row.engineSame ? "same" : row.engineSameIgnoringPx ? "same except px sizes" : "DIFFERENT"}`
     );
+  }
+
   console.log(
     `worst pipeline difference ${worstPipeline.toFixed(3)}% (limit ${LIMIT_PCT}%), worst engine difference ${worstEngine.toFixed(3)}%, report ${out}`
   );

@@ -20,6 +20,7 @@ export function listRunPage(
   before: number | null
 ): Promise<RunPage> {
   const after = before === null ? "" : `&before=${before}`;
+
   return json<RunPage>(
     "GET",
     `/api/projects/${encodeURIComponent(projectId)}/runs?limit=${limit}${after}`
@@ -33,13 +34,18 @@ export function searchRunPage(
   query: string
 ): Promise<RunPage> {
   const projectId = history?.projectId;
-  if (!projectId) return Promise.resolve({ runs: [], nextBefore: null });
+
+  if (!projectId) {
+    return Promise.resolve({ runs: [], nextBefore: null });
+  }
+
   const params = new URLSearchParams({
     q: query,
     direction: directionId,
     limit: String(SEARCH_LIMIT),
     light: "1",
   });
+
   return json<RunPage>(
     "GET",
     `/api/projects/${encodeURIComponent(projectId)}/runs?${params.toString()}`
@@ -76,7 +82,11 @@ export function publishOlderRuns(
   load: (() => void) | null
 ): void {
   loader = load;
-  if (next.more === older.more && next.loading === older.loading) return;
+
+  if (next.more === older.more && next.loading === older.loading) {
+    return;
+  }
+
   older = next.more || next.loading ? next : NONE;
   listeners.forEach((listener) => listener());
 }
@@ -87,6 +97,7 @@ export function requestOlderRuns(): void {
 
 function subscribe(listener: () => void): () => void {
   listeners.add(listener);
+
   return () => {
     listeners.delete(listener);
   };

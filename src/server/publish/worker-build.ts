@@ -22,6 +22,7 @@ export interface WorkerSource {
 function candidates(): string[] {
   const here = path.dirname(fileURLToPath(import.meta.url));
   const fromEnv = process.env.STUDIO_PUBLISH_WORKER_DIR;
+
   return [
     fromEnv,
     path.resolve(here, "..", "..", "..", "cloud", "publish-worker"),
@@ -32,13 +33,19 @@ function candidates(): string[] {
 export function findWorkerSource(): WorkerSource | null {
   for (const dir of candidates()) {
     const migrations = path.join(dir, "migrations");
-    if (!existsSync(migrations)) continue;
+
+    if (!existsSync(migrations)) {
+      continue;
+    }
+
     const entry = path.join(dir, "src", "index.ts");
     const prebuilt = path.join(dir, "worker.js");
     const runner = path.join(dir, "scripts", "local.mjs");
+
     const hasRunner =
       existsSync(runner) &&
       existsSync(path.join(dir, "node_modules", "miniflare"));
+
     return {
       dir,
       entry: existsSync(entry) ? entry : null,
@@ -47,6 +54,7 @@ export function findWorkerSource(): WorkerSource | null {
       localRunner: hasRunner ? runner : null,
     };
   }
+
   return null;
 }
 
@@ -63,7 +71,8 @@ export async function writeBuildOutput(
   const worker = path.join(root, "workers", "default");
   const bundle = path.join(worker, "bundle", "worker.js");
   await mkdir(path.dirname(bundle), { recursive: true });
-  if (source.entry)
+
+  if (source.entry) {
     await build({
       entryPoints: [source.entry],
       outfile: bundle,
@@ -74,15 +83,19 @@ export async function writeBuildOutput(
       legalComments: "none",
       logLevel: "silent",
     });
-  else if (source.prebuilt) await copyFile(source.prebuilt, bundle);
-  else
+  } else if (source.prebuilt) {
+    await copyFile(source.prebuilt, bundle);
+  } else {
     throw new Error(
       "The publish Worker bundle is missing from this copy of Design Studio."
     );
+  }
+
   await writeFile(
     path.join(root, "config.json"),
     JSON.stringify({ buildContext: { isPreview: false } })
   );
+
   const config = {
     name: WORKER_NAME,
     compatibilityDate: COMPATIBILITY_DATE,
@@ -99,9 +112,11 @@ export async function writeBuildOutput(
       modules: { "worker.js": { type: "esm" } },
     },
   };
+
   await writeFile(
     path.join(worker, "worker.config.json"),
     JSON.stringify(config, null, 2)
   );
+
   return bundle;
 }

@@ -41,6 +41,7 @@ export function parseAppTokens(
 ): LoadedAppTokens {
   const sheet = readCssTokens(text);
   const tokens = buildAppTokens(sheet);
+
   return {
     root,
     file,
@@ -66,19 +67,28 @@ export async function readAppTokensAt(
 ): Promise<LoadedAppTokens | null> {
   const realRoot = await realpath(root).catch(() => null);
   const absolute = realRoot ? await safeFileInside(realRoot, file) : null;
-  if (!realRoot || !absolute) return null;
+
+  if (!realRoot || !absolute) {
+    return null;
+  }
+
   const info = await stat(absolute);
   const stamp = `${info.mtimeMs}:${info.size}`;
   const cached = cache.get(absolute);
-  if (cached?.stamp === stamp && cached.loaded.file === file)
+
+  if (cached?.stamp === stamp && cached.loaded.file === file) {
     return cached.loaded;
+  }
+
   const loaded = parseAppTokens(
     realRoot,
     file,
     absolute,
     await readFile(absolute, "utf-8")
   );
+
   cache.set(absolute, { stamp, loaded });
+
   return loaded;
 }
 
@@ -86,6 +96,7 @@ export async function loadAppTokens(
   workTree: string
 ): Promise<LoadedAppTokens | null> {
   const file = await findTokenFile(workTree);
+
   return file ? readAppTokensAt(workTree, file) : null;
 }
 
@@ -93,8 +104,14 @@ export async function appTokensFor(
   project: Project,
   direction: Direction
 ): Promise<LoadedAppTokens | null> {
-  if (!usesAppTokens(project)) return null;
-  if (await readDesignSystemFiles(direction.workTree)) return null;
+  if (!usesAppTokens(project)) {
+    return null;
+  }
+
+  if (await readDesignSystemFiles(direction.workTree)) {
+    return null;
+  }
+
   return loadAppTokens(direction.workTree);
 }
 

@@ -24,6 +24,7 @@ async function openProject(
     "/api/projects",
     { prompt, kind: "html" }
   );
+
   await api.waitForRuns(project.id, 1);
   await page.evaluate((id) => {
     const raw = localStorage.getItem("design-studio.ui.v1");
@@ -35,6 +36,7 @@ async function openProject(
   }, project.id);
   await page.reload();
   await expect(frontFrame(page).locator("h1")).toHaveText(prompt);
+
   return api.project(project.id);
 }
 
@@ -56,7 +58,10 @@ async function settled(
 }
 
 async function shot(page: Page, name: string): Promise<void> {
-  if (!SHOTS) return;
+  if (!SHOTS) {
+    return;
+  }
+
   mkdirSync(SHOTS, { recursive: true });
   await page
     .getByRole("region", { name: "Fill and border" })
@@ -127,8 +132,11 @@ test("Multi-select: Shift+click toggles, Mixed radius, one batch write, one undo
   expect(read()).toBe(start);
 
   await radius.fill("8");
-  for (let i = 0; i < 3; i += 1)
+
+  for (let i = 0; i < 3; i += 1) {
     await expect(cards.nth(i)).toHaveCSS("border-top-left-radius", "8px");
+  }
+
   await radius.press("Enter");
   await expect
     .poll(

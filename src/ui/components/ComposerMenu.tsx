@@ -47,33 +47,49 @@ function usePlacedPopover(
   const [open, setOpen] = useState(false);
   const [style, setStyle] = useState<CSSProperties>(UNPLACED);
   const presence = usePresence(open ? true : null);
+
   const close = useCallback(
     (refocus: boolean) => {
       setOpen(false);
-      if (refocus) trigger.current?.focus();
+
+      if (refocus) {
+        trigger.current?.focus();
+      }
     },
     [trigger]
   );
+
   usePopover(open, panel, close, trigger);
   useLayoutEffect(() => {
-    if (!open) return;
+    if (!open) {
+      return;
+    }
+
     const place = () => {
-      if (trigger.current && panel.current)
+      if (trigger.current && panel.current) {
         setStyle(placeAboveOrBelow(trigger.current, panel.current));
+      }
     };
+
     place();
     window.addEventListener("resize", place);
     const observer = new ResizeObserver(place);
-    if (panel.current) observer.observe(panel.current);
+
+    if (panel.current) {
+      observer.observe(panel.current);
+    }
+
     return () => {
       window.removeEventListener("resize", place);
       observer.disconnect();
     };
   }, [open, trigger, panel]);
+
   const show = () => {
     setStyle(UNPLACED);
     setOpen(true);
   };
+
   return {
     open,
     shown: presence.shown !== null,
@@ -101,13 +117,16 @@ function menuKeys(
   const items = Array.from(
     event.currentTarget.querySelectorAll<HTMLElement>(ITEM)
   );
+
   const at = items.indexOf(document.activeElement as HTMLElement);
+
   const step =
     event.key === "ArrowDown" || event.key === "ArrowRight"
       ? 1
       : event.key === "ArrowUp" || event.key === "ArrowLeft"
         ? -1
         : 0;
+
   if (step !== 0) {
     event.preventDefault();
     items[(at + step + items.length) % items.length]?.focus();
@@ -141,6 +160,7 @@ function MenuItem({
 }: ItemProps) {
   const off = Boolean(disabledReason);
   const note = disabledReason ?? hint;
+
   return (
     <button
       type="button"
@@ -150,7 +170,9 @@ function MenuItem({
       aria-disabled={off || undefined}
       tabIndex={-1}
       onClick={() => {
-        if (!off) onPick();
+        if (!off) {
+          onPick();
+        }
       }}
     >
       {icon && <Icon name={icon} size={14} />}
@@ -163,6 +185,7 @@ function MenuItem({
 
 function Section({ label, children }: { label: string; children: ReactNode }) {
   const id = useId();
+
   return (
     <div className="ui-menu-section" role="group" aria-labelledby={id}>
       <span className="ui-menu-label" id={id}>
@@ -184,11 +207,13 @@ interface PlusMenuProps {
 }
 
 const MODES: readonly ComposerMode[] = ["edit", "plan", "critique"];
+
 export const MODE_SHORT_HINT: Record<ComposerMode, string> = {
   edit: "Changes the design",
   plan: "You approve first",
   critique: "Review only",
 };
+
 const DESIGN_COUNTS = [1, 2, 3, 4] as const;
 
 export function PlusMenu(props: PlusMenuProps) {
@@ -196,14 +221,19 @@ export function PlusMenu(props: PlusMenuProps) {
   const panel = useRef<HTMLDivElement>(null);
   const menu = usePlacedPopover(trigger, panel);
   useEffect(() => {
-    if (menu.open) panel.current?.querySelector<HTMLElement>(ITEM)?.focus();
+    if (menu.open) {
+      panel.current?.querySelector<HTMLElement>(ITEM)?.focus();
+    }
   }, [menu.open]);
+
   const act = (run: () => void) => () => {
     menu.close(false);
     run();
   };
+
   const designs = props.designs;
   const countsId = useId();
+
   return (
     <>
       <button
@@ -219,7 +249,10 @@ export function PlusMenu(props: PlusMenuProps) {
         data-tip-align="start"
         onMouseDown={(event) => event.stopPropagation()}
         onClick={() => {
-          if (!menu.open) props.onOpen?.();
+          if (!menu.open) {
+            props.onOpen?.();
+          }
+
           menu.toggle();
         }}
       >
@@ -275,6 +308,7 @@ export function PlusMenu(props: PlusMenuProps) {
                   {DESIGN_COUNTS.filter((count) => count <= designs.max).map(
                     (count) => {
                       const off = count > 1 && designs.disabledReason !== null;
+
                       return (
                         <button
                           key={count}
@@ -288,7 +322,9 @@ export function PlusMenu(props: PlusMenuProps) {
                           aria-disabled={off || undefined}
                           tabIndex={-1}
                           onClick={() => {
-                            if (!off) designs.onChange(count);
+                            if (!off) {
+                              designs.onChange(count);
+                            }
                           }}
                         >
                           {count}
@@ -331,7 +367,11 @@ function PillCaret() {
 
 function ModelName({ name }: { name: string }) {
   const at = name.lastIndexOf(" ");
-  if (at < 0) return <>{name}</>;
+
+  if (at < 0) {
+    return <>{name}</>;
+  }
+
   return (
     <>
       {name.slice(0, at)}
@@ -353,12 +393,14 @@ export function LevelPill({
   const panel = useRef<HTMLDivElement>(null);
   const menu = usePlacedPopover(trigger, panel);
   useEffect(() => {
-    if (menu.open)
+    if (menu.open) {
       (
         panel.current?.querySelector<HTMLElement>('[aria-checked="true"]') ??
         panel.current?.querySelector<HTMLElement>(ITEM)
       )?.focus();
+    }
   }, [menu.open]);
+
   return (
     <>
       <button
@@ -370,7 +412,10 @@ export function LevelPill({
         aria-expanded={menu.open}
         aria-label={`Level: ${levelLabel(level)}`}
         onClick={() => {
-          if (!menu.open) onOpen?.();
+          if (!menu.open) {
+            onOpen?.();
+          }
+
           menu.toggle();
         }}
       >
@@ -426,12 +471,14 @@ function ModelToggle({
 }) {
   const ids = MODEL_OPTIONS.map((option) => option.id);
   const known = ids.includes(value);
+
   const radios = useRovingRadioGroup<string>(
     ids,
     known ? value : (ids[0] ?? ""),
     onChange,
     () => locked
   );
+
   return (
     <div
       className="segmented"
@@ -480,11 +527,13 @@ export function ModelPill({
   const locked = shown !== model;
   const choice = effort.value ?? "auto";
   useEffect(() => {
-    if (pop.open)
+    if (pop.open) {
       panel.current
         ?.querySelector<HTMLElement>('[tabindex="0"]:not(:disabled)')
         ?.focus();
+    }
   }, [pop.open]);
+
   return (
     <>
       <button
@@ -496,7 +545,10 @@ export function ModelPill({
         aria-haspopup="dialog"
         aria-expanded={pop.open}
         onClick={() => {
-          if (!pop.open) onOpen?.();
+          if (!pop.open) {
+            onOpen?.();
+          }
+
           pop.toggle();
         }}
       >

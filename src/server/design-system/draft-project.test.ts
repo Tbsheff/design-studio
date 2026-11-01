@@ -29,8 +29,9 @@ import { packRegistry } from "./packs.js";
 const roots: string[] = [];
 
 afterEach(async () => {
-  while (roots.length)
+  while (roots.length) {
     await rm(roots.pop() as string, { recursive: true, force: true });
+  }
 });
 
 const noFetch = async () => Promise.reject(new Error("no network in tests"));
@@ -38,11 +39,13 @@ const noFetch = async () => Promise.reject(new Error("no network in tests"));
 async function draftTree(request: Record<string, unknown>) {
   const root = await mkdtemp(path.join(os.tmpdir(), "studio-draft-"));
   roots.push(root);
+
   const draft = await buildDraft(
     parseDraftRequest(request, 0),
     { registry: packRegistry(), fetcher: noFetch },
     { allowLoopback: false, imageCount: 0 }
   );
+
   await mkdir(path.join(root, "design-system"), { recursive: true });
   await mkdir(path.join(root, "source"), { recursive: true });
   await writeFile(
@@ -53,6 +56,7 @@ async function draftTree(request: Record<string, unknown>) {
     path.join(root, COVERAGE_FILE),
     `${JSON.stringify(draft.coverage, null, 2)}\n`
   );
+
   return { root, coverage: draft.coverage };
 }
 
@@ -68,6 +72,7 @@ async function editTokens(
   const tokens = JSON.parse(
     await readFile(path.join(root, TOKENS_FILE), "utf-8")
   ) as Tokens;
+
   edit(tokens);
   await writeFile(path.join(root, TOKENS_FILE), JSON.stringify(tokens));
 }
@@ -77,6 +82,7 @@ describe("draft coverage after a run", () => {
     const { root, coverage } = await draftTree({
       brief: "Quiet tools for focused teams",
     });
+
     expect(coverage.fallbacks).toEqual(
       expect.arrayContaining(["radius.pill", "shadow.lg", "color.success"])
     );
@@ -86,12 +92,15 @@ describe("draft coverage after a run", () => {
         "studio.modes": { dark: "oklch(70% 0.15 150)" },
       };
     });
+
     const next = (await refreshDraftCoverage(
       root,
       packRegistry()
     )) as DesignSystemCoverage;
+
     const entry = (token: string) =>
       next.tokens.find((item) => item.token === token);
+
     expect(entry("radius.pill")).toEqual({
       token: "radius.pill",
       source: "agent",
@@ -121,6 +130,7 @@ describe("draft coverage after a run", () => {
       brief: "Night mode console",
       mode: "dark",
     });
+
     expect(coverage.mode).toBe("dark");
     expect(await refreshDraftCoverage(root, packRegistry())).toEqual(coverage);
     await editTokens(root, (tokens) => {

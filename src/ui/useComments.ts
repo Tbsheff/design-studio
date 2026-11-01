@@ -49,6 +49,7 @@ function targetWith(
   offset: CommentTarget["offset"]
 ): CommentTarget {
   const target = targetFromSelection(selection);
+
   return offset ? { ...target, offset } : target;
 }
 
@@ -128,19 +129,28 @@ async function describeWithTimeout(
   describe: DescribeAnchors | null,
   comments: DesignComment[]
 ): Promise<Record<string, SelectionContext>> {
-  if (!describe || comments.length === 0) return {};
+  if (!describe || comments.length === 0) {
+    return {};
+  }
+
   const timeout = new Promise<null>((resolve) =>
     window.setTimeout(() => resolve(null), DESCRIBE_TIMEOUT_MS)
   );
+
   const contexts = await Promise.race([
     describe(comments.map(anchorQueryOf)).catch(() => null),
     timeout,
   ]);
+
   const out: Record<string, SelectionContext> = {};
   comments.forEach((comment, index) => {
     const context = contexts?.[index];
-    if (context) out[comment.id] = context;
+
+    if (context) {
+      out[comment.id] = context;
+    }
   });
+
   return out;
 }
 
@@ -159,9 +169,11 @@ function usePicks(comments: DesignComment[]) {
           (comment) => comment.id === id && canPickForChat(comment.status)
         )
       );
+
       return next.length === prev.length ? prev : next;
     });
   }, [comments]);
+
   const togglePick = useCallback(
     (id: string) =>
       setPicked((prev) =>
@@ -169,7 +181,9 @@ function usePicks(comments: DesignComment[]) {
       ),
     []
   );
+
   const clearPicked = useCallback(() => setPicked([]), []);
+
   return { picked, togglePick, clearPicked };
 }
 
@@ -208,11 +222,16 @@ export function useComments(
     setRepinId(null);
     setNotice(null);
     afterRun.current.clear();
-    if (!directionId) return;
+
+    if (!directionId) {
+      return;
+    }
+
     let alive = true;
     json<DesignComment[]>("GET", base(projectId, directionId))
       .then((list) => alive && setComments(list))
       .catch((err: unknown) => alive && setNotice(errorText(err)));
+
     return () => {
       alive = false;
     };
@@ -222,8 +241,9 @@ export function useComments(
     if (
       event.type === "comments.changed" &&
       event.directionId === didRef.current
-    )
+    ) {
       setComments(event.comments);
+    }
   });
 
   const call = useCallback(
@@ -233,7 +253,11 @@ export function useComments(
       body?: unknown
     ): Promise<T | null> => {
       const did = didRef.current;
-      if (!did) return null;
+
+      if (!did) {
+        return null;
+      }
+
       return json<T>(method, `${base(projectId, did)}${suffix}`, body);
     },
     [projectId]
@@ -246,13 +270,19 @@ export function useComments(
         : queuedOf(listRef.current).filter(
             (comment) => !chatRef.current.includes(comment.id)
           );
-      if (chosen.length === 0) return;
+
+      if (chosen.length === 0) {
+        return;
+      }
+
       setSending(true);
+
       try {
         const contexts = await describeWithTimeout(
           describeRef.current,
           chosen.filter((comment) => !comment.drawing)
         );
+
         await call("POST", "/send", {
           ids: chosen.map((comment) => comment.id),
           contexts,
@@ -275,12 +305,20 @@ export function useComments(
 
   const deliver = useCallback(
     async (created: DesignComment[], toClaude: boolean) => {
-      if (!toClaude || created.length === 0) return;
-      const ids = created.map((comment) => comment.id);
-      if (runningRef.current) {
-        for (const id of ids) afterRun.current.add(id);
+      if (!toClaude || created.length === 0) {
         return;
       }
+
+      const ids = created.map((comment) => comment.id);
+
+      if (runningRef.current) {
+        for (const id of ids) {
+          afterRun.current.add(id);
+        }
+
+        return;
+      }
+
       listRef.current = [
         ...listRef.current.filter((c) => !ids.includes(c.id)),
         ...created,
@@ -298,10 +336,16 @@ export function useComments(
       extras: CommentExtras = {}
     ): Promise<boolean> => {
       const clean = text.trim();
-      if (!clean || selections.length === 0) return false;
+
+      if (!clean || selections.length === 0) {
+        return false;
+      }
+
       const now = toClaude && !runningRef.current;
+
       try {
         const created: DesignComment[] = [];
+
         for (const selection of selections) {
           const comment = await call<DesignComment>("POST", "", {
             text: clean,
@@ -317,16 +361,22 @@ export function useComments(
               ? { attachmentIds: extras.attachmentIds }
               : {}),
           });
-          if (comment) created.push(comment);
+
+          if (comment) {
+            created.push(comment);
+          }
         }
+
         setComments((prev) => [
           ...prev.filter((c) => !created.some((n) => n.id === c.id)),
           ...created,
         ]);
         await deliver(created, toClaude);
+
         return true;
       } catch (err) {
         setNotice(errorText(err));
+
         return false;
       }
     },
@@ -335,18 +385,25 @@ export function useComments(
 
   useEffect(() => {
     for (const id of [...afterRun.current]) {
-      if (comments.find((comment) => comment.id === id)?.status !== "queued")
+      if (comments.find((comment) => comment.id === id)?.status !== "queued") {
         afterRun.current.delete(id);
+      }
     }
   }, [comments]);
 
   useEffect(() => {
-    if (running || afterRun.current.size === 0) return;
+    if (running || afterRun.current.size === 0) {
+      return;
+    }
+
     const ready = listRef.current.filter(
       (comment) =>
         afterRun.current.has(comment.id) && comment.status === "queued"
     );
-    if (ready.length > 0) void send(ready.map((comment) => comment.id));
+
+    if (ready.length > 0) {
+      void send(ready.map((comment) => comment.id));
+    }
   }, [running, send]);
 
   const update = useCallback(
@@ -377,8 +434,13 @@ export function useComments(
       const ids = queuedOf(listRef.current).map((comment) => comment.id);
       const at = ids.indexOf(id);
       const to = at + delta;
-      if (at < 0 || to < 0 || to >= ids.length) return;
+
+      if (at < 0 || to < 0 || to >= ids.length) {
+        return;
+      }
+
       [ids[at], ids[to]] = [ids[to] as string, ids[at] as string];
+
       try {
         await call("POST", "/reorder", { ids });
       } catch (err) {
@@ -396,7 +458,11 @@ export function useComments(
     ) => {
       const comment = listRef.current.find((item) => item.id === id);
       setRepinId(null);
-      if (!comment) return;
+
+      if (!comment) {
+        return;
+      }
+
       await update(id, {
         target: targetWith(selection, offset),
         context: selection,
@@ -423,13 +489,19 @@ export function useComments(
       extras?: CommentExtras;
     }): Promise<boolean> => {
       const clean = input.text.trim();
-      if (!clean) return false;
+
+      if (!clean) {
+        return false;
+      }
+
       const now = input.toClaude && !runningRef.current;
+
       try {
         const attachment = await api.uploadAttachment(
           projectId,
           new File([input.image], "drawing.png", { type: "image/png" })
         );
+
         const comment = await call<DesignComment>("POST", "", {
           text: clean,
           target: drawingTarget(input.drawing.box),
@@ -444,12 +516,18 @@ export function useComments(
           drawing: input.drawing,
           ...frameField(frameRef),
         });
-        if (!comment) return false;
+
+        if (!comment) {
+          return false;
+        }
+
         merge(comment);
         await deliver([comment], input.toClaude);
+
         return true;
       } catch (err) {
         setNotice(errorText(err));
+
         return false;
       }
     },
@@ -459,17 +537,26 @@ export function useComments(
   const reply = useCallback(
     async (id: string, text: string): Promise<boolean> => {
       const clean = text.trim();
-      if (!clean) return false;
+
+      if (!clean) {
+        return false;
+      }
+
       try {
         const comment = await call<DesignComment>(
           "POST",
           `/${encodeURIComponent(id)}/replies`,
           { text: clean }
         );
-        if (comment) merge(comment);
+
+        if (comment) {
+          merge(comment);
+        }
+
         return comment !== null;
       } catch (err) {
         setNotice(errorText(err));
+
         return false;
       }
     },
@@ -483,7 +570,10 @@ export function useComments(
           "DELETE",
           `/${encodeURIComponent(id)}/replies/${encodeURIComponent(replyId)}`
         );
-        if (comment) merge(comment);
+
+        if (comment) {
+          merge(comment);
+        }
       } catch (err) {
         setNotice(errorText(err));
       }
@@ -493,6 +583,7 @@ export function useComments(
 
   const setShowResolved = useCallback((on: boolean) => {
     setShowResolvedState(on);
+
     try {
       window.localStorage.setItem(SHOW_RESOLVED_KEY, on ? "1" : "0");
     } catch {
@@ -504,6 +595,7 @@ export function useComments(
     () => queuedOf(comments).filter((comment) => !chatIds.includes(comment.id)),
     [comments, chatIds]
   );
+
   const inChat = useMemo(
     () =>
       comments.filter(
@@ -511,19 +603,26 @@ export function useComments(
       ),
     [comments, chatIds]
   );
+
   const picks = usePicks(comments);
   const clearPicks = picks.clearPicked;
 
   const toChat = useCallback(
     async (ids: string[]) => {
-      if (ids.length === 0) return;
+      if (ids.length === 0) {
+        return;
+      }
+
       setPreparing(true);
+
       try {
         const prefill = await call<CommentPrefill>("POST", "/prefill", { ids });
+
         if (prefill) {
           prefillRef.current?.(prefill);
           setChatIds((prev) => [...new Set([...prev, ...prefill.commentIds])]);
         }
+
         clearPicks();
         setNotice(null);
       } catch (err) {

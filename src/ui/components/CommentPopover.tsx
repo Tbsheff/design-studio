@@ -26,18 +26,28 @@ export const MOD_LABEL =
     : "Ctrl+";
 
 function focusables(root: HTMLElement | null): HTMLElement[] {
-  if (!root) return [];
+  if (!root) {
+    return [];
+  }
+
   return Array.from(
     root.querySelectorAll<HTMLElement>("input, textarea, button:not(:disabled)")
   ).filter((element) => element.tabIndex >= 0);
 }
 
 export function trapTab(event: KeyboardEvent, root: HTMLElement | null): void {
-  if (event.key !== "Tab") return;
+  if (event.key !== "Tab") {
+    return;
+  }
+
   const items = focusables(root);
   const first = items[0];
   const last = items[items.length - 1];
-  if (!first || !last) return;
+
+  if (!first || !last) {
+    return;
+  }
+
   if (event.shiftKey && document.activeElement === first) {
     event.preventDefault();
     last.focus();
@@ -64,7 +74,11 @@ export function CommentReplies({
 }) {
   const initial = useProfileInitial();
   const replies = comment.replies ?? [];
-  if (replies.length === 0) return null;
+
+  if (replies.length === 0) {
+    return null;
+  }
+
   return (
     <ul
       className="comment-replies"
@@ -122,8 +136,10 @@ function GrowingArea(props: {
           event.key !== "Enter" ||
           event.shiftKey ||
           event.nativeEvent.isComposing
-        )
+        ) {
           return;
+        }
+
         event.preventDefault();
         props.onEnter();
       }}
@@ -140,14 +156,22 @@ function ReplyBox({
 }) {
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
+
   const send = () => {
-    if (busy || text.trim() === "") return;
+    if (busy || text.trim() === "") {
+      return;
+    }
+
     setBusy(true);
     void onReply(text).then((ok) => {
       setBusy(false);
-      if (ok) setText("");
+
+      if (ok) {
+        setText("");
+      }
     });
   };
+
   return (
     <div className="comment-field reply">
       <GrowingArea
@@ -196,6 +220,7 @@ export function OpenCommentPopover(props: OpenProps) {
       root.current?.querySelector<HTMLTextAreaElement>(
         "textarea:not(:disabled)"
       ) ?? focusables(root.current)[0];
+
     target?.focus({ preventScroll: true });
   }, [comment.id]);
 
@@ -204,8 +229,10 @@ export function OpenCommentPopover(props: OpenProps) {
       event.preventDefault();
       event.stopPropagation();
       props.onClose();
+
       return;
     }
+
     trapTab(event, root.current);
   };
 
@@ -217,10 +244,12 @@ export function OpenCommentPopover(props: OpenProps) {
     side.current,
     comment.drawing ? undefined : comment.target.offset
   );
+
   side.current = placement.side;
   const scale = 1 / props.zoom;
 
   let body: ReactNode = <p className="comment-card-text">{comment.text}</p>;
+
   if (editable) {
     body = (
       <div className="comment-field">

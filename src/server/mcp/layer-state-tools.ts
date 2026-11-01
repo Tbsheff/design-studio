@@ -89,28 +89,38 @@ async function sourceEdit(
   url: string,
   input: z.output<typeof setSchema>
 ): Promise<{ lines: string[]; result: DirectEditResult | null }> {
-  if (input.hidden === undefined && input.name === undefined)
+  if (input.hidden === undefined && input.name === undefined) {
     return { lines: [], result: null };
+  }
+
   refuseWhileRunning(deps, loaded.project, loaded.direction);
   const element = await sourceElement(deps, url, input.selector);
+
   const target = {
     source: element.source,
     selector: input.selector,
     tag: element.tag,
   };
+
   const requests: DirectEditRequest[] = [];
-  if (input.name !== undefined)
+
+  if (input.name !== undefined) {
     requests.push({
       ...target,
       name: input.name === null || input.name === "" ? null : input.name,
     });
-  if (input.hidden !== undefined)
+  }
+
+  if (input.hidden !== undefined) {
     requests.push({
       ...target,
       style: { display: input.hidden ? "none" : null },
     });
+  }
+
   const lines: string[] = [];
   let result: DirectEditResult | null = null;
+
   for (const request of requests) {
     result = await studioCall<DirectEditResult>(
       deps,
@@ -124,6 +134,7 @@ async function sourceEdit(
         : `${request.name ? `Renamed ${element.tag} to "${request.name}"` : `Removed the name of ${element.tag}`} in ${result.file} (version ${result.version.id}).`
     );
   }
+
   return { lines, result };
 }
 
@@ -145,6 +156,7 @@ function summaryOf(input: z.output<typeof setSchema>): string {
         : "Unlocked a layer"
       : null,
   ];
+
   return parts.filter(Boolean).join(", ");
 }
 
@@ -158,38 +170,47 @@ const setLayerState = defineTool(
   },
   async (deps, input): Promise<Done> => {
     const loaded = await loadTarget(deps, input.projectId, input.directionId);
+
     const url = await pageUrl(
       deps,
       loaded.project,
       loaded.direction,
       input.path
     );
+
     const edited = await sourceEdit(deps, loaded, url, input);
     const lines = [...edited.lines];
+
     if (input.locked !== undefined) {
       const current = await studioCall<LayerLocksView>(
         deps,
         "GET",
         locksUrl(loaded)
       );
+
       const probe = await probeLock(
         deps.preview,
         url,
         input.selector,
         current.keys
       );
-      if (!probe.found)
+
+      if (!probe.found) {
         throw new EditError(
           `No element matches ${input.selector} on the page.`
         );
+      }
+
       const view = await studioCall<LayerLocksView>(
         deps,
         "PUT",
         locksUrl(loaded),
         lockDelta(probe, input.locked)
       );
+
       lines.push(lockOutcome(probe, input.locked, view.keys.length));
     }
+
     const activity: ActivityDraft = edited.result
       ? versionActivity(
           loaded.project,
@@ -202,6 +223,7 @@ const setLayerState = defineTool(
           directionId: loaded.direction.id,
           summary: summaryOf(input),
         };
+
     return { result: ok(lines.join("\n")), activity };
   }
 );
@@ -217,11 +239,13 @@ const listLockedLayers = defineTool(
   },
   async (deps, input): Promise<Done> => {
     const loaded = await loadTarget(deps, input.projectId, input.directionId);
+
     const view = await studioCall<LayerLocksView>(
       deps,
       "GET",
       locksUrl(loaded)
     );
+
     const probe =
       view.keys.length > 0
         ? await probeLock(
@@ -231,6 +255,7 @@ const listLockedLayers = defineTool(
             view.keys
           ).catch(() => null)
         : null;
+
     return {
       result: ok(
         describeLocks(view.keys, probe?.resolved ?? null, probe?.page ?? null)

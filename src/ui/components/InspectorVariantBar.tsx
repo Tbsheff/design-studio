@@ -31,6 +31,7 @@ const STATES: { id: VariantState; label: string }[] = [
   { id: "focus", label: "Focus" },
   { id: "active", label: "Active" },
 ];
+
 const SHOWN_BREAKPOINTS = 4;
 const BASE: ParsedVariant = { breakpoint: null, dark: false, states: [] };
 
@@ -38,6 +39,7 @@ function breakpointsOf(support: VariantSupport | null) {
   const list = support?.breakpoints.length
     ? support.breakpoints
     : DEFAULT_BREAKPOINTS;
+
   return list.slice(0, SHOWN_BREAKPOINTS);
 }
 
@@ -66,13 +68,21 @@ function Chip({
 }
 
 function summary(prefix: string, support: VariantSupport | null): string {
-  if (support?.mode === "none")
+  if (support?.mode === "none") {
     return support.reason ?? "This element cannot take variant styles.";
-  if (prefix === "") return "Edits change the base style.";
+  }
+
+  if (prefix === "") {
+    return "Edits change the base style.";
+  }
+
   const set = support?.set ?? [];
   const where = support?.mode === "css" ? "a CSS rule" : "classes";
-  if (set.length === 0)
+
+  if (set.length === 0) {
     return `Nothing set yet. Edits write ${where}; dim values come from the base.`;
+  }
+
   return `Set here: ${set.join(support?.mode === "css" ? "; " : " ")}. Dim values come from the base.`;
 }
 
@@ -90,30 +100,39 @@ function InspectorVariantBarView({
   const breakpoints = breakpointsOf(support);
 
   useEffect(() => {
-    if (prefix !== "") postForceState(port.current, selector, prefix);
+    if (prefix !== "") {
+      postForceState(port.current, selector, prefix);
+    }
   }, [port, selector, prefix]);
 
   const choose = (next: ParsedVariant) => {
     const value = variantPrefix(next);
+
     const width = next.breakpoint
       ? (breakpoints.find((entry) => entry.name === next.breakpoint)?.px ??
         null)
       : null;
+
     port.current?.post({ type: "preview-reset" });
     editVariantStore.set(value);
     fitFrameTo(width);
     postForceState(port.current, selector, value);
   };
+
   const note = summary(prefix, support);
-  if (off)
+
+  if (off) {
     return note === quietNote ? null : (
       <p className="ins-variant-note ins-variants-off">{note}</p>
     );
+  }
+
   const toggleState = (state: VariantState) =>
     choose({
       ...current,
       states: current.states.includes(state) ? [] : [state],
     });
+
   const widths = [
     { value: ANY_WIDTH, label: "All widths" },
     ...breakpoints.map((entry) => ({

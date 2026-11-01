@@ -42,9 +42,15 @@ interface HomeRouteDeps {
 
 function optionalPath(body: Record<string, unknown>): string | undefined {
   const value = body.parentPath;
-  if (value === undefined || value === null) return undefined;
-  if (typeof value !== "string")
+
+  if (value === undefined || value === null) {
+    return undefined;
+  }
+
+  if (typeof value !== "string") {
     throw new BadRequestError("parentPath must be a string");
+  }
+
   return value;
 }
 
@@ -65,11 +71,13 @@ export function registerHomeRoutes(app: Hono, deps: HomeRouteDeps): void {
     name?: string
   ): Promise<Project> => {
     const starter = findStarter(starterId);
+
     const created = await projects.createInFolder({
       parentPath: parentPath ?? (await defaultFolder.ensure()),
       name: name ?? starter.name,
       kind: "html",
     });
+
     try {
       await copyStarter(starter, projects.mainDirection(created).workTree);
       await versions.ensureRepo(created);
@@ -77,7 +85,9 @@ export function registerHomeRoutes(app: Hono, deps: HomeRouteDeps): void {
       await projects.discardCreated(created.id);
       throw error;
     }
+
     await deps.addParentFolder(parentPath, created);
+
     return deps.commitInit(created, `Starter: ${starter.name}`);
   };
 
@@ -87,6 +97,7 @@ export function registerHomeRoutes(app: Hono, deps: HomeRouteDeps): void {
     const body = await readBody(c);
     const project = await createFromStarter(body.starterId, optionalPath(body));
     deps.watch(project);
+
     return c.json({ project, runId: null });
   });
 
@@ -99,21 +110,30 @@ export function registerHomeRoutes(app: Hono, deps: HomeRouteDeps): void {
         project.imported?.created === true &&
         !project.designSystemFor
     );
-    if (existing) return existing;
+
+    if (existing) {
+      return existing;
+    }
+
     const first = await createFromStarter(
       SAMPLE_STARTER_ID,
       parentPath,
       SAMPLE_NAME
     );
+
     await applySampleEdit(projects.mainDirection(first).workTree);
+
     const project = await deps.commitInit(
       first,
       "Sample edit: new headline",
       "manual"
     );
+
     deps.watch(project);
+
     return project;
   };
+
   let sampleInflight: Promise<Project> | null = null;
 
   app.post("/api/projects/sample", async (c) => {
@@ -121,24 +141,31 @@ export function registerHomeRoutes(app: Hono, deps: HomeRouteDeps): void {
     sampleInflight ??= createSample(optionalPath(body)).finally(() => {
       sampleInflight = null;
     });
+
     return c.json({ project: await sampleInflight, runId: null });
   });
 
   app.post("/api/projects/:pid/opened", async (c) => {
     const pid = c.req.param("pid");
+
     const openedAt = await projects.withLock(pid, async () => {
       const project = await projects.get(pid);
       project.openedAt = Date.now();
       await projects.writeRaw(project);
+
       return project.openedAt;
     });
+
     return c.json({ openedAt });
   });
 
   app.patch("/api/projects/:pid", async (c) => {
     const body = await readBody(c);
-    if (typeof body.name !== "string")
+
+    if (typeof body.name !== "string") {
       throw new BadRequestError("name is required");
+    }
+
     return c.json(await projects.rename(c.req.param("pid"), body.name));
   });
 
@@ -154,6 +181,7 @@ export function registerHomeRoutes(app: Hono, deps: HomeRouteDeps): void {
 
   app.get("/api/trash/:trashId/thumbnail", async (c) => {
     const bytes = await library.trashThumbnail(c.req.param("trashId"));
+
     return new Response(new Uint8Array(bytes), {
       headers: {
         "content-type": "image/png",
@@ -164,6 +192,7 @@ export function registerHomeRoutes(app: Hono, deps: HomeRouteDeps): void {
 
   app.delete("/api/trash/:trashId", async (c) => {
     await library.deleteForever(c.req.param("trashId"));
+
     return c.json({ deleted: 1 });
   });
 
@@ -177,6 +206,7 @@ export function registerHomeRoutes(app: Hono, deps: HomeRouteDeps): void {
 
   app.get("/api/projects/:pid/thumbnail/:vid", async (c) => {
     const bytes = await thumbnails.file(c.req.param("pid"), c.req.param("vid"));
+
     return new Response(new Uint8Array(bytes), {
       headers: {
         "content-type": "image/png",
@@ -187,9 +217,13 @@ export function registerHomeRoutes(app: Hono, deps: HomeRouteDeps): void {
 
   app.post("/api/clarify", async (c) => {
     const body = await readBody(c);
-    if (typeof body.prompt !== "string")
+
+    if (typeof body.prompt !== "string") {
       throw new BadRequestError("prompt is required");
+    }
+
     const claudeExecutable = process.env.STUDIO_CLAUDE_PATH;
+
     return c.json(
       await askQuestions(body.prompt, {
         mode: config.agentMode === "mock" ? "mock" : "sdk",
@@ -207,6 +241,7 @@ export function registerHomeRoutes(app: Hono, deps: HomeRouteDeps): void {
 
   app.post("/api/onboarding/dismiss", async (c) => {
     await defaultFolder.dismissOnboarding();
+
     return c.json({ dismissed: true });
   });
 }
@@ -214,6 +249,7 @@ export function registerHomeRoutes(app: Hono, deps: HomeRouteDeps): void {
 function osUserName(): string | null {
   try {
     const name = userInfo().username.trim();
+
     return name === "" ? null : name;
   } catch {
     return null;

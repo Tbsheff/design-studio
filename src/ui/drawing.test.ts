@@ -7,7 +7,11 @@ describe("drawing strokes", () => {
   it("smooths jitter, drops tiny steps, and ends at the pointer", () => {
     const builder = createStrokeBuilder(0, 0, minStepFor(1));
     expect(builder.add(0.5, 0.2)).toBe(false);
-    for (let x = 10; x <= 100; x += 10) builder.add(x, x % 20 === 0 ? 4 : -4);
+
+    for (let x = 10; x <= 100; x += 10) {
+      builder.add(x, x % 20 === 0 ? 4 : -4);
+    }
+
     builder.end(100, 0);
     const points = builder.points();
     const ys = points.filter((_, index) => index % 2 === 1);

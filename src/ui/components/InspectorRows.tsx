@@ -31,8 +31,11 @@ export function ContentRow({
   const state = textEditability(selection);
   const onKeyDown = useRowKeys(edit.commit, edit.revertText);
   const data = useInspectorApp().element?.textFromData;
-  if (data)
+
+  if (data) {
     return <DataTextNote data={data} selection={selection} edit={edit} />;
+  }
+
   if (state !== "ok") {
     return (
       <div className="ins-field wide readonly">
@@ -45,6 +48,7 @@ export function ContentRow({
       </div>
     );
   }
+
   return (
     <div className="ins-field wide">
       <label htmlFor="ins-content" className="ins-scrub static">
@@ -86,19 +90,27 @@ export function CssTextRow({
   const value = edit.values[prop];
   const shown = text ?? (value === "none" ? "" : value);
   const id = `ins-${prop}`;
+
   const commit = () => {
     if (text !== null) {
       const next = text.trim();
-      if (UNSAFE.test(next)) edit.revert([prop]);
-      else edit.preview({ [prop]: next === "" ? "none" : next });
+
+      if (UNSAFE.test(next)) {
+        edit.revert([prop]);
+      } else {
+        edit.preview({ [prop]: next === "" ? "none" : next });
+      }
     }
+
     setText(null);
     edit.commit();
   };
+
   const onKeyDown = useRowKeys(commit, () => {
     setText(null);
     edit.revert([prop]);
   });
+
   return (
     <div className={`ins-field ${wide ? "wide" : ""}`}>
       <label htmlFor={id} className="ins-scrub static">
@@ -115,7 +127,10 @@ export function CssTextRow({
         onChange={(event) => {
           setText(event.target.value);
           const next = event.target.value.trim();
-          if (next !== "" && !UNSAFE.test(next)) edit.preview({ [prop]: next });
+
+          if (next !== "" && !UNSAFE.test(next)) {
+            edit.preview({ [prop]: next });
+          }
         }}
         onKeyDown={onKeyDown}
         onBlur={commit}
@@ -132,9 +147,11 @@ function toggleLine(value: string, line: string): string {
   const parts = value
     .split(/\s+/)
     .filter((part) => part !== "" && part !== "none");
+
   const next = parts.includes(line)
     ? parts.filter((part) => part !== line)
     : [...parts, line];
+
   return next.length === 0 ? "none" : next.join(" ");
 }
 
@@ -142,11 +159,14 @@ function TextStyleTogglesView({ edit }: { edit: DirectEdit }) {
   const italic =
     edit.values["font-style"] === "italic" ||
     edit.values["font-style"] === "oblique";
+
   const decoration = edit.values["text-decoration-line"];
+
   const write = (patch: Partial<Record<DirectStyleProperty, string>>) => {
     edit.preview(patch);
     edit.commit();
   };
+
   const items = [
     {
       key: "i",
@@ -174,6 +194,7 @@ function TextStyleTogglesView({ edit }: { edit: DirectEdit }) {
       glyph: <s>S</s>,
     },
   ];
+
   return (
     <div className="ins-field ins-toggles" role="group" aria-label="Text style">
       {items.map((item) => (

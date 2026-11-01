@@ -33,6 +33,7 @@ const GAP: TweakControl = {
   unit: "px",
   default: 16,
 };
+
 const PAGE =
   "<html><head><style>:root { --gap: 16px; }\n.a { gap: var(--gap); }</style></head><body></body></html>";
 
@@ -89,6 +90,7 @@ describe("control validation", () => {
         default: "system-ui",
       },
     ]);
+
     expect(parsed.error).toBeNull();
     expect(parsed.controls).toHaveLength(4);
   });
@@ -160,6 +162,7 @@ describe("control validation", () => {
     expect(tweakCss(GAP, 50)).toBeNull();
     expect(parseTweakCss(GAP, "18px")).toBe(18);
     expect(parseTweakCss(GAP, "1rem")).toBeNull();
+
     const toggle: TweakControl = {
       id: "t",
       label: "T",
@@ -169,6 +172,7 @@ describe("control validation", () => {
       off: "column",
       default: false,
     };
+
     expect(tweakCss(toggle, true)).toBe("row");
     expect(parseTweakCss(toggle, "column")).toBe(false);
     expect(tweaksPreviewCss([GAP, toggle], { gap: 20, t: true })).toBe(
@@ -184,9 +188,11 @@ describe("define_tweaks tool", () => {
     const result = await runDefineTweaks({ ctx: ctx("edit") }, [GAP]);
     expect(failed(result)).toBe(false);
     expect(result.content[0]?.text).toContain("Every cssVar is declared");
+
     const saved = JSON.parse(
       await readFile(path.join(workTree, TWEAKS_FILE), "utf-8")
     ) as { controls: TweakControl[] };
+
     expect(saved.controls).toEqual([GAP]);
     expect((await readTweaksState(workTree)).current).toEqual({ gap: 16 });
   });
@@ -196,6 +202,7 @@ describe("define_tweaks tool", () => {
       path.join(workTree, "index.html"),
       "<html><head><style>.a { color: var(--accent); }</style></head></html>"
     );
+
     const result = await runDefineTweaks({ ctx: ctx("edit") }, [
       GAP,
       {
@@ -206,6 +213,7 @@ describe("define_tweaks tool", () => {
         default: "#000",
       },
     ]);
+
     const text = result.content[0]?.text ?? "";
     expect(text).toContain("--gap (Gap) is not declared");
     expect(text).toContain("--gap (Gap) is never used");
@@ -218,6 +226,7 @@ describe("define_tweaks tool", () => {
     const bad = await runDefineTweaks({ ctx: ctx("edit") }, [
       { ...GAP, default: -1 },
     ]);
+
     expect(failed(bad)).toBe(true);
     const critique = await runDefineTweaks({ ctx: ctx("critique") }, [GAP]);
     expect(failed(critique)).toBe(true);
@@ -257,10 +266,14 @@ describe("permissions", () => {
         file_path: file,
         content: "{}",
       });
+
       expect(result.behavior).toBe("deny");
-      if (result.behavior === "deny")
+
+      if (result.behavior === "deny") {
         expect(result.message).toContain("define_tweaks");
+      }
     }
+
     expect(
       evaluateToolUse(policy("edit"), "Read", { file_path: TWEAKS_FILE })
         .behavior
@@ -280,6 +293,7 @@ describe("tweaks run task", () => {
       resolveRunConfig({ ...DEFAULT_SETTINGS, maxBudgetUsd: 2 }, "polish"),
       "tweaks"
     );
+
     expect(config.model).toBe("claude-haiku-5-5");
     expect(config.maxBudgetUsd).toBe(0.25);
     expect(config.preset.skills).toBe(false);
@@ -293,6 +307,7 @@ describe("tweaks run task", () => {
         buildRunLevelBlock(resolveRunConfig(DEFAULT_SETTINGS, level), "edit")
       ).toContain("mcp__studio__define_tweaks");
     }
+
     expect(
       buildRunLevelBlock(
         resolveRunConfig(DEFAULT_SETTINGS, "wireframe"),

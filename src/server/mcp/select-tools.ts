@@ -80,6 +80,7 @@ export async function selectMatchingOnPage(
         input.selector.trim()
       )
     : input.selector;
+
   const { layers, extra } = await layersAtPaths(
     preview,
     input.url,
@@ -90,20 +91,27 @@ export async function selectMatchingOnPage(
       const ready = await probe.evaluate<boolean>(
         `typeof ${HEADLESS_MATCH} === 'function'`
       );
-      if (!ready)
+
+      if (!ready) {
         throw new LayerRefError(
           "This page has no studio bridge script, so matching elements cannot be found."
         );
+      }
+
       const found = await probe.evaluate<HeadlessMatch>(
         `${HEADLESS_MATCH}(${JSON.stringify(css)}, ${JSON.stringify(input.by)})`
       );
+
       return { paths: found.found ? found.paths : [], extra: found };
     }
   );
-  if (!extra.found)
+
+  if (!extra.found) {
     throw new LayerRefError(
       `No element matches ${input.selector} on the page.`
     );
+  }
+
   const matched = layers
     .filter((layer) => layer !== null)
     .map((layer) => ({
@@ -113,6 +121,7 @@ export async function selectMatchingOnPage(
       component: layer.comp,
       source: (layer.comp && layer.used) || layer.own,
     }));
+
   return {
     by: input.by,
     count: matched.length,
@@ -153,24 +162,29 @@ async function frameTarget(
   const frames = (await deps.canvas.read(loaded.project)).canvas?.frames ?? [];
   const ref = input.frame ?? "f1";
   const found = findFrame(frames, ref);
+
   if (
     !found &&
     input.frame !== undefined &&
     !(frames.length === 0 && ref === "f1")
-  )
+  ) {
     throw new EditError(
       `No frame ${ref} on the canvas. Use canvas_list for the frame ids.`
     );
+  }
+
   const { project, direction } =
     found?.directionId && input.directionId === undefined
       ? await loadTarget(deps, input.projectId, found.directionId)
       : loaded;
+
   const remembered =
     input.frame === undefined &&
     input.path === undefined &&
     isLayerRef(input.selector)
       ? memoPage(scopeOf(project.id, direction.id), input.selector.trim())
       : undefined;
+
   return {
     project,
     direction,
@@ -192,12 +206,14 @@ const selectMatching = defineTool(
   },
   async (deps, input): Promise<Done> => {
     const target = await frameTarget(deps, input);
+
     const url = await pageUrl(
       deps,
       target.project,
       target.direction,
       target.page
     );
+
     try {
       const report = await selectMatchingOnPage(deps.preview, {
         url,
@@ -207,9 +223,13 @@ const selectMatching = defineTool(
         selector: input.selector,
         by: input.by,
       });
+
       return { result: ok({ page: target.page ?? "", ...report }) };
     } catch (error) {
-      if (error instanceof LayerRefError) throw new EditError(error.message);
+      if (error instanceof LayerRefError) {
+        throw new EditError(error.message);
+      }
+
       throw error;
     }
   }

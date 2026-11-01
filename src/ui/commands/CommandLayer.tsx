@@ -13,27 +13,34 @@ export default function CommandLayer({
   onLayer: (next: Layer | null) => void;
 }) {
   const opener = useRef<Element | null>(null);
-  if (opener.current === null) opener.current = document.activeElement;
+
+  if (opener.current === null) {
+    opener.current = document.activeElement;
+  }
 
   useEffect(
     () => () => {
       const back = opener.current;
+
       if (
         back instanceof HTMLElement &&
         back.isConnected &&
         document.activeElement === document.body
-      )
+      ) {
         back.focus({ preventScroll: true });
+      }
     },
     []
   );
 
-  if (layer === "palette")
+  if (layer === "palette") {
     return (
       <Palette
         onClose={() => onLayer(null)}
         onShortcuts={() => onLayer("shortcuts")}
       />
     );
+  }
+
   return <ShortcutSheet onClose={() => onLayer(null)} />;
 }

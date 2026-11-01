@@ -8,8 +8,11 @@ export const ALIGN_OPS = [
   "middle",
   "bottom",
 ] as const;
+
 export const DISTRIBUTE_OPS = ["horizontal", "vertical"] as const;
+
 export type AlignOp = (typeof ALIGN_OPS)[number];
+
 export type DistributeOp = (typeof DISTRIBUTE_OPS)[number];
 
 export type ArrangeAction =
@@ -87,7 +90,13 @@ export const ARRANGE_SHORTCUTS: Record<string, ArrangeAction> = {
 };
 
 export function arrangeLabel(action: ArrangeAction): string {
-  if ("align" in action) return `Align ${action.align}`;
-  if ("distribute" in action) return `Distribute ${action.distribute} spacing`;
+  if ("align" in action) {
+    return `Align ${action.align}`;
+  }
+
+  if ("distribute" in action) {
+    return `Distribute ${action.distribute} spacing`;
+  }
+
   return "Tidy up";
 }

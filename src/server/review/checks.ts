@@ -82,7 +82,9 @@ export const REVIEW_AXE_RULES = [
   "aria-required-attr",
   "html-has-lang",
 ];
+
 export const AXE_NODES_PER_RULE = 20;
+
 const ALT_RULES = new Set([
   "image-alt",
   "input-image-alt",
@@ -91,12 +93,14 @@ const ALT_RULES = new Set([
   "area-alt",
   "object-alt",
 ]);
+
 const LOC = /^(.+):(\d+):(\d+)$/;
 const TAP_MIN = 24;
 const STYLE_PROPS = new Set<string>(DIRECT_STYLE_PROPERTIES);
 
 export function parseLoc(raw: string | null): SourceLoc | null {
   const match = raw ? LOC.exec(raw) : null;
+
   return match
     ? {
         file: match[1] as string,
@@ -108,11 +112,15 @@ export function parseLoc(raw: string | null): SourceLoc | null {
 
 export function axeSelector(node: AxeNode): string | null {
   const first = node.target[0];
+
   return typeof first === "string" && node.target.length === 1 ? first : null;
 }
 
 function label(el: ProbeElement | null, fallback: string): string {
-  if (!el) return fallback;
+  if (!el) {
+    return fallback;
+  }
+
   return el.text ? `${el.tag} "${el.text}"` : el.tag;
 }
 
@@ -128,7 +136,10 @@ function firstLine(text: string | undefined): string {
 }
 
 function impactSeverity(impact: string | null | undefined): ReviewSeverity {
-  if (impact === "critical" || impact === "serious") return "high";
+  if (impact === "critical" || impact === "serious") {
+    return "high";
+  }
+
   return impact === "moderate" ? "medium" : "low";
 }
 
@@ -137,6 +148,7 @@ function editFor(
   style: Partial<Record<DirectStyleProperty, string>>
 ): ReviewFix["edit"] | null {
   const source = parseLoc(el.loc);
+
   return source ? { source, selector: el.selector, tag: el.tag, style } : null;
 }
 
@@ -159,9 +171,13 @@ function resolvedColor(
   entries: CompiledTokenEntry[]
 ): Color | null {
   let value = modeValue(entry, "light");
-  for (let step = 0; step < 4 && value.includes("var("); step += 1)
+
+  for (let step = 0; step < 4 && value.includes("var("); step += 1) {
     value = resolveTokenValue(value, entries);
+  }
+
   const color = parse(value);
+
   return color && (color.alpha ?? 1) >= 0.999 ? color : null;
 }
 
@@ -176,7 +192,11 @@ const TEXT_ROLE = /(^|-)(fg|text|foreground|ink|body|heading|muted|copy)(-|$)/;
 function colorDistance(a: Color, b: Color): number {
   const left = converter("oklab")(a);
   const right = converter("oklab")(b);
-  if (!left || !right) return Number.POSITIVE_INFINITY;
+
+  if (!left || !right) {
+    return Number.POSITIVE_INFINITY;
+  }
+
   return Math.hypot(
     left.l - right.l,
     2 * (left.a - right.a),
@@ -191,11 +211,20 @@ function passingTokens(
   entries: CompiledTokenEntry[]
 ): (PassingToken & { distance: number; text: boolean })[] {
   const out: (PassingToken & { distance: number; text: boolean })[] = [];
+
   for (const entry of entries) {
     const color = entry.type === "color" ? resolvedColor(entry, entries) : null;
-    if (!color) continue;
+
+    if (!color) {
+      continue;
+    }
+
     const ratio = wcagContrast(color, back);
-    if (ratio < need) continue;
+
+    if (ratio < need) {
+      continue;
+    }
+
     out.push({
       cssVar: entry.cssVar,
       hex: formatHex(color) ?? "",
@@ -204,6 +233,7 @@ function passingTokens(
       text: TEXT_ROLE.test(entry.cssVar.replace(/^--/, "")),
     });
   }
+
   return out;
 }
 
@@ -215,14 +245,21 @@ export function nearestPassingToken(
 ): PassingToken | null {
   const text = parse(fg);
   const back = parse(bg);
-  if (!text || !back) return null;
+
+  if (!text || !back) {
+    return null;
+  }
+
   const all = passingTokens(text, back, need, entries).filter((item) =>
     keepsHue(text, item.hex)
   );
+
   const pool = all.some((item) => item.text)
     ? all.filter((item) => item.text)
     : all;
+
   const best = pool.sort((a, b) => a.distance - b.distance)[0];
+
   return best
     ? { cssVar: best.cssVar, hex: best.hex, ratio: best.ratio }
     : null;
@@ -234,12 +271,15 @@ function contrastData(
   const data =
     (node.any ?? []).find((check) => check.id === "color-contrast")?.data ??
     node.any?.[0]?.data;
+
   if (
     !data ||
     typeof data.fgColor !== "string" ||
     typeof data.bgColor !== "string"
-  )
+  ) {
     return null;
+  }
+
   return {
     fg: data.fgColor,
     bg: data.bgColor,
@@ -256,7 +296,8 @@ function contrastDraft(
   const selector = axeSelector(node);
   const data = contrastData(node);
   const head = base("contrast", el, selector, node.html);
-  if (!data)
+
+  if (!data) {
     return {
       ...head,
       key: `${selector}`,
@@ -265,12 +306,17 @@ function contrastDraft(
       fix: null,
       hint: "Make the text color and the background meet WCAG AA contrast with the project tokens.",
     };
+  }
+
   const token = nearestPassingToken(data.fg, data.bg, data.need, entries);
+
   const edit =
     token && el ? editFor(el, { color: `var(${token.cssVar})` }) : null;
+
   const tail = token
     ? ` The nearest token that passes is ${token.cssVar} (${token.hex}, ${token.ratio}:1).`
     : " No color token of the project passes on this background.";
+
   return {
     ...head,
     key: `${selector}|${data.fg}|${data.bg}`,
@@ -285,13 +331,19 @@ function contrastDraft(
 
 function spaceToken(value: string, entries: CompiledTokenEntry[]): string {
   const px = lengthToPx(value);
-  if (px === null || px === 0) return value;
+
+  if (px === null || px === 0) {
+    return value;
+  }
+
   const fits = matchDimension(value, entries, "space").filter(
     (match) => (lengthToPx(match.value) ?? -1) >= px
   );
+
   const best = fits.sort(
     (a, b) => (lengthToPx(a.value) ?? 0) - (lengthToPx(b.value) ?? 0)
   )[0];
+
   return best ? `var(${best.cssVar})` : value;
 }
 
@@ -300,18 +352,24 @@ function tapEdit(
   entries: CompiledTokenEntry[]
 ): ReviewFix["edit"] | null {
   const style = el.tapStyle;
-  if (!style || Object.keys(style).length === 0) return null;
+
+  if (!style || Object.keys(style).length === 0) {
+    return null;
+  }
+
   const tokened = Object.fromEntries(
     Object.entries(style).map(([prop, value]) => [
       prop,
       prop.startsWith("padding-") ? spaceToken(value, entries) : value,
     ])
   );
+
   return editFor(el, tokened as Partial<Record<DirectStyleProperty, string>>);
 }
 
 function tapLabel(edit: ReviewFix["edit"]): string {
   const style = edit.style ?? {};
+
   return "width" in style || "height" in style
     ? "Make it 24 px"
     : "Add padding";
@@ -323,6 +381,7 @@ export function tapDrafts(
 ): Draft[] {
   return taps.map((el) => {
     const edit = tapEdit(el, entries);
+
     return {
       ...base("tap-target", el, el.selector, el.tag),
       key: el.selector,
@@ -342,6 +401,7 @@ function axeDraft(
   const selector = axeSelector(node);
   const alt = ALT_RULES.has(violation.id);
   const detail = firstLine(node.failureSummary);
+
   return {
     ...base(alt ? "alt-text" : "a11y", el, selector, node.html),
     key: `${violation.id}|${selector}`,
@@ -366,6 +426,7 @@ export function axeDrafts(
     violation.nodes.slice(0, AXE_NODES_PER_RULE).map((node) => {
       const selector = axeSelector(node);
       const el = selector ? (elements[selector] ?? null) : null;
+
       return violation.id === "color-contrast"
         ? contrastDraft(node, el, entries)
         : axeDraft(violation, node, el);
@@ -419,16 +480,29 @@ const COLOR_VALUE = /^(#|rgb|hsl|oklch|oklab|lab|lch)/i;
 
 function classProps(utility: string, value: string): DirectStyleProperty[] {
   const color = COLOR_VALUE.test(value);
-  if (utility === "text") return [color ? "color" : "font-size"];
-  if (utility === "border") return [color ? "border-color" : "border-width"];
+
+  if (utility === "text") {
+    return [color ? "color" : "font-size"];
+  }
+
+  if (utility === "border") {
+    return [color ? "border-color" : "border-width"];
+  }
+
   return CLASS_PROPS[utility] ?? [];
 }
 
 const SHORTHAND = new Set(["padding", "margin"]);
 
 function inlineProps(prop: string): DirectStyleProperty[] {
-  if (prop === "background") return ["background-color"];
-  if (SHORTHAND.has(prop)) return CLASS_PROPS[prop.charAt(0)] ?? [];
+  if (prop === "background") {
+    return ["background-color"];
+  }
+
+  if (SHORTHAND.has(prop)) {
+    return CLASS_PROPS[prop.charAt(0)] ?? [];
+  }
+
   return STYLE_PROPS.has(prop) ? [prop as DirectStyleProperty] : [];
 }
 
@@ -458,12 +532,15 @@ function colorPick(
   snap: TokenMatch
 ): TokenPick {
   const same = sameHueSnap(prop, value, entries);
-  if (same)
+
+  if (same) {
     return {
       value: `var(${same.cssVar})`,
       cssVar: same.cssVar,
       note: ` The nearest token of the same hue is ${same.cssVar} (${same.value}).`,
     };
+  }
+
   return {
     value: "",
     cssVar: null,
@@ -478,31 +555,40 @@ function tokenPick(
   entries: CompiledTokenEntry[]
 ): TokenPick | null {
   const state = tokenFieldState(prop, value, entries);
-  if (state.kind === "token")
+
+  if (state.kind === "token") {
     return {
       value: `var(${state.match.cssVar})`,
       cssVar: state.match.cssVar,
       note: ` It equals the token ${state.match.cssVar}.`,
     };
+  }
+
   if (
     state.kind === "raw" &&
     state.snap &&
     COLOR_VALUE.test(value) &&
     !keepsHue(value, state.snap.value)
-  )
+  ) {
     return colorPick(prop, value, entries, state.snap);
-  if (state.kind === "raw" && state.snap)
+  }
+
+  if (state.kind === "raw" && state.snap) {
     return {
       value: `var(${state.snap.cssVar})`,
       cssVar: state.snap.cssVar,
       note: ` The nearest token is ${state.snap.cssVar} (${state.snap.value}).`,
     };
-  if (state.kind === "raw" && state.nearest)
+  }
+
+  if (state.kind === "raw" && state.nearest) {
     return {
       value: "",
       cssVar: null,
       note: ` The nearest token, ${state.nearest.cssVar} (${state.nearest.value}), is not close.`,
     };
+  }
+
   return null;
 }
 
@@ -514,17 +600,29 @@ function hitPick(
 ): TokenPick | null {
   const first = props[0];
   const pick = first ? tokenPick(first, hit.value, entries) : null;
-  if (pick?.cssVar) return pick;
+
+  if (pick?.cssVar) {
+    return pick;
+  }
+
   const length = first !== undefined && !COLOR_VALUE.test(hit.value);
-  if (hit.via === "class" && tailwind && length)
+
+  if (hit.via === "class" && tailwind && length) {
     return { value: hit.value, cssVar: null, note: pick?.note ?? "" };
+  }
+
   return pick;
 }
 
 function hitSubject(hit: TokenHit): string {
-  if (hit.via === "class") return `The class ${hit.cls}`;
-  if (hit.via === "rule")
+  if (hit.via === "class") {
+    return `The class ${hit.cls}`;
+  }
+
+  if (hit.via === "rule") {
     return `The CSS rule ${hit.rule} (${hit.prop}: ${hit.value})`;
+  }
+
   return `The inline style ${hit.prop}: ${hit.value}`;
 }
 
@@ -533,8 +631,10 @@ function fixable(hit: TokenHit, props: DirectStyleProperty[]): boolean {
     props.length === 0 ||
     hit.via === "rule" ||
     (hit.via === "inline" && SHORTHAND.has(hit.prop))
-  )
+  ) {
     return false;
+  }
+
   return hit.via === "inline" || !hit.variants;
 }
 
@@ -544,12 +644,19 @@ function tokenFix(
   props: DirectStyleProperty[],
   pick: TokenPick | null
 ): ReviewFix | null {
-  if (!el || !pick || pick.value === "" || !fixable(hit, props)) return null;
+  if (!el || !pick || pick.value === "" || !fixable(hit, props)) {
+    return null;
+  }
+
   const edit = editFor(
     el,
     Object.fromEntries(props.map((prop) => [prop, pick.value]))
   );
-  if (!edit) return null;
+
+  if (!edit) {
+    return null;
+  }
+
   return {
     label: pick.cssVar ? `Use ${pick.cssVar}` : "Use the theme scale",
     edit,
@@ -557,12 +664,18 @@ function tokenFix(
 }
 
 function tokenHint(hit: TokenHit, pick: TokenPick | null): string {
-  if (hit.via === "rule")
+  if (hit.via === "rule") {
     return `Change the value in the CSS rule ${hit.rule} to a project token.`;
-  if (hit.variants)
+  }
+
+  if (hit.variants) {
     return `Change ${hit.cls} to a token class and keep the variant ${hit.variants}.`;
-  if (pick?.otherHue)
+  }
+
+  if (pick?.otherHue) {
     return "Add a token for this color, or ask the agent to pick a token of the same hue.";
+  }
+
   return pick?.cssVar
     ? `Use ${pick.cssVar}.`
     : "Use the nearest design token or theme step, or add a token if the value is needed.";
@@ -578,15 +691,22 @@ function tokenDraft(
     hit.via === "class"
       ? classProps(hit.prop, hit.value)
       : inlineProps(hit.prop);
+
   const pick = props.length > 0 ? hitPick(hit, props, entries, tailwind) : null;
-  if (hit.via !== "class" && !pick) return null;
+
+  if (hit.via !== "class" && !pick) {
+    return null;
+  }
+
   const fix = tokenFix(hit, el, props, pick);
   const color = COLOR_VALUE.test(hit.value);
+
   const guard: FixGuard = {
     literal: hit.via === "class" ? hit.cls : hit.value,
     noArbitrary: pick?.cssVar === null,
     classes: el?.classes ?? [],
   };
+
   return {
     kind: "off-token",
     key: `${hit.selector}|${hit.via}|${hit.prop}|${hit.value}`,
@@ -603,6 +723,7 @@ function tokenDraft(
 
 function inProject(el: ProbeElement | undefined): boolean {
   const loc = el?.loc ?? el?.nearLoc ?? null;
+
   return loc !== null && !loc.includes("node_modules/");
 }
 
@@ -615,6 +736,7 @@ export function tokenDrafts(
   const usable = (
     entries.length > 0 ? hits : hits.filter((hit) => hit.via === "class")
   ).filter((hit) => inProject(elements[hit.selector]));
+
   return usable
     .map((hit) => tokenDraft(hit, elements[hit.selector], entries, true))
     .filter((draft): draft is Draft => draft !== null)
@@ -626,9 +748,17 @@ export function kitFile(
   appDir: string | null
 ): string | null {
   const file = parseLoc(source)?.file ?? null;
-  if (!file || appDir === null) return null;
+
+  if (!file || appDir === null) {
+    return null;
+  }
+
   const dir = appDir.replace(/^\.\/?/, "").replace(/\/+$/, "");
-  if (file.startsWith("../")) return file.replace(/^(\.\.\/)+/, "");
+
+  if (file.startsWith("../")) {
+    return file.replace(/^(\.\.\/)+/, "");
+  }
+
   return dir && !file.startsWith(`${dir}/`) ? file : null;
 }
 
@@ -642,6 +772,7 @@ function kitRow(
   uses: number
 ): ReviewFinding {
   const note = `This class is in the shared file ${file}; ${usesText(uses)} on this page come from it. Change it there once.`;
+
   return {
     ...first,
     element: `in ${file}, ${usesText(uses)}`,
@@ -658,32 +789,45 @@ export function groupKitTokens(
 ): ReviewFinding[] {
   const groups = new Map<string, { file: string; list: ReviewFinding[] }>();
   const out: (ReviewFinding | string)[] = [];
+
   for (const finding of findings) {
     const file =
       finding.kind === "off-token" ? kitFile(finding.source, appDir) : null;
+
     if (!file) {
       out.push(finding);
       continue;
     }
+
     const key = `${file}|${finding.message}`;
     const group = groups.get(key);
-    if (group) group.list.push(finding);
-    else {
+
+    if (group) {
+      group.list.push(finding);
+    } else {
       groups.set(key, { file, list: [finding] });
       out.push(key);
     }
   }
+
   return out.map((item) => {
-    if (typeof item !== "string") return item;
+    if (typeof item !== "string") {
+      return item;
+    }
+
     const group = groups.get(item) as { file: string; list: ReviewFinding[] };
+
     const uses = group.list.reduce(
       (sum, finding) => sum + (finding.copies ?? 1),
       0
     );
+
     const first = group.list[0] as ReviewFinding;
+
     const oneLine = group.list.every(
       (finding) => finding.source === first.source
     );
+
     return kitRow(oneLine ? first : { ...first, fix: null }, group.file, uses);
   });
 }

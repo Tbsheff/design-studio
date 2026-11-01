@@ -67,41 +67,55 @@ function isChangeReport(finding: QualityFinding): boolean {
 export function checkItems(results: readonly RenderCheckResult[]): CheckItem[] {
   return results.flatMap((result) => {
     const view = result.viewport;
+
     const errors = [...result.consoleErrors, ...result.pageErrors].map(
       (message): CheckItem => ({
         key: consoleKey(view, message),
         level: "error",
       })
     );
+
     const overflow: CheckItem[] = result.horizontalOverflow
       ? [{ key: `${view}|overflow`, level: "error" }]
       : [];
+
     const layout = result.layout
       .filter((finding) => finding.severity === "error")
       .map((finding): CheckItem => ({
         key: layoutKey(view, finding),
         level: "error",
       }));
+
     const quality = (result.quality ?? [])
       .filter((finding) => !isChangeReport(finding))
       .map((finding): CheckItem => ({
         key: qualityKey(view, finding),
         level: finding.severity,
       }));
+
     return [...errors, ...overflow, ...layout, ...quality];
   });
 }
 
 export function keyCounts(keys: readonly string[]): Map<string, number> {
   const counts = new Map<string, number>();
-  for (const key of keys) counts.set(key, (counts.get(key) ?? 0) + 1);
+
+  for (const key of keys) {
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+
   return counts;
 }
 
 export function takeKey(counts: Map<string, number>, key: string): boolean {
   const left = counts.get(key) ?? 0;
-  if (left <= 0) return false;
+
+  if (left <= 0) {
+    return false;
+  }
+
   counts.set(key, left - 1);
+
   return true;
 }
 
@@ -112,8 +126,11 @@ export function splitByBaseline(
   const counts = keyCounts(baseline.map((item) => `${item.level}|${item.key}`));
   const fresh: CheckItem[] = [];
   const old: CheckItem[] = [];
-  for (const item of items)
+
+  for (const item of items) {
     (takeKey(counts, `${item.level}|${item.key}`) ? old : fresh).push(item);
+  }
+
   return { fresh, old };
 }
 
@@ -126,6 +143,10 @@ export function levelCounts(
     medium: 0,
     low: 0,
   };
-  for (const item of items) counts[item.level] += 1;
+
+  for (const item of items) {
+    counts[item.level] += 1;
+  }
+
   return counts;
 }

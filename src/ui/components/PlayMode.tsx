@@ -37,6 +37,7 @@ const NO_BRIDGE_MS = 1500;
 const LAYERS_FRESH_MS = 1500;
 
 type Phase = "loading" | "enter" | "run" | "shown" | "closing";
+
 type OverlayKind = "modal" | "drawer";
 
 interface Motion {
@@ -84,12 +85,16 @@ function useStageSize(): { width: number; height: number } {
     width: window.innerWidth,
     height: window.innerHeight,
   });
+
   useEffect(() => {
     const onResize = () =>
       setSize({ width: window.innerWidth, height: window.innerHeight });
+
     window.addEventListener("resize", onResize);
+
     return () => window.removeEventListener("resize", onResize);
   }, []);
+
   return size;
 }
 
@@ -98,18 +103,23 @@ function scaleFor(
   stage: { width: number; height: number }
 ): number {
   const frame = slot.frame;
-  if (slot.overlay === "drawer")
+
+  if (slot.overlay === "drawer") {
     return Math.min(
       1,
       (stage.height - 56) / frame.height,
       (stage.width * 0.9) / frame.width
     );
-  if (slot.overlay === "modal")
+  }
+
+  if (slot.overlay === "modal") {
     return Math.min(
       1,
       (stage.width - 120) / frame.width,
       (stage.height - 180) / frame.height
     );
+  }
+
   return Math.min(
     1,
     (stage.width - 48) / frame.width,
@@ -146,12 +156,19 @@ function overlayOf(slots: Slot[]): Slot | undefined {
 
 function settled(prev: Slot[], token: string): Slot[] {
   const target = prev.find((item) => item.token === token);
-  if (!target) return prev;
-  if (target.overlay)
+
+  if (!target) {
+    return prev;
+  }
+
+  if (target.overlay) {
     return prev.map((item) =>
       item.token === token ? { ...item, phase: "shown" } : item
     );
+  }
+
   const at = prev.indexOf(target);
+
   return prev
     .filter((item, index) => index >= at || item.overlay)
     .map((item) => (item.token === token ? { ...item, phase: "shown" } : item));
@@ -162,7 +179,10 @@ function withPhase(prev: Slot[], token: string, phase: Phase): Slot[] {
 }
 
 function placed(prev: Slot[], slot: Slot): Slot[] {
-  if (slot.overlay) return [...baseOf(prev), slot];
+  if (slot.overlay) {
+    return [...baseOf(prev), slot];
+  }
+
   return [
     ...baseOf(prev)
       .filter((item) => item.phase === "shown" || item.phase === "run")
@@ -172,8 +192,14 @@ function placed(prev: Slot[], slot: Slot): Slot[] {
 }
 
 function keyOf(event: KeyboardEvent): "exit" | "restart" | "back" | null {
-  if (event.key === "Escape") return "exit";
-  if (event.key === "r" || event.key === "R") return "restart";
+  if (event.key === "Escape") {
+    return "exit";
+  }
+
+  if (event.key === "r" || event.key === "R") {
+    return "restart";
+  }
+
   return event.key === "Backspace" || event.key === "ArrowLeft" ? "back" : null;
 }
 
@@ -207,14 +233,17 @@ function usePlay(p: Props) {
     const top = slotsRef.current.at(-1);
     const last = shot.current;
     shot.current = null;
+
     if (
       !last ||
       !top ||
       last.token !== top.token ||
       Date.now() - last.at > LAYERS_FRESH_MS ||
       Object.keys(last.layers).length === 0
-    )
+    ) {
       return null;
+    }
+
     return last.layers;
   };
 
@@ -222,9 +251,15 @@ function usePlay(p: Props) {
 
   const reveal = (token: string) => {
     const slot = slotsRef.current.find((item) => item.token === token);
-    if (!slot || slot.phase !== "loading") return;
-    if (slot.transition === "instant" || slot.transition === "smart-animate")
+
+    if (!slot || slot.phase !== "loading") {
+      return;
+    }
+
+    if (slot.transition === "instant" || slot.transition === "smart-animate") {
       return settle(token);
+    }
+
     setSlots((prev) => withPhase(prev, token, "enter"));
     window.requestAnimationFrame(() =>
       window.requestAnimationFrame(() => {
@@ -241,18 +276,32 @@ function usePlay(p: Props) {
     after: () => void
   ) => {
     const frame = props.current.frames.find((item) => item.id === frameId);
-    if (!frame) return setError("That frame is gone.");
+
+    if (!frame) {
+      return setError("That frame is gone.");
+    }
+
     setError(null);
     const layers = motion.transition === "smart-animate" ? freshLayers() : null;
+
     const effective: Motion =
       motion.transition === "smart-animate" && !layers
         ? { ...motion, transition: "dissolve" }
         : motion;
+
     void props.current.urlOf(frame).then((url) => {
-      if (!url) return setError("The preview for that frame is not ready.");
+      if (!url) {
+        return setError("The preview for that frame is not ready.");
+      }
+
       const token = randomToken();
-      if (layers) pendingFx.current.set(token, layers);
+
+      if (layers) {
+        pendingFx.current.set(token, layers);
+      }
+
       const first = slotsRef.current.length === 0;
+
       const slot: Slot = {
         key: token,
         frame,
@@ -262,6 +311,7 @@ function usePlay(p: Props) {
         phase: "loading",
         ...(overlay ? { overlay } : {}),
       };
+
       after();
       setSlots((prev) => placed(prev, slot));
       later(() => reveal(token), NO_BRIDGE_MS);
@@ -276,10 +326,14 @@ function usePlay(p: Props) {
 
   const closeOverlay = () => {
     const open = overlayOf(slotsRef.current);
-    if (!open) return false;
-    if (open.transition === "instant")
+
+    if (!open) {
+      return false;
+    }
+
+    if (open.transition === "instant") {
       setSlots((prev) => prev.filter((item) => !item.overlay));
-    else {
+    } else {
       setSlots((prev) => withPhase(prev, open.token, "closing"));
       later(
         () =>
@@ -287,6 +341,7 @@ function usePlay(p: Props) {
         open.duration + 40
       );
     }
+
     return true;
   };
 
@@ -297,11 +352,19 @@ function usePlay(p: Props) {
   }, [show]);
 
   const back = () => {
-    if (closeOverlay()) return;
+    if (closeOverlay()) {
+      return;
+    }
+
     const list = historyRef.current;
-    if (list.length < 2) return;
+
+    if (list.length < 2) {
+      return;
+    }
+
     const previous = list[list.length - 2] as string;
     const current = baseOf(slotsRef.current).at(-1);
+
     const motion = current
       ? {
           transition: reverseTransition(current.transition),
@@ -309,47 +372,73 @@ function usePlay(p: Props) {
           easing: current.easing,
         }
       : INSTANT;
+
     show(previous, motion, list.slice(0, -1));
   };
 
   const onLinkClick = (id: string) => {
     const link = props.current.file.links.find((item) => item.id === id);
-    if (!link) return;
-    if (isBackTarget(link.to)) return back();
-    if (link.action)
+
+    if (!link) {
+      return;
+    }
+
+    if (isBackTarget(link.to)) {
+      return back();
+    }
+
+    if (link.action) {
       return place(link.to.frame, motionOf(link), link.action, () => undefined);
+    }
+
     show(link.to.frame, motionOf(link), [...historyRef.current, link.to.frame]);
   };
 
   const onKey = (key: "exit" | "restart" | "back") => {
     if (key === "exit") {
-      if (!closeOverlay()) props.current.onClose();
-    } else if (key === "restart") restart();
-    else back();
+      if (!closeOverlay()) {
+        props.current.onClose();
+      }
+    } else if (key === "restart") {
+      restart();
+    } else {
+      back();
+    }
   };
 
   useEffect(() => {
     restart();
     const list = timers.current;
+
     return () => list.forEach((timer) => window.clearTimeout(timer));
   }, [restart]);
 
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
-      if (event.metaKey || event.ctrlKey || event.altKey) return;
+      if (event.metaKey || event.ctrlKey || event.altKey) {
+        return;
+      }
+
       const key = keyOf(event);
-      if (!key) return;
+
+      if (!key) {
+        return;
+      }
+
       event.preventDefault();
       event.stopImmediatePropagation();
       onKey(key);
     };
+
     window.addEventListener("keydown", handler, true);
+
     return () => window.removeEventListener("keydown", handler, true);
   });
 
   const linkKey = p.file.links
     .map((link) => `${link.id}:${link.from.frame}:${link.from.selector}`)
     .join("|");
+
   const sendLinks = (frame: BridgeFrame, slot: Slot) => {
     const links = props.current.file.links
       .filter(
@@ -358,16 +447,23 @@ function usePlay(p: Props) {
           staticLinkIssue(link, props.current.frames) === null
       )
       .map(linkQuery);
+
     postToFrame(frame, { type: "play-links", links });
   };
 
   useEffect(() => {
-    for (const token of readyFrames.current.keys())
-      if (!slotsRef.current.some((slot) => slot.token === token))
+    for (const token of readyFrames.current.keys()) {
+      if (!slotsRef.current.some((slot) => slot.token === token)) {
         readyFrames.current.delete(token);
+      }
+    }
+
     for (const slot of slotsRef.current) {
       const frame = readyFrames.current.get(slot.token);
-      if (frame) sendLinks(frame, slot);
+
+      if (frame) {
+        sendLinks(frame, slot);
+      }
     }
   }, [linkKey]);
 
@@ -375,6 +471,7 @@ function usePlay(p: Props) {
     readyFrames.current.set(slot.token, frame);
     sendLinks(frame, slot);
     const layers = pendingFx.current.get(slot.token);
+
     if (layers) {
       pendingFx.current.delete(slot.token);
       postToFrame(frame, {
@@ -384,6 +481,7 @@ function usePlay(p: Props) {
         easing: slot.easing,
       });
     }
+
     reveal(slot.token);
   };
 
@@ -395,19 +493,29 @@ function usePlay(p: Props) {
       kind: props.current.kind,
       element: elements.current[slot.token] ?? null,
     }));
+
   useBridge(bridgeFrames, (frame, message: BridgeToParent) => {
     const slot = slotsRef.current.find((item) => item.token === frame.token);
-    if (!slot) return;
+
+    if (!slot) {
+      return;
+    }
+
     const top = slot === slotsRef.current.at(-1);
-    if (message.type === "ready") onReady(frame, slot);
-    else if (message.type === "play-layers" && top)
+
+    if (message.type === "ready") {
+      onReady(frame, slot);
+    } else if (message.type === "play-layers" && top) {
       shot.current = {
         token: slot.token,
         at: Date.now(),
         layers: message.layers,
       };
-    else if (message.type === "play-click" && top) onLinkClick(message.id);
-    else if (message.type === "play-key") onKey(message.key);
+    } else if (message.type === "play-click" && top) {
+      onLinkClick(message.id);
+    } else if (message.type === "play-key") {
+      onKey(message.key);
+    }
   });
 
   return { slots, history, error, elements, restart, back, closeOverlay };
@@ -429,6 +537,7 @@ function SlotView({
   bind: (el: HTMLIFrameElement | null) => void;
 }) {
   const scale = scaleFor(slot, stage);
+
   return (
     <div
       className={slotClass(
@@ -465,11 +574,18 @@ function playHint(
   overlay: boolean,
   shown: CanvasFrame | undefined
 ): string {
-  if (p.file.links.length === 0)
+  if (p.file.links.length === 0) {
     return "No links yet. Use the Prototype tool to link frames.";
-  if (overlay) return "Click outside or press Esc to close";
-  if (shown && !hasOutgoing(p.file, shown.id))
+  }
+
+  if (overlay) {
+    return "Click outside or press Esc to close";
+  }
+
+  if (shown && !hasOutgoing(p.file, shown.id)) {
     return "No links here. Esc, then link elements in Prototype.";
+  }
+
   return "Click a linked element";
 }
 
@@ -480,14 +596,22 @@ function useFocusReturn(root: { current: HTMLElement | null }) {
       document.activeElement !== document.body
         ? document.activeElement
         : null;
+
     root.current?.focus();
+
     return () => {
       window.requestAnimationFrame(() => {
-        if (document.activeElement && document.activeElement !== document.body)
+        if (
+          document.activeElement &&
+          document.activeElement !== document.body
+        ) {
           return;
+        }
+
         const target = opener?.isConnected
           ? opener
           : document.querySelector<HTMLElement>(".stage");
+
         target?.focus({ preventScroll: true });
       });
     };
@@ -502,14 +626,17 @@ export default function PlayMode(p: Props) {
   const base = baseOf(play.slots);
   const overlay = overlayOf(play.slots);
   const current = base.at(-1);
+
   const shownFrame =
     (overlay && overlay.phase !== "closing" ? overlay.frame : undefined) ??
     base.filter((slot) => slot.phase === "shown" || slot.phase === "run").at(-1)
       ?.frame ??
     current?.frame;
+
   const bind = (token: string) => (el: HTMLIFrameElement | null) => {
     play.elements.current[token] = el;
   };
+
   return (
     <div
       ref={root}
@@ -561,6 +688,7 @@ export default function PlayMode(p: Props) {
             slot !== current &&
             current !== undefined &&
             current.phase === "run";
+
           return (
             <SlotView
               key={slot.key}

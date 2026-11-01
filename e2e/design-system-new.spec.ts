@@ -33,6 +33,7 @@ test.beforeAll(async () => {
     const name = path.basename(
       (req.url ?? "/") === "/" ? "index.html" : (req.url ?? "")
     );
+
     readFile(path.join(FIXTURES, "site", name))
       .then((body) =>
         res
@@ -67,9 +68,14 @@ async function rgbOf(locator: Locator): Promise<number[]> {
     canvas.width = 1;
     canvas.height = 1;
     const context = canvas.getContext("2d");
-    if (!context) return [];
+
+    if (!context) {
+      return [];
+    }
+
     context.fillStyle = getComputedStyle(element).backgroundColor;
     context.fillRect(0, 0, 1, 1);
+
     return [...context.getImageData(0, 0, 1, 1).data].slice(0, 3);
   });
 }
@@ -96,7 +102,11 @@ async function createdProject(
   const created = (await api.projects()).find(
     (project) => !before.has(project.id)
   );
-  if (!created) throw new Error("backing project not found");
+
+  if (!created) {
+    throw new Error("backing project not found");
+  }
+
   return created;
 }
 
@@ -154,16 +164,20 @@ test("new design system: website + DESIGN.md draft, kit page, save back, then us
   await expect(
     page.locator(".ds-toast", { hasText: "Saved Rocket Kit to your library." })
   ).toBeVisible();
+
   const users = (await api.call<PackSummary[]>("GET", "/api/packs"))
     .filter((pack) => pack.source === "user")
     .map((pack) => pack.id);
+
   expect(users.filter((id) => id.startsWith("user-rocket-kit"))).toEqual([
     "user-rocket-kit",
   ]);
+
   const detail = await api.call<{ tokensJson: string }>(
     "GET",
     "/api/packs/user-rocket-kit"
   );
+
   expect(detail.tokensJson).toContain("oklch(52% 0.2 300)");
 
   await page
@@ -180,12 +194,14 @@ test("new design system: website + DESIGN.md draft, kit page, save back, then us
   const option = list.getByRole("option", { name: "Rocket Kit", exact: true });
   await expect(option).toContainText("Yours");
   await option.click();
+
   const used = await createProjectViaUi(
     page,
     api,
     "Rocket launch page",
     "html"
   );
+
   expect(used.packId).toBe("user-rocket-kit");
   await expect
     .poll(() =>
@@ -216,9 +232,11 @@ test("new design system: draft from a DTCG tokens file only", async ({
   await expect(bar).toContainText("Dtcg");
   const project = await createdProject(api, before);
   expect(project.designSystemFor).toMatch(/^user-dtcg/);
+
   const pack = (await api.call<PackSummary[]>("GET", "/api/packs")).find(
     (item) => item.id === project.designSystemFor
   );
+
   expect(pack).toMatchObject({ source: "user", provenance: "imported" });
   await expect.poll(async () => rgbOf(chip(page, "primary"))).toHaveLength(3);
   expectRgb(await rgbOf(chip(page, "primary")), [10, 125, 90]);

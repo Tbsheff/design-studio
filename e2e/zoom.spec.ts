@@ -8,21 +8,31 @@ async function currentZoom(page: Page): Promise<number> {
   const transform = await page
     .locator(".artboard")
     .evaluate((el) => (el as HTMLElement).style.transform);
+
   const match = /scale\(([\d.]+)\)/.exec(transform);
-  if (!match?.[1]) throw new Error(`no scale in ${transform}`);
+
+  if (!match?.[1]) {
+    throw new Error(`no scale in ${transform}`);
+  }
+
   return Number(match[1]);
 }
 
 async function zoomLabel(page: Page): Promise<string> {
   return page.getByLabel("Zoom", { exact: true }).evaluate((el) => {
     const select = el as HTMLSelectElement;
+
     return select.options[select.selectedIndex]?.text.trim() ?? "";
   });
 }
 
 async function artboardOrigin(page: Page): Promise<Point> {
   const box = await page.locator(".artboard").boundingBox();
-  if (!box) throw new Error("artboard not visible");
+
+  if (!box) {
+    throw new Error("artboard not visible");
+  }
+
   return { x: box.x, y: box.y };
 }
 
@@ -33,11 +43,16 @@ async function pointInFrame(
 ): Promise<Point> {
   const frame = await page.locator("iframe.frame.front").boundingBox();
   const stage = await page.locator(".stage").boundingBox();
-  if (!frame || !stage) throw new Error("frame not visible");
+
+  if (!frame || !stage) {
+    throw new Error("frame not visible");
+  }
+
   const left = Math.max(frame.x, stage.x);
   const top = Math.max(frame.y, stage.y);
   const right = Math.min(frame.x + frame.width, stage.x + stage.width);
   const bottom = Math.min(frame.y + frame.height, stage.y + stage.height);
+
   return { x: left + (right - left) * fx, y: top + (bottom - top) * fy };
 }
 
@@ -48,10 +63,12 @@ async function expectPointKept(
 ): Promise<number> {
   const before = await currentZoom(page);
   const origin = await artboardOrigin(page);
+
   const design = {
     x: (at.x - origin.x) / before,
     y: (at.y - origin.y) / before,
   };
+
   await page.mouse.move(at.x, at.y);
   await page.keyboard.down("Control");
   await page.mouse.wheel(0, deltaY);
@@ -64,12 +81,17 @@ async function expectPointKept(
   const moved = await artboardOrigin(page);
   expect(Math.abs(moved.x + design.x * after - at.x)).toBeLessThanOrEqual(4);
   expect(Math.abs(moved.y + design.y * after - at.y)).toBeLessThanOrEqual(4);
+
   return after;
 }
 
 function percentOf(label: string): number {
   const match = /(\d+)%/.exec(label);
-  if (!match?.[1]) throw new Error(`no percent in "${label}"`);
+
+  if (!match?.[1]) {
+    throw new Error(`no percent in "${label}"`);
+  }
+
   return Number(match[1]);
 }
 
@@ -96,6 +118,7 @@ test("canvas zoom: ctrl+wheel over the frame, buttons, and keyboard shortcuts", 
     await pointInFrame(page, 0.3, 0.4),
     -100
   );
+
   expect(zoomedIn).toBeGreaterThan(fitZoom);
   expect(percentOf(await zoomLabel(page))).toBe(Math.round(zoomedIn * 100));
 
@@ -104,11 +127,16 @@ test("canvas zoom: ctrl+wheel over the frame, buttons, and keyboard shortcuts", 
     await pointInFrame(page, 0.7, 0.6),
     60
   );
+
   expect(zoomedOut).toBeLessThan(zoomedIn);
   expect(percentOf(await zoomLabel(page))).toBe(Math.round(zoomedOut * 100));
 
   const stage = await page.locator(".stage").boundingBox();
-  if (!stage) throw new Error("stage not visible");
+
+  if (!stage) {
+    throw new Error("stage not visible");
+  }
+
   await expectPointKept(
     page,
     { x: stage.x + stage.width - 12, y: stage.y + stage.height - 12 },

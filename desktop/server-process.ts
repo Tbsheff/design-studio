@@ -37,6 +37,7 @@ function openLog(file: string): WriteStream {
   mkdirSync(path.dirname(file), { recursive: true });
   const log = createWriteStream(file, { flags: "a" });
   log.write(`\n--- server start ${new Date().toISOString()} ---\n`);
+
   return log;
 }
 
@@ -48,16 +49,23 @@ function pipeOutput(
 ): void {
   const forward = (target: NodeJS.WriteStream) => (chunk: Buffer) => {
     log.write(chunk);
-    if (echo) target.write(chunk);
+
+    if (echo) {
+      target.write(chunk);
+    }
+
     onLine(chunk.toString("utf-8"));
   };
+
   child.stdout?.on("data", forward(process.stdout));
   child.stderr?.on("data", forward(process.stderr));
 }
 
 function exited(child: ChildProcess): Promise<void> {
-  if (child.exitCode !== null || child.signalCode !== null)
+  if (child.exitCode !== null || child.signalCode !== null) {
     return Promise.resolve();
+  }
+
   return new Promise((resolve) => child.once("exit", () => resolve()));
 }
 
@@ -71,6 +79,7 @@ function within(promise: Promise<void>, ms: number): Promise<boolean> {
 function signalGroup(pid: number, signal: NodeJS.Signals | 0): boolean {
   try {
     process.kill(-pid, signal);
+
     return true;
   } catch {
     return false;
@@ -84,6 +93,7 @@ function groupAlive(pid: number): boolean {
 async function answers(origin: string): Promise<boolean> {
   try {
     const res = await fetch(`${origin}/`);
+
     return res.ok;
   } catch {
     return false;
@@ -95,14 +105,20 @@ async function pollUntilAnswer(
   isDone: () => boolean
 ): Promise<void> {
   const deadline = Date.now() + READY_TIMEOUT_MS;
+
   while (Date.now() < deadline && !isDone()) {
-    if (await answers(origin)) return;
+    if (await answers(origin)) {
+      return;
+    }
+
     await new Promise((resolve) => setTimeout(resolve, POLL_MS));
   }
-  if (!isDone())
+
+  if (!isDone()) {
     throw new Error(
       `studio server did not answer ${origin} within ${READY_TIMEOUT_MS} ms`
     );
+  }
 }
 
 function waitReady(
@@ -111,13 +127,17 @@ function waitReady(
   seenLine: Promise<void>
 ): Promise<void> {
   let settled = false;
+
   const failed = exited(child).then(() => {
-    if (!settled)
+    if (!settled) {
       throw new Error(
         `studio server exited during startup (code ${child.exitCode ?? child.signalCode})`
       );
+    }
   });
+
   const polled = pollUntilAnswer(origin, () => settled);
+
   return Promise.race([seenLine, polled, failed]).finally(() => {
     settled = true;
   });
@@ -125,37 +145,53 @@ function waitReady(
 
 async function groupGone(pid: number, ms: number): Promise<boolean> {
   const deadline = Date.now() + ms;
-  while (groupAlive(pid) && Date.now() < deadline)
+
+  while (groupAlive(pid) && Date.now() < deadline) {
     await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+
   return !groupAlive(pid);
 }
 
 async function stopGroup(child: ChildProcess, pid: number): Promise<void> {
   signalGroup(pid, "SIGTERM");
   const stopped = await within(exited(child), TERM_GRACE_MS);
-  if (!stopped || !(await groupGone(pid, KILL_GRACE_MS)))
+
+  if (!stopped || !(await groupGone(pid, KILL_GRACE_MS))) {
     signalGroup(pid, "SIGKILL");
+  }
+
   await within(exited(child), KILL_GRACE_MS);
 }
 
 export function startServer(options: ServerOptions): ServerHandle {
   const log = openLog(options.logFile);
+
   const child = spawn(options.execPath, options.args, {
     cwd: options.cwd,
     env: options.env,
     detached: true,
     stdio: ["ignore", "pipe", "pipe", "ipc"],
   });
-  if (child.pid === undefined) throw new Error("studio server did not start");
+
+  if (child.pid === undefined) {
+    throw new Error("studio server did not start");
+  }
+
   const pid = child.pid;
   let markReady: () => void = () => undefined;
+
   const seenLine = new Promise<void>((resolve) => {
     markReady = resolve;
   });
+
   pipeOutput(child, log, options.echo, (text) => {
-    if (text.includes(READY_LINE)) markReady();
+    if (text.includes(READY_LINE)) {
+      markReady();
+    }
   });
   let stopping: Promise<void> | null = null;
+
   return {
     pid,
     child,
@@ -166,6 +202,7 @@ export function startServer(options: ServerOptions): ServerHandle {
     })),
     stop() {
       stopping ??= stopGroup(child, pid).finally(() => log.end());
+
       return stopping;
     },
   };

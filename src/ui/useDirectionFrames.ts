@@ -55,7 +55,10 @@ function useDirectionUrls(
   }, [projectId]);
   useEffect(() => {
     for (const id of key ? key.split(",") : []) {
-      if (asked.current.has(id)) continue;
+      if (asked.current.has(id)) {
+        continue;
+      }
+
       asked.current.add(id);
       api
         .directionPreview(projectId, id)
@@ -63,6 +66,7 @@ function useDirectionUrls(
         .catch(() => asked.current.delete(id));
     }
   }, [projectId, key]);
+
   return urls;
 }
 
@@ -71,8 +75,10 @@ export function useDirectionFrames(o: Options) {
   const elements = useRef<Record<string, HTMLIFrameElement | null>>({});
   const passive = o.frames.filter((f) => f.id !== o.activeId);
   const known = new Set(o.directions?.map((d) => d.id));
+
   const resolved = passive.map((f) => {
     const own = frameDirection(f, o.currentId);
+
     return {
       frame: f,
       directionId:
@@ -81,6 +87,7 @@ export function useDirectionFrames(o: Options) {
           : o.currentId,
     };
   });
+
   const others = [
     ...new Set(
       resolved
@@ -88,8 +95,10 @@ export function useDirectionFrames(o: Options) {
         .filter((id): id is string => id !== null && id !== o.currentId)
     ),
   ].sort();
+
   const urls = useDirectionUrls(o.projectId, others);
   const heads = new Map(o.directions?.map((d) => [d.id, d.headVersionId]));
+
   const targets: GateTarget[] = resolved
     .filter(
       (r) => r.directionId !== null && (r.directionId !== o.currentId || o.live)
@@ -99,6 +108,7 @@ export function useDirectionFrames(o: Options) {
       directionId: r.directionId as string,
       headVersionId: heads.get(r.directionId as string) ?? null,
     }));
+
   const gate = useSwapGate(
     o.kind,
     targets,
@@ -111,6 +121,7 @@ export function useDirectionFrames(o: Options) {
     const token = tokens.current.get(frame.id) ?? randomToken();
     tokens.current.set(frame.id, token);
     const isCurrent = directionId !== null && directionId === o.currentId;
+
     const base =
       directionId === null
         ? null
@@ -120,7 +131,9 @@ export function useDirectionFrames(o: Options) {
               urls[directionId] ?? null,
               markOf(o.directions, directionId)
             );
+
     const gated = !isCurrent || o.live;
+
     const build = (change: FilesChange | null) => {
       const page = base
         ? frameStateUrl(
@@ -133,13 +146,16 @@ export function useDirectionFrames(o: Options) {
             frame.id
           )
         : null;
+
       return page
         ? frameSrc(page, token, { [BRIDGE_PASSIVE_PARAM]: "1" })
         : null;
     };
+
     const src = build(gated ? gate.shownFor(frame.id) : null);
     const next = gated ? gate.nextFor(frame.id) : null;
     const nextSrc = next ? build(next) : null;
+
     return {
       id: frame.id,
       directionId,
@@ -152,6 +168,7 @@ export function useDirectionFrames(o: Options) {
   const slotKey = slots
     .map((s) => `${s.id}:${s.directionId === o.currentId ? s.src : ""}`)
     .join("|");
+
   const tokenSlots = useMemo(
     () =>
       slots
@@ -159,7 +176,9 @@ export function useDirectionFrames(o: Options) {
         .map((s) => ({ token: s.token, src: s.src as string })),
     [slotKey]
   );
+
   useTokenFrames(tokenSlots, elements, o.kind, o.live);
+
   return { slots, elements, onSwapDone: gate.onSwapDone };
 }
 

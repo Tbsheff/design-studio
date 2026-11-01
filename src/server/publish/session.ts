@@ -53,24 +53,34 @@ export function createCliSession(store: PublishStore): CliSession {
   let login: PublishLoginState = { running: false, url: null, error: null };
 
   const probeCli = async (fresh: boolean): Promise<Probe> => {
-    if (!fresh && probe && Date.now() - probe.at < PROBE_TTL_MS) return probe;
+    if (!fresh && probe && Date.now() - probe.at < PROBE_TTL_MS) {
+      return probe;
+    }
+
     await mkdir(store.dir, { recursive: true, mode: 0o700 });
     probe = { ...(await newestCf(store.dir)), at: Date.now() };
+
     return probe;
   };
 
   const whoAmI = async (bin: string, fresh: boolean): Promise<WhoAmI> => {
-    if (!fresh && who && Date.now() - who.at < WHO_TTL_MS) return who.value;
+    if (!fresh && who && Date.now() - who.at < WHO_TTL_MS) {
+      return who.value;
+    }
+
     who = { value: await cfWhoAmI(bin, store.dir), at: Date.now() };
+
     return who.value;
   };
 
   const state = async (fresh = false): Promise<PublishCliState> => {
     const found = await probeCli(fresh);
     const settings = await store.settings();
+
     const versionOk =
       found.version !== null &&
       compareCfVersion(found.version, CF_MIN_VERSION) >= 0;
+
     const base: PublishCliState = {
       installed: found.bin !== null && found.version !== null,
       version: found.version,
@@ -86,12 +96,21 @@ export function createCliSession(store: PublishStore): CliSession {
       login,
       error: null,
     };
-    if (!found.bin || !versionOk) return base;
+
+    if (!found.bin || !versionOk) {
+      return base;
+    }
+
     const me = await whoAmI(found.bin, fresh).catch(() => null);
-    if (!me) return { ...base, error: "cf auth whoami did not answer." };
+
+    if (!me) {
+      return { ...base, error: "cf auth whoami did not answer." };
+    }
+
     const accountId =
       me.accounts.find((a) => a.id === settings.accountId)?.id ??
       (me.accounts.length === 1 ? (me.accounts[0]?.id ?? null) : null);
+
     return {
       ...base,
       signedIn: me.signedIn,
@@ -104,26 +123,37 @@ export function createCliSession(store: PublishStore): CliSession {
 
   const ready = async (accountId?: string): Promise<ReadyCli> => {
     const now = await state();
-    if (!now.installed)
+
+    if (!now.installed) {
       throw new BadRequestError(
         `The Cloudflare CLI (cf) is not installed. Run ${CF_INSTALL_COMMAND} in Terminal, then click Check again in Settings → Publishing.`
       );
-    if (!now.versionOk)
+    }
+
+    if (!now.versionOk) {
       throw new BadRequestError(
         `cf ${now.version} is too old. Publish needs cf ${CF_MIN_VERSION} or later: run ${CF_INSTALL_COMMAND}.`
       );
-    if (!now.signedIn)
+    }
+
+    if (!now.signedIn) {
       throw new BadRequestError(
         "Sign in to Cloudflare first in Settings → Publishing."
       );
+    }
+
     const id = accountId ?? now.accountId;
-    if (!id || !now.accounts.some((a) => a.id === id))
+
+    if (!id || !now.accounts.some((a) => a.id === id)) {
       throw new BadRequestError(
         accountId
           ? "The Cloudflare sign-in has no access to the account of this publication."
           : "Pick a Cloudflare account in Settings → Publishing."
       );
+    }
+
     const settings = await store.settings();
+
     return {
       bin: probe?.bin as string,
       accountId: id,
@@ -135,29 +165,42 @@ export function createCliSession(store: PublishStore): CliSession {
     keyring: boolean,
     narrow: boolean
   ): Promise<PublishCliState> => {
-    if (child) return state();
+    if (child) {
+      return state();
+    }
+
     const found = await probeCli(true);
-    if (!found.bin)
+
+    if (!found.bin) {
       throw new BadRequestError(
         `Install the Cloudflare CLI first: ${CF_INSTALL_COMMAND}.`
       );
+    }
+
     await store.saveSettings({ keyring });
     login = { running: true, url: null, error: null };
     let seen = "";
+
     const run = runCf(found.bin, loginArgs(keyring, narrow), {
       cwd: store.dir,
       timeoutMs: LOGIN_TIMEOUT_MS,
       onSpawn: (spawned) => {
         child = spawned;
+
         const watch = (chunk: Buffer) => {
           seen = (seen + chunk.toString("utf-8")).slice(-20_000);
           const match = LOGIN_URL.exec(seen);
-          if (match && !login.url) login = { ...login, url: match[0] };
+
+          if (match && !login.url) {
+            login = { ...login, url: match[0] };
+          }
         };
+
         spawned.stdout?.on("data", watch);
         spawned.stderr?.on("data", watch);
       },
     });
+
     void run.then((out) => {
       child = null;
       who = null;
@@ -172,6 +215,7 @@ export function createCliSession(store: PublishStore): CliSession {
       };
     });
     await new Promise((resolve) => setTimeout(resolve, 1500));
+
     return state();
   };
 
@@ -179,26 +223,34 @@ export function createCliSession(store: PublishStore): CliSession {
     child?.kill("SIGTERM");
     child = null;
     login = { running: false, url: null, error: null };
+
     return state(true);
   };
 
   const logout = async (): Promise<PublishCliState> => {
     const found = await probeCli(false);
-    if (found.bin)
+
+    if (found.bin) {
       await runCf(found.bin, ["auth", "logout"], {
         cwd: store.dir,
         timeoutMs: 30_000,
       });
+    }
+
     who = null;
+
     return state(true);
   };
 
   const setAccount = async (
     accountId: string | null
   ): Promise<PublishCliState> => {
-    if (accountId !== null && !/^[A-Za-z0-9]{8,64}$/.test(accountId))
+    if (accountId !== null && !/^[A-Za-z0-9]{8,64}$/.test(accountId)) {
       throw new BadRequestError("accountId is not valid");
+    }
+
     await store.saveSettings({ accountId });
+
     return state();
   };
 
@@ -207,7 +259,11 @@ export function createCliSession(store: PublishStore): CliSession {
     subdomain: string
   ): Promise<void> => {
     const settings = await store.settings();
-    if (settings.subdomains[accountId] === subdomain) return;
+
+    if (settings.subdomains[accountId] === subdomain) {
+      return;
+    }
+
     await store.saveSettings({
       subdomains: { ...settings.subdomains, [accountId]: subdomain },
     });

@@ -30,6 +30,7 @@ export interface ResolveInputs {
 export type VersionFit = "ok" | "older" | "newer" | "unknown";
 
 const VERSION_TIMEOUT_MS = 10_000;
+
 const SDK_PACKAGE = path.join(
   "@anthropic-ai",
   "claude-agent-sdk",
@@ -39,8 +40,12 @@ const SDK_PACKAGE = path.join(
 export const nodeFs: ClaudeFs = {
   isExecutable(file) {
     try {
-      if (!statSync(file).isFile()) return false;
+      if (!statSync(file).isFile()) {
+        return false;
+      }
+
       accessSync(file, constants.X_OK);
+
       return true;
     } catch {
       return false;
@@ -54,6 +59,7 @@ export function knownClaudeLocations(
   env: NodeJS.ProcessEnv
 ): string[] {
   const npmPrefix = env.NPM_CONFIG_PREFIX || env.npm_config_prefix;
+
   return [
     path.join(home, ".local", "bin", "claude"),
     path.join(home, ".claude", "local", "claude"),
@@ -73,14 +79,21 @@ export function claudeCandidates(
       file: path.join(dir, "claude"),
       source: "path" as const,
     }));
+
   const known = knownClaudeLocations(inputs.home, inputs.env).map((file) => ({
     file,
     source: "known" as const,
   }));
+
   const seen = new Set<string>();
+
   return [...fromPath, ...known].filter((candidate) => {
-    if (seen.has(candidate.file)) return false;
+    if (seen.has(candidate.file)) {
+      return false;
+    }
+
     seen.add(candidate.file);
+
     return true;
   });
 }
@@ -90,7 +103,10 @@ function locate(
   source: ClaudeSource,
   fs: ClaudeFs
 ): ClaudeLocation | null {
-  if (!fs.isExecutable(file)) return null;
+  if (!fs.isExecutable(file)) {
+    return null;
+  }
+
   try {
     return { path: file, realPath: fs.realpath(file), source };
   } catch {
@@ -103,11 +119,19 @@ export function resolveClaude(
   fs: ClaudeFs = nodeFs
 ): ClaudeLocation | null {
   const override = inputs.env.STUDIO_CLAUDE_PATH;
-  if (override) return locate(path.resolve(override), "env", fs);
+
+  if (override) {
+    return locate(path.resolve(override), "env", fs);
+  }
+
   for (const candidate of claudeCandidates(inputs)) {
     const found = locate(candidate.file, candidate.source, fs);
-    if (found) return found;
+
+    if (found) {
+      return found;
+    }
   }
+
   return null;
 }
 
@@ -120,6 +144,7 @@ export function bundledClaude(
 
 export function parseVersion(text: string): [number, number, number] | null {
   const match = /(\d+)\.(\d+)\.(\d+)/.exec(text);
+
   return match ? [Number(match[1]), Number(match[2]), Number(match[3])] : null;
 }
 
@@ -129,9 +154,19 @@ export function compareClaudeVersion(
 ): VersionFit {
   const have = found ? parseVersion(found) : null;
   const want = expected ? parseVersion(expected) : null;
-  if (!have || !want) return "unknown";
-  if (have[0] !== want[0]) return have[0] < want[0] ? "older" : "newer";
-  if (have[1] !== want[1]) return have[1] < want[1] ? "older" : "newer";
+
+  if (!have || !want) {
+    return "unknown";
+  }
+
+  if (have[0] !== want[0]) {
+    return have[0] < want[0] ? "older" : "newer";
+  }
+
+  if (have[1] !== want[1]) {
+    return have[1] < want[1] ? "older" : "newer";
+  }
+
   return "ok";
 }
 
@@ -143,6 +178,7 @@ export function expectedClaudeVersion(
     const manifest = JSON.parse(read(path.join(modulesDir, SDK_PACKAGE))) as {
       claudeCodeVersion?: unknown;
     };
+
     return typeof manifest.claudeCodeVersion === "string"
       ? manifest.claudeCodeVersion
       : null;

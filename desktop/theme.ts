@@ -39,8 +39,12 @@ export function setupBackground(): string {
 
 function repaint(): void {
   const color = studioBackground();
-  for (const window of painted)
-    if (!window.isDestroyed()) window.setBackgroundColor(color);
+
+  for (const window of painted) {
+    if (!window.isDestroyed()) {
+      window.setBackgroundColor(color);
+    }
+  }
 }
 
 export function trackThemeWindow(window: BrowserWindow): void {
@@ -49,8 +53,12 @@ export function trackThemeWindow(window: BrowserWindow): void {
 }
 
 export function initTheme(themeFile: string): void {
-  if (file) return;
+  if (file) {
+    return;
+  }
+
   file = themeFile;
+
   try {
     pref =
       valid(
@@ -60,19 +68,26 @@ export function initTheme(themeFile: string): void {
   } catch {
     pref = "dark";
   }
+
   ipcMain.on(THEME_IPC.get, (event) => {
     event.returnValue = pref;
   });
   ipcMain.on(THEME_IPC.set, (_event, raw: unknown) => {
     const next = valid(raw);
-    if (!next || next === pref) return;
+
+    if (!next || next === pref) {
+      return;
+    }
+
     pref = next;
+
     try {
       mkdirSync(path.dirname(themeFile), { recursive: true });
       writeFileSync(themeFile, `${JSON.stringify({ theme: pref })}\n`);
     } catch (err) {
       console.warn(`[desktop] theme: could not save ${String(err)}`);
     }
+
     repaint();
   });
   nativeTheme.on("updated", repaint);

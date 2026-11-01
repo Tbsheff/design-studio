@@ -23,6 +23,7 @@ function firstWriteAt(run: RunView): number | null {
   const starts = run.tools
     .filter((t) => FILE_WRITE_TOOLS.has(t.name))
     .map((t) => t.startedAt);
+
   return starts.length > 0 ? Math.min(...starts) : null;
 }
 
@@ -32,7 +33,11 @@ function previewSamplesForRun(
 ): TelemetrySample[] {
   const from = firstWriteAt(run);
   const finishedAt = run.summary?.finishedAt ?? null;
-  if (from === null || finishedAt === null) return [];
+
+  if (from === null || finishedAt === null) {
+    return [];
+  }
+
   return samples.filter(
     (s) =>
       s.kind === "preview.latency" &&
@@ -43,10 +48,17 @@ function previewSamplesForRun(
 }
 
 function previewText(samples: TelemetrySample[] | null): string {
-  if (samples === null) return "loading";
-  if (samples.length === 0) return "n/a";
+  if (samples === null) {
+    return "loading";
+  }
+
+  if (samples.length === 0) {
+    return "n/a";
+  }
+
   const last = samples[samples.length - 1] as TelemetrySample;
   const max = Math.max(...samples.map((s) => s.ms));
+
   return samples.length === 1
     ? formatMs(last.ms)
     : `${formatMs(last.ms)} last, ${formatMs(max)} max (${samples.length} updates)`;
@@ -56,15 +68,25 @@ function firstTokenText(
   samples: TelemetrySample[] | null,
   runId: string
 ): string {
-  if (samples === null) return "loading";
+  if (samples === null) {
+    return "loading";
+  }
+
   const ofRun = samples.filter(
     (s) => s.kind === "run.first_token" && s.detail?.runId === runId
   );
+
   const visible = ofRun.find((s) => s.detail?.stage === "visible");
   const server = ofRun.find((s) => s.detail?.stage === "server");
-  if (!visible && !server) return "n/a";
-  if (visible && server)
+
+  if (!visible && !server) {
+    return "n/a";
+  }
+
+  if (visible && server) {
     return `${formatMs(visible.ms)} (server ${formatMs(server.ms)})`;
+  }
+
   return formatMs((visible ?? server)?.ms ?? 0);
 }
 
@@ -72,21 +94,33 @@ function longFramesText(
   samples: TelemetrySample[] | null,
   run: RunView
 ): string {
-  if (samples === null) return "loading";
+  if (samples === null) {
+    return "loading";
+  }
+
   const finishedAt = run.summary?.finishedAt ?? null;
-  if (finishedAt === null) return "n/a";
+
+  if (finishedAt === null) {
+    return "n/a";
+  }
+
   const during = samples.filter(
     (s) =>
       s.kind === "frame.long" &&
       s.ts >= run.startedAt &&
       s.ts <= finishedAt + LONG_FRAME_FLUSH_GRACE_MS
   );
+
   const count = during.reduce(
     (sum, s) =>
       sum + (typeof s.detail?.count === "number" ? s.detail.count : 1),
     0
   );
-  if (count === 0) return "none";
+
+  if (count === 0) {
+    return "none";
+  }
+
   return `${count}, longest ${formatMs(Math.max(...during.map((s) => s.ms)))}`;
 }
 
@@ -106,13 +140,18 @@ export function LatencyBreakdown({
       .getTelemetry(projectId)
       .then((list) => alive && setSamples(list))
       .catch(() => alive && setSamples([]));
+
     return () => {
       alive = false;
     };
   }, [projectId, run.runId, finishedAt]);
 
   const s = run.summary;
-  if (!s) return null;
+
+  if (!s) {
+    return null;
+  }
+
   const rows: [string, string][] = [
     ["Model", formatMs(s.modelMs)],
     ["Tools", formatMs(s.toolMs)],
@@ -124,6 +163,7 @@ export function LatencyBreakdown({
     ],
     ["Long frames", longFramesText(samples, run)],
   ];
+
   return (
     <>
       <h4>Latency</h4>

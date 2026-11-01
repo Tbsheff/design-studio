@@ -24,8 +24,9 @@ import {
 const roots: string[] = [];
 
 afterEach(async () => {
-  while (roots.length)
+  while (roots.length) {
     await rm(roots.pop() as string, { recursive: true, force: true });
+  }
 });
 
 async function setup(kind: "html" | "react" = "html") {
@@ -34,6 +35,7 @@ async function setup(kind: "html" | "react" = "html") {
   const bus = createFakeBus();
   const projects = createFakeProjects(temp.project, temp.root);
   const versions = createFakeVersions();
+
   const config: ServerConfig = {
     dataDir: temp.root,
     projectsDir: `${temp.root} projects`,
@@ -45,6 +47,7 @@ async function setup(kind: "html" | "react" = "html") {
     studioOrigin: "",
     previewOrigin: "",
   };
+
   const runner = createAgentRunner({
     config,
     bus,
@@ -52,10 +55,15 @@ async function setup(kind: "html" | "react" = "html") {
     versions,
     preview: createFakePreview(),
   });
+
   function context(request: RunRequest): AgentRunContext {
     const project = structuredClone(projects.current);
     const direction = project.directions[0];
-    if (!direction) throw new Error("missing direction");
+
+    if (!direction) {
+      throw new Error("missing direction");
+    }
+
     return {
       project,
       direction,
@@ -65,6 +73,7 @@ async function setup(kind: "html" | "react" = "html") {
       previewUrl: null,
     };
   }
+
   return { ...temp, bus, projects, versions, runner, context };
 }
 
@@ -78,12 +87,15 @@ async function readRunFiles(projectDir: string, runId: string) {
   )
     .trim()
     .split("\n");
+
   const summary = JSON.parse(
     await readFile(path.join(projectDir, "runs", `${runId}.json`), "utf-8")
   ) as RunSummary;
+
   const parsed = lines.map(
     (line) => JSON.parse(line) as StudioEvent | { type: "run.sent" }
   );
+
   return {
     events: parsed.filter(
       (line): line is StudioEvent => line.type !== "run.sent"
@@ -95,6 +107,7 @@ async function readRunFiles(projectDir: string, runId: string) {
 describe("mock agent run, Round 3", () => {
   it("stores thinking, tools and text in event order, with both thinking blocks", async () => {
     const env = await setup();
+
     const handle = env.runner.start(
       env.context({
         prompt: "Order probe [think]",
@@ -102,31 +115,38 @@ describe("mock agent run, Round 3", () => {
         level: "wireframe",
       })
     );
+
     const summary = await handle.done;
+
     const kinds = (summary.parts ?? []).map((part) =>
       part.kind === "tool"
         ? `tool:${summary.toolCalls.find((t) => t.toolUseId === part.toolUseId)?.name}`
         : part.kind
     );
+
     expect(kinds.slice(0, 4)).toEqual([
       "thinking",
       "tool:Read",
       "thinking",
       "text",
     ]);
+
     const thinking = (summary.parts ?? []).filter(
       (part) => part.kind === "thinking"
     );
+
     expect(
       thinking.map((part) => (part.kind === "thinking" ? part.text : ""))
     ).toEqual([
       "Thinking A: the page needs a clear heading first.",
       "Thinking B: keep the cards, then write the change.",
     ]);
+
     const saved = await readRunFiles(
       env.projects.projectDir("p1"),
       handle.runId
     );
+
     expect(saved.summary.parts).toEqual(summary.parts);
   });
 
@@ -135,6 +155,7 @@ describe("mock agent run, Round 3", () => {
     await env.runner.start(
       env.context({ prompt: "Old Title", mode: "edit", level: "wireframe" })
     ).done;
+
     const summary = await env.runner.start(
       env.context({
         prompt: "New Title [edit1]",
@@ -142,6 +163,7 @@ describe("mock agent run, Round 3", () => {
         level: "wireframe",
       })
     ).done;
+
     const edit = summary.toolCalls.find((tool) => tool.name === "Edit");
     expect(edit?.diff).toMatchObject({
       path: "index.html",
@@ -149,19 +171,23 @@ describe("mock agent run, Round 3", () => {
       removed: 1,
       created: false,
     });
+
     const changed = edit?.diff?.hunks.flatMap((hunk) =>
       hunk.lines.filter((line) => line.kind !== "same")
     );
+
     expect(changed).toEqual([
       { kind: "del", text: "    <h1>Old Title</h1>" },
       { kind: "add", text: "    <h1>New Title</h1>" },
     ]);
+
     const finished = env.bus.events.find(
       (event) =>
         event.type === "run.tool.finished" &&
         event.runId === summary.id &&
         event.toolUseId === edit?.toolUseId
     );
+
     expect(
       finished?.type === "run.tool.finished" ? finished.diff?.added : null
     ).toBe(1);
@@ -172,6 +198,7 @@ describe("mock agent run, Round 3", () => {
     await env.runner.start(
       env.context({ prompt: "Base page", mode: "edit", level: "wireframe" })
     ).done;
+
     const handle = env.runner.start(
       env.context({
         prompt: "Look around [steps]",
@@ -179,6 +206,7 @@ describe("mock agent run, Round 3", () => {
         level: "wireframe",
       })
     );
+
     await waitUntil(() =>
       env.bus.events.some(
         (event) =>
@@ -189,15 +217,20 @@ describe("mock agent run, Round 3", () => {
       true
     );
     const summary = await handle.done;
+
     const runEvents = env.bus.events.filter(
       (event) => "runId" in event && event.runId === handle.runId
     );
+
     const delivered = runEvents.findIndex((event) => event.type === "run.user");
+
     const thirdTool = runEvents.filter(
       (event) => event.type === "run.tool.started"
     )[2];
+
     expect(delivered).toBeGreaterThan(-1);
     expect(delivered).toBeLessThan(runEvents.indexOf(thirdTool!));
+
     const lines = (
       await readFile(
         path.join(
@@ -211,6 +244,7 @@ describe("mock agent run, Round 3", () => {
       .trim()
       .split("\n")
       .map((line) => JSON.parse(line) as { type: string; text?: string });
+
     expect(
       lines.some(
         (line) =>
@@ -227,6 +261,7 @@ describe("mock agent run, Round 3", () => {
 
   it("keeps a message queued after the last tool for the next run, and steer stops the run", async () => {
     const env = await setup();
+
     const handle = env.runner.start(
       env.context({
         prompt: "Steer me [steps]",
@@ -234,6 +269,7 @@ describe("mock agent run, Round 3", () => {
         level: "wireframe",
       })
     );
+
     await waitUntil(() =>
       env.bus.events.some(
         (event) =>
@@ -253,6 +289,7 @@ describe("mock agent run, Round 3", () => {
 
   it("asks before Bash; a deny with a note reaches the agent and no command runs", async () => {
     const env = await setup();
+
     const handle = env.runner.start(
       env.context({
         prompt: "Test it [bash]",
@@ -260,14 +297,19 @@ describe("mock agent run, Round 3", () => {
         level: "wireframe",
       })
     );
+
     await waitUntil(() =>
       env.bus.events.some((event) => event.type === "run.permission")
     );
+
     const asked = env.bus.events.find(
       (event) => event.type === "run.permission"
     );
-    if (asked?.type !== "run.permission")
+
+    if (asked?.type !== "run.permission") {
       throw new Error("no permission event");
+    }
+
     expect(asked.request).toMatchObject({
       toolName: "Bash",
       detail: "npm test",
@@ -279,6 +321,7 @@ describe("mock agent run, Round 3", () => {
     const bash = summary.toolCalls.find((tool) => tool.name === "Bash");
     expect(bash?.isError).toBe(true);
     expect(bash?.summary).toContain("use npm");
+
     const lines = (
       await readFile(
         path.join(
@@ -292,6 +335,7 @@ describe("mock agent run, Round 3", () => {
       .trim()
       .split("\n")
       .map((line) => JSON.parse(line) as { type: string; text?: string });
+
     expect(
       lines.some(
         (line) => line.type === "run.sent" && line.text?.includes("use npm")
@@ -304,11 +348,13 @@ describe("mock agent run, Round 3", () => {
 
   it("a stop while a prompt is open answers it as a deny", async () => {
     const env = await setup();
+
     const ctx = env.context({
       prompt: "Test it [bash]",
       mode: "edit",
       level: "wireframe",
     });
+
     const handle = env.runner.start(ctx);
     await waitUntil(() =>
       env.bus.events.some((event) => event.type === "run.permission")
@@ -340,13 +386,16 @@ describe("mock agent run, Round 3", () => {
     await env.runner.start(
       env.context({ prompt: "Base page", mode: "edit", level: "wireframe" })
     ).done;
+
     const before = await readFile(
       path.join(env.workTree, "index.html"),
       "utf-8"
     );
+
     const summary = await env.runner.start(
       env.context({ prompt: "New hero", mode: "edit", plan: true })
     ).done;
+
     const write = summary.toolCalls.find((tool) => tool.name === "Write");
     expect(write?.isError).toBe(true);
     expect(write?.summary).toBe(PLAN_MODE_DENY);
@@ -359,8 +408,12 @@ describe("mock agent run, Round 3", () => {
 
 async function waitUntil(check: () => boolean, ms = 5000): Promise<void> {
   const deadline = Date.now() + ms;
+
   while (!check()) {
-    if (Date.now() > deadline) throw new Error("timed out");
+    if (Date.now() > deadline) {
+      throw new Error("timed out");
+    }
+
     await new Promise((resolve) => setTimeout(resolve, 10));
   }
 }

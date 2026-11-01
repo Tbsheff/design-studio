@@ -36,17 +36,23 @@ export function parseDraft(
 ): { settings: ProjectSettings } | { error: string } {
   const rawBudget = draft.maxBudgetUsd.trim();
   const budget = rawBudget === "" ? null : Number(rawBudget);
+
   if (
     budget !== null &&
     (!Number.isFinite(budget) || budget < 0.01 || budget > 50)
-  )
+  ) {
     return {
       error:
         "Enter a spending limit per run from $0.01 to $50, or leave it empty for no limit.",
     };
+  }
+
   const turns = Number(draft.maxTurns);
-  if (!Number.isInteger(turns) || turns < 1 || turns > 200)
+
+  if (!Number.isInteger(turns) || turns < 1 || turns > 200) {
     return { error: "Enter a whole number of max turns from 1 to 200." };
+  }
+
   return {
     settings: {
       model: draft.model,

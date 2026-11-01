@@ -45,9 +45,16 @@ export function feedSource(
   packaged: boolean,
   resourcesPath: string
 ): { kind: "env"; url: string } | { kind: "bundled" } | null {
-  if (!packaged) return null;
+  if (!packaged) {
+    return null;
+  }
+
   const url = env[UPDATE_FEED_ENV];
-  if (url) return /^https?:\/\//.test(url) ? { kind: "env", url } : null;
+
+  if (url) {
+    return /^https?:\/\//.test(url) ? { kind: "env", url } : null;
+  }
+
   return existsSync(path.join(resourcesPath, "app-update.yml"))
     ? { kind: "bundled" }
     : null;
@@ -69,8 +76,13 @@ export class Updater {
       app.isPackaged,
       options.resourcesPath
     );
+
     this.enabled = source !== null;
-    if (!source) return;
+
+    if (!source) {
+      return;
+    }
+
     const updater = electronUpdater.autoUpdater;
     updater.logger = {
       info: (m: unknown) => this.log("info", m),
@@ -80,8 +92,11 @@ export class Updater {
     };
     updater.autoDownload = true;
     updater.autoInstallOnAppQuit = false;
-    if (source.kind === "env")
+
+    if (source.kind === "env") {
       updater.setFeedURL({ provider: "generic", url: source.url });
+    }
+
     updater.on("checking-for-update", () => this.emit({ state: "checking" }));
     updater.on("update-not-available", () => void this.onNone());
     updater.on("update-available", (info: UpdateInfo) =>
@@ -98,6 +113,7 @@ export class Updater {
   private log(level: string, message: unknown): void {
     const line = `${new Date().toISOString()} [updater] ${level} ${message instanceof Error ? (message.stack ?? message.message) : String(message)}`;
     console.log(line);
+
     try {
       mkdirSync(path.dirname(this.options.logFile), { recursive: true });
       appendFileSync(this.options.logFile, `${line}\n`);
@@ -118,8 +134,10 @@ export class Updater {
     if (
       !this.enabled ||
       (this.options.env ?? process.env)[UPDATE_CHECK_ENV] === "off"
-    )
+    ) {
       return;
+    }
+
     void this.check(false);
     this.timer = setInterval(() => void this.check(false), PERIODIC_CHECK_MS);
     this.timer.unref();
@@ -127,18 +145,23 @@ export class Updater {
 
   async check(manual: boolean): Promise<void> {
     if (!this.updater) {
-      if (manual)
+      if (manual) {
         await dialog.showMessageBox({
           type: "info",
           message: "Updates are not set up for this build",
           buttons: ["OK"],
         });
+      }
+
       return;
     }
+
     if (this.ready) {
       await this.offerInstall();
+
       return;
     }
+
     this.manual = manual;
     await this.updater
       .checkForUpdates()
@@ -149,17 +172,21 @@ export class Updater {
 
   private async onNone(): Promise<void> {
     this.emit({ state: "none" });
-    if (this.manual)
+
+    if (this.manual) {
       await dialog.showMessageBox({
         type: "info",
         message: `Design Studio ${app.getVersion()} is the newest version`,
         buttons: ["OK"],
       });
+    }
+
     this.manual = false;
   }
 
   private async onError(error: Error): Promise<void> {
     this.emit({ state: "error", detail: error.message });
+
     if (this.installing) {
       this.installing = false;
       this.ready = null;
@@ -177,6 +204,7 @@ export class Updater {
         buttons: ["OK"],
       });
     }
+
     this.manual = false;
   }
 
@@ -188,15 +216,22 @@ export class Updater {
   }
 
   runsIdle(): void {
-    if (!this.waitingForRuns || this.options.activeRuns() > 0) return;
+    if (!this.waitingForRuns || this.options.activeRuns() > 0) {
+      return;
+    }
+
     this.waitingForRuns = false;
     void this.offerInstall();
   }
 
   private async offerInstall(): Promise<void> {
-    if (!this.ready || this.prompting || !this.updater) return;
+    if (!this.ready || this.prompting || !this.updater) {
+      return;
+    }
+
     const version = this.ready.version;
     this.prompting = true;
+
     try {
       if (installDecision(this.options.activeRuns()) === "defer") {
         this.waitingForRuns = true;
@@ -208,8 +243,10 @@ export class Updater {
             "A run is in progress. Design Studio asks again when it finishes.",
           buttons: ["OK"],
         });
+
         return;
       }
+
       const { response } = await dialog.showMessageBox({
         type: "info",
         message: `Design Studio ${version} is ready to install`,
@@ -219,7 +256,11 @@ export class Updater {
         defaultId: 0,
         cancelId: 1,
       });
-      if (response !== 0) return;
+
+      if (response !== 0) {
+        return;
+      }
+
       if (installDecision(this.options.activeRuns()) === "defer") {
         this.waitingForRuns = true;
         this.emit({
@@ -227,8 +268,10 @@ export class Updater {
           version,
           detail: "run started before restart",
         });
+
         return;
       }
+
       this.installing = true;
       this.emit({ state: "installing", version });
       this.updater.quitAndInstall(false, true);

@@ -12,9 +12,14 @@ type Send = (message: DesktopLinkMessage) => void;
 export function desktopSender(
   env: NodeJS.ProcessEnv = process.env
 ): Send | null {
-  if (env[RENDER_IPC_ENV] !== "1" || !process.send) return null;
+  if (env[RENDER_IPC_ENV] !== "1" || !process.send) {
+    return null;
+  }
+
   return (message) => {
-    if (process.connected) process.send?.(message);
+    if (process.connected) {
+      process.send?.(message);
+    }
   };
 }
 
@@ -22,7 +27,7 @@ function runMessage(
   event: StudioEvent,
   prompts: Map<string, string>
 ): DesktopLinkMessage | null {
-  if (event.type === "mcp.approval")
+  if (event.type === "mcp.approval") {
     return {
       type: DESKTOP_MESSAGE,
       kind: "mcp-approval",
@@ -30,11 +35,17 @@ function runMessage(
       approvalId: event.approval.id,
       title: event.approval.title,
     };
-  if (event.type !== "run.started" && event.type !== "run.finished")
+  }
+
+  if (event.type !== "run.started" && event.type !== "run.finished") {
     return null;
+  }
+
   const directionId = event.directionId ?? "";
+
   if (event.type === "run.started") {
     prompts.set(event.runId, event.request.prompt);
+
     return {
       type: DESKTOP_MESSAGE,
       kind: "run-started",
@@ -46,14 +57,18 @@ function runMessage(
       },
     };
   }
+
   const { summary } = event;
+
   const run: DesktopRunInfo = {
     runId: summary.id,
     projectId: summary.projectId,
     directionId: summary.directionId,
     prompt: summary.request.prompt || prompts.get(summary.id) || "",
   };
+
   prompts.delete(summary.id);
+
   return {
     type: DESKTOP_MESSAGE,
     kind: "run-finished",
@@ -71,12 +86,17 @@ export function linkDesktop(
 ): EventBus {
   const prompts = new Map<string, string>();
   send({ type: DESKTOP_MESSAGE, kind: "hello", ...hello });
+
   return {
     ...bus,
     emit(input) {
       const event = bus.emit(input);
       const message = runMessage(event, prompts);
-      if (message) send(message);
+
+      if (message) {
+        send(message);
+      }
+
       return event;
     },
   };

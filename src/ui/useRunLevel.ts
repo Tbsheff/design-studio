@@ -20,11 +20,16 @@ export function useRunLevel(
   const seq = useRef(0);
 
   useEffect(() => {
-    if (saved) setLevel(saved);
+    if (saved) {
+      setLevel(saved);
+    }
   }, [saved, projectId]);
 
   const choose = (next: RunLevel) => {
-    if (next === level) return;
+    if (next === level) {
+      return;
+    }
+
     const previous = level;
     const ticket = ++seq.current;
     setLevel(next);
@@ -32,10 +37,15 @@ export function useRunLevel(
     api
       .updateSettings(projectId, { defaultLevel: next })
       .then((project) => {
-        if (ticket === seq.current) onSaved(project);
+        if (ticket === seq.current) {
+          onSaved(project);
+        }
       })
       .catch((err: unknown) => {
-        if (ticket !== seq.current) return;
+        if (ticket !== seq.current) {
+          return;
+        }
+
         setLevel(previous);
         setError(`Could not save the run level: ${errorText(err)}`);
       });

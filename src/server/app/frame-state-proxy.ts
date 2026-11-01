@@ -13,6 +13,7 @@ import {
 } from "./frame-state.js";
 
 const MOCK_SESSION_VALUE = "studio-preview-session";
+
 const BASE_SESSION_COOKIES = [
   "authjs.session-token",
   "authjs.session_token",
@@ -22,6 +23,7 @@ const BASE_SESSION_COOKIES = [
   "__session",
   "auth_session",
 ];
+
 const LOADING_HOLD_MS = 120_000;
 const MAX_EMPTY_BODY = 5 * 1024 * 1024;
 
@@ -34,19 +36,26 @@ export function sessionCookieNames(
   env: Record<string, string> | undefined
 ): string[] {
   const prefix = env?.AUTH_COOKIE_PREFIX?.trim();
+
   const extra =
     prefix && /^[\w.-]{1,40}$/.test(prefix)
       ? [`${prefix}.session-token`, `${prefix}.session_token`]
       : [];
+
   return [...new Set([...BASE_SESSION_COOKIES, ...extra])];
 }
 
 function parseCookieHeader(header: string | undefined): Map<string, string> {
   const map = new Map<string, string>();
+
   for (const part of (header ?? "").split(";")) {
     const at = part.indexOf("=");
-    if (at > 0) map.set(part.slice(0, at).trim(), part.slice(at + 1).trim());
+
+    if (at > 0) {
+      map.set(part.slice(0, at).trim(), part.slice(at + 1).trim());
+    }
   }
+
   return map;
 }
 
@@ -61,13 +70,24 @@ function upstreamCookie(
   existing: string | undefined,
   state: ActiveFrameState
 ): string | undefined {
-  if (!state.resolved.def.signedIn) return existing;
+  if (!state.resolved.def.signedIn) {
+    return existing;
+  }
+
   const cookies = parseCookieHeader(existing);
-  if (!usesCapturedSession(state))
-    for (const name of sessionCookieNames(state.env))
-      if (!cookies.has(name)) cookies.set(name, MOCK_SESSION_VALUE);
-  for (const [name, value] of Object.entries(state.resolved.jar))
+
+  if (!usesCapturedSession(state)) {
+    for (const name of sessionCookieNames(state.env)) {
+      if (!cookies.has(name)) {
+        cookies.set(name, MOCK_SESSION_VALUE);
+      }
+    }
+  }
+
+  for (const [name, value] of Object.entries(state.resolved.jar)) {
     cookies.set(name, value);
+  }
+
   return cookies.size === 0
     ? undefined
     : [...cookies].map(([name, value]) => `${name}=${value}`).join("; ");
@@ -77,18 +97,27 @@ export function withStateHeaders(
   headers: http.OutgoingHttpHeaders,
   state: ActiveFrameState | null
 ): http.OutgoingHttpHeaders {
-  if (!state) return headers;
+  if (!state) {
+    return headers;
+  }
+
   const cookie = upstreamCookie(
     typeof headers.cookie === "string" ? headers.cookie : undefined,
     state
   );
+
   const next: http.OutgoingHttpHeaders = {
     ...headers,
     [FRAME_STATE_HEADER]: state.resolved.def.kind,
     [FRAME_STATE_ID_HEADER]: state.resolved.def.id,
   };
-  if (cookie) next.cookie = cookie;
-  else delete next.cookie;
+
+  if (cookie) {
+    next.cookie = cookie;
+  } else {
+    delete next.cookie;
+  }
+
   return next;
 }
 
@@ -97,8 +126,10 @@ function pathOf(req: http.IncomingMessage): string {
 }
 
 export function isDataPath(pathname: string): boolean {
-  if (pathname.startsWith("/api/auth/") || pathname === "/api/auth")
+  if (pathname.startsWith("/api/auth/") || pathname === "/api/auth") {
     return false;
+  }
+
   return (
     pathname.startsWith("/api/") ||
     pathname === "/api" ||
@@ -109,8 +140,13 @@ export function isDataPath(pathname: string): boolean {
 
 function trpcProcedures(pathname: string): string[] | null {
   const at = pathname.indexOf("/trpc/");
-  if (at < 0) return null;
+
+  if (at < 0) {
+    return null;
+  }
+
   const tail = decodeURIComponent(pathname.slice(at + "/trpc/".length));
+
   return tail ? tail.split(",") : null;
 }
 
@@ -130,6 +166,7 @@ function sendJson(
 function mockUserBodies(state: ActiveFrameState): Record<string, unknown> {
   const now = new Date();
   const expires = new Date(now.getTime() + 7 * 864e5).toISOString();
+
   const user = {
     id: "studio-preview-user",
     name: state.resolved.session.user.name,
@@ -139,6 +176,7 @@ function mockUserBodies(state: ActiveFrameState): Record<string, unknown> {
     createdAt: now.toISOString(),
     updatedAt: now.toISOString(),
   };
+
   const session = {
     id: "studio-preview-session",
     userId: user.id,
@@ -147,6 +185,7 @@ function mockUserBodies(state: ActiveFrameState): Record<string, unknown> {
     createdAt: now.toISOString(),
     updatedAt: now.toISOString(),
   };
+
   return {
     "/api/auth/get-session": { session, user },
     "/api/auth/session": {
@@ -165,21 +204,28 @@ function authMock(
     !state.resolved.def.signedIn ||
     usesCapturedSession(state) ||
     method !== "GET"
-  )
+  ) {
     return undefined;
+  }
+
   return mockUserBodies(state)[pathname];
 }
 
 function errorBody(pathname: string): unknown {
   const message = "Design Studio error state: this call failed on purpose.";
   const procedures = trpcProcedures(pathname);
-  if (!procedures) return { error: message, message };
+
+  if (!procedures) {
+    return { error: message, message };
+  }
+
   const one = (procedure: string) => {
     const data = {
       code: "INTERNAL_SERVER_ERROR",
       httpStatus: 500,
       path: procedure,
     };
+
     return {
       error: {
         json: { message, code: -32603, data },
@@ -189,6 +235,7 @@ function errorBody(pathname: string): unknown {
       },
     };
   };
+
   return procedures.length > 1 ? procedures.map(one) : one(procedures[0] ?? "");
 }
 
@@ -208,6 +255,7 @@ function holdOpen(req: http.IncomingMessage, res: http.ServerResponse): void {
       }),
     LOADING_HOLD_MS
   );
+
   timer.unref();
   const clear = (): void => clearTimeout(timer);
   res.once("close", clear);
@@ -217,8 +265,12 @@ function holdOpen(req: http.IncomingMessage, res: http.ServerResponse): void {
 function answerMock(res: http.ServerResponse, rule: MockRule): void {
   const reply = (): void =>
     sendJson(res, rule.status ?? 200, rule.body ?? null);
-  if (rule.delayMs) setTimeout(reply, rule.delayMs).unref();
-  else reply();
+
+  if (rule.delayMs) {
+    setTimeout(reply, rule.delayMs).unref();
+  } else {
+    reply();
+  }
 }
 
 export function answerState(
@@ -230,25 +282,41 @@ export function answerState(
   const method = (req.method ?? "GET").toUpperCase();
   const pathname = pathOf(req);
   const auth = authMock(state, method, pathname);
+
   if (auth !== undefined) {
     sendJson(res, 200, auth);
+
     return true;
   }
-  if (isDocument) return false;
+
+  if (isDocument) {
+    return false;
+  }
+
   const rule = findMock(state.resolved.def.mocks, method, pathname);
+
   if (rule) {
     answerMock(res, rule);
+
     return true;
   }
-  if (!isDataPath(pathname)) return false;
+
+  if (!isDataPath(pathname)) {
+    return false;
+  }
+
   if (state.resolved.def.kind === "loading") {
     holdOpen(req, res);
+
     return true;
   }
+
   if (state.resolved.def.kind === "error") {
     sendJson(res, 500, errorBody(pathname));
+
     return true;
   }
+
   return false;
 }
 
@@ -256,7 +324,10 @@ export function captureSessionCookies(
   state: ActiveFrameState | null,
   headers: http.OutgoingHttpHeaders
 ): void {
-  if (!state?.resolved.def.signedIn) return;
+  if (!state?.resolved.def.signedIn) {
+    return;
+  }
+
   const raw = headers["set-cookie"];
   const list = Array.isArray(raw) ? raw : typeof raw === "string" ? [raw] : [];
   delete headers["set-cookie"];
@@ -269,27 +340,44 @@ export function wantsEmpty(
   state: ActiveFrameState | null,
   req: http.IncomingMessage
 ): boolean {
-  if (state?.resolved.def.kind !== "empty" || !isDataPath(pathOf(req)))
+  if (state?.resolved.def.kind !== "empty" || !isDataPath(pathOf(req))) {
     return false;
+  }
+
   return !String(req.headers["trpc-accept"] ?? "").includes("jsonl");
 }
 
 function isJsonOk(status: number, upstreamRes: http.IncomingMessage): boolean {
   const type = upstreamRes.headers["content-type"] ?? "";
+
   return status < 400 && type.includes("json") && !type.includes("jsonl");
 }
 
 function syntheticEmpty(pathname: string): unknown {
   const procedures = trpcProcedures(pathname);
-  if (!procedures) return [];
+
+  if (!procedures) {
+    return [];
+  }
+
   const one = () => ({ result: { data: { json: [] } } });
+
   return procedures.length > 1 ? procedures.map(one) : one();
 }
 
 function emptyArrays(value: unknown, depth: number): unknown {
-  if (depth > 40) return value;
-  if (Array.isArray(value)) return [];
-  if (!value || typeof value !== "object") return value;
+  if (depth > 40) {
+    return value;
+  }
+
+  if (Array.isArray(value)) {
+    return [];
+  }
+
+  if (!value || typeof value !== "object") {
+    return value;
+  }
+
   return Object.fromEntries(
     Object.entries(value).map(([key, item]) => [
       key,
@@ -300,13 +388,18 @@ function emptyArrays(value: unknown, depth: number): unknown {
 
 function emptyTrpc(value: unknown): unknown {
   const one = (item: unknown): unknown => {
-    if (!item || typeof item !== "object" || !("result" in item)) return item;
+    if (!item || typeof item !== "object" || !("result" in item)) {
+      return item;
+    }
+
     const result = (item as { result: { data?: unknown } }).result;
+
     return {
       ...item,
       result: { ...result, data: emptyArrays(result?.data, 0) },
     };
   };
+
   return Array.isArray(value) ? value.map(one) : one(value);
 }
 
@@ -320,8 +413,10 @@ export function sendEmptied(
   if (!isJsonOk(status, upstreamRes)) {
     upstreamRes.resume();
     sendJson(res, 200, syntheticEmpty(pathOf(req)));
+
     return;
   }
+
   const chunks: Buffer[] = [];
   let size = 0;
   upstreamRes.on("data", (chunk: Buffer) => {
@@ -331,6 +426,7 @@ export function sendEmptied(
   upstreamRes.on("end", () => {
     const text = Buffer.concat(chunks).toString("utf-8");
     let body = text;
+
     try {
       if (size <= MAX_EMPTY_BODY) {
         const parsed: unknown = JSON.parse(text);
@@ -343,6 +439,7 @@ export function sendEmptied(
     } catch {
       body = text;
     }
+
     res.writeHead(status, { ...headers, "x-studio-mock": "1" });
     res.end(body);
   });

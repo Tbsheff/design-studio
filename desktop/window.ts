@@ -23,6 +23,7 @@ export interface WindowOptions {
 
 const DEFAULT_SIZE = { width: 1440, height: 900 };
 const SAVE_DELAY_MS = 400;
+
 export const MAC_CHROME = {
   titleBarStyle: "hiddenInset",
   trafficLightPosition: { x: 16, y: 17 },
@@ -49,11 +50,15 @@ export function readWindowState(file: string): WindowState | null {
 }
 
 function writeWindowState(file: string, window: BrowserWindow): void {
-  if (window.isDestroyed()) return;
+  if (window.isDestroyed()) {
+    return;
+  }
+
   const state: WindowState = {
     bounds: window.getNormalBounds(),
     maximized: window.isMaximized(),
   };
+
   mkdirSync(path.dirname(file), { recursive: true });
   writeFileSync(
     file,
@@ -63,12 +68,16 @@ function writeWindowState(file: string, window: BrowserWindow): void {
 
 function trackState(window: BrowserWindow, file: string): void {
   let timer: NodeJS.Timeout | undefined;
+
   const schedule = () => {
     clearTimeout(timer);
     timer = setTimeout(() => writeWindowState(file, window), SAVE_DELAY_MS);
   };
-  for (const event of ["resize", "move", "maximize", "unmaximize"] as const)
+
+  for (const event of ["resize", "move", "maximize", "unmaximize"] as const) {
     window.on(event as "resize", schedule);
+  }
+
   window.on("close", () => {
     clearTimeout(timer);
     writeWindowState(file, window);
@@ -76,7 +85,10 @@ function trackState(window: BrowserWindow, file: string): void {
 }
 
 function markFullScreen(window: BrowserWindow): void {
-  if (window.isDestroyed()) return;
+  if (window.isDestroyed()) {
+    return;
+  }
+
   const value = window.isFullScreen() ? "true" : "false";
   void window.webContents
     .executeJavaScript(
@@ -95,6 +107,7 @@ function trackFullScreen(window: BrowserWindow): void {
 export function createMainWindow(options: WindowOptions): BrowserWindow {
   const saved = readWindowState(options.stateFile);
   initTheme(path.join(path.dirname(options.stateFile), "theme.json"));
+
   const window = new BrowserWindow({
     ...(saved ? saved.bounds : DEFAULT_SIZE),
     minWidth: 800,
@@ -117,11 +130,16 @@ export function createMainWindow(options: WindowOptions): BrowserWindow {
       ],
     },
   });
-  if (saved?.maximized) window.maximize();
+
+  if (saved?.maximized) {
+    window.maximize();
+  }
+
   trackThemeWindow(window);
   trackState(window, options.stateFile);
   trackFullScreen(window);
   window.once("ready-to-show", () => window.show());
   void window.loadURL(options.url);
+
   return window;
 }

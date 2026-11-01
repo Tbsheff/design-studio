@@ -15,10 +15,16 @@ export function hasClassChange(
 
 export function nextClassList(current: string, change: ClassChange): string {
   const removed = new Set(change.remove ?? []);
+
   const kept = current
     .split(/\s+/)
     .filter((name) => name !== "" && !removed.has(name));
-  for (const name of change.add ?? [])
-    if (!kept.includes(name)) kept.push(name);
+
+  for (const name of change.add ?? []) {
+    if (!kept.includes(name)) {
+      kept.push(name);
+    }
+  }
+
   return kept.join(" ");
 }

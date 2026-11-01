@@ -6,6 +6,7 @@ import { chromium, type Locator, type Page } from "playwright-core";
 const base = process.env.STUDIO_URL ?? "http://127.0.0.1:4970";
 const out = path.resolve(process.argv[2] ?? "/tmp/polish-r6");
 const prefix = process.argv[3] ?? "after";
+
 mkdirSync(out, { recursive: true });
 
 const SHORT = { timeout: 8000 };
@@ -14,8 +15,13 @@ let debugPage: Page | null = null;
 async function shot(page: Page, name: string, target?: Locator): Promise<void> {
   await page.waitForTimeout(600);
   const file = path.join(out, `${prefix}-${name}.png`);
-  if (target) await target.screenshot({ path: file });
-  else await page.screenshot({ path: file });
+
+  if (target) {
+    await target.screenshot({ path: file });
+  } else {
+    await page.screenshot({ path: file });
+  }
+
   console.log(path.basename(file));
 }
 
@@ -26,10 +32,12 @@ async function step(name: string, run: () => Promise<void>): Promise<void> {
     console.log(
       `skip ${name}: ${error instanceof Error ? error.message.split("\n")[0] : String(error)}`
     );
-    if (process.env.SHOTS_DEBUG)
+
+    if (process.env.SHOTS_DEBUG) {
       await debugPage?.screenshot({
         path: path.join(out, `debug-${name}.png`),
       });
+    }
   }
 }
 
@@ -47,6 +55,7 @@ async function call<T>(
         headers: { "x-studio-token": t, "content-type": "application/json" },
         body: b === undefined ? undefined : JSON.stringify(b),
       });
+
       return res.json();
     },
     { t: token, m: method, u: url, b: body }
@@ -91,16 +100,21 @@ async function main(): Promise<void> {
       "--disable-features=IsolateOrigins,site-per-process",
     ],
   });
+
   const page = await browser.newPage({
     viewport: { width: 1440, height: 900 },
     deviceScaleFactor: 2,
   });
+
   debugPage = page;
   await page.goto(base);
+
   const token =
     (await page.locator('meta[name="studio-token"]').getAttribute("content")) ??
     "";
+
   await page.evaluate(() => localStorage.clear());
+
   const created = await call<{
     project: { id: string; directions: { workTree: string }[] };
   }>(page, token, "POST", "/api/projects", {
@@ -109,6 +123,7 @@ async function main(): Promise<void> {
     packId: "editorial",
     startRun: false,
   });
+
   const pid = created.project.id;
   writeFileSync(
     path.join(created.project.directions[0]!.workTree, "index.html"),
@@ -134,14 +149,22 @@ async function main(): Promise<void> {
   });
   await step("dark", async () => {
     const dark = page.getByRole("button", { name: "Preview dark mode" });
-    if ((await dark.count()) === 0) throw new Error("no canvas theme switch");
+
+    if ((await dark.count()) === 0) {
+      throw new Error("no canvas theme switch");
+    }
+
     await dark.click(SHORT);
     await shot(page, "canvas-dark");
     await dark.click(SHORT);
   });
   await step("components", async () => {
     const tab = page.getByRole("tab", { name: /^Components/ });
-    if ((await tab.count()) === 0) throw new Error("no Components tab");
+
+    if ((await tab.count()) === 0) {
+      throw new Error("no Components tab");
+    }
+
     await tab.click(SHORT);
     await page.locator(".cmp-thumb img").first().waitFor({ timeout: 20000 });
     await page.getByRole("button", { name: "Mention Card" }).click();
@@ -154,7 +177,11 @@ async function main(): Promise<void> {
     await page.waitForTimeout(500);
     const target = frame(page).locator(".cta").first();
     const box = await target.boundingBox();
-    if (!box) throw new Error("h1 has no box");
+
+    if (!box) {
+      throw new Error("h1 has no box");
+    }
+
     await page.mouse.click(box.x + 4, box.y + 4);
     await page.locator(".overlay .box.selected").first().waitFor(SHORT);
     await page.getByRole("tab", { name: /^Design/ }).click(SHORT);

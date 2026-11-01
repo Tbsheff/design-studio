@@ -28,6 +28,7 @@ const DESKTOP = typeof window !== "undefined" && "studioDesktop" in window;
 function readRecent(): string[] {
   try {
     const raw: unknown = JSON.parse(localStorage.getItem(RECENT_KEY) ?? "[]");
+
     return Array.isArray(raw)
       ? raw
           .filter((id): id is string => typeof id === "string")
@@ -52,30 +53,43 @@ function noteRecent(id: string): void {
 }
 
 function Marked({ text, marks }: { text: string; marks: number[] }): ReactNode {
-  if (marks.length === 0) return text;
+  if (marks.length === 0) {
+    return text;
+  }
+
   const set = new Set(marks);
   const out: ReactNode[] = [];
   let run = "";
   let on = false;
+
   const flush = (key: number) => {
-    if (run) out.push(on ? <mark key={key}>{run}</mark> : run);
+    if (run) {
+      out.push(on ? <mark key={key}>{run}</mark> : run);
+    }
+
     run = "";
   };
+
   [...text].forEach((ch, i) => {
     const hit = set.has(i);
+
     if (hit !== on) {
       flush(i);
       on = hit;
     }
+
     run += ch;
   });
   flush(text.length);
+
   return out;
 }
 
 function RowLead({ row }: { row: Row }) {
-  if (row.hit && row.kind === "project" && !row.icon)
+  if (row.hit && row.kind === "project" && !row.icon) {
     return <ProjectThumb hit={row.hit} />;
+  }
+
   return (
     <span className="cmdk-icon" data-tone={row.tone} aria-hidden="true">
       <Icon name={row.icon ?? "dot"} size={14} />
@@ -93,6 +107,7 @@ function RowEnd({
   typing: boolean;
 }) {
   const enter = typing && active && !row.disabled;
+
   return (
     <span className="cmdk-end">
       {row.disabled ? (
@@ -119,10 +134,14 @@ function RowEnd({
 }
 
 function stepOf(event: ReactKeyboardEvent): number {
-  if (event.key === "ArrowDown" || (event.ctrlKey && event.key === "n"))
+  if (event.key === "ArrowDown" || (event.ctrlKey && event.key === "n")) {
     return 1;
-  if (event.key === "ArrowUp" || (event.ctrlKey && event.key === "p"))
+  }
+
+  if (event.key === "ArrowUp" || (event.ctrlKey && event.key === "p")) {
     return -1;
+  }
+
   return 0;
 }
 
@@ -145,13 +164,17 @@ function usePaletteRows(
   const hits = useProjectHits(current);
   const routes = useRouteHits(query, current, hits?.routes ?? []);
   const [recent] = useState(readRecent);
+
   const [commands] = useState(() => {
     const all = [...collectCommands(), ...globalCommands(onShortcuts)].filter(
       (c) => !c.id.startsWith("project.open.")
     );
+
     return all.filter((c, i) => all.findIndex((x) => x.id === c.id) === i);
   });
+
   const [busy, setBusy] = useState(false);
+
   const actions = useMemo(
     () => ({
       openProject: (id: string, route?: string) => {
@@ -176,6 +199,7 @@ function usePaletteRows(
     }),
     [onClose, setError]
   );
+
   const rows = useMemo(
     () =>
       buildRows({
@@ -191,6 +215,7 @@ function usePaletteRows(
       }),
     [query, commands, hits, routes, recent, current, actions]
   );
+
   return { rows, busy, loading: hits === null };
 }
 
@@ -206,12 +231,14 @@ export function Palette({
   const [error, setError] = useState<string | null>(null);
   const listId = useId();
   const listRef = useRef<HTMLDivElement>(null);
+
   const { rows, busy, loading } = usePaletteRows(
     query,
     onShortcuts,
     onClose,
     setError
   );
+
   const current = Math.min(active, Math.max(0, rows.length - 1));
   const typing = query.trim() !== "";
 
@@ -222,12 +249,20 @@ export function Palette({
   }, [current, rows]);
 
   const run = (row: Row | undefined) => {
-    if (!row || row.disabled || busy) return;
-    if (row.commandId) noteRecent(row.commandId);
-    if (row.kind === "new" || row.kind === "project" || row.kind === "route") {
-      row.run();
+    if (!row || row.disabled || busy) {
       return;
     }
+
+    if (row.commandId) {
+      noteRecent(row.commandId);
+    }
+
+    if (row.kind === "new" || row.kind === "project" || row.kind === "route") {
+      row.run();
+
+      return;
+    }
+
     onClose();
     window.setTimeout(() => row.run(), 0);
   };
@@ -235,6 +270,7 @@ export function Palette({
   const onKeyDown = (event: ReactKeyboardEvent<HTMLInputElement>) => {
     const step = stepOf(event);
     const recentRow = typing ? undefined : recentRowFor(event, rows);
+
     if (step !== 0 && rows.length > 0) {
       event.preventDefault();
       setActive((current + step + rows.length) % rows.length);
@@ -248,12 +284,17 @@ export function Palette({
     } else if (event.key === "Escape") {
       event.preventDefault();
       event.stopPropagation();
-      if (query) setQuery("");
-      else onClose();
+
+      if (query) {
+        setQuery("");
+      } else {
+        onClose();
+      }
     }
   };
 
   let lastGroup = "";
+
   return (
     <div
       className="cmdk-backdrop"
@@ -315,6 +356,7 @@ export function Palette({
           {rows.map((row, index) => {
             const head = row.group !== lastGroup ? row.group : null;
             lastGroup = row.group;
+
             return (
               <div key={`${row.group}-${row.key}`} role="presentation">
                 {head && (

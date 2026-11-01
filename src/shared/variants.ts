@@ -1,4 +1,5 @@
 export const VARIANT_STATES = ["hover", "focus", "active"] as const;
+
 export type VariantState = (typeof VARIANT_STATES)[number];
 
 export const DEFAULT_BREAKPOINTS: readonly Breakpoint[] = [
@@ -37,22 +38,40 @@ function isState(part: string): part is VariantState {
 
 export function parseVariant(raw: string): ParsedVariant | null {
   const text = raw.trim();
-  if (text === "" || text === "base")
+
+  if (text === "" || text === "base") {
     return { breakpoint: null, dark: false, states: [] };
-  if (text.length > MAX_VARIANT) return null;
+  }
+
+  if (text.length > MAX_VARIANT) {
+    return null;
+  }
+
   const parts = text.split(/[:+\s]+/).filter(Boolean);
   const out: ParsedVariant = { breakpoint: null, dark: false, states: [] };
+
   for (const part of parts) {
-    if (!PART.test(part)) return null;
-    if (part === "dark") out.dark = true;
-    else if (isState(part)) {
-      if (!out.states.includes(part)) out.states.push(part);
-    } else if (out.breakpoint === null) out.breakpoint = part;
-    else return null;
+    if (!PART.test(part)) {
+      return null;
+    }
+
+    if (part === "dark") {
+      out.dark = true;
+    } else if (isState(part)) {
+      if (!out.states.includes(part)) {
+        out.states.push(part);
+      }
+    } else if (out.breakpoint === null) {
+      out.breakpoint = part;
+    } else {
+      return null;
+    }
   }
+
   out.states.sort(
     (a, b) => VARIANT_STATES.indexOf(a) - VARIANT_STATES.indexOf(b)
   );
+
   return out;
 }
 
@@ -62,14 +81,19 @@ export function variantPrefix(variant: ParsedVariant): string {
     ...(variant.dark ? ["dark"] : []),
     ...variant.states,
   ];
+
   return parts.map((part) => `${part}:`).join("");
 }
 
 export function normalizeVariant(
   raw: string | undefined | null
 ): string | null {
-  if (raw === undefined || raw === null) return "";
+  if (raw === undefined || raw === null) {
+    return "";
+  }
+
   const parsed = parseVariant(raw);
+
   return parsed ? variantPrefix(parsed) : null;
 }
 

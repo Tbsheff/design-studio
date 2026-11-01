@@ -27,11 +27,14 @@ function load(): Promise<void> {
     .finally(() => {
       inflight = null;
     });
+
   return inflight;
 }
 
 function update(change: (list: Project[]) => Project[]): void {
-  if (state.projects) emit({ ...state, projects: change(state.projects) });
+  if (state.projects) {
+    emit({ ...state, projects: change(state.projects) });
+  }
 }
 
 export const projectsApi = {
@@ -39,6 +42,7 @@ export const projectsApi = {
   load,
   subscribe(listener: () => void) {
     listeners.add(listener);
+
     return () => {
       listeners.delete(listener);
     };
@@ -48,6 +52,7 @@ export const projectsApi = {
     update((list) =>
       list.map((item) => (item.id === project.id ? { ...item, name } : item))
     );
+
     try {
       return await api.renameProject(project.id, name);
     } finally {
@@ -57,10 +62,12 @@ export const projectsApi = {
   duplicate: async (project: Project) => {
     const { project: copy } = await api.duplicateProject(project.id);
     await load();
+
     return copy;
   },
   trash: async (project: Project) => {
     update((list) => list.filter((item) => item.id !== project.id));
+
     try {
       return await api.trashProject(project.id);
     } finally {
@@ -94,6 +101,7 @@ export function useProjects(
   }, []);
   const projects = current.projects;
   const lagging = projects?.some(thumbnailPending) ?? false;
+
   const watching =
     options.watch === true &&
     (lagging ||
@@ -101,16 +109,24 @@ export function useProjects(
         (project) => Date.now() - project.updatedAt < RECENT_MS
       ) ??
         false));
+
   useEffect(() => {
-    if (!watching) return;
+    if (!watching) {
+      return;
+    }
+
     const timer = window.setInterval(
       () => {
-        if (document.visibilityState === "visible") void load();
+        if (document.visibilityState === "visible") {
+          void load();
+        }
       },
       lagging ? POLL_FAST_MS : POLL_MS
     );
+
     return () => window.clearInterval(timer);
   }, [watching, lagging]);
+
   return { ...current, reload: load };
 }
 
@@ -121,30 +137,41 @@ export function useAppHealth(
 ): Map<string, AppHealth> {
   const [health, setHealth] = useState<AppHealth[]>([]);
   const [tick, setTick] = useState(0);
+
   const key = (projects ?? [])
     .filter((project) => project.imported && !project.designSystemFor)
     .map((project) => `${project.id}:${project.updatedAt}`)
     .join(",");
+
   useEffect(() => {
-    if (!key) return;
+    if (!key) {
+      return;
+    }
+
     let live = true;
     projectsApi
       .health()
       .then((next) => live && setHealth(next))
       .catch(() => undefined);
+
     return () => {
       live = false;
     };
   }, [key, tick]);
   const building = health.some((item) => item.state === "building");
   useEffect(() => {
-    if (!building) return;
+    if (!building) {
+      return;
+    }
+
     const timer = window.setTimeout(
       () => setTick((n) => n + 1),
       HEALTH_POLL_MS
     );
+
     return () => window.clearTimeout(timer);
   }, [building, health]);
+
   return useMemo(
     () => new Map(health.map((item) => [item.projectId, item])),
     [health]

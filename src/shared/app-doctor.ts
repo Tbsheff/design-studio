@@ -37,18 +37,29 @@ export const DOCTOR_NOTE =
 export function describeDoctor(
   result: AppDoctorResult | null | undefined
 ): string {
-  if (!result || result.causes.length === 0)
+  if (!result || result.causes.length === 0) {
     return "The doctor found no problem in the dev server log or the app root response.";
+  }
+
   return result.causes
     .map((cause) => {
       const lines = [
         `${cause.severity === "error" ? "Problem" : "Note"} (${cause.kind}): ${cause.title}`,
         cause.detail,
       ];
-      if (cause.fix) lines.push(`Fix "${cause.kind}": ${cause.fix.label}`);
-      if (cause.command) lines.push(`Run: ${cause.command}`);
-      if (cause.evidence.length > 0)
+
+      if (cause.fix) {
+        lines.push(`Fix "${cause.kind}": ${cause.fix.label}`);
+      }
+
+      if (cause.command) {
+        lines.push(`Run: ${cause.command}`);
+      }
+
+      if (cause.evidence.length > 0) {
         lines.push(`Log: ${cause.evidence.join(" | ")}`);
+      }
+
       return lines.join("\n");
     })
     .join("\n\n");

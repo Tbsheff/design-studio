@@ -170,16 +170,21 @@ export function renderShipTemplate(
   vars: ShipTemplateVars
 ): string {
   const table = values(vars);
+
   const lines = template.split("\n").flatMap((line) => {
     const names = [...line.matchAll(PLACEHOLDER)].map(
       (match) => match[1] ?? ""
     );
-    if (names.length > 0 && names.every((name) => (table[name] ?? "") === ""))
+
+    if (names.length > 0 && names.every((name) => (table[name] ?? "") === "")) {
       return [];
+    }
+
     return [
       line.replace(PLACEHOLDER, (_all, name: string) => table[name] ?? ""),
     ];
   });
+
   return lines
     .join("\n")
     .replace(/\n{3,}/g, "\n\n")
@@ -225,6 +230,7 @@ const SECRET_NAMES = new Set([
   "service-account.json",
   ".git-credentials",
 ]);
+
 const SECRET_EXTENSIONS = [
   ".pem",
   ".key",
@@ -240,19 +246,31 @@ const SECRET_EXTENSIONS = [
 export function refusedPath(file: string): string | null {
   const parts = file.split("/");
   const name = (parts[parts.length - 1] ?? "").toLowerCase();
-  if (parts.some((part) => part === "node_modules"))
+
+  if (parts.some((part) => part === "node_modules")) {
     return "node_modules is never committed.";
-  if (parts.some((part) => part === ".git")) return ".git is never committed.";
-  if (name.startsWith(".env"))
+  }
+
+  if (parts.some((part) => part === ".git")) {
+    return ".git is never committed.";
+  }
+
+  if (name.startsWith(".env")) {
     return "Environment files (.env*) are never committed.";
+  }
+
   if (
     SECRET_NAMES.has(name) ||
     name.startsWith("id_rsa") ||
     /^secrets?\./.test(name)
-  )
+  ) {
     return "This looks like a secret or credentials file.";
-  if (SECRET_EXTENSIONS.some((ext) => name.endsWith(ext)))
+  }
+
+  if (SECRET_EXTENSIONS.some((ext) => name.endsWith(ext))) {
     return "Key and certificate files are never committed.";
+  }
+
   return null;
 }
 

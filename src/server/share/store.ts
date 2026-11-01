@@ -98,8 +98,13 @@ export function createShareStore(dataDir: string): ShareStore {
 
   const read = async (): Promise<ShareRecord[]> => {
     const text = await readFile(file, "utf-8").catch(() => null);
-    if (!text) return [];
+
+    if (!text) {
+      return [];
+    }
+
     const parsed: unknown = JSON.parse(text);
+
     return Array.isArray(parsed) ? (parsed as ShareRecord[]) : [];
   };
 
@@ -115,13 +120,18 @@ export function createShareStore(dataDir: string): ShareStore {
       const records = await read();
       const result = task(records);
       const now = Date.now();
+
       const kept = records.filter(
         (r) =>
           isLive(r, now) || now - (r.revokedAt ?? r.expiresAt) < KEEP_REVOKED_MS
       );
-      for (const gone of records.filter((r) => !kept.includes(r)))
+
+      for (const gone of records.filter((r) => !kept.includes(r))) {
         await rm(path.join(dir, gone.id), { recursive: true, force: true });
+      }
+
       await write(kept);
+
       return result;
     });
 
@@ -131,6 +141,7 @@ export function createShareStore(dataDir: string): ShareStore {
     newId: () => nanoid(12),
     async add(id, input) {
       const token = randomBytes(32).toString("base64url");
+
       const record: ShareRecord = {
         id,
         tokenHash: hashToken(token),
@@ -139,63 +150,97 @@ export function createShareStore(dataDir: string): ShareStore {
         revokedAt: null,
         commentIds: [],
       };
+
       await mutate((records) => records.push(record));
+
       return { record, token };
     },
     async list(projectId) {
       const records = await read();
+
       return projectId
         ? records.filter((r) => r.projectId === projectId)
         : records;
     },
     async byToken(token) {
-      if (!TOKEN_RE.test(token)) return null;
+      if (!TOKEN_RE.test(token)) {
+        return null;
+      }
+
       const hash = hashToken(token);
       const found = (await read()).find((r) => r.tokenHash === hash);
+
       return found && isLive(found) ? found : null;
     },
     async endedByToken(token) {
-      if (!TOKEN_RE.test(token)) return null;
+      if (!TOKEN_RE.test(token)) {
+        return null;
+      }
+
       const hash = hashToken(token);
       const found = (await read()).find((r) => r.tokenHash === hash);
-      if (!found || isLive(found)) return null;
+
+      if (!found || isLive(found)) {
+        return null;
+      }
+
       return found.revokedAt !== null ? "revoked" : "expired";
     },
     revoke(id) {
       return mutate((records) => {
         const found = records.find((r) => r.id === id);
-        if (!found) return null;
-        if (found.revokedAt === null) found.revokedAt = Date.now();
+
+        if (!found) {
+          return null;
+        }
+
+        if (found.revokedAt === null) {
+          found.revokedAt = Date.now();
+        }
+
         return found;
       }).then(async (found) => {
-        if (found)
+        if (found) {
           await rm(path.join(dir, found.id), { recursive: true, force: true });
+        }
+
         return found;
       });
     },
     async addComment(id, commentId) {
       await mutate((records) => {
         const found = records.find((r) => r.id === id);
-        if (found) found.commentIds.push(commentId);
+
+        if (found) {
+          found.commentIds.push(commentId);
+        }
       });
     },
     update(id, patch) {
       return mutate((records) => {
         const found = records.find((r) => r.id === id);
-        if (!found || !isLive(found)) return null;
+
+        if (!found || !isLive(found)) {
+          return null;
+        }
+
         Object.assign(found, patch);
+
         return { ...found };
       });
     },
     async activeCount() {
       const now = Date.now();
+
       return (await read()).filter((r) => isLive(r, now)).length;
     },
     async nextExpiry() {
       const now = Date.now();
+
       const live = (await read())
         .filter((r) => isLive(r, now))
         .map((r) => r.expiresAt);
+
       return live.length > 0 ? Math.min(...live) : null;
     },
   };

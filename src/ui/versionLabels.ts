@@ -65,10 +65,19 @@ export function indexVersions(versions: Version[]): VersionIndex {
 
 function manualSort(raw: string): keyof typeof EDIT_INFO {
   const title = raw.replace(/^(Undo|Redo): /, "");
-  if (/^(Update tokens|Add token)\b/.test(title)) return "tokens";
-  if (title.startsWith("Update DESIGN.md")) return "design-md";
-  if (/^(Apply|Switch to) .+ design system$/.test(title))
+
+  if (/^(Update tokens|Add token)\b/.test(title)) {
+    return "tokens";
+  }
+
+  if (title.startsWith("Update DESIGN.md")) {
+    return "design-md";
+  }
+
+  if (/^(Apply|Switch to) .+ design system$/.test(title)) {
     return "design-system";
+  }
+
   return "element";
 }
 
@@ -80,6 +89,7 @@ export function kindInfo(v: Version): KindInfo {
 
 export function originOf(v: Version, index: VersionIndex): Version | null {
   let current: Version | undefined = v;
+
   for (
     let depth = 0;
     depth < MAX_CHAIN && current && isRestoreKind(current.meta.kind);
@@ -88,11 +98,15 @@ export function originOf(v: Version, index: VersionIndex): Version | null {
     const from: string | undefined = current.meta.restoredFrom;
     current = from ? index.get(from) : undefined;
   }
+
   return current && current !== v ? current : null;
 }
 
 function plainTitle(v: Version): string {
-  if (v.name) return v.name;
+  if (v.name) {
+    return v.name;
+  }
+
   return v.meta.kind === "run" ? runTitle(v.title) : v.title;
 }
 
@@ -102,9 +116,13 @@ export function displayTitle(v: Version, index: VersionIndex): string {
 
 export function autoTitle(v: Version, index: VersionIndex): string {
   const kind = v.meta.kind;
-  if (!isRestoreKind(kind))
+
+  if (!isRestoreKind(kind)) {
     return v.meta.kind === "run" ? runTitle(v.title) : v.title;
+  }
+
   const origin = originOf(v, index);
+
   return restoreTitle(
     kind,
     origin ? plainTitle(origin) : baseTitle(v.title, kind)
@@ -112,7 +130,10 @@ export function autoTitle(v: Version, index: VersionIndex): string {
 }
 
 export function undoneOf(v: Version, index: VersionIndex): Version | null {
-  if (v.meta.kind !== "undo" || !v.parentId) return null;
+  if (v.meta.kind !== "undo" || !v.parentId) {
+    return null;
+  }
+
   return index.get(v.parentId) ?? null;
 }
 
@@ -131,23 +152,45 @@ function layerName(subject: string): string {
 }
 
 function editAction(props: string[]): string {
-  if (props.every((prop) => SIZE_PROPS.has(prop))) return "resize";
-  if (props.every((prop) => PLACE_PROPS.test(prop))) return "move";
-  if (props.every((prop) => SPACE_PROPS.test(prop))) return "spacing change";
-  if (props.every((prop) => COLOR_PROPS.test(prop))) return "color change";
+  if (props.every((prop) => SIZE_PROPS.has(prop))) {
+    return "resize";
+  }
+
+  if (props.every((prop) => PLACE_PROPS.test(prop))) {
+    return "move";
+  }
+
+  if (props.every((prop) => SPACE_PROPS.test(prop))) {
+    return "spacing change";
+  }
+
+  if (props.every((prop) => COLOR_PROPS.test(prop))) {
+    return "color change";
+  }
+
   return "edit";
 }
 
 export function historyPhrase(label: string): string | null {
   const text = TEXT_LABEL.exec(label);
-  if (text?.[1]) return `text edit of ${layerName(text[1])}${text[2] ?? ""}`;
+
+  if (text?.[1]) {
+    return `text edit of ${layerName(text[1])}${text[2] ?? ""}`;
+  }
+
   const edit = EDIT_LABEL.exec(label);
-  if (!edit?.[1] || !edit[2]) return null;
+
+  if (!edit?.[1] || !edit[2]) {
+    return null;
+  }
+
   const props = edit[2].split(", ").map((prop) => prop.trim());
+
   return `${editAction(props)} of ${layerName(edit[1])}${edit[3] ?? ""}`;
 }
 
 export function fullText(v: Version): string | null {
   const prompt = v.meta.prompt?.trim();
+
   return prompt ? prompt : null;
 }

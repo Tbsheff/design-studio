@@ -22,10 +22,12 @@ import {
 } from "./support/studio";
 
 const REVIEW_DIR = path.join(ROOT, "design-review");
+
 const SIZES = [
   [1440, 900],
   [800, 934],
 ] as const;
+
 const FAR = "#00c853";
 const FAR_2 = "#2962ff";
 const COMMITTED = "#ff6d00";
@@ -41,6 +43,7 @@ async function openProject(page: Page, api: StudioApi): Promise<Project> {
       packId: "editorial",
     }
   );
+
   await api.waitForRuns(project.id, 1);
   await page.evaluate((id) => {
     const raw = localStorage.getItem("design-studio.ui.v1");
@@ -52,6 +55,7 @@ async function openProject(page: Page, api: StudioApi): Promise<Project> {
   }, project.id);
   await page.reload();
   await expect(page.locator(".topbar")).toBeVisible();
+
   return api.project(project.id);
 }
 
@@ -59,7 +63,11 @@ async function plant(frame: FrameLocator): Promise<void> {
   await frame.locator("body").evaluate((body) => {
     const w = window as unknown as { __marker?: string };
     w.__marker = "kept";
-    if (document.getElementById("tk-probe")) return;
+
+    if (document.getElementById("tk-probe")) {
+      return;
+    }
+
     const probe = document.createElement("p");
     probe.id = "tk-probe";
     probe.textContent = "probe";
@@ -81,6 +89,7 @@ async function probe(
 function near(color: string, target: string): boolean {
   const a = parse(color);
   const b = parse(target);
+
   return Boolean(a && b) && deltaE(a!, b!) < 0.02;
 }
 
@@ -94,6 +103,7 @@ async function expectColor(frame: FrameLocator, target: string): Promise<void> {
 
 async function shoot(page: Page, name: string, focus: Locator): Promise<void> {
   mkdirSync(REVIEW_DIR, { recursive: true });
+
   for (const [width, height] of SIZES) {
     await page.setViewportSize({ width, height });
     await page.waitForTimeout(300);
@@ -106,6 +116,7 @@ async function shoot(page: Page, name: string, focus: Locator): Promise<void> {
       ),
     });
   }
+
   await page.setViewportSize({ width: 1600, height: 1000 });
   await page.waitForTimeout(250);
 }
@@ -158,6 +169,7 @@ test("tokens panel: live preview in every frame, theme, discard, commit, undo", 
     .locator('li.tkp-row[data-token^="--space-"]')
     .first()
     .locator("input");
+
   await space.focus();
   await page.keyboard.press("ArrowUp");
   await expect(page.locator(".tkp-count")).toHaveText("2 changes");
@@ -188,21 +200,26 @@ test("tokens panel: live preview in every frame, theme, discard, commit, undo", 
     .first()
     .click();
   await expect(page.locator(".compare-pane")).toHaveCount(2);
+
   const panes = [
     page.frameLocator(".compare-pane:nth-child(1) iframe"),
     page.frameLocator(".compare-pane:nth-child(2) iframe"),
   ];
+
   for (const pane of panes) {
     await expect(pane.locator("h1")).toHaveText("Tokens Panel Journal");
     await plant(pane);
     await expectColor(pane, FAR);
   }
+
   await page.getByRole("tab", { name: "Tokens" }).click();
   await input.fill(FAR_2);
+
   for (const pane of panes) {
     await expectColor(pane, FAR_2);
     expect((await probe(pane)).marker).toBe("kept");
   }
+
   await page.getByRole("button", { name: "Close compare" }).click();
   await expect(front.locator("h1")).toBeVisible();
   await plant(front);

@@ -113,8 +113,10 @@ function fakeQuery(
   cost = 0.004
 ): { fn: typeof query; options: unknown[] } {
   const options: unknown[] = [];
+
   const fn = ((params: { options?: unknown }) => {
     options.push(params.options);
+
     const messages = [
       { type: "assistant", message: { content: [{ type: "text", text }] } },
       {
@@ -124,17 +126,23 @@ function fakeQuery(
         total_cost_usd: cost,
       },
     ] as unknown as SDKMessage[];
+
     const iterator = (async function* stream() {
-      for (const message of messages) yield message;
+      for (const message of messages) {
+        yield message;
+      }
     })();
+
     return Object.assign(iterator, { close: () => undefined });
   }) as unknown as typeof query;
+
   return { fn, options };
 }
 
 describe("sdk brief generator", () => {
   it("makes one Haiku call with no tools and returns the cost", async () => {
     const fake = fakeQuery(JSON.stringify(THREE));
+
     const result = await createSdkBriefGenerator({ queryFn: fake.fn }).generate(
       {
         prompt: "bike shop",
@@ -144,6 +152,7 @@ describe("sdk brief generator", () => {
         hasDesignSystem: false,
       }
     );
+
     expect(result).toMatchObject({
       source: "model",
       model: BRIEF_MODEL,
@@ -164,6 +173,7 @@ describe("sdk brief generator", () => {
     const fake = fakeQuery(
       '[{"title":"Only one","brief":"a single brief that is long enough"}]'
     );
+
     const result = await createSdkBriefGenerator({ queryFn: fake.fn }).generate(
       {
         prompt: "bike shop",
@@ -173,6 +183,7 @@ describe("sdk brief generator", () => {
         hasDesignSystem: false,
       }
     );
+
     expect(result.source).toBe("fallback");
     expect(result.error).toMatch(/expected 3 briefs/);
     expect(result.costUsd).toBe(0.004);
@@ -205,6 +216,7 @@ describe("variation and reference blocks in the user message", () => {
       designMd: null,
       designSystem: null,
     });
+
     expect(
       text.startsWith('bike shop\n\n<variation label="B" index="1" of="3">')
     ).toBe(true);
@@ -223,6 +235,7 @@ describe("variation and reference blocks in the user message", () => {
       source: { file: "index.html", line: 3, col: 1 },
       snippet: '<header class="x">',
     });
+
     expect(block).toContain('<reference-element from="Variation B">');
     expect(block).toContain("computed styles: color: red");
     expect(block).toContain('source snippet:\n<header class="x">');

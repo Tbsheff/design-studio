@@ -30,7 +30,11 @@ export function developerDir(): Promise<string | null> {
 
 export function bundledGit(gitDir: string): GitChoice {
   const binary = path.join(gitDir, "bin", "git");
-  if (!existsSync(binary)) return { kind: "missing", binary: null, env: {} };
+
+  if (!existsSync(binary)) {
+    return { kind: "missing", binary: null, env: {} };
+  }
+
   return {
     kind: "bundled",
     binary,
@@ -62,7 +66,11 @@ function xcrunGit(): Promise<string | null> {
 
 async function gitBehindXcrunShim(devDir: string | null): Promise<string> {
   const direct = devDir ? path.join(devDir, "usr", "bin", "git") : null;
-  if (direct && existsSync(direct)) return direct;
+
+  if (direct && existsSync(direct)) {
+    return direct;
+  }
+
   return (await xcrunGit()) ?? SYSTEM_GIT;
 }
 
@@ -74,8 +82,15 @@ export async function chooseGit(
   gitDir: string,
   forced: string | undefined
 ): Promise<GitChoice> {
-  if (forced === "bundled" || forced === "dugite") return bundledGit(gitDir);
+  if (forced === "bundled" || forced === "dugite") {
+    return bundledGit(gitDir);
+  }
+
   const devDir = await developerDir();
-  if (forced !== "system" && !devDir) return bundledGit(gitDir);
+
+  if (forced !== "system" && !devDir) {
+    return bundledGit(gitDir);
+  }
+
   return systemGit(await gitBehindXcrunShim(devDir));
 }

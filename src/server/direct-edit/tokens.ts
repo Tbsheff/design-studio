@@ -14,11 +14,13 @@ function assertValueTokens(
   known: Set<string> | null
 ): void {
   for (const name of tokenReferences(value)) {
-    if (!CSS_VAR_NAME.test(name))
+    if (!CSS_VAR_NAME.test(name)) {
       throw new DirectEditError(
         "invalid_token",
         `${prop}: "${value}" has a var() without a valid --name`
       );
+    }
+
     if (known !== null && !known.has(name)) {
       throw new DirectEditError(
         "unknown_token",
@@ -33,7 +35,9 @@ export function assertKnownTokens(
   known: Set<string> | null
 ): void {
   for (const [prop, value] of Object.entries(style ?? {})) {
-    if (typeof value === "string") assertValueTokens(prop, value, known);
+    if (typeof value === "string") {
+      assertValueTokens(prop, value, known);
+    }
   }
 }
 
@@ -41,6 +45,7 @@ export async function knownTokenVars(
   workTree: string
 ): Promise<Set<string> | null> {
   const files = await readDesignSystemFiles(workTree);
+
   return files === null
     ? null
     : new Set(files.entries.map((entry) => entry.cssVar));

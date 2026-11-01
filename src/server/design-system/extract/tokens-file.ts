@@ -5,6 +5,7 @@ import type { Harvest } from "./types.js";
 import { harvestCssVars } from "./vars.js";
 
 export { TokensFileError };
+
 export { parseTokensJson } from "./json-tokens.js";
 
 function harvestCssFile(text: string, label: string): Harvest {
@@ -13,10 +14,13 @@ function harvestCssFile(text: string, label: string): Harvest {
     "tokens-file",
     label
   );
-  if (found.candidates.length === 0 && found.extras.length === 0)
+
+  if (found.candidates.length === 0 && found.extras.length === 0) {
     throw new TokensFileError(
       "the CSS file has no custom properties in :root, @theme or a dark block"
     );
+  }
+
   return {
     source: "tokens-file",
     label,

@@ -54,6 +54,7 @@ const EMPTY: DraftForm = {
 function allUrls(form: DraftForm): string[] {
   const typed = form.urlInput.trim();
   const list = form.urls.map((url) => url.trim()).filter(Boolean);
+
   return typed && !list.includes(typed)
     ? [...list, typed].slice(0, MAX_URLS)
     : list;
@@ -61,6 +62,7 @@ function allUrls(form: DraftForm): string[] {
 
 function hasSource(form: DraftForm): boolean {
   const filled = (text: string) => text.trim() !== "";
+
   return (
     allUrls(form).length > 0 ||
     filled(form.designMd) ||
@@ -85,11 +87,18 @@ function toFormData(form: DraftForm): FormData {
     brief: optional(form.brief),
     folderPath: optional(form.folder.trim()),
   };
+
   const data = new FormData();
   data.append("request", JSON.stringify(request));
-  if (form.tokensFile)
+
+  if (form.tokensFile) {
     data.append("tokensFile", form.tokensFile, form.tokensFile.name);
-  for (const image of form.images) data.append("images", image, image.name);
+  }
+
+  for (const image of form.images) {
+    data.append("images", image, image.name);
+  }
+
   return data;
 }
 
@@ -102,11 +111,16 @@ async function routeFiles(
   const patch: Patch = {};
   const skipped: string[] = [];
   const images = [...form.images];
+
   for (const file of files) {
     const lower = file.name.toLowerCase();
+
     if (IMAGE_TYPES.includes(file.type)) {
-      if (images.length < MAX_IMAGES) images.push(file);
-      else skipped.push(`${file.name} (at most ${MAX_IMAGES} images)`);
+      if (images.length < MAX_IMAGES) {
+        images.push(file);
+      } else {
+        skipped.push(`${file.name} (at most ${MAX_IMAGES} images)`);
+      }
     } else if (/\.(json|css)$/.test(lower)) {
       patch.tokensFile = file;
     } else if (/\.(md|markdown)$/.test(lower)) {
@@ -116,7 +130,11 @@ async function routeFiles(
       skipped.push(file.name);
     }
   }
-  if (images.length !== form.images.length) patch.images = images;
+
+  if (images.length !== form.images.length) {
+    patch.images = images;
+  }
+
   return { patch, skipped };
 }
 
@@ -180,6 +198,7 @@ function DropZone({
   const input = useRef<HTMLInputElement>(null);
   const [over, setOver] = useState(false);
   const [note, setNote] = useState<string | null>(null);
+
   const add = async (files: File[]) => {
     const { patch, skipped } = await routeFiles(files, form);
     set(patch);
@@ -189,15 +208,18 @@ function DropZone({
         : null
     );
   };
+
   const onDrop = (event: DragEvent) => {
     event.preventDefault();
     setOver(false);
     void add(Array.from(event.dataTransfer.files));
   };
+
   const hasFiles =
     form.images.length > 0 ||
     form.tokensFile !== null ||
     form.designMdFile !== null;
+
   return (
     <div
       className={`nds-dropzone ${over ? "over" : ""}`}
@@ -283,16 +305,26 @@ function UrlField({
   set: (patch: Patch) => void;
 }) {
   const full = form.urls.length >= MAX_URLS;
+
   const add = () => {
     const url = form.urlInput.trim();
-    if (!url || full || form.urls.includes(url)) return;
+
+    if (!url || full || form.urls.includes(url)) {
+      return;
+    }
+
     set({ urls: [...form.urls, url], urlInput: "" });
   };
+
   const onKey = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key !== "Enter") return;
+    if (event.key !== "Enter") {
+      return;
+    }
+
     event.preventDefault();
     add();
   };
+
   return (
     <div className="nds-stack">
       <div className="nds-row">
@@ -351,7 +383,11 @@ function Presets({
   onChange: (id: string) => void;
 }) {
   const { packs } = pickable(usePacks());
-  if (!packs) return null;
+
+  if (!packs) {
+    return null;
+  }
+
   return (
     <div className="nds-presets" role="group" aria-label="Start from">
       {packs.map((pack) => (
@@ -378,6 +414,7 @@ function DesignMdField({
   onChange: (value: string) => void;
 }) {
   const [view, setView] = useState<"edit" | "preview">("edit");
+
   return (
     <div className="nds-md">
       <div className="nds-tabs" role="tablist" aria-label="DESIGN.md view">
@@ -423,6 +460,7 @@ function TokensField({
   onChange: (file: File | null) => void;
 }) {
   const input = useRef<HTMLInputElement>(null);
+
   return (
     <div className="nds-row">
       <input
@@ -465,18 +503,27 @@ function FolderField({
 }) {
   const [manual, setManual] = useState(() => !hasNativePicker());
   const [error, setError] = useState<string | null>(null);
+
   const choose = async () => {
     setError(null);
+
     try {
       const outcome = await pickFolder({
         title: "Choose a code folder to scan",
       });
-      if (outcome.kind === "picked") onChange(outcome.path);
-      if (outcome.kind === "unsupported") setManual(true);
+
+      if (outcome.kind === "picked") {
+        onChange(outcome.path);
+      }
+
+      if (outcome.kind === "unsupported") {
+        setManual(true);
+      }
     } catch (err) {
       setError(errorText(err));
     }
   };
+
   return (
     <div className="nds-stack">
       <div className="nds-row">
@@ -528,6 +575,7 @@ function Advanced({
     form.folder.trim(),
     form.designMd.trim(),
   ].filter(Boolean).length;
+
   return (
     <details className="nds-advanced" open={count > 0 ? true : undefined}>
       <summary>
@@ -597,19 +645,29 @@ function sourceList(
     icon: "globe",
     label: url.replace(/^https?:\/\//, "").replace(/\/$/, ""),
   }));
-  if (form.designMd.trim())
+
+  if (form.designMd.trim()) {
     list.push({ icon: "doc", label: form.designMdFile ?? "DESIGN.md" });
-  if (form.brief.trim()) list.push({ icon: "pencil", label: "Brief" });
-  if (form.tokensFile)
+  }
+
+  if (form.brief.trim()) {
+    list.push({ icon: "pencil", label: "Brief" });
+  }
+
+  if (form.tokensFile) {
     list.push({ icon: "token", label: form.tokensFile.name });
-  if (form.folder.trim())
+  }
+
+  if (form.folder.trim()) {
     list.push({
       icon: "folder",
       label:
         form.folder.trim().split("/").filter(Boolean).pop() ??
         form.folder.trim(),
     });
-  if (form.images.length > 0)
+  }
+
+  if (form.images.length > 0) {
     list.push({
       icon: "image",
       label:
@@ -617,11 +675,14 @@ function sourceList(
           ? "1 image, for the AI step"
           : `${form.images.length} images, for the AI step`,
     });
+  }
+
   return list;
 }
 
 function SourceSummary({ form }: { form: DraftForm }) {
   const list = sourceList(form);
+
   return (
     <div className="nds-summary">
       <h2>Sources</h2>
@@ -687,13 +748,21 @@ function useDropGuard(): void {
   useEffect(() => {
     const outside = (event: globalThis.DragEvent) => {
       const target = event.target;
-      if (target instanceof Element && target.closest("[data-drop-target]"))
+
+      if (target instanceof Element && target.closest("[data-drop-target]")) {
         return;
+      }
+
       event.preventDefault();
-      if (event.dataTransfer) event.dataTransfer.dropEffect = "none";
+
+      if (event.dataTransfer) {
+        event.dataTransfer.dropEffect = "none";
+      }
     };
+
     window.addEventListener("dragover", outside);
     window.addEventListener("drop", outside);
+
     return () => {
       window.removeEventListener("dragover", outside);
       window.removeEventListener("drop", outside);
@@ -717,9 +786,14 @@ export function NewDesignSystem({
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
-    if (!ready) return;
+
+    if (!ready) {
+      return;
+    }
+
     setBusy(true);
     setError(null);
+
     try {
       const result = await api.createDesignSystemDraft(toFormData(form));
       refreshPacks();

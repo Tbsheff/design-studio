@@ -75,6 +75,7 @@ export interface CanvasSnapshot {
   canvas: CanvasFile | null;
   hash: string | null;
 }
+
 import type {
   DesignRulesState,
   DesignRulesTestResult,
@@ -120,18 +121,23 @@ async function request(
   const headers: Record<string, string> = {
     [STUDIO_TOKEN_HEADER]: getSession().token,
   };
+
   let payload: BodyInit | undefined;
+
   if (body instanceof FormData) {
     payload = body;
   } else if (body !== undefined) {
     headers["content-type"] = "application/json";
     payload = JSON.stringify(body);
   }
+
   const res = await fetch(path, { method, headers, body: payload });
+
   if (!res.ok) {
     let message = `${method} ${path} failed: ${res.status}`;
     let code: string | undefined;
     let data: unknown;
+
     try {
       const parsed = (await res.json()) as { error?: string; message?: string };
       data = parsed;
@@ -140,8 +146,10 @@ async function request(
     } catch {
       message = `${message} ${res.statusText}`;
     }
+
     throw new ApiError(res.status, message, code, data);
   }
+
   return res;
 }
 
@@ -150,17 +158,27 @@ const warm = new Map<string, { at: number; value: Promise<unknown> }>();
 
 function takeWarm(path: string): Promise<unknown> | null {
   const hit = warm.get(path);
-  if (!hit) return null;
+
+  if (!hit) {
+    return null;
+  }
+
   warm.delete(path);
+
   return Date.now() - hit.at < WARM_MS ? hit.value : null;
 }
 
 export function warmGet(path: string): void {
   const hit = warm.get(path);
-  if (hit && Date.now() - hit.at < WARM_MS) return;
+
+  if (hit && Date.now() - hit.at < WARM_MS) {
+    return;
+  }
+
   const value = request("GET", path).then(
     (res) => res.json() as Promise<unknown>
   );
+
   value.catch(() => warm.delete(path));
   warm.set(path, { at: Date.now(), value });
 }
@@ -171,6 +189,7 @@ export async function json<T>(
   body?: unknown
 ): Promise<T> {
   const early = method === "GET" ? takeWarm(path) : null;
+
   if (early) {
     try {
       return (await early) as T;
@@ -178,31 +197,45 @@ export async function json<T>(
       return json<T>(method, path, body);
     }
   }
+
   const res = await request(method, path, body);
+
   return (await res.json()) as T;
 }
 
 const p = (pid: string) => `/api/projects/${encodeURIComponent(pid)}`;
+
 const d = (pid: string, did: string) =>
   `${p(pid)}/d/${encodeURIComponent(did)}`;
 
 const treeInFlight = new Map<string, Promise<{ files: string[] }>>();
+
 function sharedTree(url: string): Promise<{ files: string[] }> {
   const open = treeInFlight.get(url);
-  if (open) return open;
+
+  if (open) {
+    return open;
+  }
+
   const next = json<{ files: string[] }>("GET", url).finally(() =>
     treeInFlight.delete(url)
   );
+
   treeInFlight.set(url, next);
+
   return next;
 }
+
 const pk = (id: string) => `/api/packs/${encodeURIComponent(id)}`;
 
 export function warmProject(pid: string, directionId: string | null): void {
   warmGet(p(pid));
   warmGet(`${p(pid)}/runs`);
   warmGet(`${p(pid)}/canvas`);
-  if (directionId) warmGet(`${d(pid, directionId)}/preview`);
+
+  if (directionId) {
+    warmGet(`${d(pid, directionId)}/preview`);
+  }
 }
 
 export const api = {
@@ -285,6 +318,7 @@ export const api = {
     form.append("file", file, file.name);
     form.append("mode", mode);
     const res = await request("POST", "/api/packs/import", form, pickMessage);
+
     return (await res.json()) as ImportPackResult;
   },
   openPackEditor: (id: string) =>
@@ -303,6 +337,7 @@ export const api = {
       { packId },
       pickMessage
     );
+
     return (await res.json()) as ApplyPackResult;
   },
   savePack: async (
@@ -316,6 +351,7 @@ export const api = {
       input,
       pickMessage
     );
+
     return (await res.json()) as SavePackResult;
   },
   createDesignSystemDraft: (form: FormData) =>
@@ -329,6 +365,7 @@ export const api = {
       req,
       pickMessage
     );
+
     return (await res.json()) as CreateTokenResult;
   },
   previewTokens: async (pid: string, did: string, changes: TokenChange[]) => {
@@ -338,6 +375,7 @@ export const api = {
       { changes },
       pickMessage
     );
+
     return (await res.json()) as TokenPreviewResult;
   },
   updateTokens: async (pid: string, did: string, changes: TokenChange[]) => {
@@ -347,6 +385,7 @@ export const api = {
       { changes },
       pickMessage
     );
+
     return (await res.json()) as UpdateTokensResult;
   },
   getCanvas: (pid: string) => json<CanvasSnapshot>("GET", `${p(pid)}/canvas`),
@@ -374,6 +413,7 @@ export const api = {
       { values },
       pickMessage
     );
+
     return (await res.json()) as CommitTweaksResult;
   },
   importProject: (
@@ -445,6 +485,7 @@ export const api = {
   uploadAttachment: (pid: string, file: File) => {
     const form = new FormData();
     form.append("file", file, file.name);
+
     return json<Attachment>("POST", `${p(pid)}/attachments`, form);
   },
   getDesignMd: (pid: string) =>
@@ -456,6 +497,7 @@ export const api = {
       "GET",
       `${p(pid)}/files?path=${encodeURIComponent(filePath)}`
     );
+
     return res.blob();
   },
   listRuns: (pid: string) => json<RunSummary[]>("GET", `${p(pid)}/runs`),
@@ -484,6 +526,7 @@ export const api = {
       undefined,
       pickMessage
     );
+
     return (await res.json()) as { state: EditHistoryState; version: Version };
   },
   editSession: (pid: string, did: string, base?: string) =>
@@ -503,6 +546,7 @@ export const api = {
       { baseVersionId },
       pickMessage
     );
+
     return (await res.json()) as EditSessionEnd;
   },
   elementClasses: (
@@ -598,6 +642,7 @@ export const api = {
       "GET",
       `${p(pid)}/versions/${encodeURIComponent(vid)}/export`
     );
+
     return res.blob();
   },
   getRun: (runId: string) =>
@@ -651,10 +696,22 @@ export const api = {
 };
 
 function editKind(req: DirectEditRequest): string {
-  if (req.move) return "move";
-  if (req.insert) return "insert";
-  if (req.text !== undefined) return "text";
-  if (req.name !== undefined) return "name";
+  if (req.move) {
+    return "move";
+  }
+
+  if (req.insert) {
+    return "insert";
+  }
+
+  if (req.text !== undefined) {
+    return "text";
+  }
+
+  if (req.name !== undefined) {
+    return "name";
+  }
+
   return "style";
 }
 
@@ -674,6 +731,7 @@ async function timedEdit<T>(
     ms: Math.round(performance.now() - started),
     detail: { kind, count },
   });
+
   return result;
 }
 
@@ -727,6 +785,7 @@ export const rulesApi = {
       ...frame,
     }),
 };
+
 export function arrange(
   projectId: string,
   directionId: string,

@@ -55,6 +55,7 @@ export function PenIcon({ size = 16 }: { size?: number }) {
 
 function backingScale(frame: Frame, zoom: number): number {
   const dpr = typeof window === "undefined" ? 1 : window.devicePixelRatio || 1;
+
   return Math.min(
     dpr * zoom,
     MAX_BACKING_SIDE / Math.max(frame.width, frame.height),
@@ -79,17 +80,23 @@ export function DrawSurface({
 }: SurfaceProps) {
   const initial = useProfileInitial();
   const canvas = useRef<HTMLCanvasElement>(null);
+
   const active = useRef<{
     builder: StrokeBuilder;
     stroke: DrawStroke;
     pointer: number;
   } | null>(null);
+
   const [drawing, setDrawing] = useState(false);
   const scale = backingScale(frame, zoom);
 
   const paint = () => {
     const ctx = canvas.current?.getContext("2d");
-    if (!ctx) return;
+
+    if (!ctx) {
+      return;
+    }
+
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     ctx.setTransform(scale, 0, 0, scale, 0, 0);
@@ -104,7 +111,11 @@ export function DrawSurface({
 
   const pointOf = (event: { clientX: number; clientY: number }) => {
     const rect = canvas.current?.getBoundingClientRect();
-    if (!rect || rect.width === 0 || rect.height === 0) return null;
+
+    if (!rect || rect.width === 0 || rect.height === 0) {
+      return null;
+    }
+
     return {
       x: ((event.clientX - rect.left) * frame.width) / rect.width,
       y: ((event.clientY - rect.top) * frame.height) / rect.height,
@@ -112,9 +123,16 @@ export function DrawSurface({
   };
 
   const onDown = (event: PointerEvent<HTMLCanvasElement>) => {
-    if (event.button !== 0 || active.current || draw.pointsLeft < 2) return;
+    if (event.button !== 0 || active.current || draw.pointsLeft < 2) {
+      return;
+    }
+
     const point = pointOf(event);
-    if (!point) return;
+
+    if (!point) {
+      return;
+    }
+
     event.preventDefault();
     event.stopPropagation();
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -134,25 +152,46 @@ export function DrawSurface({
 
   const onMove = (event: PointerEvent<HTMLCanvasElement>) => {
     const current = active.current;
-    if (!current || current.pointer !== event.pointerId) return;
+
+    if (!current || current.pointer !== event.pointerId) {
+      return;
+    }
+
     const samples = event.nativeEvent.getCoalescedEvents?.() ?? [];
     let changed = false;
+
     for (const sample of samples.length ? samples : [event.nativeEvent]) {
-      if (current.builder.points().length >= draw.pointsLeft) break;
+      if (current.builder.points().length >= draw.pointsLeft) {
+        break;
+      }
+
       const point = pointOf(sample);
-      if (point) changed = current.builder.add(point.x, point.y) || changed;
+
+      if (point) {
+        changed = current.builder.add(point.x, point.y) || changed;
+      }
     }
-    if (changed) paint();
+
+    if (changed) {
+      paint();
+    }
   };
 
   const onUp = (event: PointerEvent<HTMLCanvasElement>) => {
     const current = active.current;
-    if (!current || current.pointer !== event.pointerId) return;
+
+    if (!current || current.pointer !== event.pointerId) {
+      return;
+    }
+
     active.current = null;
     setDrawing(false);
     const point = pointOf(event);
-    if (point && current.builder.points().length < draw.pointsLeft)
+
+    if (point && current.builder.points().length < draw.pointsLeft) {
       current.builder.end(point.x, point.y);
+    }
+
     draw.push({ ...current.stroke, points: [...current.builder.points()] });
   };
 
@@ -164,8 +203,12 @@ export function DrawSurface({
     mentions,
     attachmentIds,
   }: ComposerSubmit): Promise<boolean> => {
-    if (!box) return false;
+    if (!box) {
+      return false;
+    }
+
     const strokes = draw.strokes;
+
     const value: CommentDrawing = {
       frame: {
         width: Math.round(frame.width),
@@ -174,8 +217,13 @@ export function DrawSurface({
       box,
       strokes,
     };
+
     const image = await renderDrawingPng(value).catch(() => null);
-    if (!image) return false;
+
+    if (!image) {
+      return false;
+    }
+
     const ok = await control.addDrawing({
       text,
       drawing: value,
@@ -183,7 +231,11 @@ export function DrawSurface({
       toClaude,
       extras: { mentions, attachmentIds },
     });
-    if (ok) draw.setOn(false);
+
+    if (ok) {
+      draw.setOn(false);
+    }
+
     return ok;
   };
 
@@ -238,12 +290,21 @@ function onSwatchKey(event: KeyboardEvent<HTMLDivElement>) {
       : event.key === "ArrowLeft" || event.key === "ArrowUp"
         ? -1
         : 0;
-  if (step === 0) return;
+
+  if (step === 0) {
+    return;
+  }
+
   const radios = Array.from(
     event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="radio"]')
   );
+
   const index = radios.indexOf(document.activeElement as HTMLButtonElement);
-  if (index < 0) return;
+
+  if (index < 0) {
+    return;
+  }
+
   event.preventDefault();
   const next = radios[(index + step + radios.length) % radios.length];
   next?.focus();
@@ -251,8 +312,12 @@ function onSwatchKey(event: KeyboardEvent<HTMLDivElement>) {
 }
 
 export function DrawBar({ draw }: { draw: DrawTool }) {
-  if (!draw.on) return null;
+  if (!draw.on) {
+    return null;
+  }
+
   const count = draw.strokes.length;
+
   return (
     <div
       className="draw-bar"
@@ -322,6 +387,7 @@ export function DrawBar({ draw }: { draw: DrawTool }) {
 
 export function DrawingStrokes({ drawing }: { drawing: CommentDrawing }) {
   const { width, height } = drawing.frame;
+
   return (
     <svg
       className="drawing-strokes"
@@ -333,6 +399,7 @@ export function DrawingStrokes({ drawing }: { drawing: CommentDrawing }) {
     >
       {drawing.strokes.map((stroke, index) => {
         const d = strokePath(stroke.points);
+
         return (
           <g key={index}>
             <path

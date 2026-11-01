@@ -9,15 +9,23 @@ export interface LiveStore<T> {
 export function createLiveStore<T>(initial: T): LiveStore<T> {
   let value = initial;
   const listeners = new Set<() => void>();
+
   return {
     get: () => value,
     set: (next) => {
-      if (Object.is(next, value)) return;
+      if (Object.is(next, value)) {
+        return;
+      }
+
       value = next;
-      for (const listener of listeners) listener();
+
+      for (const listener of listeners) {
+        listener();
+      }
     },
     subscribe: (listener) => {
       listeners.add(listener);
+
       return () => {
         listeners.delete(listener);
       };

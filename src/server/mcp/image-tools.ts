@@ -122,14 +122,22 @@ async function imageBody(
   workTree: string,
   input: Input
 ): Promise<Pick<SetImageRequest, "image" | "url">> {
-  if (input.url) return { url: input.url };
-  if (!input.path) return {};
+  if (input.url) {
+    return { url: input.url };
+  }
+
+  if (!input.path) {
+    return {};
+  }
+
   const file = path.isAbsolute(input.path)
     ? input.path
     : path.resolve(workTree, input.path);
+
   const image = await imageFromPath(file).catch((error: unknown) => {
     throw new EditError(error instanceof Error ? error.message : String(error));
   });
+
   return {
     image: { name: path.basename(file), data: image.bytes.toString("base64") },
   };
@@ -137,10 +145,12 @@ async function imageBody(
 
 async function tagAt(file: string, line: number, col: number): Promise<string> {
   const text = await readFile(file, "utf-8").catch(() => "");
+
   const tag =
     /^<([A-Za-z][\w.]*)/.exec(
       (text.split("\n")[line - 1] ?? "").slice(col - 1)
     )?.[1] ?? "element";
+
   return /^(img|Image)$/.test(tag) ? "img" : tag;
 }
 
@@ -156,6 +166,7 @@ async function targetFor(
       scopeOf(project.id, direction.id),
       input.source
     );
+
     return {
       source,
       tag: await tagAt(
@@ -165,15 +176,23 @@ async function targetFor(
       ),
     };
   }
+
   const sel = input.selector ?? "";
   const url = await pageUrl(deps, project, direction, input.page);
   const element = await describeElement(deps.preview, url, sel);
-  if (!element) throw new EditError(`No element matches ${sel} on the page.`);
+
+  if (!element) {
+    throw new EditError(`No element matches ${sel} on the page.`);
+  }
+
   const probed = await probeOwners(deps.preview, url, sel).catch(() => null);
-  if (!element.source && !probed?.owners.length)
+
+  if (!element.source && !probed?.owners.length) {
     throw new EditError(
       `${sel} has no source location. Pass source with the file:line:col of its tag.`
     );
+  }
+
   return {
     source: element.source,
     tag: element.tag,
@@ -206,14 +225,18 @@ const setImage = defineTool(
       input.projectId,
       input.directionId
     );
+
     refuseWhileRunning(deps, project, direction);
     const target = await targetFor(deps, project, direction, input);
+
     const body: SetImageRequest = {
       target,
       ...(await imageBody(direction.workTree, input)),
       ...options(input),
     };
+
     let result: SetImageResult;
+
     try {
       result = await studioCall<SetImageResult>(
         deps,
@@ -226,9 +249,11 @@ const setImage = defineTool(
         error instanceof Error ? error.message : String(error)
       );
     }
+
     const at = result.select?.map(
       (item) => `${item.file}:${item.line}:${item.col}`
     );
+
     const output = ok({
       changed: result.changed,
       mode: result.mode,
@@ -239,6 +264,7 @@ const setImage = defineTool(
       title: result.title,
       versionId: result.version?.id ?? null,
     });
+
     return result.changed
       ? {
           result: output,

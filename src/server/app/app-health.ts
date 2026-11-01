@@ -13,6 +13,7 @@ export function installCommand(
   appDir: string
 ): { command: string; dir: string; full: string } {
   const hint = installHint(root, appDir);
+
   return {
     command: hint.command,
     dir: hint.dir,
@@ -33,6 +34,7 @@ function needsInstall(
   appDir: string
 ): AppHealth {
   const hint = installCommand(root, appDir);
+
   return {
     projectId: project.id,
     state: "install",
@@ -48,6 +50,7 @@ async function attachedHealth(
   apps: AppControl | undefined
 ): Promise<AppHealth> {
   const app = project.app;
+
   const base: AppHealth = {
     projectId: project.id,
     state: "ready",
@@ -55,15 +58,26 @@ async function attachedHealth(
     detail: null,
     command: null,
   };
-  if (!app) return base;
+
+  if (!app) {
+    return base;
+  }
+
   const status = apps?.status(project);
-  if (status?.state === "starting") return { ...base, state: "building" };
+
+  if (status?.state === "starting") {
+    return { ...base, state: "building" };
+  }
+
   if (status?.state === "failed" && apps?.doctor) {
     const cause = (
       await apps.doctor(project, false).catch(() => null)
     )?.causes.find((item) => item.severity === "error");
-    if (cause?.kind === "install")
+
+    if (cause?.kind === "install") {
       return needsInstall(project, root, app.appDir);
+    }
+
     return {
       ...base,
       state: "failed",
@@ -72,8 +86,11 @@ async function attachedHealth(
       command: cause?.command ?? null,
     };
   }
-  if (app.mode === "managed" && nextBinary(root, app.appDir) === null)
+
+  if (app.mode === "managed" && nextBinary(root, app.appDir) === null) {
     return needsInstall(project, root, app.appDir);
+  }
+
   return base;
 }
 
@@ -89,7 +106,8 @@ export async function projectHealth(
   apps: AppControl | undefined
 ): Promise<AppHealth> {
   const root = project.imported?.sourcePath;
-  if (!root)
+
+  if (!root) {
     return {
       projectId: project.id,
       state: "static",
@@ -97,8 +115,16 @@ export async function projectHealth(
       detail: null,
       command: null,
     };
-  if (project.app) return attachedHealth(project, root, apps);
-  if (await viteNeedsInstall(root)) return needsInstall(project, root, ".");
+  }
+
+  if (project.app) {
+    return attachedHealth(project, root, apps);
+  }
+
+  if (await viteNeedsInstall(root)) {
+    return needsInstall(project, root, ".");
+  }
+
   return {
     projectId: project.id,
     state: "static",

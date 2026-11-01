@@ -244,7 +244,10 @@ const CANVAS_OFF = "The canvas is not available in this run.";
 function canvasContext(
   deps: Pick<StudioToolDeps, "ctx" | "canvas">
 ): CanvasToolContext | null {
-  if (!deps.canvas) return null;
+  if (!deps.canvas) {
+    return null;
+  }
+
   return {
     canvas: deps.canvas,
     project: deps.ctx.project,
@@ -262,7 +265,11 @@ async function withCanvas(
   ) => Promise<{ content: { type: "text"; text: string }[]; isError?: boolean }>
 ) {
   const ctx = canvasContext(deps);
-  if (!ctx) return errorText(CANVAS_OFF);
+
+  if (!ctx) {
+    return errorText(CANVAS_OFF);
+  }
+
   try {
     return await run(ctx);
   } catch (error) {
@@ -317,8 +324,11 @@ async function withFrameStates(
   run: (stateDeps: FrameStateDeps) => Promise<string>
 ) {
   const stateDeps = configuredFrameStates();
-  if (!stateDeps)
+
+  if (!stateDeps) {
     return errorText("Frame states are not available in this run.");
+  }
+
   try {
     return { content: [{ type: "text" as const, text: await run(stateDeps) }] };
   } catch (error) {
@@ -341,6 +351,7 @@ export function runSetFrameState(
 ) {
   return withFrameStates(deps, "set_frame_state", async (stateDeps) => {
     const done = await applyFrameState(stateDeps, deps.ctx.project, args);
+
     return `Frame ${done.frameId} now shows ${done.state.name} (${done.state.id}).\n${describeFrameStates(deps.ctx.project, done.view)}`;
   });
 }
@@ -385,14 +396,22 @@ export function runAddFlow(
   args: FlowInput
 ) {
   return withCanvas(deps, "add_flow", async (ctx) => {
-    if (ctx.plan)
+    if (ctx.plan) {
       return errorText(
         "Plan mode is on, so the canvas stays as it is. Describe the flow in the plan."
       );
-    if (ctx.mode === "critique")
+    }
+
+    if (ctx.mode === "critique") {
       return errorText("add_flow is not available in critique runs.");
+    }
+
     const flowDeps = configuredFlowDeps(ctx.canvas);
-    if (!flowDeps) return errorText("Flow is not available in this run.");
+
+    if (!flowDeps) {
+      return errorText("Flow is not available in this run.");
+    }
+
     return {
       content: [
         {
@@ -421,10 +440,12 @@ export function describeTiles(
 ): string {
   const size = `${viewport} ${box.width}x${box.height}`;
   const span = `${tiles.paths.length} image(s) cover y=${tiles.from}-${tiles.to}px of a ${tiles.pageHeight}px page`;
+
   const more =
     tiles.to < tiles.pageHeight
       ? ` More of the page is below: call screenshot again with from=${tiles.to}.`
       : " This is the end of the page.";
+
   return `${size}: ${span}.${more}`;
 }
 
@@ -432,6 +453,7 @@ async function tileContent(paths: string[]) {
   const images = await Promise.all(
     paths.map(async (file) => (await readFile(file)).toString("base64"))
   );
+
   return images.map((data) => ({
     type: "image" as const,
     data,
@@ -450,10 +472,17 @@ function firstMobileFrom(
   viewport: ViewportName,
   from: number
 ): { from: number; note: string } {
-  if (viewport !== "mobile") return { from, note: "" };
+  if (viewport !== "mobile") {
+    return { from, note: "" };
+  }
+
   const first = (counters.mobileShots ?? 0) === 0;
   counters.mobileShots = (counters.mobileShots ?? 0) + 1;
-  if (!first || from === 0) return { from, note: "" };
+
+  if (!first || from === 0) {
+    return { from, note: "" };
+  }
+
   return {
     from: 0,
     note: " The first mobile screenshot of a run always starts at the top, so from was set to 0.",
@@ -464,22 +493,31 @@ async function screenTarget(
   deps: StudioToolDeps,
   screen: number | undefined
 ): Promise<RunScreen | string | null> {
-  if (screen === undefined || !deps.run) return null;
+  if (screen === undefined || !deps.run) {
+    return null;
+  }
+
   const screens = deps.run.lastScreens?.length
     ? deps.run.lastScreens
     : await runScreens(deps.preview, deps.ctx, deps.run.config, deps.run).catch(
         () => []
       );
+
   const picked = screens[screen - 1];
-  if (!picked)
+
+  if (!picked) {
     return `There is no screen ${screen}. Screens:\n${describeScreens(screens) || "1. Entry"}`;
+  }
+
   await warmScreens(deps.preview, deps.ctx.project, [picked]);
+
   return picked;
 }
 
 function targetDeps(deps: Pick<StudioToolDeps, "canvas">): TargetDeps | null {
   const states = configuredFrameStates();
   const canvas = deps.canvas ?? states?.canvas;
+
   return canvas && states ? { canvas, projectDir: states.projectDir } : null;
 }
 
@@ -498,7 +536,10 @@ async function pickTarget(
 }
 
 function viewportName(width: number): ViewportName {
-  if (width <= 500) return "mobile";
+  if (width <= 500) {
+    return "mobile";
+  }
+
   return width <= 1024 ? "tablet" : "desktop";
 }
 
@@ -506,9 +547,14 @@ function shotBox(
   target: ShotTarget,
   viewport: ViewportName | undefined
 ): { name: ViewportName; box: { width: number; height: number } } {
-  if (viewport) return { name: viewport, box: VIEWPORTS[viewport] };
-  if (target.size)
+  if (viewport) {
+    return { name: viewport, box: VIEWPORTS[viewport] };
+  }
+
+  if (target.size) {
     return { name: viewportName(target.size.width), box: target.size };
+  }
+
   return { name: "desktop", box: VIEWPORTS.desktop };
 }
 
@@ -525,9 +571,14 @@ async function pickShot(
   args: ShotArgs & { viewport?: ViewportName; screen?: number }
 ): Promise<PickedShot | string> {
   const screen = await screenTarget(deps, args.screen);
-  if (typeof screen === "string") return screen;
+
+  if (typeof screen === "string") {
+    return screen;
+  }
+
   if (screen) {
     const viewport = args.viewport ?? "desktop";
+
     return {
       url: screen.url,
       label: `screen ${args.screen}: ${screen.label}`,
@@ -536,9 +587,15 @@ async function pickShot(
       box: VIEWPORTS[viewport],
     };
   }
+
   const target = await pickTarget(deps, args);
-  if (typeof target === "string") return `Screenshot failed: ${target}`;
+
+  if (typeof target === "string") {
+    return `Screenshot failed: ${target}`;
+  }
+
   const { name, box } = shotBox(target, args.viewport);
+
   return { url: target.url, label: target.label, viewport: name, box };
 }
 
@@ -552,29 +609,44 @@ export async function takeScreenshot(
     screen?: number;
   }
 ) {
-  if (!deps.ctx.previewUrl)
+  if (!deps.ctx.previewUrl) {
     return errorText(
       "Preview is not running for this direction, so no screenshot is available."
     );
+  }
+
   const target = await pickShot(deps, args);
-  if (typeof target === "string") return errorText(target);
+
+  if (typeof target === "string") {
+    return errorText(target);
+  }
+
   const { viewport, box } = target;
   const start = firstMobileFrom(counters, viewport, args.from);
   counters.shots += 1;
-  if (deps.run) deps.run.shots = (deps.run.shots ?? 0) + 1;
-  if (deps.run?.log)
+
+  if (deps.run) {
+    deps.run.shots = (deps.run.shots ?? 0) + 1;
+  }
+
+  if (deps.run?.log) {
     recordShot(deps.run.log, viewport, {
       url: target.url,
       ...(target.prepare ? { prepare: target.prepare } : {}),
     });
+  }
+
   const dark = args.theme === "dark";
+
   const outPrefix = path.join(
     deps.runsDir,
     `${deps.runId}-shot-${counters.shots}-${viewport}${dark ? "-dark" : ""}`
   );
+
   try {
     await mkdir(deps.runsDir, { recursive: true });
     const fresh = freshCapture(deps.ctx, deps.run);
+
     const tiles = await deps.preview.screenshotTiles(target.url, {
       viewport: box,
       ...TILE_PLAN[viewport],
@@ -584,6 +656,7 @@ export async function takeScreenshot(
       ...(dark ? { theme: "dark" as const } : {}),
       ...(target.prepare ? { prepare: target.prepare } : {}),
     });
+
     return {
       content: [
         ...(await tileContent(tiles.paths)),
@@ -616,13 +689,18 @@ export async function runRenderCheck(
   counters: StudioToolCounters,
   args: ShotArgs = {}
 ) {
-  if (!deps.ctx.previewUrl)
+  if (!deps.ctx.previewUrl) {
     return errorText(
       "Preview is not running for this direction, so render_check cannot run."
     );
+  }
+
   const target = await pickTarget(deps, args);
-  if (typeof target === "string")
+
+  if (typeof target === "string") {
     return errorText(`render_check failed: ${target}`);
+  }
+
   try {
     const report = await buildCheckReport(
       deps.preview,
@@ -631,17 +709,22 @@ export async function runRenderCheck(
       deps.run,
       target
     );
+
     counters.checks += 1;
+
     if (deps.run) {
       deps.run.lastFindings = report.findings;
       deps.run.lastChecks = report.results;
     }
+
     await saveCheck(deps.runsDir, deps.runId, counters.checks, report.results);
+
     const note = await baselineNote(
       report.results,
       deps.runsDir,
       deps.runId
     ).catch(() => null);
+
     return {
       content: [
         {
@@ -656,18 +739,32 @@ export async function runRenderCheck(
 }
 
 async function loadQuery(deps: StudioToolDeps): Promise<QueryFn> {
-  if (deps.queryFn) return deps.queryFn;
+  if (deps.queryFn) {
+    return deps.queryFn;
+  }
+
   return (await import("@anthropic-ai/claude-agent-sdk")).query;
 }
 
 function criticBlocked(deps: StudioToolDeps): string | null {
   const run = deps.run;
-  if (!run || !run.config.criticModel || run.config.preset.criticMaxCalls === 0)
+
+  if (
+    !run ||
+    !run.config.criticModel ||
+    run.config.preset.criticMaxCalls === 0
+  ) {
     return "design_review is only available in prototype and polish runs. Use render_check and screenshots instead.";
-  if (run.criticCalls >= run.config.preset.criticMaxCalls)
+  }
+
+  if (run.criticCalls >= run.config.preset.criticMaxCalls) {
     return `design_review was already called ${run.criticCalls} times in this run, the limit. Use render_check and screenshots for the final check.`;
-  if (!deps.ctx.previewUrl)
+  }
+
+  if (!deps.ctx.previewUrl) {
     return "Preview is not running for this direction, so design_review cannot run.";
+  }
+
   return null;
 }
 
@@ -687,18 +784,23 @@ async function reviewScreens(
     url: target.url,
     pagePath: target.path,
   };
+
   const screens = explicitTarget(args)
     ? []
     : await runScreens(deps.preview, deps.ctx, run.config, run).catch(() => []);
+
   const rest = screens.filter(
     (screen) => screen.prepare || !samePage(screen.url, target.url)
   );
+
   const first =
     screens.find(
       (screen) => !screen.prepare && samePage(screen.url, target.url)
     ) ?? own;
+
   const all = [first, ...rest];
   await warmScreens(deps.preview, deps.ctx.project, all);
+
   return all;
 }
 
@@ -709,6 +811,7 @@ async function reviewInput(
   images: CriticImage[]
 ) {
   const app = deps.ctx.project.app;
+
   const changedSource = app
     ? await changedSourceFor(
         deps.ctx.direction.workTree,
@@ -716,10 +819,12 @@ async function reviewInput(
         run.startedAt
       ).catch(() => [])
     : [];
+
   const before =
     !run.config.preset.quickCritic && run.reviewShots?.length
       ? beforeImages(run.reviewShots)
       : [];
+
   return {
     request: deps.ctx.request.prompt,
     findings: run.lastFindings,
@@ -741,15 +846,24 @@ export async function runDesignReview(
   args: ShotArgs = {}
 ) {
   const blocked = criticBlocked(deps);
-  if (blocked) return errorText(blocked);
+
+  if (blocked) {
+    return errorText(blocked);
+  }
+
   const target = await pickTarget(deps, args);
-  if (typeof target === "string")
+
+  if (typeof target === "string") {
     return errorText(`design_review failed: ${target}`);
+  }
+
   const run = deps.run as RunToolState;
   run.criticCalls += 1;
+
   try {
     const screens = await reviewScreens(deps, run, target, args);
     const prefix = criticOutPrefix(deps.runsDir, deps.runId, run.criticCalls);
+
     const images = await criticImages(
       deps.preview,
       screens,
@@ -757,7 +871,9 @@ export async function runDesignReview(
       run.config.preset.screens?.maxImages,
       freshCapture(deps.ctx, run)
     );
+
     const input = await reviewInput(deps, run, screens, images);
+
     const result = await runCritic(
       await loadQuery(deps),
       input,
@@ -767,12 +883,14 @@ export async function runDesignReview(
         : run.config.preset.criticBudgetUsd,
       deps.env
     );
+
     run.criticCostUsd += result.costUsd;
     run.reviewShots = images;
     await writeFile(
       `${prefix}.json`,
       `${JSON.stringify({ model: run.config.criticModel, kind: input.kind, screens: screens.map((screen) => screen.label), images: images.map((image) => image.label), before: input.before?.length ?? 0, costUsd: result.costUsd, error: result.error, issues: result.issues, raw: result.raw }, null, 2)}\n`
     );
+
     return {
       content: [
         {
@@ -792,10 +910,13 @@ export async function runDefineTweaks(
   deps: Pick<StudioToolDeps, "ctx">,
   controls: unknown
 ) {
-  if (deps.ctx.request.mode === "critique")
+  if (deps.ctx.request.mode === "critique") {
     return errorText("define_tweaks is not available in critique runs.");
+  }
+
   try {
     const result = await defineTweaks(deps.ctx.direction.workTree, controls);
+
     return result.ok
       ? { content: [{ type: "text" as const, text: result.text }] }
       : errorText(result.text);
@@ -805,12 +926,15 @@ export async function runDefineTweaks(
 }
 
 export async function runDesignSystemCheck(deps: Pick<StudioToolDeps, "ctx">) {
-  if (!deps.ctx.project.designSystemFor)
+  if (!deps.ctx.project.designSystemFor) {
     return errorText(
       "design_system_check works only in a design-system project (the workbench of a design system)."
     );
+  }
+
   try {
     const result = await checkDesignSystem(deps.ctx.direction.workTree);
+
     return {
       content: [{ type: "text" as const, text: describeCheck(result) }],
     };
@@ -822,13 +946,16 @@ export async function runDesignSystemCheck(deps: Pick<StudioToolDeps, "ctx">) {
 export async function runPrepareShip(
   deps: Pick<StudioToolDeps, "ctx" | "runsDir">
 ) {
-  if (!deps.ctx.project.app)
+  if (!deps.ctx.project.app) {
     return errorText("prepare_ship works only in an attached app project.");
+  }
+
   try {
     const plan = await prepareShip({
       projectDir: path.dirname(deps.runsDir),
       project: deps.ctx.project,
     });
+
     const files = plan.files.map((f) => ({
       path: f.path,
       status: f.status,
@@ -837,6 +964,7 @@ export async function runPrepareShip(
       refused: f.refused,
       conflict: f.conflict,
     }));
+
     const text = JSON.stringify(
       {
         blocked: plan.blocked,
@@ -849,6 +977,7 @@ export async function runPrepareShip(
       null,
       2
     );
+
     return { content: [{ type: "text" as const, text }] };
   } catch (error) {
     return errorText(`prepare_ship failed: ${describeError(error)}`);
@@ -860,6 +989,7 @@ export async function createStudioMcpServer(
 ): Promise<McpSdkServerConfigWithInstance> {
   const { createSdkMcpServer, tool } =
     await import("@anthropic-ai/claude-agent-sdk");
+
   const counters: StudioToolCounters = deps.run
     ? (deps.run.counters ??= { shots: 0, checks: 0 })
     : { shots: 0, checks: 0 };
@@ -1093,6 +1223,7 @@ export async function createStudioMcpServer(
     (args) => runSelectMatching(deps, args),
     { annotations: { readOnlyHint: true } }
   );
+
   const diffVersionsTool = tool(
     "diff_versions",
     TOOL_SHORT.diff_versions,
@@ -1227,24 +1358,28 @@ export async function createStudioMcpServer(
     setImageShape,
     (args) => runSetImage(deps, args)
   );
+
   const drawVectorTool = tool(
     "draw_vector",
     TOOL_SHORT.draw_vector,
     drawVectorShape,
     (args) => runDrawVector(deps, args)
   );
+
   const booleanShapesTool = tool(
     "boolean_shapes",
     TOOL_SHORT.boolean_shapes,
     booleanShapesShape,
     (args) => runBooleanShapes(deps, args)
   );
+
   const setLayerStateTool = tool(
     LAYER_STATE_TOOL,
     TOOL_SHORT.set_layer_state,
     layerStateShape,
     (args) => runSetLayerState(deps, args)
   );
+
   const listLockedLayersTool = tool(
     LIST_LOCKS_TOOL,
     TOOL_SHORT.list_locked_layers,
@@ -1252,6 +1387,7 @@ export async function createStudioMcpServer(
     (args) => runListLockedLayers(deps, args),
     { annotations: { readOnlyHint: true } }
   );
+
   const compareReferenceTool = tool(
     "compare_to_reference",
     TOOL_SHORT.compare_to_reference,
@@ -1260,12 +1396,14 @@ export async function createStudioMcpServer(
       runCompareToReference({ ...deps, targets: targetDeps(deps) }, args),
     { annotations: { readOnlyHint: true } }
   );
+
   const figmaImportTool = tool(
     "import_figma_frame",
     TOOL_SHORT.import_figma_frame,
     figmaImportShape,
     withLayerIds(deps, (args) => runFigmaImport(deps, args))
   );
+
   const paintShapeTool = tool(
     "paint_shape",
     TOOL_SHORT.paint_shape,
@@ -1278,6 +1416,7 @@ export async function createStudioMcpServer(
     deps.ctx.request.mode,
     deps.ctx.request.mode === "edit" && isLeanRun(deps.ctx.request)
   );
+
   const helpTool = tool(
     HELP_TOOL,
     TOOL_SHORT.studio_help,
@@ -1295,6 +1434,7 @@ export async function createStudioMcpServer(
     }),
     { annotations: { readOnlyHint: true } }
   );
+
   const all = [
     screenshot,
     renderCheck,
@@ -1345,6 +1485,7 @@ export async function createStudioMcpServer(
     figmaImportTool,
     helpTool,
   ];
+
   return createSdkMcpServer({
     name: "studio",
     version: "0.1.0",
@@ -1354,7 +1495,10 @@ export async function createStudioMcpServer(
 
 export function studioHelp(name: string, allowed: ReadonlySet<string>): string {
   const short = name.replace(/^mcp__studio__/, "");
-  if (!allowed.has(short) || short === HELP_TOOL)
+
+  if (!allowed.has(short) || short === HELP_TOOL) {
     return `No studio tool ${short} in this run. Tools: ${[...allowed].filter((entry) => entry !== HELP_TOOL).join(", ")}.`;
+  }
+
   return TOOL_HELP[short as Exclude<StudioToolName, "studio_help">];
 }

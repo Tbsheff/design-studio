@@ -78,15 +78,22 @@ function useWipe() {
   const [dragging, setDragging] = useState(false);
   const board = useRef<HTMLDivElement>(null);
   const handle = useRef<HTMLDivElement>(null);
+
   const fromPointer = (clientX: number) => {
     const rect = board.current?.getBoundingClientRect();
-    if (rect && rect.width > 0)
+
+    if (rect && rect.width > 0) {
       setPos(clampPct(((clientX - rect.left) / rect.width) * 100));
+    }
   };
+
   const boardProps = {
     ref: board,
     onPointerDown: (event: PointerEvent<HTMLDivElement>) => {
-      if (event.button !== 0) return;
+      if (event.button !== 0) {
+        return;
+      }
+
       event.preventDefault();
       event.currentTarget.setPointerCapture(event.pointerId);
       setDragging(true);
@@ -98,13 +105,19 @@ function useWipe() {
     onPointerUp: () => setDragging(false),
     onPointerCancel: () => setDragging(false),
   };
+
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     const step = KEY_STEP[event.key];
-    if (!step) return;
+
+    if (!step) {
+      return;
+    }
+
     event.preventDefault();
     event.stopPropagation();
     setPos((current) => clampPct(step(current, event.shiftKey)));
   };
+
   return { pos, dragging, boardProps, handle, onKeyDown };
 }
 
@@ -122,6 +135,7 @@ function WipeHandle({
   valueText: string;
 }) {
   const rounded = Math.round(pos);
+
   return (
     <div
       ref={handleRef}
@@ -161,6 +175,7 @@ export function SliderBoard(props: BoardProps) {
   const width = viewport.width * scale;
   const wipe = useWipe();
   const rounded = Math.round(wipe.pos);
+
   return (
     <Stage
       width={width}
@@ -233,22 +248,32 @@ function useDiffMask(
     versionDiff(projectId, older, newer, viewport, controller.signal).then(
       (mask) => {
         url = mask.url;
-        if (controller.signal.aborted) URL.revokeObjectURL(mask.url);
-        else setState({ status: "ready", mask });
+
+        if (controller.signal.aborted) {
+          URL.revokeObjectURL(mask.url);
+        } else {
+          setState({ status: "ready", mask });
+        }
       },
       (error: unknown) => {
-        if (!controller.signal.aborted)
+        if (!controller.signal.aborted) {
           setState({
             status: "error",
             message: error instanceof Error ? error.message : String(error),
           });
+        }
       }
     );
+
     return () => {
       controller.abort();
-      if (url) URL.revokeObjectURL(url);
+
+      if (url) {
+        URL.revokeObjectURL(url);
+      }
     };
   }, [projectId, older, newer, viewport.width, viewport.height, attempt]);
+
   return state;
 }
 
@@ -267,6 +292,7 @@ function OverlayStatus({
       </span>
     );
   }
+
   if (state.status === "error") {
     return (
       <span className="compare-status error" role="alert">
@@ -277,7 +303,9 @@ function OverlayStatus({
       </span>
     );
   }
+
   const pct = state.mask.changedPct;
+
   return (
     <span
       className="compare-status"
@@ -296,6 +324,7 @@ export function OverlayBoard(props: BoardProps) {
   const [attempt, setAttempt] = useState(0);
   const [show, setShow] = useState(true);
   const [opacity, setOpacity] = useState(70);
+
   const state = useDiffMask(
     props.projectId,
     props.older.id,
@@ -303,6 +332,7 @@ export function OverlayBoard(props: BoardProps) {
     viewport,
     attempt
   );
+
   return (
     <Stage
       width={viewport.width * scale}
@@ -378,12 +408,20 @@ let lastPicture: Picture | null = null;
 
 function usePicture() {
   const [picture, setPictureState] = useState<Picture | null>(lastPicture);
+
   const setPicture = (file: File | undefined) => {
-    if (!file || !file.type.startsWith("image/")) return;
-    if (lastPicture) URL.revokeObjectURL(lastPicture.url);
+    if (!file || !file.type.startsWith("image/")) {
+      return;
+    }
+
+    if (lastPicture) {
+      URL.revokeObjectURL(lastPicture.url);
+    }
+
     lastPicture = { url: URL.createObjectURL(file), name: file.name };
     setPictureState(lastPicture);
   };
+
   return { picture, setPicture };
 }
 
@@ -398,15 +436,18 @@ function PicturePicker({
 }) {
   const input = useRef<HTMLInputElement>(null);
   const [over, setOver] = useState(false);
+
   const onChange = (event: ChangeEvent<HTMLInputElement>) => {
     onPick(event.target.files?.[0]);
     event.target.value = "";
   };
+
   const onDrop = (event: DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     setOver(false);
     onPick(event.dataTransfer.files[0]);
   };
+
   const pick = (
     <>
       <input
@@ -426,7 +467,11 @@ function PicturePicker({
       </button>
     </>
   );
-  if (compact) return pick;
+
+  if (compact) {
+    return pick;
+  }
+
   return (
     <div
       className={`compare-ref-empty ${over ? "over" : ""}`}
@@ -450,6 +495,7 @@ export function ReferenceBoard(props: BoardProps) {
   const { picture, setPicture } = usePicture();
   const [opacity, setOpacity] = useState(100);
   const rounded = Math.round(wipe.pos);
+
   return (
     <Stage
       width={width}

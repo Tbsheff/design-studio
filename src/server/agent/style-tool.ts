@@ -38,6 +38,7 @@ const property = z
   .describe(
     "color, font-size, radius, spacing, or one CSS property such as background-color or padding-top. Leave out for all."
   );
+
 const value = z
   .string()
   .trim()
@@ -47,6 +48,7 @@ const value = z
   .describe(
     'Value to match, for example "#1c1f23" or "14px". Compared with the computed value.'
   );
+
 const scope = {
   frame: z
     .string()
@@ -71,6 +73,7 @@ export const findStylesShape = {
     .optional()
     .describe("Only elements with this class."),
 };
+
 export const replaceStyleShape = {
   ...scope,
   token: z
@@ -84,6 +87,7 @@ export const replaceStyleShape = {
 };
 
 const findSchema = z.object(findStylesShape).strict();
+
 const replaceSchema = z
   .object(replaceStyleShape)
   .strict()
@@ -106,22 +110,31 @@ async function pageOf(
   deps: DirectToolDeps,
   ref: string | undefined
 ): Promise<{ url: string; viewport: { width: number; height: number } }> {
-  if (!deps.ctx.previewUrl)
+  if (!deps.ctx.previewUrl) {
     throw new Error(
       "Preview is not running for this direction, so styles cannot be scanned."
     );
+  }
+
   const target = deps.ctx.target;
-  if (target && (!ref || isContextFrame(deps.ctx, ref)))
+
+  if (target && (!ref || isContextFrame(deps.ctx, ref))) {
     return {
       url: pageUrl(deps.ctx.previewUrl, target.path, target.state),
       viewport: { width: target.width, height: target.height },
     };
+  }
+
   const frames = ref ? await canvasFrames(deps) : [];
   const frame = ref ? findFrame(frames, ref) : null;
-  if (ref && !frame && ref !== "f1")
+
+  if (ref && !frame && ref !== "f1") {
     throw new Error(`No frame ${ref} on the canvas.`);
+  }
+
   const state =
     frame && frame.id === target?.id ? target.state : DEFAULT_FRAME_STATE;
+
   return {
     url: pageUrl(deps.ctx.previewUrl, frame?.path ?? "", state),
     viewport: frame
@@ -149,22 +162,28 @@ export async function runFindStyles(
   args: z.input<typeof findSchema>
 ): Promise<ToolText> {
   const parsed = findSchema.safeParse(args);
-  if (!parsed.success)
+
+  if (!parsed.success) {
     return text(`find_styles: ${issues(parsed.error)}`, true);
+  }
+
   try {
     const page = await pageOf(deps, parsed.data.frame);
+
     const result = await scanPageStyles(
       deps.preview,
       page.url,
       page.viewport,
       queryOf(parsed.data)
     );
+
     const report = styleReport(
       result,
       tokenLookupFor(
         await tokenEntriesFor(deps.ctx.project, deps.ctx.direction)
       )
     );
+
     return text(JSON.stringify(report, null, 2));
   } catch (error) {
     return text(
@@ -179,12 +198,20 @@ export async function runReplaceStyle(
   args: z.input<typeof replaceSchema>
 ): Promise<ToolText> {
   const blocked = refusal(deps.ctx, "replace_style");
-  if (blocked) return text(blocked, true);
+
+  if (blocked) {
+    return text(blocked, true);
+  }
+
   const parsed = replaceSchema.safeParse(args);
-  if (!parsed.success)
+
+  if (!parsed.success) {
     return text(`replace_style: ${issues(parsed.error)}`, true);
+  }
+
   try {
     const page = await pageOf(deps, parsed.data.frame);
+
     const matches = matchesOf(
       (
         await scanPageStyles(
@@ -195,26 +222,38 @@ export async function runReplaceStyle(
         )
       ).hits
     ).slice(0, STYLE_REPLACE_MAX);
-    if (matches.length === 0)
+
+    if (matches.length === 0) {
       return text(
         `No element with a source location uses ${parsed.data.value ?? "that value"}.`
       );
+    }
+
     const plan = await planStyleReplace(
       deps.ctx.direction.workTree,
       deps.ctx.project.kind,
       { matches, token: parsed.data.token }
     );
+
     for (const file of plan.changed) {
       const problem = writeProblem(deps.ctx, file.target.relative);
-      if (problem) return text(problem, true);
+
+      if (problem) {
+        return text(problem, true);
+      }
     }
-    for (const file of plan.changed)
+
+    for (const file of plan.changed) {
       await writeAtomic(file.target.file, file.code);
+    }
+
     const files = plan.changed.map((file) => file.target.relative).join(", ");
+
     const classes =
       plan.wrote === "classes" || plan.wrote === "mixed"
         ? ` Wrote classes.`
         : "";
+
     return text(
       `${replaceSummary(plan, parsed.data.token)}.${files ? ` Files: ${files}.` : ""}${classes} The run saves this change in its version, like your file edits.`
     );

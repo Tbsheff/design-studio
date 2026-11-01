@@ -7,8 +7,12 @@ export function ComposerComments({
   count: number;
   onClear: () => void;
 }) {
-  if (count === 0) return null;
+  if (count === 0) {
+    return null;
+  }
+
   const noun = count === 1 ? "comment" : "comments";
+
   return (
     <div className="composer-comments" data-testid="composer-comments">
       <span

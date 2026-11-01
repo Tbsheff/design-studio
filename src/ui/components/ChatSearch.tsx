@@ -37,9 +37,12 @@ function useRunHits(directionId: string | null, query: string): Hits | null {
   useEffect(() => {
     if (!text || !directionId) {
       setHits(null);
+
       return;
     }
+
     let alive = true;
+
     const timer = window.setTimeout(() => {
       searchRunPage(directionId, text)
         .then(
@@ -58,22 +61,31 @@ function useRunHits(directionId: string | null, query: string): Hits | null {
             setHits({ query: text, runs: [], more: false, failed: true })
         );
     }, DEBOUNCE_MS);
+
     return () => {
       alive = false;
       window.clearTimeout(timer);
     };
   }, [directionId, text]);
+
   return hits;
 }
 
 function runLabel(run: RunSummary): string {
   const prompt = run.request.prompt.replace(/\s+/g, " ").trim();
+
   return run.title || prompt || "Untitled run";
 }
 
 function countText(hits: Hits | null, searching: boolean): string {
-  if (!hits || searching) return "";
-  if (hits.failed) return "";
+  if (!hits || searching) {
+    return "";
+  }
+
+  if (hits.failed) {
+    return "";
+  }
+
   return hits.more ? `${SEARCH_LIMIT}+` : String(hits.runs.length);
 }
 
@@ -92,12 +104,18 @@ function HitList({
   onPick: (runId: string) => void;
   onActive: (index: number) => void;
 }) {
-  if (!hits)
+  if (!hits) {
     return searching ? <p className="chat-search-note">Searching…</p> : null;
-  if (hits.failed)
+  }
+
+  if (hits.failed) {
     return <p className="chat-search-note">Search failed. Try again.</p>;
-  if (hits.runs.length === 0)
+  }
+
+  if (hits.runs.length === 0) {
     return <p className="chat-search-note">No run matches “{hits.query}”.</p>;
+  }
+
   return (
     <ul
       className="chat-search-hits"
@@ -148,27 +166,38 @@ export function ChatSearch({
   const searching = text !== "" && hits?.query !== text;
   const runs = hits?.runs ?? [];
   useEffect(() => setActive(0), [hits]);
+
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Escape") {
       event.preventDefault();
       event.stopPropagation();
       onClose();
+
       return;
     }
+
     if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-      if (runs.length === 0) return;
+      if (runs.length === 0) {
+        return;
+      }
+
       event.preventDefault();
       const step = event.key === "ArrowDown" ? 1 : -1;
       setActive((index) => (index + step + runs.length) % runs.length);
+
       return;
     }
+
     const picked = runs[active];
+
     if (event.key === "Enter" && picked) {
       event.preventDefault();
       onPick(picked.id);
     }
   };
+
   const count = countText(hits, searching);
+
   return (
     <div className="chat-search" role="search">
       <div className="chat-search-bar">

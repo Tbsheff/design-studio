@@ -7,6 +7,7 @@ import type {
 import { elementClassInfo } from "./class-info.js";
 
 export const EDIT_TARGETS = ["use", "component", "element"] as const;
+
 export type EditTarget = (typeof EDIT_TARGETS)[number];
 
 type Sourced = Pick<
@@ -54,6 +55,7 @@ async function forwardsClassName(
     scope.project.kind,
     loc
   ).catch(() => null);
+
   return info?.element?.forwardsClassName === true;
 }
 
@@ -79,22 +81,30 @@ export async function chooseEditSite(
   const shared = scope.project.app
     ? sharedSourceOf(element, scope.project.app.appDir)
     : null;
-  if (ask.target === "component" || ask.target === "element")
+
+  if (ask.target === "component" || ask.target === "element") {
     return componentSite(element, shared, true);
+  }
+
   const use =
     shared?.use && shared.name ? { loc: shared.use, name: shared.name } : null;
+
   if (!use || !shared) {
-    if (ask.target === "use")
+    if (ask.target === "use") {
       return {
         error: `${ask.selector} is not the outer element of a shared component use, so there is no use site to edit. Leave out target to edit ${element.source.file}.`,
       };
+    }
+
     return componentSite(element, shared, false);
   }
+
   if (ask.classes && !(await forwardsClassName(scope, element.source))) {
     return {
       error: `<${use.name}> in ${element.source.file} does not pass its className prop to ${ask.selector}, so a class at ${locText(use.loc)} would not reach it. Pass target "component" to change ${element.source.file} (every <${use.name}>), or use set_props for a variant or size.`,
     };
   }
+
   return {
     kind: "use",
     source: use.loc,
@@ -113,6 +123,7 @@ export async function textComesFromData(
     scope.project.kind,
     loc
   ).catch(() => null);
+
   return Boolean(info?.element?.textFromData);
 }
 
@@ -129,19 +140,29 @@ export function siteRequest(
 export function editedAtLabel(
   site: EditSite | undefined
 ): "use" | "component" | "element" {
-  if (site?.kind === "use") return "use";
+  if (site?.kind === "use") {
+    return "use";
+  }
+
   return site?.shared ? "component" : "element";
 }
 
 export function siteNote(site: EditSite): string | null {
-  if (site.kind === "use")
+  if (site.kind === "use") {
     return `Edited this use of <${site.component}> at ${locText(site.source)}; ${site.shared.file} did not change. Pass target "component" to change every ${site.component} instead.`;
-  if (!site.shared) return null;
+  }
+
+  if (!site.shared) {
+    return null;
+  }
+
   const what = site.shared.name
     ? `every ${site.shared.name}`
     : `every use of ${site.shared.file}`;
+
   const back = site.shared.use
     ? ` Leave out target to change only the use at ${locText(site.shared.use)}.`
     : "";
+
   return `${site.shared.file} is a shared component, so this edit changes ${what}.${back}`;
 }

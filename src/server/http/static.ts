@@ -47,27 +47,46 @@ export async function serveStatic(
   requestPath: string
 ): Promise<Response | null> {
   let decoded: string;
+
   try {
     decoded = decodeURIComponent(requestPath);
   } catch {
     return null;
   }
-  if (decoded.includes("\0")) return null;
+
+  if (decoded.includes("\0")) {
+    return null;
+  }
+
   const root = path.resolve(rootDir);
   const target = path.resolve(root, `.${path.posix.normalize(`/${decoded}`)}`);
-  if (!target.startsWith(root + path.sep)) return null;
-  if (path.basename(target) === "index.html") return null;
+
+  if (!target.startsWith(root + path.sep)) {
+    return null;
+  }
+
+  if (path.basename(target) === "index.html") {
+    return null;
+  }
+
   try {
     const info = await stat(target);
-    if (!info.isFile()) return null;
+
+    if (!info.isFile()) {
+      return null;
+    }
   } catch {
     return null;
   }
+
   const bytes = await readFile(target);
+
   const type =
     MIME_TYPES[path.extname(target).toLowerCase()] ??
     "application/octet-stream";
+
   const immutable = target.includes(`${path.sep}assets${path.sep}`);
+
   return new Response(new Uint8Array(bytes), {
     headers: {
       "content-type": type,
@@ -83,16 +102,24 @@ export async function renderIndexHtml(
   config: ServerConfig
 ): Promise<string> {
   let html: string;
+
   try {
     html = await readFile(path.join(rootDir, "index.html"), "utf-8");
   } catch {
     return MISSING_BUILD_PAGE;
   }
+
   const meta =
     `<meta name="studio-token" content="${escapeAttribute(config.studioToken)}">` +
     `<meta name="studio-preview-origin" content="${escapeAttribute(config.previewOrigin)}">`;
+
   const headOpen = /<head[^>]*>/i.exec(html);
-  if (!headOpen) return `${meta}${html}`;
+
+  if (!headOpen) {
+    return `${meta}${html}`;
+  }
+
   const insertAt = headOpen.index + headOpen[0].length;
+
   return `${html.slice(0, insertAt)}${meta}${html.slice(insertAt)}`;
 }

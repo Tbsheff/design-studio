@@ -34,8 +34,10 @@ export function historyKeyOf(
     !(event.metaKey || event.ctrlKey) ||
     event.altKey ||
     event.key.toLowerCase() !== "z"
-  )
+  ) {
     return null;
+  }
+
   return event.shiftKey ? "redo" : "undo";
 }
 
@@ -54,10 +56,22 @@ export function routeHistoryCommand(
   state: ShortcutState,
   modal: () => boolean = modalOpen
 ): boolean {
-  if (kind === "redo" && !state.redo) return false;
-  if (modal()) return true;
-  if (kind === "undo" && state.enabled) state.onUndo();
-  if (kind === "redo" && state.redo?.enabled) state.redo.onRedo();
+  if (kind === "redo" && !state.redo) {
+    return false;
+  }
+
+  if (modal()) {
+    return true;
+  }
+
+  if (kind === "undo" && state.enabled) {
+    state.onUndo();
+  }
+
+  if (kind === "redo" && state.redo?.enabled) {
+    state.redo.onRedo();
+  }
+
   return true;
 }
 
@@ -71,22 +85,36 @@ export function useUndoShortcut(
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       const kind = historyKeyOf(event);
-      if (!kind || editsText(event.target)) return;
-      if (kind === "redo" && !state.current.redo) return;
+
+      if (!kind || editsText(event.target)) {
+        return;
+      }
+
+      if (kind === "redo" && !state.current.redo) {
+        return;
+      }
+
       event.preventDefault();
       routeHistoryCommand(kind, state.current);
     };
+
     const fromPreview = (event: Event) => {
       const kind: HistoryKind =
         (event as CustomEvent<{ redo?: unknown }>).detail?.redo === true
           ? "redo"
           : "undo";
-      if (recentDesktopCommand(kind)) return;
+
+      if (recentDesktopCommand(kind)) {
+        return;
+      }
+
       noteHandledShortcut(kind);
       routeHistoryCommand(kind, state.current);
     };
+
     window.addEventListener("keydown", onKey);
     window.addEventListener(PREVIEW_HISTORY_EVENT, fromPreview);
+
     return () => {
       window.removeEventListener("keydown", onKey);
       window.removeEventListener(PREVIEW_HISTORY_EVENT, fromPreview);
@@ -96,8 +124,10 @@ export function useUndoShortcut(
     if (
       (command.type !== "undo" && command.type !== "redo") ||
       editsText(document.activeElement)
-    )
+    ) {
       return false;
+    }
+
     return routeHistoryCommand(command.type, state.current);
   });
 }

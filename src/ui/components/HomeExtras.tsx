@@ -25,28 +25,41 @@ function HiddenProjectsNote({
     count: number;
     target: string;
   } | null>(null);
+
   const [moving, setMoving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
   const load = () =>
     api
       .hiddenProjects()
       .then(setHidden)
       .catch(() => setHidden(null));
+
   useEffect(() => {
     void load();
   }, []);
-  if (!hidden || hidden.count === 0) return null;
+
+  if (!hidden || hidden.count === 0) {
+    return null;
+  }
+
   const move = async () => {
     setMoving(true);
     setError(null);
+
     try {
       const result = await api.moveHiddenProjects();
       const first = result.failed[0];
-      if (first)
+
+      if (first) {
         setError(
           `Could not move ${result.failed.length} project${result.failed.length === 1 ? "" : "s"}: ${first.error}`
         );
-      if (result.moved.length > 0) onMoved();
+      }
+
+      if (result.moved.length > 0) {
+        onMoved();
+      }
     } catch (err) {
       setError(errorText(err));
     } finally {
@@ -54,6 +67,7 @@ function HiddenProjectsNote({
       await load();
     }
   };
+
   return (
     <div className="home-hidden-note" role="status">
       <span>
@@ -103,6 +117,7 @@ export function ComposerFoot({
   onHiddenMoved,
 }: ComposerFootProps) {
   const homeDir = workspaces?.homeDir ?? null;
+
   return (
     <div className="home-foot">
       <div className="home-foot-row">

@@ -17,10 +17,17 @@ export function recordLayout(
   change: LayoutChange,
   source: CanvasWriteSource
 ): void {
-  if (!recordsLayout(source)) return;
+  if (!recordsLayout(source)) {
+    return;
+  }
+
   const owner = canvas.ownerOf(project);
   const label = layoutLabel(change);
-  if (label === null || owner.headVersionId === null) return;
+
+  if (label === null || owner.headVersionId === null) {
+    return;
+  }
+
   history.record({
     projectId: project.id,
     directionId: owner.id,
@@ -38,34 +45,42 @@ export async function stepLayout(
   kind: LayoutStep
 ): Promise<boolean> {
   let applied = false;
+
   if (change.kind === "canvas") {
     const [made, back] =
       kind === "undo"
         ? [change.after, change.before]
         : [change.before, change.after];
+
     await canvas.update(
       project,
       (current) => {
         const next = revertCanvas(current, made, back);
         applied = next !== null;
+
         return next;
       },
       { source: "restore" }
     );
+
     return applied;
   }
+
   const [made, back] =
     kind === "undo"
       ? [change.after, change.before]
       : [change.before, change.after];
+
   await canvas.links.update(
     project,
     (current) => {
       const next = revertLinks(current, made, back);
       applied = next !== null;
+
       return next;
     },
     "restore"
   );
+
   return applied;
 }

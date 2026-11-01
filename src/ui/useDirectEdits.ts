@@ -47,8 +47,10 @@ interface Options {
 const DEBOUNCE_MS = 250;
 
 function failureText(err: unknown): string {
-  if (err instanceof ApiError && err.status === 409)
+  if (err instanceof ApiError && err.status === 409) {
     return "Agent is running. Wait or cancel.";
+  }
+
   return errorText(err);
 }
 
@@ -57,10 +59,12 @@ export function useDirectEdits(
 ): DirectEdit & { blocked: string | null } {
   const opts = useRef(o);
   opts.current = o;
+
   const bases = useMemo(
     () => o.selections.map((s) => valuesFromStyles(s.styles)),
     [o.selections]
   );
+
   const basesRef = useRef(bases);
   basesRef.current = bases;
   const merged = useMemo(() => mergeValues(bases), [bases]);
@@ -88,8 +92,10 @@ export function useDirectEdits(
 
   const postAll = useCallback((style: Record<string, string | null>) => {
     const port = opts.current.port.current;
-    for (const s of opts.current.selections)
+
+    for (const s of opts.current.selections) {
       port?.post({ type: "preview-style", selector: s.selector, style });
+    }
   }, []);
 
   const resetPreview = useCallback(
@@ -98,7 +104,10 @@ export function useDirectEdits(
   );
 
   const cancel = useCallback(() => {
-    if (timer.current !== null) window.clearTimeout(timer.current);
+    if (timer.current !== null) {
+      window.clearTimeout(timer.current);
+    }
+
     timer.current = null;
     again.current = false;
     setDraft({});
@@ -115,8 +124,10 @@ export function useDirectEdits(
         cancel();
         opts.current.port.current?.post({ type: "preview-reset" });
         opts.current.onStale(err.message);
+
         return;
       }
+
       resetPreview();
       setDraft({});
       setShifts({});
@@ -128,53 +139,81 @@ export function useDirectEdits(
   const pendingStyle = useCallback(() => {
     const style = changedProps(draftRef.current, mergedRef.current.values);
     const rewrite = opts.current.rewrite;
-    if (!rewrite || Object.keys(style).length === 0) return style;
+
+    if (!rewrite || Object.keys(style).length === 0) {
+      return style;
+    }
+
     const next = changedProps(rewrite(style), mergedRef.current.values);
     const moved = changedProps(next, { ...mergedRef.current.values, ...style });
+
     if (Object.keys(moved).length > 0) {
       setDraft({ ...draftRef.current, ...moved });
       postAll(moved);
     }
+
     return next;
   }, [postAll, setDraft]);
 
   const flush = useCallback(async () => {
     timer.current = null;
+
     if (inflight.current) {
       again.current = true;
+
       return;
     }
+
     const cur = opts.current;
-    if (blocked || !cur.directionId) return;
+
+    if (blocked || !cur.directionId) {
+      return;
+    }
+
     const style = pendingStyle();
     const sent = shifts.current;
     const items = ownEdits(cur.selections, basesRef.current, style, sent);
     const edits = items.map((item) => item.edit);
-    if (edits.length === 0) return;
+
+    if (edits.length === 0) {
+      return;
+    }
+
     setStatus({ kind: "saving" });
+
     const problem = (message: string) =>
       setStatus({ kind: "error", message, code: "optimistic_mismatch" });
+
     const optimistic = edits.map((edit) =>
       startOptimistic(cur.port.current, edit, problem)
     );
+
     const request = api
       .directEditBatch(cur.projectId, cur.directionId, { edits })
       .then((result) => {
         optimistic.forEach((one, index) =>
           one.saved(result.applied[index]?.tailwind)
         );
-        for (const item of items)
+
+        for (const item of items) {
           cur.onCommitted({ selector: item.edit.selector, style: item.style });
+        }
+
         setShifts(withoutShifts(shifts.current, [], sent));
         setStatus({ kind: "saved", at: Date.now() });
       })
       .catch((err: unknown) => {
-        for (const one of optimistic) one.failed(failureText(err));
+        for (const one of optimistic) {
+          one.failed(failureText(err));
+        }
+
         fail(err);
       });
+
     inflight.current = request;
     await request;
     inflight.current = null;
+
     if (again.current) {
       again.current = false;
       void flush();
@@ -182,20 +221,31 @@ export function useDirectEdits(
   }, [blocked, fail, pendingStyle, setShifts]);
 
   const commitSoon = useCallback(() => {
-    if (timer.current !== null) window.clearTimeout(timer.current);
+    if (timer.current !== null) {
+      window.clearTimeout(timer.current);
+    }
+
     timer.current = window.setTimeout(() => void flush(), DEBOUNCE_MS);
   }, [flush]);
 
   const commit = useCallback(() => {
-    if (timer.current !== null) window.clearTimeout(timer.current);
+    if (timer.current !== null) {
+      window.clearTimeout(timer.current);
+    }
+
     void flush();
   }, [flush]);
 
   const preview = useCallback(
     (patch: Partial<StyleValues>) => {
-      if (blocked) return;
-      if (Object.keys(patch).some((prop) => prop in shifts.current))
+      if (blocked) {
+        return;
+      }
+
+      if (Object.keys(patch).some((prop) => prop in shifts.current)) {
         setShifts(withoutShifts(shifts.current, Object.keys(patch)));
+      }
+
       setDraft({ ...draftRef.current, ...patch });
       postAll(patch);
       setStatus((s) => (s.kind === "error" ? { kind: "idle" } : s));
@@ -210,21 +260,32 @@ export function useDirectEdits(
       bounds: Omit<Shift, "delta"> = {},
       part?: ShiftPart
     ) => {
-      if (blocked) return;
+      if (blocked) {
+        return;
+      }
+
       const next = addShift(shifts.current, props, delta, bounds, part);
       setShifts(next);
       const draft = { ...draftRef.current };
-      for (const prop of props) delete draft[prop];
+
+      for (const prop of props) {
+        delete draft[prop];
+      }
+
       setDraft(draft);
       const port = opts.current.port.current;
+
       const only = Object.fromEntries(
         props.flatMap((prop) => (next[prop] ? [[prop, next[prop]]] : []))
       ) as Shifts;
+
       opts.current.selections.forEach((s, i) => {
         const own = basesRef.current[i];
         const style = own ? shiftedStyle(own, only) : {};
-        if (Object.keys(style).length > 0)
+
+        if (Object.keys(style).length > 0) {
           port?.post({ type: "preview-style", selector: s.selector, style });
+        }
       });
       setStatus((s) => (s.kind === "error" ? { kind: "idle" } : s));
     },
@@ -234,15 +295,21 @@ export function useDirectEdits(
   const revert = useCallback(
     (props: DirectStyleProperty[]) => {
       const next = { ...draftRef.current };
-      for (const prop of props) delete next[prop];
+
+      for (const prop of props) {
+        delete next[prop];
+      }
+
       setDraft(next);
       setShifts(withoutShifts(shifts.current, props));
       const port = opts.current.port.current;
       opts.current.selections.forEach((s, i) => {
         const own = basesRef.current[i];
+
         const style = Object.fromEntries(
           props.map((prop) => [prop, own?.[prop] ? own[prop] : null])
         );
+
         port?.post({ type: "preview-style", selector: s.selector, style });
       });
     },
@@ -257,7 +324,10 @@ export function useDirectEdits(
 
   const settle = useCallback(async () => {
     cancel();
-    while (inflight.current) await inflight.current;
+
+    while (inflight.current) {
+      await inflight.current;
+    }
   }, [cancel]);
 
   const drain = useCallback(async () => {
@@ -265,14 +335,20 @@ export function useDirectEdits(
       window.clearTimeout(timer.current);
       await flush();
     }
-    while (inflight.current) await inflight.current;
+
+    while (inflight.current) {
+      await inflight.current;
+    }
   }, [flush]);
 
   const absorb = useCallback(
     (style: Partial<StyleValues>) => {
       const next = { ...draftRef.current };
-      for (const prop of Object.keys(style) as DirectStyleProperty[])
+
+      for (const prop of Object.keys(style) as DirectStyleProperty[]) {
         delete next[prop];
+      }
+
       setDraft(next);
       setShifts(withoutShifts(shifts.current, Object.keys(style)));
       setStatus({ kind: "saved", at: Date.now() });
@@ -285,8 +361,12 @@ export function useDirectEdits(
 
   useEffect(() => {
     o.control.current = { cancel, settle, commitText };
+
     return () => {
-      if (o.control.current?.cancel === cancel) o.control.current = null;
+      if (o.control.current?.cancel === cancel) {
+        o.control.current = null;
+      }
+
       if (timer.current !== null) {
         window.clearTimeout(timer.current);
         void flush();
@@ -298,12 +378,17 @@ export function useDirectEdits(
     () => ({ ...merged.values, ...draft }),
     [merged, draft]
   );
+
   const mixed = useMemo(() => {
     const set = new Set(merged.mixed);
-    for (const prop of Object.keys(draft) as DirectStyleProperty[])
+
+    for (const prop of Object.keys(draft) as DirectStyleProperty[]) {
       set.delete(prop);
+    }
+
     return set as ReadonlySet<DirectStyleProperty>;
   }, [merged, draft]);
+
   const dirty = useMemo(
     () => [
       ...new Set([
@@ -313,10 +398,12 @@ export function useDirectEdits(
     ],
     [draft, shifted]
   );
+
   const scope = useMemo(
     () => ({ projectId: o.projectId, directionId: o.directionId }),
     [o.projectId, o.directionId]
   );
+
   return {
     values,
     mixed,

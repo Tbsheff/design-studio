@@ -5,6 +5,7 @@ import { Icon } from "./Icon";
 export async function copyText(text: string): Promise<boolean> {
   try {
     await navigator.clipboard.writeText(text);
+
     return true;
   } catch {
     return false;
@@ -22,12 +23,18 @@ export function CopyButton({
 }) {
   const [state, setState] = useState<"idle" | "copied" | "failed">("idle");
   useEffect(() => {
-    if (state === "idle") return;
+    if (state === "idle") {
+      return;
+    }
+
     const id = window.setTimeout(() => setState("idle"), 1400);
+
     return () => window.clearTimeout(id);
   }, [state]);
+
   const tip =
     state === "copied" ? "Copied" : state === "failed" ? "Copy failed" : label;
+
   return (
     <button
       type="button"

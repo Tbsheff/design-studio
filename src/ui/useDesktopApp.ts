@@ -13,6 +13,7 @@ function projectForFolder(
   folder: string
 ): Project | undefined {
   const clean = folder.replace(/\/+$/, "");
+
   return projects.find(
     (project) =>
       project.imported?.sourcePath === clean ||
@@ -29,15 +30,24 @@ function focusNewProject(): void {
 }
 
 function textEdit(kind: "undo" | "redo"): boolean {
-  if (!isTypingTarget(document.activeElement)) return false;
+  if (!isTypingTarget(document.activeElement)) {
+    return false;
+  }
+
   document.execCommand(kind);
+
   return true;
 }
 
 async function openFolder(folder: string): Promise<string> {
   const existing = projectForFolder(await api.listProjects(), folder);
-  if (existing) return existing.id;
+
+  if (existing) {
+    return existing.id;
+  }
+
   const { project } = await api.importProject(folder);
+
   return project.id;
 }
 
@@ -56,11 +66,18 @@ function hasFiles(event: DragEvent): boolean {
 
 function droppedFolder(event: DragEvent, bridge: DropBridge): string | null {
   for (const item of Array.from(event.dataTransfer?.items ?? [])) {
-    if (item.kind !== "file" || !item.webkitGetAsEntry()?.isDirectory) continue;
+    if (item.kind !== "file" || !item.webkitGetAsEntry()?.isDirectory) {
+      continue;
+    }
+
     const file = item.getAsFile();
     const folder = file ? bridge.pathForFile?.(file) : "";
-    if (folder) return folder;
+
+    if (folder) {
+      return folder;
+    }
   }
+
   return null;
 }
 
@@ -75,20 +92,39 @@ function ownsDrop(event: DragEvent): boolean {
 function useFolderDrop(): void {
   useEffect(() => {
     const bridge = dropBridge();
-    if (!bridge?.pathForFile || !bridge.openDropped) return undefined;
+
+    if (!bridge?.pathForFile || !bridge.openDropped) {
+      return undefined;
+    }
+
     const onDragOver = (event: DragEvent) => {
-      if (ownsDrop(event) || !hasFiles(event)) return;
+      if (ownsDrop(event) || !hasFiles(event)) {
+        return;
+      }
+
       event.preventDefault();
-      if (event.dataTransfer) event.dataTransfer.dropEffect = "copy";
+
+      if (event.dataTransfer) {
+        event.dataTransfer.dropEffect = "copy";
+      }
     };
+
     const onDrop = (event: DragEvent) => {
-      if (ownsDrop(event) || !hasFiles(event)) return;
+      if (ownsDrop(event) || !hasFiles(event)) {
+        return;
+      }
+
       event.preventDefault();
       const folder = droppedFolder(event, bridge);
-      if (folder) bridge.openDropped?.(folder);
+
+      if (folder) {
+        bridge.openDropped?.(folder);
+      }
     };
+
     window.addEventListener("dragover", onDragOver);
     window.addEventListener("drop", onDrop);
+
     return () => {
       window.removeEventListener("dragover", onDragOver);
       window.removeEventListener("drop", onDrop);
@@ -123,6 +159,7 @@ function useAppCommands(setError: (error: string | null) => void): void {
     } else if (command.type === "command") {
       runAppCommand(command.id);
     }
+
     return true;
   });
 }
@@ -135,5 +172,6 @@ export function useDesktopApp(activeProjectId: string | null): string | null {
   );
   useAppCommands(setError);
   useFolderDrop();
+
   return error;
 }

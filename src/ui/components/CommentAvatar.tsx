@@ -20,6 +20,7 @@ export function AvatarFace({
   author,
 }: AvatarProps) {
   const face = author ? authorInitial(author) : initial;
+
   return (
     <span
       className={`avatar-pin ${tone}${flip ? " flip" : ""}${author ? " agent" : ""}`}
@@ -42,7 +43,10 @@ export function CommentAuthor({
   author: string | undefined;
   viewer?: boolean;
 }) {
-  if (!author) return null;
+  if (!author) {
+    return null;
+  }
+
   return (
     <span className="comment-author" data-testid="comment-author">
       <span className="comment-author-face" aria-hidden="true">

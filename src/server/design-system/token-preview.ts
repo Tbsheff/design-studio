@@ -25,6 +25,7 @@ const cache = new Map<string, TokenSource>();
 async function stampOf(file: string): Promise<string | null> {
   try {
     const info = await stat(file);
+
     return `${info.mtimeMs}:${info.size}`;
   } catch {
     return null;
@@ -39,7 +40,9 @@ async function readSource(
     readFile(path.join(workTree, TOKENS_FILE), "utf-8"),
     readManifest(workTree),
   ]);
+
   const parsed = parseTokenFile(text);
+
   return {
     stamp,
     file: parsed.file,
@@ -50,19 +53,28 @@ async function readSource(
 
 async function loadTokenSource(workTree: string): Promise<TokenSource | null> {
   const key = path.resolve(workTree);
+
   const [tokens, pack] = await Promise.all([
     stampOf(path.join(key, TOKENS_FILE)),
     stampOf(path.join(key, PACK_FILE)),
   ]);
+
   if (tokens === null || pack === null) {
     cache.delete(key);
+
     return null;
   }
+
   const stamp = `${tokens}|${pack}`;
   const cached = cache.get(key);
-  if (cached?.stamp === stamp) return cached;
+
+  if (cached?.stamp === stamp) {
+    return cached;
+  }
+
   const source = await readSource(key, stamp);
   cache.set(key, source);
+
   return source;
 }
 
@@ -74,8 +86,9 @@ export function invalidateTokenSourceOnChange(
   workTree: string,
   paths: string[]
 ): void {
-  if (paths.includes(TOKENS_FILE) || paths.includes(PACK_FILE))
+  if (paths.includes(TOKENS_FILE) || paths.includes(PACK_FILE)) {
     invalidateTokenSource(workTree);
+  }
 }
 
 export async function previewTokens(
@@ -84,22 +97,32 @@ export async function previewTokens(
 ): Promise<TokenPreviewResult> {
   const changes = parseTokenChanges(raw);
   const source = await loadTokenSource(workTree);
-  if (source === null)
+
+  if (source === null) {
     throw new DirectEditError(
       "no_design_system",
       "This direction has no design system"
     );
-  if (source.file === null)
+  }
+
+  if (source.file === null) {
     throw new DirectEditError(
       "tokens_invalid",
       source.error ?? "tokens.json is invalid"
     );
+  }
+
   validateTokenChanges(source.file, changes);
   const next = applyTokenChanges(source.file, changes);
+
   const compiled = compileTokens(next, {
     mode: source.mode,
     only: new Set(changes.map((change) => change.path)),
   });
-  if (compiled.errors.length > 0) return { css: "", errors: compiled.errors };
+
+  if (compiled.errors.length > 0) {
+    return { css: "", errors: compiled.errors };
+  }
+
   return { css: compiled.css, errors: [] };
 }

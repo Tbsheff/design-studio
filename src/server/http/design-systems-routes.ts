@@ -49,6 +49,7 @@ import type { VersionStore } from "../types.js";
 
 export const MAX_DRAFT_IMAGES = 8;
 export const MAX_DRAFT_IMAGE_BYTES = 8 * 1024 * 1024;
+
 const IMAGE_TYPES = new Set([
   "image/png",
   "image/jpeg",
@@ -87,22 +88,29 @@ function asFiles(value: unknown): File[] {
     : value === undefined
       ? []
       : [value];
+
   return list.filter((item): item is File => item instanceof File);
 }
 
 async function readImages(files: File[]): Promise<ImageInput[]> {
-  if (files.length > MAX_DRAFT_IMAGES)
+  if (files.length > MAX_DRAFT_IMAGES) {
     throw new BadRequestError(`Add at most ${MAX_DRAFT_IMAGES} images`);
+  }
+
   return Promise.all(
     files.map(async (file) => {
-      if (!IMAGE_TYPES.has(file.type))
+      if (!IMAGE_TYPES.has(file.type)) {
         throw new BadRequestError(
           `${file.name}: use PNG, JPEG, GIF or WebP images`
         );
-      if (file.size > MAX_DRAFT_IMAGE_BYTES)
+      }
+
+      if (file.size > MAX_DRAFT_IMAGE_BYTES) {
         throw new BadRequestError(
           `${file.name} is larger than ${MAX_DRAFT_IMAGE_BYTES / 1024 / 1024} MB`
         );
+      }
+
       return {
         name: file.name,
         mime: file.type,
@@ -116,9 +124,15 @@ async function readTokensUpload(
   value: unknown
 ): Promise<{ name: string; text: string } | null> {
   const [file] = asFiles(value);
-  if (!file) return null;
-  if (file.size > MAX_TOKENS_FILE_BYTES)
+
+  if (!file) {
+    return null;
+  }
+
+  if (file.size > MAX_TOKENS_FILE_BYTES) {
     throw new BadRequestError(`${file.name} is larger than 2 MB`);
+  }
+
   return { name: file.name || "tokens.json", text: await file.text() };
 }
 
@@ -130,16 +144,20 @@ async function readDraftBody(
     !(c.req.header("content-type") ?? "")
       .toLowerCase()
       .startsWith("multipart/form-data")
-  )
+  ) {
     return { raw: await readBody(c), tokensFile: null, images: [] };
+  }
+
   const form = await c.req.parseBody({ all: true });
   const text = typeof form.request === "string" ? form.request : "{}";
   let raw: unknown;
+
   try {
     raw = JSON.parse(text);
   } catch {
     throw new BadRequestError("request must be JSON");
   }
+
   return {
     raw,
     tokensFile: await readTokensUpload(form.tokensFile),
@@ -153,8 +171,11 @@ async function writeDraftFiles(
 ): Promise<void> {
   for (const file of files) {
     const target = path.join(workTree, file.path);
-    if (!target.startsWith(workTree + path.sep))
+
+    if (!target.startsWith(workTree + path.sep)) {
       throw new Error(`draft file outside the work tree: ${file.path}`);
+    }
+
     await mkdir(path.dirname(target), { recursive: true });
     await writeFile(target, file.content);
   }
@@ -186,15 +207,18 @@ function metaFile(
     })),
     files: [KIT_PAGE_FILE, ...source.files.map((file) => file.path)],
   };
+
   return { path: META_FILE, content: `${JSON.stringify(meta, null, 2)}\n` };
 }
 
 function librarySource(pack: LoadedPack): BackingSource {
   const { name, mode, fonts } = pack.manifest;
+
   const coverage = {
     path: COVERAGE_FILE,
     content: `${JSON.stringify(libraryCoverage(pack), null, 2)}\n`,
   };
+
   return {
     name,
     kitHtml: renderKitPage({
@@ -209,8 +233,11 @@ function librarySource(pack: LoadedPack): BackingSource {
 
 function packParam(c: Context): string {
   const id = c.req.param("id") ?? "";
-  if (!/^[a-z0-9][a-z0-9-]{0,63}$/.test(id))
+
+  if (!/^[a-z0-9][a-z0-9-]{0,63}$/.test(id)) {
     throw new BadRequestError("invalid pack id");
+  }
+
   return id;
 }
 
@@ -230,15 +257,18 @@ export function registerDesignSystemRoutes(
     images: ImageInput[]
   ): Promise<Project> => {
     await versions.ensureRepo(created);
+
     const attachments = await Promise.all(
       images.map((image) => projects.saveAttachment(created.id, image))
     );
+
     const workTree = projects.mainDirection(created).workTree;
     await writeDraftFiles(workTree, [
       { path: KIT_PAGE_FILE, content: source.kitHtml },
       ...source.files,
       metaFile(source, pack, attachments),
     ]);
+
     return deps.finishCreate(created, pack);
   };
 
@@ -253,7 +283,9 @@ export function registerDesignSystemRoutes(
       kind: "html",
       designSystemFor: pack.manifest.id,
     });
+
     let project: Project;
+
     try {
       project = await fillBacking(created, source, pack, images);
     } catch (error) {
@@ -267,7 +299,9 @@ export function registerDesignSystemRoutes(
         );
       throw error;
     }
+
     deps.watch(project, projects.mainDirection(project));
+
     return project;
   };
 
@@ -283,6 +317,7 @@ export function registerDesignSystemRoutes(
     const draft = assembleDraft(request, base, emptyHarvested(), KIT_GROUPS);
     const pack = await library.createUserPack(draft.pack);
     let project: Project;
+
     try {
       project = await createBacking(
         {
@@ -305,6 +340,7 @@ export function registerDesignSystemRoutes(
         );
       throw error;
     }
+
     live.start({
       project,
       packId: pack.manifest.id,
@@ -313,6 +349,7 @@ export function registerDesignSystemRoutes(
       imageCount: images.length,
       autoImprove,
     });
+
     return {
       project,
       pack: pack.summary,
@@ -324,12 +361,15 @@ export function registerDesignSystemRoutes(
   app.post("/api/design-systems/draft", async (c) => {
     const started = Date.now();
     const body = await readDraftBody(c, deps.readBody);
+
     const merged =
       body.tokensFile && typeof body.raw === "object" && body.raw !== null
         ? { ...body.raw, tokensFile: body.tokensFile }
         : body.raw;
+
     const request = parseDraftRequest(merged, body.images.length);
-    if (deps.live)
+
+    if (deps.live) {
       return c.json(
         await createLive(
           deps.live,
@@ -339,13 +379,17 @@ export function registerDesignSystemRoutes(
           c.req.query("improve") !== "off"
         )
       );
+    }
+
     const draft = await buildDraft(
       request,
       { registry: library.registry, fetcher },
       { allowLoopback: deps.allowLoopback, imageCount: body.images.length }
     );
+
     const pack = await library.createUserPack(draft.pack);
     let project: Project;
+
     try {
       project = await createBacking(
         {
@@ -368,48 +412,66 @@ export function registerDesignSystemRoutes(
         );
       throw error;
     }
+
     const result: DesignSystemDraftResult = {
       project,
       pack: pack.summary,
       coverage: draft.coverage,
       ms: Date.now() - started,
     };
+
     return c.json(result);
   });
 
   app.post("/api/packs/:id/editor", async (c) => {
     const id = packParam(c);
     const pack = await library.registry.get(id);
-    if (!pack) throw new NotFoundError(`unknown pack: ${id}`);
-    if (pack.source !== "user")
+
+    if (!pack) {
+      throw new NotFoundError(`unknown pack: ${id}`);
+    }
+
+    if (pack.source !== "user") {
       throw new BadRequestError(
         `${pack.manifest.name} is a built-in design system; make a copy to edit it`
       );
+    }
+
     const result: OpenPackEditorResult = await editorLock(id, async () => {
       const existing = (await projects.list()).find(
         (project) =>
           project.designSystemFor === id && !project.designSystemDeleted
       );
-      if (existing) return { project: existing, created: false };
+
+      if (existing) {
+        return { project: existing, created: false };
+      }
+
       return {
         project: await createBacking(librarySource(pack), pack, []),
         created: true,
       };
     });
+
     return c.json(result);
   });
 
   app.get("/api/projects/:pid/design-system-draft", async (c) => {
     const project = await projects.get(c.req.param("pid"));
-    if (!project.designSystemFor)
+
+    if (!project.designSystemFor) {
       throw new NotFoundError("This project is not a design-system project");
+    }
+
     const workTree = projects.mainDirection(project).workTree;
+
     const info: DesignSystemDraftInfo = {
       packId: project.designSystemFor,
       coverage: await readCoverage(workTree),
       check: await checkDesignSystem(workTree),
       sources: (await deps.live?.read(project.id)) ?? null,
     };
+
     return c.json(info);
   });
 }

@@ -9,7 +9,10 @@ import { Icon } from "./Icon";
 export const RunCommentsContext = createContext<CommentsControl | null>(null);
 
 function idsOf(request: RunRequest | null | undefined): string[] {
-  if (!request) return [];
+  if (!request) {
+    return [];
+  }
+
   return [
     ...(request.comments ?? []).map((comment) => comment.id),
     ...(request.commentIds ?? []),
@@ -17,7 +20,10 @@ function idsOf(request: RunRequest | null | undefined): string[] {
 }
 
 function replyText(run: RunView): string {
-  if (run.summary?.finalText) return run.summary.finalText;
+  if (run.summary?.finalText) {
+    return run.summary.finalText;
+  }
+
   return run.parts
     .flatMap((part) => (part.kind === "text" ? [part.text] : []))
     .join("\n");
@@ -26,7 +32,10 @@ function replyText(run: RunView): string {
 type LinkState = "done" | "resolved" | "open";
 
 function stateOf(comment: DesignComment, done: number[] | null): LinkState {
-  if (comment.status === "resolved") return "resolved";
+  if (comment.status === "resolved") {
+    return "resolved";
+  }
+
   return done?.includes(comment.n) ? "done" : "open";
 }
 
@@ -74,6 +83,7 @@ function resolvable(
   const open = linked.filter(
     (comment) => comment.status !== "resolved" && comment.status !== "sent"
   );
+
   return done === null
     ? open
     : open.filter((comment) => done.includes(comment.n));
@@ -83,21 +93,34 @@ export function RunCommentsCard({ run }: { run: RunView }) {
   const control = useContext(RunCommentsContext);
   const [busy, setBusy] = useState(false);
   const ids = new Set([...idsOf(run.summary?.request), ...idsOf(run.request)]);
-  if (!control || ids.size === 0 || run.status === "running") return null;
+
+  if (!control || ids.size === 0 || run.status === "running") {
+    return null;
+  }
+
   const linked = control.comments.filter((comment) => ids.has(comment.id));
-  if (linked.length === 0) return null;
+
+  if (linked.length === 0) {
+    return null;
+  }
+
   const done = commentsDone(replyText(run));
   const toResolve = run.status === "completed" ? resolvable(linked, done) : [];
+
   const resolve = async () => {
     setBusy(true);
+
     try {
-      for (const comment of toResolve)
+      for (const comment of toResolve) {
         await control.update(comment.id, { status: "resolved" });
+      }
     } finally {
       setBusy(false);
     }
   };
+
   const noun = toResolve.length === 1 ? "comment" : "comments";
+
   return (
     <section
       className="run-comments"

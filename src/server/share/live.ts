@@ -65,8 +65,12 @@ export interface LiveHub {
 }
 
 function publicCursor(room: Room, viewer: Viewer): SharePresenceCursor | null {
-  if (!viewer.cursor) return null;
+  if (!viewer.cursor) {
+    return null;
+  }
+
   const frame = room.frames[viewer.cursor.frame];
+
   return {
     linkId: room.linkId,
     viewer: viewer.id,
@@ -84,16 +88,20 @@ export function createLiveHub(): LiveHub {
   const studioAt = new Map<string, number>();
 
   const toStudio = (projectId: string, event: SharePresenceEvent): void => {
-    for (const send of studio.get(projectId) ?? []) send(event);
+    for (const send of studio.get(projectId) ?? []) {
+      send(event);
+    }
   };
 
   const stateOf = (projectId: string): SharePresenceEvent => {
     const own = [...rooms.values()].filter((r) => r.projectId === projectId);
+
     const cursors = own.flatMap((room) =>
       [...room.viewers.values()]
         .map((v) => publicCursor(room, v))
         .filter((c): c is SharePresenceCursor => c !== null)
     );
+
     return {
       type: "state",
       cursors,
@@ -104,7 +112,11 @@ export function createLiveHub(): LiveHub {
 
   const roomOf = (record: ShareRecord): Room => {
     const found = rooms.get(record.id);
-    if (found) return found;
+
+    if (found) {
+      return found;
+    }
+
     const room: Room = {
       linkId: record.id,
       projectId: record.projectId,
@@ -112,16 +124,26 @@ export function createLiveHub(): LiveHub {
       studioCursor: record.studioCursor === true,
       viewers: new Map(),
     };
+
     rooms.set(record.id, room);
+
     return room;
   };
 
   const leave = (linkId: string, key: string): void => {
     const room = rooms.get(linkId);
     const viewer = room?.viewers.get(key);
-    if (!room || !viewer) return;
+
+    if (!room || !viewer) {
+      return;
+    }
+
     room.viewers.delete(key);
-    if (room.viewers.size === 0) rooms.delete(linkId);
+
+    if (room.viewers.size === 0) {
+      rooms.delete(linkId);
+    }
+
     toStudio(room.projectId, { type: "leave", linkId, viewer: viewer.id });
     toStudio(room.projectId, stateOf(room.projectId));
   };
@@ -129,7 +151,11 @@ export function createLiveHub(): LiveHub {
   return {
     join(record, send, close) {
       const room = roomOf(record);
-      if (room.viewers.size >= SHARE_LIVE_VIEWERS_MAX) return null;
+
+      if (room.viewers.size >= SHARE_LIVE_VIEWERS_MAX) {
+        return null;
+      }
+
       const viewer: Viewer = {
         key: randomBytes(18).toString("base64url"),
         id: randomBytes(6).toString("base64url"),
@@ -139,28 +165,48 @@ export function createLiveHub(): LiveHub {
         at: 0,
         cursor: null,
       };
+
       room.viewers.set(viewer.key, viewer);
       toStudio(room.projectId, stateOf(room.projectId));
+
       return { key: viewer.key, id: viewer.id };
     },
     leave,
     cursor(linkId, input) {
       const room = rooms.get(linkId);
       const viewer = room?.viewers.get(input.key);
-      if (!room || !viewer) return "gone";
+
+      if (!room || !viewer) {
+        return "gone";
+      }
+
       const now = Date.now();
-      if (now - viewer.at < CURSOR_MIN_MS) return "skip";
+
+      if (now - viewer.at < CURSOR_MIN_MS) {
+        return "skip";
+      }
+
       viewer.at = now;
       viewer.name = input.name;
+
       if (input.frame === null || !room.frames[input.frame]) {
-        if (!viewer.cursor) return "ok";
+        if (!viewer.cursor) {
+          return "ok";
+        }
+
         viewer.cursor = null;
         toStudio(room.projectId, { type: "leave", linkId, viewer: viewer.id });
+
         return "ok";
       }
+
       viewer.cursor = { frame: input.frame, x: input.x, y: input.y };
       const shown = publicCursor(room, viewer);
-      if (shown) toStudio(room.projectId, { type: "cursor", cursor: shown });
+
+      if (shown) {
+        toStudio(room.projectId, { type: "cursor", cursor: shown });
+      }
+
       return "ok";
     },
     subscribeStudio(projectId, send) {
@@ -168,34 +214,57 @@ export function createLiveHub(): LiveHub {
       set.add(send);
       studio.set(projectId, set);
       send(stateOf(projectId));
+
       return () => {
         set.delete(send);
-        if (set.size === 0) studio.delete(projectId);
+
+        if (set.size === 0) {
+          studio.delete(projectId);
+        }
       };
     },
     studioCursor(projectId, input) {
       const now = Date.now();
-      if (input && now - (studioAt.get(projectId) ?? 0) < STUDIO_CURSOR_MIN_MS)
+
+      if (
+        input &&
+        now - (studioAt.get(projectId) ?? 0) < STUDIO_CURSOR_MIN_MS
+      ) {
         return;
+      }
+
       studioAt.set(projectId, now);
+
       for (const room of rooms.values()) {
-        if (room.projectId !== projectId || !room.studioCursor) continue;
+        if (room.projectId !== projectId || !room.studioCursor) {
+          continue;
+        }
+
         const frame = !input?.frameId
           ? -1
           : room.frames.length === 1 && !room.frames[0]?.id
             ? 0
             : room.frames.findIndex((f) => f.id === input.frameId);
+
         const data =
           frame >= 0 && input
             ? { frame, x: Math.round(input.x), y: Math.round(input.y) }
             : null;
-        for (const viewer of room.viewers.values()) viewer.send("studio", data);
+
+        for (const viewer of room.viewers.values()) {
+          viewer.send("studio", data);
+        }
       }
     },
     update(record) {
       const room = rooms.get(record.id);
-      if (!room) return;
+
+      if (!room) {
+        return;
+      }
+
       room.frames = record.frames;
+
       const frames = record.frames.map((f) => ({
         name: f.name,
         width: f.width,
@@ -203,32 +272,52 @@ export function createLiveHub(): LiveHub {
         cssHeight: f.cssHeight,
         ...(f.path ? { path: f.path } : {}),
       }));
-      for (const viewer of room.viewers.values())
+
+      for (const viewer of room.viewers.values()) {
         viewer.send("frames", { rev: record.rev ?? 0, frames });
+      }
     },
     setStudioCursor(record) {
       const room = rooms.get(record.id);
-      if (!room) return;
+
+      if (!room) {
+        return;
+      }
+
       room.studioCursor = record.studioCursor === true;
-      if (!room.studioCursor)
-        for (const viewer of room.viewers.values()) viewer.send("studio", null);
+
+      if (!room.studioCursor) {
+        for (const viewer of room.viewers.values()) {
+          viewer.send("studio", null);
+        }
+      }
+
       toStudio(room.projectId, stateOf(room.projectId));
     },
     async close(linkId) {
       const room = rooms.get(linkId);
-      if (!room) return;
+
+      if (!room) {
+        return;
+      }
+
       rooms.delete(linkId);
+
       const closing = [...room.viewers.values()].map((viewer) => {
         viewer.send("end", {});
+
         return viewer.close();
       });
+
       toStudio(room.projectId, stateOf(room.projectId));
       await Promise.race([
         Promise.all(closing),
         new Promise((resolve) => setTimeout(resolve, 500).unref()),
       ]);
-      if (closing.length > 0)
+
+      if (closing.length > 0) {
         await new Promise((resolve) => setTimeout(resolve, 50).unref());
+      }
     },
     count: (linkId) => rooms.get(linkId)?.viewers.size ?? 0,
     hasRoom: (linkId) => rooms.has(linkId),
@@ -254,14 +343,17 @@ export function createLiveRefresher(
   const refresh = async (record: ShareRecord, head: string): Promise<void> => {
     busy.add(record.id);
     const dir = store.framesDir(record.id);
+
     try {
       const source = await resolveSource(deps, record.projectId, head);
+
       const frames = record.frames.map((f) => ({
         name: f.name,
         width: f.width,
         height: f.height,
         ...(f.path ? { path: f.path } : {}),
       }));
+
       const shots = await captureShare(
         deps.preview,
         source,
@@ -269,13 +361,18 @@ export function createLiveRefresher(
         dir,
         record.frames.map((f) => f.id)
       );
+
       const next = await store.update(record.id, {
         versionId: source.version.id,
         frames: shots,
         rev: (record.rev ?? 0) + 1,
       });
-      if (next) hub.update(next);
-      else await rm(dir, { recursive: true, force: true });
+
+      if (next) {
+        hub.update(next);
+      } else {
+        await rm(dir, { recursive: true, force: true });
+      }
     } catch (error) {
       failed.set(record.id, head);
       console.error("[share] live refresh failed", error);
@@ -285,13 +382,19 @@ export function createLiveRefresher(
   };
 
   const check = async (record: ShareRecord): Promise<void> => {
-    if (busy.has(record.id)) return;
+    if (busy.has(record.id)) {
+      return;
+    }
+
     const project = await deps.projects.get(record.projectId).catch(() => null);
+
     const head = project?.directions.find(
       (d) => d.id === record.directionId
     )?.headVersionId;
-    if (head && head !== record.versionId && failed.get(record.id) !== head)
+
+    if (head && head !== record.versionId && failed.get(record.id) !== head) {
       await refresh(record, head);
+    }
   };
 
   const tick = async (): Promise<void> => {
@@ -299,15 +402,24 @@ export function createLiveRefresher(
     const records = await store.list().catch(() => []);
     const now = Date.now();
     let ended = false;
+
     for (const record of records) {
       if (!isLive(record, now) && hub.hasRoom(record.id)) {
         await hub.close(record.id);
         ended = true;
       }
     }
-    if (ended) onEnded();
+
+    if (ended) {
+      onEnded();
+    }
+
     const live = records.filter((r) => r.live === true && isLive(r, now));
-    for (const record of live) void check(record);
+
+    for (const record of live) {
+      void check(record);
+    }
+
     if (live.length > 0 && !stopped) {
       timer = setTimeout(() => void tick(), POLL_MS);
       timer.unref();
@@ -316,13 +428,19 @@ export function createLiveRefresher(
 
   return {
     kick() {
-      if (timer || stopped) return;
+      if (timer || stopped) {
+        return;
+      }
+
       timer = setTimeout(() => void tick(), 0);
       timer.unref();
     },
     stop() {
       stopped = true;
-      if (timer) clearTimeout(timer);
+
+      if (timer) {
+        clearTimeout(timer);
+      }
     },
   };
 }

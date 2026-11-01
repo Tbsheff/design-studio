@@ -36,9 +36,15 @@ function planQuery(
     path: input.path,
     targetProjectId: input.targetProjectId,
   });
-  if (input.sourceDirectionId)
+
+  if (input.sourceDirectionId) {
     query.set("sourceDirectionId", input.sourceDirectionId);
-  if (input.route) query.set("route", input.route);
+  }
+
+  if (input.route) {
+    query.set("route", input.route);
+  }
+
   return query.toString();
 }
 
@@ -47,6 +53,7 @@ function flowQuery(
 ): string {
   const query = new URLSearchParams(planQuery(input));
   query.set("flow", "1");
+
   return query.toString();
 }
 

@@ -64,6 +64,7 @@ const isColor: ValueCheck = (value) =>
   !UNSAFE.test(value) && parseColor(value)
     ? null
     : "is not a color (use oklch(), hex, rgb() or hsl())";
+
 const isDimension: ValueCheck = (value) =>
   DIMENSION.test(value) ? null : "is not a dimension in px, rem or em";
 
@@ -122,32 +123,55 @@ function invalid(message: string): DirectEditError {
 function checkValues(token: CreateTokenRequest): void {
   const check = VALUE_CHECKS[token.group];
   const problem = check(token.value);
-  if (problem) throw invalid(`value "${token.value}" ${problem}`);
-  if (token.darkValue === undefined) return;
-  if (token.group !== "color")
+
+  if (problem) {
+    throw invalid(`value "${token.value}" ${problem}`);
+  }
+
+  if (token.darkValue === undefined) {
+    return;
+  }
+
+  if (token.group !== "color") {
     throw invalid("darkValue is only allowed for color tokens");
+  }
+
   const darkProblem = check(token.darkValue);
-  if (darkProblem)
+
+  if (darkProblem) {
     throw invalid(`darkValue "${token.darkValue}" ${darkProblem}`);
+  }
 }
 
 function parseCreateTokenRequest(raw: unknown): ParsedCreate {
   const parsed = requestSchema.safeParse(raw);
+
   if (!parsed.success) {
     const detail = parsed.error.issues
       .map((issue) => `${issue.path.join(".") || "(root)"}: ${issue.message}`)
       .join("; ");
+
     throw invalid(`Invalid token: ${detail}`);
   }
+
   const { apply, ...rest } = parsed.data;
+
   const token: CreateTokenRequest = {
     group: rest.group,
     name: rest.name,
     value: rest.value,
   };
-  if (rest.darkValue !== undefined) token.darkValue = rest.darkValue;
-  if (rest.description !== undefined) token.description = rest.description;
+
+  if (rest.darkValue !== undefined) {
+    token.darkValue = rest.darkValue;
+  }
+
+  if (rest.description !== undefined) {
+    token.description = rest.description;
+  }
+
   checkValues(token);
+
   return {
     token,
     edit: apply === undefined ? null : parseDirectEditRequest(apply),
@@ -160,16 +184,21 @@ export async function requireDesignSystem(
   DesignSystemFiles & { tokens: NonNullable<DesignSystemFiles["tokens"]> }
 > {
   const files = await readDesignSystemFiles(workTree);
-  if (files === null)
+
+  if (files === null) {
     throw new DirectEditError(
       "no_design_system",
       "This direction has no design system"
     );
-  if (files.tokens === null || files.errors.length > 0)
+  }
+
+  if (files.tokens === null || files.errors.length > 0) {
     throw new DirectEditError(
       "tokens_invalid",
       buildErrorMessage(files.errors)
     );
+  }
+
   return { ...files, tokens: files.tokens };
 }
 
@@ -179,28 +208,40 @@ function assertTokenIsNew(
   cssVar: string
 ): void {
   const group = files.tokens?.[token.group];
+
   const taken =
     typeof group === "object" &&
     group !== null &&
     Object.hasOwn(group, token.name);
-  if (taken)
+
+  if (taken) {
     throw new DirectEditError(
       "token_exists",
       `${token.group}.${token.name} already exists`
     );
+  }
+
   const owner = files.entries.find((entry) => entry.cssVar === cssVar);
-  if (owner)
+
+  if (owner) {
     throw new DirectEditError(
       "token_exists",
       `${cssVar} is already used by ${owner.path}`
     );
+  }
 }
 
 function tokenNode(token: CreateTokenRequest): DesignToken {
   const node: DesignToken = { $value: token.value };
-  if (token.description !== undefined) node.$description = token.description;
-  if (token.darkValue !== undefined)
+
+  if (token.description !== undefined) {
+    node.$description = token.description;
+  }
+
+  if (token.darkValue !== undefined) {
     node.$extensions = { "studio.modes": { dark: token.darkValue } };
+  }
+
   return node;
 }
 
@@ -211,16 +252,22 @@ function nextTokensText(
 ): { text: string; vars: Set<string> } {
   const next = insertToken(text, token.group, token.name, tokenNode(token));
   const parsed = next === null ? null : parseTokenFile(next).file;
-  if (next === null || parsed === null)
+
+  if (next === null || parsed === null) {
     throw new DirectEditError(
       "tokens_invalid",
       `design-system/tokens.json has no "${token.group}" group to add to`
     );
+  }
+
   const compiled = compileTokens(parsed, {
     mode: files.manifest?.mode === "dark" ? "dark" : "light",
   });
-  if (compiled.errors.length > 0)
+
+  if (compiled.errors.length > 0) {
     throw invalid(buildErrorMessage(compiled.errors));
+  }
+
   return {
     text: next,
     vars: new Set(compiled.entries.map((entry) => entry.cssVar)),
@@ -232,6 +279,7 @@ export async function readSnapshot(
   relative: string
 ): Promise<FileSnapshot> {
   const file = path.join(workTree, relative);
+
   return {
     relative,
     content: existsSync(file) ? await readFile(file, "utf-8") : null,
@@ -244,14 +292,22 @@ export async function restoreSnapshots(
 ): Promise<void> {
   for (const snapshot of snapshots) {
     const file = path.join(workTree, snapshot.relative);
-    if (snapshot.content === null) await rm(file, { force: true });
-    else await writeFileAtomic(file, snapshot.content);
+
+    if (snapshot.content === null) {
+      await rm(file, { force: true });
+    } else {
+      await writeFileAtomic(file, snapshot.content);
+    }
   }
 }
 
 function createTitle(cssVar: string, plan: PlannedEdit | null): string {
-  if (plan === null) return `Add token ${cssVar}`;
+  if (plan === null) {
+    return `Add token ${cssVar}`;
+  }
+
   const style = plan.patch.applied.style;
+
   return `Add token ${cssVar} and apply to ${plan.patch.tag}${style.length > 0 ? ` ${style.join(", ")}` : ""}`;
 }
 
@@ -260,6 +316,7 @@ function createMeta(
   plan: PlannedEdit | null
 ): VersionMeta {
   const summary = `Create token ${token.group}.${token.name} = ${token.value}${token.darkValue ? ` (dark ${token.darkValue})` : ""}`;
+
   return {
     kind: "manual",
     prompt:
@@ -280,14 +337,23 @@ async function writeAll(
 ): Promise<string[]> {
   await writeFileAtomic(path.join(workTree, TOKENS_FILE), input.tokensText);
   const sync = await syncDesignSystem(workTree);
-  if (sync.errors.length > 0)
+
+  if (sync.errors.length > 0) {
     throw new DirectEditError("tokens_invalid", buildErrorMessage(sync.errors));
+  }
+
   const paths = DESIGN_FILES.filter((relative) =>
     existsSync(path.join(workTree, relative))
   );
-  if (input.plan === null) return paths;
-  if (input.plan.patch.code !== input.plan.original)
+
+  if (input.plan === null) {
+    return paths;
+  }
+
+  if (input.plan.patch.code !== input.plan.original) {
     await writeAtomic(input.plan.target.file, input.plan.patch.code);
+  }
+
   return [...paths, input.plan.target.relative];
 }
 
@@ -297,8 +363,11 @@ async function createdChanges(
   plan: PlannedEdit | null
 ): Promise<EditFileChange[] | null> {
   const changes = await snapshotChanges(workTree, snapshots);
-  if (changes === null || plan === null || plan.patch.code === plan.original)
+
+  if (changes === null || plan === null || plan.patch.code === plan.original) {
     return changes;
+  }
+
   return [
     {
       file: plan.target.file,
@@ -317,11 +386,14 @@ async function writeAndCommit(
   input: CommitInput
 ): Promise<Version> {
   const workTree = direction.workTree;
+
   const snapshots = await Promise.all(
     DESIGN_FILES.map((relative) => readSnapshot(workTree, relative))
   );
+
   try {
     const paths = await writeAll(workTree, input);
+
     const version = await deps.versions.commitFile(
       project,
       direction,
@@ -329,11 +401,14 @@ async function writeAndCommit(
       createTitle(input.cssVar, input.plan),
       createMeta(input.token, input.plan)
     );
-    if (version === null)
+
+    if (version === null) {
       throw new DirectEditError(
         "no_change",
         "The token did not change any tracked file"
       );
+    }
+
     recordTokenEdit(
       deps,
       project,
@@ -341,11 +416,15 @@ async function writeAndCommit(
       version,
       await createdChanges(workTree, snapshots, input.plan)
     );
+
     return version;
   } catch (error) {
     await restoreSnapshots(workTree, snapshots);
-    if (input.plan !== null)
+
+    if (input.plan !== null) {
       await writeAtomic(input.plan.target.file, input.plan.original);
+    }
+
     throw error;
   }
 }
@@ -362,24 +441,30 @@ export async function createToken(
   const files = await requireDesignSystem(workTree);
   const cssVar = cssVarFor([token.group, token.name]);
   assertTokenIsNew(files, token, cssVar);
+
   const next = nextTokensText(
     await readFile(path.join(workTree, TOKENS_FILE), "utf-8"),
     files,
     token
   );
+
   const plan =
     edit === null ? null : await planDirectEdit(workTree, edit, next.vars);
+
   const version = await writeAndCommit(deps, project, direction, {
     tokensText: next.text,
     plan,
     cssVar,
     token,
   });
+
   await publishVersion(deps, project, direction, version);
+
   const result =
     plan === null
       ? null
       : { file: plan.target.relative, version, applied: plan.patch.applied };
+
   return {
     state: await readDesignSystemState(project, direction),
     cssVar,

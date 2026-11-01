@@ -31,16 +31,25 @@ const JUNK_DIRS = new Set([
   "benchmarks",
   "coverage",
 ]);
+
 const JUNK_FILE =
   /(\.map|\.md|\.markdown|\.tsbuildinfo|^\.npmignore|^\.eslintrc(\..*)?|^\.prettierrc(\..*)?|^\.editorconfig|^\.travis\.yml)$/i;
+
 const TYPE_FILE = /\.(d\.)?[mc]?ts$/;
 const KEEP_FILE = /^(licen[cs]e|notice|copying)/i;
+
 const TYPESCRIPT_SERVER =
   /^(_?tsserver(library)?|_?typingsInstaller)\.(js|d\.ts)$/;
 
 export function isJunkFile(name: string, options: PruneOptions): boolean {
-  if (KEEP_FILE.test(name)) return false;
-  if (JUNK_FILE.test(name)) return true;
+  if (KEEP_FILE.test(name)) {
+    return false;
+  }
+
+  if (JUNK_FILE.test(name)) {
+    return true;
+  }
+
   return !options.keepTypes && TYPE_FILE.test(name);
 }
 
@@ -52,7 +61,10 @@ function isTypescriptLib(dir: string): boolean {
 }
 
 function isTypescriptJunk(dir: string, name: string, isDir: boolean): boolean {
-  if (!isTypescriptLib(dir)) return false;
+  if (!isTypescriptLib(dir)) {
+    return false;
+  }
+
   return isDir
     ? /^[a-z]{2}(-[a-z]{2})?$/.test(name)
     : TYPESCRIPT_SERVER.test(name);
@@ -60,10 +72,15 @@ function isTypescriptJunk(dir: string, name: string, isDir: boolean): boolean {
 
 function sizeOf(target: string): PruneStats {
   const stat = lstatSync(target);
-  if (!stat.isDirectory()) return { files: 1, bytes: stat.size };
+
+  if (!stat.isDirectory()) {
+    return { files: 1, bytes: stat.size };
+  }
+
   return readdirSync(target).reduce<PruneStats>(
     (sum, name) => {
       const inner = sizeOf(path.join(target, name));
+
       return { files: sum.files + inner.files, bytes: sum.bytes + inner.bytes };
     },
     { files: 0, bytes: 0 }
@@ -78,7 +95,10 @@ function remove(target: string, stats: PruneStats): void {
 }
 
 function childDepth(name: string, depth: number): number {
-  if (name === "node_modules") return 0;
+  if (name === "node_modules") {
+    return 0;
+  }
+
   return depth === 0 && name.startsWith("@") ? 0 : depth + 1;
 }
 
@@ -90,14 +110,20 @@ function walk(
 ): void {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const target = path.join(dir, entry.name);
-    if (entry.isSymbolicLink()) continue;
+
+    if (entry.isSymbolicLink()) {
+      continue;
+    }
+
     if (entry.isDirectory()) {
       if (
         (depth > 0 && JUNK_DIRS.has(entry.name)) ||
         isTypescriptJunk(dir, entry.name, true)
-      )
+      ) {
         remove(target, stats);
-      else walk(target, options, stats, childDepth(entry.name, depth));
+      } else {
+        walk(target, options, stats, childDepth(entry.name, depth));
+      }
     } else if (
       isJunkFile(entry.name, options) ||
       isTypescriptJunk(dir, entry.name, false)
@@ -113,6 +139,7 @@ export function pruneModules(
 ): PruneStats {
   const stats: PruneStats = { files: 0, bytes: 0 };
   walk(modulesDir, options, stats, 0);
+
   return stats;
 }
 
@@ -125,6 +152,7 @@ export function linkEsbuildBinary(
   arch: string = process.arch
 ): PruneStats {
   const copy = path.join(modulesDir, "esbuild", "bin", "esbuild");
+
   const native = path.join(
     modulesDir,
     "@esbuild",
@@ -132,15 +160,22 @@ export function linkEsbuildBinary(
     "bin",
     "esbuild"
   );
+
   if (
     !existsSync(copy) ||
     !existsSync(native) ||
     lstatSync(copy).isSymbolicLink()
-  )
+  ) {
     return { files: 0, bytes: 0 };
-  if (digest(copy) !== digest(native)) return { files: 0, bytes: 0 };
+  }
+
+  if (digest(copy) !== digest(native)) {
+    return { files: 0, bytes: 0 };
+  }
+
   const bytes = lstatSync(copy).size;
   rmSync(copy);
   symlinkSync(path.relative(path.dirname(copy), native), copy);
+
   return { files: 1, bytes };
 }

@@ -15,8 +15,10 @@ import {
 const MAX_FILE_BYTES = 256 * 1024;
 const FOCUS_ABOVE_BYTES = 12 * 1024;
 const FOCUS_FILES = new Set(["AGENTS.md", "CLAUDE.md"]);
+
 const UI_SECTION =
   /\b(ui|ux|design|styl\w*|css|tailwind|class(?:es|name)?|components?|layout|colou?rs?|tokens?|theme|fonts?|typography|frontend|front-end|react|next\.?js|tsx|jsx|pages?|routes?|screens?|views?|icons?|images?|assets?|a11y|accessib\w*|responsive|mobile|naming|conventions?|comments?|imports?|exports?|shadcn|storybook)\b/i;
+
 const WALK_LEVELS = 6;
 
 const SECRET_PATTERNS = [
@@ -38,12 +40,15 @@ function isWorkspaceRoot(dir: string): boolean {
   if (
     existsSync(path.join(dir, "pnpm-workspace.yaml")) ||
     existsSync(path.join(dir, "turbo.json"))
-  )
+  ) {
     return true;
+  }
+
   try {
     const pkg = JSON.parse(
       readFileSync(path.join(dir, "package.json"), "utf-8")
     ) as { workspaces?: unknown };
+
     return pkg.workspaces !== undefined;
   } catch {
     return false;
@@ -53,12 +58,21 @@ function isWorkspaceRoot(dir: string): boolean {
 export function findWorkspaceRoot(start: string): string | null {
   const home = os.homedir();
   let dir = path.resolve(start);
+
   for (let up = 0; up <= WALK_LEVELS && dir !== home; up += 1) {
-    if (isWorkspaceRoot(dir)) return dir;
+    if (isWorkspaceRoot(dir)) {
+      return dir;
+    }
+
     const parent = path.dirname(dir);
-    if (parent === dir) return null;
+
+    if (parent === dir) {
+      return null;
+    }
+
     dir = parent;
   }
+
   return null;
 }
 
@@ -67,9 +81,11 @@ export function dropSecretLines(text: string): {
   dropped: number;
 } {
   const lines = text.split("\n");
+
   const kept = lines.filter(
     (line) => !SECRET_PATTERNS.some((pattern) => pattern.test(line))
   );
+
   return { text: kept.join("\n"), dropped: lines.length - kept.length };
 }
 
@@ -93,10 +109,14 @@ function contextDirs(
   project: Pick<Project, "app">,
   workTree: string
 ): { dirs: Dir[]; root: string | null; appDir: string } | null {
-  if (!project.app) return null;
+  if (!project.app) {
+    return null;
+  }
+
   const appDir = path.resolve(workTree, project.app.appDir || ".");
   const root = findWorkspaceRoot(appDir);
   const outer = root ?? path.resolve(workTree);
+
   const dirs: Dir[] =
     outer === appDir
       ? [{ abs: appDir, scope: "app" }]
@@ -104,6 +124,7 @@ function contextDirs(
           { abs: appDir, scope: "app" },
           { abs: outer, scope: "workspace" },
         ];
+
   return { dirs, root, appDir };
 }
 
@@ -111,6 +132,7 @@ function candidates(dirs: Dir[], base: string): Candidate[] {
   return REPO_CONTEXT_FILES.flatMap((name) =>
     dirs.map((dir) => {
       const abs = path.join(dir.abs, name);
+
       return { abs, scope: dir.scope, rel: path.relative(base, abs) || name };
     })
   );
@@ -122,6 +144,7 @@ async function realOrNull(file: string): Promise<string | null> {
 
 function inside(file: string, dir: string): boolean {
   const rel = path.relative(dir, file);
+
   return rel !== "" && !rel.startsWith("..") && !path.isAbsolute(rel);
 }
 
@@ -130,10 +153,21 @@ async function readCandidate(
   boundary: string
 ): Promise<{ real: string; size: number; text: string | null } | null> {
   const real = await realOrNull(candidate.abs);
-  if (!real || !inside(real, boundary)) return null;
+
+  if (!real || !inside(real, boundary)) {
+    return null;
+  }
+
   const info = await stat(real).catch(() => null);
-  if (!info?.isFile()) return null;
-  if (info.size > MAX_FILE_BYTES) return { real, size: info.size, text: null };
+
+  if (!info?.isFile()) {
+    return null;
+  }
+
+  if (info.size > MAX_FILE_BYTES) {
+    return { real, size: info.size, text: null };
+  }
+
   return {
     real,
     size: info.size,
@@ -162,6 +196,7 @@ function isImportOnly(text: string): boolean {
     .split("\n")
     .map((line) => line.trim())
     .filter(Boolean);
+
   return lines.length > 0 && lines.every((line) => /^@\S+$/.test(line));
 }
 
@@ -176,18 +211,33 @@ function classify(
   read: { real: string; size: number; text: string | null },
   seen: Seen
 ): Loaded | RepoContextFile | null {
-  if (read.real === seen.designMd)
+  if (read.real === seen.designMd) {
     return fileRecord(candidate, read.size, "design_md");
-  if (read.text === null) return fileRecord(candidate, read.size, "too_large");
+  }
+
+  if (read.text === null) {
+    return fileRecord(candidate, read.size, "too_large");
+  }
+
   const trimmed = read.text.trim();
-  if (!trimmed) return null;
-  if (seen.reals.has(read.real) || seen.texts.has(trimmed))
+
+  if (!trimmed) {
+    return null;
+  }
+
+  if (seen.reals.has(read.real) || seen.texts.has(trimmed)) {
     return fileRecord(candidate, read.size, "duplicate");
+  }
+
   seen.reals.add(read.real);
   seen.texts.add(trimmed);
-  if (isImportOnly(trimmed))
+
+  if (isImportOnly(trimmed)) {
     return fileRecord(candidate, read.size, "import_only");
+  }
+
   const clean = dropSecretLines(trimmed);
+
   return {
     file: fileRecord(candidate, read.size, "full", clean.dropped),
     text: clean.text,
@@ -215,15 +265,23 @@ export function focusAgentDoc(
   extraTerms: readonly string[] = []
 ): string {
   const sections = docSections(text);
+
   const touches = (section: DocSection) =>
     UI_SECTION.test(section.text) ||
     extraTerms.some((term) => term && section.text.includes(term));
+
   const kept = sections.filter(
     (section) => section.title === "" || touches(section)
   );
+
   const dropped = sections.filter((section) => !kept.includes(section));
-  if (dropped.length === 0) return text;
+
+  if (dropped.length === 0) {
+    return text;
+  }
+
   const note = `[The studio left out ${dropped.length} section(s) of ${relPath} that are not about UI, styling or files this run may touch: ${dropped.map((section) => section.title).join("; ")}. Read ${relPath} for them when the task needs it.]`;
+
   return `${kept.map((section) => section.text).join("\n")}\n\n${note}`;
 }
 
@@ -232,10 +290,15 @@ function focusLoaded(loaded: Loaded[], appRel: string): void {
     (sum, item) => sum + Buffer.byteLength(item.text, "utf-8"),
     0
   );
-  if (total <= FOCUS_ABOVE_BYTES) return;
+
+  if (total <= FOCUS_ABOVE_BYTES) {
+    return;
+  }
+
   for (const item of loaded) {
-    if (FOCUS_FILES.has(path.basename(item.file.path)))
+    if (FOCUS_FILES.has(path.basename(item.file.path))) {
       item.text = focusAgentDoc(item.text, item.file.path, [appRel]);
+    }
   }
 }
 
@@ -243,27 +306,40 @@ export function fairShares(sizes: number[], cap: number): number[] {
   const out = sizes.map(() => 0);
   let left = cap;
   let open = sizes.map((_, index) => index);
+
   while (open.length > 0 && left > 0) {
     const share = Math.floor(left / open.length);
     const small = open.filter((index) => (sizes[index] ?? 0) <= share);
+
     if (small.length === 0) {
-      for (const index of open) out[index] = share;
+      for (const index of open) {
+        out[index] = share;
+      }
+
       break;
     }
+
     for (const index of small) {
       out[index] = sizes[index] ?? 0;
       left -= sizes[index] ?? 0;
     }
+
     open = open.filter((index) => (sizes[index] ?? 0) > share);
   }
+
   return out;
 }
 
 function cutToBytes(text: string, max: number): string {
   const bytes = Buffer.from(text, "utf-8");
-  if (bytes.length <= max) return text;
+
+  if (bytes.length <= max) {
+    return text;
+  }
+
   const head = bytes.subarray(0, max).toString("utf-8");
   const lastBreak = head.lastIndexOf("\n");
+
   return (
     lastBreak > 0 ? head.slice(0, lastBreak) : head.slice(0, -1)
   ).trimEnd();
@@ -273,15 +349,21 @@ function renderFile(item: Loaded, share: number): string {
   const total = Buffer.byteLength(item.text, "utf-8");
   const body = cutToBytes(item.text, share);
   item.file.sentBytes = Buffer.byteLength(body, "utf-8");
-  if (item.file.sentBytes < total) item.file.use = "cut";
+
+  if (item.file.sentBytes < total) {
+    item.file.use = "cut";
+  }
+
   const cut =
     item.file.use === "cut"
       ? `\n[Cut: ${item.file.sentBytes} of ${total} bytes shown. Read ${item.file.path} for the rest when the task needs it.]`
       : "";
+
   const dropped =
     item.file.droppedLines > 0
       ? `\n[${item.file.droppedLines} line(s) that looked like secrets were left out.]`
       : "";
+
   return `<file path="${item.file.path}" scope="${item.file.scope}">\n${body}${cut}${dropped}\n</file>`;
 }
 
@@ -293,15 +375,23 @@ async function loadFiles(
   const seen: Seen = { reals: new Set(), texts: new Set(), designMd };
   const loaded: Loaded[] = [];
   const files: RepoContextFile[] = [];
+
   for (const candidate of list) {
     const read = await readCandidate(candidate, boundary);
     const result = read ? classify(candidate, read, seen) : null;
-    if (!result) continue;
+
+    if (!result) {
+      continue;
+    }
+
     if ("text" in result) {
       loaded.push(result);
       files.push(result.file);
-    } else files.push(result);
+    } else {
+      files.push(result);
+    }
   }
+
   return { loaded, files };
 }
 
@@ -310,7 +400,8 @@ export async function loadRepoContext(
   workTree: string
 ): Promise<RepoContextState> {
   const found = contextDirs(project, workTree);
-  if (!found)
+
+  if (!found) {
     return {
       workspaceRoot: null,
       appDir: null,
@@ -318,27 +409,36 @@ export async function loadRepoContext(
       bytes: 0,
       text: null,
     };
+  }
+
   const outer = found.dirs[found.dirs.length - 1]?.abs ?? found.appDir;
   const boundary = (await realOrNull(outer)) ?? outer;
   const designMd = await realOrNull(path.join(workTree, "DESIGN.md"));
+
   const { loaded, files } = await loadFiles(
     candidates(found.dirs, outer),
     boundary,
     designMd
   );
+
   const appRel = path.relative(outer, found.appDir);
   focusLoaded(loaded, appRel);
+
   const shares = fairShares(
     loaded.map((item) => Buffer.byteLength(item.text, "utf-8")),
     REPO_CONTEXT_MAX_BYTES
   );
+
   const parts = loaded.map((item, index) =>
     renderFile(item, shares[index] ?? 0)
   );
+
   const bytes = files.reduce((sum, file) => sum + file.sentBytes, 0);
+
   const text = parts.length
     ? `<repo_context>\n${BLOCK_INTRO}\n\n${parts.join("\n\n")}\n</repo_context>`
     : null;
+
   return {
     workspaceRoot: found.root,
     appDir: appRel || ".",
@@ -362,17 +462,28 @@ export async function loadRepoContextOutline(
   workTree: string
 ): Promise<string | null> {
   const found = contextDirs(project, workTree);
-  if (!found) return null;
+
+  if (!found) {
+    return null;
+  }
+
   const outer = found.dirs[found.dirs.length - 1]?.abs ?? found.appDir;
   const boundary = (await realOrNull(outer)) ?? outer;
+
   const list = candidates(found.dirs, outer).filter((candidate) =>
     FOCUS_FILES.has(path.basename(candidate.abs))
   );
+
   const { loaded } = await loadFiles(list, boundary, null);
+
   const parts = loaded
     .map((item) => ({ path: item.file.path, titles: titleLines(item.text) }))
     .filter((item) => item.titles.length > 0);
-  if (parts.length === 0) return null;
+
+  if (parts.length === 0) {
+    return null;
+  }
+
   return parts
     .map(
       (item) =>

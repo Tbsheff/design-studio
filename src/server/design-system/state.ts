@@ -32,10 +32,15 @@ export async function readDesignSystemState(
   direction: Direction
 ): Promise<DesignSystemState> {
   const files = await readDesignSystemFiles(direction.workTree);
+
   if (!files && usesAppTokens(project)) {
     const app = await loadAppTokens(direction.workTree);
-    if (app) return appTokenState(app);
+
+    if (app) {
+      return appTokenState(app);
+    }
   }
+
   return {
     packId: files ? (files.manifest?.id ?? project.packId ?? null) : null,
     manifest: files?.manifest ?? null,
@@ -55,7 +60,10 @@ async function readDesignMd(workTree: string): Promise<string | null> {
 }
 
 function capDesignMd(content: string): string {
-  if (content.length <= DESIGN_MD_PROMPT_CAP) return content;
+  if (content.length <= DESIGN_MD_PROMPT_CAP) {
+    return content;
+  }
+
   return `${content.slice(0, DESIGN_MD_PROMPT_CAP)}\n[DESIGN.md cut at ${DESIGN_MD_PROMPT_CAP} characters]`;
 }
 
@@ -64,8 +72,10 @@ export async function loadDesignSystemPromptContext(
   project?: Project
 ): Promise<DesignSystemPromptContext | null> {
   const files = await readDesignSystemFiles(workTree);
+
   if (!files && project && usesAppTokens(project)) {
     const app = await loadAppTokens(workTree);
+
     return app
       ? {
           designMd: null,
@@ -76,9 +86,14 @@ export async function loadDesignSystemPromptContext(
         }
       : null;
   }
-  if (!files) return null;
+
+  if (!files) {
+    return null;
+  }
+
   const designMd = await readDesignMd(workTree);
   const fontsUrl = files.manifest?.fonts?.googleFontsUrl;
+
   return {
     designMd: designMd === null ? null : capDesignMd(stripTokenBlock(designMd)),
     entries: files.entries,

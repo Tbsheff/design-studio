@@ -28,11 +28,18 @@ async function waitFor<T>(
   everyMs = 300
 ): Promise<T> {
   const deadline = Date.now() + timeoutMs;
+
   for (;;) {
     const value = await fn().catch(() => null);
-    if (value !== null) return value;
-    if (Date.now() > deadline)
+
+    if (value !== null) {
+      return value;
+    }
+
+    if (Date.now() > deadline) {
       throw new Error(`timed out waiting for ${label}`);
+    }
+
     await sleep(everyMs);
   }
 }
@@ -43,9 +50,11 @@ function describe(run: RunSummary): string {
       ? `tool:${run.toolCalls.find((t) => t.toolUseId === part.toolUseId)?.name ?? "?"}`
       : part.kind
   );
+
   const diffs = run.toolCalls
     .filter((t) => t.diff)
     .map((t) => `${t.name} +${t.diff?.added} -${t.diff?.removed}`);
+
   return `status=${run.status} cost=$${run.costUsd.toFixed(4)} parts=[${kinds.join(", ")}] diffs=${JSON.stringify(diffs)} context=${run.contextTokens ?? 0}`;
 }
 
@@ -53,8 +62,10 @@ async function main(): Promise<void> {
   const work = realpathSync(
     mkdtempSync(path.join(os.tmpdir(), "studio r3 smoke "))
   );
+
   const dataDir = path.join(work, "data");
   const log = createWriteStream(path.join(work, "server.log"));
+
   const server = spawn(
     path.join(ROOT, "node_modules", ".bin", "tsx"),
     ["src/server/index.ts"],
@@ -72,8 +83,10 @@ async function main(): Promise<void> {
       stdio: ["ignore", "pipe", "pipe"],
     }
   );
+
   server.stdout.pipe(log);
   server.stderr.pipe(log);
+
   const browser = await chromium.launch({
     channel: "chrome",
     headless: true,
@@ -82,7 +95,9 @@ async function main(): Promise<void> {
       "--disable-features=IsolateOrigins,site-per-process",
     ],
   });
+
   const runs: RunSummary[] = [];
+
   try {
     await waitFor(
       "server",
@@ -90,14 +105,18 @@ async function main(): Promise<void> {
       60_000,
       500
     );
+
     const page = await browser.newPage({
       viewport: { width: 1600, height: 1000 },
     });
+
     await page.goto(BASE);
+
     const token =
       (await page
         .locator('meta[name="studio-token"]')
         .getAttribute("content")) ?? "";
+
     const call = async <T>(
       method: string,
       route: string,
@@ -111,12 +130,17 @@ async function main(): Promise<void> {
         },
         body: body === undefined ? undefined : JSON.stringify(body),
       });
-      if (!res.ok)
+
+      if (!res.ok) {
         throw new Error(`${method} ${route} ${res.status} ${await res.text()}`);
+      }
+
       return (await res.json()) as T;
     };
+
     const list = (pid: string) =>
       call<RunSummary[]>("GET", `/api/projects/${pid}/runs`);
+
     const finished = (pid: string, runId: string) =>
       waitFor(
         `run ${runId}`,
@@ -138,9 +162,11 @@ async function main(): Promise<void> {
         settings: { model: MODEL, maxBudgetUsd: BUDGET },
       }
     );
+
     console.log(
       `[r3-smoke] project ${project.id} model ${project.settings.model}`
     );
+
     const first = await waitFor(
       "create run",
       async () =>
@@ -149,6 +175,7 @@ async function main(): Promise<void> {
       600_000,
       1000
     );
+
     runs.push(first);
     console.log(`[r3-smoke] create: ${describe(first)}`);
 
@@ -176,6 +203,7 @@ async function main(): Promise<void> {
       .waitFor({ timeout: 120_000 });
     await box.fill(QUEUED);
     await box.press("Enter");
+
     const runId = await waitFor(
       "edit run id",
       async () =>
@@ -184,16 +212,21 @@ async function main(): Promise<void> {
         )?.id ?? null,
       30_000
     );
+
     const edit = await finished(project.id, runId);
     runs.push(edit);
+
     const detail = await call<{ sent: RunSentRecord[] }>(
       "GET",
       `/api/runs/${runId}`
     );
+
     const inRun = detail.sent.some((record) =>
       record.text.includes("Order now")
     );
+
     console.log(`[r3-smoke] edit: ${describe(edit)} queuedInThisRun=${inRun}`);
+
     if (!inRun) {
       const next = await waitFor(
         "queued follow-up run",
@@ -204,11 +237,14 @@ async function main(): Promise<void> {
         60_000,
         500
       ).catch(() => null);
+
       if (next) {
         const done = await finished(project.id, next.id);
         runs.push(done);
         console.log(`[r3-smoke] queued follow-up run: ${describe(done)}`);
-      } else console.log("[r3-smoke] queued message: not found in any run");
+      } else {
+        console.log("[r3-smoke] queued message: not found in any run");
+      }
     }
 
     await box.click();
@@ -226,18 +262,21 @@ async function main(): Promise<void> {
     await box.focus();
     const started = Date.now();
     page.on("request", (request) => {
-      if (request.url().includes("/cancel"))
+      if (request.url().includes("/cancel")) {
         console.log(
           `[r3-smoke] cancel request sent after ${Date.now() - started} ms`
         );
+      }
     });
     page.on("response", (response) => {
-      if (response.url().includes("/cancel"))
+      if (response.url().includes("/cancel")) {
         console.log(
           `[r3-smoke] cancel answered ${response.status()} after ${Date.now() - started} ms`
         );
+      }
     });
     await page.keyboard.press("Escape");
+
     const stoppedAt = await page.waitForFunction(
       () =>
         document.querySelector(
@@ -248,16 +287,20 @@ async function main(): Promise<void> {
       undefined,
       { polling: "raf", timeout: 10_000 }
     );
+
     console.log(
       `[r3-smoke] Esc to Stopped: ${(await stoppedAt.jsonValue()) - started} ms`
     );
+
     const stopped = (await list(project.id)).find((run) =>
       run.request.prompt.startsWith("Read index.html, then add")
     );
+
     const nextPrompt = "Make the button corners round.";
     const nextSent = Date.now();
     await box.fill(nextPrompt);
     await page.keyboard.press("Meta+Enter");
+
     const next = await waitFor(
       "run after the stop",
       async () =>
@@ -267,19 +310,23 @@ async function main(): Promise<void> {
       30_000,
       100
     ).catch(() => null);
+
     console.log(
       `[r3-smoke] send right after the stop: ${next ? `run started after ${Date.now() - nextSent} ms` : "no run started"}`
     );
+
     if (stopped) {
       const done = await finished(project.id, stopped.id);
       runs.push(done);
       console.log(`[r3-smoke] stopped run: ${describe(done)}`);
     }
+
     if (next) {
       const done = await finished(project.id, next.id);
       runs.push(done);
       console.log(`[r3-smoke] run after the stop: ${describe(done)}`);
     }
+
     console.log(
       `[r3-smoke] total cost $${runs.reduce((sum, run) => sum + run.costUsd, 0).toFixed(4)}`
     );

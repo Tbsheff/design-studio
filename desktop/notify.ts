@@ -13,6 +13,7 @@ export interface RunNotice {
 
 function shortPrompt(prompt: string): string {
   const line = prompt.replace(/\s+/g, " ").trim();
+
   return line.length > PROMPT_CHARS
     ? `${line.slice(0, PROMPT_CHARS - 1)}…`
     : line;
@@ -23,17 +24,24 @@ export function runNotice(
   projectName: string | null,
   windowFocused: boolean
 ): RunNotice | null {
-  if (windowFocused || finished.status === "canceled") return null;
+  if (windowFocused || finished.status === "canceled") {
+    return null;
+  }
+
   const ok = finished.status === "completed";
+
   const title = ok
     ? "Run finished"
     : finished.status === "budget_exceeded"
       ? "Run stopped at the budget limit"
       : "Run failed";
+
   const where = projectName ?? "Design Studio";
+
   const detail = ok
     ? shortPrompt(finished.run.prompt)
     : (finished.error ?? shortPrompt(finished.run.prompt));
+
   return {
     title,
     body: detail ? `${where}: ${detail}` : where,

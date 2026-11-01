@@ -10,6 +10,7 @@ const SHOTS = process.env.STUDIO_DS4_SHOTS ?? "";
 
 async function removePacksNamed(api: StudioApi, name: string): Promise<void> {
   const packs = await api.call<PackSummary[]>("GET", "/api/packs");
+
   for (const pack of packs.filter(
     (item) =>
       item.source === "user" &&
@@ -34,11 +35,15 @@ async function setUi(
 }
 
 const yours = (page: Page) => page.getByRole("region", { name: /^Yours/ });
+
 const detail = (page: Page, name: string) =>
   page.getByRole("dialog", { name: `${name} design system`, exact: true });
 
 async function shot(page: Page, file: string): Promise<void> {
-  if (!SHOTS) return;
+  if (!SHOTS) {
+    return;
+  }
+
   mkdirSync(SHOTS, { recursive: true });
   await page.screenshot({
     path: path.join(SHOTS, file),
@@ -77,12 +82,14 @@ test("design systems screen: copy, rename, export, delete, import, open in edito
     original.getByRole("button", { name: "Delete", exact: true })
   ).toHaveCount(0);
   await shot(page, "detail.png");
+
   if (SHOTS) {
     await original
       .getByRole("region", { name: "Check" })
       .scrollIntoViewIfNeeded();
     await shot(page, "detail-check.png");
   }
+
   await original.getByRole("button", { name: "Make a copy to edit" }).click();
 
   const copy = detail(page, "Modern Minimal copy");
@@ -94,6 +101,7 @@ test("design systems screen: copy, rename, export, delete, import, open in edito
   await rename.getByRole("button", { name: "Rename", exact: true }).click();
   const renamed = detail(page, NAME);
   await expect(renamed).toBeVisible();
+
   const packId = (await api.call<PackSummary[]>("GET", "/api/packs")).find(
     (pack) => pack.name === NAME
   )!.id;
@@ -124,9 +132,11 @@ test("design systems screen: copy, rename, export, delete, import, open in edito
   await imported.getByRole("button", { name: "Close design system" }).click();
 
   await page.getByLabel("Design system zip").setInputFiles(zip);
+
   const conflict = page.getByRole("dialog", {
     name: "Design system already in your library",
   });
+
   await expect(
     conflict.getByRole("heading", {
       name: `${NAME} is already in your library`,
@@ -152,13 +162,17 @@ test("design systems screen: copy, rename, export, delete, import, open in edito
   await expect(
     page.getByRole("region", { name: "Design system draft" })
   ).toBeVisible();
+
   const ids = (await api.call<PackSummary[]>("GET", "/api/packs"))
     .filter((pack) => pack.name === NAME)
     .map((pack) => pack.id);
+
   expect(ids).toHaveLength(2);
+
   const backing = (await api.projects()).find(
     (project) => project.name === `${NAME} design system`
   );
+
   expect(ids).toContain(backing?.designSystemFor);
   const editorPack = backing!.designSystemFor!;
 
@@ -202,6 +216,7 @@ test("design systems screen: copy, rename, export, delete, import, open in edito
       startRun: false,
     }
   );
+
   await setUi(page, { activeProjectId: project.id });
   await page
     .locator(".topbar")

@@ -61,6 +61,7 @@ function wheelPixels(
   pageHeight: number
 ): { dx: number; dy: number } {
   const unit = e.deltaMode === 1 ? LINE_PX : e.deltaMode === 2 ? pageHeight : 1;
+
   return { dx: e.deltaX * unit, dy: e.deltaY * unit };
 }
 
@@ -76,8 +77,10 @@ function clampZoom(z: number): number {
 }
 
 function fitZoomFor(stage: Stage, bounds: Box): number {
-  if (stage.w <= 0 || stage.h <= 0 || bounds.width <= 0 || bounds.height <= 0)
+  if (stage.w <= 0 || stage.h <= 0 || bounds.width <= 0 || bounds.height <= 0) {
     return 1;
+  }
+
   return Math.max(
     MIN_ZOOM,
     Math.min(
@@ -112,6 +115,7 @@ function fitBase(
   z: number
 ): { x: number; y: number } {
   const { bounds, active } = layout;
+
   return {
     x: Math.round((stage.w - bounds.width * z) / 2) + (active.x - bounds.x) * z,
     y: fitTop(stage, bounds.height * z) + (active.y - bounds.y) * z,
@@ -132,13 +136,17 @@ function paintScreenSizeChrome(artboard: HTMLElement, zoom: number): void {
       setZoomVars(el, zoom);
       continue;
     }
+
     el.style.transform = `scale(${1 / zoom})`;
     el.style.maxWidth = `calc(var(--frame-w, 100000px) * ${zoom})`;
   }
 }
 
 export function blocksZoomKey(event: KeyboardEvent): boolean {
-  if (!isTypingTarget(event.target)) return false;
+  if (!isTypingTarget(event.target)) {
+    return false;
+  }
+
   return !(isModZoomKey(event) && event.target instanceof HTMLSelectElement);
 }
 
@@ -188,17 +196,24 @@ export function usePanZoom({
 
   useLayoutEffect(() => {
     const el = stageRef.current;
-    if (!el) return;
+
+    if (!el) {
+      return;
+    }
+
     const ro = new ResizeObserver(() =>
       setStage({ w: el.clientWidth, h: el.clientHeight })
     );
+
     ro.observe(el);
     setStage({ w: el.clientWidth, h: el.clientHeight });
+
     return () => ro.disconnect();
   }, [stageRef]);
 
   const committedZoom =
     setting === "fit" ? fitZoomFor(stage, layout.bounds) : setting;
+
   const live = useRef({ stage, layout, setting, committedZoom, selectionRect });
   live.current = { stage, layout, setting, committedZoom, selectionRect };
 
@@ -206,30 +221,45 @@ export function usePanZoom({
     const cur = live.current;
     const override = zoomOverride.current;
     const zoom = override ?? cur.committedZoom;
+
     const base =
       override === null && cur.setting === "fit"
         ? fitBase(cur.stage, cur.layout, zoom)
         : numericBase(cur.stage, cur.layout.active, zoom);
+
     return { zoom, x: base.x + offset.current.x, y: base.y + offset.current.y };
   }, []);
 
   const paint = useCallback(() => {
     const el = artboardRef.current;
-    if (!el) return;
+
+    if (!el) {
+      return;
+    }
+
     const v = view();
     el.style.transform = `translate(${v.x}px, ${v.y}px) scale(${v.zoom})`;
-    if (painted.current?.zoom !== v.zoom) paintScreenSizeChrome(el, v.zoom);
+
+    if (painted.current?.zoom !== v.zoom) {
+      paintScreenSizeChrome(el, v.zoom);
+    }
+
     if (
       zoomOverride.current === null &&
       el.style.getPropertyValue("--inv-zoom") !== String(1 / v.zoom)
-    )
+    ) {
       setZoomVars(el, v.zoom);
+    }
+
     painted.current = v;
     zoomPercent.set(Math.round(v.zoom * 100));
   }, [artboardRef, view, zoomPercent]);
 
   const schedulePaint = useCallback(() => {
-    if (paintFrame.current) return;
+    if (paintFrame.current) {
+      return;
+    }
+
     paintFrame.current = requestAnimationFrame(() => {
       paintFrame.current = 0;
       paint();
@@ -246,10 +276,21 @@ export function usePanZoom({
     const prev = prevActive.current;
     prevActive.current = { id: activeId, x: ax, y: ay };
     const p = painted.current;
-    if (!prev || !p || (prev.id === activeId && prev.x === ax && prev.y === ay))
+
+    if (
+      !prev ||
+      !p ||
+      (prev.id === activeId && prev.x === ax && prev.y === ay)
+    ) {
       return;
+    }
+
     const cur = live.current;
-    if (zoomOverride.current === null && cur.setting === "fit") return;
+
+    if (zoomOverride.current === null && cur.setting === "fit") {
+      return;
+    }
+
     const base = numericBase(cur.stage, cur.layout.active, p.zoom);
     offset.current = {
       x: p.x + (ax - prev.x) * p.zoom - base.x,
@@ -261,14 +302,19 @@ export function usePanZoom({
   const { width: aw, height: ah } = layout.active;
   const { x: bx, y: by, width: bw, height: bh } = layout.bounds;
   useLayoutEffect(() => {
-    if (fitMode) offset.current = { x: 0, y: 0 };
+    if (fitMode) {
+      offset.current = { x: 0, y: 0 };
+    }
   }, [fitMode, aw, ah, bx, by, bw, bh]);
 
   useLayoutEffect(() => paint());
 
   const commit = useCallback(
     (zoom: ZoomSetting) => {
-      if (wheelTimer.current !== null) window.clearTimeout(wheelTimer.current);
+      if (wheelTimer.current !== null) {
+        window.clearTimeout(wheelTimer.current);
+      }
+
       wheelTimer.current = null;
       zoomOverride.current = null;
       live.current = {
@@ -291,15 +337,18 @@ export function usePanZoom({
       const next = clampZoom(cur.zoom * factor);
       const ax0 = (stageX - cur.x) / cur.zoom;
       const ay0 = (stageY - cur.y) / cur.zoom;
+
       const base = numericBase(
         live.current.stage,
         live.current.layout.active,
         next
       );
+
       offset.current = {
         x: stageX - ax0 * next - base.x,
         y: stageY - ay0 * next - base.y,
       };
+
       return next;
     },
     [view]
@@ -315,11 +364,18 @@ export function usePanZoom({
     (stageX: number, stageY: number, factor: number) => {
       zoomOverride.current = placeAt(stageX, stageY, factor);
       schedulePaint();
-      if (wheelTimer.current !== null) window.clearTimeout(wheelTimer.current);
+
+      if (wheelTimer.current !== null) {
+        window.clearTimeout(wheelTimer.current);
+      }
+
       wheelTimer.current = window.setTimeout(() => {
         wheelTimer.current = null;
         const z = zoomOverride.current;
-        if (z !== null) commit(z);
+
+        if (z !== null) {
+          commit(z);
+        }
       }, WHEEL_IDLE_MS);
     },
     [placeAt, schedulePaint, commit]
@@ -346,12 +402,14 @@ export function usePanZoom({
   const zoomToBox = useCallback(
     (box: Box) => {
       const { stage: s, layout: l } = live.current;
+
       const z = clampZoom(
         Math.min(
           (s.w - SELECTION_PAD * 2) / Math.max(1, box.width),
           (s.h - SELECTION_PAD * 2) / Math.max(1, box.height)
         )
       );
+
       const base = numericBase(s, l.active, z);
       offset.current = {
         x: Math.round(s.w / 2 - (box.x + box.width / 2) * z) - base.x,
@@ -363,12 +421,17 @@ export function usePanZoom({
   );
 
   const pendingFocus = useRef(false);
+
   const zoomToActive = useCallback(() => {
     pendingFocus.current = true;
     rerender();
   }, []);
+
   useLayoutEffect(() => {
-    if (!pendingFocus.current) return;
+    if (!pendingFocus.current) {
+      return;
+    }
+
     pendingFocus.current = false;
     const { active } = live.current.layout;
     zoomToBox({ x: 0, y: 0, width: active.width, height: active.height });
@@ -376,7 +439,11 @@ export function usePanZoom({
 
   const freeze = useCallback(() => {
     const cur = live.current;
-    if (zoomOverride.current !== null || cur.setting !== "fit") return;
+
+    if (zoomOverride.current !== null || cur.setting !== "fit") {
+      return;
+    }
+
     const v = painted.current ?? view();
     const base = numericBase(cur.stage, cur.layout.active, v.zoom);
     offset.current = { x: v.x - base.x, y: v.y - base.y };
@@ -385,11 +452,15 @@ export function usePanZoom({
 
   const applyZoomKey = useCallback(
     (key: ZoomKey) => {
-      if (key === "in") zoomStep(1);
-      else if (key === "out") zoomStep(-1);
-      else if (key === "actual") zoomTo(1);
-      else if (key === "fit") fit();
-      else {
+      if (key === "in") {
+        zoomStep(1);
+      } else if (key === "out") {
+        zoomStep(-1);
+      } else if (key === "actual") {
+        zoomTo(1);
+      } else if (key === "fit") {
+        fit();
+      } else {
         const { active } = live.current.layout;
         zoomToBox(
           live.current.selectionRect() ?? {
@@ -411,12 +482,18 @@ export function usePanZoom({
     y: number;
     h: number;
   } | null>(null);
+
   const frameWheel = useCallback(
     (frame: HTMLIFrameElement | null, e: FrameWheel) => {
       const el = stageRef.current;
-      if (!el || !frame) return;
+
+      if (!el || !frame) {
+        return;
+      }
+
       const now = performance.now();
       let o = frameOrigin.current;
+
       if (!o || o.frame !== frame || now - o.at > WHEEL_IDLE_MS) {
         const frameRect = frame.getBoundingClientRect();
         const stageRect = el.getBoundingClientRect();
@@ -429,6 +506,7 @@ export function usePanZoom({
           h: frame.clientHeight,
         };
       }
+
       o.at = now;
       frameOrigin.current = o;
       const v = view();
@@ -444,18 +522,26 @@ export function usePanZoom({
 
   useEffect(() => {
     const el = stageRef.current;
-    if (!el) return;
+
+    if (!el) {
+      return;
+    }
+
     let rect: DOMRect | null = null;
     let height = 0;
     let lastAt = 0;
+
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
+
       if (!rect || e.timeStamp - lastAt > WHEEL_IDLE_MS) {
         rect = el.getBoundingClientRect();
         height = el.clientHeight;
       }
+
       lastAt = e.timeStamp;
       const { dx, dy } = wheelPixels(e, height);
+
       if (e.ctrlKey || e.metaKey) {
         wheelZoomAt(
           e.clientX - rect.left,
@@ -467,31 +553,50 @@ export function usePanZoom({
         schedulePaint();
       }
     };
+
     el.addEventListener("wheel", onWheel, { passive: false });
+
     return () => el.removeEventListener("wheel", onWheel);
   }, [stageRef, wheelZoomAt, schedulePaint]);
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
-      if (isTypingTarget(e.target)) return;
+      if (isTypingTarget(e.target)) {
+        return;
+      }
+
       if (e.code === "Space") {
         e.preventDefault();
-        if (!e.repeat) setSpaceHeld(true);
+
+        if (!e.repeat) {
+          setSpaceHeld(true);
+        }
       } else if (e.code === "KeyZ" && !e.metaKey && !e.ctrlKey && !e.shiftKey) {
-        if (!e.repeat) setZoomHeld(true);
+        if (!e.repeat) {
+          setZoomHeld(true);
+        }
       }
     };
+
     const up = (e: KeyboardEvent) => {
-      if (e.code === "Space") setSpaceHeld(false);
-      if (e.code === "KeyZ") setZoomHeld(false);
+      if (e.code === "Space") {
+        setSpaceHeld(false);
+      }
+
+      if (e.code === "KeyZ") {
+        setZoomHeld(false);
+      }
     };
+
     const blur = () => {
       setSpaceHeld(false);
       setZoomHeld(false);
     };
+
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
     window.addEventListener("blur", blur);
+
     return () => {
       window.removeEventListener("keydown", down);
       window.removeEventListener("keyup", up);
@@ -509,24 +614,35 @@ export function usePanZoom({
           e.clientY - rect.top,
           e.altKey ? 1 / CLICK_ZOOM : CLICK_ZOOM
         );
+
         return;
       }
-      if (!(e.button === 1 || (e.button === 0 && spaceHeld))) return;
+
+      if (!(e.button === 1 || (e.button === 0 && spaceHeld))) {
+        return;
+      }
+
       e.preventDefault();
       const target = e.currentTarget;
       target.setPointerCapture(e.pointerId);
       setPanning(true);
       let lastX = e.clientX;
       let lastY = e.clientY;
+
       const move = (ev: PointerEvent) => {
         const dx = ev.clientX - lastX;
         const dy = ev.clientY - lastY;
         lastX = ev.clientX;
         lastY = ev.clientY;
-        if (dx === 0 && dy === 0) return;
+
+        if (dx === 0 && dy === 0) {
+          return;
+        }
+
         offset.current = { x: offset.current.x + dx, y: offset.current.y + dy };
         schedulePaint();
       };
+
       const end = () => {
         setPanning(false);
         rerender();
@@ -534,6 +650,7 @@ export function usePanZoom({
         target.removeEventListener("pointerup", end);
         target.removeEventListener("pointercancel", end);
       };
+
       target.addEventListener("pointermove", move as EventListener);
       target.addEventListener("pointerup", end);
       target.addEventListener("pointercancel", end);

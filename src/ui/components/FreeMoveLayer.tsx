@@ -4,8 +4,12 @@ import { SnapGuides } from "./ArtboardOverlay";
 import { gapStyle } from "./CanvasOverlays";
 
 export function FreeMoveLayer({ view }: { view: FreeMoveView | null }) {
-  if (!view) return null;
+  if (!view) {
+    return null;
+  }
+
   const { box, line } = view;
+
   return (
     <div className="overlay" aria-hidden="true" data-testid="free-move">
       <div

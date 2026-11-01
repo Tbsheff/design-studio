@@ -16,7 +16,9 @@ import { usePopover } from "../usePopover";
 import { Icon, type IconName } from "./Icon";
 
 type ThemePref = "system" | "light" | "dark";
+
 type ThemeApi = { get: () => ThemePref; set: (pref: ThemePref) => void };
+
 const themeApi = (): ThemeApi | undefined =>
   (window as unknown as { studioTheme?: ThemeApi }).studioTheme;
 
@@ -74,17 +76,23 @@ function MenuItems({ items, onDone }: { items: Item[]; onDone: () => void }) {
 }
 
 function onMenuKey(event: KeyboardEvent<HTMLDivElement>) {
-  if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+  if (event.key !== "ArrowDown" && event.key !== "ArrowUp") {
+    return;
+  }
+
   const items = [
     ...event.currentTarget.querySelectorAll<HTMLButtonElement>(
       ".ui-menu-item:not(:disabled)"
     ),
   ];
+
   const at = items.indexOf(document.activeElement as HTMLButtonElement);
+
   const next =
     items[
       (at + (event.key === "ArrowDown" ? 1 : -1) + items.length) % items.length
     ];
+
   event.preventDefault();
   next?.focus();
 }
@@ -100,6 +108,7 @@ function ProjectMenu(
   usePopover(true, root, props.onClose, props.trigger);
   const done = () => props.onClose(false);
   const pref = themeApi()?.get() ?? "system";
+
   const panels: Item[] = [
     {
       id: "versions",
@@ -150,6 +159,7 @@ function ProjectMenu(
       run: props.onDesignMd,
     },
   ];
+
   const project: Item[] = [
     { id: "rename", label: "Rename", icon: "pencil", run: props.onStartRename },
     {
@@ -159,6 +169,7 @@ function ProjectMenu(
       run: props.onSettings,
     },
   ];
+
   const themes: Item[] = (["system", "light", "dark"] as const).map(
     (value) => ({
       id: `theme-${value}`,
@@ -174,6 +185,7 @@ function ProjectMenu(
       run: () => themeApi()?.set(value),
     })
   );
+
   return (
     <div
       ref={root}
@@ -228,11 +240,16 @@ function RenameField({
 }) {
   const [value, setValue] = useState(name);
   const done = useRef(false);
+
   const finish = (save: boolean) => {
-    if (done.current) return;
+    if (done.current) {
+      return;
+    }
+
     done.current = true;
     onDone(save && value.trim() && value.trim() !== name ? value.trim() : null);
   };
+
   return (
     <input
       className="pane-rename"
@@ -243,8 +260,9 @@ function RenameField({
       onFocus={(e) => e.currentTarget.select()}
       onBlur={() => finish(true)}
       onKeyDown={(e) => {
-        if (e.key === "Enter") finish(true);
-        else if (e.key === "Escape") {
+        if (e.key === "Enter") {
+          finish(true);
+        } else if (e.key === "Escape") {
           e.preventDefault();
           e.stopPropagation();
           finish(false);
@@ -301,13 +319,19 @@ export function StudioPaneHeader(props: Props) {
   const [open, setOpen] = useState(false);
   const [renaming, setRenaming] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null);
+
   const close = useCallback((refocus: boolean) => {
     setOpen(false);
-    if (refocus) trigger.current?.focus();
+
+    if (refocus) {
+      trigger.current?.focus();
+    }
   }, []);
+
   const commentsOn = props.tab === "comments";
   const searchShown = useLive(chatSearchAvailable) && props.tab === "chat";
   const searchOpen = useLive(chatSearchOpen);
+
   return (
     <>
       <header className="pane-head">
@@ -316,7 +340,10 @@ export function StudioPaneHeader(props: Props) {
             name={props.name}
             onDone={(next) => {
               setRenaming(false);
-              if (next) void props.onRename(next);
+
+              if (next) {
+                void props.onRename(next);
+              }
             }}
           />
         ) : (

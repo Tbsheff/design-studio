@@ -12,7 +12,10 @@ export function locationFor(
   list: WorkspaceList | null,
   lastLocation: string | null
 ): string | null {
-  if (list === null) return lastLocation;
+  if (list === null) {
+    return lastLocation;
+  }
+
   return list.folders.some(
     (folder) =>
       folder.path === lastLocation && !folder.missing && !folder.default
@@ -34,6 +37,7 @@ export function filterByFolder(
 ): { filterFolder: WorkspaceFolder | null; shownProjects: Project[] | null } {
   const filterFolder =
     list?.folders.find((folder) => folder.id === filterId) ?? null;
+
   return {
     filterFolder,
     shownProjects:
@@ -66,10 +70,12 @@ export function useWorkspaces(onError: (message: string | null) => void) {
 
   const attempt = async <T>(task: () => Promise<T>, failed: T): Promise<T> => {
     onError(null);
+
     try {
       return await task();
     } catch (err) {
       onError(errorText(err));
+
       return failed;
     }
   };
@@ -82,6 +88,7 @@ export function useWorkspaces(onError: (message: string | null) => void) {
           ? folders
           : [...folders, saved]
       );
+
       return saved;
     }, null);
 
@@ -91,6 +98,7 @@ export function useWorkspaces(onError: (message: string | null) => void) {
       update((folders) =>
         folders.map((folder) => (folder.id === id ? saved : folder))
       );
+
       return true;
     }, false);
 
@@ -98,12 +106,14 @@ export function useWorkspaces(onError: (message: string | null) => void) {
     attempt(async () => {
       await api.removeWorkspace(target.id);
       update((folders) => folders.filter((folder) => folder.id !== target.id));
+
       return true;
     }, false);
 
   const setDefaultFolder = (path: string): Promise<boolean> =>
     attempt(async () => {
       setWorkspaces(await api.setDefaultFolder(path));
+
       return true;
     }, false);
 

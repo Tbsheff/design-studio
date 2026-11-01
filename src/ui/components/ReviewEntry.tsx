@@ -51,8 +51,12 @@ function useSlot(
       marker.current
         ?.closest(".canvas")
         ?.querySelector<HTMLElement>('[data-topbar-slot="review"]') ?? null;
-    if (found !== slot) setSlot(found);
+
+    if (found !== slot) {
+      setSlot(found);
+    }
   });
+
   return slot;
 }
 
@@ -65,14 +69,22 @@ function entryTip(
   count: number | null,
   stale: boolean
 ): string | undefined {
-  if (open) return undefined;
-  if (count === null)
+  if (open) {
+    return undefined;
+  }
+
+  if (count === null) {
     return "Check contrast, tap targets, alt text, tokens and clipping";
+  }
+
   return `${count} review ${count === 1 ? "finding" : "findings"}${stale ? " (from an older render)" : ""}`;
 }
 
 function worst(result: ReviewResult | null): ReviewSeverity | null {
-  if (!result) return null;
+  if (!result) {
+    return null;
+  }
+
   return (
     (["high", "medium", "low"] as const).find(
       (sev) => result.counts[sev] > 0
@@ -83,7 +95,10 @@ function worst(result: ReviewResult | null): ReviewSeverity | null {
 function useCloseOnToolChange(toolKey: string, close: () => void) {
   const last = useRef(toolKey);
   useEffect(() => {
-    if (last.current === toolKey) return;
+    if (last.current === toolKey) {
+      return;
+    }
+
     last.current = toolKey;
     close();
   }, [toolKey, close]);
@@ -95,6 +110,7 @@ export function ReviewEntry(p: Props) {
   const [open, setOpen] = useState(false);
   const close = useRef(() => setOpen(false)).current;
   useCloseOnToolChange(p.toolKey, close);
+
   const review = useReview({
     projectId: p.projectId,
     directionId: p.directionId,
@@ -102,13 +118,18 @@ export function ReviewEntry(p: Props) {
     lastChange: p.lastChange,
     open: open && p.live,
   });
+
   const count = review.result ? review.result.findings.length : null;
   const ask = p.shell?.onAskAgent;
+
   const select = (finding: ReviewFinding) => {
-    if (finding.selector)
+    if (finding.selector) {
       p.post({ type: "select-selector", selector: finding.selector });
+    }
   };
+
   const sev = worst(review.result);
+
   const button = (
     <button
       type="button"
@@ -136,6 +157,7 @@ export function ReviewEntry(p: Props) {
       )}
     </button>
   );
+
   return (
     <>
       <span ref={marker} hidden />

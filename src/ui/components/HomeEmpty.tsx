@@ -17,6 +17,7 @@ const KIND_TONE = { next: "next", vite: "vite", html: "html" } as const;
 
 function foundBadge(app: FoundApp): string {
   const base = FOUND_KIND_LABEL[app.kind];
+
   return app.kind === "next" && app.apps.length > 1 ? `${base} monorepo` : base;
 }
 
@@ -28,22 +29,30 @@ function useFound(): FoundApps | null | "error" {
       .found()
       .then((next) => live && setFound(next))
       .catch(() => live && setFound("error"));
+
     return () => {
       live = false;
     };
   }, []);
+
   return found;
 }
 
 function FoundList({ onUse }: { onUse: (path: string) => void }) {
   const found = useFound();
-  if (found === "error") return null;
+
+  if (found === "error") {
+    return null;
+  }
+
   const apps = found?.apps.slice(0, MAX_FOUND) ?? [];
+
   const roots = found
     ? found.roots
         .map((root) => shortenHome(root, found.home).replace(/^~\//, ""))
         .join(", ")
     : "";
+
   return (
     <section className="home-found" aria-label="Found on this Mac">
       <div className="home-found-head">
@@ -103,6 +112,7 @@ function StartCards({
       .then((list) => setStarters(list.slice(0, MAX_STARTERS)))
       .catch(() => undefined);
   }, []);
+
   return (
     <div className="home-start">
       <button

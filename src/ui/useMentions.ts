@@ -22,12 +22,18 @@ function loadFiles(
 ): Promise<string[]> {
   const key = `${projectId}/${directionId}`;
   const known = fileCache.get(key);
-  if (known && !fresh) return known;
+
+  if (known && !fresh) {
+    return known;
+  }
+
   const next = api.workTreeFiles(projectId, directionId).then(
     (result) => result.files,
     () => []
   );
+
   fileCache.set(key, next);
+
   return next;
 }
 
@@ -75,30 +81,38 @@ export function useMentions({
   const query = rawQuery !== null && draft !== dismissed ? rawQuery : null;
 
   const refresh = (fresh: boolean) => {
-    if (directionId)
+    if (directionId) {
       void loadFiles(projectId, directionId, fresh).then(setFiles);
+    }
   };
+
   useEffect(() => refresh(false), [projectId, directionId]);
   useEffect(() => {
-    if (query === "") refresh(true);
+    if (query === "") {
+      refresh(true);
+    }
   }, [query === ""]);
 
   const options = useMemo<MentionOption[]>(() => {
     const picked = new Set(mentions.map(mentionKey));
+
     const fileOptions = (files ?? []).map((path): MentionOption => ({
       key: `file:${path}`,
       label: path.split("/").pop() ?? path,
       detail: path,
       mention: { kind: "file", path },
     }));
+
     const tokenOptions = (tokens ?? []).map((entry): MentionOption => ({
       key: `token:${entry.cssVar}`,
       label: entry.cssVar,
       detail: entry.value,
       mention: { kind: "token", name: entry.cssVar, value: entry.value },
     }));
+
     const componentOptions = (components ?? []).map((item): MentionOption => {
       const mention = componentMention(item);
+
       return {
         key: mentionKey(mention),
         label: item.name,
@@ -106,6 +120,7 @@ export function useMentions({
         mention,
       };
     });
+
     return [
       ...(lead ?? []),
       ...componentOptions,
@@ -113,21 +128,29 @@ export function useMentions({
       ...tokenOptions,
     ].filter((option) => !picked.has(option.key));
   }, [files, tokens, mentions, components, lead]);
+
   const add = (mention: RunMention) =>
     setMentions((prev) =>
       prev.some((item) => mentionKey(item) === mentionKey(mention))
         ? prev
         : [...prev, mention]
     );
+
   const requestSeq = request?.seq;
   useEffect(() => {
-    if (request) add(request.mention);
+    if (request) {
+      add(request.mention);
+    }
   }, [requestSeq]);
   const picker = useMentionPicker(options, query);
 
   const pick = (option: MentionOption) => {
-    if (lead?.some((item) => item.key === option.key)) onLead?.(option);
-    else add(option.mention);
+    if (lead?.some((item) => item.key === option.key)) {
+      onLead?.(option);
+    } else {
+      add(option.mention);
+    }
+
     setDraft(
       draft
         .replace(/@[^\s@]*$/, "")
@@ -136,20 +159,28 @@ export function useMentions({
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLElement>): boolean => {
-    if (!picker.open) return false;
-    if (event.key === "ArrowDown" || event.key === "ArrowUp")
+    if (!picker.open) {
+      return false;
+    }
+
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
       picker.move(event.key === "ArrowDown" ? 1 : -1);
-    else if (
+    } else if (
       (event.key === "Enter" || event.key === "Tab") &&
       picker.current &&
       !event.metaKey &&
       !event.ctrlKey
-    )
+    ) {
       pick(picker.current);
-    else if (event.key === "Escape") setDismissed(draft);
-    else return false;
+    } else if (event.key === "Escape") {
+      setDismissed(draft);
+    } else {
+      return false;
+    }
+
     event.preventDefault();
     event.stopPropagation();
+
     return true;
   };
 

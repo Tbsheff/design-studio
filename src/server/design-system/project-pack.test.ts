@@ -53,7 +53,11 @@ function call(method: string, url: string, body?: unknown): Promise<Response> {
   const headers: Record<string, string> = {
     "x-studio-token": config.studioToken,
   };
-  if (body !== undefined) headers["content-type"] = "application/json";
+
+  if (body !== undefined) {
+    headers["content-type"] = "application/json";
+  }
+
   return Promise.resolve(
     app.request(url, {
       method,
@@ -67,6 +71,7 @@ async function ok<T>(response: Response | Promise<Response>): Promise<T> {
   const res = await response;
   const text = await res.text();
   expect(res.status, text).toBe(200);
+
   return JSON.parse(text) as T;
 }
 
@@ -87,8 +92,10 @@ const apply = (project: Project, packId: string) =>
   call("POST", `/api/projects/${project.id}/d/main/design-system/apply`, {
     packId,
   });
+
 const save = (project: Project, body: Record<string, unknown>) =>
   call("POST", `/api/projects/${project.id}/d/main/design-system/save`, body);
+
 const read = (project: Project, file: string) =>
   readFile(path.join(project.directions[0]!.workTree, file), "utf-8");
 
@@ -124,8 +131,10 @@ beforeEach(async () => {
 
 afterEach(async () => {
   await cleanup();
-  while (temps.length)
+
+  while (temps.length) {
     await rm(temps.pop() as string, { recursive: true, force: true });
+  }
 });
 
 describe("apply or switch a pack on a project", { timeout: 30000 }, () => {
@@ -134,6 +143,7 @@ describe("apply or switch a pack on a project", { timeout: 30000 }, () => {
       packId: "editorial",
       designMd: "Use big type.",
     });
+
     const before = await read(project, TOKENS_CSS_FILE);
     const result = await ok<ApplyPackResult>(apply(project, "brutalist"));
     expect(result.version.title).toBe("Switch to Brutalist design system");
@@ -229,11 +239,13 @@ describe("apply or switch a pack on a project", { timeout: 30000 }, () => {
       path.join(folder, "src", "main.tsx"),
       "console.log('hi');\n"
     );
+
     const project = (
       await ok<{ project: Project }>(
         call("POST", "/api/projects/import", { path: folder })
       )
     ).project;
+
     const result = await ok<ApplyPackResult>(apply(project, "editorial"));
     expect(result).toMatchObject({ wired: false, notice: NOT_WIRED_NOTICE });
     expect(result.written.sort()).toEqual(
@@ -254,9 +266,11 @@ describe(
         packId: "editorial",
         designMd: "Source-only notes.",
       });
+
       const saved = await ok<SavePackResult>(
         save(source, { name: "House Style" })
       );
+
       expect(saved).toMatchObject({
         created: true,
         pack: {
@@ -268,9 +282,11 @@ describe(
       });
       const listed = await ok<PackSummary[]>(call("GET", "/api/packs"));
       expect(listed.at(-1)?.id).toBe("user-house-style");
+
       const detail = await ok<{ designMd: string }>(
         call("GET", "/api/packs/user-house-style")
       );
+
       expect(detail.designMd).not.toContain("studio:tokens");
       expect(detail.designMd).not.toContain("Project notes");
       expect(detail.designMd.startsWith("# Editorial")).toBe(true);
@@ -279,6 +295,7 @@ describe(
         packId: "brutalist",
         designMd: "Target notes.",
       });
+
       await ok<ApplyPackResult>(apply(target, "user-house-style"));
       expect(await read(target, TOKENS_FILE)).toBe(
         await read(source, TOKENS_FILE)
@@ -298,9 +315,11 @@ describe(
     it("updates the same user pack on save-back and refuses built-in targets", async () => {
       const project = await create({ packId: "editorial" });
       const first = await ok<SavePackResult>(save(project, { name: "Mine" }));
+
       const update = await ok<SavePackResult>(
         save(project, { name: "Mine v2", packId: first.pack.id })
       );
+
       expect(update).toMatchObject({
         created: false,
         pack: { id: "user-mine", name: "Mine v2" },
@@ -315,9 +334,11 @@ describe(
 
     it("points pack.json at the saved pack so a second save updates it in place", async () => {
       const project = await create({ packId: "editorial" });
+
       const first = await ok<SavePackResult>(
         save(project, { name: "Field Notes" })
       );
+
       expect(first).toMatchObject({
         created: true,
         pack: { id: "user-field-notes" },
@@ -332,30 +353,37 @@ describe(
         provenance: "extracted",
       });
       expect(first.project.packId).toBe("user-field-notes");
+
       const state = await ok<{ packId: string }>(
         call("GET", `/api/projects/${project.id}/d/main/design-system`)
       );
+
       expect(state.packId).toBe("user-field-notes");
 
       const again = await ok<SavePackResult>(
         save(project, { name: "Field Notes" })
       );
+
       expect(again).toMatchObject({
         created: false,
         pack: { id: "user-field-notes" },
         version: null,
       });
+
       const renamed = await ok<SavePackResult>(
         save(project, { name: "Field Notes 2" })
       );
+
       expect(renamed).toMatchObject({
         created: false,
         pack: { id: "user-field-notes", name: "Field Notes 2" },
         version: { title: "Save Field Notes 2 to library" },
       });
+
       const ids = (await ok<PackSummary[]>(call("GET", "/api/packs")))
         .filter((pack) => pack.source === "user")
         .map((pack) => pack.id);
+
       expect(ids).toEqual(["user-field-notes"]);
     });
 
@@ -386,6 +414,7 @@ describe("library routes", { timeout: 30000 }, () => {
     const copy = await ok<PackSummary>(
       call("POST", "/api/packs/editorial/duplicate", {})
     );
+
     expect(copy).toMatchObject({ id: "user-editorial-copy", source: "user" });
     expect(
       await ok<PackSummary>(

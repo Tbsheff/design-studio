@@ -26,7 +26,10 @@ const KIND_LABEL: Record<NonNullable<FolderInspection["kind"]>, string> = {
 };
 
 export function chipProblem(chip: AppChip | null): string | null {
-  if (!chip || chip.checking) return null;
+  if (!chip || chip.checking) {
+    return null;
+  }
+
   return chip.error ?? chip.inspection?.problem ?? null;
 }
 
@@ -34,14 +37,20 @@ export function chipBlocker(
   chip: AppChip | null
 ): { command: string; dir: string } | null {
   const found = chip?.inspection;
+
   if (
     !found ||
     found.problem ||
     found.depsInstalled !== false ||
     !found.install
-  )
+  ) {
     return null;
-  if (found.kind === "next" && chip.mode === "url") return null;
+  }
+
+  if (found.kind === "next" && chip.mode === "url") {
+    return null;
+  }
+
   return found.install;
 }
 
@@ -54,11 +63,22 @@ export function chipName(chip: AppChip): string {
 }
 
 function chipLabel(chip: AppChip): string {
-  if (chip.checking && !chip.inspection) return "Checking…";
-  if (chipProblem(chip)) return "Not an app folder";
+  if (chip.checking && !chip.inspection) {
+    return "Checking…";
+  }
+
+  if (chipProblem(chip)) {
+    return "Not an app folder";
+  }
+
   const found = chip.inspection;
-  if (!found?.kind) return "";
+
+  if (!found?.kind) {
+    return "";
+  }
+
   const dir = chip.appDir ?? found.appDir;
+
   return dir && dir !== "."
     ? `${KIND_LABEL[found.kind]} · ${dir}`
     : KIND_LABEL[found.kind];
@@ -72,20 +92,27 @@ export function droppedFolder(
   data: DataTransfer
 ): { path: string } | { unsupported: true } | null {
   for (const item of Array.from(data.items)) {
-    if (item.kind !== "file" || !item.webkitGetAsEntry()?.isDirectory) continue;
+    if (item.kind !== "file" || !item.webkitGetAsEntry()?.isDirectory) {
+      continue;
+    }
+
     const file = item.getAsFile();
+
     const path = file
       ? ((
           window as unknown as { studioDesktop?: DropBridge }
         ).studioDesktop?.pathForFile?.(file) ?? "")
       : "";
+
     return path ? { path } : { unsupported: true };
   }
+
   return null;
 }
 
 export function useAppChip() {
   const [chip, setChip] = useState<AppChip | null>(null);
+
   const set = useCallback(
     (path: string) =>
       setChip({
@@ -101,17 +128,23 @@ export function useAppChip() {
       }),
     []
   );
+
   const clear = useCallback(() => setChip(null), []);
+
   const update = useCallback(
     (patch: Partial<AppChip>) =>
       setChip((current) => (current ? { ...current, ...patch } : current)),
     []
   );
+
   const path = chip?.path ?? null;
   const appDir = chip?.appDir ?? null;
   const nonce = chip?.nonce ?? 0;
   useEffect(() => {
-    if (!path) return;
+    if (!path) {
+      return;
+    }
+
     let live = true;
     setChip((current) =>
       current ? { ...current, checking: true, error: null } : current
@@ -136,10 +169,12 @@ export function useAppChip() {
               : current
           )
       );
+
     return () => {
       live = false;
     };
   }, [path, appDir, nonce]);
+
   return { chip, set, clear, update };
 }
 
@@ -156,6 +191,7 @@ export function AppChipView({
 }) {
   const name = chipName(chip);
   const bad = chipProblem(chip) !== null || chipBlocker(chip) !== null;
+
   return (
     <li className={`home-chip app${bad ? " warn" : ""}`}>
       <button

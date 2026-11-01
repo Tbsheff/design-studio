@@ -30,10 +30,13 @@ import { parseDirectEditBatch } from "./validate.js";
 
 const PAGE =
   '<!doctype html>\n<html>\n<body>\n  <h1 class="t">Hello</h1>\n  <p>One</p>\n  <span style="color: red">Two</span>\n</body>\n</html>\n';
+
 const OTHER =
   "<!doctype html>\n<html>\n<body>\n  <h2>Other</h2>\n</body>\n</html>\n";
+
 const TSX =
   'export const A = (): JSX.Element => <h2 style={{ color: "red" }}>x</h2>;\n';
+
 const H1 = { file: "index.html", line: 4, col: 3 };
 const P = { file: "index.html", line: 5, col: 3 };
 const SPAN = { file: "index.html", line: 6, col: 3 };
@@ -60,7 +63,11 @@ function call(method: string, url: string, body?: unknown): Promise<Response> {
   const headers: Record<string, string> = {
     "x-studio-token": config.studioToken,
   };
-  if (body !== undefined) headers["content-type"] = "application/json";
+
+  if (body !== undefined) {
+    headers["content-type"] = "application/json";
+  }
+
   return Promise.resolve(
     app.request(url, {
       method,
@@ -79,6 +86,7 @@ async function setupProject(): Promise<{
     prompt: "A page",
     kind: "html",
   });
+
   const project = ((await created.json()) as { project: Project }).project;
   const workTree = projects.mainDirection(project).workTree;
   await writeFile(path.join(workTree, "index.html"), PAGE);
@@ -87,6 +95,7 @@ async function setupProject(): Promise<{
   await writeFile(path.join(workTree, "src", "A.tsx"), TSX);
   const kept = await call("POST", `/api/projects/${project.id}/d/main/keep`);
   expect(kept.status).toBe(200);
+
   return {
     project: await projects.get(project.id),
     workTree,
@@ -135,6 +144,7 @@ describe("direct edit batch", { timeout: 30000 }, () => {
     const before = await versionCount(project);
     const seen: StudioEvent[] = [];
     bus.subscribe(project.id, (event) => seen.push(event));
+
     const response = await batch(project, {
       edits: [
         { source: H1, selector: "h1", style: { color: "blue" } },
@@ -146,6 +156,7 @@ describe("direct edit batch", { timeout: 30000 }, () => {
         { source: P, selector: "p", text: "Uno & dos" },
       ],
     });
+
     expect(response.status).toBe(200);
     const result = (await response.json()) as DirectEditBatchResult;
     expect(result.files).toEqual(["index.html"]);
@@ -159,9 +170,11 @@ describe("direct edit batch", { timeout: 30000 }, () => {
       parentId: base.id,
       changedFiles: ["index.html"],
     });
+
     const expected = PAGE.replace("<h1 class", '<h1 style="color: blue;" class')
       .replace("<p>One</p>", "<p>Uno &amp; dos</p>")
       .replace('style="color: red"', 'style="color: blue; font-size: 20px;"');
+
     expect(await readFile(path.join(workTree, "index.html"), "utf-8")).toBe(
       expected
     );
@@ -181,6 +194,7 @@ describe("direct edit batch", { timeout: 30000 }, () => {
   it("applies edits in two files as one version", async () => {
     const { project, workTree } = await setupProject();
     const before = await versionCount(project);
+
     const response = await batch(project, {
       edits: [
         { source: H2, selector: "h2", style: { opacity: "0.5" } },
@@ -191,6 +205,7 @@ describe("direct edit batch", { timeout: 30000 }, () => {
         },
       ],
     });
+
     expect(response.status).toBe(200);
     const result = (await response.json()) as DirectEditBatchResult;
     expect(result.files).toEqual(["other.html", "src/A.tsx"]);
@@ -209,6 +224,7 @@ describe("direct edit batch", { timeout: 30000 }, () => {
 
   it("writes nothing and makes no version when one edit fails", async () => {
     const { project, workTree, base } = await setupProject();
+
     const response = await batch(project, {
       edits: [
         { source: H2, selector: "h2", style: { opacity: "0.5" } },
@@ -216,6 +232,7 @@ describe("direct edit batch", { timeout: 30000 }, () => {
         { source: { ...P, line: 99 }, selector: "p", text: "x" },
       ],
     });
+
     expect(response.status).toBe(422);
     expect(((await response.json()) as { error: string }).error).toBe(
       "element_not_found"
@@ -234,16 +251,19 @@ describe("direct edit batch", { timeout: 30000 }, () => {
   it("writes back all originals when the commit fails, and records one history entry on success", async () => {
     const { project, workTree } = await setupProject();
     const direction = projects.mainDirection(project);
+
     const edits = {
       edits: [
         { source: H1, selector: "h1", style: { color: "blue" } },
         { source: H2, selector: "h2", text: "Next" },
       ],
     };
+
     const failing: VersionStore = {
       ...versions,
       commitFile: () => Promise.reject(new Error("git failed")),
     };
+
     await expect(
       applyDirectEditBatch(
         { bus, projects, versions: failing, runner },
@@ -260,6 +280,7 @@ describe("direct edit batch", { timeout: 30000 }, () => {
     );
 
     const records: EditRecord[] = [];
+
     const result = await applyDirectEditBatch(
       {
         bus,
@@ -272,6 +293,7 @@ describe("direct edit batch", { timeout: 30000 }, () => {
       direction,
       edits
     );
+
     expect(records).toHaveLength(1);
     expect(records[0]?.versionId).toBe(result.version.id);
     expect(
@@ -288,9 +310,11 @@ describe("direct edit batch", { timeout: 30000 }, () => {
 
   it("returns the head version when no edit changes the source", async () => {
     const { project, base } = await setupProject();
+
     const response = await batch(project, {
       edits: [{ source: H1, selector: "h1", style: { color: null } }],
     });
+
     expect(response.status).toBe(200);
     const result = (await response.json()) as DirectEditBatchResult;
     expect(result.files).toEqual([]);
@@ -319,10 +343,12 @@ describe("parseDirectEditBatch", () => {
       { edits: [{ ...edit, move: "up" }] },
       { edits: "x" },
     ];
-    for (const raw of bad)
+
+    for (const raw of bad) {
       expect(
         () => parseDirectEditBatch(raw),
         JSON.stringify(raw).slice(0, 60)
       ).toThrow(/Invalid direct edit batch|Edit 1/);
+    }
   });
 });

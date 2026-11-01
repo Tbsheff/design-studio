@@ -21,6 +21,7 @@ type ToolText = {
 };
 
 const color = z.string().trim().max(100).regex(VECTOR_COLOR);
+
 const paint = {
   fill: color
     .nullable()
@@ -40,6 +41,7 @@ const paint = {
     .optional()
     .describe("Stroke width in px."),
 };
+
 const where = {
   targetSelector: z
     .string()
@@ -66,8 +68,10 @@ const where = {
 
 export const VECTOR_DRAW_SHORT =
   "Draw a rectangle, ellipse or pen path as an inline <svg> placed at x, y in a parent element (one undo step).";
+
 export const VECTOR_BOOLEAN_SHORT =
   "Union, subtract, intersect or exclude two SVG shapes into one <path>.";
+
 export const VECTOR_PAINT_SHORT =
   "Set fill, stroke or stroke width of an SVG shape.";
 
@@ -169,18 +173,27 @@ async function write(
   request: VectorRequest
 ): Promise<ToolText> {
   const { project, direction, previewUrl } = deps.ctx;
+
   const previewOrigin =
     previewUrl && project.kind === "react" ? new URL(previewUrl).origin : null;
+
   const plan = await planVector(
     { project, workTree: direction.workTree, previewOrigin },
     request
   );
+
   const problem = writeProblem(deps.ctx, plan.target.relative);
-  if (problem) return text(problem, true);
+
+  if (problem) {
+    return text(problem, true);
+  }
+
   await writeAtomic(plan.target.file, plan.code);
+
   const at = plan.select
     .map((item) => `${item.file}:${item.line}:${item.col}`)
     .join(", ");
+
   return text(
     `${plan.title} at ${at}. The run saves this change in its version, like your file edits.`
   );
@@ -192,7 +205,11 @@ async function guarded(
   task: () => Promise<ToolText>
 ): Promise<ToolText> {
   const blocked = refusal(deps.ctx, name);
-  if (blocked) return text(blocked, true);
+
+  if (blocked) {
+    return text(blocked, true);
+  }
+
   try {
     return await task();
   } catch (error) {
@@ -209,29 +226,43 @@ export function runDrawVector(
 ): Promise<ToolText> {
   return guarded(deps, "draw_vector", async () => {
     const parsed = drawSchema.safeParse(args);
-    if (!parsed.success) return issues("draw_vector", parsed.error);
+
+    if (!parsed.success) {
+      return issues("draw_vector", parsed.error);
+    }
+
     const input = parsed.data;
+
     if (
       (input.targetSelector === undefined) ===
       (input.targetSource === undefined)
-    )
+    ) {
       return text("Pass targetSelector or targetSource, not both.", true);
+    }
+
     if (
       input.shape === "path"
         ? !input.d
         : input.width === undefined || input.height === undefined
-    )
+    ) {
       return text(
         "shape path needs d; rect and ellipse need width and height.",
         true
       );
+    }
+
     const target = await targetOf(deps, input);
-    if (typeof target === "string") return text(target, true);
+
+    if (typeof target === "string") {
+      return text(target, true);
+    }
+
     const common = {
       target,
       relativeParent: input.makeParentRelative,
       ...paintOf(input),
     };
+
     const request: VectorRequest =
       input.shape === "path"
         ? {
@@ -251,6 +282,7 @@ export function runDrawVector(
             },
             ...common,
           };
+
     return write(deps, "draw_vector", request);
   });
 }
@@ -260,13 +292,18 @@ async function rectsOf(
   page: string | undefined,
   selectors: [string, string]
 ): Promise<[VectorBox, VectorBox] | undefined> {
-  if (!deps.ctx.previewUrl) return undefined;
+  if (!deps.ctx.previewUrl) {
+    return undefined;
+  }
+
   const found = await describeElements(
     deps.preview,
     editPageUrl(deps.ctx, page),
     selectors
   ).catch(() => []);
+
   const [a, b] = found;
+
   return a && b ? [a.rect, b.rect] : undefined;
 }
 
@@ -276,11 +313,19 @@ export function runBooleanShapes(
 ): Promise<ToolText> {
   return guarded(deps, "boolean_shapes", async () => {
     const parsed = booleanSchema.safeParse(args);
-    if (!parsed.success) return issues("boolean_shapes", parsed.error);
+
+    if (!parsed.success) {
+      return issues("boolean_shapes", parsed.error);
+    }
+
     const input = parsed.data;
-    if ((input.selectors === undefined) === (input.sources === undefined))
+
+    if ((input.selectors === undefined) === (input.sources === undefined)) {
       return text("Pass selectors or sources, not both.", true);
+    }
+
     const targets: InsertTarget[] = [];
+
     for (const index of [0, 1] as const) {
       const found = await targetOf(
         deps,
@@ -288,12 +333,18 @@ export function runBooleanShapes(
           ? { targetSelector: input.selectors[index], path: input.path }
           : { targetSource: input.sources?.[index], path: input.path }
       );
-      if (typeof found === "string") return text(found, true);
+
+      if (typeof found === "string") {
+        return text(found, true);
+      }
+
       targets.push(found);
     }
+
     const rects = input.selectors
       ? await rectsOf(deps, input.path, input.selectors)
       : undefined;
+
     return write(deps, "boolean_shapes", {
       op: "boolean",
       boolean: input.op,
@@ -309,15 +360,26 @@ export function runPaintShape(
 ): Promise<ToolText> {
   return guarded(deps, "paint_shape", async () => {
     const parsed = paintSchema.safeParse(args);
-    if (!parsed.success) return issues("paint_shape", parsed.error);
+
+    if (!parsed.success) {
+      return issues("paint_shape", parsed.error);
+    }
+
     const input = parsed.data;
+
     if (
       (input.targetSelector === undefined) ===
       (input.targetSource === undefined)
-    )
+    ) {
       return text("Pass targetSelector or targetSource, not both.", true);
+    }
+
     const target = await targetOf(deps, input);
-    if (typeof target === "string") return text(target, true);
+
+    if (typeof target === "string") {
+      return text(target, true);
+    }
+
     return write(deps, "paint_shape", {
       op: "paint",
       target,

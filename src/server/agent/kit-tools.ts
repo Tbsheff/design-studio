@@ -117,24 +117,32 @@ export async function runListComponents(
   args: z.input<typeof listSchema>
 ): Promise<ToolText> {
   const parsed = listSchema.safeParse(args);
-  if (!parsed.success)
+
+  if (!parsed.success) {
     return text(`list_components: ${issues(parsed.error)}`, true);
+  }
+
   const { project, direction } = deps.ctx;
-  if (project.kind !== "react")
+
+  if (project.kind !== "react") {
     return text(
       JSON.stringify({
         components: [],
         note: "This is an HTML project; it has no React components.",
       })
     );
+  }
+
   try {
     const { query, source, limit, cursor } = parsed.data;
+
     const list = await listComponentSchemas(project, direction.workTree, {
       limit: limit ?? 20,
       ...(query ? { query } : {}),
       ...(source ? { source } : {}),
       ...(cursor ? { cursor } : {}),
     });
+
     return text(JSON.stringify(list, null, 2));
   } catch (error) {
     return text(`list_components failed: ${describeError(error)}`, true);
@@ -146,7 +154,8 @@ async function framePage(
   ref: string | undefined
 ): Promise<{ path?: string; viewport: Viewport; state: string }> {
   const target = deps.ctx.target;
-  if (!ref || isContextFrame(deps.ctx, ref))
+
+  if (!ref || isContextFrame(deps.ctx, ref)) {
     return target
       ? {
           viewport: { width: target.width, height: target.height },
@@ -154,13 +163,19 @@ async function framePage(
           ...(target.path ? { path: target.path } : {}),
         }
       : { viewport: EDIT_VIEWPORT, state: DEFAULT_FRAME_STATE };
+  }
+
   const frames = await canvasFrames(deps);
   const frame = findFrame(frames, ref);
-  if (!frame)
+
+  if (!frame) {
     throw new LayerRefError(
       `No frame ${ref} on the canvas. Call canvas_list for the frame ids.`
     );
+  }
+
   const state = frame.id === target?.id ? target.state : DEFAULT_FRAME_STATE;
+
   return {
     viewport: { width: frame.width, height: frame.height },
     state,
@@ -173,17 +188,24 @@ export async function runGetLayers(
   args: z.input<typeof layersSchema>
 ): Promise<ToolText> {
   const parsed = layersSchema.safeParse(args);
-  if (!parsed.success) return text(`get_layers: ${issues(parsed.error)}`, true);
-  if (!deps.ctx.previewUrl)
+
+  if (!parsed.success) {
+    return text(`get_layers: ${issues(parsed.error)}`, true);
+  }
+
+  if (!deps.ctx.previewUrl) {
     return text(
       "Preview is not running for this direction, so the layers cannot be read.",
       true
     );
+  }
+
   try {
     const frame = await framePage(deps, parsed.data.frame);
     const page = parsed.data.path ?? frame.path;
     const url = pageUrl(deps.ctx.previewUrl, page ?? "", frame.state);
     const scope = scopeOf(deps.ctx.project.id, deps.ctx.direction.id);
+
     const tree = await layerTreeText(deps.preview, {
       url,
       viewport: frame.viewport,
@@ -192,6 +214,7 @@ export async function runGetLayers(
       root: parsed.data.root,
       depth: parsed.data.depth,
     });
+
     return tree === null
       ? text(`No element matches ${parsed.data.root} on the page.`, true)
       : text(tree);
@@ -214,13 +237,20 @@ export async function resolveSelectors<A extends LayerArgs>(
   args: A
 ): Promise<A> {
   const keys = SELECTOR_KEYS.filter((key) => isLayerRef(args[key]));
-  if (keys.length === 0 || !deps.ctx.previewUrl) return args;
+
+  if (keys.length === 0 || !deps.ctx.previewUrl) {
+    return args;
+  }
+
   const scope = scopeOf(deps.ctx.project.id, deps.ctx.direction.id);
   const out: A = { ...args };
+
   for (const key of keys) {
     const ref = String(args[key]).trim();
+
     const page =
       args.path ?? memoPage(scope, ref) ?? editPage(deps.ctx, undefined)?.path;
+
     out[key] = (await resolveLayerRef(
       deps.preview,
       editPageUrl(deps.ctx, page),
@@ -228,8 +258,12 @@ export async function resolveSelectors<A extends LayerArgs>(
       scope,
       ref
     )) as A[typeof key];
-    if (out.path === undefined && page !== undefined) out.path = page;
+
+    if (out.path === undefined && page !== undefined) {
+      out.path = page;
+    }
   }
+
   return out;
 }
 
@@ -239,6 +273,7 @@ export function withLayerIds<A extends LayerArgs>(
 ): (args: A) => Promise<ToolText> {
   return async (args) => {
     let resolved: A;
+
     try {
       resolved = await resolveSelectors(deps, args);
     } catch (error) {
@@ -249,6 +284,7 @@ export function withLayerIds<A extends LayerArgs>(
         true
       );
     }
+
     return run(resolved);
   };
 }

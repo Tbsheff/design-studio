@@ -49,9 +49,15 @@ export function pickComments(
 ): DesignComment[] {
   return ids.map((id) => {
     const comment = all.find((item) => item.id === id);
-    if (!comment) throw new NotFoundError(`comment ${id} not found`);
-    if (!canPickForChat(comment.status))
+
+    if (!comment) {
+      throw new NotFoundError(`comment ${id} not found`);
+    }
+
+    if (!canPickForChat(comment.status)) {
       throw new ConflictError(`comment #${comment.n} is ${comment.status}`);
+    }
+
     return comment;
   });
 }
@@ -64,11 +70,16 @@ async function warmApp(
   const upstream = project.app
     ? await deps.preview.apps?.ensure(project).catch(() => null)
     : null;
-  if (!upstream) return;
+
+  if (!upstream) {
+    return;
+  }
+
   const answer = await fetch(new URL(`/${page ?? ""}`, upstream), {
     redirect: "manual",
     signal: AbortSignal.timeout(WARM_TIMEOUT_MS),
   }).catch(() => null);
+
   await answer?.body?.cancel().catch(() => undefined);
 }
 
@@ -79,14 +90,18 @@ async function placeOf(
   comment: DesignComment
 ): Promise<ShotPlace> {
   const ref = comment.frame?.id;
+
   const frames = ref
     ? ((await readProjectCanvas(project, deps.projectDir)).canvas?.frames ?? [])
     : [];
+
   const found = ref ? findFrame(frames, ref) : null;
   const path = found?.path ?? comment.frame?.path ?? "";
+
   const size = found
     ? { width: found.width, height: found.height }
     : DEFAULT_SIZE;
+
   const state =
     project.app && found
       ? stateOfFrame(
@@ -94,6 +109,7 @@ async function placeOf(
           found.id
         )
       : undefined;
+
   return {
     url: withFrameStateHost(baseUrl, state),
     frame: { name: `comment-${comment.n}`, ...size, ...(path ? { path } : {}) },
@@ -113,6 +129,7 @@ async function cropOf(
   const place = await placeOf(deps, project, baseUrl, comment);
   await warmApp(deps, project, place.frame.path);
   const selector = comment.context?.selector ?? comment.target.selector;
+
   const shot = await captureFrame(
     deps.preview,
     place.url,
@@ -123,6 +140,7 @@ async function cropOf(
     1600,
     CROP_PADDING
   );
+
   return shot.png;
 }
 
@@ -133,20 +151,25 @@ async function imageOf(
   comment: DesignComment
 ): Promise<CommentPrefill["attachments"][number]> {
   const drawn = comment.drawing ? comment.attachmentIds?.[0] : undefined;
+
   if (drawn) {
     const saved = await deps.getAttachment(project.id, drawn);
+
     return {
       id: saved.id,
       name: saved.name,
       dataUrl: await dataUrlOf(saved.path, saved.mime),
     };
   }
+
   const png = await cropOf(deps, project, baseUrl, comment);
+
   const saved = await deps.saveAttachment(project.id, {
     name: `comment-${comment.n}.png`,
     mime: "image/png",
     bytes: new Uint8Array(png),
   });
+
   return {
     id: saved.id,
     name: saved.name,
@@ -163,6 +186,7 @@ export async function buildPrefill(
   const baseUrl = await deps.preview.directionUrl(project, direction);
   const attachments: CommentPrefill["attachments"] = [];
   const notes: string[] = [];
+
   for (const comment of chosen) {
     if (attachments.length >= CHAT_IMAGE_MAX) {
       notes.push(
@@ -170,6 +194,7 @@ export async function buildPrefill(
       );
       continue;
     }
+
     try {
       attachments.push(await imageOf(deps, project, baseUrl, comment));
     } catch (error) {
@@ -179,6 +204,7 @@ export async function buildPrefill(
       );
     }
   }
+
   return {
     text: chatPrompt(chosen, notes),
     commentIds: chosen.map((comment) => comment.id),

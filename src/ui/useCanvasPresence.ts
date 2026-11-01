@@ -16,22 +16,32 @@ interface PresenceInput {
 }
 
 export function inViewIds(stage: HTMLElement | null): string[] {
-  if (!stage) return [];
+  if (!stage) {
+    return [];
+  }
+
   const box = stage.getBoundingClientRect();
   const ids: string[] = [];
+
   for (const el of stage.querySelectorAll<HTMLElement>(
     ".artboard[data-frame-id], .canvas-frame[data-frame-id]"
   )) {
     const r = el.getBoundingClientRect();
     const w = Math.min(r.right, box.right) - Math.max(r.left, box.left);
     const h = Math.min(r.bottom, box.bottom) - Math.max(r.top, box.top);
-    if (w <= 0 || h <= 0 || r.width <= 0 || r.height <= 0) continue;
+
+    if (w <= 0 || h <= 0 || r.width <= 0 || r.height <= 0) {
+      continue;
+    }
+
     if (
       (w * h) / (r.width * r.height) >= 0.25 ||
       (w * h) / (box.width * box.height) >= 0.25
-    )
+    ) {
       ids.push(el.dataset.frameId as string);
+    }
   }
+
   return [...new Set(ids)].sort();
 }
 
@@ -58,28 +68,40 @@ export function useCanvasPresence(o: PresenceInput): void {
   useEffect(() => {
     let last = "";
     let sentAt = 0;
+
     const send = () => {
-      if (document.hidden) return;
+      if (document.hidden) {
+        return;
+      }
+
       const body = presenceBody(latest.current);
       const key = JSON.stringify(body);
-      if (key === last && Date.now() - sentAt < RESEND_MS) return;
+
+      if (key === last && Date.now() - sentAt < RESEND_MS) {
+        return;
+      }
+
       last = key;
       sentAt = Date.now();
       api.putCanvasPresence(latest.current.projectId, body).catch(() => {
         last = "";
       });
     };
+
     send();
     const timer = window.setInterval(send, PRESENCE_MS);
+
     return () => window.clearInterval(timer);
   }, [o.projectId]);
   useEffect(() => {
     let stop: (() => void) | null = null;
     let gone = false;
     void import("./shareLive").then((mod) => {
-      if (!gone)
+      if (!gone) {
         stop = mod.startShareLive(o.projectId, () => latest.current.stage());
+      }
     });
+
     return () => {
       gone = true;
       stop?.();

@@ -43,7 +43,10 @@ export function useCommentPrefill({
   focusRef.current = focus;
 
   useEffect(() => {
-    if (!request || seen.current === request.seq) return;
+    if (!request || seen.current === request.seq) {
+      return;
+    }
+
     seen.current = request.seq;
     const current = draft.get().trim();
     draft.set(current ? `${current}\n\n${request.text}` : request.text);
@@ -52,6 +55,7 @@ export function useCommentPrefill({
       const fresh = incoming.filter(
         (file) => !prev.some((p) => p.localId === file.localId)
       );
+
       return [...prev, ...fresh].slice(0, maxImages);
     });
     setLinked((prev) => [...new Set([...prev, ...request.commentIds])]);

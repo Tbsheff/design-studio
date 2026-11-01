@@ -30,6 +30,7 @@ async function zoomOf(page: Page): Promise<number> {
   const transform = await page
     .locator(".artboard")
     .evaluate((el) => (el as HTMLElement).style.transform);
+
   return Number(/scale\(([\d.]+)\)/.exec(transform)?.[1] ?? "1");
 }
 
@@ -53,12 +54,14 @@ test("R7-3: variations open as frames; old frames load; a passive frame reloads 
   page,
 }) => {
   const api = await openHome(page);
+
   const project = await createProjectViaUi(
     page,
     api,
     "Frames Variations",
     "html"
   );
+
   await api.waitForRuns(project.id, 1);
   await expect(frontFrame(page).locator("h1")).toHaveText("Frames Variations");
   const main = project.directions[0]!;
@@ -71,6 +74,7 @@ test("R7-3: variations open as frames; old frames load; a passive frame reloads 
       ],
       activeId: "f1",
     };
+
     localStorage.setItem(
       "design-studio.canvas.v1",
       JSON.stringify({ [pid]: old })
@@ -105,34 +109,42 @@ test("R7-3: variations open as frames; old frames load; a passive frame reloads 
   const group = (await api.project(project.id)).directions.filter(
     (d) => d.variation
   );
+
   const [a, b, c] = group as [
     (typeof group)[0],
     (typeof group)[0],
     (typeof group)[0],
   ];
-  for (const d of group)
+
+  for (const d of group) {
     await expect(passiveIframe(page, d.id)).toHaveAttribute(
       "src",
       new RegExp(`/${d.id}/`)
     );
+  }
+
   const stored = await page.evaluate(
     (pid) =>
       JSON.parse(localStorage.getItem("design-studio.canvas.v1") ?? "{}")[pid],
     project.id
   );
+
   expect(
     stored.frames.map((f: { directionId?: string }) => f.directionId)
   ).toEqual([main.id, main.id, a.id, b.id, c.id]);
 
   await page.waitForTimeout(1500);
   await armIframeCounter(page);
+
   const srcOf = async (id: string) =>
     passiveIframe(page, id).getAttribute("src");
+
   const before = {
     b: await srcOf(b.id),
     c: await srcOf(c.id),
     a: await srcOf(a.id),
   };
+
   writeFileSync(path.join(a.workTree, "index.html"), page2("Changed A"));
   await expect(
     page
@@ -150,9 +162,11 @@ test("R7-3: variations open as frames; old frames load; a passive frame reloads 
   await page.waitForTimeout(600);
   expect(await srcOf(b.id)).toBe(before.b);
   expect(await srcOf(c.id)).toBe(before.c);
+
   const maxIframes = await page.evaluate(
     () => (window as unknown as { __maxIframes: number }).__maxIframes
   );
+
   console.log(`R7-3 max iframes ${maxIframes} for 5 frames`);
   expect(maxIframes).toBeLessThanOrEqual(6);
   await expect(page.locator("iframe")).toHaveCount(5);
@@ -261,7 +275,11 @@ test("R7 frame resize: edge and corner drags show W x H, Shift keeps the ratio, 
   const right = await page
     .locator(".artboard > .frame-resize.right")
     .boundingBox();
-  if (!right) throw new Error("no right handle");
+
+  if (!right) {
+    throw new Error("no right handle");
+  }
+
   const x = right.x + right.width / 2;
   const y = right.y + right.height / 2;
   await page.mouse.move(x, y);
@@ -292,7 +310,11 @@ test("R7 frame resize: edge and corner drags show W x H, Shift keeps the ratio, 
   const fitZoom = await zoomOf(page);
   const passive = page.locator(".canvas-frame");
   const corner = await passive.locator(".frame-resize.corner").boundingBox();
-  if (!corner) throw new Error("no corner");
+
+  if (!corner) {
+    throw new Error("no corner");
+  }
+
   const cx = corner.x + corner.width / 2;
   const cy = corner.y + corner.height / 2;
   await page.keyboard.down("Shift");
@@ -308,7 +330,11 @@ test("R7 frame resize: edge and corner drags show W x H, Shift keeps the ratio, 
   );
 
   const bottom = await passive.locator(".frame-resize.bottom").boundingBox();
-  if (!bottom) throw new Error("no bottom");
+
+  if (!bottom) {
+    throw new Error("no bottom");
+  }
+
   await page.mouse.move(
     bottom.x + bottom.width / 2,
     bottom.y + bottom.height / 2

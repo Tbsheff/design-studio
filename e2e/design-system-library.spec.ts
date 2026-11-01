@@ -23,7 +23,11 @@ async function openProject(
     "/api/projects",
     { kind: "html", ...body }
   );
-  if (body.startRun !== false) await api.waitForRuns(project.id, 1);
+
+  if (body.startRun !== false) {
+    await api.waitForRuns(project.id, 1);
+  }
+
   await page.evaluate((id) => {
     const raw = localStorage.getItem("design-studio.ui.v1");
     const state = raw ? JSON.parse(raw) : {};
@@ -34,6 +38,7 @@ async function openProject(
   }, project.id);
   await page.reload();
   await expect(page.locator(".topbar")).toBeVisible();
+
   return api.project(project.id);
 }
 
@@ -48,8 +53,10 @@ async function deleteUserPackIfPresent(
   id: string
 ): Promise<void> {
   const packs = await api.call<PackSummary[]>("GET", "/api/packs");
-  if (packs.some((pack) => pack.id === id))
+
+  if (packs.some((pack) => pack.id === id)) {
     await api.call("DELETE", `/api/packs/${id}`);
+  }
 }
 
 async function previewPrimary(page: Page): Promise<string> {
@@ -69,6 +76,7 @@ async function expectPreviewPrimary(
     primary = await previewPrimary(page);
     check(primary);
   }).toPass({ timeout: 20_000 });
+
   return primary;
 }
 
@@ -77,16 +85,20 @@ test("design-system library: save to library, switch packs, restore through vers
 }) => {
   const api = await openHome(page);
   await deleteUserPackIfPresent(api, "user-house-editorial");
+
   const project = await openProject(page, api, {
     prompt: "Library Journal",
     packId: "editorial",
     designMd: "Keep these notes.",
   });
+
   const tree = mainDirection(project).workTree;
+
   const editorialCss = readFileSync(
     path.join(tree, "design-system/tokens.css"),
     "utf-8"
   );
+
   const editorialPrimary = await expectPreviewPrimary(page, (primary) =>
     expect(primary).not.toBe("")
   );
@@ -151,7 +163,11 @@ test("design-system library: save to library, switch packs, restore through vers
   ).toHaveCount(1);
   const versions = await api.versions(project.id, "main");
   const before = versions[1];
-  if (!before) throw new Error("no version before the switch");
+
+  if (!before) {
+    throw new Error("no version before the switch");
+  }
+
   expect(before.title).toBe("Save House Editorial to library");
   await versionRow(page, before.title)
     .first()
@@ -173,10 +189,12 @@ test("design-system library: add a design system to a project without one", asyn
   page,
 }) => {
   const api = await openHome(page);
+
   const project = await openProject(page, api, {
     prompt: "Plain Library Page",
     startRun: false,
   });
+
   const tree = mainDirection(project).workTree;
   await expect(page.locator(".topbar .ds-chip")).toHaveCount(0);
   await page
@@ -193,6 +211,7 @@ test("design-system library: add a design system to a project without one", asyn
   await expect(
     page.locator(".ds-toast", { hasText: "Apply Editorial design system." })
   ).toBeVisible();
+
   for (const file of [
     "design-system/tokens.json",
     "design-system/pack.json",
@@ -201,5 +220,6 @@ test("design-system library: add a design system to a project without one", asyn
   ]) {
     expect(existsSync(path.join(tree, file)), file).toBe(true);
   }
+
   expect((await api.project(project.id)).packId).toBe("editorial");
 });

@@ -10,7 +10,10 @@ const SERIF = "Georgia, serif";
 const SANS = "system-ui, sans-serif";
 
 function columnsOf(list: HTMLElement | null): number {
-  if (!list) return 1;
+  if (!list) {
+    return 1;
+  }
+
   return Math.max(
     1,
     getComputedStyle(list).gridTemplateColumns.split(" ").filter(Boolean).length
@@ -31,8 +34,13 @@ function nextIndex(
     Home: 0,
     End: count - 1,
   };
+
   const target = moves[key];
-  if (target === undefined) return null;
+
+  if (target === undefined) {
+    return null;
+  }
+
   return Math.min(count - 1, Math.max(0, target));
 }
 
@@ -61,6 +69,7 @@ function PackCard({ pack }: { pack: PackSummary }) {
     background: swatchValue(pack, "bg"),
     color: swatchValue(pack, "fg"),
   };
+
   return (
     <>
       <span className="pack-specimen" style={colors} aria-hidden="true">
@@ -107,24 +116,33 @@ export function PackList({
   const options: (PackSummary | null)[] = includeNone
     ? [null, ...(packs ?? [])]
     : (packs ?? []);
+
   const selected = findPack(packs, value);
   const [active, setActive] = useState(0);
   const list = useRef<HTMLDivElement>(null);
   const ready = packs !== null;
+
   const selectedIndex = options.findIndex(
     (pack) => (pack?.id ?? null) === (selected?.id ?? null)
   );
 
   useEffect(() => {
-    if (ready) setActive(Math.max(0, selectedIndex));
+    if (ready) {
+      setActive(Math.max(0, selectedIndex));
+    }
   }, [ready]);
 
   useEffect(() => {
-    if (packs) loadPackFonts(packs);
+    if (packs) {
+      loadPackFonts(packs);
+    }
   }, [packs]);
 
   useEffect(() => {
-    if (!ready) return;
+    if (!ready) {
+      return;
+    }
+
     list.current?.parentElement?.scrollIntoView({ block: "nearest" });
     list.current
       ?.querySelector<HTMLElement>(`[data-index="${active}"]`)
@@ -134,17 +152,29 @@ export function PackList({
   const onKey = (e: KeyboardEvent) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
-      if (options.length > 0) onChoose(options[active] ?? null);
+
+      if (options.length > 0) {
+        onChoose(options[active] ?? null);
+      }
+
       return;
     }
-    if (e.key === "Tab") return onTab?.();
+
+    if (e.key === "Tab") {
+      return onTab?.();
+    }
+
     const next = nextIndex(
       e.key,
       active,
       options.length,
       columnsOf(list.current)
     );
-    if (next === null) return;
+
+    if (next === null) {
+      return;
+    }
+
     e.preventDefault();
     setActive(next);
   };
@@ -159,6 +189,7 @@ export function PackList({
     >
       {options.map((pack, index) => {
         const isSelected = (pack?.id ?? null) === (selected?.id ?? null);
+
         return (
           <div
             key={pack?.id ?? NONE}

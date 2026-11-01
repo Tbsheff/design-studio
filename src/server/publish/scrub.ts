@@ -20,13 +20,22 @@ const ANSI = /\u001b\[[0-9;?]*[ -/]*[@-~]|\u001b\][^\u0007]*\u0007/g;
 
 export function scrubCliText(text: string, extra: string[] = []): string {
   let out = text.replace(ANSI, "");
-  for (const secret of extra)
-    if (secret.length >= 4) out = out.split(secret).join("[hidden]");
-  for (const [pattern, replace] of RULES) out = out.replace(pattern, replace);
+
+  for (const secret of extra) {
+    if (secret.length >= 4) {
+      out = out.split(secret).join("[hidden]");
+    }
+  }
+
+  for (const [pattern, replace] of RULES) {
+    out = out.replace(pattern, replace);
+  }
+
   return out;
 }
 
 export function tailLines(text: string, max = 60): string {
   const lines = text.split(/\r?\n/).filter((line) => line.trim() !== "");
+
   return lines.slice(-max).join("\n");
 }

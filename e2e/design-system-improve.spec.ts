@@ -41,7 +41,11 @@ async function createDtcgDraft(
     page.getByRole("region", { name: "Design system draft" })
   ).toContainText(name);
   const project = (await api.projects()).find((item) => !before.has(item.id));
-  if (!project) throw new Error("backing project not found");
+
+  if (!project) {
+    throw new Error("backing project not found");
+  }
+
   return project;
 }
 
@@ -73,6 +77,7 @@ async function pickerOptions(page: Page): Promise<string[]> {
     .click();
   const list = page.getByRole("listbox", { name: "Design systems" });
   await expect(list.getByRole("option").first()).toBeVisible();
+
   return list.getByRole("option").allTextContents();
 }
 
@@ -111,9 +116,11 @@ test("improve with AI: a DTCG draft passes the check, then Save to library puts 
   expect(readFileSync(path.join(tree, "DESIGN.md"), "utf-8")).not.toMatch(
     /^_To do:/m
   );
+
   const coverage = JSON.parse(
     readFileSync(path.join(tree, "source", "coverage.json"), "utf-8")
   ) as DesignSystemCoverage;
+
   expect(coverage.version).toBe(1);
 
   await bar.getByRole("button", { name: "Save to library" }).click();
@@ -121,10 +128,12 @@ test("improve with AI: a DTCG draft passes the check, then Save to library puts 
     page.locator(".ds-toast", { hasText: "Saved Harbor Kit to your library." })
   ).toBeVisible();
   expect((await packOf(api, packId))?.draft).toBeUndefined();
+
   const detail = await api.call<{ designMd: string }>(
     "GET",
     `/api/packs/${packId}`
   );
+
   expect(detail.designMd).not.toMatch(/^_To do:/m);
 
   const options = await pickerOptions(page);
@@ -149,9 +158,11 @@ test("improve with AI: the studio sends the agent back when the check fails, and
   expect(run?.finalText).toContain(
     "Design system check: passed after 1 studio fix round(s)."
   );
+
   const detail = await api.call<{
     sent: Array<{ text: string; continuation?: number }>;
   }>("GET", `/api/runs/${run?.id}`);
+
   expect(detail.sent.map((item) => item.continuation ?? 0)).toEqual([0, 1]);
   expect(detail.sent[1]?.text).toContain(
     "[design-md] DESIGN.md still has a to-do line"

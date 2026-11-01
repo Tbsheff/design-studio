@@ -8,12 +8,15 @@ function release(host: Element): void {
       host.getAttribute("aria-expanded") === "true" ||
       host.matches(":hover") ||
       host.matches(":focus-visible")
-    )
+    ) {
       return;
+    }
+
     host.removeAttribute(OFF);
     host.removeEventListener("pointerleave", clear);
     host.removeEventListener("focusout", clear);
   };
+
   host.addEventListener("pointerleave", clear);
   host.addEventListener("focusout", clear);
 }
@@ -30,6 +33,7 @@ function clipBox(host: Element): {
     top: 0,
     bottom: window.innerHeight,
   };
+
   for (
     let node = host.parentElement;
     node && node !== document.body;
@@ -38,17 +42,24 @@ function clipBox(host: Element): {
     const style = getComputedStyle(node);
     const clipsX = style.overflowX !== "visible";
     const clipsY = style.overflowY !== "visible";
-    if (!clipsX && !clipsY) continue;
+
+    if (!clipsX && !clipsY) {
+      continue;
+    }
+
     const rect = node.getBoundingClientRect();
+
     if (clipsX) {
       box.left = Math.max(box.left, rect.left);
       box.right = Math.min(box.right, rect.right);
     }
+
     if (clipsY) {
       box.top = Math.max(box.top, rect.top);
       box.bottom = Math.min(box.bottom, rect.bottom);
     }
   }
+
   return box;
 }
 
@@ -56,10 +67,23 @@ type Box = ReturnType<typeof clipBox>;
 
 function restoreAuto(host: Element): void {
   const auto = host.getAttribute(AUTO);
-  if (auto === null) return;
-  if (auto.includes("align")) host.removeAttribute("data-tip-align");
-  if (auto.includes("side")) host.removeAttribute("data-tip-side");
-  if (auto.includes("was-top")) host.setAttribute("data-tip-side", "top");
+
+  if (auto === null) {
+    return;
+  }
+
+  if (auto.includes("align")) {
+    host.removeAttribute("data-tip-align");
+  }
+
+  if (auto.includes("side")) {
+    host.removeAttribute("data-tip-side");
+  }
+
+  if (auto.includes("was-top")) {
+    host.setAttribute("data-tip-side", "top");
+  }
+
   host.removeAttribute(AUTO);
 }
 
@@ -69,12 +93,20 @@ function fitAlign(
   box: Box,
   width: number
 ): string[] {
-  if (host.hasAttribute("data-tip-align")) return [];
+  if (host.hasAttribute("data-tip-align")) {
+    return [];
+  }
+
   const middle = rect.left + rect.width / 2;
   const overRight = middle + width / 2 > box.right - EDGE;
   const overLeft = middle - width / 2 < box.left + EDGE;
-  if (!overRight && !overLeft) return [];
+
+  if (!overRight && !overLeft) {
+    return [];
+  }
+
   host.setAttribute("data-tip-align", overRight ? "end" : "start");
+
   return ["align"];
 }
 
@@ -87,14 +119,19 @@ function fitSide(
   const fitsBelow = rect.bottom + 6 + height <= box.bottom - EDGE;
   const fitsAbove = rect.top - 6 - height >= box.top + EDGE;
   const side = host.getAttribute("data-tip-side");
+
   if (side === null && !fitsBelow && fitsAbove) {
     host.setAttribute("data-tip-side", "top");
+
     return ["side"];
   }
+
   if (side === "top" && !fitsAbove && fitsBelow) {
     host.setAttribute("data-tip-side", "bottom");
+
     return ["side", "was-top"];
   }
+
   return [];
 }
 
@@ -103,14 +140,22 @@ function fitTip(host: Element): void {
   const tip = getComputedStyle(host, "::after");
   const width = parseFloat(tip.width);
   const height = parseFloat(tip.height);
-  if (!width || !height) return;
+
+  if (!width || !height) {
+    return;
+  }
+
   const rect = host.getBoundingClientRect();
   const box = clipBox(host);
+
   const moved = [
     ...fitAlign(host, rect, box, width),
     ...fitSide(host, rect, box, height),
   ];
-  if (moved.length > 0) host.setAttribute(AUTO, moved.join(" "));
+
+  if (moved.length > 0) {
+    host.setAttribute(AUTO, moved.join(" "));
+  }
 }
 
 function tipHost(target: EventTarget | null): Element | null {
@@ -128,8 +173,12 @@ function installWarmTips(): void {
   document.addEventListener(
     "pointerover",
     (event) => {
-      if (!tipHost(event.target)) return;
+      if (!tipHost(event.target)) {
+        return;
+      }
+
       window.clearTimeout(coolTimer);
+
       if (!root.hasAttribute(WARM)) {
         window.clearTimeout(warmTimer);
         warmTimer = window.setTimeout(
@@ -144,9 +193,17 @@ function installWarmTips(): void {
     "pointerout",
     (event) => {
       const host = tipHost(event.target);
-      if (!host) return;
+
+      if (!host) {
+        return;
+      }
+
       const to = event.relatedTarget;
-      if (to instanceof Node && host.contains(to)) return;
+
+      if (to instanceof Node && host.contains(to)) {
+        return;
+      }
+
       window.clearTimeout(warmTimer);
       window.clearTimeout(coolTimer);
       coolTimer = window.setTimeout(
@@ -164,19 +221,33 @@ export function installTipGuard(): void {
     "pointerdown",
     (event) => {
       const host = tipHost(event.target);
-      if (!host || host.hasAttribute(OFF)) return;
+
+      if (!host || host.hasAttribute(OFF)) {
+        return;
+      }
+
       host.setAttribute(OFF, "");
       release(host);
     },
     true
   );
+
   const onEnter = (event: Event): void => {
     const host = tipHost(event.target);
-    if (!host || host.hasAttribute(OFF)) return;
+
+    if (!host || host.hasAttribute(OFF)) {
+      return;
+    }
+
     const from = event instanceof PointerEvent ? event.relatedTarget : null;
-    if (from instanceof Node && host.contains(from)) return;
+
+    if (from instanceof Node && host.contains(from)) {
+      return;
+    }
+
     fitTip(host);
   };
+
   document.addEventListener("pointerover", onEnter, true);
   document.addEventListener("focusin", onEnter, true);
 }

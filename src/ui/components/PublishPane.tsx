@@ -38,14 +38,17 @@ const EXPIRIES: { id: PublishExpiryDays; label: string }[] = [
 function usePublications(projectId: string) {
   const [list, setList] = useState<Publication[]>([]);
   const [backendError, setBackendError] = useState<string | null>(null);
+
   const reload = useCallback(async () => {
     const next = await publishApi.list(projectId);
     setList(next.publications);
     setBackendError(next.backendError);
   }, [projectId]);
+
   useEffect(() => {
     void reload().catch(() => undefined);
   }, [reload]);
+
   return { list, backendError, reload };
 }
 
@@ -95,12 +98,19 @@ function FramePicker({
     () => canvasFrameChoices(target.projectId, target.directionId),
     [target.projectId, target.directionId]
   );
+
   const toggle = (id: string) => {
     const next = new Set(form.picked);
-    if (next.has(id)) next.delete(id);
-    else next.add(id);
+
+    if (next.has(id)) {
+      next.delete(id);
+    } else {
+      next.add(id);
+    }
+
     setForm({ ...form, picked: next });
   };
+
   return (
     <fieldset className="export-field export-frames">
       <legend className="export-label">Frames (published as images)</legend>
@@ -245,6 +255,7 @@ function PublishForm({
 
 function filesText(plan: PublishPlan): string {
   const base = `${plan.fileCount} file${plan.fileCount === 1 ? "" : "s"}, ${publishSize(plan.bytes)}`;
+
   return plan.changedFiles === null
     ? base
     : `${base} (${plan.changedFiles} changed since the live version)`;
@@ -261,13 +272,16 @@ function PlanView({ plan }: { plan: PublishPlan }) {
     ["Indexing", plan.noindex ? "noindex" : "Search engines may list it"],
     ["Version", plan.versionId.slice(0, 7)],
   ];
-  if (plan.kind === "viewer")
+
+  if (plan.kind === "viewer") {
     rows.push([
       "Studio notes",
       plan.comments > 0
         ? `${plan.comments} open comment${plan.comments === 1 ? "" : "s"}`
         : "None",
     ]);
+  }
+
   return (
     <div className="publish-plan" data-testid="publish-plan">
       <div className="alert publish-public" role="alert">
@@ -304,6 +318,7 @@ function planInputOf(target: PublishTarget, form: FormState): PublishPlanInput {
     target.projectId,
     target.directionId
   ).filter((f) => form.picked.has(f.id));
+
   const input: PublishPlanInput = {
     versionId: target.versionId ?? undefined,
     expiresInDays: form.expiry,
@@ -311,26 +326,38 @@ function planInputOf(target: PublishTarget, form: FormState): PublishPlanInput {
     noindex: !form.indexable,
     ...(target.directionId ? { directionId: target.directionId } : {}),
   };
-  if (form.passwordOn) input.password = form.password;
-  if (target.kind === "viewer")
+
+  if (form.passwordOn) {
+    input.password = form.password;
+  }
+
+  if (target.kind === "viewer") {
     Object.assign(input, {
       frames: frames.map((f) => f.frame),
       frameIds: frames.map((f) => f.id),
       comments: form.comments,
     });
+  }
+
   return input;
 }
 
 function formError(target: PublishTarget, form: FormState): string | null {
-  if (!target.versionId)
+  if (!target.versionId) {
     return "Save a version first. Publish takes a saved version.";
-  if (form.passwordOn && form.password.length < PUBLISH_PASSWORD_MIN)
+  }
+
+  if (form.passwordOn && form.password.length < PUBLISH_PASSWORD_MIN) {
     return `Type a password of ${PUBLISH_PASSWORD_MIN} or more characters, or turn Password off.`;
+  }
+
   if (
     target.kind === "viewer" &&
     (form.picked.size === 0 || form.picked.size > PUBLISH_MAX_FRAMES)
-  )
+  ) {
     return `Pick 1 to ${PUBLISH_MAX_FRAMES} frames.`;
+  }
+
   return null;
 }
 
@@ -340,9 +367,11 @@ function usePublishFlow(target: PublishTarget) {
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<Publication | null>(null);
+
   const act = async (label: string, task: () => Promise<void>) => {
     setBusy(label);
     setError(null);
+
     try {
       await task();
     } catch (err) {
@@ -351,30 +380,40 @@ function usePublishFlow(target: PublishTarget) {
       setBusy(null);
     }
   };
+
   const check = (input: PublishPlanInput) =>
     act("Checking…", async () =>
       setPlan(await publishApi.plan(target.projectId, input))
     );
+
   const confirm = () =>
     act("Publishing…", async () => {
-      if (!plan) return;
+      if (!plan) {
+        return;
+      }
+
       const made = await publishApi.publish(target.projectId, plan.id);
       setPlan(null);
       setDone(made.publication);
       await pubs.reload();
-      if (made.publication.status !== "live")
+
+      if (made.publication.status !== "live") {
         setError(made.publication.error ?? "Publish failed.");
+      }
     });
+
   const unpublish = (p: Publication) =>
     act("Unpublishing…", async () => {
       await publishApi.unpublish(target.projectId, p.id);
       await pubs.reload();
     });
+
   const rollback = (p: Publication, versionId: string) =>
     act("Rolling back…", async () => {
       await publishApi.rollback(target.projectId, p.id, versionId);
       await pubs.reload();
     });
+
   return {
     pubs,
     plan,
@@ -390,10 +429,14 @@ function usePublishFlow(target: PublishTarget) {
 }
 
 function DoneNote({ done }: { done: Publication }) {
-  if (done.status !== "live" || !done.url) return null;
+  if (done.status !== "live" || !done.url) {
+    return null;
+  }
+
   const upload = done.lastUpload
     ? ` Uploaded ${done.lastUpload.sent}, reused ${done.lastUpload.reused}.`
     : "";
+
   return (
     <div
       className="share-url publish-done"
@@ -482,6 +525,7 @@ export default function PublishPane({
   const cli = usePublishCli();
   const backend = usePublishBackend();
   const flow = usePublishFlow(target);
+
   const [form, setForm] = useState<FormState>(() => ({
     picked: new Set(
       canvasFrameChoices(target.projectId, target.directionId)
@@ -495,12 +539,15 @@ export default function PublishPane({
     viewerComments: false,
     indexable: false,
   }));
+
   const ready = backend.backend?.ready === true;
   const problem = formError(target, form);
   const now = Date.now();
+
   const shown = flow.pubs.list
     .filter((p) => p.status !== "removed")
     .concat(flow.pubs.list.filter((p) => p.status === "removed").slice(0, 2));
+
   return (
     <>
       <div className="modal-body share-body publish-body">

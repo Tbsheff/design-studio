@@ -47,6 +47,7 @@ import { markShared, pageOwnDir } from "./shared-files.js";
 
 const LAYOUT_CAP = 12;
 const TOKEN_CAP = 60;
+
 const SEVERITY_RANK: Record<ReviewSeverity, number> = {
   high: 0,
   medium: 1,
@@ -67,6 +68,7 @@ async function ownAxe(
   context: string
 ): Promise<AxeViolation[]> {
   await page.evaluate(`${await loadAxeSource()}\n;0`);
+
   return page.evaluate<AxeViolation[]>(
     `window.axe.run(${context}, { runOnly: { type: 'rule', values: ${JSON.stringify(REVIEW_AXE_RULES)} }, resultTypes: ['violations'] }).then((result) => result.violations)`
   );
@@ -78,25 +80,32 @@ async function readPage(
   within: string | undefined
 ): Promise<PageFacts> {
   await waitForPage(page);
+
   const context = within
     ? `document.querySelector(${JSON.stringify(within)})`
     : "document";
+
   const matched = within
     ? await page.evaluate<number>(
         `(() => { try { return document.querySelectorAll(${JSON.stringify(within)}).length; } catch { return 0; } })()`
       )
     : 0;
-  if (within && matched === 0)
+
+  if (within && matched === 0) {
     throw new BadRequestError(
       `No element matches selector ${within} on this page. Check it with get_screenshot or the canvas selection.`
     );
+  }
+
   const violations =
     !within && page.axe
       ? pickRules((await page.axe()) as AxeViolation[], REVIEW_AXE_RULES)
       : await ownAxe(page, context);
+
   const layout = await page.evaluate<LayoutProbeResult>(
     layoutProbeExpression(LAYOUT_CAP)
   );
+
   const selectors = [
     ...new Set(
       violations
@@ -104,9 +113,11 @@ async function readPage(
         .filter((selector): selector is string => selector !== null)
     ),
   ];
+
   const probe = await page.evaluate<ProbeResult>(
     reviewProbeExpression({ selectors, app, scanRules: true, cap: TOKEN_CAP })
   );
+
   return { matched, violations, layout: layout.findings, probe };
 }
 
@@ -116,9 +127,11 @@ async function insideRoot(
   drafts: Draft[]
 ): Promise<Draft[]> {
   const selectors = drafts.map((draft) => draft.selector);
+
   const inside = await page.evaluate<boolean[]>(
     `(() => { const root = document.querySelector(${JSON.stringify(root)}); return ${JSON.stringify(selectors)}.map((s) => { if (!root || !s) return false; try { const el = document.querySelector(s); return Boolean(el && root.contains(el)); } catch { return false; } }); })()`
   );
+
   return drafts.filter((_draft, index) => inside[index] === true);
 }
 
@@ -128,6 +141,7 @@ function findingId(draft: Draft): string {
 
 export function frameName(frame: ReviewFrame): string {
   const page = frame.path ? ` (${frame.path})` : "";
+
   return `${frame.label ?? frame.id ?? `${frame.width}x${frame.height}`}${page}`;
 }
 
@@ -138,6 +152,7 @@ function askText(draft: Draft, frame: ReviewFrame): string {
   ]
     .filter(Boolean)
     .join(", ");
+
   return `Review finding in frame ${frameName(frame)}, ${REVIEW_KIND_LABEL[draft.kind].toLowerCase()} (${draft.severity}): ${draft.message}\nElement: ${draft.element}${where ? ` (${where})` : ""}.\n${draft.hint}`;
 }
 
@@ -160,6 +175,7 @@ function toFinding(draft: Draft, frame: ReviewFrame): ReviewFinding {
 function ordered(findings: ReviewFinding[]): ReviewFinding[] {
   const kindRank = (finding: ReviewFinding) =>
     REVIEW_KINDS.indexOf(finding.kind);
+
   return [...findings].sort(
     (a, b) =>
       kindRank(a) - kindRank(b) ||
@@ -169,14 +185,17 @@ function ordered(findings: ReviewFinding[]): ReviewFinding[] {
 
 function unique(findings: ReviewFinding[]): ReviewFinding[] {
   const seen = new Set<string>();
+
   return findings.filter(
     (finding) => !seen.has(finding.id) && Boolean(seen.add(finding.id))
   );
 }
 
 function noTokensNote(probe: ProbeResult): string {
-  if (probe.tokens.some((hit) => hit.via === "class"))
+  if (probe.tokens.some((hit) => hit.via === "class")) {
     return "This project has no design tokens, so only Tailwind arbitrary values such as p-[6px] count as off-token.";
+  }
+
   return "This project has no design tokens yet, so Review skips the off-token check.";
 }
 
@@ -189,22 +208,33 @@ function copyKey(finding: ReviewFinding): string | null {
 function grouped(findings: ReviewFinding[]): ReviewFinding[] {
   const first = new Map<string, ReviewFinding>();
   const out: ReviewFinding[] = [];
+
   for (const finding of findings) {
     const key = copyKey(finding);
     const seen = key ? first.get(key) : undefined;
+
     if (seen) {
       seen.copies = (seen.copies ?? 1) + 1;
       continue;
     }
-    if (key) first.set(key, finding);
+
+    if (key) {
+      first.set(key, finding);
+    }
+
     out.push(finding);
   }
+
   return out;
 }
 
 function counts(findings: ReviewFinding[]): Record<ReviewSeverity, number> {
   const out: Record<ReviewSeverity, number> = { high: 0, medium: 0, low: 0 };
-  for (const finding of findings) out[finding.severity] += 1;
+
+  for (const finding of findings) {
+    out[finding.severity] += 1;
+  }
+
   return out;
 }
 
@@ -214,18 +244,26 @@ function fromAppSource(draft: Draft): boolean {
 
 function keepSharedAsk(drafts: Draft[], appDir: string): Draft[] {
   const prefix = appDir ? `${appDir.replace(/\/+$/, "")}/` : "";
+
   for (const draft of drafts) {
     const file = draft.fix?.edit.source.file;
-    if (!file || !prefix || file.startsWith(prefix)) continue;
+
+    if (!file || !prefix || file.startsWith(prefix)) {
+      continue;
+    }
+
     draft.fix = null;
     draft.hint = `This element comes from shared code at ${file}, so a change there reaches every place that uses it. ${draft.hint}`;
   }
+
   return drafts;
 }
 
 function selectorNote(selector: string, matched: number): string {
-  if (matched <= 1)
+  if (matched <= 1) {
     return `1 element matches ${selector}; only findings inside it are shown.`;
+  }
+
   return `${matched} elements match ${selector}; only findings inside the first one are shown. Pass a more exact selector or a layer id from get_layers for another one.`;
 }
 
@@ -242,12 +280,18 @@ export async function runReview(
   target: ReviewTarget
 ): Promise<ReviewResult> {
   const { project, direction, frame } = target;
-  if (!preview.withPage) throw new Error("rendering is not available");
+
+  if (!preview.withPage) {
+    throw new Error("rendering is not available");
+  }
+
   const url = withPagePath(
     target.baseUrl ?? (await preview.directionUrl(project, direction)),
     frame.path || undefined
   );
+
   const entries = (await readDesignSystemState(project, direction)).entries;
+
   const { facts, all } = await preview.withPage(
     url,
     { width: frame.width, height: frame.height },
@@ -255,6 +299,7 @@ export async function runReview(
       const read = await readPage(page, Boolean(project.app), frame.selector);
       const rules = target.rules ?? [];
       const ruleHits = await probeRules(page, rules, Boolean(project.app));
+
       const base = [
         ...axeDrafts(read.violations, read.probe.elements, entries),
         ...tapDrafts(read.probe.taps, entries),
@@ -266,10 +311,12 @@ export async function runReview(
         ),
         ...layoutDrafts(read.layout),
       ];
+
       const found = [
         ...applyTokenRules(rules, base),
         ...ruleDrafts(rules, ruleHits.hits),
       ];
+
       return {
         facts: read,
         all: frame.selector
@@ -278,17 +325,21 @@ export async function runReview(
       };
     }
   );
+
   const drafts = project.app
     ? keepSharedAsk(all.filter(fromAppSource), project.app.appDir)
     : all;
+
   await verifyFixes(project, direction, drafts);
   markShared(drafts, await pageOwnDir(project, direction, frame.path));
+
   const findings = ordered(
     groupKitTokens(
       grouped(unique(drafts.map((draft) => toFinding(draft, frame)))),
       project.app ? project.app.appDir : null
     )
   );
+
   const notes = [
     ...(entries.length === 0 ? [noTokensNote(facts.probe)] : []),
     ...(frame.selector ? [selectorNote(frame.selector, facts.matched)] : []),
@@ -298,6 +349,7 @@ export async function runReview(
         ]
       : []),
   ];
+
   const matched = frame.selector
     ? {
         matched: {
@@ -306,6 +358,7 @@ export async function runReview(
         },
       }
     : {};
+
   return {
     projectId: project.id,
     directionId: direction.id,

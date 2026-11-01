@@ -67,32 +67,39 @@ function isKeyMessage(msg: BridgeToParent): msg is KeyMessage {
 }
 
 function forwardAppKey(id: AppKey): void {
-  if (id === "ask-inline") void runCommand("selection.ask-inline");
-  else if (id === "project-rail") void runCommand("view.project-rail");
-  else if (id === "stop")
+  if (id === "ask-inline") {
+    void runCommand("selection.ask-inline");
+  } else if (id === "project-rail") {
+    void runCommand("view.project-rail");
+  } else if (id === "stop") {
     window.dispatchEvent(new CustomEvent(PREVIEW_STOP_EVENT));
-  else if (id === "palette" || id === "shortcuts") openLayer(id);
-  else moveRegion(id === "next-region" ? 1 : -1);
+  } else if (id === "palette" || id === "shortcuts") {
+    openLayer(id);
+  } else {
+    moveRegion(id === "next-region" ? 1 : -1);
+  }
 }
 
 function forwardKeyMessage(msg: KeyMessage): void {
-  if (msg.type === "app-key") forwardAppKey(msg.id);
-  else if (msg.type === "escape")
+  if (msg.type === "app-key") {
+    forwardAppKey(msg.id);
+  } else if (msg.type === "escape") {
     window.dispatchEvent(new CustomEvent(PREVIEW_ESCAPE_EVENT));
-  else if (msg.type === "layout-key")
+  } else if (msg.type === "layout-key") {
     window.dispatchEvent(new CustomEvent(PREVIEW_LAYOUT_KEY_EVENT));
-  else if (msg.type === "tool-key")
+  } else if (msg.type === "tool-key") {
     window.dispatchEvent(
       new CustomEvent(PREVIEW_TOOL_KEY_EVENT, { detail: { tool: msg.tool } })
     );
-  else if (msg.type === "arrange-key")
+  } else if (msg.type === "arrange-key") {
     window.dispatchEvent(
       new CustomEvent(PREVIEW_ARRANGE_KEY_EVENT, { detail: { key: msg.key } })
     );
-  else if (typeof msg.redo === "boolean")
+  } else if (typeof msg.redo === "boolean") {
     window.dispatchEvent(
       new CustomEvent(PREVIEW_HISTORY_EVENT, { detail: { redo: msg.redo } })
     );
+  }
 }
 
 interface Slot {
@@ -153,9 +160,13 @@ function pagePoint(
   x: number,
   y: number
 ): { x: number; y: number } | null {
-  if (!frame) return null;
+  if (!frame) {
+    return null;
+  }
+
   const rect = frame.getBoundingClientRect();
   const scale = frame.offsetWidth > 0 ? rect.width / frame.offsetWidth : 1;
+
   return { x: rect.left + x * scale, y: rect.top + y * scale };
 }
 
@@ -166,11 +177,14 @@ const HMR_FALLBACK_MS = 2500;
 
 function releaseToolbarFocus(): void {
   const active = document.activeElement;
-  if (active instanceof HTMLButtonElement && active.closest(".toolbar"))
+
+  if (active instanceof HTMLButtonElement && active.closest(".toolbar")) {
     active.blur();
+  }
 }
 
 type SelectMessage = Extract<BridgeToParent, { type: "select" }>;
+
 type SelectManyMessage = Extract<BridgeToParent, { type: "select-many" }>;
 
 function isSelectMessage(
@@ -184,8 +198,12 @@ export function nextSelection(
   picked: SelectionContext,
   additive: boolean
 ): SelectionContext[] {
-  if (!additive) return [picked];
+  if (!additive) {
+    return [picked];
+  }
+
   const has = prev.some((s) => s.selector === picked.selector);
+
   return has
     ? prev.filter((s) => s.selector !== picked.selector)
     : [...prev, picked];
@@ -196,8 +214,12 @@ export function manySelection(
   picked: SelectionContext[],
   additive: boolean
 ): SelectionContext[] {
-  if (!additive) return picked;
+  if (!additive) {
+    return picked;
+  }
+
   const known = new Set(prev.map((s) => s.selector));
+
   return [...prev, ...picked.filter((s) => !known.has(s.selector))];
 }
 
@@ -208,8 +230,10 @@ function nodeAfterSelect(
   if (
     msg.additive &&
     selection.some((s) => s.selector === msg.selection.selector)
-  )
+  ) {
     return null;
+  }
+
   return typeof msg.node === "number" ? msg.node : null;
 }
 
@@ -219,27 +243,41 @@ function applyRects(
   rects: (SelectionContext["rect"] | null)[]
 ): SelectionContext[] {
   let changed = false;
+
   const next = prev.map((s) => {
     const i = selectors.indexOf(s.selector);
     const r = i >= 0 ? rects[i] : undefined;
-    if (!r || sameRect(r, s.rect)) return s;
+
+    if (!r || sameRect(r, s.rect)) {
+      return s;
+    }
+
     changed = true;
+
     return { ...s, rect: r };
   });
+
   return changed ? next : prev;
 }
 
 function hoverOf(
   msg: Extract<BridgeToParent, { type: "hover" }>
 ): HoverBox | null {
-  if (!msg.rect) return null;
+  if (!msg.rect) {
+    return null;
+  }
+
   const box: HoverBox = {
     rect: msg.rect,
     label: msg.label,
     altKey: msg.altKey === true,
     fromTree: msg.source === "tree",
   };
-  if (typeof msg.node === "number") box.node = msg.node;
+
+  if (typeof msg.node === "number") {
+    box.node = msg.node;
+  }
+
   return box;
 }
 
@@ -255,16 +293,21 @@ function sameRect(
 export function usePreviewFrames(o: Options) {
   const [slots, setSlots] = useState<Slot[]>([]);
   const [frontToken, setFrontToken] = useState<string | null>(null);
+
   const [hover] = useState<LiveStore<HoverBox | null>>(() =>
     createLiveStore<HoverBox | null>(null)
   );
+
   const setHover = hover.set;
+
   const [picked] = useState<LiveStore<SelectionContext[] | null>>(() =>
     createLiveStore<SelectionContext[] | null>(null)
   );
+
   const heldRects = useRef<Extract<BridgeToParent, { type: "rects" }> | null>(
     null
   );
+
   const [tree, setTree] = useState<LayerTree | null>(null);
   const [selectedNode, setSelectedNode] = useState<number | null>(null);
   const treeWanted = useRef(false);
@@ -272,9 +315,11 @@ export function usePreviewFrames(o: Options) {
   const elements = useRef<Record<string, HTMLIFrameElement | null>>({});
   const pendingSwap = useRef<PendingSwap | null>(null);
   const reselectOnSwap = useRef(false);
+
   const pendingReact = useRef<{ changedAt: number; receivedAt: number } | null>(
     null
   );
+
   const pendingSelectAt = useRef<number | null>(null);
   const handledChange = useRef<FilesChange | null>(null);
   const mountedAt = useRef(Date.now());
@@ -307,11 +352,15 @@ export function usePreviewFrames(o: Options) {
 
   const frontFrame = useCallback((): BridgeFrame | null => {
     const slot = slotsRef.current.find((s) => s.token === frontRef.current);
+
     return slot ? frameFor(slot) : null;
   }, [frameFor]);
 
   const requestRects = useCallback((frame: BridgeFrame | null) => {
-    if (!frame) return;
+    if (!frame) {
+      return;
+    }
+
     const selectors = opts.current.selection.map((s) => s.selector);
     postToFrame(frame, { type: "request-rects", selectors });
   }, []);
@@ -339,19 +388,24 @@ export function usePreviewFrames(o: Options) {
       setSlots((prev) => prev.filter((s) => s.token === token));
       setHover(null);
       const slot = slotsRef.current.find((s) => s.token === token);
-      if (slot)
+
+      if (slot) {
         window.setTimeout(() => {
           const frame = frameFor(slot);
           syncFrame(frame);
           const [only, ...rest] = opts.current.selection;
-          if (reselectOnSwap.current && only && rest.length === 0)
+
+          if (reselectOnSwap.current && only && rest.length === 0) {
             postToFrame(frame, {
               type: "select-selector",
               selector: only.selector,
             });
+          }
+
           reselectOnSwap.current = false;
           window.dispatchEvent(new Event(PREVIEW_PAINTED_EVENT));
         }, 0);
+      }
     },
     [frameFor, syncFrame]
   );
@@ -359,12 +413,18 @@ export function usePreviewFrames(o: Options) {
   const settleSwap = useCallback(
     (token: string) => {
       const swap = pendingSwap.current;
-      if (swap?.token !== token) return;
+
+      if (swap?.token !== token) {
+        return;
+      }
+
       if (textEditing.current || dragHold.current) {
         swap.due = true;
         swap.loaded = true;
+
         return;
       }
+
       window.clearTimeout(swap.timer);
       pendingSwap.current = null;
       swapTo(token);
@@ -375,25 +435,41 @@ export function usePreviewFrames(o: Options) {
   const markSwap = useCallback(
     (token: string, flag: "due" | "loaded") => {
       const swap = pendingSwap.current;
-      if (swap?.token !== token) return;
+
+      if (swap?.token !== token) {
+        return;
+      }
+
       swap[flag] = true;
-      if (swap.due && swap.loaded) settleSwap(token);
+
+      if (swap.due && swap.loaded) {
+        settleSwap(token);
+      }
     },
     [settleSwap]
   );
 
   const loadFresh = useCallback((baseUrl: string | null) => {
-    if (pendingSwap.current) window.clearTimeout(pendingSwap.current.timer);
-    if (hmrFallback.current !== null) window.clearTimeout(hmrFallback.current);
+    if (pendingSwap.current) {
+      window.clearTimeout(pendingSwap.current.timer);
+    }
+
+    if (hmrFallback.current !== null) {
+      window.clearTimeout(hmrFallback.current);
+    }
+
     hmrFallback.current = null;
     pendingSwap.current = null;
     pendingReact.current = null;
     setHover(null);
+
     if (!baseUrl) {
       setSlots([]);
       setFrontToken(null);
+
       return;
     }
+
     const token = randomToken();
     setSlots([{ token, src: frameSrc(baseUrl, token) }]);
     setFrontToken(token);
@@ -403,13 +479,22 @@ export function usePreviewFrames(o: Options) {
 
   const watchHmr = useCallback(
     (receivedAt: number) => {
-      if (hmrFallback.current !== null)
+      if (hmrFallback.current !== null) {
         window.clearTimeout(hmrFallback.current);
+      }
+
       hmrFallback.current = window.setTimeout(() => {
         hmrFallback.current = null;
         const token = frontRef.current;
-        if (!token || frameErrorAt.current[token] === undefined) return;
-        if ((lastPaintAt.current[token] ?? 0) >= receivedAt) return;
+
+        if (!token || frameErrorAt.current[token] === undefined) {
+          return;
+        }
+
+        if ((lastPaintAt.current[token] ?? 0) >= receivedAt) {
+          return;
+        }
+
         loadFresh(opts.current.baseUrl);
       }, HMR_FALLBACK_MS);
     },
@@ -418,24 +503,36 @@ export function usePreviewFrames(o: Options) {
 
   useEffect(() => {
     const change = o.lastChange;
-    if (change === handledChange.current) return;
+
+    if (change === handledChange.current) {
+      return;
+    }
+
     handledChange.current = change;
+
     if (
       !change ||
       !o.live ||
       !o.baseUrl ||
       change.directionId !== o.directionId
-    )
+    ) {
       return;
+    }
+
     if (o.kind === "react" && !change.reload) {
       pendingReact.current = {
         changedAt: change.changedAt,
         receivedAt: change.receivedAt,
       };
       watchHmr(change.receivedAt);
+
       return;
     }
-    if (pendingSwap.current) window.clearTimeout(pendingSwap.current.timer);
+
+    if (pendingSwap.current) {
+      window.clearTimeout(pendingSwap.current.timer);
+    }
+
     reselectOnSwap.current = change.reload === true;
     const token = randomToken();
     const src = frameSrc(o.baseUrl, token, { v: String(change.changedAt) });
@@ -443,10 +540,12 @@ export function usePreviewFrames(o: Options) {
       ...prev.filter((s) => s.token === frontRef.current),
       { token, src },
     ]);
+
     const timer = window.setTimeout(
       () => markSwap(token, "due"),
       SWAP_FALLBACK_MS
     );
+
     pendingSwap.current = {
       token,
       changedAt: change.changedAt,
@@ -466,28 +565,42 @@ export function usePreviewFrames(o: Options) {
 
   const onFrameLoad = useCallback(
     (token: string) => {
-      if (pendingSwap.current?.token === token)
+      if (pendingSwap.current?.token === token) {
         window.setTimeout(() => markSwap(token, "loaded"), LOAD_GRACE_MS);
+      }
     },
     [markSwap]
   );
 
   useEffect(() => {
     const f = frontFrame();
-    if (f)
+
+    if (f) {
       postToFrame(f, {
         type: "set-mode",
         mode: o.selectMode ? "select" : "none",
         marquee: o.marquee === true,
       });
-    if (!o.selectMode) setHover(null);
+    }
+
+    if (!o.selectMode) {
+      setHover(null);
+    }
   }, [o.selectMode, o.marquee, frontToken, frontFrame]);
 
   useEffect(() => {
     const f = frontFrame();
-    if (!f) return;
+
+    if (!f) {
+      return;
+    }
+
     const allowed = o.textEditAllowed === true;
-    if (!allowed) postToFrame(f, { type: "text-edit-stop" });
+
+    if (!allowed) {
+      postToFrame(f, { type: "text-edit-stop" });
+    }
+
     postToFrame(f, { type: "text-edit-allowed", allowed });
   }, [o.textEditAllowed, frontToken, frontFrame]);
 
@@ -500,7 +613,11 @@ export function usePreviewFrames(o: Options) {
 
   useLayoutEffect(() => {
     const at = pendingSelectAt.current;
-    if (at === null) return;
+
+    if (at === null) {
+      return;
+    }
+
     pendingSelectAt.current = null;
     requestAnimationFrame(() => {
       const cur = opts.current;
@@ -517,11 +634,14 @@ export function usePreviewFrames(o: Options) {
     (frame: BridgeFrame) => {
       const cur = opts.current;
       const isFront = frame.token === frontRef.current;
+
       const base = {
         projectId: cur.projectId,
         directionId: cur.directionId ?? undefined,
       };
+
       lastPaintAt.current[frame.token] = Date.now();
+
       if (!openReported.current && isFront) {
         openReported.current = true;
         reportAppStart("studio");
@@ -531,7 +651,9 @@ export function usePreviewFrames(o: Options) {
           ms: Date.now() - mountedAt.current,
         });
       }
+
       const swap = pendingSwap.current;
+
       if (swap && swap.token === frame.token) {
         settleSwap(frame.token);
         sendTelemetry({
@@ -541,35 +663,55 @@ export function usePreviewFrames(o: Options) {
           detail: { kind: "html" },
         });
       }
+
       const react = pendingReact.current;
-      if (!react || !isFront || cur.kind !== "react") return;
+
+      if (!react || !isFront || cur.kind !== "react") {
+        return;
+      }
+
       pendingReact.current = null;
-      if (Date.now() - react.receivedAt < REACT_LATENCY_WINDOW_MS)
+
+      if (Date.now() - react.receivedAt < REACT_LATENCY_WINDOW_MS) {
         sendTelemetry({
           ...base,
           kind: "preview.latency",
           ms: Date.now() - react.changedAt,
           detail: { kind: "react" },
         });
+      }
     },
     [settleSwap]
   );
 
   const scheduleTree = useCallback(() => {
-    if (treeTimer.current !== null) return;
+    if (treeTimer.current !== null) {
+      return;
+    }
+
     treeTimer.current = window.setTimeout(() => {
       treeTimer.current = null;
       const f = frontFrame();
-      if (f && treeWanted.current) postToFrame(f, { type: "request-tree" });
+
+      if (f && treeWanted.current) {
+        postToFrame(f, { type: "request-tree" });
+      }
     }, TREE_REFRESH_MS);
   }, [frontFrame]);
 
   const watchTree = useCallback(
     (on: boolean) => {
       treeWanted.current = on;
-      if (!on) return;
+
+      if (!on) {
+        return;
+      }
+
       const f = frontFrame();
-      if (f) postToFrame(f, { type: "request-tree" });
+
+      if (f) {
+        postToFrame(f, { type: "request-tree" });
+      }
     },
     [frontFrame]
   );
@@ -579,8 +721,10 @@ export function usePreviewFrames(o: Options) {
       textEditing.current = msg.type === "text-edit" && msg.state === "start";
       opts.current.onTextEdit?.(msg);
       const swap = pendingSwap.current;
-      if (!textEditing.current && swap?.due && swap.loaded)
+
+      if (!textEditing.current && swap?.due && swap.loaded) {
         settleSwap(swap.token);
+      }
     },
     [settleSwap]
   );
@@ -589,23 +733,34 @@ export function usePreviewFrames(o: Options) {
     (msg: SelectMessage | SelectManyMessage) => {
       const cur = opts.current;
       releaseToolbarFocus();
+
       if (msg.type === "select-many") {
         setSelectedNode(typeof msg.node === "number" ? msg.node : null);
-        if (msg.selections.length > 0) pendingSelectAt.current = msg.at;
+
+        if (msg.selections.length > 0) {
+          pendingSelectAt.current = msg.at;
+        }
+
         picked.set(manySelection(cur.selection, msg.selections, msg.additive));
         startTransition(() =>
           cur.setSelection((prev) =>
             manySelection(prev, msg.selections, msg.additive)
           )
         );
+
         return;
       }
+
       setSelectedNode(nodeAfterSelect(msg, cur.selection));
       picked.set(nextSelection(cur.selection, msg.selection, msg.additive));
       startTransition(() =>
         cur.setSelection((prev) => {
           const next = nextSelection(prev, msg.selection, msg.additive);
-          if (next.includes(msg.selection)) pendingSelectAt.current = msg.at;
+
+          if (next.includes(msg.selection)) {
+            pendingSelectAt.current = msg.at;
+          }
+
           return next;
         })
       );
@@ -616,28 +771,42 @@ export function usePreviewFrames(o: Options) {
   const onFrontMessage = useCallback(
     (frame: BridgeFrame, msg: BridgeToParent) => {
       const cur = opts.current;
-      for (const listener of listeners.current) listener(msg);
+
+      for (const listener of listeners.current) {
+        listener(msg);
+      }
+
       if (isKeyMessage(msg)) {
         forwardKeyMessage(msg);
+
         return;
       }
+
       if (isSelectMessage(msg)) {
         onSelectMessage(msg);
+
         return;
       }
+
       switch (msg.type) {
         case "hover":
-          if (cur.selectMode || msg.source === "tree") setHover(hoverOf(msg));
+          if (cur.selectMode || msg.source === "tree") {
+            setHover(hoverOf(msg));
+          }
+
           break;
         case "tree":
           setTree(parseLayerTree(msg));
           break;
         case "rects":
-          if (dragHold.current) heldRects.current = msg;
-          else
+          if (dragHold.current) {
+            heldRects.current = msg;
+          } else {
             cur.setSelection((prev) =>
               applyRects(prev, msg.selectors, msg.rects)
             );
+          }
+
           break;
         case "scroll":
           setHover(null);
@@ -655,9 +824,14 @@ export function usePreviewFrames(o: Options) {
           break;
         case "context-menu": {
           const at = pagePoint(frame.element, msg.x, msg.y);
-          if (at) cur.onContextMenu?.(at);
+
+          if (at) {
+            cur.onContextMenu?.(at);
+          }
+
           break;
         }
+
         case "text-edit":
         case "text-commit":
           onTextMessage(msg);
@@ -670,19 +844,31 @@ export function usePreviewFrames(o: Options) {
   const onMessage = useCallback(
     (frame: BridgeFrame, msg: BridgeToParent) => {
       const cur = opts.current;
+
       if (msg.type === "ready") {
-        for (const listener of listeners.current) listener(msg);
-        if (treeWanted.current && frame.token === frontRef.current)
+        for (const listener of listeners.current) {
+          listener(msg);
+        }
+
+        if (treeWanted.current && frame.token === frontRef.current) {
           postToFrame(frame, { type: "request-tree" });
+        }
+
         return syncFrame(frame);
       }
+
       if (msg.type === "painted") {
-        if (frame.token === frontRef.current)
+        if (frame.token === frontRef.current) {
           window.dispatchEvent(new Event(PREVIEW_PAINTED_EVENT));
-        if (treeWanted.current && frame.token === frontRef.current)
+        }
+
+        if (treeWanted.current && frame.token === frontRef.current) {
           scheduleTree();
+        }
+
         return onPainted(frame);
       }
+
       if (msg.type === "error") {
         frameErrorAt.current[frame.token] = Date.now();
         cur.onError({
@@ -692,9 +878,13 @@ export function usePreviewFrames(o: Options) {
           file: msg.source,
           line: msg.line,
         });
+
         return;
       }
-      if (frame.token === frontRef.current) onFrontMessage(frame, msg);
+
+      if (frame.token === frontRef.current) {
+        onFrontMessage(frame, msg);
+      }
     },
     [onFrontMessage, onPainted, syncFrame]
   );
@@ -703,50 +893,65 @@ export function usePreviewFrames(o: Options) {
 
   useEffect(
     () => () => {
-      if (treeTimer.current !== null) window.clearTimeout(treeTimer.current);
+      if (treeTimer.current !== null) {
+        window.clearTimeout(treeTimer.current);
+      }
     },
     []
   );
 
   const clearSelection = useCallback(() => {
     const f = frontFrame();
-    if (f) postToFrame(f, { type: "clear" });
+
+    if (f) {
+      postToFrame(f, { type: "clear" });
+    }
   }, [frontFrame]);
 
   const post = useCallback(
     (body: ParentMessageBody) => {
       const f = frontFrame();
-      if (f) postToFrame(f, body);
+
+      if (f) {
+        postToFrame(f, body);
+      }
     },
     [frontFrame]
   );
 
   const listen = useCallback((handler: (message: BridgeToParent) => void) => {
     listeners.current.add(handler);
+
     return () => {
       listeners.current.delete(handler);
     };
   }, []);
+
   const hoverNode = useCallback(
     (id: number | null) => post({ type: "hover-node", id }),
     [post]
   );
+
   const selectNode = useCallback(
     (id: number, additive: boolean) =>
       post({ type: "select-node", id, additive }),
     [post]
   );
+
   const selectRelative = useCallback(
     (selector: string, move: SelectMove) => {
       const cur = opts.current;
       const target = cur.selection.find((s) => s.selector === selector);
+
       if (
         move === "child" &&
         cur.textEditAllowed &&
         target &&
         textEditability(target) === "ok"
-      )
+      ) {
         frontFrame()?.element?.focus();
+      }
+
       post({ type: "select-relative", selector, move });
     },
     [post, frontFrame]
@@ -756,27 +961,39 @@ export function usePreviewFrames(o: Options) {
     (held: boolean, settle: boolean) => {
       dragHold.current = held;
       const rects = heldRects.current;
+
       if (!held && rects) {
         heldRects.current = null;
         opts.current.setSelection((prev) =>
           applyRects(prev, rects.selectors, rects.rects)
         );
       }
+
       const swap = pendingSwap.current;
-      if (held || !swap) return;
+
+      if (held || !swap) {
+        return;
+      }
+
       const release = () => {
         const cur = pendingSwap.current;
+
         if (
           cur === swap &&
           !dragHold.current &&
           !textEditing.current &&
           cur.due &&
           cur.loaded
-        )
+        ) {
           settleSwap(cur.token);
+        }
       };
-      if (settle) release();
-      else window.setTimeout(release, SWAP_FALLBACK_MS);
+
+      if (settle) {
+        release();
+      } else {
+        window.setTimeout(release, SWAP_FALLBACK_MS);
+      }
     },
     [settleSwap]
   );

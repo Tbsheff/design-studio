@@ -28,14 +28,19 @@ interface Deps {
 
 async function parseTitle(text: string): Promise<string> {
   let body: unknown;
+
   try {
     body = text.trim() === "" ? {} : JSON.parse(text);
   } catch {
     throw new BadRequestError("body must be JSON");
   }
+
   const result = titleSchema.safeParse(body);
-  if (!result.success)
+
+  if (!result.success) {
     throw new BadRequestError(result.error.issues[0]?.message ?? "bad body");
+  }
+
   return result.data.title;
 }
 
@@ -45,27 +50,38 @@ export function registerRunTitleRoutes(app: Hono, deps: Deps): void {
     const runId = assertSafeId(c.req.param("runId"), "runId");
     const title = await parseTitle(await c.req.text());
     const pid = await deps.findRunProject(runId);
-    if (pid === null) throw new NotFoundError(`run ${runId} not found`);
+
+    if (pid === null) {
+      throw new NotFoundError(`run ${runId} not found`);
+    }
+
     const file = path.join(deps.runsDir(pid), `${runId}.json`);
+
     const summary = await lock(runId, async () => {
       let current: RunSummary;
+
       try {
         current = JSON.parse(await readFile(file, "utf-8")) as RunSummary;
       } catch {
         throw new NotFoundError(`run ${runId} not found`);
       }
+
       if (
         current.status === "running" &&
         deps.runner.isRunning(pid, current.directionId)
-      )
+      ) {
         throw new ConflictError("run_in_progress");
+      }
+
       const { title: _old, ...rest } = current;
       const next: RunSummary = title ? { ...rest, title } : rest;
       const temp = `${file}.${randomBytes(4).toString("hex")}.tmp`;
       await writeFile(temp, `${JSON.stringify(next, null, 2)}\n`);
       await rename(temp, file);
+
       return next;
     });
+
     return c.json(summary);
   });
 }

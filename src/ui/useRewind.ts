@@ -46,26 +46,38 @@ export function editedRequest(request: RunRequest, prompt: string): RunRequest {
     task: _task,
     ...rest
   } = request;
+
   return { ...rest, prompt };
 }
 
 export function useRewind(options: Options): RewindControl {
   const ref = useRef(options);
   ref.current = options;
+
   const onRestore = useCallback((versionId: string) => {
     const { act, direction, projectId, refreshVersions } = ref.current;
-    if (!direction) return;
+
+    if (!direction) {
+      return;
+    }
+
     void act(async () => {
       await api.restore(projectId, direction.id, versionId);
       refreshVersions();
     });
   }, []);
+
   const onEditResend = useCallback(
     async (run: RunView, prompt: string, fromVersionId: string) => {
       const { act, guard, direction, projectId, seedRun, setDirectionId } =
         ref.current;
+
       const request = run.request;
-      if (!request) return;
+
+      if (!request) {
+        return;
+      }
+
       await guard(() =>
         act(async () => {
           const created = await api.createDirection(
@@ -73,6 +85,7 @@ export function useRewind(options: Options): RewindControl {
             fromVersionId,
             `${direction?.name ?? "Direction"} edit`
           );
+
           const next = editedRequest(request, prompt);
           const { runId } = await api.startRun(projectId, created.id, next);
           seedRun(runId, created.id, next);
@@ -82,13 +95,16 @@ export function useRewind(options: Options): RewindControl {
     },
     []
   );
+
   const { versions, status, busy, running } = options;
   const dirtyCount = status?.dirty ? status.changed.length : 0;
   const locked = busy || running !== null;
   const headVersionId = options.direction?.headVersionId ?? null;
+
   const headRestoredFrom =
     versions.find((version) => version.id === headVersionId)?.meta
       .restoredFrom ?? null;
+
   return useMemo(
     () => ({
       versions,

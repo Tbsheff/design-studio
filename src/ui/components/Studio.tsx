@@ -105,6 +105,7 @@ import { VariationsTop, canvasVariations } from "./VariationsLayer";
 const ExportDialog = lazy(() =>
   import("./ExportDialog").then((m) => ({ default: m.ExportDialog }))
 );
+
 const ShipDialog = lazy(() => import("./ShipDialog"));
 const RulesEditor = lazy(() => import("./RulesEditor"));
 const ShareDialog = lazy(() => import("./ShareDialog"));
@@ -116,7 +117,10 @@ function RulesSlot({
   projectId: string;
   directionId: string | null;
 }) {
-  if (!directionId) return null;
+  if (!directionId) {
+    return null;
+  }
+
   return (
     <Suspense fallback={null}>
       <RulesEditor
@@ -137,7 +141,10 @@ function ShipLayer({
   open: boolean;
   onClose: () => void;
 }) {
-  if (!open) return null;
+  if (!open) {
+    return null;
+  }
+
   return (
     <Suspense fallback={null}>
       <ShipDialog projectId={projectId} onClose={onClose} />
@@ -152,7 +159,10 @@ function ShareLayer({
   target: ShareTarget | null;
   onClose: () => void;
 }) {
-  if (!target) return null;
+  if (!target) {
+    return null;
+  }
+
   return (
     <Suspense fallback={null}>
       <ShareDialog target={target} onClose={onClose} />
@@ -167,13 +177,17 @@ function ExportLayer({
   target: ExportTarget | null;
   onClose: () => void;
 }) {
-  if (!target) return null;
+  if (!target) {
+    return null;
+  }
+
   return (
     <Suspense fallback={null}>
       <ExportDialog target={target} onClose={onClose} />
     </Suspense>
   );
 }
+
 import { useStudioCommands } from "../commands/useStudioCommands";
 import { prefetchCommandLayer } from "../screens";
 
@@ -187,9 +201,15 @@ function useHomeVariationsHandoff(
   propose: ReturnType<typeof useVariations>["propose"]
 ): void {
   useEffect(() => {
-    if (!ready) return;
+    if (!ready) {
+      return;
+    }
+
     const intent = homeVariations.take(projectId);
-    if (intent) void propose(intent.prompt, intent.level, [], intent.count);
+
+    if (intent) {
+      void propose(intent.prompt, intent.level, [], intent.count);
+    }
   }, [ready, projectId, propose]);
 }
 
@@ -226,6 +246,7 @@ function withCommentIds(request: RunRequest, commentIds: string[]): RunRequest {
 
 function buildPlanRequest(run: RunView): RunRequest {
   const level = run.request?.level;
+
   return {
     prompt: "Build the plan above.",
     mode: "edit",
@@ -271,6 +292,7 @@ function reviewPair(
 ): [Version, Version] | null {
   const v = list.find((x) => x.id === versionId);
   const parent = v ? list.find((x) => x.id === v.parentId) : undefined;
+
   return v && parent ? [parent, v] : null;
 }
 
@@ -317,12 +339,16 @@ async function askAgent(
   draft: DraftStore,
   showChat: () => Promise<boolean>
 ): Promise<void> {
-  if (!(await showChat())) return;
+  if (!(await showChat())) {
+    return;
+  }
+
   draft.set(prompt);
   window.requestAnimationFrame(() => {
     const input = document.querySelector<HTMLTextAreaElement>(
       '.prompt [data-slot="composer-input"]'
     );
+
     input?.focus();
     input?.setSelectionRange(prompt.length, prompt.length);
   });
@@ -367,6 +393,7 @@ export function Studio({
   const port = useRef<PreviewPort | null>(null);
   const editControl = useRef<DirectEditControl | null>(null);
   const editable = isDirectEditable(source, compareOpen);
+
   const panel = usePanelTab(
     projectId,
     inspectorEmptyReason(selection, editable) === null
@@ -374,19 +401,23 @@ export function Studio({
 
   const direction =
     project?.directions.find((x) => x.id === directionId) ?? null;
+
   const designSystem = useDesignSystemState(
     projectId,
     project,
     directionId,
     data.lastChange
   );
+
   const tokens = designSystem.tokens;
+
   const packActions = usePackActions({
     projectId,
     directionId,
     setProject: data.setProject,
     onCommitted: data.refreshVersions,
   });
+
   const directionRuns = useMemo(
     () =>
       Object.values(runs)
@@ -394,9 +425,11 @@ export function Studio({
         .sort((a, b) => a.startedAt - b.startedAt),
     [runs, directionId]
   );
+
   const activeRun = directionRuns.find((r) => r.status === "running") ?? null;
   const [pendingRun, setPendingRun] = useState<RunView | null>(null);
   const improveRun = lastImproveRun(directionRuns);
+
   const variations = useVariations({
     projectId,
     project,
@@ -404,19 +437,23 @@ export function Studio({
     setDirectionId: data.setDirectionId,
     seedRun: data.seedRun,
   });
+
   const canUndo = undoAllowed(
     directionId,
     busy || activeRun !== null,
     versions.length
   );
+
   useDesktopContext({ projectId, directionId, running: activeRun !== null });
   const undoRef = useRef<() => void>(() => undefined);
   const [prefill, setPrefill] = useState<PrefillRequest | null>(null);
   const prefillChat = useRef<(next: CommentPrefill) => void>(() => undefined);
+
   const onPrefill = useCallback(
     (next: CommentPrefill) => prefillChat.current(next),
     []
   );
+
   const comments = useComments(
     projectId,
     directionId,
@@ -424,6 +461,7 @@ export function Studio({
     activeRun !== null,
     onPrefill
   );
+
   const refreshSelection = useSelectionRefresh(
     selection,
     setSelection,
@@ -434,6 +472,7 @@ export function Studio({
       dropDrafts: () => editControl.current?.cancel(),
     }
   );
+
   const editHistory = useEditHistory({
     projectId,
     directionId,
@@ -452,6 +491,7 @@ export function Studio({
     },
     onError: setActionError,
   });
+
   const tweaks = useTweaks({
     projectId,
     project,
@@ -459,7 +499,9 @@ export function Studio({
     lastChange: data.lastChange,
     onCommitted: () => data.refreshVersions(),
   });
+
   const historyChain = editHistory.undoChain(canUndo, () => undoRef.current());
+
   const studioTokens = useStudioTokens({
     projectId,
     directionId,
@@ -468,10 +510,12 @@ export function Studio({
     redo: editHistory.redo,
     onCommitted: () => data.refreshVersions(),
   });
+
   const { guard } = studioTokens;
   const leaveCheck = studioTokens.draft.confirmLeave;
   useEffect(() => {
     setLeaveCheck(leaveCheck);
+
     return () => setLeaveCheck(null);
   }, [leaveCheck]);
   const guardRef = useRef(guard);
@@ -492,9 +536,11 @@ export function Studio({
   const rail = useRail();
   const detailsRun = runById(runs, detailsRunId);
   const componentList = useComponents(projectId, directionId, data.lastChange);
+
   const [mentionRequest, setMentionRequest] = useState<MentionRequest | null>(
     null
   );
+
   const chatState = useChatState(directionRuns);
   const draftChrome = useDraftChrome(projectId, project);
 
@@ -505,7 +551,9 @@ export function Studio({
   );
 
   useEffect(() => {
-    if (selection.length > 0) setStaleNotice(null);
+    if (selection.length > 0) {
+      setStaleNotice(null);
+    }
   }, [selection.length]);
 
   useEffect(
@@ -528,6 +576,7 @@ export function Studio({
   const act = useCallback(async (fn: () => Promise<unknown>) => {
     setBusy(true);
     setActionError(null);
+
     try {
       await fn();
     } catch (err) {
@@ -536,14 +585,17 @@ export function Studio({
       setBusy(false);
     }
   }, []);
+
   const { trackSend, ...runControls } = useRunControls(activeRun, draft, act);
   const exporter = useExportTarget(projectId, direction, versions);
   const commandActions = useStudioCommands();
   const tryVariants = useTryVariants(project, selection, variations);
   useEffect(() => {
     const id = window.setTimeout(prefetchCommandLayer, 1500);
+
     return () => window.clearTimeout(id);
   }, []);
+
   const rewind = useRewind({
     projectId,
     direction,
@@ -557,17 +609,22 @@ export function Studio({
     setDirectionId: data.setDirectionId,
     refreshVersions: data.refreshVersions,
   });
+
   const mcpFeed = useMcpFeed(projectId, directionId);
+
   const mcp = useMemo(
     () => ({ ...mcpFeed, locked: rewind.locked, onUndo: rewind.onRestore }),
     [mcpFeed, rewind.locked, rewind.onRestore]
   );
+
   useInlineApprovals(projectId, paneCollapsed, panel.tab);
 
-  if (data.loadError || !project)
+  if (data.loadError || !project) {
     return <StudioBoot message={data.loadError || null} onExit={onExit} />;
+  }
 
   const did = directionId;
+
   const refreshAfter = (fn: () => Promise<unknown>) =>
     act(async () => {
       await fn();
@@ -575,7 +632,9 @@ export function Studio({
     });
 
   const withDid = (fn: (id: string) => Promise<unknown>) => {
-    if (did) void fn(did);
+    if (did) {
+      void fn(did);
+    }
   };
 
   const undo = () =>
@@ -584,36 +643,49 @@ export function Studio({
       port.current?.post({ type: "preview-reset" });
       port.current?.post({ type: "optimistic-drop" });
       setSelection([]);
+
       return refreshAfter(() => api.undo(projectId, id));
     });
+
   undoRef.current = undo;
 
   const showChatAfterRun = () => {
-    if ((editSession.current?.count ?? 0) === 0) panel.show("chat");
+    if ((editSession.current?.count ?? 0) === 0) {
+      panel.show("chat");
+    }
   };
 
   const startRun = async (request: RunRequest, optimistic = false) => {
-    if (!did) return;
+    if (!did) {
+      return;
+    }
+
     const pending = optimistic
       ? emptyRun(`pending-${randomToken()}`, did, Date.now(), request)
       : null;
+
     if (pending) {
       setPendingRun(pending);
       showChatAfterRun();
     }
+
     const cancelSend = data.noteSend();
+
     try {
       const { runId, stopped } = await trackSend(() =>
         api.startRun(projectId, did, request)
       );
+
       data.seedRun(runId, did, request, stopped);
     } catch (error) {
       cancelSend();
       throw error;
     } finally {
-      if (pending)
+      if (pending) {
         setPendingRun((current) => (current === pending ? null : current));
+      }
     }
+
     setSource({ kind: "live" });
     showChatAfterRun();
   };
@@ -646,9 +718,12 @@ export function Studio({
 
   const withCanvas = (request: RunRequest): RunRequest => {
     const canvas = runCanvas.current();
+
     return canvas ? { ...request, canvas } : request;
   };
+
   const polish = () => void act(() => startRun(withCanvas(POLISH_REQUEST)));
+
   const tweak = (prompt: string, extras?: InlineRunExtras) =>
     void act(() =>
       startRun(
@@ -668,6 +743,7 @@ export function Studio({
         true
       )
     );
+
   const suggestTweaks = (prompt?: string) =>
     void act(() =>
       startRun(
@@ -679,38 +755,52 @@ export function Studio({
           : TWEAKS_REQUEST
       )
     );
+
   const showPane = async (
     tab: Parameters<typeof panel.choose>[0]
   ): Promise<boolean> => {
-    if (paneCollapsed) uiStore.set({ paneCollapsed: false });
+    if (paneCollapsed) {
+      uiStore.set({ paneCollapsed: false });
+    }
+
     const session = editSession.current;
+
     if (
       panel.tab === "design" &&
       tab !== "design" &&
       session &&
       !(await session.requestExit())
-    )
+    ) {
       return false;
+    }
+
     panel.choose(tab);
+
     return true;
   };
+
   const canvasPane = (
     tab: Parameters<typeof panel.choose>[0]
   ): Promise<boolean> =>
     panel.tab === "design" && tab === "comments"
       ? Promise.resolve(true)
       : showPane(tab);
+
   prefillChat.current = (next) => {
     void showPane("chat").then((shown) => {
-      if (shown) setPrefill({ ...next, seq: Date.now() });
+      if (shown) {
+        setPrefill({ ...next, seq: Date.now() });
+      }
     });
   };
+
   const makeStates = (frame?: CanvasFrame) => {
     const f =
       frame ??
       activeFrame(
         canvasStore.get(projectId) ?? defaultLayout(uiStore.get().viewport)
       );
+
     const path = f.path ?? "";
     void act(() =>
       startRun(
@@ -724,33 +814,51 @@ export function Studio({
       )
     );
   };
+
   const approvePlan = (run: RunView) =>
     void act(() => startRun(withCanvas(buildPlanRequest(run))));
+
   const retryRun = (run: RunView) => {
     const request = run.request;
-    if (request) void act(() => startRun({ ...request, retryOf: run.runId }));
+
+    if (request) {
+      void act(() => startRun({ ...request, retryOf: run.runId }));
+    }
   };
 
   const openShip = shipOpener(project, setShipOpen);
+
   const openReview = (pair: [Version, Version]) => {
     openCompareInCode();
     setCompareOpen(false);
     setCompare(pair);
     requestAnimationFrame(() => setCompareOpen(true));
   };
+
   const reviewVersionId = (versionId: string) => {
     const pair = reviewPair(versions, versionId);
-    if (pair) return openReview(pair);
-    if (!did) return;
+
+    if (pair) {
+      return openReview(pair);
+    }
+
+    if (!did) {
+      return;
+    }
+
     void api
       .listVersions(projectId, did)
       .then((list) => {
         const fresh = reviewPair(list, versionId);
-        if (fresh) openReview(fresh);
+
+        if (fresh) {
+          openReview(fresh);
+        }
       })
       .catch(() => undefined);
     data.refreshVersions();
   };
+
   const reviewVersion = (v: Version) => reviewVersionId(v.id);
   commandActions.current = {
     running: Boolean(activeRun),
@@ -930,7 +1038,10 @@ export function Studio({
               session: editSession,
               onExit: () => panel.choose("chat"),
               onSessionEnd: (action) => {
-                if (action === "discard") setSelection([]);
+                if (action === "discard") {
+                  setSelection([]);
+                }
+
                 data.refreshVersions();
               },
               layers: <div className="edit-layers-host" ref={setLayersHost} />,
@@ -942,10 +1053,14 @@ export function Studio({
               selectMode: panel.tab === "design",
               onSelectMode: () => void runCommand("tool.select"),
               onUndo: () => {
-                if (historyChain.canUndo) historyChain.onUndo();
+                if (historyChain.canUndo) {
+                  historyChain.onUndo();
+                }
               },
               onRedo: () => {
-                if (editHistory.redo.enabled) editHistory.redo.onRedo();
+                if (editHistory.redo.enabled) {
+                  editHistory.redo.onRedo();
+                }
               },
               tab: inspectorTab,
               onTab: setInspectorTab,
@@ -965,7 +1080,11 @@ export function Studio({
               onOpenRun: setDetailsRunId,
               onOpenVersion: (versionId) => {
                 const version = versions.find((v) => v.id === versionId);
-                if (!version) return;
+
+                if (!version) {
+                  return;
+                }
+
                 setCompareOpen(false);
                 setSource({
                   kind: "version",
@@ -1013,6 +1132,7 @@ export function Studio({
                     fromVersionId,
                     name
                   );
+
                   data.setDirectionId(created.id);
                 }
               ),
@@ -1169,11 +1289,14 @@ export function Studio({
               onTextCommit: (selector, text) => {
                 const target =
                   selection.length === 1 ? selection[0] : undefined;
+
                 if (
                   target?.selector === selector &&
                   editControl.current?.commitText(selector, text)
-                )
+                ) {
                   return;
+                }
+
                 port.current?.post({ type: "preview-reset" });
               },
             }}

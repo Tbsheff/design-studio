@@ -2,6 +2,7 @@ import type { SourceLoc, Version } from "./contracts.js";
 import type { InsertTarget } from "./insert.js";
 
 export const VECTOR_SHAPES = ["rect", "ellipse"] as const;
+
 export type VectorToolId = "rect" | "ellipse" | "pen";
 
 export function vectorToolKeyOf(
@@ -10,13 +11,23 @@ export function vectorToolKeyOf(
     "key" | "shiftKey" | "metaKey" | "ctrlKey" | "altKey" | "repeat"
   >
 ): VectorToolId | null {
-  if (event.metaKey || event.ctrlKey || event.altKey || event.repeat)
+  if (event.metaKey || event.ctrlKey || event.altKey || event.repeat) {
     return null;
-  if (event.key === "P" && event.shiftKey) return "pen";
-  if (event.shiftKey) return null;
+  }
+
+  if (event.key === "P" && event.shiftKey) {
+    return "pen";
+  }
+
+  if (event.shiftKey) {
+    return null;
+  }
+
   const key = event.key.toLowerCase();
+
   return key === "r" ? "rect" : key === "o" ? "ellipse" : null;
 }
+
 export type VectorShape = (typeof VECTOR_SHAPES)[number];
 
 export const BOOLEAN_OPS = [
@@ -25,6 +36,7 @@ export const BOOLEAN_OPS = [
   "intersect",
   "exclude",
 ] as const;
+
 export type BooleanOpName = (typeof BOOLEAN_OPS)[number];
 
 export const SVG_SHAPE_TAGS = [
@@ -38,9 +50,12 @@ export const SVG_SHAPE_TAGS = [
   "line",
   "g",
 ] as const;
+
 export const VECTOR_PATH_MAX = 20000;
+
 export const VECTOR_COLOR =
   /^(?:#[0-9a-fA-F]{3,8}|[a-zA-Z]{3,30}|(?:rgb|rgba|hsl|hsla|oklch|oklab)\([^()]{1,80}\)|var\(--[\w-]{1,60}\))$/;
+
 export const DEFAULT_SHAPE_FILL = "#D9D9D9";
 export const DEFAULT_PEN_STROKE = "#1E1E1E";
 

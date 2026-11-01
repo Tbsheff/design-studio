@@ -28,6 +28,7 @@ import type {
 
 const PAGE =
   '<!doctype html>\n<html>\n<head><title>T</title></head>\n<body>\n  <h1 class="t">Hello</h1>\n  <p>One <b>two</b></p>\n</body>\n</html>\n';
+
 const H1 = { file: "index.html", line: 5, col: 3 };
 const P = { file: "index.html", line: 6, col: 3 };
 
@@ -40,14 +41,17 @@ let app: ReturnType<typeof createApp>;
 
 function fakeRunner(): AgentRunner {
   let count = 0;
+
   return {
     start() {
       count += 1;
+
       const handle: RunHandle = {
         runId: `run${count}`,
         cancel: () => undefined,
         done: new Promise(() => undefined),
       };
+
       return handle;
     },
     get: () => undefined,
@@ -60,7 +64,11 @@ function call(method: string, url: string, body?: unknown): Promise<Response> {
   const headers: Record<string, string> = {
     "x-studio-token": config.studioToken,
   };
-  if (body !== undefined) headers["content-type"] = "application/json";
+
+  if (body !== undefined) {
+    headers["content-type"] = "application/json";
+  }
+
   return Promise.resolve(
     app.request(url, {
       method,
@@ -79,12 +87,14 @@ async function setupProject(): Promise<{
     prompt: "A page",
     kind: "html",
   });
+
   expect(created.status).toBe(200);
   const project = ((await created.json()) as { project: Project }).project;
   const workTree = projects.mainDirection(project).workTree;
   await writeFile(path.join(workTree, "index.html"), PAGE);
   const kept = await call("POST", `/api/projects/${project.id}/d/main/keep`);
   expect(kept.status).toBe(200);
+
   return { project, workTree, base: (await kept.json()) as Version };
 }
 
@@ -120,11 +130,13 @@ describe("direct edit route", { timeout: 30000 }, () => {
     const { project, workTree, base } = await setupProject();
     const seen: StudioEvent[] = [];
     bus.subscribe(project.id, (event) => seen.push(event));
+
     const response = await directEdit(project, {
       source: H1,
       selector: "h1",
       style: { color: "red", "font-size": "20px" },
     });
+
     expect(response.status).toBe(200);
     const result = (await response.json()) as DirectEditResult;
     expect(result.file).toBe("index.html");
@@ -168,12 +180,14 @@ describe("direct edit route", { timeout: 30000 }, () => {
 
   it("refuses a stale selection whose tag no longer matches", async () => {
     const { project, workTree, base } = await setupProject();
+
     const response = await directEdit(project, {
       source: H1,
       selector: "p",
       tag: "p",
       text: "Changed",
     });
+
     expect(response.status).toBe(422);
     expect(await response.json()).toEqual({
       error: "stale_selection",
@@ -186,23 +200,27 @@ describe("direct edit route", { timeout: 30000 }, () => {
     expect((await projects.get(project.id)).directions[0]?.headVersionId).toBe(
       base.id
     );
+
     const matching = await directEdit(project, {
       source: H1,
       selector: "h1",
       tag: "h1",
       text: "Changed",
     });
+
     expect(matching.status).toBe(200);
   });
 
   it("rejects a tag that is not a lowercase tag name", async () => {
     const { project } = await setupProject();
+
     const response = await directEdit(project, {
       source: H1,
       selector: "h1",
       tag: "H1",
       text: "x",
     });
+
     expect(response.status).toBe(422);
     expect(((await response.json()) as { error: string }).error).toBe(
       "invalid_request"
@@ -211,11 +229,13 @@ describe("direct edit route", { timeout: 30000 }, () => {
 
   it("edits text and names the version after the tag", async () => {
     const { project, workTree } = await setupProject();
+
     const response = await directEdit(project, {
       source: H1,
       selector: "h1",
       text: "Café & more",
     });
+
     expect(response.status).toBe(200);
     const result = (await response.json()) as DirectEditResult;
     expect(result.version.title).toBe("Edit text of h1");
@@ -227,11 +247,13 @@ describe("direct edit route", { timeout: 30000 }, () => {
   it("does not sweep unfinished changes into the edit version", async () => {
     const { project, workTree } = await setupProject();
     await writeFile(path.join(workTree, "notes.css"), "body{}");
+
     const response = await directEdit(project, {
       source: H1,
       selector: "h1",
       style: { color: "red" },
     });
+
     const result = (await response.json()) as DirectEditResult;
     expect(result.version.changedFiles).toEqual(["index.html"]);
     expect(
@@ -243,6 +265,7 @@ describe("direct edit route", { timeout: 30000 }, () => {
 
   it("serializes concurrent edits on one direction", async () => {
     const { project, workTree } = await setupProject();
+
     const responses = await Promise.all([
       directEdit(project, {
         source: H1,
@@ -255,6 +278,7 @@ describe("direct edit route", { timeout: 30000 }, () => {
         style: { opacity: "0.5" },
       }),
     ]);
+
     expect(responses.map((response) => response.status)).toEqual([200, 200]);
     expect(await readFile(path.join(workTree, "index.html"), "utf-8")).toMatch(
       /<h1 style="(color: red; opacity: 0\.5;|opacity: 0\.5; color: red;)" class="t">/
@@ -264,11 +288,13 @@ describe("direct edit route", { timeout: 30000 }, () => {
   it("returns 409 while a run is active on the direction", async () => {
     const { project, workTree } = await setupProject();
     running.add(`${project.id}/main`);
+
     const response = await directEdit(project, {
       source: H1,
       selector: "h1",
       style: { color: "red" },
     });
+
     expect(response.status).toBe(409);
     expect(((await response.json()) as { error: string }).error).toBe(
       "run_in_progress"
@@ -297,6 +323,7 @@ describe("direct edit route", { timeout: 30000 }, () => {
     await mkdir(path.join(workTree, "node_modules", "x"), { recursive: true });
     await writeFile(path.join(workTree, "node_modules", "x", "a.html"), PAGE);
     await writeFile(path.join(workTree, "script.js"), "x");
+
     const cases = [
       { file: "../../../etc/hosts.html", error: "invalid_source" },
       { file: `../${path.basename(workTree)}/index.html`, error: null },
@@ -307,12 +334,14 @@ describe("direct edit route", { timeout: 30000 }, () => {
       { file: "script.js", error: "invalid_source" },
       { file: "missing.html", error: "source_not_found" },
     ];
+
     for (const entry of cases) {
       const response = await directEdit(project, {
         source: { ...H1, file: entry.file },
         selector: "h1",
         style: { color: "blue" },
       });
+
       const body = (await response.json()) as { error?: string };
       expect({
         file: entry.file,
@@ -324,11 +353,13 @@ describe("direct edit route", { timeout: 30000 }, () => {
         error: entry.error,
       });
     }
+
     expect(await readFile(outside, "utf-8")).toBe(PAGE);
   });
 
   it("returns 422 for unsafe CSS values and unknown properties", async () => {
     const { project, workTree } = await setupProject();
+
     const bad = [
       { color: "red; background: blue" },
       { color: "url(javascript:alert(1))" },
@@ -340,12 +371,14 @@ describe("direct edit route", { timeout: 30000 }, () => {
       { color: "" },
       { position: "fixed" },
     ];
+
     for (const style of bad) {
       const response = await directEdit(project, {
         source: H1,
         selector: "h1",
         style,
       });
+
       expect({ style, status: response.status }).toEqual({
         style,
         status: 422,
@@ -354,11 +387,13 @@ describe("direct edit route", { timeout: 30000 }, () => {
         "invalid_request"
       );
     }
+
     const tooLong = await directEdit(project, {
       source: H1,
       selector: "h1",
       text: "x".repeat(5001),
     });
+
     expect(tooLong.status).toBe(422);
     const empty = await directEdit(project, { source: H1, selector: "h1" });
     expect(empty.status).toBe(422);
@@ -369,11 +404,13 @@ describe("direct edit route", { timeout: 30000 }, () => {
 
   it("returns 422 with the message when text cannot be edited", async () => {
     const { project } = await setupProject();
+
     const response = await directEdit(project, {
       source: P,
       selector: "p",
       text: "x",
     });
+
     expect(response.status).toBe(422);
     expect(await response.json()).toEqual({
       error: "text_not_editable",
@@ -387,14 +424,17 @@ describe("direct edit route", { timeout: 30000 }, () => {
       prompt: "A page",
       kind: "html",
     });
+
     const project = ((await created.json()) as { project: Project }).project;
     const workTree = projects.mainDirection(project).workTree;
     await writeFile(path.join(workTree, "index.html"), PAGE);
+
     const response = await directEdit(project, {
       source: H1,
       selector: "h1",
       style: { color: "red" },
     });
+
     expect(response.status).toBe(422);
     expect(((await response.json()) as { error: string }).error).toBe(
       "no_base_version"
@@ -406,11 +446,13 @@ describe("direct edit route", { timeout: 30000 }, () => {
 
   it("returns 200 with the head version when the edit changes nothing", async () => {
     const { project, base } = await setupProject();
+
     const response = await directEdit(project, {
       source: H1,
       selector: "h1",
       style: { color: null },
     });
+
     expect(response.status).toBe(200);
     expect(((await response.json()) as DirectEditResult).version.id).toBe(
       base.id
@@ -420,15 +462,19 @@ describe("direct edit route", { timeout: 30000 }, () => {
   it("edits a TSX file through the same route", async () => {
     const { project, workTree } = await setupProject();
     await mkdir(path.join(workTree, "src"), { recursive: true });
+
     const tsx =
       'export const A = (): JSX.Element => <h2 style={{ color: "red" }}>x</h2>;\n';
+
     await writeFile(path.join(workTree, "src", "A.tsx"), tsx);
     await call("POST", `/api/projects/${project.id}/d/main/keep`);
+
     const response = await directEdit(project, {
       source: { file: "src/A.tsx", line: 1, col: 37 },
       selector: "h2",
       style: { color: "blue" },
     });
+
     expect(response.status).toBe(200);
     expect(await readFile(path.join(workTree, "src", "A.tsx"), "utf-8")).toBe(
       tsx.replace('"red"', '"blue"')
@@ -442,11 +488,14 @@ describe("direct edit route", { timeout: 30000 }, () => {
   it("renames, hides, shows and moves with clear version titles", async () => {
     const { project, workTree } = await setupProject();
     const file = path.join(workTree, "index.html");
+
     const title = async (body: unknown) => {
       const response = await directEdit(project, body);
       expect(response.status).toBe(200);
+
       return (await response.json()) as DirectEditResult;
     };
+
     expect(
       (
         await title({
@@ -480,12 +529,14 @@ describe("direct edit route", { timeout: 30000 }, () => {
         })
       ).version.title
     ).toBe("Show p");
+
     const moved = await title({
       source: P,
       selector: "p",
       tag: "p",
       move: "up",
     });
+
     expect(moved.version.title).toBe("Move p up");
     expect(moved.moved).toEqual(H1);
     expect(await readFile(file, "utf-8")).toBe(
@@ -494,12 +545,14 @@ describe("direct edit route", { timeout: 30000 }, () => {
         '<p>One <b>two</b></p>\n  <h1 data-name="Hero title" class="t">Hello</h1>'
       )
     );
+
     const refused = await directEdit(project, {
       source: H1,
       selector: "p",
       tag: "p",
       move: "up",
     });
+
     expect(refused.status).toBe(422);
     expect(await refused.json()).toEqual({
       error: "cannot_move",

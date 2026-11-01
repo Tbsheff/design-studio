@@ -13,6 +13,7 @@ const ROOT = path.resolve(
   "..",
   ".."
 );
+
 const SAMPLES = Number(process.env.PERF_DESKTOP_SAMPLES ?? 10);
 const EXECUTABLE = process.env.STUDIO_DESKTOP_EXECUTABLE ?? "";
 const LABEL = process.env.PERF_LABEL ?? (EXECUTABLE ? "packaged" : "dev");
@@ -27,11 +28,17 @@ interface Sample {
 
 function env(work: string): Record<string, string> {
   const out: Record<string, string> = {};
-  for (const [key, value] of Object.entries(process.env))
-    if (value !== undefined) out[key] = value;
+
+  for (const [key, value] of Object.entries(process.env)) {
+    if (value !== undefined) {
+      out[key] = value;
+    }
+  }
+
   delete out.ELECTRON_RUN_AS_NODE;
   const claudeHome = path.join(work, "claude-home");
   writeSkillsFixture(claudeHome);
+
   return {
     ...out,
     STUDIO_AGENT: "mock",
@@ -47,6 +54,7 @@ async function sample(): Promise<Sample> {
   const work = mkdtempSync(path.join(os.tmpdir(), "studio desktop start "));
   const marks: Record<string, number> = {};
   const t0 = Date.now();
+
   const app = EXECUTABLE
     ? await electron.launch({
         executablePath: EXECUTABLE,
@@ -60,12 +68,14 @@ async function sample(): Promise<Sample> {
         env: env(work),
         timeout: 120_000,
       });
+
   try {
     app.process().stdout?.on("data", (chunk: Buffer) => {
       for (const match of chunk
         .toString()
-        .matchAll(/\[desktop\] boot (\w+) (\d+)ms/g))
+        .matchAll(/\[desktop\] boot (\w+) (\d+)ms/g)) {
         marks[match[1] as string] = Number(match[2]);
+      }
     });
     const page = await app.firstWindow({ timeout: 120_000 });
     const windowMs = Date.now() - t0;
@@ -78,10 +88,13 @@ async function sample(): Promise<Sample> {
       { timeout: 120_000 }
     );
     const homeUsableMs = Date.now() - t0;
+
     const token = await page
       .locator('meta[name="studio-token"]')
       .getAttribute("content");
+
     let appStart: TelemetrySample | null = null;
+
     for (let i = 0; i < 20 && !appStart; i += 1) {
       const list = await page.evaluate(
         async (t) =>
@@ -92,11 +105,16 @@ async function sample(): Promise<Sample> {
           ).json() as Promise<TelemetrySample[]>,
         token
       );
+
       appStart = Array.isArray(list)
         ? (list.find((s) => s.kind === "app.start") ?? null)
         : null;
-      if (!appStart) await page.waitForTimeout(100);
+
+      if (!appStart) {
+        await page.waitForTimeout(100);
+      }
     }
+
     return { homeUsableMs, windowMs, appStart, marks };
   } finally {
     await app.close().catch(() => undefined);
@@ -112,9 +130,11 @@ function stats(values: number[]): {
   samples: number[];
 } {
   const sorted = [...values].sort((a, b) => a - b);
+
   const at = (q: number) =>
     sorted[Math.min(sorted.length - 1, Math.ceil(q * sorted.length) - 1)] ??
     NaN;
+
   return {
     n: sorted.length,
     p50: at(0.5),
@@ -126,6 +146,7 @@ function stats(values: number[]): {
 
 async function main(): Promise<void> {
   const samples: Sample[] = [];
+
   for (let i = 0; i < SAMPLES; i += 1) {
     const s = await sample();
     samples.push(s);
@@ -133,7 +154,9 @@ async function main(): Promise<void> {
       `[desktop-start] ${LABEL} #${i + 1}: window ${s.windowMs} ms, Home usable ${s.homeUsableMs} ms (launch call), app.start ${s.appStart?.ms ?? "n/a"} ms, marks ${JSON.stringify(s.marks)}`
     );
   }
+
   const markNames = [...new Set(samples.flatMap((s) => Object.keys(s.marks)))];
+
   const result = {
     label: LABEL,
     executable: EXECUTABLE || "electron . (dev build)",
@@ -157,6 +180,7 @@ async function main(): Promise<void> {
       ])
     ),
   };
+
   mkdirSync(path.dirname(OUT), { recursive: true });
   writeFileSync(OUT, `${JSON.stringify(result, null, 2)}\n`);
   console.log(

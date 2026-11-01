@@ -94,9 +94,11 @@ const LAYOUT_EXPRESSION = `(() => {
 
 function withTimeout<T>(task: Promise<T>, ms: number): Promise<T | null> {
   let timer: NodeJS.Timeout | undefined;
+
   const timeout = new Promise<null>((resolve) => {
     timer = setTimeout(() => resolve(null), ms);
   });
+
   return Promise.race([task, timeout]).finally(() => clearTimeout(timer));
 }
 
@@ -104,10 +106,14 @@ export async function probeLayout(
   preview: PreviewService,
   url: string
 ): Promise<LayoutRegion | null> {
-  if (!preview.withPage) return null;
+  if (!preview.withPage) {
+    return null;
+  }
+
   const run = preview.withPage(url, DESKTOP, (page) =>
     page.evaluate<LayoutRegion | null>(LAYOUT_EXPRESSION)
   );
+
   return withTimeout(
     run.catch(() => null),
     PROBE_TIMEOUT_MS
@@ -120,9 +126,11 @@ function importPath(source: string, name: string): string | null {
   const named = new RegExp(
     `import\\s*(?:\\w+\\s*,\\s*)?\\{[^}]*\\b${name}\\b[^}]*\\}\\s*from\\s*["']([^"']+)["']`
   );
+
   const fallback = new RegExp(
     `import\\s+${name}\\s*(?:,[^;]*)?from\\s*["']([^"']+)["']`
   );
+
   return named.exec(source)?.[1] ?? fallback.exec(source)?.[1] ?? null;
 }
 
@@ -142,11 +150,16 @@ async function readFirst(
     "/index.js",
   ]) {
     const file = `${base}${suffix}`;
+
     const text = await readFile(path.join(workTree, file), "utf-8").catch(
       () => null
     );
-    if (text !== null) return { file, text };
+
+    if (text !== null) {
+      return { file, text };
+    }
   }
+
   return null;
 }
 
@@ -157,14 +170,23 @@ export async function pageOwner(
   const source = await readFile(path.join(workTree, routeFile), "utf-8").catch(
     () => null
   );
-  if (!source || /<main\b/.test(source)) return null;
+
+  if (!source || /<main\b/.test(source)) {
+    return null;
+  }
+
   const name = JSX_ROOT.exec(source)?.[1]?.split(".")[0];
   const spec = name ? importPath(source, name) : null;
-  if (!name || !spec?.startsWith(".")) return null;
+
+  if (!name || !spec?.startsWith(".")) {
+    return null;
+  }
+
   const found = await readFirst(
     workTree,
     path.posix.join(path.posix.dirname(routeFile), spec)
   );
+
   return found
     ? { name, file: found.file, hasMain: /<main\b/.test(found.text) }
     : null;
@@ -173,6 +195,7 @@ export async function pageOwner(
 function regionText(region: LayoutRegion): string {
   const b = region.columnBox ?? region.mainBox;
   const column = region.column ? ` > ${region.column}` : "";
+
   return `${region.main}${column} (${b.width}x${b.height} at ${b.x},${b.y} on desktop)`;
 }
 
@@ -182,14 +205,19 @@ export function layoutLines(
   routeFile: string | null
 ): string[] {
   const lines: string[] = [];
-  if (region)
+
+  if (region) {
     lines.push(
       `main content region: ${regionText(region)}${region.owners.length ? `, rendered by <${region.owners[0]}>` : ""}. New UI goes inside it, in the section it belongs to, never above or beside the element that holds <main>.`
     );
-  if (owner)
+  }
+
+  if (owner) {
     lines.push(
       `page content owner: <${owner.name}> in ${owner.file}${owner.hasMain ? " (it renders <main>)" : ""}. ${routeFile ?? "The route file"} only renders it, so edit ${owner.file}, not the route file.`
     );
+  }
+
   return lines;
 }
 
@@ -207,8 +235,12 @@ export function outsideFindings(
   now: LayoutRegion | null,
   owner: PageOwner | null | undefined
 ): QualityFinding[] {
-  if (!baseline || !now) return [];
+  if (!baseline || !now) {
+    return [];
+  }
+
   const into = owner ? ` in ${owner.file} (<${owner.name}>)` : "";
+
   return addedOutside(baseline.outside, now.outside)
     .slice(0, 3)
     .map((element) => ({

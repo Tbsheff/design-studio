@@ -31,6 +31,7 @@ function shortSnippet(text: string): string {
 
 function targetWhere(comment: DesignComment): string {
   const loc = comment.context?.usedAt ?? comment.target.sourceLoc;
+
   return loc
     ? `${loc.file.split("/").pop()}:${loc.line}`
     : comment.target.selector;
@@ -39,11 +40,14 @@ function targetWhere(comment: DesignComment): string {
 function targetLabel(comment: DesignComment): string {
   if (comment.drawing) {
     const { box } = comment.drawing;
+
     return `Drawing · ${box.width} × ${box.height}`;
   }
+
   const snippet = comment.target.textSnippet
     ? ` “${shortSnippet(comment.target.textSnippet)}”`
     : "";
+
   return `${comment.target.tag}${snippet} · ${targetWhere(comment)}`;
 }
 
@@ -51,17 +55,24 @@ function targetTip(comment: DesignComment): string {
   const page = comment.frame
     ? ` · Page ${comment.frame.path.replace(/^\/+/, "") || "index"}`
     : "";
-  if (comment.drawing) return `${targetLabel(comment)}${page}`;
+
+  if (comment.drawing) {
+    return `${targetLabel(comment)}${page}`;
+  }
+
   const text = comment.target.textSnippet;
+
   const snippet = text
     ? ` “${text}${text.length >= SHARED_TEXT_SNIPPET_MAX ? "…" : ""}”`
     : "";
+
   return `${comment.target.tag}${snippet} · ${targetWhere(comment)}${page}`;
 }
 
 function shownPathsKey(): string {
   const projectId = projectFromPath(window.location.pathname);
   const layout = projectId ? canvasStore.get(projectId) : undefined;
+
   return layout
     ? JSON.stringify(shownFrames(layout).map((frame) => frame.path ?? ""))
     : "";
@@ -69,6 +80,7 @@ function shownPathsKey(): string {
 
 function useShownPaths(): string[] | null {
   const key = useSyncExternalStore(canvasStore.subscribe, shownPathsKey);
+
   return key ? (JSON.parse(key) as string[]) : null;
 }
 
@@ -89,6 +101,7 @@ function TargetLink({
   control: CommentsControl;
 }) {
   const away = notShownText(comment, useShownPaths());
+
   return (
     <button
       type="button"
@@ -113,9 +126,12 @@ function PickNum({
   comment: DesignComment;
   control: CommentsControl;
 }) {
-  if (!canPickForChat(comment.status))
+  if (!canPickForChat(comment.status)) {
     return <span className={`comment-num ${comment.status}`}>{comment.n}</span>;
+  }
+
   const on = control.picked.includes(comment.id);
+
   return (
     <button
       type="button"
@@ -139,7 +155,10 @@ function FixButton({
   comment: DesignComment;
   control: CommentsControl;
 }) {
-  if (!canPickForChat(comment.status)) return null;
+  if (!canPickForChat(comment.status)) {
+    return null;
+  }
+
   return (
     <button
       type="button"
@@ -163,7 +182,11 @@ export function ChatPickBar({
   className?: string;
 }) {
   const count = control.picked.length;
-  if (count === 0) return null;
+
+  if (count === 0) {
+    return null;
+  }
+
   return (
     <div
       className={`comments-pick-bar ${className ?? ""}`}
@@ -205,7 +228,10 @@ function Section({
   action?: ReactNode;
   children: ReactNode;
 }) {
-  if (count === 0) return null;
+  if (count === 0) {
+    return null;
+  }
+
   return (
     <section className="comments-section" aria-label={title}>
       <h3>
@@ -231,13 +257,18 @@ function QueuedRow({
 }) {
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(comment.text);
+
   const save = () => {
     const clean = text.trim();
     setEditing(false);
-    if (clean && clean !== comment.text)
+
+    if (clean && clean !== comment.text) {
       void control.update(comment.id, { text: clean });
-    else setText(comment.text);
+    } else {
+      setText(comment.text);
+    }
   };
+
   return (
     <li
       className={`comment-row ${control.openId === comment.id ? "open" : ""}`}
@@ -259,7 +290,10 @@ function QueuedRow({
             onChange={(event) => setText(event.target.value)}
             onBlur={save}
             onKeyDown={(event) => {
-              if (event.key === "Enter") save();
+              if (event.key === "Enter") {
+                save();
+              }
+
               if (event.key === "Escape") {
                 event.stopPropagation();
                 setText(comment.text);
@@ -352,6 +386,7 @@ function DoneRow({
 >) {
   const runId = comment.runId;
   const versionId = comment.versionId;
+
   return (
     <li
       className="comment-row"
@@ -444,6 +479,7 @@ function OrphanRow({
 }) {
   const active = control.repinId === comment.id;
   const away = notShownText(comment, useShownPaths());
+
   return (
     <li
       className="comment-row"
@@ -498,6 +534,7 @@ function SendQueuedButton({
   className?: string;
 }) {
   const count = control.queued.length;
+
   return (
     <button
       type="button"
@@ -513,9 +550,16 @@ function SendQueuedButton({
 const PICK_HINT = "Press C or choose Comment, then click an element.";
 
 function composerTarget(selection: SelectionContext[]): string | null {
-  if (selection.length === 0) return null;
-  if (selection.length > 1) return `${selection.length} elements`;
+  if (selection.length === 0) {
+    return null;
+  }
+
+  if (selection.length > 1) {
+    return `${selection.length} elements`;
+  }
+
   const first = selection[0];
+
   return first ? `the ${first.tag}` : null;
 }
 
@@ -530,16 +574,25 @@ function CommentsComposer({
   const [busy, setBusy] = useState(false);
   const target = composerTarget(selection);
   const ready = target !== null && text.trim().length > 0 && !busy;
+
   const submit = async () => {
-    if (!ready) return;
+    if (!ready) {
+      return;
+    }
+
     setBusy(true);
+
     try {
-      if (await control.add(selection, text.trim(), false)) setText("");
+      if (await control.add(selection, text.trim(), false)) {
+        setText("");
+      }
     } finally {
       setBusy(false);
     }
   };
+
   const queued = control.queued.length;
+
   return (
     <div
       className="comments-composer ui-composer"
@@ -590,22 +643,28 @@ export function CommentsPanel({
 }: Props) {
   const by = (status: DesignComment["status"]) =>
     control.comments.filter((comment) => comment.status === status);
+
   const sent = by("sent");
   const resolved = by("resolved");
   const orphaned = by("orphaned");
   const queued = control.queued;
+
   const outside = control.comments.filter(
     (comment) =>
       comment.status === "draft" && comment.author && comment.from !== "viewer"
   );
+
   const viewers = control.comments.filter(
     (comment) => comment.status === "draft" && comment.from === "viewer"
   );
+
   const empty =
     control.comments.filter(
       (comment) => comment.status !== "draft" || comment.author
     ).length === 0;
+
   const showResolved = control.showResolved;
+
   return (
     <div className="comments-pane">
       <div className="comments-panel" data-testid="comments-panel">
@@ -739,7 +798,11 @@ export function QueuedComposerBar({
   onShow: () => void;
 }) {
   const count = control.queued.length;
-  if (count === 0 && !control.notice) return null;
+
+  if (count === 0 && !control.notice) {
+    return null;
+  }
+
   return (
     <div className="comments-queue-bar" data-testid="queued-bar">
       <span className="label">

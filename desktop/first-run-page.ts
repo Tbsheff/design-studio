@@ -16,6 +16,7 @@ interface SetupBridge {
 
 const bridge = (window as unknown as { studioSetup: SetupBridge }).studioSetup;
 const MARKS = { ok: "✓", warn: "!", fail: "✕" };
+
 const FIX_LABELS: Record<string, string> = {
   "install-clt": "Install Command Line Tools",
   "copy-claude": "Copy “claude”",
@@ -32,6 +33,7 @@ function element<K extends keyof HTMLElementTagNameMap>(
   const node = document.createElement(tag);
   node.className = className;
   node.textContent = text;
+
   return node;
 }
 
@@ -40,6 +42,7 @@ function fixButton(action: string): HTMLButtonElement {
   button.type = "button";
   button.dataset.fix = action;
   button.addEventListener("click", () => void bridge.fix(action));
+
   return button;
 }
 
@@ -48,24 +51,33 @@ function row(result: CheckResult): HTMLLIElement {
   item.dataset.check = result.id;
   item.dataset.status = result.status;
   const label = element("span", "label", result.label);
-  if (!result.required)
+
+  if (!result.required) {
     label.append(element("span", "optional", " (optional)"));
+  }
+
   item.append(
     element("span", "mark", MARKS[result.status]),
     label,
     element("span", "detail", result.detail)
   );
+
   if (result.fixes.length > 0) {
     const fixes = element("div", "fixes", "");
     fixes.append(...result.fixes.map(fixButton));
     item.append(fixes);
   }
+
   return item;
 }
 
 async function refresh(): Promise<void> {
   const list = document.getElementById("checks");
-  if (!list) return;
+
+  if (!list) {
+    return;
+  }
+
   list.replaceChildren(element("li", "pending", "Checking…"));
   const results = await bridge.run();
   list.replaceChildren(...results.map(row));
@@ -73,11 +85,17 @@ async function refresh(): Promise<void> {
 }
 
 async function start(): Promise<void> {
-  if (navigator.userAgent.includes("Mac OS X"))
+  if (navigator.userAgent.includes("Mac OS X")) {
     document.documentElement.dataset.shell = "mac";
+  }
+
   const info = await bridge.info();
   const next = document.getElementById("continue");
-  if (next && info) next.textContent = info.continueLabel;
+
+  if (next && info) {
+    next.textContent = info.continueLabel;
+  }
+
   next?.addEventListener("click", () => void bridge.done());
   document
     .getElementById("recheck")

@@ -14,7 +14,8 @@ export async function runAppDoctor(
 ): Promise<ToolText> {
   const project = deps.ctx.project;
   const doctor = deps.preview.apps?.doctor;
-  if (!project.app || !doctor)
+
+  if (!project.app || !doctor) {
     return {
       content: [
         {
@@ -24,12 +25,16 @@ export async function runAppDoctor(
       ],
       isError: true,
     };
+  }
+
   try {
     const result = await doctor(project, fresh);
     const status = deps.preview.apps?.status(project);
+
     const head = status
       ? `Dev server: ${status.state}${status.upstream ? ` at ${status.upstream}` : ""}${status.message ? ` (${status.message})` : ""}.`
       : "";
+
     return {
       content: [
         {

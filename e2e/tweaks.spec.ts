@@ -22,6 +22,7 @@ import {
 } from "./support/studio";
 
 const REVIEW_DIR = path.join(ROOT, "design-review");
+
 const SIZES = [
   [1440, 900],
   [800, 934],
@@ -37,6 +38,7 @@ async function openProject(
     "/api/projects",
     { prompt, kind: "html" }
   );
+
   await api.waitForRuns(project.id, 1);
   await page.evaluate((id) => {
     const raw = localStorage.getItem("design-studio.ui.v1");
@@ -48,6 +50,7 @@ async function openProject(
   }, project.id);
   await page.reload();
   await expect(page.locator(".topbar")).toBeVisible();
+
   return api.project(project.id);
 }
 
@@ -69,6 +72,7 @@ async function probe(frame: FrameLocator): Promise<Probe> {
     const card = document.querySelector(".card");
     const cards = document.querySelector(".cards");
     const h1 = document.querySelector("h1");
+
     return {
       radius: card ? getComputedStyle(card).borderTopLeftRadius : "",
       color: h1 ? getComputedStyle(h1).color : "",
@@ -80,6 +84,7 @@ async function probe(frame: FrameLocator): Promise<Probe> {
 
 async function shoot(page: Page, name: string, focus: Locator): Promise<void> {
   mkdirSync(REVIEW_DIR, { recursive: true });
+
   for (const [width, height] of SIZES) {
     await page.setViewportSize({ width, height });
     await page.waitForTimeout(300);
@@ -89,6 +94,7 @@ async function shoot(page: Page, name: string, focus: Locator): Promise<void> {
       path: path.join(REVIEW_DIR, `tweaks-${name}-${width}x${height}.png`),
     });
   }
+
   await page.setViewportSize({ width: 1600, height: 1000 });
   await page.waitForTimeout(250);
 }
@@ -99,12 +105,19 @@ async function dragSlider(
   fraction: number
 ): Promise<void> {
   const box = await slider.boundingBox();
-  if (!box) throw new Error("slider has no box");
+
+  if (!box) {
+    throw new Error("slider has no box");
+  }
+
   const y = box.y + box.height / 2;
   await page.mouse.move(box.x + 4, y);
   await page.mouse.down();
-  for (let i = 1; i <= 6; i += 1)
+
+  for (let i = 1; i <= 6; i += 1) {
     await page.mouse.move(box.x + 4 + ((box.width - 8) * fraction * i) / 6, y);
+  }
+
   await page.mouse.up();
 }
 
@@ -170,6 +183,7 @@ test("tweaks panel: drag previews every frame with no reload, commit makes one v
   const gapSlider = page.locator(
     'li.twk-row[data-tweak="gap"] input[type="range"]'
   );
+
   await gapSlider.focus();
   await page.keyboard.press("ArrowRight");
   await page.keyboard.press("ArrowRight");
@@ -192,14 +206,17 @@ test("tweaks panel: drag previews every frame with no reload, commit makes one v
     .first()
     .click();
   await expect(page.locator(".compare-pane")).toHaveCount(2);
+
   const panes = [
     page.frameLocator(".compare-pane:nth-child(1) iframe"),
     page.frameLocator(".compare-pane:nth-child(2) iframe"),
   ];
+
   for (const pane of panes) {
     await expect(pane.locator("h1")).toHaveText("Tweaks Studio");
     await expect.poll(async () => (await probe(pane)).radius).toBe(dragged);
   }
+
   await page.getByRole("button", { name: "Close compare" }).click();
   await expect(front.locator("h1")).toBeVisible();
 

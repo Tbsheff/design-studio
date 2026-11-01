@@ -40,6 +40,7 @@ const frame = frameRef
   .describe(
     "Canvas frame id or @label from canvas_list. Its page, size and direction are used. Default f1, the entry page."
   );
+
 const element = z
   .object({
     selector: selector.describe("CSS selector or layer id from get_layers."),
@@ -117,18 +118,22 @@ async function frameTarget(
   const loaded = await loadTarget(deps, input.projectId, input.directionId);
   const frames = (await deps.canvas.read(loaded.project)).canvas?.frames ?? [];
   const found = findFrame(frames, ref);
+
   if (
     !found &&
     input.frame !== undefined &&
     !(frames.length === 0 && ref === "f1")
-  )
+  ) {
     throw new EditError(
       `No frame ${ref} on the canvas. Use canvas_list for the frame ids.`
     );
+  }
+
   const { project, direction } =
     found?.directionId && input.directionId === undefined
       ? await loadTarget(deps, input.projectId, found.directionId)
       : loaded;
+
   return {
     project,
     direction,
@@ -140,8 +145,14 @@ async function frameTarget(
 }
 
 function actionOf(input: z.output<typeof arrangeSchema>): ArrangeAction {
-  if (input.align) return { align: input.align };
-  if (input.distribute) return { distribute: input.distribute };
+  if (input.align) {
+    return { align: input.align };
+  }
+
+  if (input.distribute) {
+    return { distribute: input.distribute };
+  }
+
   return { tidy: true };
 }
 
@@ -157,6 +168,7 @@ const arrange = defineTool(
     const target = await frameTarget(deps, input);
     refuseWhileRunning(deps, target.project, target.direction);
     const action = actionOf(input);
+
     const body = {
       arrange: {
         targets: input.targets.map((item) => ({ selector: item.selector })),
@@ -165,12 +177,14 @@ const arrange = defineTool(
         viewport: target.viewport,
       },
     };
+
     const result = await studioCall<ArrangeResult>(
       deps,
       "POST",
       `${base(target.project, target.direction.id)}/direct-edit`,
       body
     );
+
     const output = {
       changed: result.changed,
       mode: result.mode,
@@ -184,7 +198,9 @@ const arrange = defineTool(
           ? "All changes are one version and one undo step."
           : null),
     };
+
     const summary = `${arrangeLabel(action)} on ${input.targets.length === 1 ? "1 element" : `${input.targets.length} elements`}`;
+
     return {
       result: ok(output),
       ...(result.changed
@@ -213,12 +229,14 @@ const measure = defineTool(
   },
   async (deps, input): Promise<Done> => {
     const target = await frameTarget(deps, input);
+
     const url = await pageUrl(
       deps,
       target.project,
       target.direction,
       target.page
     );
+
     try {
       return {
         result: ok(
@@ -232,7 +250,10 @@ const measure = defineTool(
         ),
       };
     } catch (error) {
-      if (error instanceof DirectEditError) throw new EditError(error.message);
+      if (error instanceof DirectEditError) {
+        throw new EditError(error.message);
+      }
+
       throw error;
     }
   }

@@ -16,19 +16,29 @@ async function savedFrame(
   path: string | undefined
 ) {
   const frames = (await canvas.read(project)).canvas?.frames ?? [];
-  if (ref) return findFrame(frames, ref);
+
+  if (ref) {
+    return findFrame(frames, ref);
+  }
+
   const mine = frames.filter(
     (frame) => (frame.directionId ?? direction.id) === direction.id
   );
+
   const presence = canvas.presence(project.id);
+
   const live =
     presence?.directionId === direction.id
       ? mine.find((frame) => frame.id === presence.activeFrameId)
       : undefined;
-  if (path === undefined)
+
+  if (path === undefined) {
     return live ?? mine.find((frame) => !frame.hidden) ?? null;
+  }
+
   const onPage = (frame: (typeof frames)[number]) =>
     pageKey(frame.path) === pageKey(path);
+
   return (
     [live, ...mine.filter((frame) => !frame.hidden), ...mine].find(
       (frame) => frame && onPage(frame)
@@ -44,14 +54,17 @@ function checkSaved(
   input: ReviewRequest,
   explicit: boolean
 ): void {
-  if (input.frame && !saved && !explicit)
+  if (input.frame && !saved && !explicit) {
     throw new BadRequestError(
       `Frame ${input.frame} is not on the canvas. Use canvas_list for the frame ids.`
     );
-  if (saved?.directionId && saved.directionId !== direction.id)
+  }
+
+  if (saved?.directionId && saved.directionId !== direction.id) {
     throw new BadRequestError(
       `Frame ${saved.id} shows direction ${saved.directionId}. Pass that directionId.`
     );
+  }
 }
 
 function frameNames(
@@ -60,6 +73,7 @@ function frameNames(
 ): Pick<ReviewFrame, "id" | "label" | "path" | "selector"> {
   const id = saved?.id ?? input.frame;
   const path = input.path ?? saved?.path;
+
   return {
     ...(id ? { id } : {}),
     ...(saved?.label ? { label: saved.label } : {}),
@@ -75,11 +89,14 @@ export async function resolveReviewFrame(
   input: ReviewRequest
 ): Promise<ReviewFrame> {
   const explicit = input.width !== undefined && input.height !== undefined;
+
   const saved =
     explicit && !input.frame
       ? null
       : await savedFrame(canvas, project, direction, input.frame, input.path);
+
   checkSaved(saved, direction, input, explicit);
+
   return {
     ...frameNames(saved, input),
     width: input.width ?? saved?.width ?? DEFAULT_REVIEW_FRAME.width,

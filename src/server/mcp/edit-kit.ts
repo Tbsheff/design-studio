@@ -31,12 +31,16 @@ export const id = (what: string) =>
       "must be an id of 1 to 64 letters, digits, - or _"
     )
     .describe(what);
+
 export const projectId = id("Project id from list_projects.");
+
 export const directionId = id(
   "Direction id. Leave out for the main direction."
 ).optional();
+
 export const selector = z.string().trim().min(1).max(SELECTOR_MAX);
 export const pageName = (value: string): string => value.replace(/^\/+/, "");
+
 export const pagePath = z
   .string()
   .trim()
@@ -46,8 +50,10 @@ export const pagePath = z
   .describe(
     'Page path in the project, for example "about.html". Leave out for the entry page.'
   );
+
 export const packId = z.string().regex(/^[a-z0-9][a-z0-9-]{0,63}$/);
 const styleValue = z.string().max(200).nullable();
+
 const styleObject = z
   .object(
     Object.fromEntries(
@@ -55,15 +61,18 @@ const styleObject = z
     ) as Record<DirectStyleProperty, z.ZodOptional<typeof styleValue>>
   )
   .strict();
+
 export const style = z.preprocess(kebabKeys, styleObject);
 
 const classNames = z.array(z.string().trim().min(1).max(100)).max(30);
+
 export const classes = z
   .object({ add: classNames.optional(), remove: classNames.optional() })
   .strict()
   .describe(
     "Tailwind classes to add or remove, with any variant prefix (md:p-8, hover:bg-primary). An added class replaces the class of the same utility and variant (p-6 replaces p-4). Works on a plain class or className string and on string arguments of cn(), clsx() or twMerge(); a class built at runtime or a cva() result is refused."
   );
+
 export const variant = z
   .string()
   .trim()
@@ -71,6 +80,7 @@ export const variant = z
   .describe(
     'Breakpoint and state the style applies to, with the same code path as the studio inspector variant bar: "md:" (768 px and up), "lg:", "hover:", "focus:", "active:", "dark:" or a mix such as "md:hover:". In a Tailwind project style becomes prefixed classes (md:p-6, hover:bg-primary); in a plain HTML page it becomes a media query or :hover rule; other files refuse it. Leave out for the base style.'
   );
+
 export const hasClasses = (input: {
   classes?: { add?: string[]; remove?: string[] };
 }) =>
@@ -105,6 +115,7 @@ export function parseInput<S extends z.ZodType>(
   args: Record<string, unknown>
 ): z.output<S> {
   const result = schema.safeParse(args);
+
   if (!result.success) {
     throw new EditError(
       result.error.issues.length > 0
@@ -112,6 +123,7 @@ export function parseInput<S extends z.ZodType>(
         : "input is not valid"
     );
   }
+
   return result.data;
 }
 
@@ -175,21 +187,30 @@ export async function pageUrl(
 
 export async function sourceElement(deps: EditDeps, url: string, sel: string) {
   const element = await describeElement(deps.preview, url, sel);
-  if (!element) throw new EditError(`No element matches ${sel} on the page.`);
-  if (!element.source)
+
+  if (!element) {
+    throw new EditError(`No element matches ${sel} on the page.`);
+  }
+
+  if (!element.source) {
     throw new EditError(
       `${sel} has no source location, so it cannot be edited directly. Use write_file.`
     );
+  }
+
   return { ...element, source: element.source };
 }
 
 export async function writeText(file: string, content: string): Promise<void> {
   await mkdir(path.dirname(file), { recursive: true });
+
   const temp = path.join(
     path.dirname(file),
     `.${path.basename(file)}.mcp-${randomBytes(4).toString("hex")}.tmp`
   );
+
   await writeFile(temp, content);
+
   try {
     await rename(temp, file);
   } catch (error) {
@@ -208,10 +229,12 @@ export function checkWritePath(
     raw.startsWith("~") ||
     raw.includes("\0") ||
     raw.split(/[\\/]/).some((part) => part === "..")
-  )
+  ) {
     throw new EditError(
       `Path ${raw} must be relative to the project folder, with no "..".`
     );
+  }
+
   const result = evaluateToolUse(
     {
       workTree,
@@ -223,15 +246,21 @@ export function checkWritePath(
     "Write",
     { file_path: raw }
   );
-  if (result.behavior === "deny")
+
+  if (result.behavior === "deny") {
     throw new EditError(
       result.message.replace("mcp__studio__canvas_place", "canvas_place")
     );
+  }
+
   const relative = path
     .relative(workTree, path.resolve(workTree, raw))
     .split(path.sep)
     .join("/");
-  if (relative === "" || relative.startsWith(".."))
+
+  if (relative === "" || relative.startsWith("..")) {
     throw new EditError(`Path ${raw} is not a file in the project folder.`);
+  }
+
   return relative;
 }

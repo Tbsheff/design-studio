@@ -18,6 +18,7 @@ export type Side =
   | "maxw"
   | "minh"
   | "maxh";
+
 export type SidedGroup =
   | "padding"
   | "margin"
@@ -25,6 +26,7 @@ export type SidedGroup =
   | "radius"
   | "dims"
   | "inset";
+
 export type SingleGroup =
   | "color"
   | "bg"
@@ -61,6 +63,7 @@ export type SingleGroup =
   | "bg-size"
   | "bg-position"
   | "bg-repeat";
+
 export type Group = SidedGroup | SingleGroup;
 
 export interface ParsedClass {
@@ -106,6 +109,7 @@ const BOX_SIDES: Record<string, Side[]> = {
   s: ["l"],
   e: ["r"],
 };
+
 const CORNER_SIDES: Record<string, Side[]> = {
   "": ["tl", "tr", "br", "bl"],
   t: ["tl", "tr"],
@@ -192,6 +196,7 @@ const TEXT_ALIGN = new Set([
   "start",
   "end",
 ]);
+
 const TEXT_OTHER = new Set([
   "wrap",
   "nowrap",
@@ -200,7 +205,9 @@ const TEXT_OTHER = new Set([
   "ellipsis",
   "clip",
 ]);
+
 const T_SHIRT = /^(xs|sm|base|md|lg|\d?xl|2xs|3xs)$/;
+
 const WEIGHTS = new Set([
   "thin",
   "extralight",
@@ -212,6 +219,7 @@ const WEIGHTS = new Set([
   "extrabold",
   "black",
 ]);
+
 const BORDER_STYLES = new Set([
   "solid",
   "dashed",
@@ -220,6 +228,7 @@ const BORDER_STYLES = new Set([
   "hidden",
   "none",
 ]);
+
 const JUSTIFY = new Set([
   "start",
   "end",
@@ -233,6 +242,7 @@ const JUSTIFY = new Set([
   "center-safe",
   "end-safe",
 ]);
+
 const ITEMS = new Set([
   "start",
   "end",
@@ -244,6 +254,7 @@ const ITEMS = new Set([
   "end-safe",
   "normal",
 ]);
+
 const SELF = new Set([
   "auto",
   "start",
@@ -255,7 +266,9 @@ const SELF = new Set([
   "center-safe",
   "end-safe",
 ]);
+
 const OVERFLOW = new Set(["auto", "hidden", "clip", "visible", "scroll"]);
+
 const SHADOW_NAMES = new Set([
   "none",
   "inner",
@@ -267,8 +280,10 @@ const SHADOW_NAMES = new Set([
   "xl",
   "2xl",
 ]);
+
 const BG_NOT_COLOR =
   /^(fixed|local|scroll|clip-|origin-|repeat|no-repeat|cover|contain|auto$|center|top|bottom|left|right|none$|linear|radial|conic|gradient|blend-|size-|position-|\[url|\[image:|\[length:|\[size:|\[position:)/;
+
 const ARBITRARY_PROPERTY: Record<string, SingleGroup> = {
   color: "color",
   "background-color": "bg",
@@ -311,16 +326,22 @@ function splitVariants(raw: string): string[] {
   const parts: string[] = [];
   let depth = 0;
   let start = 0;
+
   for (let index = 0; index < raw.length; index += 1) {
     const char = raw[index];
-    if (char === "[" || char === "(") depth += 1;
-    else if (char === "]" || char === ")") depth = Math.max(0, depth - 1);
-    else if (char === ":" && depth === 0) {
+
+    if (char === "[" || char === "(") {
+      depth += 1;
+    } else if (char === "]" || char === ")") {
+      depth = Math.max(0, depth - 1);
+    } else if (char === ":" && depth === 0) {
       parts.push(raw.slice(start, index));
       start = index + 1;
     }
   }
+
   parts.push(raw.slice(start));
+
   return parts;
 }
 
@@ -329,6 +350,7 @@ export function parseClass(raw: string): ParsedClass {
   let utility = parts.pop() ?? "";
   const variants = parts.length > 0 ? `${parts.join(":")}:` : "";
   let important = false;
+
   if (utility.startsWith("!")) {
     important = true;
     utility = utility.slice(1);
@@ -336,22 +358,37 @@ export function parseClass(raw: string): ParsedClass {
     important = true;
     utility = utility.slice(0, -1);
   }
+
   const negative = /^-[a-z]/.test(utility);
-  if (negative) utility = utility.slice(1);
+
+  if (negative) {
+    utility = utility.slice(1);
+  }
+
   return { raw, variants, important, negative, utility };
 }
 
 function bracketed(suffix: string): string | null {
-  if (suffix.startsWith("[") && suffix.endsWith("]"))
+  if (suffix.startsWith("[") && suffix.endsWith("]")) {
     return suffix.slice(1, -1);
-  if (suffix.startsWith("(") && suffix.endsWith(")"))
+  }
+
+  if (suffix.startsWith("(") && suffix.endsWith(")")) {
     return suffix.slice(1, -1);
+  }
+
   return null;
 }
 
 function arbitraryIsLength(inner: string): boolean {
-  if (/^(length|size|percentage):/.test(inner)) return true;
-  if (/^(color|family-name|number):/.test(inner)) return false;
+  if (/^(length|size|percentage):/.test(inner)) {
+    return true;
+  }
+
+  if (/^(color|family-name|number):/.test(inner)) {
+    return false;
+  }
+
   return lengthToPx(inner.replace(/_/g, " ")) !== null || /^calc\(/.test(inner);
 }
 
@@ -359,15 +396,29 @@ function classifyText(
   suffix: string,
   theme: TailwindTheme | null
 ): SingleGroup | null {
-  if (TEXT_ALIGN.has(suffix)) return "text-align";
-  if (TEXT_OTHER.has(suffix)) return null;
+  if (TEXT_ALIGN.has(suffix)) {
+    return "text-align";
+  }
+
+  if (TEXT_OTHER.has(suffix)) {
+    return null;
+  }
+
   const base =
     suffix.includes("/") && !suffix.startsWith("[")
       ? suffix.slice(0, suffix.indexOf("/"))
       : suffix;
-  if (theme?.text.has(base) || T_SHIRT.test(base)) return "font-size";
+
+  if (theme?.text.has(base) || T_SHIRT.test(base)) {
+    return "font-size";
+  }
+
   const inner = bracketed(base);
-  if (inner !== null) return arbitraryIsLength(inner) ? "font-size" : "color";
+
+  if (inner !== null) {
+    return arbitraryIsLength(inner) ? "font-size" : "color";
+  }
+
   return "color";
 }
 
@@ -375,32 +426,54 @@ function classifyFont(
   suffix: string,
   theme: TailwindTheme | null
 ): SingleGroup | null {
-  if (theme?.fontWeight.has(suffix) || WEIGHTS.has(suffix))
+  if (theme?.fontWeight.has(suffix) || WEIGHTS.has(suffix)) {
     return "font-weight";
+  }
+
   if (
     theme?.font.has(suffix) ||
     suffix === "sans" ||
     suffix === "serif" ||
     suffix === "mono"
-  )
+  ) {
     return "font-family";
+  }
+
   const inner = bracketed(suffix);
-  if (inner === null) return null;
-  if (/^number:/.test(inner) || /^\d+$/.test(inner)) return "font-weight";
+
+  if (inner === null) {
+    return null;
+  }
+
+  if (/^number:/.test(inner) || /^\d+$/.test(inner)) {
+    return "font-weight";
+  }
+
   return "font-family";
 }
 
 function classifyBorder(suffix: string): SingleGroup | null {
-  if (BORDER_STYLES.has(suffix)) return "border-style";
-  if (/^\d+$/.test(suffix)) return "border-width";
+  if (BORDER_STYLES.has(suffix)) {
+    return "border-style";
+  }
+
+  if (/^\d+$/.test(suffix)) {
+    return "border-width";
+  }
+
   if (
     /^([xytrblse])(-|$)/.test(suffix) ||
     /^(collapse|separate|spacing)/.test(suffix)
-  )
+  ) {
     return null;
+  }
+
   const inner = bracketed(suffix);
-  if (inner !== null)
+
+  if (inner !== null) {
     return arbitraryIsLength(inner) ? "border-width" : "border-color";
+  }
+
   return "border-color";
 }
 
@@ -408,14 +481,22 @@ function classifyShadow(
   suffix: string,
   theme: TailwindTheme | null
 ): SingleGroup | null {
-  if (SHADOW_NAMES.has(suffix) || theme?.shadow.has(suffix)) return "shadow";
+  if (SHADOW_NAMES.has(suffix) || theme?.shadow.has(suffix)) {
+    return "shadow";
+  }
+
   const inner = bracketed(suffix);
-  if (inner !== null) return /^color:/.test(inner) ? null : "shadow";
+
+  if (inner !== null) {
+    return /^color:/.test(inner) ? null : "shadow";
+  }
+
   return null;
 }
 
 const OBJECT_POSITIONS =
   /^(center|top|bottom|left|right|left-top|left-bottom|right-top|right-bottom|top-left|top-right|bottom-left|bottom-right|\[.+\]|\(.+\))$/;
+
 const BG_POSITIONS =
   /^(center|top|bottom|left|right|left-top|left-bottom|right-top|right-bottom|top-left|top-right|bottom-left|bottom-right|\[position:.+\]|position-.+)$/;
 
@@ -423,11 +504,18 @@ function classifyBg(suffix: string): SingleGroup | null {
   if (
     /^\[(url\(|image:)/.test(suffix) ||
     /^(linear|radial|conic|gradient)/.test(suffix)
-  )
+  ) {
     return /^\[(url\(|image:)/.test(suffix) ? "bg-image" : null;
-  if (/^\[(size|length):/.test(suffix) || /^size-/.test(suffix))
+  }
+
+  if (/^\[(size|length):/.test(suffix) || /^size-/.test(suffix)) {
     return "bg-size";
-  if (BG_POSITIONS.test(suffix)) return "bg-position";
+  }
+
+  if (BG_POSITIONS.test(suffix)) {
+    return "bg-position";
+  }
+
   return BG_NOT_COLOR.test(suffix) ? null : "bg";
 }
 
@@ -436,8 +524,10 @@ function classifyFlex(suffix: string): SingleGroup | null {
     /^(\d+|auto|initial|none)$/.test(suffix) ||
     bracketed(suffix) !== null ||
     /^\d+\/\d+$/.test(suffix)
-  )
+  ) {
     return "flex";
+  }
+
   return null;
 }
 
@@ -448,7 +538,10 @@ function sided(
   negative: boolean,
   size = false
 ): Classified | null {
-  if (!sides) return null;
+  if (!sides) {
+    return null;
+  }
+
   return {
     kind: "sided",
     group,
@@ -463,6 +556,7 @@ const GAP_SIDES: Record<string, Side[]> = {
   y: ["y"],
   "": ["x", "y"],
 };
+
 const DIM_SIDES: Record<string, Side[]> = {
   w: ["w"],
   h: ["h"],
@@ -472,6 +566,7 @@ const DIM_SIDES: Record<string, Side[]> = {
   "min-h": ["minh"],
   "max-h": ["maxh"],
 };
+
 const INSET_SIDES: Record<string, Side[]> = {
   inset: ["t", "r", "b", "l"],
   "inset-x": ["l", "r"],
@@ -532,8 +627,12 @@ function classifySided(
 ): Classified | null | undefined {
   for (const [pattern, build] of SIDED_RULES) {
     const match = pattern.exec(utility);
-    if (match) return build(match, negative);
+
+    if (match) {
+      return build(match, negative);
+    }
   }
+
   return undefined;
 }
 
@@ -550,6 +649,7 @@ const always =
   (group: SingleGroup): PrefixRule =>
   () =>
     group;
+
 const fromSet =
   (set: ReadonlySet<string>, group: SingleGroup): PrefixRule =>
   (suffix) =>
@@ -601,8 +701,13 @@ function classifyPrefixed(
   const match = /^([a-z]+(?:-(?:rotate|shadow|items|self))?)-(.+)$/.exec(
     utility
   );
-  if (!match) return null;
+
+  if (!match) {
+    return null;
+  }
+
   const rule = PREFIX_RULES[match[1] ?? ""];
+
   return rule ? single(rule(match[2] ?? "", theme)) : null;
 }
 
@@ -612,13 +717,27 @@ export function classify(
 ): Classified | null {
   const { utility, negative } = parsed;
   const property = /^\[([a-z-]+):(.+)\]$/.exec(utility);
-  if (property) return single(ARBITRARY_PROPERTY[property[1] ?? ""] ?? null);
+
+  if (property) {
+    return single(ARBITRARY_PROPERTY[property[1] ?? ""] ?? null);
+  }
+
   const keyword = KEYWORD_GROUPS[utility];
-  if (keyword) return single(keyword);
-  if (/^(grayscale|invert|sepia|blur|drop-shadow)$/.test(utility))
+
+  if (keyword) {
+    return single(keyword);
+  }
+
+  if (/^(grayscale|invert|sepia|blur|drop-shadow)$/.test(utility)) {
     return single("filter");
+  }
+
   const side = classifySided(utility, negative);
-  if (side !== undefined) return side;
+
+  if (side !== undefined) {
+    return side;
+  }
+
   return classifyPrefixed(utility, theme);
 }
 
@@ -676,6 +795,7 @@ export function emitSided(
   variants: string
 ): string {
   const prefix = PREFIX[group][part] ?? part;
+
   return `${variants}${value.negative ? "-" : ""}${prefix}${value.suffix === "" ? "" : `-${value.suffix}`}`;
 }
 
@@ -683,19 +803,39 @@ type SideMap = Partial<Record<Side, SideValue>>;
 
 function compactBox(map: SideMap): Array<[string, SideValue]> {
   const { t, r, b, l } = map;
-  if (t && sameValue(t, r) && sameValue(t, b) && sameValue(t, l))
+
+  if (t && sameValue(t, r) && sameValue(t, b) && sameValue(t, l)) {
     return [["all", t]];
+  }
+
   const out: Array<[string, SideValue]> = [];
-  if (l && sameValue(l, r)) out.push(["x", l]);
-  if (t && sameValue(t, b)) out.push(["y", t]);
-  else {
-    if (t) out.push(["t", t]);
-    if (b) out.push(["b", b]);
+
+  if (l && sameValue(l, r)) {
+    out.push(["x", l]);
   }
+
+  if (t && sameValue(t, b)) {
+    out.push(["y", t]);
+  } else {
+    if (t) {
+      out.push(["t", t]);
+    }
+
+    if (b) {
+      out.push(["b", b]);
+    }
+  }
+
   if (!(l && sameValue(l, r))) {
-    if (r) out.push(["r", r]);
-    if (l) out.push(["l", l]);
+    if (r) {
+      out.push(["r", r]);
+    }
+
+    if (l) {
+      out.push(["l", l]);
+    }
   }
+
   return out;
 }
 
@@ -705,24 +845,37 @@ function pairs(
   second: [Side, Side, string]
 ): Array<[string, SideValue]> {
   const out: Array<[string, SideValue]> = [];
+
   for (const [a, b, name] of [first, second]) {
     const va = map[a];
     const vb = map[b];
-    if (va && sameValue(va, vb)) out.push([name, va]);
-    else {
-      if (va) out.push([a, va]);
-      if (vb) out.push([b, vb]);
+
+    if (va && sameValue(va, vb)) {
+      out.push([name, va]);
+    } else {
+      if (va) {
+        out.push([a, va]);
+      }
+
+      if (vb) {
+        out.push([b, vb]);
+      }
     }
   }
+
   return out;
 }
 
 function compactCorners(map: SideMap): Array<[string, SideValue]> {
   const { tl, tr, br, bl } = map;
-  if (tl && sameValue(tl, tr) && sameValue(tl, br) && sameValue(tl, bl))
+
+  if (tl && sameValue(tl, tr) && sameValue(tl, br) && sameValue(tl, bl)) {
     return [["all", tl]];
+  }
+
   const rows = pairs(map, ["tl", "tr", "t"], ["bl", "br", "b"]);
   const cols = pairs(map, ["tl", "bl", "l"], ["tr", "br", "r"]);
+
   return cols.length < rows.length ? cols : rows;
 }
 
@@ -731,21 +884,33 @@ export function compactSides(
   map: SideMap,
   useSize: boolean
 ): Array<[string, SideValue]> {
-  if (group === "padding" || group === "margin" || group === "inset")
+  if (group === "padding" || group === "margin" || group === "inset") {
     return compactBox(map);
-  if (group === "radius") return compactCorners(map);
+  }
+
+  if (group === "radius") {
+    return compactCorners(map);
+  }
+
   if (group === "gap") {
-    if (map.x && sameValue(map.x, map.y)) return [["all", map.x]];
+    if (map.x && sameValue(map.x, map.y)) {
+      return [["all", map.x]];
+    }
+
     return [
       ...(map.x ? [["x", map.x] as [string, SideValue]] : []),
       ...(map.y ? [["y", map.y] as [string, SideValue]] : []),
     ];
   }
+
   const limits = (["minw", "maxw", "minh", "maxh"] as const).flatMap((side) =>
     map[side] ? [[side, map[side]] as [string, SideValue]] : []
   );
-  if (useSize && map.w && sameValue(map.w, map.h))
+
+  if (useSize && map.w && sameValue(map.w, map.h)) {
     return [["all", map.w], ...limits];
+  }
+
   return [
     ...(map.w ? [["w", map.w] as [string, SideValue]] : []),
     ...(map.h ? [["h", map.h] as [string, SideValue]] : []),

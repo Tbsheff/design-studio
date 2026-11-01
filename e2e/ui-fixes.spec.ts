@@ -17,19 +17,31 @@ async function artboardBox(
   page: Page
 ): Promise<{ x: number; y: number; width: number }> {
   const box = await page.locator(".artboard").boundingBox();
-  if (!box) throw new Error("artboard not visible");
+
+  if (!box) {
+    throw new Error("artboard not visible");
+  }
+
   return { x: box.x, y: box.y, width: box.width };
 }
 
 async function stageCorner(page: Page): Promise<{ x: number; y: number }> {
   const box = await page.locator(".stage").boundingBox();
-  if (!box) throw new Error("stage not visible");
+
+  if (!box) {
+    throw new Error("stage not visible");
+  }
+
   return { x: box.x + 8, y: box.y + box.height - 8 };
 }
 
 async function frameCenter(page: Page): Promise<{ x: number; y: number }> {
   const box = await page.locator("iframe.frame.front").boundingBox();
-  if (!box) throw new Error("frame not visible");
+
+  if (!box) {
+    throw new Error("frame not visible");
+  }
+
   return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
 }
 
@@ -42,8 +54,11 @@ async function drag(
 ) {
   await page.mouse.move(from.x, from.y);
   await page.mouse.down({ button });
-  for (let step = 1; step <= 5; step += 1)
+
+  for (let step = 1; step <= 5; step += 1) {
     await page.mouse.move(from.x + (dx * step) / 5, from.y + (dy * step) / 5);
+  }
+
   await page.mouse.up({ button });
 }
 

@@ -15,12 +15,20 @@ function apply(
 ): CanvasLayout {
   const current =
     canvasStore.get(projectId) ?? defaultLayout(uiStore.get().viewport);
+
   const next = fn(current);
-  if (next !== current) canvasStore.set(projectId, next);
+
+  if (next !== current) {
+    canvasStore.set(projectId, next);
+  }
+
   const active = activeFrame(next);
   const { viewport } = uiStore.get();
-  if (active.width !== viewport.width || active.height !== viewport.height)
+
+  if (active.width !== viewport.width || active.height !== viewport.height) {
     uiStore.set({ viewport: viewportOf(active) });
+  }
+
   return next;
 }
 
@@ -33,7 +41,9 @@ export function showVariationFrames(
   const next = apply(projectId, (layout) =>
     placeDirections(layout, directionIds, currentId, dropCurrent)
   );
+
   uiStore.set({ zoom: "fit" });
+
   return activeFrame(next).directionId ?? currentId;
 }
 
@@ -50,6 +60,7 @@ export function framesOnCanvas(
   directionIds: string[]
 ): number {
   const layout = canvasStore.get(projectId);
+
   return layout
     ? layout.frames.filter(
         (f) => f.directionId && directionIds.includes(f.directionId)

@@ -1,5 +1,7 @@
 export const PORT_TASK = "port";
+
 export type PortTask = typeof PORT_TASK;
+
 export const PORT_LEVEL_LABEL = "Port to app";
 export const PORT_OPEN_EVENT = "studio:port-to-app";
 
@@ -147,6 +149,7 @@ export const PORT_FLOW_MAX_PAGES = 8;
 
 export function portPageSlug(pagePath: string): string {
   const stem = pagePath.replace(/^.*\//, "").replace(/\.html?$/i, "");
+
   return (
     stem
       .toLowerCase()
@@ -165,8 +168,15 @@ export function cleanPortRoute(raw: string): string | null {
     .replace(/^\/+|\/+$/g, "")
     .split("/")
     .filter(Boolean);
-  if (parts.length === 0 || parts.length > 6) return null;
-  if (!parts.every((part) => ROUTE_PART.test(part))) return null;
+
+  if (parts.length === 0 || parts.length > 6) {
+    return null;
+  }
+
+  if (!parts.every((part) => ROUTE_PART.test(part))) {
+    return null;
+  }
+
   return `/${parts.join("/")}`;
 }
 
@@ -175,14 +185,17 @@ export function suggestPortRoute(
   title: string | null
 ): string {
   const stem = pagePath.replace(/^.*\//, "").replace(/\.html?$/i, "");
+
   const base =
     stem && stem !== "index"
       ? stem
       : (title?.split(/\s[·|–—-]\s/)[0] ?? "prototype");
+
   const slug = base
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 40);
+
   return `/${slug || "prototype"}`;
 }

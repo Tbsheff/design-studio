@@ -78,7 +78,11 @@ export function toPublication(r: PublicationRecord): Publication {
 
 async function readJson<T>(file: string, fallback: T): Promise<T> {
   const text = await readFile(file, "utf-8").catch(() => null);
-  if (!text) return fallback;
+
+  if (!text) {
+    return fallback;
+  }
+
   try {
     return JSON.parse(text) as T;
   } catch {
@@ -101,6 +105,7 @@ export function createPublishStore(dataDir: string): PublishStore {
 
   const read = async (): Promise<PublicationRecord[]> => {
     const parsed = await readJson<unknown>(listFile, []);
+
     return Array.isArray(parsed) ? (parsed as PublicationRecord[]) : [];
   };
 
@@ -108,6 +113,7 @@ export function createPublishStore(dataDir: string): PublishStore {
     dir,
     async list(projectId) {
       const all = await read();
+
       return (
         projectId ? all.filter((r) => r.projectId === projectId) : all
       ).sort((a, b) => b.createdAt - a.createdAt);
@@ -119,9 +125,15 @@ export function createPublishStore(dataDir: string): PublishStore {
       return lock("publications", async () => {
         const all = await read();
         const at = all.findIndex((r) => r.id === record.id);
-        if (at >= 0) all[at] = record;
-        else all.push(record);
+
+        if (at >= 0) {
+          all[at] = record;
+        } else {
+          all.push(record);
+        }
+
         await write(listFile, all);
+
         return record;
       });
     },
@@ -138,7 +150,9 @@ export function createPublishStore(dataDir: string): PublishStore {
           ...(await readJson<Partial<PublishSettings>>(settingsFile, {})),
           ...patch,
         };
+
         await write(settingsFile, next);
+
         return next;
       });
     },

@@ -23,6 +23,7 @@ export async function sourceFiles(workTree: string): Promise<string[]> {
   const root = await realpath(workTree);
   const src = path.join(root, "src");
   const dir = existsSync(src) ? src : root;
+
   return cachedFileList(path.resolve(workTree), dir, isJsxFile, () =>
     listFiles(dir, isJsxFile)
   );
@@ -33,12 +34,15 @@ export function usesIn(
   workTree: string
 ): (name: string) => Promise<number> {
   const counts = new Map<string, Promise<number>>();
+
   return (name) => {
     let count = counts.get(name);
+
     if (!count) {
       count = cachedUseCount(path.resolve(workTree), files, name);
       counts.set(name, count);
     }
+
     return count;
   };
 }
@@ -56,7 +60,10 @@ export async function previewOrigin(
   project: Project,
   direction: Direction
 ): Promise<string | null> {
-  if (project.kind !== "react") return null;
+  if (project.kind !== "react") {
+    return null;
+  }
+
   try {
     return new URL(await preview.directionUrl(project, direction)).origin;
   } catch {
@@ -71,6 +78,7 @@ export async function instanceFor(
   query: InstanceQuery
 ): Promise<ComponentInstance | null> {
   const files = await sourceFiles(direction.workTree);
+
   return resolveInstance(
     {
       workTree: direction.workTree,
@@ -87,7 +95,11 @@ const warmedKits = new Set<string>();
 
 export function warmKit(project: Project, direction: Direction): void {
   const key = `${project.id}/${direction.id}/${direction.workTree}`;
-  if (project.kind !== "react" || warmedKits.has(key)) return;
+
+  if (project.kind !== "react" || warmedKits.has(key)) {
+    return;
+  }
+
   warmedKits.add(key);
   setTimeout(
     () =>
@@ -100,7 +112,10 @@ export function warmKit(project: Project, direction: Direction): void {
 }
 
 export function warmPropsTypes(project: Project, direction: Direction): void {
-  if (project.kind !== "react") return;
+  if (project.kind !== "react") {
+    return;
+  }
+
   setTimeout(() => {
     void Promise.all([loadTypeScript(), realpath(direction.workTree)])
       .then(([ts, root]) => ts && warmProgram(ts, root))

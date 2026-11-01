@@ -64,12 +64,14 @@ function failed(message: string): ToolResult {
 }
 
 function pickAttachment(ctx: AgentRunContext, name: string | undefined) {
-  if (!name)
+  if (!name) {
     return (
       referenceAttachment(ctx.attachments) ??
       ctx.attachments.find((item) => item.mime.startsWith("image/")) ??
       null
     );
+  }
+
   return (
     ctx.attachments.find(
       (item) => item.name === name || plainAttachmentName(item.name) === name
@@ -88,26 +90,37 @@ export async function runCompareToReference(
   }
 ): Promise<ToolResult> {
   const parsed = z.object(compareReferenceShape).strict().safeParse(args);
-  if (!parsed.success)
+
+  if (!parsed.success) {
     return failed(
       parsed.error.issues
         .map((issue) => `${issue.path.join(".") || "input"}: ${issue.message}`)
         .join("; ")
     );
+  }
+
   const attachment = pickAttachment(deps.ctx, parsed.data.attachment);
-  if (!attachment)
+
+  if (!attachment) {
     return failed(
       parsed.data.attachment
         ? `no attached image named ${parsed.data.attachment}.`
         : "this run has no attached image."
     );
+  }
+
   try {
     const shot = await resolveShotTarget(deps.targets, deps.ctx, {
       ...(parsed.data.frame ? { frame: parsed.data.frame } : {}),
       ...(parsed.data.path !== undefined ? { path: parsed.data.path } : {}),
     });
-    if (!shot) return failed("the preview is not running for this direction.");
+
+    if (!shot) {
+      return failed("the preview is not running for this direction.");
+    }
+
     calls += 1;
+
     const score = await compareToReference({
       preview: deps.preview,
       url: shot.url,
@@ -117,7 +130,9 @@ export async function runCompareToReference(
       outDir: deps.runsDir,
       stem: `${deps.runId}-compare-${calls}`,
     });
+
     const sheet = (await readFile(score.diffPath)).toString("base64");
+
     return {
       content: [
         { type: "image", data: sheet, mimeType: "image/png" },

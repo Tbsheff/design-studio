@@ -6,6 +6,7 @@ import { chromium, type Page } from "playwright-core";
 const base = process.env.STUDIO_URL ?? "http://127.0.0.1:4970";
 const out = path.resolve(process.argv[2] ?? "/tmp/polish-r1");
 const prefix = process.argv[3] ?? "after";
+
 mkdirSync(out, { recursive: true });
 
 const PNG_1PX = Buffer.from(
@@ -31,10 +32,12 @@ async function token(page: Page): Promise<string> {
 
 async function main(): Promise<void> {
   const browser = await chromium.launch({ channel: "chrome", headless: true });
+
   const page = await browser.newPage({
     viewport: { width: 1440, height: 900 },
     deviceScaleFactor: 2,
   });
+
   await page.goto(base);
   await page.getByRole("heading", { name: "New project" }).waitFor();
   await shot(page, "home-first-run", true);
@@ -70,6 +73,7 @@ async function main(): Promise<void> {
   await shot(page, "home-chips");
 
   const studioToken = await token(page);
+
   const call = (route: string, body: unknown) =>
     page.evaluate(
       async ([r, b, t]) =>
@@ -85,6 +89,7 @@ async function main(): Promise<void> {
         ).json(),
       [route, body, studioToken] as const
     );
+
   for (const starterId of [
     "landing",
     "dashboard",
@@ -92,8 +97,10 @@ async function main(): Promise<void> {
     "form",
     "mobile-app",
     "deck",
-  ])
+  ]) {
     await call("/api/projects/from-starter", { starterId });
+  }
+
   await call("/api/projects/sample", {});
   await page.goto(base);
   await page.locator(".project-thumb img").nth(5).waitFor({ timeout: 30_000 });

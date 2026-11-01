@@ -274,8 +274,10 @@ export function normalizeName(raw: string): string {
     .replace(/^-+/, "")
     .replace(/[._/\s]+/g, "-")
     .replace(/-+/g, "-");
+
   for (let changed = true; changed;) {
     changed = false;
+
     for (const prefix of PREFIXES) {
       if (name.startsWith(prefix) && name.length > prefix.length) {
         name = name.slice(prefix.length);
@@ -283,6 +285,7 @@ export function normalizeName(raw: string): string {
       }
     }
   }
+
   return name.replace(/-(default|base|value)$/, "");
 }
 
@@ -290,24 +293,39 @@ function lookup(
   table: Record<string, { high: string[]; medium: string[] }>,
   name: string
 ): NameMatch | null {
-  for (const [token, names] of Object.entries(table))
-    if (names.high.includes(name)) return { token, confidence: "high" };
-  for (const [token, names] of Object.entries(table))
-    if (names.medium.includes(name)) return { token, confidence: "medium" };
+  for (const [token, names] of Object.entries(table)) {
+    if (names.high.includes(name)) {
+      return { token, confidence: "high" };
+    }
+  }
+
+  for (const [token, names] of Object.entries(table)) {
+    if (names.medium.includes(name)) {
+      return { token, confidence: "medium" };
+    }
+  }
+
   return null;
 }
 
 function stripGroup(name: string, words: string[]): string | null {
   for (const word of words) {
-    if (name === word) return "";
-    if (name.startsWith(`${word}-`)) return name.slice(word.length + 1);
+    if (name === word) {
+      return "";
+    }
+
+    if (name.startsWith(`${word}-`)) {
+      return name.slice(word.length + 1);
+    }
   }
+
   return null;
 }
 
 export function matchColorName(raw: string): NameMatch | null {
   const name = normalizeName(raw);
   const found = lookup(COLOR_NAMES, name);
+
   return found
     ? { token: `color.${found.token}`, confidence: found.confidence }
     : null;
@@ -315,6 +333,7 @@ export function matchColorName(raw: string): NameMatch | null {
 
 export function matchFontName(raw: string): NameMatch | null {
   const name = normalizeName(raw);
+
   const bare = stripGroup(name, [
     "font-family",
     "fontfamily",
@@ -326,9 +345,11 @@ export function matchFontName(raw: string): NameMatch | null {
     "family",
     "typeface",
   ]);
+
   const found =
     (bare !== null && bare !== "" ? lookup(FONT_NAMES, bare) : null) ??
     lookup(FONT_NAMES, name);
+
   return found
     ? { token: `font.${found.token}`, confidence: found.confidence }
     : null;
@@ -336,6 +357,7 @@ export function matchFontName(raw: string): NameMatch | null {
 
 export function matchRadiusName(raw: string): NameMatch | null {
   const name = normalizeName(raw);
+
   const suffix = stripGroup(name, [
     "border-radius",
     "borderradius",
@@ -345,8 +367,13 @@ export function matchRadiusName(raw: string): NameMatch | null {
     "corner",
     "corners",
   ]);
-  if (suffix === null) return null;
+
+  if (suffix === null) {
+    return null;
+  }
+
   const found = RADIUS_SUFFIX[suffix];
+
   return found
     ? { token: `radius.${found.token}`, confidence: found.confidence }
     : null;
@@ -354,6 +381,7 @@ export function matchRadiusName(raw: string): NameMatch | null {
 
 export function matchShadowName(raw: string): NameMatch | null {
   const name = normalizeName(raw);
+
   const suffix = stripGroup(name, [
     "box-shadow",
     "boxshadow",
@@ -361,8 +389,13 @@ export function matchShadowName(raw: string): NameMatch | null {
     "shadow",
     "elevation",
   ]);
-  if (suffix === null) return null;
+
+  if (suffix === null) {
+    return null;
+  }
+
   const found = SHADOW_SUFFIX[suffix];
+
   return found
     ? {
         token: `shadow.${found}`,
@@ -376,6 +409,7 @@ export function matchScaleName(
   group: "text" | "space"
 ): NameMatch | null {
   const name = normalizeName(raw);
+
   const words =
     group === "text"
       ? [
@@ -388,9 +422,15 @@ export function matchScaleName(
           "size",
         ]
       : ["spacing", "space", "spacer", "gap", "sp"];
+
   const suffix = stripGroup(name, words);
-  if (suffix === null || suffix === "") return null;
+
+  if (suffix === null || suffix === "") {
+    return null;
+  }
+
   const required: readonly string[] = REQUIRED_TOKENS[group];
+
   return required.includes(suffix)
     ? { token: `${group}.${suffix}`, confidence: "high" }
     : null;
@@ -399,15 +439,26 @@ export function matchScaleName(
 export type ValueKind = "color" | "font" | "dimension" | "shadow" | "unknown";
 
 export function matchName(raw: string, kind: ValueKind): NameMatch | null {
-  if (kind === "color") return matchColorName(raw);
-  if (kind === "font") return matchFontName(raw);
-  if (kind === "shadow") return matchShadowName(raw);
-  if (kind === "dimension")
+  if (kind === "color") {
+    return matchColorName(raw);
+  }
+
+  if (kind === "font") {
+    return matchFontName(raw);
+  }
+
+  if (kind === "shadow") {
+    return matchShadowName(raw);
+  }
+
+  if (kind === "dimension") {
     return (
       matchRadiusName(raw) ??
       matchScaleName(raw, "text") ??
       matchScaleName(raw, "space")
     );
+  }
+
   return null;
 }
 
@@ -429,6 +480,7 @@ const CANONICAL: Record<string, string[]> = {
 
 export function isCanonicalName(raw: string, token: string): boolean {
   const name = normalizeName(raw);
+
   return CANONICAL[token]?.includes(name) ?? name === token.replace(".", "-");
 }
 

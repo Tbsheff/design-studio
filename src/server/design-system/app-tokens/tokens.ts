@@ -45,15 +45,31 @@ const NAMESPACES: Array<[RegExp, string, TokenType | null]> = [
 
 const NUMBER = /^-?(\d+\.?\d*|\.\d+)$/;
 const DURATION = /^-?(\d+\.?\d*|\.\d+)(ms|s)$/;
+
 const SHADOW_HINT =
   /\d(px|rem|em)?\s+-?\d.*(#|rgb|hsl|oklch|oklab|lab|lch|color-mix|black|white|transparent)/i;
 
 function valueType(value: string): TokenType {
-  if (toOklchColor(value)) return "color";
-  if (normalizeLength(value) || /^calc\(/.test(value)) return "dimension";
-  if (NUMBER.test(value)) return "number";
-  if (DURATION.test(value)) return "duration";
-  if (SHADOW_HINT.test(value)) return "shadow";
+  if (toOklchColor(value)) {
+    return "color";
+  }
+
+  if (normalizeLength(value) || /^calc\(/.test(value)) {
+    return "dimension";
+  }
+
+  if (NUMBER.test(value)) {
+    return "number";
+  }
+
+  if (DURATION.test(value)) {
+    return "duration";
+  }
+
+  if (SHADOW_HINT.test(value)) {
+    return "shadow";
+  }
+
   return "other";
 }
 
@@ -61,21 +77,36 @@ export function tokenGroup(
   name: string,
   resolved: string
 ): { group: string; type: TokenType } {
-  for (const [test, group, type] of NAMESPACES)
-    if (test.test(name)) return { group, type: type ?? valueType(resolved) };
+  for (const [test, group, type] of NAMESPACES) {
+    if (test.test(name)) {
+      return { group, type: type ?? valueType(resolved) };
+    }
+  }
+
   const type = valueType(resolved);
-  if (type === "color") return { group: "color", type };
-  if (/radius/.test(name) && type === "dimension")
+
+  if (type === "color") {
+    return { group: "color", type };
+  }
+
+  if (/radius/.test(name) && type === "dimension") {
     return { group: "radius", type };
-  if (/shadow|elevation/.test(name) && type === "shadow")
+  }
+
+  if (/shadow|elevation/.test(name) && type === "shadow") {
     return { group: "shadow", type };
-  if (/^--font-?(sans|serif|mono|family|display|body|heading)/.test(name))
+  }
+
+  if (/^--font-?(sans|serif|mono|family|display|body|heading)/.test(name)) {
     return { group: "font", type: "fontFamily" };
+  }
+
   return { group: "other", type };
 }
 
 function effectiveLight(lights: CssDeclaration[]): CssDeclaration | null {
   const unlayered = lights.filter((decl) => decl.scope === "root");
+
   return unlayered.at(-1) ?? lights.at(-1) ?? null;
 }
 
@@ -83,30 +114,50 @@ export function buildAppTokens(sheet: CssTokenSheet): AppToken[] {
   const order: string[] = [];
   const lights = new Map<string, CssDeclaration[]>();
   const darks = new Map<string, CssDeclaration>();
+
   for (const decl of sheet.declarations) {
-    if (!lights.has(decl.name) && !darks.has(decl.name)) order.push(decl.name);
-    if (decl.scope === "dark") darks.set(decl.name, decl);
-    else lights.set(decl.name, [...(lights.get(decl.name) ?? []), decl]);
+    if (!lights.has(decl.name) && !darks.has(decl.name)) {
+      order.push(decl.name);
+    }
+
+    if (decl.scope === "dark") {
+      darks.set(decl.name, decl);
+    } else {
+      lights.set(decl.name, [...(lights.get(decl.name) ?? []), decl]);
+    }
   }
+
   const lightScope = new Map<string, string>();
   const darkScope = new Map<string, string>();
+
   for (const name of order) {
     const light = effectiveLight(lights.get(name) ?? []);
-    if (light) lightScope.set(name, light.value);
+
+    if (light) {
+      lightScope.set(name, light.value);
+    }
+
     const dark = darks.get(name);
-    if (dark) darkScope.set(name, dark.value);
+
+    if (dark) {
+      darkScope.set(name, dark.value);
+    }
   }
+
   return order.map((name) => {
     const all = lights.get(name) ?? [];
     const light = effectiveLight(all);
     const dark = darks.get(name) ?? null;
     const lightRaw = light?.value ?? dark?.value ?? "";
     const value = resolveVars(lightRaw, [lightScope, darkScope]);
+
     const darkResolved = resolveVars(dark?.value ?? lightRaw, [
       darkScope,
       lightScope,
     ]);
+
     const { group, type } = tokenGroup(name, value);
+
     return {
       name,
       path: `${group}.${name.slice(2)}`,

@@ -41,6 +41,7 @@ export function frameKey(
 function useLatest<T>(value: T) {
   const ref = useRef(value);
   ref.current = value;
+
   return ref;
 }
 
@@ -58,7 +59,11 @@ export function useReview(input: ReviewInput): ReviewState {
 
   const run = useCallback(() => {
     const { projectId, directionId, frame } = latest.current;
-    if (!directionId) return;
+
+    if (!directionId) {
+      return;
+    }
+
     const ticket = ++pending.current;
     const runKey = frameKey(directionId, frame);
     const started = Date.now();
@@ -72,7 +77,10 @@ export function useReview(input: ReviewInput): ReviewState {
         height: side(frame.height),
       })
       .then((next) => {
-        if (ticket !== pending.current) return;
+        if (ticket !== pending.current) {
+          return;
+        }
+
         setResult(next);
         setResultKey(runKey);
         setRanAt(started);
@@ -86,17 +94,24 @@ export function useReview(input: ReviewInput): ReviewState {
   const fix = useCallback(
     async (findings: ReviewFinding[]) => {
       const { projectId, directionId } = latest.current;
-      if (!directionId || findings.length === 0) return;
+
+      if (!directionId || findings.length === 0) {
+        return;
+      }
+
       setFixing(findings.map((finding) => finding.id));
       setError(null);
+
       try {
         const done = await api.reviewFix(
           projectId,
           directionId,
           findings.map((finding) => finding.id)
         );
-        if (done.applied.length === 0)
+
+        if (done.applied.length === 0) {
           setError(done.skipped[0]?.reason ?? "Nothing was fixed.");
+        }
       } catch (err) {
         setError(errorText(err));
       } finally {
@@ -108,16 +123,24 @@ export function useReview(input: ReviewInput): ReviewState {
 
   const change = input.lastChange;
   useEffect(() => {
-    if (change && change.directionId === latest.current.directionId)
+    if (change && change.directionId === latest.current.directionId) {
       setChangedAt(change.receivedAt);
+    }
   }, [change, latest]);
 
   const stale = result !== null && (resultKey !== key || changedAt > ranAt);
   const open = input.open;
   useEffect(() => {
-    if (!open || busy || fixing || error) return;
-    if (result && !stale) return;
+    if (!open || busy || fixing || error) {
+      return;
+    }
+
+    if (result && !stale) {
+      return;
+    }
+
     const timer = window.setTimeout(run, result ? RERUN_MS : 0);
+
     return () => window.clearTimeout(timer);
   }, [open, stale, result, busy, fixing, error, run]);
 

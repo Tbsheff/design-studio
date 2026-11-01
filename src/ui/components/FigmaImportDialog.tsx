@@ -42,8 +42,10 @@ function messageOf(error: unknown): string {
     error instanceof ApiError &&
     error.data &&
     typeof (error.data as { message?: unknown }).message === "string"
-  )
+  ) {
     return (error.data as { message: string }).message;
+  }
+
   return error instanceof Error ? error.message : String(error);
 }
 
@@ -56,10 +58,19 @@ function facts(stats: FigmaImportStats): string[] {
     plural(stats.layers, "layer"),
     `${plural(stats.tokens, "token color")}`,
   ];
-  if (stats.rawColors.length > 0)
+
+  if (stats.rawColors.length > 0) {
     out.push(plural(stats.rawColors.length, "raw color"));
-  if (stats.images > 0) out.push(plural(stats.images, "image placeholder"));
-  if (stats.hidden > 0) out.push(`${stats.hidden} hidden skipped`);
+  }
+
+  if (stats.images > 0) {
+    out.push(plural(stats.images, "image placeholder"));
+  }
+
+  if (stats.hidden > 0) {
+    out.push(`${stats.hidden} hidden skipped`);
+  }
+
   return out;
 }
 
@@ -84,16 +95,21 @@ function usePreview(
       ...(nodeId ? { nodeId } : {}),
     })
       .then((result) => {
-        if (!live) return;
+        if (!live) {
+          return;
+        }
+
         setPreview(result);
         setFailure(null);
       })
       .catch((error: unknown) => live && setFailure(messageOf(error)))
       .finally(() => live && setLoading(false));
+
     return () => {
       live = false;
     };
   }, [ids, base, target, nodeId, position]);
+
   return { preview, failure, loading, setFailure };
 }
 
@@ -104,21 +120,28 @@ interface PlainFailure {
 }
 
 function plainFailure(raw: string): PlainFailure {
-  if (LINKS_OFF.test(raw))
+  if (LINKS_OFF.test(raw)) {
     return {
       text: "Design Studio cannot open Figma links here.",
       fix: "Paste the frame JSON below instead of the link.",
       details: raw,
     };
+  }
+
   const status = /Figma API answered (\d+)/.exec(raw);
-  if (status)
+
+  if (status) {
     return {
       text: `Figma refused to share this file (error ${status[1]}).`,
       fix: "Check that your Figma token can open this file.",
       details: raw,
     };
-  if (raw.length > 140 || /https?:\/\/|[A-Z]+_[A-Z_]+=?/.test(raw))
+  }
+
+  if (raw.length > 140 || /https?:\/\/|[A-Z]+_[A-Z_]+=?/.test(raw)) {
     return { text: "The Figma frame did not load.", fix: null, details: raw };
+  }
+
   return { text: raw, fix: null, details: null };
 }
 
@@ -128,6 +151,7 @@ function nodesUrl(link: string): string {
   const match = /figma\.com\/(?:file|design|proto)\/([A-Za-z0-9]+)/.exec(link);
   const node = /[?&]node-id=([^&#]+)/.exec(link)?.[1];
   const ids = node ? decodeURIComponent(node).replace("-", ":") : "<node id>";
+
   return `https://api.figma.com/v1/files/${match?.[1] ?? "<file key>"}/nodes?ids=${ids}`;
 }
 
@@ -140,11 +164,17 @@ function JsonPaste({
 }) {
   const [text, setText] = useState("");
   const [bad, setBad] = useState(false);
+
   const use = () => {
     const nodes = text.trim();
-    if (!looksLikeFigmaNodes(nodes)) return setBad(true);
+
+    if (!looksLikeFigmaNodes(nodes)) {
+      return setBad(true);
+    }
+
     onUse(nodes);
   };
+
   return (
     <div className="field">
       <label className="field">
@@ -191,13 +221,17 @@ function JsonFallback({
   failure: string | null;
   onUse: (nodes: string) => void;
 }) {
-  if (!failure || !("link" in base) || !LINKS_OFF.test(failure)) return null;
+  if (!failure || !("link" in base) || !LINKS_OFF.test(failure)) {
+    return null;
+  }
+
   return <JsonPaste link={base.link} onUse={onUse} />;
 }
 
 function FailureNote({ failure }: { failure: string }) {
   const [open, setOpen] = useState(false);
   const plain = plainFailure(failure);
+
   return (
     <div className="alert error small fgi-error" role="alert">
       <p>
@@ -224,6 +258,7 @@ function FailureNote({ failure }: { failure: string }) {
 
 function Summary({ preview }: { preview: FigmaImportPreview }) {
   const { frame, stats } = preview;
+
   return (
     <div className="fgi-summary" aria-live="polite">
       <div className="fgi-frame">
@@ -270,11 +305,15 @@ export default function FigmaImportDialog({
   const [base, setBase] = useState<FigmaImportSource>(() =>
     looksLikeFigmaLink(text) ? { link: text.trim() } : { nodes: text }
   );
+
   const [nodeId, setNodeId] = useState("");
+
   const [position, setPosition] = useState<JsxInsertPosition>(
     canNest ? "inside" : "after"
   );
+
   const [busy, setBusy] = useState(false);
+
   const { preview, failure, loading, setFailure } = usePreview(
     ids,
     base,
@@ -282,17 +321,27 @@ export default function FigmaImportDialog({
     nodeId,
     position
   );
+
   const dialog = useModalDialog(() => {
-    if (busy) return false;
+    if (busy) {
+      return false;
+    }
+
     onClose();
   });
+
   const frames = preview?.frames ?? [];
   const chosen = nodeId || preview?.frame.id || "";
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
-    if (busy || !preview) return;
+
+    if (busy || !preview) {
+      return;
+    }
+
     setBusy(true);
+
     try {
       const result = await json<FigmaImportResult>("POST", route(ids), {
         ...base,
@@ -300,6 +349,7 @@ export default function FigmaImportDialog({
         position,
         nodeId: preview.frame.id,
       });
+
       const kit = result.stats.kit.map((use) => use.component);
       const added = result.imports.filter((item) => item.added).length;
       onDone(
@@ -313,7 +363,9 @@ export default function FigmaImportDialog({
   };
 
   const onKeyDown = (event: KeyboardEvent) => {
-    if (event.key === "Escape") event.stopPropagation();
+    if (event.key === "Escape") {
+      event.stopPropagation();
+    }
   };
 
   return (

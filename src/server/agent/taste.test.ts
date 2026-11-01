@@ -22,6 +22,7 @@ function library(
   rows.forEach((row, index) => {
     const data =
       typeof row.data === "string" ? row.data : JSON.stringify(row.data);
+
     db.prepare("INSERT INTO preferences VALUES (?,?,?,?,?)").run(
       row.id,
       `2026-10-0${index + 1}`,
@@ -29,17 +30,22 @@ function library(
       null,
       data
     );
-    if (row.retired)
+
+    if (row.retired) {
       db.prepare("INSERT INTO retired VALUES (?,?)").run(row.id, "{}");
+    }
   });
   db.close();
+
   return home;
 }
 
 afterEach(() => {
   delete process.env.STUDIO_TASTE;
-  for (const dir of dirs.splice(0))
+
+  for (const dir of dirs.splice(0)) {
     rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 describe("loadTasteRules", () => {
@@ -73,6 +79,7 @@ describe("loadTasteRules", () => {
       },
       { id: "e", scope: "global", data: { kind: "maybe", rule: "Ignored" } },
     ]);
+
     expect(loadTasteRules(home)).toEqual([
       { kind: "prefer", area: "layout", rule: "Group with space" },
       { kind: "avoid", area: "general", rule: "Bounce easing" },
@@ -110,6 +117,7 @@ describe("taste prompt block", () => {
     entry: "index.html",
     settings: { allowBash: false, allowInstall: false },
   } as unknown as Project;
+
   const rules = [
     { kind: "prefer" as const, area: "layout", rule: "Group with space" },
   ];

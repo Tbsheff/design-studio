@@ -4,6 +4,7 @@ import type { SettingsDraft } from "../settingsDraft";
 import { Icon } from "./Icon";
 
 const loadFields = () => import("./SettingsFields");
+
 const SettingsFields = lazy(() =>
   loadFields().then((m) => ({ default: m.SettingsFields }))
 );
@@ -19,10 +20,15 @@ interface Props {
 
 export function NewProjectAdvanced(props: Props) {
   const [open, setOpen] = useState(props.initiallyOpen === true);
+
   const pickFile = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = "";
-    if (!file) return;
+
+    if (!file) {
+      return;
+    }
+
     file
       .text()
       .then(props.onDesignMd)

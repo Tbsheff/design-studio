@@ -6,13 +6,17 @@ export function useHistorySearch(history: readonly string[]) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
+
   const shown = useMemo(
     () => fuzzyRank([...history].reverse(), query, (prompt) => prompt, 20),
     [history, query]
   );
+
   useEffect(() => setActive(0), [query, open]);
+
   const current =
     shown[Math.min(active, Math.max(0, shown.length - 1))] ?? null;
+
   return {
     open,
     query,
@@ -38,7 +42,10 @@ export function HistorySearch({
   search: ReturnType<typeof useHistorySearch>;
   onPick: (prompt: string) => void;
 }) {
-  if (!search.open) return null;
+  if (!search.open) {
+    return null;
+  }
+
   return (
     <div
       className="skill-pop history-pop"
@@ -54,16 +61,20 @@ export function HistorySearch({
         value={search.query}
         onChange={(event) => search.setQuery(event.target.value)}
         onKeyDown={(event) => {
-          if (event.key === "Escape") search.close();
-          else if (event.key === "Enter" && search.current)
+          if (event.key === "Escape") {
+            search.close();
+          } else if (event.key === "Enter" && search.current) {
             onPick(search.current);
-          else if (
+          } else if (
             event.key === "ArrowDown" ||
             event.key === "ArrowUp" ||
             (event.ctrlKey && event.key === "r")
-          )
+          ) {
             search.move(event.key === "ArrowUp" ? -1 : 1);
-          else return;
+          } else {
+            return;
+          }
+
           event.preventDefault();
           event.stopPropagation();
         }}

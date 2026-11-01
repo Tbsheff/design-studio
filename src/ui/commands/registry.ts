@@ -27,25 +27,36 @@ const sources = new Set<{ current: Source }>();
 export function collectCommands(): Command[] {
   const seen = new Set<string>();
   const out: Command[] = [];
+
   for (const source of [...sources].reverse()) {
     for (const command of source.current()) {
-      if (seen.has(command.id)) continue;
+      if (seen.has(command.id)) {
+        continue;
+      }
+
       seen.add(command.id);
       out.push(command);
     }
   }
+
   return out;
 }
 
 export function runCommand(id: string): boolean {
   const command = collectCommands().find((c) => c.id === id);
-  if (!command || command.disabled) return false;
+
+  if (!command || command.disabled) {
+    return false;
+  }
+
   command.run();
+
   return true;
 }
 
 export function commandBlocker(id: string): string | null {
   const command = collectCommands().find((c) => c.id === id);
+
   return command ? (command.disabled ?? null) : "Not available here";
 }
 
@@ -59,6 +70,7 @@ export function useCommands(source: Source): void {
   useEffect(() => {
     const entry = { current: () => ref.current() };
     sources.add(entry);
+
     return () => {
       sources.delete(entry);
     };
@@ -68,10 +80,16 @@ export function useCommands(source: Source): void {
 let listening = false;
 
 export function listenForCommands(): void {
-  if (listening) return;
+  if (listening) {
+    return;
+  }
+
   listening = true;
   window.addEventListener(COMMAND_EVENT, (event) => {
     const id = (event as CustomEvent<unknown>).detail;
-    if (typeof id === "string") runCommand(id);
+
+    if (typeof id === "string") {
+      runCommand(id);
+    }
   });
 }

@@ -49,28 +49,45 @@ function normalized(value: string): string {
 function balanced(value: string): boolean {
   let depth = 0;
   let quote: string | null = null;
+
   for (const char of value) {
     if (quote) {
-      if (char === quote) quote = null;
+      if (char === quote) {
+        quote = null;
+      }
+
       continue;
     }
-    if (char === '"' || char === "'") quote = char;
-    else if (char === "(") depth += 1;
-    else if (char === ")" && --depth < 0) return false;
+
+    if (char === '"' || char === "'") {
+      quote = char;
+    } else if (char === "(") {
+      depth += 1;
+    } else if (char === ")" && --depth < 0) {
+      return false;
+    }
   }
+
   return depth === 0 && quote === null;
 }
 
 function checkCssValue(label: string, value: string): string {
   const trimmed = value.trim();
-  if (trimmed === "" || trimmed.length > MAX_VALUE)
+
+  if (trimmed === "" || trimmed.length > MAX_VALUE) {
     throw invalid(`${label} must be 1 to ${MAX_VALUE} characters`);
-  if (UNSAFE.test(trimmed))
+  }
+
+  if (UNSAFE.test(trimmed)) {
     throw invalid(
       `${label} "${trimmed}" must not contain ; { } < >, comments or line breaks`
     );
-  if (!balanced(trimmed))
+  }
+
+  if (!balanced(trimmed)) {
     throw invalid(`${label} "${trimmed}" has unbalanced brackets or quotes`);
+  }
+
   return normalized(trimmed);
 }
 
@@ -78,12 +95,15 @@ function tokenOf(loaded: LoadedAppTokens, change: TokenChange): AppToken {
   const token = loaded.tokens.find(
     (item) => item.path === change.path || item.name === change.path
   );
-  if (!token)
+
+  if (!token) {
     throw new DirectEditError(
       "unknown_token",
       `${change.path} is not a token in ${loaded.file}`,
       404
     );
+  }
+
   return token;
 }
 
@@ -93,12 +113,17 @@ function lineStart(text: string, offset: number): number {
 
 function lineEnd(text: string, offset: number): number {
   const next = text.indexOf("\n", offset);
+
   return next === -1 ? text.length : next + 1;
 }
 
 function indentOf(text: string, decl: CssDeclaration | undefined): string {
-  if (!decl) return "  ";
+  if (!decl) {
+    return "  ";
+  }
+
   const start = lineStart(text, decl.declStart);
+
   return /^[ \t]*/.exec(text.slice(start, decl.declStart))?.[0] || "  ";
 }
 
@@ -110,17 +135,22 @@ function insertDark(
   const block: CssTokenBlock | undefined = loaded.sheet.blocks
     .filter((item) => item.scope === "dark")
     .at(-1);
-  if (!block)
+
+  if (!block) {
     throw invalid(
       `${loaded.file} has no .dark block to add a dark value for ${token.name}`
     );
+  }
+
   const last = loaded.sheet.declarations
     .filter((decl) => decl.start > block.open && decl.end < block.close)
     .at(-1);
+
   const text = loaded.text;
   const before = lineStart(text, block.close);
   const onOwnLine = text.slice(before, block.close).trim() === "";
   const line = `${indentOf(text, last)}${token.name}: ${value};\n`;
+
   return onOwnLine
     ? { start: before, end: before, text: line }
     : { start: block.close, end: block.close, text: `\n${line}` };
@@ -129,8 +159,10 @@ function insertDark(
 function removeDecl(text: string, decl: CssDeclaration): Splice {
   const start = lineStart(text, decl.declStart);
   const end = lineEnd(text, decl.declEnd);
+
   const rest =
     text.slice(start, decl.declStart) + text.slice(decl.declEnd, end);
+
   return rest.trim() === ""
     ? { start, end, text: "" }
     : { start: decl.declStart, end: decl.declEnd, text: "" };
@@ -139,23 +171,35 @@ function removeDecl(text: string, decl: CssDeclaration): Splice {
 function splicesFor(loaded: LoadedAppTokens, change: TokenChange): Splice[] {
   const token = tokenOf(loaded, change);
   const out: Splice[] = [];
+
   if (change.value !== undefined) {
     const value = checkCssValue(`${change.path} value`, change.value);
-    if (!token.light)
+
+    if (!token.light) {
       throw invalid(
         `${change.path} has no light declaration in ${loaded.file}`
       );
-    if (value !== token.light.value)
+    }
+
+    if (value !== token.light.value) {
       out.push({ start: token.light.start, end: token.light.end, text: value });
+    }
   }
+
   if (change.darkValue === null) {
-    if (token.dark) out.push(removeDecl(loaded.text, token.dark));
+    if (token.dark) {
+      out.push(removeDecl(loaded.text, token.dark));
+    }
   } else if (change.darkValue !== undefined) {
     const value = checkCssValue(`${change.path} dark value`, change.darkValue);
-    if (!token.dark) out.push(insertDark(loaded, token, value));
-    else if (value !== token.dark.value)
+
+    if (!token.dark) {
+      out.push(insertDark(loaded, token, value));
+    } else if (value !== token.dark.value) {
       out.push({ start: token.dark.start, end: token.dark.end, text: value });
+    }
   }
+
   return out;
 }
 
@@ -163,12 +207,16 @@ function applySplices(text: string, splices: Splice[]): string {
   const ordered = [...splices].sort((a, b) => b.start - a.start);
   let out = text;
   let floor = Number.POSITIVE_INFINITY;
+
   for (const splice of ordered) {
-    if (splice.end > floor)
+    if (splice.end > floor) {
       throw invalid("two token changes touch the same declaration");
+    }
+
     out = out.slice(0, splice.start) + splice.text + out.slice(splice.end);
     floor = splice.start;
   }
+
   return out;
 }
 
@@ -180,12 +228,14 @@ function expected(
     change?.value !== undefined
       ? normalized(change.value)
       : (token.light?.value ?? null);
+
   const dark =
     change?.darkValue === undefined
       ? (token.dark?.value ?? null)
       : change.darkValue === null
         ? null
         : normalized(change.darkValue);
+
   return { light, dark };
 }
 
@@ -197,21 +247,28 @@ function verify(
   const byName = new Map(
     changes.map((change) => [tokenOf(before, change).name, change])
   );
+
   const fail = () =>
     new DirectEditError(
       "tokens_invalid",
       `${before.file} could not be edited in place`
     );
-  if (after.tokens.length !== before.tokens.length) throw fail();
+
+  if (after.tokens.length !== before.tokens.length) {
+    throw fail();
+  }
+
   for (const token of before.tokens) {
     const next = after.tokens.find((item) => item.name === token.name);
     const want = expected(token, byName.get(token.name));
+
     if (
       !next ||
       (next.light?.value ?? null) !== want.light ||
       (next.dark?.value ?? null) !== want.dark
-    )
+    ) {
       throw fail();
+    }
   }
 }
 
@@ -223,12 +280,17 @@ export function plannedCssText(
     loaded.text,
     changes.flatMap((change) => splicesFor(loaded, change))
   );
-  if (next === loaded.text) return next;
+
+  if (next === loaded.text) {
+    return next;
+  }
+
   verify(
     loaded,
     parseAppTokens(loaded.root, loaded.file, loaded.absolute, next),
     changes
   );
+
   return next;
 }
 
@@ -238,6 +300,7 @@ function updateMeta(
 ): VersionMeta {
   const parts = changes.map((change) => {
     const name = tokenOf(loaded, change).name;
+
     const bits = [
       change.value !== undefined ? `= ${change.value}` : "",
       change.darkValue === null
@@ -246,8 +309,10 @@ function updateMeta(
           ? `(dark ${change.darkValue})`
           : "",
     ];
+
     return `${name} ${bits.filter(Boolean).join(" ")}`;
   });
+
   return {
     kind: "manual",
     prompt: `Update tokens in ${loaded.file}: ${parts.join("; ")}`,
@@ -264,11 +329,14 @@ async function writeAndCommit(
 ): Promise<Version> {
   const workTree = direction.workTree;
   const snapshot = await readSnapshot(workTree, loaded.file);
+
   try {
     await writeFileAtomic(loaded.absolute, text);
+
     const title = tokensTitle(
       changes.map((change) => tokenOf(loaded, change).name)
     );
+
     const version = await deps.versions.commitFile(
       project,
       direction,
@@ -276,11 +344,14 @@ async function writeAndCommit(
       title,
       updateMeta(loaded, changes)
     );
-    if (version === null)
+
+    if (version === null) {
       throw new DirectEditError(
         "no_change",
         "The token changes did not change any tracked file"
       );
+    }
+
     recordTokenEdit(
       deps,
       project,
@@ -288,6 +359,7 @@ async function writeAndCommit(
       version,
       await snapshotChanges(workTree, [snapshot])
     );
+
     return version;
   } catch (error) {
     await restoreSnapshots(workTree, [snapshot]);
@@ -302,15 +374,25 @@ export async function updateAppTokens(
   raw: unknown
 ): Promise<UpdateTokensResult | null> {
   const found = await appTokensFor(project, direction);
-  if (!found) return null;
+
+  if (!found) {
+    return null;
+  }
+
   const changes = parseTokenChanges(raw);
   assertCanEdit(deps, project, direction);
   const loaded = await readAppTokensAt(direction.workTree, found.file);
-  if (!loaded)
+
+  if (!loaded) {
     throw new DirectEditError("no_design_system", "The token file is gone");
+  }
+
   const text = plannedCssText(loaded, changes);
-  if (text === loaded.text)
+
+  if (text === loaded.text) {
     throw new DirectEditError("no_change", "The token values are already set");
+  }
+
   const version = await writeAndCommit(
     deps,
     project,
@@ -319,8 +401,10 @@ export async function updateAppTokens(
     text,
     changes
   );
+
   await publishVersion(deps, project, direction, version);
   const fresh = await readAppTokensAt(direction.workTree, found.file);
+
   return {
     state: fresh ? appTokenState(fresh) : appTokenState(loaded),
     version,
@@ -339,30 +423,42 @@ export function previewAppTokens(
   const light: string[] = [];
   const dark: string[] = [];
   const errors: string[] = [];
+
   for (const change of changes) {
     try {
       const token = tokenOf(loaded, change);
+
       const value =
         change.value !== undefined
           ? checkCssValue(`${change.path} value`, change.value)
           : null;
-      if (value !== null) light.push(`${token.name}: ${value};`);
-      if (change.darkValue === null)
+
+      if (value !== null) {
+        light.push(`${token.name}: ${value};`);
+      }
+
+      if (change.darkValue === null) {
         dark.push(
           `${token.name}: ${value ?? token.light?.value ?? token.value};`
         );
-      else if (change.darkValue !== undefined)
+      } else if (change.darkValue !== undefined) {
         dark.push(
           `${token.name}: ${checkCssValue(`${change.path} dark value`, change.darkValue)};`
         );
+      }
     } catch (error) {
       errors.push(error instanceof Error ? error.message : String(error));
     }
   }
-  if (errors.length > 0) return { css: "", errors };
+
+  if (errors.length > 0) {
+    return { css: "", errors };
+  }
+
   const blocks = [
     light.length > 0 ? `:root {\n${declarations(light)}\n}` : "",
     dark.length > 0 ? `${DARK_SELECTOR} {\n${declarations(dark)}\n}` : "",
   ];
+
   return { css: blocks.filter(Boolean).join("\n"), errors: [] };
 }

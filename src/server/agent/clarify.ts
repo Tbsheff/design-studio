@@ -98,10 +98,14 @@ function clarifyOptions(
 
 async function replyText(stream: AsyncIterable<SDKMessage>): Promise<string> {
   let text = "";
+
   for await (const message of stream) {
     if (message.type === "assistant") {
-      for (const block of message.message.content)
-        if (block.type === "text") text += block.text;
+      for (const block of message.message.content) {
+        if (block.type === "text") {
+          text += block.text;
+        }
+      }
     } else if (
       message.type === "result" &&
       message.subtype === "success" &&
@@ -110,6 +114,7 @@ async function replyText(stream: AsyncIterable<SDKMessage>): Promise<string> {
       text = message.result;
     }
   }
+
   return text;
 }
 
@@ -128,18 +133,27 @@ export async function askQuestions(
   questions: ClarifyQuestion[];
   source: "mock" | "model" | "fallback" | "none";
 }> {
-  if (!needsQuestions(prompt)) return { questions: [], source: "none" };
-  if (deps.mode === "mock")
+  if (!needsQuestions(prompt)) {
+    return { questions: [], source: "none" };
+  }
+
+  if (deps.mode === "mock") {
     return { questions: fallbackQuestions(), source: "mock" };
+  }
+
   const loadQuery =
     deps.loadQuery ??
     (async () => (await import("@anthropic-ai/claude-agent-sdk")).query);
+
   const queryFn = await loadQuery();
+
   const stream = queryFn({
     prompt: `<brief>\n${prompt.trim()}\n</brief>\nReply with the JSON array only.`,
     options: clarifyOptions(deps.env, deps.claudeExecutable),
   });
+
   let timer: NodeJS.Timeout | undefined;
+
   try {
     const timeout = new Promise<never>((_resolve, reject) => {
       timer = setTimeout(
@@ -147,9 +161,11 @@ export async function askQuestions(
         deps.timeoutMs ?? CLARIFY_TIMEOUT_MS
       );
     });
+
     const questions = parseClarifyReply(
       await Promise.race([replyText(stream), timeout])
     );
+
     return questions.length > 0
       ? { questions, source: "model" }
       : { questions: fallbackQuestions(), source: "fallback" };
@@ -158,9 +174,13 @@ export async function askQuestions(
       "[clarify] model questions failed, using fixed questions",
       error
     );
+
     return { questions: fallbackQuestions(), source: "fallback" };
   } finally {
-    if (timer) clearTimeout(timer);
+    if (timer) {
+      clearTimeout(timer);
+    }
+
     stream.close();
   }
 }

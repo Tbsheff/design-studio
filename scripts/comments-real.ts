@@ -65,11 +65,18 @@ async function waitFor<T>(
   timeoutMs: number
 ): Promise<T> {
   const deadline = Date.now() + timeoutMs;
+
   for (;;) {
     const value = await fn().catch(() => null);
-    if (value !== null) return value;
-    if (Date.now() > deadline)
+
+    if (value !== null) {
+      return value;
+    }
+
+    if (Date.now() > deadline) {
       throw new Error(`timed out waiting for ${label}`);
+    }
+
     await sleep(500);
   }
 }
@@ -78,11 +85,13 @@ async function main(): Promise<void> {
   const work = realpathSync(
     mkdtempSync(path.join(os.tmpdir(), "studio comments real "))
   );
+
   const dataDir = path.join(work, "data");
   const site = path.join(work, "site");
   mkdirSync(site, { recursive: true });
   writeFileSync(path.join(site, "index.html"), PAGE);
   const log = createWriteStream(path.join(work, "server.log"));
+
   const server = spawn(
     path.join(ROOT, "node_modules", ".bin", "tsx"),
     ["src/server/index.ts"],
@@ -100,9 +109,11 @@ async function main(): Promise<void> {
       stdio: ["ignore", "pipe", "pipe"],
     }
   );
+
   server.stdout.pipe(log);
   server.stderr.pipe(log);
   console.log(`[comments-real] work dir ${work}`);
+
   const browser = await chromium.launch({
     channel: "chrome",
     headless: true,
@@ -111,20 +122,25 @@ async function main(): Promise<void> {
       "--disable-features=IsolateOrigins,site-per-process",
     ],
   });
+
   try {
     await waitFor(
       "server",
       async () => ((await fetch(`${BASE}/`)).ok ? true : null),
       60_000
     );
+
     const page = await browser.newPage({
       viewport: { width: 1600, height: 1000 },
     });
+
     await page.goto(BASE);
+
     const token =
       (await page
         .locator('meta[name="studio-token"]')
         .getAttribute("content")) ?? "";
+
     const call = async <T>(
       method: string,
       route: string,
@@ -138,8 +154,11 @@ async function main(): Promise<void> {
         },
         body: body === undefined ? undefined : JSON.stringify(body),
       });
-      if (!res.ok)
+
+      if (!res.ok) {
         throw new Error(`${method} ${route} ${res.status} ${await res.text()}`);
+      }
+
       return (await res.json()) as T;
     };
 
@@ -148,6 +167,7 @@ async function main(): Promise<void> {
       "/api/projects/import",
       { path: site }
     );
+
     await call("PATCH", `/api/projects/${project.id}/settings`, {
       model: MODEL,
       maxBudgetUsd: BUDGET,
@@ -168,19 +188,25 @@ async function main(): Promise<void> {
 
     for (const comment of COMMENTS) {
       const toggle = page.getByRole("button", { name: "Comment", exact: true });
-      if ((await toggle.getAttribute("aria-pressed")) !== "true")
+
+      if ((await toggle.getAttribute("aria-pressed")) !== "true") {
         await toggle.click();
+      }
+
       await frame.locator(comment.selector).click();
       const input = page.getByTestId("comment-compose").getByRole("textbox");
       await input.fill(comment.text);
       await input.press("Enter");
       await page.getByTestId("comment-compose").waitFor({ state: "detached" });
     }
+
     await page.keyboard.press("Escape");
+
     const queued = await call<DesignComment[]>(
       "GET",
       `/api/projects/${project.id}/d/${did}/comments`
     );
+
     console.log(
       `[comments-real] queued: ${queued.map((c) => `#${c.n} ${c.status}`).join(", ")}`
     );
@@ -196,13 +222,16 @@ async function main(): Promise<void> {
           "GET",
           `/api/projects/${project.id}/runs`
         );
+
         return list.length > 0 && list.every((run) => run.status !== "running")
           ? list
           : null;
       },
       600_000
     );
+
     const run = runs[runs.length - 1] as RunSummary;
+
     const settled = await waitFor(
       "settled comments",
       async () => {
@@ -210,11 +239,14 @@ async function main(): Promise<void> {
           "GET",
           `/api/projects/${project.id}/d/${did}/comments`
         );
+
         return list.every((c) => c.status !== "sent") ? list : null;
       },
       30_000
     );
+
     const html = readFileSync(path.join(site, "index.html"), "utf-8");
+
     const result = {
       runs: runs.length,
       status: run.status,
@@ -233,6 +265,7 @@ async function main(): Promise<void> {
       buttonDone: /<button[^>]*>\s*Order now\s*<\/button>/.test(html),
       ledeKept: html.includes("We roast beans in small batches."),
     };
+
     writeFileSync(
       path.join(work, "result.json"),
       JSON.stringify(result, null, 2)

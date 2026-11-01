@@ -22,6 +22,7 @@ import { Icon, type IconName } from "./Icon";
 import type { PortDialogTarget } from "./PortToAppDialog";
 
 export type CanvasTool = "select" | "comment" | "edit" | "prototype" | null;
+
 export type PresentMode = "window" | "fullscreen" | "new-window" | "play";
 
 export interface MenuEntry {
@@ -43,12 +44,16 @@ export interface MenuGroup {
 }
 
 function onMenuKey(event: KeyboardEvent<HTMLDivElement>) {
-  if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+  if (event.key !== "ArrowDown" && event.key !== "ArrowUp") {
+    return;
+  }
+
   const items = [
     ...event.currentTarget.querySelectorAll<HTMLButtonElement>(
       ".ui-menu-item:not(:disabled)"
     ),
   ].filter((item) => item.checkVisibility());
+
   const at = items.indexOf(document.activeElement as HTMLButtonElement);
   event.preventDefault();
   items[
@@ -71,6 +76,7 @@ function MenuPopover({
 }) {
   const root = useRef<HTMLDivElement>(null);
   usePopover(true, root, onClose, trigger);
+
   return (
     <div
       ref={root}
@@ -133,7 +139,9 @@ function shareGroups(
     run: p.onExport,
     ...(p.canExport ? {} : { tip: "Save a version to export" }),
   };
+
   const ship = p.onShip;
+
   const shipItem: MenuEntry[] = ship
     ? [
         {
@@ -145,6 +153,7 @@ function shareGroups(
         },
       ]
     : [];
+
   const portItem: MenuEntry[] = onPort
     ? [
         {
@@ -157,7 +166,9 @@ function shareGroups(
         },
       ]
     : [];
+
   const link = p.onShareLink;
+
   const linkItem: MenuEntry[] = link
     ? [
         {
@@ -173,6 +184,7 @@ function shareGroups(
         },
       ]
     : [];
+
   const publishItem: MenuEntry[] = link
     ? [
         {
@@ -188,6 +200,7 @@ function shareGroups(
         },
       ]
     : [];
+
   return [
     { items: [exportItem, ...shipItem, ...portItem] },
     {
@@ -209,10 +222,15 @@ function usePortDialog(available: boolean): {
   close: () => void;
 } {
   const [target, setTarget] = useState<PortDialogTarget | null>(null);
+
   const open = useCallback(
     (frameId: string | null, directionId?: string | null) => {
       const { activeProjectId, directionByProject } = uiStore.get();
-      if (!activeProjectId) return;
+
+      if (!activeProjectId) {
+        return;
+      }
+
       setTarget({
         projectId: activeProjectId,
         directionId: directionId ?? directionByProject[activeProjectId] ?? null,
@@ -221,8 +239,10 @@ function usePortDialog(available: boolean): {
     },
     []
   );
+
   useEffect(() => {
     setPortAvailable(available);
+
     return () => setPortAvailable(false);
   }, [available]);
   useEffect(() => {
@@ -230,9 +250,12 @@ function usePortDialog(available: boolean): {
       const detail = (event as CustomEvent<PortOpenDetail>).detail;
       open(detail?.frameId ?? null, detail?.directionId ?? null);
     };
+
     window.addEventListener(PORT_OPEN_EVENT, onOpen);
+
     return () => window.removeEventListener(PORT_OPEN_EVENT, onOpen);
   }, [open]);
+
   return { target, open, close: useCallback(() => setTarget(null), []) };
 }
 
@@ -257,10 +280,15 @@ export function DropMenu({
 }) {
   const [open, setOpen] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null);
+
   const close = useCallback((refocus: boolean) => {
     setOpen(false);
-    if (refocus) trigger.current?.focus();
+
+    if (refocus) {
+      trigger.current?.focus();
+    }
   }, []);
+
   return (
     <span
       className={anchorClass ? `topbar-anchor ${anchorClass}` : "topbar-anchor"}
@@ -275,7 +303,10 @@ export function DropMenu({
         data-tip={open ? undefined : tip}
         data-tip-align={align === "end" ? "end" : undefined}
         onClick={() => {
-          if (!open) onOpen?.();
+          if (!open) {
+            onOpen?.();
+          }
+
           setOpen((v) => !v);
         }}
       >
@@ -349,6 +380,7 @@ function zoomGroups({
 
 function ZoomPill(p: ZoomProps) {
   const percent = useLive(p.zoom);
+
   return (
     <DropMenu
       label={`Zoom ${percent}%`}
@@ -377,6 +409,7 @@ function OverflowMenu(p: OverflowProps) {
   const percent = useLive(p.zoom.zoom);
   const shape = useVectorTool();
   const zoom = zoomGroups(p.zoom);
+
   const groups = (): MenuGroup[] => [
     {
       fold: "wide",
@@ -432,6 +465,7 @@ function OverflowMenu(p: OverflowProps) {
       })),
     },
   ];
+
   return (
     <DropMenu
       label="More actions"
@@ -508,6 +542,7 @@ export function CanvasTopBar(p: Props) {
   const port = usePortDialog(!p.onShip);
   const onPort = p.onShip ? null : () => port.open(null);
   const present = presentItems(p.onPresent);
+
   const zoom: ZoomProps = {
     zoom: p.zoom,
     setting: p.zoomSetting,
@@ -515,6 +550,7 @@ export function CanvasTopBar(p: Props) {
     onFit: p.onFit,
     onStep: p.onZoomStep,
   };
+
   return (
     <div className="toolbar canvas-topbar" role="toolbar" aria-label="Canvas">
       {p.paneCollapsed && (

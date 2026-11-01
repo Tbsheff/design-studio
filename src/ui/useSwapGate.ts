@@ -23,33 +23,60 @@ export class SwapQueue {
   }
 
   done(directionId: string): boolean {
-    if (this.flying !== directionId) return false;
+    if (this.flying !== directionId) {
+      return false;
+    }
+
     const change = this.next.get(directionId);
-    if (change) this.shown.set(directionId, change);
+
+    if (change) {
+      this.shown.set(directionId, change);
+    }
+
     this.next.delete(directionId);
     this.flying = null;
     this.pump();
+
     return true;
   }
 
   hold(on: boolean): boolean {
-    if (this.held === on) return false;
+    if (this.held === on) {
+      return false;
+    }
+
     this.held = on;
     const id = this.flying;
+
     if (on && id !== null) {
       const change = this.next.get(id);
-      if (change && !this.waiting.has(id)) this.waiting.set(id, change);
+
+      if (change && !this.waiting.has(id)) {
+        this.waiting.set(id, change);
+      }
+
       this.next.delete(id);
       this.flying = null;
     }
-    if (!on) this.pump();
+
+    if (!on) {
+      this.pump();
+    }
+
     return true;
   }
 
   private pump(): void {
-    if (this.held || this.flying !== null) return;
+    if (this.held || this.flying !== null) {
+      return;
+    }
+
     const first = this.waiting.entries().next();
-    if (first.done) return;
+
+    if (first.done) {
+      return;
+    }
+
     const [id, change] = first.value;
     this.waiting.delete(id);
     this.flying = id;
@@ -88,25 +115,47 @@ export function useSwapGate(
   const gated = kind === "html";
 
   const onSwapDone = useCallback((key: string) => {
-    if (queue.current.done(key)) bump();
+    if (queue.current.done(key)) {
+      bump();
+    }
   }, []);
 
   useEffect(() => {
-    if (!gated || !lastChange) return;
-    if (lastChange.directionId === liveDirectionId && queue.current.hold(true))
+    if (!gated || !lastChange) {
+      return;
+    }
+
+    if (
+      lastChange.directionId === liveDirectionId &&
+      queue.current.hold(true)
+    ) {
       setLiveWait((n) => n + 1);
+    }
+
     const hits = live.current.filter(
       (target) => target.directionId === lastChange.directionId
     );
-    for (const target of hits) queue.current.offer(target.key, lastChange);
-    if (hits.length > 0) bump();
+
+    for (const target of hits) {
+      queue.current.offer(target.key, lastChange);
+    }
+
+    if (hits.length > 0) {
+      bump();
+    }
   }, [gated, lastChange, liveDirectionId]);
 
   useEffect(() => {
-    if (liveWait === 0) return;
+    if (liveWait === 0) {
+      return;
+    }
+
     const timer = window.setTimeout(() => {
-      if (!holdRef.current && queue.current.hold(false)) bump();
+      if (!holdRef.current && queue.current.hold(false)) {
+        bump();
+      }
     }, SWAP_RELEASE_MS);
+
     return () => window.clearTimeout(timer);
   }, [liveWait]);
 
@@ -116,18 +165,22 @@ export function useSwapGate(
         `${target.key}:${target.directionId}:${target.headVersionId ?? ""}`
     )
     .join("|");
+
   useEffect(() => {
     for (const target of live.current) {
       const head = `${target.directionId}:${target.headVersionId ?? ""}`;
       const previous = heads.current[target.key];
       heads.current[target.key] = head;
+
       if (
         !gated ||
         previous === undefined ||
         previous === head ||
         !previous.startsWith(`${target.directionId}:`)
-      )
+      ) {
         continue;
+      }
+
       const now = Date.now();
       queue.current.offer(target.key, {
         directionId: target.directionId,
@@ -140,14 +193,20 @@ export function useSwapGate(
   }, [headKey, gated]);
 
   useEffect(() => {
-    if (queue.current.hold(hold)) bump();
+    if (queue.current.hold(hold)) {
+      bump();
+    }
   }, [hold]);
 
   const flying = queue.current.inFlight;
   const flight = queue.current.flights;
   useEffect(() => {
-    if (flying === null) return;
+    if (flying === null) {
+      return;
+    }
+
     const timer = window.setTimeout(() => onSwapDone(flying), SWAP_RELEASE_MS);
+
     return () => window.clearTimeout(timer);
   }, [flying, flight, onSwapDone]);
 
@@ -155,9 +214,11 @@ export function useSwapGate(
     (directionId: string) => queue.current.shown.get(directionId) ?? null,
     [version]
   );
+
   const nextFor = useCallback(
     (directionId: string) => queue.current.next.get(directionId) ?? null,
     [version]
   );
+
   return { shownFor, nextFor, onSwapDone };
 }

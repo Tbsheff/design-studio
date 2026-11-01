@@ -12,18 +12,25 @@ function declarations(styleText: string): Map<string, string> {
   let depth = 0;
   let quote: string | null = null;
   let current = "";
+
   const push = (): void => {
     const colon = current.indexOf(":");
-    if (colon > 0)
+
+    if (colon > 0) {
       out.set(
         current.slice(0, colon).trim().toLowerCase(),
         current.slice(colon + 1).trim()
       );
+    }
+
     current = "";
   };
+
   for (const char of styleText) {
     if (quote) {
-      if (char === quote) quote = null;
+      if (char === quote) {
+        quote = null;
+      }
     } else if (char === '"' || char === "'") {
       quote = char;
     } else if (char === "(") {
@@ -34,25 +41,41 @@ function declarations(styleText: string): Map<string, string> {
       push();
       continue;
     }
+
     current += char;
   }
+
   push();
+
   return out;
 }
 
 function authoredStyles(element: Element): Record<string, string> {
   const text = element.getAttribute("style");
-  if (!text) return {};
+
+  if (!text) {
+    return {};
+  }
+
   const inline = declarations(text);
   const out: Record<string, string> = {};
+
   for (const key of AUTHORED_KEYS) {
     const value = inline.get(key);
-    if (value) out[key] = value;
+
+    if (value) {
+      out[key] = value;
+    }
   }
+
   for (const key of AUTHORED_SIZE_KEYS) {
     const value = inline.get(key);
-    if (value && AUTHORED_SIZE_RE.test(value)) out[key] = value;
+
+    if (value && AUTHORED_SIZE_RE.test(value)) {
+      out[key] = value;
+    }
   }
+
   return out;
 }
 
@@ -63,9 +86,12 @@ export function layoutStyles(
   const parent = element.parentElement
     ? window.getComputedStyle(element.parentElement)
     : null;
+
   const positioned =
     computed.position === "absolute" || computed.position === "fixed";
+
   const sizes = authoredBox(element, positioned);
+
   return {
     ...authoredStyles(element),
     ...declaredMargins(element),
@@ -92,8 +118,10 @@ interface Container {
 
 function containerOf(element: HTMLElement, fixed: boolean): Container {
   const parent = fixed ? null : element.offsetParent;
+
   if (parent instanceof HTMLElement && parent !== document.body) {
     const box = parent.getBoundingClientRect();
+
     return {
       width: parent.clientWidth,
       height: parent.clientHeight,
@@ -101,9 +129,11 @@ function containerOf(element: HTMLElement, fixed: boolean): Container {
       y: box.top + parent.clientTop,
     };
   }
+
   const scrolled = fixed
     ? { x: 0, y: 0 }
     : { x: -window.scrollX, y: -window.scrollY };
+
   return {
     width: document.documentElement.clientWidth,
     height: document.documentElement.clientHeight,
@@ -120,9 +150,13 @@ function constraintStyles(
   computed: CSSStyleDeclaration,
   box: Partial<Record<string, string>>
 ): Record<string, string> {
-  if (!(element instanceof HTMLElement)) return {};
+  if (!(element instanceof HTMLElement)) {
+    return {};
+  }
+
   const parent = containerOf(element, computed.position === "fixed");
   const rect = element.getBoundingClientRect();
+
   return {
     "authored-left": box.left ?? "",
     "authored-right": box.right ?? "",
@@ -144,8 +178,12 @@ function constraintStyles(
 }
 
 function boxExtra(computed: CSSStyleDeclaration, axis: "x" | "y"): number {
-  if (computed.boxSizing === "border-box") return 0;
+  if (computed.boxSizing === "border-box") {
+    return 0;
+  }
+
   const sides = axis === "x" ? ["Left", "Right"] : ["Top", "Bottom"];
+
   return sides.reduce(
     (sum, side) =>
       sum +
@@ -162,9 +200,13 @@ function offsetStyles(
   element: Element,
   computed: CSSStyleDeclaration
 ): Record<string, string> {
-  if (!(element instanceof HTMLElement)) return {};
+  if (!(element instanceof HTMLElement)) {
+    return {};
+  }
+
   const left = element.offsetLeft - (parseFloat(computed.marginLeft) || 0);
   const top = element.offsetTop - (parseFloat(computed.marginTop) || 0);
+
   return {
     "offset-left": `${Math.round(left)}px`,
     "offset-top": `${Math.round(top)}px`,
@@ -172,8 +214,12 @@ function offsetStyles(
 }
 
 export function arrangeChordOf(event: KeyboardEvent): string | null {
-  if (event.metaKey || event.repeat || !event.altKey) return null;
+  if (event.metaKey || event.repeat || !event.altKey) {
+    return null;
+  }
+
   const chord = `${event.ctrlKey ? "Ctrl+" : ""}Alt+${event.shiftKey ? "Shift+" : ""}${event.code}`;
+
   return chord in ARRANGE_SHORTCUTS || chord === REMOVE_LAYOUT_CHORD
     ? chord
     : null;

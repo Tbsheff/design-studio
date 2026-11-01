@@ -44,7 +44,7 @@ export function reportAppStart(screen: "home" | "studio"): void {
       detail: {
         surface: boot ? "desktop" : "web",
         screen,
-        ...(boot?.marks ?? {}),
+        ...boot?.marks,
       },
     });
   });

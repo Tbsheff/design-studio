@@ -103,7 +103,7 @@ async function applyFix(
 
   if (fix.kind === "set-env") {
     await reattach(deps, project, {
-      env: { ...(project.app?.env ?? {}), ...fix.env },
+      env: { ...project.app?.env, ...fix.env },
     });
 
     return `Set ${Object.keys(fix.env).join(", ")} for next dev. The dev server restarts.`;

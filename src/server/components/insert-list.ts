@@ -214,8 +214,8 @@ async function workspaceRoots(root: string, appDir: string): Promise<string[]> {
     () => null
   );
   const deps = Object.keys({
-    ...(pkg?.dependencies ?? {}),
-    ...(pkg?.devDependencies ?? {}),
+    ...pkg?.dependencies,
+    ...pkg?.devDependencies,
   });
   const names = await packageNames(root);
   return deps.flatMap((dep) => {

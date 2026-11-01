@@ -97,7 +97,7 @@ async function reviewFrameOf(
     ...(frameRefOf ? { frame: frameRefOf } : {}),
     ...(data.path ? { path: data.path } : {}),
     ...(data.selector ? { selector: data.selector } : {}),
-    ...(size ?? {}),
+    ...size,
   };
   if (!deps.canvas)
     return {

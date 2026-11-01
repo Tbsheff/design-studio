@@ -652,7 +652,7 @@ function withWait(
   return {
     ...schema,
     properties: {
-      ...((schema.properties as Record<string, unknown> | undefined) ?? {}),
+      ...(schema.properties as Record<string, unknown> | undefined),
       wait: WAIT_PROPERTY,
     },
   };

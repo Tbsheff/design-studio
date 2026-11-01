@@ -1563,7 +1563,7 @@ const RULES: [string, unknown[], number[]][] = [
   ["unicorn/no-typeof-undefined", [], [22,89]],
   ["unicorn/no-unnecessary-array-splice-count", [], [495,538]],
   ["unicorn/no-useless-collection-argument", [], [375,413,659,939,983]],
-  ["unicorn/no-useless-fallback-in-spread", [], [325,373,376,505,556,657,1066]],
+  ["unicorn/no-useless-fallback-in-spread", [], [373]],
   ["unicorn/no-useless-length-check", [], [306]],
   ["unicorn/no-useless-promise-resolve-reject", [], [360]],
   ["unicorn/no-useless-spread", [], [40,196,198,240,518,681,695,813,1039,1116]],

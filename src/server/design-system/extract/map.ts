@@ -455,7 +455,7 @@ function writeToken(
   const node = nodeAt(tokens, token);
   if (!node) return;
   node.$value = pick.value;
-  const extensions = { ...(node.$extensions ?? {}) };
+  const extensions = { ...node.$extensions };
   if (pick.dark) extensions["studio.modes"] = { dark: pick.dark };
   else delete extensions["studio.modes"];
   if (pick.sourceVar)

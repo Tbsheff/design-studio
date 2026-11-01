@@ -37,7 +37,7 @@ function sourceKey(element: Element, own: string, used: string | null): string {
 function pageOf(key: string): { page: string; rest: string } {
   const at = key.indexOf("|");
 
-  return at < 0
+  return at === -1
     ? { page: "", rest: key }
     : { page: key.slice(0, at), rest: key.slice(at + 1) };
 }

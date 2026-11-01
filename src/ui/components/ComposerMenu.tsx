@@ -368,7 +368,7 @@ function PillCaret() {
 function ModelName({ name }: { name: string }) {
   const at = name.lastIndexOf(" ");
 
-  if (at < 0) {
+  if (at === -1) {
     return <>{name}</>;
   }
 

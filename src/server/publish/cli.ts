@@ -177,7 +177,7 @@ function firstJson(text: string): unknown {
   const start = text.indexOf("{");
   const end = text.lastIndexOf("}");
 
-  if (start < 0 || end <= start) {
+  if (start === -1 || end <= start) {
     return null;
   }
 

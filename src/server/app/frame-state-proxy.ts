@@ -141,7 +141,7 @@ export function isDataPath(pathname: string): boolean {
 function trpcProcedures(pathname: string): string[] | null {
   const at = pathname.indexOf("/trpc/");
 
-  if (at < 0) {
+  if (at === -1) {
     return null;
   }
 

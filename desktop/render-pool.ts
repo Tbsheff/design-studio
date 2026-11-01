@@ -187,7 +187,7 @@ export class RenderPool {
 
   private dropSlot(slot: Slot): void {
     const position = this.slots.indexOf(slot);
-    if (position >= 0) this.slots.splice(position, 1);
+    if (position !== -1) this.slots.splice(position, 1);
     if (slot.idleTimer) clearTimeout(slot.idleTimer);
     if (!slot.window.isDestroyed()) slot.window.destroy();
   }

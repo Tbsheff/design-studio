@@ -166,8 +166,8 @@ export function describeLocks(
 
   const lines = keys.map((key) => {
     const at = key.indexOf("|");
-    const where = at < 0 ? "" : key.slice(0, at);
-    const what = at < 0 ? key : key.slice(at + 1);
+    const where = at === -1 ? "" : key.slice(0, at);
+    const what = at === -1 ? key : key.slice(at + 1);
 
     const state =
       resolved && where === page

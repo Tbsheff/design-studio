@@ -66,7 +66,7 @@ export function parseShellPath(output: string): string[] {
   const start = output.indexOf(PATH_MARK);
   const end = output.indexOf(PATH_MARK, start + PATH_MARK.length);
 
-  if (start < 0 || end < 0) {
+  if (start === -1 || end === -1) {
     return [];
   }
 

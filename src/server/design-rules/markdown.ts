@@ -17,7 +17,7 @@ function fencedRules(lines: string[]): string | null {
       (line, index) => index > at && line.trim() === open[2]
     );
 
-    return lines.slice(at + 1, close < 0 ? lines.length : close).join("\n");
+    return lines.slice(at + 1, close === -1 ? lines.length : close).join("\n");
   }
 
   return null;
@@ -26,9 +26,9 @@ function fencedRules(lines: string[]): string | null {
 export function extractRulesBlock(markdown: string): string | null {
   const text = markdown.replaceAll("\r\n", "\n");
   const start = text.indexOf(DESIGN_MD_RULES_START);
-  const end = start < 0 ? -1 : text.indexOf(DESIGN_MD_RULES_END, start);
+  const end = start === -1 ? -1 : text.indexOf(DESIGN_MD_RULES_END, start);
 
-  if (start >= 0 && end >= 0) {
+  if (start !== -1 && end >= 0) {
     const inner = text.slice(start + DESIGN_MD_RULES_START.length, end);
 
     return (fencedRules(inner.split("\n")) ?? inner).trim();
@@ -61,7 +61,7 @@ function replaceFence(lines: string[], text: string): string | null {
       (line, index) => index > at && line.trim() === open[2]
     );
 
-    if (close < 0) {
+    if (close === -1) {
       return null;
     }
 
@@ -76,9 +76,9 @@ function replaceFence(lines: string[], text: string): string | null {
 export function upsertRulesBlock(markdown: string, text: string): string {
   const source = markdown.replaceAll("\r\n", "\n");
   const start = source.indexOf(DESIGN_MD_RULES_START);
-  const end = start < 0 ? -1 : source.indexOf(DESIGN_MD_RULES_END, start);
+  const end = start === -1 ? -1 : source.indexOf(DESIGN_MD_RULES_END, start);
 
-  if (start >= 0 && end >= 0) {
+  if (start !== -1 && end >= 0) {
     return (
       source.slice(0, start) +
       rulesSection(text) +

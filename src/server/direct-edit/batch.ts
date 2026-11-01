@@ -170,7 +170,7 @@ function offsetOf(code: string, line: number, col: number): number {
   let offset = 0;
   for (let at = 1; at < line; at += 1) {
     const next = code.indexOf("\n", offset);
-    if (next < 0) return code.length;
+    if (next === -1) return code.length;
     offset = next + 1;
   }
   return offset + Math.max(0, col - 1);

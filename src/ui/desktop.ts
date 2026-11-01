@@ -110,7 +110,7 @@ export function useDesktopCommand(handler: Handler): void {
     return () => {
       const index = handlers.indexOf(entry);
 
-      if (index >= 0) {
+      if (index !== -1) {
         handlers.splice(index, 1);
       }
     };

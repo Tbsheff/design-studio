@@ -29,7 +29,7 @@ class JsReader {
     }
 
     const end = this.text.indexOf(close, this.index + 2);
-    this.index = end < 0 ? this.text.length : end + close.length;
+    this.index = end === -1 ? this.text.length : end + close.length;
 
     return true;
   }

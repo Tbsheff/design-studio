@@ -86,7 +86,7 @@ function jsonValues(text: string): unknown[] {
     const start = text.indexOf(open);
     const end = text.lastIndexOf(close);
 
-    if (start < 0 || end <= start) {
+    if (start === -1 || end <= start) {
       continue;
     }
 

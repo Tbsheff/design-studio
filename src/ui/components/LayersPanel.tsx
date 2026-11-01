@@ -785,7 +785,7 @@ export function LayersPanel({
   const finishRename = useLatest(
     (node: LayerNode, value: string | null, step?: 1 | -1) => {
       const at = rows.findIndex((r) => r.id === node.id);
-      const next = step && at >= 0 ? rows[at + step] : undefined;
+      const next = step && at !== -1 ? rows[at + step] : undefined;
       setEditing(next ? next.id : null);
       if (next) onSelect(next.id, false);
       else listRef.current?.focus();

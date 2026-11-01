@@ -113,7 +113,7 @@ export function layerKeys(nodes: LayerNode[]): Map<number, string> {
 export function ancestorsOf(nodes: LayerNode[], id: number): number[] {
   const index = nodes.findIndex((n) => n.id === id);
 
-  if (index < 0) {
+  if (index === -1) {
     return [];
   }
 
@@ -291,7 +291,7 @@ export function dropTarget(
 ): DropTarget | null {
   const index = rows.findIndex((r) => r.id === id);
 
-  if (index < 0) {
+  if (index === -1) {
     return null;
   }
 
@@ -382,7 +382,11 @@ export function layerDrop(
   const index = Math.floor(y / rowHeight);
   const row = rows[index];
 
-  if (from < 0 || !row || (index >= from && index < subtreeEnd(rows, from))) {
+  if (
+    from === -1 ||
+    !row ||
+    (index >= from && index < subtreeEnd(rows, from))
+  ) {
     return null;
   }
 
@@ -406,8 +410,8 @@ export function adjacentMove(
 ): DropTarget | null {
   const from = rows.findIndex((r) => r.id === id);
   const index = Math.floor(y / rowHeight);
-  const prev = from < 0 ? null : siblingRow(rows, from, -1);
-  const next = from < 0 ? null : siblingRow(rows, from, 1);
+  const prev = from === -1 ? null : siblingRow(rows, from, -1);
+  const next = from === -1 ? null : siblingRow(rows, from, 1);
   const onPrev = prev !== null && index >= prev && index < from;
 
   const onNext =

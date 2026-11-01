@@ -10,7 +10,7 @@ import { parseDirectEditRequest } from "./validate.js";
 function locAt(source: string, needle: string): { line: number; col: number } {
   const index = source.indexOf(`<${needle}`);
 
-  if (index < 0) {
+  if (index === -1) {
     throw new Error(`no ${needle}`);
   }
 

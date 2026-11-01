@@ -94,7 +94,7 @@ function inside(root: string, file: string): boolean {
 
 export function missingEnvKeys(lines: string[]): string[] {
   const start = lines.findIndex((line) => ENV_ERROR.test(line));
-  if (start < 0) return [];
+  if (start === -1) return [];
   const keys = new Set<string>();
   for (const line of lines.slice(start, start + 40)) {
     const match =
@@ -108,7 +108,7 @@ export function missingEnvKeys(lines: string[]): string[] {
 
 function stackFiles(ctx: Ctx): string[] {
   const start = ctx.all.findIndex((line) => ENV_ERROR.test(line));
-  const near = start < 0 ? [] : ctx.all.slice(start, start + 30);
+  const near = start === -1 ? [] : ctx.all.slice(start, start + 30);
   const files = near
     .map(
       (line) => /\(([^()\s]+\.(?:ts|tsx|mjs|cjs|js)):\d+:\d+\)/.exec(line)?.[1]

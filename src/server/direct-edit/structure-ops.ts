@@ -95,7 +95,7 @@ function restOfLineBlank(source: string, offset: number): boolean {
   const next = source.indexOf("\n", offset);
 
   return /^[ \t\r]*$/.test(
-    source.slice(offset, next < 0 ? source.length : next)
+    source.slice(offset, next === -1 ? source.length : next)
   );
 }
 

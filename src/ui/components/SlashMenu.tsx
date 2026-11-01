@@ -216,7 +216,7 @@ export function useSlashMenu({
   const enter = (id: string | null) => {
     const from = groups.findIndex((item) => item.id === path);
     setPath(id);
-    setActive(id === null && from >= 0 ? { at: from, key: "|" } : null);
+    setActive(id === null && from !== -1 ? { at: from, key: "|" } : null);
     setDismissed(null);
     setDraft("/");
   };

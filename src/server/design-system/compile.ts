@@ -341,7 +341,7 @@ function findCycle(
   const visit = (node: string): string[] | null => {
     const index = stack.indexOf(node);
 
-    if (index >= 0) {
+    if (index !== -1) {
       return [...stack.slice(index), node];
     }
 

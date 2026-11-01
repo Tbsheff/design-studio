@@ -88,7 +88,7 @@ function clean<T>(list: Ranked<T>[], query: string): Ranked<T>[] {
 function groupIndex(group: string): number {
   const at = GROUP_ORDER.indexOf(group);
 
-  return at < 0 ? GROUP_ORDER.length : at;
+  return at === -1 ? GROUP_ORDER.length : at;
 }
 
 function projectMeta(hit: ProjectHit): string | undefined {

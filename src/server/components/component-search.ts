@@ -35,7 +35,7 @@ function sourceOf(library: Library, entry: LibraryEntry): ComponentSource {
     entry.absolute.startsWith(dir + path.sep)
   );
 
-  return index >= 0 && index < library.scan.length - 1 ? "package" : "app";
+  return index !== -1 && index < library.scan.length - 1 ? "package" : "app";
 }
 
 function words(value: string): string {

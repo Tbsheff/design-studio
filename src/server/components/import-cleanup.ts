@@ -64,7 +64,7 @@ export function removeImport(code: string, name: string, file: string): string {
       (item) => item.local.name === name
     );
 
-    if (index < 0) {
+    if (index === -1) {
       continue;
     }
 

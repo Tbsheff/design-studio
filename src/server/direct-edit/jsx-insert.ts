@@ -396,7 +396,9 @@ function ownLine(source: string, node: StructNode): boolean {
 
   return (
     /^[ \t]*$/.test(source.slice(start, node.start)) &&
-    /^[ \t\r]*$/.test(source.slice(node.end, next < 0 ? source.length : next))
+    /^[ \t\r]*$/.test(
+      source.slice(node.end, next === -1 ? source.length : next)
+    )
   );
 }
 

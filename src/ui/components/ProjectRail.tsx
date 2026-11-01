@@ -143,14 +143,14 @@ function moveFocus(event: ReactKeyboardEvent<HTMLElement>): void {
 
   const at = items.indexOf(document.activeElement as HTMLElement);
 
-  if (at < 0 && !(document.activeElement instanceof HTMLInputElement)) {
+  if (at === -1 && !(document.activeElement instanceof HTMLInputElement)) {
     return;
   }
 
   event.preventDefault();
 
   const next =
-    at < 0
+    at === -1
       ? 0
       : (at + (event.key === "ArrowDown" ? 1 : -1) + items.length) %
         items.length;

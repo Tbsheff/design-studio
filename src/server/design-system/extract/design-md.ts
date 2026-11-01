@@ -75,7 +75,7 @@ function fontsIn(
 
   const colon = text.indexOf(":");
 
-  if (colon < 0) {
+  if (colon === -1) {
     return [];
   }
 

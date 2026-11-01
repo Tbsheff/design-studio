@@ -1068,7 +1068,7 @@ export function createProjectStore(
 
         const current = project.directions[index];
 
-        if (index < 0 || current === undefined) {
+        if (index === -1 || current === undefined) {
           throw new NotFoundError(`direction ${id} not found`);
         }
 

@@ -185,7 +185,7 @@ function exportTarget(value: unknown): string | null {
 function matchPattern(pattern: string, value: string): string | null {
   const star = pattern.indexOf("*");
 
-  if (star < 0) {
+  if (star === -1) {
     return pattern === value ? "" : null;
   }
 

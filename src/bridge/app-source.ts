@@ -357,7 +357,7 @@ export async function appElementBySource(
       const sources = await Promise.all(batch.map(appSourceFor));
       const index = sources.indexOf(loc);
 
-      if (index >= 0) {
+      if (index !== -1) {
         return batch[index] ?? null;
       }
     }

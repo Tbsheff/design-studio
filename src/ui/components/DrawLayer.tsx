@@ -301,7 +301,7 @@ function onSwatchKey(event: KeyboardEvent<HTMLDivElement>) {
 
   const index = radios.indexOf(document.activeElement as HTMLButtonElement);
 
-  if (index < 0) {
+  if (index === -1) {
     return;
   }
 

@@ -429,7 +429,7 @@ export function useComments(
       const at = ids.indexOf(id);
       const to = at + delta;
 
-      if (at < 0 || to < 0 || to >= ids.length) {
+      if (at === -1 || to < 0 || to >= ids.length) {
         return;
       }
 

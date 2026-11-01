@@ -72,9 +72,9 @@ export function upsertTokenBlock(
 ): string {
   const block = tokenBlock(entries);
   const start = markdown.indexOf(DESIGN_MD_TOKENS_START);
-  const end = start < 0 ? -1 : markdown.indexOf(DESIGN_MD_TOKENS_END, start);
+  const end = start === -1 ? -1 : markdown.indexOf(DESIGN_MD_TOKENS_END, start);
 
-  if (start >= 0 && end >= 0) {
+  if (start !== -1 && end >= 0) {
     return (
       markdown.slice(0, start) +
       block +
@@ -91,14 +91,14 @@ export const TOKEN_TABLE_POINTER =
 export function stripTokenBlock(markdown: string): string {
   const start = markdown.indexOf(DESIGN_MD_TOKENS_START);
 
-  if (start < 0) {
+  if (start === -1) {
     return markdown;
   }
 
   const end = markdown.indexOf(DESIGN_MD_TOKENS_END, start);
 
   const after =
-    end < 0 ? "" : markdown.slice(end + DESIGN_MD_TOKENS_END.length);
+    end === -1 ? "" : markdown.slice(end + DESIGN_MD_TOKENS_END.length);
 
   return `${markdown.slice(0, start)}${TOKEN_TABLE_POINTER}${after}`;
 }
@@ -121,12 +121,13 @@ export function composeDesignMd(
 export function removeTokenBlock(markdown: string): string {
   const start = markdown.indexOf(DESIGN_MD_TOKENS_START);
 
-  if (start < 0) {
+  if (start === -1) {
     return markdown;
   }
 
   const end = markdown.indexOf(DESIGN_MD_TOKENS_END, start);
-  const tail = end < 0 ? "" : markdown.slice(end + DESIGN_MD_TOKENS_END.length);
+  const tail =
+    end === -1 ? "" : markdown.slice(end + DESIGN_MD_TOKENS_END.length);
   const head = markdown.slice(0, start).replace(/\n*$/, "");
   const rest = tail.replace(/^\n*/, "");
 

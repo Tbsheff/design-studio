@@ -209,7 +209,7 @@ export function valuesFromStyles(styles: Record<string, string>): StyleValues {
 export function hasChildElements(outerHTML: string): boolean {
   const close = outerHTML.indexOf(">");
 
-  if (close < 0) {
+  if (close === -1) {
     return false;
   }
 

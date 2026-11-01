@@ -272,7 +272,7 @@ function linearPick(
   if (flow.length === 0) return null;
   const p = axis === "x" ? x : y;
   const index = flow.findIndex((item) => p < centerOf(item.rect, axis));
-  return index < 0
+  return index === -1
     ? { index: flow.length - 1, after: true }
     : { index, after: false };
 }

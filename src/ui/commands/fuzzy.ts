@@ -22,7 +22,7 @@ function subsequence(token: string, text: string): number[] | null {
   for (const ch of token) {
     const at = text.indexOf(ch, from);
 
-    if (at < 0) {
+    if (at === -1) {
       return null;
     }
 
@@ -44,7 +44,7 @@ function tokenScore(
     (w, i) => !used.has(i) && w.word.startsWith(token)
   );
 
-  if (prefix >= 0) {
+  if (prefix !== -1) {
     used.add(prefix);
     const at = list[prefix]?.at ?? 0;
 
@@ -56,7 +56,7 @@ function tokenScore(
 
   const inside = title.indexOf(token);
 
-  if (inside >= 0) {
+  if (inside !== -1) {
     return {
       score: 6,
       marks: Array.from({ length: token.length }, (_, i) => inside + i),

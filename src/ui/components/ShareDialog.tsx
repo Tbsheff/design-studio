@@ -250,7 +250,7 @@ export default function ShareDialog({ target, onClose }: { target: ShareTarget; 
           <div className="modal-head">
             <div className="titles">
               <h2>Publish on Cloudflare</h2>
-              <p>Put a saved version on a public workers.dev address that works when this Mac is off.</p>
+              <p>Put a saved version on your publish Worker. The address works when this Mac is off.</p>
             </div>
             {tabs}
             <button type="button" className="icon-btn" aria-label="Close" onClick={onClose}>

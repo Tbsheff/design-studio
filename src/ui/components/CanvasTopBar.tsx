@@ -83,7 +83,7 @@ function shareGroups(p: { canExport: boolean; onExport: () => void; onShip?: (()
   const portItem: MenuEntry[] = onPort ? [{ id: 'port', label: 'Move to app…', icon: 'react', meta: 'Route in your app', run: onPort, tip: 'The agent rebuilds a page as a route in an attached app, with its kit components' }] : [];
   const link = p.onShareLink;
   const linkItem: MenuEntry[] = link ? [{ id: 'share-link', label: 'Share a read-only link…', icon: 'link', meta: 'View and comment', disabled: !p.canExport, run: () => link('link'), tip: p.canExport ? 'Others see still images of the frames and can comment' : 'Save a version to share' }] : [];
-  const publishItem: MenuEntry[] = link ? [{ id: 'publish', label: 'Publish on Cloudflare…', icon: 'globe', meta: 'Public workers.dev URL', disabled: !p.canExport, run: () => link('publish'), tip: p.canExport ? 'Uploads a copy of a saved version to your Cloudflare account after you confirm' : 'Save a version to publish' }] : [];
+  const publishItem: MenuEntry[] = link ? [{ id: 'publish', label: 'Publish on Cloudflare…', icon: 'globe', meta: 'Your publish Worker', disabled: !p.canExport, run: () => link('publish'), tip: p.canExport ? 'Uploads a copy of a saved version to your publish Worker after you confirm' : 'Save a version to publish' }] : [];
   return [{ items: [exportItem, ...shipItem, ...portItem] }, { items: linkItem, note: 'Links are off until you make one. Nothing leaves this computer.' }, { items: publishItem, note: 'Publish uploads only after you confirm what goes public.' }];
 }
 

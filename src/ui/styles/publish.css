@@ -142,3 +142,139 @@
 .publish-body .share-link-head > .btn {
   flex-shrink: 0;
 }
+
+.publish-setup-steps,
+.publish-versions,
+.publish-comments ol {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.publish-setup-step {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  gap: var(--s-2);
+  align-items: start;
+  min-height: 28px;
+  padding: var(--s-1) 0;
+  font-size: var(--t-xs);
+}
+
+.publish-setup-mark {
+  line-height: 20px;
+  color: var(--text-3);
+  text-align: center;
+}
+
+.publish-setup-step.is-done .publish-setup-mark {
+  color: var(--accent);
+}
+
+.publish-setup-step.is-failed .publish-setup-mark,
+.publish-setup-step.is-failed .publish-setup-detail {
+  color: var(--danger);
+}
+
+.publish-setup-step.is-running .publish-setup-mark {
+  color: var(--text);
+}
+
+.publish-setup-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  line-height: 20px;
+}
+
+.publish-setup-label {
+  color: var(--text);
+  font-weight: var(--w-medium);
+}
+
+.publish-setup-detail {
+  color: var(--text-2);
+  overflow-wrap: anywhere;
+}
+
+.publish-setup-command {
+  color: var(--text-3);
+  font-size: var(--t-xs);
+  overflow-wrap: anywhere;
+}
+
+.publish-version,
+.publish-comment {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: 28px;
+  font-size: var(--t-xs);
+  color: var(--text-2);
+}
+
+.publish-version > .truncate,
+.publish-comment-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.publish-versions,
+.publish-comments {
+  margin-top: var(--s-2);
+  padding: var(--s-1) var(--s-2);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+}
+
+.publish-live-tag,
+.publish-legacy-tag {
+  flex-shrink: 0;
+  padding: 0 var(--s-2);
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: var(--t-xs);
+  line-height: 20px;
+}
+
+.publish-legacy-tag {
+  margin-left: var(--s-2);
+  background: var(--surface-inset);
+  color: var(--text-3);
+}
+
+.publish-comment-text {
+  display: grid;
+  gap: 2px;
+  padding: var(--s-1) 0;
+}
+
+.publish-comment-who {
+  color: var(--text);
+  font-weight: var(--w-medium);
+}
+
+.publish-comment-body {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.publish-done-upload {
+  grid-column: 1 / -1;
+  padding-bottom: var(--s-1);
+  color: var(--text-2);
+  font-size: var(--t-xs);
+}
+
+.publish-row-meta {
+  display: block;
+  margin-top: -2px;
+  padding-bottom: var(--s-1);
+}
+
+.publish-body .share-link-title {
+  flex: 1;
+}

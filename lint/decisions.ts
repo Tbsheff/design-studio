@@ -237,10 +237,11 @@ export const SCOPED_OFF_REASONS: Record<string, string> = {
   "import/no-nodejs-modules":
     "Off where the code runs on Node: it can never reach 0 there. The coarse ban covers browser code.",
   "no-console":
-    "Off in the logger and in scripts, which print by design (plan 5.2).",
+    "Off in the logger, in scripts and in the worker client until it logs through the logger (plan 5.2).",
   "node/no-process-env":
     "Off in the config module and desktop/env.ts, which own env access (plan 5.2).",
-  "node/no-sync": "Off in desktop/build.ts and the data lock (plan 5.2).",
+  "node/no-sync":
+    "Off in desktop/build.ts, the data lock and the resource lookup, whose callers are sync (plan 5.2).",
   "import/no-default-export":
     "Off in *.config.ts: the tools load a default export.",
 };
@@ -248,7 +249,11 @@ export const SCOPED_OFF_REASONS: Record<string, string> = {
 export const decisionOverrides: OxlintOverride[] = [
   { files: NODE_RUNTIMES, rules: { "import/no-nodejs-modules": "off" } },
   {
-    files: ["src/server/platform/logger/**", "scripts/**"],
+    files: [
+      "src/server/platform/logger/**",
+      "src/server/platform/process/worker-client.ts",
+      "scripts/**",
+    ],
     rules: { "no-console": "off" },
   },
   {
@@ -259,6 +264,7 @@ export const decisionOverrides: OxlintOverride[] = [
     files: [
       "src/server/platform/**",
       "src/server/store/git-objects.ts",
+      "src/server/store/default-folder.ts",
       "src/server/git/user-git.ts",
     ],
     rules: { "import/no-relative-parent-imports": "off" },
@@ -272,7 +278,11 @@ export const decisionOverrides: OxlintOverride[] = [
     },
   },
   {
-    files: ["desktop/build.ts", "src/server/platform/data-lock/**"],
+    files: [
+      "desktop/build.ts",
+      "src/server/platform/data-lock/**",
+      "src/server/platform/resources/**",
+    ],
     rules: { "node/no-sync": "off" },
   },
   { files: ["*.config.ts"], rules: { "import/no-default-export": "off" } },

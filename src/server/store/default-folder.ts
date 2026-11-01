@@ -14,8 +14,13 @@ import { z } from "zod";
 import { BadRequestError, isNodeError } from "./errors.js";
 import { createKeyedMutex } from "./mutex.js";
 
+export {
+  DEFAULT_FOLDER_NAME,
+  DEV_PROJECTS_FOLDER,
+  projectsDirFromEnv,
+} from "../platform/config/index.js";
+
 export const PREFERENCES_FILE = "preferences.json";
-export const DEFAULT_FOLDER_NAME = "Design Studio";
 const MAX_PATH_LENGTH = 4096;
 
 const preferencesSchema = z
@@ -32,26 +37,6 @@ const preferencesSchema = z
   .strict();
 
 type Preferences = z.infer<typeof preferencesSchema>;
-
-export const DEV_PROJECTS_FOLDER = "studio-projects";
-
-export function projectsDirFromEnv(
-  envValue: string | undefined,
-  homeDir: string,
-  devRoot: string | null
-): string {
-  if (
-    envValue !== undefined &&
-    envValue.trim() !== "" &&
-    path.isAbsolute(envValue)
-  ) {
-    return path.resolve(envValue);
-  }
-
-  return devRoot
-    ? path.join(devRoot, DEV_PROJECTS_FOLDER)
-    : path.join(homeDir, DEFAULT_FOLDER_NAME);
-}
 
 export interface DefaultFolderStore {
   current(): Promise<string>;

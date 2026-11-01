@@ -20,6 +20,7 @@ const RECURSIVE_WATCH =
 const COOKIE_DIR = "node_modules/.cache/design-studio";
 const STUDIO_COOKIE_DIR = ".studio/sync";
 const FLUSH_TIMEOUT_MS = 1000;
+const MAX_TRACKED = 64;
 
 interface Tracked {
   root: string;
@@ -140,6 +141,16 @@ export function createChangeTracker(maxPaths: number): ChangeTracker {
     entry.watcher.close();
   };
 
+  const evictOldest = (): void => {
+    for (const key of tracked.keys()) {
+      if (tracked.size < MAX_TRACKED) {
+        return;
+      }
+
+      forget(key);
+    }
+  };
+
   const add = (entry: Tracked, relative: string): void => {
     if (!relevant(relative)) {
       return;
@@ -168,10 +179,14 @@ export function createChangeTracker(maxPaths: number): ChangeTracker {
     const existing = tracked.get(key);
 
     if (existing && existing.root === root) {
+      tracked.delete(key);
+      tracked.set(key, existing);
+
       return existing;
     }
 
     forget(key);
+    evictOldest();
 
     if (!RECURSIVE_WATCH) {
       return null;

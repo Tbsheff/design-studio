@@ -149,15 +149,19 @@ async function allFiles(
   side: "old" | "new",
   out: FileChange[]
 ): Promise<void> {
+  const nested: Promise<void>[] = [];
+
   for (const entry of await entriesOf(store, tree)) {
     const relative = `${prefix}${entry.name}`;
 
     if (entry.mode === TREE_MODE) {
-      await allFiles(store, entry.sha, `${relative}/`, side, out);
+      nested.push(allFiles(store, entry.sha, `${relative}/`, side, out));
     } else {
       out.push({ path: relative, entry: side === "new" ? entry : null });
     }
   }
+
+  await Promise.all(nested);
 }
 
 async function diffEntry(
@@ -211,23 +215,19 @@ async function diffInto(
     return;
   }
 
-  const left = new Map(
-    (await entriesOf(store, a)).map((entry) => [entry.name, entry])
-  );
+  const [leftEntries, rightEntries] = await Promise.all([
+    entriesOf(store, a),
+    entriesOf(store, b),
+  ]);
 
-  const right = new Map(
-    (await entriesOf(store, b)).map((entry) => [entry.name, entry])
-  );
+  const left = new Map(leftEntries.map((entry) => [entry.name, entry]));
+  const right = new Map(rightEntries.map((entry) => [entry.name, entry]));
 
-  for (const name of new Set([...left.keys(), ...right.keys()])) {
-    await diffEntry(
-      store,
-      `${prefix}${name}`,
-      left.get(name),
-      right.get(name),
-      out
-    );
-  }
+  await Promise.all(
+    [...new Set([...left.keys(), ...right.keys()])].map((name) =>
+      diffEntry(store, `${prefix}${name}`, left.get(name), right.get(name), out)
+    )
+  );
 }
 
 export async function diffTrees(

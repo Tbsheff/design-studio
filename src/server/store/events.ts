@@ -1,5 +1,5 @@
 import { appendFileSync, mkdirSync, readFileSync } from "node:fs";
-import { appendFile, mkdir } from "node:fs/promises";
+import { appendFile, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import type {
@@ -13,10 +13,13 @@ import { assertSafeId } from "./errors.js";
 const RING_SIZE = 5000;
 const FLUSH_DELAY_MS = 5;
 const EVENT_FILES_MAX = 20;
-const SEQ_PER_MS = 1000;
+const SEQ_RESERVE = 1000;
 
 interface ProjectLog {
   file: string;
+  seqFile: string;
+  reserved: number;
+  seqChain: Promise<void>;
   lastSeq: number;
   ring: StudioEvent[];
   listeners: Set<(event: StudioEvent) => void>;
@@ -57,6 +60,53 @@ const readFileEvents = (file: string): StudioEvent[] => {
   } catch {
     return [];
   }
+};
+
+const readReserved = (file: string): number => {
+  let value = 0;
+
+  try {
+    value = Number(readFileSync(file, "utf-8").trim());
+  } catch {
+    return 0;
+  }
+
+  return Number.isSafeInteger(value) && value > 0 ? value : 0;
+};
+
+const writeSeqFile = async (
+  log: ProjectLog,
+  previous: Promise<void>,
+  value: number
+): Promise<void> => {
+  await previous;
+
+  try {
+    await writeFile(log.seqFile, `${value}\n`);
+  } catch (error) {
+    report("seq reserve", { error });
+  }
+};
+
+const persistReserved = (log: ProjectLog, value: number): void => {
+  log.reserved = value;
+  log.seqChain = writeSeqFile(log, log.seqChain, value);
+};
+
+const reserveAhead = (log: ProjectLog, seq: number): void => {
+  if (seq + SEQ_RESERVE / 2 > log.reserved) {
+    persistReserved(log, seq + SEQ_RESERVE);
+  }
+};
+
+const releaseReserved = async (log: ProjectLog): Promise<void> => {
+  await log.chain;
+
+  if (log.unflushed.length === 0 && log.reserved > log.lastSeq) {
+    persistReserved(log, log.lastSeq);
+  }
+
+  await log.seqChain;
 };
 
 const sampleVersion = (version: Version): Version => {
@@ -121,7 +171,7 @@ const scheduleFlush = (log: ProjectLog): void => {
   log.timer.unref();
 };
 
-const flushLogSync = (log: ProjectLog): void => {
+const writeUnflushedNow = (log: ProjectLog): void => {
   if (log.unflushed.length === 0) return;
   try {
     mkdirSync(path.dirname(log.file), { recursive: true });
@@ -136,7 +186,7 @@ const openBuses = new Set<Map<string, ProjectLog>>();
 
 const flushAllSync = (): void => {
   for (const logs of openBuses)
-    for (const log of logs.values()) flushLogSync(log);
+    for (const log of logs.values()) writeUnflushedNow(log);
 };
 
 const fanOut = (log: ProjectLog, event: StudioEvent): void => {
@@ -158,9 +208,14 @@ const storedSince = (log: ProjectLog, afterSeq: number): StudioEvent[] => {
 
 const openLog = (file: string): ProjectLog => {
   const stored = readFileEvents(file);
+  const seqFile = path.join(path.dirname(file), "events.seq");
+  const reserved = readReserved(seqFile);
   return {
     file,
-    lastSeq: Math.max(stored.at(-1)?.seq ?? 0, Date.now() * SEQ_PER_MS),
+    seqFile,
+    reserved,
+    seqChain: Promise.resolve(),
+    lastSeq: Math.max(stored.at(-1)?.seq ?? 0, reserved),
     ring: stored.slice(-RING_SIZE),
     listeners: new Set(),
     unflushed: [],
@@ -176,6 +231,7 @@ const record = (log: ProjectLog, input: StudioEventInput): StudioEvent => {
     seq: log.lastSeq + 1,
     ts: Date.now(),
   } as StudioEvent;
+  reserveAhead(log, event.seq);
   log.lastSeq = event.seq;
   log.ring.push(event);
   if (log.ring.length > RING_SIZE)
@@ -244,7 +300,7 @@ export function createEventBus(dataDir: string): FlushableEventBus {
     async flush(): Promise<void> {
       const all = [...logs.values()];
       for (const log of all) flushLog(log);
-      await Promise.all(all.map((log) => log.chain));
+      await Promise.all(all.map((log) => releaseReserved(log)));
     },
   };
 }

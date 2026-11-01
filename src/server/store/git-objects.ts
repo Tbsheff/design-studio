@@ -30,6 +30,7 @@ export interface TreeEntry {
 export interface CommitInfo {
   tree: string;
   parents: string[];
+  committedAt: string;
   message: string;
 }
 
@@ -92,12 +93,16 @@ function serializeTree(entries: TreeEntry[]): Buffer {
   );
 }
 
+const identTime = (ident: string): string =>
+  / (?<at>\d+) [+-]\d{4}$/u.exec(ident)?.groups?.at ?? "0";
+
 function parseCommit(body: Buffer): CommitInfo {
   const text = body.toString("utf-8");
   const split = text.indexOf("\n\n");
   const header = split === -1 ? text : text.slice(0, split);
   const parents: string[] = [];
   let tree = "";
+  let committedAt = "0";
 
   for (const line of header.split("\n")) {
     if (line.startsWith("tree ")) {
@@ -107,9 +112,18 @@ function parseCommit(body: Buffer): CommitInfo {
     if (line.startsWith("parent ")) {
       parents.push(line.slice(7));
     }
+
+    if (line.startsWith("committer ")) {
+      committedAt = identTime(line);
+    }
   }
 
-  return { tree, parents, message: split === -1 ? "" : text.slice(split + 2) };
+  return {
+    tree,
+    parents,
+    committedAt,
+    message: split === -1 ? "" : text.slice(split + 2),
+  };
 }
 
 function timezone(date: Date): string {
@@ -310,7 +324,12 @@ export class ObjectStore {
 
     const body = Buffer.from(`${header}\n\n${message}`);
     const sha = await this.writeLoose("commit", body);
-    this.remember(this.commits, sha, { tree, parents, message });
+    this.remember(this.commits, sha, {
+      committedAt: identTime(author),
+      message,
+      parents,
+      tree,
+    });
 
     return sha;
   }

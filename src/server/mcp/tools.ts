@@ -111,6 +111,13 @@ const VERSION = {
   description:
     "Version id. Leave out for the newest saved version of the main direction.",
 };
+
+const SHOT_VERSION = {
+  type: "string",
+  description:
+    "Version id. Leave out to shoot the current files of the direction, unsaved edits included. Pass the head version id for the saved state.",
+};
+
 const DIRECTION = {
   type: "string",
   description: "Direction id. Leave out for the main direction.",
@@ -212,7 +219,7 @@ export const TOOLS: ToolDef[] = [
     "Get a PNG screenshot of a page at a viewport size, or of one canvas frame (frameId sets the page, the direction, the frame state and the size; pass width to shoot that frame at another width), or of one element on it (element: layer id or CSS selector).",
     {
       projectId: PROJECT,
-      versionId: VERSION,
+      versionId: SHOT_VERSION,
       directionId: DIRECTION,
       path: PAGE,
       frameId: {
@@ -833,7 +840,9 @@ const PROJECT_TOOLS: Record<
     ),
   list_found_apps: async (deps, args) =>
     json(
-      await findApps(await deps.projects.list(), { fresh: args.fresh === true })
+      await findApps(await deps.projects.list(), {
+        fresh: args.fresh === true,
+      })
     ),
   list_variants: async (deps, args) => {
     const project = await deps.projects.get(

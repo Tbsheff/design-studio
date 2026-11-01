@@ -78,6 +78,7 @@ const NEVER_TRACKED = ["node_modules"];
 const APP_NEVER_TRACKED = [...NEVER_TRACKED, ".studio"];
 const MAX_SCOPED_PATHS = 500;
 const MAX_CACHED_TREES = 4096;
+const MAX_CACHED_VERSIONS = 512;
 const LOOSE_OBJECTS_TO_PACK = 1000;
 const APP_MAX_TRACKED_BYTES = 2 * 1024 * 1024;
 const RAW_ATTRIBUTES = "* -text -filter -ident -working-tree-encoding\n";
@@ -465,6 +466,7 @@ export function createVersionStore(config: ServerConfig): VersionStore {
   >();
 
   const commitTrees = new Map<string, string>();
+  const versionCache = new Map<string, Promise<Version>>();
   const lockSweeps = new Map<string, Promise<void>>();
   const objectStores = new Map<string, ObjectStore>();
 
@@ -704,20 +706,6 @@ export function createVersionStore(config: ServerConfig): VersionStore {
       .map(parseLogRecord);
   };
 
-  const committedAtOf = async (
-    project: Project,
-    sha: string
-  ): Promise<string> => {
-    const raw = await objectsOf(project).readObject(sha);
-    const header = raw?.body.toString("utf-8").split("\n\n")[0] ?? "";
-
-    const committer = header
-      .split("\n")
-      .find((line) => line.startsWith("committer "));
-
-    return / (?<at>\d+) [+-]\d{4}$/u.exec(committer ?? "")?.groups?.at ?? "0";
-  };
-
   const changedFilesAt = async (
     project: Project,
     commit: CommitInfo
@@ -737,7 +725,7 @@ export function createVersionStore(config: ServerConfig): VersionStore {
     return changes.map((change) => change.path);
   };
 
-  const getVersion = async (
+  const readVersion = async (
     project: Project,
     versionId: string
   ): Promise<Version> => {
@@ -748,18 +736,45 @@ export function createVersionStore(config: ServerConfig): VersionStore {
       throw new NotFoundError(`version ${versionId} not found`);
     }
 
-    const { meta } = parseCommitMessage(commit.message);
-
-    const committedAt =
-      meta?.createdAt === undefined ? await committedAtOf(project, sha) : "0";
-
     return toVersion(
       sha,
       commit.parents.join(" "),
-      committedAt,
+      commit.committedAt,
       commit.message,
       await changedFilesAt(project, commit)
     );
+  };
+
+  const cachedVersion = async (
+    key: string,
+    project: Project,
+    versionId: string
+  ): Promise<Version> => {
+    try {
+      return await readVersion(project, versionId);
+    } catch (error) {
+      versionCache.delete(key);
+      throw error;
+    }
+  };
+
+  const getVersion = async (
+    project: Project,
+    versionId: string
+  ): Promise<Version> => {
+    const key = `${gitDirOf(project)}\0${versionId}`;
+    let version = versionCache.get(key);
+
+    if (version === undefined) {
+      if (versionCache.size >= MAX_CACHED_VERSIONS) {
+        versionCache.clear();
+      }
+
+      version = cachedVersion(key, project, versionId);
+      versionCache.set(key, version);
+    }
+
+    return structuredClone(await version);
   };
 
   const commitInfo = async (
@@ -1957,8 +1972,10 @@ export function createVersionStore(config: ServerConfig): VersionStore {
     async ensureRepo(project: Project): Promise<void> {
       const prepared = prepareRepo(project);
 
-      for (const direction of project.directions) {
-        warm.add(project, direction, prepared);
+      if (project.app) {
+        for (const direction of project.directions) {
+          warm.add(project, direction, prepared);
+        }
       }
 
       await prepared;

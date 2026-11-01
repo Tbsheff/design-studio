@@ -548,7 +548,7 @@ function compileToken(
 function followsDark(
   path: string,
   byPath: Map<string, CompiledToken>,
-  seen: Set<string> = new Set()
+  seen = new Set<string>()
 ): boolean {
   if (seen.has(path)) {
     return false;

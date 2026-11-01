@@ -584,7 +584,7 @@ async function walk(
   dir: string,
   prefix: string,
   out: ZipEntry[],
-  skip: Set<string> = new Set()
+  skip = new Set<string>()
 ): Promise<void> {
   for (const item of await readdir(dir, { withFileTypes: true })) {
     if (skip.has(item.name)) continue;

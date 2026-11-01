@@ -16,7 +16,7 @@ import { BACKUP_STATE, killListeners } from "./ports";
 
 export default async function globalSetup(): Promise<void> {
   if (!existsSync(path.join(ROOT, "dist", "ui", "index.html"))) {
-    throw new Error("dist/ui/index.html missing; run npm run build:ui once");
+    throw new Error("dist/ui/index.html missing; run pnpm run build:ui once");
   }
 
   const ports = [

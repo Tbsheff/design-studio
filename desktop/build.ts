@@ -30,6 +30,8 @@ const TEMPLATE_DIR = path.join(
   "react-vite"
 );
 const TEMPLATE_CACHE = path.join(ROOT, "build", "react-template-cache");
+const TEMPLATE_CACHE_WORKSPACE =
+  "nodeLinker: hoisted\nallowBuilds:\n  esbuild: true\n";
 const FIRST_RUN_STATIC = ["first-run.html", "first-run.css"];
 const NOT_SHIPPED = new Set(["playwright-core"]);
 const NOT_SHIPPED_PATTERNS = [
@@ -79,7 +81,7 @@ function uiIsStale(): boolean {
 export function ensureUi(): void {
   if (!uiIsStale()) return;
   console.log("[desktop] building UI");
-  execFileSync("npm", ["run", "build:ui"], { cwd: ROOT, stdio: "inherit" });
+  execFileSync("pnpm", ["run", "build:ui"], { cwd: ROOT, stdio: "inherit" });
 }
 
 export async function buildDesktopApp(
@@ -330,11 +332,14 @@ function prebuiltTemplate(target: string): void {
     rmSync(TEMPLATE_CACHE, { recursive: true, force: true });
     mkdirSync(TEMPLATE_CACHE, { recursive: true });
     writeFileSync(cachedPkg, pkg);
-    execFileSync(
-      "npm",
-      ["install", "--no-audit", "--no-fund", "--no-package-lock"],
-      { cwd: TEMPLATE_CACHE, stdio: "inherit" }
+    writeFileSync(
+      path.join(TEMPLATE_CACHE, "pnpm-workspace.yaml"),
+      TEMPLATE_CACHE_WORKSPACE
     );
+    execFileSync("pnpm", ["install", "--no-lockfile"], {
+      cwd: TEMPLATE_CACHE,
+      stdio: "inherit",
+    });
   }
   mkdirSync(target, { recursive: true });
   writeFileSync(path.join(target, "package.json"), pkg);

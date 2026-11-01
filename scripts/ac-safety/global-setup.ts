@@ -27,7 +27,7 @@ export default async function globalSetup(): Promise<void> {
   }
 
   if (!existsSync(path.join(ROOT, "dist", "ui", "index.html"))) {
-    execFileSync("npm", ["run", "build:ui"], { cwd: ROOT, stdio: "inherit" });
+    execFileSync("pnpm", ["run", "build:ui"], { cwd: ROOT, stdio: "inherit" });
   }
 
   const renderHostPid = await startE2eRenderer();

@@ -147,7 +147,7 @@ async function main(): Promise<void> {
       .getByTestId("permission-prompt")
       .getByRole("button", { name: "Deny…" })
       .click();
-    await page.getByLabel("Note for the agent").fill("use npm run check");
+    await page.getByLabel("Note for the agent").fill("use pnpm run check");
     await shot(page, "chat-permission-deny");
     await page
       .getByTestId("permission-prompt")

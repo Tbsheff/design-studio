@@ -13,4 +13,4 @@ fi
 if [ -n "$(staged "$fmt_globs" | tr -d '\0')" ]; then
   staged "$fmt_globs" | xargs -0 node_modules/.bin/oxfmt --check --no-error-on-unmatched-pattern --
 fi
-npm run --silent lint:boundaries
+pnpm run --silent lint:boundaries

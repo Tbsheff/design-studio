@@ -103,7 +103,7 @@ export function ErrorsPanel({ errors, onSendToAgent, onClear, pane }: Props) {
         <button
           type="button"
           className="errors-head"
-          aria-expanded={true}
+          aria-expanded
           data-tip="Hide the errors"
           onClick={() => setOpen(false)}
         >

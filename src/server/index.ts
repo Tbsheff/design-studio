@@ -132,10 +132,9 @@ async function main(): Promise<void> {
     const forceExit = setTimeout(() => process.exit(1), 5000);
     forceExit.unref();
     server.close();
-    preview
-      .stop()
+    Promise.all([baseBus.flush(), preview.stop()])
       .catch((error: unknown) =>
-        console.error("[studio] preview stop failed", error)
+        console.error("[studio] shutdown step failed", error)
       )
       .finally(() => process.exit(0));
   };

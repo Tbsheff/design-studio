@@ -318,6 +318,17 @@ export function useStudioData(projectId: string): StudioData {
       .catch(() => undefined);
   }, [projectId]);
 
+  const addVersion = useCallback(
+    (version: Version) => {
+      setVersions((prev) =>
+        prev.some((v) => v.id === version.id) ? prev : [version, ...prev]
+      );
+      if ((version.changedFilesTotal ?? 0) > version.changedFiles.length)
+        refreshVersions();
+    },
+    [refreshVersions]
+  );
+
   useEffect(() => {
     setVersions([]);
     setStatus(null);
@@ -362,11 +373,7 @@ export function useStudioData(projectId: string): StudioData {
         }
         case "version.created": {
           if (event.version.directionId === directionRef.current)
-            setVersions((prev) =>
-              prev.some((v) => v.id === event.version.id)
-                ? prev
-                : [event.version, ...prev]
-            );
+            addVersion(event.version);
           break;
         }
         case "versions.changed": {
@@ -405,7 +412,7 @@ export function useStudioData(projectId: string): StudioData {
         }
       }
     },
-    [addError, batcher, projectId, refreshVersions]
+    [addError, addVersion, batcher, projectId, refreshVersions]
   );
 
   const connection = useProjectEvents(projectId, onEvent);

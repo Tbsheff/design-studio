@@ -314,5 +314,15 @@ export const decisionOverrides: OxlintOverride[] = [
     ],
     rules: { "node/no-sync": "off" },
   },
+  {
+    files: [
+      "src/server/main/public.ts",
+      "src/server/mcp/edit-tools.ts",
+      "src/server/mcp/server.ts",
+      "src/server/project-source/source.ts",
+      "src/server/run-log/run-list.ts",
+    ],
+    rules: { "react-doctor/no-barrel-import": "off" },
+  },
   { files: ["*.config.ts"], rules: { "import/no-default-export": "off" } },
 ];

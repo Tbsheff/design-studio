@@ -13,9 +13,11 @@ import {
   EXPORT_SCALES,
 } from "../../shared/export.js";
 import type { ExportFrame, ExportScale } from "../../shared/export.js";
-import { BadRequestError } from "../platform/errors/bad-request.js";
-import { NotFoundError } from "../platform/errors/not-found.js";
-import { assertSafeId } from "../platform/errors/safe-id.js";
+import {
+  BadRequestError,
+  NotFoundError,
+  assertSafeId,
+} from "../platform/errors/index.js";
 
 interface OpenedPreview {
   url: string;

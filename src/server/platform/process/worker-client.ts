@@ -1,4 +1,3 @@
-import { once } from "node:events";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { Worker } from "node:worker_threads";
@@ -25,7 +24,6 @@ const TSX_LOADER = path.join(
 );
 
 const MAX_FAILURES = 3;
-const SETTLED = "settled";
 
 const siblingWorkerFile = (moduleUrl: string, name: string): string => {
   const own = fileURLToPath(moduleUrl);
@@ -41,27 +39,9 @@ const workerArgs = (file: string): string[] => {
   return ["--import", pathToFileURL(TSX_LOADER).href];
 };
 
-type Outcome<Reply> = { result: Reply } | { error: Error };
-
-type SettledEvent<Reply> = Event & { outcome: Outcome<Reply> };
-
-const settledEvent = <Reply>(outcome: Outcome<Reply>): SettledEvent<Reply> =>
-  Object.assign(new Event(SETTLED), { outcome });
-
-const awaitReply = async <Reply>(signal: EventTarget): Promise<Reply> => {
-  const [event] = (await once(signal, SETTLED)) as [SettledEvent<Reply>];
-  const { outcome } = event;
-
-  if ("error" in outcome) {
-    throw outcome.error;
-  }
-
-  return outcome.result;
-};
-
 class WorkerClient<Query, Reply> {
   private worker: Worker | null = null;
-  private readonly pending = new Map<number, EventTarget>();
+  private readonly pending = new Map<number, PromiseWithResolvers<Reply>>();
   private nextId = 1;
   private failures = 0;
   private idleTimer: NodeJS.Timeout | null = null;
@@ -83,10 +63,9 @@ class WorkerClient<Query, Reply> {
     this.nextId += 1;
     this.clearIdle();
 
-    const signal = new EventTarget();
-    const reply = awaitReply<Reply>(signal);
+    const reply = Promise.withResolvers<Reply>();
 
-    this.pending.set(id, signal);
+    this.pending.set(id, reply);
     worker.ref();
 
     try {
@@ -100,7 +79,7 @@ class WorkerClient<Query, Reply> {
       return Promise.reject(error);
     }
 
-    return reply;
+    return reply.promise;
   }
 
   public get started(): boolean {
@@ -178,11 +157,9 @@ class WorkerClient<Query, Reply> {
     }
 
     if ("error" in reply) {
-      waiting.dispatchEvent(
-        settledEvent<Reply>({ error: new Error(reply.error) })
-      );
+      waiting.reject(new Error(reply.error));
     } else {
-      waiting.dispatchEvent(settledEvent({ result: reply.result }));
+      waiting.resolve(reply.result);
     }
   }
 
@@ -237,8 +214,8 @@ class WorkerClient<Query, Reply> {
 
     this.pending.clear();
 
-    for (const signal of waiting) {
-      signal.dispatchEvent(settledEvent<Reply>({ error }));
+    for (const entry of waiting) {
+      entry.reject(error);
     }
   }
 }

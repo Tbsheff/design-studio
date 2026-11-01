@@ -60,7 +60,7 @@ import {
   savedVersionId,
   savesSettled,
 } from "../direct-edit/save-queue.js";
-import { isKnownError } from "../platform/errors/known.js";
+import { isKnownError } from "../platform/errors/index.js";
 import {
   editSummary,
   frameStepText,

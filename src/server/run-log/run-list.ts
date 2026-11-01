@@ -4,8 +4,7 @@ import path from "node:path";
 
 import type { RunSummary } from "../../shared/contracts.js";
 import { runMatches, runQueryTerms } from "../../shared/rewind.js";
-import { BadRequestError } from "../platform/errors/bad-request.js";
-import { isNodeError } from "../platform/errors/node-error.js";
+import { BadRequestError, isNodeError } from "../platform/errors/index.js";
 
 interface CachedRun {
   mtimeMs: number;

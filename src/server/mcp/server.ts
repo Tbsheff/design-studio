@@ -10,7 +10,7 @@ import { firstVersionBlock } from "../app/first-version.js";
 import { takeSaveFailures } from "../direct-edit/save-queue.js";
 import { withMcpOrigin } from "../edit-origin.js";
 import type { ExportDeps } from "../export/source.js";
-import { isKnownError } from "../platform/errors/known.js";
+import { isKnownError } from "../platform/errors/index.js";
 import {
   renderedSince,
   renderPending,

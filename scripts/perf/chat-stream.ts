@@ -1,5 +1,6 @@
 import { spawn } from "node:child_process";
 import type { ChildProcess } from "node:child_process";
+import { once } from "node:events";
 import {
   appendFileSync,
   mkdirSync,
@@ -26,6 +27,8 @@ const ROOT = path.resolve(
   "..",
   ".."
 );
+const STOP_GRACE_MS = 15_000;
+const STOP_KILL_MS = 5000;
 const PORT = Number(process.env.PERF_PORT ?? 7570);
 const BASE = `http://127.0.0.1:${PORT}`;
 const UI_KEY = "design-studio.ui.v1";
@@ -166,23 +169,43 @@ async function waitReady(): Promise<void> {
   throw new Error("perf server did not start");
 }
 
-async function stopServer(child: ChildProcess): Promise<void> {
-  if (child.pid === undefined) return;
+const exited = async (child: ChildProcess, ms: number): Promise<boolean> => {
+  if (child.exitCode !== null || child.signalCode !== null) {
+    return true;
+  }
   try {
-    process.kill(-child.pid, "SIGTERM");
+    await once(child, "exit", { signal: AbortSignal.timeout(ms) });
+    return true;
   } catch {
+    return false;
+  }
+};
+
+const signalGroup = (child: ChildProcess, signal: NodeJS.Signals): boolean => {
+  if (child.pid === undefined) {
+    return false;
+  }
+  try {
+    process.kill(-child.pid, signal);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+async function stopServer(child: ChildProcess): Promise<void> {
+  const done = exited(child, STOP_GRACE_MS);
+  if (!signalGroup(child, "SIGTERM")) {
     return;
   }
-  const deadline = Date.now() + 10_000;
-  while (Date.now() < deadline) {
-    const down = await fetch(`${BASE}/`).then(
-      () => false,
-      () => true
-    );
-    if (down) return;
-    await sleep(100);
+  if (await done) {
+    return;
   }
-  process.kill(-child.pid, "SIGKILL");
+  const killed = exited(child, STOP_KILL_MS);
+  signalGroup(child, "SIGKILL");
+  if (!(await killed)) {
+    throw new Error("perf server did not exit");
+  }
 }
 
 async function tokenOf(): Promise<string> {
@@ -278,6 +301,7 @@ function appendHistory(
       startedAt: ts,
       finishedAt: ts + 500,
       finalText: text,
+      parts: [{ kind: "text", text }],
       toolCalls: [],
       versionId: null,
     };
@@ -320,7 +344,7 @@ const INIT_SCRIPT = `(() => {
     }
     const full = opts.chunks.join('');
     perf.emit('run.text', ev({ type: 'run.text', runId: opts.runId, text: full }));
-    perf.emit('run.finished', ev({ type: 'run.finished', runId: opts.runId, summary: { ...opts.summary, id: opts.runId, finalText: full } }));
+    perf.emit('run.finished', ev({ type: 'run.finished', runId: opts.runId, summary: { ...opts.summary, id: opts.runId, finalText: full, parts: [{ kind: 'text', text: full }] } }));
   };
 })();`;
 
@@ -367,7 +391,7 @@ async function openProject(
     if (req.url().includes(`/api/projects/${project.id}/events`))
       sseRequests.push(req.url());
   });
-  await page.goto(BASE);
+  await page.goto(`${BASE}/p/${encodeURIComponent(project.id)}`);
   const contentMs = (await page
     .waitForFunction(
       (sentinel) =>

@@ -399,6 +399,8 @@ function liveAppSource(
 }
 
 function versionLabel(src: ExportSource): string {
+  if (src.version.id !== LIVE_VERSION_ID && src.root === src.direction.workTree)
+    return `the work tree at version ${src.version.id}`;
   if (src.version.id !== LIVE_VERSION_ID) return `version ${src.version.id}`;
   const state = firstVersionState(src.project.id);
   return state?.pending
@@ -406,7 +408,24 @@ function versionLabel(src: ExportSource): string {
     : "the live app";
 }
 
-async function source(deps: ExportDeps, args: Args): Promise<ExportSource> {
+async function workTreeSource(
+  deps: ExportDeps,
+  project: Project,
+  direction: Direction,
+  headVersionId: string
+): Promise<ExportSource> {
+  const version = await deps.versions.get(project, headVersionId);
+  return {
+    ...liveAppSource(deps, project, direction),
+    version,
+  };
+}
+
+async function source(
+  deps: ExportDeps,
+  args: Args,
+  workTree = false
+): Promise<ExportSource> {
   const projectId = str(args, "projectId", true) as string;
   const project = await deps.projects.get(projectId);
   let versionId = str(args, "versionId");
@@ -421,6 +440,8 @@ async function source(deps: ExportDeps, args: Args): Promise<ExportSource> {
       return liveAppSource(deps, project, direction);
     if (!direction.headVersionId)
       throw new ToolError(firstVersionWaitText(project.id));
+    if (workTree)
+      return workTreeSource(deps, project, direction, direction.headVersionId);
     versionId = direction.headVersionId;
   }
   return resolveSource(deps, project.id, versionId);
@@ -723,7 +744,7 @@ async function warmAppPage(
 async function screenshot(deps: ExportDeps, raw: Args): Promise<ToolResult> {
   const picked = await frameShot(deps, raw);
   const args = picked.args;
-  const src = await source(deps, args);
+  const src = await source(deps, args, true);
   const page = pagePath(args) ?? picked.path;
   const frame: ExportFrame = {
     name: "Screenshot",

@@ -1,0 +1,197 @@
+import { createRequire } from "node:module";
+
+import type { OxlintOverride } from "oxlint";
+
+import { presetRules, vitestRules } from "./presets.ts";
+
+type RuleModule = {
+  meta?: { deprecated?: unknown; docs?: { requiresTypeChecking?: boolean } };
+  framework?: string;
+  tags?: string[];
+};
+
+type RuleMap = Record<string, RuleModule>;
+
+const load = createRequire(import.meta.url);
+
+const rulesOf = (specifier: string): RuleMap => {
+  const loaded: { rules?: RuleMap; default?: { rules?: RuleMap } } = load(specifier);
+  return loaded.rules ?? loaded.default?.rules ?? {};
+};
+
+const levelOf = (value: unknown) => (Array.isArray(value) ? value[0] : value);
+
+const isUnset = (key: string) => {
+  const level = levelOf(presetRules[key]);
+  return level === undefined || level === "off" || level === 0;
+};
+
+const NATIVE_ON: Record<string, unknown> = {
+  "capitalized-comments": "error",
+  complexity: ["error", 20],
+  "id-length": "error",
+  "init-declarations": "error",
+  "max-depth": ["error", 4],
+  "max-lines": ["error", 500],
+  "max-lines-per-function": ["error", 80],
+  "max-params": ["error", 4],
+  "max-statements": ["error", 30],
+  "new-cap": "error",
+  "no-console": "error",
+  "no-continue": "error",
+  "no-implicit-coercion": "error",
+  "no-magic-numbers": ["error", { ignore: [-1, 0, 1, 2] }],
+  "no-ternary": "error",
+  "no-undefined": "error",
+  "no-underscore-dangle": "error",
+  "import/exports-last": "error",
+  "import/extensions": "error",
+  "import/group-exports": "error",
+  "import/max-dependencies": ["error", { max: 20 }],
+  "import/no-anonymous-default-export": "error",
+  "import/no-commonjs": "error",
+  "import/no-cycle": ["warn", { ignoreTypes: true }],
+  "import/no-default-export": "error",
+  "import/no-dynamic-require": "error",
+  "import/no-namespace": "error",
+  "import/no-nodejs-modules": "error",
+  "import/no-relative-parent-imports": "error",
+  "import/no-unassigned-import": "error",
+  "import/unambiguous": "error",
+  "jsdoc/require-param": "error",
+  "jsdoc/require-param-type": "error",
+  "jsdoc/require-returns": "error",
+  "jsdoc/require-returns-type": "error",
+  "jsx-a11y/no-autofocus": "error",
+  "node/no-process-env": "error",
+  "node/no-sync": "error",
+  "oxc/no-map-spread": "error",
+  "promise/prefer-await-to-then": "error",
+  "react/forbid-component-props": "error",
+  "react/forward-ref-uses-ref": "error",
+  "react/jsx-boolean-value": "error",
+  "react/jsx-filename-extension": ["error", { extensions: [".tsx"] }],
+  "react/jsx-max-depth": "error",
+  "react/jsx-no-literals": "error",
+  "react/jsx-props-no-spreading": "error",
+  "react/no-array-index-key": "error",
+  "react/no-multi-comp": "error",
+  "react/no-unknown-property": "error",
+  "react/only-export-components": "error",
+  "react-perf/jsx-no-jsx-as-prop": "error",
+  "react-perf/jsx-no-new-array-as-prop": "error",
+  "react-perf/jsx-no-new-function-as-prop": "error",
+  "react-perf/jsx-no-new-object-as-prop": "error",
+  "typescript/consistent-indexed-object-style": "error",
+  "typescript/explicit-function-return-type": "error",
+  "typescript/explicit-member-accessibility": "error",
+  "typescript/explicit-module-boundary-types": "error",
+  "typescript/no-require-imports": "error",
+  "typescript/no-var-requires": "error",
+  "typescript/prefer-readonly-parameter-types": "error",
+  "typescript/require-await": "error",
+  "unicorn/explicit-length-check": "error",
+  "unicorn/max-nested-calls": "error",
+  "unicorn/no-array-callback-reference": "error",
+  "unicorn/no-immediate-mutation": "error",
+  "unicorn/no-nested-ternary": "error",
+  "unicorn/no-process-exit": "error",
+  "unicorn/prefer-global-this": "error",
+  "unicorn/prefer-string-raw": "error",
+  "unicorn/prefer-top-level-await": "error",
+  "sonarjs/cognitive-complexity": ["error", 20],
+  "sonarjs/cyclomatic-complexity": ["error", { threshold: 20 }],
+  "sonarjs/max-lines": ["error", { maximum: 500 }],
+  "sonarjs/max-lines-per-function": ["error", { maximum: 80 }],
+};
+
+export const OFF_REASONS: Record<string, string> = {
+  "anti-slop/require-safety-comment-for-type-assertion": "Requires a comment; Tyler chose the comment rules off (no-comments hook).",
+  "jsdoc-js/require-jsdoc": "Requires a comment; Tyler chose the comment rules off. The plugin is not loaded.",
+  "tsdoc/syntax": "Comment rule family; Tyler chose it off. The plugin is not loaded.",
+  "sonarjs/file-header": "Requires a header comment, which the no-comments hook forbids.",
+  "sort-imports": "oxfmt sortImports owns import order; the two orders fight.",
+  "sonarjs/arrow-function-convention": "Fights the formatter (arrowParens: always).",
+  "import/prefer-default-export": "Contradicts import/no-default-export.",
+  "import/no-named-export": "With import/no-default-export it bans every export.",
+  "node/no-top-level-await": "Contradicts unicorn/prefer-top-level-await.",
+  "oxc/no-async-await": "Bans ES2017 syntax the ES2023 target has; contradicts promise/prefer-await-to-then.",
+  "oxc/no-optional-chaining": "Bans ES2020 syntax the ES2023 target has; contradicts typescript/prefer-optional-chain.",
+  "oxc/no-rest-spread-properties": "Bans ES2018 syntax the ES2023 target has; contradicts prefer-object-spread.",
+  "react/react-in-jsx-scope": "tsconfig uses jsx react-jsx; React is not in scope by design.",
+  "unicorn/no-null": "The wire contract uses null; no-undefined stays on as the other side.",
+  "unicorn/number-literal-case": "Broken upstream (oxc-project/oxc#21949), so Ultracite keeps it off.",
+  "unicorn/prefer-reflect-apply": "Contradicts anti-slop/no-reflect-apply.",
+  "github/no-dataset": "Contradicts unicorn/prefer-dom-node-dataset.",
+  "sonarjs/no-reference-error": "The JS plugin bridge gives no globals, so it flags every identifier.",
+  "vitest/no-importing-vitest-globals": "Contradicts vitest/prefer-importing-vitest-globals; tests import from vitest.",
+};
+
+const REACT_DOCTOR_SKIP_TAGS = new Set(["ink", "r3f", "webgl", "three", "react-native", "server-action", "project-analysis"]);
+
+const NATIVE_REACT_IDS = new Set([
+  ...Object.keys(presetRules),
+  ...Object.keys(NATIVE_ON),
+].filter((key) => /^(react|jsx-a11y|react-perf)\//u.test(key)).map((key) => key.split("/")[1]));
+
+const reactDoctorKeeps = (id: string, rule: RuleModule) =>
+  rule.framework === "global" && !(rule.tags ?? []).some((tag) => REACT_DOCTOR_SKIP_TAGS.has(tag)) && !NATIVE_REACT_IDS.has(id);
+
+const eslintKeeps = (_id: string, rule: RuleModule) => !rule.meta?.deprecated && !rule.meta?.docs?.requiresTypeChecking;
+
+const PLUGINS: [string, string, (id: string, rule: RuleModule) => boolean][] = [
+  ["github", "eslint-plugin-github", eslintKeeps],
+  ["sonarjs", "eslint-plugin-sonarjs", eslintKeeps],
+  ["react-doctor", "oxlint-plugin-react-doctor", reactDoctorKeeps],
+];
+
+const pluginRules = (prefix: string, specifier: string, keeps: (id: string, rule: RuleModule) => boolean) =>
+  Object.entries(rulesOf(specifier))
+    .filter(([id, rule]) => keeps(id, rule) && isUnset(`${prefix}/${id}`))
+    .map(([id]) => [`${prefix}/${id}`, "error"] as const);
+
+const typeAwareSonar = Object.entries(rulesOf("eslint-plugin-sonarjs"))
+  .filter(([, rule]) => rule.meta?.docs?.requiresTypeChecking)
+  .map(([id]) => `sonarjs/${id}`);
+
+const off = (keys: string[]) => Object.fromEntries(keys.map((key) => [key, "off"]));
+
+export const decisions = {
+  rules: {
+    ...Object.fromEntries(PLUGINS.flatMap(([prefix, specifier, keeps]) => pluginRules(prefix, specifier, keeps))),
+    ...NATIVE_ON,
+    ...off(typeAwareSonar),
+    ...off(Object.keys(OFF_REASONS).filter((key) => !/^(jsdoc-js|tsdoc|vitest)\//u.test(key))),
+  },
+};
+
+type LintRules = NonNullable<OxlintOverride["rules"]>;
+
+export const vitestAll: LintRules = Object.fromEntries(
+  Object.entries(vitestRules).map(([key, value]) => [key, levelOf(value) === "off" ? ("error" as const) : value])
+);
+vitestAll["vitest/no-importing-vitest-globals"] = "off";
+
+export const playwrightAll: LintRules = Object.fromEntries(
+  Object.entries(rulesOf("eslint-plugin-playwright"))
+    .filter(([id, rule]) => eslintKeeps(id, rule))
+    .map(([id]) => [`playwright/${id}`, "error" as const])
+);
+
+const NODE_RUNTIMES = ["src/server/**", "src/**/*.test.ts", "desktop/**", "scripts/**", "e2e/**", "cloud/**", "lint/**", "*.config.ts"];
+
+export const SCOPED_OFF_REASONS: Record<string, string> = {
+  "import/no-nodejs-modules": "Off where the code runs on Node: it can never reach 0 there. The coarse ban covers browser code.",
+  "no-console": "Off in the logger and in scripts, which print by design (plan 5.2).",
+  "node/no-process-env": "Off in the config module and desktop/env.ts, which own env access (plan 5.2).",
+  "node/no-sync": "Off in desktop/build.ts and the data lock (plan 5.2).",
+  "import/no-default-export": "Off in *.config.ts: the tools load a default export.",
+};
+
+export const decisionOverrides: OxlintOverride[] = [
+  { files: NODE_RUNTIMES, rules: { "import/no-nodejs-modules": "off" } },
+  { files: ["src/server/platform/logger/**", "scripts/**"], rules: { "no-console": "off" } },
+  { files: ["src/server/platform/config/**", "desktop/env.ts"], rules: { "node/no-process-env": "off" } },
+  { files: ["desktop/build.ts", "src/server/platform/data-lock/**"], rules: { "node/no-sync": "off" } },
+  { files: ["*.config.ts"], rules: { "import/no-default-export": "off" } },
+];

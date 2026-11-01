@@ -15,3 +15,5 @@ design-review/
 e2e/results/
 verification/*
 !verification/ACCEPTANCE.md
+.claude/
+artifacts/typecheck-diff.txt

@@ -1,0 +1,8 @@
+#!/bin/sh
+set -e
+staged=$(git diff --cached --name-only --diff-filter=ACMR -- '*.ts' '*.tsx' '*.js' '*.mjs' '*.cjs')
+if [ -n "$staged" ]; then
+  echo "$staged" | xargs node_modules/.bin/oxlint --
+  echo "$staged" | xargs node_modules/.bin/oxfmt --check --
+fi
+npm run --silent lint:boundaries

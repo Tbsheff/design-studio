@@ -22,10 +22,13 @@ type OpGroup = Readonly<Record<string, CatalogOp>>;
 
 type Catalog = { readonly [Context in keyof typeof AllOps]: OpGroup };
 
+type AgentSet = "app" | "core" | "design-system" | "kit" | "tweak";
+
 interface AgentOpSets {
+  readonly bySet: ReadonlyMap<AgentSet, string[]>;
   readonly editIds: string[];
   readonly help: Map<string, string>;
-  readonly short: Map<string, string>;
+  readonly lean: Set<string>;
   readonly toolIds: string[];
   readonly writeIds: string[];
 }
@@ -33,15 +36,42 @@ interface AgentOpSets {
 const AGENT_TOOL_PREFIX = "mcp__studio__";
 const EDIT_PERMISSION = "project.update";
 
+const AGENT_SETS: readonly AgentSet[] = [
+  "app",
+  "core",
+  "design-system",
+  "kit",
+  "tweak",
+];
+
+const isAgentSet = (value: string): value is AgentSet =>
+  AGENT_SETS.some((set) => set === value);
+
+const setNames = (sets: AgentOpSets, binding: AgentToolBinding): string[] => {
+  const names = isAgentSet(binding.set) && sets.bySet.get(binding.set);
+
+  if (!names) {
+    throw new Error(
+      `Agent tool ${binding.name} has unknown set ${binding.set}. Use one of ${AGENT_SETS.join(", ")}.`
+    );
+  }
+
+  return names;
+};
+
 const addOp = (
   sets: AgentOpSets,
   op: CatalogOp,
   binding: AgentToolBinding
 ): void => {
   const id = `${AGENT_TOOL_PREFIX}${binding.name}`;
+  setNames(sets, binding).push(binding.name);
   sets.toolIds.push(id);
   sets.help.set(binding.name, op.description);
-  sets.short.set(binding.name, binding.short);
+
+  if (binding.lean) {
+    sets.lean.add(binding.name);
+  }
 
   if (op.access === "read") {
     return;
@@ -56,9 +86,10 @@ const addOp = (
 
 const deriveAgentOps = (catalog: Catalog): AgentOpSets => {
   const sets: AgentOpSets = {
+    bySet: new Map(AGENT_SETS.map((set) => [set, []])),
     editIds: [],
     help: new Map(),
-    short: new Map(),
+    lean: new Set(),
     toolIds: [],
     writeIds: [],
   };
@@ -80,4 +111,4 @@ const AGENT_OPS: AgentOpSets = deriveAgentOps(AllOps);
 
 export { AGENT_OPS, deriveAgentOps };
 
-export type { AgentOpSets, Catalog };
+export type { AgentOpSets, AgentSet, Catalog };

@@ -1,4 +1,6 @@
 import type { Project, RunMode } from "../../shared/contracts.js";
+import type { AgentSet } from "./legacy/agent-ops.js";
+import { AGENT_OPS } from "./legacy/agent-ops.js";
 import { blockedInCritique } from "./permissions.js";
 
 export const HELP_TOOL = "studio_help";
@@ -71,15 +73,25 @@ export type ToolScopeProject = Pick<
   "kind" | "app" | "designSystemFor"
 >;
 
+function withDerived(names: string[], set: AgentSet): string[] {
+  return [...names, ...(AGENT_OPS.bySet.get(set) ?? [])];
+}
+
 function scopedTools(project: ToolScopeProject): string[] {
   const app = Boolean(project.app);
   return [
-    ...CORE_TOOLS,
-    ...(app ? [] : TWEAK_TOOLS),
-    ...(project.designSystemFor ? DESIGN_SYSTEM_TOOLS : []),
-    ...(project.kind === "react" || app ? KIT_TOOLS : []),
-    ...(app ? APP_TOOLS : []),
+    ...withDerived(CORE_TOOLS, "core"),
+    ...(app ? [] : withDerived(TWEAK_TOOLS, "tweak")),
+    ...(project.designSystemFor
+      ? withDerived(DESIGN_SYSTEM_TOOLS, "design-system")
+      : []),
+    ...(project.kind === "react" || app ? withDerived(KIT_TOOLS, "kit") : []),
+    ...(app ? withDerived(APP_TOOLS, "app") : []),
   ];
+}
+
+function isLean(name: string): boolean {
+  return LEAN_TOOLS.has(name) || AGENT_OPS.lean.has(name);
 }
 
 export function studioToolsFor(
@@ -87,9 +99,7 @@ export function studioToolsFor(
   mode: RunMode,
   lean = false
 ): Set<string> {
-  const names = scopedTools(project).filter(
-    (name) => !lean || LEAN_TOOLS.has(name)
-  );
+  const names = scopedTools(project).filter((name) => !lean || isLean(name));
   return new Set(
     mode === "critique"
       ? names.filter((name) => !blockedInCritique(`mcp__studio__${name}`))

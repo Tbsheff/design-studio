@@ -1,5 +1,7 @@
+import type { Dirent } from "node:fs";
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 
 interface GeneratedFile {
   path: string;
@@ -15,6 +17,8 @@ const SERVICES = path.join(ROOT, "src/server/services");
 const HEADER = "// @generated";
 
 const CORE = "_core";
+
+const CLOSE_CONST = "} as const;";
 
 const pascal = (ctx: string): string =>
   ctx
@@ -34,16 +38,220 @@ const lines = (...body: string[]): string =>
 const stub = (name: string): string =>
   lines(`const ${name} = {} as const;`, "", `export { ${name} };`);
 
-const contextFiles = (ctx: string): GeneratedFile[] => [
+const readOrEmpty = async (file: string): Promise<string> => {
+  try {
+    return await readFile(file, "utf-8");
+  } catch {
+    return "";
+  }
+};
+
+const listDir = async (dir: string): Promise<Dirent[]> => {
+  try {
+    return await readdir(dir, { withFileTypes: true });
+  } catch {
+    return [];
+  }
+};
+
+const CONTRACT_SKIP = new Set(["index", "routes", "schema"]);
+
+const SERVICE_SKIP = new Set(["handlers", "live"]);
+
+const opTails = async (
+  dir: string,
+  skip: ReadonlySet<string>
+): Promise<string[]> => {
+  const entries = await listDir(dir);
+
+  const tails: string[] = [];
+
+  for (const entry of entries) {
+    const tail = entry.name.replace(/\.ts$/u, "");
+
+    const isOp =
+      entry.isFile() &&
+      entry.name.endsWith(".ts") &&
+      !entry.name.endsWith(".test.ts") &&
+      !skip.has(tail);
+
+    if (isOp) {
+      tails.push(tail);
+    }
+  }
+
+  return tails.toSorted((left, right) => left.localeCompare(right));
+};
+
+const opsIndex = (ctx: string, tails: string[]): string => {
+  const name = `${pascal(ctx)}Ops`;
+
+  if (tails.length === 0) {
+    return stub(name);
+  }
+
+  return lines(
+    ...tails.map((tail) => `import { ${camel(tail)} } from "./${tail}.js";`),
+    "",
+    `const ${name} = {`,
+    ...tails.map((tail) => `  ${camel(tail)},`),
+    CLOSE_CONST,
+    "",
+    `export { ${name} };`
+  );
+};
+
+const PREVIEW_EXPORT = /export\s*\{[^}]*\bpreview\b[^}]*\}/u;
+
+const hasPreview = async (ctx: string, tail: string): Promise<boolean> =>
+  PREVIEW_EXPORT.test(
+    await readOrEmpty(path.join(SERVICES, ctx, `${tail}.ts`))
+  );
+
+const entryImport = (tail: string, preview: boolean): string => {
+  const key = camel(tail);
+
+  const names = preview
+    ? `handle as ${key}Handle, preview as ${key}Preview`
+    : `handle as ${key}Handle`;
+
+  return `import { ${names} } from "./${tail}.js";`;
+};
+
+const entryRow = (tail: string, preview: boolean): string => {
+  const key = camel(tail);
+
+  return preview
+    ? `  ${key}: { handle: ${key}Handle, preview: ${key}Preview },`
+    : `  ${key}: { handle: ${key}Handle },`;
+};
+
+const handlersFile = async (ctx: string, tails: string[]): Promise<string> => {
+  const name = `${pascal(ctx)}Entries`;
+
+  if (tails.length === 0) {
+    return stub(name);
+  }
+
+  const previews = await Promise.all(
+    tails.map((tail) => hasPreview(ctx, tail))
+  );
+
+  return lines(
+    `import type { ${pascal(ctx)}Ops } from "../../../shared/contract/${ctx}/index.js";`,
+    `import type { Entries } from "../_core/handler.js";`,
+    ...tails.map((tail, index) => entryImport(tail, Boolean(previews[index]))),
+    "",
+    `const ${name} = {`,
+    ...tails.map((tail, index) => entryRow(tail, Boolean(previews[index]))),
+    `} satisfies Entries<typeof ${pascal(ctx)}Ops>;`,
+    "",
+    `export { ${name} };`
+  );
+};
+
+interface RouteOp {
+  readonly http: { readonly method: string; readonly path: string };
+  readonly id: string;
+  readonly invalidates: readonly string[];
+}
+
+const loadRoute = async (ctx: string, tail: string): Promise<RouteOp> => {
+  const file = path.join(CONTRACT, ctx, `${tail}.ts`);
+
+  try {
+    const mod = (await import(pathToFileURL(file).href)) as Record<
+      string,
+      RouteOp
+    >;
+
+    const op = mod[camel(tail)];
+
+    if (!op) {
+      throw new Error(`no export named ${camel(tail)}`);
+    }
+
+    return op;
+  } catch (error) {
+    throw new Error(
+      `gen-routes: cannot load ${path.relative(ROOT, file)} for routes.ts (${String(error)}). fix: export one defineOp const named ${camel(tail)}`,
+      { cause: error }
+    );
+  }
+};
+
+const routeRows = (tail: string, op: RouteOp): string[] => [
+  `  ${camel(tail)}: {`,
+  `    id: ${JSON.stringify(op.id)},`,
+  `    invalidates: ${JSON.stringify(op.invalidates).replaceAll(",", ", ")},`,
+  `    method: ${JSON.stringify(op.http.method)},`,
+  `    path: ${JSON.stringify(op.http.path)},`,
+  "  },",
+];
+
+const routesFile = async (ctx: string, tails: string[]): Promise<string> => {
+  if (tails.length === 0) {
+    return stub("routes");
+  }
+
+  const ops = await Promise.all(tails.map((tail) => loadRoute(ctx, tail)));
+
+  return lines(
+    "const routes = {",
+    ...tails.flatMap((tail, index) => {
+      const op = ops[index];
+
+      return op ? routeRows(tail, op) : [];
+    }),
+    CLOSE_CONST,
+    "",
+    "export { routes };"
+  );
+};
+
+interface ContextScan {
+  readonly ctx: string;
+  readonly ops: string[];
+  readonly services: string[];
+}
+
+const scanContext = async (ctx: string): Promise<ContextScan> => ({
+  ctx,
+  ops: await opTails(path.join(CONTRACT, ctx), CONTRACT_SKIP),
+  services: await opTails(path.join(SERVICES, ctx), SERVICE_SKIP),
+});
+
+const contextFiles = async (scan: ContextScan): Promise<GeneratedFile[]> => [
   {
-    path: path.join(CONTRACT, ctx, "index.ts"),
-    text: stub(`${pascal(ctx)}Ops`),
+    path: path.join(CONTRACT, scan.ctx, "index.ts"),
+    text: opsIndex(scan.ctx, scan.ops),
   },
-  { path: path.join(CONTRACT, ctx, "routes.ts"), text: stub("routes") },
   {
-    path: path.join(SERVICES, ctx, "handlers.ts"),
-    text: stub(`${pascal(ctx)}Entries`),
+    path: path.join(CONTRACT, scan.ctx, "routes.ts"),
+    text: await routesFile(scan.ctx, scan.ops),
   },
+  {
+    path: path.join(SERVICES, scan.ctx, "handlers.ts"),
+    text: await handlersFile(scan.ctx, scan.services),
+  },
+];
+
+const missingFrom = (
+  from: string[],
+  other: string[],
+  folder: string
+): string[] =>
+  from.flatMap((tail) =>
+    other.includes(tail)
+      ? []
+      : [
+          `gen-routes: ${folder}/${tail}.ts has no pair file. fix: add the matching op and handler files, or remove this one`,
+        ]
+  );
+
+const pairErrors = (scan: ContextScan): string[] => [
+  ...missingFrom(scan.ops, scan.services, `src/shared/contract/${scan.ctx}`),
+  ...missingFrom(scan.services, scan.ops, `src/server/services/${scan.ctx}`),
 ];
 
 interface ListSpec {
@@ -61,18 +269,10 @@ const globalList = (contexts: string[], spec: ListSpec): string =>
     "",
     `const ${spec.constName} = {`,
     ...contexts.map((ctx) => `  ${camel(ctx)}: ${pascal(ctx)}${spec.suffix},`),
-    "} as const;",
+    CLOSE_CONST,
     "",
     `export { ${spec.constName} };`
   );
-
-const readOrEmpty = async (file: string): Promise<string> => {
-  try {
-    return await readFile(file, "utf-8");
-  } catch {
-    return "";
-  }
-};
 
 const liveContexts = async (contexts: string[]): Promise<string[]> => {
   const found = await Promise.all(
@@ -132,15 +332,22 @@ const scanContexts = async (): Promise<string[]> => {
   return names.toSorted((left, right) => left.localeCompare(right));
 };
 
-const buildAll = async (): Promise<GeneratedFile[]> => {
+interface Build {
+  readonly errors: string[];
+  readonly files: GeneratedFile[];
+}
+
+const buildAll = async (): Promise<Build> => {
   const contexts = await scanContexts();
+  const scans = await Promise.all(contexts.map((ctx) => scanContext(ctx)));
+  const perContext = await Promise.all(scans.map((scan) => contextFiles(scan)));
 
-  const files = [
-    ...contexts.flatMap((ctx) => contextFiles(ctx)),
-    ...(await globalFiles(contexts)),
-  ];
+  const files = [...perContext.flat(), ...(await globalFiles(contexts))];
 
-  return files.toSorted((left, right) => left.path.localeCompare(right.path));
+  return {
+    errors: scans.flatMap((scan) => pairErrors(scan)),
+    files: files.toSorted((left, right) => left.path.localeCompare(right.path)),
+  };
 };
 
 const staleFiles = async (files: GeneratedFile[]): Promise<string[]> => {
@@ -182,9 +389,15 @@ const check = async (files: GeneratedFile[]): Promise<void> => {
   }
 };
 
-const files = await buildAll();
+const { errors, files } = await buildAll();
 
-if (process.argv.includes("--check")) {
+for (const error of errors) {
+  process.stderr.write(`${error}\n`);
+}
+
+if (errors.length > 0) {
+  process.exitCode = 1;
+} else if (process.argv.includes("--check")) {
   await check(files);
 } else {
   await writeAll(files);

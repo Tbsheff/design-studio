@@ -37,7 +37,7 @@ async function frameRefs(deps: EditDeps, input: z.output<typeof publishInput>, p
 
 export function planDetail(plan: PublishPlan): string {
   const pages = plan.pages.length > 4 ? `${plan.pages.slice(0, 4).join(', ')} and ${plan.pages.length - 4} more` : plan.pages.join(', ');
-  const what = plan.kind === 'site' ? `${plan.pages.length} page${plan.pages.length === 1 ? '' : 's'} (${pages})` : `PNG images of ${plan.pages.length} frame${plan.pages.length === 1 ? '' : 's'} (${pages})${plan.comments ? ` and ${plan.comments} comments` : ''}`;
+  const what = plan.kind === 'site' ? `${plan.pages.length} page${plan.pages.length === 1 ? '' : 's'} (${pages})` : `PNG images of ${plan.pages.length} frame${plan.pages.length === 1 ? '' : 's'} (${pages})${plan.comments ? ` and ${plan.comments} comment${plan.comments === 1 ? '' : 's'}` : ''}`;
   return `Anyone with the URL can open ${oneLine(what, 220)}: ${plan.fileCount} files, ${publishSize(plan.bytes)}, at ${plan.url ?? plan.urlPattern}. Password ${plan.password ? 'on' : 'off'}. ${publishExpiryText(plan.expiresAt)}. Version ${plan.versionId.slice(0, 7)}.`;
 }
 

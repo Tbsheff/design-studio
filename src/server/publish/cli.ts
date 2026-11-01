@@ -68,8 +68,8 @@ export function runCf(bin: string, args: string[], options: CliRunOptions = {}):
   });
 }
 
-export async function cfVersion(bin: string): Promise<string | null> {
-  const out = await runCf(bin, ['--version'], { timeoutMs: 30_000 });
+export async function cfVersion(bin: string, cwd: string): Promise<string | null> {
+  const out = await runCf(bin, ['--version'], { cwd, timeoutMs: 30_000 });
   const match = /(\d+\.\d+\.\d+(?:-[0-9A-Za-z.]+)?)/.exec(`${out.stdout}\n${out.stderr}`);
   return out.code === 0 && match?.[1] ? match[1] : null;
 }
@@ -96,8 +96,8 @@ function accountsOf(raw: unknown): PublishAccount[] {
   return out;
 }
 
-export async function cfWhoAmI(bin: string): Promise<WhoAmI> {
-  const out = await runCf(bin, ['auth', 'whoami'], { timeoutMs: 60_000 });
+export async function cfWhoAmI(bin: string, cwd: string): Promise<WhoAmI> {
+  const out = await runCf(bin, ['auth', 'whoami'], { cwd, timeoutMs: 60_000 });
   const parsed = firstJson(out.stdout) as Record<string, unknown> | null;
   if (!parsed || parsed.authenticated !== true) return { signedIn: false, email: null, accounts: [] };
   return { signedIn: true, email: typeof parsed.email === 'string' ? parsed.email : null, accounts: accountsOf(parsed.accounts) };

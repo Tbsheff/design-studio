@@ -1,4 +1,5 @@
 import type { ChildProcess } from 'node:child_process';
+import { mkdir } from 'node:fs/promises';
 import { CF_INSTALL_COMMAND, CF_MIN_VERSION, compareCfVersion, type PublishCliState, type PublishLoginState } from '../../shared/publish.js';
 import { BadRequestError } from '../store/errors.js';
 import { cfVersion, cfWhoAmI, cliFailure, loginArgs, resolveCf, runCf, type WhoAmI } from './cli.js';
@@ -40,13 +41,14 @@ export function createCliSession(store: PublishStore): CliSession {
   const probeCli = async (fresh: boolean): Promise<Probe> => {
     if (!fresh && probe && Date.now() - probe.at < PROBE_TTL_MS) return probe;
     const bin = await resolveCf();
-    probe = { bin, version: bin ? await cfVersion(bin) : null, at: Date.now() };
+    await mkdir(store.dir, { recursive: true, mode: 0o700 });
+    probe = { bin, version: bin ? await cfVersion(bin, store.dir) : null, at: Date.now() };
     return probe;
   };
 
   const whoAmI = async (bin: string, fresh: boolean): Promise<WhoAmI> => {
     if (!fresh && who && Date.now() - who.at < WHO_TTL_MS) return who.value;
-    who = { value: await cfWhoAmI(bin), at: Date.now() };
+    who = { value: await cfWhoAmI(bin, store.dir), at: Date.now() };
     return who.value;
   };
 
@@ -81,6 +83,7 @@ export function createCliSession(store: PublishStore): CliSession {
     login = { running: true, url: null, error: null };
     let seen = '';
     const run = runCf(found.bin, loginArgs(keyring), {
+      cwd: store.dir,
       timeoutMs: LOGIN_TIMEOUT_MS,
       onSpawn: (spawned) => {
         child = spawned;
@@ -112,7 +115,7 @@ export function createCliSession(store: PublishStore): CliSession {
 
   const logout = async (): Promise<PublishCliState> => {
     const found = await probeCli(false);
-    if (found.bin) await runCf(found.bin, ['auth', 'logout'], { timeoutMs: 30_000 });
+    if (found.bin) await runCf(found.bin, ['auth', 'logout'], { cwd: store.dir, timeoutMs: 30_000 });
     who = null;
     return state(true);
   };

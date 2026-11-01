@@ -17,6 +17,7 @@ export interface ShareTarget {
   directionId: string | null;
   versionId: string | null;
   kind: PublishKind;
+  mode?: ShareMode;
 }
 
 type ShareMode = 'link' | 'publish';
@@ -238,7 +239,7 @@ function ExpiryPicker({ value, onChange }: { value: ShareExpiryHours; onChange: 
 
 export default function ShareDialog({ target, onClose }: { target: ShareTarget; onClose: () => void }) {
   const dialog = useModalDialog(onClose);
-  const [mode, setMode] = useState<ShareMode>('link');
+  const [mode, setMode] = useState<ShareMode>(target.mode ?? 'link');
   const tabs = <ShareTabs mode={mode} onMode={setMode} />;
   return (
     <dialog ref={dialog.ref} className="modal share-dialog" aria-label={mode === 'link' ? 'Share a read-only link' : 'Publish on Cloudflare'} onMouseDown={dialog.onMouseDown}>

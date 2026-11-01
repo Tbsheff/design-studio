@@ -119,7 +119,7 @@ function PlanView({ plan }: { plan: PublishPlan }) {
     ['Ends', publishExpiryText(plan.expiresAt)],
     ['Version', plan.versionId.slice(0, 7)],
   ];
-  if (plan.kind === 'viewer') rows.push(['Comments', plan.comments > 0 ? `${plan.comments} open comments` : 'None']);
+  if (plan.kind === 'viewer') rows.push(['Comments', plan.comments > 0 ? `${plan.comments} open comment${plan.comments === 1 ? '' : 's'}` : 'None']);
   return (
     <div className="publish-plan" data-testid="publish-plan">
       <div className="alert publish-public" role="alert">

@@ -37,7 +37,7 @@ const SITE_CSP = [
   "frame-ancestors 'none'",
 ].join('; ');
 
-const VIEWER_CSP = ["default-src 'none'", "img-src 'self'", "style-src 'self'", "base-uri 'none'", "form-action 'none'", "frame-ancestors 'none'"].join('; ');
+const VIEWER_CSP = ["default-src 'none'", "img-src 'self' data:", "style-src 'self'", "base-uri 'none'", "form-action 'none'", "frame-ancestors 'none'"].join('; ');
 
 export function cspFor(kind: PublishKind): string {
   return kind === 'site' ? SITE_CSP : VIEWER_CSP;

@@ -3,7 +3,13 @@
 }
 
 .publish-body {
+  grid-template-columns: minmax(0, 1fr);
   align-content: start;
+}
+
+.publish-body > *,
+.publish-form > * {
+  min-width: 0;
 }
 
 .publish-form,
@@ -122,4 +128,17 @@
 
 .publish-body .share-url {
   grid-template-columns: 96px minmax(0, 1fr) auto;
+}
+
+.publish-body .share-links {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.publish-body .share-link,
+.publish-body .share-link > * {
+  min-width: 0;
+}
+
+.publish-body .share-link-head > .btn {
+  flex-shrink: 0;
 }

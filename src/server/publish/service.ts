@@ -279,7 +279,7 @@ export function createPublishService(deps: PublishDeps): PublishService {
     if (!found || found.projectId !== projectId) throw new NotFoundError('publication not found');
     if (found.status === 'removed') return toPublication(found);
     const ready = await cli.ready(found.accountId);
-    const out = await deployLock('deploy', () => runCf(ready.bin, ['workers', 'delete', found.workerName, '--force'], { accountId: found.accountId }));
+    const out = await deployLock('deploy', () => runCf(ready.bin, ['workers', 'delete', found.workerName, '--force'], { cwd: store.dir, accountId: found.accountId }));
     const text = scrubCliText(`${out.stderr}\n${out.stdout}`, deps.secrets);
     const gone = out.code === 0 || /not found|does not exist|10007/i.test(text);
     if (!gone) throw new BadRequestError(cliFailure(out, 'Unpublish failed.'));

@@ -26,6 +26,7 @@ export interface DirectDeps {
   treeOf(project: Project, commit: string): Promise<string>;
   keyOf(project: Project, direction: Direction): string;
   neverTracked(project: Project): string[];
+  hidden: (project: Project) => string[];
   staleMarkerOf(project: Project, direction: Direction): string;
   changedSinceScan(
     project: Project,
@@ -60,7 +61,7 @@ export interface DirectCommit {
   changed: string[];
 }
 
-const GITIGNORE = /(^|\/)\.gitignore$/;
+const GITIGNORE = /(^|\/)\.git(?:ignore|attributes)$/;
 const NEW_FOLDER_LIMIT = 200;
 
 type PathKind = "full" | "dirty" | "clean" | "untracked" | "new-folder";
@@ -85,6 +86,12 @@ export function createDirectStore(deps: DirectDeps) {
     return paths.filter(
       (entry) => entry !== "" && !never.includes(entry.split("/")[0] ?? "")
     );
+  };
+
+  const shown = (project: Project, paths: Iterable<string>): string[] => {
+    const hidden = new Set(deps.hidden(project));
+
+    return scoped(project, [...paths]).filter((entry) => !hidden.has(entry));
   };
 
   const classifyOne = async (
@@ -202,7 +209,7 @@ export function createDirectStore(deps: DirectDeps) {
       models.delete(key);
       return "full";
     }
-    const relevant = scoped(project, pending);
+    const relevant = shown(project, pending);
     addUnstaged(key, relevant);
     if (!(await reclassify(project, direction, head, relevant, model))) {
       models.delete(key);
@@ -301,7 +308,7 @@ export function createDirectStore(deps: DirectDeps) {
     ): void {
       models.set(deps.keyOf(project, direction), {
         head,
-        changed: new Set(changed),
+        changed: new Set(shown(project, changed)),
       });
     },
 
@@ -418,7 +425,7 @@ export function createDirectStore(deps: DirectDeps) {
       const key = deps.keyOf(project, direction);
       const model: StatusModel = {
         head,
-        changed: new Set(scoped(project, changed)),
+        changed: new Set(shown(project, changed)),
       };
       addUnstaged(key, model.changed);
       if (scannedHead !== head) {
@@ -429,7 +436,13 @@ export function createDirectStore(deps: DirectDeps) {
           await deps.treeOf(project, head)
         );
         const recheck = [
-          ...new Set([...model.changed, ...moved.map((change) => change.path)]),
+          ...new Set([
+            ...model.changed,
+            ...shown(
+              project,
+              moved.map((change) => change.path)
+            ),
+          ]),
         ];
         addUnstaged(key, recheck);
         if (!(await reclassify(project, direction, head, recheck, model)))

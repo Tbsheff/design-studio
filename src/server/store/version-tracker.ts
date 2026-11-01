@@ -18,6 +18,7 @@ const RECURSIVE_WATCH =
   process.platform === "darwin" || process.platform === "win32";
 
 const COOKIE_DIR = "node_modules/.cache/design-studio";
+const STUDIO_COOKIE_DIR = ".studio/sync";
 const FLUSH_TIMEOUT_MS = 1000;
 
 interface Tracked {
@@ -42,15 +43,45 @@ export interface ChangeTracker {
 function relevant(relative: string): boolean {
   return (
     relative !== "" &&
+    relative !== STUDIO_COOKIE_DIR &&
+    !relative.startsWith(`${STUDIO_COOKIE_DIR}/`) &&
     !relative.split("/").some((segment) => SKIPPED_SEGMENTS.has(segment))
   );
 }
 
-async function cookieDirOf(root: string): Promise<string | null> {
+interface CookieDir {
+  dir: string;
+  relative: string;
+}
+
+const studioCookieDir = async (root: string): Promise<CookieDir | null> => {
+  const cookie: CookieDir = {
+    dir: path.join(root, ...STUDIO_COOKIE_DIR.split("/")),
+    relative: STUDIO_COOKIE_DIR,
+  };
+
+  try {
+    const studio = await lstat(path.join(root, ".studio"));
+
+    if (!studio.isDirectory()) {
+      return null;
+    }
+
+    return cookie;
+  } catch {
+    return cookie;
+  }
+};
+
+async function cookieDirOf(root: string): Promise<CookieDir | null> {
   const modules = path.join(root, "node_modules");
   const info = await lstat(modules).catch(() => null);
 
-  if (!info?.isDirectory()) {
+  if (!info) {
+    return studioCookieDir(root);
+  }
+
+  if (!info.isDirectory()) {
     return null;
   }
 
@@ -60,23 +91,25 @@ async function cookieDirOf(root: string): Promise<string | null> {
   ]);
 
   return realModules === path.join(realRoot, "node_modules")
-    ? path.join(root, ...COOKIE_DIR.split("/"))
+    ? { dir: path.join(root, ...COOKIE_DIR.split("/")), relative: COOKIE_DIR }
     : null;
 }
 
 async function flush(entry: Tracked): Promise<boolean> {
-  const dir = await cookieDirOf(entry.root);
+  const cookie = await cookieDirOf(entry.root);
 
-  if (!dir) {
+  if (!cookie) {
     return false;
   }
 
+  const { dir } = cookie;
   const name = `sync-${randomBytes(6).toString("hex")}`;
   const file = path.join(dir, name);
+  const key = `${cookie.relative}/${name}`;
   let timer: NodeJS.Timeout | undefined;
 
   const seen = new Promise<boolean>((resolve) => {
-    entry.cookies.set(`${COOKIE_DIR}/${name}`, () => resolve(true));
+    entry.cookies.set(key, () => resolve(true));
     timer = setTimeout(() => resolve(false), FLUSH_TIMEOUT_MS);
   });
 
@@ -87,7 +120,7 @@ async function flush(entry: Tracked): Promise<boolean> {
     return await seen;
   } finally {
     clearTimeout(timer);
-    entry.cookies.delete(`${COOKIE_DIR}/${name}`);
+    entry.cookies.delete(key);
     await rm(file, { force: true });
   }
 }

@@ -47,11 +47,11 @@ import {
   assertSafeId,
 } from "./errors.js";
 import { ObjectStore, gitIdent } from "./git-objects.js";
-import type { CommitInfo } from "./git-objects.js";
+import type { CommitInfo, TreeEntry } from "./git-objects.js";
 import { createKeyedMutex } from "./mutex.js";
 import { diffVersionFiles } from "./version-diff.js";
 import { createDirectStore } from "./version-direct.js";
-import { FastPathUnavailable, diffTrees } from "./version-fast.js";
+import { FastPathUnavailable, diffTrees, updateTree } from "./version-fast.js";
 import { seedFromUserRepo } from "./version-seed.js";
 import { createChangeTracker } from "./version-tracker.js";
 import { createWarmQueue } from "./version-warm.js";
@@ -334,6 +334,24 @@ async function pathExists(target: string): Promise<boolean> {
   );
 }
 
+const fastOk = async (
+  project: Project,
+  direction: Direction
+): Promise<boolean> =>
+  Boolean(project.app) ||
+  !(await pathExists(path.join(direction.workTree, ".gitattributes")));
+
+const layoutEntry = async (
+  store: ObjectStore,
+  bytes: Buffer | null
+): Promise<TreeEntry | null> => {
+  if (bytes === null) {
+    return null;
+  }
+
+  return { mode: "100644", name: "", sha: await store.writeBlob(bytes) };
+};
+
 function splitNul(text: string): string[] {
   return text.split("\0").filter((entry) => entry !== "");
 }
@@ -440,6 +458,7 @@ export function createVersionStore(config: ServerConfig): VersionStore {
   const untrackedCounts = new Map<string, number>();
   const tracker = createChangeTracker(MAX_SCOPED_PATHS);
   const headIndexTrees = new Map<string, string>();
+  const fullyStaged = new Set<string>();
 
   const listCache = new Map<
     string,
@@ -770,13 +789,13 @@ export function createVersionStore(config: ServerConfig): VersionStore {
   ): Promise<void> => {
     const key = lockKey(project, direction);
 
-    const scan = project.app
-      ? tracker.beginFullScan(key, rootOf(direction))
-      : null;
+    const tracked = await fastOk(project, direction);
+    const scan = tracked ? tracker.beginFullScan(key, rootOf(direction)) : null;
 
     await stageAll(directionScope(project, direction), firstOfApp);
+    fullyStaged.add(key);
 
-    if (project.app) {
+    if (tracked) {
       tracker.endFullScan(key, scan);
     }
   };
@@ -854,7 +873,7 @@ export function createVersionStore(config: ServerConfig): VersionStore {
     project: Project,
     direction: Direction
   ): Promise<void> => {
-    const changed = project.app
+    const changed = (await fastOk(project, direction))
       ? await tracker.changedSinceScan(
           lockKey(project, direction),
           rootOf(direction)
@@ -1251,7 +1270,9 @@ export function createVersionStore(config: ServerConfig): VersionStore {
     await refreshExclude(project);
     const scope = directionScope(project, direction);
 
-    const fast = project.app
+    const eligible = await fastOk(project, direction);
+
+    const fast = eligible
       ? await direct.status(project, direction, paths)
       : "git";
 
@@ -1261,7 +1282,10 @@ export function createVersionStore(config: ServerConfig): VersionStore {
 
     await direct.syncIndex(project, direction);
 
-    if (fast === "full") {
+    if (
+      fast === "full" ||
+      !(project.app || fullyStaged.has(lockKey(project, direction)))
+    ) {
       await fullStage(project, direction);
     } else {
       await (paths === undefined
@@ -1285,7 +1309,7 @@ export function createVersionStore(config: ServerConfig): VersionStore {
       (entry) => !LAYOUT_FILES.includes(entry)
     );
 
-    if (project.app && head && (paths === undefined || fast === "full")) {
+    if (eligible && head && (paths === undefined || fast === "full")) {
       direct.remember(project, direction, head, changed);
     }
 
@@ -1434,6 +1458,36 @@ export function createVersionStore(config: ServerConfig): VersionStore {
     );
   };
 
+  const layoutTree = async (
+    project: Project,
+    tree: string,
+    live: LiveLayout
+  ): Promise<string | null> => {
+    if (live.length === 0) {
+      return tree;
+    }
+
+    const store = objectsOf(project);
+
+    const entries = await Promise.all(
+      live.map(async (item) => {
+        const entry = await layoutEntry(store, item.bytes);
+
+        return [item.relative, entry] as const;
+      })
+    );
+
+    try {
+      return (await updateTree(store, tree, new Map(entries))) ?? EMPTY_TREE;
+    } catch (error) {
+      if (error instanceof FastPathUnavailable) {
+        return null;
+      }
+
+      throw error;
+    }
+  };
+
   const staleMarkerOf = (project: Project, direction: Direction): string =>
     path.join(
       gitDirOf(project),
@@ -1447,6 +1501,7 @@ export function createVersionStore(config: ServerConfig): VersionStore {
     keyOf: lockKey,
     neverTracked: (project) =>
       project.app ? APP_NEVER_TRACKED : NEVER_TRACKED,
+    hidden: layoutFilesOf,
     staleMarkerOf,
     changedSinceScan: (project, direction) =>
       tracker.changedSinceScan(lockKey(project, direction), rootOf(direction)),
@@ -1469,6 +1524,41 @@ export function createVersionStore(config: ServerConfig): VersionStore {
       ]);
     },
   });
+
+  const resetForRestore = async (
+    project: Project,
+    direction: Direction,
+    head: string,
+    tree: string
+  ): Promise<{ fast: boolean; kept: string }> => {
+    const headTree = await treeOf(project, head);
+    const live = await readLayout(project, direction);
+
+    const planned = (await fastOk(project, direction))
+      ? await layoutTree(project, tree, live)
+      : null;
+
+    if (
+      planned !== null &&
+      (await direct.reset(project, direction, headTree, tree))
+    ) {
+      await writeLayout(live, true);
+
+      return { fast: true, kept: planned };
+    }
+
+    await resetWorkTree(project, direction, headTree, tree, "keep");
+    await writeLayout(live, true);
+
+    if (live.length === 0) {
+      return { fast: false, kept: tree };
+    }
+
+    return {
+      fast: false,
+      kept: await treeWithLayout(project, direction, live),
+    };
+  };
 
   const commitDirect = async (
     project: Project,
@@ -1692,7 +1782,11 @@ export function createVersionStore(config: ServerConfig): VersionStore {
     locked(project, direction, async () => {
       const head = await headOf(project, direction);
 
-      if (head === null || direct.has(project, direction)) {
+      if (
+        head === null ||
+        direct.has(project, direction) ||
+        !(await fastOk(project, direction))
+      ) {
         return null;
       }
 
@@ -1814,13 +1908,13 @@ export function createVersionStore(config: ServerConfig): VersionStore {
     );
   };
 
-  const discardDirect = (
+  const discardDirect = async (
     project: Project,
     direction: Direction,
     tree: string | null
   ): Promise<WorkTreeStatus | null> => {
-    if (!project.app || tree === null) {
-      return Promise.resolve(null);
+    if (tree === null || !(await fastOk(project, direction))) {
+      return null;
     }
 
     return direct.discard(project, direction, tree, (paths) =>
@@ -1836,10 +1930,8 @@ export function createVersionStore(config: ServerConfig): VersionStore {
     async ensureRepo(project: Project): Promise<void> {
       const prepared = prepareRepo(project);
 
-      if (project.app) {
-        for (const direction of project.directions) {
-          warm.add(project, direction, prepared);
-        }
+      for (const direction of project.directions) {
+        warm.add(project, direction, prepared);
       }
 
       await prepared;
@@ -1863,7 +1955,7 @@ export function createVersionStore(config: ServerConfig): VersionStore {
       ];
 
       return locked(project, direction, async () => {
-        const fast = project.app
+        const fast = (await fastOk(project, direction))
           ? await commitDirect(project, direction, paths, title, meta)
           : undefined;
 
@@ -1925,7 +2017,7 @@ export function createVersionStore(config: ServerConfig): VersionStore {
           packLooseObjects(project);
         }
 
-        if (project.app) {
+        if (await fastOk(project, direction)) {
           direct.remember(project, direction, version.id, []);
         }
 
@@ -2073,24 +2165,12 @@ export function createVersionStore(config: ServerConfig): VersionStore {
           target = await requireCommit(project, versionId);
         }
 
-        const tree = await treeOf(project, target);
-        const headTree = await treeOf(project, head);
-        const live = await readLayout(project, direction);
-
-        const fast = project.app
-          ? await direct.reset(project, direction, headTree, tree)
-          : false;
-
-        if (!fast) {
-          await resetWorkTree(project, direction, headTree, tree, "keep");
-        }
-
-        await writeLayout(live, true);
-
-        const kept =
-          live.length > 0 && !fast
-            ? await treeWithLayout(project, direction, live)
-            : tree;
+        const { kept, fast } = await resetForRestore(
+          project,
+          direction,
+          head,
+          await treeOf(project, target)
+        );
 
         const title = restoreTitle(kind, await originTitleOf(project, target));
 

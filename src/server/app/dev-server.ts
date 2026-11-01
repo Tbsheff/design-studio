@@ -24,7 +24,7 @@ const MAX_LINE = 2000;
 const BLOCKED_ENV =
   /^(STUDIO_|ANTHROPIC_|CLAUDE_|ELECTRON_RUN_AS_NODE$|NODE_OPTIONS$|VITE_)/;
 
-const ANSI = /\u001b\[[0-9;?]*[ -/]*[@-~]/g;
+const ANSI = /\u001B\[[0-9;?]*[ -/]*[@-~]/g;
 const PROBE_TIMEOUT_MS = 3000;
 const DOCTOR_DELAY_MS = 300;
 

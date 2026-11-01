@@ -17,10 +17,10 @@ import { DirectEditError } from "./errors.js";
 
 const MAX_VALUE = 200;
 const MAX_TEXT = 5000;
-const UNSAFE_VALUE = /[;{}<>\\\u0000-\u001f\u007f]/;
+const UNSAFE_VALUE = /[;{}<>\\\u0000-\u001F\u007F]/;
 const SCRIPT_URL = /javascript\s*:|expression\s*\(/i;
 const MAX_NAME = 60;
-const UNSAFE_NAME = /["'`<>{}&\\\u0000-\u001f\u007f]/;
+const UNSAFE_NAME = /["'`<>{}&\\\u0000-\u001F\u007F]/;
 const COMPONENT_NAME = /^[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)*$/;
 
 const styleValueSchema = z

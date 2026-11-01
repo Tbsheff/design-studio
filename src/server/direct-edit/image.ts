@@ -104,7 +104,7 @@ const requestSchema = z
       .string()
       .max(IMAGE_ALT_MAX)
       .refine(
-        (value) => !/[\u0000-\u001f]/.test(value),
+        (value) => !/[\u0000-\u001F]/.test(value),
         "alt has control characters"
       )
       .nullable()

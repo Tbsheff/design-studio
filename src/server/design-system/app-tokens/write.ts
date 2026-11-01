@@ -29,7 +29,7 @@ import type { LoadedAppTokens } from "./source.js";
 import type { AppToken } from "./tokens.js";
 
 const MAX_VALUE = 400;
-const UNSAFE = /[;{}<>\u0000-\u001f\u007f]|\/\*|\*\//;
+const UNSAFE = /[;{}<>\u0000-\u001F\u007F]|\/\*|\*\//;
 const DARK_SELECTOR = '.dark, [data-theme="dark"]';
 
 interface Splice {

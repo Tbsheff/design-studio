@@ -62,7 +62,7 @@ const propValue = z.union([
     .string()
     .max(PROP_TEXT_MAX)
     .refine(
-      (value) => !/[\u0000-\u0008\u000b-\u001f]/.test(value),
+      (value) => !/[\u0000-\u0008\u000B-\u001F]/.test(value),
       "control characters are not allowed"
     ),
   z.number().finite(),

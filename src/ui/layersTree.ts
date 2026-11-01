@@ -313,7 +313,7 @@ export function dropTarget(
 }
 
 const FALLBACK_LABEL = /^[#.]/;
-const UNSAFE_NAME_CHARS = /["'`<>{}&\\\u0000-\u001f\u007f]/g;
+const UNSAFE_NAME_CHARS = /["'`<>{}&\\\u0000-\u001F\u007F]/g;
 
 export function editableName(name: string): string {
   return FALLBACK_LABEL.test(name) ? "" : name;

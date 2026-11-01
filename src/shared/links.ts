@@ -172,7 +172,7 @@ export function isBackTarget(target: LinkTarget): target is { back: true } {
 
 export function cleanLinkSelector(raw: unknown): string | null {
   if (typeof raw !== "string") return null;
-  const selector = raw.replaceAll(/[\u0000-\u001f\u007f]/g, " ").trim();
+  const selector = raw.replaceAll(/[\u0000-\u001F\u007F]/g, " ").trim();
   return selector === "" || selector.length > LINK_SELECTOR_MAX
     ? null
     : selector;
@@ -250,7 +250,7 @@ export function decodeEntities(text: string): string {
 export function cleanLinkText(raw: unknown): string | null {
   if (typeof raw !== "string") return null;
   const text = decodeEntities(raw)
-    .replaceAll(/[\u0000-\u001f\u007f<>]/g, " ")
+    .replaceAll(/[\u0000-\u001F\u007F<>]/g, " ")
     .replaceAll(/\s+/g, " ")
     .trim()
     .slice(0, LINK_TEXT_MAX);

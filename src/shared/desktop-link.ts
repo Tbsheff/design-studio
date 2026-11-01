@@ -122,7 +122,7 @@ export function parsePickFolderRequest(
 
   const title =
     (typeof record.title === "string" ? record.title : "")
-      .replaceAll(/[\u0000-\u001f\u007f]/g, " ")
+      .replaceAll(/[\u0000-\u001F\u007F]/g, " ")
       .trim()
       .slice(0, MAX_PICK_TITLE) || "Choose a folder";
 

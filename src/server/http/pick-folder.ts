@@ -78,7 +78,7 @@ async function existingFolder(
 
 function cleanTitle(title: string | undefined): string {
   const text = (title ?? "")
-    .replaceAll(/[\u0000-\u001f\u007f]/g, " ")
+    .replaceAll(/[\u0000-\u001F\u007F]/g, " ")
     .trim()
     .slice(0, MAX_TITLE_LENGTH);
 

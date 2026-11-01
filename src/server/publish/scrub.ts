@@ -16,7 +16,7 @@ const RULES: [RegExp, string][] = [
   [/\b[A-Za-z0-9_-]{40,}\b/g, "[hidden]"],
 ];
 
-const ANSI = /\u001b\[[0-9;?]*[ -/]*[@-~]|\u001b\][^\u0007]*\u0007/g;
+const ANSI = /\u001B\[[0-9;?]*[ -/]*[@-~]|\u001B\][^\u0007]*\u0007/g;
 
 export function scrubCliText(text: string, extra: string[] = []): string {
   let out = text.replaceAll(ANSI, "");

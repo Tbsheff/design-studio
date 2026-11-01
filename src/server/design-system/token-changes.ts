@@ -14,7 +14,7 @@ const MAX_PATH = 120;
 const MAX_VALUE = 200;
 const WHOLE_ALIAS = /^\{[A-Za-z0-9_.-]+\}$/;
 const PATH_PATTERN = /^[A-Za-z0-9_-]+(\.[A-Za-z0-9_-]+)+$/;
-const UNSAFE = /[;{}<>\\\u0000-\u001f\u007f]/;
+const UNSAFE = /[;{}<>\\\u0000-\u001F\u007F]/;
 const MODES = "studio.modes";
 
 type TokenNode = Record<string, unknown>;

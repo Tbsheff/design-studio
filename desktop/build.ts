@@ -32,6 +32,11 @@ const TEMPLATE_DIR = path.join(
 const TEMPLATE_CACHE = path.join(ROOT, "build", "react-template-cache");
 const TEMPLATE_CACHE_WORKSPACE =
   "nodeLinker: hoisted\nallowBuilds:\n  esbuild: true\n";
+const PNPM_METADATA = new Set([
+  ".modules.yaml",
+  ".pnpm",
+  ".pnpm-workspace-state-v1.json",
+]);
 const FIRST_RUN_STATIC = ["first-run.html", "first-run.css"];
 const NOT_SHIPPED = new Set(["playwright-core"]);
 const NOT_SHIPPED_PATTERNS = [
@@ -343,11 +348,14 @@ function prebuiltTemplate(target: string): void {
   }
   mkdirSync(target, { recursive: true });
   writeFileSync(path.join(target, "package.json"), pkg);
-  cpSync(
-    path.join(TEMPLATE_CACHE, "node_modules"),
-    path.join(target, "node_modules"),
-    { recursive: true, verbatimSymlinks: true }
-  );
+  const cacheModules = path.join(TEMPLATE_CACHE, "node_modules");
+  cpSync(cacheModules, path.join(target, "node_modules"), {
+    recursive: true,
+    verbatimSymlinks: true,
+    filter: (src) =>
+      path.dirname(src) !== cacheModules ||
+      !PNPM_METADATA.has(path.basename(src)),
+  });
 }
 
 function copyStatic(resources: string): void {

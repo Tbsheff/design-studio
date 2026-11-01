@@ -1,10 +1,12 @@
-import type { CanvasFile, CanvasFileFrame } from "../../shared/canvas-file.js";
+import type {
+  CanvasFile,
+  CanvasFileFrame,
+  LayoutChange,
+} from "../../shared/canvas-file.js";
 import type { CanvasWriteSource, Project } from "../../shared/contracts.js";
 import type { LinksFile } from "../../shared/links.js";
 
-export type LayoutChange =
-  | { kind: "canvas"; before: CanvasFile; after: CanvasFile }
-  | { kind: "links"; before: LinksFile; after: LinksFile };
+export type { LayoutChange };
 
 export type LayoutListener = (
   project: Project,

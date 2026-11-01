@@ -1,3 +1,5 @@
+import type { LinksFile } from "./links.js";
+
 export const CANVAS_FILE = ".studio/canvas.json";
 export const CANVAS_DIR = ".studio";
 export const CANVAS_FILE_VERSION = 1;
@@ -30,6 +32,10 @@ export interface CanvasFile {
   frames: CanvasFileFrame[];
   lofi: string[];
 }
+
+export type LayoutChange =
+  | { kind: "canvas"; before: CanvasFile; after: CanvasFile }
+  | { kind: "links"; before: LinksFile; after: LinksFile };
 
 export function emptyCanvasFile(): CanvasFile {
   return { version: CANVAS_FILE_VERSION, frames: [], lofi: [] };

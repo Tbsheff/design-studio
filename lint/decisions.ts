@@ -237,17 +237,17 @@ export const SCOPED_OFF_REASONS: Record<string, string> = {
   "import/no-nodejs-modules":
     "Off where the code runs on Node: it can never reach 0 there. The coarse ban covers browser code.",
   "no-console":
-    "Off in the logger, in scripts and in the worker client until it logs through the logger (plan 5.2).",
+    "Off in the logger, in scripts, in the events module and in the worker client until it logs through the logger (plan 5.2).",
   "node/no-process-env":
     "Off in the config module and desktop/env.ts, which own env access (plan 5.2).",
   "node/no-sync":
-    "Off in desktop/build.ts, the data lock, the resource lookup and the path checks, whose callers are sync (plan 5.2).",
+    "Off in desktop/build.ts, the data lock, the resource lookup, the path checks and the event log replay and exit flush, whose callers are sync (plan 5.2).",
   "import/no-default-export":
     "Off in *.config.ts: the tools load a default export.",
   "import/consistent-type-specifier-style":
     "Off in agent/permissions.ts: one shared/contracts import carries a value and an inline type, which keeps its parent-import count at the baseline.",
   "unicorn/prefer-export-from":
-    "Off in the agent and props-schema shims: they re-export a symbol moved to platform or shared and also use it, so they need an import binding.",
+    "Off in the agent, layout-history and props-schema shims: they re-export a symbol moved to platform or shared and also use it, so they need an import binding.",
 };
 
 export const decisionOverrides: OxlintOverride[] = [
@@ -256,6 +256,7 @@ export const decisionOverrides: OxlintOverride[] = [
     files: [
       "src/server/platform/logger/**",
       "src/server/platform/process/worker-client.ts",
+      "src/server/events/**",
       "scripts/**",
     ],
     rules: { "no-console": "off" },
@@ -267,6 +268,11 @@ export const decisionOverrides: OxlintOverride[] = [
   {
     files: [
       "src/server/platform/**",
+      "src/server/events/**",
+      "src/server/store/events.ts",
+      "src/server/direct-edit/change-feed.ts",
+      "src/server/direct-edit/planned-feed.ts",
+      "src/server/preview/render-wait.ts",
       "src/server/store/git-objects.ts",
       "src/server/store/default-folder.ts",
       "src/server/git/user-git.ts",
@@ -284,6 +290,7 @@ export const decisionOverrides: OxlintOverride[] = [
   {
     files: [
       "desktop/build.ts",
+      "src/server/events/bus.ts",
       "src/server/platform/data-lock/**",
       "src/server/platform/paths/**",
       "src/server/platform/resources/**",
@@ -296,6 +303,7 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/server/agent/sdk-driver.ts",
       "src/server/agent/critic.ts",
       "src/server/agent/permissions.ts",
+      "src/server/canvas/layout-history.ts",
       "src/server/components/props-schema.ts",
     ],
     rules: { "unicorn/prefer-export-from": "off" },

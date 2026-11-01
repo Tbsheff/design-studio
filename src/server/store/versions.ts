@@ -646,7 +646,7 @@ export function createVersionStore(config: ServerConfig): VersionStore {
     project: Project,
     revArgs: string[]
   ): Promise<Version[]> => {
-    const format = "%x1e" + ["%H", "%P", "%ct", "%B"].join("%x1f") + "%x1f";
+    const format = `%x1e${["%H", "%P", "%ct", "%B"].join("%x1f")}%x1f`;
 
     const { stdout } = await runGit(repoScope(project), [
       "log",

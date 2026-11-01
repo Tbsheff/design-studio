@@ -50,9 +50,9 @@ test("AC-49: React dev server stays running between edits", async ({
   });
   const navBefore = await frame.evaluate(
     () =>
-      performance.getEntriesByType("navigation").length +
-      ":" +
-      String(performance.timeOrigin)
+      `${performance.getEntriesByType("navigation").length}:${String(
+        performance.timeOrigin
+      )}`
   );
 
   const app = path.join(mainDirection(project).workTree, "src", "App.tsx");

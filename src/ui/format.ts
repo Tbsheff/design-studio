@@ -5,9 +5,13 @@ export function formatTime(ts: number): string {
 
   return sameDay
     ? d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })
-    : d.toLocaleDateString(undefined, { month: "short", day: "numeric" }) +
-        " " +
-        d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+    : `${d.toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
+      })} ${d.toLocaleTimeString(undefined, {
+        hour: "2-digit",
+        minute: "2-digit",
+      })}`;
 }
 
 export function formatMs(ms: number | null | undefined): string {

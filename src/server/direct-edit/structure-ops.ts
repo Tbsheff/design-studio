@@ -250,12 +250,12 @@ function wrapOp(source: string, nodes: StructNode[], frame: Frame): Splice[] {
   const lined = indent !== null && ownLine(source, first);
 
   const inner = lined
-    ? texts
+    ? `${texts
         .map(
           (entry) =>
             `\n${indent}${step}${reindent(entry.text, entry.indent, indent + step)}`
         )
-        .join("") + `\n${indent}`
+        .join("")}\n${indent}`
     : texts.map((entry) => entry.text).join("");
 
   const wrapper = {

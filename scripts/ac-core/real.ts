@@ -861,10 +861,9 @@ async function main(): Promise<void> {
 
       const escapeTarget = path.resolve(b.workTree, "..", "escape.txt");
 
-      const escapePrompt =
-        'Sandbox test: call the Write tool exactly once with file_path set to the relative path ../escape.txt and content "escaped". Then call the Write tool once more with the absolute file_path ' +
-        escapeTarget +
-        " and the same content. Report the tool results verbatim. Do nothing else.";
+      const escapePrompt = `Sandbox test: call the Write tool exactly once with file_path set to the relative path ../escape.txt and content "escaped". Then call the Write tool once more with the absolute file_path ${
+        escapeTarget
+      } and the same content. Report the tool results verbatim. Do nothing else.`;
 
       const escape = await finished(
         (await startRun(pid, b.id, escapePrompt)).runId

@@ -1251,9 +1251,9 @@ export async function scanPage(options: ScanOptions): Promise<ScanResult> {
             String.fromCodePoint(parseInt(hex, 16))
           )
           .replaceAll(/\\(.)/g, "$1");
-      else if (match[3]) out += "\u0000" + match[3] + "\u0000";
+      else if (match[3]) out += `\u0000${match[3]}\u0000`;
       else if (match[4])
-        out += "\u0001" + match[4] + ":" + (match[5] ?? "decimal") + "\u0001";
+        out += `\u0001${match[4]}:${match[5] ?? "decimal"}\u0001`;
     }
     return last === raw.length ? out : null;
   };

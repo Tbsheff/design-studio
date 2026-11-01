@@ -126,7 +126,7 @@ describe("css parser", () => {
   });
 });
 
-describe("URL extractor", () => {
+describe("the URL extractor", () => {
   it("harvests custom properties, usage colors, fonts, radius and Google Fonts from HTML + linked CSS", async () => {
     const { harvest, snapshot } = await harvestUrl(
       siteUrl,
@@ -233,7 +233,7 @@ describe("fetched text never becomes token or DESIGN.md text", () => {
   });
 });
 
-describe("URL time limit", () => {
+describe("the URL time limit", () => {
   const page = (links: number) =>
     `<!doctype html><html><head>${Array.from({ length: links }, (_v, index) => `<link rel="stylesheet" href="/s${index}.css">`).join("")}<style>:root { --primary: #1f6feb; }</style></head><body></body></html>`;
 
@@ -468,7 +468,7 @@ describe("tokens file extractor", () => {
   });
 });
 
-describe("DESIGN.md text extractor", () => {
+describe("the DESIGN.md text extractor", () => {
   it("reads named colors and font roles, and ignores code blocks", async () => {
     const { candidates } = harvestDesignText(
       await fixture("design.md"),

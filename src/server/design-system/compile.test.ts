@@ -179,7 +179,7 @@ describe(compileTokens, () => {
   });
 });
 
-describe("DESIGN.md token block", () => {
+describe("the DESIGN.md token block", () => {
   const entries = compileTokens(fixture()).entries;
 
   it("inserts the block after the first H1 and keeps prose", () => {

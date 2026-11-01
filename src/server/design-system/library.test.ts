@@ -326,7 +326,7 @@ describe("pack library store", () => {
   });
 });
 
-describe("DESIGN.md split", () => {
+describe("the DESIGN.md split", () => {
   it("inverts composeDesignMd for every built-in pack", async () => {
     for (const result of await loadAllPacks(BUILTIN)) {
       const pack = result.pack;

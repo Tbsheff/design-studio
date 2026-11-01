@@ -151,7 +151,7 @@ afterEach(async () => {
   await cleanup();
 });
 
-describe("R7-4 rewind per message", { timeout: 60_000 }, () => {
+describe("slice R7-4 rewind per message", { timeout: 60_000 }, () => {
   it("restore at message 2 of 4 makes the files equal the version that message made", async () => {
     const { project, runs } = await fourMessages();
     const second = runs[1]?.versionId as string;
@@ -222,8 +222,8 @@ describe("R7-4 rewind per message", { timeout: 60_000 }, () => {
   });
 });
 
-describe("R7-7 run titles", { timeout: 60_000 }, () => {
-  it("PATCH /api/runs/:runId stores a title that the run list returns, and checks the body", async () => {
+describe("slice R7-7 run titles", { timeout: 60_000 }, () => {
+  it("a PATCH of /api/runs/:runId stores a title that the run list returns, and checks the body", async () => {
     const created = await call<{ project: Project }>("POST", "/api/projects", {
       prompt: "x",
       kind: "html",

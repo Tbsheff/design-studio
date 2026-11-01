@@ -14,7 +14,7 @@ const policy: ToolPolicy = {
 };
 const signal = new AbortController().signal;
 
-describe("Bash ask gate", () => {
+describe("bash ask gate", () => {
   it("asks once per tool call in canUseTool and the PreToolUse hook, and sends the note on deny", async () => {
     let asks = 0;
     const gate = createBashGate(async () => {
@@ -72,7 +72,7 @@ describe("Bash ask gate", () => {
   });
 });
 
-describe("PostToolUse inbox hook", () => {
+describe("the PostToolUse inbox hook", () => {
   it("adds queued messages to the tool result context", async () => {
     const hook = createInboxHook({
       inbox: { take: () => [{ id: "q", text: "Use serif" }] },

@@ -18,7 +18,7 @@ const view = (
   summary: summary as RunSummary | null,
 });
 
-describe("Improve with AI", () => {
+describe("improve with AI", () => {
   it("builds a design-system run with the optional focus and never a wireframe level", () => {
     expect(improveRequest("  ", "prototype")).toEqual({
       prompt: "Improve this design system.",

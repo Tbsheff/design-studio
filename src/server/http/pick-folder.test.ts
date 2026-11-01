@@ -145,7 +145,7 @@ describe("folder picker", () => {
   });
 });
 
-describe("POST /api/pick-folder", () => {
+describe("route POST /api/pick-folder", () => {
   let config: ServerConfig;
   let cleanup: () => Promise<void>;
 

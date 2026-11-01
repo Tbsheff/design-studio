@@ -181,7 +181,7 @@ describe("http app", { timeout: 20_000 }, () => {
     expect(response.status).toBe(400);
   });
 
-  it("PATCH settings updates and validates", async () => {
+  it("a PATCH of settings updates and validates", async () => {
     const project = await createHtml();
     const ok = await call("PATCH", `/api/projects/${project.id}/settings`, {
       allowBash: true,
@@ -251,7 +251,7 @@ describe("http app", { timeout: 20_000 }, () => {
     expect(started[0]?.designMd).toBe("# Brand\nprimary #0B6E4F");
   });
 
-  it("PUT design-md commits a manual version and leaves the tree clean", async () => {
+  it("a PUT of design-md commits a manual version and leaves the tree clean", async () => {
     const project = await createHtml();
     const response = await call(
       "PUT",
@@ -397,7 +397,7 @@ describe("http app", { timeout: 20_000 }, () => {
     }
   );
 
-  it("GET /api/runs/:id returns the sent-message log apart from the chat events", async () => {
+  it("a GET of /api/runs/:id returns the sent-message log apart from the chat events", async () => {
     const project = await createHtml();
     const runsDir = path.join(projects.projectDir(project.id), "runs");
     await mkdir(runsDir, { recursive: true });

@@ -52,7 +52,7 @@ afterAll(async () => {
   await rm(root, { recursive: true, force: true });
 });
 
-describe("ViteManager child process", { timeout: 60_000 }, () => {
+describe("the ViteManager child process", { timeout: 60_000 }, () => {
   it("runs the project vite.config in a child with a scrubbed env and serves the bridge", async () => {
     const target = {
       key: "d:p:main",

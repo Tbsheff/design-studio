@@ -392,7 +392,7 @@ describe("canUseTool", () => {
   });
 });
 
-describe("PreToolUse guard", () => {
+describe("the PreToolUse guard", () => {
   it("denies the same inputs as canUseTool", async () => {
     const guard = createPreToolUseGuard(policy());
 

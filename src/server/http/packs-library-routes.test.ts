@@ -137,7 +137,7 @@ afterEach(async () => {
   await cleanup();
 });
 
-describe("POST /api/packs/import", { timeout: 30_000 }, () => {
+describe("route POST /api/packs/import", { timeout: 30_000 }, () => {
   it("imports an exported zip as a new user pack with imported provenance", async () => {
     const result = await ok<ImportPackResult>(
       importZip(await exportZip("editorial"))
@@ -421,7 +421,7 @@ describe("POST /api/packs/import", { timeout: 30_000 }, () => {
   });
 });
 
-describe("GET /api/packs", () => {
+describe("route GET /api/packs", () => {
   it("sends light and dark swatches for every built-in light pack and dark swatches only for a dark pack", async () => {
     const packs = (await ok<PackSummary[]>(call("GET", "/api/packs"))).filter(
       (pack) => pack.source === "builtin"
@@ -445,7 +445,7 @@ describe("GET /api/packs", () => {
   });
 });
 
-describe("GET /api/packs/:id/check", () => {
+describe("route GET /api/packs/:id/check", () => {
   it("passes every built-in pack and reports pack problems without kit page rules", async () => {
     const packs = await ok<PackSummary[]>(call("GET", "/api/packs"));
     for (const pack of packs.filter((item) => item.source === "builtin")) {
@@ -488,7 +488,7 @@ describe("GET /api/packs/:id/check", () => {
   });
 });
 
-describe("POST /api/packs/:id/editor", { timeout: 30_000 }, () => {
+describe("route POST /api/packs/:id/editor", { timeout: 30_000 }, () => {
   it("creates one backing project from the pack files, then opens the same one again", async () => {
     const copy = await ok<PackSummary>(
       call("POST", "/api/packs/editorial/duplicate", { name: "Ink" })
@@ -580,7 +580,7 @@ describe("POST /api/packs/:id/editor", { timeout: 30_000 }, () => {
   });
 });
 
-describe("POST .../design-system/save with asNew", { timeout: 30_000 }, () => {
+describe("asNew on POST .../design-system/save", { timeout: 30_000 }, () => {
   it("saves a copy as a new user pack and points the project at it", async () => {
     const house = await ok<PackSummary>(
       call("POST", "/api/packs/editorial/duplicate", { name: "House" })

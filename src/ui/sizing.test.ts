@@ -39,7 +39,7 @@ describe(axisRole, () => {
 });
 
 describe(sizePatch, () => {
-  it("Fill writes flex: 1 on the main axis of a flex parent", () => {
+  it("fill writes flex: 1 on the main axis of a flex parent", () => {
     expect(sizePatch("width", "fill", plain, rowParent, "240px")).toEqual({
       flex: "1",
     });
@@ -48,20 +48,20 @@ describe(sizePatch, () => {
     });
   });
 
-  it("Fill writes align-self: stretch and clears the size on the cross axis", () => {
+  it("fill writes align-self: stretch and clears the size on the cross axis", () => {
     expect(sizePatch("height", "fill", plain, rowParent, "80px")).toEqual({
       "align-self": "stretch",
       height: "",
     });
   });
 
-  it("Fill writes 100% outside flex", () => {
+  it("fill writes 100% outside flex", () => {
     expect(sizePatch("width", "fill", plain, blockParent, "240px")).toEqual({
       width: "100%",
     });
   });
 
-  it("Hug writes fit-content and clears a flex grow", () => {
+  it("hug writes fit-content and clears a flex grow", () => {
     expect(
       sizePatch(
         "width",
@@ -76,7 +76,7 @@ describe(sizePatch, () => {
     });
   });
 
-  it("Fixed writes the used px and clears stretch", () => {
+  it("fixed writes the used px and clears stretch", () => {
     expect(
       sizePatch(
         "height",

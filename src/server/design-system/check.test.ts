@@ -170,7 +170,7 @@ describe("design system check", () => {
     ]);
   });
 
-  it("DESIGN.md: needs the 9 sections, with text, and no to-do lines", () => {
+  it("a DESIGN.md needs the 9 sections, with text, and no to-do lines", () => {
     const files = filesOf(light);
     const noSection = {
       ...files,

@@ -155,7 +155,7 @@ afterEach(async () => {
   await cleanup();
 });
 
-describe("POST /api/design-systems/draft", { timeout: 30_000 }, () => {
+describe("route POST /api/design-systems/draft", { timeout: 30_000 }, () => {
   it("creates a draft pack and a backing HTML project from a DTCG file in one version, under 5 s", async () => {
     const text = await readFile(
       path.join(FIXTURES, "dtcg.tokens.json"),

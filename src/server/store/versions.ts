@@ -108,8 +108,8 @@ const APP_EXCLUDES = [
 
 const META_PREFIX = "studio-meta: ";
 const MAX_ORIGIN_DEPTH = 64;
-const FIELD = "\x1F";
-const RECORD = "\x1E";
+const FIELD = "\u001F";
+const RECORD = "\u001E";
 const SHA_PATTERN = /^[0-9a-f]{40}$/;
 const ZERO_SHA = "0".repeat(40);
 const FORCED_KINDS = new Set<VersionMeta["kind"]>(["fork", "undo", "restore"]);

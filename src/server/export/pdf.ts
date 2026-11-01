@@ -73,11 +73,11 @@ export function imagesToPdf(pages: PdfPage[], title: string): Buffer {
     push("\nendstream\nendobj\n");
   };
 
-  push("%PDF-1.4\n%\xE2\xE3\xCF\xD3\n");
+  push("%PDF-1.4\n%\u00E2\u00E3\u00CF\u00D3\n");
   const pageIds = pages.map((_, index) => 4 + index * 3);
 
   const safeTitle = title
-    .replaceAll(/[^\x20-\x7E]/g, "")
+    .replaceAll(/[^\u0020-\u007E]/g, "")
     .replaceAll(/[\\()]/g, (char) => `\\${char}`);
 
   object(1, "<< /Type /Catalog /Pages 2 0 R >>");

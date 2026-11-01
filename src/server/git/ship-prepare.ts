@@ -244,12 +244,12 @@ async function shadowVersions(
     .then((text) => JSON.parse(text) as Record<string, string>)
     .catch(() => ({}) as Record<string, string>);
   return stdout
-    .split("\x1E")
+    .split("\u001E")
     .map((record) => record.trim())
     .filter(Boolean)
     .map((record) => {
       const [id = "", parents = "", at = "0", title = "", body = ""] =
-        record.split("\x1F");
+        record.split("\u001F");
       const named = names[id];
       return {
         id,

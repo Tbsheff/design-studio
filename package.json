@@ -84,6 +84,7 @@
     "dugite": "3.3.1",
     "electron": "44.9.3",
     "electron-builder": "26.15.3",
+    "eslint": "10.14.0",
     "eslint-plugin-boundaries": "7.4.0",
     "eslint-plugin-github": "6.1.2",
     "eslint-plugin-jsdoc": "65.4.2",
@@ -101,6 +102,7 @@
     "ultracite": "8.1.0",
     "vitest": "^3.0.0"
   },
+  "packageManager": "pnpm@11.1.1",
   "allowScripts": {
     "esbuild@0.28.2": true,
     "dugite@3.3.1": true

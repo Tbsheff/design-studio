@@ -1,0 +1,6 @@
+nodeLinker: hoisted
+allowBuilds:
+  dugite: true
+  electron: true
+  electron-winstaller: false
+  esbuild: true

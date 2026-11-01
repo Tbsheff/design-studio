@@ -255,7 +255,8 @@
   margin: 0 0 -4px -6px;
 }
 
-.version:is(:hover, :focus-within, .picked, .expanded) .version-actions {
+.version:is(:hover, :has(:focus-visible), .head, .picked, .expanded)
+  .version-actions {
   display: flex;
 }
 

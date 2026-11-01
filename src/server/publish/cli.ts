@@ -3,7 +3,7 @@ import path from 'node:path';
 import { findOnPath } from '../git/user-git.js';
 import { LOGIN_SHELL_PATH_ENV } from '../agent/sdk-driver.js';
 import { scrubCliText } from './scrub.js';
-import type { PublishAccount } from '../../shared/publish.js';
+import { compareCfVersion, type PublishAccount } from '../../shared/publish.js';
 
 export interface CliResult {
   code: number | null;
@@ -43,6 +43,16 @@ export async function resolveCf(): Promise<string[]> {
     if (bin && !found.includes(bin)) found.push(bin);
   }
   return found;
+}
+
+export async function newestCf(cwd: string): Promise<{ bin: string | null; version: string | null }> {
+  let best: { bin: string | null; version: string | null } = { bin: null, version: null };
+  for (const bin of await resolveCf()) {
+    const version = await cfVersion(bin, cwd);
+    const newer = version !== null && (best.version === null || compareCfVersion(version, best.version) > 0);
+    if (newer || best.bin === null) best = { bin, version };
+  }
+  return best;
 }
 
 function cliEnv(accountId: string | null | undefined): NodeJS.ProcessEnv {

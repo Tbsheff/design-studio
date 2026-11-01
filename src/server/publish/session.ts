@@ -2,7 +2,7 @@ import type { ChildProcess } from 'node:child_process';
 import { mkdir } from 'node:fs/promises';
 import { CF_INSTALL_COMMAND, CF_MIN_VERSION, compareCfVersion, type PublishCliState, type PublishLoginState } from '../../shared/publish.js';
 import { BadRequestError } from '../store/errors.js';
-import { cfVersion, cfWhoAmI, cliFailure, loginArgs, resolveCf, runCf, type WhoAmI } from './cli.js';
+import { cfWhoAmI, cliFailure, loginArgs, newestCf, runCf, type WhoAmI } from './cli.js';
 import type { PublishStore } from './store.js';
 
 export interface ReadyCli {
@@ -41,13 +41,7 @@ export function createCliSession(store: PublishStore): CliSession {
   const probeCli = async (fresh: boolean): Promise<Probe> => {
     if (!fresh && probe && Date.now() - probe.at < PROBE_TTL_MS) return probe;
     await mkdir(store.dir, { recursive: true, mode: 0o700 });
-    let best: Probe = { bin: null, version: null, at: Date.now() };
-    for (const bin of await resolveCf()) {
-      const version = await cfVersion(bin, store.dir);
-      const newer = version !== null && (best.version === null || compareCfVersion(version, best.version) > 0);
-      if (newer || best.bin === null) best = { bin, version, at: best.at };
-    }
-    probe = best;
+    probe = { ...(await newestCf(store.dir)), at: Date.now() };
     return probe;
   };
 

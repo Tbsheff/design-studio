@@ -4,7 +4,7 @@ import path from 'node:path';
 import { WORKER_NAME } from '../../../cloud/publish-worker/src/protocol.js';
 import type { PublishBackendMode, PublishBackendState, SetupStep, SetupStepId } from '../../shared/publish.js';
 import { BadRequestError } from '../store/errors.js';
-import { cfVersion, cliFailure, deployedUrl, resolveCf, runCf, type CliResult } from './cli.js';
+import { cfVersion, cliFailure, deployedUrl, newestCf, runCf, type CliResult } from './cli.js';
 import { createLocalRuntime, LOCAL_D1_ID, type LocalRuntime } from './local-runtime.js';
 import { remoteClient, type Endpoint } from './remote.js';
 import { scrubCliText, tailLines } from './scrub.js';
@@ -259,7 +259,7 @@ export function createPublishBackend(store: PublishStore, cli: CliSession, vault
     const source = findWorkerSource();
     if (!source) throw new BadRequestError('The publish Worker files are missing from this copy of Design Studio.');
     if (mode === 'local' && !source.localRunner) throw new BadRequestError('Local mode needs cloud/publish-worker with its packages installed (npm install in that folder).');
-    const bin = await resolveCf();
+    const { bin } = await newestCf(store.dir);
     if (!bin) throw new BadRequestError('Install the Cloudflare CLI first (npm i -g cf).');
     running = true;
     lastError = null;

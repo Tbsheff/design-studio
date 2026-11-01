@@ -53,11 +53,40 @@ function preloadFonts(): Plugin {
   };
 }
 
+function moduleList(): Plugin {
+  return {
+    name: "studio-module-list",
+    apply: "build",
+    generateBundle(_options, bundle) {
+      const chunks = Object.values(bundle).flatMap((item) =>
+        item.type === "chunk"
+          ? [
+              {
+                file: item.fileName,
+                modules: Object.entries(item.modules).map(([id, info]) => ({
+                  id: id.replaceAll("\0", "").replaceAll(root, ""),
+                  bytes: info.renderedLength,
+                })),
+              },
+            ]
+          : []
+      );
+
+      this.emitFile({
+        type: "asset",
+        fileName: ".vite/modules.json",
+        source: JSON.stringify(chunks),
+      });
+    },
+  };
+}
+
 export default defineConfig({
   root,
-  plugins: [react(), tailwindcss(), preloadFonts()],
+  plugins: [react(), tailwindcss(), preloadFonts(), moduleList()],
   build: {
     outDir: "dist/ui",
+    manifest: true,
     emptyOutDir: true,
     modulePreload: { polyfill: false },
     rollupOptions: {

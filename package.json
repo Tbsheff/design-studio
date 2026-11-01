@@ -29,6 +29,7 @@
     "format:check": "oxfmt --check",
     "check:scripts": "tsx scripts/gen-routes.ts --check && tsx scripts/check-ownership.ts && tsx scripts/check-coarse.ts && tsx scripts/check-bridge-guards.ts && tsx scripts/check-ops.ts",
     "check:ops": "tsx scripts/check-ops.ts",
+    "check:bundle": "tsx scripts/check-bundle.ts",
     "check": "pnpm run lint:boundaries && pnpm run typecheck && pnpm run lint:gate && pnpm run check:scripts",
     "test": "vitest run",
     "e2e": "playwright test",

@@ -34,10 +34,15 @@ function pathWithLoginShell(): string {
   return [...new Set(parts.filter((part) => part !== ''))].join(path.delimiter);
 }
 
-export async function resolveCf(): Promise<string | null> {
+export async function resolveCf(): Promise<string[]> {
   const override = process.env.STUDIO_CF_BIN;
-  if (override) return override;
-  return findOnPath('cf', pathWithLoginShell());
+  if (override) return [override];
+  const found: string[] = [];
+  for (const dir of pathWithLoginShell().split(path.delimiter)) {
+    const bin = await findOnPath('cf', dir);
+    if (bin && !found.includes(bin)) found.push(bin);
+  }
+  return found;
 }
 
 function cliEnv(accountId: string | null | undefined): NodeJS.ProcessEnv {

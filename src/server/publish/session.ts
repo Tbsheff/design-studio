@@ -40,9 +40,14 @@ export function createCliSession(store: PublishStore): CliSession {
 
   const probeCli = async (fresh: boolean): Promise<Probe> => {
     if (!fresh && probe && Date.now() - probe.at < PROBE_TTL_MS) return probe;
-    const bin = await resolveCf();
     await mkdir(store.dir, { recursive: true, mode: 0o700 });
-    probe = { bin, version: bin ? await cfVersion(bin, store.dir) : null, at: Date.now() };
+    let best: Probe = { bin: null, version: null, at: Date.now() };
+    for (const bin of await resolveCf()) {
+      const version = await cfVersion(bin, store.dir);
+      const newer = version !== null && (best.version === null || compareCfVersion(version, best.version) > 0);
+      if (newer || best.bin === null) best = { bin, version, at: best.at };
+    }
+    probe = best;
     return probe;
   };
 

@@ -278,6 +278,7 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/server/preview/ports.ts",
       "src/server/store/git-objects.ts",
       "src/server/store/default-folder.ts",
+      "src/server/store/data-lock.ts",
       "src/server/git/user-git.ts",
     ],
     rules: { "import/no-relative-parent-imports": "off" },

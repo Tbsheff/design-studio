@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 import { app, BrowserWindow, dialog, session, shell } from "electron";
 
-import { LOCKED_EXIT_CODE } from "../src/server/store/data-lock.js";
+import { LOCKED_EXIT_CODE } from "../src/server/platform/data-lock/index.js";
 import { RENDER_IPC_ENV } from "../src/shared/render-rpc.js";
 import {
   bundledClaude,

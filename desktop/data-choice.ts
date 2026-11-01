@@ -1,6 +1,9 @@
 import { dialog } from "electron";
 
-import { liveHolder, type LockInfo } from "../src/server/store/data-lock.js";
+import {
+  liveHolder,
+  type LockInfo,
+} from "../src/server/platform/data-lock/index.js";
 
 export interface DataChoiceInput {
   preferred: string;

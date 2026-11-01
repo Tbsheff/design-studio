@@ -2,6 +2,8 @@ import { open, readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 
 const TAIL_BYTES = 65_536;
+const HYDRATE_LIMIT = 8;
+const MISSING_CODES = new Set(["ENOENT", "ENOTDIR"]);
 
 interface Sequenced {
   seq: number;
@@ -13,6 +15,52 @@ interface SeqFloor {
 }
 
 type FloorEntry = [string, SeqFloor];
+
+const orMissing = async <Value>(
+  read: () => Promise<Value>,
+  fallback: Value
+): Promise<Value> => {
+  try {
+    return await read();
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      "code" in error &&
+      MISSING_CODES.has(String(error.code))
+    ) {
+      return fallback;
+    }
+
+    throw error;
+  }
+};
+
+const mapLimited = async <Item, Result>(
+  items: Item[],
+  limit: number,
+  run: (item: Item) => Promise<Result>
+): Promise<Result[]> => {
+  const results: Result[] = Array.from({ length: items.length });
+  let next = 0;
+
+  const worker = async (): Promise<void> => {
+    if (next >= items.length) {
+      return;
+    }
+
+    const index = next;
+
+    next += 1;
+    results[index] = await run(items[index] as Item);
+    await worker();
+  };
+
+  const workers = Array.from({ length: Math.min(limit, items.length) }, worker);
+
+  await Promise.all(workers);
+
+  return results;
+};
 
 const parseLine = <Entry extends Sequenced>(line: string): Entry | null => {
   try {
@@ -66,13 +114,8 @@ const parseReserved = (text: string): number => {
   return 0;
 };
 
-const readReserved = async (file: string): Promise<number> => {
-  try {
-    return parseReserved(await readFile(file, "utf-8"));
-  } catch {
-    return 0;
-  }
-};
+const readReserved = async (file: string): Promise<number> =>
+  parseReserved(await orMissing(() => readFile(file, "utf-8"), ""));
 
 const dropPartialLine = (text: string, start: number): string => {
   if (start === 0) {
@@ -101,21 +144,16 @@ const readTail = async (file: string): Promise<string> => {
 const lastSeqOf = (events: Sequenced[]): number => events.at(-1)?.seq ?? 0;
 
 const lastStoredSeq = async (file: string): Promise<number> => {
-  let tail = "";
-
-  try {
-    tail = await readTail(file);
-  } catch {
-    return 0;
-  }
-
+  const tail = await orMissing(() => readTail(file), "");
   const tailSeq = lastSeqOf(parseLines(tail));
 
   if (tailSeq > 0) {
     return tailSeq;
   }
 
-  return lastSeqOf(await readEventFile(file));
+  const text = await orMissing(() => readFile(file, "utf-8"), "");
+
+  return lastSeqOf(parseLines(text));
 };
 
 const readFloor = async (dir: string): Promise<SeqFloor> => {
@@ -127,23 +165,28 @@ const readFloor = async (dir: string): Promise<SeqFloor> => {
   return { lastSeq: Math.max(reserved, stored), reserved };
 };
 
-const listDir = async (dir: string): Promise<string[]> => {
-  try {
-    return await readdir(dir);
-  } catch {
-    return [];
-  }
-};
+const listDir = (dir: string): Promise<string[]> =>
+  orMissing(() => readdir(dir), []);
 
-const trashedProjectId = async (dir: string): Promise<string | null> => {
+const parseProjectId = (text: string): string | null => {
   try {
-    const text = await readFile(path.join(dir, "trashed.json"), "utf-8");
     const record = JSON.parse(text) as { projectId?: string };
 
     return record.projectId ?? null;
   } catch {
     return null;
   }
+};
+
+const trashedProjectId = async (dir: string): Promise<string | null> => {
+  const file = path.join(dir, "trashed.json");
+  const text = await orMissing(() => readFile(file, "utf-8"), null);
+
+  if (text === null) {
+    return null;
+  }
+
+  return parseProjectId(text);
 };
 
 const trashFloor = async (dir: string): Promise<FloorEntry | null> => {
@@ -193,8 +236,12 @@ const readSeqFloors = async (
   ]);
 
   const [projectFloors, trashFloors] = await Promise.all([
-    Promise.all(projectIds.map((id) => projectFloor(projectsRoot, id))),
-    Promise.all(trashIds.map((id) => trashFloor(path.join(trashRoot, id)))),
+    mapLimited(projectIds, HYDRATE_LIMIT, (id) =>
+      projectFloor(projectsRoot, id)
+    ),
+    mapLimited(trashIds, HYDRATE_LIMIT, (id) =>
+      trashFloor(path.join(trashRoot, id))
+    ),
   ]);
 
   return mergeTrash(new Map(projectFloors), trashFloors);

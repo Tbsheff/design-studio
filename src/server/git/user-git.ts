@@ -78,8 +78,8 @@ export function userGit(cwd: string, args: string[], options: Omit<ExecOptions, 
   return execTool('git', args, { ...options, cwd });
 }
 
-export async function findOnPath(name: string): Promise<string | null> {
-  for (const dir of (process.env.PATH ?? '').split(path.delimiter)) {
+export async function findOnPath(name: string, searchPath = process.env.PATH ?? ''): Promise<string | null> {
+  for (const dir of searchPath.split(path.delimiter)) {
     if (!dir) continue;
     const candidate = path.join(dir, name);
     const found = await access(candidate, constants.X_OK).then(

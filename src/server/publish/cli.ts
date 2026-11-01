@@ -1,5 +1,7 @@
 import { spawn, type ChildProcess } from 'node:child_process';
+import path from 'node:path';
 import { findOnPath } from '../git/user-git.js';
+import { LOGIN_SHELL_PATH_ENV } from '../agent/sdk-driver.js';
 import { scrubCliText } from './scrub.js';
 import type { PublishAccount } from '../../shared/publish.js';
 
@@ -27,14 +29,19 @@ const DEFAULT_TIMEOUT_MS = 170_000;
 const OUTPUT_MAX = 400_000;
 export const LOGIN_SCOPES = ['account:read', 'user:read', 'workers:write', 'workers_scripts:write', 'offline_access'];
 
+function pathWithLoginShell(): string {
+  const parts = [...(process.env.PATH ?? '').split(path.delimiter), ...(process.env[LOGIN_SHELL_PATH_ENV] ?? '').split(path.delimiter)];
+  return [...new Set(parts.filter((part) => part !== ''))].join(path.delimiter);
+}
+
 export async function resolveCf(): Promise<string | null> {
   const override = process.env.STUDIO_CF_BIN;
   if (override) return override;
-  return findOnPath('cf');
+  return findOnPath('cf', pathWithLoginShell());
 }
 
 function cliEnv(accountId: string | null | undefined): NodeJS.ProcessEnv {
-  const env: NodeJS.ProcessEnv = { ...process.env, NO_COLOR: '1', FORCE_COLOR: '0', CF_NO_OSC_PROGRESS: '1', DO_NOT_TRACK: '1' };
+  const env: NodeJS.ProcessEnv = { ...process.env, PATH: pathWithLoginShell(), NO_COLOR: '1', FORCE_COLOR: '0', CF_NO_OSC_PROGRESS: '1', DO_NOT_TRACK: '1' };
   for (const key of Object.keys(env)) if (key.startsWith('STUDIO_') || key === 'ANTHROPIC_API_KEY') delete env[key];
   if (accountId) env.CLOUDFLARE_ACCOUNT_ID = accountId;
   return env;

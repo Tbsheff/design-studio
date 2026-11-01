@@ -229,9 +229,9 @@ export function continuationPrompt(
 
   if (decision.blocking.length && done < MAX_FIX_LOOPS) {
     lines.push(
-      `- These high and medium findings remain. Fix them with Edit, then run render_check and all screenshots again:`
+      `- These high and medium findings remain. Fix them with Edit, then run render_check and all screenshots again:`,
+      ...decision.blocking.slice(0, LISTED_FINDINGS).map(findingText)
     );
-    lines.push(...decision.blocking.slice(0, LISTED_FINDINGS).map(findingText));
   }
 
   lines.push(

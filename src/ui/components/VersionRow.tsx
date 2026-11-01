@@ -379,18 +379,20 @@ function moreItems(props: VersionRowProps): MoreItem[] {
       },
     });
   }
-  items.push({
-    id: "export",
-    label: "Export…",
-    icon: "download",
-    run: props.onExport,
-  });
-  items.push({
-    id: "branch",
-    label: "New direction from here",
-    icon: "branch",
-    run: props.onBranch,
-  });
+  items.push(
+    {
+      id: "export",
+      label: "Export…",
+      icon: "download",
+      run: props.onExport,
+    },
+    {
+      id: "branch",
+      label: "New direction from here",
+      icon: "branch",
+      run: props.onBranch,
+    }
+  );
   if (isHead && v.meta.level !== "polish")
     items.push({
       id: "polish",

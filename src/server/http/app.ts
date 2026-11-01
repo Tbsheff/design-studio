@@ -15,14 +15,16 @@ import { z } from "zod";
 
 import { APP_STREAM_PATH } from "../../shared/app-stream.js";
 import type { ArrangeResult } from "../../shared/arrange.js";
-import { CANVAS_FILE } from "../../shared/canvas-file.js";
-import { cleanFramePath, isFrameId } from "../../shared/canvas-file.js";
+import {
+  CANVAS_FILE,
+  cleanFramePath,
+  isFrameId,
+} from "../../shared/canvas-file.js";
 import {
   RUN_EFFORTS,
   RUN_LEVELS,
   STUDIO_TOKEN_HEADER,
   isRunLevel,
-  type RunEffort,
 } from "../../shared/contracts.js";
 import type {
   Attachment,
@@ -43,6 +45,7 @@ import type {
   StudioEvent,
   TelemetrySample,
   Version,
+  RunEffort,
 } from "../../shared/contracts.js";
 import { nameFromPrompt } from "../../shared/folders.js";
 import { withLofi } from "../../shared/lofi.js";

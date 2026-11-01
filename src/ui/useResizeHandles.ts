@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 
-import type { SelectionContext } from "../shared/contracts";
-import type { BridgeToParent } from "../shared/contracts";
+import type { SelectionContext, BridgeToParent } from "../shared/contracts";
 import { api, errorText } from "./api";
 import type { ParentMessageBody } from "./bridge";
 import { createLiveStore, useLive } from "./liveStore";

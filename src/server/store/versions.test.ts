@@ -16,8 +16,7 @@ import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import type { Project, Version } from "../../shared/contracts.js";
-import type { ServerConfig } from "../types.js";
-import type { VersionStore } from "../types.js";
+import type { ServerConfig, VersionStore } from "../types.js";
 import { createProjectStore } from "./projects.js";
 import type { StudioProjectStore } from "./projects.js";
 import { makeTempConfig } from "./testConfig.js";

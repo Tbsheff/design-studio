@@ -16,9 +16,8 @@ import {
   publishVersion,
   resolveSource,
   themeForFile,
-  type EditScope,
 } from "./index.js";
-import type { DirectEditDeps, ResolvedSource } from "./index.js";
+import type { DirectEditDeps, ResolvedSource, EditScope } from "./index.js";
 import { structureDoc, type StructureDoc } from "./structure-docs.js";
 import {
   planStructure,

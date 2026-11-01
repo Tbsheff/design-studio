@@ -12,8 +12,7 @@ import type {
   query,
 } from "@anthropic-ai/claude-agent-sdk";
 
-import type { RunUsage } from "../../shared/contracts.js";
-import type { AppReviewRecord } from "../../shared/contracts.js";
+import type { RunUsage, AppReviewRecord } from "../../shared/contracts.js";
 import type { ReferenceRecord } from "../../shared/reference.js";
 import {
   levelOf,

@@ -27,8 +27,11 @@ import {
   emptyHarvested,
   parseDraftRequest,
 } from "../design-system/extract/draft.js";
-import type { DraftRequest } from "../design-system/extract/draft.js";
-import type { Draft, DraftFile } from "../design-system/extract/draft.js";
+import type {
+  DraftRequest,
+  Draft,
+  DraftFile,
+} from "../design-system/extract/draft.js";
 import {
   KIT_GROUPS,
   KIT_PAGE_FILE,

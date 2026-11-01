@@ -1,5 +1,4 @@
-import { readFileSync } from "node:fs";
-import { mkdtempSync, rmSync } from "node:fs";
+import { readFileSync, mkdtempSync, rmSync } from "node:fs";
 import { createServer } from "node:http";
 import type { Server } from "node:http";
 import type { AddressInfo } from "node:net";

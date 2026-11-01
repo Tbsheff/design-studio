@@ -52,7 +52,7 @@ async function waitFor(check: () => boolean, ms: number): Promise<boolean> {
   return check();
 }
 
-describe("WatcherManager", () => {
+describe(WatcherManager, () => {
   it("reports a file written right after watch() starts, before the watcher is ready", async () => {
     const misses: number[] = [];
 

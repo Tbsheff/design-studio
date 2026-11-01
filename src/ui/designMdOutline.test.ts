@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { outlineOf } from "./designMdOutline";
 
-describe("outlineOf", () => {
+describe(outlineOf, () => {
   it("lists headings with line and offset and skips code fences", () => {
     const md =
       "# Brand\n\nIntro\n\n## Color\n\n```md\n## Not a heading\n```\n\n### Type **scale**\n";

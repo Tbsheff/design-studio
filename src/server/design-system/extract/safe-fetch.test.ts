@@ -108,7 +108,7 @@ describe("address checks", () => {
   });
 });
 
-describe("safeFetch", () => {
+describe(safeFetch, () => {
   it("blocks a loopback server unless the test allow is on", async () => {
     const base = await serve((_req, res) => res.end("<html></html>"));
     await expect(safeFetch(`${base}/`, policy())).rejects.toThrow(

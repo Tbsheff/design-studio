@@ -8,7 +8,7 @@ const versions = [
   { id: "v1", parentId: null, createdAt: 100 },
 ];
 
-describe("forkBaseOf", () => {
+describe(forkBaseOf, () => {
   it("forks from the parent of the version the run made", () => {
     expect(forkBaseOf({ versionId: "v3", startedAt: 250 }, versions)).toBe(
       "v2"
@@ -30,7 +30,7 @@ describe("forkBaseOf", () => {
   });
 });
 
-describe("runMatches", () => {
+describe(runMatches, () => {
   it("matches every word in the prompt or title, any case", () => {
     expect(runMatches(runQueryTerms("MENU"), "Add a menu section")).toBe(true);
     expect(runMatches(runQueryTerms("menu hours"), "Add a menu section")).toBe(

@@ -27,7 +27,7 @@ function card(
   };
 }
 
-describe("mergeValues", () => {
+describe(mergeValues, () => {
   it("keeps shared values and marks differing ones as mixed with an empty value", () => {
     const merged = mergeValues([
       valuesFromStyles({ "border-radius": "12px", color: "rgb(0, 0, 0)" }),
@@ -51,7 +51,7 @@ describe("mergeValues", () => {
   });
 });
 
-describe("batchEdits", () => {
+describe(batchEdits, () => {
   it("writes the value to every element whose own value differs, in one list", () => {
     const selections = [
       card(3, { "border-radius": "4px" }),
@@ -79,7 +79,7 @@ describe("batchEdits", () => {
   });
 });
 
-describe("multiBlockReason", () => {
+describe(multiBlockReason, () => {
   it("allows distinct source locations", () => {
     expect(multiBlockReason([card(3, {}), card(4, {})])).toBeNull();
   });
@@ -106,7 +106,7 @@ describe("multiBlockReason", () => {
   });
 });
 
-describe("dependsOnCurrent", () => {
+describe(dependsOnCurrent, () => {
   it("flags relative math and allows plain or absolute input", () => {
     expect(dependsOnCurrent("+8", "px")).toBe(true);
     expect(dependsOnCurrent("8", "px")).toBe(false);
@@ -115,7 +115,7 @@ describe("dependsOnCurrent", () => {
   });
 });
 
-describe("nextSelection", () => {
+describe(nextSelection, () => {
   it("replaces on a plain click, adds and removes on Shift+click", () => {
     const [a, b] = [card(3, {}), card(4, {})];
     expect(nextSelection([a], b, false)).toEqual([b]);

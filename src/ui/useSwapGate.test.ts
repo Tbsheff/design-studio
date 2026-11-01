@@ -9,7 +9,7 @@ const change = (directionId: string, changedAt: number) => ({
   paths: [],
 });
 
-describe("SwapQueue", () => {
+describe(SwapQueue, () => {
   it("lets one frame reload at a time and keeps only the newest change per frame", () => {
     const q = new SwapQueue();
     q.offer("a", change("a", 1));

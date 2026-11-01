@@ -403,7 +403,7 @@ describe("variations fan-out", { timeout: 30_000 }, () => {
   });
 });
 
-describe("fanOut", () => {
+describe(fanOut, () => {
   it("names around taken names and reports a start failure on its item only", async () => {
     expect(variationName("A", new Set(["Variation A"]))).toBe(
       "Variation A (2)"

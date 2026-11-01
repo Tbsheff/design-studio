@@ -5,7 +5,7 @@ import { diffLines } from "./line-diff";
 const lines = (count: number, prefix = "line") =>
   Array.from({ length: count }, (_, index) => `${prefix} ${index + 1}`);
 
-describe("diffLines", () => {
+describe(diffLines, () => {
   it("shows a one-line edit as +1 −1 with the exact old and new line and 3 lines of context", () => {
     const before = lines(20).join("\n");
     const afterLines = lines(20);

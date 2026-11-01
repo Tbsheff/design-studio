@@ -247,7 +247,7 @@ describe("frames per direction", () => {
   });
 });
 
-describe("zoomKeyOf", () => {
+describe(zoomKeyOf, () => {
   const key = (
     k: string,
     code: string,

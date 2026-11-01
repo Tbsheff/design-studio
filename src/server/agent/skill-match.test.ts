@@ -56,7 +56,7 @@ const CATALOG: SkillInfo[] = [
 ];
 const ALL_IDS = CATALOG.map((entry) => entry.id);
 
-describe("recommendSkills", () => {
+describe(recommendSkills, () => {
   it("ranks UI skills first and leaves decoys that only share the word design out", () => {
     const ids = recommendSkills(CATALOG, ALL_IDS, {
       prompt: "A dashboard home for a home-energy monitor",

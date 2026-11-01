@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { evaluateMath, resolveNumberInput } from "./mathInput";
 
-describe("evaluateMath", () => {
+describe(evaluateMath, () => {
   it("handles operator precedence and parentheses", () => {
     expect(evaluateMath("16*2")).toEqual({ value: 32, unit: "" });
     expect(evaluateMath("12+4*2")).toEqual({ value: 20, unit: "" });
@@ -26,7 +26,7 @@ describe("evaluateMath", () => {
   });
 });
 
-describe("resolveNumberInput", () => {
+describe(resolveNumberInput, () => {
   it("evaluates expressions in the field unit", () => {
     expect(resolveNumberInput("12+4", "0px", "px")).toBe("16px");
     expect(resolveNumberInput("16*2", "", "px")).toBe("32px");

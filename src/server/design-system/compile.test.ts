@@ -32,7 +32,7 @@ function entry(file: TokenFile, tokenPath: string) {
   return compileTokens(file).entries.find((item) => item.path === tokenPath);
 }
 
-describe("compileTokens", () => {
+describe(compileTokens, () => {
   it("compiles the fixture with no errors", () => {
     const result = compileTokens(fixture());
     expect(result.errors).toEqual([]);

@@ -9,7 +9,7 @@ import {
   withBlur,
 } from "./shadows";
 
-describe("parseShadows", () => {
+describe(parseShadows, () => {
   it("reads none and empty as no shadows", () => {
     expect(parseShadows("none")).toEqual([]);
     expect(parseShadows("")).toEqual([]);
@@ -72,7 +72,7 @@ describe("parseShadows", () => {
   });
 });
 
-describe("formatShadows", () => {
+describe(formatShadows, () => {
   it("writes the default new shadow", () => {
     expect(formatShadows([NEW_SHADOW])).toBe("0 4px 12px 0 rgb(0 0 0 / 0.12)");
   });
@@ -108,7 +108,7 @@ describe("layer blur", () => {
   });
 });
 
-describe("splitTopLevel", () => {
+describe(splitTopLevel, () => {
   it("ignores separators inside parentheses", () => {
     expect(splitTopLevel("a(1, 2), b", ",")).toEqual(["a(1, 2)", "b"]);
     expect(splitTopLevel("rgb(0 0 0) 1px", " ")).toEqual(["rgb(0 0 0)", "1px"]);

@@ -96,7 +96,7 @@ afterAll(async () => {
   await rm(root, { recursive: true, force: true });
 });
 
-describe("parseFrontMatter", () => {
+describe(parseFrontMatter, () => {
   it("reads plain, quoted and folded values", () => {
     expect(
       parseFrontMatter(
@@ -107,7 +107,7 @@ describe("parseFrontMatter", () => {
   });
 });
 
-describe("discoverSkills", () => {
+describe(discoverSkills, () => {
   it("finds personal skills and skills of enabled plugins only", async () => {
     const catalog = await discoverSkills(home);
     expect(catalog.skills.map((s) => s.id)).toEqual([
@@ -204,7 +204,7 @@ describe("discoverSkills cache", () => {
   });
 });
 
-describe("prepareSkills", () => {
+describe(prepareSkills, () => {
   it("links only skill folders into generated plugins and skips turned-off skills", async () => {
     const out = path.join(root, "out");
 

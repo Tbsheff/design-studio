@@ -8,7 +8,7 @@ function locs(code: string): string[] {
   );
 }
 
-describe("tagJsxSource", () => {
+describe(tagJsxSource, () => {
   it("tags lowercase host elements with line and 1-based col", () => {
     const source = [
       "export function App() {",

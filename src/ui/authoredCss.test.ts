@@ -11,7 +11,7 @@ import {
   pathCrumbs,
 } from "./authoredCss";
 
-describe("parseDeclarations", () => {
+describe(parseDeclarations, () => {
   it("keeps semicolons inside url() and quotes, and keeps !important", () => {
     expect(
       parseDeclarations(
@@ -31,7 +31,7 @@ describe("parseDeclarations", () => {
   });
 });
 
-describe("isCoveredDeclaration", () => {
+describe(isCoveredDeclaration, () => {
   it("covers panel properties, their shorthands and longhands", () => {
     for (const prop of [
       "color",
@@ -81,7 +81,7 @@ describe("isCoveredDeclaration", () => {
   });
 });
 
-describe("otherStyles", () => {
+describe(otherStyles, () => {
   it("lists uncovered declarations once, the last one winning, with the source", () => {
     const rows = otherStyles({
       rules: [
@@ -106,7 +106,7 @@ describe("otherStyles", () => {
   });
 });
 
-describe("formatCopyCss", () => {
+describe(formatCopyCss, () => {
   it("writes rules in order and then the inline style", () => {
     const text = formatCopyCss({
       rules: [
@@ -129,7 +129,7 @@ describe("formatCopyCss", () => {
   });
 });
 
-describe("parseAuthoredReply", () => {
+describe(parseAuthoredReply, () => {
   it("keeps only well-formed rules and caps them", () => {
     const big = "x".repeat(19_990);
     const parsed = parseAuthoredReply({

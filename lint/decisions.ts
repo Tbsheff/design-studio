@@ -214,6 +214,7 @@ export const vitestAll: LintRules = Object.fromEntries(
   ])
 );
 vitestAll["vitest/no-importing-vitest-globals"] = "off";
+vitestAll["vitest/valid-title"] = ["error", { allowArguments: true }];
 
 export const playwrightAll: LintRules = Object.fromEntries(
   Object.entries(rulesOf("eslint-plugin-playwright"))

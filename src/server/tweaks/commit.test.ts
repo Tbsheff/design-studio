@@ -446,7 +446,7 @@ describe(
   }
 );
 
-describe("commitTitle", () => {
+describe(commitTitle, () => {
   it("lists up to four labels", () => {
     const many = Array.from(
       { length: 6 },

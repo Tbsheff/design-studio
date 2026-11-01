@@ -104,7 +104,7 @@ describe("run state", () => {
   });
 });
 
-describe("shownPending", () => {
+describe(shownPending, () => {
   const request = { prompt: "Make it blue", mode: "edit" as const };
   const pending = emptyRun("pending-1", "main", 10_000, request);
 

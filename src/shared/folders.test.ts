@@ -13,7 +13,7 @@ function project(id: string, sourcePath: string | null): Project {
   return { id, imported: sourcePath ? { sourcePath } : null } as Project;
 }
 
-describe("slugify", () => {
+describe(slugify, () => {
   it("makes lowercase hyphen slugs from project names", () => {
     expect(slugify("A pricing page for a developer tool")).toBe(
       "a-pricing-page-for-a-developer-tool"
@@ -51,7 +51,7 @@ describe("slugify", () => {
   });
 });
 
-describe("slugCandidate", () => {
+describe(slugCandidate, () => {
   it("adds -2, -3 after the first attempt", () => {
     expect(slugCandidate("site", 1)).toBe("site");
     expect(slugCandidate("site", 2)).toBe("site-2");

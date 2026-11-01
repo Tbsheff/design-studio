@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import { pngSize } from "./png-size.js";
 
-describe("pngSize", () => {
+describe(pngSize, () => {
   it("reads width and height from the PNG header", () => {
     const bytes = PNG.sync.write(new PNG({ width: 1440, height: 8000 }));
     expect(pngSize(bytes)).toEqual({ width: 1440, height: 8000 });

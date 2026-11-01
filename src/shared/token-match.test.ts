@@ -66,7 +66,7 @@ describe("cssVarFor and varName", () => {
   });
 });
 
-describe("matchColor", () => {
+describe(matchColor, () => {
   it("parses every colour format the inspector sees", () => {
     for (const value of [
       "#7a1f2b",
@@ -121,7 +121,7 @@ describe("matchColor", () => {
   });
 });
 
-describe("matchDimension", () => {
+describe(matchDimension, () => {
   it("converts rem, em and px", () => {
     expect(lengthToPx("1.5rem")).toBe(24);
     expect(lengthToPx("2em", 10)).toBe(20);
@@ -169,7 +169,7 @@ describe("matchDimension", () => {
   });
 });
 
-describe("matchFontFamily", () => {
+describe(matchFontFamily, () => {
   it("matches the first family name without case or quotes", () => {
     expect(matchFontFamily("fraunces, serif", ENTRIES)[0]).toMatchObject({
       cssVar: "--font-display",

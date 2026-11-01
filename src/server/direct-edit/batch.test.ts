@@ -322,7 +322,7 @@ describe("direct edit batch", { timeout: 30_000 }, () => {
   });
 });
 
-describe("parseDirectEditBatch", () => {
+describe(parseDirectEditBatch, () => {
   const edit = { source: H1, selector: "h1", style: { color: "blue" } };
 
   it("accepts 1 to 50 edits", () => {

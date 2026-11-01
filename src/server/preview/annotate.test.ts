@@ -119,7 +119,7 @@ function locs(html: string): string[] {
   );
 }
 
-describe("annotateHtml", () => {
+describe(annotateHtml, () => {
   it("adds line:col for each element in body and keeps all other bytes", () => {
     const source = [
       "<!doctype html>",

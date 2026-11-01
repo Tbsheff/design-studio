@@ -42,7 +42,7 @@ const found: AnchorReport = {
 };
 const missing: AnchorReport = { id: "c1", rect: null, via: null };
 
-describe("reviewReport", () => {
+describe(reviewReport, () => {
   it("does nothing for a source match", () => {
     expect(reviewReport(comment("queued"), found, state())).toEqual({
       patch: null,

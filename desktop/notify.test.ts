@@ -10,7 +10,7 @@ const run = {
     "Make the hero calmer and add a menu section with prices for every item on the board",
 };
 
-describe("runNotice", () => {
+describe(runNotice, () => {
   it("stays quiet while a studio window has focus, and for canceled runs", () => {
     expect(
       runNotice(

@@ -53,7 +53,7 @@ export default function App() {
 const helper = () => 1;
 `;
 
-describe("listComponents", () => {
+describe(listComponents, () => {
   it("finds React components, counts uses and points at the root host element by source loc", async () => {
     const root = tree({
       "src/components/Button.tsx": BUTTON,

@@ -7,7 +7,7 @@ import {
 } from "../../shared/render-rpc.js";
 import { chooseBackend } from "./render-backend.js";
 
-describe("chooseBackend", () => {
+describe(chooseBackend, () => {
   it("uses playwright for npm start and tests", () => {
     expect(chooseBackend({})).toBe("playwright");
   });

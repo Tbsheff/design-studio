@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { formatMeasure, measureBetween } from "./measure";
 
-describe("measureBetween", () => {
+describe(measureBetween, () => {
   it("measures the gap to a sibling on the right and below", () => {
     expect(
       measureBetween(

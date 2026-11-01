@@ -4,7 +4,7 @@ import { nextRadioOption } from "./components/LevelControl";
 import { designsHint, runSettingsSummary } from "./components/RunSettings";
 import { createDraftStore, homeVariations } from "./storage";
 
-describe("nextRadioOption", () => {
+describe(nextRadioOption, () => {
   const options = [1, 2, 3, 4] as const;
 
   it("moves with arrows, wraps, and jumps with Home and End", () => {

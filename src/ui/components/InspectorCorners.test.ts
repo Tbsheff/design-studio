@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { joinCorners } from "./InspectorCorners";
 
-describe("joinCorners", () => {
+describe(joinCorners, () => {
   it("writes four values in border-radius order", () => {
     expect(
       joinCorners({ top: "4px", right: "8px", bottom: "12px", left: "16px" })

@@ -7,7 +7,7 @@ import {
   runTitle,
 } from "./version-title";
 
-describe("runTitle", () => {
+describe(runTitle, () => {
   it("keeps the first clause of a prompt", () => {
     expect(
       runTitle(
@@ -33,7 +33,7 @@ describe("runTitle", () => {
   });
 });
 
-describe("baseTitle", () => {
+describe(baseTitle, () => {
   it("unwraps legacy nested undo and restore titles", () => {
     expect(
       baseTitle(
@@ -52,7 +52,7 @@ describe("baseTitle", () => {
   });
 });
 
-describe("restoreTitle", () => {
+describe(restoreTitle, () => {
   it("builds one level of wording", () => {
     expect(restoreTitle("undo", "Edit h1: color")).toBe(
       "Back to Edit h1: color"

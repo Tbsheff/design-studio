@@ -39,7 +39,7 @@ const query = (patch: Partial<AnchorQuery> = {}): AnchorQuery => ({
   ...patch,
 });
 
-describe("resolveAnchor", () => {
+describe(resolveAnchor, () => {
   const h1: FakeElement = {
     tag: "h1",
     loc: "index.html:5:3",

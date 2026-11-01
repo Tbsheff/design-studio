@@ -687,7 +687,7 @@ describe("create token", { timeout: 60_000 }, () => {
   });
 });
 
-describe("insertToken", () => {
+describe(insertToken, () => {
   it("appends to an empty group and a one-line group", () => {
     const empty = insertToken('{\n  "color": {}\n}\n', "color", "x", {
       $value: "#fff",

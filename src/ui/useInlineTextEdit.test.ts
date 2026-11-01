@@ -4,7 +4,7 @@ import { MAX_INLINE_TEXT, parseTextCommit } from "./useInlineTextEdit";
 
 const base = { ns: "studio", token: "t", type: "text-commit", at: 1 } as const;
 
-describe("parseTextCommit", () => {
+describe(parseTextCommit, () => {
   it("accepts a string selector and text", () => {
     expect(
       parseTextCommit({ ...base, selector: "body > main > h1", text: "Hello" })

@@ -40,7 +40,7 @@ const css = (text: string) => ({
   inline: "",
 });
 
-describe("lintValues", () => {
+describe(lintValues, () => {
   it("names the nearest token and its ΔE for an off-palette color", () => {
     const values = valuesFromStyles({ color: "rgb(250, 10, 20)" });
     const [issue] = lintValues(

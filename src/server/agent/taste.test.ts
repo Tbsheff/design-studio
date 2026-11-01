@@ -48,7 +48,7 @@ afterEach(() => {
   }
 });
 
-describe("loadTasteRules", () => {
+describe(loadTasteRules, () => {
   it("returns active global rules only, without statements or ids", () => {
     const home = library([
       {

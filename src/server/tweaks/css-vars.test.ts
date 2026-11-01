@@ -8,7 +8,7 @@ import {
 } from "./css-vars.js";
 import { htmlStyleRegions } from "./sources.js";
 
-describe("rootDeclarations", () => {
+describe(rootDeclarations, () => {
   it("finds custom properties in top-level :root rules with exact value spans", () => {
     const css =
       ":root { --gap: 24px; --accent:#0f6b5c ; color: red; }\n.card { --gap: 2px; }";
@@ -78,7 +78,7 @@ describe("usesVar and applyEdits", () => {
   });
 });
 
-describe("htmlStyleRegions", () => {
+describe(htmlStyleRegions, () => {
   it("returns the text of each style element, not comments or scripts", () => {
     const html =
       '<html><head><!-- <style>:root{--x:1}</style> --><style>:root { --y: 2px; }</style><script>const s = "<style>";</script></head><body><template><style>:root{--z:3}</style></template></body></html>';

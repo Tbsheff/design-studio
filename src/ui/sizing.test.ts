@@ -28,7 +28,7 @@ const plain = {
   "align-self": "auto",
 };
 
-describe("axisRole", () => {
+describe(axisRole, () => {
   it("maps width and height to the main and cross axis of a flex parent", () => {
     expect(axisRole("width", rowParent)).toBe("main");
     expect(axisRole("height", rowParent)).toBe("cross");
@@ -38,7 +38,7 @@ describe("axisRole", () => {
   });
 });
 
-describe("sizePatch", () => {
+describe(sizePatch, () => {
   it("Fill writes flex: 1 on the main axis of a flex parent", () => {
     expect(sizePatch("width", "fill", plain, rowParent, "240px")).toEqual({
       flex: "1",

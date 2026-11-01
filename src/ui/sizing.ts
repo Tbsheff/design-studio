@@ -133,7 +133,9 @@ export function sizePatch(axis: Axis, mode: SizeMode, values: Values, parent: Pa
   if (!facts) return legacyPatch(axis, mode, values, parent, clear);
   if (mode === 'fill') return fillPatch(axis, values, parent, facts);
   const natural = naturalMode(axis, { ...values, flex: '', 'align-self': values['align-self'] === 'stretch' ? '' : values['align-self'] }, parent, facts);
-  return { [axis]: natural === 'hug' ? '' : 'fit-content', ...clear };
+  const ruleSize = facts.authored[axis];
+  const sizedByRule = ruleSize !== '' && ruleSize !== values[axis].trim() && authoredMode(ruleSize) !== 'hug' && authoredMode(ruleSize) !== null;
+  return { [axis]: natural === 'hug' && !sizedByRule ? '' : 'fit-content', ...clear };
 }
 
 function legacyPatch(axis: Axis, mode: SizeMode, values: Values, parent: ParentLayout, clear: Partial<StyleValues>): Partial<StyleValues> {

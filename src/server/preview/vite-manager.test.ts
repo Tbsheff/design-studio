@@ -20,7 +20,7 @@ const bus: EventBus = {
       EventBus["emit"]
     >;
   },
-  since: () => [],
+  since: () => Promise.resolve([]),
   subscribe: () => () => undefined,
 };
 

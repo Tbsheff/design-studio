@@ -1,5 +1,5 @@
 import { appendFileSync, mkdirSync, readFileSync } from "node:fs";
-import { appendFile, mkdir, writeFile } from "node:fs/promises";
+import { appendFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import type {
@@ -68,6 +68,14 @@ const parseLines = (text: string): StudioEvent[] => {
 const readFileEvents = (file: string): StudioEvent[] => {
   try {
     return parseLines(readFileSync(file, "utf-8"));
+  } catch {
+    return [];
+  }
+};
+
+const readFileEventsAsync = async (file: string): Promise<StudioEvent[]> => {
+  try {
+    return parseLines(await readFile(file, "utf-8"));
   } catch {
     return [];
   }
@@ -251,10 +259,14 @@ const fanOut = (log: ProjectLog, event: StudioEvent): void => {
   }
 };
 
-const storedSince = (log: ProjectLog, afterSeq: number): StudioEvent[] => {
-  const stored = readFileEvents(log.file);
+const storedSince = async (
+  log: ProjectLog,
+  afterSeq: number
+): Promise<StudioEvent[]> => {
+  const unflushed = [...log.unflushed];
+  const stored = await readFileEventsAsync(log.file);
   const lastStored = stored.at(-1)?.seq ?? 0;
-  const pending = log.unflushed.filter((event) => event.seq > lastStored);
+  const pending = unflushed.filter((event) => event.seq > lastStored);
 
   return [...stored, ...pending].filter((event) => event.seq > afterSeq);
 };
@@ -300,19 +312,22 @@ const record = (log: ProjectLog, input: StudioEventInput): StudioEvent => {
   return event;
 };
 
-const sinceLog = (log: ProjectLog, afterSeq: number): StudioEvent[] => {
+const sinceLog = async (
+  log: ProjectLog,
+  afterSeq: number
+): Promise<StudioEvent[]> => {
   const [first] = log.ring;
 
   if (!first || first.seq <= afterSeq + 1) {
     return log.ring.filter((event) => event.seq > afterSeq);
   }
 
-  return storedSince(log, afterSeq);
+  return await storedSince(log, afterSeq);
 };
 
 interface EventBus {
   emit: (event: StudioEventInput) => StudioEvent;
-  since: (projectId: string, afterSeq: number) => StudioEvent[];
+  since: (projectId: string, afterSeq: number) => Promise<StudioEvent[]>;
   subscribe: (
     projectId: string,
     listener: (event: StudioEvent) => void
@@ -372,8 +387,8 @@ const createEventBus = (dataDir: string): FlushableEventBus => {
       await Promise.all(all.map((log) => releaseReserved(log)));
     },
 
-    since(projectId: string, afterSeq: number): StudioEvent[] {
-      return sinceLog(logFor(projectId), afterSeq);
+    async since(projectId: string, afterSeq: number): Promise<StudioEvent[]> {
+      return await sinceLog(logFor(projectId), afterSeq);
     },
 
     subscribe(

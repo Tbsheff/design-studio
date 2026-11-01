@@ -46,8 +46,10 @@ export function createFakeBus(): FakeBus {
       return event;
     },
     since(projectId, afterSeq) {
-      return events.filter(
-        (event) => event.projectId === projectId && event.seq > afterSeq
+      return Promise.resolve(
+        events.filter(
+          (event) => event.projectId === projectId && event.seq > afterSeq
+        )
       );
     },
     subscribe(_projectId, listener) {

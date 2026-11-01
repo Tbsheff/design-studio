@@ -87,9 +87,11 @@ function createBus(): EventBus & { events: StudioEvent[] } {
 
       return event;
     },
-    since(projectId: string, afterSeq: number): StudioEvent[] {
-      return events.filter(
-        (event) => event.projectId === projectId && event.seq > afterSeq
+    since(projectId: string, afterSeq: number): Promise<StudioEvent[]> {
+      return Promise.resolve(
+        events.filter(
+          (event) => event.projectId === projectId && event.seq > afterSeq
+        )
       );
     },
     subscribe(

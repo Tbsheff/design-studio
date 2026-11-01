@@ -36,7 +36,7 @@ interface Queued {
 }
 
 interface Session {
-  watch(projectId: string, afterSeq: number): void;
+  watch(projectId: string, afterSeq: number): Promise<void>;
   unwatch(projectId: string): void;
 }
 
@@ -44,25 +44,56 @@ function createSession(bus: EventBus, wake: () => void) {
   const queue: Queued[] = [];
   const subs = new Map<string, () => void>();
   const sent = new Map<string, number>();
+  const held = new Map<string, { items: Queued[]; waiting: number }>();
+  const enqueue = (projectId: string, event: StudioEvent): void => {
+    const hold = held.get(projectId);
+    if (hold) {
+      hold.items.push({ event, replay: false });
+      return;
+    }
+    queue.push({ event, replay: false });
+    wake();
+  };
+  const subscribe = (projectId: string): void => {
+    if (subs.has(projectId)) return;
+    subs.set(
+      projectId,
+      bus.subscribe(projectId, (event) => enqueue(projectId, event))
+    );
+  };
+  const hold = (projectId: string): { items: Queued[]; waiting: number } => {
+    const current = held.get(projectId) ?? { items: [], waiting: 0 };
+    current.waiting += 1;
+    held.set(projectId, current);
+    return current;
+  };
+  const release = (
+    projectId: string,
+    current: { items: Queued[]; waiting: number }
+  ): void => {
+    current.waiting -= 1;
+    if (current.waiting > 0 || held.get(projectId) !== current) return;
+    held.delete(projectId);
+    if (subs.has(projectId)) queue.push(...current.items);
+    wake();
+  };
   const session: Session = {
-    watch(projectId, afterSeq) {
-      for (const event of bus.since(projectId, afterSeq))
-        queue.push({ event, replay: true });
-      if (!subs.has(projectId)) {
-        subs.set(
-          projectId,
-          bus.subscribe(projectId, (event) => {
-            queue.push({ event, replay: false });
-            wake();
-          })
-        );
+    async watch(projectId, afterSeq) {
+      const current = hold(projectId);
+      subscribe(projectId);
+      try {
+        const replay = await bus.since(projectId, afterSeq);
+        if (subs.has(projectId))
+          for (const event of replay) queue.push({ event, replay: true });
+      } finally {
+        release(projectId, current);
       }
-      wake();
     },
     unwatch(projectId) {
       subs.get(projectId)?.();
       subs.delete(projectId);
       sent.delete(projectId);
+      held.delete(projectId);
     },
   };
   const take = (): StudioEvent[] => {
@@ -78,6 +109,7 @@ function createSession(bus: EventBus, wake: () => void) {
   const close = (): void => {
     for (const stop of subs.values()) stop();
     subs.clear();
+    held.clear();
   };
   return { session, take, close, idle: () => queue.length === 0 };
 }
@@ -108,6 +140,17 @@ async function knownProject(
   } catch {
     return false;
   }
+}
+
+async function watchKnown(
+  session: Session,
+  watch: [string, number][],
+  known: boolean[]
+): Promise<void> {
+  const replays: Promise<void>[] = [];
+  for (const [index, [projectId, after]] of watch.entries())
+    if (known[index]) replays.push(session.watch(projectId, after));
+  await Promise.all(replays);
 }
 
 export function registerStreamRoutes(app: Hono, deps: StreamDeps): void {
@@ -184,9 +227,7 @@ export function registerStreamRoutes(app: Hono, deps: StreamDeps): void {
     const session = sessions.get(sid);
     if (!session) throw new NotFoundError("stream is closed");
     for (const projectId of unwatch) session.unwatch(projectId);
-    watch.forEach(([projectId, after], index) => {
-      if (known[index]) session.watch(projectId, after);
-    });
+    await watchKnown(session, watch, known);
     return c.json({ ok: true });
   });
 }

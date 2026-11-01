@@ -174,7 +174,7 @@ describe("project store", () => {
 });
 
 describe("event bus", () => {
-  it("keeps seq across a new bus instance and replays from the file", () => {
+  it("keeps seq across a new bus instance and replays from the file", async () => {
     const bus = createEventBus(config.dataDir);
     const received: number[] = [];
     const unsubscribe = bus.subscribe("p1", (event) =>
@@ -207,7 +207,9 @@ describe("event bus", () => {
     expect(received).toEqual([1, 2]);
 
     const restarted = createEventBus(config.dataDir);
-    expect(restarted.since("p1", 1).map((event) => event.seq)).toEqual([2, 3]);
+    expect((await restarted.since("p1", 1)).map((event) => event.seq)).toEqual([
+      2, 3,
+    ]);
     const next = restarted.emit({
       type: "files.changed",
       projectId: "p1",
@@ -223,6 +225,6 @@ describe("event bus", () => {
         changedAt: 5,
       }).seq
     ).toBe(2);
-    expect(restarted.since("p1", 0)).toHaveLength(4);
+    await expect(restarted.since("p1", 0)).resolves.toHaveLength(4);
   });
 });

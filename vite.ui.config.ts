@@ -61,7 +61,7 @@ export default defineConfig({
     emptyOutDir: true,
     modulePreload: { polyfill: false },
     rollupOptions: {
-      input: fileURLToPath(new URL("./index.html", import.meta.url)),
+      input: fileURLToPath(new URL("index.html", import.meta.url)),
       output: {
         manualChunks: (id) =>
           /[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/.test(id)

@@ -12,8 +12,8 @@ import type {
   TrashedProject,
 } from "../src/shared/contracts";
 import { projectsDirFor, readState } from "./support/server";
+import type { StudioApi } from "./support/studio";
 import {
-  StudioApi,
   frontFrame,
   headVersion,
   mainDirection,

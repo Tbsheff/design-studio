@@ -6,6 +6,7 @@ import {
   type RenderClip,
   type RenderErrors,
 } from "../../shared/render-rpc.js";
+import type { AxeViolation } from "./axe.js";
 
 export interface RenderPage {
   goto(url: string): Promise<void>;
@@ -15,7 +16,7 @@ export interface RenderPage {
   close(): Promise<void>;
   lastNav?(): { loadMs: number; idleMs: number } | null;
   reset?(): Promise<void>;
-  axe?(): Promise<import("./axe.js").AxeViolation[]>;
+  axe?(): Promise<AxeViolation[]>;
 }
 
 export interface RenderBackend {

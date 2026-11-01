@@ -5,6 +5,7 @@ import path from "node:path";
 import type {
   Browser,
   BrowserContext,
+  BrowserType,
   LaunchOptions,
   Page,
   Route,
@@ -128,7 +129,7 @@ export interface BrowserReadOptions {
   deadline: number;
 }
 
-type Chromium = typeof import("playwright-core").chromium;
+type Chromium = BrowserType;
 
 interface LaunchChoice {
   label: string;

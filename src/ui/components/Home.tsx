@@ -117,7 +117,7 @@ type Busy = "create" | "ask" | "starter" | null;
 
 type Pop = "plus" | "pack" | "level" | "model" | "folder" | null;
 
-type LibraryModule = typeof import("./HomeLibrary");
+type LibraryModule = Awaited<typeof libraryChunk>;
 
 const EXAMPLES = [
   "Wireframe a settings page",
@@ -416,7 +416,7 @@ function StarterRow({
   );
 }
 
-type TemplatesModule = typeof import("./HomeTemplates");
+type TemplatesModule = Awaited<ReturnType<typeof loadTemplates>>;
 
 function TemplatesSection({
   templates,

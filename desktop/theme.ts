@@ -1,7 +1,8 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
-import { BrowserWindow, ipcMain, nativeTheme } from "electron";
+import type { BrowserWindow } from "electron";
+import { ipcMain, nativeTheme } from "electron";
 
 export type ThemePref = "system" | "light" | "dark";
 

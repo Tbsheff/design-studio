@@ -1,5 +1,7 @@
+import type { AppDoctorResult } from "./app-doctor.js";
 import type { CanvasFile } from "./canvas-file";
 import type { ElementScope } from "./element-variants";
+import type { FrameStatesView } from "./frame-state.js";
 import type { LinkQuery, LinkRectReport, LinksFile } from "./links";
 import type { StatesRequest } from "./states";
 import type { StyleQuery, StyleScanResult } from "./style-search";
@@ -206,7 +208,7 @@ export interface AppServerStatus {
   command: string | null;
   message: string | null;
   startedAt: number | null;
-  doctor?: import("./app-doctor.js").AppDoctorResult | null;
+  doctor?: AppDoctorResult | null;
 }
 
 export interface AppLogLine {
@@ -774,7 +776,7 @@ export type StudioEventBody =
   | { type: "app.status"; status: AppServerStatus }
   | {
       type: "frame-states.changed";
-      states: import("./frame-state.js").FrameStatesView;
+      states: FrameStatesView;
     }
   | { type: "layer-locks.changed"; keys: string[] }
   | { type: "edit.planned"; id: string; patches: DomPatch[] }

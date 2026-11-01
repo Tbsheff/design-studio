@@ -2,6 +2,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
 import { expect, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 import {
   artboardTransform,
@@ -293,7 +294,6 @@ test("AC-21 desktop, tablet, mobile and custom viewports size the frame", async 
   expect(custom.innerHeight).toBe(700);
 });
 
-type Page = import("@playwright/test").Page;
 type Box = { x: number; y: number; width: number; height: number } | null;
 type Point = { x: number; y: number };
 

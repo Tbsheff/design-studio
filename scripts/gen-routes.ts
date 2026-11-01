@@ -254,6 +254,81 @@ const pairErrors = (scan: ContextScan): string[] => [
   ...missingFrom(scan.services, scan.ops, `src/server/services/${scan.ctx}`),
 ];
 
+const EXPORT_LIST = /\bexport\s+(?:type\s+)?\{(?<names>[^}]*)\}/gu;
+
+const EXPORT_DECL =
+  /\bexport\s+(?:declare\s+)?(?:async\s+)?(?:const|let|var|function\*?|class|interface|type|enum)\s+(?<name>[\w$]+)/gu;
+
+const EXPORT_OTHER = /\bexport\s+(?<name>default|\*)/gu;
+
+const listedNames = (names: string): string[] =>
+  names
+    .split(",")
+    .map(
+      (part) =>
+        part
+          .trim()
+          .replace(/^type /u, "")
+          .split(" as ")
+          .at(-1)
+          ?.trim() ?? ""
+    )
+    .filter((name) => name !== "");
+
+const exportNames = (text: string): string[] => [
+  ...[...text.matchAll(EXPORT_LIST)].flatMap((match) =>
+    listedNames(match.groups?.["names"] ?? "")
+  ),
+  ...[...text.matchAll(EXPORT_DECL), ...text.matchAll(EXPORT_OTHER)].map(
+    (match) => match.groups?.["name"] ?? ""
+  ),
+];
+
+const sameNames = (found: string[], allowed: string[]): boolean =>
+  found.every((name) => allowed.includes(name));
+
+const opExportError = async (ctx: string, tail: string): Promise<string[]> => {
+  const file = `src/shared/contract/${ctx}/${tail}.ts`;
+  const text = await readOrEmpty(path.join(ROOT, file));
+  const name = camel(tail);
+  const found = exportNames(text);
+
+  const defined = new RegExp(`\\bconst\\s+${name}\\s*=\\s*defineOp\\(`, "u");
+
+  if (found.length === 1 && found[0] === name && defined.test(text)) {
+    return [];
+  }
+
+  return [
+    `gen-routes: ${file} is not one defineOp const named ${name} (exports: ${found.join(", ") || "nothing"}). fix: export only one defineOp const named ${name}`,
+  ];
+};
+
+const serviceExportError = async (
+  ctx: string,
+  tail: string
+): Promise<string[]> => {
+  const file = `src/server/services/${ctx}/${tail}.ts`;
+  const found = exportNames(await readOrEmpty(path.join(ROOT, file)));
+
+  if (found.includes("handle") && sameNames(found, ["handle", "preview"])) {
+    return [];
+  }
+
+  return [
+    `gen-routes: ${file} exports ${found.join(", ") || "nothing"}. fix: export only handle and preview`,
+  ];
+};
+
+const exportErrors = async (scan: ContextScan): Promise<string[]> => {
+  const found = await Promise.all([
+    ...scan.ops.map((tail) => opExportError(scan.ctx, tail)),
+    ...scan.services.map((tail) => serviceExportError(scan.ctx, tail)),
+  ]);
+
+  return found.flat();
+};
+
 interface ListSpec {
   suffix: string;
   file: string;
@@ -340,12 +415,23 @@ interface Build {
 const buildAll = async (): Promise<Build> => {
   const contexts = await scanContexts();
   const scans = await Promise.all(contexts.map((ctx) => scanContext(ctx)));
+  const exported = await Promise.all(scans.map((scan) => exportErrors(scan)));
+
+  const errors = [
+    ...scans.flatMap((scan) => pairErrors(scan)),
+    ...exported.flat(),
+  ];
+
+  if (errors.length > 0) {
+    return { errors, files: [] };
+  }
+
   const perContext = await Promise.all(scans.map((scan) => contextFiles(scan)));
 
   const files = [...perContext.flat(), ...(await globalFiles(contexts))];
 
   return {
-    errors: scans.flatMap((scan) => pairErrors(scan)),
+    errors,
     files: files.toSorted((left, right) => left.path.localeCompare(right.path)),
   };
 };

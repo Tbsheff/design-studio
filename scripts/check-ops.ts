@@ -3,6 +3,8 @@ import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
 
+import { runChecks } from "./check-ops-catalog.js";
+
 interface RuleText {
   fix: string;
   id: string;
@@ -464,7 +466,7 @@ const firstRun = async (now: Baseline): Promise<number> => {
   return 0;
 };
 
-const main = async (): Promise<number> => {
+const checkScan = async (): Promise<number> => {
   const hits = await scan();
 
   const now = countEntries(
@@ -495,4 +497,4 @@ const main = async (): Promise<number> => {
   return Number(failed);
 };
 
-process.exitCode = await main();
+process.exitCode = await runChecks(checkScan, process.argv);

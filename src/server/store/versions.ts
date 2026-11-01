@@ -158,10 +158,15 @@ function resolveGitBinary(): Promise<string> {
   return gitBinary;
 }
 
-function gitEnv(scope: GitScope): NodeJS.ProcessEnv {
+let gitEnvBase: NodeJS.ProcessEnv | null = null;
+
+const baseGitEnv = (): NodeJS.ProcessEnv => {
+  if (gitEnvBase !== null) {
+    return gitEnvBase;
+  }
+
   const env: NodeJS.ProcessEnv = {
     ...process.env,
-    GIT_DIR: scope.gitDir,
     GIT_CONFIG_GLOBAL: os.devNull,
     GIT_CONFIG_NOSYSTEM: "1",
     GIT_AUTHOR_NAME: "Design Studio",
@@ -172,8 +177,16 @@ function gitEnv(scope: GitScope): NodeJS.ProcessEnv {
     GIT_OPTIONAL_LOCKS: "0",
   };
 
+  delete env.GIT_DIR;
   delete env.GIT_WORK_TREE;
   delete env.GIT_INDEX_FILE;
+  gitEnvBase = env;
+
+  return env;
+};
+
+function gitEnv(scope: GitScope): NodeJS.ProcessEnv {
+  const env: NodeJS.ProcessEnv = { ...baseGitEnv(), GIT_DIR: scope.gitDir };
 
   if (scope.workTree !== undefined) {
     env.GIT_WORK_TREE = scope.workTree;

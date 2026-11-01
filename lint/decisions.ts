@@ -245,7 +245,7 @@ export const SCOPED_OFF_REASONS: Record<string, string> = {
   "unicorn/no-process-exit":
     "Off in the server entry, which owns the process and its exit codes.",
   "node/no-sync":
-    "Off in desktop/build.ts, the data lock, the resource lookup, the path checks and the event log replay and exit flush, whose callers are sync (plan 5.2).",
+    "Off in desktop/build.ts, the data lock, the resource lookup, the path checks and the event log exit flush, whose callers are sync (plan 5.2).",
   "import/no-default-export":
     "Off in *.config.ts: the tools load a default export.",
 };
@@ -309,7 +309,7 @@ export const decisionOverrides: OxlintOverride[] = [
   {
     files: [
       "desktop/build.ts",
-      "src/server/events/bus.ts",
+      "src/server/events/exit-flush.ts",
       "src/server/platform/data-lock/**",
       "src/server/platform/paths/**",
       "src/server/platform/resources/**",

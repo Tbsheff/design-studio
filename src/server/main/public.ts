@@ -8,7 +8,7 @@ import { createAgentRunner } from "../agent/index.js";
 import { createCanvasService } from "../canvas/service.js";
 import { followSourceMoves } from "../direct-edit/follow-moves.js";
 import { withSaveQueue } from "../direct-edit/save-queue.js";
-import { createEventBus } from "../events/bus.js";
+import { openEventBus } from "../events/bus.js";
 import type { EventBus, FlushableEventBus } from "../events/bus.js";
 import { createApp } from "../http/app.js";
 import { loadConfig } from "../platform/config/index.js";
@@ -142,10 +142,13 @@ const linkBus = (config: ServerConfig, baseBus: EventBus): EventBus => {
   });
 };
 
-const openStores = (config: ServerConfig, options: ServerOptions): Stores => {
+const openStores = async (
+  config: ServerConfig,
+  options: ServerOptions
+): Promise<Stores> => {
   const versions = withSaveQueue(createVersionStore(config));
   const projects = createProjectStore(config, versions);
-  const baseBus = createEventBus(config.dataDir);
+  const baseBus = await openEventBus(config.dataDir);
   const linked = linkBus(config, baseBus);
 
   const observed = options.thumbnails?.observeBus(linked) ?? {
@@ -266,7 +269,7 @@ const createServer = async (
 
   process.on("exit", releaseLock);
 
-  const stores = openStores(config, options);
+  const stores = await openStores(config, options);
   const { app, preview } = buildApp(config, options, stores);
 
   const server = serve(

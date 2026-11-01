@@ -1,5 +1,4 @@
-import { appendFileSync, mkdirSync, readFileSync } from "node:fs";
-import { appendFile, mkdir, readFile, writeFile } from "node:fs/promises";
+import { appendFile, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import type {
@@ -9,6 +8,9 @@ import type {
 } from "../../shared/contracts.js";
 import { assertSafeId } from "../platform/errors/safe-id.js";
 import { logError } from "../platform/logger/index.js";
+import { readEventFile, readSeqFloors } from "./event-file.js";
+import type { SeqFloor } from "./event-file.js";
+import { registerExitFlush, toLines } from "./exit-flush.js";
 
 const RING_SIZE = 5000;
 const FLUSH_DELAY_MS = 5;
@@ -25,76 +27,13 @@ interface ProjectLog {
   listeners: Set<(event: StudioEvent) => void>;
   unflushed: StudioEvent[];
   dirReady: boolean;
+  filling: Promise<void> | null;
   timer: NodeJS.Timeout | null;
   chain: Promise<void>;
 }
 
 const report = (label: string, cause: { error: unknown }): void => {
   logError(`[events] ${label} failed`, cause.error);
-};
-
-const parseLine = (line: string): StudioEvent | null => {
-  try {
-    return JSON.parse(line) as StudioEvent;
-  } catch {
-    return null;
-  }
-};
-
-const parseFilled = (line: string): StudioEvent | null => {
-  if (line.trim() === "") {
-    return null;
-  }
-
-  return parseLine(line);
-};
-
-const parseLines = (text: string): StudioEvent[] => {
-  const events: StudioEvent[] = [];
-  let lastSeq = 0;
-
-  for (const line of text.split("\n")) {
-    const event = parseFilled(line);
-
-    if (event !== null && event.seq > lastSeq) {
-      lastSeq = event.seq;
-      events.push(event);
-    }
-  }
-
-  return events;
-};
-
-const readFileEvents = (file: string): StudioEvent[] => {
-  try {
-    return parseLines(readFileSync(file, "utf-8"));
-  } catch {
-    return [];
-  }
-};
-
-const readFileEventsAsync = async (file: string): Promise<StudioEvent[]> => {
-  try {
-    return parseLines(await readFile(file, "utf-8"));
-  } catch {
-    return [];
-  }
-};
-
-const readReserved = (file: string): number => {
-  let value = 0;
-
-  try {
-    value = Number(readFileSync(file, "utf-8").trim());
-  } catch {
-    return 0;
-  }
-
-  if (Number.isSafeInteger(value) && value > 0) {
-    return value;
-  }
-
-  return 0;
 };
 
 const writeSeqFile = async (
@@ -160,9 +99,6 @@ const slimInput = (input: StudioEventInput): StudioEventInput => {
   return { ...input, version: sampleVersion(input.version) };
 };
 
-const toLines = (events: StudioEvent[]): string =>
-  events.map((event) => `${JSON.stringify(event)}\n`).join("");
-
 const appendLines = async (log: ProjectLog, text: string): Promise<void> => {
   if (!log.dirReady) {
     await mkdir(path.dirname(log.file), { recursive: true });
@@ -223,30 +159,6 @@ const scheduleFlush = (log: ProjectLog): void => {
   log.timer.unref();
 };
 
-const writeUnflushedNow = (log: ProjectLog): void => {
-  if (log.unflushed.length === 0) {
-    return;
-  }
-
-  try {
-    mkdirSync(path.dirname(log.file), { recursive: true });
-    appendFileSync(log.file, toLines(log.unflushed));
-    log.unflushed.length = 0;
-  } catch (error) {
-    report("final append", { error });
-  }
-};
-
-const openBuses = new Set<Map<string, ProjectLog>>();
-
-const flushAllSync = (): void => {
-  for (const logs of openBuses) {
-    for (const log of logs.values()) {
-      writeUnflushedNow(log);
-    }
-  }
-};
-
 const fanOut = (log: ProjectLog, event: StudioEvent): void => {
   const snapshot = new Set(log.listeners);
 
@@ -264,31 +176,39 @@ const storedSince = async (
   afterSeq: number
 ): Promise<StudioEvent[]> => {
   const unflushed = [...log.unflushed];
-  const stored = await readFileEventsAsync(log.file);
+  const stored = await readEventFile<StudioEvent>(log.file);
   const lastStored = stored.at(-1)?.seq ?? 0;
   const pending = unflushed.filter((event) => event.seq > lastStored);
 
   return [...stored, ...pending].filter((event) => event.seq > afterSeq);
 };
 
-const openLog = (logFile: string): ProjectLog => {
-  const stored = readFileEvents(logFile);
-  const seqPath = path.join(path.dirname(logFile), "events.seq");
-  const reservedSeq = readReserved(seqPath);
+const openLog = (logFile: string, floor: SeqFloor | undefined): ProjectLog => ({
+  chain: Promise.resolve(),
+  dirReady: false,
+  file: logFile,
+  filling: null,
+  lastSeq: floor?.lastSeq ?? 0,
+  listeners: new Set(),
+  reserved: floor?.reserved ?? 0,
+  ring: [],
+  seqChain: Promise.resolve(),
+  seqFile: path.join(path.dirname(logFile), "events.seq"),
+  timer: null,
+  unflushed: [],
+});
 
-  return {
-    chain: Promise.resolve(),
-    dirReady: false,
-    file: logFile,
-    lastSeq: Math.max(stored.at(-1)?.seq ?? 0, reservedSeq),
-    listeners: new Set(),
-    reserved: reservedSeq,
-    ring: stored.slice(-RING_SIZE),
-    seqChain: Promise.resolve(),
-    seqFile: seqPath,
-    timer: null,
-    unflushed: [],
-  };
+const fillRing = async (log: ProjectLog): Promise<void> => {
+  const stored = await readEventFile<StudioEvent>(log.file);
+  const firstSeq = log.ring[0]?.seq ?? Number.POSITIVE_INFINITY;
+  const older = stored.filter((event) => event.seq < firstSeq);
+
+  log.ring = [...older, ...log.ring].slice(-RING_SIZE);
+};
+
+const ensureFilled = async (log: ProjectLog): Promise<void> => {
+  log.filling ??= fillRing(log);
+  await log.filling;
 };
 
 const record = (log: ProjectLog, input: StudioEventInput): StudioEvent => {
@@ -316,6 +236,7 @@ const sinceLog = async (
   log: ProjectLog,
   afterSeq: number
 ): Promise<StudioEvent[]> => {
+  await ensureFilled(log);
   const [first] = log.ring;
 
   if (!first || first.seq <= afterSeq + 1) {
@@ -338,7 +259,10 @@ interface FlushableEventBus extends EventBus {
   flush: () => Promise<void>;
 }
 
-const createEventBus = (dataDir: string): FlushableEventBus => {
+const createEventBus = (
+  dataDir: string,
+  floors = new Map<string, SeqFloor>()
+): FlushableEventBus => {
   const logs = new Map<string, ProjectLog>();
 
   const logFor = (projectId: string): ProjectLog => {
@@ -354,7 +278,8 @@ const createEventBus = (dataDir: string): FlushableEventBus => {
         "projects",
         assertSafeId(projectId, "projectId"),
         "events.jsonl"
-      )
+      ),
+      floors.get(projectId)
     );
 
     logs.set(projectId, log);
@@ -362,11 +287,7 @@ const createEventBus = (dataDir: string): FlushableEventBus => {
     return log;
   };
 
-  openBuses.add(logs);
-
-  if (openBuses.size === 1) {
-    process.once("exit", flushAllSync);
-  }
+  registerExitFlush({ logs, report });
 
   return {
     emit(input: StudioEventInput): StudioEvent {
@@ -405,6 +326,9 @@ const createEventBus = (dataDir: string): FlushableEventBus => {
   };
 };
 
-export { createEventBus };
+const openEventBus = async (dataDir: string): Promise<FlushableEventBus> =>
+  createEventBus(dataDir, await readSeqFloors(dataDir));
+
+export { createEventBus, openEventBus };
 
 export type { EventBus, FlushableEventBus };

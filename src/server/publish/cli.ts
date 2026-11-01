@@ -103,8 +103,8 @@ export async function cfWhoAmI(bin: string, cwd: string): Promise<WhoAmI> {
   return { signedIn: true, email: typeof parsed.email === 'string' ? parsed.email : null, accounts: accountsOf(parsed.accounts) };
 }
 
-export function loginArgs(keyring: boolean): string[] {
-  return ['auth', 'login', '--no-device', '--force', keyring ? '--use-keyring' : '--no-use-keyring', '--scopes', ...LOGIN_SCOPES];
+export function loginArgs(keyring: boolean, narrow: boolean): string[] {
+  return ['auth', 'login', '--no-device', '--force', ...(keyring ? ['--use-keyring'] : []), ...(narrow ? ['--scopes', ...LOGIN_SCOPES] : [])];
 }
 
 const WORKERS_DEV = /https:\/\/([a-z0-9-]+)\.([a-z0-9-]+)\.workers\.dev\b/i;
@@ -120,7 +120,7 @@ export function cliFailure(result: CliResult, fallback: string): string {
   if (result.timedOut) return `${fallback} The cf command did not finish in time.`;
   const text = scrubCliText(`${result.stderr}\n${result.stdout}`);
   if (/register a workers\.dev subdomain/i.test(text)) return 'This Cloudflare account has no workers.dev subdomain yet. Open Workers & Pages in the Cloudflare dashboard once to pick one, then publish again.';
-  if (/not logged in|authenticat|unauthori[sz]ed|code: ?10000/i.test(text)) return 'Cloudflare refused the sign-in. Sign in again in Settings → Publishing.';
+  if (/not logged in|authenticat|unauthori[sz]ed|code: ?10000/i.test(text)) return 'Cloudflare refused the sign-in or its access. Sign in again in Settings → Publishing; if this keeps failing, clear Ask only for Workers access before you sign in.';
   const line = text.split(/\r?\n/).map((l) => l.replace(/^[\s│┌└├◆●✖→]+/, '').trim()).filter((l) => l && !/^error$/i.test(l)).find((l) => /error|fail|invalid|denied|not /i.test(l));
   return line ? `${fallback} ${line.slice(0, 300)}` : fallback;
 }

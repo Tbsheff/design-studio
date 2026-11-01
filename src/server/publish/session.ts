@@ -14,7 +14,7 @@ export interface ReadyCli {
 export interface CliSession {
   state(fresh?: boolean): Promise<PublishCliState>;
   ready(accountId?: string): Promise<ReadyCli>;
-  startLogin(keyring: boolean): Promise<PublishCliState>;
+  startLogin(keyring: boolean, narrow: boolean): Promise<PublishCliState>;
   cancelLogin(): Promise<PublishCliState>;
   logout(): Promise<PublishCliState>;
   setAccount(accountId: string | null): Promise<PublishCliState>;
@@ -75,14 +75,14 @@ export function createCliSession(store: PublishStore): CliSession {
     return { bin: probe?.bin as string, accountId: id, subdomain: settings.subdomains[id] ?? null };
   };
 
-  const startLogin = async (keyring: boolean): Promise<PublishCliState> => {
+  const startLogin = async (keyring: boolean, narrow: boolean): Promise<PublishCliState> => {
     if (child) return state();
     const found = await probeCli(true);
     if (!found.bin) throw new BadRequestError(`Install the Cloudflare CLI first: ${CF_INSTALL_COMMAND}.`);
     await store.saveSettings({ keyring });
     login = { running: true, url: null, error: null };
     let seen = '';
-    const run = runCf(found.bin, loginArgs(keyring), {
+    const run = runCf(found.bin, loginArgs(keyring, narrow), {
       cwd: store.dir,
       timeoutMs: LOGIN_TIMEOUT_MS,
       onSpawn: (spawned) => {

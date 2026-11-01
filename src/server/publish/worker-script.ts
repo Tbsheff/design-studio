@@ -14,7 +14,7 @@ export interface WorkerOptions {
   password: PasswordHash | null;
 }
 
-const PBKDF2_ITER = 100_000;
+const PBKDF2_ITER = 10_000;
 
 export function hashPassword(password: string): PasswordHash {
   const salt = randomBytes(16);

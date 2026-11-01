@@ -5,7 +5,7 @@ const base = (pid: string) => `/api/projects/${encodeURIComponent(pid)}`;
 
 export const publishApi = {
   cli: (fresh = false) => json<PublishCliState>('GET', `/api/publish/cli${fresh ? '?fresh=1' : ''}`),
-  login: (keyring: boolean) => json<PublishCliState>('POST', '/api/publish/login', { keyring }),
+  login: (keyring: boolean, narrow: boolean) => json<PublishCliState>('POST', '/api/publish/login', { keyring, narrow }),
   cancelLogin: () => json<PublishCliState>('DELETE', '/api/publish/login'),
   logout: () => json<PublishCliState>('POST', '/api/publish/logout', {}),
   setAccount: (accountId: string | null) => json<PublishCliState>('PUT', '/api/publish/settings', { accountId }),

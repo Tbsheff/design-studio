@@ -29,7 +29,7 @@ export function registerPublishRoutes(app: Hono, deps: PublishRouteDeps): Publis
 
   app.post('/api/publish/login', async (c) => {
     const body = await deps.readBody(c);
-    return c.json(await service.cli.startLogin(body.keyring !== false));
+    return c.json(await service.cli.startLogin(body.keyring !== false, body.narrow !== false));
   });
 
   app.delete('/api/publish/login', async (c) => c.json(await service.cli.cancelLogin()));

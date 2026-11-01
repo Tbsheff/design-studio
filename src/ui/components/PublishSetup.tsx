@@ -58,6 +58,7 @@ function InstallStep({ cli, busy, run }: { cli: PublishCliState; busy: boolean; 
 
 function SignInStep({ cli, busy, run }: { cli: PublishCliState; busy: boolean; run: Cli['run'] }) {
   const [keyring, setKeyring] = useState(cli.keyring);
+  const [narrow, setNarrow] = useState(true);
   if (cli.login.running) {
     return (
       <div className="publish-step" data-testid="publish-signing-in">
@@ -83,8 +84,12 @@ function SignInStep({ cli, busy, run }: { cli: PublishCliState; busy: boolean; r
         <input type="checkbox" checked={keyring} onChange={(e) => setKeyring(e.target.checked)} />
         <span>Lock the sign-in with a key in the macOS Keychain</span>
       </label>
+      <label className="publish-check" data-tip="Off: cf asks for its full default access, for when a publish fails with a permission error">
+        <input type="checkbox" checked={narrow} onChange={(e) => setNarrow(e.target.checked)} />
+        <span>Ask only for Workers access</span>
+      </label>
       <div className="publish-step-actions">
-        <button type="button" className="btn small primary" disabled={busy} onClick={() => void run(() => publishApi.login(keyring))}>
+        <button type="button" className="btn small primary" disabled={busy} onClick={() => void run(() => publishApi.login(keyring, narrow))}>
           Sign in with Cloudflare
         </button>
       </div>
@@ -125,7 +130,7 @@ function AccountStep({ cli, busy, run }: { cli: PublishCliState; busy: boolean; 
         <button type="button" className="btn small" disabled={busy} onClick={() => void run(() => publishApi.cli(true))} data-tip="Asks cf who is signed in. It changes nothing.">
           Test connection
         </button>
-        <button type="button" className="btn small ghost" disabled={busy} onClick={() => void run(() => publishApi.logout())}>
+        <button type="button" className="btn small ghost" disabled={busy} onClick={() => void run(() => publishApi.logout())} data-tip="Runs cf auth logout, so cf in Terminal is signed out too">
           Sign out
         </button>
       </div>

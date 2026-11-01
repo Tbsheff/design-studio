@@ -34,7 +34,9 @@ afterEach(async () => {
   }
 });
 
-const noFetch = async () => Promise.reject(new Error("no network in tests"));
+const noFetch = async () => {
+  throw new Error("no network in tests");
+};
 
 async function draftTree(request: Record<string, unknown>) {
   const root = await mkdtemp(path.join(os.tmpdir(), "studio-draft-"));

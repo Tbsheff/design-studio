@@ -225,9 +225,9 @@ function expected(
   change: TokenChange | undefined
 ): { light: string | null; dark: string | null } {
   const light =
-    change?.value !== undefined
-      ? normalized(change.value)
-      : (token.light?.value ?? null);
+    change?.value === undefined
+      ? (token.light?.value ?? null)
+      : normalized(change.value);
 
   const dark =
     change?.darkValue === undefined
@@ -302,12 +302,12 @@ function updateMeta(
     const name = tokenOf(loaded, change).name;
 
     const bits = [
-      change.value !== undefined ? `= ${change.value}` : "",
+      change.value === undefined ? "" : `= ${change.value}`,
       change.darkValue === null
         ? "(remove dark)"
-        : change.darkValue !== undefined
-          ? `(dark ${change.darkValue})`
-          : "",
+        : change.darkValue === undefined
+          ? ""
+          : `(dark ${change.darkValue})`,
     ];
 
     return `${name} ${bits.filter(Boolean).join(" ")}`;
@@ -429,9 +429,9 @@ export function previewAppTokens(
       const token = tokenOf(loaded, change);
 
       const value =
-        change.value !== undefined
-          ? checkCssValue(`${change.path} value`, change.value)
-          : null;
+        change.value === undefined
+          ? null
+          : checkCssValue(`${change.path} value`, change.value);
 
       if (value !== null) {
         light.push(`${token.name}: ${value};`);

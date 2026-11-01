@@ -80,7 +80,7 @@ export function registerFrameStateRoutes(
 
     return c.json(
       await applyFrameSession(stateDeps, project, {
-        ...(body.user !== undefined ? { user: body.user } : {}),
+        ...(body.user === undefined ? {} : { user: body.user }),
         ...(body.forget === true ? { forget: true } : {}),
       })
     );

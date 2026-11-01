@@ -37,7 +37,7 @@ export function flowInputOf(body: Record<string, unknown>): FlowInput {
     ...(typeof body.depth === "number" && Number.isFinite(body.depth)
       ? { depth: Math.round(body.depth) }
       : {}),
-    ...(body.params !== undefined ? { params: cleanParams(body.params) } : {}),
+    ...(body.params === undefined ? {} : { params: cleanParams(body.params) }),
   };
 }
 

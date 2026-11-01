@@ -157,13 +157,13 @@ function paintOf(input: {
   strokeWidth?: number | null | undefined;
 }) {
   return {
-    ...(input.fill !== undefined
-      ? { fill: input.fill === "none" ? null : input.fill }
-      : {}),
-    ...(input.stroke !== undefined ? { stroke: input.stroke } : {}),
-    ...(input.strokeWidth !== undefined
-      ? { strokeWidth: input.strokeWidth }
-      : {}),
+    ...(input.fill === undefined
+      ? {}
+      : { fill: input.fill === "none" ? null : input.fill }),
+    ...(input.stroke === undefined ? {} : { stroke: input.stroke }),
+    ...(input.strokeWidth === undefined
+      ? {}
+      : { strokeWidth: input.strokeWidth }),
   };
 }
 

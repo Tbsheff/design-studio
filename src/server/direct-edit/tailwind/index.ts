@@ -40,8 +40,11 @@ function styleEdits(
   const unmapped: string[] = [];
   for (const [prop, value] of Object.entries(style)) {
     const mapped = isMappedProperty(prop) ? cssEdits(prop, value, theme) : null;
-    if (!mapped) unmapped.push(prop);
-    else edits.push(...mapped.map((edit) => ({ ...edit, variants })));
+    if (mapped) {
+      edits.push(...mapped.map((edit) => ({ ...edit, variants })));
+    } else {
+      unmapped.push(prop);
+    }
   }
   return { edits, unmapped };
 }

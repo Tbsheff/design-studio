@@ -392,7 +392,7 @@ export async function runScreens(
       preview,
       ctx,
       ...(state.canvas ? { canvas: state.canvas } : {}),
-      ...(state.startedAt !== undefined ? { startedAt: state.startedAt } : {}),
+      ...(state.startedAt === undefined ? {} : { startedAt: state.startedAt }),
       ...(state.screenCache ? { cache: state.screenCache } : {}),
     },
     { ...plan, maxScreens: maxScreens ?? plan.maxScreens }

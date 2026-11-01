@@ -114,11 +114,11 @@ export function registerMcpRoutes(
       method,
       headers: {
         [STUDIO_TOKEN_HEADER]: deps.studioToken,
-        ...(payload !== undefined
-          ? { "content-type": "application/json" }
-          : {}),
+        ...(payload === undefined
+          ? {}
+          : { "content-type": "application/json" }),
       },
-      ...(payload !== undefined ? { body: JSON.stringify(payload) } : {}),
+      ...(payload === undefined ? {} : { body: JSON.stringify(payload) }),
     });
 
   const activity = createActivityLog(deps.dataDir, deps.bus);

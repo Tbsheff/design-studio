@@ -497,7 +497,9 @@ export function createOptimistic(deps: OptimisticDeps): Optimistic {
       reason = styleMismatch(hold) ?? contentMismatch(hold, entry.spec);
       settled = reason === null || final;
 
-      if (!settled) {
+      if (settled) {
+        tidyStyleAttribute(hold);
+      } else {
         for (const prop of lifted) {
           hold.element.style.setProperty(
             prop,
@@ -505,8 +507,6 @@ export function createOptimistic(deps: OptimisticDeps): Optimistic {
             "important"
           );
         }
-      } else {
-        tidyStyleAttribute(hold);
       }
     });
 

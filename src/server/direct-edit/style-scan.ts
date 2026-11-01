@@ -110,7 +110,7 @@ export function styleReport(
     truncated: result.truncated,
     values: values.slice(0, ROWS_MAX),
     matches:
-      result.value !== null ? matchesOf(result.hits).slice(0, MATCHES_MAX) : [],
+      result.value === null ? [] : matchesOf(result.hits).slice(0, MATCHES_MAX),
     sites: siteCount(result.hits),
     unlocated: unlocatedCount(result.hits),
   };

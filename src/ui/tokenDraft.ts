@@ -88,7 +88,7 @@ export function shownRaw(
   return {
     value: pending?.value ?? base.value,
     darkValue:
-      pending?.darkValue !== undefined ? pending.darkValue : base.darkValue,
+      pending?.darkValue === undefined ? base.darkValue : pending.darkValue,
   };
 }
 
@@ -175,9 +175,9 @@ function overlayEntry(
   entries: CompiledTokenEntry[]
 ): CompiledTokenEntry {
   const value =
-    pending.value !== undefined
-      ? resolveCss(pending.value, entries, false)
-      : entry.value;
+    pending.value === undefined
+      ? entry.value
+      : resolveCss(pending.value, entries, false);
 
   const darkValue =
     pending.darkValue === undefined

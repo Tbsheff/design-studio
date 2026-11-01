@@ -941,14 +941,14 @@ function kitElement(
   });
   const text = textOnly(node);
 
-  const kept = !parent
-    ? rootStyles(node)
-    : parent.direction
+  const kept = parent
+    ? parent.direction
       ? placement(node, parent).filter(
           ([prop]) =>
             prop === "flex" || prop === "align-self" || prop === "min-width"
         )
-      : [];
+      : []
+    : rootStyles(node);
 
   if (text !== null) {
     return {

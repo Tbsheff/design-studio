@@ -73,7 +73,7 @@ function pickModes<T>(
 
   const light =
     modes.find((mode) => mode !== dark && LIGHT_MODE.test(nameOf(mode))) ??
-    (defaultMode !== dark ? defaultMode : undefined) ??
+    (defaultMode === dark ? undefined : defaultMode) ??
     modes.find((mode) => mode !== dark);
 
   return { light, dark: dark === light ? undefined : dark };
@@ -413,7 +413,7 @@ export function figmaToDtcg(file: Record<string, unknown>): FigmaConversion {
     }
 
     const modes =
-      dark !== undefined ? { $extensions: { "studio.modes": { dark } } } : {};
+      dark === undefined ? {} : { $extensions: { "studio.modes": { dark } } };
 
     place(tree, path, { $type: type, $value: light ?? dark, ...modes });
   }

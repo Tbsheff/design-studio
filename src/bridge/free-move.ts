@@ -437,12 +437,13 @@ export function createFreeMove(ports: FreeMovePorts): FreeMove {
       d.ready = true;
       ports.post({ type: "move-start", move: session.start });
     };
-    if (!d.promoted) announce();
-    else {
+    if (d.promoted) {
       ports.promote(d.element);
       d.started = new Promise((done) =>
         setTimeout(() => done(announce()), PROMOTE_WAIT_MS)
       );
+    } else {
+      announce();
     }
     return session;
   };

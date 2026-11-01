@@ -142,7 +142,7 @@ export function buildEditRequest(
     selector: selection.selector,
     ...target,
     ...(hasStyle ? { style: wire } : {}),
-    ...(text !== undefined ? { text, hints: textHints(selection) } : {}),
+    ...(text === undefined ? {} : { text, hints: textHints(selection) }),
     ...(variant ? { variant } : {}),
   };
 }

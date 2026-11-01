@@ -324,7 +324,7 @@ function titleOf(
     ...(asset ? ["replace"] : []),
     ...(request.fit ? [`fit ${request.fit}`] : []),
     ...(request.focal ? ["focal point"] : []),
-    ...(request.alt !== undefined ? ["alt text"] : []),
+    ...(request.alt === undefined ? [] : ["alt text"]),
   ];
 
   return `${mode === "background" ? "Background image" : "Image"} of ${tag}: ${parts.join(", ") || "no change"}`;

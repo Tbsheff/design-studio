@@ -614,8 +614,8 @@ function produce(entry: Entry, seenFonts: Set<string>): Produced | string {
     ? candidate(
         required.match,
         {
-          ...(entry.value !== undefined ? { value: entry.value } : {}),
-          ...(entry.dark !== undefined ? { dark: entry.dark } : {}),
+          ...(entry.value === undefined ? {} : { value: entry.value }),
+          ...(entry.dark === undefined ? {} : { dark: entry.dark }),
         },
         "tokens-file",
         entry.evidence,

@@ -819,7 +819,7 @@ export function LayersPanel({
       </header>
       <div
         ref={listRef}
-        className={`layers-list${drag.dragging !== null ? " dragging" : ""}`}
+        className={`layers-list${drag.dragging === null ? "" : " dragging"}`}
         role="tree"
         aria-label="Layers"
         tabIndex={0}

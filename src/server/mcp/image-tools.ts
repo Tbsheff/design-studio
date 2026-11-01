@@ -210,7 +210,7 @@ function options(
     ...(input.mode ? { mode: input.mode } : {}),
     ...(input.fit ? { fit: input.fit } : {}),
     ...(input.focal ? { focal: input.focal } : {}),
-    ...(input.alt !== undefined ? { alt: input.alt } : {}),
+    ...(input.alt === undefined ? {} : { alt: input.alt }),
     ...(input.position ? { position: input.position } : {}),
   };
 }

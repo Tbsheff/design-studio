@@ -728,13 +728,13 @@ async function screenshot(deps: ExportDeps, raw: Args): Promise<ToolResult> {
   const frame: ExportFrame = {
     name: "Screenshot",
     width:
-      args.width !== undefined
-        ? int(args, "width", 320, 2560, 1440)
-        : (picked.width ?? 1440),
+      args.width === undefined
+        ? (picked.width ?? 1440)
+        : int(args, "width", 320, 2560, 1440),
     height:
-      args.height !== undefined
-        ? int(args, "height", 320, 2000, 900)
-        : (picked.height ?? 900),
+      args.height === undefined
+        ? (picked.height ?? 900)
+        : int(args, "height", 320, 2000, 900),
     ...(page ? { path: page } : {}),
   };
   const element = str(args, "element");

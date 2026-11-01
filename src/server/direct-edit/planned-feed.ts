@@ -89,7 +89,7 @@ export function domPatchOf(
     ...(request.tag ? { tag: request.tag } : {}),
     ...(style ? { style } : {}),
     ...(classes ? { classes } : {}),
-    ...(text !== undefined ? { text } : {}),
+    ...(text === undefined ? {} : { text }),
   };
 
   return hasChange(dom) ? dom : null;

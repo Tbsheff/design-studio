@@ -480,7 +480,7 @@ export async function addLink(
           current,
           withMotion(base, {
             ...(spec.action ? { action: spec.action } : {}),
-            ...(spec.duration !== undefined ? { duration: spec.duration } : {}),
+            ...(spec.duration === undefined ? {} : { duration: spec.duration }),
             ...(spec.easing ? { easing: spec.easing } : {}),
           })
         );

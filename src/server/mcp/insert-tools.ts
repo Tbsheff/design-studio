@@ -197,7 +197,7 @@ const insertComponent = defineTool(
       target,
       position: input.position,
       ...(input.props ? { props: input.props } : {}),
-      ...(input.text !== undefined ? { text: input.text } : {}),
+      ...(input.text === undefined ? {} : { text: input.text }),
     };
 
     let result: InsertComponentResult;

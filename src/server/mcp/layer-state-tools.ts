@@ -140,21 +140,21 @@ async function sourceEdit(
 
 function summaryOf(input: z.output<typeof setSchema>): string {
   const parts = [
-    input.name !== undefined
-      ? input.name
+    input.name === undefined
+      ? null
+      : input.name
         ? `Renamed layer to ${input.name}`
-        : "Removed a layer name"
-      : null,
-    input.hidden !== undefined
-      ? input.hidden
+        : "Removed a layer name",
+    input.hidden === undefined
+      ? null
+      : input.hidden
         ? "Hid a layer"
-        : "Showed a layer"
-      : null,
-    input.locked !== undefined
-      ? input.locked
+        : "Showed a layer",
+    input.locked === undefined
+      ? null
+      : input.locked
         ? "Locked a layer"
-        : "Unlocked a layer"
-      : null,
+        : "Unlocked a layer",
   ];
 
   return parts.filter(Boolean).join(", ");

@@ -113,7 +113,7 @@ const addFlowTool = defineTool(
       {
         ...(input.routes ? { routes: input.routes } : {}),
         ...(input.from ? { from: input.from } : {}),
-        ...(input.depth !== undefined ? { depth: input.depth } : {}),
+        ...(input.depth === undefined ? {} : { depth: input.depth }),
         ...(input.params ? { params: input.params } : {}),
       },
       "agent"

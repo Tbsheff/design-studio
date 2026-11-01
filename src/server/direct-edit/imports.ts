@@ -533,13 +533,13 @@ function importLines(
   const sample = last ?? all[0];
 
   const quote =
-    sample?.source.start != null
-      ? code[sample.source.start] === '"'
+    sample?.source.start == null
+      ? "'"
+      : code[sample.source.start] === '"'
         ? '"'
-        : "'"
-      : "'";
+        : "'";
 
-  const semi = sample?.end != null ? code[sample.end - 1] === ";" : true;
+  const semi = sample?.end == null ? true : code[sample.end - 1] === ";";
 
   const text = lines
     .map(

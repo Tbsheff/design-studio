@@ -92,9 +92,9 @@ export async function applyFrameState(
     ? {
         ...(input.mock.name ? { name: input.mock.name } : {}),
         ...(input.mock.rules ? { mocks: input.mock.rules } : {}),
-        ...(input.mock.signedIn !== undefined
-          ? { signedIn: input.mock.signedIn }
-          : {}),
+        ...(input.mock.signedIn === undefined
+          ? {}
+          : { signedIn: input.mock.signedIn }),
       }
     : undefined;
 

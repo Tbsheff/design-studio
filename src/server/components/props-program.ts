@@ -380,7 +380,7 @@ export function typedProps(
       ...control,
       optional: (prop.flags & ts.SymbolFlags.Optional) !== 0,
       from: "type",
-      ...(fallback !== undefined ? { default: fallback } : {}),
+      ...(fallback === undefined ? {} : { default: fallback }),
     });
   }
   return result;

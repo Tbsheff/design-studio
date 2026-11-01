@@ -1002,9 +1002,9 @@ function editBody(
     ...(input.style && Object.keys(input.style).length > 0
       ? { style: input.style }
       : {}),
-    ...(input.text !== undefined
-      ? { text: input.text, hints: textHintsOf(element) }
-      : {}),
+    ...(input.text === undefined
+      ? {}
+      : { text: input.text, hints: textHintsOf(element) }),
     ...(hasClasses(input) ? { classes: input.classes } : {}),
     ...(input.variant ? { variant: input.variant } : {}),
   };

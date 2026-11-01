@@ -109,9 +109,9 @@ export function registerRunControlRoutes(app: Hono, runner: AgentRunner): void {
         decision.allow
           ? {
               allow: true,
-              ...(decision.always !== undefined
-                ? { always: decision.always }
-                : {}),
+              ...(decision.always === undefined
+                ? {}
+                : { always: decision.always }),
             }
           : {
               allow: false,

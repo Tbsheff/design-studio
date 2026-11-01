@@ -157,7 +157,7 @@ const testRules = defineTool(
     );
     const size = input.viewport ? VIEWPORTS[input.viewport] : {};
     const body = {
-      ...(input.text !== undefined ? { text: input.text } : {}),
+      ...(input.text === undefined ? {} : { text: input.text }),
       ...(input.frame ? { frame: input.frame } : {}),
       ...(input.path ? { path: input.path } : {}),
       ...size,

@@ -349,7 +349,7 @@ function layoutSpecs(o: LayoutInput): PlaceSpec[] {
   const frames = o.file.frames;
 
   const anchorFrame =
-    o.anchorPath !== null ? frameAt(frames, o.anchorPath) : undefined;
+    o.anchorPath === null ? undefined : frameAt(frames, o.anchorPath);
 
   const size = anchorFrame
     ? { width: anchorFrame.width, height: anchorFrame.height }
@@ -781,9 +781,9 @@ export async function buildFlow(
     .map((frame) => frame.id);
 
   const anchorFrame =
-    plan.anchorPath !== null
-      ? (frameAt(frames, plan.anchorPath)?.id ?? null)
-      : null;
+    plan.anchorPath === null
+      ? null
+      : (frameAt(frames, plan.anchorPath)?.id ?? null);
 
   const state = await inheritState(
     deps,

@@ -240,11 +240,11 @@ export function createLiveHub(): LiveHub {
           continue;
         }
 
-        const frame = !input?.frameId
-          ? -1
-          : room.frames.length === 1 && !room.frames[0]?.id
+        const frame = input?.frameId
+          ? room.frames.length === 1 && !room.frames[0]?.id
             ? 0
-            : room.frames.findIndex((f) => f.id === input.frameId);
+            : room.frames.findIndex((f) => f.id === input.frameId)
+          : -1;
 
         const data =
           frame >= 0 && input

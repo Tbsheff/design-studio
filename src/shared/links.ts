@@ -148,7 +148,7 @@ export function motionOf(raw: Record<string, unknown>): LinkMotion {
   return {
     ...(isLinkAction(raw.action) ? { action: raw.action } : {}),
     ...(isLinkTransition(raw.transition) ? { transition: raw.transition } : {}),
-    ...(duration !== null ? { duration } : {}),
+    ...(duration === null ? {} : { duration }),
     ...(isLinkEasing(raw.easing) ? { easing: raw.easing } : {}),
   };
 }

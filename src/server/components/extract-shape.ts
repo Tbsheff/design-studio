@@ -463,11 +463,11 @@ class Walker {
     for (const name of names) {
       const own = byUse[0]?.get(name);
 
-      const edit0 = !own
-        ? { start: insert0, end: insert0, prefix: ` ${name}=` }
-        : own.value
+      const edit0 = own
+        ? own.value
           ? { start: own.value.start ?? 0, end: own.value.end ?? 0, prefix: "" }
-          : { start: own.end ?? 0, end: own.end ?? 0, prefix: "=" };
+          : { start: own.end ?? 0, end: own.end ?? 0, prefix: "=" }
+        : { start: insert0, end: insert0, prefix: ` ${name}=` };
 
       this.attribute(
         name,

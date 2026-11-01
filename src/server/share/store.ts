@@ -184,7 +184,7 @@ export function createShareStore(dataDir: string): ShareStore {
         return null;
       }
 
-      return found.revokedAt !== null ? "revoked" : "expired";
+      return found.revokedAt === null ? "expired" : "revoked";
     },
     revoke(id) {
       return mutate((records) => {

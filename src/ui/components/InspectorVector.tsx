@@ -265,16 +265,16 @@ function PaintRows({
         if (!ok) return;
         setSaved((prev) => ({
           ...prev,
-          ...(change.fill !== undefined ? { fill: change.fill ?? "none" } : {}),
-          ...(change.stroke !== undefined
-            ? { stroke: change.stroke ?? "none" }
-            : {}),
-          ...(change.strokeWidth !== undefined
-            ? {
+          ...(change.fill === undefined ? {} : { fill: change.fill ?? "none" }),
+          ...(change.stroke === undefined
+            ? {}
+            : { stroke: change.stroke ?? "none" }),
+          ...(change.strokeWidth === undefined
+            ? {}
+            : {
                 width:
                   change.strokeWidth === null ? "" : String(change.strokeWidth),
-              }
-            : {}),
+              }),
         }));
       }
     );

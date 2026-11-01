@@ -99,10 +99,10 @@ function pump(): void {
         finish(request, URL.createObjectURL(await res.blob()), true);
       })
       .catch(() => {
-        if (!request.controller.signal.aborted) {
-          finish(request, null, false);
-        } else {
+        if (request.controller.signal.aborted) {
           forget(request);
+        } else {
+          finish(request, null, false);
         }
       })
       .finally(() => {

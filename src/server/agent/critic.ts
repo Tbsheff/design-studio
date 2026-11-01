@@ -200,7 +200,7 @@ export function criticText(input: Omit<CriticInput, "images">): string {
       : null,
     input.screens ? `<screens>\n${input.screens}\n</screens>` : null,
     input.app && input.kind !== "regression" ? APP_RULES : null,
-    input.kind !== "regression" ? sourceBlock(input.changedSource) : null,
+    input.kind === "regression" ? null : sourceBlock(input.changedSource),
     closingLine(input),
   ];
 
@@ -252,7 +252,7 @@ function criticOptions(
   return {
     ...(env ? { env } : {}),
     model,
-    ...(budgetUsd !== null ? { maxBudgetUsd: budgetUsd } : {}),
+    ...(budgetUsd === null ? {} : { maxBudgetUsd: budgetUsd }),
     maxTurns: 1,
     tools: [],
     settingSources: [],

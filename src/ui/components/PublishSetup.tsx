@@ -269,12 +269,14 @@ export function PublishSetupBody({
 
   return (
     <>
-      {!installed ? (
-        <InstallStep cli={cli} busy={busy} run={run} />
-      ) : cli.signedIn ? (
-        <AccountStep cli={cli} busy={busy} run={run} />
+      {installed ? (
+        cli.signedIn ? (
+          <AccountStep cli={cli} busy={busy} run={run} />
+        ) : (
+          <SignInStep cli={cli} busy={busy} run={run} />
+        )
       ) : (
-        <SignInStep cli={cli} busy={busy} run={run} />
+        <InstallStep cli={cli} busy={busy} run={run} />
       )}
       {(error ?? cli.error) && (
         <div className="alert error small" role="alert">

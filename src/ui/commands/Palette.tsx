@@ -348,7 +348,7 @@ export function Palette({
             </p>
           )}
           {rows.map((row, index) => {
-            const head = row.group !== lastGroup ? row.group : null;
+            const head = row.group === lastGroup ? null : row.group;
             lastGroup = row.group;
 
             return (

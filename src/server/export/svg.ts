@@ -206,7 +206,7 @@ class SvgWriter {
     const attrs = [
       ` font-family="${xml(font.family)}"`,
       ` font-size="${n(font.size)}"`,
-      font.weight !== 400 ? ` font-weight="${font.weight}"` : "",
+      font.weight === 400 ? "" : ` font-weight="${font.weight}"`,
       font.italic ? ' font-style="italic"' : "",
       text.letterSpacing ? ` letter-spacing="${n(text.letterSpacing)}"` : "",
       text.underline || text.strike

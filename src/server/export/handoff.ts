@@ -382,7 +382,7 @@ async function handoffMarkdown(
     .slice(0, MAX_DECISIONS)
     .map(
       (v) =>
-        `- ${new Date(v.createdAt).toISOString().slice(0, 10)} · ${cell(v.name ?? v.title)}${v.meta.kind !== "run" ? ` (${v.meta.kind})` : ""}`
+        `- ${new Date(v.createdAt).toISOString().slice(0, 10)} · ${cell(v.name ?? v.title)}${v.meta.kind === "run" ? "" : ` (${v.meta.kind})`}`
     );
   const entry = project.entry || "index.html";
   const run =

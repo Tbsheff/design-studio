@@ -165,11 +165,11 @@ async function withRender(
   const settled = await renderSettled(id);
   const content = (result as { content?: unknown[] }).content;
   if (!Array.isArray(content)) return result;
-  const note = !waited
-    ? "No page of this app was rendered yet, so there was no rebuild to wait for."
-    : settled
+  const note = waited
+    ? settled
       ? `The dev server rebuilt the page ${Date.now() - started} ms after the call started.`
-      : "The dev server did not finish the rebuild within 60 s.";
+      : "The dev server did not finish the rebuild within 60 s."
+    : "No page of this app was rendered yet, so there was no rebuild to wait for.";
   return {
     ...(result as object),
     content: [...content, { type: "text", text: note }],

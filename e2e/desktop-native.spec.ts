@@ -247,7 +247,7 @@ test("R2-1: zoom keys and View menu zoom the canvas, never the page", async () =
           queueMicrotask(() =>
             requestAnimationFrame(() =>
               resolve(
-                (artboard?.style.transform ?? "") !== before ? Date.now() : -1
+                (artboard?.style.transform ?? "") === before ? -1 : Date.now()
               )
             )
           );

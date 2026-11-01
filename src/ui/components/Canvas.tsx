@@ -1578,9 +1578,9 @@ function CanvasView(props: ViewProps) {
 
     const blocked = props.running
       ? "A run is going."
-      : did !== directionId
-        ? "Open this direction first."
-        : undefined;
+      : did === directionId
+        ? undefined
+        : "Open this direction first.";
 
     return [
       {

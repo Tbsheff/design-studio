@@ -679,11 +679,11 @@ function RunAnnouncer({ run }: { run: RunView | undefined }) {
   const queued = run?.status === "running" ? run.queue.length : 0;
   const asking = run?.status === "running" ? run.permissions[0] : undefined;
 
-  const text = !run
-    ? ""
-    : asking
+  const text = run
+    ? asking
       ? `The agent needs your answer: ${asking.title}`
-      : `${RUN_ANNOUNCE[run.status]}${queued ? `. ${queued} queued` : ""}`;
+      : `${RUN_ANNOUNCE[run.status]}${queued ? `. ${queued} queued` : ""}`
+    : "";
 
   return (
     <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">

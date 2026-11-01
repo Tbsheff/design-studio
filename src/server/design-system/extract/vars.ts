@@ -122,8 +122,8 @@ export function candidate(
 
   return {
     token: match.token,
-    ...(value !== undefined ? { value } : {}),
-    ...(dark !== undefined ? { dark } : {}),
+    ...(value === undefined ? {} : { value }),
+    ...(dark === undefined ? {} : { dark }),
     source,
     confidence,
     evidence,
@@ -274,8 +274,8 @@ function resolvedPair(
       : undefined;
 
   return {
-    ...(value !== undefined ? { value } : {}),
-    ...(dark !== undefined ? { dark } : {}),
+    ...(value === undefined ? {} : { value }),
+    ...(dark === undefined ? {} : { dark }),
   };
 }
 

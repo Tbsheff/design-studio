@@ -373,9 +373,9 @@ function directRequest(input: EditInput, element: Sourced, site: EditSite) {
     ...siteRequest(site),
     selector: input.selector,
     ...(Object.keys(style).length > 0 ? { style } : {}),
-    ...(input.text !== undefined
-      ? { text: input.text, hints: textHintsOf(element) }
-      : {}),
+    ...(input.text === undefined
+      ? {}
+      : { text: input.text, hints: textHintsOf(element) }),
     ...(input.classes ? { classes: input.classes } : {}),
     ...(input.variant ? { variant: input.variant } : {}),
   });

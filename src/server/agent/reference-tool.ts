@@ -113,7 +113,7 @@ export async function runCompareToReference(
   try {
     const shot = await resolveShotTarget(deps.targets, deps.ctx, {
       ...(parsed.data.frame ? { frame: parsed.data.frame } : {}),
-      ...(parsed.data.path !== undefined ? { path: parsed.data.path } : {}),
+      ...(parsed.data.path === undefined ? {} : { path: parsed.data.path }),
     });
 
     if (!shot) {

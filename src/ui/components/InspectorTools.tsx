@@ -153,11 +153,11 @@ export function InspectorTools(props: Props) {
   const htmlSource =
     props.selection.length === 1 && isHtmlFile(last?.source?.file);
 
-  const insertTip = !last
-    ? "Select a parent element first"
-    : !htmlSource
-      ? "Adding elements works on one element in an HTML file"
-      : undefined;
+  const insertTip = last
+    ? htmlSource
+      ? undefined
+      : "Adding elements works on one element in an HTML file"
+    : "Select a parent element first";
 
   const select = () => {
     if (props.onSelectMode) {

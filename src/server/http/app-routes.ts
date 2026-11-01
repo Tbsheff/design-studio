@@ -68,7 +68,7 @@ function attachRequest(body: Record<string, unknown>): AttachAppRequest {
     url: pick("url"),
     appDir: pick("appDir"),
     name: pick("name"),
-    ...(env !== undefined ? { env: env as Record<string, string> } : {}),
+    ...(env === undefined ? {} : { env: env as Record<string, string> }),
   };
 }
 

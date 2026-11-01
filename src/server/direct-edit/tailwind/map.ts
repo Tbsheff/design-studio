@@ -706,7 +706,7 @@ function leadingToken(value: string, theme: TailwindTheme): string {
   }
 
   const pct = percent(text);
-  const number = pct !== null ? pct / 100 : plainNumber(text);
+  const number = pct === null ? plainNumber(text) : pct / 100;
 
   if (number !== null) {
     if (Math.abs(number - 1) < 0.005) {
@@ -759,7 +759,7 @@ function trackingToken(value: string, theme: TailwindTheme): string {
 
 function opacityToken(value: string, theme: TailwindTheme): string {
   const pct = percent(value);
-  const number = pct !== null ? pct : (plainNumber(value) ?? Number.NaN) * 100;
+  const number = pct === null ? (plainNumber(value) ?? Number.NaN) * 100 : pct;
   const whole = Math.round(number);
 
   if (

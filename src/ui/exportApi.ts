@@ -44,7 +44,7 @@ async function call(
   const res = await fetch(path, {
     method,
     headers,
-    ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+    ...(body === undefined ? {} : { body: JSON.stringify(body) }),
   });
 
   if (!res.ok) {

@@ -227,7 +227,11 @@ export function setFrameHidden(
   }
 
   const frames = layout.frames.map((f) =>
-    f.id !== id ? f : hidden ? { ...f, hidden: true } : withoutKey(f, "hidden")
+    f.id === id
+      ? hidden
+        ? { ...f, hidden: true }
+        : withoutKey(f, "hidden")
+      : f
   );
 
   const activeId =
@@ -273,7 +277,7 @@ export function setFramePath(
   return {
     ...layout,
     frames: layout.frames.map((f) =>
-      f.id !== id ? f : path ? { ...f, path } : withoutKey(f, "path")
+      f.id === id ? (path ? { ...f, path } : withoutKey(f, "path")) : f
     ),
   };
 }

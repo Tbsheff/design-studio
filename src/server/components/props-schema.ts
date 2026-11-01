@@ -574,9 +574,9 @@ function variantSpecs(
         control: "boolean",
         optional: true,
         from: "variant",
-        ...(fallback !== undefined
-          ? { default: fallback === true || fallback === "true" }
-          : {}),
+        ...(fallback === undefined
+          ? {}
+          : { default: fallback === true || fallback === "true" }),
       };
     }
 
@@ -586,7 +586,7 @@ function variantSpecs(
       options: values,
       optional: true,
       from: "variant",
-      ...(fallback !== undefined ? { default: String(fallback) } : {}),
+      ...(fallback === undefined ? {} : { default: String(fallback) }),
     };
   });
 }

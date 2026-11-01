@@ -910,12 +910,12 @@ async function buildSdkOptions(
       ],
     },
     permissionMode: "default",
-    ...(config.agentBudgetUsd !== null
-      ? {
+    ...(config.agentBudgetUsd === null
+      ? {}
+      : {
           maxBudgetUsd:
             config.agentBudgetUsd + (priorFor(input, resume)?.costUsd ?? 0),
-        }
-      : {}),
+        }),
     maxTurns: config.maxTurns,
     model: config.model,
     ...(ctx.request.effort ? { effort: ctx.request.effort } : {}),
@@ -1313,9 +1313,9 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
       segment.sdkOptions = {
         ...(await buildSdkOptions(options, input, sessionId, segment.setup)),
         resume: sessionId,
-        ...(segment.maxBudgetUsd !== null
-          ? { maxBudgetUsd: segment.maxBudgetUsd }
-          : {}),
+        ...(segment.maxBudgetUsd === null
+          ? {}
+          : { maxBudgetUsd: segment.maxBudgetUsd }),
       };
       const prior: PriorSession = {
         sessionId,
@@ -1352,9 +1352,9 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
         segment.sdkOptions = {
           ...(await buildSdkOptions(options, input, sessionId, segment.setup)),
           resume: sessionId,
-          ...(segment.maxBudgetUsd !== null
-            ? { maxBudgetUsd: segment.maxBudgetUsd }
-            : {}),
+          ...(segment.maxBudgetUsd === null
+            ? {}
+            : { maxBudgetUsd: segment.maxBudgetUsd }),
         };
         const prior: PriorSession = {
           sessionId,
@@ -1412,9 +1412,9 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
     segment.sdkOptions = {
       ...(await buildSdkOptions(options, input, sessionId, segment.setup)),
       resume: sessionId,
-      ...(segment.maxBudgetUsd !== null
-        ? { maxBudgetUsd: segment.maxBudgetUsd }
-        : {}),
+      ...(segment.maxBudgetUsd === null
+        ? {}
+        : { maxBudgetUsd: segment.maxBudgetUsd }),
     };
     const prior: PriorSession = {
       sessionId,
@@ -1510,9 +1510,9 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
     segment.sdkOptions = {
       ...(await buildSdkOptions(options, input, sessionId, segment.setup)),
       resume: sessionId,
-      ...(segment.maxBudgetUsd !== null
-        ? { maxBudgetUsd: segment.maxBudgetUsd }
-        : {}),
+      ...(segment.maxBudgetUsd === null
+        ? {}
+        : { maxBudgetUsd: segment.maxBudgetUsd }),
     };
     const prior: PriorSession = {
       sessionId,
@@ -1559,9 +1559,9 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
       segment.sdkOptions = {
         ...(await buildSdkOptions(options, input, sessionId, segment.setup)),
         resume: sessionId,
-        ...(segment.maxBudgetUsd !== null
-          ? { maxBudgetUsd: segment.maxBudgetUsd }
-          : {}),
+        ...(segment.maxBudgetUsd === null
+          ? {}
+          : { maxBudgetUsd: segment.maxBudgetUsd }),
       };
       const prior: PriorSession = {
         sessionId,

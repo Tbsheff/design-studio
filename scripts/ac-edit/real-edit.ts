@@ -310,9 +310,9 @@ async function main(): Promise<void> {
 
     const colorChanges = sameShape
       ? colorsBefore.flatMap((el, index) =>
-          el.color !== colorsAfter[index]?.color
-            ? [{ ...el, after: colorsAfter[index]?.color }]
-            : []
+          el.color === colorsAfter[index]?.color
+            ? []
+            : [{ ...el, after: colorsAfter[index]?.color }]
         )
       : null;
 

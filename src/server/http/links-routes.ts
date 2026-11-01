@@ -182,9 +182,9 @@ export function registerLinksRoutes(app: Hono, deps: LinksRouteDeps): void {
         return {
           ...file,
           links: file.links.map((link) =>
-            link.id !== id
-              ? link
-              : withMotion({ ...link, ...(to ? { to } : {}) }, motion)
+            link.id === id
+              ? withMotion({ ...link, ...(to ? { to } : {}) }, motion)
+              : link
           ),
         };
       },

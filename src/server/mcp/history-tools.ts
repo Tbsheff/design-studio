@@ -282,9 +282,9 @@ async function batchRequest(
     ...(edit.style && Object.keys(edit.style).length > 0
       ? { style: edit.style }
       : {}),
-    ...(edit.text !== undefined
-      ? { text: edit.text, hints: textHintsOf(element) }
-      : {}),
+    ...(edit.text === undefined
+      ? {}
+      : { text: edit.text, hints: textHintsOf(element) }),
     ...(hasClasses(edit) ? { classes: edit.classes } : {}),
     ...(edit.variant ? { variant: edit.variant } : {}),
   };

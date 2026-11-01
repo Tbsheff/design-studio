@@ -315,8 +315,11 @@ export function useLayerEdits(o: Options): LayerEdits {
   const runOp = useCallback(
     (op: SelectionOp) => {
       const targets = selectionTargets(live.current.selection);
-      if (!targets) notify(NO_SOURCE);
-      else void applyStructure({ op, targets });
+      if (targets) {
+        void applyStructure({ op, targets });
+      } else {
+        notify(NO_SOURCE);
+      }
     },
     [applyStructure, notify]
   );
@@ -369,8 +372,11 @@ export function useLayerEdits(o: Options): LayerEdits {
         drop,
         live.current.selection
       );
-      if (!request) notify(NO_SOURCE);
-      else void applyStructure(request);
+      if (request) {
+        void applyStructure(request);
+      } else {
+        notify(NO_SOURCE);
+      }
     },
     [applyStructure, notify]
   );

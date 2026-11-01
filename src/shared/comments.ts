@@ -225,7 +225,7 @@ export function resolveAnchor<E>(
     return { element: text, via: "text" };
   }
 
-  return selector !== null ? { element: selector, via: "selector" } : null;
+  return selector === null ? null : { element: selector, via: "selector" };
 }
 
 export interface OrphanTracker {

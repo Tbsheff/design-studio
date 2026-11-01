@@ -145,10 +145,10 @@ class JsReader {
     while (!this.closes("]")) {
       const item = this.readValue(depth + 1);
 
-      if (item !== undefined) {
-        items.push(item);
-      } else {
+      if (item === undefined) {
         this.skipValue();
+      } else {
+        items.push(item);
       }
 
       this.skipComma();
@@ -181,10 +181,10 @@ class JsReader {
     this.index += 1;
     const value = this.readValue(depth + 1);
 
-    if (value !== undefined) {
-      object[key] = value;
-    } else {
+    if (value === undefined) {
       this.skipValue();
+    } else {
+      object[key] = value;
     }
 
     return true;

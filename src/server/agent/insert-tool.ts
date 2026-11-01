@@ -156,7 +156,7 @@ export async function runInsertComponent(
       target,
       position: input.position,
       ...(input.props ? { props: input.props } : {}),
-      ...(input.text !== undefined ? { text: input.text } : {}),
+      ...(input.text === undefined ? {} : { text: input.text }),
     };
     const plan = await planInsertComponent(
       { project, workTree: direction.workTree, previewOrigin },

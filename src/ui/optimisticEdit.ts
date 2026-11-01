@@ -39,7 +39,7 @@ export function domPatchFor(req: DirectEditRequest): DomPatch | null {
     selector: req.selector,
     trusted: true,
     ...(style ? { style } : {}),
-    ...(req.text !== undefined ? { text: req.text } : {}),
+    ...(req.text === undefined ? {} : { text: req.text }),
   };
 }
 

@@ -486,9 +486,9 @@ export function createPublishService(deps: PublishDeps): PublishService {
     expiresAt: held.plan.expiresAt,
     noindex: held.plan.noindex,
     comments: held.plan.viewerComments,
-    ...(held.passwordHash !== undefined
-      ? { passwordHash: held.passwordHash }
-      : {}),
+    ...(held.passwordHash === undefined
+      ? {}
+      : { passwordHash: held.passwordHash }),
   });
 
   const push = async (held: HeldPlan): Promise<PublicationRecord> => {

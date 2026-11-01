@@ -222,7 +222,7 @@ export function targetLabel(
   const frame = target.frameId ? ` (frame ${target.frameId})` : "";
 
   const state =
-    target.state !== DEFAULT_FRAME_STATE ? `, state ${target.state}` : "";
+    target.state === DEFAULT_FRAME_STATE ? "" : `, state ${target.state}`;
 
   return `${page}${frame}${state}`;
 }

@@ -6,7 +6,8 @@ import {
   cleanLinkText,
   LINK_TEXT_MAX,
 } from "../../shared/links.js";
-import { scriptTargets, type ScriptTargets } from "./script-links.js";
+import { scriptTargets } from "./script-links.js";
+import type { ScriptTargets } from "./script-links.js";
 
 type Node = DefaultTreeAdapterMap["node"];
 

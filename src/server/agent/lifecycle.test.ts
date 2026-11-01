@@ -9,9 +9,8 @@ import {
   createRunLifecycle,
   DELTA_FLUSH_CHARS,
   DELTA_FLUSH_MS,
-  type DriverSink,
-  type RunDriver,
 } from "./lifecycle.js";
+import type { DriverSink, RunDriver } from "./lifecycle.js";
 import {
   createFakeBus,
   createFakeProjects,

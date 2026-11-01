@@ -6,7 +6,8 @@ import type {
   CommentStatus,
   DesignComment,
 } from "../shared/contracts";
-import { parseLoc, reviewReport, type ReviewState } from "./commentAnchors";
+import { parseLoc, reviewReport } from "./commentAnchors";
+import type { ReviewState } from "./commentAnchors";
 
 const rect = { x: 1, y: 2, width: 3, height: 4 };
 

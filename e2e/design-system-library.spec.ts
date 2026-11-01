@@ -1,17 +1,18 @@
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 import type { PackSummary, Project } from "../src/shared/contracts";
 import {
-  type StudioApi,
   frontFrame,
   mainDirection,
   openHome,
   showVersions,
   versionRow,
 } from "./support/studio";
+import type { StudioApi } from "./support/studio";
 
 async function openProject(
   page: Page,

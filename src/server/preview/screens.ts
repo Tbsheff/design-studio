@@ -4,9 +4,8 @@ import {
   replayExpression,
   screenSignatureExpression,
   viewMembersExpression,
-  type ScreenStep,
-  type ViewMember,
 } from "./screens-probe.js";
+import type { ScreenStep, ViewMember } from "./screens-probe.js";
 
 export interface PageScreen {
   label: string;

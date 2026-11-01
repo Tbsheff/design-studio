@@ -1,17 +1,15 @@
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type KeyboardEvent as ReactKeyboardEvent,
-  type PointerEvent as ReactPointerEvent,
+import { useCallback, useEffect, useRef, useState } from "react";
+import type {
+  KeyboardEvent as ReactKeyboardEvent,
+  PointerEvent as ReactPointerEvent,
 } from "react";
 
 import type { RunStatus, SelectionContext } from "../../shared/contracts";
 import { cleanFramePath } from "../canvasFrames";
 import { openPortDialog, portAvailable } from "../portApi";
 import { usePopover } from "../usePopover";
-import { Icon, type IconName } from "./Icon";
+import { Icon } from "./Icon";
+import type { IconName } from "./Icon";
 
 export interface FrameMenuItem {
   id: string;

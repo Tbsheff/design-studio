@@ -1,4 +1,5 @@
-import { lazy, Suspense, type JSX } from "react";
+import { lazy, Suspense } from "react";
+import type { JSX } from "react";
 
 import { Icon } from "./Icon";
 import type { UiSelectProps } from "./UiSelect";

@@ -14,14 +14,12 @@ import {
   assertSameTag,
 } from "./errors.js";
 import type { PatchResult, SourceEdit, SourcePosition } from "./errors.js";
-import { applySplices, leadingWhitespaceStart, type Splice } from "./splice.js";
+import { applySplices, leadingWhitespaceStart } from "./splice.js";
+import type { Splice } from "./splice.js";
 import { htmlNameSplice, htmlPositionAt, planHtmlMove } from "./structure.js";
 import { htmlClassSite } from "./tailwind/html-site.js";
-import {
-  decideClassEdit,
-  describeSite,
-  type TailwindTheme,
-} from "./tailwind/index.js";
+import { decideClassEdit, describeSite } from "./tailwind/index.js";
+import type { TailwindTheme } from "./tailwind/index.js";
 import { variantCssProps, variantCssSplices } from "./variant-css.js";
 
 type ParentNode = DefaultTreeAdapterMap["parentNode"];

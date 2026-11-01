@@ -1,12 +1,9 @@
-import { expect, test, type Page, type Route } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import type { Page, Route } from "@playwright/test";
 
 import type { RunSummary, StudioEvent } from "../src/shared/contracts";
-import {
-  createProjectViaUi,
-  frontFrame,
-  openHome,
-  type StudioApi,
-} from "./support/studio";
+import { createProjectViaUi, frontFrame, openHome } from "./support/studio";
+import type { StudioApi } from "./support/studio";
 
 const HOLD_MS = 1500;
 

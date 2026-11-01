@@ -3,7 +3,8 @@ import { readdirSync } from "node:fs";
 import http from "node:http";
 import type { AddressInfo } from "node:net";
 
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 import type {
   Project,

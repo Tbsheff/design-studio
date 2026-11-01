@@ -1,4 +1,5 @@
-import { useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
+import { useRef, useState } from "react";
+import type { KeyboardEvent, PointerEvent } from "react";
 
 import { colorHex } from "../../shared/token-match";
 import { colorToHex, formatNumber, parseNumber } from "../cssValues";

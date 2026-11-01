@@ -8,9 +8,8 @@ import {
   jsxFiles,
   messageFiles,
   walkNodes,
-  type ModuleLoader,
-  type TextModule,
 } from "./text-source-files.js";
+import type { ModuleLoader, TextModule } from "./text-source-files.js";
 
 export const ANY = Symbol("any");
 

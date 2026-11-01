@@ -11,8 +11,8 @@ import {
   modeRgb,
   parse,
   useMode,
-  type Color,
 } from "culori/fn";
+import type { Color } from "culori/fn";
 
 useMode(modeRgb);
 

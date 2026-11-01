@@ -1,4 +1,5 @@
-import { defineConfig, type OxlintOverride } from "oxlint";
+import { defineConfig } from "oxlint";
+import type { OxlintOverride } from "oxlint";
 
 import { ELEMENTS, ROOT_POLICIES, dependencies } from "./lint/boundaries.ts";
 import { coarse } from "./lint/coarse.ts";

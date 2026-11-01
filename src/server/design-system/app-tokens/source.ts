@@ -9,8 +9,10 @@ import type {
 } from "../../../shared/contracts.js";
 import { readDesignSystemFiles } from "../sync.js";
 import { findTokenFile, safeFileInside } from "./detect.js";
-import { readCssTokens, type CssTokenSheet } from "./read-css.js";
-import { appTokenEntries, buildAppTokens, type AppToken } from "./tokens.js";
+import { readCssTokens } from "./read-css.js";
+import type { CssTokenSheet } from "./read-css.js";
+import { appTokenEntries, buildAppTokens } from "./tokens.js";
+import type { AppToken } from "./tokens.js";
 
 export interface LoadedAppTokens {
   root: string;

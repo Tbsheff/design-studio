@@ -2,7 +2,8 @@ import { mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-import { expect, test, type Browser, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import type { Browser, Page } from "@playwright/test";
 
 import type { Project, TelemetrySample } from "../src/shared/contracts";
 import { ROOT } from "./support/server";
@@ -13,8 +14,8 @@ import {
   openHome,
   selectInFrame,
   showVersions,
-  type StudioApi,
 } from "./support/studio";
+import type { StudioApi } from "./support/studio";
 
 const UI_KEY = "design-studio.ui.v1";
 const RESULTS_FILE = path.join(ROOT, "e2e", "results", "perf-r5.json");

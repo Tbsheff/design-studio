@@ -17,8 +17,8 @@ import {
   oneLine,
   refuseWhileRunning,
   studioCall,
-  type EditDeps,
 } from "./edit-deps.js";
+import type { EditDeps } from "./edit-deps.js";
 import {
   base,
   defineTool,
@@ -26,8 +26,8 @@ import {
   packId,
   projectId,
   versionActivity,
-  type Done,
 } from "./edit-kit.js";
+import type { Done } from "./edit-kit.js";
 import { isInside, safeFolder } from "./folders.js";
 import { readTokensFileInput } from "./tokens-file-input.js";
 import {

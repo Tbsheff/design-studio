@@ -1,12 +1,12 @@
 import { mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 
-import { expect, test, type Frame, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import type { Frame, Page } from "@playwright/test";
 
 import { ROOT } from "./support/server";
 import {
   createProjectViaUi,
-  type StudioApi,
   frontFrame,
   mainDirection,
   openHome,
@@ -14,6 +14,7 @@ import {
   setSelectMode,
   showVersions,
 } from "./support/studio";
+import type { StudioApi } from "./support/studio";
 
 const REVIEW_DIR = path.join(ROOT, "design-review");
 

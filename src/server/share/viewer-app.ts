@@ -2,7 +2,8 @@ import { randomBytes } from "node:crypto";
 import { readFile } from "node:fs/promises";
 
 import { getConnInfo } from "@hono/node-server/conninfo";
-import { Hono, type Context } from "hono";
+import { Hono } from "hono";
+import type { Context } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { streamSSE } from "hono/streaming";
 import { z } from "zod";

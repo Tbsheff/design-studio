@@ -1,5 +1,6 @@
 import { cssEdits, isMappedProperty } from "./map.js";
-import { planClassEdit, type ClassEdit, type ClassSite } from "./plan.js";
+import { planClassEdit } from "./plan.js";
+import type { ClassEdit, ClassSite } from "./plan.js";
 import type { TailwindTheme } from "./theme.js";
 
 const KEYWORDS: Record<string, Record<string, string>> = {

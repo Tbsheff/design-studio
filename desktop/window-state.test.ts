@@ -5,8 +5,8 @@ import {
   parseStateFile,
   pickState,
   recordState,
-  type DisplayInfo,
 } from "./window-state.js";
+import type { DisplayInfo } from "./window-state.js";
 
 const laptop: DisplayInfo = {
   id: 1,

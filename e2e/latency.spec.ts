@@ -2,7 +2,8 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 import type { TelemetrySample } from "../src/shared/contracts";
 import { BASE_URL, ROOT } from "./support/server";
@@ -13,8 +14,8 @@ import {
   openHome,
   selectInFrame,
   setSelectMode,
-  type StudioApi,
 } from "./support/studio";
+import type { StudioApi } from "./support/studio";
 
 const SAMPLES = 20;
 const SEND_SAMPLES = 12;

@@ -1,11 +1,5 @@
-import {
-  lazy,
-  Suspense,
-  useCallback,
-  useRef,
-  useState,
-  type MutableRefObject,
-} from "react";
+import { lazy, Suspense, useCallback, useRef, useState } from "react";
+import type { MutableRefObject } from "react";
 
 import type {
   ProjectKind,
@@ -17,7 +11,8 @@ import { TRY_VARIANTS_COMMAND } from "../shared/element-variants";
 import { formatCopyCss } from "./authoredCss";
 import type { PreviewPort } from "./bridge";
 import { commandBlocker, runCommand } from "./commands/registry";
-import { PreviewMenu, type PreviewMenuItem } from "./components/PreviewMenu";
+import { PreviewMenu } from "./components/PreviewMenu";
+import type { PreviewMenuItem } from "./components/PreviewMenu";
 import { pasteJsx } from "./pasteJsx";
 import { uiStore } from "./storage";
 import { selectionTargets, structureMenuItems } from "./structureEdits";

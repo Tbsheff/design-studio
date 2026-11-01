@@ -1,9 +1,7 @@
 import path from "node:path";
 
-import {
-  _electron as electron,
-  type ElectronApplication,
-} from "@playwright/test";
+import { _electron as electron } from "@playwright/test";
+import type { ElectronApplication } from "@playwright/test";
 
 import { ROOT } from "./server";
 import { writeSkillsFixture } from "./skills-fixture";

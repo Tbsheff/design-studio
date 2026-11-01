@@ -18,8 +18,8 @@ import {
   openHome,
   sendPrompt,
   showVersions,
-  type StudioApi,
 } from "./support/studio";
+import type { StudioApi } from "./support/studio";
 
 const CREATE_PROMPT = "Riverside Dental Clinic";
 const MAIN_EDIT = "Book a cleaning online";

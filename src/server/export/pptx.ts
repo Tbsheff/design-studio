@@ -1,8 +1,10 @@
 import type PptxGenJS from "pptxgenjs";
 
 import { ShapeWriter } from "./pptx-shapes.js";
-import { addBlock, textBlocks, type Slide } from "./pptx-text.js";
-import { patchDeck, type XmlPatch } from "./pptx-xml.js";
+import { addBlock, textBlocks } from "./pptx-text.js";
+import type { Slide } from "./pptx-text.js";
+import { patchDeck } from "./pptx-xml.js";
+import type { XmlPatch } from "./pptx-xml.js";
 import type { VectorRegion } from "./vector.js";
 
 const PX_PER_IN = 96;

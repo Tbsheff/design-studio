@@ -12,12 +12,8 @@ import { makeTempConfig } from "../store/testConfig.js";
 import { createVersionStore } from "../store/versions.js";
 import type { AgentRunner, ServerConfig } from "../types.js";
 import { createApp } from "./app.js";
-import {
-  OSASCRIPT,
-  createFolderPicker,
-  type ExecFileFn,
-  type FolderPicker,
-} from "./pick-folder.js";
+import { OSASCRIPT, createFolderPicker } from "./pick-folder.js";
+import type { ExecFileFn, FolderPicker } from "./pick-folder.js";
 
 type Call = { file: string; args: string[]; timeout: number };
 type Reply = {

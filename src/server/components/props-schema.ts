@@ -2,7 +2,8 @@ import { existsSync } from "node:fs";
 import { readFile, realpath, stat } from "node:fs/promises";
 import path from "node:path";
 
-import { parse, type ParserPlugin } from "@babel/parser";
+import { parse } from "@babel/parser";
+import type { ParserPlugin } from "@babel/parser";
 import type * as t from "@babel/types";
 import type * as TS from "typescript";
 
@@ -20,9 +21,8 @@ import {
   nodeModulesFile,
   ProgramBudgetError,
   typedProps,
-  type ProgramScope,
-  type TypedProps,
 } from "./props-program.js";
+import type { ProgramScope, TypedProps } from "./props-program.js";
 
 export { compilerOptionsFor } from "./props-program.js";
 

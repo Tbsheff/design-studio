@@ -3,15 +3,13 @@ import type PptxGenJS from "pptxgenjs";
 
 import type { ScanColor, ScanRect } from "./page-scan.js";
 import type { NativeShape, NativeStroke } from "./pptx-plan.js";
-import { addBlock, type Slide } from "./pptx-text.js";
-import {
-  gradientXml,
-  roundGeomXml,
-  shadowXml,
-  type XmlPatch,
-} from "./pptx-xml.js";
+import { addBlock } from "./pptx-text.js";
+import type { Slide } from "./pptx-text.js";
+import { gradientXml, roundGeomXml, shadowXml } from "./pptx-xml.js";
+import type { XmlPatch } from "./pptx-xml.js";
 import type { PathPoint } from "./svg-path.js";
-import { cropPng, type VectorRegion } from "./vector.js";
+import { cropPng } from "./vector.js";
+import type { VectorRegion } from "./vector.js";
 
 type Points = NonNullable<PptxGenJS.ShapeProps["points"]>;
 

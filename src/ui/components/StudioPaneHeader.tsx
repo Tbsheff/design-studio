@@ -1,11 +1,5 @@
-import {
-  useCallback,
-  useRef,
-  useState,
-  type KeyboardEvent,
-  type ReactNode,
-  type RefObject,
-} from "react";
+import { useCallback, useRef, useState } from "react";
+import type { KeyboardEvent, ReactNode, RefObject } from "react";
 
 import { shortcutLabel } from "../../shared/keymap";
 import { chatSearchAvailable, chatSearchOpen } from "../chatSearchState";
@@ -13,7 +7,8 @@ import { IS_MAC } from "../commands/keys";
 import { useLive } from "../liveStore";
 import type { PanelTab } from "../usePanelTab";
 import { usePopover } from "../usePopover";
-import { Icon, type IconName } from "./Icon";
+import { Icon } from "./Icon";
+import type { IconName } from "./Icon";
 
 type ThemePref = "system" | "light" | "dark";
 

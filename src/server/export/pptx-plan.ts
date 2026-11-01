@@ -11,7 +11,8 @@ import type {
   ScanSvg,
   ScanText,
 } from "./page-scan.js";
-import { parsePath, type PathPoint } from "./svg-path.js";
+import { parsePath } from "./svg-path.js";
+import type { PathPoint } from "./svg-path.js";
 
 export interface NativeStroke {
   color: ScanColor;

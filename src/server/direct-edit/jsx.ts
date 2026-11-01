@@ -24,11 +24,8 @@ import {
   jsxNameLiteral,
   planJsxMove,
 } from "./structure.js";
-import {
-  decideClassEdit,
-  describeSite,
-  type TailwindTheme,
-} from "./tailwind/index.js";
+import { decideClassEdit, describeSite } from "./tailwind/index.js";
+import type { TailwindTheme } from "./tailwind/index.js";
 import { jsxClassSite } from "./tailwind/jsx-site.js";
 
 interface JsxPatchOptions {

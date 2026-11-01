@@ -1,11 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { Direction, Version } from "../shared/contracts";
-import {
-  onOpenExport,
-  type ExportTarget,
-  type OpenExportDetail,
-} from "./exportApi";
+import { onOpenExport } from "./exportApi";
+import type { ExportTarget, OpenExportDetail } from "./exportApi";
 
 export function useExportTarget(
   projectId: string,

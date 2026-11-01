@@ -1,4 +1,5 @@
-import { converter, formatHex, parse, wcagContrast, type Color } from "culori";
+import { converter, formatHex, parse, wcagContrast } from "culori";
+import type { Color } from "culori";
 
 import type {
   CompiledTokenEntry,

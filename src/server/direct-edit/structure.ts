@@ -5,7 +5,8 @@ import type { DefaultTreeAdapterMap } from "parse5";
 import type { ReorderMove } from "../../shared/contracts.js";
 import { DirectEditError } from "./errors.js";
 import type { SourcePosition } from "./errors.js";
-import { leadingWhitespaceStart, type Splice } from "./splice.js";
+import { leadingWhitespaceStart } from "./splice.js";
+import type { Splice } from "./splice.js";
 
 type HtmlNode =
   | DefaultTreeAdapterMap["childNode"]

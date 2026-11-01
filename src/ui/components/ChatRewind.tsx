@@ -1,9 +1,11 @@
-import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { KeyboardEvent } from "react";
 
 import { RUN_TITLE_MAX } from "../../shared/rewind";
 import type { RunView } from "../runState";
 import { UserMessage } from "./ChatParts";
-import { Icon, type IconName } from "./Icon";
+import { Icon } from "./Icon";
+import type { IconName } from "./Icon";
 
 export interface TurnRewind {
   restoreTip: string | null;

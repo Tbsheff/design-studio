@@ -44,8 +44,8 @@ import {
   bashWriteProblem,
   checkPathInside,
   evaluateToolUse,
-  type ToolPolicy,
 } from "./permissions.js";
+import type { ToolPolicy } from "./permissions.js";
 import { runReferencePass } from "./reference-check.js";
 import { buildUserMessageParts, buildUserText } from "./user-message.js";
 

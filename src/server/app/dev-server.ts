@@ -1,4 +1,5 @@
-import { spawn, type ChildProcess } from "node:child_process";
+import { spawn } from "node:child_process";
+import type { ChildProcess } from "node:child_process";
 import { existsSync } from "node:fs";
 import net from "node:net";
 import path from "node:path";
@@ -11,7 +12,8 @@ import type {
 } from "../../shared/contracts.js";
 import type { EventBus } from "../types.js";
 import { DevServerPids } from "./dev-server-pids.js";
-import { diagnose, probeRoot, sameDoctor, type DoctorProbe } from "./doctor.js";
+import { diagnose, probeRoot, sameDoctor } from "./doctor.js";
+import type { DoctorProbe } from "./doctor.js";
 import { installHint } from "./install-hint.js";
 
 const MAX_LOG_LINES = 400;

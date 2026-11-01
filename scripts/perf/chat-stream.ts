@@ -1,4 +1,5 @@
-import { spawn, type ChildProcess } from "node:child_process";
+import { spawn } from "node:child_process";
+import type { ChildProcess } from "node:child_process";
 import {
   appendFileSync,
   mkdirSync,
@@ -11,7 +12,8 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { chromium, type Browser, type Page } from "playwright-core";
+import { chromium } from "playwright-core";
+import type { Browser, Page } from "playwright-core";
 
 import type {
   Project,

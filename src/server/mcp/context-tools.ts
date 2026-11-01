@@ -2,14 +2,8 @@ import { z } from "zod";
 
 import type { RepoContextState } from "../../shared/repo-context.js";
 import { loadTarget, studioCall } from "./edit-deps.js";
-import {
-  base,
-  defineTool,
-  directionId,
-  ok,
-  projectId,
-  type Done,
-} from "./edit-kit.js";
+import { base, defineTool, directionId, ok, projectId } from "./edit-kit.js";
+import type { Done } from "./edit-kit.js";
 
 const schema = z.object({ projectId, directionId }).strict();
 

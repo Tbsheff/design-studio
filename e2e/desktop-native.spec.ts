@@ -9,12 +9,8 @@ import {
 import os from "node:os";
 import path from "node:path";
 
-import {
-  expect,
-  test,
-  type ElectronApplication,
-  type Page,
-} from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import type { ElectronApplication, Page } from "@playwright/test";
 
 import type { Project, RunSummary, Version } from "../src/shared/contracts";
 import { desktopEnv, launchDesktop } from "./support/desktop-app";

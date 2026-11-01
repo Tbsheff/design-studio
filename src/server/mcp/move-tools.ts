@@ -10,8 +10,8 @@ import {
   loadTarget,
   refuseWhileRunning,
   studioCall,
-  type EditDeps,
 } from "./edit-deps.js";
+import type { EditDeps } from "./edit-deps.js";
 import {
   base,
   defineTool,
@@ -23,8 +23,8 @@ import {
   selector,
   sourceElement,
   versionActivity,
-  type Done,
 } from "./edit-kit.js";
+import type { Done } from "./edit-kit.js";
 
 const moveSchema = z
   .object({

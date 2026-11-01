@@ -1,12 +1,8 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import {
-  BrowserWindow,
-  session,
-  type Session,
-  type WebContents,
-} from "electron";
+import { BrowserWindow, session } from "electron";
+import type { Session, WebContents } from "electron";
 import { PNG } from "pngjs";
 
 import type { RenderClip, RenderErrors } from "../src/shared/render-rpc.js";

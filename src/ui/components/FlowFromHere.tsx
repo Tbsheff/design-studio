@@ -1,4 +1,5 @@
-import { useState, type PointerEvent as ReactPointerEvent } from "react";
+import { useState } from "react";
+import type { PointerEvent as ReactPointerEvent } from "react";
 
 import type { FlowResult } from "../../shared/route-flow";
 import { api, errorText } from "../api";

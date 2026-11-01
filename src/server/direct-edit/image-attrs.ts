@@ -13,7 +13,8 @@ import {
   rangeOf,
   removalRange,
 } from "./props.js";
-import { applySplices, leadingWhitespaceStart, type Splice } from "./splice.js";
+import { applySplices, leadingWhitespaceStart } from "./splice.js";
+import type { Splice } from "./splice.js";
 
 export type AttrChanges = Record<string, string | null>;
 

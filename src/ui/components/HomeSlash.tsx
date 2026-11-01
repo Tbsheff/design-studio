@@ -1,4 +1,5 @@
-import { useLayoutEffect, type KeyboardEvent, type RefObject } from "react";
+import { useLayoutEffect } from "react";
+import type { KeyboardEvent, RefObject } from "react";
 
 import type { RunLevel } from "../../shared/contracts";
 import { levelGroup, modelGroup } from "./slashGroups";

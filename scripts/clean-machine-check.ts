@@ -2,7 +2,8 @@ import { mkdtempSync, realpathSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-import { _electron as electron, type Page } from "@playwright/test";
+import { _electron as electron } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 import type {
   Project,

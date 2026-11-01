@@ -13,8 +13,10 @@ import {
   selectorClipExpression,
   waitForPage,
 } from "./capture.js";
-import { scanExpression, type ScanRect, type ScanResult } from "./page-scan.js";
-import { planNative, type NativePlan } from "./pptx-plan.js";
+import { scanExpression } from "./page-scan.js";
+import type { ScanRect, ScanResult } from "./page-scan.js";
+import { planNative } from "./pptx-plan.js";
+import type { NativePlan } from "./pptx-plan.js";
 import { withPagePath } from "./source.js";
 
 export interface VectorRegion {

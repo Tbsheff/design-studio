@@ -7,7 +7,8 @@ import {
   MAX_DESIGN_SYSTEM_ROUNDS,
   wantsDesignSystemCheck,
 } from "./design-system-run.js";
-import { EMPTY_USAGE, type DriverOutcome } from "./lifecycle.js";
+import { EMPTY_USAGE } from "./lifecycle.js";
+import type { DriverOutcome } from "./lifecycle.js";
 
 const PASS: DesignSystemCheckResult = { passed: true, problems: [] };
 const FAIL: DesignSystemCheckResult = {

@@ -1,12 +1,9 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 import type { Project } from "../src/shared/contracts";
-import {
-  type StudioApi,
-  frontFrame,
-  openHome,
-  selectInFrame,
-} from "./support/studio";
+import { frontFrame, openHome, selectInFrame } from "./support/studio";
+import type { StudioApi } from "./support/studio";
 
 const SAMPLE_MS = 6000;
 const TICK_MS = 50;

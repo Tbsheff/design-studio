@@ -9,8 +9,8 @@ import {
   ok,
   projectId,
   versionActivity,
-  type ToolSpec,
 } from "./edit-kit.js";
+import type { ToolSpec } from "./edit-kit.js";
 
 const target = z.object({ projectId, directionId }).strict();
 

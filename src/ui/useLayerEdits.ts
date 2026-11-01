@@ -1,11 +1,5 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type MutableRefObject,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { MutableRefObject } from "react";
 
 import type {
   BridgeToParent,
@@ -22,17 +16,13 @@ import { shortcutLabel } from "../shared/keymap";
 import { reorderMoveOf } from "../shared/reorder";
 import { STRUCTURE_KEY_IDS, structureKeyOf } from "../shared/structure-keys";
 import { api, errorText } from "./api";
-import { useBridge, type BridgeFrame, type ParentMessageBody } from "./bridge";
+import { useBridge } from "./bridge";
+import type { BridgeFrame, ParentMessageBody } from "./bridge";
 import { IS_MAC } from "./commands/keys";
 import type { LayerTree } from "./layersTree";
 import { pasteJsx } from "./pasteJsx";
-import {
-  NO_SOURCE,
-  dropRequest,
-  selectionTargets,
-  type LayerDrop,
-  type SelectionOp,
-} from "./structureEdits";
+import { NO_SOURCE, dropRequest, selectionTargets } from "./structureEdits";
+import type { LayerDrop, SelectionOp } from "./structureEdits";
 import { canvasHasKeys, isTypingTarget } from "./typingTarget";
 import { useLayerLocks } from "./useLayerLocks";
 

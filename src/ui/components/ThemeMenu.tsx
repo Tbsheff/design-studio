@@ -1,10 +1,5 @@
-import {
-  useEffect,
-  useRef,
-  useSyncExternalStore,
-  type KeyboardEvent,
-  type RefObject,
-} from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
+import type { KeyboardEvent, RefObject } from "react";
 
 type ThemePref = "system" | "light" | "dark";
 

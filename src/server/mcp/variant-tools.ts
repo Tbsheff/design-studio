@@ -2,15 +2,10 @@ import { z } from "zod";
 
 import type { CanvasFile } from "../../shared/canvas-file.js";
 import type { Direction, Project, Version } from "../../shared/contracts.js";
-import { EditError, studioCall, type EditDeps } from "./edit-deps.js";
-import {
-  defineTool,
-  id,
-  ok,
-  projectId,
-  versionActivity,
-  type ToolSpec,
-} from "./edit-kit.js";
+import { EditError, studioCall } from "./edit-deps.js";
+import type { EditDeps } from "./edit-deps.js";
+import { defineTool, id, ok, projectId, versionActivity } from "./edit-kit.js";
+import type { ToolSpec } from "./edit-kit.js";
 
 const keepInput = z
   .object({

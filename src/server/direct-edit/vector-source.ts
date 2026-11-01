@@ -1,9 +1,11 @@
 import path from "node:path";
 
 import type * as t from "@babel/types";
-import { parse, type DefaultTreeAdapterMap } from "parse5";
+import { parse } from "parse5";
+import type { DefaultTreeAdapterMap } from "parse5";
 
-import { DirectEditError, type SourcePosition } from "./errors.js";
+import { DirectEditError } from "./errors.js";
+import type { SourcePosition } from "./errors.js";
 import { findElementAt } from "./html.js";
 import { findJsxElement, parseSource } from "./jsx.js";
 

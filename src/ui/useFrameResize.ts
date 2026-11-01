@@ -1,8 +1,5 @@
-import {
-  useRef,
-  type PointerEvent as ReactPointerEvent,
-  type RefObject,
-} from "react";
+import { useRef } from "react";
+import type { PointerEvent as ReactPointerEvent, RefObject } from "react";
 
 import {
   activeFrame,
@@ -10,12 +7,11 @@ import {
   resizeFrame,
   viewportOf,
   shownFrames,
-  type Box,
-  type CanvasFrame,
-  type CanvasLayout,
 } from "./canvasFrames";
+import type { Box, CanvasFrame, CanvasLayout } from "./canvasFrames";
 import type { ResizeEdge } from "./components/FrameControls";
-import { snapOff, snapRect, type SnapGuide, type SpacingBadge } from "./snap";
+import { snapOff, snapRect } from "./snap";
+import type { SnapGuide, SpacingBadge } from "./snap";
 import { uiStore } from "./storage";
 import type { CanvasFrames } from "./useCanvasFrames";
 import type { PanZoom } from "./usePanZoom";

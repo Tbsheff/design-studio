@@ -1,16 +1,17 @@
 import { mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 import type { Project } from "../src/shared/contracts";
 import {
-  type StudioApi,
   frontFrame,
   mainDirection,
   openHome,
   setSelectMode,
 } from "./support/studio";
+import type { StudioApi } from "./support/studio";
 
 const SHOTS = process.env.STUDIO_R4_SHOTS ?? "";
 

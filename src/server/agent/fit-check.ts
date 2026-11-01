@@ -1,10 +1,6 @@
 import type { QualityFinding } from "../../shared/contracts.js";
-import {
-  outsideFindings,
-  type LayoutCard,
-  type LayoutRegion,
-  type PageOwner,
-} from "./layout-region.js";
+import { outsideFindings } from "./layout-region.js";
+import type { LayoutCard, LayoutRegion, PageOwner } from "./layout-region.js";
 
 const SIZE_WORDS =
   /\b(small|compact|tiny|mini|little|narrow|minimal|slim)\b(?:\W+\w+){0,5}?\W+(cards?|widgets?|panels?|tiles?|box(?:es)?|sections?|blocks?|modules?|summary|summaries|lists?|banners?|components?|callouts?)\b/i;

@@ -1,4 +1,5 @@
-import { converter, parse, type Color } from "culori";
+import { converter, parse } from "culori";
+import type { Color } from "culori";
 
 const toHsl = converter("hsl");
 const TINTED = 0.15;

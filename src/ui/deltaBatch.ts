@@ -1,5 +1,6 @@
 import type { StudioEvent } from "../shared/contracts";
-import { applyRunEvent, type RunMap } from "./runState";
+import { applyRunEvent } from "./runState";
+import type { RunMap } from "./runState";
 
 type DeltaEvent = Extract<
   StudioEvent,

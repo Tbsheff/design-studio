@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState } from "react";
+import type { ReactNode } from "react";
 
 import type { ToolDiff } from "../../shared/contracts";
 import { shortcutLabel } from "../../shared/keymap";
@@ -26,7 +27,8 @@ import {
   toolTally,
   toolVerb,
 } from "../toolLabels";
-import { Icon, type IconName } from "./Icon";
+import { Icon } from "./Icon";
+import type { IconName } from "./Icon";
 
 const TOOL_ICON: Record<string, IconName> = {
   Write: "pencil",

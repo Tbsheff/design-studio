@@ -1,4 +1,5 @@
-import { useEffect, useId, useRef, useState, type FormEvent } from "react";
+import { useEffect, useId, useRef, useState } from "react";
+import type { FormEvent } from "react";
 
 import type { ClarifyQuestion } from "../../shared/contracts";
 import { Icon } from "./Icon";

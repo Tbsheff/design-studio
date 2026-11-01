@@ -13,7 +13,8 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-import { chromium, type Browser } from "playwright-core";
+import { chromium } from "playwright-core";
+import type { Browser } from "playwright-core";
 
 import { diffTrees, treeHash } from "../../e2e/ac/safety/helpers.js";
 import type {

@@ -1,7 +1,8 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 import { ROOT } from "./support/server";
 import {
@@ -11,8 +12,8 @@ import {
   openHome,
   selectInFrame,
   setSelectMode,
-  type StudioApi,
 } from "./support/studio";
+import type { StudioApi } from "./support/studio";
 
 const h1 = (page: Page) => frontFrame(page).locator("h1");
 

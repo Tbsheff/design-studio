@@ -1,4 +1,5 @@
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
+import type { FormEvent } from "react";
 
 import type { PackSummary } from "../../shared/contracts";
 import { errorText } from "../api";

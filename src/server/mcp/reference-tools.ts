@@ -11,7 +11,8 @@ import {
   scoreLines,
 } from "../agent/reference-check.js";
 import { findFrame, frameRef } from "../canvas/tools.js";
-import { EditError, loadTarget, type EditDeps } from "./edit-deps.js";
+import { EditError, loadTarget } from "./edit-deps.js";
+import type { EditDeps } from "./edit-deps.js";
 import {
   defineTool,
   directionId,
@@ -19,8 +20,8 @@ import {
   pagePath,
   pageUrl,
   projectId,
-  type Done,
 } from "./edit-kit.js";
+import type { Done } from "./edit-kit.js";
 
 const MAX_BYTES = 20 * 1024 * 1024;
 

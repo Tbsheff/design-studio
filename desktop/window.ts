@@ -4,13 +4,11 @@ import path from "node:path";
 import { BrowserWindow, screen } from "electron";
 
 import { initTheme, studioBackground, trackThemeWindow } from "./theme.js";
-import {
-  parseStateFile,
-  pickState,
-  recordState,
-  type DisplayInfo,
-  type WindowState,
-  type WindowStateFile,
+import { parseStateFile, pickState, recordState } from "./window-state.js";
+import type {
+  DisplayInfo,
+  WindowState,
+  WindowStateFile,
 } from "./window-state.js";
 
 export interface WindowOptions {

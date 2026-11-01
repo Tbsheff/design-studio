@@ -1,18 +1,15 @@
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type PointerEvent as ReactPointerEvent,
-} from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { PointerEvent as ReactPointerEvent } from "react";
 
 import type { SelectionContext } from "../shared/contracts";
 import type { BridgeToParent } from "../shared/contracts";
 import { api, errorText } from "./api";
 import type { ParentMessageBody } from "./bridge";
-import { createLiveStore, useLive, type LiveStore } from "./liveStore";
+import { createLiveStore, useLive } from "./liveStore";
+import type { LiveStore } from "./liveStore";
 import { startOptimistic } from "./optimisticEdit";
-import { snapOff, snapRect, type Rect, type SnapGuide } from "./snap";
+import { snapOff, snapRect } from "./snap";
+import type { Rect, SnapGuide } from "./snap";
 import { buildEditRequest, mergeCommit } from "./useDirectEdit";
 
 export type ResizeEdge = "e" | "s" | "se";

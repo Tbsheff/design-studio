@@ -11,12 +11,12 @@ import type { ReviewFix } from "../../shared/review.js";
 import type { RenderPage } from "../preview/render-backend.js";
 import type { Draft } from "../review/checks.js";
 import { parseLoc } from "../review/checks.js";
-import {
-  rulesProbeExpression,
-  type ProbeRule,
-  type RuleHitElement,
-  type RuleMiss,
-  type RulesProbeResult,
+import { rulesProbeExpression } from "./probe.js";
+import type {
+  ProbeRule,
+  RuleHitElement,
+  RuleMiss,
+  RulesProbeResult,
 } from "./probe.js";
 
 const COLOR_VALUE = /^(#|rgb|hsl|oklch|oklab|lab|lch)/i;

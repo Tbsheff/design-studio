@@ -16,9 +16,10 @@ import {
   sendEmptied,
   wantsEmpty,
   withStateHeaders,
-  type ActiveFrameState,
 } from "./frame-state-proxy.js";
-import { resolveStackSources, type SourceTarget } from "./source-map.js";
+import type { ActiveFrameState } from "./frame-state-proxy.js";
+import { resolveStackSources } from "./source-map.js";
+import type { SourceTarget } from "./source-map.js";
 
 const HOST_PATTERN =
   /^(?:s-[a-z][a-z0-9-]{0,23}\.)?p-([0-9a-f]{2,128})\.localhost(?::(\d+))?$/;

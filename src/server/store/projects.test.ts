@@ -15,7 +15,8 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { DEFAULT_SETTINGS } from "../../shared/contracts.js";
 import type { ServerConfig, VersionStore } from "../types.js";
 import { createEventBus } from "./events.js";
-import { createProjectStore, type StudioProjectStore } from "./projects.js";
+import { createProjectStore } from "./projects.js";
+import type { StudioProjectStore } from "./projects.js";
 import { makeTempConfig } from "./testConfig.js";
 import { createVersionStore } from "./versions.js";
 

@@ -1,10 +1,5 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  type MutableRefObject,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
+import type { MutableRefObject } from "react";
 
 import type {
   BridgeToParent,
@@ -16,14 +11,10 @@ import type {
   InsertTarget,
   InsertableComponent,
 } from "../shared/insert";
-import { useBridge, type BridgeFrame, type ParentMessageBody } from "./bridge";
-import {
-  insertApi,
-  insertBus,
-  insertError,
-  type DropHint,
-  type InsertHost,
-} from "./componentInsert";
+import { useBridge } from "./bridge";
+import type { BridgeFrame, ParentMessageBody } from "./bridge";
+import { insertApi, insertBus, insertError } from "./componentInsert";
+import type { DropHint, InsertHost } from "./componentInsert";
 import { NO_SOURCE } from "./structureEdits";
 
 const RESELECT_EVERY_MS = 350;

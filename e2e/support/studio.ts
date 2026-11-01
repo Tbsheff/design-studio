@@ -1,4 +1,5 @@
-import { expect, type FrameLocator, type Page } from "@playwright/test";
+import { expect } from "@playwright/test";
+import type { FrameLocator, Page } from "@playwright/test";
 
 import { needsQuestions } from "../../src/shared/clarify";
 import type {

@@ -1,4 +1,5 @@
-import { useLayoutEffect, type CSSProperties, type RefObject } from "react";
+import { useLayoutEffect } from "react";
+import type { CSSProperties, RefObject } from "react";
 
 export const POPOVER_GAP = 4;
 const MARGIN = 8;

@@ -12,9 +12,11 @@ import {
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-import { build, type BuildOptions, type Metafile } from "esbuild";
+import { build } from "esbuild";
+import type { BuildOptions, Metafile } from "esbuild";
 
-import { linkEsbuildBinary, pruneModules, type PruneStats } from "./prune.js";
+import { linkEsbuildBinary, pruneModules } from "./prune.js";
+import type { PruneStats } from "./prune.js";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const STAGE = path.join(ROOT, "build", "desktop");

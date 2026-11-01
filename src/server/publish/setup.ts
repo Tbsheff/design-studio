@@ -10,20 +10,12 @@ import type {
   SetupStepId,
 } from "../../shared/publish.js";
 import { BadRequestError } from "../store/errors.js";
-import {
-  cfVersion,
-  cliFailure,
-  deployedUrl,
-  newestCf,
-  runCf,
-  type CliResult,
-} from "./cli.js";
-import {
-  createLocalRuntime,
-  LOCAL_D1_ID,
-  type LocalRuntime,
-} from "./local-runtime.js";
-import { remoteClient, type Endpoint } from "./remote.js";
+import { cfVersion, cliFailure, deployedUrl, newestCf, runCf } from "./cli.js";
+import type { CliResult } from "./cli.js";
+import { createLocalRuntime, LOCAL_D1_ID } from "./local-runtime.js";
+import type { LocalRuntime } from "./local-runtime.js";
+import { remoteClient } from "./remote.js";
+import type { Endpoint } from "./remote.js";
 import { scrubCliText, tailLines } from "./scrub.js";
 import type { CliSession } from "./session.js";
 import type { BackendSettings, PublishStore } from "./store.js";
@@ -33,8 +25,8 @@ import {
   PUBLISH_BUCKET,
   PUBLISH_DATABASE,
   writeBuildOutput,
-  type WorkerSource,
 } from "./worker-build.js";
+import type { WorkerSource } from "./worker-build.js";
 
 export interface PublishBackend {
   state(check?: boolean): Promise<PublishBackendState>;

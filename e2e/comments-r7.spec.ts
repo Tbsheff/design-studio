@@ -1,7 +1,8 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
-import { expect, test, type Locator, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 
 import type {
   Attachment,
@@ -14,8 +15,8 @@ import {
   frontFrame,
   mainDirection,
   openHome,
-  type StudioApi,
 } from "./support/studio";
+import type { StudioApi } from "./support/studio";
 
 function base(project: Project): string {
   return `/api/projects/${project.id}/d/${mainDirection(project).id}/comments`;

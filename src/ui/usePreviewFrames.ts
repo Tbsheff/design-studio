@@ -16,19 +16,16 @@ import type {
   ZoomKey,
 } from "../shared/contracts";
 import { sendTelemetry } from "./api";
-import {
-  frameSrc,
-  postToFrame,
-  useBridge,
-  type BridgeFrame,
-  type ParentMessageBody,
-} from "./bridge";
+import { frameSrc, postToFrame, useBridge } from "./bridge";
+import type { BridgeFrame, ParentMessageBody } from "./bridge";
 import { runCommand } from "./commands/registry";
 import { openLayer } from "./commands/registry";
 import { moveRegion } from "./commands/useStudioCommands";
 import { textEditability } from "./cssValues";
-import { parseLayerTree, type LayerTree } from "./layersTree";
-import { createLiveStore, type LiveStore } from "./liveStore";
+import { parseLayerTree } from "./layersTree";
+import type { LayerTree } from "./layersTree";
+import { createLiveStore } from "./liveStore";
+import type { LiveStore } from "./liveStore";
 import { reportAppStart } from "./perfTelemetry";
 import { randomToken } from "./session";
 import { PREVIEW_PAINTED_EVENT } from "./useEditHistory";

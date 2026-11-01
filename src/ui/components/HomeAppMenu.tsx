@@ -1,11 +1,13 @@
-import { useState, type KeyboardEvent, type RefObject } from "react";
+import { useState } from "react";
+import type { KeyboardEvent, RefObject } from "react";
 
 import { parseEnvText } from "../../shared/app";
 import type { RunLevel } from "../../shared/contracts";
 import { shortenHome } from "../../shared/folders";
 import { api, ApiError } from "../api";
 import type { AppChip, RunMode } from "./HomeAppChip";
-import { Pop, type Close } from "./HomePopovers";
+import { Pop } from "./HomePopovers";
+import type { Close } from "./HomePopovers";
 import { Icon } from "./Icon";
 
 import "../styles/attach-app.css";

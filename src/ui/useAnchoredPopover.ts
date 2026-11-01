@@ -4,8 +4,8 @@ import {
   useLayoutEffect,
   useRef,
   useState,
-  type CSSProperties,
 } from "react";
+import type { CSSProperties } from "react";
 
 import { placeFixed } from "./popoverPlacement";
 

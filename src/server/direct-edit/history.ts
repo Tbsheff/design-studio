@@ -22,10 +22,12 @@ import {
   saveDeferred,
   writeAtomic,
   writeNewFile,
-  type DirectEditDeps,
-  type EditFileChange,
-  type EditRecord,
-  type EditRecorder,
+} from "./index.js";
+import type {
+  DirectEditDeps,
+  EditFileChange,
+  EditRecord,
+  EditRecorder,
 } from "./index.js";
 import { savedVersionId, savesSettled } from "./save-queue.js";
 

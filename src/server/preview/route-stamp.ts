@@ -5,13 +5,12 @@ import type { AppRoute } from "../../shared/contracts.js";
 import { matchRouteFile } from "../agent/run-target.js";
 import { appRouterDir, listAppRoutes } from "../app/routes.js";
 import { siblingWorkerFile, WorkerClient } from "../worker-client.js";
-import {
-  answerGraph,
-  RouteGraph,
-  type ContentStamp,
-  type GraphReply,
-  type GraphRequest,
-  type ImportEdges,
+import { answerGraph, RouteGraph } from "./route-graph.js";
+import type {
+  ContentStamp,
+  GraphReply,
+  GraphRequest,
+  ImportEdges,
 } from "./route-graph.js";
 
 export type { ContentStamp } from "./route-graph.js";

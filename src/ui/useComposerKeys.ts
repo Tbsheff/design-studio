@@ -1,4 +1,5 @@
-import { useRef, type KeyboardEvent } from "react";
+import { useRef } from "react";
+import type { KeyboardEvent } from "react";
 
 import type { QueuedMessage } from "../shared/contracts";
 

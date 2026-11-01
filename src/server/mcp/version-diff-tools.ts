@@ -2,13 +2,8 @@ import { z } from "zod";
 
 import type { VersionChanges } from "../../shared/contracts.js";
 import { EditError, loadTarget, studioCall } from "./edit-deps.js";
-import {
-  defineTool,
-  directionId,
-  ok,
-  projectId,
-  type ToolSpec,
-} from "./edit-kit.js";
+import { defineTool, directionId, ok, projectId } from "./edit-kit.js";
+import type { ToolSpec } from "./edit-kit.js";
 
 const versionId = z
   .string()

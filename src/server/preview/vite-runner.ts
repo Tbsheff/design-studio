@@ -12,8 +12,8 @@ import {
   realOrSelf,
   relativeInside,
   sourceTagsPlugin,
-  type BuildErrorPayload,
 } from "./vite-plugins.js";
+import type { BuildErrorPayload } from "./vite-plugins.js";
 
 export interface RunnerInit {
   type: "init";

@@ -1,4 +1,5 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
 
 import type { SelectionContext } from "../../shared/contracts";
 import type { EditorInfo } from "../../shared/export";

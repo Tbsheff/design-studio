@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import type { RunSummary, StudioEvent } from "../shared/contracts";
 import { createDeltaBatcher, mergeDeltas } from "./deltaBatch";
-import { applyRunEvent, runText, type RunMap } from "./runState";
+import { applyRunEvent, runText } from "./runState";
+import type { RunMap } from "./runState";
 
 let seq = 0;
 

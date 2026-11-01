@@ -7,8 +7,8 @@ import {
   runFromSummary,
   runText,
   shownPending,
-  type RunMap,
 } from "./runState";
+import type { RunMap } from "./runState";
 
 let seq = 0;
 const ev = (body: Record<string, unknown>): StudioEvent =>

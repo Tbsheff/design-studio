@@ -2,7 +2,8 @@ import { readFile, realpath } from "node:fs/promises";
 import path from "node:path";
 
 import type * as t from "@babel/types";
-import { SourceMapConsumer, type RawSourceMap } from "source-map-js";
+import { SourceMapConsumer } from "source-map-js";
+import type { RawSourceMap } from "source-map-js";
 
 import type { SourceLoc } from "../../shared/contracts.js";
 import type {
@@ -19,8 +20,8 @@ import {
   loadTypeScript,
   parseModuleFile,
   resolveImport,
-  type ComponentRef,
 } from "./props-schema.js";
+import type { ComponentRef } from "./props-schema.js";
 
 const MODULE_PATH = /^\/(?!@)[A-Za-z0-9_@.\-/ ]{1,300}\.(tsx|jsx)$/;
 const MAP_URL =

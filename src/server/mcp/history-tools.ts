@@ -26,8 +26,8 @@ import {
   oneLine,
   refuseWhileRunning,
   studioCall,
-  type EditDeps,
 } from "./edit-deps.js";
+import type { EditDeps } from "./edit-deps.js";
 import {
   base,
   checkWritePath,
@@ -44,8 +44,8 @@ import {
   style,
   versionActivity,
   writeText,
-  type Done,
 } from "./edit-kit.js";
+import type { Done } from "./edit-kit.js";
 import { describeElements, textHintsOf } from "./element.js";
 
 const BATCH_MAX = 50;

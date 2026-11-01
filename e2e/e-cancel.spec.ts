@@ -1,7 +1,8 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 import type { RunSummary } from "../src/shared/contracts";
 import {
@@ -11,8 +12,8 @@ import {
   mainDirection,
   openHome,
   sendPrompt,
-  type StudioApi,
 } from "./support/studio";
+import type { StudioApi } from "./support/studio";
 
 const CREATE_PROMPT = "Lighthouse Books";
 

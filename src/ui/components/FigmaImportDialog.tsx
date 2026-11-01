@@ -1,4 +1,5 @@
-import { useEffect, useState, type FormEvent, type KeyboardEvent } from "react";
+import { useEffect, useState } from "react";
+import type { FormEvent, KeyboardEvent } from "react";
 
 import type {
   FigmaImportPreview,

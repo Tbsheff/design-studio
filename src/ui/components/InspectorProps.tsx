@@ -5,8 +5,8 @@ import {
   useEffect,
   useRef,
   useState,
-  type KeyboardEvent,
 } from "react";
+import type { KeyboardEvent } from "react";
 
 import type { SelectionContext } from "../../shared/contracts";
 import type {

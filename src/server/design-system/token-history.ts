@@ -2,7 +2,8 @@ import path from "node:path";
 
 import type { Direction, Project, Version } from "../../shared/contracts.js";
 import type { DirectEditDeps, EditFileChange } from "../direct-edit/index.js";
-import { readSnapshot, type FileSnapshot } from "./create-token.js";
+import { readSnapshot } from "./create-token.js";
+import type { FileSnapshot } from "./create-token.js";
 
 export async function snapshotChanges(
   workTree: string,

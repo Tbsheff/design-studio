@@ -1,12 +1,9 @@
-import { useEffect, useSyncExternalStore, type MutableRefObject } from "react";
+import { useEffect, useSyncExternalStore } from "react";
+import type { MutableRefObject } from "react";
 
 import type { BridgeToParent, ProjectKind } from "../shared/contracts";
-import {
-  postToFrame,
-  useBridge,
-  type BridgeFrame,
-  type ParentMessageBody,
-} from "./bridge";
+import { postToFrame, useBridge } from "./bridge";
+import type { BridgeFrame, ParentMessageBody } from "./bridge";
 
 export type ThemeChoice = "light" | "dark" | null;
 

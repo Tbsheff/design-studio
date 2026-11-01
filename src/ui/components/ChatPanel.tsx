@@ -1,12 +1,5 @@
-import {
-  memo,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { ReactNode } from "react";
 
 import type { Direction } from "../../shared/contracts";
 import { forkBaseOf } from "../../shared/rewind";
@@ -39,16 +32,12 @@ import {
   Thinking,
   UserMessage,
 } from "./ChatParts";
-import { UserTurn, type TurnActions } from "./ChatRewind";
+import { UserTurn } from "./ChatRewind";
+import type { TurnActions } from "./ChatRewind";
 import { ChatSearch } from "./ChatSearch";
 import { Icon } from "./Icon";
-import {
-  feedShown,
-  McpItem,
-  timelineOf,
-  type McpFeedControl,
-  type TimelineItem,
-} from "./McpFeed";
+import { feedShown, McpItem, timelineOf } from "./McpFeed";
+import type { McpFeedControl, TimelineItem } from "./McpFeed";
 import { PermissionPrompt } from "./PermissionPrompt";
 import { RunCommentsCard } from "./RunComments";
 import { LiveStatus, ToolChips, ToolSummary } from "./ToolChips";

@@ -17,8 +17,8 @@ import {
   expectedClaudeVersion,
   parseVersion,
   resolveClaude,
-  type ClaudeFs,
 } from "./claude-cli.js";
+import type { ClaudeFs } from "./claude-cli.js";
 
 const HOME = "/Users/test";
 

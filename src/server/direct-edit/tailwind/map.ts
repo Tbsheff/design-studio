@@ -5,7 +5,8 @@ import type {
   SideValue,
   SingleGroup,
 } from "./classes.js";
-import { colorDistance, parseColor, type ParsedColor } from "./color.js";
+import { colorDistance, parseColor } from "./color.js";
+import type { ParsedColor } from "./color.js";
 import type { TailwindTheme, ThemeNamespace } from "./theme.js";
 import { emValue, lengthToPx, percent, plainNumber } from "./units.js";
 

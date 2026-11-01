@@ -1,10 +1,12 @@
 import { mkdirSync } from "node:fs";
 import path from "node:path";
 
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 import type { PackSummary, Project } from "../src/shared/contracts";
-import { type StudioApi, openHome } from "./support/studio";
+import { openHome } from "./support/studio";
+import type { StudioApi } from "./support/studio";
 
 const SHOTS = process.env.STUDIO_DS4_SHOTS ?? "";
 

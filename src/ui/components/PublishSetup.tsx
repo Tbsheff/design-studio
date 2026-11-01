@@ -4,11 +4,8 @@ import type { PublishCliState } from "../../shared/publish";
 import { errorText } from "../api";
 import { publishApi } from "../publishApi";
 import { CopyButton } from "./CopyButton";
-import {
-  BackendSetup,
-  usePublishBackend,
-  type BackendHook,
-} from "./PublishBackendSetup";
+import { BackendSetup, usePublishBackend } from "./PublishBackendSetup";
+import type { BackendHook } from "./PublishBackendSetup";
 
 import "../styles/publish.css";
 

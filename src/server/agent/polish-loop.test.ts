@@ -12,8 +12,8 @@ import {
   newLoopLog,
   recordCheck,
   recordShot,
-  type LoopLog,
 } from "./polish-loop.js";
+import type { LoopLog } from "./polish-loop.js";
 
 const polish = resolveRunConfig(DEFAULT_SETTINGS, "polish");
 const budget = { spentUsd: 0.3, capUsd: 1.5, continuations: 0 };

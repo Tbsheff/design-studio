@@ -1,15 +1,11 @@
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type KeyboardEvent,
-} from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { KeyboardEvent } from "react";
 
 import type { CopyCodeFormat } from "../../shared/export";
 import { activeExportFrame, exportApi, openExport } from "../exportApi";
 import { usePopover } from "../usePopover";
-import { Icon, type IconName } from "./Icon";
+import { Icon } from "./Icon";
+import type { IconName } from "./Icon";
 
 import "../styles/export.css";
 

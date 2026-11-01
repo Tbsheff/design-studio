@@ -1,4 +1,5 @@
-import { useEffect, useId, useState, type KeyboardEvent } from "react";
+import { useEffect, useId, useState } from "react";
+import type { KeyboardEvent } from "react";
 
 import type { RunStatus, RunSummary } from "../../shared/contracts";
 import { runQueryTerms } from "../../shared/rewind";

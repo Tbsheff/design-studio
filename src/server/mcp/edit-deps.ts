@@ -8,11 +8,8 @@ import type { EditRecorder } from "../direct-edit/index.js";
 import type { ExportDeps } from "../export/source.js";
 import type { AgentRunner, EventBus } from "../types.js";
 import type { ActivityLog } from "./activity.js";
-import {
-  APPROVAL_TIMEOUT_MS,
-  type ApprovalAsk,
-  type ApprovalQueue,
-} from "./approvals.js";
+import { APPROVAL_TIMEOUT_MS } from "./approvals.js";
+import type { ApprovalAsk, ApprovalQueue } from "./approvals.js";
 import { mcpErrorText } from "./error-copy.js";
 import { downloadsFolder, isInside, safeFolder } from "./folders.js";
 

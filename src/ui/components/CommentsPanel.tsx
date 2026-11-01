@@ -1,4 +1,5 @@
-import { useState, useSyncExternalStore, type ReactNode } from "react";
+import { useState, useSyncExternalStore } from "react";
+import type { ReactNode } from "react";
 
 import { canPickForChat } from "../../shared/comments";
 import type { DesignComment, SelectionContext } from "../../shared/contracts";

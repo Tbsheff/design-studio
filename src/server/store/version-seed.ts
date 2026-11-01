@@ -12,7 +12,8 @@ import {
 import path from "node:path";
 
 import { userGit } from "../git/user-git.js";
-import { runGit, type GitScope } from "./versions.js";
+import { runGit } from "./versions.js";
+import type { GitScope } from "./versions.js";
 
 const STAT_BATCH = 256;
 const REGULAR_MODES = new Set(["100644", "100755", "120000"]);

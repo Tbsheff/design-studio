@@ -46,7 +46,8 @@ import {
   NotFoundError,
   assertSafeId,
 } from "./errors.js";
-import { ObjectStore, gitIdent, type CommitInfo } from "./git-objects.js";
+import { ObjectStore, gitIdent } from "./git-objects.js";
+import type { CommitInfo } from "./git-objects.js";
 import { createKeyedMutex } from "./mutex.js";
 import { diffVersionFiles } from "./version-diff.js";
 import { createDirectStore } from "./version-direct.js";

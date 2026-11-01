@@ -13,7 +13,8 @@ import {
 import { planSwap, swapCandidates } from "../components/swap.js";
 import { resolveInstance } from "../components/use-site.js";
 import { writeAtomic, writeNewFile } from "../direct-edit/index.js";
-import { refusal, writeProblem, type DirectToolDeps } from "./direct-tools.js";
+import { refusal, writeProblem } from "./direct-tools.js";
+import type { DirectToolDeps } from "./direct-tools.js";
 import { targetOf } from "./insert-tool.js";
 import { resolveSelectors } from "./kit-tools.js";
 

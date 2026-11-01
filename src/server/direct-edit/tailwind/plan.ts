@@ -1,15 +1,12 @@
 import type { Splice } from "../splice.js";
-import {
-  classify,
-  compactSides,
-  emitSided,
-  parseClass,
-  type Classified,
-  type ParsedClass,
-  type Side,
-  type SidedGroup,
-  type SideValue,
-  type SingleGroup,
+import { classify, compactSides, emitSided, parseClass } from "./classes.js";
+import type {
+  Classified,
+  ParsedClass,
+  Side,
+  SidedGroup,
+  SideValue,
+  SingleGroup,
 } from "./classes.js";
 import type { CssEdit } from "./map.js";
 import type { TailwindTheme } from "./theme.js";

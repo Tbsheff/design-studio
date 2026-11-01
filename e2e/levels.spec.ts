@@ -1,8 +1,8 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 import type { Project, RunLevel } from "../src/shared/contracts";
 import {
-  type StudioApi,
   chooseRunSetting,
   closeRunSettings,
   createProjectViaUi,
@@ -12,6 +12,7 @@ import {
   sendPrompt,
   showVersions,
 } from "./support/studio";
+import type { StudioApi } from "./support/studio";
 
 async function createProject(api: StudioApi, prompt: string): Promise<Project> {
   const { project } = await api.call<{ project: Project }>(

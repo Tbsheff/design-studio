@@ -1,23 +1,16 @@
 import { execFile } from "node:child_process";
 import path from "node:path";
 
-import {
-  BrowserWindow,
-  clipboard,
-  ipcMain,
-  shell,
-  type IpcMainInvokeEvent,
-} from "electron";
+import { BrowserWindow, clipboard, ipcMain, shell } from "electron";
+import type { IpcMainInvokeEvent } from "electron";
 
 import {
   CLAUDE_INSTALL_COMMAND,
   FIX_ACTIONS,
   needsAttention,
   runChecks,
-  type CheckInputs,
-  type CheckResult,
-  type FixAction,
 } from "./setup-checks.js";
+import type { CheckInputs, CheckResult, FixAction } from "./setup-checks.js";
 import { setupBackground } from "./theme.js";
 import { MAC_CHROME } from "./window.js";
 

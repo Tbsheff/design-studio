@@ -1,7 +1,8 @@
 import { existsSync, readFileSync, realpathSync } from "node:fs";
 import path from "node:path";
 
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 import { projectsDirFor, readState } from "./support/server";
 import { createProjectViaUi, mainDirection, openHome } from "./support/studio";

@@ -1,6 +1,7 @@
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { Worker, type Transferable } from "node:worker_threads";
+import { Worker } from "node:worker_threads";
+import type { Transferable } from "node:worker_threads";
 
 import { REPO_ROOT } from "./config.js";
 import type { WorkerReply, WorkerRequest } from "./worker-serve.js";

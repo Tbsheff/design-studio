@@ -5,11 +5,8 @@ import type {
   Project,
   WorkTreeStatus,
 } from "../../shared/contracts.js";
-import {
-  comparePaths,
-  type ObjectStore,
-  type TreeEntry,
-} from "./git-objects.js";
+import { comparePaths } from "./git-objects.js";
+import type { ObjectStore, TreeEntry } from "./git-objects.js";
 import {
   FastPathUnavailable,
   checkWritable,
@@ -20,8 +17,8 @@ import {
   sameAsWork,
   updateTree,
   writeWorkFile,
-  type FileChange,
 } from "./version-fast.js";
+import type { FileChange } from "./version-fast.js";
 
 export interface DirectDeps {
   objects(project: Project): ObjectStore;

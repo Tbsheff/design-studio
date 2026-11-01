@@ -10,13 +10,10 @@ import type {
 } from "../../shared/contracts.js";
 import { ownerUseSite } from "../components/use-site.js";
 import { dataExpression, findJsxElement, stringLiteral } from "./jsx.js";
-import { createModuleCache, type TextModule } from "./text-source-files.js";
-import {
-  trace,
-  unwrap,
-  type Candidate,
-  type TraceContext,
-} from "./text-trace.js";
+import { createModuleCache } from "./text-source-files.js";
+import type { TextModule } from "./text-source-files.js";
+import { trace, unwrap } from "./text-trace.js";
+import type { Candidate, TraceContext } from "./text-trace.js";
 
 export interface TextSourceScope {
   workTree: string;

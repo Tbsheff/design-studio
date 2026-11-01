@@ -8,13 +8,8 @@ import {
 import os from "node:os";
 import path from "node:path";
 
-import {
-  expect,
-  test,
-  type ElectronApplication,
-  type Frame,
-  type Page,
-} from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import type { ElectronApplication, Frame, Page } from "@playwright/test";
 
 import type {
   Project,
@@ -35,8 +30,8 @@ import {
   listProcesses,
   processCommandAndEnv,
   processEnvKeys,
-  type ProcessRow,
 } from "./support/processes";
+import type { ProcessRow } from "./support/processes";
 import { clickCreate } from "./support/studio";
 
 test.describe.configure({ mode: "serial" });

@@ -8,10 +8,8 @@ import {
   shiftedPart,
   shiftedValue,
   valuesFromStyles,
-  type Shift,
-  type ShiftPart,
-  type StyleValues,
 } from "./cssValues";
+import type { Shift, ShiftPart, StyleValues } from "./cssValues";
 import { resolveNumberInput } from "./mathInput";
 import { buildEditRequest } from "./useDirectEdit";
 

@@ -1,7 +1,8 @@
 import { mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import { formatHex, parse } from "culori";
 
 import type { CompiledTokenEntry, Project } from "../src/shared/contracts";
@@ -12,12 +13,12 @@ import {
 } from "../src/shared/token-match";
 import { ROOT } from "./support/server";
 import {
-  type StudioApi,
   frontFrame,
   mainDirection,
   openHome,
   selectInFrame,
 } from "./support/studio";
+import type { StudioApi } from "./support/studio";
 
 const REVIEW_DIR = path.join(ROOT, "design-review");
 

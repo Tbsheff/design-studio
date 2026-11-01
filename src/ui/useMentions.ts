@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
+import { useEffect, useMemo, useState } from "react";
+import type { KeyboardEvent } from "react";
 
 import type {
   CompiledTokenEntry,
@@ -10,8 +11,8 @@ import {
   mentionKey,
   mentionQueryOf,
   useMentionPicker,
-  type MentionOption,
 } from "./components/MentionPicker";
+import type { MentionOption } from "./components/MentionPicker";
 
 const fileCache = new Map<string, Promise<string[]>>();
 

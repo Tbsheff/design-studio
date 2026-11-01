@@ -5,9 +5,8 @@ import {
   useLayoutEffect,
   useRef,
   useState,
-  type CSSProperties,
-  type KeyboardEvent,
 } from "react";
+import type { CSSProperties, KeyboardEvent } from "react";
 import { createPortal } from "react-dom";
 
 import type { RunEffort, RunLevel, RunMode } from "../../shared/contracts";

@@ -1,12 +1,8 @@
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type MutableRefObject,
-} from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { MutableRefObject } from "react";
 
-import { parseAuthoredReply, type AuthoredCss } from "./authoredCss";
+import { parseAuthoredReply } from "./authoredCss";
+import type { AuthoredCss } from "./authoredCss";
 import type { PreviewPort } from "./bridge";
 
 const REPLY_TIMEOUT_MS = 1500;

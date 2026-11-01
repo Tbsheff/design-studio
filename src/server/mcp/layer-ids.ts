@@ -1,6 +1,7 @@
 import { layerRef } from "../../shared/layer-ref.js";
 import type { SourceFileChange } from "../direct-edit/change-feed.js";
-import { lineMapOf, type LineMap } from "./line-map.js";
+import { lineMapOf } from "./line-map.js";
+import type { LineMap } from "./line-map.js";
 
 interface Ids {
   refByKey: Map<string, string>;

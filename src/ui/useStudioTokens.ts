@@ -4,7 +4,8 @@ import type { Version } from "../shared/contracts";
 import { useTokenFrameSync } from "./tokenFrames";
 import type { DesignTokens } from "./useDesignSystemState";
 import { useTokenDraft } from "./useTokenDraft";
-import { useUndoShortcut, type RedoShortcut } from "./useUndoShortcut";
+import { useUndoShortcut } from "./useUndoShortcut";
+import type { RedoShortcut } from "./useUndoShortcut";
 
 interface Options {
   projectId: string;

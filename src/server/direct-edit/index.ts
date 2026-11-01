@@ -40,7 +40,8 @@ import {
   withdrawPlanned,
 } from "./planned-feed.js";
 import { isPendingVersion, saveLater, savesSettled } from "./save-queue.js";
-import { tailwindThemeFor, type TailwindTheme } from "./tailwind/theme.js";
+import { tailwindThemeFor } from "./tailwind/theme.js";
+import type { TailwindTheme } from "./tailwind/theme.js";
 import { findTextSource } from "./text-source.js";
 import { assertKnownTokens, knownTokenVars } from "./tokens.js";
 import { parseDirectEditRequest } from "./validate.js";

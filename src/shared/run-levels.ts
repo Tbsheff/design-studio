@@ -5,7 +5,8 @@ import type {
   RunLevel,
   RunTask,
 } from "./contracts";
-import { PORT_LEVEL_LABEL, PORT_TASK, type PortTask } from "./port";
+import { PORT_LEVEL_LABEL, PORT_TASK } from "./port";
+import type { PortTask } from "./port";
 
 export type PlaceholderMode = "off" | QualitySeverity;
 

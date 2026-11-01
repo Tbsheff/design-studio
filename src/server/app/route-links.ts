@@ -17,9 +17,8 @@ import {
   lineOf,
   RouteEvaluator,
   UNKNOWN,
-  type SourceModule,
-  type SourceProject,
 } from "./route-eval.js";
+import type { SourceModule, SourceProject } from "./route-eval.js";
 import { appRouterDir, listAppRoutes } from "./routes.js";
 
 const MAX_FILES = 120;

@@ -5,19 +5,15 @@ import {
   useMemo,
   useRef,
   useState,
-  type KeyboardEvent,
 } from "react";
+import type { KeyboardEvent } from "react";
 
 import type { ProjectKind, Version } from "../../shared/contracts";
 import { useUi } from "../storage";
 import { displayTitle, indexVersions } from "../versionLabels";
 import { CompareFrame } from "./CompareFrame";
-import {
-  OverlayBoard,
-  ReferenceBoard,
-  SliderBoard,
-  type BoardProps,
-} from "./CompareModes";
+import { OverlayBoard, ReferenceBoard, SliderBoard } from "./CompareModes";
+import type { BoardProps } from "./CompareModes";
 
 import "../styles/reference.css";
 import { Icon } from "./Icon";

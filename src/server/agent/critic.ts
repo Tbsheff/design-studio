@@ -14,7 +14,8 @@ import type { QualityFinding } from "../../shared/contracts.js";
 import { diffImages, readPng } from "../preview/visual-diff.js";
 import type { PreviewService } from "../types.js";
 import type { RunToolState } from "./check-tool.js";
-import { changedSince, type RunScreen } from "./screens.js";
+import { changedSince } from "./screens.js";
+import type { RunScreen } from "./screens.js";
 import type { TasteRule } from "./taste.js";
 
 type QueryFn = typeof query;

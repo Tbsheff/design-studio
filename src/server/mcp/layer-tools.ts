@@ -5,7 +5,8 @@ import { readProjectCanvas } from "../canvas/service.js";
 import { findFrame, frameRef } from "../canvas/tools.js";
 import { noteRenderedPage } from "../preview/render-wait.js";
 import type { PreviewService } from "../types.js";
-import { EditError, loadTarget, type EditDeps } from "./edit-deps.js";
+import { EditError, loadTarget } from "./edit-deps.js";
+import type { EditDeps } from "./edit-deps.js";
 import {
   defineTool,
   directionId,
@@ -15,8 +16,8 @@ import {
   pageUrl,
   projectId,
   selector,
-  type Done,
 } from "./edit-kit.js";
+import type { Done } from "./edit-kit.js";
 import {
   isLayerRef,
   LayerRefError,
@@ -25,9 +26,8 @@ import {
   resolveLayerRefs,
   scanLayers,
   scopeOf,
-  type Layer,
-  type Viewport,
 } from "./layer-ref.js";
+import type { Layer, Viewport } from "./layer-ref.js";
 import { noteShownFiles } from "./source-loc.js";
 
 type Direction = Project["directions"][number];

@@ -2,10 +2,8 @@ import { appendFileSync, existsSync, mkdirSync } from "node:fs";
 import path from "node:path";
 
 import { app, dialog } from "electron";
-import electronUpdater, {
-  type AppUpdater,
-  type UpdateInfo,
-} from "electron-updater";
+import electronUpdater from "electron-updater";
+import type { AppUpdater, UpdateInfo } from "electron-updater";
 
 export const UPDATE_FEED_ENV = "STUDIO_UPDATE_FEED";
 export const UPDATE_CHECK_ENV = "STUDIO_UPDATE_CHECK";

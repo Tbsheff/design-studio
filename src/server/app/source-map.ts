@@ -2,7 +2,8 @@ import { existsSync, readFileSync, realpathSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { SourceMapConsumer, type RawSourceMap } from "source-map-js";
+import { SourceMapConsumer } from "source-map-js";
+import type { RawSourceMap } from "source-map-js";
 
 export interface SourceTarget {
   upstream: string;

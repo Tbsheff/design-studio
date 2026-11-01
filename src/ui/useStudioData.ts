@@ -1,11 +1,5 @@
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type Dispatch,
-  type SetStateAction,
-} from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { Dispatch, SetStateAction } from "react";
 
 import type {
   Project,
@@ -17,19 +11,16 @@ import type {
 } from "../shared/contracts";
 import { api, errorText } from "./api";
 import { createDeltaBatcher, frameOrTimeout } from "./deltaBatch";
-import { useProjectEvents, type ConnectionState } from "./events";
+import { useProjectEvents } from "./events";
+import type { ConnectionState } from "./events";
 import { reportFirstToken } from "./perfTelemetry";
 import {
   listRunPage,
   publishOlderRuns,
   publishRunHistory,
 } from "./runHistoryApi";
-import {
-  applyRunEvent,
-  emptyRun,
-  runFromSummary,
-  type RunMap,
-} from "./runState";
+import { applyRunEvent, emptyRun, runFromSummary } from "./runState";
+import type { RunMap } from "./runState";
 import { uiStore, useUi } from "./storage";
 import { useRunNotice } from "./useRunNotice";
 

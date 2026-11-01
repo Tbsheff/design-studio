@@ -9,8 +9,8 @@ import {
   ok,
   projectId,
   versionActivity,
-  type ToolSpec,
 } from "./edit-kit.js";
+import type { ToolSpec } from "./edit-kit.js";
 
 const versionId = z
   .string()

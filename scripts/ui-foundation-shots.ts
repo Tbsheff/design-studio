@@ -1,7 +1,8 @@
 import { mkdirSync } from "node:fs";
 import path from "node:path";
 
-import { chromium, type Page } from "playwright-core";
+import { chromium } from "playwright-core";
+import type { Page } from "playwright-core";
 
 const base = process.env.STUDIO_URL ?? "http://127.0.0.1:4870";
 const sheet = process.env.SHEET_URL;

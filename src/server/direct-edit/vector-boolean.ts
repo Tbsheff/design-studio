@@ -3,7 +3,8 @@ import type { MultiPolygon, Pair } from "polygon-clipping";
 import type { BooleanOpName, VectorBox } from "../../shared/vector.js";
 import { DEFAULT_SHAPE_FILL } from "../../shared/vector.js";
 import { DirectEditError } from "./errors.js";
-import { applySplices, type Splice } from "./splice.js";
+import { applySplices } from "./splice.js";
+import type { Splice } from "./splice.js";
 import { positionAt } from "./structure-ops.js";
 import {
   allPoints,
@@ -15,8 +16,8 @@ import {
   regionOf,
   regionPath,
   round,
-  type Box,
 } from "./vector-geometry.js";
+import type { Box } from "./vector-geometry.js";
 import { elementText } from "./vector-snippet.js";
 import type { VectorDoc, VNode } from "./vector-source.js";
 

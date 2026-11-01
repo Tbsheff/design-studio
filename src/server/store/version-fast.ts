@@ -17,9 +17,8 @@ import {
   TREE_MODE,
   blobShaOf,
   comparePaths,
-  type ObjectStore,
-  type TreeEntry,
 } from "./git-objects.js";
+import type { ObjectStore, TreeEntry } from "./git-objects.js";
 
 export const EMPTY_TREE = "4b825dc642cb6eb9a060e54bf8d69288fbee4904";
 

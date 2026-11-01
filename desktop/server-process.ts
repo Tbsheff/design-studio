@@ -1,5 +1,7 @@
-import { spawn, type ChildProcess } from "node:child_process";
-import { createWriteStream, mkdirSync, type WriteStream } from "node:fs";
+import { spawn } from "node:child_process";
+import type { ChildProcess } from "node:child_process";
+import { createWriteStream, mkdirSync } from "node:fs";
+import type { WriteStream } from "node:fs";
 import path from "node:path";
 
 import type { Env } from "./env.js";

@@ -9,7 +9,8 @@ import {
 } from "../mcp/reference-tools.js";
 import type { AgentRunContext, PreviewService } from "../types.js";
 import { compareToReference, referenceAttachment } from "./reference-check.js";
-import { resolveShotTarget, type TargetDeps } from "./run-target.js";
+import { resolveShotTarget } from "./run-target.js";
+import type { TargetDeps } from "./run-target.js";
 
 type ToolResult = {
   content: (

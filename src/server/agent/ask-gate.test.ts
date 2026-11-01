@@ -2,11 +2,8 @@ import type { HookInput } from "@anthropic-ai/claude-agent-sdk";
 import { describe, expect, it } from "vitest";
 
 import { createBashGate } from "./ask-gate.js";
-import {
-  createCanUseTool,
-  createPreToolUseGuard,
-  type ToolPolicy,
-} from "./permissions.js";
+import { createCanUseTool, createPreToolUseGuard } from "./permissions.js";
+import type { ToolPolicy } from "./permissions.js";
 import { createInboxHook } from "./sdk-driver.js";
 
 const policy: ToolPolicy = {

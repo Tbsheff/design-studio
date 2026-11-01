@@ -1,7 +1,8 @@
 import type { PreviewService } from "../types.js";
 import { runEditElement, runSetToken } from "./direct-tools.js";
 import type { DriverInput } from "./lifecycle.js";
-import { mockCanvasTool, type MockToolSession } from "./mock-canvas.js";
+import { mockCanvasTool } from "./mock-canvas.js";
+import type { MockToolSession } from "./mock-canvas.js";
 import { EDIT_ELEMENT_TOOL, SET_TOKEN_TOOL } from "./permissions.js";
 
 export const MOCK_DIRECT_TAG = "[direct]";

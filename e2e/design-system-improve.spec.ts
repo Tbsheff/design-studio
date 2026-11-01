@@ -1,7 +1,8 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 import type {
   DesignSystemCoverage,
@@ -9,7 +10,8 @@ import type {
   Project,
 } from "../src/shared/contracts";
 import { ROOT } from "./support/server";
-import { type StudioApi, mainDirection, openHome } from "./support/studio";
+import { mainDirection, openHome } from "./support/studio";
+import type { StudioApi } from "./support/studio";
 
 const DTCG = path.join(
   ROOT,

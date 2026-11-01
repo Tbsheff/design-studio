@@ -1,7 +1,8 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 import type { Project } from "../src/shared/contracts";
 import {
@@ -10,8 +11,8 @@ import {
   mainDirection,
   openHome,
   showVersions,
-  type StudioApi,
 } from "./support/studio";
+import type { StudioApi } from "./support/studio";
 
 const PROMPTS = [
   "Harbor Lane Coffee",

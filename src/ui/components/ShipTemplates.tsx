@@ -1,4 +1,5 @@
-import { useEffect, useState, type MutableRefObject } from "react";
+import { useEffect, useState } from "react";
+import type { MutableRefObject } from "react";
 
 import type { ShipSettings } from "../../shared/ship";
 import { shipApi } from "../shipApi";

@@ -1,11 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  applyPartEvent,
-  closeParts,
-  type PartEvent,
-  withFinalText,
-} from "./run-parts";
+import { applyPartEvent, closeParts, withFinalText } from "./run-parts";
+import type { PartEvent } from "./run-parts";
 
 function play(events: PartEvent[]) {
   return events.reduce(applyPartEvent, [] as ReturnType<typeof applyPartEvent>);

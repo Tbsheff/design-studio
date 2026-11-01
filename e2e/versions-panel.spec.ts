@@ -1,15 +1,12 @@
 import path from "node:path";
 
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 import type { Project } from "../src/shared/contracts";
 import { ROOT } from "./support/server";
-import {
-  type StudioApi,
-  mainDirection,
-  openHome,
-  showVersions,
-} from "./support/studio";
+import { mainDirection, openHome, showVersions } from "./support/studio";
+import type { StudioApi } from "./support/studio";
 
 const PROMPT =
   "A landing page for a small independent bookshop: hero, featured books, events calendar, newsletter signup";

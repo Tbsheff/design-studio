@@ -1,4 +1,5 @@
-import { useState, type MutableRefObject, type ReactNode } from "react";
+import { useState } from "react";
+import type { MutableRefObject, ReactNode } from "react";
 
 import type { InsertKind, SelectionContext } from "../../shared/contracts";
 import { TRY_VARIANTS_COMMAND } from "../../shared/element-variants";

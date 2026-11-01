@@ -4,17 +4,18 @@ import http from "node:http";
 import type { AddressInfo } from "node:net";
 import path from "node:path";
 
-import { expect, test, type Locator, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 
 import type { PackSummary, Project } from "../src/shared/contracts";
 import { ROOT } from "./support/server";
 import {
-  type StudioApi,
   createProjectViaUi,
   frontFrame,
   mainDirection,
   openHome,
 } from "./support/studio";
+import type { StudioApi } from "./support/studio";
 
 const FIXTURES = path.join(
   ROOT,

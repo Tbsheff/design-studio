@@ -16,30 +16,24 @@ import type { PlaceholderMode } from "../../shared/run-levels.js";
 import { waitForPage } from "../export/capture.js";
 import type { PeekOptions } from "../types.js";
 import { dropOutsideApp } from "./app-source-filter.js";
-import { runAxe, runSharedAxe, type AxeViolation } from "./axe.js";
-import { CaptureCache, cacheKey, type Stamps } from "./capture-cache.js";
-import {
-  layoutProbeExpression,
-  type LayoutProbeResult,
-} from "./layout-probe.js";
+import { runAxe, runSharedAxe } from "./axe.js";
+import type { AxeViolation } from "./axe.js";
+import { CaptureCache, cacheKey } from "./capture-cache.js";
+import type { Stamps } from "./capture-cache.js";
+import { layoutProbeExpression } from "./layout-probe.js";
+import type { LayoutProbeResult } from "./layout-probe.js";
 import { WarmPages } from "./page-pool.js";
 import { PeekPages } from "./peek-pages.js";
-import {
-  qualityProbeExpression,
-  type ProbeRect,
-  type QualityProbeResult,
-} from "./quality-probe.js";
+import { qualityProbeExpression } from "./quality-probe.js";
+import type { ProbeRect, QualityProbeResult } from "./quality-probe.js";
 import {
   duplicateFindings,
   genericFindings,
   placeholderFindings,
   tapFindings,
 } from "./quality.js";
-import {
-  createRenderBackend,
-  type RenderBackend,
-  type RenderPage,
-} from "./render-backend.js";
+import { createRenderBackend } from "./render-backend.js";
+import type { RenderBackend, RenderPage } from "./render-backend.js";
 import { projectOfUrl } from "./render-wait.js";
 import { expandScrollRoot } from "./scroll-root.js";
 

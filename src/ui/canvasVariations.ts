@@ -5,8 +5,8 @@ import {
   keepDirection,
   placeDirections,
   viewportOf,
-  type CanvasLayout,
 } from "./canvasFrames";
+import type { CanvasLayout } from "./canvasFrames";
 import { uiStore } from "./storage";
 
 function apply(

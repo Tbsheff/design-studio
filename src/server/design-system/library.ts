@@ -30,8 +30,8 @@ import {
   PackExistsError,
   findImportConflict,
   readPackZip,
-  type ImportMode,
 } from "./pack-import.js";
+import type { ImportMode } from "./pack-import.js";
 import {
   DESIGN_MD_FILE,
   USER_PACK_PREFIX,

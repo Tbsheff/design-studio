@@ -10,8 +10,8 @@ import {
   createPreToolUseGuard,
   isInstallCommand,
   permittedToolNames,
-  type ToolPolicy,
 } from "./permissions.js";
+import type { ToolPolicy } from "./permissions.js";
 
 let root: string;
 let workTree: string;

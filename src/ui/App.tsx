@@ -1,11 +1,5 @@
-import {
-  Component,
-  lazy,
-  Suspense,
-  useEffect,
-  useState,
-  type ReactNode,
-} from "react";
+import { Component, lazy, Suspense, useEffect, useState } from "react";
+import type { ReactNode } from "react";
 
 import { errorText } from "./api";
 import type { CommandLayer as Layer } from "./commands/registry";

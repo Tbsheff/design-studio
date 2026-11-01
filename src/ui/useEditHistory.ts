@@ -1,12 +1,5 @@
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type Dispatch,
-  type MutableRefObject,
-  type SetStateAction,
-} from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { Dispatch, MutableRefObject, SetStateAction } from "react";
 
 import { anchorQueryOf, targetFromSelection } from "../shared/comments";
 import type {
@@ -18,11 +11,8 @@ import type {
 } from "../shared/contracts";
 import { api, errorText } from "./api";
 import { useProjectEvents } from "./events";
-import {
-  historyKeyOf,
-  type HistoryKind,
-  type RedoShortcut,
-} from "./useUndoShortcut";
+import { historyKeyOf } from "./useUndoShortcut";
+import type { HistoryKind, RedoShortcut } from "./useUndoShortcut";
 import { historyPhrase } from "./versionLabels";
 
 export const PREVIEW_PAINTED_EVENT = "studio:preview-painted";

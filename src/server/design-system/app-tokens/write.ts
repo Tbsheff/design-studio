@@ -24,8 +24,8 @@ import {
   appTokensFor,
   parseAppTokens,
   readAppTokensAt,
-  type LoadedAppTokens,
 } from "./source.js";
+import type { LoadedAppTokens } from "./source.js";
 import type { AppToken } from "./tokens.js";
 
 const MAX_VALUE = 400;

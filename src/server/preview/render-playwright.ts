@@ -1,12 +1,8 @@
 import type { Browser, BrowserContext, Page } from "playwright-core";
 
 import type { RenderClip, RenderErrors } from "../../shared/render-rpc.js";
-import {
-  NAVIGATION_TIMEOUT_MS,
-  SETTLE_TIMEOUT_MS,
-  type RenderBackend,
-  type RenderPage,
-} from "./render-backend.js";
+import { NAVIGATION_TIMEOUT_MS, SETTLE_TIMEOUT_MS } from "./render-backend.js";
+import type { RenderBackend, RenderPage } from "./render-backend.js";
 
 function isFaviconMiss(url: string): boolean {
   try {

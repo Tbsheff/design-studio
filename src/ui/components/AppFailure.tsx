@@ -1,4 +1,5 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState } from "react";
+import type { FormEvent } from "react";
 
 import type { AppServerStatus, AttachedApp } from "../../shared/contracts";
 import type { FolderInspection } from "../../shared/open-app";

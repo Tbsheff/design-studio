@@ -8,7 +8,8 @@ import { resolveSource, writeAtomic } from "../direct-edit/index.js";
 import { planInsertJsx } from "../direct-edit/jsx-insert.js";
 import { parseFigmaNodes } from "../figma/nodes.js";
 import { prepareFigmaImport } from "../figma/to-markup.js";
-import { refusal, writeProblem, type DirectToolDeps } from "./direct-tools.js";
+import { refusal, writeProblem } from "./direct-tools.js";
+import type { DirectToolDeps } from "./direct-tools.js";
 import { targetOf } from "./insert-tool.js";
 
 type ToolText = {

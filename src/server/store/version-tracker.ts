@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
-import { watch, type FSWatcher } from "node:fs";
+import { watch } from "node:fs";
+import type { FSWatcher } from "node:fs";
 import { lstat, mkdir, realpath, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 

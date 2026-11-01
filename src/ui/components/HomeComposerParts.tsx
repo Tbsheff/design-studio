@@ -1,13 +1,5 @@
-import {
-  useEffect,
-  useId,
-  useRef,
-  useState,
-  type ClipboardEvent,
-  type DragEvent,
-  type FormEvent,
-  type ReactNode,
-} from "react";
+import { useEffect, useId, useRef, useState } from "react";
+import type { ClipboardEvent, DragEvent, FormEvent, ReactNode } from "react";
 
 import { Icon } from "./Icon";
 

@@ -19,8 +19,8 @@ import {
   loadTarget,
   refuseWhileRunning,
   studioCall,
-  type EditDeps,
 } from "./edit-deps.js";
+import type { EditDeps } from "./edit-deps.js";
 import {
   base,
   defineTool,
@@ -32,8 +32,8 @@ import {
   selector,
   sourceElement,
   versionActivity,
-  type Done,
 } from "./edit-kit.js";
+import type { Done } from "./edit-kit.js";
 
 export const LAYER_STATE_NOTE =
   "Lock, hide and rename use the same server code as the eye, lock and name in the studio Layers panel. Lock is studio state saved in the Design Studio data folder (not in the project files and not a version): a click on the canvas passes through a locked layer and its children, in the studio and for every MCP client. Hide writes display: none and rename writes data-name in the source, each as one version the user can undo.";

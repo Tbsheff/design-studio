@@ -5,7 +5,8 @@ import { probeOwners } from "../components/owner-probe.js";
 import { resolveInstance } from "../components/use-site.js";
 import { writeAtomic } from "../direct-edit/index.js";
 import { parseSetProps, planSetProps } from "../direct-edit/props.js";
-import { refusal, writeProblem, type DirectToolDeps } from "./direct-tools.js";
+import { refusal, writeProblem } from "./direct-tools.js";
+import type { DirectToolDeps } from "./direct-tools.js";
 import { editPageUrl } from "./run-target.js";
 
 type ToolText = {

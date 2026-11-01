@@ -13,17 +13,15 @@ import {
   setPending,
   toChanges,
   withField,
-  type PendingMap,
-  type PendingToken,
-  type TokenField,
 } from "./tokenDraft";
+import type { PendingMap, PendingToken, TokenField } from "./tokenDraft";
 import {
   broadcastTheme,
   broadcastTokenCss,
   holdTokenCssUntilReload,
   useCanvasTheme,
-  type ThemeChoice,
 } from "./tokenFrames";
+import type { ThemeChoice } from "./tokenFrames";
 import type { DesignTokens } from "./useDesignSystemState";
 
 const PREVIEW_THROTTLE_MS = 60;

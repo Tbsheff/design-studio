@@ -1,17 +1,14 @@
 import { mkdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 import type { SkillCatalog } from "../src/shared/contracts";
 import { ROOT, readState } from "./support/server";
 import { claudeHomeFor, FIXTURE_SKILLS } from "./support/skills-fixture";
-import {
-  mainDirection,
-  openHome,
-  type StudioApi,
-  clickCreate,
-} from "./support/studio";
+import { mainDirection, openHome, clickCreate } from "./support/studio";
+import type { StudioApi } from "./support/studio";
 
 const SHOTS = path.join(ROOT, "design-review");
 

@@ -30,16 +30,17 @@ import {
   MAX_FIX_LOOPS,
   missingShots,
   recordCheck,
-  type LoopLog,
 } from "./polish-loop.js";
-import { defaultShotTarget, type ShotTarget } from "./run-target.js";
+import type { LoopLog } from "./polish-loop.js";
+import { defaultShotTarget } from "./run-target.js";
+import type { ShotTarget } from "./run-target.js";
 import {
   describeScreens,
   planScreens,
   samePage,
   warmScreens,
-  type RunScreen,
 } from "./screens.js";
+import type { RunScreen } from "./screens.js";
 
 const DIFF_VIEWPORTS: CheckViewport[] = ["desktop", "mobile"];
 

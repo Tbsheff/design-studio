@@ -1,11 +1,5 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type MutableRefObject,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { MutableRefObject } from "react";
 
 import type {
   DirectEditRequest,
@@ -21,10 +15,8 @@ import {
   shiftedPart,
   shiftedValue,
   valuesFromStyles,
-  type Shift,
-  type ShiftPart,
-  type StyleValues,
 } from "./cssValues";
+import type { Shift, ShiftPart, StyleValues } from "./cssValues";
 import { editVariantStore } from "./editVariant";
 import { startOptimistic } from "./optimisticEdit";
 

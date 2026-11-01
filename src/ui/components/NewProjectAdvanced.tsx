@@ -1,4 +1,5 @@
-import { lazy, Suspense, useState, type ChangeEvent } from "react";
+import { lazy, Suspense, useState } from "react";
+import type { ChangeEvent } from "react";
 
 import type { SettingsDraft } from "../settingsDraft";
 import { Icon } from "./Icon";

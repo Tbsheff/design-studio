@@ -9,7 +9,8 @@ import {
   projectPreviewHost,
   projectPreviewOrigin,
 } from "../../shared/contracts.js";
-import { startHtmlServer, type HtmlServer } from "./html-server.js";
+import { startHtmlServer } from "./html-server.js";
+import type { HtmlServer } from "./html-server.js";
 
 let root: string;
 let server: HtmlServer;

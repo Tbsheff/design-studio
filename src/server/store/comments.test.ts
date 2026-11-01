@@ -6,11 +6,8 @@ import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import type { CommentTarget, StudioEvent } from "../../shared/contracts.js";
-import {
-  createCommentStore,
-  reorderSubset,
-  type CommentStore,
-} from "./comments.js";
+import { createCommentStore, reorderSubset } from "./comments.js";
+import type { CommentStore } from "./comments.js";
 import { createEventBus } from "./events.js";
 
 const target: CommentTarget = {

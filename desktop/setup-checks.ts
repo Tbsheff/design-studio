@@ -4,11 +4,8 @@ import { statfs } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import {
-  claudeVersion,
-  compareClaudeVersion,
-  type ClaudeLocation,
-} from "./claude-cli.js";
+import { claudeVersion, compareClaudeVersion } from "./claude-cli.js";
+import type { ClaudeLocation } from "./claude-cli.js";
 import type { GitChoice } from "./git-choice.js";
 
 export type CheckStatus = "ok" | "warn" | "fail";

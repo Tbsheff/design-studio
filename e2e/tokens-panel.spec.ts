@@ -1,25 +1,20 @@
 import { mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 
-import {
-  expect,
-  test,
-  type FrameLocator,
-  type Locator,
-  type Page,
-} from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import type { FrameLocator, Locator, Page } from "@playwright/test";
 import { differenceEuclidean, parse } from "culori";
 
 import type { Project } from "../src/shared/contracts";
 import { ROOT } from "./support/server";
 import {
-  type StudioApi,
   frontFrame,
   mainDirection,
   openHome,
   sendPrompt,
   showVersions,
 } from "./support/studio";
+import type { StudioApi } from "./support/studio";
 
 const REVIEW_DIR = path.join(ROOT, "design-review");
 

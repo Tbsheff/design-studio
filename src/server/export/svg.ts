@@ -9,7 +9,8 @@ import type {
   ScanSvg,
   ScanText,
 } from "./page-scan.js";
-import { cropPng, type VectorRegion } from "./vector.js";
+import { cropPng } from "./vector.js";
+import type { VectorRegion } from "./vector.js";
 
 const n = (value: number): string => String(Math.round(value * 100) / 100);
 

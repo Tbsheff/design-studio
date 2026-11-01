@@ -1,10 +1,5 @@
-import {
-  useEffect,
-  useRef,
-  useState,
-  type Dispatch,
-  type SetStateAction,
-} from "react";
+import { useEffect, useRef, useState } from "react";
+import type { Dispatch, SetStateAction } from "react";
 
 import type { CommentPrefill } from "../shared/contracts";
 import type { PendingAttachment } from "./components/ComposerParts";

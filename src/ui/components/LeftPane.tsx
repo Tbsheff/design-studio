@@ -1,10 +1,5 @@
-import {
-  useMemo,
-  useState,
-  type ComponentProps,
-  type ReactNode,
-  type RefObject,
-} from "react";
+import { useMemo, useState } from "react";
+import type { ComponentProps, ReactNode, RefObject } from "react";
 
 import type { RunView } from "../runState";
 import type { PanelTab } from "../usePanelTab";

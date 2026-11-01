@@ -13,11 +13,8 @@ import path from "node:path";
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import {
-  WORKSPACES_FILE,
-  createWorkspaceStore,
-  type WorkspaceStore,
-} from "./workspaces.js";
+import { WORKSPACES_FILE, createWorkspaceStore } from "./workspaces.js";
+import type { WorkspaceStore } from "./workspaces.js";
 
 let dataDir: string;
 let outside: string;

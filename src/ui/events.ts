@@ -2,7 +2,8 @@ import { useCallback, useEffect, useRef, useSyncExternalStore } from "react";
 
 import type { StudioEvent } from "../shared/contracts";
 import { appStream } from "./appStream";
-import { createEventHub, type ConnectionState } from "./eventHub";
+import { createEventHub } from "./eventHub";
+import type { ConnectionState } from "./eventHub";
 
 export type { ConnectionState } from "./eventHub";
 

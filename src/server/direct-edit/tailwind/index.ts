@@ -5,14 +5,8 @@ import type {
 import { parseVariant } from "../../../shared/variants.js";
 import { DirectEditError } from "../errors.js";
 import { cssEdits, isMappedProperty } from "./map.js";
-import {
-  ClassEditError,
-  planClassEdit,
-  siteClasses,
-  type ClassEdit,
-  type ClassPlan,
-  type ClassSite,
-} from "./plan.js";
+import { ClassEditError, planClassEdit, siteClasses } from "./plan.js";
+import type { ClassEdit, ClassPlan, ClassSite } from "./plan.js";
 import type { TailwindTheme } from "./theme.js";
 
 export type { TailwindTheme } from "./theme.js";

@@ -1,8 +1,5 @@
-import polygonClipping, {
-  type MultiPolygon,
-  type Pair,
-  type Ring,
-} from "polygon-clipping";
+import polygonClipping from "polygon-clipping";
+import type { MultiPolygon, Pair, Ring } from "polygon-clipping";
 
 import { DirectEditError } from "./errors.js";
 

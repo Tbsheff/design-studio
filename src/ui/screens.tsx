@@ -1,4 +1,5 @@
-import { lazy, useState, type ComponentType } from "react";
+import { lazy, useState } from "react";
+import type { ComponentType } from "react";
 
 function preloadable<P extends object>(load: () => Promise<ComponentType<P>>) {
   let ready: ComponentType<P> | null = null;

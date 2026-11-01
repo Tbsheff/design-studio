@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { FormEvent } from "react";
 
 import type { Project, ProjectSettings } from "../../shared/contracts";
 import { api, errorText } from "../api";

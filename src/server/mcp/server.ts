@@ -15,7 +15,8 @@ import {
   renderPending,
   renderSettled,
 } from "../preview/render-wait.js";
-import { EditError, type EditDeps } from "./edit-deps.js";
+import { EditError } from "./edit-deps.js";
+import type { EditDeps } from "./edit-deps.js";
 import {
   callEditTool,
   EDIT_NAMES,
@@ -23,12 +24,8 @@ import {
   RENDER_WAIT_TOOLS,
 } from "./edit-tools.js";
 import { withLayerSelectors } from "./layer-tools.js";
-import {
-  newToken,
-  readMcpSettings,
-  writeMcpSettings,
-  type McpSettings,
-} from "./settings.js";
+import { newToken, readMcpSettings, writeMcpSettings } from "./settings.js";
+import type { McpSettings } from "./settings.js";
 import { callTool, ToolError, TOOLS } from "./tools.js";
 
 const PROTOCOLS = ["2025-06-18", "2025-03-26", "2024-11-05"];

@@ -1,12 +1,5 @@
-import {
-  useId,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-  type KeyboardEvent as ReactKeyboardEvent,
-  type ReactNode,
-} from "react";
+import { useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import type { KeyboardEvent as ReactKeyboardEvent, ReactNode } from "react";
 
 import { chordMatches } from "../../shared/keymap";
 import { errorText, api } from "../api";
@@ -18,7 +11,8 @@ import { projectsApi } from "../projectsStore";
 import { uiStore } from "../storage";
 import { globalCommands } from "./globalCommands";
 import { IS_MAC, Keys } from "./keys";
-import { buildRows, typePair, type Row } from "./paletteRows";
+import { buildRows, typePair } from "./paletteRows";
+import type { Row } from "./paletteRows";
 import { collectCommands } from "./registry";
 
 const RECENT_KEY = "design-studio.commands.recent.v1";

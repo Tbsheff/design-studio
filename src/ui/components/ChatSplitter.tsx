@@ -1,10 +1,5 @@
-import {
-  useCallback,
-  useRef,
-  type KeyboardEvent,
-  type PointerEvent,
-  type RefObject,
-} from "react";
+import { useCallback, useRef } from "react";
+import type { KeyboardEvent, PointerEvent, RefObject } from "react";
 
 import { uiStore, useUi } from "../storage";
 

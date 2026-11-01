@@ -1,4 +1,5 @@
-import { useEffect, useRef, type KeyboardEvent } from "react";
+import { useEffect, useRef } from "react";
+import type { KeyboardEvent } from "react";
 
 import type { RunStatus } from "../../shared/contracts";
 import { formatMs, formatTime, formatUsd } from "../format";

@@ -1,14 +1,12 @@
 import { beforeAll, describe, expect, it } from "vitest";
 
 import type { DesignSystemCheckRule } from "../../shared/contracts.js";
-import {
-  checkDesignSystemFiles,
-  familiesInFontLinks,
-  type DesignSystemFiles,
-} from "./check.js";
+import { checkDesignSystemFiles, familiesInFontLinks } from "./check.js";
+import type { DesignSystemFiles } from "./check.js";
 import { DESIGN_MD_SECTIONS } from "./extract/compose.js";
 import { renderKitPage } from "./extract/kit-page.js";
-import { packRegistry, type LoadedPack } from "./packs.js";
+import { packRegistry } from "./packs.js";
+import type { LoadedPack } from "./packs.js";
 
 let light: LoadedPack;
 let dark: LoadedPack;

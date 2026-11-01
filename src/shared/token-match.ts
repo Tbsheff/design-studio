@@ -10,15 +10,15 @@ import {
   modeRgb,
   parse,
   useMode,
-  type Color,
 } from "culori/fn";
+import type { Color } from "culori/fn";
 
-import {
-  TOKEN_GROUP_FOR_PROPERTY,
-  type CompiledTokenEntry,
-  type DirectStyleProperty,
-  type TokenGroupName,
-  type TokenMatch,
+import { TOKEN_GROUP_FOR_PROPERTY } from "./contracts";
+import type {
+  CompiledTokenEntry,
+  DirectStyleProperty,
+  TokenGroupName,
+  TokenMatch,
 } from "./contracts";
 
 useMode(modeRgb);

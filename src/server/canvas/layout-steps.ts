@@ -5,9 +5,8 @@ import {
   recordsLayout,
   revertCanvas,
   revertLinks,
-  type LayoutChange,
-  type LayoutStep,
 } from "./layout-history.js";
+import type { LayoutChange, LayoutStep } from "./layout-history.js";
 import type { CanvasService } from "./service.js";
 
 export function recordLayout(

@@ -11,9 +11,8 @@ import {
   checkGit,
   checkNetwork,
   needsAttention,
-  type CheckResult,
-  type ClaudeSetup,
 } from "./setup-checks.js";
+import type { CheckResult, ClaudeSetup } from "./setup-checks.js";
 
 function fakeClaude(
   auth: string,

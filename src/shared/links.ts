@@ -1,8 +1,5 @@
-import {
-  cleanFramePath,
-  isFrameId,
-  type CanvasFileFrame,
-} from "./canvas-file.js";
+import { cleanFramePath, isFrameId } from "./canvas-file.js";
+import type { CanvasFileFrame } from "./canvas-file.js";
 
 export const LINKS_FILE = ".studio/links.json";
 export const LINKS_FILE_VERSION = 1;

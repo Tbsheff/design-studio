@@ -10,8 +10,8 @@ import {
   bundledClaude,
   expectedClaudeVersion,
   resolveClaude,
-  type ClaudeLocation,
 } from "./claude-cli.js";
+import type { ClaudeLocation } from "./claude-cli.js";
 import { chooseDataDir } from "./data-choice.js";
 import {
   baseEnv,
@@ -22,7 +22,8 @@ import {
   nodeDirs,
 } from "./env.js";
 import { openSetupWindow, registerSetupIpc, setupNeeded } from "./first-run.js";
-import { chooseGit, FORCE_GIT_ENV, type GitChoice } from "./git-choice.js";
+import { chooseGit, FORCE_GIT_ENV } from "./git-choice.js";
+import type { GitChoice } from "./git-choice.js";
 import { NativeShell } from "./native.js";
 import { guardContents, guardPermissions } from "./navigation.js";
 import {
@@ -32,21 +33,13 @@ import {
   packagedLayout,
   repoDataDir,
 } from "./paths.js";
-import {
-  pickPorts,
-  readSavedPorts,
-  savePorts,
-  waitForFree,
-  type PortSet,
-} from "./ports.js";
+import { pickPorts, readSavedPorts, savePorts, waitForFree } from "./ports.js";
+import type { PortSet } from "./ports.js";
 import { isRenderContents, RenderPool } from "./render-pool.js";
 import { RenderHost, serveChild } from "./render-rpc-host.js";
 import { ServerLink } from "./server-link.js";
-import {
-  startServer,
-  type ServerExit,
-  type ServerHandle,
-} from "./server-process.js";
+import { startServer } from "./server-process.js";
+import type { ServerExit, ServerHandle } from "./server-process.js";
 import type { CheckInputs, ClaudeSetup } from "./setup-checks.js";
 import {
   cleanStaleServer,

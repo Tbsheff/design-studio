@@ -6,8 +6,8 @@ import {
   useMemo,
   useRef,
   useState,
-  type FormEvent,
 } from "react";
+import type { FormEvent } from "react";
 
 import { cleanRoute, envText, parseEnvText } from "../../shared/app";
 import type {

@@ -8,8 +8,8 @@ import {
   snippetOf,
   statusAfterRun,
   targetFromSelection,
-  type AnchorDom,
 } from "./comments.js";
+import type { AnchorDom } from "./comments.js";
 import type { AnchorQuery, CommentStatus } from "./contracts.js";
 
 interface FakeElement {

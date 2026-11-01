@@ -50,22 +50,13 @@ import type {
   VersionStore,
 } from "../types.js";
 import { scopeProblem } from "../variations/scope-check.js";
-import {
-  createBashEditTracker,
-  fileDiff,
-  readFileText,
-  type BashEditResult,
-  type BashWriteCheck,
-  type FileText,
-} from "./bash-edits.js";
+import { createBashEditTracker, fileDiff, readFileText } from "./bash-edits.js";
+import type { BashEditResult, BashWriteCheck, FileText } from "./bash-edits.js";
 import { createCutWriteGuard } from "./cut-writes.js";
 import { isLeanRun } from "./lean-run.js";
 import { EDIT_TOOL_NAMES } from "./permissions.js";
-import {
-  createTodoTracker,
-  evidenceOf,
-  type TodoEvidence,
-} from "./todo-tracker.js";
+import { createTodoTracker, evidenceOf } from "./todo-tracker.js";
+import type { TodoEvidence } from "./todo-tracker.js";
 
 export interface DriverSink {
   textDelta(text: string): void;

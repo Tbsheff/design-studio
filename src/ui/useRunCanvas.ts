@@ -6,12 +6,8 @@ import type {
   SelectionContext,
 } from "../shared/contracts";
 import { stateLabel } from "../shared/frame-state";
-import {
-  activeFrame,
-  canvasStore,
-  defaultLayout,
-  type CanvasFrame,
-} from "./canvasFrames";
+import { activeFrame, canvasStore, defaultLayout } from "./canvasFrames";
+import type { CanvasFrame } from "./canvasFrames";
 import { frameStateOf, useFrameStates } from "./frameStates";
 import { uiStore } from "./storage";
 import { inViewIds } from "./useCanvasPresence";

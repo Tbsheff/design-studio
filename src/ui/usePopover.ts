@@ -1,10 +1,5 @@
-import {
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  type MouseEvent as ReactMouseEvent,
-  type RefObject,
-} from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
+import type { MouseEvent as ReactMouseEvent, RefObject } from "react";
 
 function modalDialogOwnsEscape(popover: HTMLElement | null): boolean {
   const modal = document.querySelector("dialog[open]");

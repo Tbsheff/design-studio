@@ -1,15 +1,10 @@
 import { z } from "zod";
 
 import { COMPONENT_PREVIEW_PROPS_HEADER } from "../../shared/component-preview.js";
-import { EditError, loadTarget, type EditDeps } from "./edit-deps.js";
-import {
-  base,
-  defineTool,
-  directionId,
-  projectId,
-  type Done,
-  type ToolSpec,
-} from "./edit-kit.js";
+import { EditError, loadTarget } from "./edit-deps.js";
+import type { EditDeps } from "./edit-deps.js";
+import { base, defineTool, directionId, projectId } from "./edit-kit.js";
+import type { Done, ToolSpec } from "./edit-kit.js";
 
 const previewSchema = z
   .object({

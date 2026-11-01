@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import type { StudioEvent } from "../shared/contracts";
-import { createEventHub, type EventSourceLike } from "./eventHub";
+import { createEventHub } from "./eventHub";
+import type { EventSourceLike } from "./eventHub";
 
 class FakeSource implements EventSourceLike {
   onopen: EventSourceLike["onopen"] = null;

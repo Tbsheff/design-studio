@@ -1,5 +1,6 @@
 import type { StructureKey } from "./contracts.js";
-import { matchesKey, type KeyId, type KeyInput } from "./keymap.js";
+import { matchesKey } from "./keymap.js";
+import type { KeyId, KeyInput } from "./keymap.js";
 
 export const STRUCTURE_KEY_IDS: Record<StructureKey, KeyId> = {
   delete: "layer-delete",

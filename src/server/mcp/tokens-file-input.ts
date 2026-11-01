@@ -3,7 +3,8 @@ import { homedir } from "node:os";
 import path from "node:path";
 
 import { MAX_TOKENS_FILE_BYTES } from "../design-system/extract/draft.js";
-import { approve, EditError, oneLine, type EditDeps } from "./edit-deps.js";
+import { approve, EditError, oneLine } from "./edit-deps.js";
+import type { EditDeps } from "./edit-deps.js";
 import { isInside, safeFolder } from "./folders.js";
 
 const TOKEN_FILE = /\.(json|css)$/i;

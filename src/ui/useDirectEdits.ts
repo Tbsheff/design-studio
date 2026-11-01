@@ -1,11 +1,5 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type MutableRefObject,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { MutableRefObject } from "react";
 
 import type {
   DirectStyleProperty,
@@ -13,7 +7,8 @@ import type {
 } from "../shared/contracts";
 import { ApiError, api, errorText } from "./api";
 import type { PreviewPort } from "./bridge";
-import { changedProps, valuesFromStyles, type StyleValues } from "./cssValues";
+import { changedProps, valuesFromStyles } from "./cssValues";
+import type { StyleValues } from "./cssValues";
 import {
   addShift,
   mergeValues,
@@ -21,10 +16,8 @@ import {
   ownEdits,
   shiftedStyle,
   withoutShifts,
-  type Shift,
-  type ShiftPart,
-  type Shifts,
 } from "./mixedValues";
+import type { Shift, ShiftPart, Shifts } from "./mixedValues";
 import { startOptimistic } from "./optimisticEdit";
 import type {
   DirectEdit,

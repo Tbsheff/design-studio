@@ -9,7 +9,8 @@ import { TOKENS_FILE } from "../../shared/contracts.js";
 import { isNodeError } from "../store/errors.js";
 import { COVERAGE_FILE, META_FILE } from "./extract/draft.js";
 import { gradeOf, scoreOf } from "./extract/map.js";
-import { writeFileAtomic, type PackRegistry } from "./packs.js";
+import { writeFileAtomic } from "./packs.js";
+import type { PackRegistry } from "./packs.js";
 
 const SAFE_ATTACHMENT_ID = /^[A-Za-z0-9_-]{1,64}$/;
 

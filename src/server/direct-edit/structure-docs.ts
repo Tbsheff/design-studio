@@ -9,7 +9,8 @@ import type { SourcePosition } from "./errors.js";
 import { findElementAt } from "./html.js";
 import { findJsxElement, parseSource } from "./jsx.js";
 import { leadingWhitespaceStart } from "./splice.js";
-import { refuse, type Frame, type StructNode } from "./structure-ops.js";
+import { refuse } from "./structure-ops.js";
+import type { Frame, StructNode } from "./structure-ops.js";
 import {
   assertNotMapped,
   jsxAncestors,

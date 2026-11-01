@@ -1,6 +1,8 @@
-import { shell, type Session, type WebContents } from "electron";
+import { shell } from "electron";
+import type { Session, WebContents } from "electron";
 
-import { VITE_PORT_RANGE, type PortSet } from "./ports.js";
+import { VITE_PORT_RANGE } from "./ports.js";
+import type { PortSet } from "./ports.js";
 
 const EXTERNAL_PROTOCOLS = new Set(["http:", "https:", "mailto:"]);
 

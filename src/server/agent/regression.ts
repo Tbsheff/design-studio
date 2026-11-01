@@ -3,13 +3,10 @@ import { writeFile } from "node:fs/promises";
 import type { query } from "@anthropic-ai/claude-agent-sdk";
 
 import type { AgentRunContext, PreviewService } from "../types.js";
-import { runScreens, type RunToolState } from "./check-tool.js";
-import {
-  criticOutPrefix,
-  regressionPairs,
-  runCritic,
-  type CriticIssue,
-} from "./critic.js";
+import { runScreens } from "./check-tool.js";
+import type { RunToolState } from "./check-tool.js";
+import { criticOutPrefix, regressionPairs, runCritic } from "./critic.js";
+import type { CriticIssue } from "./critic.js";
 import { warmScreens } from "./screens.js";
 
 type QueryFn = typeof query;

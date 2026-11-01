@@ -3,7 +3,8 @@ import { mkdirSync, mkdtempSync, realpathSync, rmSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-import { expect, type ElectronApplication, type Page } from "@playwright/test";
+import { expect } from "@playwright/test";
+import type { ElectronApplication, Page } from "@playwright/test";
 
 import { desktopEnv, launchDesktop } from "../e2e/support/desktop-app";
 import { clickCreate } from "../e2e/support/studio";

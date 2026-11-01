@@ -1,14 +1,10 @@
-import {
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-  type KeyboardEvent,
-} from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import type { KeyboardEvent } from "react";
 
 import type { KeyId } from "../../shared/keymap";
 import { KeyHint } from "../commands/keys";
-import { Icon, type IconName } from "./Icon";
+import { Icon } from "./Icon";
+import type { IconName } from "./Icon";
 
 export interface PreviewMenuItem {
   id: string;

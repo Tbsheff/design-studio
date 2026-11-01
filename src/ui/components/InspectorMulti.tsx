@@ -1,4 +1,5 @@
-import { memo, useSyncExternalStore, type MutableRefObject } from "react";
+import { memo, useSyncExternalStore } from "react";
+import type { MutableRefObject } from "react";
 
 import type {
   BridgeToParent,
@@ -13,7 +14,8 @@ import type { StyleValues } from "../cssValues";
 import type { DesignTokens } from "../useDesignSystemState";
 import type { DirectEdit } from "../useDirectEdit";
 import type { CreateRequest } from "../useTokenSnap";
-import { CreateTokenDialog, type CreateTokenSubmit } from "./CreateTokenDialog";
+import { CreateTokenDialog } from "./CreateTokenDialog";
+import type { CreateTokenSubmit } from "./CreateTokenDialog";
 import { Icon } from "./Icon";
 import { InspectorSection } from "./InspectorFields";
 import { NumberField } from "./NumberField";

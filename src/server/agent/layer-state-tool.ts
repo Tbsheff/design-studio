@@ -27,7 +27,8 @@ import {
   scopeOf,
 } from "../mcp/layer-ref.js";
 import { configuredLayerLocks } from "../store/layer-locks.js";
-import { refusal, writeProblem, type DirectToolDeps } from "./direct-tools.js";
+import { refusal, writeProblem } from "./direct-tools.js";
+import type { DirectToolDeps } from "./direct-tools.js";
 import { editPageUrl } from "./run-target.js";
 
 type ToolText = {

@@ -14,10 +14,8 @@ import { customAlphabet } from "nanoid";
 import { z } from "zod";
 
 import type { WorkspaceFolder, WorkspaceList } from "../../shared/folders.js";
-import {
-  DEFAULT_FOLDER_NAME,
-  type DefaultFolderStore,
-} from "./default-folder.js";
+import { DEFAULT_FOLDER_NAME } from "./default-folder.js";
+import type { DefaultFolderStore } from "./default-folder.js";
 import {
   BadRequestError,
   NotFoundError,

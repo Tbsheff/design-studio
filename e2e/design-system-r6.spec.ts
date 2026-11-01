@@ -8,7 +8,8 @@ import {
 } from "node:fs";
 import path from "node:path";
 
-import { expect, test, type Frame, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import type { Frame, Page } from "@playwright/test";
 import { differenceEuclidean, parse } from "culori";
 
 import type {
@@ -18,12 +19,12 @@ import type {
 } from "../src/shared/contracts";
 import { readState } from "./support/server";
 import {
-  type StudioApi,
   frontFrame,
   mainDirection,
   openHome,
   selectInFrame,
 } from "./support/studio";
+import type { StudioApi } from "./support/studio";
 
 const deltaE = differenceEuclidean("oklab");
 

@@ -1,5 +1,6 @@
 import type { OxlintOverride } from "oxlint";
 
+import { dependencies } from "./boundaries.ts";
 import { LEGACY_GLOBS, SHARED_DOM } from "./legacy.ts";
 
 type Pattern = {
@@ -19,45 +20,48 @@ const typeOnly = (group: string[], message: string): Pattern => ({
 
 const NO_SERVER = ban(
   ["**/server/**"],
-  "Coarse layer rule: this side must not import src/server."
+  "Importing src/server from this side is banned. Use the op types from src/shared/contract."
 );
 const NO_UI = ban(
   ["**/ui/**"],
-  "Coarse layer rule: this side must not import src/ui."
+  "Importing src/ui from this side is banned. Use the shared types from src/shared."
 );
 const NO_BRIDGE = ban(
   ["**/bridge/**"],
-  "Coarse layer rule: this side must not import src/bridge."
+  "Importing src/bridge from this side is banned. Use the bridge message types from src/shared."
 );
 const NO_DESKTOP = ban(
   ["**/desktop/**"],
-  "Coarse layer rule: this side must not import desktop."
+  "Importing desktop from this side is banned. Use the desktop helpers from src/ui/platform."
 );
-const NO_NODE = ban(["node:*"], "Node built-ins do not run on this platform.");
+const NO_NODE = ban(
+  ["node:*"],
+  "Node built-ins on this platform are banned. Use Web APIs or the helpers from src/shared."
+);
 const NO_REACT = ban(
   ["react", "react/*", "react-dom", "react-dom/*"],
-  "src/shared stays framework free."
+  "React in src/shared is banned. Use plain TypeScript from src/shared."
 );
 
 const BROWSER_LIBS = [
   typeOnly(
     ["effect", "effect/*", "zod", "zod/*"],
-    "Browser code imports effect and zod as types only."
+    "Value imports of effect and zod in browser code are banned. Use import type, or call(op) from src/ui/platform/http.ts."
   ),
   ban(
     ["hono", "hono/*", "@anthropic-ai/*"],
-    "Server libraries do not run in the browser."
+    "Server libraries in browser code are banned. Use call(op) from src/ui/platform/http.ts."
   ),
 ];
 
 const SERVER_ONLY_TEST = ban(
   ["**/test-fakes*", "**/testing/**"],
-  "Test helpers stay out of shipped server code."
+  "Test helpers in shipped server code are banned. Use the real Layer from src/server/platform."
 );
 
 const EFFECT_SERVER = ban(
   ["effect/http-api", "effect/process", "effect/unstable/*"],
-  "Use the platform Effect modules, not the unstable or HTTP API ones."
+  "The unstable and HTTP API Effect modules are banned. Use the platform Effect modules from src/server/platform."
 );
 
 const DOMAIN_ADAPTERS = ban(
@@ -71,17 +75,17 @@ const DOMAIN_ADAPTERS = ban(
     "**/mcp/**",
     "**/agent-tools/**",
   ],
-  "Domain code must not import adapters or transport libraries."
+  "Adapters and transport libraries in domain code are banned. Use a service from src/server/services."
 );
 
 const CHILD_PROCESS = ban(
   ["node:child_process"],
-  "Only src/server/platform and src/server/main spawn processes."
+  "Spawning processes outside src/server/platform and src/server/main is banned. Use the process service from src/server/platform/process."
 );
 
 const UI_DOMAIN = ban(
   ["react-dom", "react-dom/*", "**/platform/**", "**/components/**"],
-  "ui/domain is pure logic."
+  "React DOM, platform and component imports in ui/domain are banned. Use pure functions from src/ui/domain."
 );
 
 const UI_KIT_PORTAL: Pattern = {
@@ -93,25 +97,62 @@ const UI_KIT_PORTAL: Pattern = {
     "unmountComponentAtNode",
     "findDOMNode",
   ],
-  message: "ui/kit may use createPortal from react-dom only.",
+  message:
+    "Other react-dom APIs in ui/kit are banned. Use createPortal from react-dom.",
 };
 
-const UI_FEATURE = ban(
-  ["**/features/*/!(index)", "**/features/*/!(index).js"],
-  "Import another feature through its index.ts."
+const FEATURE_TARGETS = [
+  "shared",
+  "shared-contract",
+  "ui-kit",
+  "ui-domain",
+  "ui-platform",
+  "ui",
+];
+
+const FEATURE_POLICIES = [
+  {
+    from: { element: { type: "ui-feature" } },
+    allow: [
+      { to: { element: { type: FEATURE_TARGETS } } },
+      {
+        to: {
+          element: {
+            type: "ui-feature",
+            captured: { feature: "{{ from.element.captured.feature }}" },
+          },
+        },
+      },
+    ],
+  },
+];
+
+const UI_CONTRACT = typeOnly(
+  ["**/shared/contract/**", "!**/shared/contract/**/routes.js"],
+  "Value imports from shared/contract in src/ui are banned. Use import type, or the ops from shared/contract/<ctx>/routes.js."
+);
+
+const SERVICE_LIBS = ban(
+  ["node:*", "hono", "hono/*", "@modelcontextprotocol/*", "@anthropic-ai/*"],
+  "Node built-ins and transport libraries in services are banned. Use a platform service from src/server/platform."
+);
+
+const ENGINE = ban(
+  ["effect", "effect/*", "node:*", "**/platform/**"],
+  "Effect, Node built-ins and platform imports in engine code are banned. Use plain functions from the engine folder."
 );
 
 const V3_NAMES = ["Service", "Tag"]
   .map((property) => ({
     object: "Effect",
     property,
-    message: "Effect v3 name; use Context.Service.",
+    message: "Effect v3 names are banned. Use Context.Service from effect.",
   }))
   .concat([
     {
       object: "Context",
       property: "Tag",
-      message: "Effect v3 name; use Context.Service.",
+      message: "Effect v3 names are banned. Use Context.Service from effect.",
     },
   ]);
 
@@ -127,7 +168,7 @@ export const COARSE_FOLDERS = {
   "src/server": [NO_UI, NO_BRIDGE],
 } as const;
 
-const UI = [...COARSE_FOLDERS["src/ui"], ...BROWSER_LIBS];
+const UI = [...COARSE_FOLDERS["src/ui"], ...BROWSER_LIBS, UI_CONTRACT];
 const SERVER = [...COARSE_FOLDERS["src/server"], EFFECT_SERVER];
 
 const NEW_DOMAIN_AREAS = [
@@ -160,10 +201,19 @@ const serverRows = [
   restrict(["src/server/**/*.test.ts"], SERVER),
   restrict(
     ["src/server/services/**"],
-    [...SERVER, SERVER_ONLY_TEST, CHILD_PROCESS]
+    [...SERVER, SERVER_ONLY_TEST, CHILD_PROCESS, SERVICE_LIBS]
   ),
-  restrict(["src/server/services/**/*.test.ts"], [...SERVER, CHILD_PROCESS]),
+  restrict(
+    ["src/server/services/**/*.test.ts"],
+    [...SERVER, CHILD_PROCESS, SERVICE_LIBS]
+  ),
   ...domainRows,
+];
+
+const engineRows = [
+  restrict(["src/server/**/engine/**"], [...SERVER, SERVER_ONLY_TEST, ENGINE]),
+  restrict(["src/server/**/engine/**/*.test.ts"], [...SERVER, ENGINE]),
+  restrict(["src/ui/**/engine/**"], [...UI, NO_NODE, ENGINE]),
 ];
 
 const uiRows = [
@@ -171,7 +221,13 @@ const uiRows = [
   restrict(["src/ui/**/*.test.ts", "src/ui/**/*.test.tsx"], UI),
   restrict(["src/ui/domain/**"], [...UI, NO_NODE, UI_DOMAIN]),
   restrict(["src/ui/kit/**"], [...UI, NO_NODE, UI_KIT_PORTAL]),
-  restrict(["src/ui/features/**"], [...UI, NO_NODE, UI_FEATURE]),
+  restrict(["src/ui/features/**"], [...UI, NO_NODE]),
+  {
+    files: ["src/ui/features/**"],
+    rules: {
+      "boundaries/dependencies": dependencies("error", FEATURE_POLICIES),
+    },
+  },
 ];
 
 export const coarse: OxlintOverride[] = [
@@ -185,6 +241,7 @@ export const coarse: OxlintOverride[] = [
     [...COARSE_FOLDERS["src/shared"], NO_NODE, NO_REACT]
   ),
   ...serverRows,
+  ...engineRows,
   {
     files: ["src/shared/**"],
     rules: { "no-restricted-globals": ["error", ...SHARED_DOM] },

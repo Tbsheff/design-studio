@@ -37,14 +37,19 @@ const NATIVE_ON: Record<string, unknown> = {
   "max-lines-per-function": ["error", 80],
   "max-params": ["error", 4],
   "max-statements": ["error", 30],
-  "new-cap": "error",
+  "new-cap": [
+    "error",
+    {
+      capIsNewExceptionPattern: String.raw`^(Schema|Context|Data|Layer|Effect|Stream|PubSub|Option)\.`,
+    },
+  ],
   "no-console": "error",
   "no-continue": "error",
   "no-implicit-coercion": "error",
   "no-magic-numbers": ["error", { ignore: [-1, 0, 1, 2] }],
   "no-ternary": "error",
   "no-undefined": "error",
-  "no-underscore-dangle": "error",
+  "no-underscore-dangle": ["error", { allow: ["_tag"] }],
   "import/exports-last": "error",
   "import/extensions": "error",
   "import/group-exports": "error",
@@ -248,6 +253,12 @@ export const SCOPED_OFF_REASONS: Record<string, string> = {
     "Off in desktop/build.ts, the data lock, the resource lookup, the path checks and the event log exit flush, whose callers are sync (plan 5.2).",
   "import/no-default-export":
     "Off in *.config.ts: the tools load a default export.",
+  "unicorn/throw-new-error":
+    "Off in src/shared/contract, src/server and cloud/api: its autofix breaks every TaggedError class (D29).",
+  "import/max-dependencies":
+    "Off in generated files and the per-context index, routes and handlers files, which import every op of a context (D29).",
+  "max-lines":
+    "Off in generated files and the per-context index, routes and handlers files, which list every op of a context (D29).",
 };
 
 export const decisionOverrides: OxlintOverride[] = [
@@ -410,4 +421,17 @@ export const decisionOverrides: OxlintOverride[] = [
     rules: { "eslint/id-length": "off" },
   },
   { files: ["*.config.ts"], rules: { "import/no-default-export": "off" } },
+  {
+    files: ["src/shared/contract/**", "src/server/**", "cloud/api/**"],
+    rules: { "unicorn/throw-new-error": "off" },
+  },
+  {
+    files: [
+      "**/*.generated.ts",
+      "src/shared/contract/*/index.ts",
+      "src/shared/contract/*/routes.ts",
+      "src/server/services/*/handlers.ts",
+    ],
+    rules: { "import/max-dependencies": "off", "max-lines": "off" },
+  },
 ];

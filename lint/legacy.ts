@@ -44,20 +44,23 @@ const UI_GLOBALS = [
   "BroadcastChannel",
 ].map((name) => ({
   name,
-  message: "Only src/ui/platform may touch browser I/O.",
+  message:
+    "Browser I/O outside src/ui/platform is banned. Use the helpers from src/ui/platform.",
 }));
 
 const STUDIO_DESKTOP = [
   {
     object: "window",
     property: "studioDesktop",
-    message: "Only src/ui/platform may use window.studioDesktop.",
+    message:
+      "window.studioDesktop outside src/ui/platform is banned. Use the desktop helpers from src/ui/platform.",
   },
 ];
 
 export const SHARED_DOM = ["document", "window"].map((name) => ({
   name,
-  message: "src/shared runs on every platform.",
+  message:
+    "DOM globals in src/shared are banned. Use values passed in from src/ui.",
 }));
 
 const isLegacy = (glob: string) => LEGACY_GLOBS.includes(glob);

@@ -1278,7 +1278,7 @@ export function createApp(deps: AppDeps): Hono {
         };
         for (const event of bus.since(project.id, afterSeq)) await send(event);
         while (!closed) {
-          const batch = pending.splice(0, pending.length);
+          const batch = pending.splice(0);
           for (const event of batch) await send(event);
           if (pending.length === 0 && !closed) {
             await new Promise<void>((resolve) => {

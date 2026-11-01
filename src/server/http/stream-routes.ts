@@ -67,7 +67,7 @@ function createSession(bus: EventBus, wake: () => void) {
   };
   const take = (): StudioEvent[] => {
     const out: StudioEvent[] = [];
-    for (const item of queue.splice(0, queue.length)) {
+    for (const item of queue.splice(0)) {
       const last = sent.get(item.event.projectId) ?? 0;
       if (!item.replay && item.event.seq <= last) continue;
       sent.set(item.event.projectId, Math.max(last, item.event.seq));

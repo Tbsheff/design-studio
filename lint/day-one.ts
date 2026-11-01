@@ -1561,7 +1561,6 @@ const RULES: [string, unknown[], number[]][] = [
   ["unicorn/no-object-as-default-parameter", [], [522,604,634]],
   ["unicorn/no-process-exit", [], [1,13,146,151,154,155,156,160,163,164,165,166,167,169,170,172,173,174,175,176,177,178,181,183,184,185,543,638]],
   ["unicorn/no-typeof-undefined", [], [22,89]],
-  ["unicorn/no-unnecessary-array-splice-count", [], [495,538]],
   ["unicorn/no-useless-collection-argument", [], [375,413,659,939,983]],
   ["unicorn/no-useless-fallback-in-spread", [], [373]],
   ["unicorn/no-useless-length-check", [], [306]],

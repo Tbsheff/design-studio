@@ -272,6 +272,7 @@ describe("version store", { timeout: 20_000 }, () => {
     );
     await expect(versions.get(project, "../etc")).rejects.toThrow(/invalid/);
   });
+
   it("restore and undo keep files the user added that no version tracks", async () => {
     const main = projects.mainDirection(project);
     await write(main.workTree, "index.html", "v1");

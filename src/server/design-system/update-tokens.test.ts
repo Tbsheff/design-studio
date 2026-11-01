@@ -545,6 +545,7 @@ describe("token update", { timeout: 30_000 }, () => {
       "Update tokens: --space-a, --space-b, --space-c, --space-d +2 more"
     );
   });
+
   it("undoes and redoes a token update through the edit history with exact bytes", async () => {
     const { project, workTree } = await setup();
     const before = await readAll(workTree);

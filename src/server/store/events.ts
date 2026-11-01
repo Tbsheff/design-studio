@@ -82,9 +82,14 @@ const writeSeqFile = async (
   await previous;
 
   try {
+    await mkdir(path.dirname(log.seqFile), { recursive: true });
     await writeFile(log.seqFile, `${value}\n`);
   } catch (error) {
     report("seq reserve", { error });
+
+    if (log.reserved === value) {
+      log.reserved = 0;
+    }
   }
 };
 

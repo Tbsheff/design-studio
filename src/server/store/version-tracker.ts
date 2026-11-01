@@ -141,6 +141,11 @@ export function createChangeTracker(maxPaths: number): ChangeTracker {
     entry.watcher.close();
   };
 
+  const touch = (key: string, entry: Tracked): void => {
+    tracked.delete(key);
+    tracked.set(key, entry);
+  };
+
   const evictOldest = (): void => {
     for (const key of tracked.keys()) {
       if (tracked.size < MAX_TRACKED) {
@@ -179,8 +184,7 @@ export function createChangeTracker(maxPaths: number): ChangeTracker {
     const existing = tracked.get(key);
 
     if (existing && existing.root === root) {
-      tracked.delete(key);
-      tracked.set(key, existing);
+      touch(key, existing);
 
       return existing;
     }
@@ -265,6 +269,7 @@ export function createChangeTracker(maxPaths: number): ChangeTracker {
 
       const paths = [...entry.paths];
       entry.paths.clear();
+      touch(key, entry);
 
       return paths;
     },
@@ -273,6 +278,8 @@ export function createChangeTracker(maxPaths: number): ChangeTracker {
       const entry = tracked.get(key);
 
       if (entry) {
+        touch(key, entry);
+
         for (const relative of paths) {
           add(entry, relative);
         }

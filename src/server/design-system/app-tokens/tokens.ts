@@ -54,7 +54,7 @@ function valueType(value: string): TokenType {
     return "color";
   }
 
-  if (normalizeLength(value) || /^calc\(/.test(value)) {
+  if (normalizeLength(value) || value.startsWith("calc(")) {
     return "dimension";
   }
 

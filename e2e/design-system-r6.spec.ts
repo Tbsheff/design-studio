@@ -387,7 +387,7 @@ test("R6-2: the Components tab lists Button and Card with thumbnails and a click
   const sent = page.waitForRequest(
     (request) =>
       request.method() === "POST" &&
-      /\/runs$/.test(new URL(request.url()).pathname)
+      new URL(request.url()).pathname.endsWith("/runs")
   );
   await page.keyboard.press("Meta+Enter");
   const body = (await sent).postDataJSON() as { mentions?: unknown[] };

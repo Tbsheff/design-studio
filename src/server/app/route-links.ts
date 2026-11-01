@@ -190,7 +190,7 @@ export function cleanHref(raw: string): string | null {
     !s.startsWith("/") ||
     s.startsWith("//") ||
     /^\/api(\/|$)/.test(s) ||
-    /^\/_next\//.test(s)
+    s.startsWith("/_next/")
   ) {
     return null;
   }
@@ -734,7 +734,7 @@ class RouteScanner {
       }
     }
 
-    if (name === "form" || /Form$/.test(name)) {
+    if (name === "form" || name.endsWith("Form")) {
       const button = this.submitButton(node);
 
       for (const attr of FORM_ATTRS) {

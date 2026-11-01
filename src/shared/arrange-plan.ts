@@ -386,7 +386,7 @@ function flexTidy(
     style.gap = px(gap);
   }
 
-  if (/^space-/.test(parent.justifyContent)) {
+  if (parent.justifyContent.startsWith("space-")) {
     style["justify-content"] = "flex-start";
   }
 

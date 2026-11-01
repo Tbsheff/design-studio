@@ -390,7 +390,7 @@ function arbitraryIsLength(inner: string): boolean {
   }
 
   return (
-    lengthToPx(inner.replaceAll("_", " ")) !== null || /^calc\(/.test(inner)
+    lengthToPx(inner.replaceAll("_", " ")) !== null || inner.startsWith("calc(")
   );
 }
 
@@ -447,7 +447,7 @@ function classifyFont(
     return null;
   }
 
-  if (/^number:/.test(inner) || /^\d+$/.test(inner)) {
+  if (inner.startsWith("number:") || /^\d+$/.test(inner)) {
     return "font-weight";
   }
 
@@ -490,7 +490,7 @@ function classifyShadow(
   const inner = bracketed(suffix);
 
   if (inner !== null) {
-    return /^color:/.test(inner) ? null : "shadow";
+    return inner.startsWith("color:") ? null : "shadow";
   }
 
   return null;
@@ -510,7 +510,7 @@ function classifyBg(suffix: string): SingleGroup | null {
     return /^\[(url\(|image:)/.test(suffix) ? "bg-image" : null;
   }
 
-  if (/^\[(size|length):/.test(suffix) || /^size-/.test(suffix)) {
+  if (/^\[(size|length):/.test(suffix) || suffix.startsWith("size-")) {
     return "bg-size";
   }
 

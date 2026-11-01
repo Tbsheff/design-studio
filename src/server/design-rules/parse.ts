@@ -212,7 +212,7 @@ export function parseRuleLine(raw: string): DesignRule | null {
     !line ||
     line.startsWith("#") ||
     line.startsWith("//") ||
-    /^```/.test(line)
+    line.startsWith("```")
   ) {
     return null;
   }

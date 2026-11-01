@@ -82,7 +82,7 @@ export function loadPackFonts(packs: PackSummary[]): void {
     if (
       !url ||
       loadedFonts.has(pack.id) ||
-      !/^https:\/\/fonts\.googleapis\.com\//.test(url)
+      !url.startsWith("https://fonts.googleapis.com/")
     ) {
       continue;
     }

@@ -160,7 +160,7 @@ function rawColor(
 
 function penalty(name: string, use: ColorUse): number {
   const ink = /foreground|ink|text/.test(name);
-  let score = /^--color-/.test(name) ? 2 : 0;
+  let score = name.startsWith("--color-") ? 2 : 0;
 
   if (/sidebar|chart|popover/.test(name)) {
     score += 3;

@@ -59,7 +59,7 @@ function num(node: VNode, name: string, fallback = 0): number {
   const raw = node.attrs[name];
   if (raw === undefined || raw === "") return fallback;
   const value = Number.parseFloat(raw);
-  if (!Number.isFinite(value) || /%$/.test(raw))
+  if (!Number.isFinite(value) || raw.endsWith("%"))
     throw refuse(`<${node.tag}> ${name}="${raw}" is not a plain number`);
   return value;
 }

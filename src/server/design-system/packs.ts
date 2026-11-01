@@ -1,13 +1,5 @@
-import { randomBytes } from "node:crypto";
 import { existsSync } from "node:fs";
-import {
-  mkdir,
-  readFile,
-  readdir,
-  rename,
-  stat,
-  writeFile,
-} from "node:fs/promises";
+import { mkdir, readFile, readdir, stat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -32,6 +24,7 @@ import {
   extractRulesBlock,
   upsertRulesBlock,
 } from "../design-rules/markdown.js";
+import { writeAtomic } from "../platform/atomic-write/index.js";
 import { resourcePath } from "../resources.js";
 import { compileTokens, parseTokenFile, resolveEntryValue } from "./compile.js";
 import { composeDesignMd as composeWithNotes } from "./design-md.js";
@@ -457,10 +450,7 @@ export async function writeFileAtomic(
   file: string,
   content: string
 ): Promise<void> {
-  await mkdir(path.dirname(file), { recursive: true });
-  const temp = `${file}.${randomBytes(4).toString("hex")}.tmp`;
-  await writeFile(temp, content);
-  await rename(temp, file);
+  await writeAtomic(file, content, { createDir: true });
 }
 
 function composeDesignMd(pack: LoadedPack, userNotes?: string): string {

@@ -1,13 +1,4 @@
-import { randomBytes } from "node:crypto";
-import {
-  mkdir,
-  readFile,
-  realpath,
-  rename,
-  rm,
-  stat,
-  writeFile,
-} from "node:fs/promises";
+import { mkdir, readFile, realpath, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import type {
@@ -21,6 +12,7 @@ import type {
 import { variantLabel } from "../../shared/variants.js";
 import type { LayoutChange } from "../canvas/layout-history.js";
 import { isOutsideRequest } from "../edit-origin.js";
+import { writeAtomic as platformWriteAtomic } from "../platform/atomic-write/index.js";
 import { isNodeError } from "../store/errors.js";
 import type {
   AgentRunner,
@@ -247,20 +239,11 @@ export async function writeAtomic(
   file: string,
   content: string
 ): Promise<void> {
-  const temp = path.join(
-    path.dirname(file),
-    `.${path.basename(file)}.studio-${randomBytes(4).toString("hex")}.tmp`
-  );
-
-  const { mode } = await stat(file);
-  await writeFile(temp, content, { mode });
-
-  try {
-    await rename(temp, file);
-  } catch (error) {
-    await rm(temp, { force: true });
-    throw error;
-  }
+  await platformWriteAtomic(file, content, {
+    cleanup: "rename",
+    hiddenTemp: true,
+    keepMode: true,
+  });
 }
 
 export async function writeNewFile(

@@ -1,5 +1,5 @@
-import { createHash, randomBytes } from "node:crypto";
-import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { readFile, rename } from "node:fs/promises";
 import path from "node:path";
 
 import {
@@ -16,6 +16,7 @@ import type {
   LegacyCanvasNotice,
   Project,
 } from "../../shared/contracts.js";
+import { writeAtomic as platformWriteAtomic } from "../platform/atomic-write/index.js";
 import { ConflictError } from "../store/errors.js";
 import { createKeyedMutex } from "../store/mutex.js";
 import type { EventBus } from "../types.js";
@@ -175,16 +176,10 @@ export async function readCanvasAt(
 }
 
 export async function writeAtomic(target: string, text: string): Promise<void> {
-  await mkdir(path.dirname(target), { recursive: true });
-  const temp = `${target}.${randomBytes(4).toString("hex")}.tmp`;
-
-  try {
-    await writeFile(temp, text);
-    await rename(temp, target);
-  } catch (error) {
-    await rm(temp, { force: true });
-    throw error;
-  }
+  await platformWriteAtomic(target, text, {
+    cleanup: "always",
+    createDir: true,
+  });
 }
 
 export function createCanvasService(

@@ -7,6 +7,7 @@ import type { Done, ToolSpec } from "../edit-kit.js";
 import { HISTORY_TOOLS } from "../history-tools.js";
 import { HUNK_TOOLS } from "../hunk-tools.js";
 import { VERSION_DIFF_TOOLS } from "../version-diff-tools.js";
+import { restoredResult } from "./versions-result.js";
 import { restoreVersionSchema } from "./versions-schema.js";
 import type { RestoreVersionInput } from "./versions-schema.js";
 
@@ -38,12 +39,7 @@ const restoreVersion = async (
       `Restored “${versionName(version)}”`,
       restored
     ),
-    result: ok({
-      from: version.id,
-      newVersionId: restored.id,
-      restored: true,
-      title: restored.title,
-    }),
+    result: ok(restoredResult(restored, version)),
   };
 };
 

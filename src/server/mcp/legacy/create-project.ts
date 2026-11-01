@@ -4,6 +4,7 @@ import type { EditDeps } from "../edit-deps.js";
 import { ok } from "../edit-kit.js";
 import type { Done } from "../edit-kit.js";
 import { packOf } from "./pack-of.js";
+import { createdResult } from "./projects-result.js";
 import type { CreateProjectInput } from "./projects-schema.js";
 
 interface CreateBody {
@@ -75,13 +76,7 @@ const createProject = async (
       projectId: project.id,
       summary: `Created project ${oneLine(project.name, NAME_TEXT_MAX)}`,
     },
-    result: ok({
-      designSystem: pack?.id ?? null,
-      directionId: main?.id ?? null,
-      folder: main?.workTree ?? null,
-      name: project.name,
-      projectId: project.id,
-    }),
+    result: ok(createdResult(project, main, pack)),
   };
 };
 

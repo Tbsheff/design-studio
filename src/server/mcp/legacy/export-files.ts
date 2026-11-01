@@ -17,6 +17,7 @@ import {
 import type { EditDeps } from "../edit-deps.js";
 import { ok } from "../edit-kit.js";
 import type { Done } from "../edit-kit.js";
+import { fileResult, handoffResult } from "./export-result.js";
 import type { ExportInput } from "./export-schema.js";
 
 interface ExportFrame {
@@ -35,13 +36,6 @@ interface ExportRun {
   input: ExportInput;
   project: Project;
   version: Version;
-}
-
-interface FileResult {
-  bytes: number;
-  files: string[];
-  note?: string;
-  versionId: string;
 }
 
 interface HandoffBody {
@@ -109,12 +103,12 @@ const exportHandoff = async (run: ExportRun): Promise<Done> => {
 
   return {
     activity: exported(run, file),
-    result: ok({
-      files: [file],
-      handoffFiles: handoff.files.length,
-      prompt: short(handoff.prompt, PROMPT_MAX),
-      versionId: run.version.id,
-    }),
+    result: ok(
+      handoffResult(file, run.version.id, {
+        files: handoff.files.length,
+        prompt: short(handoff.prompt, PROMPT_MAX),
+      })
+    ),
   };
 };
 
@@ -134,17 +128,10 @@ const exportFile = async (run: ExportRun): Promise<Done> => {
 
   const file = await writeUnique(run.folder, output.name, output.bytes);
 
-  const result: FileResult = {
-    bytes: output.bytes.byteLength,
-    files: [file],
-    versionId: run.version.id,
+  return {
+    activity: exported(run, file),
+    result: ok(fileResult(file, run.version.id, output)),
   };
-
-  if (output.note) {
-    result.note = output.note;
-  }
-
-  return { activity: exported(run, file), result: ok(result) };
 };
 
 const exportVersion = (

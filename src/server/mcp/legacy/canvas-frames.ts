@@ -8,6 +8,12 @@ import type { EditDeps } from "../edit-deps.js";
 import { ok } from "../edit-kit.js";
 import type { Done } from "../edit-kit.js";
 import type { ToolResult } from "../tools.js";
+import {
+  pointEvent,
+  pointMessage,
+  pointResult,
+  removedResult,
+} from "./canvas-result.js";
 import type {
   AddFrameInput,
   AddRouteFrameInput,
@@ -26,24 +32,6 @@ interface Removal {
 
 interface PlaceOptions {
   seed?: boolean;
-}
-
-interface PointResult {
-  badge: boolean;
-  frame: string;
-  label: string | null;
-  note: string;
-  page: string;
-  selector?: string;
-  shown: false;
-}
-
-interface PointEvent {
-  at: number;
-  client: string;
-  frameId: string;
-  label: string | null;
-  selector?: string;
 }
 
 const WARM_TIMEOUT_MS = 180_000;
@@ -110,46 +98,6 @@ const badgeNote = (badge: boolean): string => {
   return NO_BADGE_NOTE;
 };
 
-const pointEvent = (
-  frame: CanvasFileFrame | null,
-  who: string,
-  sel: string
-): PointEvent => {
-  const point: PointEvent = {
-    at: Date.now(),
-    client: who,
-    frameId: frame?.id ?? "f1",
-    label: frame?.label ?? frame?.path ?? null,
-  };
-
-  if (sel) {
-    point.selector = sel;
-  }
-
-  return point;
-};
-
-const pointResult = (
-  frame: CanvasFileFrame | null,
-  badge: boolean,
-  sel: string
-): PointResult => {
-  const result: PointResult = {
-    badge,
-    frame: frame?.id ?? "f1",
-    label: frame?.label ?? null,
-    note: badgeNote(badge),
-    page: frame?.path ?? "(entry page)",
-    shown: false,
-  };
-
-  if (sel) {
-    result.selector = sel;
-  }
-
-  return result;
-};
-
 const pointFrame = async (
   deps: EditDeps,
   ctx: CanvasToolContext,
@@ -162,16 +110,18 @@ const pointFrame = async (
 
   const sel = input.selector?.trim() ?? "";
 
-  deps.bus.emit({
-    directionId: ctx.direction.id,
-    point: pointEvent(frame, client, sel),
-    projectId: ctx.project.id,
-    type: "mcp.point",
-  });
+  deps.bus.emit(
+    pointMessage(
+      { directionId: ctx.direction.id, projectId: ctx.project.id },
+      pointEvent(frame, client, sel)
+    )
+  );
 
   const badge = deps.canvas.presence(ctx.project.id) !== null;
 
-  return ok(pointResult(frame, badge, sel));
+  const note = badgeNote(badge);
+
+  return ok(pointResult(frame, { badge, note, sel }));
 };
 
 const addedText = (placed: readonly CanvasFileFrame[]): string => {
@@ -309,10 +259,7 @@ const removeFrame = async (
       projectId: ctx.project.id,
       summary: frameStepText("Remove", gone, input.frame),
     },
-    result: ok({
-      note: "The page file stays in the project.",
-      removed: gone.id,
-    }),
+    result: ok(removedResult(gone.id)),
   };
 };
 

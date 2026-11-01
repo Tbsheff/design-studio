@@ -14,6 +14,7 @@ import {
   writeText,
 } from "../edit-kit.js";
 import type { Done } from "../edit-kit.js";
+import { unchangedResult, writtenResult } from "./direct-edit-result.js";
 import type { WriteFileInput } from "./direct-edit-schema.js";
 
 interface WriteTarget {
@@ -122,11 +123,7 @@ const writeProjectFile = async (
 
   if (before === input.content) {
     return plain(
-      ok({
-        changed: false,
-        path: target.relative,
-        versionId: target.direction.headVersionId,
-      })
+      ok(unchangedResult(target.relative, target.direction.headVersionId))
     );
   }
 
@@ -158,13 +155,7 @@ const writeProjectFile = async (
       `${writeVerb(before)} ${target.relative}`,
       version
     ),
-    result: ok({
-      changed: true,
-      created: before === null,
-      path: target.relative,
-      title: version?.title ?? null,
-      versionId: version?.id ?? null,
-    }),
+    result: ok(writtenResult(target.relative, before === null, version)),
   };
 };
 

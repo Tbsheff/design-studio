@@ -12,6 +12,7 @@ import {
   versionActivity,
 } from "../edit-kit.js";
 import type { Done } from "../edit-kit.js";
+import { structureResult } from "./direct-edit-result.js";
 import type { EditElementInput } from "./direct-edit-schema.js";
 
 type StructureOp = NonNullable<EditElementInput["op"]>;
@@ -141,12 +142,7 @@ const structureElement = async (
 
   return {
     activity: versionActivity(project, direction, summary, result.version),
-    result: ok({
-      files: result.files,
-      select: result.select,
-      title: result.version.title,
-      versionId: result.version.id,
-    }),
+    result: ok(structureResult(result)),
   };
 };
 

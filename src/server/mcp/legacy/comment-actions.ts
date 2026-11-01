@@ -8,6 +8,7 @@ import type { EditDeps } from "../edit-deps.js";
 import { base, ok, pageUrl } from "../edit-kit.js";
 import type { Done } from "../edit-kit.js";
 import { describeElement } from "../element.js";
+import { addedResult } from "./comments-result.js";
 import type {
   AddCommentInput,
   ReplyCommentInput,
@@ -97,12 +98,7 @@ const addComment = async (
       projectId: project.id,
       summary: `Added comment #${comment.n}${onText(context)}`,
     },
-    result: ok({
-      author: comment.author ?? client,
-      commentId: comment.id,
-      frameLevel: !context,
-      number: comment.n,
-    }),
+    result: ok(addedResult(comment, client, !context)),
   };
 };
 

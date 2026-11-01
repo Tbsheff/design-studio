@@ -11,6 +11,8 @@ import {
   workspaceFields,
   workspaceOf,
 } from "../workspace-tools.js";
+import { attachedResult, serverViewOf } from "./projects-result.js";
+import type { ServerView } from "./projects-result.js";
 import type { AttachAppInput } from "./projects-schema.js";
 
 type Workspace = Awaited<ReturnType<typeof workspaceOf>>;
@@ -20,12 +22,6 @@ interface AttachBody {
   folder: string;
   name?: string;
   url?: string;
-}
-
-interface ServerView {
-  message: AppServerStatus["message"];
-  state: AppServerStatus["state"];
-  upstream: AppServerStatus["upstream"];
 }
 
 const NAME_TEXT_MAX = 60;
@@ -116,11 +112,7 @@ const serverView = async (
       return null;
     }
 
-    return {
-      message: status.message,
-      state: status.state,
-      upstream: status.upstream,
-    };
+    return serverViewOf(status);
   } catch {
     return null;
   }
@@ -157,23 +149,28 @@ const attachApp = async (
 
   const server = await serverView(deps, project);
 
+  const next = nextText(server);
+
+  const readiness = attachReadiness(firstVersion, legacyCanvas);
+
+  const workspaceView = workspaceFields(project, folder);
+
   return {
     activity: {
       directionId: main?.id ?? null,
       projectId: project.id,
       summary: `Attached ${oneLine(project.name, NAME_TEXT_MAX)}`,
     },
-    result: ok({
-      ...workspaceFields(project, folder),
-      ...attachReadiness(firstVersion, legacyCanvas),
-      app: project.app,
-      directionId: main?.id ?? null,
-      folder: main?.workTree ?? null,
-      name: project.name,
-      next: nextText(server),
-      projectId: project.id,
-      server,
-    }),
+    result: ok(
+      attachedResult({
+        main,
+        next,
+        project,
+        readiness,
+        server,
+        workspace: workspaceView,
+      })
+    ),
   };
 };
 

@@ -1,4 +1,3 @@
-import type { Version } from "../../../shared/contracts.js";
 import {
   loadTarget,
   oneLine,
@@ -10,13 +9,10 @@ import { base, defineTool, ok, versionActivity } from "../edit-kit.js";
 import type { Done, ToolSpec } from "../edit-kit.js";
 import { LIBRARY_TOOLS } from "../library-tools.js";
 import { packOf } from "./pack-of.js";
+import { appliedResult } from "./packs-result.js";
+import type { ApplyResult } from "./packs-result.js";
 import { applyDesignSystemSchema } from "./packs-schema.js";
 import type { ApplyDesignSystemInput } from "./packs-schema.js";
-
-interface ApplyResult {
-  version: Version | null;
-  notice: string | null;
-}
 
 const NAME_TEXT_MAX = 60;
 
@@ -50,12 +46,7 @@ const applyDesignSystem = async (
       `Applied ${oneLine(pack.name, NAME_TEXT_MAX)}`,
       result.version
     ),
-    result: ok({
-      applied: pack.id,
-      changedFiles: result.version?.changedFiles ?? [],
-      notice: result.notice,
-      versionId: result.version?.id ?? null,
-    }),
+    result: ok(appliedResult(pack.id, result)),
   };
 };
 

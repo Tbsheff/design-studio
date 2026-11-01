@@ -1,4 +1,3 @@
-import { TOKENS_FILE } from "../../../shared/contracts.js";
 import type {
   CompiledTokenEntry,
   DesignSystemState,
@@ -14,16 +13,10 @@ import {
 import type { EditDeps } from "../edit-deps.js";
 import { base, ok, versionActivity } from "../edit-kit.js";
 import type { Done } from "../edit-kit.js";
+import { tokenResult } from "./direct-edit-result.js";
 import type { SetTokenInput } from "./direct-edit-schema.js";
 
 type Theme = SetTokenInput["theme"];
-
-interface TokenReadback {
-  file: string;
-  line: number | null;
-  resolved: string | null;
-  value: string | null;
-}
 
 interface TokenChange {
   darkValue?: string;
@@ -32,41 +25,6 @@ interface TokenChange {
 }
 
 const SUMMARY_VALUE_MAX = 60;
-
-const darkReadback = (entry: CompiledTokenEntry): TokenReadback => {
-  const { source } = entry;
-
-  const readback: TokenReadback = {
-    file: source?.file ?? TOKENS_FILE,
-    line: source?.darkLine ?? null,
-    resolved: entry.darkValue,
-    value: entry.darkValue,
-  };
-
-  if (source) {
-    readback.value = source.darkValue;
-  }
-
-  return readback;
-};
-
-const tokenReadback = (
-  entry: CompiledTokenEntry,
-  theme: Theme
-): TokenReadback => {
-  if (theme === "dark") {
-    return darkReadback(entry);
-  }
-
-  const { source } = entry;
-
-  return {
-    file: source?.file ?? TOKENS_FILE,
-    line: source?.line ?? null,
-    resolved: entry.value,
-    value: source?.value ?? entry.value,
-  };
-};
 
 const missingText = (state: DesignSystemState, name: string): string => {
   if (state.entries.length === 0) {
@@ -142,13 +100,14 @@ const setToken = async (
 
   return {
     activity: versionActivity(project, direction, summary, result.version),
-    result: ok({
-      ...tokenReadback(after, input.theme),
-      changedFiles: result.version.changedFiles,
-      theme: input.theme,
-      token: entry.cssVar,
-      versionId: result.version.id,
-    }),
+    result: ok(
+      tokenResult({
+        after,
+        cssVar: entry.cssVar,
+        theme: input.theme,
+        version: result.version,
+      })
+    ),
   };
 };
 

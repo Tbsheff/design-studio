@@ -5,9 +5,6 @@ import type {
 } from "../../../shared/contracts.js";
 import {
   chooseEditSite,
-  editedAtLabel,
-  locText,
-  siteNote,
   siteRequest,
   textComesFromData,
 } from "../../direct-edit/edit-site.js";
@@ -30,14 +27,11 @@ import {
 } from "../edit-kit.js";
 import type { Done } from "../edit-kit.js";
 import { textHintsOf } from "../element.js";
+import { editOutput } from "./direct-edit-result.js";
 import type { EditElementInput } from "./direct-edit-schema.js";
 import { structureElement } from "./structure-element.js";
 
 type SourcedElement = SelectionContext & { source: SourceLoc };
-
-type Tailwind = NonNullable<DirectEditResult["tailwind"]>;
-
-type TextSource = NonNullable<DirectEditResult["textSource"]>;
 
 type EditBody = ReturnType<typeof siteRequest> & {
   classes?: EditElementInput["classes"];
@@ -55,21 +49,6 @@ interface EditCall {
   scope: EditSiteScope;
   site: EditSite;
   url: string;
-}
-
-interface EditOutput {
-  applied: DirectEditResult["applied"];
-  at: string;
-  classes?: Tailwind["classes"];
-  editedAt: ReturnType<typeof editedAtLabel>;
-  file: string;
-  note?: string;
-  shared?: string;
-  textSource?: string;
-  title: string;
-  use?: string;
-  versionId: string;
-  wrote?: Tailwind["mode"];
 }
 
 const hasStyle = (input: EditElementInput): boolean =>
@@ -163,74 +142,6 @@ const postEdit = async (call: EditCall): Promise<DirectEditResult> => {
 
     return retryOnComponent(call, error);
   }
-};
-
-const editedAt = (result: DirectEditResult, site: EditSite): string => {
-  if (result.textSource) {
-    return `${result.textSource.file}:${result.textSource.line}`;
-  }
-
-  if (site.kind === "use" || result.file === site.source.file) {
-    return locText(site.source);
-  }
-
-  return result.file;
-};
-
-const textSourceText = (info: TextSource): string => {
-  const head = `Edited ${info.what} in ${info.file}:${info.line}.`;
-
-  if (info.shared) {
-    return `${head} ${info.shared}`;
-  }
-
-  return head;
-};
-
-const addSiteNote = (output: EditOutput, site: EditSite): void => {
-  const note = siteNote(site);
-
-  if (!note) {
-    return;
-  }
-
-  if (site.kind === "use") {
-    output.use = note;
-  } else {
-    output.shared = note;
-  }
-};
-
-const addTailwind = (output: EditOutput, tailwind: Tailwind): void => {
-  output.classes = tailwind.classes;
-  output.wrote = tailwind.mode;
-
-  if (tailwind.note) {
-    output.note = tailwind.note;
-  }
-};
-
-const editOutput = (result: DirectEditResult, site: EditSite): EditOutput => {
-  const output: EditOutput = {
-    applied: result.applied,
-    at: editedAt(result, site),
-    editedAt: editedAtLabel(site),
-    file: result.file,
-    title: result.version.title,
-    versionId: result.version.id,
-  };
-
-  addSiteNote(output, site);
-
-  if (result.tailwind) {
-    addTailwind(output, result.tailwind);
-  }
-
-  if (result.textSource) {
-    output.textSource = textSourceText(result.textSource);
-  }
-
-  return output;
 };
 
 const editElement = async (

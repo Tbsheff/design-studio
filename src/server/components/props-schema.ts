@@ -14,6 +14,7 @@ import type {
   PropValue,
   VariantGroup,
 } from "../../shared/props.js";
+import { loadTypeScript } from "../platform/ts-compiler/index.js";
 import {
   compilerOptionsFor,
   createProgram,
@@ -25,6 +26,7 @@ import {
 import type { ProgramScope, TypedProps } from "./props-program.js";
 
 export { compilerOptionsFor } from "./props-program.js";
+export { loadTypeScript };
 
 type Ts = typeof TS;
 
@@ -51,18 +53,6 @@ interface CacheEntry {
 }
 
 const cache = new Map<string, CacheEntry>();
-let tsModule: Promise<Ts | null> | null = null;
-
-export function loadTypeScript(): Promise<Ts | null> {
-  tsModule ??= import("typescript")
-    .then(
-      (mod) =>
-        ((mod as { default?: Ts }).default ?? (mod as unknown as Ts)) as Ts
-    )
-    .catch(() => null);
-
-  return tsModule;
-}
 
 function isNode(value: unknown): value is t.Node {
   return (

@@ -1,4 +1,3 @@
-import { realpathSync } from "node:fs";
 import path from "node:path";
 
 import type {
@@ -8,10 +7,17 @@ import type {
 } from "@anthropic-ai/claude-agent-sdk";
 
 import { CANVAS_DIR } from "../../shared/canvas-file.js";
-import { TOKENS_CSS_FILE } from "../../shared/contracts.js";
-import type { RunMode } from "../../shared/contracts.js";
+import { TOKENS_CSS_FILE, type RunMode } from "../../shared/contracts.js";
 import { TWEAKS_FILE, TWEAKS_TOOL } from "../../shared/tweaks.js";
+import {
+  BLOCKED_SEGMENTS,
+  checkPathInside,
+  realpathNearest,
+  workTreeRoot,
+} from "../platform/paths/index.js";
 import type { ToolGate } from "./ask-gate.js";
+
+export { checkPathInside };
 
 export const DESIGN_SYSTEM_CHECK_TOOL = "mcp__studio__design_system_check";
 export const CANVAS_LIST_TOOL = "mcp__studio__canvas_list";
@@ -151,7 +157,6 @@ const PATH_TOOLS = new Set([
 
 const PATH_FIELDS = ["file_path", "path", "notebook_path"] as const;
 const PATTERN_FIELDS = ["pattern", "glob"] as const;
-const BLOCKED_SEGMENTS = new Set([".git", "node_modules"]);
 
 const WRITE_PATH_TOOLS = new Set([
   "Write",
@@ -258,60 +263,6 @@ export function builtinToolNames(policy: ToolSet): string[] {
 
 export function permittedToolNames(policy: ToolSet): string[] {
   return [...builtinToolNames(policy), ...STUDIO_MCP_TOOLS];
-}
-
-function realpathNearest(target: string): string {
-  const remainder: string[] = [];
-  let current = target;
-
-  for (;;) {
-    try {
-      const real = realpathSync(current);
-
-      return remainder.length ? path.join(real, ...remainder.reverse()) : real;
-    } catch {
-      const parent = path.dirname(current);
-
-      if (parent === current) {
-        return target;
-      }
-
-      remainder.push(path.basename(current));
-      current = parent;
-    }
-  }
-}
-
-function workTreeRoot(workTree: string): string {
-  return realpathNearest(path.resolve(workTree));
-}
-
-export function checkPathInside(workTree: string, raw: string): string | null {
-  if (raw.startsWith("~")) {
-    return `Path ${raw} is outside the work tree.`;
-  }
-
-  const root = workTreeRoot(workTree);
-  const absolute = path.isAbsolute(raw) ? raw : path.resolve(root, raw);
-  const real = realpathNearest(path.normalize(absolute));
-  const relative = path.relative(root, real);
-
-  if (relative === "") {
-    return null;
-  }
-
-  if (relative.startsWith("..") || path.isAbsolute(relative)) {
-    return `Path ${raw} is outside the work tree.`;
-  }
-
-  const segments = relative.split(path.sep);
-  const blocked = segments.find((segment) => BLOCKED_SEGMENTS.has(segment));
-
-  if (blocked) {
-    return `Path ${raw} is inside ${blocked}, which is off limits.`;
-  }
-
-  return null;
 }
 
 function isInsideDir(dir: string, raw: string): boolean {

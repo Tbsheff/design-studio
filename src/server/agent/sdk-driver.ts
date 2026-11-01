@@ -22,6 +22,7 @@ import {
 } from "../../shared/run-levels.js";
 import type { CanvasService } from "../canvas/service.js";
 import { SOURCE_DIR } from "../design-system/extract/draft.js";
+import { buildEnv, LOGIN_SHELL_PATH_ENV } from "../platform/config/index.js";
 import type { CommentStore } from "../store/comments.js";
 import type { PreviewService } from "../types.js";
 import { createBashGate, type ToolGate } from "./ask-gate.js";
@@ -131,48 +132,9 @@ interface AttemptResult {
   sawInit: boolean;
 }
 
-const AGENT_ENV_KEYS = [
-  "HOME",
-  "USER",
-  "LOGNAME",
-  "PATH",
-  "SHELL",
-  "TMPDIR",
-  "LANG",
-  "ANTHROPIC_API_KEY",
-  "HTTPS_PROXY",
-  "HTTP_PROXY",
-  "NO_PROXY",
-  "NODE_EXTRA_CA_CERTS",
-];
-export const LOGIN_SHELL_PATH_ENV = "STUDIO_LOGIN_SHELL_PATH";
+export { buildEnv, LOGIN_SHELL_PATH_ENV };
 const TODO_TOOL_ENV = "CLAUDE_CODE_ENABLE_TASKS";
 const CHECK_TOOL_NAME = "mcp__studio__render_check";
-
-function joinPath(
-  base: string | undefined,
-  extra: string | undefined
-): string | undefined {
-  if (!extra) return base;
-  const parts = [...(base ?? "").split(":"), ...extra.split(":")].filter(
-    (part) => part !== ""
-  );
-  return [...new Set(parts)].join(":");
-}
-
-export function buildEnv(
-  source: NodeJS.ProcessEnv,
-  needsShellPath: boolean
-): Record<string, string | undefined> {
-  const env: Record<string, string | undefined> = {};
-  for (const key of AGENT_ENV_KEYS) {
-    const value = source[key];
-    if (value !== undefined && value !== "") env[key] = value;
-  }
-  if (needsShellPath)
-    env["PATH"] = joinPath(env["PATH"], source[LOGIN_SHELL_PATH_ENV]);
-  return env;
-}
 
 function linkAbort(signal: AbortSignal): AbortController {
   const controller = new AbortController();

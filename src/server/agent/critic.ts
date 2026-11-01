@@ -11,12 +11,15 @@ import type {
 import { z } from "zod";
 
 import type { QualityFinding } from "../../shared/contracts.js";
+import { extractJson } from "../../shared/extract-json.js";
 import { diffImages, readPng } from "../preview/visual-diff.js";
 import type { PreviewService } from "../types.js";
 import type { RunToolState } from "./check-tool.js";
 import { changedSince } from "./screens.js";
 import type { RunScreen } from "./screens.js";
 import type { TasteRule } from "./taste.js";
+
+export { extractJson };
 
 type QueryFn = typeof query;
 
@@ -130,20 +133,6 @@ interface CriticResult {
   costUsd: number;
   raw: string;
   error: string | null;
-}
-
-export function extractJson(text: string): unknown {
-  const fenced = /```(?:json)?\s*([\s\S]*?)```/.exec(text);
-  const body = fenced?.[1] ?? text;
-  const start = body.search(/[[{]/);
-
-  if (start === -1) {
-    throw new Error("no JSON in critic reply");
-  }
-
-  const end = Math.max(body.lastIndexOf("]"), body.lastIndexOf("}"));
-
-  return JSON.parse(body.slice(start, end + 1));
 }
 
 export function parseCriticReply(text: string): CriticIssue[] {

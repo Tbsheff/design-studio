@@ -241,9 +241,13 @@ export const SCOPED_OFF_REASONS: Record<string, string> = {
   "node/no-process-env":
     "Off in the config module and desktop/env.ts, which own env access (plan 5.2).",
   "node/no-sync":
-    "Off in desktop/build.ts, the data lock and the resource lookup, whose callers are sync (plan 5.2).",
+    "Off in desktop/build.ts, the data lock, the resource lookup and the path checks, whose callers are sync (plan 5.2).",
   "import/no-default-export":
     "Off in *.config.ts: the tools load a default export.",
+  "import/consistent-type-specifier-style":
+    "Off in agent/permissions.ts: one shared/contracts import carries a value and an inline type, which keeps its parent-import count at the baseline.",
+  "unicorn/prefer-export-from":
+    "Off in the agent and props-schema shims: they re-export a symbol moved to platform or shared and also use it, so they need an import binding.",
 };
 
 export const decisionOverrides: OxlintOverride[] = [
@@ -281,9 +285,23 @@ export const decisionOverrides: OxlintOverride[] = [
     files: [
       "desktop/build.ts",
       "src/server/platform/data-lock/**",
+      "src/server/platform/paths/**",
       "src/server/platform/resources/**",
     ],
     rules: { "node/no-sync": "off" },
   },
   { files: ["*.config.ts"], rules: { "import/no-default-export": "off" } },
+  {
+    files: [
+      "src/server/agent/sdk-driver.ts",
+      "src/server/agent/critic.ts",
+      "src/server/agent/permissions.ts",
+      "src/server/components/props-schema.ts",
+    ],
+    rules: { "unicorn/prefer-export-from": "off" },
+  },
+  {
+    files: ["src/server/agent/permissions.ts"],
+    rules: { "import/consistent-type-specifier-style": "off" },
+  },
 ];

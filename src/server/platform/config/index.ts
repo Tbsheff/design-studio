@@ -170,10 +170,67 @@ const loadConfig = (): ServerConfig => {
   };
 };
 
+const AGENT_ENV_KEYS = [
+  "HOME",
+  "USER",
+  "LOGNAME",
+  "PATH",
+  "SHELL",
+  "TMPDIR",
+  "LANG",
+  "ANTHROPIC_API_KEY",
+  "HTTPS_PROXY",
+  "HTTP_PROXY",
+  "NO_PROXY",
+  "NODE_EXTRA_CA_CERTS",
+] as const;
+
+const LOGIN_SHELL_PATH_ENV = "STUDIO_LOGIN_SHELL_PATH";
+
+type AgentEnv = Partial<Record<(typeof AGENT_ENV_KEYS)[number], string>>;
+
+const joinPath = (
+  base: string | undefined,
+  extra: string | undefined
+): string | undefined => {
+  if (!extra) {
+    return base;
+  }
+
+  const parts = [...(base ?? "").split(":"), ...extra.split(":")].filter(
+    (part) => part !== ""
+  );
+
+  return [...new Set(parts)].join(":");
+};
+
+const buildEnv = (
+  source: NodeJS.ProcessEnv,
+  needsShellPath: boolean
+): AgentEnv => {
+  const env: AgentEnv = {};
+
+  for (const key of AGENT_ENV_KEYS) {
+    const value = source[key];
+
+    if (value) {
+      env[key] = value;
+    }
+  }
+
+  if (needsShellPath) {
+    env["PATH"] = joinPath(env["PATH"], source[LOGIN_SHELL_PATH_ENV]);
+  }
+
+  return env;
+};
+
 export {
   DEFAULT_FOLDER_NAME,
   DEV_PROJECTS_FOLDER,
+  LOGIN_SHELL_PATH_ENV,
   REPO_ROOT,
+  buildEnv,
   loadConfig,
   projectsDirFromEnv,
   resourcesDir,

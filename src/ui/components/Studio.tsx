@@ -711,7 +711,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
                 onExport: exporter.openHead,
                 onTweak: whenDirection(did, tweak),
                 onShip: openShip,
-                onShareLink: () => setShareTarget({ projectId, directionId: direction?.id ?? null, versionId: direction?.headVersionId ?? null }),
+                onShareLink: (mode) => setShareTarget({ mode: mode ?? 'link', projectId, directionId: direction?.id ?? null, versionId: direction?.headVersionId ?? null, kind: project?.kind === 'html' && !project.app ? 'site' : 'viewer' }),
                 onAskAgent: (text) => {
                   draft.set(text);
                   void showPane('chat');

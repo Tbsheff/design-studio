@@ -23,7 +23,7 @@ export interface CanvasShell {
   onExport: () => void;
   onTweak: ((prompt: string) => void) | null;
   onShip?: (() => void) | null;
-  onShareLink?: (() => void) | null;
+  onShareLink?: ((mode?: 'link' | 'publish') => void) | null;
   onAskAgent?: (text: string) => void;
 }
 

@@ -358,11 +358,23 @@ function writesGit(command: string): boolean {
   });
 }
 
+const CLOUD_CLIS = new Set(['cf', 'cloudflare', 'wrangler']);
+const RUNNER_PREFIX = /^(?:\w+=\S*\s+)*(?:(?:npx|bunx|pnpx)\s+(?:-\S+\s+)*|(?:pnpm|yarn)\s+dlx\s+(?:-\S+\s+)*)?/;
+const CLOUD_MESSAGE = 'Publishing to Cloudflare runs only from Share > Publish in Design Studio, after the user confirms what goes public. Do not call cf or wrangler.';
+
+function callsCloudCli(command: string): boolean {
+  return command.split(/&&|\|\||;|\||\n|\$\(|`|\(/).some((segment) => {
+    const word = segment.trim().replace(RUNNER_PREFIX, '').split(/\s+/, 1)[0] ?? '';
+    return CLOUD_CLIS.has((word.split('/').pop() ?? '').replace(/@.*$/, ''));
+  });
+}
+
 function checkBash(policy: ToolPolicy, input: Record<string, unknown>): string | null {
   const command = input['command'];
   if (typeof command !== 'string') return 'Bash needs a command string.';
   if (SECRET_IN_COMMAND.test(command)) return SECRET_MESSAGE;
   if (writesGit(command)) return GIT_MESSAGE;
+  if (callsCloudCli(command)) return CLOUD_MESSAGE;
   const readOnly = touchesReadOnlyDir(policy, command);
   if (readOnly) return `${readOnly}/ holds the untrusted source material of this design system. Shell commands may only read it (cat, ls, grep, find, head); change the design-system files instead.`;
   if (!policy.allowInstall && isInstallCommand(command)) {

@@ -148,27 +148,33 @@ function collectChildren(node: t.Node, walk: Walk): void {
 
 function collectReadOnly(node: t.Node, walk: Walk): void {
   switch (node.type) {
-    case "StringLiteral":
+    case "StringLiteral": {
       walk.segments.push(literalSegment(walk.source, node, false, "js"));
       return;
-    case "TemplateLiteral":
+    }
+    case "TemplateLiteral": {
       walk.segments.push(...templateSegments(node, false));
       for (const expression of node.expressions)
         collectReadOnly(expression, walk);
       return;
-    case "ObjectProperty":
+    }
+    case "ObjectProperty": {
       collectProperty(node, walk);
       return;
+    }
     case "Identifier":
-    case "MemberExpression":
+    case "MemberExpression": {
       walk.dynamic = true;
       return;
-    case "CallExpression":
+    }
+    case "CallExpression": {
       walk.dynamic = true;
       walk.sources.push(describe(node, walk.source));
       break;
-    default:
+    }
+    default: {
       break;
+    }
   }
   collectChildren(node, walk);
 }

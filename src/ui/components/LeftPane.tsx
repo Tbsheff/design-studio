@@ -106,22 +106,29 @@ function Sheet(props: Props & { tab: PanelTab }) {
   const title = SHEET_TITLES[props.tab] ?? "";
   const body = (() => {
     switch (props.tab) {
-      case "versions":
+      case "versions": {
         return <VersionsPanel {...props.versions} />;
-      case "tokens":
+      }
+      case "tokens": {
         return props.tokens ? <TokensPanel {...props.tokens} /> : null;
-      case "components":
+      }
+      case "components": {
         return props.components ? (
           <ComponentsPanel {...props.components} />
         ) : null;
-      case "tweaks":
+      }
+      case "tweaks": {
         return props.tweaks ? <TweaksPanel {...props.tweaks} /> : null;
-      case "comments":
+      }
+      case "comments": {
         return props.comments ? <CommentsPanel {...props.comments} /> : null;
-      case "system":
+      }
+      case "system": {
         return <div className="pane-system">{props.system}</div>;
-      default:
+      }
+      default: {
         return null;
+      }
     }
   })();
   return (

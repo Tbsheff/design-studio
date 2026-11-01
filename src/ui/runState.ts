@@ -201,28 +201,34 @@ function applyToolEvent(run: RunView, event: StudioEvent): void {
 
 function applyControlEvent(run: RunView, event: StudioEvent): void {
   switch (event.type) {
-    case "run.queue":
+    case "run.queue": {
       run.queue = event.items;
       break;
-    case "run.user":
+    }
+    case "run.user": {
       run.queue = run.queue.filter((item) => item.id !== event.id);
       break;
-    case "run.permission":
+    }
+    case "run.permission": {
       run.permissions = [
         ...run.permissions.filter((p) => p.id !== event.request.id),
         event.request,
       ];
       break;
-    case "run.permission.resolved":
+    }
+    case "run.permission.resolved": {
       run.permissions = run.permissions.filter((p) => p.id !== event.requestId);
       break;
-    case "run.todos":
+    }
+    case "run.todos": {
       run.todos = event.todos;
       break;
-    case "run.usage":
+    }
+    case "run.usage": {
       run.contextTokens = event.contextTokens;
       break;
-    case "run.retry":
+    }
+    case "run.retry": {
       run.retry = {
         attempt: event.attempt,
         max: event.max,
@@ -230,6 +236,7 @@ function applyControlEvent(run: RunView, event: StudioEvent): void {
         error: event.error,
       };
       break;
+    }
   }
 }
 

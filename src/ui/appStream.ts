@@ -375,24 +375,30 @@ interface AppStream {
 
 function follow(tab: Tab, message: Wire, leader: Leader | null): void {
   switch (message.t) {
-    case "ev":
+    case "ev": {
       if (!leader)
         tab.deliver(message.type, message.pid, message.seq, message.data);
       return;
-    case "state":
+    }
+    case "state": {
       if (!leader) tab.setState(message.state);
       return;
-    case "approvals":
+    }
+    case "approvals": {
       if (!leader) tab.setApprovals(message.poll);
       return;
-    case "hello":
+    }
+    case "hello": {
       if (!leader) tab.changed();
       return;
-    case "want":
+    }
+    case "want": {
       leader?.update(message.tab, message.wants);
       return;
-    case "bye":
+    }
+    case "bye": {
       leader?.drop(message.tab);
+    }
   }
 }
 

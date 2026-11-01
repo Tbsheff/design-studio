@@ -122,11 +122,12 @@ function tagRoot(name: t.JSXOpeningElement["name"]): string | null {
 
 function paramNames(node: t.Node, out: Set<string>): void {
   switch (node.type) {
-    case "Identifier":
+    case "Identifier": {
       out.add(node.name);
 
       return;
-    case "ObjectPattern":
+    }
+    case "ObjectPattern": {
       for (const prop of node.properties) {
         paramNames(
           prop.type === "RestElement" ? prop.argument : prop.value,
@@ -135,7 +136,8 @@ function paramNames(node: t.Node, out: Set<string>): void {
       }
 
       return;
-    case "ArrayPattern":
+    }
+    case "ArrayPattern": {
       for (const item of node.elements) {
         if (item) {
           paramNames(item, out);
@@ -143,14 +145,17 @@ function paramNames(node: t.Node, out: Set<string>): void {
       }
 
       return;
-    case "AssignmentPattern":
+    }
+    case "AssignmentPattern": {
       paramNames(node.left, out);
 
       return;
-    case "RestElement":
+    }
+    case "RestElement": {
       paramNames(node.argument, out);
 
       return;
+    }
     default:
   }
 }

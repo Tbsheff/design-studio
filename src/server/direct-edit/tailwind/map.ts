@@ -895,40 +895,55 @@ function singleToken(
   }
 
   switch (prop) {
-    case "color":
+    case "color": {
       return `text-${colorSuffix(value, theme, "color")}`;
-    case "background-color":
+    }
+    case "background-color": {
       return `bg-${colorSuffix(value, theme, "")}`;
-    case "border-color":
+    }
+    case "border-color": {
       return `border-${colorSuffix(value, theme, "color")}`;
-    case "font-size":
+    }
+    case "font-size": {
       return fontSizeToken(value, theme);
-    case "font-weight":
+    }
+    case "font-weight": {
       return fontWeightToken(value, theme);
-    case "font-family":
+    }
+    case "font-family": {
       return fontFamilyToken(value, theme);
-    case "line-height":
+    }
+    case "line-height": {
       return leadingToken(value, theme);
-    case "letter-spacing":
+    }
+    case "letter-spacing": {
       return trackingToken(value, theme);
-    case "opacity":
+    }
+    case "opacity": {
       return opacityToken(value, theme);
-    case "border-width":
+    }
+    case "border-width": {
       return borderWidthToken(value, theme);
-    case "box-shadow":
+    }
+    case "box-shadow": {
       return shadowToken(value, theme);
-    case "flex":
+    }
+    case "flex": {
       return flexToken(value);
-    case "filter":
+    }
+    case "filter": {
       return value.trim() === "none"
         ? "filter-none"
         : `[filter:${arbitrary(value).slice(1, -1)}]`;
-    case "transform":
+    }
+    case "transform": {
       return value.trim() === "none"
         ? "transform-none"
         : `[transform:${arbitrary(value).slice(1, -1)}]`;
-    default:
+    }
+    default: {
       return `[${prop}:${arbitrary(value).slice(1, -1)}]`;
+    }
   }
 }
 

@@ -349,7 +349,7 @@ export function useStudioData(projectId: string): StudioData {
       batcher.push(event);
       trackFirstToken(sends.current, projectId, event);
       switch (event.type) {
-        case "files.changed":
+        case "files.changed": {
           if (live && event.directionId)
             setLastChange({
               directionId: event.directionId,
@@ -359,7 +359,8 @@ export function useStudioData(projectId: string): StudioData {
               ...(event.reload ? { reload: true } : {}),
             });
           break;
-        case "version.created":
+        }
+        case "version.created": {
           if (event.version.directionId === directionRef.current)
             setVersions((prev) =>
               prev.some((v) => v.id === event.version.id)
@@ -367,10 +368,12 @@ export function useStudioData(projectId: string): StudioData {
                 : [event.version, ...prev]
             );
           break;
-        case "versions.changed":
+        }
+        case "versions.changed": {
           if (active) refreshVersions();
           break;
-        case "direction.updated":
+        }
+        case "direction.updated": {
           setProject((prev) => {
             if (!prev) return prev;
             const exists = prev.directions.some(
@@ -384,10 +387,12 @@ export function useStudioData(projectId: string): StudioData {
             return { ...prev, directions };
           });
           break;
-        case "status.changed":
+        }
+        case "status.changed": {
           if (live && active) setStatus(event.status);
           break;
-        case "preview.build-error":
+        }
+        case "preview.build-error": {
           if (live && active)
             addError({
               directionId: event.directionId ?? null,
@@ -397,6 +402,7 @@ export function useStudioData(projectId: string): StudioData {
               line: event.line,
             });
           break;
+        }
       }
     },
     [addError, batcher, projectId, refreshVersions]

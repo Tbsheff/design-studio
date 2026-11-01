@@ -61,22 +61,28 @@ export function applyPartEvent(
   event: PartEvent
 ): RunPart[] {
   switch (event.type) {
-    case "run.text.delta":
+    case "run.text.delta": {
       return event.text ? appendDelta(parts, "text", event.text) : [...parts];
-    case "run.text":
+    }
+    case "run.text": {
       return closeBlock(parts, "text", event.text);
-    case "run.thinking.delta":
+    }
+    case "run.thinking.delta": {
       return appendDelta(parts, "thinking", event.text);
-    case "run.thinking":
+    }
+    case "run.thinking": {
       return closeBlock(parts, "thinking", event.text);
-    case "run.tool.started":
+    }
+    case "run.tool.started": {
       return parts.some(
         (part) => part.kind === "tool" && part.toolUseId === event.toolUseId
       )
         ? [...parts]
         : [...parts, { kind: "tool", toolUseId: event.toolUseId }];
-    case "run.user":
+    }
+    case "run.user": {
       return [...parts, { kind: "user", id: event.id, text: event.text }];
+    }
   }
 }
 

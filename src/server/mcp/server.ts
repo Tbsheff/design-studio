@@ -327,10 +327,12 @@ async function dispatch(
         instructions: READ_INSTRUCTIONS + (edits ? EDITS_NOTE : READ_ONLY_NOTE),
       });
     }
-    case "ping":
+    case "ping": {
       return reply({});
-    case "tools/list":
+    }
+    case "tools/list": {
       return reply({ tools: edits ? [...TOOLS, ...EDIT_TOOLS] : TOOLS });
+    }
     case "tools/call": {
       const name =
         typeof message.params?.name === "string" ? message.params.name : "";
@@ -338,9 +340,10 @@ async function dispatch(
         return fail(-32_602, `unknown tool ${name}`);
       return reply(await callAny(ctx, edits, name, message.params?.arguments));
     }
-    default:
+    default: {
       if (message.method.startsWith("notifications/")) return null;
       return fail(-32_601, `method ${message.method} is not supported`);
+    }
   }
 }
 

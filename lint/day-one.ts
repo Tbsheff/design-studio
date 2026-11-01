@@ -1596,7 +1596,7 @@ const RULES: [string, unknown[], number[]][] = [
   ["unicorn/relative-url-style", [], [1051,1099,1177]],
   ["unicorn/require-array-join-separator", [], [92,713,930,939,958]],
   ["unicorn/require-post-message-target-origin", [], [813]],
-  ["unicorn/switch-case-braces", [], [301,322,450,451,556,584,591,780,813,949,1083,1150,1161]],
+  ["unicorn/switch-case-braces", [], [591,1150]],
   ["unicorn/text-encoding-identifier-case", [{"withDash":true}], [1,27,133]],
   ["vitest/expect-expect", [], [497,539]],
   ["vitest/max-expects", [], [14,24,36,218,222,245,246,248,250,253,261,267,272,281,352,354,356,360,370,388,389,393,403,409,418,428,442,494,497,502,503,512,520,522,533,541,628,635,686,697,699,703,711,713,715,733,787,818,1026,1047,1055,1071,1081,1163]],

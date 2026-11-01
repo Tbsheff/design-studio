@@ -1618,10 +1618,11 @@ async function runCanvas(
   client: string
 ): Promise<Done> {
   switch (name) {
-    case "canvas_list":
+    case "canvas_list": {
       return plain(
         await canvasList(await canvasContext(deps, parse("canvas_list", args)))
       );
+    }
     case "canvas_place": {
       const input = parse("canvas_place", args);
       return placeWithActivity(
@@ -1642,10 +1643,12 @@ async function runCanvas(
         )
       );
     }
-    case "add_frame":
+    case "add_frame": {
       return addFrame(deps, parse("add_frame", args));
-    case "remove_frame":
+    }
+    case "remove_frame": {
       return removeFrame(deps, parse("remove_frame", args));
+    }
   }
 }
 
@@ -1659,36 +1662,49 @@ async function run(
   if (extra) return extra.run(deps, args, client);
   const tool = name as Name;
   switch (tool) {
-    case "attach_app":
+    case "attach_app": {
       return attachApp(deps, parse("attach_app", args), client);
-    case "add_route_frame":
+    }
+    case "add_route_frame": {
       return addRouteFrame(deps, parse("add_route_frame", args));
+    }
     case "canvas_list":
     case "canvas_place":
     case "canvas_point":
     case "add_frame":
-    case "remove_frame":
+    case "remove_frame": {
       return runCanvas(deps, tool, args, client);
-    case "write_file":
+    }
+    case "write_file": {
       return writeProjectFile(deps, parse("write_file", args), client);
-    case "edit_element":
+    }
+    case "edit_element": {
       return editElement(deps, parse("edit_element", args));
-    case "add_comment":
+    }
+    case "add_comment": {
       return addComment(deps, parse("add_comment", args), client);
-    case "reply_comment":
+    }
+    case "reply_comment": {
       return replyComment(deps, parse("reply_comment", args), client);
-    case "resolve_comment":
+    }
+    case "resolve_comment": {
       return resolveComment(deps, parse("resolve_comment", args));
-    case "create_project":
+    }
+    case "create_project": {
       return createProject(deps, parse("create_project", args));
-    case "restore_version":
+    }
+    case "restore_version": {
       return restoreVersion(deps, parse("restore_version", args));
-    case "apply_design_system":
+    }
+    case "apply_design_system": {
       return applyDesignSystem(deps, parse("apply_design_system", args));
-    case "set_token":
+    }
+    case "set_token": {
       return setToken(deps, parse("set_token", args));
-    case "export":
+    }
+    case "export": {
       return exportFiles(deps, parse("export", args), client);
+    }
   }
 }
 

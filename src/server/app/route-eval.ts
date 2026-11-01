@@ -318,24 +318,32 @@ export class RouteEvaluator {
     if (env.depth > MAX_EVAL_DEPTH) return null;
     const next: Env = { ...env, depth: env.depth + 1 };
     switch (node.type) {
-      case "StringLiteral":
+      case "StringLiteral": {
         return str(node.value);
-      case "TemplateLiteral":
+      }
+      case "TemplateLiteral": {
         return this.template(node, next);
-      case "Identifier":
+      }
+      case "Identifier": {
         return this.identifier(node.name, next);
-      case "MemberExpression":
+      }
+      case "MemberExpression": {
         return this.member(node, next);
-      case "ObjectExpression":
+      }
+      case "ObjectExpression": {
         return { kind: "obj", node, mod: env.mod };
+      }
       case "ArrowFunctionExpression":
       case "FunctionExpression":
-      case "FunctionDeclaration":
+      case "FunctionDeclaration": {
         return { kind: "fn", node, mod: env.mod };
-      case "CallExpression":
+      }
+      case "CallExpression": {
         return this.call(node, next);
-      default:
+      }
+      default: {
         return this.other(node, next);
+      }
     }
   }
 
@@ -344,31 +352,36 @@ export class RouteEvaluator {
       case "TSAsExpression":
       case "TSSatisfiesExpression":
       case "TSNonNullExpression":
-      case "ParenthesizedExpression":
+      case "ParenthesizedExpression": {
         return this.value(node.expression, env);
-      case "ConditionalExpression":
+      }
+      case "ConditionalExpression": {
         return this.conditional(node, env);
+      }
       case "LogicalExpression": {
         const left = await this.value(node.left, env);
         return left?.kind === "str" && left.s !== ""
           ? left
           : this.value(node.right, env);
       }
-      case "BinaryExpression":
+      case "BinaryExpression": {
         return node.operator === "+" && node.left.type !== "PrivateName"
           ? str(
               textOf(await this.value(node.left, env)) +
                 textOf(await this.value(node.right, env))
             )
           : null;
-      case "NewExpression":
+      }
+      case "NewExpression": {
         return node.callee.type === "Identifier" &&
           node.callee.name === "URL" &&
           node.arguments[0]
           ? this.value(node.arguments[0], env)
           : null;
-      default:
+      }
+      default: {
         return null;
+      }
     }
   }
 

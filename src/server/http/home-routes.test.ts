@@ -105,7 +105,7 @@ function fakeRunner(): AgentRunner {
 
 function build(extra: Partial<ServerConfig> = {}): void {
   const preview = fakePreview();
-  const observed = observeBus(createEventBus(config.dataDir));
+  const observed = observeBus(createEventBus(config.dataDir, new Map()));
   bus = observed.bus;
   const thumbnails = createThumbnailService({ projects, preview, versions });
   observed.observe((event) => {

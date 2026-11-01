@@ -120,7 +120,7 @@ beforeEach(async () => {
   ({ config, cleanup } = await makeTempConfig());
   versions = createVersionStore(config);
   projects = createProjectStore(config, versions);
-  bus = createEventBus(config.dataDir);
+  bus = createEventBus(config.dataDir, new Map());
   app = createApp({
     config,
     bus,

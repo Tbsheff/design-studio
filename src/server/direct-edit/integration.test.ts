@@ -106,7 +106,7 @@ beforeEach(async () => {
   ({ config, cleanup } = await makeTempConfig());
   const versions = createVersionStore(config);
   projects = createProjectStore(config, versions);
-  bus = createEventBus(config.dataDir);
+  bus = createEventBus(config.dataDir, new Map());
   running = new Set();
   app = createApp({
     config,

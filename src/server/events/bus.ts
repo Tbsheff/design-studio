@@ -261,7 +261,7 @@ interface FlushableEventBus extends EventBus {
 
 const createEventBus = (
   dataDir: string,
-  floors = new Map<string, SeqFloor>()
+  floors: ReadonlyMap<string, SeqFloor>
 ): FlushableEventBus => {
   const logs = new Map<string, ProjectLog>();
 

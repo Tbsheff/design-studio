@@ -161,7 +161,7 @@ beforeEach(async () => {
   thumbnails = createThumbnailService({ projects, preview, versions });
   app = createApp({
     config,
-    bus: createEventBus(config.dataDir),
+    bus: createEventBus(config.dataDir, new Map()),
     projects,
     versions,
     runner,

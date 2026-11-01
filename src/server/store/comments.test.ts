@@ -24,7 +24,7 @@ let events: StudioEvent[];
 
 beforeEach(async () => {
   dataDir = await mkdtemp(path.join(os.tmpdir(), "studio comments "));
-  const bus = createEventBus(dataDir);
+  const bus = createEventBus(dataDir, new Map());
   events = [];
   bus.subscribe("p1", (event) => events.push(event));
   store = createCommentStore(dataDir, bus);

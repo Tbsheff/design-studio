@@ -74,7 +74,7 @@ function makeApp(
   const projects = createProjectStore(config, versions);
   return createApp({
     config: { ...config, fetchAllowLoopback: allowLoopback },
-    bus: createEventBus(config.dataDir),
+    bus: createEventBus(config.dataDir, new Map()),
     projects,
     versions,
     runner,

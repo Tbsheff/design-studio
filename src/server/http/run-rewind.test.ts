@@ -138,7 +138,7 @@ beforeEach(async () => {
   config = { ...config, agentMode: "mock" };
   const versions = createVersionStore(config);
   projects = createProjectStore(config, versions);
-  const bus = createEventBus(config.dataDir);
+  const bus = createEventBus(config.dataDir, new Map());
   const preview = {
     ...createFakePreview(),
     directionUrl: async () => "http://127.0.0.1:0/",

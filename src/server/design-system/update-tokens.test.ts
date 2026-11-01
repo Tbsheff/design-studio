@@ -195,7 +195,7 @@ beforeEach(async () => {
       });
     },
   });
-  bus = createEventBus(config.dataDir);
+  bus = createEventBus(config.dataDir, new Map());
   running = new Set();
   app = createApp({
     config,

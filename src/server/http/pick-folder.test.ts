@@ -170,7 +170,7 @@ describe("route POST /api/pick-folder", () => {
     };
     return createApp({
       config,
-      bus: createEventBus(config.dataDir),
+      bus: createEventBus(config.dataDir, new Map()),
       projects: createProjectStore(config, versions),
       versions,
       runner,

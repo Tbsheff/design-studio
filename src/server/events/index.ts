@@ -1,4 +1,4 @@
-export { createEventBus, openEventBus } from "./bus.js";
+export { openEventBus } from "./bus.js";
 
 export {
   emitSourceChange,

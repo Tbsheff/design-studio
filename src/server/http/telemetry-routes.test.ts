@@ -58,7 +58,7 @@ beforeEach(async () => {
   projects = createProjectStore(config, versions);
   app = createApp({
     config,
-    bus: createEventBus(config.dataDir),
+    bus: createEventBus(config.dataDir, new Map()),
     projects,
     versions,
     runner,

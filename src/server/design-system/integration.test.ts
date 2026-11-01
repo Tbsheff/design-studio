@@ -188,7 +188,7 @@ beforeEach(async () => {
       });
     },
   });
-  bus = createEventBus(config.dataDir);
+  bus = createEventBus(config.dataDir, new Map());
   started = [];
   app = createApp({
     config,
@@ -525,7 +525,7 @@ describe("recompile", { timeout: 20_000 }, () => {
     const root = await copyFixtureWorkTree();
     await syncDesignSystem(root);
     const events: StudioEvent[] = [];
-    const localBus = createEventBus(config.dataDir);
+    const localBus = createEventBus(config.dataDir, new Map());
     localBus.subscribe("p1", (event) => events.push(event));
 
     const fakeProjects = {

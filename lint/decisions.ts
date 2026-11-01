@@ -222,6 +222,8 @@ export const playwrightAll: LintRules = Object.fromEntries(
     .map(([id]) => [`playwright/${id}`, "error" as const])
 );
 
+const SERVER_MAIN = "src/server/main/**";
+
 const NODE_RUNTIMES = [
   "src/server/**",
   "src/**/*.test.ts",
@@ -237,9 +239,11 @@ export const SCOPED_OFF_REASONS: Record<string, string> = {
   "import/no-nodejs-modules":
     "Off where the code runs on Node: it can never reach 0 there. The coarse ban covers browser code.",
   "no-console":
-    "Off in the logger, in scripts, in the events module and in the worker client until it logs through the logger (plan 5.2).",
+    "Off in the logger, in scripts, in the events module, in the server entry and in the worker client until it logs through the logger (plan 5.2).",
   "node/no-process-env":
-    "Off in the config module and desktop/env.ts, which own env access (plan 5.2).",
+    "Off in the config module, desktop/env.ts and the server entry, which own env access (plan 5.2).",
+  "unicorn/no-process-exit":
+    "Off in the server entry, which owns the process and its exit codes.",
   "node/no-sync":
     "Off in desktop/build.ts, the data lock, the resource lookup, the path checks and the event log replay and exit flush, whose callers are sync (plan 5.2).",
   "import/no-default-export":
@@ -257,6 +261,7 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/server/platform/logger/**",
       "src/server/platform/process/worker-client.ts",
       "src/server/events/**",
+      SERVER_MAIN,
       "scripts/**",
     ],
     rules: { "no-console": "off" },
@@ -266,11 +271,16 @@ export const decisionOverrides: OxlintOverride[] = [
     rules: { "node/no-process-env": "off" },
   },
   {
+    files: [SERVER_MAIN],
+    rules: { "node/no-process-env": "off", "unicorn/no-process-exit": "off" },
+  },
+  {
     files: [
       "src/server/platform/**",
       "src/server/events/**",
       "src/server/run-log/**",
       "src/server/project-source/**",
+      SERVER_MAIN,
       "src/server/store/events.ts",
       "src/server/direct-edit/change-feed.ts",
       "src/server/direct-edit/planned-feed.ts",

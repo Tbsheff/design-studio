@@ -114,7 +114,7 @@ function PlanView({ plan }: { plan: PublishPlan }) {
   const rows: [string, string][] = [
     ['Address', plan.url ?? plan.urlPattern],
     [plan.kind === 'site' ? 'Pages' : 'Frames', plan.pages.join(', ')],
-    ['Files', `${plan.fileCount} files, ${publishSize(plan.bytes)}`],
+    ['Files', `${plan.fileCount} file${plan.fileCount === 1 ? '' : 's'}, ${publishSize(plan.bytes)}`],
     ['Password', plan.password ? 'On' : 'Off: anyone with the URL'],
     ['Ends', publishExpiryText(plan.expiresAt)],
     ['Version', plan.versionId.slice(0, 7)],

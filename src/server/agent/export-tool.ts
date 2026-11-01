@@ -19,6 +19,7 @@ export const exportFrameShape = {
 const schema = z.object(exportFrameShape).strict();
 type ToolText = { content: { type: 'text'; text: string }[]; isError?: boolean };
 
+const DEFAULT_FRAME: ExportFrame = { name: 'Desktop', width: 1440, height: 900 };
 const text = (message: string, isError = false): ToolText => ({ content: [{ type: 'text', text: message }], ...(isError ? { isError: true } : {}) });
 
 async function framesFor(deps: DirectToolDeps, refs: string[] | undefined): Promise<ExportFrame[] | string> {
@@ -28,13 +29,17 @@ async function framesFor(deps: DirectToolDeps, refs: string[] | undefined): Prom
     const out: ExportFrame[] = [];
     for (const ref of refs) {
       const found = findFrame(all, ref);
+      if (!found && all.length === 0 && ref === 'f1') {
+        out.push(DEFAULT_FRAME);
+        continue;
+      }
       if (!found) return `No frame ${ref} on the canvas. Call canvas_list for frame ids.`;
       out.push(toExport(found));
     }
     return out;
   }
   const own = all.filter((frame) => !frame.hidden && (!frame.directionId || frame.directionId === deps.ctx.direction.id)).sort((a, b) => a.order - b.order);
-  return own.length > 0 ? own.slice(0, EXPORT_MAX_FRAMES).map(toExport) : [{ name: 'Desktop', width: 1440, height: 900 }];
+  return own.length > 0 ? own.slice(0, EXPORT_MAX_FRAMES).map(toExport) : [DEFAULT_FRAME];
 }
 
 async function writeExport(folder: string, name: string, bytes: Uint8Array): Promise<string> {

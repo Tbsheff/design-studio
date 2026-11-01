@@ -326,5 +326,25 @@ export const decisionOverrides: OxlintOverride[] = [
     ],
     rules: { "react-doctor/no-barrel-import": "off" },
   },
+  {
+    files: ["src/server/mcp/legacy/**"],
+    rules: { "import/no-relative-parent-imports": "off" },
+  },
+  {
+    files: [
+      "src/server/mcp/legacy/canvas-schema.ts",
+      "src/server/mcp/legacy/comments-schema.ts",
+      "src/server/mcp/legacy/direct-edit-schema.ts",
+      "src/server/mcp/legacy/export-schema.ts",
+      "src/server/mcp/legacy/packs-schema.ts",
+      "src/server/mcp/legacy/projects-schema.ts",
+      "src/server/mcp/legacy/versions-schema.ts",
+    ],
+    rules: { "eslint/sort-keys": "off" },
+  },
+  {
+    files: ["src/server/mcp/legacy/frame-target.ts"],
+    rules: { "eslint/id-length": "off" },
+  },
   { files: ["*.config.ts"], rules: { "import/no-default-export": "off" } },
 ];

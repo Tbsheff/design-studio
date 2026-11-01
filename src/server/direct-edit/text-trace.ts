@@ -718,7 +718,7 @@ async function traceProp(
 
   ctx.hops += 1;
   ctx.files ??= jsxFiles(ctx.root);
-  const escaped = query.name.replaceAll(/[$]/g, "\\$");
+  const escaped = query.name.replaceAll(/[$]/g, String.raw`\$`);
 
   const hits = await filesMentioning(
     await ctx.files,

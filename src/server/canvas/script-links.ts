@@ -5,7 +5,7 @@ export interface ScriptTargets {
   onAttr(code: string | null): string | null;
 }
 
-const NAME = "[A-Za-z_$][\\w$]*";
+const NAME = String.raw`[A-Za-z_$][\w$]*`;
 const LOOKUP = `document\\s*\\.\\s*(?:getElementById|querySelector)\\(\\s*['"][^'"]+['"]\\s*\\)`;
 const RECV = `(${LOOKUP}|${NAME})`;
 const QUOTED = "(['\"`])([^'\"`$]*)";

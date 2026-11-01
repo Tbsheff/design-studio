@@ -234,7 +234,7 @@ export function planVariants(
 
 function quoted(value: string, style: FileStyle): string {
   const escaped = value
-    .replaceAll("\\", "\\\\")
+    .replaceAll("\\", String.raw`\\`)
     .split(style.quote)
     .join(`\\${style.quote}`);
   return `${style.quote}${escaped}${style.quote}`;

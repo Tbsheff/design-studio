@@ -174,12 +174,12 @@ function camelCaseProp(prop: string): string {
 
 function escapeJsString(value: string, quote: string): string {
   return value
-    .replaceAll("\\", "\\\\")
+    .replaceAll("\\", String.raw`\\`)
     .replaceAll(new RegExp(quote, "g"), `\\${quote}`)
-    .replaceAll("\n", "\\n")
-    .replaceAll("\r", "\\r")
-    .replaceAll("\u2028", "\\u2028")
-    .replaceAll("\u2029", "\\u2029");
+    .replaceAll("\n", String.raw`\n`)
+    .replaceAll("\r", String.raw`\r`)
+    .replaceAll("\u2028", String.raw`\u2028`)
+    .replaceAll("\u2029", String.raw`\u2029`);
 }
 
 export function stringLiteral(value: string, quote: string): string {

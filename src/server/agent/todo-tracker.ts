@@ -86,7 +86,7 @@ function baseName(file: string): string {
 }
 
 function attributeHit(text: string, word: string): boolean {
-  const escaped = word.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const escaped = word.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 
   return new RegExp(
     `(?:id|data-[\\w-]+|view|screen|step|route)\\s*[=:]\\s*["'\`{]?[\\w-]*${escaped}`,

@@ -68,7 +68,7 @@ const BORDER_STYLES = new Set([
 function arbitrary(value: string): string {
   return value
     .trim()
-    .replaceAll("_", "\\_")
+    .replaceAll("_", String.raw`\_`)
     .replaceAll('"', "'")
     .replaceAll(/\s*,\s*/g, ",")
     .replaceAll(/\s+/g, "_");

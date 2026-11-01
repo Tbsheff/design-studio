@@ -16,7 +16,7 @@ function escapeHtml(text: string): string {
 }
 
 function jsonForScript(value: unknown): string {
-  return JSON.stringify(value).replaceAll("<", "\\u003c");
+  return JSON.stringify(value).replaceAll("<", String.raw`\u003c`);
 }
 
 const STYLE = `

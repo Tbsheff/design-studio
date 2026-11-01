@@ -229,7 +229,7 @@ export function rootDeclarations(
 }
 
 function escapeRegExp(value: string): string {
-  return value.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return value.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 }
 
 export function usesVar(text: string, name: string): boolean {

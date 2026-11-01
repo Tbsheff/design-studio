@@ -157,7 +157,7 @@ export function scriptSources(tree: PageTree): string[] {
 }
 
 function cssString(value: string): string {
-  return value.replaceAll("\\", "\\\\").replaceAll('"', '\\"');
+  return value.replaceAll("\\", String.raw`\\`).replaceAll('"', String.raw`\"`);
 }
 
 function idOf(el: Element): string | null {

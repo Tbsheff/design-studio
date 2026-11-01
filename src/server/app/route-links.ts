@@ -339,7 +339,7 @@ function redirected(
       .map((seg) =>
         seg.startsWith(":")
           ? "[^/]+"
-          : seg.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&")
+          : seg.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`)
       )
       .join("/");
 

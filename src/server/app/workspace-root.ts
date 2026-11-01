@@ -27,7 +27,9 @@ function globPattern(glob: string): RegExp {
     .map((part) =>
       part === "**"
         ? ".*"
-        : part.replaceAll(/[.+^${}()|[\]\\]/g, "\\$&").replaceAll("*", "[^/]*")
+        : part
+            .replaceAll(/[.+^${}()|[\]\\]/g, String.raw`\$&`)
+            .replaceAll("*", "[^/]*")
     )
     .join("/");
 

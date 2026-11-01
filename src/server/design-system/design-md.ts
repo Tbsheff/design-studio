@@ -10,7 +10,7 @@ const EMPTY_CELL = "-";
 function cell(value: string | null | undefined): string {
   const text = (value ?? "").replaceAll(/\s+/g, " ").trim();
 
-  return text === "" ? EMPTY_CELL : text.replaceAll("|", "\\|");
+  return text === "" ? EMPTY_CELL : text.replaceAll("|", String.raw`\|`);
 }
 
 export function tokenTable(entries: CompiledTokenEntry[]): string {

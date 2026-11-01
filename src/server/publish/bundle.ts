@@ -132,7 +132,10 @@ async function walk(
 }
 
 export function cleanHtml(html: string): string {
-  const bridge = BRIDGE_SCRIPT_PATH.replaceAll(/[.*+?^${}()|[\]\\/]/g, "\\$&");
+  const bridge = BRIDGE_SCRIPT_PATH.replaceAll(
+    /[.*+?^${}()|[\]\\/]/g,
+    String.raw`\$&`
+  );
 
   return html
     .replaceAll(

@@ -189,7 +189,7 @@ async function readSheet(
     clock.deadline,
     url
   );
-  const css = fetched.body.toString("utf8");
+  const css = fetched.body.toString("utf-8");
   const imports = cssImports(css)
     .map((imported) => absolute(imported, fetched.url))
     .filter(
@@ -515,7 +515,7 @@ async function readStatic(
   const type = page.contentType.toLowerCase();
   if (type !== "" && !type.includes("html") && !type.includes("xml"))
     throw new Error(`${page.url} is not an HTML page (${type.split(";")[0]})`);
-  const html = page.body.toString("utf8");
+  const html = page.body.toString("utf-8");
   const parts = pageParts(html);
   const failures: string[] = [];
   const stylesheets = await loadStylesheets(

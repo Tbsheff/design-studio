@@ -86,7 +86,7 @@ const PREVIEW_HOST = /^p-((?:[0-9a-f]{2})+)\.localhost$/;
 export function projectOfUrl(url: string): string | undefined {
   try {
     const hex = PREVIEW_HOST.exec(new URL(url).hostname)?.[1];
-    return hex ? Buffer.from(hex, "hex").toString("utf8") : undefined;
+    return hex ? Buffer.from(hex, "hex").toString("utf-8") : undefined;
   } catch {
     return undefined;
   }

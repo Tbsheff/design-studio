@@ -37,7 +37,7 @@ function plistVersion(app: string): string {
       "Print :CFBundleShortVersionString",
       path.join(app, "Contents", "Info.plist"),
     ],
-    { encoding: "utf8" }
+    { encoding: "utf-8" }
   ).trim();
 }
 
@@ -81,7 +81,7 @@ function shipItLogs(): string {
     .filter((file) => existsSync(file))
     .map(
       (file) =>
-        `--- ${path.basename(file)}\n${readFileSync(file, "utf8").split("\n").slice(-25).join("\n")}`
+        `--- ${path.basename(file)}\n${readFileSync(file, "utf-8").split("\n").slice(-25).join("\n")}`
     )
     .join("\n");
 }
@@ -252,13 +252,13 @@ async function versionAfter(appCopy: string): Promise<string> {
 function updaterLog(work: string): string {
   const file = path.join(work, "user-data", "logs", "updater.log");
   return existsSync(file)
-    ? readFileSync(file, "utf8").split("\n").slice(-30).join("\n")
+    ? readFileSync(file, "utf-8").split("\n").slice(-30).join("\n")
     : "(none)";
 }
 
 function stopRelaunched(appCopy: string): void {
   const relaunched = spawnSync("pgrep", ["-f", appCopy], {
-    encoding: "utf8",
+    encoding: "utf-8",
   }).stdout.trim();
   if (!relaunched) return;
   console.log(

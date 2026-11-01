@@ -165,13 +165,13 @@ test("AC-31 undo an edit, then recover the undone result", async ({ page }) => {
   const main = mainDirection(project);
   await expect(frontFrame(page).locator("h1")).toHaveText("Undo Trail");
   const file = path.join(main.workTree, "index.html");
-  const base = readFileSync(file, "utf8");
+  const base = readFileSync(file, "utf-8");
   await sendPrompt(page, "Edit to undo");
   await api.waitForRuns(project.id, 2);
   await expect(frontFrame(page).locator(".mock-edit")).toHaveText(
     "Edit to undo"
   );
-  const edited = readFileSync(file, "utf8");
+  const edited = readFileSync(file, "utf-8");
   const editVersion = await headVersion(api, project.id, main.id);
   await showVersions(page);
   await page.getByRole("button", { name: "Undo", exact: true }).click();
@@ -179,7 +179,7 @@ test("AC-31 undo an edit, then recover the undone result", async ({ page }) => {
     .poll(async () => (await headVersion(api, project.id, main.id)).meta.kind)
     .toBe("undo");
   await expect(frontFrame(page).locator(".mock-edit")).toHaveCount(0);
-  const afterUndo = readFileSync(file, "utf8");
+  const afterUndo = readFileSync(file, "utf-8");
   const undoVersion = await headVersion(api, project.id, main.id);
   const listAfterUndo = await api.versions(project.id, main.id);
   const row = page
@@ -192,7 +192,7 @@ test("AC-31 undo an edit, then recover the undone result", async ({ page }) => {
   await expect(frontFrame(page).locator(".mock-edit")).toHaveText(
     "Edit to undo"
   );
-  const afterRestore = readFileSync(file, "utf8");
+  const afterRestore = readFileSync(file, "utf-8");
   const restoreVersion = await headVersion(api, project.id, main.id);
   evidence("AC-31", {
     undoMatchesBase: afterUndo === base,
@@ -226,7 +226,7 @@ test("AC-35 AC-36 branch from an earlier version without touching the original, 
   const target = versions[1];
   if (!target) throw new Error("need version 2");
   const mainFile = path.join(main.workTree, "index.html");
-  const mainBefore = readFileSync(mainFile, "utf8");
+  const mainBefore = readFileSync(mainFile, "utf-8");
   const mainHeadBefore = (await headVersion(api, project.id, main.id)).id;
   const mainVersionsBefore = (await api.versions(project.id, main.id))
     .map((v) => v.id)
@@ -246,7 +246,7 @@ test("AC-35 AC-36 branch from an earlier version without touching the original, 
   await expect(frontFrame(page).locator(".mock-edit")).toHaveCount(1);
   const forkFileAtStart = readFileSync(
     path.join(fork.workTree, "index.html"),
-    "utf8"
+    "utf-8"
   );
   const targetHtml = git(project.id, ["show", `${target.id}:index.html`]);
   await sendPrompt(page, "Fork only note");
@@ -256,7 +256,7 @@ test("AC-35 AC-36 branch from an earlier version without touching the original, 
     "Fork only note",
   ]);
   const forkHead = await headVersion(api, project.id, fork.id);
-  const mainAfter = readFileSync(mainFile, "utf8");
+  const mainAfter = readFileSync(mainFile, "utf-8");
   const mainHeadAfter = (await headVersion(api, project.id, main.id)).id;
   const mainVersionsAfter = (await api.versions(project.id, main.id))
     .map((v) => v.id)
@@ -336,12 +336,12 @@ test("AC-37 parallel runs in two directions cannot overwrite each other", async 
     waitRun(api, runA),
     waitRun(api, runB),
   ]);
-  const fileA = readFileSync(path.join(main.workTree, "index.html"), "utf8");
-  const fileB = readFileSync(path.join(other.workTree, "index.html"), "utf8");
+  const fileA = readFileSync(path.join(main.workTree, "index.html"), "utf-8");
+  const fileB = readFileSync(path.join(other.workTree, "index.html"), "utf-8");
   const projectFile = JSON.parse(
     readFileSync(
       path.join(readState().dataDir, "projects", project.id, "project.json"),
-      "utf8"
+      "utf-8"
     )
   ) as Project;
   const refA = git(project.id, ["rev-parse", `refs/heads/d/${main.id}`]).trim();
@@ -393,12 +393,12 @@ test("AC-38 interrupted run: discard removes partial and untracked files, keep c
   const main = mainDirection(project);
   const file = path.join(main.workTree, "index.html");
   await expect(frontFrame(page).locator("h1")).toHaveText("Interrupted");
-  const completed = readFileSync(file, "utf8");
+  const completed = readFileSync(file, "utf-8");
   const headBefore = (await headVersion(api, project.id, main.id)).id;
 
   const first = await startRun(api, project.id, main.id, "[slow] Partial one");
   await expect
-    .poll(() => readFileSync(file, "utf8") !== completed, { intervals: [50] })
+    .poll(() => readFileSync(file, "utf-8") !== completed, { intervals: [50] })
     .toBe(true);
   await api.call("POST", `/api/runs/${first}/cancel`);
   const canceledOne = await waitRun(api, first);
@@ -410,7 +410,7 @@ test("AC-38 interrupted run: discard removes partial and untracked files, keep c
   await banner.getByRole("button", { name: "Discard" }).click();
   await expect(banner).toHaveCount(0);
   const discardResult = {
-    fileRestored: readFileSync(file, "utf8") === completed,
+    fileRestored: readFileSync(file, "utf-8") === completed,
     strayRemoved: !existsSync(stray),
     head: (await headVersion(api, project.id, main.id)).id === headBefore,
     dirty: (await api.status(project.id, main.id)).dirty,
@@ -418,11 +418,11 @@ test("AC-38 interrupted run: discard removes partial and untracked files, keep c
 
   const second = await startRun(api, project.id, main.id, "[slow] Partial two");
   await expect
-    .poll(() => readFileSync(file, "utf8") !== completed, { intervals: [50] })
+    .poll(() => readFileSync(file, "utf-8") !== completed, { intervals: [50] })
     .toBe(true);
   await api.call("POST", `/api/runs/${second}/cancel`);
   const canceledTwo = await waitRun(api, second);
-  const partialTwo = readFileSync(file, "utf8");
+  const partialTwo = readFileSync(file, "utf-8");
   await expect(banner).toContainText("Unfinished changes");
   await banner.getByRole("button", { name: "Keep" }).click();
   await expect(banner).toHaveCount(0);
@@ -430,7 +430,7 @@ test("AC-38 interrupted run: discard removes partial and untracked files, keep c
   const keepResult = {
     kind: kept.meta.kind,
     parentIsCompleted: kept.parentId === headBefore,
-    fileIsPartial: readFileSync(file, "utf8") === partialTwo,
+    fileIsPartial: readFileSync(file, "utf-8") === partialTwo,
     committed:
       git(project.id, ["show", `${kept.id}:index.html`]) === partialTwo,
     dirty: (await api.status(project.id, main.id)).dirty,

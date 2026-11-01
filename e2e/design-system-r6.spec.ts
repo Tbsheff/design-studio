@@ -263,7 +263,7 @@ test("R6-3: an off-palette color shows the nearest token with ΔE and Use token 
     .getByRole("button", { name: `Use ${cssVar} for text color` })
     .click();
   await expect
-    .poll(() => readFileSync(file, "utf8"))
+    .poll(() => readFileSync(file, "utf-8"))
     .toContain(`color: var(${cssVar})`);
   await expect(
     page.getByTestId("token-lint").filter({ hasText: "Text color" })
@@ -574,7 +574,7 @@ test("R6-6: the DESIGN.md editor has an outline and a live preview, and asks to 
   const api = await openHome(page);
   const project = await openPackProject(page, api, "Design Md Page");
   const file = path.join(project.directions[0]!.workTree, "DESIGN.md");
-  const before = readFileSync(file, "utf8");
+  const before = readFileSync(file, "utf-8");
   await page.getByRole("button", { name: "DESIGN.md", exact: true }).click();
   const dialog = page.getByRole("dialog", { name: "DESIGN.md", exact: true });
   const editor = dialog.getByLabel("DESIGN.md content");
@@ -621,7 +621,7 @@ test("R6-6: the DESIGN.md editor has an outline and a live preview, and asks to 
   await dialog.getByRole("button", { name: "Cancel" }).click();
   await ask.getByRole("button", { name: "Discard" }).click();
   await expect(dialog).toBeHidden();
-  expect(readFileSync(file, "utf8")).toBe(before);
+  expect(readFileSync(file, "utf-8")).toBe(before);
 
   await page.getByRole("button", { name: "DESIGN.md", exact: true }).click();
   await expect(editor).not.toBeEmpty();
@@ -636,6 +636,6 @@ test("R6-6: the DESIGN.md editor has an outline and a live preview, and asks to 
   await ask.getByRole("button", { name: "Save" }).click();
   await expect(dialog).toBeHidden();
   await expect
-    .poll(() => readFileSync(file, "utf8"))
+    .poll(() => readFileSync(file, "utf-8"))
     .toContain("One more line.");
 });

@@ -171,7 +171,7 @@ async function plainTarget(
   const target = await resolveSource(scope.workTree, source.file);
   return {
     target,
-    code: await readFile(target.file, "utf8"),
+    code: await readFile(target.file, "utf-8"),
     at: source,
     tag: request.target.tag,
     usedAt: null,

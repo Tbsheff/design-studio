@@ -9,7 +9,7 @@ const ERROR_LINE =
 
 const errorsOf = (command: string, args: string[]) => {
   const run = spawnSync(command, args, {
-    encoding: "utf8",
+    encoding: "utf-8",
     maxBuffer: 2 ** 31 - 1,
   });
   const keys = `${run.stdout}\n${run.stderr}`
@@ -42,7 +42,7 @@ const main = () => {
   mkdirSync(OUT_DIR, { recursive: true });
   writeFileSync(OUT, lines.length > 0 ? `${lines.join("\n")}\n` : "");
   const known = new Set(
-    existsSync(BASELINE) ? readFileSync(BASELINE, "utf8").split("\n") : []
+    existsSync(BASELINE) ? readFileSync(BASELINE, "utf-8").split("\n") : []
   );
   const fresh = lines.filter((line) => !known.has(line));
   const summary = `typecheck-diff: tsc ${tsc.size} errors, tsrs ${tsrs.size} errors, ${lines.length} diff lines, ${fresh.length} new`;

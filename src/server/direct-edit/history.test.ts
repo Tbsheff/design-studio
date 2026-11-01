@@ -145,7 +145,7 @@ describe("edit history", { timeout: 30000 }, () => {
     const seen: StudioEvent[] = [];
     bus.subscribe(project.id, (event) => seen.push(event));
     for (const style of EDITS) await edit(project, style);
-    const end = await readFile(file, "utf8");
+    const end = await readFile(file, "utf-8");
     expect(end).not.toBe(PAGE);
     expect(await stateOf(project)).toEqual({
       canUndo: true,
@@ -160,7 +160,7 @@ describe("edit history", { timeout: 30000 }, () => {
       expect(response.status).toBe(200);
       undone.push(((await response.json()) as { version: Version }).version);
     }
-    expect(await readFile(file, "utf8")).toBe(PAGE);
+    expect(await readFile(file, "utf-8")).toBe(PAGE);
     expect(undone.map((version) => version.title)).toEqual([
       "Undo: Edit h1: color",
       "Undo: Edit h1: font-size",
@@ -182,7 +182,7 @@ describe("edit history", { timeout: 30000 }, () => {
 
     for (let index = 0; index < 3; index += 1)
       expect((await step(project, "redo")).status).toBe(200);
-    expect(await readFile(file, "utf8")).toBe(end);
+    expect(await readFile(file, "utf-8")).toBe(end);
     expect(await stateOf(project)).toMatchObject({
       canUndo: true,
       canRedo: false,
@@ -196,7 +196,7 @@ describe("edit history", { timeout: 30000 }, () => {
     const { project, file } = await setupProject();
     await edit(project, { color: "red" });
     await edit(project, { color: "blue" });
-    const changed = (await readFile(file, "utf8")).replace(
+    const changed = (await readFile(file, "utf-8")).replace(
       "Hello",
       "Hello from the agent"
     );
@@ -206,7 +206,7 @@ describe("edit history", { timeout: 30000 }, () => {
     expect(((await response.json()) as { error: string }).error).toBe(
       "history_stale"
     );
-    expect(await readFile(file, "utf8")).toBe(changed);
+    expect(await readFile(file, "utf-8")).toBe(changed);
     expect(await stateOf(project)).toEqual({
       canUndo: false,
       canRedo: false,
@@ -218,13 +218,13 @@ describe("edit history", { timeout: 30000 }, () => {
   it("refuses while a run is active on the direction", async () => {
     const { project, file } = await setupProject();
     await edit(project, { color: "red" });
-    const before = await readFile(file, "utf8");
+    const before = await readFile(file, "utf-8");
     running.add(`${project.id}/main`);
     expect((await step(project, "undo")).status).toBe(409);
-    expect(await readFile(file, "utf8")).toBe(before);
+    expect(await readFile(file, "utf-8")).toBe(before);
     running.clear();
     expect((await step(project, "undo")).status).toBe(200);
-    expect(await readFile(file, "utf8")).toBe(PAGE);
+    expect(await readFile(file, "utf-8")).toBe(PAGE);
   });
 
   it("clears redo when a new edit is recorded", async () => {
@@ -277,13 +277,13 @@ describe("edit history", { timeout: 30000 }, () => {
     expect(
       ((await undo.json()) as { version: Version }).version.changedFiles.sort()
     ).toEqual(["about.html", "index.html"]);
-    expect(await readFile(file, "utf8")).toBe(PAGE);
-    expect(await readFile(other, "utf8")).toBe("<p>About</p>\n");
+    expect(await readFile(file, "utf-8")).toBe(PAGE);
+    expect(await readFile(other, "utf-8")).toBe("<p>About</p>\n");
 
     await writeFile(other, "<p>Changed by someone else</p>\n");
     expect((await step(project, "redo")).status).toBe(409);
-    expect(await readFile(file, "utf8")).toBe(PAGE);
-    expect(await readFile(other, "utf8")).toBe(
+    expect(await readFile(file, "utf-8")).toBe(PAGE);
+    expect(await readFile(other, "utf-8")).toBe(
       "<p>Changed by someone else</p>\n"
     );
   });

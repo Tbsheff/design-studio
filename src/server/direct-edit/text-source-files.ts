@@ -131,7 +131,7 @@ export function createModuleCache(root: string) {
   const load = async (file: string): Promise<TextModule | null> => {
     const safe = await textFileInRoot(root, file);
     if (!safe) return null;
-    const code = await readFile(safe.file, "utf8").catch(() => null);
+    const code = await readFile(safe.file, "utf-8").catch(() => null);
     if (code === null) return null;
     const json = safe.file.toLowerCase().endsWith(".json");
     const ast = json ? parseJson(code) : parseModuleFile(code, safe.file);
@@ -196,7 +196,7 @@ async function cachedText(file: string): Promise<string> {
   if (!info || info.size > MAX_BYTES) return "";
   const known = texts.get(file);
   if (known && known.mtime === info.mtimeMs) return known.text;
-  const text = await readFile(file, "utf8").catch(() => "");
+  const text = await readFile(file, "utf-8").catch(() => "");
   if (texts.size >= TEXT_CACHE_MAX)
     texts.delete(texts.keys().next().value as string);
   texts.set(file, { mtime: info.mtimeMs, text });

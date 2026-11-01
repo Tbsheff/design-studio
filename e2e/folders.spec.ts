@@ -353,7 +353,7 @@ test("hidden projects move to the default folder only when the user clicks Move"
     "<!doctype html><title>x</title><h1>Old hidden</h1>\n"
   );
   const stored = JSON.parse(
-    readFileSync(path.join(projectDir, "project.json"), "utf8")
+    readFileSync(path.join(projectDir, "project.json"), "utf-8")
   ) as Project;
   const hidden: Project = {
     ...stored,
@@ -374,7 +374,7 @@ test("hidden projects move to the default folder only when the user clicks Move"
 
   const note = page.locator(".home-hidden-note");
   await expect(note).toContainText("1 project is in the app's hidden folder");
-  expect(readFileSync(path.join(workTree, "index.html"), "utf8")).toContain(
+  expect(readFileSync(path.join(workTree, "index.html"), "utf-8")).toContain(
     "Old hidden"
   );
   await note.getByRole("button", { name: /^Move to / }).click();
@@ -386,7 +386,7 @@ test("hidden projects move to the default folder only when the user clicks Move"
   const moved = await api.call<Project>("GET", `/api/projects/${id}`);
   expect(moved.directions[0]?.workTree).toBe(folder);
   expect(moved.imported).toEqual({ sourcePath: folder, created: true });
-  expect(readFileSync(path.join(folder, "index.html"), "utf8")).toContain(
+  expect(readFileSync(path.join(folder, "index.html"), "utf-8")).toContain(
     "Old hidden"
   );
   expect(existsSync(workTree)).toBe(false);

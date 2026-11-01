@@ -146,7 +146,7 @@ async function fileInfo(file: string): Promise<FileInfo | null> {
   const stamp = `${info.mtimeMs}:${info.size}`;
   const known = cache.get(file);
   if (known?.stamp === stamp) return known;
-  const text = await readFile(file, "utf8").catch(() => null);
+  const text = await readFile(file, "utf-8").catch(() => null);
   if (text === null) return null;
   const ast = parseModuleFile(text, file);
   const exported = ast ? exportNames(ast) : new Map<string, string>();
@@ -194,7 +194,7 @@ async function packageNames(root: string): Promise<Map<string, string>> {
     for (const item of items) {
       if (!item.isDirectory()) continue;
       const dir = path.join(root, group, item.name);
-      const pkg = await readFile(path.join(dir, "package.json"), "utf8").then(
+      const pkg = await readFile(path.join(dir, "package.json"), "utf-8").then(
         (raw) => JSON.parse(raw) as { name?: unknown },
         () => null
       );
@@ -207,7 +207,7 @@ async function packageNames(root: string): Promise<Map<string, string>> {
 async function workspaceRoots(root: string, appDir: string): Promise<string[]> {
   const pkg = await readFile(
     path.join(root, appDir, "package.json"),
-    "utf8"
+    "utf-8"
   ).then(
     (raw) =>
       JSON.parse(raw) as Record<string, Record<string, string> | undefined>,

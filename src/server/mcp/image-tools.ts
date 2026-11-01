@@ -136,7 +136,7 @@ async function imageBody(
 }
 
 async function tagAt(file: string, line: number, col: number): Promise<string> {
-  const text = await readFile(file, "utf8").catch(() => "");
+  const text = await readFile(file, "utf-8").catch(() => "");
   const tag =
     /^<([A-Za-z][\w.]*)/.exec(
       (text.split("\n")[line - 1] ?? "").slice(col - 1)

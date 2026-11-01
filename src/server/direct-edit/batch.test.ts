@@ -162,7 +162,7 @@ describe("direct edit batch", { timeout: 30000 }, () => {
     const expected = PAGE.replace("<h1 class", '<h1 style="color: blue;" class')
       .replace("<p>One</p>", "<p>Uno &amp; dos</p>")
       .replace('style="color: red"', 'style="color: blue; font-size: 20px;"');
-    expect(await readFile(path.join(workTree, "index.html"), "utf8")).toBe(
+    expect(await readFile(path.join(workTree, "index.html"), "utf-8")).toBe(
       expected
     );
     expect(await versionCount(project)).toBe(before + 1);
@@ -173,7 +173,7 @@ describe("direct edit batch", { timeout: 30000 }, () => {
     expect(
       (await call("POST", `/api/projects/${project.id}/d/main/undo`)).status
     ).toBe(200);
-    expect(await readFile(path.join(workTree, "index.html"), "utf8")).toBe(
+    expect(await readFile(path.join(workTree, "index.html"), "utf-8")).toBe(
       PAGE
     );
   });
@@ -198,10 +198,10 @@ describe("direct edit batch", { timeout: 30000 }, () => {
       "other.html",
       "src/A.tsx",
     ]);
-    expect(await readFile(path.join(workTree, "other.html"), "utf8")).toBe(
+    expect(await readFile(path.join(workTree, "other.html"), "utf-8")).toBe(
       OTHER.replace("<h2>", '<h2 style="opacity: 0.5;">')
     );
-    expect(await readFile(path.join(workTree, "src", "A.tsx"), "utf8")).toBe(
+    expect(await readFile(path.join(workTree, "src", "A.tsx"), "utf-8")).toBe(
       TSX.replace('"red"', '"blue"')
     );
     expect(await versionCount(project)).toBe(before + 1);
@@ -220,10 +220,10 @@ describe("direct edit batch", { timeout: 30000 }, () => {
     expect(((await response.json()) as { error: string }).error).toBe(
       "element_not_found"
     );
-    expect(await readFile(path.join(workTree, "index.html"), "utf8")).toBe(
+    expect(await readFile(path.join(workTree, "index.html"), "utf-8")).toBe(
       PAGE
     );
-    expect(await readFile(path.join(workTree, "other.html"), "utf8")).toBe(
+    expect(await readFile(path.join(workTree, "other.html"), "utf-8")).toBe(
       OTHER
     );
     expect((await projects.get(project.id)).directions[0]?.headVersionId).toBe(
@@ -252,10 +252,10 @@ describe("direct edit batch", { timeout: 30000 }, () => {
         edits
       )
     ).rejects.toThrow("git failed");
-    expect(await readFile(path.join(workTree, "index.html"), "utf8")).toBe(
+    expect(await readFile(path.join(workTree, "index.html"), "utf-8")).toBe(
       PAGE
     );
-    expect(await readFile(path.join(workTree, "other.html"), "utf8")).toBe(
+    expect(await readFile(path.join(workTree, "other.html"), "utf-8")).toBe(
       OTHER
     );
 
@@ -280,7 +280,7 @@ describe("direct edit batch", { timeout: 30000 }, () => {
       [
         "index.html",
         PAGE,
-        await readFile(path.join(workTree, "index.html"), "utf8"),
+        await readFile(path.join(workTree, "index.html"), "utf-8"),
       ],
       ["other.html", OTHER, OTHER.replace("<h2>Other</h2>", "<h2>Next</h2>")],
     ]);

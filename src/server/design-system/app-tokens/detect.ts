@@ -78,7 +78,7 @@ async function score(
 ): Promise<number> {
   const file = await safeFileInside(root, relative);
   if (!file) return -1;
-  const text = await readFile(file, "utf8").catch(() => "");
+  const text = await readFile(file, "utf-8").catch(() => "");
   if (!text.includes("--")) return -1;
   const sheet = readCssTokens(text);
   const tokens = buildAppTokens(sheet).length;
@@ -108,7 +108,7 @@ async function shadcnCss(root: string, dir: string): Promise<string | null> {
   if (!file) return null;
   try {
     const css = (
-      JSON.parse(await readFile(file, "utf8")) as {
+      JSON.parse(await readFile(file, "utf-8")) as {
         tailwind?: { css?: unknown };
       }
     ).tailwind?.css;

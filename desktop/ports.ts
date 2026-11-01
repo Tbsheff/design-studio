@@ -70,7 +70,7 @@ function isPortSet(value: unknown): value is PortSet {
 
 export function readSavedPorts(file: string): PortSet | null {
   try {
-    const parsed: unknown = JSON.parse(readFileSync(file, "utf8"));
+    const parsed: unknown = JSON.parse(readFileSync(file, "utf-8"));
     return isPortSet(parsed) ? parsed : null;
   } catch {
     return null;

@@ -54,7 +54,7 @@ async function realFolder(
 async function plainKind(folder: string): Promise<FolderKind | null> {
   const pkgText = await readFile(
     path.join(folder, "package.json"),
-    "utf8"
+    "utf-8"
   ).catch(() => null);
   let pkg: Record<string, unknown> | null = null;
   try {

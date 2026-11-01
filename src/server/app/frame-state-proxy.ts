@@ -329,7 +329,7 @@ export function sendEmptied(
     chunks.push(chunk);
   });
   upstreamRes.on("end", () => {
-    const text = Buffer.concat(chunks).toString("utf8");
+    const text = Buffer.concat(chunks).toString("utf-8");
     let body = text;
     try {
       if (size <= MAX_EMPTY_BODY) {

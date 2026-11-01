@@ -69,7 +69,7 @@ async function runWith(script: (sink: DriverSink) => Promise<void>) {
   const lines = (
     await readFile(
       path.join(projects.projectDir("p1"), "runs", `${summary.id}.jsonl`),
-      "utf8"
+      "utf-8"
     )
   )
     .trim()
@@ -78,7 +78,7 @@ async function runWith(script: (sink: DriverSink) => Promise<void>) {
     (line) => JSON.parse(line) as { type: string; text?: string; seq?: number }
   );
   const telemetryFile = path.join(projects.projectDir("p1"), "telemetry.jsonl");
-  const telemetry = (await readFile(telemetryFile, "utf8").catch(() => ""))
+  const telemetry = (await readFile(telemetryFile, "utf-8").catch(() => ""))
     .split("\n")
     .filter(Boolean)
     .map((line) => JSON.parse(line) as TelemetrySample);

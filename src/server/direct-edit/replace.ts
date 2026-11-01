@@ -252,7 +252,7 @@ async function loadFile(
   const target = await resolveSource(workTree, file);
   const existing = files.get(target.file);
   if (existing) return existing;
-  const original = await readFile(target.file, "utf8");
+  const original = await readFile(target.file, "utf-8");
   const extension = path.extname(target.relative).toLowerCase();
   const jsx =
     extension === ".jsx" || extension === ".tsx"

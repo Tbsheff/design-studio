@@ -108,11 +108,11 @@ test("improve with AI: a DTCG draft passes the check, then Save to library puts 
     bar.getByRole("button", { name: "Save to library" })
   ).toHaveClass(/primary/);
   const tree = mainDirection(project).workTree;
-  expect(readFileSync(path.join(tree, "DESIGN.md"), "utf8")).not.toMatch(
+  expect(readFileSync(path.join(tree, "DESIGN.md"), "utf-8")).not.toMatch(
     /^_To do:/m
   );
   const coverage = JSON.parse(
-    readFileSync(path.join(tree, "source", "coverage.json"), "utf8")
+    readFileSync(path.join(tree, "source", "coverage.json"), "utf-8")
   ) as DesignSystemCoverage;
   expect(coverage.version).toBe(1);
 

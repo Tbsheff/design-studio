@@ -112,7 +112,7 @@ function directEdit(project: Project, body: unknown): Promise<Response> {
 
 async function readAll(workTree: string, files: string[]): Promise<string[]> {
   return Promise.all(
-    files.map((file) => readFile(path.join(workTree, file), "utf8"))
+    files.map((file) => readFile(path.join(workTree, file), "utf-8"))
   );
 }
 
@@ -180,18 +180,18 @@ describe("direct edit token references", { timeout: 30000 }, () => {
       style: { color: "var(--primary)" },
     });
     expect(response.status).toBe(200);
-    expect(await readFile(path.join(workTree, "index.html"), "utf8")).toContain(
-      '<h1 style="color: var(--primary);" class="t">'
-    );
+    expect(
+      await readFile(path.join(workTree, "index.html"), "utf-8")
+    ).toContain('<h1 style="color: var(--primary);" class="t">');
     const fallback = await directEdit(project, {
       source: P,
       selector: "p",
       style: { "margin-top": "var(--space-4, 16px)" },
     });
     expect(fallback.status).toBe(200);
-    expect(await readFile(path.join(workTree, "index.html"), "utf8")).toContain(
-      '<p style="margin-top: var(--space-4, 16px);">'
-    );
+    expect(
+      await readFile(path.join(workTree, "index.html"), "utf-8")
+    ).toContain('<p style="margin-top: var(--space-4, 16px);">');
   });
 
   it("refuses an unknown token and a var() without a name", async () => {
@@ -220,7 +220,7 @@ describe("direct edit token references", { timeout: 30000 }, () => {
       style: { color: "var(primary)" },
     });
     expect(await errorOf(bad)).toEqual({ status: 422, error: "invalid_token" });
-    expect(await readFile(path.join(workTree, "index.html"), "utf8")).toBe(
+    expect(await readFile(path.join(workTree, "index.html"), "utf-8")).toBe(
       PAGE
     );
   });
@@ -233,9 +233,9 @@ describe("direct edit token references", { timeout: 30000 }, () => {
       style: { color: "var(--whatever)" },
     });
     expect(response.status).toBe(200);
-    expect(await readFile(path.join(workTree, "index.html"), "utf8")).toContain(
-      "color: var(--whatever);"
-    );
+    expect(
+      await readFile(path.join(workTree, "index.html"), "utf-8")
+    ).toContain("color: var(--whatever);");
   });
 });
 
@@ -271,7 +271,7 @@ describe("create token", { timeout: 60000 }, () => {
       },
     ];
     for (const item of cases) {
-      const before = await readFile(path.join(workTree, TOKENS_FILE), "utf8");
+      const before = await readFile(path.join(workTree, TOKENS_FILE), "utf-8");
       const count = (await listVersions(project)).length;
       const response = await createTokenCall(project, {
         group: item.group,
@@ -294,7 +294,7 @@ describe("create token", { timeout: 60000 }, () => {
         [...DESIGN_FILES].sort()
       );
       expect((await listVersions(project)).length).toBe(count + 1);
-      const after = await readFile(path.join(workTree, TOKENS_FILE), "utf8");
+      const after = await readFile(path.join(workTree, TOKENS_FILE), "utf-8");
       expectPureInsertion(before, after);
       expect(after).toContain(
         `\n    "${item.name}": {\n      "$value": ${JSON.stringify(item.value)}\n    }\n  }`
@@ -313,7 +313,7 @@ describe("create token", { timeout: 60000 }, () => {
       value: "4rem",
     });
     expect(response.status, await response.clone().text()).toBe(200);
-    const text = await readFile(path.join(workTree, TOKENS_FILE), "utf8");
+    const text = await readFile(path.join(workTree, TOKENS_FILE), "utf-8");
     const space = text.slice(text.indexOf('"space"'));
     expect(space.indexOf('"12"')).toBeLessThan(space.indexOf('"wide"'));
     expect(space.indexOf('"$type"')).toBeLessThan(space.indexOf('"wide"'));
@@ -334,7 +334,7 @@ describe("create token", { timeout: 60000 }, () => {
       value: "4rem",
     });
     expect(text.status, await text.clone().text()).toBe(200);
-    const css = await readFile(path.join(workTree, TOKENS_CSS_FILE), "utf8");
+    const css = await readFile(path.join(workTree, TOKENS_CSS_FILE), "utf-8");
     expect(css).toContain("--space-7:");
     expect(css).toContain("--text-5xl:");
   });
@@ -351,7 +351,7 @@ describe("create token", { timeout: 60000 }, () => {
     expect(response.status).toBe(200);
     const result = (await response.json()) as CreateTokenResult;
     const tokens = JSON.parse(
-      await readFile(path.join(workTree, TOKENS_FILE), "utf8")
+      await readFile(path.join(workTree, TOKENS_FILE), "utf-8")
     ) as TokenFile;
     expect(tokens.color["brand-2"]).toEqual({
       $value: "#ff5500",
@@ -363,7 +363,7 @@ describe("create token", { timeout: 60000 }, () => {
     );
     expect(entry?.darkValue).toMatch(/^oklch\(/);
     expect(
-      await readFile(path.join(workTree, TOKENS_CSS_FILE), "utf8")
+      await readFile(path.join(workTree, TOKENS_CSS_FILE), "utf-8")
     ).toMatch(/\.dark \{[^}]*--brand-2:/);
   });
 
@@ -485,9 +485,9 @@ describe("create token", { timeout: 60000 }, () => {
       applied: { style: ["color"], text: false },
     });
     expect((await listVersions(project)).length).toBe(count + 1);
-    expect(await readFile(path.join(workTree, "index.html"), "utf8")).toContain(
-      '<h1 style="color: var(--brand-2);" class="t">'
-    );
+    expect(
+      await readFile(path.join(workTree, "index.html"), "utf-8")
+    ).toContain('<h1 style="color: var(--brand-2);" class="t">');
     const types = seen.map((event) => event.type);
     expect(types).toEqual(
       expect.arrayContaining([
@@ -608,14 +608,14 @@ describe("create token", { timeout: 60000 }, () => {
     }
     expect(new Set(results.map((result) => result.version.id)).size).toBe(6);
     const tokens = JSON.parse(
-      await readFile(path.join(workTree, TOKENS_FILE), "utf8")
+      await readFile(path.join(workTree, TOKENS_FILE), "utf-8")
     ) as TokenFile;
     expect(
       [1, 2, 3, 4, 5].every(
         (index) => tokens.color[`brand-${index}`] !== undefined
       )
     ).toBe(true);
-    const css = await readFile(path.join(workTree, TOKENS_CSS_FILE), "utf8");
+    const css = await readFile(path.join(workTree, TOKENS_CSS_FILE), "utf-8");
     expect(
       [1, 2, 3, 4, 5].every((index) => css.includes(`--brand-${index}:`))
     ).toBe(true);

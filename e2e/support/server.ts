@@ -18,7 +18,7 @@ export const VITE_PORT_BASE = 5300 + E2E_PORT_OFFSET * 10;
 export const BASE_URL = `http://127.0.0.1:${STUDIO_PORT}`;
 export const PREVIEW_FRAGMENT = `.localhost:${PREVIEW_PORT}/`;
 export function previewOriginFor(projectId: string): string {
-  const hex = [...Buffer.from(projectId, "utf8")]
+  const hex = [...Buffer.from(projectId, "utf-8")]
     .map((byte) => byte.toString(16).padStart(2, "0"))
     .join("");
   return `http://p-${hex}.localhost:${PREVIEW_PORT}`;
@@ -38,7 +38,7 @@ interface E2eState {
 }
 
 export function readState(): E2eState {
-  return JSON.parse(readFileSync(STATE_FILE, "utf8")) as E2eState;
+  return JSON.parse(readFileSync(STATE_FILE, "utf-8")) as E2eState;
 }
 
 export function writeState(state: E2eState): void {

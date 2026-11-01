@@ -60,7 +60,7 @@ describe("workspace store", () => {
     expect(await store.add({ path: `${real}/` })).toEqual(added);
     expect((await store.list()).folders).toHaveLength(1);
     const saved = JSON.parse(
-      await readFile(path.join(dataDir, WORKSPACES_FILE), "utf8")
+      await readFile(path.join(dataDir, WORKSPACES_FILE), "utf-8")
     ) as { version: number; folders: unknown[] };
     expect(saved.version).toBe(1);
     expect(saved.folders).toHaveLength(1);

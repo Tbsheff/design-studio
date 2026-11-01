@@ -46,7 +46,7 @@ describe("comment store", () => {
     expect(created).toMatchObject({ n: 1, status: "queued", text: "Bigger" });
     const file = path.join(dataDir, "projects", "p1", "comments", "main.json");
     expect(existsSync(file)).toBe(true);
-    expect(JSON.parse(await readFile(file, "utf8")).comments).toHaveLength(1);
+    expect(JSON.parse(await readFile(file, "utf-8")).comments).toHaveLength(1);
     expect(await store.list("p1", "other")).toEqual([]);
     expect(events.at(-1)).toMatchObject({
       type: "comments.changed",

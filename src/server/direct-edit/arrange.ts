@@ -259,7 +259,7 @@ async function stateFor(
   );
   let state = files.get(target.file);
   if (!state) {
-    const original = await readFile(target.file, "utf8");
+    const original = await readFile(target.file, "utf-8");
     state = {
       target,
       original,

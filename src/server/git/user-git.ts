@@ -89,8 +89,8 @@ export function execTool(
     });
     child.once("close", (code) => {
       clearTimeout(timer);
-      const stdout = Buffer.concat(out).toString("utf8");
-      const stderr = Buffer.concat(err).toString("utf8").trim();
+      const stdout = Buffer.concat(out).toString("utf-8");
+      const stderr = Buffer.concat(err).toString("utf-8").trim();
       const name =
         `${path.basename(binary)} ${args.find((arg) => !arg.startsWith("-") && !arg.includes("=")) ?? ""}`.trim();
       if (timedOut)

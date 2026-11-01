@@ -61,9 +61,9 @@ test("UI fixes: disclosure, pan drag, custom size on Enter, settings persist, sv
   const main = mainDirection(project);
   await expect(frontFrame(page).locator("h1")).toHaveText("Pan Test Page");
   await api.waitForRuns(project.id, 1);
-  expect(readFileSync(path.join(main.workTree, "DESIGN.md"), "utf8")).toContain(
-    "#0B6E4F"
-  );
+  expect(
+    readFileSync(path.join(main.workTree, "DESIGN.md"), "utf-8")
+  ).toContain("#0B6E4F");
 
   await expect(
     page.locator(".prompt").getByTestId("data-disclosure")

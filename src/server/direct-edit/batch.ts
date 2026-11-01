@@ -125,7 +125,7 @@ async function groupFor(
   const key = await realpath(target.file).catch(() => target.file);
   let group = groups.get(key);
   if (!group) {
-    const original = await readFile(target.file, "utf8");
+    const original = await readFile(target.file, "utf-8");
     group = {
       target,
       original,

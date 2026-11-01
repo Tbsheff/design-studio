@@ -135,7 +135,7 @@ async function errorOf(
 
 async function readAll(workTree: string): Promise<string[]> {
   return Promise.all(
-    DESIGN_FILES.map((file) => readFile(path.join(workTree, file), "utf8"))
+    DESIGN_FILES.map((file) => readFile(path.join(workTree, file), "utf-8"))
   );
 }
 
@@ -303,7 +303,7 @@ describe("token preview", { timeout: 30000 }, () => {
     const { project, workTree } = await setup();
     await previewCss(project, [{ path: "radius.md", value: "12px" }]);
     const file = path.join(workTree, TOKENS_FILE);
-    const text = await readFile(file, "utf8");
+    const text = await readFile(file, "utf-8");
     await writeFile(file, text.replace('"primary": {', '"primary-2": {'));
     expect(
       (await preview(project, [{ path: "color.primary", value: "#ff0000" }]))
@@ -348,7 +348,7 @@ describe("token preview", { timeout: 30000 }, () => {
 describe("token update", { timeout: 30000 }, () => {
   it("edits only the changed lines and commits one version with a title", async () => {
     const { project, workTree } = await setup();
-    const before = await readFile(path.join(workTree, TOKENS_FILE), "utf8");
+    const before = await readFile(path.join(workTree, TOKENS_FILE), "utf-8");
     const seen: StudioEvent[] = [];
     bus.subscribe(project.id, (event) => seen.push(event));
     const response = await update(project, [
@@ -362,7 +362,7 @@ describe("token update", { timeout: 30000 }, () => {
       result.state.entries.find((entry) => entry.cssVar === "--radius-md")
         ?.value
     ).toBe("12px");
-    const after = await readFile(path.join(workTree, TOKENS_FILE), "utf8");
+    const after = await readFile(path.join(workTree, TOKENS_FILE), "utf-8");
     const diff = changedLines(before, after);
     expect(diff.added.filter((line) => line.includes("#ff0000"))).toHaveLength(
       1
@@ -375,7 +375,7 @@ describe("token update", { timeout: 30000 }, () => {
       '"$value": "oklch(55% 0.2 260)",',
       '"$value": "8px"',
     ]);
-    const css = await readFile(path.join(workTree, TOKENS_CSS_FILE), "utf8");
+    const css = await readFile(path.join(workTree, TOKENS_CSS_FILE), "utf-8");
     expect(css).toContain("--primary: #ff0000;");
     expect(css).toContain("--radius-md: 12px;");
     expect(await listVersions(project)).toHaveLength(baseline + 1);
@@ -393,12 +393,12 @@ describe("token update", { timeout: 30000 }, () => {
   it("adds and removes the $extensions block for dark values", async () => {
     const { project, workTree } = await setup();
     const file = path.join(workTree, TOKENS_FILE);
-    const before = await readFile(file, "utf8");
+    const before = await readFile(file, "utf-8");
     expect(
       (await update(project, [{ path: "color.accent", darkValue: "#00ff00" }]))
         .status
     ).toBe(200);
-    const added = await readFile(file, "utf8");
+    const added = await readFile(file, "utf-8");
     const accent = (JSON.parse(added) as { color: Record<string, unknown> })
       .color.accent;
     expect(accent).toEqual({
@@ -412,7 +412,7 @@ describe("token update", { timeout: 30000 }, () => {
       (await update(project, [{ path: "color.accent", darkValue: null }]))
         .status
     ).toBe(200);
-    expect(await readFile(file, "utf8")).toBe(before);
+    expect(await readFile(file, "utf-8")).toBe(before);
   });
 
   it("removes only the dark value of a token that has one", async () => {
@@ -422,7 +422,7 @@ describe("token update", { timeout: 30000 }, () => {
         .status
     ).toBe(200);
     const parsed = JSON.parse(
-      await readFile(path.join(workTree, TOKENS_FILE), "utf8")
+      await readFile(path.join(workTree, TOKENS_FILE), "utf-8")
     ) as { color: Record<string, unknown> };
     expect(parsed.color.primary).toEqual({
       $value: "oklch(55% 0.2 260)",

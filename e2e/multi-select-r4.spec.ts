@@ -67,7 +67,7 @@ async function shot(page: Page, name: string): Promise<void> {
 }
 
 function cardLines(file: string): string[] {
-  return readFileSync(file, "utf8")
+  return readFileSync(file, "utf-8")
     .split("\n")
     .filter(
       (line) => line.includes("<article") && line.includes('class="card"')
@@ -86,7 +86,7 @@ test("Multi-select: Shift+click toggles, Mixed radius, one batch write, one undo
   const project = await openProject(page, api, "Mixed Radius Cards");
   const main = mainDirection(project);
   const file = path.join(main.workTree, "index.html");
-  const read = () => readFileSync(file, "utf8");
+  const read = () => readFileSync(file, "utf-8");
   const cards = frontFrame(page).locator(".card");
   const boxes = page.locator(".overlay .box.selected");
   const radius = page.getByLabel("Border radius", { exact: true });

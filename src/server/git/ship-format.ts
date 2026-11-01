@@ -40,7 +40,7 @@ async function names(dir: string): Promise<string[]> {
 }
 
 async function packageJson(dir: string): Promise<Record<string, unknown>> {
-  return readFile(path.join(dir, "package.json"), "utf8")
+  return readFile(path.join(dir, "package.json"), "utf-8")
     .then((text) => JSON.parse(text) as Record<string, unknown>)
     .catch(() => ({}));
 }

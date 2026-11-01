@@ -150,7 +150,7 @@ export function createCliSession(store: PublishStore): CliSession {
       onSpawn: (spawned) => {
         child = spawned;
         const watch = (chunk: Buffer) => {
-          seen = (seen + chunk.toString("utf8")).slice(-20_000);
+          seen = (seen + chunk.toString("utf-8")).slice(-20_000);
           const match = LOGIN_URL.exec(seen);
           if (match && !login.url) login = { ...login, url: match[0] };
         };

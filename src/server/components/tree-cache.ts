@@ -66,7 +66,7 @@ export function cachedFileList(
 }
 
 async function countIn(file: string, pattern: RegExp): Promise<number> {
-  const code = await readFile(file, "utf8").catch(() => "");
+  const code = await readFile(file, "utf-8").catch(() => "");
   return code.match(pattern)?.length ?? 0;
 }
 

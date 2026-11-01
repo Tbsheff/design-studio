@@ -137,7 +137,7 @@ async function readNodesFile(
         "The studio reads this JSON file and writes the frame as markup into the page. It does not connect to Figma.",
     });
   }
-  return readFile(file, "utf8");
+  return readFile(file, "utf-8");
 }
 
 function summary(stats: FigmaImportResult["stats"]): string {

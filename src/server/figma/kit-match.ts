@@ -138,7 +138,7 @@ export async function loadKit(
 
 function safeRead(file: string): string {
   try {
-    return readFileSync(file, "utf8");
+    return readFileSync(file, "utf-8");
   } catch {
     return "";
   }

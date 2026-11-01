@@ -269,7 +269,7 @@ async function bodyTarget(
     scope.workTree,
     pageFile(scope, request.page)
   );
-  const doc = parse(await readFile(resolved.file, "utf8"), {
+  const doc = parse(await readFile(resolved.file, "utf-8"), {
     sourceCodeLocationInfo: true,
   });
   const html = doc.childNodes.find(
@@ -345,7 +345,7 @@ async function sourceOf(
   const resolved = await resolveSource(scope.workTree, item.source.file);
   return {
     resolved,
-    code: await readFile(resolved.file, "utf8"),
+    code: await readFile(resolved.file, "utf-8"),
     at: { line: item.source.line, col: item.source.col },
   };
 }

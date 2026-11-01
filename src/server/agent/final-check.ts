@@ -97,7 +97,7 @@ async function readBaselineFindings(
 ): Promise<BaselineFindings | null> {
   const text = await readFile(
     path.join(runsDir, baselineFindingsFile(runId)),
-    "utf8"
+    "utf-8"
   ).catch(() => null);
   if (text === null) return null;
   try {

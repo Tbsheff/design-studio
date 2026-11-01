@@ -26,7 +26,7 @@ async function cancelMidWrite(
 ): Promise<RunSummary> {
   await sendPrompt(page, prompt);
   await expect
-    .poll(() => readFileSync(indexFile, "utf8") !== before, {
+    .poll(() => readFileSync(indexFile, "utf-8") !== before, {
       timeout: 15_000,
       intervals: [50],
     })
@@ -61,7 +61,7 @@ test("E: cancel mid-edit, then discard; cancel again, then keep", async ({
   await api.waitForRuns(project.id, 1);
   const completed = await headVersion(api, project.id, main.id);
   const indexFile = path.join(main.workTree, "index.html");
-  const completedHtml = readFileSync(indexFile, "utf8");
+  const completedHtml = readFileSync(indexFile, "utf-8");
 
   await cancelMidWrite(
     page,
@@ -71,7 +71,7 @@ test("E: cancel mid-edit, then discard; cancel again, then keep", async ({
     completedHtml,
     "[slow] Add a long store history section"
   );
-  const partial = readFileSync(indexFile, "utf8");
+  const partial = readFileSync(indexFile, "utf-8");
   expect(partial).not.toBe(completedHtml);
   expect(partial.length).toBeLessThan(completedHtml.length);
 
@@ -98,7 +98,7 @@ test("E: cancel mid-edit, then discard; cancel again, then keep", async ({
 
   await banner.getByRole("button", { name: "Discard" }).click();
   await expect(banner).toHaveCount(0);
-  expect(readFileSync(indexFile, "utf8")).toBe(completedHtml);
+  expect(readFileSync(indexFile, "utf-8")).toBe(completedHtml);
   expect((await api.status(project.id, main.id)).dirty).toBe(false);
   await expect(frontFrame(page).locator(".card")).toHaveCount(3);
   await expect(page.locator("li.version")).toHaveCount(1);
@@ -111,7 +111,7 @@ test("E: cancel mid-edit, then discard; cancel again, then keep", async ({
     completedHtml,
     "[slow] Add an events calendar"
   );
-  const partialTwo = readFileSync(indexFile, "utf8");
+  const partialTwo = readFileSync(indexFile, "utf-8");
   await expect(banner).toContainText("Unfinished changes in 1 file");
   await banner.getByRole("button", { name: "Keep" }).click();
   await expect(banner).toHaveCount(0);
@@ -120,6 +120,6 @@ test("E: cancel mid-edit, then discard; cancel again, then keep", async ({
   expect(kept.meta.kind).toBe("keep");
   expect(kept.parentId).toBe(completed.id);
   expect(kept.changedFiles).toEqual(["index.html"]);
-  expect(readFileSync(indexFile, "utf8")).toBe(partialTwo);
+  expect(readFileSync(indexFile, "utf-8")).toBe(partialTwo);
   expect((await api.status(project.id, main.id)).dirty).toBe(false);
 });

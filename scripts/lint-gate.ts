@@ -29,7 +29,7 @@ const lint = (): Diagnostic[] => {
   const run = spawnSync(
     "node_modules/.bin/oxlint",
     ["-c", "oxlint.config.ts", "--format=json"],
-    { encoding: "utf8", maxBuffer: 2 ** 31 - 1 }
+    { encoding: "utf-8", maxBuffer: 2 ** 31 - 1 }
   );
   const parsed: { diagnostics?: Diagnostic[] } = JSON.parse(run.stdout || "{}");
   return parsed.diagnostics ?? [];
@@ -74,7 +74,9 @@ const budgetBreaks = (diagnostics: Diagnostic[]) =>
     .map((diagnostic) => `budget-0 ${diagnostic.filename}: ${diagnostic.code}`);
 
 const readBaseline = (): Baseline | undefined =>
-  existsSync(BASELINE) ? JSON.parse(readFileSync(BASELINE, "utf8")) : undefined;
+  existsSync(BASELINE)
+    ? JSON.parse(readFileSync(BASELINE, "utf-8"))
+    : undefined;
 
 const write = (baseline: Baseline) =>
   writeFileSync(BASELINE, `${JSON.stringify(baseline, null, 2)}\n`);

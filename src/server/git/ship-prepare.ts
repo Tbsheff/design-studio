@@ -239,7 +239,7 @@ async function shadowVersions(
   ]);
   const names = await readFile(
     path.join(ctx.projectDir, "version-names.json"),
-    "utf8"
+    "utf-8"
   )
     .then((text) => JSON.parse(text) as Record<string, string>)
     .catch(() => ({}) as Record<string, string>);
@@ -365,7 +365,7 @@ async function chatSummary(
   for (const { name } of dated
     .sort((a, b) => b.at - a.at)
     .slice(0, RUNS_SCANNED)) {
-    const run = await readFile(path.join(dir, name), "utf8")
+    const run = await readFile(path.join(dir, name), "utf-8")
       .then((text) => JSON.parse(text) as Partial<RunSummary>)
       .catch(() => null);
     if (

@@ -157,8 +157,8 @@ async function load(
   const hit = cache.get(projectDir);
   if (hit) return hit;
   const [states, jar] = await Promise.all([
-    readFile(path.join(projectDir, STATES_FILE), "utf8").catch(() => null),
-    readFile(path.join(projectDir, JAR_FILE), "utf8").catch(() => null),
+    readFile(path.join(projectDir, STATES_FILE), "utf-8").catch(() => null),
+    readFile(path.join(projectDir, JAR_FILE), "utf-8").catch(() => null),
   ]);
   const loaded = { states: parseStates(states), jar: parseJar(jar) };
   cache.set(projectDir, loaded);

@@ -502,7 +502,7 @@ class RequestGuard {
       response.status < 300 &&
       this.sheets.length < MAX_SHEETS
     )
-      this.sheets.push({ url, css: response.body.toString("utf8") });
+      this.sheets.push({ url, css: response.body.toString("utf-8") });
   }
 
   private refuseFailure(url: string, error: unknown): void {

@@ -17,7 +17,7 @@ import type { Project, RunSummary } from "../../src/shared/contracts";
 import { BACKUP_STATE } from "./ports";
 
 export function readState(): { dataDir: string; workDir: string; pid: number } {
-  return JSON.parse(readFileSync(BACKUP_STATE, "utf8")) as {
+  return JSON.parse(readFileSync(BACKUP_STATE, "utf-8")) as {
     dataDir: string;
     workDir: string;
     pid: number;
@@ -136,14 +136,14 @@ export function runFile(projectId: string, runId: string): RunSummary {
     "runs",
     `${runId}.json`
   );
-  return JSON.parse(readFileSync(file, "utf8")) as RunSummary;
+  return JSON.parse(readFileSync(file, "utf-8")) as RunSummary;
 }
 
 export function git(projectId: string, args: string[]): string {
   const gitDir = path.join(readState().dataDir, "projects", projectId, "git");
   return execFileSync("git", args, {
     env: { ...process.env, GIT_DIR: gitDir },
-    encoding: "utf8",
+    encoding: "utf-8",
   });
 }
 

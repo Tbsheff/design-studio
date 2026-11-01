@@ -87,7 +87,7 @@ export async function readProjectCanvas(
   project: Project,
   projectDir: ProjectDirOf | null
 ): Promise<{ canvas: CanvasFile | null; text: string | null }> {
-  const text = await readFile(canvasFileOf(project, projectDir), "utf8").catch(
+  const text = await readFile(canvasFileOf(project, projectDir), "utf-8").catch(
     () => null
   );
   if (text === null)
@@ -114,7 +114,7 @@ export async function setAsideLegacyCanvas(
   if (!project.app) return null;
   const own = canvasFileOf(project, projectDir);
   if (
-    await readFile(own, "utf8").then(
+    await readFile(own, "utf-8").then(
       () => true,
       () => false
     )
@@ -143,7 +143,7 @@ function hashOf(text: string): string {
 export async function readCanvasAt(
   workTree: string
 ): Promise<{ canvas: CanvasFile | null; text: string | null }> {
-  const text = await readFile(canvasPath(workTree), "utf8").catch(() => null);
+  const text = await readFile(canvasPath(workTree), "utf-8").catch(() => null);
   if (text === null) return { canvas: null, text: null };
   return { canvas: parseCanvasText(text), text };
 }
@@ -201,7 +201,7 @@ export function createCanvasService(
   ): Promise<CanvasSnapshot> => {
     const text = serializeCanvasFile(canvas);
     const file = canvasFileOf(project, projectDir);
-    const current = await readFile(file, "utf8").catch(() => null);
+    const current = await readFile(file, "utf-8").catch(() => null);
     const saved = parseCanvasText(text) ?? emptyCanvasFile();
     const snapshot = { canvas: saved, hash: hashOf(text) };
     if (current === text) return snapshot;

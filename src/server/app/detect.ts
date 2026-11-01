@@ -17,7 +17,7 @@ export async function readPackage(
 ): Promise<Record<string, unknown> | null> {
   try {
     const parsed = JSON.parse(
-      await readFile(path.join(dir, "package.json"), "utf8")
+      await readFile(path.join(dir, "package.json"), "utf-8")
     ) as unknown;
     return typeof parsed === "object" && parsed !== null
       ? (parsed as Record<string, unknown>)
@@ -66,7 +66,7 @@ export async function workspaceGlobs(
 ): Promise<string[] | null> {
   const pnpmFile = path.join(root, "pnpm-workspace.yaml");
   if (existsSync(pnpmFile))
-    return globsFromPnpmWorkspace(await readFile(pnpmFile, "utf8"));
+    return globsFromPnpmWorkspace(await readFile(pnpmFile, "utf-8"));
   const workspaces = pkg?.workspaces;
   if (Array.isArray(workspaces))
     return workspaces.filter(

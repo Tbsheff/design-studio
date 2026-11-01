@@ -315,7 +315,7 @@ export function createDirectStore(deps: DirectDeps) {
     async syncIndex(project: Project, direction: Direction): Promise<void> {
       const key = deps.keyOf(project, direction);
       const marker = deps.staleMarkerOf(project, direction);
-      const stale = (await readFile(marker, "utf8").catch(() => "")).trim();
+      const stale = (await readFile(marker, "utf-8").catch(() => "")).trim();
       if (stale !== "") {
         await deps.resetIndex(project, direction, stale);
         await rm(marker, { force: true });

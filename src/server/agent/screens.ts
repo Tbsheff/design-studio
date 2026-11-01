@@ -134,12 +134,12 @@ async function changedLines(
 ): Promise<ChangedFile> {
   const [before, after] = await Promise.all([
     baseFile(file).catch(() => null),
-    readFile(path.join(workTree, file), "utf8").catch(() => null),
+    readFile(path.join(workTree, file), "utf-8").catch(() => null),
   ]);
   if (before === null || after === null) return { file, lines: null };
   return {
     file,
-    lines: changedLineRanges(Buffer.from(before).toString("utf8"), after),
+    lines: changedLineRanges(Buffer.from(before).toString("utf-8"), after),
   };
 }
 

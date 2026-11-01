@@ -154,7 +154,7 @@ async function waitForMarker(
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     if (existsSync(file))
-      return JSON.parse(readFileSync(file, "utf8")) as Record<string, unknown>;
+      return JSON.parse(readFileSync(file, "utf-8")) as Record<string, unknown>;
     await new Promise((resolve) => setTimeout(resolve, 200));
   }
   return null;
@@ -165,7 +165,7 @@ function listenerPid(port: number): number | null {
     const out = execFileSync(
       "lsof",
       ["-nP", `-iTCP:${port}`, "-sTCP:LISTEN", "-t"],
-      { encoding: "utf8" }
+      { encoding: "utf-8" }
     ).trim();
     return out ? Number(out.split("\n")[0]) : null;
   } catch {
@@ -259,7 +259,7 @@ test("AC-51: preview frames cannot reach studio credentials or API", async ({
   );
   rmSync(marker, { force: true });
   const viteConfig = path.join(mainDirection(react).workTree, "vite.config.ts");
-  const originalConfig = readFileSync(viteConfig, "utf8");
+  const originalConfig = readFileSync(viteConfig, "utf-8");
   writeFileSync(
     viteConfig,
     `import { defineConfig } from 'vite';

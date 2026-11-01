@@ -85,7 +85,7 @@ async function readInside(
   if (!root || !real) return null;
   const rel = path.relative(root, real);
   if (!rel || rel.startsWith("..") || path.isAbsolute(rel)) return null;
-  return readFile(real, "utf8").catch(() => null);
+  return readFile(real, "utf-8").catch(() => null);
 }
 
 interface Slice {

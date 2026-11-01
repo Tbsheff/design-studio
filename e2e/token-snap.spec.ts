@@ -153,7 +153,7 @@ test("token snap: picker, auto-snap, raw badge, create token with apply, undo", 
     .first()
     .click();
   await expect
-    .poll(() => readFileSync(indexFile, "utf8"))
+    .poll(() => readFileSync(indexFile, "utf-8"))
     .toContain("color: var(--primary)");
   await expect(
     page.getByRole("button", { name: "Text color: token --primary" })
@@ -164,9 +164,9 @@ test("token snap: picker, auto-snap, raw badge, create token with apply, undo", 
   await color.fill(near);
   await color.press("Enter");
   await expect
-    .poll(() => readFileSync(indexFile, "utf8"))
+    .poll(() => readFileSync(indexFile, "utf-8"))
     .toContain("color: var(--accent)");
-  expect(readFileSync(indexFile, "utf8")).not.toContain(near);
+  expect(readFileSync(indexFile, "utf-8")).not.toContain(near);
   await expect(page.locator(".tk-note")).toContainText("Snapped to --accent");
   await expect(
     page.getByRole("button", { name: "Text color: token --accent" })
@@ -176,13 +176,13 @@ test("token snap: picker, auto-snap, raw badge, create token with apply, undo", 
   await color.fill(far);
   await color.press("Enter");
   await expect
-    .poll(() => readFileSync(indexFile, "utf8"))
+    .poll(() => readFileSync(indexFile, "utf-8"))
     .toContain(`color: ${far}`);
   const rawBadge = pickerButton;
   await expect(rawBadge).toHaveAccessibleDescription(/^Raw value/);
   const beforeCreate = await settledCount(page, api, project.id, main.id);
-  const sourceRaw = readFileSync(indexFile, "utf8");
-  const tokensRaw = readFileSync(tokensJson, "utf8");
+  const sourceRaw = readFileSync(indexFile, "utf-8");
+  const tokensRaw = readFileSync(tokensJson, "utf-8");
 
   const menu = page.getByRole("menu", { name: "Raw value" });
   await shoot(
@@ -223,13 +223,13 @@ test("token snap: picker, auto-snap, raw badge, create token with apply, undo", 
   await expect(dialog).toBeHidden();
 
   await expect
-    .poll(() => readFileSync(indexFile, "utf8"))
+    .poll(() => readFileSync(indexFile, "utf-8"))
     .toContain("color: var(--brand-2)");
-  const created = JSON.parse(readFileSync(tokensJson, "utf8")) as {
+  const created = JSON.parse(readFileSync(tokensJson, "utf-8")) as {
     color: Record<string, { $value?: string }>;
   };
   expect(formatHex(created.color["brand-2"]?.$value ?? "")).toBe(far);
-  expect(readFileSync(tokensCss, "utf8")).toContain("--brand-2");
+  expect(readFileSync(tokensCss, "utf-8")).toContain("--brand-2");
   expect(await settledCount(page, api, project.id, main.id)).toBe(
     beforeCreate + 1
   );
@@ -248,8 +248,8 @@ test("token snap: picker, auto-snap, raw badge, create token with apply, undo", 
 
   await page.locator(".ins-header .ins-tag").click();
   await page.keyboard.press("ControlOrMeta+z");
-  await expect.poll(() => readFileSync(indexFile, "utf8")).toBe(sourceRaw);
-  expect(readFileSync(tokensJson, "utf8")).toBe(tokensRaw);
-  expect(readFileSync(tokensJson, "utf8")).not.toContain("brand-2");
-  expect(readFileSync(tokensCss, "utf8")).not.toContain("--brand-2");
+  await expect.poll(() => readFileSync(indexFile, "utf-8")).toBe(sourceRaw);
+  expect(readFileSync(tokensJson, "utf-8")).toBe(tokensRaw);
+  expect(readFileSync(tokensJson, "utf-8")).not.toContain("brand-2");
+  expect(readFileSync(tokensCss, "utf-8")).not.toContain("--brand-2");
 });

@@ -80,7 +80,7 @@ export function parseFrontMatter(source: string): Record<string, string> {
 }
 
 async function readJsonFile(file: string): Promise<unknown> {
-  return JSON.parse(await readFile(file, "utf8")) as unknown;
+  return JSON.parse(await readFile(file, "utf-8")) as unknown;
 }
 
 async function isDir(target: string): Promise<boolean> {
@@ -137,7 +137,7 @@ async function parsedSkillFile(
   const stamp = `${info.mtimeMs}:${info.ctimeMs}:${info.size}:${entryName}`;
   const known = parsedSkills.get(file);
   if (known?.stamp === stamp) return known.parsed;
-  const parsed = parseSkillText(await readFile(file, "utf8"), entryName);
+  const parsed = parseSkillText(await readFile(file, "utf-8"), entryName);
   if (parsedSkills.size >= MAX_PARSED_ENTRIES) parsedSkills.clear();
   parsedSkills.set(file, { stamp, parsed });
   return parsed;

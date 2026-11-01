@@ -224,7 +224,7 @@ interface MockFlags {
 }
 
 async function mockShellWrite(absolute: string): Promise<void> {
-  const current = await readFile(absolute, "utf8").catch(() => null);
+  const current = await readFile(absolute, "utf-8").catch(() => null);
   const next =
     current === null
       ? "MOCK_VALUE=1\n"
@@ -597,7 +597,7 @@ async function editSelectionFile(
   prompt: string
 ): Promise<void> {
   const absolute = resolveSelectionFile(workTree, file);
-  let source = await readFile(absolute, "utf8");
+  let source = await readFile(absolute, "utf-8");
   const ordered = [...selections].sort(compareSelectionsBottomUp);
   for (const selection of ordered) {
     const next = applySelectionEdit(
@@ -656,7 +656,7 @@ async function runCommentEdit(
   const done: number[] = [];
   for (const [file, fileComments] of byFile) {
     const absolute = resolveSelectionFile(workTree, file);
-    let source = await readFile(absolute, "utf8");
+    let source = await readFile(absolute, "utf-8");
     const ordered = [...fileComments].sort((a, b) =>
       compareSelectionsBottomUp(a.element, b.element)
     );
@@ -708,7 +708,7 @@ async function writeHtmlChange(
     return "Created `index.html`.";
   }
   await session.say(`Adding a note for "${text}".`);
-  const source = await readFile(indexPath, "utf8");
+  const source = await readFile(indexPath, "utf-8");
   await session.writeFileAsTool(
     "Edit",
     "index.html",
@@ -723,7 +723,7 @@ async function runHeadingEdit(
   text: string
 ): Promise<string> {
   const indexPath = path.join(workTree, "index.html");
-  const source = await readFile(indexPath, "utf8");
+  const source = await readFile(indexPath, "utf-8");
   await session.say(`Changing the heading to "${text}".`);
   const next = source.replace(
     /(<h1\b[^>]*>)[^<\n]*(<\/h1>)/,
@@ -756,7 +756,7 @@ async function runReactEdit(
 ): Promise<string> {
   const appPath = path.join(workTree, "src", "App.tsx");
   const current = (await exists(appPath))
-    ? await readFile(appPath, "utf8")
+    ? await readFile(appPath, "utf-8")
     : "";
   const heading = /(<h1\b[^>]*>)([\s\S]*?)(<\/h1>)/.exec(current);
   await session.say(`Setting the heading to "${text}".`);
@@ -961,7 +961,7 @@ async function runElementVariantMock(
   await session.say(
     `Trying option ${variation.label} of the ${scope.tag}: ${variation.title}.`
   );
-  const source = await readFile(path.join(workTree, scope.file), "utf8");
+  const source = await readFile(path.join(workTree, scope.file), "utf-8");
   const end = source.length - scope.suffixLength;
   const element = source.slice(scope.start, end);
   const openEnd = findOpenTagEnd(element, 0);

@@ -124,19 +124,19 @@ test("C: import a Vite folder, edit via studio, build it, nothing else touched",
     true
   );
   expect(nodeModulesViteCache()).toBe(viteCacheBefore);
-  const app = readFileSync(path.join(folder, "src", "App.tsx"), "utf8");
+  const app = readFileSync(path.join(folder, "src", "App.tsx"), "utf-8");
   expect(app).toContain(`<h1>${EDIT_PROMPT}</h1>`);
   expect(app).not.toContain("data-studio-loc");
 
   const output = execFileSync("npx", ["vite", "build"], {
     cwd: folder,
-    encoding: "utf8",
+    encoding: "utf-8",
   });
   expect(output).toMatch(/built in/);
   const assetsDir = path.join(folder, "dist", "assets");
   const builtJs = readdirSync(assetsDir).filter((name) => name.endsWith(".js"));
   expect(builtJs.length).toBeGreaterThan(0);
-  const bundle = readFileSync(path.join(assetsDir, builtJs[0] ?? ""), "utf8");
+  const bundle = readFileSync(path.join(assetsDir, builtJs[0] ?? ""), "utf-8");
   expect(bundle).toContain(EDIT_PROMPT);
   expect(bundle).not.toContain("data-studio-loc");
   expect(bundle).not.toContain("__studio");

@@ -161,7 +161,7 @@ test("AC-26 selection highlight matches the element and leaves the DOM unchanged
   const { project, folder } = await importHtmlFixture(page, FIXTURE);
   const frame = frontFrame(page);
   await expect(frame.locator("h1")).toContainText("Fixture");
-  const fileBefore = readFileSync(path.join(folder, "index.html"), "utf8");
+  const fileBefore = readFileSync(path.join(folder, "index.html"), "utf-8");
   const domBefore = await (
     await frameOf(page)
   ).evaluate(() => document.documentElement.outerHTML);
@@ -190,7 +190,7 @@ test("AC-26 selection highlight matches the element and leaves the DOM unchanged
   const domEnd = await (
     await frameOf(page)
   ).evaluate(() => document.documentElement.outerHTML);
-  const fileAfter = readFileSync(path.join(folder, "index.html"), "utf8");
+  const fileAfter = readFileSync(path.join(folder, "index.html"), "utf-8");
   evidence("AC-26", {
     projectId: project.id,
     domIdenticalAfterSelect: domBefore === domAfterSelect,
@@ -220,7 +220,7 @@ test("AC-30 AC-32 AC-27 shift-select two elements, one prompt, one version with 
   await expect(frame.locator("h1")).toContainText("Fixture");
   const versionsBefore = await api.versions(project.id, main.id);
   const file = path.join(folder, "index.html");
-  const before = readFileSync(file, "utf8");
+  const before = readFileSync(file, "utf-8");
   await setSelectMode(page, true);
   await frame.locator(".card.first h2.card-title").click();
   await frame
@@ -246,7 +246,7 @@ test("AC-30 AC-32 AC-27 shift-select two elements, one prompt, one version with 
     .locator("h1, p, button, a")
     .evaluateAll((els) => els.map((el) => getComputedStyle(el).color));
   const versionsAfter = await api.versions(project.id, main.id);
-  const after = readFileSync(file, "utf8");
+  const after = readFileSync(file, "utf-8");
   const diff = changedLines(before, after);
   const stored = runFile(project.id, run.id);
   const userText = buildUserText({ request: stored.request, designMd: "" });

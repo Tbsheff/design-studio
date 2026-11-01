@@ -701,7 +701,7 @@ export async function readSourcePage(
   pagePath: string
 ): Promise<string> {
   const page = sourcePagePath(pagePath);
-  const html = await readFile(path.join(workTree, page), "utf8").catch(() => {
+  const html = await readFile(path.join(workTree, page), "utf-8").catch(() => {
     throw new NotFoundError(`No page ${page} in the source project`);
   });
   return html.slice(0, SOURCE_MAX);

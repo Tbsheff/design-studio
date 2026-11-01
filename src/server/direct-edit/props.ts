@@ -429,7 +429,7 @@ export async function planSetProps(
   plan: PropsPlan;
 }> {
   const target = await resolveSource(workTree, request.source.file);
-  const original = await readFile(target.file, "utf8");
+  const original = await readFile(target.file, "utf-8");
   const instance = await readInstance(workTree, {
     ...request.source,
     file: target.relative,
@@ -593,7 +593,7 @@ export async function planVariantClasses(
       `${edit.file} is not a .tsx or .jsx file; cva() variants are edited only in component files`
     );
   const target = await resolveSource(workTree, edit.file);
-  const original = await readFile(target.file, "utf8");
+  const original = await readFile(target.file, "utf-8");
   const ast = parseModuleFile(original, target.file);
   if (!ast)
     throw new DirectEditError(

@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 
 const css = readFileSync(
   fileURLToPath(new URL("./inspector.css", import.meta.url)),
-  "utf8"
+  "utf-8"
 );
 
 function declarations(

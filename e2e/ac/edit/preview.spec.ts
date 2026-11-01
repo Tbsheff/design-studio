@@ -35,7 +35,7 @@ test("AC-17 canvas shows partial writes while the run is still running", async (
   const frame = frontFrame(page);
   await expect(frame.locator(".card")).toHaveCount(3);
   const indexFile = path.join(main.workTree, "index.html");
-  const completedSize = readFileSync(indexFile, "utf8").length;
+  const completedSize = readFileSync(indexFile, "utf-8").length;
 
   await sendPrompt(page, "[slow] Streaming note");
   await expect
@@ -69,7 +69,7 @@ test("AC-17 canvas shows partial writes while the run is still running", async (
       status: statusAfter,
       cards,
       h1,
-      diskSize: readFileSync(indexFile, "utf8").length,
+      diskSize: readFileSync(indexFile, "utf-8").length,
     };
     observations.push(obs);
     if (status === "running" && statusAfter === "running" && cards < 3) {
@@ -219,7 +219,7 @@ test("AC-20 HTML reload keeps zoom, viewport, direction, chat scroll, draft, sel
   const fileB = path.join(directionB.workTree, "index.html");
   writeFileSync(
     fileB,
-    readFileSync(fileB, "utf8").replace(
+    readFileSync(fileB, "utf-8").replace(
       "A clear starting point.",
       "Reloaded lede text."
     )
@@ -415,7 +415,7 @@ test("AC-23 HTML console and thrown errors appear in the studio", async ({
   const main = mainDirection(project);
   await expect(frontFrame(page).locator("h1")).toHaveText("Error Surface");
   const file = path.join(main.workTree, "index.html");
-  const source = readFileSync(file, "utf8");
+  const source = readFileSync(file, "utf-8");
   const withErrors = source.replace(
     "<body>",
     `<body>\n  <script>console.error('ac23 early console boom');</script>\n  <script>setTimeout(function () { throw new Error('ac23 thrown later'); }, 300);</script>`
@@ -468,7 +468,7 @@ test("AC-24 last completed design stays viewable while a new version generates",
   const frontSrc = await page.locator("iframe.frame.front").getAttribute("src");
   const liveDisk = readFileSync(
     path.join(mainDirection(project).workTree, "index.html"),
-    "utf8"
+    "utf-8"
   ).length;
   await page.waitForTimeout(1600);
   const stillOld = {

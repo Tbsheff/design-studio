@@ -49,7 +49,7 @@ async function readRun(file: string): Promise<RunSummary | null> {
     return known.summary;
   let summary: RunSummary | null = null;
   try {
-    const parsed: unknown = JSON.parse(await readFile(file, "utf8"));
+    const parsed: unknown = JSON.parse(await readFile(file, "utf-8"));
     summary = isRunSummary(parsed) ? parsed : null;
   } catch {
     summary = null;

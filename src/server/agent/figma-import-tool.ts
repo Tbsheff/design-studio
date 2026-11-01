@@ -89,7 +89,7 @@ async function nodesText(deps: DirectToolDeps, file: string): Promise<string> {
   const info = await stat(absolute);
   if (info.size > FIGMA_NODES_MAX_BYTES)
     throw new Error(`${file} is larger than 10 MB`);
-  return readFile(absolute, "utf8");
+  return readFile(absolute, "utf-8");
 }
 
 export async function runFigmaImport(

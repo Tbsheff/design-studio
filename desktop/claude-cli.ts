@@ -137,7 +137,7 @@ export function compareClaudeVersion(
 
 export function expectedClaudeVersion(
   modulesDir: string,
-  read: (file: string) => string = (file) => readFileSync(file, "utf8")
+  read: (file: string) => string = (file) => readFileSync(file, "utf-8")
 ): string | null {
   try {
     const manifest = JSON.parse(read(path.join(modulesDir, SDK_PACKAGE))) as {

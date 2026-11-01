@@ -167,7 +167,7 @@ describe("R7-4 rewind per message", { timeout: 60_000 }, () => {
     const workTree = projects.mainDirection(
       await projects.get(project.id)
     ).workTree;
-    const onDisk = await readFile(path.join(workTree, "index.html"), "utf8");
+    const onDisk = await readFile(path.join(workTree, "index.html"), "utf-8");
     expect(onDisk).toBe(await fileAt(project.id, second, "index.html"));
     expect(onDisk).toContain("Add a menu section");
     expect(onDisk).not.toContain("Add opening hours");
@@ -209,14 +209,14 @@ describe("R7-4 rewind per message", { timeout: 60_000 }, () => {
     ).toHaveLength(4);
     const html = await readFile(
       path.join(fork.data.workTree, "index.html"),
-      "utf8"
+      "utf-8"
     );
     expect(html).toContain("Add a menu section");
     expect(html).toContain("Add weekend hours");
     expect(html).not.toContain("Add opening hours");
     const main = await readFile(
       path.join(projects.mainDirection(after).workTree, "index.html"),
-      "utf8"
+      "utf-8"
     );
     expect(main).toContain("Add a contact form");
   });

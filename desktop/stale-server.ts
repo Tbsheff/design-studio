@@ -25,7 +25,7 @@ export function clearServerPid(file: string): void {
 function readRecord(file: string): ServerPidRecord | null {
   try {
     const parsed = JSON.parse(
-      readFileSync(file, "utf8")
+      readFileSync(file, "utf-8")
     ) as Partial<ServerPidRecord>;
     return Number.isInteger(parsed.pid) ? (parsed as ServerPidRecord) : null;
   } catch {
@@ -38,7 +38,7 @@ function orphanCommand(pid: number): string {
     const out = execFileSync(
       "/bin/ps",
       ["-o", "ppid=,command=", "-p", String(pid)],
-      { encoding: "utf8" }
+      { encoding: "utf-8" }
     ).trim();
     const match = /^(\d+)\s+(.*)$/s.exec(out);
     return match && match[1] === "1" ? (match[2] ?? "") : "";

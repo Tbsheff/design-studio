@@ -150,7 +150,7 @@ export async function readScanFiles(
   return Promise.all(
     relative.map(async (file) => ({
       path: file,
-      text: await readFile(path.join(workTree, file), "utf8"),
+      text: await readFile(path.join(workTree, file), "utf-8"),
     }))
   );
 }

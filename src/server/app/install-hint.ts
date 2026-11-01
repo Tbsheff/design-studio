@@ -26,7 +26,7 @@ function lockManager(dir: string): PackageManager | null {
 function declaredManager(dir: string): PackageManager | null {
   try {
     const pkg = JSON.parse(
-      readFileSync(path.join(dir, "package.json"), "utf8")
+      readFileSync(path.join(dir, "package.json"), "utf-8")
     ) as { packageManager?: unknown };
     const name =
       typeof pkg.packageManager === "string"

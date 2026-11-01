@@ -108,10 +108,10 @@ export function runCf(
       child.kill("SIGTERM");
     }, options.timeoutMs ?? DEFAULT_TIMEOUT_MS);
     child.stdout?.on("data", (chunk: Buffer) => {
-      if (stdout.length < OUTPUT_MAX) stdout += chunk.toString("utf8");
+      if (stdout.length < OUTPUT_MAX) stdout += chunk.toString("utf-8");
     });
     child.stderr?.on("data", (chunk: Buffer) => {
-      if (stderr.length < OUTPUT_MAX) stderr += chunk.toString("utf8");
+      if (stderr.length < OUTPUT_MAX) stderr += chunk.toString("utf-8");
     });
     child.on("error", (error) => {
       clearTimeout(timer);

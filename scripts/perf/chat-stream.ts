@@ -246,7 +246,7 @@ function appendHistory(
   template: RunSummary
 ): void {
   const file = path.join(dataDir, "projects", project.id, "events.jsonl");
-  const lines = readFileSync(file, "utf8").trim().split("\n");
+  const lines = readFileSync(file, "utf-8").trim().split("\n");
   const last = JSON.parse(lines.at(-1) ?? "{}") as StudioEvent;
   let seq = last.seq;
   const directionId = template.directionId;

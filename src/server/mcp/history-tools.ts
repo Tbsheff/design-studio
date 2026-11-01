@@ -381,7 +381,7 @@ async function batchFiles(
   if (new Set(planned.map((file) => file.relative)).size !== planned.length)
     throw new EditError("Each path can be in files only once.");
   const befores = await Promise.all(
-    planned.map((file) => readFile(file.absolute, "utf8").catch(() => null))
+    planned.map((file) => readFile(file.absolute, "utf-8").catch(() => null))
   );
   const changed = planned.filter(
     (file, index) => befores[index] !== file.content

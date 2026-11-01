@@ -106,7 +106,7 @@ export function createWorkspaceStore(
   const read = async (): Promise<WorkspacesFile> => {
     let raw: string;
     try {
-      raw = await readFile(file, "utf8");
+      raw = await readFile(file, "utf-8");
     } catch (error) {
       if (isNodeError(error) && error.code === "ENOENT")
         return { version: 1, folders: [] };

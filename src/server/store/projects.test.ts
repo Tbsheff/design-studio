@@ -133,7 +133,7 @@ describe("project store", () => {
     expect(
       await readFile(
         path.join(project.directions[0]!.workTree, "DESIGN.md"),
-        "utf8"
+        "utf-8"
       )
     ).toBe("# Brand\n");
   });
@@ -155,7 +155,7 @@ describe("project store", () => {
     expect(project.settings.maxBudgetUsd).toBeNull();
     const file = path.join(projects.projectDir(project.id), "project.json");
     const legacy = async (maxBudgetUsd: number) => {
-      const stored = JSON.parse(await readFile(file, "utf8"));
+      const stored = JSON.parse(await readFile(file, "utf-8"));
       delete stored.settingsVersion;
       stored.settings.maxBudgetUsd = maxBudgetUsd;
       await writeFile(file, JSON.stringify(stored));
@@ -166,7 +166,7 @@ describe("project store", () => {
     expect((await projects.get(project.id)).settings.maxBudgetUsd).toBe(0.75);
     await legacy(2);
     await projects.updateSettings(project.id, { maxTurns: 9 });
-    expect(JSON.parse(await readFile(file, "utf8"))).toMatchObject({
+    expect(JSON.parse(await readFile(file, "utf-8"))).toMatchObject({
       settingsVersion: 2,
       settings: { maxBudgetUsd: null, maxTurns: 9 },
     });

@@ -80,7 +80,7 @@ export class SaveCheckError extends Error {
 
 async function readOptional(file: string): Promise<string | null> {
   try {
-    return await readFile(file, "utf8");
+    return await readFile(file, "utf-8");
   } catch (error) {
     if (isNodeError(error) && error.code === "ENOENT") return null;
     throw error;

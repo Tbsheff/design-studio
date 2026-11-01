@@ -36,35 +36,35 @@ const GOLDEN: {
   {
     name: "layout-clipping.html",
     source: () =>
-      readFileSync(path.join(FIXTURES, "layout-clipping.html"), "utf8"),
+      readFileSync(path.join(FIXTURES, "layout-clipping.html"), "utf-8"),
     sha256: "0862c64accbd840e39c811b526b401e2623a22cb5eabe8944b25ed1f2b647a4b",
     locCount: 27,
   },
   {
     name: "pricing-doubled.html",
     source: () =>
-      readFileSync(path.join(FIXTURES, "pricing-doubled.html"), "utf8"),
+      readFileSync(path.join(FIXTURES, "pricing-doubled.html"), "utf-8"),
     sha256: "a933bf3d3ca18ac4e37f402383e01f66cab07bd9ef29e68c5bb5771f3a9fcbab",
     locCount: 207,
   },
   {
     name: "pricing-generic.html",
     source: () =>
-      readFileSync(path.join(FIXTURES, "pricing-generic.html"), "utf8"),
+      readFileSync(path.join(FIXTURES, "pricing-generic.html"), "utf-8"),
     sha256: "e6f9abb12a2a761f0d5b117854ea16cef3bf3e1430c3e1c0647bb406e6dd0d96",
     locCount: 31,
   },
   {
     name: "pricing-responsive.html",
     source: () =>
-      readFileSync(path.join(FIXTURES, "pricing-responsive.html"), "utf8"),
+      readFileSync(path.join(FIXTURES, "pricing-responsive.html"), "utf-8"),
     sha256: "75a1d1296e3b5bbdf2e47ba054e31ce82c72a843a1504ee0e661ae8cba72d0f0",
     locCount: 31,
   },
   {
     name: "pricing-table-first.html",
     source: () =>
-      readFileSync(path.join(FIXTURES, "pricing-table-first.html"), "utf8"),
+      readFileSync(path.join(FIXTURES, "pricing-table-first.html"), "utf-8"),
     sha256: "bb287c54c4cb5e334cfd4acd66930aecc3d839dc6e20050baff0beba13ec74f4",
     locCount: 19,
   },
@@ -73,7 +73,7 @@ const GOLDEN: {
     source: () =>
       readFileSync(
         path.join(FIXTURES, "pricing-table-then-cards.html"),
-        "utf8"
+        "utf-8"
       ),
     sha256: "06bd34c1922a863b0413628bad00ed643e1946bf561ad2509e8ece4c7cc2d254",
     locCount: 31,
@@ -81,7 +81,7 @@ const GOLDEN: {
   {
     name: "quality-checks.html",
     source: () =>
-      readFileSync(path.join(FIXTURES, "quality-checks.html"), "utf8"),
+      readFileSync(path.join(FIXTURES, "quality-checks.html"), "utf-8"),
     sha256: "e68266d39a416dc635481647e596d29283d87d117e86d5747a1a250c35f8dd01",
     locCount: 19,
   },

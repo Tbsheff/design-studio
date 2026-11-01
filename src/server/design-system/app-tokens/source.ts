@@ -76,7 +76,7 @@ export async function readAppTokensAt(
     realRoot,
     file,
     absolute,
-    await readFile(absolute, "utf8")
+    await readFile(absolute, "utf-8")
   );
   cache.set(absolute, { stamp, loaded });
   return loaded;

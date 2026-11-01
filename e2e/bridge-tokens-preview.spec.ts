@@ -70,7 +70,7 @@ interface Probe {
 
 async function tokensCss(): Promise<string> {
   const parsed = parseTokenFile(
-    await readFile(path.join(PACK_DIR, "tokens.json"), "utf8")
+    await readFile(path.join(PACK_DIR, "tokens.json"), "utf-8")
   );
   if (!parsed.file) throw new Error(parsed.error ?? "bad fixture");
   return compileTokens(parsed.file).css;

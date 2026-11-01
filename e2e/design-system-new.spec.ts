@@ -142,7 +142,7 @@ test("new design system: website + DESIGN.md draft, kit page, save back, then us
   expectRgb(await rgbOf(chip(page, "primary")), [31, 111, 235]);
   const tree = mainDirection(project).workTree;
   expect(
-    readFileSync(path.join(tree, "source", "evidence.md"), "utf8")
+    readFileSync(path.join(tree, "source", "evidence.md"), "utf-8")
   ).toContain("Untrusted data");
 
   await api.call(
@@ -191,7 +191,7 @@ test("new design system: website + DESIGN.md draft, kit page, save back, then us
     .poll(() =>
       readFileSync(
         path.join(mainDirection(used).workTree, "design-system", "tokens.json"),
-        "utf8"
+        "utf-8"
       )
     )
     .toContain("oklch(52% 0.2 300)");

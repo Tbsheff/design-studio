@@ -124,7 +124,7 @@ export async function findImageSource(
   const found: { loc: SourceLoc; score: number }[] = [];
   for (const entry of await sourceFiles(appRoot)) {
     const file = path.join(appRoot, entry);
-    const code = await readFile(file, "utf8").catch(() => "");
+    const code = await readFile(file, "utf-8").catch(() => "");
     if (!needles.some((needle) => code.includes(needle))) continue;
     let ast: t.File;
     try {

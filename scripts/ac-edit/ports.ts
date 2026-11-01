@@ -9,7 +9,7 @@ export function listenersOn(port: number): number[] {
     return execFileSync(
       "lsof",
       ["-nP", `-iTCP:${port}`, "-sTCP:LISTEN", "-t"],
-      { encoding: "utf8" }
+      { encoding: "utf-8" }
     )
       .split("\n")
       .filter(Boolean)

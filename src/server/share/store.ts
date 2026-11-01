@@ -97,7 +97,7 @@ export function createShareStore(dataDir: string): ShareStore {
   const lock = createKeyedMutex();
 
   const read = async (): Promise<ShareRecord[]> => {
-    const text = await readFile(file, "utf8").catch(() => null);
+    const text = await readFile(file, "utf-8").catch(() => null);
     if (!text) return [];
     const parsed: unknown = JSON.parse(text);
     return Array.isArray(parsed) ? (parsed as ShareRecord[]) : [];

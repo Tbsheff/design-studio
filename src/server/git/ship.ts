@@ -86,7 +86,7 @@ async function writeEntry(
 ): Promise<void> {
   await mkdir(path.dirname(target), { recursive: true });
   if (mode === "120000") {
-    await symlink(Buffer.from(bytes).toString("utf8"), target);
+    await symlink(Buffer.from(bytes).toString("utf-8"), target);
     return;
   }
   await writeFile(target, bytes);
@@ -167,7 +167,7 @@ async function formatStaged(
   repoPath: string,
   bytes: Uint8Array
 ): Promise<void> {
-  const text = Buffer.from(bytes).toString("utf8");
+  const text = Buffer.from(bytes).toString("utf-8");
   const formatted = await formatText(
     commit.formatter,
     commit.repo.root,

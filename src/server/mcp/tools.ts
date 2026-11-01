@@ -528,7 +528,7 @@ async function frameHtml(deps: ExportDeps, args: Args): Promise<ToolResult> {
       await src.files(),
       page ?? (src.project.entry || "index.html")
     );
-    return text(await readFile(file, "utf8"));
+    return text(await readFile(file, "utf-8"));
   }
   const opened = await src.open();
   try {
@@ -888,7 +888,7 @@ export async function callTool(
       const src = await source(deps, args);
       const md = await readFile(
         path.join(await src.files(), DESIGN_MD_FILE),
-        "utf8"
+        "utf-8"
       ).catch(() => null);
       return text(md ?? "This project has no DESIGN.md.");
     }
@@ -911,7 +911,7 @@ export async function callTool(
         throw new ToolError("only text files can be read");
       if ((await stat(file)).size > MAX_TEXT)
         throw new ToolError("the file is too large");
-      return text(await readFile(file, "utf8"));
+      return text(await readFile(file, "utf-8"));
     }
     default:
       throw new ToolError(`unknown tool ${name}`);

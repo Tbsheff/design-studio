@@ -265,7 +265,7 @@ export async function writeWorkFile(
   await mkdir(path.dirname(absolute), { recursive: true });
   await rm(absolute, { force: true });
   if (change.entry.mode === SYMLINK_MODE)
-    await symlink(body.toString("utf8"), absolute);
+    await symlink(body.toString("utf-8"), absolute);
   else
     await writeFile(absolute, body, {
       mode: change.entry.mode === "100755" ? 0o755 : 0o644,

@@ -155,7 +155,7 @@ function timeGitAdd(project: Project): number[] {
 
 async function measure(page: Page, api: StudioApi, project: Project) {
   const file = path.join(mainDirection(project).workTree, "index.html");
-  const original = readFileSync(file, "utf8");
+  const original = readFileSync(file, "utf-8");
   const tap = new EventTap(project.id, api.token);
   await page.waitForTimeout(500);
   const paint: number[] = [];

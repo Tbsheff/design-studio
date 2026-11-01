@@ -46,7 +46,7 @@ test("AC-55: state is local and remote model use is disclosed in the UI", async 
     .filter((file) => file.endsWith(".js"))
     .flatMap((file) =>
       [
-        ...readFileSync(path.join(assetsDir, file), "utf8").matchAll(
+        ...readFileSync(path.join(assetsDir, file), "utf-8").matchAll(
           /.{0,40}(anthropic|sent to anthropic|remote model|privacy).{0,40}/gi
         ),
       ].map((m) => m[0])

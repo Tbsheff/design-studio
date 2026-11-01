@@ -173,7 +173,7 @@ async function workspacePackages(start: string): Promise<Map<string, string>> {
       if (!entry.isDirectory()) continue;
       const pkgDir = path.join(dir, group, entry.name);
       const pkg = JSON.parse(
-        (await readFile(path.join(pkgDir, "package.json"), "utf8").catch(
+        (await readFile(path.join(pkgDir, "package.json"), "utf-8").catch(
           () => "{}"
         )) || "{}"
       ) as { name?: string };
@@ -230,7 +230,7 @@ export async function createSourceProject(
   const packages = await workspacePackages(root);
   const cache = new Map<string, Promise<SourceModule | null>>();
   const read = async (file: string): Promise<SourceModule | null> => {
-    const code = await readFile(file, "utf8").catch(() => null);
+    const code = await readFile(file, "utf-8").catch(() => null);
     if (code === null || code.length > MAX_FILE_BYTES) return null;
     const ast = parseModuleFile(code, file);
     return ast ? indexModule(file, ast) : null;

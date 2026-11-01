@@ -19,7 +19,7 @@ export function newToken(): string {
 export async function readMcpSettings(dataDir: string): Promise<McpSettings> {
   try {
     const parsed = JSON.parse(
-      await readFile(path.join(dataDir, FILE), "utf8")
+      await readFile(path.join(dataDir, FILE), "utf-8")
     ) as Partial<McpSettings>;
     const port =
       Number.isInteger(parsed.port) &&

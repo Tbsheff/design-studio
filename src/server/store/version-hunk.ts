@@ -159,7 +159,7 @@ function changeName(hunk: PatchHunk): string {
 
 async function readText(file: string): Promise<string> {
   try {
-    return await readFile(file, "utf8");
+    return await readFile(file, "utf-8");
   } catch (error) {
     if (isNodeError(error) && error.code === "ENOENT")
       throw new HunkStaleError(`${STALE} The file is gone.`);

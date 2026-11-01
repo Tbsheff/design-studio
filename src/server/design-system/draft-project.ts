@@ -15,7 +15,7 @@ const SAFE_ATTACHMENT_ID = /^[A-Za-z0-9_-]{1,64}$/;
 
 async function readJson(file: string): Promise<unknown> {
   try {
-    return JSON.parse(await readFile(file, "utf8")) as unknown;
+    return JSON.parse(await readFile(file, "utf-8")) as unknown;
   } catch (error) {
     if (isNodeError(error) && error.code === "ENOENT") return null;
     if (error instanceof SyntaxError) return null;

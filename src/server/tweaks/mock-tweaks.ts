@@ -76,7 +76,7 @@ let mockToolCount = 0;
 
 async function readOptional(file: string): Promise<string | null> {
   try {
-    return await readFile(file, "utf8");
+    return await readFile(file, "utf-8");
   } catch {
     return null;
   }

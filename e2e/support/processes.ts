@@ -9,7 +9,7 @@ export interface ProcessRow {
 
 export function listProcesses(): ProcessRow[] {
   const out = execFileSync("ps", ["-A", "-o", "pid=,ppid=,pgid=,command="], {
-    encoding: "utf8",
+    encoding: "utf-8",
   });
   return out
     .split("\n")
@@ -25,7 +25,7 @@ export function listProcesses(): ProcessRow[] {
 
 export function processCommandAndEnv(pid: number): string {
   return execFileSync("ps", ["eww", "-o", "command=", "-p", String(pid)], {
-    encoding: "utf8",
+    encoding: "utf-8",
   });
 }
 

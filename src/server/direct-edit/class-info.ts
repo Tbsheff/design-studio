@@ -84,7 +84,7 @@ export async function elementClassInfo(
   rawVariant = ""
 ): Promise<ElementClassInfo> {
   const target = await resolveSource(workTree, loc.file);
-  const code = await readFile(target.file, "utf8");
+  const code = await readFile(target.file, "utf-8");
   const theme = await themeForFile(workTree, target.relative, code, {
     projectKind,
   });

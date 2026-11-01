@@ -85,7 +85,7 @@ test("design-system library: save to library, switch packs, restore through vers
   const tree = mainDirection(project).workTree;
   const editorialCss = readFileSync(
     path.join(tree, "design-system/tokens.css"),
-    "utf8"
+    "utf-8"
   );
   const editorialPrimary = await expectPreviewPrimary(page, (primary) =>
     expect(primary).not.toBe("")
@@ -139,9 +139,9 @@ test("design-system library: save to library, switch packs, restore through vers
     expect(primary).not.toBe(editorialPrimary)
   );
   expect(
-    readFileSync(path.join(tree, "design-system/tokens.css"), "utf8")
+    readFileSync(path.join(tree, "design-system/tokens.css"), "utf-8")
   ).not.toBe(editorialCss);
-  expect(readFileSync(path.join(tree, "DESIGN.md"), "utf8")).toContain(
+  expect(readFileSync(path.join(tree, "DESIGN.md"), "utf-8")).toContain(
     "## Project notes\n\nKeep these notes."
   );
 
@@ -162,7 +162,7 @@ test("design-system library: save to library, switch packs, restore through vers
     expect(primary).toBe(editorialPrimary)
   );
   expect(
-    readFileSync(path.join(tree, "design-system/tokens.css"), "utf8")
+    readFileSync(path.join(tree, "design-system/tokens.css"), "utf-8")
   ).toBe(editorialCss);
   await expect
     .poll(async () => (await api.project(project.id)).packId)

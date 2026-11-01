@@ -509,13 +509,13 @@ describe("POST /api/packs/:id/editor", { timeout: 30000 }, () => {
       packId: copy.id,
     });
     const tree = project.directions[0]!.workTree;
-    const kit = await readFile(path.join(tree, "index.html"), "utf8");
+    const kit = await readFile(path.join(tree, "index.html"), "utf-8");
     expect(kit).toContain("<h1>Ink</h1>");
     expect(
-      JSON.parse(await readFile(path.join(tree, PACK_FILE), "utf8"))
+      JSON.parse(await readFile(path.join(tree, PACK_FILE), "utf-8"))
     ).toMatchObject({ id: copy.id, name: "Ink" });
     const meta = JSON.parse(
-      await readFile(path.join(tree, "source/meta.json"), "utf8")
+      await readFile(path.join(tree, "source/meta.json"), "utf-8")
     ) as Record<string, unknown>;
     expect(meta).toMatchObject({
       kind: "design-system-draft",
@@ -612,7 +612,7 @@ describe("POST .../design-system/save with asNew", { timeout: 30000 }, () => {
     ).toBe("House");
     const tree = project.directions[0]!.workTree;
     expect(
-      JSON.parse(await readFile(path.join(tree, PACK_FILE), "utf8"))
+      JSON.parse(await readFile(path.join(tree, PACK_FILE), "utf-8"))
     ).toMatchObject({ id: "user-house-copy" });
 
     const again = await ok<SavePackResult>(

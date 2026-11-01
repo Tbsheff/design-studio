@@ -47,7 +47,7 @@ test("B: React mock edit through selection uses HMR without reload", async ({
   expect(iframeSrcBefore?.startsWith(origin)).toBe(true);
 
   const appFile = path.join(main.workTree, "src", "App.tsx");
-  const sourceBefore = readFileSync(appFile, "utf8");
+  const sourceBefore = readFileSync(appFile, "utf-8");
   const paragraphBefore = await frame.locator("section.hero p").textContent();
 
   const vite = await viteFrame(page, origin);
@@ -75,7 +75,7 @@ test("B: React mock edit through selection uses HMR without reload", async ({
     paragraphBefore ?? ""
   );
 
-  const sourceAfter = readFileSync(appFile, "utf8");
+  const sourceAfter = readFileSync(appFile, "utf-8");
   expect(sourceAfter).toBe(
     sourceBefore.replace(`<h1>${CREATE_PROMPT}</h1>`, `<h1>${EDIT_PROMPT}</h1>`)
   );

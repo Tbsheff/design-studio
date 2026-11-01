@@ -74,7 +74,7 @@ test("AC-54: imported React folder is never modified outside the agreed workspac
   const userGitStatusBefore = execFileSync(
     "git",
     ["--no-optional-locks", "status", "--porcelain"],
-    { cwd: folder, encoding: "utf8" }
+    { cwd: folder, encoding: "utf-8" }
   );
 
   const api = await openHome(page);
@@ -129,7 +129,7 @@ test("AC-54: imported React folder is never modified outside the agreed workspac
   const userGitStatusAfter = execFileSync(
     "git",
     ["--no-optional-locks", "status", "--porcelain"],
-    { cwd: folder, encoding: "utf8" }
+    { cwd: folder, encoding: "utf-8" }
   );
   const result = {
     parent,

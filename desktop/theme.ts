@@ -54,7 +54,7 @@ export function initTheme(themeFile: string): void {
   try {
     pref =
       valid(
-        (JSON.parse(readFileSync(themeFile, "utf8")) as { theme?: unknown })
+        (JSON.parse(readFileSync(themeFile, "utf-8")) as { theme?: unknown })
           .theme
       ) ?? "dark";
   } catch {

@@ -36,7 +36,7 @@ export function zipFiles(entries: ZipEntry[], date: Date = new Date()): Buffer {
   const centrals: Buffer[] = [];
   let offset = 0;
   for (const entry of entries) {
-    const name = Buffer.from(entry.name, "utf8");
+    const name = Buffer.from(entry.name, "utf-8");
     const packed = deflateRawSync(entry.data);
     const crc = crc32(entry.data);
     const local = Buffer.alloc(30);
@@ -137,7 +137,7 @@ function readCentral(bytes: Buffer, at: number, end: number): CentralEntry {
   const skip = bytes.readUInt16LE(at + 30) + bytes.readUInt16LE(at + 32);
   const madeByUnix = bytes.readUInt16LE(at + 4) >> 8 === 3;
   return {
-    name: bytes.subarray(at + 46, at + 46 + nameLength).toString("utf8"),
+    name: bytes.subarray(at + 46, at + 46 + nameLength).toString("utf-8"),
     flags: bytes.readUInt16LE(at + 8),
     method: bytes.readUInt16LE(at + 10),
     crc: bytes.readUInt32LE(at + 16),

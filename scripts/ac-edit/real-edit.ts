@@ -180,7 +180,7 @@ async function main(): Promise<void> {
     const diffBetween = (pid: string, a: string, b: string) =>
       execFileSync("git", ["diff", "-U0", a, b], {
         env: { ...process.env, GIT_DIR: gitDir(pid) },
-        encoding: "utf8",
+        encoding: "utf-8",
       });
     const sortedVersions = async (pid: string) =>
       [
@@ -297,7 +297,10 @@ async function main(): Promise<void> {
     const fileLines = execFileSync(
       "git",
       ["show", `${followVersion?.id}:index.html`],
-      { env: { ...process.env, GIT_DIR: gitDir(project.id) }, encoding: "utf8" }
+      {
+        env: { ...process.env, GIT_DIR: gitDir(project.id) },
+        encoding: "utf-8",
+      }
     ).split("\n").length;
     const ordered = [...runs].sort((a, b) => a.startedAt - b.startedAt);
     report.runs = ordered.map((run) => ({

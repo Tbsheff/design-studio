@@ -57,7 +57,7 @@ function saveResult(key: string, value: unknown): void {
   mkdirSync(path.dirname(RESULTS_FILE), { recursive: true });
   let all: Record<string, unknown> = {};
   try {
-    all = JSON.parse(readFileSync(RESULTS_FILE, "utf8")) as Record<
+    all = JSON.parse(readFileSync(RESULTS_FILE, "utf-8")) as Record<
       string,
       unknown
     >;
@@ -159,7 +159,7 @@ async function telemetry(
 
 function homeJsBytes(): { entry: string; bytes: number; files: string[] } {
   const dist = path.join(ROOT, "dist", "ui");
-  const html = readFileSync(path.join(dist, "index.html"), "utf8");
+  const html = readFileSync(path.join(dist, "index.html"), "utf-8");
   const files = [
     ...html.matchAll(
       /<(?:script[^>]*src|link[^>]*rel="modulepreload"[^>]*href)="\/?([^"]+\.js)"/g
@@ -198,7 +198,7 @@ test("R5-1 telemetry: app.start, run.first_token, edit.commit and frame.long aft
   await page.getByLabel("Font size", { exact: true }).fill("31");
   await page.getByLabel("Font size", { exact: true }).press("Enter");
   await expect
-    .poll(() => readFileSync(file, "utf8"))
+    .poll(() => readFileSync(file, "utf-8"))
     .toContain("font-size: 31px");
   await page.evaluate(() => {
     const end = performance.now() + 120;
@@ -411,7 +411,7 @@ test("R5 versions panel: 100 versions load and render", async ({ page }) => {
   await api.waitForRuns(project.id, 1);
   const direction = mainDirection(project);
   const file = path.join(direction.workTree, "index.html");
-  const original = readFileSync(file, "utf8");
+  const original = readFileSync(file, "utf-8");
   for (
     let i = (await api.versions(project.id, direction.id)).length;
     i < VERSION_COUNT;

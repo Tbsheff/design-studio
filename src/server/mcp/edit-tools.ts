@@ -865,7 +865,7 @@ async function writeProjectFile(
   refuseWhileRunning(deps, project, direction);
   const relative = checkWritePath(project, direction.workTree, input.path);
   const file = path.join(direction.workTree, ...relative.split("/"));
-  const before = await readFile(file, "utf8").catch(() => null);
+  const before = await readFile(file, "utf-8").catch(() => null);
   if (before === input.content)
     return plain(
       ok({ path: relative, changed: false, versionId: direction.headVersionId })

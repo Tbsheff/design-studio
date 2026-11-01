@@ -48,7 +48,7 @@ export async function readDesignSystemState(
 
 async function readDesignMd(workTree: string): Promise<string | null> {
   try {
-    return await readFile(path.join(workTree, DESIGN_MD_FILE), "utf8");
+    return await readFile(path.join(workTree, DESIGN_MD_FILE), "utf-8");
   } catch {
     return null;
   }

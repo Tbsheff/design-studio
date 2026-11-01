@@ -79,7 +79,7 @@ export function createLocalRuntime(dir: string): LocalRuntime {
         START_TIMEOUT_MS
       );
       const watch = (chunk: Buffer) => {
-        seen = (seen + chunk.toString("utf8")).slice(-8000);
+        seen = (seen + chunk.toString("utf-8")).slice(-8000);
         const match = READY.exec(seen);
         if (!match?.[1]) return;
         clearTimeout(timer);

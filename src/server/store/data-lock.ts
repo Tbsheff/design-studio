@@ -47,7 +47,9 @@ function isLockInfo(value: unknown): value is LockInfo {
 
 export function readLock(dataDir: string): LockInfo | null {
   try {
-    const parsed: unknown = JSON.parse(readFileSync(lockPath(dataDir), "utf8"));
+    const parsed: unknown = JSON.parse(
+      readFileSync(lockPath(dataDir), "utf-8")
+    );
     return isLockInfo(parsed) ? parsed : null;
   } catch {
     return null;

@@ -119,7 +119,7 @@ async function paintedAfter(
 }
 
 async function measureHtml(page: Page, file: string): Promise<number[]> {
-  const original = readFileSync(file, "utf8");
+  const original = readFileSync(file, "utf-8");
   const out: number[] = [];
   for (let i = 0; i < SAMPLES; i += 1) {
     const text = `Latency sample ${i}`;
@@ -135,7 +135,7 @@ async function measureHtml(page: Page, file: string): Promise<number[]> {
 }
 
 async function measureReact(page: Page, file: string): Promise<number[]> {
-  const original = readFileSync(file, "utf8");
+  const original = readFileSync(file, "utf-8");
   const out: number[] = [];
   for (let i = 0; i < SAMPLES; i += 1) {
     const text = `React sample ${i}`;

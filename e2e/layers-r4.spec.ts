@@ -161,9 +161,9 @@ test("R4-4: a 40 px handle drag at 50% zoom changes the width field and the file
   await page.mouse.up();
 
   await expect
-    .poll(() => readFileSync(file, "utf8"))
+    .poll(() => readFileSync(file, "utf-8"))
     .toContain('<article style="width: 340px;" class="card" id="c1">');
-  expect(readFileSync(file, "utf8")).toBe(
+  expect(readFileSync(file, "utf-8")).toBe(
     PAGE.replace(
       '<article class="card" id="c1">',
       '<article style="width: 340px;" class="card" id="c1">'
@@ -184,9 +184,9 @@ test("R4-9: Alt+Down moves a card in the HTML source, twice, and the selection f
   await focusStudio(page);
   await page.keyboard.press("Alt+ArrowDown");
   await expect
-    .poll(() => order(readFileSync(file, "utf8")))
+    .poll(() => order(readFileSync(file, "utf-8")))
     .toEqual(["c2", "c1", "c3"]);
-  const once = readFileSync(file, "utf8");
+  const once = readFileSync(file, "utf-8");
   expect(once).toBe(
     PAGE.replace(
       '<article class="card" id="c1">Card one</article>\n    <article class="card" id="c2">Card two</article>',
@@ -203,7 +203,7 @@ test("R4-9: Alt+Down moves a card in the HTML source, twice, and the selection f
   await focusPreview(page);
   await page.keyboard.press("Alt+ArrowDown");
   await expect
-    .poll(() => order(readFileSync(file, "utf8")))
+    .poll(() => order(readFileSync(file, "utf-8")))
     .toEqual(["c2", "c3", "c1"]);
   await expect(page.locator(".ins-source")).toHaveText("index.html:13");
   await expect(page.getByLabel("Text content")).toHaveValue("Card one");
@@ -213,14 +213,14 @@ test("R4-9: Alt+Down moves a card in the HTML source, twice, and the selection f
   await expect(page.locator(".edit-notice")).toHaveText(
     "This element is already last among its siblings"
   );
-  expect(order(readFileSync(file, "utf8"))).toEqual(["c2", "c3", "c1"]);
+  expect(order(readFileSync(file, "utf-8"))).toEqual(["c2", "c3", "c1"]);
 
   await page.getByRole("button", { name: "Layers", exact: true }).click();
   await expect(page.locator(".layers-row.selected")).toContainText("#c1");
   await page.locator(".layers-list").focus();
   await page.keyboard.press("Alt+ArrowUp");
   await expect
-    .poll(() => order(readFileSync(file, "utf8")))
+    .poll(() => order(readFileSync(file, "utf-8")))
     .toEqual(["c2", "c1", "c3"]);
   await expect(page.locator(".layers-row.selected")).toContainText("#c1");
   await expect.poll(() => versionCount(api, pid, did)).toBe(before + 3);
@@ -244,7 +244,7 @@ test("R4-9: Alt+Down moves a literal card in a TSX file", async ({ page }) => {
   await focusPreview(page);
   await page.keyboard.press("Alt+ArrowDown");
   await expect
-    .poll(() => readFileSync(file, "utf8"))
+    .poll(() => readFileSync(file, "utf-8"))
     .toBe(
       APP.replace(
         '<article className="card" id="c1">Card one</article>\n      <article className="card" id="c2">Card two</article>',
@@ -258,7 +258,7 @@ test("R4-9: Alt+Down moves a literal card in a TSX file", async ({ page }) => {
   await focusStudio(page);
   await page.keyboard.press("Alt+ArrowDown");
   await expect
-    .poll(() => order(readFileSync(file, "utf8")))
+    .poll(() => order(readFileSync(file, "utf-8")))
     .toEqual(["c2", "c3", "c1"]);
   await expect(page.getByLabel("Text content")).toHaveValue("Card one");
 });
@@ -283,13 +283,13 @@ test("R4-4: Enter on a layers row selects the first child, Shift+Enter the paren
   await page.keyboard.press("Shift+Enter");
   await expect(promo).toHaveAttribute("aria-selected", "true");
   await expect(page.locator(".ins-tag")).toHaveText("section");
-  const before = readFileSync(file, "utf8");
+  const before = readFileSync(file, "utf-8");
   await page.keyboard.press("F2");
   const input = page.getByLabel("Layer name");
   await expect(input).toBeFocused();
   await input.press("Escape");
   await expect(input).toHaveCount(0);
-  expect(readFileSync(file, "utf8")).toBe(before);
+  expect(readFileSync(file, "utf-8")).toBe(before);
 });
 
 test("R4-4: rename writes data-name, hide and show restore the bytes, drag reorders once", async ({
@@ -304,7 +304,7 @@ test("R4-4: rename writes data-name, hide and show restore the bytes, drag reord
   await input.fill("Hero title");
   await input.press("Enter");
   await expect
-    .poll(() => readFileSync(file, "utf8"))
+    .poll(() => readFileSync(file, "utf-8"))
     .toContain('<h2 data-name="Hero title">Section title</h2>');
   await expect
     .poll(() => latestTitle(api, pid, did))
@@ -316,19 +316,19 @@ test("R4-4: rename writes data-name, hide and show restore the bytes, drag reord
   await expect(
     page.locator(".layers-row", { hasText: "Hero title" })
   ).toHaveCount(1);
-  const beforeHide = readFileSync(file, "utf8");
+  const beforeHide = readFileSync(file, "utf-8");
   const promo = page.locator(".layers-row", { hasText: "#promo" });
   await promo.hover();
   await promo.getByRole("button", { name: "Hide" }).click();
   await expect
-    .poll(() => readFileSync(file, "utf8"))
+    .poll(() => readFileSync(file, "utf-8"))
     .toContain('<section id="promo" style="display: none; padding:8px">');
   await expect(frontFrame(page).locator("#promo")).toBeHidden();
   await expect(promo).toHaveClass(/is-hidden/);
   await expect.poll(() => latestTitle(api, pid, did)).toBe("Hide section");
   await layersSettled(page);
   await promo.getByRole("button", { name: "Show" }).click();
-  await expect.poll(() => readFileSync(file, "utf8")).toBe(beforeHide);
+  await expect.poll(() => readFileSync(file, "utf-8")).toBe(beforeHide);
   await expect(frontFrame(page).locator("#promo")).toBeVisible();
   await expect(promo).not.toHaveClass(/is-hidden/);
 
@@ -348,7 +348,7 @@ test("R4-4: rename writes data-name, hide and show restore the bytes, drag reord
   await expect(page.getByTestId("layers-drop")).toBeVisible();
   await page.mouse.up();
   await expect
-    .poll(() => order(readFileSync(file, "utf8")))
+    .poll(() => order(readFileSync(file, "utf-8")))
     .toEqual(["c1", "c3", "c2"]);
   await expect.poll(() => versionCount(api, pid, did)).toBe(before + 1);
   await expect(page.getByTestId("layers-drop")).toHaveCount(0);

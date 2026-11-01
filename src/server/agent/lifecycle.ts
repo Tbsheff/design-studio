@@ -214,7 +214,7 @@ async function loadPriorSession(
   };
   try {
     const raw = JSON.parse(
-      await readFile(sessionLedgerPath(runsDir, sessionId), "utf8")
+      await readFile(sessionLedgerPath(runsDir, sessionId), "utf-8")
     ) as Record<string, unknown>;
     const promptHash =
       typeof raw["promptHash"] === "string" ? raw["promptHash"] : null;

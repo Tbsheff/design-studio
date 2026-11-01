@@ -100,7 +100,7 @@ test("D: two directions, separate edits, compare, resume one", async ({
 
   const bFileBefore = readFileSync(
     path.join(directionB.workTree, "index.html"),
-    "utf8"
+    "utf-8"
   );
   const bHeadBefore = await headVersion(api, project.id, directionB.id);
   const aHeadBefore = await headVersion(api, project.id, directionA.id);
@@ -124,14 +124,14 @@ test("D: two directions, separate edits, compare, resume one", async ({
   expect(resumed?.sessionId).toBe(aSessionBefore);
   const aFile = readFileSync(
     path.join(directionA.workTree, "index.html"),
-    "utf8"
+    "utf-8"
   );
   expect(aFile).toContain(EDIT_A);
   expect(aFile).toContain(EDIT_A2);
   expect(aFile).not.toContain(EDIT_B);
 
   expect(
-    readFileSync(path.join(directionB.workTree, "index.html"), "utf8")
+    readFileSync(path.join(directionB.workTree, "index.html"), "utf-8")
   ).toBe(bFileBefore);
   expect((await headVersion(api, project.id, directionB.id)).id).toBe(
     bHeadBefore.id

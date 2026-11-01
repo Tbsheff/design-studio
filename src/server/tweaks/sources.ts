@@ -126,7 +126,7 @@ async function loadSource(
   const file = path.join(workTree, relative);
   const info = await stat(file);
   if (info.size > MAX_BYTES) return null;
-  const text = await readFile(file, "utf8");
+  const text = await readFile(file, "utf-8");
   const kind =
     KIND_BY_EXTENSION[path.extname(relative).toLowerCase()] ?? "script";
   if (kind === "css")

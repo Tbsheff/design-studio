@@ -80,7 +80,7 @@ export function createDefaultFolderStore(
   const read = async (): Promise<Preferences> => {
     let raw: string;
     try {
-      raw = await readFile(file, "utf8");
+      raw = await readFile(file, "utf-8");
     } catch (error) {
       if (isNodeError(error) && error.code === "ENOENT") return { version: 1 };
       throw error;

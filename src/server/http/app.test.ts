@@ -245,7 +245,7 @@ describe("http app", { timeout: 20000 }, () => {
       projects.mainDirection(project).workTree,
       "DESIGN.md"
     );
-    expect(await readFile(file, "utf8")).toBe("# Brand\nprimary #0B6E4F");
+    expect(await readFile(file, "utf-8")).toBe("# Brand\nprimary #0B6E4F");
     expect(started[0]?.designMd).toBe("# Brand\nprimary #0B6E4F");
   });
 
@@ -378,8 +378,8 @@ describe("http app", { timeout: 20000 }, () => {
         const head = projects.mainDirection(current).headVersionId;
         if (head === null) throw new Error("no head");
         const snapshot = await versions.snapshot(current, head);
-        expect(await readFile(path.join(workTree, "index.html"), "utf8")).toBe(
-          await readFile(path.join(snapshot, "index.html"), "utf8")
+        expect(await readFile(path.join(workTree, "index.html"), "utf-8")).toBe(
+          await readFile(path.join(snapshot, "index.html"), "utf-8")
         );
       }
       const listed = (await (

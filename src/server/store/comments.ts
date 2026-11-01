@@ -167,7 +167,7 @@ export function createCommentStore(
   const read = async (file: string): Promise<CommentFile> => {
     if (!existsSync(file)) return emptyFile();
     try {
-      const parsed: unknown = JSON.parse(await readFile(file, "utf8"));
+      const parsed: unknown = JSON.parse(await readFile(file, "utf-8"));
       return isCommentFile(parsed) ? parsed : emptyFile();
     } catch (error) {
       console.error("[comments] unreadable file", file, error);

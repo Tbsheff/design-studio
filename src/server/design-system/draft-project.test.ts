@@ -66,7 +66,7 @@ async function editTokens(
   edit: (tokens: Tokens) => void
 ): Promise<void> {
   const tokens = JSON.parse(
-    await readFile(path.join(root, TOKENS_FILE), "utf8")
+    await readFile(path.join(root, TOKENS_FILE), "utf-8")
   ) as Tokens;
   edit(tokens);
   await writeFile(path.join(root, TOKENS_FILE), JSON.stringify(tokens));

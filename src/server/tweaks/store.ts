@@ -29,7 +29,7 @@ interface TweaksRead {
 export async function readTweaksFile(workTree: string): Promise<TweaksRead> {
   let text: string;
   try {
-    text = await readFile(path.join(workTree, TWEAKS_FILE), "utf8");
+    text = await readFile(path.join(workTree, TWEAKS_FILE), "utf-8");
   } catch (error) {
     if (
       isNodeError(error) &&

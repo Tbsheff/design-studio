@@ -109,7 +109,7 @@ async function scannerFor(project: Project): Promise<RouteScanner> {
 }
 
 async function readParams(projectDir: string): Promise<Record<string, string>> {
-  const text = await readFile(path.join(projectDir, FLOW_FILE), "utf8").catch(
+  const text = await readFile(path.join(projectDir, FLOW_FILE), "utf-8").catch(
     () => null
   );
   if (!text) return {};

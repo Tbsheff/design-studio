@@ -27,7 +27,7 @@ export async function scopeProblem(
     return `Rejected: this variant changed ${others.length === 1 ? "another file" : "other files"} (${list}${others.length > 3 ? ", …" : ""}). Only lines ${scope.startLine}-${scope.endLine} of ${scope.file} may change. The changes were discarded.`;
   }
   if (!changed.includes(scope.file)) return null;
-  const code = await readFile(path.join(workTree, scope.file), "utf8").catch(
+  const code = await readFile(path.join(workTree, scope.file), "utf-8").catch(
     () => null
   );
   if (code === null)

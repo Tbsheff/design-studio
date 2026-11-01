@@ -128,8 +128,8 @@ test("tokens panel: live preview in every frame, theme, discard, commit, undo", 
   await expect(page.locator("li.version")).toHaveCount(
     (await api.versions(project.id, main.id)).length
   );
-  const jsonBefore = readFileSync(tokensJson, "utf8");
-  const cssBefore = readFileSync(tokensCss, "utf8");
+  const jsonBefore = readFileSync(tokensJson, "utf-8");
+  const cssBefore = readFileSync(tokensCss, "utf-8");
 
   const front = frontFrame(page);
   await plant(front);
@@ -213,7 +213,7 @@ test("tokens panel: live preview in every frame, theme, discard, commit, undo", 
   expect((await probe(front)).marker).toBe("kept");
   await expect(page.locator(".tkp-footer")).toHaveCount(0);
   await expect(row).not.toHaveClass(/changed/);
-  expect(readFileSync(tokensJson, "utf8")).toBe(jsonBefore);
+  expect(readFileSync(tokensJson, "utf-8")).toBe(jsonBefore);
 
   const versionsBefore = (await api.versions(project.id, main.id)).length;
   await input.fill(COMMITTED);
@@ -221,9 +221,9 @@ test("tokens panel: live preview in every frame, theme, discard, commit, undo", 
   await page.getByRole("button", { name: "Commit", exact: true }).click();
   await expect(page.locator(".tkp-footer")).toHaveCount(0);
   await expect
-    .poll(() => readFileSync(tokensJson, "utf8"))
+    .poll(() => readFileSync(tokensJson, "utf-8"))
     .toContain(COMMITTED);
-  expect(readFileSync(tokensCss, "utf8")).not.toBe(cssBefore);
+  expect(readFileSync(tokensCss, "utf-8")).not.toBe(cssBefore);
   await expect
     .poll(async () => (await api.versions(project.id, main.id)).length)
     .toBe(versionsBefore + 1);
@@ -238,7 +238,7 @@ test("tokens panel: live preview in every frame, theme, discard, commit, undo", 
 
   await page.locator(".tkp-title").click();
   await page.keyboard.press("ControlOrMeta+z");
-  await expect.poll(() => readFileSync(tokensJson, "utf8")).toBe(jsonBefore);
-  expect(readFileSync(tokensCss, "utf8")).toBe(cssBefore);
+  await expect.poll(() => readFileSync(tokensJson, "utf-8")).toBe(jsonBefore);
+  expect(readFileSync(tokensCss, "utf-8")).toBe(cssBefore);
   await expect(input).not.toHaveValue(COMMITTED);
 });

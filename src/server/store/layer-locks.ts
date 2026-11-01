@@ -36,7 +36,7 @@ export interface LayerLockDeps {
 }
 
 async function readState(file: string): Promise<LayerStateFile> {
-  const text = await readFile(file, "utf8").catch(() => null);
+  const text = await readFile(file, "utf-8").catch(() => null);
   if (text === null) return { locks: {} };
   try {
     const parsed = JSON.parse(text) as Partial<LayerStateFile> | null;

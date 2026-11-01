@@ -22,7 +22,7 @@ const SEARCH_DIRS = ["packages", "apps", "libs", "tooling"];
 function readManifest(dir: string): Manifest | null {
   try {
     return JSON.parse(
-      readFileSync(path.join(dir, "package.json"), "utf8")
+      readFileSync(path.join(dir, "package.json"), "utf-8")
     ) as Manifest;
   } catch {
     return null;

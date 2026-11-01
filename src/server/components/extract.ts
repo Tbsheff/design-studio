@@ -298,7 +298,7 @@ function packageDir(file: string, root: string): string {
 function dependsOn(dir: string, name: string): boolean {
   try {
     const pkg = JSON.parse(
-      readFileSync(path.join(dir, "package.json"), "utf8")
+      readFileSync(path.join(dir, "package.json"), "utf-8")
     ) as Record<string, Record<string, string> | undefined>;
     return Boolean(
       pkg.dependencies?.[name] ??
@@ -737,7 +737,7 @@ function packageName(dir: string, root: string): string | null {
     const pkg = JSON.parse(
       readFileSync(
         path.join(packageDir(path.join(dir, "x"), root), "package.json"),
-        "utf8"
+        "utf-8"
       )
     ) as { name?: unknown };
     return typeof pkg.name === "string" ? pkg.name : null;

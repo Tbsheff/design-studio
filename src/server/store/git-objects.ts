@@ -71,8 +71,8 @@ function parseTree(body: Buffer): TreeEntry[] {
     const space = body.indexOf(0x20, at);
     const nul = body.indexOf(0, space);
     entries.push({
-      mode: body.toString("utf8", at, space),
-      name: body.toString("utf8", space + 1, nul),
+      mode: body.toString("utf-8", at, space),
+      name: body.toString("utf-8", space + 1, nul),
       sha: body.toString("hex", nul + 1, nul + 21),
     });
     at = nul + 21;
@@ -90,7 +90,7 @@ function serializeTree(entries: TreeEntry[]): Buffer {
 }
 
 function parseCommit(body: Buffer): CommitInfo {
-  const text = body.toString("utf8");
+  const text = body.toString("utf-8");
   const split = text.indexOf("\n\n");
   const header = split === -1 ? text : text.slice(0, split);
   const parents: string[] = [];
@@ -170,7 +170,7 @@ class BatchReader {
       const pending = this.queue[0];
       const eol = this.buffer.indexOf(0x0a);
       if (!pending || eol === -1) return;
-      const header = this.buffer.toString("utf8", 0, eol).split(" ");
+      const header = this.buffer.toString("utf-8", 0, eol).split(" ");
       if (header[1] === "missing") {
         this.buffer = this.buffer.subarray(eol + 1);
         this.queue.shift();
@@ -261,7 +261,7 @@ export class ObjectStore {
   }
 
   async readRef(ref: string): Promise<string | null> {
-    const loose = await readFile(path.join(this.gitDir, ref), "utf8").catch(
+    const loose = await readFile(path.join(this.gitDir, ref), "utf-8").catch(
       () => null
     );
     if (loose !== null) {
@@ -270,7 +270,7 @@ export class ObjectStore {
     }
     const packed = await readFile(
       path.join(this.gitDir, "packed-refs"),
-      "utf8"
+      "utf-8"
     ).catch(() => "");
     const line = packed.split("\n").find((entry) => entry.endsWith(` ${ref}`));
     return line ? line.slice(0, 40) : null;

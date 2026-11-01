@@ -49,7 +49,7 @@ function pipeOutput(
   const forward = (target: NodeJS.WriteStream) => (chunk: Buffer) => {
     log.write(chunk);
     if (echo) target.write(chunk);
-    onLine(chunk.toString("utf8"));
+    onLine(chunk.toString("utf-8"));
   };
   child.stdout?.on("data", forward(process.stdout));
   child.stderr?.on("data", forward(process.stderr));

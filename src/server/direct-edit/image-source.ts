@@ -28,13 +28,13 @@ function startsWith(bytes: Buffer, signature: number[], at = 0): boolean {
 function svgText(bytes: Buffer): string | null {
   const head = bytes
     .subarray(0, 2048)
-    .toString("utf8")
+    .toString("utf-8")
     .replace(/^﻿/, "")
     .trimStart();
   const body = head
     .replace(/^<\?xml[^>]*>\s*/, "")
     .replace(/^(<!--[\s\S]*?-->\s*|<!DOCTYPE[^>]*>\s*)*/i, "");
-  return /^<svg[\s>]/i.test(body) ? bytes.toString("utf8") : null;
+  return /^<svg[\s>]/i.test(body) ? bytes.toString("utf-8") : null;
 }
 
 function rasterExt(bytes: Buffer): string | null {

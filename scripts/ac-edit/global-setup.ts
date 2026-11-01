@@ -32,7 +32,7 @@ export default async function globalSetup(): Promise<void> {
   const owner = execFileSync(
     "lsof",
     ["-nP", `-iTCP:${STUDIO_PORT}`, "-sTCP:LISTEN", "-t"],
-    { encoding: "utf8" }
+    { encoding: "utf-8" }
   ).trim();
   console.log(
     `[ac-edit] studio server pid ${pid} (listener ${owner}) answered after ${listenMs}ms, data ${dataDir}`

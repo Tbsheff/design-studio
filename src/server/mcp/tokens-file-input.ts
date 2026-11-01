@@ -50,5 +50,5 @@ export async function readTokensFileInput(
         "The studio copies this tokens file into the draft project, where outside agents can read it. It does not connect to Figma.",
     });
   }
-  return { name: path.basename(file), text: await readFile(file, "utf8") };
+  return { name: path.basename(file), text: await readFile(file, "utf-8") };
 }

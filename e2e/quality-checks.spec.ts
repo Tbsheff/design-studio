@@ -12,23 +12,23 @@ import { ROOT } from "./support/server";
 
 const FIXTURE = readFileSync(
   path.join(ROOT, "e2e", "fixtures", "quality-checks.html"),
-  "utf8"
+  "utf-8"
 );
 const GENERIC = readFileSync(
   path.join(ROOT, "e2e", "fixtures", "pricing-generic.html"),
-  "utf8"
+  "utf-8"
 );
 const TABLE_FIRST = readFileSync(
   path.join(ROOT, "e2e", "fixtures", "pricing-table-first.html"),
-  "utf8"
+  "utf-8"
 );
 const TABLE_THEN_CARDS = readFileSync(
   path.join(ROOT, "e2e", "fixtures", "pricing-table-then-cards.html"),
-  "utf8"
+  "utf-8"
 );
 const DOUBLED = readFileSync(
   path.join(ROOT, "e2e", "fixtures", "pricing-doubled.html"),
-  "utf8"
+  "utf-8"
 );
 const CTAS = `<!doctype html><html><body><main>
 <section><h2>Team</h2><p>For growing teams.</p><a href="/signup?plan=team">Start trial</a></section>
@@ -39,7 +39,7 @@ const CTAS = `<!doctype html><html><body><main>
 </main></body></html>`;
 const RESPONSIVE = readFileSync(
   path.join(ROOT, "e2e", "fixtures", "pricing-responsive.html"),
-  "utf8"
+  "utf-8"
 );
 const WITH_MENU = FIXTURE.replace(
   "<header>",

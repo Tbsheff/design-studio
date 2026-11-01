@@ -180,7 +180,7 @@ async function paintedAfter(
 }
 
 async function measureHtml(page: Page, file: string): Promise<number[]> {
-  const original = readFileSync(file, "utf8");
+  const original = readFileSync(file, "utf-8");
   const out: number[] = [];
   for (let i = 0; i < SAMPLES; i += 1) {
     const text = `Latency sample ${i}`;
@@ -196,7 +196,7 @@ async function measureHtml(page: Page, file: string): Promise<number[]> {
 }
 
 async function measureReact(page: Page, file: string): Promise<number[]> {
-  const original = readFileSync(file, "utf8");
+  const original = readFileSync(file, "utf-8");
   const out: number[] = [];
   for (let i = 0; i < SAMPLES; i += 1) {
     const text = `React sample ${i}`;
@@ -302,7 +302,7 @@ async function bytesAt(
 ): Promise<number> {
   const deadline = Date.now() + 5000;
   for (;;) {
-    if (ok(readFileSync(file, "utf8"))) return Date.now();
+    if (ok(readFileSync(file, "utf-8"))) return Date.now();
     if (Date.now() > deadline)
       throw new Error(`expected bytes never reached ${file}`);
     await new Promise((resolve) => setTimeout(resolve, 2));

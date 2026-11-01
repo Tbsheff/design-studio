@@ -325,7 +325,7 @@ export function createComponentPreviews(deps: {
     if (png) return { png };
     const failed = await readFile(
       cacheFile(projectId, hash, "json"),
-      "utf8"
+      "utf-8"
     ).then(
       (raw) => JSON.parse(raw) as { reason?: unknown },
       () => null
@@ -473,7 +473,7 @@ export function createComponentPreviews(deps: {
       const component = { id: entry.id, name: entry.name, file: entry.file };
       const source =
         library.texts.get(entry.absolute) ??
-        (await readFile(entry.absolute, "utf8"));
+        (await readFile(entry.absolute, "utf-8"));
       const sample = await sampleTree(
         direction.workTree,
         entry,

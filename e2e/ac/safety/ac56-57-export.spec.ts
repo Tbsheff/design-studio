@@ -102,7 +102,7 @@ test("AC-56: standalone HTML export opens from file:// with network blocked", as
   const head = await headVersion(api, project.id, "main");
   const out = await exportTo(api, project.id, head.id, "html");
   const files = readdirSync(out, { recursive: true }).map(String);
-  const html = readFileSync(path.join(out, "index.html"), "utf8");
+  const html = readFileSync(path.join(out, "index.html"), "utf-8");
   const offline = await openOffline(path.join(out, "index.html"));
   const externalUrls = [
     ...html.matchAll(/(?:src|href)=["'](https?:[^"']+)["']/g),
@@ -139,27 +139,32 @@ test("AC-57: React export is a normal buildable Vite app", async ({ page }) => {
   const files = readdirSync(out, { recursive: true })
     .map(String)
     .filter((file) => !file.startsWith("node_modules"));
-  const viteConfig = readFileSync(path.join(out, "vite.config.ts"), "utf8");
+  const viteConfig = readFileSync(path.join(out, "vite.config.ts"), "utf-8");
   const pkg = JSON.parse(
-    readFileSync(path.join(out, "package.json"), "utf8")
+    readFileSync(path.join(out, "package.json"), "utf-8")
   ) as { scripts: Record<string, string> };
   const install = execFileSync("npm", ["install", "--no-audit", "--no-fund"], {
     cwd: out,
-    encoding: "utf8",
+    encoding: "utf-8",
     stdio: ["ignore", "pipe", "pipe"],
   });
   const build = execFileSync("npm", ["run", "build"], {
     cwd: out,
-    encoding: "utf8",
+    encoding: "utf-8",
     stdio: ["ignore", "pipe", "pipe"],
   });
   const distIndex = path.join(out, "dist", "index.html");
-  const distHtml = existsSync(distIndex) ? readFileSync(distIndex, "utf8") : "";
+
+  const distHtml = existsSync(distIndex)
+    ? readFileSync(distIndex, "utf-8")
+    : "";
   const bundle = readdirSync(path.join(out, "dist", "assets")).filter((file) =>
     file.endsWith(".js")
   );
   const bundleText = bundle
-    .map((file) => readFileSync(path.join(out, "dist", "assets", file), "utf8"))
+    .map((file) =>
+      readFileSync(path.join(out, "dist", "assets", file), "utf-8")
+    )
     .join("\n");
   const result = {
     out,

@@ -105,7 +105,7 @@ test("AC-01 AC-02 AC-03: create HTML from a text prompt, no deps and no build", 
   expect(files).not.toContain("package.json");
   expect(existsSync(path.join(main.workTree, "node_modules"))).toBe(false);
   expect(
-    readFileSync(path.join(main.workTree, project.entry), "utf8")
+    readFileSync(path.join(main.workTree, project.entry), "utf-8")
   ).toContain(prompt);
   const preview = (await api.preview(project.id, main.id)).url;
   log("AC-03 preview url", preview);
@@ -140,7 +140,7 @@ test("AC-02 AC-04: React/Vite project uses standard conventions and npm run buil
   ])
     expect(files).toContain(required);
   const pkg = JSON.parse(
-    readFileSync(path.join(main.workTree, "package.json"), "utf8")
+    readFileSync(path.join(main.workTree, "package.json"), "utf-8")
   ) as {
     scripts: Record<string, string>;
     dependencies: Record<string, string>;
@@ -156,7 +156,7 @@ test("AC-02 AC-04: React/Vite project uses standard conventions and npm run buil
     expect.arrayContaining(["vite", "typescript", "@vitejs/plugin-react"])
   );
   expect(
-    readFileSync(path.join(main.workTree, "src", "main.tsx"), "utf8")
+    readFileSync(path.join(main.workTree, "src", "main.tsx"), "utf-8")
   ).toMatch(/createRoot/);
   const preview = (await api.preview(project.id, main.id)).url;
   expect(new URL(preview).port).not.toBe(String(PREVIEW_PORT));
@@ -179,7 +179,7 @@ test("AC-02 AC-04: React/Vite project uses standard conventions and npm run buil
   symlinkSync(path.join(ROOT, "node_modules"), exportedLink, "dir");
   const output = execFileSync("npm", ["run", "build"], {
     cwd: dest,
-    encoding: "utf8",
+    encoding: "utf-8",
   });
   log("AC-04 build tail", output.trim().split("\n").slice(-3).join(" | "));
   expect(existsSync(path.join(dest, "dist", "index.html"))).toBe(true);
@@ -188,7 +188,7 @@ test("AC-02 AC-04: React/Vite project uses standard conventions and npm run buil
   );
   expect(assets.length).toBeGreaterThan(0);
   expect(
-    readFileSync(path.join(dest, "dist", "assets", assets[0] ?? ""), "utf8")
+    readFileSync(path.join(dest, "dist", "assets", assets[0] ?? ""), "utf-8")
   ).toContain(prompt);
 });
 
@@ -308,15 +308,15 @@ test("AC-05: open an existing create-vite style React project", async ({
   await sendPrompt(page, "Edited after open");
   await expect(frame.locator("h1")).toHaveText("Edited after open");
   await api.waitForRuns(project.id, 1);
-  expect(readFileSync(path.join(folder, "src", "App.tsx"), "utf8")).toContain(
+  expect(readFileSync(path.join(folder, "src", "App.tsx"), "utf-8")).toContain(
     "<h1>Edited after open</h1>"
   );
-  expect(readFileSync(path.join(folder, "vite.config.ts"), "utf8")).toBe(
+  expect(readFileSync(path.join(folder, "vite.config.ts"), "utf-8")).toBe(
     files["vite.config.ts"]
   );
   const output = execFileSync("npm", ["run", "build"], {
     cwd: folder,
-    encoding: "utf8",
+    encoding: "utf-8",
   });
   log("AC-05 build tail", output.trim().split("\n").slice(-2).join(" | "));
   expect(existsSync(path.join(folder, "dist", "index.html"))).toBe(true);
@@ -333,7 +333,7 @@ test("AC-06 AC-07: generated source is real, editable on disk, and stored as pla
   await expect(frame.locator("h1")).toHaveText(prompt);
   await api.waitForRuns(project.id, 1);
   const indexFile = path.join(main.workTree, "index.html");
-  const source = readFileSync(indexFile, "utf8");
+  const source = readFileSync(indexFile, "utf-8");
   log("AC-06 index.html lines", source.split("\n").length);
   expect(source).toMatch(/<!doctype html>/i);
   expect(source).toContain(`<h1>${prompt}</h1>`);
@@ -360,14 +360,14 @@ test("AC-06 AC-07: generated source is real, editable on disk, and stored as pla
     "src",
     "App.tsx"
   );
-  const app = readFileSync(appFile, "utf8");
+  const app = readFileSync(appFile, "utf-8");
   expect(app).toMatch(/export default function App/);
   expect(app).not.toContain("data-studio-loc");
 
   const { dataDir } = readState();
   const projectDir = path.join(dataDir, "projects", project.id);
   const projectJson = JSON.parse(
-    readFileSync(path.join(projectDir, "project.json"), "utf8")
+    readFileSync(path.join(projectDir, "project.json"), "utf-8")
   ) as Project;
   expect(projectJson.id).toBe(project.id);
   expect(
@@ -382,12 +382,12 @@ test("AC-06 AC-07: generated source is real, editable on disk, and stored as pla
   expect(
     execFileSync("git", ["cat-file", "-t", head.id], {
       env: gitEnv,
-      encoding: "utf8",
+      encoding: "utf-8",
     }).trim()
   ).toBe("commit");
   const committed = execFileSync("git", ["show", `${head.id}:index.html`], {
     env: gitEnv,
-    encoding: "utf8",
+    encoding: "utf-8",
   });
   expect(committed).toContain("Hand edited in a text editor");
   const runFiles = readdirSync(path.join(projectDir, "runs"));
@@ -405,7 +405,7 @@ test("AC-06 AC-07: generated source is real, editable on disk, and stored as pla
       "-path",
       "*/node_modules/*",
     ],
-    { encoding: "utf8" }
+    { encoding: "utf-8" }
   )
     .trim()
     .split("\n");
@@ -432,7 +432,7 @@ test("AC-14: failed and canceled runs keep the last completed version", async ({
   await api.waitForRuns(project.id, 1);
   const completed = await headVersion(api, project.id, main.id);
   const indexFile = path.join(main.workTree, "index.html");
-  const completedHtml = readFileSync(indexFile, "utf8");
+  const completedHtml = readFileSync(indexFile, "utf-8");
   const gitEnv = {
     ...process.env,
     GIT_DIR: path.join(readState().dataDir, "projects", project.id, "git"),
@@ -440,7 +440,7 @@ test("AC-14: failed and canceled runs keep the last completed version", async ({
   const treeOf = (commit: string) =>
     execFileSync("git", ["rev-parse", `${commit}^{tree}`], {
       env: gitEnv,
-      encoding: "utf8",
+      encoding: "utf-8",
     }).trim();
   const completedTree = treeOf(completed.id);
 
@@ -473,11 +473,11 @@ test("AC-14: failed and canceled runs keep the last completed version", async ({
       .getByRole("button", { name: "Discard" })
       .click();
   }
-  await expect.poll(() => readFileSync(indexFile, "utf8")).toBe(completedHtml);
+  await expect.poll(() => readFileSync(indexFile, "utf-8")).toBe(completedHtml);
 
   await sendPrompt(page, "[slow] Add a long event schedule");
   await expect
-    .poll(() => readFileSync(indexFile, "utf8") !== completedHtml, {
+    .poll(() => readFileSync(indexFile, "utf-8") !== completedHtml, {
       timeout: 15_000,
       intervals: [50],
     })
@@ -500,7 +500,7 @@ test("AC-14: failed and canceled runs keep the last completed version", async ({
     .locator(".banner")
     .getByRole("button", { name: "Discard" })
     .click();
-  await expect.poll(() => readFileSync(indexFile, "utf8")).toBe(completedHtml);
+  await expect.poll(() => readFileSync(indexFile, "utf-8")).toBe(completedHtml);
   const versions = await api.versions(project.id, main.id);
   log(
     "AC-14 versions after fail+cancel",
@@ -602,7 +602,7 @@ test("AC-08: restart keeps designs, history and settings", async ({ page }) => {
   await api.waitForRuns(project.id, 3);
   const indexHtml = readFileSync(
     path.join(main.workTree, "index.html"),
-    "utf8"
+    "utf-8"
   );
 
   const snapshot = async (client: StudioApi) => {
@@ -644,7 +644,7 @@ test("AC-08: restart keeps designs, history and settings", async ({ page }) => {
   const after = await snapshot(fresh);
   log("AC-08 settings after restart", after.project.settings);
   expect(after).toEqual(before);
-  expect(readFileSync(path.join(main.workTree, "index.html"), "utf8")).toBe(
+  expect(readFileSync(path.join(main.workTree, "index.html"), "utf-8")).toBe(
     indexHtml
   );
   await page.evaluate(

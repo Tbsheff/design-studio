@@ -126,7 +126,7 @@ function packageDir(file: string, root: string): string | null {
 
 function readJson(file: string): Record<string, unknown> | null {
   try {
-    const value: unknown = JSON.parse(readFileSync(file, "utf8"));
+    const value: unknown = JSON.parse(readFileSync(file, "utf-8"));
     return value && typeof value === "object"
       ? (value as Record<string, unknown>)
       : null;

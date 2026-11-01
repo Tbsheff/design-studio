@@ -77,7 +77,7 @@ export function toPublication(r: PublicationRecord): Publication {
 }
 
 async function readJson<T>(file: string, fallback: T): Promise<T> {
-  const text = await readFile(file, "utf8").catch(() => null);
+  const text = await readFile(file, "utf-8").catch(() => null);
   if (!text) return fallback;
   try {
     return JSON.parse(text) as T;

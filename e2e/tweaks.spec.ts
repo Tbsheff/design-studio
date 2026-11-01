@@ -135,8 +135,8 @@ test("tweaks panel: drag previews every frame with no reload, commit makes one v
   await sendPrompt(page, "Add a short note");
   await api.waitForRuns(project.id, 2);
   await expect(frontFrame(page).locator(".mock-edit")).toHaveCount(1);
-  const htmlBefore = readFileSync(indexPath, "utf8");
-  const tweaksBefore = readFileSync(tweaksPath, "utf8");
+  const htmlBefore = readFileSync(indexPath, "utf-8");
+  const tweaksBefore = readFileSync(tweaksPath, "utf-8");
 
   const front = frontFrame(page);
   await plant(front);
@@ -208,9 +208,9 @@ test("tweaks panel: drag previews every frame with no reload, commit makes one v
   await page.getByRole("button", { name: "Commit", exact: true }).click();
   await expect(page.locator(".twk-footer")).toHaveCount(0);
   await expect
-    .poll(() => readFileSync(indexPath, "utf8"))
+    .poll(() => readFileSync(indexPath, "utf-8"))
     .toContain(`--tw-radius: ${dragged};`);
-  expect(readFileSync(indexPath, "utf8")).toBe(
+  expect(readFileSync(indexPath, "utf-8")).toBe(
     htmlBefore.replace("--tw-radius: 12px;", `--tw-radius: ${dragged};`)
   );
   await expect
@@ -218,9 +218,9 @@ test("tweaks panel: drag previews every frame with no reload, commit makes one v
     .toBe(versionsBefore + 1);
   const head = (await api.versions(project.id, main.id))[0];
   expect(head?.title).toBe("Tweak: Corner radius");
-  expect(JSON.parse(readFileSync(tweaksPath, "utf8")).controls[1].default).toBe(
-    Number.parseFloat(dragged)
-  );
+  expect(
+    JSON.parse(readFileSync(tweaksPath, "utf-8")).controls[1].default
+  ).toBe(Number.parseFloat(dragged));
   await expect(radiusRow.locator(".twk-readout")).toHaveText(dragged);
   await expect(radiusRow).not.toHaveClass(/changed/);
   await expect
@@ -229,8 +229,8 @@ test("tweaks panel: drag previews every frame with no reload, commit makes one v
 
   await page.locator(".twk-title").click();
   await page.keyboard.press("ControlOrMeta+z");
-  await expect.poll(() => readFileSync(indexPath, "utf8")).toBe(htmlBefore);
-  expect(readFileSync(tweaksPath, "utf8")).toBe(tweaksBefore);
+  await expect.poll(() => readFileSync(indexPath, "utf-8")).toBe(htmlBefore);
+  expect(readFileSync(tweaksPath, "utf-8")).toBe(tweaksBefore);
   await expect(radiusRow.locator(".twk-readout")).toHaveText("12px");
   await expect
     .poll(async () => (await probe(frontFrame(page))).radius)

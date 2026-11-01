@@ -454,7 +454,7 @@ function pendingGroups(entries: CoverageEntry[], done: boolean): KitGroup[] {
 
 async function readJson<T>(file: string): Promise<T | null> {
   try {
-    return JSON.parse(await readFile(file, "utf8")) as T;
+    return JSON.parse(await readFile(file, "utf-8")) as T;
   } catch (error) {
     if (isNodeError(error) && error.code === "ENOENT") return null;
     if (error instanceof SyntaxError) return null;

@@ -421,7 +421,7 @@ export async function changedSourceFor(
   let left = CHANGED_TOTAL_CHARS;
   for (const file of files) {
     if (left <= 0) break;
-    const text = await readFile(path.join(workTree, file), "utf8").catch(
+    const text = await readFile(path.join(workTree, file), "utf-8").catch(
       () => null
     );
     if (text === null) continue;

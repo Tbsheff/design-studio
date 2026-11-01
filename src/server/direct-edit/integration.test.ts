@@ -140,7 +140,7 @@ describe("direct edit route", { timeout: 30000 }, () => {
     });
     expect(result.version.meta.prompt).toContain("color: red");
     const file = path.join(workTree, "index.html");
-    expect(await readFile(file, "utf8")).toBe(
+    expect(await readFile(file, "utf-8")).toBe(
       PAGE.replace(
         "<h1 class",
         '<h1 style="color: red; font-size: 20px;" class'
@@ -163,7 +163,7 @@ describe("direct edit route", { timeout: 30000 }, () => {
 
     const undo = await call("POST", `/api/projects/${project.id}/d/main/undo`);
     expect(undo.status).toBe(200);
-    expect(await readFile(file, "utf8")).toBe(PAGE);
+    expect(await readFile(file, "utf-8")).toBe(PAGE);
   });
 
   it("refuses a stale selection whose tag no longer matches", async () => {
@@ -180,7 +180,7 @@ describe("direct edit route", { timeout: 30000 }, () => {
       message:
         "The page changed since you selected this element. Select it again.",
     });
-    expect(await readFile(path.join(workTree, "index.html"), "utf8")).toBe(
+    expect(await readFile(path.join(workTree, "index.html"), "utf-8")).toBe(
       PAGE
     );
     expect((await projects.get(project.id)).directions[0]?.headVersionId).toBe(
@@ -219,9 +219,9 @@ describe("direct edit route", { timeout: 30000 }, () => {
     expect(response.status).toBe(200);
     const result = (await response.json()) as DirectEditResult;
     expect(result.version.title).toBe("Edit text of h1");
-    expect(await readFile(path.join(workTree, "index.html"), "utf8")).toContain(
-      '<h1 class="t">Café &amp; more</h1>'
-    );
+    expect(
+      await readFile(path.join(workTree, "index.html"), "utf-8")
+    ).toContain('<h1 class="t">Café &amp; more</h1>');
   });
 
   it("does not sweep unfinished changes into the edit version", async () => {
@@ -256,7 +256,7 @@ describe("direct edit route", { timeout: 30000 }, () => {
       }),
     ]);
     expect(responses.map((response) => response.status)).toEqual([200, 200]);
-    expect(await readFile(path.join(workTree, "index.html"), "utf8")).toMatch(
+    expect(await readFile(path.join(workTree, "index.html"), "utf-8")).toMatch(
       /<h1 style="(color: red; opacity: 0\.5;|opacity: 0\.5; color: red;)" class="t">/
     );
   });
@@ -273,7 +273,7 @@ describe("direct edit route", { timeout: 30000 }, () => {
     expect(((await response.json()) as { error: string }).error).toBe(
       "run_in_progress"
     );
-    expect(await readFile(path.join(workTree, "index.html"), "utf8")).toBe(
+    expect(await readFile(path.join(workTree, "index.html"), "utf-8")).toBe(
       PAGE
     );
     running.clear();
@@ -324,7 +324,7 @@ describe("direct edit route", { timeout: 30000 }, () => {
         error: entry.error,
       });
     }
-    expect(await readFile(outside, "utf8")).toBe(PAGE);
+    expect(await readFile(outside, "utf-8")).toBe(PAGE);
   });
 
   it("returns 422 for unsafe CSS values and unknown properties", async () => {
@@ -362,7 +362,7 @@ describe("direct edit route", { timeout: 30000 }, () => {
     expect(tooLong.status).toBe(422);
     const empty = await directEdit(project, { source: H1, selector: "h1" });
     expect(empty.status).toBe(422);
-    expect(await readFile(path.join(workTree, "index.html"), "utf8")).toBe(
+    expect(await readFile(path.join(workTree, "index.html"), "utf-8")).toBe(
       PAGE
     );
   });
@@ -399,7 +399,7 @@ describe("direct edit route", { timeout: 30000 }, () => {
     expect(((await response.json()) as { error: string }).error).toBe(
       "no_base_version"
     );
-    expect(await readFile(path.join(workTree, "index.html"), "utf8")).toBe(
+    expect(await readFile(path.join(workTree, "index.html"), "utf-8")).toBe(
       PAGE
     );
   });
@@ -430,11 +430,11 @@ describe("direct edit route", { timeout: 30000 }, () => {
       style: { color: "blue" },
     });
     expect(response.status).toBe(200);
-    expect(await readFile(path.join(workTree, "src", "A.tsx"), "utf8")).toBe(
+    expect(await readFile(path.join(workTree, "src", "A.tsx"), "utf-8")).toBe(
       tsx.replace('"red"', '"blue"')
     );
     await call("POST", `/api/projects/${project.id}/d/main/undo`);
-    expect(await readFile(path.join(workTree, "src", "A.tsx"), "utf8")).toBe(
+    expect(await readFile(path.join(workTree, "src", "A.tsx"), "utf-8")).toBe(
       tsx
     );
   });
@@ -457,7 +457,7 @@ describe("direct edit route", { timeout: 30000 }, () => {
         })
       ).version.title
     ).toBe("Rename h1 to Hero title");
-    expect(await readFile(file, "utf8")).toContain(
+    expect(await readFile(file, "utf-8")).toContain(
       '<h1 data-name="Hero title" class="t">'
     );
     expect(
@@ -488,7 +488,7 @@ describe("direct edit route", { timeout: 30000 }, () => {
     });
     expect(moved.version.title).toBe("Move p up");
     expect(moved.moved).toEqual(H1);
-    expect(await readFile(file, "utf8")).toBe(
+    expect(await readFile(file, "utf-8")).toBe(
       PAGE.replace(
         '<h1 class="t">Hello</h1>\n  <p>One <b>two</b></p>',
         '<p>One <b>two</b></p>\n  <h1 data-name="Hero title" class="t">Hello</h1>'

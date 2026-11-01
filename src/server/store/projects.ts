@@ -235,8 +235,8 @@ async function prebuiltMatches(
 ): Promise<boolean> {
   if (!existsSync(path.join(prebuilt, "node_modules"))) return false;
   const [wanted, shipped] = await Promise.all([
-    readFile(path.join(cacheDir, "package.json"), "utf8"),
-    readFile(path.join(prebuilt, "package.json"), "utf8"),
+    readFile(path.join(cacheDir, "package.json"), "utf-8"),
+    readFile(path.join(prebuilt, "package.json"), "utf-8"),
   ]);
   return wanted === shipped;
 }
@@ -265,7 +265,7 @@ async function linkNodeModules(
 }
 
 async function readJson(file: string): Promise<unknown> {
-  return JSON.parse(await readFile(file, "utf8")) as unknown;
+  return JSON.parse(await readFile(file, "utf-8")) as unknown;
 }
 
 function hasViteDependency(pkg: unknown): boolean {
@@ -359,10 +359,10 @@ export function createProjectStore(
       const marker = path.join(templateCacheDir, ".studio-installed");
       const pkg = await readFile(
         path.join(templateDir, "package.json"),
-        "utf8"
+        "utf-8"
       );
       const installedFor = existsSync(marker)
-        ? await readFile(marker, "utf8")
+        ? await readFile(marker, "utf-8")
         : null;
       if (installedFor === pkg && existsSync(modules)) return modules;
       await mkdir(templateCacheDir, { recursive: true });
@@ -1000,7 +1000,7 @@ export function createProjectStore(
       try {
         return await readFile(
           path.join(mainDirection(project).workTree, DESIGN_MD_FILE),
-          "utf8"
+          "utf-8"
         );
       } catch (error) {
         if (isNodeError(error) && error.code === "ENOENT") return null;

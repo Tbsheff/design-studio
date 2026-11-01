@@ -185,7 +185,7 @@ describe("define_tweaks tool", () => {
     expect(failed(result)).toBe(false);
     expect(result.content[0]?.text).toContain("Every cssVar is declared");
     const saved = JSON.parse(
-      await readFile(path.join(workTree, TWEAKS_FILE), "utf8")
+      await readFile(path.join(workTree, TWEAKS_FILE), "utf-8")
     ) as { controls: TweakControl[] };
     expect(saved.controls).toEqual([GAP]);
     expect((await readTweaksState(workTree)).current).toEqual({ gap: 16 });
@@ -222,7 +222,7 @@ describe("define_tweaks tool", () => {
     const critique = await runDefineTweaks({ ctx: ctx("critique") }, [GAP]);
     expect(failed(critique)).toBe(true);
     await expect(
-      readFile(path.join(workTree, TWEAKS_FILE), "utf8")
+      readFile(path.join(workTree, TWEAKS_FILE), "utf-8")
     ).rejects.toThrow();
   });
 });

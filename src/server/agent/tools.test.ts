@@ -119,7 +119,7 @@ describe("render_check tool", () => {
     await runRenderCheck(d, counters);
     await runRenderCheck(d, counters);
     const saved = JSON.parse(
-      await readFile(path.join(d.runsDir, "r1-check-2.json"), "utf8")
+      await readFile(path.join(d.runsDir, "r1-check-2.json"), "utf-8")
     );
     expect(saved).toHaveLength(2);
     expect(saved[0]).toMatchObject({

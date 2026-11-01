@@ -142,7 +142,7 @@ async function readFirst(
     "/index.js",
   ]) {
     const file = `${base}${suffix}`;
-    const text = await readFile(path.join(workTree, file), "utf8").catch(
+    const text = await readFile(path.join(workTree, file), "utf-8").catch(
       () => null
     );
     if (text !== null) return { file, text };
@@ -154,7 +154,7 @@ export async function pageOwner(
   workTree: string,
   routeFile: string
 ): Promise<PageOwner | null> {
-  const source = await readFile(path.join(workTree, routeFile), "utf8").catch(
+  const source = await readFile(path.join(workTree, routeFile), "utf-8").catch(
     () => null
   );
   if (!source || /<main\b/.test(source)) return null;

@@ -136,14 +136,14 @@ async function copyOne(
   const ext = path.posix.extname(relative).toLowerCase();
   if (ext === ".html" || ext === ".htm") {
     const html = cleanHtml(
-      await injectForPreview(root, relative, await readFile(from, "utf8"))
+      await injectForPreview(root, relative, await readFile(from, "utf-8"))
     );
     assertClean(relative, html, secrets);
     await writeFile(to, html);
     return Buffer.byteLength(html);
   }
   if ([".css", ".js", ".mjs", ".json", ".svg", ".txt"].includes(ext))
-    assertClean(relative, await readFile(from, "utf8"), secrets);
+    assertClean(relative, await readFile(from, "utf-8"), secrets);
   await copyFile(from, to);
   return (await lstat(to)).size;
 }
@@ -188,7 +188,7 @@ export async function rootRefPages(
 ): Promise<string[]> {
   const hits: string[] = [];
   for (const relative of files.filter((f) => /\.(html?|css)$/i.test(f))) {
-    if (ROOT_REF.test(await readFile(path.join(outDir, relative), "utf8")))
+    if (ROOT_REF.test(await readFile(path.join(outDir, relative), "utf-8")))
       hits.push(relative);
   }
   return hits;

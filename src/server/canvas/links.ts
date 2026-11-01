@@ -28,7 +28,7 @@ export function linksPath(workTree: string): string {
 }
 
 export async function readLinksAt(workTree: string): Promise<LinksFile> {
-  const text = await readFile(linksPath(workTree), "utf8").catch(() => null);
+  const text = await readFile(linksPath(workTree), "utf-8").catch(() => null);
   return (text === null ? null : parseLinksText(text)) ?? emptyLinksFile();
 }
 

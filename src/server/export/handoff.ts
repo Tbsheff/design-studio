@@ -487,7 +487,7 @@ async function handoffTokens(
 ): Promise<{ entries: CompiledTokenEntry[]; names: TokenNames }> {
   const app = ds ? null : await appTokensForHandoff(source, root);
   const names: TokenNames = {
-    appVars: appVarsOf(tokensJson ? tokensJson.data.toString("utf8") : null),
+    appVars: appVarsOf(tokensJson ? tokensJson.data.toString("utf-8") : null),
     appFile: app?.file ?? null,
   };
   return { entries: ds?.entries ?? app?.entries ?? [], names };
@@ -525,7 +525,7 @@ export async function buildHandoff(
     throw new Error("the project is too large for a handoff bundle");
   const canvasText = await readFile(
     path.join(root, ...CANVAS_FILE.split("/")),
-    "utf8"
+    "utf-8"
   ).catch(() => null);
   const canvas = canvasText === null ? null : parseCanvasText(canvasText);
   if (canvasText !== null && canvas)
@@ -542,13 +542,13 @@ export async function buildHandoff(
     ds?.css ??
     sourceEntries
       .find((e) => e.name === TOKENS_CSS_FILE)
-      ?.data.toString("utf8") ??
+      ?.data.toString("utf-8") ??
     null;
   if (tokensCss) await put("tokens.css", tokensCss);
   if (tokensJson) await put("tokens.json", tokensJson.data);
   const designMd = await readFile(
     path.join(root, DESIGN_MD_FILE),
-    "utf8"
+    "utf-8"
   ).catch(() => null);
   if (designMd) await put("DESIGN.md", designMd);
 

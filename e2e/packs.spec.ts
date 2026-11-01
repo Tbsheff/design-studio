@@ -69,7 +69,7 @@ test("design-system packs: picker, project files, top bar chip and popover", asy
       .toBe(true);
   }
   expect(
-    readFileSync(path.join(tree, "design-system/tokens.css"), "utf8")
+    readFileSync(path.join(tree, "design-system/tokens.css"), "utf-8")
   ).toContain("--primary");
 
   const chip = page

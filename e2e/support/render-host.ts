@@ -54,10 +54,10 @@ export function startRenderHost(): Promise<RenderHostHandle> {
       reject(new Error(`render host exited ${code}: ${output}`))
     );
     child.stderr?.on("data", (chunk: Buffer) => {
-      output += chunk.toString("utf8");
+      output += chunk.toString("utf-8");
     });
     child.stdout?.on("data", (chunk: Buffer) => {
-      output += chunk.toString("utf8");
+      output += chunk.toString("utf-8");
       const line = output.split("\n").find((entry) => entry.startsWith(READY));
       if (!line || child.pid === undefined) return;
       clearTimeout(timer);

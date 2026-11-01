@@ -99,7 +99,7 @@ function hashTree(dir: string): Record<string, string> {
 
 function processTree(rootPid: number): { pid: number; command: string }[] {
   const rows = execFileSync("ps", ["-A", "-o", "pid=,ppid=,command="], {
-    encoding: "utf8",
+    encoding: "utf-8",
   })
     .split("\n")
     .map((line) => line.trim().match(/^(\d+)\s+(\d+)\s+(.*)$/))
@@ -304,10 +304,10 @@ async function main(): Promise<void> {
       const run1 = await finished(created.runId);
       const tree1 = hashTree(mainTree);
       const papayaOnDisk = Object.keys(tree1).filter((file) =>
-        /papaya/i.test(readFileSync(path.join(mainTree, file), "utf8"))
+        /papaya/i.test(readFileSync(path.join(mainTree, file), "utf-8"))
       );
       const h1Run1 = firstH1(
-        readFileSync(path.join(mainTree, "index.html"), "utf8")
+        readFileSync(path.join(mainTree, "index.html"), "utf-8")
       );
       const sessionAfter1 = (await direction(pid, mainId)).sessionId;
       results.ac11_run1 = {
@@ -432,7 +432,7 @@ async function main(): Promise<void> {
       sessionAfter1: string | null
     ): Promise<void> => {
       const h1Run2 = firstH1(
-        readFileSync(path.join(mainTree, "index.html"), "utf8")
+        readFileSync(path.join(mainTree, "index.html"), "utf-8")
       );
       const frameH1 =
         (
@@ -443,7 +443,7 @@ async function main(): Promise<void> {
             .textContent()
         )?.trim() ?? null;
       const sessionAfter2 = (await direction(pid, mainId)).sessionId;
-      const resumeFallback = readFileSync(serverLog, "utf8").includes(
+      const resumeFallback = readFileSync(serverLog, "utf-8").includes(
         "retrying without resume"
       );
       results.ac11_run2 = {
@@ -514,7 +514,7 @@ async function main(): Promise<void> {
       const mainNow = await direction(pid, mainId);
       const bHtml = readFileSync(
         path.join(bNow.workTree, "index.html"),
-        "utf8"
+        "utf-8"
       );
       results.ac12 = {
         run: runBrief(run.summary),
@@ -736,7 +736,7 @@ async function main(): Promise<void> {
         (await startRun(pid, b.id, escapePrompt)).runId
       );
       const found = execFileSync("find", [work, "-name", "escape.txt"], {
-        encoding: "utf8",
+        encoding: "utf-8",
       }).trim();
       results.ac16_escape = {
         ...runBrief(escape.summary),
@@ -797,7 +797,7 @@ async function main(): Promise<void> {
           await call("POST", `/api/projects/${pid}/d/${mainId}/discard`);
       }
       const found = execFileSync("find", [work, "-name", "escape.txt"], {
-        encoding: "utf8",
+        encoding: "utf-8",
       }).trim();
       results.ac16_escape2 = {
         cases,

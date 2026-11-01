@@ -76,7 +76,7 @@ export class DevServerPids {
 
   private async read(): Promise<Records> {
     try {
-      const parsed = JSON.parse(await readFile(this.file, "utf8")) as Records;
+      const parsed = JSON.parse(await readFile(this.file, "utf-8")) as Records;
       return parsed && typeof parsed === "object" ? parsed : {};
     } catch {
       return {};

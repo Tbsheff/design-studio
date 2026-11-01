@@ -10,14 +10,14 @@ const readWaves = (): Waves | undefined => {
   if (!existsSync(ROADMAP)) {
     return undefined;
   }
-  const text = readFileSync(ROADMAP, "utf8");
+  const text = readFileSync(ROADMAP, "utf-8");
   const appendix = text.slice(text.indexOf("## Appendix A"));
   const json = /```json\n(?<body>[\s\S]*?)\n```/u.exec(appendix)?.groups?.body;
   return json ? JSON.parse(json.replaceAll(/,(\s*[}\]])/gu, "$1")) : undefined;
 };
 
 const tracked = () =>
-  execFileSync("git", ["ls-files"], { encoding: "utf8" })
+  execFileSync("git", ["ls-files"], { encoding: "utf-8" })
     .split("\n")
     .filter(Boolean);
 

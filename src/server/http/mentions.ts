@@ -129,7 +129,7 @@ export async function readMentionFiles(
     const absolute = path.resolve(workTree, mentionPath);
     const info = await stat(absolute).catch(() => null);
     if (!info?.isFile()) continue;
-    const text = (await readFile(absolute, "utf8").catch(() => "")).slice(
+    const text = (await readFile(absolute, "utf-8").catch(() => "")).slice(
       0,
       FILE_MAX_BYTES
     );

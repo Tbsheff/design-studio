@@ -36,7 +36,7 @@ async function readSource(
   stamp: string
 ): Promise<TokenSource> {
   const [text, manifest] = await Promise.all([
-    readFile(path.join(workTree, TOKENS_FILE), "utf8"),
+    readFile(path.join(workTree, TOKENS_FILE), "utf-8"),
     readManifest(workTree),
   ]);
   const parsed = parseTokenFile(text);

@@ -104,7 +104,7 @@ export async function listFiles(
 async function readSmall(file: string): Promise<string | null> {
   const info = await stat(file).catch(() => null);
   if (!info?.isFile() || info.size > MAX_FILE_BYTES) return null;
-  const text = await readFile(file, "utf8").catch(() => null);
+  const text = await readFile(file, "utf-8").catch(() => null);
   return text === null || text.includes("\u0000") ? null : text;
 }
 

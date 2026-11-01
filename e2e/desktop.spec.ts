@@ -321,7 +321,7 @@ test("React project hot-reloads a disk edit and Vite runs as Node", async () => 
   const appFile = path.join(main.workTree, "src", "App.tsx");
   writeFileSync(
     appFile,
-    readFileSync(appFile, "utf8").replace(
+    readFileSync(appFile, "utf-8").replace(
       "<h1>Desktop react check</h1>",
       "<h1>Edited on disk</h1>"
     )

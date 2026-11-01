@@ -106,7 +106,7 @@ async function main(): Promise<void> {
         name: "Smoke Kit",
         tokensFile: {
           name: "dtcg.tokens.json",
-          text: readFileSync(FIXTURE, "utf8"),
+          text: readFileSync(FIXTURE, "utf-8"),
         },
       }
     );

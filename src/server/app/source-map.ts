@@ -225,7 +225,7 @@ function remember(key: string, value: string | null): void {
 
 function countLines(file: string): number | null {
   try {
-    return readFileSync(file, "utf8").split("\n").length;
+    return readFileSync(file, "utf-8").split("\n").length;
   } catch {
     return null;
   }
@@ -317,7 +317,7 @@ function opensElement(target: SourceTarget, source: string): boolean {
   try {
     const line = readFileSync(
       path.join(target.workTree, match[1] ?? ""),
-      "utf8"
+      "utf-8"
     ).split("\n")[Number(match[2]) - 1];
     return line?.[Number(match[3]) - 1] === "<";
   } catch {

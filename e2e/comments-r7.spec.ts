@@ -115,7 +115,7 @@ async function expectSentImage(
         "attachments",
         `${attachmentId}.json`
       ),
-      "utf8"
+      "utf-8"
     )
   ) as Attachment;
   expect(meta.mime).toBe("image/png");

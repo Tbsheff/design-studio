@@ -238,7 +238,7 @@ async function planFile(
   request: StructureEditRequest,
   ctx: PlanContext
 ): Promise<FileResult> {
-  const original = await readFile(work.target.file, "utf8");
+  const original = await readFile(work.target.file, "utf-8");
   const doc = structureDoc(work.target.relative, original);
   const locate = (target: StructureTarget, role: "target" | "into" | "ref") =>
     doc.node(target.source, role, target.tag);

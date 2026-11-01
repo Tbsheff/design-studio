@@ -73,7 +73,7 @@ export async function writesKeptLayout(change: {
       if (known === undefined) return false;
       const now = await readFile(
         path.join(change.root, ...relative.split("/")),
-        "utf8"
+        "utf-8"
       ).catch(() => null);
       return now === known;
     })

@@ -146,7 +146,7 @@ function majorOf(range: unknown): TailwindVersion | null {
 
 async function readText(file: string | null): Promise<string | null> {
   if (!file) return null;
-  return readFile(file, "utf8").catch(() => null);
+  return readFile(file, "utf-8").catch(() => null);
 }
 
 async function packageVersion(root: string): Promise<TailwindVersion | null> {

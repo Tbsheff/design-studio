@@ -76,7 +76,7 @@ function readSmall(file: string): string | null {
   try {
     if (!statSync(file).isFile() || statSync(file).size > MAX_SOURCE_BYTES)
       return null;
-    return readFileSync(file, "utf8");
+    return readFileSync(file, "utf-8");
   } catch {
     return null;
   }

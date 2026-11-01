@@ -52,7 +52,7 @@ test("Cmd+Z undoes three direct edits to the exact start bytes and Shift+Cmd+Z r
   const frame = frontFrame(page);
   await expect(frame.locator("h1")).toHaveText("Harbor Undo Stack");
   const file = path.join(main.workTree, "index.html");
-  const read = () => readFileSync(file, "utf8");
+  const read = () => readFileSync(file, "utf-8");
   const states = [read()];
 
   await selectInFrame(page, "h1");

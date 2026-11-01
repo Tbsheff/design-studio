@@ -163,7 +163,7 @@ class WorkTreeGraph {
   private async load(): Promise<void> {
     if (!this.cacheFile) return;
     const saved = JSON.parse(
-      await readFile(this.cacheFile, "utf8")
+      await readFile(this.cacheFile, "utf-8")
     ) as SavedGraph;
     if (
       saved.version !== SAVED_VERSION ||
@@ -335,7 +335,7 @@ export class RouteGraph {
 
   private async imports(scope: WalkScope, file: string): Promise<string[]> {
     const ts = await loadTs();
-    const text = await readFile(file, "utf8").catch(() => "");
+    const text = await readFile(file, "utf-8").catch(() => "");
     const specs = ts
       .preProcessFile(text, true, true)
       .importedFiles.map((ref) => ref.fileName);

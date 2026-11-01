@@ -213,7 +213,7 @@ describe("prepareSkills", () => {
     for (const dir of prepared.pluginDirs) {
       expect(readdirSync(dir).sort()).toEqual([".claude-plugin", "skills"]);
       const manifest = JSON.parse(
-        readFileSync(path.join(dir, ".claude-plugin", "plugin.json"), "utf8")
+        readFileSync(path.join(dir, ".claude-plugin", "plugin.json"), "utf-8")
       ) as Record<string, unknown>;
       expect(Object.keys(manifest).sort()).toEqual([
         "description",

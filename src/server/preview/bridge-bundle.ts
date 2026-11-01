@@ -30,7 +30,7 @@ const PREBUILT_BRIDGE_FILE = "bridge.js";
 
 function prebuiltOrBundle(): Promise<string> {
   const prebuilt = packagedResource(PREBUILT_BRIDGE_FILE);
-  return prebuilt ? readFile(prebuilt, "utf8") : bundleBridge();
+  return prebuilt ? readFile(prebuilt, "utf-8") : bundleBridge();
 }
 
 export function loadBridgeScript(): Promise<string> {

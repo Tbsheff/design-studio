@@ -62,7 +62,7 @@ function saveResults(name: string, value: Stats): void {
   mkdirSync(path.dirname(RESULTS_FILE), { recursive: true });
   let saved: { runId?: string; results?: Record<string, Stats> } = {};
   try {
-    saved = JSON.parse(readFileSync(RESULTS_FILE, "utf8"));
+    saved = JSON.parse(readFileSync(RESULTS_FILE, "utf-8"));
   } catch {
     saved = {};
   }
@@ -195,7 +195,7 @@ async function bytesAt(
 ): Promise<number> {
   const deadline = Date.now() + 5000;
   for (;;) {
-    if (ok(readFileSync(file, "utf8"))) return Date.now();
+    if (ok(readFileSync(file, "utf-8"))) return Date.now();
     if (Date.now() > deadline)
       throw new Error(`expected bytes never reached ${file}`);
     await new Promise((resolve) => setTimeout(resolve, 2));
@@ -336,7 +336,7 @@ async function fontSample(
 ): Promise<{ visible: number; bytes: number }> {
   const field = page.getByLabel("Font size", { exact: true });
   const needle = `font-size: ${size}px`;
-  expect(readFileSync(ctx.file, "utf8")).not.toContain(needle);
+  expect(readFileSync(ctx.file, "utf-8")).not.toContain(needle);
   const seen = await watch(frontFrame(page).locator("h1"), {
     kind: "style",
     prop: "font-size",
@@ -376,7 +376,7 @@ async function flexSample(
   const layout = page.getByRole("region", { name: "Auto layout" });
   await layout.getByRole("button", { name: "Horizontal" }).click();
   await expect
-    .poll(() => readFileSync(ctx.file, "utf8"))
+    .poll(() => readFileSync(ctx.file, "utf-8"))
     .not.toContain("flex-direction: column");
   await settled(page, ctx);
   const seen = await watch(frontFrame(page).locator(".cards"), {
@@ -445,7 +445,7 @@ async function textSample(
   text: string,
   needle: string
 ): Promise<{ caret: number; bytes: number }> {
-  expect(readFileSync(ctx.file, "utf8")).not.toContain(needle);
+  expect(readFileSync(ctx.file, "utf-8")).not.toContain(needle);
   const h1 = frontFrame(page).locator("h1");
   await h1.evaluate(
     () => ((window as unknown as { __caretMs?: number }).__caretMs = undefined)
@@ -526,7 +526,7 @@ async function resizeSample(
   );
   const want = start + 4 + delta;
   const needle = `width: ${want}px`;
-  expect(readFileSync(ctx.file, "utf8")).not.toContain(needle);
+  expect(readFileSync(ctx.file, "utf-8")).not.toContain(needle);
   const box = await handle.boundingBox();
   if (!box) throw new Error("no resize handle");
   const x = box.x + box.width / 2;
@@ -581,7 +581,7 @@ async function renameSample(
   to: string
 ): Promise<{ visible: number; bytes: number }> {
   const needle = `data-name="${to}"`;
-  expect(readFileSync(ctx.file, "utf8")).not.toContain(needle);
+  expect(readFileSync(ctx.file, "utf-8")).not.toContain(needle);
   await page.locator(".layers-row", { hasText: from }).first().dblclick();
   const input = page.getByLabel("Layer name");
   await expect(input).toBeFocused();
@@ -631,7 +631,7 @@ async function moveSample(
   down: boolean
 ): Promise<{ visible: number; bytes: number }> {
   const want = down ? ["c2", "c1", "c3"] : ["c1", "c2", "c3"];
-  expect(order(readFileSync(ctx.file, "utf8"))).not.toEqual(want);
+  expect(order(readFileSync(ctx.file, "utf-8"))).not.toEqual(want);
   const seen = await watchSwap(page);
   await focusStudio(page);
   await clearStamps(page);
@@ -674,12 +674,12 @@ async function undoSample(
   size: number
 ): Promise<{ visible: number; bytes: number }> {
   await selectInFrame(page, "h1");
-  const before = readFileSync(ctx.file, "utf8");
+  const before = readFileSync(ctx.file, "utf-8");
   const field = page.getByLabel("Font size", { exact: true });
   await field.fill(String(size));
   await field.press("Enter");
   await expect
-    .poll(() => readFileSync(ctx.file, "utf8"))
+    .poll(() => readFileSync(ctx.file, "utf-8"))
     .toContain(`font-size: ${size}px`);
   await settled(page, ctx);
   await focusCanvas(page);

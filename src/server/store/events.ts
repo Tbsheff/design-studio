@@ -40,7 +40,7 @@ export function createEventBus(dataDir: string): EventBus {
   const readFileEvents = (projectId: string): StudioEvent[] => {
     const file = eventsFile(projectId);
     if (!existsSync(file)) return [];
-    return parseLines(readFileSync(file, "utf8"));
+    return parseLines(readFileSync(file, "utf-8"));
   };
 
   const logFor = (projectId: string): ProjectLog => {

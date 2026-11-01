@@ -172,7 +172,7 @@ async function errorOf(
 }
 
 const read = (workTree: string, relative: string) =>
-  readFile(path.join(workTree, relative), "utf8");
+  readFile(path.join(workTree, relative), "utf-8");
 
 beforeEach(async () => {
   ({ config, cleanup } = await makeTempConfig());

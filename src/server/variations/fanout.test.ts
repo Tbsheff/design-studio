@@ -210,7 +210,7 @@ describe("variations fan-out", { timeout: 30000 }, () => {
     );
     const pages = await Promise.all(
       group.map((direction) =>
-        readFile(path.join(direction.workTree, "index.html"), "utf8")
+        readFile(path.join(direction.workTree, "index.html"), "utf-8")
       )
     );
     expect(
@@ -232,7 +232,7 @@ describe("variations fan-out", { timeout: 30000 }, () => {
         "runs",
         `${result.items[1]?.runId}.jsonl`
       ),
-      "utf8"
+      "utf-8"
     );
     const sent = sentText
       .trim()
@@ -341,7 +341,7 @@ describe("variations fan-out", { timeout: 30000 }, () => {
     );
     const pageB = await readFile(
       path.join(directionB!.workTree, "index.html"),
-      "utf8"
+      "utf-8"
     );
     const asideLine =
       pageB.split("\n").findIndex((line) => line.includes("<aside")) + 1;
@@ -377,7 +377,7 @@ describe("variations fan-out", { timeout: 30000 }, () => {
     const lines = (
       await readFile(
         path.join(projects.projectDir(project.id), "runs", `${runId}.jsonl`),
-        "utf8"
+        "utf-8"
       )
     )
       .trim()
@@ -397,7 +397,7 @@ describe("variations fan-out", { timeout: 30000 }, () => {
           .workTree,
         "index.html"
       ),
-      "utf8"
+      "utf-8"
     );
     expect(pageA).toContain('class="mock-mix" data-from="Variation B"');
   });

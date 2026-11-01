@@ -18,7 +18,7 @@ function listenerPid(port: number): number | null {
     const out = execFileSync(
       "lsof",
       ["-nP", `-iTCP:${port}`, "-sTCP:LISTEN", "-t"],
-      { encoding: "utf8" }
+      { encoding: "utf-8" }
     ).trim();
     return out ? Number(out.split("\n")[0]) : null;
   } catch {
@@ -56,7 +56,7 @@ test("AC-49: React dev server stays running between edits", async ({
   );
 
   const app = path.join(mainDirection(project).workTree, "src", "App.tsx");
-  const original = readFileSync(app, "utf8");
+  const original = readFileSync(app, "utf-8");
   const checks: {
     step: string;
     url: string;

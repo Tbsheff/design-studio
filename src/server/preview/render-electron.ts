@@ -44,7 +44,7 @@ function socketTransport(socketPath: string): Transport {
   socket.unref();
   let buffer = "";
   const handlers: ((response: RenderResponse) => void)[] = [];
-  socket.setEncoding("utf8");
+  socket.setEncoding("utf-8");
   socket.on("data", (chunk: string) => {
     buffer += chunk;
     let newline = buffer.indexOf("\n");

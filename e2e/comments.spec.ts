@@ -168,7 +168,7 @@ test("Comments: queue two pins, survive reload and zoom, send in one run", async
   ).toBeVisible();
   await shoot(page, "pins");
 
-  const before = readFileSync(indexFile, "utf8");
+  const before = readFileSync(indexFile, "utf-8");
   writeFileSync(
     indexFile,
     before.replace("<main>", '<main>\n    <p class="eyebrow">New this week</p>')
@@ -272,7 +272,7 @@ test("Comments: orphaned when the element is deleted, then re-pinned", async ({
   await pinComment(page, ".cta", "Use a stronger verb");
   await page.keyboard.press("Escape");
   await expect(pin(page, 1)).toBeVisible();
-  const source = readFileSync(indexFile, "utf8");
+  const source = readFileSync(indexFile, "utf-8");
   writeFileSync(
     indexFile,
     source.replace(/\s*<button class="cta"[^>]*>[^<]*<\/button>/, "")

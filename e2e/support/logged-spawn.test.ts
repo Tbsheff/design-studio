@@ -31,7 +31,7 @@ afterEach(() => {
 async function waitForFile(file: string, timeoutMs: number): Promise<string> {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
-    if (existsSync(file)) return readFileSync(file, "utf8");
+    if (existsSync(file)) return readFileSync(file, "utf-8");
     await new Promise((resolve) => setTimeout(resolve, 50));
   }
   throw new Error(`no ${file} within ${timeoutMs}ms`);
@@ -59,12 +59,12 @@ describe("spawnDetachedToLog", () => {
       ].join("\n")
     );
     grandchildPid = Number(
-      execFileSync(TSX, [starter], { cwd: dir, encoding: "utf8" }).trim()
+      execFileSync(TSX, [starter], { cwd: dir, encoding: "utf-8" }).trim()
     );
     expect(grandchildPid).toBeGreaterThan(0);
 
     expect(await waitForFile(exitPath, 15_000)).toBe("0");
-    const log = readFileSync(logPath, "utf8");
+    const log = readFileSync(logPath, "utf-8");
     expect(log).toContain(`line ${LINES - 1}`);
     expect(log).toContain(`err ${LINES - 1}`);
   }, 30_000);

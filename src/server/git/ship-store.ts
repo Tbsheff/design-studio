@@ -59,7 +59,7 @@ const fileOf = (projectDir: string) => path.join(projectDir, FILE);
 
 export async function readShipState(projectDir: string): Promise<ShipState> {
   const parsed: unknown = JSON.parse(
-    await readFile(fileOf(projectDir), "utf8").catch(() => "{}")
+    await readFile(fileOf(projectDir), "utf-8").catch(() => "{}")
   );
   const raw = (typeof parsed === "object" && parsed !== null ? parsed : {}) as {
     settings?: unknown;

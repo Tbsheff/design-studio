@@ -295,7 +295,7 @@ export function createProjectLibrary(deps: LibraryDeps): ProjectLibrary {
       if (!existsSync(path.join(from, "project.json")))
         throw new NotFoundError(`trash item ${trashId} not found`);
       const record = JSON.parse(
-        await readFile(path.join(from, TRASH_RECORD), "utf8")
+        await readFile(path.join(from, TRASH_RECORD), "utf-8")
       ) as { projectId: string };
       const projectId = assertSafeId(record.projectId, "projectId");
       const target = projects.projectDir(projectId);
@@ -317,7 +317,7 @@ export function createProjectLibrary(deps: LibraryDeps): ProjectLibrary {
 async function readTrashedProject(dir: string): Promise<Project | null> {
   try {
     return JSON.parse(
-      await readFile(path.join(dir, "project.json"), "utf8")
+      await readFile(path.join(dir, "project.json"), "utf-8")
     ) as Project;
   } catch {
     return null;
@@ -341,7 +341,7 @@ async function readTrashItem(
   const dir = path.join(root, trashId);
   try {
     const record = JSON.parse(
-      await readFile(path.join(dir, TRASH_RECORD), "utf8")
+      await readFile(path.join(dir, TRASH_RECORD), "utf-8")
     ) as { projectId?: unknown; name?: unknown; trashedAt?: unknown };
     const project = await readTrashedProject(dir);
     const main =
@@ -373,11 +373,11 @@ async function readTrashItem(
 async function mergeGhost(ghost: string, trashed: string): Promise<void> {
   const events = path.join(ghost, "events.jsonl");
   if (existsSync(events)) {
-    const late = await readFile(events, "utf8");
+    const late = await readFile(events, "utf-8");
     const kept = path.join(trashed, "events.jsonl");
     await writeFile(
       kept,
-      `${existsSync(kept) ? await readFile(kept, "utf8") : ""}${late}`
+      `${existsSync(kept) ? await readFile(kept, "utf-8") : ""}${late}`
     );
   }
   for (const entry of await readdir(ghost)) {

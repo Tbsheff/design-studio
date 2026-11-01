@@ -84,7 +84,7 @@ function rootsOf(json: Json, doc: FigmaDocument): void {
 }
 
 export function parseFigmaNodes(text: string): FigmaDocument {
-  if (Buffer.byteLength(text, "utf8") > FIGMA_NODES_MAX_BYTES)
+  if (Buffer.byteLength(text, "utf-8") > FIGMA_NODES_MAX_BYTES)
     throw new FigmaInputError(
       "The Figma JSON is larger than 10 MB. Export one frame with GET /v1/files/:key/nodes?ids=<node id>."
     );

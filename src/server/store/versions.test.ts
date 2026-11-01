@@ -99,9 +99,9 @@ describe("version store", { timeout: 20000 }, () => {
       directionId: "main",
     });
     expect(undo.parentId).toBe(v2!.id);
-    expect(await readFile(path.join(main.workTree, "index.html"), "utf8")).toBe(
-      "v1"
-    );
+    expect(
+      await readFile(path.join(main.workTree, "index.html"), "utf-8")
+    ).toBe("v1");
     expect(existsSync(path.join(main.workTree, "extra.html"))).toBe(false);
 
     const list = await versions.list(project, main);
@@ -117,12 +117,12 @@ describe("version store", { timeout: 20000 }, () => {
       restoredFrom: v2!.id,
       directionId: "main",
     });
-    expect(await readFile(path.join(main.workTree, "index.html"), "utf8")).toBe(
-      "v2"
-    );
-    expect(await readFile(path.join(main.workTree, "extra.html"), "utf8")).toBe(
-      "extra"
-    );
+    expect(
+      await readFile(path.join(main.workTree, "index.html"), "utf-8")
+    ).toBe("v2");
+    expect(
+      await readFile(path.join(main.workTree, "extra.html"), "utf-8")
+    ).toBe("extra");
   });
 
   it("undo and restore titles name the original version and never nest", async () => {
@@ -167,9 +167,9 @@ describe("version store", { timeout: 20000 }, () => {
 
     const after = await versions.discard(project, main);
     expect(after).toEqual({ dirty: false, changed: [] });
-    expect(await readFile(path.join(main.workTree, "index.html"), "utf8")).toBe(
-      "clean"
-    );
+    expect(
+      await readFile(path.join(main.workTree, "index.html"), "utf-8")
+    ).toBe("clean");
     expect(existsSync(path.join(main.workTree, "new/page.html"))).toBe(false);
     expect(existsSync(path.join(main.workTree, ".DS_Store"))).toBe(true);
   });
@@ -189,7 +189,7 @@ describe("version store", { timeout: 20000 }, () => {
     project = await projects.get(project.id);
     expect(branch.parentVersionId).toBe(base!.id);
     expect(
-      await readFile(path.join(branch.workTree, "index.html"), "utf8")
+      await readFile(path.join(branch.workTree, "index.html"), "utf-8")
     ).toBe("base");
     const fork = await versions.commit(project, branch, "Fork", {
       kind: "fork",
@@ -212,9 +212,9 @@ describe("version store", { timeout: 20000 }, () => {
       dirty: false,
       changed: [],
     });
-    expect(await readFile(path.join(main.workTree, "index.html"), "utf8")).toBe(
-      "base"
-    );
+    expect(
+      await readFile(path.join(main.workTree, "index.html"), "utf-8")
+    ).toBe("base");
     expect(existsSync(path.join(main.workTree, "alt.html"))).toBe(false);
 
     expect(
@@ -237,10 +237,10 @@ describe("version store", { timeout: 20000 }, () => {
     const target = await mkdtemp(path.join(os.tmpdir(), "studio checkout "));
     try {
       await versions.checkoutInto(project, version!.id, target);
-      expect(await readFile(path.join(target, "index.html"), "utf8")).toBe(
+      expect(await readFile(path.join(target, "index.html"), "utf-8")).toBe(
         "<p>export me</p>"
       );
-      expect(await readFile(path.join(target, "assets/a.css"), "utf8")).toBe(
+      expect(await readFile(path.join(target, "assets/a.css"), "utf-8")).toBe(
         "p{}"
       );
     } finally {
@@ -251,7 +251,7 @@ describe("version store", { timeout: 20000 }, () => {
     expect(snapshotDir).toBe(
       path.join(projects.projectDir(project.id), "snapshots", version!.id)
     );
-    expect(await readFile(path.join(snapshotDir, "index.html"), "utf8")).toBe(
+    expect(await readFile(path.join(snapshotDir, "index.html"), "utf-8")).toBe(
       "<p>export me</p>"
     );
     expect(await versions.snapshot(project, version!.id)).toBe(snapshotDir);
@@ -284,19 +284,19 @@ describe("version store", { timeout: 20000 }, () => {
     ]);
 
     await versions.restore(project, main, v2!.id, "undo");
-    expect(await readFile(path.join(main.workTree, "index.html"), "utf8")).toBe(
-      "v1"
-    );
     expect(
-      await readFile(path.join(main.workTree, "user-notes.txt"), "utf8")
+      await readFile(path.join(main.workTree, "index.html"), "utf-8")
+    ).toBe("v1");
+    expect(
+      await readFile(path.join(main.workTree, "user-notes.txt"), "utf-8")
     ).toBe("mine");
     expect(
-      await readFile(path.join(main.workTree, "notes/deep.md"), "utf8")
+      await readFile(path.join(main.workTree, "notes/deep.md"), "utf-8")
     ).toBe("deep");
 
     await versions.restore(project, main, v1!.id, "restore");
     expect(
-      await readFile(path.join(main.workTree, "user-notes.txt"), "utf8")
+      await readFile(path.join(main.workTree, "user-notes.txt"), "utf-8")
     ).toBe("mine");
     expect((await versions.status(project, main)).changed.sort()).toEqual([
       "notes/deep.md",
@@ -320,11 +320,11 @@ describe("version store", { timeout: 20000 }, () => {
     const trashRoot = path.join(projects.projectDir(project.id), "trash");
     const [stamp] = await readdir(trashRoot);
     expect(
-      await readFile(path.join(trashRoot, stamp!, "stray/note.txt"), "utf8")
+      await readFile(path.join(trashRoot, stamp!, "stray/note.txt"), "utf-8")
     ).toBe("keep me somewhere");
-    expect(await readFile(path.join(main.workTree, "index.html"), "utf8")).toBe(
-      "clean"
-    );
+    expect(
+      await readFile(path.join(main.workTree, "index.html"), "utf-8")
+    ).toBe("clean");
   });
 
   it("never commits or exports a node_modules symlink, even from an old exclude file", async () => {
@@ -345,7 +345,7 @@ describe("version store", { timeout: 20000 }, () => {
       expect(version?.changedFiles).toEqual(["index.html"]);
       const exclude = await readFile(
         path.join(projects.projectDir(project.id), "git", "info", "exclude"),
-        "utf8"
+        "utf-8"
       );
       expect(exclude.split("\n")).toContain("node_modules");
       const zip = Buffer.from(
@@ -461,7 +461,7 @@ describe("version store", { timeout: 20000 }, () => {
         ...(version.parentId ? [] : ["--root"]),
         version.id,
       ];
-      const expected = execFileSync("git", args, { env, encoding: "utf8" })
+      const expected = execFileSync("git", args, { env, encoding: "utf-8" })
         .split("\0")
         .filter(Boolean);
       expect(version.changedFiles).toEqual(expected);

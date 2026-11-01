@@ -13,7 +13,7 @@ import { ROOT } from "./support/server";
 
 const FIXTURE = readFileSync(
   path.join(ROOT, "e2e", "fixtures", "layout-clipping.html"),
-  "utf8"
+  "utf-8"
 );
 
 let server: Server;

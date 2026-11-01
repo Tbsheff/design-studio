@@ -84,7 +84,7 @@ export function readPackZip(bytes: Buffer): PackZip {
     if (folderId !== null && folder !== folderId)
       throw new BadRequestError("the zip must hold one design system folder");
     folderId = folder;
-    files.set(file, entry.data.toString("utf8"));
+    files.set(file, entry.data.toString("utf-8"));
   }
   const missing = PACK_FILES.filter((file) => !files.has(file));
   if (folderId === null || missing.length > 0)

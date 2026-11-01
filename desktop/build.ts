@@ -217,7 +217,7 @@ interface PackageManifest {
 
 function runtimeDependencies(dir: string): string[] {
   const manifest = JSON.parse(
-    readFileSync(path.join(dir, "package.json"), "utf8")
+    readFileSync(path.join(dir, "package.json"), "utf-8")
   ) as PackageManifest;
   const peers = Object.keys(manifest.peerDependencies ?? {}).filter(
     (name) => !manifest.peerDependenciesMeta?.[name]?.optional
@@ -318,11 +318,11 @@ function copySlimGit(target: string): void {
 }
 
 function prebuiltTemplate(target: string): void {
-  const pkg = readFileSync(path.join(TEMPLATE_DIR, "package.json"), "utf8");
+  const pkg = readFileSync(path.join(TEMPLATE_DIR, "package.json"), "utf-8");
   const cachedPkg = path.join(TEMPLATE_CACHE, "package.json");
   if (
     !existsSync(cachedPkg) ||
-    readFileSync(cachedPkg, "utf8") !== pkg ||
+    readFileSync(cachedPkg, "utf-8") !== pkg ||
     !existsSync(path.join(TEMPLATE_CACHE, "node_modules"))
   ) {
     rmSync(TEMPLATE_CACHE, { recursive: true, force: true });
@@ -368,7 +368,7 @@ function copyStatic(resources: string): void {
 
 function writeAppPackage(appDir: string): void {
   const root = JSON.parse(
-    readFileSync(path.join(ROOT, "package.json"), "utf8")
+    readFileSync(path.join(ROOT, "package.json"), "utf-8")
   ) as { version: string };
   const version = process.env.STUDIO_APP_VERSION || root.version;
   if (!/^\d+\.\d+\.\d+(-[0-9A-Za-z.]+)?$/.test(version))

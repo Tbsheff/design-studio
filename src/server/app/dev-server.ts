@@ -442,10 +442,10 @@ export class AppServers {
         startedAt: Date.now(),
       });
     child.stdout
-      ?.setEncoding("utf8")
+      ?.setEncoding("utf-8")
       .on("data", (chunk: string) => this.log(server, "stdout", chunk));
     child.stderr
-      ?.setEncoding("utf8")
+      ?.setEncoding("utf-8")
       .on("data", (chunk: string) => this.log(server, "stderr", chunk));
     const exited = new Promise<never>((_, reject) => {
       child.once("error", (error) => reject(error));

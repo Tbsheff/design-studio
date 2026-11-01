@@ -281,7 +281,7 @@ export function registerEditHistoryRoutes(
       .loadDirection(c.req.param("pid"), c.req.param("did"))
       .then(async ({ direction }): Promise<ElementSource> => {
         const target = await resolveSource(direction.workTree, file);
-        const code = await readFile(target.file, "utf8");
+        const code = await readFile(target.file, "utf-8");
         const extension = path.extname(target.relative).toLowerCase();
         const loc = { line, col };
         const span =

@@ -182,7 +182,7 @@ async function main(): Promise<void> {
             ...process.env,
             GIT_DIR: path.join(dataDir, "projects", project.id, "git"),
           },
-          encoding: "utf8",
+          encoding: "utf-8",
         }
       );
       const full = execFileSync(
@@ -193,7 +193,7 @@ async function main(): Promise<void> {
             ...process.env,
             GIT_DIR: path.join(dataDir, "projects", project.id, "git"),
           },
-          encoding: "utf8",
+          encoding: "utf-8",
         }
       );
       console.log(

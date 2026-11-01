@@ -68,7 +68,7 @@ function snapshot(root: string): Record<string, string> {
       ? "link"
       : info.isDirectory()
         ? "dir"
-        : readFileSync(full, "utf8");
+        : readFileSync(full, "utf-8");
   }
   return files;
 }
@@ -339,7 +339,7 @@ describe("the default projects folder", { timeout: 30000 }, () => {
       oldRoot,
     ]);
     const saved = JSON.parse(
-      readFileSync(path.join(config.dataDir, "preferences.json"), "utf8")
+      readFileSync(path.join(config.dataDir, "preferences.json"), "utf-8")
     ) as { projectsDir: string };
     expect(saved.projectsDir).toBe(parent);
     const next = await createDefault("Second page");
@@ -397,7 +397,7 @@ describe("the default projects folder", { timeout: 30000 }, () => {
     expect(main.sessionId).toBeNull();
     expect(main.sessionResetReason).toBe("move");
     expect(main.headVersionId).toBe(projects.mainDirection(html).headVersionId);
-    expect(readFileSync(path.join(main.workTree, "index.html"), "utf8")).toBe(
+    expect(readFileSync(path.join(main.workTree, "index.html"), "utf-8")).toBe(
       "<h1>Old landing</h1>\n"
     );
     expect(existsSync(oldTree)).toBe(false);
@@ -438,7 +438,7 @@ describe("the default projects folder", { timeout: 30000 }, () => {
       project.id,
       "project.json"
     );
-    const before = readFileSync(projectFile, "utf8");
+    const before = readFileSync(projectFile, "utf-8");
     try {
       const result = (await (
         await call("POST", "/api/hidden-projects/move")
@@ -454,12 +454,12 @@ describe("the default projects folder", { timeout: 30000 }, () => {
     } finally {
       await chmod(locked, 0o644);
     }
-    expect(readFileSync(projectFile, "utf8")).toBe(before);
+    expect(readFileSync(projectFile, "utf-8")).toBe(before);
     expect(readdirSync(config.projectsDir)).toEqual([]);
-    expect(readFileSync(path.join(main.workTree, "index.html"), "utf8")).toBe(
+    expect(readFileSync(path.join(main.workTree, "index.html"), "utf-8")).toBe(
       "<h1>Locked page</h1>\n"
     );
-    expect(readFileSync(locked, "utf8")).toBe("secret\n");
+    expect(readFileSync(locked, "utf-8")).toBe("secret\n");
     expect(readlinkSync(path.join(main.workTree, "assets", "link.txt"))).toBe(
       "a.txt"
     );

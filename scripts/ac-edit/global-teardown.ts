@@ -6,7 +6,7 @@ import { BACKUP_STATE, killListeners } from "./ports";
 
 export default async function globalTeardown(): Promise<void> {
   if (!existsSync(BACKUP_STATE)) return;
-  const state = JSON.parse(readFileSync(BACKUP_STATE, "utf8")) as {
+  const state = JSON.parse(readFileSync(BACKUP_STATE, "utf-8")) as {
     pid: number;
     ports: number[];
     renderHostPid?: number;

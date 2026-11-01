@@ -90,7 +90,7 @@ const apply = (project: Project, packId: string) =>
 const save = (project: Project, body: Record<string, unknown>) =>
   call("POST", `/api/projects/${project.id}/d/main/design-system/save`, body);
 const read = (project: Project, file: string) =>
-  readFile(path.join(project.directions[0]!.workTree, file), "utf8");
+  readFile(path.join(project.directions[0]!.workTree, file), "utf-8");
 
 async function titles(project: Project): Promise<string[]> {
   return (await versions.list(project, project.directions[0]!)).map(
@@ -239,7 +239,7 @@ describe("apply or switch a pack on a project", { timeout: 30000 }, () => {
     expect(result.written.sort()).toEqual(
       ["DESIGN.md", PACK_FILE, TOKENS_CSS_FILE, TOKENS_FILE].sort()
     );
-    expect(await readFile(path.join(folder, "src", "main.tsx"), "utf8")).toBe(
+    expect(await readFile(path.join(folder, "src", "main.tsx"), "utf-8")).toBe(
       "console.log('hi');\n"
     );
   });

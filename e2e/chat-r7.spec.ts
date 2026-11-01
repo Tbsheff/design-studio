@@ -38,12 +38,12 @@ async function fourMessages(
   await expect(frontFrame(page).locator("h1")).toHaveText(PROMPTS[0] as string);
   await api.waitForRuns(project.id, 1);
   const file = path.join(mainDirection(project).workTree, "index.html");
-  const files = [readFileSync(file, "utf8")];
+  const files = [readFileSync(file, "utf-8")];
   for (const [index, prompt] of PROMPTS.slice(1).entries()) {
     await composer(page).fill(prompt);
     await composer(page).press("Meta+Enter");
     await api.waitForRuns(project.id, index + 2);
-    files.push(readFileSync(file, "utf8"));
+    files.push(readFileSync(file, "utf-8"));
   }
   await expect(page.locator("[data-run-id]")).toHaveCount(4);
   return { api, project, files };
@@ -88,12 +88,12 @@ test("R7-4: restore code at message 2 of 4, with a confirm for unfinished change
   );
   await confirm.getByRole("button", { name: "Cancel" }).click();
   await expect(confirm).toHaveCount(0);
-  expect(readFileSync(file, "utf8")).toContain("my unsaved edit");
+  expect(readFileSync(file, "utf-8")).toContain("my unsaved edit");
 
   await (await action(page, 1, "Restore code here")).click();
   await confirm.getByRole("button", { name: "Restore" }).click();
-  await expect.poll(() => readFileSync(file, "utf8")).toBe(files[1]);
-  expect(readFileSync(path.join(workTree, "my-notes.txt"), "utf8")).toBe(
+  await expect.poll(() => readFileSync(file, "utf-8")).toBe(files[1]);
+  expect(readFileSync(path.join(workTree, "my-notes.txt"), "utf-8")).toBe(
     "keep me\n"
   );
   await expect(frontFrame(page).locator("body")).toContainText(
@@ -162,7 +162,7 @@ test("R7-4: edit and resend forks a new direction from the version before that m
   ).toBe("Add weekend hours");
   const forked = readFileSync(
     path.join(created.workTree, "index.html"),
-    "utf8"
+    "utf-8"
   );
   expect(forked.startsWith(files[1]?.split("</body>")[0] ?? "")).toBe(true);
   expect(forked).toContain("Add weekend hours");
@@ -170,7 +170,7 @@ test("R7-4: edit and resend forks a new direction from the version before that m
   expect(
     readFileSync(
       path.join(mainDirection(project).workTree, "index.html"),
-      "utf8"
+      "utf-8"
     )
   ).toBe(files[3]);
 

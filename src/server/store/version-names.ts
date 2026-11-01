@@ -53,7 +53,7 @@ export function createVersionNames(
     let names: Names = {};
     try {
       const parsed = NamesFile.safeParse(
-        JSON.parse(await readFile(fileOf(projectId), "utf8"))
+        JSON.parse(await readFile(fileOf(projectId), "utf-8"))
       );
       if (parsed.success) names = parsed.data;
     } catch {

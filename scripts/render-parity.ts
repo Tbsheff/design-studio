@@ -68,7 +68,7 @@ function collectPages(work: string): Map<string, string> {
   ))
     pages.set(
       `fixture/${name}`,
-      readFileSync(path.join(fixtures, name), "utf8")
+      readFileSync(path.join(fixtures, name), "utf-8")
     );
   for (const name of REAL_PAGES) {
     const source = path.join(REAL_PAGES_DIR, name);
@@ -81,7 +81,7 @@ function collectPages(work: string): Map<string, string> {
     cpSync(source, path.join(dir, "index.html"));
     pages.set(
       `real/${name}`,
-      readFileSync(path.join(dir, "index.html"), "utf8")
+      readFileSync(path.join(dir, "index.html"), "utf-8")
     );
   }
   return pages;

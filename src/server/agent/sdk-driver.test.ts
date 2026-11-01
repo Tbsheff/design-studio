@@ -264,7 +264,7 @@ describe("sdk driver resumed sessions", () => {
       "sessions",
       `${SESSION}.json`
     );
-    const ledger = JSON.parse(await readFile(ledgerPath, "utf8"));
+    const ledger = JSON.parse(await readFile(ledgerPath, "utf-8"));
     expect(ledger.promptHash).toBe(
       hashPrompt(String(t.seenOptions[1]?.systemPrompt))
     );
@@ -306,7 +306,7 @@ async function sentRecords(
   runId: string
 ): Promise<RunSentRecord[]> {
   const lines = (
-    await readFile(path.join(projectDir, "runs", `${runId}.jsonl`), "utf8")
+    await readFile(path.join(projectDir, "runs", `${runId}.jsonl`), "utf-8")
   )
     .trim()
     .split("\n");
@@ -353,7 +353,7 @@ describe("sdk driver sent message log", () => {
       "sessions",
       `${SESSION}.json`
     );
-    const ledger = JSON.parse(await readFile(ledgerPath, "utf8"));
+    const ledger = JSON.parse(await readFile(ledgerPath, "utf-8"));
     await writeFile(
       ledgerPath,
       JSON.stringify({ ...ledger, promptHash: "old" })
@@ -448,7 +448,7 @@ describe("sdk driver run accounting", () => {
     const ledger = JSON.parse(
       await readFile(
         path.join(t.projects.projectDir("p1"), "sessions", `${SESSION}.json`),
-        "utf8"
+        "utf-8"
       )
     );
     expect(ledger).toMatchObject({
@@ -488,7 +488,7 @@ describe("sdk driver run accounting", () => {
     const lines = (
       await readFile(
         path.join(t.projects.projectDir("p1"), "telemetry.jsonl"),
-        "utf8"
+        "utf-8"
       )
     )
       .trim()
@@ -663,7 +663,7 @@ describe("sdk driver polish auto-continue", () => {
     const ledger = JSON.parse(
       await readFile(
         path.join(t.projects.projectDir("p1"), "sessions", `${SESSION}.json`),
-        "utf8"
+        "utf-8"
       )
     );
     expect(ledger.costUsd).toBeCloseTo(0.3, 9);

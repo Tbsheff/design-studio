@@ -59,7 +59,7 @@ describe("default projects folder", () => {
       chosen
     );
     expect(
-      JSON.parse(readFileSync(path.join(dataDir, PREFERENCES_FILE), "utf8"))
+      JSON.parse(readFileSync(path.join(dataDir, PREFERENCES_FILE), "utf-8"))
     ).toEqual({ version: 1, projectsDir: chosen });
   });
 

@@ -323,7 +323,7 @@ test("Open Folder imports a folder, opens it, and records it as recent", async (
     .poll(async () => (await recorded()).recents.map((entry) => entry.folder))
     .toContain(folder);
   const recents = JSON.parse(
-    readFileSync(path.join(userData, "recent-projects.json"), "utf8")
+    readFileSync(path.join(userData, "recent-projects.json"), "utf-8")
   ) as { folder: string }[];
   expect(recents[0]?.folder).toBe(folder);
 
@@ -667,14 +667,17 @@ test("window bounds are saved per display layout", async () => {
           window.setBounds({ x: 40, y: 60, width: 1100, height: 760 });
       });
       if (!existsSync(file)) return null;
-      const state = JSON.parse(readFileSync(file, "utf8")) as {
+      const state = JSON.parse(readFileSync(file, "utf-8")) as {
         last: string;
         layouts: Record<string, { bounds: { width: number } }>;
       };
       return state.layouts[state.last]?.bounds.width ?? null;
     })
     .toBe(1100);
-  const key = (JSON.parse(readFileSync(file, "utf8")) as { last: string }).last;
+
+  const key = (JSON.parse(readFileSync(file, "utf-8")) as { last: string })
+    .last;
+
   expect(key).toMatch(/^\d+:-?\d+,-?\d+,\d+x\d+/);
 });
 

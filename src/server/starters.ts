@@ -85,5 +85,5 @@ export function sampleEdit(html: string): string {
 
 export async function applySampleEdit(workTree: string): Promise<void> {
   const file = path.join(workTree, "index.html");
-  await writeFile(file, sampleEdit(await readFile(file, "utf8")));
+  await writeFile(file, sampleEdit(await readFile(file, "utf-8")));
 }

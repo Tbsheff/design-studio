@@ -41,7 +41,7 @@ const FIXTURES = path.join(
   path.dirname(fileURLToPath(import.meta.url)),
   "__fixtures__"
 );
-const fixture = (name: string) => readFile(path.join(FIXTURES, name), "utf8");
+const fixture = (name: string) => readFile(path.join(FIXTURES, name), "utf-8");
 
 let site: http.Server;
 let siteUrl: string;
@@ -300,7 +300,7 @@ describe("local folder extractor", () => {
 
   it("reads shadcn CSS variables, SCSS variables and the Tailwind theme, read-only and without symlinks", async () => {
     const before = JSON.stringify(
-      await readFile(path.join(root, "tailwind.config.js"), "utf8")
+      await readFile(path.join(root, "tailwind.config.js"), "utf-8")
     );
     const scan = await scanFolder(root);
     const candidates = scan.harvest.candidates;
@@ -341,7 +341,7 @@ describe("local folder extractor", () => {
     ]);
     expect(
       JSON.stringify(
-        await readFile(path.join(root, "tailwind.config.js"), "utf8")
+        await readFile(path.join(root, "tailwind.config.js"), "utf-8")
       )
     ).toBe(before);
   });

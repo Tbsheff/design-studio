@@ -42,7 +42,7 @@ function isWorkspaceRoot(dir: string): boolean {
     return true;
   try {
     const pkg = JSON.parse(
-      readFileSync(path.join(dir, "package.json"), "utf8")
+      readFileSync(path.join(dir, "package.json"), "utf-8")
     ) as { workspaces?: unknown };
     return pkg.workspaces !== undefined;
   } catch {
@@ -137,7 +137,7 @@ async function readCandidate(
   return {
     real,
     size: info.size,
-    text: await readFile(real, "utf8").catch(() => null),
+    text: await readFile(real, "utf-8").catch(() => null),
   };
 }
 
@@ -229,7 +229,7 @@ export function focusAgentDoc(
 
 function focusLoaded(loaded: Loaded[], appRel: string): void {
   const total = loaded.reduce(
-    (sum, item) => sum + Buffer.byteLength(item.text, "utf8"),
+    (sum, item) => sum + Buffer.byteLength(item.text, "utf-8"),
     0
   );
   if (total <= FOCUS_ABOVE_BYTES) return;
@@ -260,9 +260,9 @@ export function fairShares(sizes: number[], cap: number): number[] {
 }
 
 function cutToBytes(text: string, max: number): string {
-  const bytes = Buffer.from(text, "utf8");
+  const bytes = Buffer.from(text, "utf-8");
   if (bytes.length <= max) return text;
-  const head = bytes.subarray(0, max).toString("utf8");
+  const head = bytes.subarray(0, max).toString("utf-8");
   const lastBreak = head.lastIndexOf("\n");
   return (
     lastBreak > 0 ? head.slice(0, lastBreak) : head.slice(0, -1)
@@ -270,9 +270,9 @@ function cutToBytes(text: string, max: number): string {
 }
 
 function renderFile(item: Loaded, share: number): string {
-  const total = Buffer.byteLength(item.text, "utf8");
+  const total = Buffer.byteLength(item.text, "utf-8");
   const body = cutToBytes(item.text, share);
-  item.file.sentBytes = Buffer.byteLength(body, "utf8");
+  item.file.sentBytes = Buffer.byteLength(body, "utf-8");
   if (item.file.sentBytes < total) item.file.use = "cut";
   const cut =
     item.file.use === "cut"
@@ -329,7 +329,7 @@ export async function loadRepoContext(
   const appRel = path.relative(outer, found.appDir);
   focusLoaded(loaded, appRel);
   const shares = fairShares(
-    loaded.map((item) => Buffer.byteLength(item.text, "utf8")),
+    loaded.map((item) => Buffer.byteLength(item.text, "utf-8")),
     REPO_CONTEXT_MAX_BYTES
   );
   const parts = loaded.map((item, index) =>

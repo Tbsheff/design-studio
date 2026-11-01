@@ -119,7 +119,7 @@ function serveSocket(
   token: string
 ): void {
   let buffer = "";
-  socket.setEncoding("utf8");
+  socket.setEncoding("utf-8");
   socket.on("error", () => socket.destroy());
   socket.on("data", (chunk: string) => {
     buffer += chunk;

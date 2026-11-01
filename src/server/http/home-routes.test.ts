@@ -192,7 +192,7 @@ describe("home routes", { timeout: 30000 }, () => {
       const project = await fromStarter(id);
       const html = await readFile(
         path.join(projects.mainDirection(project).workTree, "index.html"),
-        "utf8"
+        "utf-8"
       );
       expect(html).toContain("<h1");
       const history = await call<Version[]>(
@@ -228,7 +228,7 @@ describe("home routes", { timeout: 30000 }, () => {
     expect(
       await readFile(
         path.join(projects.mainDirection(project).workTree, "index.html"),
-        "utf8"
+        "utf-8"
       )
     ).toContain("roasted to order");
     expect(started).toHaveLength(0);
@@ -262,10 +262,10 @@ describe("home routes", { timeout: 30000 }, () => {
     expect(path.dirname(copyTree)).toBe(
       path.dirname(projects.mainDirection(project).workTree)
     );
-    expect(await readFile(path.join(copyTree, "index.html"), "utf8")).toBe(
+    expect(await readFile(path.join(copyTree, "index.html"), "utf-8")).toBe(
       await readFile(
         path.join(projects.mainDirection(project).workTree, "index.html"),
-        "utf8"
+        "utf-8"
       )
     );
     const status = await call<{ dirty: boolean; changed: string[] }>(
@@ -367,14 +367,14 @@ describe("home routes", { timeout: 30000 }, () => {
       path.join(projects.projectDir(copy.id), "directions", extra.id)
     );
     expect(
-      await readFile(path.join(copiedExtra.workTree, "index.html"), "utf8")
+      await readFile(path.join(copiedExtra.workTree, "index.html"), "utf-8")
     ).toBe("<h1>Bold direction</h1>\n");
     expect(
       await readFile(
         path.join(projects.mainDirection(copy).workTree, "index.html"),
-        "utf8"
+        "utf-8"
       )
-    ).toBe(await readFile(path.join(sourceTree, "index.html"), "utf8"));
+    ).toBe(await readFile(path.join(sourceTree, "index.html"), "utf-8"));
     for (const direction of source.directions) {
       const status = await call<{ changed: string[] }>(
         "GET",
@@ -399,7 +399,7 @@ describe("home routes", { timeout: 30000 }, () => {
       ).sort()
     ).toEqual(sourceDirections);
     expect(
-      await readFile(path.join(extra.workTree, "index.html"), "utf8")
+      await readFile(path.join(extra.workTree, "index.html"), "utf-8")
     ).toBe("<h1>Bold direction</h1>\n");
   });
 
@@ -521,7 +521,7 @@ describe("home routes", { timeout: 30000 }, () => {
     );
     const events = await readFile(
       path.join(projects.projectDir(project.id), "events.jsonl"),
-      "utf8"
+      "utf-8"
     );
     expect(events).toContain("status.changed");
     await call("POST", `/api/trash/${trashed.trashId}/restore`, undefined, 404);
@@ -614,7 +614,7 @@ describe("home routes", { timeout: 30000 }, () => {
       await call<{ dismissed: boolean }>("GET", "/api/onboarding")
     ).toEqual({ dismissed: true });
     const saved = JSON.parse(
-      await readFile(path.join(config.dataDir, PREFERENCES_FILE), "utf8")
+      await readFile(path.join(config.dataDir, PREFERENCES_FILE), "utf-8")
     ) as Record<string, unknown>;
     expect(saved).toEqual({
       version: 1,

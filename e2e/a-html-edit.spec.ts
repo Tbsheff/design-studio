@@ -48,7 +48,7 @@ test("A: HTML mock create, select edit, undo, restore, export", async ({
   const firstHead = await headVersion(api, project.id, main.id);
 
   const indexFile = path.join(main.workTree, "index.html");
-  const beforeEdit = readFileSync(indexFile, "utf8");
+  const beforeEdit = readFileSync(indexFile, "utf-8");
   const ledeBefore = await frame.locator(".lede").textContent();
   const cardsBefore = await frame.locator(".card").allTextContents();
 
@@ -61,7 +61,7 @@ test("A: HTML mock create, select edit, undo, restore, export", async ({
   await expect(frame.locator(".lede")).toHaveText(ledeBefore ?? "");
   expect(await frame.locator(".card").allTextContents()).toEqual(cardsBefore);
 
-  const afterEdit = readFileSync(indexFile, "utf8");
+  const afterEdit = readFileSync(indexFile, "utf-8");
   const diff = changedLines(beforeEdit, afterEdit);
   expect(diff).toHaveLength(1);
   expect(diff[0]?.before.trim()).toBe(`<h1>${CREATE_PROMPT}</h1>`);
@@ -77,7 +77,7 @@ test("A: HTML mock create, select edit, undo, restore, export", async ({
     .poll(async () => (await headVersion(api, project.id, main.id)).meta.kind)
     .toBe("undo");
   await expect(frame.locator("h1")).toHaveText(CREATE_PROMPT);
-  expect(readFileSync(indexFile, "utf8")).toBe(beforeEdit);
+  expect(readFileSync(indexFile, "utf-8")).toBe(beforeEdit);
   await expect(page.locator("li.version")).toHaveCount(3);
   const versionsAfterUndo = await api.versions(project.id, main.id);
   expect(versionsAfterUndo.map((version) => version.id)).toContain(
@@ -96,7 +96,7 @@ test("A: HTML mock create, select edit, undo, restore, export", async ({
     .poll(async () => (await headVersion(api, project.id, main.id)).meta.kind)
     .toBe("restore");
   await expect(frame.locator("h1")).toHaveText(EDIT_PROMPT);
-  expect(readFileSync(indexFile, "utf8")).toBe(afterEdit);
+  expect(readFileSync(indexFile, "utf-8")).toBe(afterEdit);
   const restoredHead = await headVersion(api, project.id, main.id);
   expect(restoredHead.meta.kind).toBe("restore");
   await expect(page.locator("li.version")).toHaveCount(4);
@@ -113,13 +113,18 @@ test("A: HTML mock create, select edit, undo, restore, export", async ({
   const outDir = mkdtempSync(path.join(os.tmpdir(), "studio export "));
   const zipPath = path.join(outDir, "design.zip");
   await download.saveAs(zipPath);
-  const listing = execFileSync("unzip", ["-Z1", zipPath], { encoding: "utf8" })
+  const listing = execFileSync("unzip", ["-Z1", zipPath], { encoding: "utf-8" })
     .split("\n")
     .filter(Boolean);
   expect(listing).toContain("index.html");
   const extracted = path.join(outDir, "site");
   execFileSync("unzip", ["-q", zipPath, "-d", extracted]);
-  const exportedHtml = readFileSync(path.join(extracted, "index.html"), "utf8");
+
+  const exportedHtml = readFileSync(
+    path.join(extracted, "index.html"),
+    "utf-8"
+  );
+
   expect(exportedHtml).not.toContain("data-studio-loc");
   expect(exportedHtml).not.toContain("__studio");
   expect(existsSync(path.join(extracted, ".studio"))).toBe(false);

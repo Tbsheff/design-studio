@@ -259,7 +259,7 @@ async function readMatched(
     }
     total += info.size;
     acc.read.push(relative);
-    absorb(acc, file, kind, await readFile(file, "utf8"), relative);
+    absorb(acc, file, kind, await readFile(file, "utf-8"), relative);
   }
 }
 
@@ -294,7 +294,7 @@ async function absorbTokenFile(
   const relative = await findTokenFile(root).catch(() => null);
   const file = relative ? await safeFileInside(root, relative) : null;
   if (!relative || !file) return null;
-  const sheet = readCssTokens(await readFile(file, "utf8"));
+  const sheet = readCssTokens(await readFile(file, "utf-8"));
   for (const token of buildAppTokens(sheet)) {
     if (token.light) acc.props.root.set(token.name, token.light.value);
     if (token.dark) acc.props.dark.set(token.name, token.dark.value);

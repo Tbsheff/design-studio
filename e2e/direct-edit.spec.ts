@@ -102,7 +102,7 @@ test("Direct edit: HTML style, text, undo, and element with children", async ({
   await expect(frame.locator("h1")).toHaveText("Harbor Direct Edit");
   await api.waitForRuns(project.id, 1);
   const indexFile = path.join(main.workTree, "index.html");
-  const original = readFileSync(indexFile, "utf8");
+  const original = readFileSync(indexFile, "utf-8");
 
   await expect(page.getByRole("tab", { name: "Chat" })).toHaveAttribute(
     "aria-selected",
@@ -131,11 +131,11 @@ test("Direct edit: HTML style, text, undo, and element with children", async ({
   await color.press("Enter");
   await expectSaved(page);
   await expect
-    .poll(() => readFileSync(indexFile, "utf8"))
+    .poll(() => readFileSync(indexFile, "utf-8"))
     .toContain("color: #c2410c");
 
   const styledCount = await settledHead(page, api, project.id, main.id);
-  const styled = readFileSync(indexFile, "utf8");
+  const styled = readFileSync(indexFile, "utf-8");
   const diff = changedLines(original, styled);
   expect(diff).toHaveLength(1);
   expect(diff[0]?.before.trim()).toBe("<h1>Harbor Direct Edit</h1>");
@@ -161,18 +161,18 @@ test("Direct edit: HTML style, text, undo, and element with children", async ({
   await text.press("ControlOrMeta+Enter");
   await expectSaved(page);
   await expect
-    .poll(() => readFileSync(indexFile, "utf8"))
+    .poll(() => readFileSync(indexFile, "utf-8"))
     .toContain(">Roasted every morning</h1>");
   await expect
     .poll(() => settledHead(page, api, project.id, main.id))
     .toBe(styledCount + 1);
-  const afterText = changedLines(styled, readFileSync(indexFile, "utf8"));
+  const afterText = changedLines(styled, readFileSync(indexFile, "utf-8"));
   expect(afterText).toHaveLength(1);
   await expect(frame.locator("h1")).toHaveText("Roasted every morning");
 
   await blurFields(page);
   await page.keyboard.press("ControlOrMeta+z");
-  await expect.poll(() => readFileSync(indexFile, "utf8")).toBe(styled);
+  await expect.poll(() => readFileSync(indexFile, "utf-8")).toBe(styled);
   await expect(frame.locator("h1")).toHaveText("Harbor Direct Edit");
 
   await setSelectMode(page, true);
@@ -184,12 +184,12 @@ test("Direct edit: HTML style, text, undo, and element with children", async ({
   await expect(page.getByText("Has child elements")).toBeVisible();
   await expect(page.getByLabel("Text content")).toHaveCount(0);
 
-  const beforeBad = readFileSync(indexFile, "utf8");
+  const beforeBad = readFileSync(indexFile, "utf-8");
   const width = page.getByLabel("Width", { exact: true });
   await width.fill("10px; color: red");
   await width.press("Enter");
   await expect(page.locator(".ins-error")).toContainText("not allowed");
-  expect(readFileSync(indexFile, "utf8")).toBe(beforeBad);
+  expect(readFileSync(indexFile, "utf-8")).toBe(beforeBad);
   await expect(width).not.toHaveValue("10px; color: red");
 });
 
@@ -211,7 +211,7 @@ test("Direct edit: React color change uses HMR and Undo restores App.tsx", async
   await api.waitForRuns(project.id, 1);
   const origin = new URL((await api.preview(project.id, main.id)).url).origin;
   const appFile = path.join(main.workTree, "src", "App.tsx");
-  const original = readFileSync(appFile, "utf8");
+  const original = readFileSync(appFile, "utf-8");
   const vite = await vitePage(page, origin);
   await vite.evaluate(() => {
     (window as unknown as { __directMarker?: number }).__directMarker = 7;
@@ -227,7 +227,7 @@ test("Direct edit: React color change uses HMR and Undo restores App.tsx", async
   await color.press("Enter");
   await expectSaved(page);
   await expect
-    .poll(() => readFileSync(appFile, "utf8"))
+    .poll(() => readFileSync(appFile, "utf-8"))
     .toMatch(/<h1 style=\{\{[^}]*color: ['"]#0f766e['"]/);
   await expect(frame.locator("h1")).toHaveCSS("color", "rgb(15, 118, 110)");
 
@@ -247,7 +247,7 @@ test("Direct edit: React color change uses HMR and Undo restores App.tsx", async
   await settledHead(page, api, project.id, main.id);
   await showVersions(page);
   await page.getByRole("button", { name: "Undo", exact: true }).click();
-  await expect.poll(() => readFileSync(appFile, "utf8")).toBe(original);
+  await expect.poll(() => readFileSync(appFile, "utf-8")).toBe(original);
   await expect(frame.locator("h1")).not.toHaveCSS("color", "rgb(15, 118, 110)");
 });
 
@@ -290,7 +290,7 @@ test("Direct edit: selection box follows the h1 after a font-size edit", async (
   await fontSize.press("Enter");
   await expectSaved(page);
   await expect
-    .poll(() => readFileSync(indexFile, "utf8"))
+    .poll(() => readFileSync(indexFile, "utf-8"))
     .toContain("font-size: 40px");
   await expect
     .poll(() => page.locator("iframe.frame.front").getAttribute("src"))

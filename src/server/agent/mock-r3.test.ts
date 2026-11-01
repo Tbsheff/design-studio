@@ -74,12 +74,12 @@ function types(events: StudioEvent[]): string[] {
 
 async function readRunFiles(projectDir: string, runId: string) {
   const lines = (
-    await readFile(path.join(projectDir, "runs", `${runId}.jsonl`), "utf8")
+    await readFile(path.join(projectDir, "runs", `${runId}.jsonl`), "utf-8")
   )
     .trim()
     .split("\n");
   const summary = JSON.parse(
-    await readFile(path.join(projectDir, "runs", `${runId}.json`), "utf8")
+    await readFile(path.join(projectDir, "runs", `${runId}.json`), "utf-8")
   ) as RunSummary;
   const parsed = lines.map(
     (line) => JSON.parse(line) as StudioEvent | { type: "run.sent" }
@@ -205,7 +205,7 @@ describe("mock agent run, Round 3", () => {
           "runs",
           `${handle.runId}.jsonl`
         ),
-        "utf8"
+        "utf-8"
       )
     )
       .trim()
@@ -286,7 +286,7 @@ describe("mock agent run, Round 3", () => {
           "runs",
           `${handle.runId}.jsonl`
         ),
-        "utf8"
+        "utf-8"
       )
     )
       .trim()
@@ -298,7 +298,7 @@ describe("mock agent run, Round 3", () => {
       )
     ).toBe(true);
     await expect(
-      readFile(path.join(env.workTree, MOCK_BASH_OUTPUT), "utf8")
+      readFile(path.join(env.workTree, MOCK_BASH_OUTPUT), "utf-8")
     ).rejects.toThrow();
   });
 
@@ -331,7 +331,7 @@ describe("mock agent run, Round 3", () => {
       )
     ).toBe(true);
     await expect(
-      readFile(path.join(env.workTree, MOCK_BASH_OUTPUT), "utf8")
+      readFile(path.join(env.workTree, MOCK_BASH_OUTPUT), "utf-8")
     ).rejects.toThrow();
   });
 
@@ -342,7 +342,7 @@ describe("mock agent run, Round 3", () => {
     ).done;
     const before = await readFile(
       path.join(env.workTree, "index.html"),
-      "utf8"
+      "utf-8"
     );
     const summary = await env.runner.start(
       env.context({ prompt: "New hero", mode: "edit", plan: true })
@@ -350,7 +350,7 @@ describe("mock agent run, Round 3", () => {
     const write = summary.toolCalls.find((tool) => tool.name === "Write");
     expect(write?.isError).toBe(true);
     expect(write?.summary).toBe(PLAN_MODE_DENY);
-    expect(await readFile(path.join(env.workTree, "index.html"), "utf8")).toBe(
+    expect(await readFile(path.join(env.workTree, "index.html"), "utf-8")).toBe(
       before
     );
     expect(summary.finalText).toMatch(/^Plan:/);

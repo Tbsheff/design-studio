@@ -867,7 +867,7 @@ async function pageTokens(
   if (!file || !/\.html?$/i.test(file)) return [];
   const resolved = await resolveSource(workTree, file).catch(() => null);
   if (!resolved) return [];
-  const text = await readFile(resolved.file, "utf8").catch(() => "");
+  const text = await readFile(resolved.file, "utf-8").catch(() => "");
   const css = [...text.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi)]
     .map((match) => match[1] ?? "")
     .join("\n");

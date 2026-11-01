@@ -25,7 +25,7 @@ const FIXTURE = path.join(
 );
 
 function fixture(): TokenFile {
-  return JSON.parse(readFileSync(FIXTURE, "utf8")) as TokenFile;
+  return JSON.parse(readFileSync(FIXTURE, "utf-8")) as TokenFile;
 }
 
 function entry(file: TokenFile, tokenPath: string) {

@@ -156,8 +156,8 @@ async function bothGeneratedFilesContain(
   designMdText: string
 ): Promise<boolean> {
   const [css, designMd] = await Promise.all([
-    readFile(path.join(root, TOKENS_CSS_FILE), "utf8"),
-    readFile(path.join(root, "DESIGN.md"), "utf8"),
+    readFile(path.join(root, TOKENS_CSS_FILE), "utf-8"),
+    readFile(path.join(root, "DESIGN.md"), "utf-8"),
   ]);
   return css.includes(cssText) && designMd.includes(designMdText);
 }
@@ -218,7 +218,7 @@ describe("packs", () => {
       recursive: true,
     });
     const goodManifest = JSON.parse(
-      await readFile(path.join(dir, "good", "pack.json"), "utf8")
+      await readFile(path.join(dir, "good", "pack.json"), "utf-8")
     ) as Record<string, unknown>;
     await writeFile(
       path.join(dir, "good", "pack.json"),
@@ -286,7 +286,7 @@ describe("apply a pack on create", { timeout: 30000 }, () => {
       expect(existsSync(path.join(main.workTree, file))).toBe(true);
     const designMd = await readFile(
       path.join(main.workTree, "DESIGN.md"),
-      "utf8"
+      "utf-8"
     );
     expect(designMd).toContain("# Test Pack");
     expect(designMd).toContain(DESIGN_MD_TOKENS_START);
@@ -330,12 +330,12 @@ describe("apply a pack on create", { timeout: 30000 }, () => {
     const main = project.directions[0]!;
     const entry = await readFile(
       path.join(main.workTree, "src", "main.tsx"),
-      "utf8"
+      "utf-8"
     );
     expect(entry.split("\n")[0]).toBe(REACT_TOKENS_IMPORT);
     const indexHtml = await readFile(
       path.join(main.workTree, "index.html"),
-      "utf8"
+      "utf-8"
     );
     expect(indexHtml).toContain(
       "https://fonts.googleapis.com/css2?family=Inter"
@@ -354,7 +354,7 @@ describe("apply a pack on create", { timeout: 30000 }, () => {
     const project = await create({ kind: "react" });
     const entry = await readFile(
       path.join(project.directions[0]!.workTree, "src", "main.tsx"),
-      "utf8"
+      "utf-8"
     );
     expect(entry).not.toContain("tokens.css");
     expect(project.packId ?? null).toBeNull();
@@ -495,7 +495,7 @@ describe("recompile", { timeout: 20000 }, () => {
     await watcher.ready("p1", "d1");
     try {
       const tokens = JSON.parse(
-        await readFile(path.join(root, TOKENS_FILE), "utf8")
+        await readFile(path.join(root, TOKENS_FILE), "utf-8")
       ) as Record<string, Record<string, unknown>>;
       tokens.color!.primary = { $value: "#ff0000" };
       await writeFile(path.join(root, TOKENS_FILE), JSON.stringify(tokens));
@@ -516,7 +516,7 @@ describe("recompile", { timeout: 20000 }, () => {
       const error = buildErrorAfterBadWrite();
       expect(error).toMatchObject({ file: TOKENS_FILE, directionId: "d1" });
       expect(
-        await readFile(path.join(root, TOKENS_CSS_FILE), "utf8")
+        await readFile(path.join(root, TOKENS_CSS_FILE), "utf-8")
       ).toContain("--primary: #ff0000;");
     } finally {
       await watcher.closeAll();
@@ -528,7 +528,7 @@ describe("recompile", { timeout: 20000 }, () => {
     const main = projects.mainDirection(await projects.get(project.id));
     const driver: RunDriver = async ({ ctx }) => {
       const file = path.join(ctx.direction.workTree, TOKENS_FILE);
-      const tokens = JSON.parse(await readFile(file, "utf8")) as Record<
+      const tokens = JSON.parse(await readFile(file, "utf-8")) as Record<
         string,
         Record<string, unknown>
       >;
@@ -563,7 +563,7 @@ describe("recompile", { timeout: 20000 }, () => {
     }).done;
     expect(summary.status).toBe("completed");
     expect(
-      await readFile(path.join(main.workTree, TOKENS_CSS_FILE), "utf8")
+      await readFile(path.join(main.workTree, TOKENS_CSS_FILE), "utf-8")
     ).toContain("--accent: #00aa00;");
     const latest = await projects.get(project.id);
     expect(

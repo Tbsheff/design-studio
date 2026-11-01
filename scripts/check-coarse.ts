@@ -10,7 +10,7 @@ type Pattern = { group: string[] };
 const TEST_ONLY_GROUPS = new Set(["node:*", "**/test-fakes*", "**/testing/**"]);
 const TEST_FILE = /\.test\.tsx?$/u;
 
-const tracked = execFileSync("git", ["ls-files", "src"], { encoding: "utf8" })
+const tracked = execFileSync("git", ["ls-files", "src"], { encoding: "utf-8" })
   .split("\n")
   .filter(Boolean);
 

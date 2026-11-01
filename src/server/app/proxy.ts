@@ -156,7 +156,7 @@ function injectBridge(
   const tag = bridgeTag(stateId);
   let buffered = "";
   let done = false;
-  upstreamRes.setEncoding("utf8");
+  upstreamRes.setEncoding("utf-8");
   upstreamRes.on("data", (chunk: string) => {
     if (done) {
       res.write(chunk);
@@ -200,7 +200,7 @@ function readBody(req: http.IncomingMessage, limit: number): Promise<string> {
       }
       chunks.push(chunk);
     });
-    req.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")));
+    req.on("end", () => resolve(Buffer.concat(chunks).toString("utf-8")));
     req.on("error", reject);
   });
 }

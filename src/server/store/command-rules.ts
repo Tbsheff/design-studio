@@ -25,7 +25,7 @@ export function createCommandRuleStore(
   const read = async (file: string): Promise<string[]> => {
     if (!existsSync(file)) return [];
     try {
-      const parsed: unknown = JSON.parse(await readFile(file, "utf8"));
+      const parsed: unknown = JSON.parse(await readFile(file, "utf-8"));
       const rules = (parsed as { rules?: unknown } | null)?.rules;
       return Array.isArray(rules)
         ? rules.filter((rule): rule is string => typeof rule === "string")

@@ -42,7 +42,7 @@ async function openProject(
 
 function lineOf(file: string, needle: string): string {
   return (
-    readFileSync(file, "utf8")
+    readFileSync(file, "utf-8")
       .split("\n")
       .find((line) => line.includes(needle)) ?? ""
   );
@@ -89,7 +89,7 @@ async function fileChangedAt(
 ): Promise<number> {
   const end = Date.now() + timeoutMs;
   while (Date.now() < end) {
-    if (readFileSync(file, "utf8").includes(needle)) return Date.now();
+    if (readFileSync(file, "utf-8").includes(needle)) return Date.now();
     await new Promise((resolve) => setTimeout(resolve, 5));
   }
   throw new Error(`file never contained ${needle}`);

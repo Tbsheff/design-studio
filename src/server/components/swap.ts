@@ -136,7 +136,7 @@ function hasChildren(element: t.JSXElement): boolean {
 
 async function readUseSite(workTree: string, use: SourceLoc): Promise<UseSite> {
   const target = await resolveSource(workTree, use.file);
-  const code = await readFile(target.file, "utf8");
+  const code = await readFile(target.file, "utf-8");
   const ast = parseModuleFile(code, target.file);
   if (!ast)
     throw new DirectEditError(

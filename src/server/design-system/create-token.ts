@@ -234,7 +234,7 @@ export async function readSnapshot(
   const file = path.join(workTree, relative);
   return {
     relative,
-    content: existsSync(file) ? await readFile(file, "utf8") : null,
+    content: existsSync(file) ? await readFile(file, "utf-8") : null,
   };
 }
 
@@ -363,7 +363,7 @@ export async function createToken(
   const cssVar = cssVarFor([token.group, token.name]);
   assertTokenIsNew(files, token, cssVar);
   const next = nextTokensText(
-    await readFile(path.join(workTree, TOKENS_FILE), "utf8"),
+    await readFile(path.join(workTree, TOKENS_FILE), "utf-8"),
     files,
     token
   );

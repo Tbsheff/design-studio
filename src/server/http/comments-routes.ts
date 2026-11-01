@@ -229,7 +229,7 @@ async function parseBody<T>(c: Context, schema: z.ZodType<T>): Promise<T> {
 
 async function readSummary(file: string): Promise<RunSummary | null> {
   try {
-    return JSON.parse(await readFile(file, "utf8")) as RunSummary;
+    return JSON.parse(await readFile(file, "utf-8")) as RunSummary;
   } catch {
     return null;
   }

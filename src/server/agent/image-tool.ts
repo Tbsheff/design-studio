@@ -140,7 +140,7 @@ async function targetFor(deps: DirectToolDeps, input: Input) {
       (
         await readFile(
           path.join(deps.ctx.direction.workTree, source.file),
-          "utf8"
+          "utf-8"
         ).catch(() => "")
       ).split("\n")[source.line - 1] ?? "";
     const tag =

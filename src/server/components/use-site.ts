@@ -118,7 +118,7 @@ function mapFor(url: string): Promise<SourceMapConsumer | null> {
       if (!match?.[1]) return null;
       return new SourceMapConsumer(
         JSON.parse(
-          Buffer.from(match[1], "base64").toString("utf8")
+          Buffer.from(match[1], "base64").toString("utf-8")
         ) as RawSourceMap
       );
     })
@@ -172,7 +172,7 @@ export async function ownerUseSite(
     path.join(root, decodeURIComponent(frame.pathname.slice(1)))
   );
   if (!file) return null;
-  const code = await readFile(file, "utf8").catch(() => null);
+  const code = await readFile(file, "utf-8").catch(() => null);
   const ast = code === null ? null : parseModuleFile(code, file);
   const element = ast
     ? elementAt(ast, original.line, (original.column ?? 0) + 1, owner.name)
@@ -264,7 +264,7 @@ export async function countUses(
   const pattern = new RegExp(`<${name}[\\s/>]`, "g");
   let total = 0;
   for (const file of files) {
-    const code = await readFile(file, "utf8").catch(() => "");
+    const code = await readFile(file, "utf-8").catch(() => "");
     total += code.match(pattern)?.length ?? 0;
   }
   return total;
@@ -278,7 +278,7 @@ export async function readInstance(
   const root = await realpath(workTree);
   const file = await insideRoot(root, path.resolve(root, loc.file));
   if (!file) return null;
-  const code = await readFile(file, "utf8").catch(() => null);
+  const code = await readFile(file, "utf-8").catch(() => null);
   const ast = code === null ? null : parseModuleFile(code, file);
   const element = ast ? elementAt(ast, loc.line, loc.col) : null;
   if (!ast || !element) return null;

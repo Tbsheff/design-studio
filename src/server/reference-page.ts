@@ -132,7 +132,7 @@ export async function captureReferencePage(
         text: "",
         error: `not an HTML page (${fetched.contentType || "unknown type"})`,
       };
-    return { url: fetched.url, ...pageOutline(fetched.body.toString("utf8")) };
+    return { url: fetched.url, ...pageOutline(fetched.body.toString("utf-8")) };
   } catch (error) {
     return {
       url,

@@ -30,7 +30,7 @@ export type FileText =
 export function textOf(bytes: Uint8Array | null): FileText {
   if (bytes === null) return { kind: "missing" };
   if (bytes.byteLength > DIFF_MAX_BYTES) return { kind: "skip" };
-  const text = Buffer.from(bytes).toString("utf8");
+  const text = Buffer.from(bytes).toString("utf-8");
   return text.includes("\u0000") ? { kind: "skip" } : { kind: "text", text };
 }
 

@@ -63,7 +63,7 @@ describe("ViteManager child process", { timeout: 60000 }, () => {
     };
     const url = await manager.url(target);
     const dump = JSON.parse(
-      await readFile(path.join(root, "env-dump.json"), "utf8")
+      await readFile(path.join(root, "env-dump.json"), "utf-8")
     ) as { pid: number; ppid: number; keys: string[]; home: string };
     expect(dump.pid).not.toBe(process.pid);
     expect(dump.ppid).toBe(process.pid);

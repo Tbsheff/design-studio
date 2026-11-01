@@ -58,7 +58,7 @@ export function createActivityLog(dataDir: string, bus: EventBus): ActivityLog {
     const cached = cache.get(projectId);
     if (cached) return cached;
     const parsed: unknown = JSON.parse(
-      await readFile(fileOf(projectId), "utf8").catch(() => "[]")
+      await readFile(fileOf(projectId), "utf-8").catch(() => "[]")
     );
     const items = Array.isArray(parsed)
       ? parsed.filter(isActivity).slice(-ACTIVITY_KEEP)

@@ -85,7 +85,7 @@ export async function buildScope(
     throw new ConflictError(
       `${target.relative} has unsaved changes. Save or discard them, then try variants again.`
     );
-  const code = await readFile(target.file, "utf8");
+  const code = await readFile(target.file, "utf-8");
   const span = spanOf(target.relative, code, source.line, source.col);
   if (!span || code[span.start] !== "<")
     throw new BadRequestError(
@@ -115,7 +115,7 @@ async function readElement(
 ): Promise<{ code: string; element: string | null } | null> {
   const code = await readFile(
     path.join(direction.workTree, scope.file),
-    "utf8"
+    "utf-8"
   ).catch(() => null);
   return code === null ? null : { code, element: elementOf(code, scope) };
 }
@@ -253,7 +253,7 @@ export async function keepElementVariant(
   );
   assertCanEdit(deps, project, target);
   const targetFile = path.join(target.workTree, scope.file);
-  const current = await readFile(targetFile, "utf8");
+  const current = await readFile(targetFile, "utf-8");
   const original = elementOf(current, scope);
   if (original === null || hash(original) !== scope.elementHash)
     throw new ConflictError(

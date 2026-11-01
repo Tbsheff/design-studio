@@ -129,7 +129,7 @@ function usersOf(reverse: Map<string, string[]>, target: string): Set<string> {
 }
 
 async function componentName(file: string): Promise<string | null> {
-  const text = await readFile(file, "utf8").catch(() => "");
+  const text = await readFile(file, "utf-8").catch(() => "");
   const exported = EXPORTED_NAME.exec(text)?.[1];
   if (exported) return exported;
   const base = path.basename(file).replace(/\.[^.]+$/, "");

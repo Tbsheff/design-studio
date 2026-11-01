@@ -175,7 +175,7 @@ async function statesSource(input: DriverInput): Promise<string> {
     input.ctx.request.states?.path || input.ctx.project.entry || "index.html";
   return readFile(
     path.join(input.ctx.direction.workTree, pagePath),
-    "utf8"
+    "utf-8"
   ).catch(() => EMPTY_PAGE);
 }
 

@@ -434,7 +434,7 @@ function variantSpecs(
 }
 
 export async function readModule(file: string): Promise<ParsedModule | null> {
-  const code = await readFile(file, "utf8").catch(() => null);
+  const code = await readFile(file, "utf-8").catch(() => null);
   if (code === null || code.length > 512 * 1024) return null;
   const ast = parseModuleFile(code, file);
   return ast ? { ast, code } : null;

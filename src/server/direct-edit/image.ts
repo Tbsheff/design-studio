@@ -322,7 +322,7 @@ async function planReplace(
   image: ImageBytes | null
 ): Promise<ImagePlan> {
   const { source, target } = await sourceFor(scope, request.target);
-  const original = await readFile(target.file, "utf8");
+  const original = await readFile(target.file, "utf-8");
   const asset = image
     ? await planAsset(scope.project, scope.workTree, target.relative, image)
     : null;
@@ -399,7 +399,7 @@ async function planInsertImage(
   const known = page
     ? await resolveSource(scope.workTree, page).catch(() => null)
     : null;
-  const text = known ? await readFile(known.file, "utf8") : "";
+  const text = known ? await readFile(known.file, "utf-8") : "";
   const tailwind = known
     ? (await themeForFile(scope.workTree, known.relative, text, {
         projectKind: scope.project.kind,

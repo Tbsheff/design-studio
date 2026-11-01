@@ -112,7 +112,7 @@ export function createScreenshotTrimStore(
       const file = await fileFor(key);
       if (!file) return null;
       const [text, info] = await Promise.all([
-        readFile(file, "utf8"),
+        readFile(file, "utf-8"),
         stat(file),
       ]);
       const entries = parseEntries(text);

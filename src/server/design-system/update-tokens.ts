@@ -144,7 +144,7 @@ export async function plannedTokensText(
       buildErrorMessage(compiled.errors)
     );
   return nextText(
-    await readFile(path.join(workTree, TOKENS_FILE), "utf8"),
+    await readFile(path.join(workTree, TOKENS_FILE), "utf-8"),
     changes,
     next
   );

@@ -50,7 +50,7 @@ export function registerRunTitleRoutes(app: Hono, deps: Deps): void {
     const summary = await lock(runId, async () => {
       let current: RunSummary;
       try {
-        current = JSON.parse(await readFile(file, "utf8")) as RunSummary;
+        current = JSON.parse(await readFile(file, "utf-8")) as RunSummary;
       } catch {
         throw new NotFoundError(`run ${runId} not found`);
       }

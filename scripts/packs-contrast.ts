@@ -74,8 +74,8 @@ for (const id of readdirSync(packsDir).sort()) {
     errors.push(`${id}: missing tokens.json or pack.json`);
     continue;
   }
-  const tokens = JSON.parse(readFileSync(tokensPath, "utf8")) as TokenFile;
-  const pack = JSON.parse(readFileSync(packPath, "utf8")) as PackManifest;
+  const tokens = JSON.parse(readFileSync(tokensPath, "utf-8")) as TokenFile;
+  const pack = JSON.parse(readFileSync(packPath, "utf-8")) as PackManifest;
   if (pack.id !== id) errors.push(`${id}: pack.id is ${pack.id}`);
   for (const [group, names] of Object.entries(REQUIRED_TOKENS)) {
     const g = tokens[group] as TokenGroup | undefined;

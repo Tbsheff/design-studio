@@ -38,7 +38,7 @@ function displays(): DisplayInfo[] {
 
 function readStateFile(file: string): WindowStateFile {
   try {
-    return parseStateFile(JSON.parse(readFileSync(file, "utf8")));
+    return parseStateFile(JSON.parse(readFileSync(file, "utf-8")));
   } catch {
     return parseStateFile(null);
   }

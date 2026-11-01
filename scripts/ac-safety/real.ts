@@ -149,7 +149,7 @@ async function importFolder(
     { path: folder }
   );
   const file = path.join(dataDir, "projects", project.id, "project.json");
-  const stored = JSON.parse(readFileSync(file, "utf8")) as Project;
+  const stored = JSON.parse(readFileSync(file, "utf-8")) as Project;
   stored.settings = {
     ...stored.settings,
     model: MODEL,
@@ -178,7 +178,7 @@ function gitInit(folder: string): void {
 }
 
 function h1Of(file: string): string {
-  const html = readFileSync(file, "utf8");
+  const html = readFileSync(file, "utf-8");
   const match = /<h1\b[^>]*>([\s\S]*?)<\/h1>/i.exec(html);
   return (match?.[1] ?? "").replace(/<[^>]+>/g, "").trim();
 }
@@ -326,7 +326,7 @@ async function main(): Promise<void> {
         attachmentMeta: readdirSync(attachmentsDir)
           .filter((f) => f.endsWith(".json"))
           .map((f) =>
-            JSON.parse(readFileSync(path.join(attachmentsDir, f), "utf8"))
+            JSON.parse(readFileSync(path.join(attachmentsDir, f), "utf-8"))
           ),
       };
       save();
@@ -462,7 +462,7 @@ async function main(): Promise<void> {
         }
       );
       const run = await finishRun(runId);
-      const html = readFileSync(path.join(designFolder, "index.html"), "utf8");
+      const html = readFileSync(path.join(designFolder, "index.html"), "utf-8");
       const css =
         [...html.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi)]
           .map((m) => m[1])
@@ -510,7 +510,7 @@ async function main(): Promise<void> {
       ]);
       const exported = readFileSync(
         path.join(exportDir, "out", "index.html"),
-        "utf8"
+        "utf-8"
       );
       report.ac40 = {
         run: runView(run.summary, run.events),
@@ -574,7 +574,7 @@ async function main(): Promise<void> {
         ),
         packageJson: readFileSync(
           path.join(bashFolder, "package.json"),
-          "utf8"
+          "utf-8"
         ),
       };
       save();

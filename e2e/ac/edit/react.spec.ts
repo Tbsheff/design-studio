@@ -40,7 +40,7 @@ function listenerPid(port: number): string {
     return execFileSync(
       "lsof",
       ["-nP", `-iTCP:${port}`, "-sTCP:LISTEN", "-t"],
-      { encoding: "utf8" }
+      { encoding: "utf-8" }
     ).trim();
   } catch {
     return "";
@@ -110,12 +110,12 @@ test("AC-19 React edits use HMR on one dev server with no full reload", async ({
   const parentOfListener = execFileSync(
     "ps",
     ["-o", "ppid=", "-p", pidBefore],
-    { encoding: "utf8" }
+    { encoding: "utf-8" }
   ).trim();
   const grandparentOfListener = execFileSync(
     "ps",
     ["-o", "ppid=", "-p", parentOfListener],
-    { encoding: "utf8" }
+    { encoding: "utf-8" }
   ).trim();
   evidence("AC-19-pid", {
     serverPid,
@@ -192,7 +192,7 @@ test("AC-20 HMR update keeps zoom, viewport, chat scroll, draft and selection", 
   const appFile = path.join(main.workTree, "src", "App.tsx");
   writeFileSync(
     appFile,
-    readFileSync(appFile, "utf8").replace(
+    readFileSync(appFile, "utf-8").replace(
       /<h1>[^<]*<\/h1>/,
       "<h1>Hmr state updated</h1>"
     )
@@ -252,7 +252,7 @@ test("AC-27 and AC-32 React selection carries DOM, styles, source and edits the 
   writeFileSync(appFile, appSource("React Select"));
   await expect(frame.locator("button.cta")).toHaveText("Primary");
   await api.call("POST", `/api/projects/${project.id}/d/${main.id}/keep`);
-  const before = readFileSync(appFile, "utf8");
+  const before = readFileSync(appFile, "utf-8");
   await selectInFrame(page, "button.cta");
   await sendPrompt(page, "color #c00");
   const runs = await api.waitForRuns(project.id, 2);
@@ -268,7 +268,7 @@ test("AC-27 and AC-32 React selection carries DOM, styles, source and edits the 
   const h1Color = await frame
     .locator("h1")
     .evaluate((el) => getComputedStyle(el).color);
-  const after = readFileSync(appFile, "utf8");
+  const after = readFileSync(appFile, "utf-8");
   const stored = runFile(project.id, run.id);
   const selection = stored.request.selection?.[0];
   const userText = buildUserText({ request: stored.request, designMd: "" });

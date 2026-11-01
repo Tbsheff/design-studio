@@ -74,12 +74,12 @@ function types(events: StudioEvent[]): string[] {
 
 async function readRunFiles(projectDir: string, runId: string) {
   const lines = (
-    await readFile(path.join(projectDir, "runs", `${runId}.jsonl`), "utf8")
+    await readFile(path.join(projectDir, "runs", `${runId}.jsonl`), "utf-8")
   )
     .trim()
     .split("\n");
   const summary = JSON.parse(
-    await readFile(path.join(projectDir, "runs", `${runId}.json`), "utf8")
+    await readFile(path.join(projectDir, "runs", `${runId}.json`), "utf-8")
   ) as RunSummary;
   const parsed = lines.map(
     (line) => JSON.parse(line) as StudioEvent | { type: "run.sent" }
@@ -101,7 +101,7 @@ describe("mock agent run", () => {
     const summary = await handle.done;
 
     expect(summary.status).toBe("completed");
-    const html = await readFile(path.join(env.workTree, "index.html"), "utf8");
+    const html = await readFile(path.join(env.workTree, "index.html"), "utf-8");
     expect(html).toContain("<h1>Coffee &lt;subscription&gt; service</h1>");
     expect(html).toContain('class="cta"');
     expect(html.match(/class="card"/g)?.length).toBe(3);
@@ -229,7 +229,7 @@ describe("mock agent run", () => {
     expect(types(env.bus.events)).not.toContain("version.created");
     const partial = await readFile(
       path.join(env.workTree, "index.html"),
-      "utf8"
+      "utf-8"
     );
     expect(partial.length).toBeGreaterThan(0);
     expect(partial).not.toContain("</html>");
@@ -289,7 +289,7 @@ describe("mock agent run", () => {
     expect(textRun.status).toBe("completed");
     const afterText = await readFile(
       path.join(env.workTree, "index.html"),
-      "utf8"
+      "utf-8"
     );
     expect(afterText).toBe(
       original.replace(
@@ -309,7 +309,7 @@ describe("mock agent run", () => {
     expect(colorRun.status).toBe("completed");
     const afterColor = await readFile(
       path.join(env.workTree, "index.html"),
-      "utf8"
+      "utf-8"
     );
     expect(afterColor).toBe(
       afterText.replace('<p class="b">', '<p class="b" style="color: #c0392b">')
@@ -323,7 +323,7 @@ describe("mock agent run", () => {
       .done;
     await env.runner.start(env.context({ prompt: "Add a note", mode: "edit" }))
       .done;
-    const html = await readFile(path.join(env.workTree, "index.html"), "utf8");
+    const html = await readFile(path.join(env.workTree, "index.html"), "utf-8");
     expect(html).toMatch(/<p class="mock-edit">Add a note<\/p>\n<\/body>/);
   });
 
@@ -345,13 +345,13 @@ describe("mock agent run", () => {
     ).done;
     const app = await readFile(
       path.join(env.workTree, "src", "App.tsx"),
-      "utf8"
+      "utf-8"
     );
     expect(app).toContain("<h1>Team dashboard</h1>");
     await env.runner.start(env.context({ prompt: "Ops board", mode: "edit" }))
       .done;
     expect(
-      await readFile(path.join(env.workTree, "src", "App.tsx"), "utf8")
+      await readFile(path.join(env.workTree, "src", "App.tsx"), "utf-8")
     ).toContain("<h1>Ops board</h1>");
   });
 });
@@ -429,13 +429,13 @@ describe("mock design system run", () => {
       "mcp__studio__design_system_check",
     ]);
     expect(
-      await readFile(path.join(t.workTree, "DESIGN.md"), "utf8")
+      await readFile(path.join(t.workTree, "DESIGN.md"), "utf-8")
     ).not.toMatch(/^_To do:/m);
     expect(
       JSON.parse(
         await readFile(
           path.join(t.workTree, "design-system", "tokens.json"),
-          "utf8"
+          "utf-8"
         )
       ).$description
     ).toMatch(/Improve with AI/);

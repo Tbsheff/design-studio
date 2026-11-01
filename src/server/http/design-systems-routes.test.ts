@@ -159,7 +159,7 @@ describe("POST /api/design-systems/draft", { timeout: 30000 }, () => {
   it("creates a draft pack and a backing HTML project from a DTCG file in one version, under 5 s", async () => {
     const text = await readFile(
       path.join(FIXTURES, "dtcg.tokens.json"),
-      "utf8"
+      "utf-8"
     );
     const result = await ok<DesignSystemDraftResult>(
       call("POST", "/api/design-systems/draft", {
@@ -196,7 +196,7 @@ describe("POST /api/design-systems/draft", { timeout: 30000 }, () => {
     }
     const css = await readFile(
       path.join(tree, "design-system/tokens.css"),
-      "utf8"
+      "utf-8"
     );
     expect(css).toContain("--primary:");
     const versions = await ok<Version[]>(
@@ -225,7 +225,7 @@ describe("POST /api/design-systems/draft", { timeout: 30000 }, () => {
       info.coverage?.tokens.find((entry) => entry.token === "color.primary")
     ).toMatchObject({ source: "tokens-file", confidence: "high" });
     const meta = JSON.parse(
-      await readFile(path.join(tree, "source/meta.json"), "utf8")
+      await readFile(path.join(tree, "source/meta.json"), "utf-8")
     ) as { packId: string; inputs: { tokensFile: string } };
     expect(meta).toMatchObject({
       packId: "user-evergreen",
@@ -266,7 +266,7 @@ describe("POST /api/design-systems/draft", { timeout: 30000 }, () => {
     });
     const tree = workTree(result.project);
     const meta = JSON.parse(
-      await readFile(path.join(tree, "source/meta.json"), "utf8")
+      await readFile(path.join(tree, "source/meta.json"), "utf-8")
     ) as { attachments: Array<{ id: string; name: string }> };
     expect(meta.attachments).toHaveLength(1);
     expect(meta.attachments[0]?.name).toBe("logo.png");
@@ -274,11 +274,11 @@ describe("POST /api/design-systems/draft", { timeout: 30000 }, () => {
       true
     );
     const tokens = JSON.parse(
-      await readFile(path.join(tree, TOKENS_FILE), "utf8")
+      await readFile(path.join(tree, TOKENS_FILE), "utf-8")
     ) as { color: Record<string, { $value: string }> };
     expect(tokens.color.primary?.$value).toBe(normalizeColor("#2563eb"));
     expect(tokens.color.accent?.$value).toBe(normalizeColor("#e8590c"));
-    expect(await readFile(path.join(tree, "DESIGN.md"), "utf8")).toContain(
+    expect(await readFile(path.join(tree, "DESIGN.md"), "utf-8")).toContain(
       "Bold and loud."
     );
   });
@@ -317,7 +317,7 @@ describe("POST /api/design-systems/draft", { timeout: 30000 }, () => {
       name: "Broken Kit",
       tokensFile: {
         name: "dtcg.tokens.json",
-        text: await readFile(path.join(FIXTURES, "dtcg.tokens.json"), "utf8"),
+        text: await readFile(path.join(FIXTURES, "dtcg.tokens.json"), "utf-8"),
       },
     });
     expect(res.status).toBe(500);
@@ -374,7 +374,7 @@ describe("POST /api/design-systems/draft", { timeout: 30000 }, () => {
     ]);
     const tree = workTree(result.project);
     const tokens = JSON.parse(
-      await readFile(path.join(tree, TOKENS_FILE), "utf8")
+      await readFile(path.join(tree, TOKENS_FILE), "utf-8")
     ) as { color: Record<string, { $value: string }> };
     tokens.color.primary!.$value = "oklch(50% 0.2 20)";
     await writeFile(
@@ -397,7 +397,7 @@ describe("POST /api/design-systems/draft", { timeout: 30000 }, () => {
       [result.pack.id, undefined],
     ]);
     expect(
-      JSON.parse(await readFile(path.join(tree, PACK_FILE), "utf8"))
+      JSON.parse(await readFile(path.join(tree, PACK_FILE), "utf-8"))
     ).not.toHaveProperty("draft");
     const detail = await ok<{ tokensJson: string }>(
       call("GET", `/api/packs/${result.pack.id}`)
@@ -461,7 +461,7 @@ describe("POST /api/design-systems/draft", { timeout: 30000 }, () => {
     const meta = JSON.parse(
       await readFile(
         path.join(workTree(result.project), "source/meta.json"),
-        "utf8"
+        "utf-8"
       )
     ) as { attachments: Array<{ id: string }> };
     started.length = 0;

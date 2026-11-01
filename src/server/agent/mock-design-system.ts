@@ -91,7 +91,7 @@ export function fillTodos(markdown: string, keepLast: boolean): string {
 }
 
 async function readText(workTree: string, file: string): Promise<string> {
-  return readFile(path.join(workTree, file), "utf8");
+  return readFile(path.join(workTree, file), "utf-8");
 }
 
 async function improveTokens(

@@ -33,14 +33,14 @@ let library: PackLibrary;
 
 async function fixtureInput(name = "Brand One"): Promise<CreateUserPackInput> {
   const manifest = JSON.parse(
-    await readFile(path.join(FIXTURE, "pack.json"), "utf8")
+    await readFile(path.join(FIXTURE, "pack.json"), "utf-8")
   ) as CreateUserPackInput & { id: string };
   return {
     name,
     mode: manifest.mode,
     fonts: manifest.fonts,
-    tokensJson: await readFile(path.join(FIXTURE, "tokens.json"), "utf8"),
-    designMd: await readFile(path.join(FIXTURE, "DESIGN.md"), "utf8"),
+    tokensJson: await readFile(path.join(FIXTURE, "tokens.json"), "utf-8"),
+    designMd: await readFile(path.join(FIXTURE, "DESIGN.md"), "utf-8"),
     provenance: "imported",
     tags: ["brand"],
   };
@@ -95,7 +95,7 @@ describe("pack registry with user packs", () => {
     );
     await cp(good.dir, path.join(userDir, "no-prefix"), { recursive: true });
     const manifest = JSON.parse(
-      await readFile(path.join(good.dir, "pack.json"), "utf8")
+      await readFile(path.join(good.dir, "pack.json"), "utf-8")
     ) as Record<string, unknown>;
     await writeFile(
       path.join(userDir, "no-prefix", "pack.json"),
@@ -122,7 +122,7 @@ describe("pack registry with user packs", () => {
 
     const goodTokens = await readFile(
       path.join(good.dir, "tokens.json"),
-      "utf8"
+      "utf-8"
     );
     await writeFile(
       path.join(userDir, "user-broken", "tokens.json"),
@@ -265,7 +265,7 @@ describe("pack library store", () => {
     });
     expect(published.manifest.draft).toBeUndefined();
     expect(
-      JSON.parse(await readFile(path.join(published.dir, "pack.json"), "utf8"))
+      JSON.parse(await readFile(path.join(published.dir, "pack.json"), "utf-8"))
     ).not.toHaveProperty("draft");
   });
 
@@ -311,7 +311,7 @@ describe("pack library store", () => {
     expect(fileName).toBe("user-zip-me.zip");
     const file = path.join(root, fileName);
     await writeFile(file, bytes);
-    const listing = execFileSync("unzip", ["-Z1", file], { encoding: "utf8" })
+    const listing = execFileSync("unzip", ["-Z1", file], { encoding: "utf-8" })
       .trim()
       .split("\n");
     expect(listing).toEqual([
@@ -321,7 +321,7 @@ describe("pack library store", () => {
     ]);
     expect(
       execFileSync("unzip", ["-p", file, "user-zip-me/tokens.json"], {
-        encoding: "utf8",
+        encoding: "utf-8",
       })
     ).toBe(pack.tokensText);
     execFileSync("unzip", ["-tq", file]);

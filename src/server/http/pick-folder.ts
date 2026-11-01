@@ -85,7 +85,7 @@ const defaultExecFile: ExecFileFn = (file, args, options, callback) => {
   execFile(
     file,
     args,
-    { ...options, encoding: "utf8" },
+    { ...options, encoding: "utf-8" },
     (error, stdout, stderr) => callback(error, String(stdout), String(stderr))
   );
 };

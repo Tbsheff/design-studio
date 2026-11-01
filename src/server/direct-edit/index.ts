@@ -486,7 +486,7 @@ export async function planDirectEdit(
 ): Promise<PlannedEdit> {
   assertKnownTokens(request.style, known);
   const target = await resolveSource(workTree, request.source.file);
-  const original = await readFile(target.file, "utf8");
+  const original = await readFile(target.file, "utf-8");
   const theme = await themeForFile(workTree, target.relative, original, scope);
   try {
     return {

@@ -140,7 +140,7 @@ function resolveGitBinary(): Promise<string> {
   const override = process.env.STUDIO_GIT;
   if (override) return Promise.resolve(override);
   gitBinary ??= new Promise((resolve) => {
-    execFile("git", ["--exec-path"], { encoding: "utf8" }, (error, stdout) => {
+    execFile("git", ["--exec-path"], { encoding: "utf-8" }, (error, stdout) => {
       const candidate = error ? "" : path.join(stdout.trim(), "git");
       resolve(candidate !== "" && existsSync(candidate) ? candidate : "git");
     });
@@ -182,7 +182,7 @@ export async function runGit(
         env: gitEnv(scope),
         cwd: options.cwd ?? scope.workTree ?? scope.gitDir,
         maxBuffer: 256 * 1024 * 1024,
-        encoding: "utf8",
+        encoding: "utf-8",
       },
       (error, stdout, stderr) => {
         if (
@@ -228,7 +228,7 @@ export async function runGitBuffer(
         if (error) {
           reject(
             new Error(
-              `git ${args[0] ?? ""} failed: ${stderr.toString("utf8").trim() || error.message}`
+              `git ${args[0] ?? ""} failed: ${stderr.toString("utf-8").trim() || error.message}`
             )
           );
           return;
@@ -1393,7 +1393,7 @@ export function createVersionStore(config: ServerConfig): VersionStore {
       if (scan === null) return null;
       const live = directionScope(project, direction).indexFile as string;
       const stale = (
-        await readFile(staleMarkerOf(project, direction), "utf8").catch(
+        await readFile(staleMarkerOf(project, direction), "utf-8").catch(
           () => ""
         )
       ).trim();

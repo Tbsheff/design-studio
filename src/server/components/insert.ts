@@ -384,7 +384,7 @@ async function retargeted(
   const target = await resolveSource(scope.workTree, use.file);
   return {
     target,
-    code: await readFile(target.file, "utf8"),
+    code: await readFile(target.file, "utf-8"),
     at: use,
     tag: undefined,
     usedAt: use,
@@ -407,7 +407,7 @@ export async function resolveTarget(
     return retargeted(scope, use);
   }
   const first = await resolveSource(scope.workTree, source.file);
-  const code = await readFile(first.file, "utf8");
+  const code = await readFile(first.file, "utf-8");
   const plain = {
     target: first,
     code,

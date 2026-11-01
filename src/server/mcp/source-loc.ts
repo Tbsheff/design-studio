@@ -75,7 +75,7 @@ async function colOnLine(
     throw new EditError(
       `${raw}: pass file:line:col for a file that is not JSX.`
     );
-  const text = await readFile(insideTree(workTree, file), "utf8").catch(
+  const text = await readFile(insideTree(workTree, file), "utf-8").catch(
     () => null
   );
   if (text === null)

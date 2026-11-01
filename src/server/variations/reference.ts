@@ -28,7 +28,7 @@ async function readSnippet(
   const file = sourceFile(workTree, source.file);
   if (!file) return null;
   try {
-    const lines = (await readFile(file, "utf8")).split("\n");
+    const lines = (await readFile(file, "utf-8")).split("\n");
     const start = Math.max(0, source.line - 1);
     const snippet = lines.slice(start, start + SNIPPET_LINES).join("\n");
     if (!snippet.trim()) return null;

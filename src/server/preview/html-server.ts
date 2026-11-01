@@ -255,7 +255,7 @@ export async function startHtmlServer(
       "cache-control": "no-store",
     };
     if (extension === ".html" || extension === ".htm") {
-      const source = await readFile(resolved.file, "utf8");
+      const source = await readFile(resolved.file, "utf-8");
       const annotated = annotateHtml(source, resolved.relative);
       return c.body(
         await injectForPreview(root, resolved.relative, annotated),

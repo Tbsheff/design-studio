@@ -102,7 +102,7 @@ export async function harvestNextFonts(root: string): Promise<NextFonts> {
   for (const file of files) {
     const absolute = await safeFileInside(root, file);
     const text = absolute
-      ? await readFile(absolute, "utf8").catch(() => "")
+      ? await readFile(absolute, "utf-8").catch(() => "")
       : "";
     for (const family of familiesIn(text))
       counts.set(family, {

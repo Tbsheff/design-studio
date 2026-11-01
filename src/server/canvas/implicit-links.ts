@@ -176,7 +176,7 @@ async function localScripts(
       ? path.resolve(workTree, `.${clean}`)
       : path.resolve(path.dirname(file), clean);
     const text = full.startsWith(root)
-      ? await readFile(full, "utf8").catch(() => null)
+      ? await readFile(full, "utf-8").catch(() => null)
       : null;
     if (text && text.length <= SCRIPT_BYTES_MAX) out.push(text);
   }
@@ -189,7 +189,7 @@ async function staticPage(
 ): Promise<StaticPage | null> {
   const workTree = workTreeOf(project, frame);
   const file = workTree ? pageFile(workTree, frame.path ?? "") : null;
-  const html = file ? await readFile(file, "utf8").catch(() => null) : null;
+  const html = file ? await readFile(file, "utf-8").catch(() => null) : null;
   if (!workTree || !file || html === null) return null;
   const tree = pageTree(html);
   const scripts = await localScripts(workTree, file, scriptSources(tree));

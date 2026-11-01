@@ -61,7 +61,7 @@ export function loadAxeSource(): Promise<string> {
     const file =
       packagedResource("axe.min.js") ??
       createRequire(import.meta.url).resolve("axe-core/axe.min.js");
-    axeSource = readFile(file, "utf8");
+    axeSource = readFile(file, "utf-8");
   }
   return axeSource;
 }

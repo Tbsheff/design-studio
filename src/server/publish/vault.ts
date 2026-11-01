@@ -76,10 +76,10 @@ export function createKeyVault(dir: string): KeyVault {
     kind,
     async get() {
       if ((await kind()) === "keychain") {
-        const sealed = await readFile(sealedFile, "utf8").catch(() => null);
+        const sealed = await readFile(sealedFile, "utf-8").catch(() => null);
         return sealed ? askDesktop("open", sealed.trim()) : null;
       }
-      const plain = await readFile(plainFile, "utf8").catch(() => null);
+      const plain = await readFile(plainFile, "utf-8").catch(() => null);
       return plain ? plain.trim() : null;
     },
     async set(value) {

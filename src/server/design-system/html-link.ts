@@ -97,7 +97,7 @@ export async function designSystemLinkProblem(
   if (!(await hasTokensFile(workTree))) return null;
   let html: string;
   try {
-    html = await readFile(path.join(workTree, entry), "utf8");
+    html = await readFile(path.join(workTree, entry), "utf-8");
   } catch {
     return null;
   }

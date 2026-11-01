@@ -83,7 +83,7 @@ function stale(): DirectEditError {
 
 async function readOrNull(file: string): Promise<string | null> {
   try {
-    return await readFile(file, "utf8");
+    return await readFile(file, "utf-8");
   } catch (error) {
     if (
       isNodeError(error) &&

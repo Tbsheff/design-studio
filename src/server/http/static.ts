@@ -84,7 +84,7 @@ export async function renderIndexHtml(
 ): Promise<string> {
   let html: string;
   try {
-    html = await readFile(path.join(rootDir, "index.html"), "utf8");
+    html = await readFile(path.join(rootDir, "index.html"), "utf-8");
   } catch {
     return MISSING_BUILD_PAGE;
   }

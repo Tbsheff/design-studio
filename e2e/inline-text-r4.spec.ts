@@ -56,7 +56,7 @@ async function armCommitProbe(page: Page): Promise<void> {
 async function bytesOnDisk(file: string, needle: string): Promise<number> {
   const deadline = Date.now() + 5000;
   for (;;) {
-    if (readFileSync(file, "utf8").includes(needle)) return Date.now();
+    if (readFileSync(file, "utf-8").includes(needle)) return Date.now();
     if (Date.now() > deadline)
       throw new Error(`${needle} never reached ${file}`);
     await new Promise((resolve) => setTimeout(resolve, 2));
@@ -206,7 +206,7 @@ test("R4-1: Esc cancels, keeps select mode, restores the text; blur commits; Ent
     "html"
   );
   const runsBefore = await runCount(api, project.id);
-  const original = readFileSync(file, "utf8");
+  const original = readFileSync(file, "utf-8");
   await selectInFrame(page, "h1");
 
   await editH1(page);
@@ -221,7 +221,7 @@ test("R4-1: Esc cancels, keeps select mode, restores the text; blur commits; Ent
   );
   await expect(page.locator(".overlay .box.selected")).toHaveCount(1);
   await page.waitForTimeout(300);
-  expect(readFileSync(file, "utf8")).toBe(original);
+  expect(readFileSync(file, "utf-8")).toBe(original);
 
   await page.keyboard.press("Enter");
   await expect.poll(() => caretReady(page)).toBe(true);
@@ -276,13 +276,13 @@ test("R4-1: inline edit is off while a run is active", async ({ page }) => {
       .last()
       .locator('.tool-row[data-state="pending"]')
   ).toHaveCount(1);
-  const during = readFileSync(file, "utf8");
+  const during = readFileSync(file, "utf-8");
   await selectInFrame(page, "h1");
   await h1(page).dblclick();
   await h1(page).press("Enter");
   await page.waitForTimeout(200);
   await expect(frontFrame(page).locator("[contenteditable]")).toHaveCount(0);
-  expect(readFileSync(file, "utf8")).toBe(during);
+  expect(readFileSync(file, "utf-8")).toBe(during);
   await api.waitForRuns(project.id, 2);
   await expect(
     page.locator("[data-run-id]").last().locator(".run-foot .status.running")
@@ -410,7 +410,7 @@ test("R4-1: a failed write shows in the inspector and restores the text; a run s
     "html"
   );
   const main = mainDirection(project);
-  const original = readFileSync(file, "utf8");
+  const original = readFileSync(file, "utf-8");
   await selectInFrame(page, "h1");
 
   await page.route(/\/direct-edit$/, (route) =>
@@ -426,7 +426,7 @@ test("R4-1: a failed write shows in the inspector and restores the text; a run s
   await page.keyboard.press("Meta+Enter");
   await expect(page.locator(".ins-error")).toContainText("Agent is running");
   await expect(h1(page)).toHaveText("Inline Error Probe");
-  expect(readFileSync(file, "utf8")).toBe(original);
+  expect(readFileSync(file, "utf-8")).toBe(original);
   await page.unroute(/\/direct-edit$/);
 
   await editH1(page);
@@ -440,5 +440,5 @@ test("R4-1: a failed write shows in the inspector and restores the text; a run s
   await expect(page.locator(".canvas.text-editing")).toHaveCount(0);
   await expect(h1(page)).not.toHaveText(/zzz/);
   await api.waitForRuns(project.id, 2);
-  expect(readFileSync(file, "utf8")).not.toContain("zzz");
+  expect(readFileSync(file, "utf-8")).not.toContain("zzz");
 });

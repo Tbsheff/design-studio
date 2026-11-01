@@ -36,7 +36,7 @@ function groupControls(controls: TweakControl[]): Group[] {
 }
 
 function slug(value: string): string {
-  return value.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+  return value.toLowerCase().replaceAll(/[^a-z0-9]+/g, "-");
 }
 
 function readout(control: TweakControl, value: TweakValue): string {

@@ -167,7 +167,9 @@ export function buildPackFiles(
     );
   }
 
-  const prose = removeTokenBlock(input.designMd.replace(/\r\n/g, "\n")).trim();
+  const prose = removeTokenBlock(
+    input.designMd.replaceAll("\r\n", "\n")
+  ).trim();
 
   if (prose === "") {
     throw new BadRequestError("DESIGN.md is empty");

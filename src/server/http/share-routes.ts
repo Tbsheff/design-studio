@@ -116,7 +116,7 @@ function titleOf(raw: unknown, project: Project): string {
   const text =
     typeof raw === "string"
       ? raw
-          .replace(/[\p{Cc}\s]+/gu, " ")
+          .replaceAll(/[\p{Cc}\s]+/gu, " ")
           .trim()
           .slice(0, 120)
       : "";

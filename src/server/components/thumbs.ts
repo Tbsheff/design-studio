@@ -46,7 +46,7 @@ export function createComponentService(deps: {
     const url = await deps.preview.directionUrl(project, direction);
     const dir = path.join(
       deps.scratchDir(project.id),
-      `${direction.id}-${version.replace(/[^a-zA-Z0-9]/g, "").slice(0, 24) || "v"}`
+      `${direction.id}-${version.replaceAll(/[^a-zA-Z0-9]/g, "").slice(0, 24) || "v"}`
     );
     await mkdir(dir, { recursive: true });
     try {

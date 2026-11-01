@@ -58,7 +58,7 @@ export function cleanRoute(raw: string): string | null {
 
   const withSlash = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
 
-  return withSlash.replace(/\/{2,}/g, "/");
+  return withSlash.replaceAll(/\/{2,}/g, "/");
 }
 
 export function routeLabel(route: string): string {
@@ -69,7 +69,7 @@ export function routeLabel(route: string): string {
   const last = route.split("?")[0]?.split("/").filter(Boolean).pop() ?? route;
 
   return last
-    .replace(/[-_]+/g, " ")
+    .replaceAll(/[-_]+/g, " ")
     .replace(/^\w/, (char) => char.toUpperCase())
     .slice(0, 40);
 }

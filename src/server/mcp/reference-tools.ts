@@ -135,7 +135,7 @@ const compareTool = defineTool(
     const frame = await frameOf(deps, target, input);
     const page = input.path ?? frame?.path;
     const url = await pageUrl(deps, target.project, target.direction, page);
-    const stem = `${target.project.id}-${(frame?.id ?? "page").replace(/[^A-Za-z0-9_-]/g, "")}-${Date.now().toString(36)}`;
+    const stem = `${target.project.id}-${(frame?.id ?? "page").replaceAll(/[^A-Za-z0-9_-]/g, "")}-${Date.now().toString(36)}`;
 
     const score = await compareToReference({
       preview: deps.preview,

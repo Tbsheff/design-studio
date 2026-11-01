@@ -183,7 +183,7 @@ function linkAbort(signal: AbortSignal): AbortController {
 }
 
 function shortText(value: string, max = 160): string {
-  const clean = value.replace(/\s+/g, " ").trim();
+  const clean = value.replaceAll(/\s+/g, " ").trim();
   return clean.length > max ? `${clean.slice(0, max)}…` : clean;
 }
 

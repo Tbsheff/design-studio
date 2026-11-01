@@ -97,8 +97,8 @@ export function stemOf(name: string): string {
 
   const stem = base
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
+    .replaceAll(/[^a-z0-9]+/g, "-")
+    .replaceAll(/^-+|-+$/g, "")
     .slice(0, 40)
     .replace(/-+$/, "");
 
@@ -160,7 +160,7 @@ function checkUrl(raw: string): URL {
     throw bad("Image URLs must use https.");
   }
 
-  const host = url.hostname.replace(/^\[|\]$/g, "").toLowerCase();
+  const host = url.hostname.replaceAll(/^\[|\]$/g, "").toLowerCase();
 
   const local =
     host === "localhost" ||

@@ -171,9 +171,9 @@ function changedSpan(before: string, after: string): string {
 
 function readable(text: string): string {
   return text
-    .replace(/<[^>]*>?/g, " ")
-    .replace(/[{}()[\]"'`;,=<>/]/g, " ")
-    .replace(/\s+/g, " ")
+    .replaceAll(/<[^>]*>?/g, " ")
+    .replaceAll(/[{}()[\]"'`;,=<>/]/g, " ")
+    .replaceAll(/\s+/g, " ")
     .trim();
 }
 

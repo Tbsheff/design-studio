@@ -357,7 +357,7 @@ export function normalize(text: string, lead: string, to: string): string {
       }
 
       const depth = Math.round(
-        match[0].replace(/\t/g, from).length / from.length
+        match[0].replaceAll("	", from).length / from.length
       );
 
       return to.repeat(depth) + line.slice(match[0].length);

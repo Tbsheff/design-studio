@@ -319,7 +319,7 @@ function startWrapperServer(port: number): Promise<Server> {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-store",
       });
-      res.end(wrapperHtml(src.replace(/"/g, "&quot;")));
+      res.end(wrapperHtml(src.replaceAll('"', "&quot;")));
     });
 
     server.once("error", reject);

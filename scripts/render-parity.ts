@@ -228,7 +228,7 @@ function findingKeys(
   normalize: boolean
 ): string[] {
   const clean = (text: string) =>
-    normalize ? text.replace(/\d+x\d+ px/g, "NxN px") : text;
+    normalize ? text.replaceAll(/\d+x\d+ px/g, "NxN px") : text;
 
   return results
     .flatMap((result) => [

@@ -100,7 +100,7 @@ function patchShape(block: string, patch: XmlPatch): string {
 }
 
 function patchSlide(xml: string, patches: Map<string, XmlPatch>): string {
-  return xml.replace(BLOCK, (block) => {
+  return xml.replaceAll(BLOCK, (block) => {
     const name = /<p:cNvPr id="\d+" name="(ds-\d+)"/.exec(block)?.[1];
     const patch = name ? patches.get(name) : undefined;
 

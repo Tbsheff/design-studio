@@ -113,7 +113,7 @@ export async function changedSince(
   const changed: string[] = [];
   await walk(
     workTree,
-    dir.replace(/^\/+|\/+$/g, ""),
+    dir.replaceAll(/^\/+|\/+$/g, ""),
     (file, _size, mtimeMs) => mtimeMs >= since && changed.push(file),
     { left: WALK_CAP }
   );

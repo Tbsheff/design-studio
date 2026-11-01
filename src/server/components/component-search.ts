@@ -39,7 +39,7 @@ function sourceOf(library: Library, entry: LibraryEntry): ComponentSource {
 }
 
 function words(value: string): string {
-  return value.toLowerCase().replace(/[^a-z0-9]+/g, "");
+  return value.toLowerCase().replaceAll(/[^a-z0-9]+/g, "");
 }
 
 function tierOf(

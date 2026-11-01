@@ -17,9 +17,9 @@ export function jsxAttrName(name: string): string {
 
 function escape(value: string): string {
   return value
-    .replace(/&/g, "&amp;")
-    .replace(/"/g, "&quot;")
-    .replace(/</g, "&lt;");
+    .replaceAll("&", "&amp;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("<", "&lt;");
 }
 
 export function attrText(attrs: Attrs, html: boolean): string {

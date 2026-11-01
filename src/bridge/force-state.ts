@@ -48,11 +48,11 @@ function rewrite(text: string, forced: Forced): string | null {
 
   if (forced.dark && DARK_TEST.test(out)) {
     hit = true;
-    out = out.replace(DARK_MEDIA, ALWAYS);
+    out = out.replaceAll(DARK_MEDIA, ALWAYS);
   }
 
   if (hit && forced.states.includes("hover")) {
-    out = out.replace(HOVER_MEDIA, ALWAYS);
+    out = out.replaceAll(HOVER_MEDIA, ALWAYS);
   }
 
   return hit ? out : null;
@@ -92,7 +92,7 @@ function wrapped(
 function cloneMedia(rule: CSSMediaRule, forced: Forced): string | null {
   const media = rule.media.mediaText;
   const dark = forced.dark && DARK_TEST.test(media);
-  const head = `@media ${dark ? media.replace(DARK_MEDIA, ALWAYS) : media}`;
+  const head = `@media ${dark ? media.replaceAll(DARK_MEDIA, ALWAYS) : media}`;
 
   return wrapped(rule, head, forced, dark);
 }

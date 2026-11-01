@@ -108,7 +108,7 @@ function setAsideName(now: Date): string {
   const stamp = now
     .toISOString()
     .replace(/\.\d+Z$/, "")
-    .replace(/[-:]/g, "")
+    .replaceAll(/[-:]/g, "")
     .replace("T", "-");
 
   return CANVAS_FILE.replace(/\.json$/, `.old-${stamp}.json`);

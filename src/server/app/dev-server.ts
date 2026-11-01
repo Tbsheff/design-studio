@@ -246,7 +246,7 @@ export class AppServers {
     chunk: string
   ): void {
     const lines = chunk
-      .replace(ANSI, "")
+      .replaceAll(ANSI, "")
       .split(/\r?\n/)
       .filter((line) => line.trim() !== "");
 

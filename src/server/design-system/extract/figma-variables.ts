@@ -228,8 +228,8 @@ function segment(raw: string): string {
   return (
     raw
       .trim()
-      .replace(/[^A-Za-z0-9_-]+/g, "-")
-      .replace(/^-+|-+$/g, "") || "x"
+      .replaceAll(/[^A-Za-z0-9_-]+/g, "-")
+      .replaceAll(/^-+|-+$/g, "") || "x"
   );
 }
 

@@ -69,7 +69,7 @@ export function formatLoc(loc: SourceLoc | null | undefined): string | null {
 }
 
 function normalizeText(value: string): string {
-  return value.replace(/\s+/g, " ").trim();
+  return value.replaceAll(/\s+/g, " ").trim();
 }
 
 export function snippetOf(text: string): string {

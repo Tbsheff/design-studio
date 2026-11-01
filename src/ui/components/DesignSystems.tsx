@@ -134,7 +134,7 @@ function Group({
   onOpen: (pack: PackSummary) => void;
   empty?: React.ReactNode;
 }) {
-  const id = `lib-${title.toLowerCase().replace(/\W+/g, "-")}`;
+  const id = `lib-${title.toLowerCase().replaceAll(/\W+/g, "-")}`;
 
   return (
     <section className="lib-group" aria-labelledby={id}>

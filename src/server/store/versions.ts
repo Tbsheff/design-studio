@@ -469,7 +469,7 @@ export function createVersionStore(config: ServerConfig): VersionStore {
 
       batch.forEach((relative, index) => {
         if ((sizes[index] ?? 0) > APP_MAX_TRACKED_BYTES) {
-          large.push(`/${relative.replace(/([*?[\]\\!#])/g, "\\$1")}`);
+          large.push(`/${relative.replaceAll(/([*?[\]\\!#])/g, "\\$1")}`);
         }
       });
     }
@@ -892,7 +892,7 @@ export function createVersionStore(config: ServerConfig): VersionStore {
       createdAt: Date.now(),
     };
 
-    const cleanTitle = title.replace(/\s+/g, " ").trim() || meta.kind;
+    const cleanTitle = title.replaceAll(/\s+/g, " ").trim() || meta.kind;
     const message = `${cleanTitle}\n\n${META_PREFIX}${JSON.stringify(stored)}\n`;
     const store = objectsOf(project);
 

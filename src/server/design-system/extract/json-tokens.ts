@@ -314,7 +314,7 @@ class Resolver {
         : value;
     }
 
-    return value.replace(ALIAS, (match, ref: string) => {
+    return value.replaceAll(ALIAS, (match, ref: string) => {
       const target = this.byPath.get(ref);
 
       const resolved = target
@@ -506,8 +506,8 @@ function requiredMatch(
 function extraName(raw: string, strip: RegExp): string | null {
   const base = raw
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+    .replaceAll(/[^a-z0-9]+/g, "-")
+    .replaceAll(/^-+|-+$/g, "");
 
   const stripped = base.replace(strip, "");
   const name = stripped || base;

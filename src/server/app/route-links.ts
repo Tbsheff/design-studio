@@ -130,7 +130,7 @@ export function staticText(node: t.Node): string {
     node.children.forEach(visit);
   }
 
-  return parts.join(" ").replace(/\s+/g, " ").trim().slice(0, 80);
+  return parts.join(" ").replaceAll(/\s+/g, " ").trim().slice(0, 80);
 }
 
 function tagFor(name: string, kind: RouteLinkKind): string {
@@ -195,7 +195,7 @@ export function cleanHref(raw: string): string | null {
     return null;
   }
 
-  const trimmed = s.replace(/\/{2,}/g, "/");
+  const trimmed = s.replaceAll(/\/{2,}/g, "/");
 
   return trimmed.length > 1 ? trimmed.replace(/\/$/, "") : trimmed;
 }
@@ -204,7 +204,9 @@ function linkSelector(href: string): string | null {
   const bare = originless(href).split(/[?#]/)[0] ?? "";
   const pieces = bare.split(/\[[^\]]*\]/).filter((piece) => piece.length > 1);
   const exact = !/\[[^\]]*\]/.test(bare);
-  const safe = pieces.map((piece) => piece.replace(/["\\]/g, "")).slice(0, 3);
+  const safe = pieces
+    .map((piece) => piece.replaceAll(/["\\]/g, ""))
+    .slice(0, 3);
 
   if (safe.length === 0) {
     return null;
@@ -337,7 +339,7 @@ function redirected(
       .map((seg) =>
         seg.startsWith(":")
           ? "[^/]+"
-          : seg.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+          : seg.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&")
       )
       .join("/");
 
@@ -345,7 +347,7 @@ function redirected(
       new RegExp(`^${pattern}$`).test(href) &&
       rule.destination.startsWith("/")
     ) {
-      return rule.destination.replace(/:\w+\*?/g, UNKNOWN);
+      return rule.destination.replaceAll(/:\w+\*?/g, UNKNOWN);
     }
   }
 

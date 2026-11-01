@@ -54,7 +54,7 @@ const BLOCKS = new Set([
 ]);
 
 function squash(text: string): string {
-  return text.replace(/\s+/g, " ").trim();
+  return text.replaceAll(/\s+/g, " ").trim();
 }
 
 export function pageOutline(html: string): { title: string; text: string } {
@@ -197,7 +197,7 @@ export function referencePagesBlock(
   }
 
   const body = pages.map((page) => {
-    const head = `<reference-page url="${page.url.replace(/["<>]/g, encodeURIComponent)}"${page.title ? ` title="${page.title.replace(/["<>]/g, "")}"` : ""}>`;
+    const head = `<reference-page url="${page.url.replaceAll(/["<>]/g, encodeURIComponent)}"${page.title ? ` title="${page.title.replaceAll(/["<>]/g, "")}"` : ""}>`;
 
     const content = page.error
       ? `The studio could not read this page: ${page.error}. Ask the user for a screenshot if you need it.`

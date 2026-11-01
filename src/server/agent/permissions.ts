@@ -656,7 +656,7 @@ const FIND_WRITES = /\s-(delete|exec|execdir|ok|okdir|fprint\w*|fls)\b/;
 
 function writesInsideDir(dir: string, command: string): boolean {
   const pattern = new RegExp(
-    `(^|[\\s'"=:(/.])${dir.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(/|[\\s'")]|$)`
+    `(^|[\\s'"=:(/.])${dir.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&")}(/|[\\s'")]|$)`
   );
 
   if (!pattern.test(command)) {

@@ -50,11 +50,11 @@ const LOOKS: Look[] = [
 
 function escape(value: string): string {
   return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
 }
 
 function lookFor(index: number): Look {
@@ -111,7 +111,7 @@ function variationApp(title: string, variation: MockVariation): string {
   const look = lookFor(variation.index);
 
   const text = (value: string) =>
-    escape(value).replace(/\{/g, "&#123;").replace(/\}/g, "&#125;");
+    escape(value).replaceAll("{", "&#123;").replaceAll("}", "&#125;");
 
   return `export default function App() {
   return (

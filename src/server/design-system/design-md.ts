@@ -8,9 +8,9 @@ import type { CompiledTokenEntry } from "../../shared/contracts.js";
 const EMPTY_CELL = "-";
 
 function cell(value: string | null | undefined): string {
-  const text = (value ?? "").replace(/\s+/g, " ").trim();
+  const text = (value ?? "").replaceAll(/\s+/g, " ").trim();
 
-  return text === "" ? EMPTY_CELL : text.replace(/\|/g, "\\|");
+  return text === "" ? EMPTY_CELL : text.replaceAll("|", "\\|");
 }
 
 export function tokenTable(entries: CompiledTokenEntry[]): string {
@@ -171,7 +171,7 @@ export interface DesignMdParts {
 }
 
 export function splitDesignMd(markdown: string): DesignMdParts {
-  const lines = removeTokenBlock(markdown.replace(/\r\n/g, "\n")).split("\n");
+  const lines = removeTokenBlock(markdown.replaceAll("\r\n", "\n")).split("\n");
   const range = notesRange(lines);
 
   if (!range) {

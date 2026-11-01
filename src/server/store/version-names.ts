@@ -37,7 +37,7 @@ export function parseVersionName(raw: unknown): string | null {
     throw new BadRequestError("name must be a string or null");
   }
 
-  const name = raw.trim().replace(/\s+/g, " ");
+  const name = raw.trim().replaceAll(/\s+/g, " ");
 
   if (name.length > VERSION_NAME_MAX) {
     throw new BadRequestError(

@@ -171,7 +171,7 @@ async function componentName(file: string): Promise<string | null> {
 
   const base = path.basename(file).replace(/\.[^.]+$/, "");
 
-  const pascal = base.replace(
+  const pascal = base.replaceAll(
     /(^|[-_.\s]+)([a-zA-Z0-9])/g,
     (_match, _sep: string, letter: string) => letter.toUpperCase()
   );
@@ -285,7 +285,7 @@ function routeIndex(snapshot: AppSnapshot, route: string | undefined): number {
     return -1;
   }
 
-  const clean = `/${(route.split(/[?#]/)[0] ?? "").replace(/^\/+|\/+$/g, "")}`;
+  const clean = `/${(route.split(/[?#]/)[0] ?? "").replaceAll(/^\/+|\/+$/g, "")}`;
 
   return snapshot.routes.findIndex((item) => item.route === clean);
 }

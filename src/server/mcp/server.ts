@@ -287,8 +287,8 @@ export function clientName(
         ? info.name
         : "";
   const clean = raw
-    .replace(/[^\p{L}\p{N} ._@()-]/gu, "")
-    .replace(/\s+/g, " ")
+    .replaceAll(/[^\p{L}\p{N} ._@()-]/gu, "")
+    .replaceAll(/\s+/g, " ")
     .trim()
     .slice(0, 40);
   return clean || DEFAULT_CLIENT;

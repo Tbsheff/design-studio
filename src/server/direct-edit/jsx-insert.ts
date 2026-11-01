@@ -285,7 +285,7 @@ function assertReferences(
     if (
       GLOBALS.has(ref) ||
       bound.has(ref) ||
-      new RegExp(`\\b${ref.replace(/\$/g, "\\$")}\\b`).test(code)
+      new RegExp(`\\b${ref.replaceAll("$", "\\$")}\\b`).test(code)
     ) {
       continue;
     }

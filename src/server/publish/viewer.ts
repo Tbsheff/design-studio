@@ -22,7 +22,7 @@ export interface ViewerPage {
 }
 
 function escapeHtml(text: string): string {
-  return text.replace(/[&<>"']/g, (ch) => `&#${ch.charCodeAt(0)};`);
+  return text.replaceAll(/[&<>"']/g, (ch) => `&#${ch.charCodeAt(0)};`);
 }
 
 const STYLE = `:root{color-scheme:light dark;--bg:#faf9f5;--panel:#fff;--line:rgb(28 27 25 / .12);--text:rgb(28 27 25 / .94);--muted:rgb(28 27 25 / .66)}

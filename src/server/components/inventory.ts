@@ -349,8 +349,8 @@ const ATTR_RE = /\b(class|data-name)\s*=\s*("([^"]*)"|'([^']*)')/g;
 
 function stripNonMarkup(html: string): string {
   return html
-    .replace(/<!--[\s\S]*?-->/g, "")
-    .replace(/<(script|style|template)\b[\s\S]*?<\/\1>/gi, "");
+    .replaceAll(/<!--[\s\S]*?-->/g, "")
+    .replaceAll(/<(script|style|template)\b[\s\S]*?<\/\1>/gi, "");
 }
 
 interface Seen {

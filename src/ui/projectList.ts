@@ -28,7 +28,7 @@ export function sortProjects(
 function fold(text: string): string {
   return text
     .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
+    .replaceAll(/\p{Diacritic}/gu, "")
     .toLowerCase();
 }
 

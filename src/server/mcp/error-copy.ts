@@ -47,6 +47,6 @@ export function mcpErrorText(message: string): string {
   }
 
   return message
-    .replace(/,? ?or ask the agent/gi, "")
-    .replace(/ask the agent to /gi, "use write_file to ");
+    .replaceAll(/,? ?or ask the agent/gi, "")
+    .replaceAll(/ask the agent to /gi, "use write_file to ");
 }

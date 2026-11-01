@@ -41,7 +41,7 @@ function classify(content: string): Classified {
     match[0].replace(/^[([]+/, "")
   );
 
-  const plain = text.replace(FILE_TOKEN, " ");
+  const plain = text.replaceAll(FILE_TOKEN, " ");
 
   const words = [
     ...new Set(
@@ -51,7 +51,7 @@ function classify(content: string): Classified {
     ),
   ];
 
-  const spaced = plain.replace(/_/g, " ");
+  const spaced = plain.replaceAll("_", " ");
   const kind = kindOf(spaced, files.length > 0);
 
   return { kind, files, words, needsReview: REVIEW_ONLY.test(spaced) };
@@ -86,7 +86,7 @@ function baseName(file: string): string {
 }
 
 function attributeHit(text: string, word: string): boolean {
-  const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const escaped = word.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
   return new RegExp(
     `(?:id|data-[\\w-]+|view|screen|step|route)\\s*[=:]\\s*["'\`{]?[\\w-]*${escaped}`,

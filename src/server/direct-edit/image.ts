@@ -178,7 +178,7 @@ function assetHome(
 ): { dir: string; rooted: boolean } {
   if (project.app) {
     return {
-      dir: path.posix.join(project.app.appDir.replace(/\\/g, "/"), "public"),
+      dir: path.posix.join(project.app.appDir.replaceAll("\\", "/"), "public"),
       rooted: true,
     };
   }
@@ -454,7 +454,7 @@ function snippetFor(
   alt: string,
   fit: ImageFit
 ): string {
-  const safeAlt = alt.replace(
+  const safeAlt = alt.replaceAll(
     /[&"<>{}]/g,
     (char) => `&#${char.charCodeAt(0)};`
   );

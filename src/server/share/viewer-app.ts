@@ -457,7 +457,7 @@ export function createViewerApp(deps: ViewerAppDeps): Hono {
 
       const result = deps.hub.cursor(record.id, {
         ...parsed.data,
-        name: parsed.data.name.replace(/[\p{Cc}]+/gu, "") || "Viewer",
+        name: parsed.data.name.replaceAll(/[\p{Cc}]+/gu, "") || "Viewer",
       });
 
       return c.body(null, result === "gone" ? 410 : 204);

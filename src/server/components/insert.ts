@@ -191,7 +191,7 @@ function pickEntry(
 }
 
 export function humanize(name: string): string {
-  const words = name.replace(/([a-z0-9])([A-Z])/g, "$1 $2").split(" ");
+  const words = name.replaceAll(/([a-z0-9])([A-Z])/g, "$1 $2").split(" ");
 
   return words
     .map((word, index) => (index === 0 ? word : word.toLowerCase()))
@@ -280,7 +280,7 @@ export function jsxFor(
   const fromProps = typeof given.children === "string" ? given.children : null;
 
   const text = (request.text ?? fromProps ?? humanize(entry.name))
-    .replace(/\s+/g, " ")
+    .replaceAll(/\s+/g, " ")
     .trim();
 
   return text

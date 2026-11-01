@@ -159,7 +159,7 @@ function utility(raw: string): string | null {
     return null;
   }
 
-  return raw.replace(/^!|!$/g, "");
+  return raw.replaceAll(/^!|!$/g, "");
 }
 
 function isFontSizeSuffix(suffix: string): boolean {
@@ -251,8 +251,8 @@ export function isUnsetComputed(
 
 export function sameValue(a: string, b: string): boolean {
   return (
-    a.trim().toLowerCase().replace(/\s+/g, " ") ===
-    b.trim().toLowerCase().replace(/\s+/g, " ")
+    a.trim().toLowerCase().replaceAll(/\s+/g, " ") ===
+    b.trim().toLowerCase().replaceAll(/\s+/g, " ")
   );
 }
 

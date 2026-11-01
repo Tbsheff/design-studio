@@ -276,8 +276,8 @@ export function isMappedProperty(prop: string): boolean {
 function arbitrary(value: string): string {
   return `[${value
     .trim()
-    .replace(/\s*,\s*/g, ",")
-    .replace(/\s+/g, "_")}]`;
+    .replaceAll(/\s*,\s*/g, ",")
+    .replaceAll(/\s+/g, "_")}]`;
 }
 
 function varName(value: string): string | null {
@@ -669,7 +669,7 @@ function fontWeightToken(value: string, theme: TailwindTheme): string {
 function firstFamily(stack: string): string {
   return (stack.split(",")[0] ?? "")
     .trim()
-    .replace(/^["']|["']$/g, "")
+    .replaceAll(/^["']|["']$/g, "")
     .toLowerCase();
 }
 
@@ -694,7 +694,7 @@ function fontFamilyToken(value: string, theme: TailwindTheme): string {
     return `font-${arbitraryVar(theme, variable, "family-name")}`;
   }
 
-  return `font-${arbitrary(value.replace(/["']/g, ""))}`;
+  return `font-${arbitrary(value.replaceAll(/["']/g, ""))}`;
 }
 
 function leadingToken(value: string, theme: TailwindTheme): string {
@@ -805,7 +805,7 @@ function borderWidthToken(value: string, theme: TailwindTheme): string {
 function normalizeShadow(value: string): string {
   return value
     .toLowerCase()
-    .replace(
+    .replaceAll(
       /(rgba?|hsla?|oklch|oklab)\([^()]*\)|#[0-9a-f]{3,8}\b/g,
       (match) => {
         const parsed = parseColor(match);
@@ -819,9 +819,9 @@ function normalizeShadow(value: string): string {
         return `c(${l.toFixed(2)},${c.toFixed(2)},${(c > 0.01 ? (h ?? 0) : 0).toFixed(0)},${parsed.alpha.toFixed(2)})`;
       }
     )
-    .replace(/\b0px\b/g, "0")
-    .replace(/\s*,\s*/g, ",")
-    .replace(/\s+/g, " ")
+    .replaceAll(/\b0px\b/g, "0")
+    .replaceAll(/\s*,\s*/g, ",")
+    .replaceAll(/\s+/g, " ")
     .trim();
 }
 
@@ -850,7 +850,7 @@ function shadowToken(value: string, theme: TailwindTheme): string {
 }
 
 function flexToken(value: string): string {
-  const text = value.trim().replace(/\s+/g, " ");
+  const text = value.trim().replaceAll(/\s+/g, " ");
 
   if (/^(1|1 1 0%|1 1 0px|1 1 0)$/.test(text)) {
     return "flex-1";

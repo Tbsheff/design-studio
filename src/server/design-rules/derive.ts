@@ -27,7 +27,7 @@ function sections(text: string): Section[] {
   const out: Section[] = [{ heading: "", lines: [] }];
   let fence = false;
 
-  for (const line of text.replace(/\r\n/g, "\n").split("\n")) {
+  for (const line of text.replaceAll("\r\n", "\n").split("\n")) {
     if (/^\s*(```|~~~)/.test(line)) {
       fence = !fence;
     }
@@ -48,8 +48,8 @@ function bullets(lines: string[]): string[] {
     .map((line) =>
       line
         .replace(/^\s*[-*]\s+/, "")
-        .replace(/\*\*/g, "")
-        .replace(/\s+/g, " ")
+        .replaceAll("**", "")
+        .replaceAll(/\s+/g, " ")
         .trim()
     );
 }

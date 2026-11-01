@@ -52,9 +52,9 @@ function findElement(root: ParentNode, tagName: string): Element | null {
 
 function escapeAttr(value: string): string {
   return value
-    .replace(/&/g, "&amp;")
-    .replace(/"/g, "&quot;")
-    .replace(/</g, "&lt;");
+    .replaceAll("&", "&amp;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("<", "&lt;");
 }
 
 function collectLocInsertions(

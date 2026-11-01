@@ -137,7 +137,7 @@ function sameUpstream(location: URL, upstream: URL): boolean {
 }
 
 function escapeHtml(value: string): string {
-  return value.replace(/[&<>"']/g, (char) => `&#${char.charCodeAt(0)};`);
+  return value.replaceAll(/[&<>"']/g, (char) => `&#${char.charCodeAt(0)};`);
 }
 
 function messagePage(title: string, detail: string): string {

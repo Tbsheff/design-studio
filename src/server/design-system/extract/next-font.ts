@@ -70,7 +70,7 @@ function familiesIn(text: string): string[] {
           ?.trim() ?? "";
 
       if (/^[A-Z][A-Za-z0-9_]{1,40}$/.test(name)) {
-        out.push(name.replace(/_/g, " "));
+        out.push(name.replaceAll("_", " "));
       }
     }
   }

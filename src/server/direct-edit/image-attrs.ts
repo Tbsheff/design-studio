@@ -19,7 +19,7 @@ import type { Splice } from "./splice.js";
 export type AttrChanges = Record<string, string | null>;
 
 function escapeAttr(value: string): string {
-  return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
+  return value.replaceAll("&", "&amp;").replaceAll('"', "&quot;");
 }
 
 export function setHtmlAttrs(

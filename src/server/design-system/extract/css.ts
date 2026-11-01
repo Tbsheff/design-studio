@@ -13,7 +13,7 @@ const SKIPPED_AT_RULES =
   /^@(keyframes|-webkit-keyframes|font-face|counter-style|property|page|font-feature-values)\b/i;
 
 function stripComments(text: string): string {
-  return text.replace(/\/\*[\s\S]*?\*\//g, "");
+  return text.replaceAll(/\/\*[\s\S]*?\*\//g, "");
 }
 
 function pushDecl(frame: Frame | undefined, raw: string): void {
@@ -76,9 +76,9 @@ function emit(stack: Frame[], frame: Frame, out: CssRule[]): void {
     .reverse()
     .find((item) => !item.prelude.startsWith("@"));
 
-  const selector = parent ? own.replace(/&/g, parent.prelude) : own;
+  const selector = parent ? own.replaceAll("&", parent.prelude) : own;
   out.push({
-    selector: selector.replace(/\s+/g, " ").trim(),
+    selector: selector.replaceAll(/\s+/g, " ").trim(),
     media,
     decls: frame.decls,
   });
@@ -285,7 +285,7 @@ export function resolveVars(
 
   let substitutions = 0;
 
-  const next = value.replace(
+  const next = value.replaceAll(
     /var\(\s*(--[\w-]+)\s*(?:,\s*([^()]*(?:\([^()]*\)[^()]*)*))?\)/g,
     (whole, name: string, fallback: string | undefined) => {
       if (++substitutions > MAX_SUBSTITUTIONS) {

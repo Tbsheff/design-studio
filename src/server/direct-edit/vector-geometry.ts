@@ -371,7 +371,7 @@ export function translatePath(d: string, dx: number, dy: number): string {
   }
   return out
     .join(" ")
-    .replace(/ ([MmLlHhVvCcSsQqTtAaZz]) /g, "$1")
+    .replaceAll(/ ([MmLlHhVvCcSsQqTtAaZz]) /g, "$1")
     .replace(/^([MmLlHhVvCcSsQqTtAaZz]) /, "$1");
 }
 

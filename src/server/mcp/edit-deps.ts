@@ -226,7 +226,7 @@ export function short(text: string, max = 4000): string {
 }
 
 export function oneLine(text: string, max = 80): string {
-  const flat = text.replace(/\s+/g, " ").trim();
+  const flat = text.replaceAll(/\s+/g, " ").trim();
 
   return flat.length > max ? `${flat.slice(0, max - 1)}…` : flat;
 }

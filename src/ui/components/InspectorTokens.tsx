@@ -180,7 +180,7 @@ function shownValue(issue: LintIssue): string {
       issue.value
         .split(",")[0]
         ?.trim()
-        .replace(/^['"]|['"]$/g, "") ?? issue.value
+        .replaceAll(/^['"]|['"]$/g, "") ?? issue.value
     );
   return issue.value;
 }
@@ -360,7 +360,7 @@ export function FontField({
             ? value
             : (value
                 .split(",")[0]
-                ?.replace(/^["']|["']$/g, "")
+                ?.replaceAll(/^["']|["']$/g, "")
                 .trim() ?? ""))
         }
         data-tip={value}

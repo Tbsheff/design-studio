@@ -43,7 +43,7 @@ function invalid(message: string): DirectEditError {
 }
 
 function normalized(value: string): string {
-  return value.trim().replace(/\s+/g, " ");
+  return value.trim().replaceAll(/\s+/g, " ");
 }
 
 function balanced(value: string): boolean {

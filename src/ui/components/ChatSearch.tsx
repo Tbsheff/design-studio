@@ -73,7 +73,7 @@ function useRunHits(directionId: string | null, query: string): Hits | null {
 }
 
 function runLabel(run: RunSummary): string {
-  const prompt = run.request.prompt.replace(/\s+/g, " ").trim();
+  const prompt = run.request.prompt.replaceAll(/\s+/g, " ").trim();
 
   return run.title || prompt || "Untitled run";
 }

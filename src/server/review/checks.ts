@@ -407,8 +407,8 @@ function axeDraft(
     ...base(alt ? "alt-text" : "a11y", el, selector, node.html),
     key: `${violation.id}|${selector}`,
     severity: alt ? "high" : impactSeverity(violation.impact),
-    message: `${violation.help}.${detail ? ` ${detail}.` : ""}`.replace(
-      /\.\./g,
+    message: `${violation.help}.${detail ? ` ${detail}.` : ""}`.replaceAll(
+      "..",
       "."
     ),
     fix: null,

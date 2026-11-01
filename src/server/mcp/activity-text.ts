@@ -125,7 +125,7 @@ export function editSummary(
   classes = false
 ): string {
   const parts = Object.keys(style ?? {}).map(
-    (prop) => STYLE_WORDS[prop] ?? prop.replace(/-/g, " ")
+    (prop) => STYLE_WORDS[prop] ?? prop.replaceAll("-", " ")
   );
 
   if (classes) {
@@ -141,7 +141,7 @@ export function editSummary(
 
 export function versionName(version: Version): string {
   const title = version.name ?? version.title;
-  const flat = title.replace(/\s+/g, " ").trim();
+  const flat = title.replaceAll(/\s+/g, " ").trim();
 
   return flat.length > 48 ? `${flat.slice(0, 47)}…` : flat;
 }

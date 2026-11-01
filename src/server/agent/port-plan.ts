@@ -102,11 +102,11 @@ function childElements(node: Node): Element[] {
 }
 
 function clean(text: string): string {
-  return text.replace(/\s+/g, " ").trim();
+  return text.replaceAll(/\s+/g, " ").trim();
 }
 
 function isHidden(el: Element): boolean {
-  const style = (attr(el, "style") ?? "").replace(/\s+/g, "");
+  const style = (attr(el, "style") ?? "").replaceAll(/\s+/g, "");
 
   return (
     attr(el, "hidden") !== null ||
@@ -116,7 +116,7 @@ function isHidden(el: Element): boolean {
 }
 
 function isDecor(el: Element): boolean {
-  const style = (attr(el, "style") ?? "").replace(/\s+/g, "");
+  const style = (attr(el, "style") ?? "").replaceAll(/\s+/g, "");
 
   return el.tagName === "svg" && /position:absolute/i.test(style);
 }
@@ -163,7 +163,7 @@ const INLINE = new Set([
 
 function lines(node: Node): string {
   if (node.nodeName === "#text" && "value" in node) {
-    return node.value.replace(/\s+/g, " ");
+    return node.value.replaceAll(/\s+/g, " ");
   }
 
   if (
@@ -461,7 +461,7 @@ function tokenUses(css: string): Map<string, number> {
 }
 
 function rawColorCount(css: string): number {
-  const withoutDefs = css.replace(/--[\w-]+\s*:\s*[^;}]+/g, "");
+  const withoutDefs = css.replaceAll(/--[\w-]+\s*:\s*[^;}]+/g, "");
 
   return withoutDefs.match(COLOR_LITERAL)?.length ?? 0;
 }

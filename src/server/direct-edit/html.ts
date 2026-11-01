@@ -92,14 +92,14 @@ export function findElementAt(
 }
 
 function escapeAttr(value: string): string {
-  return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
+  return value.replaceAll("&", "&amp;").replaceAll('"', "&quot;");
 }
 
 function escapeText(value: string): string {
   return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
 }
 
 function startTagOf(

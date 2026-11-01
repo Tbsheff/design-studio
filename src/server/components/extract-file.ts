@@ -81,7 +81,7 @@ const UTILITY =
 
 function camel(value: string): string {
   const words = value
-    .replace(/[^A-Za-z0-9]+/g, " ")
+    .replaceAll(/[^A-Za-z0-9]+/g, " ")
     .trim()
     .split(/\s+/)
     .filter(Boolean);
@@ -234,7 +234,7 @@ export function planVariants(
 
 function quoted(value: string, style: FileStyle): string {
   const escaped = value
-    .replace(/\\/g, "\\\\")
+    .replaceAll("\\", "\\\\")
     .split(style.quote)
     .join(`\\${style.quote}`);
   return `${style.quote}${escaped}${style.quote}`;

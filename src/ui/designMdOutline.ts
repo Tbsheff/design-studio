@@ -22,7 +22,7 @@ export function outlineOf(markdown: string): OutlineItem[] {
     if (match) {
       out.push({
         level: match[1]?.length ?? 1,
-        text: (match[2] ?? "").replace(/[*_`]/g, ""),
+        text: (match[2] ?? "").replaceAll(/[*_`]/g, ""),
         line,
         offset,
       });

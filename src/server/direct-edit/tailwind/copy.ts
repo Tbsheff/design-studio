@@ -68,10 +68,10 @@ const BORDER_STYLES = new Set([
 function arbitrary(value: string): string {
   return value
     .trim()
-    .replace(/_/g, "\\_")
-    .replace(/"/g, "'")
-    .replace(/\s*,\s*/g, ",")
-    .replace(/\s+/g, "_");
+    .replaceAll("_", "\\_")
+    .replaceAll('"', "'")
+    .replaceAll(/\s*,\s*/g, ",")
+    .replaceAll(/\s+/g, "_");
 }
 
 function legacyClass(prop: string, value: string): string {

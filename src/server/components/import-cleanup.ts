@@ -12,9 +12,9 @@ function stillUsed(code: string, ast: t.File, name: string): boolean {
     }
   }
 
-  return new RegExp(`(^|[^\\w$.])${name.replace(/\$/g, "\\$")}(?![\\w$])`).test(
-    text
-  );
+  return new RegExp(
+    `(^|[^\\w$.])${name.replaceAll("$", "\\$")}(?![\\w$])`
+  ).test(text);
 }
 
 function specifierRange(

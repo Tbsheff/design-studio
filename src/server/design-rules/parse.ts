@@ -52,8 +52,8 @@ function ruleId(text: string): string {
 function cleanLine(raw: string): string {
   return raw
     .replace(/^\s*(?:[-*+]|\d+[.)])\s+/, "")
-    .replace(/\*\*/g, "")
-    .replace(/\s+/g, " ")
+    .replaceAll("**", "")
+    .replaceAll(/\s+/g, " ")
     .trim();
 }
 
@@ -64,7 +64,7 @@ export function targetSelector(raw: string): string | null {
     return quoted[1].trim();
   }
 
-  const word = raw.trim().toLowerCase().replace(/\s+/g, " ");
+  const word = raw.trim().toLowerCase().replaceAll(/\s+/g, " ");
 
   const single =
     word.endsWith("es") && RULE_TARGETS[word.slice(0, -2)]
@@ -86,7 +86,7 @@ function isClass(token: string): boolean {
 
 function classGroups(spec: string): string[][] | null {
   const tokens = spec
-    .replace(/`/g, "")
+    .replaceAll("`", "")
     .split(/[\s,]+/)
     .filter(Boolean);
 
@@ -121,7 +121,7 @@ function classRule(line: string, text: string): ClassRule | null {
     id: ruleId(text),
     kind: "class",
     text,
-    target: match[1].replace(/`/g, "").trim(),
+    target: match[1].replaceAll("`", "").trim(),
     selector,
     classes,
   };
@@ -155,7 +155,7 @@ function tokenRule(line: string, text: string): TokenRule | null {
 function familyList(raw: string): string[] {
   return raw
     .split(/,|\band\b|\bor\b/)
-    .map((part) => part.replace(/["'`]/g, "").trim())
+    .map((part) => part.replaceAll(/["'`]/g, "").trim())
     .filter((part) => part.length > 0 && part.length < 40);
 }
 
@@ -193,7 +193,7 @@ function componentRule(line: string, text: string): ComponentRule | null {
     return null;
   }
 
-  const module = (match[3] ?? match[1] ?? "").replace(/[`'",]/g, "") || null;
+  const module = (match[3] ?? match[1] ?? "").replaceAll(/[`'",]/g, "") || null;
 
   return {
     id: ruleId(text),
@@ -231,7 +231,7 @@ export function parseRules(text: string): DesignRule[] {
   const seen = new Set<string>();
   const out: DesignRule[] = [];
 
-  for (const line of text.replace(/\r\n/g, "\n").split("\n")) {
+  for (const line of text.replaceAll("\r\n", "\n").split("\n")) {
     const rule = parseRuleLine(line);
 
     if (!rule || seen.has(rule.id)) {

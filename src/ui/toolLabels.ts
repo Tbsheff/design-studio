@@ -5,8 +5,8 @@ const PATH_KEYS = ["file_path", "path", "filePath", "notebook_path"];
 
 function humanize(raw: string): string {
   const words = raw
-    .replace(/[_-]+/g, " ")
-    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replaceAll(/[_-]+/g, " ")
+    .replaceAll(/([a-z])([A-Z])/g, "$1 $2")
     .trim()
     .toLowerCase();
 
@@ -36,8 +36,8 @@ function isAbsolutePath(value: string): boolean {
 }
 
 function relativePath(file: string, workTree: string | null): string {
-  const norm = file.replace(/\\/g, "/");
-  const root = workTree?.replace(/\\/g, "/").replace(/\/+$/, "");
+  const norm = file.replaceAll("\\", "/");
+  const root = workTree?.replaceAll("\\", "/").replace(/\/+$/, "");
 
   if (root && norm.startsWith(`${root}/`)) {
     return norm.slice(root.length + 1);

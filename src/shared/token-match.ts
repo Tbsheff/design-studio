@@ -247,7 +247,7 @@ function firstFamily(value: string): string {
 
   return first
     .trim()
-    .replace(/^['"]|['"]$/g, "")
+    .replaceAll(/^['"]|['"]$/g, "")
     .trim()
     .toLowerCase();
 }

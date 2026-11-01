@@ -19,8 +19,10 @@ function cutAtWord(text: string, max: number): string {
 }
 
 export function runTitle(prompt: string): string {
-  const flat = prompt.replace(/\r/g, "").trim();
-  const clause = (flat.split(CLAUSE_END)[0] ?? "").replace(/\s+/g, " ").trim();
+  const flat = prompt.replaceAll("\r", "").trim();
+  const clause = (flat.split(CLAUSE_END)[0] ?? "")
+    .replaceAll(/\s+/g, " ")
+    .trim();
 
   return clause === "" ? "Untitled run" : cutAtWord(clause, RUN_TITLE_MAX);
 }

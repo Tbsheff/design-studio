@@ -1729,8 +1729,9 @@ export function createApp(deps: AppDeps): Hono {
     const version = await versions.get(project, c.req.param("vid"));
     const bytes = await versions.exportZip(project, version.id);
     const safeName =
-      project.name.replace(/[^A-Za-z0-9._-]+/g, "-").replace(/^-+|-+$/g, "") ||
-      "design";
+      project.name
+        .replaceAll(/[^A-Za-z0-9._-]+/g, "-")
+        .replaceAll(/^-+|-+$/g, "") || "design";
     return new Response(new Uint8Array(bytes), {
       headers: {
         "content-type": "application/zip",

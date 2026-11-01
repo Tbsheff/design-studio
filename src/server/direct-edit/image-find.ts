@@ -18,10 +18,10 @@ function openTagAttr(html: string, name: string): string | null {
   return raw === undefined
     ? null
     : raw
-        .replace(/&amp;/g, "&")
-        .replace(/&quot;/g, '"')
-        .replace(/&lt;/g, "<")
-        .replace(/&gt;/g, ">");
+        .replaceAll("&amp;", "&")
+        .replaceAll("&quot;", '"')
+        .replaceAll("&lt;", "<")
+        .replaceAll("&gt;", ">");
 }
 
 function srcCandidates(src: string | null): string[] {

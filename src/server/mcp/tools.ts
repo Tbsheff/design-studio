@@ -696,7 +696,7 @@ export async function warmUpstream(
   const scripts = [
     ...new Set(
       [...html.matchAll(SCRIPT_SRC)].map((match) =>
-        (match[1] as string).replace(/&amp;/g, "&")
+        (match[1] as string).replaceAll("&amp;", "&")
       )
     ),
   ].slice(0, WARM_SCRIPTS_MAX);

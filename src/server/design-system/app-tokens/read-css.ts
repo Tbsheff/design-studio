@@ -61,7 +61,7 @@ export function maskComments(text: string): string {
     if (char === "/" && text[index + 1] === "*") {
       const close = text.indexOf("*/", index + 2);
       const end = close === -1 ? text.length : close + 2;
-      out += text.slice(index, end).replace(/[^\n]/g, " ");
+      out += text.slice(index, end).replaceAll(/[^\n]/g, " ");
       index = end;
       continue;
     }
@@ -176,7 +176,7 @@ function classify(
 }
 
 function clean(text: string): string {
-  return text.replace(/\s+/g, " ").trim();
+  return text.replaceAll(/\s+/g, " ").trim();
 }
 
 interface Scan {

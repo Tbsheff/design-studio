@@ -48,7 +48,7 @@ const FACES: Record<string, Record<number, { face: string; bold: boolean }>> = {
 export function fontFace(family: string): string {
   const names = family
     .split(",")
-    .map((name) => name.trim().replace(/^["']|["']$/g, ""))
+    .map((name) => name.trim().replaceAll(/^["']|["']$/g, ""))
     .filter(Boolean);
 
   const head = (names[0] ?? "sans-serif").toLowerCase();

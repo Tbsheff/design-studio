@@ -21,7 +21,7 @@ const SKIP_TAGS = new Set([
 const TEXT_MAX = 40;
 
 function clip(value: string, max: number): string {
-  const flat = value.replace(/\s+/g, " ").trim();
+  const flat = value.replaceAll(/\s+/g, " ").trim();
 
   return flat.length > max ? `${flat.slice(0, max - 1)}…` : flat;
 }

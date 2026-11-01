@@ -26,7 +26,7 @@ export function statePrefix(path: string): string {
 
   return stem === "" || stem === "index"
     ? ""
-    : `${stem.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-`;
+    : `${stem.toLowerCase().replaceAll(/[^a-z0-9]+/g, "-")}-`;
 }
 
 export function statesPrompt(path: string): string {

@@ -538,7 +538,7 @@ async function textRuns(page: Page, ctx: Ctx, label: string): Promise<void> {
     bytes.push(sample.bytes);
   }
 
-  const key = label.toLowerCase().replace(/\s+/g, "-");
+  const key = label.toLowerCase().replaceAll(/\s+/g, "-");
   expect(
     record(`${key} dblclick-caret visible`, caret).p95
   ).toBeLessThanOrEqual(TARGET_MS);

@@ -73,7 +73,7 @@ function pxNote(entry: CompiledTokenEntry, mode: TokenMode): string {
   }
 
   if (entry.type === "fontFamily") {
-    return value.split(",")[0]?.replace(/['"]/g, "").trim() ?? value;
+    return value.split(",")[0]?.replaceAll(/['"]/g, "").trim() ?? value;
   }
 
   if (entry.type !== "dimension" || value.endsWith("px")) {

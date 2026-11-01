@@ -167,19 +167,19 @@ function endOf(node: t.Node): number {
 }
 
 function camelCaseProp(prop: string): string {
-  return prop.replace(/-([a-z])/g, (_match, letter: string) =>
+  return prop.replaceAll(/-([a-z])/g, (_match, letter: string) =>
     letter.toUpperCase()
   );
 }
 
 function escapeJsString(value: string, quote: string): string {
   return value
-    .replace(/\\/g, "\\\\")
-    .replace(new RegExp(quote, "g"), `\\${quote}`)
-    .replace(/\n/g, "\\n")
-    .replace(/\r/g, "\\r")
-    .replace(/\u2028/g, "\\u2028")
-    .replace(/\u2029/g, "\\u2029");
+    .replaceAll("\\", "\\\\")
+    .replaceAll(new RegExp(quote, "g"), `\\${quote}`)
+    .replaceAll("\n", "\\n")
+    .replaceAll("\r", "\\r")
+    .replaceAll("\u2028", "\\u2028")
+    .replaceAll("\u2029", "\\u2029");
 }
 
 export function stringLiteral(value: string, quote: string): string {
@@ -188,11 +188,11 @@ export function stringLiteral(value: string, quote: string): string {
 
 function escapeJsxText(value: string): string {
   return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/\{/g, "&#123;")
-    .replace(/\}/g, "&#125;");
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll("{", "&#123;")
+    .replaceAll("}", "&#125;");
 }
 
 function keyOf(property: StyleEntry["node"]): string | null {
@@ -413,7 +413,7 @@ function replaceRange(
 }
 
 function expressionText(source: string, node: t.Node): string {
-  const text = source.slice(startOf(node), endOf(node)).replace(/\s+/g, " ");
+  const text = source.slice(startOf(node), endOf(node)).replaceAll(/\s+/g, " ");
   return text.length > MAX_EXPRESSION_TEXT
     ? `${text.slice(0, MAX_EXPRESSION_TEXT - 1)}…`
     : text;

@@ -278,7 +278,7 @@ async function fileName(
   ext: string
 ): Promise<string> {
   const base = (await kebabFolder(dir))
-    ? name.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase()
+    ? name.replaceAll(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase()
     : name;
   return path.join(dir, `${base}${ext}`);
 }

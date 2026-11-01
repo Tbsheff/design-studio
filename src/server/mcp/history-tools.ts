@@ -320,7 +320,7 @@ async function batchElements(
   const parts = [
     ...new Set(
       result.applied.flatMap((entry) => [
-        ...entry.style.map((prop) => prop.replace(/-/g, " ")),
+        ...entry.style.map((prop) => prop.replaceAll("-", " ")),
         ...(entry.classes ? ["classes"] : []),
         ...(entry.text ? ["text"] : []),
       ])

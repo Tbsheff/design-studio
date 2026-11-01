@@ -126,7 +126,7 @@ export function parseDraftRequest(
 }
 
 function titleCase(text: string): string {
-  return text.replace(
+  return text.replaceAll(
     /(^|[\s-])([a-z])/g,
     (_whole, lead: string, char: string) => `${lead}${char.toUpperCase()}`
   );
@@ -138,7 +138,7 @@ function nameFromUrl(url: string): string | null {
     const label = host.split(".")[0] ?? "";
 
     return /^[a-z0-9-]{1,40}$/i.test(label) && !/^\d+$/.test(label)
-      ? titleCase(label.replace(/-/g, " "))
+      ? titleCase(label.replaceAll("-", " "))
       : null;
   } catch {
     return null;
@@ -147,7 +147,7 @@ function nameFromUrl(url: string): string | null {
 
 function nameFromBrief(brief: string | undefined): string | null {
   const words = (brief ?? "")
-    .replace(/[^\p{L}\p{N}\s-]/gu, " ")
+    .replaceAll(/[^\p{L}\p{N}\s-]/gu, " ")
     .trim()
     .split(/\s+/)
     .filter(Boolean)
@@ -174,7 +174,7 @@ export function draftName(request: DraftRequest): string {
         path
           .basename(request.tokensFile.name)
           .replace(/\.(tokens\.)?(json|css)$/i, "")
-          .replace(/[^\w\s-]/g, " ")
+          .replaceAll(/[^\w\s-]/g, " ")
           .trim()
       ) || null
     : null;
@@ -183,7 +183,7 @@ export function draftName(request: DraftRequest): string {
     ? titleCase(
         path
           .basename(request.folderPath)
-          .replace(/[^\w\s-]/g, " ")
+          .replaceAll(/[^\w\s-]/g, " ")
           .trim()
       ) || null
     : null;
@@ -286,7 +286,7 @@ function evidence(
 
   for (const entry of coverage.tokens) {
     lines.push(
-      `| ${entry.token} | ${entry.source} | ${entry.confidence} | ${entry.evidence.replace(/\|/g, "/").slice(0, 160)} |`
+      `| ${entry.token} | ${entry.source} | ${entry.confidence} | ${entry.evidence.replaceAll("|", "/").slice(0, 160)} |`
     );
   }
 
@@ -364,7 +364,7 @@ function snapshotFiles(urlHarvests: UrlHarvest[]): DraftFile[] {
       { path: `${dir}/page.html.txt`, content: item.snapshot.html },
       ...item.snapshot.stylesheets.map((sheet, sheetIndex) => ({
         path: `${dir}/style-${sheetIndex + 1}.css.txt`,
-        content: `/* ${sheet.url.replace(/\*\//g, "")} */\n${sheet.css}`,
+        content: `/* ${sheet.url.replaceAll("*/", "")} */\n${sheet.css}`,
       })),
     ];
   });

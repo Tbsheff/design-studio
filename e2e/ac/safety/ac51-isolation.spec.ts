@@ -257,7 +257,7 @@ test("AC-51: preview frames cannot reach studio credentials or API", async ({
         try {
           const res = await fetch(url);
           out[name] =
-            `${res.status} ${(await res.text()).slice(0, 40).replace(/\s+/g, " ")}`;
+            `${res.status} ${(await res.text()).slice(0, 40).replaceAll(/\s+/g, " ")}`;
         } catch (error) {
           out[name] = String(error).slice(0, 80);
         }

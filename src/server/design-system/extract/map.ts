@@ -508,7 +508,7 @@ function manifestFonts(
     .find((url): url is string => url !== undefined);
   const covers = (url: string) =>
     webFamilies.every((name) =>
-      url.includes(`family=${name.replace(/ /g, "+")}`)
+      url.includes(`family=${name.replaceAll(" ", "+")}`)
     );
   const googleFontsUrl =
     harvested && covers(harvested)

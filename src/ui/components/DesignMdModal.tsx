@@ -251,7 +251,7 @@ export function DesignMdModal({
             tabIndex={0}
           >
             {shown.trim() ? (
-              <Markdown>{shown.replace(/<!--[\s\S]*?-->/g, "")}</Markdown>
+              <Markdown>{shown.replaceAll(/<!--[\s\S]*?-->/g, "")}</Markdown>
             ) : (
               <p className="dmd-outline-empty">Nothing to show yet.</p>
             )}

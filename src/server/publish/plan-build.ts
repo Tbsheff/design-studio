@@ -46,7 +46,7 @@ export function titleOf(raw: unknown, fallback: string): string {
   const text =
     typeof raw === "string"
       ? raw
-          .replace(/[\p{Cc}\s]+/gu, " ")
+          .replaceAll(/[\p{Cc}\s]+/gu, " ")
           .trim()
           .slice(0, 120)
       : "";

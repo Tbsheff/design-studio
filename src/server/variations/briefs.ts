@@ -118,7 +118,7 @@ const BriefReplySchema = z.union([
 ]);
 
 function normalizeBriefText(text: string): string {
-  return text.replace(/\s+/g, " ").trim();
+  return text.replaceAll(/\s+/g, " ").trim();
 }
 
 export function briefProblems(
@@ -258,7 +258,10 @@ const BRIEF_SYSTEM = `You are an art director. For one design request you propos
 
 function briefUserText(input: BriefInput): string {
   if (input.element) {
-    const text = input.element.text.replace(/\s+/g, " ").trim().slice(0, 200);
+    const text = input.element.text
+      .replaceAll(/\s+/g, " ")
+      .trim()
+      .slice(0, 200);
     return `<request>\n${input.prompt.trim()}\n</request>\n\nThe directions are for one element only: a <${input.element.tag}>${text ? ` with the text "${text}"` : ""}. Each direction reworks that element and its children; the rest of the page stays the same, so vary its layout, type, color and density, not the page. Keep its content.\n\nPropose exactly ${input.count} directions. Reply with the JSON array only.`;
   }
   const context = [

@@ -62,7 +62,7 @@ function fileHint(
 ): string {
   const kebab = known?.kebab ?? /(^|\/)(ui|packages)(\/|$)/.test(folder);
 
-  return `${folder}/${kebab ? name.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase() : name}.tsx`;
+  return `${folder}/${kebab ? name.replaceAll(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase() : name}.tsx`;
 }
 
 function useFolders(ids: Props["ids"]) {

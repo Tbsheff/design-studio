@@ -153,8 +153,8 @@ export function portPageSlug(pagePath: string): string {
   return (
     stem
       .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "")
+      .replaceAll(/[^a-z0-9]+/g, "-")
+      .replaceAll(/^-+|-+$/g, "")
       .slice(0, 40) || "page"
   );
 }
@@ -165,7 +165,7 @@ const ROUTE_PART =
 export function cleanPortRoute(raw: string): string | null {
   const parts = raw
     .trim()
-    .replace(/^\/+|\/+$/g, "")
+    .replaceAll(/^\/+|\/+$/g, "")
     .split("/")
     .filter(Boolean);
 
@@ -193,8 +193,8 @@ export function suggestPortRoute(
 
   const slug = base
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
+    .replaceAll(/[^a-z0-9]+/g, "-")
+    .replaceAll(/^-+|-+$/g, "")
     .slice(0, 40);
 
   return `/${slug || "prototype"}`;

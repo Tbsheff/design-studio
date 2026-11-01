@@ -109,8 +109,8 @@ export function cleanExportPath(raw: string): string | null {
 export function exportFileStem(name: string): string {
   return (
     name
-      .replace(/[^A-Za-z0-9._-]+/g, "-")
-      .replace(/^-+|-+$/g, "")
+      .replaceAll(/[^A-Za-z0-9._-]+/g, "-")
+      .replaceAll(/^-+|-+$/g, "")
       .slice(0, 60) || "design"
   );
 }

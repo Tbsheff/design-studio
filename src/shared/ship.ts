@@ -181,25 +181,25 @@ export function renderShipTemplate(
     }
 
     return [
-      line.replace(PLACEHOLDER, (_all, name: string) => table[name] ?? ""),
+      line.replaceAll(PLACEHOLDER, (_all, name: string) => table[name] ?? ""),
     ];
   });
 
   return lines
     .join("\n")
-    .replace(/\n{3,}/g, "\n\n")
+    .replaceAll(/\n{3,}/g, "\n\n")
     .trim();
 }
 
 export function cleanBranchName(raw: string): string {
   return raw
     .toLowerCase()
-    .replace(/[^a-z0-9/._-]+/g, "-")
+    .replaceAll(/[^a-z0-9/._-]+/g, "-")
     .split("/")
     .map((part) =>
       part
-        .replace(/\.{2,}/g, ".")
-        .replace(/^[-.]+|[-.]+$/g, "")
+        .replaceAll(/\.{2,}/g, ".")
+        .replaceAll(/^[-.]+|[-.]+$/g, "")
         .replace(/\.lock$/, "")
     )
     .filter(Boolean)

@@ -102,7 +102,7 @@ function noteStuck(ctx: TraceContext, mod: TextModule, node: t.Node): void {
 
   const text = mod.code
     .slice(node.start ?? 0, node.end ?? 0)
-    .replace(/\s+/g, " ");
+    .replaceAll(/\s+/g, " ");
 
   ctx.stuck = {
     file: mod.relative,
@@ -718,7 +718,7 @@ async function traceProp(
 
   ctx.hops += 1;
   ctx.files ??= jsxFiles(ctx.root);
-  const escaped = query.name.replace(/[$]/g, "\\$");
+  const escaped = query.name.replaceAll(/[$]/g, "\\$");
 
   const hits = await filesMentioning(
     await ctx.files,

@@ -47,7 +47,7 @@ export function parseLayerTree(raw: {
     nodes.push({
       id: n.id,
       depth,
-      tag: text(n.tag, 32).replace(/[^a-z0-9-]/gi, ""),
+      tag: text(n.tag, 32).replaceAll(/[^a-z0-9-]/gi, ""),
       name: text(n.name, LAYER_LABEL_MAX),
       text: text(n.text, LAYER_LABEL_MAX),
       childCount: count(n.childCount),
@@ -320,7 +320,7 @@ export function editableName(name: string): string {
 }
 
 export function cleanName(value: string): string {
-  return value.replace(UNSAFE_NAME_CHARS, "").slice(0, LAYER_LABEL_MAX);
+  return value.replaceAll(UNSAFE_NAME_CHARS, "").slice(0, LAYER_LABEL_MAX);
 }
 
 const CONTAINER_TAGS = new Set([

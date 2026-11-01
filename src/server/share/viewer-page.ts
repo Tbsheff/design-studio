@@ -12,11 +12,11 @@ export interface ViewerData {
 }
 
 function escapeHtml(text: string): string {
-  return text.replace(/[&<>"']/g, (ch) => `&#${ch.charCodeAt(0)};`);
+  return text.replaceAll(/[&<>"']/g, (ch) => `&#${ch.charCodeAt(0)};`);
 }
 
 function jsonForScript(value: unknown): string {
-  return JSON.stringify(value).replace(/</g, "\\u003c");
+  return JSON.stringify(value).replaceAll("<", "\\u003c");
 }
 
 const STYLE = `

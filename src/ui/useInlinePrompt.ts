@@ -47,7 +47,7 @@ function labelOf(selection: SelectionContext[]): string {
   const last = selection.at(-1);
   if (selection.length > 1) return `${selection.length} elements`;
   if (last?.component) return last.component;
-  const text = last?.text.replace(/\s+/g, " ").trim() ?? "";
+  const text = last?.text.replaceAll(/\s+/g, " ").trim() ?? "";
   const snippet =
     text.length > SNIPPET_MAX ? `${text.slice(0, SNIPPET_MAX - 1)}…` : text;
   return snippet ? `“${snippet}”` : last?.tag || "element";

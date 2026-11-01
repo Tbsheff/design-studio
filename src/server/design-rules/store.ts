@@ -125,7 +125,7 @@ export async function saveDesignRules(
   place: RulesPlace,
   text: string
 ): Promise<{ file: string; inRepo: boolean }> {
-  const clean = `${text.replace(/\r\n/g, "\n").trim()}\n`;
+  const clean = `${text.replaceAll("\r\n", "\n").trim()}\n`;
 
   if (place.project.app) {
     const file = path.join(place.studioDir, STUDIO_RULES_FILE);

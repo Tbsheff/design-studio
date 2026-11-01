@@ -179,7 +179,7 @@ export function listFrames(doc: FigmaDocument): FigmaFrameInfo[] {
 }
 
 export function findNode(doc: FigmaDocument, id: string): FigmaNode | null {
-  const want = id.trim().replace(/-/g, ":");
+  const want = id.trim().replaceAll("-", ":");
   const stack = [...doc.roots];
 
   while (stack.length > 0) {
@@ -257,7 +257,7 @@ export function parseFigmaLink(raw: string): FigmaLink | null {
 
   const node = url.searchParams.get("node-id");
 
-  return { fileKey: key, nodeId: node ? node.replace(/-/g, ":") : null };
+  return { fileKey: key, nodeId: node ? node.replaceAll("-", ":") : null };
 }
 
 export function figmaFetchEnabled(): boolean {

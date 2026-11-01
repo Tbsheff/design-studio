@@ -253,7 +253,7 @@ function rampColor(step: number, index: number): string {
 
 function fontNames(pack: PackSummary): string {
   const clean = (family: string) =>
-    family.split(",")[0]?.replace(/['"]/g, "").trim() ?? "";
+    family.split(",")[0]?.replaceAll(/['"]/g, "").trim() ?? "";
 
   const display = clean(pack.fonts.display);
   const body = clean(pack.fonts.body);

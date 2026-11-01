@@ -101,7 +101,7 @@ function file(
 ): Response {
   const headers: Record<string, string> = {
     "content-type": type,
-    "content-disposition": `attachment; filename="${name.replace(/"/g, "")}"`,
+    "content-disposition": `attachment; filename="${name.replaceAll('"', "")}"`,
     "content-length": String(bytes.byteLength),
   };
 

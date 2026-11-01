@@ -101,7 +101,7 @@ function isNode(value: unknown): value is t.Node {
 
 function describe(node: t.Node, source: string): string {
   const { start, end } = rangeOf(node);
-  const text = source.slice(start, end).replace(/\s+/g, " ");
+  const text = source.slice(start, end).replaceAll(/\s+/g, " ");
   if (node.type === "CallExpression") {
     const callee = source.slice(
       rangeOf(node.callee).start,

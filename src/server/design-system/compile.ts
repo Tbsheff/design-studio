@@ -465,7 +465,7 @@ function substituteAliases(
   const refs: string[] = [];
   let missing: string | null = null;
 
-  const text = value.replace(ANY_ALIAS, (_match, ref: string) => {
+  const text = value.replaceAll(ANY_ALIAS, (_match, ref: string) => {
     const target = byPath.get(ref);
 
     if (!target) {

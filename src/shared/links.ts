@@ -172,7 +172,7 @@ export function isBackTarget(target: LinkTarget): target is { back: true } {
 
 export function cleanLinkSelector(raw: unknown): string | null {
   if (typeof raw !== "string") return null;
-  const selector = raw.replace(/[\u0000-\u001f\u007f]/g, " ").trim();
+  const selector = raw.replaceAll(/[\u0000-\u001f\u007f]/g, " ").trim();
   return selector === "" || selector.length > LINK_SELECTOR_MAX
     ? null
     : selector;
@@ -231,7 +231,7 @@ function codePoint(value: number): string {
 }
 
 export function decodeEntities(text: string): string {
-  return text.replace(
+  return text.replaceAll(
     /&(#x[0-9a-f]+|#\d+|[a-z][a-z0-9]*);/gi,
     (whole, body: string) => {
       if (body[0] !== "#")
@@ -250,8 +250,8 @@ export function decodeEntities(text: string): string {
 export function cleanLinkText(raw: unknown): string | null {
   if (typeof raw !== "string") return null;
   const text = decodeEntities(raw)
-    .replace(/[\u0000-\u001f\u007f<>]/g, " ")
-    .replace(/\s+/g, " ")
+    .replaceAll(/[\u0000-\u001f\u007f<>]/g, " ")
+    .replaceAll(/\s+/g, " ")
     .trim()
     .slice(0, LINK_TEXT_MAX);
   return text === "" ? null : text;
@@ -523,7 +523,11 @@ export interface LinkRectReport {
 }
 
 export function normalizedText(text: string): string {
-  return text.replace(/\s+/g, " ").trim().toLowerCase().slice(0, LINK_TEXT_MAX);
+  return text
+    .replaceAll(/\s+/g, " ")
+    .trim()
+    .toLowerCase()
+    .slice(0, LINK_TEXT_MAX);
 }
 
 export function textAgrees(

@@ -59,8 +59,8 @@ export function cleanFrameLabel(raw: unknown): string | null {
   }
 
   const label = raw
-    .replace(/[\u0000-\u001f\u007f<>]/g, "")
-    .replace(/\s+/g, " ")
+    .replaceAll(/[\u0000-\u001f\u007f<>]/g, "")
+    .replaceAll(/\s+/g, " ")
     .trim()
     .slice(0, CANVAS_LABEL_MAX);
 

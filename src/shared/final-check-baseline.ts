@@ -39,8 +39,8 @@ export function baselineFindingsFile(runId: string): string {
 
 function plain(text: string): string {
   return text
-    .replace(/\s+/g, " ")
-    .replace(/\d+(?:\.\d+)?/g, "#")
+    .replaceAll(/\s+/g, " ")
+    .replaceAll(/\d+(?:\.\d+)?/g, "#")
     .trim()
     .slice(0, 240);
 }

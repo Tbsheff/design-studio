@@ -92,7 +92,7 @@ function textOf(node: Node): string {
 function shortText(el: Element): string {
   const raw = el.tagName === "input" ? (attr(el, "value") ?? "") : textOf(el);
 
-  return raw.replace(/\s+/g, " ").trim().slice(0, LINK_TEXT_MAX);
+  return raw.replaceAll(/\s+/g, " ").trim().slice(0, LINK_TEXT_MAX);
 }
 
 export interface PageTree {
@@ -157,7 +157,7 @@ export function scriptSources(tree: PageTree): string[] {
 }
 
 function cssString(value: string): string {
-  return value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+  return value.replaceAll("\\", "\\\\").replaceAll('"', '\\"');
 }
 
 function idOf(el: Element): string | null {

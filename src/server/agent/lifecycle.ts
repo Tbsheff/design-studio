@@ -184,7 +184,7 @@ function sessionsDirOf(runsDir: string): string {
 function sessionLedgerPath(runsDir: string, sessionId: string): string {
   return path.join(
     sessionsDirOf(runsDir),
-    `${sessionId.replace(/[^A-Za-z0-9_-]/g, "_")}.json`
+    `${sessionId.replaceAll(/[^A-Za-z0-9_-]/g, "_")}.json`
   );
 }
 

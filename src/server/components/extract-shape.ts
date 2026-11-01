@@ -331,7 +331,7 @@ function meaningful(child: Child): boolean {
 }
 
 function normalText(value: string): string {
-  return value.replace(/\s*\n\s*/g, " ").trim();
+  return value.replaceAll(/\s*\n\s*/g, " ").trim();
 }
 
 function trimmedRange(child: t.JSXText): { start: number; end: number } {

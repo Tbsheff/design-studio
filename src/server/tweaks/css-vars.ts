@@ -81,7 +81,7 @@ function blockEnd(text: string, open: number, limit: number): number {
 }
 
 function stripComments(text: string): string {
-  return text.replace(/\/\*[\s\S]*?(\*\/|$)/g, " ");
+  return text.replaceAll(/\/\*[\s\S]*?(\*\/|$)/g, " ");
 }
 
 function isRootPrelude(prelude: string): boolean {
@@ -229,7 +229,7 @@ export function rootDeclarations(
 }
 
 function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return value.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 export function usesVar(text: string, name: string): boolean {

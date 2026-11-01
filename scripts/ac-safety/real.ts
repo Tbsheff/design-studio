@@ -206,7 +206,7 @@ function h1Of(file: string): string {
   const html = readFileSync(file, "utf-8");
   const match = /<h1\b[^>]*>([\s\S]*?)<\/h1>/i.exec(html);
 
-  return (match?.[1] ?? "").replace(/<[^>]+>/g, "").trim();
+  return (match?.[1] ?? "").replaceAll(/<[^>]+>/g, "").trim();
 }
 
 async function makeOrbitPng(browser: Browser, file: string): Promise<void> {

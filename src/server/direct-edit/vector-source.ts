@@ -194,7 +194,7 @@ const SVG_ATTRS: Record<string, string> = {
 };
 
 function kebab(name: string): string {
-  return name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
+  return name.replaceAll(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
 }
 
 function styleObject(

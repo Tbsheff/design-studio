@@ -389,7 +389,9 @@ function arbitraryIsLength(inner: string): boolean {
     return false;
   }
 
-  return lengthToPx(inner.replace(/_/g, " ")) !== null || /^calc\(/.test(inner);
+  return (
+    lengthToPx(inner.replaceAll("_", " ")) !== null || /^calc\(/.test(inner)
+  );
 }
 
 function classifyText(

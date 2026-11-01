@@ -344,7 +344,7 @@ async function defaultUser(root: string): Promise<string> {
   const raw = email.split("@")[0] || os.userInfo().username;
   return raw
     .toLowerCase()
-    .replace(/[^a-z0-9._-]+/g, "-")
+    .replaceAll(/[^a-z0-9._-]+/g, "-")
     .slice(0, 40);
 }
 

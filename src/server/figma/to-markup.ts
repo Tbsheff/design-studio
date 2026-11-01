@@ -1032,24 +1032,26 @@ function childrenOf(node: FigmaNode, self: Parent, walk: Walk): El[] {
 
 function escapeText(text: string, mode: MarkupContext["mode"]): string {
   const html = text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
 
   return mode === "jsx"
-    ? html.replace(/\{/g, "&#123;").replace(/\}/g, "&#125;")
+    ? html.replaceAll("{", "&#123;").replaceAll("}", "&#125;")
     : html;
 }
 
 function escapeAttr(value: string): string {
   return value
-    .replace(/&/g, "&amp;")
-    .replace(/"/g, "&quot;")
-    .replace(/</g, "&lt;");
+    .replaceAll("&", "&amp;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("<", "&lt;");
 }
 
 function camel(prop: string): string {
-  return prop.replace(/-([a-z])/g, (_, letter: string) => letter.toUpperCase());
+  return prop.replaceAll(/-([a-z])/g, (_, letter: string) =>
+    letter.toUpperCase()
+  );
 }
 
 function styleAttr(styles: Styles, ctx: MarkupContext): string {
@@ -1072,7 +1074,7 @@ function styleAttr(styles: Styles, ctx: MarkupContext): string {
   const object = styles
     .map(
       ([prop, value]) =>
-        `${camel(prop)}: '${value.replace(/\\/g, "\\\\").replace(/'/g, "\\'")}'`
+        `${camel(prop)}: '${value.replaceAll("\\", "\\\\").replaceAll("'", "\\'")}'`
     )
     .join(", ");
 

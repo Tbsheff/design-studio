@@ -16,7 +16,7 @@ const n = (value: number): string => String(Math.round(value * 100) / 100);
 
 export function xml(text: string): string {
   return text
-    .replace(
+    .replaceAll(
       /[&<>"']/g,
       (char) =>
         ({
@@ -27,7 +27,7 @@ export function xml(text: string): string {
           "'": "&apos;",
         })[char] ?? char
     )
-    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "");
+    .replaceAll(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "");
 }
 
 function paint(attr: "fill" | "stroke", color: ScanColor | null): string {

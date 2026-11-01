@@ -29,7 +29,7 @@ function ownText(element: Element): string {
     }
   }
 
-  return text.replace(/\s+/g, " ").trim();
+  return text.replaceAll(/\s+/g, " ").trim();
 }
 
 function layerKey(element: Element): string | null {

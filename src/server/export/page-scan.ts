@@ -894,7 +894,7 @@ export async function scanPage(options: ScanOptions): Promise<ScanResult> {
       (stroke && (parseFloat(style.strokeWidth) || 0) > 0)
     )
       return null;
-    const text = (node.textContent ?? "").replace(/\s+/g, " ").trim();
+    const text = (node.textContent ?? "").replaceAll(/\s+/g, " ").trim();
     if (!fill || !text) return undefined;
     const box = local(node.getBoundingClientRect());
     if (box.width <= 0 || box.height <= 0) return undefined;
@@ -910,7 +910,7 @@ export async function scanPage(options: ScanOptions): Promise<ScanResult> {
       usedFamilies.add(
         name
           .trim()
-          .replace(/^["']|["']$/g, "")
+          .replaceAll(/^["']|["']$/g, "")
           .toLowerCase()
       )
     );
@@ -1007,7 +1007,7 @@ export async function scanPage(options: ScanOptions): Promise<ScanResult> {
     if (mode === "uppercase") return text.toUpperCase();
     if (mode === "lowercase") return text.toLowerCase();
     if (mode === "capitalize")
-      return text.replace(
+      return text.replaceAll(
         /(^|\s)(\S)/g,
         (_, space: string, char: string) => space + char.toUpperCase()
       );
@@ -1163,7 +1163,7 @@ export async function scanPage(options: ScanOptions): Promise<ScanResult> {
       usedFamilies.add(
         name
           .trim()
-          .replace(/^["']|["']$/g, "")
+          .replaceAll(/^["']|["']$/g, "")
           .toLowerCase()
       )
     );
@@ -1247,10 +1247,10 @@ export async function scanPage(options: ScanOptions): Promise<ScanResult> {
       last = match.index + match[0].length;
       if (match[1] !== undefined || match[2] !== undefined)
         out += (match[1] ?? match[2] ?? "")
-          .replace(/\\([0-9a-f]{1,6})\s?/gi, (_, hex: string) =>
+          .replaceAll(/\\([0-9a-f]{1,6})\s?/gi, (_, hex: string) =>
             String.fromCodePoint(parseInt(hex, 16))
           )
-          .replace(/\\(.)/g, "$1");
+          .replaceAll(/\\(.)/g, "$1");
       else if (match[3]) out += "\u0000" + match[3] + "\u0000";
       else if (match[4])
         out += "\u0001" + match[4] + ":" + (match[5] ?? "decimal") + "\u0001";
@@ -1314,11 +1314,11 @@ export async function scanPage(options: ScanOptions): Promise<ScanResult> {
       return false;
     }
     const text = parsed
-      .replace(
+      .replaceAll(
         /\u0000([\w-]+)\u0000/g,
         (_, name: string) => element.getAttribute(name) ?? ""
       )
-      .replace(
+      .replaceAll(
         /\u0001([\w-]+):([\w-]+)\u0001/g,
         (_, name: string, kind: string) =>
           counterText(counterValue(element, name), kind)
@@ -1424,7 +1424,7 @@ export async function scanPage(options: ScanOptions): Promise<ScanResult> {
         const family = rule.style
           .getPropertyValue("font-family")
           .trim()
-          .replace(/^["']|["']$/g, "")
+          .replaceAll(/^["']|["']$/g, "")
           .toLowerCase();
         if (!usedFamilies.has(family)) continue;
         const css = await inlineFace(rule, sheet.href ?? location.href, budget);

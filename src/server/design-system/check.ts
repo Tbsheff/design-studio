@@ -47,7 +47,7 @@ const NOT_COLORS = new Set([
   "auto",
 ]);
 const TODO_LINE = new RegExp(
-  `^\\s*(?:[-*]\\s+)?${TODO_MARK.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`,
+  `^\\s*(?:[-*]\\s+)?${TODO_MARK.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&")}`,
   "m"
 );
 
@@ -304,7 +304,7 @@ function checkDesignMd(designMd: string | null, problems: Problems): void {
 
 function namedColors(value: string): string[] {
   return value
-    .replace(/var\([^)]*\)/g, " ")
+    .replaceAll(/var\([^)]*\)/g, " ")
     .split(/[\s,()/]+/)
     .filter(
       (word) =>
@@ -348,9 +348,9 @@ export function familiesInFontLinks(hrefs: string[]): string[] {
   for (const href of hrefs) {
     try {
       for (const family of new URL(
-        href.replace(/&amp;/g, "&")
+        href.replaceAll("&amp;", "&")
       ).searchParams.getAll("family"))
-        names.push((family.split(":")[0] ?? "").replace(/\+/g, " ").trim());
+        names.push((family.split(":")[0] ?? "").replaceAll("+", " ").trim());
     } catch {
       continue;
     }

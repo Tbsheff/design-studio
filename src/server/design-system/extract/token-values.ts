@@ -144,7 +144,7 @@ export function fontWeightText(value: unknown): string | null {
     return number >= 1 && number <= 1000 ? String(Math.round(number)) : null;
   }
 
-  const named = WEIGHTS[text.replace(/[\s_-]+/g, "").replace(/italic$/, "")];
+  const named = WEIGHTS[text.replaceAll(/[\s_-]+/g, "").replace(/italic$/, "")];
 
   return named === undefined ? null : String(named);
 }

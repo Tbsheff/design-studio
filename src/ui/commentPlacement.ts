@@ -227,7 +227,7 @@ const KIND_OF_TAG: Record<string, string> = {
 };
 
 function snippet(text: string, max: number): string {
-  const line = text.replace(/\s+/g, " ").trim();
+  const line = text.replaceAll(/\s+/g, " ").trim();
   return line.length > max ? `${line.slice(0, max - 1)}…` : line;
 }
 

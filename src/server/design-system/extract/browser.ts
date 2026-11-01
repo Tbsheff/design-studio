@@ -373,7 +373,7 @@ class RequestGuard {
       this.requests.refused.push(`${url.slice(0, 160)}: ${why}`);
     }
 
-    const key = `${hostOf(url)}: ${why.replace(/https?:\/\/\S+/g, "").trim()}`;
+    const key = `${hostOf(url)}: ${why.replaceAll(/https?:\/\/\S+/g, "").trim()}`;
     this.requests.reasons[key] = (this.requests.reasons[key] ?? 0) + 1;
   }
 

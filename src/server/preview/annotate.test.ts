@@ -110,7 +110,7 @@ const GOLDEN: {
 const LOC_PATTERN = / data-studio-loc="[^"]*"/g;
 
 function stripAnnotations(html: string): string {
-  return html.replace(LOC_PATTERN, "").replace(BRIDGE_SCRIPT_TAG, "");
+  return html.replaceAll(LOC_PATTERN, "").replace(BRIDGE_SCRIPT_TAG, "");
 }
 
 function locs(html: string): string[] {

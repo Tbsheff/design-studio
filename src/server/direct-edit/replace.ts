@@ -172,7 +172,7 @@ function arbitraryValue(suffix: string): string | null {
   const bracket = /^\[(?:[a-z-]+:)?(.+)\]$/.exec(suffix)?.[1];
 
   if (bracket) {
-    return bracket.replace(/_/g, " ");
+    return bracket.replaceAll("_", " ");
   }
 
   const shorthand = /^\((?:[a-z-]+:)?(--[A-Za-z0-9_-]+)\)$/.exec(suffix)?.[1];
@@ -274,7 +274,7 @@ export function classTokenValue(
   }
 
   const kind = kindOf(property);
-  const match = CLASS_SHAPES[kind].exec(token.replace(/^!|!$/g, ""));
+  const match = CLASS_SHAPES[kind].exec(token.replaceAll(/^!|!$/g, ""));
 
   if (!match) {
     throw invalid(`${token} does not set ${property}.`);

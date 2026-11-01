@@ -272,8 +272,8 @@ export function normalizeName(raw: string): string {
     .trim()
     .toLowerCase()
     .replace(/^-+/, "")
-    .replace(/[._/\s]+/g, "-")
-    .replace(/-+/g, "-");
+    .replaceAll(/[._/\s]+/g, "-")
+    .replaceAll(/-+/g, "-");
 
   for (let changed = true; changed;) {
     changed = false;

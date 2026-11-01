@@ -241,7 +241,7 @@ function escapeToken(token: string, segment: Segment): string {
     throw new ClassEditError(
       `The class "${token}" cannot be written into this source`
     );
-  if (segment.escape === "html") return token.replace(/&/g, "&amp;");
+  if (segment.escape === "html") return token.replaceAll("&", "&amp;");
   return token;
 }
 

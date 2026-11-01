@@ -38,7 +38,7 @@ const STATE_NOTE =
 const MAX_LISTED = 3;
 
 function normal(text: string): string {
-  return text.replace(/\s+/g, " ").trim();
+  return text.replaceAll(/\s+/g, " ").trim();
 }
 
 function sameText(value: string, current: string): boolean {
@@ -239,7 +239,7 @@ function jsxAttributeText(text: string, quote: string): string {
 }
 
 function templateText(text: string): string {
-  return `\`${text.replace(/\\/g, "\\\\").replace(/`/g, "\\`").replace(/\$\{/g, "\\${")}\``;
+  return `\`${text.replaceAll("\\", "\\\\").replaceAll("`", "\\`").replaceAll("${", "\\${")}\``;
 }
 
 function replacement(candidate: Candidate, text: string): string {

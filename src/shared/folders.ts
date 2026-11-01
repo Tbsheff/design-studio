@@ -7,7 +7,7 @@ export const MAX_SLUG_SUFFIX = 999;
 
 export function nameFromPrompt(prompt: string): string {
   const words = withoutAnswers(prompt)
-    .replace(/\s+/g, " ")
+    .replaceAll(/\s+/g, " ")
     .trim()
     .split(" ")
     .slice(0, 6)
@@ -19,12 +19,12 @@ export function nameFromPrompt(prompt: string): string {
 export function slugify(name: string): string {
   const ascii = name
     .normalize("NFKD")
-    .replace(/[̀-ͯ]/g, "")
+    .replaceAll(/[̀-ͯ]/g, "")
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+    .replaceAll(/[^a-z0-9]+/g, "-")
+    .replaceAll(/^-+|-+$/g, "");
 
-  const cut = ascii.slice(0, SLUG_MAX_LENGTH).replace(/-+$/g, "");
+  const cut = ascii.slice(0, SLUG_MAX_LENGTH).replaceAll(/-+$/g, "");
 
   return cut || SLUG_FALLBACK;
 }

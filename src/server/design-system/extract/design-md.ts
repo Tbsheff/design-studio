@@ -13,7 +13,9 @@ const FONT_ROLES: Array<[RegExp, string]> = [
 ];
 
 function plain(text: string): string {
-  return text.replace(/[*_`~]/g, "").replace(/\[([^\]]*)\]\([^)]*\)/g, "$1");
+  return text
+    .replaceAll(/[*_`~]/g, "")
+    .replaceAll(/\[([^\]]*)\]\([^)]*\)/g, "$1");
 }
 
 function nameBefore(
@@ -163,7 +165,7 @@ function proseLines(
   let heading = "";
 
   for (const raw of markdown
-    .replace(/\r\n/g, "\n")
+    .replaceAll("\r\n", "\n")
     .split("\n")
     .slice(0, 4000)) {
     if (/^\s*(```|~~~)/.test(raw)) {
@@ -195,7 +197,7 @@ export function harvestDesignText(
 
 export function firstHeading(markdown: string): string | null {
   const match = /^#\s+(.+)$/m.exec(markdown);
-  const title = match?.[1]?.replace(/[*_`#]/g, "").trim() ?? "";
+  const title = match?.[1]?.replaceAll(/[*_`#]/g, "").trim() ?? "";
 
   return title === "" ? null : title.slice(0, 80);
 }

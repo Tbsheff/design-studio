@@ -115,7 +115,7 @@ function keySplice(element: Element, key: string): Splice {
     return {
       start: attrLocation.startOffset,
       end: attrLocation.endOffset,
-      text: `class="${text.replace(/&/g, "&amp;").replace(/"/g, "&quot;")}"`,
+      text: `class="${text.replaceAll("&", "&amp;").replaceAll('"', "&quot;")}"`,
     };
   }
 

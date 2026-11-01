@@ -62,7 +62,7 @@ export function handoffRoot(deps: ExportDeps, projectId: string): string {
 }
 
 function cell(value: string): string {
-  return value.replace(/\|/g, "\\|").replace(/\s+/g, " ").trim();
+  return value.replaceAll("|", "\\|").replaceAll(/\s+/g, " ").trim();
 }
 
 const FIXED_ROLES: Record<string, string> = {

@@ -30,9 +30,9 @@ function pascal(text: string): string {
 function kebab(text: string): string {
   return text
     .trim()
-    .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
-    .replace(/[^A-Za-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
+    .replaceAll(/([a-z0-9])([A-Z])/g, "$1-$2")
+    .replaceAll(/[^A-Za-z0-9]+/g, "-")
+    .replaceAll(/^-|-$/g, "")
     .toLowerCase();
 }
 
@@ -97,7 +97,7 @@ function variantProps(node: FigmaNode, source: string): Record<string, string> {
       continue;
     }
 
-    const prop = kebab(key.split("#")[0] ?? key).replace(
+    const prop = kebab(key.split("#")[0] ?? key).replaceAll(
       /-([a-z])/g,
       (_, letter: string) => letter.toUpperCase()
     );

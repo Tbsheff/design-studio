@@ -399,7 +399,9 @@ const RULES: Rule[] = [
 
 function probeLines(probe: DoctorProbe | null): string[] {
   if (!probe || probe.status < 500) return [];
-  const text = probe.body.replace(/\\n/g, "\n").replace(/<[^>]+>/g, "\n");
+  const text = probe.body
+    .replaceAll(String.raw`\n`, "\n")
+    .replaceAll(/<[^>]+>/g, "\n");
   return text
     .split("\n")
     .filter((line) => ENV_ERROR.test(line) || MODULE_MISSING.test(line))

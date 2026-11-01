@@ -67,7 +67,7 @@ function RenameField({
     onDone(name);
   };
   const commit = () => {
-    const name = value.trim().replace(/\s+/g, " ");
+    const name = value.trim().replaceAll(/\s+/g, " ");
     if (name === initial) return finish(undefined);
     finish(name === "" || name === fallback ? null : name);
   };

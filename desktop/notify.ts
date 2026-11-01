@@ -12,7 +12,7 @@ export interface RunNotice {
 }
 
 function shortPrompt(prompt: string): string {
-  const line = prompt.replace(/\s+/g, " ").trim();
+  const line = prompt.replaceAll(/\s+/g, " ").trim();
 
   return line.length > PROMPT_CHARS
     ? `${line.slice(0, PROMPT_CHARS - 1)}…`

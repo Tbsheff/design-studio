@@ -230,7 +230,7 @@ function flowLabel(route: string): string {
     "Page";
 
   const title = word
-    .replace(/[-_]+/g, " ")
+    .replaceAll(/[-_]+/g, " ")
     .replace(/^\w/, (c) => c.toUpperCase());
 
   return (cleanFrameLabel(dynamic ? `${title} detail` : title) ?? "Page").slice(

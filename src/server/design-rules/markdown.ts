@@ -24,7 +24,7 @@ function fencedRules(lines: string[]): string | null {
 }
 
 export function extractRulesBlock(markdown: string): string | null {
-  const text = markdown.replace(/\r\n/g, "\n");
+  const text = markdown.replaceAll("\r\n", "\n");
   const start = text.indexOf(DESIGN_MD_RULES_START);
   const end = start < 0 ? -1 : text.indexOf(DESIGN_MD_RULES_END, start);
 
@@ -74,7 +74,7 @@ function replaceFence(lines: string[], text: string): string | null {
 }
 
 export function upsertRulesBlock(markdown: string, text: string): string {
-  const source = markdown.replace(/\r\n/g, "\n");
+  const source = markdown.replaceAll("\r\n", "\n");
   const start = source.indexOf(DESIGN_MD_RULES_START);
   const end = start < 0 ? -1 : source.indexOf(DESIGN_MD_RULES_END, start);
 

@@ -173,7 +173,7 @@ export async function detectApp(root: string): Promise<AppDetection> {
 export function cleanAppDir(raw: string): string | null {
   const clean = raw
     .trim()
-    .replace(/\\/g, "/")
+    .replaceAll("\\", "/")
     .replace(/^\.\//, "")
     .replace(/\/+$/, "");
   if (clean === "" || clean === ".") return ".";

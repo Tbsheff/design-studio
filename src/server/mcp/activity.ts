@@ -33,7 +33,7 @@ export interface ActivityLog {
 }
 
 function clean(text: string, max: number): string {
-  const flat = text.replace(/[\p{Cc}\s]+/gu, " ").trim();
+  const flat = text.replaceAll(/[\p{Cc}\s]+/gu, " ").trim();
 
   return flat.length > max ? `${flat.slice(0, max - 1)}…` : flat;
 }

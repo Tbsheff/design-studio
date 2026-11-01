@@ -156,7 +156,7 @@ export function familiesOf(stack: string): string[] {
     .map((part) =>
       part
         .trim()
-        .replace(/^["']|["']$/g, "")
+        .replaceAll(/^["']|["']$/g, "")
         .trim()
     )
     .filter(
@@ -358,7 +358,7 @@ export function normalizeShadow(raw: string): string | null {
 }
 
 export function safeGoogleFontsUrl(raw: string): string | null {
-  const url = raw.replace(/&amp;/g, "&").trim();
+  const url = raw.replaceAll("&amp;", "&").trim();
 
   if (
     !url.startsWith("https://fonts.googleapis.com/") ||
@@ -381,7 +381,7 @@ export function googleFontsUrlFor(families: string[]): string | null {
   }
 
   const params = unique
-    .map((name) => `family=${name.replace(/ /g, "+")}:wght@400;500;600;700`)
+    .map((name) => `family=${name.replaceAll(" ", "+")}:wght@400;500;600;700`)
     .join("&");
 
   return `https://fonts.googleapis.com/css2?${params}&display=swap`;

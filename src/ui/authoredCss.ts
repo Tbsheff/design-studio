@@ -99,7 +99,7 @@ export function parseDeclarations(
   const out: { prop: string; value: string }[] = [];
 
   for (const chunk of splitTopLevel(
-    css.replace(/\/\*[\s\S]*?\*\//g, ""),
+    css.replaceAll(/\/\*[\s\S]*?\*\//g, ""),
     ";"
   )) {
     const [rawProp = "", rawValue] = splitTopLevel(chunk, ":", 1);

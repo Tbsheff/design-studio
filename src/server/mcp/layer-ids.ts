@@ -61,7 +61,7 @@ export function isGoneRef(scope: string, ref: string): boolean {
 function movedKey(key: string, maps: Map<string, LineMap>): string | null {
   let gone = false;
 
-  const next = key.replace(
+  const next = key.replaceAll(
     LOC_IN_KEY,
     (whole, lead: string, file: string, line: string, col: string) => {
       const map = maps.get(file);

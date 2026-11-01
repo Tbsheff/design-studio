@@ -58,7 +58,7 @@ function ColorFieldView({ prop, label, short, edit }: FieldProps) {
     }
   };
 
-  const id = `ins-${prop}-${label.replace(/\W+/g, "-").toLowerCase()}`;
+  const id = `ins-${prop}-${label.replaceAll(/\W+/g, "-").toLowerCase()}`;
 
   return (
     <div className={`ins-field color ${inherited ? "inherited" : ""}`}>

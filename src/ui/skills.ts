@@ -87,7 +87,7 @@ export function skillsFromPrompt(prompt: string): string[] {
 }
 
 export function withoutSkillLines(prompt: string): string {
-  return prompt.replace(/^Use the \S+:\S+ skill\.$/gm, "").trim();
+  return prompt.replaceAll(/^Use the \S+:\S+ skill\.$/gm, "").trim();
 }
 
 export function plural(count: number, word: string): string {

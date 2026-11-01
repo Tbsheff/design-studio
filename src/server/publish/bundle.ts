@@ -132,15 +132,15 @@ async function walk(
 }
 
 export function cleanHtml(html: string): string {
-  const bridge = BRIDGE_SCRIPT_PATH.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&");
+  const bridge = BRIDGE_SCRIPT_PATH.replaceAll(/[.*+?^${}()|[\]\\/]/g, "\\$&");
 
   return html
-    .replace(
+    .replaceAll(
       new RegExp(`<script\\b[^>]*${bridge}[^>]*>\\s*</script>`, "gi"),
       ""
     )
-    .replace(new RegExp(`\\s${SOURCE_LOC_ATTR}="[^"]*"`, "g"), "")
-    .replace(new RegExp(`[?&]${BRIDGE_TOKEN_PARAM}=[^"'&\\s]*`, "g"), "");
+    .replaceAll(new RegExp(`\\s${SOURCE_LOC_ATTR}="[^"]*"`, "g"), "")
+    .replaceAll(new RegExp(`[?&]${BRIDGE_TOKEN_PARAM}=[^"'&\\s]*`, "g"), "");
 }
 
 function assertClean(relative: string, text: string, secrets: string[]): void {

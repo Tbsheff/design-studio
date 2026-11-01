@@ -297,7 +297,7 @@ export function createComponentPreviews(deps: {
   const cacheFile = (projectId: string, hash: string, ext: "png" | "json") =>
     path.join(
       deps.cacheDir,
-      projectId.replace(/[^A-Za-z0-9_-]/g, "_"),
+      projectId.replaceAll(/[^A-Za-z0-9_-]/g, "_"),
       `${hash}.${ext}`
     );
 

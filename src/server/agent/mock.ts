@@ -138,15 +138,15 @@ function throwIfAborted(signal: AbortSignal): void {
 
 function escapeHtml(value: string): string {
   return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
 }
 
 function escapeJsxText(value: string): string {
-  return escapeHtml(value).replace(/\{/g, "&#123;").replace(/\}/g, "&#125;");
+  return escapeHtml(value).replaceAll("{", "&#123;").replaceAll("}", "&#125;");
 }
 
 const SKILL_TAG = /\[skill:([^\]\s]+)\]/g;
@@ -167,10 +167,10 @@ export function mockSkillRequests(prompt: string): string[] {
 
 export function cleanPrompt(prompt: string): string {
   return prompt
-    .replace(MOCK_TAGS, "")
-    .replace(SKILL_TAG, "")
-    .replace(SKILL_LINE, "")
-    .replace(/\s+/g, " ")
+    .replaceAll(MOCK_TAGS, "")
+    .replaceAll(SKILL_TAG, "")
+    .replaceAll(SKILL_LINE, "")
+    .replaceAll(/\s+/g, " ")
     .trim();
 }
 

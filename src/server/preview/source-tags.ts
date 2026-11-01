@@ -85,7 +85,7 @@ function isHostElementName(name: unknown): name is AstNode & { name: string } {
 }
 
 function escapeAttr(value: string): string {
-  return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
+  return value.replaceAll("&", "&amp;").replaceAll('"', "&quot;");
 }
 
 export function tagJsxSource(

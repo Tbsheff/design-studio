@@ -125,9 +125,7 @@ const main = () => {
   writeFileSync(OUT, "export const dayOne = [];\n");
   const hits = new Map<string, Set<string>>();
   const native = passes(hits, []);
-  const typed = process.argv.includes("--type-aware")
-    ? passes(hits, ["--type-aware"])
-    : 0;
+  const typed = passes(hits, ["--type-aware"]);
   const pairs = [...hits.values()].reduce((sum, set) => sum + set.size, 0);
   process.stdout.write(
     `day-one: ${hits.size} rules, ${pairs} rule-file pairs, rounds ${native}/${typed}\n`

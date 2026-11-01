@@ -11,6 +11,7 @@
     "dev": "concurrently -k -n server,ui \"tsx watch src/server/index.ts\" \"vite --config vite.ui.config.ts\"",
     "start": "vite build --config vite.ui.config.ts && tsx src/server/index.ts",
     "server": "tsx src/server/index.ts",
+    "setup:cloud": "npm ci --prefix cloud/publish-worker",
     "build:ui": "vite build --config vite.ui.config.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "typecheck:tsrs": "tsrs --noEmit -p tsconfig.json",

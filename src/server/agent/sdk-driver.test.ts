@@ -501,7 +501,7 @@ describe("sdk driver run accounting", () => {
       directionId: "d1",
       detail: { path: "pages/index.html", tool: "Write", runId: summary.id },
     });
-    expect(typeof samples[0]?.ms).toBe("number");
+    expect(samples[0]?.ms).toBeTypeOf("number");
   });
 });
 

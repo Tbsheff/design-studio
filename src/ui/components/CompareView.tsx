@@ -40,7 +40,8 @@ function ModeSwitch({ mode, onMode }: { mode: Mode; onMode: (mode: Mode) => void
     const next = MODES[index];
     if (!next) return;
     onMode(next.id);
-    event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="radio"]')[index]?.focus();
+    const buttons = event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="radio"]');
+    buttons[index]?.focus();
   };
   return (
     <div className="segmented compare-modes" role="radiogroup" aria-label="Compare mode" onKeyDown={onKeyDown}>

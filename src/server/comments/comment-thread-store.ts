@@ -5,9 +5,11 @@ import type {
   CreateCommentInput,
   UpdateCommentInput,
 } from "../store/comments.js";
-import { NotFoundError } from "../store/errors.js";
+import { BadRequestError, NotFoundError } from "../store/errors.js";
 import { attemptComments } from "./comment-core.js";
 import type { CommentError, CommentRuntime } from "./comment-core.js";
+import { insertComment } from "./comment-insert.js";
+import type { InsertRequest, InsertedComment } from "./comment-insert.js";
 import { buildPrefill, pickComments } from "./prefill.js";
 
 interface CommentRef {
@@ -32,6 +34,9 @@ interface CommentThreadStoreApi {
     ref: CommentRef,
     input: CreateCommentInput
   ) => Effect.Effect<DesignComment, CommentError>;
+  readonly insert: (
+    request: InsertRequest
+  ) => Effect.Effect<InsertedComment, CommentError>;
   readonly prefill: (
     ref: CommentRef,
     ids: readonly string[]
@@ -49,6 +54,10 @@ interface CommentThreadStoreApi {
     ref: CommentRef,
     ids: readonly string[]
   ) => Effect.Effect<DesignComment[], CommentError>;
+  readonly resolve: (
+    ref: CommentRef,
+    commentId: string
+  ) => Effect.Effect<DesignComment, CommentError>;
   readonly update: (
     ref: CommentRef,
     commentId: string,
@@ -114,6 +123,10 @@ const createComment = async (
   ref: CommentRef,
   input: CreateCommentInput
 ): Promise<DesignComment> => {
+  if (input.drawing && (input.attachmentIds?.length ?? 0) === 0) {
+    throw new BadRequestError("a drawing needs its image in attachmentIds");
+  }
+
   const { direction, project } = await runtime.loadTarget(
     ref.projectId,
     ref.directionId
@@ -168,6 +181,13 @@ class CommentThreadStore extends Context.Service<
           createComment(runtime, ref, input)
         );
       }),
+      insert: Effect.fn("CommentThreadStore.insert")(function* run(
+        request: InsertRequest
+      ) {
+        return yield* attemptComments((runtime) =>
+          insertComment(runtime, request)
+        );
+      }),
       prefill: Effect.fn("CommentThreadStore.prefill")(function* run(
         ref: CommentRef,
         ids: readonly string[]
@@ -209,6 +229,18 @@ class CommentThreadStore extends Context.Service<
         return yield* attemptComments((runtime) =>
           withTarget(runtime, ref, (projectId, directionId) =>
             runtime.files.reorder(projectId, directionId, [...ids])
+          )
+        );
+      }),
+      resolve: Effect.fn("CommentThreadStore.resolve")(function* run(
+        ref: CommentRef,
+        commentId: string
+      ) {
+        return yield* attemptComments((runtime) =>
+          withTarget(runtime, ref, (projectId, directionId) =>
+            runtime.files.update(projectId, directionId, commentId, {
+              status: "resolved",
+            })
           )
         );
       }),

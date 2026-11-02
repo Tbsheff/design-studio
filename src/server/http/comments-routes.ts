@@ -6,8 +6,6 @@ import { z } from "zod";
 
 import {
   COMMENT_TEXT_MAX,
-  DRAW_POINTS_MAX,
-  DRAW_STROKES_MAX,
   agentText,
   commentPrompt,
   isSendable,
@@ -24,11 +22,7 @@ import type {
   RunSummary,
   SelectionContext,
 } from "../../shared/contracts.js";
-import {
-  buildPrefill,
-  pickComments,
-  type PrefillDeps,
-} from "../comments/prefill.js";
+import { pickComments, type PrefillDeps } from "../comments/prefill.js";
 import type { CommentStore } from "../store/comments.js";
 import {
   BadRequestError,
@@ -36,7 +30,7 @@ import {
   NotFoundError,
 } from "../store/errors.js";
 import type { AgentRunner, RunHandle } from "../types.js";
-import { MENTION_MAX, parseMentions } from "./mentions.js";
+import { MENTION_MAX } from "./mentions.js";
 
 const rectSchema = z.object({
   x: z.number().finite(),
@@ -72,20 +66,6 @@ const selectionSchema = z.object({
   ancestors: z.array(z.string().max(200)).max(20),
 });
 
-const targetSchema = z.object({
-  selector: z.string().min(1).max(2000),
-  sourceLoc: sourceLocSchema.nullable().optional(),
-  tag: z.string().min(1).max(64),
-  textSnippet: z.string().max(200),
-  rectHint: rectSchema,
-  offset: z
-    .object({
-      x: z.number().finite().min(0).max(1),
-      y: z.number().finite().min(0).max(1),
-    })
-    .optional(),
-});
-
 const textSchema = z
   .string()
   .trim()
@@ -94,88 +74,9 @@ const textSchema = z
 
 const authorSchema = z.string().trim().min(1).max(60);
 
-const coordinate = z.number().finite().min(-10_000).max(100_000);
-
-const drawingSchema = z
-  .object({
-    frame: z.object({
-      width: z.number().int().min(1).max(10_000),
-      height: z.number().int().min(1).max(100_000),
-    }),
-    box: rectSchema,
-    strokes: z
-      .array(
-        z.object({
-          color: z.string().regex(/^#[0-9a-fA-F]{6}$/),
-          width: z.number().min(1).max(64),
-          points: z.array(coordinate).min(2).max(DRAW_POINTS_MAX),
-        })
-      )
-      .min(1)
-      .max(DRAW_STROKES_MAX),
-  })
-  .refine(
-    (drawing) =>
-      drawing.strokes.reduce((sum, stroke) => sum + stroke.points.length, 0) <=
-      DRAW_POINTS_MAX,
-    "drawing has too many points"
-  );
-
-const frameSchema = z
-  .object({
-    id: z
-      .string()
-      .regex(/^[A-Za-z0-9_-]{1,64}$/)
-      .optional(),
-    label: z.string().trim().max(80).optional(),
-    path: z.string().max(300),
-  })
-  .strict();
-
-const attachmentIdsSchema = z
-  .array(z.string().regex(/^[A-Za-z0-9_-]{1,64}$/))
-  .min(1)
-  .max(4);
-
-const createSchema = z
-  .object({
-    text: textSchema,
-    target: targetSchema,
-    context: selectionSchema.optional(),
-    status: z.enum(["draft", "queued"]).optional(),
-    attachmentIds: attachmentIdsSchema.optional(),
-    mentions: z.array(z.unknown()).max(MENTION_MAX).optional(),
-    drawing: drawingSchema.optional(),
-    author: authorSchema.optional(),
-    frame: frameSchema.optional(),
-  })
-  .refine(
-    (input) => !input.drawing || (input.attachmentIds?.length ?? 0) > 0,
-    "a drawing needs its image in attachmentIds"
-  );
-
 const replySchema = z
   .object({ text: textSchema, author: authorSchema.optional() })
   .strict();
-
-const updateSchema = z
-  .object({
-    text: textSchema.optional(),
-    status: z
-      .enum(["draft", "queued", "sent", "resolved", "orphaned"])
-      .optional(),
-    target: targetSchema.optional(),
-    context: selectionSchema.optional(),
-  })
-  .strict();
-
-const prefillSchema = z
-  .object({ ids: z.array(z.string().min(1).max(64)).min(1).max(20) })
-  .strict();
-
-const reorderSchema = z.object({
-  ids: z.array(z.string().min(1).max(64)).min(1).max(500),
-});
 
 const sendSchema = z.object({
   ids: z.array(z.string().min(1).max(64)).min(1).max(100).optional(),
@@ -364,42 +265,6 @@ export function registerCommentRoutes(app: Hono, deps: CommentRouteDeps): void {
     return c.json(list);
   });
 
-  app.post(base, async (c) => {
-    const { mentions: rawMentions, ...input } = await parseBody(
-      c,
-      createSchema
-    );
-    const mentions = parseMentions(rawMentions);
-    const { project, direction } = await deps.loadDirection(
-      c.req.param("pid"),
-      c.req.param("did")
-    );
-    for (const id of input.attachmentIds ?? []) {
-      if (deps.hasAttachment && !(await deps.hasAttachment(project.id, id)))
-        throw new NotFoundError(`attachment ${id} not found`);
-    }
-    return c.json(
-      await comments.create(project.id, direction.id, {
-        ...input,
-        ...(mentions?.length ? { mentions } : {}),
-      })
-    );
-  });
-
-  app.post(`${base}/prefill`, async (c) => {
-    const { ids } = await parseBody(c, prefillSchema);
-    if (!deps.prefill) throw new BadRequestError("prefill is not available");
-    const { project, direction } = await deps.loadDirection(
-      c.req.param("pid"),
-      c.req.param("did")
-    );
-    const chosen = pickComments(
-      await comments.list(project.id, direction.id),
-      ids
-    );
-    return c.json(await buildPrefill(deps.prefill, project, direction, chosen));
-  });
-
   app.post(`${base}/:cid/replies`, async (c) => {
     const { text, author } = await parseBody(c, replySchema);
     const { project, direction } = await deps.loadDirection(
@@ -415,30 +280,6 @@ export function registerCommentRoutes(app: Hono, deps: CommentRouteDeps): void {
         author
       )
     );
-  });
-
-  app.delete(`${base}/:cid/replies/:rid`, async (c) => {
-    const { project, direction } = await deps.loadDirection(
-      c.req.param("pid"),
-      c.req.param("did")
-    );
-    return c.json(
-      await comments.removeReply(
-        project.id,
-        direction.id,
-        c.req.param("cid"),
-        c.req.param("rid")
-      )
-    );
-  });
-
-  app.post(`${base}/reorder`, async (c) => {
-    const { ids } = await parseBody(c, reorderSchema);
-    const { project, direction } = await deps.loadDirection(
-      c.req.param("pid"),
-      c.req.param("did")
-    );
-    return c.json(await comments.reorder(project.id, direction.id, ids));
   });
 
   app.post(`${base}/send`, async (c) => {
@@ -471,26 +312,6 @@ export function registerCommentRoutes(app: Hono, deps: CommentRouteDeps): void {
       }
     );
     return c.json(result);
-  });
-
-  app.patch(`${base}/:cid`, async (c) => {
-    const input = await parseBody(c, updateSchema);
-    const { project, direction } = await deps.loadDirection(
-      c.req.param("pid"),
-      c.req.param("did")
-    );
-    return c.json(
-      await comments.update(project.id, direction.id, c.req.param("cid"), input)
-    );
-  });
-
-  app.delete(`${base}/:cid`, async (c) => {
-    const { project, direction } = await deps.loadDirection(
-      c.req.param("pid"),
-      c.req.param("did")
-    );
-    await comments.remove(project.id, direction.id, c.req.param("cid"));
-    return c.json({ ok: true });
   });
 }
 

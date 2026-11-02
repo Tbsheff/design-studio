@@ -1,4 +1,4 @@
-import type { DesignComment } from "../../../shared/contracts.js";
+import type { DesignComment } from "../../shared/contracts.js";
 
 const FRAME_WIDTH = 1440;
 const FRAME_HEIGHT = 900;

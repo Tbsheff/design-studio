@@ -303,7 +303,7 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/server/store/{authorizer,data-lock,default-folder,events,git-objects,local-principal,mutex,project-access,skill-store,starters,studio-info}.ts",
       "src/{server/handlers/_core/handler,server/handlers/_core/run-action,server/handlers/studio/handlers,server/handlers/studio/health,server/handlers/studio/list-skills,server/handlers/studio/live,shared/actions/studio/health,shared/actions/studio/list-skills}.ts",
       "src/server/{http/mount,http/mount-all,http/wire-error,mcp/registry,agent-tools/registry,agent-tools/sdk-shape}.ts",
-      "{cloud/publish-worker/src/protocol,src/server/handlers/publish/{live,get,handlers,inspect,list,list-comments,publish,unpublish,restore,delete-comment,start,stop,delete,set,apply},src/server/publish/{cf-cli,publications,publish-core,publish-store,legacy-link,plan-card,plan-input,publish-planner},src/shared/actions/_core/http-status,src/shared/actions/_core/errors/all,src/shared/actions/publish/{errors/status,get,inspect,list,list-comments,publish,unpublish,restore,delete-comment,start,stop,delete,set,apply},src/server/handlers/share/{live,handlers,list,create,delete,update,set-cursor,set-lan},src/server/share/{share-core,share-store,share-listener,live-refresher,share-attempt,share-cards,share-link-store,share-links},src/shared/actions/share/{list,create,delete,update,set-cursor,set-lan},src/server/handlers/comments/{live,handlers,list,search-mention},src/server/comments/{comment-core,comment-store,comment-thread-store,comment-page,work-tree,index},src/shared/actions/comments/{list,search-mention}}.ts",
+      "{cloud/publish-worker/src/protocol,src/server/handlers/publish/{live,get,handlers,inspect,list,list-comments,publish,unpublish,restore,delete-comment,start,stop,delete,set,apply},src/server/publish/{cf-cli,publications,publish-core,publish-store,legacy-link,plan-card,plan-input,publish-planner},src/shared/actions/_core/http-status,src/shared/actions/_core/errors/all,src/shared/actions/publish/{errors/status,get,inspect,list,list-comments,publish,unpublish,restore,delete-comment,start,stop,delete,set,apply},src/server/handlers/share/{live,handlers,list,create,delete,update,set-cursor,set-lan},src/server/share/{share-core,share-store,share-listener,live-refresher,share-attempt,share-cards,share-link-store,share-links},src/shared/actions/share/{list,create,delete,update,set-cursor,set-lan},src/server/handlers/comments/{live,handlers,list,search-mention,create,update,delete,delete-reply,create-reply,export,insert,move,set-resolved},src/server/comments/{comment-core,comment-store,comment-thread-store,comment-page,work-tree,index,comment-insert,frame-target},src/shared/actions/comments/{schema,errors/status,list,search-mention,create,update,delete,delete-reply,create-reply,export,insert,move,set-resolved}}.ts",
       "src/server/agent/legacy/agent-ops.ts",
       "src/server/agent/legacy/direct-edit.ts",
       "scripts/stamp/{names,templates,templates-ui,write}.ts",
@@ -352,9 +352,6 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/server/mcp/legacy/canvas-schema.ts",
       "src/server/mcp/legacy/canvas.ts",
       "src/server/mcp/legacy/cloud.ts",
-      "src/server/mcp/legacy/comment-actions.ts",
-      "src/server/mcp/legacy/comments-result.ts",
-      "src/server/mcp/legacy/comments-schema.ts",
       "src/server/mcp/legacy/comments.ts",
       "src/server/mcp/legacy/create-project.ts",
       "src/server/mcp/legacy/devserver.ts",
@@ -396,8 +393,6 @@ export const decisionOverrides: OxlintOverride[] = [
     files: [
       "src/server/mcp/legacy/canvas-result.ts",
       "src/server/mcp/legacy/canvas-schema.ts",
-      "src/server/mcp/legacy/comments-result.ts",
-      "src/server/mcp/legacy/comments-schema.ts",
       "src/server/mcp/legacy/direct-edit-result.ts",
       "src/server/mcp/legacy/direct-edit-schema.ts",
       "src/server/mcp/legacy/export-result.ts",
@@ -433,7 +428,7 @@ export const decisionOverrides: OxlintOverride[] = [
   },
   {
     files: [
-      "src/{server/mcp/legacy/frame-target,shared/run-target,server/http/spacing-routes,ui/features/spacing/spacing-bands,server/share/share-links,shared/actions/comments/schema}.ts",
+      "src/{server/comments/frame-target,shared/run-target,server/http/spacing-routes,ui/features/spacing/spacing-bands,server/share/share-links,shared/actions/comments/schema}.ts",
     ],
     rules: { "eslint/id-length": "off" },
   },

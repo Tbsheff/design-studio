@@ -1,8 +1,9 @@
 // @generated
+import type { CommentsError } from "../../comments/errors/index.js";
 import type { PublishError } from "../../publish/errors/index.js";
 import type { CoreError } from "./index.js";
 
-type StudioError = CoreError | PublishError;
+type StudioError = CoreError | CommentsError | PublishError;
 
 type StudioErrorTag = StudioError["_tag"];
 

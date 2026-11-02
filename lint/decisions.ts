@@ -419,8 +419,10 @@ export const decisionOverrides: OxlintOverride[] = [
   {
     files: [
       "src/server/agent/icon-tool.ts",
+      "src/server/http/icon-routes.ts",
       "src/server/icons/deps.ts",
       "src/server/mcp/icon-tools.ts",
+      "src/ui/features/icons/deps.ts",
     ],
     rules: { "import/no-relative-parent-imports": "off" },
   },

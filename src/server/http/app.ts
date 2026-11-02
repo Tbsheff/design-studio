@@ -156,6 +156,7 @@ import { registerFolderInspectRoutes } from "./folder-inspect-routes.js";
 import { registerFrameStateRoutes } from "./frame-state-routes.js";
 import { registerHomeRoutes } from "./home-routes.js";
 import { registerHunkRoutes } from "./hunk-routes.js";
+import { registerIconRoutes } from "./icon-routes.js";
 import { registerInsertRoutes } from "./insert-routes.js";
 import { registerLayerStateRoutes } from "./layer-state-routes.js";
 import { registerMcpRoutes } from "./mcp-routes.js";
@@ -1904,6 +1905,13 @@ export function createApp(deps: AppDeps): Hono {
     commitDesignMd,
   });
   registerInsertRoutes(app, {
+    editDeps,
+    preview,
+    readBody,
+    loadDirection,
+    withDirection,
+  });
+  registerIconRoutes(app, {
     editDeps,
     preview,
     readBody,

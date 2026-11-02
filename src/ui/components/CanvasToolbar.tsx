@@ -1,5 +1,6 @@
 import { useState, type KeyboardEvent, type ReactNode } from "react";
 
+import { runCommand } from "../commands/registry";
 import { uiStore, type Viewport, type ZoomSetting } from "../storage";
 import { VECTOR_TOOLS, useVectorTool, vectorTool } from "../vectorTool";
 import { PenIcon } from "./DrawLayer";
@@ -380,6 +381,36 @@ export function VectorToolButtons() {
   );
 }
 
+function InsertIconButton() {
+  return (
+    <button
+      type="button"
+      className="btn small ghost insert-icon-btn"
+      aria-label="Insert icon"
+      aria-keyshortcuts="I"
+      data-tip="Insert an icon into the selected layer"
+      onClick={() => runCommand("icon.insert")}
+    >
+      <svg
+        className="icon"
+        width={14}
+        height={14}
+        viewBox="0 0 16 16"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={1.4}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <path d="M8 2l1.6 3.6L13.5 6l-2.9 2.6.8 3.9L8 10.6l-3.4 1.9.8-3.9L2.5 6l3.9-.4z" />
+      </svg>
+      <span className="label">Icon</span> <kbd>I</kbd>
+    </button>
+  );
+}
+
 export function CanvasViewRow(props: Props) {
   return (
     <div
@@ -408,6 +439,7 @@ export function CanvasViewRow(props: Props) {
         hasHead={props.hasHead}
       />
       <div className="spacer" />
+      <InsertIconButton />
       {props.drawMode !== undefined && (
         <button
           className="btn small ghost select-toggle draw-toggle"

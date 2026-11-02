@@ -13,6 +13,8 @@ import type { PreviewPort } from "./bridge";
 import { commandBlocker, runCommand } from "./commands/registry";
 import { PreviewMenu } from "./components/PreviewMenu";
 import type { PreviewMenuItem } from "./components/PreviewMenu";
+import { IconSlot } from "./features/icons/icon-slot";
+import { useIconHost } from "./features/icons/use-icon-host";
 import { pasteJsx } from "./pasteJsx";
 import { uiStore } from "./storage";
 import { selectionTargets, structureMenuItems } from "./structureEdits";
@@ -133,7 +135,8 @@ function disabledBy(reason: string | null): { disabled?: string } {
 function menuItems(
   o: Options,
   target: SelectionContext,
-  openCreate: () => void
+  openCreate: () => void,
+  iconItems: (target: SelectionContext) => PreviewMenuItem[]
 ): PreviewMenuItem[] {
   return [
     {
@@ -189,6 +192,7 @@ function menuItems(
     },
     ...structureItems(o),
     ...pasteItem(o, target),
+    ...iconItems(target),
     ...createItem(o, openCreate),
   ];
 }
@@ -208,6 +212,14 @@ export function usePreviewMenu(o: Options) {
   const target = o.selection.at(-1);
   const openCreate = () => setCreating(latest.current.selection);
   const directionId = o.ids.directionId;
+  const icons = useIconHost({
+    directionId,
+    busy: o.edits.busy,
+    enabled: o.edits.enabled,
+    notify: o.edits.notify,
+    projectId: o.ids.projectId,
+    selection: o.selection,
+  });
 
   const dialog =
     creating && directionId ? (
@@ -222,7 +234,9 @@ export function usePreviewMenu(o: Options) {
     ) : null;
 
   const items =
-    at && target ? menuItems(latest.current, target, openCreate) : [];
+    at && target
+      ? menuItems(latest.current, target, openCreate, icons.items)
+      : [];
 
   const menu = (
     <>
@@ -235,6 +249,16 @@ export function usePreviewMenu(o: Options) {
         />
       ) : null}
       {dialog}
+      {icons.opened && directionId ? (
+        <IconSlot
+          projectId={o.ids.projectId}
+          directionId={directionId}
+          mode={icons.opened.mode}
+          target={icons.opened.target}
+          onClose={icons.close}
+          onDone={o.edits.notify}
+        />
+      ) : null}
     </>
   );
 

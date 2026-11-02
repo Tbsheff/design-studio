@@ -183,6 +183,7 @@ export const KEYMAP = [
     keys: ["Shift+R"],
     group: "Canvas",
   },
+  { id: "insert-icon", label: "Insert icon", keys: ["I"], group: "Canvas" },
 
   {
     id: "select-child",

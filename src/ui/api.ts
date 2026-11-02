@@ -61,6 +61,8 @@ import type {
 } from "../shared/contracts";
 import { STUDIO_TOKEN_HEADER } from "../shared/contracts";
 import type { WorkspaceFolder, WorkspaceList } from "../shared/folders";
+import type { IconList, IconPosition, IconSource } from "../shared/icons";
+import type { InsertTarget } from "../shared/insert";
 import type { FolderInspection } from "../shared/open-app";
 import type {
   StyleReplaceRequest,
@@ -94,6 +96,31 @@ import type { WireFields } from "./platform/http";
 import { getSession } from "./session";
 
 export { ApiError } from "./platform/http";
+
+export interface IconListQuery {
+  query: string;
+  library?: IconSource;
+  limit?: number;
+}
+
+export interface IconInsertBody {
+  name: string;
+  size: number;
+  color?: string;
+  library?: IconSource;
+  position: IconPosition;
+  target: InsertTarget;
+}
+
+export interface IconInsertReply {
+  file: string;
+  icon: string;
+  importAdded: boolean;
+  select: (SourceLoc & { tag: string })[];
+  swapped: boolean;
+  title: string;
+  versionId: string;
+}
 
 type ErrorPick = (data: {
   error?: string;
@@ -647,6 +674,19 @@ export const api = {
     }),
   appFix: (pid: string, kind: DoctorCauseKind) =>
     json<AppFixResult>("POST", `${p(pid)}/app/doctor/fix`, { kind }),
+  listIcons: (pid: string, did: string, q: IconListQuery) =>
+    json<IconList>(
+      "GET",
+      `${d(pid, did)}/icons?${new URLSearchParams({
+        query: q.query,
+        limit: String(q.limit ?? 48),
+        ...(q.library ? { library: q.library } : {}),
+      }).toString()}`
+    ),
+  insertIcon: (pid: string, did: string, body: IconInsertBody) =>
+    timedEdit(pid, did, "icon", 1, () =>
+      json<IconInsertReply>("POST", `${d(pid, did)}/icons/insert`, body)
+    ),
 };
 
 function editKind(req: DirectEditRequest): string {

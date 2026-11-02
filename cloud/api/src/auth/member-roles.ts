@@ -2,6 +2,10 @@ interface RoleRow {
   readonly role: string;
 }
 
+interface ActingRow {
+  readonly acting_user_id: string;
+}
+
 interface CountRow {
   readonly total: number;
 }
@@ -14,6 +18,10 @@ interface PersonalUser {
 interface MemberRoles {
   readonly createPersonalOrg: (user: PersonalUser) => Promise<void>;
   readonly countOwners: (orgId: string) => Promise<number>;
+  readonly readActingUser: (
+    keyId: string,
+    orgId: string
+  ) => Promise<string | null>;
   readonly readRole: (orgId: string, userId: string) => Promise<string | null>;
   readonly revokeMember: (orgId: string, userId: string) => Promise<void>;
 }
@@ -52,6 +60,16 @@ const toMemberRoles = (db: D1Database): MemberRoles => ({
         )
         .bind(`${orgId}-owner`, orgId, user.id, now),
     ]);
+  },
+  readActingUser: async (keyId, orgId) => {
+    const row = await db
+      .prepare(
+        "SELECT acting_user_id FROM key_meta WHERE key_id = ? AND org_id = ?"
+      )
+      .bind(keyId, orgId)
+      .first<ActingRow>();
+
+    return row?.acting_user_id ?? null;
   },
   readRole: async (orgId, userId) => {
     const row = await db

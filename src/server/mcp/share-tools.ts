@@ -55,8 +55,6 @@ const createInput = z
   })
   .strict();
 
-const listInput = z.object({ projectId }).strict();
-
 const revokeInput = z
   .object({
     projectId,
@@ -186,43 +184,6 @@ const createShare = defineTool(
   }
 );
 
-const listShares = defineTool(
-  "list_share_links",
-  listInput,
-  {
-    title: "List share links",
-    description: `List the share links of a project: id, title, frames, expiry, whether each is active, and how many viewer comments came in. Read only; it never returns tokens or URLs. Read viewer comments with list_comments. ${SHARE_NOTE}`,
-    readOnly: true,
-    idempotent: true,
-  },
-  async (deps, input) => {
-    const { project } = await loadTarget(deps, input.projectId);
-
-    const list = await studioCall<ShareList>(
-      deps,
-      "GET",
-      `/api/projects/${encodeURIComponent(project.id)}/shares`
-    );
-
-    return {
-      result: ok({
-        links: list.links.map((l) => ({
-          id: l.id,
-          title: l.title,
-          active: l.active,
-          live: l.live,
-          viewers: l.viewers,
-          expiresAt: new Date(l.expiresAt).toISOString(),
-          revoked: l.revokedAt !== null,
-          frames: l.frames.map((f) => f.name),
-          comments: l.comments,
-        })),
-        server: { running: list.server.running, localNetwork: list.server.lan },
-      }),
-    };
-  }
-);
-
 const revokeShare = defineTool(
   "revoke_share_link",
   revokeInput,
@@ -246,4 +207,4 @@ const revokeShare = defineTool(
   }
 );
 
-export const SHARE_TOOLS = [createShare, listShares, revokeShare];
+export const SHARE_TOOLS = [createShare, revokeShare];

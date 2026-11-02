@@ -5,22 +5,14 @@ import { streamSSE } from "hono/streaming";
 
 import { isFrameId } from "../../shared/canvas-file.js";
 import type { Project } from "../../shared/contracts.js";
-import type { ShareCreated, ShareList } from "../../shared/share.js";
+import type { ShareCreated } from "../../shared/share.js";
 import { resolveSource, type ExportDeps } from "../export/source.js";
 import { expiryOf, framesOf, sharePort } from "../share/frames.js";
 import { createShareListener, type ShareListener } from "../share/listener.js";
-import {
-  createLiveHub,
-  createLiveRefresher,
-  type LiveHub,
-} from "../share/live.js";
+import { createLiveRefresher, type LiveHub } from "../share/live.js";
+import { bindShareRuntime, toShareCore } from "../share/share-core.js";
 import { captureShare } from "../share/snapshot.js";
-import {
-  createShareStore,
-  isLive,
-  toLink,
-  type ShareStore,
-} from "../share/store.js";
+import { isLive, toLink, type ShareStore } from "../share/store.js";
 import { createViewerApp } from "../share/viewer-app.js";
 import type { CommentStore } from "../store/comments.js";
 import {
@@ -102,8 +94,7 @@ export function registerShareRoutes(
   app: Hono,
   deps: ShareRouteDeps
 ): ShareListener {
-  const store = createShareStore(deps.dataDir);
-  const hub = createLiveHub();
+  const { files: store, hub } = toShareCore(deps.dataDir);
   const listener = createShareListener(
     createViewerApp({ shares: store, comments: deps.comments, hub }),
     store,
@@ -115,6 +106,7 @@ export function registerShareRoutes(
     hub,
     () => void listener.sync().catch(() => undefined)
   );
+  bindShareRuntime(deps.dataDir, { refresher, server: listener });
   void listener
     .sync()
     .catch((error: unknown) =>
@@ -122,17 +114,6 @@ export function registerShareRoutes(
     );
   refresher.kick();
   registerLiveRoutes(app, deps, store, hub);
-
-  app.get("/api/projects/:pid/shares", async (c) => {
-    const project = await deps.projects.get(
-      assertSafeId(c.req.param("pid"), "projectId")
-    );
-    const now = Date.now();
-    const links = (await store.list(project.id))
-      .map((r) => toLink(r, now, hub.count(r.id)))
-      .sort((a, b) => b.createdAt - a.createdAt);
-    return c.json({ links, server: listener.state() } satisfies ShareList);
-  });
 
   app.post("/api/projects/:pid/shares", async (c) => {
     const created = await createLink(

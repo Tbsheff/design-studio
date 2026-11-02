@@ -1,0 +1,166 @@
+{
+  "tools": [
+    {
+      "name": "create_share_link",
+      "description": "Make a read-only share link for canvas frames so other people can view the design and comment. The user must click Allow in Design Studio first; without the window open it is refused. Returns the link URL once (only a hash of the token is kept). A share link is a read-only PNG snapshot of canvas frames, served on a separate listener on this computer (127.0.0.1) unless the user turns on Allow on local network in the Share dialog. Viewers can only see the images and add comments with a name they type; those comments land as drafts in the studio Comments pane, marked as from a viewer, and never go to the studio agent unless the user sends them. The link has a random token, ends after its expiry and can be revoked. Links are off until someone creates one. A live link (live: true) swaps in new snapshots after each saved version and shows viewer cursors in the studio; viewers still get only PNGs, never the design code or a studio API.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "frames": {
+            "description": "Frame ids or @labels from canvas_list. Leave out for every visible frame of the direction.",
+            "minItems": 1,
+            "maxItems": 12,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80
+            }
+          },
+          "expiresInHours": {
+            "default": 24,
+            "description": "Hours until the link ends: 1, 24, 168.",
+            "anyOf": [
+              {
+                "type": "number",
+                "const": 1
+              },
+              {
+                "type": "number",
+                "const": 24
+              },
+              {
+                "type": "number",
+                "const": 168
+              }
+            ]
+          },
+          "title": {
+            "description": "Title on the shared page. Leave out for the project name.",
+            "type": "string",
+            "maxLength": 120
+          },
+          "live": {
+            "default": false,
+            "description": "Live link: viewers get new PNG snapshots each time a version is saved, and their cursors show on the studio canvas. The studio cursor shows to viewers only if the user turns it on in Share.",
+            "type": "boolean"
+          }
+        },
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "list_share_links",
+      "description": "List the share links of a project: id, title, frames, expiry, whether each is active, and how many viewer comments came in. Read only; it never returns tokens or URLs. Read viewer comments with list_comments. A share link is a read-only PNG snapshot of canvas frames, served on a separate listener on this computer (127.0.0.1) unless the user turns on Allow on local network in the Share dialog. Viewers can only see the images and add comments with a name they type; those comments land as drafts in the studio Comments pane, marked as from a viewer, and never go to the studio agent unless the user sends them. The link has a random token, ends after its expiry and can be revoked. Links are off until someone creates one. A live link (live: true) swaps in new snapshots after each saved version and shows viewer cursors in the studio; viewers still get only PNGs, never the design code or a studio API.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          }
+        },
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "revoke_share_link",
+      "description": "Turn off a share link now. The link, its images and its comment form stop working at once and the snapshot images are deleted. Comments already sent stay in the Comments pane.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "shareId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Share link id from list_share_links or create_share_link."
+          }
+        },
+        "required": ["projectId", "shareId"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    }
+  ],
+  "samples": [
+    {
+      "tool": "list_share_links",
+      "args": {
+        "projectId": "p_demo01"
+      },
+      "result": {
+        "links": [
+          {
+            "id": "a1b2c3d4e5f6",
+            "title": "Checkout flow",
+            "active": true,
+            "live": false,
+            "viewers": 0,
+            "expiresAt": "2026-11-03T12:00:00.000Z",
+            "revoked": false,
+            "frames": ["Cart", "Pay"],
+            "comments": 2
+          }
+        ],
+        "server": {
+          "running": true,
+          "localNetwork": false
+        }
+      }
+    },
+    {
+      "tool": "revoke_share_link",
+      "args": {
+        "projectId": "p_demo01",
+        "shareId": "a1b2c3d4e5f6"
+      },
+      "result": {
+        "link": {
+          "id": "a1b2c3d4e5f6",
+          "active": false,
+          "revokedAt": 1793626400000
+        },
+        "server": {
+          "running": false,
+          "lan": false,
+          "localUrl": null,
+          "lanUrl": null
+        }
+      }
+    }
+  ]
+}

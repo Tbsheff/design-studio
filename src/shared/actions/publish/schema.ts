@@ -248,6 +248,8 @@ const PublicationResultSchema = Schema.Struct({
 
 const DeletedSchema = Schema.Struct({ ok: Schema.Literal(true) });
 
+const PublishBackendModeSchema = Schema.Literals(["cloudflare", "local"]);
+
 type PublishInput = typeof PublishInputSchema.Type;
 
 type PublicationList = typeof PublicationListSchema.Type;
@@ -257,6 +259,8 @@ type PublicationCommentList = typeof PublicationCommentListSchema.Type;
 type PublishCliState = typeof PublishCliStateSchema.Type;
 
 type PublishBackendState = typeof PublishBackendStateSchema.Type;
+
+type PublishBackendMode = typeof PublishBackendModeSchema.Type;
 
 export {
   DeletedSchema,
@@ -270,6 +274,7 @@ export {
   PublicationCommentSchema,
   PublicationListSchema,
   PublicationSchema,
+  PublishBackendModeSchema,
   PublishBackendStateSchema,
   PublishCliStateSchema,
   QueryFlagSchema,
@@ -278,6 +283,7 @@ export {
 export type {
   PublicationCommentList,
   PublicationList,
+  PublishBackendMode,
   PublishBackendState,
   PublishCliState,
   PublishInput,

@@ -12,10 +12,10 @@ The first real stamped actions are `studio.health` (`GET /api/health`) and `stud
 | Action definition | [`src/shared/actions/studio/list-skills.ts`](../src/shared/actions/studio/list-skills.ts), [`src/shared/actions/studio/health.ts`](../src/shared/actions/studio/health.ts) | `actionDefinition` (new:action) |
 | Domain payload schemas | [`src/shared/actions/studio/schema.ts`](../src/shared/actions/studio/schema.ts) | `domainSchema` (new:domain) |
 | Action handler | [`src/server/handlers/studio/list-skills.ts`](../src/server/handlers/studio/list-skills.ts), [`src/server/handlers/studio/health.ts`](../src/server/handlers/studio/health.ts) | `actionHandler` (new:action) |
-| Action preview (`confirm: "user"`) | none on main yet; the stamp writes it | `actionPreview` (new:action) |
-| Domain live layer | [`src/server/handlers/studio/live.ts`](../src/server/handlers/studio/live.ts) | `domainLive` (new:domain) |
-| Read service | [`src/server/store/skill-store.ts`](../src/server/store/skill-store.ts), [`src/server/store/studio-info.ts`](../src/server/store/studio-info.ts) | `service` (new:service) |
-| Domain service (write) | [`service.ts`](patterns/golden/service.ts) (real file lands with S4c at `src/server/publish/publications.ts`) | `service` (new:service) |
+| Action preview (`confirm: "user"`) | [`src/server/handlers/publish/publish.ts`](../src/server/handlers/publish/publish.ts), [`src/server/handlers/publish/restore.ts`](../src/server/handlers/publish/restore.ts) | `actionPreview` (new:action) |
+| Domain live layer | [`src/server/handlers/studio/live.ts`](../src/server/handlers/studio/live.ts), with services that need services [`src/server/handlers/publish/live.ts`](../src/server/handlers/publish/live.ts) | `domainLive` (new:domain) |
+| Read service | [`src/server/store/skill-store.ts`](../src/server/store/skill-store.ts), [`src/server/publish/publish-store.ts`](../src/server/publish/publish-store.ts) | `service` (new:service) |
+| Domain service (write) | [`src/server/publish/publications.ts`](../src/server/publish/publications.ts) | `service` (new:service) |
 | Domain routes (generated) | [`src/shared/actions/studio/routes.ts`](../src/shared/actions/studio/routes.ts) | none (gen-routes writes it) |
 | Domain action list (generated) | [`src/shared/actions/studio/index.ts`](../src/shared/actions/studio/index.ts) | none (gen-routes writes it) |
 | Domain handlers (generated) | [`src/server/handlers/studio/handlers.ts`](../src/server/handlers/studio/handlers.ts) | none (gen-routes writes it) |
@@ -33,7 +33,7 @@ The first real stamped actions are `studio.health` (`GET /api/health`) and `stud
 | HTTP adapter mount | [`src/server/http/mount.ts`](../src/server/http/mount.ts) | none (hand-written once) |
 | Layer coverage check | [`src/server/main/runtime-check.ts`](../src/server/main/runtime-check.ts) | none (hand-written once) |
 | Pure engine | [`pure-engine.ts`](patterns/golden/pure-engine.ts) (real file lands with S5-direct-edit at `src/server/direct-edit/engine/apply-splices.ts`) | none |
-| UI action call | `listSkills` in [`src/ui/api.ts`](../src/ui/api.ts): `call(routes.listSkillsStudio, {})` from `src/ui/platform/http.ts` | none |
+| UI action call | [`src/ui/publishApi.ts`](../src/ui/publishApi.ts): `call(routes.<x>, input)` from `src/ui/platform/http.ts` with `WireInput` and `WireOutput` | none |
 | UI data hook | [`ui-hook.ts`](patterns/golden/ui-hook.ts) (real file lands with S4c at `src/ui/features/publish/use-publications.ts`) | `uiHook` (new:action `--ui <feature>`) |
 | UI feature index | [`ui-feature-index.ts`](patterns/golden/ui-feature-index.ts) (real file lands with S4c) | `uiFeatureIndex` (new:feature, new:domain `--ui`) |
 | UI copy | [`ui-copy.ts`](patterns/golden/ui-copy.ts) (real file lands with S4c) | `uiCopy` (new:feature, new:domain `--ui`) |

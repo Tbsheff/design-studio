@@ -1,10 +1,22 @@
 // @generated
 const routes = {
+  applyPublish: {
+    id: "publish.apply",
+    invalidates: ["publish.inspect"],
+    method: "POST",
+    path: "/api/publish/backend/setup",
+  },
   deleteCommentPublish: {
     id: "publish.deleteComment",
     invalidates: ["publish.listComments", "publish.list"],
     method: "DELETE",
     path: "/api/projects/:projectId/publications/:publicationId/comments/:commentId",
+  },
+  deletePublish: {
+    id: "publish.delete",
+    invalidates: ["publish.get"],
+    method: "POST",
+    path: "/api/publish/logout",
   },
   getPublish: {
     id: "publish.get",
@@ -41,6 +53,24 @@ const routes = {
     invalidates: ["publish.list"],
     method: "POST",
     path: "/api/projects/:projectId/publications/:publicationId/rollback",
+  },
+  setPublish: {
+    id: "publish.set",
+    invalidates: ["publish.get", "publish.inspect"],
+    method: "PUT",
+    path: "/api/publish/settings",
+  },
+  startPublish: {
+    id: "publish.start",
+    invalidates: ["publish.get"],
+    method: "POST",
+    path: "/api/publish/login",
+  },
+  stopPublish: {
+    id: "publish.stop",
+    invalidates: ["publish.get"],
+    method: "DELETE",
+    path: "/api/publish/login",
   },
   unpublishPublish: {
     id: "publish.unpublish",

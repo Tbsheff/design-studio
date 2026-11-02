@@ -301,7 +301,7 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/server/store/{authorizer,data-lock,default-folder,events,git-objects,local-principal,mutex,project-access,skill-store,starters,studio-info}.ts",
       "src/{server/handlers/_core/handler,server/handlers/_core/run-action,server/handlers/studio/handlers,server/handlers/studio/health,server/handlers/studio/list-skills,server/handlers/studio/live,shared/actions/studio/health,shared/actions/studio/list-skills}.ts",
       "src/server/{http/mount,http/mount-all,http/wire-error,mcp/registry,agent-tools/registry,agent-tools/sdk-shape}.ts",
-      "{cloud/publish-worker/src/protocol,src/server/handlers/publish/{live,get,handlers,inspect,list,list-comments,publish,unpublish,restore,delete-comment},src/server/publish/{cf-cli,publications,publish-core,publish-store,legacy-link,plan-card,plan-input,publish-planner},src/shared/actions/_core/http-status,src/shared/actions/_core/errors/all,src/shared/actions/publish/{errors/status,get,inspect,list,list-comments,publish,unpublish,restore,delete-comment}}.ts",
+      "{cloud/publish-worker/src/protocol,src/server/handlers/publish/{live,get,handlers,inspect,list,list-comments,publish,unpublish,restore,delete-comment,start,stop,delete,set,apply},src/server/publish/{cf-cli,publications,publish-core,publish-store,legacy-link,plan-card,plan-input,publish-planner},src/shared/actions/_core/http-status,src/shared/actions/_core/errors/all,src/shared/actions/publish/{errors/status,get,inspect,list,list-comments,publish,unpublish,restore,delete-comment,start,stop,delete,set,apply}}.ts",
       "src/server/agent/legacy/agent-ops.ts",
       "src/server/agent/legacy/direct-edit.ts",
       "scripts/stamp/{names,templates,templates-ui,write}.ts",

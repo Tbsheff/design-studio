@@ -1,7 +1,9 @@
 // @generated
 import type { PublishActions } from "../../../shared/actions/publish/index.js";
 import type { Entries } from "../_core/handler.js";
+import { handle as applyPublishHandle } from "./apply.js";
 import { handle as deleteCommentPublishHandle } from "./delete-comment.js";
+import { handle as deletePublishHandle } from "./delete.js";
 import { handle as getPublishHandle } from "./get.js";
 import { handle as inspectPublishHandle } from "./inspect.js";
 import { handle as listCommentsPublishHandle } from "./list-comments.js";
@@ -14,13 +16,18 @@ import {
   handle as restorePublishHandle,
   preview as restorePublishPreview,
 } from "./restore.js";
+import { handle as setPublishHandle } from "./set.js";
+import { handle as startPublishHandle } from "./start.js";
+import { handle as stopPublishHandle } from "./stop.js";
 import {
   handle as unpublishPublishHandle,
   preview as unpublishPublishPreview,
 } from "./unpublish.js";
 
 const PublishEntries = {
+  applyPublish: { handle: applyPublishHandle },
   deleteCommentPublish: { handle: deleteCommentPublishHandle },
+  deletePublish: { handle: deletePublishHandle },
   getPublish: { handle: getPublishHandle },
   inspectPublish: { handle: inspectPublishHandle },
   listCommentsPublish: { handle: listCommentsPublishHandle },
@@ -33,6 +40,9 @@ const PublishEntries = {
     handle: restorePublishHandle,
     preview: restorePublishPreview,
   },
+  setPublish: { handle: setPublishHandle },
+  startPublish: { handle: startPublishHandle },
+  stopPublish: { handle: stopPublishHandle },
   unpublishPublish: {
     handle: unpublishPublishHandle,
     preview: unpublishPublishPreview,

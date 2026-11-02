@@ -1,0 +1,18 @@
+import { Effect } from "effect";
+
+import type { Input } from "../../../shared/actions/_core/action.js";
+import type { startPublish } from "../../../shared/actions/publish/start.js";
+import { PublishService } from "../../publish/publications.js";
+import type { Handle } from "../_core/handler.js";
+
+type StartPublishInput = Input<typeof startPublish>;
+
+const handle = Effect.fn("publish.start")(function* run(
+  input: StartPublishInput
+) {
+  const service = yield* PublishService;
+
+  return yield* service.startLogin(input.keyring, input.narrow);
+}) satisfies Handle<typeof startPublish>;
+
+export { handle };

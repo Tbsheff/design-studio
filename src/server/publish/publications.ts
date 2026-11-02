@@ -4,7 +4,12 @@ import type { Cause } from "effect";
 import { BadRequest } from "../../shared/actions/_core/errors/bad-request.js";
 import { NotFound } from "../../shared/actions/_core/errors/not-found.js";
 import type { CfFailed } from "../../shared/actions/publish/errors/cf-failed.js";
-import type { PublishInput } from "../../shared/actions/publish/schema.js";
+import type {
+  PublishBackendMode,
+  PublishBackendState,
+  PublishCliState,
+  PublishInput,
+} from "../../shared/actions/publish/schema.js";
 import type { Publication } from "../../shared/publish.js";
 import { loadConfig } from "../platform/config/index.js";
 import { NotFoundError } from "../store/errors.js";
@@ -24,12 +29,19 @@ import type { PublicationRecord } from "./store.js";
 
 type WriteError = BadRequest | CfFailed | NotFound;
 
+type SetupError = BadRequest | NotFound;
+
 interface PublishServiceApi {
+  readonly applyBackend: (
+    mode: PublishBackendMode
+  ) => Effect.Effect<PublishBackendState, SetupError>;
+  readonly cancelLogin: () => Effect.Effect<PublishCliState, SetupError>;
   readonly deleteComment: (
     projectId: string,
     publicationId: string,
     commentId: string
   ) => Effect.Effect<void, WriteError>;
+  readonly logout: () => Effect.Effect<PublishCliState, SetupError>;
   readonly publish: (
     input: PublishInput
   ) => Effect.Effect<Publication, BadRequest | NotFound>;
@@ -38,6 +50,13 @@ interface PublishServiceApi {
     publicationId: string,
     versionId: string
   ) => Effect.Effect<Publication, WriteError>;
+  readonly setAccount: (
+    accountId: string | null
+  ) => Effect.Effect<PublishCliState, SetupError>;
+  readonly startLogin: (
+    isKeyring: boolean,
+    isNarrow: boolean
+  ) => Effect.Effect<PublishCliState, SetupError>;
   readonly unpublish: (
     projectId: string,
     publicationId: string
@@ -162,7 +181,43 @@ const removeApp = (
     });
   });
 
+const setupApi = {
+  applyBackend: Effect.fn("PublishService.applyBackend")(function* run(
+    mode: PublishBackendMode
+  ) {
+    const core = openCore();
+
+    return yield* attempt(() => core.backend.start(mode));
+  }),
+  cancelLogin: Effect.fn("PublishService.cancelLogin")(function* run() {
+    const core = openCore();
+
+    return yield* attempt(() => core.cli.cancelLogin());
+  }),
+  logout: Effect.fn("PublishService.logout")(function* run() {
+    const core = openCore();
+
+    return yield* attempt(() => core.cli.logout());
+  }),
+  setAccount: Effect.fn("PublishService.setAccount")(function* run(
+    accountId: string | null
+  ) {
+    const core = openCore();
+
+    return yield* attempt(() => core.cli.setAccount(accountId));
+  }),
+  startLogin: Effect.fn("PublishService.startLogin")(function* run(
+    isKeyring: boolean,
+    isNarrow: boolean
+  ) {
+    const core = openCore();
+
+    return yield* attempt(() => core.cli.startLogin(isKeyring, isNarrow));
+  }),
+};
+
 const makeApi = (cf: CfCliApi): PublishServiceApi => ({
+  ...setupApi,
   deleteComment: Effect.fn("PublishService.deleteComment")(function* run(
     projectId: string,
     publicationId: string,

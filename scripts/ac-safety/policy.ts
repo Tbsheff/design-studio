@@ -12,7 +12,7 @@ import {
   builtinToolNames,
   evaluateToolUse,
   type ToolPolicy,
-} from "../../src/server/agent/permissions.js";
+} from "../../src/server/platform/tool-policy/index.js";
 
 const work = realpathSync(mkdtempSync(path.join(os.tmpdir(), "ac policy ")));
 const workTree = path.join(work, "tree");

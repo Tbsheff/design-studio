@@ -12,9 +12,9 @@ import {
 } from "../../shared/contracts.js";
 import { inputIssues } from "../../shared/input-errors.js";
 import { kebabKeys } from "../../shared/style-keys.js";
-import { evaluateToolUse } from "../agent/permissions.js";
 import { SOURCE_DIR } from "../design-system/extract/draft.js";
 import { withPagePath } from "../export/source.js";
+import { evaluateToolUse } from "../platform/tool-policy/index.js";
 import type { ActivityDraft } from "./activity.js";
 import { EditError, type EditDeps } from "./edit-deps.js";
 import { describeElement } from "./element.js";

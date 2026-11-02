@@ -289,6 +289,8 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/server/platform/git/user-git.ts",
       "src/server/platform/process/worker-client.ts",
       "src/server/platform/resources/index.ts",
+      "src/server/platform/tool-policy/**",
+      "src/ui/platform/session.ts",
       "src/server/project-source/source.ts",
       "src/server/run-log/run-list.ts",
       SERVER_MAIN,
@@ -411,10 +413,6 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/server/agent/legacy/agent-ops.ts",
       "src/server/agent/legacy/direct-edit.ts",
     ],
-    rules: { "import/no-relative-parent-imports": "off" },
-  },
-  {
-    files: ["src/ui/platform/session.ts"],
     rules: { "import/no-relative-parent-imports": "off" },
   },
   {

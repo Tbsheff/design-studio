@@ -9,9 +9,9 @@ import type { Page } from "@playwright/test";
 import {
   compileTokens,
   parseTokenFile,
-} from "../src/server/design-system/compile";
-import { previewTokens } from "../src/server/design-system/token-preview";
-import { loadBridgeScript } from "../src/server/preview/bridge-bundle";
+  previewTokens,
+} from "../src/server/design-system/model/index";
+import { loadBridgeScript } from "../src/server/preview/index";
 import {
   PACK_FILE,
   TOKEN_PREVIEW_STYLE_ID,

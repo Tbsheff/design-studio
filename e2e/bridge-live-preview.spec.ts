@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
-import { loadBridgeScript } from "../src/server/preview/bridge-bundle";
+import { loadBridgeScript } from "../src/server/preview/index";
 
 const ORIGIN = "http://bridge-preview.localhost:4999";
 const TOKEN = "live-preview-token";

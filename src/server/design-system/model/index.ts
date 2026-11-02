@@ -71,6 +71,8 @@ export type {
   PackRegistryOptions,
 } from "../packs.js";
 
+export { previewTokens } from "../token-preview.js";
+
 export { readSnapshot } from "../token-snapshot.js";
 
 export type { FileSnapshot } from "../token-snapshot.js";

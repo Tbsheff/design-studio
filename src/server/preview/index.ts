@@ -32,6 +32,72 @@ import { warmComponentUsage } from "./usage-scope.js";
 import type { ViteManager, ViteTarget } from "./vite-manager.js";
 import { WatcherManager } from "./watcher.js";
 
+export { loadBridgeScript } from "./bridge-bundle.js";
+
+export { BrowserPool, elementClipsExpression, planTiles } from "./browser.js";
+
+export type {
+  InspectResult,
+  PeekOptions,
+  RenderCheckOptions,
+  TileRequest,
+  TileResult,
+} from "./browser.js";
+
+export {
+  NAVIGATION_TIMEOUT_MS,
+  SETTLE_TIMEOUT_MS,
+  chooseBackend,
+  createRenderBackend,
+} from "./render-backend.js";
+
+export type { RenderBackend, RenderPage } from "./render-backend.js";
+
+export { createElectronBackend } from "./render-electron.js";
+
+export { createPlaywrightBackend } from "./render-playwright.js";
+
+export {
+  captureFrame,
+  hideDevChrome,
+  pngDimensions,
+  selectorClipExpression,
+  waitForPage,
+} from "./capture.js";
+
+export type { Shot } from "./capture.js";
+
+export {
+  componentUsage,
+  resolveUsageFile,
+  warmComponentUsage,
+} from "./usage-scope.js";
+
+export type { UsageAt, UsageEdges } from "./usage-scope.js";
+
+export {
+  capFindings,
+  countSeverities,
+  duplicateFindings,
+  genericFindings,
+  navFindings,
+  placeholderFindings,
+  sortFindings,
+  tapFindings,
+} from "./quality.js";
+
+export { exploreScreens, replayExpression } from "./screens.js";
+
+export type { PageScreen, ScreenStep } from "./screens.js";
+
+export { startHtmlServer } from "./html-server.js";
+
+export type { HtmlServer, RootKind } from "./html-server.js";
+
+export { ViteManager } from "./vite-manager.js";
+
+export type { ViteTarget } from "./vite-manager.js";
+
 interface PreviewServiceDeps {
   config: ServerConfig;
   bus: EventBus;

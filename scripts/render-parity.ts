@@ -22,15 +22,15 @@ import pixelmatch from "pixelmatch";
 import { PNG } from "pngjs";
 
 import { startRenderHost, stopRenderHost } from "../e2e/support/render-host.js";
-import { BrowserPool } from "../src/server/preview/browser.js";
 import {
+  BrowserPool,
   NAVIGATION_TIMEOUT_MS,
   SETTLE_TIMEOUT_MS,
+  createElectronBackend,
+  createPlaywrightBackend,
   type RenderBackend,
   type RenderPage,
-} from "../src/server/preview/render-backend.js";
-import { createElectronBackend } from "../src/server/preview/render-electron.js";
-import { createPlaywrightBackend } from "../src/server/preview/render-playwright.js";
+} from "../src/server/preview/index.js";
 import type {
   QualityFinding,
   RenderCheckResult,

@@ -7,8 +7,7 @@ import path from "node:path";
 
 import { expect, test } from "@playwright/test";
 
-import { BrowserPool } from "../src/server/preview/browser";
-import { navFindings } from "../src/server/preview/quality";
+import { BrowserPool, navFindings } from "../src/server/preview/index";
 import { ROOT } from "./support/server";
 
 const FIXTURE = readFileSync(

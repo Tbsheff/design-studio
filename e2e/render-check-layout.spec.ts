@@ -7,7 +7,7 @@ import path from "node:path";
 
 import { expect, test } from "@playwright/test";
 
-import { BrowserPool } from "../src/server/preview/browser";
+import { BrowserPool } from "../src/server/preview/index";
 import { wantsElectronRenderer } from "./support/render-host";
 import { ROOT } from "./support/server";
 

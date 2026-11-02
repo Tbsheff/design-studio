@@ -4,7 +4,6 @@ import path from "node:path";
 import type { Hono } from "hono";
 
 import type { TelemetrySample } from "../../shared/contracts.js";
-import { discoverSkills } from "../agent/index.js";
 import { BadRequestError, assertSafeId } from "../store/errors.js";
 import type { AppContext } from "./app-context.js";
 import { parseJsonLines, readOptional } from "./app-project-files.js";
@@ -24,8 +23,6 @@ const registerStudioRoutes = (app: Hono, ctx: AppContext): void => {
   if (runtime !== null) {
     mountAll(app, runtime);
   }
-
-  app.get("/api/skills", async (c) => c.json(await discoverSkills()));
 
   app.post("/api/pick-folder", async (c) => {
     if (

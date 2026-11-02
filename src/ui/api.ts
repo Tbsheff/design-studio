@@ -99,7 +99,6 @@ import type {
   TextStyleCreateResult,
   TextStyleList,
 } from "../shared/text-styles";
-import type { VariantSupport } from "../shared/variants";
 
 export interface CanvasSnapshot {
   directionId: string;
@@ -107,6 +106,7 @@ export interface CanvasSnapshot {
   hash: string | null;
 }
 
+import { routes } from "../shared/actions/studio/routes.js";
 import type {
   DesignRulesState,
   DesignRulesTestResult,
@@ -122,7 +122,7 @@ import type {
   TweaksState,
   TweakValue,
 } from "../shared/tweaks";
-import { ApiError } from "./platform/http";
+import { ApiError, call } from "./platform/http";
 import type { WireFields } from "./platform/http";
 import { getSession } from "./session";
 
@@ -466,7 +466,10 @@ export const api = {
   },
   openPackEditor: (id: string) =>
     json<OpenPackEditorResult>("POST", `${pk(id)}/editor`),
-  listSkills: () => json<SkillCatalog>("GET", "/api/skills"),
+  listSkills: async (): Promise<SkillCatalog> =>
+    (await call<
+      typeof import("../shared/actions/studio/list-skills.js").listSkillsStudio
+    >(routes.listSkillsStudio, {})) as SkillCatalog,
   getDesignSystem: (pid: string, did: string) =>
     json<DesignSystemState>("GET", `${d(pid, did)}/design-system`),
   applyPack: async (
@@ -691,7 +694,7 @@ export const api = {
     json<{
       tailwind: TailwindOutcome | null;
       element: ElementSourceInfo | null;
-      variants?: VariantSupport;
+      variants?: import("../shared/variants").VariantSupport;
     }>(
       "GET",
       `${d(pid, did)}/classes?file=${enc(loc.file)}&line=${loc.line}&col=${loc.col}${variant ? `&variant=${enc(variant)}` : ""}`

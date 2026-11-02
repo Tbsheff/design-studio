@@ -24,6 +24,7 @@ import {
   sourcePagePath,
   type PortPlanInput,
 } from "../agent/index.js";
+import { bindMcpReadRuntime } from "../preview/mcp-read-core.js";
 import {
   BadRequestError,
   ConflictError,
@@ -106,7 +107,7 @@ function parsePaths(raw: unknown): string[] | null {
   return paths.length > 0 ? paths : null;
 }
 
-function parseQuery(raw: Record<string, unknown>): PortQuery {
+function parseQuery(raw: Readonly<Record<string, unknown>>): PortQuery {
   const sourceProjectId = text(raw.sourceProjectId);
 
   if (!sourceProjectId) {
@@ -369,21 +370,15 @@ function wantsFlow(query: PortQuery): boolean {
 }
 
 export function registerPortRoutes(app: Hono, deps: PortRouteDeps): void {
-  app.get("/api/port/plan", async (c) => {
-    const repeated = c.req.queries("paths");
+  bindMcpReadRuntime({
+    planPort: async (raw) => {
+      const query = parseQuery(Object.fromEntries(Object.entries(raw)));
+      const input = await planInput(deps, query);
 
-    const query = parseQuery({
-      ...c.req.query(),
-      ...(repeated && repeated.length > 1 ? { paths: repeated } : {}),
-    });
-
-    const input = await planInput(deps, query);
-
-    return c.json(
-      query.flow || query.paths
-        ? await buildFlowPlan({ ...input, paths: query.paths })
-        : await buildPortPlan(input)
-    );
+      return query.flow || query.paths
+        ? buildFlowPlan({ ...input, paths: query.paths })
+        : buildPortPlan(input);
+    },
   });
 
   app.post("/api/port/start", async (c) => {

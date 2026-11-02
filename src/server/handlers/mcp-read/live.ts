@@ -1,5 +1,7 @@
 import { Layer } from "effect";
 
-const McpReadLive = Layer.empty;
+import { McpReadStore } from "../../preview/mcp-read-store.js";
+
+const McpReadLive = Layer.mergeAll(McpReadStore.layer);
 
 export { McpReadLive };

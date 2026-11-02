@@ -12,7 +12,6 @@ import {
   type VariationBriefsResult,
   type VariationStartResult,
 } from "../../shared/contracts.js";
-import type { ElementVariantInfo } from "../../shared/element-variants.js";
 import { levelOf, resolveRunConfig } from "../../shared/run-levels.js";
 import { readDesignSystemState } from "../design-system/state.js";
 import {
@@ -29,14 +28,10 @@ import {
   validateUserBriefs,
   type BriefGenerator,
 } from "./briefs.js";
+import { listElementVariants } from "./element-variants.js";
 import { createGroupRegistry, fanOut, groupDirections } from "./fanout.js";
 import { buildReference, labelOf, mixPrompt } from "./reference.js";
-import {
-  buildScope,
-  keepElementVariant,
-  variantInfo,
-  type KeepDeps,
-} from "./scope.js";
+import { buildScope, keepElementVariant, type KeepDeps } from "./scope.js";
 
 interface VariationRouteDeps {
   config: ServerConfig;
@@ -346,20 +341,4 @@ export function registerVariationRoutes(
     }
     return c.json({ canceled });
   });
-}
-
-export async function listElementVariants(
-  project: Project,
-  runner: Pick<AgentRunner, "isRunning">
-): Promise<ElementVariantInfo[]> {
-  const items = await Promise.all(
-    project.directions.map((direction) =>
-      variantInfo(
-        project,
-        direction,
-        runner.isRunning(project.id, direction.id)
-      )
-    )
-  );
-  return items.filter((item): item is ElementVariantInfo => item !== null);
 }

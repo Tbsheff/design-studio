@@ -1,0 +1,540 @@
+{
+  "tools": [
+    {
+      "name": "list_projects",
+      "description": "List the design projects in Design Studio with their directions and newest version ids.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "search_projects",
+      "description": "Find projects and app routes by text, like the studio Cmd+K palette: fuzzy match on the project name and app folder, and on the routes of the matched attached apps (and of projectId when given). Each project has type (next, vite, html, react, design-system), place, updatedAt, openedAt (last opened in the studio, or null) and health (level ok, busy, warn or off with a note such as \"Needs install\" or \"Dev server ready\"; null for prototypes). A query that starts with \"/\" searches the routes of every attached app. An empty query lists recent projects: last opened first, last edited when never opened. Read only.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "maxLength": 100,
+            "description": "Search text, for example \"bona\" or \"/f2f\". Leave out for recent projects."
+          },
+          "projectId": {
+            "type": "string",
+            "description": "Project id from list_projects whose routes are always searched, like the open project in the studio."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "description": "Most projects to return. Default 20."
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "list_versions",
+      "description": "List the saved versions of one direction, newest first.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "description": "Project id from list_projects"
+          },
+          "directionId": {
+            "type": "string",
+            "description": "Direction id. Leave out for the main direction."
+          }
+        },
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "get_frame_html",
+      "description": "Get the HTML of one page. Static HTML projects return the source file. React projects return the rendered DOM.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "description": "Project id from list_projects"
+          },
+          "versionId": {
+            "type": "string",
+            "description": "Version id. Leave out for the newest saved version of the main direction."
+          },
+          "directionId": {
+            "type": "string",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "path": {
+            "type": "string",
+            "description": "Page path inside the project, for example \"about.html\". Leave out for the entry page."
+          }
+        },
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "get_tokens",
+      "description": "Get the design tokens. A studio design system gives tokens.css and each token with its CSS variable and values. An imported app folder gives the tokens of its own CSS file (Tailwind @theme, :root and .dark): each token with its declared value, resolved value, dark value, file and line.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "description": "Project id from list_projects"
+          },
+          "versionId": {
+            "type": "string",
+            "description": "Version id. Leave out for the newest saved version of the main direction."
+          },
+          "directionId": {
+            "type": "string",
+            "description": "Direction id. Leave out for the main direction."
+          }
+        },
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "get_design_md",
+      "description": "Get the DESIGN.md rules of the project.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "description": "Project id from list_projects"
+          },
+          "versionId": {
+            "type": "string",
+            "description": "Version id. Leave out for the newest saved version of the main direction."
+          },
+          "directionId": {
+            "type": "string",
+            "description": "Direction id. Leave out for the main direction."
+          }
+        },
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "get_screenshot",
+      "description": "Get a PNG screenshot of a page at a viewport size, or of one canvas frame (frameId sets the page, the direction, the frame state and the size; pass width to shoot that frame at another width), or of one element on it (element: layer id or CSS selector).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "description": "Project id from list_projects"
+          },
+          "versionId": {
+            "type": "string",
+            "description": "Version id. Leave out to shoot the current files of the direction, unsaved edits included. Pass the head version id for the saved state."
+          },
+          "directionId": {
+            "type": "string",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "path": {
+            "type": "string",
+            "description": "Page path inside the project, for example \"about.html\". Leave out for the entry page."
+          },
+          "frameId": {
+            "type": "string",
+            "description": "Canvas frame id or @label from canvas_list. It sets the page, the direction, the frame state (signed in, empty …) and the size; width or height given with it render that frame at the other size, for example width 390 for a mobile shot. Leave out to use path, width and height."
+          },
+          "width": {
+            "type": "integer",
+            "minimum": 320,
+            "maximum": 2560,
+            "description": "Viewport width in px. Default 1440, or the frame width with frameId."
+          },
+          "height": {
+            "type": "integer",
+            "minimum": 320,
+            "maximum": 2000,
+            "description": "Viewport height in px. Default 900, or the frame height with frameId."
+          },
+          "fullPage": {
+            "type": "boolean",
+            "description": "Capture the full page height, up to 6000 px. Default false."
+          },
+          "element": {
+            "type": "string",
+            "maxLength": 300,
+            "description": "Layer id from get_layers (such as \"e0k3pz\") or a CSS selector: crop the shot to this element plus padding."
+          },
+          "padding": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 200,
+            "description": "Space around the element crop in px. Default 16."
+          }
+        },
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "list_variants",
+      "description": "List the element variants of a project (\"Try variants\" in the studio): group id, label, title, direction id, file and line range, and state (running, ready, unchanged, rejected with the reason, kept or discarded). Read only. Only the user starts variant runs, in the studio; keep_variant applies a ready one.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "description": "Project id from list_projects"
+          }
+        },
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "list_routes",
+      "description": "List the routes of an attached Next.js app from its app router (app/**/page.tsx): route, page file, dynamic, route group. Pages hold 50 routes; pass nextCursor as cursor for the next page.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "description": "Project id from list_projects"
+          },
+          "query": {
+            "type": "string",
+            "maxLength": 100,
+            "description": "Search text matched against the route, page file and route group, for example \"f2f\" or \"admin/users\"."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 500,
+            "description": "Routes per page. Default 50."
+          },
+          "cursor": {
+            "type": "string",
+            "description": "nextCursor from the previous page."
+          }
+        },
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "list_found_apps",
+      "description": "Read only. List the app folders Design Studio finds in the home folder, the same list as \"Found on this Mac\" on Home: ~/Documents, ~/code, ~/dev, ~/Projects and ~/Developer, two folders deep, with kind (next, vite or html), the Next.js apps of a monorepo (apps), and projectId when the folder is already a project. The scan never leaves the home folder, stops after 1 second (truncated: true) and is cached for a minute; fresh: true scans again. Pass a path to open_folder or attach_app to open one.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "fresh": {
+            "type": "boolean",
+            "description": "Scan again instead of using the cached list. Default false."
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "list_files",
+      "description": "List the source files of a version.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "description": "Project id from list_projects"
+          },
+          "versionId": {
+            "type": "string",
+            "description": "Version id. Leave out for the newest saved version of the main direction."
+          },
+          "directionId": {
+            "type": "string",
+            "description": "Direction id. Leave out for the main direction."
+          }
+        },
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "read_file",
+      "description": "Read one text source file of a version.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "description": "Project id from list_projects"
+          },
+          "versionId": {
+            "type": "string",
+            "description": "Version id. Leave out for the newest saved version of the main direction."
+          },
+          "directionId": {
+            "type": "string",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "path": {
+            "type": "string",
+            "description": "File path from list_files"
+          }
+        },
+        "required": ["projectId", "path"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "get_run_context",
+      "description": "Read the repo context that every studio run of this direction gets: the AGENTS.md, CLAUDE.md, DESIGN.md and PRODUCT.md of the app folder and the workspace root, cut to about 32 KB in total, with lines that look like secrets left out. Returns workspaceRoot, appDir, files (path, scope app or workspace, bytes, sentBytes, use: full, cut, design_md (the project DESIGN.md, sent as its own block), duplicate, import_only or too_large) and text, the exact <repo_context> block of the run message. Only attached apps have repo context. Read only; it does not start a run.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          }
+        },
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "app_doctor",
+      "description": "Read only. For an attached app: name the cause when the dev server fails or a frame shows an error overlay, with the same server code as the doctor card in the studio: env-validation (and the env key that skips it, such as SKIP_ENV_VALIDATION=true), missing-env-file, port-in-use, install (with the command) and auth-redirect. Each problem has a kind; pass it to apply_app_fix when it has a fix. The doctor reads the dev server log of the current start and one request to the app root. Fixes only set env keys the studio found in the app env schema or .env.example (with the example values), copy .env.example, switch to a running dev server or restart; they never write secret values.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "fresh": {
+            "description": "Request the app root again before the check. Default false: use the last request.",
+            "type": "boolean"
+          }
+        },
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "get_port_plan",
+      "description": "Plan how to move an HTML prototype page into an attached app as one React route, the same plan the studio \"Move to app\" dialog puts in its run. Returns the page sections, the step list of a flow, repeated blocks (cards) with their headings, headings, actions, images, links, the CSS tokens it uses mapped to the app tokens, counts of inline styles and raw colors, parts to leave out (hidden or absolute decorative elements), and kit: the target app components that fit (Card, Badge, Button and others) with their import line and why. With route it also returns the route file and routeExists. With flow: true or paths it plans a whole flow instead: pages in flow order, each with its route under the base route, route file, routeExists and its own plan; links: the link map from each prototype href (anchor, form or script) to its app path with the query kept; unselected and unreached pages. Read only: it never starts a run; write the routes yourself from the plan with write_file or insert_jsx.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "The prototype project id (an HTML project), from list_projects."
+          },
+          "path": {
+            "description": "HTML page in the prototype project, for example \"index.html\" or \"time.html\". Leave out for index.html. With flow or paths it is the first page of the flow, which gets the base route.",
+            "type": "string",
+            "maxLength": 300
+          },
+          "paths": {
+            "description": "Port these pages of the prototype as one flow, for example [\"index.html\", \"time.html\"]. They come back in flow order.",
+            "minItems": 1,
+            "maxItems": 8,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 300
+            }
+          },
+          "flow": {
+            "description": "true: follow the links from path (anchors, form actions and page names in scripts) and plan every page of the flow.",
+            "type": "boolean"
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "targetProjectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "The attached app project id to port into (a project made with Open app), from list_projects. Leave out to read the page only."
+          },
+          "route": {
+            "description": "The new app route, for example \"/classes\" or \"/(design)/classes\" to use a route group layout. Gives the route file and checks that the route is new. With flow or paths it is the base route: the first page gets it and each other page gets <route>/<page name>.",
+            "type": "string",
+            "maxLength": 200
+          }
+        },
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "get_component_usage",
+      "description": "List the app routes that render one source file, directly from the page or through a layout or any import chain, the same count the studio inline prompt (Mod+I) shows as \"All uses (N)\". Returns file, component (its exported name) and routes ({route, file}). Use it before an edit to a shared component: with more than one route, change the call site (a prop or className) for one use, or change the file for all uses and name the routes. With usedAt or route it also returns callSite {file, kind: page | component | layout, routes, routeLocal, pageFile}: kind layout means a layout or template renders the use, and routeLocal false means no change can stay on one route, because a page cannot pass props to its parent layout, so any edit there changes all callSite.routes routes. Prototype (HTML) projects return no routes. Read only.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "file": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300,
+            "description": "Source file of a component or layout, relative to the app folder or the project folder, for example \"components/auth/auth-background-panel.tsx\". The file part of a data-studio-loc or a get_layers file:line:col works."
+          },
+          "usedAt": {
+            "description": "File of the call site that renders the selected use (the usedAt file of a selection), for example \"app/(auth)/layout.tsx\". With it the result has callSite.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300
+          },
+          "route": {
+            "description": "Route of the frame the use is on, for example \"/sign-in\". With it the result has callSite and its pageFile.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300
+          }
+        },
+        "required": ["projectId", "file"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    }
+  ],
+  "samples": [
+    {
+      "tool": "get_component_usage",
+      "args": {
+        "projectId": "p_demo01",
+        "file": "components/auth/auth-background-panel.tsx"
+      },
+      "result": {
+        "file": "components/auth/auth-background-panel.tsx",
+        "component": "AuthBackgroundPanel",
+        "routes": [
+          {
+            "route": "/sign-in",
+            "file": "app/(auth)/sign-in/page.tsx"
+          },
+          {
+            "route": "/sign-up",
+            "file": "app/(auth)/sign-up/page.tsx"
+          }
+        ]
+      }
+    },
+    {
+      "tool": "app_doctor",
+      "args": {
+        "projectId": "p_demo01"
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Dev server: failed (exit 1).\n\nenv-validation: The app env schema rejected DATABASE_URL. Set SKIP_ENV_VALIDATION=true to skip it."
+          }
+        ]
+      }
+    }
+  ]
+}

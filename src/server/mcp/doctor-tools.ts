@@ -1,11 +1,6 @@
 import { z } from "zod";
 
-import {
-  describeDoctor,
-  DOCTOR_NOTE,
-  type AppFixResult,
-} from "../../shared/app-doctor.js";
-import type { DoctorView } from "../http/doctor-routes.js";
+import { DOCTOR_NOTE, type AppFixResult } from "../../shared/app-doctor.js";
 import { loadTarget, studioCall } from "./edit-deps.js";
 import { defineTool, projectId } from "./edit-kit.js";
 
@@ -16,50 +11,6 @@ const KINDS = [
   "install",
   "auth-redirect",
 ] as const;
-
-function statusLine(view: DoctorView): string {
-  const status = view.status;
-  return `Dev server: ${status.state}${status.upstream ? ` at ${status.upstream}` : ""}${status.message ? ` (${status.message})` : ""}.`;
-}
-
-const appDoctor = defineTool(
-  "app_doctor",
-  z
-    .object({
-      projectId,
-      fresh: z
-        .boolean()
-        .optional()
-        .describe(
-          "Request the app root again before the check. Default false: use the last request."
-        ),
-    })
-    .strict(),
-  {
-    title: "App doctor",
-    description: `Read only. For an attached app: name the cause when the dev server fails or a frame shows an error overlay, with the same server code as the doctor card in the studio: env-validation (and the env key that skips it, such as SKIP_ENV_VALIDATION=true), missing-env-file, port-in-use, install (with the command) and auth-redirect. Each problem has a kind; pass it to apply_app_fix when it has a fix. ${DOCTOR_NOTE}`,
-    readOnly: true,
-    idempotent: true,
-  },
-  async (deps, input) => {
-    const { project } = await loadTarget(deps, input.projectId);
-    const view = await studioCall<DoctorView>(
-      deps,
-      "GET",
-      `/api/projects/${encodeURIComponent(project.id)}/app/doctor${input.fresh ? "?fresh=1" : ""}`
-    );
-    return {
-      result: {
-        content: [
-          {
-            type: "text",
-            text: `${statusLine(view)}\n\n${describeDoctor(view.doctor)}`,
-          },
-        ],
-      },
-    };
-  }
-);
 
 const applyAppFix = defineTool(
   "apply_app_fix",
@@ -92,4 +43,4 @@ const applyAppFix = defineTool(
   }
 );
 
-export const DOCTOR_TOOLS = [appDoctor, applyAppFix];
+export const DOCTOR_TOOLS = [applyAppFix];

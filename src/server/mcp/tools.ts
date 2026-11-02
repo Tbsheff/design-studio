@@ -39,7 +39,7 @@ import {
 } from "../export/source.js";
 import { noteRenderedPage } from "../preview/render-wait.js";
 import { forcedOf } from "../state-styles/forced-store.js";
-import { listElementVariants } from "../variations/routes.js";
+import { listElementVariants } from "../variations/element-variants.js";
 import {
   isLayerRef,
   LayerRefError,

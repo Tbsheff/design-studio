@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 
-import { STUDIO_TOKEN_HEADER } from "../../shared/contracts";
+import type { WireInput } from "../../shared/actions/_core/action.js";
+import type { getUsageMcpRead } from "../../shared/actions/mcp-read/get-usage.js";
+import { routes } from "../../shared/actions/mcp-read/routes.js";
 import {
   isSharedLayout,
   type ComponentUsage,
   type EditScope,
   type EditScopeChoice,
 } from "../../shared/usage-scope";
-import { getSession } from "../session";
+import { call } from "../platform/http";
 import { uiStore } from "../storage";
 import type { InlinePromptView } from "../useInlinePrompt";
 import { Icon } from "./Icon";
@@ -23,15 +25,35 @@ interface Props {
   frame: { width: number; height: number };
 }
 
-function usageQuery(
+interface UsageFields {
+  file: string;
+  projectId: string;
+  route?: string;
+  usedAt?: string;
+}
+
+function usageInput(
+  projectId: string,
   file: string,
   usedAt: string | null,
   route: string | null
-): string {
-  const query = new URLSearchParams({ file });
-  if (usedAt) query.set("usedAt", usedAt);
-  if (route) query.set("route", route);
-  return query.toString();
+): UsageFields {
+  const fields: UsageFields = { file, projectId };
+  if (usedAt) fields.usedAt = usedAt;
+  if (route) fields.route = route;
+  return fields;
+}
+
+async function readUsage(fields: UsageFields): Promise<ComponentUsage | null> {
+  try {
+    const data: unknown = await call(
+      routes.getUsageMcpRead,
+      fields as WireInput<typeof getUsageMcpRead>
+    );
+    return data as ComponentUsage;
+  } catch {
+    return null;
+  }
 }
 
 function useUsage(
@@ -44,18 +66,15 @@ function useUsage(
     setUsage(null);
     const projectId = uiStore.get().activeProjectId;
     if (!file || !projectId) return;
-    const abort = new AbortController();
-    fetch(
-      `/api/projects/${encodeURIComponent(projectId)}/usage?${usageQuery(file, usedAt, route)}`,
-      {
-        headers: { [STUDIO_TOKEN_HEADER]: getSession().token },
-        signal: abort.signal,
-      }
-    )
-      .then((res) => (res.ok ? (res.json() as Promise<ComponentUsage>) : null))
-      .then((data) => setUsage(data))
-      .catch(() => undefined);
-    return () => abort.abort();
+    let isLive = true;
+    const apply = async (): Promise<void> => {
+      const data = await readUsage(usageInput(projectId, file, usedAt, route));
+      if (isLive) setUsage(data);
+    };
+    void apply();
+    return () => {
+      isLive = false;
+    };
   }, [file, usedAt, route]);
   return usage;
 }

@@ -4,19 +4,16 @@ import { copyFile } from "node:fs/promises";
 import type { Context, Hono } from "hono";
 
 import type {
-  AppDoctorResult,
   AppFixResult,
   DoctorCause,
   DoctorCauseKind,
 } from "../../shared/app-doctor.js";
-import type { AppServerStatus, Project } from "../../shared/contracts.js";
-import {
-  BadRequestError,
-  ConflictError,
-  NotFoundError,
-} from "../store/errors.js";
+import type { Project } from "../../shared/contracts.js";
+import { appProject, doctorControl } from "../preview/doctor-read.js";
+import { bindMcpReadRuntime } from "../preview/mcp-read-core.js";
+import { BadRequestError, ConflictError } from "../store/errors.js";
 import type { StudioProjectStore } from "../store/projects.js";
-import type { AppControl, PreviewService } from "../types.js";
+import type { PreviewService } from "../types.js";
 
 export interface DoctorRouteDeps {
   projects: StudioProjectStore;
@@ -31,36 +28,6 @@ const KINDS: DoctorCauseKind[] = [
   "install",
   "auth-redirect",
 ];
-
-export interface DoctorView {
-  status: AppServerStatus;
-  doctor: AppDoctorResult;
-}
-
-async function appProject(
-  projects: StudioProjectStore,
-  pid: string
-): Promise<Project> {
-  const project = await projects.get(pid);
-
-  if (!project.app) {
-    throw new NotFoundError(`project ${pid} is not an attached app`);
-  }
-
-  return project;
-}
-
-function control(
-  preview: PreviewService
-): Required<Pick<AppControl, "doctor">> & AppControl {
-  const apps = preview.apps;
-
-  if (!apps?.doctor) {
-    throw new BadRequestError("app servers are not available");
-  }
-
-  return apps as Required<Pick<AppControl, "doctor">> & AppControl;
-}
 
 async function reattach(
   deps: DoctorRouteDeps,
@@ -83,7 +50,7 @@ async function reattach(
     env: patch.env ?? app.env ?? {},
   });
 
-  const apps = control(deps.preview);
+  const apps = doctorControl(deps.preview);
   apps.forget(updated.id);
   void apps.restart(updated).catch(() => undefined);
 }
@@ -117,7 +84,7 @@ async function applyFix(
         );
       }
     );
-    void control(deps.preview)
+    void doctorControl(deps.preview)
       .restart(project)
       .catch(() => undefined);
 
@@ -130,23 +97,11 @@ async function applyFix(
     return `The studio now uses the dev server at ${fix.url}.`;
   }
 
-  void control(deps.preview)
+  void doctorControl(deps.preview)
     .restart(project)
     .catch(() => undefined);
 
   return "The dev server restarts on a free port.";
-}
-
-export async function readDoctor(
-  deps: DoctorRouteDeps,
-  pid: string,
-  fresh: boolean
-): Promise<DoctorView> {
-  const project = await appProject(deps.projects, pid);
-  const apps = control(deps.preview);
-  const doctor = await apps.doctor(project, fresh);
-
-  return { status: apps.status(project), doctor };
 }
 
 export async function fixApp(
@@ -159,7 +114,7 @@ export async function fixApp(
   }
 
   const project = await appProject(deps.projects, pid);
-  const doctor = await control(deps.preview).doctor(project, false);
+  const doctor = await doctorControl(deps.preview).doctor(project, false);
   const cause = doctor.causes.find((item) => item.kind === kind);
 
   if (!cause) {
@@ -172,11 +127,7 @@ export async function fixApp(
 }
 
 export function registerDoctorRoutes(app: Hono, deps: DoctorRouteDeps): void {
-  app.get("/api/projects/:pid/app/doctor", async (c) =>
-    c.json(
-      await readDoctor(deps, c.req.param("pid"), c.req.query("fresh") === "1")
-    )
-  );
+  bindMcpReadRuntime({ preview: deps.preview, projects: deps.projects });
   app.post("/api/projects/:pid/app/doctor/fix", async (c) =>
     c.json(
       await fixApp(deps, c.req.param("pid"), (await deps.readBody(c)).kind)

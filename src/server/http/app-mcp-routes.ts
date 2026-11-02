@@ -48,12 +48,14 @@ const registerAppMcpRoutes = (
     runtime,
   });
   slot.routes = mcpRoutes;
-  registerStreamRoutes(app, {
-    bus,
-    projects,
-    approvals: mcpRoutes.approvalFeed,
-    track: streamTracker,
-  });
+  if (runtime !== null) {
+    registerStreamRoutes(app, {
+      approvals: mcpRoutes.approvalFeed,
+      projects,
+      runtime,
+      track: streamTracker,
+    });
+  }
   return mcpRoutes;
 };
 

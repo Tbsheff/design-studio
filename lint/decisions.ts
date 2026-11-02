@@ -279,7 +279,7 @@ export const decisionOverrides: OxlintOverride[] = [
   },
   {
     files: [
-      "src/server/events/{bus,event-bus,event-core,event-log,event-writer}.ts",
+      "src/server/events/{bus,event-bus,event-core,event-log,event-writer,render-tracker,save-lanes,save-queue}.ts",
       "src/server/handlers/events/live.ts",
       "src/server/events/change-feed.ts",
       "src/server/events/planned-feed.ts",

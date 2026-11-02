@@ -5,6 +5,7 @@ import type { ApprovalCard } from "../../../shared/actions/_core/approval-card.j
 import type { StudioError } from "../../../shared/actions/_core/errors/all.js";
 import { BadRequest } from "../../../shared/actions/_core/errors/bad-request.js";
 import type { NotFound } from "../../../shared/actions/_core/errors/not-found.js";
+import { EventBus } from "../../events/event-bus.js";
 import { Authorizer } from "../../store/authorizer.js";
 import { LocalOrgScope, scopeOf } from "../../store/local-org-scope.js";
 import { LocalPrincipal } from "../../store/local-principal.js";
@@ -22,7 +23,7 @@ interface Decoded {
 
 type Gate = (card: ApprovalCard) => Effect.Effect<void, StudioError>;
 
-type RunNeeds = AnyAccess | Authorizer | ProjectAccess;
+type RunNeeds = AnyAccess | Authorizer | EventBus | ProjectAccess;
 
 type Proven = Effect.Effect<object, StudioError>;
 
@@ -59,6 +60,24 @@ const checkScope = (
     const access = yield* ProjectAccess;
 
     yield* access.visible(input.projectId);
+  });
+
+const announceDone = (
+  action: AnyAction,
+  input: Decoded
+): Effect.Effect<void, never, EventBus> =>
+  Effect.gen(function* announce() {
+    if (action.access === "read") {
+      return;
+    }
+
+    const bus = yield* EventBus;
+
+    yield* bus.announce({
+      actionId: action.id,
+      invalidates: [...action.invalidates],
+      projectId: input.projectId ?? null,
+    });
   });
 
 const previewOf = <Action extends AnyAction>(
@@ -103,7 +122,11 @@ const makeRunner = <Action extends AnyAction>(
         yield* callGate(yield* preview(input));
       }
 
-      return yield* handle(input);
+      const output = yield* handle(input);
+
+      yield* announceDone(action, input);
+
+      return output;
     });
 
     const scoped = program.pipe(

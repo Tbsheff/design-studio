@@ -6,6 +6,7 @@ import type {
   Version,
   VersionMeta,
 } from "../../../shared/contracts.js";
+import { bindSaveLanes } from "../../events/save-lanes.js";
 import { logError } from "../../platform/logger/index.js";
 import type { VersionStore } from "../../types.js";
 
@@ -254,6 +255,13 @@ const withSaveQueue = (store: VersionStore): VersionStore => {
 
   return proxy;
 };
+
+bindSaveLanes({
+  failures: takeSaveFailures,
+  isPending: isPendingVersion,
+  savedId: savedVersionId,
+  settled: savesSettled,
+});
 
 export {
   PENDING_VERSION,

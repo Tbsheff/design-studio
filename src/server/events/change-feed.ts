@@ -1,5 +1,7 @@
 import path from "node:path";
 
+import { Context, Effect, Layer } from "effect";
+
 import { logError } from "../platform/logger/index.js";
 
 interface SourceFileChange {
@@ -89,7 +91,51 @@ const emitSourceChange = (change: SourceChange): void => {
   }
 };
 
+interface ChangeFeedApi {
+  readonly emit: (change: SourceChange) => Effect.Effect<void>;
+  readonly noteWrite: (
+    workTree: string,
+    relatives: readonly string[],
+    complete: boolean
+  ) => Effect.Effect<void>;
+  readonly since: (root: string, stamp: number) => readonly string[] | null;
+  readonly stamp: (root: string) => number;
+  readonly subscribe: (listener: Listener) => Effect.Effect<() => void>;
+}
+
+class ChangeFeed extends Context.Service<ChangeFeed, ChangeFeedApi>()(
+  "design-studio/events/ChangeFeed"
+) {
+  declare public readonly access: "write";
+
+  public static readonly layer = Layer.succeed(
+    ChangeFeed,
+    ChangeFeed.of({
+      emit: Effect.fn("ChangeFeed.emit")(function* run(change: SourceChange) {
+        yield* Effect.sync(() => emitSourceChange(change));
+      }),
+      noteWrite: Effect.fn("ChangeFeed.noteWrite")(function* run(
+        workTree: string,
+        relatives: readonly string[],
+        complete: boolean
+      ) {
+        yield* Effect.sync(() =>
+          noteTreeWrite(workTree, [...relatives], complete)
+        );
+      }),
+      since: treeChangesSince,
+      stamp: treeStamp,
+      subscribe: Effect.fn("ChangeFeed.subscribe")(function* run(
+        listener: Listener
+      ) {
+        return yield* Effect.sync(() => onSourceChange(listener));
+      }),
+    })
+  );
+}
+
 export {
+  ChangeFeed,
   emitSourceChange,
   noteTreeChange,
   noteTreeWrite,
@@ -98,4 +144,4 @@ export {
   treeStamp,
 };
 
-export type { SourceChange, SourceFileChange };
+export type { ChangeFeedApi, SourceChange, SourceFileChange };

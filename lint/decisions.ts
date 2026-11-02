@@ -430,6 +430,7 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/server/mcp/fill-tools.ts",
       "src/server/agent/fill-tool.ts",
       "src/server/fill/deps.ts",
+      "src/server/{spacing/deps,mcp/spacing-tools,agent/spacing-tool}.ts",
       "src/server/mcp/copy-code-tools.ts",
       "src/server/agent/copy-code-tool.ts",
       "src/server/export/copy-handler.ts",

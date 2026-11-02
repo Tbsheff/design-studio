@@ -93,6 +93,10 @@ export const TOOL_SHORT = {
     "Read only. The fill of one element: solid color or linear or radial gradient stops {color, token, position}, with blend modes.",
   set_fill:
     "Set a solid, linear or radial fill (2-6 stops, color or token) with an optional blend mode on one element.",
+  get_spacing:
+    "Read only. The box model of one element: padding, margin and gap per side with css, px, token and class, and its rect.",
+  set_spacing:
+    "Set padding, margin, gap, row-gap or column-gap for one side, an axis or all sides to px or a token, as scale classes or CSS.",
   copy_code:
     "Read only. Copy one element as html, tailwind or a react JSX component with kit components and import lines.",
   set_motion:
@@ -204,6 +208,10 @@ export const TOOL_HELP: Record<
     "Read only. Read the fill of the target with the same server code as the MCP get_fill tool: a solid color or a linear or radial gradient parsed into stops {color, token, position %}, the angle or form and center, and any mix-blend-mode or background-blend-mode, from its Tailwind classes or its inline style.",
   set_fill:
     "Set the fill of the target with the same server code as the MCP set_fill tool. type solid takes color or token; type linear takes angle (degrees, default 180) and 2-6 stops; type radial takes form (circle or ellipse), at and 2-6 stops; each stop is {color | token, position %}. blendMode with blendProperty (mix-blend-mode by default, or background-blend-mode) sets a blend. In Tailwind v4 it writes bg-linear-<angle> or bg-radial with from-*, via-* and to-* classes and positions, with token names when a stop matches a color token (more stops or Tailwind v3: one bg-[linear-gradient(..)] class); otherwise it writes background-image linear-gradient() or radial-gradient() with var() for token stops.",
+  get_spacing:
+    "Read only. Read the box model of the target with the same server code as the MCP get_spacing tool: padding and margin on each side and the row and column gap, each with its css value, px, spacing token and Tailwind class, and the element rect on the live page when you pass targetSelector.",
+  set_spacing:
+    "Set one spacing value on the target with the same server code as the MCP set_spacing tool. property is padding, margin, gap, row-gap or column-gap; side is all, x, y, top, right, bottom or left (gap takes all, x or y); pass value in px (negative only for margin) or token (a scale step such as 4, or a theme token such as md). snap: true snaps value to the nearest token. In Tailwind it writes scale classes (p-4, px-6, gap-3, -mt-2) and an arbitrary value only when no step matches; otherwise it writes CSS with var() for tokens.",
   set_motion:
     "Set the motion of the target with the same server code as the MCP set_motion tool. kind transition takes properties, durationMs, easing (linear, ease, ease-in, ease-out, ease-in-out or cubic-bezier(..)), delayMs, and state (hover, focus or active) with end values. kind entrance takes preset (fade, slide-up, slide-down, scale-in, blur-in), durationMs, delayMs and staggerMs for children. kind none removes the motion. In Tailwind it writes motion-safe classes (tw-animate-css or tailwindcss-animate classes when the project has one); otherwise it writes @keyframes once and the rules in a studio motion style block (HTML) or the app CSS entry. Every rule has a prefers-reduced-motion guard.",
   clear_text:

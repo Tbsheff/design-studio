@@ -34,6 +34,8 @@ const CORE_TOOLS = [
   "set_motion",
   "get_fill",
   "set_fill",
+  "get_spacing",
+  "set_spacing",
   "copy_code",
   "diff_versions",
   "list_comments",

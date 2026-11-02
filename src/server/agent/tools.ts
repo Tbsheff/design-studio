@@ -172,6 +172,12 @@ import {
 } from "./screens.js";
 import { runSelectMatching, selectMatchingShape } from "./select-tool.js";
 import {
+  getSpacingInput,
+  runGetSpacing,
+  runSetSpacing,
+  setSpacingInput,
+} from "./spacing-tool.js";
+import {
   findStylesShape,
   replaceStyleShape,
   runFindStyles,
@@ -1357,6 +1363,21 @@ export async function createStudioMcpServer(
     withLayerIds(deps, (args) => runSetFill(deps, args))
   );
 
+  const getSpacingTool = tool(
+    "get_spacing",
+    TOOL_SHORT.get_spacing,
+    getSpacingInput,
+    withLayerIds(deps, (args) => runGetSpacing(deps, args)),
+    { annotations: { readOnlyHint: true } }
+  );
+
+  const setSpacingTool = tool(
+    "set_spacing",
+    TOOL_SHORT.set_spacing,
+    setSpacingInput,
+    withLayerIds(deps, (args) => runSetSpacing(deps, args))
+  );
+
   const copyCodeTool = tool(
     "copy_code",
     TOOL_SHORT.copy_code,
@@ -1570,6 +1591,8 @@ export async function createStudioMcpServer(
     setMotionTool,
     getFillTool,
     setFillTool,
+    getSpacingTool,
+    setSpacingTool,
     copyCodeTool,
     clearTextTool,
     listComponentsTool,

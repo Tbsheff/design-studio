@@ -8,7 +8,7 @@ Copy the golden file for each kind of code. `docs/patterns.md` lists them. Never
 `review-only` marks a rule that no tool checks. A reviewer checks it.
 `(lands with <wave>)` marks a rule whose check, file or command is not on `main` yet. Follow the rule now. Do not run a command that is marked this way until its wave lands.
 Waves: W8-rename (the naming rename, first slice of W8), S4a (Effect runtime), S4b (action core), S4s (stamp and check-actions), M9b (the lint merge step after S4s), S4c (publish), Auth S1 (tenancy), S5-events, S5-mcp-life, S5-direct-edit, S6a (UI platform), Auth S6c (real permissions), the layout wave (moves the root to `apps/desktop` and makes `packages/common/actions` and `packages/ui`).
-Fast path for a new endpoint (lands with S4s): `pnpm run new:action ...`, fill the definition, fill the handler, remove `NotImplemented`, run `pnpm exec tsx scripts/call-action.ts <id> '<json>'`. The stamp does every other step.
+Fast path for a new action (lands with S4s): `pnpm run new:action ...`, fill the definition, fill the handler, remove `NotImplemented`, run `pnpm exec tsx scripts/call-action.ts <id> '<json>'`. The stamp does every other step.
 
 ## 0. Naming
 
@@ -50,7 +50,7 @@ The rules are in `.claude/goal/patterns/naming.md` (D44). One word means one thi
 - Let `handlers/<domain>/**` import only `handlers/_core`, service `index.ts` files, platform and `actions`. A domain never imports another domain -> check-actions (import scan) (lands with S4s). (W14)
 
 - Put npm-publishable code only in `packages/ui` or `packages/common/<name>`. Put every app in `apps/<name>`: `apps/desktop` (Electron, local server, UI, bridge), `apps/api` (auth and tenant Worker), `apps/publish` (published-design Worker), `apps/web` (browser app for sign-in, orgs, keys and confirms). Shared code goes in publishable packages: `packages/common/<name>` (shared non-UI code, first `packages/common/actions`) and `packages/ui` (UI kit). A package never imports an app. Today the repo root and `cloud/*` are the old paths; new cloud API code goes in `apps/api` -> review-only. (W15)
-## 2. How to add an endpoint
+## 2. How to add an action
 
 - Stamp every new action with `pnpm run new:action <domain> <verb> ...` (lands with S4s). Never copy an action, route, tool or handler by hand -> check-actions (pair rule, template shape) (lands with S4s), `gen-routes --check`. (E1)
 - Fill all 13 `defineAction` keys in sorted order: access, agent, confirm, description, errors, http, id, input, invalidates, mcp, needs, output, scope -> tsc (`ActionSpec` has no optional key) (lands with S4b), `sort-keys`. (E2)

@@ -1,3 +1,4 @@
+import { routes as exportRoutes } from "../shared/actions/export/routes.js";
 import { STUDIO_TOKEN_HEADER } from "../shared/contracts";
 import {
   EXPORT_NOTE_HEADER,
@@ -21,6 +22,7 @@ import {
   frameName,
   type CanvasFrame,
 } from "./canvasFrames";
+import { call as callAction } from "./platform/http";
 import { getSession } from "./session";
 import { uiStore } from "./storage";
 
@@ -110,13 +112,17 @@ export const exportApi = {
       `${p(pid)}/handoff/${encodeURIComponent(folder)}/reveal`
     );
   },
-  copyCode: async (
-    pid: string,
-    request: CopyCodeRequest
-  ): Promise<CopyCodeResult> =>
-    (
-      await call("POST", `${p(pid)}/copy-code`, request)
-    ).json() as Promise<CopyCodeResult>,
+  copyCode: (pid: string, request: CopyCodeRequest): Promise<CopyCodeResult> =>
+    callAction(exportRoutes.getCodeExport, {
+      directionId: request.directionId ?? null,
+      format: request.format,
+      height: request.frame.height,
+      projectId: pid,
+      targetSelector: request.selector,
+      versionId: request.versionId ?? null,
+      width: request.frame.width,
+      ...(request.frame.path ? { path: request.frame.path } : {}),
+    }),
   editors: async (): Promise<EditorInfo[]> =>
     (await call("GET", "/api/editors")).json() as Promise<EditorInfo[]>,
   openInEditor: async (

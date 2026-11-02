@@ -1,0 +1,229 @@
+{
+  "tools": [
+    {
+      "name": "export",
+      "description": "Export a version as PNG, HTML, PDF, a handoff zip or a source zip and write the files to a folder. Returns the file paths. Default folder: the Design Studio data folder, exports/<projectId>. A folder outside Downloads and the projects folder waits for the user to approve it in Design Studio.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "versionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Version id. Leave out for the newest version of the direction."
+          },
+          "format": {
+            "type": "string",
+            "enum": ["png", "html", "pdf", "handoff", "zip"],
+            "description": "png, html, pdf, handoff (folder for a coding agent, as a zip) or zip (source files)."
+          },
+          "scale": {
+            "default": 1,
+            "description": "PNG pixel scale.",
+            "anyOf": [
+              {
+                "type": "number",
+                "const": 1
+              },
+              {
+                "type": "number",
+                "const": 2
+              },
+              {
+                "type": "number",
+                "const": 3
+              }
+            ]
+          },
+          "frames": {
+            "description": "Frames to capture. Default one 1440x900 frame (handoff: desktop and mobile).",
+            "minItems": 1,
+            "maxItems": 12,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "maxLength": 60
+                },
+                "width": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 4000
+                },
+                "height": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 4000
+                },
+                "path": {
+                  "type": "string",
+                  "maxLength": 200
+                }
+              },
+              "required": ["width", "height"],
+              "additionalProperties": false
+            }
+          },
+          "folder": {
+            "description": "Absolute path of an existing folder. Leave out for the Design Studio data folder (exports/<projectId>). Another folder outside the projects folder waits for the user to approve it in Design Studio.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        },
+        "required": ["projectId", "format"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "export_frame",
+      "description": "Export canvas frames as SVG or PPTX with the same server code as Export > SVG and Export > PPTX in the studio. SVG: one vector file per frame (a zip for several), with boxes, borders and inline SVG as shapes, text as <text> with its font names (web fonts embedded when the page loads them), and pictures, gradients and canvas kept as embedded images; selector exports one element. PPTX: one slide per frame (a page with two or more .slide or [data-slide] sections gives one slide per section), each with native, editable text boxes (font, size, weight, color, alignment, line height), solid, gradient and rounded boxes with outer shadows, rules as lines, inline SVG shapes, arcs and SVG text, and images (also rounded) as pictures, on a full-slide picture of the rest (background images, filters, inset shadows) with those parts left out. Returns the path of the file in the Design Studio data folder. Changes no design file.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "format": {
+            "type": "string",
+            "enum": ["svg", "pptx"],
+            "description": "svg: vector file. pptx: slide deck."
+          },
+          "frames": {
+            "description": "Frame ids or @labels from canvas_list. Leave out for every visible frame of the direction.",
+            "minItems": 1,
+            "maxItems": 12,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 60
+            }
+          },
+          "selector": {
+            "description": "SVG only: a layer id from get_layers or a CSS selector; exports just that element of the first frame.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "area": {
+            "default": "frame",
+            "description": "SVG only: frame (the visible frame) or page (the full page height).",
+            "type": "string",
+            "enum": ["frame", "page"]
+          },
+          "versionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Version id. Leave out for the newest version of the direction."
+          }
+        },
+        "required": ["projectId", "format"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "copy_code",
+      "description": "Copy one element as code with the same server code as Copy as code in the studio. format html: markup with a <style> block of classes from the computed styles. tailwind: markup with Tailwind classes. react: a JSX component (export function named after the layer) with className (the source Tailwind classes when it has them), style objects otherwise, self-closing void tags and htmlFor; elements whose data-name or class matches a project kit component become <Button> and similar, with their import lines. Read only: changes no file.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "format": {
+            "default": "html",
+            "description": "html, tailwind or react.",
+            "type": "string",
+            "enum": ["html", "tailwind", "react"]
+          },
+          "path": {
+            "description": "Page path in the project, for example \"about.html\". Leave out for the entry page.",
+            "type": "string",
+            "maxLength": 300
+          },
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "targetSelector": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000,
+            "description": "CSS selector or layer id of the element to copy."
+          }
+        },
+        "required": ["projectId", "targetSelector"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      }
+    }
+  ],
+  "samples": [
+    {
+      "tool": "copy_code",
+      "args": {
+        "projectId": "p_demo01",
+        "targetSelector": "e0k3pz",
+        "format": "react"
+      },
+      "result": {
+        "code": "export function HeroCard() {\n  return <div className=\"rounded-lg p-6\">Hello</div>;\n}",
+        "format": "react"
+      }
+    },
+    {
+      "tool": "export_frame",
+      "args": {
+        "projectId": "p_demo01",
+        "format": "svg",
+        "frames": ["f1"]
+      },
+      "result": {
+        "file": "/Users/demo/Library/Application Support/Design Studio/exports/p_demo01/demo-a1b2c3d.svg",
+        "format": "svg",
+        "bytes": 18234,
+        "versionId": "a1b2c3d4e5f60718293a4b5c6d7e8f9012345678",
+        "frames": ["Desktop"]
+      }
+    }
+  ]
+}

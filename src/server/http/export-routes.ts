@@ -4,11 +4,8 @@ import type { Context, Hono } from "hono";
 
 import type { ProjectKind } from "../../shared/contracts.js";
 import {
-  COPY_CODE_FORMATS,
   EXPORT_NOTE_HEADER,
   exportFileStem,
-  type CopyCodeFormat,
-  type CopyCodeResult,
   type ExportFormat,
   type ExportFrame,
   type ExportScale,
@@ -16,23 +13,23 @@ import {
 } from "../../shared/export.js";
 import { zipFiles, type ZipEntry } from "../design-system/zip.js";
 import { captureFrame, type Shot } from "../export/capture.js";
-import { copyCode, type CopyScope } from "../export/copy-handler.js";
 import {
   listEditors,
   openInEditor,
   revealInFinder,
 } from "../export/editors.js";
+import { bindExportRuntime } from "../export/export-core.js";
 import { buildHandoff, handoffRoot, zipHandoff } from "../export/handoff.js";
 import { inlineHtml } from "../export/inline-html.js";
 import { imagesToPdf } from "../export/pdf.js";
 import {
-  parseFrame,
   parseFrames,
   parseScale,
   resolveSource,
   type ExportDeps,
 } from "../export/source.js";
 import { exportVector, type VectorFile } from "../export/vector-export.js";
+import { loadConfig } from "../platform/config/index.js";
 import type { CommentStore } from "../store/comments.js";
 import {
   BadRequestError,
@@ -242,46 +239,10 @@ async function exportImages(
   );
 }
 
-async function openForCopy(
-  deps: ExportRouteDeps,
-  pid: string,
-  input: Record<string, unknown>
-): Promise<{ url: string; release: () => Promise<void> }> {
-  if (typeof input.directionId === "string") {
-    const project = await deps.projects.get(assertSafeId(pid, "projectId"));
-    const did = assertSafeId(input.directionId, "directionId");
-    const direction = project.directions.find((d) => d.id === did);
-
-    if (!direction) {
-      throw new NotFoundError("direction not found");
-    }
-
-    return {
-      url: await deps.preview.directionUrl(project, direction),
-      release: async () => undefined,
-    };
-  }
-
-  return (await resolveSource(deps, pid, text(input, "versionId"))).open();
-}
-
-async function copyScope(
-  deps: ExportRouteDeps,
-  pid: string,
-  input: Record<string, unknown>,
-  url: string
-): Promise<CopyScope> {
-  const project = await deps.projects.get(assertSafeId(pid, "projectId"));
-
-  const direction =
-    project.directions.find((d) => d.id === input.directionId) ??
-    project.directions[0];
-
-  return { project, workTree: direction?.workTree ?? null, url };
-}
-
 export function registerExportRoutes(app: Hono, deps: ExportRouteDeps): void {
   const secrets = [deps.studioToken];
+
+  bindExportRuntime(loadConfig().dataDir, deps);
 
   app.post("/api/projects/:pid/export", async (c) => {
     const input = await body(c);
@@ -400,43 +361,6 @@ export function registerExportRoutes(app: Hono, deps: ExportRouteDeps): void {
     await revealInFinder(target);
 
     return c.json({ ok: true });
-  });
-
-  app.post("/api/projects/:pid/copy-code", async (c) => {
-    const input = await body(c);
-
-    const format: CopyCodeFormat = COPY_CODE_FORMATS.includes(
-      input.format as CopyCodeFormat
-    )
-      ? (input.format as CopyCodeFormat)
-      : "html";
-
-    const selector = selectorOf(input);
-
-    if (!selector) {
-      throw new BadRequestError("selector is required");
-    }
-
-    const frame = parseFrame(input.frame);
-    const opened = await openForCopy(deps, c.req.param("pid"), input);
-
-    try {
-      const scope = await copyScope(
-        deps,
-        c.req.param("pid"),
-        input,
-        opened.url
-      );
-
-      const result: CopyCodeResult = {
-        code: await copyCode(deps.preview, scope, { frame, selector, format }),
-        format,
-      };
-
-      return c.json(result);
-    } finally {
-      await opened.release().catch(() => undefined);
-    }
   });
 
   app.get("/api/editors", (c) => c.json(listEditors()));

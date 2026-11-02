@@ -1,4 +1,8 @@
 // @generated
-const ExportActions = {} as const;
+import { getCodeExport } from "./get-code.js";
+
+const ExportActions = {
+  getCodeExport,
+} as const;
 
 export { ExportActions };

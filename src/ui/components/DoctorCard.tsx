@@ -1,7 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
+import type { healthStudio } from "../../shared/actions/studio/health.js";
+import { routes as studioRoutes } from "../../shared/actions/studio/routes.js";
 import type { DoctorCause } from "../../shared/app-doctor";
 import { api, errorText } from "../api";
+import { call } from "../platform/http";
 import { CopyButton } from "./CopyButton";
 import { Icon } from "./Icon";
 
@@ -24,6 +27,29 @@ export default function DoctorCard({
 }: DoctorCardProps) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [version, setVersion] = useState<string | null>(null);
+  useEffect(() => {
+    let live = true;
+    const read = async () => {
+      try {
+        const health = await call<typeof healthStudio>(
+          studioRoutes.healthStudio,
+          {}
+        );
+        if (live) {
+          setVersion(health.version);
+        }
+      } catch {
+        if (live) {
+          setVersion(null);
+        }
+      }
+    };
+    void read();
+    return () => {
+      live = false;
+    };
+  }, []);
   const fix = () => {
     setBusy(true);
     setError(null);
@@ -72,6 +98,11 @@ export default function DoctorCard({
           Show the log
         </button>
         <span className="grow" />
+        {version && (
+          <span className="mono" data-tip="Design Studio version">
+            v{version}
+          </span>
+        )}
         {cause.fix && (
           <button
             type="button"

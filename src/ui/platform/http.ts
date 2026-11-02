@@ -1,6 +1,14 @@
+import type {
+  ActionId,
+  AnyAction,
+  Method,
+  WireInput,
+  WireOutput,
+} from "../../shared/actions/_core/action.js";
+import type { WireBody } from "../../shared/actions/_core/wire.js";
 import { tokenHeaders } from "./session";
 
-type HttpMethod = "DELETE" | "GET" | "PATCH" | "POST" | "PUT";
+type HttpMethod = Method;
 
 type WireJson =
   | boolean
@@ -12,22 +20,18 @@ type WireJson =
 
 type WireFields = Readonly<Record<string, WireJson>>;
 
-interface HttpOp<In extends WireFields = WireFields, Out = WireJson> {
-  readonly input?: In;
+interface ActionRoute {
+  readonly id: ActionId;
+  readonly invalidates: readonly ActionId[];
   readonly method: HttpMethod;
-  readonly output?: Out;
   readonly path: string;
 }
 
-type WireInput<Op> = Op extends HttpOp<infer In> ? In : never;
+type RouteOf<Action extends AnyAction> = ActionRoute & {
+  readonly id: Action["id"];
+};
 
-type WireOutput<Op> = Op extends HttpOp<WireFields, infer Out> ? Out : never;
-
-interface WireError {
-  readonly code?: string;
-  readonly error?: string;
-  readonly message?: string;
-}
+type WireError = Partial<WireBody>;
 
 const PARAM = /:(?<name>[A-Za-z_]\w*)/gu;
 
@@ -107,7 +111,7 @@ const readError = async (
     return new ApiError(
       res.status,
       body.message ?? body.error ?? fallback,
-      body.error,
+      body.code ?? body.error,
       body
     );
   } catch {
@@ -129,38 +133,38 @@ const requestOf = (method: HttpMethod, rest: WireFields): RequestInit => {
   };
 };
 
-const targetOf = (op: HttpOp, fields: WireFields): string => {
-  const url = fillPath(op.path, fields);
+const targetOf = (route: ActionRoute, fields: WireFields): string => {
+  const url = fillPath(route.path, fields);
 
-  if (QUERY_METHODS.has(op.method)) {
-    return withQuery(url, restOf(op.path, fields));
+  if (QUERY_METHODS.has(route.method)) {
+    return withQuery(url, restOf(route.path, fields));
   }
 
   return url;
 };
 
-const call = async <Op extends HttpOp>(
-  op: Op,
-  input: WireInput<Op>
-): Promise<WireOutput<Op>> => {
-  const fields: WireFields = input;
-  const target = targetOf(op, fields);
+const call = async <Action extends AnyAction>(
+  route: RouteOf<Action>,
+  input: WireInput<Action>
+): Promise<WireOutput<Action>> => {
+  const fields = input as WireFields;
+  const target = targetOf(route, fields);
 
   const res = await fetch(
     target,
-    requestOf(op.method, restOf(op.path, fields))
+    requestOf(route.method, restOf(route.path, fields))
   );
 
   if (!res.ok) {
     throw await readError(
       res,
-      `${op.method} ${target} failed: ${String(res.status)}`
+      `${route.method} ${target} failed: ${String(res.status)}`
     );
   }
 
-  return (await res.json()) as WireOutput<Op>;
+  return (await res.json()) as WireOutput<Action>;
 };
 
 export { ApiError, call };
 
-export type { HttpMethod, HttpOp, WireFields, WireInput, WireJson, WireOutput };
+export type { ActionRoute, HttpMethod, RouteOf, WireFields, WireJson };

@@ -290,7 +290,7 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/server/platform/process/worker-client.ts",
       "src/server/platform/resources/index.ts",
       "src/server/platform/tool-policy/**",
-      "src/ui/platform/session.ts",
+      "src/ui/platform/{http,session}.ts",
       "src/server/project-source/source.ts",
       "src/server/run-log/run-list.ts",
       SERVER_MAIN,

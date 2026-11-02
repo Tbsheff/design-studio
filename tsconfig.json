@@ -15,5 +15,5 @@
     "noEmit": true
   },
   "include": ["src", "e2e", "scripts", "desktop", "*.ts"],
-  "exclude": ["desktop/dist"]
+  "exclude": ["desktop/dist", "scripts/stamp/probes"]
 }

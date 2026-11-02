@@ -15,6 +15,7 @@ import type {
   RuleText,
   SchemaLike,
 } from "./check-actions-names.js";
+import { checkProbes } from "./check-actions-probes.js";
 
 interface OpCheck {
   readonly bad: (row: OpRow) => string | null;
@@ -77,7 +78,7 @@ const rowsOf = (catalog: Catalog): OpRow[] =>
   Object.entries(catalog).flatMap(([context, group]) =>
     Object.entries(group).map(([opKey, definition]) => ({
       ctx: context,
-      file: `src/shared/actions/${kebab(context)}/${kebab(opKey)}.ts`,
+      file: `src/shared/actions/${kebab(context)}/${kebab(definition.id.split(".").at(1) ?? opKey)}.ts`,
       key: opKey,
       op: definition,
     }))
@@ -425,7 +426,13 @@ const runChecks = async (
     scanned = await scan();
   }
 
-  return Math.max(scanned, await checkOps(argv));
+  let probed = 0;
+
+  if (argv.includes("--probes")) {
+    probed = await checkProbes();
+  }
+
+  return Math.max(scanned, await checkOps(argv), probed);
 };
 
 export { runChecks };

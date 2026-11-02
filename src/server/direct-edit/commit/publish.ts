@@ -81,8 +81,8 @@ export function saveDeferred(
   return saveLater(
     {
       versions: deps.versions,
-      publish: (p, d, version, withStatus) =>
-        publishVersion(deps, p, d, version, withStatus),
+      publish: (p, d, version, withStatus, versions) =>
+        publishVersion({ ...deps, versions }, p, d, version, withStatus),
       failed,
     },
     project,

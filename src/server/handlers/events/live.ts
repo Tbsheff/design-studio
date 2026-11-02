@@ -1,5 +1,5 @@
-import { Layer } from "effect";
+import { EventBus } from "../../events/event-bus.js";
 
-const EventsLive = Layer.empty;
+const EventsLive = EventBus.layer;
 
 export { EventsLive };

@@ -1,258 +1,18 @@
-import { appendFile, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import type {
-  StudioEvent,
-  StudioEventInput,
-  Version,
-} from "../../shared/contracts.js";
+import type { StudioEvent, StudioEventInput } from "../../shared/contracts.js";
 import { assertSafeId } from "../platform/errors/safe-id.js";
-import { logError } from "../platform/logger/index.js";
-import { readEventFile, readSeqFloors } from "./event-file.js";
+import { bindEventBus } from "./event-core.js";
+import { readSeqFloors } from "./event-file.js";
 import type { SeqFloor } from "./event-file.js";
-import { registerExitFlush, toLines } from "./exit-flush.js";
-
-const RING_SIZE = 5000;
-const FLUSH_DELAY_MS = 5;
-const EVENT_FILES_MAX = 20;
-const SEQ_RESERVE = 1000;
-
-interface ProjectLog {
-  file: string;
-  seqFile: string;
-  reserved: number;
-  seqChain: Promise<void>;
-  lastSeq: number;
-  ring: StudioEvent[];
-  listeners: Set<(event: StudioEvent) => void>;
-  unflushed: StudioEvent[];
-  dirReady: boolean;
-  filling: Promise<void> | null;
-  timer: NodeJS.Timeout | null;
-  chain: Promise<void>;
-}
-
-const report = (label: string, cause: { error: unknown }): void => {
-  logError(`[events] ${label} failed`, cause.error);
-};
-
-const writeSeqFile = async (
-  log: ProjectLog,
-  previous: Promise<void>,
-  value: number
-): Promise<void> => {
-  await previous;
-
-  try {
-    await mkdir(path.dirname(log.seqFile), { recursive: true });
-    await writeFile(log.seqFile, `${value}\n`);
-  } catch (error) {
-    report("seq reserve", { error });
-
-    if (log.reserved === value) {
-      log.reserved = 0;
-    }
-  }
-};
-
-const persistReserved = (log: ProjectLog, value: number): void => {
-  log.reserved = value;
-  log.seqChain = writeSeqFile(log, log.seqChain, value);
-};
-
-const reserveAhead = (log: ProjectLog, seq: number): void => {
-  if (seq + SEQ_RESERVE / 2 > log.reserved) {
-    persistReserved(log, seq + SEQ_RESERVE);
-  }
-};
-
-const releaseReserved = async (log: ProjectLog): Promise<void> => {
-  await log.chain;
-
-  if (log.unflushed.length === 0 && log.reserved > log.lastSeq) {
-    persistReserved(log, log.lastSeq);
-  }
-
-  await log.seqChain;
-};
-
-const sampleVersion = (version: Version): Version => {
-  if (version.changedFiles.length <= EVENT_FILES_MAX) {
-    return version;
-  }
-
-  return {
-    ...version,
-    changedFiles: version.changedFiles.slice(0, EVENT_FILES_MAX),
-    changedFilesTotal: Math.max(
-      version.changedFilesTotal ?? 0,
-      version.changedFiles.length
-    ),
-  };
-};
-
-const slimInput = (input: StudioEventInput): StudioEventInput => {
-  if (input.type !== "version.created") {
-    return input;
-  }
-
-  return { ...input, version: sampleVersion(input.version) };
-};
-
-const appendLines = async (log: ProjectLog, text: string): Promise<void> => {
-  if (!log.dirReady) {
-    await mkdir(path.dirname(log.file), { recursive: true });
-    log.dirReady = true;
-  }
-
-  try {
-    await appendFile(log.file, text);
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
-      throw error;
-    }
-
-    await mkdir(path.dirname(log.file), { recursive: true });
-    await appendFile(log.file, text);
-  }
-};
-
-const writeBatch = async (
-  log: ProjectLog,
-  previous: Promise<void>
-): Promise<void> => {
-  await previous;
-  const batch = [...log.unflushed];
-
-  if (batch.length === 0) {
-    return;
-  }
-
-  try {
-    await appendLines(log, toLines(batch));
-    log.unflushed.splice(0, batch.length);
-  } catch (error) {
-    report("append", { error });
-  }
-};
-
-const flushLog = (log: ProjectLog): void => {
-  if (log.timer !== null) {
-    clearTimeout(log.timer);
-  }
-
-  log.timer = null;
-
-  if (log.unflushed.length === 0) {
-    return;
-  }
-
-  log.chain = writeBatch(log, log.chain);
-};
-
-const scheduleFlush = (log: ProjectLog): void => {
-  if (log.timer !== null) {
-    return;
-  }
-
-  log.timer = setTimeout(() => flushLog(log), FLUSH_DELAY_MS);
-  log.timer.unref();
-};
-
-const fanOut = (log: ProjectLog, event: StudioEvent): void => {
-  const snapshot = new Set(log.listeners);
-
-  for (const listener of snapshot) {
-    try {
-      listener(event);
-    } catch (error) {
-      report("listener", { error });
-    }
-  }
-};
-
-const storedSince = async (
-  log: ProjectLog,
-  afterSeq: number
-): Promise<StudioEvent[]> => {
-  const unflushed = [...log.unflushed];
-  const stored = await readEventFile<StudioEvent>(log.file);
-  const lastStored = stored.at(-1)?.seq ?? 0;
-  const pending = unflushed.filter((event) => event.seq > lastStored);
-
-  return [...stored, ...pending].filter((event) => event.seq > afterSeq);
-};
-
-const openLog = (logFile: string, floor: SeqFloor | undefined): ProjectLog => ({
-  chain: Promise.resolve(),
-  dirReady: false,
-  file: logFile,
-  filling: null,
-  lastSeq: floor?.lastSeq ?? 0,
-  listeners: new Set(),
-  reserved: floor?.reserved ?? 0,
-  ring: [],
-  seqChain: Promise.resolve(),
-  seqFile: path.join(path.dirname(logFile), "events.seq"),
-  timer: null,
-  unflushed: [],
-});
-
-const fillRing = async (log: ProjectLog): Promise<void> => {
-  const stored = await readEventFile<StudioEvent>(log.file);
-  const firstSeq = log.ring[0]?.seq ?? Number.POSITIVE_INFINITY;
-  const older = stored.filter((event) => event.seq < firstSeq);
-
-  log.ring = [...older, ...log.ring].slice(-RING_SIZE);
-};
-
-const ensureFilled = async (log: ProjectLog): Promise<void> => {
-  log.filling ??= fillRing(log);
-  await log.filling;
-};
-
-const record = (log: ProjectLog, input: StudioEventInput): StudioEvent => {
-  const event = {
-    ...slimInput(input),
-    seq: log.lastSeq + 1,
-    ts: Date.now(),
-  } as StudioEvent;
-
-  reserveAhead(log, event.seq);
-  log.lastSeq = event.seq;
-  log.ring.push(event);
-
-  if (log.ring.length > RING_SIZE) {
-    log.ring.splice(0, log.ring.length - RING_SIZE);
-  }
-
-  log.unflushed.push(event);
-  scheduleFlush(log);
-
-  return event;
-};
-
-const sinceLog = async (
-  log: ProjectLog,
-  afterSeq: number
-): Promise<StudioEvent[]> => {
-  await ensureFilled(log);
-  const [first] = log.ring;
-
-  if (!first || first.seq <= afterSeq + 1) {
-    return log.ring.filter((event) => event.seq > afterSeq);
-  }
-
-  return await storedSince(log, afterSeq);
-};
+import { fanOut, openLog, sinceLog } from "./event-log.js";
+import type { EventListener, ProjectLog } from "./event-log.js";
+import { flushLog, record, releaseReserved } from "./event-writer.js";
 
 interface EventBus {
   emit: (event: StudioEventInput) => StudioEvent;
   since: (projectId: string, afterSeq: number) => Promise<StudioEvent[]>;
-  subscribe: (
-    projectId: string,
-    listener: (event: StudioEvent) => void
-  ) => () => void;
+  subscribe: (projectId: string, listener: EventListener) => () => void;
 }
 
 interface FlushableEventBus extends EventBus {
@@ -272,62 +32,67 @@ const createEventBus = (
       return existing;
     }
 
-    const log = openLog(
-      path.join(
-        dataDir,
-        "projects",
-        assertSafeId(projectId, "projectId"),
-        "events.jsonl"
-      ),
-      floors.get(projectId)
+    const file = path.join(
+      dataDir,
+      "projects",
+      assertSafeId(projectId, "projectId"),
+      "events.jsonl"
     );
+
+    const log = openLog(file, floors.get(projectId) ?? null);
 
     logs.set(projectId, log);
 
     return log;
   };
 
-  registerExitFlush({ logs, report });
+  const emit = (input: StudioEventInput): StudioEvent => {
+    const log = logFor(input.projectId);
+    const recorded = record(log, input);
 
-  return {
-    emit(input: StudioEventInput): StudioEvent {
-      const log = logFor(input.projectId);
-      const event = record(log, input);
-      fanOut(log, event);
+    fanOut(log, recorded);
 
-      return event;
-    },
-
-    async flush(): Promise<void> {
-      const all = [...logs.values()];
-
-      for (const log of all) {
-        flushLog(log);
-      }
-
-      await Promise.all(all.map((log) => releaseReserved(log)));
-    },
-
-    async since(projectId: string, afterSeq: number): Promise<StudioEvent[]> {
-      return await sinceLog(logFor(projectId), afterSeq);
-    },
-
-    subscribe(
-      projectId: string,
-      listener: (event: StudioEvent) => void
-    ): () => void {
-      const log = logFor(projectId);
-      log.listeners.add(listener);
-
-      return () => {
-        log.listeners.delete(listener);
-      };
-    },
+    return recorded.event;
   };
+
+  const flush = async (): Promise<void> => {
+    const all = [...logs.values()];
+
+    for (const log of all) {
+      flushLog(log);
+    }
+
+    await Promise.all(all.map((log) => releaseReserved(log)));
+  };
+
+  const since = async (
+    projectId: string,
+    afterSeq: number
+  ): Promise<StudioEvent[]> => await sinceLog(logFor(projectId), afterSeq);
+
+  const subscribe = (
+    projectId: string,
+    listener: EventListener
+  ): (() => void) => {
+    const log = logFor(projectId);
+
+    log.listeners.add(listener);
+
+    return () => {
+      log.listeners.delete(listener);
+    };
+  };
+
+  return { emit, flush, since, subscribe };
 };
 
-const openEventBus = async (dataDir: string): Promise<FlushableEventBus> =>
-  createEventBus(dataDir, await readSeqFloors(dataDir));
+const openEventBus = async (dataDir: string): Promise<FlushableEventBus> => {
+  const bus = createEventBus(dataDir, await readSeqFloors(dataDir));
+
+  bindEventBus(bus);
+
+  return bus;
+};
 
 export { createEventBus, openEventBus };
 

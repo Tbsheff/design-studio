@@ -279,7 +279,8 @@ export const decisionOverrides: OxlintOverride[] = [
   },
   {
     files: [
-      "src/server/events/bus.ts",
+      "src/server/events/{bus,event-bus,event-core,event-log,event-writer}.ts",
+      "src/server/handlers/events/live.ts",
       "src/server/events/change-feed.ts",
       "src/server/events/planned-feed.ts",
       "src/server/events/render-wait.ts",
@@ -326,7 +327,6 @@ export const decisionOverrides: OxlintOverride[] = [
   {
     files: [
       "desktop/build.ts",
-      "src/server/events/exit-flush.ts",
       "src/server/platform/data-lock/**",
       "src/server/platform/paths/**",
       "src/server/platform/resources/**",

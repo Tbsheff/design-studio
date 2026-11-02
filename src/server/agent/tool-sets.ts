@@ -45,6 +45,8 @@ const CORE_TOOLS = [
   "list_state_styles",
   "set_state_style",
   "set_forced_state",
+  "get_stacking",
+  "set_stacking",
   "copy_code",
   "diff_versions",
   "list_comments",

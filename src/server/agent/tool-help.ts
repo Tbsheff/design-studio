@@ -17,6 +17,10 @@ import { importPageDescription } from "./page-import-tool.js";
 import { COMPARE_REFERENCE_DESCRIPTION } from "./reference-tool.js";
 import { SELECT_MATCHING_DESCRIPTION } from "./select-tool.js";
 import {
+  getStackingDescription,
+  setStackingDescription,
+} from "./stacking-tool.js";
+import {
   listStateStylesDescription,
   setForcedStateDescription,
   setStateStyleDescription,
@@ -129,6 +133,10 @@ export const TOOL_SHORT = {
     "Set or reset one style property of one layer in one state (hover, focus-visible, active, disabled, dark), optionally at a breakpoint.",
   set_forced_state:
     "Show a frame in hover, focus-visible, active, disabled or dark without a pointer, so get_screenshot shows that state.",
+  get_stacking:
+    "Read only. Position, offsets, overflow-x, overflow-y and z-index of one layer, with the class, scale or token source of each value.",
+  set_stacking:
+    "Set position, offsets, overflow and z-index of one layer in one version: sticky top-0 z-10 classes in Tailwind, declarations in CSS.",
   copy_code:
     "Read only. Copy one element as html, tailwind or a react JSX component with kit components and import lines.",
   set_motion:
@@ -227,6 +235,8 @@ export const TOOL_HELP: Record<
   list_state_styles: listStateStylesDescription,
   set_state_style: setStateStyleDescription,
   set_forced_state: setForcedStateDescription,
+  get_stacking: getStackingDescription,
+  set_stacking: setStackingDescription,
   update_text: updateTextDescription,
   arrange:
     "Align, distribute or tidy up sibling elements like Figma, with the same code as the studio arrange bar. In a flex parent it writes the parent layout (align-items, justify-content, gap) or align-self on some children; in a grid justify-items or align-items; absolute children move by left/top. align and distribute in a parent with no auto layout are refused; tidy adds auto layout (flex, gap) to it. Tailwind projects get classes. Pass one of align, distribute or tidy.",

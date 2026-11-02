@@ -18,6 +18,7 @@ import {
   type SetImageRequest,
 } from "../../shared/image";
 import type { PreviewPort } from "../bridge";
+import { runCommand } from "../commands/registry";
 import {
   clipboardImage,
   fileData,
@@ -396,6 +397,15 @@ export default function InspectorImage(props: Props) {
             onClick={() => void paste()}
           >
             Paste
+          </button>
+          <button
+            type="button"
+            className="btn ghost small"
+            disabled={disabled}
+            data-tip="Search free stock photos and place one here"
+            onClick={() => runCommand("image.find")}
+          >
+            Find photo
           </button>
           <input
             ref={fileInput}

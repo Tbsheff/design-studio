@@ -1,0 +1,136 @@
+.dialog {
+  width: min(640px, 100%);
+}
+
+.body {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.form {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--s-2);
+}
+
+.form input {
+  width: 100%;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--s-2);
+  max-height: 360px;
+  margin: 0;
+  overflow-y: auto;
+  padding: var(--s-1);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface-inset);
+  list-style: none;
+}
+
+.card {
+  display: grid;
+  gap: var(--s-1);
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: none;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.card:hover .thumb {
+  box-shadow: inset 0 0 0 1px var(--accent-line);
+}
+
+.card:focus-visible {
+  outline: 0;
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+.card:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.frame {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--r-sm);
+  background: var(--surface-hover);
+}
+
+.thumb {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.license {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  padding: 0 6px;
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--text-2);
+  font-size: 10px;
+  line-height: 16px;
+}
+
+.author {
+  overflow: hidden;
+  color: var(--text-3);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.note {
+  margin: 0;
+  padding: var(--s-4) 0;
+  color: var(--text-3);
+  text-align: center;
+}
+
+.credit {
+  margin: 0;
+  padding: var(--s-2) var(--s-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  color: var(--text-2);
+  font-size: 12px;
+}
+
+.off {
+  display: grid;
+  gap: var(--s-2);
+  color: var(--text-2);
+}
+
+.switch {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: 28px;
+}
+
+fieldset.chips {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}

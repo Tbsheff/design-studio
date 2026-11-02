@@ -15,6 +15,8 @@ import { PreviewMenu } from "./components/PreviewMenu";
 import type { PreviewMenuItem } from "./components/PreviewMenu";
 import { IconSlot } from "./features/icons/icon-slot";
 import { useIconHost } from "./features/icons/use-icon-host";
+import { ImageSearchMount } from "./features/image-search/image-search-mount";
+import { useImageSearchHost } from "./features/image-search/use-image-search-host";
 import { pasteJsx } from "./pasteJsx";
 import { uiStore } from "./storage";
 import { selectionTargets, structureMenuItems } from "./structureEdits";
@@ -212,14 +214,16 @@ export function usePreviewMenu(o: Options) {
   const target = o.selection.at(-1);
   const openCreate = () => setCreating(latest.current.selection);
   const directionId = o.ids.directionId;
-  const icons = useIconHost({
+  const hostOptions = {
     directionId,
     busy: o.edits.busy,
     enabled: o.edits.enabled,
     notify: o.edits.notify,
     projectId: o.ids.projectId,
     selection: o.selection,
-  });
+  };
+  const icons = useIconHost(hostOptions);
+  const photos = useImageSearchHost(hostOptions);
 
   const dialog =
     creating && directionId ? (
@@ -235,7 +239,10 @@ export function usePreviewMenu(o: Options) {
 
   const items =
     at && target
-      ? menuItems(latest.current, target, openCreate, icons.items)
+      ? menuItems(latest.current, target, openCreate, (item) => [
+          ...icons.items(item),
+          ...photos.items(item),
+        ])
       : [];
 
   const menu = (
@@ -259,6 +266,12 @@ export function usePreviewMenu(o: Options) {
           onDone={o.edits.notify}
         />
       ) : null}
+      <ImageSearchMount
+        directionId={directionId}
+        host={photos}
+        projectId={o.ids.projectId}
+        onDone={o.edits.notify}
+      />
     </>
   );
 

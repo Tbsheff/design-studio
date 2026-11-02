@@ -411,6 +411,21 @@ function InsertIconButton() {
   );
 }
 
+function FindPhotoButton() {
+  return (
+    <button
+      type="button"
+      className="btn small ghost find-photo-btn"
+      aria-label="Find photo"
+      data-tip="Find a stock photo for the selected layer"
+      onClick={() => runCommand("image.find")}
+    >
+      <Icon name="image" size={14} />
+      <span className="label">Photo</span>
+    </button>
+  );
+}
+
 export function CanvasViewRow(props: Props) {
   return (
     <div
@@ -440,6 +455,7 @@ export function CanvasViewRow(props: Props) {
       />
       <div className="spacer" />
       <InsertIconButton />
+      <FindPhotoButton />
       {props.drawMode !== undefined && (
         <button
           className="btn small ghost select-toggle draw-toggle"

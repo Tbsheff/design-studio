@@ -13,6 +13,7 @@ import { registerComponentRoutes } from "./components-routes.js";
 import { registerFigmaRoutes } from "./figma-routes.js";
 import { registerFillRoutes } from "./fill-routes.js";
 import { registerIconRoutes } from "./icon-routes.js";
+import { registerImageSearchRoutes } from "./image-search-routes.js";
 import { registerInsertRoutes } from "./insert-routes.js";
 import { registerLayerStateRoutes } from "./layer-state-routes.js";
 import { registerMotionRoutes } from "./motion-routes.js";
@@ -82,7 +83,8 @@ const registerReviewPanelRoutes = (app: Hono, ctx: AppContext): void => {
 };
 
 const registerStylePanelRoutes = (app: Hono, ctx: AppContext): void => {
-  const { canvas, editDeps, loadDirection, preview, withDirection } = ctx;
+  const { canvas, editDeps, loadDirection, preview, projects, withDirection } =
+    ctx;
   const withPreview = {
     editDeps,
     preview,
@@ -99,6 +101,7 @@ const registerStylePanelRoutes = (app: Hono, ctx: AppContext): void => {
   registerSpacingRoutes(app, plain);
   registerStateStyleRoutes(app, { ...plain, canvas });
   registerStackingRoutes(app, plain);
+  registerImageSearchRoutes(app, { ...withPreview, projects });
   registerComponentVariantRoutes(app, withPreview);
   registerFigmaRoutes(app, withPreview);
 };

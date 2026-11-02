@@ -1,7 +1,7 @@
 import type { Hono } from "hono";
 
 import type { Direction, Project } from "../../shared/contracts.js";
-import { loadRepoContext } from "../agent/repo-context.js";
+import { loadRepoContext } from "../agent/index.js";
 
 export interface RunContextRouteDeps {
   loadDirection: (

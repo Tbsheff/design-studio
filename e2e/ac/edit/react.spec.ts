@@ -13,7 +13,7 @@ import {
   readState,
   runFile,
 } from "../../../scripts/ac-edit/helpers";
-import { buildUserText } from "../../../src/server/agent/user-message";
+import { buildUserText } from "../../../src/server/agent/index";
 import {
   frontFrame,
   mainDirection,

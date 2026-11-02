@@ -2,10 +2,7 @@ import { z } from "zod";
 
 import { filterComments } from "../../shared/comments.js";
 import type { DesignComment } from "../../shared/contracts.js";
-import {
-  COMMENT_STATUSES,
-  describeCommentList,
-} from "../agent/comment-tools.js";
+import { COMMENT_STATUSES, describeCommentList } from "../agent/index.js";
 import { canvasFrameOf } from "../comments/frame.js";
 import { loadTarget, studioCall } from "./edit-deps.js";
 import { defineTool, directionId, projectId } from "./edit-kit.js";

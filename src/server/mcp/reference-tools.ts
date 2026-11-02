@@ -5,11 +5,7 @@ import { z } from "zod";
 
 import { REFERENCE_LOW_SCORE } from "../../shared/reference.js";
 import type { ReferenceScore } from "../../shared/reference.js";
-import {
-  compareToReference,
-  mimeOfPath,
-  scoreLines,
-} from "../agent/reference-check.js";
+import { compareToReference, mimeOfPath, scoreLines } from "../agent/index.js";
 import { findFrame, frameRef } from "../canvas/tools.js";
 import { EditError, loadTarget } from "./edit-deps.js";
 import type { EditDeps } from "./edit-deps.js";

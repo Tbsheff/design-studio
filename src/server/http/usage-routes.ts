@@ -1,6 +1,6 @@
 import type { Hono } from "hono";
 
-import { componentUsage } from "../agent/usage-scope.js";
+import { componentUsage } from "../preview/index.js";
 import { BadRequestError, assertSafeId } from "../store/errors.js";
 import type { StudioProjectStore } from "../store/projects.js";
 import type { PreviewService } from "../types.js";

@@ -35,7 +35,7 @@ function claudeExecutableOption(): { claudeExecutable?: string } {
   return executable ? { claudeExecutable: executable } : {};
 }
 
-export function createAgentRunner(deps: AgentRunnerDeps): AgentRunner {
+function createAgentRunner(deps: AgentRunnerDeps): AgentRunner {
   const canvas = deps.canvas ? { canvas: deps.canvas } : {};
 
   const driver =
@@ -60,7 +60,7 @@ export function createAgentRunner(deps: AgentRunnerDeps): AgentRunner {
   );
 }
 
-export function designSystemBeforeCommit(
+function designSystemBeforeCommit(
   bus: EventBus,
   registry?: PackRegistry
 ): (project: Project, direction: Direction) => Promise<void> {
@@ -90,3 +90,35 @@ export function designSystemBeforeCommit(
     });
   };
 }
+
+export { createAgentRunner, designSystemBeforeCommit };
+export { askQuestions } from "./clarify.js";
+export { COMMENT_STATUSES, describeCommentList } from "./comment-tools.js";
+export { isLeanRun, leanContext, leanRunConfig } from "./lean-run.js";
+export { createRunLifecycle } from "./lifecycle.js";
+export {
+  BASH_EDIT_TOOL,
+  EDIT_TOOL_NAMES,
+  canChangePreview,
+  createCanUseTool,
+  createPreToolUseGuard,
+} from "./permissions.js";
+export {
+  buildFlowPlan,
+  buildPortPlan,
+  portFlowText,
+  portPlanText,
+  readSourcePage,
+  sourcePagePath,
+} from "./port-plan.js";
+export {
+  compareToReference,
+  mimeOfPath,
+  scoreLines,
+} from "./reference-check.js";
+export { loadRepoContext } from "./repo-context.js";
+export { createSdkDriver } from "./sdk-driver.js";
+export { discoverSkills, prepareSkills } from "./skills.js";
+export { buildUserText } from "./user-message.js";
+export type { PortPlanInput } from "./port-plan.js";
+export type { PreparedSkills } from "./skills.js";

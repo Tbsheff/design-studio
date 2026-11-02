@@ -7,9 +7,11 @@ import {
   type SDKMessage,
 } from "@anthropic-ai/claude-agent-sdk";
 
-import { createRunLifecycle } from "../src/server/agent/lifecycle.js";
-import { createSdkDriver } from "../src/server/agent/sdk-driver.js";
-import type { PreparedSkills } from "../src/server/agent/skills.js";
+import {
+  createRunLifecycle,
+  createSdkDriver,
+} from "../src/server/agent/index.js";
+import type { PreparedSkills } from "../src/server/agent/index.js";
 import {
   createFakeBus,
   createFakePreview,
@@ -31,7 +33,7 @@ const MANUAL_SKILL =
   process.env["SMOKE_MANUAL_SKILL"] ?? "personal:example-manual-skill";
 const CLI_BUILTIN_SKILLS = ["design", "doctor"];
 const userSkillCount = async () => {
-  const { discoverSkills } = await import("../src/server/agent/skills.js");
+  const { discoverSkills } = await import("../src/server/agent/index.js");
   return (await discoverSkills()).skills.length;
 };
 
@@ -144,7 +146,7 @@ async function runOnce(
   };
   const skillsRoot = path.join(temp.root, "skills-plugins");
   if (disabledAll) {
-    const { discoverSkills } = await import("../src/server/agent/skills.js");
+    const { discoverSkills } = await import("../src/server/agent/index.js");
     temp.project.settings.disabledSkills = (await discoverSkills()).skills.map(
       (skill) => skill.id
     );

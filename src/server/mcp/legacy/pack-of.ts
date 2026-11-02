@@ -6,7 +6,7 @@ const packOf = async (deps: EditDeps, packId: string): Promise<PackSummary> => {
   const packs = await studioCall<{ items: PackSummary[] }>(
     deps,
     "GET",
-    "/api/packs?limit=200"
+    "/api/packs?cursor=null&limit=200"
   );
 
   const pack = packs.items.find((item) => item.id === packId);

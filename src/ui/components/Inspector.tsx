@@ -42,6 +42,11 @@ import "../styles/inspector-edit.css";
 const InspectorProps = lazy(() => import("./InspectorProps"));
 const InspectorImage = lazy(() => import("./InspectorImage"));
 const InspectorVector = lazy(() => import("./InspectorVector"));
+const AccessibilitySlot = lazy(async () => {
+  const loaded = await import("../features/accessibility");
+
+  return { default: loaded.AccessibilitySlot };
+});
 const StackingSlot = lazy(async () => {
   const loaded = await import("../features/stacking");
 
@@ -426,6 +431,30 @@ function StackingSection(props: InspectorProps) {
   );
 }
 
+function AccessibilitySection(props: InspectorProps) {
+  const target = props.selection[0];
+
+  if (
+    props.selection.length !== 1 ||
+    !target ||
+    !props.directionId ||
+    !props.editable
+  ) {
+    return null;
+  }
+
+  return (
+    <Suspense fallback={null}>
+      <AccessibilitySlot
+        key={target.selector}
+        projectId={props.projectId}
+        directionId={props.directionId}
+        target={target}
+      />
+    </Suspense>
+  );
+}
+
 function useUseSite(props: InspectorProps) {
   const [componentFor, setComponentFor] = useState<string | null>(null);
   const target = props.selection.length === 1 ? props.selection[0] : undefined;
@@ -514,6 +543,7 @@ function SimpleTab(props: InspectorProps) {
           <VectorSection {...props} />
           <ImageSection {...props} />
           <StackingSection {...props} />
+          <AccessibilitySection {...props} />
           <ComponentSection {...props} />
         </>
       }

@@ -113,6 +113,7 @@ const CanvasRulers = lazy(() => import("./CanvasRulers"));
 const VectorLayer = lazy(() => import("./VectorLayer"));
 const InlinePrompt = lazy(() => import("./InlinePrompt"));
 
+import { TabOrderSlot } from "../features/accessibility/tab-order-slot";
 import { FindPanelSlot } from "../features/text-search/find-panel-slot";
 import { useFindHost } from "../features/text-search/use-find-host";
 import {
@@ -1802,6 +1803,16 @@ function CanvasView(props: ViewProps) {
               covered={covered}
               wait={firstBuild.wait}
               path={active.path}
+            />
+            <TabOrderSlot
+              projectId={projectId}
+              directionId={directionId}
+              frameId={active.id}
+              frames={frames}
+              kind={kind}
+              isBlocked={protoOn}
+              lastChange={props.lastChange}
+              zoom={pz.zoom}
             />
             <LiveOverlay
               hover={frames.hover}

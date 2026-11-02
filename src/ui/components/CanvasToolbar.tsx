@@ -1,6 +1,7 @@
 import { useState, type KeyboardEvent, type ReactNode } from "react";
 
 import { runCommand } from "../commands/registry";
+import { TabOrderToggle } from "../features/accessibility/tab-order-toggle";
 import { uiStore, type Viewport, type ZoomSetting } from "../storage";
 import { VECTOR_TOOLS, useVectorTool, vectorTool } from "../vectorTool";
 import { PenIcon } from "./DrawLayer";
@@ -456,6 +457,7 @@ export function CanvasViewRow(props: Props) {
       <div className="spacer" />
       <InsertIconButton />
       <FindPhotoButton />
+      <TabOrderToggle />
       {props.drawMode !== undefined && (
         <button
           className="btn small ghost select-toggle draw-toggle"

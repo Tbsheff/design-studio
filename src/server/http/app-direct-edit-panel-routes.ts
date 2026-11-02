@@ -4,6 +4,7 @@ import type { Hono } from "hono";
 
 import { componentPreviewsFor } from "../components/preview.js";
 import { createComponentService } from "../components/thumbs.js";
+import { registerAccessibilityRoutes } from "./accessibility-routes.js";
 import type { AppContext } from "./app-context.js";
 import { readBody } from "./app-request.js";
 import { registerComponentCreateRoutes } from "./component-create-routes.js";
@@ -101,6 +102,7 @@ const registerStylePanelRoutes = (app: Hono, ctx: AppContext): void => {
   registerSpacingRoutes(app, plain);
   registerStateStyleRoutes(app, { ...plain, canvas });
   registerStackingRoutes(app, plain);
+  registerAccessibilityRoutes(app, { ...withPreview, canvas });
   registerImageSearchRoutes(app, { ...withPreview, projects });
   registerComponentVariantRoutes(app, withPreview);
   registerFigmaRoutes(app, withPreview);

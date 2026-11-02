@@ -3,7 +3,7 @@ import { userInfo } from "node:os";
 import type { Context, Hono } from "hono";
 
 import type { Project } from "../../shared/contracts.js";
-import { askQuestions } from "../agent/clarify.js";
+import { askQuestions } from "../agent/index.js";
 import { buildEnv } from "../platform/config/index.js";
 import {
   SAMPLE_NAME,

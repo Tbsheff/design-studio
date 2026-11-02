@@ -439,7 +439,7 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/ui/features/icons/deps.ts",
       "src/ui/features/text-styles/deps.ts",
       "src/ui/features/motion/deps.ts",
-      "src/server/http/{{fill,spacing,component-variant,link-interaction,page-import,text-search,motion,state-style,stacking,image-search,accessibility}-routes,app-{context,errors,project-files,request,run-parse,*-routes}}.ts",
+      "src/server/http/{{fill,spacing,component-variant,link-interaction,page-import,text-search,motion,state-style,stacking,image-search,accessibility}-routes,app-{context,errors,project-files,request,run-parse,*-routes},loopback-guard}.ts",
       "src/{ui/features/{fill,spacing,component-variant,link-interaction,page-import,text-search,state-styles,stacking,image-search,accessibility}/deps,bridge/play-triggers}.ts",
     ],
     rules: { "import/no-relative-parent-imports": "off" },

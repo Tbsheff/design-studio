@@ -38,6 +38,9 @@ importers:
       culori:
         specifier: ^4.0.2
         version: 4.0.2
+      effect:
+        specifier: 4.1.1
+        version: 4.1.1
       electron-updater:
         specifier: 6.8.9
         version: 6.8.9
@@ -2332,6 +2335,9 @@ packages:
 
   ee-first@1.1.1:
     resolution: {integrity: sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==}
+
+  effect@4.1.1:
+    resolution: {integrity: sha512-XYu65BrcmNqu5i7PPvP4dqL+R5ma37zIsfuSPjcn78mog+6e5PkilNg7Xo+pBpjXJYlWEIpH4j91tMrfW05CMw==}
 
   ejs@3.1.10:
     resolution: {integrity: sha512-UeJmFfOrAQS8OJWPZ4qtgHyWExa088/MtK5UEyoJGFH67cDEXkZSviOiKRCZ4Xij0zxI3JECgYs3oKx+AizQBA==}
@@ -6970,6 +6976,8 @@ snapshots:
       readable-stream: 2.3.8
 
   ee-first@1.1.1: {}
+
+  effect@4.1.1: {}
 
   ejs@3.1.10:
     dependencies:

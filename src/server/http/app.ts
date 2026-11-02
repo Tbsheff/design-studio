@@ -1,7 +1,5 @@
 import { Hono } from "hono";
 
-import { APP_STREAM_PATH } from "../../shared/app-stream.js";
-import { STUDIO_TOKEN_HEADER } from "../../shared/contracts.js";
 import { registerAppCanvasRoutes } from "./app-canvas-routes.js";
 import { registerAppCommentsRoutes } from "./app-comments-routes.js";
 import { createAppContext, type AppDeps } from "./app-context.js";
@@ -40,6 +38,7 @@ import {
   registerVersionsRoutes,
 } from "./app-versions-routes.js";
 import { registerWorkspacesRoutes } from "./app-workspaces-routes.js";
+import { registerLoopbackGuard } from "./loopback-guard.js";
 import { isRunSummary } from "./run-list.js";
 import { renderIndexHtml, serveStatic } from "./static.js";
 
@@ -47,7 +46,7 @@ export { isRunSummary };
 
 export function createApp(deps: AppDeps): Hono {
   const ctx = createAppContext(deps);
-  const { allowedOrigins, config, uiDir } = ctx;
+  const { config, uiDir } = ctx;
   const app = new Hono();
   app.onError((error, c) => {
     const reply = toErrorReply(error);
@@ -57,21 +56,7 @@ export function createApp(deps: AppDeps): Hono {
 
   registerSessionRoutes(app, ctx);
 
-  app.use("/api/*", async (c, next) => {
-    const origin = c.req.header("origin");
-    if (origin !== undefined && !allowedOrigins.has(origin))
-      return c.json({ error: "forbidden" }, 403);
-    const isEventStream =
-      c.req.method === "GET" &&
-      (/^\/api\/projects\/[^/]+\/events$/.test(c.req.path) ||
-        c.req.path === APP_STREAM_PATH);
-    const token =
-      c.req.header(STUDIO_TOKEN_HEADER) ??
-      (isEventStream ? c.req.query("token") : undefined);
-    if (token !== config.studioToken)
-      return c.json({ error: "forbidden" }, 403);
-    await next();
-  });
+  registerLoopbackGuard(app, ctx);
 
   const mcpSlot = createMcpSlot();
   registerProjectsRoutes(app, ctx);

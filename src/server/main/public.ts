@@ -1,6 +1,3 @@
-import { mkdir } from "node:fs/promises";
-import path from "node:path";
-
 import { serve } from "@hono/node-server";
 
 import type { StudioEvent } from "../../shared/contracts.js";
@@ -14,19 +11,18 @@ import { createApp } from "../http/app.js";
 import { pageProbe } from "../page-probe/index.js";
 import { loadConfig } from "../platform/config/index.js";
 import type { ServerConfig } from "../platform/config/index.js";
-import { acquireDataLock } from "../platform/data-lock/index.js";
 import { logError, logInfo } from "../platform/logger/index.js";
 import { createPreviewService, loadBridgeScript } from "../preview/index.js";
 import { createCommentStore } from "../store/comments.js";
 import { createVersionStore } from "../store/versions.js";
 import { desktopSender, linkDesktop } from "./desktop-link.js";
-import { watchParent } from "./parent-watch.js";
+import { handleSignals, prepareDataDir } from "./lifecycle.js";
 import {
   createProjectLayerLocks,
   createWiredProjectStore,
 } from "./project-ports.js";
-
-const FORCE_EXIT_MS = 5000;
+import { buildRuntime } from "./runtime.js";
+import type { StudioRuntime } from "./runtime.js";
 
 type AppDeps = Parameters<typeof createApp>[0];
 
@@ -61,6 +57,7 @@ interface ServerOptions {
 }
 
 interface StudioServer {
+  runtime: StudioRuntime;
   shutdown: (signal: string) => void;
 }
 
@@ -233,58 +230,14 @@ const buildApp = (
   return { app, preview };
 };
 
-const stopAll = async (
-  baseBus: FlushableEventBus,
-  preview: Preview
-): Promise<void> => {
-  try {
-    await Promise.all([baseBus.flush(), preview.stop()]);
-  } catch (error) {
-    logError("[studio] shutdown step failed", error);
-  }
-
-  process.exit(0);
-};
-
-const handleSignals = (
-  server: ReturnType<typeof serve>,
-  baseBus: FlushableEventBus,
-  preview: Preview
-): StudioServer => {
-  let stopping = false;
-
-  const shutdown = (signal: string): void => {
-    if (stopping) {
-      return;
-    }
-
-    stopping = true;
-    logInfo(`[studio] ${signal} received, shutting down`);
-    const forceExit = setTimeout(() => process.exit(1), FORCE_EXIT_MS);
-
-    forceExit.unref();
-    server.close();
-    void stopAll(baseBus, preview);
-  };
-
-  watchParent(() => shutdown("parent exit"));
-  process.on("SIGINT", () => shutdown("SIGINT"));
-  process.on("SIGTERM", () => shutdown("SIGTERM"));
-  process.on("SIGHUP", () => shutdown("SIGHUP"));
-
-  return { shutdown };
-};
-
 const createServer = async (
   options: ServerOptions = {}
 ): Promise<StudioServer> => {
   const config = loadConfig();
 
-  await mkdir(path.join(config.dataDir, "projects"), { recursive: true });
-  const releaseLock = acquireDataLock(config.dataDir, config.studioPort);
+  await prepareDataDir(config);
 
-  process.on("exit", releaseLock);
-
+  const runtime = buildRuntime();
   const stores = await openStores(config, options);
   const { app, preview } = buildApp(config, options, stores);
 
@@ -300,7 +253,11 @@ const createServer = async (
   await preview.start();
   void warmPreview(config, preview, stores.versions, stores.projects);
 
-  return handleSignals(server, stores.baseBus, preview);
+  return handleSignals(server, {
+    baseBus: stores.baseBus,
+    preview,
+    runtime,
+  });
 };
 
 export { createServer };

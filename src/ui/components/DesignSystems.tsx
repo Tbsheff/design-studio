@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 
 import type { PackProblem, PackSummary } from "../../shared/contracts";
-import { ApiError, api, errorText } from "../api";
+import { ApiError, errorText } from "../api";
 import { downloadBlob } from "../format";
 import { fontStack, refreshPacks, usePacks } from "../packs";
+import { packApi } from "../platform/pack-api";
 import { uiStore, type LibraryFrom } from "../storage";
 import { Icon } from "./Icon";
 import {
@@ -203,7 +204,7 @@ export function DesignSystems({ from }: { from: LibraryFrom | null }) {
   const fileInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    api
+    packApi
       .packProblems()
       .then(setProblems)
       .catch(() => setProblems([]));
@@ -227,7 +228,7 @@ export function DesignSystems({ from }: { from: LibraryFrom | null }) {
     setImportError(null);
 
     try {
-      const result = await api.importPack(file);
+      const result = await packApi.importPack(file);
       imported(result.pack, result.replaced);
     } catch (err) {
       const existing = existingOf(err);
@@ -246,21 +247,21 @@ export function DesignSystems({ from }: { from: LibraryFrom | null }) {
     onRename: (pack) => setDialog({ kind: "rename", pack }),
     onDelete: (pack) => setDialog({ kind: "delete", pack }),
     onDuplicate: async (pack) => {
-      const copy = await api.duplicatePack(pack.id);
+      const copy = await packApi.duplicatePack(pack.id);
       refreshPacks();
       show(`Made ${copy.name}.`);
       setSelectedId(copy.id);
     },
     onExport: async (pack) =>
-      downloadBlob(await api.exportPack(pack.id), `${pack.id}.zip`),
+      downloadBlob(await packApi.exportPack(pack.id), `${pack.id}.zip`),
     onOpenEditor: async (pack) => {
-      const { project } = await api.openPackEditor(pack.id);
+      const { project } = await packApi.openPackEditor(pack.id);
       leave({ activeProjectId: project.id });
     },
     onUseInNew: (pack) => leave({ activeProjectId: null, lastPackId: pack.id }),
     onApply: from
       ? async (pack) => {
-          await api.applyPack(from.projectId, from.directionId, pack.id);
+          await packApi.applyPack(from.projectId, from.directionId, pack.id);
           leave({ activeProjectId: from.projectId });
         }
       : null,
@@ -387,7 +388,7 @@ export function DesignSystems({ from }: { from: LibraryFrom | null }) {
           pack={dialog.pack}
           onClose={() => setDialog(null)}
           onRename={async (name) => {
-            await api.renamePack(dialog.pack.id, name);
+            await packApi.renamePack(dialog.pack.id, name);
             refreshPacks();
             show(`Renamed to ${name}.`);
           }}
@@ -398,7 +399,7 @@ export function DesignSystems({ from }: { from: LibraryFrom | null }) {
           pack={dialog.pack}
           onClose={() => setDialog(null)}
           onDelete={async () => {
-            await api.deletePack(dialog.pack.id);
+            await packApi.deletePack(dialog.pack.id);
             setSelectedId(null);
             refreshPacks();
             show(`Deleted ${dialog.pack.name}.`);
@@ -410,7 +411,7 @@ export function DesignSystems({ from }: { from: LibraryFrom | null }) {
           existing={dialog.existing}
           onClose={() => setDialog(null)}
           onChoose={async (mode) => {
-            const result = await api.importPack(dialog.file, mode);
+            const result = await packApi.importPack(dialog.file, mode);
             imported(result.pack, result.replaced);
           }}
         />

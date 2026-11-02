@@ -7,7 +7,7 @@ import {
 import type { EditDeps } from "../edit-deps.js";
 import { base, defineTool, ok, versionActivity } from "../edit-kit.js";
 import type { Done, ToolSpec } from "../edit-kit.js";
-import { LIBRARY_TOOLS } from "../library-tools.js";
+import { openFolderTool } from "./open-folder.js";
 import { packOf } from "./pack-of.js";
 import { appliedResult } from "./packs-result.js";
 import type { ApplyResult } from "./packs-result.js";
@@ -62,9 +62,6 @@ const applyDesignSystemTool = defineTool(
   applyDesignSystem
 );
 
-const PACKS_LEGACY_TOOLS: ToolSpec[] = [
-  applyDesignSystemTool,
-  ...LIBRARY_TOOLS,
-];
+const PACKS_LEGACY_TOOLS: ToolSpec[] = [applyDesignSystemTool, openFolderTool];
 
 export { PACKS_LEGACY_TOOLS };

@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import type { Project } from "../shared/contracts";
-import { api } from "./api";
 import type { DesignSystemActions } from "./components/DesignSystemChip";
 import { refreshPacks } from "./packs";
+import { packApi } from "./platform/pack-api";
 
 const TOAST_MS = 5000;
 
@@ -52,7 +52,7 @@ export function usePackActions({
           return;
         }
 
-        const result = await api.applyPack(projectId, directionId, packId);
+        const result = await packApi.applyPack(projectId, directionId, packId);
         setProject(result.project);
         onCommitted();
         show(result.notice ?? `${result.version.title}.`);
@@ -62,7 +62,7 @@ export function usePackActions({
           return;
         }
 
-        const result = await api.savePack(projectId, directionId, {
+        const result = await packApi.savePack(projectId, directionId, {
           name,
           ...(packId ? { packId } : {}),
           ...(asNew ? { asNew: true } : {}),

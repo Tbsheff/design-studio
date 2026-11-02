@@ -33,16 +33,8 @@ import type {
   EditSessionState,
   Direction,
   Project,
-  PackSummary,
   ProjectKind,
   ProjectSettings,
-  ApplyPackResult,
-  SavePackResult,
-  ImportPackMode,
-  ImportPackResult,
-  OpenPackEditorResult,
-  PackProblem,
-  DesignSystemDraftResult,
   SkillCatalog,
   RenderCheckResult,
   RunLevel,
@@ -374,8 +366,6 @@ function sharedTree(url: string): Promise<{ files: string[] }> {
   return next;
 }
 
-const pk = (id: string) => `/api/packs/${enc(id)}`;
-
 export function warmProject(pid: string, directionId: string | null): void {
   warmGet(p(pid));
   warmGet(`${p(pid)}/runs`);
@@ -438,64 +428,12 @@ export const api = {
   onboarding: () => json<{ dismissed: boolean }>("GET", "/api/onboarding"),
   dismissOnboarding: () =>
     json<{ dismissed: boolean }>("POST", "/api/onboarding/dismiss"),
-  listPacks: () => json<PackSummary[]>("GET", "/api/packs"),
-  packProblems: () => json<PackProblem[]>("GET", "/api/packs/problems"),
-  renamePack: (id: string, name: string) =>
-    json<PackSummary>("PATCH", pk(id), { name }),
-  duplicatePack: (id: string, name?: string) =>
-    json<PackSummary>("POST", `${pk(id)}/duplicate`, name ? { name } : {}),
-  deletePack: (id: string) => json<{ ok: true }>("DELETE", pk(id)),
-  exportPack: async (id: string) =>
-    (await request("GET", `${pk(id)}/export`)).blob(),
-  importPack: async (
-    file: File,
-    mode: ImportPackMode = "ask"
-  ): Promise<ImportPackResult> => {
-    const form = new FormData();
-    form.append("file", file, file.name);
-    form.append("mode", mode);
-    const res = await request("POST", "/api/packs/import", form, pickMessage);
-
-    return (await res.json()) as ImportPackResult;
-  },
-  openPackEditor: (id: string) =>
-    json<OpenPackEditorResult>("POST", `${pk(id)}/editor`),
   listSkills: async (): Promise<SkillCatalog> =>
     (await call<
       typeof import("../shared/actions/studio/list-skills.js").listSkillsStudio
     >(routes.listSkillsStudio, {})) as SkillCatalog,
   getDesignSystem: (pid: string, did: string) =>
     json<DesignSystemState>("GET", `${d(pid, did)}/design-system`),
-  applyPack: async (
-    pid: string,
-    did: string,
-    packId: string
-  ): Promise<ApplyPackResult> => {
-    const res = await request(
-      "POST",
-      `${d(pid, did)}/design-system/apply`,
-      { packId },
-      pickMessage
-    );
-
-    return (await res.json()) as ApplyPackResult;
-  },
-  savePack: async (
-    pid: string,
-    did: string,
-    input: { name: string; packId?: string; asNew?: boolean; force?: boolean }
-  ) => {
-    const res = await request(
-      "POST",
-      `${d(pid, did)}/design-system/save`,
-      input,
-      pickMessage
-    );
-
-    return (await res.json()) as SavePackResult;
-  },
-  createDesignSystemDraft: (form: FormData) =>
-    json<DesignSystemDraftResult>("POST", "/api/design-systems/draft", form),
   createToken: async (pid: string, did: string, req: CreateTokenRequest) => {
     const res = await request(
       "POST",

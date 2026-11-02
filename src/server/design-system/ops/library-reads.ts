@@ -217,11 +217,16 @@ const toStart = (cursor: string | null): number => {
   return start;
 };
 
-const toItemPage = (
-  list: readonly DesignSystemItem[],
+interface Page<Item> {
+  readonly items: readonly Item[];
+  readonly next: string | null;
+}
+
+const toPage = <Item>(
+  list: readonly Item[],
   cursor: string | null,
   limit: number
-): ItemPage => {
+): Page<Item> => {
   const start = toStart(cursor);
   const end = start + limit;
   const items = list.slice(start, end);
@@ -233,6 +238,12 @@ const toItemPage = (
   return { items, next: String(end) };
 };
 
-export { listItems, readDraftInfo, readDraftStatus, toItemPage };
+const toItemPage = (
+  list: readonly DesignSystemItem[],
+  cursor: string | null,
+  limit: number
+): ItemPage => toPage(list, cursor, limit);
 
-export type { ItemPage };
+export { listItems, readDraftInfo, readDraftStatus, toItemPage, toPage };
+
+export type { ItemPage, Page };

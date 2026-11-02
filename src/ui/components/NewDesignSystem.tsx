@@ -3,9 +3,10 @@ import type { DragEvent, FormEvent, KeyboardEvent, ReactNode } from "react";
 
 import type { PackSummary } from "../../shared/contracts";
 import { Markdown } from "../ai/components/ai/markdown";
-import { api, errorText } from "../api";
+import { errorText } from "../api";
 import { hasNativePicker, pickFolder } from "../folderPicker";
 import { pickable, refreshPacks, usePacks } from "../packs";
+import { packApi } from "../platform/pack-api";
 import { Icon } from "./Icon";
 
 const MAX_URLS = 3;
@@ -788,7 +789,7 @@ export function NewDesignSystem({
     setError(null);
 
     try {
-      const result = await api.createDesignSystemDraft(toFormData(form));
+      const result = await packApi.createDesignSystemDraft(toFormData(form));
       refreshPacks();
       onCreated(result.project.id);
     } catch (err) {

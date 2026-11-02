@@ -158,12 +158,123 @@ const DraftStatusSchema = Schema.Struct({
   sources: Schema.NullOr(StatusSourcesSchema),
 });
 
+const UPLOAD_NAME_MAX = 255;
+
+const DraftImageSchema = Schema.Struct({
+  content: Schema.String.annotate({
+    description: "The image file as base64 text.",
+  }),
+  mime: Schema.String,
+  name: Schema.String.check(Schema.isMaxLength(UPLOAD_NAME_MAX)),
+});
+
+const TokensUploadSchema = Schema.Struct({
+  name: Schema.String.check(Schema.isMaxLength(UPLOAD_NAME_MAX)),
+  text: Schema.String,
+});
+
+const PackProblemSchema = Schema.Struct({
+  errors: Schema.Array(Schema.String),
+  id: Schema.String,
+  source: PackSourceSchema,
+});
+
+const PackFileSchema = Schema.Struct({
+  content: Schema.String,
+  name: Schema.String,
+  type: Schema.String,
+});
+
+const ImportResultSchema = Schema.Struct({
+  pack: PackSummarySchema,
+  replaced: Schema.Boolean,
+});
+
+const EditorResultSchema = Schema.Struct({
+  created: Schema.Boolean,
+  project: Schema.Unknown,
+});
+
+const ApplyResultSchema = Schema.Struct({
+  notice: Schema.NullOr(Schema.String),
+  project: Schema.Unknown,
+  state: Schema.Unknown,
+  version: Schema.Unknown,
+  wired: Schema.Boolean,
+  written: Schema.Array(Schema.String),
+});
+
+const SaveResultSchema = Schema.Struct({
+  created: Schema.Boolean,
+  pack: PackSummarySchema,
+  project: Schema.Unknown,
+  version: Schema.Unknown,
+});
+
+const DraftResultSchema = Schema.Struct({
+  coverage: Schema.Unknown,
+  directionId: Schema.NullOr(Schema.String),
+  grade: Schema.String,
+  improve: Schema.String,
+  ms: Schema.Number,
+  name: Schema.String,
+  next: Schema.String,
+  pack: PackSummarySchema,
+  packId: Schema.String,
+  project: Schema.Unknown,
+  projectId: Schema.String,
+});
+
+const PublishedDraftSchema = Schema.Struct({
+  checkPassed: Schema.Boolean,
+  created: Schema.Boolean,
+  name: Schema.String,
+  packId: Schema.String,
+  versionId: Schema.NullOr(Schema.String),
+});
+
+const OkSchema = Schema.Struct({ ok: Schema.Literal(true) });
+
+const PackFontsInputSchema = PackFontsSchema;
+
+const PackModeInputSchema = PackModeSchema;
+
+const ProvenanceSchema = Schema.Literals(["original", "imported", "extracted"]);
+
+const TokensJsonSchema = Schema.Union([
+  Schema.String,
+  Schema.Record(Schema.String, Schema.Unknown),
+]);
+
+type PackProblemItem = typeof PackProblemSchema.Type;
+
+type PackFile = typeof PackFileSchema.Type;
+
+type DraftResult = typeof DraftResultSchema.Type;
+
+type PublishedDraft = typeof PublishedDraftSchema.Type;
+
 type DesignSystemItem = typeof DesignSystemItemSchema.Type;
 
 type DraftStatus = typeof DraftStatusSchema.Type;
 
 export {
+  ApplyResultSchema,
   CheckResultSchema,
+  DraftImageSchema,
+  DraftResultSchema,
+  EditorResultSchema,
+  ImportResultSchema,
+  OkSchema,
+  PackFileSchema,
+  PackFontsInputSchema,
+  PackModeInputSchema,
+  PackProblemSchema,
+  ProvenanceSchema,
+  PublishedDraftSchema,
+  SaveResultSchema,
+  TokensJsonSchema,
+  TokensUploadSchema,
   DesignSystemItemSchema,
   DraftInfoSchema,
   DraftStatusSchema,
@@ -171,4 +282,11 @@ export {
   PackSummarySchema,
 };
 
-export type { DesignSystemItem, DraftStatus };
+export type {
+  DesignSystemItem,
+  DraftResult,
+  DraftStatus,
+  PackFile,
+  PackProblemItem,
+  PublishedDraft,
+};

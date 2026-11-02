@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 
+import type { listSummaryPacks } from "../shared/actions/packs/list-summary.js";
+import { routes } from "../shared/actions/packs/routes.js";
 import type { PackSummary } from "../shared/contracts";
-import { api, errorText } from "./api";
+import { errorText } from "./api";
+import { call } from "./platform/http";
 
 export interface PacksState {
   packs: PackSummary[] | null;
@@ -10,9 +13,20 @@ export interface PacksState {
 
 let cached: Promise<PackSummary[]> | null = null;
 
+const LIST_LIMIT = 200;
+
+async function listPacks(): Promise<PackSummary[]> {
+  const page = await call<typeof listSummaryPacks>(routes.listSummaryPacks, {
+    cursor: null,
+    limit: LIST_LIMIT,
+  });
+
+  return page.items as PackSummary[];
+}
+
 function loadPacks(): Promise<PackSummary[]> {
   if (!cached) {
-    cached = api.listPacks().catch((err: unknown) => {
+    cached = listPacks().catch((err: unknown) => {
       cached = null;
       throw err;
     });

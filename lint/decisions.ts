@@ -254,7 +254,7 @@ export const SCOPED_OFF_REASONS: Record<string, string> = {
   "import/no-default-export":
     "Off in *.config.ts and the cloud/api Worker entry: the tools and the Workers runtime load a default export.",
   "sonarjs/no-implicit-dependencies":
-    "Off in cloud/api platform files that import cloudflare:workers, a runtime module and no npm package.",
+    "Off in cloud/api platform files that import cloudflare:workers (a runtime module), and in auth/options.ts until cloud/api/package.json lists @better-auth/api-key and @better-auth/passkey.",
   "unicorn/throw-new-error":
     "Off in src/shared/contract, src/server and cloud/api: its autofix breaks every TaggedError class (D29).",
   "import/max-dependencies":
@@ -420,7 +420,7 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/server/{mcp/fill-tools,agent/fill-tool,fill/deps}.ts",
       "src/server/{design-system/model/index,design-system/ops/index,spacing/deps,mcp/spacing-tools,agent/spacing-tool,components/variant-write/deps,mcp/component-variant-tools,agent/component-variant-tool,canvas/links/link-interaction,canvas/links/link-interaction-input,canvas/links/link-target,mcp/link-interaction-tools,agent/link-interaction-tool,page-import/deps,mcp/page-import-tools,agent/page-import-tool,text-search/deps,mcp/text-search-tools,agent/text-search-tool,breakpoints/deps,mcp/breakpoints-tools,agent/breakpoints-tool,state-styles/deps,mcp/state-styles-tools,agent/state-styles-tool,style-scope/engine/deps,stacking/deps,stacking/engine/deps,mcp/stacking-tools,agent/stacking-tool,image-search/deps,mcp/image-search-tools,agent/image-search-tool,accessibility/deps,mcp/accessibility-tools,agent/accessibility-tool}.ts",
       "src/server/{mcp/copy-code-tools,agent/copy-code-tool}.ts",
-      "cloud/api/src/tenant/{probes/{planted-tq,cross-org},repos/projects,blobs,current-org,db,resolver,viewer-db}.ts",
+      "cloud/api/src/{tenant/{probes/{planted-tq,cross-org},repos/projects,blobs,current-org,db,resolver,viewer-db},auth/{gateway,permissions,rate-limit}}.ts",
       "src/server/export/copy-handler.ts",
       "src/server/export/copy-react.ts",
       "src/server/http/text-style-routes.ts",
@@ -476,7 +476,7 @@ export const decisionOverrides: OxlintOverride[] = [
     rules: { "import/no-default-export": "off" },
   },
   {
-    files: ["cloud/api/src/platform/{bindings,rate-limiter}.ts"],
+    files: ["cloud/api/src/{platform/{bindings,rate-limiter},auth/options}.ts"],
     rules: { "sonarjs/no-implicit-dependencies": "off" },
   },
   {

@@ -1,3 +1,4 @@
+import { ACCESSIBILITY_TOOLS } from "../accessibility-tools.js";
 import { BREAKPOINT_TOOLS } from "../breakpoints-tools.js";
 import { COMPONENT_VARIANT_TOOLS } from "../component-variant-tools.js";
 import { defineTool } from "../edit-kit.js";
@@ -65,6 +66,7 @@ const DIRECT_EDIT_INLINE_TOOLS: ToolSpec[] = [
   ...BREAKPOINT_TOOLS,
   ...STATE_STYLE_TOOLS,
   ...STACKING_TOOLS,
+  ...ACCESSIBILITY_TOOLS,
   ...IMAGE_SEARCH_TOOLS,
 ];
 

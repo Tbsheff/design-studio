@@ -54,6 +54,8 @@ const CORE_TOOLS = [
   "set_image",
   "search_images",
   "place_image",
+  "inspect_accessibility",
+  "set_accessibility",
   "import_page",
   "export_frame",
   "draw_vector",

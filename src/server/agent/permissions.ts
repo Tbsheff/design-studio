@@ -139,6 +139,8 @@ const GET_STACKING_TOOL = "mcp__studio__get_stacking";
 const SET_STACKING_TOOL = "mcp__studio__set_stacking";
 const SEARCH_IMAGES_TOOL = "mcp__studio__search_images";
 const PLACE_IMAGE_TOOL = "mcp__studio__place_image";
+const INSPECT_ACCESSIBILITY_TOOL = "mcp__studio__inspect_accessibility";
+const SET_ACCESSIBILITY_TOOL = "mcp__studio__set_accessibility";
 
 const DIRECT_EDIT_TOOLS = new Set<string>([
   INSERT_ICON_TOOL,
@@ -166,6 +168,7 @@ const DIRECT_EDIT_TOOLS = new Set<string>([
   SET_STATE_STYLE_TOOL,
   SET_STACKING_TOOL,
   PLACE_IMAGE_TOOL,
+  SET_ACCESSIBILITY_TOOL,
   ...STUDIO_EDIT_TOOLS_R13,
 ]);
 
@@ -210,6 +213,8 @@ const STUDIO_MCP_TOOLS: readonly string[] = [
   SET_STACKING_TOOL,
   SEARCH_IMAGES_TOOL,
   PLACE_IMAGE_TOOL,
+  INSPECT_ACCESSIBILITY_TOOL,
+  SET_ACCESSIBILITY_TOOL,
   ...AGENT_OPS.toolIds,
 ];
 

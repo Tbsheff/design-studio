@@ -1,6 +1,10 @@
 import { FRAME_STATES_NOTE } from "../app/frame-state-service.js";
 import { FLOW_NOTE } from "../app/route-flow.js";
 import {
+  inspectAccessibilityDescription,
+  setAccessibilityDescription,
+} from "./accessibility-tool.js";
+import {
   listBreakpointsDescription,
   setBreakpointStyleDescription,
 } from "./breakpoints-tool.js";
@@ -176,6 +180,10 @@ export const TOOL_SHORT = {
     "Read only. Search free Creative Commons stock photos by words, orientation and limit; returns thumbnail, full url, size, author and license.",
   place_image:
     "Download one search_images result into the project assets, set it on an <img> or background with alt text, and credit it in ASSETS.md.",
+  inspect_accessibility:
+    "Read only. List the role and name of a layer, the tab order, unnamed controls, images with no alt and low contrast pairs with a token that passes.",
+  set_accessibility:
+    "Set aria-label, role, alt or tabIndex on one layer as one version; on a kit component it sets the prop at the call site.",
   draw_vector: VECTOR_DRAW_SHORT,
   boolean_shapes: VECTOR_BOOLEAN_SHORT,
   paint_shape: VECTOR_PAINT_SHORT,
@@ -306,6 +314,8 @@ export const TOOL_HELP: Record<
   set_image: SET_IMAGE_AGENT_DESCRIPTION,
   search_images: searchImagesDescription,
   place_image: placeImageDescription,
+  inspect_accessibility: inspectAccessibilityDescription,
+  set_accessibility: setAccessibilityDescription,
   import_page: importPageDescription,
   draw_vector: VECTOR_DRAW_SHORT,
   boolean_shapes: VECTOR_BOOLEAN_SHORT,

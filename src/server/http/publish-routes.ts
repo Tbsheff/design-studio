@@ -65,10 +65,6 @@ function registerSetupRoutes(
   deps: PublishRouteDeps,
   service: PublishService
 ): void {
-  app.get("/api/publish/cli", async (c) =>
-    c.json(await service.cli.state(c.req.query("fresh") === "1"))
-  );
-
   app.post("/api/publish/login", async (c) => {
     const body = await deps.readBody(c);
 
@@ -97,10 +93,6 @@ function registerSetupRoutes(
     return c.json(await service.cli.setAccount(body.accountId));
   });
 
-  app.get("/api/publish/backend", async (c) =>
-    c.json(await service.backend.state(c.req.query("check") === "1"))
-  );
-
   app.post("/api/publish/backend/setup", async (c) => {
     const body = await deps.readBody(c);
     const mode = body.mode === "local" ? "local" : "cloudflare";
@@ -118,10 +110,6 @@ export function registerPublishRoutes(
 
   const pidOf = (c: Context) =>
     assertSafeId(c.req.param("pid") ?? "", "projectId");
-
-  app.get("/api/projects/:pid/publications", async (c) =>
-    c.json(await service.list(pidOf(c)))
-  );
 
   app.post("/api/projects/:pid/publish/plan", async (c) =>
     c.json(await service.plan(pidOf(c), planInput(await deps.readBody(c))))
@@ -160,10 +148,6 @@ export function registerPublishRoutes(
       ),
     });
   });
-
-  app.get("/api/projects/:pid/publications/:id/comments", async (c) =>
-    c.json({ comments: await service.comments(pidOf(c), c.req.param("id")) })
-  );
 
   app.delete("/api/projects/:pid/publications/:id/comments/:cid", async (c) => {
     await service.deleteComment(

@@ -25,7 +25,6 @@ import {
   NotFoundError,
   assertSafeId,
 } from "../store/errors.js";
-import { createKeyedMutex } from "../store/mutex.js";
 import { cliFailure, runCf } from "./cli.js";
 import { hashPassword } from "./password.js";
 import {
@@ -38,17 +37,16 @@ import {
   type Built,
   type StagedFile,
 } from "./plan-build.js";
+import { toPublishCore } from "./publish-core.js";
 import { remoteClient, studioErrors, type RemoteClient } from "./remote.js";
 import { scrubCliText, tailLines } from "./scrub.js";
-import { createCliSession, type CliSession } from "./session.js";
-import { createPublishBackend, type PublishBackend } from "./setup.js";
+import type { CliSession } from "./session.js";
+import type { PublishBackend } from "./setup.js";
 import {
-  createPublishStore,
   toPublication,
   type PublicationRecord,
   type PublishStore,
 } from "./store.js";
-import { createKeyVault } from "./vault.js";
 
 export interface PublishDeps extends BuildDeps {
   dataDir: string;
@@ -273,11 +271,13 @@ function planOf(a: PlanArgs): PublishPlan {
 }
 
 export function createPublishService(deps: PublishDeps): PublishService {
-  const store: PublishStore = createPublishStore(deps.dataDir);
-  const cli = createCliSession(store);
-  const backend = createPublishBackend(store, cli, createKeyVault(store.dir));
+  const core = toPublishCore(deps.dataDir);
+  const store: PublishStore = core.files;
+  const { cli, backend, lock } = core;
+  for (const secret of deps.secrets) {
+    core.secrets.add(secret);
+  }
   const plans = new Map<string, HeldPlan>();
-  const lock = createKeyedMutex();
   const stagingRoot = path.join(store.dir, "staging");
   void rm(stagingRoot, { recursive: true, force: true });
 

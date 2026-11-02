@@ -48,7 +48,9 @@ const EDITS_OFF_TEXT =
 const DROPPED_KEYS: ReadonlySet<string> = new Set(["$schema", "not"]);
 
 const toInputSchema = (action: AnyAction): JsonSchema.JsonSchema => {
-  const document = Schema.toJsonSchemaDocument(action.input);
+  const document = Schema.toJsonSchemaDocument(action.input, {
+    onExcessProperty: "error",
+  });
 
   const kept = Object.entries(document.schema).filter(
     ([key]) => !DROPPED_KEYS.has(key)

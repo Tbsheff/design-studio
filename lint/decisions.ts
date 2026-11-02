@@ -302,6 +302,7 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/{server/handlers/_core/handler,server/handlers/_core/run-action,server/handlers/studio/handlers,server/handlers/studio/health,server/handlers/studio/list-skills,server/handlers/studio/live,shared/actions/studio/health,shared/actions/studio/list-skills}.ts",
       "src/server/{http/mount,http/mount-all,http/wire-error,mcp/registry,agent-tools/registry,agent-tools/sdk-shape}.ts",
       "{cloud/publish-worker/src/protocol,src/server/handlers/publish/live,src/server/publish/cf-cli,src/shared/actions/_core/http-status,src/shared/actions/_core/errors/all,src/shared/actions/publish/errors/status}.ts",
+      "src/{server/handlers/publish/get,server/handlers/publish/handlers,server/handlers/publish/inspect,server/handlers/publish/list,server/handlers/publish/list-comments,server/publish/publications,server/publish/publish-core,server/publish/publish-store,shared/actions/publish/get,shared/actions/publish/inspect,shared/actions/publish/list,shared/actions/publish/list-comments}.ts",
       "src/server/agent/legacy/agent-ops.ts",
       "src/server/agent/legacy/direct-edit.ts",
       "scripts/stamp/{names,templates,templates-ui,write}.ts",

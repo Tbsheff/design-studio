@@ -85,8 +85,6 @@ const publishInput = z
   })
   .strict();
 
-const listInput = z.object({ projectId }).strict();
-
 const unpublishInput = z
   .object({
     projectId,
@@ -265,30 +263,6 @@ const publishDesign = defineTool(
   }
 );
 
-const listPublications = defineTool(
-  "list_publications",
-  listInput,
-  {
-    title: "List publications",
-    description: `List the publications of a project: id, title, URL, status (live, failed, ended, removed), source version, pages, size, password on or off, end date, view counts (total and last 7 days, no personal data), viewer comment count and published versions for rollback_publication. Read only. ${PUBLISH_NOTE}`,
-    readOnly: true,
-    idempotent: true,
-  },
-  async (deps, input) => {
-    const { project } = await loadTarget(deps, input.projectId);
-
-    const list = await studioCall<PublicationList>(
-      deps,
-      "GET",
-      `/api/projects/${encodeURIComponent(project.id)}/publications`
-    );
-
-    return {
-      result: ok({ publications: list.publications.map(publicationView) }),
-    };
-  }
-);
-
 function unpublishDetail(p: Publication): string {
   if (p.backend === "app") {
     return `${p.url ?? "Its URL"} stops working at once (410) and its files are deleted from R2. View counts and comments stay.`;
@@ -417,7 +391,6 @@ const rollbackPublication = defineTool(
 
 export const PUBLISH_TOOLS = [
   publishDesign,
-  listPublications,
   unpublishDesign,
   rollbackPublication,
 ];

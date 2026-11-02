@@ -22,7 +22,7 @@ export interface WhoAmI {
   accounts: PublishAccount[];
 }
 
-const DEFAULT_TIMEOUT_MS = 170_000;
+export const DEFAULT_TIMEOUT_MS = 170_000;
 
 export const LOGIN_SCOPES = [
   "account:read",
@@ -84,7 +84,9 @@ export async function newestCf(
   return best;
 }
 
-function cliEnv(accountId: string | null | undefined): NodeJS.ProcessEnv {
+export function cliEnv(
+  accountId: string | null | undefined
+): NodeJS.ProcessEnv {
   const env: NodeJS.ProcessEnv = {
     ...process.env,
     PATH: pathWithLoginShell(),

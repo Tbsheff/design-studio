@@ -16,6 +16,7 @@ import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import type { Project, Version } from "../../shared/contracts.js";
+import { projectStorePorts } from "../main/project-ports.js";
 import type { ServerConfig, VersionStore } from "../types.js";
 import { createProjectStore } from "./projects.js";
 import type { StudioProjectStore } from "./projects.js";
@@ -40,7 +41,7 @@ async function write(
 beforeEach(async () => {
   ({ config, cleanup } = await makeTempConfig());
   versions = createVersionStore(config);
-  projects = createProjectStore(config, versions);
+  projects = createProjectStore(config, versions, projectStorePorts);
   project = await projects.create({ name: "Test", kind: "html" });
   await versions.ensureRepo(project);
 });

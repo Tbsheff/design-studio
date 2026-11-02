@@ -302,6 +302,7 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/server/store/events.ts",
       "src/server/store/git-objects.ts",
       "src/server/store/mutex.ts",
+      "src/server/store/starters.ts",
     ],
     rules: { "import/no-relative-parent-imports": "off" },
   },

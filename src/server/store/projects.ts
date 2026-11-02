@@ -22,6 +22,8 @@ import {
   SETTINGS_VERSION,
 } from "../../shared/contracts.js";
 import type {
+  AppCandidate,
+  AppFramework,
   AttachAppRequest,
   AttachedApp,
   Attachment,
@@ -36,10 +38,7 @@ import {
   slugCandidate,
   slugify,
 } from "../../shared/folders.js";
-import { cleanAppDir, detectApp, frameworkOf } from "../app/detect.js";
-import { nextAppWorkspace } from "../app/workspace-root.js";
-import { findTokenFile } from "../design-system/app-tokens/detect.js";
-import { DESIGN_MD_FILE, writeFileAtomic } from "../design-system/packs.js";
+import { writeAtomic } from "../platform/atomic-write/index.js";
 import { packagedResource, resourcePath } from "../resources.js";
 import type { ProjectStore, ServerConfig, VersionStore } from "../types.js";
 import {
@@ -53,6 +52,34 @@ import {
 import { createKeyedMutex } from "./mutex.js";
 
 const MAIN_DIRECTION_ID = "main";
+const DESIGN_MD_FILE = "DESIGN.md";
+
+export interface DetectedApp {
+  framework: AppFramework | null;
+  appDir: string | null;
+  candidates: AppCandidate[];
+}
+
+export interface AppDetection {
+  cleanAppDir(raw: string): string | null;
+  detectApp(root: string): Promise<DetectedApp>;
+  frameworkOf(pkg: Record<string, unknown> | null): AppFramework | null;
+  nextAppWorkspace(
+    folder: string
+  ): Promise<{ root: string; appDir: string } | null>;
+}
+
+export interface PackLookup {
+  findTokenFile(workTree: string): Promise<string | null>;
+}
+
+export interface ProjectStorePorts {
+  apps: AppDetection;
+  packs: PackLookup;
+}
+
+const writeFileAtomic = (file: string, content: string): Promise<void> =>
+  writeAtomic(file, content, { createDir: true });
 
 const DEFAULT_TEMPLATE_DIR = resourcePath(
   path.join("templates", "react-vite"),
@@ -337,13 +364,14 @@ function hasViteDependency(pkg: unknown): boolean {
 }
 
 async function pickAppDir(
+  apps: AppDetection,
   folder: string,
   requested: string | undefined
 ): Promise<string> {
   let appDir: string | null;
 
   if (typeof requested === "string" && requested.trim() !== "") {
-    appDir = cleanAppDir(requested);
+    appDir = apps.cleanAppDir(requested);
 
     if (appDir === null) {
       throw new BadRequestError(
@@ -351,7 +379,7 @@ async function pickAppDir(
       );
     }
   } else {
-    const detection = await detectApp(folder);
+    const detection = await apps.detectApp(folder);
 
     if (detection.appDir === null && detection.candidates.length > 1) {
       throw new PickAppError(detection.candidates);
@@ -381,7 +409,7 @@ async function pickAppDir(
     () => null
   )) as Record<string, unknown> | null;
 
-  if (frameworkOf(pkg) !== "next") {
+  if (apps.frameworkOf(pkg) !== "next") {
     throw new BadRequestError(
       `${appDir} has no next dependency in its package.json`
     );
@@ -391,12 +419,13 @@ async function pickAppDir(
 }
 
 async function workspaceAppDir(
+  apps: AppDetection,
   folder: string,
   requested: string | undefined
 ): Promise<{ root: string; appDir: string } | null> {
   const sub =
     typeof requested === "string" && requested.trim() !== ""
-      ? cleanAppDir(requested)
+      ? apps.cleanAppDir(requested)
       : ".";
 
   if (sub === null) {
@@ -404,7 +433,7 @@ async function workspaceAppDir(
   }
 
   const target = await realpath(path.join(folder, sub)).catch(() => null);
-  const workspace = target ? await nextAppWorkspace(target) : null;
+  const workspace = target ? await apps.nextAppWorkspace(target) : null;
 
   return workspace && workspace.root !== folder
     ? { root: workspace.root, appDir: workspace.appDir }
@@ -414,8 +443,10 @@ async function workspaceAppDir(
 export function createProjectStore(
   config: ServerConfig,
   versions: VersionStore,
+  ports: ProjectStorePorts,
   options: ProjectStoreOptions = {}
 ): StudioProjectStore {
+  const { apps, packs } = ports;
   const lock = createKeyedMutex();
   const templateDir = options.templateDir ?? DEFAULT_TEMPLATE_DIR;
   const installDeps = options.installTemplateDeps ?? installTemplateModules;
@@ -752,7 +783,7 @@ export function createProjectStore(
       }
 
       const opened = await resolveUserFolder(input.folder);
-      const workspace = await workspaceAppDir(opened, input.appDir);
+      const workspace = await workspaceAppDir(apps, opened, input.appDir);
 
       const folder = workspace
         ? await resolveUserFolder(workspace.root).catch(() => opened)
@@ -766,6 +797,7 @@ export function createProjectStore(
       const env = cleanAppEnv(input.env);
 
       const appDir = await pickAppDir(
+        apps,
         folder,
         folder === opened ? input.appDir : workspace?.appDir
       );
@@ -823,7 +855,10 @@ export function createProjectStore(
         return this.attachApp({ folder, appDir: options.appDir });
       }
 
-      if (!options.skipApp && (await detectApp(folder)).framework === "next") {
+      if (
+        !options.skipApp &&
+        (await apps.detectApp(folder)).framework === "next"
+      ) {
         return this.attachApp({ folder });
       }
 
@@ -835,7 +870,7 @@ export function createProjectStore(
         hasViteDependency(await readJson(packageFile).catch(() => null));
 
       const appWithTokens =
-        hasPackage && !isVite && (await findTokenFile(folder)) !== null;
+        hasPackage && !isVite && (await packs.findTokenFile(folder)) !== null;
 
       if (
         !isVite &&

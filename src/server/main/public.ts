@@ -18,10 +18,10 @@ import { logError, logInfo } from "../platform/logger/index.js";
 import { loadBridgeScript } from "../preview/bridge-bundle.js";
 import { createPreviewService } from "../preview/index.js";
 import { createCommentStore } from "../store/comments.js";
-import { createProjectStore } from "../store/projects.js";
 import { createVersionStore } from "../store/versions.js";
 import { desktopSender, linkDesktop } from "./desktop-link.js";
 import { watchParent } from "./parent-watch.js";
+import { createWiredProjectStore } from "./project-ports.js";
 
 const FORCE_EXIT_MS = 5000;
 
@@ -33,7 +33,7 @@ type Preview = ReturnType<typeof createPreviewService>;
 
 type Versions = ReturnType<typeof createVersionStore>;
 
-type Projects = ReturnType<typeof createProjectStore>;
+type Projects = ReturnType<typeof createWiredProjectStore>;
 
 type Project = Awaited<ReturnType<Projects["list"]>>[number];
 
@@ -147,7 +147,7 @@ const openStores = async (
   options: ServerOptions
 ): Promise<Stores> => {
   const versions = withSaveQueue(createVersionStore(config));
-  const projects = createProjectStore(config, versions);
+  const projects = createWiredProjectStore(config, versions);
   const baseBus = await openEventBus(config.dataDir);
   const linked = linkBus(config, baseBus);
 

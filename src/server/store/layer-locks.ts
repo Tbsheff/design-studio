@@ -5,7 +5,7 @@ import {
   cleanLockKeys,
   type LayerLocksView,
 } from "../../shared/layer-locks.js";
-import { writeAtomic } from "../canvas/service.js";
+import { writeAtomic } from "../platform/atomic-write/index.js";
 import type { EventBus } from "../types.js";
 import { assertSafeId } from "./errors.js";
 import { createKeyedMutex } from "./mutex.js";
@@ -100,7 +100,10 @@ export function createLayerLockStore(deps: LayerLockDeps): LayerLockStore {
         state.locks[did] = keys;
       }
 
-      await writeAtomic(file, `${JSON.stringify(state, null, 2)}\n`);
+      await writeAtomic(file, `${JSON.stringify(state, null, 2)}\n`, {
+        cleanup: "always",
+        createDir: true,
+      });
       deps.bus.emit({
         type: "layer-locks.changed",
         projectId,

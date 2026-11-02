@@ -13,6 +13,7 @@ import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { DEFAULT_SETTINGS } from "../../shared/contracts.js";
+import { projectStorePorts } from "../main/project-ports.js";
 import type { ServerConfig, VersionStore } from "../types.js";
 import { openEventBus } from "./events.js";
 import { createProjectStore } from "./projects.js";
@@ -30,7 +31,7 @@ beforeEach(async () => {
   ({ config, cleanup } = await makeTempConfig());
   versions = createVersionStore(config);
   installCalls = 0;
-  projects = createProjectStore(config, versions, {
+  projects = createProjectStore(config, versions, projectStorePorts, {
     installTemplateDeps: async (cacheDir) => {
       installCalls += 1;
       await mkdir(path.join(cacheDir, "node_modules", "react"), {

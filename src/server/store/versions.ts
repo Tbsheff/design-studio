@@ -1,4 +1,3 @@
-import { execFile } from "node:child_process";
 import { randomBytes, randomUUID } from "node:crypto";
 import { constants as fsConstants, existsSync } from "node:fs";
 import {
@@ -16,7 +15,6 @@ import {
   unlink,
   writeFile,
 } from "node:fs/promises";
-import os from "node:os";
 import path from "node:path";
 
 import { CANVAS_FILE } from "../../shared/canvas-file.js";
@@ -34,6 +32,15 @@ import {
   restoreTitle,
 } from "../../shared/version-title.js";
 import { isOutsideEdit, isOwnEdit, stampOrigin } from "../edit-origin.js";
+import { ObjectStore, gitIdent } from "../platform/git/objects.js";
+import type { CommitInfo, TreeEntry } from "../platform/git/objects.js";
+import {
+  gitEnv,
+  resolveGitBinary,
+  runGit,
+  runGitBuffer,
+} from "../platform/git/run-git.js";
+import type { GitScope } from "../platform/git/run-git.js";
 import type {
   ServerConfig,
   SessionEndResult,
@@ -46,8 +53,6 @@ import {
   NotFoundError,
   assertSafeId,
 } from "./errors.js";
-import { ObjectStore, gitIdent } from "./git-objects.js";
-import type { CommitInfo, TreeEntry } from "./git-objects.js";
 import { createKeyedMutex } from "./mutex.js";
 import { diffVersionFiles } from "./version-diff.js";
 import { createDirectStore } from "./version-direct.js";
@@ -55,6 +60,9 @@ import { FastPathUnavailable, diffTrees, updateTree } from "./version-fast.js";
 import { seedFromUserRepo } from "./version-seed.js";
 import { createChangeTracker } from "./version-tracker.js";
 import { createWarmQueue } from "./version-warm.js";
+
+export { runGit, runGitBuffer } from "../platform/git/run-git.js";
+export type { GitScope } from "../platform/git/run-git.js";
 
 export const GIT_EXCLUDES = [
   "node_modules",
@@ -127,155 +135,6 @@ type OwnSpan = Omit<SessionSpan, "outside"> & {
 interface StoredVersionMeta extends VersionMeta {
   directionId: string;
   createdAt: number;
-}
-
-export interface GitScope {
-  gitDir: string;
-  workTree?: string;
-  indexFile?: string;
-  untracked?: string[];
-}
-
-interface GitResult {
-  stdout: string;
-}
-
-let gitBinary: Promise<string> | null = null;
-
-function resolveGitBinary(): Promise<string> {
-  const override = process.env.STUDIO_GIT;
-
-  if (override) {
-    return Promise.resolve(override);
-  }
-
-  gitBinary ??= new Promise((resolve) => {
-    execFile("git", ["--exec-path"], { encoding: "utf-8" }, (error, stdout) => {
-      const candidate = error ? "" : path.join(stdout.trim(), "git");
-      resolve(candidate !== "" && existsSync(candidate) ? candidate : "git");
-    });
-  });
-
-  return gitBinary;
-}
-
-let gitEnvBase: NodeJS.ProcessEnv | null = null;
-
-const baseGitEnv = (): NodeJS.ProcessEnv => {
-  if (gitEnvBase !== null) {
-    return gitEnvBase;
-  }
-
-  const env: NodeJS.ProcessEnv = {
-    ...process.env,
-    GIT_CONFIG_GLOBAL: os.devNull,
-    GIT_CONFIG_NOSYSTEM: "1",
-    GIT_AUTHOR_NAME: "Design Studio",
-    GIT_AUTHOR_EMAIL: "studio@localhost",
-    GIT_COMMITTER_NAME: "Design Studio",
-    GIT_COMMITTER_EMAIL: "studio@localhost",
-    GIT_TERMINAL_PROMPT: "0",
-    GIT_OPTIONAL_LOCKS: "0",
-  };
-
-  delete env.GIT_DIR;
-  delete env.GIT_WORK_TREE;
-  delete env.GIT_INDEX_FILE;
-  gitEnvBase = env;
-
-  return env;
-};
-
-function gitEnv(scope: GitScope): NodeJS.ProcessEnv {
-  const env: NodeJS.ProcessEnv = { ...baseGitEnv(), GIT_DIR: scope.gitDir };
-
-  if (scope.workTree !== undefined) {
-    env.GIT_WORK_TREE = scope.workTree;
-  }
-
-  if (scope.indexFile !== undefined) {
-    env.GIT_INDEX_FILE = scope.indexFile;
-  }
-
-  return env;
-}
-
-export async function runGit(
-  scope: GitScope,
-  args: string[],
-  options: { cwd?: string; input?: string; okCodes?: number[] } = {}
-): Promise<GitResult> {
-  const binary = await resolveGitBinary();
-
-  return new Promise((resolve, reject) => {
-    const child = execFile(
-      binary,
-      args,
-      {
-        env: gitEnv(scope),
-        cwd: options.cwd ?? scope.workTree ?? scope.gitDir,
-        maxBuffer: 256 * 1024 * 1024,
-        encoding: "utf-8",
-      },
-      (error, stdout, stderr) => {
-        if (
-          error &&
-          !(
-            typeof error.code === "number" &&
-            options.okCodes?.includes(error.code)
-          )
-        ) {
-          reject(
-            new Error(
-              `git ${args[0] ?? ""} failed: ${stderr.trim() || error.message}`
-            )
-          );
-
-          return;
-        }
-
-        resolve({ stdout });
-      }
-    );
-
-    if (options.input !== undefined) {
-      child.stdin?.on("error", () => undefined);
-      child.stdin?.end(options.input);
-    }
-  });
-}
-
-export async function runGitBuffer(
-  scope: GitScope,
-  args: string[]
-): Promise<Uint8Array> {
-  const binary = await resolveGitBinary();
-
-  return new Promise((resolve, reject) => {
-    execFile(
-      binary,
-      args,
-      {
-        env: gitEnv(scope),
-        cwd: scope.gitDir,
-        maxBuffer: 1024 * 1024 * 1024,
-        encoding: "buffer",
-      },
-      (error, stdout, stderr) => {
-        if (error) {
-          reject(
-            new Error(
-              `git ${args[0] ?? ""} failed: ${stderr.toString("utf-8").trim() || error.message}`
-            )
-          );
-
-          return;
-        }
-
-        resolve(new Uint8Array(stdout));
-      }
-    );
-  });
 }
 
 function isInside(root: string, target: string): boolean {

@@ -151,6 +151,7 @@ import { registerDoctorRoutes } from "./doctor-routes.js";
 import { registerEditHistoryRoutes } from "./edit-history-routes.js";
 import { registerExportRoutes } from "./export-routes.js";
 import { registerFigmaRoutes } from "./figma-routes.js";
+import { registerFillRoutes } from "./fill-routes.js";
 import { registerFlowRoutes } from "./flow-routes.js";
 import { registerFolderInspectRoutes } from "./folder-inspect-routes.js";
 import { registerFrameStateRoutes } from "./frame-state-routes.js";
@@ -1927,6 +1928,12 @@ export function createApp(deps: AppDeps): Hono {
     withDirection,
   });
   registerMotionRoutes(app, {
+    editDeps,
+    readBody,
+    loadDirection,
+    withDirection,
+  });
+  registerFillRoutes(app, {
     editDeps,
     readBody,
     loadDirection,

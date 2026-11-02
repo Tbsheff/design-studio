@@ -60,6 +60,15 @@ import type {
   WorkTreeStatus,
 } from "../shared/contracts";
 import { STUDIO_TOKEN_HEADER } from "../shared/contracts";
+import type {
+  BlendMode,
+  BlendProperty,
+  FillBlend,
+  FillInfo,
+  FillSpec,
+  FillType,
+  RadialForm,
+} from "../shared/fill";
 import type { WorkspaceFolder, WorkspaceList } from "../shared/folders";
 import type { IconList, IconPosition, IconSource } from "../shared/icons";
 import type { InsertTarget } from "../shared/insert";
@@ -131,6 +140,37 @@ export interface MotionSpecBody {
   properties?: string[];
   staggerMs?: number;
   state?: MotionState;
+}
+
+export interface FillStopBody {
+  color?: string;
+  position?: number;
+  token?: string;
+}
+
+export interface FillInputBody {
+  type: FillType;
+  angle?: number;
+  at?: string;
+  blendMode?: BlendMode;
+  blendProperty?: BlendProperty;
+  color?: string;
+  form?: RadialForm;
+  stops?: FillStopBody[];
+  token?: string;
+}
+
+export interface FillSetBody {
+  fill: FillInputBody;
+  target: TextStyleTargetBody;
+}
+
+export interface FillSetReply {
+  blend: FillBlend | null;
+  files: string[];
+  fill: FillSpec;
+  mode: "classes" | "css";
+  versionId: string;
 }
 
 export interface MotionSetBody {
@@ -736,6 +776,19 @@ export const api = {
   insertIcon: (pid: string, did: string, body: IconInsertBody) =>
     timedEdit(pid, did, "icon", 1, () =>
       json<IconInsertReply>("POST", `${d(pid, did)}/icons/insert`, body)
+    ),
+  getFill: (pid: string, did: string, source: SourceLoc) =>
+    json<FillInfo>(
+      "GET",
+      `${d(pid, did)}/fill?${new URLSearchParams({
+        file: source.file,
+        line: String(source.line),
+        col: String(source.col),
+      }).toString()}`
+    ),
+  setFill: (pid: string, did: string, body: FillSetBody) =>
+    timedEdit(pid, did, "fill", 1, () =>
+      json<FillSetReply>("POST", `${d(pid, did)}/fill`, body)
     ),
   listMotion: (pid: string, did: string, source: SourceLoc) =>
     json<MotionInfo>(

@@ -15,6 +15,7 @@ import type {
 import type { PreviewPort } from "../bridge";
 import { SIDES } from "../cssValues";
 import { VariantScopeContext, useEditVariant } from "../editVariant";
+import { FillSlot } from "../features/fill";
 import { MotionSlot } from "../features/motion";
 import { TextStyleSlot } from "../features/text-styles";
 import { useAuthoredCss } from "../useAuthoredCss";
@@ -270,27 +271,33 @@ function TextSection({
   );
 }
 
+function BackgroundField({ edit }: { edit: DirectEdit }) {
+  return (
+    <ColorField
+      prop="background-color"
+      label="Background color"
+      short="Background"
+      edit={edit}
+    />
+  );
+}
+
 function AppearanceSection({
   edit,
   extras,
+  fill,
   onReveal,
 }: {
   edit: DirectEdit;
   extras: Set<Extra>;
+  fill?: ReactNode;
   onReveal: (extra: Extra) => void;
 }) {
   const hidden = EXTRAS.filter((extra) => !extras.has(extra.id));
   return (
     <InspectorSection title="Appearance">
       <div className="ins-grid">
-        <div className="wide">
-          <ColorField
-            prop="background-color"
-            label="Background color"
-            short="Background"
-            edit={edit}
-          />
-        </div>
+        <div className="wide">{fill || <BackgroundField edit={edit} />}</div>
         <RadiusField edit={edit} short="Radius" />
         <SelectField
           prop="overflow"
@@ -444,11 +451,13 @@ function SimpleSections({
   ui,
   selection,
   textStyle,
+  fill,
 }: {
   edit: DirectEdit;
   ui: TokenUi | null;
   selection: SelectionContext | null;
   textStyle?: ReactNode;
+  fill?: ReactNode;
 }) {
   const [revealed, setRevealed] = useState<Set<Extra>>(() => new Set());
   const extras = new Set([...extrasInUse(edit), ...revealed]);
@@ -466,7 +475,12 @@ function SimpleSections({
         selection={selection}
         textStyle={textStyle}
       />
-      <AppearanceSection edit={edit} extras={extras} onReveal={reveal} />
+      <AppearanceSection
+        edit={edit}
+        extras={extras}
+        fill={fill}
+        onReveal={reveal}
+      />
       {extras.has("shadow") && (
         <EffectsSection edit={edit} revealed={revealed.has("shadow")} />
       )}
@@ -678,6 +692,18 @@ export function SimpleEditor(props: SimpleEditorProps) {
                       projectId={props.projectId}
                       directionId={props.directionId}
                       targets={[props.target]}
+                    />
+                  )
+                }
+                fill={
+                  props.directionId && (
+                    <FillSlot
+                      projectId={props.projectId}
+                      directionId={props.directionId}
+                      target={props.target}
+                      port={props.port}
+                      edit={edit}
+                      fallback={<BackgroundField edit={edit} />}
                     />
                   )
                 }

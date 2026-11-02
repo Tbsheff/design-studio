@@ -13,6 +13,10 @@ import { importPageDescription } from "./page-import-tool.js";
 import { COMPARE_REFERENCE_DESCRIPTION } from "./reference-tool.js";
 import { SELECT_MATCHING_DESCRIPTION } from "./select-tool.js";
 import {
+  searchTextDescription,
+  updateTextDescription,
+} from "./text-search-tool.js";
+import {
   VECTOR_BOOLEAN_SHORT,
   VECTOR_DRAW_SHORT,
   VECTOR_PAINT_SHORT,
@@ -66,6 +70,10 @@ export const TOOL_SHORT = {
     "Read only. Colors, font sizes, radii and spacing on the page with counts and token/raw status; with value, the elements that use it.",
   replace_style:
     "Replace one raw style value with a token on every element of the page that uses it. Skips .map() elements and computed classNames.",
+  search_text:
+    "Read only. Find visible text (text, alt, placeholder, title, aria-label, rendered string literals) in HTML and JSX pages with file:line:col and frame.",
+  update_text:
+    "Replace text from search_text hits (chosen ids or all) in every file as one change. Keeps entities; never changes dynamic expressions.",
   arrange:
     "Align, distribute or tidy sibling elements by writing the parent auto layout. Pass one of align, distribute or tidy.",
   select_matching:
@@ -194,6 +202,8 @@ export const TOOL_HELP: Record<
     "Read only. List the colors, font sizes, radii and spacing used on the page (or one canvas frame) with element counts and whether each value is a token, raw or mixed, like the inspector Selection colors panel. With value (and property) it lists the elements that use that computed value; inherited values count only on the element that sets them.",
   replace_style:
     'Replace one style value with a token on every element of the page (or frame) that uses it, with the same code as "Replace with token…" in the studio inspector. token is a CSS variable or, in a Tailwind project, a theme class; Tailwind projects get classes, not inline style. Elements made by .map(), elements with a className built in code, and shared elements where only some copies use the value are skipped and counted. Use it to move raw values such as #1c1f23 or p-[13px] to tokens.',
+  search_text: searchTextDescription,
+  update_text: updateTextDescription,
   arrange:
     "Align, distribute or tidy up sibling elements like Figma, with the same code as the studio arrange bar. In a flex parent it writes the parent layout (align-items, justify-content, gap) or align-self on some children; in a grid justify-items or align-items; absolute children move by left/top. align and distribute in a parent with no auto layout are refused; tidy adds auto layout (flex, gap) to it. Tailwind projects get classes. Pass one of align, distribute or tidy.",
   select_matching: SELECT_MATCHING_DESCRIPTION,

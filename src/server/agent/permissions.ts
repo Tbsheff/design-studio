@@ -128,6 +128,8 @@ const COPY_CODE_TOOL = "mcp__studio__copy_code";
 const LIST_LINK_INTERACTIONS_TOOL = "mcp__studio__list_link_interactions";
 const SET_LINK_INTERACTION_TOOL = "mcp__studio__set_link_interaction";
 const IMPORT_PAGE_TOOL = "mcp__studio__import_page";
+const SEARCH_TEXT_TOOL = "mcp__studio__search_text";
+const UPDATE_TEXT_TOOL = "mcp__studio__update_text";
 
 const DIRECT_EDIT_TOOLS = new Set<string>([
   INSERT_ICON_TOOL,
@@ -150,6 +152,7 @@ const DIRECT_EDIT_TOOLS = new Set<string>([
   SWAP_INSTANCE_TOOL,
   SET_IMAGE_TOOL,
   IMPORT_PAGE_TOOL,
+  UPDATE_TEXT_TOOL,
   ...STUDIO_EDIT_TOOLS_R13,
 ]);
 
@@ -183,6 +186,8 @@ const STUDIO_MCP_TOOLS: readonly string[] = [
   LIST_LINK_INTERACTIONS_TOOL,
   SET_LINK_INTERACTION_TOOL,
   IMPORT_PAGE_TOOL,
+  SEARCH_TEXT_TOOL,
+  UPDATE_TEXT_TOOL,
   ...AGENT_OPS.toolIds,
 ];
 

@@ -125,6 +125,8 @@ const SET_SPACING_TOOL = "mcp__studio__set_spacing";
 const CREATE_COMPONENT_VARIANT_TOOL = "mcp__studio__create_component_variant";
 const UPDATE_COMPONENT_VARIANT_TOOL = "mcp__studio__update_component_variant";
 const COPY_CODE_TOOL = "mcp__studio__copy_code";
+const LIST_LINK_INTERACTIONS_TOOL = "mcp__studio__list_link_interactions";
+const SET_LINK_INTERACTION_TOOL = "mcp__studio__set_link_interaction";
 
 const DIRECT_EDIT_TOOLS = new Set<string>([
   INSERT_ICON_TOOL,
@@ -176,6 +178,8 @@ const STUDIO_MCP_TOOLS: readonly string[] = [
   CREATE_COMPONENT_VARIANT_TOOL,
   UPDATE_COMPONENT_VARIANT_TOOL,
   COPY_CODE_TOOL,
+  LIST_LINK_INTERACTIONS_TOOL,
+  SET_LINK_INTERACTION_TOOL,
   ...AGENT_OPS.toolIds,
 ];
 
@@ -183,6 +187,7 @@ setToolCatalog({
   blockedTools: new Set<string>([
     CANVAS_PLACE_TOOL,
     EDIT_LINKS_TOOL,
+    SET_LINK_INTERACTION_TOOL,
     ADD_FLOW_TOOL,
     ...DIRECT_EDIT_TOOLS,
     ...AGENT_OPS.writeIds,
@@ -223,6 +228,8 @@ const NO_CHANGE_TOOLS = new Set([
   CANVAS_POINT_TOOL,
   LIST_LINKS_TOOL,
   EDIT_LINKS_TOOL,
+  LIST_LINK_INTERACTIONS_TOOL,
+  SET_LINK_INTERACTION_TOOL,
   LIST_FRAME_STATES_TOOL,
   SET_FRAME_STATE_TOOL,
   SET_FRAME_SESSION_TOOL,

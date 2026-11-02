@@ -14,6 +14,8 @@ const CORE_TOOLS = [
   "canvas_point",
   "list_links",
   "edit_links",
+  "list_link_interactions",
+  "set_link_interaction",
   "get_layers",
   "review_frame",
   "edit_element",

@@ -1,5 +1,16 @@
 import { cleanFramePath, isFrameId } from "./canvas-file.js";
 import type { CanvasFileFrame } from "./canvas-file.js";
+import { decodeEntities } from "./html-entities.js";
+import {
+  cleanLinkUrl,
+  LINK_EXTRA_ACTIONS,
+  triggerOf,
+  targetFits,
+  targetFrame,
+  targetRef,
+  triggerSuffix,
+} from "./link-interaction.js";
+import type { LinkTrigger, LinkVisibility } from "./link-interaction.js";
 
 export const LINKS_FILE = ".studio/links.json";
 export const LINKS_FILE_VERSION = 1;
@@ -18,6 +29,10 @@ export const LINK_TRANSITIONS = [
   "smart-animate",
 ] as const;
 export const LINK_ACTIONS = ["navigate", "modal", "drawer"] as const;
+export const LINK_INTERACTION_ACTIONS = [
+  ...LINK_ACTIONS,
+  ...LINK_EXTRA_ACTIONS,
+] as const;
 export const LINK_EASINGS = [
   "ease-out",
   "ease-in",
@@ -31,7 +46,7 @@ export const LINK_DURATION_MAX = 3000;
 export const LINK_EASING_DEFAULT = "ease-out";
 
 export type LinkTransition = (typeof LINK_TRANSITIONS)[number];
-export type LinkAction = (typeof LINK_ACTIONS)[number];
+export type LinkAction = (typeof LINK_INTERACTION_ACTIONS)[number];
 export type LinkEasing = (typeof LINK_EASINGS)[number];
 
 export interface LinkSource {
@@ -43,7 +58,12 @@ export interface LinkSource {
   label?: string;
 }
 
-export type LinkTarget = { frame: string } | { back: true };
+export type LinkTarget =
+  | { frame: string }
+  | { back: true }
+  | { selector: string; visibility?: Exclude<LinkVisibility, "toggle"> }
+  | { url: string }
+  | { close: true };
 
 export interface PrototypeLink {
   id: string;
@@ -51,6 +71,7 @@ export interface PrototypeLink {
   to: LinkTarget;
   transition: LinkTransition;
   action?: Exclude<LinkAction, "navigate">;
+  trigger?: LinkTrigger;
   duration?: number;
   easing?: LinkEasing;
   implicit?: true;
@@ -96,8 +117,12 @@ export function isLinkTransition(value: unknown): value is LinkTransition {
 export function isLinkAction(value: unknown): value is LinkAction {
   return (
     typeof value === "string" &&
-    (LINK_ACTIONS as readonly string[]).includes(value)
+    (LINK_INTERACTION_ACTIONS as readonly string[]).includes(value)
   );
+}
+
+export function isFrameAction(value: LinkAction): boolean {
+  return (LINK_ACTIONS as readonly string[]).includes(value);
 }
 
 export function isLinkEasing(value: unknown): value is LinkEasing {
@@ -131,7 +156,8 @@ export function withMotion<T extends Omit<PrototypeLink, "id">>(
     if (motion.action === "navigate") delete out.action;
     else out.action = motion.action;
   }
-  if (isBackTarget(out.to)) delete out.action;
+  if (isBackTarget(out.to) && out.action && isFrameAction(out.action))
+    delete out.action;
   if (motion.duration !== undefined) {
     if (motion.duration === LINK_DURATION_DEFAULT) delete out.duration;
     else out.duration = motion.duration;
@@ -178,75 +204,6 @@ export function cleanLinkSelector(raw: unknown): string | null {
     : selector;
 }
 
-const NAMED_ENTITIES: Record<string, string> = {
-  amp: "&",
-  lt: "<",
-  gt: ">",
-  quot: '"',
-  apos: "'",
-  nbsp: " ",
-  larr: "←",
-  rarr: "→",
-  uarr: "↑",
-  darr: "↓",
-  harr: "↔",
-  lsaquo: "‹",
-  rsaquo: "›",
-  laquo: "«",
-  raquo: "»",
-  mdash: "—",
-  ndash: "–",
-  hellip: "…",
-  middot: "·",
-  bull: "•",
-  times: "×",
-  divide: "÷",
-  copy: "©",
-  reg: "®",
-  trade: "™",
-  deg: "°",
-  plusmn: "±",
-  check: "✓",
-  cross: "✗",
-  lsquo: "‘",
-  rsquo: "’",
-  ldquo: "“",
-  rdquo: "”",
-  euro: "€",
-  pound: "£",
-  yen: "¥",
-  cent: "¢",
-  sect: "§",
-  para: "¶",
-  star: "☆",
-  starf: "★",
-  hearts: "♥",
-  minus: "−",
-};
-
-function codePoint(value: number): string {
-  return Number.isInteger(value) && value > 0 && value <= 0x10_ff_ff
-    ? String.fromCodePoint(value)
-    : "";
-}
-
-export function decodeEntities(text: string): string {
-  return text.replaceAll(
-    /&(#x[0-9a-f]+|#\d+|[a-z][a-z0-9]*);/gi,
-    (whole, body: string) => {
-      if (body[0] !== "#")
-        return (
-          NAMED_ENTITIES[body] ?? NAMED_ENTITIES[body.toLowerCase()] ?? whole
-        );
-      const value =
-        body[1] === "x" || body[1] === "X"
-          ? Number.parseInt(body.slice(2), 16)
-          : Number(body.slice(1));
-      return codePoint(value) || whole;
-    }
-  );
-}
-
 export function cleanLinkText(raw: unknown): string | null {
   if (typeof raw !== "string") return null;
   const text = decodeEntities(raw)
@@ -276,7 +233,17 @@ function parseTarget(raw: unknown): LinkTarget | null {
   if (!raw || typeof raw !== "object") return null;
   const t = raw as Record<string, unknown>;
   if (t.back === true) return { back: true };
-  return isFrameId(t.frame) ? { frame: t.frame } : null;
+  if (t.close === true) return { close: true };
+  if ("url" in t) {
+    const url = typeof t.url === "string" ? cleanLinkUrl(t.url) : null;
+    return url === null ? null : { url };
+  }
+  if (!("selector" in t)) return isFrameId(t.frame) ? { frame: t.frame } : null;
+  const selector = cleanLinkSelector(t.selector);
+  if (!selector) return null;
+  return t.visibility === "show" || t.visibility === "hide"
+    ? { selector, visibility: t.visibility }
+    : { selector };
 }
 
 export function parseLink(raw: unknown): PrototypeLink | null {
@@ -291,7 +258,26 @@ export function parseLink(raw: unknown): PrototypeLink | null {
     to,
     transition: isLinkTransition(l.transition) ? l.transition : "instant",
   };
-  return withMotion(base, motionOf({ ...l, transition: undefined }));
+  const trigger = parseTrigger(l.trigger);
+  if (trigger) base.trigger = trigger;
+  const link = withMotion(base, motionOf({ ...l, transition: undefined }));
+  return targetFits(linkAction(link), link.to) ? link : null;
+}
+
+function parseTrigger(raw: unknown): LinkTrigger | null {
+  if (!raw || typeof raw !== "object") return null;
+  const t = raw as Record<string, unknown>;
+  return triggerOf(
+    typeof t.kind === "string" ? t.kind : "",
+    typeof t.ms === "number" ? t.ms : null,
+    typeof t.key === "string" ? t.key : null
+  );
+}
+
+export function interactionKey(
+  link: Pick<PrototypeLink, "from" | "trigger">
+): string {
+  return `${sourceKey(link.from)}${triggerSuffix(link.trigger ?? null)}`;
 }
 
 export function sourceKey(
@@ -310,7 +296,7 @@ export function normalizeLinksFile(file: LinksFile): LinksFile {
   const links = [...file.links]
     .sort((a, b) => idNumber(a.id) - idNumber(b.id))
     .filter((link) => {
-      const key = sourceKey(link.from);
+      const key = interactionKey(link);
       if (seen.has(link.id) || sources.has(key)) return false;
       seen.add(link.id);
       sources.add(key);
@@ -372,8 +358,8 @@ export function upsertLink(
   file: LinksFile,
   link: Omit<PrototypeLink, "id">
 ): { file: LinksFile; link: PrototypeLink } {
-  const key = sourceKey(link.from);
-  const same = file.links.find((item) => sourceKey(item.from) === key);
+  const key = interactionKey(link);
+  const same = file.links.find((item) => interactionKey(item) === key);
   const { implicit: _implicit, ...rest } = link;
   const saved: PrototypeLink = {
     ...rest,
@@ -400,10 +386,9 @@ export function staticLinkIssue(
   const all = knownFrames(frames);
   const from = all.find((frame) => frame.id === link.from.frame);
   if (!from) return "from-frame-missing";
-  if (!isBackTarget(link.to)) {
-    const target = link.to.frame;
-    if (!all.some((frame) => frame.id === target)) return "to-frame-missing";
-  }
+  const target = targetFrame(link.to);
+  if (target !== null && !all.some((frame) => frame.id === target))
+    return "to-frame-missing";
   if ((from.path ?? "") !== link.from.path) return "page-changed";
   return null;
 }
@@ -451,6 +436,10 @@ export const ACTION_LABELS: Record<LinkAction, string> = {
   navigate: "Navigate",
   modal: "Open as modal",
   drawer: "Open as drawer",
+  "scroll-to": "Scroll to",
+  "open-url": "Open URL",
+  "close-overlay": "Close overlay",
+  toggle: "Show or hide",
 };
 
 export const EASING_LABELS: Record<LinkEasing, string> = {
@@ -487,9 +476,7 @@ export function coveredBy(
       (item.from.text ?? "") === (link.from.text ?? "")
     )
       return true;
-    const sameTarget = isBackTarget(item.to)
-      ? isBackTarget(link.to)
-      : !isBackTarget(link.to) && item.to.frame === link.to.frame;
+    const sameTarget = targetRef(item.to) === targetRef(link.to);
     return (
       sameTarget &&
       (item.from.selector === link.from.selector ||

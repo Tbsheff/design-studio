@@ -18,6 +18,7 @@ import {
   type EditDeps,
 } from "./edit-deps.js";
 import { defineTool, directionId, projectId, type Done } from "./edit-kit.js";
+import { LINK_INTERACTION_TOOLS } from "./link-interaction-tools.js";
 
 const LINKS_NOTE =
   "Links live in the studio (.studio/links.json), not in the page code, so they work for HTML, React and attached app routes. Play in the studio starts at the start frame; a click on a linked element goes to its frame. Each link change is one step in the edit history (undo and redo, like Cmd+Z). Links save with the next version, like the canvas layout; undo or restore of a version keeps the current links and frames.";
@@ -236,4 +237,5 @@ export const LINK_TOOLS = [
   removeLinkTool,
   setStartTool,
   keepLinksTool,
+  ...LINK_INTERACTION_TOOLS,
 ];

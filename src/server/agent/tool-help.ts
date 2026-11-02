@@ -39,6 +39,10 @@ export const TOOL_SHORT = {
     "Read only. Prototype links of Play mode: id, frame, selector, target, transition, broken, startFrame.",
   edit_links:
     "Add, replace or remove prototype links and set the Play start frame. Links live in the studio, not in page code.",
+  list_link_interactions:
+    "Read only. Saved prototype links with trigger (click, hover, press, delay, key), action and target (frame, selector or url).",
+  set_link_interaction:
+    "Set the trigger, action and target of one link, or make one from an element: scroll-to, open-url, close-overlay, toggle.",
   list_frame_states:
     "Attached apps only. Read only. Frame preview states, which frame shows which, and the session in use.",
   set_frame_state:
@@ -169,6 +173,10 @@ export const TOOL_HELP: Record<
   list_frame_states: `Attached apps only. Read only. List the frame preview states (signed in, empty, loading, error, mock), which frame shows which, and the session in use. ${FRAME_STATES_NOTE}`,
   set_frame_state: `Attached apps only. Show one canvas frame in a preview state with the same code as the frame state menu: state is default, session, empty, loading, error, a mock state id, or mock with mock {name?, rules: [{path, method?, status?, body?, delayMs?}], signedIn?} to make one. Changes no file. ${FRAME_STATES_NOTE}`,
   set_frame_session: `Attached apps only. Change the session that signed-in frame states use, with the same code as the frame state menu: user {name, email} sets the mock user; forgetCookies drops the cookies the app set in signed-in frames. Changes no file. ${FRAME_STATES_NOTE}`,
+  list_link_interactions:
+    "Read only. List the saved prototype links with the same server code as the MCP list_link_interactions tool: id, frame, selector, trigger (shown only when it is not click: hover, press, delay with delayMs, key with key), action (navigate, modal, drawer, scroll-to, open-url, close-overlay, toggle), target (toFrame, target selector with visibility, or url), transition and broken. fromFrame limits the list to one frame.",
+  set_link_interaction:
+    'Set the trigger, action and target of one prototype link with the same server code as the MCP set_link_interaction tool. Pass linkId to change a saved link, or fromFrame and selector to make one (the element must exist on the rendered page; use "body" for a delay trigger). trigger: click (default), hover, press, delay (delayMs) or key (key, for example "Escape" or "k"). action: navigate, modal or drawer with toFrame ("back" for navigate), scroll-to with target (a CSS selector in the same frame), open-url with url (https only), close-overlay, or toggle with target and visibility (toggle, show or hide). One element has one link per trigger. Each change is one undo step.',
   list_route_links: `Attached apps only. Read only. List the links found in the source of one app route (route pattern or concrete path): kind, href, target route, element and file:line. ${FLOW_NOTE}`,
   add_flow: `Attached apps only. Lay out route frames left to right with the same code as Flow in the studio, and make prototype links from the links in their source. routes: routes in order; or from: a route or frame id/@label, with depth (default 1) to add the routes it links to. params: sample values for dynamic segments. ${FLOW_NOTE}`,
   edit_element:

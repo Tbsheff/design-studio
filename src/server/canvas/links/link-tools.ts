@@ -4,6 +4,10 @@ import type { CanvasFileFrame } from "../../../shared/canvas-file.js";
 import type { Direction, Project } from "../../../shared/contracts.js";
 import { withFrameStateHost } from "../../../shared/frame-state.js";
 import {
+  describeTarget,
+  describeTrigger,
+} from "../../../shared/link-interaction.js";
+import {
   cleanLinkSelector,
   cleanLinkText,
   isBackTarget,
@@ -16,6 +20,7 @@ import {
   LINK_SELECTOR_MAX,
   LINK_TEXT_MAX,
   LINK_TRANSITIONS,
+  ACTION_LABELS,
   linkAction,
   sourceName,
   linkDuration,
@@ -159,7 +164,7 @@ function resolveScript(queries: LinkQuery[]): string {
 
 export class LinkError extends Error {}
 
-function text(value: unknown): ToolText {
+export function text(value: unknown): ToolText {
   return {
     content: [
       {
@@ -171,18 +176,23 @@ function text(value: unknown): ToolText {
   };
 }
 
-function failure(message: string): ToolText {
+export function failure(message: string): ToolText {
   return { content: [{ type: "text", text: message }], isError: true };
 }
 
-async function framesOf(ctx: CanvasToolContext): Promise<CanvasFileFrame[]> {
+export async function framesOf(
+  ctx: CanvasToolContext
+): Promise<CanvasFileFrame[]> {
   const frames = (await ctx.canvas.read(ctx.project)).canvas?.frames ?? [];
   return frames.length > 0
     ? frames
     : [{ id: "f1", width: 1440, height: 900, x: 0, y: 0, order: 0 }];
 }
 
-function frameOf(frames: CanvasFileFrame[], ref: string): CanvasFileFrame {
+export function frameOf(
+  frames: CanvasFileFrame[],
+  ref: string
+): CanvasFileFrame {
   const frame = findFrame(frames, ref);
   if (!frame)
     throw new LinkError(
@@ -196,13 +206,23 @@ function frameTitle(frames: readonly CanvasFileFrame[], id: string): string {
   return frame?.label ?? frame?.path ?? (id === "f1" ? "the first frame" : id);
 }
 
+function targetTitle(
+  link: PrototypeLink,
+  frames: readonly CanvasFileFrame[]
+): string {
+  const { to } = link;
+  if ("frame" in to) return frameTitle(frames, to.frame);
+  if ("selector" in to)
+    return `${ACTION_LABELS[linkAction(link)]} ${to.selector}`;
+  if ("url" in to) return to.url;
+  return isBackTarget(to) ? "Back" : ACTION_LABELS["close-overlay"];
+}
+
 export function linkTitle(
   link: PrototypeLink,
   frames: readonly CanvasFileFrame[]
 ): string {
-  const target = isBackTarget(link.to)
-    ? "Back"
-    : frameTitle(frames, link.to.frame);
+  const target = targetTitle(link, frames);
   const what = sourceName(link.from);
   return `${what} in ${frameTitle(frames, link.from.frame)} → ${target}`;
 }
@@ -295,8 +315,9 @@ function describeLink(
     page: link.from.path || "(entry page)",
     selector: link.from.selector,
     ...(link.from.text ? { text: link.from.text } : {}),
-    toFrame: isBackTarget(link.to) ? BACK_REF : link.to.frame,
+    ...describeTarget(link.to, linkAction(link)),
     action: linkAction(link),
+    ...describeTrigger(link.trigger ?? null),
     transition: link.transition,
     duration: linkDuration(link),
     ...(link.easing ? { easing: link.easing } : {}),
@@ -305,6 +326,33 @@ function describeLink(
     ...(link.implicit ? { implicit: true } : {}),
     ...(link.from.frame === start ? { onStartFrame: true } : {}),
   };
+}
+
+export function savedLinkText(
+  link: PrototypeLink,
+  frames: readonly CanvasFileFrame[],
+  file: LinksFile
+): ToolText {
+  return text({
+    link: describeLink(link, frames, null, startFrameOf(file, frames)),
+    links: file.links.length,
+  });
+}
+
+export function linkListText(
+  links: readonly PrototypeLink[],
+  frames: readonly CanvasFileFrame[],
+  file: LinksFile,
+  note: string
+): ToolText {
+  const start = startFrameOf(file, frames);
+  return text({
+    startFrame: start,
+    links: links.map((link) =>
+      describeLink(link, frames, staticLinkIssue(link, frames), start)
+    ),
+    note,
+  });
 }
 
 const IMPLICIT_NOTE =

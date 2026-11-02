@@ -115,8 +115,14 @@ const registerDirectEditPanelRoutes = (app: Hono, ctx: AppContext): void => {
 };
 
 const registerDirectEditCreateRoutes = (app: Hono, ctx: AppContext): void => {
-  const { bus, editDeps, loadDirection, preview, projects, withDirection } =
-    ctx;
+  const {
+    editDeps,
+    layerLocks,
+    loadDirection,
+    preview,
+    projects,
+    withDirection,
+  } = ctx;
   registerComponentCreateRoutes(app, {
     editDeps,
     preview,
@@ -124,7 +130,7 @@ const registerDirectEditCreateRoutes = (app: Hono, ctx: AppContext): void => {
     loadDirection,
     withDirection,
   });
-  registerLayerStateRoutes(app, { projects, bus, readBody });
+  registerLayerStateRoutes(app, { projects, layerLocks, readBody });
 };
 
 export { registerDirectEditCreateRoutes, registerDirectEditPanelRoutes };

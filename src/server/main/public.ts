@@ -21,7 +21,10 @@ import { createCommentStore } from "../store/comments.js";
 import { createVersionStore } from "../store/versions.js";
 import { desktopSender, linkDesktop } from "./desktop-link.js";
 import { watchParent } from "./parent-watch.js";
-import { createWiredProjectStore } from "./project-ports.js";
+import {
+  createProjectLayerLocks,
+  createWiredProjectStore,
+} from "./project-ports.js";
 
 const FORCE_EXIT_MS = 5000;
 
@@ -175,7 +178,9 @@ const buildApp = (
 
   const comments = createCommentStore(config.dataDir, bus);
 
-  followSourceMoves(comments);
+  const layerLocks = createProjectLayerLocks(projects, bus);
+
+  followSourceMoves(comments, layerLocks);
   pageProbe.start();
 
   const runner = createAgentRunner({
@@ -183,6 +188,7 @@ const buildApp = (
     canvas,
     comments,
     config,
+    layerLocks,
     preview,
     projects,
     versions,
@@ -207,6 +213,7 @@ const buildApp = (
     canvas,
     comments,
     config,
+    layerLocks,
     preview,
     projects,
     runner,

@@ -51,6 +51,8 @@ import type { CommentStore } from "../store/comments.js";
 import { createDefaultFolderStore } from "../store/default-folder.js";
 import type { DefaultFolderStore } from "../store/default-folder.js";
 import { BadRequestError, assertSafeId } from "../store/errors.js";
+import { createLayerLockStore } from "../store/layer-locks.js";
+import type { LayerLockStore } from "../store/layer-locks.js";
 import { createKeyedMutex } from "../store/mutex.js";
 import type { StudioProjectStore } from "../store/projects.js";
 import { createVersionNames } from "../store/version-names.js";
@@ -85,6 +87,7 @@ interface AppDeps {
   packs?: PackRegistry;
   uiDir?: string;
   comments?: CommentStore;
+  layerLocks?: LayerLockStore;
   workspaces?: WorkspaceStore;
   defaultFolder?: DefaultFolderStore;
   folderPicker?: FolderPicker;
@@ -687,6 +690,13 @@ const createAppContext = (deps: AppDeps) => {
   };
 
   const comments = deps.comments ?? createCommentStore(config.dataDir, bus);
+
+  const layerLocks =
+    deps.layerLocks ??
+    createLayerLockStore({
+      bus,
+      projectDir: (id) => projects.projectDir(id),
+    });
   const rulesFor = rulesLoader(projects.projectDir);
 
   const commitDesignMd = async (project: Project, direction: Direction) => {
@@ -846,6 +856,7 @@ const createAppContext = (deps: AppDeps) => {
     findRunProject,
     folderPicker,
     forkDirection,
+    layerLocks,
     library,
     liveDrafts,
     loadDirection,

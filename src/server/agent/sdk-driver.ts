@@ -24,6 +24,7 @@ import type { CanvasService } from "../canvas/service.js";
 import { SOURCE_DIR } from "../design-system/extract/draft.js";
 import { buildEnv } from "../platform/config/index.js";
 import type { CommentStore } from "../store/comments.js";
+import type { LayerLockStore } from "../store/layer-locks.js";
 import type { PreviewService } from "../types.js";
 import { createBashGate, type ToolGate } from "./ask-gate.js";
 import { captureBaselineFindings } from "./baseline-findings.js";
@@ -114,6 +115,7 @@ interface SdkDriverOptions {
   preview: PreviewService;
   canvas?: CanvasService;
   comments?: CommentStore;
+  layerLocks?: LayerLockStore | null;
   queryFn?: QueryFn;
   onMessage?: (message: SDKMessage) => void;
   onPermission?: (toolName: string, result: PermissionResult) => void;
@@ -824,6 +826,7 @@ async function buildSdkOptions(
     preview: options.preview,
     ...(options.canvas ? { canvas: options.canvas } : {}),
     ...(options.comments ? { comments: options.comments } : {}),
+    layerLocks: options.layerLocks ?? null,
     ctx,
     runsDir: input.runsDir,
     runId: input.runId,

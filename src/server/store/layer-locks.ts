@@ -121,13 +121,3 @@ export function createLayerLockStore(deps: LayerLockDeps): LayerLockStore {
       update(projectId, directionId, () => keys),
   };
 }
-
-let configured: LayerLockStore | null = null;
-
-export function configureLayerLocks(store: LayerLockStore): void {
-  configured = store;
-}
-
-export function configuredLayerLocks(): LayerLockStore | null {
-  return configured;
-}

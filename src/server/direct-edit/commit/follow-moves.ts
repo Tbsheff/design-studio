@@ -1,7 +1,7 @@
 import type { SourceLoc } from "../../../shared/contracts.js";
 import { lineMapOf, type LineMap } from "../../mcp/line-map.js";
 import type { CommentStore } from "../../store/comments.js";
-import { configuredLayerLocks } from "../../store/layer-locks.js";
+import type { LayerLockStore } from "../../store/layer-locks.js";
 import { onSourceChange, type SourceFileChange } from "../change-feed.js";
 
 const LOCK_KEY = /^(.*?\|)(?:use:([^|]+)\|)?loc:(.+)(#\d+)$/;
@@ -95,11 +95,11 @@ function movedLockKey(key: string, moves: Remapper): string | null {
 }
 
 async function followLocks(
-  projectId: string,
-  directionId: string,
+  locks: LayerLockStore | null,
+  change: { projectId: string; directionId: string },
   moves: Remapper
 ): Promise<void> {
-  const locks = configuredLayerLocks();
+  const { projectId, directionId } = change;
 
   if (!locks || (await locks.read(projectId, directionId)).keys.length === 0) {
     return;
@@ -112,11 +112,14 @@ async function followLocks(
   );
 }
 
-export function followSourceMoves(comments: CommentStore): () => void {
+export function followSourceMoves(
+  comments: CommentStore,
+  locks: LayerLockStore | null
+): () => void {
   return onSourceChange((change) => {
     const moves = remapperOf(change.files);
     void Promise.all([
-      followLocks(change.projectId, change.directionId, moves),
+      followLocks(locks, change, moves),
       comments.followSource(change.projectId, change.directionId, moves.remap),
     ]).catch((error: unknown) => {
       console.error("[follow-moves] could not move locks or comments", error);

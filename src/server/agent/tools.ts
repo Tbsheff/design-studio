@@ -55,6 +55,7 @@ import { prepareShip } from "../git/ship-prepare.js";
 import type { TileResult } from "../preview/browser.js";
 import { reviewFrameShape, runReviewFrameTool } from "../review/agent-tool.js";
 import type { CommentStore } from "../store/comments.js";
+import type { LayerLockStore } from "../store/layer-locks.js";
 import { defineTweaks } from "../tweaks/store.js";
 import type { AgentRunContext, PreviewService } from "../types.js";
 import {
@@ -321,6 +322,7 @@ export interface StudioToolDeps {
   env?: Record<string, string | undefined>;
   canvas?: CanvasService;
   comments?: CommentStore;
+  layerLocks?: LayerLockStore | null;
   exportsDir?: string;
 }
 

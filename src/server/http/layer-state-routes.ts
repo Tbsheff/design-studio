@@ -6,16 +6,12 @@ import {
 } from "../../shared/layer-locks.js";
 import { applyDelta } from "../layers/lock-probe.js";
 import { BadRequestError, NotFoundError } from "../store/errors.js";
-import {
-  configureLayerLocks,
-  createLayerLockStore,
-} from "../store/layer-locks.js";
+import type { LayerLockStore } from "../store/layer-locks.js";
 import type { StudioProjectStore } from "../store/projects.js";
-import type { EventBus } from "../types.js";
 
 interface LayerStateRouteDeps {
   projects: StudioProjectStore;
-  bus: EventBus;
+  layerLocks: LayerLockStore;
   readBody: (c: Context) => Promise<Record<string, unknown>>;
 }
 
@@ -23,12 +19,7 @@ export function registerLayerStateRoutes(
   app: Hono,
   deps: LayerStateRouteDeps
 ): void {
-  const store = createLayerLockStore({
-    projectDir: (id) => deps.projects.projectDir(id),
-    bus: deps.bus,
-  });
-
-  configureLayerLocks(store);
+  const store = deps.layerLocks;
 
   const direction = async (c: Context) => {
     const project = await deps.projects.get(c.req.param("pid") ?? "");

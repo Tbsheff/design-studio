@@ -1,11 +1,9 @@
 import { z } from "zod";
 
 import type { SelectionContext } from "../../shared/contracts.js";
-import {
-  parseDirectEditRequest,
-  planDirectEdit,
-  writeAtomic,
-} from "../direct-edit/index.js";
+import { planDirectEdit } from "../direct-edit/commit/edit-plan.js";
+import { writeAtomic } from "../direct-edit/commit/edit-source.js";
+import { parseDirectEditRequest } from "../direct-edit/engine/validate.js";
 import {
   announcePlanned,
   domPatchOf,
@@ -26,7 +24,6 @@ import {
   resolveLayerRefs,
   scopeOf,
 } from "../mcp/layer-ref.js";
-import { configuredLayerLocks } from "../store/layer-locks.js";
 import { refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
 import { editPageUrl } from "./run-target.js";
@@ -259,7 +256,7 @@ async function lockEdit(
   selector: string,
   locked: boolean
 ): Promise<string> {
-  const store = configuredLayerLocks();
+  const store = deps.layerLocks ?? null;
 
   if (!store) {
     throw new Error("Layer locks are not available in this run.");
@@ -324,7 +321,7 @@ export async function runListLockedLayers(
   deps: DirectToolDeps,
   args: { path?: string | undefined }
 ): Promise<ToolText> {
-  const store = configuredLayerLocks();
+  const store = deps.layerLocks ?? null;
 
   if (!store) {
     return text("Layer locks are not available in this run.", true);

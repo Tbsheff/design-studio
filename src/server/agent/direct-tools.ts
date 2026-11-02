@@ -27,6 +27,9 @@ import {
   plannedTokensText,
   writeTokensText,
 } from "../design-system/update-tokens.js";
+import { planDirectEdit } from "../direct-edit/commit/edit-plan.js";
+import { writeAtomic } from "../direct-edit/commit/edit-source.js";
+import type { PlannedEdit } from "../direct-edit/commit/edit-types.js";
 import {
   chooseEditSite,
   EDIT_TARGETS,
@@ -35,13 +38,8 @@ import {
   textComesFromData,
   type EditSite,
 } from "../direct-edit/edit-site.js";
-import {
-  DirectEditError,
-  parseDirectEditRequest,
-  planDirectEdit,
-  writeAtomic,
-  type PlannedEdit,
-} from "../direct-edit/index.js";
+import { DirectEditError } from "../direct-edit/engine/errors.js";
+import { parseDirectEditRequest } from "../direct-edit/engine/validate.js";
 import {
   announcePlanned,
   domPatchOf,
@@ -57,6 +55,7 @@ import {
   scopeOf,
   type Viewport,
 } from "../mcp/layer-ref.js";
+import type { LayerLockStore } from "../store/layer-locks.js";
 import type { AgentRunContext, PreviewService } from "../types.js";
 import { evaluateToolUse } from "./permissions.js";
 import { editPageUrl } from "./run-target.js";
@@ -65,6 +64,7 @@ export interface DirectToolDeps {
   preview: PreviewService;
   ctx: AgentRunContext;
   canvas?: CanvasService | undefined;
+  layerLocks?: LayerLockStore | null | undefined;
 }
 
 export async function canvasFrames(deps: DirectToolDeps) {

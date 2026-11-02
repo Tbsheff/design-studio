@@ -7,6 +7,7 @@ import { refreshDraftCoverage } from "../design-system/draft-project.js";
 import { packRegistry, type PackRegistry } from "../design-system/packs.js";
 import { buildErrorMessage, syncDesignSystem } from "../design-system/sync.js";
 import type { CommentStore } from "../store/comments.js";
+import type { LayerLockStore } from "../store/layer-locks.js";
 import type {
   AgentRunner,
   EventBus,
@@ -27,6 +28,7 @@ interface AgentRunnerDeps {
   preview: PreviewService;
   canvas?: CanvasService;
   comments?: CommentStore;
+  layerLocks?: LayerLockStore | null;
 }
 
 function claudeExecutableOption(): { claudeExecutable?: string } {
@@ -45,6 +47,7 @@ function createAgentRunner(deps: AgentRunnerDeps): AgentRunner {
           preview: deps.preview,
           ...canvas,
           ...(deps.comments ? { comments: deps.comments } : {}),
+          layerLocks: deps.layerLocks ?? null,
           skillsRoot: path.join(deps.config.dataDir, "skills-plugins"),
           exportsRoot: path.join(deps.config.dataDir, "exports"),
           ...claudeExecutableOption(),

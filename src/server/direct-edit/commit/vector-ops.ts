@@ -18,7 +18,7 @@ import {
   type VectorRequest,
   type VectorResult,
 } from "../../../shared/vector.js";
-import type { InsertScope } from "../../components/insert.js";
+import type { InsertScope } from "../components-ops/insert.js";
 import { DirectEditError } from "../engine/errors.js";
 import { planBoolean } from "../engine/vector-boolean.js";
 import {

@@ -473,6 +473,7 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/server/direct-edit/commit/index.ts",
       "src/server/direct-edit/commit/imports.ts",
       "src/server/components/model.ts",
+      "src/server/{components/{insert,swap,extract,extract-file,extract-shape,import-cleanup},direct-edit/components-ops/index,store/version-hunk}.ts",
       "src/server/direct-edit/{arrange-probe,arrange,batch,class-info,edit-site,follow-moves,history,image-attrs,image-find,image-source,image,imports,jsx-insert,props,replace,run-record,save-queue,structure-apply,style-scan,text-source-files,text-source,text-trace,vector-ops}.ts",
     ],
     rules: {

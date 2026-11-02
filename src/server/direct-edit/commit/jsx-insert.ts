@@ -19,12 +19,6 @@ import {
 } from "../../../shared/insert.js";
 import { OWNERS_MAX, OWNER_STACK_MAX } from "../../../shared/props.js";
 import {
-  resolveTarget,
-  seenImports,
-  type InsertScope,
-  type ResolvedTarget,
-} from "../../components/insert.js";
-import {
   loadLibrary,
   type LibraryEntry,
   loadTypeScript,
@@ -33,6 +27,12 @@ import {
   type ImportItem,
   type ImportNeed,
 } from "../../components/model.js";
+import {
+  resolveTarget,
+  seenImports,
+  type InsertScope,
+  type ResolvedTarget,
+} from "../components-ops/insert.js";
 import { DirectEditError } from "../engine/errors.js";
 import {
   parseHtmlSnippet,

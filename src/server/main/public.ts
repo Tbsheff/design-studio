@@ -162,7 +162,8 @@ const openStores = async (
 const buildApp = (
   config: ServerConfig,
   options: ServerOptions,
-  stores: Stores
+  stores: Stores,
+  runtime: StudioRuntime
 ): BuiltApp => {
   const { projects, versions } = stores;
   const { bus } = stores.observed;
@@ -222,6 +223,7 @@ const buildApp = (
     preview,
     projects,
     runner,
+    runtime,
     thumbnails,
     uiDir,
     versions,
@@ -239,7 +241,7 @@ const createServer = async (
 
   const runtime = buildRuntime();
   const stores = await openStores(config, options);
-  const { app, preview } = buildApp(config, options, stores);
+  const { app, preview } = buildApp(config, options, stores, runtime);
 
   const server = serve(
     { fetch: app.fetch, hostname: "127.0.0.1", port: config.studioPort },

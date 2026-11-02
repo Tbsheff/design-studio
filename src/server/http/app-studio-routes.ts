@@ -15,9 +15,15 @@ import {
   optionalString,
   readBody,
 } from "./app-request.js";
+import { mountAll } from "./mount-all.js";
 
 const registerStudioRoutes = (app: Hono, ctx: AppContext): void => {
-  const { appTelemetryFile, folderPicker, projects, telemetryFile } = ctx;
+  const { appTelemetryFile, folderPicker, projects, runtime, telemetryFile } =
+    ctx;
+
+  if (runtime !== null) {
+    mountAll(app, runtime);
+  }
 
   app.get("/api/skills", async (c) => c.json(await discoverSkills()));
 

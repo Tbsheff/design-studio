@@ -302,6 +302,7 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/server/handlers/_core/{handler,run-action}.ts",
       "src/server/handlers/studio/{handlers,health,live}.ts",
       "src/shared/actions/studio/health.ts",
+      "src/server/http/{mount,mount-all,wire-error}.ts",
     ],
     rules: { "import/no-relative-parent-imports": "off" },
   },

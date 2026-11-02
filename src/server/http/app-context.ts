@@ -45,6 +45,7 @@ import { createEditHistory } from "../direct-edit/history.js";
 import type { EditHistory } from "../direct-edit/history.js";
 import { onPlannedEdit } from "../direct-edit/planned-feed.js";
 import { recordRunInHistory } from "../direct-edit/run-record.js";
+import type { StudioRuntime } from "../main/runtime.js";
 import { resourcePath, resourcesDir } from "../resources.js";
 import { createCommandRuleStore } from "../store/command-rules.js";
 import { createCommentStore } from "../store/comments.js";
@@ -96,6 +97,7 @@ interface AppDeps {
   editHistory?: EditHistory;
   canvas?: CanvasService;
   frameStates?: FrameStateDeps;
+  runtime?: StudioRuntime;
 }
 
 const DEV_UI_ORIGINS = ["http://127.0.0.1:5173", "http://localhost:5173"];
@@ -878,6 +880,7 @@ const createAppContext = (deps: AppDeps) => {
     runEnd,
     runner,
     runsDir,
+    runtime: deps.runtime ?? null,
     startDraftImprove,
     startRun,
     streamTracker,

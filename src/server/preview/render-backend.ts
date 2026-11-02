@@ -3,36 +3,11 @@ import {
   RENDER_IPC_ENV,
   RENDER_SOCKET_ENV,
   type RenderBackendName,
-  type RenderClip,
-  type RenderErrors,
 } from "../../shared/render-rpc.js";
-import type { AxeViolation } from "./axe.js";
+import type { RenderBackend } from "./render-contract.js";
 
-export interface RenderPage {
-  goto(url: string): Promise<void>;
-  evaluate<T>(expression: string): Promise<T>;
-  screenshot(outPath: string, clip?: RenderClip): Promise<void>;
-  errors(): Promise<RenderErrors>;
-  close(): Promise<void>;
-  lastNav?(): { loadMs: number; idleMs: number } | null;
-  reset?(): Promise<void>;
-  axe?(): Promise<AxeViolation[]>;
-}
-
-export interface RenderBackend {
-  readonly name: RenderBackendName;
-  readonly reusablePages?: boolean;
-  open(viewport: {
-    width: number;
-    height: number;
-    scale?: number;
-  }): Promise<RenderPage>;
-  close(): Promise<void>;
-  warm?(): Promise<void>;
-}
-
-export const NAVIGATION_TIMEOUT_MS = 30_000;
-export const SETTLE_TIMEOUT_MS = 5000;
+export { NAVIGATION_TIMEOUT_MS, SETTLE_TIMEOUT_MS } from "./render-contract.js";
+export type { RenderBackend, RenderPage } from "./render-contract.js";
 
 export function chooseBackend(
   env: NodeJS.ProcessEnv = process.env

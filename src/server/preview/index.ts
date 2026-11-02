@@ -8,7 +8,6 @@ import type {
   Project,
   RenderCheckResult,
 } from "../../shared/contracts.js";
-import { warmComponentUsage } from "../agent/usage-scope.js";
 import { AppServers } from "../app/dev-server.js";
 import { resolveFrameState } from "../app/frame-state.js";
 import { createAppProxy, type AppTarget } from "../app/proxy.js";
@@ -29,6 +28,7 @@ import { startHtmlServer } from "./html-server.js";
 import type { HtmlServer, RootKind } from "./html-server.js";
 import { SourceStamps, type SourceStamp } from "./source-stamp.js";
 import { noteLayoutKeepingWrite, writesKeptLayout } from "./tag-layout.js";
+import { warmComponentUsage } from "./usage-scope.js";
 import type { ViteManager, ViteTarget } from "./vite-manager.js";
 import { WatcherManager } from "./watcher.js";
 

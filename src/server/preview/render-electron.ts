@@ -15,7 +15,7 @@ import {
   SETTLE_TIMEOUT_MS,
   type RenderBackend,
   type RenderPage,
-} from "./render-backend.js";
+} from "./render-contract.js";
 
 const OP_TIMEOUT_MS = 90_000;
 

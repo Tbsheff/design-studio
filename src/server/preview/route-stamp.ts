@@ -2,7 +2,7 @@ import { readdir } from "node:fs/promises";
 import path from "node:path";
 
 import type { AppRoute } from "../../shared/contracts.js";
-import { matchRouteFile } from "../agent/run-target.js";
+import { matchRouteFile } from "../app/index.js";
 import { appRouterDir, listAppRoutes } from "../app/routes.js";
 import { siblingWorkerFile, WorkerClient } from "../worker-client.js";
 import { answerGraph, RouteGraph } from "./route-graph.js";

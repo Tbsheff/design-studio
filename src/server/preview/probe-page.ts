@@ -1,5 +1,5 @@
-import { waitForPage } from "../export/capture.js";
 import type { PeekOptions, PreviewService } from "../types.js";
+import { waitForPage } from "./capture.js";
 import type { RenderPage } from "./render-backend.js";
 
 type ProbePage = Pick<RenderPage, "evaluate">;

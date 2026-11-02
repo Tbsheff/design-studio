@@ -12,6 +12,10 @@ import { COPY_CODE_AGENT_DESCRIPTION } from "./copy-code-tool.js";
 import { APP_DOCTOR_DESCRIPTION } from "./doctor-tool.js";
 import { EXPORT_FRAME_AGENT_DESCRIPTION } from "./export-tool.js";
 import { FIGMA_IMPORT_TOOL_DESCRIPTION } from "./figma-import-tool.js";
+import {
+  placeImageDescription,
+  searchImagesDescription,
+} from "./image-search-tool.js";
 import { SET_IMAGE_AGENT_DESCRIPTION } from "./image-tool.js";
 import { importPageDescription } from "./page-import-tool.js";
 import { COMPARE_REFERENCE_DESCRIPTION } from "./reference-tool.js";
@@ -168,6 +172,10 @@ export const TOOL_SHORT = {
     "Copy a live page (https or localhost URL) into a new static HTML page and canvas frame: a copy for redesign, not a live link.",
   set_image:
     "Place or replace an image (project file, attached image or https url) with src, alt, fit and focal point; copies the file into the project assets.",
+  search_images:
+    "Read only. Search free Creative Commons stock photos by words, orientation and limit; returns thumbnail, full url, size, author and license.",
+  place_image:
+    "Download one search_images result into the project assets, set it on an <img> or background with alt text, and credit it in ASSETS.md.",
   draw_vector: VECTOR_DRAW_SHORT,
   boolean_shapes: VECTOR_BOOLEAN_SHORT,
   paint_shape: VECTOR_PAINT_SHORT,
@@ -296,6 +304,8 @@ export const TOOL_HELP: Record<
   swap_instance: SWAP_INSTANCE_AGENT_DESCRIPTION,
   export_frame: EXPORT_FRAME_AGENT_DESCRIPTION,
   set_image: SET_IMAGE_AGENT_DESCRIPTION,
+  search_images: searchImagesDescription,
+  place_image: placeImageDescription,
   import_page: importPageDescription,
   draw_vector: VECTOR_DRAW_SHORT,
   boolean_shapes: VECTOR_BOOLEAN_SHORT,

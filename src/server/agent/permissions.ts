@@ -137,6 +137,8 @@ const SET_STATE_STYLE_TOOL = "mcp__studio__set_state_style";
 const SET_FORCED_STATE_TOOL = "mcp__studio__set_forced_state";
 const GET_STACKING_TOOL = "mcp__studio__get_stacking";
 const SET_STACKING_TOOL = "mcp__studio__set_stacking";
+const SEARCH_IMAGES_TOOL = "mcp__studio__search_images";
+const PLACE_IMAGE_TOOL = "mcp__studio__place_image";
 
 const DIRECT_EDIT_TOOLS = new Set<string>([
   INSERT_ICON_TOOL,
@@ -163,6 +165,7 @@ const DIRECT_EDIT_TOOLS = new Set<string>([
   SET_BREAKPOINT_STYLE_TOOL,
   SET_STATE_STYLE_TOOL,
   SET_STACKING_TOOL,
+  PLACE_IMAGE_TOOL,
   ...STUDIO_EDIT_TOOLS_R13,
 ]);
 
@@ -205,6 +208,8 @@ const STUDIO_MCP_TOOLS: readonly string[] = [
   SET_FORCED_STATE_TOOL,
   GET_STACKING_TOOL,
   SET_STACKING_TOOL,
+  SEARCH_IMAGES_TOOL,
+  PLACE_IMAGE_TOOL,
   ...AGENT_OPS.toolIds,
 ];
 

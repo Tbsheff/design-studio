@@ -132,6 +132,12 @@ import {
   runInsertIcon,
   runListIcons,
 } from "./icon-tool.js";
+import {
+  placeImageInput,
+  runPlaceImage,
+  runSearchImages,
+  searchImagesInput,
+} from "./image-search-tool.js";
 import { runSetImage, setImageShape } from "./image-tool.js";
 import { insertComponentShape, runInsertComponent } from "./insert-tool.js";
 import {
@@ -1645,6 +1651,21 @@ export async function createStudioMcpServer(
     (args) => runSetImage(deps, args)
   );
 
+  const searchImagesTool = tool(
+    "search_images",
+    TOOL_SHORT.search_images,
+    searchImagesInput,
+    (args) => runSearchImages(deps, args),
+    { annotations: { readOnlyHint: true } }
+  );
+
+  const placeImageTool = tool(
+    "place_image",
+    TOOL_SHORT.place_image,
+    placeImageInput,
+    withLayerIds(deps, (args) => runPlaceImage(deps, args))
+  );
+
   const drawVectorTool = tool(
     "draw_vector",
     TOOL_SHORT.draw_vector,
@@ -1785,6 +1806,8 @@ export async function createStudioMcpServer(
     diffVersionsTool,
     exportFrameTool,
     setImageTool,
+    searchImagesTool,
+    placeImageTool,
     importPageTool,
     searchTextTool,
     updateTextTool,

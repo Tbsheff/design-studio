@@ -229,6 +229,8 @@ const gitOverride = (): string => process.env.STUDIO_GIT ?? "";
 
 const childEnv = (): NodeJS.ProcessEnv => ({ ...process.env });
 
+const imageSearchEnv = (): string => process.env.STUDIO_IMAGE_SEARCH ?? "";
+
 export {
   DEFAULT_FOLDER_NAME,
   DEV_PROJECTS_FOLDER,
@@ -237,6 +239,7 @@ export {
   buildEnv,
   childEnv,
   gitOverride,
+  imageSearchEnv,
   loadConfig,
   projectsDirFromEnv,
   resourcesDir,

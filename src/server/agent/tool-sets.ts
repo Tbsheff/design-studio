@@ -52,6 +52,8 @@ const CORE_TOOLS = [
   "list_comments",
   "resolve_comment",
   "set_image",
+  "search_images",
+  "place_image",
   "import_page",
   "export_frame",
   "draw_vector",

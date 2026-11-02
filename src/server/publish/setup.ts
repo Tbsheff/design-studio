@@ -2,7 +2,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { WORKER_NAME } from "../../../cloud/publish-worker/src/protocol.js";
+import { WORKER_NAME } from "../../shared/actions/publish-remote.js";
 import type {
   PublishBackendMode,
   PublishBackendState,
@@ -13,7 +13,7 @@ import { BadRequestError } from "../store/errors.js";
 import { cfVersion, cliFailure, deployedUrl, newestCf, runCf } from "./cli.js";
 import type { CliResult } from "./cli.js";
 import { createLocalRuntime, LOCAL_D1_ID } from "./local-runtime.js";
-import type { LocalRuntime } from "./local-runtime.js";
+import type { LocalWorker } from "./local-runtime.js";
 import { remoteClient } from "./remote.js";
 import type { Endpoint } from "./remote.js";
 import { scrubCliText, tailLines } from "./scrub.js";
@@ -174,7 +174,7 @@ export function createPublishBackend(
 ): PublishBackend {
   const localAllowed = process.env.STUDIO_PUBLISH_LOCAL === "1";
   const localDir = path.join(store.dir, "local");
-  const runtime: LocalRuntime = createLocalRuntime(localDir);
+  const runtime: LocalWorker = createLocalRuntime(localDir);
   let steps: SetupStep[] = [];
   let running = false;
   let lastError: string | null = null;

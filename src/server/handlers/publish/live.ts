@@ -1,5 +1,7 @@
 import { Layer } from "effect";
 
-const PublishLive = Layer.empty;
+import { CfCli, LocalRuntime } from "../../publish/index.js";
+
+const PublishLive = Layer.mergeAll(CfCli.layer, LocalRuntime.layer);
 
 export { PublishLive };

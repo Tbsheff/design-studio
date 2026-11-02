@@ -1,23 +1,19 @@
-import { spawn, type ChildProcess } from "node:child_process";
 import path from "node:path";
 
 import { compareCfVersion, type PublishAccount } from "../../shared/publish.js";
 import { findOnPath } from "../git/user-git.js";
 import { LOGIN_SHELL_PATH_ENV } from "../platform/config/index.js";
+import { spawnCf } from "./cf-cli.js";
+import type { CfChild } from "./cf-cli.js";
 import { scrubCliText } from "./scrub.js";
 
-export interface CliResult {
-  code: number | null;
-  stdout: string;
-  stderr: string;
-  timedOut: boolean;
-}
+export type { CliResult } from "./cf-cli.js";
 
 export interface CliRunOptions {
   cwd?: string;
   accountId?: string | null;
   timeoutMs?: number;
-  onSpawn?: (child: ChildProcess) => void;
+  onSpawn?: (child: CfChild) => void;
 }
 
 export interface WhoAmI {
@@ -27,7 +23,6 @@ export interface WhoAmI {
 }
 
 const DEFAULT_TIMEOUT_MS = 170_000;
-const OUTPUT_MAX = 400_000;
 
 export const LOGIN_SCOPES = [
   "account:read",
@@ -117,46 +112,15 @@ export function runCf(
   args: string[],
   options: CliRunOptions = {}
 ): Promise<CliResult> {
-  return new Promise((resolve) => {
-    const child = spawn(bin, args, {
+  return spawnCf({
+    bin,
+    args,
+    options: {
       cwd: options.cwd,
       env: cliEnv(options.accountId),
-      stdio: ["ignore", "pipe", "pipe"],
-    });
-
-    options.onSpawn?.(child);
-    let stdout = "";
-    let stderr = "";
-    let timedOut = false;
-
-    const timer = setTimeout(() => {
-      timedOut = true;
-      child.kill("SIGTERM");
-    }, options.timeoutMs ?? DEFAULT_TIMEOUT_MS);
-
-    child.stdout?.on("data", (chunk: Buffer) => {
-      if (stdout.length < OUTPUT_MAX) {
-        stdout += chunk.toString("utf-8");
-      }
-    });
-    child.stderr?.on("data", (chunk: Buffer) => {
-      if (stderr.length < OUTPUT_MAX) {
-        stderr += chunk.toString("utf-8");
-      }
-    });
-    child.on("error", (error) => {
-      clearTimeout(timer);
-      resolve({
-        code: -1,
-        stdout,
-        stderr: `${stderr}\n${error.message}`,
-        timedOut,
-      });
-    });
-    child.on("close", (code) => {
-      clearTimeout(timer);
-      resolve({ code, stdout, stderr, timedOut });
-    });
+      timeoutMs: options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
+      onSpawn: options.onSpawn,
+    },
   });
 }
 

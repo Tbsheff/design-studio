@@ -1,0 +1,177 @@
+{
+  "tools": [
+    {
+      "name": "publish_design",
+      "description": "Publish a saved version to a public URL on the user's publish Worker, or republish into an old one (publicationId) as a new version. It first builds the exact files and hashes them, then the user must click Allow in Design Studio on a prompt that shows the pages, file count, size, URL, password and end date; without the window open it is refused. Returns the URL. Publish puts a static copy of one saved version on the public internet through the user's own publish Worker (one Cloudflare Worker with R2 and D1, set up once in Settings → Publishing), at https://design-studio-publish.<account-subdomain>.workers.dev/d/<name>-<6 letters>/. An HTML prototype goes up as its own pages, styles, scripts, images and fonts (no source files, .env, node_modules, repository data or studio scripts); an attached app or React project goes up as PNG images of its frames, never its code. Republish uploads only changed files and keeps older versions for rollback. The Worker adds noindex and no-referrer headers, runs prototype pages in a CSP sandbox, and can ask for a password, stop on an end date and take viewer comments. The user must click Allow in Design Studio for each publish, rollback and unpublish. These tools never set up the Worker, never sign in, never show a key and never start a studio run.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "versionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Saved version id from list_versions. Leave out for the head version."
+          },
+          "frames": {
+            "description": "Attached app or React project only: frame ids or @labels from canvas_list to show. Leave out for every visible frame of the direction.",
+            "minItems": 1,
+            "maxItems": 12,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80
+            }
+          },
+          "title": {
+            "description": "Title on the published viewer. Leave out for the project name.",
+            "type": "string",
+            "maxLength": 120
+          },
+          "password": {
+            "description": "Password viewers must type (HTTP Basic, any user name). Only a salted hash goes into the Worker; the reply never repeats it. Leave out for no password, or to keep the password of the publication you republish.",
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 128
+          },
+          "expiresInDays": {
+            "description": "Days until the link stops working: 1, 7 or 30, or 0 for no end date. Default 7 for a new publication; a republish keeps the old end date.",
+            "anyOf": [
+              {
+                "type": "number",
+                "const": 0
+              },
+              {
+                "type": "number",
+                "const": 1
+              },
+              {
+                "type": "number",
+                "const": 7
+              },
+              {
+                "type": "number",
+                "const": 30
+              }
+            ]
+          },
+          "comments": {
+            "description": "Attached app or React project only: show the open comments next to the frames as read-only text.",
+            "type": "boolean"
+          },
+          "viewerComments": {
+            "description": "Let viewers leave comments on a comments page (rate limited, owner can delete). Leave out for off on a new publication; a republish keeps the old value.",
+            "type": "boolean"
+          },
+          "noindex": {
+            "description": "Send noindex so search engines skip it. Default true.",
+            "type": "boolean"
+          },
+          "publicationId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Publication id from list_publications to republish into the same URL."
+          }
+        },
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "list_publications",
+      "description": "List the publications of a project: id, title, URL, status (live, failed, ended, removed), source version, pages, size, password on or off, end date, view counts (total and last 7 days, no personal data), viewer comment count and published versions for rollback_publication. Read only. Publish puts a static copy of one saved version on the public internet through the user's own publish Worker (one Cloudflare Worker with R2 and D1, set up once in Settings → Publishing), at https://design-studio-publish.<account-subdomain>.workers.dev/d/<name>-<6 letters>/. An HTML prototype goes up as its own pages, styles, scripts, images and fonts (no source files, .env, node_modules, repository data or studio scripts); an attached app or React project goes up as PNG images of its frames, never its code. Republish uploads only changed files and keeps older versions for rollback. The Worker adds noindex and no-referrer headers, runs prototype pages in a CSP sandbox, and can ask for a password, stop on an end date and take viewer comments. The user must click Allow in Design Studio for each publish, rollback and unpublish. These tools never set up the Worker, never sign in, never show a key and never start a studio run.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          }
+        },
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "unpublish_design",
+      "description": "Turn off a publication so its URL answers 410, and delete its files. The user must click Allow in Design Studio first. The publication stays in list_publications as removed.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "publicationId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Publication id from list_publications."
+          }
+        },
+        "required": ["projectId", "publicationId"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "rollback_publication",
+      "description": "Make an older published version live again at the same URL. Nothing uploads; the newer version stays for a later rollback. The user must click Allow in Design Studio first.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "publicationId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Publication id from list_publications."
+          },
+          "versionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Published version id from list_publications versions[].id."
+          }
+        },
+        "required": ["projectId", "publicationId", "versionId"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    }
+  ]
+}

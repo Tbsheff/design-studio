@@ -9,7 +9,7 @@ import type {
   PublicationSettings,
   RemoteComment,
   RemotePublication,
-} from "../../../cloud/publish-worker/src/protocol.js";
+} from "../../shared/actions/publish-remote.js";
 import {
   BadRequestError,
   ConflictError,

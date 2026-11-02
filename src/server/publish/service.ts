@@ -6,7 +6,7 @@ import { nanoid } from "nanoid";
 import type {
   PublicationSettings,
   RemotePublication,
-} from "../../../cloud/publish-worker/src/protocol.js";
+} from "../../shared/actions/publish-remote.js";
 import type { Direction, Project } from "../../shared/contracts.js";
 import {
   PUBLISH_EXPIRY_DAYS,

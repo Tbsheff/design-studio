@@ -1,10 +1,12 @@
 // @generated
+import { PublishStatus } from "../publish/errors/status.js";
 import type { StudioErrorTag } from "./errors/all.js";
 import type { HttpStatus } from "./errors/http-status-codes.js";
 import { CoreStatus } from "./errors/status.js";
 
 const HTTP_STATUS = {
   ...CoreStatus,
+  ...PublishStatus,
   Defect: 500,
 } as const satisfies Record<StudioErrorTag | "Defect", HttpStatus>;
 

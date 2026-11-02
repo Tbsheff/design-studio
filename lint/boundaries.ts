@@ -83,7 +83,7 @@ export const ROOT_POLICIES: Policy[] = [
     { type: ["shared", "shared-contract", "desktop"] },
     { type: "platform", captured: { mod: "data-lock" } },
   ]),
-  allow({ type: "cloud-publish" }, [{ type: "cloud-publish" }]),
+  allow({ type: "cloud-publish" }, [{ type: ["cloud-publish", "shared"] }]),
   allow({ type: "cloud-api" }, [
     { type: ["shared", "shared-contract", "cloud-api"] },
   ]),

@@ -1,4 +1,3 @@
-import type { ChildProcess } from "node:child_process";
 import { mkdir } from "node:fs/promises";
 
 import {
@@ -9,6 +8,7 @@ import {
   type PublishLoginState,
 } from "../../shared/publish.js";
 import { BadRequestError } from "../store/errors.js";
+import type { CfChild } from "./cf-cli.js";
 import {
   cfWhoAmI,
   cliFailure,
@@ -49,7 +49,7 @@ const LOGIN_URL = /https:\/\/dash\.cloudflare\.com\/oauth2\/auth\?[^\s"'<>]+/;
 export function createCliSession(store: PublishStore): CliSession {
   let probe: Probe | null = null;
   let who: { value: WhoAmI; at: number } | null = null;
-  let child: ChildProcess | null = null;
+  let child: CfChild | null = null;
   let login: PublishLoginState = { running: false, url: null, error: null };
 
   const probeCli = async (fresh: boolean): Promise<Probe> => {

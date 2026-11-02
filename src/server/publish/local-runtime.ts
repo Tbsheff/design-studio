@@ -3,122 +3,226 @@ import type { ChildProcess } from "node:child_process";
 import { existsSync } from "node:fs";
 import path from "node:path";
 
+import { Context, Effect, Layer } from "effect";
+
 import { BadRequestError } from "../store/errors.js";
 
-export const LOCAL_D1_ID = "5e7f0d1a-0000-4000-8000-00000000d1d1";
-const READY = /publish worker local ready at (http:\/\/127\.0\.0\.1:\d+\/)/;
+interface LocalStart {
+  readonly bundle: string;
+  readonly secrets: string;
+  readonly runner: string | null;
+  readonly databaseId: string;
+}
+
+interface LocalWorker {
+  readonly stateDir: string;
+  readonly port: number;
+  readonly start: (input: LocalStart) => Promise<string>;
+  readonly ensure: (input: LocalStart) => Promise<string>;
+  readonly stop: () => void;
+}
+
+interface LocalRuntimeApi {
+  readonly open: (dir: string) => Effect.Effect<LocalWorker>;
+}
+
+interface WorkerState {
+  child: ChildProcess | null;
+  url: string | null;
+  starting: Promise<string> | null;
+}
+
+const LOCAL_D1_ID = "5e7f0d1a-0000-4000-8000-00000000d1d1";
+
+const READY =
+  /publish worker local ready at (?<url>http:\/\/127\.0\.0\.1:\d+\/)/u;
+
 const START_TIMEOUT_MS = 60_000;
 
-export interface LocalStart {
-  bundle: string;
-  secrets: string;
-  runner: string | null;
-  databaseId: string;
-}
+const SEEN_MAX = 8000;
 
-export interface LocalRuntime {
-  stateDir: string;
-  port: number;
-  start(input: LocalStart): Promise<string>;
-  ensure(input: LocalStart): Promise<string>;
-  stop(): void;
-}
+const KILL_SIGNAL = "SIGTERM";
 
-export function createLocalRuntime(dir: string): LocalRuntime {
+const lastErrorLine = (seen: string): string =>
+  seen
+    .split("\n")
+    .filter((line) => /error/iu.test(line))
+    .slice(-1)[0]
+    ?.slice(0, 200) ?? "";
+
+const checkStart = (input: LocalStart): BadRequestError | null => {
+  if (!input.runner) {
+    return new BadRequestError(
+      "Local mode needs cloud/publish-worker with its packages installed."
+    );
+  }
+
+  if (!existsSync(input.bundle) || !existsSync(input.secrets)) {
+    return new BadRequestError(
+      "The local Worker build is missing. Run Set up publishing again."
+    );
+  }
+
+  return null;
+};
+
+const runnerArgs = (
+  input: LocalStart,
+  stateDir: string,
+  port: number
+): string[] => [
+  input.runner ?? "",
+  "--script",
+  input.bundle,
+  "--persist",
+  stateDir,
+  "--d1",
+  input.databaseId,
+  "--secrets",
+  input.secrets,
+  "--port",
+  String(port),
+];
+
+const spawnRunner = (
+  input: LocalStart,
+  stateDir: string,
+  port: number
+): ChildProcess =>
+  spawn(process.execPath, runnerArgs(input, stateDir, port), {
+    cwd: path.dirname(path.dirname(input.runner ?? "")),
+    env: { HOME: process.env.HOME ?? "", PATH: process.env.PATH ?? "" },
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+
+const waitReady = (
+  state: WorkerState,
+  spawned: ChildProcess
+): Promise<string> =>
+  new Promise((resolve, reject) => {
+    let seen = "";
+    const timer = setTimeout(() => {
+      reject(new BadRequestError("The local Worker did not start in time."));
+    }, START_TIMEOUT_MS);
+    const watch = (chunk: Buffer): void => {
+      seen = (seen + chunk.toString("utf-8")).slice(-SEEN_MAX);
+      const found = READY.exec(seen)?.groups?.["url"] ?? null;
+
+      if (found === null) {
+        return;
+      }
+
+      clearTimeout(timer);
+      state.url = found;
+      resolve(found);
+    };
+
+    spawned.stdout?.on("data", watch);
+    spawned.stderr?.on("data", watch);
+    spawned.once("exit", (code) => {
+      clearTimeout(timer);
+
+      if (state.child === spawned) {
+        state.child = null;
+        state.url = null;
+      }
+
+      reject(
+        new BadRequestError(
+          `The local Worker stopped (code ${code}). ${lastErrorLine(seen)}`
+        )
+      );
+    });
+  });
+
+const createLocalRuntime = (dir: string): LocalWorker => {
   const stateDir = path.join(dir, "state");
   const port = Number(process.env.STUDIO_PUBLISH_LOCAL_PORT ?? "13770");
-  let child: ChildProcess | null = null;
-  let url: string | null = null;
+  const state: WorkerState = { child: null, starting: null, url: null };
 
-  const stop = () => {
-    child?.kill("SIGTERM");
-    child = null;
-    url = null;
+  const stop = (): void => {
+    state.child?.kill(KILL_SIGNAL);
+    state.child = null;
+    state.url = null;
   };
+
   process.once("exit", stop);
 
-  const start = (input: LocalStart): Promise<string> => {
+  const startNow = (input: LocalStart): Promise<string> => {
     stop();
-    if (!input.runner)
-      return Promise.reject(
-        new BadRequestError(
-          "Local mode needs cloud/publish-worker with its packages installed."
-        )
-      );
-    if (!existsSync(input.bundle) || !existsSync(input.secrets))
-      return Promise.reject(
-        new BadRequestError(
-          "The local Worker build is missing. Run Set up publishing again."
-        )
-      );
-    const args = [
-      input.runner,
-      "--script",
-      input.bundle,
-      "--persist",
-      stateDir,
-      "--d1",
-      input.databaseId,
-      "--secrets",
-      input.secrets,
-      "--port",
-      String(port),
-    ];
-    const spawned = spawn(process.execPath, args, {
-      cwd: path.dirname(path.dirname(input.runner)),
-      stdio: ["ignore", "pipe", "pipe"],
-      env: { PATH: process.env.PATH ?? "", HOME: process.env.HOME ?? "" },
+    const refused = checkStart(input);
+
+    if (refused !== null) {
+      return Promise.reject(refused);
+    }
+
+    const spawned = spawnRunner(input, stateDir, port);
+
+    state.child = spawned;
+
+    return waitReady(state, spawned);
+  };
+
+  const start = (input: LocalStart): Promise<string> => {
+    state.starting ??= startNow(input).finally(() => {
+      state.starting = null;
     });
-    child = spawned;
-    return new Promise((resolve, reject) => {
-      let seen = "";
-      const timer = setTimeout(
-        () =>
-          reject(
-            new BadRequestError("The local Worker did not start in time.")
-          ),
-        START_TIMEOUT_MS
+
+    return state.starting;
+  };
+
+  const ensure = async (input: LocalStart): Promise<string> => {
+    if (state.child && state.url) {
+      return state.url;
+    }
+
+    return await start(input);
+  };
+
+  return { ensure, port, start, stateDir, stop };
+};
+
+class LocalRuntime extends Context.Service<LocalRuntime, LocalRuntimeApi>()(
+  "design-studio/publish/LocalRuntime"
+) {
+  declare public readonly access: "write";
+
+  public static readonly layer = Layer.effect(
+    LocalRuntime,
+    Effect.gen(function* make() {
+      const opened = new Map<string, LocalWorker>();
+
+      yield* Effect.addFinalizer(() =>
+        Effect.sync(() => {
+          for (const worker of opened.values()) {
+            worker.stop();
+          }
+
+          opened.clear();
+        })
       );
-      const watch = (chunk: Buffer) => {
-        seen = (seen + chunk.toString("utf-8")).slice(-8000);
-        const match = READY.exec(seen);
-        if (!match?.[1]) return;
-        clearTimeout(timer);
-        url = match[1];
-        resolve(match[1]);
-      };
-      spawned.stdout?.on("data", watch);
-      spawned.stderr?.on("data", watch);
-      spawned.once("exit", (code) => {
-        clearTimeout(timer);
-        if (child === spawned) {
-          child = null;
-          url = null;
-        }
-        reject(
-          new BadRequestError(
-            `The local Worker stopped (code ${code}). ${
-              seen
-                .split("\n")
-                .filter((l) => /error/i.test(l))
-                .slice(-1)[0]
-                ?.slice(0, 200) ?? ""
-            }`
-          )
-        );
+
+      const open = Effect.fn("LocalRuntime.open")(function* run(dir: string) {
+        return yield* Effect.sync(() => {
+          const known = opened.get(dir);
+
+          if (known) {
+            return known;
+          }
+
+          const worker = createLocalRuntime(dir);
+
+          opened.set(dir, worker);
+
+          return worker;
+        });
       });
-    });
-  };
 
-  let starting: Promise<string> | null = null;
-  const startOnce = (input: LocalStart): Promise<string> => {
-    starting ??= start(input).finally(() => {
-      starting = null;
-    });
-    return starting;
-  };
-  const ensure = async (input: LocalStart): Promise<string> =>
-    child && url ? url : startOnce(input);
-
-  return { stateDir, port, start: startOnce, ensure, stop };
+      return LocalRuntime.of({ open });
+    })
+  );
 }
+
+export { createLocalRuntime, LOCAL_D1_ID, LocalRuntime };
+
+export type { LocalRuntimeApi, LocalStart, LocalWorker };

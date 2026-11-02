@@ -1,22 +1,60 @@
-import type {
-  ShipPrepare,
-  ShipRequest,
-  ShipResult,
-  ShipSettings,
-} from "../shared/ship";
-import { json } from "./api";
+import type { WireOutput } from "../shared/actions/_core/action.js";
+import type { getPlanShip } from "../shared/actions/ship/get-plan.js";
+import type { getSettingsShip } from "../shared/actions/ship/get-settings.js";
+import type { publishShip } from "../shared/actions/ship/publish.js";
+import { routes } from "../shared/actions/ship/routes.js";
+import type { setSettingsShip } from "../shared/actions/ship/set-settings.js";
+import type { ShipRequest, ShipSettings } from "../shared/ship";
+import { call } from "./platform/http";
 
-const base = (pid: string) => `/api/projects/${encodeURIComponent(pid)}/ship`;
+interface PlanBase {
+  readonly baseVersionId?: string;
+}
 
-export const shipApi = {
-  prepare: (pid: string, baseVersionId?: string) =>
-    json<ShipPrepare>(
-      "GET",
-      `${base(pid)}${baseVersionId ? `?base=${encodeURIComponent(baseVersionId)}` : ""}`
-    ),
-  ship: (pid: string, request: ShipRequest) =>
-    json<ShipResult>("POST", base(pid), request),
-  settings: (pid: string) => json<ShipSettings>("GET", `${base(pid)}/settings`),
-  saveSettings: (pid: string, settings: ShipSettings) =>
-    json<ShipSettings>("PUT", `${base(pid)}/settings`, settings),
+const baseOf = (baseVersionId?: string): PlanBase => {
+  if (baseVersionId) {
+    return { baseVersionId };
+  }
+
+  return {};
 };
+
+const toSettingsBody = (settings: ShipSettings): ShipSettings => ({
+  bodyTemplate: settings.bodyTemplate,
+  branchTemplate: settings.branchTemplate,
+  issueId: settings.issueId,
+  user: settings.user,
+});
+
+const toPublishBody = (request: ShipRequest): ShipRequest => ({
+  baseVersionId: request.baseVersionId,
+  body: request.body,
+  branch: request.branch,
+  commitMessage: request.commitMessage,
+  files: [...request.files],
+  headVersionId: request.headVersionId,
+  mode: request.mode,
+  title: request.title,
+});
+
+const shipApi = {
+  prepare: (
+    projectId: string,
+    baseVersionId?: string
+  ): Promise<WireOutput<typeof getPlanShip>> =>
+    call(routes.getPlanShip, { ...baseOf(baseVersionId), projectId }),
+  saveSettings: (
+    projectId: string,
+    settings: ShipSettings
+  ): Promise<WireOutput<typeof setSettingsShip>> =>
+    call(routes.setSettingsShip, { ...toSettingsBody(settings), projectId }),
+  settings: (projectId: string): Promise<WireOutput<typeof getSettingsShip>> =>
+    call(routes.getSettingsShip, { projectId }),
+  ship: (
+    projectId: string,
+    request: ShipRequest
+  ): Promise<WireOutput<typeof publishShip>> =>
+    call(routes.publishShip, { ...toPublishBody(request), projectId }),
+};
+
+export { shipApi };

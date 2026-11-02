@@ -1,0 +1,167 @@
+{
+  "tools": [
+    {
+      "name": "prepare_ship",
+      "description": "List the files the studio changed since a base version, with diffs, refused files, conflicts with the user's own changes, and the default branch name, commit message and pull request text. Read only. Ship works on an attached app project whose folder is in a git repository. The studio makes a new branch from the repo HEAD in a separate git worktree, so the checked-out branch, the working tree and the index of the user stay as they are. It never force pushes, and it never commits .env files, secrets or node_modules. Repo commit hooks do not run; when the repo has a biome or prettier config, the studio formats the shipped files with it in that worktree first (format says which, and the ship result lists the files it reformatted with their diffs).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "baseVersionId": {
+            "description": "Base version id. Leave out for the last ship, or the version made when the app was attached.",
+            "type": "string",
+            "pattern": "^[0-9a-f]{40,64}$"
+          },
+          "title": {
+            "description": "Name of the change, for example \"Add Recent F2F documents card\". The default branch name, commit message and pull request text come from it. Leave out for a name made from all versions since the base.",
+            "type": "string",
+            "maxLength": 200
+          }
+        },
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "ship",
+      "description": "Commit studio changes to a new branch in the user's repo and, if asked, push it and open a pull request. The user must click Allow in Design Studio first; without the window open it is refused. Call prepare_ship first. Ship works on an attached app project whose folder is in a git repository. The studio makes a new branch from the repo HEAD in a separate git worktree, so the checked-out branch, the working tree and the index of the user stay as they are. It never force pushes, and it never commits .env files, secrets or node_modules. Repo commit hooks do not run; when the repo has a biome or prettier config, the studio formats the shipped files with it in that worktree first (format says which, and the ship result lists the files it reformatted with their diffs).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "baseVersionId": {
+            "description": "Base version id from prepare_ship. Leave out for the default base.",
+            "type": "string",
+            "pattern": "^[0-9a-f]{40,64}$"
+          },
+          "files": {
+            "description": "Repo-relative paths from prepare_ship. Leave out for every file that is not refused and has no conflict.",
+            "maxItems": 500,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 1000
+            }
+          },
+          "branch": {
+            "description": "Branch name. Leave out for the name from the project branch template.",
+            "type": "string",
+            "maxLength": 200
+          },
+          "commitMessage": {
+            "type": "string",
+            "maxLength": 4000
+          },
+          "title": {
+            "description": "Name of the change and pull request title. When branch, commitMessage or body are left out, their defaults come from this title. Leave out for a name made from all versions since the base.",
+            "type": "string",
+            "maxLength": 200
+          },
+          "body": {
+            "description": "Pull request body. Leave out for the project body template.",
+            "type": "string",
+            "maxLength": 20000
+          },
+          "mode": {
+            "default": "branch",
+            "description": "branch: commit on a new local branch only. push: also push it to the remote. pr: push and open a pull request with gh.",
+            "type": "string",
+            "enum": ["branch", "push", "pr"]
+          }
+        },
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      }
+    }
+  ],
+  "samples": [
+    {
+      "tool": "prepare_ship",
+      "args": {
+        "projectId": "p_demo01",
+        "title": "Add Recent F2F documents card"
+      },
+      "result": {
+        "blocked": null,
+        "repo": {
+          "root": "/Users/demo/code/app",
+          "checkedOut": "main",
+          "head": "3f2a9c1d8e7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f",
+          "remote": "origin",
+          "github": true,
+          "gh": true
+        },
+        "base": {
+          "versionId": "a1b2c3d4e5f60718293a4b5c6d7e8f9012345678",
+          "title": "Attached app",
+          "at": 1793600000000,
+          "kind": "attached"
+        },
+        "otherBases": [
+          {
+            "versionId": "a1b2c3d4e5f60718293a4b5c6d7e8f9012345678",
+            "title": "Attached app"
+          }
+        ],
+        "headVersionId": "b2c3d4e5f60718293a4b5c6d7e8f901234567890",
+        "versions": ["Add Recent F2F documents card"],
+        "defaults": {
+          "branch": "demo/add-recent-f2f-documents-card",
+          "title": "Add Recent F2F documents card",
+          "commitMessage": "Add Recent F2F documents card",
+          "body": "Add Recent F2F documents card\n\n### Studio versions\n- Add Recent F2F documents card"
+        },
+        "files": [
+          {
+            "path": "src/components/RecentDocs.tsx",
+            "status": "added",
+            "additions": 42,
+            "deletions": 0,
+            "refused": null,
+            "conflict": null,
+            "diff": "@@ -0,0 +1,42 @@\n+export const RecentDocs = () => null;"
+          }
+        ],
+        "format": null,
+        "note": "Ship works on an attached app project whose folder is in a git repository."
+      }
+    },
+    {
+      "tool": "ship",
+      "args": {
+        "projectId": "p_demo01",
+        "mode": "branch"
+      },
+      "result": {
+        "branch": "demo/add-recent-f2f-documents-card",
+        "sha": "c3d4e5f60718293a4b5c6d7e8f90123456789012",
+        "mode": "branch",
+        "pushed": false,
+        "remote": null,
+        "prUrl": null,
+        "prError": null,
+        "files": ["src/components/RecentDocs.tsx"]
+      }
+    }
+  ]
+}

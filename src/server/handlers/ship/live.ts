@@ -1,5 +1,8 @@
 import { Layer } from "effect";
 
-const ShipLive = Layer.empty;
+import { ShipRunner } from "../../ship/ship-runner.js";
+import { ShipStore } from "../../ship/ship-store.js";
+
+const ShipLive = Layer.mergeAll(ShipRunner.layer, ShipStore.layer);
 
 export { ShipLive };

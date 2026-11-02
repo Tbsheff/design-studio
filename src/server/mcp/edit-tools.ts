@@ -27,7 +27,6 @@ import { PROJECTS_LEGACY_TOOLS } from "./legacy/projects.js";
 import { PUBLISH_LEGACY_TOOLS } from "./legacy/publish.js";
 import { RUNS_LEGACY_TOOLS } from "./legacy/runs.js";
 import { SESSION_LEGACY_TOOLS } from "./legacy/session.js";
-import { SHIP_LEGACY_TOOLS } from "./legacy/ship.js";
 import { STUDIO_LEGACY_TOOLS } from "./legacy/studio.js";
 import { VERSIONS_LEGACY_TOOLS } from "./legacy/versions.js";
 import { ACTION_EDIT_TOOLS } from "./registry.js";
@@ -49,7 +48,6 @@ const LEGACY_TOOLS: ToolSpec[] = [
   ...PUBLISH_LEGACY_TOOLS,
   ...RUNS_LEGACY_TOOLS,
   ...SESSION_LEGACY_TOOLS,
-  ...SHIP_LEGACY_TOOLS,
   ...STUDIO_LEGACY_TOOLS,
   ...VERSIONS_LEGACY_TOOLS,
 ];

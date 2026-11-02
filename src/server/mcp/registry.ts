@@ -1,16 +1,18 @@
-import { Exit, Schema } from "effect";
+import { Effect, Exit, Schema } from "effect";
 import type { JsonSchema } from "effect";
 
 import type { AnyAction } from "../../shared/actions/_core/action.js";
 import type { StudioError } from "../../shared/actions/_core/errors/all.js";
+import { Forbidden } from "../../shared/actions/_core/errors/forbidden.js";
 import { AllActions } from "../../shared/actions/index.js";
 import type { Entries } from "../handlers/_core/handler.js";
 import { allowAll, makeRunner } from "../handlers/_core/run-action.js";
-import type { Runner, WireArgs } from "../handlers/_core/run-action.js";
+import type { Gate, Runner, WireArgs } from "../handlers/_core/run-action.js";
 import { ALL_ENTRIES } from "../handlers/all-entries.generated.js";
 import { failureOf, toWireError } from "../http/wire-error.js";
 import type { StudioRuntime } from "../main/runtime.js";
 import { toLegacyPrincipal } from "../store/local-principal.js";
+import type { ApprovalQueue } from "./approvals.js";
 import type { ToolDef } from "./tools.js";
 
 type Group = Readonly<Record<string, AnyAction>>;
@@ -21,6 +23,10 @@ type ActionExit = Exit.Exit<object, StudioError>;
 
 interface RuntimeDeps {
   readonly runtime?: StudioRuntime | null | undefined;
+}
+
+interface GateDeps {
+  readonly approvals?: ApprovalQueue | null | undefined;
 }
 
 interface TextResult {
@@ -153,12 +159,55 @@ const toToolResult = (exit: ActionExit): TextResult => {
   return textResult(JSON.stringify(wire.body), true);
 };
 
+const GATE_TEXT = {
+  closed:
+    "Design Studio is not open, so nobody can approve this action. Open the Design Studio window, then call the tool again.",
+  deny: "The user denied this action in Design Studio.",
+  timeout:
+    "Nobody answered the approval prompt in Design Studio in time, so it was refused. Ask the user to watch for the prompt, then call the tool again.",
+} as const;
+
+const NO_GATE =
+  "This action needs the user to allow it in Design Studio, and this caller has no approval prompt. Ask the user to do it in Design Studio.";
+
+const refuseAll: Gate = () =>
+  Effect.fail(new Forbidden({ message: NO_GATE, perm: "confirm" }));
+
+const askGate =
+  (approvals: ApprovalQueue, tool: string): Gate =>
+  (card) =>
+    Effect.flatMap(
+      Effect.promise(() =>
+        approvals.ask({ ...card, client: "mcp", projectId: null, tool })
+      ),
+      (outcome) => {
+        if (outcome === "allow") {
+          return Effect.void;
+        }
+
+        return Effect.fail(
+          new Forbidden({ message: GATE_TEXT[outcome], perm: "confirm" })
+        );
+      }
+    );
+
+const gateOf = (gates: GateDeps | null, tool: string): Gate => {
+  const approvals = gates?.approvals ?? null;
+
+  if (approvals === null) {
+    return refuseAll;
+  }
+
+  return askGate(approvals, tool);
+};
+
 const runActionTool = async (
   runtime: StudioRuntime,
   tool: ActionRunner,
-  args: WireArgs
+  args: WireArgs,
+  gate: Gate
 ): Promise<TextResult> => {
-  const program = tool.run(args, toLegacyPrincipal(), "json");
+  const program = tool.run(args, toLegacyPrincipal(), "json", gate);
 
   return toToolResult(await runtime.runPromiseExit(program));
 };
@@ -170,7 +219,7 @@ const callActionTool = (
   deps: RuntimeDeps,
   name: string,
   args: WireArgs,
-  edits: RuntimeDeps | null
+  edits: GateDeps | null
 ): Promise<TextResult> => {
   const tool = ACTION_TOOLS_BY_NAME.get(name);
   const runtime = deps.runtime ?? null;
@@ -187,7 +236,7 @@ const callActionTool = (
     return refuse(RUNTIME_OFF);
   }
 
-  return runActionTool(runtime, tool, args);
+  return runActionTool(runtime, tool, args, gateOf(edits, name));
 };
 
 const actionCaller = (
@@ -204,7 +253,7 @@ const actionCaller = (
       return refuse(`unknown action ${action.id}`);
     }
 
-    return runActionTool(runtime, runner, args);
+    return runActionTool(runtime, runner, args, refuseAll);
   };
 };
 
@@ -214,7 +263,7 @@ const isKnownTool = (tools: readonly ToolDef[], name: string): boolean =>
 const listActionTools = (
   readTools: readonly ToolDef[],
   editTools: readonly ToolDef[],
-  edits: RuntimeDeps | null
+  edits: GateDeps | null
 ): ToolDef[] => {
   const reads = [...readTools, ...ACTION_READ_TOOLS];
 
@@ -252,6 +301,7 @@ export type {
   ActionRunner,
   ActionTool,
   CallById,
+  GateDeps,
   RuntimeDeps,
   TextResult,
 };

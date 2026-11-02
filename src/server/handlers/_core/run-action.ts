@@ -26,7 +26,12 @@ type RunNeeds = AnyAccess | Authorizer | ProjectAccess;
 
 type Proven = Effect.Effect<object, StudioError>;
 
-type Runner = (args: WireArgs, principal: Principal, form: WireForm) => Proven;
+type Runner = (
+  args: WireArgs,
+  principal: Principal,
+  form: WireForm,
+  callGate?: Gate
+) => Proven;
 
 type Decode = (args: WireArgs) => Effect.Effect<Decoded, Schema.SchemaError>;
 
@@ -82,7 +87,7 @@ const makeRunner = <Action extends AnyAction>(
   const handle = entry.handle as Erased;
   const preview = previewOf(entry);
 
-  return (args, principal, form) => {
+  return (args, principal, form, callGate = gate) => {
     const program = Effect.gen(function* runAction() {
       const input = yield* Effect.mapError(
         decoders[form](args),
@@ -95,7 +100,7 @@ const makeRunner = <Action extends AnyAction>(
       yield* checkScope(action, input);
 
       if (preview !== null) {
-        yield* gate(yield* preview(input));
+        yield* callGate(yield* preview(input));
       }
 
       return yield* handle(input);

@@ -446,8 +446,15 @@ export const decisionOverrides: OxlintOverride[] = [
     rules: { "import/no-relative-parent-imports": "off" },
   },
   {
-    files: ["src/server/mcp/legacy/frame-target.ts"],
+    files: [
+      "src/server/mcp/legacy/frame-target.ts",
+      "src/shared/run-target.ts",
+    ],
     rules: { "eslint/id-length": "off" },
+  },
+  {
+    files: ["src/server/app/index.ts"],
+    rules: { "oxc/no-barrel-file": "off" },
   },
   { files: ["*.config.ts"], rules: { "import/no-default-export": "off" } },
   {

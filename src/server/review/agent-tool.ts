@@ -5,7 +5,7 @@ import {
   withFrameStateHost,
 } from "../../shared/frame-state.js";
 import type { ReviewFrame } from "../../shared/review.js";
-import type { RunTarget } from "../agent/run-target.js";
+import type { RunTarget } from "../../shared/run-target.js";
 import type { CanvasService } from "../canvas/service.js";
 import { frameRef } from "../canvas/tools.js";
 import type { AgentRunContext, PreviewService } from "../types.js";

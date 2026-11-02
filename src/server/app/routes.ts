@@ -24,7 +24,7 @@ function routeGroup(name: string): string | null {
   return match?.[1] ?? null;
 }
 
-export function appRouterDir(appRoot: string): string | null {
+function appRouterDir(appRoot: string): string | null {
   for (const candidate of [
     path.join(appRoot, "app"),
     path.join(appRoot, "src", "app"),
@@ -37,7 +37,7 @@ export function appRouterDir(appRoot: string): string | null {
   return null;
 }
 
-export async function listAppRoutes(
+async function listAppRoutes(
   workTree: string,
   appDir: string
 ): Promise<AppRoute[]> {
@@ -99,3 +99,49 @@ export async function listAppRoutes(
       Number(a.dynamic) - Number(b.dynamic) || a.route.localeCompare(b.route)
   );
 }
+
+function segmentsOf(value: string): string[] {
+  return value.split("/").filter(Boolean);
+}
+
+function segmentMatches(pattern: string[], actual: string[]): boolean {
+  for (const [index, part] of pattern.entries()) {
+    if (/^\[\[?\.\.\./.test(part)) {
+      return part.startsWith("[[") || actual.length > index;
+    }
+
+    if (index >= actual.length) {
+      return false;
+    }
+
+    if (!part.startsWith("[") && part !== actual[index]) {
+      return false;
+    }
+  }
+
+  return pattern.length === actual.length;
+}
+
+function matchRouteFile(
+  routes: readonly AppRoute[],
+  framePath: string
+): string | null {
+  const actual = segmentsOf(framePath.split("?")[0] ?? "");
+
+  const exact = routes.find(
+    (route) => segmentsOf(route.route).join("/") === actual.join("/")
+  );
+
+  if (exact) {
+    return exact.file;
+  }
+
+  return (
+    routes.find(
+      (route) =>
+        route.dynamic && segmentMatches(segmentsOf(route.route), actual)
+    )?.file ?? null
+  );
+}
+
+export { appRouterDir, listAppRoutes, matchRouteFile };

@@ -2,38 +2,15 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 
 import type { QualityFinding } from "../../shared/contracts.js";
+import type { LayoutRegion, PageOwner } from "../../shared/run-target.js";
 import type { PreviewService } from "../types.js";
 
-export interface LayoutBox {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
-export interface LayoutRegion {
-  main: string;
-  mainBox: LayoutBox;
-  column: string | null;
-  columnBox: LayoutBox | null;
-  owners: string[];
-  outside: Record<string, number>;
-  contentWidth?: number;
-  rows?: string[];
-  cards?: LayoutCard[];
-}
-
-export interface LayoutCard {
-  name: string;
-  box: LayoutBox;
-  rows: string[];
-}
-
-export interface PageOwner {
-  name: string;
-  file: string;
-  hasMain: boolean;
-}
+export type {
+  LayoutBox,
+  LayoutCard,
+  LayoutRegion,
+  PageOwner,
+} from "../../shared/run-target.js";
 
 const DESKTOP = { width: 1440, height: 900 };
 const PROBE_TIMEOUT_MS = 20_000;

@@ -1,6 +1,5 @@
 import { cleanFramePath } from "../../shared/canvas-file.js";
 import type {
-  AppRoute,
   Direction,
   Project,
   RunCanvasRef,
@@ -11,35 +10,18 @@ import {
   withFrameStateHost,
   type FrameStatesView,
 } from "../../shared/frame-state.js";
+import type { RunTarget, TargetFrame } from "../../shared/run-target.js";
 import { frameStatesView, stateOfFrame } from "../app/frame-state.js";
-import { listAppRoutes } from "../app/routes.js";
+import { listAppRoutes, matchRouteFile } from "../app/routes.js";
 import type { CanvasService } from "../canvas/service.js";
 import { findFrame } from "../canvas/tools.js";
 import { withPagePath } from "../export/source.js";
 import type { AgentRunContext, PreviewService } from "../types.js";
-import {
-  pageOwner,
-  probeLayout,
-  type LayoutRegion,
-  type PageOwner,
-} from "./layout-region.js";
+import { pageOwner, probeLayout } from "./layout-region.js";
 
-export interface TargetFrame {
-  id: string;
-  label: string | null;
-  path: string;
-  width: number;
-  height: number;
-}
+export type { RunTarget, TargetFrame } from "../../shared/run-target.js";
 
-export interface RunTarget extends TargetFrame {
-  state: string;
-  stateName: string | null;
-  routeFile: string | null;
-  inView: TargetFrame[];
-  layout?: LayoutRegion | null;
-  owner?: PageOwner | null;
-}
+export { matchRouteFile } from "../app/routes.js";
 
 export interface ShotArgs {
   frame?: string;
@@ -64,52 +46,6 @@ export interface TargetDeps {
 type SavedFrame = NonNullable<ReturnType<typeof findFrame>>;
 
 const MAX_IN_VIEW = 8;
-
-function segmentsOf(value: string): string[] {
-  return value.split("/").filter(Boolean);
-}
-
-function segmentMatches(pattern: string[], actual: string[]): boolean {
-  for (const [index, part] of pattern.entries()) {
-    if (/^\[\[?\.\.\./.test(part)) {
-      return part.startsWith("[[") || actual.length > index;
-    }
-
-    const value = actual[index];
-
-    if (value === undefined) {
-      return false;
-    }
-
-    if (!part.startsWith("[") && part !== value) {
-      return false;
-    }
-  }
-
-  return pattern.length === actual.length;
-}
-
-export function matchRouteFile(
-  routes: readonly AppRoute[],
-  framePath: string
-): string | null {
-  const actual = segmentsOf(framePath.split("?")[0] ?? "");
-
-  const exact = routes.find(
-    (route) => segmentsOf(route.route).join("/") === actual.join("/")
-  );
-
-  if (exact) {
-    return exact.file;
-  }
-
-  return (
-    routes.find(
-      (route) =>
-        route.dynamic && segmentMatches(segmentsOf(route.route), actual)
-    )?.file ?? null
-  );
-}
 
 async function routeFileOf(
   project: Project,

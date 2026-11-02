@@ -26,7 +26,7 @@ Fast path for a new endpoint (lands with S4s): `pnpm run new:op ...`, fill the c
 - Import with relative paths and a `.js` suffix. Import another area only through its `index.ts` -> `import/extensions`, boundaries public-index rule. (W13)
 - Let `services/<ctx>/**` import only `services/_core`, domain `index.ts` files, platform and contract. A context never imports another context -> check-ops (import scan) (lands with S4s). (W14)
 
-- Put npm-publishable code only in `packages/<name>`. Put every app (studio, publish worker, cloud API) in `apps/<name>`. Today `cloud/*` is the old path; new cloud code goes in `apps/cloud-api` -> review-only. (W15)
+- Put npm-publishable code only in `packages/<name>`. Put every app in `apps/<name>`: `apps/desktop` (Electron, local server, UI, bridge), `apps/api` (auth and tenant Worker), `apps/publish` (published-design Worker). Today the repo root and `cloud/*` are the old paths; new cloud API code goes in `apps/api` -> review-only. (W15)
 ## 2. How to add an endpoint
 
 - Stamp every new op with `pnpm run new:op <ctx> <opKey> ...` (lands with S4s). Never copy an op, route, tool or handler by hand -> check-ops (pair rule, template shape) (lands with S4s), `gen-routes --check`. (E1)

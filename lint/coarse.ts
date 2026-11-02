@@ -210,12 +210,6 @@ const serverRows = [
   ...domainRows,
 ];
 
-const engineRows = [
-  restrict(["src/server/**/engine/**"], [...SERVER, SERVER_ONLY_TEST, ENGINE]),
-  restrict(["src/server/**/engine/**/*.test.ts"], [...SERVER, ENGINE]),
-  restrict(["src/ui/**/engine/**"], [...UI, NO_NODE, ENGINE]),
-];
-
 const uiRows = [
   restrict(["src/ui/**"], [...UI, NO_NODE]),
   restrict(["src/ui/**/*.test.ts", "src/ui/**/*.test.tsx"], UI),
@@ -229,6 +223,25 @@ const uiRows = [
     },
   },
 ];
+
+const engineGlob = (glob: string): string =>
+  glob.replace(/\/\*\*(?<test>\/\*\.test\.tsx?)?$/u, "/**/engine/**$<test>");
+
+const engineRowOf = (row: OxlintOverride): OxlintOverride[] => {
+  const setting = row.rules?.["no-restricted-imports"];
+
+  if (!Array.isArray(setting)) {
+    return [];
+  }
+
+  const { patterns } = setting[1] as { patterns: Pattern[] };
+
+  return [restrict(row.files.map(engineGlob), [...patterns, ENGINE])];
+};
+
+const engineRows = [...uiRows, ...serverRows].flatMap((row) =>
+  engineRowOf(row)
+);
 
 export const coarse: OxlintOverride[] = [
   ...uiRows,

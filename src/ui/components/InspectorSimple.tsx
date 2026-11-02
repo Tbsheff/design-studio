@@ -15,6 +15,7 @@ import type {
 import type { PreviewPort } from "../bridge";
 import { SIDES } from "../cssValues";
 import { VariantScopeContext, useEditVariant } from "../editVariant";
+import { TextStyleSlot } from "../features/text-styles";
 import { useAuthoredCss } from "../useAuthoredCss";
 import type { DesignTokens } from "../useDesignSystemState";
 import {
@@ -204,15 +205,18 @@ function TextSection({
   edit,
   ui,
   selection,
+  textStyle,
 }: {
   edit: DirectEdit;
   ui: TokenUi | null;
   selection: SelectionContext | null;
+  textStyle?: ReactNode;
 }) {
   return (
     <InspectorSection title="Text">
       <div className="ins-grid">
         {selection && <ContentRow selection={selection} edit={edit} />}
+        {textStyle && <div className="wide">{textStyle}</div>}
         <div className="wide">
           <FontField ui={ui} edit={edit} />
         </div>
@@ -438,10 +442,12 @@ function SimpleSections({
   edit,
   ui,
   selection,
+  textStyle,
 }: {
   edit: DirectEdit;
   ui: TokenUi | null;
   selection: SelectionContext | null;
+  textStyle?: ReactNode;
 }) {
   const [revealed, setRevealed] = useState<Set<Extra>>(() => new Set());
   const extras = new Set([...extrasInUse(edit), ...revealed]);
@@ -453,7 +459,12 @@ function SimpleSections({
   return (
     <>
       <LayoutSection edit={edit} selection={selection} />
-      <TextSection edit={edit} ui={ui} selection={selection} />
+      <TextSection
+        edit={edit}
+        ui={ui}
+        selection={selection}
+        textStyle={textStyle}
+      />
       <AppearanceSection edit={edit} extras={extras} onReveal={reveal} />
       {extras.has("shadow") && (
         <EffectsSection edit={edit} revealed={revealed.has("shadow")} />
@@ -656,7 +667,20 @@ export function SimpleEditor(props: SimpleEditorProps) {
                 quietNote={classLine?.note ?? null}
               />
               <TokenLint ui={tk.ui} edit={edit} css={authored.css} />
-              <SimpleSections edit={edit} ui={tk.ui} selection={props.target} />
+              <SimpleSections
+                edit={edit}
+                ui={tk.ui}
+                selection={props.target}
+                textStyle={
+                  props.directionId && (
+                    <TextStyleSlot
+                      projectId={props.projectId}
+                      directionId={props.directionId}
+                      targets={[props.target]}
+                    />
+                  )
+                }
+              />
               <MatchSection
                 projectId={props.projectId}
                 directionId={props.directionId}
@@ -741,7 +765,20 @@ export function SimpleMultiEditor(
           <ErrorLine status={edit.status} />
           {props.component}
           <fieldset className="ins-fieldset" disabled={edit.blocked !== null}>
-            <SimpleSections edit={edit} ui={tk.ui} selection={null} />
+            <SimpleSections
+              edit={edit}
+              ui={tk.ui}
+              selection={null}
+              textStyle={
+                props.directionId && (
+                  <TextStyleSlot
+                    projectId={props.projectId}
+                    directionId={props.directionId}
+                    targets={props.selection}
+                  />
+                )
+              }
+            />
           </fieldset>
           <MatchSection
             projectId={props.projectId}

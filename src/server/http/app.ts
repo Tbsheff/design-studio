@@ -181,6 +181,7 @@ import { registerShareRoutes } from "./share-routes.js";
 import { registerShipRoutes } from "./ship-routes.js";
 import { renderIndexHtml, serveStatic } from "./static.js";
 import { registerStreamRoutes, type StreamTracker } from "./stream-routes.js";
+import { registerTextStyleRoutes } from "./text-style-routes.js";
 import { registerUsageRoutes } from "./usage-routes.js";
 import { registerVersionRoutes } from "./version-routes.js";
 
@@ -1914,6 +1915,12 @@ export function createApp(deps: AppDeps): Hono {
   registerIconRoutes(app, {
     editDeps,
     preview,
+    readBody,
+    loadDirection,
+    withDirection,
+  });
+  registerTextStyleRoutes(app, {
+    editDeps,
     readBody,
     loadDirection,
     withDirection,

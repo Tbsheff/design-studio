@@ -68,6 +68,11 @@ import type {
   StyleReplaceRequest,
   StyleReplaceResult,
 } from "../shared/style-search";
+import type {
+  TextStyleApplyResult,
+  TextStyleCreateResult,
+  TextStyleList,
+} from "../shared/text-styles";
 import type { VariantSupport } from "../shared/variants";
 
 export interface CanvasSnapshot {
@@ -101,6 +106,27 @@ export interface IconListQuery {
   query: string;
   library?: IconSource;
   limit?: number;
+}
+
+export interface TextStyleTargetBody {
+  selector?: string;
+  source: SourceLoc;
+  tag?: string;
+}
+
+export interface TextStyleApplyBody {
+  style: string;
+  target: TextStyleTargetBody;
+}
+
+export interface TextStyleCreateBody {
+  name: string;
+  styles: Record<string, string>;
+}
+
+export interface TextStyleDetachBody {
+  styles: Record<string, string>;
+  target: TextStyleTargetBody;
 }
 
 export interface IconInsertBody {
@@ -686,6 +712,32 @@ export const api = {
   insertIcon: (pid: string, did: string, body: IconInsertBody) =>
     timedEdit(pid, did, "icon", 1, () =>
       json<IconInsertReply>("POST", `${d(pid, did)}/icons/insert`, body)
+    ),
+  listTextStyles: (pid: string, did: string) =>
+    json<TextStyleList>("GET", `${d(pid, did)}/text-styles?limit=100`),
+  applyTextStyle: (pid: string, did: string, body: TextStyleApplyBody) =>
+    timedEdit(pid, did, "text-style", 1, () =>
+      json<TextStyleApplyResult>(
+        "POST",
+        `${d(pid, did)}/text-styles/apply`,
+        body
+      )
+    ),
+  createTextStyle: (pid: string, did: string, body: TextStyleCreateBody) =>
+    timedEdit(pid, did, "text-style", 1, () =>
+      json<TextStyleCreateResult>(
+        "POST",
+        `${d(pid, did)}/text-styles/create`,
+        body
+      )
+    ),
+  detachTextStyle: (pid: string, did: string, body: TextStyleDetachBody) =>
+    timedEdit(pid, did, "text-style", 1, () =>
+      json<{ file: string; versionId: string }>(
+        "POST",
+        `${d(pid, did)}/text-styles/detach`,
+        body
+      )
     ),
 };
 

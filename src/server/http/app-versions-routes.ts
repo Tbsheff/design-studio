@@ -1,10 +1,16 @@
 import type { Hono } from "hono";
 
+import { CANVAS_FILE } from "../../shared/canvas-file.js";
+import { invalidateTokenSource } from "../design-system/token-preview.js";
 import { recordRunInHistory } from "../direct-edit/run-record.js";
 import { BadRequestError } from "../store/errors.js";
 import { trimListedFiles } from "../store/version-names.js";
 import type { AppContext } from "./app-context.js";
+import type { McpSlot } from "./app-mcp-routes.js";
 import { readBody, requireString } from "./app-request.js";
+import { registerEditHistoryRoutes } from "./edit-history-routes.js";
+import { registerHunkRoutes } from "./hunk-routes.js";
+import { registerVersionRoutes } from "./version-routes.js";
 
 const registerVersionsRoutes = (app: Hono, ctx: AppContext): void => {
   const {
@@ -167,4 +173,47 @@ const registerVersionsRoutes = (app: Hono, ctx: AppContext): void => {
   });
 };
 
-export { registerVersionsRoutes };
+const registerVersionsHistoryRoutes = (
+  app: Hono,
+  ctx: AppContext,
+  mcpSlot: McpSlot
+): void => {
+  const {
+    announceCanvasAt,
+    editDeps,
+    editHistory,
+    loadDirection,
+    projects,
+    thumbnails,
+    versionNames,
+    versions,
+    withDirection,
+  } = ctx;
+  registerVersionRoutes(app, {
+    projects,
+    versions,
+    thumbnails,
+    names: versionNames,
+    readBody,
+  });
+  registerEditHistoryRoutes(app, {
+    history: editHistory,
+    editDeps,
+    projects,
+    withDirection,
+    readBody,
+    loadDirection,
+    onRestored: (workTree, relatives) => {
+      invalidateTokenSource(workTree);
+      if (relatives.includes(CANVAS_FILE)) {
+        announceCanvasAt(workTree).catch(() => null);
+      }
+    },
+    onRemapped: (projectId, remapped) => {
+      mcpSlot.routes?.activity.remap(projectId, remapped);
+    },
+  });
+  registerHunkRoutes(app, { editDeps, withDirection, readBody });
+};
+
+export { registerVersionsHistoryRoutes, registerVersionsRoutes };

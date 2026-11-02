@@ -14,11 +14,13 @@ import {
   parseReferenceUrls,
 } from "../design-system/reference-page.js";
 import { BadRequestError, ConflictError } from "../store/errors.js";
+import { createProjectLibrary } from "../store/project-library.js";
 import type { AppContext } from "./app-context.js";
 import { resolvePack, resolveProjectFile } from "./app-project-files.js";
 import { optionalString, readBody, requireString } from "./app-request.js";
 import { finishAttach } from "./app-routes.js";
 import { parseLevel, parseSettings, parseStartRun } from "./app-run-parse.js";
+import { registerHomeRoutes } from "./home-routes.js";
 
 const registerProjectsRoutes = (app: Hono, ctx: AppContext): void => {
   const {
@@ -308,4 +310,43 @@ const registerProjectDetailRoutes = (app: Hono, ctx: AppContext): void => {
   });
 };
 
-export { registerProjectDetailRoutes, registerProjectsRoutes };
+const registerHomeProjectRoutes = (app: Hono, ctx: AppContext): void => {
+  const {
+    addParentFolder,
+    commitInit,
+    config,
+    defaultFolder,
+    preview,
+    projects,
+    runner,
+    thumbnails,
+    versions,
+    watchDirection,
+  } = ctx;
+  registerHomeRoutes(app, {
+    config,
+    projects,
+    versions,
+    library: createProjectLibrary({
+      config,
+      projects,
+      versions,
+      preview,
+      runner,
+      defaultFolder: () => defaultFolder.ensure(),
+    }),
+    thumbnails,
+    defaultFolder,
+    readBody,
+    commitInit,
+    watch: (project) =>
+      watchDirection(project, projects.mainDirection(project)),
+    addParentFolder,
+  });
+};
+
+export {
+  registerHomeProjectRoutes,
+  registerProjectDetailRoutes,
+  registerProjectsRoutes,
+};

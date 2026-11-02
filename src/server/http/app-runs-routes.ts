@@ -12,12 +12,16 @@ import {
   parseReferenceUrls,
 } from "../design-system/reference-page.js";
 import { ConflictError, NotFoundError, assertSafeId } from "../store/errors.js";
+import { registerVariationRoutes } from "../variations/routes.js";
 import type { AppContext } from "./app-context.js";
 import { parseJsonLines, readOptional } from "./app-project-files.js";
 import { optionalString, readBody } from "./app-request.js";
 import { parseRunRequest } from "./app-run-parse.js";
 import { withCommentInputs } from "./comments-routes.js";
+import { registerRunContextRoutes } from "./run-context-routes.js";
+import { registerRunControlRoutes } from "./run-control-routes.js";
 import { listRunSummaries, runListBody, runListQuery } from "./run-list.js";
+import { registerRunTitleRoutes } from "./run-title-routes.js";
 
 const registerRunsRoutes = (app: Hono, ctx: AppContext): void => {
   const { findRunProject, runner, runsDir } = ctx;
@@ -157,4 +161,38 @@ const registerProjectRunsRoutes = (app: Hono, ctx: AppContext): void => {
   });
 };
 
-export { registerProjectRunsRoutes, registerRunsRoutes };
+const registerRunsControlRoutes = (app: Hono, ctx: AppContext): void => {
+  const { findRunProject, runner, runsDir } = ctx;
+  registerRunControlRoutes(app, runner);
+  registerRunTitleRoutes(app, { runner, findRunProject, runsDir });
+};
+
+const registerRunsVariationRoutes = (app: Hono, ctx: AppContext): void => {
+  const {
+    config,
+    editDeps,
+    forkDirection,
+    loadDirection,
+    projects,
+    runner,
+    startRun,
+    withDirection,
+  } = ctx;
+  registerVariationRoutes(app, {
+    config,
+    projects,
+    runner,
+    startRun,
+    withDirection,
+    forkDirection,
+    edit: editDeps,
+  });
+  registerRunContextRoutes(app, { loadDirection });
+};
+
+export {
+  registerProjectRunsRoutes,
+  registerRunsControlRoutes,
+  registerRunsRoutes,
+  registerRunsVariationRoutes,
+};

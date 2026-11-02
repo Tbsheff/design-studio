@@ -9,6 +9,7 @@ import { APP_DOCTOR_DESCRIPTION } from "./doctor-tool.js";
 import { EXPORT_FRAME_AGENT_DESCRIPTION } from "./export-tool.js";
 import { FIGMA_IMPORT_TOOL_DESCRIPTION } from "./figma-import-tool.js";
 import { SET_IMAGE_AGENT_DESCRIPTION } from "./image-tool.js";
+import { importPageDescription } from "./page-import-tool.js";
 import { COMPARE_REFERENCE_DESCRIPTION } from "./reference-tool.js";
 import { SELECT_MATCHING_DESCRIPTION } from "./select-tool.js";
 import {
@@ -128,6 +129,8 @@ export const TOOL_SHORT = {
     "Replace one component instance with another library component, keeping matching props.",
   export_frame:
     "Export canvas frames as SVG or PPTX into the studio data folder. Changes no design file. Only when the user asks for an SVG or a deck.",
+  import_page:
+    "Copy a live page (https or localhost URL) into a new static HTML page and canvas frame: a copy for redesign, not a live link.",
   set_image:
     "Place or replace an image (project file, attached image or https url) with src, alt, fit and focal point; copies the file into the project assets.",
   draw_vector: VECTOR_DRAW_SHORT,
@@ -249,6 +252,7 @@ export const TOOL_HELP: Record<
   swap_instance: SWAP_INSTANCE_AGENT_DESCRIPTION,
   export_frame: EXPORT_FRAME_AGENT_DESCRIPTION,
   set_image: SET_IMAGE_AGENT_DESCRIPTION,
+  import_page: importPageDescription,
   draw_vector: VECTOR_DRAW_SHORT,
   boolean_shapes: VECTOR_BOOLEAN_SHORT,
   paint_shape: VECTOR_PAINT_SHORT,

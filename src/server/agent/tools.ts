@@ -163,6 +163,7 @@ import {
   runSetMotion,
   setMotionInput,
 } from "./motion-tool.js";
+import { importPageInput, runImportPage } from "./page-import-tool.js";
 import { recordShot } from "./polish-loop.js";
 import { runSetProps, setPropsShape } from "./props-tool.js";
 import {
@@ -1537,6 +1538,13 @@ export async function createStudioMcpServer(
     withLayerIds(deps, (args) => runExportFrame(deps, args))
   );
 
+  const importPageTool = tool(
+    "import_page",
+    TOOL_SHORT.import_page,
+    importPageInput,
+    (args) => runImportPage(deps, args)
+  );
+
   const setImageTool = tool(
     "set_image",
     TOOL_SHORT.set_image,
@@ -1677,6 +1685,7 @@ export async function createStudioMcpServer(
     diffVersionsTool,
     exportFrameTool,
     setImageTool,
+    importPageTool,
     drawVectorTool,
     booleanShapesTool,
     paintShapeTool,

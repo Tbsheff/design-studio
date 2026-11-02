@@ -1,8 +1,8 @@
 # Design Studio rulebook for agents
 
 Read this before you write code. Each rule is one line: what to do, then what enforces it after a `->`, then its id.
-"tsc" means `pnpm run typecheck`. "check-actions" means `pnpm exec tsx scripts/check-actions.ts` (lands with W8-rename), which will be part of `pnpm run check:scripts`.
-Until W8-rename lands, the code has the old names: `src/shared/contract/<ctx>/`, `src/server/services/<ctx>/`, `all-ops.generated.ts` and `scripts/check-ops.ts` (`pnpm run check:ops`). Run and edit those. Do not make the new paths by hand.
+"tsc" means `pnpm run typecheck`. "check-actions" means `pnpm exec tsx scripts/check-actions.ts`, which will be part of `pnpm run check:scripts`.
+W8-rename has landed: definitions live in `src/shared/actions/<domain>/`, handlers in `src/server/handlers/<domain>/`, the global list is `src/shared/actions/all-actions.generated.ts`, and the check is `scripts/check-actions.ts` (`pnpm run check:actions`).
 Use pnpm for every command: `pnpm run <script>`, `pnpm exec <bin>`, `pnpm dlx <pkg>`. Run a script file with `pnpm exec tsx scripts/<x>.ts`.
 Copy the golden file for each kind of code. `docs/patterns.md` lists them. Never copy the first similar file you find.
 `review-only` marks a rule that no tool checks. A reviewer checks it.
@@ -34,8 +34,8 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 
 ## 1. Where code goes
 
-- Put each action definition in `src/shared/actions/<domain>/<verb>.ts` (lands with W8-rename; the layout wave moves it to `packages/common/actions/src/<domain>/<verb>.ts`), as one `defineAction` const named `<verb><Domain>` -> new:action, check-actions (pair rule) (lands with S4s). (W1)
-- Put each action handler in `src/server/handlers/<domain>/<verb>.ts` (lands with W8-rename), with the same path tail. It exports `handle`, and also `preview` when `confirm: "user"` -> new:action, check-actions (pair rule) (lands with S4s), tsc `Entries` (lands with S4b). (W2)
+- Put each action definition in `src/shared/actions/<domain>/<verb>.ts` (the layout wave moves it to `packages/common/actions/src/<domain>/<verb>.ts`), as one `defineAction` const named `<verb><Domain>` -> new:action, check-actions (pair rule) (lands with S4s). (W1)
+- Put each action handler in `src/server/handlers/<domain>/<verb>.ts`, with the same path tail. It exports `handle`, and also `preview` when `confirm: "user"` -> new:action, check-actions (pair rule) (lands with S4s), tsc `Entries` (lands with S4b). (W2)
 - Put shared payload schemas in `actions/<domain>/schema.ts`. Put branded ids in `actions/_core/ids.ts` -> review, new:action (it imports ids from there) (lands with S4s). (W3)
 - Put each error class in its own file: `actions/_core/errors/<kebab>.ts` or `actions/<domain>/errors/<kebab>.ts` -> `max-classes-per-file` 1, new:error (lands with S4s). (W4)
 - Put each service in `src/server/<area>/<kebab>.ts`, one `Context.Service` class per file. The file name is the class name in kebab case -> `max-classes-per-file`, `unicorn/filename-case`, new:service (lands with S4s). (W5)

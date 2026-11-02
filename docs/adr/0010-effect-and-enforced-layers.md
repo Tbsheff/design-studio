@@ -43,7 +43,7 @@ Tyler asked for crisp, enforced boundaries, with an opinionated framework, Ultra
    - **oxlint `no-restricted-imports`** owns the coarse ui/server/shared/bridge/desktop ban (an error from day one, with 0 violations today, kept out of the legacy list), the public-index-only rule, the npm-per-layer bans (no value import of `effect` or `zod` in the UI and bridge), and platform globals.
    - **`import/no-cycle`** owns cycles. It starts at warn (5 runtime SCCs hit today), with `ignoreTypes: true`. It becomes an error for the server when the cycle-break phase ends, for the UI when the UI phase ends, and covers type imports (`ignoreTypes: false`) once the agent and MCP adapters are rebuilt.
    - **Per-platform tsconfig project references** own DOM and Node API purity. They land last, with a separate DOM-lib project for the server files that run in-page probe code (35 by grep on `f16f58e`, plus up to 9 that use DOM types only; the list comes from a `lib: [ES2023]` dry run), a desktop-renderer project, and a UI-test project.
-3. **One operation contract (`defineOp`)** per studio action, written in Effect Schema under `src/shared/contract/<context>/`. A `Handlers<typeof Ops>` map must cover every op.
+3. **One action definition (`defineAction`)** per studio action, written in Effect Schema under `src/shared/actions/<domain>/`. A `Handlers<typeof Actions>` map must cover every action.
    - **Consumers:** the HTTP mount, the MCP registry and the agent-tools registry all read the same handler map. A missing route or tool then fails typecheck.
    - **UI:** the UI value-imports a generated, effect-free `routes.ts` and type-imports the op types. This costs 0 bytes of Effect.
    - **Errors:** wire errors are `{_tag, error, message, code?, data?}`, so today's readers keep working.
@@ -62,7 +62,7 @@ Tyler asked for crisp, enforced boundaries, with an opinionated framework, Ultra
 flowchart BT
   subgraph shared["src/shared"]
     pure["shared/pure<br/>(helpers, no DOM, no node)"]
-    contract["shared/contract<br/>(Schema ops, routes.ts, wire errors)"]
+    contract["shared/actions<br/>(Schema actions, routes.ts, wire errors)"]
     contract --> pure
   end
 

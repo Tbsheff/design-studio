@@ -35,7 +35,7 @@ export const ELEMENTS: Element[] = [
   element("shared", "src/shared"),
   element("bridge", "src/bridge"),
   element("platform", "src/server/platform/*", ["mod"]),
-  element("services", "src/server/services/*", ["svc"]),
+  element("handlers", "src/server/handlers/*", ["domain"]),
   element("agent", "src/server/agent"),
   element("adapter", "src/server/http"),
   element("adapter", "src/server/mcp"),
@@ -60,7 +60,7 @@ export const ELEMENTS: Element[] = [
 const SERVER_TYPES = [
   "platform",
   "domain",
-  "services",
+  "handlers",
   "agent",
   "adapter",
   "main",
@@ -131,7 +131,7 @@ export const LAYERS: Layer[] = [
     ],
   },
   { name: "share", areas: ["share", "publish", "ship", "variations", "git"] },
-  { name: "services", type: "services", paths: ["src/server/services"] },
+  { name: "handlers", type: "handlers", paths: ["src/server/handlers"] },
   { name: "agent", type: "agent", paths: ["src/server/agent"] },
   {
     name: "adapter",

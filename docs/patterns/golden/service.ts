@@ -1,8 +1,8 @@
 import { Context, Effect, Layer, Semaphore } from "effect";
 
-import { NotFound } from "../../shared/contract/_core/errors/not-found.js";
-import type { CfFailed } from "../../shared/contract/publish/errors/cf-failed.js";
-import type { Publication } from "../../shared/contract/publish/schema.js";
+import { NotFound } from "../../shared/actions/_core/errors/not-found.js";
+import type { CfFailed } from "../../shared/actions/publish/errors/cf-failed.js";
+import type { Publication } from "../../shared/actions/publish/schema.js";
 import { CfCli } from "./cf-cli.js";
 import { PublishStore } from "./publish-store.js";
 

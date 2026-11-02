@@ -1,12 +1,12 @@
 import type { Effect } from "effect";
 
-import type { ApprovalCard } from "../../../shared/contract/_core/approval-card.js";
 import type {
-  AnyOp,
+  AnyAction,
   ErrorOf,
   Input,
   Output,
-} from "../../../shared/contract/_core/op.js";
+} from "../../../shared/actions/_core/action.js";
+import type { ApprovalCard } from "../../../shared/actions/_core/approval-card.js";
 
 interface ReadAccess {
   readonly access: "read";
@@ -16,32 +16,34 @@ interface AnyAccess {
   readonly access: "read" | "write";
 }
 
-type EnvOf<Op extends AnyOp> = Op["access"] extends "read"
+type EnvOf<Action extends AnyAction> = Action["access"] extends "read"
   ? ReadAccess
   : AnyAccess;
 
-type Handle<Op extends AnyOp> = (
-  input: Input<Op>
-) => Effect.Effect<Output<Op>, ErrorOf<Op>, EnvOf<Op>>;
+type Handle<Action extends AnyAction> = (
+  input: Input<Action>
+) => Effect.Effect<Output<Action>, ErrorOf<Action>, EnvOf<Action>>;
 
-type Preview<Op extends AnyOp> = (
-  input: Input<Op>
-) => Effect.Effect<ApprovalCard, ErrorOf<Op>, ReadAccess>;
+type Preview<Action extends AnyAction> = (
+  input: Input<Action>
+) => Effect.Effect<ApprovalCard, ErrorOf<Action>, ReadAccess>;
 
-interface PlainEntry<Op extends AnyOp> {
-  readonly handle: Handle<Op>;
+interface PlainEntry<Action extends AnyAction> {
+  readonly handle: Handle<Action>;
 }
 
-interface ConfirmEntry<Op extends AnyOp> extends PlainEntry<Op> {
-  readonly preview: Preview<Op>;
+interface ConfirmEntry<Action extends AnyAction> extends PlainEntry<Action> {
+  readonly preview: Preview<Action>;
 }
 
-type Entry<Op extends AnyOp> = Op extends { readonly confirm: "user" }
-  ? ConfirmEntry<Op>
-  : PlainEntry<Op>;
+type Entry<Action extends AnyAction> = Action extends {
+  readonly confirm: "user";
+}
+  ? ConfirmEntry<Action>
+  : PlainEntry<Action>;
 
-type Entries<Ops extends Readonly<Record<string, AnyOp>>> = {
-  readonly [Key in keyof Ops]: Entry<Ops[Key]>;
+type Entries<Actions extends Readonly<Record<string, AnyAction>>> = {
+  readonly [Key in keyof Actions]: Entry<Actions[Key]>;
 };
 
 export type { AnyAccess, Entries, Entry, EnvOf, Handle, Preview, ReadAccess };

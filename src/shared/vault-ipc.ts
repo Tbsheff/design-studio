@@ -4,4 +4,4 @@ export {
   isVaultRequest,
   type VaultReply,
   type VaultRequest,
-} from "./contract/vault-ipc.js";
+} from "./actions/vault-ipc.js";

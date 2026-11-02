@@ -2,13 +2,17 @@ import { Cause, Exit } from "effect";
 import type { ManagedRuntime } from "effect";
 import type { Context, Hono } from "hono";
 
-import type { StudioError } from "../../shared/contract/_core/errors/all.js";
-import { statusOf } from "../../shared/contract/_core/http-status.js";
-import type { AnyOp } from "../../shared/contract/_core/op.js";
-import { toWire } from "../../shared/contract/_core/wire.js";
-import type { Entries } from "../services/_core/handler.js";
-import { allowAll, makeRunner } from "../services/_core/run-op.js";
-import type { Runner, WireArgs, WireForm } from "../services/_core/run-op.js";
+import type { AnyAction } from "../../shared/actions/_core/action.js";
+import type { StudioError } from "../../shared/actions/_core/errors/all.js";
+import { statusOf } from "../../shared/actions/_core/http-status.js";
+import { toWire } from "../../shared/actions/_core/wire.js";
+import type { Entries } from "../handlers/_core/handler.js";
+import { allowAll, makeRunner } from "../handlers/_core/run-action.js";
+import type {
+  Runner,
+  WireArgs,
+  WireForm,
+} from "../handlers/_core/run-action.js";
 import type { Principal } from "../store/local-principal.js";
 
 interface StudioEnv {
@@ -19,7 +23,7 @@ type StudioApp = Hono<StudioEnv>;
 
 type StudioRuntime = ManagedRuntime.ManagedRuntime<never, never>;
 
-type Group = Readonly<Record<string, AnyOp>>;
+type Group = Readonly<Record<string, AnyAction>>;
 
 const BODYLESS = new Set(["DELETE", "GET"]);
 
@@ -78,7 +82,7 @@ const reply = (
 
 const mountOne = (
   app: StudioApp,
-  op: AnyOp,
+  op: AnyAction,
   run: Runner,
   runtime: StudioRuntime
 ): void => {
@@ -93,10 +97,10 @@ const mountOne = (
   });
 };
 
-const mountOps = <Ops extends Group>(
+const mountActions = <Actions extends Group>(
   app: StudioApp,
-  ops: Ops,
-  entries: Entries<Ops>,
+  ops: Actions,
+  entries: Entries<Actions>,
   runtime: StudioRuntime
 ): void => {
   for (const key of Object.keys(ops)) {
@@ -109,6 +113,6 @@ const mountOps = <Ops extends Group>(
   }
 };
 
-export { mountOps };
+export { mountActions };
 
 export type { StudioApp, StudioEnv };

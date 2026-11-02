@@ -1,5 +1,5 @@
 // @generated
-import type { PublishOps } from "../../../shared/contract/publish/index.js";
+import type { PublishActions } from "../../../shared/actions/publish/index.js";
 import type { Entries } from "../_core/handler.js";
 import { handle as listHandle } from "./list.js";
 import {
@@ -10,6 +10,6 @@ import {
 const PublishEntries = {
   list: { handle: listHandle },
   unpublish: { handle: unpublishHandle, preview: unpublishPreview },
-} satisfies Entries<typeof PublishOps>;
+} satisfies Entries<typeof PublishActions>;
 
 export { PublishEntries };

@@ -1,6 +1,6 @@
 import type { Effect, Layer } from "effect";
 
-import type { AllEntries } from "../services/all-entries.generated.js";
+import type { AllEntries } from "../handlers/all-entries.generated.js";
 import type { Authorizer } from "../store/authorizer.js";
 import type { LocalOrgScope } from "../store/local-org-scope.js";
 import type { LocalPrincipal } from "../store/local-principal.js";
@@ -24,7 +24,9 @@ type NeedsOfEntry<Entry> = {
 
 type NeedsOf<EntryMap> = {
   readonly [Ctx in keyof EntryMap]: {
-    readonly [Op in keyof EntryMap[Ctx]]: NeedsOfEntry<EntryMap[Ctx][Op]>;
+    readonly [Action in keyof EntryMap[Ctx]]: NeedsOfEntry<
+      EntryMap[Ctx][Action]
+    >;
   }[keyof EntryMap[Ctx]];
 }[keyof EntryMap];
 

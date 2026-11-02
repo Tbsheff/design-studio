@@ -485,15 +485,15 @@ export const decisionOverrides: OxlintOverride[] = [
   },
   { files: ["*.config.ts"], rules: { "import/no-default-export": "off" } },
   {
-    files: ["src/shared/contract/**", "src/server/**", "cloud/api/**"],
+    files: ["src/shared/actions/**", "src/server/**", "cloud/api/**"],
     rules: { "unicorn/throw-new-error": "off" },
   },
   {
     files: [
       "**/*.generated.ts",
-      "src/shared/contract/*/index.ts",
-      "src/shared/contract/*/routes.ts",
-      "src/server/services/*/handlers.ts",
+      "src/shared/actions/*/index.ts",
+      "src/shared/actions/*/routes.ts",
+      "src/server/handlers/*/handlers.ts",
     ],
     rules: { "import/max-dependencies": "off", "max-lines": "off" },
   },

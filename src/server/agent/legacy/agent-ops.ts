@@ -1,4 +1,4 @@
-import { AllOps } from "../../../shared/contract/index.js";
+import { AllActions } from "../../../shared/actions/index.js";
 
 interface AgentToolBinding {
   readonly lean: boolean;
@@ -20,7 +20,7 @@ interface CatalogOp {
 
 type OpGroup = Readonly<Record<string, CatalogOp>>;
 
-type Catalog = { readonly [Context in keyof typeof AllOps]: OpGroup };
+type Catalog = { readonly [Context in keyof typeof AllActions]: OpGroup };
 
 type AgentSet = "app" | "core" | "design-system" | "kit" | "tweak";
 
@@ -107,7 +107,7 @@ const deriveAgentOps = (catalog: Catalog): AgentOpSets => {
   return sets;
 };
 
-const AGENT_OPS: AgentOpSets = deriveAgentOps(AllOps);
+const AGENT_OPS: AgentOpSets = deriveAgentOps(AllActions);
 
 export { AGENT_OPS, deriveAgentOps };
 

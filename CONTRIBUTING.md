@@ -18,7 +18,7 @@ Thanks for helping with Design Studio.
 
 Follow [AGENTS.md section 2](AGENTS.md#2-how-to-add-an-endpoint). Copy the golden files that [docs/patterns.md](docs/patterns.md) lists.
 
-The `pnpm run new:op` stamp lands after S4b, with the S4s wave. Until then, write the op contract and the handler from the golden files, then run `pnpm exec tsx scripts/gen-routes.ts`.
+The `pnpm run new:action` stamp lands after S4b, with the S4s wave. Until then, write the action definition and the handler from the golden files, then run `pnpm exec tsx scripts/gen-routes.ts`.
 
 ## Setup
 

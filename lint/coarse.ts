@@ -127,13 +127,13 @@ const FEATURE_POLICIES = [
   },
 ];
 
-const UI_CONTRACT = typeOnly(
+const UI_ACTIONS = typeOnly(
   [
-    "**/shared/contract",
-    "**/shared/contract/**",
-    "!**/shared/contract/**/routes.js",
+    "**/shared/actions",
+    "**/shared/actions/**",
+    "!**/shared/actions/**/routes.js",
   ],
-  "Value imports from shared/contract in src/ui are banned. Use import type, or the ops from shared/contract/<ctx>/routes.js."
+  "Value imports from shared/actions in src/ui are banned. Use import type, or the routes from shared/actions/<domain>/routes.js."
 );
 
 const SERVICE_LIBS = ban(
@@ -172,7 +172,7 @@ export const COARSE_FOLDERS = {
   "src/server": [NO_UI, NO_BRIDGE],
 } as const;
 
-const UI = [...COARSE_FOLDERS["src/ui"], ...BROWSER_LIBS, UI_CONTRACT];
+const UI = [...COARSE_FOLDERS["src/ui"], ...BROWSER_LIBS, UI_ACTIONS];
 const SERVER = [...COARSE_FOLDERS["src/server"], EFFECT_SERVER];
 
 const NEW_DOMAIN_AREAS = [
@@ -204,11 +204,11 @@ const serverRows = [
   restrict(["src/server/**"], [...SERVER, SERVER_ONLY_TEST]),
   restrict(["src/server/**/*.test.ts"], SERVER),
   restrict(
-    ["src/server/services/**"],
+    ["src/server/handlers/**"],
     [...SERVER, SERVER_ONLY_TEST, CHILD_PROCESS, SERVICE_LIBS]
   ),
   restrict(
-    ["src/server/services/**/*.test.ts"],
+    ["src/server/handlers/**/*.test.ts"],
     [...SERVER, CHILD_PROCESS, SERVICE_LIBS]
   ),
   ...domainRows,

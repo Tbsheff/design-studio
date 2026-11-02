@@ -9,15 +9,10 @@ interface GeneratedFile {
 }
 
 const ROOT = path.join(import.meta.dirname, "..");
-
-const CONTRACT = path.join(ROOT, "src/shared/contract");
-
-const SERVICES = path.join(ROOT, "src/server/services");
-
+const ACTIONS = path.join(ROOT, "src/shared/actions");
+const HANDLERS = path.join(ROOT, "src/server/handlers");
 const HEADER = "// @generated";
-
 const CORE = "_core";
-
 const CLOSE_CONST = "} as const;";
 
 const pascal = (ctx: string): string =>
@@ -54,11 +49,11 @@ const listDir = async (dir: string): Promise<Dirent[]> => {
   }
 };
 
-const CONTRACT_SKIP = new Set(["index", "routes", "schema"]);
+const ACTION_SKIP = new Set(["index", "routes", "schema"]);
 
-const SERVICE_SKIP = new Set(["handlers", "live"]);
+const HANDLER_SKIP = new Set(["handlers", "live"]);
 
-const opTails = async (
+const actionTails = async (
   dir: string,
   skip: ReadonlySet<string>
 ): Promise<string[]> => {
@@ -69,13 +64,13 @@ const opTails = async (
   for (const entry of entries) {
     const tail = entry.name.replace(/\.ts$/u, "");
 
-    const isOp =
+    const isAction =
       entry.isFile() &&
       entry.name.endsWith(".ts") &&
       !entry.name.endsWith(".test.ts") &&
       !skip.has(tail);
 
-    if (isOp) {
+    if (isAction) {
       tails.push(tail);
     }
   }
@@ -83,8 +78,8 @@ const opTails = async (
   return tails.toSorted((left, right) => left.localeCompare(right));
 };
 
-const opsIndex = (ctx: string, tails: string[]): string => {
-  const name = `${pascal(ctx)}Ops`;
+const actionsIndex = (ctx: string, tails: string[]): string => {
+  const name = `${pascal(ctx)}Actions`;
 
   if (tails.length === 0) {
     return stub(name);
@@ -105,7 +100,7 @@ const PREVIEW_EXPORT = /export\s*\{[^}]*\bpreview\b[^}]*\}/u;
 
 const hasPreview = async (ctx: string, tail: string): Promise<boolean> =>
   PREVIEW_EXPORT.test(
-    await readOrEmpty(path.join(SERVICES, ctx, `${tail}.ts`))
+    await readOrEmpty(path.join(HANDLERS, ctx, `${tail}.ts`))
   );
 
 const entryImport = (tail: string, preview: boolean): string => {
@@ -138,31 +133,31 @@ const handlersFile = async (ctx: string, tails: string[]): Promise<string> => {
   );
 
   return lines(
-    `import type { ${pascal(ctx)}Ops } from "../../../shared/contract/${ctx}/index.js";`,
+    `import type { ${pascal(ctx)}Actions } from "../../../shared/actions/${ctx}/index.js";`,
     `import type { Entries } from "../_core/handler.js";`,
     ...tails.map((tail, index) => entryImport(tail, Boolean(previews[index]))),
     "",
     `const ${name} = {`,
     ...tails.map((tail, index) => entryRow(tail, Boolean(previews[index]))),
-    `} satisfies Entries<typeof ${pascal(ctx)}Ops>;`,
+    `} satisfies Entries<typeof ${pascal(ctx)}Actions>;`,
     "",
     `export { ${name} };`
   );
 };
 
-interface RouteOp {
+interface RouteAction {
   readonly http: { readonly method: string; readonly path: string };
   readonly id: string;
   readonly invalidates: readonly string[];
 }
 
-const loadRoute = async (ctx: string, tail: string): Promise<RouteOp> => {
-  const file = path.join(CONTRACT, ctx, `${tail}.ts`);
+const loadRoute = async (ctx: string, tail: string): Promise<RouteAction> => {
+  const file = path.join(ACTIONS, ctx, `${tail}.ts`);
 
   try {
     const mod = (await import(pathToFileURL(file).href)) as Record<
       string,
-      RouteOp
+      RouteAction
     >;
 
     const op = mod[camel(tail)];
@@ -174,13 +169,13 @@ const loadRoute = async (ctx: string, tail: string): Promise<RouteOp> => {
     return op;
   } catch (error) {
     throw new Error(
-      `gen-routes: cannot load ${path.relative(ROOT, file)} for routes.ts (${String(error)}). fix: export one defineOp const named ${camel(tail)}`,
+      `gen-routes: cannot load ${path.relative(ROOT, file)} for routes.ts (${String(error)}). fix: export one defineAction const named ${camel(tail)}`,
       { cause: error }
     );
   }
 };
 
-const routeRows = (tail: string, op: RouteOp): string[] => [
+const routeRows = (tail: string, op: RouteAction): string[] => [
   `  ${camel(tail)}: {`,
   `    id: ${JSON.stringify(op.id)},`,
   `    invalidates: ${JSON.stringify(op.invalidates).replaceAll(",", ", ")},`,
@@ -210,29 +205,29 @@ const routesFile = async (ctx: string, tails: string[]): Promise<string> => {
 };
 
 interface ContextScan {
-  readonly ctx: string;
-  readonly ops: string[];
-  readonly services: string[];
+  readonly actions: string[];
+  readonly domain: string;
+  readonly handlers: string[];
 }
 
 const scanContext = async (ctx: string): Promise<ContextScan> => ({
-  ctx,
-  ops: await opTails(path.join(CONTRACT, ctx), CONTRACT_SKIP),
-  services: await opTails(path.join(SERVICES, ctx), SERVICE_SKIP),
+  actions: await actionTails(path.join(ACTIONS, ctx), ACTION_SKIP),
+  domain: ctx,
+  handlers: await actionTails(path.join(HANDLERS, ctx), HANDLER_SKIP),
 });
 
 const contextFiles = async (scan: ContextScan): Promise<GeneratedFile[]> => [
   {
-    path: path.join(CONTRACT, scan.ctx, "index.ts"),
-    text: opsIndex(scan.ctx, scan.ops),
+    path: path.join(ACTIONS, scan.domain, "index.ts"),
+    text: actionsIndex(scan.domain, scan.actions),
   },
   {
-    path: path.join(CONTRACT, scan.ctx, "routes.ts"),
-    text: await routesFile(scan.ctx, scan.ops),
+    path: path.join(ACTIONS, scan.domain, "routes.ts"),
+    text: await routesFile(scan.domain, scan.actions),
   },
   {
-    path: path.join(SERVICES, scan.ctx, "handlers.ts"),
-    text: await handlersFile(scan.ctx, scan.services),
+    path: path.join(HANDLERS, scan.domain, "handlers.ts"),
+    text: await handlersFile(scan.domain, scan.handlers),
   },
 ];
 
@@ -245,13 +240,21 @@ const missingFrom = (
     other.includes(tail)
       ? []
       : [
-          `gen-routes: ${folder}/${tail}.ts has no pair file. fix: add the matching op and handler files, or remove this one`,
+          `gen-routes: ${folder}/${tail}.ts has no pair file. fix: add the matching action and handler files, or remove this one`,
         ]
   );
 
 const pairErrors = (scan: ContextScan): string[] => [
-  ...missingFrom(scan.ops, scan.services, `src/shared/contract/${scan.ctx}`),
-  ...missingFrom(scan.services, scan.ops, `src/server/services/${scan.ctx}`),
+  ...missingFrom(
+    scan.actions,
+    scan.handlers,
+    `src/shared/actions/${scan.domain}`
+  ),
+  ...missingFrom(
+    scan.handlers,
+    scan.actions,
+    `src/server/handlers/${scan.domain}`
+  ),
 ];
 
 const EXPORT_LIST = /\bexport\s+(?:type\s+)?\{(?<names>[^}]*)\}/gu;
@@ -287,28 +290,34 @@ const exportNames = (text: string): string[] => [
 const sameNames = (found: string[], allowed: string[]): boolean =>
   found.every((name) => allowed.includes(name));
 
-const opExportError = async (ctx: string, tail: string): Promise<string[]> => {
-  const file = `src/shared/contract/${ctx}/${tail}.ts`;
+const actionExportError = async (
+  ctx: string,
+  tail: string
+): Promise<string[]> => {
+  const file = `src/shared/actions/${ctx}/${tail}.ts`;
   const text = await readOrEmpty(path.join(ROOT, file));
   const name = camel(tail);
   const found = exportNames(text);
 
-  const defined = new RegExp(`\\bconst\\s+${name}\\s*=\\s*defineOp\\(`, "u");
+  const defined = new RegExp(
+    `\\bconst\\s+${name}\\s*=\\s*defineAction\\(`,
+    "u"
+  );
 
   if (found.length === 1 && found[0] === name && defined.test(text)) {
     return [];
   }
 
   return [
-    `gen-routes: ${file} is not one defineOp const named ${name} (exports: ${found.join(", ") || "nothing"}). fix: export only one defineOp const named ${name}`,
+    `gen-routes: ${file} is not one defineAction const named ${name} (exports: ${found.join(", ") || "nothing"}). fix: export only one defineAction const named ${name}`,
   ];
 };
 
-const serviceExportError = async (
+const handlerExportError = async (
   ctx: string,
   tail: string
 ): Promise<string[]> => {
-  const file = `src/server/services/${ctx}/${tail}.ts`;
+  const file = `src/server/handlers/${ctx}/${tail}.ts`;
   const found = exportNames(await readOrEmpty(path.join(ROOT, file)));
 
   if (found.includes("handle") && sameNames(found, ["handle", "preview"])) {
@@ -322,8 +331,8 @@ const serviceExportError = async (
 
 const exportErrors = async (scan: ContextScan): Promise<string[]> => {
   const found = await Promise.all([
-    ...scan.ops.map((tail) => opExportError(scan.ctx, tail)),
-    ...scan.services.map((tail) => serviceExportError(scan.ctx, tail)),
+    ...scan.actions.map((tail) => actionExportError(scan.domain, tail)),
+    ...scan.handlers.map((tail) => handlerExportError(scan.domain, tail)),
   ]);
 
   return found.flat();
@@ -351,7 +360,7 @@ const globalList = (contexts: string[], spec: ListSpec): string =>
 
 const liveContexts = async (contexts: string[]): Promise<string[]> => {
   const found = await Promise.all(
-    contexts.map((ctx) => readOrEmpty(path.join(SERVICES, ctx, "live.ts")))
+    contexts.map((ctx) => readOrEmpty(path.join(HANDLERS, ctx, "live.ts")))
   );
 
   return contexts.filter((_ctx, index) => Boolean(found[index]));
@@ -362,15 +371,15 @@ const globalFiles = async (contexts: string[]): Promise<GeneratedFile[]> => {
 
   const files: GeneratedFile[] = [
     {
-      path: path.join(CONTRACT, "all-ops.generated.ts"),
+      path: path.join(ACTIONS, "all-actions.generated.ts"),
       text: globalList(contexts, {
-        constName: "ALL_OPS",
+        constName: "ALL_ACTIONS",
         file: "index.js",
-        suffix: "Ops",
+        suffix: "Actions",
       }),
     },
     {
-      path: path.join(SERVICES, "all-entries.generated.ts"),
+      path: path.join(HANDLERS, "all-entries.generated.ts"),
       text: globalList(contexts, {
         constName: "ALL_ENTRIES",
         file: "handlers.js",
@@ -381,7 +390,7 @@ const globalFiles = async (contexts: string[]): Promise<GeneratedFile[]> => {
 
   if (live.length > 0) {
     files.push({
-      path: path.join(SERVICES, "all-live.generated.ts"),
+      path: path.join(HANDLERS, "all-live.generated.ts"),
       text: globalList(live, {
         constName: "ALL_LIVE",
         file: "live.js",
@@ -394,7 +403,7 @@ const globalFiles = async (contexts: string[]): Promise<GeneratedFile[]> => {
 };
 
 const scanContexts = async (): Promise<string[]> => {
-  const entries = await readdir(CONTRACT, { withFileTypes: true });
+  const entries = await readdir(ACTIONS, { withFileTypes: true });
 
   const names: string[] = [];
 

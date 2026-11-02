@@ -7,9 +7,17 @@ import type {
   RunSummary,
   StudioEvent,
 } from "../../shared/contracts.js";
-import { NotFoundError, assertSafeId } from "../store/errors.js";
+import {
+  captureReferencePage,
+  parseReferenceUrls,
+} from "../design-system/reference-page.js";
+import { ConflictError, NotFoundError, assertSafeId } from "../store/errors.js";
 import type { AppContext } from "./app-context.js";
 import { parseJsonLines, readOptional } from "./app-project-files.js";
+import { optionalString, readBody } from "./app-request.js";
+import { parseRunRequest } from "./app-run-parse.js";
+import { withCommentInputs } from "./comments-routes.js";
+import { listRunSummaries, runListBody, runListQuery } from "./run-list.js";
 
 const registerRunsRoutes = (app: Hono, ctx: AppContext): void => {
   const { findRunProject, runner, runsDir } = ctx;
@@ -21,6 +29,7 @@ const registerRunsRoutes = (app: Hono, ctx: AppContext): void => {
     if (pid === null) {
       throw new NotFoundError(`run ${runId} not found`);
     }
+
     const base = path.join(runsDir(pid), runId);
     const summaryText = await readOptional(`${base}.json`);
     const eventsText = await readOptional(`${base}.jsonl`);
@@ -28,6 +37,7 @@ const registerRunsRoutes = (app: Hono, ctx: AppContext): void => {
     if (summaryText === null && eventsText === null) {
       throw new NotFoundError(`run ${runId} not found`);
     }
+
     const summary =
       summaryText === null ? null : (JSON.parse(summaryText) as RunSummary);
 
@@ -50,10 +60,101 @@ const registerRunsRoutes = (app: Hono, ctx: AppContext): void => {
     if (!handle) {
       throw new NotFoundError("run is not active");
     }
+
     handle.cancel();
 
     return c.json({ ok: true });
   });
 };
 
-export { registerRunsRoutes };
+const registerProjectRunsRoutes = (app: Hono, ctx: AppContext): void => {
+  const {
+    comments,
+    config,
+    forkDirection,
+    liveDrafts,
+    loadDirection,
+    projects,
+    runner,
+    runsDir,
+    startRun,
+    versions,
+    waitForStop,
+    withDirection,
+    withTaskInputs,
+  } = ctx;
+
+  app.get("/api/projects/:pid/runs", async (c) => {
+    const pid = c.req.param("pid");
+    await projects.get(pid);
+    const query = runListQuery((name) => c.req.query(name));
+
+    return c.json(runListBody(await listRunSummaries(runsDir(pid)), query));
+  });
+
+  app.post("/api/projects/:pid/directions", async (c) => {
+    const pid = c.req.param("pid");
+    const body = await readBody(c);
+    const fromVersionId = optionalString(body, "fromVersionId") ?? null;
+    const name = optionalString(body, "name") ?? "";
+
+    return c.json(await forkDirection(pid, { fromVersionId, name }));
+  });
+
+  app.get("/api/projects/:pid/d/:did/status", async (c) => {
+    const { project, direction } = await loadDirection(
+      c.req.param("pid"),
+      c.req.param("did")
+    );
+
+    return c.json(await versions.status(project, direction));
+  });
+
+  app.post("/api/projects/:pid/d/:did/runs", async (c) => {
+    const body = await readBody(c);
+    const request = parseRunRequest(body);
+
+    const referenceUrls = parseReferenceUrls(
+      body.referenceUrls,
+      config.fetchAllowLoopback === true
+    );
+
+    if (referenceUrls.length > 0) {
+      request.referencePages = await Promise.all(
+        referenceUrls.map((url) =>
+          captureReferencePage(url, config.fetchAllowLoopback === true)
+        )
+      );
+    }
+    await waitForStop(c.req.param("pid"), c.req.param("did"));
+
+    const runId = await withDirection(
+      c.req.param("pid"),
+      c.req.param("did"),
+      async (project, direction) => {
+        if (runner.isRunning(project.id, direction.id)) {
+          throw new ConflictError("run_in_progress");
+        }
+        if (liveDrafts.isReading(project.id)) {
+          throw new ConflictError(
+            "The studio is still reading the sources. Wait until they finish."
+          );
+        }
+        return startRun(
+          project,
+          direction,
+          await withCommentInputs(
+            comments,
+            project,
+            direction,
+            await withTaskInputs(project, direction, request)
+          )
+        );
+      }
+    );
+
+    return c.json({ runId });
+  });
+};
+
+export { registerProjectRunsRoutes, registerRunsRoutes };

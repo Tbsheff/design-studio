@@ -1,0 +1,170 @@
+import type { Hono } from "hono";
+
+import { recordRunInHistory } from "../direct-edit/run-record.js";
+import { BadRequestError } from "../store/errors.js";
+import { trimListedFiles } from "../store/version-names.js";
+import type { AppContext } from "./app-context.js";
+import { readBody, requireString } from "./app-request.js";
+
+const registerVersionsRoutes = (app: Hono, ctx: AppContext): void => {
+  const {
+    bus,
+    editHistory,
+    emitStatus,
+    loadDirection,
+    preview,
+    projects,
+    recordVersion,
+    syncPackId,
+    versionNames,
+    versions,
+    withDirection,
+  } = ctx;
+
+  app.get("/api/projects/:pid/d/:did/versions", async (c) => {
+    const { project, direction } = await loadDirection(
+      c.req.param("pid"),
+      c.req.param("did")
+    );
+
+    return c.json(
+      trimListedFiles(
+        await versionNames.apply(
+          project.id,
+          await versions.list(project, direction)
+        )
+      )
+    );
+  });
+
+  app.post("/api/projects/:pid/d/:did/undo", async (c) => {
+    const version = await withDirection(
+      c.req.param("pid"),
+      c.req.param("did"),
+      async (project, direction) => {
+        const restored = await versions.restore(
+          project,
+          direction,
+          "head",
+          "undo"
+        );
+
+        await recordVersion(project, direction, restored, "undo");
+        await syncPackId(project, direction);
+        await emitStatus(project, direction);
+
+        return restored;
+      }
+    );
+
+    return c.json(version);
+  });
+
+  app.post("/api/projects/:pid/d/:did/restore", async (c) => {
+    const versionId = requireString(await readBody(c), "versionId");
+
+    const version = await withDirection(
+      c.req.param("pid"),
+      c.req.param("did"),
+      async (project, direction) => {
+        const restored = await versions.restore(
+          project,
+          direction,
+          versionId,
+          "restore"
+        );
+
+        await recordVersion(project, direction, restored, "restore");
+        await recordRunInHistory(
+          editHistory,
+          versions,
+          project,
+          direction,
+          restored.id
+        ).catch(() => editHistory.clear(project.id, direction.id));
+        await syncPackId(project, direction);
+        await emitStatus(project, direction);
+
+        return restored;
+      }
+    );
+
+    return c.json(version);
+  });
+
+  app.post("/api/projects/:pid/d/:did/keep", async (c) => {
+    const version = await withDirection(
+      c.req.param("pid"),
+      c.req.param("did"),
+      async (project, direction) => {
+        const kept = await versions.commit(
+          project,
+          direction,
+          "Kept unfinished changes",
+          { kind: "keep" }
+        );
+
+        if (kept === null) {
+          throw new BadRequestError("no unfinished changes to keep");
+        }
+        await recordVersion(project, direction, kept);
+        await emitStatus(project, direction);
+
+        return kept;
+      }
+    );
+
+    return c.json(version);
+  });
+
+  app.post("/api/projects/:pid/d/:did/discard", async (c) => {
+    const status = await withDirection(
+      c.req.param("pid"),
+      c.req.param("did"),
+      async (project, direction) => {
+        const discarded = await versions.discard(project, direction);
+        bus.emit({
+          directionId: direction.id,
+          projectId: project.id,
+          status: discarded,
+          type: "status.changed",
+        });
+
+        return discarded;
+      }
+    );
+
+    return c.json(status);
+  });
+
+  app.get("/api/projects/:pid/versions/:vid/preview", async (c) => {
+    const project = await projects.get(c.req.param("pid"));
+    const versionId = c.req.param("vid");
+    const snapshotDir = await versions.snapshot(project, versionId);
+
+    return c.json({
+      url: await preview.snapshotUrl(project, versionId, snapshotDir),
+    });
+  });
+
+  app.get("/api/projects/:pid/versions/:vid/export", async (c) => {
+    const project = await projects.get(c.req.param("pid"));
+    const version = await versions.get(project, c.req.param("vid"));
+    const bytes = await versions.exportZip(project, version.id);
+
+    const safeName =
+      project.name
+        .replaceAll(/[^A-Za-z0-9._-]+/g, "-")
+        .replaceAll(/^-+|-+$/g, "") || "design";
+
+    return new Response(new Uint8Array(bytes), {
+      headers: {
+        "content-disposition": `attachment; filename="${safeName}-${version.id.slice(0, 8)}.zip"`,
+        "content-length": String(bytes.byteLength),
+        "content-type": "application/zip",
+      },
+    });
+  });
+};
+
+export { registerVersionsRoutes };

@@ -1,75 +1,36 @@
-import { readFile } from "node:fs/promises";
 import path from "node:path";
 
 import { Hono } from "hono";
-import { streamSSE } from "hono/streaming";
 
 import { APP_STREAM_PATH } from "../../shared/app-stream.js";
-import type { ArrangeResult } from "../../shared/arrange.js";
 import { CANVAS_FILE } from "../../shared/canvas-file.js";
 import { STUDIO_TOKEN_HEADER } from "../../shared/contracts.js";
-import type {
-  Direction,
-  DirectEditBatchResult,
-  StructureEditResult,
-  DirectEditResult,
-  Project,
-  StudioEvent,
-} from "../../shared/contracts.js";
-import {
-  isStyleReplaceBody,
-  type StyleReplaceResult,
-} from "../../shared/style-search.js";
+import type { Direction, Project } from "../../shared/contracts.js";
 import { componentPreviewsFor } from "../components/preview.js";
-import { warmPropsTypes } from "../components/props-service.js";
 import { createComponentService } from "../components/thumbs.js";
-import { appTokensFor } from "../design-system/app-tokens/source.js";
-import {
-  previewAppTokens,
-  updateAppTokens,
-} from "../design-system/app-tokens/write.js";
-import { createToken } from "../design-system/create-token.js";
-import {
-  captureReferencePage,
-  parseReferenceUrls,
-} from "../design-system/reference-page.js";
-import { readDesignSystemState } from "../design-system/state.js";
-import {
-  invalidateTokenSource,
-  previewTokens,
-} from "../design-system/token-preview.js";
-import { updateTokens } from "../design-system/update-tokens.js";
-import { applyArrange, isArrangeBody } from "../direct-edit/arrange.js";
-import { applyDirectEditBatch } from "../direct-edit/batch.js";
-import { applyDirectEdit } from "../direct-edit/commit/apply.js";
-import { DirectEditError } from "../direct-edit/engine/errors.js";
-import { applyStyleReplace } from "../direct-edit/replace.js";
-import { recordRunInHistory } from "../direct-edit/run-record.js";
-import { applyStructureEdit } from "../direct-edit/structure-apply.js";
-import { isDirectEditBatch, isStructureEdit } from "../direct-edit/validate.js";
-import { BadRequestError, ConflictError } from "../store/errors.js";
+import { invalidateTokenSource } from "../design-system/token-preview.js";
 import { createProjectLibrary } from "../store/project-library.js";
-import { trimListedFiles } from "../store/version-names.js";
-import { commitTweaks } from "../tweaks/commit.js";
-import { readTweaksState } from "../tweaks/store.js";
 import { registerVariationRoutes } from "../variations/routes.js";
 import { createAppContext, type AppDeps } from "./app-context.js";
-import { resolveProjectFile } from "./app-project-files.js";
-import { registerProjectsRoutes } from "./app-projects-routes.js";
+import { registerDirectEditRoutes } from "./app-direct-edit-routes.js";
+import { toErrorReply } from "./app-errors.js";
+import { registerEventsRoutes } from "./app-events-routes.js";
 import {
-  HEARTBEAT_MS,
-  optionalString,
-  readBody,
-  requireString,
-} from "./app-request.js";
+  registerProjectDetailRoutes,
+  registerProjectsRoutes,
+} from "./app-projects-routes.js";
+import { readBody } from "./app-request.js";
 import { registerAppRoutes } from "./app-routes.js";
-import { parseRunRequest, parseSettings } from "./app-run-parse.js";
-import { registerRunsRoutes } from "./app-runs-routes.js";
+import {
+  registerProjectRunsRoutes,
+  registerRunsRoutes,
+} from "./app-runs-routes.js";
 import { registerSessionRoutes } from "./app-session-routes.js";
 import { registerStudioRoutes } from "./app-studio-routes.js";
+import { registerVersionsRoutes } from "./app-versions-routes.js";
 import { registerWorkspacesRoutes } from "./app-workspaces-routes.js";
 import { registerCanvasRoutes } from "./canvas-routes.js";
-import { registerCommentRoutes, withCommentInputs } from "./comments-routes.js";
+import { registerCommentRoutes } from "./comments-routes.js";
 import { registerComponentCreateRoutes } from "./component-create-routes.js";
 import { registerComponentPreviewRoutes } from "./component-preview-routes.js";
 import { registerComponentVariantRoutes } from "./component-variant-routes.js";
@@ -90,7 +51,6 @@ import { registerInsertRoutes } from "./insert-routes.js";
 import { registerLayerStateRoutes } from "./layer-state-routes.js";
 import { registerLinkInteractionRoutes } from "./link-interaction-routes.js";
 import { registerMcpRoutes } from "./mcp-routes.js";
-import { listWorkTree } from "./mentions.js";
 import { registerMotionRoutes } from "./motion-routes.js";
 import { registerPackRoutes } from "./packs-routes.js";
 import { registerPageImportRoutes } from "./page-import-routes.js";
@@ -101,12 +61,7 @@ import { registerReviewRoutes } from "./review-routes.js";
 import { registerRulesRoutes } from "./rules-routes.js";
 import { registerRunContextRoutes } from "./run-context-routes.js";
 import { registerRunControlRoutes } from "./run-control-routes.js";
-import {
-  isRunSummary,
-  listRunSummaries,
-  runListBody,
-  runListQuery,
-} from "./run-list.js";
+import { isRunSummary } from "./run-list.js";
 import { registerRunTitleRoutes } from "./run-title-routes.js";
 import { registerShareRoutes } from "./share-routes.js";
 import { registerShipRoutes } from "./ship-routes.js";
@@ -129,7 +84,6 @@ export function createApp(deps: AppDeps): Hono {
     appOpen,
     bus,
     canvas,
-    commandRules,
     comments,
     commitDesignMd,
     commitInit,
@@ -137,7 +91,6 @@ export function createApp(deps: AppDeps): Hono {
     defaultFolder,
     editDeps,
     editHistory,
-    emitStatus,
     findRunProject,
     forkDirection,
     library,
@@ -145,22 +98,17 @@ export function createApp(deps: AppDeps): Hono {
     loadDirection,
     preview,
     projects,
-    recordVersion,
     rulesFor,
     runner,
     runsDir,
     startRun,
     streamTracker,
-    syncPackId,
     thumbnails,
     uiDir,
     versionNames,
     versions,
-    waitForStop,
     watchDirection,
-    watchTokenSources,
     withDirection,
-    withTaskInputs,
   } = ctx;
   const app = new Hono();
   app.onError((error, c) => {
@@ -205,489 +153,11 @@ export function createApp(deps: AppDeps): Hono {
 
   registerWorkspacesRoutes(app, ctx);
 
-  app.get("/api/projects/:pid", async (c) =>
-    c.json(await projects.get(c.req.param("pid")))
-  );
-
-  app.patch("/api/projects/:pid/settings", async (c) => {
-    const pid = c.req.param("pid");
-    await projects.get(pid);
-    const patch = parseSettings(await readBody(c)) ?? {};
-    const project = await projects.updateSettings(pid, patch);
-    return c.json(project);
-  });
-
-  app.get("/api/projects/:pid/command-rules", async (c) => {
-    const project = await projects.get(c.req.param("pid"));
-    return c.json({ rules: await commandRules.list(project.id) });
-  });
-
-  app.post("/api/projects/:pid/command-rules/remove", async (c) => {
-    const project = await projects.get(c.req.param("pid"));
-    const rule = requireString(await readBody(c), "rule");
-    return c.json({ rules: await commandRules.remove(project.id, rule) });
-  });
-
-  app.get("/api/projects/:pid/events", async (c) => {
-    const project = await projects.get(c.req.param("pid"));
-    const rawAfter =
-      c.req.header("last-event-id") ?? c.req.query("after") ?? "0";
-    const after = Number.parseInt(rawAfter, 10);
-    const afterSeq = Number.isFinite(after) && after >= 0 ? after : 0;
-    return streamSSE(c, async (stream) => {
-      streamTracker.opened();
-      const pending: StudioEvent[] = [];
-      let wake: (() => void) | null = null;
-      let closed = false;
-      const unsubscribe = bus.subscribe(project.id, (event) => {
-        pending.push(event);
-        wake?.();
-      });
-      const heartbeat = setInterval(() => {
-        void stream.write(": ping\n\n").catch(() => undefined);
-      }, HEARTBEAT_MS);
-      stream.onAbort(() => {
-        closed = true;
-        wake?.();
-      });
-      try {
-        let lastSent = afterSeq;
-        const send = async (event: StudioEvent): Promise<void> => {
-          if (event.seq <= lastSent) return;
-          lastSent = event.seq;
-          await stream.writeSSE({
-            id: String(event.seq),
-            event: event.type,
-            data: JSON.stringify(event),
-          });
-        };
-        for (const event of await bus.since(project.id, afterSeq))
-          await send(event);
-        while (!closed) {
-          const batch = pending.splice(0);
-          for (const event of batch) await send(event);
-          if (pending.length === 0 && !closed) {
-            await new Promise<void>((resolve) => {
-              wake = resolve;
-            });
-            wake = null;
-          }
-        }
-      } finally {
-        streamTracker.closed();
-        clearInterval(heartbeat);
-        unsubscribe();
-      }
-    });
-  });
-
-  app.post("/api/projects/:pid/attachments", async (c) => {
-    const pid = c.req.param("pid");
-    const form = await c.req.parseBody();
-    const file = form.file;
-    if (!(file instanceof File))
-      throw new BadRequestError('multipart field "file" is required');
-    const attachment = await projects.saveAttachment(pid, {
-      name: file.name,
-      mime: file.type,
-      bytes: new Uint8Array(await file.arrayBuffer()),
-    });
-    return c.json(attachment);
-  });
-
-  app.get("/api/projects/:pid/design-md", async (c) => {
-    const content = await projects.readDesignMd(c.req.param("pid"));
-    return c.json({ content: content ?? "" });
-  });
-
-  app.put("/api/projects/:pid/design-md", async (c) => {
-    const body = await readBody(c);
-    const content = body.content;
-    if (typeof content !== "string")
-      throw new BadRequestError("content must be a string");
-    const pid = c.req.param("pid");
-    await projects.writeDesignMd(pid, content);
-    const project = await projects.get(pid);
-    const main = projects.mainDirection(project);
-    const version = await versions.commitFile(
-      project,
-      main,
-      "DESIGN.md",
-      "Update DESIGN.md",
-      { kind: "manual" }
-    );
-    if (version) await recordVersion(project, main, version);
-    await emitStatus(project, main);
-    return c.json({ ok: true, versionId: version?.id ?? null });
-  });
-
-  app.get("/api/projects/:pid/files", async (c) => {
-    const pid = c.req.param("pid");
-    await projects.get(pid);
-    const file = await resolveProjectFile(
-      projects.projectDir(pid),
-      c.req.query("path") ?? ""
-    );
-    const bytes = await readFile(file);
-    return new Response(new Uint8Array(bytes), {
-      headers: { "content-type": "image/png", "cache-control": "no-store" },
-    });
-  });
-
-  app.get("/api/projects/:pid/runs", async (c) => {
-    const pid = c.req.param("pid");
-    await projects.get(pid);
-    const query = runListQuery((name) => c.req.query(name));
-    return c.json(runListBody(await listRunSummaries(runsDir(pid)), query));
-  });
-
-  app.post("/api/projects/:pid/directions", async (c) => {
-    const pid = c.req.param("pid");
-    const body = await readBody(c);
-    const fromVersionId = optionalString(body, "fromVersionId") ?? null;
-    const name = optionalString(body, "name") ?? "";
-    return c.json(await forkDirection(pid, { name, fromVersionId }));
-  });
-
-  app.get("/api/projects/:pid/d/:did/versions", async (c) => {
-    const { project, direction } = await loadDirection(
-      c.req.param("pid"),
-      c.req.param("did")
-    );
-    return c.json(
-      trimListedFiles(
-        await versionNames.apply(
-          project.id,
-          await versions.list(project, direction)
-        )
-      )
-    );
-  });
-
-  app.get("/api/projects/:pid/d/:did/design-system", async (c) => {
-    const { project, direction } = await loadDirection(
-      c.req.param("pid"),
-      c.req.param("did")
-    );
-    return c.json(await readDesignSystemState(project, direction));
-  });
-
-  app.get("/api/projects/:pid/d/:did/status", async (c) => {
-    const { project, direction } = await loadDirection(
-      c.req.param("pid"),
-      c.req.param("did")
-    );
-    return c.json(await versions.status(project, direction));
-  });
-
-  app.post("/api/projects/:pid/d/:did/runs", async (c) => {
-    const body = await readBody(c);
-    const request = parseRunRequest(body);
-    const referenceUrls = parseReferenceUrls(
-      body.referenceUrls,
-      config.fetchAllowLoopback === true
-    );
-    if (referenceUrls.length > 0)
-      request.referencePages = await Promise.all(
-        referenceUrls.map((url) =>
-          captureReferencePage(url, config.fetchAllowLoopback === true)
-        )
-      );
-    await waitForStop(c.req.param("pid"), c.req.param("did"));
-    const runId = await withDirection(
-      c.req.param("pid"),
-      c.req.param("did"),
-      async (project, direction) => {
-        if (runner.isRunning(project.id, direction.id))
-          throw new ConflictError("run_in_progress");
-        if (liveDrafts.isReading(project.id))
-          throw new ConflictError(
-            "The studio is still reading the sources. Wait until they finish."
-          );
-        return startRun(
-          project,
-          direction,
-          await withCommentInputs(
-            comments,
-            project,
-            direction,
-            await withTaskInputs(project, direction, request)
-          )
-        );
-      }
-    );
-    return c.json({ runId });
-  });
-
-  app.post("/api/projects/:pid/d/:did/undo", async (c) => {
-    const version = await withDirection(
-      c.req.param("pid"),
-      c.req.param("did"),
-      async (project, direction) => {
-        const restored = await versions.restore(
-          project,
-          direction,
-          "head",
-          "undo"
-        );
-        await recordVersion(project, direction, restored, "undo");
-        await syncPackId(project, direction);
-        await emitStatus(project, direction);
-        return restored;
-      }
-    );
-    return c.json(version);
-  });
-
-  app.post("/api/projects/:pid/d/:did/design-system/preview", async (c) => {
-    const body = await readBody(c);
-    try {
-      const { project, direction } = await loadDirection(
-        c.req.param("pid"),
-        c.req.param("did")
-      );
-      watchTokenSources(project);
-      const app = await appTokensFor(project, direction);
-      return c.json(
-        app
-          ? previewAppTokens(app, body)
-          : await previewTokens(direction.workTree, body)
-      );
-    } catch (error) {
-      if (error instanceof DirectEditError)
-        return c.json(
-          { error: error.code, message: error.message },
-          error.status
-        );
-      throw error;
-    }
-  });
-
-  app.get("/api/projects/:pid/d/:did/tweaks", async (c) => {
-    const { direction } = await loadDirection(
-      c.req.param("pid"),
-      c.req.param("did")
-    );
-    return c.json(await readTweaksState(direction.workTree));
-  });
-
-  app.post("/api/projects/:pid/d/:did/tweaks/commit", async (c) => {
-    const body = await readBody(c);
-    try {
-      const result = await withDirection(
-        c.req.param("pid"),
-        c.req.param("did"),
-        (project, direction) => commitTweaks(editDeps, project, direction, body)
-      );
-      return c.json(result);
-    } catch (error) {
-      if (error instanceof DirectEditError)
-        return c.json(
-          { error: error.code, message: error.message },
-          error.status
-        );
-      throw error;
-    }
-  });
-
-  app.post(
-    "/api/projects/:pid/d/:did/design-system/tokens/update",
-    async (c) => {
-      const body = await readBody(c);
-      try {
-        const result = await withDirection(
-          c.req.param("pid"),
-          c.req.param("did"),
-          async (project, direction) =>
-            (await updateAppTokens(editDeps, project, direction, body)) ??
-            updateTokens(editDeps, project, direction, body)
-        );
-        return c.json(result);
-      } catch (error) {
-        if (error instanceof DirectEditError)
-          return c.json(
-            { error: error.code, message: error.message },
-            error.status
-          );
-        throw error;
-      }
-    }
-  );
-
-  app.post("/api/projects/:pid/d/:did/design-system/tokens", async (c) => {
-    const body = await readBody(c);
-    try {
-      const result = await withDirection(
-        c.req.param("pid"),
-        c.req.param("did"),
-        (project, direction) => createToken(editDeps, project, direction, body)
-      );
-      return c.json(result);
-    } catch (error) {
-      if (error instanceof DirectEditError)
-        return c.json(
-          { error: error.code, message: error.message },
-          error.status
-        );
-      throw error;
-    }
-  });
-
-  app.post("/api/projects/:pid/d/:did/direct-edit", async (c) => {
-    const body = await readBody(c);
-    try {
-      const result = await withDirection<
-        | DirectEditResult
-        | DirectEditBatchResult
-        | StructureEditResult
-        | StyleReplaceResult
-        | ArrangeResult
-      >(c.req.param("pid"), c.req.param("did"), (project, direction) =>
-        isArrangeBody(body)
-          ? applyArrange({ ...editDeps, preview }, project, direction, body)
-          : isStyleReplaceBody(body)
-            ? applyStyleReplace(editDeps, project, direction, body)
-            : isStructureEdit(body)
-              ? applyStructureEdit(editDeps, project, direction, body)
-              : isDirectEditBatch(body)
-                ? applyDirectEditBatch(editDeps, project, direction, body)
-                : applyDirectEdit(editDeps, project, direction, body)
-      );
-      return c.json(result);
-    } catch (error) {
-      if (error instanceof DirectEditError)
-        return c.json(
-          { error: error.code, message: error.message },
-          error.status
-        );
-      throw error;
-    }
-  });
-
-  app.post("/api/projects/:pid/d/:did/restore", async (c) => {
-    const versionId = requireString(await readBody(c), "versionId");
-    const version = await withDirection(
-      c.req.param("pid"),
-      c.req.param("did"),
-      async (project, direction) => {
-        const restored = await versions.restore(
-          project,
-          direction,
-          versionId,
-          "restore"
-        );
-        await recordVersion(project, direction, restored, "restore");
-        await recordRunInHistory(
-          editHistory,
-          versions,
-          project,
-          direction,
-          restored.id
-        ).catch(() => editHistory.clear(project.id, direction.id));
-        await syncPackId(project, direction);
-        await emitStatus(project, direction);
-        return restored;
-      }
-    );
-    return c.json(version);
-  });
-
-  app.post("/api/projects/:pid/d/:did/keep", async (c) => {
-    const version = await withDirection(
-      c.req.param("pid"),
-      c.req.param("did"),
-      async (project, direction) => {
-        const kept = await versions.commit(
-          project,
-          direction,
-          "Kept unfinished changes",
-          { kind: "keep" }
-        );
-        if (kept === null)
-          throw new BadRequestError("no unfinished changes to keep");
-        await recordVersion(project, direction, kept);
-        await emitStatus(project, direction);
-        return kept;
-      }
-    );
-    return c.json(version);
-  });
-
-  app.post("/api/projects/:pid/d/:did/discard", async (c) => {
-    const status = await withDirection(
-      c.req.param("pid"),
-      c.req.param("did"),
-      async (project, direction) => {
-        const discarded = await versions.discard(project, direction);
-        bus.emit({
-          type: "status.changed",
-          projectId: project.id,
-          directionId: direction.id,
-          status: discarded,
-        });
-        return discarded;
-      }
-    );
-    return c.json(status);
-  });
-
-  app.get("/api/projects/:pid/d/:did/preview", async (c) => {
-    const { project, direction } = await loadDirection(
-      c.req.param("pid"),
-      c.req.param("did")
-    );
-    const url = await preview.directionUrl(project, direction);
-    warmPropsTypes(project, direction);
-    return c.json({ url });
-  });
-
-  app.get("/api/projects/:pid/d/:did/tree", async (c) => {
-    const { direction } = await loadDirection(
-      c.req.param("pid"),
-      c.req.param("did")
-    );
-    return c.json({ files: await listWorkTree(direction.workTree) });
-  });
-
-  app.post("/api/projects/:pid/d/:did/check", async (c) => {
-    const { project, direction } = await loadDirection(
-      c.req.param("pid"),
-      c.req.param("did")
-    );
-    return c.json(
-      await preview.renderCheck(
-        project,
-        direction,
-        project.app ? { appOnly: true } : undefined
-      )
-    );
-  });
-
-  app.get("/api/projects/:pid/versions/:vid/preview", async (c) => {
-    const project = await projects.get(c.req.param("pid"));
-    const versionId = c.req.param("vid");
-    const snapshotDir = await versions.snapshot(project, versionId);
-    return c.json({
-      url: await preview.snapshotUrl(project, versionId, snapshotDir),
-    });
-  });
-
-  app.get("/api/projects/:pid/versions/:vid/export", async (c) => {
-    const project = await projects.get(c.req.param("pid"));
-    const version = await versions.get(project, c.req.param("vid"));
-    const bytes = await versions.exportZip(project, version.id);
-    const safeName =
-      project.name
-        .replaceAll(/[^A-Za-z0-9._-]+/g, "-")
-        .replaceAll(/^-+|-+$/g, "") || "design";
-    return new Response(new Uint8Array(bytes), {
-      headers: {
-        "content-type": "application/zip",
-        "content-disposition": `attachment; filename="${safeName}-${version.id.slice(0, 8)}.zip"`,
-        "content-length": String(bytes.byteLength),
-      },
-    });
-  });
+  registerProjectDetailRoutes(app, ctx);
+  registerEventsRoutes(app, ctx);
+  registerProjectRunsRoutes(app, ctx);
+  registerVersionsRoutes(app, ctx);
+  registerDirectEditRoutes(app, ctx);
 
   registerRunsRoutes(app, ctx);
 

@@ -1,3 +1,5 @@
+import { readFile } from "node:fs/promises";
+
 import type { Hono } from "hono";
 
 import type {
@@ -13,7 +15,7 @@ import {
 } from "../design-system/reference-page.js";
 import { BadRequestError, ConflictError } from "../store/errors.js";
 import type { AppContext } from "./app-context.js";
-import { resolvePack } from "./app-project-files.js";
+import { resolvePack, resolveProjectFile } from "./app-project-files.js";
 import { optionalString, readBody, requireString } from "./app-request.js";
 import { finishAttach } from "./app-routes.js";
 import { parseLevel, parseSettings, parseStartRun } from "./app-run-parse.js";
@@ -74,6 +76,7 @@ const registerProjectsRoutes = (app: Hono, ctx: AppContext): void => {
     if (kind !== "html" && kind !== "react") {
       throw new BadRequestError("kind must be html or react");
     }
+
     const settings = parseSettings(body.settings);
     const designMd = optionalString(body, "designMd");
     const pack = await resolvePack(packs, body.packId);
@@ -103,6 +106,7 @@ const registerProjectsRoutes = (app: Hono, ctx: AppContext): void => {
     if (!shouldStartRun) {
       return c.json({ project, runId: null });
     }
+
     const referencePages = await Promise.all(
       referenceUrls.map((url) =>
         captureReferencePage(url, config.fetchAllowLoopback === true)
@@ -131,6 +135,7 @@ const registerProjectsRoutes = (app: Hono, ctx: AppContext): void => {
     if (imported.app) {
       return c.json(await finishAttach(appRouteDeps, imported));
     }
+
     await versions.ensureRepo(imported);
     const project = await commitInit(imported);
     watchDirection(project, projects.mainDirection(project));
@@ -158,8 +163,9 @@ const registerProjectsRoutes = (app: Hono, ctx: AppContext): void => {
     const failed: { projectId: string; error: string }[] = [];
 
     if (hidden.length === 0) {
-      return c.json({ moved, failed });
+      return c.json({ failed, moved });
     }
+
     const target = await defaultFolder.ensure();
 
     for (const project of hidden) {
@@ -176,6 +182,7 @@ const registerProjectsRoutes = (app: Hono, ctx: AppContext): void => {
             ) {
               throw new ConflictError("run_in_progress");
             }
+
             await preview.release(project, main);
             const next = await projects.moveIntoFolder(project.id, target);
             await preview.release(next, main);
@@ -204,4 +211,101 @@ const registerProjectsRoutes = (app: Hono, ctx: AppContext): void => {
   });
 };
 
-export { registerProjectsRoutes };
+const registerProjectDetailRoutes = (app: Hono, ctx: AppContext): void => {
+  const { commandRules, emitStatus, projects, recordVersion, versions } = ctx;
+
+  app.get("/api/projects/:pid", async (c) =>
+    c.json(await projects.get(c.req.param("pid")))
+  );
+
+  app.patch("/api/projects/:pid/settings", async (c) => {
+    const pid = c.req.param("pid");
+    await projects.get(pid);
+    const patch = parseSettings(await readBody(c)) ?? {};
+    const project = await projects.updateSettings(pid, patch);
+
+    return c.json(project);
+  });
+
+  app.get("/api/projects/:pid/command-rules", async (c) => {
+    const project = await projects.get(c.req.param("pid"));
+
+    return c.json({ rules: await commandRules.list(project.id) });
+  });
+
+  app.post("/api/projects/:pid/command-rules/remove", async (c) => {
+    const project = await projects.get(c.req.param("pid"));
+    const rule = requireString(await readBody(c), "rule");
+
+    return c.json({ rules: await commandRules.remove(project.id, rule) });
+  });
+
+  app.post("/api/projects/:pid/attachments", async (c) => {
+    const pid = c.req.param("pid");
+    const form = await c.req.parseBody();
+    const { file } = form;
+
+    if (!(file instanceof File)) {
+      throw new BadRequestError('multipart field "file" is required');
+    }
+    const attachment = await projects.saveAttachment(pid, {
+      bytes: new Uint8Array(await file.arrayBuffer()),
+      mime: file.type,
+      name: file.name,
+    });
+
+    return c.json(attachment);
+  });
+
+  app.get("/api/projects/:pid/design-md", async (c) => {
+    const content = await projects.readDesignMd(c.req.param("pid"));
+
+    return c.json({ content: content ?? "" });
+  });
+
+  app.put("/api/projects/:pid/design-md", async (c) => {
+    const body = await readBody(c);
+    const { content } = body;
+
+    if (typeof content !== "string") {
+      throw new BadRequestError("content must be a string");
+    }
+    const pid = c.req.param("pid");
+    await projects.writeDesignMd(pid, content);
+    const project = await projects.get(pid);
+    const main = projects.mainDirection(project);
+
+    const version = await versions.commitFile(
+      project,
+      main,
+      "DESIGN.md",
+      "Update DESIGN.md",
+      { kind: "manual" }
+    );
+
+    if (version) {
+      await recordVersion(project, main, version);
+    }
+    await emitStatus(project, main);
+
+    return c.json({ ok: true, versionId: version?.id ?? null });
+  });
+
+  app.get("/api/projects/:pid/files", async (c) => {
+    const pid = c.req.param("pid");
+    await projects.get(pid);
+
+    const file = await resolveProjectFile(
+      projects.projectDir(pid),
+      c.req.query("path") ?? ""
+    );
+
+    const bytes = await readFile(file);
+
+    return new Response(new Uint8Array(bytes), {
+      headers: { "cache-control": "no-store", "content-type": "image/png" },
+    });
+  });
+};
+
+export { registerProjectDetailRoutes, registerProjectsRoutes };

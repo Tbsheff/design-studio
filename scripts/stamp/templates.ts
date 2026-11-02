@@ -38,6 +38,7 @@ interface ActionDefinitionSpec {
   readonly http: { readonly method: string; readonly path: string };
   readonly input: readonly Field[];
   readonly invalidates: readonly string[];
+  readonly isList: boolean;
   readonly mcp: McpBinding;
   readonly names: DerivedNames;
   readonly needs: string;
@@ -162,7 +163,39 @@ const definitionImports = (spec: ActionDefinitionSpec): ImportLine[] => {
     list.push({ from: "../_core/ids.js", names: ids, typeOnly: false });
   }
 
+  if (spec.isList) {
+    list.push({
+      from: "../_core/list-page.js",
+      names: ["PageFields", "pageOf"],
+      typeOnly: false,
+    });
+  }
+
   return list;
+};
+
+const listInput = (fields: readonly Field[]): string => {
+  const rows = [...fields]
+    .toSorted((left, right) => left.name.localeCompare(right.name))
+    .map((field) => `    ${field.name}: ${field.schema},`);
+
+  return ["Schema.Struct({", "    ...PageFields,", ...rows, "  })"].join("\n");
+};
+
+const inputText = (spec: ActionDefinitionSpec): string => {
+  if (spec.isList) {
+    return listInput(spec.input);
+  }
+
+  return struct(spec.input, "  ");
+};
+
+const outputText = (spec: ActionDefinitionSpec): string => {
+  if (spec.isList) {
+    return `pageOf(${struct(spec.output, "  ")})`;
+  }
+
+  return struct(spec.output, "  ");
 };
 
 const actionKeys = (spec: ActionDefinitionSpec): string[] => [
@@ -173,11 +206,11 @@ const actionKeys = (spec: ActionDefinitionSpec): string[] => [
   `  errors: [${spec.errors.map((error) => error.name).join(", ")}],`,
   `  http: { method: ${quote(spec.http.method)}, path: ${quote(spec.http.path)} },`,
   `  id: ${quote(spec.names.id)},`,
-  `  input: ${struct(spec.input, "  ")},`,
+  `  input: ${inputText(spec)},`,
   `  invalidates: [${spec.invalidates.map((id) => quote(id)).join(", ")}],`,
   `  mcp: ${mcpText(spec.mcp)},`,
   `  needs: ${quote(spec.needs)},`,
-  `  output: ${struct(spec.output, "  ")},`,
+  `  output: ${outputText(spec)},`,
   `  scope: ${quote(spec.scope)},`,
 ];
 

@@ -158,11 +158,6 @@ const unifiedDiff = async (
   return output;
 };
 
-const newFileDiffs = (files: readonly StampFile[]): Promise<string[]> =>
-  Promise.all(
-    files.map((file) => unifiedDiff(absolute(file.path), "", file.text))
-  );
-
 const generatedDiffs = async (): Promise<string[]> => {
   const files = await buildOrFail();
 
@@ -177,20 +172,6 @@ const generatedDiffs = async (): Promise<string[]> => {
       unifiedDiff(file.path, current[files.indexOf(file)] ?? "", file.text)
     )
   );
-};
-
-const dryRun = async (files: readonly StampFile[]): Promise<StampResult> => {
-  const written = await writeNew(files);
-
-  try {
-    const diffs = [...(await newFileDiffs(files)), ...(await generatedDiffs())];
-
-    process.stdout.write(diffs.join(""));
-  } finally {
-    await removeAll(written);
-  }
-
-  return { generated: [], written: [] };
 };
 
 const turnsOffThrowNewError = (decisions: string): boolean =>
@@ -242,6 +223,87 @@ const clean = async (paths: readonly string[]): Promise<void> => {
   await runTool(OXFMT, ["--no-error-on-unmatched-pattern", ...files]);
 };
 
+const restore = async (
+  files: readonly StampFile[],
+  before: readonly (string | null)[]
+): Promise<void> => {
+  await Promise.all(
+    files.map(async (file, index) => {
+      const text = before[index] ?? null;
+
+      if (text === null) {
+        await rm(absolute(file.path), { force: true });
+
+        return;
+      }
+
+      await writeFile(absolute(file.path), text);
+    })
+  );
+};
+
+const readBefore = (files: readonly StampFile[]): Promise<(string | null)[]> =>
+  Promise.all(
+    files.map(async (file) => {
+      if (await exists(absolute(file.path))) {
+        return readFile(absolute(file.path), "utf-8");
+      }
+
+      return null;
+    })
+  );
+
+const dryRun = async (files: readonly StampFile[]): Promise<StampResult> => {
+  const before = await readBefore(files);
+
+  await Promise.all(
+    files.map(async (file) => {
+      await mkdir(path.dirname(absolute(file.path)), { recursive: true });
+      await writeFile(absolute(file.path), file.text);
+    })
+  );
+
+  try {
+    await clean(files.map((file) => absolute(file.path)));
+
+    const after = await Promise.all(
+      files.map((file) => readFile(absolute(file.path), "utf-8"))
+    );
+
+    const own = await Promise.all(
+      files.map((file, index) =>
+        unifiedDiff(
+          absolute(file.path),
+          before[index] ?? "",
+          after[index] ?? ""
+        )
+      )
+    );
+
+    process.stdout.write([...own, ...(await generatedDiffs())].join(""));
+  } finally {
+    await restore(files, before);
+  }
+
+  return { generated: [], written: [] };
+};
+
+const unstamp = async (files: readonly string[]): Promise<StampResult> => {
+  const found = await Promise.all(files.map((file) => exists(absolute(file))));
+  const removed = files.filter((_file, index) => found[index] === true);
+
+  await removeAll(removed.map((file) => absolute(file)));
+
+  const generated = await regenerate();
+
+  await clean(generated);
+
+  return {
+    generated: generated.map((file) => relative(file)),
+    written: removed,
+  };
+};
+
 const stamp = async (
   files: readonly StampFile[],
   options: StampOptions
@@ -263,6 +325,14 @@ const stamp = async (
   };
 };
 
-export { clean, dryRun, regenerate, stamp, turnsOffThrowNewError, writeNew };
+export {
+  clean,
+  dryRun,
+  regenerate,
+  stamp,
+  turnsOffThrowNewError,
+  unstamp,
+  writeNew,
+};
 
 export type { StampFile, StampOptions, StampResult };

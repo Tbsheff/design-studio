@@ -27,6 +27,8 @@
     "fix": "ultracite fix",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
+    "gen:routes": "tsx scripts/gen-routes.ts",
+    "new:action": "tsx scripts/new-action.ts",
     "check:scripts": "tsx scripts/gen-routes.ts --check && tsx scripts/check-ownership.ts && tsx scripts/check-coarse.ts && tsx scripts/check-bridge-guards.ts && tsx scripts/check-actions.ts",
     "check:actions": "tsx scripts/check-actions.ts",
     "check:bundle": "tsx scripts/check-bundle.ts",

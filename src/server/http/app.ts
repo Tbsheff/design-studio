@@ -161,6 +161,7 @@ import { registerInsertRoutes } from "./insert-routes.js";
 import { registerLayerStateRoutes } from "./layer-state-routes.js";
 import { registerMcpRoutes } from "./mcp-routes.js";
 import { listWorkTree, parseMentions, readMentionFiles } from "./mentions.js";
+import { registerMotionRoutes } from "./motion-routes.js";
 import { registerPackRoutes } from "./packs-routes.js";
 import { createFolderPicker, type FolderPicker } from "./pick-folder.js";
 import { registerPortRoutes } from "./port-routes.js";
@@ -1920,6 +1921,12 @@ export function createApp(deps: AppDeps): Hono {
     withDirection,
   });
   registerTextStyleRoutes(app, {
+    editDeps,
+    readBody,
+    loadDirection,
+    withDirection,
+  });
+  registerMotionRoutes(app, {
     editDeps,
     readBody,
     loadDirection,

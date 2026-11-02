@@ -63,6 +63,13 @@ import { STUDIO_TOKEN_HEADER } from "../shared/contracts";
 import type { WorkspaceFolder, WorkspaceList } from "../shared/folders";
 import type { IconList, IconPosition, IconSource } from "../shared/icons";
 import type { InsertTarget } from "../shared/insert";
+import type {
+  MotionInfo,
+  MotionKind,
+  MotionSetResult,
+  MotionState,
+  EntrancePreset,
+} from "../shared/motion";
 import type { FolderInspection } from "../shared/open-app";
 import type {
   StyleReplaceRequest,
@@ -112,6 +119,23 @@ export interface TextStyleTargetBody {
   selector?: string;
   source: SourceLoc;
   tag?: string;
+}
+
+export interface MotionSpecBody {
+  kind: MotionKind;
+  delayMs?: number;
+  durationMs?: number;
+  easing?: string;
+  end?: Record<string, string>;
+  preset?: EntrancePreset;
+  properties?: string[];
+  staggerMs?: number;
+  state?: MotionState;
+}
+
+export interface MotionSetBody {
+  spec: MotionSpecBody;
+  target: TextStyleTargetBody;
 }
 
 export interface TextStyleApplyBody {
@@ -712,6 +736,19 @@ export const api = {
   insertIcon: (pid: string, did: string, body: IconInsertBody) =>
     timedEdit(pid, did, "icon", 1, () =>
       json<IconInsertReply>("POST", `${d(pid, did)}/icons/insert`, body)
+    ),
+  listMotion: (pid: string, did: string, source: SourceLoc) =>
+    json<MotionInfo>(
+      "GET",
+      `${d(pid, did)}/motion?${new URLSearchParams({
+        file: source.file,
+        line: String(source.line),
+        col: String(source.col),
+      }).toString()}`
+    ),
+  setMotion: (pid: string, did: string, body: MotionSetBody) =>
+    timedEdit(pid, did, "motion", 1, () =>
+      json<MotionSetResult>("POST", `${d(pid, did)}/motion`, body)
     ),
   listTextStyles: (pid: string, did: string) =>
     json<TextStyleList>("GET", `${d(pid, did)}/text-styles?limit=100`),

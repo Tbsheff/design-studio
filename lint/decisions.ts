@@ -438,6 +438,8 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/server/http/text-style-routes.ts",
       "src/ui/features/icons/deps.ts",
       "src/ui/features/text-styles/deps.ts",
+      "src/server/http/motion-routes.ts",
+      "src/ui/features/motion/deps.ts",
     ],
     rules: { "import/no-relative-parent-imports": "off" },
   },

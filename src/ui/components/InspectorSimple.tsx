@@ -15,6 +15,7 @@ import type {
 import type { PreviewPort } from "../bridge";
 import { SIDES } from "../cssValues";
 import { VariantScopeContext, useEditVariant } from "../editVariant";
+import { MotionSlot } from "../features/motion";
 import { TextStyleSlot } from "../features/text-styles";
 import { useAuthoredCss } from "../useAuthoredCss";
 import type { DesignTokens } from "../useDesignSystemState";
@@ -681,6 +682,14 @@ export function SimpleEditor(props: SimpleEditorProps) {
                   )
                 }
               />
+              {props.directionId && (
+                <MotionSlot
+                  projectId={props.projectId}
+                  directionId={props.directionId}
+                  target={props.target}
+                  port={props.port}
+                />
+              )}
               <MatchSection
                 projectId={props.projectId}
                 directionId={props.directionId}

@@ -11,7 +11,7 @@ import {
 } from "../../shared/publish.js";
 import type { ShareFrame } from "../../shared/share.js";
 import type { ExportDeps, ExportSource } from "../export/source.js";
-import { framesOf } from "../http/share-routes.js";
+import { framesOf } from "../share/frames.js";
 import { captureShare } from "../share/snapshot.js";
 import type { CommentStore } from "../store/comments.js";
 import { BadRequestError } from "../store/errors.js";

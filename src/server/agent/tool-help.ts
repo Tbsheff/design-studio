@@ -80,6 +80,12 @@ export const TOOL_SHORT = {
     "Read only. Search icons for insert_icon: the project icon library (lucide-react, heroicons, tabler) or the bundled lucide set. Name, component and SVG preview.",
   insert_icon:
     "Insert an icon inside, before or after a target: a library component with its import, or an inline SVG. An icon target is swapped in place.",
+  list_text_styles:
+    "Read only. The project type scale: Tailwind @theme, tokens.json, CSS vars, DESIGN.md. Name, size, weight, line-height, letter-spacing, family, source.",
+  apply_text_style:
+    "Apply a text style to an element: Tailwind classes that replace text size, font, leading and tracking classes, or CSS var references.",
+  create_text_style:
+    "Add the computed text props of an element as a new text style token in the project token source.",
   list_components:
     "Read only. Project components, the shared kit first, with import line, JSX example, parts and cva variants. Use query; pages of 20.",
   get_layers:
@@ -174,6 +180,12 @@ export const TOOL_HELP: Record<
     "Read only. Search the icons that insert_icon can add, with the same server code as the MCP list_icons tool. In a React project it reads the icon library the project has installed (lucide-react, @heroicons/react or @tabler/icons-react) from node_modules; HTML projects and projects with no icon library get a bundled set of about 360 lucide icons. Returns name, library, the component name (null for inline SVG) and an SVG preview. query matches parts of names; limit is at most 50.",
   insert_icon:
     'Insert an icon inside, before or after the target with the same server code as the MCP insert_icon tool. In a React project with an icon library it writes <SearchIcon className="size-4" /> (size-N from size, text-<token> from color) and adds or extends the import line; otherwise it writes an inline <svg> with stroke="currentColor". When the target is already an icon (an <svg> or an icon component), the new icon replaces it. Find names with list_icons.',
+  list_text_styles:
+    "Read only. List the text styles that apply_text_style can use, with the same server code as the MCP list_text_styles tool. It reads Tailwind v4 @theme --text-* vars with their --line-height, --font-weight and --letter-spacing pairs and --font-* families, then tokens.json typography, then size, weight and line-height vars in :root, then the DESIGN.md typography section; the first source wins for a name. Returns name, size, weight, lineHeight, letterSpacing, family, source and file.",
+  apply_text_style:
+    "Apply one text style from list_text_styles to the target with the same server code as the MCP apply_text_style tool. In a Tailwind file it adds the style classes (text-xl, font-semibold, leading-[..], tracking-[..]) and removes the text size, font weight, font family, leading and tracking classes they replace; text colors and alignment stay. Elsewhere it writes font-size, font-weight, line-height, letter-spacing and font-family with var(--token) references in the rule or inline style.",
+  create_text_style:
+    "Read the computed font size, weight, line-height, letter-spacing and family of the target on the live page and add them as a new text style named name: --text-<name> with pairs in the Tailwind @theme block, a tokens.json typography entry, or :root CSS vars. Refuses a name that exists.",
   clear_text:
     "Remove the plain text inside an element and keep its child elements, such as placeholder text next to children you inserted. On a library component it clears the text where the page uses it. Text from a prop or a { } expression stays.",
   list_components:

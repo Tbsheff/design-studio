@@ -103,9 +103,14 @@ export { DIFF_VERSIONS_TOOL } from "./legacy/versions.js";
 
 const LIST_ICONS_TOOL = "mcp__studio__list_icons";
 const INSERT_ICON_TOOL = "mcp__studio__insert_icon";
+const LIST_TEXT_STYLES_TOOL = "mcp__studio__list_text_styles";
+const APPLY_TEXT_STYLE_TOOL = "mcp__studio__apply_text_style";
+const CREATE_TEXT_STYLE_TOOL = "mcp__studio__create_text_style";
 
 const DIRECT_EDIT_TOOLS = new Set<string>([
   INSERT_ICON_TOOL,
+  APPLY_TEXT_STYLE_TOOL,
+  CREATE_TEXT_STYLE_TOOL,
   EDIT_ELEMENT_TOOL,
   SET_TOKEN_TOOL,
   SET_PROPS_TOOL,
@@ -135,6 +140,9 @@ const STUDIO_MCP_TOOLS: readonly string[] = [
   ...LEGACY_AGENT_TOOLS,
   LIST_ICONS_TOOL,
   INSERT_ICON_TOOL,
+  LIST_TEXT_STYLES_TOOL,
+  APPLY_TEXT_STYLE_TOOL,
+  CREATE_TEXT_STYLE_TOOL,
   ...AGENT_OPS.toolIds,
 ];
 

@@ -165,6 +165,14 @@ import {
   runReplaceStyle,
 } from "./style-tool.js";
 import type { TasteRule } from "./taste.js";
+import {
+  applyTextStyleInput,
+  createTextStyleInput,
+  listTextStylesInput,
+  runApplyTextStyle,
+  runCreateTextStyle,
+  runListTextStyles,
+} from "./text-style-tool.js";
 import { TOOL_HELP, TOOL_SHORT, type StudioToolName } from "./tool-help.js";
 import { HELP_TOOL, studioToolsFor } from "./tool-sets.js";
 import {
@@ -1284,6 +1292,28 @@ export async function createStudioMcpServer(
     withLayerIds(deps, (args) => runInsertIcon(deps, args))
   );
 
+  const listTextStylesTool = tool(
+    "list_text_styles",
+    TOOL_SHORT.list_text_styles,
+    listTextStylesInput,
+    (args) => runListTextStyles(deps, args),
+    { annotations: { readOnlyHint: true } }
+  );
+
+  const applyTextStyleTool = tool(
+    "apply_text_style",
+    TOOL_SHORT.apply_text_style,
+    applyTextStyleInput,
+    withLayerIds(deps, (args) => runApplyTextStyle(deps, args))
+  );
+
+  const createTextStyleTool = tool(
+    "create_text_style",
+    TOOL_SHORT.create_text_style,
+    createTextStyleInput,
+    withLayerIds(deps, (args) => runCreateTextStyle(deps, args))
+  );
+
   const insertJsxTool = tool(
     "insert_jsx",
     TOOL_SHORT.insert_jsx,
@@ -1482,6 +1512,9 @@ export async function createStudioMcpServer(
     insertJsxTool,
     listIconsTool,
     insertIconTool,
+    listTextStylesTool,
+    applyTextStyleTool,
+    createTextStyleTool,
     clearTextTool,
     listComponentsTool,
     getLayersTool,

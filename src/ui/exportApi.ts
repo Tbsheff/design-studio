@@ -1,19 +1,22 @@
+import type { exportHandoffExport } from "../shared/actions/export/export-handoff.js";
+import type { exportExport } from "../shared/actions/export/export.js";
+import type { getHandoffExport } from "../shared/actions/export/get-handoff.js";
 import { routes as exportRoutes } from "../shared/actions/export/routes.js";
+import type { ExportFileResultWire } from "../shared/actions/export/schema.js";
 import { STUDIO_TOKEN_HEADER } from "../shared/contracts";
-import {
-  EXPORT_NOTE_HEADER,
-  type CopyCodeRequest,
-  type CopyCodeResult,
-  type EditorId,
-  type EditorInfo,
-  type ExportFormat,
-  type ExportFrame,
-  type ExportRequest,
-  type ExportScale,
-  type ExportScope,
-  type HandoffRequest,
-  type HandoffResult,
-  type McpStatus,
+import type {
+  CopyCodeRequest,
+  CopyCodeResult,
+  EditorId,
+  EditorInfo,
+  ExportFormat,
+  ExportFrame,
+  ExportRequest,
+  ExportScale,
+  ExportScope,
+  HandoffRequest,
+  HandoffResult,
+  McpStatus,
 } from "../shared/export";
 import {
   activeFrame,
@@ -60,52 +63,56 @@ async function call(
   return res;
 }
 
-function fileName(res: Response, fallback: string): string {
-  const match = /filename="([^"]+)"/.exec(
-    res.headers.get("content-disposition") ?? ""
-  );
-
-  return match?.[1] ?? fallback;
-}
-
 export interface ExportedFile {
   blob: Blob;
   name: string;
   note: string | null;
 }
 
+function toExportedFile(file: ExportFileResultWire): ExportedFile {
+  const raw = atob(file.content);
+  const bytes = new Uint8Array(raw.length);
+
+  for (let index = 0; index < raw.length; index += 1) {
+    bytes[index] = raw.codePointAt(index) ?? 0;
+  }
+
+  return {
+    blob: new Blob([bytes], { type: file.type }),
+    name: file.name,
+    note: file.note,
+  };
+}
+
 export const exportApi = {
   exportFile: async (
     pid: string,
     request: ExportRequest
-  ): Promise<ExportedFile> => {
-    const res = await call("POST", `${p(pid)}/export`, request);
-
-    return {
-      blob: await res.blob(),
-      name: fileName(res, `export.${request.format}`),
-      note: res.headers.get(EXPORT_NOTE_HEADER),
-    };
-  },
-  handoff: async (
-    pid: string,
-    request: HandoffRequest
-  ): Promise<HandoffResult> =>
-    (
-      await call("POST", `${p(pid)}/handoff`, request)
-    ).json() as Promise<HandoffResult>,
-  handoffZip: async (pid: string, folder: string): Promise<ExportedFile> => {
-    const res = await call(
-      "GET",
-      `${p(pid)}/handoff/${encodeURIComponent(folder)}/zip`
-    );
-
-    return {
-      blob: await res.blob(),
-      name: fileName(res, `${folder}.zip`),
-      note: null,
-    };
-  },
+  ): Promise<ExportedFile> =>
+    toExportedFile(
+      await callAction<typeof exportExport>(exportRoutes.exportExport, {
+        format: request.format,
+        frames: request.frames,
+        projectId: pid,
+        scale: request.scale,
+        scope: request.scope,
+        selector: request.selector ?? null,
+        versionId: request.versionId,
+      })
+    ),
+  handoff: (pid: string, request: HandoffRequest): Promise<HandoffResult> =>
+    callAction<typeof exportHandoffExport>(exportRoutes.exportHandoffExport, {
+      frames: request.frames,
+      projectId: pid,
+      versionId: request.versionId,
+    }),
+  handoffZip: async (pid: string, folder: string): Promise<ExportedFile> =>
+    toExportedFile(
+      await callAction<typeof getHandoffExport>(exportRoutes.getHandoffExport, {
+        folder,
+        projectId: pid,
+      })
+    ),
   revealHandoff: async (pid: string, folder: string): Promise<void> => {
     await call(
       "POST",

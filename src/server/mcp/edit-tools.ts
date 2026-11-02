@@ -17,7 +17,6 @@ import { COMMENTS_LEGACY_TOOLS } from "./legacy/comments.js";
 import { DEVSERVER_LEGACY_TOOLS } from "./legacy/devserver.js";
 import { DIRECT_EDIT_LEGACY_TOOLS } from "./legacy/direct-edit.js";
 import { EVENTS_LEGACY_TOOLS } from "./legacy/events.js";
-import { EXPORT_LEGACY_TOOLS } from "./legacy/export.js";
 import { MCP_LIFE_LEGACY_TOOLS } from "./legacy/mcp-life.js";
 import { MCP_READ_LEGACY_TOOLS } from "./legacy/mcp-read.js";
 import { LEGACY_ORDER } from "./legacy/order.js";
@@ -39,7 +38,6 @@ const LEGACY_TOOLS: ToolSpec[] = [
   ...DEVSERVER_LEGACY_TOOLS,
   ...DIRECT_EDIT_LEGACY_TOOLS,
   ...EVENTS_LEGACY_TOOLS,
-  ...EXPORT_LEGACY_TOOLS,
   ...MCP_LIFE_LEGACY_TOOLS,
   ...MCP_READ_LEGACY_TOOLS,
   ...ORG_SCOPE_LEGACY_TOOLS,

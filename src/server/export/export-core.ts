@@ -3,11 +3,19 @@ import type { Cause } from "effect";
 
 import { BadRequest } from "../../shared/actions/_core/errors/bad-request.js";
 import { NotFound } from "../../shared/actions/_core/errors/not-found.js";
+import type { CanvasService } from "../canvas/service.js";
 import { loadConfig } from "../platform/config/index.js";
+import type { CommentStore } from "../store/comments.js";
 import { NotFoundError } from "../store/errors.js";
 import type { ExportDeps } from "./source.js";
 
-type ExportRuntime = ExportDeps;
+interface ExportRuntime extends ExportDeps {
+  readonly canvas: CanvasService | null;
+  readonly comments: CommentStore;
+  readonly dataDir: string;
+  readonly projectsFolder: (() => Promise<string>) | null;
+  readonly secrets: string[];
+}
 
 type ExportError = BadRequest | NotFound;
 

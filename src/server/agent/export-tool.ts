@@ -1,15 +1,10 @@
-import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { z } from "zod";
 
-import {
-  EXPORT_MAX_FRAMES,
-  exportFileStem,
-  type ExportFrame,
-} from "../../shared/export.js";
-import { findFrame } from "../canvas/tools.js";
-import { exportVector } from "../export/vector-export.js";
+import { EXPORT_MAX_FRAMES, exportFileStem } from "../../shared/export.js";
+import { pickExportFrames } from "../export/export-frames.js";
+import { writeUnique } from "../export/export-write.js";
 import { canvasFrames, type DirectToolDeps } from "./direct-tools.js";
 
 export const EXPORT_FRAME_AGENT_DESCRIPTION =
@@ -49,89 +44,10 @@ type ToolText = {
   isError?: boolean;
 };
 
-const DEFAULT_FRAME: ExportFrame = {
-  name: "Desktop",
-  width: 1440,
-  height: 900,
-};
-
 const text = (message: string, isError = false): ToolText => ({
   content: [{ type: "text", text: message }],
   ...(isError ? { isError: true } : {}),
 });
-
-async function framesFor(
-  deps: DirectToolDeps,
-  refs: string[] | undefined
-): Promise<ExportFrame[] | string> {
-  const all = await canvasFrames(deps);
-
-  const toExport = (frame: (typeof all)[number]): ExportFrame => ({
-    name: frame.label?.trim() || `${frame.width} × ${frame.height}`,
-    width: frame.width,
-    height: frame.height,
-    ...(frame.path ? { path: frame.path } : {}),
-  });
-
-  if (refs) {
-    const out: ExportFrame[] = [];
-
-    for (const ref of refs) {
-      const found = findFrame(all, ref);
-
-      if (!found && all.length === 0 && ref === "f1") {
-        out.push(DEFAULT_FRAME);
-        continue;
-      }
-
-      if (!found) {
-        return `No frame ${ref} on the canvas. Call canvas_list for frame ids.`;
-      }
-
-      out.push(toExport(found));
-    }
-
-    return out;
-  }
-
-  const own = all
-    .filter(
-      (frame) =>
-        !frame.hidden &&
-        (!frame.directionId || frame.directionId === deps.ctx.direction.id)
-    )
-    .sort((a, b) => a.order - b.order);
-
-  return own.length > 0
-    ? own.slice(0, EXPORT_MAX_FRAMES).map(toExport)
-    : [DEFAULT_FRAME];
-}
-
-async function writeExport(
-  folder: string,
-  name: string,
-  bytes: Uint8Array
-): Promise<string> {
-  await mkdir(folder, { recursive: true });
-  const ext = path.extname(name);
-  const stem = name.slice(0, name.length - ext.length);
-
-  for (let n = 1; n < 1000; n += 1) {
-    const target = path.join(folder, n === 1 ? name : `${stem}-${n}${ext}`);
-
-    try {
-      await writeFile(target, bytes, { flag: "wx" });
-
-      return target;
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== "EEXIST") {
-        throw error;
-      }
-    }
-  }
-
-  throw new Error(`no free file name for ${name}`);
-}
 
 export async function runExportFrame(
   deps: DirectToolDeps & { exportsDir?: string | undefined },
@@ -159,17 +75,23 @@ export async function runExportFrame(
   const { project, direction } = deps.ctx;
 
   try {
-    const frames = await framesFor(deps, input.frames);
+    const pick = pickExportFrames(
+      await canvasFrames(deps),
+      direction.id,
+      input.frames ?? null
+    );
 
-    if (typeof frames === "string") {
-      return text(frames, true);
+    if (!pick.ok) {
+      return text(pick.message, true);
     }
 
-    const picked = input.selector ? frames.slice(0, 1) : frames;
+    const picked = input.selector ? pick.frames.slice(0, 1) : pick.frames;
 
     const url =
       deps.ctx.previewUrl ??
       (await deps.preview.directionUrl(project, direction));
+
+    const { exportVector } = await import("../export/vector-export.js");
 
     const out = await exportVector(deps.preview, url, {
       format: input.format,
@@ -180,7 +102,7 @@ export async function runExportFrame(
       stem: exportFileStem(project.name),
     });
 
-    const file = await writeExport(
+    const file = await writeUnique(
       path.join(deps.exportsDir, project.id),
       out.name,
       out.bytes

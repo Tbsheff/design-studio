@@ -4,13 +4,23 @@ import type { AppContext } from "./app-context.js";
 import { registerExportRoutes } from "./export-routes.js";
 
 const registerAppExportRoutes = (app: Hono, ctx: AppContext): void => {
-  const { comments, config, preview, projects, versions } = ctx;
-  registerExportRoutes(app, {
+  const {
+    canvas,
+    comments,
+    config,
+    defaultFolder,
+    preview,
     projects,
     versions,
-    preview,
+  } = ctx;
+  registerExportRoutes(app, {
+    canvas,
     comments,
+    preview,
+    projects,
+    projectsFolder: () => defaultFolder.ensure(),
     studioToken: config.studioToken,
+    versions,
   });
 };
 

@@ -4,7 +4,7 @@ import path from "node:path";
 import { parseExpression } from "@babel/parser";
 import type * as t from "@babel/types";
 
-import { parseModuleFile } from "../../components/props-schema.js";
+import { parseModuleFile } from "../../components/model.js";
 
 export interface TextModule {
   file: string;

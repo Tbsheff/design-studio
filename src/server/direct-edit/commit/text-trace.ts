@@ -2,10 +2,7 @@ import path from "node:path";
 
 import type * as t from "@babel/types";
 
-import {
-  loadTypeScript,
-  resolveImport,
-} from "../../components/props-schema.js";
+import { loadTypeScript, resolveImport } from "../../components/model.js";
 import {
   filesMentioning,
   jsxFiles,

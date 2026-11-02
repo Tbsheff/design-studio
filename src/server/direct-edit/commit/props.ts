@@ -21,9 +21,14 @@ import {
   type SetPropsResult,
   type VariantClassResult,
 } from "../../../shared/props.js";
-import { cvaCalls, parseModuleFile } from "../../components/props-schema.js";
-import { sourceFiles, usesIn } from "../../components/props-service.js";
-import { elementAt, readInstance } from "../../components/use-site.js";
+import {
+  cvaCalls,
+  parseModuleFile,
+  sourceFiles,
+  usesIn,
+  elementAt,
+  readInstance,
+} from "../../components/model.js";
 import { DirectEditError } from "../engine/errors.js";
 import { parseSource } from "../engine/jsx.js";
 import { applySplices } from "../engine/splice.js";

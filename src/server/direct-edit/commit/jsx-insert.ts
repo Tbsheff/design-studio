@@ -19,19 +19,20 @@ import {
 } from "../../../shared/insert.js";
 import { OWNERS_MAX, OWNER_STACK_MAX } from "../../../shared/props.js";
 import {
-  loadLibrary,
-  type LibraryEntry,
-} from "../../components/insert-list.js";
-import {
   resolveTarget,
   seenImports,
   type InsertScope,
   type ResolvedTarget,
 } from "../../components/insert.js";
 import {
+  loadLibrary,
+  type LibraryEntry,
   loadTypeScript,
   parseModuleFile,
-} from "../../components/props-schema.js";
+  planImports,
+  type ImportItem,
+  type ImportNeed,
+} from "../../components/model.js";
 import { DirectEditError } from "../engine/errors.js";
 import {
   parseHtmlSnippet,
@@ -57,7 +58,6 @@ import { jsxElementAt } from "../engine/structure.js";
 import { writeAndCommitAll } from "./batch.js";
 import { resolveSource } from "./edit-source.js";
 import type { DirectEditDeps, ResolvedSource } from "./edit-types.js";
-import { planImports, type ImportItem, type ImportNeed } from "./imports.js";
 import { assertCanEdit, publishVersion } from "./publish.js";
 
 export interface JsxInsertPlan {

@@ -22,30 +22,26 @@ import {
   PROP_NAME,
   PROP_TEXT_MAX,
   PROPS_MAX,
-  type ComponentSchema,
-  type PropSpec,
-  type PropValue,
 } from "../../shared/props.js";
 import { writeAndCommitAll } from "../direct-edit/batch.js";
-import { DirectEditError } from "../direct-edit/errors.js";
-import {
-  planImport,
-  type ImportNeed,
-  type SeenImport,
-} from "../direct-edit/imports.js";
+import { resolveSource } from "../direct-edit/commit/edit-source.js";
+import type {
+  DirectEditDeps,
+  ResolvedSource,
+} from "../direct-edit/commit/edit-types.js";
 import {
   assertCanEdit,
   publishVersion,
-  resolveSource,
-  type DirectEditDeps,
-  type ResolvedSource,
-} from "../direct-edit/index.js";
+} from "../direct-edit/commit/publish.js";
+import { DirectEditError } from "../direct-edit/errors.js";
 import { structureDoc } from "../direct-edit/structure-docs.js";
 import {
   planInsert,
   positionAt,
   refuse,
 } from "../direct-edit/structure-ops.js";
+import { jsxFor } from "./component-search.js";
+import { planImport, type ImportNeed, type SeenImport } from "./import-plan.js";
 import { loadLibrary, type LibraryEntry } from "./insert-list.js";
 import {
   componentSchema,
@@ -54,6 +50,8 @@ import {
   parseModuleFile,
 } from "./props-schema.js";
 import { ownerUseSite } from "./use-site.js";
+
+export { humanize, jsxFor, propsFor } from "./component-search.js";
 
 export interface InsertScope {
   project: Project;
@@ -147,8 +145,6 @@ const VOID_TAGS = new Set([
   "select",
 ]);
 
-const SAFE_ATTR = /^[^"\\{}<>\n]*$/;
-
 export function parseInsertRequest(raw: unknown): InsertComponentRequest {
   const parsed = requestSchema.safeParse(raw);
 
@@ -188,104 +184,6 @@ function pickEntry(
   throw refuse(
     `More than one component is named ${component.name} (${matches.map((entry) => entry.file).join(", ")}). Pass its file too`
   );
-}
-
-export function humanize(name: string): string {
-  const words = name.replaceAll(/([a-z0-9])([A-Z])/g, "$1 $2").split(" ");
-
-  return words
-    .map((word, index) => (index === 0 ? word : word.toLowerCase()))
-    .join(" ");
-}
-
-function attribute(name: string, value: PropValue): string {
-  if (value === true) {
-    return ` ${name}`;
-  }
-
-  if (typeof value === "string" && SAFE_ATTR.test(value)) {
-    return ` ${name}="${value}"`;
-  }
-
-  return ` ${name}={${JSON.stringify(value)}}`;
-}
-
-function requiredValue(spec: PropSpec): PropValue {
-  if (spec.default !== undefined) {
-    return spec.default;
-  }
-
-  if (spec.control === "select") {
-    return spec.options?.[0] ?? "";
-  }
-
-  if (spec.control === "boolean") {
-    return false;
-  }
-
-  if (spec.control === "number") {
-    return 0;
-  }
-
-  return humanize(spec.name.charAt(0).toUpperCase() + spec.name.slice(1));
-}
-
-export function propsFor(
-  schema: ComponentSchema | null,
-  given: Record<string, PropValue>
-): Record<string, PropValue> {
-  const out: Record<string, PropValue> = {};
-
-  for (const spec of schema?.props ?? []) {
-    if (
-      spec.optional ||
-      spec.name === "asChild" ||
-      spec.from === "variant" ||
-      spec.name in given
-    ) {
-      continue;
-    }
-
-    out[spec.name] = requiredValue(spec);
-  }
-
-  for (const [name, value] of Object.entries(given)) {
-    if (name !== "children") {
-      out[name] = value;
-    }
-  }
-
-  return out;
-}
-
-function childText(text: string): string {
-  return /[{}<>]/.test(text) ? `{${JSON.stringify(text)}}` : text;
-}
-
-export function jsxFor(
-  entry: LibraryEntry,
-  schema: ComponentSchema | null,
-  request: InsertComponentRequest
-): string {
-  const given = request.props ?? {};
-
-  const attrs = Object.entries(propsFor(schema, given))
-    .map(([name, value]) => attribute(name, value))
-    .join("");
-
-  if (!entry.children) {
-    return `<${entry.name}${attrs} />`;
-  }
-
-  const fromProps = typeof given.children === "string" ? given.children : null;
-
-  const text = (request.text ?? fromProps ?? humanize(entry.name))
-    .replaceAll(/\s+/g, " ")
-    .trim();
-
-  return text
-    ? `<${entry.name}${attrs}>${childText(text)}</${entry.name}>`
-    : `<${entry.name}${attrs} />`;
 }
 
 function isNode(value: unknown): value is t.Node {

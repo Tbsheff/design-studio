@@ -1,20 +1,23 @@
 import path from "node:path";
 
 import type { Project } from "../../shared/contracts.js";
+import type { InsertComponentRequest } from "../../shared/insert.js";
 import {
   COMPONENT_LIST_MAX,
   type ComponentListItem,
   type ComponentListQuery,
   type ComponentSchemaList,
+  type ComponentSchema,
   type ComponentSource,
+  type PropSpec,
+  type PropValue,
 } from "../../shared/props.js";
 import {
   importResolver,
   pickSpecifier,
   type ImportNeed,
-} from "../direct-edit/imports.js";
+} from "./import-plan.js";
 import { loadLibrary, type Library, type LibraryEntry } from "./insert-list.js";
-import { jsxFor } from "./insert.js";
 import { componentSchemas, loadTypeScript } from "./props-schema.js";
 
 type Ts = NonNullable<Awaited<ReturnType<typeof loadTypeScript>>>;
@@ -29,6 +32,106 @@ interface Ranked {
 const DEFAULT_LIMIT = 40;
 const SEEN_MAX = 40;
 const ALIAS_LIKE = /^(@\/|~\/|#|@[\w.-]+\/[\w.-]+)/;
+
+const SAFE_ATTR = /^[^"\\{}<>\n]*$/;
+
+function humanize(name: string): string {
+  const parts = name.replaceAll(/([a-z0-9])([A-Z])/g, "$1 $2").split(" ");
+
+  return parts
+    .map((word, index) => (index === 0 ? word : word.toLowerCase()))
+    .join(" ");
+}
+
+function attribute(name: string, value: PropValue): string {
+  if (value === true) {
+    return ` ${name}`;
+  }
+
+  if (typeof value === "string" && SAFE_ATTR.test(value)) {
+    return ` ${name}="${value}"`;
+  }
+
+  return ` ${name}={${JSON.stringify(value)}}`;
+}
+
+function requiredValue(spec: PropSpec): PropValue {
+  if (spec.default !== undefined) {
+    return spec.default;
+  }
+
+  if (spec.control === "select") {
+    return spec.options?.[0] ?? "";
+  }
+
+  if (spec.control === "boolean") {
+    return false;
+  }
+
+  if (spec.control === "number") {
+    return 0;
+  }
+
+  return humanize(spec.name.charAt(0).toUpperCase() + spec.name.slice(1));
+}
+
+function propsFor(
+  schema: ComponentSchema | null,
+  given: Record<string, PropValue>
+): Record<string, PropValue> {
+  const out: Record<string, PropValue> = {};
+
+  for (const spec of schema?.props ?? []) {
+    if (
+      spec.optional ||
+      spec.name === "asChild" ||
+      spec.from === "variant" ||
+      spec.name in given
+    ) {
+      continue;
+    }
+
+    out[spec.name] = requiredValue(spec);
+  }
+
+  for (const [name, value] of Object.entries(given)) {
+    if (name !== "children") {
+      out[name] = value;
+    }
+  }
+
+  return out;
+}
+
+function childText(text: string): string {
+  return /[{}<>]/.test(text) ? `{${JSON.stringify(text)}}` : text;
+}
+
+function jsxFor(
+  entry: LibraryEntry,
+  schema: ComponentSchema | null,
+  request: InsertComponentRequest
+): string {
+  const given = request.props ?? {};
+
+  const attrs = Object.entries(propsFor(schema, given))
+    .map(([name, value]) => attribute(name, value))
+    .join("");
+
+  if (!entry.children) {
+    return `<${entry.name}${attrs} />`;
+  }
+
+  const fromProps = typeof given.children === "string" ? given.children : null;
+
+  const text = (request.text ?? fromProps ?? humanize(entry.name))
+    .replaceAll(/\s+/g, " ")
+    .trim();
+
+  return text
+    ? `<${entry.name}${attrs}>${childText(text)}</${entry.name}>`
+    : `<${entry.name}${attrs} />`;
+}
 
 function sourceOf(library: Library, entry: LibraryEntry): ComponentSource {
   const index = library.scan.findIndex((dir) =>
@@ -259,7 +362,7 @@ function partsOf(library: Library, entry: LibraryEntry): string[] {
     .map((other) => other.name);
 }
 
-export async function searchComponents(
+async function searchComponents(
   project: Project,
   workTree: string,
   request: ComponentListQuery
@@ -331,3 +434,5 @@ export async function searchComponents(
     nextCursor: next < ranked.length ? String(next) : null,
   };
 }
+
+export { humanize, jsxFor, propsFor, searchComponents };

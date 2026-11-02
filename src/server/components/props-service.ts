@@ -9,13 +9,16 @@ import type {
   ComponentSchemaList,
   InstanceQuery,
 } from "../../shared/props.js";
-import type { PreviewService } from "../types.js";
 import { searchComponents } from "./component-search.js";
 import { listFiles } from "./inventory.js";
 import { warmProgram } from "./props-program.js";
 import { loadTypeScript } from "./props-schema.js";
 import { cachedFileList, cachedUseCount } from "./tree-cache.js";
 import { resolveInstance } from "./use-site.js";
+
+export interface DirectionUrlPort {
+  directionUrl: (project: Project, direction: Direction) => Promise<string>;
+}
 
 const isJsxFile = (name: string) => /\.(tsx|jsx)$/i.test(name);
 
@@ -56,7 +59,7 @@ export function listComponentSchemas(
 }
 
 export async function previewOrigin(
-  preview: PreviewService,
+  preview: DirectionUrlPort,
   project: Project,
   direction: Direction
 ): Promise<string | null> {
@@ -72,7 +75,7 @@ export async function previewOrigin(
 }
 
 export async function instanceFor(
-  preview: PreviewService,
+  preview: DirectionUrlPort,
   project: Project,
   direction: Direction,
   query: InstanceQuery

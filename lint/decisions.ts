@@ -471,6 +471,8 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/server/direct-edit/tailwind/{classes,color,copy,html-site,index,jsx-site,map,plan,units}.ts",
       "src/server/direct-edit/index.ts",
       "src/server/direct-edit/commit/index.ts",
+      "src/server/direct-edit/commit/imports.ts",
+      "src/server/components/model.ts",
       "src/server/direct-edit/{arrange-probe,arrange,batch,class-info,edit-site,follow-moves,history,image-attrs,image-find,image-source,image,imports,jsx-insert,props,replace,run-record,save-queue,structure-apply,style-scan,text-source-files,text-source,text-trace,vector-ops}.ts",
     ],
     rules: {

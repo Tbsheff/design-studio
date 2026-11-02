@@ -25,9 +25,8 @@ import {
   type SetImageResult,
 } from "../../../shared/image.js";
 import { OWNERS_MAX, OWNER_STACK_MAX } from "../../../shared/props.js";
-import { loadLibrary } from "../../components/insert-list.js";
 import type { InsertScope } from "../../components/insert.js";
-import { ownerUseSite } from "../../components/use-site.js";
+import { loadLibrary, ownerUseSite } from "../../components/model.js";
 import { DirectEditError } from "../engine/errors.js";
 import {
   patchSource,

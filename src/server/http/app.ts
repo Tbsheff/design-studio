@@ -1,5 +1,4 @@
-import { existsSync } from "node:fs";
-import { appendFile, mkdir, readFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
 
 import { Hono } from "hono";
@@ -15,19 +14,12 @@ import type {
   StructureEditResult,
   DirectEditResult,
   Project,
-  ProjectKind,
-  RunSummary,
-  RunSentRecord,
   StudioEvent,
-  TelemetrySample,
 } from "../../shared/contracts.js";
-import { nameFromPrompt } from "../../shared/folders.js";
 import {
   isStyleReplaceBody,
   type StyleReplaceResult,
 } from "../../shared/style-search.js";
-import { discoverSkills } from "../agent/index.js";
-import { searchProjects } from "../app/project-search.js";
 import { componentPreviewsFor } from "../components/preview.js";
 import { warmPropsTypes } from "../components/props-service.js";
 import { createComponentService } from "../components/thumbs.js";
@@ -55,40 +47,27 @@ import { applyStyleReplace } from "../direct-edit/replace.js";
 import { recordRunInHistory } from "../direct-edit/run-record.js";
 import { applyStructureEdit } from "../direct-edit/structure-apply.js";
 import { isDirectEditBatch, isStructureEdit } from "../direct-edit/validate.js";
-import {
-  BadRequestError,
-  ConflictError,
-  NotFoundError,
-  assertSafeId,
-} from "../store/errors.js";
+import { BadRequestError, ConflictError } from "../store/errors.js";
 import { createProjectLibrary } from "../store/project-library.js";
 import { trimListedFiles } from "../store/version-names.js";
 import { commitTweaks } from "../tweaks/commit.js";
 import { readTweaksState } from "../tweaks/store.js";
 import { registerVariationRoutes } from "../variations/routes.js";
 import { createAppContext, type AppDeps } from "./app-context.js";
+import { resolveProjectFile } from "./app-project-files.js";
+import { registerProjectsRoutes } from "./app-projects-routes.js";
 import {
-  parseJsonLines,
-  readOptional,
-  resolvePack,
-  resolveProjectFile,
-} from "./app-project-files.js";
-import {
-  APP_TELEMETRY_KINDS,
   HEARTBEAT_MS,
-  TELEMETRY_KINDS,
-  isRecord,
   optionalString,
   readBody,
   requireString,
 } from "./app-request.js";
-import { finishAttach, registerAppRoutes } from "./app-routes.js";
-import {
-  parseLevel,
-  parseRunRequest,
-  parseSettings,
-  parseStartRun,
-} from "./app-run-parse.js";
+import { registerAppRoutes } from "./app-routes.js";
+import { parseRunRequest, parseSettings } from "./app-run-parse.js";
+import { registerRunsRoutes } from "./app-runs-routes.js";
+import { registerSessionRoutes } from "./app-session-routes.js";
+import { registerStudioRoutes } from "./app-studio-routes.js";
+import { registerWorkspacesRoutes } from "./app-workspaces-routes.js";
 import { registerCanvasRoutes } from "./canvas-routes.js";
 import { registerCommentRoutes, withCommentInputs } from "./comments-routes.js";
 import { registerComponentCreateRoutes } from "./component-create-routes.js";
@@ -141,13 +120,13 @@ import { registerUsageRoutes } from "./usage-routes.js";
 export { isRunSummary };
 
 export function createApp(deps: AppDeps): Hono {
+  const ctx = createAppContext(deps);
   const {
     addParentFolder,
     allowedOrigins,
     announceCanvasAt,
     applyPackOnCreate,
     appOpen,
-    appTelemetryFile,
     bus,
     canvas,
     commandRules,
@@ -156,18 +135,14 @@ export function createApp(deps: AppDeps): Hono {
     commitInit,
     config,
     defaultFolder,
-    directionLock,
     editDeps,
     editHistory,
     emitStatus,
     findRunProject,
-    folderPicker,
     forkDirection,
     library,
     liveDrafts,
     loadDirection,
-    packs,
-    prepareCreated,
     preview,
     projects,
     recordVersion,
@@ -177,7 +152,6 @@ export function createApp(deps: AppDeps): Hono {
     startRun,
     streamTracker,
     syncPackId,
-    telemetryFile,
     thumbnails,
     uiDir,
     versionNames,
@@ -187,8 +161,7 @@ export function createApp(deps: AppDeps): Hono {
     watchTokenSources,
     withDirection,
     withTaskInputs,
-    workspaces,
-  } = createAppContext(deps);
+  } = ctx;
   const app = new Hono();
   app.onError((error, c) => {
     const reply = toErrorReply(error);
@@ -196,14 +169,7 @@ export function createApp(deps: AppDeps): Hono {
     return c.json(reply.body, reply.status);
   });
 
-  app.get("/api/session", (c) => {
-    if (c.req.header("sec-fetch-site") !== "same-origin")
-      return c.json({ error: "forbidden" }, 403);
-    return c.json({
-      token: config.studioToken,
-      previewOrigin: config.previewOrigin,
-    });
-  });
+  registerSessionRoutes(app, ctx);
 
   app.use("/api/*", async (c, next) => {
     const origin = c.req.header("origin");
@@ -221,68 +187,9 @@ export function createApp(deps: AppDeps): Hono {
     await next();
   });
 
-  app.get("/api/projects", async (c) => c.json(await projects.list()));
-  app.get("/api/project-search", async (c) =>
-    c.json(
-      await searchProjects(
-        {
-          projects,
-          appStatus: (p) => preview.apps?.status(p) ?? null,
-          runsDir,
-        },
-        {
-          query: c.req.query("q") ?? "",
-          projectId: c.req.query("project") ?? null,
-          limit: Number(c.req.query("limit") ?? 20) || 20,
-        }
-      )
-    )
-  );
+  registerProjectsRoutes(app, ctx);
 
-  app.get("/api/skills", async (c) => c.json(await discoverSkills()));
-
-  app.post("/api/projects", async (c) => {
-    const body = await readBody(c);
-    const prompt = requireString(body, "prompt");
-    const kind = (body.kind ?? "html") as ProjectKind;
-    if (kind !== "html" && kind !== "react")
-      throw new BadRequestError("kind must be html or react");
-    const settings = parseSettings(body.settings);
-    const designMd = optionalString(body, "designMd");
-    const pack = await resolvePack(packs, body.packId);
-    const level = parseLevel(body.level);
-    const shouldStartRun = parseStartRun(body.startRun);
-    const parentPath = optionalString(body, "parentPath");
-    const name = optionalString(body, "name") ?? nameFromPrompt(prompt);
-    const referenceUrls = parseReferenceUrls(
-      body.referenceUrls,
-      config.fetchAllowLoopback === true
-    );
-    const created = await projects.createInFolder({
-      parentPath: parentPath ?? (await defaultFolder.ensure()),
-      name,
-      kind,
-      settings,
-    });
-    await addParentFolder(parentPath, created);
-    await versions.ensureRepo(created);
-    const project = await prepareCreated(created, pack, designMd);
-    const main = projects.mainDirection(project);
-    watchDirection(project, main);
-    if (!shouldStartRun) return c.json({ project, runId: null });
-    const referencePages = await Promise.all(
-      referenceUrls.map((url) =>
-        captureReferencePage(url, config.fetchAllowLoopback === true)
-      )
-    );
-    const runId = await startRun(project, main, {
-      prompt,
-      mode: "edit",
-      ...(level ? { level } : {}),
-      ...(referencePages.length > 0 ? { referencePages } : {}),
-    });
-    return c.json({ project, runId });
-  });
+  registerStudioRoutes(app, ctx);
 
   const appRouteDeps = {
     projects,
@@ -296,137 +203,7 @@ export function createApp(deps: AppDeps): Hono {
   registerAppRoutes(app, appRouteDeps);
   registerFolderInspectRoutes(app, { projects, preview, readBody });
 
-  app.post("/api/projects/import", async (c) => {
-    const body = await readBody(c);
-    const appDir = optionalString(body, "appDir");
-    const imported = await projects.importFolder(requireString(body, "path"), {
-      ...(appDir ? { appDir } : {}),
-      skipApp: body.skipApp === true,
-    });
-    if (imported.app) return c.json(await finishAttach(appRouteDeps, imported));
-    await versions.ensureRepo(imported);
-    const project = await commitInit(imported);
-    watchDirection(project, projects.mainDirection(project));
-    return c.json({ project });
-  });
-
-  app.get("/api/workspaces", async (c) => c.json(await workspaces.list()));
-
-  app.post("/api/workspaces", async (c) => {
-    const body = await readBody(c);
-    return c.json(
-      await workspaces.add({
-        path: requireString(body, "path"),
-        label: optionalString(body, "label"),
-      })
-    );
-  });
-
-  app.put("/api/workspaces/default", async (c) => {
-    const body = await readBody(c);
-    const previous = await defaultFolder.current();
-    const next = await defaultFolder.set(requireString(body, "path"));
-    if (previous !== next && existsSync(previous)) {
-      await workspaces
-        .add({ path: previous })
-        .catch((error: unknown) =>
-          console.error("[http] could not keep the old default folder", error)
-        );
-    }
-    return c.json(await workspaces.list());
-  });
-
-  app.get("/api/hidden-projects", async (c) => {
-    const hidden = (await projects.list()).filter((project) =>
-      projects.isHidden(project)
-    );
-    return c.json({
-      count: hidden.length,
-      target: await defaultFolder.current(),
-    });
-  });
-
-  app.post("/api/hidden-projects/move", async (c) => {
-    const hidden = (await projects.list()).filter((project) =>
-      projects.isHidden(project)
-    );
-    const moved: string[] = [];
-    const failed: { projectId: string; error: string }[] = [];
-    if (hidden.length === 0) return c.json({ moved, failed });
-    const target = await defaultFolder.ensure();
-    for (const project of hidden) {
-      const main = projects.mainDirection(project);
-      try {
-        const updated = await directionLock(
-          `${project.id}/${main.id}`,
-          async () => {
-            if (
-              project.directions.some((direction) =>
-                runner.isRunning(project.id, direction.id)
-              )
-            )
-              throw new ConflictError("run_in_progress");
-            await preview.release(project, main);
-            const next = await projects.moveIntoFolder(project.id, target);
-            await preview.release(next, main);
-            return next;
-          }
-        );
-        bus.emit({
-          type: "direction.updated",
-          projectId: project.id,
-          directionId: main.id,
-          direction: projects.mainDirection(updated),
-        });
-        moved.push(project.id);
-      } catch (error) {
-        console.error(`[http] could not move project ${project.id}`, error);
-        failed.push({
-          projectId: project.id,
-          error: error instanceof Error ? error.message : String(error),
-        });
-      }
-    }
-    return c.json({ moved, failed });
-  });
-
-  app.patch("/api/workspaces/:id", async (c) => {
-    const body = await readBody(c);
-    return c.json(
-      await workspaces.rename(c.req.param("id"), requireString(body, "label"))
-    );
-  });
-
-  app.delete("/api/workspaces/:id", async (c) => {
-    await workspaces.remove(c.req.param("id"));
-    return c.json({ ok: true });
-  });
-
-  app.post("/api/pick-folder", async (c) => {
-    if (
-      c.req.header("sec-fetch-site") !== undefined &&
-      c.req.header("sec-fetch-site") !== "same-origin"
-    )
-      return c.json({ error: "forbidden" }, 403);
-    const body = await readBody(c);
-    const result = await folderPicker.pick({
-      title: optionalString(body, "title"),
-      defaultPath: optionalString(body, "defaultPath"),
-    });
-    if (result.status === "picked") return c.json({ path: result.path });
-    if (result.status === "canceled") return c.body(null, 204);
-    if (result.status === "unsupported")
-      return c.json(
-        { error: "the folder picker needs macOS; paste a path instead" },
-        501
-      );
-    if (result.status === "busy")
-      return c.json({ error: "a folder picker is already open" }, 409);
-    if (result.status === "timeout")
-      return c.json({ error: "the folder picker timed out" }, 504);
-    console.error("[http] folder picker failed", result.error);
-    return c.json({ error: `the folder picker failed: ${result.error}` }, 500);
-  });
+  registerWorkspacesRoutes(app, ctx);
 
   app.get("/api/projects/:pid", async (c) =>
     c.json(await projects.get(c.req.param("pid")))
@@ -912,85 +689,10 @@ export function createApp(deps: AppDeps): Hono {
     });
   });
 
-  app.get("/api/runs/:runId", async (c) => {
-    const runId = assertSafeId(c.req.param("runId"), "runId");
-    const pid = await findRunProject(runId);
-    if (pid === null) throw new NotFoundError(`run ${runId} not found`);
-    const base = path.join(runsDir(pid), runId);
-    const summaryText = await readOptional(`${base}.json`);
-    const eventsText = await readOptional(`${base}.jsonl`);
-    if (summaryText === null && eventsText === null)
-      throw new NotFoundError(`run ${runId} not found`);
-    const summary =
-      summaryText === null ? null : (JSON.parse(summaryText) as RunSummary);
-    const lines = parseJsonLines<StudioEvent | RunSentRecord>(eventsText ?? "");
-    const sent = lines.filter(
-      (line): line is RunSentRecord => line.type === "run.sent"
-    );
-    const events = lines.filter(
-      (line): line is StudioEvent => line.type !== "run.sent"
-    );
-    return c.json({ summary, events, sent });
-  });
+  registerRunsRoutes(app, ctx);
 
   registerRunControlRoutes(app, runner);
   registerRunTitleRoutes(app, { runner, findRunProject, runsDir });
-
-  app.post("/api/runs/:runId/cancel", (c) => {
-    const handle = runner.get(assertSafeId(c.req.param("runId"), "runId"));
-    if (!handle) throw new NotFoundError("run is not active");
-    handle.cancel();
-    return c.json({ ok: true });
-  });
-
-  app.post("/api/telemetry", async (c) => {
-    const body = await readBody(c);
-    const kind = body.kind as TelemetrySample["kind"];
-    if (!TELEMETRY_KINDS.has(kind))
-      throw new BadRequestError("unknown telemetry kind");
-    const projectId = APP_TELEMETRY_KINDS.has(kind)
-      ? optionalString(body, "projectId")
-      : requireString(body, "projectId");
-    if (typeof body.ms !== "number" || !Number.isFinite(body.ms))
-      throw new BadRequestError("ms must be a number");
-    if (projectId !== undefined) await projects.get(projectId);
-    const sample: TelemetrySample = {
-      kind,
-      ms: body.ms,
-      ts: typeof body.ts === "number" ? body.ts : Date.now(),
-    };
-    if (projectId !== undefined) sample.projectId = projectId;
-    const directionId = optionalString(body, "directionId");
-    if (directionId !== undefined) sample.directionId = directionId;
-    if (isRecord(body.detail)) sample.detail = body.detail;
-    const file =
-      projectId === undefined ? appTelemetryFile : telemetryFile(projectId);
-    await mkdir(path.dirname(file), { recursive: true });
-    await appendFile(file, `${JSON.stringify(sample)}\n`);
-    return c.json({ ok: true });
-  });
-
-  app.get("/api/telemetry", async (c) => {
-    const projectId = c.req.query("projectId");
-    const appOnly = c.req.query("scope") === "app";
-    const files = appOnly
-      ? [appTelemetryFile]
-      : projectId
-        ? [telemetryFile(assertSafeId(projectId, "projectId"))]
-        : [
-            appTelemetryFile,
-            ...(await projects.list()).map((project) =>
-              telemetryFile(project.id)
-            ),
-          ];
-    const samples: TelemetrySample[] = [];
-    for (const file of files) {
-      const text = await readOptional(file);
-      if (text !== null) samples.push(...parseJsonLines<TelemetrySample>(text));
-    }
-    samples.sort((a, b) => a.ts - b.ts);
-    return c.json(samples);
-  });
 
   registerExportRoutes(app, {
     projects,

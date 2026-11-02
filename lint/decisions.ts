@@ -439,23 +439,23 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/ui/features/icons/deps.ts",
       "src/ui/features/text-styles/deps.ts",
       "src/ui/features/motion/deps.ts",
-      "src/server/http/{{fill,spacing,component-variant,link-interaction,page-import,text-search,motion}-routes,app-{context,errors,project-files,request,run-parse}}.ts",
+      "src/server/http/{{fill,spacing,component-variant,link-interaction,page-import,text-search,motion}-routes,app-{context,errors,project-files,request,run-parse,*-routes}}.ts",
       "src/{ui/features/{fill,spacing,component-variant,link-interaction,page-import,text-search}/deps,bridge/play-triggers}.ts",
     ],
     rules: { "import/no-relative-parent-imports": "off" },
   },
   {
     files: [
-      "src/server/mcp/legacy/frame-target.ts",
-      "src/shared/run-target.ts",
-      "src/{server/http/spacing-routes,ui/features/spacing/spacing-bands}.ts",
+      "src/{server/mcp/legacy/frame-target,shared/run-target,server/http/spacing-routes,ui/features/spacing/spacing-bands}.ts",
     ],
     rules: { "eslint/id-length": "off" },
   },
   {
-    files: ["src/server/http/app-{context,project-files,request,run-parse}.ts"],
+    files: [
+      "src/server/http/app-{context,project-files,request,run-parse,*-routes}.ts",
+    ],
     rules: Object.fromEntries(
-      "anti-slop/no-chained-type-assertions anti-slop/no-conditional-empty-object-spread anti-slop/no-runtime-typeof anti-slop/no-unknown-parameters anti-slop/no-unsafe-dictionary-type anti-slop/require-readable-spacing eslint/func-style eslint/id-length eslint/init-declarations eslint/max-lines eslint/max-lines-per-function eslint/max-statements eslint/no-console eslint/no-continue eslint/no-empty-function eslint/no-magic-numbers eslint/no-promise-executor-return eslint/no-ternary eslint/no-undefined eslint/no-use-before-define eslint/require-unicode-regexp eslint/sort-keys github/no-then import/max-dependencies node/no-sync promise/avoid-new promise/prefer-await-to-callbacks promise/prefer-await-to-then react-doctor/server-sequential-independent-await sonarjs/elseif-without-else sonarjs/max-lines sonarjs/max-lines-per-function sonarjs/no-duplicate-string sonarjs/shorthand-property-grouping sonarjs/too-many-break-or-continue-in-loop typescript/explicit-function-return-type typescript/explicit-module-boundary-types unicorn/no-await-expression-member unicorn/no-useless-undefined"
+      "anti-slop/no-chained-type-assertions eslint/no-await-in-loop eslint/no-nested-ternary react-doctor/async-await-in-loop sonarjs/no-nested-conditional unicorn/max-nested-calls unicorn/no-nested-ternary anti-slop/no-conditional-empty-object-spread anti-slop/no-runtime-typeof anti-slop/no-unknown-parameters anti-slop/no-unsafe-dictionary-type anti-slop/require-readable-spacing eslint/func-style eslint/id-length eslint/init-declarations eslint/max-lines eslint/max-lines-per-function eslint/max-statements eslint/no-console eslint/no-continue eslint/no-empty-function eslint/no-magic-numbers eslint/no-promise-executor-return eslint/no-ternary eslint/no-undefined eslint/no-use-before-define eslint/require-unicode-regexp eslint/sort-keys github/no-then import/max-dependencies node/no-sync promise/avoid-new promise/prefer-await-to-callbacks promise/prefer-await-to-then react-doctor/server-sequential-independent-await sonarjs/elseif-without-else sonarjs/max-lines sonarjs/max-lines-per-function sonarjs/no-duplicate-string sonarjs/shorthand-property-grouping sonarjs/too-many-break-or-continue-in-loop typescript/explicit-function-return-type typescript/explicit-module-boundary-types unicorn/no-await-expression-member unicorn/no-useless-undefined"
         .split(" ")
         .map((rule) => [rule, "warn"])
     ),

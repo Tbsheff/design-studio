@@ -430,7 +430,7 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/server/mcp/fill-tools.ts",
       "src/server/agent/fill-tool.ts",
       "src/server/fill/deps.ts",
-      "src/server/{spacing/deps,mcp/spacing-tools,agent/spacing-tool,components/variant-write/deps,mcp/component-variant-tools,agent/component-variant-tool,canvas/links/link-interaction,canvas/links/link-interaction-input,canvas/links/link-target,mcp/link-interaction-tools,agent/link-interaction-tool,page-import/deps,mcp/page-import-tools,agent/page-import-tool,text-search/deps,mcp/text-search-tools,agent/text-search-tool}.ts",
+      "src/server/{design-system/model/index,design-system/ops/index,spacing/deps,mcp/spacing-tools,agent/spacing-tool,components/variant-write/deps,mcp/component-variant-tools,agent/component-variant-tool,canvas/links/link-interaction,canvas/links/link-interaction-input,canvas/links/link-target,mcp/link-interaction-tools,agent/link-interaction-tool,page-import/deps,mcp/page-import-tools,agent/page-import-tool,text-search/deps,mcp/text-search-tools,agent/text-search-tool}.ts",
       "src/server/mcp/copy-code-tools.ts",
       "src/server/agent/copy-code-tool.ts",
       "src/server/export/copy-handler.ts",
@@ -438,9 +438,8 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/server/http/text-style-routes.ts",
       "src/ui/features/icons/deps.ts",
       "src/ui/features/text-styles/deps.ts",
-      "src/server/http/motion-routes.ts",
       "src/ui/features/motion/deps.ts",
-      "src/server/http/{fill,spacing,component-variant,link-interaction,page-import,text-search}-routes.ts",
+      "src/server/http/{{fill,spacing,component-variant,link-interaction,page-import,text-search,motion}-routes,app-{context,errors,project-files,request,run-parse}}.ts",
       "src/{ui/features/{fill,spacing,component-variant,link-interaction,page-import,text-search}/deps,bridge/play-triggers}.ts",
     ],
     rules: { "import/no-relative-parent-imports": "off" },
@@ -454,15 +453,16 @@ export const decisionOverrides: OxlintOverride[] = [
     rules: { "eslint/id-length": "off" },
   },
   {
-    files: ["src/server/app/index.ts"],
-    rules: { "oxc/no-barrel-file": "off" },
+    files: ["src/server/http/app-{context,project-files,request,run-parse}.ts"],
+    rules: Object.fromEntries(
+      "anti-slop/no-chained-type-assertions anti-slop/no-conditional-empty-object-spread anti-slop/no-runtime-typeof anti-slop/no-unknown-parameters anti-slop/no-unsafe-dictionary-type anti-slop/require-readable-spacing eslint/func-style eslint/id-length eslint/init-declarations eslint/max-lines eslint/max-lines-per-function eslint/max-statements eslint/no-console eslint/no-continue eslint/no-empty-function eslint/no-magic-numbers eslint/no-promise-executor-return eslint/no-ternary eslint/no-undefined eslint/no-use-before-define eslint/require-unicode-regexp eslint/sort-keys github/no-then import/max-dependencies node/no-sync promise/avoid-new promise/prefer-await-to-callbacks promise/prefer-await-to-then react-doctor/server-sequential-independent-await sonarjs/elseif-without-else sonarjs/max-lines sonarjs/max-lines-per-function sonarjs/no-duplicate-string sonarjs/shorthand-property-grouping sonarjs/too-many-break-or-continue-in-loop typescript/explicit-function-return-type typescript/explicit-module-boundary-types unicorn/no-await-expression-member unicorn/no-useless-undefined"
+        .split(" ")
+        .map((rule) => [rule, "warn"])
+    ),
   },
   {
-    files: [
-      "src/server/design-system/model/index.ts",
-      "src/server/design-system/ops/index.ts",
-    ],
-    rules: { "import/no-relative-parent-imports": "off" },
+    files: ["src/server/app/index.ts"],
+    rules: { "oxc/no-barrel-file": "off" },
   },
   {
     files: [

@@ -117,6 +117,7 @@ export {
   scoreLines,
 } from "./reference-check.js";
 export { loadRepoContext } from "./repo-context.js";
+export { resolveRunTarget } from "./run-target.js";
 export { createSdkDriver } from "./sdk-driver.js";
 export { discoverSkills, prepareSkills } from "./skills.js";
 export { buildUserText } from "./user-message.js";

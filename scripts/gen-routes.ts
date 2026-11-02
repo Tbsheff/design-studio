@@ -438,17 +438,29 @@ const check = async (files: GeneratedFile[]): Promise<void> => {
   }
 };
 
-const { errors, files } = await buildAll();
+const runCli = async (): Promise<void> => {
+  const { errors, files } = await buildAll();
 
-for (const error of errors) {
-  process.stderr.write(`${error}\n`);
+  for (const error of errors) {
+    process.stderr.write(`${error}\n`);
+  }
+
+  if (errors.length > 0) {
+    process.exitCode = 1;
+  } else if (process.argv.includes("--check")) {
+    await check(files);
+  } else {
+    await writeAll(files);
+    process.stdout.write(`gen-routes: wrote ${files.length} files\n`);
+  }
+};
+
+const isEntry = import.meta.url === pathToFileURL(process.argv[1] ?? "").href;
+
+if (isEntry) {
+  await runCli();
 }
 
-if (errors.length > 0) {
-  process.exitCode = 1;
-} else if (process.argv.includes("--check")) {
-  await check(files);
-} else {
-  await writeAll(files);
-  process.stdout.write(`gen-routes: wrote ${files.length} files\n`);
-}
+export { buildAll, staleFiles, writeAll };
+
+export type { Build };

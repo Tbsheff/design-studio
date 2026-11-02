@@ -409,6 +409,7 @@ export const decisionOverrides: OxlintOverride[] = [
     files: [
       "src/server/agent/legacy/agent-ops.ts",
       "src/server/agent/legacy/direct-edit.ts",
+      "scripts/stamp/{names,templates,templates-ui,write}.ts",
     ],
     rules: { "import/no-relative-parent-imports": "off" },
   },

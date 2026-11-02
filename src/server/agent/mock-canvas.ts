@@ -3,7 +3,11 @@ import path from "node:path";
 
 import { CANVAS_GAP } from "../../shared/canvas-file.js";
 import { statePrefix } from "../../shared/states.js";
-import { editLinks, listLinks, type LinkProbe } from "../canvas/link-tools.js";
+import {
+  editLinks,
+  listLinks,
+  type LinkProbe,
+} from "../canvas/links/link-tools.js";
 import type { CanvasService } from "../canvas/service.js";
 import {
   canvasList,

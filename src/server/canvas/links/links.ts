@@ -1,27 +1,22 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-import type { CanvasWriteSource, Project } from "../../shared/contracts.js";
+import type { Project } from "../../../shared/contracts.js";
 import {
   emptyLinksFile,
   LINKS_FILE,
   parseLinksText,
   serializeLinksFile,
   type LinksFile,
-} from "../../shared/links.js";
-import { createKeyedMutex } from "../store/mutex.js";
-import type { EventBus } from "../types.js";
-import { canvasOwner, writeAtomic } from "./service.js";
-
-export interface LinksService {
-  read(project: Project): Promise<LinksFile>;
-  update(
-    project: Project,
-    change: (file: LinksFile) => LinksFile | null,
-    source: CanvasWriteSource
-  ): Promise<LinksFile>;
-  announce(project: Project): Promise<void>;
-}
+} from "../../../shared/links.js";
+import { createKeyedMutex } from "../../store/mutex.js";
+import type { EventBus } from "../../types.js";
+import {
+  canvasOwner,
+  writeAtomic,
+  type LinksService,
+  type LinksWritten,
+} from "../service.js";
 
 export function linksPath(workTree: string): string {
   return path.join(workTree, ...LINKS_FILE.split("/"));
@@ -32,13 +27,6 @@ export async function readLinksAt(workTree: string): Promise<LinksFile> {
 
   return (text === null ? null : parseLinksText(text)) ?? emptyLinksFile();
 }
-
-export type LinksWritten = (
-  project: Project,
-  before: LinksFile,
-  after: LinksFile,
-  source: CanvasWriteSource
-) => void;
 
 export function createLinksService(
   bus: EventBus,

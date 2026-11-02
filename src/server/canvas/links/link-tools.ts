@@ -1,8 +1,8 @@
 import { z } from "zod";
 
-import type { CanvasFileFrame } from "../../shared/canvas-file.js";
-import type { Direction, Project } from "../../shared/contracts.js";
-import { withFrameStateHost } from "../../shared/frame-state.js";
+import type { CanvasFileFrame } from "../../../shared/canvas-file.js";
+import type { Direction, Project } from "../../../shared/contracts.js";
+import { withFrameStateHost } from "../../../shared/frame-state.js";
 import {
   cleanLinkSelector,
   cleanLinkText,
@@ -29,13 +29,19 @@ import {
   type LinksFile,
   type LinkTransition,
   type PrototypeLink,
-} from "../../shared/links.js";
-import { configuredFrameStates } from "../app/frame-state-service.js";
-import { frameStatesView } from "../app/frame-state.js";
-import { waitForPage } from "../export/capture.js";
-import { withPagePath } from "../export/source.js";
-import type { RenderPage } from "../preview/render-backend.js";
-import type { PreviewService } from "../types.js";
+} from "../../../shared/links.js";
+import { frameStatesView } from "../../app/frame-state.js";
+import { waitForPage } from "../../export/capture.js";
+import { withPagePath } from "../../export/source.js";
+import type { RenderPage } from "../../preview/render-backend.js";
+import type { PreviewService } from "../../types.js";
+import { configuredFrameStates } from "../app-flow/frame-state-service.js";
+import {
+  findFrame,
+  frameRef,
+  type CanvasToolContext,
+  type ToolText,
+} from "../tools.js";
 import { clickProbeScript } from "./click-probe.js";
 import {
   implicitLinks,
@@ -45,12 +51,6 @@ import {
   type ImplicitDeps,
   type PageAnchor,
 } from "./implicit-links.js";
-import {
-  findFrame,
-  frameRef,
-  type CanvasToolContext,
-  type ToolText,
-} from "./tools.js";
 
 export const BACK_REF = "back";
 

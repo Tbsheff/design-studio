@@ -9,7 +9,7 @@ import {
   probeWithPreview,
   removeLink,
   setStartFrame,
-} from "../canvas/link-tools.js";
+} from "../canvas/links/link-tools.js";
 import { frameRef, type CanvasToolContext } from "../canvas/tools.js";
 import {
   EditError,

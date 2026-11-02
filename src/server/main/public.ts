@@ -5,7 +5,7 @@ import { serve } from "@hono/node-server";
 
 import type { StudioEvent } from "../../shared/contracts.js";
 import { createAgentRunner } from "../agent/index.js";
-import { createCanvasService } from "../canvas/service.js";
+import { createCanvasService } from "../canvas/index.js";
 import { followSourceMoves } from "../direct-edit/follow-moves.js";
 import { withSaveQueue } from "../direct-edit/save-queue.js";
 import { openEventBus } from "../events/index.js";

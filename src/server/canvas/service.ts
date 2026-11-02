@@ -16,12 +16,34 @@ import type {
   LegacyCanvasNotice,
   Project,
 } from "../../shared/contracts.js";
+import type { LinksFile } from "../../shared/links.js";
 import { writeAtomic as platformWriteAtomic } from "../platform/atomic-write/index.js";
 import { ConflictError } from "../store/errors.js";
 import { createKeyedMutex } from "../store/mutex.js";
 import type { EventBus } from "../types.js";
 import type { LayoutListener } from "./layout-history.js";
-import { createLinksService, type LinksService } from "./links.js";
+
+export interface LinksService {
+  read: (project: Project) => Promise<LinksFile>;
+  update: (
+    project: Project,
+    change: (file: LinksFile) => LinksFile | null,
+    source: CanvasWriteSource
+  ) => Promise<LinksFile>;
+  announce: (project: Project) => Promise<void>;
+}
+
+export type LinksWritten = (
+  project: Project,
+  before: LinksFile,
+  after: LinksFile,
+  source: CanvasWriteSource
+) => void;
+
+export type LinksFactory = (
+  bus: EventBus,
+  written?: LinksWritten
+) => LinksService;
 
 export interface CanvasSnapshot {
   canvas: CanvasFile | null;
@@ -182,8 +204,9 @@ export async function writeAtomic(target: string, text: string): Promise<void> {
   });
 }
 
-export function createCanvasService(
+export function createCanvasCore(
   bus: EventBus,
+  createLinksService: LinksFactory,
   projectDir: ProjectDirOf | null = null
 ): CanvasService {
   const lock = createKeyedMutex();

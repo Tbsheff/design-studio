@@ -19,8 +19,8 @@ import {
   implicitLinks,
   keepImplicit,
   type ImplicitDeps,
-} from "../canvas/implicit-links.js";
-import { implicitDeps, probeWithPreview } from "../canvas/link-tools.js";
+} from "../canvas/links/implicit-links.js";
+import { implicitDeps, probeWithPreview } from "../canvas/links/link-tools.js";
 import type { CanvasService } from "../canvas/service.js";
 import { BadRequestError, NotFoundError } from "../store/errors.js";
 import type { StudioProjectStore } from "../store/projects.js";

@@ -8,7 +8,7 @@ import type {
   SelectionContext,
 } from "../../shared/contracts.js";
 import { levelOf } from "../../shared/run-levels.js";
-import { probeWithPreview } from "../canvas/link-tools.js";
+import { probeWithPreview } from "../canvas/links/link-tools.js";
 import type { CanvasService } from "../canvas/service.js";
 import { checkPathInside } from "../platform/paths/index.js";
 import { MOCK_TWEAKS_TAG, runMockTweaks } from "../tweaks/mock-tweaks.js";

@@ -1,4 +1,4 @@
-import { LINK_TEXT_MAX } from "../../shared/links.js";
+import { LINK_TEXT_MAX } from "../../../shared/links.js";
 
 const CLICK_MAX = 30;
 

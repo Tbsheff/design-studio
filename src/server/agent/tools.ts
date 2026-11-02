@@ -39,7 +39,7 @@ import {
   probeWithPreview,
   type EditLinksArgs,
   type LinkProbe,
-} from "../canvas/link-tools.js";
+} from "../canvas/links/link-tools.js";
 import type { CanvasService } from "../canvas/service.js";
 import {
   canvasList,

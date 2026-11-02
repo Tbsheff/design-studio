@@ -32,6 +32,8 @@ import { warmComponentUsage } from "./usage-scope.js";
 import type { ViteManager, ViteTarget } from "./vite-manager.js";
 import { WatcherManager } from "./watcher.js";
 
+export type { PreviewService } from "../types.js";
+
 export { loadBridgeScript } from "./bridge-bundle.js";
 
 export { BrowserPool, elementClipsExpression, planTiles } from "./browser.js";

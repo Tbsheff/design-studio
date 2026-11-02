@@ -11,12 +11,12 @@ import { withSaveQueue } from "../direct-edit/save-queue.js";
 import { openEventBus } from "../events/index.js";
 import type { EventBus, FlushableEventBus } from "../events/index.js";
 import { createApp } from "../http/app.js";
+import { pageProbe } from "../page-probe/index.js";
 import { loadConfig } from "../platform/config/index.js";
 import type { ServerConfig } from "../platform/config/index.js";
 import { acquireDataLock } from "../platform/data-lock/index.js";
 import { logError, logInfo } from "../platform/logger/index.js";
-import { loadBridgeScript } from "../preview/bridge-bundle.js";
-import { createPreviewService } from "../preview/index.js";
+import { createPreviewService, loadBridgeScript } from "../preview/index.js";
 import { createCommentStore } from "../store/comments.js";
 import { createVersionStore } from "../store/versions.js";
 import { desktopSender, linkDesktop } from "./desktop-link.js";
@@ -176,6 +176,7 @@ const buildApp = (
   const comments = createCommentStore(config.dataDir, bus);
 
   followSourceMoves(comments);
+  pageProbe.start();
 
   const runner = createAgentRunner({
     bus,

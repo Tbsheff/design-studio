@@ -7,6 +7,7 @@ import { warmKit } from "../components/props-service.js";
 import type { EditHistory } from "../direct-edit/history.js";
 import type { EditRecorder } from "../direct-edit/index.js";
 import type { ExportDeps } from "../export/source.js";
+import { EditError } from "../page-probe/edit-error.js";
 import type { AgentRunner, EventBus } from "../types.js";
 import type { ActivityLog } from "./activity.js";
 import { APPROVAL_TIMEOUT_MS } from "./approvals.js";
@@ -26,14 +27,7 @@ export interface EditDeps extends ExportDeps {
   history?: EditRecorder & Partial<Pick<EditHistory, "mark" | "dropUnsaved">>;
 }
 
-export class EditError extends Error {
-  constructor(
-    message: string,
-    readonly code: string | null = null
-  ) {
-    super(message);
-  }
-}
+export { EditError } from "../page-probe/edit-error.js";
 
 export const RUN_BUSY =
   "A studio run is editing this design. Try again when it finishes.";

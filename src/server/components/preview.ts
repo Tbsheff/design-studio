@@ -33,6 +33,7 @@ export interface PreviewTarget {
   id?: string | undefined;
   name?: string | undefined;
   file?: string | undefined;
+  props?: Record<string, PropValue> | undefined;
 }
 
 export interface PreviewComponent {
@@ -262,7 +263,8 @@ function sampleChildren(
 async function sampleTree(
   workTree: string,
   entry: LibraryEntry,
-  entries: LibraryEntry[]
+  entries: LibraryEntry[],
+  given: Record<string, PropValue> = {}
 ): Promise<{
   tree: SampleNode;
   props: Record<string, PropValue>;
@@ -272,7 +274,7 @@ async function sampleTree(
     file: entry.absolute,
     name: entry.local,
   }).catch(() => null);
-  const props = propsFor(schema, {});
+  const props = propsFor(schema, given);
   const exportName = entry.kind === "default" ? "default" : entry.name;
   if (!entry.children)
     return { tree: { exportName, props, children: [] }, props, text: null };
@@ -477,7 +479,8 @@ export function createComponentPreviews(deps: {
       const sample = await sampleTree(
         direction.workTree,
         entry,
-        library.entries
+        library.entries,
+        target.props
       );
       const hash = createHash("sha256")
         .update(

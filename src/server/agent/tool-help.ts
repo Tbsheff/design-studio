@@ -116,6 +116,10 @@ export const TOOL_SHORT = {
     "Read only. Render one library component alone with default props, as an image.",
   create_component:
     "Turn one element into a reusable React component file with inferred props and cva variants, and use it at the old place.",
+  create_component_variant:
+    "Add a value (or a new key) to the cva variants map of one kit component, with classes or a copy of a value; returns a preview.",
+  update_component_variant:
+    "Rename a cva variant value of one kit component, replace its classes, or make it the default; returns a preview.",
   swap_instance:
     "Replace one component instance with another library component, keeping matching props.",
   export_frame:
@@ -230,6 +234,10 @@ export const TOOL_HELP: Record<
   component_preview:
     "Read only. Render one component of the project library alone with its default props, with the same server code as the studio Components panel tiles and the MCP component_preview tool, and see it as an image. Use it to check what a kit component looks like before you use it. Components that need data, server code or an open state return the reason.",
   create_component: CREATE_COMPONENT_AGENT_DESCRIPTION,
+  create_component_variant:
+    "Add a value to the cva() variants map of one kit component with the same server code as the MCP create_component_variant tool. Pass name (from list_components) or file, key (variant, size or another key), value, and classes; copyFrom starts from an existing value of the key, and classes then replace the ones of the same utility. newKey: true adds a key that does not exist, with this value as its default. setDefault: true also sets defaultVariants. Only the cva() call changes. It refuses a component with no cva(). You get the value list and a preview image of the new value.",
+  update_component_variant:
+    "Change one value of the cva() variants map of one kit component with the same server code as the MCP update_component_variant tool. rename gives the value a new name (defaultVariants and compoundVariants follow; page uses of the old name do not), classes replaces all of its classes, and setDefault: true makes it the default. Only the cva() call changes. You get the value list and a preview image.",
   swap_instance: SWAP_INSTANCE_AGENT_DESCRIPTION,
   export_frame: EXPORT_FRAME_AGENT_DESCRIPTION,
   set_image: SET_IMAGE_AGENT_DESCRIPTION,

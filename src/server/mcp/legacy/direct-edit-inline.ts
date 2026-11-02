@@ -1,3 +1,4 @@
+import { COMPONENT_VARIANT_TOOLS } from "../component-variant-tools.js";
 import { defineTool } from "../edit-kit.js";
 import type { ToolSpec } from "../edit-kit.js";
 import { FILL_TOOLS } from "../fill-tools.js";
@@ -54,6 +55,7 @@ const DIRECT_EDIT_INLINE_TOOLS: ToolSpec[] = [
   ...MOTION_TOOLS,
   ...FILL_TOOLS,
   ...SPACING_TOOLS,
+  ...COMPONENT_VARIANT_TOOLS,
 ];
 
 export { DIRECT_EDIT_INLINE_TOOLS };

@@ -12,7 +12,7 @@ Fast path for a new action (lands with S4s): `pnpm run new:action ...`, fill the
 
 ## 0. Naming
 
-The rules are in `.claude/goal/patterns/naming.md` (D44). One word means one thing. Never use a synonym.
+The rules are in `docs/naming.md` (D44). One word means one thing. Never use a synonym.
 
 | Word | Means | Never |
 |---|---|---|

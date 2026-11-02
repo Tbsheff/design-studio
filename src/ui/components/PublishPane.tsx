@@ -10,11 +10,10 @@ import {
   type PublishExpiryDays,
   type PublishKind,
   type PublishPlan,
-  type PublishPlanInput,
 } from "../../shared/publish";
 import { errorText } from "../api";
 import { canvasFrameChoices } from "../exportApi";
-import { publishApi } from "../publishApi";
+import { publishApi, type PublishRequest } from "../publishApi";
 import { canvasFrameName } from "./CanvasFrames";
 import { CopyButton } from "./CopyButton";
 import { PublicationRow } from "./PublicationRow";
@@ -313,13 +312,13 @@ function PlanView({ plan }: { plan: PublishPlan }) {
   );
 }
 
-function planInputOf(target: PublishTarget, form: FormState): PublishPlanInput {
+function planInputOf(target: PublishTarget, form: FormState): PublishRequest {
   const frames = canvasFrameChoices(
     target.projectId,
     target.directionId
   ).filter((f) => form.picked.has(f.id));
 
-  const input: PublishPlanInput = {
+  const input: PublishRequest = {
     versionId: target.versionId ?? undefined,
     expiresInDays: form.expiry,
     viewerComments: form.viewerComments,
@@ -333,8 +332,7 @@ function planInputOf(target: PublishTarget, form: FormState): PublishPlanInput {
 
   if (target.kind === "viewer") {
     Object.assign(input, {
-      frames: frames.map((f) => f.frame),
-      frameIds: frames.map((f) => f.id),
+      frames: frames.map((f) => f.id),
       comments: form.comments,
     });
   }
@@ -364,6 +362,7 @@ function formError(target: PublishTarget, form: FormState): string | null {
 function usePublishFlow(target: PublishTarget) {
   const pubs = usePublications(target.projectId);
   const [plan, setPlan] = useState<PublishPlan | null>(null);
+  const [asked, setAsked] = useState<PublishRequest | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<Publication | null>(null);
@@ -381,18 +380,19 @@ function usePublishFlow(target: PublishTarget) {
     }
   };
 
-  const check = (input: PublishPlanInput) =>
-    act("Checking…", async () =>
-      setPlan(await publishApi.plan(target.projectId, input))
-    );
+  const check = (input: PublishRequest) =>
+    act("Checking…", async () => {
+      setPlan(await publishApi.plan(target.projectId, input));
+      setAsked(input);
+    });
 
   const confirm = () =>
     act("Publishing…", async () => {
-      if (!plan) {
+      if (!plan || !asked) {
         return;
       }
 
-      const made = await publishApi.publish(target.projectId, plan.id);
+      const made = await publishApi.publish(target.projectId, asked);
       setPlan(null);
       setDone(made.publication);
       await pubs.reload();

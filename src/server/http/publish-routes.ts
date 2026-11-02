@@ -1,6 +1,9 @@
+import { Schema } from "effect";
 import type { Context, Hono } from "hono";
 
-import type { PublishPlanInput } from "../../shared/publish.js";
+import { publishPublish } from "../../shared/actions/publish/publish.js";
+import { linkLegacy, planFor } from "../publish/legacy-link.js";
+import { toPlanInput } from "../publish/plan-input.js";
 import {
   createPublishService,
   type PublishDeps,
@@ -8,56 +11,20 @@ import {
 } from "../publish/service.js";
 import { assertSafeId, BadRequestError } from "../store/errors.js";
 
+const decodePlanBody = Schema.decodeUnknownPromise(publishPublish.input, {
+  onExcessProperty: "error",
+});
+
+const toDecodedPlan = async (raw: Record<string, unknown>) => {
+  try {
+    return await decodePlanBody(raw);
+  } catch (error) {
+    throw new BadRequestError(String(error));
+  }
+};
+
 export interface PublishRouteDeps extends PublishDeps {
   readBody: (c: Context) => Promise<Record<string, unknown>>;
-}
-
-const STRINGS = [
-  "directionId",
-  "versionId",
-  "title",
-  "password",
-  "publicationId",
-] as const;
-
-const BOOLEANS = [
-  "keepPassword",
-  "comments",
-  "viewerComments",
-  "noindex",
-] as const;
-
-function planInput(raw: Record<string, unknown>): PublishPlanInput {
-  const input: PublishPlanInput = {};
-
-  for (const key of STRINGS) {
-    if (typeof raw[key] === "string") {
-      input[key] = raw[key];
-    }
-  }
-
-  for (const key of BOOLEANS) {
-    if (typeof raw[key] === "boolean") {
-      input[key] = raw[key];
-    }
-  }
-
-  if (Array.isArray(raw.frames)) {
-    input.frames = raw.frames as PublishPlanInput["frames"];
-  }
-
-  if (Array.isArray(raw.frameIds)) {
-    input.frameIds = raw.frameIds.filter(
-      (id): id is string => typeof id === "string"
-    );
-  }
-
-  if (typeof raw.expiresInDays === "number") {
-    input.expiresInDays =
-      raw.expiresInDays as PublishPlanInput["expiresInDays"];
-  }
-
-  return input;
 }
 
 function registerSetupRoutes(
@@ -107,56 +74,16 @@ export function registerPublishRoutes(
 ): PublishService {
   const service = createPublishService(deps);
   registerSetupRoutes(app, deps, service);
+  const link = linkLegacy(deps, service);
 
-  const pidOf = (c: Context) =>
-    assertSafeId(c.req.param("pid") ?? "", "projectId");
-
-  app.post("/api/projects/:pid/publish/plan", async (c) =>
-    c.json(await service.plan(pidOf(c), planInput(await deps.readBody(c))))
-  );
-
-  app.post("/api/projects/:pid/publish", async (c) => {
+  app.post("/api/projects/:pid/publish/plan", async (c) => {
+    const projectId = assertSafeId(c.req.param("pid") ?? "", "projectId");
     const body = await deps.readBody(c);
+    const input = await toDecodedPlan({ ...body, projectId });
 
-    if (typeof body.planId !== "string") {
-      throw new BadRequestError("planId is required");
-    }
-
-    return c.json({
-      publication: await service.publish(pidOf(c), body.planId),
-    });
-  });
-
-  app.delete("/api/projects/:pid/publications/:id", async (c) =>
-    c.json({
-      publication: await service.unpublish(pidOf(c), c.req.param("id")),
-    })
-  );
-
-  app.post("/api/projects/:pid/publications/:id/rollback", async (c) => {
-    const body = await deps.readBody(c);
-
-    if (typeof body.versionId !== "string") {
-      throw new BadRequestError("versionId is required");
-    }
-
-    return c.json({
-      publication: await service.rollback(
-        pidOf(c),
-        c.req.param("id"),
-        body.versionId
-      ),
-    });
-  });
-
-  app.delete("/api/projects/:pid/publications/:id/comments/:cid", async (c) => {
-    await service.deleteComment(
-      pidOf(c),
-      c.req.param("id"),
-      c.req.param("cid")
+    return c.json(
+      await planFor(link, projectId, await toPlanInput(link, input))
     );
-
-    return c.json({ ok: true });
   });
 
   return service;

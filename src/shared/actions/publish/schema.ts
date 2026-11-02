@@ -142,6 +142,114 @@ const PublishBackendStateSchema = Schema.Struct({
 
 const QueryFlagSchema = Schema.optionalKey(Schema.String);
 
+const NO_END_DAYS = 0;
+
+const DAY = 1;
+
+const WEEK_DAYS = 7;
+
+const MONTH_DAYS = 30;
+
+const SAFE_ID = /^[A-Za-z0-9_-]{1,64}$/u;
+
+const toIdField = (description: string): Schema.String =>
+  Schema.String.check(Schema.isPattern(SAFE_ID)).annotate({ description });
+
+const FRAME_REF_MAX = 80;
+
+const FRAMES_MAX = 12;
+
+const TITLE_MAX = 120;
+
+const PASSWORD_MIN = 8;
+
+const PASSWORD_MAX = 128;
+
+const PublishFramesSchema = Schema.Array(
+  Schema.String.check(Schema.isMinLength(1), Schema.isMaxLength(FRAME_REF_MAX))
+)
+  .check(Schema.isMinLength(1), Schema.isMaxLength(FRAMES_MAX))
+  .annotate({
+    description:
+      "Attached app or React project only: frame ids or @labels from canvas_list to show. Leave out for every visible frame of the direction.",
+  });
+
+const ExpiryDaysSchema = Schema.Literals([
+  NO_END_DAYS,
+  DAY,
+  WEEK_DAYS,
+  MONTH_DAYS,
+]).annotate({
+  description:
+    "Days until the link stops working: 1, 7 or 30, or 0 for no end date. Default 7 for a new publication; a republish keeps the old end date.",
+});
+
+const PublishInputFields = {
+  comments: Schema.optionalKey(
+    Schema.Boolean.annotate({
+      description:
+        "Attached app or React project only: show the open comments next to the frames as read-only text.",
+    })
+  ),
+  directionId: Schema.optionalKey(
+    toIdField("Direction id. Leave out for the main direction.")
+  ),
+  expiresInDays: Schema.optionalKey(ExpiryDaysSchema),
+  frames: Schema.optionalKey(PublishFramesSchema),
+  noindex: Schema.optionalKey(
+    Schema.Boolean.annotate({
+      description: "Send noindex so search engines skip it. Default true.",
+    })
+  ),
+  password: Schema.optionalKey(
+    Schema.String.check(
+      Schema.isMinCodePoints(PASSWORD_MIN),
+      Schema.isMaxCodePoints(PASSWORD_MAX)
+    ).annotate({
+      description:
+        "Password viewers must type (HTTP Basic, any user name). Only a salted hash goes into the Worker; the reply never repeats it. Leave out for no password, or to keep the password of the publication you republish.",
+    })
+  ),
+  projectId: ListProjectIdSchema,
+  publicationId: Schema.optionalKey(
+    toIdField(
+      "Publication id from list_publications to republish into the same URL."
+    )
+  ),
+  title: Schema.optionalKey(
+    Schema.String.check(Schema.isMaxLength(TITLE_MAX)).annotate({
+      description:
+        "Title on the published viewer. Leave out for the project name.",
+    })
+  ),
+  versionId: Schema.optionalKey(
+    toIdField(
+      "Saved version id from list_versions. Leave out for the head version."
+    )
+  ),
+  viewerComments: Schema.optionalKey(
+    Schema.Boolean.annotate({
+      description:
+        "Let viewers leave comments on a comments page (rate limited, owner can delete). Leave out for off on a new publication; a republish keeps the old value.",
+    })
+  ),
+};
+
+const PublishInputSchema = Schema.Struct(PublishInputFields);
+
+const PublicationTargetFields = {
+  projectId: ListProjectIdSchema,
+  publicationId: toIdField("Publication id from list_publications."),
+};
+
+const PublicationResultSchema = Schema.Struct({
+  publication: PublicationSchema,
+});
+
+const DeletedSchema = Schema.Struct({ ok: Schema.Literal(true) });
+
+type PublishInput = typeof PublishInputSchema.Type;
+
 type PublicationList = typeof PublicationListSchema.Type;
 
 type PublicationCommentList = typeof PublicationCommentListSchema.Type;
@@ -151,7 +259,13 @@ type PublishCliState = typeof PublishCliStateSchema.Type;
 type PublishBackendState = typeof PublishBackendStateSchema.Type;
 
 export {
+  DeletedSchema,
   ListProjectIdSchema,
+  PublicationResultSchema,
+  PublicationTargetFields,
+  PublishInputFields,
+  PublishInputSchema,
+  toIdField,
   PublicationCommentListSchema,
   PublicationCommentSchema,
   PublicationListSchema,
@@ -166,4 +280,5 @@ export type {
   PublicationList,
   PublishBackendState,
   PublishCliState,
+  PublishInput,
 };

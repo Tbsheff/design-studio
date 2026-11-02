@@ -4,12 +4,15 @@ import type { Cause } from "effect";
 import { BadRequest } from "../../shared/actions/_core/errors/bad-request.js";
 import { NotFound } from "../../shared/actions/_core/errors/not-found.js";
 import type { CfFailed } from "../../shared/actions/publish/errors/cf-failed.js";
+import type { PublishInput } from "../../shared/actions/publish/schema.js";
 import type { Publication } from "../../shared/publish.js";
 import { loadConfig } from "../platform/config/index.js";
 import { NotFoundError } from "../store/errors.js";
 import { CfCli } from "./cf-cli.js";
 import type { CfCliApi } from "./cf-cli.js";
 import { cliEnv, cliFailure, DEFAULT_TIMEOUT_MS } from "./cli.js";
+import { attemptLegacy, planFor, takePlan } from "./legacy-link.js";
+import { toPlanInput } from "./plan-input.js";
 import { toPublishCore } from "./publish-core.js";
 import type { PublishCore } from "./publish-core.js";
 import { remoteClient, studioErrors } from "./remote.js";
@@ -27,6 +30,9 @@ interface PublishServiceApi {
     publicationId: string,
     commentId: string
   ) => Effect.Effect<void, WriteError>;
+  readonly publish: (
+    input: PublishInput
+  ) => Effect.Effect<Publication, BadRequest | NotFound>;
   readonly rollback: (
     projectId: string,
     publicationId: string,
@@ -171,6 +177,18 @@ const makeApi = (cf: CfCliApi): PublishServiceApi => ({
         commentId
       )
     );
+  }),
+  publish: Effect.fn("PublishService.publish")(function* run(
+    input: PublishInput
+  ) {
+    return yield* attemptLegacy(async (link) => {
+      const planInput = await toPlanInput(link, input);
+      const held = await planFor(link, input.projectId, planInput);
+
+      takePlan(link, input.projectId, planInput);
+
+      return link.service.publish(input.projectId, held.id);
+    });
   }),
   rollback: Effect.fn("PublishService.rollback")(function* run(
     projectId: string,

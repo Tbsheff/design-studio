@@ -1,5 +1,11 @@
 // @generated
 const routes = {
+  deleteCommentPublish: {
+    id: "publish.deleteComment",
+    invalidates: ["publish.listComments", "publish.list"],
+    method: "DELETE",
+    path: "/api/projects/:projectId/publications/:publicationId/comments/:commentId",
+  },
   getPublish: {
     id: "publish.get",
     invalidates: [],
@@ -23,6 +29,24 @@ const routes = {
     invalidates: [],
     method: "GET",
     path: "/api/projects/:projectId/publications",
+  },
+  publishPublish: {
+    id: "publish.publish",
+    invalidates: ["publish.list"],
+    method: "POST",
+    path: "/api/projects/:projectId/publish",
+  },
+  restorePublish: {
+    id: "publish.restore",
+    invalidates: ["publish.list"],
+    method: "POST",
+    path: "/api/projects/:projectId/publications/:publicationId/rollback",
+  },
+  unpublishPublish: {
+    id: "publish.unpublish",
+    invalidates: ["publish.list"],
+    method: "DELETE",
+    path: "/api/projects/:projectId/publications/:publicationId",
   },
 } as const;
 

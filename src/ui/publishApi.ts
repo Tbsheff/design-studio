@@ -14,6 +14,10 @@ const base = (pid: string) => `/api/projects/${encodeURIComponent(pid)}`;
 const pub = (pid: string, id: string) =>
   `${base(pid)}/publications/${encodeURIComponent(id)}`;
 
+type PublishRequest = Omit<PublishPlanInput, "frameIds" | "frames"> & {
+  frames?: string[];
+};
+
 export const publishApi = {
   cli: (fresh = false) =>
     json<PublishCliState>("GET", `/api/publish/cli${fresh ? "?fresh=1" : ""}`),
@@ -32,12 +36,10 @@ export const publishApi = {
     json<PublishBackendState>("POST", "/api/publish/backend/setup", { mode }),
   list: (pid: string) =>
     json<PublicationList>("GET", `${base(pid)}/publications`),
-  plan: (pid: string, input: PublishPlanInput) =>
+  plan: (pid: string, input: PublishRequest) =>
     json<PublishPlan>("POST", `${base(pid)}/publish/plan`, input),
-  publish: (pid: string, planId: string) =>
-    json<{ publication: Publication }>("POST", `${base(pid)}/publish`, {
-      planId,
-    }),
+  publish: (pid: string, input: PublishRequest) =>
+    json<{ publication: Publication }>("POST", `${base(pid)}/publish`, input),
   unpublish: (pid: string, id: string) =>
     json<{ publication: Publication }>("DELETE", pub(pid, id)),
   rollback: (pid: string, id: string, versionId: string) =>
@@ -52,3 +54,5 @@ export const publishApi = {
       `${pub(pid, id)}/comments/${encodeURIComponent(cid)}`
     ),
 };
+
+export type { PublishRequest };

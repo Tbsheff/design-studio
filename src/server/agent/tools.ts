@@ -14,6 +14,7 @@ import {
   withRunTask,
   type ResolvedRunConfig,
 } from "../../shared/run-levels.js";
+import { AGENT_OPS, buildAgentTools } from "../agent-tools/registry.js";
 import {
   FRAME_STATES_NOTE,
   applyFrameSession,
@@ -51,6 +52,8 @@ import {
 } from "../canvas/tools.js";
 import { checkDesignSystem, describeCheck } from "../design-system/check.js";
 import { prepareShip } from "../git/ship-prepare.js";
+import type { StudioRuntime } from "../main/runtime.js";
+import { actionCaller } from "../mcp/registry.js";
 import type { TileResult } from "../preview/browser.js";
 import { reviewFrameShape, runReviewFrameTool } from "../review/agent-tool.js";
 import type { CommentStore } from "../store/comments.js";
@@ -168,7 +171,6 @@ import {
   runSetLayerState,
 } from "./layer-state-tool.js";
 import { isLeanRun } from "./lean-run.js";
-import { AGENT_OPS } from "./legacy/agent-ops.js";
 import {
   listLinkInteractionsInput,
   runListLinkInteractions,
@@ -324,6 +326,7 @@ export interface StudioToolDeps {
   layerLocks?: LayerLockStore | null;
   frameStates?: FrameStateDeps | null;
   exportsDir?: string;
+  runtime?: StudioRuntime | null | undefined;
 }
 
 const CANVAS_OFF = "The canvas is not available in this run.";
@@ -1853,6 +1856,7 @@ export async function createStudioMcpServer(
     compareReferenceTool,
     figmaImportTool,
     helpTool,
+    ...buildAgentTools(actionCaller(deps.runtime), tool),
   ];
 
   return createSdkMcpServer({

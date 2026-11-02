@@ -31,6 +31,7 @@ import { SHARE_LEGACY_TOOLS } from "./legacy/share.js";
 import { SHIP_LEGACY_TOOLS } from "./legacy/ship.js";
 import { STUDIO_LEGACY_TOOLS } from "./legacy/studio.js";
 import { VERSIONS_LEGACY_TOOLS } from "./legacy/versions.js";
+import { ACTION_EDIT_TOOLS } from "./registry.js";
 import type { ToolDef, ToolResult } from "./tools.js";
 
 const LEGACY_TOOLS: ToolSpec[] = [
@@ -134,9 +135,10 @@ function toolDef(name: string, schema: z.ZodType, meta: Meta): ToolDef {
   };
 }
 
-export const EDIT_TOOLS: ToolDef[] = ORDERED_TOOLS.map((tool) =>
-  toolDef(tool.name, tool.schema, tool.meta)
-);
+export const EDIT_TOOLS: ToolDef[] = [
+  ...ORDERED_TOOLS.map((tool) => toolDef(tool.name, tool.schema, tool.meta)),
+  ...ACTION_EDIT_TOOLS,
+];
 
 export const EDIT_NAMES = new Set<string>(TOOLS_BY_NAME.keys());
 

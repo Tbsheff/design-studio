@@ -196,6 +196,7 @@ const buildApp = (
     layerLocks,
     preview,
     projects,
+    runtime,
     versions,
   });
 

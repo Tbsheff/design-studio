@@ -28,6 +28,7 @@ const registerAppMcpRoutes = (
     preview,
     projects,
     runner,
+    runtime,
     streamTracker,
     versions,
   } = ctx;
@@ -44,6 +45,7 @@ const registerAppMcpRoutes = (
     projectsFolder: () => defaultFolder.ensure(),
     appOpen,
     history: editHistory,
+    runtime,
   });
   slot.routes = mcpRoutes;
   registerStreamRoutes(app, {

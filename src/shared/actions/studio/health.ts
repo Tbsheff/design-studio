@@ -4,7 +4,13 @@ import { defineAction } from "../_core/action.js";
 
 const healthStudio = defineAction({
   access: "read",
-  agent: { off: "ui-bootstrap" },
+  agent: {
+    lean: false,
+    name: "get_studio_health",
+    set: "core",
+    short:
+      "Get the health of the local studio server: ok, app version and preview origin.",
+  },
   confirm: "none",
   description:
     "Get the health of the local studio server. It returns the app version and the preview origin. It does not return a secret.",

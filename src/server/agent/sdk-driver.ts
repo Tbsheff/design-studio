@@ -23,6 +23,7 @@ import {
 import type { FrameStateDeps } from "../canvas/app-flow/frame-state-service.js";
 import type { CanvasService } from "../canvas/service.js";
 import { SOURCE_DIR } from "../design-system/extract/draft.js";
+import type { StudioRuntime } from "../main/runtime.js";
 import { buildEnv } from "../platform/config/index.js";
 import type { CommentStore } from "../store/comments.js";
 import type { LayerLockStore } from "../store/layer-locks.js";
@@ -118,6 +119,7 @@ interface SdkDriverOptions {
   comments?: CommentStore;
   layerLocks?: LayerLockStore | null;
   frameStates?: FrameStateDeps | null;
+  runtime?: StudioRuntime | null;
   queryFn?: QueryFn;
   onMessage?: (message: SDKMessage) => void;
   onPermission?: (toolName: string, result: PermissionResult) => void;
@@ -830,6 +832,7 @@ async function buildSdkOptions(
     ...(options.comments ? { comments: options.comments } : {}),
     layerLocks: options.layerLocks ?? null,
     frameStates: options.frameStates ?? null,
+    runtime: options.runtime,
     ctx,
     runsDir: input.runsDir,
     runId: input.runId,

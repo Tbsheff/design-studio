@@ -1,3 +1,4 @@
+import type { StudioRuntime } from "../main/runtime.js";
 import type {
   AgentRunner,
   PreviewService,
@@ -10,6 +11,7 @@ export interface ExportDeps {
   versions: VersionStore;
   preview: PreviewService;
   runner?: Pick<AgentRunner, "isRunning">;
+  runtime?: StudioRuntime | null;
 }
 
 export {

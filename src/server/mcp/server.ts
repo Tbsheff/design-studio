@@ -25,6 +25,7 @@ import {
   RENDER_WAIT_TOOLS,
 } from "./edit-tools.js";
 import { withLayerSelectors } from "./layer-tools.js";
+import { ActionTools } from "./registry.js";
 import { newToken, readMcpSettings, writeMcpSettings } from "./settings.js";
 import type { McpSettings } from "./settings.js";
 import { callTool, ToolError, TOOLS } from "./tools.js";
@@ -267,6 +268,8 @@ async function callAny(
   name: string,
   args: unknown
 ): Promise<unknown> {
+  if (ActionTools.isAction(name))
+    return ActionTools.call(ctx.deps, name, argsOf(args), edits);
   if (!EDIT_NAMES.has(name)) return runTool(ctx.deps, name, args);
   if (!edits)
     return { content: [{ type: "text", text: EDITS_OFF }], isError: true };
@@ -328,12 +331,14 @@ async function dispatch(
       return reply({});
     }
     case "tools/list": {
-      return reply({ tools: edits ? [...TOOLS, ...EDIT_TOOLS] : TOOLS });
+      return reply({
+        tools: ActionTools.list(TOOLS, EDIT_TOOLS, edits),
+      });
     }
     case "tools/call": {
       const name =
         typeof message.params?.name === "string" ? message.params.name : "";
-      if (!EDIT_NAMES.has(name) && !TOOLS.some((tool) => tool.name === name))
+      if (!EDIT_NAMES.has(name) && !ActionTools.isKnown(TOOLS, name))
         return fail(-32_602, `unknown tool ${name}`);
       return reply(await callAny(ctx, edits, name, message.params?.arguments));
     }

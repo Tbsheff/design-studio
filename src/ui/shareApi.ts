@@ -1,49 +1,59 @@
+import type { WireOutput } from "../shared/actions/_core/action.js";
+import type { createShare } from "../shared/actions/share/create.js";
+import type { deleteShare } from "../shared/actions/share/delete.js";
+import type { listShare } from "../shared/actions/share/list.js";
+import { routes } from "../shared/actions/share/routes.js";
+import type { setLanShare } from "../shared/actions/share/set-lan.js";
+import type { updateShare } from "../shared/actions/share/update.js";
 import type { ExportFrame } from "../shared/export";
-import type {
-  ShareCreated,
-  ShareExpiryHours,
-  ShareLink,
-  ShareList,
-  ShareServerState,
-} from "../shared/share";
-import { json } from "./api";
+import type { ShareExpiryHours } from "../shared/share";
+import { call } from "./platform/http";
 
-export const SHARES_CHANGED = "studio:shares-changed";
+interface CreateRequest {
+  readonly directionId: string | null;
+  readonly expiresInHours: ShareExpiryHours;
+  readonly frameIds: readonly string[];
+  readonly frames: readonly ExportFrame[];
+  readonly live: boolean;
+  readonly versionId: string;
+}
 
-export function sharesChanged(projectId: string): void {
+const SHARES_CHANGED = "studio:shares-changed";
+
+const sharesChanged = (projectId: string): void => {
   window.dispatchEvent(
     new CustomEvent(SHARES_CHANGED, { detail: { projectId } })
   );
-}
-
-const base = (pid: string) => `/api/projects/${encodeURIComponent(pid)}/shares`;
-
-export const shareApi = {
-  list: (pid: string) => json<ShareList>("GET", base(pid)),
-  create: (
-    pid: string,
-    input: {
-      directionId: string | null;
-      versionId: string;
-      frames: ExportFrame[];
-      frameIds: string[];
-      expiresInHours: ShareExpiryHours;
-      live: boolean;
-    }
-  ) =>
-    json<ShareCreated>("POST", base(pid), {
-      ...input,
-      directionId: input.directionId ?? undefined,
-    }),
-  revoke: (pid: string, id: string) =>
-    json<{ link: ShareLink | null; server: ShareServerState }>(
-      "DELETE",
-      `${base(pid)}/${encodeURIComponent(id)}`
-    ),
-  setStudioCursor: (pid: string, id: string, on: boolean) =>
-    json<{ link: ShareLink }>("PUT", `${base(pid)}/${encodeURIComponent(id)}`, {
-      studioCursor: on,
-    }),
-  setLan: (on: boolean) =>
-    json<{ server: ShareServerState }>("PUT", "/api/shares/lan", { on }),
 };
+
+const shareApi = {
+  create: (
+    projectId: string,
+    input: CreateRequest
+  ): Promise<WireOutput<typeof createShare>> =>
+    call(routes.createShare, {
+      directionId: input.directionId,
+      expiresInHours: input.expiresInHours,
+      frames: [...input.frameIds],
+      live: input.live,
+      versionId: input.versionId,
+      projectId,
+    }),
+  list: (projectId: string): Promise<WireOutput<typeof listShare>> =>
+    call(routes.listShare, { projectId }),
+  revoke: (
+    projectId: string,
+    shareId: string
+  ): Promise<WireOutput<typeof deleteShare>> =>
+    call(routes.deleteShare, { projectId, shareId }),
+  setLan: (isOn: boolean): Promise<WireOutput<typeof setLanShare>> =>
+    call(routes.setLanShare, { isOn }),
+  setStudioCursor: (
+    projectId: string,
+    shareId: string,
+    isOn: boolean
+  ): Promise<WireOutput<typeof updateShare>> =>
+    call(routes.updateShare, { projectId, shareId, studioCursor: isOn }),
+};
+
+export { SHARES_CHANGED, shareApi, sharesChanged };

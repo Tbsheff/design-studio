@@ -1,3 +1,4 @@
+import { routes } from "../shared/actions/share/routes.js";
 import { STUDIO_TOKEN_HEADER } from "../shared/contracts";
 import type {
   SharePresenceCursor,
@@ -5,6 +6,7 @@ import type {
   StudioCursorInput,
 } from "../shared/share";
 import type { BridgeFrame } from "./bridge";
+import { call } from "./platform/http";
 import { getSession } from "./session";
 import { SHARES_CHANGED } from "./shareApi";
 import { onSharePointer, setSharePointer } from "./tokenFrames";
@@ -238,10 +240,11 @@ function studioPointer(projectId: string, stage: () => HTMLElement | null) {
 
     const body = pending ?? { frameId: null, x: 0, y: 0 };
     pending = undefined;
-    void fetch(`/api/projects/${encodeURIComponent(projectId)}/share-cursor`, {
-      method: "PUT",
-      headers: { ...authHeaders(), "content-type": "application/json" },
-      body: JSON.stringify(body),
+    void call(routes.setCursorShare, {
+      frameId: body.frameId,
+      pointX: body.x,
+      pointY: body.y,
+      projectId,
     }).catch(() => undefined);
   };
 

@@ -13,7 +13,6 @@ import { PROJECTS_AGENT_TOOLS } from "./projects.js";
 import { PUBLISH_AGENT_TOOLS } from "./publish.js";
 import { RUNS_AGENT_TOOLS } from "./runs.js";
 import { SESSION_AGENT_TOOLS } from "./session.js";
-import { SHARE_AGENT_TOOLS } from "./share.js";
 import { SHIP_AGENT_TOOLS } from "./ship.js";
 import { STUDIO_AGENT_TOOLS } from "./studio.js";
 import { VERSIONS_AGENT_TOOLS } from "./versions.js";
@@ -34,7 +33,6 @@ const LEGACY_AGENT_TOOLS: readonly string[] = [
   ...PUBLISH_AGENT_TOOLS,
   ...RUNS_AGENT_TOOLS,
   ...SESSION_AGENT_TOOLS,
-  ...SHARE_AGENT_TOOLS,
   ...SHIP_AGENT_TOOLS,
   ...STUDIO_AGENT_TOOLS,
   ...VERSIONS_AGENT_TOOLS,

@@ -39,6 +39,38 @@ const ShareListSchema = Schema.Struct({
   server: ShareServerStateSchema,
 });
 
+const ShareCreatedSchema = Schema.Struct({
+  link: ShareLinkSchema,
+  server: ShareServerStateSchema,
+  token: Schema.String,
+  url: Schema.NullOr(Schema.String),
+});
+
+const ShareRevokedSchema = Schema.Struct({
+  link: Schema.NullOr(ShareLinkSchema),
+  server: ShareServerStateSchema,
+});
+
+const ShareLinkResultSchema = Schema.Struct({
+  link: ShareLinkSchema,
+});
+
+const ShareServerResultSchema = Schema.Struct({
+  server: ShareServerStateSchema,
+});
+
+const ShareIdSchema = Schema.String.check(
+  Schema.isPattern(/^[A-Za-z0-9_-]{1,64}$/u)
+).annotate({
+  description: "Share link id from list_share_links or create_share_link.",
+});
+
+type ShareCreated = typeof ShareCreatedSchema.Type;
+
+type ShareRevoked = typeof ShareRevokedSchema.Type;
+
+type ShareLinkResult = typeof ShareLinkResultSchema.Type;
+
 type ShareFrame = typeof ShareFrameSchema.Type;
 
 type ShareLink = typeof ShareLinkSchema.Type;
@@ -50,14 +82,22 @@ type ShareListWire = typeof ShareListSchema.Encoded;
 type ShareServerState = typeof ShareServerStateSchema.Type;
 
 export {
+  ShareCreatedSchema,
   ShareFrameSchema,
+  ShareIdSchema,
+  ShareLinkResultSchema,
+  ShareRevokedSchema,
+  ShareServerResultSchema,
   ShareLinkSchema,
   ShareListSchema,
   ShareServerStateSchema,
 };
 
 export type {
+  ShareCreated,
   ShareFrame,
+  ShareLinkResult,
+  ShareRevoked,
   ShareLink,
   ShareList,
   ShareListWire,

@@ -2,6 +2,7 @@ import type { ShareServerState } from "../../shared/share.js";
 import type { ShareListener as ShareServer } from "./listener.js";
 import { createLiveHub } from "./live.js";
 import type { LiveHub, LiveRefresher as LiveRefreshLoop } from "./live.js";
+import type { ShareLinkDeps, ShareParts } from "./share-links.js";
 import { createShareStore } from "./store.js";
 import type { ShareStore as ShareFiles } from "./store.js";
 
@@ -11,6 +12,7 @@ interface ShareCore {
 }
 
 interface ShareRuntime {
+  readonly deps: ShareLinkDeps;
   readonly refresher: LiveRefreshLoop;
   readonly server: ShareServer;
 }
@@ -50,6 +52,24 @@ const bindShareRuntime = (dataDir: string, runtime: ShareRuntime): void => {
 const toShareRuntime = (dataDir: string): ShareRuntime | null =>
   runtimes.get(dataDir) ?? null;
 
+const toShareParts = (dataDir: string): ShareParts | null => {
+  const runtime = toShareRuntime(dataDir);
+
+  if (runtime === null) {
+    return null;
+  }
+
+  const core = toShareCore(dataDir);
+
+  return {
+    deps: runtime.deps,
+    files: core.files,
+    hub: core.hub,
+    kick: () => runtime.refresher.kick(),
+    server: runtime.server,
+  };
+};
+
 const toServerState = (dataDir: string): ShareServerState => {
   const runtime = toShareRuntime(dataDir);
 
@@ -65,6 +85,7 @@ export {
   OFF_STATE,
   toServerState,
   toShareCore,
+  toShareParts,
   toShareRuntime,
 };
 

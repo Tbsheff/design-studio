@@ -1,4 +1,8 @@
 // @generated
-const StudioActions = {} as const;
+import { healthStudio } from "./health.js";
+
+const StudioActions = {
+  healthStudio,
+} as const;
 
 export { StudioActions };

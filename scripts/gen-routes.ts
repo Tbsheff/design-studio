@@ -1,82 +1,26 @@
-import type { Dirent } from "node:fs";
-import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import { mkdir, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
-interface GeneratedFile {
-  path: string;
-  text: string;
-}
-
-const ROOT = path.join(import.meta.dirname, "..");
-const ACTIONS = path.join(ROOT, "src/shared/actions");
-const HANDLERS = path.join(ROOT, "src/server/handlers");
-const HEADER = "// @generated";
-const CORE = "_core";
-const CLOSE_CONST = "} as const;";
-
-const pascal = (ctx: string): string =>
-  ctx
-    .split("-")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join("");
-
-const camel = (ctx: string): string => {
-  const name = pascal(ctx);
-
-  return name.charAt(0).toLowerCase() + name.slice(1);
-};
-
-const lines = (...body: string[]): string =>
-  `${[HEADER, ...body].join("\n")}\n`;
-
-const stub = (name: string): string =>
-  lines(`const ${name} = {} as const;`, "", `export { ${name} };`);
-
-const readOrEmpty = async (file: string): Promise<string> => {
-  try {
-    return await readFile(file, "utf-8");
-  } catch {
-    return "";
-  }
-};
-
-const listDir = async (dir: string): Promise<Dirent[]> => {
-  try {
-    return await readdir(dir, { withFileTypes: true });
-  } catch {
-    return [];
-  }
-};
+import {
+  ACTIONS,
+  CLOSE_CONST,
+  CORE,
+  HANDLERS,
+  ROOT,
+  actionConst,
+  actionTails,
+  lines,
+  pascal,
+  camel,
+  readOrEmpty,
+  stub,
+} from "./gen-common.js";
+import type { GeneratedFile } from "./gen-common.js";
+import { errorFiles } from "./gen-errors.js";
 
 const ACTION_SKIP = new Set(["index", "routes", "schema"]);
-
 const HANDLER_SKIP = new Set(["handlers", "live"]);
-
-const actionTails = async (
-  dir: string,
-  skip: ReadonlySet<string>
-): Promise<string[]> => {
-  const entries = await listDir(dir);
-
-  const tails: string[] = [];
-
-  for (const entry of entries) {
-    const tail = entry.name.replace(/\.ts$/u, "");
-
-    const isAction =
-      entry.isFile() &&
-      entry.name.endsWith(".ts") &&
-      !entry.name.endsWith(".test.ts") &&
-      !skip.has(tail);
-
-    if (isAction) {
-      tails.push(tail);
-    }
-  }
-
-  return tails.toSorted((left, right) => left.localeCompare(right));
-};
 
 const actionsIndex = (ctx: string, tails: string[]): string => {
   const name = `${pascal(ctx)}Actions`;
@@ -86,10 +30,12 @@ const actionsIndex = (ctx: string, tails: string[]): string => {
   }
 
   return lines(
-    ...tails.map((tail) => `import { ${camel(tail)} } from "./${tail}.js";`),
+    ...tails.map(
+      (tail) => `import { ${actionConst(ctx, tail)} } from "./${tail}.js";`
+    ),
     "",
     `const ${name} = {`,
-    ...tails.map((tail) => `  ${camel(tail)},`),
+    ...tails.map((tail) => `  ${actionConst(ctx, tail)},`),
     CLOSE_CONST,
     "",
     `export { ${name} };`
@@ -103,8 +49,8 @@ const hasPreview = async (ctx: string, tail: string): Promise<boolean> =>
     await readOrEmpty(path.join(HANDLERS, ctx, `${tail}.ts`))
   );
 
-const entryImport = (tail: string, preview: boolean): string => {
-  const key = camel(tail);
+const entryImport = (ctx: string, tail: string, preview: boolean): string => {
+  const key = actionConst(ctx, tail);
 
   const names = preview
     ? `handle as ${key}Handle, preview as ${key}Preview`
@@ -113,8 +59,8 @@ const entryImport = (tail: string, preview: boolean): string => {
   return `import { ${names} } from "./${tail}.js";`;
 };
 
-const entryRow = (tail: string, preview: boolean): string => {
-  const key = camel(tail);
+const entryRow = (ctx: string, tail: string, preview: boolean): string => {
+  const key = actionConst(ctx, tail);
 
   return preview
     ? `  ${key}: { handle: ${key}Handle, preview: ${key}Preview },`
@@ -135,10 +81,14 @@ const handlersFile = async (ctx: string, tails: string[]): Promise<string> => {
   return lines(
     `import type { ${pascal(ctx)}Actions } from "../../../shared/actions/${ctx}/index.js";`,
     `import type { Entries } from "../_core/handler.js";`,
-    ...tails.map((tail, index) => entryImport(tail, Boolean(previews[index]))),
+    ...tails.map((tail, index) =>
+      entryImport(ctx, tail, Boolean(previews[index]))
+    ),
     "",
     `const ${name} = {`,
-    ...tails.map((tail, index) => entryRow(tail, Boolean(previews[index]))),
+    ...tails.map((tail, index) =>
+      entryRow(ctx, tail, Boolean(previews[index]))
+    ),
     `} satisfies Entries<typeof ${pascal(ctx)}Actions>;`,
     "",
     `export { ${name} };`
@@ -160,23 +110,23 @@ const loadRoute = async (ctx: string, tail: string): Promise<RouteAction> => {
       RouteAction
     >;
 
-    const op = mod[camel(tail)];
+    const op = mod[actionConst(ctx, tail)];
 
     if (!op) {
-      throw new Error(`no export named ${camel(tail)}`);
+      throw new Error(`no export named ${actionConst(ctx, tail)}`);
     }
 
     return op;
   } catch (error) {
     throw new Error(
-      `gen-routes: cannot load ${path.relative(ROOT, file)} for routes.ts (${String(error)}). fix: export one defineAction const named ${camel(tail)}`,
+      `gen-routes: cannot load ${path.relative(ROOT, file)} for routes.ts (${String(error)}). fix: export one defineAction const named ${actionConst(ctx, tail)}`,
       { cause: error }
     );
   }
 };
 
-const routeRows = (tail: string, op: RouteAction): string[] => [
-  `  ${camel(tail)}: {`,
+const routeRows = (key: string, op: RouteAction): string[] => [
+  `  ${key}: {`,
   `    id: ${JSON.stringify(op.id)},`,
   `    invalidates: ${JSON.stringify(op.invalidates).replaceAll(",", ", ")},`,
   `    method: ${JSON.stringify(op.http.method)},`,
@@ -196,7 +146,7 @@ const routesFile = async (ctx: string, tails: string[]): Promise<string> => {
     ...tails.flatMap((tail, index) => {
       const op = ops[index];
 
-      return op ? routeRows(tail, op) : [];
+      return op ? routeRows(actionConst(ctx, tail), op) : [];
     }),
     CLOSE_CONST,
     "",
@@ -296,7 +246,7 @@ const actionExportError = async (
 ): Promise<string[]> => {
   const file = `src/shared/actions/${ctx}/${tail}.ts`;
   const text = await readOrEmpty(path.join(ROOT, file));
-  const name = camel(tail);
+  const name = actionConst(ctx, tail);
   const found = exportNames(text);
 
   const defined = new RegExp(
@@ -437,7 +387,11 @@ const buildAll = async (): Promise<Build> => {
 
   const perContext = await Promise.all(scans.map((scan) => contextFiles(scan)));
 
-  const files = [...perContext.flat(), ...(await globalFiles(contexts))];
+  const files = [
+    ...perContext.flat(),
+    ...(await globalFiles(contexts)),
+    ...(await errorFiles(contexts)),
+  ];
 
   return {
     errors,

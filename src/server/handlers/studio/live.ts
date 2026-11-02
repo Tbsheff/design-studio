@@ -1,5 +1,5 @@
-import { Layer } from "effect";
+import { StudioInfo } from "../../store/studio-info.js";
 
-const StudioLive = Layer.empty;
+const StudioLive = StudioInfo.layer;
 
 export { StudioLive };

@@ -1,0 +1,41 @@
+.label {
+  flex: none;
+  display: grid;
+  place-items: center start;
+  min-width: 36px;
+  height: 100%;
+  padding: 0 var(--s-1) 0 var(--s-2);
+  color: var(--text-3);
+  font-size: var(--t-xs);
+  font-weight: 500;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.wide {
+  min-width: 72px;
+}
+
+.body {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.note {
+  margin: 0;
+  color: var(--text-3);
+  font-size: var(--t-xs);
+}
+
+.error {
+  margin: 0;
+  color: var(--danger);
+  font-size: var(--t-xs);
+}
+
+.group {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}

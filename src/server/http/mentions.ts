@@ -1,86 +1,13 @@
-import { readdir, readFile, stat } from "node:fs/promises";
+import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 
 import type { RunMention } from "../../shared/contracts.js";
-import { treeStamp } from "../direct-edit/change-feed.js";
 import { checkPathInside } from "../platform/paths/index.js";
 import { BadRequestError } from "../store/errors.js";
 import type { MentionFile } from "../types.js";
 
-const SKIP = new Set([
-  "node_modules",
-  ".git",
-  "dist",
-  ".vite",
-  "vite-cache",
-  ".DS_Store",
-  ".studio",
-]);
-
-const TREE_MAX = 3000;
 export const MENTION_MAX = 10;
 const FILE_MAX_BYTES = 20_000;
-
-const TREE_CACHE_MS = 30_000;
-
-const trees = new Map<
-  string,
-  { stamp: number; at: number; list: Promise<string[]> }
->();
-
-export function listWorkTree(root: string): Promise<string[]> {
-  const stamp = treeStamp(root);
-  const known = trees.get(root);
-
-  if (known && known.stamp === stamp && Date.now() - known.at < TREE_CACHE_MS) {
-    return known.list;
-  }
-
-  const list = walkWorkTree(root);
-  trees.set(root, { stamp, at: Date.now(), list });
-  list.catch(() => trees.delete(root));
-
-  if (trees.size > 50) {
-    trees.delete(trees.keys().next().value as string);
-  }
-
-  return list;
-}
-
-async function walkWorkTree(root: string): Promise<string[]> {
-  const out: string[] = [];
-
-  const walk = async (dir: string): Promise<void> => {
-    if (out.length >= TREE_MAX) {
-      return;
-    }
-
-    const items = await readdir(dir, { withFileTypes: true }).catch(() => []);
-    items.sort((a, b) => a.name.localeCompare(b.name));
-
-    for (const item of items) {
-      if (
-        out.length >= TREE_MAX ||
-        SKIP.has(item.name) ||
-        item.name.startsWith(".")
-      ) {
-        continue;
-      }
-
-      const full = path.join(dir, item.name);
-
-      if (item.isDirectory()) {
-        await walk(full);
-      } else if (item.isFile()) {
-        out.push(path.relative(root, full).split(path.sep).join("/"));
-      }
-    }
-  };
-
-  await walk(root);
-
-  return out;
-}
 
 const COMPONENT_NAME = /^[A-Z][A-Za-z0-9]{0,47}$/;
 
@@ -203,3 +130,5 @@ export async function readMentionFiles(
 
   return files;
 }
+
+export { listWorkTree } from "../comments/work-tree.js";

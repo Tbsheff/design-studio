@@ -1,4 +1,3 @@
-import { COMMENT_TOOLS } from "../comment-tools.js";
 import { defineTool } from "../edit-kit.js";
 import type { ToolSpec } from "../edit-kit.js";
 import { REFERENCE_TOOLS } from "../reference-tools.js";
@@ -45,7 +44,6 @@ const COMMENTS_LEGACY_TOOLS: ToolSpec[] = [
   addCommentTool,
   replyCommentTool,
   resolveCommentTool,
-  ...COMMENT_TOOLS,
   ...REFERENCE_TOOLS,
 ];
 

@@ -1,0 +1,234 @@
+{
+  "tools": [
+    {
+      "name": "add_comment",
+      "description": "Pin a comment on an element (CSS selector) or on the whole frame. The comment shows your client name. It does not send anything to the studio agent.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "path": {
+            "description": "Page path in the project, for example \"about.html\". Leave out for the entry page.",
+            "type": "string",
+            "maxLength": 300
+          },
+          "selector": {
+            "description": "CSS selector of the element. Leave out for a comment on the whole frame.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          }
+        },
+        "required": ["projectId", "text"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "reply_comment",
+      "description": "Add a reply to a pinned comment.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "commentId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Comment id from add_comment."
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          }
+        },
+        "required": ["projectId", "commentId", "text"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "resolve_comment",
+      "description": "Mark a pinned comment as resolved.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "commentId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Comment id from add_comment."
+          }
+        },
+        "required": ["projectId", "commentId"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "list_comments",
+      "description": "List the comments pinned on a direction, from you, other outside agents and the user, with the same server code as the studio Comments pane: number, author, text, replies, element (selector, source file:line, component), frame, id and status. Read only. Use reply_comment and resolve_comment with the id. Listing comments never sends them to the studio agent.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "status": {
+            "description": "open (default: every status but resolved), all, or one status.",
+            "type": "string",
+            "enum": [
+              "open",
+              "all",
+              "draft",
+              "queued",
+              "sent",
+              "resolved",
+              "orphaned"
+            ]
+          },
+          "frame": {
+            "description": "Frame id, @label or page path such as / or /settings.",
+            "type": "string",
+            "maxLength": 300
+          }
+        },
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "compare_to_reference",
+      "description": "Compare a canvas frame with a reference picture (a screenshot or mock, PNG, JPEG, GIF or WebP). The studio renders the frame at the frame width and the picture's aspect, scales the picture to that size, and returns a match score from 0 to 100 made of two parts: content (20%: of the pixels that are not plain background in either image, the percent that match in color, compared at 160 px wide) and edges (80%: how well the outlines of text, boxes, icons and pictures line up, to 2 px at 320 px wide, squared, so a moved column, a wrong icon or a CSS shape in place of a photo cost points while flat background does not help). It also returns both parts for the 3x3 areas that differ most with their x/y boxes, and the path of a side-by-side diff PNG (reference, render, render with the different pixels in red). A score under 80 means the frame does not match the picture yet: fix the areas with the lowest edge numbers first. Read only; changes no file.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Project id from list_projects."
+          },
+          "directionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Direction id. Leave out for the main direction."
+          },
+          "image": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "description": "Absolute path of the reference picture on this computer."
+          },
+          "frame": {
+            "description": "Frame id or @label from canvas_list. Leave out for the first frame of the direction.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60
+          },
+          "path": {
+            "description": "Page path in the project, for example \"about.html\". Leave out for the entry page.",
+            "type": "string",
+            "maxLength": 300
+          }
+        },
+        "required": ["projectId", "image"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    }
+  ],
+  "samples": [
+    {
+      "tool": "list_comments",
+      "args": {
+        "projectId": "p_demo01",
+        "status": "open"
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "1 open comment:\n#1 (from Claude Code): Make the header shorter\n   h1 \"Welcome back\" \u00b7 src/App.tsx:12\n   frame Home\n   id c_a1b2c3 \u00b7 status draft"
+          }
+        ]
+      }
+    },
+    {
+      "tool": "reply_comment",
+      "args": {
+        "projectId": "p_demo01",
+        "commentId": "c_a1b2c3",
+        "text": "Done in the last version."
+      },
+      "result": {
+        "commentId": "c_a1b2c3",
+        "replies": 1
+      }
+    }
+  ]
+}

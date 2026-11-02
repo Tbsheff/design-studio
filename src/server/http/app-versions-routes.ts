@@ -210,7 +210,7 @@ const registerVersionsHistoryRoutes = (
       }
     },
     onRemapped: (projectId, remapped) => {
-      mcpSlot.routes?.activity.remap(projectId, remapped);
+      mcpSlot.routes?.activity.remap(projectId, remapped).catch(() => null);
     },
   });
   registerHunkRoutes(app, { editDeps, withDirection, readBody });

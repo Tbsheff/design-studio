@@ -9,6 +9,7 @@ import { listComments } from "./list.js";
 import { moveComments } from "./move.js";
 import { searchMentionComments } from "./search-mention.js";
 import { setResolvedComments } from "./set-resolved.js";
+import { startComments } from "./start.js";
 import { updateComments } from "./update.js";
 
 const CommentsActions = {
@@ -22,6 +23,7 @@ const CommentsActions = {
   moveComments,
   searchMentionComments,
   setResolvedComments,
+  startComments,
   updateComments,
 } as const;
 

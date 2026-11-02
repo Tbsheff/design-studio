@@ -4,15 +4,32 @@ import type { Cause } from "effect";
 import { BadRequest } from "../../shared/actions/_core/errors/bad-request.js";
 import { Conflict } from "../../shared/actions/_core/errors/conflict.js";
 import { NotFound } from "../../shared/actions/_core/errors/not-found.js";
-import type { Direction, Project } from "../../shared/contracts.js";
+import type { Direction, Project, RunRequest } from "../../shared/contracts.js";
 import { loadConfig } from "../platform/config/index.js";
 import type { CommentStore as CommentFiles } from "../store/comments.js";
 import { ConflictError, NotFoundError } from "../store/errors.js";
+import type { AgentRunner } from "../types.js";
 import type { PrefillDeps } from "./prefill.js";
+import type { RunWatcher } from "./run-watch.js";
 
 interface CommentTarget {
   readonly direction: Direction;
   readonly project: Project;
+}
+
+interface CommentRunDeps {
+  readonly runner: AgentRunner;
+  readonly startRun: (
+    project: Project,
+    direction: Direction,
+    request: RunRequest
+  ) => Promise<string>;
+  readonly watcher: RunWatcher;
+  readonly withDirection: <Value>(
+    projectId: string,
+    directionId: string,
+    task: (project: Project, direction: Direction) => Promise<Value>
+  ) => Promise<Value>;
 }
 
 interface CommentRuntime {
@@ -27,6 +44,7 @@ interface CommentRuntime {
   ) => Promise<CommentTarget>;
   readonly prefill: PrefillDeps;
   readonly projectDir: (projectId: string) => string;
+  readonly runs: CommentRunDeps;
 }
 
 type CommentError = BadRequest | Conflict | NotFound;
@@ -80,4 +98,4 @@ const attemptComments = <Value>(
 
 export { attemptComments, bindCommentRuntime, toCommentRuntime };
 
-export type { CommentError, CommentRuntime, CommentTarget };
+export type { CommentError, CommentRunDeps, CommentRuntime, CommentTarget };

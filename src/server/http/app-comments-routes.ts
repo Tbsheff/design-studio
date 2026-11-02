@@ -1,6 +1,7 @@
 import type { Hono } from "hono";
 
 import { bindCommentRuntime } from "../comments/comment-core.js";
+import { createRunWatcher } from "../comments/run-watch.js";
 import type { AppContext } from "./app-context.js";
 import { registerCommentRoutes } from "./comments-routes.js";
 
@@ -30,6 +31,7 @@ const registerAppCommentsRoutes = (app: Hono, ctx: AppContext): void => {
       file: { name: string; mime: string; bytes: Uint8Array }
     ) => projects.saveAttachment(pid, file),
   };
+  const watcher = createRunWatcher({ files: comments, runner, runsDir });
   bindCommentRuntime(config.dataDir, {
     files: comments,
     hasAttachment,
@@ -43,17 +45,9 @@ const registerAppCommentsRoutes = (app: Hono, ctx: AppContext): void => {
     },
     prefill,
     projectDir: (id) => projects.projectDir(id),
+    runs: { runner, startRun, watcher, withDirection },
   });
-  registerCommentRoutes(app, {
-    comments,
-    runner,
-    runsDir,
-    loadDirection,
-    withDirection,
-    startRun,
-    hasAttachment,
-    prefill,
-  });
+  registerCommentRoutes(app, { comments, loadDirection, watcher });
 };
 
 export { registerAppCommentsRoutes };

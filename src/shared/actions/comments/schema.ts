@@ -188,6 +188,20 @@ const PrefillIdsSchema = Schema.Array(SafeIdTextSchema).check(
   Schema.isMaxLength(PREFILL_IDS_MAX)
 );
 
+const SEND_IDS_MAX = 100;
+
+const SendIdsSchema = Schema.Array(SafeIdTextSchema).check(
+  Schema.isMinLength(1),
+  Schema.isMaxLength(SEND_IDS_MAX)
+);
+
+const SelectionContextsSchema = Schema.Record(
+  Schema.String,
+  SelectionContextSchema
+);
+
+const RunLevelSchema = Schema.Literals(["wireframe", "prototype", "polish"]);
+
 const ReorderIdsSchema = Schema.Array(SafeIdTextSchema).check(
   Schema.isMinLength(1),
   Schema.isMaxLength(REORDER_IDS_MAX)
@@ -293,10 +307,13 @@ export {
   PrefillIdsSchema,
   ProjectFieldSchema,
   ReorderIdsSchema,
+  RunLevelSchema,
   RunMentionSchema,
   SafeIdTextSchema,
   SelectionContextSchema,
+  SelectionContextsSchema,
   SelectorSchema,
+  SendIdsSchema,
   TargetInputSchema,
 };
 

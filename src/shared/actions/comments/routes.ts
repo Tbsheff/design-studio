@@ -60,6 +60,12 @@ const routes = {
     method: "PUT",
     path: "/api/projects/:projectId/comments/:commentId/resolved",
   },
+  startComments: {
+    id: "comments.start",
+    invalidates: ["comments.list"],
+    method: "POST",
+    path: "/api/projects/:projectId/d/:directionId/comments/send",
+  },
   updateComments: {
     id: "comments.update",
     invalidates: ["comments.list"],

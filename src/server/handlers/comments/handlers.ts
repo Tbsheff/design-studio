@@ -11,6 +11,7 @@ import { handle as listCommentsHandle } from "./list.js";
 import { handle as moveCommentsHandle } from "./move.js";
 import { handle as searchMentionCommentsHandle } from "./search-mention.js";
 import { handle as setResolvedCommentsHandle } from "./set-resolved.js";
+import { handle as startCommentsHandle } from "./start.js";
 import { handle as updateCommentsHandle } from "./update.js";
 
 const CommentsEntries = {
@@ -24,6 +25,7 @@ const CommentsEntries = {
   moveComments: { handle: moveCommentsHandle },
   searchMentionComments: { handle: searchMentionCommentsHandle },
   setResolvedComments: { handle: setResolvedCommentsHandle },
+  startComments: { handle: startCommentsHandle },
   updateComments: { handle: updateCommentsHandle },
 } satisfies Entries<typeof CommentsActions>;
 

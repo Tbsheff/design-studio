@@ -89,6 +89,10 @@ export const TOOL_SHORT = {
     "Add the computed text props of an element as a new text style token in the project token source.",
   list_motion:
     "Read only. The transitions and entrance animations on one element: Tailwind motion classes and studio motion CSS rules, with the reduced-motion guard.",
+  get_fill:
+    "Read only. The fill of one element: solid color or linear or radial gradient stops {color, token, position}, with blend modes.",
+  set_fill:
+    "Set a solid, linear or radial fill (2-6 stops, color or token) with an optional blend mode on one element.",
   copy_code:
     "Read only. Copy one element as html, tailwind or a react JSX component with kit components and import lines.",
   set_motion:
@@ -196,6 +200,10 @@ export const TOOL_HELP: Record<
   list_motion:
     "Read only. List the motion on the target with the same server code as the MCP list_motion tool: the Tailwind transition, duration, ease, delay and animate classes (with motion-safe and motion-reduce forms), the studio motion CSS rules for the element in the page style block or the app CSS entry, and whether a prefers-reduced-motion guard is there.",
   copy_code: COPY_CODE_AGENT_DESCRIPTION,
+  get_fill:
+    "Read only. Read the fill of the target with the same server code as the MCP get_fill tool: a solid color or a linear or radial gradient parsed into stops {color, token, position %}, the angle or form and center, and any mix-blend-mode or background-blend-mode, from its Tailwind classes or its inline style.",
+  set_fill:
+    "Set the fill of the target with the same server code as the MCP set_fill tool. type solid takes color or token; type linear takes angle (degrees, default 180) and 2-6 stops; type radial takes form (circle or ellipse), at and 2-6 stops; each stop is {color | token, position %}. blendMode with blendProperty (mix-blend-mode by default, or background-blend-mode) sets a blend. In Tailwind v4 it writes bg-linear-<angle> or bg-radial with from-*, via-* and to-* classes and positions, with token names when a stop matches a color token (more stops or Tailwind v3: one bg-[linear-gradient(..)] class); otherwise it writes background-image linear-gradient() or radial-gradient() with var() for token stops.",
   set_motion:
     "Set the motion of the target with the same server code as the MCP set_motion tool. kind transition takes properties, durationMs, easing (linear, ease, ease-in, ease-out, ease-in-out or cubic-bezier(..)), delayMs, and state (hover, focus or active) with end values. kind entrance takes preset (fade, slide-up, slide-down, scale-in, blur-in), durationMs, delayMs and staggerMs for children. kind none removes the motion. In Tailwind it writes motion-safe classes (tw-animate-css or tailwindcss-animate classes when the project has one); otherwise it writes @keyframes once and the rules in a studio motion style block (HTML) or the app CSS entry. Every rule has a prefers-reduced-motion guard.",
   clear_text:

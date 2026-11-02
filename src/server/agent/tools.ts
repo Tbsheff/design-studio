@@ -107,6 +107,12 @@ import {
 import { runAppDoctor } from "./doctor-tool.js";
 import { exportFrameShape, runExportFrame } from "./export-tool.js";
 import { figmaImportShape, runFigmaImport } from "./figma-import-tool.js";
+import {
+  getFillInput,
+  runGetFill,
+  runSetFill,
+  setFillInput,
+} from "./fill-tool.js";
 import { baselineNote } from "./final-check.js";
 import {
   insertIconInput,
@@ -1336,6 +1342,21 @@ export async function createStudioMcpServer(
     withLayerIds(deps, (args) => runSetMotion(deps, args))
   );
 
+  const getFillTool = tool(
+    "get_fill",
+    TOOL_SHORT.get_fill,
+    getFillInput,
+    withLayerIds(deps, (args) => runGetFill(deps, args)),
+    { annotations: { readOnlyHint: true } }
+  );
+
+  const setFillTool = tool(
+    "set_fill",
+    TOOL_SHORT.set_fill,
+    setFillInput,
+    withLayerIds(deps, (args) => runSetFill(deps, args))
+  );
+
   const copyCodeTool = tool(
     "copy_code",
     TOOL_SHORT.copy_code,
@@ -1547,6 +1568,8 @@ export async function createStudioMcpServer(
     createTextStyleTool,
     listMotionTool,
     setMotionTool,
+    getFillTool,
+    setFillTool,
     copyCodeTool,
     clearTextTool,
     listComponentsTool,

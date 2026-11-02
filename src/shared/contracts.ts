@@ -1794,6 +1794,8 @@ export const DIRECT_STYLE_PROPERTIES = [
   "background-size",
   "background-position",
   "background-repeat",
+  "mix-blend-mode",
+  "background-blend-mode",
 ] as const;
 
 export type DirectStyleProperty = (typeof DIRECT_STYLE_PROPERTIES)[number];

@@ -108,6 +108,8 @@ const APPLY_TEXT_STYLE_TOOL = "mcp__studio__apply_text_style";
 const CREATE_TEXT_STYLE_TOOL = "mcp__studio__create_text_style";
 const LIST_MOTION_TOOL = "mcp__studio__list_motion";
 const SET_MOTION_TOOL = "mcp__studio__set_motion";
+const GET_FILL_TOOL = "mcp__studio__get_fill";
+const SET_FILL_TOOL = "mcp__studio__set_fill";
 const COPY_CODE_TOOL = "mcp__studio__copy_code";
 
 const DIRECT_EDIT_TOOLS = new Set<string>([
@@ -115,6 +117,7 @@ const DIRECT_EDIT_TOOLS = new Set<string>([
   APPLY_TEXT_STYLE_TOOL,
   CREATE_TEXT_STYLE_TOOL,
   SET_MOTION_TOOL,
+  SET_FILL_TOOL,
   EDIT_ELEMENT_TOOL,
   SET_TOKEN_TOOL,
   SET_PROPS_TOOL,
@@ -149,6 +152,8 @@ const STUDIO_MCP_TOOLS: readonly string[] = [
   CREATE_TEXT_STYLE_TOOL,
   LIST_MOTION_TOOL,
   SET_MOTION_TOOL,
+  GET_FILL_TOOL,
+  SET_FILL_TOOL,
   COPY_CODE_TOOL,
   ...AGENT_OPS.toolIds,
 ];

@@ -108,6 +108,7 @@ const APPLY_TEXT_STYLE_TOOL = "mcp__studio__apply_text_style";
 const CREATE_TEXT_STYLE_TOOL = "mcp__studio__create_text_style";
 const LIST_MOTION_TOOL = "mcp__studio__list_motion";
 const SET_MOTION_TOOL = "mcp__studio__set_motion";
+const COPY_CODE_TOOL = "mcp__studio__copy_code";
 
 const DIRECT_EDIT_TOOLS = new Set<string>([
   INSERT_ICON_TOOL,
@@ -148,6 +149,7 @@ const STUDIO_MCP_TOOLS: readonly string[] = [
   CREATE_TEXT_STYLE_TOOL,
   LIST_MOTION_TOOL,
   SET_MOTION_TOOL,
+  COPY_CODE_TOOL,
   ...AGENT_OPS.toolIds,
 ];
 

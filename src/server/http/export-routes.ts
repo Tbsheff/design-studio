@@ -4,6 +4,7 @@ import type { Context, Hono } from "hono";
 
 import type { ProjectKind } from "../../shared/contracts.js";
 import {
+  COPY_CODE_FORMATS,
   EXPORT_NOTE_HEADER,
   exportFileStem,
   type CopyCodeFormat,
@@ -14,12 +15,8 @@ import {
   type ExportScope,
 } from "../../shared/export.js";
 import { zipFiles, type ZipEntry } from "../design-system/zip.js";
-import {
-  projectTailwindTheme,
-  type TailwindTheme,
-} from "../direct-edit/tailwind/theme.js";
 import { captureFrame, type Shot } from "../export/capture.js";
-import { copyAsCode } from "../export/copy-code.js";
+import { copyCode, type CopyScope } from "../export/copy-handler.js";
 import {
   listEditors,
   openInEditor,
@@ -268,18 +265,19 @@ async function openForCopy(
   return (await resolveSource(deps, pid, text(input, "versionId"))).open();
 }
 
-async function copyTheme(
+async function copyScope(
   deps: ExportRouteDeps,
   pid: string,
-  input: Record<string, unknown>
-): Promise<TailwindTheme | null> {
+  input: Record<string, unknown>,
+  url: string
+): Promise<CopyScope> {
   const project = await deps.projects.get(assertSafeId(pid, "projectId"));
 
   const direction =
     project.directions.find((d) => d.id === input.directionId) ??
     project.directions[0];
 
-  return direction ? projectTailwindTheme(direction.workTree) : null;
+  return { project, workTree: direction?.workTree ?? null, url };
 }
 
 export function registerExportRoutes(app: Hono, deps: ExportRouteDeps): void {
@@ -407,8 +405,11 @@ export function registerExportRoutes(app: Hono, deps: ExportRouteDeps): void {
   app.post("/api/projects/:pid/copy-code", async (c) => {
     const input = await body(c);
 
-    const format: CopyCodeFormat =
-      input.format === "tailwind" ? "tailwind" : "html";
+    const format: CopyCodeFormat = COPY_CODE_FORMATS.includes(
+      input.format as CopyCodeFormat
+    )
+      ? (input.format as CopyCodeFormat)
+      : "html";
 
     const selector = selectorOf(input);
 
@@ -420,20 +421,15 @@ export function registerExportRoutes(app: Hono, deps: ExportRouteDeps): void {
     const opened = await openForCopy(deps, c.req.param("pid"), input);
 
     try {
-      const theme =
-        format === "tailwind"
-          ? await copyTheme(deps, c.req.param("pid"), input)
-          : null;
+      const scope = await copyScope(
+        deps,
+        c.req.param("pid"),
+        input,
+        opened.url
+      );
 
       const result: CopyCodeResult = {
-        code: await copyAsCode(
-          deps.preview,
-          opened.url,
-          frame,
-          selector,
-          format,
-          theme
-        ),
+        code: await copyCode(deps.preview, scope, { frame, selector, format }),
         format,
       };
 

@@ -197,6 +197,11 @@ export function CopyCodeMenu({
       run: () => void copy("Tailwind", code("tailwind")),
     },
     {
+      label: "Copy React",
+      icon: "code",
+      run: () => void copy("React", code("react")),
+    },
+    {
       label: "Export PNG…",
       icon: "image",
       run: () => {

@@ -4,6 +4,7 @@ import {
   CREATE_COMPONENT_AGENT_DESCRIPTION,
   SWAP_INSTANCE_AGENT_DESCRIPTION,
 } from "./component-create-tool.js";
+import { COPY_CODE_AGENT_DESCRIPTION } from "./copy-code-tool.js";
 import { APP_DOCTOR_DESCRIPTION } from "./doctor-tool.js";
 import { EXPORT_FRAME_AGENT_DESCRIPTION } from "./export-tool.js";
 import { FIGMA_IMPORT_TOOL_DESCRIPTION } from "./figma-import-tool.js";
@@ -88,6 +89,8 @@ export const TOOL_SHORT = {
     "Add the computed text props of an element as a new text style token in the project token source.",
   list_motion:
     "Read only. The transitions and entrance animations on one element: Tailwind motion classes and studio motion CSS rules, with the reduced-motion guard.",
+  copy_code:
+    "Read only. Copy one element as html, tailwind or a react JSX component with kit components and import lines.",
   set_motion:
     "Set a transition (props, duration, easing, delay, hover/focus/active end values), an entrance animation with stagger, or none on one element.",
   list_components:
@@ -192,6 +195,7 @@ export const TOOL_HELP: Record<
     "Read the computed font size, weight, line-height, letter-spacing and family of the target on the live page and add them as a new text style named name: --text-<name> with pairs in the Tailwind @theme block, a tokens.json typography entry, or :root CSS vars. Refuses a name that exists.",
   list_motion:
     "Read only. List the motion on the target with the same server code as the MCP list_motion tool: the Tailwind transition, duration, ease, delay and animate classes (with motion-safe and motion-reduce forms), the studio motion CSS rules for the element in the page style block or the app CSS entry, and whether a prefers-reduced-motion guard is there.",
+  copy_code: COPY_CODE_AGENT_DESCRIPTION,
   set_motion:
     "Set the motion of the target with the same server code as the MCP set_motion tool. kind transition takes properties, durationMs, easing (linear, ease, ease-in, ease-out, ease-in-out or cubic-bezier(..)), delayMs, and state (hover, focus or active) with end values. kind entrance takes preset (fade, slide-up, slide-down, scale-in, blur-in), durationMs, delayMs and staggerMs for children. kind none removes the motion. In Tailwind it writes motion-safe classes (tw-animate-css or tailwindcss-animate classes when the project has one); otherwise it writes @keyframes once and the rules in a studio motion style block (HTML) or the app CSS entry. Every rule has a prefers-reduced-motion guard.",
   clear_text:

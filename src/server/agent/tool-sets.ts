@@ -32,6 +32,7 @@ const CORE_TOOLS = [
   "create_text_style",
   "list_motion",
   "set_motion",
+  "copy_code",
   "diff_versions",
   "list_comments",
   "resolve_comment",

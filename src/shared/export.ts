@@ -13,7 +13,13 @@ export type ExportScale = 1 | 2 | 3;
 
 export type ExportScope = "page" | "frame";
 
-export type CopyCodeFormat = "html" | "tailwind";
+export type CopyCodeFormat = "html" | "tailwind" | "react";
+
+export const COPY_CODE_FORMATS: readonly CopyCodeFormat[] = [
+  "html",
+  "tailwind",
+  "react",
+];
 
 export type EditorId = "cursor" | "vscode" | "zed";
 

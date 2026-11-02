@@ -51,6 +51,10 @@ export function candidateNames(node: FigmaNode, doc: FigmaDocument): string[] {
     node.name,
   ].filter((name): name is string => Boolean(name));
 
+  return kitCandidates(raw);
+}
+
+export function kitCandidates(raw: readonly string[]): string[] {
   const out: string[] = [];
 
   for (const name of raw) {
@@ -85,6 +89,23 @@ function byName(entries: LibraryEntry[]): Map<string, LibraryEntry> {
   }
 
   return map;
+}
+
+export async function loadKitNames(
+  project: Project,
+  workTree: string
+): Promise<Map<string, LibraryEntry> | null> {
+  if (project.kind === "html") {
+    return null;
+  }
+
+  const library = await loadLibrary(project, workTree).catch(() => null);
+
+  if (!library || library.entries.length === 0) {
+    return null;
+  }
+
+  return byName(library.entries);
 }
 
 function variantProps(node: FigmaNode, source: string): Record<string, string> {

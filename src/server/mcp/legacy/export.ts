@@ -1,3 +1,4 @@
+import { COPY_CODE_TOOLS } from "../copy-code-tools.js";
 import { defineTool } from "../edit-kit.js";
 import type { ToolSpec } from "../edit-kit.js";
 import { EXPORT_TOOLS } from "../export-tools.js";
@@ -15,6 +16,10 @@ const exportTool = defineTool(
   exportFiles
 );
 
-const EXPORT_LEGACY_TOOLS: ToolSpec[] = [exportTool, ...EXPORT_TOOLS];
+const EXPORT_LEGACY_TOOLS: ToolSpec[] = [
+  exportTool,
+  ...EXPORT_TOOLS,
+  ...COPY_CODE_TOOLS,
+];
 
 export { EXPORT_LEGACY_TOOLS };

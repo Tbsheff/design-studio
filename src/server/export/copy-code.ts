@@ -1,10 +1,7 @@
 import { SOURCE_LOC_ATTR } from "../../shared/contracts.js";
-import type { CopyCodeFormat, ExportFrame } from "../../shared/export.js";
+import type { ExportFrame } from "../../shared/export.js";
 import { tailwindClassesFor } from "../direct-edit/tailwind/copy.js";
-import {
-  defaultTailwindTheme,
-  type TailwindTheme,
-} from "../direct-edit/tailwind/theme.js";
+import type { TailwindTheme } from "../direct-edit/tailwind/theme.js";
 import { BadRequestError } from "../store/errors.js";
 import type { PreviewService } from "../types.js";
 import { waitForPage } from "./capture.js";
@@ -16,6 +13,7 @@ interface StyledNode {
   styles: [string, string][];
   children: (StyledNode | string)[];
   raw?: string;
+  cls?: string;
 }
 
 const INHERITED = [
@@ -197,7 +195,7 @@ function collectExpression(selector: string): string {
       if (child.nodeType === 3) { if (child.textContent) children.push(child.textContent); }
       else if (child.nodeType === 1 && !['SCRIPT', 'STYLE', 'TEMPLATE'].includes(child.tagName)) children.push(walk(child, style, false));
     }
-    return { tag, attrs, styles, children };
+    return { tag, attrs, styles, children, cls: el.getAttribute('class') || '' };
   };
   try { return walk(root, root.parentElement ? getComputedStyle(root.parentElement) : null, true); }
   finally { sandbox.remove(); }
@@ -463,14 +461,12 @@ function renderTailwind(root: StyledNode, theme: TailwindTheme): string {
   return `${open(root, 0)}\n`;
 }
 
-export async function copyAsCode(
+async function readTree(
   preview: PreviewService,
   url: string,
   frame: ExportFrame,
-  selector: string,
-  format: CopyCodeFormat,
-  theme: TailwindTheme | null = null
-): Promise<string> {
+  selector: string
+): Promise<StyledNode> {
   if (!preview.withPage) {
     throw new Error("this preview backend cannot read the page");
   }
@@ -489,7 +485,7 @@ export async function copyAsCode(
     throw new BadRequestError("The selected element is not on this page");
   }
 
-  return format === "tailwind"
-    ? renderTailwind(tree, theme ?? (await defaultTailwindTheme()))
-    : renderHtml(tree);
+  return tree;
 }
+
+export { compact, readTree, renderHtml, renderTailwind, type StyledNode };

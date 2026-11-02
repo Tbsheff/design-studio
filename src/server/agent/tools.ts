@@ -88,6 +88,7 @@ import {
   runComponentPreview,
 } from "./component-preview-tool.js";
 import { getRunContextShape, runGetRunContext } from "./context-tool.js";
+import { copyCodeInput, runCopyCode } from "./copy-code-tool.js";
 import {
   beforeImages,
   changedSourceFor,
@@ -1335,6 +1336,14 @@ export async function createStudioMcpServer(
     withLayerIds(deps, (args) => runSetMotion(deps, args))
   );
 
+  const copyCodeTool = tool(
+    "copy_code",
+    TOOL_SHORT.copy_code,
+    copyCodeInput,
+    withLayerIds(deps, (args) => runCopyCode(deps, args)),
+    { annotations: { readOnlyHint: true } }
+  );
+
   const insertJsxTool = tool(
     "insert_jsx",
     TOOL_SHORT.insert_jsx,
@@ -1538,6 +1547,7 @@ export async function createStudioMcpServer(
     createTextStyleTool,
     listMotionTool,
     setMotionTool,
+    copyCodeTool,
     clearTextTool,
     listComponentsTool,
     getLayersTool,

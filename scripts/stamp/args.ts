@@ -161,6 +161,10 @@ const parseArgs = (spec: ArgsSpec, argv: readonly string[]): ParsedArgs => {
   return found;
 };
 
+const optional = (kind: FlagKind): FlagSpec => ({ kind, required: false });
+
+const must = (kind: FlagKind): FlagSpec => ({ kind, required: true });
+
 const stringFlag = (args: ParsedArgs, name: string): string | null =>
   args.strings.get(name) ?? null;
 
@@ -175,6 +179,8 @@ export {
   fail,
   hasFlag,
   listFlag,
+  must,
+  optional,
   parseArgs,
   runCli,
   stringFlag,

@@ -25,6 +25,11 @@ interface StampOptions {
   readonly isDryRun: boolean;
 }
 
+interface StampPlan {
+  readonly created: readonly StampFile[];
+  readonly edited: readonly StampFile[];
+}
+
 interface StampResult {
   readonly generated: readonly string[];
   readonly written: readonly string[];
@@ -253,14 +258,22 @@ const readBefore = (files: readonly StampFile[]): Promise<(string | null)[]> =>
     })
   );
 
+const makeDirs = async (files: readonly StampFile[]): Promise<string[]> => {
+  const made = await Promise.all(
+    files.map((file) =>
+      mkdir(path.dirname(absolute(file.path)), { recursive: true })
+    )
+  );
+
+  return made.filter((dir): dir is string => typeof dir === "string");
+};
+
 const dryRun = async (files: readonly StampFile[]): Promise<StampResult> => {
   const before = await readBefore(files);
+  const made = await makeDirs(files);
 
   await Promise.all(
-    files.map(async (file) => {
-      await mkdir(path.dirname(absolute(file.path)), { recursive: true });
-      await writeFile(absolute(file.path), file.text);
-    })
+    files.map((file) => writeFile(absolute(file.path), file.text))
   );
 
   try {
@@ -283,6 +296,9 @@ const dryRun = async (files: readonly StampFile[]): Promise<StampResult> => {
     process.stdout.write([...own, ...(await generatedDiffs())].join(""));
   } finally {
     await restore(files, before);
+    await Promise.all(
+      made.map((dir) => rm(dir, { force: true, recursive: true }))
+    );
   }
 
   return { generated: [], written: [] };
@@ -325,14 +341,49 @@ const stamp = async (
   };
 };
 
+const writeEdits = async (files: readonly StampFile[]): Promise<string[]> => {
+  await Promise.all(
+    files.map(async (file) => {
+      await mkdir(path.dirname(absolute(file.path)), { recursive: true });
+      await writeFile(absolute(file.path), file.text);
+    })
+  );
+
+  return files.map((file) => absolute(file.path));
+};
+
+const stampPlan = async (
+  plan: StampPlan,
+  options: StampOptions
+): Promise<StampResult> => {
+  if (options.isDryRun) {
+    return dryRun([...plan.created, ...plan.edited]);
+  }
+
+  await guardClean();
+
+  const written = await writeNew(plan.created);
+  const edited = await writeEdits(plan.edited);
+  const generated = await regenerate();
+
+  await clean([...written, ...edited, ...generated]);
+
+  return {
+    generated: generated.map((file) => relative(file)),
+    written: [...written, ...edited].map((file) => relative(file)),
+  };
+};
+
 export {
   clean,
   dryRun,
+  exists,
   regenerate,
   stamp,
+  stampPlan,
   turnsOffThrowNewError,
   unstamp,
   writeNew,
 };
 
-export type { StampFile, StampOptions, StampResult };
+export type { StampFile, StampOptions, StampPlan, StampResult };

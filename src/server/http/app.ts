@@ -191,6 +191,7 @@ import { registerShipRoutes } from "./ship-routes.js";
 import { registerSpacingRoutes } from "./spacing-routes.js";
 import { renderIndexHtml, serveStatic } from "./static.js";
 import { registerStreamRoutes, type StreamTracker } from "./stream-routes.js";
+import { registerTextSearchRoutes } from "./text-search-routes.js";
 import { registerTextStyleRoutes } from "./text-style-routes.js";
 import { registerUsageRoutes } from "./usage-routes.js";
 import { registerVersionRoutes } from "./version-routes.js";
@@ -2136,6 +2137,13 @@ export function createApp(deps: AppDeps): Hono {
   registerCanvasRoutes(app, { projects, canvas, readBody, preview });
   registerLinkInteractionRoutes(app, { canvas, preview, projects, readBody });
   registerPageImportRoutes(app, { canvas, editDeps, readBody, withDirection });
+  registerTextSearchRoutes(app, {
+    canvas,
+    editDeps,
+    loadDirection,
+    readBody,
+    withDirection,
+  });
   registerFrameStateRoutes(app, { projects, canvas, bus, readBody });
   registerFlowRoutes(app, { projects, canvas, readBody });
 

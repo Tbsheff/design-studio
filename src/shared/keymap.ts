@@ -319,6 +319,7 @@ export const KEYMAP = [
 
   { id: "undo", label: "Undo", keys: ["Mod+Z"], group: "Edit" },
   { id: "redo", label: "Redo", keys: ["Mod+Shift+Z"], group: "Edit" },
+  { id: "find-text", label: "Find text", keys: ["Mod+Shift+F"], group: "Edit" },
   {
     id: "rename",
     label: "Rename layer or version",

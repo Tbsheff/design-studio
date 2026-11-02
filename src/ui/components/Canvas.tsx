@@ -113,6 +113,8 @@ const CanvasRulers = lazy(() => import("./CanvasRulers"));
 const VectorLayer = lazy(() => import("./VectorLayer"));
 const InlinePrompt = lazy(() => import("./InlinePrompt"));
 
+import { FindPanelSlot } from "../features/text-search/find-panel-slot";
+import { useFindHost } from "../features/text-search/use-find-host";
 import {
   frameStateUrl,
   useFrameStates,
@@ -1651,6 +1653,12 @@ function CanvasView(props: ViewProps) {
     passive,
   });
 
+  const findHost = useFindHost({
+    enabled: directionId !== null,
+    frames: canvasFrames,
+    post: frames.post,
+  });
+
   useCanvasCommands({
     live,
     hasHead: headVersionId !== null,
@@ -1730,6 +1738,11 @@ function CanvasView(props: ViewProps) {
       />
       {appCanvas.bar}
       <CheckResults projectId={projectId} check={check} />
+      <FindPanelSlot
+        projectId={projectId}
+        directionId={directionId}
+        host={findHost}
+      />
       <ReviewEntry
         projectId={projectId}
         directionId={directionId}

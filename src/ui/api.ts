@@ -763,6 +763,49 @@ export const api = {
     ),
   workTreeFiles: (pid: string, did: string) =>
     sharedTree(`${d(pid, did)}/tree`),
+  searchText: async (
+    pid: string,
+    did: string,
+    q: import("../shared/text-search").TextSearchQuery
+  ) => {
+    const params = new URLSearchParams({
+      caseSensitive: String(q.caseSensitive),
+      query: q.query,
+      regex: String(q.regex),
+      wholeWord: String(q.wholeWord),
+      ...(q.glob ? { glob: q.glob } : {}),
+    });
+
+    return (await (
+      await request(
+        "GET",
+        `${d(pid, did)}/search-text?${params.toString()}`,
+        undefined,
+        pickMessage
+      )
+    ).json()) as import("../shared/text-search").TextSearchResult;
+  },
+  updateText: async (
+    pid: string,
+    did: string,
+    req: import("../shared/text-search").TextUpdateRequest
+  ) =>
+    (await (
+      await request(
+        "POST",
+        `${d(pid, did)}/update-text`,
+        {
+          caseSensitive: req.caseSensitive,
+          query: req.query,
+          regex: req.regex,
+          replace: req.replace,
+          wholeWord: req.wholeWord,
+          ...(req.glob ? { glob: req.glob } : {}),
+          ...(req.ids ? { ids: req.ids } : {}),
+        },
+        pickMessage
+      )
+    ).json()) as import("../shared/text-search").TextUpdateResult,
   importPage: async (
     pid: string,
     did: string,

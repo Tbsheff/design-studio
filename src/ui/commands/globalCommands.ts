@@ -1,3 +1,7 @@
+import {
+  FIND_TEXT_COMMAND,
+  FIND_TEXT_EVENT,
+} from "../features/text-search/copy";
 import { pickFolder } from "../folderPicker";
 import { requestOpenApp } from "../openAppRequest";
 import { goHome } from "../projectNav";
@@ -57,6 +61,19 @@ const THEME_COMMANDS: Command[] = [
     run: () => setTheme("dark"),
   },
 ];
+
+function findTextCommand(inProject: boolean): Command {
+  return {
+    id: FIND_TEXT_COMMAND,
+    title: "Find and replace text",
+    group: "Edit",
+    icon: "search",
+    keyId: "find-text",
+    keywords: "search replace copy words rename text",
+    run: () => window.dispatchEvent(new CustomEvent(FIND_TEXT_EVENT)),
+    ...(inProject ? {} : { disabled: "Open a project to find text" }),
+  };
+}
 
 export function globalCommands(openShortcuts: () => void): Command[] {
   const inProject = uiStore.get().activeProjectId !== null;
@@ -120,6 +137,7 @@ export function globalCommands(openShortcuts: () => void): Command[] {
           returnTo: "home",
         }),
     },
+    findTextCommand(inProject),
     ...THEME_COMMANDS,
     {
       id: "help.shortcuts",

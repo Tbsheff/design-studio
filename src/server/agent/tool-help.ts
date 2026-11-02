@@ -86,6 +86,10 @@ export const TOOL_SHORT = {
     "Apply a text style to an element: Tailwind classes that replace text size, font, leading and tracking classes, or CSS var references.",
   create_text_style:
     "Add the computed text props of an element as a new text style token in the project token source.",
+  list_motion:
+    "Read only. The transitions and entrance animations on one element: Tailwind motion classes and studio motion CSS rules, with the reduced-motion guard.",
+  set_motion:
+    "Set a transition (props, duration, easing, delay, hover/focus/active end values), an entrance animation with stagger, or none on one element.",
   list_components:
     "Read only. Project components, the shared kit first, with import line, JSX example, parts and cva variants. Use query; pages of 20.",
   get_layers:
@@ -186,6 +190,10 @@ export const TOOL_HELP: Record<
     "Apply one text style from list_text_styles to the target with the same server code as the MCP apply_text_style tool. In a Tailwind file it adds the style classes (text-xl, font-semibold, leading-[..], tracking-[..]) and removes the text size, font weight, font family, leading and tracking classes they replace; text colors and alignment stay. Elsewhere it writes font-size, font-weight, line-height, letter-spacing and font-family with var(--token) references in the rule or inline style.",
   create_text_style:
     "Read the computed font size, weight, line-height, letter-spacing and family of the target on the live page and add them as a new text style named name: --text-<name> with pairs in the Tailwind @theme block, a tokens.json typography entry, or :root CSS vars. Refuses a name that exists.",
+  list_motion:
+    "Read only. List the motion on the target with the same server code as the MCP list_motion tool: the Tailwind transition, duration, ease, delay and animate classes (with motion-safe and motion-reduce forms), the studio motion CSS rules for the element in the page style block or the app CSS entry, and whether a prefers-reduced-motion guard is there.",
+  set_motion:
+    "Set the motion of the target with the same server code as the MCP set_motion tool. kind transition takes properties, durationMs, easing (linear, ease, ease-in, ease-out, ease-in-out or cubic-bezier(..)), delayMs, and state (hover, focus or active) with end values. kind entrance takes preset (fade, slide-up, slide-down, scale-in, blur-in), durationMs, delayMs and staggerMs for children. kind none removes the motion. In Tailwind it writes motion-safe classes (tw-animate-css or tailwindcss-animate classes when the project has one); otherwise it writes @keyframes once and the rules in a studio motion style block (HTML) or the app CSS entry. Every rule has a prefers-reduced-motion guard.",
   clear_text:
     "Remove the plain text inside an element and keep its child elements, such as placeholder text next to children you inserted. On a library component it clears the text where the page uses it. Text from a prop or a { } expression stays.",
   list_components:

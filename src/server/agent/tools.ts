@@ -138,6 +138,12 @@ import {
 } from "./layer-state-tool.js";
 import { isLeanRun } from "./lean-run.js";
 import { AGENT_OPS } from "./legacy/agent-ops.js";
+import {
+  listMotionInput,
+  runListMotion,
+  runSetMotion,
+  setMotionInput,
+} from "./motion-tool.js";
 import { recordShot } from "./polish-loop.js";
 import { runSetProps, setPropsShape } from "./props-tool.js";
 import {
@@ -1314,6 +1320,21 @@ export async function createStudioMcpServer(
     withLayerIds(deps, (args) => runCreateTextStyle(deps, args))
   );
 
+  const listMotionTool = tool(
+    "list_motion",
+    TOOL_SHORT.list_motion,
+    listMotionInput,
+    withLayerIds(deps, (args) => runListMotion(deps, args)),
+    { annotations: { readOnlyHint: true } }
+  );
+
+  const setMotionTool = tool(
+    "set_motion",
+    TOOL_SHORT.set_motion,
+    setMotionInput,
+    withLayerIds(deps, (args) => runSetMotion(deps, args))
+  );
+
   const insertJsxTool = tool(
     "insert_jsx",
     TOOL_SHORT.insert_jsx,
@@ -1515,6 +1536,8 @@ export async function createStudioMcpServer(
     listTextStylesTool,
     applyTextStyleTool,
     createTextStyleTool,
+    listMotionTool,
+    setMotionTool,
     clearTextTool,
     listComponentsTool,
     getLayersTool,

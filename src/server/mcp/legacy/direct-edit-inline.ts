@@ -1,5 +1,6 @@
 import { defineTool } from "../edit-kit.js";
 import type { ToolSpec } from "../edit-kit.js";
+import { MOTION_TOOLS } from "../motion-tools.js";
 import { TEXT_STYLE_TOOLS } from "../text-style-tools.js";
 import {
   editElementSchema,
@@ -48,6 +49,7 @@ const DIRECT_EDIT_INLINE_TOOLS: ToolSpec[] = [
   editElementTool,
   setTokenTool,
   ...TEXT_STYLE_TOOLS,
+  ...MOTION_TOOLS,
 ];
 
 export { DIRECT_EDIT_INLINE_TOOLS };

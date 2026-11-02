@@ -64,6 +64,12 @@ import {
   runMeasure,
 } from "./arrange-tool.js";
 import {
+  listBreakpointsInput,
+  runListBreakpoints,
+  runSetBreakpointStyle,
+  setBreakpointStyleInput,
+} from "./breakpoints-tool.js";
+import {
   budgetLine,
   buildCheckReport,
   freshCapture,
@@ -1447,6 +1453,21 @@ export async function createStudioMcpServer(
     withLayerIds(deps, (args) => runSetSpacing(deps, args))
   );
 
+  const listBreakpointsTool = tool(
+    "list_breakpoints",
+    TOOL_SHORT.list_breakpoints,
+    listBreakpointsInput,
+    withLayerIds(deps, (args) => runListBreakpoints(deps, args)),
+    { annotations: { readOnlyHint: true } }
+  );
+
+  const setBreakpointStyleTool = tool(
+    "set_breakpoint_style",
+    TOOL_SHORT.set_breakpoint_style,
+    setBreakpointStyleInput,
+    withLayerIds(deps, (args) => runSetBreakpointStyle(deps, args))
+  );
+
   const copyCodeTool = tool(
     "copy_code",
     TOOL_SHORT.copy_code,
@@ -1685,6 +1706,8 @@ export async function createStudioMcpServer(
     setFillTool,
     getSpacingTool,
     setSpacingTool,
+    listBreakpointsTool,
+    setBreakpointStyleTool,
     copyCodeTool,
     clearTextTool,
     listComponentsTool,

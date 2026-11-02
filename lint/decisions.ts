@@ -430,7 +430,7 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/server/mcp/fill-tools.ts",
       "src/server/agent/fill-tool.ts",
       "src/server/fill/deps.ts",
-      "src/server/{design-system/model/index,design-system/ops/index,spacing/deps,mcp/spacing-tools,agent/spacing-tool,components/variant-write/deps,mcp/component-variant-tools,agent/component-variant-tool,canvas/links/link-interaction,canvas/links/link-interaction-input,canvas/links/link-target,mcp/link-interaction-tools,agent/link-interaction-tool,page-import/deps,mcp/page-import-tools,agent/page-import-tool,text-search/deps,mcp/text-search-tools,agent/text-search-tool}.ts",
+      "src/server/{design-system/model/index,design-system/ops/index,spacing/deps,mcp/spacing-tools,agent/spacing-tool,components/variant-write/deps,mcp/component-variant-tools,agent/component-variant-tool,canvas/links/link-interaction,canvas/links/link-interaction-input,canvas/links/link-target,mcp/link-interaction-tools,agent/link-interaction-tool,page-import/deps,mcp/page-import-tools,agent/page-import-tool,text-search/deps,mcp/text-search-tools,agent/text-search-tool,breakpoints/deps,mcp/breakpoints-tools,agent/breakpoints-tool,style-scope/engine/deps}.ts",
       "src/server/mcp/copy-code-tools.ts",
       "src/server/agent/copy-code-tool.ts",
       "src/server/export/copy-handler.ts",

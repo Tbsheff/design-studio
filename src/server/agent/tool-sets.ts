@@ -40,6 +40,8 @@ const CORE_TOOLS = [
   "set_fill",
   "get_spacing",
   "set_spacing",
+  "list_breakpoints",
+  "set_breakpoint_style",
   "copy_code",
   "diff_versions",
   "list_comments",

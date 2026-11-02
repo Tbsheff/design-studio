@@ -1,3 +1,4 @@
+import { BREAKPOINT_TOOLS } from "../breakpoints-tools.js";
 import { COMPONENT_VARIANT_TOOLS } from "../component-variant-tools.js";
 import { defineTool } from "../edit-kit.js";
 import type { ToolSpec } from "../edit-kit.js";
@@ -58,6 +59,7 @@ const DIRECT_EDIT_INLINE_TOOLS: ToolSpec[] = [
   ...SPACING_TOOLS,
   ...COMPONENT_VARIANT_TOOLS,
   ...TEXT_SEARCH_TOOLS,
+  ...BREAKPOINT_TOOLS,
 ];
 
 export { DIRECT_EDIT_INLINE_TOOLS };

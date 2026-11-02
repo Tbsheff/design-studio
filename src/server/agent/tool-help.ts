@@ -1,6 +1,10 @@
 import { FRAME_STATES_NOTE } from "../app/frame-state-service.js";
 import { FLOW_NOTE } from "../app/route-flow.js";
 import {
+  listBreakpointsDescription,
+  setBreakpointStyleDescription,
+} from "./breakpoints-tool.js";
+import {
   CREATE_COMPONENT_AGENT_DESCRIPTION,
   SWAP_INSTANCE_AGENT_DESCRIPTION,
 } from "./component-create-tool.js";
@@ -110,6 +114,10 @@ export const TOOL_SHORT = {
     "Read only. The box model of one element: padding, margin and gap per side with css, px, token and class, and its rect.",
   set_spacing:
     "Set padding, margin, gap, row-gap or column-gap for one side, an axis or all sides to px or a token, as scale classes or CSS.",
+  list_breakpoints:
+    "Read only. Project breakpoints, the active one for a frame width, and the values each breakpoint overrides on a layer.",
+  set_breakpoint_style:
+    "Set or reset one style property of one layer at base or one breakpoint: md:/lg: classes in Tailwind, @media rules in HTML.",
   copy_code:
     "Read only. Copy one element as html, tailwind or a react JSX component with kit components and import lines.",
   set_motion:
@@ -203,6 +211,8 @@ export const TOOL_HELP: Record<
   replace_style:
     'Replace one style value with a token on every element of the page (or frame) that uses it, with the same code as "Replace with token…" in the studio inspector. token is a CSS variable or, in a Tailwind project, a theme class; Tailwind projects get classes, not inline style. Elements made by .map(), elements with a className built in code, and shared elements where only some copies use the value are skipped and counted. Use it to move raw values such as #1c1f23 or p-[13px] to tokens.',
   search_text: searchTextDescription,
+  list_breakpoints: listBreakpointsDescription,
+  set_breakpoint_style: setBreakpointStyleDescription,
   update_text: updateTextDescription,
   arrange:
     "Align, distribute or tidy up sibling elements like Figma, with the same code as the studio arrange bar. In a flex parent it writes the parent layout (align-items, justify-content, gap) or align-self on some children; in a grid justify-items or align-items; absolute children move by left/top. align and distribute in a parent with no auto layout are refused; tidy adds auto layout (flex, gap) to it. Tailwind projects get classes. Pass one of align, distribute or tidy.",

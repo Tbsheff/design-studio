@@ -8,25 +8,25 @@ import type {
   Project,
   StudioEvent,
   Version,
-} from "../../shared/contracts.js";
-import { createFakePreview } from "../agent/test-fakes.js";
-import { createApp } from "../http/app.js";
-import { createEventBus } from "../store/events.js";
+} from "../../../shared/contracts.js";
+import { createFakePreview } from "../../agent/test-fakes.js";
+import { createApp } from "../../http/app.js";
+import { createEventBus } from "../../store/events.js";
 import {
   createProjectStore,
   type StudioProjectStore,
-} from "../store/projects.js";
-import { makeTempConfig } from "../store/testConfig.js";
-import { createVersionStore } from "../store/versions.js";
+} from "../../store/projects.js";
+import { makeTempConfig } from "../../store/testConfig.js";
+import { createVersionStore } from "../../store/versions.js";
 import type {
   AgentRunner,
   EventBus,
   ServerConfig,
   VersionStore,
-} from "../types.js";
+} from "../../types.js";
+import { parseDirectEditBatch } from "../engine/validate.js";
+import type { EditRecord } from "../index.js";
 import { applyDirectEditBatch } from "./batch.js";
-import type { EditRecord } from "./index.js";
-import { parseDirectEditBatch } from "./validate.js";
 
 const PAGE =
   '<!doctype html>\n<html>\n<body>\n  <h1 class="t">Hello</h1>\n  <p>One</p>\n  <span style="color: red">Two</span>\n</body>\n</html>\n';

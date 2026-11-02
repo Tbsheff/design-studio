@@ -8,22 +8,22 @@ import type {
   Project,
   StudioEvent,
   Version,
-} from "../../shared/contracts.js";
-import { createFakePreview } from "../agent/test-fakes.js";
-import { createApp } from "../http/app.js";
-import { createEventBus } from "../store/events.js";
+} from "../../../shared/contracts.js";
+import { createFakePreview } from "../../agent/test-fakes.js";
+import { createApp } from "../../http/app.js";
+import { createEventBus } from "../../store/events.js";
 import {
   createProjectStore,
   type StudioProjectStore,
-} from "../store/projects.js";
-import { makeTempConfig } from "../store/testConfig.js";
-import { createVersionStore } from "../store/versions.js";
+} from "../../store/projects.js";
+import { makeTempConfig } from "../../store/testConfig.js";
+import { createVersionStore } from "../../store/versions.js";
 import type {
   AgentRunner,
   EventBus,
   RunHandle,
   ServerConfig,
-} from "../types.js";
+} from "../../types.js";
 import { createEditHistory, type EditHistory } from "./history.js";
 
 const PAGE =

@@ -9,22 +9,22 @@ import type {
   Project,
   StudioEvent,
   Version,
-} from "../../shared/contracts.js";
-import { createFakePreview } from "../agent/test-fakes.js";
-import { createApp } from "../http/app.js";
-import { createEventBus } from "../store/events.js";
+} from "../../../shared/contracts.js";
+import { createFakePreview } from "../../agent/test-fakes.js";
+import { createApp } from "../../http/app.js";
+import { createEventBus } from "../../store/events.js";
 import {
   createProjectStore,
   type StudioProjectStore,
-} from "../store/projects.js";
-import { makeTempConfig } from "../store/testConfig.js";
-import { createVersionStore } from "../store/versions.js";
+} from "../../store/projects.js";
+import { makeTempConfig } from "../../store/testConfig.js";
+import { createVersionStore } from "../../store/versions.js";
 import type {
   AgentRunner,
   EventBus,
   RunHandle,
   ServerConfig,
-} from "../types.js";
+} from "../../types.js";
 
 const PAGE =
   '<!doctype html>\n<html>\n<head><title>T</title></head>\n<body>\n  <h1 class="t">Hello</h1>\n  <p>One <b>two</b></p>\n</body>\n</html>\n';

@@ -252,7 +252,9 @@ export const SCOPED_OFF_REASONS: Record<string, string> = {
   "node/no-sync":
     "Off in desktop/build.ts, the data lock, the resource lookup, the path checks and the event log exit flush, whose callers are sync (plan 5.2).",
   "import/no-default-export":
-    "Off in *.config.ts: the tools load a default export.",
+    "Off in *.config.ts and the cloud/api Worker entry: the tools and the Workers runtime load a default export.",
+  "sonarjs/no-implicit-dependencies":
+    "Off in cloud/api platform files that import cloudflare:workers, a runtime module and no npm package.",
   "unicorn/throw-new-error":
     "Off in src/shared/contract, src/server and cloud/api: its autofix breaks every TaggedError class (D29).",
   "import/max-dependencies":
@@ -412,19 +414,10 @@ export const decisionOverrides: OxlintOverride[] = [
   },
   {
     files: [
-      "src/server/agent/icon-tool.ts",
-      "src/server/http/icon-routes.ts",
-      "src/server/icons/deps.ts",
-      "src/server/mcp/icon-tools.ts",
-      "src/server/mcp/text-style-tools.ts",
-      "src/server/agent/text-style-tool.ts",
-      "src/server/text-styles/deps.ts",
-      "src/server/mcp/motion-tools.ts",
-      "src/server/agent/motion-tool.ts",
-      "src/server/motion/deps.ts",
-      "src/server/mcp/fill-tools.ts",
-      "src/server/agent/fill-tool.ts",
-      "src/server/fill/deps.ts",
+      "src/server/{agent/icon-tool,http/icon-routes,icons/deps,mcp/icon-tools}.ts",
+      "src/server/{mcp/text-style-tools,agent/text-style-tool,text-styles/deps}.ts",
+      "src/server/{mcp/motion-tools,agent/motion-tool,motion/deps}.ts",
+      "src/server/{mcp/fill-tools,agent/fill-tool,fill/deps}.ts",
       "src/server/{design-system/model/index,design-system/ops/index,spacing/deps,mcp/spacing-tools,agent/spacing-tool,components/variant-write/deps,mcp/component-variant-tools,agent/component-variant-tool,canvas/links/link-interaction,canvas/links/link-interaction-input,canvas/links/link-target,mcp/link-interaction-tools,agent/link-interaction-tool,page-import/deps,mcp/page-import-tools,agent/page-import-tool,text-search/deps,mcp/text-search-tools,agent/text-search-tool,breakpoints/deps,mcp/breakpoints-tools,agent/breakpoints-tool,state-styles/deps,mcp/state-styles-tools,agent/state-styles-tool,style-scope/engine/deps,stacking/deps,stacking/engine/deps,mcp/stacking-tools,agent/stacking-tool,image-search/deps,mcp/image-search-tools,agent/image-search-tool,accessibility/deps,mcp/accessibility-tools,agent/accessibility-tool}.ts",
       "src/server/mcp/copy-code-tools.ts",
       "src/server/agent/copy-code-tool.ts",
@@ -478,7 +471,14 @@ export const decisionOverrides: OxlintOverride[] = [
       "sonarjs/no-wildcard-import": "off",
     },
   },
-  { files: ["*.config.ts"], rules: { "import/no-default-export": "off" } },
+  {
+    files: ["*.config.ts", "cloud/api/src/index.ts"],
+    rules: { "import/no-default-export": "off" },
+  },
+  {
+    files: ["cloud/api/src/platform/{bindings,rate-limiter}.ts"],
+    rules: { "sonarjs/no-implicit-dependencies": "off" },
+  },
   {
     files: ["src/shared/actions/**", "src/server/**", "cloud/api/**"],
     rules: { "unicorn/throw-new-error": "off" },

@@ -1,0 +1,44 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "studio-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "alias": {
+    "effect": "../../node_modules/effect",
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "studio",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations",
+    },
+  ],
+  "r2_buckets": [
+    {
+      "binding": "FILES",
+      "bucket_name": "studio-files",
+    },
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "RATE",
+        "class_name": "RateLimiter",
+      },
+    ],
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["RateLimiter"],
+    },
+  ],
+  "vars": {
+    "AUTH_URL": "http://localhost:8787",
+    "WEB_ORIGIN": "http://localhost:5173",
+    "UC_ORIGIN": "http://localhost:8788",
+    "RP_ID": "localhost",
+  },
+}

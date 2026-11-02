@@ -1,0 +1,21 @@
+{
+  "name": "@design-studio/cloud-api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The hosted Design Studio API Worker: auth, orgs and tenant data on one D1 database and one R2 bucket.",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "better-auth": "1.7.0",
+    "effect": "4.1.1",
+    "hono": "4.13.13"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "4.20260702.1",
+    "typescript": "5.9.3",
+    "wrangler": "4.27.0"
+  }
+}

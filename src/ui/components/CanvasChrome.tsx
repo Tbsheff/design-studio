@@ -19,6 +19,7 @@ import {
   type CanvasFrame,
   type CanvasLayout,
 } from "../canvasFrames";
+import { importPageItems, ImportPageSlot } from "../features/page-import";
 import type { LiveStore } from "../liveStore";
 import { uiStore, type UiState } from "../storage";
 import type { PanelTab } from "../usePanelTab";
@@ -245,7 +246,7 @@ function addAndShow(p: ChromeProps, size: { width: number; height: number }) {
   p.zoom.zoomToActive?.();
 }
 
-function useFileMenu(p: ChromeProps) {
+function useFileMenu(p: ChromeProps, onImport: () => void) {
   const [pages, setPages] = useState<string[]>([]);
 
   const load = () => {
@@ -299,13 +300,16 @@ function useFileMenu(p: ChromeProps) {
     },
     {
       label: "Add frame",
-      items: FRAME_PRESETS.map((f) => ({
-        id: `add-${f.preset}`,
-        label: f.label,
-        icon: f.preset,
-        disabled: !canAddFrame(p.layout),
-        run: () => addAndShow(p, { width: f.width, height: f.height }),
-      })),
+      items: [
+        ...FRAME_PRESETS.map((f) => ({
+          id: `add-${f.preset}`,
+          label: f.label,
+          icon: f.preset,
+          disabled: !canAddFrame(p.layout),
+          run: () => addAndShow(p, { width: f.width, height: f.height }),
+        })),
+        ...importPageItems(p.kind, p.directionId, onImport),
+      ],
     },
   ];
 
@@ -370,7 +374,9 @@ export function CanvasChrome(p: ChromeProps) {
   const [tweakOpen, setTweakOpen] = useState(false);
   const closePresent = useCallback(() => setPresent(null), []);
   const closeTweak = useCallback(() => setTweakOpen(false), []);
-  const file = useFileMenu(p);
+  const [importing, setImporting] = useState(false);
+  const closeImport = useCallback(() => setImporting(false), []);
+  const file = useFileMenu(p, () => setImporting(true));
   useRulersKey();
   const shell = p.shell;
   const viewOpen = p.ui.viewRowOpen || p.view.source.kind === "version";
@@ -468,6 +474,15 @@ export function CanvasChrome(p: ChromeProps) {
           viewport={p.ui.viewport}
           {...p.view}
           rulers={{ on: p.ui.rulers, onToggle: toggleRulers }}
+        />
+      )}
+      {importing && p.directionId && (
+        <ImportPageSlot
+          projectId={p.projectId}
+          directionId={p.directionId}
+          frames={p.frames}
+          zoom={p.zoom}
+          onClose={closeImport}
         />
       )}
       {present && p.presentUrl && (

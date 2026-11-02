@@ -170,6 +170,7 @@ import { registerMcpRoutes } from "./mcp-routes.js";
 import { listWorkTree, parseMentions, readMentionFiles } from "./mentions.js";
 import { registerMotionRoutes } from "./motion-routes.js";
 import { registerPackRoutes } from "./packs-routes.js";
+import { registerPageImportRoutes } from "./page-import-routes.js";
 import { createFolderPicker, type FolderPicker } from "./pick-folder.js";
 import { registerPortRoutes } from "./port-routes.js";
 import { registerPropsRoutes } from "./props-routes.js";
@@ -2134,6 +2135,7 @@ export function createApp(deps: AppDeps): Hono {
   registerHunkRoutes(app, { editDeps, withDirection, readBody });
   registerCanvasRoutes(app, { projects, canvas, readBody, preview });
   registerLinkInteractionRoutes(app, { canvas, preview, projects, readBody });
+  registerPageImportRoutes(app, { canvas, editDeps, readBody, withDirection });
   registerFrameStateRoutes(app, { projects, canvas, bus, readBody });
   registerFlowRoutes(app, { projects, canvas, readBody });
 

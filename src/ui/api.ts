@@ -81,6 +81,10 @@ import type {
 } from "../shared/motion";
 import type { FolderInspection } from "../shared/open-app";
 import type {
+  PageImportRequest,
+  PageImportResult,
+} from "../shared/page-import";
+import type {
   SpacingInfo,
   SpacingProperty,
   SpacingSetResult,
@@ -759,6 +763,23 @@ export const api = {
     ),
   workTreeFiles: (pid: string, did: string) =>
     sharedTree(`${d(pid, did)}/tree`),
+  importPage: async (
+    pid: string,
+    did: string,
+    req: Omit<PageImportRequest, "name">
+  ) =>
+    (await (
+      await request(
+        "POST",
+        `${d(pid, did)}/import-page`,
+        {
+          url: req.url,
+          width: req.width,
+          ...(req.selector ? { selector: req.selector } : {}),
+        },
+        pickMessage
+      )
+    ).json()) as PageImportResult,
   renderCheck: (pid: string, did: string) =>
     json<RenderCheckResult[]>("POST", `${d(pid, did)}/check`),
   versionPreview: (pid: string, vid: string) =>

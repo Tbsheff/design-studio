@@ -1,8 +1,8 @@
 import { ARRANGE_TOOLS } from "../arrange-tools.js";
 import { COMPONENT_CREATE_TOOLS } from "../component-create-tools.js";
 import { COMPONENT_PREVIEW_TOOLS } from "../component-preview-tools.js";
-import type { ToolSpec } from "../edit-kit.js";
 import { FIGMA_IMPORT_TOOLS } from "../figma-import-tools.js";
+import { ICON_TOOLS } from "../icon-tools.js";
 import { IMAGE_TOOLS } from "../image-tools.js";
 import { INSERT_TOOLS } from "../insert-tools.js";
 import { JSX_INSERT_TOOLS } from "../jsx-insert-tools.js";
@@ -19,7 +19,7 @@ import { VARIANT_TOOLS } from "../variant-tools.js";
 import { VECTOR_TOOLS } from "../vector-tools.js";
 import { DIRECT_EDIT_INLINE_TOOLS } from "./direct-edit-inline.js";
 
-const DIRECT_EDIT_LEGACY_TOOLS: ToolSpec[] = [
+const DIRECT_EDIT_LEGACY_TOOLS = [
   ...DIRECT_EDIT_INLINE_TOOLS,
   ...VARIANT_TOOLS,
   ...PROPS_TOOLS,
@@ -39,6 +39,7 @@ const DIRECT_EDIT_LEGACY_TOOLS: ToolSpec[] = [
   ...LAYER_STATE_TOOLS,
   ...MOVE_TOOLS,
   ...FIGMA_IMPORT_TOOLS,
+  ...ICON_TOOLS,
 ];
 
 export { DIRECT_EDIT_LEGACY_TOOLS };

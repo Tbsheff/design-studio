@@ -107,6 +107,12 @@ import { runAppDoctor } from "./doctor-tool.js";
 import { exportFrameShape, runExportFrame } from "./export-tool.js";
 import { figmaImportShape, runFigmaImport } from "./figma-import-tool.js";
 import { baselineNote } from "./final-check.js";
+import {
+  insertIconInput,
+  listIconsInput,
+  runInsertIcon,
+  runListIcons,
+} from "./icon-tool.js";
 import { runSetImage, setImageShape } from "./image-tool.js";
 import { insertComponentShape, runInsertComponent } from "./insert-tool.js";
 import {
@@ -1263,6 +1269,21 @@ export async function createStudioMcpServer(
     withLayerIds(deps, (args) => runInsertComponent(deps, args))
   );
 
+  const listIconsTool = tool(
+    "list_icons",
+    TOOL_SHORT.list_icons,
+    listIconsInput,
+    (args) => runListIcons(deps, args),
+    { annotations: { readOnlyHint: true } }
+  );
+
+  const insertIconTool = tool(
+    "insert_icon",
+    TOOL_SHORT.insert_icon,
+    insertIconInput,
+    withLayerIds(deps, (args) => runInsertIcon(deps, args))
+  );
+
   const insertJsxTool = tool(
     "insert_jsx",
     TOOL_SHORT.insert_jsx,
@@ -1459,6 +1480,8 @@ export async function createStudioMcpServer(
     reviewFrameTool,
     insertComponentTool,
     insertJsxTool,
+    listIconsTool,
+    insertIconTool,
     clearTextTool,
     listComponentsTool,
     getLayersTool,

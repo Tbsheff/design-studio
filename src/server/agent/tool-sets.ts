@@ -25,6 +25,8 @@ const CORE_TOOLS = [
   "select_matching",
   "insert_jsx",
   "clear_text",
+  "list_icons",
+  "insert_icon",
   "diff_versions",
   "list_comments",
   "resolve_comment",

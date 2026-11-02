@@ -120,7 +120,15 @@ export const LAYERS: Layer[] = [
   { name: "canvas-core", areas: ["canvas"] },
   {
     name: "app-flow",
-    areas: ["export", "review", "tweaks", "figma", "design-rules", "comments"],
+    areas: [
+      "export",
+      "review",
+      "tweaks",
+      "figma",
+      "design-rules",
+      "comments",
+      "icons",
+    ],
   },
   { name: "share", areas: ["share", "publish", "ship", "variations", "git"] },
   { name: "services", type: "services", paths: ["src/server/services"] },

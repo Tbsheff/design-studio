@@ -417,6 +417,14 @@ export const decisionOverrides: OxlintOverride[] = [
     rules: { "import/no-relative-parent-imports": "off" },
   },
   {
+    files: [
+      "src/server/agent/icon-tool.ts",
+      "src/server/icons/deps.ts",
+      "src/server/mcp/icon-tools.ts",
+    ],
+    rules: { "import/no-relative-parent-imports": "off" },
+  },
+  {
     files: ["src/server/mcp/legacy/frame-target.ts"],
     rules: { "eslint/id-length": "off" },
   },

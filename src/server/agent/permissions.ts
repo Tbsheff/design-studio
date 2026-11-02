@@ -101,7 +101,11 @@ export { DESIGN_SYSTEM_CHECK_TOOL } from "./legacy/packs.js";
 export { STUDIO_HELP_TOOL } from "./legacy/studio.js";
 export { DIFF_VERSIONS_TOOL } from "./legacy/versions.js";
 
+const LIST_ICONS_TOOL = "mcp__studio__list_icons";
+const INSERT_ICON_TOOL = "mcp__studio__insert_icon";
+
 const DIRECT_EDIT_TOOLS = new Set<string>([
+  INSERT_ICON_TOOL,
   EDIT_ELEMENT_TOOL,
   SET_TOKEN_TOOL,
   SET_PROPS_TOOL,
@@ -129,6 +133,8 @@ export const EDIT_TOOL_NAMES: ReadonlySet<string> = new Set<string>([
 
 const STUDIO_MCP_TOOLS: readonly string[] = [
   ...LEGACY_AGENT_TOOLS,
+  LIST_ICONS_TOOL,
+  INSERT_ICON_TOOL,
   ...AGENT_OPS.toolIds,
 ];
 

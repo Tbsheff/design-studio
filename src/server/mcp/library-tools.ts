@@ -285,60 +285,6 @@ async function draftInfo(
   );
 }
 
-const designSystemStatus = defineTool(
-  "design_system_status",
-  z
-    .object({
-      projectId: projectId.describe(
-        "Design system draft project id from create_design_system."
-      ),
-    })
-    .strict(),
-  {
-    title: "Design system draft status",
-    description:
-      "Read a design system draft: each source (queued, reading, read, thin, blocked, failed, with a plain sentence), whether all sources are done, the coverage grade, and the design system check (passed or the problems). The save gate uses the same check.",
-    readOnly: true,
-    idempotent: true,
-  },
-  async (deps, input): Promise<Done> => {
-    const { project } = await loadTarget(deps, input.projectId);
-    const info = await draftInfo(deps, project);
-    const coverage = info.coverage
-      ? {
-          score: info.coverage.score,
-          grade: info.coverage.grade,
-          fallbacks: info.coverage.fallbacks,
-        }
-      : null;
-    const sources = info.sources
-      ? {
-          done: info.sources.done,
-          items: info.sources.sources.map((source) => ({
-            label: source.label,
-            kind: source.kind,
-            state: source.state,
-            detail: source.detail,
-            ...(source.note ? { note: source.note } : {}),
-          })),
-          improve: info.sources.improve,
-        }
-      : null;
-    return {
-      result: ok({
-        packId: info.packId,
-        sources,
-        coverage,
-        check: info.check,
-        running: deps.runner.isRunning(
-          project.id,
-          mainOf(project)?.id ?? "main"
-        ),
-      }),
-    };
-  }
-);
-
 const saveDesignSystem = defineTool(
   "save_design_system",
   z
@@ -426,55 +372,4 @@ const saveDesignSystem = defineTool(
   }
 );
 
-const listDesignSystems = defineTool(
-  "list_design_systems",
-  z
-    .object({
-      drafts: z
-        .boolean()
-        .default(false)
-        .describe("Also list drafts that are not saved to the library yet."),
-    })
-    .strict(),
-  {
-    title: "List design systems",
-    description:
-      "List the design systems (packs) in the studio library: id, name, mode, fonts, built-in or user, and a few swatches. Use an id with create_project or apply_design_system.",
-    readOnly: true,
-    idempotent: true,
-  },
-  async (deps, input): Promise<Done> => {
-    const packs = await studioCall<PackSummary[]>(deps, "GET", "/api/packs");
-    const projects = await deps.projects.list();
-    const shown = packs.filter((pack) => input.drafts || !pack.draft);
-    return {
-      result: ok(
-        shown.map((pack) => {
-          const backing = projects.find(
-            (project) =>
-              project.designSystemFor === pack.id &&
-              !project.designSystemDeleted
-          );
-          return {
-            id: pack.id,
-            name: pack.name,
-            mode: pack.mode,
-            source: pack.source,
-            draft: pack.draft === true,
-            fonts: pack.fonts,
-            swatches: pack.swatches.slice(0, 6),
-            ...(backing ? { projectId: backing.id } : {}),
-          };
-        })
-      ),
-    };
-  }
-);
-
-export const LIBRARY_TOOLS = [
-  openFolder,
-  createDesignSystem,
-  designSystemStatus,
-  saveDesignSystem,
-  listDesignSystems,
-];
+export const LIBRARY_TOOLS = [openFolder, createDesignSystem, saveDesignSystem];

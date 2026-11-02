@@ -1,0 +1,35 @@
+import { Schema } from "effect";
+
+import { defineAction } from "../_core/action.js";
+import { BadRequest } from "../_core/errors/bad-request.js";
+import { NotFound } from "../_core/errors/not-found.js";
+import { ProjectIdSchema } from "../_core/ids.js";
+import { DraftStatusSchema } from "./schema.js";
+
+const ProjectFieldSchema = ProjectIdSchema.annotate({
+  description: "Design system draft project id from create_design_system.",
+});
+
+const inspectDraftPacks = defineAction({
+  access: "read",
+  agent: { off: "ui-bootstrap" },
+  confirm: "none",
+  description:
+    "Read a design system draft: each source (queued, reading, read, thin, blocked, failed, with a plain sentence), whether all sources are done, the coverage grade, and the design system check (passed or the problems). The save gate uses the same check.",
+  errors: [BadRequest, NotFound],
+  http: {
+    method: "GET",
+    path: "/api/projects/:projectId/design-system-draft/status",
+  },
+  id: "packs.inspectDraft",
+  input: Schema.Struct({
+    projectId: ProjectFieldSchema,
+  }),
+  invalidates: [],
+  mcp: { name: "design_system_status" },
+  needs: "project.read",
+  output: DraftStatusSchema,
+  scope: "project",
+});
+
+export { inspectDraftPacks };

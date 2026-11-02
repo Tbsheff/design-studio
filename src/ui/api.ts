@@ -38,12 +38,9 @@ import type {
   ProjectSettings,
   ApplyPackResult,
   SavePackResult,
-  DesignSystemDraftInfo,
-  DesignSystemCheckResult,
   ImportPackMode,
   ImportPackResult,
   OpenPackEditorResult,
-  PackDetail,
   PackProblem,
   DesignSystemDraftResult,
   SkillCatalog,
@@ -443,9 +440,6 @@ export const api = {
     json<{ dismissed: boolean }>("POST", "/api/onboarding/dismiss"),
   listPacks: () => json<PackSummary[]>("GET", "/api/packs"),
   packProblems: () => json<PackProblem[]>("GET", "/api/packs/problems"),
-  getPack: (id: string) => json<PackDetail>("GET", `${pk(id)}`),
-  checkPack: (id: string) =>
-    json<DesignSystemCheckResult>("GET", `${pk(id)}/check`),
   renamePack: (id: string, name: string) =>
     json<PackSummary>("PATCH", pk(id), { name }),
   duplicatePack: (id: string, name?: string) =>
@@ -502,8 +496,6 @@ export const api = {
   },
   createDesignSystemDraft: (form: FormData) =>
     json<DesignSystemDraftResult>("POST", "/api/design-systems/draft", form),
-  getDesignSystemDraft: (pid: string) =>
-    json<DesignSystemDraftInfo>("GET", `${p(pid)}/design-system-draft`),
   createToken: async (pid: string, did: string, req: CreateTokenRequest) => {
     const res = await request(
       "POST",

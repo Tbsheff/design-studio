@@ -6,15 +6,12 @@ import type { Context, Hono } from "hono";
 import type {
   Attachment,
   DesignSystemCoverage,
-  DesignSystemDraftInfo,
   DesignSystemDraftResult,
   Direction,
   OpenPackEditorResult,
   Project,
 } from "../../shared/contracts.js";
-import { checkDesignSystem } from "../design-system/check.js";
 import type { LiveDrafts } from "../design-system/draft-live.js";
-import { readCoverage } from "../design-system/draft-project.js";
 import {
   COVERAGE_FILE,
   MAX_TOKENS_FILE_BYTES,
@@ -40,7 +37,9 @@ import {
 import { libraryCoverage } from "../design-system/extract/map.js";
 import type { Fetcher } from "../design-system/extract/url.js";
 import type { PackLibrary } from "../design-system/library.js";
+import { bindPackRuntime } from "../design-system/ops/library-core.js";
 import type { LoadedPack } from "../design-system/packs.js";
+import { loadConfig } from "../platform/config/index.js";
 import {
   BadRequestError,
   NotFoundError,
@@ -48,7 +47,7 @@ import {
 } from "../store/errors.js";
 import { createKeyedMutex } from "../store/mutex.js";
 import type { StudioProjectStore } from "../store/projects.js";
-import type { VersionStore } from "../types.js";
+import type { AgentRunner, VersionStore } from "../types.js";
 
 export const MAX_DRAFT_IMAGES = 8;
 export const MAX_DRAFT_IMAGE_BYTES = 8 * 1024 * 1024;
@@ -63,6 +62,7 @@ const IMAGE_TYPES = new Set([
 export interface DesignSystemRouteDeps {
   library: PackLibrary;
   projects: StudioProjectStore;
+  runner: AgentRunner;
   versions: VersionStore;
   projectsFolder: () => Promise<string>;
   finishCreate: (project: Project, pack: LoadedPack) => Promise<Project>;
@@ -250,6 +250,13 @@ export function registerDesignSystemRoutes(
 ): void {
   const { library, projects, versions } = deps;
   const fetcher = deps.fetcher ?? createFetcher(deps.allowLoopback);
+
+  bindPackRuntime(loadConfig().dataDir, {
+    library,
+    live: deps.live ?? null,
+    projects,
+    runner: deps.runner,
+  });
 
   const editorLock = createKeyedMutex();
 
@@ -457,24 +464,5 @@ export function registerDesignSystemRoutes(
     });
 
     return c.json(result);
-  });
-
-  app.get("/api/projects/:pid/design-system-draft", async (c) => {
-    const project = await projects.get(c.req.param("pid"));
-
-    if (!project.designSystemFor) {
-      throw new NotFoundError("This project is not a design-system project");
-    }
-
-    const workTree = projects.mainDirection(project).workTree;
-
-    const info: DesignSystemDraftInfo = {
-      packId: project.designSystemFor,
-      coverage: await readCoverage(workTree),
-      check: await checkDesignSystem(workTree),
-      sources: (await deps.live?.read(project.id)) ?? null,
-    };
-
-    return c.json(info);
   });
 }

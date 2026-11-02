@@ -15,7 +15,7 @@ import {
   saveDirectionPack,
 } from "../design-system/project-pack.js";
 import type { ProjectPackDeps } from "../design-system/project-pack.js";
-import { DirectEditError } from "../direct-edit/index.js";
+import { DirectEditError } from "../direct-edit/engine/errors.js";
 import { BadRequestError } from "../store/errors.js";
 
 interface PackRouteDeps {
@@ -114,14 +114,6 @@ export function registerPackRoutes(app: Hono, deps: PackRouteDeps): void {
       throw error;
     }
   });
-
-  app.get("/api/packs/:id", async (c) =>
-    c.json(await library.detail(packId(c)))
-  );
-
-  app.get("/api/packs/:id/check", async (c) =>
-    c.json(await library.checkPack(packId(c)))
-  );
 
   app.patch("/api/packs/:id", async (c) =>
     c.json((await library.updateUserPack(packId(c), await readBody(c))).summary)

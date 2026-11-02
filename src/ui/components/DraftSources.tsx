@@ -9,6 +9,7 @@ import type {
 } from "../../shared/contracts";
 import { api } from "../api";
 import { useProjectEvents } from "../events";
+import { packApi } from "../platform/pack-api";
 import { Icon } from "./Icon";
 
 type ImproveEnd = { runId: string; status: RunStatus } | null;
@@ -51,7 +52,7 @@ export function useDraftSources(
     }
 
     let live = true;
-    api
+    packApi
       .getDesignSystemDraft(projectId)
       .then((info) => live && setState((prev) => prev ?? info.sources ?? null))
       .catch(() => undefined);

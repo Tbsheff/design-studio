@@ -39,6 +39,7 @@ const registerAppPacksRoutes = (app: Hono, ctx: AppContext): void => {
     live: liveDrafts,
     library,
     projects,
+    runner,
     versions,
     projectsFolder: () => defaultFolder.ensure(),
     finishCreate: (project, pack) =>

@@ -8,8 +8,9 @@ import type {
   DesignSystemState,
   Project,
 } from "../../shared/contracts";
-import { api, errorText } from "../api";
+import { errorText } from "../api";
 import { findPack, usePacks } from "../packs";
+import { packApi } from "../platform/pack-api";
 import { useFitPopover } from "../popoverPlacement";
 import type { RunView } from "../runState";
 import { CheckStatus, improvePassed } from "./DraftImprove";
@@ -44,7 +45,7 @@ function useDraftInfo(
     }
 
     let live = true;
-    api
+    packApi
       .getDesignSystemDraft(projectId)
       .then(
         (info) =>

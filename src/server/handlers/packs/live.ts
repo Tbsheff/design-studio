@@ -1,5 +1,5 @@
-import { Layer } from "effect";
+import { PackStore } from "../../design-system/ops/pack-store.js";
 
-const PacksLive = Layer.empty;
+const PacksLive = PackStore.layer;
 
 export { PacksLive };

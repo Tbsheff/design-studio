@@ -6,7 +6,8 @@ import type {
   PackSummary,
 } from "../../shared/contracts";
 import { Markdown } from "../ai/components/ai/markdown";
-import { api, errorText } from "../api";
+import { errorText } from "../api";
+import { packApi } from "../platform/pack-api";
 import { useModalDialog } from "../usePopover";
 import { Icon } from "./Icon";
 import { PackBadges } from "./PackBadges";
@@ -206,12 +207,12 @@ export function PackDetailDialog({
   onClose: () => void;
 }) {
   const detail = useLoad<PackDetail>(
-    () => api.getPack(pack.id),
+    () => packApi.getPack(pack.id),
     `${pack.id}:${pack.name}`
   );
 
   const check = useLoad<DesignSystemCheckResult>(
-    () => api.checkPack(pack.id),
+    () => packApi.checkPack(pack.id),
     `${pack.id}:${pack.name}`
   );
 

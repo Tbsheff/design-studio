@@ -1,0 +1,241 @@
+{
+  "tools": [
+    {
+      "name": "open_folder",
+      "description": "Open an existing folder as a Design Studio project, the same as Open folder on the studio Home. The studio then edits the files in that folder in place. The same folder rules as the studio apply, and system folders, the home folder itself and the studio data dir are refused. A folder outside the projects folder waits for the user to approve it in Design Studio. A folder that is already a project returns that project. A Next.js app folder inside a monorepo (pnpm-workspace.yaml, turbo.json or package.json workspaces) opens at the workspace root with that folder as appDir, so the shared kit, Tailwind CSS and root DESIGN.md are found; the result has workspaceRoot and appDir (workspaceRoot is null outside a monorepo).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "description": "Absolute path (or ~/...) of a folder with an index.html, a Vite app, or an app with a token CSS file."
+          }
+        },
+        "required": ["path"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "create_design_system",
+      "description": "Start a new design system draft from sources (websites, a brief, a DESIGN.md, a code folder, a tokens file such as a Figma variables export), the same as New design system in the studio. It answers at once with the draft project; the sources are read in the background. Poll design_system_status until sources.done is true, then fix problems with set_token and write_file in that project and save it with save_design_system. The AI step (Improve with AI) is a studio run, so it does not start from here: Started from an outside agent, so the AI step did not start. Use Improve with AI in Design Studio.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "description": "Name of the design system. Leave out to take it from the first source.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "mode": {
+            "default": "auto",
+            "type": "string",
+            "enum": ["light", "dark", "auto"]
+          },
+          "basePackId": {
+            "description": "Design system to fill gaps from. Leave out for the default.",
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+          },
+          "urls": {
+            "description": "Up to 3 public website URLs to read colors, fonts and spacing from.",
+            "maxItems": 3,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 2000,
+              "format": "uri"
+            }
+          },
+          "brief": {
+            "description": "A short text brief: brand, mood, audience.",
+            "type": "string",
+            "maxLength": 4000
+          },
+          "designMd": {
+            "description": "DESIGN.md text to start from.",
+            "type": "string",
+            "maxLength": 524288
+          },
+          "folderPath": {
+            "description": "Absolute path of a code folder to read tokens from (CSS variables, Tailwind theme, next/font). A folder outside the projects folder waits for the user to approve it.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "tokensFile": {
+            "description": "Absolute path of a tokens file (.json or .css, at most 2 MB): Figma variables JSON (REST /variables/local answer or a plugin export, Light and Dark modes), W3C DTCG, Tokens Studio, or CSS custom properties. Aliases stay token references. The studio does not connect to Figma and needs no Figma token. A file outside the projects folder waits for the user to approve it.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        },
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "design_system_status",
+      "description": "Read a design system draft: each source (queued, reading, read, thin, blocked, failed, with a plain sentence), whether all sources are done, the coverage grade, and the design system check (passed or the problems). The save gate uses the same check.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Design system draft project id from create_design_system."
+          }
+        },
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "save_design_system",
+      "description": "Save a design system draft to the studio library, the same as Save in the draft bar. Refused while the sources are read or a studio run is active. The design system check must pass, unless force is true with a reason; call design_system_status to see the problems first.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "Design system draft project id."
+          },
+          "name": {
+            "description": "Library name. Leave out to keep the draft name.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "force": {
+            "default": false,
+            "description": "Save even when the design system check fails. Needs reason.",
+            "type": "boolean"
+          },
+          "reason": {
+            "description": "Why you save while the check fails. Shown to the user in the studio feed.",
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 300
+          }
+        },
+        "required": ["projectId"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "list_design_systems",
+      "description": "List the design systems (packs) in the studio library: id, name, mode, fonts, built-in or user, and a few swatches. Use an id with create_project or apply_design_system.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "drafts": {
+            "default": false,
+            "description": "Also list drafts that are not saved to the library yet.",
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    }
+  ],
+  "samples": [
+    {
+      "tool": "list_design_systems",
+      "args": {},
+      "result": [
+        {
+          "id": "studio-default",
+          "name": "Studio Default",
+          "mode": "light",
+          "source": "builtin",
+          "draft": false,
+          "fonts": {
+            "display": "Inter",
+            "body": "Inter",
+            "mono": "JetBrains Mono"
+          },
+          "swatches": [
+            {
+              "name": "bg",
+              "value": "#ffffff"
+            },
+            {
+              "name": "fg",
+              "value": "#111111"
+            },
+            {
+              "name": "primary",
+              "value": "#2f6bff"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tool": "design_system_status",
+      "args": {
+        "projectId": "p_demo01"
+      },
+      "result": {
+        "packId": "acme",
+        "sources": {
+          "done": true,
+          "items": [
+            {
+              "label": "acme.com",
+              "kind": "url",
+              "state": "read",
+              "detail": "Read 14 colors, 2 fonts and 6 spacing steps."
+            }
+          ],
+          "improve": {
+            "state": "skipped",
+            "reason": "improve=off"
+          }
+        },
+        "coverage": {
+          "score": 82,
+          "grade": "usable",
+          "fallbacks": ["shadow.lg"]
+        },
+        "check": {
+          "passed": true,
+          "problems": []
+        },
+        "running": false
+      }
+    }
+  ]
+}

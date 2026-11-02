@@ -18,7 +18,6 @@ import {
   FRAME_STATES_NOTE,
   applyFrameSession,
   applyFrameState,
-  configuredFrameStates,
   describeFrameStates,
   readFrameStates,
   type FrameStateDeps,
@@ -26,11 +25,11 @@ import {
 } from "../app/frame-state-service.js";
 import {
   buildFlow,
-  configuredFlowDeps,
   describeFlow,
   describeRouteLinks,
   FLOW_NOTE,
   listRouteLinks,
+  toFlowDeps,
 } from "../app/route-flow.js";
 import {
   editLinks,
@@ -323,6 +322,7 @@ export interface StudioToolDeps {
   canvas?: CanvasService;
   comments?: CommentStore;
   layerLocks?: LayerLockStore | null;
+  frameStates?: FrameStateDeps | null;
   exportsDir?: string;
 }
 
@@ -383,9 +383,14 @@ export function runCanvasPoint(
 }
 
 function agentLinkProbe(
-  deps: Pick<StudioToolDeps, "ctx" | "preview">
+  deps: Pick<StudioToolDeps, "ctx" | "preview" | "frameStates">
 ): LinkProbe | undefined {
-  return probeWithPreview(deps.preview, deps.ctx.project, deps.ctx.direction);
+  return probeWithPreview(
+    deps.preview,
+    deps.ctx.project,
+    deps.ctx.direction,
+    deps.frameStates ?? null
+  );
 }
 
 export function runListLinks(
@@ -426,11 +431,11 @@ export function runEditLinks(
 }
 
 async function withFrameStates(
-  deps: Pick<StudioToolDeps, "ctx">,
+  deps: Pick<StudioToolDeps, "ctx" | "frameStates">,
   name: string,
   run: (stateDeps: FrameStateDeps) => Promise<string>
 ) {
-  const stateDeps = configuredFrameStates();
+  const stateDeps = deps.frameStates ?? null;
 
   if (!stateDeps) {
     return errorText("Frame states are not available in this run.");
@@ -443,7 +448,9 @@ async function withFrameStates(
   }
 }
 
-export function runListFrameStates(deps: Pick<StudioToolDeps, "ctx">) {
+export function runListFrameStates(
+  deps: Pick<StudioToolDeps, "ctx" | "frameStates">
+) {
   return withFrameStates(deps, "list_frame_states", async (stateDeps) =>
     describeFrameStates(
       deps.ctx.project,
@@ -453,7 +460,7 @@ export function runListFrameStates(deps: Pick<StudioToolDeps, "ctx">) {
 }
 
 export function runSetFrameState(
-  deps: Pick<StudioToolDeps, "ctx">,
+  deps: Pick<StudioToolDeps, "ctx" | "frameStates">,
   args: FrameStateInput
 ) {
   return withFrameStates(deps, "set_frame_state", async (stateDeps) => {
@@ -464,7 +471,7 @@ export function runSetFrameState(
 }
 
 export function runSetFrameSession(
-  deps: Pick<StudioToolDeps, "ctx">,
+  deps: Pick<StudioToolDeps, "ctx" | "frameStates">,
   args: { user?: { name: string; email: string }; forgetCookies?: boolean }
 ) {
   return withFrameStates(deps, "set_frame_session", async (stateDeps) =>
@@ -499,7 +506,7 @@ export async function runListRouteLinks(
 }
 
 export function runAddFlow(
-  deps: Pick<StudioToolDeps, "ctx" | "canvas">,
+  deps: Pick<StudioToolDeps, "ctx" | "canvas" | "frameStates">,
   args: FlowInput
 ) {
   return withCanvas(deps, "add_flow", async (ctx) => {
@@ -513,7 +520,7 @@ export function runAddFlow(
       return errorText("add_flow is not available in critique runs.");
     }
 
-    const flowDeps = configuredFlowDeps(ctx.canvas);
+    const flowDeps = toFlowDeps(ctx.canvas, deps.frameStates);
 
     if (!flowDeps) {
       return errorText("Flow is not available in this run.");
@@ -621,8 +628,10 @@ async function screenTarget(
   return picked;
 }
 
-function targetDeps(deps: Pick<StudioToolDeps, "canvas">): TargetDeps | null {
-  const states = configuredFrameStates();
+function targetDeps(
+  deps: Pick<StudioToolDeps, "canvas" | "frameStates">
+): TargetDeps | null {
+  const states = deps.frameStates ?? null;
   const canvas = deps.canvas ?? states?.canvas;
 
   return canvas && states ? { canvas, projectDir: states.projectDir } : null;

@@ -40,7 +40,7 @@ import { waitForPage } from "../../export/capture.js";
 import { withPagePath } from "../../export/source.js";
 import type { RenderPage } from "../../preview/render-backend.js";
 import type { PreviewService } from "../../types.js";
-import { configuredFrameStates } from "../app-flow/frame-state-service.js";
+import type { FrameStateDeps } from "../app-flow/frame-state-service.js";
 import {
   findFrame,
   frameRef,
@@ -230,9 +230,10 @@ export function linkTitle(
 async function withStateHost(
   project: Project,
   frameId: string,
-  url: string
+  url: string,
+  frameStates: FrameStateDeps | null
 ): Promise<string> {
-  const states = project.app ? configuredFrameStates() : null;
+  const states = project.app ? frameStates : null;
   if (!states) return url;
   const view = await frameStatesView(states.projectDir(project.id)).catch(
     () => null
@@ -243,7 +244,8 @@ async function withStateHost(
 export function probeWithPreview(
   preview: Pick<PreviewService, "directionUrl" | "withPage">,
   project: Project,
-  fallback: Direction
+  fallback: Direction,
+  frameStates: FrameStateDeps | null
 ): LinkProbe | undefined {
   const withPage = preview.withPage?.bind(preview);
   if (!withPage) return undefined;
@@ -260,7 +262,8 @@ export function probeWithPreview(
       withPagePath(
         await preview.directionUrl(project, direction),
         frame.path || undefined
-      )
+      ),
+      frameStates
     );
     return withPage(
       url,

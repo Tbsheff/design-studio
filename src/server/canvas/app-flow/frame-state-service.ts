@@ -155,13 +155,3 @@ export function describeFrameStates(
     `Session: ${session} Session cookie names sent: ${sessionCookieNames(project.app?.env).join(", ")}.`,
   ].join("\n");
 }
-
-let configured: FrameStateDeps | null = null;
-
-export function configureFrameStates(deps: FrameStateDeps): void {
-  configured = deps;
-}
-
-export function configuredFrameStates(): FrameStateDeps | null {
-  return configured;
-}

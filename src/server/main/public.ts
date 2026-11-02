@@ -176,6 +176,12 @@ const buildApp = (
     projects.projectDir(projectId)
   );
 
+  const frameStates = {
+    bus,
+    canvas,
+    projectDir: (projectId: string): string => projects.projectDir(projectId),
+  };
+
   const comments = createCommentStore(config.dataDir, bus);
 
   const layerLocks = createProjectLayerLocks(projects, bus);
@@ -188,6 +194,7 @@ const buildApp = (
     canvas,
     comments,
     config,
+    frameStates,
     layerLocks,
     preview,
     projects,
@@ -213,6 +220,7 @@ const buildApp = (
     canvas,
     comments,
     config,
+    frameStates,
     layerLocks,
     preview,
     projects,

@@ -11,16 +11,28 @@ import { registerTextSearchRoutes } from "./text-search-routes.js";
 
 const registerAppCanvasRoutes = (app: Hono, ctx: AppContext): void => {
   const {
-    bus,
     canvas,
     editDeps,
+    frameStates,
     loadDirection,
     preview,
     projects,
     withDirection,
   } = ctx;
-  registerCanvasRoutes(app, { projects, canvas, readBody, preview });
-  registerLinkInteractionRoutes(app, { canvas, preview, projects, readBody });
+  registerCanvasRoutes(app, {
+    projects,
+    canvas,
+    frameStates,
+    readBody,
+    preview,
+  });
+  registerLinkInteractionRoutes(app, {
+    canvas,
+    frameStates,
+    preview,
+    projects,
+    readBody,
+  });
   registerPageImportRoutes(app, { canvas, editDeps, readBody, withDirection });
   registerTextSearchRoutes(app, {
     canvas,
@@ -29,8 +41,8 @@ const registerAppCanvasRoutes = (app: Hono, ctx: AppContext): void => {
     readBody,
     withDirection,
   });
-  registerFrameStateRoutes(app, { projects, canvas, bus, readBody });
-  registerFlowRoutes(app, { projects, canvas, readBody });
+  registerFrameStateRoutes(app, { frameStates, projects, readBody });
+  registerFlowRoutes(app, { projects, canvas, frameStates, readBody });
 };
 
 export { registerAppCanvasRoutes };

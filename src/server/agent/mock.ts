@@ -1007,7 +1007,12 @@ async function runMockScenario(
       session,
       mockCanvasContext(input, canvas),
       preview
-        ? probeWithPreview(preview, input.ctx.project, input.ctx.direction)
+        ? probeWithPreview(
+            preview,
+            input.ctx.project,
+            input.ctx.direction,
+            null
+          )
         : undefined,
       input.ctx.request.prompt
     );

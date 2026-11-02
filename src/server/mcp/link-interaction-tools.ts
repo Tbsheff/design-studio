@@ -68,7 +68,13 @@ const runList = async (deps: EditDeps, input: ListInput): Promise<Done> => {
 
 const runSet = async (deps: EditDeps, input: SetInput): Promise<Done> => {
   const ctx = await canvasScope(deps, input, true);
-  const probe = probeWithPreview(deps.preview, ctx.project, ctx.direction);
+
+  const probe = probeWithPreview(
+    deps.preview,
+    ctx.project,
+    ctx.direction,
+    deps.frameStates
+  );
 
   const done = await setLinkInteraction(
     ctx,

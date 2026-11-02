@@ -1,7 +1,7 @@
 import type { Context, Hono } from "hono";
 
 import { cleanParams, type FlowInput } from "../../shared/route-flow.js";
-import { configuredFrameStates } from "../app/frame-state-service.js";
+import type { FrameStateDeps } from "../app/frame-state-service.js";
 import {
   buildFlow,
   listRouteLinks,
@@ -15,6 +15,7 @@ import type { StudioProjectStore } from "../store/projects.js";
 interface FlowRouteDeps {
   projects: StudioProjectStore;
   canvas: CanvasService;
+  frameStates: FrameStateDeps;
   readBody: (c: Context) => Promise<Record<string, unknown>>;
 }
 
@@ -42,12 +43,12 @@ export function flowInputOf(body: Record<string, unknown>): FlowInput {
 }
 
 export function registerFlowRoutes(app: Hono, deps: FlowRouteDeps): void {
-  const { projects, canvas, readBody } = deps;
+  const { projects, canvas, frameStates, readBody } = deps;
 
   const flowDeps = (): FlowDeps => ({
     canvas,
+    frameStates,
     projectDir: (id) => projects.projectDir(id),
-    frameStates: configuredFrameStates(),
   });
 
   app.get("/api/projects/:pid/flow/links", async (c) => {

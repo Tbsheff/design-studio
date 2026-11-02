@@ -3,14 +3,14 @@ import type { Context, Hono } from "hono";
 import {
   applyFrameSession,
   applyFrameState,
-  configureFrameStates,
   readFrameStates,
   type FrameStateDeps,
 } from "../app/frame-state-service.js";
 import { BadRequestError } from "../store/errors.js";
 import type { StudioProjectStore } from "../store/projects.js";
 
-interface FrameStateRouteDeps extends Omit<FrameStateDeps, "projectDir"> {
+interface FrameStateRouteDeps {
+  frameStates: FrameStateDeps;
   projects: StudioProjectStore;
   readBody: (c: Context) => Promise<Record<string, unknown>>;
 }
@@ -40,14 +40,7 @@ export function registerFrameStateRoutes(
   deps: FrameStateRouteDeps
 ): void {
   const { projects, readBody } = deps;
-
-  const stateDeps: FrameStateDeps = {
-    projectDir: (id) => projects.projectDir(id),
-    bus: deps.bus,
-    canvas: deps.canvas,
-  };
-
-  configureFrameStates(stateDeps);
+  const stateDeps = deps.frameStates;
 
   app.get("/api/projects/:pid/frame-states", async (c) => {
     const project = await projects.get(c.req.param("pid"));

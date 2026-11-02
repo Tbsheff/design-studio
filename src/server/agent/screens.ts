@@ -12,8 +12,8 @@ import {
 import { changedLineRanges } from "../../shared/line-diff.js";
 import type { ScreenPlan } from "../../shared/run-levels.js";
 import {
-  configuredFrameStates,
   readFrameStates,
+  type FrameStateDeps,
 } from "../app/frame-state-service.js";
 import { stateOfFrame } from "../app/frame-state.js";
 import { listAppRoutes } from "../app/routes.js";
@@ -39,6 +39,7 @@ export interface ScreenDeps {
   preview: PreviewService;
   ctx: AgentRunContext;
   canvas?: CanvasService;
+  frameStates?: FrameStateDeps | null;
   startedAt?: number;
   cache?: ScreenCache;
 }
@@ -179,8 +180,11 @@ function ownFrames(
     .sort((a, b) => a.order - b.order);
 }
 
-async function frameStates(project: Project): Promise<FrameStatesView | null> {
-  const deps = project.app ? configuredFrameStates() : null;
+async function frameStates(
+  project: Project,
+  stateDeps: FrameStateDeps | null
+): Promise<FrameStatesView | null> {
+  const deps = project.app ? stateDeps : null;
   return deps ? readFrameStates(deps, project).catch(() => null) : null;
 }
 
@@ -268,7 +272,7 @@ async function canvasPages(
     ? await deps.canvas.read(project).catch(() => null)
     : null;
   const frames = ownFrames(snapshot?.canvas?.frames ?? [], direction.id);
-  const view = await frameStates(project);
+  const view = await frameStates(project, deps.frameStates ?? null);
   const pages: PageRef[] = [];
   for (const frame of frames) {
     const page = framePage(base, frame, view);

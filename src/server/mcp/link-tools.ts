@@ -42,7 +42,12 @@ async function contextOf(
 }
 
 function probeOf(deps: EditDeps, ctx: CanvasToolContext) {
-  return probeWithPreview(deps.preview, ctx.project, ctx.direction);
+  return probeWithPreview(
+    deps.preview,
+    ctx.project,
+    ctx.direction,
+    deps.frameStates
+  );
 }
 
 function failed(done: { result: Done["result"] }): Done | null {

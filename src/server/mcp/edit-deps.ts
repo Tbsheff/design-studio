@@ -2,6 +2,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import type { Direction, Project } from "../../shared/contracts.js";
+import type { FrameStateDeps } from "../canvas/app-flow/frame-state-service.js";
 import type { CanvasService } from "../canvas/service.js";
 import { warmKit } from "../components/props-service.js";
 import type { EditHistory } from "../direct-edit/history.js";
@@ -19,6 +20,7 @@ export interface EditDeps extends ExportDeps {
   request(method: string, url: string, body?: unknown): Promise<Response>;
   runner: AgentRunner;
   canvas: CanvasService;
+  frameStates: FrameStateDeps;
   bus: EventBus;
   approvals: ApprovalQueue;
   activity: ActivityLog;

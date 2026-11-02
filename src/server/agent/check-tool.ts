@@ -8,6 +8,7 @@ import type {
   SelectionContext,
 } from "../../shared/contracts.js";
 import type { ResolvedRunConfig } from "../../shared/run-levels.js";
+import type { FrameStateDeps } from "../canvas/app-flow/frame-state-service.js";
 import type { CanvasService } from "../canvas/service.js";
 import type { RenderCheckOptions } from "../preview/browser.js";
 import type { ProbeRect } from "../preview/quality-probe.js";
@@ -63,6 +64,7 @@ export interface RunToolState {
   lastChecks: RenderCheckResult[];
   baseline: Promise<BaselineShot[]> | null;
   canvas?: CanvasService;
+  frameStates?: FrameStateDeps | null;
   startedAt?: number;
   screenCache?: { stamp: string; screens: RunScreen[] };
   lastScreens?: RunScreen[];
@@ -392,6 +394,7 @@ export async function runScreens(
       preview,
       ctx,
       ...(state.canvas ? { canvas: state.canvas } : {}),
+      frameStates: state.frameStates ?? null,
       ...(state.startedAt === undefined ? {} : { startedAt: state.startedAt }),
       ...(state.screenCache ? { cache: state.screenCache } : {}),
     },

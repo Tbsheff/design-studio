@@ -37,11 +37,7 @@ import {
   findFrame,
   type PlaceSpec,
 } from "../tools.js";
-import {
-  applyFrameState,
-  configuredFrameStates,
-  type FrameStateDeps,
-} from "./frame-state-service.js";
+import { applyFrameState, type FrameStateDeps } from "./frame-state-service.js";
 import {
   cleanHref,
   createRouteScanner,
@@ -72,11 +68,12 @@ interface Size {
   height: number;
 }
 
-export function configuredFlowDeps(canvas: CanvasService): FlowDeps | null {
-  const states = configuredFrameStates();
-
-  return states
-    ? { canvas, projectDir: states.projectDir, frameStates: states }
+export function toFlowDeps(
+  canvas: CanvasService,
+  frameStates: FrameStateDeps | null | undefined
+): FlowDeps | null {
+  return frameStates
+    ? { canvas, projectDir: frameStates.projectDir, frameStates }
     : null;
 }
 

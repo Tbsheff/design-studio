@@ -2,6 +2,7 @@ import type { Context, Hono } from "hono";
 import type { z } from "zod";
 
 import type { Project } from "../../shared/contracts.js";
+import type { FrameStateDeps } from "../canvas/app-flow/frame-state-service.js";
 import {
   linkInteractionSchema,
   toInteractionRequest,
@@ -16,6 +17,7 @@ import type { PreviewService } from "../types.js";
 
 interface LinkInteractionRouteDeps {
   readonly canvas: CanvasService;
+  readonly frameStates: FrameStateDeps;
   readonly preview: Pick<PreviewService, "directionUrl" | "withPage"> | null;
   readonly projects: StudioProjectStore;
   readonly readBody: (ctx: Context) => Promise<object>;
@@ -62,7 +64,14 @@ const probeOf = (
     return null;
   }
 
-  return probeWithPreview(deps.preview, scope.project, scope.direction) ?? null;
+  return (
+    probeWithPreview(
+      deps.preview,
+      scope.project,
+      scope.direction,
+      deps.frameStates
+    ) ?? null
+  );
 };
 
 const registerLinkInteractionRoutes = (

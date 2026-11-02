@@ -3,11 +3,11 @@ import { z } from "zod";
 import { FLOW_MAX_DEPTH } from "../../shared/route-flow.js";
 import {
   buildFlow,
-  configuredFlowDeps,
   describeFlow,
   describeRouteLinks,
   FLOW_NOTE,
   listRouteLinks,
+  toFlowDeps,
 } from "../app/route-flow.js";
 import { EditError, loadTarget, refuseWhileRunning } from "./edit-deps.js";
 import { defineTool, directionId, projectId } from "./edit-kit.js";
@@ -100,7 +100,7 @@ const addFlowTool = defineTool(
     );
 
     refuseWhileRunning(deps, project, direction);
-    const flowDeps = configuredFlowDeps(deps.canvas);
+    const flowDeps = toFlowDeps(deps.canvas, deps.frameStates);
 
     if (!flowDeps) {
       throw new EditError("Design Studio is still starting. Try again.");

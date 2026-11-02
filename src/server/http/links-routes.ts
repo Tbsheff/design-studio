@@ -15,6 +15,7 @@ import {
   type LinkTarget,
   type PrototypeLink,
 } from "../../shared/links.js";
+import type { FrameStateDeps } from "../canvas/app-flow/frame-state-service.js";
 import {
   implicitLinks,
   keepImplicit,
@@ -29,6 +30,7 @@ import type { PreviewService } from "../types.js";
 interface LinksRouteDeps {
   projects: StudioProjectStore;
   canvas: CanvasService;
+  frameStates: FrameStateDeps;
   readBody: (c: Context) => Promise<Record<string, unknown>>;
   preview?: Pick<PreviewService, "directionUrl" | "withPage">;
 }
@@ -40,7 +42,7 @@ function implicitOf(deps: LinksRouteDeps, project: Project): ImplicitDeps {
     deps.canvas,
     project,
     deps.preview && main
-      ? probeWithPreview(deps.preview, project, main)
+      ? probeWithPreview(deps.preview, project, main, deps.frameStates)
       : undefined
   );
 }

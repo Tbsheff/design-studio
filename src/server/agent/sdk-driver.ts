@@ -20,6 +20,7 @@ import {
   withRunTask,
   type ResolvedRunConfig,
 } from "../../shared/run-levels.js";
+import type { FrameStateDeps } from "../canvas/app-flow/frame-state-service.js";
 import type { CanvasService } from "../canvas/service.js";
 import { SOURCE_DIR } from "../design-system/extract/draft.js";
 import { buildEnv } from "../platform/config/index.js";
@@ -116,6 +117,7 @@ interface SdkDriverOptions {
   canvas?: CanvasService;
   comments?: CommentStore;
   layerLocks?: LayerLockStore | null;
+  frameStates?: FrameStateDeps | null;
   queryFn?: QueryFn;
   onMessage?: (message: SDKMessage) => void;
   onPermission?: (toolName: string, result: PermissionResult) => void;
@@ -827,6 +829,7 @@ async function buildSdkOptions(
     ...(options.canvas ? { canvas: options.canvas } : {}),
     ...(options.comments ? { comments: options.comments } : {}),
     layerLocks: options.layerLocks ?? null,
+    frameStates: options.frameStates ?? null,
     ctx,
     runsDir: input.runsDir,
     runId: input.runId,
@@ -1133,6 +1136,7 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
       startedAt: Date.now(),
       screenCache: { stamp: "", screens: [] },
       ...(options.canvas ? { canvas: options.canvas } : {}),
+      frameStates: options.frameStates ?? null,
       baseline: config.preset.checks.quality
         ? captureBaseline(
             options.preview,

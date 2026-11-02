@@ -20,6 +20,7 @@ import {
   loadRepoContext,
   resolveRunTarget,
 } from "../agent/index.js";
+import type { FrameStateDeps } from "../canvas/app-flow/frame-state-service.js";
 import { createCanvasService } from "../canvas/index.js";
 import type { CanvasService } from "../canvas/index.js";
 import { recordLayout, stepLayout } from "../canvas/layout-steps.js";
@@ -94,6 +95,7 @@ interface AppDeps {
   thumbnails?: ThumbnailService;
   editHistory?: EditHistory;
   canvas?: CanvasService;
+  frameStates?: FrameStateDeps;
 }
 
 const DEV_UI_ORIGINS = ["http://127.0.0.1:5173", "http://localhost:5173"];
@@ -167,6 +169,12 @@ const createAppContext = (deps: AppDeps) => {
   const canvas =
     deps.canvas ??
     createCanvasService(bus, (projectId) => projects.projectDir(projectId));
+
+  const frameStates: FrameStateDeps = deps.frameStates ?? {
+    bus,
+    canvas,
+    projectDir: (projectId) => projects.projectDir(projectId),
+  };
 
   canvas.onLayoutChange?.((project, change, source) =>
     recordLayout(editHistory, canvas, project, change, source)
@@ -856,6 +864,7 @@ const createAppContext = (deps: AppDeps) => {
     findRunProject,
     folderPicker,
     forkDirection,
+    frameStates,
     layerLocks,
     library,
     liveDrafts,

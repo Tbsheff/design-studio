@@ -1599,7 +1599,7 @@ export type ParentToBridge =
       token: string;
       type: "force-state";
       selector: string | null;
-      states: ("hover" | "focus" | "active")[];
+      states: ("hover" | "focus" | "focus-visible" | "active" | "disabled")[];
       dark: boolean;
       track: boolean;
     }

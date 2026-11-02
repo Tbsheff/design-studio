@@ -25,6 +25,7 @@ import {
 import { LOFI_STYLE_ID } from "../shared/lofi.js";
 import { nudgeStepOf } from "../shared/nudge.js";
 import { reorderMoveOf } from "../shared/reorder.js";
+import { FORCE_STATE_PARAM, fromForcedParam } from "../shared/state-styles.js";
 import { structureKeyOf } from "../shared/structure-keys.js";
 import { TWEAKS_PREVIEW_STYLE_ID } from "../shared/tweaks.js";
 import { vectorToolKeyOf } from "../shared/vector.js";
@@ -39,7 +40,12 @@ import {
 } from "./app-source.js";
 import { AUTHORED_MAX_BYTES, ancestorPath, authoredRules } from "./authored.js";
 import { componentOwners } from "./component-owner.js";
-import { createForceState, type ForcedState } from "./force-state.js";
+import {
+  createForceState,
+  FORCED_STATES,
+  type ForcedState,
+} from "./force-state.js";
+import { forceStateFromUrl } from "./forced-boot.js";
 import { createFreeMove, nudgeBaseOf } from "./free-move.js";
 import { forwardHistoryKeys } from "./history-key.js";
 import { arrangeChordOf, isLayoutKey, layoutStyles } from "./inlineStyle.js";
@@ -1463,8 +1469,7 @@ function startBridge(session: BridgeSession): void {
     message: Extract<ParentToBridge, { type: "force-state" }>
   ): void => {
     const states = (Array.isArray(message.states) ? message.states : []).filter(
-      (state): state is ForcedState =>
-        state === "hover" || state === "focus" || state === "active"
+      (state): state is ForcedState => FORCED_STATES.includes(state)
     );
     const selector =
       typeof message.selector === "string" && message.selector.length <= 2000
@@ -1853,6 +1858,11 @@ if (!globalScope[marker]) {
   exposeHeadlessScan(selectorFor);
   exposeHeadlessMatch(APP_MODE !== "next");
   markScopedElement();
+  forceStateFromUrl(
+    fromForcedParam(
+      new URL(window.location.href).searchParams.get(FORCE_STATE_PARAM)
+    )
+  );
   const session = readSession();
   if (session) startBridge(session);
 }

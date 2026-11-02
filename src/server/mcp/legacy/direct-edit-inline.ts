@@ -5,6 +5,7 @@ import type { ToolSpec } from "../edit-kit.js";
 import { FILL_TOOLS } from "../fill-tools.js";
 import { MOTION_TOOLS } from "../motion-tools.js";
 import { SPACING_TOOLS } from "../spacing-tools.js";
+import { STATE_STYLE_TOOLS } from "../state-styles-tools.js";
 import { TEXT_SEARCH_TOOLS } from "../text-search-tools.js";
 import { TEXT_STYLE_TOOLS } from "../text-style-tools.js";
 import {
@@ -60,6 +61,7 @@ const DIRECT_EDIT_INLINE_TOOLS: ToolSpec[] = [
   ...COMPONENT_VARIANT_TOOLS,
   ...TEXT_SEARCH_TOOLS,
   ...BREAKPOINT_TOOLS,
+  ...STATE_STYLE_TOOLS,
 ];
 
 export { DIRECT_EDIT_INLINE_TOOLS };

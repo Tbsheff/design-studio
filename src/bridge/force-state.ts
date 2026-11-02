@@ -8,7 +8,20 @@ const DARK_TEST = /\(\s*prefers-color-scheme\s*:\s*dark\s*\)/;
 const HOVER_MEDIA = /\(\s*hover\s*:\s*hover\s*\)/g;
 const CLIMBING = new Set(["hover", "active"]);
 
-export type ForcedState = "hover" | "focus" | "active";
+export type ForcedState =
+  | "hover"
+  | "focus"
+  | "focus-visible"
+  | "active"
+  | "disabled";
+
+export const FORCED_STATES: readonly ForcedState[] = [
+  "hover",
+  "focus",
+  "focus-visible",
+  "active",
+  "disabled",
+];
 
 interface Forced {
   selector: string;

@@ -10,6 +10,10 @@ import {
 import { cleanExportPath, type ExportFrame } from "../../shared/export.js";
 import { withFrameStateHost } from "../../shared/frame-state.js";
 import {
+  withForcedParam,
+  type ForcedStateWire,
+} from "../../shared/state-styles.js";
+import {
   firstVersionState,
   firstVersionWaitText,
 } from "../app/first-version.js";
@@ -34,6 +38,7 @@ import {
   type ExportSource,
 } from "../export/source.js";
 import { noteRenderedPage } from "../preview/render-wait.js";
+import { forcedOf } from "../state-styles/forced-store.js";
 import { listElementVariants } from "../variations/routes.js";
 import {
   isLayerRef,
@@ -635,6 +640,15 @@ interface FrameShot {
   height?: number;
   path?: string;
   state?: string;
+  forced?: ForcedStateWire;
+}
+
+function forcedPart(
+  projectId: string,
+  frameId: string
+): { forced?: ForcedStateWire } {
+  const forced = forcedOf(projectId, frameId);
+  return forced ? { forced } : {};
 }
 
 async function frameShot(deps: ExportDeps, args: Args): Promise<FrameShot> {
@@ -649,7 +663,8 @@ async function frameShot(deps: ExportDeps, args: Args): Promise<FrameShot> {
         deps.projects.projectDir(projectId)
       )
     ).canvas?.frames ?? [];
-  if (frames.length === 0 && ref === "f1") return { args };
+  if (frames.length === 0 && ref === "f1")
+    return { args, ...forcedPart(project.id, "f1") };
   const frame = findFrame(frames, ref);
   if (!frame) throw new ToolError(`no frame ${ref} on the canvas`);
   const withDirection =
@@ -670,6 +685,7 @@ async function frameShot(deps: ExportDeps, args: Args): Promise<FrameShot> {
     height: frame.height,
     ...(frame.path ? { path: frame.path } : {}),
     ...(state ? { state } : {}),
+    ...forcedPart(project.id, frame.id),
   };
 }
 
@@ -769,7 +785,10 @@ async function screenshot(deps: ExportDeps, raw: Args): Promise<ToolResult> {
   await warmAppPage(deps, src.project, page);
   const opened = await src.open();
   try {
-    const url = withFrameStateHost(opened.url, picked.state);
+    const url = withForcedParam(
+      withFrameStateHost(opened.url, picked.state),
+      picked.forced ?? null
+    );
     const selector = element
       ? await elementSelector(
           deps,

@@ -132,6 +132,9 @@ const SEARCH_TEXT_TOOL = "mcp__studio__search_text";
 const UPDATE_TEXT_TOOL = "mcp__studio__update_text";
 const LIST_BREAKPOINTS_TOOL = "mcp__studio__list_breakpoints";
 const SET_BREAKPOINT_STYLE_TOOL = "mcp__studio__set_breakpoint_style";
+const LIST_STATE_STYLES_TOOL = "mcp__studio__list_state_styles";
+const SET_STATE_STYLE_TOOL = "mcp__studio__set_state_style";
+const SET_FORCED_STATE_TOOL = "mcp__studio__set_forced_state";
 
 const DIRECT_EDIT_TOOLS = new Set<string>([
   INSERT_ICON_TOOL,
@@ -156,6 +159,7 @@ const DIRECT_EDIT_TOOLS = new Set<string>([
   IMPORT_PAGE_TOOL,
   UPDATE_TEXT_TOOL,
   SET_BREAKPOINT_STYLE_TOOL,
+  SET_STATE_STYLE_TOOL,
   ...STUDIO_EDIT_TOOLS_R13,
 ]);
 
@@ -193,6 +197,9 @@ const STUDIO_MCP_TOOLS: readonly string[] = [
   UPDATE_TEXT_TOOL,
   LIST_BREAKPOINTS_TOOL,
   SET_BREAKPOINT_STYLE_TOOL,
+  LIST_STATE_STYLES_TOOL,
+  SET_STATE_STYLE_TOOL,
+  SET_FORCED_STATE_TOOL,
   ...AGENT_OPS.toolIds,
 ];
 

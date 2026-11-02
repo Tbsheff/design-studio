@@ -2,6 +2,14 @@ export const VARIANT_STATES = ["hover", "focus", "active"] as const;
 
 export type VariantState = (typeof VARIANT_STATES)[number];
 
+export const PSEUDO_STATES = [
+  ...VARIANT_STATES,
+  "focus-visible",
+  "disabled",
+] as const;
+
+export type PseudoState = (typeof PSEUDO_STATES)[number];
+
 export const DEFAULT_BREAKPOINTS: readonly Breakpoint[] = [
   { name: "sm", px: 640 },
   { name: "md", px: 768 },
@@ -18,7 +26,7 @@ export interface Breakpoint {
 export interface ParsedVariant {
   breakpoint: string | null;
   dark: boolean;
-  states: VariantState[];
+  states: PseudoState[];
 }
 
 export interface VariantSupport {
@@ -32,8 +40,8 @@ export interface VariantSupport {
 const PART = /^[a-z0-9][a-z0-9-]*$/;
 const MAX_VARIANT = 60;
 
-function isState(part: string): part is VariantState {
-  return (VARIANT_STATES as readonly string[]).includes(part);
+function isState(part: string): part is PseudoState {
+  return (PSEUDO_STATES as readonly string[]).includes(part);
 }
 
 export function parseVariant(raw: string): ParsedVariant | null {
@@ -69,7 +77,7 @@ export function parseVariant(raw: string): ParsedVariant | null {
   }
 
   out.states.sort(
-    (a, b) => VARIANT_STATES.indexOf(a) - VARIANT_STATES.indexOf(b)
+    (a, b) => PSEUDO_STATES.indexOf(a) - PSEUDO_STATES.indexOf(b)
   );
 
   return out;

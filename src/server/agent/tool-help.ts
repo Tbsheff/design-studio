@@ -17,6 +17,11 @@ import { importPageDescription } from "./page-import-tool.js";
 import { COMPARE_REFERENCE_DESCRIPTION } from "./reference-tool.js";
 import { SELECT_MATCHING_DESCRIPTION } from "./select-tool.js";
 import {
+  listStateStylesDescription,
+  setForcedStateDescription,
+  setStateStyleDescription,
+} from "./state-styles-tool.js";
+import {
   searchTextDescription,
   updateTextDescription,
 } from "./text-search-tool.js";
@@ -118,6 +123,12 @@ export const TOOL_SHORT = {
     "Read only. Project breakpoints, the active one for a frame width, and the values each breakpoint overrides on a layer.",
   set_breakpoint_style:
     "Set or reset one style property of one layer at base or one breakpoint: md:/lg: classes in Tailwind, @media rules in HTML.",
+  list_state_styles:
+    "Read only. The hover, focus-visible, active, disabled and dark values of one layer, per breakpoint, and the forced frame states.",
+  set_state_style:
+    "Set or reset one style property of one layer in one state (hover, focus-visible, active, disabled, dark), optionally at a breakpoint.",
+  set_forced_state:
+    "Show a frame in hover, focus-visible, active, disabled or dark without a pointer, so get_screenshot shows that state.",
   copy_code:
     "Read only. Copy one element as html, tailwind or a react JSX component with kit components and import lines.",
   set_motion:
@@ -213,6 +224,9 @@ export const TOOL_HELP: Record<
   search_text: searchTextDescription,
   list_breakpoints: listBreakpointsDescription,
   set_breakpoint_style: setBreakpointStyleDescription,
+  list_state_styles: listStateStylesDescription,
+  set_state_style: setStateStyleDescription,
+  set_forced_state: setForcedStateDescription,
   update_text: updateTextDescription,
   arrange:
     "Align, distribute or tidy up sibling elements like Figma, with the same code as the studio arrange bar. In a flex parent it writes the parent layout (align-items, justify-content, gap) or align-self on some children; in a grid justify-items or align-items; absolute children move by left/top. align and distribute in a parent with no auto layout are refused; tidy adds auto layout (flex, gap) to it. Tailwind projects get classes. Pass one of align, distribute or tidy.",

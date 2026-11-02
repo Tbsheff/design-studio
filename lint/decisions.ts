@@ -420,7 +420,7 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/server/{mcp/fill-tools,agent/fill-tool,fill/deps}.ts",
       "src/server/{design-system/model/index,design-system/ops/index,spacing/deps,mcp/spacing-tools,agent/spacing-tool,components/variant-write/deps,mcp/component-variant-tools,agent/component-variant-tool,canvas/links/link-interaction,canvas/links/link-interaction-input,canvas/links/link-target,mcp/link-interaction-tools,agent/link-interaction-tool,page-import/deps,mcp/page-import-tools,agent/page-import-tool,text-search/deps,mcp/text-search-tools,agent/text-search-tool,breakpoints/deps,mcp/breakpoints-tools,agent/breakpoints-tool,state-styles/deps,mcp/state-styles-tools,agent/state-styles-tool,style-scope/engine/deps,stacking/deps,stacking/engine/deps,mcp/stacking-tools,agent/stacking-tool,image-search/deps,mcp/image-search-tools,agent/image-search-tool,accessibility/deps,mcp/accessibility-tools,agent/accessibility-tool}.ts",
       "src/server/{mcp/copy-code-tools,agent/copy-code-tool}.ts",
-      "cloud/api/src/tenant/probes/planted-tq.ts",
+      "cloud/api/src/tenant/{probes/{planted-tq,cross-org},repos/projects,blobs,current-org,db,resolver,viewer-db}.ts",
       "src/server/export/copy-handler.ts",
       "src/server/export/copy-react.ts",
       "src/server/http/text-style-routes.ts",

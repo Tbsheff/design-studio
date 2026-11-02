@@ -1,0 +1,166 @@
+import { Context, Effect, Layer } from "effect";
+
+import { NotFound } from "../../../../src/shared/actions/_core/errors/not-found.js";
+import { CloudBindings } from "../platform/bindings.js";
+import { CurrentOrg } from "./current-org.js";
+import { TenantDb } from "./db.js";
+import type { TenantDbApi } from "./db.js";
+import { BadBlobId } from "./errors/bad-blob-id.js";
+import { tq } from "./sql.js";
+
+type BlobKind = "attachment" | "blob";
+
+interface BlobRef {
+  readonly kind: BlobKind;
+  readonly name: string;
+}
+
+interface BlobPage {
+  readonly cursor: string | null;
+  readonly names: readonly string[];
+}
+
+type BlobBody = ArrayBuffer | ReadableStream | string;
+
+const LIST_MAX = 100;
+
+const ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/u;
+
+const HASH_PATTERN = /^[0-9a-f]{64}$/u;
+
+const FOLDERS: Readonly<Record<BlobKind, string>> = {
+  attachment: "attachments",
+  blob: "blobs",
+};
+
+const PATTERNS: Readonly<Record<BlobKind, RegExp>> = {
+  attachment: ID_PATTERN,
+  blob: HASH_PATTERN,
+};
+
+const auditBadId = tq<{
+  readonly action: string;
+  readonly actorKind: string;
+  readonly createdAt: number;
+  readonly detail: string;
+  readonly id: string;
+  readonly targetTable: string;
+}>`
+  INSERT INTO audit_log (org_id, id, actor_kind, action, target_table, detail, created_at)
+  VALUES (:org, :id, :actorKind, :action, :targetTable, :detail, :createdAt)
+  RETURNING org_id`;
+
+interface TenantBlobsApi {
+  readonly delete: (ref: BlobRef) => Effect.Effect<void, never, CurrentOrg>;
+  readonly get: (
+    ref: BlobRef
+  ) => Effect.Effect<R2ObjectBody, NotFound, CurrentOrg>;
+  readonly list: (
+    kind: BlobKind,
+    cursor: string | null
+  ) => Effect.Effect<BlobPage, never, CurrentOrg>;
+  readonly put: (
+    ref: BlobRef,
+    body: BlobBody
+  ) => Effect.Effect<void, never, CurrentOrg>;
+}
+
+const prefixOf = (orgId: string, kind: BlobKind): string =>
+  `org/${orgId}/${FOLDERS[kind]}/`;
+
+const makeKeyOf = (
+  db: TenantDbApi
+): ((ref: BlobRef) => Effect.Effect<string, never, CurrentOrg>) =>
+  Effect.fn("TenantBlobs.keyOf")(function* run(ref: BlobRef) {
+    const org = yield* CurrentOrg;
+
+    if (!PATTERNS[ref.kind].test(ref.name)) {
+      yield* db.insert(auditBadId, {
+        action: "blob.badId",
+        actorKind: "system",
+        createdAt: Date.now(),
+        detail: ref.kind,
+        id: crypto.randomUUID(),
+        targetTable: "blob_ref",
+      });
+
+      return yield* Effect.die(
+        new BadBlobId({
+          kind: ref.kind,
+          message: "The blob name is not valid.",
+        })
+      );
+    }
+
+    return `${prefixOf(org.orgId, ref.kind)}${ref.name}`;
+  });
+
+const toPage = (prefix: string, listed: R2Objects): BlobPage => {
+  const names = listed.objects.map((object) => object.key.slice(prefix.length));
+
+  if (listed.truncated) {
+    return { cursor: listed.cursor, names };
+  }
+
+  return { cursor: null, names };
+};
+
+const makeBlobs = (files: R2Bucket, db: TenantDbApi): TenantBlobsApi => {
+  const keyOf = makeKeyOf(db);
+
+  return {
+    delete: Effect.fn("TenantBlobs.delete")(function* run(ref) {
+      const key = yield* keyOf(ref);
+
+      yield* Effect.promise(() => files.delete(key));
+    }),
+    get: Effect.fn("TenantBlobs.get")(function* run(ref) {
+      const key = yield* keyOf(ref);
+      const object = yield* Effect.promise(() => files.get(key));
+
+      if (object === null) {
+        return yield* new NotFound({ message: "The file does not exist." });
+      }
+
+      return object;
+    }),
+    list: Effect.fn("TenantBlobs.list")(function* run(kind, cursor) {
+      const org = yield* CurrentOrg;
+      const prefix = prefixOf(org.orgId, kind);
+      const options: R2ListOptions = { limit: LIST_MAX, prefix };
+
+      if (cursor !== null) {
+        options.cursor = cursor;
+      }
+
+      const listed = yield* Effect.promise(() => files.list(options));
+
+      return toPage(prefix, listed);
+    }),
+    put: Effect.fn("TenantBlobs.put")(function* run(ref, body) {
+      const key = yield* keyOf(ref);
+
+      yield* Effect.promise(() => files.put(key, body));
+    }),
+  };
+};
+
+class TenantBlobs extends Context.Service<TenantBlobs, TenantBlobsApi>()(
+  "design-studio/tenant/TenantBlobs"
+) {
+  declare public readonly access: "write";
+
+  public static readonly layer = Layer.effect(
+    TenantBlobs,
+    Effect.gen(function* make() {
+      const bindings = yield* CloudBindings;
+      const db = yield* TenantDb;
+
+      return TenantBlobs.of(makeBlobs(bindings.files, db));
+    })
+  );
+}
+
+export { TenantBlobs };
+
+export type { BlobBody, BlobKind, BlobPage, BlobRef, TenantBlobsApi };

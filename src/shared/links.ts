@@ -503,6 +503,7 @@ export interface LinkQuery {
   selector: string;
   tag?: string;
   text?: string;
+  trigger?: "hover" | "press";
 }
 
 export interface LinkRectReport {

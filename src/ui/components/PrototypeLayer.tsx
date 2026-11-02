@@ -1,4 +1,6 @@
 import {
+  lazy,
+  Suspense,
   useRef,
   useState,
   type PointerEvent as ReactPointerEvent,
@@ -6,12 +8,13 @@ import {
 import { createPortal } from "react-dom";
 
 import type { SelectionContext } from "../../shared/contracts";
+import { targetFrame, TRIGGER_LABELS } from "../../shared/link-interaction";
 import {
   ACTION_LABELS,
   cleanLinkText,
   EASING_LABELS,
   isBackTarget,
-  LINK_ACTIONS,
+  isFrameAction,
   LINK_EASING_DEFAULT,
   LINK_EASINGS,
   LINK_ISSUE_TEXT,
@@ -19,7 +22,6 @@ import {
   linkAction,
   linkDuration,
   transitionLabel,
-  type LinkAction,
   type LinkEasing,
   type LinkMotion,
   type LinksFile,
@@ -35,6 +37,12 @@ import { Icon } from "./Icon";
 import { UiSelect, type UiSelectOption } from "./UiSelect";
 
 import "../styles/prototype.css";
+
+const LinkInteractionEditor = lazy(async () => {
+  const mod = await import("../features/link-interaction/index.js");
+
+  return { default: mod.LinkInteractionEditor };
+});
 
 interface Point {
   x: number;
@@ -263,9 +271,8 @@ export function LinkArrows({
               height: state.rect.height,
             };
 
-            const target = isBackTarget(state.link.to)
-              ? null
-              : frameBox(state.link.to.frame);
+            const toFrame = targetFrame(state.link.to);
+            const target = toFrame ? frameBox(toFrame) : null;
 
             const broken = state.issue !== null;
             const cls = `link-arrow${broken ? " broken" : ""}${state.link.implicit ? " implicit" : ""}${state.link.action ? " overlay" : ""}${state.link.id === selectedId ? " selected" : ""}`;
@@ -514,13 +521,10 @@ interface BarProps {
   startId: string;
   selected: LinkState | null;
   hasSelection: boolean;
+  selection?: SelectionContext;
   frameTitle: (frame: CanvasFrame) => string;
   linkTitle: (link: PrototypeLink) => string;
   onError: (message: string) => void;
-}
-
-function targetValue(to: LinkTarget): string {
-  return isBackTarget(to) ? "back" : to.frame;
 }
 
 const DURATIONS = [150, 200, 320, 500, 800, 1200];
@@ -533,9 +537,6 @@ function motionOptions(link: PrototypeLink) {
     : [...DURATIONS, duration].sort((a, b) => a - b);
 
   return {
-    actions: LINK_ACTIONS.filter(
-      (action) => action === "navigate" || !isBackTarget(link.to)
-    ).map((action) => ({ value: action, label: ACTION_LABELS[action] })),
     transitions: LINK_TRANSITIONS.map((transition) => ({
       value: transition,
       label: transitionLabel(transition),
@@ -557,7 +558,7 @@ function targetOptions(
   frameTitle: (frame: CanvasFrame) => string
 ): UiSelectOption[] {
   const options = frames.filter((frame) => frame.id !== link.from.frame);
-  const target = isBackTarget(link.to) ? null : link.to.frame;
+  const target = targetFrame(link.to);
 
   const missing =
     target && !options.some((frame) => frame.id === target) ? target : null;
@@ -577,15 +578,20 @@ function LinkEditor({
   state,
   frames,
   frameTitle,
+  picked,
+  onPicking,
   onError,
 }: {
   projectId: string;
   state: LinkState;
   frames: CanvasFrame[];
   frameTitle: (frame: CanvasFrame) => string;
+  picked: string | null;
+  onPicking: (isPicking: boolean) => void;
   onError: (message: string) => void;
 }) {
   const link = state.link;
+  const toFrames = isFrameAction(linkAction(link));
 
   const fail = (error: unknown) =>
     onError(error instanceof Error ? error.message : String(error));
@@ -626,30 +632,38 @@ function LinkEditor({
           Found in page
         </span>
       )}
-      <UiSelect
-        className="proto-select"
-        aria-label="Link target"
-        value={isBackTarget(link.to) ? "back" : link.to.frame}
-        options={targetOptions(link, frames, frameTitle)}
-        onChange={(value) =>
-          change({ to: value === "back" ? { back: true } : { frame: value } })
-        }
-      />
-      <UiSelect
-        className="proto-select"
-        aria-label="Action"
-        value={linkAction(link)}
-        options={opts.actions}
-        onChange={(value: LinkAction) => change({ action: value })}
-      />
-      <UiSelect
-        className="proto-select"
-        aria-label="Transition"
-        value={link.transition}
-        options={opts.transitions}
-        onChange={(value: LinkTransition) => change({ transition: value })}
-      />
-      {link.transition !== "instant" && (
+      <Suspense fallback={null}>
+        <LinkInteractionEditor
+          key={link.id}
+          projectId={projectId}
+          link={link}
+          frames={frames}
+          picked={picked}
+          onPicking={onPicking}
+          onError={onError}
+        />
+      </Suspense>
+      {toFrames && (
+        <UiSelect
+          className="proto-select"
+          aria-label="Link target"
+          value={targetFrame(link.to) ?? "back"}
+          options={targetOptions(link, frames, frameTitle)}
+          onChange={(value) =>
+            change({ to: value === "back" ? { back: true } : { frame: value } })
+          }
+        />
+      )}
+      {toFrames && (
+        <UiSelect
+          className="proto-select"
+          aria-label="Transition"
+          value={link.transition}
+          options={opts.transitions}
+          onChange={(value: LinkTransition) => change({ transition: value })}
+        />
+      )}
+      {toFrames && link.transition !== "instant" && (
         <>
           <UiSelect
             className="proto-select proto-narrow"
@@ -696,12 +710,22 @@ function LinkEditor({
   );
 }
 
-function rowMeta(link: PrototypeLink): string {
+function actionMeta(link: PrototypeLink): string {
   const action = linkAction(link);
+
+  if (!isFrameAction(action)) {
+    return ACTION_LABELS[action];
+  }
 
   return action === "navigate"
     ? transitionLabel(link.transition)
     : `${ACTION_LABELS[action]}, ${transitionLabel(link.transition).toLowerCase()}`;
+}
+
+function rowMeta(link: PrototypeLink): string {
+  const meta = actionMeta(link);
+
+  return link.trigger ? `${TRIGGER_LABELS[link.trigger.kind]}, ${meta}` : meta;
 }
 
 function LinkList({
@@ -778,6 +802,16 @@ export function PrototypeBar(bar: BarProps) {
   };
 
   const [listOpen, setListOpen] = useState(false);
+  const [pinnedId, setPinnedId] = useState<string | null>(null);
+
+  const editing =
+    (pinnedId && p.states.find((state) => state.link.id === pinnedId)) ||
+    p.selected;
+
+  const editingId = editing?.link.id ?? null;
+
+  const onPicking = (isPicking: boolean) =>
+    setPinnedId(isPicking ? editingId : null);
   const broken = p.states.filter((state) => state.issue !== null).length;
   const found = p.states.filter((state) => state.link.implicit).length;
   const savedCount = p.file.links.length - found;
@@ -812,12 +846,14 @@ export function PrototypeBar(bar: BarProps) {
         }
       />
       <div className="toolbar-sep" />
-      {p.selected ? (
+      {editing ? (
         <LinkEditor
           projectId={p.projectId}
-          state={p.selected}
+          state={editing}
           frames={p.frames}
           frameTitle={p.frameTitle}
+          picked={p.selection?.selector ?? null}
+          onPicking={onPicking}
           onError={p.onError}
         />
       ) : (

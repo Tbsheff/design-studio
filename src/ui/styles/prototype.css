@@ -463,3 +463,70 @@ body:has(.ds-toast) .proto-bar,
     transition: none;
   }
 }
+
+.proto-interaction {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.proto-interaction[aria-busy="true"] {
+  opacity: 0.7;
+}
+
+.proto-input {
+  height: 24px;
+  min-width: 0;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--text);
+  font: var(--t-xs) / 1 var(--font);
+}
+
+.proto-input:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+
+.proto-input[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+
+.proto-ms {
+  width: 72px;
+  font-variant-numeric: tabular-nums;
+}
+
+.proto-url {
+  width: 200px;
+}
+
+.proto-target {
+  width: 140px;
+  font-family: var(--mono);
+}
+
+.proto-delay {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.proto-unit {
+  color: var(--text-2);
+  font-size: var(--t-xs);
+}
+
+.proto-key kbd {
+  font: var(--t-xs) / 1 var(--mono);
+}
+
+.proto-key[aria-pressed="true"],
+.proto-picking {
+  background: var(--accent-soft);
+  border-color: var(--accent-line);
+  color: var(--accent-text);
+}

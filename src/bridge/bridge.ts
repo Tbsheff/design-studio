@@ -48,7 +48,8 @@ import { createLayerIndex, moveSelection } from "./layers.js";
 import { createLockSet } from "./locks.js";
 import { createMarquee } from "./marquee.js";
 import { createOptimistic, type Released } from "./optimistic.js";
-import { createLinkBridge } from "./play.js";
+import { createTriggerBridge } from "./play-triggers.js";
+import { createLinkBridge, linkQueries } from "./play.js";
 import { elementBySource } from "./reorder.js";
 import {
   exposeHeadlessMatch,
@@ -1423,6 +1424,7 @@ function startBridge(session: BridgeSession): void {
   const rects = createRectTracker(post);
   const anchors = createAnchorTracker(post);
   const links = createLinkBridge(post);
+  const triggers = createTriggerBridge(post);
   const livePreview = createLivePreview();
   const textEditor = createTextEditor({
     post,
@@ -1525,7 +1527,11 @@ function startBridge(session: BridgeSession): void {
     "force-state": onForceState,
     "track-anchors": (message) => anchors.track(anchorQueries(message.anchors)),
     "track-links": (message) => links.track(message.links),
-    "play-links": (message) => links.play(message.links),
+    "play-links": (message) => {
+      links.play(message.links);
+      triggers.set(linkQueries(message.links));
+    },
+    "play-run": (message) => triggers.run(message.op, message.selector),
     "play-fx": (message) => links.fx(message),
     "request-tree": () =>
       post({ type: "tree", ...layers.build(locks.ownLocked) }),
@@ -1760,6 +1766,7 @@ function startBridge(session: BridgeSession): void {
   };
 
   window.addEventListener("message", onMessage);
+  triggers.install();
   window.addEventListener("dragover", onDragOver, { capture: true });
   window.addEventListener("drop", onFileDrop, { capture: true });
   window.addEventListener("pointermove", onPointerMove, {

@@ -10,8 +10,11 @@ import {
 
 import type { ProjectKind, SelectionContext } from "../shared/contracts";
 import { withFrameStateHost } from "../shared/frame-state";
+import { targetFrame } from "../shared/link-interaction";
 import {
+  ACTION_LABELS,
   isBackTarget,
+  linkAction,
   sourceName,
   startFrameOf,
   withImplicit,
@@ -132,8 +135,18 @@ export function usePrototype(o: Options) {
     return frame ? frameTitle(frame) : "missing frame";
   };
 
+  const targetName = (link: PrototypeLink) => {
+    if (isBackTarget(link.to)) {
+      return "Back";
+    }
+
+    const to = targetFrame(link.to);
+
+    return to ? titleById(to) : ACTION_LABELS[linkAction(link)];
+  };
+
   const linkTitle = (link: PrototypeLink) =>
-    `${sourceName(link.from)} in ${titleById(link.from.frame)} → ${isBackTarget(link.to) ? "Back" : titleById(link.to.frame)}`;
+    `${sourceName(link.from)} in ${titleById(link.from.frame)} → ${targetName(link)}`;
 
   const urls = useRef(new Map<string, Promise<string>>());
   const frameStates = useCurrentFrameStates();
@@ -206,6 +219,7 @@ export function usePrototype(o: Options) {
           startId={startId}
           selected={selected}
           hasSelection={single !== undefined}
+          selection={single}
           frameTitle={frameTitle}
           linkTitle={linkTitle}
           onError={o.notify}

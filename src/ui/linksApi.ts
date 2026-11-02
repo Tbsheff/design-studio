@@ -1,8 +1,13 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import { STUDIO_TOKEN_HEADER, type StudioEvent } from "../shared/contracts";
+import type {
+  LinkTriggerKind,
+  LinkVisibility,
+} from "../shared/link-interaction";
 import {
   emptyLinksFile,
+  type LinkAction,
   type LinkMotion,
   type LinkSource,
   type LinksFile,
@@ -42,6 +47,18 @@ async function call<T>(
   }
 
   return (await res.json()) as T;
+}
+
+export interface LinkInteractionChange {
+  readonly action?: LinkAction;
+  readonly delayMs?: number;
+  readonly key?: string;
+  readonly linkId: string;
+  readonly target?: string;
+  readonly toFrame?: string;
+  readonly trigger?: LinkTriggerKind;
+  readonly url?: string;
+  readonly visibility?: LinkVisibility;
 }
 
 const base = (projectId: string) =>
@@ -143,6 +160,19 @@ export const linksApi = {
     write(projectId, "POST", `${base(projectId)}/keep`, { ids, ...motion }),
   remove: (projectId: string, id: string) =>
     write(projectId, "DELETE", `${base(projectId)}/${id}`),
+  setInteraction: async (
+    projectId: string,
+    change: LinkInteractionChange
+  ): Promise<PrototypeLink | null> => {
+    const { links, link } = await call<{
+      links: LinksFile;
+      link: PrototypeLink | null;
+    }>("POST", `${base(projectId)}/interaction`, change);
+
+    setFile(projectId, links);
+
+    return link;
+  },
   setStart: (projectId: string, frame: string) =>
     write(projectId, "PUT", `${base(projectId)}/start`, { frame }),
 };

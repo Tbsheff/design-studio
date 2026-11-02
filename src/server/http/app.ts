@@ -165,6 +165,7 @@ import { registerHunkRoutes } from "./hunk-routes.js";
 import { registerIconRoutes } from "./icon-routes.js";
 import { registerInsertRoutes } from "./insert-routes.js";
 import { registerLayerStateRoutes } from "./layer-state-routes.js";
+import { registerLinkInteractionRoutes } from "./link-interaction-routes.js";
 import { registerMcpRoutes } from "./mcp-routes.js";
 import { listWorkTree, parseMentions, readMentionFiles } from "./mentions.js";
 import { registerMotionRoutes } from "./motion-routes.js";
@@ -2132,6 +2133,7 @@ export function createApp(deps: AppDeps): Hono {
   });
   registerHunkRoutes(app, { editDeps, withDirection, readBody });
   registerCanvasRoutes(app, { projects, canvas, readBody, preview });
+  registerLinkInteractionRoutes(app, { canvas, preview, projects, readBody });
   registerFrameStateRoutes(app, { projects, canvas, bus, readBody });
   registerFlowRoutes(app, { projects, canvas, readBody });
 

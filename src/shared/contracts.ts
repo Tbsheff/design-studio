@@ -1107,6 +1107,10 @@ export const BRIDGE_CHANGES_PATH = "/__studio/changes";
 
 export type PlayKey = "exit" | "restart" | "back";
 
+export type PlayTriggerPhase = "enter" | "leave" | "down" | "up";
+
+export type PlayRunOp = "scroll" | "show" | "hide" | "toggle";
+
 export type LinkRect = NonNullable<LinkRectReport["rect"]>;
 
 export type BridgeToParent =
@@ -1195,6 +1199,14 @@ export type BridgeToParent =
   | { ns: "studio"; token: string; type: "link-rects"; links: LinkRectReport[] }
   | { ns: "studio"; token: string; type: "play-click"; id: string }
   | { ns: "studio"; token: string; type: "play-key"; key: PlayKey }
+  | {
+      ns: "studio";
+      token: string;
+      type: "play-trigger";
+      id: string;
+      phase: PlayTriggerPhase;
+    }
+  | { ns: "studio"; token: string; type: "play-press-key"; key: string }
   | {
       ns: "studio";
       token: string;
@@ -1603,6 +1615,13 @@ export type ParentToBridge =
       token: string;
       type: "play-links";
       links: LinkQuery[] | null;
+    }
+  | {
+      ns: "studio";
+      token: string;
+      type: "play-run";
+      op: PlayRunOp;
+      selector: string;
     }
   | {
       ns: "studio";

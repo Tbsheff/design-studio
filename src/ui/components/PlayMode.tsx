@@ -10,8 +10,10 @@ import {
   BRIDGE_PASSIVE_PARAM,
   type BridgeToParent,
   type LinkRect,
+  type PlayRunOp,
   type ProjectKind,
 } from "../../shared/contracts";
+import { targetFrame } from "../../shared/link-interaction";
 import {
   easingCss,
   isBackTarget,
@@ -25,6 +27,12 @@ import {
 } from "../../shared/links";
 import { frameSrc, postToFrame, useBridge, type BridgeFrame } from "../bridge";
 import type { CanvasFrame } from "../canvasFrames";
+import {
+  bridgeTrigger,
+  runLink,
+  type PlayHandlers,
+} from "../features/link-interaction/play-runtime.js";
+import { usePlayTriggers } from "../features/link-interaction/use-play-triggers.js";
 import { randomToken } from "../session";
 import { linkQuery } from "../useLinkRects";
 import { frameTitle } from "./CanvasFrames";
@@ -376,22 +384,56 @@ function usePlay(p: Props) {
     show(previous, motion, list.slice(0, -1));
   };
 
-  const onLinkClick = (id: string) => {
-    const link = props.current.file.links.find((item) => item.id === id);
-
-    if (!link) {
-      return;
-    }
-
+  const go = (link: PrototypeLink) => {
     if (isBackTarget(link.to)) {
       return back();
     }
 
-    if (link.action) {
-      return place(link.to.frame, motionOf(link), link.action, () => undefined);
+    const to = targetFrame(link.to);
+
+    if (to === null) {
+      return;
     }
 
-    show(link.to.frame, motionOf(link), [...historyRef.current, link.to.frame]);
+    if (link.action === "modal" || link.action === "drawer") {
+      return place(to, motionOf(link), link.action, () => undefined);
+    }
+
+    show(to, motionOf(link), [...historyRef.current, to]);
+  };
+
+  const runInTop = (op: PlayRunOp, selector: string) => {
+    const top = slotsRef.current.at(-1);
+    const frame = top ? readyFrames.current.get(top.token) : undefined;
+
+    if (frame) {
+      postToFrame(frame, { type: "play-run", op, selector });
+    }
+  };
+
+  const handlers: PlayHandlers = {
+    close: closeOverlay,
+    go,
+    open: (url) => {
+      window.open(url, "_blank", "noopener,noreferrer");
+    },
+    run: runInTop,
+  };
+
+  const topSlot = slots.at(-1);
+  const triggers = usePlayTriggers({
+    frameId: topSlot?.frame.id ?? null,
+    handlers,
+    links: p.file.links,
+    token: topSlot?.token ?? null,
+  });
+
+  const onLinkClick = (id: string) => {
+    const link = props.current.file.links.find((item) => item.id === id);
+
+    if (link) {
+      runLink(link, "start", handlers);
+    }
   };
 
   const onKey = (key: "exit" | "restart" | "back") => {
@@ -436,7 +478,10 @@ function usePlay(p: Props) {
   });
 
   const linkKey = p.file.links
-    .map((link) => `${link.id}:${link.from.frame}:${link.from.selector}`)
+    .map(
+      (link) =>
+        `${link.id}:${link.from.frame}:${link.from.selector}:${link.trigger?.kind ?? ""}`
+    )
     .join("|");
 
   const sendLinks = (frame: BridgeFrame, slot: Slot) => {
@@ -444,9 +489,14 @@ function usePlay(p: Props) {
       .filter(
         (link) =>
           link.from.frame === slot.frame.id &&
+          (!link.trigger || bridgeTrigger(link) !== null) &&
           staticLinkIssue(link, props.current.frames) === null
       )
-      .map(linkQuery);
+      .map((link) => {
+        const trigger = bridgeTrigger(link);
+
+        return trigger ? { ...linkQuery(link), trigger } : linkQuery(link);
+      });
 
     postToFrame(frame, { type: "play-links", links });
   };
@@ -515,6 +565,10 @@ function usePlay(p: Props) {
       onLinkClick(message.id);
     } else if (message.type === "play-key") {
       onKey(message.key);
+    } else if (message.type === "play-trigger" && top) {
+      triggers.onTrigger(message.id, message.phase);
+    } else if (message.type === "play-press-key" && top) {
+      triggers.onKey(message.key);
     }
   });
 

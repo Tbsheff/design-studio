@@ -14,6 +14,7 @@ interface PlayPost {
   (body: { type: "link-rects"; links: LinkRectReport[] }): void;
   (body: { type: "play-click"; id: string }): void;
   (body: { type: "play-key"; key: PlayKey }): void;
+  (body: { type: "play-press-key"; key: string }): void;
   (body: { type: "play-layers"; layers: Record<string, Rect> }): void;
 }
 
@@ -244,7 +245,10 @@ function isLinkQuery(value: unknown): value is LinkQuery {
     typeof query.selector === "string" &&
     query.selector.length <= LINK_SELECTOR_MAX &&
     (query.tag === undefined || typeof query.tag === "string") &&
-    (query.text === undefined || typeof query.text === "string")
+    (query.text === undefined || typeof query.text === "string") &&
+    (query.trigger === undefined ||
+      query.trigger === "hover" ||
+      query.trigger === "press")
   );
 }
 
@@ -266,7 +270,7 @@ function visibleText(element: Element): string {
     : (element.textContent ?? "");
 }
 
-function closestLink(query: LinkQuery, target: Element): Element | null {
+export function closestLink(query: LinkQuery, target: Element): Element | null {
   let found: Element | null = null;
 
   try {
@@ -423,7 +427,10 @@ export function createLinkBridge(post: PlayPost): LinkBridge {
       send();
     },
     play(raw) {
-      playing = raw === null ? null : linkQueries(raw);
+      playing =
+        raw === null
+          ? null
+          : linkQueries(raw).filter((query) => !query.trigger);
     },
     schedule,
     onClick(event) {
@@ -464,6 +471,8 @@ export function createLinkBridge(post: PlayPost): LinkBridge {
               : null;
 
       if (!key) {
+        post({ type: "play-press-key", key: event.key });
+
         return false;
       }
 

@@ -667,7 +667,6 @@ const FILES = [
   "src/server/review/run.ts",
   "src/server/review/shared-files.ts",
   "src/server/share/favicon.ts",
-  "src/server/share/frames.ts",
   "src/server/share/listener.ts",
   "src/server/share/live.ts",
   "src/server/share/snapshot.ts",

@@ -81,6 +81,12 @@ import type {
 } from "../shared/motion";
 import type { FolderInspection } from "../shared/open-app";
 import type {
+  SpacingInfo,
+  SpacingProperty,
+  SpacingSetResult,
+  SpacingSide,
+} from "../shared/spacing";
+import type {
   StyleReplaceRequest,
   StyleReplaceResult,
 } from "../shared/style-search";
@@ -171,6 +177,32 @@ export interface FillSetReply {
   fill: FillSpec;
   mode: "classes" | "css";
   versionId: string;
+}
+
+export interface SpacingStep {
+  px: number;
+  token: string;
+}
+
+export interface SpacingBox extends SpacingInfo {
+  scale: SpacingStep[];
+}
+
+export interface SpacingComputed {
+  gap: string;
+  margin: string;
+  padding: string;
+}
+
+export interface SpacingSetBody {
+  spacing: {
+    property: SpacingProperty;
+    side: SpacingSide;
+    snap?: boolean;
+    token?: string;
+    value?: number;
+  };
+  target: TextStyleTargetBody;
 }
 
 export interface MotionSetBody {
@@ -789,6 +821,27 @@ export const api = {
   setFill: (pid: string, did: string, body: FillSetBody) =>
     timedEdit(pid, did, "fill", 1, () =>
       json<FillSetReply>("POST", `${d(pid, did)}/fill`, body)
+    ),
+  getSpacing: (
+    pid: string,
+    did: string,
+    source: SourceLoc,
+    computed: SpacingComputed
+  ) =>
+    json<SpacingBox>(
+      "GET",
+      `${d(pid, did)}/spacing?${new URLSearchParams({
+        file: source.file,
+        line: String(source.line),
+        col: String(source.col),
+        gap: computed.gap,
+        margin: computed.margin,
+        padding: computed.padding,
+      }).toString()}`
+    ),
+  setSpacing: (pid: string, did: string, body: SpacingSetBody) =>
+    timedEdit(pid, did, "spacing", 1, () =>
+      json<SpacingSetResult>("POST", `${d(pid, did)}/spacing`, body)
     ),
   listMotion: (pid: string, did: string, source: SourceLoc) =>
     json<MotionInfo>(

@@ -1,11 +1,33 @@
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 
 import type { BridgeToParent, SelectionContext } from "../../shared/contracts";
+import type { SpacingHandlesProps } from "../features/spacing";
 import { formatMeasure } from "../measure";
 import type { SpacingBadge } from "../snap";
 import { frameSnapStore } from "../useFrameResize";
 import { guideStyle } from "./ArtboardOverlay";
 import { Icon } from "./Icon";
+
+const LazySpacingHandles = lazy(async () => {
+  const mod = await import("../features/spacing/index.js");
+
+  return { default: mod.SpacingHandles };
+});
+
+export function SpacingLayer({ host, selection, zoom }: SpacingHandlesProps) {
+  return (
+    <Suspense fallback={null}>
+      <LazySpacingHandles host={host} selection={selection} zoom={zoom} />
+    </Suspense>
+  );
+}
 
 export function PresentLayer({
   url,

@@ -440,8 +440,8 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/ui/features/text-styles/deps.ts",
       "src/server/http/motion-routes.ts",
       "src/ui/features/motion/deps.ts",
-      "src/server/http/fill-routes.ts",
-      "src/ui/features/fill/deps.ts",
+      "src/server/http/{fill,spacing}-routes.ts",
+      "src/ui/features/{fill,spacing}/deps.ts",
     ],
     rules: { "import/no-relative-parent-imports": "off" },
   },
@@ -449,6 +449,7 @@ export const decisionOverrides: OxlintOverride[] = [
     files: [
       "src/server/mcp/legacy/frame-target.ts",
       "src/shared/run-target.ts",
+      "src/{server/http/spacing-routes,ui/features/spacing/spacing-bands}.ts",
     ],
     rules: { "eslint/id-length": "off" },
   },

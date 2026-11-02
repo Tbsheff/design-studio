@@ -97,7 +97,7 @@ import {
   useLayersWatch,
   useSelectMoveKeys,
 } from "./CanvasLayers";
-import { FrameSnapLayer, MarqueeLayer } from "./CanvasOverlays";
+import { FrameSnapLayer, MarqueeLayer, SpacingLayer } from "./CanvasOverlays";
 import type { CanvasSource } from "./CanvasToolbar";
 import {
   FrameMoreMenu,
@@ -1486,6 +1486,31 @@ function CanvasView(props: ViewProps) {
     onError: layerEdits.notify,
   });
 
+  const spacingHost = useMemo(
+    () => ({
+      projectId,
+      directionId,
+      enabled: handlesOn,
+      post: frames.post,
+      listen: frames.listen,
+      holdSwap: frames.holdSwap,
+      setSelection: props.setSelection,
+      refreshRects: frames.refreshRects,
+      onError: layerEdits.notify,
+    }),
+    [
+      projectId,
+      directionId,
+      handlesOn,
+      frames.post,
+      frames.listen,
+      frames.holdSwap,
+      props.setSelection,
+      frames.refreshRects,
+      layerEdits.notify,
+    ]
+  );
+
   const freeMove = useFreeMove({
     projectId,
     directionId,
@@ -1773,6 +1798,13 @@ function CanvasView(props: ViewProps) {
               selection={props.selection}
               zoom={pz.zoom}
               resize={resize}
+              spacing={
+                <SpacingLayer
+                  host={spacingHost}
+                  selection={props.selection}
+                  zoom={pz.zoom}
+                />
+              }
               comments={
                 <CanvasComments
                   comment={comment}

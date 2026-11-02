@@ -14,6 +14,7 @@ interface Props {
   comments: ReactNode;
   zoom: number;
   resize?: ResizeControl;
+  spacing?: ReactNode;
 }
 
 const EDGES: ResizeEdge[] = ["e", "s", "se"];
@@ -153,6 +154,7 @@ export function ArtboardOverlay({
   comments,
   zoom,
   resize,
+  spacing,
 }: Props) {
   const anchor = unionBox(selection.map((s) => s.rect));
   const measuring = hover?.altKey && anchor && !hover.fromTree;
@@ -199,6 +201,7 @@ export function ArtboardOverlay({
           />
         );
       })}
+      {!resize?.live && spacing}
       {resize?.target && (
         <ResizeHandles control={resize} rect={resize.target.rect} zoom={zoom} />
       )}

@@ -185,6 +185,7 @@ import {
 import { registerRunTitleRoutes } from "./run-title-routes.js";
 import { registerShareRoutes } from "./share-routes.js";
 import { registerShipRoutes } from "./ship-routes.js";
+import { registerSpacingRoutes } from "./spacing-routes.js";
 import { renderIndexHtml, serveStatic } from "./static.js";
 import { registerStreamRoutes, type StreamTracker } from "./stream-routes.js";
 import { registerTextStyleRoutes } from "./text-style-routes.js";
@@ -1938,6 +1939,12 @@ export function createApp(deps: AppDeps): Hono {
     withDirection,
   });
   registerFillRoutes(app, {
+    editDeps,
+    readBody,
+    loadDirection,
+    withDirection,
+  });
+  registerSpacingRoutes(app, {
     editDeps,
     readBody,
     loadDirection,

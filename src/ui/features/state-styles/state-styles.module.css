@@ -1,0 +1,85 @@
+.row {
+  display: grid;
+  gap: var(--s-1);
+  padding: var(--s-2) var(--pane-inset);
+  border-top: 1px solid var(--line);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.chip {
+  position: relative;
+  height: 24px;
+  min-width: 28px;
+  padding: 0 var(--s-2);
+  border: 1px solid transparent;
+  border-radius: var(--r-control-sm);
+  background: transparent;
+  color: var(--text-2);
+  font: inherit;
+  font-size: var(--t-xs);
+  cursor: pointer;
+}
+
+.chip:hover:not(:disabled) {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.chip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.chip:disabled {
+  color: var(--text-faint);
+  cursor: default;
+}
+
+.on {
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+.dot {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.note {
+  margin: 0;
+  color: var(--text-3);
+  font-size: var(--t-xs);
+}
+
+.error {
+  margin: 0;
+  color: var(--danger, var(--text-2));
+  font-size: var(--t-xs);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chip {
+    transition: none;
+  }
+}
+
+fieldset.row {
+  margin: 0;
+  min-width: 0;
+  border-right: 0;
+  border-bottom: 0;
+  border-left: 0;
+}

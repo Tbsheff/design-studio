@@ -17,6 +17,7 @@ import { SIDES } from "../cssValues";
 import { VariantScopeContext, useEditVariant } from "../editVariant";
 import { FillSlot } from "../features/fill";
 import { MotionSlot } from "../features/motion";
+import { StateStylesSlot } from "../features/state-styles";
 import { TextStyleSlot } from "../features/text-styles";
 import { useAuthoredCss } from "../useAuthoredCss";
 import type { DesignTokens } from "../useDesignSystemState";
@@ -681,6 +682,15 @@ export function SimpleEditor(props: SimpleEditorProps) {
                 support={classes.variants}
                 quietNote={classLine?.note ?? null}
               />
+              {props.directionId && props.target.source && (
+                <StateStylesSlot
+                  projectId={props.projectId}
+                  directionId={props.directionId}
+                  target={props.target}
+                  port={props.port}
+                  status={edit.status}
+                />
+              )}
               <TokenLint ui={tk.ui} edit={edit} css={authored.css} />
               <SimpleSections
                 edit={edit}

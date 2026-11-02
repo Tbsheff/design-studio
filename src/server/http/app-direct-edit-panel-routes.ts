@@ -20,6 +20,7 @@ import { registerPropsRoutes } from "./props-routes.js";
 import { registerReviewRoutes } from "./review-routes.js";
 import { registerRulesRoutes } from "./rules-routes.js";
 import { registerSpacingRoutes } from "./spacing-routes.js";
+import { registerStateStyleRoutes } from "./state-style-routes.js";
 import { registerTextStyleRoutes } from "./text-style-routes.js";
 
 const registerComponentPanelRoutes = (app: Hono, ctx: AppContext): void => {
@@ -80,7 +81,7 @@ const registerReviewPanelRoutes = (app: Hono, ctx: AppContext): void => {
 };
 
 const registerStylePanelRoutes = (app: Hono, ctx: AppContext): void => {
-  const { editDeps, loadDirection, preview, withDirection } = ctx;
+  const { canvas, editDeps, loadDirection, preview, withDirection } = ctx;
   const withPreview = {
     editDeps,
     preview,
@@ -95,6 +96,7 @@ const registerStylePanelRoutes = (app: Hono, ctx: AppContext): void => {
   registerMotionRoutes(app, plain);
   registerFillRoutes(app, plain);
   registerSpacingRoutes(app, plain);
+  registerStateStyleRoutes(app, { ...plain, canvas });
   registerComponentVariantRoutes(app, withPreview);
   registerFigmaRoutes(app, withPreview);
 };

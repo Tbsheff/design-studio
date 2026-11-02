@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { annotateHtml } from "../preview/annotate.js";
-import { tagJsxSource } from "../preview/source-tags.js";
+import { annotateHtml } from "../../preview/annotate.js";
+import { tagJsxSource } from "../../preview/source-tags.js";
 import { DirectEditError } from "./errors.js";
 import { patchHtml } from "./html.js";
 import { patchJsx } from "./jsx.js";

@@ -3,7 +3,7 @@ import { isIP } from "node:net";
 import path from "node:path";
 
 import { IMAGE_BYTES_MAX } from "../../shared/image.js";
-import { DirectEditError } from "./errors.js";
+import { DirectEditError } from "./engine/errors.js";
 
 export interface ImageBytes {
   bytes: Buffer;

@@ -464,6 +464,18 @@ export const decisionOverrides: OxlintOverride[] = [
     ],
     rules: { "import/no-relative-parent-imports": "off" },
   },
+  {
+    files: [
+      "src/server/direct-edit/engine/index.ts",
+      "src/server/direct-edit/{classes,css,errors,html,jsx-snippet,jsx,splice,structure-docs,structure-ops,structure,tokens,validate,variant-css,vector-boolean,vector-geometry,vector-snippet,vector-source}.ts",
+      "src/server/direct-edit/tailwind/{classes,color,copy,html-site,index,jsx-site,map,plan,units}.ts",
+    ],
+    rules: {
+      "import/no-relative-parent-imports": "off",
+      "oxc/no-barrel-file": "off",
+      "sonarjs/no-wildcard-import": "off",
+    },
+  },
   { files: ["*.config.ts"], rules: { "import/no-default-export": "off" } },
   {
     files: ["src/shared/contract/**", "src/server/**", "cloud/api/**"],

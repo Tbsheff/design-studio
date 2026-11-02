@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { annotateHtml } from "../preview/annotate.js";
+import { annotateHtml } from "../../preview/annotate.js";
 import { DirectEditError } from "./errors.js";
 import { patchHtml } from "./html.js";
 

@@ -4,7 +4,7 @@ import path from "node:path";
 import type * as t from "@babel/types";
 
 import type { Project, SourceLoc } from "../../shared/contracts.js";
-import { parseSource } from "./jsx.js";
+import { parseSource } from "./engine/jsx.js";
 
 const SKIP =
   /(^|\/)(node_modules|\.next|\.git|dist|build|\.turbo|coverage|\.studio)(\/|$)/;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { tagJsxSource } from "../preview/source-tags.js";
+import { tagJsxSource } from "../../preview/source-tags.js";
 import { DirectEditError } from "./errors.js";
 import { patchJsx } from "./jsx.js";
 

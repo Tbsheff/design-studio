@@ -2,8 +2,6 @@ import { readFile, readdir, stat } from "node:fs/promises";
 import { createRequire } from "node:module";
 import path from "node:path";
 
-import type { Oklch } from "culori";
-
 import { DEFAULT_BREAKPOINTS } from "../../../shared/variants.js";
 import {
   findTokenFile,
@@ -18,44 +16,20 @@ import {
   buildAppTokens,
   type AppToken,
 } from "../../design-system/app-tokens/tokens.js";
-import { parseColor } from "./color.js";
-import { lengthToPx, plainNumber, emValue } from "./units.js";
+import { parseColor } from "../engine/tailwind/color.js";
+import type {
+  TailwindTheme,
+  TailwindVersion,
+  ThemeNamespace,
+} from "../engine/tailwind/theme-model.js";
+import { lengthToPx, plainNumber, emValue } from "../engine/tailwind/units.js";
 
-export type TailwindVersion = 3 | 4;
-export type ThemeNamespace =
-  | "color"
-  | "spacing"
-  | "text"
-  | "radius"
-  | "font-weight"
-  | "leading"
-  | "tracking"
-  | "shadow"
-  | "font";
-
-export interface ThemeColor {
-  name: string;
-  color: Oklch | null;
-  project: boolean;
-  rank: number;
-}
-
-export interface TailwindTheme {
-  version: TailwindVersion;
-  spacingPx: number;
-  spacing: Map<string, number>;
-  text: Map<string, number>;
-  radius: Map<string, number>;
-  fontWeight: Map<string, number>;
-  leading: Map<string, number>;
-  tracking: Map<string, number>;
-  shadow: Map<string, string>;
-  font: Map<string, string>;
-  colors: ThemeColor[];
-  colorNames: Set<string>;
-  vars: Map<string, { ns: ThemeNamespace; name: string }>;
-  breakpoints: Map<string, number>;
-}
+export type {
+  TailwindTheme,
+  TailwindVersion,
+  ThemeColor,
+  ThemeNamespace,
+} from "../engine/tailwind/theme-model.js";
 
 const V3_DEFAULTS = `@theme default {
   --text-xs: 0.75rem; --text-sm: 0.875rem; --text-base: 1rem; --text-lg: 1.125rem; --text-xl: 1.25rem; --text-2xl: 1.5rem;

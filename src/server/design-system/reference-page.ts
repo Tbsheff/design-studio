@@ -1,9 +1,9 @@
 import { parse } from "parse5";
 import type { DefaultTreeAdapterMap } from "parse5";
 
-import type { ReferencePage } from "../shared/contracts.js";
-import { checkUrl, safeFetch } from "./design-system/extract/safe-fetch.js";
-import { BadRequestError } from "./store/errors.js";
+import type { ReferencePage } from "../../shared/contracts.js";
+import { BadRequestError } from "../store/errors.js";
+import { checkUrl, safeFetch } from "./extract/safe-fetch.js";
 
 type Node = DefaultTreeAdapterMap["node"];
 

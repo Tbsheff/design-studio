@@ -21,7 +21,6 @@ import type { DirectEditDeps } from "../direct-edit/index.js";
 import { compileTokens, parseTokenFile } from "./compile.js";
 import {
   DESIGN_FILES,
-  readSnapshot,
   requireDesignSystem,
   restoreSnapshots,
 } from "./create-token.js";
@@ -37,6 +36,7 @@ import {
 import { editTokensText } from "./token-edit.js";
 import { recordTokenEdit, snapshotChanges } from "./token-history.js";
 import { invalidateTokenSource } from "./token-preview.js";
+import { readSnapshot } from "./token-snapshot.js";
 
 const TITLE_NAMES = 4;
 

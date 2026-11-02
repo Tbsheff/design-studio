@@ -457,6 +457,13 @@ export const decisionOverrides: OxlintOverride[] = [
     files: ["src/server/app/index.ts"],
     rules: { "oxc/no-barrel-file": "off" },
   },
+  {
+    files: [
+      "src/server/design-system/model/index.ts",
+      "src/server/design-system/ops/index.ts",
+    ],
+    rules: { "import/no-relative-parent-imports": "off" },
+  },
   { files: ["*.config.ts"], rules: { "import/no-default-export": "off" } },
   {
     files: ["src/shared/contract/**", "src/server/**", "cloud/api/**"],

@@ -13,10 +13,11 @@ import {
   publishVersion,
 } from "../../direct-edit/index.js";
 import type { DirectEditDeps } from "../../direct-edit/index.js";
-import { readSnapshot, restoreSnapshots } from "../create-token.js";
+import { restoreSnapshots } from "../create-token.js";
 import { writeFileAtomic } from "../packs.js";
 import { parseTokenChanges } from "../token-changes.js";
 import { recordTokenEdit, snapshotChanges } from "../token-history.js";
+import { readSnapshot } from "../token-snapshot.js";
 import { tokensTitle } from "../update-tokens.js";
 import type { CssDeclaration, CssTokenBlock } from "./read-css.js";
 import {

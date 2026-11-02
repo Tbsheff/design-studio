@@ -26,7 +26,7 @@ import {
 } from "../store/errors.js";
 import type { StudioProjectStore } from "../store/projects.js";
 import { checkDesignSystem } from "./check.js";
-import { readSnapshot, restoreSnapshots } from "./create-token.js";
+import { restoreSnapshots } from "./create-token.js";
 import { splitDesignMd } from "./design-md.js";
 import type { PackLibrary } from "./library.js";
 import {
@@ -42,6 +42,7 @@ import type { LoadedPack } from "./packs.js";
 import { readDesignSystemState } from "./state.js";
 import { hasTokensFile, readManifest } from "./sync.js";
 import { invalidateTokenSource } from "./token-preview.js";
+import { readSnapshot } from "./token-snapshot.js";
 
 export type ProjectPackDeps = Omit<DirectEditDeps, "projects"> & {
   projects: Pick<

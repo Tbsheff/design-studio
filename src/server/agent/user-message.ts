@@ -16,7 +16,7 @@ import {
 } from "../../shared/reference.js";
 import { statesTaskBlock } from "../../shared/states.js";
 import { editScopeOf, type EditScope } from "../../shared/usage-scope.js";
-import { referencePagesBlock } from "../reference-page.js";
+import { referencePagesBlock } from "../design-system/reference-page.js";
 import type { AgentRunContext, MentionFile } from "../types.js";
 import { referenceBlock, variationBlock } from "../variations/message.js";
 import { layoutLines } from "./layout-region.js";

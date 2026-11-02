@@ -83,6 +83,10 @@ import { createPackLibrary } from "../design-system/library.js";
 import { applyPack, packRegistry } from "../design-system/packs.js";
 import type { LoadedPack, PackRegistry } from "../design-system/packs.js";
 import {
+  captureReferencePage,
+  parseReferenceUrls,
+} from "../design-system/reference-page.js";
+import {
   loadDesignSystemPromptContext,
   readDesignSystemState,
 } from "../design-system/state.js";
@@ -101,7 +105,6 @@ import { applyStyleReplace } from "../direct-edit/replace.js";
 import { recordRunInHistory } from "../direct-edit/run-record.js";
 import { applyStructureEdit } from "../direct-edit/structure-apply.js";
 import { isDirectEditBatch, isStructureEdit } from "../direct-edit/validate.js";
-import { captureReferencePage, parseReferenceUrls } from "../reference-page.js";
 import { resourcePath, resourcesDir } from "../resources.js";
 import { createCommandRuleStore } from "../store/command-rules.js";
 import { createCommentStore, type CommentStore } from "../store/comments.js";

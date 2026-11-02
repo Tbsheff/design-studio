@@ -656,7 +656,7 @@ const FILES = [
   "src/server/publish/vault.ts",
   "src/server/publish/viewer.ts",
   "src/server/publish/worker-build.ts",
-  "src/server/reference-page.ts",
+  "src/server/design-system/reference-page.ts",
   "src/server/resources.ts",
   "src/server/review/agent-tool.ts",
   "src/server/review/checks.ts",

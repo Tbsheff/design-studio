@@ -46,6 +46,11 @@ import {
 import type { DesignSystemFiles } from "./sync.js";
 import { recordTokenEdit, snapshotChanges } from "./token-history.js";
 import { insertToken } from "./token-insert.js";
+import { readSnapshot } from "./token-snapshot.js";
+import type { FileSnapshot } from "./token-snapshot.js";
+
+export { readSnapshot } from "./token-snapshot.js";
+export type { FileSnapshot } from "./token-snapshot.js";
 
 const MAX_NAME = 40;
 const MAX_VALUE = 200;
@@ -109,11 +114,6 @@ const requestSchema = z
 interface ParsedCreate {
   token: CreateTokenRequest;
   edit: DirectEditRequest | null;
-}
-
-export interface FileSnapshot {
-  relative: string;
-  content: string | null;
 }
 
 function invalid(message: string): DirectEditError {
@@ -271,18 +271,6 @@ function nextTokensText(
   return {
     text: next,
     vars: new Set(compiled.entries.map((entry) => entry.cssVar)),
-  };
-}
-
-export async function readSnapshot(
-  workTree: string,
-  relative: string
-): Promise<FileSnapshot> {
-  const file = path.join(workTree, relative);
-
-  return {
-    relative,
-    content: existsSync(file) ? await readFile(file, "utf-8") : null,
   };
 }
 

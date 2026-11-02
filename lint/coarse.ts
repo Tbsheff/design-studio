@@ -128,7 +128,11 @@ const FEATURE_POLICIES = [
 ];
 
 const UI_CONTRACT = typeOnly(
-  ["**/shared/contract/**", "!**/shared/contract/**/routes.js"],
+  [
+    "**/shared/contract",
+    "**/shared/contract/**",
+    "!**/shared/contract/**/routes.js",
+  ],
   "Value imports from shared/contract in src/ui are banned. Use import type, or the ops from shared/contract/<ctx>/routes.js."
 );
 

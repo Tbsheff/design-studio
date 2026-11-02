@@ -149,6 +149,7 @@ import { registerCanvasRoutes } from "./canvas-routes.js";
 import { registerCommentRoutes, withCommentInputs } from "./comments-routes.js";
 import { registerComponentCreateRoutes } from "./component-create-routes.js";
 import { registerComponentPreviewRoutes } from "./component-preview-routes.js";
+import { registerComponentVariantRoutes } from "./component-variant-routes.js";
 import { registerComponentRoutes } from "./components-routes.js";
 import { registerDesignSystemRoutes } from "./design-systems-routes.js";
 import { registerDoctorRoutes } from "./doctor-routes.js";
@@ -1946,6 +1947,13 @@ export function createApp(deps: AppDeps): Hono {
   });
   registerSpacingRoutes(app, {
     editDeps,
+    readBody,
+    loadDirection,
+    withDirection,
+  });
+  registerComponentVariantRoutes(app, {
+    editDeps,
+    preview,
     readBody,
     loadDirection,
     withDirection,

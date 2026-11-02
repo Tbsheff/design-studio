@@ -343,6 +343,12 @@ export async function json<T>(
   return (await res.json()) as T;
 }
 
+export async function getBlob(path: string): Promise<Blob> {
+  const res = await request("GET", path);
+
+  return res.blob();
+}
+
 const enc = encodeURIComponent;
 
 const p = (pid: string) => `/api/projects/${enc(pid)}`;

@@ -27,6 +27,24 @@ import "../styles/inspector-props.css";
 
 const SwapInstanceMenu = lazy(() => import("./SwapInstanceMenu"));
 
+const VariantSheet = lazy(async () => {
+  const mod = await import("../features/component-variant/index.js");
+  return { default: mod.VariantSheet };
+});
+
+type SheetMode = "create" | "edit";
+
+function authorModeOf(value: string): SheetMode | null {
+  if (value === ":new") return "create";
+  if (value === ":edit") return "edit";
+  return null;
+}
+
+const AUTHOR_OPTIONS = [
+  { value: ":new", label: "New variant…" },
+  { value: ":edit", label: "Edit variant…" },
+];
+
 interface InspectorPropsProps {
   projectId: string;
   directionId: string | null;
@@ -113,17 +131,24 @@ function SelectProp({
   overridden,
   disabled,
   onChange,
+  onAuthor,
 }: {
   spec: PropSpec;
   value: PropValue | undefined;
   overridden: boolean;
   disabled: boolean;
   onChange: (value: PropValue | null) => void;
+  onAuthor?: ((mode: SheetMode) => void) | undefined;
 }) {
   const current = value === undefined ? "" : String(value);
   const options = spec.options ?? [];
   const list =
     current && !options.includes(current) ? [current, ...options] : options;
+  const pick = (next: string) => {
+    const mode = authorModeOf(next);
+    if (mode && onAuthor) onAuthor(mode);
+    else onChange(next === "" ? null : next);
+  };
   return (
     <div className={`ins-field select prp-field${overridden ? " set" : ""}`}>
       <label
@@ -140,14 +165,17 @@ function SelectProp({
         value={current}
         placeholder="—"
         disabled={disabled}
-        options={list.map((option) => ({
-          value: option,
-          label:
-            option === spec.default && option !== "default"
-              ? `${option} (default)`
-              : option,
-        }))}
-        onChange={(next) => onChange(next === "" ? null : next)}
+        options={[
+          ...list.map((option) => ({
+            value: option,
+            label:
+              option === spec.default && option !== "default"
+                ? `${option} (default)`
+                : option,
+          })),
+          ...(onAuthor ? AUTHOR_OPTIONS : []),
+        ]}
+        onChange={pick}
       />
     </div>
   );
@@ -244,11 +272,13 @@ function PropRow({
   spec,
   disabled,
   onChange,
+  onAuthor,
 }: {
   instance: ComponentInstance;
   spec: PropSpec;
   disabled: boolean;
   onChange: (name: string, value: PropValue | null) => void;
+  onAuthor?: ((prop: string, mode: SheetMode) => void) | undefined;
 }) {
   const value = valueOf(instance, spec);
   const locked = instance.dynamic.includes(spec.name);
@@ -269,6 +299,7 @@ function PropRow({
         overridden={spec.name in instance.values}
         disabled={disabled}
         onChange={change}
+        onAuthor={onAuthor && ((mode) => onAuthor(spec.name, mode))}
       />
     );
   if (spec.control === "boolean")
@@ -539,11 +570,13 @@ function PropRows({
   component,
   disabled,
   onChange,
+  onAuthor,
 }: {
   instance: ComponentInstance;
   component: ComponentSchema;
   disabled: boolean;
   onChange: (name: string, value: PropValue | null) => void;
+  onAuthor?: ((prop: string, mode: SheetMode) => void) | undefined;
 }) {
   const variants = component.props.filter((spec) => spec.from === "variant");
   const others = component.props.filter((spec) => spec.from !== "variant");
@@ -560,6 +593,13 @@ function PropRows({
                 spec={spec}
                 disabled={disabled}
                 onChange={onChange}
+                onAuthor={
+                  component.cva?.variants.some(
+                    (group) => group.prop === spec.name
+                  )
+                    ? onAuthor
+                    : undefined
+                }
               />
             ))}
           </div>
@@ -628,6 +668,58 @@ function SwapButton({
   );
 }
 
+function AuthorSheet({
+  projectId,
+  directionId,
+  instance,
+  sheet,
+  onClose,
+  onUse,
+  onStatus,
+}: {
+  projectId: string;
+  directionId: string;
+  instance: ComponentInstance;
+  sheet: { prop: string; mode: SheetMode } | null;
+  onClose: () => void;
+  onUse: (name: string, value: PropValue | null) => void;
+  onStatus: (status: Status) => void;
+}) {
+  const onSaved = useCallback(
+    (saved: {
+      key: string;
+      title: string;
+      shouldUseOnSelected: boolean;
+      value: string;
+    }) => {
+      onClose();
+      if (saved.shouldUseOnSelected) onUse(saved.key, saved.value);
+      else onStatus({ kind: "saved", text: saved.title });
+    },
+    [onClose, onUse, onStatus]
+  );
+  if (!sheet) return null;
+  const component = instance.component;
+  const group = component?.cva?.variants.find(
+    (entry) => entry.prop === sheet.prop
+  );
+  if (!component || !group) return null;
+  return (
+    <Suspense fallback={null}>
+      <VariantSheet
+        projectId={projectId}
+        directionId={directionId}
+        component={component}
+        group={group}
+        mode={sheet.mode}
+        current={initialValue(instance, group)}
+        onClose={onClose}
+        onSaved={onSaved}
+      />
+    </Suspense>
+  );
+}
+
 function StatusLine({ status }: { status: Status }) {
   if (status.kind === "idle") return null;
   if (status.kind === "saving")
@@ -655,6 +747,16 @@ export default function InspectorProps({
   );
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const [styles, setStyles] = useState(false);
+  const [sheet, setSheet] = useState<{ prop: string; mode: SheetMode } | null>(
+    null
+  );
+  const closeSheet = useCallback(() => setSheet(null), []);
+  const openSheet = useCallback(
+    (prop: string, mode: SheetMode) => {
+      if (editable) setSheet({ prop, mode });
+    },
+    [editable]
+  );
   const component = instance?.component;
   if (!instance || !component || !directionId) return null;
   const onChange = (name: string, value: PropValue | null) => {
@@ -724,6 +826,16 @@ export default function InspectorProps({
         component={component}
         disabled={disabled}
         onChange={onChange}
+        onAuthor={openSheet}
+      />
+      <AuthorSheet
+        projectId={projectId}
+        directionId={directionId}
+        instance={instance}
+        sheet={sheet}
+        onClose={closeSheet}
+        onUse={onChange}
+        onStatus={setStatus}
       />
       {instance.spread && (
         <p className="ins-note">

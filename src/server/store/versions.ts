@@ -56,7 +56,12 @@ import {
 import { createKeyedMutex } from "./mutex.js";
 import { diffVersionFiles } from "./version-diff.js";
 import { createDirectStore } from "./version-direct.js";
-import { FastPathUnavailable, diffTrees, updateTree } from "./version-fast.js";
+import {
+  FastPathUnavailable,
+  diffTrees,
+  readBlobAt,
+  updateTree,
+} from "./version-fast.js";
 import { seedFromUserRepo } from "./version-seed.js";
 import { createChangeTracker } from "./version-tracker.js";
 import { createWarmQueue } from "./version-warm.js";
@@ -1984,11 +1989,11 @@ export function createVersionStore(config: ServerConfig): VersionStore {
       }
 
       try {
-        return await runGitBuffer(repoScope(project), [
-          "cat-file",
-          "blob",
-          `${head}:${relativePath}`,
-        ]);
+        return await readBlobAt(
+          objectsOf(project),
+          await treeOf(project, head),
+          relativePath
+        );
       } catch {
         return null;
       }
@@ -2000,11 +2005,11 @@ export function createVersionStore(config: ServerConfig): VersionStore {
       relativePath: string
     ): Promise<Uint8Array | null> {
       try {
-        return await runGitBuffer(repoScope(project), [
-          "cat-file",
-          "blob",
-          `${versionId}:${relativePath}`,
-        ]);
+        return await readBlobAt(
+          objectsOf(project),
+          await treeOf(project, versionId),
+          relativePath
+        );
       } catch {
         return null;
       }

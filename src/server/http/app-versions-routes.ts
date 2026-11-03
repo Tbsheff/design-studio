@@ -4,7 +4,7 @@ import { CANVAS_FILE } from "../../shared/canvas-file.js";
 import { invalidateTokenSource } from "../design-system/token-preview.js";
 import { recordRunInHistory } from "../direct-edit/run-record.js";
 import { BadRequestError } from "../store/errors.js";
-import { trimListedFiles } from "../store/version-names.js";
+import { bindVersionReadRuntime } from "../store/version-read-core.js";
 import type { AppContext } from "./app-context.js";
 import type { McpSlot } from "./app-mcp-routes.js";
 import { readBody, requireString } from "./app-request.js";
@@ -17,31 +17,13 @@ const registerVersionsRoutes = (app: Hono, ctx: AppContext): void => {
     bus,
     editHistory,
     emitStatus,
-    loadDirection,
     preview,
     projects,
     recordVersion,
     syncPackId,
-    versionNames,
     versions,
     withDirection,
   } = ctx;
-
-  app.get("/api/projects/:pid/d/:did/versions", async (c) => {
-    const { project, direction } = await loadDirection(
-      c.req.param("pid"),
-      c.req.param("did")
-    );
-
-    return c.json(
-      trimListedFiles(
-        await versionNames.apply(
-          project.id,
-          await versions.list(project, direction)
-        )
-      )
-    );
-  });
 
   app.post("/api/projects/:pid/d/:did/undo", async (c) => {
     const version = await withDirection(
@@ -189,6 +171,11 @@ const registerVersionsHistoryRoutes = (
     versions,
     withDirection,
   } = ctx;
+  bindVersionReadRuntime({
+    names: versionNames,
+    projects,
+    versions,
+  });
   registerVersionRoutes(app, {
     projects,
     versions,

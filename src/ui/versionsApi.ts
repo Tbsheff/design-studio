@@ -1,6 +1,9 @@
+import { routes } from "../shared/actions/versions/routes.js";
 import { STUDIO_TOKEN_HEADER } from "../shared/contracts";
+import type { VersionChanges } from "../shared/contracts";
 import type { HunkRevertRequest, HunkRevertResult } from "../shared/hunk";
 import { json } from "./api";
+import { call } from "./platform/http";
 import { getSession } from "./session";
 
 const MAX_THUMB_FETCHES = 2;
@@ -20,6 +23,35 @@ export const revertHunk = (
     `/api/projects/${encodeURIComponent(pid)}/d/${encodeURIComponent(did)}/hunks/revert`,
     request
   );
+
+export const versionChanges = (
+  pid: string,
+  from: string,
+  to: string
+): Promise<VersionChanges> =>
+  call(routes.inspectDiffVersions, {
+    projectId: pid,
+    thumbnails: false,
+    from,
+    to,
+  }) as Promise<VersionChanges>;
+
+export const getVersion = (pid: string, versionId: string) =>
+  call(routes.getVersions, { versionId, projectId: pid });
+
+export const listEditHistory = (pid: string, did: string, limit: number) =>
+  call(routes.listHistoryVersions, {
+    limit,
+    directionId: did,
+    projectId: pid,
+  });
+
+export const listHunks = (
+  pid: string,
+  from: string,
+  to: string,
+  file: string
+) => call(routes.listHunksVersions, { file, from, to, projectId: pid });
 
 export function openCompareInCode(): void {
   try {

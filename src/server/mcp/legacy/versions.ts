@@ -6,7 +6,6 @@ import { base, defineTool, ok, versionActivity } from "../edit-kit.js";
 import type { Done, ToolSpec } from "../edit-kit.js";
 import { HISTORY_TOOLS } from "../history-tools.js";
 import { HUNK_TOOLS } from "../hunk-tools.js";
-import { VERSION_DIFF_TOOLS } from "../version-diff-tools.js";
 import { restoredResult } from "./versions-result.js";
 import { restoreVersionSchema } from "./versions-schema.js";
 import type { RestoreVersionInput } from "./versions-schema.js";
@@ -58,7 +57,6 @@ const restoreVersionTool = defineTool(
 const VERSIONS_LEGACY_TOOLS: ToolSpec[] = [
   restoreVersionTool,
   ...HISTORY_TOOLS,
-  ...VERSION_DIFF_TOOLS,
   ...HUNK_TOOLS,
 ];
 

@@ -96,6 +96,7 @@ export interface CanvasSnapshot {
 }
 
 import { routes } from "../shared/actions/studio/routes.js";
+import { routes as versionsRoutes } from "../shared/actions/versions/routes.js";
 import type {
   DesignRulesState,
   DesignRulesTestResult,
@@ -572,8 +573,14 @@ export const api = {
   listRuns: (pid: string) => json<RunSummary[]>("GET", `${p(pid)}/runs`),
   createDirection: (pid: string, fromVersionId: string, name: string) =>
     json<Direction>("POST", `${p(pid)}/directions`, { fromVersionId, name }),
-  listVersions: (pid: string, did: string) =>
-    json<Version[]>("GET", `${d(pid, did)}/versions`),
+  listVersions: async (pid: string, did: string) => {
+    const list = await call(versionsRoutes.listVersions, {
+      directionId: did,
+      projectId: pid,
+    });
+
+    return list.items as Version[];
+  },
   status: (pid: string, did: string) =>
     json<WorkTreeStatus>("GET", `${d(pid, did)}/status`),
   startRun: (
@@ -583,8 +590,12 @@ export const api = {
   ) => json<{ runId: string }>("POST", `${d(pid, did)}/runs`, req),
   undo: (pid: string, did: string) =>
     json<Version>("POST", `${d(pid, did)}/undo`),
-  editHistory: (pid: string, did: string) =>
-    json<EditHistoryState>("GET", `${p(pid)}/edit-history?did=${enc(did)}`),
+  editHistory: (pid: string, did: string): Promise<EditHistoryState> =>
+    call(versionsRoutes.listHistoryVersions, {
+      limit: 1,
+      directionId: did,
+      projectId: pid,
+    }),
   editHistoryStep: async (pid: string, did: string, kind: "undo" | "redo") => {
     const res = await request(
       "POST",

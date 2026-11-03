@@ -6,10 +6,10 @@ import type {
   VersionFileDiff,
 } from "../../shared/contracts";
 import { splitHunks, type PatchHunk } from "../../shared/hunk";
-import { errorText, json } from "../api";
+import { errorText } from "../api";
 import { useProjectEvents } from "../events";
 import { displayTitle, indexVersions } from "../versionLabels";
-import { revertHunk } from "../versionsApi";
+import { revertHunk, versionChanges } from "../versionsApi";
 import { Icon } from "./Icon";
 
 import "../styles/compare-code.css";
@@ -356,10 +356,7 @@ function useChanges(projectId: string, from: string, to: string) {
   const key = `${projectId}/${from}/${to}`;
   useEffect(() => {
     let live = true;
-    json<VersionChanges>(
-      "GET",
-      `/api/projects/${encodeURIComponent(projectId)}/versions/${encodeURIComponent(from)}/changes/${encodeURIComponent(to)}`
-    ).then(
+    versionChanges(projectId, from, to).then(
       (changes) => live && setState({ key, changes, error: null }),
       (error: unknown) =>
         live && setState({ key, changes: null, error: errorText(error) })

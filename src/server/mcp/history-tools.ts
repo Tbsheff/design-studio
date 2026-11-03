@@ -137,26 +137,6 @@ const redo = defineTool(
   (deps, input) => step(deps, input, "redo")
 );
 
-const editHistory = defineTool(
-  "edit_history",
-  target,
-  {
-    title: "List edit history",
-    description: `List the recent edits that undo and redo would step through, newest first: label, version id and files. ${HISTORY_NOTE} The history lives in memory and clears when Design Studio restarts.`,
-    readOnly: true,
-    idempotent: true,
-  },
-  async (deps, input) => {
-    const { project, direction } = await loadTarget(
-      deps,
-      input.projectId,
-      input.directionId
-    );
-    const state = await historyState(deps, project, direction);
-    return { result: ok({ ...state, note: HISTORY_NOTE }) };
-  }
-);
-
 const batchEdit = z
   .object({
     path: pagePath,
@@ -492,4 +472,4 @@ const batch = defineTool(
   }
 );
 
-export const HISTORY_TOOLS = [undo, redo, editHistory, batch];
+export const HISTORY_TOOLS = [undo, redo, batch];

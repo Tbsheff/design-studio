@@ -5,6 +5,7 @@ import type { Context, Hono } from "hono";
 import type { VersionThumbs } from "../../shared/contracts.js";
 import type { StudioProjectStore } from "../store/projects.js";
 import { parseVersionName, type VersionNames } from "../store/version-names.js";
+import { bindVersionReadRuntime } from "../store/version-read-core.js";
 import {
   clampViewport,
   diffThumbName,
@@ -72,6 +73,11 @@ async function versionThumbs(
 export function registerVersionRoutes(app: Hono, deps: VersionRouteDeps): void {
   const { projects, versions, thumbnails, names, readBody } = deps;
 
+  bindVersionReadRuntime({
+    thumbs: (project, from, to) =>
+      versionThumbs(deps, project.id, from, to, new AbortController().signal),
+  });
+
   app.get("/api/projects/:pid/versions/:vid/thumb", async (c) =>
     thumbnails
       .version(c.req.param("pid"), c.req.param("vid"), c.req.raw.signal)
@@ -97,27 +103,6 @@ export function registerVersionRoutes(app: Hono, deps: VersionRouteDeps): void {
           png(result.png, { "x-changed-pct": String(result.changedPct) }),
         gone
       );
-  });
-
-  app.get("/api/projects/:pid/versions/:vid/changes/:other", async (c) => {
-    const project = await projects.get(c.req.param("pid"));
-
-    if (!versions.diffFiles) {
-      return c.json({ error: "version diffs are not available" }, 501);
-    }
-
-    const from = c.req.param("vid");
-    const to = c.req.param("other");
-    const changes = await versions.diffFiles(project, from, to);
-
-    if (c.req.query("thumbs") !== "1") {
-      return c.json(changes);
-    }
-
-    return c.json({
-      ...changes,
-      thumbs: await versionThumbs(deps, project.id, from, to, c.req.raw.signal),
-    });
   });
 
   app.patch("/api/projects/:pid/versions/:vid", async (c) => {

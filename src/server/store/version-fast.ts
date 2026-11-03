@@ -72,6 +72,24 @@ export async function lookupPath(
   return null;
 }
 
+export async function readBlobAt(
+  store: ObjectStore,
+  tree: string,
+  relative: string
+): Promise<Buffer | null> {
+  try {
+    const entry = await lookupPath(store, tree, relative);
+
+    if (!entry || entry.mode === TREE_MODE || entry.mode === GITLINK_MODE) {
+      return null;
+    }
+
+    return await store.readBlob(entry.sha);
+  } catch {
+    return null;
+  }
+}
+
 function groupChanges(changes: Map<string, TreeEntry | null>): {
   direct: Map<string, TreeEntry | null>;
   nested: Map<string, Map<string, TreeEntry | null>>;

@@ -25,14 +25,10 @@ import {
 } from "../direct-edit/index.js";
 import { jsxElementSpan } from "../direct-edit/jsx.js";
 import { recordRunInHistory } from "../direct-edit/run-record.js";
-import { savesSettled } from "../direct-edit/save-queue.js";
 import { findTextSource } from "../direct-edit/text-source.js";
-import {
-  BadRequestError,
-  ConflictError,
-  assertSafeId,
-} from "../store/errors.js";
+import { BadRequestError, ConflictError } from "../store/errors.js";
 import type { StudioProjectStore } from "../store/projects.js";
+import { bindVersionReadRuntime } from "../store/version-read-core.js";
 
 interface EditHistoryRouteDeps {
   history: EditHistory;
@@ -100,36 +96,9 @@ export function registerEditHistoryRoutes(
   app: Hono,
   deps: EditHistoryRouteDeps
 ): void {
-  const { history, editDeps, projects, withDirection } = deps;
+  const { history, editDeps, withDirection } = deps;
 
-  app.get("/api/projects/:pid/edit-history", async (c) => {
-    const project = await projects.get(c.req.param("pid"));
-    const raw = c.req.query("did");
-    const directionId =
-      raw === undefined
-        ? projects.mainDirection(project).id
-        : assertSafeId(raw, "directionId");
-    return c.json(history.state(project.id, directionId));
-  });
-
-  app.get("/api/projects/:pid/d/:did/edit-history/list", async (c) => {
-    const { project, direction } = await deps.loadDirection(
-      c.req.param("pid"),
-      c.req.param("did")
-    );
-    const limit = Math.min(
-      50,
-      Math.max(1, Number.parseInt(c.req.query("limit") ?? "20", 10) || 20)
-    );
-    await savesSettled(project.id);
-    return c.json({
-      ...history.state(project.id, direction.id),
-      ...(history.list?.(project.id, direction.id, limit) ?? {
-        undo: [],
-        redo: [],
-      }),
-    });
-  });
+  bindVersionReadRuntime({ history });
 
   const stepRoute = (kind: HistoryStep) => async (c: Context) => {
     try {

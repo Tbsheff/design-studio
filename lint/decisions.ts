@@ -573,10 +573,6 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/server/mcp/legacy/direct-edit.ts",
       "src/server/mcp/legacy/edit-element.ts",
       "src/server/mcp/legacy/events.ts",
-      "src/server/mcp/legacy/export-files.ts",
-      "src/server/mcp/legacy/export-schema.ts",
-      "src/server/mcp/legacy/export.ts",
-      "src/server/mcp/legacy/frame-target.ts",
       "src/server/mcp/legacy/mcp-life.ts",
       "src/server/mcp/legacy/mcp-read.ts",
       "src/server/mcp/legacy/open-folder.ts",
@@ -592,11 +588,8 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/server/mcp/legacy/runs.ts",
       "src/server/mcp/legacy/session.ts",
       "src/server/mcp/legacy/set-token.ts",
-      "src/server/mcp/legacy/ship.ts",
       "src/server/mcp/legacy/structure-element.ts",
       "src/server/mcp/legacy/studio.ts",
-      "src/server/mcp/legacy/versions-result.ts",
-      "src/server/mcp/legacy/versions-schema.ts",
       "src/server/mcp/legacy/versions.ts",
       "src/server/mcp/legacy/write-file.ts",
     ],
@@ -729,19 +722,27 @@ export const decisionOverrides: OxlintOverride[] = [
   },
   {
     files: [
-      "src/server/direct-edit/engine/index.ts",
       "src/server/direct-edit/{classes,css,errors,html,jsx-snippet,jsx,splice,structure-docs,structure-ops,structure,tokens,validate,variant-css,vector-boolean,vector-geometry,vector-snippet,vector-source}.ts",
       "src/server/direct-edit/tailwind/{classes,color,copy,html-site,index,jsx-site,map,plan,units}.ts",
-      "src/server/direct-edit/index.ts",
-      "src/server/direct-edit/commit/index.ts",
       "src/server/direct-edit/commit/imports.ts",
-      "src/server/components/model.ts",
       "src/server/{components/{insert,swap,extract,extract-file,extract-shape,import-cleanup},direct-edit/components-ops/index,store/version-hunk,agent/usage-scope,export/capture}.ts",
       "src/server/{mcp/{element,layer-ref,layer-ids,line-map,source-loc},layers/lock-probe,components/owner-probe,page-probe/index,app/{route-eval,route-links,route-flow,frame-state-service},canvas/{index,links/index,app-flow/index}}.ts",
       "src/server/direct-edit/{arrange-probe,arrange,batch,class-info,edit-site,follow-moves,history,image-attrs,image-find,image-source,image,imports,jsx-insert,props,replace,run-record,save-queue,structure-apply,style-scan,text-source-files,text-source,text-trace,vector-ops}.ts",
     ],
     rules: {
       "import/no-relative-parent-imports": "off",
+      "oxc/no-barrel-file": "off",
+      "sonarjs/no-wildcard-import": "off",
+    },
+  },
+  {
+    files: [
+      "src/server/components/model.ts",
+      "src/server/direct-edit/commit/index.ts",
+      "src/server/direct-edit/engine/index.ts",
+      "src/server/direct-edit/index.ts",
+    ],
+    rules: {
       "oxc/no-barrel-file": "off",
       "sonarjs/no-wildcard-import": "off",
     },
@@ -801,10 +802,6 @@ export const decisionOverrides: OxlintOverride[] = [
   {
     files: ["src/ui/kit/chip-button.tsx"],
     rules: { "react/function-component-definition": "off" },
-  },
-  {
-    files: ["src/server/mcp/direct-edit-call.ts"],
-    rules: { "import/no-relative-parent-imports": "off" },
   },
   {
     files: ["cloud/api/src/shared-actions.ts"],

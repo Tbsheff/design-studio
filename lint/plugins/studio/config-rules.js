@@ -1,4 +1,5 @@
 import { keyName, propertyOf, rule } from "./ast.js";
+import { sourceOf } from "./facts.js";
 import { FROZEN_AREAS, FROZEN_EXEMPTIONS, LEGACY_OVERRIDES, SCOPE_EXEMPTIONS } from "./frozen.js";
 
 const WARN_MAX = 3;
@@ -157,4 +158,122 @@ const frozenExemption = rule((context) => {
   };
 });
 
-export { frozenExemption, narrowOverride };
+const PROBES = new Map([
+  ["anti-slop/no-unknown-parameters", /\bunknown\b/u],
+  ["anti-slop/no-unsafe-dictionary-type", /Record<\s*string|\[\s*\w+\s*:\s*string\s*\]/u],
+  ["import/no-relative-parent-imports", /(?:from |import\()["']\.\.\//u],
+  ["node/no-sync", /Sync\(/u],
+]);
+
+const MISSING_MESSAGE =
+  "A decision override that lists a file that does not exist is banned. Use only the paths of files that exist in lint/decisions.ts.";
+
+const unneededMessage = (ruleName) =>
+  `A decision override that turns ${ruleName} off for a file that has no code that rule reports is banned. Use a block in lint/decisions.ts that lists only the files that need ${ruleName} off.`;
+
+const closeOf = (pattern, open) => {
+  let depth = 0;
+
+  for (let index = open; index < pattern.length; index += 1) {
+    depth += Number(pattern[index] === "{") - Number(pattern[index] === "}");
+
+    if (depth === 0) {
+      return index;
+    }
+  }
+
+  return -1;
+};
+
+const splitTop = (list) => {
+  const parts = [""];
+  let depth = 0;
+
+  for (const char of list) {
+    depth += Number(char === "{") - Number(char === "}");
+
+    if (char === "," && depth === 0) {
+      parts.push("");
+    } else {
+      parts[parts.length - 1] += char;
+    }
+  }
+
+  return parts;
+};
+
+const expandBraces = (pattern) => {
+  const open = pattern.indexOf("{");
+  const close = closeOf(pattern, open);
+
+  if (open === -1 || close === -1) {
+    return [pattern];
+  }
+
+  const head = pattern.slice(0, open);
+  const tail = pattern.slice(close + 1);
+
+  return splitTop(pattern.slice(open + 1, close)).flatMap((part) => expandBraces(`${head}${part}${tail}`));
+};
+
+const offRulesOf = (rules) =>
+  rules.properties.filter(
+    (property) =>
+      property.type === "Property" &&
+      property.value.type === "Literal" &&
+      property.value.value === "off" &&
+      PROBES.has(keyName(property)),
+  );
+
+const fileLiterals = (files) => {
+  if (files.type !== "ArrayExpression") {
+    return [];
+  }
+
+  return files.elements.filter(
+    (element) => element?.type === "Literal" && !/[*{]/u.test(String(element.value)),
+  );
+};
+
+const checkFile = (context, literal, offRules) => {
+  for (const file of expandBraces(String(literal.value))) {
+    const text = sourceOf(file);
+
+    if (text === null) {
+      context.report({ message: MISSING_MESSAGE, node: literal });
+
+      return;
+    }
+
+    for (const property of offRules) {
+      const ruleName = keyName(property);
+
+      if (!PROBES.get(ruleName).test(text)) {
+        context.report({ message: unneededMessage(ruleName), node: literal });
+      }
+    }
+  }
+};
+
+const overrideNeedsRule = rule((context) => ({
+  ObjectExpression: (node) => {
+    const files = propertyOf(node, "files");
+    const rules = propertyOf(node, "rules");
+
+    if (files === null || rules === null || rules.value.type !== "ObjectExpression") {
+      return;
+    }
+
+    const offRules = offRulesOf(rules.value);
+
+    if (offRules.length === 0) {
+      return;
+    }
+
+    for (const literal of fileLiterals(files.value)) {
+      checkFile(context, literal, offRules);
+    }
+  },
+}));
+
+export { frozenExemption, narrowOverride, overrideNeedsRule };

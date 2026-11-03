@@ -21,6 +21,8 @@ const FEATURE_UI_FILES = [
 
 const DECISION_FILES = ["lint/decisions.ts"];
 
+const CLOUD_FILES = ["cloud/api/src/**/*.ts"];
+
 const SERVER_TESTS = ["src/server/**/*.test.ts"];
 
 const UI_FILES = ["src/ui/**/*.ts", "src/ui/**/*.tsx"];
@@ -210,21 +212,17 @@ const studio: OxlintOverride[] = [
     rules: { "unicorn/throw-new-error": "off" },
   },
   {
-    files: ["src/shared/actions/**/*.ts"],
+    files: ACTION_FILES,
     rules: {
       "studio/action-domain-name": "error",
       "studio/action-verb": "error",
       "studio/agent-off-reason": "error",
+      "studio/bootstrap-off-reason": "error",
+      "studio/description-tool-name": "error",
+      "studio/mcp-off-reason": "error",
+      "studio/read-verb-access": "error",
       "studio/write-needs-write-permission": "error",
     },
-  },
-  {
-    files: ACTION_FILES,
-    rules: { "studio/mcp-off-reason": "error" },
-  },
-  {
-    files: ACTION_FILES,
-    rules: { "studio/read-verb-access": "error" },
   },
   {
     excludeFiles: LEGACY_UNTYPED_SCHEMAS,
@@ -255,8 +253,14 @@ const studio: OxlintOverride[] = [
     excludeFiles: SERVER_TESTS,
     files: SERVER_FILES,
     rules: {
+      "studio/function-verb": "error",
+      "studio/no-async-in-service": "error",
       "studio/not-ready-unavailable": "error",
       "studio/read-service-io": "error",
+      "studio/service-api-effect": "error",
+      "studio/service-file-name": "error",
+      "studio/service-import-index": "error",
+      "studio/service-tag-area": "error",
       "studio/service-wired": "error",
     },
   },
@@ -299,12 +303,15 @@ const studio: OxlintOverride[] = [
   },
   {
     excludeFiles: [...LEGACY_APP_IMPORTS, "cloud/api/src/shared-actions.ts"],
-    files: ["cloud/api/src/**/*.ts"],
+    files: CLOUD_FILES,
     rules: { "studio/no-app-import": "error" },
   },
   {
     files: DECISION_FILES,
-    rules: { "studio/narrow-override": "error" },
+    rules: {
+      "studio/narrow-override": "error",
+      "studio/override-needs-rule": "error",
+    },
   },
   {
     files: ["lint/studio.ts", "lint/boundaries.ts"],
@@ -313,8 +320,10 @@ const studio: OxlintOverride[] = [
   {
     files: HANDLER_FILES,
     rules: {
+      "studio/derived-type-name": "error",
       "studio/handler-satisfies": "error",
       "studio/no-deep-area-import": "error",
+      "studio/no-handler-node-global": "error",
       "studio/read-yields-read-service": "error",
     },
   },
@@ -322,24 +331,6 @@ const studio: OxlintOverride[] = [
     excludeFiles: ["src/server/platform/attempt/**"],
     files: SERVER_FILES,
     rules: { "studio/no-local-error-bridge": "error" },
-  },
-  {
-    excludeFiles: SERVER_TESTS,
-    files: SERVER_FILES,
-    rules: {
-      "studio/no-async-in-service": "error",
-      "studio/service-tag-area": "error",
-    },
-  },
-  {
-    excludeFiles: SERVER_TESTS,
-    files: SERVER_FILES,
-    rules: {
-      "studio/function-verb": "error",
-      "studio/service-api-effect": "error",
-      "studio/service-file-name": "error",
-      "studio/service-import-index": "error",
-    },
   },
   {
     excludeFiles: [...SERVER_TESTS, ...LEGACY_SERVICE_CODE],
@@ -447,32 +438,21 @@ const studio: OxlintOverride[] = [
     rules: { "studio/list-page": "error" },
   },
   {
-    files: ACTION_FILES,
-    rules: {
-      "studio/bootstrap-off-reason": "error",
-      "studio/description-tool-name": "error",
-    },
-  },
-  {
     excludeFiles: LEGACY_DELETE_ACTIONS,
     files: ACTION_FILES,
     rules: { "studio/delete-destructive": "error" },
   },
   {
-    files: HANDLER_FILES,
-    rules: {
-      "studio/derived-type-name": "error",
-      "studio/no-handler-node-global": "error",
-    },
-  },
-  {
     excludeFiles: TENANT_SQL_FILES,
-    files: ["cloud/api/src/**/*.ts"],
+    files: CLOUD_FILES,
     rules: { "studio/tenant-sql-in-repos": "error" },
   },
   {
     files: ["cloud/api/src/tenant/repos/**/*.ts"],
-    rules: { "studio/no-org-id-param": "error" },
+    rules: {
+      "studio/no-org-id-param": "error",
+      "studio/repo-no-viewer-scope": "error",
+    },
   },
   {
     excludeFiles: ["cloud/api/src/tenant/repos/key-perm.ts"],
@@ -491,6 +471,22 @@ const studio: OxlintOverride[] = [
     excludeFiles: [...SERVER_TESTS, ...LEGACY_RUNTIME_SLOTS],
     files: SERVER_FILES,
     rules: { "studio/no-new-runtime-slot": "error" },
+  },
+  {
+    files: ["cloud/api/src/tenant/**/*.ts"],
+    rules: { "studio/no-scope-param": "error" },
+  },
+  {
+    files: CLOUD_FILES,
+    rules: {
+      "studio/cloud-one-runtime": "error",
+      "studio/cloud-platform-layer": "error",
+      "studio/cloud-run-entry": "error",
+      "studio/no-direct-bindings": "error",
+      "studio/no-local-http-status": "error",
+      "studio/no-open-tag": "error",
+      "studio/no-plain-error": "error",
+    },
   },
 ];
 

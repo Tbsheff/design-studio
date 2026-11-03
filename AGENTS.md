@@ -35,6 +35,7 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - End each new service class name with a role: Store, Writer, Runner, Watcher, Queue, Client or Cache (`McpListenerRunner`). The spec names (`Authorizer`, `LocalPrincipal`, `LocalOrgScope`, `ProjectAccess`, `CfCli`) and the legacy names listed in `lint/studio.ts` keep their names -> `studio/service-role`. (N5c)
 - Never put `data`, `info`, `item`, `obj`, `thing`, `stuff`, `manager`, `helper`, `util`, `handle`, `process`, `misc`, `Shape`, a `Type` or `Interface` suffix or an `I` prefix in a name. Spell words out. Short forms allowed: `id`, `url`, `html`, `css`, `jsx`, `mcp`, `ui`, `db` -> `anti-slop/no-shape-in-symbol-names`, `id-denylist` (lands with M9b), check-actions (lands with W9b). (N6)
 - Use the package test: can someone outside this repo `pnpm add` it and use it without our server, env or secrets? Yes: a package in `packages/ui` or `packages/common/<name>`. No: an app in `apps/<name>`. A package imports only packages, through their `exports` map -> boundaries (a package that imports `apps/**` fails) (lands with the layout wave). (N7)
+- Use the status constants from `cloud/api/src/shared-actions.ts` in cloud code. Never declare a local `HTTP_*` or `*_STATUS` number. Add a missing code to `src/shared/actions/_core/errors/http-status-codes.ts` -> `studio/no-local-http-status`. (N8)
 - Name each handler action type with the derived name: `type GetProjectInput = Input<typeof getProject>`, never a plural or short form -> `studio/derived-type-name`. (N8)
 - Start each cloud MCP tool name in `cloud/api/src/mcp` with an N3 verb (`create_comment`, never `add_comment`) -> `studio/cloud-tool-verb`. (N9)
 - Put an action whose object is another domain noun (`token`, `component`, `project`, `design`, `canvas`, `publication`) in that noun's domain: `token.create`, never `direct-edit.createToken` -> `studio/action-domain-object` (action files; the old direct-edit, publish and workspace ids are frozen). (N1a)
@@ -128,6 +129,9 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Use `Effect.die` for storage I/O that no caller can recover from -> review-only. (S13)
 - Never keep a hand-made runtime slot (a `NOT_READY` text, a `Map` keyed by `loadConfig().dataDir`). Use `makeRuntimeSlot` or `requireBound` from `src/server/platform/runtime-slot/index.ts`; an unbound runtime is a defect -> `studio/no-runtime-map`. (S13a)
 - Use zod only in `src/server/agent-tools/sdk-shape.ts`, which bridges `Schema.toJsonSchemaDocument(action.input)` to the SDK shape -> `no-restricted-imports` (`zod` elsewhere in new folders) (lands with M9b). (S14)
+- Make the one cloud `ManagedRuntime` in `cloud/api/src/index.ts`, and pass it to each mount function -> `studio/cloud-one-runtime`. (S15)
+- Call `runPromise`, `runPromiseExit`, `runSync` and `runFork` in cloud code only in `cloud/api/src/index.ts`, `http/**` and `mcp/**` -> `studio/cloud-run-entry`. (S16)
+- Use `CloudBindings.layer`, `CloudSettings.layer` and `configLayer` only in `cloud/api/src/index.ts`. A mount module exports its layer without the platform layer -> `studio/cloud-platform-layer`. (S17)
 - Never make a new runtime slot (`makeRuntimeSlot`). Give the service its dependencies through a Layer in `handlers/<domain>/live.ts`. Only the frozen legacy slot files keep theirs -> `studio/no-new-runtime-slot`. (S15)
 - Never import `zod` in the auth files. Use `Schema` from `effect`, and read a JSON file with `toJsonFileReader` from `src/server/platform/local-file/index.ts` -> `studio/no-zod-import` (auth files). (S15)
 - Never import `zod` in new server files (cloud, content, viewport, handlers, `direct-edit/direct-edit-*.ts`). Decode with the action schema in `run-action.ts` -> `studio/no-zod-import`. (S14a)
@@ -146,6 +150,8 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Send a defect as `toWire(null)` (500). The runner logs it with `Effect.logError(action.id, defect)`. Never send stacks or paths -> run-action `tapDefect`, adapter `reply` (lands with S4b). (R7)
 - Never map `Cause.UnknownError` to a 400 in a local bridge. Use `attemptKnown` from `src/server/platform/attempt/index.ts`: it maps only the known store errors and lets the rest die as defects -> `studio/no-local-error-bridge`. (R7a)
 - Write `message` as user text in STE. MCP and the agent show it as it is -> review-only. (R8)
+- Never use `new Error` in cloud Effect code. Die or fail with a `Schema.TaggedError` from `cloud/api/src/tenant/errors` or `cloud/api/src/shared-actions.ts` -> `studio/no-plain-error`. (R9)
+- Never declare an open `_tag` field (optional or `string`). Let Effect infer the error union, and map it with `Effect.catchTag` or a switch on `_tag` -> `studio/no-open-tag`. (R10)
 - Never give a server class the name of a wire error in `src/shared/actions`. Put a domain error in `actions/<domain>/errors/`, never in `_core/errors` -> `studio/error-name-unique`. (R1a)
 - Never fail a "not ready" runtime with `BadRequest`. Use `Unavailable` (503) or `requireBound` from `platform/runtime-slot` -> `studio/not-ready-unavailable`. (R2a)
 
@@ -162,6 +168,8 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Page lists by key with `LIMIT` 100 or less. Use one `db.batch` per request. Never query inside a loop -> review, B13 counter (lands with Auth S1). (T8)
 - Let cloud group middleware provide `CurrentOrg` and `CurrentUser` with `Effect.provideService`, over Layers built once -> check-tenant B12 (lands with Auth S1), check-actions (S4) (lands with S4s). (T9)
 - Move security code line for line (plan section 0 list) -> the slice's S-p0 smoke. (T10)
+- Put viewer reads (no `CurrentOrg`) in `cloud/api/src/tenant/viewer-db.ts` and `TenantBlobs.getPublished`, never in `tenant/repos/**` -> `studio/repo-no-viewer-scope`. (T11)
+- Never take a scope (`PublicScope`, `ShareScope`, `ViewerScopeApi`, `CurrentOrgApi`) as a parameter in tenant code. Yield `ViewerScope` or `CurrentOrg` inside the method -> `studio/no-scope-param`. (T12)
 - Write `tq` tenant queries only in `cloud/api/src/tenant/repos/<table>.ts` -> `studio/tenant-sql-in-repos`. (T11)
 - Never call raw `db.prepare()` in a tenant repo. Use `tq` with `TenantDb` -> `studio/repo-uses-tq`. (T12)
 - Never take `orgId` as a parameter or read `input.orgId` in a tenant repo. Bind `:org` from `CurrentOrg` -> `studio/no-org-id-param`. (T13)
@@ -203,6 +211,7 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Serialize each SSE event once per project, for all subscribers -> S-replay smoke (lands with S5-events), review-only. (P8)
 - Load heavy modules (playwright-core, esbuild, typescript, vite, the agent SDK) with a dynamic import on first use -> review, B12 `scripts/check-boot-imports.ts` (lands with S5-mcp-life). (P9)
 - Keep every perf budget. Only the merge step rewrites `scripts/perf/baseline.json`, and only downward -> G-perf (lands with S4a). (P10)
+- Read D1 and R2 only through their owners in `cloud/api/src/{platform,tenant,auth,http/middleware}`. Viewer, MCP and route code yields a tenant service, never `CloudBindings` -> `studio/no-direct-bindings`. (P11)
 
 ## 8. Lint and hooks
 
@@ -219,6 +228,7 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Run `pnpm run typecheck` and `pnpm run typecheck:tsrs`. Never run raw `tsc` -> PreToolUse hook. (L7)
 - Make every restricted rule message say the fix: `<what is banned>. Use <X> from <path>.` Every check script prints `fix: <command>` -> check-coarse (asserts `Use ` in each message) (lands with S4s). (L8)
 - Never add `no-restricted-syntax`. oxlint 1.89 does not have it. Add a check-actions scan instead -> check-coarse (rejects the key) (lands with S4s). (L9)
+- List a file in a `lint/decisions.ts` block only when the file exists and has code that each turned-off rule reports (a `../` import for `no-relative-parent-imports`, `unknown` for `no-unknown-parameters`) -> `studio/override-needs-rule`. (L10)
 - Never put a glob over stamped code (`src/shared/actions/**`, `src/server/handlers/<domain>/*.ts`) in `lint/decisions.ts` or `lint/plugins/studio/frozen.js`. List exact files. Every `excludeFiles` entry in `lint/studio.ts` is in `FROZEN_EXEMPTIONS` or `SCOPE_EXEMPTIONS` -> `studio/wide-exemption`, `studio/frozen-exemption`. (L10)
 - Keep each `decisionOverrides` entry to exact files and at most 3 warn rules. Never turn a fixable style rule off or to warn -> `studio/narrow-override`. (L6c)
 - Never add an entry to a lint exemption list in `lint/studio.ts` or an area to a `lint/boundaries.ts` layer in a slice. The merge step adds it to `lint/plugins/studio/frozen.js` -> `studio/frozen-exemption`. (L6d)

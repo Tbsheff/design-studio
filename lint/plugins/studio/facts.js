@@ -62,6 +62,7 @@ const cache = {
   serviceAccess: null,
   serviceFiles: null,
   serviceUses: null,
+  sources: new Map(),
   wireErrors: null,
   writeSites: new Map(),
 };
@@ -110,6 +111,24 @@ const actionAccessOf = (domain, tail) => {
 
 const relativeOf = (filename) =>
   path.relative(ROOT, filename).split(path.sep).join("/");
+
+const readSource = (relative) => {
+  const file = path.join(ROOT, relative);
+
+  if (!existsSync(file)) {
+    return null;
+  }
+
+  return readFileSync(file, "utf-8");
+};
+
+const sourceOf = (relative) => {
+  if (!cache.sources.has(relative)) {
+    cache.sources.set(relative, readSource(relative));
+  }
+
+  return cache.sources.get(relative);
+};
 
 const SNAPSHOTS = path.join(ROOT, "artifacts/mcp-snapshots");
 
@@ -318,5 +337,6 @@ export {
   relativeOf,
   serviceAccessOf,
   serviceFileCountOf,
+  sourceOf,
   writeSiteFrom,
 };

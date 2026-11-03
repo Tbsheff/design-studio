@@ -4,7 +4,7 @@ import {
   agentOffReason,
   writeNeedsWritePermission,
 } from "./studio/action-rules.js";
-import { frozenExemption, narrowOverride } from "./studio/config-rules.js";
+import { frozenExemption, narrowOverride, overrideNeedsRule } from "./studio/config-rules.js";
 import { handlerSatisfies, readYieldsReadService } from "./studio/handler-rules.js";
 import { noFixableOff, noStudioOverride } from "./studio/lint-rules.js";
 import {
@@ -54,6 +54,17 @@ import {
   readVerbAccess,
 } from "./studio/spec-rules.js";
 import { cloudToolVerb, noOrgIdParam, repoUsesTq, tenantSqlInRepos } from "./studio/cloud-rules.js";
+import {
+  cloudOneRuntime,
+  cloudPlatformLayer,
+  cloudRunEntry,
+  noDirectBindings,
+  noLocalHttpStatus,
+  noOpenTag,
+  noPlainError,
+  noScopeParam,
+  repoNoViewerScope,
+} from "./studio/cloud-shape-rules.js";
 import { noNewRuntimeSlot, wideExemption } from "./studio/exemption-rules.js";
 import { derivedTypeName, noHandlerNodeGlobal } from "./studio/handler-shape-rules.js";
 import {
@@ -95,6 +106,9 @@ const studio = {
     "await-write": awaitWrite,
     "boolean-name": booleanName,
     "bootstrap-off-reason": bootstrapOffReason,
+    "cloud-one-runtime": cloudOneRuntime,
+    "cloud-platform-layer": cloudPlatformLayer,
+    "cloud-run-entry": cloudRunEntry,
     "cloud-tool-verb": cloudToolVerb,
     "delete-destructive": deleteDestructive,
     "derived-tool-name": derivedToolName,
@@ -120,18 +134,23 @@ const studio = {
     "no-cache-ttl": noCacheTtl,
     "no-deep-area-import": noDeepAreaImport,
     "no-desktop-global": noDesktopGlobal,
+    "no-direct-bindings": noDirectBindings,
     "no-dom-query": noDomQuery,
     "no-feature-async": noFeatureAsync,
     "no-fixable-off": noFixableOff,
     "no-handler-node-global": noHandlerNodeGlobal,
     "no-input-default": noInputDefault,
     "no-local-error-bridge": noLocalErrorBridge,
+    "no-local-http-status": noLocalHttpStatus,
     "no-new-runtime-slot": noNewRuntimeSlot,
+    "no-open-tag": noOpenTag,
     "no-optional-null": noOptionalNull,
     "no-org-id-param": noOrgIdParam,
     "no-output-guess": noOutputGuess,
+    "no-plain-error": noPlainError,
     "no-promise-cast": noPromiseCast,
     "no-runtime-map": noRuntimeMap,
+    "no-scope-param": noScopeParam,
     "no-short-name": noShortName,
     "no-stub-route": noStubRoute,
     "no-studio-override": noStudioOverride,
@@ -142,12 +161,14 @@ const studio = {
     "no-wire-cast": noWireCast,
     "no-zod-import": noZodImport,
     "not-ready-unavailable": notReadyUnavailable,
+    "override-needs-rule": overrideNeedsRule,
     "predicate-name": predicateName,
     "read-needs-input": readNeedsInput,
     "read-service-io": readServiceIo,
     "read-verb-access": readVerbAccess,
     "read-yields-read-service": readYieldsReadService,
     "readonly-field": readonlyField,
+    "repo-no-viewer-scope": repoNoViewerScope,
     "repo-uses-tq": repoUsesTq,
     "service-api-effect": serviceApiEffect,
     "service-effect-only": serviceEffectOnly,

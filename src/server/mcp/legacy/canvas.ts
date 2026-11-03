@@ -3,7 +3,7 @@ import { defineTool, plain } from "../edit-kit.js";
 import type { ToolSpec } from "../edit-kit.js";
 import { FLOW_TOOLS } from "../flow-tools.js";
 import { FRAME_STATE_TOOLS } from "../frame-state-tools.js";
-import { LINK_TOOLS } from "../link-tools.js";
+import { LINK_INTERACTION_TOOLS } from "../link-interaction-tools.js";
 import { PAGE_IMPORT_TOOLS } from "../page-import-tools.js";
 import {
   addFrame,
@@ -113,7 +113,7 @@ const CANVAS_LEGACY_TOOLS: ToolSpec[] = [
   addFrameTool,
   removeFrameTool,
   addRouteFrameTool,
-  ...LINK_TOOLS,
+  ...LINK_INTERACTION_TOOLS,
   ...PAGE_IMPORT_TOOLS,
   ...FLOW_TOOLS,
   ...FRAME_STATE_TOOLS,

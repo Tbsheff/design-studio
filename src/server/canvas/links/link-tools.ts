@@ -306,7 +306,7 @@ function queryOf(link: PrototypeLink): LinkQuery {
   };
 }
 
-function describeLink(
+export function describeLink(
   link: PrototypeLink,
   frames: readonly CanvasFileFrame[],
   issue: LinkIssue | null,
@@ -412,13 +412,20 @@ async function probeIssues(
   return checked;
 }
 
-export async function listLinks(
+export interface LinkView {
+  startFrame: string;
+  links: ReturnType<typeof describeLink>[];
+  note: string | undefined;
+}
+
+export async function listLinkView(
   ctx: CanvasToolContext,
-  probe?: LinkProbe
-): Promise<ToolText> {
+  probe?: LinkProbe,
+  withImplicit = true
+): Promise<LinkView> {
   const frames = await framesOf(ctx);
   const file = await ctx.canvas.links.read(ctx.project);
-  const implicit = await implicitOf(ctx, probe, file);
+  const implicit = withImplicit ? await implicitOf(ctx, probe, file) : [];
   const all = [...file.links, ...implicit];
   const issues = new Map<string, LinkIssue | null>(
     all.map((link) => [link.id, staticLinkIssue(link, frames)])
@@ -433,13 +440,20 @@ export async function listLinks(
         : null,
     implicit.length > 0 ? IMPLICIT_NOTE : null,
   ].filter(Boolean);
-  return text({
+  return {
     startFrame: start,
     links: all.map((link) =>
       describeLink(link, frames, issues.get(link.id) ?? null, start)
     ),
     note: notes.length > 0 ? notes.join(" ") : undefined,
-  });
+  };
+}
+
+export async function listLinks(
+  ctx: CanvasToolContext,
+  probe?: LinkProbe
+): Promise<ToolText> {
+  return text(await listLinkView(ctx, probe));
 }
 
 export async function keepLinks(
@@ -473,6 +487,82 @@ export async function keepLinks(
   });
 }
 
+export interface SavedLink {
+  file: LinksFile;
+  frames: CanvasFileFrame[];
+  link: PrototypeLink;
+}
+
+export interface SaveHint {
+  tag?: string;
+  text?: string;
+}
+
+export async function saveLink(
+  ctx: CanvasToolContext,
+  spec: LinkSpec,
+  probe: LinkProbe | undefined,
+  source: "user" | "agent",
+  given?: SaveHint
+): Promise<SavedLink> {
+  const frames = await framesOf(ctx);
+  const from = frameOf(frames, spec.fromFrame);
+  const back = spec.toFrame.trim().toLowerCase() === BACK_REF;
+  const to = back ? null : frameOf(frames, spec.toFrame);
+  if (to && to.id === from.id)
+    throw new LinkError(
+      'A link goes to another frame. Pick a different toFrame, or "back".'
+    );
+  if (back && spec.action && spec.action !== "navigate")
+    throw new LinkError(
+      'A "back" link cannot open an overlay. Use action navigate, or a toFrame.'
+    );
+  const selector = cleanLinkSelector(spec.selector);
+  if (!selector) throw new LinkError("selector is empty or too long.");
+  let hint: SaveHint = given ?? {};
+  if (probe && !given) {
+    const [found] = await probe(from, [{ id: "new", selector }]).catch(
+      (error: unknown) => {
+        throw new LinkError(
+          `Could not render ${from.path || "the entry page"} to check the selector: ${error instanceof Error ? error.message : String(error)}`
+        );
+      }
+    );
+    if (!found)
+      throw new LinkError(
+        `No element matches ${selector} on ${from.path || "the entry page"} of ${from.id}. Check the selector with get_frame_html.`
+      );
+    const label = cleanLinkText(found.text);
+    hint = { tag: found.tag, ...(label ? { text: label } : {}) };
+  }
+  const transition: LinkTransition = spec.transition ?? "instant";
+  let saved: PrototypeLink | null = null;
+  const file = await ctx.canvas.links.update(
+    ctx.project,
+    (current) => {
+      const base: Omit<PrototypeLink, "id"> = {
+        from: { frame: from.id, path: from.path ?? "", selector, ...hint },
+        to: to ? { frame: to.id } : { back: true },
+        transition,
+      };
+      const next = upsertLink(
+        current,
+        withMotion(base, {
+          ...(spec.action ? { action: spec.action } : {}),
+          ...(spec.duration === undefined ? {} : { duration: spec.duration }),
+          ...(spec.easing ? { easing: spec.easing } : {}),
+        })
+      );
+      saved = next.link;
+      return next.file;
+    },
+    source
+  );
+  const link = saved as PrototypeLink | null;
+  if (!link) throw new LinkError("The link was not saved.");
+  return { file, frames, link };
+}
+
 export async function addLink(
   ctx: CanvasToolContext,
   spec: LinkSpec,
@@ -487,61 +577,7 @@ export async function addLink(
   if (ctx.mode === "critique")
     return { result: failure("Links are not available in critique runs.") };
   try {
-    const frames = await framesOf(ctx);
-    const from = frameOf(frames, spec.fromFrame);
-    const back = spec.toFrame.trim().toLowerCase() === BACK_REF;
-    const to = back ? null : frameOf(frames, spec.toFrame);
-    if (to && to.id === from.id)
-      throw new LinkError(
-        'A link goes to another frame. Pick a different toFrame, or "back".'
-      );
-    if (back && spec.action && spec.action !== "navigate")
-      throw new LinkError(
-        'A "back" link cannot open an overlay. Use action navigate, or a toFrame.'
-      );
-    const selector = cleanLinkSelector(spec.selector);
-    if (!selector) throw new LinkError("selector is empty or too long.");
-    let hint: { tag?: string; text?: string } = {};
-    if (probe) {
-      const [found] = await probe(from, [{ id: "new", selector }]).catch(
-        (error: unknown) => {
-          throw new LinkError(
-            `Could not render ${from.path || "the entry page"} to check the selector: ${error instanceof Error ? error.message : String(error)}`
-          );
-        }
-      );
-      if (!found)
-        throw new LinkError(
-          `No element matches ${selector} on ${from.path || "the entry page"} of ${from.id}. Check the selector with get_frame_html.`
-        );
-      const label = cleanLinkText(found.text);
-      hint = { tag: found.tag, ...(label ? { text: label } : {}) };
-    }
-    const transition: LinkTransition = spec.transition ?? "instant";
-    let saved: PrototypeLink | null = null;
-    const file = await ctx.canvas.links.update(
-      ctx.project,
-      (current) => {
-        const base: Omit<PrototypeLink, "id"> = {
-          from: { frame: from.id, path: from.path ?? "", selector, ...hint },
-          to: to ? { frame: to.id } : { back: true },
-          transition,
-        };
-        const next = upsertLink(
-          current,
-          withMotion(base, {
-            ...(spec.action ? { action: spec.action } : {}),
-            ...(spec.duration === undefined ? {} : { duration: spec.duration }),
-            ...(spec.easing ? { easing: spec.easing } : {}),
-          })
-        );
-        saved = next.link;
-        return next.file;
-      },
-      "agent"
-    );
-    const link = saved as PrototypeLink | null;
-    if (!link) throw new LinkError("The link was not saved.");
+    const { file, frames, link } = await saveLink(ctx, spec, probe, "agent");
     const title = linkTitle(link, frames);
     return {
       result: text({

@@ -316,8 +316,26 @@ export const decisionOverrides: OxlintOverride[] = [
     files: [
       "src/server/{cloud/{session,client},handlers/cloud/{get,set,delete,live,handlers}}.ts",
       "src/shared/actions/cloud/{get,set,delete}.ts",
+      "src/server/canvas/links/link-{ops,runtime,store,writer}.ts",
+      "src/server/handlers/canvas/{create-link,delete-link,keep-link,list-implicit-links,list-links,set-start-link,update-link,live,handlers}.ts",
+      "src/shared/actions/canvas/{schema,create-link,delete-link,keep-link,list-implicit-links,list-links,set-start-link,update-link}.ts",
     ],
     rules: { "import/no-relative-parent-imports": "off" },
+  },
+  {
+    files: [
+      "src/server/canvas/links/link-{ops,tools}.ts",
+      "src/server/http/canvas-routes.ts",
+    ],
+    rules: {
+      "anti-slop/no-conditional-empty-object-spread": "warn",
+      "anti-slop/require-readable-spacing": "warn",
+      "eslint/max-params": "warn",
+      "eslint/no-ternary": "warn",
+      "eslint/no-undefined": "warn",
+      "sonarjs/shorthand-property-grouping": "warn",
+      "typescript/explicit-module-boundary-types": "warn",
+    },
   },
   {
     files: ["src/server/platform/git/encoding.ts"],

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
+import { routes } from "../shared/actions/canvas/routes.js";
 import { STUDIO_TOKEN_HEADER, type StudioEvent } from "../shared/contracts";
 import type {
   LinkTriggerKind,
@@ -17,6 +18,7 @@ import {
 } from "../shared/links";
 import { ApiError } from "./api";
 import { useProjectEvents } from "./events";
+import { call as callAction } from "./platform/http";
 import { getSession } from "./session";
 
 async function call<T>(
@@ -100,10 +102,10 @@ function load(projectId: string): void {
 
   entry.loading = true;
   entry.requestedAt = Date.now();
-  call<{ links: LinksFile }>("GET", base(projectId))
+  callAction(routes.listLinksCanvas, { projectId })
     .then(({ links }) => {
       entry.loaded = true;
-      setFile(projectId, links);
+      setFile(projectId, links as LinksFile);
     })
     .catch((error: unknown) => console.error("[links] load failed", error))
     .finally(() => {
@@ -125,41 +127,82 @@ function receive(event: StudioEvent): void {
   setFile(event.projectId, event.links);
 }
 
-async function write(
-  projectId: string,
-  method: string,
-  path: string,
-  body?: unknown
-): Promise<LinksFile> {
-  const { links } = await call<{ links: LinksFile }>(method, path, body);
-  setFile(projectId, links);
+function writeFile(projectId: string, links: unknown): LinksFile {
+  setFile(projectId, links as LinksFile);
 
-  return links;
+  return links as LinksFile;
 }
+
+const frameRefOf = (target: LinkTarget): string | undefined => {
+  if ("back" in target) {
+    return "back";
+  }
+
+  return "frame" in target ? target.frame : undefined;
+};
 
 export const linksApi = {
   add: async (
     projectId: string,
     link: { from: LinkSource; to: LinkTarget; transition: LinkTransition }
   ): Promise<PrototypeLink | null> => {
-    const { links, link: saved } = await call<{
-      links: LinksFile;
-      link: PrototypeLink | null;
-    }>("POST", base(projectId), link);
+    const { links, link: saved } = await callAction(routes.createLinkCanvas, {
+      fromFrame: link.from.frame,
+      projectId,
+      selector: link.from.selector,
+      ...(link.from.tag ? { tag: link.from.tag } : {}),
+      ...(link.from.text ? { text: link.from.text } : {}),
+      toFrame: frameRefOf(link.to) ?? "back",
+      transition: link.transition,
+    });
 
-    setFile(projectId, links);
+    setFile(projectId, links as LinksFile);
 
-    return saved;
+    return saved as PrototypeLink | null;
   },
-  update: (
+  update: async (
     projectId: string,
     id: string,
     change: { to?: LinkTarget } & LinkMotion
-  ) => write(projectId, "PATCH", `${base(projectId)}/${id}`, change),
-  keep: (projectId: string, ids: string[] | "all", motion: LinkMotion = {}) =>
-    write(projectId, "POST", `${base(projectId)}/keep`, { ids, ...motion }),
-  remove: (projectId: string, id: string) =>
-    write(projectId, "DELETE", `${base(projectId)}/${id}`),
+  ) => {
+    const toFrame = change.to ? frameRefOf(change.to) : undefined;
+
+    const { links } = await callAction(routes.updateLinkCanvas, {
+      ...(change.action ? { action: change.action } : {}),
+      ...(change.duration === undefined ? {} : { duration: change.duration }),
+      ...(change.easing ? { easing: change.easing } : {}),
+      linkId: id,
+      projectId,
+      ...(toFrame ? { toFrame } : {}),
+      ...(change.transition ? { transition: change.transition } : {}),
+    });
+
+    return writeFile(projectId, links);
+  },
+  keep: async (
+    projectId: string,
+    ids: string[] | "all",
+    motion: LinkMotion = {}
+  ) => {
+    const { links } = await callAction(routes.keepLinkCanvas, {
+      ...(motion.action ? { action: motion.action } : {}),
+      ...(motion.duration === undefined ? {} : { duration: motion.duration }),
+      ...(motion.easing ? { easing: motion.easing } : {}),
+      ids,
+      projectId,
+      ...(motion.transition ? { transition: motion.transition } : {}),
+    });
+
+    return writeFile(projectId, links);
+  },
+  remove: async (projectId: string, id: string) => {
+    const { links } = await callAction(routes.deleteLinkCanvas, {
+      linkId: id,
+      projectId,
+    });
+
+    return writeFile(projectId, links);
+  },
   setInteraction: async (
     projectId: string,
     change: LinkInteractionChange
@@ -173,8 +216,14 @@ export const linksApi = {
 
     return link;
   },
-  setStart: (projectId: string, frame: string) =>
-    write(projectId, "PUT", `${base(projectId)}/start`, { frame }),
+  setStart: async (projectId: string, frame: string) => {
+    const { links } = await callAction(routes.setStartLinkCanvas, {
+      frame,
+      projectId,
+    });
+
+    return writeFile(projectId, links);
+  },
 };
 
 function subscribe(listener: () => void): () => void {
@@ -208,10 +257,10 @@ export function useImplicitLinks(
   const fetchNow = useRef(() => undefined as void);
   fetchNow.current = () => {
     const at = ++seq.current;
-    call<{ implicit: PrototypeLink[] }>("GET", `${base(projectId)}/implicit`)
+    callAction(routes.listImplicitLinksCanvas, { projectId })
       .then(({ implicit }) => {
         if (at === seq.current) {
-          setLinks(implicit);
+          setLinks(implicit as PrototypeLink[]);
         }
       })
       .catch((error: unknown) =>

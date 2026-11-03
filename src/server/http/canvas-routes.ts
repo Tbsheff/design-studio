@@ -8,11 +8,11 @@ import {
 } from "../../shared/canvas-file.js";
 import type { CanvasPresence } from "../../shared/contracts.js";
 import type { FrameStateDeps } from "../canvas/app-flow/frame-state-service.js";
+import { bindLinkRuntime } from "../canvas/links/link-runtime.js";
 import type { CanvasService } from "../canvas/service.js";
 import { BadRequestError } from "../store/errors.js";
 import type { StudioProjectStore } from "../store/projects.js";
 import type { PreviewService } from "../types.js";
-import { registerLinksRoutes } from "./links-routes.js";
 
 interface CanvasRouteDeps {
   projects: StudioProjectStore;
@@ -93,7 +93,12 @@ function parsePresence(raw: unknown): CanvasPresence {
 
 export function registerCanvasRoutes(app: Hono, deps: CanvasRouteDeps): void {
   const { projects, canvas, readBody } = deps;
-  registerLinksRoutes(app, deps);
+  bindLinkRuntime({
+    canvas,
+    frameStates: deps.frameStates,
+    preview: deps.preview ?? null,
+    projects,
+  });
 
   app.get("/api/projects/:pid/canvas", async (c) => {
     const project = await projects.get(c.req.param("pid"));

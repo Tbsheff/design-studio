@@ -1,10 +1,8 @@
 import type { Hono } from "hono";
 
+import { bindLinkRuntime } from "../canvas/links/link-runtime.js";
 import type { AppContext } from "./app-context.js";
 import { readBody } from "./app-request.js";
-import { registerCanvasRoutes } from "./canvas-routes.js";
-import { registerFlowRoutes } from "./flow-routes.js";
-import { registerFrameStateRoutes } from "./frame-state-routes.js";
 import { registerLinkInteractionRoutes } from "./link-interaction-routes.js";
 import { registerPageImportRoutes } from "./page-import-routes.js";
 import { registerTextSearchRoutes } from "./text-search-routes.js";
@@ -19,12 +17,11 @@ const registerAppCanvasRoutes = (app: Hono, ctx: AppContext): void => {
     projects,
     withDirection,
   } = ctx;
-  registerCanvasRoutes(app, {
-    projects,
+  bindLinkRuntime({
     canvas,
     frameStates,
-    readBody,
-    preview,
+    preview: preview ?? null,
+    projects,
   });
   registerLinkInteractionRoutes(app, {
     canvas,
@@ -41,8 +38,6 @@ const registerAppCanvasRoutes = (app: Hono, ctx: AppContext): void => {
     readBody,
     withDirection,
   });
-  registerFrameStateRoutes(app, { frameStates, projects, readBody });
-  registerFlowRoutes(app, { projects, canvas, frameStates, readBody });
 };
 
 export { registerAppCanvasRoutes };

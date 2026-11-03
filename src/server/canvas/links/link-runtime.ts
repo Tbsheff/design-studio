@@ -15,7 +15,7 @@ interface LinkRuntime {
   readonly canvas: CanvasService;
   readonly frameStates: FrameStateDeps;
   readonly preview: Pick<PreviewService, "directionUrl" | "withPage"> | null;
-  readonly projects: Pick<StudioProjectStore, "get">;
+  readonly projects: Pick<StudioProjectStore, "get" | "projectDir">;
 }
 
 type LinkFailure = BadRequest | NotFound;
@@ -62,6 +62,9 @@ const attemptLink = <Value>(
     );
   });
 
-export { attemptLink, bindLinkRuntime };
+const runtimeOf = (): LinkRuntime | null =>
+  runtimes.get(loadConfig().dataDir) ?? null;
+
+export { attemptLink, bindLinkRuntime, runtimeOf };
 
 export type { LinkFailure, LinkRuntime };

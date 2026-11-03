@@ -317,15 +317,17 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/server/{cloud/{session,client},handlers/cloud/{get,set,delete,live,handlers}}.ts",
       "src/shared/actions/cloud/{get,set,delete}.ts",
       "src/server/canvas/links/link-{ops,runtime,store,writer}.ts",
-      "src/server/handlers/canvas/{create-link,delete-link,keep-link,list-implicit-links,list-links,set-start-link,update-link,live,handlers}.ts",
-      "src/shared/actions/canvas/{schema,create-link,delete-link,keep-link,list-implicit-links,list-links,set-start-link,update-link}.ts",
+      "src/server/canvas/canvas-{ops,runtime,store,writer}.ts",
+      "src/server/handlers/canvas/*.ts",
+      "src/shared/actions/canvas/*.ts",
     ],
     rules: { "import/no-relative-parent-imports": "off" },
   },
   {
     files: [
+      "src/server/canvas/canvas-ops.ts",
       "src/server/canvas/links/link-{ops,tools}.ts",
-      "src/server/http/canvas-routes.ts",
+      "src/ui/frameStates.ts",
     ],
     rules: {
       "anti-slop/no-conditional-empty-object-spread": "warn",
@@ -335,6 +337,15 @@ export const decisionOverrides: OxlintOverride[] = [
       "eslint/no-undefined": "warn",
       "sonarjs/shorthand-property-grouping": "warn",
       "typescript/explicit-module-boundary-types": "warn",
+    },
+  },
+  {
+    files: [
+      "src/shared/actions/canvas/{schema,create-flow,set-frame-state,update-frame-session}.ts",
+    ],
+    rules: {
+      "eslint/no-magic-numbers": "off",
+      "unicorn/max-nested-calls": "off",
     },
   },
   {

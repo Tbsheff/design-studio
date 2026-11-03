@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useSyncExternalStore } from "react";
 
-import { STUDIO_TOKEN_HEADER, type StudioEvent } from "../shared/contracts";
+import { routes } from "../shared/actions/canvas/routes.js";
+import type { StudioEvent } from "../shared/contracts";
 import {
   DEFAULT_FRAME_STATE,
   DEFAULT_MOCK_USER,
@@ -9,42 +10,10 @@ import {
   type FrameStatesView,
   type MockUser,
 } from "../shared/frame-state";
-import { ApiError } from "./api";
 import { useProjectEvents } from "./events";
-import { getSession } from "./session";
+import { call } from "./platform/http";
 
-async function call<T>(
-  method: string,
-  path: string,
-  body?: unknown
-): Promise<T> {
-  const res = await fetch(path, {
-    method,
-    headers: {
-      [STUDIO_TOKEN_HEADER]: getSession().token,
-      ...(body === undefined ? {} : { "content-type": "application/json" }),
-    },
-    body: body === undefined ? undefined : JSON.stringify(body),
-  });
-
-  if (!res.ok) {
-    const data = (await res.json().catch(() => null)) as {
-      error?: string;
-      message?: string;
-    } | null;
-
-    throw new ApiError(
-      res.status,
-      data?.message ?? data?.error ?? `${method} ${path} failed: ${res.status}`,
-      data?.error
-    );
-  }
-
-  return (await res.json()) as T;
-}
-
-const base = (projectId: string) =>
-  `/api/projects/${encodeURIComponent(projectId)}/frame-states`;
+const viewOf = (wire: unknown): FrameStatesView => wire as FrameStatesView;
 
 const views = new Map<string, FrameStatesView>();
 const loading = new Set<string>();
@@ -74,8 +43,8 @@ function load(projectId: string): void {
   }
 
   loading.add(projectId);
-  call<FrameStatesView>("GET", base(projectId))
-    .then((view) => store(projectId, view))
+  call(routes.listFrameStatesCanvas, { projectId })
+    .then((view) => store(projectId, viewOf(view)))
     .catch(() => {
       if (!views.has(projectId)) {
         store(projectId, {
@@ -169,23 +138,27 @@ export async function setFrameState(
   state: string,
   mock?: { name?: string; rules?: unknown[] }
 ): Promise<FrameStateDef> {
-  const done = await call<{ view: FrameStatesView; state: FrameStateDef }>(
-    "PUT",
-    `${base(projectId)}/frames/${encodeURIComponent(frameId)}`,
-    { state, ...(mock ? { mock } : {}) }
-  );
+  const done = await call(routes.setFrameStateCanvas, {
+    frame: frameId,
+    projectId,
+    state,
+    ...(mock ? { mock: mock as never } : {}),
+  });
 
-  store(projectId, done.view);
+  store(projectId, viewOf(done.view));
 
-  return done.state;
+  return done.state as FrameStateDef;
 }
 
 export async function setFrameSession(
   projectId: string,
   change: { user?: MockUser; forget?: boolean }
 ): Promise<void> {
-  store(
+  const view = await call(routes.updateFrameSessionCanvas, {
     projectId,
-    await call<FrameStatesView>("PATCH", `${base(projectId)}/session`, change)
-  );
+    ...(change.forget === undefined ? {} : { forget: change.forget }),
+    ...(change.user ? { user: change.user } : {}),
+  });
+
+  store(projectId, viewOf(view));
 }

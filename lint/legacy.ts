@@ -228,8 +228,4 @@ export const legacy: OxlintOverride[] = [
       "no-restricted-properties": "off",
     },
   },
-  {
-    files: ["src/shared/app.ts"],
-    rules: { "no-restricted-globals": ["warn", ...SHARED_DOM] },
-  },
 ];

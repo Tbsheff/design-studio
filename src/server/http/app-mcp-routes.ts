@@ -25,6 +25,7 @@ const registerAppMcpRoutes = (
     defaultFolder,
     editHistory,
     frameStates,
+    mcpListener,
     preview,
     projects,
     runner,
@@ -45,7 +46,7 @@ const registerAppMcpRoutes = (
     projectsFolder: () => defaultFolder.ensure(),
     appOpen,
     history: editHistory,
-    runtime,
+    listener: mcpListener,
   });
   slot.routes = mcpRoutes;
   if (runtime !== null) {

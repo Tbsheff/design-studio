@@ -19,18 +19,18 @@ import { ShipLive } from "../handlers/ship/live.js";
 import { StudioLive } from "../handlers/studio/live.js";
 import { VersionLive } from "../handlers/version/live.js";
 import { WorkspaceLive } from "../handlers/workspace/live.js";
-import { McpServer } from "../mcp/mcp-server-layer.js";
-import { Authorizer } from "../store/authorizer.js";
-import { LocalOrgScope } from "../store/local-org-scope.js";
-import { LocalPrincipal } from "../store/local-principal.js";
-import { ProjectAccess } from "../store/project-access.js";
+import {
+  Authorizer,
+  LocalOrgScope,
+  LocalPrincipal,
+  ProjectAccess,
+} from "../store/index.js";
 
 const liveLayer = Layer.mergeAll(
   Authorizer.layer,
   LocalOrgScope.layer,
   LocalPrincipal.layer,
   ProjectAccess.layer,
-  McpServer.layer,
   CanvasLive,
   CloudLive,
   CommentLive,

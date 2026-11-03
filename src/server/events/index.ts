@@ -1,14 +1,15 @@
 export { openEventBus } from "./bus.js";
 
+export { ChangeFeed } from "./change-feed.js";
+
 export {
-  ChangeFeed,
   emitSourceChange,
   noteTreeChange,
   noteTreeWrite,
   onSourceChange,
   treeChangesSince,
   treeStamp,
-} from "./change-feed.js";
+} from "./source-change.js";
 
 export {
   announcePlanned,
@@ -32,7 +33,7 @@ export type { EventBus, FlushableEventBus } from "./bus.js";
 
 export type { EventListener, RecordedEvent } from "./event-log.js";
 
-export type { SourceChange, SourceFileChange } from "./change-feed.js";
+export type { SourceChange, SourceFileChange } from "./source-change.js";
 
 export type { PlannedEdit } from "./planned-feed.js";
 

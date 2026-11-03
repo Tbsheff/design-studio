@@ -1,23 +1,12 @@
 import { Context, Effect, Layer } from "effect";
 
-import { attemptKnown } from "../platform/attempt/index.js";
 import type { KnownFailure } from "../platform/attempt/index.js";
-import { requireBound } from "../platform/runtime-slot/index.js";
+import { runOnServer } from "./dev-server-attempt.js";
 import { applyConfig, attachApp, controlServer } from "./dev-server-ops.js";
 import type { AttachInput, Control } from "./dev-server-ops.js";
 import { devServerRuntimeOf } from "./dev-server-runtime.js";
-import type { DevServerRuntime } from "./dev-server-runtime.js";
 
 type DevServerFailure = KnownFailure;
-
-const attemptServer = <Value>(
-  task: (runtime: DevServerRuntime) => Promise<Value>
-): Effect.Effect<Value, DevServerFailure> =>
-  Effect.gen(function* withRuntime() {
-    const runtime = yield* requireBound("App server", devServerRuntimeOf());
-
-    return yield* attemptKnown(() => task(runtime));
-  });
 
 interface DevServerRunnerApi {
   readonly attach: (
@@ -67,24 +56,24 @@ class DevServerRunner extends Context.Service<
         attach: Effect.fn("DevServerRunner.attach")(function* run(
           input: AttachInput
         ) {
-          return yield* attemptServer((runtime) => attachApp(runtime, input));
+          return yield* runOnServer((runtime) => attachApp(runtime, input));
         }),
         control: Effect.fn("DevServerRunner.control")(function* run(
           projectId: string,
           control: Control
         ) {
-          return yield* attemptServer((runtime) =>
+          return yield* runOnServer((runtime) =>
             controlServer(runtime, projectId, control)
           );
         }),
         setConfig: Effect.fn("DevServerRunner.setConfig")(function* run(input) {
-          return yield* attemptServer((runtime) => applyConfig(runtime, input));
+          return yield* runOnServer((runtime) => applyConfig(runtime, input));
         }),
       });
     })
   );
 }
 
-export { DevServerRunner, attemptServer };
+export { DevServerRunner };
 
 export type { DevServerFailure, DevServerRunnerApi };

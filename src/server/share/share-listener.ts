@@ -14,35 +14,35 @@ interface ShareListenerApi {
 const toRuntime = (): ShareRuntime | null =>
   toShareRuntime(loadConfig().dataDir);
 
-const syncNow = async (): Promise<ShareServerState> => {
+const runShareSync = Effect.fn("ShareListener.sync")(function* run() {
   const runtime = toRuntime();
 
   if (runtime === null) {
     return OFF_STATE;
   }
 
-  return await runtime.server.sync();
-};
+  return yield* Effect.promise(() => runtime.server.sync());
+});
 
-const setLanNow = async (isOn: boolean): Promise<ShareServerState> => {
+const setLan = Effect.fn("ShareListener.setLan")(function* run(isOn: boolean) {
   const runtime = toRuntime();
 
   if (runtime === null) {
     return OFF_STATE;
   }
 
-  return await runtime.server.setLan(isOn);
-};
+  return yield* Effect.promise(() => runtime.server.setLan(isOn));
+});
 
-const stopNow = async (): Promise<void> => {
+const stopServer = Effect.fn("ShareListener.stop")(function* run() {
   const runtime = toRuntime();
 
   if (runtime === null) {
     return;
   }
 
-  await runtime.server.stop();
-};
+  yield* Effect.promise(() => runtime.server.stop());
+});
 
 class ShareListener extends Context.Service<ShareListener, ShareListenerApi>()(
   "design-studio/share/ShareListener"
@@ -53,13 +53,11 @@ class ShareListener extends Context.Service<ShareListener, ShareListenerApi>()(
     ShareListener,
     Effect.gen(function* make() {
       yield* Effect.addFinalizer(() =>
-        Effect.promise(() => stopNow()).pipe(Effect.orElseSucceed(() => null))
+        stopServer().pipe(Effect.orElseSucceed(() => null))
       );
 
       return ShareListener.of({
-        setLan: Effect.fn("ShareListener.setLan")(function* run(isOn: boolean) {
-          return yield* Effect.promise(() => setLanNow(isOn));
-        }),
+        setLan,
         state: Effect.fn("ShareListener.state")(function* run() {
           const runtime = toRuntime();
 
@@ -69,9 +67,7 @@ class ShareListener extends Context.Service<ShareListener, ShareListenerApi>()(
 
           return yield* Effect.sync(() => runtime.server.state());
         }),
-        sync: Effect.fn("ShareListener.sync")(function* run() {
-          return yield* Effect.promise(() => syncNow());
-        }),
+        sync: runShareSync,
       });
     })
   );

@@ -1,7 +1,7 @@
 import { Context, Effect, Layer } from "effect";
 
+import { runOnServer } from "./dev-server-attempt.js";
 import { readRoutes, readView } from "./dev-server-ops.js";
-import { attemptServer } from "./dev-server-runner.js";
 import type { DevServerFailure } from "./dev-server-runner.js";
 
 interface DevServerStoreApi {
@@ -25,12 +25,10 @@ class DevServerStore extends Context.Service<
       routes: Effect.fn("DevServerStore.routes")(function* run(
         projectId: string
       ) {
-        return yield* attemptServer((runtime) =>
-          readRoutes(runtime, projectId)
-        );
+        return yield* runOnServer((runtime) => readRoutes(runtime, projectId));
       }),
       view: Effect.fn("DevServerStore.view")(function* run(projectId: string) {
-        return yield* attemptServer((runtime) => readView(runtime, projectId));
+        return yield* runOnServer((runtime) => readView(runtime, projectId));
       }),
     })
   );

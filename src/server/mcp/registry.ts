@@ -10,7 +10,7 @@ import { allowAll, makeRunner } from "../handlers/_core/run-action.js";
 import type { Gate, Runner, WireArgs } from "../handlers/_core/run-action.js";
 import { ALL_ENTRIES } from "../handlers/all-entries.generated.js";
 import type { StudioRuntime } from "../main/runtime.js";
-import { toLegacyPrincipal } from "../store/local-principal.js";
+import { toLegacyPrincipal } from "../store/principal.js";
 import type { ApprovalQueue } from "./approvals.js";
 import { toToolResult } from "./tool-result.js";
 import type { TextResult } from "./tool-result.js";

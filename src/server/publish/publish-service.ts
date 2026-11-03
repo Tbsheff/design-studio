@@ -16,14 +16,17 @@ import { loadConfig } from "../platform/config/index.js";
 import { CfCli } from "./cf-cli.js";
 import type { CfCliApi } from "./cf-cli.js";
 import { cliEnv, cliFailure, DEFAULT_TIMEOUT_MS } from "./cli.js";
-import { attemptLegacy, planFor, takePlan } from "./legacy-link.js";
-import type { LegacyLink } from "./legacy-link.js";
-import { toPlanInput } from "./plan-input.js";
+import { attemptLegacy } from "./legacy-link.js";
 import { toPublishCore } from "./publish-core.js";
 import type { PublishCore } from "./publish-core.js";
-import { remoteClient, studioErrors } from "./remote.js";
+import {
+  deleteRemoteComment,
+  publishLegacy,
+  revokeRemote,
+  rollbackRemote,
+} from "./publish-remote-writes.js";
+import { studioErrors } from "./remote.js";
 import { scrubCliText, tailLines } from "./scrub.js";
-import { mergeRemote } from "./service.js";
 import type { ReadyCli } from "./session.js";
 import { toPublication } from "./store.js";
 import type { PublicationRecord } from "./store.js";
@@ -66,26 +69,26 @@ interface PublishServiceApi {
 
 const MISSING_WORKER = /not found|does not exist|10007/iu;
 
-const openCore = (): PublishCore => toPublishCore(loadConfig().dataDir);
+const toCore = (): PublishCore => toPublishCore(loadConfig().dataDir);
 
 const LOG_LINES = 20;
 
-const attempt = <Value>(
+const runKnown = <Value>(
   task: () => Promise<Value>
 ): Effect.Effect<Value, KnownFailure> => attemptKnown(task);
 
-const remote = <Value>(
+const runRemote = <Value>(
   task: () => Promise<Value>
-): Effect.Effect<Value, KnownFailure> => attempt(() => studioErrors(task));
+): Effect.Effect<Value, KnownFailure> => runKnown(() => studioErrors(task));
 
-const locked = <Value>(
+const runLocked = <Value>(
   core: PublishCore,
   key: string,
   task: () => Promise<Value>
 ): Effect.Effect<Value, KnownFailure> =>
-  attempt(() => core.lock(key, () => studioErrors(task)));
+  runKnown(() => core.lock(key, () => studioErrors(task)));
 
-const readyCli = (
+const getReadyCli = (
   core: PublishCore,
   accountId: string | null
 ): Promise<ReadyCli> => {
@@ -96,7 +99,7 @@ const readyCli = (
   return core.cli.ready(accountId);
 };
 
-const readOwned = (
+const getOwned = (
   core: PublishCore,
   projectId: string,
   publicationId: string
@@ -111,13 +114,15 @@ const readOwned = (
     return found;
   });
 
-const removeLegacy = (
+const deleteLegacy = (
   cf: CfCliApi,
   core: PublishCore,
   found: PublicationRecord
 ): Effect.Effect<PublicationRecord, WriteError> =>
   Effect.gen(function* removeWorker() {
-    const ready = yield* attempt(() => readyCli(core, found.accountId ?? null));
+    const ready = yield* runKnown(() =>
+      getReadyCli(core, found.accountId ?? null)
+    );
 
     const out = yield* cf.run({
       args: ["workers", "delete", String(found.workerName), "--force"],
@@ -150,104 +155,58 @@ const removeLegacy = (
     return yield* Effect.promise(() => core.files.put(removed));
   });
 
-const removeApp = (
+const deleteApp = (
   core: PublishCore,
   found: PublicationRecord
 ): Effect.Effect<PublicationRecord, KnownFailure> =>
-  locked(core, found.id, async () => {
-    const endpoint = await core.backend.endpoint();
-    const out = await remoteClient(endpoint).revoke(found.id);
-
-    return core.files.put({
-      ...mergeRemote(found, out.publication, endpoint.url),
-      hashes: [],
-      status: "removed",
-      updatedAt: Date.now(),
-    });
-  });
-
-const deleteRemoteComment = async (
-  core: PublishCore,
-  publicationId: string,
-  commentId: string
-): Promise<{ deleted: string }> =>
-  remoteClient(await core.backend.endpoint()).deleteComment(
-    publicationId,
-    commentId
-  );
-
-const publishLegacy = async (
-  link: LegacyLink,
-  input: PublishInput
-): Promise<Publication> => {
-  const planInput = await toPlanInput(link, input);
-  const held = await planFor(link, input.projectId, planInput);
-
-  takePlan(link, input.projectId, planInput);
-
-  return link.service.publish(input.projectId, held.id);
-};
-
-const rollbackRemote = async (
-  core: PublishCore,
-  found: PublicationRecord,
-  versionId: string
-): Promise<PublicationRecord> => {
-  const endpoint = await core.backend.endpoint();
-  const next = await remoteClient(endpoint).rollback(found.id, versionId);
-
-  return core.files.put({
-    ...mergeRemote(found, next, endpoint.url),
-    updatedAt: Date.now(),
-  });
-};
+  runLocked(core, found.id, () => revokeRemote(core, found));
 
 const setupApi = {
   applyBackend: Effect.fn("PublishService.applyBackend")(function* run(
     mode: PublishBackendMode
   ) {
-    const core = openCore();
+    const core = toCore();
 
-    return yield* attempt(() => core.backend.start(mode));
+    return yield* runKnown(() => core.backend.start(mode));
   }),
   cancelLogin: Effect.fn("PublishService.cancelLogin")(function* run() {
-    const core = openCore();
+    const core = toCore();
 
-    return yield* attempt(() => core.cli.cancelLogin());
+    return yield* runKnown(() => core.cli.cancelLogin());
   }),
   logout: Effect.fn("PublishService.logout")(function* run() {
-    const core = openCore();
+    const core = toCore();
 
-    return yield* attempt(() => core.cli.logout());
+    return yield* runKnown(() => core.cli.logout());
   }),
   setAccount: Effect.fn("PublishService.setAccount")(function* run(
     accountId: string | null
   ) {
-    const core = openCore();
+    const core = toCore();
 
-    return yield* attempt(() => core.cli.setAccount(accountId));
+    return yield* runKnown(() => core.cli.setAccount(accountId));
   }),
   startLogin: Effect.fn("PublishService.startLogin")(function* run(
     isKeyring: boolean,
     isNarrow: boolean
   ) {
-    const core = openCore();
+    const core = toCore();
 
-    return yield* attempt(() => core.cli.startLogin(isKeyring, isNarrow));
+    return yield* runKnown(() => core.cli.startLogin(isKeyring, isNarrow));
   }),
 };
 
-const makeApi = (cf: CfCliApi): PublishServiceApi => ({
+const toServiceApi = (cf: CfCliApi): PublishServiceApi => ({
   ...setupApi,
   deleteComment: Effect.fn("PublishService.deleteComment")(function* run(
     projectId: string,
     publicationId: string,
     commentId: string
   ) {
-    const core = openCore();
-    const found = yield* readOwned(core, projectId, publicationId);
+    const core = toCore();
+    const found = yield* getOwned(core, projectId, publicationId);
 
-    yield* remote(() => deleteRemoteComment(core, found.id, commentId));
+    yield* runRemote(() => deleteRemoteComment(core, found.id, commentId));
   }),
   publish: Effect.fn("PublishService.publish")(function* run(
     input: PublishInput
@@ -259,8 +218,8 @@ const makeApi = (cf: CfCliApi): PublishServiceApi => ({
     publicationId: string,
     versionId: string
   ) {
-    const core = openCore();
-    const found = yield* readOwned(core, projectId, publicationId);
+    const core = toCore();
+    const found = yield* getOwned(core, projectId, publicationId);
 
     if (found.backend !== "app") {
       return yield* new BadRequest({
@@ -268,7 +227,7 @@ const makeApi = (cf: CfCliApi): PublishServiceApi => ({
       });
     }
 
-    const saved = yield* locked(core, found.id, () =>
+    const saved = yield* runLocked(core, found.id, () =>
       rollbackRemote(core, found, versionId)
     );
 
@@ -278,18 +237,18 @@ const makeApi = (cf: CfCliApi): PublishServiceApi => ({
     projectId: string,
     publicationId: string
   ) {
-    const core = openCore();
-    const found = yield* readOwned(core, projectId, publicationId);
+    const core = toCore();
+    const found = yield* getOwned(core, projectId, publicationId);
 
     if (found.status === "removed") {
       return toPublication(found);
     }
 
     if (found.backend !== "app") {
-      return toPublication(yield* removeLegacy(cf, core, found));
+      return toPublication(yield* deleteLegacy(cf, core, found));
     }
 
-    return toPublication(yield* removeApp(core, found));
+    return toPublication(yield* deleteApp(core, found));
   }),
 });
 
@@ -304,7 +263,7 @@ class PublishService extends Context.Service<
     Effect.gen(function* build() {
       const cf = yield* CfCli;
 
-      return PublishService.of(makeApi(cf));
+      return PublishService.of(toServiceApi(cf));
     })
   );
 }

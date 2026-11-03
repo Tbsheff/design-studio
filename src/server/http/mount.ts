@@ -11,7 +11,7 @@ import type {
   WireForm,
 } from "../handlers/_core/run-action.js";
 import type { StudioRuntime } from "../main/runtime.js";
-import { toLegacyPrincipal } from "../store/local-principal.js";
+import { toLegacyPrincipal } from "../store/principal.js";
 import { failureOf, toWireError } from "./wire-error.js";
 
 type Group = Readonly<Record<string, AnyAction>>;

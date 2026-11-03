@@ -6,8 +6,8 @@ import {
   CloudOrgSchema,
   CloudUserSchema,
 } from "../../shared/actions/cloud/schema.js";
-import { CloudSession } from "./session.js";
-import type { CloudProfile } from "./session.js";
+import { CloudSession } from "./cloud-session.js";
+import type { CloudProfile } from "./cloud-session.js";
 
 const CLOUD_ORIGIN = "https://api.designstudio.app";
 
@@ -21,17 +21,17 @@ interface CloudClientApi {
   >;
 }
 
-const unavailable = (): Unavailable =>
+const toUnavailable = (): Unavailable =>
   new Unavailable({ message: "The cloud did not answer." });
 
-const readJson = <Value>(
+const getJson = <Value>(
   path: string,
   jwt: string,
   schema: Schema.Codec<Value, unknown>
 ): Effect.Effect<Value, Unavailable> =>
   Effect.gen(function* read() {
     const response = yield* Effect.tryPromise({
-      catch: unavailable,
+      catch: toUnavailable,
       try: (signal) =>
         fetch(new URL(path, CLOUD_ORIGIN), {
           headers: { authorization: `Bearer ${jwt}` },
@@ -41,16 +41,16 @@ const readJson = <Value>(
     });
 
     if (!response.ok) {
-      return yield* unavailable();
+      return yield* toUnavailable();
     }
 
     const body = yield* Effect.tryPromise({
-      catch: unavailable,
+      catch: toUnavailable,
       try: () => response.json(),
     });
 
     return yield* Schema.decodeUnknownEffect(schema)(body).pipe(
-      Effect.mapError(unavailable)
+      Effect.mapError(toUnavailable)
     );
   });
 
@@ -67,8 +67,8 @@ class CloudClient extends Context.Service<CloudClient, CloudClientApi>()(
 
         return yield* session.withToken((jwt) =>
           Effect.all({
-            orgs: readJson("/v1/orgs", jwt, OrgListSchema),
-            user: readJson("/v1/me", jwt, CloudUserSchema),
+            orgs: getJson("/v1/orgs", jwt, OrgListSchema),
+            user: getJson("/v1/me", jwt, CloudUserSchema),
           })
         );
       }),
@@ -76,6 +76,6 @@ class CloudClient extends Context.Service<CloudClient, CloudClientApi>()(
   );
 }
 
-export { CLOUD_ORIGIN, CloudClient };
+export { CloudClient };
 
 export type { CloudClientApi };

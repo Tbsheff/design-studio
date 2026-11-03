@@ -43,7 +43,7 @@ const toRealPath = (target: string | null): Effect.Effect<string | null> => {
   );
 };
 
-const readEntries = (dir: string): Effect.Effect<readonly Dirent[]> =>
+const listEntries = (dir: string): Effect.Effect<readonly Dirent[]> =>
   Effect.tryPromise(() => readdir(dir, { withFileTypes: true })).pipe(
     Effect.orElseSucceed(() => [])
   );
@@ -96,7 +96,7 @@ const listFiles = Effect.fn("SourceIndexStore.listFiles")(function* run(
 
   while (queue.length > 0 && files.length < MAX_FILES) {
     const dir = queue.shift() ?? root;
-    const entries = yield* readEntries(dir);
+    const entries = yield* listEntries(dir);
 
     queue.push(...toSubdirs(dir, entries));
     files.push(...toFiles(dir, entries));

@@ -1,4 +1,5 @@
 import { serve } from "@hono/node-server";
+import { Effect } from "effect";
 
 import type { StudioEvent } from "../../shared/contracts.js";
 import { createAgentRunner } from "../agent/index.js";
@@ -8,6 +9,8 @@ import { withSaveQueue } from "../direct-edit/save-queue.js";
 import { openEventBus } from "../events/index.js";
 import type { EventBus, FlushableEventBus } from "../events/index.js";
 import { createApp } from "../http/app.js";
+import { McpListenerRunner } from "../mcp-life/index.js";
+import type { McpListenerRunnerApi } from "../mcp-life/index.js";
 import { pageProbe } from "../page-probe/index.js";
 import { loadConfig } from "../platform/config/index.js";
 import type { ServerConfig } from "../platform/config/index.js";
@@ -59,6 +62,11 @@ interface ServerOptions {
 interface StudioServer {
   runtime: StudioRuntime;
   shutdown: (signal: string) => void;
+}
+
+interface LiveParts {
+  readonly mcpListener: McpListenerRunnerApi;
+  readonly runtime: StudioRuntime;
 }
 
 interface BuiltApp {
@@ -163,8 +171,9 @@ const buildApp = (
   config: ServerConfig,
   options: ServerOptions,
   stores: Stores,
-  runtime: StudioRuntime
+  live: LiveParts
 ): BuiltApp => {
+  const { mcpListener, runtime } = live;
   const { projects, versions } = stores;
   const { bus } = stores.observed;
   const { uiDir } = options;
@@ -221,6 +230,7 @@ const buildApp = (
     config,
     frameStates,
     layerLocks,
+    mcpListener,
     preview,
     projects,
     runner,
@@ -241,8 +251,20 @@ const createServer = async (
   await prepareDataDir(config);
 
   const runtime = buildRuntime();
-  const stores = await openStores(config, options);
-  const { app, preview } = buildApp(config, options, stores, runtime);
+
+  const [mcpListener, stores] = await Promise.all([
+    runtime.runPromise(
+      Effect.gen(function* getListener() {
+        return yield* McpListenerRunner;
+      })
+    ),
+    openStores(config, options),
+  ]);
+
+  const { app, preview } = buildApp(config, options, stores, {
+    mcpListener,
+    runtime,
+  });
 
   const server = serve(
     { fetch: app.fetch, hostname: "127.0.0.1", port: config.studioPort },

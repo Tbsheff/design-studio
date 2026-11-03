@@ -54,7 +54,7 @@
   },
   "S11": {
     "src/server/events/bus.ts": 35,
-    "src/server/events/change-feed.ts": 1,
+    "src/server/events/source-change.ts": 1,
     "src/server/events/event-file.ts": 37,
     "src/server/events/exit-flush.ts": 1,
     "src/server/events/planned-feed.ts": 1,

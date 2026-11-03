@@ -3,8 +3,8 @@ import path from "node:path";
 import { compareCfVersion, type PublishAccount } from "../../shared/publish.js";
 import { findOnPath } from "../git/user-git.js";
 import { LOGIN_SHELL_PATH_ENV } from "../platform/config/index.js";
-import { spawnCf } from "./cf-cli.js";
 import type { CfChild, CliResult } from "./cf-cli.js";
+import { spawnCf } from "./cf-spawn.js";
 import { scrubCliText } from "./scrub.js";
 
 export type { CliResult } from "./cf-cli.js";

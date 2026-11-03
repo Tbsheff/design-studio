@@ -14,7 +14,7 @@ interface McpSettingsWriterApi {
   readonly update: (input: McpSettingsUpdate) => Effect.Effect<McpStatus>;
 }
 
-const denyPending = (approvals: McpLifeApprovals): void => {
+const setPendingDenied = (approvals: McpLifeApprovals): void => {
   for (const item of approvals.list()) {
     approvals.answer(item.id, false);
   }
@@ -27,7 +27,7 @@ const applyEdits = Effect.fn("McpSettingsWriter.applyEdits")(function* run(
   yield* Effect.promise(() => runtime.mcp.setEdits(edits));
 
   if (!edits) {
-    denyPending(runtime.approvals);
+    setPendingDenied(runtime.approvals);
   }
 });
 
@@ -36,7 +36,7 @@ const applyEnabled = Effect.fn("McpSettingsWriter.applyEnabled")(function* run(
   enabled: boolean
 ) {
   if (!enabled) {
-    denyPending(runtime.approvals);
+    setPendingDenied(runtime.approvals);
   }
 
   return yield* Effect.promise(() => runtime.mcp.setEnabled(enabled));

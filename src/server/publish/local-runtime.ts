@@ -43,14 +43,14 @@ const SEEN_MAX = 8000;
 
 const KILL_SIGNAL = "SIGTERM";
 
-const lastErrorLine = (seen: string): string =>
+const toLastErrorLine = (seen: string): string =>
   seen
     .split("\n")
     .filter((line) => /error/iu.test(line))
     .slice(-1)[0]
     ?.slice(0, 200) ?? "";
 
-const checkStart = (input: LocalStart): BadRequestError | null => {
+const inspectStart = (input: LocalStart): BadRequestError | null => {
   if (!input.runner) {
     return new BadRequestError(
       "Local mode needs cloud/publish-worker with its packages installed."
@@ -66,7 +66,7 @@ const checkStart = (input: LocalStart): BadRequestError | null => {
   return null;
 };
 
-const runnerArgs = (
+const toRunnerArgs = (
   input: LocalStart,
   stateDir: string,
   port: number
@@ -84,18 +84,18 @@ const runnerArgs = (
   String(port),
 ];
 
-const spawnRunner = (
+const startRunner = (
   input: LocalStart,
   stateDir: string,
   port: number
 ): ChildProcess =>
-  spawn(process.execPath, runnerArgs(input, stateDir, port), {
+  spawn(process.execPath, toRunnerArgs(input, stateDir, port), {
     cwd: path.dirname(path.dirname(input.runner ?? "")),
     env: { HOME: process.env.HOME ?? "", PATH: process.env.PATH ?? "" },
     stdio: ["ignore", "pipe", "pipe"],
   });
 
-const waitReady = (
+const runUntilReady = (
   state: WorkerState,
   spawned: ChildProcess
 ): Promise<string> =>
@@ -129,7 +129,7 @@ const waitReady = (
 
       reject(
         new BadRequestError(
-          `The local Worker stopped (code ${code}). ${lastErrorLine(seen)}`
+          `The local Worker stopped (code ${code}). ${toLastErrorLine(seen)}`
         )
       );
     });
@@ -150,17 +150,17 @@ const createLocalRuntime = (dir: string): LocalWorker => {
 
   const startNow = (input: LocalStart): Promise<string> => {
     stop();
-    const refused = checkStart(input);
+    const refused = inspectStart(input);
 
     if (refused !== null) {
       return Promise.reject(refused);
     }
 
-    const spawned = spawnRunner(input, stateDir, port);
+    const spawned = startRunner(input, stateDir, port);
 
     state.child = spawned;
 
-    return waitReady(state, spawned);
+    return runUntilReady(state, spawned);
   };
 
   const start = (input: LocalStart): Promise<string> => {

@@ -11,7 +11,7 @@ import {
   LocalOrgScope,
   LocalPrincipal,
   ProjectAccess,
-  scopeOf,
+  toOrgScope,
 } from "../../store/index.js";
 import type { Principal } from "../../store/index.js";
 import type { AnyAccess, Entry } from "./handler.js";
@@ -135,7 +135,7 @@ const makeRunner = <Action extends AnyAction>(
     const scoped = program.pipe(
       Effect.tapDefect((defect) => Effect.logError(action.id, defect)),
       Effect.provideService(LocalPrincipal, principal),
-      Effect.provideService(LocalOrgScope, scopeOf(principal))
+      Effect.provideService(LocalOrgScope, toOrgScope(principal))
     );
 
     return provenByRuntimeCheck(scoped);

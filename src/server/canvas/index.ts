@@ -16,6 +16,4 @@ export { CanvasStore } from "./canvas-store.js";
 
 export { CanvasWriter } from "./canvas-writer.js";
 
-export { LinkStore } from "./links/link-store.js";
-
-export { LinkWriter } from "./links/link-writer.js";
+export { LinkStore, LinkWriter } from "./links/index.js";

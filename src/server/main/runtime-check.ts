@@ -19,10 +19,12 @@ import type { ShipEntries } from "../handlers/ship/handlers.js";
 import type { StudioEntries } from "../handlers/studio/handlers.js";
 import type { VersionEntries } from "../handlers/version/handlers.js";
 import type { WorkspaceEntries } from "../handlers/workspace/handlers.js";
-import type { Authorizer } from "../store/authorizer.js";
-import type { LocalOrgScope } from "../store/local-org-scope.js";
-import type { LocalPrincipal } from "../store/local-principal.js";
-import type { ProjectAccess } from "../store/project-access.js";
+import type {
+  Authorizer,
+  LocalOrgScope,
+  LocalPrincipal,
+  ProjectAccess,
+} from "../store/index.js";
 import type { liveLayer } from "./live-layer.js";
 
 type Provided =

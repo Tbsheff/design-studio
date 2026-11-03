@@ -6,10 +6,9 @@ import { NotFound } from "../../shared/actions/_core/errors/not-found.js";
 import type { PublishInput } from "../../shared/actions/publish/schema.js";
 import type { Publication, PublishPlan } from "../../shared/publish.js";
 import type { KnownFailure } from "../platform/attempt/index.js";
-import { attemptLegacy, planFor } from "./legacy-link.js";
-import type { LegacyLink } from "./legacy-link.js";
+import { attemptLegacy } from "./legacy-link.js";
 import { toPublishCard, toRestoreCard, toUnpublishCard } from "./plan-card.js";
-import { toPlanInput } from "./plan-input.js";
+import { planLegacy } from "./plan-legacy.js";
 
 type PlanError = KnownFailure;
 
@@ -29,7 +28,7 @@ interface PublishPlannerApi {
   ) => Effect.Effect<ApprovalCard, PlanError>;
 }
 
-const findPublication = (
+const getPublication = (
   projectId: string,
   publicationId: string
 ): Effect.Effect<Publication, PlanError> =>
@@ -46,19 +45,13 @@ const findPublication = (
     return found;
   });
 
-const planLegacy = async (
-  link: LegacyLink,
-  input: PublishInput
-): Promise<PublishPlan> =>
-  planFor(link, input.projectId, await toPlanInput(link, input));
-
 const plan = Effect.fn("PublishPlanner.plan")(function* run(
   input: PublishInput
 ) {
   return yield* attemptLegacy((link) => planLegacy(link, input));
 });
 
-const makeApi = (): PublishPlannerApi => ({
+const toPlannerApi = (): PublishPlannerApi => ({
   plan,
   publishCard: Effect.fn("PublishPlanner.publishCard")(function* run(
     input: PublishInput
@@ -70,7 +63,7 @@ const makeApi = (): PublishPlannerApi => ({
     publicationId: string,
     versionId: string
   ) {
-    const found = yield* findPublication(projectId, publicationId);
+    const found = yield* getPublication(projectId, publicationId);
     const version = found.versions.find((item) => item.id === versionId);
 
     if (!version) {
@@ -85,7 +78,7 @@ const makeApi = (): PublishPlannerApi => ({
     projectId: string,
     publicationId: string
   ) {
-    return toUnpublishCard(yield* findPublication(projectId, publicationId));
+    return toUnpublishCard(yield* getPublication(projectId, publicationId));
   }),
 });
 
@@ -97,7 +90,7 @@ class PublishPlanner extends Context.Service<
 
   public static readonly layer = Layer.succeed(
     PublishPlanner,
-    PublishPlanner.of(makeApi())
+    PublishPlanner.of(toPlannerApi())
   );
 }
 

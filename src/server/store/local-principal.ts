@@ -1,29 +1,7 @@
 import { Context, Layer } from "effect";
 
-import type { Permission } from "../../shared/actions/_core/permissions.js";
-
-interface UiPrincipal {
-  readonly kind: "ui";
-  readonly userId: string | null;
-}
-
-interface KeyPrincipal {
-  readonly actingUserId: string | null;
-  readonly keyId: string;
-  readonly kind: "key";
-  readonly orgId: string;
-  readonly perms: readonly Permission[];
-}
-
-interface LegacyPrincipal {
-  readonly kind: "legacy";
-}
-
-type Principal = KeyPrincipal | LegacyPrincipal | UiPrincipal;
-
-const LEGACY_PRINCIPAL: LegacyPrincipal = { kind: "legacy" };
-
-const toLegacyPrincipal = (): Principal => LEGACY_PRINCIPAL;
+import { toLegacyPrincipal } from "./principal.js";
+import type { Principal } from "./principal.js";
 
 class LocalPrincipal extends Context.Service<LocalPrincipal, Principal>()(
   "design-studio/store/LocalPrincipal"
@@ -36,6 +14,11 @@ class LocalPrincipal extends Context.Service<LocalPrincipal, Principal>()(
   );
 }
 
-export { LocalPrincipal, toLegacyPrincipal };
+export { LocalPrincipal };
 
-export type { KeyPrincipal, LegacyPrincipal, Principal, UiPrincipal };
+export type {
+  KeyPrincipal,
+  LegacyPrincipal,
+  Principal,
+  UiPrincipal,
+} from "./principal.js";

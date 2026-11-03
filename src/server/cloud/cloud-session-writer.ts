@@ -1,9 +1,9 @@
 import { Context, Effect, Layer } from "effect";
 
 import type { CloudView } from "../../shared/actions/cloud/schema.js";
-import { CloudClient } from "./client.js";
-import { CloudSession } from "./session.js";
-import type { CloudToken } from "./session.js";
+import { CloudClient } from "./cloud-client.js";
+import { CloudSession } from "./cloud-session.js";
+import type { CloudToken } from "./cloud-session.js";
 
 interface CloudSessionWriterApi {
   readonly store: (

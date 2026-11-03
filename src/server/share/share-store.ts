@@ -21,18 +21,22 @@ interface ShareStoreApi {
   readonly list: (projectId: string) => Effect.Effect<ShareList>;
 }
 
-const readList = async (projectId: string): Promise<ShareList> => {
+const listShares = Effect.fn("ShareStore.list")(function* run(
+  projectId: string
+) {
   const { dataDir } = loadConfig();
   const core = toShareCore(dataDir);
   const now = Date.now();
-  const records = await core.files.list(projectId);
+  const records = yield* Effect.promise(() => core.files.list(projectId));
 
   const links = records
     .map((record) => toLink(record, now, core.hub.count(record.id)))
     .toSorted((left, right) => right.createdAt - left.createdAt);
 
-  return { links, server: toServerState(dataDir) };
-};
+  const list: ShareList = { links, server: toServerState(dataDir) };
+
+  return list;
+});
 
 class ShareStore extends Context.Service<ShareStore, ShareStoreApi>()(
   "design-studio/share/ShareStore"
@@ -55,9 +59,7 @@ class ShareStore extends Context.Service<ShareStore, ShareStoreApi>()(
           revokeCard(parts, projectId, shareId)
         );
       }),
-      list: Effect.fn("ShareStore.list")(function* run(projectId: string) {
-        return yield* Effect.promise(() => readList(projectId));
-      }),
+      list: listShares,
     })
   );
 }

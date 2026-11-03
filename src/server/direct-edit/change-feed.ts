@@ -5,6 +5,9 @@ export {
   onSourceChange,
   treeChangesSince,
   treeStamp,
-} from "../events/change-feed.js";
+} from "../events/source-change.js";
 
-export type { SourceChange, SourceFileChange } from "../events/change-feed.js";
+export type {
+  SourceChange,
+  SourceFileChange,
+} from "../events/source-change.js";

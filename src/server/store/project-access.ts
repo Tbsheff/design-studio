@@ -14,7 +14,7 @@ const SAFE_ID = /^[\w-]{1,64}$/u;
 
 const MISS_MESSAGE = "The project does not exist.";
 
-const makeProjectAccess = (projectsRoot: string): ProjectAccessApi => {
+const createProjectAccess = (projectsRoot: string): ProjectAccessApi => {
   const hasProjectFile = (projectId: string): Effect.Effect<boolean> =>
     Effect.tryPromise(() =>
       stat(path.join(projectsRoot, projectId, "project.json"))
@@ -48,10 +48,10 @@ class ProjectAccess extends Context.Service<ProjectAccess, ProjectAccessApi>()(
   public static readonly layer = Layer.sync(ProjectAccess, () => {
     const projectsRoot = path.join(loadConfig().dataDir, "projects");
 
-    return ProjectAccess.of(makeProjectAccess(projectsRoot));
+    return ProjectAccess.of(createProjectAccess(projectsRoot));
   });
 }
 
-export { ProjectAccess, makeProjectAccess };
+export { ProjectAccess };
 
 export type { ProjectAccessApi };

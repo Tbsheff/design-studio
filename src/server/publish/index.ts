@@ -4,6 +4,6 @@ export { LocalRuntime } from "./local-runtime.js";
 
 export { PublishPlanner } from "./publish-planner.js";
 
-export { PublishService } from "./publications.js";
+export { PublishService } from "./publish-service.js";
 
 export { PublishStore } from "./publish-store.js";

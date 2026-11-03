@@ -4,7 +4,11 @@ export { Authorizer } from "./authorizer.js";
 
 export type { CreateCommentInput } from "./comments.js";
 
-export { LocalOrgScope, scopeOf } from "./local-org-scope.js";
+export { LocalOrgScope } from "./local-org-scope.js";
+
+export { toLegacyPrincipal } from "./principal.js";
+
+export { toOrgScope } from "./org-scope.js";
 
 export { LocalPrincipal } from "./local-principal.js";
 

@@ -46,7 +46,7 @@ type HubOf = (
   projectId: string
 ) => Effect.Effect<PubSub.PubSub<RecordedEvent>>;
 
-const makeHubs = (): HubOf => {
+const createHubs = (): HubOf => {
   const hubs = new Map<string, PubSub.PubSub<RecordedEvent>>();
 
   const hubOf = Effect.fn("EventQueue.hubOf")(function* open(
@@ -101,7 +101,7 @@ class EventQueue extends Context.Service<EventQueue, EventQueueApi>()(
   public static readonly layer = Layer.effect(
     EventQueue,
     Effect.gen(function* make() {
-      const hubOf = makeHubs();
+      const hubOf = createHubs();
       const doneHub = yield* PubSub.sliding<ActionDone>(DONE_SIZE);
 
       return EventQueue.of({

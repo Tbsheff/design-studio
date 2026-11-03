@@ -1,7 +1,7 @@
 import { Context, Effect, Layer } from "effect";
 
 import type { CloudView } from "../../shared/actions/cloud/schema.js";
-import { CloudSession } from "./session.js";
+import { CloudSession } from "./cloud-session.js";
 
 interface CloudSessionStoreApi {
   readonly current: () => Effect.Effect<CloudView>;

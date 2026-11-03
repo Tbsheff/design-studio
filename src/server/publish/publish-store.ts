@@ -2,10 +2,6 @@ import { Context, Effect, Layer } from "effect";
 
 import { NotFound } from "../../shared/actions/_core/errors/not-found.js";
 import type {
-  RemoteComment,
-  RemotePublication,
-} from "../../shared/actions/publish-remote.js";
-import type {
   PublicationCommentList,
   PublicationList,
   PublishBackendState,
@@ -16,8 +12,8 @@ import type { KnownFailure } from "../platform/attempt/index.js";
 import { loadConfig } from "../platform/config/index.js";
 import { toPublishCore } from "./publish-core.js";
 import type { PublishCore } from "./publish-core.js";
-import { remoteClient, studioErrors } from "./remote.js";
-import { mergeRemote } from "./service.js";
+import { listMerged, listRemoteComments } from "./publish-remote-reads.js";
+import { studioErrors } from "./remote.js";
 import { toPublication } from "./store.js";
 import type { PublicationRecord } from "./store.js";
 
@@ -33,43 +29,9 @@ interface PublishStoreApi {
   readonly list: (projectId: string) => Effect.Effect<PublicationList>;
 }
 
-const openCore = (): PublishCore => toPublishCore(loadConfig().dataDir);
+const toCore = (): PublishCore => toPublishCore(loadConfig().dataDir);
 
-const mergeAll = async (
-  core: PublishCore,
-  projectId: string,
-  records: readonly PublicationRecord[]
-): Promise<PublicationList> => {
-  const endpoint = await core.backend.endpoint();
-  const reply = await remoteClient(endpoint).list(projectId);
-
-  const remote = new Map<string, RemotePublication>(
-    reply.publications.map((entry) => [entry.id, entry])
-  );
-
-  const merged = records.map((record) => {
-    const found = remote.get(record.id);
-
-    if (record.backend === "app" && found) {
-      return mergeRemote(record, found, endpoint.url);
-    }
-
-    return record;
-  });
-
-  return {
-    backendError: null,
-    publications: merged.map((record) => toPublication(record)),
-  };
-};
-
-const readRemoteComments = async (
-  core: PublishCore,
-  publicationId: string
-): Promise<{ comments: RemoteComment[] }> =>
-  remoteClient(await core.backend.endpoint()).comments(publicationId);
-
-const readOwned = (
+const getOwned = (
   core: PublishCore,
   projectId: string,
   publicationId: string
@@ -95,14 +57,14 @@ class PublishStore extends Context.Service<PublishStore, PublishStoreApi>()(
       backendState: Effect.fn("PublishStore.backendState")(function* run(
         isCheck: boolean
       ) {
-        const core = openCore();
+        const core = toCore();
 
         return yield* Effect.promise(() => core.backend.state(isCheck));
       }),
       cliState: Effect.fn("PublishStore.cliState")(function* run(
         isFresh: boolean
       ) {
-        const core = openCore();
+        const core = toCore();
 
         return yield* Effect.promise(() => core.cli.state(isFresh));
       }),
@@ -110,21 +72,21 @@ class PublishStore extends Context.Service<PublishStore, PublishStoreApi>()(
         projectId: string,
         publicationId: string
       ) {
-        const core = openCore();
-        const found = yield* readOwned(core, projectId, publicationId);
+        const core = toCore();
+        const found = yield* getOwned(core, projectId, publicationId);
 
         if (found.backend !== "app") {
           return { comments: [] };
         }
 
         const reply = yield* attemptKnown(() =>
-          studioErrors(() => readRemoteComments(core, found.id))
+          studioErrors(() => listRemoteComments(core, found.id))
         );
 
         return { comments: reply.comments };
       }),
       list: Effect.fn("PublishStore.list")(function* run(projectId: string) {
-        const core = openCore();
+        const core = toCore();
         const records = yield* Effect.promise(() => core.files.list(projectId));
 
         const plain: PublicationList = {
@@ -139,7 +101,7 @@ class PublishStore extends Context.Service<PublishStore, PublishStoreApi>()(
         return yield* Effect.tryPromise({
           catch: (error) =>
             (error instanceof Error && error.message) || String(error),
-          try: () => mergeAll(core, projectId, records),
+          try: () => listMerged(core, projectId, records),
         }).pipe(
           Effect.match({
             onFailure: (failure) => ({

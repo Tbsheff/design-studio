@@ -3,7 +3,7 @@ import { Context, Effect, Layer } from "effect";
 import type { McpStatus } from "../../shared/export.js";
 import { lifeRuntime } from "./mcp-life-runtime.js";
 
-const redactCommand = (status: McpStatus): McpStatus => {
+const toRedactedStatus = (status: McpStatus): McpStatus => {
   if (status.command === null) {
     return status;
   }
@@ -31,7 +31,7 @@ class McpSettingsStore extends Context.Service<
         const runtime = yield* lifeRuntime();
         const status = yield* Effect.promise(() => runtime.mcp.status());
 
-        return redactCommand(status);
+        return toRedactedStatus(status);
       }),
     })
   );

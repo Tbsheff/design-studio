@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
 
+import { Effect } from "effect";
 import { Hono } from "hono";
 
 import type { McpStatus } from "../../shared/export.js";
@@ -8,6 +9,7 @@ import { takeSaveFailures } from "../direct-edit/save-queue.js";
 import { withMcpOrigin } from "../edit-origin.js";
 import type { ExportDeps } from "../export/source.js";
 import type { WireArgs } from "../handlers/_core/run-action.js";
+import type { McpListenerRunnerApi } from "../mcp-life/index.js";
 import { isKnownError } from "../platform/errors/index.js";
 import {
   renderedSince,
@@ -23,8 +25,7 @@ import {
   RENDER_WAIT_TOOLS,
 } from "./edit-tools.js";
 import { withLayerSelectors } from "./layer-tools.js";
-import { freePort, portFree, sameText } from "./mcp-server-layer.js";
-import type { McpServerApi } from "./mcp-server-layer.js";
+import { getFreePort, isPortFree, isSameText } from "./port-probe.js";
 import { ActionTools } from "./registry.js";
 import { newToken, readMcpSettings, writeMcpSettings } from "./settings.js";
 import type { McpSettings } from "./settings.js";
@@ -306,7 +307,7 @@ function createMcpApp(
     if (c.req.header("origin") !== undefined)
       return c.json({ error: "forbidden" }, 403);
     const auth = c.req.header("authorization") ?? "";
-    if (!auth.startsWith("Bearer ") || !sameText(auth.slice(7), token))
+    if (!auth.startsWith("Bearer ") || !isSameText(auth.slice(7), token))
       return c.json({ error: "unauthorized" }, 401, {
         "www-authenticate": "Bearer",
       });
@@ -376,7 +377,7 @@ export interface McpService {
 export function createMcpService(
   dataDir: string,
   deps: ExportDeps,
-  listener: McpServerApi,
+  listener: McpListenerRunnerApi | null,
   edits: EditDeps | null = null
 ): McpService {
   let current: McpSettings | null = null;
@@ -388,16 +389,24 @@ export function createMcpService(
     return current;
   };
 
-  const stop = (): Promise<void> => listener.close();
+  const isListening = async (): Promise<boolean> => {
+    if (listener === null) return false;
+    return Effect.runPromise(listener.isListening());
+  };
+
+  const stop = async (): Promise<void> => {
+    if (listener !== null) await Effect.runPromise(listener.close());
+  };
 
   const start = async (): Promise<void> => {
+    if (listener === null) throw new Error("The MCP listener is not ready.");
     const settings = await load();
-    if (listener.isListening()) return;
-    if (!(await portFree(settings.port))) {
-      settings.port = await freePort();
+    if (await isListening()) return;
+    if (!(await isPortFree(settings.port))) {
+      settings.port = await getFreePort();
       await writeMcpSettings(dataDir, settings);
     }
-    await listener.listen(settings.port, app.fetch);
+    await Effect.runPromise(listener.listen(settings.port, app.fetch));
   };
 
   const status = async (): Promise<McpStatus> => {
@@ -407,7 +416,7 @@ export function createMcpService(
     return {
       enabled: settings.enabled,
       edits: settings.edits,
-      running: listener.isListening(),
+      running: await isListening(),
       url: settings.enabled ? url : null,
       command: settings.enabled ? command : null,
       error: lastError,

@@ -5,23 +5,17 @@ import type {
   CreateCommentInput,
   UpdateCommentInput,
 } from "../store/comments.js";
-import { BadRequestError, NotFoundError } from "../store/errors.js";
 import { attemptComments } from "./comment-core.js";
-import type { CommentError, CommentRuntime } from "./comment-core.js";
+import type { CommentError } from "./comment-core.js";
 import { insertComment } from "./comment-insert.js";
 import type { InsertRequest, InsertedComment } from "./comment-insert.js";
-import { buildPrefill, pickComments } from "./prefill.js";
-
-interface CommentRef {
-  readonly directionId: string | null;
-  readonly projectId: string;
-}
-
-interface ReplyRequest {
-  readonly author: string | null;
-  readonly commentId: string;
-  readonly text: string;
-}
+import {
+  createComment,
+  createCommentPrefill,
+  createCommentReply,
+  runOnTarget,
+} from "./comment-thread-ops.js";
+import type { CommentRef } from "./comment-thread-ops.js";
 
 interface CommentThreadStoreApi {
   readonly addReply: (
@@ -65,95 +59,6 @@ interface CommentThreadStoreApi {
   ) => Effect.Effect<DesignComment, CommentError>;
 }
 
-const withTarget = async <Value>(
-  runtime: CommentRuntime,
-  ref: CommentRef,
-  task: (projectId: string, directionId: string) => Promise<Value>
-): Promise<Value> => {
-  const { direction, project } = await runtime.loadTarget(
-    ref.projectId,
-    ref.directionId
-  );
-
-  return task(project.id, direction.id);
-};
-
-const checkAttachments = async (
-  runtime: CommentRuntime,
-  projectId: string,
-  ids: readonly string[]
-): Promise<void> => {
-  const found = await Promise.all(
-    ids.map((id) => runtime.hasAttachment(projectId, id))
-  );
-
-  const missingIndex = found.indexOf(false);
-
-  if (missingIndex !== -1) {
-    throw new NotFoundError(`attachment ${ids[missingIndex] ?? ""} not found`);
-  }
-};
-
-const addCommentReply = (
-  runtime: CommentRuntime,
-  ref: CommentRef,
-  reply: ReplyRequest
-): Promise<DesignComment> =>
-  withTarget(runtime, ref, (projectId, directionId) => {
-    if (reply.author === null) {
-      return runtime.files.addReply(
-        projectId,
-        directionId,
-        reply.commentId,
-        reply.text
-      );
-    }
-
-    return runtime.files.addReply(
-      projectId,
-      directionId,
-      reply.commentId,
-      reply.text,
-      reply.author
-    );
-  });
-
-const createComment = async (
-  runtime: CommentRuntime,
-  ref: CommentRef,
-  input: CreateCommentInput
-): Promise<DesignComment> => {
-  if (input.drawing && (input.attachmentIds?.length ?? 0) === 0) {
-    throw new BadRequestError("a drawing needs its image in attachmentIds");
-  }
-
-  const { direction, project } = await runtime.loadTarget(
-    ref.projectId,
-    ref.directionId
-  );
-
-  await checkAttachments(runtime, project.id, input.attachmentIds ?? []);
-
-  return runtime.files.create(project.id, direction.id, input);
-};
-
-const buildCommentPrefill = async (
-  runtime: CommentRuntime,
-  ref: CommentRef,
-  ids: readonly string[]
-): Promise<CommentPrefill> => {
-  const { direction, project } = await runtime.loadTarget(
-    ref.projectId,
-    ref.directionId
-  );
-
-  const all = await runtime.files.list(project.id, direction.id);
-
-  const chosen = pickComments(all, [...ids]);
-
-  return buildPrefill(runtime.prefill, project, direction, chosen);
-};
-
 class CommentThreadStore extends Context.Service<
   CommentThreadStore,
   CommentThreadStoreApi
@@ -170,7 +75,7 @@ class CommentThreadStore extends Context.Service<
         author: string | null
       ) {
         return yield* attemptComments((runtime) =>
-          addCommentReply(runtime, ref, { author, commentId, text })
+          createCommentReply(runtime, ref, { author, commentId, text })
         );
       }),
       create: Effect.fn("CommentThreadStore.create")(function* run(
@@ -193,7 +98,7 @@ class CommentThreadStore extends Context.Service<
         ids: readonly string[]
       ) {
         return yield* attemptComments((runtime) =>
-          buildCommentPrefill(runtime, ref, ids)
+          createCommentPrefill(runtime, ref, ids)
         );
       }),
       remove: Effect.fn("CommentThreadStore.remove")(function* run(
@@ -201,7 +106,7 @@ class CommentThreadStore extends Context.Service<
         commentId: string
       ) {
         return yield* attemptComments((runtime) =>
-          withTarget(runtime, ref, (projectId, directionId) =>
+          runOnTarget(runtime, ref, (projectId, directionId) =>
             runtime.files.remove(projectId, directionId, commentId)
           )
         );
@@ -212,7 +117,7 @@ class CommentThreadStore extends Context.Service<
         replyId: string
       ) {
         return yield* attemptComments((runtime) =>
-          withTarget(runtime, ref, (projectId, directionId) =>
+          runOnTarget(runtime, ref, (projectId, directionId) =>
             runtime.files.removeReply(
               projectId,
               directionId,
@@ -227,7 +132,7 @@ class CommentThreadStore extends Context.Service<
         ids: readonly string[]
       ) {
         return yield* attemptComments((runtime) =>
-          withTarget(runtime, ref, (projectId, directionId) =>
+          runOnTarget(runtime, ref, (projectId, directionId) =>
             runtime.files.reorder(projectId, directionId, [...ids])
           )
         );
@@ -237,7 +142,7 @@ class CommentThreadStore extends Context.Service<
         commentId: string
       ) {
         return yield* attemptComments((runtime) =>
-          withTarget(runtime, ref, (projectId, directionId) =>
+          runOnTarget(runtime, ref, (projectId, directionId) =>
             runtime.files.update(projectId, directionId, commentId, {
               status: "resolved",
             })
@@ -250,7 +155,7 @@ class CommentThreadStore extends Context.Service<
         input: UpdateCommentInput
       ) {
         return yield* attemptComments((runtime) =>
-          withTarget(runtime, ref, (projectId, directionId) =>
+          runOnTarget(runtime, ref, (projectId, directionId) =>
             runtime.files.update(projectId, directionId, commentId, input)
           )
         );
@@ -261,4 +166,6 @@ class CommentThreadStore extends Context.Service<
 
 export { CommentThreadStore };
 
-export type { CommentRef, CommentThreadStoreApi };
+export type { CommentThreadStoreApi };
+
+export type { CommentRef } from "./comment-thread-ops.js";

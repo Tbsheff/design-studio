@@ -1,9 +1,9 @@
-export { CloudClient } from "./client.js";
+export { CloudClient } from "./cloud-client.js";
 
-export { CloudSession } from "./session.js";
+export { CloudSession } from "./cloud-session.js";
 
 export { CloudSessionWriter } from "./cloud-session-writer.js";
 
-export { CloudSessionStore } from "./session-store.js";
+export { CloudSessionStore } from "./cloud-session-store.js";
 
 export { SourceIndexStore } from "./source-index-store.js";

@@ -1,4 +1,5 @@
-import { pageFileOf, type PageWait } from "../chat/use-first-build.js";
+import { pageFileOf } from "../chat/use-first-build.js";
+import type { PageWait } from "../chat/use-first-build.js";
 
 function SkeletonPage() {
   return (

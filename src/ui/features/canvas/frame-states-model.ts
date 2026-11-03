@@ -6,9 +6,11 @@ import {
   DEFAULT_FRAME_STATE,
   DEFAULT_MOCK_USER,
   withFrameStateHost,
-  type FrameStateDef,
-  type FrameStatesView,
-  type MockUser,
+} from "../../../shared/frame-state.js";
+import type {
+  FrameStateDef,
+  FrameStatesView,
+  MockUser,
 } from "../../../shared/frame-state.js";
 import { useProjectEvents } from "../../platform/events.js";
 import { call } from "../../platform/http.js";
@@ -41,14 +43,14 @@ function store(projectId: string, view: FrameStatesView): void {
 }
 
 const emptyView = (): FrameStatesView => ({
-  states: [],
   frames: {},
   session: {
-    user: { ...DEFAULT_MOCK_USER },
-    usesMockUser: true,
     captured: [],
     capturedAt: null,
+    user: { ...DEFAULT_MOCK_USER },
+    usesMockUser: true,
   },
+  states: [],
 });
 
 const fetchView = async (projectId: string): Promise<void> => {

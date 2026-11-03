@@ -1,19 +1,17 @@
-import { useEffect, useRef, useState, type MutableRefObject } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { MutableRefObject } from "react";
 
 import type { BridgeToParent, ProjectKind } from "../../../shared/contracts.js";
-import {
-  staticLinkIssue,
-  type LinkIssue,
-  type LinkQuery,
-  type LinkRectReport,
-  type LinksFile,
-  type PrototypeLink,
+import { staticLinkIssue } from "../../../shared/links.js";
+import type {
+  LinkIssue,
+  LinkQuery,
+  LinkRectReport,
+  LinksFile,
+  PrototypeLink,
 } from "../../../shared/links.js";
-import {
-  postToFrame,
-  useBridge,
-  type BridgeFrame,
-} from "../../platform/bridge.js";
+import { postToFrame, useBridge } from "../../platform/bridge.js";
+import type { BridgeFrame } from "../../platform/bridge.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";
 
 type Rect = NonNullable<LinkRectReport["rect"]>;
@@ -62,10 +60,10 @@ function slotsOf(o: Options): FrameSlot[] {
 
   if (o.active.token && o.active.src) {
     list.push({
-      frameId: o.active.frameId,
-      token: o.active.token,
-      src: o.active.src,
       element: o.active.elements.current[o.active.token] ?? null,
+      frameId: o.active.frameId,
+      src: o.active.src,
+      token: o.active.token,
     });
   }
 
@@ -75,10 +73,10 @@ function slotsOf(o: Options): FrameSlot[] {
     }
 
     list.push({
-      frameId: slot.id,
-      token: slot.token,
-      src: slot.src,
       element: o.passive.elements.current[slot.token] ?? null,
+      frameId: slot.id,
+      src: slot.src,
+      token: slot.token,
     });
   }
 
@@ -87,11 +85,11 @@ function slotsOf(o: Options): FrameSlot[] {
 
 function bridgeFrame(slot: FrameSlot, kind: ProjectKind): BridgeFrame {
   return {
+    element: slot.element,
     key: slot.frameId,
+    kind,
     token: slot.token,
     url: slot.src,
-    kind,
-    element: slot.element,
   };
 }
 
@@ -141,12 +139,12 @@ export function useLinkRects(o: Options): LinkState[] {
 
     posted.current.set(slot.frameId, {
       element: slot.element,
-      token: slot.token,
       text,
+      token: slot.token,
     });
     postToFrame(bridgeFrame(slot, o.kind), {
-      type: "track-links",
       links: queries,
+      type: "track-links",
     });
   };
 
@@ -183,7 +181,7 @@ export function useLinkRects(o: Options): LinkState[] {
 
       setReports((prev) => ({
         ...prev,
-        [frame.key]: { token: frame.token, rects },
+        [frame.key]: { rects, token: frame.token },
       }));
     }
   );
@@ -192,7 +190,7 @@ export function useLinkRects(o: Options): LinkState[] {
     const issue = staticLinkIssue(link, o.frames);
 
     if (issue) {
-      return { link, rect: null, issue };
+      return { issue, link, rect: null };
     }
 
     const report = reports[link.from.frame];
@@ -204,11 +202,11 @@ export function useLinkRects(o: Options): LinkState[] {
       report.token !== slot.token ||
       !(link.id in report.rects)
     ) {
-      return { link, rect: null, issue: null };
+      return { issue: null, link, rect: null };
     }
 
     const rect = report.rects[link.id] ?? null;
 
-    return { link, rect, issue: rect ? null : "element-missing" };
+    return { issue: rect ? null : "element-missing", link, rect };
   });
 }

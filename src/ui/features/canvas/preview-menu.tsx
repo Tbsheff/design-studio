@@ -138,7 +138,7 @@ export function PreviewMenu({
       className={`project-menu at-pointer preview-menu${scrolls ? " scrolls" : ""}`}
       role="menu"
       aria-label={label}
-      style={{ position: "fixed", left: pos.x, top: pos.y, right: "auto" }}
+      style={{ left: pos.x, position: "fixed", right: "auto", top: pos.y }}
       onKeyDown={onKeyDown}
       onContextMenu={(event) => event.preventDefault()}
     >

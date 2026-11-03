@@ -1,21 +1,20 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import { routes } from "../../../shared/actions/canvas/routes.js";
-import { type StudioEvent } from "../../../shared/contracts.js";
+import type { StudioEvent } from "../../../shared/contracts.js";
 import type {
   LinkTriggerKind,
   LinkVisibility,
 } from "../../../shared/link-interaction.js";
-import {
-  emptyLinksFile,
-  LINK_ACTIONS,
-  type LinkAction,
-  type LinkMotion,
-  type LinkSource,
-  type LinksFile,
-  type LinkTarget,
-  type LinkTransition,
-  type PrototypeLink,
+import { emptyLinksFile, LINK_ACTIONS } from "../../../shared/links.js";
+import type {
+  LinkAction,
+  LinkMotion,
+  LinkSource,
+  LinksFile,
+  LinkTarget,
+  LinkTransition,
+  PrototypeLink,
 } from "../../../shared/links.js";
 import { useProjectEvents } from "../../platform/events.js";
 import { call as callAction, sendJson } from "../../platform/http.js";
@@ -146,25 +145,6 @@ export const linksApi = {
 
     return saved;
   },
-  update: async (
-    projectId: string,
-    id: string,
-    change: { to?: LinkTarget } & LinkMotion
-  ) => {
-    const toFrame = change.to ? frameRefOf(change.to) : undefined;
-
-    const { links } = await callAction(routes.updateLinkCanvas, {
-      ...frameAction(change.action),
-      ...(change.duration === undefined ? {} : { duration: change.duration }),
-      ...(change.easing ? { easing: change.easing } : {}),
-      linkId: id,
-      projectId,
-      ...(toFrame ? { toFrame } : {}),
-      ...(change.transition ? { transition: change.transition } : {}),
-    });
-
-    return writeFile(projectId, links);
-  },
   keep: async (
     projectId: string,
     ids: string[] | "all",
@@ -206,6 +186,25 @@ export const linksApi = {
     const { links } = await callAction(routes.setStartLinkCanvas, {
       frame,
       projectId,
+    });
+
+    return writeFile(projectId, links);
+  },
+  update: async (
+    projectId: string,
+    id: string,
+    change: { to?: LinkTarget } & LinkMotion
+  ) => {
+    const toFrame = change.to ? frameRefOf(change.to) : undefined;
+
+    const { links } = await callAction(routes.updateLinkCanvas, {
+      ...frameAction(change.action),
+      ...(change.duration === undefined ? {} : { duration: change.duration }),
+      ...(change.easing ? { easing: change.easing } : {}),
+      linkId: id,
+      projectId,
+      ...(toFrame ? { toFrame } : {}),
+      ...(change.transition ? { transition: change.transition } : {}),
     });
 
     return writeFile(projectId, links);

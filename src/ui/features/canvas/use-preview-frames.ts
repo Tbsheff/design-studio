@@ -245,7 +245,7 @@ function applyRects(
 
   const next = prev.map((s) => {
     const i = selectors.indexOf(s.selector);
-    const r = i >= 0 ? rects[i] : undefined;
+    const r = i === -1 ? undefined : rects[i];
 
     if (!r || sameRect(r, s.rect)) {
       return s;
@@ -267,10 +267,10 @@ function hoverOf(
   }
 
   const box: HoverBox = {
-    rect: msg.rect,
-    label: msg.label,
     altKey: msg.altKey === true,
     fromTree: msg.source === "tree",
+    label: msg.label,
+    rect: msg.rect,
   };
 
   if (typeof msg.node === "number") {
@@ -335,11 +335,11 @@ export function usePreviewFrames(o: Options) {
 
   const frameFor = useCallback(
     (slot: PreviewSlot): BridgeFrame => ({
+      element: elements.current[slot.token] ?? null,
       key: slot.token,
+      kind: opts.current.kind,
       token: slot.token,
       url: slot.src,
-      kind: opts.current.kind,
-      element: elements.current[slot.token] ?? null,
     }),
     []
   );
@@ -361,19 +361,19 @@ export function usePreviewFrames(o: Options) {
     }
 
     const selectors = opts.current.selection.map((s) => s.selector);
-    postToFrame(frame, { type: "request-rects", selectors });
+    postToFrame(frame, { selectors, type: "request-rects" });
   }, []);
 
   const syncFrame = useCallback(
     (frame: BridgeFrame) => {
       postToFrame(frame, {
-        type: "set-mode",
-        mode: opts.current.selectMode ? "select" : "none",
         marquee: opts.current.marquee === true,
+        mode: opts.current.selectMode ? "select" : "none",
+        type: "set-mode",
       });
       postToFrame(frame, {
-        type: "text-edit-allowed",
         allowed: opts.current.textEditAllowed === true,
+        type: "text-edit-allowed",
       });
       requestRects(frame);
     },
@@ -396,8 +396,8 @@ export function usePreviewFrames(o: Options) {
 
           if (reselectOnSwap.current && only && rest.length === 0) {
             postToFrame(frame, {
-              type: "select-selector",
               selector: only.selector,
+              type: "select-selector",
             });
           }
 
@@ -470,7 +470,7 @@ export function usePreviewFrames(o: Options) {
     }
 
     const token = randomToken();
-    setSlots([{ token, src: frameSrc(baseUrl) }]);
+    setSlots([{ src: frameSrc(baseUrl), token }]);
     setFrontToken(token);
   }, []);
 
@@ -537,7 +537,7 @@ export function usePreviewFrames(o: Options) {
     const src = frameSrc(o.baseUrl, { v: String(change.changedAt) });
     setSlots((prev) => [
       ...prev.filter((s) => s.token === frontRef.current),
-      { token, src },
+      { src, token },
     ]);
 
     const timer = window.setTimeout(
@@ -546,11 +546,11 @@ export function usePreviewFrames(o: Options) {
     );
 
     pendingSwap.current = {
-      token,
       changedAt: change.changedAt,
-      timer,
-      loaded: false,
       due: false,
+      loaded: false,
+      timer,
+      token,
     };
   }, [
     o.lastChange,
@@ -576,9 +576,9 @@ export function usePreviewFrames(o: Options) {
 
     if (f) {
       postToFrame(f, {
-        type: "set-mode",
-        mode: o.selectMode ? "select" : "none",
         marquee: o.marquee === true,
+        mode: o.selectMode ? "select" : "none",
+        type: "set-mode",
       });
     }
 
@@ -600,7 +600,7 @@ export function usePreviewFrames(o: Options) {
       postToFrame(f, { type: "text-edit-stop" });
     }
 
-    postToFrame(f, { type: "text-edit-allowed", allowed });
+    postToFrame(f, { allowed, type: "text-edit-allowed" });
   }, [o.textEditAllowed, frontToken, frontFrame]);
 
   const selectorKey = o.selection.map((s) => s.selector).join("\n");
@@ -621,10 +621,10 @@ export function usePreviewFrames(o: Options) {
     requestAnimationFrame(() => {
       const cur = opts.current;
       sendTelemetry({
-        kind: "select.latency",
-        projectId: cur.projectId,
         directionId: cur.directionId ?? undefined,
+        kind: "select.latency",
         ms: Date.now() - at,
+        projectId: cur.projectId,
       });
     });
   }, [o.selection]);
@@ -635,8 +635,8 @@ export function usePreviewFrames(o: Options) {
       const isFront = frame.token === frontRef.current;
 
       const base = {
-        projectId: cur.projectId,
         directionId: cur.directionId ?? undefined,
+        projectId: cur.projectId,
       };
 
       lastPaintAt.current[frame.token] = Date.now();
@@ -657,9 +657,9 @@ export function usePreviewFrames(o: Options) {
         settleSwap(frame.token);
         sendTelemetry({
           ...base,
+          detail: { kind: "html" },
           kind: "preview.latency",
           ms: Date.now() - swap.changedAt,
-          detail: { kind: "html" },
         });
       }
 
@@ -674,9 +674,9 @@ export function usePreviewFrames(o: Options) {
       if (Date.now() - react.receivedAt < REACT_LATENCY_WINDOW_MS) {
         sendTelemetry({
           ...base,
+          detail: { kind: "react" },
           kind: "preview.latency",
           ms: Date.now() - react.changedAt,
-          detail: { kind: "react" },
         });
       }
     },
@@ -788,16 +788,18 @@ export function usePreviewFrames(o: Options) {
       }
 
       switch (msg.type) {
-        case "hover":
+        case "hover": {
           if (cur.selectMode || msg.source === "tree") {
             setHover(hoverOf(msg));
           }
 
           break;
-        case "tree":
+        }
+        case "tree": {
           setTree(parseLayerTree(msg));
           break;
-        case "rects":
+        }
+        case "rects": {
           if (dragHold.current) {
             heldRects.current = msg;
           } else {
@@ -807,20 +809,25 @@ export function usePreviewFrames(o: Options) {
           }
 
           break;
-        case "scroll":
+        }
+        case "scroll": {
           setHover(null);
           requestRects(frame);
           break;
-        case "mode-exited":
+        }
+        case "mode-exited": {
           setHover(null);
           cur.onModeExited();
           break;
-        case "wheel":
+        }
+        case "wheel": {
           cur.onFrameWheel(frame.element, msg);
           break;
-        case "zoom-key":
+        }
+        case "zoom-key": {
           cur.onZoomKey(msg.key);
           break;
+        }
         case "context-menu": {
           const at = pagePoint(frame.element, msg.x, msg.y);
 
@@ -832,9 +839,10 @@ export function usePreviewFrames(o: Options) {
         }
 
         case "text-edit":
-        case "text-commit":
+        case "text-commit": {
           onTextMessage(msg);
           break;
+        }
       }
     },
     [requestRects, onTextMessage, onSelectMessage]
@@ -872,10 +880,10 @@ export function usePreviewFrames(o: Options) {
         frameErrorAt.current[frame.token] = Date.now();
         cur.onError({
           directionId: cur.directionId,
-          source: msg.kind,
-          message: msg.message,
           file: msg.source,
           line: msg.line,
+          message: msg.message,
+          source: msg.kind,
         });
 
         return;
@@ -927,13 +935,13 @@ export function usePreviewFrames(o: Options) {
   }, []);
 
   const hoverNode = useCallback(
-    (id: number | null) => post({ type: "hover-node", id }),
+    (id: number | null) => post({ id, type: "hover-node" }),
     [post]
   );
 
   const selectNode = useCallback(
     (id: number, additive: boolean) =>
-      post({ type: "select-node", id, additive }),
+      post({ additive, id, type: "select-node" }),
     [post]
   );
 
@@ -951,7 +959,7 @@ export function usePreviewFrames(o: Options) {
         frontFrame()?.element?.focus();
       }
 
-      post({ type: "select-relative", selector, move });
+      post({ move, selector, type: "select-relative" });
     },
     [post, frontFrame]
   );
@@ -998,22 +1006,22 @@ export function usePreviewFrames(o: Options) {
   );
 
   return {
-    slots,
+    clearSelection,
+    elements,
     frontToken,
     holdSwap,
     hover,
-    picked,
-    elements,
+    hoverNode,
+    listen,
     onFrameLoad,
-    clearSelection,
+    picked,
     post,
     refreshRects: () => requestRects(frontFrame()),
-    listen,
-    tree,
-    selectedNode,
-    watchTree,
-    hoverNode,
     selectNode,
     selectRelative,
+    selectedNode,
+    slots,
+    tree,
+    watchTree,
   };
 }

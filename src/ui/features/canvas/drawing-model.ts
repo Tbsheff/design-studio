@@ -230,7 +230,7 @@ export function penPath(
   }
 
   if (closed && moved.length > 1) {
-    d += `${penSegment(moved[moved.length - 1] as PenAnchor, first)}Z`;
+    d += `${penSegment(moved.at(-1) as PenAnchor, first)}Z`;
   }
 
   return d;

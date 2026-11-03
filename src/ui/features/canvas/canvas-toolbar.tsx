@@ -4,11 +4,8 @@ import type { CanvasSource } from "../../domain/canvas-presets.js";
 import { Icon } from "../../kit/Icon.js";
 import type { ZoomSetting } from "../../platform/storage.js";
 import { PenIcon } from "./draw-layer.js";
-import {
-  type Props,
-  ViewportControls,
-  SourceControls,
-} from "./toolbar-viewport.js";
+import { ViewportControls, SourceControls } from "./toolbar-viewport.js";
+import type { Props } from "./toolbar-viewport.js";
 import {
   VECTOR_TOOLS,
   useVectorTool,

@@ -47,13 +47,13 @@ export function inViewIds(stage: HTMLElement | null): string[] {
 
 function presenceBody(o: PresenceInput) {
   return {
-    directionId: o.directionId,
     activeFrameId: o.activeId,
-    liveSize: {
-      width: Math.round(o.liveSize.width),
-      height: Math.round(o.liveSize.height),
-    },
+    directionId: o.directionId,
     inView: inViewIds(o.stage()),
+    liveSize: {
+      height: Math.round(o.liveSize.height),
+      width: Math.round(o.liveSize.width),
+    },
     selection: o.selection.slice(0, 20).map((s) => ({
       selector: s.selector.slice(0, 400),
       tag: s.tag.slice(0, 40),

@@ -4,7 +4,6 @@ import type { FrameStatesView } from "../../../shared/frame-state.js";
 import { Icon } from "../../kit/Icon.js";
 import { usePopover } from "../../kit/use-popover.js";
 import {
-  type Panel,
   stop,
   menuKeys,
   StateRows,
@@ -12,6 +11,7 @@ import {
   UserForm,
   MockForm,
 } from "./frame-state-parts.js";
+import type { Panel } from "./frame-state-parts.js";
 import {
   frameStateOf,
   setFrameSession,
@@ -24,21 +24,28 @@ function usePanelMenu() {
   const [panel, setPanel] = useState<Panel>("list");
   const root = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
+
   const close = useCallback((refocus: boolean) => {
     setOpen(false);
     setPanel("list");
-    if (refocus) trigger.current?.focus();
+
+    if (refocus) {
+      trigger.current?.focus();
+    }
   }, []);
+
   usePopover(open, root, close);
   useEffect(() => {
-    if (open && panel === "list")
+    if (open && panel === "list") {
       root.current
         ?.querySelector<HTMLButtonElement>(
           '[role^="menuitem"][aria-checked="true"]'
         )
         ?.focus();
+    }
   }, [open, panel]);
-  return { open, setOpen, panel, setPanel, root, trigger, close };
+
+  return { close, open, panel, root, setOpen, setPanel, trigger };
 }
 
 function MenuBody({
@@ -60,11 +67,12 @@ function MenuBody({
     onError(null);
     task
       .then(() => menu.close(true))
-      .catch((err: unknown) =>
-        onError(err instanceof Error ? err.message : String(err))
+      .catch((error: unknown) =>
+        onError(error instanceof Error ? error.message : String(error))
       );
   };
-  if (menu.panel === "user")
+
+  if (menu.panel === "user") {
     return (
       <UserForm
         user={view.session.user}
@@ -74,7 +82,8 @@ function MenuBody({
         }
       />
     );
-  if (menu.panel === "mock")
+  }
+  if (menu.panel === "mock") {
     return (
       <MockForm
         onBack={() => menu.setPanel("list")}
@@ -85,6 +94,7 @@ function MenuBody({
         }
       />
     );
+  }
   return (
     <div role="menu" aria-label="Frame state" onKeyDown={menuKeys}>
       <StateRows
@@ -128,10 +138,14 @@ export function FrameStateMenu({
   const states = useCurrentFrameStates();
   const menu = usePanelMenu();
   const [error, setError] = useState<string | null>(null);
-  if (!states) return null;
+
+  if (!states) {
+    return null;
+  }
   const chosen = frameStateOf(states.view, frameId);
   const def = states.view.states.find((state) => state.id === chosen);
   const set = chosen !== "default";
+
   return (
     <div className="frame-menu-root frame-state-root" ref={menu.root}>
       <button

@@ -125,21 +125,21 @@ function OtherFrames({
       const wait = waiting(f.path, did);
       live.set(f.id, {
         frame: f,
-        src: wait ? null : (slot?.src ?? null),
-        nextSrc: wait ? null : (slot?.nextSrc ?? null),
-        pending: wait
-          ? { step: step ?? null, missing: wait === "missing" }
-          : undefined,
-        sandbox,
-        offset: active,
-        label: labelProps(f, did),
-        register,
         frameRef: (el) => {
           if (slot) {
             passive.elements.current[slot.token] = tagFrame(el, slot.token);
           }
         },
+        label: labelProps(f, did),
+        nextSrc: wait ? null : (slot?.nextSrc ?? null),
+        offset: active,
         onNextLoad: passive.onSwapDone,
+        pending: wait
+          ? { step: step ?? null, missing: wait === "missing" }
+          : undefined,
+        register,
+        sandbox,
+        src: wait ? null : (slot?.src ?? null),
       });
 
       const sig = JSON.stringify([

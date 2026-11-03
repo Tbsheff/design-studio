@@ -1,4 +1,5 @@
-import { Suspense, type ReactNode } from "react";
+import { Suspense } from "react";
+import type { ReactNode } from "react";
 
 import { tipWithKey } from "../../canvas-toolbar-slots.js";
 import { Icon } from "../../kit/Icon.js";
@@ -9,14 +10,15 @@ import {
   usePortDialog,
   DropMenu,
 } from "./top-bar-drop-menu.js";
-import {
-  type CanvasTool,
-  type PresentMode,
-  type MenuEntry,
-  type MenuGroup,
-  shareGroups,
+import { shareGroups } from "./top-bar-menu.js";
+import type {
+  CanvasTool,
+  PresentMode,
+  MenuEntry,
+  MenuGroup,
 } from "./top-bar-menu.js";
-import { type ZoomProps, ZoomPill, OverflowMenu } from "./top-bar-zoom.js";
+import { ZoomPill, OverflowMenu } from "./top-bar-zoom.js";
+import type { ZoomProps } from "./top-bar-zoom.js";
 
 interface Props {
   shapeTools?: ReactNode;
@@ -51,27 +53,27 @@ interface Props {
 function presentItems(onPresent: (mode: PresentMode) => void): MenuEntry[] {
   return [
     {
+      icon: "link",
       id: "play",
       label: "Play prototype",
-      icon: "link",
       run: () => onPresent("play"),
     },
     {
+      icon: "play",
       id: "window",
       label: "In this window",
-      icon: "play",
       run: () => onPresent("window"),
     },
     {
+      icon: "expand",
       id: "fullscreen",
       label: "Fullscreen",
-      icon: "expand",
       run: () => onPresent("fullscreen"),
     },
     {
+      icon: "window",
       id: "new-window",
       label: "New window",
-      icon: "window",
       run: () => onPresent("new-window"),
     },
   ];
@@ -83,11 +85,11 @@ export function CanvasTopBar(p: Props) {
   const present = presentItems(p.onPresent);
 
   const zoom: ZoomProps = {
-    zoom: p.zoom,
-    setting: p.zoomSetting,
-    onZoomTo: p.onZoomTo,
     onFit: p.onFit,
     onStep: p.onZoomStep,
+    onZoomTo: p.onZoomTo,
+    setting: p.zoomSetting,
+    zoom: p.zoom,
   };
 
   return (
@@ -219,7 +221,7 @@ export function CanvasTopBar(p: Props) {
         viewOpen={p.viewOpen}
         onToggleView={p.onToggleView}
         onReload={p.onReload}
-        tweak={{ open: p.tweakOpen, disabled: p.tweakDisabled, run: p.onTweak }}
+        tweak={{ disabled: p.tweakDisabled, open: p.tweakOpen, run: p.onTweak }}
       />
       <DropMenu
         label="Share"

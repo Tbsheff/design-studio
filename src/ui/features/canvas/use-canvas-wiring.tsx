@@ -31,6 +31,7 @@ const useCanvasWiring = (
   ed: ReturnType<typeof useCanvasEdits>
 ) => {
   const { projectId, directionId, kind, headVersionId } = props;
+
   const {
     stageRef,
     artboardRef,
@@ -55,6 +56,7 @@ const useCanvasWiring = (
     baseUrl,
     liveUrl,
   } = s;
+
   const { frames, passive, theme } = pv;
   const { layerEdits } = ed;
   const lofiList = useCanvasLofi(projectId);
@@ -110,9 +112,9 @@ const useCanvasWiring = (
 
     return [
       {
+        icon: "layers",
         id: "states",
         label: "Make states",
-        icon: "layers",
         run: () => make(frame),
         ...(blocked ? { disabled: blocked } : {}),
       },
@@ -120,65 +122,62 @@ const useCanvasWiring = (
   };
 
   const labelProps = useFrameLabels({
-    projectId,
-    kind,
-    directionId,
     activeId: active.id,
+    appPages: appRoutePages(projectId, props.app),
+    baseLabel,
+    directionId,
+    directionName: shellDirectionName(props.shell),
     directions: props.directions,
+    frameActions,
+    frames: canvasFrames,
+    kind,
+    projectId,
     selection: props.selection,
     setSelection: props.setSelection,
-    frames: canvasFrames,
-    baseLabel,
-    directionName: shellDirectionName(props.shell),
-    frameActions,
-    appPages: appRoutePages(projectId, props.app),
   });
 
   const proto = usePrototype({
-    projectId,
-    kind,
-    directionId,
-    frames: layout.frames,
-    shown,
     active,
     baseUrl,
-    live,
-    selection: props.selection,
     clearSelection: () => props.setSelection(() => []),
-    sandbox,
+    directionId,
+    frames: layout.frames,
+    kind,
+    live,
     notify: layerEdits.notify,
     on: protoOn,
-    preview: frames,
     passive,
+    preview: frames,
+    projectId,
+    sandbox,
+    selection: props.selection,
+    shown,
   });
 
   const commandsInput = {
-    live,
-    hasHead: headVersionId !== null,
-    zoomBy,
-    selectMode,
-    setSelectMode,
+    check,
     comment,
+    dark: darkSwitch,
     draw,
+    hasHead: headVersionId !== null,
     layersOpen,
+    live,
+    lofi: lofiSwitch,
     onLayers: toggleEdit,
     onSource: props.onSource,
-    dark: darkSwitch,
-    lofi: lofiSwitch,
-    check,
     play: proto.play,
+    selectMode,
+    setSelectMode,
+    zoomBy,
   };
 
   const appCanvas = useAppCanvas({
-    projectId,
     app: props.app,
-    listen: frames.listen,
-    resetKey: `${active.id}|${String(liveUrl)}`,
+    focus: pz.zoomToActive,
     frames: canvasFrames,
     freeze: pz.freeze,
-    focus: pz.zoomToActive,
+    listen: frames.listen,
     notify: layerEdits.notify,
-    size: viewport,
     onSignIn: () => {
       setSelectMode(false);
       setProtoOn(false);
@@ -187,26 +186,29 @@ const useCanvasWiring = (
         artboardRef.current?.querySelector("iframe")?.focus()
       );
     },
+    projectId,
+    resetKey: `${active.id}|${String(liveUrl)}`,
+    size: viewport,
   });
 
   const capture = pz.spaceHeld || pz.panning || pz.zoomHeld;
   const stageMode = stageCursor(pz);
 
   return {
-    darkSwitch,
-    lofiSwitch,
-    sandbox,
-    registerPassive,
     addFrameAt,
-    undoRemove,
-    dismissUndo,
-    onResizeStart,
-    labelProps,
-    proto,
-    commandsInput,
     appCanvas,
     capture,
+    commandsInput,
+    darkSwitch,
+    dismissUndo,
+    labelProps,
+    lofiSwitch,
+    onResizeStart,
+    proto,
+    registerPassive,
+    sandbox,
     stageMode,
+    undoRemove,
   };
 };
 

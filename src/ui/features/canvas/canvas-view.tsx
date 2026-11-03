@@ -86,6 +86,7 @@ const CanvasView = (props: ViewProps) => {
   const { findHost, importPage, matrixSlot } = useViewSlots(props, s, pv);
   const CommandsHost = props.commandsHost;
   const { projectId, directionId, kind, source, headVersionId } = props;
+
   const {
     ui,
     stageRef,
@@ -106,8 +107,10 @@ const CanvasView = (props: ViewProps) => {
     draw,
     liveUrl,
   } = s;
+
   const { inline, frames } = pv;
   const { layerEdits, previewMenu } = ed;
+
   const {
     darkSwitch,
     lofiSwitch,
@@ -145,18 +148,18 @@ const CanvasView = (props: ViewProps) => {
         selection={props.selection}
         stage={() => stageRef.current}
         view={{
+          checking: check.checking,
           drawMode: draw.toolbarMode,
+          hasHead: headVersionId !== null,
+          links: proto.viewToggle,
+          lofi: lofiSwitch,
+          onCheck: check.run,
+          onSource: props.onSource,
           onToggleDraw: draw.toggle,
           source,
-          onSource: props.onSource,
-          hasHead: headVersionId !== null,
-          checking: check.checking,
-          onCheck: check.run,
           theme: darkSwitch,
-          lofi: lofiSwitch,
-          links: proto.viewToggle,
         }}
-        proto={{ on: protoOn, set: setProto, play: proto.play }}
+        proto={{ on: protoOn, play: proto.play, set: setProto }}
       />
       {appCanvas.bar}
       <CheckResults projectId={projectId} check={check} />

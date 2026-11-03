@@ -44,9 +44,9 @@ export function FlowFromHere({
     setBusy(true);
     setNote(null);
     api
-      .buildFlow(states.projectId, { from: frameId, depth: 1 })
+      .buildFlow(states.projectId, { depth: 1, from: frameId })
       .then((result) => setNote(doneText(result)))
-      .catch((err: unknown) => setNote(errorText(err)))
+      .catch((error: unknown) => setNote(errorText(error)))
       .finally(() => setBusy(false));
   };
 

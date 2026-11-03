@@ -1,10 +1,5 @@
-import {
-  lazy,
-  Suspense,
-  useRef,
-  useState,
-  type PointerEvent as ReactPointerEvent,
-} from "react";
+import { lazy, Suspense, useRef, useState } from "react";
+import type { PointerEvent as ReactPointerEvent } from "react";
 import { createPortal } from "react-dom";
 
 import type { SelectionContext } from "../../../shared/contracts.js";
@@ -25,16 +20,19 @@ import {
   linkAction,
   linkDuration,
   transitionLabel,
-  type LinkEasing,
-  type LinkMotion,
-  type LinksFile,
-  type LinkTarget,
-  type LinkTransition,
-  type PrototypeLink,
+} from "../../../shared/links.js";
+import type {
+  LinkEasing,
+  LinkMotion,
+  LinksFile,
+  LinkTarget,
+  LinkTransition,
+  PrototypeLink,
 } from "../../../shared/links.js";
 import { loadLinkInteraction } from "../../canvas-link-slots.js";
 import { Icon } from "../../kit/Icon.js";
-import { UiSelect, type UiSelectOption } from "../../kit/UiSelect.js";
+import { UiSelect } from "../../kit/UiSelect.js";
+import type { UiSelectOption } from "../../kit/UiSelect.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";
 import { framePage, frameTitle } from "./canvas-frames.js";
 import { linksApi } from "./links-api.js";
@@ -96,10 +94,10 @@ function protoHint(
 
 function boxOf(frame: CanvasFrame, active: CanvasFrame): Box {
   return {
+    height: frame.height,
+    width: frame.width,
     x: frame.x - active.x,
     y: frame.y - active.y,
-    width: frame.width,
-    height: frame.height,
   };
 }
 
@@ -108,7 +106,7 @@ function clamp(value: number, min: number, max: number): number {
 }
 
 function startPoint(state: LinkState, from: Box): Point | null {
-  const rect = state.rect;
+  const { rect } = state;
 
   if (!rect) {
     return null;
@@ -158,7 +156,7 @@ function bounds(frames: CanvasFrame[], active: CanvasFrame): Box {
   const maxY =
     Math.max(active.height, ...boxes.map((b) => b.y + b.height)) + PAD;
 
-  return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+  return { height: maxY - minY, width: maxX - minX, x: minX, y: minY };
 }
 
 export interface LinkDrag {
@@ -241,10 +239,10 @@ export function LinkArrows({
       <svg
         className="link-arrows"
         style={{
+          height: view.height,
           left: view.x,
           top: view.y,
           width: view.width,
-          height: view.height,
         }}
         viewBox={`${view.x} ${view.y} ${view.width} ${view.height}`}
       >
@@ -269,10 +267,10 @@ export function LinkArrows({
             }
 
             const rect = {
+              height: state.rect.height,
+              width: state.rect.width,
               x: from.x + state.rect.x,
               y: from.y + state.rect.y,
-              width: state.rect.width,
-              height: state.rect.height,
             };
 
             const toFrame = targetFrame(state.link.to);
@@ -390,13 +388,13 @@ export function useLinkDrag(
     const box = handle.getBoundingClientRect();
     const from = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
     handle.setPointerCapture(event.pointerId);
-    setDrag({ from, to: from, target: null });
+    setDrag({ from, target: null, to: from });
 
     const move = (e: PointerEvent) =>
       setDrag({
         from,
-        to: { x: e.clientX, y: e.clientY },
         target: frameUnder(e.clientX, e.clientY, activeId),
+        to: { x: e.clientX, y: e.clientY },
       });
 
     const up = (e: PointerEvent) => {
@@ -423,7 +421,7 @@ export function useLinkDrag(
     handle.addEventListener("pointercancel", cancel);
   };
 
-  return { drag, begin };
+  return { begin, drag };
 }
 
 export function LinkHandle({
@@ -541,10 +539,6 @@ function motionOptions(link: PrototypeLink) {
     : [...DURATIONS, duration].sort((a, b) => a - b);
 
   return {
-    transitions: LINK_TRANSITIONS.map((transition) => ({
-      value: transition,
-      label: transitionLabel(transition),
-    })),
     durations: durations.map((ms) => ({
       value: String(ms),
       label: `${ms} ms`,
@@ -552,6 +546,10 @@ function motionOptions(link: PrototypeLink) {
     easings: LINK_EASINGS.map((easing) => ({
       value: easing,
       label: EASING_LABELS[easing],
+    })),
+    transitions: LINK_TRANSITIONS.map((transition) => ({
+      value: transition,
+      label: transitionLabel(transition),
     })),
   };
 }
@@ -569,11 +567,11 @@ function targetOptions(
 
   return [
     ...options.map((frame) => ({
-      value: frame.id,
       label: `Go to ${frameTitle(frame)}`,
+      value: frame.id,
     })),
-    ...(missing ? [{ value: missing, label: "Missing frame" }] : []),
-    { value: "back", label: "Back" },
+    ...(missing ? [{ label: "Missing frame", value: missing }] : []),
+    { label: "Back", value: "back" },
   ];
 }
 
@@ -594,7 +592,7 @@ function LinkEditor({
   onPicking: (isPicking: boolean) => void;
   onError: (message: string) => void;
 }) {
-  const link = state.link;
+  const { link } = state;
   const toFrames = isFrameAction(linkAction(link));
 
   const fail = (error: unknown) =>
@@ -816,6 +814,7 @@ export function PrototypeBar(bar: BarProps) {
 
   const onPicking = (isPicking: boolean) =>
     setPinnedId(isPicking ? editingId : null);
+
   const broken = p.states.filter((state) => state.issue !== null).length;
   const found = p.states.filter((state) => state.link.implicit).length;
   const savedCount = p.file.links.length - found;
@@ -824,8 +823,8 @@ export function PrototypeBar(bar: BarProps) {
     p.onError(error instanceof Error ? error.message : String(error));
 
   const starts = p.frames.map((frame) => ({
-    value: frame.id,
     label: p.frameTitle(frame),
+    value: frame.id,
   }));
 
   const startId = playStartOf(p.file, p.frames, p.startId);

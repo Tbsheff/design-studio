@@ -2,12 +2,12 @@ import { useEffect, useRef } from "react";
 
 import {
   RULER_SIZE,
-  type Props,
   viewOf,
   colorsOf,
   sizeCanvas,
   drawAxis,
 } from "./ruler-draw.js";
+import type { Props } from "./ruler-draw.js";
 
 export default function CanvasRulers({
   artboardRef,
@@ -19,7 +19,7 @@ export default function CanvasRulers({
   const left = useRef<HTMLCanvasElement>(null);
   const props = useRef({ origin, selection });
   props.current = { origin, selection };
-  const draw = useRef<() => void>(() => undefined);
+  const draw = useRef<() => void>(() => null);
   draw.current = () => {
     const view = viewOf(artboardRef.current);
     const el = root.current;
@@ -49,14 +49,14 @@ export default function CanvasRulers({
 
       const length = vertical ? canvas.clientHeight : canvas.clientWidth;
       drawAxis({
+        colors,
         ctx,
         length,
         offset: (vertical ? view.y : view.x) - RULER_SIZE,
-        zoom: view.zoom,
         origin: vertical ? o.y : o.x,
-        vertical,
-        colors,
         range,
+        vertical,
+        zoom: view.zoom,
       });
     };
 
@@ -82,7 +82,7 @@ export default function CanvasRulers({
     const mo = new MutationObserver(schedule);
 
     if (board) {
-      mo.observe(board, { attributes: true, attributeFilter: ["style"] });
+      mo.observe(board, { attributeFilter: ["style"], attributes: true });
     }
 
     const ro = new ResizeObserver(schedule);
@@ -95,8 +95,8 @@ export default function CanvasRulers({
     media.addEventListener("change", schedule);
     const theme = new MutationObserver(schedule);
     theme.observe(document.documentElement, {
-      attributes: true,
       attributeFilter: ["class", "data-theme", "style"],
+      attributes: true,
     });
     schedule();
 

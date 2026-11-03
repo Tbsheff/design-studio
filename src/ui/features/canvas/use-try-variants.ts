@@ -21,17 +21,17 @@ export function useTryVariants(
 
   useCommands(() => [
     {
-      id: TRY_VARIANTS_COMMAND,
-      title: "Try variants of the selected element",
       group: "Selection",
       icon: "compare",
-      slash: "variants",
+      id: TRY_VARIANTS_COMMAND,
       keywords: "try versions options alternatives element",
       run: () => {
         if (selection[0]) {
           variations.askElement(selection[0]);
         }
       },
+      slash: "variants",
+      title: "Try variants of the selected element",
       ...(blocker ? { disabled: blocker } : {}),
     },
   ]);

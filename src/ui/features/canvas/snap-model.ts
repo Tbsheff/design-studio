@@ -48,8 +48,8 @@ interface Span {
 
 function span(r: Rect, axis: Axis): Span {
   return axis === "x"
-    ? { lo: r.x, hi: r.x + r.width }
-    : { lo: r.y, hi: r.y + r.height };
+    ? { hi: r.x + r.width, lo: r.x }
+    : { hi: r.y + r.height, lo: r.y };
 }
 
 function cross(axis: Axis): Axis {
@@ -138,7 +138,7 @@ function existingGaps(candidates: Rect[], axis: Axis): Neighbours["gaps"] {
     }
 
     if (next && span(next, axis).lo - sa.hi > 0) {
-      gaps.push({ a: sa, b: span(next, axis), at: crossMid(a, next, axis) });
+      gaps.push({ a: sa, at: crossMid(a, next, axis), b: span(next, axis) });
     }
   }
 
@@ -167,7 +167,7 @@ function neighboursOf(rect: Rect, candidates: Rect[], axis: Axis): Neighbours {
     }
   }
 
-  return { before, after, gaps: existingGaps(candidates, axis) };
+  return { after, before, gaps: existingGaps(candidates, axis) };
 }
 
 function spacingDeltas(own: Span, n: Neighbours): number[] {
@@ -251,7 +251,7 @@ function guidesFor(
       const prev = byAt.get(p);
       const from = Math.min(own.lo, other.lo, prev?.from ?? Infinity);
       const to = Math.max(own.hi, other.hi, prev?.to ?? -Infinity);
-      byAt.set(p, { axis, at: p, from, to });
+      byAt.set(p, { at: p, axis, from, to });
     }
   }
 
@@ -259,7 +259,7 @@ function guidesFor(
 }
 
 function badge(axis: Axis, a: Span, b: Span, at: number): SpacingBadge {
-  return { axis, from: a.hi, to: b.lo, at, value: b.lo - a.hi };
+  return { at, axis, from: a.hi, to: b.lo, value: b.lo - a.hi };
 }
 
 function ownGapAt(
@@ -343,7 +343,7 @@ function spacingFor(
 
 export function snapRect(input: SnapInput): SnapResult {
   const threshold = SNAP_PX / Math.max(input.zoom, 0.01);
-  let rect = input.rect;
+  let { rect } = input;
   rect = shifted(rect, "x", input.x, axisDelta(input, "x", threshold));
   rect = shifted(rect, "y", input.y, axisDelta(input, "y", threshold));
   const guides: SnapGuide[] = [];
@@ -363,7 +363,7 @@ export function snapRect(input: SnapInput): SnapResult {
     }
   }
 
-  return { rect, guides, spacing };
+  return { guides, rect, spacing };
 }
 
 export function snapOff(event: {
@@ -383,5 +383,5 @@ export function unionBox(rects: Rect[]): Rect | null {
   const right = Math.max(...rects.map((r) => r.x + r.width));
   const bottom = Math.max(...rects.map((r) => r.y + r.height));
 
-  return { x: left, y: top, width: right - left, height: bottom - top };
+  return { height: bottom - top, width: right - left, x: left, y: top };
 }

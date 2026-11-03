@@ -47,9 +47,9 @@ function frameMenuItems(
   const extra = o.frameActions?.(frame, did) ?? [];
 
   const hide: FrameMenuItem = {
+    icon: "eyeOff",
     id: "hide",
     label: "Hide frame",
-    icon: "eyeOff",
     run: () => o.frames.update((l) => setFrameHidden(l, frame.id, true)),
     ...(canHideFrame(o.frames.layout, frame.id)
       ? {}
@@ -168,13 +168,6 @@ function useFrameLabels(o: LabelInput) {
 
     return {
       ...o.baseLabel(frame),
-      number: variation
-        ? `1${variation.label.toLowerCase()}`
-        : String(index + 1),
-      title: variation
-        ? undefined
-        : (frame.label ?? named ?? o.directionName ?? undefined),
-      directionId: did,
       badge: variation
         ? {
             label: variation.label,
@@ -182,6 +175,7 @@ function useFrameLabels(o: LabelInput) {
             current: did === o.directionId,
           }
         : undefined,
+      directionId: did,
       extras: (
         <>
           {variation && did && (
@@ -206,6 +200,12 @@ function useFrameLabels(o: LabelInput) {
           />
         </>
       ),
+      number: variation
+        ? `1${variation.label.toLowerCase()}`
+        : String(index + 1),
+      title: variation
+        ? undefined
+        : (frame.label ?? named ?? o.directionName ?? undefined),
     };
   };
 

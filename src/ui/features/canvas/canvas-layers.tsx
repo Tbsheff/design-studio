@@ -52,21 +52,21 @@ function CanvasLayersPanel({
   const hoveredNode = useHoveredNode(frames.hover);
 
   const menuState = {
+    busy: edits.busy,
+    canPaste: edits.canPaste,
     count: selection.length,
     hasSource: selectionTargets(selection) !== null,
-    canPaste: edits.canPaste,
-    busy: edits.busy,
   };
 
   const actions = edits.enabled
     ? {
-        onRename: edits.renameNode,
-        onToggleHidden: edits.setNodeHidden,
+        menuItems: () => structureMenuItems(menuState, edits.structureKey),
+        onDrop: edits.dropNode,
         onMove: edits.moveNode,
         onMoveSelected: edits.moveSelected,
+        onRename: edits.renameNode,
         onStructureKey: edits.structureKey,
-        onDrop: edits.dropNode,
-        menuItems: () => structureMenuItems(menuState, edits.structureKey),
+        onToggleHidden: edits.setNodeHidden,
       }
     : null;
 
@@ -152,8 +152,8 @@ function useSelectMoveKeys(
   selection: SelectionContext[],
   selectRelative: (selector: string, move: SelectMove) => void
 ): void {
-  const live = useRef({ selectMode, selection, selectRelative });
-  live.current = { selectMode, selection, selectRelative };
+  const live = useRef({ selectMode, selectRelative, selection });
+  live.current = { selectMode, selectRelative, selection };
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const cur = live.current;

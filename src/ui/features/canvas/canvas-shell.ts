@@ -28,12 +28,12 @@ interface CanvasShell {
 
 type SetSelectMode = (update: (m: boolean) => boolean) => void;
 
-type CommentTool = {
+interface CommentTool {
   available: boolean;
   on: boolean;
   setOn: (on: boolean) => void;
   toggle: () => void;
-};
+}
 
 function useShellState(
   shell: CanvasShell | undefined,
@@ -102,7 +102,7 @@ function useShellPane(
   const place = (panel: ReactNode) =>
     shell?.layersHost ? createPortal(panel, shell.layersHost) : panel;
 
-  return { layersOpen, picking, toggleEdit, closeLayers, place };
+  return { closeLayers, layersOpen, picking, place, toggleEdit };
 }
 
 function fileNameOf(
@@ -144,7 +144,7 @@ function toolOf(
 
 function reloadFrames(stage: HTMLElement | null) {
   stage?.querySelectorAll<HTMLIFrameElement>("iframe.frame").forEach((el) => {
-    const src = el.src;
+    const { src } = el;
 
     if (src) {
       el.src = src;

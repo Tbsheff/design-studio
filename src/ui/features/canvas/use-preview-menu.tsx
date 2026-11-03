@@ -16,8 +16,8 @@ import {
   runCommand,
   useIconHost,
   useImageSearchHost,
-  type GenerateTabProps,
 } from "../../canvas-preview-slots.js";
+import type { GenerateTabProps } from "../../canvas-preview-slots.js";
 import type { PreviewPort } from "../../platform/bridge.js";
 import { uiStore } from "../../platform/storage.js";
 import { formatCopyCss } from "../inspector/authored-css.js";
@@ -65,24 +65,22 @@ async function copyCss(
   const css = await requestAuthoredCss(port, selector);
 
   if (css) {
-    await navigator.clipboard
-      .writeText(formatCopyCss(css))
-      .catch(() => undefined);
+    await navigator.clipboard.writeText(formatCopyCss(css)).catch(() => null);
   }
 }
 
 function structureItems(o: Options): PreviewMenuItem[] {
-  const edits = o.edits;
+  const { edits } = o;
 
   if (!edits.enabled) {
     return [];
   }
 
   const state = {
+    busy: edits.busy,
+    canPaste: edits.canPaste,
     count: o.selection.length,
     hasSource: selectionTargets(o.selection) !== null,
-    canPaste: edits.canPaste,
-    busy: edits.busy,
   };
 
   return structureMenuItems(state, edits.structureKey, true);
@@ -100,14 +98,14 @@ function pasteItem(o: Options, target: SelectionContext): PreviewMenuItem[] {
         ? "Wait for the last edit to finish"
         : null;
 
-  const ids = { projectId: o.ids.projectId, directionId: o.ids.directionId };
+  const ids = { directionId: o.ids.directionId, projectId: o.ids.projectId };
 
   return [
     {
+      divider: true,
+      icon: "code",
       id: "paste-jsx",
       label: "Paste JSX or Figma",
-      icon: "code",
-      divider: true,
       run: () => pasteJsx(ids, target, o.edits.notify),
       ...disabledBy(blocked),
     },
@@ -128,9 +126,9 @@ function createItem(o: Options, open: () => void): PreviewMenuItem[] {
 
   return [
     {
+      icon: "component",
       id: "create-component",
       label,
-      icon: "component",
       run: open,
       ...disabledBy(blocked),
     },
@@ -161,9 +159,9 @@ function menuItems(
 ): PreviewMenuItem[] {
   return [
     {
+      icon: "chat",
       id: "ask",
       label: "Ask the agent about this",
-      icon: "chat",
       run: () =>
         void (
           runCommand("selection.ask-inline") ||
@@ -171,44 +169,44 @@ function menuItems(
         ),
     },
     {
+      icon: "compare",
       id: "variants",
       label: "Try variants…",
-      icon: "compare",
       run: () => void runCommand(TRY_VARIANTS_COMMAND),
       ...disabledBy(commandBlocker(TRY_VARIANTS_COMMAND)),
     },
     {
-      id: "parent",
-      label: "Select parent",
       icon: "pointer",
+      id: "parent",
       keyId: "select-parent",
+      label: "Select parent",
       run: () => o.selectRelative(target.selector, "parent"),
     },
     {
-      id: "child",
-      label: "Select child",
       icon: "pointer",
+      id: "child",
       keyId: "select-child",
+      label: "Select child",
       run: () => o.selectRelative(target.selector, "child"),
     },
     {
+      icon: "copy",
       id: "copy-css",
       label: "Copy CSS",
-      icon: "copy",
       run: () => copyCss(o.port?.current ?? null, target.selector),
     },
     {
-      id: "zoom",
-      label: "Zoom to selection",
       icon: "search",
+      id: "zoom",
       keyId: "zoom-selection",
+      label: "Zoom to selection",
       run: () => o.zoom("selection"),
     },
     {
-      id: "layers",
-      label: "Show in layers",
       icon: "layers",
+      id: "layers",
       keyId: "layers",
+      label: "Show in layers",
       run: () => uiStore.set({ layersOpen: true }),
     },
     ...structureItems(o),
@@ -232,15 +230,17 @@ export function usePreviewMenu(o: Options) {
   const [creating, setCreating] = useState<SelectionContext[] | null>(null);
   const target = o.selection.at(-1);
   const openCreate = () => setCreating(latest.current.selection);
-  const directionId = o.ids.directionId;
+  const { directionId } = o.ids;
+
   const hostOptions = {
-    directionId,
     busy: o.edits.busy,
+    directionId,
     enabled: o.edits.enabled,
     notify: o.edits.notify,
     projectId: o.ids.projectId,
     selection: o.selection,
   };
+
   const icons = useIconHost(hostOptions);
   const photos = useImageSearchHost(hostOptions);
 
@@ -248,7 +248,7 @@ export function usePreviewMenu(o: Options) {
     creating && directionId ? (
       <Suspense fallback={null}>
         <CreateComponentDialog
-          ids={{ projectId: o.ids.projectId, directionId }}
+          ids={{ directionId, projectId: o.ids.projectId }}
           selection={creating}
           onDone={o.edits.notify}
           onClose={() => setCreating(null)}
@@ -295,5 +295,5 @@ export function usePreviewMenu(o: Options) {
     </>
   );
 
-  return { onContextMenu, menu };
+  return { menu, onContextMenu };
 }

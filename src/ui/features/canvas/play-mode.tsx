@@ -1,17 +1,12 @@
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type CSSProperties,
-} from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { CSSProperties } from "react";
 
-import {
-  BRIDGE_PASSIVE_PARAM,
-  type BridgeToParent,
-  type LinkRect,
-  type PlayRunOp,
-  type ProjectKind,
+import { BRIDGE_PASSIVE_PARAM } from "../../../shared/contracts.js";
+import type {
+  BridgeToParent,
+  LinkRect,
+  PlayRunOp,
+  ProjectKind,
 } from "../../../shared/contracts.js";
 import { targetFrame } from "../../../shared/link-interaction.js";
 import {
@@ -21,24 +16,26 @@ import {
   LINK_DURATION_DEFAULT,
   reverseTransition,
   staticLinkIssue,
-  type LinksFile,
-  type LinkTransition,
-  type PrototypeLink,
+} from "../../../shared/links.js";
+import type {
+  LinksFile,
+  LinkTransition,
+  PrototypeLink,
 } from "../../../shared/links.js";
 import {
   bridgeTrigger,
   runLink,
-  type PlayHandlers,
   usePlayTriggers,
 } from "../../canvas-link-slots.js";
+import type { PlayHandlers } from "../../canvas-link-slots.js";
 import { Icon } from "../../kit/Icon.js";
 import {
   frameSrc,
   postToFrame,
   tagFrame,
   useBridge,
-  type BridgeFrame,
 } from "../../platform/bridge.js";
+import type { BridgeFrame } from "../../platform/bridge.js";
 import { randomToken } from "../../platform/session.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";
 import { frameTitle } from "./canvas-frames.js";
@@ -81,28 +78,28 @@ interface Props {
 }
 
 const INSTANT: Motion = {
-  transition: "instant",
   duration: LINK_DURATION_DEFAULT,
   easing: easingCss(undefined),
+  transition: "instant",
 };
 
 function motionOf(link: PrototypeLink): Motion {
   return {
-    transition: link.transition,
     duration: linkDuration(link),
     easing: easingCss(link.easing),
+    transition: link.transition,
   };
 }
 
 function useStageSize(): { width: number; height: number } {
   const [size, setSize] = useState({
-    width: window.innerWidth,
     height: window.innerHeight,
+    width: window.innerWidth,
   });
 
   useEffect(() => {
     const onResize = () =>
-      setSize({ width: window.innerWidth, height: window.innerHeight });
+      setSize({ height: window.innerHeight, width: window.innerWidth });
 
     window.addEventListener("resize", onResize);
 
@@ -116,7 +113,7 @@ function scaleFor(
   slot: Slot,
   stage: { width: number; height: number }
 ): number {
-  const frame = slot.frame;
+  const { frame } = slot;
 
   if (slot.overlay === "drawer") {
     return Math.min(
@@ -155,8 +152,8 @@ function slotClass(slot: Slot, leaving: boolean): string {
 
 function slotStyle(motion: Motion): CSSProperties {
   return {
-    "--play-ms": `${motion.duration}ms`,
     "--play-ease": motion.easing,
+    "--play-ms": `${motion.duration}ms`,
   } as CSSProperties;
 }
 
@@ -376,14 +373,14 @@ function usePlay(p: Props) {
       return;
     }
 
-    const previous = list[list.length - 2] as string;
+    const previous = list.at(-2) as string;
     const current = baseOf(slotsRef.current).at(-1);
 
     const motion = current
       ? {
-          transition: reverseTransition(current.transition),
           duration: current.duration,
           easing: current.easing,
+          transition: reverseTransition(current.transition),
         }
       : INSTANT;
 
@@ -402,7 +399,7 @@ function usePlay(p: Props) {
     }
 
     if (link.action === "modal" || link.action === "drawer") {
-      return place(to, motionOf(link), link.action, () => undefined);
+      return place(to, motionOf(link), link.action, () => null);
     }
 
     show(to, motionOf(link), [...historyRef.current, to]);
@@ -413,7 +410,7 @@ function usePlay(p: Props) {
     const frame = top ? readyFrames.current.get(top.token) : undefined;
 
     if (frame) {
-      postToFrame(frame, { type: "play-run", op, selector });
+      postToFrame(frame, { op, selector, type: "play-run" });
     }
   };
 
@@ -427,6 +424,7 @@ function usePlay(p: Props) {
   };
 
   const topSlot = slots.at(-1);
+
   const triggers = usePlayTriggers({
     frameId: topSlot?.frame.id ?? null,
     handlers,
@@ -504,7 +502,7 @@ function usePlay(p: Props) {
         return trigger ? { ...linkQuery(link), trigger } : linkQuery(link);
       });
 
-    postToFrame(frame, { type: "play-links", links });
+    postToFrame(frame, { links, type: "play-links" });
   };
 
   useEffect(() => {
@@ -531,10 +529,10 @@ function usePlay(p: Props) {
     if (layers) {
       pendingFx.current.delete(slot.token);
       postToFrame(frame, {
-        type: "play-fx",
-        layers,
         duration: slot.duration,
         easing: slot.easing,
+        layers,
+        type: "play-fx",
       });
     }
 
@@ -543,11 +541,11 @@ function usePlay(p: Props) {
 
   const bridgeFrames = (): BridgeFrame[] =>
     slotsRef.current.map((slot) => ({
+      element: elements.current[slot.token] ?? null,
       key: slot.token,
+      kind: props.current.kind,
       token: slot.token,
       url: slot.src,
-      kind: props.current.kind,
-      element: elements.current[slot.token] ?? null,
     }));
 
   useBridge(bridgeFrames, (frame, message: BridgeToParent) => {
@@ -563,9 +561,9 @@ function usePlay(p: Props) {
       onReady(frame, slot);
     } else if (message.type === "play-layers" && top) {
       shot.current = {
-        token: slot.token,
         at: Date.now(),
         layers: message.layers,
+        token: slot.token,
       };
     } else if (message.type === "play-click" && top) {
       onLinkClick(message.id);
@@ -578,7 +576,7 @@ function usePlay(p: Props) {
     }
   });
 
-  return { slots, history, error, elements, restart, back, closeOverlay };
+  return { back, closeOverlay, elements, error, history, restart, slots };
 }
 
 function SlotView({
@@ -611,8 +609,8 @@ function SlotView({
       <div
         className="play-frame"
         style={{
-          width: slot.frame.width * scale,
           height: slot.frame.height * scale,
+          width: slot.frame.width * scale,
         }}
       >
         <iframe

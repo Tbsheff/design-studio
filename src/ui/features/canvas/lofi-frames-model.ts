@@ -1,13 +1,10 @@
-import { useEffect, useRef, type RefObject } from "react";
+import { useEffect, useRef } from "react";
+import type { RefObject } from "react";
 
 import type { BridgeToParent, ProjectKind } from "../../../shared/contracts.js";
 import { lofiCss } from "../../../shared/lofi.js";
-import {
-  frameTokenOf,
-  postToFrame,
-  useBridge,
-  type BridgeFrame,
-} from "../../platform/bridge.js";
+import { frameTokenOf, postToFrame, useBridge } from "../../platform/bridge.js";
+import type { BridgeFrame } from "../../platform/bridge.js";
 import { readBlob } from "../../platform/http.js";
 
 let cssLoad: Promise<string> | null = null;
@@ -69,12 +66,12 @@ function stageFrames(
     const host = element.closest<HTMLElement>("[data-direction-id], .artboard");
     const directionId = host?.dataset.directionId ?? currentId;
     out.push({
+      directionId,
+      element,
       key: token,
+      kind,
       token,
       url: element.src,
-      kind,
-      element,
-      directionId,
     });
   }
 
@@ -88,8 +85,8 @@ export function useLofiFrames(
   lofi: readonly string[]
 ): void {
   const sent = useRef(new WeakMap<HTMLIFrameElement, boolean>());
-  const latest = useRef({ kind, currentId, lofi });
-  latest.current = { kind, currentId, lofi };
+  const latest = useRef({ currentId, kind, lofi });
+  latest.current = { currentId, kind, lofi };
 
   const frames = () =>
     stageFrames(
@@ -103,7 +100,7 @@ export function useLofiFrames(
     latest.current.lofi.includes(frame.directionId);
 
   const sync = (frame: LofiFrame, force: boolean) => {
-    const element = frame.element;
+    const { element } = frame;
 
     if (!element) {
       return;
@@ -118,14 +115,14 @@ export function useLofiFrames(
     sent.current.set(element, on);
 
     if (!on) {
-      postToFrame(frame, { type: "lofi-preview", css: "" });
+      postToFrame(frame, { css: "", type: "lofi-preview" });
 
       return;
     }
 
     void loadLofiCss().then((css) => {
       if (sent.current.get(element) === true && wants(frame)) {
-        postToFrame(frame, { type: "lofi-preview", css });
+        postToFrame(frame, { css, type: "lofi-preview" });
       }
     });
   };

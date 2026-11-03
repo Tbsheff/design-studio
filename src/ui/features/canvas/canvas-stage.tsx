@@ -62,6 +62,7 @@ interface CanvasStageProps {
 
 const CanvasStage = ({ props, s, pv, ed, w }: CanvasStageProps) => {
   const { projectId, directionId, kind } = props;
+
   const {
     ui,
     stageRef,
@@ -82,7 +83,9 @@ const CanvasStage = ({ props, s, pv, ed, w }: CanvasStageProps) => {
     note,
     firstBuild,
   } = s;
+
   const { frames, covered, passive } = pv;
+
   const {
     layerEdits,
     inlinePrompt,
@@ -91,6 +94,7 @@ const CanvasStage = ({ props, s, pv, ed, w }: CanvasStageProps) => {
     freeMove,
     pointBadge,
   } = ed;
+
   const {
     sandbox,
     registerPassive,
@@ -125,9 +129,9 @@ const CanvasStage = ({ props, s, pv, ed, w }: CanvasStageProps) => {
         data-frame-id={active.id}
         data-direction-id={directionId || undefined}
         style={{
-          width: viewport.width,
           height: viewport.height,
           visibility: note === "empty" ? "hidden" : undefined,
+          width: viewport.width,
         }}
       >
         <PreviewSlots frames={frames} sandbox={sandbox} viewport={viewport} />

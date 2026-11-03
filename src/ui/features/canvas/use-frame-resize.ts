@@ -26,21 +26,26 @@ export interface FrameSnapView {
 
 const EMPTY_SNAP: FrameSnapView = {
   guides: [],
-  spacing: [],
   shift: { x: 0, y: 0 },
+  spacing: [],
 };
 
 function createSnapStore() {
   let view = EMPTY_SNAP;
   const subs = new Set<() => void>();
+
   return {
     get: () => view,
     set: (next: FrameSnapView | null) => {
       view = next ?? EMPTY_SNAP;
-      for (const fn of subs) fn();
+
+      for (const fn of subs) {
+        fn();
+      }
     },
     subscribe: (fn: () => void) => {
       subs.add(fn);
+
       return () => subs.delete(fn);
     },
   };
@@ -61,20 +66,28 @@ export function resizedSize(
 ): { width: number; height: number } {
   const clamp = (v: number) =>
     Math.round(Math.min(MAX_SIDE, Math.max(RESIZE_MIN, v)));
+
   let width = edge === "bottom" ? start.width : start.width + dx;
   let height = edge === "right" ? start.height : start.height + dy;
+
   if (keepRatio) {
     const ratio = start.width / start.height;
-    if (edge === "bottom") width = height * ratio;
-    else if (edge === "right") height = width / ratio;
-    else if (Math.abs(dx) * start.height >= Math.abs(dy) * start.width)
+
+    if (edge === "bottom") {
+      width = height * ratio;
+    } else if (edge === "right") {
       height = width / ratio;
-    else width = height * ratio;
+    } else if (Math.abs(dx) * start.height >= Math.abs(dy) * start.width) {
+      height = width / ratio;
+    } else {
+      width = height * ratio;
+    }
     const scale = Math.max(1, RESIZE_MIN / width, RESIZE_MIN / height);
     width *= scale;
     height *= scale;
   }
-  return { width: clamp(width), height: clamp(height) };
+
+  return { height: clamp(height), width: clamp(width) };
 }
 
 function snapSize(
@@ -87,23 +100,28 @@ function snapSize(
 ) {
   if (off || candidates.length === 0) {
     frameSnapStore.set(null);
+
     return size;
   }
+
   const res = snapRect({
-    rect: { x: frame.x, y: frame.y, ...size },
     candidates,
-    zoom,
+    rect: { x: frame.x, y: frame.y, ...size },
     x: edge === "bottom" ? null : "end",
     y: edge === "right" ? null : "end",
+    zoom,
   });
+
   frameSnapStore.set({
     guides: res.guides,
-    spacing: [],
     shift: { x: 0, y: 0 },
+    spacing: [],
   });
+
   const clamp = (v: number) =>
     Math.round(Math.min(MAX_SIDE, Math.max(RESIZE_MIN, v)));
-  return { width: clamp(res.rect.width), height: clamp(res.rect.height) };
+
+  return { height: clamp(res.rect.height), width: clamp(res.rect.width) };
 }
 
 function paintSize(
@@ -113,17 +131,21 @@ function paintSize(
 ) {
   host.style.width = size ? `${size.width}px` : restore.width;
   host.style.height = size ? `${size.height}px` : restore.height;
+
   for (const frame of host.querySelectorAll<HTMLIFrameElement>(
     ":scope > iframe"
   )) {
     frame.style.width = size ? `${size.width}px` : "";
     frame.style.height = size ? `${size.height}px` : "";
   }
+
   const readout = host.querySelector<HTMLElement>(
     ":scope > .frame-size-readout"
   );
-  if (readout)
+
+  if (readout) {
     readout.textContent = size ? `${size.width} × ${size.height}` : "";
+  }
   host.classList.toggle("frame-resizing", size !== null);
 }
 
@@ -134,31 +156,38 @@ export function useFrameResize(
   passive: RefObject<Record<string, HTMLDivElement | null>>
 ) {
   const dragging = useRef(false);
+
   return (e: ReactPointerEvent, frame: CanvasFrame, edge: ResizeEdge) => {
-    if (e.button !== 0 || pz.spaceHeld || pz.zoomHeld || dragging.current)
+    if (e.button !== 0 || pz.spaceHeld || pz.zoomHeld || dragging.current) {
       return;
+    }
     e.preventDefault();
     e.stopPropagation();
+
     const host =
       frame.id === frames.layout.activeId
         ? artboardRef.current
         : (passive.current?.[frame.id] ?? null);
-    if (!host) return;
+
+    if (!host) {
+      return;
+    }
     pz.freeze();
     const target = e.currentTarget as HTMLElement;
     target.setPointerCapture(e.pointerId);
     dragging.current = true;
-    const zoom = pz.zoom;
+    const { zoom } = pz;
     const startX = e.clientX;
     const startY = e.clientY;
-    const start = { width: frame.width, height: frame.height };
+    const start = { height: frame.height, width: frame.width };
     let size = start;
     let shift = e.shiftKey;
     let off = snapOff(e);
     const candidates = otherFrames(frames.layout, frame.id);
     let last = { x: startX, y: startY };
-    const restore = { width: host.style.width, height: host.style.height };
+    const restore = { height: host.style.height, width: host.style.width };
     document.body.classList.add(`frame-resize-${edge}`);
+
     const place = () => {
       size = snapSize(
         frame,
@@ -176,18 +205,24 @@ export function useFrameResize(
       );
       paintSize(host, size, restore);
     };
+
     place();
+
     const move = (ev: PointerEvent) => {
       last = { x: ev.clientX, y: ev.clientY };
       shift = ev.shiftKey;
       off = snapOff(ev);
       place();
     };
+
     const key = (ev: KeyboardEvent) => {
-      if (ev.key !== "Shift") return;
+      if (ev.key !== "Shift") {
+        return;
+      }
       shift = ev.type === "keydown";
       place();
     };
+
     const end = () => {
       target.removeEventListener("pointermove", move as EventListener);
       target.removeEventListener("pointerup", end);
@@ -198,15 +233,21 @@ export function useFrameResize(
       dragging.current = false;
       frameSnapStore.set(null);
       paintSize(host, null, restore);
-      if (size.width === start.width && size.height === start.height) return;
+
+      if (size.width === start.width && size.height === start.height) {
+        return;
+      }
       frames.update((l) => resizeFrame(l, frame.id, size.width, size.height));
+
       if (frame.id === frames.layout.activeId) {
         const next = activeFrame(
           resizeFrame(frames.layout, frame.id, size.width, size.height)
         );
+
         uiStore.set({ viewport: viewportOf(next) });
       }
     };
+
     target.addEventListener("pointermove", move as EventListener);
     target.addEventListener("pointerup", end);
     target.addEventListener("pointercancel", end);

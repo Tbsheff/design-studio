@@ -18,7 +18,8 @@ import {
   keepVariationFrame,
   showVariationFrames,
 } from "./canvas-variations-model.js";
-import { budgetFor, money, type VariationsState } from "./use-variations.js";
+import { budgetFor, money } from "./use-variations.js";
+import type { VariationsState } from "./use-variations.js";
 import { VariationBriefCard } from "./variation-brief-card.js";
 import type { FrameVariation } from "./variation-controls.js";
 import { groupOf } from "./variations-api.js";
@@ -35,7 +36,7 @@ function groupRun(runs: RunMap, directionId: string): GroupRun {
     .filter((run) => run.directionId === directionId)
     .sort((a, b) => a.startedAt - b.startedAt);
 
-  const latest = list[list.length - 1];
+  const latest = list.at(-1);
 
   const costUsd = list.reduce(
     (sum, run) => sum + (run.summary?.costUsd ?? 0),
@@ -43,10 +44,10 @@ function groupRun(runs: RunMap, directionId: string): GroupRun {
   );
 
   return {
-    status: latest?.status ?? null,
     costUsd,
-    running: list.some((run) => run.status === "running"),
     error: latest?.summary?.error ?? null,
+    running: list.some((run) => run.status === "running"),
+    status: latest?.status ?? null,
   };
 }
 
@@ -130,8 +131,10 @@ function VariationBar({
 
     try {
       await state.cancelAll(first.groupId);
-    } catch (err) {
-      setCancelError(`Could not cancel the runs. ${errorText(err)} Try again.`);
+    } catch (error) {
+      setCancelError(
+        `Could not cancel the runs. ${errorText(error)} Try again.`
+      );
     }
   };
 
@@ -279,7 +282,7 @@ export function canvasVariations({
       const variation = direction?.variation;
 
       if (!direction || !variation) {
-        return undefined;
+        return;
       }
 
       const group = groupOf(project, variation.groupId);
@@ -287,29 +290,20 @@ export function canvasVariations({
 
       if (variation.scope) {
         return elementVariation({
-          state,
-          project,
-          setDirectionId,
           direction,
-          variation,
-          scope: variation.scope,
           group,
+          project,
           run,
+          scope: variation.scope,
+          setDirectionId,
+          state,
+          variation,
         });
       }
 
       return {
-        label: variation.label,
-        title: variation.title,
-        status: run.status,
         costText: `${money(run.costUsd)} spent`,
-        siblings: group
-          .filter((d) => d.id !== directionId)
-          .map((d) => ({
-            id: d.id,
-            label: labelOf(d),
-            title: d.variation?.title ?? d.name,
-          })),
+        label: variation.label,
         onKeep: () => {
           keepVariationFrame(
             project.id,
@@ -328,6 +322,15 @@ export function canvasVariations({
             project.settings.defaultLevel
           );
         },
+        siblings: group
+          .filter((d) => d.id !== directionId)
+          .map((d) => ({
+            id: d.id,
+            label: labelOf(d),
+            title: d.variation?.title ?? d.name,
+          })),
+        status: run.status,
+        title: variation.title,
       };
     },
   };
@@ -386,14 +389,10 @@ function elementVariation({
     variation.rejected ?? (run.status === "failed" ? run.error : null);
 
   return {
-    label: variation.label,
-    title: variation.title,
-    status: run.status,
     costText: `${money(run.costUsd)} spent`,
-    siblings: [],
-    scoped: true,
     error,
     keepBlocked: keepBlocker(variation, run, error),
+    label: variation.label,
     onKeep: async () => {
       await state.keepElement(variation.groupId, direction.id);
       keepVariationFrame(
@@ -408,5 +407,9 @@ function elementVariation({
       );
     },
     onMix: async () => undefined,
+    scoped: true,
+    siblings: [],
+    status: run.status,
+    title: variation.title,
   };
 }

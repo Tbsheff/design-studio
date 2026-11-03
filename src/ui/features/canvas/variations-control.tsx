@@ -23,6 +23,7 @@ export function VariationsControl({
     onChange,
     (n) => Boolean(disabled) || n > max
   );
+
   return (
     <div
       className="segmented variations-control"

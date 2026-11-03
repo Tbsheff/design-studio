@@ -5,17 +5,15 @@ import {
   useReducer,
   useRef,
   useState,
-  type PointerEvent as ReactPointerEvent,
-  type RefObject,
 } from "react";
+import type { PointerEvent as ReactPointerEvent, RefObject } from "react";
 
-import {
-  isModZoomKey,
-  zoomKeyOf,
-  type ZoomKey,
-} from "../../../shared/contracts.js";
-import { createLiveStore, type LiveStore } from "../../platform/live-store.js";
-import { uiStore, type ZoomSetting } from "../../platform/storage.js";
+import { isModZoomKey, zoomKeyOf } from "../../../shared/contracts.js";
+import type { ZoomKey } from "../../../shared/contracts.js";
+import { createLiveStore } from "../../platform/live-store.js";
+import type { LiveStore } from "../../platform/live-store.js";
+import { uiStore } from "../../platform/storage.js";
+import type { ZoomSetting } from "../../platform/storage.js";
 import { isTypingTarget } from "../../platform/typing-target.js";
 import type { Box } from "./canvas-frames-model.js";
 
@@ -188,7 +186,7 @@ export function usePanZoom({
   setting,
   selectionRect,
 }: Options): PanZoom {
-  const [stage, setStage] = useState<Stage>({ w: 0, h: 0 });
+  const [stage, setStage] = useState<Stage>({ h: 0, w: 0 });
   const [panning, setPanning] = useState(false);
   const [spaceHeld, setSpaceHeld] = useState(false);
   const [zoomHeld, setZoomHeld] = useState(false);
@@ -208,11 +206,11 @@ export function usePanZoom({
     }
 
     const ro = new ResizeObserver(() =>
-      setStage({ w: el.clientWidth, h: el.clientHeight })
+      setStage({ h: el.clientHeight, w: el.clientWidth })
     );
 
     ro.observe(el);
-    setStage({ w: el.clientWidth, h: el.clientHeight });
+    setStage({ h: el.clientHeight, w: el.clientWidth });
 
     return () => ro.disconnect();
   }, [stageRef]);
@@ -220,8 +218,8 @@ export function usePanZoom({
   const committedZoom =
     setting === "fit" ? fitZoomFor(stage, layout.bounds) : setting;
 
-  const live = useRef({ stage, layout, setting, committedZoom, selectionRect });
-  live.current = { stage, layout, setting, committedZoom, selectionRect };
+  const live = useRef({ committedZoom, layout, selectionRect, setting, stage });
+  live.current = { committedZoom, layout, selectionRect, setting, stage };
 
   const view = useCallback((): View => {
     const cur = live.current;
@@ -233,7 +231,7 @@ export function usePanZoom({
         ? fitBase(cur.stage, cur.layout, zoom)
         : numericBase(cur.stage, cur.layout.active, zoom);
 
-    return { zoom, x: base.x + offset.current.x, y: base.y + offset.current.y };
+    return { x: base.x + offset.current.x, y: base.y + offset.current.y, zoom };
   }, []);
 
   const paint = useCallback(() => {
@@ -325,11 +323,11 @@ export function usePanZoom({
       zoomOverride.current = null;
       live.current = {
         ...live.current,
-        setting: zoom,
         committedZoom:
           zoom === "fit"
             ? fitZoomFor(live.current.stage, live.current.layout.bounds)
             : zoom,
+        setting: zoom,
       };
       paint();
       uiStore.set({ zoom });
@@ -440,7 +438,7 @@ export function usePanZoom({
 
     pendingFocus.current = false;
     const { active } = live.current.layout;
-    zoomToBox({ x: 0, y: 0, width: active.width, height: active.height });
+    zoomToBox({ height: active.height, width: active.width, x: 0, y: 0 });
   });
 
   const freeze = useCallback(() => {
@@ -470,10 +468,10 @@ export function usePanZoom({
         const { active } = live.current.layout;
         zoomToBox(
           live.current.selectionRect() ?? {
+            height: active.height,
+            width: active.width,
             x: 0,
             y: 0,
-            width: active.width,
-            height: active.height,
           }
         );
       }
@@ -505,11 +503,11 @@ export function usePanZoom({
         const stageRect = el.getBoundingClientRect();
         const v = view();
         o = {
-          frame,
           at: now,
+          frame,
+          h: frame.clientHeight,
           x: (frameRect.left - stageRect.left - v.x) / v.zoom,
           y: (frameRect.top - stageRect.top - v.y) / v.zoom,
-          h: frame.clientHeight,
         };
       }
 
@@ -665,19 +663,19 @@ export function usePanZoom({
   );
 
   return {
-    zoom: zoomOverride.current ?? committedZoom,
-    zoomPercent,
+    applyZoomKey,
+    fit,
+    frameWheel,
+    freeze,
+    onPointerDown,
     panning,
     spaceHeld,
-    zoomHeld,
-    onPointerDown,
+    zoom: zoomOverride.current ?? committedZoom,
     zoomAt,
-    zoomTo,
+    zoomHeld,
+    zoomPercent,
     zoomStep,
-    fit,
+    zoomTo,
     zoomToActive,
-    freeze,
-    applyZoomKey,
-    frameWheel,
   };
 }

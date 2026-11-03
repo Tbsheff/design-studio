@@ -1,18 +1,11 @@
-import {
-  useEffect,
-  useRef,
-  useState,
-  type KeyboardEvent,
-  type PointerEvent,
-} from "react";
+import { useEffect, useRef, useState } from "react";
+import type { KeyboardEvent, PointerEvent } from "react";
 
 import { strokesBox } from "../../../shared/comments.js";
 import type { CommentDrawing, DrawStroke } from "../../../shared/contracts.js";
 import { Icon } from "../../kit/Icon.js";
-import {
-  CommentComposer,
-  type ComposerSubmit,
-} from "../comments/comment-composer.js";
+import { CommentComposer } from "../comments/comment-composer.js";
+import type { ComposerSubmit } from "../comments/comment-composer.js";
 import type { CommentTools } from "../comments/comment-layer.js";
 import { MOD_LABEL } from "../comments/comment-popover.js";
 import type { CommentsControl } from "../comments/use-comments.js";
@@ -25,13 +18,16 @@ import {
   paintStrokes,
   renderDrawingPng,
   strokePath,
-  type StrokeBuilder,
 } from "./drawing-model.js";
+import type { StrokeBuilder } from "./drawing-model.js";
 import type { DrawTool } from "./use-draw-tool.js";
 
 import "../../styles/drawing.css";
 
-type Frame = { width: number; height: number };
+interface Frame {
+  width: number;
+  height: number;
+}
 
 const MAX_BACKING_SIDE = 8192;
 const MAX_BACKING_AREA = 24_000_000;
@@ -145,8 +141,8 @@ export function DrawSurface({
       pointer: event.pointerId,
       stroke: {
         color: draw.color,
-        width: Math.round((DRAW_SCREEN_WIDTH / zoom) * 10) / 10,
         points: builder.points(),
+        width: Math.round((DRAW_SCREEN_WIDTH / zoom) * 10) / 10,
       },
     };
     setDrawing(true);
@@ -154,7 +150,7 @@ export function DrawSurface({
   };
 
   const onMove = (event: PointerEvent<HTMLCanvasElement>) => {
-    const current = active.current;
+    const { current } = active;
 
     if (!current || current.pointer !== event.pointerId) {
       return;
@@ -163,7 +159,7 @@ export function DrawSurface({
     const samples = event.nativeEvent.getCoalescedEvents?.() ?? [];
     let changed = false;
 
-    for (const sample of samples.length ? samples : [event.nativeEvent]) {
+    for (const sample of samples.length > 0 ? samples : [event.nativeEvent]) {
       if (current.builder.points().length >= draw.pointsLeft) {
         break;
       }
@@ -181,7 +177,7 @@ export function DrawSurface({
   };
 
   const onUp = (event: PointerEvent<HTMLCanvasElement>) => {
-    const current = active.current;
+    const { current } = active;
 
     if (!current || current.pointer !== event.pointerId) {
       return;
@@ -210,14 +206,14 @@ export function DrawSurface({
       return false;
     }
 
-    const strokes = draw.strokes;
+    const { strokes } = draw;
 
     const value: CommentDrawing = {
-      frame: {
-        width: Math.round(frame.width),
-        height: Math.round(frame.height),
-      },
       box,
+      frame: {
+        height: Math.round(frame.height),
+        width: Math.round(frame.width),
+      },
       strokes,
     };
 
@@ -228,11 +224,11 @@ export function DrawSurface({
     }
 
     const ok = await control.addDrawing({
-      text,
       drawing: value,
+      extras: { attachmentIds, mentions },
       image,
+      text,
       toClaude,
-      extras: { mentions, attachmentIds },
     });
 
     if (ok) {
@@ -251,7 +247,7 @@ export function DrawSurface({
         aria-label="Drawing area"
         width={Math.max(1, Math.round(frame.width * scale))}
         height={Math.max(1, Math.round(frame.height * scale))}
-        style={{ width: frame.width, height: frame.height }}
+        style={{ height: frame.height, width: frame.width }}
         onPointerDown={onDown}
         onPointerMove={onMove}
         onPointerUp={onUp}
@@ -266,8 +262,8 @@ export function DrawSurface({
           zoom={zoom}
           frame={frame}
           breadcrumb={{
-            short: `${tools.pageName} › Drawing`,
             full: `${tools.pageName} › Drawing`,
+            short: `${tools.pageName} › Drawing`,
           }}
           initial={initial}
           draftKey="draw"
@@ -298,9 +294,11 @@ function onSwatchKey(event: KeyboardEvent<HTMLDivElement>) {
     return;
   }
 
-  const radios = Array.from(
-    event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="radio"]')
-  );
+  const radios = [
+    ...event.currentTarget.querySelectorAll<HTMLButtonElement>(
+      '[role="radio"]'
+    ),
+  ];
 
   const index = radios.indexOf(document.activeElement as HTMLButtonElement);
 

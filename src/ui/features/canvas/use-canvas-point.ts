@@ -62,7 +62,7 @@ function useShowFrame(o: PointInput) {
       if (selector) {
         for (const ms of SELECT_AT_MS) {
           later(ms, () =>
-            latest.current.post({ type: "select-selector", selector })
+            latest.current.post({ selector, type: "select-selector" })
           );
         }
       }
@@ -114,5 +114,5 @@ export function useCanvasPoint(o: PointInput): McpPointBadge {
 
   const dismiss = useCallback(() => setPoint(null), []);
 
-  return { point, show, dismiss };
+  return { dismiss, point, show };
 }

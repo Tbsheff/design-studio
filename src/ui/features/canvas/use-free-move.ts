@@ -63,13 +63,13 @@ function place(s: Session, drag: FreeMoveDrag, zoom: number): Placed {
 
   const snapped =
     !absolute || drag.free || s.candidates.length === 0
-      ? { rect: moved, guides: [], spacing: [] }
+      ? { guides: [], rect: moved, spacing: [] }
       : snapRect({
-          rect: moved,
           candidates: s.candidates,
-          zoom,
+          rect: moved,
           x: "move",
           y: "move",
+          zoom,
         });
 
   const box = snapped.rect;
@@ -79,10 +79,10 @@ function place(s: Session, drag: FreeMoveDrag, zoom: number): Placed {
     dy: Math.round(box.y - base.y),
     view: {
       box,
-      guides: snapped.guides,
-      spacing: snapped.spacing,
-      line: drag.insert?.line ?? null,
       copy: drag.alt,
+      guides: snapped.guides,
+      line: drag.insert?.line ?? null,
+      spacing: snapped.spacing,
     },
   };
 }
@@ -182,21 +182,21 @@ export function useFreeMove(o: Options): LiveStore<FreeMoveView | null> {
       }
 
       session.current = {
-        start,
-        target,
         candidates: start.parent
           ? [start.parent, ...start.siblings]
           : start.siblings,
+        start,
+        target,
       };
       document.body.classList.add("element-moving");
       window.addEventListener("keydown", onKey, true);
       cur.holdSwap?.(true, false);
       setView({
         box: start.rect,
-        guides: [],
-        spacing: [],
-        line: null,
         copy: false,
+        guides: [],
+        line: null,
+        spacing: [],
       });
     };
 
@@ -209,13 +209,13 @@ export function useFreeMove(o: Options): LiveStore<FreeMoveView | null> {
 
       const placed = place(s, drag, live.current.zoom);
       live.current.post({
-        type: "preview-style",
         selector: s.start.selector,
         style: {
           transform: drag.alt
             ? transformOf(s, 0, 0)
             : transformOf(s, placed.dx, placed.dy),
         },
+        type: "preview-style",
       });
       setView(placed.view);
     };
@@ -284,7 +284,7 @@ export function useFreeMove(o: Options): LiveStore<FreeMoveView | null> {
 
       if (drag.alt) {
         return () =>
-          cur.applyStructure({ op: "duplicate", targets: [target], style });
+          cur.applyStructure({ op: "duplicate", style, targets: [target] });
       }
 
       return () => saveStyle(s.target, style);
@@ -301,7 +301,7 @@ export function useFreeMove(o: Options): LiveStore<FreeMoveView | null> {
         return;
       }
 
-      const selector = target.selector;
+      const { selector } = target;
       cur.setSelection((prev) => mergeCommit(prev, { selector, style }));
 
       const optimistic = startOptimistic(
@@ -319,8 +319,8 @@ export function useFreeMove(o: Options): LiveStore<FreeMoveView | null> {
 
         optimistic.saved(result.tailwind);
         live.current.refreshRects();
-      } catch (err) {
-        optimistic.failed(errorText(err));
+      } catch (error) {
+        optimistic.failed(errorText(error));
 
         const back = Object.fromEntries(
           Object.keys(style).map((key) => [key, target.styles[key] ?? ""])
@@ -329,7 +329,7 @@ export function useFreeMove(o: Options): LiveStore<FreeMoveView | null> {
         live.current.setSelection((prev) =>
           mergeCommit(prev, { selector, style: back })
         );
-        live.current.onError(errorText(err));
+        live.current.onError(errorText(error));
       }
     };
 

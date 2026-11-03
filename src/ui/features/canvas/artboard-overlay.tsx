@@ -1,12 +1,10 @@
 import type { ReactNode } from "react";
 
 import type { SelectionContext } from "../../../shared/contracts.js";
-import {
-  formatMeasure,
-  measureBetween,
-  type MeasureLine,
-} from "../../../shared/measure.js";
-import { unionBox, type SnapGuide } from "./snap-model.js";
+import { formatMeasure, measureBetween } from "../../../shared/measure.js";
+import type { MeasureLine } from "../../../shared/measure.js";
+import { unionBox } from "./snap-model.js";
+import type { SnapGuide } from "./snap-model.js";
 import type { HoverBox } from "./use-preview-frames.js";
 import type { ResizeControl, ResizeEdge } from "./use-resize-handles.js";
 
@@ -34,7 +32,7 @@ function ResizeHandles({
   rect: SelectionContext["rect"];
   zoom: number;
 }) {
-  const live = control.live;
+  const { live } = control;
   const compact = Math.min(rect.width, rect.height) * zoom < COMPACT_PX;
 
   return (
@@ -42,10 +40,10 @@ function ResizeHandles({
       className={`resize-frame${live ? " active" : ""}${compact ? " compact" : ""}`}
       data-testid="resize-frame"
       style={{
+        height: live?.boxHeight ?? rect.height,
         left: rect.x,
         top: rect.y,
         width: live?.boxWidth ?? rect.width,
-        height: live?.boxHeight ?? rect.height,
       }}
     >
       {(compact ? COMPACT_EDGES : EDGES).map((edge) => (
@@ -67,14 +65,14 @@ function ResizeHandles({
 
 export function guideStyle(g: SnapGuide) {
   return g.axis === "x"
-    ? { left: g.at, top: g.from, height: g.to - g.from }
+    ? { height: g.to - g.from, left: g.at, top: g.from }
     : { left: g.from, top: g.at, width: g.to - g.from };
 }
 
 function fullStyle(g: SnapGuide) {
   return g.axis === "x"
-    ? { left: g.at, top: 0, bottom: 0 }
-    : { top: g.at, left: 0, right: 0 };
+    ? { bottom: 0, left: g.at, top: 0 }
+    : { left: 0, right: 0, top: g.at };
 }
 
 export function SnapGuides({
@@ -107,7 +105,7 @@ export function SnapGuides({
 function lineStyle(l: MeasureLine) {
   return l.axis === "x"
     ? { left: l.from, top: l.at, width: l.to - l.from }
-    : { left: l.at, top: l.from, height: l.to - l.from };
+    : { height: l.to - l.from, left: l.at, top: l.from };
 }
 
 function Measurements({
@@ -123,7 +121,7 @@ function Measurements({
     <div className="measure" data-testid="measure">
       <div
         className="box measure-target"
-        style={{ left: to.x, top: to.y, width: to.width, height: to.height }}
+        style={{ height: to.height, left: to.x, top: to.y, width: to.width }}
       />
       {lines.map((l) => (
         <div
@@ -172,10 +170,10 @@ export function ArtboardOverlay({
         <div
           className="box hover"
           style={{
+            height: hover.rect.height,
             left: hover.rect.x,
             top: hover.rect.y,
             width: hover.rect.width,
-            height: hover.rect.height,
           }}
         >
           {hover.label && (
@@ -197,10 +195,10 @@ export function ArtboardOverlay({
             className="box selected"
             data-selector={s.selector}
             style={{
+              height: live?.boxHeight ?? s.rect.height,
               left: s.rect.x,
               top: s.rect.y,
               width: live?.boxWidth ?? s.rect.width,
-              height: live?.boxHeight ?? s.rect.height,
             }}
           />
         );

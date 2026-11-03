@@ -1,16 +1,19 @@
 import {
   VARIATION_MAX,
   VARIATION_MAX_REACT,
-  type Direction,
-  type Project,
-  type ProjectKind,
-  type VariationBriefsRequest,
-  type VariationBriefsResult,
-  type VariationMixRequest,
-  type VariationStartRequest,
-  type VariationStartResult,
 } from "../../../shared/contracts.js";
-import { sendJson, type JsonBody } from "../../platform/http.js";
+import type {
+  Direction,
+  Project,
+  ProjectKind,
+  VariationBriefsRequest,
+  VariationBriefsResult,
+  VariationMixRequest,
+  VariationStartRequest,
+  VariationStartResult,
+} from "../../../shared/contracts.js";
+import { sendJson } from "../../platform/http.js";
+import type { JsonBody } from "../../platform/http.js";
 
 const post = <T>(path: string, body: JsonBody = {}): Promise<T> =>
   sendJson<T>("POST", path, body);
@@ -21,19 +24,19 @@ const base = (pid: string) =>
 export const variationsApi = {
   briefs: (pid: string, req: VariationBriefsRequest) =>
     post<VariationBriefsResult>(`${base(pid)}/briefs`, { ...req }),
-  start: (pid: string, req: VariationStartRequest) =>
-    post<VariationStartResult>(base(pid), { ...req }),
   cancel: (pid: string, groupId: string) =>
     post<{ canceled: string[] }>(
       `${base(pid)}/${encodeURIComponent(groupId)}/cancel`
     ),
-  mix: (pid: string, req: VariationMixRequest) =>
-    post<{ runId: string }>(`${base(pid)}/mix`, { ...req }),
   keep: (pid: string, groupId: string, directionId: string) =>
     post<{ versionId: string; directionId: string; label: string }>(
       `${base(pid)}/${encodeURIComponent(groupId)}/keep`,
       { directionId }
     ),
+  mix: (pid: string, req: VariationMixRequest) =>
+    post<{ runId: string }>(`${base(pid)}/mix`, { ...req }),
+  start: (pid: string, req: VariationStartRequest) =>
+    post<VariationStartResult>(base(pid), { ...req }),
 };
 
 export function maxVariationsFor(kind: ProjectKind): number {

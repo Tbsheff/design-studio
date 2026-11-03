@@ -223,13 +223,13 @@ function useStageKeys(o: StageKeys) {
     return true;
   });
   useLayoutKeyFallback({
-    on: o.live && !o.running && o.directionId !== null,
     hasSelection: o.selection.length > 0,
+    on: o.live && !o.running && o.directionId !== null,
     openEdit: editOpener(o.shell),
   });
   useFirstSelectKeys(o.stage, {
-    on: o.live && !o.commentMode && !o.protoOn,
     empty: o.selection.length === 0,
+    on: o.live && !o.commentMode && !o.protoOn,
     picking: o.picking,
     selectFirst: () =>
       o.post({ type: "select-relative", selector: "", move: "child" }),

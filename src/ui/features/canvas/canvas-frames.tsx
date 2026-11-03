@@ -6,11 +6,8 @@ import type {
 
 import { Icon } from "../../kit/Icon.js";
 import { openAppPanel } from "../../platform/app-status.js";
-import {
-  canvasStore,
-  frameName,
-  type CanvasFrame,
-} from "./canvas-frames-model.js";
+import { canvasStore, frameName } from "./canvas-frames-model.js";
+import type { CanvasFrame } from "./canvas-frames-model.js";
 import { FlowFromHere } from "./flow-from-here.js";
 import type { ResizeEdge } from "./frame-resize-handles.js";
 import { FrameStateMenu } from "./frame-state-menu.js";
@@ -49,8 +46,10 @@ export interface LabelProps {
 
 export function framePage(path: string | undefined): string {
   const clean = (path ?? "").replace(/^\/+/, "");
-  if (clean === "" || /\.html?$/i.test(clean))
+
+  if (clean === "" || /\.html?$/i.test(clean)) {
     return clean.replace(/^.*\//, "").replace(/\.html?$/i, "") || "index";
+  }
   return `/${clean}`;
 }
 
@@ -65,6 +64,7 @@ export function frameTitle(
   frames?: readonly Pick<CanvasFrame, "id">[]
 ): string {
   const index = frames ? frames.findIndex((item) => item.id === frame.id) : -1;
+
   return `${index >= 0 ? `${index + 1} ` : ""}${frameBaseName(frame)} · ${framePage(frame.path)}`;
 }
 
@@ -76,14 +76,15 @@ export function canvasFrameName(
   const frames = canvasStore.get(projectId)?.frames ?? [];
   const index = frames.findIndex((item) => item.id === frameId);
   const frame = frames[index];
+
   return frame ? `${index + 1} ${frameBaseName(frame)}` : fallback;
 }
 
 const NUDGE: Record<string, [number, number]> = {
+  ArrowDown: [0, 1],
   ArrowLeft: [-1, 0],
   ArrowRight: [1, 0],
   ArrowUp: [0, -1],
-  ArrowDown: [0, 1],
 };
 
 export function FrameLabel({
@@ -105,6 +106,7 @@ export function FrameLabel({
   const base = frameBaseName(frame);
   const name = badge ? `Variation ${badge.label}` : base;
   const owner = !badge && title && title !== frame.label ? `${title} · ` : "";
+
   const classes = [
     "frame-label",
     active ? "active" : "",
@@ -113,6 +115,7 @@ export function FrameLabel({
   ]
     .filter(Boolean)
     .join(" ");
+
   return (
     <div
       className={classes}
@@ -130,6 +133,7 @@ export function FrameLabel({
         onPointerDown={(e) => onPointerDown(e, frame)}
         onKeyDown={(e) => {
           const step = NUDGE[e.key];
+
           if (step) {
             e.preventDefault();
             const size = e.shiftKey ? 100 : 10;
@@ -185,6 +189,7 @@ export function FrameRedirectNote({
 }) {
   const auth = isAuthRoute(redirect.to);
   const text = `${redirect.from} goes to ${redirect.to}.${auth ? " Sign in, or pick a public route." : ""}`;
+
   return (
     <div className="frame-redirect" role="status" data-tip={text}>
       <Icon name="alert" size={12} />

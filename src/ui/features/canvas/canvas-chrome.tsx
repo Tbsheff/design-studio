@@ -11,7 +11,7 @@ import { CanvasTopBar } from "./canvas-top-bar.js";
 import type { CanvasTool, PresentMode } from "./top-bar-menu.js";
 import { isTypingTarget } from "./use-pan-zoom.js";
 
-const NOOP = () => undefined;
+const NOOP = () => null;
 
 const toggleRulers = () => uiStore.set((st) => ({ rulers: !st.rulers }));
 
@@ -47,13 +47,13 @@ function useRulersKey() {
 function barShell(shell: CanvasShell | undefined) {
   if (!shell) {
     return {
-      paneCollapsed: false,
-      onExpandPane: NOOP,
       canExport: false,
-      onExport: NOOP,
       directionName: null,
-      onShip: null,
+      onExpandPane: NOOP,
+      onExport: NOOP,
       onShareLink: null,
+      onShip: null,
+      paneCollapsed: false,
     };
   }
 
@@ -73,7 +73,7 @@ function CanvasChrome(p: ChromeProps) {
   const closeImport = useCallback(() => setImporting(false), []);
   const file = useFileMenu(p, () => setImporting(true));
   useRulersKey();
-  const shell = p.shell;
+  const { shell } = p;
   const viewOpen = p.ui.viewRowOpen || p.view.source.kind === "version";
 
   const onTool = (next: Exclude<CanvasTool, null>) => {

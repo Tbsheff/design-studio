@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import {
-  VARIATION_MIN,
-  type Direction,
-  type Project,
-  type RunLevel,
-  type RunRequest,
-  type SelectionContext,
-  type VariationBrief,
-  type VariationBriefsResult,
+import { VARIATION_MIN } from "../../../shared/contracts.js";
+import type {
+  Direction,
+  Project,
+  RunLevel,
+  RunRequest,
+  SelectionContext,
+  VariationBrief,
+  VariationBriefsResult,
 } from "../../../shared/contracts.js";
 import { resolveRunConfig } from "../../../shared/run-levels.js";
 import { errorText } from "../../api.js";
@@ -103,15 +103,15 @@ export function useVariations(o: Options) {
   const startWith = useCallback(
     async (current: BriefDraft, briefs: VariationBrief[]) => {
       const { projectId, seedRun, direction, setDirectionId } = opts.current;
-      setDraft({ ...current, starting: true, error: null });
+      setDraft({ ...current, error: null, starting: true });
 
       try {
         const result = await variationsApi.start(projectId, {
-          prompt: current.prompt,
           briefs,
-          level: current.level,
           fromDirectionId: current.fromDirectionId,
-          ...(current.attachmentIds.length
+          level: current.level,
+          prompt: current.prompt,
+          ...(current.attachmentIds.length > 0
             ? { attachmentIds: current.attachmentIds }
             : {}),
           ...(current.element ? { element: current.element } : {}),
@@ -125,15 +125,15 @@ export function useVariations(o: Options) {
           }
 
           seedRun(item.runId, item.directionId, {
-            prompt: current.prompt,
-            mode: "edit",
             level: current.level,
-            variation: { ...brief, index, count: briefs.length },
+            mode: "edit",
+            prompt: current.prompt,
+            variation: { ...brief, count: briefs.length, index },
           });
         });
         const failed = result.items.filter((item) => item.error);
         setNotice(
-          failed.length
+          failed.length > 0
             ? failed.map((item) => `${item.label}: ${item.error}`).join(" ")
             : null
         );
@@ -156,12 +156,12 @@ export function useVariations(o: Options) {
         if (live && live !== currentId) {
           setDirectionId(live);
         }
-      } catch (err) {
+      } catch (error) {
         setDraft({
           ...current,
           starting: false,
           autoStart: false,
-          error: errorText(err),
+          error: errorText(error),
         });
       }
     },
@@ -191,27 +191,27 @@ export function useVariations(o: Options) {
       autoStartRef.current = false;
 
       const base: BriefDraft = {
-        prompt,
-        level,
         attachmentIds,
-        count,
-        fromDirectionId,
-        briefs: null,
-        result: null,
-        loading: true,
-        starting: false,
         autoStart: false,
-        error: null,
+        briefs: null,
+        count,
         element: null,
+        error: null,
+        fromDirectionId,
+        level,
+        loading: true,
+        prompt,
+        result: null,
+        starting: false,
       };
 
       setDraft(base);
 
       try {
         const result = await variationsApi.briefs(projectId, {
-          prompt,
           count,
           fromDirectionId,
+          prompt,
         });
 
         if (requestRef.current !== ticket) {
@@ -220,10 +220,10 @@ export function useVariations(o: Options) {
 
         const ready: BriefDraft = {
           ...base,
-          briefs: result.briefs,
-          result,
-          loading: false,
           autoStart: autoStartRef.current,
+          briefs: result.briefs,
+          loading: false,
+          result,
         };
 
         if (autoStartRef.current) {
@@ -231,9 +231,9 @@ export function useVariations(o: Options) {
         } else {
           setDraft(ready);
         }
-      } catch (err) {
+      } catch (error) {
         if (requestRef.current === ticket) {
-          setDraft({ ...base, loading: false, error: errorText(err) });
+          setDraft({ ...base, loading: false, error: errorText(error) });
         }
       }
     },
@@ -267,28 +267,28 @@ export function useVariations(o: Options) {
       setAsk(null);
 
       const base: BriefDraft = {
-        prompt,
-        level,
         attachmentIds: [],
-        count,
-        fromDirectionId,
-        briefs: null,
-        result: null,
-        loading: true,
-        starting: false,
         autoStart: true,
-        error: null,
+        briefs: null,
+        count,
         element,
+        error: null,
+        fromDirectionId,
+        level,
+        loading: true,
+        prompt,
+        result: null,
+        starting: false,
       };
 
       setDraft(base);
 
       try {
         const result = await variationsApi.briefs(projectId, {
-          prompt,
           count,
-          fromDirectionId,
           element,
+          fromDirectionId,
+          prompt,
         });
 
         if (requestRef.current !== ticket) {
@@ -298,8 +298,8 @@ export function useVariations(o: Options) {
         const ready: BriefDraft = {
           ...base,
           briefs: result.briefs,
-          result,
           loading: false,
+          result,
         };
 
         if (autoStartRef.current) {
@@ -307,13 +307,13 @@ export function useVariations(o: Options) {
         } else {
           setDraft({ ...ready, autoStart: false });
         }
-      } catch (err) {
+      } catch (error) {
         if (requestRef.current === ticket) {
           setDraft({
             ...base,
             loading: false,
             autoStart: false,
-            error: errorText(err),
+            error: errorText(error),
           });
         }
       }
@@ -393,16 +393,16 @@ export function useVariations(o: Options) {
       const { projectId, seedRun } = opts.current;
 
       const { runId } = await variationsApi.mix(projectId, {
-        fromDirectionId,
-        toDirectionId,
         element,
+        fromDirectionId,
         level,
+        toDirectionId,
       });
 
       seedRun(runId, toDirectionId, {
-        prompt: `Use the ${element.tag} from another variation`,
-        mode: "edit",
         level,
+        mode: "edit",
+        prompt: `Use the ${element.tag} from another variation`,
       });
 
       return runId;
@@ -415,32 +415,32 @@ export function useVariations(o: Options) {
   }, []);
 
   return {
-    count: effectiveCount,
-    max,
-    setCount,
-    draft,
-    propose,
-    proposeElement,
-    keepElement,
     ask,
     askElement: setAsk,
-    editBrief,
-    removeBrief,
-    start,
-    skip,
+    cancelAll,
+    clearNotice: () => setNotice(null),
+    count: effectiveCount,
     dismiss: () => {
       requestRef.current += 1;
       autoStartRef.current = false;
       setDraft(null);
     },
+    draft,
+    editBrief,
     groupId,
-    setGroupId,
-    notice,
-    clearNotice: () => setNotice(null),
-    kept,
+    keepElement,
     keepNotice: setKept,
+    kept,
+    max,
     mix,
-    cancelAll,
+    notice,
+    propose,
+    proposeElement,
+    removeBrief,
+    setCount,
+    setGroupId,
+    skip,
+    start,
   };
 }
 

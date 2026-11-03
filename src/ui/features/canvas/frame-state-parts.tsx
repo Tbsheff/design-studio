@@ -1,17 +1,17 @@
-import {
-  useState,
-  type KeyboardEvent as ReactKeyboardEvent,
-  type PointerEvent as ReactPointerEvent,
+import { useState } from "react";
+import type {
+  KeyboardEvent as ReactKeyboardEvent,
+  PointerEvent as ReactPointerEvent,
 } from "react";
 
-import {
-  STATE_HINTS,
-  type FrameStateDef,
-  type FrameStatesView,
-  type MockUser,
+import { STATE_HINTS } from "../../../shared/frame-state.js";
+import type {
+  FrameStateDef,
+  FrameStatesView,
+  MockUser,
 } from "../../../shared/frame-state.js";
 import { Icon } from "../../kit/Icon.js";
-import { setFrameSession } from "./frame-states-model.js";
+import type { setFrameSession } from "./frame-states-model.js";
 
 import "../../styles/frame-state.css";
 
@@ -24,19 +24,24 @@ export const stop = (e: ReactPointerEvent) => e.stopPropagation();
 const MOCK_EXAMPLE = '[\n  { "path": "/api/items", "body": [] }\n]';
 
 export function menuKeys(event: ReactKeyboardEvent<HTMLElement>): void {
-  const items = Array.from(
-    event.currentTarget.querySelectorAll<HTMLButtonElement>(
+  const items = [
+    ...event.currentTarget.querySelectorAll<HTMLButtonElement>(
       '[role^="menuitem"]:not(:disabled)'
-    )
-  );
+    ),
+  ];
+
   const index = items.indexOf(document.activeElement as HTMLButtonElement);
+
   const next =
     event.key === "ArrowDown"
       ? index + 1
       : event.key === "ArrowUp"
         ? index - 1
         : null;
-  if (next === null || items.length === 0) return;
+
+  if (next === null || items.length === 0) {
+    return;
+  }
   event.preventDefault();
   items[(next + items.length) % items.length]?.focus();
 }
@@ -88,6 +93,7 @@ export function SessionRows({
   onSession: (change: Parameters<typeof setFrameSession>[1]) => void;
 }) {
   const kept = view.session.captured.length;
+
   return (
     <div className="ui-menu-section">
       <div className="ui-menu-label">Signed-in states use</div>
@@ -139,13 +145,14 @@ export function UserForm({
   const [name, setName] = useState(user.name);
   const [email, setEmail] = useState(user.email);
   const [error, setError] = useState<string | null>(null);
+
   return (
     <form
       className="frame-state-form"
       onSubmit={(e) => {
         e.preventDefault();
-        onSave({ name, email }).catch((err: unknown) =>
-          setError(err instanceof Error ? err.message : String(err))
+        onSave({ email, name }).catch((failure: unknown) =>
+          setError(failure instanceof Error ? failure.message : String(failure))
         );
       }}
     >
@@ -189,22 +196,29 @@ export function MockForm({
   const [name, setName] = useState("Mock data");
   const [rules, setRules] = useState(MOCK_EXAMPLE);
   const [error, setError] = useState<string | null>(null);
+
   const submit = () => {
     let parsed: MockRules | null = null;
+
     try {
       parsed = JSON.parse(rules);
     } catch {
       setError("Rules must be JSON: a list of { path, status?, body? }.");
+
       return;
     }
+
     if (!Array.isArray(parsed)) {
       setError("Rules must be a list.");
+
       return;
     }
-    onSave(name, parsed).catch((err: unknown) =>
-      setError(err instanceof Error ? err.message : String(err))
+
+    onSave(name, parsed).catch((failure: unknown) =>
+      setError(failure instanceof Error ? failure.message : String(failure))
     );
   };
+
   return (
     <form
       className="frame-state-form"

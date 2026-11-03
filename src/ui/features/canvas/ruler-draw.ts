@@ -53,11 +53,11 @@ export function colorsOf(el: HTMLElement): Colors {
 
   return {
     bg: v("--ruler-bg"),
-    tick: v("--ruler-tick"),
-    text: v("--ruler-text"),
+    line: v("--ruler-line"),
     mark: v("--ruler-mark"),
     markText: v("--ruler-mark-text"),
-    line: v("--ruler-line"),
+    text: v("--ruler-text"),
+    tick: v("--ruler-tick"),
   };
 }
 
@@ -129,7 +129,7 @@ function label(
   marks: [number, number][]
 ): void {
   const { ctx } = a;
-  const width = ctx.measureText(text).width;
+  const { width } = ctx.measureText(text);
 
   const [from, to] = a.vertical
     ? [pos - 3 - width, pos - 3]

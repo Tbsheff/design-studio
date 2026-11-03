@@ -1,9 +1,11 @@
-import { memo, useEffect, useRef, useState, type RefObject } from "react";
+import { memo, useEffect, useRef, useState } from "react";
+import type { RefObject } from "react";
 
 import { pageFileOf } from "../chat/use-first-build.js";
 import { PREVIEW_PAINTED_EVENT } from "../inspector/use-edit-history.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";
-import { type LabelProps, frameBaseName, FrameLabel } from "./canvas-frames.js";
+import { frameBaseName, FrameLabel } from "./canvas-frames.js";
+import type { LabelProps } from "./canvas-frames.js";
 import { FrameResizeHandles } from "./frame-resize-handles.js";
 import { FrameSkeleton } from "./frame-skeleton.js";
 
@@ -17,7 +19,10 @@ export function useResetPassiveGateInFirstRender(): void {
 
 function resetPassiveMountGate(): void {
   frontPainted = false;
-  if (paintListening || typeof window === "undefined") return;
+
+  if (paintListening || typeof window === "undefined") {
+    return;
+  }
   paintListening = true;
   window.addEventListener(PREVIEW_PAINTED_EVENT, () => {
     frontPainted = true;
@@ -28,34 +33,48 @@ function usePassiveMount(ref: RefObject<HTMLDivElement | null>): boolean {
   const [armed, setArmed] = useState(false);
   useEffect(() => {
     const el = ref.current;
-    if (armed || !el) return;
+
+    if (armed || !el) {
+      return;
+    }
     let front = frontPainted;
     let seen = false;
+
     const tryArm = () => {
-      if (front && seen) setArmed(true);
+      if (front && seen) {
+        setArmed(true);
+      }
     };
+
     const onPaint = () => {
       front = true;
       tryArm();
     };
+
     window.addEventListener(PREVIEW_PAINTED_EVENT, onPaint);
     const timer = window.setTimeout(onPaint, MOUNT_FALLBACK_MS);
     const root = el.closest(".stage");
+
     const io = new IntersectionObserver(
       (entries) => {
-        if (!entries.some((e) => e.isIntersecting)) return;
+        if (!entries.some((e) => e.isIntersecting)) {
+          return;
+        }
         seen = true;
         tryArm();
       },
       { root, rootMargin: "50%" }
     );
+
     io.observe(el);
+
     return () => {
       window.removeEventListener(PREVIEW_PAINTED_EVENT, onPaint);
       window.clearTimeout(timer);
       io.disconnect();
     };
   }, [armed, ref]);
+
   return armed;
 }
 
@@ -87,8 +106,10 @@ export function PassiveFrame({
   const name = label.badge
     ? `Variation ${label.badge.label}`
     : frameBaseName(frame);
+
   const box = useRef<HTMLDivElement | null>(null);
   const armed = usePassiveMount(box);
+
   return (
     <div
       ref={(el) => {
@@ -99,10 +120,10 @@ export function PassiveFrame({
       data-frame-id={frame.id}
       data-direction-id={label.directionId ?? undefined}
       style={{
+        height: frame.height,
         left: frame.x - offset.x,
         top: frame.y - offset.y,
         width: frame.width,
-        height: frame.height,
       }}
     >
       {(armed ? [src, nextSrc] : []).map((url, index) =>
@@ -150,26 +171,26 @@ export type PassiveEntry = PassiveProps;
 function liveLabel(cur: LabelProps, live: () => LabelProps): LabelProps {
   return {
     ...cur,
-    onPointerDown: (e, f) => live().onPointerDown(e, f),
+    onActivate: (f) => live().onActivate(f),
     onBodyPointerDown: cur.onBodyPointerDown
       ? (e, f, body) => live().onBodyPointerDown?.(e, f, body)
       : undefined,
-    onActivate: (f) => live().onActivate(f),
-    onRemove: (f) => live().onRemove(f),
     onNudge: (f, dx, dy) => live().onNudge(f, dx, dy),
+    onPointerDown: (e, f) => live().onPointerDown(e, f),
+    onRemove: (f) => live().onRemove(f),
     onResizeStart: (e, f, edge) => live().onResizeStart(e, f, edge),
   };
 }
 
 export const StablePassiveFrame = memo(
-  function StablePassiveFrame({
+  ({
     id,
     entries,
   }: {
     id: string;
     sig: string;
     entries: RefObject<Map<string, PassiveEntry>>;
-  }) {
+  }) => {
     const cur = entries.current.get(id);
     if (!cur) return null;
     const live = () => entries.current.get(id) ?? cur;
@@ -183,3 +204,5 @@ export const StablePassiveFrame = memo(
   },
   (a, b) => a.sig === b.sig && a.entries === b.entries && a.id === b.id
 );
+
+StablePassiveFrame.displayName = "StablePassiveFrame";

@@ -1,9 +1,11 @@
-import { useState, type KeyboardEvent, type ReactNode } from "react";
+import { useState } from "react";
+import type { KeyboardEvent, ReactNode } from "react";
 
 import { PRESETS } from "../../domain/canvas-presets.js";
 import type { CanvasSource } from "../../domain/canvas-presets.js";
 import { Icon } from "../../kit/Icon.js";
-import { uiStore, type Viewport } from "../../platform/storage.js";
+import { uiStore } from "../../platform/storage.js";
+import type { Viewport } from "../../platform/storage.js";
 
 export interface Props {
   viewport: Viewport;
@@ -22,12 +24,12 @@ export interface Props {
 }
 
 const RADIO_STEP: Record<string, (index: number, count: number) => number> = {
-  ArrowRight: (index, count) => (index + 1) % count,
   ArrowDown: (index, count) => (index + 1) % count,
   ArrowLeft: (index, count) => (index - 1 + count) % count,
+  ArrowRight: (index, count) => (index + 1) % count,
   ArrowUp: (index, count) => (index - 1 + count) % count,
-  Home: () => 0,
   End: (_index, count) => count - 1,
+  Home: () => 0,
 };
 
 function onRadioGroupKey(event: KeyboardEvent<HTMLDivElement>) {
@@ -37,11 +39,11 @@ function onRadioGroupKey(event: KeyboardEvent<HTMLDivElement>) {
     return;
   }
 
-  const radios = Array.from(
-    event.currentTarget.querySelectorAll<HTMLButtonElement>(
+  const radios = [
+    ...event.currentTarget.querySelectorAll<HTMLButtonElement>(
       '[role="radio"]:not(:disabled)'
-    )
-  );
+    ),
+  ];
 
   const index = radios.indexOf(document.activeElement as HTMLButtonElement);
 
@@ -79,7 +81,7 @@ export function ViewportControls({ viewport }: { viewport: Viewport }) {
 
     setCustomW(String(w));
     setCustomH(String(h));
-    uiStore.set({ viewport: { preset: "custom", width: w, height: h } });
+    uiStore.set({ viewport: { height: h, preset: "custom", width: w } });
   };
 
   const onDimKey = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -111,7 +113,7 @@ export function ViewportControls({ viewport }: { viewport: Viewport }) {
             className={viewport.preset === p.id ? "on" : ""}
             onClick={() =>
               uiStore.set({
-                viewport: { preset: p.id, width: p.width, height: p.height },
+                viewport: { height: p.height, preset: p.id, width: p.width },
               })
             }
           >

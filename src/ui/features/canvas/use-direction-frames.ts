@@ -1,23 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import {
-  BRIDGE_PASSIVE_PARAM,
-  type Direction,
-  type ProjectKind,
-} from "../../../shared/contracts.js";
+import { BRIDGE_PASSIVE_PARAM } from "../../../shared/contracts.js";
+import type { Direction, ProjectKind } from "../../../shared/contracts.js";
 import { api } from "../../api.js";
 import { frameSrc } from "../../platform/bridge.js";
 import { randomToken } from "../../platform/session.js";
 import { useTokenFrames } from "../design-system/token-frames.js";
 import type { FilesChange } from "../home/use-studio-data.js";
-import { useSwapGate, type GateTarget } from "../inspector/use-swap-gate.js";
-import {
-  frameDirection,
-  withFramePath,
-  type CanvasFrame,
-} from "./canvas-frames-model.js";
+import { useSwapGate } from "../inspector/use-swap-gate.js";
+import type { GateTarget } from "../inspector/use-swap-gate.js";
+import { frameDirection, withFramePath } from "./canvas-frames-model.js";
+import type { CanvasFrame } from "./canvas-frames-model.js";
 import { markOf, withElementMark } from "./element-mark-model.js";
-import { frameStateUrl, type FrameStatesRead } from "./frame-states-model.js";
+import { frameStateUrl } from "./frame-states-model.js";
+import type { FrameStatesRead } from "./frame-states-model.js";
 import { passiveSrc } from "./use-canvas-frames.js";
 
 export interface PassiveSlot {
@@ -80,11 +76,11 @@ export function useDirectionFrames(o: Options) {
     const own = frameDirection(f, o.currentId);
 
     return {
-      frame: f,
       directionId:
         own && (own === o.currentId || !o.directions || known.has(own))
           ? own
           : o.currentId,
+      frame: f,
     };
   });
 
@@ -104,9 +100,9 @@ export function useDirectionFrames(o: Options) {
       (r) => r.directionId !== null && (r.directionId !== o.currentId || o.live)
     )
     .map((r) => ({
-      key: r.frame.id,
       directionId: r.directionId as string,
       headVersionId: heads.get(r.directionId as string) ?? null,
+      key: r.frame.id,
     }));
 
   const gate = useSwapGate(
@@ -155,11 +151,11 @@ export function useDirectionFrames(o: Options) {
     const nextSrc = next ? build(next) : null;
 
     return {
-      id: frame.id,
       directionId,
-      token,
-      src,
+      id: frame.id,
       nextSrc: nextSrc === src ? null : nextSrc,
+      src,
+      token,
     };
   });
 
@@ -171,13 +167,13 @@ export function useDirectionFrames(o: Options) {
     () =>
       slots
         .filter((s) => s.src && s.directionId === o.currentId)
-        .map((s) => ({ token: s.token, src: s.src as string })),
+        .map((s) => ({ src: s.src as string, token: s.token })),
     [slotKey]
   );
 
   useTokenFrames(tokenSlots, elements, o.kind, o.live);
 
-  return { slots, elements, onSwapDone: gate.onSwapDone };
+  return { elements, onSwapDone: gate.onSwapDone, slots };
 }
 
 export type DirectionFrames = ReturnType<typeof useDirectionFrames>;

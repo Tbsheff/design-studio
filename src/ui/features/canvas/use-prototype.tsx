@@ -1,12 +1,5 @@
-import {
-  lazy,
-  Suspense,
-  useEffect,
-  useRef,
-  useState,
-  type MutableRefObject,
-  type ReactNode,
-} from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import type { MutableRefObject, ReactNode } from "react";
 
 import type {
   ProjectKind,
@@ -21,15 +14,15 @@ import {
   sourceName,
   startFrameOf,
   withImplicit,
-  type PrototypeLink,
 } from "../../../shared/links.js";
+import type { PrototypeLink } from "../../../shared/links.js";
 import { api } from "../../api.js";
 import {
   frameDirection,
   frameName,
   withFramePath,
-  type CanvasFrame,
 } from "./canvas-frames-model.js";
+import type { CanvasFrame } from "./canvas-frames-model.js";
 import { frameStateOf, useCurrentFrameStates } from "./frame-states-model.js";
 import { linksApi, useImplicitLinks, useLinks } from "./links-api.js";
 import {
@@ -76,7 +69,7 @@ function errorMessage(error: unknown): string {
 }
 
 export function usePrototype(o: Options) {
-  const on = o.on;
+  const { on } = o;
   const [arrows, setArrows] = useState(true);
   const [playing, setPlaying] = useState(false);
   const saved = useLinks(o.projectId);
@@ -104,18 +97,18 @@ export function usePrototype(o: Options) {
   const startId = playStartOf(file, o.frames, startFrameOf(file, o.frames));
 
   const states = useLinkRects({
-    kind: o.kind,
-    file,
-    frames: o.frames,
-    enabled: on,
     active: {
+      elements: o.preview.elements,
       frameId: o.active.id,
-      token: o.preview.frontToken,
       src:
         o.preview.slots.find((slot) => slot.token === o.preview.frontToken)
           ?.src ?? null,
-      elements: o.preview.elements,
+      token: o.preview.frontToken,
     },
+    enabled: on,
+    file,
+    frames: o.frames,
+    kind: o.kind,
     passive: o.passive,
   });
 
@@ -247,8 +240,8 @@ export function usePrototype(o: Options) {
   );
 
   return {
-    play,
     artboard,
+    play,
     stage,
     viewToggle: on
       ? { on: arrows, onToggle: () => setArrows((v) => !v) }

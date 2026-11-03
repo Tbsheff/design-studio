@@ -15,10 +15,10 @@ export function FreeMoveLayer({ view }: { view: FreeMoveView | null }) {
       <div
         className={`box move-ghost${view.copy ? " copy" : ""}`}
         style={{
+          height: box.height,
           left: box.x,
           top: box.y,
           width: box.width,
-          height: box.height,
         }}
       />
       <SnapGuides guides={view.guides} full />
@@ -43,7 +43,7 @@ export function FreeMoveLayer({ view }: { view: FreeMoveView | null }) {
           data-testid="move-insert"
           style={
             line.axis === "x"
-              ? { left: line.at, top: line.from, height: line.to - line.from }
+              ? { height: line.to - line.from, left: line.at, top: line.from }
               : { left: line.from, top: line.at, width: line.to - line.from }
           }
         />

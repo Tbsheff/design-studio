@@ -44,13 +44,13 @@ function usePreviewUrl(
 
     load
       .then(({ url }) => alive && setBaseUrl(url))
-      .catch((err) => {
+      .catch((error) => {
         if (!alive) {
           return;
         }
 
         setBaseUrl(null);
-        const text = errorText(err);
+        const text = errorText(error);
         setUrlError(
           text === NO_VERSION_TEXT
             ? text
@@ -81,8 +81,8 @@ function useRenderCheck(projectId: string, directionId: string | null) {
 
     try {
       setResults(await api.renderCheck(projectId, directionId));
-    } catch (err) {
-      setError(errorText(err));
+    } catch (failure) {
+      setError(errorText(failure));
       setResults(null);
     } finally {
       setChecking(false);
@@ -94,7 +94,7 @@ function useRenderCheck(projectId: string, directionId: string | null) {
     setError(null);
   };
 
-  return { checking, results, error, run, close };
+  return { checking, close, error, results, run };
 }
 
 function useFramePort(
@@ -110,9 +110,9 @@ function useFramePort(
 
     port.current = frames
       ? {
+          listen: frames.listen,
           post: frames.post,
           refreshRects: frames.refreshRects,
-          listen: frames.listen,
         }
       : null;
   });

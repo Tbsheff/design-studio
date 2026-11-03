@@ -1,6 +1,8 @@
-import { useRef, type KeyboardEvent, type RefObject } from "react";
+import { useRef } from "react";
+import type { KeyboardEvent, RefObject } from "react";
 
-import { Icon, type IconName } from "../../kit/Icon.js";
+import { Icon } from "../../kit/Icon.js";
+import type { IconName } from "../../kit/Icon.js";
 import { usePopover } from "../../kit/use-popover.js";
 
 export type CanvasTool = "select" | "comment" | "edit" | "prototype" | null;
@@ -113,11 +115,11 @@ export function shareGroups(
   onPort: (() => void) | null
 ): MenuGroup[] {
   const exportItem: MenuEntry = {
+    disabled: !p.canExport,
+    icon: "download",
     id: "export",
     label: "Export…",
-    icon: "download",
     meta: "PNG, PDF, HTML, handoff",
-    disabled: !p.canExport,
     run: p.onExport,
     ...(p.canExport ? {} : { tip: "Save a version to export" }),
   };
@@ -127,9 +129,9 @@ export function shareGroups(
   const shipItem: MenuEntry[] = ship
     ? [
         {
+          icon: "branch",
           id: "ship",
           label: "Ship as a pull request…",
-          icon: "branch",
           meta: "Branch and PR",
           run: ship,
         },
@@ -139,9 +141,9 @@ export function shareGroups(
   const portItem: MenuEntry[] = onPort
     ? [
         {
+          icon: "react",
           id: "port",
           label: "Move to app…",
-          icon: "react",
           meta: "Route in your app",
           run: onPort,
           tip: "The agent rebuilds a page as a route in an attached app, with its kit components",
@@ -154,11 +156,11 @@ export function shareGroups(
   const linkItem: MenuEntry[] = link
     ? [
         {
+          disabled: !p.canExport,
+          icon: "link",
           id: "share-link",
           label: "Share a read-only link…",
-          icon: "link",
           meta: "View and comment",
-          disabled: !p.canExport,
           run: () => link("link"),
           tip: p.canExport
             ? "Others see still images of the frames and can comment"
@@ -170,11 +172,11 @@ export function shareGroups(
   const publishItem: MenuEntry[] = link
     ? [
         {
+          disabled: !p.canExport,
+          icon: "globe",
           id: "publish",
           label: "Publish on Cloudflare…",
-          icon: "globe",
           meta: "Your publish Worker",
-          disabled: !p.canExport,
           run: () => link("publish"),
           tip: p.canExport
             ? "Uploads a copy of a saved version to your publish Worker after you confirm"

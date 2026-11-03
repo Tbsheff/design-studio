@@ -84,27 +84,33 @@ export function useResizeLive({
   onHandleDown,
 }: ResizeHandles): ResizeControl {
   const size = useLive(sizes);
+
   const live =
     size && target
       ? {
-          width: size.size.w,
-          height: size.size.h,
-          boxWidth: size.rect.width + size.size.w - size.base.w,
           boxHeight: size.rect.height + size.size.h - size.base.h,
+          boxWidth: size.rect.width + size.size.w - size.base.w,
           guides: size.guides,
+          height: size.size.h,
+          width: size.size.w,
         }
       : null;
-  return { target, live, onHandleDown };
+
+  return { live, onHandleDown, target };
 }
 
 function pxOf(value: string | undefined, fallback: number): number {
   const parsed = value?.endsWith("px") ? Number.parseFloat(value) : Number.NaN;
+
   return Math.round(Number.isFinite(parsed) ? parsed : fallback);
 }
 
 function scaleOf(element: Element): number {
   const overlay = element.closest<HTMLElement>(".overlay");
-  if (!overlay || overlay.offsetWidth === 0) return 1;
+
+  if (!overlay || overlay.offsetWidth === 0) {
+    return 1;
+  }
   return overlay.getBoundingClientRect().width / overlay.offsetWidth;
 }
 
@@ -117,31 +123,45 @@ export function resizedSize(
 ): Size {
   let w = edge === "s" ? base.w : base.w + dx;
   let h = edge === "e" ? base.h : base.h + dy;
+
   if (keepRatio && base.w > 0 && base.h > 0) {
     const ratio = base.w / base.h;
-    if (edge === "e") h = w / ratio;
-    else if (edge === "s") w = h * ratio;
-    else if (Math.abs(dx / base.w) >= Math.abs(dy / base.h)) h = w / ratio;
-    else w = h * ratio;
+
+    if (edge === "e") {
+      h = w / ratio;
+    } else if (edge === "s") {
+      w = h * ratio;
+    } else if (Math.abs(dx / base.w) >= Math.abs(dy / base.h)) {
+      h = w / ratio;
+    } else {
+      w = h * ratio;
+    }
   }
-  return { w: Math.max(1, Math.round(w)), h: Math.max(1, Math.round(h)) };
+
+  return { h: Math.max(1, Math.round(h)), w: Math.max(1, Math.round(w)) };
 }
 
 let neighborSeq = 0;
 
 function requestNeighbors(d: Drag, o: Options): void {
-  if (!o.listen) return;
+  if (!o.listen) {
+    return;
+  }
   neighborSeq += 1;
   const requestId = `nb-${neighborSeq}`;
+
   const stop = o.listen((message) => {
-    if (message.type !== "neighbors" || message.requestId !== requestId) return;
+    if (message.type !== "neighbors" || message.requestId !== requestId) {
+      return;
+    }
     d.candidates = message.parent
       ? [message.parent, ...message.siblings]
       : message.siblings;
     stop();
   });
+
   d.stopListen = stop;
-  o.post({ type: "request-neighbors", requestId, selector: d.target.selector });
+  o.post({ requestId, selector: d.target.selector, type: "request-neighbors" });
 }
 
 export function snapSize(
@@ -149,39 +169,55 @@ export function snapSize(
   next: Size,
   off: boolean
 ): { size: Size; guides: SnapGuide[] } {
-  if (off || d.candidates.length === 0) return { size: next, guides: [] };
+  if (off || d.candidates.length === 0) {
+    return { size: next, guides: [] };
+  }
   const r = d.target.rect;
+
   const box = {
+    height: r.height + next.h - d.base.h,
+    width: r.width + next.w - d.base.w,
     x: r.x,
     y: r.y,
-    width: r.width + next.w - d.base.w,
-    height: r.height + next.h - d.base.h,
   };
+
   const res = snapRect({
-    rect: box,
     candidates: d.candidates,
-    zoom: d.zoom,
+    rect: box,
     x: d.edge === "s" ? null : "end",
     y: d.edge === "e" ? null : "end",
+    zoom: d.zoom,
   });
+
   const size = {
-    w: Math.max(1, Math.round(next.w + res.rect.width - box.width)),
     h: Math.max(1, Math.round(next.h + res.rect.height - box.height)),
+    w: Math.max(1, Math.round(next.w + res.rect.width - box.width)),
   };
-  return { size, guides: res.guides };
+
+  return { guides: res.guides, size };
 }
 
 function axisStyle(d: Drag, size: Size): Record<string, string> {
   const style: Record<string, string> = {};
-  if (d.axes.has("width")) style.width = `${size.w}px`;
-  if (d.axes.has("height")) style.height = `${size.h}px`;
+
+  if (d.axes.has("width")) {
+    style.width = `${size.w}px`;
+  }
+  if (d.axes.has("height")) {
+    style.height = `${size.h}px`;
+  }
   return style;
 }
 
 function styleFor(size: Size, base: Size): Record<string, string> {
   const style: Record<string, string> = {};
-  if (size.w !== base.w) style.width = `${size.w}px`;
-  if (size.h !== base.h) style.height = `${size.h}px`;
+
+  if (size.w !== base.w) {
+    style.width = `${size.w}px`;
+  }
+  if (size.h !== base.h) {
+    style.height = `${size.h}px`;
+  }
   return style;
 }
 
@@ -199,6 +235,7 @@ export function useResizeHandles(o: Options): ResizeHandles {
   const drag = useRef<Drag | null>(null);
   const [sizes] = useState(() => createLiveStore<LiveSize | null>(null));
   const setSize = sizes.set;
+
   const target =
     o.enabled && o.selection.length === 1 && o.selection[0]?.source
       ? (o.selection[0] ?? null)
@@ -206,23 +243,28 @@ export function useResizeHandles(o: Options): ResizeHandles {
 
   const preview = useCallback((d: Drag, next: Size, keepRatio: boolean) => {
     d.size = next;
-    if (d.edge !== "s" || keepRatio) d.axes.add("width");
-    if (d.edge !== "e" || keepRatio) d.axes.add("height");
+
+    if (d.edge !== "s" || keepRatio) {
+      d.axes.add("width");
+    }
+    if (d.edge !== "e" || keepRatio) {
+      d.axes.add("height");
+    }
     setSize({
-      size: next,
       base: d.base,
-      rect: d.target.rect,
       guides: d.guides,
+      rect: d.target.rect,
+      size: next,
     });
     resizeReadout.set({
+      height: next.h,
       selector: d.target.selector,
       width: next.w,
-      height: next.h,
     });
     live.current.post({
-      type: "preview-style",
       selector: d.target.selector,
       style: axisStyle(d, next),
+      type: "preview-style",
     });
   }, []);
 
@@ -237,11 +279,14 @@ export function useResizeHandles(o: Options): ResizeHandles {
 
   const cancel = useCallback(() => {
     const d = drag.current;
-    if (!d) return;
+
+    if (!d) {
+      return;
+    }
     live.current.post({
-      type: "preview-style",
       selector: d.target.selector,
       style: axisStyle(d, d.base),
+      type: "preview-style",
     });
     end();
   }, [end]);
@@ -250,64 +295,78 @@ export function useResizeHandles(o: Options): ResizeHandles {
     const cur = live.current;
     const style = styleFor(d.size, d.base);
     const req = buildEditRequest(d.target, style);
-    if (!req || !cur.directionId) return;
-    const selector = d.target.selector;
+
+    if (!req || !cur.directionId) {
+      return;
+    }
+    const { selector } = d.target;
     cur.setSelection((prev) => mergeCommit(prev, { selector, style }));
+
     const optimistic = startOptimistic(
       { post: cur.post, refreshRects: cur.refreshRects },
       req,
       (message) => live.current.onError(message)
     );
+
     try {
       const result = await api.directEdit(cur.projectId, cur.directionId, req);
       optimistic.saved(result.tailwind);
       live.current.refreshRects();
-    } catch (err) {
+    } catch (error) {
       const back = {
         width: d.target.styles.width ?? "",
         height: d.target.styles.height ?? "",
       };
-      optimistic.failed(errorText(err));
+      optimistic.failed(errorText(error));
       live.current.setSelection((prev) =>
         mergeCommit(prev, { selector, style: back })
       );
-      live.current.onError(errorText(err));
+      live.current.onError(errorText(error));
     }
   }, []);
 
   const onHandleDown = useCallback(
     (edge: ResizeEdge, e: ReactPointerEvent<HTMLElement>) => {
       const sel = target;
-      if (e.button !== 0 || !sel) return;
+
+      if (e.button !== 0 || !sel) {
+        return;
+      }
       e.preventDefault();
       e.stopPropagation();
       const handle = e.currentTarget;
       handle.setPointerCapture(e.pointerId);
+
       const base = {
-        w: pxOf(sel.styles.width, sel.rect.width),
         h: pxOf(sel.styles.height, sel.rect.height),
+        w: pxOf(sel.styles.width, sel.rect.width),
       };
+
       const d: Drag = {
+        axes: new Set(),
+        base,
+        candidates: [],
         edge,
+        guides: [],
         pointerId: e.pointerId,
+        size: base,
         startX: e.clientX,
         startY: e.clientY,
-        zoom: scaleOf(handle) || 1,
-        base,
-        size: base,
-        target: sel,
-        axes: new Set(),
-        candidates: [],
-        guides: [],
         stopListen: () => undefined,
+        target: sel,
+        zoom: scaleOf(handle) || 1,
       };
+
       drag.current = d;
       document.body.classList.add("element-resizing");
       live.current.holdSwap?.(true, false);
-      setSize({ size: base, base, rect: sel.rect, guides: [] });
+      setSize({ base, guides: [], rect: sel.rect, size: base });
       requestNeighbors(d, live.current);
+
       const onMove = (ev: PointerEvent) => {
-        if (ev.pointerId !== d.pointerId || drag.current !== d) return;
+        if (ev.pointerId !== d.pointerId || drag.current !== d) {
+          return;
+        }
         const raw = resizedSize(
           d.edge,
           d.base,
@@ -315,34 +374,50 @@ export function useResizeHandles(o: Options): ResizeHandles {
           (ev.clientY - d.startY) / d.zoom,
           ev.shiftKey
         );
+
         const snapped = snapSize(d, raw, ev.shiftKey || snapOff(ev));
         d.guides = snapped.guides;
         preview(d, snapped.size, ev.shiftKey);
       };
+
       const detach = () => {
         handle.removeEventListener("pointermove", onMove);
         handle.removeEventListener("pointerup", onUp);
         handle.removeEventListener("pointercancel", onCancel);
         window.removeEventListener("keydown", onKey, true);
       };
+
       const onUp = (ev: PointerEvent) => {
-        if (ev.pointerId !== d.pointerId) return;
+        if (ev.pointerId !== d.pointerId) {
+          return;
+        }
         detach();
-        if (drag.current !== d) return;
+
+        if (drag.current !== d) {
+          return;
+        }
         const changed = d.size.w !== d.base.w || d.size.h !== d.base.h;
         end(changed);
-        if (changed) void commit(d);
+
+        if (changed) {
+          void commit(d);
+        }
       };
+
       const onCancel = () => {
         detach();
         cancel();
       };
+
       const onKey = (ev: KeyboardEvent) => {
-        if (ev.key !== "Escape") return;
+        if (ev.key !== "Escape") {
+          return;
+        }
         ev.preventDefault();
         ev.stopPropagation();
         onCancel();
       };
+
       handle.addEventListener("pointermove", onMove);
       handle.addEventListener("pointerup", onUp);
       handle.addEventListener("pointercancel", onCancel);
@@ -353,5 +428,5 @@ export function useResizeHandles(o: Options): ResizeHandles {
 
   useEffect(() => () => cancel(), [cancel]);
 
-  return { target, sizes, onHandleDown };
+  return { onHandleDown, sizes, target };
 }

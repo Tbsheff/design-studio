@@ -49,22 +49,22 @@ function passToElementHandle(e: ReactPointerEvent): boolean {
 
   handle.dispatchEvent(
     new PointerEvent("pointerdown", {
+      altKey,
       bubbles: true,
-      cancelable: true,
-      composed: true,
-      clientX,
-      clientY,
-      screenX,
-      screenY,
-      pointerId,
-      pointerType,
-      isPrimary,
       button,
       buttons,
-      shiftKey,
-      altKey,
-      metaKey,
+      cancelable: true,
+      clientX,
+      clientY,
+      composed: true,
       ctrlKey,
+      isPrimary,
+      metaKey,
+      pointerId,
+      pointerType,
+      screenX,
+      screenY,
+      shiftKey,
     })
   );
 
@@ -97,8 +97,8 @@ export function FrameResizeHandles({
 const MENU_STEP: Record<string, (index: number, count: number) => number> = {
   ArrowDown: (index, count) => (index + 1) % count,
   ArrowUp: (index, count) => (index - 1 + count) % count,
-  Home: () => 0,
   End: (_index, count) => count - 1,
+  Home: () => 0,
 };
 
 export function menuKeys(
@@ -117,9 +117,11 @@ export function menuKeys(
 
   event.preventDefault();
 
-  const items = Array.from(
-    event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="menuitem"]')
-  );
+  const items = [
+    ...event.currentTarget.querySelectorAll<HTMLButtonElement>(
+      '[role="menuitem"]'
+    ),
+  ];
 
   const index = items.indexOf(document.activeElement as HTMLButtonElement);
   items[step(Math.max(0, index), items.length)]?.focus();
@@ -140,5 +142,5 @@ export function useMenu() {
 
   usePopover(open, root, close);
 
-  return { open, setOpen, root, trigger, close };
+  return { close, open, root, setOpen, trigger };
 }

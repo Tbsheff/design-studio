@@ -35,19 +35,25 @@ export function useDrawTool(
   const [on, setOnState] = useState(false);
   const [color, setColor] = useState<string>(DRAW_COLORS[0].value);
   const [strokes, setStrokes] = useState<DrawStroke[]>([]);
-  const live = useRef({ on, available, onActivate });
-  live.current = { on, available, onActivate };
+  const live = useRef({ available, on, onActivate });
+  live.current = { available, on, onActivate };
 
   const setOn = useCallback((next: boolean) => {
-    if (next && !live.current.available) return;
-    if (next) live.current.onActivate();
-    else setStrokes([]);
+    if (next && !live.current.available) {
+      return;
+    }
+    if (next) {
+      live.current.onActivate();
+    } else {
+      setStrokes([]);
+    }
     setOnState(next);
   }, []);
 
   const toggle = useCallback(() => setOn(!live.current.on), [setOn]);
   const undo = useCallback(() => setStrokes((prev) => prev.slice(0, -1)), []);
   const clear = useCallback(() => setStrokes([]), []);
+
   const push = useCallback(
     (stroke: DrawStroke) =>
       setStrokes((prev) =>
@@ -57,12 +63,15 @@ export function useDrawTool(
   );
 
   useEffect(() => {
-    if (!available) setOn(false);
+    if (!available) {
+      setOn(false);
+    }
   }, [available, setOn]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       const mod = event.metaKey || event.ctrlKey;
+
       if (
         live.current.on &&
         mod &&
@@ -70,45 +79,60 @@ export function useDrawTool(
         !event.shiftKey &&
         event.key.toLowerCase() === "z"
       ) {
-        if (hasText(event.target)) return;
+        if (hasText(event.target)) {
+          return;
+        }
         event.preventDefault();
         event.stopPropagation();
         undo();
+
         return;
       }
-      if (isTypingTarget(event.target) || mod || event.altKey) return;
+
+      if (isTypingTarget(event.target) || mod || event.altKey) {
+        return;
+      }
       const key = event.key.toLowerCase();
+
       if (key === "p" && !event.shiftKey && live.current.available) {
         event.preventDefault();
         toggle();
       } else if (key === "escape" || key === "v" || key === "c") {
-        if (live.current.on) setOn(false);
+        if (live.current.on) {
+          setOn(false);
+        }
       }
     };
+
     window.addEventListener("keydown", onKey, true);
+
     return () => window.removeEventListener("keydown", onKey, true);
   }, [setOn, toggle, undo]);
 
   useDesktopCommand((command) => {
-    if (!live.current.on || command.type !== "undo") return false;
+    if (!live.current.on || command.type !== "undo") {
+      return false;
+    }
     undo();
+
     return true;
   });
 
   const used = strokes.reduce((sum, stroke) => sum + stroke.points.length, 0);
+
   return {
     available,
-    on,
-    toolbarMode: available ? on : undefined,
-    setOn,
-    toggle,
+    clear,
     color,
-    setColor,
-    strokes,
+    on,
     pointsLeft: Math.max(0, DRAW_POINTS_MAX - used),
     push,
+    setColor,
+    setOn,
+    strokes,
+    toggle,
+    toolbarMode: available ? on : undefined,
     undo,
-    clear,
   };
 }
 
@@ -118,13 +142,18 @@ export function useCanvasDraw(
   setSelectMode: (on: boolean) => void
 ): DrawTool {
   const setComment = comment.setOn;
+
   const draw = useDrawTool(comment.available, () => {
     setSelectMode(false);
     setComment(false);
   });
+
   const setDraw = draw.setOn;
   useEffect(() => {
-    if (comment.on || selectMode) setDraw(false);
+    if (comment.on || selectMode) {
+      setDraw(false);
+    }
   }, [comment.on, selectMode, setDraw]);
+
   return draw;
 }

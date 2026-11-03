@@ -1,11 +1,12 @@
 import { useEffect, useRef, useSyncExternalStore } from "react";
 
-import { shortcutLabel, type KeyId } from "../../../shared/keymap.js";
-import {
-  vectorToolKeyOf,
-  type VectorRequest,
-  type VectorResult,
-  type VectorToolId,
+import { shortcutLabel } from "../../../shared/keymap.js";
+import type { KeyId } from "../../../shared/keymap.js";
+import { vectorToolKeyOf } from "../../../shared/vector.js";
+import type {
+  VectorRequest,
+  VectorResult,
+  VectorToolId,
 } from "../../../shared/vector.js";
 import { json } from "../../api.js";
 import { IS_MAC } from "../../canvas-hook-slots.js";
@@ -20,7 +21,7 @@ interface State {
   available: boolean;
 }
 
-let state: State = { tool: null, available: false };
+let state: State = { available: false, tool: null };
 const listeners = new Set<() => void>();
 
 function emit(next: Partial<State>): void {
@@ -39,8 +40,6 @@ export const vectorTool = {
   get: () => state,
   set: (tool: VectorToolId | null) =>
     emit({ tool: state.available ? tool : null }),
-  toggle: (tool: VectorToolId) =>
-    emit({ tool: state.available && state.tool !== tool ? tool : null }),
   setAvailable: (available: boolean) => {
     if (available !== state.available) {
       emit({ available });
@@ -51,6 +50,8 @@ export const vectorTool = {
 
     return () => listeners.delete(listener);
   },
+  toggle: (tool: VectorToolId) =>
+    emit({ tool: state.available && state.tool !== tool ? tool : null }),
 };
 
 export function useVectorTool(): State {
@@ -68,23 +69,23 @@ const VECTOR_TOOL_LIST: {
   glyph: string;
 }[] = [
   {
-    id: "rect",
-    label: "Rectangle",
-    keyId: "tool-rect",
     glyph: "M2.75 3.75h10.5v8.5H2.75z",
+    id: "rect",
+    keyId: "tool-rect",
+    label: "Rectangle",
   },
   {
-    id: "ellipse",
-    label: "Ellipse",
-    keyId: "tool-ellipse",
     glyph: "M8 13a5 5 0 1 0 0-10 5 5 0 0 0 0 10z",
+    id: "ellipse",
+    keyId: "tool-ellipse",
+    label: "Ellipse",
   },
   {
-    id: "pen",
-    label: "Pen",
-    keyId: "tool-pen",
     glyph:
       "M8 2.5 12.5 9 8 13.5 3.5 9zM8 2.5v5.25M8 9.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5z",
+    id: "pen",
+    keyId: "tool-pen",
+    label: "Pen",
   },
 ];
 

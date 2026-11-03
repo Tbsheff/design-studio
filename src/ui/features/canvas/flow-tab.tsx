@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 
 import type { AppRoute } from "../../../shared/contracts.js";
-import { dynamicNames, type FlowResult } from "../../../shared/route-flow.js";
+import { dynamicNames } from "../../../shared/route-flow.js";
+import type { FlowResult } from "../../../shared/route-flow.js";
 import { api, errorText } from "../../api.js";
 import { Icon } from "../../kit/Icon.js";
 
@@ -32,14 +33,14 @@ function useRoutesAndParams(projectId: string) {
     api
       .appRoutes(projectId)
       .then((result) => setRoutes(result.routes))
-      .catch((err: unknown) => setError(errorText(err)));
+      .catch((failure: unknown) => setError(errorText(failure)));
     api
       .flowParams(projectId)
       .then((result) => setParams(result.params))
-      .catch(() => undefined);
+      .catch(() => null);
   }, [projectId]);
 
-  return { routes, params, setParams, error, setError };
+  return { error, params, routes, setError, setParams };
 }
 
 function FlowResultView({ result }: { result: FlowResult }) {
@@ -116,7 +117,7 @@ export default function FlowTab({ projectId }: { projectId: string }) {
     api
       .buildFlow(projectId, input)
       .then(setResult)
-      .catch((err: unknown) => setError(errorText(err)))
+      .catch((failure: unknown) => setError(errorText(failure)))
       .finally(() => setBusy(false));
   };
 
@@ -141,16 +142,16 @@ export default function FlowTab({ projectId }: { projectId: string }) {
               type="button"
               role="listitem"
               className="app-route"
-              aria-pressed={at >= 0}
-              data-tip={at >= 0 ? "Remove from the flow" : "Add to the flow"}
+              aria-pressed={at > -1}
+              data-tip={at === -1 ? "Add to the flow" : "Remove from the flow"}
               data-tip-align="start"
               onClick={() => toggle(route.route)}
             >
               <span className="mono">{route.route}</span>
-              {at >= 0 ? (
-                <span className="flow-order">{at + 1}</span>
-              ) : (
+              {at === -1 ? (
                 <Icon name="plus" size={12} />
+              ) : (
+                <span className="flow-order">{at + 1}</span>
               )}
             </button>
           );

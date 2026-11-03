@@ -1,12 +1,12 @@
 import {
   VARIATION_BRIEF_MAX,
   VARIATION_MIN,
-  type Project,
-  type VariationBrief,
 } from "../../../shared/contracts.js";
+import type { Project, VariationBrief } from "../../../shared/contracts.js";
 import { LEVEL_PRESETS } from "../../../shared/run-levels.js";
 import { Icon } from "../../kit/Icon.js";
-import { budgetFor, money, type BriefDraft } from "./use-variations.js";
+import { budgetFor, money } from "./use-variations.js";
+import type { BriefDraft } from "./use-variations.js";
 
 interface Props {
   project: Project;

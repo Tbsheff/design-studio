@@ -68,7 +68,7 @@ function activeFrameOf(
   active: { id: string; path?: string },
   all: { id: string }[]
 ) {
-  return { id: active.id, path: active.path ?? "", ids: all.map((f) => f.id) };
+  return { id: active.id, ids: all.map((f) => f.id), path: active.path ?? "" };
 }
 
 function pageNameOf(path: string | undefined): string {
@@ -84,14 +84,14 @@ function commentToolsOf(props: Props, path: string | undefined): CommentTools {
   const tools = props.commentTools ?? {};
 
   return {
-    sources: {
-      projectId: props.projectId,
-      directionId: props.directionId,
-      tokens: tools.tokens,
-      components: tools.components,
-    },
-    pageName: pageNameOf(path),
     onSteer: tools.onSteer,
+    pageName: pageNameOf(path),
+    sources: {
+      components: tools.components,
+      directionId: props.directionId,
+      projectId: props.projectId,
+      tokens: tools.tokens,
+    },
   };
 }
 
@@ -123,7 +123,7 @@ function stageNote(p: {
 
 function themeSwitch(enabled: boolean | undefined, theme: ThemeChoice) {
   if (!enabled) {
-    return undefined;
+    return;
   }
 
   const dark = theme === "dark";

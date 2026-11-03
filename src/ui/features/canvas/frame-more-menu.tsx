@@ -23,11 +23,11 @@ function portItem(root: HTMLElement | null): FrameMenuItem[] {
 
   const run = () =>
     openPortDialog({
-      frameId: frame?.dataset.frameId ?? null,
       directionId: frame?.dataset.directionId ?? null,
+      frameId: frame?.dataset.frameId ?? null,
     });
 
-  return [{ id: "port-to-app", label: "Move to app…", icon: "react", run }];
+  return [{ icon: "react", id: "port-to-app", label: "Move to app…", run }];
 }
 
 export function FrameMoreMenu({

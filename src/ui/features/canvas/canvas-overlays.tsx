@@ -26,7 +26,7 @@ function PresentLayer({
     const el = root.current;
 
     if (fullscreen && el?.requestFullscreen) {
-      void el.requestFullscreen().catch(() => undefined);
+      void el.requestFullscreen().catch(() => null);
     }
 
     const onKey = (event: KeyboardEvent) => {
@@ -54,7 +54,7 @@ function PresentLayer({
       document.removeEventListener("fullscreenchange", onFullscreen);
 
       if (document.fullscreenElement) {
-        void document.exitFullscreen().catch(() => undefined);
+        void document.exitFullscreen().catch(() => null);
       }
     };
   }, [fullscreen, onClose]);
@@ -168,7 +168,7 @@ function TweakPrompt({
 function gapStyle(b: SpacingBadge) {
   return b.axis === "x"
     ? { left: b.from, top: b.at, width: b.to - b.from }
-    : { left: b.at, top: b.from, height: b.to - b.from };
+    : { height: b.to - b.from, left: b.at, top: b.from };
 }
 
 function FrameSnapLayer({ origin }: { origin: { x: number; y: number } }) {
@@ -254,10 +254,10 @@ function MarqueeLayer({
         className="box marquee"
         data-testid="marquee"
         style={{
+          height: rect.height,
           left: rect.x,
           top: rect.y,
           width: rect.width,
-          height: rect.height,
         }}
       />
     </div>

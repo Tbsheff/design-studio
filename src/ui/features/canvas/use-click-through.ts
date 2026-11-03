@@ -23,8 +23,8 @@ export type ClickThrough = (point: { x: number; y: number }) => void;
 export function useClickThrough(port: Port, enabled: boolean): ClickThrough {
   const pending = useRef<Pending | null>(null);
   const timers = useRef<number[]>([]);
-  const live = useRef({ port, enabled });
-  live.current = { port, enabled };
+  const live = useRef({ enabled, port });
+  live.current = { enabled, port };
 
   const send = useCallback(() => {
     const p = pending.current;
@@ -76,7 +76,7 @@ export function useClickThrough(port: Port, enabled: boolean): ClickThrough {
 
       timers.current.forEach((t) => window.clearTimeout(t));
       timers.current = [];
-      pending.current = { x: point.x, y: point.y, at: Date.now() };
+      pending.current = { at: Date.now(), x: point.x, y: point.y };
       later(NO_RELOAD_MS);
     },
     [later]

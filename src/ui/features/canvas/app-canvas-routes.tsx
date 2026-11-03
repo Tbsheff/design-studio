@@ -5,12 +5,8 @@ import { cleanFrameLabel } from "../../../shared/canvas-file.js";
 import type { AttachedApp, BridgeToParent } from "../../../shared/contracts.js";
 import { api } from "../../api.js";
 import { readStored, writeStored } from "../../platform/storage.js";
-import {
-  addFrame,
-  canAddFrame,
-  setFramePath,
-  type CanvasLayout,
-} from "./canvas-frames-model.js";
+import { addFrame, canAddFrame, setFramePath } from "./canvas-frames-model.js";
+import type { CanvasLayout } from "./canvas-frames-model.js";
 
 const AppBar = lazy(() => import("../../app/shell/app-bar.js"));
 
@@ -19,6 +15,7 @@ export function routeFrameId(
   route: string
 ): string | null {
   const path = route.replace(/^\/+/, "").replace(/\/+$/, "");
+
   return (
     layout.frames.find(
       (frame) => (frame.path ?? "").replace(/\/+$/, "") === path
@@ -33,7 +30,8 @@ export function addRouteFrame(
 ): CanvasLayout {
   const path = route.replace(/^\/+/, "");
   const existing = routeFrameId(layout, route);
-  if (existing)
+
+  if (existing) {
     return {
       ...layout,
       activeId: existing,
@@ -41,12 +39,19 @@ export function addRouteFrame(
         f.id === existing && f.hidden ? withoutHidden(f) : f
       ),
     };
-  if (!canAddFrame(layout)) return layout;
+  }
+  if (!canAddFrame(layout)) {
+    return layout;
+  }
   const added = addFrame(layout, size);
-  const frame = added.frames[added.frames.length - 1];
-  if (!frame) return layout;
+  const frame = added.frames.at(-1);
+
+  if (!frame) {
+    return layout;
+  }
   const withPath = setFramePath(added, frame.id, path);
   const label = cleanFrameLabel(routeLabel(route));
+
   return {
     ...withPath,
     activeId: frame.id,
@@ -60,6 +65,7 @@ function withoutHidden(
   frame: CanvasLayout["frames"][number]
 ): CanvasLayout["frames"][number] {
   const { hidden: _hidden, ...rest } = frame;
+
   return rest;
 }
 
@@ -67,7 +73,9 @@ export function appRoutePages(
   projectId: string,
   app: AttachedApp | null | undefined
 ): (() => Promise<string[]>) | null {
-  if (!app) return null;
+  if (!app) {
+    return null;
+  }
   return () =>
     api
       .appRoutes(projectId)
@@ -106,22 +114,31 @@ export function useRedirectNote(
   const [note, setNote] = useState<{ from: string; to: string } | null>(null);
   useEffect(() => setNote(null), [resetKey]);
   useEffect(() => {
-    if (!enabled) return undefined;
+    if (!enabled) {
+      return undefined;
+    }
     return listen((message) => {
-      if (message.type !== "ready") return;
-      if (!message.redirectedFrom) {
-        setNote(null);
+      if (message.type !== "ready") {
         return;
       }
+      if (!message.redirectedFrom) {
+        setNote(null);
+
+        return;
+      }
+
       let to = message.url;
+
       try {
         to = new URL(message.url).pathname;
       } catch {
         to = message.url;
       }
+
       setNote({ from: message.redirectedFrom, to });
     });
   }, [listen, enabled]);
+
   return note;
 }
 
@@ -131,6 +148,7 @@ export const MAX_HIDDEN_REDIRECTS = 50;
 export function readHiddenRedirects(): string[] {
   try {
     const raw: unknown = JSON.parse(readStored(HIDDEN_REDIRECTS_KEY) ?? "[]");
+
     return Array.isArray(raw)
       ? raw.filter((item): item is string => typeof item === "string")
       : [];

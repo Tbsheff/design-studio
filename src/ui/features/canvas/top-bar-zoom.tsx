@@ -1,7 +1,8 @@
 import { shortcutLabel } from "../../../shared/keymap.js";
 import { IS_MAC, tipWithKey } from "../../canvas-toolbar-slots.js";
 import { Icon } from "../../kit/Icon.js";
-import { useLive, type LiveStore } from "../../platform/live-store.js";
+import { useLive } from "../../platform/live-store.js";
+import type { LiveStore } from "../../platform/live-store.js";
 import type { ZoomSetting } from "../../platform/storage.js";
 import { DropMenu } from "./top-bar-drop-menu.js";
 import type { MenuEntry, MenuGroup } from "./top-bar-menu.js";
@@ -47,16 +48,16 @@ function zoomGroups({
     {
       items: [
         {
+          checked: setting === "fit",
           id: "fit",
           label: "Zoom to fit",
           meta: shortcutLabel("zoom-fit", IS_MAC),
-          checked: setting === "fit",
           run: onFit,
         },
         ...ZOOMS.map((z) => ({
+          checked: setting === z,
           id: String(z),
           label: `${Math.round(z * 100)}%`,
-          checked: setting === z,
           run: () => onZoomTo(z),
         })),
       ],
@@ -101,46 +102,45 @@ export function OverflowMenu(p: OverflowProps) {
       fold: "wide",
       items: [
         {
+          icon: "reload",
           id: "reload",
           label: "Reload preview",
-          icon: "reload",
           run: p.onReload,
         },
         {
+          checked: p.viewOpen,
+          icon: "eye",
           id: "view",
           label: "Size, source and checks",
-          icon: "eye",
-          checked: p.viewOpen,
           run: p.onToggleView,
         },
       ],
     },
-    { fold: "wide", label: "Present", items: p.present },
+    { fold: "wide", items: p.present, label: "Present" },
     {
       fold: "narrow",
       items: [
         {
-          id: "tweak",
-          label: "Describe a tweak",
-          icon: "sliders",
           checked: p.tweak.open,
           disabled: p.tweak.disabled,
+          icon: "sliders",
+          id: "tweak",
+          label: "Describe a tweak",
           run: p.tweak.run,
         },
       ],
     },
     {
       fold: "narrow",
-      label: `Zoom ${percent}%`,
       items: zoom
         .flatMap((g) => g.items)
         .filter(
           (item) => item.id === "fit" || item.id === "in" || item.id === "out"
         ),
+      label: `Zoom ${percent}%`,
     },
     {
       fold: "tight",
-      label: "Shapes",
       items: VECTOR_TOOLS.map((item) => ({
         id: item.id,
         label: item.label,
@@ -149,6 +149,7 @@ export function OverflowMenu(p: OverflowProps) {
         disabled: !shape.available,
         run: () => vectorTool.toggle(item.id),
       })),
+      label: "Shapes",
     },
   ];
 

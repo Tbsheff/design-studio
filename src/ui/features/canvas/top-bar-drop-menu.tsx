@@ -1,20 +1,13 @@
-import {
-  lazy,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { lazy, useCallback, useEffect, useRef, useState } from "react";
+import type { ReactNode } from "react";
 
 import { PORT_OPEN_EVENT } from "../../../shared/port.js";
 import { uiStore } from "../../platform/storage.js";
-import {
-  setPortAvailable,
-  type PortOpenDetail,
-} from "../design-system/port-api.js";
+import { setPortAvailable } from "../design-system/port-api.js";
+import type { PortOpenDetail } from "../design-system/port-api.js";
 import type { PortDialogTarget } from "../design-system/port-to-app-dialog.js";
-import { type MenuGroup, MenuPopover } from "./top-bar-menu.js";
+import { MenuPopover } from "./top-bar-menu.js";
+import type { MenuGroup } from "./top-bar-menu.js";
 
 export const PortToAppDialog = lazy(async () => {
   const loaded = await import("../design-system/port-to-app-dialog.js");
@@ -38,9 +31,9 @@ export function usePortDialog(available: boolean): {
       }
 
       setTarget({
-        projectId: activeProjectId,
         directionId: directionId ?? directionByProject[activeProjectId] ?? null,
         frameId,
+        projectId: activeProjectId,
       });
     },
     []
@@ -53,7 +46,7 @@ export function usePortDialog(available: boolean): {
   }, [available]);
   useEffect(() => {
     const onOpen = (event: Event) => {
-      const detail = (event as CustomEvent<PortOpenDetail>).detail;
+      const { detail } = event as CustomEvent<PortOpenDetail>;
       open(detail?.frameId ?? null, detail?.directionId ?? null);
     };
 
@@ -62,7 +55,7 @@ export function usePortDialog(available: boolean): {
     return () => window.removeEventListener(PORT_OPEN_EVENT, onOpen);
   }, [open]);
 
-  return { target, open, close: useCallback(() => setTarget(null), []) };
+  return { close: useCallback(() => setTarget(null), []), open, target };
 }
 
 export function DropMenu({

@@ -6,11 +6,11 @@ import { Icon } from "../../kit/Icon.js";
 import { menuKeys, useMenu } from "./frame-resize-handles.js";
 
 const STATUS_TEXT: Record<RunStatus, string> = {
-  running: "Running",
-  completed: "Done",
-  canceled: "Canceled",
-  failed: "Failed",
   budget_exceeded: "Budget limit",
+  canceled: "Canceled",
+  completed: "Done",
+  failed: "Failed",
+  running: "Running",
 };
 
 export interface Sibling {
@@ -124,7 +124,7 @@ export function VariationControls({
   const [mixing, setMixing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [keeping, setKeeping] = useState(false);
-  const status = variation.status;
+  const { status } = variation;
 
   const keep = async () => {
     if (variation.keepBlocked || keeping) {
@@ -136,9 +136,9 @@ export function VariationControls({
 
     try {
       await variation.onKeep();
-    } catch (err) {
+    } catch (failure) {
       setError(
-        `Could not keep it. ${err instanceof Error ? err.message : String(err)}`
+        `Could not keep it. ${failure instanceof Error ? failure.message : String(failure)}`
       );
     } finally {
       setKeeping(false);
@@ -156,9 +156,9 @@ export function VariationControls({
     try {
       await variation.onMix(to, element);
       onMixed();
-    } catch (err) {
+    } catch (failure) {
       setError(
-        `Could not use the element. ${err instanceof Error ? err.message : String(err)} Pick it again, then try again.`
+        `Could not use the element. ${failure instanceof Error ? failure.message : String(failure)} Pick it again, then try again.`
       );
     } finally {
       setMixing(false);

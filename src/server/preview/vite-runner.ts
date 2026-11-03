@@ -21,6 +21,7 @@ export interface RunnerInit {
   port: number;
   cacheDir: string;
   bridgeScript: string;
+  cloudTree?: boolean;
 }
 
 export type RunnerToParent =
@@ -56,7 +57,7 @@ const BUILD_ERROR_LEAD_MS = 30;
 function buildConfig(init: RunnerInit, sync: ChangeSync): InlineConfig {
   const root = path.resolve(init.root);
   const realRoot = realOrSelf(root);
-  const configFile = findConfigFile(root);
+  const configFile = init.cloudTree === true ? false : findConfigFile(root);
   const rootCandidates = [...new Set([realRoot, root])];
 
   const onBuildError = async (error: BuildErrorPayload): Promise<void> => {

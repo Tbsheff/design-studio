@@ -1,11 +1,7 @@
-import { STUDIO_TOKEN_HEADER } from "../../shared/contracts";
-
 interface StudioSession {
   readonly previewOrigin: string;
   readonly token: string;
 }
-
-type TokenHeaders = Readonly<Record<typeof STUDIO_TOKEN_HEADER, string>>;
 
 const TOKEN_BYTES = 16;
 
@@ -72,10 +68,6 @@ const randomToken = (): string => {
   ).join("");
 };
 
-const tokenHeaders = (): TokenHeaders => ({
-  [STUDIO_TOKEN_HEADER]: getSession().token,
-});
+export { getSession, loadSession, randomToken };
 
-export { getSession, loadSession, randomToken, tokenHeaders };
-
-export type { StudioSession, TokenHeaders };
+export type { StudioSession };

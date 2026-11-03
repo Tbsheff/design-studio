@@ -17,6 +17,7 @@ import { BrandMark } from "../../components/BrandMark.js";
 import { IS_MAC, tipWithKey } from "../../home-commands.js";
 import { useCommands } from "../../home-commands.js";
 import { Icon } from "../../kit/Icon.js";
+import { readStored, writeStored } from "../../platform/storage.js";
 import {
   noteProjectOpened,
   refreshProjectHits,
@@ -44,11 +45,7 @@ type RailState = "open" | "mini";
 const listeners = new Set<() => void>();
 
 function readRail(): RailState {
-  try {
-    return localStorage.getItem(KEY) === "open" ? "open" : "mini";
-  } catch {
-    return "mini";
-  }
+  return readStored(KEY) === "open" ? "open" : "mini";
 }
 
 let railState: RailState = readRail();
@@ -56,14 +53,10 @@ let railState: RailState = readRail();
 export function setRail(next: RailState): void {
   railState = next;
 
-  try {
-    localStorage.setItem(KEY, next);
-  } catch {
-    return;
-  } finally {
-    for (const listener of listeners) {
-      listener();
-    }
+  writeStored(KEY, next);
+
+  for (const listener of listeners) {
+    listener();
   }
 }
 

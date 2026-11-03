@@ -1,5 +1,6 @@
 import type { TelemetrySample } from "../../shared/contracts";
 import { sendTelemetry } from "../api";
+import { desktopBridge } from "./desktop";
 
 export interface DesktopBoot {
   startedAt: number;
@@ -19,8 +20,7 @@ let appStartSent = false;
 let flushLongFrames: () => void = () => undefined;
 
 export function desktopBoot(): DesktopBoot | null {
-  const boot = (window as unknown as { studioDesktop?: { boot?: DesktopBoot } })
-    .studioDesktop?.boot;
+  const boot = desktopBridge<{ boot?: DesktopBoot }>()?.boot;
 
   return boot && typeof boot.startedAt === "number" ? boot : null;
 }

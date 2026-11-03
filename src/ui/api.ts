@@ -47,7 +47,6 @@ import type {
   Version,
   WorkTreeStatus,
 } from "../shared/contracts";
-import { STUDIO_TOKEN_HEADER } from "../shared/contracts";
 import type {
   BlendMode,
   BlendProperty,
@@ -112,10 +111,8 @@ import type {
   TweaksState,
   TweakValue,
 } from "../shared/tweaks";
-import { ApiError, call } from "./platform/http";
-import type { WireFields } from "./platform/http";
+import { call, pickMessage, request } from "./platform/http";
 import { prefetch, readShared } from "./platform/query";
-import { getSession } from "./session";
 import { endEditSession, restoreVersion, stepEditHistory } from "./versionsApi";
 
 export { ApiError } from "./platform/http";
@@ -238,55 +235,6 @@ export interface IconInsertReply {
   swapped: boolean;
   title: string;
   versionId: string;
-}
-
-type ErrorPick = (data: {
-  error?: string;
-  message?: string;
-}) => string | undefined;
-
-const pickError: ErrorPick = (data) => data.error ?? data.message;
-const pickMessage: ErrorPick = (data) => data.message ?? data.error;
-
-async function request(
-  method: string,
-  path: string,
-  body?: unknown,
-  pick: ErrorPick = pickError
-): Promise<Response> {
-  const headers: Record<string, string> = {
-    [STUDIO_TOKEN_HEADER]: getSession().token,
-  };
-
-  let payload: BodyInit | undefined;
-
-  if (body instanceof FormData) {
-    payload = body;
-  } else if (body !== undefined) {
-    headers["content-type"] = "application/json";
-    payload = JSON.stringify(body);
-  }
-
-  const res = await fetch(path, { method, headers, body: payload });
-
-  if (!res.ok) {
-    let message = `${method} ${path} failed: ${res.status}`;
-    let parsed: (WireFields & { error?: string; message?: string }) | undefined;
-
-    try {
-      parsed = (await res.json()) as WireFields & {
-        error?: string;
-        message?: string;
-      };
-      message = pick(parsed) ?? message;
-    } catch {
-      message = `${message} ${res.statusText}`;
-    }
-
-    throw new ApiError(res.status, message, parsed?.error, parsed);
-  }
-
-  return res;
 }
 
 const sendPresence = async (

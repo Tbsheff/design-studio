@@ -7,9 +7,16 @@ import type {
 } from "../../shared/actions/_core/action.js";
 import type { WireBody } from "../../shared/actions/_core/wire.js";
 import type { AllActions } from "../../shared/actions/index.js";
-import { tokenHeaders } from "./session";
+import { STUDIO_TOKEN_HEADER } from "../../shared/contracts";
+import { getSession } from "./session";
 
 type HttpMethod = Method;
+
+type TokenHeaders = Readonly<Record<typeof STUDIO_TOKEN_HEADER, string>>;
+
+const tokenHeaders = (): TokenHeaders => ({
+  [STUDIO_TOKEN_HEADER]: getSession().token,
+});
 
 type WireJson =
   | boolean
@@ -193,6 +200,79 @@ const call = async <Route extends ActionRoute>(
   return (await res.json()) as RouteOutput<Route>;
 };
 
+type ErrorPick = (data: {
+  error?: string;
+  message?: string;
+}) => string | undefined;
+
+const pickError: ErrorPick = (data) => data.error ?? data.message;
+const pickMessage: ErrorPick = (data) => data.message ?? data.error;
+
+type RequestBody = FormData | WireFields | readonly WireJson[] | null;
+
+const payloadOf = (body: RequestBody): BodyInit | null => {
+  if (body === null || body instanceof FormData) {
+    return body;
+  }
+
+  return JSON.stringify(body);
+};
+
+const headersOf = (body: RequestBody): HeadersInit => {
+  const token = tokenHeaders();
+
+  if (body === null || body instanceof FormData) {
+    return token;
+  }
+
+  return { ...token, "content-type": "application/json" };
+};
+
+const failureOf = async (
+  res: Response,
+  fallback: string,
+  pick: ErrorPick
+): Promise<ApiError> => {
+  try {
+    const parsed = (await res.json()) as WireFields & {
+      error?: string;
+      message?: string;
+    };
+
+    return new ApiError(
+      res.status,
+      pick(parsed) ?? fallback,
+      parsed.error,
+      parsed
+    );
+  } catch {
+    return new ApiError(res.status, `${fallback} ${res.statusText}`);
+  }
+};
+
+const request = async (
+  method: string,
+  path: string,
+  body: RequestBody = null,
+  pick: ErrorPick = pickError
+): Promise<Response> => {
+  const res = await fetch(path, {
+    body: payloadOf(body),
+    headers: headersOf(body),
+    method,
+  });
+
+  if (!res.ok) {
+    throw await failureOf(
+      res,
+      `${method} ${path} failed: ${String(res.status)}`,
+      pick
+    );
+  }
+
+  return res;
+};
+
 const sendJson = async <Body>(
   method: HttpMethod,
   path: string,
@@ -243,9 +323,21 @@ const readBlob = async (url: string): Promise<Blob> => {
   return res.blob();
 };
 
-export { ApiError, call, getBlob, getJson, getRaw, readBlob, sendJson };
+export {
+  ApiError,
+  call,
+  getBlob,
+  getJson,
+  getRaw,
+  pickError,
+  pickMessage,
+  readBlob,
+  request,
+  sendJson,
+};
 
 export type {
+  ErrorPick,
   ActionOf,
   ActionRoute,
   HttpMethod,

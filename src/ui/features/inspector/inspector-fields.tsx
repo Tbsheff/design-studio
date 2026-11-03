@@ -5,6 +5,7 @@ import { colorHex, resolveTokenValue } from "../../../shared/token-match.js";
 import { TokenControl } from "../../components/TokenControl.js";
 import { Icon, type IconName } from "../../kit/Icon.js";
 import { UiSelect } from "../../kit/UiSelect.js";
+import { readStored, writeStored } from "../../platform/storage.js";
 import { colorToHex, displayColor, isValidColor } from "./css-values.js";
 import { useInherited } from "./edit-variant.js";
 import { sameEditValues, type DirectEdit } from "./use-direct-edit.js";
@@ -195,7 +196,7 @@ const OPEN_KEY = "studio.inspector.sections";
 
 function readOpen(): Record<string, boolean> {
   try {
-    const raw: unknown = JSON.parse(localStorage.getItem(OPEN_KEY) ?? "{}");
+    const raw: unknown = JSON.parse(readStored(OPEN_KEY) ?? "{}");
 
     return raw && typeof raw === "object"
       ? (raw as Record<string, boolean>)
@@ -217,12 +218,7 @@ export function useSectionOpen(
     const next = !open;
     sectionOpen[title] = next;
     setOpen(next);
-
-    try {
-      localStorage.setItem(OPEN_KEY, JSON.stringify(sectionOpen));
-    } catch {
-      return;
-    }
+    writeStored(OPEN_KEY, JSON.stringify(sectionOpen));
   };
 
   return [open, toggle];

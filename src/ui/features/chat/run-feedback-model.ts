@@ -1,5 +1,7 @@
 import { useCallback, useState } from "react";
 
+import { readStored, writeStored } from "../../platform/storage.js";
+
 export type Thumb = "up" | "down";
 
 export interface RunFeedback {
@@ -21,7 +23,7 @@ function load(): Store {
   }
 
   try {
-    const raw = window.localStorage.getItem(KEY);
+    const raw = readStored(KEY);
     const parsed: unknown = raw ? JSON.parse(raw) : {};
     cache = parsed && typeof parsed === "object" ? (parsed as Store) : {};
   } catch {
@@ -41,11 +43,7 @@ function save(store: Store): void {
       .forEach((id) => delete store[id]);
   }
 
-  try {
-    window.localStorage.setItem(KEY, JSON.stringify(store));
-  } catch {
-    return;
-  }
+  writeStored(KEY, JSON.stringify(store));
 }
 
 export function readRunFeedback(runId: string): RunFeedback {

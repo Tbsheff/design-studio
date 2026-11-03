@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { readStored, writeStored } from "./storage";
+
 export type PanelTab =
   | "chat"
   | "design"
@@ -28,7 +30,7 @@ const MAX_PROJECTS = 100;
 
 function readAll(): Record<string, PanelTab> {
   try {
-    const raw: unknown = JSON.parse(localStorage.getItem(TAB_KEY) ?? "{}");
+    const raw: unknown = JSON.parse(readStored(TAB_KEY) ?? "{}");
 
     return raw && typeof raw === "object"
       ? (raw as Record<string, PanelTab>)
@@ -50,11 +52,7 @@ function writeTab(projectId: string, tab: PanelTab): void {
   all[projectId] = tab;
   const kept = Object.entries(all).slice(-MAX_PROJECTS);
 
-  try {
-    localStorage.setItem(TAB_KEY, JSON.stringify(Object.fromEntries(kept)));
-  } catch {
-    return;
-  }
+  writeStored(TAB_KEY, JSON.stringify(Object.fromEntries(kept)));
 }
 
 export function usePanelTab(projectId: string, eligible: boolean) {

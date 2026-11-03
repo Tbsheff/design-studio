@@ -27,6 +27,7 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Name each action id `<domain>.<verb>`, or `<domain>.<verb><Object>` when the domain has 2 objects (`canvas.moveLayer`) -> new:action (lands with W9b), check-actions (lands with W9b). (N1)
 - Never hand-write a derived name. From `project.create`: const `createProject`, definition `src/shared/actions/project/create.ts`, handler `src/server/handlers/project/create.ts`, tool `create_project`, route `POST /api/projects`, hook `useAction(createProject)`, types `CreateProjectInput` and `CreateProjectOutput` -> new:action, check-actions (lands with W9b). (N2)
 - Use only these verbs in action ids. Read: `get`, `list`, `search`, `inspect`. Write: `create`, `update`, `set`, `insert`, `rename`, `move`, `duplicate`, `delete`, `restore`. Run: `start`, `stop`, `run`, `apply`, `export`, `import`, `publish`, `unpublish`, `share`. Never `fetch`, `load`, `retrieve`, `make`, `add`, `remove`, `edit`, `handle`, `process`, `do` -> new:action refuses other verbs, check-actions (lands with W9b). (N3)
+- Never use a verb outside the N3 list in an action id, even when a legacy tool name has one (`keep_links`). Keep the old name with `mcp.name` -> `studio/action-verb`. (N3a)
 - Keep every tool name that is in `artifacts/mcp-snapshots/*.json`. Its definition sets `tool: "<old name>"`, and check-actions lists it as a legacy name. A new action never sets `tool` -> check-actions (lands with W9b). (N4)
 - Name files and folders in kebab-case with singular folders, and a React component file in PascalCase. Name a service class `<Noun><Role>` (Store, Runner, Watcher, Queue, Client, Cache), an error `<Noun><Problem>Error`, an event `<domain>.<pastVerb>`, an env var `STUDIO_<NOUN>`. Start a function with a verb above or `to`, `from`, `is`, `has`. Start a boolean with `is`, `has`, `can` or `should` -> `unicorn/filename-case`, review. (N5)
 - Never put `data`, `info`, `item`, `obj`, `thing`, `stuff`, `manager`, `helper`, `util`, `handle`, `process`, `misc`, `Shape`, a `Type` or `Interface` suffix or an `I` prefix in a name. Spell words out. Short forms allowed: `id`, `url`, `html`, `css`, `jsx`, `mcp`, `ui`, `db` -> `anti-slop/no-shape-in-symbol-names`, `id-denylist` (lands with M9b), check-actions (lands with W9b). (N6)
@@ -46,8 +47,10 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Put tenant SQL only in `cloud/api/src/tenant/repos/<table>.ts` -> check-tenant B1, B2 (lands with Auth S1). (W10)
 - Never hand-edit a file that starts with `// @generated` (per-domain `index.ts`, `routes.ts`, `handlers.ts`, `errors/index.ts`, and the global lists). Run `pnpm exec tsx scripts/gen-routes.ts` (the `pnpm run gen:routes` alias lands with S4s) -> `gen-routes --check` in `pnpm run check:scripts`. (W11)
 - Never edit the 5 hand aggregators (`actions/index.ts`, `main/live-layer.ts`, `http/mount-all.ts`, `mcp/registry.ts`, `agent-tools/registry.ts`). They import generated lists -> check-ownership, review. (W12)
+- Never guess a result kind from the output shape in an aggregator (`Schema.is`, `Schema.Struct` in `mcp/registry.ts` and the other 4). Map a declared output schema in an owned adapter file such as `mcp/tool-result.ts` -> `studio/no-output-guess`. (W12a)
 - Import with relative paths and a `.js` suffix. Import another area only through its `index.ts` -> `import/extensions`, boundaries public-index rule. (W13)
 - Let `handlers/<domain>/**` import only `handlers/_core`, service `index.ts` files, platform and `actions`. A domain never imports another domain -> check-actions (import scan) (lands with S4s). (W14)
+- Never import a service file past its area `index.ts` from a handler (`../../canvas/canvas-store.js`). Export the service from `src/server/<area>/index.ts` -> `studio/no-deep-area-import`. (W14a)
 
 - Put npm-publishable code only in `packages/ui` or `packages/common/<name>`. Put every app in `apps/<name>`: `apps/desktop` (Electron, local server, UI, bridge), `apps/api` (auth and tenant Worker), `apps/publish` (published-design Worker), `apps/web` (browser app for sign-in, orgs, keys and confirms). Shared code goes in publishable packages: `packages/common/<name>` (shared non-UI code, first `packages/common/actions`) and `packages/ui` (UI kit). A package never imports an app. Today the repo root and `cloud/*` are the old paths; new cloud API code goes in `apps/api` -> review-only. (W15)
 ## 2. How to add an action
@@ -60,6 +63,7 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Put `projectId` in the input of every `scope: "project"` action -> tsc `ScopeCheck` (error key `projectScopeNeedsProjectId`) (lands with S4b). (E6)
 - Set `confirm: "user"` on every `destructive` action and every action whose `needs` is a confirm permission (publish, share, delete) -> tsc `ConfirmCheck` (`actionNeedsConfirmUser`), tsc `Entries` (a missing `preview` fails) (lands with S4b). (E7)
 - Give `mcp` `{ name }` or `{ off }`. Give `agent` `{ lean, name, set, short }` or `{ off }`. `set` is the tool set (`app`, `core`, `design-system`, `kit`, `tweak`). `short` is the 20 to 160 char tool text. The only off reasons are `run-control`, `secret`, `stream` and `ui-bootstrap` -> tsc (closed unions) (lands with S4b), check-actions (runs start, steer and stop must be `run-control`) (lands with S4s). (E8)
+- Never set agent `{ off: "ui-bootstrap" }` on a write or on an action with an MCP name. While a legacy agent tool still serves it, set `{ off: "legacy-agent" }`; the count may only go down -> `studio/agent-off-reason`, check-actions (E8 `LEGACY_AGENT_MAX` cap). (E8a)
 - Write tool names out in full. Never rename a name that is in `artifacts/mcp-snapshots/*.json` (each P5 slice writes its file; see N4). Every name is unique snake_case, 64 chars max -> check-actions (lands with S4s), `scripts/mcp-schema-diff.ts` (lands with S4c). (E9)
 - Write the description in STE, 20 to 600 chars, with no `TODO` -> check-actions (lands with S4s). (E10)
 - List in `invalidates` the read action ids whose data the action changes -> new:action (asks for it), check-actions (warns on an edit action with `[]`) (lands with S4s). (E11)
@@ -67,6 +71,7 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Write handlers as `Effect.fn("<action id>")(function* run(input: Input<typeof action>) {...}) satisfies Handle<typeof action>`. Use `satisfies`, never a type annotation, so the exact `R` stays visible -> tsc (lands with S4b), check-actions (pattern match) (lands with S4s). (E13)
 - Keep handlers thin: yield services, call them, shape the output. No `node:*`, `hono`, MCP or SDK imports -> `no-restricted-imports` on `handlers/**` (lands with M9b), `max-lines-per-function` 80. (E14)
 - Remove `NotImplemented` from `errors` before you commit. The stamp puts it there so the stub compiles -> check-actions fails while any action lists it (lands with S4s). (E15)
+- Never ship a cloud route that only fails with `NotImplemented`. Leave the route out of its group until it has a handler -> `studio/no-stub-route`. (E15a)
 - Never add a migrated action to `agent/tool-sets.ts`, `agent/tool-help.ts`, the `agent/permissions.ts` name lists or `EDITS_NOTE`. The registries derive the agent allowlist, tool sets, help, edit set, plan and critique blocks, the MCP Allow-edits gate and the MCP annotations from AllActions (`agent/legacy/agent-ops.ts`) -> check-actions (every agent name is in the derived allowlist; no action name is in a legacy list) (lands with S4s). (E16)
 
 ## 3. Services and Effect
@@ -95,6 +100,7 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Let gen-routes merge the status maps into `_core/http-status.ts` and the tag unions into `_core/errors/all.ts` -> `gen-routes --check`, tsc (`satisfies Record<StudioErrorTag | "Defect", HttpStatus>`) (lands with S4a). (R5)
 - Make the wire body only with `toWire` from `actions/_core/wire.ts`: `{ _tag, code, error, message, ...data }`. An error with a payload has a `code` field and a `data` field (`PickApp` has `code: "pick_app"` and `data: { candidates }`) -> golden `http/mount.ts` (lands with S4b), S-error-shape smoke (lands with S4c). (R6)
 - Send a defect as `toWire(null)` (500). The runner logs it with `Effect.logError(action.id, defect)`. Never send stacks or paths -> run-action `tapDefect`, adapter `reply` (lands with S4b). (R7)
+- Never map `Cause.UnknownError` to a 400 in a local bridge. Use `attemptKnown` from `src/server/platform/attempt/index.ts`: it maps only the known store errors and lets the rest die as defects -> `studio/no-local-error-bridge`. (R7a)
 - Write `message` as user text in STE. MCP and the agent show it as it is -> review-only. (R8)
 
 ## 5. Tenancy
@@ -113,9 +119,12 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 ## 6. UI
 
 - Let only `src/ui/platform/**` touch `fetch`, `EventSource`, `BroadcastChannel`, storage, `history` and `window.studioDesktop` -> `no-restricted-globals`, `no-restricted-properties` (message names the fix) (lands with S6a). (U1)
+- Never read `window.studioDesktop` outside `src/ui/platform/**`. Use `desktopBridge` or `isDesktop` from `src/ui/platform/desktop.ts` -> `studio/no-desktop-global`. (U1a)
 - Read and write with the one hook `useAction(<action>)`. A read also passes `input` (lands with S6a). Until then, call actions with `call(action, input)` from `src/ui/platform/http.ts` -> U1 rules, review. (U2)
+- Never call `useAction` on a read action (`get*`, `list*`, `search*`, `inspect*`) with no input, because the read never runs. Pass `{}` when the input is empty -> `studio/read-needs-input`. (U2a)
 - Value-import only `actions/<domain>/routes.ts` in the UI. Import every other definition file with `import type` -> `no-restricted-imports` with `allowTypeImports` (lands with M9b). (U3)
 - Use wire types in the UI (`WireInput<Action>`, `WireOutput<Action>`, `<Name>Wire`), never decoded branded types -> tsc. (U4)
+- Never cast an action call with `as Promise<...>`. `call` returns the wire output of the route -> `studio/no-promise-cast`. (U4a)
 - Never import `effect` or `zod` values in `src/ui` or `src/bridge` -> `no-restricted-imports` (lands with M9b), check-bundle (lands with S4s). (U5)
 - Give each feature this shape: `index.ts` (lazy named exports only), one component per kebab-case `.tsx`, `use-<thing>.ts` hooks, `copy.ts`, `<thing>-model.ts` -> new:feature (lands with S4s), `react/no-multi-comp`, `react/jsx-no-literals`, `unicorn/filename-case`. (U6)
 - Never import one feature from another. `ui/app` composes features -> boundaries (feature to feature disallowed) (lands with M9b). (U7)
@@ -124,6 +133,7 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Wrap every function prop in `useCallback` -> `react_perf/jsx-no-new-function-as-prop` and the other `react_perf` rules. (U10)
 - Lazy-load every dialog, panel and route that is not on Home -> check-bundle (B1) (lands with S4s). (U11)
 - Refresh data only through `action.invalidates`: `useAction` refetches after its own call, and the `action.done` SSE event (emitted by `run-action.ts`) covers MCP and agent calls (lands with S5-events). No polling, no TTL caches -> check-actions (bans `setInterval` with a fetch in `ui/platform`) (lands with S4s). (U12)
+- Never keep a time-based cache (warm, TTL, max age) in `src/ui/platform/**`. Dedupe in-flight reads only -> `studio/no-cache-ttl`. (U12a)
 - Use `.ui-menu` styles, 28 px rows, `data-tip` tooltips and `tokens.css`. Check dark and light -> review-only, screenshots. (U13)
 
 ## 7. Performance
@@ -144,6 +154,7 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Write no comments. The only allowed one is the `// @generated` header -> no-comments pre-commit hook. (L1)
 - Keep each function at complexity 20 or less, 80 lines, 4 params and 30 statements. Keep files at 500 lines or less -> cccc hook, `complexity`, `max-*` rules. (L2)
 - Put one `export { }` block and one `export type { }` block at the end of each file. No default exports -> `import/group-exports`, `import/exports-last`, `import/no-default-export`. (L3)
+- Never write `export * from` in `src/ui`. Use named re-exports, or import from the real module -> `studio/no-wildcard-reexport`. (L3a)
 - Use arrow consts, `null` (never `undefined`), `readonly` fields and no ternaries -> `func-style`, `no-undefined`, `no-ternary`. (L4)
 - Keep new folders at 0 diagnostics with every rule on. Run `pnpm run lint:gate`: 0 errors, and the warning count may only go down -> budget-0 folders in `scripts/lint-gate.ts`, G-lint. (L5)
 - Never edit `scripts/lint-baseline.json`, `oxlint.config.ts`, `lint/**` or `scripts/waves.json` in a slice. The merge step owns them. A slice may add only the narrowest scoped entry to `decisionOverrides` in `lint/decisions.ts` for a reason the spec forces, and must name it in its commit -> check-ownership. (L6)

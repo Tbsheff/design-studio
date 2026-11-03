@@ -13,6 +13,7 @@ import {
 import { legacy } from "./lint/legacy.ts";
 import { antiSlop, core, js, jsPluginSettings, react } from "./lint/presets.ts";
 import { serverOrder } from "./lint/server-order.ts";
+import { STUDIO_PLUGIN, studio } from "./lint/studio.ts";
 
 export const LINT_IGNORES = [
   ...(core.ignorePatterns ?? []),
@@ -69,6 +70,7 @@ export default defineConfig({
     ...(js.jsPlugins ?? []),
     "eslint-plugin-boundaries",
     "eslint-plugin-playwright",
+    STUDIO_PLUGIN,
   ],
   options: { typeAware: false },
   ignorePatterns: LINT_IGNORES,
@@ -82,5 +84,6 @@ export default defineConfig({
     ...decisionOverrides,
     ...TEST_OVERRIDES,
     ...dayOne,
+    ...studio,
   ],
 });

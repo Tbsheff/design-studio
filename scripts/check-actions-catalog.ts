@@ -47,6 +47,10 @@ const OFF_REASONS = new Set([
   "ui-bootstrap",
 ]);
 
+const AGENT_OFF_REASONS = new Set([...OFF_REASONS, "legacy-agent"]);
+
+const LEGACY_AGENT_MAX = 73;
+
 const TOOL_NAME = /^[a-z][a-z0-9_]*$/u;
 
 const MAX_NAME = 64;
@@ -174,14 +178,42 @@ const badName = (binding: Binding): string | null => {
   return name;
 };
 
-const badOff = (binding: Binding): string | null => {
+const offIn = (
+  reasons: ReadonlySet<string>,
+  binding: Binding
+): string | null => {
   const off = binding.off ?? null;
 
-  if (off === null || OFF_REASONS.has(off)) {
+  if (off === null || reasons.has(off)) {
     return null;
   }
 
   return off;
+};
+
+const badOff = (binding: Binding): string | null => offIn(OFF_REASONS, binding);
+
+const badAgentOff = (binding: Binding): string | null =>
+  offIn(AGENT_OFF_REASONS, binding);
+
+const isLegacyAgent = (row: OpRow): boolean =>
+  row.op.agent.off === "legacy-agent";
+
+const LEGACY_AGENT: RuleText = {
+  fix: `give the action agent { lean, name, set, short }, or lower LEGACY_AGENT_MAX in scripts/check-actions-catalog.ts when the count drops`,
+  id: "E8",
+  what: `more than ${String(LEGACY_AGENT_MAX)} actions set agent off legacy-agent`,
+};
+
+const legacyAgentHits = (rows: OpRow[]): Hit[] => {
+  const legacy = rows.filter((row) => isLegacyAgent(row));
+  const [first = null] = legacy;
+
+  if (first === null || legacy.length <= LEGACY_AGENT_MAX) {
+    return [];
+  }
+
+  return [opHit(LEGACY_AGENT, first, `${String(legacy.length)} actions`)];
 };
 
 const fieldsOf = (schema: SchemaLike): Readonly<Record<string, SchemaLike>> =>
@@ -286,9 +318,9 @@ const OP_CHECKS: OpCheck[] = [
     warn: false,
   },
   {
-    bad: (row) => firstOf(badOff(row.op.mcp), badOff(row.op.agent)),
+    bad: (row) => firstOf(badOff(row.op.mcp), badAgentOff(row.op.agent)),
     rule: {
-      fix: "use run-control, secret, stream or ui-bootstrap",
+      fix: "use run-control, secret, stream or ui-bootstrap, and legacy-agent only on agent",
       id: "O8",
       what: "an off reason is not in the closed set",
     },
@@ -373,6 +405,7 @@ const opReport = async (rows: OpRow[], flags: OpFlags): Promise<OpReport> => {
     problems: [
       ...UNIQUE.flatMap((unique) => dupeHits(rows, unique)),
       ...failing.flatMap((check) => checkHits(rows, check)),
+      ...legacyAgentHits(rows),
       ...later.flat(),
     ],
     warnings: warning.flatMap((check) => checkHits(rows, check)),

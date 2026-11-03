@@ -51,14 +51,14 @@ export interface CommentExtras {
   offset?: CommentTarget["offset"];
 }
 
-function targetWith(
+const targetWith = (
   selection: SelectionContext,
   offset: CommentTarget["offset"]
-): CommentTarget {
+): CommentTarget => {
   const target = targetFromSelection(selection);
 
   return offset ? { ...target, offset } : target;
-}
+};
 
 export interface CommentsControl {
   directionId: string | null;
@@ -113,31 +113,27 @@ export type OnPrefill = (prefill: CommentPrefill) => void;
 
 const SHOW_RESOLVED_KEY = "studio.comments.showResolved";
 
-function readShowResolved(): boolean {
-  return readStored(SHOW_RESOLVED_KEY) === "1";
-}
+const readShowResolved = (): boolean => readStored(SHOW_RESOLVED_KEY) === "1";
 
 const RUNNING_NOTICE = "Agent is running: queued";
 const DESCRIBE_TIMEOUT_MS = 800;
 
-function base(projectId: string, directionId: string): string {
-  return `/api/projects/${encodeURIComponent(projectId)}/d/${encodeURIComponent(directionId)}/comments`;
-}
+const base = (projectId: string, directionId: string): string =>
+  `/api/projects/${encodeURIComponent(projectId)}/d/${encodeURIComponent(directionId)}/comments`;
 
-function queuedOf(comments: DesignComment[]): DesignComment[] {
-  return comments.filter((comment) => comment.status === "queued");
-}
+const queuedOf = (comments: DesignComment[]): DesignComment[] =>
+  comments.filter((comment) => comment.status === "queued");
 
-async function describeWithTimeout(
+const describeWithTimeout = async (
   describe: DescribeAnchors | null,
   comments: DesignComment[]
-): Promise<Record<string, SelectionContext>> {
+): Promise<Record<string, SelectionContext>> => {
   if (!describe || comments.length === 0) {
     return {};
   }
 
   const timeout = new Promise<null>((resolve) =>
-    window.setTimeout(() => resolve(null), DESCRIBE_TIMEOUT_MS)
+    globalThis.setTimeout(() => resolve(null), DESCRIBE_TIMEOUT_MS)
   );
 
   const contexts = await Promise.race([
@@ -155,15 +151,15 @@ async function describeWithTimeout(
   });
 
   return out;
-}
+};
 
-function frameField(ref: MutableRefObject<CommentFrame | null>): {
+const frameField = (
+  ref: MutableRefObject<CommentFrame | null>
+): {
   frame?: CommentFrame;
-} {
-  return ref.current ? { frame: ref.current } : {};
-}
+} => (ref.current ? { frame: ref.current } : {});
 
-function usePicks(comments: DesignComment[]) {
+const usePicks = (comments: DesignComment[]) => {
   const [picked, setPicked] = useState<string[]>([]);
   useEffect(() => {
     setPicked((prev) => {
@@ -187,16 +183,16 @@ function usePicks(comments: DesignComment[]) {
 
   const clearPicked = useCallback(() => setPicked([]), []);
 
-  return { picked, togglePick, clearPicked };
-}
+  return { clearPicked, picked, togglePick };
+};
 
-export function useComments(
+export const useComments = (
   projectId: string,
   directionId: string | null,
   composerActive = false,
   running = false,
   onPrefill?: OnPrefill
-): CommentsControl {
+): CommentsControl => {
   const [comments, setComments] = useState<DesignComment[]>([]);
   const [notice, setNotice] = useState<string | null>(null);
   const [sending, startSending] = useTransition();
@@ -231,6 +227,7 @@ export function useComments(
     }
 
     let alive = true;
+
     const load = async () => {
       try {
         const list = await json<DesignComment[]>(
@@ -241,9 +238,9 @@ export function useComments(
         if (alive) {
           setComments(list);
         }
-      } catch (err: unknown) {
+      } catch (error: unknown) {
         if (alive) {
-          setNotice(errorText(err));
+          setNotice(errorText(error));
         }
       }
     };
@@ -301,17 +298,17 @@ export function useComments(
           );
 
           await call("POST", "/send", {
-            ids: chosen.map((comment) => comment.id),
             contexts,
+            ids: chosen.map((comment) => comment.id),
           });
           setNotice(null);
-        } catch (err) {
+        } catch (error) {
           setNotice(
-            err instanceof ApiError &&
-              err.status === 409 &&
-              err.tag === "run_in_progress"
+            error instanceof ApiError &&
+              error.status === 409 &&
+              error.tag === "run_in_progress"
               ? RUNNING_NOTICE
-              : errorText(err)
+              : errorText(error)
           );
         }
       })();
@@ -370,13 +367,13 @@ export function useComments(
 
         for (const selection of selections) {
           const comment = await call<DesignComment>("POST", "", {
-            text: clean,
+            context: selection,
+            status: now ? "draft" : "queued",
             target: targetWith(
               selection,
               selections.length === 1 ? extras.offset : undefined
             ),
-            context: selection,
-            status: now ? "draft" : "queued",
+            text: clean,
             ...frameField(frameRef),
             ...(extras.mentions?.length ? { mentions: extras.mentions } : {}),
             ...(extras.attachmentIds?.length
@@ -396,8 +393,8 @@ export function useComments(
         await deliver(created, toClaude);
 
         return true;
-      } catch (err) {
-        setNotice(errorText(err));
+      } catch (error) {
+        setNotice(errorText(error));
 
         return false;
       }
@@ -432,8 +429,8 @@ export function useComments(
     async (id: string, patch: CommentPatch) => {
       try {
         await call("PATCH", `/${encodeURIComponent(id)}`, patch);
-      } catch (err) {
-        setNotice(errorText(err));
+      } catch (error) {
+        setNotice(errorText(error));
       }
     },
     [call]
@@ -444,8 +441,8 @@ export function useComments(
       try {
         await call("DELETE", `/${encodeURIComponent(id)}`);
         setOpenId((current) => (current === id ? null : current));
-      } catch (err) {
-        setNotice(errorText(err));
+      } catch (error) {
+        setNotice(errorText(error));
       }
     },
     [call]
@@ -465,8 +462,8 @@ export function useComments(
 
       try {
         await call("POST", "/reorder", { ids });
-      } catch (err) {
-        setNotice(errorText(err));
+      } catch (error) {
+        setNotice(errorText(error));
       }
     },
     [call]
@@ -486,8 +483,8 @@ export function useComments(
       }
 
       await update(id, {
-        target: targetWith(selection, offset),
         context: selection,
+        target: targetWith(selection, offset),
         ...(comment.status === "orphaned" ? { status: "queued" as const } : {}),
       });
     },
@@ -547,8 +544,8 @@ export function useComments(
         await deliver([comment], input.toClaude);
 
         return true;
-      } catch (err) {
-        setNotice(errorText(err));
+      } catch (error) {
+        setNotice(errorText(error));
 
         return false;
       }
@@ -576,8 +573,8 @@ export function useComments(
         }
 
         return comment !== null;
-      } catch (err) {
-        setNotice(errorText(err));
+      } catch (error) {
+        setNotice(errorText(error));
 
         return false;
       }
@@ -596,8 +593,8 @@ export function useComments(
         if (comment) {
           merge(comment);
         }
-      } catch (err) {
-        setNotice(errorText(err));
+      } catch (error) {
+        setNotice(errorText(error));
       }
     },
     [call, merge]
@@ -646,8 +643,8 @@ export function useComments(
 
           clearPicks();
           setNotice(null);
-        } catch (err) {
-          setNotice(errorText(err));
+        } catch (error) {
+          setNotice(errorText(error));
         }
       })();
 
@@ -691,4 +688,4 @@ export function useComments(
     toChat,
     preparing,
   };
-}
+};

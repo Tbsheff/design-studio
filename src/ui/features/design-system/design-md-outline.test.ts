@@ -4,10 +4,11 @@ import { outlineOf } from "./design-md-outline.js";
 
 describe(outlineOf, () => {
   it("lists headings with line and offset and skips code fences", () => {
+    expect.hasAssertions();
     const md =
       "# Brand\n\nIntro\n\n## Color\n\n```md\n## Not a heading\n```\n\n### Type **scale**\n";
 
-    expect(outlineOf(md)).toEqual([
+    expect(outlineOf(md)).toStrictEqual([
       { level: 1, line: 0, offset: 0, text: "Brand" },
       { level: 2, line: 4, offset: 16, text: "Color" },
       {

@@ -12,8 +12,6 @@ import {
   AttachmentProgress,
 } from "../../ai/components/ai/attachment.js";
 import { Chip } from "../../ai/components/ai/chip.js";
-
-import "../../styles/reference.css";
 import { api } from "../../api.js";
 import type { PendingAttachment } from "../../domain/pending-attachment.js";
 import { Icon } from "../../kit/Icon.js";
@@ -23,13 +21,13 @@ import { modelLabel } from "./settings-draft-model.js";
 
 export type { PendingAttachment } from "../../domain/pending-attachment.js";
 
-export function SelectionChips({
+export const SelectionChips = ({
   selection,
   onRemove,
 }: {
   selection: SelectionContext[];
   onRemove: (selector: string) => void;
-}) {
+}) => {
   if (selection.length === 0) {
     return null;
   }
@@ -61,9 +59,9 @@ export function SelectionChips({
       ))}
     </div>
   );
-}
+};
 
-function ThumbState({ file }: { file: PendingAttachment }) {
+const ThumbState = ({ file }: { file: PendingAttachment }) => {
   if (file.error) {
     return (
       <AttachmentOverlay className="rounded-outer bg-destructive/15 text-xs font-semibold text-destructive">
@@ -82,11 +80,11 @@ function ThumbState({ file }: { file: PendingAttachment }) {
       <span className="sr-only">Uploading</span>
     </AttachmentOverlay>
   );
-}
+};
 
 const NAME_ROOM = 30;
 
-function shortName(name: string): string {
+const shortName = (name: string): string => {
   if (name.length <= NAME_ROOM) {
     return name;
   }
@@ -94,20 +92,20 @@ function shortName(name: string): string {
   const tail = name.slice(-12);
 
   return `${name.slice(0, NAME_ROOM - tail.length - 1)}…${tail}`;
-}
+};
 
 const plainUploads = new WeakMap<PendingAttachment, UploadedAttachment>();
 
-function unmark(file: PendingAttachment): void {
+const unmark = (file: PendingAttachment): void => {
   const plain = plainUploads.get(file);
 
   if (plain) {
     file.attachment = plain;
   }
-}
+};
 
-async function markAsReference(file: PendingAttachment): Promise<void> {
-  const projectId = projectFromPath(window.location.pathname);
+const markAsReference = async (file: PendingAttachment): Promise<void> => {
+  const projectId = projectFromPath(globalThis.location.pathname);
 
   if (!projectId || !file.attachment) {
     throw new Error("Open a project first");
@@ -127,9 +125,9 @@ async function markAsReference(file: PendingAttachment): Promise<void> {
   }
 
   file.attachment = uploaded;
-}
+};
 
-function useReferenceToggle(files: PendingAttachment[]) {
+const useReferenceToggle = (files: PendingAttachment[]) => {
   const [busy, setBusy] = useState<string | null>(null);
   const [, setTick] = useState(0);
 
@@ -158,9 +156,9 @@ function useReferenceToggle(files: PendingAttachment[]) {
   };
 
   return { busy, toggle };
-}
+};
 
-function ReferenceToggle({
+const ReferenceToggle = ({
   file,
   busy,
   onToggle,
@@ -168,7 +166,7 @@ function ReferenceToggle({
   file: PendingAttachment;
   busy: boolean;
   onToggle: () => void;
-}) {
+}) => {
   if (!file.attachment || file.error) {
     return null;
   }
@@ -197,15 +195,15 @@ function ReferenceToggle({
       {busy ? "…" : "Ref"}
     </button>
   );
-}
+};
 
-export function AttachmentThumbs({
+export const AttachmentThumbs = ({
   files,
   onRemove,
 }: {
   files: PendingAttachment[];
   onRemove: (localId: string) => void;
-}) {
+}) => {
   const reference = useReferenceToggle(files);
 
   if (files.length === 0) {
@@ -250,19 +248,17 @@ export function AttachmentThumbs({
       ))}
     </div>
   );
-}
+};
 
-export function ModelTag({ model }: { model: string }) {
-  return (
-    <Chip
-      size="sm"
-      className="model-tag mr-1 shrink-0 font-semibold whitespace-nowrap"
-      data-testid="active-model"
-      data-tip={`Model: ${model}`}
-    >
-      <Icon name="sparkle" size={12} />
-      {modelLabel(model).replace(/^Claude /, "")}
-      <span className="sr-only">({model})</span>
-    </Chip>
-  );
-}
+export const ModelTag = ({ model }: { model: string }) => (
+  <Chip
+    size="sm"
+    className="model-tag mr-1 shrink-0 font-semibold whitespace-nowrap"
+    data-testid="active-model"
+    data-tip={`Model: ${model}`}
+  >
+    <Icon name="sparkle" size={12} />
+    {modelLabel(model).replace(/^Claude /u, "")}
+    <span className="sr-only">({model})</span>
+  </Chip>
+);

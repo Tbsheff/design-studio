@@ -14,10 +14,10 @@ import { packApi } from "../../platform/pack-api.js";
 
 type ImproveEnd = { runId: string; status: RunStatus } | null;
 
-export function useDraftSources(
+export const useDraftSources = (
   projectId: string,
   enabled: boolean
-): { state: DraftSourcesState | null; improveEnd: RunStatus | null } {
+): { state: DraftSourcesState | null; improveEnd: RunStatus | null } => {
   const [state, setState] = useState<DraftSourcesState | null>(null);
   const [end, setEnd] = useState<ImproveEnd>(null);
 
@@ -38,7 +38,7 @@ export function useDraftSources(
           run.summary.status !== "running" &&
           setEnd({ runId, status: run.summary.status })
       )
-      .catch(() => undefined);
+      .catch(() => null);
 
     return () => {
       live = false;
@@ -55,7 +55,7 @@ export function useDraftSources(
     packApi
       .getDesignSystemDraft(projectId)
       .then((info) => live && setState((prev) => prev ?? info.sources ?? null))
-      .catch(() => undefined);
+      .catch(() => null);
 
     return () => {
       live = false;
@@ -71,39 +71,39 @@ export function useDraftSources(
     }
   });
 
-  return { state, improveEnd: end && end.runId === runId ? end.status : null };
-}
+  return { improveEnd: end && end.runId === runId ? end.status : null, state };
+};
 
 const KIND_ICON: Record<
   DraftSourceStatus["kind"],
   Parameters<typeof Icon>[0]["name"]
 > = {
-  url: "globe",
-  "design-md": "doc",
   brief: "pencil",
-  "tokens-file": "token",
+  "design-md": "doc",
   folder: "folder",
   images: "image",
+  "tokens-file": "token",
+  url: "globe",
 };
 
 const STATE_LABEL: Record<DraftSourceStatus["state"], string> = {
-  queued: "Waiting",
-  reading: "Reading",
-  read: "Read",
-  thin: "Little found",
   blocked: "Blocked",
   failed: "Failed",
+  queued: "Waiting",
+  read: "Read",
+  reading: "Reading",
+  thin: "Little found",
 };
 
-function seconds(ms: number | undefined): string | null {
+const seconds = (ms: number | undefined): string | null => {
   if (ms === undefined) {
     return null;
   }
 
   return ms < 1000 ? `${ms} ms` : `${(ms / 1000).toFixed(1)} s`;
-}
+};
 
-function StateMark({ state }: { state: DraftSourceStatus["state"] }) {
+const StateMark = ({ state }: { state: DraftSourceStatus["state"] }) => {
   if (state === "reading") {
     return <span className="spinner" aria-hidden="true" />;
   }
@@ -117,9 +117,9 @@ function StateMark({ state }: { state: DraftSourceStatus["state"] }) {
   }
 
   return <span className="ds-src-dot" aria-hidden="true" />;
-}
+};
 
-function SourceRow({ source }: { source: DraftSourceStatus }) {
+const SourceRow = ({ source }: { source: DraftSourceStatus }) => {
   const time = seconds(source.ms);
 
   return (
@@ -148,9 +148,9 @@ function SourceRow({ source }: { source: DraftSourceStatus }) {
       </div>
     </li>
   );
-}
+};
 
-function summary(state: DraftSourcesState): string {
+const summary = (state: DraftSourcesState): string => {
   const real = state.sources.filter((source) => source.kind !== "images");
 
   const finished = real.filter(
@@ -168,9 +168,9 @@ function summary(state: DraftSourcesState): string {
   return problems > 0
     ? `${real.length - problems} of ${real.length} read`
     : "All read";
-}
+};
 
-function startedNote(end: RunStatus | null): string {
+const startedNote = (end: RunStatus | null): string => {
   if (end === null || end === "running") {
     return "The AI step started. Follow its steps in the chat below.";
   }
@@ -184,12 +184,12 @@ function startedNote(end: RunStatus | null): string {
   }
 
   return "The AI step did not finish. See the chat below, then use Improve with AI.";
-}
+};
 
-function improveNote(
+const improveNote = (
   state: DraftSourcesState,
   end: RunStatus | null
-): string | null {
+): string | null => {
   if (!state.done) {
     return "When every source is read, the AI step starts by itself.";
   }
@@ -207,7 +207,7 @@ function improveNote(
   }
 
   return null;
-}
+};
 
 const NEEDS_LOOK = new Set<DraftSourceStatus["state"]>([
   "thin",
@@ -215,13 +215,13 @@ const NEEDS_LOOK = new Set<DraftSourceStatus["state"]>([
   "failed",
 ]);
 
-export function DraftSources({
+export const DraftSources = ({
   state,
   improveEnd,
 }: {
   state: DraftSourcesState | null;
   improveEnd: RunStatus | null;
-}) {
+}) => {
   const [open, setOpen] = useState(false);
   const listId = useId();
 
@@ -279,7 +279,7 @@ export function DraftSources({
       {note && <p className="ds-src-note">{note}</p>}
     </section>
   );
-}
+};
 
 export interface DraftChrome {
   banner: ReactNode;
@@ -289,10 +289,10 @@ export interface DraftChrome {
   unfinished: (visible: boolean) => boolean;
 }
 
-export function useDraftChrome(
+export const useDraftChrome = (
   projectId: string,
   project: Project | null
-): DraftChrome {
+): DraftChrome => {
   const backing = Boolean(project?.designSystemFor);
   const { state, improveEnd } = useDraftSources(projectId, backing);
   const reading = state !== null && !state.done;
@@ -301,9 +301,9 @@ export function useDraftChrome(
     banner: backing ? (
       <DraftSources state={state} improveEnd={improveEnd} />
     ) : null,
-    reading,
-    waitReason: reading ? "Wait for the sources to finish reading..." : null,
     locked: (running) => running || reading,
+    reading,
     unfinished: (visible) => visible && !reading,
+    waitReason: reading ? "Wait for the sources to finish reading..." : null,
   };
-}
+};

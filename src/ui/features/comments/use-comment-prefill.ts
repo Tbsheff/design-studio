@@ -13,23 +13,22 @@ interface Options {
   focus: () => void;
 }
 
-function filesOf(prefill: CommentPrefill): PendingAttachment[] {
-  return prefill.attachments.map((item) => ({
+const filesOf = (prefill: CommentPrefill): PendingAttachment[] =>
+  prefill.attachments.map((item) => ({
+    attachment: { id: item.id, mime: "image/png", name: item.name, path: "" },
+    error: null,
     localId: `comment-${item.id}`,
     name: item.name,
     previewUrl: item.dataUrl,
-    attachment: { id: item.id, name: item.name, mime: "image/png", path: "" },
-    error: null,
   }));
-}
 
-export function useCommentPrefill({
+export const useCommentPrefill = ({
   request,
   draft,
   setFiles,
   maxImages,
   focus,
-}: Options) {
+}: Options) => {
   const [linked, setLinked] = useState<string[]>([]);
   const seen = useRef<number | null>(null);
   const focusRef = useRef(focus);
@@ -55,5 +54,5 @@ export function useCommentPrefill({
     focusRef.current();
   }, [request, draft, setFiles, maxImages]);
 
-  return { linked, clear: () => setLinked([]) };
-}
+  return { clear: () => setLinked([]), linked };
+};

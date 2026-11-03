@@ -1,21 +1,23 @@
-import { useId, useRef, type KeyboardEvent } from "react";
+import { useId, useRef } from "react";
+import type { KeyboardEvent } from "react";
 
-import { RUN_LEVELS, type RunLevel } from "../../../shared/contracts.js";
+import { RUN_LEVELS } from "../../../shared/contracts.js";
+import type { RunLevel } from "../../../shared/contracts.js";
 import { LEVEL_PRESETS } from "../../../shared/run-levels.js";
 
 const STEP: Record<string, number> = {
-  ArrowRight: 1,
   ArrowDown: 1,
   ArrowLeft: -1,
+  ArrowRight: 1,
   ArrowUp: -1,
 };
 
-export function nextRadioOption<T>(
+export const nextRadioOption = <T,>(
   options: readonly T[],
   current: T,
   key: string,
   isDisabled: (option: T) => boolean = () => false
-): T | null {
+): T | null => {
   const enabled = options.filter((option) => !isDisabled(option));
 
   if (enabled.length === 0) {
@@ -27,7 +29,7 @@ export function nextRadioOption<T>(
   }
 
   if (key === "End") {
-    return enabled[enabled.length - 1] ?? null;
+    return enabled.at(-1) ?? null;
   }
 
   const step = STEP[key];
@@ -43,14 +45,14 @@ export function nextRadioOption<T>(
   }
 
   return enabled[(at + step + enabled.length) % enabled.length] ?? null;
-}
+};
 
-export function useRovingRadioGroup<T extends string | number>(
+export const useRovingRadioGroup = <T extends string | number>(
   options: readonly T[],
   value: T,
   onChange: (next: T) => void,
   isDisabled?: (option: T) => boolean
-) {
+) => {
   const refs = useRef(new Map<T, HTMLButtonElement | null>());
 
   const onKeyDown = (event: KeyboardEvent) => {
@@ -76,8 +78,8 @@ export function useRovingRadioGroup<T extends string | number>(
     tabIndex: option === value ? 0 : -1,
   });
 
-  return { onKeyDown, item };
-}
+  return { item, onKeyDown };
+};
 
 interface Props {
   value: RunLevel;
@@ -86,17 +88,18 @@ interface Props {
   tipSide?: "top" | "bottom";
 }
 
-export function LevelControl({
+export const LevelControl = ({
   value,
   onChange,
   disabled,
   tipSide = "top",
-}: Props) {
+}: Props) => {
   const baseId = useId();
   const radios = useRovingRadioGroup(RUN_LEVELS, value, onChange);
 
   return (
     <div
+      tabIndex={0}
       className="segmented level-control"
       role="radiogroup"
       aria-label="Run level"
@@ -132,37 +135,36 @@ export function LevelControl({
       ))}
     </div>
   );
-}
+};
 
-export function levelLabel(level: RunLevel): string {
-  return LEVEL_PRESETS[level].label;
-}
+export const levelLabel = (level: RunLevel): string =>
+  LEVEL_PRESETS[level].label;
 
-export function levelHint(level: RunLevel): string {
-  return LEVEL_PRESETS[level].hint;
-}
+export const levelHint = (level: RunLevel): string => LEVEL_PRESETS[level].hint;
 
-export function levelGist(level: RunLevel): {
+export const levelGist = (
+  level: RunLevel
+): {
   hint: string;
   cost: string | null;
-} {
-  const match = /^(.*?) \(usually ([^,)]+)/.exec(LEVEL_PRESETS[level].hint);
+} => {
+  const match = /^(.*?) \(usually ([^,)]+)/u.exec(LEVEL_PRESETS[level].hint);
 
   if (!match) {
-    return { hint: levelShortHint(level), cost: null };
+    return { cost: null, hint: levelShortHint(level) };
   }
 
-  return { hint: match[1] ?? "", cost: (match[2] ?? "").replace(" to ", "–") };
-}
+  return { cost: (match[2] ?? "").replace(" to ", "–"), hint: match[1] ?? "" };
+};
 
-export function levelShortHint(level: RunLevel): string {
-  const hint = LEVEL_PRESETS[level].hint;
-  const match = /^(.*?) \(usually ([^,)]+)/.exec(hint);
+export const levelShortHint = (level: RunLevel): string => {
+  const { hint } = LEVEL_PRESETS[level];
+  const match = /^(.*?) \(usually ([^,)]+)/u.exec(hint);
 
   return match ? `${match[1]}, ${match[2]}` : (hint.split(". ")[0] ?? hint);
-}
+};
 
-export function ChoiceItem({
+export const ChoiceItem = ({
   label,
   hint,
   meta,
@@ -178,7 +180,7 @@ export function ChoiceItem({
   checked: boolean;
   focusable?: boolean;
   onPick: () => void;
-}) {
+}) => {
   const id = useId();
 
   return (
@@ -205,4 +207,4 @@ export function ChoiceItem({
       </span>
     </button>
   );
-}
+};

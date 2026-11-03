@@ -10,11 +10,11 @@ interface RunLevelState {
   clearError: () => void;
 }
 
-export function useRunLevel(
+export const useRunLevel = (
   projectId: string,
   saved: RunLevel | undefined,
   onSaved: (project: Project) => void
-): RunLevelState {
+): RunLevelState => {
   const [level, setLevel] = useState<RunLevel>(saved ?? "prototype");
   const [error, setError] = useState<string | null>(null);
   const seq = useRef(0);
@@ -31,7 +31,8 @@ export function useRunLevel(
     }
 
     const previous = level;
-    const ticket = ++seq.current;
+    seq.current += 1;
+    const ticket = seq.current;
     setLevel(next);
     setError(null);
     api
@@ -41,15 +42,15 @@ export function useRunLevel(
           onSaved(project);
         }
       })
-      .catch((err: unknown) => {
+      .catch((caught: unknown) => {
         if (ticket !== seq.current) {
           return;
         }
 
         setLevel(previous);
-        setError(`Could not save the run level: ${errorText(err)}`);
+        setError(`Could not save the run level: ${errorText(caught)}`);
       });
   };
 
-  return { level, error, choose, clearError: () => setError(null) };
-}
+  return { choose, clearError: () => setError(null), error, level };
+};

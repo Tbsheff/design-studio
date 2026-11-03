@@ -7,7 +7,7 @@ import { Icon } from "../../kit/Icon.js";
 import { useModalDialog } from "../../kit/use-popover.js";
 import { COPY } from "./copy.js";
 
-function useBusyAction(onClose: () => void) {
+const useBusyAction = (onClose: () => void) => {
   const [busy, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -21,16 +21,16 @@ function useBusyAction(onClose: () => void) {
       try {
         await task();
         onClose();
-      } catch (failure) {
-        setError(errorText(failure));
+      } catch (caught) {
+        setError(errorText(caught));
       }
     });
   };
 
   return { busy, error, run };
-}
+};
 
-function Head({
+const Head = ({
   title,
   text,
   busy,
@@ -40,27 +40,25 @@ function Head({
   text: string;
   busy: boolean;
   onClose: () => void;
-}) {
-  return (
-    <div className="modal-head">
-      <div className="titles">
-        <h2>{title}</h2>
-        <p>{text}</p>
-      </div>
-      <button
-        type="button"
-        className="icon-btn"
-        aria-label={`Close ${title}`}
-        onClick={onClose}
-        disabled={busy}
-      >
-        <Icon name="close" />
-      </button>
+}) => (
+  <div className="modal-head">
+    <div className="titles">
+      <h2>{title}</h2>
+      <p>{text}</p>
     </div>
-  );
-}
+    <button
+      type="button"
+      className="icon-btn"
+      aria-label={`Close ${title}`}
+      onClick={onClose}
+      disabled={busy}
+    >
+      <Icon name="close" />
+    </button>
+  </div>
+);
 
-function ErrorLine({ error }: { error: string | null }) {
+const ErrorLine = ({ error }: { error: string | null }) => {
   if (!error) {
     return null;
   }
@@ -70,9 +68,9 @@ function ErrorLine({ error }: { error: string | null }) {
       {error}
     </div>
   );
-}
+};
 
-export function RenamePackDialog({
+export const RenamePackDialog = ({
   pack,
   onClose,
   onRename,
@@ -80,7 +78,7 @@ export function RenamePackDialog({
   pack: PackSummary;
   onClose: () => void;
   onRename: (name: string) => Promise<void>;
-}) {
+}) => {
   const [name, setName] = useState(pack.name);
   const action = useBusyAction(onClose);
   const dialog = useModalDialog(() => (action.busy ? false : onClose()));
@@ -140,9 +138,9 @@ export function RenamePackDialog({
       </form>
     </dialog>
   );
-}
+};
 
-export function DeletePackDialog({
+export const DeletePackDialog = ({
   pack,
   onClose,
   onDelete,
@@ -150,7 +148,7 @@ export function DeletePackDialog({
   pack: PackSummary;
   onClose: () => void;
   onDelete: () => Promise<void>;
-}) {
+}) => {
   const action = useBusyAction(onClose);
   const dialog = useModalDialog(() => (action.busy ? false : onClose()));
 
@@ -191,9 +189,9 @@ export function DeletePackDialog({
       </div>
     </dialog>
   );
-}
+};
 
-export function ImportConflictDialog({
+export const ImportConflictDialog = ({
   existing,
   onClose,
   onChoose,
@@ -201,7 +199,7 @@ export function ImportConflictDialog({
   existing: PackSummary;
   onClose: () => void;
   onChoose: (mode: "replace" | "copy") => Promise<void>;
-}) {
+}) => {
   const action = useBusyAction(onClose);
   const dialog = useModalDialog(() => (action.busy ? false : onClose()));
 
@@ -250,4 +248,4 @@ export function ImportConflictDialog({
       </div>
     </dialog>
   );
-}
+};

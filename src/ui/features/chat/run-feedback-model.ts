@@ -11,13 +11,13 @@ export interface RunFeedback {
 
 const KEY = "design-studio.run-feedback.v1";
 const MAX_ENTRIES = 500;
-const EMPTY: RunFeedback = { thumb: null, stars: 0 };
+const EMPTY: RunFeedback = { stars: 0, thumb: null };
 
 type Store = Record<string, RunFeedback & { at: number }>;
 
 let cache: Store | null = null;
 
-function load(): Store {
+const load = (): Store => {
   if (cache) {
     return cache;
   }
@@ -31,30 +31,33 @@ function load(): Store {
   }
 
   return cache;
-}
+};
 
-function save(store: Store): void {
+const save = (store: Store): void => {
   const ids = Object.keys(store);
 
   if (ids.length > MAX_ENTRIES) {
     ids
-      .sort((a, b) => (store[a]?.at ?? 0) - (store[b]?.at ?? 0))
+      .toSorted((a, b) => (store[a]?.at ?? 0) - (store[b]?.at ?? 0))
       .slice(0, ids.length - MAX_ENTRIES)
       .forEach((id) => delete store[id]);
   }
 
   writeStored(KEY, JSON.stringify(store));
-}
+};
 
-export function readRunFeedback(runId: string): RunFeedback {
+export const readRunFeedback = (runId: string): RunFeedback => {
   const entry = load()[runId];
 
   return entry
-    ? { thumb: entry.thumb ?? null, stars: entry.stars ?? 0 }
+    ? { stars: entry.stars ?? 0, thumb: entry.thumb ?? null }
     : EMPTY;
-}
+};
 
-export function writeRunFeedback(runId: string, feedback: RunFeedback): void {
+export const writeRunFeedback = (
+  runId: string,
+  feedback: RunFeedback
+): void => {
   const store = { ...load() };
 
   if (feedback.thumb === null && feedback.stars === 0) {
@@ -65,11 +68,11 @@ export function writeRunFeedback(runId: string, feedback: RunFeedback): void {
 
   cache = store;
   save(store);
-}
+};
 
-export function useRunFeedback(
+export const useRunFeedback = (
   runId: string
-): [RunFeedback, (patch: Partial<RunFeedback>) => void] {
+): [RunFeedback, (patch: Partial<RunFeedback>) => void] => {
   const [feedback, setFeedback] = useState(() => readRunFeedback(runId));
 
   const update = useCallback(
@@ -84,4 +87,4 @@ export function useRunFeedback(
   );
 
   return [feedback, update];
-}
+};

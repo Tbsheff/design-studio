@@ -25,14 +25,14 @@ interface Hits {
 const DEBOUNCE_MS = 150;
 
 const STATUS_WORD: Record<RunStatus, string> = {
-  running: "Running",
-  completed: "Done",
-  canceled: "Stopped",
-  failed: "Failed",
   budget_exceeded: "Limit reached",
+  canceled: "Stopped",
+  completed: "Done",
+  failed: "Failed",
+  running: "Running",
 };
 
-function useRunHits(directionId: string | null, query: string): Hits | null {
+const useRunHits = (directionId: string | null, query: string): Hits | null => {
   const [hits, setHits] = useState<Hits | null>(null);
   const text = runQueryTerms(query).join(" ");
   useEffect(() => {
@@ -44,41 +44,41 @@ function useRunHits(directionId: string | null, query: string): Hits | null {
 
     let alive = true;
 
-    const timer = window.setTimeout(() => {
+    const timer = globalThis.setTimeout(() => {
       searchRunPage(directionId, text)
         .then(
           (page) =>
             alive &&
             setHits({
+              failed: false,
+              more: page.nextBefore !== null,
               query: text,
               runs: page.runs,
-              more: page.nextBefore !== null,
-              failed: false,
             })
         )
         .catch(
           () =>
             alive &&
-            setHits({ query: text, runs: [], more: false, failed: true })
+            setHits({ failed: true, more: false, query: text, runs: [] })
         );
     }, DEBOUNCE_MS);
 
     return () => {
       alive = false;
-      window.clearTimeout(timer);
+      globalThis.clearTimeout(timer);
     };
   }, [directionId, text]);
 
   return hits;
-}
+};
 
-function runLabel(run: RunSummary): string {
-  const prompt = run.request.prompt.replaceAll(/\s+/g, " ").trim();
+const runLabel = (run: RunSummary): string => {
+  const prompt = run.request.prompt.replaceAll(/\s+/gu, " ").trim();
 
   return run.title || prompt || "Untitled run";
-}
+};
 
-function countText(hits: Hits | null, searching: boolean): string {
+const countText = (hits: Hits | null, searching: boolean): string => {
   if (!hits || searching) {
     return "";
   }
@@ -88,9 +88,9 @@ function countText(hits: Hits | null, searching: boolean): string {
   }
 
   return hits.more ? `${SEARCH_LIMIT}+` : String(hits.runs.length);
-}
+};
 
-function HitList({
+const HitList = ({
   id,
   hits,
   active,
@@ -104,7 +104,7 @@ function HitList({
   searching: boolean;
   onPick: (runId: string) => void;
   onActive: (index: number) => void;
-}) {
+}) => {
   if (!hits) {
     return searching ? <p className="chat-search-note">Searching…</p> : null;
   }
@@ -151,15 +151,15 @@ function HitList({
       ))}
     </ul>
   );
-}
+};
 
-export function ChatSearch({
+export const ChatSearch = ({
   query,
   directionId,
   onClose,
   onQuery,
   onPick,
-}: Props) {
+}: Props) => {
   const id = useId();
   const hits = useRunHits(directionId, query);
   const [active, setActive] = useState(0);
@@ -204,7 +204,6 @@ export function ChatSearch({
       <div className="chat-search-bar">
         <Icon name="search" size={14} className="chat-search-icon" />
         <input
-          autoFocus
           type="search"
           role="combobox"
           className="chat-search-input"
@@ -252,4 +251,4 @@ export function ChatSearch({
       )}
     </div>
   );
-}
+};

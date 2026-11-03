@@ -17,19 +17,17 @@ export interface PortOpenDetail {
 
 let available = false;
 
-export function setPortAvailable(on: boolean): void {
+export const setPortAvailable = (on: boolean): void => {
   available = on;
-}
+};
 
-export function portAvailable(): boolean {
-  return available;
-}
+export const portAvailable = (): boolean => available;
 
-export function openPortDialog(detail: PortOpenDetail): void {
-  window.dispatchEvent(
+export const openPortDialog = (detail: PortOpenDetail): void => {
+  globalThis.dispatchEvent(
     new CustomEvent<PortOpenDetail>(PORT_OPEN_EVENT, { detail })
   );
-}
+};
 
 type PlanRequest = Omit<PortStartRequest, "route"> & { route?: string };
 
@@ -42,7 +40,7 @@ interface PlanFields {
   targetProjectId: string;
 }
 
-function planInput(input: PlanRequest, isFlow: boolean): PlanFields {
+const planInput = (input: PlanRequest, isFlow: boolean): PlanFields => {
   const fields: PlanFields = {
     path: input.path,
     projectId: input.sourceProjectId,
@@ -62,7 +60,7 @@ function planInput(input: PlanRequest, isFlow: boolean): PlanFields {
   }
 
   return fields;
-}
+};
 
 type PlanWire = RouteOutput<typeof routes.getPortPlanWorkspace>;
 

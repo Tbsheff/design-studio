@@ -1,4 +1,4 @@
-import { useState, useSyncExternalStore, useTransition } from "react";
+import { useState, useTransition, useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
 
 import { commentPageName, pageShown } from "./comment-anchors.js";
@@ -15,181 +15,144 @@ import {
 import type { DesignComment, SelectionContext } from "./deps.js";
 import type { CommentsControl } from "./use-comments.js";
 
-import "./comments.css";
-
-interface Props {
-  control: CommentsControl;
-  running: boolean;
-  onOpenRun: (runId: string) => void;
-  onOpenVersion: (versionId: string) => void;
-  selection?: SelectionContext[];
-}
-
-const SNIPPET_MAX = 32;
-const SHARED_TEXT_SNIPPET_MAX = 80;
-
-function shortSnippet(text: string): string {
-  return text.length > SNIPPET_MAX
-    ? `${text.slice(0, SNIPPET_MAX).trimEnd()}…`
-    : text;
-}
-
-function targetWhere(comment: DesignComment): string {
-  const loc = comment.context?.usedAt ?? comment.target.sourceLoc;
-
-  return loc
-    ? `${loc.file.split("/").pop()}:${loc.line}`
-    : comment.target.selector;
-}
-
-function targetLabel(comment: DesignComment): string {
-  if (comment.drawing) {
-    const { box } = comment.drawing;
-
-    return `Drawing · ${box.width} × ${box.height}`;
-  }
-
-  const snippet = comment.target.textSnippet
-    ? ` “${shortSnippet(comment.target.textSnippet)}”`
-    : "";
-
-  return `${comment.target.tag}${snippet} · ${targetWhere(comment)}`;
-}
-
-function targetTip(comment: DesignComment): string {
-  const page = comment.frame
-    ? ` · Page ${comment.frame.path.replace(/^\/+/, "") || "index"}`
-    : "";
-
-  if (comment.drawing) {
-    return `${targetLabel(comment)}${page}`;
-  }
-
-  const text = comment.target.textSnippet;
-
-  const snippet = text
-    ? ` “${text}${text.length >= SHARED_TEXT_SNIPPET_MAX ? "…" : ""}”`
-    : "";
-
-  return `${comment.target.tag}${snippet} · ${targetWhere(comment)}${page}`;
-}
-
-const PATH_MARK = "\n";
-
-function shownPathsKey(): string {
-  const projectId = projectFromPath(window.location.pathname);
-  const layout = projectId ? canvasStore.get(projectId) : undefined;
-
-  return layout
-    ? shownFrames(layout)
-        .map((frame) => `${PATH_MARK}${frame.path ?? ""}`)
-        .join("")
-    : "";
-}
-
-function useShownPaths(): string[] | null {
-  const key = useSyncExternalStore(canvasStore.subscribe, shownPathsKey);
-
-  return key ? key.split(PATH_MARK).slice(1) : null;
-}
-
-function notShownText(
-  comment: DesignComment,
-  paths: string[] | null
-): string | null {
-  return pageShown(comment, paths)
-    ? null
-    : `On ${commentPageName(comment)}, not shown`;
-}
-
-function TargetLink({
-  comment,
-  control,
+const Section = ({
+  title,
+  count,
+  action,
+  children,
 }: {
-  comment: DesignComment;
-  control: CommentsControl;
-}) {
-  const away = notShownText(comment, useShownPaths());
-
-  return (
-    <button
-      type="button"
-      onClick={() => control.setOpenId(comment.id)}
-      aria-label={`Show comment ${comment.n} on the canvas`}
-      data-tip={
-        away
-          ? `${away}. Set a frame to this page to see the pin.`
-          : targetTip(comment)
-      }
-      data-tip-align="start"
-    >
-      <span className="truncate">{away ?? targetLabel(comment)}</span>
-    </button>
-  );
-}
-
-function PickNum({
-  comment,
-  control,
-}: {
-  comment: DesignComment;
-  control: CommentsControl;
-}) {
-  if (!canPickForChat(comment.status)) {
-    return <span className={`comment-num ${comment.status}`}>{comment.n}</span>;
-  }
-
-  const on = control.picked.includes(comment.id);
-
-  return (
-    <button
-      type="button"
-      role="checkbox"
-      aria-checked={on}
-      aria-label={`Select comment ${comment.n} for the chat`}
-      data-tip={on ? "Selected for the chat" : "Select for the chat"}
-      className={`comment-num ${comment.status} pick${on ? " picked" : ""}`}
-      data-testid="comment-pick"
-      onClick={() => control.togglePick(comment.id)}
-    >
-      {on ? <Icon name="check" size={12} /> : comment.n}
-    </button>
-  );
-}
-
-function FixButton({
-  comment,
-  control,
-}: {
-  comment: DesignComment;
-  control: CommentsControl;
-}) {
-  if (!canPickForChat(comment.status)) {
+  title: string;
+  count: number;
+  action?: ReactNode;
+  children: ReactNode;
+}) => {
+  if (count === 0) {
     return null;
   }
 
   return (
-    <button
-      type="button"
-      className="icon-btn small"
-      aria-label={`Fix comment ${comment.n} with the agent`}
-      data-tip={copy.fix}
-      data-testid="comment-fix"
-      disabled={control.preparing}
-      onClick={() => void control.toChat([comment.id])}
-    >
-      <Icon name="sparkle" />
-    </button>
+    <section className="comments-section" aria-label={title}>
+      <h3>
+        {title} <span className="count">{count}</span>
+        <span className="spacer" />
+        {action}
+      </h3>
+      <ul className="comments-list">{children}</ul>
+    </section>
   );
-}
+};
 
-export function ChatPickBar({
+const PICK_HINT = "Press C or choose Comment, then click an element.";
+
+const composerTarget = (selection: SelectionContext[]): string | null => {
+  if (selection.length === 0) {
+    return null;
+  }
+
+  if (selection.length > 1) {
+    return `${selection.length} elements`;
+  }
+
+  const first = selection[0];
+
+  return first ? `the ${first.tag}` : null;
+};
+
+const SendQueuedButton = ({
   control,
   className,
 }: {
   control: CommentsControl;
   className?: string;
-}) {
+}) => {
+  const count = control.queued.length;
+
+  return (
+    <button
+      type="button"
+      className={`btn small primary ${className ?? ""}`}
+      disabled={count === 0 || control.sending}
+      onClick={() => void control.send()}
+    >
+      {control.sending ? "Sending…" : `Send ${count} queued`}
+    </button>
+  );
+};
+
+const CommentsComposer = ({
+  control,
+  selection,
+}: {
+  control: CommentsControl;
+  selection: SelectionContext[];
+}) => {
+  const [text, setText] = useState("");
+  const [busy, startTransition] = useTransition();
+  const target = composerTarget(selection);
+  const ready = target !== null && text.trim().length > 0 && !busy;
+
+  const submit = () => {
+    if (!ready) {
+      return;
+    }
+
+    startTransition(async () => {
+      if (await control.add(selection, text.trim(), false)) {
+        setText("");
+      }
+    });
+  };
+
+  const queued = control.queued.length;
+
+  return (
+    <div
+      className="comments-composer ui-composer"
+      data-testid="comments-composer"
+    >
+      <textarea
+        aria-label={copy.add}
+        rows={2}
+        maxLength={2000}
+        value={text}
+        disabled={target === null}
+        placeholder={target ? `Add a comment on ${target}…` : PICK_HINT}
+        onChange={(event) => setText(event.target.value)}
+        onKeyDown={(event) => {
+          if (
+            event.key === "Enter" &&
+            !event.shiftKey &&
+            !event.nativeEvent.isComposing
+          ) {
+            event.preventDefault();
+            submit();
+          }
+        }}
+      />
+      <div className="comments-composer-row">
+        {queued > 0 && <SendQueuedButton control={control} className="ghost" />}
+        <span className="spacer" />
+        <button
+          type="button"
+          className="btn small send"
+          disabled={!ready}
+          onClick={() => submit()}
+        >
+          <Icon name="arrowUp" size={12} />
+          Comment
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export const ChatPickBar = ({
+  control,
+  className,
+}: {
+  control: CommentsControl;
+  className?: string;
+}) => {
   const count = control.picked.length;
 
   if (count === 0) {
@@ -224,36 +187,168 @@ export function ChatPickBar({
       </button>
     </div>
   );
-}
+};
 
-function Section({
-  title,
-  count,
-  action,
-  children,
+const focusNode = (node: HTMLInputElement | null) => {
+  node?.focus();
+};
+
+const SNIPPET_MAX = 32;
+
+const shortSnippet = (text: string): string =>
+  text.length > SNIPPET_MAX ? `${text.slice(0, SNIPPET_MAX).trimEnd()}…` : text;
+
+const targetWhere = (comment: DesignComment): string => {
+  const loc = comment.context?.usedAt ?? comment.target.sourceLoc;
+
+  return loc
+    ? `${loc.file.split("/").pop()}:${loc.line}`
+    : comment.target.selector;
+};
+
+const targetLabel = (comment: DesignComment): string => {
+  if (comment.drawing) {
+    const { box } = comment.drawing;
+
+    return `Drawing · ${box.width} × ${box.height}`;
+  }
+
+  const snippet = comment.target.textSnippet
+    ? ` “${shortSnippet(comment.target.textSnippet)}”`
+    : "";
+
+  return `${comment.target.tag}${snippet} · ${targetWhere(comment)}`;
+};
+
+const SHARED_TEXT_SNIPPET_MAX = 80;
+
+const targetTip = (comment: DesignComment): string => {
+  const page = comment.frame
+    ? ` · Page ${comment.frame.path.replace(/^\/+/u, "") || "index"}`
+    : "";
+
+  if (comment.drawing) {
+    return `${targetLabel(comment)}${page}`;
+  }
+
+  const text = comment.target.textSnippet;
+
+  const snippet = text
+    ? ` “${text}${text.length >= SHARED_TEXT_SNIPPET_MAX ? "…" : ""}”`
+    : "";
+
+  return `${comment.target.tag}${snippet} · ${targetWhere(comment)}${page}`;
+};
+
+const PATH_MARK = "\n";
+
+const shownPathsKey = (): string => {
+  const projectId = projectFromPath(globalThis.location.pathname);
+  const layout = projectId ? canvasStore.get(projectId) : undefined;
+
+  return layout
+    ? shownFrames(layout)
+        .map((frame) => `${PATH_MARK}${frame.path ?? ""}`)
+        .join("")
+    : "";
+};
+
+const useShownPaths = (): string[] | null => {
+  const key = useSyncExternalStore(canvasStore.subscribe, shownPathsKey);
+
+  return key ? key.split(PATH_MARK).slice(1) : null;
+};
+
+const notShownText = (
+  comment: DesignComment,
+  paths: string[] | null
+): string | null =>
+  pageShown(comment, paths)
+    ? null
+    : `On ${commentPageName(comment)}, not shown`;
+
+const TargetLink = ({
+  comment,
+  control,
 }: {
-  title: string;
-  count: number;
-  action?: ReactNode;
-  children: ReactNode;
-}) {
-  if (count === 0) {
+  comment: DesignComment;
+  control: CommentsControl;
+}) => {
+  const away = notShownText(comment, useShownPaths());
+
+  return (
+    <button
+      type="button"
+      onClick={() => control.setOpenId(comment.id)}
+      aria-label={`Show comment ${comment.n} on the canvas`}
+      data-tip={
+        away
+          ? `${away}. Set a frame to this page to see the pin.`
+          : targetTip(comment)
+      }
+      data-tip-align="start"
+    >
+      <span className="truncate">{away ?? targetLabel(comment)}</span>
+    </button>
+  );
+};
+
+const PickNum = ({
+  comment,
+  control,
+}: {
+  comment: DesignComment;
+  control: CommentsControl;
+}) => {
+  if (!canPickForChat(comment.status)) {
+    return <span className={`comment-num ${comment.status}`}>{comment.n}</span>;
+  }
+
+  const on = control.picked.includes(comment.id);
+
+  return (
+    <button
+      type="button"
+      role="checkbox"
+      aria-checked={on}
+      aria-label={`Select comment ${comment.n} for the chat`}
+      data-tip={on ? "Selected for the chat" : "Select for the chat"}
+      className={`comment-num ${comment.status} pick${on ? " picked" : ""}`}
+      data-testid="comment-pick"
+      onClick={() => control.togglePick(comment.id)}
+    >
+      {on ? <Icon name="check" size={12} /> : comment.n}
+    </button>
+  );
+};
+
+const FixButton = ({
+  comment,
+  control,
+}: {
+  comment: DesignComment;
+  control: CommentsControl;
+}) => {
+  if (!canPickForChat(comment.status)) {
     return null;
   }
 
   return (
-    <section className="comments-section" aria-label={title}>
-      <h3>
-        {title} <span className="count">{count}</span>
-        <span className="spacer" />
-        {action}
-      </h3>
-      <ul className="comments-list">{children}</ul>
-    </section>
+    <button
+      type="button"
+      className="icon-btn small"
+      aria-label={`Fix comment ${comment.n} with the agent`}
+      data-tip={copy.fix}
+      data-testid="comment-fix"
+      disabled={control.preparing}
+      onClick={() => void control.toChat([comment.id])}
+    >
+      <Icon name="sparkle" />
+    </button>
   );
-}
+};
 
-function QueuedRow({
+const QueuedRow = ({
   comment,
   index,
   total,
@@ -263,7 +358,7 @@ function QueuedRow({
   index: number;
   total: number;
   control: CommentsControl;
-}) {
+}) => {
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(comment.text);
 
@@ -294,7 +389,7 @@ function QueuedRow({
           <input
             aria-label={`Edit comment ${comment.n}`}
             value={text}
-            autoFocus
+            ref={focusNode}
             maxLength={2000}
             onChange={(event) => setText(event.target.value)}
             onBlur={save}
@@ -382,9 +477,17 @@ function QueuedRow({
       </div>
     </li>
   );
+};
+
+interface Props {
+  control: CommentsControl;
+  running: boolean;
+  onOpenRun: (runId: string) => void;
+  onOpenVersion: (versionId: string) => void;
+  selection?: SelectionContext[];
 }
 
-function DoneRow({
+const DoneRow = ({
   comment,
   control,
   onOpenRun,
@@ -392,9 +495,8 @@ function DoneRow({
 }: { comment: DesignComment; control: CommentsControl } & Pick<
   Props,
   "onOpenRun" | "onOpenVersion"
->) {
-  const runId = comment.runId;
-  const versionId = comment.versionId;
+>) => {
+  const { runId, versionId } = comment;
 
   return (
     <li
@@ -477,15 +579,15 @@ function DoneRow({
       </div>
     </li>
   );
-}
+};
 
-function OrphanRow({
+const OrphanRow = ({
   comment,
   control,
 }: {
   comment: DesignComment;
   control: CommentsControl;
-}) {
+}) => {
   const active = control.repinId === comment.id;
   const away = notShownText(comment, useShownPaths());
 
@@ -533,119 +635,15 @@ function OrphanRow({
       </div>
     </li>
   );
-}
+};
 
-function SendQueuedButton({
-  control,
-  className,
-}: {
-  control: CommentsControl;
-  className?: string;
-}) {
-  const count = control.queued.length;
-
-  return (
-    <button
-      type="button"
-      className={`btn small primary ${className ?? ""}`}
-      disabled={count === 0 || control.sending}
-      onClick={() => void control.send()}
-    >
-      {control.sending ? "Sending…" : `Send ${count} queued`}
-    </button>
-  );
-}
-
-const PICK_HINT = "Press C or choose Comment, then click an element.";
-
-function composerTarget(selection: SelectionContext[]): string | null {
-  if (selection.length === 0) {
-    return null;
-  }
-
-  if (selection.length > 1) {
-    return `${selection.length} elements`;
-  }
-
-  const first = selection[0];
-
-  return first ? `the ${first.tag}` : null;
-}
-
-function CommentsComposer({
-  control,
-  selection,
-}: {
-  control: CommentsControl;
-  selection: SelectionContext[];
-}) {
-  const [text, setText] = useState("");
-  const [busy, startTransition] = useTransition();
-  const target = composerTarget(selection);
-  const ready = target !== null && text.trim().length > 0 && !busy;
-
-  const submit = () => {
-    if (!ready) {
-      return;
-    }
-
-    startTransition(async () => {
-      if (await control.add(selection, text.trim(), false)) {
-        setText("");
-      }
-    });
-  };
-
-  const queued = control.queued.length;
-
-  return (
-    <div
-      className="comments-composer ui-composer"
-      data-testid="comments-composer"
-    >
-      <textarea
-        aria-label={copy.add}
-        rows={2}
-        maxLength={2000}
-        value={text}
-        disabled={target === null}
-        placeholder={target ? `Add a comment on ${target}…` : PICK_HINT}
-        onChange={(event) => setText(event.target.value)}
-        onKeyDown={(event) => {
-          if (
-            event.key === "Enter" &&
-            !event.shiftKey &&
-            !event.nativeEvent.isComposing
-          ) {
-            event.preventDefault();
-            submit();
-          }
-        }}
-      />
-      <div className="comments-composer-row">
-        {queued > 0 && <SendQueuedButton control={control} className="ghost" />}
-        <span className="spacer" />
-        <button
-          type="button"
-          className="btn small send"
-          disabled={!ready}
-          onClick={() => submit()}
-        >
-          <Icon name="arrowUp" size={12} />
-          Comment
-        </button>
-      </div>
-    </div>
-  );
-}
-
-export function CommentsPanel({
+export const CommentsPanel = ({
   control,
   running,
   onOpenRun,
   onOpenVersion,
   selection = [],
-}: Props) {
+}: Props) => {
   const by = (status: DesignComment["status"]) =>
     control.comments.filter((comment) => comment.status === status);
 
@@ -796,15 +794,15 @@ export function CommentsPanel({
       <CommentsComposer control={control} selection={selection} />
     </div>
   );
-}
+};
 
-export function QueuedComposerBar({
+export const QueuedComposerBar = ({
   control,
   onShow,
 }: {
   control: CommentsControl;
   onShow: () => void;
-}) {
+}) => {
   const count = control.queued.length;
 
   if (count === 0 && !control.notice) {
@@ -822,4 +820,4 @@ export function QueuedComposerBar({
       {count > 0 && <SendQueuedButton control={control} />}
     </div>
   );
-}
+};

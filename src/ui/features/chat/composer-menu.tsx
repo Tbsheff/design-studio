@@ -1,19 +1,18 @@
 import {
-  useCallback,
   useEffect,
   useId,
-  useLayoutEffect,
   useRef,
+  useCallback,
+  useLayoutEffect,
   useState,
-  type CSSProperties,
-  type KeyboardEvent,
-  type ReactNode,
-  type RefObject,
 } from "react";
+import type { KeyboardEvent, ReactNode, CSSProperties, RefObject } from "react";
 import { createPortal } from "react-dom";
 
-import { RUN_LEVELS, type RunLevel } from "../../../shared/contracts.js";
-import { Icon, type IconName } from "../../kit/Icon.js";
+import { RUN_LEVELS } from "../../../shared/contracts.js";
+import type { RunLevel } from "../../../shared/contracts.js";
+import { Icon } from "../../kit/Icon.js";
+import type { IconName } from "../../kit/Icon.js";
 import { usePopover } from "../../kit/use-popover.js";
 import {
   ChoiceItem,
@@ -23,27 +22,140 @@ import {
   useRovingRadioGroup,
 } from "./level-control.js";
 import {
-  EFFORT_HINT,
-  EFFORT_LABEL,
-  EffortToggle,
   MODE_HINT,
-  MODE_LABEL,
-  UNPLACED,
   designsHint,
+  EFFORT_HINT,
+  UNPLACED,
   placeAboveOrBelow,
-  type ComposerMode,
-  type DesignsSetting,
-  type EffortSetting,
+  MODE_LABEL,
+  EffortToggle,
+} from "./run-settings.js";
+import type {
+  DesignsSetting,
+  ComposerMode,
+  EffortSetting,
 } from "./run-settings.js";
 import { MODEL_OPTIONS } from "./settings-draft-model.js";
 import { effectiveModel, shortModel } from "./slash-groups.js";
 import { StableText } from "./stable-text.js";
 import { usePresence } from "./use-presence.js";
 
-function usePlacedPopover(
+interface ItemProps {
+  icon?: IconName;
+  label: string;
+  meta?: string;
+  checked?: boolean;
+  disabledReason?: string | null;
+  hint?: string;
+  onPick: () => void;
+}
+
+const MenuItem = ({
+  icon,
+  label,
+  meta,
+  checked,
+  disabledReason,
+  hint,
+  onPick,
+}: ItemProps) => {
+  const off = Boolean(disabledReason);
+  const note = disabledReason ?? hint;
+
+  return (
+    <button
+      type="button"
+      className={note ? "ui-menu-item has-hint" : "ui-menu-item"}
+      role={checked === undefined ? "menuitem" : "menuitemradio"}
+      aria-checked={checked}
+      aria-disabled={off || undefined}
+      tabIndex={-1}
+      onClick={() => {
+        if (!off) {
+          onPick();
+        }
+      }}
+    >
+      {icon && <Icon name={icon} size={14} />}
+      <span>{label}</span>
+      {note && <span className="ui-menu-hint">{note}</span>}
+      {meta && <span className="ui-menu-meta">{meta}</span>}
+    </button>
+  );
+};
+
+interface PlusMenuProps {
+  onAttach: () => void;
+  onMention: () => void;
+  onSkills: () => void;
+  onOpen?: () => void;
+  mode: ComposerMode;
+  onMode: (mode: ComposerMode) => void;
+  designs?: DesignsSetting | undefined;
+}
+
+const MODES: readonly ComposerMode[] = ["edit", "plan", "critique"];
+
+export const MODE_SHORT_HINT: Record<ComposerMode, string> = {
+  critique: "Review only",
+  edit: "Changes the design",
+  plan: "You approve first",
+};
+
+const DESIGN_COUNTS = [1, 2, 3, 4] as const;
+
+const ITEM = '[role^="menuitem"]:not([aria-disabled="true"])';
+
+const menuKeys = (
+  event: KeyboardEvent<HTMLDivElement>,
+  close: (refocus: boolean) => void
+) => {
+  const items = [...event.currentTarget.querySelectorAll<HTMLElement>(ITEM)];
+
+  const at = items.indexOf(document.activeElement as HTMLElement);
+
+  const step =
+    event.key === "ArrowDown" || event.key === "ArrowRight"
+      ? 1
+      : event.key === "ArrowUp" || event.key === "ArrowLeft"
+        ? -1
+        : 0;
+
+  if (step !== 0) {
+    event.preventDefault();
+    items[(at + step + items.length) % items.length]?.focus();
+  } else if (event.key === "Home" || event.key === "End") {
+    event.preventDefault();
+    items[event.key === "Home" ? 0 : items.length - 1]?.focus();
+  } else if (event.key === "Tab") {
+    event.preventDefault();
+    close(true);
+  }
+};
+
+const Section = ({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) => {
+  const id = useId();
+
+  return (
+    <div className="ui-menu-section" role="group" aria-labelledby={id}>
+      <span className="ui-menu-label" id={id}>
+        {label}
+      </span>
+      {children}
+    </div>
+  );
+};
+
+const usePlacedPopover = (
   trigger: RefObject<HTMLButtonElement | null>,
   panel: RefObject<HTMLDivElement | null>
-) {
+) => {
   const [open, setOpen] = useState(false);
   const [style, setStyle] = useState<CSSProperties>(UNPLACED);
   const presence = usePresence(open ? true : null);
@@ -91,132 +203,16 @@ function usePlacedPopover(
   };
 
   return {
+    close,
+    closing: presence.closing,
     open,
     shown: presence.shown !== null,
-    closing: presence.closing,
     style,
-    close,
     toggle: () => (open ? close(false) : show()),
   };
-}
-
-function panelProps(menu: { closing: boolean; style: CSSProperties }) {
-  return {
-    style: menu.style,
-    "data-closing": menu.closing || undefined,
-    inert: menu.closing || undefined,
-  };
-}
-
-const ITEM = '[role^="menuitem"]:not([aria-disabled="true"])';
-
-function menuKeys(
-  event: KeyboardEvent<HTMLDivElement>,
-  close: (refocus: boolean) => void
-) {
-  const items = Array.from(
-    event.currentTarget.querySelectorAll<HTMLElement>(ITEM)
-  );
-
-  const at = items.indexOf(document.activeElement as HTMLElement);
-
-  const step =
-    event.key === "ArrowDown" || event.key === "ArrowRight"
-      ? 1
-      : event.key === "ArrowUp" || event.key === "ArrowLeft"
-        ? -1
-        : 0;
-
-  if (step !== 0) {
-    event.preventDefault();
-    items[(at + step + items.length) % items.length]?.focus();
-  } else if (event.key === "Home" || event.key === "End") {
-    event.preventDefault();
-    items[event.key === "Home" ? 0 : items.length - 1]?.focus();
-  } else if (event.key === "Tab") {
-    event.preventDefault();
-    close(true);
-  }
-}
-
-interface ItemProps {
-  icon?: IconName;
-  label: string;
-  meta?: string;
-  checked?: boolean;
-  disabledReason?: string | null;
-  hint?: string;
-  onPick: () => void;
-}
-
-function MenuItem({
-  icon,
-  label,
-  meta,
-  checked,
-  disabledReason,
-  hint,
-  onPick,
-}: ItemProps) {
-  const off = Boolean(disabledReason);
-  const note = disabledReason ?? hint;
-
-  return (
-    <button
-      type="button"
-      className={note ? "ui-menu-item has-hint" : "ui-menu-item"}
-      role={checked === undefined ? "menuitem" : "menuitemradio"}
-      aria-checked={checked}
-      aria-disabled={off || undefined}
-      tabIndex={-1}
-      onClick={() => {
-        if (!off) {
-          onPick();
-        }
-      }}
-    >
-      {icon && <Icon name={icon} size={14} />}
-      <span>{label}</span>
-      {note && <span className="ui-menu-hint">{note}</span>}
-      {meta && <span className="ui-menu-meta">{meta}</span>}
-    </button>
-  );
-}
-
-function Section({ label, children }: { label: string; children: ReactNode }) {
-  const id = useId();
-
-  return (
-    <div className="ui-menu-section" role="group" aria-labelledby={id}>
-      <span className="ui-menu-label" id={id}>
-        {label}
-      </span>
-      {children}
-    </div>
-  );
-}
-
-interface PlusMenuProps {
-  onAttach: () => void;
-  onMention: () => void;
-  onSkills: () => void;
-  onOpen?: () => void;
-  mode: ComposerMode;
-  onMode: (mode: ComposerMode) => void;
-  designs?: DesignsSetting | undefined;
-}
-
-const MODES: readonly ComposerMode[] = ["edit", "plan", "critique"];
-
-export const MODE_SHORT_HINT: Record<ComposerMode, string> = {
-  edit: "Changes the design",
-  plan: "You approve first",
-  critique: "Review only",
 };
 
-const DESIGN_COUNTS = [1, 2, 3, 4] as const;
-
-export function PlusMenu(props: PlusMenuProps) {
+export const PlusMenu = (props: PlusMenuProps) => {
   const trigger = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
   const menu = usePlacedPopover(trigger, panel);
@@ -231,7 +227,7 @@ export function PlusMenu(props: PlusMenuProps) {
     run();
   };
 
-  const designs = props.designs;
+  const { designs } = props;
   const countsId = useId();
 
   return (
@@ -261,6 +257,7 @@ export function PlusMenu(props: PlusMenuProps) {
       {menu.shown &&
         createPortal(
           <div
+            tabIndex={0}
             ref={panel}
             className="ui-menu composer-menu"
             role="menu"
@@ -346,41 +343,24 @@ export function PlusMenu(props: PlusMenuProps) {
         )}
     </>
   );
-}
+};
 
-function PillCaret() {
-  return (
-    <svg
-      className="ui-pill-select-caret"
-      width="10"
-      height="10"
-      viewBox="0 0 16 16"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.6}
-      aria-hidden="true"
-    >
-      <path d="M3.5 6L8 10.5 12.5 6" />
-    </svg>
-  );
-}
+const PillCaret = () => (
+  <svg
+    className="ui-pill-select-caret"
+    width="10"
+    height="10"
+    viewBox="0 0 16 16"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={1.6}
+    aria-hidden="true"
+  >
+    <path d="M3.5 6L8 10.5 12.5 6" />
+  </svg>
+);
 
-function ModelName({ name }: { name: string }) {
-  const at = name.lastIndexOf(" ");
-
-  if (at === -1) {
-    return <>{name}</>;
-  }
-
-  return (
-    <>
-      {name.slice(0, at)}
-      <span className="model-pill-version"> {name.slice(at + 1)}</span>
-    </>
-  );
-}
-
-export function LevelPill({
+export const LevelPill = ({
   level,
   onLevel,
   onOpen,
@@ -388,7 +368,7 @@ export function LevelPill({
   level: RunLevel;
   onLevel: (level: RunLevel) => void;
   onOpen?: () => void;
-}) {
+}) => {
   const trigger = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
   const menu = usePlacedPopover(trigger, panel);
@@ -430,6 +410,7 @@ export function LevelPill({
       {menu.shown &&
         createPortal(
           <div
+            tabIndex={0}
             ref={panel}
             className="ui-menu composer-menu level-menu"
             role="menu"
@@ -458,9 +439,24 @@ export function LevelPill({
         )}
     </>
   );
-}
+};
 
-function ModelToggle({
+const ModelName = ({ name }: { name: string }) => {
+  const at = name.lastIndexOf(" ");
+
+  if (at === -1) {
+    return <>{name}</>;
+  }
+
+  return (
+    <>
+      {name.slice(0, at)}
+      <span className="model-pill-version"> {name.slice(at + 1)}</span>
+    </>
+  );
+};
+
+const ModelToggle = ({
   value,
   onChange,
   locked,
@@ -468,7 +464,7 @@ function ModelToggle({
   value: string;
   onChange: (id: string) => void;
   locked: boolean;
-}) {
+}) => {
   const ids = MODEL_OPTIONS.map((option) => option.id);
   const known = ids.includes(value);
 
@@ -481,6 +477,7 @@ function ModelToggle({
 
   return (
     <div
+      tabIndex={0}
       className="segmented"
       role="radiogroup"
       aria-label="Model"
@@ -502,7 +499,7 @@ function ModelToggle({
       ))}
     </div>
   );
-}
+};
 
 interface ModelPillProps {
   model: string;
@@ -512,13 +509,13 @@ interface ModelPillProps {
   onOpen?: () => void;
 }
 
-export function ModelPill({
+export const ModelPill = ({
   model,
   level,
   effort,
   onModel,
   onOpen,
-}: ModelPillProps) {
+}: ModelPillProps) => {
   const trigger = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
   const pop = usePlacedPopover(trigger, panel);
@@ -598,4 +595,10 @@ export function ModelPill({
         )}
     </>
   );
-}
+};
+
+const panelProps = (menu: { closing: boolean; style: CSSProperties }) => ({
+  "data-closing": menu.closing || undefined,
+  inert: menu.closing || undefined,
+  style: menu.style,
+});

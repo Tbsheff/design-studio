@@ -4,11 +4,11 @@ import type { KeyboardEvent } from "react";
 import type { QueuedMessage } from "../../../shared/contracts.js";
 import { Icon } from "../../kit/Icon.js";
 
-function move(
+const move = (
   items: QueuedMessage[],
   from: number,
   to: number
-): QueuedMessage[] {
+): QueuedMessage[] => {
   if (to < 0 || to >= items.length || from === to) {
     return items;
   }
@@ -21,9 +21,9 @@ function move(
   }
 
   return next;
-}
+};
 
-function QueuedItem({
+const QueuedItem = ({
   item,
   index,
   count,
@@ -41,7 +41,7 @@ function QueuedItem({
   onMove: (to: number) => void;
   onDragStart: () => void;
   onDropAt: () => void;
-}) {
+}) => {
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(item.text);
 
@@ -98,7 +98,7 @@ function QueuedItem({
           className="queued-edit"
           aria-label="Edit queued message"
           value={text}
-          autoFocus
+
           rows={Math.min(4, text.split("\n").length)}
           onChange={(event) => setText(event.target.value)}
           onBlur={() => finish(true)}
@@ -134,15 +134,15 @@ function QueuedItem({
       </button>
     </li>
   );
-}
+};
 
-export function QueuedMessages({
+export const QueuedMessages = ({
   items,
   onChange,
 }: {
   items: QueuedMessage[];
   onChange: (items: QueuedMessage[]) => void;
-}) {
+}) => {
   const [dragFrom, setDragFrom] = useState<number | null>(null);
 
   if (items.length === 0) {
@@ -183,4 +183,4 @@ export function QueuedMessages({
       </ol>
     </div>
   );
-}
+};

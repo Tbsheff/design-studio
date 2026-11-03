@@ -1,20 +1,9 @@
-import {
-  useEffect,
-  useRef,
-  useState,
-  useTransition,
-  type KeyboardEvent,
-  type ReactNode,
-} from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
+import type { KeyboardEvent, ReactNode } from "react";
 
 import { AvatarFace, CommentAuthor } from "./comment-avatar.js";
-import {
-  CARD_WIDTH,
-  placeComposer,
-  useCardSize,
-  type Breadcrumb,
-  type CardSide,
-} from "./comment-placement.js";
+import type { Breadcrumb, CardSide } from "./comment-placement.js";
+import { CARD_WIDTH, placeComposer, useCardSize } from "./comment-placement.js";
 import { copy } from "./copy.js";
 import { Icon, findElement, findElements, useProfileInitial } from "./deps.js";
 import type { DesignComment, SelectionContext } from "./deps.js";
@@ -22,11 +11,39 @@ import type { DesignComment, SelectionContext } from "./deps.js";
 type Rect = SelectionContext["rect"];
 
 export const MOD_LABEL =
-  typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform)
+  typeof navigator !== "undefined" &&
+  /Mac|iPhone|iPad/u.test(navigator.platform)
     ? "⌘"
     : "Ctrl+";
 
-function focusables(root: HTMLElement | null): HTMLElement[] {
+export const STATUS_LABEL: Record<DesignComment["status"], string> = {
+  draft: "Draft",
+  orphaned: "Element not found",
+  queued: "Queued",
+  resolved: "Resolved",
+  sent: "Sent to Claude",
+};
+
+interface OpenProps {
+  comment: DesignComment;
+  anchor: Rect;
+  zoom: number;
+  frame: { width: number; height: number };
+  breadcrumb: Breadcrumb | null;
+  initial: string | null;
+  busy: boolean;
+  onSend: () => void;
+  onFix?: () => void;
+  onSave: (text: string) => void;
+  onResolve: () => void;
+  onReopen: () => void;
+  onDelete: () => void;
+  onClose: () => void;
+  onReply: (text: string) => Promise<boolean>;
+  onDeleteReply: (replyId: string) => void;
+}
+
+const focusables = (root: HTMLElement | null): HTMLElement[] => {
   if (!root) {
     return [];
   }
@@ -34,16 +51,19 @@ function focusables(root: HTMLElement | null): HTMLElement[] {
   return findElements(root, "input, textarea, button:not(:disabled)").filter(
     (element) => element.tabIndex >= 0
   );
-}
+};
 
-export function trapTab(event: KeyboardEvent, root: HTMLElement | null): void {
+export const trapTab = (
+  event: KeyboardEvent,
+  root: HTMLElement | null
+): void => {
   if (event.key !== "Tab") {
     return;
   }
 
   const items = focusables(root);
   const first = items[0];
-  const last = items[items.length - 1];
+  const last = items.at(-1);
 
   if (!first || !last) {
     return;
@@ -56,23 +76,15 @@ export function trapTab(event: KeyboardEvent, root: HTMLElement | null): void {
     event.preventDefault();
     first.focus();
   }
-}
-
-export const STATUS_LABEL: Record<DesignComment["status"], string> = {
-  draft: "Draft",
-  queued: "Queued",
-  sent: "Sent to Claude",
-  resolved: "Resolved",
-  orphaned: "Element not found",
 };
 
-export function CommentReplies({
+export const CommentReplies = ({
   comment,
   onDelete,
 }: {
   comment: DesignComment;
   onDelete: (replyId: string) => void;
-}) {
+}) => {
   const initial = useProfileInitial();
   const replies = comment.replies ?? [];
 
@@ -111,9 +123,9 @@ export function CommentReplies({
       ))}
     </ul>
   );
-}
+};
 
-function GrowingArea(props: {
+const GrowingArea = (props: {
   label: string;
   placeholder: string;
   value: string;
@@ -121,40 +133,38 @@ function GrowingArea(props: {
   onChange: (value: string) => void;
   onEnter: () => void;
   className?: string;
-}) {
-  return (
-    <textarea
-      className={`comment-area ${props.className ?? ""}`}
-      rows={1}
-      aria-label={props.label}
-      placeholder={props.placeholder}
-      value={props.value}
-      maxLength={2000}
-      disabled={props.disabled}
-      onChange={(event) => props.onChange(event.target.value)}
-      onKeyDown={(event) => {
-        if (
-          event.key !== "Enter" ||
-          event.shiftKey ||
-          event.nativeEvent.isComposing
-        ) {
-          return;
-        }
+}) => (
+  <textarea
+    className={`comment-area ${props.className ?? ""}`}
+    rows={1}
+    aria-label={props.label}
+    placeholder={props.placeholder}
+    value={props.value}
+    maxLength={2000}
+    disabled={props.disabled}
+    onChange={(event) => props.onChange(event.target.value)}
+    onKeyDown={(event) => {
+      if (
+        event.key !== "Enter" ||
+        event.shiftKey ||
+        event.nativeEvent.isComposing
+      ) {
+        return;
+      }
 
-        event.preventDefault();
-        props.onEnter();
-      }}
-    />
-  );
-}
+      event.preventDefault();
+      props.onEnter();
+    }}
+  />
+);
 
-function ReplyBox({
+const ReplyBox = ({
   comment,
   onReply,
 }: {
   comment: DesignComment;
   onReply: (text: string) => Promise<boolean>;
-}) {
+}) => {
   const [text, setText] = useState("");
   const [busy, startTransition] = useTransition();
 
@@ -183,28 +193,9 @@ function ReplyBox({
       />
     </div>
   );
-}
+};
 
-interface OpenProps {
-  comment: DesignComment;
-  anchor: Rect;
-  zoom: number;
-  frame: { width: number; height: number };
-  breadcrumb: Breadcrumb | null;
-  initial: string | null;
-  busy: boolean;
-  onSend: () => void;
-  onFix?: () => void;
-  onSave: (text: string) => void;
-  onResolve: () => void;
-  onReopen: () => void;
-  onDelete: () => void;
-  onClose: () => void;
-  onReply: (text: string) => Promise<boolean>;
-  onDeleteReply: (replyId: string) => void;
-}
-
-export function OpenCommentPopover(props: OpenProps) {
+export const OpenCommentPopover = (props: OpenProps) => {
   const { comment } = props;
   const [text, setText] = useState(comment.text);
   const root = useRef<HTMLDivElement>(null);
@@ -236,9 +227,7 @@ export function OpenCommentPopover(props: OpenProps) {
 
   const placement = placeComposer(
     props.anchor,
-    props.zoom,
-    props.frame,
-    size,
+    { card: size, frame: props.frame, zoom: props.zoom },
     side.current,
     comment.drawing ? undefined : comment.target.offset
   );
@@ -291,8 +280,8 @@ export function OpenCommentPopover(props: OpenProps) {
         style={{
           left: placement.card.left,
           top: placement.card.top,
-          width: CARD_WIDTH,
           transform: `scale(${scale})`,
+          width: CARD_WIDTH,
         }}
         onKeyDown={onKeyDown}
         onPointerDown={(event) => event.stopPropagation()}
@@ -403,4 +392,4 @@ export function OpenCommentPopover(props: OpenProps) {
       </div>
     </>
   );
-}
+};

@@ -2,13 +2,13 @@ import { useEffect, useMemo, useState } from "react";
 
 import { fuzzyRank } from "../../../shared/fuzzy.js";
 
-export function useHistorySearch(history: readonly string[]) {
+export const useHistorySearch = (history: readonly string[]) => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
 
   const shown = useMemo(
-    () => fuzzyRank([...history].reverse(), query, (prompt) => prompt, 20),
+    () => fuzzyRank([...history].toReversed(), query, (prompt) => prompt, 20),
     [history, query]
   );
 
@@ -18,30 +18,30 @@ export function useHistorySearch(history: readonly string[]) {
     shown[Math.min(active, Math.max(0, shown.length - 1))] ?? null;
 
   return {
-    open,
-    query,
-    shown,
-    current,
-    setQuery,
-    start: () => {
-      setQuery("");
-      setOpen(true);
-    },
     close: () => setOpen(false),
+    current,
     move: (step: 1 | -1) =>
       setActive((index) =>
         shown.length === 0 ? 0 : (index + step + shown.length) % shown.length
       ),
+    open,
+    query,
+    setQuery,
+    shown,
+    start: () => {
+      setQuery("");
+      setOpen(true);
+    },
   };
-}
+};
 
-export function HistorySearch({
+export const HistorySearch = ({
   search,
   onPick,
 }: {
   search: ReturnType<typeof useHistorySearch>;
   onPick: (prompt: string) => void;
-}) {
+}) => {
   if (!search.open) {
     return null;
   }
@@ -101,4 +101,4 @@ export function HistorySearch({
       </p>
     </div>
   );
-}
+};

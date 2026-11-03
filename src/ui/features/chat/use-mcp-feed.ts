@@ -20,7 +20,10 @@ export interface McpFeedState {
 
 const KEEP = 200;
 
-function mergeActivity(list: McpActivity[], add: McpActivity[]): McpActivity[] {
+const mergeActivity = (
+  list: McpActivity[],
+  add: McpActivity[]
+): McpActivity[] => {
   const seen = new Set(list.map((item) => item.id));
   const fresh = add.filter((item) => !seen.has(item.id));
 
@@ -28,25 +31,25 @@ function mergeActivity(list: McpActivity[], add: McpActivity[]): McpActivity[] {
     return list;
   }
 
-  return [...list, ...fresh].sort((a, b) => a.at - b.at).slice(-KEEP);
-}
+  return [...list, ...fresh].toSorted((a, b) => a.at - b.at).slice(-KEEP);
+};
 
-function replaceActivity(
+const replaceActivity = (
   list: McpActivity[],
   stored: McpActivity[]
-): McpActivity[] {
+): McpActivity[] => {
   const byId = new Map(stored.map((item) => [item.id, item]));
 
   return mergeActivity(
     list.map((item) => byId.get(item.id) ?? item),
     stored
   );
-}
+};
 
-export function useMcpFeed(
+export const useMcpFeed = (
   projectId: string,
   directionId: string | null
-): McpFeedState {
+): McpFeedState => {
   const [activity, setActivity] = useState<McpActivity[]>([]);
   const [approvals, setApprovals] = useState<McpApprovalCard[]>([]);
 
@@ -58,7 +61,7 @@ export function useMcpFeed(
         (res) =>
           live && setActivity((prev) => replaceActivity(prev, res.activity))
       )
-      .catch(() => undefined);
+      .catch(() => null);
 
     return () => {
       live = false;
@@ -103,4 +106,4 @@ export function useMcpFeed(
   );
 
   return useMemo(() => ({ activity: shown, approvals }), [shown, approvals]);
-}
+};

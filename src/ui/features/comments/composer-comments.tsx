@@ -1,12 +1,12 @@
 import { Icon } from "./deps.js";
 
-export function ComposerComments({
+export const ComposerComments = ({
   count,
   onClear,
 }: {
   count: number;
   onClear: () => void;
-}) {
+}) => {
   if (count === 0) {
     return null;
   }
@@ -17,7 +17,7 @@ export function ComposerComments({
     <div className="composer-comments" data-testid="composer-comments">
       <span
         className="chip"
-        data-tip={`The run gets each ${noun.replace(/s$/, "")} with its element, and the run summary offers to resolve them.`}
+        data-tip={`The run gets each ${noun.replace(/s$/u, "")} with its element, and the run summary offers to resolve them.`}
         data-tip-side="top"
       >
         <Icon name="comment" size={12} />
@@ -33,4 +33,4 @@ export function ComposerComments({
       </span>
     </div>
   );
-}
+};

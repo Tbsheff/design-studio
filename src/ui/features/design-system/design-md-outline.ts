@@ -5,10 +5,10 @@ export interface OutlineItem {
   offset: number;
 }
 
-const HEADING = /^(#{1,3})\s+(.+?)\s*#*\s*$/;
-const FENCE = /^\s*(```|~~~)/;
+const HEADING = /^(#{1,3})\s+(.+?)\s*#*\s*$/u;
+const FENCE = /^\s*(```|~~~)/u;
 
-export function outlineOf(markdown: string): OutlineItem[] {
+export const outlineOf = (markdown: string): OutlineItem[] => {
   const out: OutlineItem[] = [];
   let fenced = false;
   let offset = 0;
@@ -20,16 +20,13 @@ export function outlineOf(markdown: string): OutlineItem[] {
     const match = fenced ? null : HEADING.exec(raw);
 
     if (match) {
-      out.push({
-        level: match[1]?.length ?? 1,
-        text: (match[2] ?? "").replaceAll(/[*_`]/g, ""),
-        line,
-        offset,
-      });
+      const level = match[1]?.length ?? 1;
+      const text = (match[2] ?? "").replaceAll(/[*_`]/gu, "");
+      out.push({ level, line, offset, text });
     }
 
     offset += raw.length + 1;
   });
 
   return out;
-}
+};

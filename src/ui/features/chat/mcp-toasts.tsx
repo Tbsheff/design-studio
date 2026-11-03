@@ -12,11 +12,11 @@ import "../../styles/mcp.css";
 
 const DONE_MS = 5000;
 
-function useApprovalFeed(): [
+const useApprovalFeed = (): [
   McpApprovalCard[],
   (id: string, outcome: McpApprovalOutcome) => void,
   (id: string) => void,
-] {
+] => {
   const [cards, setCards] = useState<McpApprovalCard[]>([]);
   const answered = useRef(new Map<string, McpApprovalOutcome>());
   useEffect(() => {
@@ -61,15 +61,15 @@ function useApprovalFeed(): [
     setCards((prev) => prev.filter((card) => card.approval.id !== id));
 
   return [cards, mark, drop];
-}
+};
 
-function topModal(): HTMLDialogElement | null {
+const topModal = (): HTMLDialogElement | null => {
   const open = document.querySelectorAll<HTMLDialogElement>("dialog:modal");
 
-  return open[open.length - 1] ?? null;
-}
+  return open.at(-1) ?? null;
+};
 
-function useTopModal(watch: boolean): HTMLDialogElement | null {
+const useTopModal = (watch: boolean): HTMLDialogElement | null => {
   const [modal, setModal] = useState<HTMLDialogElement | null>(null);
   useEffect(() => {
     if (!watch) {
@@ -80,19 +80,19 @@ function useTopModal(watch: boolean): HTMLDialogElement | null {
     check();
     const observer = new MutationObserver(check);
     observer.observe(document.body, {
-      subtree: true,
-      childList: true,
-      attributes: true,
       attributeFilter: ["open"],
+      attributes: true,
+      childList: true,
+      subtree: true,
     });
 
     return () => observer.disconnect();
   }, [watch]);
 
   return modal;
-}
+};
 
-function typingFocus(): boolean {
+const typingFocus = (): boolean => {
   const active = document.activeElement;
 
   return (
@@ -102,15 +102,15 @@ function typingFocus(): boolean {
       active instanceof HTMLTextAreaElement ||
       active instanceof HTMLSelectElement)
   );
-}
+};
 
-function showOnTop(element: HTMLDivElement | null): void {
+const showOnTop = (element: HTMLDivElement | null): void => {
   if (element && !element.matches(":popover-open")) {
     element.showPopover();
   }
-}
+};
 
-function Toast({
+const Toast = ({
   card,
   focus,
   onAnswer,
@@ -120,7 +120,7 @@ function Toast({
   focus: boolean;
   onAnswer: (allow: boolean) => void;
   onDrop: () => void;
-}) {
+}) => {
   const dropRef = useRef(onDrop);
   dropRef.current = onDrop;
   useEffect(() => {
@@ -128,9 +128,9 @@ function Toast({
       return;
     }
 
-    const timer = window.setTimeout(() => dropRef.current(), DONE_MS);
+    const timer = globalThis.setTimeout(() => dropRef.current(), DONE_MS);
 
-    return () => window.clearTimeout(timer);
+    return () => globalThis.clearTimeout(timer);
   }, [card.outcome]);
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -162,9 +162,9 @@ function Toast({
       <McpApproval card={card} compact onAnswer={onAnswer} />
     </div>
   );
-}
+};
 
-export function McpToasts() {
+export const McpToasts = () => {
   const [cards, mark, drop] = useApprovalFeed();
   const inlineProject = useInlineApprovalProject();
   const modal = useTopModal(cards.length > 0);
@@ -210,4 +210,4 @@ export function McpToasts() {
     </div>,
     modal
   );
-}
+};

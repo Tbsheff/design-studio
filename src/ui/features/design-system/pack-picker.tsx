@@ -9,6 +9,7 @@ import { findPack, keySwatches } from "./packs.js";
 import type { PacksState } from "./packs.js";
 
 const loadList = () => import("./pack-list.js");
+
 const PackList = lazy(async () => {
   const loaded = await loadList();
 
@@ -22,7 +23,7 @@ interface Props {
   onNew?: () => void;
 }
 
-function TriggerLabel({ pack }: { pack: PackSummary | null }) {
+const TriggerLabel = ({ pack }: { pack: PackSummary | null }) => {
   if (!pack) {
     return (
       <>
@@ -38,9 +39,9 @@ function TriggerLabel({ pack }: { pack: PackSummary | null }) {
       <span className="pack-trigger-text truncate">{pack.name}</span>
     </>
   );
-}
+};
 
-export function PackPicker({ state, value, onChange, onNew }: Props) {
+export const PackPicker = ({ state, value, onChange, onNew }: Props) => {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -119,4 +120,4 @@ export function PackPicker({ state, value, onChange, onNew }: Props) {
       )}
     </div>
   );
-}
+};

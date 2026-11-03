@@ -22,20 +22,20 @@ interface TurnProps {
 
 const WAIT_TIP = "Wait for the run to finish";
 
-function turnProps(
+const turnProps = (
   run: RunView,
   rewind: RewindControl | undefined,
   title: string | undefined,
   actions: TurnActions | null
-): TurnProps {
+): TurnProps => {
   if (!rewind || !actions) {
     return {
-      title,
+      actions: null,
+      editTip: null,
+      forkBase: null,
       restoreTip: null,
       restoreVersionId: null,
-      forkBase: null,
-      editTip: null,
-      actions: null,
+      title,
     };
   }
 
@@ -44,7 +44,7 @@ function turnProps(
 
   const forkBase = running
     ? null
-    : forkBaseOf({ versionId, startedAt: run.startedAt }, rewind.versions);
+    : forkBaseOf({ startedAt: run.startedAt, versionId }, rewind.versions);
 
   const restoreTip =
     running || rewind.locked
@@ -63,19 +63,19 @@ function turnProps(
       : null;
 
   return {
-    title,
+    actions,
+    editTip,
+    forkBase,
     restoreTip,
     restoreVersionId: restoreTip === null ? versionId : null,
-    forkBase,
-    editTip,
-    actions,
+    title,
   };
-}
+};
 
-function undoProps(
+const undoProps = (
   run: RunView,
   rewind: RewindControl | undefined
-): { undoVersionId: string | null; undoTip: string | null } {
+): { undoVersionId: string | null; undoTip: string | null } => {
   const versionId = run.summary?.versionId;
 
   const parentId =
@@ -87,23 +87,23 @@ function undoProps(
       : null;
 
   if (!rewind || !parentId) {
-    return { undoVersionId: null, undoTip: null };
+    return { undoTip: null, undoVersionId: null };
   }
 
   return {
-    undoVersionId: parentId,
     undoTip: rewind.locked
       ? WAIT_TIP
       : rewind.dirtyCount > 0
         ? "Save or discard your edits first"
         : null,
+    undoVersionId: parentId,
   };
-}
+};
 
-function reviewOf(
+const reviewOf = (
   run: RunView,
   rewind: RewindControl | undefined
-): string | null {
+): string | null => {
   const versionId = run.summary?.versionId;
 
   if (!rewind || !versionId || run.status === "running") {
@@ -115,7 +115,7 @@ function reviewOf(
   )
     ? versionId
     : null;
-}
+};
 
 export { turnProps, undoProps, reviewOf };
 

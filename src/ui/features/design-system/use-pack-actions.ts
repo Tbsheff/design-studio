@@ -19,12 +19,12 @@ interface Options {
   onCommitted: () => void;
 }
 
-export function usePackActions({
+export const usePackActions = ({
   projectId,
   directionId,
   setProject,
   onCommitted,
-}: Options): { actions: DesignSystemActions; toast: Toast | null } {
+}: Options): { actions: DesignSystemActions; toast: Toast | null } => {
   const [toast, setToast] = useState<Toast | null>(null);
 
   const show = useCallback(
@@ -83,4 +83,4 @@ export function usePackActions({
   );
 
   return { actions, toast };
-}
+};

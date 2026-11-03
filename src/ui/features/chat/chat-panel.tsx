@@ -17,8 +17,8 @@ import {
 import { PendingEntry, RunEntry } from "./chat-run-entry.js";
 import { ChatSearch } from "./chat-search.js";
 import { reviewOf, turnProps, undoProps } from "./chat-turn-model.js";
-import { feedShown, McpItem, timelineOf } from "./mcp-feed.js";
 import type { McpFeedControl } from "./mcp-feed.js";
+import { feedShown, McpItem, timelineOf } from "./mcp-feed.js";
 import type { RunView } from "./run-state-model.js";
 import {
   useLatest,
@@ -46,7 +46,7 @@ interface Props {
   onReview?: (versionId: string) => void;
 }
 
-function ChatPanel({
+const ChatPanel = ({
   runs,
   pending = null,
   direction,
@@ -62,7 +62,7 @@ function ChatPanel({
   offline,
   onStop,
   onReview,
-}: Props) {
+}: Props) => {
   const workTree = direction?.workTree ?? null;
   const headVersionId = direction?.headVersionId ?? null;
   const detailsRef = useLatest(onDetails);
@@ -79,13 +79,13 @@ function ChatPanel({
     [reviewRef]
   );
 
-  const polish = usePolish(
+  const polish = usePolish({
     headVersionId,
-    running || busy,
+    onApprovePlan,
     onPolish,
     onRetry,
-    onApprovePlan
-  );
+    polishing: running || busy,
+  });
 
   const { titles, actions } = useTurnActions(rewind);
   const search = useRunSearch(runs.length > 1);
@@ -160,6 +160,6 @@ function ChatPanel({
       </Conversation>
     </div>
   );
-}
+};
 
 export { ChatPanel };

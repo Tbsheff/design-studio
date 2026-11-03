@@ -5,13 +5,13 @@ import type { PackSummary } from "../../../shared/contracts.js";
 import { Icon } from "../../kit/Icon.js";
 import { Swatches } from "../inspector/swatches.js";
 import { COPY } from "./copy.js";
-import { findPack, fontStack, keySwatches, loadPackFonts } from "./packs.js";
+import { findPack, fontStack, loadPackFonts } from "./packs.js";
 
 const NONE = "none";
 const SERIF = "Georgia, serif";
 const SANS = "system-ui, sans-serif";
 
-function columnsOf(list: HTMLElement | null): number {
+const columnsOf = (list: HTMLElement | null): number => {
   if (!list) {
     return 1;
   }
@@ -20,14 +20,14 @@ function columnsOf(list: HTMLElement | null): number {
     1,
     getComputedStyle(list).gridTemplateColumns.split(" ").filter(Boolean).length
   );
-}
+};
 
-function nextIndex(
+const nextIndex = (
   key: string,
   index: number,
   count: number,
   cols: number
-): number | null {
+): number | null => {
   const moves: Record<string, number> = {
     ArrowDown: index + cols,
     ArrowLeft: index - 1,
@@ -44,29 +44,26 @@ function nextIndex(
   }
 
   return Math.min(count - 1, Math.max(0, target));
-}
+};
 
-function NoneCard() {
-  return (
-    <>
-      <span className="pack-specimen none" aria-hidden="true">
-        <Icon name="close" size={14} />
+const NoneCard = () => (
+  <>
+    <span className="pack-specimen none" aria-hidden="true">
+      <Icon name="close" size={14} />
+    </span>
+    <span className="pack-text">
+      <span className="pack-name">No design system</span>
+      <span className="pack-desc">
+        The agent picks colors and type for each project.
       </span>
-      <span className="pack-text">
-        <span className="pack-name">No design system</span>
-        <span className="pack-desc">
-          The agent picks colors and type for each project.
-        </span>
-      </span>
-    </>
-  );
-}
+    </span>
+  </>
+);
 
-function swatchValue(pack: PackSummary, name: string): string | undefined {
-  return pack.swatches.find((swatch) => swatch.name === name)?.value;
-}
+const swatchValue = (pack: PackSummary, name: string): string | undefined =>
+  pack.swatches.find((swatch) => swatch.name === name)?.value;
 
-function PackCard({ pack }: { pack: PackSummary }) {
+const PackCard = ({ pack }: { pack: PackSummary }) => {
   const colors = {
     background: swatchValue(pack, "bg"),
     color: swatchValue(pack, "fg"),
@@ -98,7 +95,7 @@ function PackCard({ pack }: { pack: PackSummary }) {
       </span>
     </>
   );
-}
+};
 
 interface ListProps {
   packs: PackSummary[] | null;
@@ -108,13 +105,13 @@ interface ListProps {
   onTab?: () => void;
 }
 
-export function PackList({
+export const PackList = ({
   packs,
   value,
   includeNone,
   onChoose,
   onTab,
-}: ListProps) {
+}: ListProps) => {
   const options: (PackSummary | null)[] = includeNone
     ? [null, ...(packs ?? [])]
     : (packs ?? []);
@@ -219,4 +216,4 @@ export function PackList({
       )}
     </div>
   );
-}
+};

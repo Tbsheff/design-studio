@@ -4,11 +4,11 @@ import { Message, MessageContent } from "../../ai/components/ai/message.js";
 import { ApprovalCard, canPolishRun } from "../../chat-slots.js";
 import { RunFeedbackRow } from "./chat-feedback.js";
 import {
+  UserMessage,
   PlanCard,
   PolishThis,
   RunError,
   RunNotice,
-  UserMessage,
 } from "./chat-parts.js";
 import { UserTurn } from "./chat-rewind.js";
 import { RunParts } from "./chat-run-parts.js";
@@ -33,7 +33,7 @@ interface EntryProps extends TurnProps {
   onStop: (() => void) | undefined;
 }
 
-function hasComments(run: RunView): boolean {
+const hasComments = (run: RunView): boolean => {
   const lists = [
     run.request?.comments,
     run.request?.commentIds,
@@ -42,138 +42,144 @@ function hasComments(run: RunView): boolean {
   ];
 
   return lists.some((list) => (list?.length ?? 0) > 0);
-}
+};
 
-const RunEntry = memo(function RunEntry({
-  run,
-  latest,
-  workTree,
-  onDetails,
-  polish,
-  offline,
-  onStop,
-  title,
-  restoreTip,
-  restoreVersionId,
-  forkBase,
-  editTip,
-  actions,
-  undoVersionId,
-  undoTip,
-  reviewVersionId,
-  onReview,
-}: EntryProps) {
-  const runId = run.runId;
-  const details = useCallback(() => onDetails(runId), [onDetails, runId]);
+const RunEntry = memo(
+  ({
+    run,
+    latest,
+    workTree,
+    onDetails,
+    polish,
+    offline,
+    onStop,
+    title,
+    restoreTip,
+    restoreVersionId,
+    forkBase,
+    editTip,
+    actions,
+    undoVersionId,
+    undoTip,
+    reviewVersionId,
+    onReview,
+  }: EntryProps) => {
+    const { runId } = run;
+    const details = useCallback(() => onDetails(runId), [onDetails, runId]);
 
-  const review = useMemo(
-    () =>
-      onReview && reviewVersionId ? () => onReview(reviewVersionId) : undefined,
-    [onReview, reviewVersionId]
-  );
+    const review = useMemo(
+      () =>
+        onReview && reviewVersionId
+          ? () => onReview(reviewVersionId)
+          : undefined,
+      [onReview, reviewVersionId]
+    );
 
-  const onUndo = useMemo(
-    () =>
-      actions && undoVersionId
-        ? () => actions.onRestore(undoVersionId)
-        : undefined,
-    [actions, undoVersionId]
-  );
+    const onUndo = useMemo(
+      () =>
+        actions && undoVersionId
+          ? () => actions.onRestore(undoVersionId)
+          : undefined,
+      [actions, undoVersionId]
+    );
 
-  const running = run.status === "running";
+    const running = run.status === "running";
 
-  const rewind = useMemo(
-    () => ({ restoreTip, restoreVersionId, forkBase, editTip }),
-    [restoreTip, restoreVersionId, forkBase, editTip]
-  );
+    const rewind = useMemo(
+      () => ({ editTip, forkBase, restoreTip, restoreVersionId }),
+      [restoreTip, restoreVersionId, forkBase, editTip]
+    );
 
-  return (
-    <div className="run flex min-w-0 flex-col gap-3.5" data-run-id={runId}>
-      <UserTurn
-        run={run}
-        title={title}
-        rewind={actions ? rewind : null}
-        actions={actions}
-      />
-      <Message type="incoming" className="msg assistant">
-        <MessageContent className="run-body gap-3">
-          <RunParts run={run} running={running} workTree={workTree} />
-          {running &&
-            run.permissions.map((request) =>
-              request.card ? (
-                <Suspense key={request.id} fallback={null}>
-                  <ApprovalCard
+    return (
+      <div className="run flex min-w-0 flex-col gap-3.5" data-run-id={runId}>
+        <UserTurn
+          run={run}
+          title={title}
+          rewind={actions ? rewind : null}
+          actions={actions}
+        />
+        <Message type="incoming" className="msg assistant">
+          <MessageContent className="run-body gap-3">
+            <RunParts run={run} running={running} workTree={workTree} />
+            {running &&
+              run.permissions.map((request) =>
+                request.card ? (
+                  <Suspense key={request.id} fallback={null}>
+                    <ApprovalCard
+                      projectId={runProjectId()}
+                      runId={runId}
+                      request={request}
+                    />
+                  </Suspense>
+                ) : (
+                  <PermissionPrompt
+                    key={request.id}
                     projectId={runProjectId()}
                     runId={runId}
                     request={request}
                   />
-                </Suspense>
-              ) : (
-                <PermissionPrompt
-                  key={request.id}
-                  projectId={runProjectId()}
-                  runId={runId}
-                  request={request}
-                />
-              )
+                )
+              )}
+            {running && (
+              <LiveStatus
+                run={run}
+                workTree={workTree}
+                offline={offline}
+                onStop={onStop}
+              />
             )}
-          {running && (
-            <LiveStatus
+            <RunError
               run={run}
-              workTree={workTree}
-              offline={offline}
-              onStop={onStop}
+              latest={latest}
+              undo={onUndo ? { onUndo, tip: undoTip } : undefined}
+              {...(polish.onRetry
+                ? { onRetry: () => polish.onRetry?.(run) }
+                : {})}
             />
-          )}
-          <RunError
-            run={run}
-            latest={latest}
-            undo={onUndo ? { onUndo, tip: undoTip } : undefined}
-            {...(polish.onRetry
-              ? { onRetry: () => polish.onRetry?.(run) }
-              : {})}
-          />
-          <RunNotice
-            run={run}
-            latest={latest}
-            {...(polish.onRetry
-              ? { onRetry: () => polish.onRetry?.(run) }
-              : {})}
-          />
-          {hasComments(run) && <RunCommentsCard run={run} />}
-          <RunFeedbackRow run={run} onDetails={details} onReview={review} />
-          {latest &&
-            run.status === "completed" &&
-            run.request?.plan &&
-            polish.onApprovePlan && (
-              <PlanCard onApprove={() => polish.onApprovePlan?.(run)} />
+            <RunNotice
+              run={run}
+              latest={latest}
+              {...(polish.onRetry
+                ? { onRetry: () => polish.onRetry?.(run) }
+                : {})}
+            />
+            {hasComments(run) && <RunCommentsCard run={run} />}
+            <RunFeedbackRow run={run} onDetails={details} onReview={review} />
+            {latest &&
+              run.status === "completed" &&
+              run.request?.plan &&
+              polish.onApprovePlan && (
+                <PlanCard onApprove={() => polish.onApprovePlan?.(run)} />
+              )}
+            {canPolishRun(run, polish.headVersionId) && (
+              <PolishThis
+                disabled={polish.running}
+                onPolish={polish.onPolish}
+              />
             )}
-          {canPolishRun(run, polish.headVersionId) && (
-            <PolishThis disabled={polish.running} onPolish={polish.onPolish} />
-          )}
-        </MessageContent>
-      </Message>
-    </div>
-  );
-});
+          </MessageContent>
+        </Message>
+      </div>
+    );
+  }
+);
+RunEntry.displayName = "RunEntry";
 
-function PendingEntry({
+const PendingEntry = ({
   run,
   workTree,
 }: {
   run: RunView;
   workTree: string | null;
-}) {
-  return (
-    <div className="run flex min-w-0 flex-col gap-3.5" data-pending-run="">
-      <UserMessage run={run} />
-      <Message type="incoming" className="msg assistant">
-        <MessageContent className="run-body gap-3">
-          <LiveStatus run={run} workTree={workTree} />
-        </MessageContent>
-      </Message>
-    </div>
-  );
-}
+}) => (
+  <div className="run flex min-w-0 flex-col gap-3.5" data-pending-run="">
+    <UserMessage run={run} />
+    <Message type="incoming" className="msg assistant">
+      <MessageContent className="run-body gap-3">
+        <LiveStatus run={run} workTree={workTree} />
+      </MessageContent>
+    </Message>
+  </div>
+);
 
 export { RunEntry, PendingEntry };

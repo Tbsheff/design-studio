@@ -11,36 +11,30 @@ import type { RunView } from "./run-state-model.js";
 
 export const IMPROVE_PROMPT = "Improve this design system.";
 
-export function improveRequest(
+export const improveRequest = (
   focus: string,
   defaultLevel: RunLevel | undefined
-): RunRequest {
+): RunRequest => {
   const trimmed = focus.trim();
 
   const level: RunLevel =
     !defaultLevel || defaultLevel === "wireframe" ? "prototype" : defaultLevel;
 
   return {
-    prompt: trimmed ? `${IMPROVE_PROMPT}\n\nFocus: ${trimmed}` : IMPROVE_PROMPT,
-    mode: "edit",
-    task: "design-system",
     level,
+    mode: "edit",
+    prompt: trimmed ? `${IMPROVE_PROMPT}\n\nFocus: ${trimmed}` : IMPROVE_PROMPT,
+    task: "design-system",
   };
-}
+};
 
-export function lastImproveRun(runs: readonly RunView[]): RunView | null {
-  return (
-    [...runs].reverse().find((run) => run.request?.task === "design-system") ??
-    null
-  );
-}
+export const lastImproveRun = (runs: readonly RunView[]): RunView | null =>
+  [...runs].toReversed().find((run) => run.request?.task === "design-system") ??
+  null;
 
-export function improvePassed(run: RunView | null): boolean {
-  return (
-    run?.summary?.status === "completed" &&
-    run.summary.designSystemCheck?.passed === true
-  );
-}
+export const improvePassed = (run: RunView | null): boolean =>
+  run?.summary?.status === "completed" &&
+  run.summary.designSystemCheck?.passed === true;
 
 interface ImproveProps {
   running: boolean;
@@ -48,7 +42,7 @@ interface ImproveProps {
   onImprove: (focus: string) => Promise<void>;
 }
 
-export function ImproveControl({ running, run, onImprove }: ImproveProps) {
+export const ImproveControl = ({ running, run, onImprove }: ImproveProps) => {
   const improving = run?.status === "running";
   const primary = !improvePassed(run);
   const [focus, setFocus] = useState("");
@@ -94,9 +88,9 @@ export function ImproveControl({ running, run, onImprove }: ImproveProps) {
       </button>
     </form>
   );
-}
+};
 
-function runNote(run: RunView | null): string | null {
+const runNote = (run: RunView | null): string | null => {
   const summary = run?.summary;
 
   if (!summary || summary.status === "running") {
@@ -116,14 +110,14 @@ function runNote(run: RunView | null): string | null {
   }
 
   return null;
-}
+};
 
 const RULE_LABEL: Record<DesignSystemCheckRule, string> = {
-  "design-md": "DESIGN.md sections to write",
-  tokens: "Tokens",
   contrast: "Contrast",
-  "kit-colors": "Kit page colors",
+  "design-md": "DESIGN.md sections to write",
   fonts: "Fonts",
+  "kit-colors": "Kit page colors",
+  tokens: "Tokens",
 };
 
 const RULE_ORDER: DesignSystemCheckRule[] = [
@@ -134,9 +128,9 @@ const RULE_ORDER: DesignSystemCheckRule[] = [
   "design-md",
 ];
 
-const MORE = /^(\d+) more .+ not listed\.?$/;
+const MORE = /^(\d+) more .+ not listed\.?$/u;
 
-function problemText(rule: DesignSystemCheckRule, message: string): string {
+const problemText = (rule: DesignSystemCheckRule, message: string): string => {
   const more = MORE.exec(message)?.[1];
 
   if (more) {
@@ -147,36 +141,35 @@ function problemText(rule: DesignSystemCheckRule, message: string): string {
     return message;
   }
 
-  const todo = /to-do line:\s*_?\s*To do:\s*(.+?)_?\s*$/i.exec(message);
+  const todo = /to-do line:\s*_?\s*To do:\s*(.+?)_?\s*$/iu.exec(message);
   const found = todo?.[1];
 
   if (!found) {
     return message;
   }
 
-  const text = found.trim().replace(/\.$/, "");
+  const text = found.trim().replace(/\.$/u, "");
 
   return text.charAt(0).toUpperCase() + text.slice(1);
-}
+};
 
-function groupProblems(
+const groupProblems = (
   problems: DesignSystemCheckResult["problems"]
-): { rule: DesignSystemCheckRule; items: string[] }[] {
-  return RULE_ORDER.map((rule) => ({
-    rule,
+): { rule: DesignSystemCheckRule; items: string[] }[] =>
+  RULE_ORDER.map((rule) => ({
     items: problems
       .filter((problem) => problem.rule === rule)
       .map((problem) => problemText(rule, problem.message)),
+    rule,
   })).filter((group) => group.items.length > 0);
-}
 
-export function CheckStatus({
+export const CheckStatus = ({
   check,
   run,
 }: {
   check: DesignSystemCheckResult | null;
   run: RunView | null;
-}) {
+}) => {
   const [open, setOpen] = useState(false);
   const listId = useId();
   const toggleRef = useRef<HTMLButtonElement>(null);
@@ -242,4 +235,4 @@ export function CheckStatus({
       )}
     </span>
   );
-}
+};

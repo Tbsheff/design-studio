@@ -16,12 +16,12 @@ interface ChangeProps {
   onApply: (packId: string) => Promise<void>;
 }
 
-export function ChangePackDialog({
+export const ChangePackDialog = ({
   currentId,
   from,
   onClose,
   onApply,
-}: ChangeProps) {
+}: ChangeProps) => {
   const state = pickable(usePacks());
   const [busy, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -119,7 +119,7 @@ export function ChangePackDialog({
       </div>
     </dialog>
   );
-}
+};
 
 interface SaveProps {
   defaultName: string;
@@ -131,13 +131,13 @@ interface SaveProps {
 
 const COPY_SUFFIX = " copy";
 
-export function SavePackDialog({
+export const SavePackDialog = ({
   defaultName,
   updating,
   canCopy,
   onClose,
   onSave,
-}: SaveProps) {
+}: SaveProps) => {
   const [name, setName] = useState(defaultName);
   const [asNew, setAsNew] = useState(false);
   const [busy, startTransition] = useTransition();
@@ -263,4 +263,4 @@ export function SavePackDialog({
       </form>
     </dialog>
   );
-}
+};

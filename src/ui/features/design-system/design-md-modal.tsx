@@ -18,7 +18,10 @@ import type { OutlineItem } from "./design-md-outline.js";
 
 const HEADING_TAGS = new Set(["H1", "H2", "H3"]);
 
-function collectHeadings(root: Element, found: HTMLElement[]): HTMLElement[] {
+const collectHeadings = (
+  root: Element,
+  found: HTMLElement[]
+): HTMLElement[] => {
   for (const child of root.children) {
     if (HEADING_TAGS.has(child.tagName) && child instanceof HTMLElement) {
       found.push(child);
@@ -28,20 +31,19 @@ function collectHeadings(root: Element, found: HTMLElement[]): HTMLElement[] {
   }
 
   return found;
-}
+};
 
-function jumpTo(
+const jumpTo = (
   editor: HTMLTextAreaElement | null,
   preview: HTMLDivElement | null,
   item: OutlineItem,
   index: number
-): void {
+): void => {
   if (editor) {
     editor.focus();
     editor.setSelectionRange(item.offset, item.offset);
 
-    const lineHeight =
-      Number.parseFloat(getComputedStyle(editor).lineHeight) || 20;
+    const lineHeight = Number(getComputedStyle(editor).lineHeight) || 20;
 
     editor.scrollTop = Math.max(0, item.line * lineHeight - lineHeight);
   }
@@ -51,42 +53,40 @@ function jumpTo(
   if (heading instanceof HTMLElement && preview) {
     preview.scrollTop = heading.offsetTop - preview.offsetTop - 8;
   }
-}
+};
 
-function Outline({
+const Outline = ({
   items,
   onJump,
 }: {
   items: OutlineItem[];
   onJump: (item: OutlineItem, index: number) => void;
-}) {
-  return (
-    <nav className="dmd-outline" aria-label={COPY.labelOutline}>
-      <p className="dmd-pane-label">Outline</p>
-      {items.length === 0 ? (
-        <p className="dmd-outline-empty">
-          Add a heading, like ## Color, to see it here.
-        </p>
-      ) : (
-        <ul>
-          {items.map((item, index) => (
-            <li key={`${item.line}:${item.text}`}>
-              <button
-                type="button"
-                className={`dmd-outline-item level-${item.level}`}
-                onClick={() => onJump(item, index)}
-              >
-                <span className="truncate">{item.text}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </nav>
-  );
-}
+}) => (
+  <nav className="dmd-outline" aria-label={COPY.labelOutline}>
+    <p className="dmd-pane-label">Outline</p>
+    {items.length === 0 ? (
+      <p className="dmd-outline-empty">
+        Add a heading, like ## Color, to see it here.
+      </p>
+    ) : (
+      <ul>
+        {items.map((item, index) => (
+          <li key={`${item.line}:${item.text}`}>
+            <button
+              type="button"
+              className={`dmd-outline-item level-${item.level}`}
+              onClick={() => onJump(item, index)}
+            >
+              <span className="truncate">{item.text}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    )}
+  </nav>
+);
 
-function UnsavedBar({
+const UnsavedBar = ({
   saving,
   onSave,
   onDiscard,
@@ -96,7 +96,7 @@ function UnsavedBar({
   onSave: () => void;
   onDiscard: () => void;
   onKeep: () => void;
-}) {
+}) => {
   const keep = useRef<HTMLButtonElement>(null);
   useEffect(() => keep.current?.focus(), []);
 
@@ -127,15 +127,15 @@ function UnsavedBar({
       </button>
     </div>
   );
-}
+};
 
-export function DesignMdModal({
+export const DesignMdModal = ({
   projectId,
   onClose,
 }: {
   projectId: string;
   onClose: () => void;
-}) {
+}) => {
   const [content, setContent] = useState<string | null>(null);
   const [original, setOriginal] = useState<string | null>(null);
   const [saving, startSaving] = useTransition();
@@ -285,7 +285,7 @@ export function DesignMdModal({
             tabIndex={0}
           >
             {shown.trim() ? (
-              <Markdown>{shown.replaceAll(/<!--[\s\S]*?-->/g, "")}</Markdown>
+              <Markdown>{shown.replaceAll(/<!--[\s\S]*?-->/gu, "")}</Markdown>
             ) : (
               <p className="dmd-outline-empty">Nothing to show yet.</p>
             )}
@@ -324,4 +324,4 @@ export function DesignMdModal({
       )}
     </dialog>
   );
-}
+};

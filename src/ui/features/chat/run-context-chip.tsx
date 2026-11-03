@@ -2,11 +2,11 @@ import { Chip } from "../../ai/components/ai/chip.js";
 import { Icon } from "../../kit/Icon.js";
 import type { RunCanvasChip } from "./use-run-canvas.js";
 
-export function RunContextChip({
+export const RunContextChip = ({
   chip,
 }: {
   chip: RunCanvasChip | null | undefined;
-}) {
+}) => {
   if (!chip) {
     return null;
   }
@@ -40,4 +40,4 @@ export function RunContextChip({
       </Chip>
     </div>
   );
-}
+};

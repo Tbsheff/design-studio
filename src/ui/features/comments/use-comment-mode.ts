@@ -8,15 +8,12 @@ type SetSelection = (
   updater: (prev: SelectionContext[]) => SelectionContext[]
 ) => void;
 
-function sameSelectors(
+const sameSelectors = (
   prev: SelectionContext[],
   next: SelectionContext[]
-): boolean {
-  return (
-    prev.length === next.length &&
-    prev.every((s, i) => s.selector === next[i]?.selector)
-  );
-}
+): boolean =>
+  prev.length === next.length &&
+  prev.every((s, i) => s.selector === next[i]?.selector);
 
 export interface CommentMode {
   available: boolean;
@@ -26,11 +23,11 @@ export interface CommentMode {
   guard: (setSelection: SetSelection) => SetSelection;
 }
 
-export function useCommentMode(
+export const useCommentMode = (
   control: CommentsControl | undefined,
   live: boolean,
   setSelectMode: (on: boolean) => void
-): CommentMode {
+): CommentMode => {
   const [on, setOn] = useState(false);
   const available = Boolean(control) && live;
   const availableRef = useRef(available);
@@ -44,17 +41,23 @@ export function useCommentMode(
   }, [setSelectMode]);
 
   useEffect(() => {
-    if (!live) setOn(false);
+    if (!live) {
+      setOn(false);
+    }
   }, [live]);
 
   useEffect(() => {
-    if (!repinId) return;
+    if (!repinId) {
+      return;
+    }
     setSelectMode(false);
     setOn(true);
   }, [repinId, setSelectMode]);
 
   useEffect(() => {
-    if (!on && repinId) setRepinId?.(null);
+    if (!on && repinId) {
+      setRepinId?.(null);
+    }
   }, [on]);
 
   useEffect(() => {
@@ -64,9 +67,11 @@ export function useCommentMode(
         event.metaKey ||
         event.ctrlKey ||
         event.altKey
-      )
+      ) {
         return;
+      }
       const key = event.key.toLowerCase();
+
       if (key === "c" && availableRef.current) {
         event.preventDefault();
         toggle();
@@ -74,21 +79,26 @@ export function useCommentMode(
         setOn(false);
       }
     };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+
+    globalThis.addEventListener("keydown", onKey);
+
+    return () => globalThis.removeEventListener("keydown", onKey);
   }, [toggle]);
 
   const guard = useCallback(
     (setSelection: SetSelection): SetSelection => {
-      if (!on) return setSelection;
+      if (!on) {
+        return setSelection;
+      }
       return (updater) =>
         setSelection((prev) => {
           const next = updater(prev);
+
           return sameSelectors(prev, next) ? next : prev;
         });
     },
     [on]
   );
 
-  return { available, on, setOn, toggle, guard };
-}
+  return { available, guard, on, setOn, toggle };
+};

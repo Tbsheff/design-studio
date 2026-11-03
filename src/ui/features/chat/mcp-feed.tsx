@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 
 import type {
   McpActivity,
@@ -6,19 +6,11 @@ import type {
 } from "../../../shared/contracts.js";
 import { errorText } from "../../api.js";
 import { formatTime } from "../../domain/format.js";
-import { Icon, type IconName } from "../../kit/Icon.js";
+import { Icon } from "../../kit/Icon.js";
+import type { IconName } from "../../kit/Icon.js";
 import { mcpApi } from "./mcp-model.js";
 import type { RunView } from "./run-state-model.js";
 import type { McpApprovalCard, McpFeedState } from "./use-mcp-feed.js";
-
-export const MCP_ACTIVE_MS = 60_000;
-const RECENT_MS = 10 * 60_000;
-const FOLD_AT = 5;
-
-export interface McpFeedControl extends McpFeedState {
-  locked: boolean;
-  onUndo: (versionId: string) => void;
-}
 
 export type TimelineItem =
   | { kind: "run"; key: string; at: number; run: RunView }
@@ -31,14 +23,14 @@ export type TimelineItem =
     }
   | { kind: "approval"; key: string; at: number; card: McpApprovalCard };
 
-export function timelineOf(
+export const timelineOf = (
   runs: readonly RunView[],
   feed: McpFeedState | null
-): TimelineItem[] {
+): TimelineItem[] => {
   const items: TimelineItem[] = runs.map((run) => ({
-    kind: "run",
-    key: run.runId,
     at: run.startedAt,
+    key: run.runId,
+    kind: "run",
     run,
   }));
 
@@ -48,22 +40,22 @@ export function timelineOf(
 
   for (const card of feed.approvals) {
     items.push({
-      kind: "approval",
-      key: `approval-${card.approval.id}`,
       at: card.approval.createdAt,
       card,
+      key: `approval-${card.approval.id}`,
+      kind: "approval",
     });
   }
 
   const singles: TimelineItem[] = feed.activity.map((entry) => ({
-    kind: "block",
-    key: `mcp-${entry.id}`,
     at: entry.at,
     client: entry.client,
     entries: [entry],
+    key: `mcp-${entry.id}`,
+    kind: "block",
   }));
 
-  const sorted = [...items, ...singles].sort((a, b) => a.at - b.at);
+  const sorted = [...items, ...singles].toSorted((a, b) => a.at - b.at);
   const out: TimelineItem[] = [];
 
   for (const item of sorted) {
@@ -83,39 +75,60 @@ export function timelineOf(
   }
 
   return out;
-}
-
-const TOOL_ICONS: Record<string, IconName> = {
-  write_file: "file",
-  edit_element: "pencil",
-  set_props: "component",
-  replace_style: "token",
-  insert_component: "component",
-  canvas_place: "frame",
-  add_frame: "frame",
-  add_route_frame: "frame",
-  attach_app: "plus",
-  remove_frame: "trash",
-  restore_version: "restore",
-  apply_design_system: "palette",
-  set_token: "token",
-  add_comment: "comment",
-  reply_comment: "comment",
-  resolve_comment: "check",
-  create_project: "plus",
-  export: "download",
-  ship: "branch",
-  batch_edit: "layers",
-  arrange: "frame",
-  measure: "scan",
-  undo: "undo",
-  redo: "reload",
-  open_folder: "folder",
-  create_design_system: "palette",
-  save_design_system: "book",
 };
 
-function useNow(stepMs: number, active: boolean): number {
+export interface McpFeedControl extends McpFeedState {
+  locked: boolean;
+  onUndo: (versionId: string) => void;
+}
+
+export const feedShown = (mcp: McpFeedControl | null): boolean =>
+  mcp !== null && (mcp.activity.length > 0 || mcp.approvals.length > 0);
+
+const DisconnectButton = () => {
+  const [state, setState] = useState<"idle" | "busy" | "done">("idle");
+  const [error, setError] = useState<string | null>(null);
+
+  if (state === "done") {
+    return <span className="mcp-block-note">Edits off</span>;
+  }
+
+  return (
+    <>
+      {error && (
+        <span className="mcp-block-error" role="alert">
+          {error}
+        </span>
+      )}
+      <button
+        type="button"
+        className="mcp-block-btn"
+        disabled={state === "busy"}
+        data-tip="Turn off Allow edits. The MCP server keeps running."
+        data-tip-align="end"
+        onClick={() => {
+          setState("busy");
+          setError(null);
+          mcpApi
+            .disconnect()
+            .then(() => setState("done"))
+            .catch((caught: unknown) => {
+              setState("idle");
+              setError(errorText(caught));
+            });
+        }}
+      >
+        Disconnect
+      </button>
+    </>
+  );
+};
+
+export const MCP_ACTIVE_MS = 60_000;
+
+const FOLD_AT = 5;
+
+const useNow = (stepMs: number, active: boolean): number => {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     if (!active) {
@@ -123,15 +136,45 @@ function useNow(stepMs: number, active: boolean): number {
     }
 
     setNow(Date.now());
-    const id = window.setInterval(() => setNow(Date.now()), stepMs);
+    const id = globalThis.setInterval(() => setNow(Date.now()), stepMs);
 
-    return () => window.clearInterval(id);
+    return () => globalThis.clearInterval(id);
   }, [stepMs, active]);
 
   return now;
-}
+};
 
-function ActivityRow({
+const TOOL_ICONS: Record<string, IconName> = {
+  add_comment: "comment",
+  add_frame: "frame",
+  add_route_frame: "frame",
+  apply_design_system: "palette",
+  arrange: "frame",
+  attach_app: "plus",
+  batch_edit: "layers",
+  canvas_place: "frame",
+  create_design_system: "palette",
+  create_project: "plus",
+  edit_element: "pencil",
+  export: "download",
+  insert_component: "component",
+  measure: "scan",
+  open_folder: "folder",
+  redo: "reload",
+  remove_frame: "trash",
+  replace_style: "token",
+  reply_comment: "comment",
+  resolve_comment: "check",
+  restore_version: "restore",
+  save_design_system: "book",
+  set_props: "component",
+  set_token: "token",
+  ship: "branch",
+  undo: "undo",
+  write_file: "file",
+};
+
+const ActivityRow = ({
   entry,
   locked,
   onUndo,
@@ -141,7 +184,7 @@ function ActivityRow({
   locked: boolean;
   onUndo: (versionId: string) => void;
   readOnly?: boolean;
-}) {
+}) => {
   const [undone, setUndone] = useState(false);
   const before = entry.versionId ? entry.beforeVersionId : null;
 
@@ -184,48 +227,9 @@ function ActivityRow({
       </time>
     </li>
   );
-}
+};
 
-function DisconnectButton() {
-  const [state, setState] = useState<"idle" | "busy" | "done">("idle");
-  const [error, setError] = useState<string | null>(null);
-
-  if (state === "done") {
-    return <span className="mcp-block-note">Edits off</span>;
-  }
-
-  return (
-    <>
-      {error && (
-        <span className="mcp-block-error" role="alert">
-          {error}
-        </span>
-      )}
-      <button
-        type="button"
-        className="mcp-block-btn"
-        disabled={state === "busy"}
-        data-tip="Turn off Allow edits. The MCP server keeps running."
-        data-tip-align="end"
-        onClick={() => {
-          setState("busy");
-          setError(null);
-          mcpApi
-            .disconnect()
-            .then(() => setState("done"))
-            .catch((err: unknown) => {
-              setState("idle");
-              setError(errorText(err));
-            });
-        }}
-      >
-        Disconnect
-      </button>
-    </>
-  );
-}
-
-export function McpBlock({
+export const McpBlock = ({
   client,
   entries,
   locked,
@@ -235,7 +239,7 @@ export function McpBlock({
   entries: McpActivity[];
   locked: boolean;
   onUndo: (versionId: string) => void;
-}) {
+}) => {
   const [open, setOpen] = useState(false);
   const lastAt = entries.at(-1)?.at ?? 0;
   const now = useNow(10_000, Date.now() - lastAt < MCP_ACTIVE_MS);
@@ -293,22 +297,22 @@ export function McpBlock({
       )}
     </section>
   );
-}
+};
 
 const OUTCOME_TEXT: Record<McpApprovalOutcome, string> = {
   allow: "Allowed",
+  closed: "Closed",
   deny: "Denied",
   timeout: "Expired",
-  closed: "Closed",
 };
 
-function countdown(ms: number): string {
+const countdown = (ms: number): string => {
   const total = Math.max(0, Math.ceil(ms / 1000));
 
   return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, "0")}`;
-}
+};
 
-export function McpApproval({
+export const McpApproval = ({
   card,
   compact = false,
   onAnswer,
@@ -316,7 +320,7 @@ export function McpApproval({
   card: McpApprovalCard;
   compact?: boolean;
   onAnswer?: (allow: boolean) => void;
-}) {
+}) => {
   const { approval } = card;
   const [local, setLocal] = useState<McpApprovalOutcome | null>(null);
   const [busy, setBusy] = useState(false);
@@ -357,11 +361,11 @@ export function McpApproval({
     mcpApi
       .answer(approval.id, allow)
       .then(() => onAnswer?.(allow))
-      .catch((err: unknown) => {
+      .catch((caught: unknown) => {
         setBusy(false);
-        const text = errorText(err);
+        const text = errorText(caught);
 
-        if (/not open/.test(text)) {
+        if (/not open/u.test(text)) {
           setLocal("timeout");
         } else {
           setError(text);
@@ -412,19 +416,15 @@ export function McpApproval({
       )}
     </section>
   );
-}
+};
 
-export function feedShown(mcp: McpFeedControl | null): boolean {
-  return mcp !== null && (mcp.activity.length > 0 || mcp.approvals.length > 0);
-}
-
-export function McpItem({
+export const McpItem = ({
   item,
   mcp,
 }: {
   item: Exclude<TimelineItem, { kind: "run" }>;
   mcp: McpFeedControl | null;
-}) {
+}) => {
   if (item.kind === "approval") {
     return <McpApproval card={item.card} />;
   }
@@ -437,9 +437,11 @@ export function McpItem({
       onUndo={(versionId) => mcp?.onUndo(versionId)}
     />
   );
-}
+};
 
-export function McpEditStrip({ mcp }: { mcp: McpFeedControl | null }) {
+const RECENT_MS = 10 * 60_000;
+
+export const McpEditStrip = ({ mcp }: { mcp: McpFeedControl | null }) => {
   const last = mcp?.activity.at(-1) ?? null;
   const now = useNow(10_000, last !== null);
   const [open, setOpen] = useState(false);
@@ -500,4 +502,4 @@ export function McpEditStrip({ mcp }: { mcp: McpFeedControl | null }) {
       </button>
     </section>
   );
-}
+};

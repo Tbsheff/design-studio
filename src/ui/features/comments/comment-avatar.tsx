@@ -9,17 +9,16 @@ interface AvatarProps {
   author?: string | undefined;
 }
 
-export function authorInitial(author: string): string {
-  return (author.trim()[0] ?? "?").toUpperCase();
-}
+export const authorInitial = (author: string): string =>
+  (author.trim()[0] ?? "?").toUpperCase();
 
-export function AvatarFace({
+export const AvatarFace = ({
   initial,
   flip = false,
   tone = "queued",
   count = 0,
   author,
-}: AvatarProps) {
+}: AvatarProps) => {
   const face = author ? authorInitial(author) : initial;
 
   return (
@@ -35,15 +34,15 @@ export function AvatarFace({
       )}
     </span>
   );
-}
+};
 
-export function CommentAuthor({
+export const CommentAuthor = ({
   author,
   viewer = false,
 }: {
   author: string | undefined;
   viewer?: boolean;
-}) {
+}) => {
   if (!author) {
     return null;
   }
@@ -61,4 +60,4 @@ export function CommentAuthor({
       )}
     </span>
   );
-}
+};

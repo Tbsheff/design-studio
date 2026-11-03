@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import type { ReactNode } from "react";
 
 import type { ToolDiff } from "../../../shared/contracts.js";
@@ -21,72 +21,31 @@ import { IS_MAC } from "../../chat-slots.js";
 import { formatMs } from "../../domain/format.js";
 import { Icon } from "../../kit/Icon.js";
 import type { IconName } from "../../kit/Icon.js";
-import type { RunView, ToolRow } from "./run-state-model.js";
+import type { ToolRow, RunView } from "./run-state-model.js";
 import {
-  SKILL_TOOL,
   toolGroupLabel,
   toolSubject,
   toolTally,
   toolVerb,
+  SKILL_TOOL,
 } from "./tool-labels-model.js";
 
-const TOOL_ICON: Record<string, IconName> = {
-  Write: "pencil",
-  Edit: "pencil",
-  MultiEdit: "pencil",
-  Read: "file",
-  Bash: "terminal",
-  Grep: "search",
-  Glob: "search",
-  WebFetch: "globe",
-  Skill: "book",
-  TodoWrite: "check",
-};
+export const toolDiffs = (tool: Pick<ToolRow, "diff" | "diffs">): ToolDiff[] =>
+  tool.diffs ?? (tool.diff ? [tool.diff] : []);
 
-const LIVE_VERB: Record<string, string> = {
-  Write: "Writing",
-  Edit: "Editing",
-  MultiEdit: "Editing",
-  Read: "Reading",
-  Bash: "Running",
-  Grep: "Searching",
-  Glob: "Finding",
-  Skill: "Loading skill",
-  TodoWrite: "Updating todos",
-};
+const CANCEL_NOTE = /\bRun canceled\.?$/u;
+
+const canceled = (tool: ToolRow): boolean =>
+  tool.isError && CANCEL_NOTE.test(tool.summary);
+
+const PLAN_NOTE = /^Plan mode is on\b/u;
+
+const planHeld = (tool: ToolRow): boolean =>
+  tool.isError && PLAN_NOTE.test(tool.summary);
 
 type ToolState = "pending" | "done" | "error" | "stopped" | "denied";
 
-const STATE_TONE: Record<ToolState, string> = {
-  pending: "text-primary",
-  done: "text-muted-foreground",
-  error: "text-destructive",
-  stopped: "text-muted-foreground",
-  denied: "text-muted-foreground",
-};
-
-const STATE_WORD: Partial<Record<ToolState, string>> = {
-  error: "Error",
-  stopped: "Stopped",
-  denied: "Denied",
-};
-
-const CANCEL_NOTE = /\bRun canceled\.?$/;
-const PLAN_NOTE = /^Plan mode is on\b/;
-
-function canceled(tool: ToolRow): boolean {
-  return tool.isError && CANCEL_NOTE.test(tool.summary);
-}
-
-function planHeld(tool: ToolRow): boolean {
-  return tool.isError && PLAN_NOTE.test(tool.summary);
-}
-
-function failed(tool: ToolRow): boolean {
-  return tool.isError && !tool.denied && !canceled(tool) && !planHeld(tool);
-}
-
-function toolState(tool: ToolRow, running = true): ToolState {
+const toolState = (tool: ToolRow, running = true): ToolState => {
   if (tool.durationMs === null) {
     return running ? "pending" : "stopped";
   }
@@ -100,46 +59,14 @@ function toolState(tool: ToolRow, running = true): ToolState {
   }
 
   return tool.isError ? "error" : "done";
-}
+};
 
-function shortName(target: string): string {
-  const parts = target.split("/");
-
-  return parts[parts.length - 1] || target;
-}
-
-export function toolDiffs(tool: Pick<ToolRow, "diff" | "diffs">): ToolDiff[] {
-  return tool.diffs ?? (tool.diff ? [tool.diff] : []);
-}
-
-function shellEdits(tool: ToolRow): ToolDiff[] {
-  return tool.diff ? [] : (tool.diffs ?? []);
-}
-
-function diffTotals(diffs: ToolDiff[]): { added: number; removed: number } {
-  return diffs.reduce(
-    (sum, diff) => ({
-      added: sum.added + diff.added,
-      removed: sum.removed + diff.removed,
-    }),
-    { added: 0, removed: 0 }
-  );
-}
-
-interface RowGroup {
-  tool: ToolRow;
-  count: number;
-  durationMs: number | null;
-  members: ToolRow[];
-}
+const quiet = (tool: ToolRow): boolean =>
+  toolDiffs(tool).length === 0 && toolState(tool) === "done";
 
 const CHECK_GROUP = "Checked";
 
-function quiet(tool: ToolRow): boolean {
-  return toolDiffs(tool).length === 0 && toolState(tool) === "done";
-}
-
-function sameRow(a: ToolRow, b: ToolRow, workTree: string | null): boolean {
+const sameRow = (a: ToolRow, b: ToolRow, workTree: string | null): boolean => {
   if (!quiet(a) || !quiet(b)) {
     return false;
   }
@@ -156,12 +83,19 @@ function sameRow(a: ToolRow, b: ToolRow, workTree: string | null): boolean {
     toolSubject(a.name, a.input, workTree) ===
       toolSubject(b.name, b.input, workTree)
   );
+};
+
+interface RowGroup {
+  tool: ToolRow;
+  count: number;
+  durationMs: number | null;
+  members: ToolRow[];
 }
 
-export function groupRepeats(
+export const groupRepeats = (
   tools: ToolRow[],
   workTree: string | null
-): RowGroup[] {
+): RowGroup[] => {
   const groups: RowGroup[] = [];
 
   for (const tool of tools) {
@@ -173,67 +107,40 @@ export function groupRepeats(
       last.members.push(tool);
     } else {
       groups.push({
-        tool,
         count: 1,
         durationMs: tool.durationMs,
         members: [tool],
+        tool,
       });
     }
   }
 
   return groups;
-}
+};
 
-function checkParts(members: ToolRow[], workTree: string | null): string {
-  const parts = members.map(
-    (tool) =>
-      toolSubject(tool.name, tool.input, workTree) ||
-      toolVerb(tool.name)
-        .replace(/ check$/, "")
-        .toLowerCase()
-  );
+const COLLAPSE_AFTER = 5;
 
-  return [...new Set(parts)].join(", ");
-}
+const failed = (tool: ToolRow): boolean =>
+  tool.isError && !tool.denied && !canceled(tool) && !planHeld(tool);
 
-function ToolStateIcon({ tool, state }: { tool: ToolRow; state: ToolState }) {
-  if (state === "pending") {
-    return <span className="spinner" />;
-  }
+const STATE_TONE: Record<ToolState, string> = {
+  denied: "text-muted-foreground",
+  done: "text-muted-foreground",
+  error: "text-destructive",
+  pending: "text-primary",
+  stopped: "text-muted-foreground",
+};
 
-  if (state === "stopped" || state === "denied") {
-    return <Icon name="close" size={14} />;
-  }
+const shortName = (target: string): string => {
+  const parts = target.split("/");
 
-  return (
-    <Icon
-      name={state === "error" ? "alert" : (TOOL_ICON[tool.name] ?? "code")}
-      size={14}
-    />
-  );
-}
+  return parts.at(-1) || target;
+};
 
-export function DiffBadge({
-  added,
-  removed,
-}: {
-  added: number;
-  removed: number;
-}) {
-  return (
-    <span
-      className="diff-badge tabular-nums"
-      aria-label={`${added} lines added, ${removed} removed`}
-    >
-      {(added > 0 || removed === 0) && (
-        <span className="diff-plus">+{added}</span>
-      )}
-      {removed > 0 && <span className="diff-minus">−{removed}</span>}
-    </span>
-  );
-}
+const shellEdits = (tool: ToolRow): ToolDiff[] =>
+  tool.diff ? [] : (tool.diffs ?? []);
 
-export function DiffView({ diff }: { diff: ToolDiff }) {
+export const DiffView = ({ diff }: { diff: ToolDiff }) => {
   if (diff.hunks.length === 0) {
     return (
       <p className="diff-empty text-xs">
@@ -261,8 +168,16 @@ export function DiffView({ diff }: { diff: ToolDiff }) {
               </div>
             )}
             {hunk.lines.map((line, lineIndex) => {
-              const oldNo = line.kind === "add" ? "" : String(oldLine++);
-              const newNo = line.kind === "del" ? "" : String(newLine++);
+              if (line.kind !== "add") {
+                oldLine += 1;
+              }
+
+              if (line.kind !== "del") {
+                newLine += 1;
+              }
+
+              const oldNo = line.kind === "add" ? "" : String(oldLine);
+              const newNo = line.kind === "del" ? "" : String(newLine);
 
               return (
                 <div
@@ -302,62 +217,52 @@ export function DiffView({ diff }: { diff: ToolDiff }) {
       )}
     </div>
   );
-}
+};
 
-function ShellEditDetail({
+export const DiffBadge = ({
+  added,
+  removed,
+}: {
+  added: number;
+  removed: number;
+}) => (
+  <span
+    className="diff-badge tabular-nums"
+    aria-label={`${added} lines added, ${removed} removed`}
+  >
+    {(added > 0 || removed === 0) && (
+      <span className="diff-plus">+{added}</span>
+    )}
+    {removed > 0 && <span className="diff-minus">−{removed}</span>}
+  </span>
+);
+
+const ShellEditDetail = ({
   tool,
   diffs,
 }: {
   tool: ToolRow;
   diffs: ToolDiff[];
-}) {
-  return (
-    <div className="flex min-w-0 flex-col gap-2 text-xs">
-      {tool.summary && (
-        <span className="font-mono break-all text-muted-foreground">
-          {tool.summary}
+}) => (
+  <div className="flex min-w-0 flex-col gap-2 text-xs">
+    {tool.summary && (
+      <span className="font-mono break-all text-muted-foreground">
+        {tool.summary}
+      </span>
+    )}
+    {diffs.map((diff) => (
+      <div key={diff.path} className="flex min-w-0 flex-col gap-1">
+        <span className="flex items-center gap-2 font-mono break-all text-foreground">
+          {diff.path}
+          <DiffBadge added={diff.added} removed={diff.removed} />
         </span>
-      )}
-      {diffs.map((diff) => (
-        <div key={diff.path} className="flex min-w-0 flex-col gap-1">
-          <span className="flex items-center gap-2 font-mono break-all text-foreground">
-            {diff.path}
-            <DiffBadge added={diff.added} removed={diff.removed} />
-          </span>
-          <DiffView diff={diff} />
-        </div>
-      ))}
-    </div>
-  );
-}
+        <DiffView diff={diff} />
+      </div>
+    ))}
+  </div>
+);
 
-function CheckDetail({
-  members,
-  workTree,
-}: {
-  members: ToolRow[];
-  workTree: string | null;
-}) {
-  return (
-    <ul className="tool-check-list flex flex-col gap-1 text-xs">
-      {members.map((tool) => {
-        const subject = toolSubject(tool.name, tool.input, workTree);
-
-        return (
-          <li key={tool.toolUseId} className="wrap-anywhere">
-            <span className="text-foreground">{toolVerb(tool.name)}</span>
-            {subject && <span className="font-mono"> {subject}</span>}
-            {tool.summary && (
-              <span className="text-muted-foreground"> · {tool.summary}</span>
-            )}
-          </li>
-        );
-      })}
-    </ul>
-  );
-}
-
-function ToolDetail({
+const ToolDetail = ({
   tool,
   target,
   state,
@@ -365,7 +270,7 @@ function ToolDetail({
   tool: ToolRow;
   target: string;
   state: ToolState;
-}) {
+}) => {
   if (tool.diff) {
     return <DiffView diff={tool.diff} />;
   }
@@ -396,9 +301,30 @@ function ToolDetail({
       )}
     </div>
   );
-}
+};
 
-function rowView(group: RowGroup, workTree: string | null) {
+const diffTotals = (diffs: ToolDiff[]): { added: number; removed: number } =>
+  diffs.reduce(
+    (sum, diff) => ({
+      added: sum.added + diff.added,
+      removed: sum.removed + diff.removed,
+    }),
+    { added: 0, removed: 0 }
+  );
+
+const checkParts = (members: ToolRow[], workTree: string | null): string => {
+  const parts = members.map(
+    (tool) =>
+      toolSubject(tool.name, tool.input, workTree) ||
+      toolVerb(tool.name)
+        .replace(/ check$/u, "")
+        .toLowerCase()
+  );
+
+  return [...new Set(parts)].join(", ");
+};
+
+const rowView = (group: RowGroup, workTree: string | null) => {
   const { tool, members } = group;
   const edits = shellEdits(tool);
 
@@ -434,11 +360,17 @@ function rowView(group: RowGroup, workTree: string | null) {
     totals: diffTotals(edits),
     verb: "Edited",
   };
-}
+};
+
+const STATE_WORD: Partial<Record<ToolState, string>> = {
+  denied: "Denied",
+  error: "Error",
+  stopped: "Stopped",
+};
 
 const SHOW_MS_FROM = 1000;
 
-function ToolMeta({
+const ToolMeta = ({
   group,
   state,
   totals,
@@ -446,7 +378,7 @@ function ToolMeta({
   group: RowGroup;
   state: ToolState;
   totals: { added: number; removed: number } | null;
-}) {
+}) => {
   const ms =
     state !== "pending" &&
     state !== "stopped" &&
@@ -474,9 +406,69 @@ function ToolMeta({
       )}
     </>
   );
-}
+};
 
-function ToolItem({
+const TOOL_ICON: Record<string, IconName> = {
+  Bash: "terminal",
+  Edit: "pencil",
+  Glob: "search",
+  Grep: "search",
+  MultiEdit: "pencil",
+  Read: "file",
+  Skill: "book",
+  TodoWrite: "check",
+  WebFetch: "globe",
+  Write: "pencil",
+};
+
+const ToolStateIcon = ({
+  tool,
+  state,
+}: {
+  tool: ToolRow;
+  state: ToolState;
+}) => {
+  if (state === "pending") {
+    return <span className="spinner" />;
+  }
+
+  if (state === "stopped" || state === "denied") {
+    return <Icon name="close" size={14} />;
+  }
+
+  return (
+    <Icon
+      name={state === "error" ? "alert" : (TOOL_ICON[tool.name] ?? "code")}
+      size={14}
+    />
+  );
+};
+
+const CheckDetail = ({
+  members,
+  workTree,
+}: {
+  members: ToolRow[];
+  workTree: string | null;
+}) => (
+  <ul className="tool-check-list flex flex-col gap-1 text-xs">
+    {members.map((tool) => {
+      const subject = toolSubject(tool.name, tool.input, workTree);
+
+      return (
+        <li key={tool.toolUseId} className="wrap-anywhere">
+          <span className="text-foreground">{toolVerb(tool.name)}</span>
+          {subject && <span className="font-mono"> {subject}</span>}
+          {tool.summary && (
+            <span className="text-muted-foreground"> · {tool.summary}</span>
+          )}
+        </li>
+      );
+    })}
+  </ul>
+);
+
+const ToolItem = ({
   group,
   workTree,
   running,
@@ -484,7 +476,7 @@ function ToolItem({
   group: RowGroup;
   workTree: string | null;
   running: boolean;
-}) {
+}) => {
   const { tool } = group;
   const state = toolState(tool, running);
   const [open, setOpen] = useState<boolean | null>(null);
@@ -497,7 +489,7 @@ function ToolItem({
       className={`tool-row ${state} ${isSkill ? "skill-tool" : ""}`}
       data-state={state}
       data-tool={tool.name}
-      data-shell-edits={edits.length || undefined}
+      data-shell-edits={edits.length > 0 ? edits.length : undefined}
       open={open ?? state === "error"}
       onOpenChange={(next) => setOpen(next)}
     >
@@ -532,9 +524,9 @@ function ToolItem({
       </ActionContent>
     </Action>
   );
-}
+};
 
-function GroupSummary({ tools }: { tools: ToolRow[] }) {
+const GroupSummary = ({ tools }: { tools: ToolRow[] }) => {
   const errors = tools.filter(failed).length;
   const total = tools.reduce((sum, t) => sum + (t.durationMs ?? 0), 0);
 
@@ -547,11 +539,9 @@ function GroupSummary({ tools }: { tools: ToolRow[] }) {
       {total > 0 && <span className="tabular-nums">{formatMs(total)}</span>}
     </>
   );
-}
+};
 
-const COLLAPSE_AFTER = 5;
-
-export function ToolChips({
+export const ToolChips = ({
   tools,
   running,
   workTree,
@@ -561,7 +551,7 @@ export function ToolChips({
   running: boolean;
   workTree: string | null;
   flat?: boolean;
-}) {
+}) => {
   const [open, setOpen] = useState<boolean | null>(null);
 
   if (tools.length === 0) {
@@ -604,7 +594,19 @@ export function ToolChips({
       </ChainOfThoughtContent>
     </ChainOfThought>
   );
-}
+};
+
+const LIVE_VERB: Record<string, string> = {
+  Bash: "Running",
+  Edit: "Editing",
+  Glob: "Finding",
+  Grep: "Searching",
+  MultiEdit: "Editing",
+  Read: "Reading",
+  Skill: "Loading skill",
+  TodoWrite: "Updating todos",
+  Write: "Writing",
+};
 
 export interface FileChange {
   path: string;
@@ -613,7 +615,7 @@ export interface FileChange {
   created: boolean;
 }
 
-export function fileChanges(tools: ToolRow[]): FileChange[] {
+export const fileChanges = (tools: ToolRow[]): FileChange[] => {
   const byPath = new Map<string, FileChange>();
 
   for (const tool of tools) {
@@ -625,10 +627,10 @@ export function fileChanges(tools: ToolRow[]): FileChange[] {
 
     for (const diff of diffs) {
       const entry = byPath.get(diff.path) ?? {
-        path: diff.path,
         added: 0,
-        removed: 0,
         created: false,
+        path: diff.path,
+        removed: 0,
       };
 
       entry.added += diff.added;
@@ -639,15 +641,15 @@ export function fileChanges(tools: ToolRow[]): FileChange[] {
   }
 
   return [...byPath.values()];
-}
+};
 
-export function ToolSummary({
+export const ToolSummary = ({
   tools,
   children,
 }: {
   tools: ToolRow[];
   children: ReactNode;
-}) {
+}) => {
   const [open, setOpen] = useState(false);
 
   const label = useMemo(
@@ -696,29 +698,29 @@ export function ToolSummary({
       {open && <div className="tool-summary-body">{children}</div>}
     </div>
   );
-}
+};
 
-function useElapsed(since: number, active: boolean): number {
+const useElapsed = (since: number, active: boolean): number => {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     if (!active) {
       return;
     }
 
-    const id = window.setInterval(() => setNow(Date.now()), 1000);
+    const id = globalThis.setInterval(() => setNow(Date.now()), 1000);
 
-    return () => window.clearInterval(id);
+    return () => globalThis.clearInterval(id);
   }, [active]);
 
   return Math.max(0, now - since);
-}
+};
 
-function statusLabel(
+const statusLabel = (
   run: RunView,
   workTree: string | null,
   now: number,
   offline: boolean
-): string {
+): string => {
   if (offline) {
     return "Lost the connection. Reconnecting…";
   }
@@ -733,7 +735,9 @@ function statusLabel(
     return `Retrying in ${seconds}s (${run.retry.attempt}/${run.retry.max})`;
   }
 
-  const pending = [...run.tools].reverse().find((t) => t.durationMs === null);
+  const pending = [...run.tools]
+    .toReversed()
+    .find((t) => t.durationMs === null);
 
   if (pending) {
     const target = toolSubject(pending.name, pending.input, workTree);
@@ -752,12 +756,12 @@ function statusLabel(
   }
 
   return run.parts.length > 0 ? "Working" : "Starting";
-}
+};
 
-export function runStepText(
+export const runStepText = (
   run: RunView | null,
   workTree: string | null
-): string | null {
+): string | null => {
   if (!run) {
     return null;
   }
@@ -775,16 +779,16 @@ export function runStepText(
   }
 
   return statusLabel(run, workTree, Date.now(), false);
-}
+};
 
-function elapsedText(ms: number): string {
+const elapsedText = (ms: number): string => {
   const seconds = Math.floor(ms / 1000);
   const minutes = Math.floor(seconds / 60);
 
   return minutes > 0 ? `${minutes}m ${seconds % 60}s` : `${seconds}s`;
-}
+};
 
-export function LiveStatus({
+export const LiveStatus = ({
   run,
   workTree,
   offline = false,
@@ -794,7 +798,7 @@ export function LiveStatus({
   workTree: string | null;
   offline?: boolean;
   onStop?: () => void;
-}) {
+}) => {
   const elapsed = useElapsed(run.startedAt, true);
 
   return (
@@ -822,4 +826,4 @@ export function LiveStatus({
       )}
     </div>
   );
-}
+};

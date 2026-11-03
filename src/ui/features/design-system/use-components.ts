@@ -7,16 +7,15 @@ import { getBlob } from "./deps.js";
 
 const REFRESH_MS = 400;
 
-function base(projectId: string, directionId: string): string {
-  return `/api/projects/${encodeURIComponent(projectId)}/d/${encodeURIComponent(directionId)}/components`;
-}
+const base = (projectId: string, directionId: string): string =>
+  `/api/projects/${encodeURIComponent(projectId)}/d/${encodeURIComponent(directionId)}/components`;
 
-export async function componentThumb(
+export const componentThumb = async (
   projectId: string,
   directionId: string,
   id: string,
   version: string
-): Promise<string | null> {
+): Promise<string | null> => {
   const blob = await getBlob(
     `${base(projectId, directionId)}/${encodeURIComponent(id)}/thumb?v=${encodeURIComponent(version)}`
   );
@@ -26,7 +25,7 @@ export async function componentThumb(
   }
 
   return URL.createObjectURL(blob);
-}
+};
 
 export interface ComponentList {
   components: ComponentInfo[] | null;
@@ -35,11 +34,11 @@ export interface ComponentList {
   retry?: () => void;
 }
 
-export function useComponents(
+export const useComponents = (
   projectId: string,
   directionId: string | null,
   lastChange: FilesChange | null
-): ComponentList {
+): ComponentList => {
   const [state, setState] = useState<ComponentList>({
     components: null,
     error: null,
@@ -58,10 +57,11 @@ export function useComponents(
       return;
     }
 
-    const my = ++seq.current;
+    seq.current += 1;
+    const my = seq.current;
     const version = String(changedAt);
 
-    const timer = window.setTimeout(
+    const timer = globalThis.setTimeout(
       async () => {
         try {
           const result = await json<{ components: ComponentInfo[] }>(
@@ -84,7 +84,7 @@ export function useComponents(
       changedAt === 0 ? 0 : REFRESH_MS
     );
 
-    return () => window.clearTimeout(timer);
+    return () => globalThis.clearTimeout(timer);
   }, [projectId, directionId, changedAt, attempt]);
   useEffect(
     () => setState({ components: null, error: null, version: "0" }),
@@ -92,4 +92,4 @@ export function useComponents(
   );
 
   return { ...state, retry: () => setAttempt((n) => n + 1) };
-}
+};

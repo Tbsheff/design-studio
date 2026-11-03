@@ -19,21 +19,18 @@ interface Box {
 const TRIM_PAD = 8;
 const TRIM_DIFF = 24;
 
-function differs(data: Uint8ClampedArray, at: number): boolean {
-  return (
-    Math.abs(data[at]! - data[0]!) +
-      Math.abs(data[at + 1]! - data[1]!) +
-      Math.abs(data[at + 2]! - data[2]!) +
-      Math.abs(data[at + 3]! - data[3]!) >
-    TRIM_DIFF
-  );
-}
+const differs = (data: Uint8ClampedArray, at: number): boolean =>
+  Math.abs(data[at]! - data[0]!) +
+    Math.abs(data[at + 1]! - data[1]!) +
+    Math.abs(data[at + 2]! - data[2]!) +
+    Math.abs(data[at + 3]! - data[3]!) >
+  TRIM_DIFF;
 
-function contentBox(
+const contentBox = (
   data: Uint8ClampedArray,
   width: number,
   height: number
-): Box | null {
+): Box | null => {
   let left = width;
   let right = -1;
   let top = height;
@@ -65,9 +62,9 @@ function contentBox(
     x,
     y,
   };
-}
+};
 
-async function trimmed(blob: Blob): Promise<Blob> {
+const trimmed = async (blob: Blob): Promise<Blob> => {
   const bitmap = await createImageBitmap(blob);
   const canvas = document.createElement("canvas");
   canvas.width = bitmap.width;
@@ -98,9 +95,11 @@ async function trimmed(blob: Blob): Promise<Blob> {
     ?.drawImage(canvas, box.x, box.y, box.w, box.h, 0, 0, box.w, box.h);
 
   return new Promise((resolve) => out.toBlob((next) => resolve(next ?? blob)));
-}
+};
 
-export async function trimmedUrl(url: string | null): Promise<string | null> {
+export const trimmedUrl = async (
+  url: string | null
+): Promise<string | null> => {
   if (!url) {
     return url;
   }
@@ -115,14 +114,14 @@ export async function trimmedUrl(url: string | null): Promise<string | null> {
   URL.revokeObjectURL(url);
 
   return URL.createObjectURL(next);
-}
+};
 
-async function fetchPreview(
+const fetchPreview = async (
   projectId: string,
   directionId: string,
   id: string,
   signal: AbortSignal
-): Promise<Shown> {
+): Promise<Shown> => {
   const res = await getRaw(
     componentPreviewPath(projectId, directionId, id),
     signal
@@ -148,12 +147,12 @@ async function fetchPreview(
         : "No preview for this component.",
     state: "none",
   };
-}
+};
 
-function useVisible(
+const useVisible = (
   ref: React.RefObject<HTMLElement | null>,
   active: boolean
-): boolean {
+): boolean => {
   const [visible, setVisible] = useState(false);
   useEffect(() => {
     const node = ref.current;
@@ -177,7 +176,7 @@ function useVisible(
   }, [ref, active, visible]);
 
   return visible;
-}
+};
 
 interface PreviewLoad {
   readonly controller: AbortController;
@@ -220,7 +219,7 @@ const showPreview = async (load: PreviewLoad): Promise<void> => {
   }
 };
 
-export function ComponentPreviewThumb({
+export const ComponentPreviewThumb = ({
   projectId,
   directionId,
   id,
@@ -234,7 +233,7 @@ export function ComponentPreviewThumb({
   version: string;
   active: boolean;
   className?: string;
-}) {
+}) => {
   const ref = useRef<HTMLSpanElement>(null);
   const visible = useVisible(ref, active);
   const [shown, setShown] = useState<Shown>({ state: "idle" });
@@ -275,4 +274,4 @@ export function ComponentPreviewThumb({
       ) : null}
     </span>
   );
-}
+};

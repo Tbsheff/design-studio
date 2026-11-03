@@ -10,12 +10,14 @@ import type {
   ToolDiff,
 } from "../../../shared/contracts.js";
 import {
+  partsText,
   applyPartEvent,
   closeParts,
   isPartEvent,
-  partsText,
   withFinalText,
 } from "../../../shared/run-parts.js";
+
+const PENDING_CLOCK_SLACK_MS = 1000;
 
 export interface ToolRow {
   toolUseId: string;
@@ -53,64 +55,11 @@ export interface RunView {
   summary: RunSummary | null;
 }
 
-export type RunMap = Record<string, RunView>;
-
-function toolRows(summary: RunSummary): ToolRow[] {
-  return summary.toolCalls.map((t) => ({
-    toolUseId: t.toolUseId,
-    name: t.name,
-    input: t.input,
-    startedAt: t.startedAt,
-    durationMs: t.finishedAt === null ? null : t.finishedAt - t.startedAt,
-    isError: t.isError,
-    summary: t.summary ?? "",
-    ...(t.diff ? { diff: t.diff } : {}),
-    ...(t.diffs ? { diffs: t.diffs } : {}),
-    ...(t.denied ? { denied: true } : {}),
-  }));
-}
-
-function legacyParts(summary: RunSummary): RunPart[] {
-  const tools: RunPart[] = summary.toolCalls.map((t) => ({
-    kind: "tool",
-    toolUseId: t.toolUseId,
-  }));
-
-  return summary.finalText
-    ? [...tools, { kind: "text", text: summary.finalText }]
-    : tools;
-}
-
-export function emptyRun(
-  runId: string,
-  directionId: string | null,
-  startedAt: number,
-  request: RunRequest | null = null
-): RunView {
-  return {
-    runId,
-    directionId,
-    request,
-    startedAt,
-    status: "running",
-    parts: [],
-    tools: [],
-    queue: [],
-    permissions: [],
-    todos: null,
-    contextTokens: null,
-    retry: null,
-    summary: null,
-  };
-}
-
-const PENDING_CLOCK_SLACK_MS = 1000;
-
-export function shownPending(
+export const shownPending = (
   pending: RunView | null,
   runs: RunView[],
   directionId: string | null
-): RunView | null {
+): RunView | null => {
   if (!pending || pending.directionId !== directionId) {
     return null;
   }
@@ -122,26 +71,102 @@ export function shownPending(
   );
 
   return started ? null : pending;
-}
+};
 
-export function runFromSummary(summary: RunSummary): RunView {
-  return {
-    ...emptyRun(
-      summary.id,
-      summary.directionId,
-      summary.startedAt,
-      summary.request
-    ),
-    status: summary.status,
-    parts: summary.parts ?? legacyParts(summary),
-    tools: toolRows(summary),
-    todos: summary.todos ?? null,
-    contextTokens: summary.contextTokens ?? null,
-    summary,
-  };
-}
+export const runText = (run: RunView): string => partsText(run.parts);
 
-function finishedView(prev: RunView | undefined, event: RunSummary): RunView {
+export type RunMap = Record<string, RunView>;
+
+const toolRows = (summary: RunSummary): ToolRow[] =>
+  summary.toolCalls.map((t) => ({
+    durationMs: t.finishedAt === null ? null : t.finishedAt - t.startedAt,
+    input: t.input,
+    isError: t.isError,
+    name: t.name,
+    startedAt: t.startedAt,
+    summary: t.summary ?? "",
+    toolUseId: t.toolUseId,
+    ...(t.diff ? { diff: t.diff } : {}),
+    ...(t.diffs ? { diffs: t.diffs } : {}),
+    ...(t.denied ? { denied: true } : {}),
+  }));
+
+const legacyParts = (summary: RunSummary): RunPart[] => {
+  const tools: RunPart[] = summary.toolCalls.map((t) => ({
+    kind: "tool",
+    toolUseId: t.toolUseId,
+  }));
+
+  return summary.finalText
+    ? [...tools, { kind: "text", text: summary.finalText }]
+    : tools;
+};
+
+export const emptyRun = (
+  runId: string,
+  directionId: string | null,
+  startedAt: number,
+  request: RunRequest | null = null
+): RunView => ({
+  contextTokens: null,
+  directionId,
+  parts: [],
+  permissions: [],
+  queue: [],
+  request,
+  retry: null,
+  runId,
+  startedAt,
+  status: "running",
+  summary: null,
+  todos: null,
+  tools: [],
+});
+
+export const runFromSummary = (summary: RunSummary): RunView => ({
+  ...emptyRun(
+    summary.id,
+    summary.directionId,
+    summary.startedAt,
+    summary.request
+  ),
+  contextTokens: summary.contextTokens ?? null,
+  parts: summary.parts ?? legacyParts(summary),
+  status: summary.status,
+  summary,
+  todos: summary.todos ?? null,
+  tools: toolRows(summary),
+});
+
+const mergeTools = (live: ToolRow[], final: ToolRow[]): ToolRow[] => {
+  const byId = new Map(final.map((t) => [t.toolUseId, t]));
+
+  return live.map((t) => {
+    const f = byId.get(t.toolUseId);
+
+    if (!f) {
+      return t;
+    }
+
+    const diff = f.diff ?? t.diff;
+    const diffs = f.diffs ?? t.diffs;
+
+    return {
+      ...t,
+      durationMs: f.durationMs ?? t.durationMs,
+      isError: f.isError,
+      summary: f.summary || t.summary,
+      ...(diff ? { diff } : {}),
+      ...(diffs ? { diffs } : {}),
+      ...(f.denied || t.denied ? { denied: true } : {}),
+    };
+  });
+};
+
+const finishedView = (
+  prev: RunView | undefined,
+  event: RunSummary
+): RunView => {
   const title = event.title ?? prev?.summary?.title;
   const summary = title ? { ...event, title } : event;
   const finished = runFromSummary(summary);
@@ -160,26 +185,26 @@ function finishedView(prev: RunView | undefined, event: RunSummary): RunView {
 
   return {
     ...finished,
-    parts,
-    tools,
-    todos: finished.todos ?? prev.todos,
     contextTokens: finished.contextTokens ?? prev.contextTokens,
+    parts,
+    todos: finished.todos ?? prev.todos,
+    tools,
   };
-}
+};
 
-function applyToolEvent(run: RunView, event: StudioEvent): void {
+const applyToolEvent = (run: RunView, event: StudioEvent): void => {
   if (event.type === "run.tool.started") {
     run.retry = null;
     run.tools = [
       ...run.tools.filter((t) => t.toolUseId !== event.toolUseId),
       {
-        toolUseId: event.toolUseId,
-        name: event.name,
-        input: event.input,
-        startedAt: event.ts,
         durationMs: null,
+        input: event.input,
         isError: false,
+        name: event.name,
+        startedAt: event.ts,
         summary: "",
+        toolUseId: event.toolUseId,
       },
     ];
   } else if (event.type === "run.tool.finished") {
@@ -197,18 +222,20 @@ function applyToolEvent(run: RunView, event: StudioEvent): void {
         : t
     );
   }
-}
+};
 
-function applyControlEvent(run: RunView, event: StudioEvent): void {
+const applyControlEvent = (run: RunView, event: StudioEvent): void => {
   switch (event.type) {
     case "run.queue": {
       run.queue = event.items;
       break;
     }
+
     case "run.user": {
       run.queue = run.queue.filter((item) => item.id !== event.id);
       break;
     }
+
     case "run.permission": {
       run.permissions = [
         ...run.permissions.filter((p) => p.id !== event.request.id),
@@ -216,36 +243,43 @@ function applyControlEvent(run: RunView, event: StudioEvent): void {
       ];
       break;
     }
+
     case "run.permission.resolved": {
       run.permissions = run.permissions.filter((p) => p.id !== event.requestId);
       break;
     }
+
     case "run.todos": {
       run.todos = event.todos;
       break;
     }
+
     case "run.usage": {
       run.contextTokens = event.contextTokens;
       break;
     }
+
     case "run.retry": {
       run.retry = {
         attempt: event.attempt,
+        error: event.error,
         max: event.max,
         until: event.ts + event.delayMs,
-        error: event.error,
       };
       break;
     }
+    default: {
+      break;
+    }
   }
-}
+};
 
-export function applyRunEvent(runs: RunMap, event: StudioEvent): RunMap {
+export const applyRunEvent = (runs: RunMap, event: StudioEvent): RunMap => {
   if (!event.type.startsWith("run.") || !("runId" in event)) {
     return runs;
   }
 
-  const runId = event.runId;
+  const { runId } = event;
   const prev = runs[runId];
 
   if (event.type === "run.finished") {
@@ -265,10 +299,10 @@ export function applyRunEvent(runs: RunMap, event: StudioEvent): RunMap {
       ...runs,
       [runId]: {
         ...run,
-        status: "canceled",
-        queue: [],
         permissions: [],
+        queue: [],
         retry: null,
+        status: "canceled",
       },
     };
   }
@@ -301,34 +335,9 @@ export function applyRunEvent(runs: RunMap, event: StudioEvent): RunMap {
   applyControlEvent(run, event);
 
   return { ...runs, [runId]: run };
-}
+};
 
-function mergeTools(live: ToolRow[], final: ToolRow[]): ToolRow[] {
-  const byId = new Map(final.map((t) => [t.toolUseId, t]));
-
-  return live.map((t) => {
-    const f = byId.get(t.toolUseId);
-
-    if (!f) {
-      return t;
-    }
-
-    const diff = f.diff ?? t.diff;
-    const diffs = f.diffs ?? t.diffs;
-
-    return {
-      ...t,
-      durationMs: f.durationMs ?? t.durationMs,
-      isError: f.isError,
-      summary: f.summary || t.summary,
-      ...(diff ? { diff } : {}),
-      ...(diffs ? { diffs } : {}),
-      ...(f.denied || t.denied ? { denied: true } : {}),
-    };
-  });
-}
-
-export function shortInput(input: unknown): string {
+export const shortInput = (input: unknown): string => {
   if (input === null || input === undefined) {
     return "";
   }
@@ -360,8 +369,4 @@ export function shortInput(input: unknown): string {
   }
 
   return JSON.stringify(input).slice(0, 80);
-}
-
-export function runText(run: RunView): string {
-  return partsText(run.parts);
-}
+};

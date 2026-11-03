@@ -2,13 +2,13 @@ import { Icon } from "../../kit/Icon.js";
 import type { McpPointBadge as Badge } from "../canvas/use-canvas-point.js";
 import { authorInitial } from "../comments/comment-avatar.js";
 
-export function McpPointBadge({
+export const McpPointBadge = ({
   badge,
   frameName,
 }: {
   badge: Badge;
   frameName: (frameId: string) => string;
-}) {
+}) => {
   const { point } = badge;
 
   if (!point) {
@@ -44,4 +44,4 @@ export function McpPointBadge({
       </button>
     </div>
   );
-}
+};

@@ -6,22 +6,25 @@ import { api, errorText } from "../../api.js";
 
 const PRESETS: (number | null)[] = [null, 0.5, 1, 2, 5];
 
-function money(value: number): string {
-  return Number.isInteger(value) ? `$${value}` : `$${value.toFixed(2)}`;
-}
+const money = (value: number): string =>
+  Number.isInteger(value) ? `$${value}` : `$${value.toFixed(2)}`;
 
-function limitLabel(value: number | null): string {
-  return value === null ? "No limit" : money(value);
-}
+const limitLabel = (value: number | null): string =>
+  value === null ? "No limit" : money(value);
 
-function parseLimit(raw: string): number | null | "bad" {
-  const text = raw.trim().replace(/^\$/, "");
-  if (text === "") return null;
+const parseLimit = (raw: string): number | null | "bad" => {
+  const text = raw.trim().replace(/^\$/u, "");
+
+  if (text === "") {
+    return null;
+  }
+
   const value = Number(text);
+
   return Number.isFinite(value) && value >= 0.01 && value <= 50
     ? Math.round(value * 100) / 100
     : "bad";
-}
+};
 
 interface Props {
   projectId: string;
@@ -29,11 +32,12 @@ interface Props {
   onSaved: (project: Project) => void;
 }
 
-export function BudgetIndicator({ projectId, settings, onSaved }: Props) {
+export const BudgetIndicator = ({ projectId, settings, onSaved }: Props) => {
   const [open, setOpen] = useState(false);
-  const [pending, setPending] = useState<number | null | undefined>(undefined);
+  const [pending, setPending] = useState<number | null | undefined>();
   const [error, setError] = useState<string | null>(null);
   const current = pending === undefined ? settings.maxBudgetUsd : pending;
+
   const save = (value: number | null) => {
     setPending(value);
     setError(null);
@@ -43,12 +47,13 @@ export function BudgetIndicator({ projectId, settings, onSaved }: Props) {
         setPending(undefined);
         setOpen(false);
       },
-      (err: unknown) => {
+      (caught: unknown) => {
         setPending(undefined);
-        setError(errorText(err));
+        setError(errorText(caught));
       }
     );
   };
+
   return (
     <span className="budget-ind-wrap">
       <button
@@ -79,9 +84,9 @@ export function BudgetIndicator({ projectId, settings, onSaved }: Props) {
       )}
     </span>
   );
-}
+};
 
-function BudgetMenu({
+const BudgetMenu = ({
   current,
   error,
   onPick,
@@ -91,28 +96,37 @@ function BudgetMenu({
   error: string | null;
   onPick: (value: number | null) => void;
   onClose: () => void;
-}) {
+}) => {
   const ref = useRef<HTMLDivElement>(null);
   const [custom, setCustom] = useState("");
   const [bad, setBad] = useState(false);
   useEffect(() => {
     const onDown = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        onClose();
+      }
     };
+
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     document.addEventListener("mousedown", onDown);
-    window.addEventListener("keydown", onKey);
+    globalThis.addEventListener("keydown", onKey);
+
     return () => {
       document.removeEventListener("mousedown", onDown);
-      window.removeEventListener("keydown", onKey);
+      globalThis.removeEventListener("keydown", onKey);
     };
   }, [onClose]);
+
   const submit = (e: FormEvent) => {
     e.preventDefault();
     const value = parseLimit(custom);
     setBad(value === "bad");
-    if (value !== "bad") onPick(value);
+
+    if (value !== "bad") {
+      onPick(value);
+    }
   };
+
   return (
     <div
       ref={ref}
@@ -159,4 +173,4 @@ function BudgetMenu({
       )}
     </div>
   );
-}
+};

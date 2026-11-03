@@ -18,22 +18,61 @@ import {
 import { PackBadges } from "./pack-badges.js";
 import { PackDetailDialog } from "./pack-detail.js";
 import type { PackDetailActions } from "./pack-detail.js";
-import { fontStack, refreshPacks, usePacks } from "./packs.js";
-
-const SERIF = "Georgia, serif";
-const SANS = "system-ui, sans-serif";
-const TOAST_MS = 5000;
+import { refreshPacks, usePacks, fontStack } from "./packs.js";
 
 type Dialog =
   | { kind: "rename" | "delete"; pack: PackSummary }
   | { kind: "conflict"; file: File; existing: PackSummary }
   | null;
 
-function swatch(pack: PackSummary, name: string): string | undefined {
-  return pack.swatches.find((item) => item.name === name)?.value;
-}
+const existingOf = (error: unknown): PackSummary | null => {
+  if (!(error instanceof ApiError) || error.code !== "pack_exists") {
+    return null;
+  }
 
-function ModeSwatches({ pack }: { pack: PackSummary }) {
+  return (
+    ((error.data as { existing?: PackSummary } | undefined)?.existing as
+      | PackSummary
+      | undefined) ?? null
+  );
+};
+
+const leave = (patch: Parameters<typeof uiStore.set>[0]): void => {
+  uiStore.set({ libraryFrom: null, screen: "home", ...patch });
+};
+
+const Problems = ({ problems }: { problems: PackProblem[] }) => {
+  if (problems.length === 0) {
+    return null;
+  }
+
+  const title =
+    problems.length === 1
+      ? "1 design system could not load"
+      : `${problems.length} design systems could not load`;
+
+  return (
+    <details className="lib-problems">
+      <summary>{title}</summary>
+      <ul>
+        {problems.map((problem) => (
+          <li key={`${problem.source}:${problem.id}`}>
+            <code>{problem.id}</code> {problem.errors.join(" ")}
+          </li>
+        ))}
+      </ul>
+    </details>
+  );
+};
+
+const SERIF = "Georgia, serif";
+
+const SANS = "system-ui, sans-serif";
+
+const swatch = (pack: PackSummary, name: string): string | undefined =>
+  pack.swatches.find((item) => item.name === name)?.value;
+
+const ModeSwatches = ({ pack }: { pack: PackSummary }) => {
   const light = pack.mode === "light" ? pack.swatches : null;
 
   const dark =
@@ -55,15 +94,15 @@ function ModeSwatches({ pack }: { pack: PackSummary }) {
       )}
     </span>
   );
-}
+};
 
-function LibraryCard({
+const LibraryCard = ({
   pack,
   onOpen,
 }: {
   pack: PackSummary;
   onOpen: () => void;
-}) {
+}) => {
   const display = fontStack(pack.fonts.display, SERIF);
   const body = fontStack(pack.fonts.body, SANS);
 
@@ -101,33 +140,9 @@ function LibraryCard({
       </button>
     </li>
   );
-}
+};
 
-function Problems({ problems }: { problems: PackProblem[] }) {
-  if (problems.length === 0) {
-    return null;
-  }
-
-  const title =
-    problems.length === 1
-      ? "1 design system could not load"
-      : `${problems.length} design systems could not load`;
-
-  return (
-    <details className="lib-problems">
-      <summary>{title}</summary>
-      <ul>
-        {problems.map((problem) => (
-          <li key={`${problem.source}:${problem.id}`}>
-            <code>{problem.id}</code> {problem.errors.join(" ")}
-          </li>
-        ))}
-      </ul>
-    </details>
-  );
-}
-
-function Group({
+const Group = ({
   title,
   packs,
   onOpen,
@@ -137,8 +152,8 @@ function Group({
   packs: PackSummary[];
   onOpen: (pack: PackSummary) => void;
   empty?: React.ReactNode;
-}) {
-  const id = `lib-${title.toLowerCase().replaceAll(/\W+/g, "-")}`;
+}) => {
+  const id = `lib-${title.toLowerCase().replaceAll(/\W+/gu, "-")}`;
 
   return (
     <section className="lib-group" aria-labelledby={id}>
@@ -160,9 +175,11 @@ function Group({
       )}
     </section>
   );
-}
+};
 
-function useToast(): [string | null, (text: string) => void] {
+const TOAST_MS = 5000;
+
+const useToast = (): [string | null, (text: string) => void] => {
   const [toast, setToast] = useState<{ id: number; text: string } | null>(null);
   useEffect(() => {
     if (!toast) {
@@ -178,25 +195,9 @@ function useToast(): [string | null, (text: string) => void] {
   }, [toast]);
 
   return [toast?.text ?? null, (text) => setToast({ id: Date.now(), text })];
-}
+};
 
-function existingOf(error: unknown): PackSummary | null {
-  if (!(error instanceof ApiError) || error.code !== "pack_exists") {
-    return null;
-  }
-
-  return (
-    ((error.data as { existing?: PackSummary } | undefined)?.existing as
-      | PackSummary
-      | undefined) ?? null
-  );
-}
-
-function leave(patch: Parameters<typeof uiStore.set>[0]): void {
-  uiStore.set({ libraryFrom: null, screen: "home", ...patch });
-}
-
-export function DesignSystems({ from }: { from: LibraryFrom | null }) {
+export const DesignSystems = ({ from }: { from: LibraryFrom | null }) => {
   const { packs, error } = usePacks();
   const [problems, setProblems] = useState<PackProblem[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -437,4 +438,4 @@ export function DesignSystems({ from }: { from: LibraryFrom | null }) {
       <StudioToast text={toast} />
     </div>
   );
-}
+};

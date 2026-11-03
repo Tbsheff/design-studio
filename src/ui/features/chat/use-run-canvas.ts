@@ -29,11 +29,10 @@ export interface RunCanvas {
   current: () => RunCanvasRef | undefined;
 }
 
-function frameKey(frame: CanvasFrame): string {
-  return `${frame.id}|${frame.path ?? ""}`;
-}
+const frameKey = (frame: CanvasFrame): string =>
+  `${frame.id}|${frame.path ?? ""}`;
 
-function elementName(selection: readonly SelectionContext[]): string | null {
+const elementName = (selection: readonly SelectionContext[]): string | null => {
   const first = selection[0];
 
   if (!first) {
@@ -41,30 +40,29 @@ function elementName(selection: readonly SelectionContext[]): string | null {
   }
 
   return first.component ?? first.usedBy?.name ?? first.tag;
-}
+};
 
-function stage(): HTMLElement | null {
-  return document.querySelector<HTMLElement>('.stage[aria-label="Canvas"]');
-}
+const stage = (): HTMLElement | null =>
+  document.querySelector<HTMLElement>('.stage[aria-label="Canvas"]');
 
-function refOf(frame: CanvasFrame): RunCanvasRef {
+const refOf = (frame: CanvasFrame): RunCanvasRef => {
   const inView = inViewIds(stage()).filter((id) => id !== frame.id);
 
   return {
     frameId: frame.id,
+    height: frame.height,
     path: frame.path ?? "",
     width: frame.width,
-    height: frame.height,
     ...(frame.label ? { label: frame.label } : {}),
-    ...(inView.length ? { inView } : {}),
+    ...(inView.length > 0 ? { inView } : {}),
   };
-}
+};
 
-export function useRunCanvas(
+export const useRunCanvas = (
   projectId: string,
   project: Project | null,
   selection: readonly SelectionContext[]
-): RunCanvas {
+): RunCanvas => {
   const stored = useSyncExternalStore(canvasStore.subscribe, () =>
     canvasStore.get(projectId)
   );
@@ -78,15 +76,15 @@ export function useRunCanvas(
   const chip = off
     ? null
     : {
-        frameId: frame.id,
-        page: `/${frame.path ?? ""}`,
         element: elementName(selection),
+        frameId: frame.id,
+        onRemove: () => setRemoved(key),
+        page: `/${frame.path ?? ""}`,
         state: stateLabel(
           states ?? null,
           frameStateOf(states ?? null, frame.id)
         ),
-        onRemove: () => setRemoved(key),
       };
 
   return { chip, current: () => (off ? undefined : refOf(frame)) };
-}
+};

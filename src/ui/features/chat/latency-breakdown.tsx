@@ -9,28 +9,27 @@ const FILE_WRITE_TOOLS = new Set(["Write", "Edit", "MultiEdit"]);
 const PREVIEW_GRACE_MS = 15_000;
 const LONG_FRAME_FLUSH_GRACE_MS = 6000;
 
-function fileWriteMs(run: RunView): number {
-  return run.tools.reduce(
+const fileWriteMs = (run: RunView): number =>
+  run.tools.reduce(
     (sum, t) =>
       FILE_WRITE_TOOLS.has(t.name) && !t.isError
         ? sum + (t.durationMs ?? 0)
         : sum,
     0
   );
-}
 
-function firstWriteAt(run: RunView): number | null {
+const firstWriteAt = (run: RunView): number | null => {
   const starts = run.tools
     .filter((t) => FILE_WRITE_TOOLS.has(t.name))
     .map((t) => t.startedAt);
 
   return starts.length > 0 ? Math.min(...starts) : null;
-}
+};
 
-function previewSamplesForRun(
+const previewSamplesForRun = (
   samples: TelemetrySample[],
   run: RunView
-): TelemetrySample[] {
+): TelemetrySample[] => {
   const from = firstWriteAt(run);
   const finishedAt = run.summary?.finishedAt ?? null;
 
@@ -45,9 +44,9 @@ function previewSamplesForRun(
       s.ts >= from &&
       s.ts <= finishedAt + PREVIEW_GRACE_MS
   );
-}
+};
 
-function previewText(samples: TelemetrySample[] | null): string {
+const previewText = (samples: TelemetrySample[] | null): string => {
   if (samples === null) {
     return "loading";
   }
@@ -56,18 +55,18 @@ function previewText(samples: TelemetrySample[] | null): string {
     return "n/a";
   }
 
-  const last = samples[samples.length - 1] as TelemetrySample;
+  const last = samples.at(-1) as TelemetrySample;
   const max = Math.max(...samples.map((s) => s.ms));
 
   return samples.length === 1
     ? formatMs(last.ms)
     : `${formatMs(last.ms)} last, ${formatMs(max)} max (${samples.length} updates)`;
-}
+};
 
-function firstTokenText(
+const firstTokenText = (
   samples: TelemetrySample[] | null,
   runId: string
-): string {
+): string => {
   if (samples === null) {
     return "loading";
   }
@@ -88,12 +87,12 @@ function firstTokenText(
   }
 
   return formatMs((visible ?? server)?.ms ?? 0);
-}
+};
 
-function longFramesText(
+const longFramesText = (
   samples: TelemetrySample[] | null,
   run: RunView
-): string {
+): string => {
   if (samples === null) {
     return "loading";
   }
@@ -122,15 +121,15 @@ function longFramesText(
   }
 
   return `${count}, longest ${formatMs(Math.max(...during.map((s) => s.ms)))}`;
-}
+};
 
-export function LatencyBreakdown({
+export const LatencyBreakdown = ({
   projectId,
   run,
 }: {
   projectId: string;
   run: RunView;
-}) {
+}) => {
   const [samples, setSamples] = useState<TelemetrySample[] | null>(null);
   const finishedAt = run.summary?.finishedAt ?? null;
 
@@ -177,4 +176,4 @@ export function LatencyBreakdown({
       </dl>
     </>
   );
-}
+};

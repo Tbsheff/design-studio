@@ -15,24 +15,23 @@ import {
 } from "./tool-labels-model.js";
 
 const STATUS_TEXT: Record<RunStatus, string> = {
-  running: "Running",
-  completed: "Completed",
-  canceled: "Canceled",
-  failed: "Failed",
   budget_exceeded: "Spending limit reached",
+  canceled: "Canceled",
+  completed: "Completed",
+  failed: "Failed",
+  running: "Running",
 };
 
 const SMALL_COST = new Intl.NumberFormat("en-US", {
-  style: "currency",
   currency: "USD",
   maximumSignificantDigits: 3,
+  style: "currency",
 });
 
-function preciseUsd(n: number): string {
-  return n < 0.01 ? SMALL_COST.format(n) : `$${n.toFixed(4)}`;
-}
+const preciseUsd = (n: number): string =>
+  n < 0.01 ? SMALL_COST.format(n) : `$${n.toFixed(4)}`;
 
-function costText(s: NonNullable<RunView["summary"]>): string {
+const costText = (s: NonNullable<RunView["summary"]>): string => {
   const roundingHidesCost = s.costUsd !== Number(s.costUsd.toFixed(2));
 
   const shown = roundingHidesCost
@@ -40,9 +39,9 @@ function costText(s: NonNullable<RunView["summary"]>): string {
     : formatUsd(s.costUsd);
 
   return s.status === "canceled" ? `${shown} (estimate)` : shown;
-}
+};
 
-export function RunDetails({
+export const RunDetails = ({
   projectId,
   run,
   onClose,
@@ -50,7 +49,7 @@ export function RunDetails({
   projectId: string;
   run: RunView;
   onClose: () => void;
-}) {
+}) => {
   const s = run.summary;
 
   const rows: [string, string][] = s
@@ -177,4 +176,4 @@ export function RunDetails({
       </div>
     </div>
   );
-}
+};

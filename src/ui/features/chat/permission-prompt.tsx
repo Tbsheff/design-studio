@@ -11,7 +11,7 @@ import {
 import { api, errorText } from "../../api.js";
 import { Icon } from "../../kit/Icon.js";
 
-export function PermissionPrompt({
+export const PermissionPrompt = ({
   projectId,
   runId,
   request,
@@ -19,33 +19,38 @@ export function PermissionPrompt({
   projectId: string;
   runId: string;
   request: PermissionRequest;
-}) {
+}) => {
   const [note, setNote] = useState("");
   const [denying, setDenying] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
   const answer = (decision: PermissionDecision) => {
     setBusy(true);
     setError(null);
     api
       .answerPermission(projectId, runId, request.id, decision)
-      .catch((err: unknown) => {
+      .catch((caught: unknown) => {
         setBusy(false);
-        setError(errorText(err));
+        setError(errorText(caught));
       });
   };
+
   const command =
     request.toolName === "Bash"
       ? (request.input as { command?: unknown } | null)?.command
       : undefined;
+
   const rule =
     typeof command === "string" &&
     command.trim() !== "" &&
     command.trim().length <= RULE_MAX_CHARS
       ? ruleForCommand(command)
       : null;
+
   const deny = () =>
     answer({ allow: false, ...(note.trim() ? { note: note.trim() } : {}) });
+
   return (
     <section
       className="permission"
@@ -73,7 +78,7 @@ export function PermissionPrompt({
             aria-label="Note for the agent"
             placeholder="Tell the agent what to do instead (optional)"
             value={note}
-            autoFocus
+
             onChange={(event) => setNote(event.target.value)}
             onKeyDown={(event) => {
               if (event.key === "Escape") {
@@ -125,4 +130,4 @@ export function PermissionPrompt({
       )}
     </section>
   );
-}
+};

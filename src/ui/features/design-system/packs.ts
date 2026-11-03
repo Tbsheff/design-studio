@@ -14,7 +14,7 @@ let cached: Promise<PackSummary[]> | null = null;
 
 const LIST_LIMIT = 200;
 
-async function listPacks(): Promise<PackSummary[]> {
+const listPacks = async (): Promise<PackSummary[]> => {
   const page = await call(routes.listSummaryPack, {
     cursor: null,
     limit: LIST_LIMIT,
@@ -23,9 +23,9 @@ async function listPacks(): Promise<PackSummary[]> {
   const items: PackSummary[] = page.items;
 
   return items;
-}
+};
 
-function loadPacks(): Promise<PackSummary[]> {
+const loadPacks = (): Promise<PackSummary[]> => {
   if (!cached) {
     cached = listPacks().catch((error: unknown) => {
       cached = null;
@@ -34,19 +34,19 @@ function loadPacks(): Promise<PackSummary[]> {
   }
 
   return cached;
-}
+};
 
 const listeners = new Set<() => void>();
 
-export function refreshPacks(): void {
+export const refreshPacks = (): void => {
   cached = null;
 
   for (const listener of listeners) {
     listener();
   }
-}
+};
 
-export function usePacks(): PacksState {
+export const usePacks = (): PacksState => {
   const [state, setState] = useState<PacksState>({ error: null, packs: null });
   const [generation, setGeneration] = useState(0);
   useEffect(() => {
@@ -82,28 +82,27 @@ export function usePacks(): PacksState {
   }, [generation]);
 
   return state;
-}
+};
 
-export function pickable(state: PacksState): PacksState {
-  return state.packs
+export const pickable = (state: PacksState): PacksState =>
+  state.packs
     ? { ...state, packs: state.packs.filter((pack) => !pack.draft) }
     : state;
-}
 
-export function findPack(
+export const findPack = (
   packs: PackSummary[] | null,
   id: string | null | undefined
-): PackSummary | null {
+): PackSummary | null => {
   if (!packs || !id) {
     return null;
   }
 
   return packs.find((pack) => pack.id === id) ?? null;
-}
+};
 
 const loadedFonts = new Set<string>();
 
-export function loadPackFonts(packs: PackSummary[]): void {
+export const loadPackFonts = (packs: PackSummary[]): void => {
   for (const pack of packs) {
     const url = pack.fonts.googleFontsUrl;
 
@@ -122,9 +121,9 @@ export function loadPackFonts(packs: PackSummary[]): void {
     link.dataset.packFont = pack.id;
     document.head.append(link);
   }
-}
+};
 
-export function fontStack(family: string, fallback: string): string {
+export const fontStack = (family: string, fallback: string): string => {
   const trimmed = family.trim();
 
   if (!trimmed) {
@@ -135,19 +134,19 @@ export function fontStack(family: string, fallback: string): string {
     return trimmed;
   }
 
-  const name = /^['"]/.test(trimmed) ? trimmed : `'${trimmed}'`;
+  const name = /^['"]/u.test(trimmed) ? trimmed : `'${trimmed}'`;
 
   return `${name}, ${fallback}`;
-}
+};
 
 const KEY_SWATCHES = ["primary", "accent", "fg", "bg"];
 
-export function keySwatches(pack: PackSummary): PackSummary["swatches"] {
+export const keySwatches = (pack: PackSummary): PackSummary["swatches"] => {
   const rank = (name: string) => {
     const index = KEY_SWATCHES.indexOf(name);
 
     return index === -1 ? KEY_SWATCHES.length : index;
   };
 
-  return [...pack.swatches].sort((a, b) => rank(a.name) - rank(b.name));
-}
+  return [...pack.swatches].toSorted((a, b) => rank(a.name) - rank(b.name));
+};

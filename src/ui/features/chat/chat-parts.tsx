@@ -24,26 +24,13 @@ import { splitMarkdownBlocks } from "../../domain/markdown-blocks.js";
 import { CopyButton } from "../../kit/CopyButton.js";
 import { Icon } from "../../kit/Icon.js";
 import { contextShare } from "./context-meter.js";
-import { levelHint, levelLabel } from "./level-control.js";
+import { levelLabel, levelHint } from "./level-control.js";
 import type { RunView } from "./run-state-model.js";
 import {
-  skillDisplayName,
   skillsFromPrompt,
   withoutSkillLines,
+  skillDisplayName,
 } from "./skills-model.js";
-
-function runLevel(run: RunView): RunLevel | null {
-  return run.summary?.level ?? run.request?.level ?? null;
-}
-
-function LevelChip({ level }: { level: RunLevel | null }) {
-  if (!level) return null;
-  return (
-    <span className={`ui-chip level-tag ${level}`} data-testid="run-level-chip">
-      {levelLabel(level)}
-    </span>
-  );
-}
 
 interface UserMessageSlots {
   title?: string | undefined;
@@ -53,7 +40,7 @@ interface UserMessageSlots {
   onRename?: () => void;
 }
 
-function RunTitle({
+const RunTitle = ({
   title,
   slot,
   onRename,
@@ -61,9 +48,15 @@ function RunTitle({
   title: string | undefined;
   slot: ReactNode;
   onRename: (() => void) | undefined;
-}) {
-  if (slot) return slot;
-  if (!title) return null;
+}) => {
+  if (slot) {
+    return slot;
+  }
+
+  if (!title) {
+    return null;
+  }
+
   return (
     <span
       className="run-title"
@@ -74,7 +67,7 @@ function RunTitle({
       {title}
     </span>
   );
-}
+};
 
 const ANSWERS_HEAD = "\n\nAnswers to your questions:\n";
 
@@ -83,29 +76,43 @@ export interface ClarifyAnswer {
   answer: string;
 }
 
-export function splitAnswers(prompt: string): {
+export const splitAnswers = (
+  prompt: string
+): {
   text: string;
   answers: ClarifyAnswer[];
-} {
+} => {
   const at = prompt.lastIndexOf(ANSWERS_HEAD);
-  if (at === -1) return { text: prompt, answers: [] };
+
+  if (at === -1) {
+    return { answers: [], text: prompt };
+  }
+
   const lines = prompt.slice(at + ANSWERS_HEAD.length).split("\n");
   const answers: ClarifyAnswer[] = [];
+
   for (const line of lines) {
-    if (!line.startsWith("- ")) return { text: prompt, answers: [] };
+    if (!line.startsWith("- ")) {
+      return { answers: [], text: prompt };
+    }
+
     const body = line.slice(2);
     const mark = body.indexOf("? ");
     answers.push(
       mark === -1
-        ? { question: "", answer: body }
-        : { question: body.slice(0, mark + 1), answer: body.slice(mark + 2) }
+        ? { answer: body, question: "" }
+        : { answer: body.slice(mark + 2), question: body.slice(0, mark + 1) }
     );
   }
-  return { text: prompt.slice(0, at), answers };
-}
 
-function AnsweredCard({ answers }: { answers: ClarifyAnswer[] }) {
-  if (answers.length === 0) return null;
+  return { answers, text: prompt.slice(0, at) };
+};
+
+const AnsweredCard = ({ answers }: { answers: ClarifyAnswer[] }) => {
+  if (answers.length === 0) {
+    return null;
+  }
+
   return (
     <div className="msg-answered" data-testid="clarify-answers">
       <span className="msg-answered-head">
@@ -122,14 +129,34 @@ function AnsweredCard({ answers }: { answers: ClarifyAnswer[] }) {
       </dl>
     </div>
   );
-}
+};
 
-function RequestChips({ run, skills }: { run: RunView; skills: string[] }) {
+const runLevel = (run: RunView): RunLevel | null =>
+  run.summary?.level ?? run.request?.level ?? null;
+
+const LevelChip = ({ level }: { level: RunLevel | null }) => {
+  if (!level) {
+    return null;
+  }
+
+  return (
+    <span className={`ui-chip level-tag ${level}`} data-testid="run-level-chip">
+      {levelLabel(level)}
+    </span>
+  );
+};
+
+const RequestChips = ({ run, skills }: { run: RunView; skills: string[] }) => {
   const req = run.request;
-  if (!req) return null;
+
+  if (!req) {
+    return null;
+  }
+
   const selected = req.selection?.length ?? 0;
   const files = req.attachmentIds?.length ?? 0;
   const mode = req.mode === "critique" ? "Critique" : req.plan ? "Plan" : null;
+
   return (
     <div className="msg-chips">
       {req.task !== "design-system" && <LevelChip level={runLevel(run)} />}
@@ -162,18 +189,22 @@ function RequestChips({ run, skills }: { run: RunView; skills: string[] }) {
       ))}
     </div>
   );
-}
+};
 
-export function UserMessage({
+export const UserMessage = ({
   run,
   title,
   tools,
   replaceBody,
   titleSlot,
   onRename,
-}: { run: RunView } & UserMessageSlots) {
+}: { run: RunView } & UserMessageSlots) => {
   const req = run.request;
-  if (!req) return null;
+
+  if (!req) {
+    return null;
+  }
+
   if (req.retryOf) {
     return (
       <div
@@ -185,9 +216,11 @@ export function UserMessage({
       </div>
     );
   }
+
   const skills = skillsFromPrompt(req.prompt);
   const { text: asked, answers } = splitAnswers(req.prompt);
   const text = (skills.length > 0 ? withoutSkillLines(asked) : asked).trim();
+
   return (
     <Message type="outgoing" className="msg user">
       <MessageContent>
@@ -227,112 +260,117 @@ export function UserMessage({
       </MessageContent>
     </Message>
   );
-}
+};
 
-const MarkdownBlock = memo(function MarkdownBlock({ text }: { text: string }) {
-  return <Markdown>{text}</Markdown>;
-});
+const MarkdownBlock = memo(({ text }: { text: string }) => (
+  <Markdown>{text}</Markdown>
+));
+MarkdownBlock.displayName = "MarkdownBlock";
 
-export const AssistantText = memo(function AssistantText({
-  text,
-  streaming = false,
-}: {
-  text: string;
-  streaming?: boolean;
-}) {
-  const blocks = splitMarkdownBlocks(text);
-  return (
-    <MessageText
-      className="msg-body assistant-text wrap-anywhere"
-      data-streaming={streaming || undefined}
-    >
-      {blocks.map((block, index) => (
-        <MarkdownBlock key={index} text={block} />
-      ))}
-    </MessageText>
-  );
-});
+export const AssistantText = memo(
+  ({ text, streaming = false }: { text: string; streaming?: boolean }) => {
+    const blocks = splitMarkdownBlocks(text);
 
-export const Thinking = memo(function Thinking({
-  text,
-  live,
-}: {
-  text: string;
-  live: boolean;
-}) {
-  if (!text && !live) return null;
-  return (
-    <Reasoning className="thinking" data-testid="thinking">
-      <ReasoningTrigger className="text-xs">
-        {live ? "Thinking…" : "Thought"}
-      </ReasoningTrigger>
-      <ReasoningContent>
-        <p className="thinking-text whitespace-pre-wrap text-xs">{text}</p>
-      </ReasoningContent>
-    </Reasoning>
-  );
-});
+    return (
+      <MessageText
+        className="msg-body assistant-text wrap-anywhere"
+        data-streaming={streaming || undefined}
+      >
+        {blocks.map((block, index) => (
+          <MarkdownBlock key={index} text={block} />
+        ))}
+      </MessageText>
+    );
+  }
+);
+AssistantText.displayName = "AssistantText";
 
-export function SentWhileRunning({ text }: { text: string }) {
-  return (
-    <div className="msg-inline-user" data-testid="sent-while-running">
-      <span className="msg-inline-label">You, while it ran</span>
-      <p className="whitespace-pre-wrap wrap-anywhere">{text}</p>
-    </div>
-  );
-}
+export const Thinking = memo(
+  ({ text, live }: { text: string; live: boolean }) => {
+    if (!text && !live) {
+      return null;
+    }
+
+    return (
+      <Reasoning className="thinking" data-testid="thinking">
+        <ReasoningTrigger className="text-xs">
+          {live ? "Thinking…" : "Thought"}
+        </ReasoningTrigger>
+        <ReasoningContent>
+          <p className="thinking-text whitespace-pre-wrap text-xs">{text}</p>
+        </ReasoningContent>
+      </Reasoning>
+    );
+  }
+);
+Thinking.displayName = "Thinking";
+
+export const SentWhileRunning = ({ text }: { text: string }) => (
+  <div className="msg-inline-user" data-testid="sent-while-running">
+    <span className="msg-inline-label">You, while it ran</span>
+    <p className="whitespace-pre-wrap wrap-anywhere">{text}</p>
+  </div>
+);
 
 const ERROR_HINTS: [RegExp, string][] = [
   [
-    /rate.?limit|\b429\b|overloaded|\b529\b/i,
+    /rate.?limit|\b429\b|overloaded|\b529\b/iu,
     "The model is busy. Wait a minute, then retry.",
   ],
   [
-    /\b401\b|\b403\b|auth|api key|log ?in|credential/i,
+    /\b401\b|\b403\b|auth|api key|log ?in|credential/iu,
     "Sign in again or check your API key in Settings, then retry.",
   ],
-  [/credit|billing|quota/i, "Check your plan or credits, then retry."],
+  [/credit|billing|quota/iu, "Check your plan or credits, then retry."],
   [
-    /prompt is too long|context (window|length)|too many tokens/i,
+    /prompt is too long|context (window|length)|too many tokens/iu,
     "Start a new direction, or send a shorter message.",
   ],
   [
-    /network|fetch failed|econn|etimedout|socket|offline/i,
+    /network|fetch failed|econn|etimedout|socket|offline/iu,
     "Check your connection, then retry.",
   ],
 ];
 
-export function errorHint(error: string): string {
+export const errorHint = (error: string): string => {
   const hit = ERROR_HINTS.find(([pattern]) => pattern.test(error));
+
   return hit
     ? hit[1]
     : "Retry, or change your message and send it again. Details has the full log.";
-}
+};
 
 interface RunUndoAction {
   onUndo: () => void;
   tip: string | null;
 }
 
-function undoRun(undo: RunUndoAction, button: HTMLButtonElement): void {
-  if (undo.tip !== null) return;
+const undoRun = (undo: RunUndoAction, button: HTMLButtonElement): void => {
+  if (undo.tip !== null) {
+    return;
+  }
+
   const next =
     button.parentElement?.querySelector<HTMLButtonElement>(
       ".btn:not(.ghost)"
     ) ??
     document.querySelector<HTMLElement>('.prompt [data-slot="composer-input"]');
+
   undo.onUndo();
   next?.focus();
-}
+};
 
-function RunErrorActions({
+const RunErrorActions = ({
   retry,
   undo,
 }: {
   retry: (() => void) | undefined;
   undo: RunUndoAction | undefined;
-}) {
-  if (!retry && !undo) return null;
+}) => {
+  if (!retry && !undo) {
+    return null;
+  }
+
   return (
     <span className="run-retry flex items-center gap-1">
       {undo && (
@@ -354,9 +392,9 @@ function RunErrorActions({
       )}
     </span>
   );
-}
+};
 
-export function RunError({
+export const RunError = ({
   run,
   latest,
   onRetry,
@@ -366,13 +404,19 @@ export function RunError({
   latest: boolean;
   onRetry?: () => void;
   undo?: RunUndoAction;
-}) {
+}) => {
   const error = run.summary?.error;
   const ref = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
-    if (error && latest) ref.current?.scrollIntoView({ block: "nearest" });
+    if (error && latest) {
+      ref.current?.scrollIntoView({ block: "nearest" });
+    }
   }, [error, latest]);
-  if (!error || run.status === "budget_exceeded") return null;
+
+  if (!error || run.status === "budget_exceeded") {
+    return null;
+  }
+
   return (
     <Exception
       ref={ref}
@@ -393,15 +437,13 @@ export function RunError({
       )}
     </Exception>
   );
-}
+};
 
 const CONTEXT_WARN = 0.7;
 
-function AlertIcon() {
-  return <Icon name="alert" size={14} />;
-}
+const AlertIcon = () => <Icon name="alert" size={14} />;
 
-export function RunNotice({
+export const RunNotice = ({
   run,
   latest,
   onRetry,
@@ -409,9 +451,10 @@ export function RunNotice({
   run: RunView;
   latest: boolean;
   onRetry?: () => void;
-}) {
+}) => {
   if (run.status === "budget_exceeded") {
     const spent = run.summary ? ` after ${formatUsd(run.summary.costUsd)}` : "";
+
     return (
       <div
         className="ui-notice run-notice"
@@ -435,10 +478,17 @@ export function RunNotice({
       </div>
     );
   }
-  if (!latest || run.status === "running" || run.contextTokens === null)
+
+  if (!latest || run.status === "running" || run.contextTokens === null) {
     return null;
+  }
+
   const share = contextShare(run.contextTokens, run.summary?.model ?? "");
-  if (share < CONTEXT_WARN) return null;
+
+  if (share < CONTEXT_WARN) {
+    return null;
+  }
+
   return (
     <div
       className="ui-notice run-notice"
@@ -452,64 +502,60 @@ export function RunNotice({
       </span>
     </div>
   );
-}
+};
 
-export function PolishThis({
+export const PolishThis = ({
   disabled,
   onPolish,
 }: {
   disabled: boolean;
   onPolish: () => void;
-}) {
-  return (
-    <div className="polish-this flex items-center gap-2 text-xs text-muted-foreground">
+}) => (
+  <div className="polish-this flex items-center gap-2 text-xs text-muted-foreground">
+    <button
+      type="button"
+      className="btn small has-icon"
+      data-testid="polish-this"
+      disabled={disabled}
+      data-tip-side="top"
+      data-tip-align="start"
+      data-tip={levelHint("polish")}
+      onClick={onPolish}
+    >
+      <Icon name="sparkle" size={14} />
+      Polish this
+    </button>
+    <span>Run every check and fix issues.</span>
+  </div>
+);
+
+export const PlanCard = ({ onApprove }: { onApprove: () => void }) => (
+  <div
+    className="plan-card"
+    data-testid="plan-card"
+    role="group"
+    aria-label="Plan ready"
+  >
+    <p>
+      <strong>Plan ready.</strong> No files changed yet.
+    </p>
+    <div className="plan-actions">
+      <button type="button" className="btn small primary" onClick={onApprove}>
+        Approve and build
+      </button>
       <button
         type="button"
-        className="btn small has-icon"
-        data-testid="polish-this"
-        disabled={disabled}
-        data-tip-side="top"
-        data-tip-align="start"
-        data-tip={levelHint("polish")}
-        onClick={onPolish}
+        className="btn small"
+        onClick={() =>
+          document
+            .querySelector<HTMLTextAreaElement>(
+              '.prompt [data-slot="composer-input"]'
+            )
+            ?.focus()
+        }
       >
-        <Icon name="sparkle" size={14} />
-        Polish this
+        Keep planning
       </button>
-      <span>Run every check and fix issues.</span>
     </div>
-  );
-}
-
-export function PlanCard({ onApprove }: { onApprove: () => void }) {
-  return (
-    <div
-      className="plan-card"
-      data-testid="plan-card"
-      role="group"
-      aria-label="Plan ready"
-    >
-      <p>
-        <strong>Plan ready.</strong> No files changed yet.
-      </p>
-      <div className="plan-actions">
-        <button type="button" className="btn small primary" onClick={onApprove}>
-          Approve and build
-        </button>
-        <button
-          type="button"
-          className="btn small"
-          onClick={() =>
-            document
-              .querySelector<HTMLTextAreaElement>(
-                '.prompt [data-slot="composer-input"]'
-              )
-              ?.focus()
-          }
-        >
-          Keep planning
-        </button>
-      </div>
-    </div>
-  );
-}
+  </div>
+);

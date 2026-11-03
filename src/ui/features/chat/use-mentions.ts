@@ -16,11 +16,11 @@ import type { MentionOption } from "./mention-picker.js";
 
 const fileCache = new Map<string, Promise<string[]>>();
 
-function loadFiles(
+const loadFiles = (
   projectId: string,
   directionId: string,
   fresh: boolean
-): Promise<string[]> {
+): Promise<string[]> => {
   const key = `${projectId}/${directionId}`;
   const known = fileCache.get(key);
 
@@ -36,7 +36,7 @@ function loadFiles(
   fileCache.set(key, next);
 
   return next;
-}
+};
 
 interface Options {
   projectId: string;
@@ -55,16 +55,14 @@ export interface MentionRequest {
   seq: number;
 }
 
-export function componentMention(component: ComponentInfo): RunMention {
-  return {
-    kind: "component",
-    name: component.name,
-    file: component.file,
-    selector: component.selector,
-  };
-}
+export const componentMention = (component: ComponentInfo): RunMention => ({
+  file: component.file,
+  kind: "component",
+  name: component.name,
+  selector: component.selector,
+});
 
-export function useMentions({
+export const useMentions = ({
   projectId,
   directionId,
   tokens,
@@ -74,7 +72,7 @@ export function useMentions({
   request,
   lead,
   onLead,
-}: Options) {
+}: Options) => {
   const [files, setFiles] = useState<string[] | null>(null);
   const [mentions, setMentions] = useState<RunMention[]>([]);
   const [dismissed, setDismissed] = useState<string | null>(null);
@@ -98,16 +96,16 @@ export function useMentions({
     const picked = new Set(mentions.map(mentionKey));
 
     const fileOptions = (files ?? []).map((path): MentionOption => ({
+      detail: path,
       key: `file:${path}`,
       label: path.split("/").pop() ?? path,
-      detail: path,
       mention: { kind: "file", path },
     }));
 
     const tokenOptions = (tokens ?? []).map((entry): MentionOption => ({
+      detail: entry.value,
       key: `token:${entry.cssVar}`,
       label: entry.cssVar,
-      detail: entry.value,
       mention: { kind: "token", name: entry.cssVar, value: entry.value },
     }));
 
@@ -115,9 +113,9 @@ export function useMentions({
       const mention = componentMention(item);
 
       return {
+        detail: item.file ?? "Component",
         key: mentionKey(mention),
         label: item.name,
-        detail: item.file ?? "Component",
         mention,
       };
     });
@@ -154,8 +152,8 @@ export function useMentions({
 
     setDraft(
       draft
-        .replace(/@[^\s@]*$/, "")
-        .replace(/\s+$/, (space) => (space ? " " : ""))
+        .replace(/@[^\s@]*$/u, "")
+        .replace(/\s+$/u, (space) => (space ? " " : ""))
     );
   };
 
@@ -186,15 +184,15 @@ export function useMentions({
   };
 
   return {
-    picker,
+    clear: () => setMentions([]),
     loading: files === null,
     mentions,
-    pick,
     onKeyDown,
+    pick,
+    picker,
     remove: (key: string) =>
       setMentions((prev) =>
         prev.filter((mention) => mentionKey(mention) !== key)
       ),
-    clear: () => setMentions([]),
   };
-}
+};

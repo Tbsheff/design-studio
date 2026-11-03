@@ -17,23 +17,21 @@ export interface SettingsDraft {
   defaultLevel: RunLevel;
 }
 
-export function toDraft(settings: ProjectSettings): SettingsDraft {
-  return {
-    model: settings.model,
-    maxBudgetUsd:
-      settings.maxBudgetUsd === null ? "" : String(settings.maxBudgetUsd),
-    maxTurns: String(settings.maxTurns),
-    allowBash: settings.allowBash,
-    allowInstall: settings.allowInstall,
-    autoApprove: settings.autoApprove ?? true,
-    disabledSkills: [...(settings.disabledSkills ?? [])],
-    defaultLevel: settings.defaultLevel ?? "prototype",
-  };
-}
+export const toDraft = (settings: ProjectSettings): SettingsDraft => ({
+  allowBash: settings.allowBash,
+  allowInstall: settings.allowInstall,
+  autoApprove: settings.autoApprove ?? true,
+  defaultLevel: settings.defaultLevel ?? "prototype",
+  disabledSkills: [...(settings.disabledSkills ?? [])],
+  maxBudgetUsd:
+    settings.maxBudgetUsd === null ? "" : String(settings.maxBudgetUsd),
+  maxTurns: String(settings.maxTurns),
+  model: settings.model,
+});
 
-export function parseDraft(
+export const parseDraft = (
   draft: SettingsDraft
-): { settings: ProjectSettings } | { error: string } {
+): { settings: ProjectSettings } | { error: string } => {
   const rawBudget = draft.maxBudgetUsd.trim();
   const budget = rawBudget === "" ? null : Number(rawBudget);
 
@@ -55,18 +53,17 @@ export function parseDraft(
 
   return {
     settings: {
-      model: draft.model,
-      maxBudgetUsd: budget,
-      maxTurns: turns,
       allowBash: draft.allowBash,
       allowInstall: draft.allowBash && draft.allowInstall,
       autoApprove: draft.autoApprove,
-      disabledSkills: [...draft.disabledSkills],
       defaultLevel: draft.defaultLevel,
+      disabledSkills: [...draft.disabledSkills],
+      maxBudgetUsd: budget,
+      maxTurns: turns,
+      model: draft.model,
     },
   };
-}
+};
 
-export function modelLabel(id: string): string {
-  return MODEL_OPTIONS.find((m) => m.id === id)?.label ?? id;
-}
+export const modelLabel = (id: string): string =>
+  MODEL_OPTIONS.find((m) => m.id === id)?.label ?? id;

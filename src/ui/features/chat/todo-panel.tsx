@@ -3,10 +3,12 @@ import { memo, useState } from "react";
 import type { TodoItem } from "../../../shared/contracts.js";
 import { Icon } from "../../kit/Icon.js";
 
-export function todoProgress(todos: TodoItem[]): {
+export const todoProgress = (
+  todos: TodoItem[]
+): {
   current: number;
   total: number;
-} {
+} => {
   const done = todos.filter((todo) => todo.status === "completed").length;
   const active = todos.some((todo) => todo.status === "in_progress");
 
@@ -14,13 +16,15 @@ export function todoProgress(todos: TodoItem[]): {
     current: Math.min(todos.length, done + (active ? 1 : 0)),
     total: todos.length,
   };
-}
+};
 
-function rowState(todo: TodoItem): {
+const rowState = (
+  todo: TodoItem
+): {
   className: string;
   label: string;
   tag: string | null;
-} {
+} => {
   if (todo.skipped) {
     return { className: "skipped", label: "skipped", tag: "Skipped" };
   }
@@ -38,9 +42,9 @@ function rowState(todo: TodoItem): {
     label: todo.status === "in_progress" ? "in progress" : "to do",
     tag: null,
   };
-}
+};
 
-function TodoMark({ todo, running }: { todo: TodoItem; running: boolean }) {
+const TodoMark = ({ todo, running }: { todo: TodoItem; running: boolean }) => {
   if (todo.skipped) {
     return <Icon name="minus" size={12} />;
   }
@@ -52,9 +56,9 @@ function TodoMark({ todo, running }: { todo: TodoItem; running: boolean }) {
   return todo.status === "in_progress" && running ? (
     <span className="spinner" />
   ) : null;
-}
+};
 
-function TodoRow({ todo, running }: { todo: TodoItem; running: boolean }) {
+const TodoRow = ({ todo, running }: { todo: TodoItem; running: boolean }) => {
   const view = rowState(todo);
 
   return (
@@ -78,60 +82,57 @@ function TodoRow({ todo, running }: { todo: TodoItem; running: boolean }) {
       <span className="sr-only">{view.label}</span>
     </li>
   );
-}
+};
 
-export const TodoPanel = memo(function TodoPanel({
-  todos,
-  running,
-}: {
-  todos: TodoItem[];
-  running: boolean;
-}) {
-  const [choice, setChoice] = useState<boolean | null>(null);
-  const [ranWith, setRanWith] = useState(running);
+export const TodoPanel = memo(
+  ({ todos, running }: { todos: TodoItem[]; running: boolean }) => {
+    const [choice, setChoice] = useState<boolean | null>(null);
+    const [ranWith, setRanWith] = useState(running);
 
-  if (ranWith !== running) {
-    setRanWith(running);
-    setChoice(null);
-  }
+    if (ranWith !== running) {
+      setRanWith(running);
+      setChoice(null);
+    }
 
-  const open = choice ?? running;
+    const open = choice ?? running;
 
-  if (todos.length === 0) {
-    return null;
-  }
+    if (todos.length === 0) {
+      return null;
+    }
 
-  const { current, total } = todoProgress(todos);
+    const { current, total } = todoProgress(todos);
 
-  return (
-    <section
-      className="todo-panel"
-      aria-label="Todo list"
-      data-testid="todo-panel"
-    >
-      <button
-        type="button"
-        className="todo-head"
-        aria-expanded={open}
-        onClick={() => setChoice(!open)}
+    return (
+      <section
+        className="todo-panel"
+        aria-label="Todo list"
+        data-testid="todo-panel"
       >
-        <Icon name={open ? "chevronDown" : "chevronRight"} size={12} />
-        <span>Todos</span>
-        <span className="todo-count tabular-nums" data-testid="todo-count">
-          {current} of {total}
-        </span>
-      </button>
-      {open && (
-        <ol className="todo-list">
-          {todos.map((todo, index) => (
-            <TodoRow
-              key={`${index}-${todo.content}`}
-              todo={todo}
-              running={running}
-            />
-          ))}
-        </ol>
-      )}
-    </section>
-  );
-});
+        <button
+          type="button"
+          className="todo-head"
+          aria-expanded={open}
+          onClick={() => setChoice(!open)}
+        >
+          <Icon name={open ? "chevronDown" : "chevronRight"} size={12} />
+          <span>Todos</span>
+          <span className="todo-count tabular-nums" data-testid="todo-count">
+            {current} of {total}
+          </span>
+        </button>
+        {open && (
+          <ol className="todo-list">
+            {todos.map((todo, index) => (
+              <TodoRow
+                key={`${index}-${todo.content}`}
+                todo={todo}
+                running={running}
+              />
+            ))}
+          </ol>
+        )}
+      </section>
+    );
+  }
+);
+TodoPanel.displayName = "TodoPanel";

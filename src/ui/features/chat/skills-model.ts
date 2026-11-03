@@ -6,7 +6,7 @@ import { api, errorText } from "../../api.js";
 let request: Promise<SkillCatalog> | null = null;
 let lastCatalog: SkillCatalog | null = null;
 
-function fetchSkillCatalog(fresh = false): Promise<SkillCatalog> {
+const fetchSkillCatalog = (fresh = false): Promise<SkillCatalog> => {
   if (fresh || !request) {
     request = api.listSkills().then(
       (catalog) => {
@@ -22,13 +22,13 @@ function fetchSkillCatalog(fresh = false): Promise<SkillCatalog> {
   }
 
   return request;
-}
+};
 
-export function useSkillCatalog(): {
+export const useSkillCatalog = (): {
   catalog: SkillCatalog | null;
   error: string | null;
   reload: () => void;
-} {
+} => {
   const [catalog, setCatalog] = useState<SkillCatalog | null>(
     () => lastCatalog
   );
@@ -46,7 +46,7 @@ export function useSkillCatalog(): {
         setCatalog(result);
         setError(null);
       },
-      (err: unknown) => live && setError(errorText(err))
+      (caught: unknown) => live && setError(errorText(caught))
     );
 
     return () => {
@@ -57,42 +57,33 @@ export function useSkillCatalog(): {
   useEffect(() => load(false), [load]);
 
   return { catalog, error, reload: () => void load(true) };
-}
+};
 
-export function skillDisplayName(id: string): string {
-  return id.startsWith("personal:") ? id.slice("personal:".length) : id;
-}
+export const skillDisplayName = (id: string): string =>
+  id.startsWith("personal:") ? id.slice("personal:".length) : id;
 
-export function originText(origin: SkillInfo["origin"]): string {
-  return origin === "personal" ? "personal" : origin.slice("plugin:".length);
-}
+export const originText = (origin: SkillInfo["origin"]): string =>
+  origin === "personal" ? "personal" : origin.slice("plugin:".length);
 
-export function enabledSkills(
+export const enabledSkills = (
   catalog: SkillCatalog | null,
   disabled: readonly string[]
-): SkillInfo[] {
-  return (catalog?.skills ?? []).filter(
-    (skill) => !disabled.includes(skill.id)
-  );
-}
+): SkillInfo[] =>
+  (catalog?.skills ?? []).filter((skill) => !disabled.includes(skill.id));
 
-export function skillInstruction(ids: readonly string[]): string {
-  return ids.map((id) => `Use the ${id} skill.`).join("\n");
-}
+export const skillInstruction = (ids: readonly string[]): string =>
+  ids.map((id) => `Use the ${id} skill.`).join("\n");
 
-export function skillsFromPrompt(prompt: string): string[] {
-  return [...prompt.matchAll(/^Use the (\S+:\S+) skill\.$/gm)].map(
+export const skillsFromPrompt = (prompt: string): string[] =>
+  [...prompt.matchAll(/^Use the (\S+:\S+) skill\.$/gmu)].map(
     (match) => match[1] ?? ""
   );
-}
 
-export function withoutSkillLines(prompt: string): string {
-  return prompt.replaceAll(/^Use the \S+:\S+ skill\.$/gm, "").trim();
-}
+export const withoutSkillLines = (prompt: string): string =>
+  prompt.replaceAll(/^Use the \S+:\S+ skill\.$/gmu, "").trim();
 
-export function plural(count: number, word: string): string {
-  return `${count} ${word}${count === 1 ? "" : "s"}`;
-}
+export const plural = (count: number, word: string): string =>
+  `${count} ${word}${count === 1 ? "" : "s"}`;
 
 export const NO_SKILLS_TEXT =
   "No skills found. Add a folder with a SKILL.md to ~/.claude/skills, or enable a Claude Code plugin that has skills.";

@@ -32,11 +32,11 @@ interface Item {
 
 const CLOCK_SLACK_MS = 5000;
 
-function nextCount(
+const nextCount = (
   state: WindowState,
   items: readonly Item[],
   since: number
-): number {
+): number => {
   const last = items.at(-1)?.key ?? null;
 
   if (state.last === null || last === state.last) {
@@ -54,20 +54,20 @@ function nextCount(
     .filter((item) => item.at >= since - CLOCK_SLACK_MS).length;
 
   return state.count + live;
-}
+};
 
-export function useHistoryWindow<T extends Item>(
+export const useHistoryWindow = <T extends Item>(
   items: T[],
   resetKey: string | null,
   reveal: string | null
-): HistoryWindow<T> {
+): HistoryWindow<T> => {
   const { viewportRef } = useConversation();
   const [since] = useState(() => Date.now());
 
   const [state, setState] = useState<WindowState>({
-    reset: resetKey,
     count: FIRST,
     last: null,
+    reset: resetKey,
   });
 
   const last = items.at(-1)?.key ?? null;
@@ -76,7 +76,7 @@ export function useHistoryWindow<T extends Item>(
     state.reset === resetKey ? nextCount(state, items, since) : FIRST;
 
   if (state.reset !== resetKey) {
-    setState({ reset: resetKey, count: FIRST, last: null });
+    setState({ count: FIRST, last: null, reset: resetKey });
   } else if (state.last !== last) {
     setState({ ...state, count, last });
   }
@@ -119,16 +119,16 @@ export function useHistoryWindow<T extends Item>(
     fromBottom.current = null;
   }, [start, items.length, viewportRef]);
 
-  return { shown: start > 0 ? items.slice(start) : items, hidden: start, more };
-}
+  return { hidden: start, more, shown: start > 0 ? items.slice(start) : items };
+};
 
-export function EarlierRuns({
+export const EarlierRuns = ({
   hidden,
   onMore,
 }: {
   hidden: number;
   onMore: () => void;
-}) {
+}) => {
   const { viewportRef, wasAtBottomRef } = useConversation();
   const ref = useRef<HTMLButtonElement | null>(null);
   const older = useOlderRuns();
@@ -184,4 +184,4 @@ export function EarlierRuns({
           : "Show earlier runs"}
     </button>
   );
-}
+};

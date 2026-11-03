@@ -1,16 +1,16 @@
-import { useEffect, useMemo, useState, useTransition } from "react";
-import type { FormEvent, KeyboardEvent } from "react";
+import { useState, useTransition, useMemo, useEffect } from "react";
+import type { KeyboardEvent, FormEvent } from "react";
 
 import type { Project } from "../../../shared/contracts.js";
 import type { FolderInspection } from "../../../shared/open-app.js";
-import { cleanPortRoute, PORT_LEVEL_LABEL } from "../../../shared/port.js";
 import type {
+  PortStartResult,
   PortFlowPage,
   PortFlowPlan,
   PortKitMatch,
-  PortStartResult,
 } from "../../../shared/port.js";
-import { api, errorText } from "../../api.js";
+import { cleanPortRoute, PORT_LEVEL_LABEL } from "../../../shared/port.js";
+import { errorText, api } from "../../api.js";
 import { Icon } from "../../kit/Icon.js";
 import { UiSelect } from "../../kit/UiSelect.js";
 import type { UiSelectOption } from "../../kit/UiSelect.js";
@@ -23,23 +23,60 @@ import type { FrameChoice } from "../share-publish-ship-export/export-api.js";
 import { COPY } from "./copy.js";
 import { portApi } from "./port-api.js";
 
-import "../../styles/export.css";
-import "../../styles/port.css";
-import "../../styles/port-flow.css";
-
 export interface PortDialogTarget {
   projectId: string;
   directionId: string | null;
   frameId: string | null;
 }
 
-const PLAN_DELAY_MS = 250;
-
-function pagePath(path: string | undefined): string {
-  const clean = (path ?? "").replace(/^\/+/, "");
+const pagePath = (path: string | undefined): string => {
+  const clean = (path ?? "").replace(/^\/+/u, "");
 
   return clean || "index.html";
-}
+};
+
+const firstFrameId = (frames: FrameChoice[], wanted: string | null): string =>
+  frames.find((f) => f.id === wanted)?.id ??
+  frames.find((f) => f.active)?.id ??
+  frames[0]?.id ??
+  "";
+
+const shownRoute = (
+  typed: string | null,
+  flow: PortFlowPlan | null,
+  path: string
+): string => {
+  if (typed !== null) {
+    return typed;
+  }
+
+  return flow?.source.entry === path ? (flow.base ?? "") : "";
+};
+
+const routeError = (route: string, picked: PortFlowPage[]): string | null => {
+  if (!cleanPortRoute(route)) {
+    return "Use an app path like /classes. Lower-case letters, digits and dashes; a route group in parentheses, like /(design)/classes, is allowed.";
+  }
+
+  const taken = picked.filter((page) => page.routeExists);
+
+  if (taken.length === 1) {
+    return `The app already has the route ${taken[0]?.url} (${taken[0]?.routeFile}). Pick a new path.`;
+  }
+
+  if (taken.length > 1) {
+    return `The app already has ${taken.length} of these routes (${taken.map((page) => page.url).join(", ")}). Pick a new path.`;
+  }
+
+  return null;
+};
+
+const routeProblem = (
+  typed: string | null,
+  shown: string,
+  picked: PortFlowPage[]
+): string | null =>
+  typed === null && !shown ? null : routeError(shown, picked);
 
 interface Targets {
   apps: Project[] | null;
@@ -48,7 +85,7 @@ interface Targets {
   reload: () => void;
 }
 
-function useTargets(sourceId: string): Targets {
+const useTargets = (sourceId: string): Targets => {
   const [state, setState] = useState<Omit<Targets, "reload">>({
     apps: null,
     error: null,
@@ -58,6 +95,7 @@ function useTargets(sourceId: string): Targets {
   const [nonce, setNonce] = useState(0);
   useEffect(() => {
     let alive = true;
+
     const read = async () => {
       try {
         const list = await api.listProjects();
@@ -84,12 +122,248 @@ function useTargets(sourceId: string): Targets {
   }, [sourceId, nonce]);
 
   return { ...state, reload: () => setNonce((n) => n + 1) };
+};
+
+const usePagePicks = (flow: PortFlowPlan | null) => {
+  const [off, setOff] = useState<ReadonlySet<string>>(() => new Set());
+  const all = flow?.pages ?? [];
+  const picked = all.filter((page) => !off.has(page.path));
+
+  const toggle = (page: string) =>
+    setOff((prev) => {
+      const next = new Set(prev);
+
+      if (next.has(page)) {
+        next.delete(page);
+      } else {
+        next.add(page);
+      }
+
+      return next;
+    });
+
+  const links = flow
+    ? flow.links.filter(
+        (link) =>
+          !off.has(link.from) && !off.has(link.page) && link.from !== link.page
+      ).length
+    : 0;
+
+  return { all, links, picked, toggle };
+};
+
+const PLAN_DELAY_MS = 250;
+
+interface FlowState {
+  flow: PortFlowPlan | null;
+  error: string | null;
+  loading: boolean;
 }
 
-async function attachFolder(
+const readPlan = async (
+  request: Parameters<typeof portApi.flowPlan>[0],
+  isAlive: () => boolean,
+  apply: (next: FlowState) => void
+): Promise<void> => {
+  try {
+    const flow = await portApi.flowPlan(request);
+
+    if (isAlive()) {
+      apply({ error: null, flow, loading: false });
+    }
+  } catch (error: unknown) {
+    if (isAlive()) {
+      apply({ error: errorText(error), flow: null, loading: false });
+    }
+  }
+};
+
+const usePlan = (input: {
+  sourceProjectId: string;
+  sourceDirectionId: string | null;
+  path: string;
+  targetProjectId: string;
+  route: string | null;
+}): FlowState => {
+  const [plan, setPlan] = useState<FlowState>({
+    error: null,
+    flow: null,
+    loading: false,
+  });
+
+  const { sourceProjectId, sourceDirectionId, path, targetProjectId, route } =
+    input;
+
+  useEffect(() => {
+    if (!targetProjectId) {
+      return;
+    }
+
+    let alive = true;
+    setPlan((prev) => ({ ...prev, loading: true }));
+
+    const timer = globalThis.setTimeout(() => {
+      void readPlan(
+        {
+          path,
+          route: route ?? undefined,
+          sourceDirectionId: sourceDirectionId ?? undefined,
+          sourceProjectId,
+          targetProjectId,
+        },
+        () => alive,
+        setPlan
+      );
+    }, PLAN_DELAY_MS);
+
+    return () => {
+      alive = false;
+      globalThis.clearTimeout(timer);
+    };
+  }, [sourceProjectId, sourceDirectionId, path, targetProjectId, route]);
+
+  return plan;
+};
+
+const usePortForm = (target: PortDialogTarget) => {
+  const frames = useMemo(
+    () => canvasFrameChoices(target.projectId, target.directionId),
+    [target.projectId, target.directionId]
+  );
+
+  const [frameId, setFrameId] = useState(() =>
+    firstFrameId(frames, target.frameId)
+  );
+
+  const path = pagePath(
+    (frames.find((f) => f.id === frameId) ?? frames[0])?.frame.path
+  );
+
+  const targets = useTargets(target.projectId);
+  const [appId, setAppId] = useState("");
+  const chosenApp = appId || (targets.apps?.[0]?.id ?? "");
+  const [route, setRoute] = useState<string | null>(null);
+
+  const plan = usePlan({
+    path,
+    route: route === null ? null : cleanPortRoute(route),
+    sourceDirectionId: target.directionId,
+    sourceProjectId: target.projectId,
+    targetProjectId: chosenApp,
+  });
+
+  const routeText = shownRoute(route, plan.flow, path);
+  const cleanRoute = cleanPortRoute(routeText);
+  const pages = usePagePicks(plan.flow);
+
+  const htmlSource =
+    !targets.source || (targets.source.kind === "html" && !targets.source.app);
+
+  const badRoute = routeProblem(route, routeText, pages.picked);
+
+  const ready =
+    Boolean(chosenApp && cleanRoute) &&
+    pages.picked.length > 0 &&
+    htmlSource &&
+    !badRoute &&
+    !plan.loading &&
+    !plan.error;
+
+  return {
+    badRoute,
+    chosenApp,
+    cleanRoute,
+    frameId,
+    frames,
+    htmlSource,
+    pages,
+    path,
+    plan,
+    ready,
+    routeText,
+    setAppId,
+    setFrameId,
+    setRoute,
+    targets,
+  };
+};
+
+type PortForm = ReturnType<typeof usePortForm>;
+
+const startPaths = (form: PortForm): string[] | undefined => {
+  const paths = form.pages.picked.map((page) => page.path);
+
+  return paths.length === 1 && paths[0] === form.path ? undefined : paths;
+};
+
+const usePortStart = (target: PortDialogTarget, form: PortForm) => {
+  const [busy, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+  const [started, setStarted] = useState<PortStartResult | null>(null);
+
+  const submit = (event: FormEvent) => {
+    event.preventDefault();
+
+    if (!form.ready || busy || !form.cleanRoute) {
+      return;
+    }
+
+    setError(null);
+    const paths = startPaths(form);
+    const route = form.cleanRoute;
+    startTransition(async () => {
+      try {
+        setStarted(
+          await portApi.start({
+            path: form.path,
+            sourceDirectionId: target.directionId ?? undefined,
+            sourceProjectId: target.projectId,
+            ...(paths ? { paths } : {}),
+            route,
+            targetProjectId: form.chosenApp,
+          })
+        );
+      } catch (caught: unknown) {
+        setError(errorText(caught));
+      }
+    });
+  };
+
+  return { busy, error, started, submit };
+};
+
+const CandidatePick = ({
+  found,
+  value,
+  onChange,
+}: {
+  found: FolderInspection;
+  value: string;
+  onChange: (appDir: string) => void;
+}) => {
+  const options: UiSelectOption[] = found.candidates.map((c) => ({
+    label: `${c.name} · ${c.appDir}`,
+    value: c.appDir,
+  }));
+
+  return (
+    <div className="field">
+      <span id="port-candidate-label">App in this folder</span>
+      <UiSelect
+        aria-labelledby="port-candidate-label"
+        value={value}
+        options={options}
+        onChange={onChange}
+        placeholder={COPY.placeholderPickAnApp}
+      />
+    </div>
+  );
+};
+
+const attachFolder = async (
   path: string,
   appDir: string | null
-): Promise<{ projectId: string } | { inspection: FolderInspection }> {
+): Promise<{ projectId: string } | { inspection: FolderInspection }> => {
   const found = await api.inspectFolder(path, appDir ?? undefined);
 
   if (found.problem) {
@@ -112,37 +386,9 @@ async function attachFolder(
   });
 
   return { projectId: project.id };
-}
+};
 
-function CandidatePick({
-  found,
-  value,
-  onChange,
-}: {
-  found: FolderInspection;
-  value: string;
-  onChange: (appDir: string) => void;
-}) {
-  const options: UiSelectOption[] = found.candidates.map((c) => ({
-    label: `${c.name} · ${c.appDir}`,
-    value: c.appDir,
-  }));
-
-  return (
-    <div className="field">
-      <span id="port-candidate-label">App in this folder</span>
-      <UiSelect
-        aria-labelledby="port-candidate-label"
-        value={value}
-        options={options}
-        onChange={onChange}
-        placeholder={COPY.placeholderPickAnApp}
-      />
-    </div>
-  );
-}
-
-function useAttach(onAttached: (projectId: string) => void) {
+const useAttach = (onAttached: (projectId: string) => void) => {
   const [path, setPath] = useState("");
   const [busy, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -167,8 +413,8 @@ function useAttach(onAttached: (projectId: string) => void) {
         } else {
           setFound(result.inspection);
         }
-      } catch (failure: unknown) {
-        setError(errorText(failure));
+      } catch (caught: unknown) {
+        setError(errorText(caught));
       }
     });
   };
@@ -191,15 +437,15 @@ function useAttach(onAttached: (projectId: string) => void) {
   };
 
   return { appDir, busy, choose, edit, error, found, path, run, setAppDir };
-}
+};
 
-function AttachField({
+const AttachField = ({
   error: listError,
   onAttached,
 }: {
   error: string | null;
   onAttached: (projectId: string) => void;
-}) {
+}) => {
   const attach = useAttach(onAttached);
 
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -267,92 +513,103 @@ function AttachField({
       </p>
     </>
   );
-}
+};
 
-interface FlowState {
-  flow: PortFlowPlan | null;
-  error: string | null;
-  loading: boolean;
-}
+const AppField = ({ form }: { form: PortForm }) => {
+  const { apps, error } = form.targets;
 
-async function readPlan(
-  request: Parameters<typeof portApi.flowPlan>[0],
-  isAlive: () => boolean,
-  apply: (next: FlowState) => void
-): Promise<void> {
-  try {
-    const flow = await portApi.flowPlan(request);
+  const options: UiSelectOption[] = (apps ?? []).map((a) => ({
+    label: a.name,
+    value: a.id,
+  }));
 
-    if (isAlive()) {
-      apply({ error: null, flow, loading: false });
-    }
-  } catch (error: unknown) {
-    if (isAlive()) {
-      apply({ error: errorText(error), flow: null, loading: false });
-    }
+  const attached = (projectId: string) => {
+    form.setAppId(projectId);
+    form.targets.reload();
+  };
+
+  if (apps?.length === 0) {
+    return <AttachField error={error} onAttached={attached} />;
   }
-}
 
-function usePlan(input: {
-  sourceProjectId: string;
-  sourceDirectionId: string | null;
-  path: string;
-  targetProjectId: string;
-  route: string | null;
-}): FlowState {
-  const [plan, setPlan] = useState<FlowState>({
-    error: null,
-    flow: null,
-    loading: false,
-  });
+  return (
+    <div className="field">
+      <span id="port-app-label">Target app</span>
+      <UiSelect
+        aria-labelledby="port-app-label"
+        value={form.chosenApp}
+        options={options}
+        onChange={form.setAppId}
+        placeholder={COPY.placeholderLoadingApps}
+        disabled={!apps}
+      />
+    </div>
+  );
+};
 
-  const { sourceProjectId, sourceDirectionId, path, targetProjectId, route } =
-    input;
+const PageRow = ({
+  page,
+  checked,
+  onToggle,
+}: {
+  page: PortFlowPage;
+  checked: boolean;
+  onToggle: () => void;
+}) => (
+  <label
+    className="export-frame port-page"
+    data-tip={page.routeFile ?? undefined}
+  >
+    <input type="checkbox" checked={checked} onChange={onToggle} />
+    <span className="port-page-name truncate">{page.path}</span>
+    <span className="port-page-route mono truncate">{page.url}</span>
+    {page.routeExists && checked && (
+      <span className="port-page-taken">Exists</span>
+    )}
+  </label>
+);
 
-  useEffect(() => {
-    if (!targetProjectId) {
-      return;
-    }
+const PageList = ({ form }: { form: PortForm }) => {
+  const { all, picked, toggle } = form.pages;
 
-    let alive = true;
-    setPlan((prev) => ({ ...prev, loading: true }));
+  if (all.length < 2) {
+    return null;
+  }
 
-    const timer = window.setTimeout(() => {
-      void readPlan(
-        {
-          path,
-          route: route ?? undefined,
-          sourceDirectionId: sourceDirectionId ?? undefined,
-          sourceProjectId,
-          targetProjectId,
-        },
-        () => alive,
-        setPlan
-      );
-    }, PLAN_DELAY_MS);
+  const on = new Set(picked.map((page) => page.path));
 
-    return () => {
-      alive = false;
-      window.clearTimeout(timer);
-    };
-  }, [sourceProjectId, sourceDirectionId, path, targetProjectId, route]);
+  return (
+    <fieldset className="export-field port-pages" aria-busy={form.plan.loading}>
+      <legend className="export-label">
+        Pages in this flow · {picked.length} of {all.length}
+      </legend>
+      {all.map((page) => (
+        <PageRow
+          key={page.path}
+          page={page}
+          checked={on.has(page.path)}
+          onToggle={() => toggle(page.path)}
+        />
+      ))}
+    </fieldset>
+  );
+};
 
-  return plan;
-}
-
-function kitOf(pages: PortFlowPage[]): PortKitMatch[] {
+const kitOf = (pages: PortFlowPage[]): PortKitMatch[] => {
   const seen = new Map<string, PortKitMatch>();
 
   for (const page of pages) {
     for (const k of page.plan.kit) {
-      if (!seen.has(k.name)) seen.set(k.name, k);
+      if (!seen.has(k.name)) {
+        seen.set(k.name, k);
+      }
     }
   }
 
   return [...seen.values()];
-}
+};
 
-function contentText(pages: PortFlowPage[], links: number): string {
+const contentText = (pages: PortFlowPage[], links: number): string => {
   const first = pages[0]?.plan;
 
   if (!first) {
@@ -371,9 +628,9 @@ function contentText(pages: PortFlowPage[], links: number): string {
   );
 
   return `${pages.length} pages, ${sections} sections, ${links} links between pages`;
-}
+};
 
-function PlanSummary({
+const PlanSummary = ({
   pages,
   links,
   loading,
@@ -383,7 +640,7 @@ function PlanSummary({
   links: number;
   loading: boolean;
   error: string | null;
-}) {
+}) => {
   if (error) {
     return <p className="port-note error">{error}</p>;
   }
@@ -438,276 +695,15 @@ function PlanSummary({
       )}
     </div>
   );
-}
+};
 
-function routeError(route: string, picked: PortFlowPage[]): string | null {
-  if (!cleanPortRoute(route)) {
-    return "Use an app path like /classes. Lower-case letters, digits and dashes; a route group in parentheses, like /(design)/classes, is allowed.";
-  }
-
-  const taken = picked.filter((page) => page.routeExists);
-
-  if (taken.length === 1) {
-    return `The app already has the route ${taken[0]?.url} (${taken[0]?.routeFile}). Pick a new path.`;
-  }
-
-  if (taken.length > 1) {
-    return `The app already has ${taken.length} of these routes (${taken.map((page) => page.url).join(", ")}). Pick a new path.`;
-  }
-
-  return null;
-}
-
-function startedText(result: PortStartResult): string {
-  const count = result.routes?.length ?? 1;
-
-  return count > 1 ? `${count} routes under ${result.route}` : result.route;
-}
-
-function Started({
-  result,
-  appName,
-  onClose,
+const FormBody = ({
+  form,
+  error,
 }: {
-  result: PortStartResult;
-  appName: string;
-  onClose: () => void;
-}) {
-  return (
-    <>
-      <div className="modal-body port-body">
-        <p className="port-done" role="status">
-          <Icon name="check" size={14} />
-          Started a {PORT_LEVEL_LABEL} run in {appName} for{" "}
-          {startedText(result)}.
-        </p>
-      </div>
-      <div className="modal-foot">
-        <span className="port-spacer" />
-        <button type="button" className="btn ghost" onClick={onClose}>
-          Close
-        </button>
-        <button
-          type="button"
-          className="btn primary"
-          data-autofocus
-          onClick={() => {
-            onClose();
-            uiStore.set({ activeProjectId: result.projectId });
-          }}
-        >
-          Open {appName}
-        </button>
-      </div>
-    </>
-  );
-}
-
-function firstFrameId(frames: FrameChoice[], wanted: string | null): string {
-  return (
-    frames.find((f) => f.id === wanted)?.id ??
-    frames.find((f) => f.active)?.id ??
-    frames[0]?.id ??
-    ""
-  );
-}
-
-function usePagePicks(flow: PortFlowPlan | null) {
-  const [off, setOff] = useState<ReadonlySet<string>>(() => new Set());
-  const all = flow?.pages ?? [];
-  const picked = all.filter((page) => !off.has(page.path));
-
-  const toggle = (page: string) =>
-    setOff((prev) => {
-      const next = new Set(prev);
-
-      if (next.has(page)) {
-        next.delete(page);
-      } else {
-        next.add(page);
-      }
-
-      return next;
-    });
-
-  const links = flow
-    ? flow.links.filter(
-        (link) =>
-          !off.has(link.from) && !off.has(link.page) && link.from !== link.page
-      ).length
-    : 0;
-
-  return { all, links, picked, toggle };
-}
-
-function shownRoute(
-  typed: string | null,
-  flow: PortFlowPlan | null,
-  path: string
-): string {
-  if (typed !== null) {
-    return typed;
-  }
-
-  return flow?.source.entry === path ? (flow.base ?? "") : "";
-}
-
-function routeProblem(
-  typed: string | null,
-  shown: string,
-  picked: PortFlowPage[]
-): string | null {
-  return typed === null && !shown ? null : routeError(shown, picked);
-}
-
-function usePortForm(target: PortDialogTarget) {
-  const frames = useMemo(
-    () => canvasFrameChoices(target.projectId, target.directionId),
-    [target.projectId, target.directionId]
-  );
-
-  const [frameId, setFrameId] = useState(() =>
-    firstFrameId(frames, target.frameId)
-  );
-
-  const path = pagePath(
-    (frames.find((f) => f.id === frameId) ?? frames[0])?.frame.path
-  );
-
-  const targets = useTargets(target.projectId);
-  const [appId, setAppId] = useState("");
-  const chosenApp = appId || (targets.apps?.[0]?.id ?? "");
-  const [route, setRoute] = useState<string | null>(null);
-
-  const plan = usePlan({
-    path,
-    route: route === null ? null : cleanPortRoute(route),
-    sourceDirectionId: target.directionId,
-    sourceProjectId: target.projectId,
-    targetProjectId: chosenApp,
-  });
-
-  const routeText = shownRoute(route, plan.flow, path);
-  const cleanRoute = cleanPortRoute(routeText);
-  const pages = usePagePicks(plan.flow);
-
-  const htmlSource =
-    !targets.source || (targets.source.kind === "html" && !targets.source.app);
-
-  const badRoute = routeProblem(route, routeText, pages.picked);
-
-  const ready =
-    Boolean(chosenApp && cleanRoute) &&
-    pages.picked.length > 0 &&
-    htmlSource &&
-    !badRoute &&
-    !plan.loading &&
-    !plan.error;
-
-  return {
-    badRoute,
-    chosenApp,
-    cleanRoute,
-    frameId,
-    frames,
-    htmlSource,
-    pages,
-    path,
-    plan,
-    ready,
-    routeText,
-    setAppId,
-    setFrameId,
-    setRoute,
-    targets,
-  };
-}
-
-type PortForm = ReturnType<typeof usePortForm>;
-
-function AppField({ form }: { form: PortForm }) {
-  const { apps, error } = form.targets;
-
-  const options: UiSelectOption[] = (apps ?? []).map((a) => ({
-    label: a.name,
-    value: a.id,
-  }));
-
-  const attached = (projectId: string) => {
-    form.setAppId(projectId);
-    form.targets.reload();
-  };
-
-  if (apps?.length === 0) {
-    return <AttachField error={error} onAttached={attached} />;
-  }
-
-  return (
-    <div className="field">
-      <span id="port-app-label">Target app</span>
-      <UiSelect
-        aria-labelledby="port-app-label"
-        value={form.chosenApp}
-        options={options}
-        onChange={form.setAppId}
-        placeholder={COPY.placeholderLoadingApps}
-        disabled={!apps}
-      />
-    </div>
-  );
-}
-
-function PageRow({
-  page,
-  checked,
-  onToggle,
-}: {
-  page: PortFlowPage;
-  checked: boolean;
-  onToggle: () => void;
-}) {
-  return (
-    <label
-      className="export-frame port-page"
-      data-tip={page.routeFile ?? undefined}
-    >
-      <input type="checkbox" checked={checked} onChange={onToggle} />
-      <span className="port-page-name truncate">{page.path}</span>
-      <span className="port-page-route mono truncate">{page.url}</span>
-      {page.routeExists && checked && (
-        <span className="port-page-taken">Exists</span>
-      )}
-    </label>
-  );
-}
-
-function PageList({ form }: { form: PortForm }) {
-  const { all, picked, toggle } = form.pages;
-
-  if (all.length < 2) {
-    return null;
-  }
-
-  const on = new Set(picked.map((page) => page.path));
-
-  return (
-    <fieldset className="export-field port-pages" aria-busy={form.plan.loading}>
-      <legend className="export-label">
-        Pages in this flow · {picked.length} of {all.length}
-      </legend>
-      {all.map((page) => (
-        <PageRow
-          key={page.path}
-          page={page}
-          checked={on.has(page.path)}
-          onToggle={() => toggle(page.path)}
-        />
-      ))}
-    </fieldset>
-  );
-}
-
-function FormBody({ form, error }: { form: PortForm; error: string | null }) {
+  form: PortForm;
+  error: string | null;
+}) => {
   const frameOptions: UiSelectOption[] = form.frames.map((f) => ({
     label: `${f.frame.name} · ${pageName(f.frame.path)}`,
     value: f.id,
@@ -763,9 +759,9 @@ function FormBody({ form, error }: { form: PortForm; error: string | null }) {
       )}
     </div>
   );
-}
+};
 
-function FormFoot({
+const FormFoot = ({
   form,
   busy,
   count,
@@ -777,7 +773,7 @@ function FormFoot({
   count: number;
   appName: string;
   onClose: () => void;
-}) {
+}) => {
   const noApp = form.targets.apps?.length === 0;
 
   return (
@@ -801,57 +797,57 @@ function FormFoot({
       </button>
     </div>
   );
-}
+};
 
-function startPaths(form: PortForm): string[] | undefined {
-  const paths = form.pages.picked.map((page) => page.path);
+const startedText = (result: PortStartResult): string => {
+  const count = result.routes?.length ?? 1;
 
-  return paths.length === 1 && paths[0] === form.path ? undefined : paths;
-}
+  return count > 1 ? `${count} routes under ${result.route}` : result.route;
+};
 
-function usePortStart(target: PortDialogTarget, form: PortForm) {
-  const [busy, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
-  const [started, setStarted] = useState<PortStartResult | null>(null);
+const Started = ({
+  result,
+  appName,
+  onClose,
+}: {
+  result: PortStartResult;
+  appName: string;
+  onClose: () => void;
+}) => (
+  <>
+    <div className="modal-body port-body">
+      <p className="port-done" role="status">
+        <Icon name="check" size={14} />
+        Started a {PORT_LEVEL_LABEL} run in {appName} for {startedText(result)}.
+      </p>
+    </div>
+    <div className="modal-foot">
+      <span className="port-spacer" />
+      <button type="button" className="btn ghost" onClick={onClose}>
+        Close
+      </button>
+      <button
+        type="button"
+        className="btn primary"
+        data-autofocus
+        onClick={() => {
+          onClose();
+          uiStore.set({ activeProjectId: result.projectId });
+        }}
+      >
+        Open {appName}
+      </button>
+    </div>
+  </>
+);
 
-  const submit = (event: FormEvent) => {
-    event.preventDefault();
-
-    if (!form.ready || busy || !form.cleanRoute) {
-      return;
-    }
-
-    setError(null);
-    const paths = startPaths(form);
-    const route = form.cleanRoute;
-    startTransition(async () => {
-      try {
-        setStarted(
-          await portApi.start({
-            sourceProjectId: target.projectId,
-            sourceDirectionId: target.directionId ?? undefined,
-            path: form.path,
-            ...(paths ? { paths } : {}),
-            targetProjectId: form.chosenApp,
-            route,
-          })
-        );
-      } catch (failure: unknown) {
-        setError(errorText(failure));
-      }
-    });
-  };
-
-  return { busy, error, started, submit };
-}
-
-export function PortToAppDialog({
+export const PortToAppDialog = ({
   target,
   onClose,
 }: {
   target: PortDialogTarget;
   onClose: () => void;
-}) {
+}) => {
   const dialog = useModalDialog(onClose);
   const form = usePortForm(target);
   const { busy, error, started, submit } = usePortStart(target, form);
@@ -904,4 +900,4 @@ export function PortToAppDialog({
       </form>
     </dialog>
   );
-}
+};

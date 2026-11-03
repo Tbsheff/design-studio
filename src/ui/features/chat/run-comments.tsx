@@ -8,7 +8,7 @@ import type { RunView } from "./run-state-model.js";
 
 export const RunCommentsContext = createContext<CommentsControl | null>(null);
 
-function idsOf(request: RunRequest | null | undefined): string[] {
+const idsOf = (request: RunRequest | null | undefined): string[] => {
   if (!request) {
     return [];
   }
@@ -17,9 +17,9 @@ function idsOf(request: RunRequest | null | undefined): string[] {
     ...(request.comments ?? []).map((comment) => comment.id),
     ...(request.commentIds ?? []),
   ];
-}
+};
 
-function replyText(run: RunView): string {
+const replyText = (run: RunView): string => {
   if (run.summary?.finalText) {
     return run.summary.finalText;
   }
@@ -27,25 +27,25 @@ function replyText(run: RunView): string {
   return run.parts
     .flatMap((part) => (part.kind === "text" ? [part.text] : []))
     .join("\n");
-}
+};
 
 type LinkState = "done" | "resolved" | "open";
 
-function stateOf(comment: DesignComment, done: number[] | null): LinkState {
+const stateOf = (comment: DesignComment, done: number[] | null): LinkState => {
   if (comment.status === "resolved") {
     return "resolved";
   }
 
   return done?.includes(comment.n) ? "done" : "open";
-}
+};
 
 const STATE_TIP: Record<LinkState, string> = {
   done: "The agent says it did this",
-  resolved: "Resolved",
   open: "Still open",
+  resolved: "Resolved",
 };
 
-function CommentLink({
+const CommentLink = ({
   comment,
   state,
   control,
@@ -53,33 +53,31 @@ function CommentLink({
   comment: DesignComment;
   state: LinkState;
   control: CommentsControl;
-}) {
-  return (
-    <li>
-      <button
-        type="button"
-        className="run-comment-link"
-        data-state={state}
-        data-testid="run-comment-link"
-        data-tip={`${STATE_TIP[state]}. Show it on the canvas.`}
-        onClick={() => control.setOpenId(comment.id)}
-      >
-        <span className="num">
-          {state === "resolved" || state === "done" ? (
-            <Icon name="check" size={12} />
-          ) : null}
-          #{comment.n}
-        </span>
-        <span className="text">{comment.text}</span>
-      </button>
-    </li>
-  );
-}
+}) => (
+  <li>
+    <button
+      type="button"
+      className="run-comment-link"
+      data-state={state}
+      data-testid="run-comment-link"
+      data-tip={`${STATE_TIP[state]}. Show it on the canvas.`}
+      onClick={() => control.setOpenId(comment.id)}
+    >
+      <span className="num">
+        {state === "resolved" || state === "done" ? (
+          <Icon name="check" size={12} />
+        ) : null}
+        #{comment.n}
+      </span>
+      <span className="text">{comment.text}</span>
+    </button>
+  </li>
+);
 
-function resolvable(
+const resolvable = (
   linked: DesignComment[],
   done: number[] | null
-): DesignComment[] {
+): DesignComment[] => {
   const open = linked.filter(
     (comment) => comment.status !== "resolved" && comment.status !== "sent"
   );
@@ -87,9 +85,9 @@ function resolvable(
   return done === null
     ? open
     : open.filter((comment) => done.includes(comment.n));
-}
+};
 
-export function RunCommentsCard({ run }: { run: RunView }) {
+export const RunCommentsCard = ({ run }: { run: RunView }) => {
   const control = useContext(RunCommentsContext);
   const [busy, setBusy] = useState(false);
   const ids = new Set([...idsOf(run.summary?.request), ...idsOf(run.request)]);
@@ -158,4 +156,4 @@ export function RunCommentsCard({ run }: { run: RunView }) {
       </ul>
     </section>
   );
-}
+};

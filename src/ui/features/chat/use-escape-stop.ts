@@ -5,22 +5,18 @@ export const PREVIEW_STOP_EVENT = "studio:preview-stop";
 
 const OVERLAY_SELECTOR = 'dialog[open], [role="dialog"][aria-modal="true"]';
 
-function isStopKey(event: KeyboardEvent): boolean {
-  return (
-    event.key === "." &&
-    (event.metaKey || event.ctrlKey) &&
-    !event.altKey &&
-    !event.shiftKey
+const isStopKey = (event: KeyboardEvent): boolean =>
+  event.key === "." &&
+  (event.metaKey || event.ctrlKey) &&
+  !event.altKey &&
+  !event.shiftKey;
+
+const overlayOpen = (): boolean =>
+  [...document.querySelectorAll<HTMLElement>(OVERLAY_SELECTOR)].some(
+    (element) => element.getClientRects().length > 0
   );
-}
 
-function overlayOpen(): boolean {
-  return Array.from(
-    document.querySelectorAll<HTMLElement>(OVERLAY_SELECTOR)
-  ).some((element) => element.getClientRects().length > 0);
-}
-
-export function useEscapeStop(active: boolean, onStop: () => void): void {
+export const useEscapeStop = (active: boolean, onStop: () => void): void => {
   const stop = useRef(onStop);
   stop.current = onStop;
   useEffect(() => {
@@ -48,12 +44,12 @@ export function useEscapeStop(active: boolean, onStop: () => void): void {
       }
     };
 
-    window.addEventListener("keydown", onKey, { capture: true });
-    window.addEventListener(PREVIEW_STOP_EVENT, onFrameStop);
+    globalThis.addEventListener("keydown", onKey, { capture: true });
+    globalThis.addEventListener(PREVIEW_STOP_EVENT, onFrameStop);
 
     return () => {
-      window.removeEventListener("keydown", onKey, { capture: true });
-      window.removeEventListener(PREVIEW_STOP_EVENT, onFrameStop);
+      globalThis.removeEventListener("keydown", onKey, { capture: true });
+      globalThis.removeEventListener(PREVIEW_STOP_EVENT, onFrameStop);
     };
   }, [active]);
-}
+};

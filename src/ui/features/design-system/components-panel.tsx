@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import type { ReactNode } from "react";
 
 import type {
@@ -47,7 +47,86 @@ interface Item {
   folder: string;
 }
 
-function Thumb({
+const insertItems = (
+  insertable: InsertableComponent[],
+  inventory: ComponentInfo[]
+): Item[] =>
+  insertable.map((component) => {
+    const known = inventory.find(
+      (item) => item.name === component.name && item.file === component.file
+    );
+
+    const info: ComponentInfo = known ?? {
+      file: component.file,
+      id: component.name,
+      line: component.line,
+      name: component.name,
+      selector: null,
+      source: "react",
+      uses: component.uses,
+    };
+
+    return {
+      folder: component.folder,
+      info: { ...info, uses: component.uses },
+      insert: component,
+      key: component.id,
+    };
+  });
+
+const useItems = (props: Props, canInsert: boolean, query: string) => {
+  const insertable = useInsertable(
+    props.projectId,
+    props.directionId,
+    canInsert && props.active,
+    props.list.version
+  );
+
+  const all = useMemo<Item[] | null>(() => {
+    if (!canInsert) {
+      return (
+        props.list.components?.map((info) => ({
+          folder: "",
+          info,
+          insert: null,
+          key: info.id,
+        })) ?? null
+      );
+    }
+
+    return insertable.list
+      ? insertItems(insertable.list.components, props.list.components ?? [])
+      : null;
+  }, [canInsert, insertable.list, props.list.components]);
+
+  const shown = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+
+    return (all ?? []).filter(
+      (item) =>
+        !needle ||
+        item.info.name.toLowerCase().includes(needle) ||
+        item.folder.toLowerCase().includes(needle)
+    );
+  }, [all, query]);
+
+  const error = canInsert ? insertable.error : props.list.error;
+  const retry = canInsert ? insertable.retry : props.list.retry;
+
+  return { all, error, retry, shown };
+};
+
+const groupsOf = (items: Item[]): [string, Item[]][] => {
+  const groups = new Map<string, Item[]>();
+
+  for (const item of items) {
+    groups.set(item.folder, [...(groups.get(item.folder) ?? []), item]);
+  }
+
+  return [...groups.entries()];
+};
+
+const Thumb = ({
   projectId,
   directionId,
   component,
@@ -59,7 +138,7 @@ function Thumb({
   component: ComponentInfo;
   version: string;
   active: boolean;
-}) {
+}) => {
   const [src, setSrc] = useState<string | null>(null);
   const [state, setState] = useState<"loading" | "ready" | "none">("loading");
   const shown = useRef<string | null>(null);
@@ -146,94 +225,14 @@ function Thumb({
       ) : null}
     </span>
   );
-}
+};
 
-function meta(component: ComponentInfo): string {
+const meta = (component: ComponentInfo): string => {
   const file = component.file?.split("/").pop() ?? "";
   const uses = component.uses === 1 ? "1 use" : `${component.uses} uses`;
 
   return file ? `${uses} · ${file}` : uses;
-}
-
-function insertItems(
-  insertable: InsertableComponent[],
-  inventory: ComponentInfo[]
-): Item[] {
-  return insertable.map((component) => {
-    const known = inventory.find(
-      (item) => item.name === component.name && item.file === component.file
-    );
-
-    const info: ComponentInfo = known ?? {
-      file: component.file,
-      id: component.name,
-      line: component.line,
-      name: component.name,
-      selector: null,
-      source: "react",
-      uses: component.uses,
-    };
-
-    return {
-      folder: component.folder,
-      info: { ...info, uses: component.uses },
-      insert: component,
-      key: component.id,
-    };
-  });
-}
-
-function useItems(props: Props, canInsert: boolean, query: string) {
-  const insertable = useInsertable(
-    props.projectId,
-    props.directionId,
-    canInsert && props.active,
-    props.list.version
-  );
-
-  const all = useMemo<Item[] | null>(() => {
-    if (!canInsert) {
-      return (
-        props.list.components?.map((info) => ({
-          folder: "",
-          info,
-          insert: null,
-          key: info.id,
-        })) ?? null
-      );
-    }
-
-    return insertable.list
-      ? insertItems(insertable.list.components, props.list.components ?? [])
-      : null;
-  }, [canInsert, insertable.list, props.list.components]);
-
-  const shown = useMemo(() => {
-    const needle = query.trim().toLowerCase();
-
-    return (all ?? []).filter(
-      (item) =>
-        !needle ||
-        item.info.name.toLowerCase().includes(needle) ||
-        item.folder.toLowerCase().includes(needle)
-    );
-  }, [all, query]);
-
-  const error = canInsert ? insertable.error : props.list.error;
-  const retry = canInsert ? insertable.retry : props.list.retry;
-
-  return { all, error, retry, shown };
-}
-
-function groupsOf(items: Item[]): [string, Item[]][] {
-  const groups = new Map<string, Item[]>();
-
-  for (const item of items) {
-    groups.set(item.folder, [...(groups.get(item.folder) ?? []), item]);
-  }
-
-  return [...groups.entries()];
-}
+};
 
 interface CardProps {
   item: Item;
@@ -246,7 +245,7 @@ interface CardProps {
   onGallery: (component: InsertableComponent) => void;
 }
 
-function Card({ item, props, drag, onInsertMenu, onGallery }: CardProps) {
+const Card = ({ item, props, drag, onInsertMenu, onGallery }: CardProps) => {
   const { info, insert } = item;
 
   const tip = insert
@@ -314,9 +313,9 @@ function Card({ item, props, drag, onInsertMenu, onGallery }: CardProps) {
       )}
     </li>
   );
-}
+};
 
-export function ComponentsPanel(props: Props) {
+export const ComponentsPanel = (props: Props) => {
   const { list, directionId } = props;
   const canInsert = props.kind === "react";
   const [query, setQuery] = useState("");
@@ -442,4 +441,4 @@ export function ComponentsPanel(props: Props) {
       <DragGhost ghost={drag.ghost} />
     </div>
   );
-}
+};

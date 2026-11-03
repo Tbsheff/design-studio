@@ -41,10 +41,10 @@ const toPage = (body: PageBody): RunPage => ({
   runs: body.items.filter(isRunSummary),
 });
 
-export async function renameRun(
+export const renameRun = async (
   runId: string,
   title: string
-): Promise<RunSummary> {
+): Promise<RunSummary> => {
   const projectId = history?.projectId;
 
   if (!projectId) {
@@ -62,37 +62,36 @@ export async function renameRun(
   }
 
   return renamed;
-}
+};
 
 export interface RunPage {
   runs: RunSummary[];
   nextBefore: number | null;
 }
 
-export async function listRunPage(
+export const listRunPage = async (
   projectId: string,
   limit: number,
   before: number | null
-): Promise<RunPage> {
-  return toPage(
+): Promise<RunPage> =>
+  toPage(
     await call(runsRoutes.listRun, {
       cursor: toCursor(before),
       limit,
       projectId,
     })
   );
-}
 
 export const SEARCH_LIMIT = 20;
 
-export async function searchRunPage(
+export const searchRunPage = async (
   directionId: string,
   query: string
-): Promise<RunPage> {
+): Promise<RunPage> => {
   const ownerProjectId = history?.projectId;
 
   if (!ownerProjectId) {
-    return { runs: [], nextBefore: null };
+    return { nextBefore: null, runs: [] };
   }
 
   return toPage(
@@ -105,34 +104,31 @@ export async function searchRunPage(
       q: query,
     })
   );
-}
+};
 
-export function publishRunHistory(next: RunHistory | null): void {
+export const publishRunHistory = (next: RunHistory | null): void => {
   history = next;
-}
+};
 
-export function runProjectId(): string {
-  return history?.projectId ?? "";
-}
+export const runProjectId = (): string => history?.projectId ?? "";
 
-export function loadRunsThrough(runId: string): Promise<boolean> {
-  return history ? history.through(runId) : Promise.resolve(false);
-}
+export const loadRunsThrough = (runId: string): Promise<boolean> =>
+  history ? history.through(runId) : Promise.resolve(false);
 
 export interface OlderRuns {
   more: boolean;
   loading: boolean;
 }
 
-const NONE: OlderRuns = { more: false, loading: false };
+const NONE: OlderRuns = { loading: false, more: false };
 let older: OlderRuns = NONE;
 let loader: (() => void) | null = null;
 const listeners = new Set<() => void>();
 
-export function publishOlderRuns(
+export const publishOlderRuns = (
   next: OlderRuns,
   load: (() => void) | null
-): void {
+): void => {
   loader = load;
 
   if (next.more === older.more && next.loading === older.loading) {
@@ -141,20 +137,19 @@ export function publishOlderRuns(
 
   older = next.more || next.loading ? next : NONE;
   listeners.forEach((listener) => listener());
-}
+};
 
-export function requestOlderRuns(): void {
+export const requestOlderRuns = (): void => {
   loader?.();
-}
+};
 
-function subscribe(listener: () => void): () => void {
+const subscribe = (listener: () => void): (() => void) => {
   listeners.add(listener);
 
   return () => {
     listeners.delete(listener);
   };
-}
+};
 
-export function useOlderRuns(): OlderRuns {
-  return useSyncExternalStore(subscribe, () => older);
-}
+export const useOlderRuns = (): OlderRuns =>
+  useSyncExternalStore(subscribe, () => older);

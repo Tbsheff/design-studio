@@ -8,8 +8,8 @@ import type {
 } from "../../../shared/contracts.js";
 import type {
   InsertPosition,
-  InsertTarget,
   InsertableComponent,
+  InsertTarget,
 } from "../../../shared/insert.js";
 import { useBridge } from "../../platform/bridge.js";
 import type { BridgeFrame, ParentMessageBody } from "../../platform/bridge.js";
@@ -18,6 +18,7 @@ import { insertApi, insertBus, insertError } from "./component-insert-api.js";
 import type { DropHint, InsertHost } from "./component-insert-api.js";
 
 const FRAME_CHANGES = new Set(["painted", "ready", "tree"]);
+
 const RESELECT_FOR_MS = 6000;
 
 interface Frames {
@@ -37,6 +38,9 @@ interface Options {
   notify: (message: string) => void;
 }
 
+const newSelector = (selector: string, position: InsertPosition): string =>
+  position === "inside" ? `${selector} > :last-child` : `${selector} + *`;
+
 interface DropAt {
   requestId: string;
   selection: SelectionContext | null;
@@ -44,7 +48,7 @@ interface DropAt {
   label: string;
 }
 
-function targetOf(selection: SelectionContext): InsertTarget | null {
+const targetOf = (selection: SelectionContext): InsertTarget | null => {
   if (!selection.source && !selection.owners?.length) {
     return null;
   }
@@ -63,29 +67,23 @@ function targetOf(selection: SelectionContext): InsertTarget | null {
     tag: selection.tag.toLowerCase(),
     ...(selection.owners?.length ? { owners: selection.owners } : {}),
   };
-}
+};
 
-function newSelector(selector: string, position: InsertPosition): string {
-  return position === "inside"
-    ? `${selector} > :last-child`
-    : `${selector} + *`;
-}
-
-function frameRect(
+const frameRect = (
   frames: Frames
-): { el: HTMLIFrameElement; rect: DOMRect } | null {
+): { el: HTMLIFrameElement; rect: DOMRect } | null => {
   const el = frames.frontToken
     ? frames.elements.current[frames.frontToken]
     : null;
 
   return el ? { el, rect: el.getBoundingClientRect() } : null;
-}
+};
 
-function localPoint(
+const localPoint = (
   frames: Frames,
   x: number,
   y: number
-): { x: number; y: number } | null {
+): { x: number; y: number } | null => {
   const found = frameRect(frames);
 
   if (!found) {
@@ -107,9 +105,9 @@ function localPoint(
   const scale = rect.width / (el.offsetWidth || rect.width);
 
   return { x: (x - rect.left) / scale, y: (y - rect.top) / scale };
-}
+};
 
-function hintOf(drop: DropAt | null): DropHint | null {
+const hintOf = (drop: DropAt | null): DropHint | null => {
   if (!drop?.selection) {
     return null;
   }
@@ -124,9 +122,9 @@ function hintOf(drop: DropAt | null): DropHint | null {
       ? `Insert into ${drop.label}`
       : `Insert after ${drop.label}`,
   };
-}
+};
 
-export function useComponentInsert(o: Options): void {
+export const useComponentInsert = (o: Options): void => {
   const live = useRef(o);
   live.current = o;
   const busy = useRef(false);
@@ -313,7 +311,8 @@ export function useComponentInsert(o: Options): void {
           return;
         }
 
-        const id = `drop-${++seq.current}`;
+        seq.current += 1;
+        const id = `drop-${seq.current}`;
         pending.current = { id, onHint };
         live.current.frames.post({
           requestId: id,
@@ -333,4 +332,4 @@ export function useComponentInsert(o: Options): void {
 
     return () => insertBus.clear(host);
   }, [host]);
-}
+};

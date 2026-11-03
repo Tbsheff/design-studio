@@ -1,32 +1,27 @@
 import {
   useEffect,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
   useTransition,
-  type ClipboardEvent,
-  type DragEvent,
-  type KeyboardEvent,
-  type PointerEvent,
-  type RefObject,
+  useLayoutEffect,
+} from "react";
+import type {
+  ClipboardEvent,
+  DragEvent,
+  RefObject,
+  KeyboardEvent,
+  PointerEvent,
 } from "react";
 
 import { AvatarFace } from "./comment-avatar.js";
-import {
-  CARD_WIDTH,
-  placeComposer,
-  useCardSize,
-  type Breadcrumb,
-  type CardSide,
-  type PinOffset,
-} from "./comment-placement.js";
-import { MOD_LABEL, trapTab } from "./comment-popover.js";
+import type { Breadcrumb, CardSide, PinOffset } from "./comment-placement.js";
+import { CARD_WIDTH, placeComposer, useCardSize } from "./comment-placement.js";
+import { trapTab, MOD_LABEL } from "./comment-popover.js";
 import { copy } from "./copy.js";
 import {
   Icon,
   MentionList,
-  api,
   mentionIcon,
   mentionKey,
   mentionLabel,
@@ -34,6 +29,7 @@ import {
   readStored,
   useMentions,
   writeStored,
+  api,
 } from "./deps.js";
 import type {
   CompiledTokenEntry,
@@ -82,6 +78,30 @@ interface ComposerProps {
   onCancel: () => void;
 }
 
+const SEND_KEY = "studio.comments.sendToClaude";
+
+const CLOSE_MS = 120;
+
+const drafts = new Map<string, string>();
+
+const CLAUDE_OPTION: MentionOption = {
+  detail: "Send to Claude",
+  icon: "sparkle",
+  key: "agent:claude",
+  label: "Claude",
+  mention: { file: null, kind: "component", name: "Claude", selector: null },
+};
+
+const readSend = (): boolean => readStored(SEND_KEY) === "1";
+
+const writeSend = (on: boolean): void => {
+  writeStored(SEND_KEY, on ? "1" : "0");
+};
+
+const reducedMotion = (): boolean =>
+  globalThis.window !== undefined &&
+  globalThis.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true;
+
 interface ImageChip {
   key: string;
   url: string;
@@ -90,43 +110,11 @@ interface ImageChip {
   failed: boolean;
 }
 
-const SEND_KEY = "studio.comments.sendToClaude";
 const IMAGE_MAX = 4;
-const CLOSE_MS = 120;
-const drafts = new Map<string, string>();
 
-const CLAUDE_OPTION: MentionOption = {
-  key: "agent:claude",
-  label: "Claude",
-  detail: "Send to Claude",
-  icon: "sparkle",
-  mention: { kind: "component", name: "Claude", file: null, selector: null },
-};
+const imageCounter = { value: 0 };
 
-function readSend(): boolean {
-  return readStored(SEND_KEY) === "1";
-}
-
-function writeSend(on: boolean): void {
-  writeStored(SEND_KEY, on ? "1" : "0");
-}
-
-function reducedMotion(): boolean {
-  return (
-    typeof window !== "undefined" &&
-    window.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true
-  );
-}
-
-function imageFiles(list: FileList | null | undefined): File[] {
-  return Array.from(list ?? []).filter((file) =>
-    file.type.startsWith("image/")
-  );
-}
-
-let imageCounter = 0;
-
-function useImages(projectId: string) {
+const useImages = (projectId: string) => {
   const [images, setImages] = useState<ImageChip[]>([]);
   const live = useRef(images);
   live.current = images;
@@ -134,6 +122,7 @@ function useImages(projectId: string) {
     () => () => live.current.forEach((image) => URL.revokeObjectURL(image.url)),
     []
   );
+
   const upload = async (key: string, file: File) => {
     try {
       const attachment = await api.uploadAttachment(projectId, file);
@@ -150,74 +139,92 @@ function useImages(projectId: string) {
       );
     }
   };
+
   const add = (files: File[]) => {
     const room = IMAGE_MAX - live.current.length;
+
     for (const file of files.slice(0, Math.max(0, room))) {
-      imageCounter += 1;
-      const key = `img${imageCounter}`;
+      imageCounter.value += 1;
+      const key = `img${imageCounter.value}`;
       setImages((prev) => [
         ...prev,
         {
-          key,
-          url: URL.createObjectURL(file),
-          name: file.name || "Pasted image",
-          id: null,
           failed: false,
+          id: null,
+          key,
+          name: file.name || "Pasted image",
+          url: URL.createObjectURL(file),
         },
       ]);
       void upload(key, file);
     }
   };
+
   const remove = (key: string) =>
     setImages((prev) => {
       const gone = prev.find((image) => image.key === key);
-      if (gone) URL.revokeObjectURL(gone.url);
+
+      if (gone) {
+        URL.revokeObjectURL(gone.url);
+      }
       return prev.filter((image) => image.key !== key);
     });
+
   return {
-    images,
     add,
-    remove,
+    images,
     pending: images.some((image) => image.id === null && !image.failed),
+    remove,
   };
-}
+};
 
 const LEAD_GAP = 6;
+
 const MIN_FIRST_LINE = 140;
 
-function useLeadWidth(
+const useLeadWidth = (
   leadRef: RefObject<HTMLSpanElement | null>,
   card: RefObject<HTMLDivElement | null>
-) {
-  const [state, setState] = useState({ width: 0, inline: false });
+) => {
+  const [state, setState] = useState({ inline: false, width: 0 });
   useLayoutEffect(() => {
     const measure = () => {
       const lead = leadRef.current;
       const field = lead?.parentElement;
+
       if (!lead || !field) {
         setState((prev) =>
-          prev.width === 0 && !prev.inline ? prev : { width: 0, inline: false }
+          prev.width === 0 && !prev.inline ? prev : { inline: false, width: 0 }
         );
+
         return;
       }
+
       const width = lead.offsetWidth;
       const inline = width + LEAD_GAP + MIN_FIRST_LINE <= field.clientWidth;
       setState((prev) =>
         prev.width === width && prev.inline === inline
           ? prev
-          : { width, inline }
+          : { inline, width }
       );
     };
+
     measure();
     const observer = new ResizeObserver(measure);
-    if (leadRef.current) observer.observe(leadRef.current);
-    if (card.current) observer.observe(card.current);
+
+    if (leadRef.current) {
+      observer.observe(leadRef.current);
+    }
+    if (card.current) {
+      observer.observe(card.current);
+    }
     return () => observer.disconnect();
   });
-  return state;
-}
 
-function Pill({
+  return state;
+};
+
+const Pill = ({
   icon,
   label,
   full,
@@ -231,45 +238,41 @@ function Pill({
   tip?: string;
   tone?: string;
   onRemove: () => void;
-}) {
-  return (
-    <span
-      className={`comment-pill ${tone ?? ""}`}
-      data-tip={tip ?? full}
-      data-tip-side="top"
-      data-testid="comment-pill"
+}) => (
+  <span
+    className={`comment-pill ${tone ?? ""}`}
+    data-tip={tip ?? full}
+    data-tip-side="top"
+    data-testid="comment-pill"
+  >
+    {icon && <Icon name={icon} size={12} />}
+    <span className="comment-pill-label">{label}</span>
+    <button
+      type="button"
+      tabIndex={-1}
+      aria-label={`Remove ${label}`}
+      onClick={onRemove}
     >
-      {icon && <Icon name={icon} size={12} />}
-      <span className="comment-pill-label">{label}</span>
-      <button
-        type="button"
-        tabIndex={-1}
-        aria-label={`Remove ${label}`}
-        onClick={onRemove}
-      >
-        <Icon name="close" size={10} />
-      </button>
-    </span>
-  );
-}
+      <Icon name="close" size={10} />
+    </button>
+  </span>
+);
 
-function RunHint({ queueOnly }: { queueOnly: boolean }) {
-  return (
-    <p className="comment-card-hint" role="note" data-testid="comment-run-hint">
-      <span className="comment-card-live" aria-hidden="true" />
-      {queueOnly ? (
-        <>
-          Claude is working. <kbd>↵</kbd> queues this for after the run.
-        </>
-      ) : (
-        <>
-          Claude is working. <kbd>↵</kbd> queues this · <kbd>{MOD_LABEL}↵</kbd>{" "}
-          sends it now
-        </>
-      )}
-    </p>
-  );
-}
+const RunHint = ({ queueOnly }: { queueOnly: boolean }) => (
+  <p className="comment-card-hint" role="note" data-testid="comment-run-hint">
+    <span className="comment-card-live" aria-hidden="true" />
+    {queueOnly ? (
+      <>
+        Claude is working. <kbd>↵</kbd> queues this for after the run.
+      </>
+    ) : (
+      <>
+        Claude is working. <kbd>↵</kbd> queues this · <kbd>{MOD_LABEL}↵</kbd>{" "}
+        sends it now
+      </>
+    )}
+  </p>
+);
 
 interface FootProps {
   toClaude: boolean;
@@ -280,48 +283,92 @@ interface FootProps {
   hint: { queueOnly: boolean } | null;
 }
 
-function ComposerFoot({
+const ComposerFoot = ({
   toClaude,
   onToClaude,
   blocked,
   submitting,
   onSubmit,
   hint,
-}: FootProps) {
-  return (
-    <>
-      <div className="comment-card-foot">
-        <label className="comment-check">
-          <input
-            type="checkbox"
-            checked={toClaude}
-            onChange={(event) => onToClaude(event.target.checked)}
-          />
-          <span>Send to Claude</span>
-        </label>
-        <button
-          type="button"
-          className={`comment-submit${toClaude ? " to-claude" : ""}`}
-          aria-label={toClaude ? "Send" : "Save comment"}
-          aria-keyshortcuts="Enter"
-          data-tip={toClaude ? "Send  ↵" : "Save comment  ↵"}
-          data-tip-side="top"
-          disabled={blocked}
-          onClick={onSubmit}
-        >
-          {submitting ? (
-            <span className="spinner" />
-          ) : (
-            <Icon name={toClaude ? "arrowUp" : "check"} size={14} />
-          )}
-        </button>
-      </div>
-      {hint && <RunHint queueOnly={hint.queueOnly} />}
-    </>
-  );
+}: FootProps) => (
+  <>
+    <div className="comment-card-foot">
+      <label className="comment-check">
+        <input
+          type="checkbox"
+          checked={toClaude}
+          onChange={(event) => onToClaude(event.target.checked)}
+        />
+        <span>Send to Claude</span>
+      </label>
+      <button
+        type="button"
+        className={`comment-submit${toClaude ? " to-claude" : ""}`}
+        aria-label={toClaude ? "Send" : "Save comment"}
+        aria-keyshortcuts="Enter"
+        data-tip={toClaude ? "Send  ↵" : "Save comment  ↵"}
+        data-tip-side="top"
+        disabled={blocked}
+        onClick={onSubmit}
+      >
+        {submitting ? (
+          <span className="spinner" />
+        ) : (
+          <Icon name={toClaude ? "arrowUp" : "check"} size={14} />
+        )}
+      </button>
+    </div>
+    {hint && <RunHint queueOnly={hint.queueOnly} />}
+  </>
+);
+
+const imageFiles = (list: FileList | null | undefined): File[] =>
+  [...(list ?? [])].filter((file) => file.type.startsWith("image/"));
+
+interface ImageDropTarget {
+  add: (files: File[]) => void;
 }
 
-export function CommentComposer(props: ComposerProps) {
+const useImageDrop = (
+  isEnabled: boolean,
+  images: ImageDropTarget,
+  area: RefObject<HTMLTextAreaElement | null>
+) => {
+  const onPaste = (event: ClipboardEvent<HTMLTextAreaElement>) => {
+    if (!isEnabled) {
+      return;
+    }
+    const files = imageFiles(event.clipboardData.files);
+    if (files.length === 0) {
+      return;
+    }
+    event.preventDefault();
+    images.add(files);
+  };
+
+  const onDragOver = (event: DragEvent<HTMLDivElement>) => {
+    if (isEnabled && event.dataTransfer.types.includes("Files")) {
+      event.preventDefault();
+    }
+  };
+
+  const onDrop = (event: DragEvent<HTMLDivElement>) => {
+    if (!isEnabled) {
+      return;
+    }
+    const files = imageFiles(event.dataTransfer.files);
+    if (files.length === 0) {
+      return;
+    }
+    event.preventDefault();
+    images.add(files);
+    area.current?.focus();
+  };
+
+  return { onDragOver, onDrop, onPaste };
+};
+
+export const CommentComposer = (props: ComposerProps) => {
   const [text, setTextState] = useState(() => drafts.get(props.draftKey) ?? "");
   const [toClaude, setToClaudeState] = useState(readSend);
   const [closing, setClosing] = useState(false);
@@ -337,8 +384,11 @@ export function CommentComposer(props: ComposerProps) {
 
   const setText = (value: string) => {
     setTextState(value);
-    if (value.trim() === "") drafts.delete(props.draftKey);
-    else drafts.set(props.draftKey, value);
+    if (value.trim() === "") {
+      drafts.delete(props.draftKey);
+    } else {
+      drafts.set(props.draftKey, value);
+    }
   };
   const setToClaude = (on: boolean) => {
     setToClaudeState(on);
@@ -346,25 +396,25 @@ export function CommentComposer(props: ComposerProps) {
   };
   const lead = useMemo(() => (toClaude ? [] : [CLAUDE_OPTION]), [toClaude]);
   const mentions = useMentions({
-    projectId: props.sources.projectId,
-    directionId: props.sources.directionId,
-    tokens: props.sources.tokens,
     components: props.sources.components,
+    directionId: props.sources.directionId,
     draft: text,
-    setDraft: setText,
     lead,
     onLead: () => setToClaude(true),
+    projectId: props.sources.projectId,
+    setDraft: setText,
+    tokens: props.sources.tokens,
   });
 
   useEffect(() => {
-    if (props.autoFocus) area.current?.focus({ preventScroll: true });
+    if (props.autoFocus) {
+      area.current?.focus({ preventScroll: true });
+    }
   }, [props.autoFocus, area]);
 
   const placement = placeComposer(
     props.anchor,
-    props.zoom,
-    props.frame,
-    size,
+    { card: size, frame: props.frame, zoom: props.zoom },
     side.current,
     props.offset
   );
@@ -379,7 +429,9 @@ export function CommentComposer(props: ComposerProps) {
   const closeTimer = useRef<number | null>(null);
   useEffect(
     () => () => {
-      if (closeTimer.current !== null) window.clearTimeout(closeTimer.current);
+      if (closeTimer.current !== null) {
+        window.clearTimeout(closeTimer.current);
+      }
     },
     []
   );
@@ -393,16 +445,20 @@ export function CommentComposer(props: ComposerProps) {
   };
 
   const submit = (now: boolean) => {
-    if (blocked) return;
+    if (blocked) {
+      return;
+    }
     startSubmit(async () => {
       const ok = await props.onSubmit({
+        attachmentIds: readyImages,
+        mentions: mentions.mentions,
+        now,
         text: text.trim(),
         toClaude,
-        now,
-        mentions: mentions.mentions,
-        attachmentIds: readyImages,
       });
-      if (!ok) return;
+      if (!ok) {
+        return;
+      }
       drafts.delete(props.draftKey);
       setTextState("");
       mentions.clear();
@@ -428,18 +484,24 @@ export function CommentComposer(props: ComposerProps) {
   };
 
   const onCardKey = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (mentions.onKeyDown(event)) return;
+    if (mentions.onKeyDown(event)) {
+      return;
+    }
     if (event.key === "Escape") {
       event.preventDefault();
       event.stopPropagation();
       closeWith(props.onCancel);
       return;
     }
-    if (props.trap) trapTab(event, card.current);
+    if (props.trap) {
+      trapTab(event, card.current);
+    }
   };
 
   const onAreaKey = (event: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (event.nativeEvent.isComposing || mentions.onKeyDown(event)) return;
+    if (event.nativeEvent.isComposing || mentions.onKeyDown(event)) {
+      return;
+    }
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
       void submit(event.metaKey || event.ctrlKey);
@@ -448,34 +510,21 @@ export function CommentComposer(props: ComposerProps) {
     const caretAtStart =
       event.currentTarget.selectionStart === 0 &&
       event.currentTarget.selectionEnd === 0;
-    if (event.key === "Backspace" && caretAtStart && removeLast())
+    if (event.key === "Backspace" && caretAtStart && removeLast()) {
       event.preventDefault();
+    }
   };
 
-  const onPaste = (event: ClipboardEvent<HTMLTextAreaElement>) => {
-    if (!props.images) return;
-    const files = imageFiles(event.clipboardData.files);
-    if (files.length === 0) return;
-    event.preventDefault();
-    images.add(files);
-  };
-
-  const onDragOver = (event: DragEvent<HTMLDivElement>) => {
-    if (props.images && event.dataTransfer.types.includes("Files"))
-      event.preventDefault();
-  };
-
-  const onDrop = (event: DragEvent<HTMLDivElement>) => {
-    if (!props.images) return;
-    const files = imageFiles(event.dataTransfer.files);
-    if (files.length === 0) return;
-    event.preventDefault();
-    images.add(files);
-    area.current?.focus();
-  };
+  const { onDragOver, onDrop, onPaste } = useImageDrop(
+    Boolean(props.images),
+    images,
+    area
+  );
 
   const focusField = (event: PointerEvent<HTMLDivElement>) => {
-    if (event.target !== event.currentTarget) return;
+    if (event.target !== event.currentTarget) {
+      return;
+    }
     event.preventDefault();
     area.current?.focus();
   };
@@ -507,8 +556,8 @@ export function CommentComposer(props: ComposerProps) {
         style={{
           left: placement.card.left,
           top: placement.card.top,
-          width: CARD_WIDTH,
           transform: `scale(${scale})`,
+          width: CARD_WIDTH,
         }}
         onKeyDown={onCardKey}
         onPointerDown={(event) => event.stopPropagation()}
@@ -612,4 +661,4 @@ export function CommentComposer(props: ComposerProps) {
       </div>
     </>
   );
-}
+};

@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState, useTransition } from "react";
-import type { DragEvent, FormEvent, KeyboardEvent, ReactNode } from "react";
+import { useEffect, useState, useTransition, useRef } from "react";
+import type { DragEvent, KeyboardEvent, FormEvent, ReactNode } from "react";
 
 import type { PackSummary } from "../../../shared/contracts.js";
 import { Markdown } from "../../ai/components/ai/markdown.js";
@@ -8,13 +8,9 @@ import { Icon } from "../../kit/Icon.js";
 import { hasNativePicker, pickFolder } from "../../platform/desktop.js";
 import { packApi } from "../../platform/pack-api.js";
 import { COPY } from "./copy.js";
-import { pickable, refreshPacks, usePacks } from "./packs.js";
+import { refreshPacks, pickable, usePacks } from "./packs.js";
 
-const MAX_URLS = 3;
-const MAX_IMAGES = 8;
 const DEFAULT_BASE = "modern-minimal";
-const IMAGE_TYPES = ["image/png", "image/jpeg", "image/gif", "image/webp"];
-const DROP_ACCEPT = `${IMAGE_TYPES.join(",")},.json,application/json,.css,text/css,.md,.markdown,text/markdown`;
 
 type Mode = "auto" | "light" | "dark";
 
@@ -46,16 +42,18 @@ const EMPTY: DraftForm = {
   urls: [],
 };
 
-function allUrls(form: DraftForm): string[] {
+const MAX_URLS = 3;
+
+const allUrls = (form: DraftForm): string[] => {
   const typed = form.urlInput.trim();
-  const list = form.urls.map((url) => url.trim()).filter(Boolean);
+  const list = form.urls.flatMap((url) => (url.trim() ? [url.trim()] : []));
 
   return typed && !list.includes(typed)
     ? [...list, typed].slice(0, MAX_URLS)
     : list;
-}
+};
 
-function hasSource(form: DraftForm): boolean {
+const hasSource = (form: DraftForm): boolean => {
   const filled = (text: string) => text.trim() !== "";
 
   return (
@@ -66,13 +64,12 @@ function hasSource(form: DraftForm): boolean {
     form.tokensFile !== null ||
     form.images.length > 0
   );
-}
+};
 
-function optional(text: string): string | undefined {
-  return text.trim() === "" ? undefined : text;
-}
+const optional = (text: string): string | undefined =>
+  text.trim() === "" ? undefined : text;
 
-function toFormData(form: DraftForm): FormData {
+const toFormData = (form: DraftForm): FormData => {
   const request = {
     basePackId: form.basePackId,
     brief: optional(form.brief),
@@ -95,14 +92,69 @@ function toFormData(form: DraftForm): FormData {
   }
 
   return data;
-}
+};
+
+const Section = ({
+  title,
+  hint,
+  children,
+  className,
+}: {
+  title: string;
+  hint?: string;
+  children: ReactNode;
+  className?: string;
+}) => (
+  <section
+    className={`nds-section${className ? ` ${className}` : ""}`}
+    aria-label={title}
+  >
+    <div className="nds-section-head">
+      <h2>{title}</h2>
+      {hint && <p>{hint}</p>}
+    </div>
+    {children}
+  </section>
+);
+
+const useDropGuard = (): void => {
+  useEffect(() => {
+    const outside = (event: globalThis.DragEvent) => {
+      const { target } = event;
+
+      if (target instanceof Element && target.closest("[data-drop-target]")) {
+        return;
+      }
+
+      event.preventDefault();
+
+      if (event.dataTransfer) {
+        event.dataTransfer.dropEffect = "none";
+      }
+    };
+
+    globalThis.addEventListener("dragover", outside);
+    globalThis.addEventListener("drop", outside);
+
+    return () => {
+      globalThis.removeEventListener("dragover", outside);
+      globalThis.removeEventListener("drop", outside);
+    };
+  }, []);
+};
+
+const IMAGE_TYPES = ["image/png", "image/jpeg", "image/gif", "image/webp"];
+
+const DROP_ACCEPT = `${IMAGE_TYPES.join(",")},.json,application/json,.css,text/css,.md,.markdown,text/markdown`;
+
+const MAX_IMAGES = 8;
 
 type Patch = Partial<DraftForm>;
 
-async function routeFiles(
+const routeFiles = async (
   files: File[],
   form: DraftForm
-): Promise<{ patch: Patch; skipped: string[] }> {
+): Promise<{ patch: Patch; skipped: string[] }> => {
   const patch: Patch = {};
   const skipped: string[] = [];
   const images = [...form.images];
@@ -116,9 +168,9 @@ async function routeFiles(
       } else {
         skipped.push(`${file.name} (at most ${MAX_IMAGES} images)`);
       }
-    } else if (/\.(json|css)$/.test(lower)) {
+    } else if (/\.(json|css)$/u.test(lower)) {
       patch.tokensFile = file;
-    } else if (/\.(md|markdown)$/.test(lower)) {
+    } else if (/\.(md|markdown)$/u.test(lower)) {
       patch.designMd = await file.text();
       patch.designMdFile = file.name;
     } else {
@@ -131,34 +183,9 @@ async function routeFiles(
   }
 
   return { patch, skipped };
-}
+};
 
-function Section({
-  title,
-  hint,
-  children,
-  className,
-}: {
-  title: string;
-  hint?: string;
-  children: ReactNode;
-  className?: string;
-}) {
-  return (
-    <section
-      className={`nds-section${className ? ` ${className}` : ""}`}
-      aria-label={title}
-    >
-      <div className="nds-section-head">
-        <h2>{title}</h2>
-        {hint && <p>{hint}</p>}
-      </div>
-      {children}
-    </section>
-  );
-}
-
-function Chip({
+const Chip = ({
   icon,
   label,
   onRemove,
@@ -166,30 +193,28 @@ function Chip({
   icon: Parameters<typeof Icon>[0]["name"];
   label: string;
   onRemove: () => void;
-}) {
-  return (
-    <li className="nds-chip">
-      <Icon name={icon} size={12} />
-      <span className="truncate">{label}</span>
-      <button
-        type="button"
-        className="icon-btn small"
-        aria-label={`Remove ${label}`}
-        onClick={onRemove}
-      >
-        <Icon name="close" size={12} />
-      </button>
-    </li>
-  );
-}
+}) => (
+  <li className="nds-chip">
+    <Icon name={icon} size={12} />
+    <span className="truncate">{label}</span>
+    <button
+      type="button"
+      className="icon-btn small"
+      aria-label={`Remove ${label}`}
+      onClick={onRemove}
+    >
+      <Icon name="close" size={12} />
+    </button>
+  </li>
+);
 
-function DropZone({
+const DropZone = ({
   form,
   set,
 }: {
   form: DraftForm;
   set: (patch: Patch) => void;
-}) {
+}) => {
   const input = useRef<HTMLInputElement>(null);
   const [over, setOver] = useState(false);
   const [note, setNote] = useState<string | null>(null);
@@ -290,15 +315,15 @@ function DropZone({
       )}
     </div>
   );
-}
+};
 
-function UrlField({
+const UrlField = ({
   form,
   set,
 }: {
   form: DraftForm;
   set: (patch: Patch) => void;
-}) {
+}) => {
   const full = form.urls.length >= MAX_URLS;
 
   const add = () => {
@@ -348,7 +373,7 @@ function UrlField({
             <Chip
               key={url}
               icon="globe"
-              label={url.replace(/^https?:\/\//, "").replace(/\/$/, "")}
+              label={url.replace(/^https?:\/\//u, "").replace(/\/$/u, "")}
               onRemove={() =>
                 set({ urls: form.urls.filter((item) => item !== url) })
               }
@@ -358,56 +383,15 @@ function UrlField({
       )}
     </div>
   );
-}
+};
 
-function PackSwatches({ pack }: { pack: PackSummary }) {
-  return (
-    <span className="nds-preset-swatches" aria-hidden="true">
-      {pack.swatches.slice(0, 4).map((swatch) => (
-        <span key={swatch.name} style={{ background: swatch.value }} />
-      ))}
-    </span>
-  );
-}
-
-function Presets({
-  value,
-  onChange,
-}: {
-  value: string;
-  onChange: (id: string) => void;
-}) {
-  const { packs } = pickable(usePacks());
-
-  if (!packs) {
-    return null;
-  }
-
-  return (
-    <div className="nds-presets" role="group" aria-label={COPY.labelStartFrom}>
-      {packs.map((pack) => (
-        <button
-          key={pack.id}
-          type="button"
-          className="nds-preset"
-          aria-pressed={pack.id === value}
-          onClick={() => onChange(pack.id)}
-        >
-          <PackSwatches pack={pack} />
-          <span className="truncate">{pack.name}</span>
-        </button>
-      ))}
-    </div>
-  );
-}
-
-function DesignMdField({
+const DesignMdField = ({
   value,
   onChange,
 }: {
   value: string;
   onChange: (value: string) => void;
-}) {
+}) => {
   const [view, setView] = useState<"edit" | "preview">("edit");
 
   return (
@@ -449,15 +433,15 @@ function DesignMdField({
       )}
     </div>
   );
-}
+};
 
-function TokensField({
+const TokensField = ({
   file,
   onChange,
 }: {
   file: File | null;
   onChange: (file: File | null) => void;
-}) {
+}) => {
   const input = useRef<HTMLInputElement>(null);
 
   return (
@@ -491,15 +475,15 @@ function TokensField({
       )}
     </div>
   );
-}
+};
 
-function FolderField({
+const FolderField = ({
   value,
   onChange,
 }: {
   value: string;
   onChange: (value: string) => void;
-}) {
+}) => {
   const [manual, setManual] = useState(() => !hasNativePicker());
   const [error, setError] = useState<string | null>(null);
 
@@ -560,15 +544,15 @@ function FolderField({
       {error && <span className="alert error small">{error}</span>}
     </div>
   );
-}
+};
 
-function Advanced({
+const Advanced = ({
   form,
   set,
 }: {
   form: DraftForm;
   set: (patch: Patch) => void;
-}) {
+}) => {
   const count = [
     form.tokensFile,
     form.folder.trim(),
@@ -617,7 +601,7 @@ function Advanced({
         <div className="nds-field">
           <span className="nds-field-label">DESIGN.md</span>
           <span className="nds-field-hint">
-            Paste an existing DESIGN.md. It becomes the system's guide.
+            Paste an existing DESIGN.md. It becomes the system&apos;s guide.
           </span>
           <DesignMdField
             value={form.designMd}
@@ -632,17 +616,56 @@ function Advanced({
       </div>
     </details>
   );
-}
+};
 
-function sourceList(
+const PackSwatches = ({ pack }: { pack: PackSummary }) => (
+  <span className="nds-preset-swatches" aria-hidden="true">
+    {pack.swatches.slice(0, 4).map((swatch) => (
+      <span key={swatch.name} style={{ background: swatch.value }} />
+    ))}
+  </span>
+);
+
+const Presets = ({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (id: string) => void;
+}) => {
+  const { packs } = pickable(usePacks());
+
+  if (!packs) {
+    return null;
+  }
+
+  return (
+    <div className="nds-presets" role="group" aria-label={COPY.labelStartFrom}>
+      {packs.map((pack) => (
+        <button
+          key={pack.id}
+          type="button"
+          className="nds-preset"
+          aria-pressed={pack.id === value}
+          onClick={() => onChange(pack.id)}
+        >
+          <PackSwatches pack={pack} />
+          <span className="truncate">{pack.name}</span>
+        </button>
+      ))}
+    </div>
+  );
+};
+
+const sourceList = (
   form: DraftForm
-): { icon: Parameters<typeof Icon>[0]["name"]; label: string }[] {
+): { icon: Parameters<typeof Icon>[0]["name"]; label: string }[] => {
   const list: {
     icon: Parameters<typeof Icon>[0]["name"];
     label: string;
   }[] = allUrls(form).map((url) => ({
     icon: "globe",
-    label: url.replace(/^https?:\/\//, "").replace(/\/$/, ""),
+    label: url.replace(/^https?:\/\//u, "").replace(/\/$/u, ""),
   }));
 
   if (form.designMd.trim()) {
@@ -661,8 +684,7 @@ function sourceList(
     list.push({
       icon: "folder",
       label:
-        form.folder.trim().split("/").filter(Boolean).pop() ??
-        form.folder.trim(),
+        form.folder.trim().split("/").findLast(Boolean) ?? form.folder.trim(),
     });
   }
 
@@ -677,9 +699,9 @@ function sourceList(
   }
 
   return list;
-}
+};
 
-function SourceSummary({ form }: { form: DraftForm }) {
+const SourceSummary = ({ form }: { form: DraftForm }) => {
   const list = sourceList(form);
 
   return (
@@ -701,81 +723,53 @@ function SourceSummary({ form }: { form: DraftForm }) {
       )}
     </div>
   );
-}
+};
 
-function Basics({
+const Basics = ({
   form,
   set,
 }: {
   form: DraftForm;
   set: (patch: Patch) => void;
-}) {
-  return (
-    <div
-      className="nds-basics"
-      role="group"
-      aria-label={COPY.labelDesignSystemSettings}
-    >
-      <label className="field">
-        <span>Name</span>
-        <input
-          value={form.name}
-          maxLength={80}
-          placeholder={COPY.placeholderFromTheWebsiteOrBrief}
-          aria-label={COPY.labelDesignSystemName}
-          onChange={(e) => set({ name: e.target.value })}
-        />
-      </label>
-      <label className="field">
-        <span>Mode</span>
-        <select
-          className="select"
-          value={form.mode}
-          aria-label={COPY.labelMode}
-          onChange={(e) => set({ mode: e.target.value as Mode })}
-        >
-          <option value="auto">Detect</option>
-          <option value="light">Light</option>
-          <option value="dark">Dark</option>
-        </select>
-      </label>
-    </div>
-  );
-}
+}) => (
+  <div
+    className="nds-basics"
+    role="group"
+    aria-label={COPY.labelDesignSystemSettings}
+  >
+    <label className="field">
+      <span>Name</span>
+      <input
+        value={form.name}
+        maxLength={80}
+        placeholder={COPY.placeholderFromTheWebsiteOrBrief}
+        aria-label={COPY.labelDesignSystemName}
+        onChange={(e) => set({ name: e.target.value })}
+      />
+    </label>
+    <label className="field">
+      <span>Mode</span>
+      <select
+        className="select"
+        value={form.mode}
+        aria-label={COPY.labelMode}
+        onChange={(e) => set({ mode: e.target.value as Mode })}
+      >
+        <option value="auto">Detect</option>
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
+      </select>
+    </label>
+  </div>
+);
 
-function useDropGuard(): void {
-  useEffect(() => {
-    const outside = (event: globalThis.DragEvent) => {
-      const { target } = event;
-
-      if (target instanceof Element && target.closest("[data-drop-target]")) {
-        return;
-      }
-
-      event.preventDefault();
-
-      if (event.dataTransfer) {
-        event.dataTransfer.dropEffect = "none";
-      }
-    };
-
-    window.addEventListener("dragover", outside);
-    window.addEventListener("drop", outside);
-
-    return () => {
-      window.removeEventListener("dragover", outside);
-      window.removeEventListener("drop", outside);
-    };
-  }, []);
-}
-
-export function NewDesignSystem({
+export const NewDesignSystem = ({
   onCancel,
   onCreated,
 }: {
   onCancel: () => void;
   onCreated: (projectId: string) => void;
-}) {
+}) => {
   const [form, setForm] = useState<DraftForm>(EMPTY);
   const [busy, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -898,4 +892,4 @@ export function NewDesignSystem({
       </main>
     </div>
   );
-}
+};

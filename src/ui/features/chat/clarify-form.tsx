@@ -5,7 +5,7 @@ import type { ClarifyQuestion } from "../../../shared/contracts.js";
 import { Icon } from "../../kit/Icon.js";
 import { useRovingRadioGroup } from "./level-control.js";
 
-function ClarifyQuestionField({
+const ClarifyQuestionField = ({
   item,
   answer,
   onAnswer,
@@ -15,7 +15,7 @@ function ClarifyQuestionField({
   answer: string;
   onAnswer: (value: string) => void;
   first: boolean;
-}) {
+}) => {
   const legendId = useId();
   const picked = item.options.includes(answer) ? answer : "";
   const radios = useRovingRadioGroup(item.options, picked, onAnswer);
@@ -33,6 +33,7 @@ function ClarifyQuestionField({
       </span>
       <div className="clarify-options">
         <div
+          tabIndex={0}
           className="clarify-choices"
           role="radiogroup"
           aria-labelledby={legendId}
@@ -77,11 +78,11 @@ function ClarifyQuestionField({
       </div>
     </div>
   );
-}
+};
 
-const MOD = /Mac|iPhone|iPad/.test(navigator.platform) ? "⌘" : "Ctrl+";
+const MOD = /Mac|iPhone|iPad/u.test(navigator.platform) ? "⌘" : "Ctrl+";
 
-export function ClarifyForm({
+export const ClarifyForm = ({
   questions,
   busy,
   onBuild,
@@ -93,15 +94,15 @@ export function ClarifyForm({
   onBuild: (answers: { question: string; answer: string }[]) => void;
   onSkip: () => void;
   onCancel: () => void;
-}) {
+}) => {
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
     onBuild(
       questions.map((item) => ({
-        question: item.question,
         answer: answers[item.id] ?? "",
+        question: item.question,
       }))
     );
   };
@@ -171,4 +172,4 @@ export function ClarifyForm({
       </div>
     </form>
   );
-}
+};

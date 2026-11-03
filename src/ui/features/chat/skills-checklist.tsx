@@ -10,7 +10,7 @@ interface Props {
   onChange: (next: string[]) => void;
 }
 
-function groupByOrigin(skills: SkillInfo[]): [string, SkillInfo[]][] {
+const groupByOrigin = (skills: SkillInfo[]): [string, SkillInfo[]][] => {
   const groups = new Map<string, SkillInfo[]>();
 
   for (const skill of skills) {
@@ -18,15 +18,14 @@ function groupByOrigin(skills: SkillInfo[]): [string, SkillInfo[]][] {
   }
 
   return [...groups.entries()];
-}
+};
 
-function originLabel(origin: string): string {
-  return origin === "personal"
+const originLabel = (origin: string): string =>
+  origin === "personal"
     ? "Personal skills (~/.claude/skills)"
     : `Plugin ${origin.slice("plugin:".length)}`;
-}
 
-function matches(skill: SkillInfo, query: string): boolean {
+const matches = (skill: SkillInfo, query: string): boolean => {
   const needle = query.trim().toLowerCase();
 
   return (
@@ -34,9 +33,9 @@ function matches(skill: SkillInfo, query: string): boolean {
     skill.id.toLowerCase().includes(needle) ||
     skill.description.toLowerCase().includes(needle)
   );
-}
+};
 
-function SkillRow({
+const SkillRow = ({
   skill,
   on,
   allowBash,
@@ -46,43 +45,41 @@ function SkillRow({
   on: boolean;
   allowBash: boolean;
   onToggle: (on: boolean) => void;
-}) {
-  return (
-    <label className="check skill-row" data-tip={skill.sourcePath}>
-      <input
-        type="checkbox"
-        aria-label={`Skill ${skill.id}`}
-        checked={on}
-        onChange={(e) => onToggle(e.target.checked)}
-      />
-      <span className="skill-text">
-        <span className="skill-name">
-          {skill.name}
-          {skill.needsBash && !allowBash && (
-            <span
-              className="skill-tag"
-              data-tip="This skill runs terminal commands. Turn on shell commands in project settings to use it fully."
-            >
-              Needs shell
-            </span>
-          )}
-          {!skill.modelInvocable && (
-            <span
-              className="skill-tag muted-tag"
-              data-tip-align="end"
-              data-tip="SKILL.md sets disable-model-invocation, so the agent cannot load it"
-            >
-              Manual only
-            </span>
-          )}
-        </span>
-        <span className="skill-desc">{skill.description}</span>
+}) => (
+  <label className="check skill-row" data-tip={skill.sourcePath}>
+    <input
+      type="checkbox"
+      aria-label={`Skill ${skill.id}`}
+      checked={on}
+      onChange={(e) => onToggle(e.target.checked)}
+    />
+    <span className="skill-text">
+      <span className="skill-name">
+        {skill.name}
+        {skill.needsBash && !allowBash && (
+          <span
+            className="skill-tag"
+            data-tip="This skill runs terminal commands. Turn on shell commands in project settings to use it fully."
+          >
+            Needs shell
+          </span>
+        )}
+        {!skill.modelInvocable && (
+          <span
+            className="skill-tag muted-tag"
+            data-tip-align="end"
+            data-tip="SKILL.md sets disable-model-invocation, so the agent cannot load it"
+          >
+            Manual only
+          </span>
+        )}
       </span>
-    </label>
-  );
-}
+      <span className="skill-desc">{skill.description}</span>
+    </span>
+  </label>
+);
 
-export function SkillsChecklist({ disabled, allowBash, onChange }: Props) {
+export const SkillsChecklist = ({ disabled, allowBash, onChange }: Props) => {
   const { catalog, error, reload } = useSkillCatalog();
   const [query, setQuery] = useState("");
 
@@ -183,7 +180,7 @@ export function SkillsChecklist({ disabled, allowBash, onChange }: Props) {
               {plural(bashCount, "skill")} that{" "}
               {bashCount === 1 ? "is on needs" : "are on need"} shell commands.
               To let {bashCount === 1 ? "it" : "them"} run scripts, turn on
-              "Allow agent to run shell commands".
+              &quot;Allow agent to run shell commands&quot;.
             </p>
           )}
           {catalog.problems.length > 0 && (
@@ -215,4 +212,4 @@ export function SkillsChecklist({ disabled, allowBash, onChange }: Props) {
       )}
     </fieldset>
   );
-}
+};

@@ -9,29 +9,27 @@ import { Icon } from "../../kit/Icon.js";
 import { getJson } from "../../platform/http.js";
 
 const USE_NOTE: Record<RepoContextFile["use"], string | null> = {
-  full: null,
   cut: "cut",
   design_md: "sent as DESIGN.md",
   duplicate: "same as another file",
+  full: null,
   import_only: "only @ imports",
   too_large: "too large, left out",
 };
 
-function sent(file: RepoContextFile): boolean {
-  return file.use === "full" || file.use === "cut" || file.use === "design_md";
-}
+const sent = (file: RepoContextFile): boolean =>
+  file.use === "full" || file.use === "cut" || file.use === "design_md";
 
-function fileName(file: RepoContextFile): string {
-  return file.path.split("/").pop() ?? file.path;
-}
+const fileName = (file: RepoContextFile): string =>
+  file.path.split("/").pop() ?? file.path;
 
-function label(file: RepoContextFile): string {
+const label = (file: RepoContextFile): string => {
   const note = USE_NOTE[file.use];
 
   return `${file.path}${note ? ` (${note})` : ""}`;
-}
+};
 
-function tipFor(files: RepoContextFile[]): string {
+const tipFor = (files: RepoContextFile[]): string => {
   const read = files.filter(sent).map(label).join(", ");
 
   const skipped = files
@@ -40,12 +38,12 @@ function tipFor(files: RepoContextFile[]): string {
     .join(", ");
 
   return `Each run reads ${read}.${skipped ? ` Not sent: ${skipped}.` : ""} Lines that look like secrets are left out.`;
-}
+};
 
-function useRunContext(
+const useRunContext = (
   projectId: string,
   directionId: string | null | undefined
-): RepoContextFile[] {
+): RepoContextFile[] => {
   const [files, setFiles] = useState<RepoContextFile[]>([]);
   useEffect(() => {
     if (!directionId) {
@@ -77,7 +75,7 @@ function useRunContext(
   }, [projectId, directionId]);
 
   return files;
-}
+};
 
 export default function RepoContextChip({
   projectId,
@@ -89,7 +87,7 @@ export default function RepoContextChip({
   const files = useRunContext(projectId, directionId);
   const shown = files.filter(sent);
 
-  if (!shown.length) {
+  if (shown.length === 0) {
     return null;
   }
 

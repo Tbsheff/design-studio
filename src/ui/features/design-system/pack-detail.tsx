@@ -29,11 +29,12 @@ interface Load<T> {
   error: string | null;
 }
 
-function useLoad<T>(load: () => Promise<T>, key: string): Load<T> {
+const useLoad = <T,>(load: () => Promise<T>, key: string): Load<T> => {
   const [state, setState] = useState<Load<T>>({ error: null, value: null });
   useEffect(() => {
     let live = true;
     setState({ error: null, value: null });
+
     const read = async () => {
       try {
         const value = await load();
@@ -56,9 +57,9 @@ function useLoad<T>(load: () => Promise<T>, key: string): Load<T> {
   }, [key]);
 
   return state;
-}
+};
 
-function CheckResult({ check }: { check: Load<DesignSystemCheckResult> }) {
+const CheckResult = ({ check }: { check: Load<DesignSystemCheckResult> }) => {
   if (check.error) {
     return (
       <div className="alert error small">
@@ -113,9 +114,9 @@ function CheckResult({ check }: { check: Load<DesignSystemCheckResult> }) {
       </ul>
     </div>
   );
-}
+};
 
-function ActionBar({
+const ActionBar = ({
   pack,
   actions,
   busy,
@@ -125,7 +126,7 @@ function ActionBar({
   actions: PackDetailActions;
   busy: boolean;
   run: (task: () => Promise<void>) => void;
-}) {
+}) => {
   const user = pack.source === "user";
   const usable = !pack.draft;
 
@@ -211,9 +212,9 @@ function ActionBar({
       )}
     </div>
   );
-}
+};
 
-export function PackDetailDialog({
+export const PackDetailDialog = ({
   pack,
   actions,
   onClose,
@@ -221,7 +222,7 @@ export function PackDetailDialog({
   pack: PackSummary;
   actions: PackDetailActions;
   onClose: () => void;
-}) {
+}) => {
   const detail = useLoad<PackDetail>(
     () => packApi.getPack(pack.id),
     `${pack.id}:${pack.name}`
@@ -309,4 +310,4 @@ export function PackDetailDialog({
       </div>
     </dialog>
   );
-}
+};

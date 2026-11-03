@@ -3,50 +3,47 @@ import { shortInput } from "./run-state-model.js";
 
 const PATH_KEYS = ["file_path", "path", "filePath", "notebook_path"];
 
-function humanize(raw: string): string {
+const humanize = (raw: string): string => {
   const words = raw
-    .replaceAll(/[_-]+/g, " ")
-    .replaceAll(/([a-z])([A-Z])/g, "$1 $2")
+    .replaceAll(/[_-]+/gu, " ")
+    .replaceAll(/([a-z])([A-Z])/gu, "$1 $2")
     .trim()
     .toLowerCase();
 
   return words.charAt(0).toUpperCase() + words.slice(1);
-}
+};
 
-export function prettyToolName(name: string): string {
+export const prettyToolName = (name: string): string => {
   const parts = name.split("__");
 
   if (parts[0] === "mcp" && parts.length >= 3) {
     return humanize(parts.slice(2).join(" "));
   }
 
-  if (/^[a-z]/.test(name) || name.includes("_")) {
+  if (/^[a-z]/u.test(name) || name.includes("_")) {
     return humanize(name);
   }
 
   return name;
-}
+};
 
-function isAbsolutePath(value: string): boolean {
-  return (
-    value.startsWith("/") ||
-    /^[A-Za-z]:[\\/]/.test(value) ||
-    value.startsWith("~/")
-  );
-}
+const isAbsolutePath = (value: string): boolean =>
+  value.startsWith("/") ||
+  /^[A-Za-z]:[\\/]/u.test(value) ||
+  value.startsWith("~/");
 
-function relativePath(file: string, workTree: string | null): string {
+const relativePath = (file: string, workTree: string | null): string => {
   const norm = file.replaceAll("\\", "/");
-  const root = workTree?.replaceAll("\\", "/").replace(/\/+$/, "");
+  const root = workTree?.replaceAll("\\", "/").replace(/\/+$/u, "");
 
   if (root && norm.startsWith(`${root}/`)) {
     return norm.slice(root.length + 1);
   }
 
   return isAbsolutePath(norm) ? baseName(norm) : norm;
-}
+};
 
-function pathInput(input: unknown): string | null {
+const pathInput = (input: unknown): string | null => {
   if (!input || typeof input !== "object") {
     return null;
   }
@@ -62,9 +59,9 @@ function pathInput(input: unknown): string | null {
   }
 
   return null;
-}
+};
 
-export function toolTarget(input: unknown, workTree: string | null): string {
+export const toolTarget = (input: unknown, workTree: string | null): string => {
   const file = pathInput(input);
 
   if (file) {
@@ -74,11 +71,11 @@ export function toolTarget(input: unknown, workTree: string | null): string {
   const raw = shortInput(input);
 
   return isAbsolutePath(raw) ? relativePath(raw, workTree) : raw;
-}
+};
 
 export const SKILL_TOOL = "Skill";
 
-export function skillToolName(input: unknown): string {
+export const skillToolName = (input: unknown): string => {
   if (!input || typeof input !== "object") {
     return "";
   }
@@ -92,9 +89,9 @@ export function skillToolName(input: unknown): string {
   return value.startsWith("personal:")
     ? value.slice("personal:".length)
     : value;
-}
+};
 
-export function toolLabel(name: string, input: unknown): string {
+export const toolLabel = (name: string, input: unknown): string => {
   if (name !== SKILL_TOOL) {
     return prettyToolName(name);
   }
@@ -102,60 +99,58 @@ export function toolLabel(name: string, input: unknown): string {
   const skill = skillToolName(input);
 
   return skill ? `Skill · ${skill}` : "Skill";
-}
+};
 
 const TOOL_VERBS: Record<string, string> = {
-  Read: "Read",
-  Write: "Write",
-  Edit: "Edit",
-  MultiEdit: "Edit",
   Bash: "Run",
-  Grep: "Search",
+  Edit: "Edit",
   Glob: "Find",
-  WebFetch: "Fetch",
-  TodoWrite: "Update todos",
+  Grep: "Search",
+  MultiEdit: "Edit",
+  Read: "Read",
   Skill: "Skill",
+  TodoWrite: "Update todos",
+  WebFetch: "Fetch",
+  Write: "Write",
+  mcp__studio__define_tweaks: "Define tweaks",
+  mcp__studio__design_review: "Design review",
+  mcp__studio__design_system_check: "Design system check",
   mcp__studio__render_check: "Render check",
   mcp__studio__screenshot: "Screenshot",
-  mcp__studio__design_review: "Design review",
-  mcp__studio__define_tweaks: "Define tweaks",
-  mcp__studio__design_system_check: "Design system check",
 };
 
-export function toolVerb(name: string): string {
-  return TOOL_VERBS[name] ?? prettyToolName(name);
-}
+export const toolVerb = (name: string): string =>
+  TOOL_VERBS[name] ?? prettyToolName(name);
 
 const TOOL_GROUPS: Record<string, string> = {
-  Read: "Read",
-  Write: "Wrote",
+  Bash: "Ran",
   Edit: "Edited",
+  Glob: "Searched",
+  Grep: "Searched",
   MultiEdit: "Edited",
   NotebookEdit: "Edited",
-  Bash: "Ran",
-  Grep: "Searched",
-  Glob: "Searched",
+  Read: "Read",
+  Skill: "Skill",
+  TodoWrite: "Planned",
   WebFetch: "Fetched",
   WebSearch: "Searched",
-  TodoWrite: "Planned",
-  Skill: "Skill",
-  mcp__studio__render_check: "Checked",
-  mcp__studio__screenshot: "Checked",
+  Write: "Wrote",
+  mcp__studio__define_tweaks: "Tweaks",
   mcp__studio__design_review: "Checked",
   mcp__studio__design_system_check: "Checked",
-  mcp__studio__define_tweaks: "Tweaks",
+  mcp__studio__render_check: "Checked",
+  mcp__studio__screenshot: "Checked",
 };
 
-export function toolGroupLabel(name: string): string {
-  return TOOL_GROUPS[name] ?? prettyToolName(name);
-}
+export const toolGroupLabel = (name: string): string =>
+  TOOL_GROUPS[name] ?? prettyToolName(name);
 
 export interface ToolTally {
   label: string;
   count: number;
 }
 
-export function toolTally(names: Iterable<string>): ToolTally[] {
+export const toolTally = (names: Iterable<string>): ToolTally[] => {
   const counts = new Map<string, number>();
 
   for (const name of names) {
@@ -163,14 +158,14 @@ export function toolTally(names: Iterable<string>): ToolTally[] {
     counts.set(label, (counts.get(label) ?? 0) + 1);
   }
 
-  return [...counts].map(([label, count]) => ({ label, count }));
-}
+  return [...counts].map(([label, count]) => ({ count, label }));
+};
 
-export function toolSubject(
+export const toolSubject = (
   name: string,
   input: unknown,
   workTree: string | null
-): string {
+): string => {
   if (name === SKILL_TOOL) {
     return skillToolName(input);
   }
@@ -192,4 +187,4 @@ export function toolSubject(
   }
 
   return toolTarget(input, workTree);
-}
+};

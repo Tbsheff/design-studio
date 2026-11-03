@@ -6,7 +6,8 @@ import {
   improveRequest,
   lastImproveRun,
 } from "./draft-improve.js";
-import { emptyRun, type RunView } from "./run-state-model.js";
+import { emptyRun } from "./run-state-model.js";
+import type { RunView } from "./run-state-model.js";
 
 const view = (
   task: "design-system" | undefined,
@@ -14,8 +15,8 @@ const view = (
   startedAt = 1
 ): RunView => ({
   ...emptyRun(`r${startedAt}`, "main", startedAt, {
-    prompt: "x",
     mode: "edit",
+    prompt: "x",
     ...(task ? { task } : {}),
   }),
   status: summary?.status ?? "running",
@@ -27,16 +28,16 @@ describe("improve with AI", () => {
     expect.hasAssertions();
 
     expect(improveRequest("  ", "prototype")).toStrictEqual({
-      prompt: "Improve this design system.",
-      mode: "edit",
-      task: "design-system",
       level: "prototype",
+      mode: "edit",
+      prompt: "Improve this design system.",
+      task: "design-system",
     });
     expect(improveRequest("Warmer neutrals", "wireframe")).toStrictEqual({
-      prompt: "Improve this design system.\n\nFocus: Warmer neutrals",
-      mode: "edit",
-      task: "design-system",
       level: "prototype",
+      mode: "edit",
+      prompt: "Improve this design system.\n\nFocus: Warmer neutrals",
+      task: "design-system",
     });
     expect(improveRequest("", "polish").level).toBe("polish");
   }, 5000);
@@ -47,26 +48,29 @@ describe("improve with AI", () => {
     const passed = view(
       "design-system",
       {
-        status: "completed",
         designSystemCheck: { passed: true, problems: [], rounds: 0 },
+        status: "completed",
       },
       1
     );
+
     const later = view(undefined, { status: "completed" }, 2);
     expect(lastImproveRun([passed, later])).toBe(passed);
     expect([improvePassed(passed)]).toStrictEqual([true]);
+
     const failed = view(
       "design-system",
       {
-        status: "failed",
         designSystemCheck: {
           passed: false,
-          problems: [{ rule: "fonts", message: "x" }],
+          problems: [{ message: "x", rule: "fonts" }],
           rounds: 3,
         },
+        status: "failed",
       },
       3
     );
+
     expect(lastImproveRun([passed, later, failed])).toBe(failed);
     expect([improvePassed(failed)]).toStrictEqual([false]);
     expect([improvePassed(null)]).toStrictEqual([false]);

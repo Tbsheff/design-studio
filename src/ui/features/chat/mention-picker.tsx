@@ -13,27 +13,25 @@ export interface MentionOption {
   icon?: IconName;
 }
 
-export function mentionKey(mention: RunMention): string {
-  return mention.kind === "file"
+export const mentionKey = (mention: RunMention): string =>
+  mention.kind === "file"
     ? `file:${mention.path}`
     : `${mention.kind}:${mention.name}`;
-}
 
-export function mentionLabel(mention: RunMention): string {
-  return mention.kind === "file"
+export const mentionLabel = (mention: RunMention): string =>
+  mention.kind === "file"
     ? (mention.path.split("/").pop() ?? mention.path)
     : mention.name;
-}
 
-export function mentionIcon(mention: RunMention): IconName {
+export const mentionIcon = (mention: RunMention): IconName => {
   if (mention.kind === "file") {
     return "file";
   }
 
   return mention.kind === "token" ? "token" : "component";
-}
+};
 
-export function mentionTitle(mention: RunMention): string {
+export const mentionTitle = (mention: RunMention): string => {
   if (mention.kind === "file") {
     return mention.path;
   }
@@ -45,31 +43,30 @@ export function mentionTitle(mention: RunMention): string {
   return mention.file
     ? `@${mention.name} · ${mention.file}`
     : `@${mention.name}`;
-}
+};
 
-export function mentionQueryOf(draft: string): string | null {
-  const match = /(?:^|\s)@([^\s@]*)$/.exec(draft);
+export const mentionQueryOf = (draft: string): string | null => {
+  const match = /(?:^|\s)@([^\s@]*)$/u.exec(draft);
 
   return match ? (match[1] ?? "") : null;
-}
+};
 
-export function rankMentions(
+export const rankMentions = (
   options: readonly MentionOption[],
   query: string
-): MentionOption[] {
-  return fuzzyRank(
+): MentionOption[] =>
+  fuzzyRank(
     options,
     query,
     (option) =>
       option.mention.kind === "file" ? option.mention.path : option.label,
     30
   );
-}
 
-export function useMentionPicker(
+export const useMentionPicker = (
   options: readonly MentionOption[],
   query: string | null
-) {
+) => {
   const [active, setActive] = useState(0);
 
   const shown = useMemo(
@@ -87,10 +84,10 @@ export function useMentionPicker(
       shown.length === 0 ? 0 : (index + step + shown.length) % shown.length
     );
 
-  return { open: query !== null, shown, current, move, setActive };
-}
+  return { current, move, open: query !== null, setActive, shown };
+};
 
-export function MentionList({
+export const MentionList = ({
   shown,
   current,
   loading,
@@ -104,7 +101,7 @@ export function MentionList({
   onPick: (option: MentionOption) => void;
   onHover: (index: number) => void;
   className?: string;
-}) {
+}) => {
   useEffect(() => {
     if (current) {
       document
@@ -158,15 +155,15 @@ export function MentionList({
       <p className="skill-pop-foot">↑↓ move · ↵ or Tab add · Esc close</p>
     </div>
   );
-}
+};
 
-export function MentionChips({
+export const MentionChips = ({
   mentions,
   onRemove,
 }: {
   mentions: RunMention[];
   onRemove: (key: string) => void;
-}) {
+}) => {
   if (mentions.length === 0) {
     return null;
   }
@@ -198,4 +195,4 @@ export function MentionChips({
       })}
     </div>
   );
-}
+};

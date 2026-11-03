@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { ToolRow } from "./run-state-model.js";
-import { fileChanges, groupRepeats } from "./tool-chips.js";
+import { groupRepeats, fileChanges } from "./tool-chips.js";
 
 const row = (
   id: string,
@@ -9,13 +9,13 @@ const row = (
   input: unknown,
   extra: Partial<ToolRow> = {}
 ): ToolRow => ({
-  toolUseId: id,
-  name,
-  input,
-  startedAt: 0,
   durationMs: 5,
+  input,
   isError: false,
+  name,
+  startedAt: 0,
   summary: "",
+  toolUseId: id,
   ...extra,
 });
 
@@ -32,6 +32,7 @@ describe("tool rows", () => {
       ],
       "/w"
     );
+
     expect(
       groups.map((group) => [group.tool.name, group.count, group.durationMs])
     ).toStrictEqual([
@@ -44,13 +45,14 @@ describe("tool rows", () => {
     expect.hasAssertions();
 
     const diff = {
-      path: "a",
       added: 1,
-      removed: 0,
-      hunks: [],
       created: false,
+      hunks: [],
+      path: "a",
+      removed: 0,
       truncated: false,
     };
+
     const groups = groupRepeats(
       [
         row("1", "Read", { file_path: "a" }),
@@ -60,9 +62,10 @@ describe("tool rows", () => {
       ],
       null
     );
+
     expect(groups).toHaveLength(4);
     expect(fileChanges(groups.map((group) => group.tool))).toStrictEqual([
-      { path: "a", added: 2, removed: 0 },
+      { added: 2, path: "a", removed: 0 },
     ]);
   }, 5000);
 });

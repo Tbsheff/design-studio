@@ -1,26 +1,30 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useId, useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
 import type {
+  DesignSystemState,
+  Project,
   CoverageGrade,
   DesignSystemCheckResult,
   DesignSystemCoverage,
-  DesignSystemState,
-  Project,
 } from "../../../shared/contracts.js";
 import { errorText } from "../../api.js";
 import { useFitPopover } from "../../domain/popoverPlacement.js";
 import { packApi } from "../../platform/pack-api.js";
 import { findPack, usePacks } from "../design-system/packs.js";
-import { CheckStatus, improvePassed } from "./draft-improve.js";
+import { improvePassed, CheckStatus } from "./draft-improve.js";
 import type { RunView } from "./run-state-model.js";
 
-const GRADE_LABELS: Record<CoverageGrade, string> = {
-  excellent: "Excellent",
-  usable: "Usable",
-  "needs-review": "Needs review",
-  rebuild: "Rebuild",
-};
+interface Props {
+  project: Project;
+  state: DesignSystemState | null;
+  lastChange: unknown;
+  onSave: (name: string, packId: string, force?: boolean) => Promise<void>;
+  improve?: ReactNode;
+  lastRun?: RunView | null;
+  reading?: boolean;
+  running?: boolean;
+}
 
 interface DraftInfoState {
   coverage: DesignSystemCoverage | null;
@@ -28,14 +32,14 @@ interface DraftInfoState {
   error: string | null;
 }
 
-function useDraftInfo(
+const useDraftInfo = (
   projectId: string | null,
   lastChange: unknown,
   runStatus: string | undefined
-): DraftInfoState {
+): DraftInfoState => {
   const [state, setState] = useState<DraftInfoState>({
-    coverage: null,
     check: null,
+    coverage: null,
     error: null,
   });
 
@@ -50,12 +54,12 @@ function useDraftInfo(
       .then(
         (info) =>
           live &&
-          setState({ coverage: info.coverage, check: info.check, error: null })
+          setState({ check: info.check, coverage: info.coverage, error: null })
       )
       .catch(
-        (err) =>
+        (error) =>
           live &&
-          setState({ coverage: null, check: null, error: errorText(err) })
+          setState({ check: null, coverage: null, error: errorText(error) })
       );
 
     return () => {
@@ -64,15 +68,22 @@ function useDraftInfo(
   }, [projectId, lastChange, runStatus]);
 
   return state;
-}
+};
 
-function cssVarOf(token: string): string {
+const GRADE_LABELS: Record<CoverageGrade, string> = {
+  excellent: "Excellent",
+  "needs-review": "Needs review",
+  rebuild: "Rebuild",
+  usable: "Usable",
+};
+
+const cssVarOf = (token: string): string => {
   const [group, name] = token.split(".");
 
   return group === "color" ? `--${name}` : `--${group}-${name}`;
-}
+};
 
-function Fallbacks({ tokens }: { tokens: string[] }) {
+const Fallbacks = ({ tokens }: { tokens: string[] }) => {
   if (tokens.length === 0) {
     return <span className="draft-fallbacks">No fallback tokens</span>;
   }
@@ -87,9 +98,83 @@ function Fallbacks({ tokens }: { tokens: string[] }) {
       <span className="sr-only">: {tokens.map(cssVarOf).join(", ")}</span>
     </span>
   );
-}
+};
 
-function SaveAnyway({
+const KEY_TOKENS = ["color.bg", "color.fg", "color.primary", "font.body"];
+
+const guessedKeys = (coverage: DesignSystemCoverage): string[] | null => {
+  if (
+    !coverage.tokens.some(
+      (entry) => entry.source === "folder" || entry.source === "tokens-file"
+    )
+  ) {
+    return null;
+  }
+
+  return KEY_TOKENS.filter(
+    (token) =>
+      coverage.tokens.find((entry) => entry.token === token)?.verified !== true
+  );
+};
+
+const Guessed = ({ coverage }: { coverage: DesignSystemCoverage }) => {
+  const keys = guessedKeys(coverage);
+
+  if (keys === null) {
+    return null;
+  }
+
+  if (keys.length === 0) {
+    return <span className="draft-fallbacks">Key tokens checked</span>;
+  }
+
+  const names = keys.map(cssVarOf).join(", ");
+
+  return (
+    <span
+      className="draft-fallbacks"
+      data-tip={`Not found under their usual names in the source, so these are guesses: ${names}`}
+      data-tip-align="start"
+    >
+      {keys.length} guessed
+      <span className="sr-only">: {names}</span>
+    </span>
+  );
+};
+
+const DraftSummary = ({
+  name,
+  coverage,
+  check,
+  run,
+  error,
+}: {
+  name: string;
+  coverage: DesignSystemCoverage | null;
+  check: DesignSystemCheckResult | null;
+  run: RunView | null;
+  error: string | null;
+}) => (
+  <div className="draft-main">
+    <strong className="truncate">{name}</strong>
+    {coverage && (
+      <span
+        className="draft-grade"
+        aria-label={`Coverage ${coverage.score} of 100, ${GRADE_LABELS[coverage.grade]}`}
+      >
+        Coverage {coverage.score}/100 · {GRADE_LABELS[coverage.grade]}
+      </span>
+    )}
+    {coverage && <Fallbacks tokens={coverage.fallbacks} />}
+    {coverage && <Guessed coverage={coverage} />}
+    <CheckStatus check={check} run={run} />
+    {error && (
+      <span className="draft-fallbacks">Could not load coverage. {error}</span>
+    )}
+  </div>
+);
+
+const SaveAnyway = ({
   count,
   busy,
   onSave,
@@ -97,7 +182,7 @@ function SaveAnyway({
   count: number;
   busy: boolean;
   onSave: () => void;
-}) {
+}) => {
   const [open, setOpen] = useState(false);
   const toggleRef = useRef<HTMLButtonElement>(null);
   const popRef = useRef<HTMLDivElement>(null);
@@ -131,12 +216,12 @@ function SaveAnyway({
       }
     };
 
-    window.addEventListener("keydown", onKey);
-    window.addEventListener("mousedown", onDown);
+    globalThis.addEventListener("keydown", onKey);
+    globalThis.addEventListener("mousedown", onDown);
 
     return () => {
-      window.removeEventListener("keydown", onKey);
-      window.removeEventListener("mousedown", onDown);
+      globalThis.removeEventListener("keydown", onKey);
+      globalThis.removeEventListener("mousedown", onDown);
     };
   }, [open]);
 
@@ -189,24 +274,13 @@ function SaveAnyway({
       )}
     </span>
   );
-}
+};
 
-interface Props {
-  project: Project;
-  state: DesignSystemState | null;
-  lastChange: unknown;
-  onSave: (name: string, packId: string, force?: boolean) => Promise<void>;
-  improve?: ReactNode;
-  lastRun?: RunView | null;
-  reading?: boolean;
-  running?: boolean;
-}
-
-function saveReason(
+const saveReason = (
   check: DesignSystemCheckResult | null,
   reading: boolean,
   running: boolean
-): string | null {
+): string | null => {
   if (reading) {
     return "Save is off while the studio reads your sources.";
   }
@@ -222,85 +296,7 @@ function saveReason(
   const count = check.problems.length;
 
   return `Save is off: the check found ${count} problem${count === 1 ? "" : "s"}. Improve with AI fixes them.`;
-}
-
-const KEY_TOKENS = ["color.bg", "color.fg", "color.primary", "font.body"];
-
-function guessedKeys(coverage: DesignSystemCoverage): string[] | null {
-  if (
-    !coverage.tokens.some(
-      (entry) => entry.source === "folder" || entry.source === "tokens-file"
-    )
-  ) {
-    return null;
-  }
-
-  return KEY_TOKENS.filter(
-    (token) =>
-      coverage.tokens.find((entry) => entry.token === token)?.verified !== true
-  );
-}
-
-function Guessed({ coverage }: { coverage: DesignSystemCoverage }) {
-  const keys = guessedKeys(coverage);
-
-  if (keys === null) {
-    return null;
-  }
-
-  if (keys.length === 0) {
-    return <span className="draft-fallbacks">Key tokens checked</span>;
-  }
-
-  const names = keys.map(cssVarOf).join(", ");
-
-  return (
-    <span
-      className="draft-fallbacks"
-      data-tip={`Not found under their usual names in the source, so these are guesses: ${names}`}
-      data-tip-align="start"
-    >
-      {keys.length} guessed
-      <span className="sr-only">: {names}</span>
-    </span>
-  );
-}
-
-function DraftSummary({
-  name,
-  coverage,
-  check,
-  run,
-  error,
-}: {
-  name: string;
-  coverage: DesignSystemCoverage | null;
-  check: DesignSystemCheckResult | null;
-  run: RunView | null;
-  error: string | null;
-}) {
-  return (
-    <div className="draft-main">
-      <strong className="truncate">{name}</strong>
-      {coverage && (
-        <span
-          className="draft-grade"
-          aria-label={`Coverage ${coverage.score} of 100, ${GRADE_LABELS[coverage.grade]}`}
-        >
-          Coverage {coverage.score}/100 · {GRADE_LABELS[coverage.grade]}
-        </span>
-      )}
-      {coverage && <Fallbacks tokens={coverage.fallbacks} />}
-      {coverage && <Guessed coverage={coverage} />}
-      <CheckStatus check={check} run={run} />
-      {error && (
-        <span className="draft-fallbacks">
-          Could not load coverage. {error}
-        </span>
-      )}
-    </div>
-  );
-}
+};
 
 interface SaveProps {
   check: DesignSystemCheckResult | null;
@@ -311,14 +307,14 @@ interface SaveProps {
   onSave: (force: boolean) => Promise<void>;
 }
 
-function SaveControls({
+const SaveControls = ({
   check,
   ready,
   readyId,
   reading,
   running,
   onSave,
-}: SaveProps) {
+}: SaveProps) => {
   const [busy, setBusy] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const reasonId = useId();
@@ -331,8 +327,8 @@ function SaveControls({
 
     try {
       await onSave(force);
-    } catch (err) {
-      setSaveError(errorText(err));
+    } catch (error) {
+      setSaveError(errorText(error));
     } finally {
       setBusy(false);
     }
@@ -376,9 +372,9 @@ function SaveControls({
       )}
     </>
   );
-}
+};
 
-export function DraftBar({
+export const DraftBar = ({
   project,
   state,
   lastChange,
@@ -387,7 +383,7 @@ export function DraftBar({
   lastRun = null,
   reading = false,
   running = false,
-}: Props) {
+}: Props) => {
   const packId = project.designSystemFor ?? null;
   const { packs } = usePacks();
 
@@ -435,4 +431,4 @@ export function DraftBar({
       </div>
     </div>
   );
-}
+};

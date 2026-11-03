@@ -16,12 +16,12 @@ import type { DropHint } from "./component-insert-api.js";
 
 const DRAG_START_PX = 4;
 
-export function useInsertable(
+export const useInsertable = (
   projectId: string,
   directionId: string | null,
   enabled: boolean,
   version: string
-) {
+) => {
   const [state, setState] = useState<{
     list: InsertableList | null;
     error: string | null;
@@ -34,6 +34,7 @@ export function useInsertable(
     }
 
     let live = true;
+
     const read = async () => {
       try {
         const list = await insertApi.list(projectId, directionId);
@@ -60,7 +61,7 @@ export function useInsertable(
   );
 
   return { ...state, retry: () => setAttempt((n) => n + 1) };
-}
+};
 
 interface Drag {
   component: InsertableComponent;
@@ -81,43 +82,51 @@ export interface ComponentDrag {
   };
 }
 
-function startDrag(
+const startDrag = (
   component: InsertableComponent,
   event: ReactPointerEvent<HTMLElement>
-): Drag {
-  return {
-    active: false,
-    component,
-    pointerId: event.pointerId,
-    startX: event.clientX,
-    startY: event.clientY,
-  };
-}
+): Drag => ({
+  active: false,
+  component,
+  pointerId: event.pointerId,
+  startX: event.clientX,
+  startY: event.clientY,
+});
 
-function isBelowThreshold(
+const isBelowThreshold = (
   cur: Drag,
   event: ReactPointerEvent<HTMLElement>
-): boolean {
-  return (
-    Math.hypot(event.clientX - cur.startX, event.clientY - cur.startY) <
-    DRAG_START_PX
-  );
-}
+): boolean =>
+  Math.hypot(event.clientX - cur.startX, event.clientY - cur.startY) <
+  DRAG_START_PX;
 
-function useCancelOnEscape(active: boolean, cancel: () => void): void {
+const useCancelOnEscape = (active: boolean, cancel: () => void): void => {
   useEffect(() => {
     if (!active) {
       return;
     }
 
     const onKey = (event: KeyboardEvent) => event.key === "Escape" && cancel();
-    window.addEventListener("keydown", onKey);
+    globalThis.addEventListener("keydown", onKey);
 
-    return () => window.removeEventListener("keydown", onKey);
+    return () => globalThis.removeEventListener("keydown", onKey);
   }, [active, cancel]);
-}
+};
 
-export function useComponentDrag(): ComponentDrag {
+const swallowClick = (
+  dragged: { current: boolean },
+  event: React.MouseEvent
+) => {
+  if (!dragged.current) {
+    return;
+  }
+
+  dragged.current = false;
+  event.preventDefault();
+  event.stopPropagation();
+};
+
+export const useComponentDrag = (): ComponentDrag => {
   const drag = useRef<Drag | null>(null);
   const dragged = useRef(false);
   const frame = useRef(0);
@@ -131,19 +140,13 @@ export function useComponentDrag(): ComponentDrag {
   useCancelOnEscape(ghost !== null, cancel);
 
   const handlers = (component: InsertableComponent) => ({
-    onClickCapture(event: React.MouseEvent) {
-      if (!dragged.current) {
-        return;
-      }
-      dragged.current = false;
-      event.preventDefault();
-      event.stopPropagation();
-    },
+    onClickCapture: (event: React.MouseEvent) => swallowClick(dragged, event),
     onPointerCancel: cancel,
     onPointerDown(event: ReactPointerEvent<HTMLElement>) {
       if (event.button !== 0) {
         return;
       }
+
       dragged.current = false;
       drag.current = startDrag(component, event);
       event.currentTarget.setPointerCapture(event.pointerId);
@@ -154,9 +157,11 @@ export function useComponentDrag(): ComponentDrag {
       if (!cur || cur.pointerId !== event.pointerId) {
         return;
       }
+
       if (!cur.active && isBelowThreshold(cur, event)) {
         return;
       }
+
       cur.active = true;
       const { clientX: x, clientY: y } = event;
       setGhost((prev) => ({
@@ -169,7 +174,8 @@ export function useComponentDrag(): ComponentDrag {
       if (frame.current) {
         return;
       }
-      frame.current = window.requestAnimationFrame(() => {
+
+      frame.current = globalThis.requestAnimationFrame(() => {
         frame.current = 0;
         insertBus
           .get()
@@ -186,15 +192,16 @@ export function useComponentDrag(): ComponentDrag {
       if (!cur?.active) {
         return;
       }
+
       dragged.current = true;
       insertBus.get()?.dragEnd(cur.component, event.clientX, event.clientY);
     },
   });
 
   return { ghost, handlers };
-}
+};
 
-export function DragGhost({ ghost }: { ghost: ComponentDrag["ghost"] }) {
+export const DragGhost = ({ ghost }: { ghost: ComponentDrag["ghost"] }) => {
   if (!ghost) {
     return null;
   }
@@ -215,11 +222,11 @@ export function DragGhost({ ghost }: { ghost: ComponentDrag["ghost"] }) {
     </div>,
     document.body
   );
-}
+};
 
-function blockReason(
+const blockReason = (
   selection: SelectionContext | undefined
-): string | undefined {
+): string | undefined => {
   if (!selection) {
     return "Select an element on the canvas first.";
   }
@@ -229,9 +236,9 @@ function blockReason(
   }
 
   return undefined;
-}
+};
 
-export function InsertMenu({
+export const InsertMenu = ({
   component,
   at,
   selection,
@@ -241,7 +248,7 @@ export function InsertMenu({
   at: { x: number; y: number };
   selection: SelectionContext | undefined;
   onClose: () => void;
-}) {
+}) => {
   const disabled = blockReason(selection);
   const tag = selection?.tag.toLowerCase() ?? "selection";
 
@@ -273,4 +280,4 @@ export function InsertMenu({
       onClose={onClose}
     />
   );
-}
+};

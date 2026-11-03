@@ -25,13 +25,6 @@ import {
   useRovingRadioGroup,
 } from "./level-control.js";
 
-export type ComposerMode = RunMode | "plan";
-
-interface ModeSetting {
-  value: ComposerMode;
-  onChange: (mode: ComposerMode) => void;
-}
-
 export interface DesignsSetting {
   value: number;
   max: number;
@@ -39,36 +32,128 @@ export interface DesignsSetting {
   disabledReason: string | null;
 }
 
+const EFFORTS = ["auto", "low", "medium", "high"] as const;
+
+type EffortChoice = (typeof EFFORTS)[number];
+
+export const EFFORT_HINT: Record<EffortChoice, string> = {
+  auto: "The model picks how hard to think.",
+  high: "Thinks the longest. Best for large or tricky work.",
+  low: "Fastest and cheapest. Good for small changes.",
+  medium: "A balance of speed and care.",
+};
+
+export type ComposerMode = RunMode | "plan";
+
+interface ModeSetting {
+  value: ComposerMode;
+  onChange: (mode: ComposerMode) => void;
+}
+
 export interface EffortSetting {
   value: RunEffort | null;
   onChange: (effort: RunEffort | null) => void;
 }
 
-const EFFORTS = ["auto", "low", "medium", "high"] as const;
+interface Props {
+  effort?: EffortSetting;
+  mode?: ModeSetting;
+  level: RunLevel;
+  onLevel: (level: RunLevel) => void;
+  designs?: DesignsSetting;
+  onOpen?: () => void;
+}
 
-type EffortChoice = (typeof EFFORTS)[number];
+export const MODE_HINT: Record<ComposerMode, string> = {
+  critique: "Send asks for a review. The design does not change.",
+  edit: "Send changes the design.",
+  plan: "Send makes a plan first. Files change only after you approve it.",
+};
+
+export const UNPLACED: CSSProperties = {
+  left: 0,
+  opacity: 0,
+  pointerEvents: "none",
+  top: 0,
+};
 
 export const EFFORT_LABEL: Record<EffortChoice, string> = {
   auto: "Auto",
+  high: "High",
   low: "Low",
   medium: "Medium",
-  high: "High",
 };
 
-export const EFFORT_HINT: Record<EffortChoice, string> = {
-  auto: "The model picks how hard to think.",
-  low: "Fastest and cheapest. Good for small changes.",
-  medium: "A balance of speed and care.",
-  high: "Thinks the longest. Best for large or tricky work.",
+export const MODE_LABEL: Record<ComposerMode, string> = {
+  critique: "Critique",
+  edit: "Edit",
+  plan: "Plan",
 };
 
-export function EffortToggle({
+export const runSettingsSummary = (input: {
+  mode?: ComposerMode;
+  level: RunLevel;
+  designs?: number;
+  designsOn?: boolean;
+  effort?: RunEffort | null;
+}): string => {
+  const parts = [
+    input.mode ? MODE_LABEL[input.mode] : null,
+    levelLabel(input.level),
+    input.effort ? `${EFFORT_LABEL[input.effort]} effort` : null,
+  ];
+
+  if (
+    input.designsOn !== false &&
+    input.designs !== undefined &&
+    input.designs > 1
+  ) {
+    parts.push(`${input.designs} designs`);
+  }
+
+  return parts.filter(Boolean).join(" · ");
+};
+
+export const designsHint = (designs: DesignsSetting): string => {
+  if (designs.disabledReason) {
+    return designs.disabledReason;
+  }
+
+  if (designs.value > 1) {
+    return `Send makes ${designs.value} designs side by side.`;
+  }
+
+  return `Pick 2 to ${designs.max} to compare options.`;
+};
+
+export const placeAboveOrBelow = (
+  trigger: HTMLElement,
+  panel: HTMLElement
+): CSSProperties => {
+  const placed = placeFixed(trigger, panel, { prefer: "above" });
+  const rect = trigger.getBoundingClientRect();
+  const left = typeof placed.left === "number" ? placed.left : rect.left;
+  const x = Math.round(rect.left + rect.width / 2 - left);
+  const above = placed.bottom !== undefined;
+
+  return {
+    ...placed,
+    "--pop-dy": above ? "4px" : "-4px",
+    transformOrigin: `${x}px ${above ? "bottom" : "top"}`,
+  } as CSSProperties;
+};
+
+const tabStops = (panel: HTMLElement): HTMLElement[] => [
+  ...panel.querySelectorAll<HTMLElement>('[tabindex="0"]:not(:disabled)'),
+];
+
+export const EffortToggle = ({
   effort,
   hintId,
 }: {
   effort: EffortSetting;
   hintId: string;
-}) {
+}) => {
   const choice: EffortChoice = effort.value ?? "auto";
 
   const pick = (next: EffortChoice) =>
@@ -78,6 +163,7 @@ export function EffortToggle({
 
   return (
     <div
+      tabIndex={0}
       className="segmented"
       role="radiogroup"
       aria-label="Effort"
@@ -99,96 +185,22 @@ export function EffortToggle({
       ))}
     </div>
   );
-}
-
-interface Props {
-  effort?: EffortSetting;
-  mode?: ModeSetting;
-  level: RunLevel;
-  onLevel: (level: RunLevel) => void;
-  designs?: DesignsSetting;
-  onOpen?: () => void;
-}
+};
 
 const MODES = ["edit", "plan", "critique"] as const;
 
-export const MODE_LABEL: Record<ComposerMode, string> = {
-  edit: "Edit",
-  plan: "Plan",
-  critique: "Critique",
-};
-
-export const MODE_HINT: Record<ComposerMode, string> = {
-  edit: "Send changes the design.",
-  plan: "Send makes a plan first. Files change only after you approve it.",
-  critique: "Send asks for a review. The design does not change.",
-};
-
-export const UNPLACED: CSSProperties = {
-  top: 0,
-  left: 0,
-  opacity: 0,
-  pointerEvents: "none",
-};
-
-export function runSettingsSummary(input: {
-  mode?: ComposerMode;
-  level: RunLevel;
-  designs?: number;
-  designsOn?: boolean;
-  effort?: RunEffort | null;
-}): string {
-  const parts = [
-    input.mode ? MODE_LABEL[input.mode] : null,
-    levelLabel(input.level),
-    input.effort ? `${EFFORT_LABEL[input.effort]} effort` : null,
-  ];
-
-  if (
-    input.designsOn !== false &&
-    input.designs !== undefined &&
-    input.designs > 1
-  ) {
-    parts.push(`${input.designs} designs`);
-  }
-
-  return parts.filter(Boolean).join(" · ");
-}
-
-export function designsHint(designs: DesignsSetting): string {
-  if (designs.disabledReason) {
-    return designs.disabledReason;
-  }
-
-  if (designs.value > 1) {
-    return `Send makes ${designs.value} designs side by side.`;
-  }
-
-  return `Pick 2 to ${designs.max} to compare options.`;
-}
-
-export function placeAboveOrBelow(
-  trigger: HTMLElement,
-  panel: HTMLElement
-): CSSProperties {
-  const placed = placeFixed(trigger, panel, { prefer: "above" });
-  const rect = trigger.getBoundingClientRect();
-  const left = typeof placed.left === "number" ? placed.left : rect.left;
-  const x = Math.round(rect.left + rect.width / 2 - left);
-  const above = placed.bottom !== undefined;
-
-  return {
-    ...placed,
-    transformOrigin: `${x}px ${above ? "bottom" : "top"}`,
-    "--pop-dy": above ? "4px" : "-4px",
-  } as CSSProperties;
-}
-
-function ModeToggle({ mode, hintId }: { mode: ModeSetting; hintId: string }) {
+const ModeToggle = ({
+  mode,
+  hintId,
+}: {
+  mode: ModeSetting;
+  hintId: string;
+}) => {
   const radios = useRovingRadioGroup(MODES, mode.value, mode.onChange);
 
   return (
     <div
+      tabIndex={0}
       className="segmented"
       role="radiogroup"
       aria-label="Run mode"
@@ -210,22 +222,16 @@ function ModeToggle({ mode, hintId }: { mode: ModeSetting; hintId: string }) {
       ))}
     </div>
   );
-}
+};
 
-function tabStops(panel: HTMLElement): HTMLElement[] {
-  return Array.from(
-    panel.querySelectorAll<HTMLElement>('[tabindex="0"]:not(:disabled)')
-  );
-}
-
-export function RunSettings({
+export const RunSettings = ({
   mode,
   level,
   onLevel,
   designs,
   onOpen,
   effort,
-}: Props) {
+}: Props) => {
   const [open, setOpen] = useState(false);
   const [style, setStyle] = useState<CSSProperties>(UNPLACED);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -234,11 +240,11 @@ export function RunSettings({
   const designsOn = designs ? designs.disabledReason === null : false;
 
   const summary = runSettingsSummary({
-    mode: mode?.value,
-    level,
     designs: designs?.value,
     designsOn,
     effort: effort?.value ?? null,
+    level,
+    mode: mode?.value,
   });
 
   const close = useCallback((refocus: boolean) => {
@@ -296,7 +302,7 @@ export function RunSettings({
     const leavingStart = event.shiftKey && document.activeElement === stops[0];
 
     const leavingEnd =
-      !event.shiftKey && document.activeElement === stops[stops.length - 1];
+      !event.shiftKey && document.activeElement === stops.at(-1);
 
     if (!leavingStart && !leavingEnd) {
       return;
@@ -384,4 +390,4 @@ export function RunSettings({
         )}
     </span>
   );
-}
+};

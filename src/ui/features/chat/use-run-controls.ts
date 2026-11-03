@@ -9,7 +9,7 @@ import { useEscapeStop } from "./use-escape-stop.js";
 const NO_QUEUE: QueuedMessage[] = [];
 
 const cancelQuietly = (projectId: string, runId: string): void => {
-  void api.cancelRun(projectId, runId).catch(() => undefined);
+  void api.cancelRun(projectId, runId).catch(() => null);
 };
 
 export interface RunControls {
@@ -23,14 +23,14 @@ export type TrackSend = (
   start: () => Promise<{ runId: string }>
 ) => Promise<{ runId: string; stopped: boolean }>;
 
-export function useRunControls(
+export const useRunControls = (
   projectId: string,
   activeRun: RunView | null,
   draft: DraftStore,
   act: (fn: () => Promise<unknown>) => Promise<void>
-): RunControls & { trackSend: TrackSend } {
-  const live = useRef({ activeRun, act, draft, projectId });
-  live.current = { activeRun, act, draft, projectId };
+): RunControls & { trackSend: TrackSend } => {
+  const live = useRef({ act, activeRun, draft, projectId });
+  live.current = { act, activeRun, draft, projectId };
   const [sending, setSending] = useState(0);
   const pending = useRef({ count: 0, stop: false });
 
@@ -77,7 +77,6 @@ export function useRunControls(
     };
 
     return {
-      trackSend,
       onCancel: () => {
         if (!live.current.activeRun && pending.current.count > 0) {
           pending.current.stop = true;
@@ -108,7 +107,7 @@ export function useRunControls(
       onQueueChange: (items: QueuedMessage[]) =>
         withRun(async (run) => {
           putting.current += 1;
-          setLocal({ runId: run.runId, items });
+          setLocal({ items, runId: run.runId });
 
           try {
             await api.setQueue(live.current.projectId, run.runId, items);
@@ -121,6 +120,7 @@ export function useRunControls(
         }),
       onSteer: (text: string) =>
         withRun((run) => api.steerRun(live.current.projectId, run.runId, text)),
+      trackSend,
     };
   }, []);
 
@@ -144,4 +144,4 @@ export function useRunControls(
       : (activeRun?.queue ?? NO_QUEUE);
 
   return { ...controls, queue };
-}
+};

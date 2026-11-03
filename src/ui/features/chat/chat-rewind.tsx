@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { KeyboardEvent } from "react";
 
 import { RUN_TITLE_MAX } from "../../../shared/rewind.js";
@@ -25,7 +25,7 @@ export interface TurnActions {
   dirtyCount: () => number;
 }
 
-function TurnButton({
+const TurnButton = ({
   label,
   icon,
   tip,
@@ -35,7 +35,7 @@ function TurnButton({
   icon: IconName;
   tip: string | null;
   onClick: () => void;
-}) {
+}) => {
   const off = tip !== null;
 
   return (
@@ -57,9 +57,11 @@ function TurnButton({
       <Icon name={icon} size={14} />
     </button>
   );
-}
+};
 
-function RestoreConfirm({
+type Mode = "idle" | "confirm" | "edit" | "rename";
+
+const RestoreConfirm = ({
   count,
   onCancel,
   onConfirm,
@@ -67,36 +69,34 @@ function RestoreConfirm({
   count: number;
   onCancel: () => void;
   onConfirm: () => void;
-}) {
-  return (
-    <div
-      className="msg-confirm"
-      role="alertdialog"
-      aria-label="Restore code here"
-      data-testid="restore-confirm"
-    >
-      <p>
-        Unfinished changes in {count} file{count === 1 ? "" : "s"}. Restore
-        replaces edits to files a version tracks; other files stay.
-      </p>
-      <div className="msg-confirm-actions">
-        <button type="button" className="btn ghost small" onClick={onCancel}>
-          Cancel
-        </button>
-        <button
-          type="button"
-          className="btn small primary"
-          autoFocus
-          onClick={onConfirm}
-        >
-          Restore
-        </button>
-      </div>
-    </div>
-  );
-}
+}) => (
+  <div
+    className="msg-confirm"
+    role="alertdialog"
+    aria-label="Restore code here"
+    data-testid="restore-confirm"
+  >
+    <p>
+      Unfinished changes in {count} file{count === 1 ? "" : "s"}. Restore
+      replaces edits to files a version tracks; other files stay.
+    </p>
+    <div className="msg-confirm-actions">
+      <button type="button" className="btn ghost small" onClick={onCancel}>
+        Cancel
+      </button>
+      <button
+        type="button"
+        className="btn small primary"
 
-function MessageEditor({
+        onClick={onConfirm}
+      >
+        Restore
+      </button>
+    </div>
+  </div>
+);
+
+const MessageEditor = ({
   initial,
   onCancel,
   onSend,
@@ -104,7 +104,7 @@ function MessageEditor({
   initial: string;
   onCancel: () => void;
   onSend: (prompt: string) => void;
-}) {
+}) => {
   const [text, setText] = useState(initial);
   const ref = useRef<HTMLTextAreaElement | null>(null);
   useEffect(() => {
@@ -167,15 +167,15 @@ function MessageEditor({
       </div>
     </div>
   );
-}
+};
 
-function TitleField({
+const TitleField = ({
   initial,
   onDone,
 }: {
   initial: string;
   onDone: (title: string | null) => void;
-}) {
+}) => {
   const [text, setText] = useState(initial);
   const done = useRef(false);
 
@@ -190,7 +190,6 @@ function TitleField({
 
   return (
     <input
-      autoFocus
       className="run-title-input"
       aria-label="Run name"
       placeholder="Name this run"
@@ -210,11 +209,9 @@ function TitleField({
       }}
     />
   );
-}
+};
 
-type Mode = "idle" | "confirm" | "edit" | "rename";
-
-export function UserTurn({
+export const UserTurn = ({
   run,
   title,
   rewind,
@@ -224,10 +221,10 @@ export function UserTurn({
   title: string | undefined;
   rewind: TurnRewind | null;
   actions: TurnActions | null;
-}) {
+}) => {
   const [mode, setMode] = useState<Mode>("idle");
   const [renameFailed, setRenameFailed] = useState(false);
-  const request = run.request;
+  const { request } = run;
 
   if (!rewind || !actions || !request || request.retryOf) {
     return <UserMessage run={run} title={title} />;
@@ -330,4 +327,4 @@ export function UserTurn({
       )}
     </>
   );
-}
+};

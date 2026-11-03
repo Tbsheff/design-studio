@@ -3,13 +3,13 @@ import { useMemo } from "react";
 import type { TodoItem } from "../../../shared/contracts.js";
 import type { RunView } from "./run-state-model.js";
 
-export function promptHistoryOf(
+export const promptHistoryOf = (
   runs: readonly Pick<RunView, "request">[]
-): string[] {
+): string[] => {
   const prompts: string[] = [];
 
   for (const run of runs) {
-    const request = run.request;
+    const { request } = run;
 
     const prompt =
       request && !request.task && !request.variation && !request.retryOf
@@ -22,13 +22,15 @@ export function promptHistoryOf(
   }
 
   return prompts;
-}
+};
 
-export function useChatState(runs: readonly RunView[]): {
+export const useChatState = (
+  runs: readonly RunView[]
+): {
   history: string[];
   todos: { todos: TodoItem[]; running: boolean } | null;
   contextTokens: number | null;
-} {
+} => {
   const history = useMemo(() => promptHistoryOf(runs), [runs]);
   const last = runs.at(-1) ?? null;
   const todoList = last?.todos ?? null;
@@ -36,9 +38,9 @@ export function useChatState(runs: readonly RunView[]): {
 
   const todos = useMemo(
     () =>
-      todoList && todoList.length > 0 ? { todos: todoList, running } : null,
+      todoList && todoList.length > 0 ? { running, todos: todoList } : null,
     [todoList, running]
   );
 
-  return { history, todos, contextTokens: last?.contextTokens ?? null };
-}
+  return { contextTokens: last?.contextTokens ?? null, history, todos };
+};

@@ -19,11 +19,11 @@ export interface DesignTokens {
   replace: (state: DesignSystemState) => void;
 }
 
-function touchesDesignSystem(
+const touchesDesignSystem = (
   change: FilesChange | null,
   directionId: string | null,
   sourceFile: string | null
-): number {
+): number => {
   if (!change || change.directionId !== directionId) {
     return 0;
   }
@@ -33,19 +33,19 @@ function touchesDesignSystem(
   )
     ? change.receivedAt
     : 0;
-}
+};
 
 export interface DesignSystemView {
   tokens: DesignTokens | null;
   state: DesignSystemState | null;
 }
 
-export function useDesignSystemState(
+export const useDesignSystemState = (
   projectId: string,
   project: Project | null,
   directionId: string | null,
   lastChange: FilesChange | null
-): DesignSystemView {
+): DesignSystemView => {
   const [loaded, setLoaded] = useState<{
     key: string;
     state: DesignSystemState;
@@ -107,14 +107,12 @@ export function useDesignSystemState(
       return { state, tokens: null };
     }
 
-    const tokens: DesignTokens = {
-      entries: state.entries,
-      file: state.tokens,
-      mode: state.manifest?.mode === "dark" ? "dark" : "light",
-      source: state.source ?? null,
-      replace,
-    };
+    const { entries } = state;
+    const file = state.tokens;
+    const mode = state.manifest?.mode === "dark" ? "dark" : "light";
+    const source = state.source ?? null;
+    const tokens: DesignTokens = { entries, file, mode, replace, source };
 
     return { state, tokens };
   }, [loaded, key, replace]);
-}
+};

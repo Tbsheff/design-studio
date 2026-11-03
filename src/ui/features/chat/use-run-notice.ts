@@ -5,25 +5,22 @@ import { isDesktop } from "../../platform/desktop.js";
 import type { RunMap } from "./run-state-model.js";
 
 const STATUS_TEXT: Partial<Record<RunStatus, string>> = {
+  budget_exceeded: "Run stopped at the budget limit",
   completed: "Run finished",
   failed: "Run failed",
-  budget_exceeded: "Run stopped at the budget limit",
 };
 
-function canNotify(): boolean {
-  return (
-    document.hidden &&
-    !isDesktop() &&
-    typeof Notification !== "undefined" &&
-    Notification.permission === "granted"
-  );
-}
+const canNotify = (): boolean =>
+  document.hidden &&
+  !isDesktop() &&
+  typeof Notification !== "undefined" &&
+  Notification.permission === "granted";
 
-function newlyFinished(
+const newlyFinished = (
   runs: RunMap,
   since: number,
   shown: Set<string>
-): string[] {
+): string[] => {
   const out: string[] = [];
 
   for (const run of Object.values(runs)) {
@@ -44,9 +41,12 @@ function newlyFinished(
   }
 
   return out;
-}
+};
 
-export function useRunNotice(projectName: string | null, runs: RunMap): void {
+export const useRunNotice = (
+  projectName: string | null,
+  runs: RunMap
+): void => {
   const hiddenAt = useRef<number | null>(null);
   const shown = useRef(new Set<string>());
   useEffect(() => {
@@ -77,4 +77,4 @@ export function useRunNotice(projectName: string | null, runs: RunMap): void {
     const notice = new Notification(projectName || "Run finished", { body });
     notice.onclick = () => window.focus();
   }, [projectName, runs]);
-}
+};

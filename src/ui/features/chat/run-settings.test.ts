@@ -34,20 +34,20 @@ describe("run settings summary", () => {
   it("always shows mode and level, and designs only when Send fans out", () => {
     expect.hasAssertions();
     expect(
-      runSettingsSummary({ mode: "edit", level: "prototype", designs: 1 })
+      runSettingsSummary({ designs: 1, level: "prototype", mode: "edit" })
     ).toBe("Edit · Prototype");
     expect(
-      runSettingsSummary({ mode: "edit", level: "prototype", designs: 3 })
+      runSettingsSummary({ designs: 3, level: "prototype", mode: "edit" })
     ).toBe("Edit · Prototype · 3 designs");
     expect(
       runSettingsSummary({
-        mode: "critique",
-        level: "polish",
         designs: 3,
         designsOn: false,
+        level: "polish",
+        mode: "critique",
       })
     ).toBe("Critique · Polish");
-    expect(runSettingsSummary({ level: "wireframe", designs: 2 })).toBe(
+    expect(runSettingsSummary({ designs: 2, level: "wireframe" })).toBe(
       "Wireframe · 2 designs"
     );
   }, 5000);
@@ -56,18 +56,18 @@ describe("run settings summary", () => {
     expect.hasAssertions();
     expect(
       designsHint({
-        value: 3,
-        max: 4,
-        onChange: () => undefined,
         disabledReason: "Critique makes one review.",
+        max: 4,
+        onChange: () => null,
+        value: 3,
       })
     ).toBe("Critique makes one review.");
     expect(
       designsHint({
-        value: 1,
-        max: 3,
-        onChange: () => undefined,
         disabledReason: null,
+        max: 3,
+        onChange: () => null,
+        value: 1,
       })
     ).toBe("Pick 2 to 3 to compare options.");
   }, 5000);
@@ -90,10 +90,10 @@ describe("draft store and Home handoff", () => {
   it("hands the Home variations intent to one project once", () => {
     expect.hasAssertions();
     homeVariations.set({
-      projectId: "p1",
-      prompt: "A page",
       count: 3,
       level: "prototype",
+      projectId: "p1",
+      prompt: "A page",
     });
     expect(homeVariations.take("p2")).toBeNull();
     expect(homeVariations.take("p1")?.count).toBe(3);

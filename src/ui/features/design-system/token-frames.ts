@@ -33,21 +33,19 @@ interface CssChannel {
   hold: HoldState;
 }
 
-function createChannel(type: CssMessage): CssChannel {
-  return {
-    type,
-    css: "",
-    hold: { timer: null, expired: false, fresh: new Set(), painted: new Set() },
-  };
-}
+const createChannel = (type: CssMessage): CssChannel => ({
+  css: "",
+  hold: { expired: false, fresh: new Set(), painted: new Set(), timer: null },
+  type,
+});
 
 const tokenChannel = createChannel("tokens-preview");
 const tweakChannel = createChannel("tweaks-preview");
 const channels = [tokenChannel, tweakChannel];
 
 const current: { theme: ThemeChoice; pointer: boolean } = {
-  theme: null,
   pointer: false,
+  theme: null,
 };
 
 type SharePointerMessage = Extract<BridgeToParent, { type: "share-pointer" }>;
@@ -61,47 +59,46 @@ const canvas: { front: string | null; swapping: boolean } = {
   swapping: false,
 };
 
-function holding(channel: CssChannel): boolean {
-  return channel.hold.timer !== null || channel.hold.expired;
-}
+const holding = (channel: CssChannel): boolean =>
+  channel.hold.timer !== null || channel.hold.expired;
 
-function endHold(channel: CssChannel): void {
-  const hold = channel.hold;
+const endHold = (channel: CssChannel): void => {
+  const { hold } = channel;
 
   if (hold.timer !== null) {
-    window.clearTimeout(hold.timer);
+    globalThis.clearTimeout(hold.timer);
   }
 
   hold.timer = null;
   hold.expired = false;
   hold.fresh.clear();
   hold.painted.clear();
-}
+};
 
-function releaseHold(channel: CssChannel): void {
+const releaseHold = (channel: CssChannel): void => {
   if (!holding(channel)) {
     return;
   }
 
-  const front = canvas.front;
+  const { front } = canvas;
   const freshFront = front !== null && channel.hold.painted.has(front);
 
   if (freshFront || (channel.hold.expired && !canvas.swapping)) {
     broadcastCss(channel, "");
   }
-}
+};
 
-function expireHold(channel: CssChannel): void {
+const expireHold = (channel: CssChannel): void => {
   channel.hold.timer = null;
   channel.hold.expired = true;
   releaseHold(channel);
-}
+};
 
-function registerTokenFrame(
+const registerTokenFrame = (
   token: string,
   source: FrameSource,
   live: boolean
-): () => void {
+): (() => void) => {
   sources.set(token, source);
 
   if (live) {
@@ -118,9 +115,9 @@ function registerTokenFrame(
     sources.delete(token);
     liveTokens.delete(token);
   };
-}
+};
 
-export function postToLiveFrames(body: ParentMessageBody): void {
+export const postToLiveFrames = (body: ParentMessageBody): void => {
   for (const token of liveTokens) {
     const frame = sources.get(token)?.();
 
@@ -128,15 +125,14 @@ export function postToLiveFrames(body: ParentMessageBody): void {
       postToFrame(frame, body);
     }
   }
-}
+};
 
-function tokenFrames(): BridgeFrame[] {
-  return [...sources.values()]
+const tokenFrames = (): BridgeFrame[] =>
+  [...sources.values()]
     .map((source) => source())
     .filter((frame) => frame.element !== null);
-}
 
-function broadcastCss(channel: CssChannel, css: string): void {
+const broadcastCss = (channel: CssChannel, css: string): void => {
   endHold(channel);
 
   if (css === channel.css) {
@@ -146,53 +142,53 @@ function broadcastCss(channel: CssChannel, css: string): void {
   channel.css = css;
 
   for (const frame of tokenFrames()) {
-    postToFrame(frame, { type: channel.type, css });
+    postToFrame(frame, { css, type: channel.type });
   }
-}
+};
 
-function holdUntilReload(channel: CssChannel): void {
+const holdUntilReload = (channel: CssChannel): void => {
   endHold(channel);
 
   if (channel.css === "") {
     return;
   }
 
-  channel.hold.timer = window.setTimeout(
+  channel.hold.timer = globalThis.setTimeout(
     () => expireHold(channel),
     HOLD_FALLBACK_MS
   );
-}
+};
 
-export function broadcastTokenCss(css: string): void {
+export const broadcastTokenCss = (css: string): void => {
   broadcastCss(tokenChannel, css);
-}
+};
 
-export function broadcastTweakCss(css: string): void {
+export const broadcastTweakCss = (css: string): void => {
   broadcastCss(tweakChannel, css);
-}
+};
 
-export function holdTokenCssUntilReload(): void {
+export const holdTokenCssUntilReload = (): void => {
   holdUntilReload(tokenChannel);
-}
+};
 
-export function holdTweakCssUntilReload(): void {
+export const holdTweakCssUntilReload = (): void => {
   holdUntilReload(tweakChannel);
-}
+};
 
 const themeListeners = new Set<() => void>();
 
-function subscribeTheme(listener: () => void): () => void {
+const subscribeTheme = (listener: () => void): (() => void) => {
   themeListeners.add(listener);
 
   return () => themeListeners.delete(listener);
-}
+};
 
-export function broadcastTheme(theme: ThemeChoice): void {
+export const broadcastTheme = (theme: ThemeChoice): void => {
   const changed = current.theme !== theme;
   current.theme = theme;
 
   for (const frame of tokenFrames()) {
-    postToFrame(frame, { type: "set-theme", theme });
+    postToFrame(frame, { theme, type: "set-theme" });
   }
 
   if (changed) {
@@ -200,13 +196,12 @@ export function broadcastTheme(theme: ThemeChoice): void {
       listener();
     }
   }
-}
+};
 
-export function useCanvasTheme(): ThemeChoice {
-  return useSyncExternalStore(subscribeTheme, () => current.theme);
-}
+export const useCanvasTheme = (): ThemeChoice =>
+  useSyncExternalStore(subscribeTheme, () => current.theme);
 
-export function setSharePointer(on: boolean): void {
+export const setSharePointer = (on: boolean): void => {
   if (current.pointer === on) {
     return;
   }
@@ -214,40 +209,40 @@ export function setSharePointer(on: boolean): void {
   current.pointer = on;
 
   for (const frame of tokenFrames()) {
-    postToFrame(frame, { type: "share-pointer", on });
+    postToFrame(frame, { on, type: "share-pointer" });
   }
-}
+};
 
-export function onSharePointer(
+export const onSharePointer = (
   listener: (frame: BridgeFrame, message: SharePointerMessage) => void
-): () => void {
+): (() => void) => {
   pointerListeners.add(listener);
 
   return () => pointerListeners.delete(listener);
-}
+};
 
-function syncTokenFrame(frame: BridgeFrame): void {
+const syncTokenFrame = (frame: BridgeFrame): void => {
   for (const channel of channels) {
     if (holding(channel)) {
       channel.hold.fresh.add(frame.token);
     } else if (channel.css !== "") {
-      postToFrame(frame, { type: channel.type, css: channel.css });
+      postToFrame(frame, { css: channel.css, type: channel.type });
     }
   }
 
   if (current.theme !== null) {
-    postToFrame(frame, { type: "set-theme", theme: current.theme });
+    postToFrame(frame, { theme: current.theme, type: "set-theme" });
   }
 
   if (current.pointer) {
-    postToFrame(frame, { type: "share-pointer", on: true });
+    postToFrame(frame, { on: true, type: "share-pointer" });
   }
-}
+};
 
-function onTokenFrameMessage(
+const onTokenFrameMessage = (
   frame: BridgeFrame,
   message: BridgeToParent
-): void {
+): void => {
   if (message.type === "ready") {
     syncTokenFrame(frame);
 
@@ -274,18 +269,21 @@ function onTokenFrameMessage(
     channel.hold.painted.add(frame.token);
     releaseHold(channel);
   }
-}
+};
 
-export function setCanvasFront(front: string | null, swapping: boolean): void {
+export const setCanvasFront = (
+  front: string | null,
+  swapping: boolean
+): void => {
   canvas.front = front;
   canvas.swapping = swapping;
 
   for (const channel of channels) {
     releaseHold(channel);
   }
-}
+};
 
-export function useTokenFrameSync(): void {
+export const useTokenFrameSync = (): void => {
   useBridge(tokenFrames, onTokenFrameMessage);
   useEffect(
     () => () => {
@@ -298,24 +296,24 @@ export function useTokenFrameSync(): void {
     },
     []
   );
-}
+};
 
-export function useTokenFrames(
+export const useTokenFrames = (
   slots: FrameSlot[],
   elements: MutableRefObject<Record<string, HTMLIFrameElement | null>>,
   kind: ProjectKind,
   live = false
-): void {
+): void => {
   useEffect(() => {
     const offs = slots.map((slot) =>
       registerTokenFrame(
         slot.token,
         () => ({
+          element: elements.current[slot.token] ?? null,
           key: slot.token,
+          kind,
           token: slot.token,
           url: slot.src,
-          kind,
-          element: elements.current[slot.token] ?? null,
         }),
         live
       )
@@ -323,4 +321,4 @@ export function useTokenFrames(
 
     return () => offs.forEach((off) => off());
   }, [slots, elements, kind, live]);
-}
+};

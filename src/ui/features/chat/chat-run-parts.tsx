@@ -10,7 +10,7 @@ type Segment =
   | { kind: "tools"; key: string; tools: ToolRow[] }
   | { kind: "user"; key: string; text: string };
 
-function segmentsOf(run: RunView): Segment[] {
+const segmentsOf = (run: RunView): Segment[] => {
   const byId = new Map(run.tools.map((tool) => [tool.toolUseId, tool]));
   const segments: Segment[] = [];
   run.parts.forEach((part, index) => {
@@ -27,28 +27,28 @@ function segmentsOf(run: RunView): Segment[] {
         last.tools.push(tool);
       } else {
         segments.push({
-          kind: "tools",
           key: `tools-${part.toolUseId}`,
+          kind: "tools",
           tools: [tool],
         });
       }
     } else if (part.kind === "user") {
-      segments.push({ kind: "user", key: `user-${part.id}`, text: part.text });
+      segments.push({ key: `user-${part.id}`, kind: "user", text: part.text });
     } else {
       segments.push({
-        kind: part.kind,
         key: `${part.kind}-${index}`,
-        text: part.text,
+        kind: part.kind,
         open: Boolean(part.open),
+        text: part.text,
       });
     }
   });
 
   return segments;
-}
+};
 
 const ToolSegment = memo(
-  function ToolSegment({
+  ({
     tools,
     running,
     workTree,
@@ -56,19 +56,16 @@ const ToolSegment = memo(
     tools: ToolRow[];
     running: boolean;
     workTree: string | null;
-  }) {
-    return (
-      <ToolChips tools={tools} running={running} workTree={workTree} flat />
-    );
-  },
+  }) => <ToolChips tools={tools} running={running} workTree={workTree} flat />,
   (a, b) =>
     a.running === b.running &&
     a.workTree === b.workTree &&
     a.tools.length === b.tools.length &&
     a.tools.every((tool, index) => tool === b.tools[index])
 );
+ToolSegment.displayName = "ToolSegment";
 
-function SegmentView({
+const SegmentView = ({
   segment,
   running,
   workTree,
@@ -76,7 +73,7 @@ function SegmentView({
   segment: Segment;
   running: boolean;
   workTree: string | null;
-}) {
+}) => {
   if (segment.kind === "tools") {
     return (
       <ToolSegment
@@ -98,7 +95,7 @@ function SegmentView({
   return (
     <AssistantText text={segment.text} streaming={running && segment.open} />
   );
-}
+};
 
 interface RunLayout {
   steps: Segment[];
@@ -106,7 +103,7 @@ interface RunLayout {
   tail: Segment[];
 }
 
-function layoutOf(segments: Segment[], running: boolean): RunLayout {
+const layoutOf = (segments: Segment[], running: boolean): RunLayout => {
   let lastTool = -1;
   let lastText = -1;
   segments.forEach((segment, index) => {
@@ -143,10 +140,10 @@ function layoutOf(segments: Segment[], running: boolean): RunLayout {
     tail.unshift(reply);
   }
 
-  return { steps, sent, tail };
-}
+  return { sent, steps, tail };
+};
 
-function RunParts({
+const RunParts = ({
   run,
   running,
   workTree,
@@ -154,7 +151,7 @@ function RunParts({
   run: RunView;
   running: boolean;
   workTree: string | null;
-}) {
+}) => {
   const layout = useMemo(
     () => layoutOf(segmentsOf(run), running),
     [run.parts, run.tools, running]
@@ -192,6 +189,6 @@ function RunParts({
       ))}
     </>
   );
-}
+};
 
 export { RunParts };

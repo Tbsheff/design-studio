@@ -1,22 +1,20 @@
-export function contextWindowFor(model: string): number {
-  return /\[1m\]|-1m\b/i.test(model) ? 1_000_000 : 200_000;
-}
+export const contextWindowFor = (model: string): number =>
+  /\[1m\]|-1m\b/iu.test(model) ? 1_000_000 : 200_000;
 
-export function contextShare(tokens: number, model: string): number {
-  return Math.min(1, Math.max(0, tokens / contextWindowFor(model)));
-}
+export const contextShare = (tokens: number, model: string): number =>
+  Math.min(1, Math.max(0, tokens / contextWindowFor(model)));
 
 const R = 6;
 const SHOW_FROM = 0.5;
 const C = 2 * Math.PI * R;
 
-export function ContextMeter({
+export const ContextMeter = ({
   tokens,
   model,
 }: {
   tokens: number | null;
   model: string;
-}) {
+}) => {
   if (tokens === null || tokens <= 0) {
     return null;
   }
@@ -58,4 +56,4 @@ export function ContextMeter({
       <span className="tabular-nums">{percent}%</span>
     </span>
   );
-}
+};

@@ -38,7 +38,7 @@ export const componentCreateApi = {
     }),
 };
 
-export function apiMessage(error: unknown): string {
+export const apiMessage = (error: unknown): string => {
   if (
     error instanceof ApiError &&
     error.data &&
@@ -48,4 +48,4 @@ export function apiMessage(error: unknown): string {
   }
 
   return error instanceof Error ? error.message : String(error);
-}
+};

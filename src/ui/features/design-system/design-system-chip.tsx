@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState, useEffect } from "react";
 
 import type {
-  CompiledTokenEntry,
   DesignSystemState,
   Project,
+  CompiledTokenEntry,
 } from "../../../shared/contracts.js";
 import { api, errorText } from "../../api.js";
 import { useFitPopover } from "../../domain/popoverPlacement.js";
@@ -25,12 +25,12 @@ export interface DesignSystemRef {
   backing: boolean;
 }
 
-export function designSystemRef(
+export const designSystemRef = (
   projectId: string,
   directionId: string | null,
   project: Project,
   state: DesignSystemState | null
-): DesignSystemRef {
+): DesignSystemRef => {
   const backing = Boolean(project.designSystemFor);
 
   if (!state) {
@@ -50,29 +50,76 @@ export function designSystemRef(
     packId: state.packId,
     projectId,
   };
+};
+
+type Dialog = "change" | "save" | null;
+
+interface ChipDialogsProps {
+  dialog: Dialog;
+  system: DesignSystemRef;
+  name: string;
+  userPack: boolean;
+  actions: DesignSystemActions;
+  onClose: () => void;
 }
+
+const ChipDialogs = ({
+  dialog,
+  system,
+  name,
+  userPack,
+  actions,
+  onClose,
+}: ChipDialogsProps) => {
+  if (dialog === "change") {
+    const from = system.directionId
+      ? { directionId: system.directionId, projectId: system.projectId }
+      : null;
+
+    return (
+      <ChangePackDialog
+        currentId={system.packId}
+        from={from}
+        onClose={onClose}
+        onApply={actions.onApply}
+      />
+    );
+  }
+
+  if (dialog === "save") {
+    return (
+      <SavePackDialog
+        defaultName={name}
+        updating={userPack}
+        canCopy={userPack && !system.backing}
+        onClose={onClose}
+        onSave={(saveName, asNew) => actions.onSave(saveName, undefined, asNew)}
+      />
+    );
+  }
+
+  return null;
+};
 
 interface Load {
   state: DesignSystemState | null;
   error: string | null;
 }
 
-function ValueCell({ value, color }: { value: string; color: boolean }) {
-  return (
-    <span className="ds-value" data-tip={value}>
-      {color && (
-        <span
-          className="swatch"
-          style={{ background: value }}
-          aria-hidden="true"
-        />
-      )}
-      <span className="truncate">{value}</span>
-    </span>
-  );
-}
+const ValueCell = ({ value, color }: { value: string; color: boolean }) => (
+  <span className="ds-value" data-tip={value}>
+    {color && (
+      <span
+        className="swatch"
+        style={{ background: value }}
+        aria-hidden="true"
+      />
+    )}
+    <span className="truncate">{value}</span>
+  </span>
+);
 
-function TokenRow({ entry }: { entry: CompiledTokenEntry }) {
+const TokenRow = ({ entry }: { entry: CompiledTokenEntry }) => {
   const color = entry.type === "color";
 
   return (
@@ -86,9 +133,9 @@ function TokenRow({ entry }: { entry: CompiledTokenEntry }) {
       )}
     </li>
   );
-}
+};
 
-function TokenList({ load }: { load: Load }) {
+const TokenList = ({ load }: { load: Load }) => {
   if (load.error) {
     return (
       <div className="alert error small" role="alert">
@@ -131,9 +178,9 @@ function TokenList({ load }: { load: Load }) {
       </ul>
     </>
   );
-}
+};
 
-function useDesignSystem(ref: DesignSystemRef, open: boolean): Load {
+const useDesignSystem = (ref: DesignSystemRef, open: boolean): Load => {
   const [load, setLoad] = useState<Load>({ error: null, state: null });
   const { projectId, directionId } = ref;
   useEffect(() => {
@@ -142,6 +189,7 @@ function useDesignSystem(ref: DesignSystemRef, open: boolean): Load {
     }
 
     let live = true;
+
     const read = async () => {
       try {
         const state = await api.getDesignSystem(projectId, directionId);
@@ -164,58 +212,9 @@ function useDesignSystem(ref: DesignSystemRef, open: boolean): Load {
   }, [open, projectId, directionId]);
 
   return load;
-}
+};
 
-type Dialog = "change" | "save" | null;
-
-interface ChipDialogsProps {
-  dialog: Dialog;
-  system: DesignSystemRef;
-  name: string;
-  userPack: boolean;
-  actions: DesignSystemActions;
-  onClose: () => void;
-}
-
-function ChipDialogs({
-  dialog,
-  system,
-  name,
-  userPack,
-  actions,
-  onClose,
-}: ChipDialogsProps) {
-  if (dialog === "change") {
-    const from = system.directionId
-      ? { directionId: system.directionId, projectId: system.projectId }
-      : null;
-
-    return (
-      <ChangePackDialog
-        currentId={system.packId}
-        from={from}
-        onClose={onClose}
-        onApply={actions.onApply}
-      />
-    );
-  }
-
-  if (dialog === "save") {
-    return (
-      <SavePackDialog
-        defaultName={name}
-        updating={userPack}
-        canCopy={userPack && !system.backing}
-        onClose={onClose}
-        onSave={(saveName, asNew) => actions.onSave(saveName, undefined, asNew)}
-      />
-    );
-  }
-
-  return null;
-}
-
-export function DesignSystemChip({
+export const DesignSystemChip = ({
   system,
   actions,
   onOpenDesignMd,
@@ -223,7 +222,7 @@ export function DesignSystemChip({
   system: DesignSystemRef;
   actions: DesignSystemActions;
   onOpenDesignMd: () => void;
-}) {
+}) => {
   const [open, setOpen] = useState(false);
   const [dialog, setDialog] = useState<Dialog>(null);
   const root = useRef<HTMLDivElement>(null);
@@ -355,4 +354,4 @@ export function DesignSystemChip({
       {dialogs}
     </div>
   );
-}
+};

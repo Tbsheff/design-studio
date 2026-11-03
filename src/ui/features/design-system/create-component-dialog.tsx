@@ -29,16 +29,16 @@ const TAG_NAMES: Record<string, string> = {
   tr: "TableRow",
 };
 
-function suggestName(selection: SelectionContext[]): string {
+const suggestName = (selection: SelectionContext[]): string => {
   const tag = (selection[0]?.tag ?? "div").toLowerCase();
   const base = TAG_NAMES[tag] ?? (selection.length > 1 ? "Row" : "Block");
 
-  return selection[0]?.component && /^[A-Z]/.test(selection[0].component)
+  return selection[0]?.component && /^[A-Z]/u.test(selection[0].component)
     ? `${selection[0].component}Item`
     : base;
-}
+};
 
-function targetOf(selection: SelectionContext): InsertTarget {
+const targetOf = (selection: SelectionContext): InsertTarget => {
   if (selection.usedAt && selection.usedBy?.root) {
     return {
       selector: selection.selector,
@@ -53,24 +53,25 @@ function targetOf(selection: SelectionContext): InsertTarget {
     tag: selection.tag.toLowerCase(),
     ...(selection.owners?.length ? { owners: selection.owners } : {}),
   };
-}
+};
 
-function fileHint(
+const fileHint = (
   folder: string,
   name: string,
   known: ComponentFolder | undefined
-): string {
-  const kebab = known?.kebab ?? /(^|\/)(ui|packages)(\/|$)/.test(folder);
+): string => {
+  const kebab = known?.kebab ?? /(^|\/)(ui|packages)(\/|$)/u.test(folder);
 
-  return `${folder}/${kebab ? name.replaceAll(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase() : name}.tsx`;
-}
+  return `${folder}/${kebab ? name.replaceAll(/([a-z0-9])([A-Z])/gu, "$1-$2").toLowerCase() : name}.tsx`;
+};
 
-function useFolders(ids: Props["ids"]) {
+const useFolders = (ids: Props["ids"]) => {
   const [folders, setFolders] = useState<ComponentFolder[] | null>(null);
   const [folder, setFolder] = useState("");
   const [note, setNote] = useState<string | null>(null);
   useEffect(() => {
     let live = true;
+
     const read = async () => {
       try {
         const list = await componentCreateApi.folders(
@@ -104,14 +105,14 @@ function useFolders(ids: Props["ids"]) {
   }, [ids.projectId, ids.directionId]);
 
   return { folder, folders, note, setFolder };
-}
+};
 
-export function CreateComponentDialog({
+export const CreateComponentDialog = ({
   ids,
   selection,
   onDone,
   onClose,
-}: Props) {
+}: Props) => {
   const [name, setName] = useState(() => suggestName(selection));
   const { folders, folder, setFolder, note } = useFolders(ids);
   const [busy, startTransition] = useTransition();
@@ -256,4 +257,4 @@ export function CreateComponentDialog({
       </form>
     </dialog>
   );
-}
+};

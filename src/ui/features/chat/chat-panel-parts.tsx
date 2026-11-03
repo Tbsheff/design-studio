@@ -7,7 +7,7 @@ import { EarlierRuns, useHistoryWindow } from "./chat-panel-window.js";
 import type { TimelineItem } from "./mcp-feed.js";
 import type { RunView } from "./run-state-model.js";
 
-function StickOnNewRun({ runId }: { runId: string | null }) {
+const StickOnNewRun = ({ runId }: { runId: string | null }) => {
   const { stickToBottom } = useConversation();
   const first = useRef(true);
   useEffect(() => {
@@ -23,7 +23,7 @@ function StickOnNewRun({ runId }: { runId: string | null }) {
   }, [runId, stickToBottom]);
 
   return null;
-}
+};
 
 interface TimelineProps {
   items: TimelineItem[];
@@ -33,13 +33,13 @@ interface TimelineProps {
   render: (item: TimelineItem) => ReactNode;
 }
 
-function WindowedTimeline({
+const WindowedTimeline = ({
   items,
   resetKey,
   reveal,
   onRevealed,
   render,
-}: TimelineProps) {
+}: TimelineProps) => {
   const { shown, hidden, more } = useHistoryWindow(items, resetKey, reveal);
   const inView = reveal !== null && shown.some((item) => item.key === reveal);
 
@@ -50,30 +50,27 @@ function WindowedTimeline({
       <ScrollToRun runId={reveal} shown={inView} onDone={onRevealed} />
     </>
   );
-}
+};
 
-function EmptyChat() {
-  return (
-    <div className="chat-empty">
-      <span className="chat-empty-icon">
-        <Icon name="sparkle" size={18} />
-      </span>
-      <strong>No runs yet</strong>
-      <p>
-        Describe a change below. To target one part, press V, then click an
-        element in the preview.
-      </p>
-    </div>
-  );
-}
+const EmptyChat = () => (
+  <div className="chat-empty">
+    <span className="chat-empty-icon">
+      <Icon name="sparkle" size={18} />
+    </span>
+    <strong>No runs yet</strong>
+    <p>
+      Describe a change below. To target one part, press V, then click an
+      element in the preview.
+    </p>
+  </div>
+);
 
-function EmptyState({ empty }: { empty: boolean }) {
-  return empty ? <EmptyChat /> : null;
-}
+const EmptyState = ({ empty }: { empty: boolean }) =>
+  empty ? <EmptyChat /> : null;
 
 const FOUND_MS = 1600;
 
-function ScrollToRun({
+const ScrollToRun = ({
   runId,
   shown,
   onDone,
@@ -81,7 +78,7 @@ function ScrollToRun({
   runId: string | null;
   shown: boolean;
   onDone: () => void;
-}) {
+}) => {
   const { viewportRef, wasAtBottomRef } = useConversation();
   useEffect(() => {
     if (!runId || !shown) {
@@ -99,22 +96,22 @@ function ScrollToRun({
     wasAtBottomRef.current = false;
     el.scrollIntoView({ block: "start" });
     el.dataset.found = "";
-    window.setTimeout(() => delete el.dataset.found, FOUND_MS);
+    globalThis.setTimeout(() => delete el.dataset.found, FOUND_MS);
     onDone();
   }, [runId, shown, onDone, viewportRef, wasAtBottomRef]);
 
   return null;
-}
-
-const RUN_ANNOUNCE: Record<RunView["status"], string> = {
-  running: "Run started",
-  completed: "Run finished",
-  canceled: "Run stopped",
-  failed: "Run failed",
-  budget_exceeded: "Run stopped at the spending limit",
 };
 
-function RunAnnouncer({ run }: { run: RunView | undefined }) {
+const RUN_ANNOUNCE: Record<RunView["status"], string> = {
+  budget_exceeded: "Run stopped at the spending limit",
+  canceled: "Run stopped",
+  completed: "Run finished",
+  failed: "Run failed",
+  running: "Run started",
+};
+
+const RunAnnouncer = ({ run }: { run: RunView | undefined }) => {
   const queued = run?.status === "running" ? run.queue.length : 0;
   const asking = run?.status === "running" ? run.permissions[0] : undefined;
 
@@ -129,10 +126,10 @@ function RunAnnouncer({ run }: { run: RunView | undefined }) {
       {text}
     </p>
   );
-}
+};
 
-function ChatLead({ lead, empty }: { lead: ReactNode; empty: boolean }) {
-  return <>{lead ?? <EmptyState empty={empty} />}</>;
-}
+const ChatLead = ({ lead, empty }: { lead: ReactNode; empty: boolean }) => (
+  <>{lead ?? <EmptyState empty={empty} />}</>
+);
 
 export { StickOnNewRun, WindowedTimeline, EmptyState, RunAnnouncer, ChatLead };

@@ -39,7 +39,10 @@ interface Options {
   refreshVersions: () => void;
 }
 
-export function editedRequest(request: RunRequest, prompt: string): RunRequest {
+export const editedRequest = (
+  request: RunRequest,
+  prompt: string
+): RunRequest => {
   const {
     retryOf: _retry,
     variation: _variation,
@@ -48,9 +51,9 @@ export function editedRequest(request: RunRequest, prompt: string): RunRequest {
   } = request;
 
   return { ...rest, prompt };
-}
+};
 
-export function useRewind(options: Options): RewindControl {
+export const useRewind = (options: Options): RewindControl => {
   const ref = useRef(options);
   ref.current = options;
 
@@ -72,7 +75,7 @@ export function useRewind(options: Options): RewindControl {
       const { act, guard, direction, projectId, seedRun, setDirectionId } =
         ref.current;
 
-      const request = run.request;
+      const { request } = run;
 
       if (!request) {
         return;
@@ -107,13 +110,13 @@ export function useRewind(options: Options): RewindControl {
 
   return useMemo(
     () => ({
-      versions,
-      headVersionId,
-      headRestoredFrom,
       dirtyCount,
+      headRestoredFrom,
+      headVersionId,
       locked,
-      onRestore,
       onEditResend,
+      onRestore,
+      versions,
     }),
     [
       versions,
@@ -125,4 +128,4 @@ export function useRewind(options: Options): RewindControl {
       onEditResend,
     ]
   );
-}
+};

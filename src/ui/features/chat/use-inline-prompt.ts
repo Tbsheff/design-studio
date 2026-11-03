@@ -35,50 +35,67 @@ export interface InlinePromptView {
   close: () => void;
 }
 
-function blockerOf(o: InlinePromptOptions): string | null {
-  if (!o.onSubmit) return "Open a direction first";
-  if (!o.live) return "Go back to the live canvas first";
-  if (o.selection.length === 0) return "Select an element first";
+const blockerOf = (o: InlinePromptOptions): string | null => {
+  if (!o.onSubmit) {
+    return "Open a direction first";
+  }
+
+  if (!o.live) {
+    return "Go back to the live canvas first";
+  }
+
+  if (o.selection.length === 0) {
+    return "Select an element first";
+  }
+
   return o.running ? "Wait for the current run to finish" : null;
-}
+};
 
 const SNIPPET_MAX = 16;
 export const INLINE_PROMPT_OPEN_EVENT = "studio:inline-prompt-open";
 
-function labelOf(selection: SelectionContext[]): string {
+const labelOf = (selection: SelectionContext[]): string => {
   const last = selection.at(-1);
-  if (selection.length > 1) return `${selection.length} elements`;
-  if (last?.component) return last.component;
-  const text = last?.text.replaceAll(/\s+/g, " ").trim() ?? "";
+
+  if (selection.length > 1) {
+    return `${selection.length} elements`;
+  }
+
+  if (last?.component) {
+    return last.component;
+  }
+
+  const text = last?.text.replaceAll(/\s+/gu, " ").trim() ?? "";
+
   const snippet =
     text.length > SNIPPET_MAX ? `${text.slice(0, SNIPPET_MAX - 1)}…` : text;
+
   return snippet ? `“${snippet}”` : last?.tag || "element";
-}
+};
 
-function usageFileOf(selection: SelectionContext[]): string | null {
-  return selection.length === 1 ? (selection[0]?.source?.file ?? null) : null;
-}
+const usageFileOf = (selection: SelectionContext[]): string | null =>
+  selection.length === 1 ? (selection[0]?.source?.file ?? null) : null;
 
-function usedAtFileOf(selection: SelectionContext[]): string | null {
-  return selection.length === 1 ? (selection[0]?.usedAt?.file ?? null) : null;
-}
+const usedAtFileOf = (selection: SelectionContext[]): string | null =>
+  selection.length === 1 ? (selection[0]?.usedAt?.file ?? null) : null;
 
-function restoreFocus(
+const restoreFocus = (
   previous: Element | null,
   stage: HTMLElement | null
-): void {
+): void => {
   const target =
     previous instanceof HTMLElement &&
     previous.isConnected &&
     previous !== document.body
       ? previous
       : stage;
-  target?.focus({ preventScroll: true });
-}
 
-export function useInlinePrompt(
+  target?.focus({ preventScroll: true });
+};
+
+export const useInlinePrompt = (
   o: InlinePromptOptions
-): InlinePromptView | null {
+): InlinePromptView | null => {
   const [open, setOpen] = useState(false);
   const returnTo = useRef<Element | null>(null);
   const latest = useRef(o);
@@ -86,11 +103,16 @@ export function useInlinePrompt(
 
   const show = useCallback(() => {
     const cur = latest.current;
-    if (cur.selection.length === 0 || !cur.live) return;
+
+    if (cur.selection.length === 0 || !cur.live) {
+      return;
+    }
+
     returnTo.current = document.activeElement;
     setOpen(true);
-    window.dispatchEvent(new Event(INLINE_PROMPT_OPEN_EVENT));
+    globalThis.dispatchEvent(new Event(INLINE_PROMPT_OPEN_EVENT));
   }, []);
+
   const close = useCallback(() => {
     setOpen(false);
     restoreFocus(returnTo.current, latest.current.stage());
@@ -102,34 +124,42 @@ export function useInlinePrompt(
         event.defaultPrevented ||
         event.repeat ||
         isTypingTarget(event.target)
-      )
+      ) {
         return;
+      }
+
       if (
         !matchesKey("inline-prompt", event, IS_MAC) ||
         latest.current.selection.length === 0
-      )
+      ) {
         return;
+      }
+
       event.preventDefault();
       show();
     };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+
+    globalThis.addEventListener("keydown", onKey);
+
+    return () => globalThis.removeEventListener("keydown", onKey);
   }, [show]);
 
   const empty = o.selection.length === 0 || !o.live;
   useEffect(() => {
-    if (empty) setOpen(false);
+    if (empty) {
+      setOpen(false);
+    }
   }, [empty]);
 
   useCommands(() => [
     {
-      id: INLINE_PROMPT_COMMAND,
-      title: "Ask the agent at the selection",
       group: "Run",
       icon: "chat",
+      id: INLINE_PROMPT_COMMAND,
       keyId: "inline-prompt",
       keywords: "inline prompt quick edit selection element",
       run: show,
+      title: "Ask the agent at the selection",
       ...(latest.current.selection.length === 0
         ? { disabled: "Select an element first" }
         : {}),
@@ -137,23 +167,31 @@ export function useInlinePrompt(
   ]);
 
   const rect = unionRect(o.selection);
-  if (!open || !rect || !o.live) return null;
+
+  if (!open || !rect || !o.live) {
+    return null;
+  }
+
   return {
-    rect,
-    label: labelOf(o.selection),
     blocked: blockerOf(o),
-    usageFile: usageFileOf(o.selection),
-    usedAtFile: usedAtFileOf(o.selection),
+    close,
+    label: labelOf(o.selection),
+    rect,
     route: o.route ?? null,
     submit: (prompt, editScope) => {
       const cur = latest.current;
-      if (blockerOf(cur) || !prompt.trim()) return;
+
+      if (blockerOf(cur) || !prompt.trim()) {
+        return;
+      }
+
       cur.onSubmit?.(
         prompt.trim(),
-        editScope ? { lean: true, editScope } : { lean: true }
+        editScope ? { editScope, lean: true } : { lean: true }
       );
       close();
     },
-    close,
+    usageFile: usageFileOf(o.selection),
+    usedAtFile: usedAtFileOf(o.selection),
   };
-}
+};

@@ -354,6 +354,11 @@ function copyStatic(resources: string): void {
     recursive: true,
   });
   cpSync(
+    path.join(ROOT, "src", "server", "mcp", "assets"),
+    path.join(resources, "mcp"),
+    { recursive: true }
+  );
+  cpSync(
     path.join(ROOT, "src", "server", "design-system", "packs"),
     path.join(resources, "packs"),
     { recursive: true }

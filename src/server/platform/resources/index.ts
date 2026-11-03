@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 
 import { resourcesDir } from "../config/index.js";
@@ -29,6 +29,9 @@ const packagedResource = (relative: string): string | null => {
   return file;
 };
 
+const toTextResource = (relative: string, devPath: string): string =>
+  readFileSync(resourcePath(relative, devPath), "utf-8");
+
 export { resourcesDir } from "../config/index.js";
 
-export { packagedResource, resourcePath };
+export { packagedResource, resourcePath, toTextResource };

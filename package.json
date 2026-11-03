@@ -13,7 +13,7 @@
     "server": "tsx src/server/index.ts",
     "setup:cloud": "pnpm --dir cloud/publish-worker install --frozen-lockfile",
     "build:ui": "vite build --config vite.ui.config.ts",
-    "typecheck": "tsc --noEmit -p tsconfig.server.json && tsc --noEmit -p tsconfig.ui.json && tsc --noEmit -p tsconfig.ui-test.json && tsc --noEmit -p tsconfig.desktop.json && tsc --noEmit -p tsconfig.server-probe.json && tsc --noEmit -p tsconfig.desktop-renderer.json",
+    "typecheck": "tsc -b tsconfig.json --pretty false",
     "typecheck:tsrs": "tsrs --noEmit -p tsconfig.server.json && tsrs --noEmit -p tsconfig.ui.json && tsrs --noEmit -p tsconfig.ui-test.json && tsrs --noEmit -p tsconfig.desktop.json && tsrs --noEmit -p tsconfig.server-probe.json && tsrs --noEmit -p tsconfig.desktop-renderer.json",
     "typecheck:rs": "pnpm run typecheck:tsrs",
     "typecheck:rs:fast": "tsrs --noEmit --fast -p tsconfig.server.json",

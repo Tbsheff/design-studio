@@ -12,8 +12,6 @@ const DOM_PROJECTS = [
   { project: "tsconfig.desktop-renderer.json", suffix: ".renderer.ts" },
 ];
 
-const TYPECHECK_SCRIPTS = ["typecheck", "typecheck:tsrs"];
-
 const FUNCTION_TYPES = new Set([
   "ArrowFunctionExpression",
   "FunctionDeclaration",
@@ -57,7 +55,15 @@ const readJson = (relative) => {
 const isScriptWired = (project) => {
   const scripts = readJson("package.json")?.scripts ?? {};
 
-  return TYPECHECK_SCRIPTS.every((name) => String(scripts[name] ?? "").includes(project));
+  const references = readJson("tsconfig.json")?.references ?? [];
+
+  const isReferenced = references.some(
+    ({ path: referenced }) => path.normalize(String(referenced)) === path.normalize(project)
+  );
+
+  const isBuilt = String(scripts.typecheck ?? "").includes("tsc -b tsconfig.json");
+
+  return isReferenced && isBuilt && String(scripts["typecheck:tsrs"] ?? "").includes(project);
 };
 
 const isIncluded = (project, relative) => {

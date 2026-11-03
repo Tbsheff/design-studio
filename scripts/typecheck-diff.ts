@@ -45,9 +45,10 @@ const errorsOfProjects = (command: string, args: string[]) => {
 };
 
 const main = () => {
-  const tsc = errorsOfProjects("node", [
+  const tsc = errorsOf("node", [
     "node_modules/typescript/bin/tsc",
-    "--noEmit",
+    "-b",
+    "tsconfig.json",
     "--pretty",
     "false",
   ]);

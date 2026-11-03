@@ -20,6 +20,7 @@ import {
 import { api, json, warmProject } from "../api";
 import { formatRelative, formatTime } from "../format";
 import { homePrefs, useHomePrefs } from "../homePrefs";
+import { Icon } from "../kit/Icon";
 import { findPack, keySwatches } from "../packs";
 import {
   filterProjects,
@@ -29,7 +30,6 @@ import {
 } from "../projectList";
 import { prefetchStudio } from "../screens";
 import { HOME_SORTS, uiStore, useUi, type HomeSort } from "../storage";
-import { Icon } from "./Icon";
 import { LazySelect } from "./LazySelect";
 import { Swatches } from "./Swatches";
 

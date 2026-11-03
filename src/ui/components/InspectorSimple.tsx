@@ -19,6 +19,7 @@ import { FillSlot } from "../features/fill";
 import { MotionSlot } from "../features/motion";
 import { StateStylesSlot } from "../features/state-styles";
 import { TextStyleSlot } from "../features/text-styles";
+import { Icon } from "../kit/Icon";
 import { useAuthoredCss } from "../useAuthoredCss";
 import type { DesignTokens } from "../useDesignSystemState";
 import {
@@ -33,7 +34,6 @@ import { useDirectEdits } from "../useDirectEdits";
 import { TokenUiContext, type TokenUi } from "../useTokenSnap";
 import { BoxModel, type DeclaredMargins } from "./BoxModel";
 import { CopyCodeMenu } from "./CopyCodeMenu";
-import { Icon } from "./Icon";
 import { InspectorBreadcrumb } from "./InspectorBreadcrumb";
 import { ClassLine, domClasses, useElementClasses } from "./InspectorClasses";
 import { RadiusField } from "./InspectorCorners";

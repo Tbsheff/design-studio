@@ -6,7 +6,7 @@ import {
   type KeyBinding,
   type KeyGroup,
 } from "../../shared/keymap";
-import { Icon } from "../components/Icon";
+import { Icon } from "../kit/Icon";
 import { IS_MAC, Keys } from "./keys";
 
 const MARK_MS = 900;

@@ -14,9 +14,9 @@ import {
   type Breadcrumb,
   type CardSide,
 } from "../commentPlacement";
+import { Icon } from "../kit/Icon";
 import { useProfileInitial } from "../useProfileInitial";
 import { AvatarFace, CommentAuthor } from "./CommentAvatar";
-import { Icon } from "./Icon";
 
 type Rect = SelectionContext["rect"];
 

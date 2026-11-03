@@ -12,6 +12,7 @@ import { matchesKey } from "../../shared/keymap";
 import { TYPE_LABELS, type ProjectHit } from "../../shared/project-search";
 import { IS_MAC, tipWithKey } from "../commands/keys";
 import { useCommands } from "../commands/registry";
+import { Icon } from "../kit/Icon";
 import {
   noteProjectOpened,
   refreshProjectHits,
@@ -19,7 +20,6 @@ import {
 } from "../projectHits";
 import { openProject } from "../projectNav";
 import { BrandMark } from "./BrandMark";
-import { Icon } from "./Icon";
 import { HealthDot, ProjectThumb } from "./ProjectThumb";
 
 import "../styles/project-nav.css";

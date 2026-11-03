@@ -1,4 +1,4 @@
-import { Icon } from "./Icon";
+import { Icon } from "../kit/Icon";
 
 interface AvatarProps {
   initial: string | null;

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 import type { Starter } from "../../shared/contracts";
 import { api, errorText } from "../api";
-import { Icon } from "./Icon";
+import { Icon } from "../kit/Icon";
 
 const STARTER_IMAGES: Record<string, string> = {
   landing: new URL("../assets/starters/landing.png", import.meta.url).href,

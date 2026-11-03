@@ -2,10 +2,10 @@ import { memo, useMemo } from "react";
 
 import type { RunStatus } from "../../shared/contracts";
 import { baseName, formatMs, formatUsd } from "../format";
+import { CopyButton } from "../kit/CopyButton";
+import { Icon } from "../kit/Icon";
 import { useRunFeedback, type Thumb } from "../runFeedback";
 import { runText, type RunView } from "../runState";
-import { CopyButton } from "./CopyButton";
-import { Icon } from "./Icon";
 import { DiffBadge, fileChanges, type FileChange } from "./ToolChips";
 
 const STATUS_LABEL: Record<RunStatus, string> = {

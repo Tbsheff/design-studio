@@ -15,8 +15,8 @@ import type {
   TextSourceInfo,
 } from "../../shared/contracts";
 import { api } from "../api";
+import { Icon } from "../kit/Icon";
 import { textHints, type DirectEdit } from "../useDirectEdit";
-import { Icon } from "./Icon";
 
 export interface InspectorApp {
   appDir: string | null;

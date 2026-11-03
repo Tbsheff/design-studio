@@ -15,9 +15,9 @@ import { Chip } from "../ai/components/ai/chip";
 
 import "../styles/reference.css";
 import { api } from "../api";
+import { Icon } from "../kit/Icon";
 import { projectFromPath } from "../route";
 import { modelLabel } from "../settingsDraft";
-import { Icon } from "./Icon";
 
 export interface PendingAttachment {
   localId: string;

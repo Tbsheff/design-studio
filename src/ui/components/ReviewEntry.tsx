@@ -16,9 +16,9 @@ import type {
 } from "../../shared/review";
 import type { ParentMessageBody } from "../bridge";
 import { frameName, type CanvasFrame } from "../canvasFrames";
+import { Icon } from "../kit/Icon";
 import { useReview } from "../useReview";
 import type { FilesChange } from "../useStudioData";
-import { Icon } from "./Icon";
 
 import "../styles/review.css";
 

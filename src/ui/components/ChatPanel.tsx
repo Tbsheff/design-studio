@@ -15,6 +15,7 @@ import {
   chatSearchOpen,
   focusChatSearchButton,
 } from "../chatSearchState";
+import { Icon } from "../kit/Icon";
 import { useLive } from "../liveStore";
 import { canPolishRun } from "../polish";
 import { loadRunsThrough, renameRun } from "../runHistoryApi";
@@ -35,7 +36,6 @@ import {
 import { UserTurn } from "./ChatRewind";
 import type { TurnActions } from "./ChatRewind";
 import { ChatSearch } from "./ChatSearch";
-import { Icon } from "./Icon";
 import { feedShown, McpItem, timelineOf } from "./McpFeed";
 import type { McpFeedControl, TimelineItem } from "./McpFeed";
 import { PermissionPrompt } from "./PermissionPrompt";

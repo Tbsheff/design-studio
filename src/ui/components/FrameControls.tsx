@@ -6,10 +6,10 @@ import type {
 
 import type { RunStatus, SelectionContext } from "../../shared/contracts";
 import { cleanFramePath } from "../canvasFrames";
+import { Icon } from "../kit/Icon";
+import type { IconName } from "../kit/Icon";
 import { openPortDialog, portAvailable } from "../portApi";
 import { usePopover } from "../usePopover";
-import { Icon } from "./Icon";
-import type { IconName } from "./Icon";
 
 export interface FrameMenuItem {
   id: string;

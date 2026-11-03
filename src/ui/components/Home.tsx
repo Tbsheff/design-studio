@@ -30,6 +30,7 @@ import type { AppHealth } from "../../shared/found-apps";
 import { api, errorText } from "../api";
 import { hasNativePicker, pickFolder } from "../folderPicker";
 import { homePrefs, useHomePrefs } from "../homePrefs";
+import { Icon } from "../kit/Icon";
 import { onOpenAppRequest, takeOpenAppRequest } from "../openAppRequest";
 import { findPack, pickable, usePacks, type PacksState } from "../packs";
 import { reportAppStart } from "../perfTelemetry";
@@ -72,7 +73,6 @@ import {
   type HomeToastState,
 } from "./HomeSections";
 import type { HomeTemplate } from "./HomeTemplates";
-import { Icon } from "./Icon";
 import { StableText } from "./StableText";
 import { ThemeButton } from "./ThemeButton";
 

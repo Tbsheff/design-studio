@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import type { ComponentProps, ReactNode, RefObject } from "react";
 
+import { Icon } from "../kit/Icon";
 import type { RunView } from "../runState";
 import type { PanelTab } from "../usePanelTab";
 import { ChatPanel } from "./ChatPanel";
@@ -8,7 +9,6 @@ import { ChatSplitter } from "./ChatSplitter";
 import { CommentsPanel, QueuedComposerBar } from "./CommentsPanel";
 import { ComponentsPanel } from "./ComponentsPanel";
 import { ErrorsPanel } from "./ErrorsPanel";
-import { Icon } from "./Icon";
 import { Inspector } from "./Inspector";
 import { McpEditStrip } from "./McpFeed";
 import { PromptBox } from "./PromptBox";

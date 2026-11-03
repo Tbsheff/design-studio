@@ -5,8 +5,8 @@ import {
   type VariationBrief,
 } from "../../shared/contracts";
 import { LEVEL_PRESETS } from "../../shared/run-levels";
+import { Icon } from "../kit/Icon";
 import { budgetFor, money, type BriefDraft } from "../useVariations";
-import { Icon } from "./Icon";
 
 interface Props {
   project: Project;

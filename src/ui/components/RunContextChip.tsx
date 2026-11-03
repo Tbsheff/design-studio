@@ -1,6 +1,6 @@
 import { Chip } from "../ai/components/ai/chip";
+import { Icon } from "../kit/Icon";
 import type { RunCanvasChip } from "../useRunCanvas";
-import { Icon } from "./Icon";
 
 export function RunContextChip({
   chip,

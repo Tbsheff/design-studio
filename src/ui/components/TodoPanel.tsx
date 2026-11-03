@@ -1,7 +1,7 @@
 import { memo, useState } from "react";
 
 import type { TodoItem } from "../../shared/contracts";
-import { Icon } from "./Icon";
+import { Icon } from "../kit/Icon";
 
 export function todoProgress(todos: TodoItem[]): {
   current: number;

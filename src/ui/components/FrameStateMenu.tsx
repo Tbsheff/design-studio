@@ -19,8 +19,8 @@ import {
   setFrameState,
   useCurrentFrameStates,
 } from "../frameStates";
+import { Icon } from "../kit/Icon";
 import { usePopover } from "../usePopover";
-import { Icon } from "./Icon";
 
 import "../styles/frame-state.css";
 

@@ -2,9 +2,9 @@ import { createContext, useContext, useState } from "react";
 
 import { commentsDone } from "../../shared/comments";
 import type { DesignComment, RunRequest } from "../../shared/contracts";
+import { Icon } from "../kit/Icon";
 import type { RunView } from "../runState";
 import type { CommentsControl } from "../useComments";
-import { Icon } from "./Icon";
 
 export const RunCommentsContext = createContext<CommentsControl | null>(null);
 

@@ -12,11 +12,11 @@ import {
   type PackSummary,
   type RunLevel,
 } from "../../shared/contracts";
+import { useFitPopover } from "../domain/popoverPlacement";
+import { Icon } from "../kit/Icon";
 import { fontStack, loadPackFonts, type PacksState } from "../packs";
-import { useFitPopover } from "../popoverPlacement";
 import { MODEL_OPTIONS } from "../settingsDraft";
 import { usePopover } from "../usePopover";
-import { Icon } from "./Icon";
 import { ChoiceItem, levelGist, levelHint, levelLabel } from "./LevelControl";
 import { VariationsControl } from "./VariationsControl";
 

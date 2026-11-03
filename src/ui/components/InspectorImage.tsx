@@ -27,8 +27,8 @@ import {
   imageFileOf,
   imageTargetOf,
 } from "../imageApi";
+import { Icon } from "../kit/Icon";
 import { isTypingTarget } from "../typingTarget";
-import { Icon } from "./Icon";
 import { InspectorSection } from "./InspectorFields";
 
 import "../styles/inspector-image.css";

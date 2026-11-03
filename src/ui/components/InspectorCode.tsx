@@ -6,7 +6,7 @@ import type { EditorInfo } from "../../shared/export";
 import { api, errorText } from "../api";
 import { useProjectEvents } from "../events";
 import { exportApi } from "../exportApi";
-import { Icon } from "./Icon";
+import { Icon } from "../kit/Icon";
 
 interface Props {
   projectId: string;

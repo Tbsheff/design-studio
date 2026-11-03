@@ -2,8 +2,8 @@ import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import type { CSSProperties, KeyboardEvent, ReactNode, RefObject } from "react";
 import { createPortal } from "react-dom";
 
-import { Icon } from "./Icon";
-import type { IconName } from "./Icon";
+import { Icon } from "../kit/Icon";
+import type { IconName } from "../kit/Icon";
 
 export interface SlashChoice {
   id: string;

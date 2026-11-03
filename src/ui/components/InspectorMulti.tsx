@@ -11,12 +11,12 @@ import { cssVarFor } from "../../shared/token-match";
 import { api } from "../api";
 import type { PreviewPort } from "../bridge";
 import type { StyleValues } from "../cssValues";
+import { Icon } from "../kit/Icon";
 import type { DesignTokens } from "../useDesignSystemState";
 import type { DirectEdit } from "../useDirectEdit";
 import type { CreateRequest } from "../useTokenSnap";
 import { CreateTokenDialog } from "./CreateTokenDialog";
 import type { CreateTokenSubmit } from "./CreateTokenDialog";
-import { Icon } from "./Icon";
 import { InspectorSection } from "./InspectorFields";
 import { NumberField } from "./NumberField";
 

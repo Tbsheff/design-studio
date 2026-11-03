@@ -10,9 +10,9 @@ import type { CSSProperties, KeyboardEvent } from "react";
 import { createPortal } from "react-dom";
 
 import type { RunEffort, RunLevel, RunMode } from "../../shared/contracts";
-import { placeFixed } from "../popoverPlacement";
+import { placeFixed } from "../domain/popoverPlacement";
+import { Icon } from "../kit/Icon";
 import { usePopover } from "../usePopover";
-import { Icon } from "./Icon";
 import {
   LevelControl,
   levelHint,

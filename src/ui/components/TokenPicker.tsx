@@ -7,7 +7,7 @@ import {
   modeValue,
   type TokenMode,
 } from "../../shared/token-match";
-import { Icon } from "./Icon";
+import { Icon } from "../kit/Icon";
 
 interface PickerProps {
   label: string;

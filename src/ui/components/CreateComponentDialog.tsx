@@ -7,8 +7,8 @@ import {
 import type { SelectionContext } from "../../shared/contracts";
 import type { InsertTarget } from "../../shared/insert";
 import { apiMessage, componentCreateApi } from "../componentCreateApi";
+import { UiSelect } from "../kit/UiSelect";
 import { useModalDialog } from "../usePopover";
-import { UiSelect } from "./UiSelect";
 
 import "../styles/create-component.css";
 

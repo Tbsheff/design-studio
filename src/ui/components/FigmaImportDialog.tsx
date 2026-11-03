@@ -13,9 +13,9 @@ import {
 } from "../../shared/figma-nodes";
 import type { InsertTarget, JsxInsertPosition } from "../../shared/insert";
 import { ApiError, json } from "../api";
+import { Icon } from "../kit/Icon";
+import { UiSelect } from "../kit/UiSelect";
 import { useModalDialog } from "../usePopover";
-import { Icon } from "./Icon";
-import { UiSelect } from "./UiSelect";
 
 import "../styles/figma-import.css";
 

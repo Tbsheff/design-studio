@@ -2,10 +2,10 @@ import { useState, type KeyboardEvent, type ReactNode } from "react";
 
 import { runCommand } from "../commands/registry";
 import { TabOrderToggle } from "../features/accessibility/tab-order-toggle";
+import { Icon, type IconName } from "../kit/Icon";
 import { uiStore, type Viewport, type ZoomSetting } from "../storage";
 import { VECTOR_TOOLS, useVectorTool, vectorTool } from "../vectorTool";
 import { PenIcon } from "./DrawLayer";
-import { Icon, type IconName } from "./Icon";
 
 export const PRESETS: {
   id: Viewport["preset"];

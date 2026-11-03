@@ -5,9 +5,9 @@ import type { PackSummary } from "../../shared/contracts";
 import { Markdown } from "../ai/components/ai/markdown";
 import { errorText } from "../api";
 import { hasNativePicker, pickFolder } from "../folderPicker";
+import { Icon } from "../kit/Icon";
 import { pickable, refreshPacks, usePacks } from "../packs";
 import { packApi } from "../platform/pack-api";
-import { Icon } from "./Icon";
 
 const MAX_URLS = 3;
 const MAX_IMAGES = 8;

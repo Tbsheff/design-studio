@@ -18,6 +18,7 @@ import { api } from "../api";
 import type { AuthoredCss } from "../authoredCss";
 import type { PreviewPort } from "../bridge";
 import type { StyleValues } from "../cssValues";
+import { Icon } from "../kit/Icon";
 import { lintValues, type LintIssue } from "../tokenLint";
 import type { DesignTokens } from "../useDesignSystemState";
 import {
@@ -33,7 +34,6 @@ import {
   type TokenUi,
 } from "../useTokenSnap";
 import { CreateTokenDialog, type CreateTokenSubmit } from "./CreateTokenDialog";
-import { Icon } from "./Icon";
 import { TokenControl } from "./TokenControl";
 
 interface ScopeInput {

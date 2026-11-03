@@ -26,10 +26,10 @@ import {
   type CardSide,
   type PinOffset,
 } from "../commentPlacement";
+import { Icon } from "../kit/Icon";
 import { useMentions } from "../useMentions";
 import { AvatarFace } from "./CommentAvatar";
 import { MOD_LABEL, trapTab } from "./CommentPopover";
-import { Icon } from "./Icon";
 import {
   MentionList,
   mentionIcon,

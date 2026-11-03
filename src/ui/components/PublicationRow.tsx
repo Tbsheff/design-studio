@@ -6,8 +6,8 @@ import {
   type PublicationComment,
 } from "../../shared/publish";
 import { errorText } from "../api";
+import { CopyButton } from "../kit/CopyButton";
 import { publishApi } from "../publishApi";
-import { CopyButton } from "./CopyButton";
 
 function statusText(p: Publication, now: number): string {
   if (p.status === "removed") {

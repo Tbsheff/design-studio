@@ -17,6 +17,7 @@ import { imageKindOf } from "../../shared/image";
 import { isSvgShapeTag } from "../../shared/vector";
 import type { PreviewPort } from "../bridge";
 import { resetEditVariant, useEditVariant } from "../editVariant";
+import { Icon } from "../kit/Icon";
 import type { DesignTokens } from "../useDesignSystemState";
 import type { DirectEditCommit, DirectEditControl } from "../useDirectEdit";
 import {
@@ -28,7 +29,6 @@ import {
 } from "../useEditSession";
 import { useModalDialog } from "../usePopover";
 import { ComponentsPanel } from "./ComponentsPanel";
-import { Icon } from "./Icon";
 import { InspectorArrange } from "./InspectorArrange";
 import { useElementClasses } from "./InspectorClasses";
 import { InspectorCode } from "./InspectorCode";

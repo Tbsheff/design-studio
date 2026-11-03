@@ -4,8 +4,8 @@ import type { KeyboardEvent } from "react";
 import type { RunStatus, RunSummary } from "../../shared/contracts";
 import { runQueryTerms } from "../../shared/rewind";
 import { formatRelative } from "../format";
+import { Icon } from "../kit/Icon";
 import { searchRunPage, SEARCH_LIMIT } from "../runHistoryApi";
-import { Icon } from "./Icon";
 
 interface Props {
   query: string;

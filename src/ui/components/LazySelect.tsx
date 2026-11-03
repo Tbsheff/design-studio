@@ -1,11 +1,11 @@
 import { lazy, Suspense } from "react";
 import type { JSX } from "react";
 
-import { Icon } from "./Icon";
-import type { UiSelectProps } from "./UiSelect";
+import { Icon } from "../kit/Icon";
+import type { UiSelectProps } from "../kit/UiSelect";
 
 const UiSelect = lazy(() =>
-  import("./UiSelect").then((m) => ({
+  import("../kit/UiSelect").then((m) => ({
     default: m.UiSelect as (p: UiSelectProps<string>) => JSX.Element,
   }))
 );

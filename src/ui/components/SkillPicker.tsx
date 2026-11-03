@@ -9,6 +9,7 @@ import type {
 import { api, errorText } from "../api";
 import { rank } from "../commands/fuzzy";
 import type { Command } from "../commands/registry";
+import { Icon } from "../kit/Icon";
 import {
   NO_SKILLS_TEXT,
   enabledSkills,
@@ -17,7 +18,6 @@ import {
   skillDisplayName,
   useSkillCatalog,
 } from "../skills";
-import { Icon } from "./Icon";
 import { SkillsChecklist } from "./SkillsChecklist";
 import type { SlashChoice, SlashSection } from "./SlashMenu";
 

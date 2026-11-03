@@ -5,7 +5,7 @@ import type { AppHealth } from "../../shared/found-apps";
 import { json } from "../api";
 import { formatRelative } from "../format";
 import { homePrefs, type HomeFilter } from "../homePrefs";
-import { Icon } from "./Icon";
+import { Icon } from "../kit/Icon";
 import { isFolderProject, projectBadge, useThumbnail } from "./ProjectGrid";
 
 export { ProjectGrid } from "./ProjectGrid";

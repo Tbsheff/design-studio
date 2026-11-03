@@ -9,10 +9,10 @@ import {
   type WorkspaceFolder,
   type WorkspaceList,
 } from "../../shared/folders";
+import { Icon } from "../kit/Icon";
+import type { UiSelectOption } from "../kit/UiSelect";
 import type { FolderChooser } from "../useFolderChooser";
-import { Icon } from "./Icon";
 import { LazySelect } from "./LazySelect";
-import type { UiSelectOption } from "./UiSelect";
 
 function FolderPath({
   path,

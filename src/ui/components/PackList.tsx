@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 
 import type { PackSummary } from "../../shared/contracts";
+import { Icon } from "../kit/Icon";
 import { findPack, fontStack, keySwatches, loadPackFonts } from "../packs";
-import { Icon } from "./Icon";
 import { Swatches } from "./Swatches";
 
 const NONE = "none";

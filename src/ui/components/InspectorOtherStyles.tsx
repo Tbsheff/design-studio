@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 
 import { formatCopyCss, otherStyles, type AuthoredCss } from "../authoredCss";
+import { Icon } from "../kit/Icon";
 import type { AuthoredCssState } from "../useAuthoredCss";
-import { Icon } from "./Icon";
 
 const COPIED_MS = 1500;
 

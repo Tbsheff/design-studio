@@ -8,8 +8,8 @@ import {
   type FoundApps,
 } from "../../shared/found-apps";
 import { api } from "../api";
+import { Icon } from "../kit/Icon";
 import { projectsApi } from "../projectsStore";
-import { Icon } from "./Icon";
 
 const MAX_FOUND = 6;
 const MAX_STARTERS = 4;

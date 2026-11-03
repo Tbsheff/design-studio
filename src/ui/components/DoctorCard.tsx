@@ -4,9 +4,9 @@ import type { healthStudio } from "../../shared/actions/studio/health.js";
 import { routes as studioRoutes } from "../../shared/actions/studio/routes.js";
 import type { DoctorCause } from "../../shared/app-doctor";
 import { api, errorText } from "../api";
+import { CopyButton } from "../kit/CopyButton";
+import { Icon } from "../kit/Icon";
 import { call } from "../platform/http";
-import { CopyButton } from "./CopyButton";
-import { Icon } from "./Icon";
 
 interface DoctorCardProps {
   projectId: string;

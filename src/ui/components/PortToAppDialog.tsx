@@ -19,12 +19,12 @@ import {
 import { api, errorText } from "../api";
 import { canvasFrameChoices, type FrameChoice } from "../exportApi";
 import { hasNativePicker, pickFolder } from "../folderPicker";
+import { Icon } from "../kit/Icon";
+import { UiSelect, type UiSelectOption } from "../kit/UiSelect";
 import { portApi } from "../portApi";
 import { uiStore } from "../storage";
 import { useModalDialog } from "../usePopover";
 import { pageName } from "./FrameControls";
-import { Icon } from "./Icon";
-import { UiSelect, type UiSelectOption } from "./UiSelect";
 
 import "../styles/export.css";
 import "../styles/port.css";

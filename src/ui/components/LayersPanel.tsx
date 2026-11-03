@@ -20,6 +20,7 @@ import type {
 import { reorderMoveOf } from "../../shared/reorder";
 import { STRUCTURE_KEY_IDS, structureKeyOf } from "../../shared/structure-keys";
 import { IS_MAC, tipWithKey } from "../commands/keys";
+import { Icon, type IconName } from "../kit/Icon";
 import {
   adjacentMove,
   ancestorsOf,
@@ -34,7 +35,6 @@ import {
 } from "../layersTree";
 import type { LayerDrop } from "../structureEdits";
 import { focusStageQuietly } from "../useInlineTextEdit";
-import { Icon, type IconName } from "./Icon";
 import { PreviewMenu, type PreviewMenuItem } from "./PreviewMenu";
 
 const ROW = 28;

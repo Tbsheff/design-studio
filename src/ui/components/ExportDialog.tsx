@@ -28,9 +28,9 @@ import {
   type FrameChoice,
 } from "../exportApi";
 import { downloadBlob } from "../format";
+import { Icon, type IconName } from "../kit/Icon";
 import { useModalDialog } from "../usePopover";
 import { canvasFrameName, framePage } from "./CanvasFrames";
-import { Icon, type IconName } from "./Icon";
 
 import "../styles/export.css";
 

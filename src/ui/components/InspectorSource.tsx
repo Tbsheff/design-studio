@@ -2,7 +2,7 @@ import { useState } from "react";
 
 import type { SourceLoc } from "../../shared/contracts";
 import { api, errorText } from "../api";
-import { Icon } from "./Icon";
+import { Icon } from "../kit/Icon";
 
 export function locText(source: SourceLoc): string {
   return `${source.file}:${source.line}:${source.col}`;

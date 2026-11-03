@@ -19,6 +19,8 @@ import {
 import { Chip } from "../ai/components/ai/chip";
 import { IS_MAC } from "../commands/keys";
 import { formatMs } from "../format";
+import { Icon } from "../kit/Icon";
+import type { IconName } from "../kit/Icon";
 import type { RunView, ToolRow } from "../runState";
 import {
   SKILL_TOOL,
@@ -27,8 +29,6 @@ import {
   toolTally,
   toolVerb,
 } from "../toolLabels";
-import { Icon } from "./Icon";
-import type { IconName } from "./Icon";
 
 const TOOL_ICON: Record<string, IconName> = {
   Write: "pencil",

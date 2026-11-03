@@ -17,11 +17,11 @@ import {
   type ShipResult,
 } from "../../shared/ship";
 import { errorText } from "../api";
+import { CopyButton } from "../kit/CopyButton";
+import { Icon } from "../kit/Icon";
+import { UiSelect } from "../kit/UiSelect";
 import { shipApi } from "../shipApi";
 import { useModalDialog } from "../usePopover";
-import { CopyButton } from "./CopyButton";
-import { Icon } from "./Icon";
-import { UiSelect } from "./UiSelect";
 
 import "../styles/ship.css";
 

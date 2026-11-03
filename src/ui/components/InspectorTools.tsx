@@ -10,10 +10,10 @@ import {
   commandBlocker,
   runCommand,
 } from "../commands/registry";
+import { Icon } from "../kit/Icon";
 import type { DirectEditControl } from "../useDirectEdit";
 import { PREVIEW_HISTORY_EVENT } from "../useUndoShortcut";
 import { VECTOR_TOOLS, useVectorTool, vectorTool } from "../vectorTool";
-import { Icon } from "./Icon";
 
 interface Props {
   projectId: string;

@@ -6,7 +6,7 @@ import type {
 } from "../../shared/contracts";
 import { RULE_MAX_CHARS, ruleForCommand } from "../../shared/permissionRules";
 import { api, errorText } from "../api";
-import { Icon } from "./Icon";
+import { Icon } from "../kit/Icon";
 
 export function PermissionPrompt({
   runId,

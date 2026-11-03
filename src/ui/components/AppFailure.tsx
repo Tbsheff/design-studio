@@ -4,8 +4,8 @@ import type { FormEvent } from "react";
 import type { AppServerStatus, AttachedApp } from "../../shared/contracts";
 import type { FolderInspection } from "../../shared/open-app";
 import { api, errorText } from "../api";
-import { CopyButton } from "./CopyButton";
-import { Icon } from "./Icon";
+import { CopyButton } from "../kit/CopyButton";
+import { Icon } from "../kit/Icon";
 
 interface AppFailureProps {
   projectId: string;

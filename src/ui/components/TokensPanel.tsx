@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 
 import type { CompiledTokenEntry } from "../../shared/contracts";
+import { Icon } from "../kit/Icon";
 import {
   aliasPath,
   rawToken,
@@ -13,7 +14,6 @@ import {
 import type { ThemeChoice } from "../tokenFrames";
 import type { DesignTokens } from "../useDesignSystemState";
 import type { TokenDraft } from "../useTokenDraft";
-import { Icon } from "./Icon";
 import { PanelHead } from "./SheetHead";
 import { TokenRow } from "./TokenRow";
 

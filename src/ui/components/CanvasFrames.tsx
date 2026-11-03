@@ -17,13 +17,13 @@ import {
   frameName,
   type CanvasFrame,
 } from "../canvasFrames";
+import { Icon } from "../kit/Icon";
 import { PREVIEW_PAINTED_EVENT } from "../useEditHistory";
 import { pageFileOf } from "../useFirstBuild";
 import { FlowFromHere } from "./FlowFromHere";
 import { FrameResizeHandles, type ResizeEdge } from "./FrameControls";
 import { FrameSkeleton } from "./FrameSkeleton";
 import { FrameStateMenu } from "./FrameStateMenu";
-import { Icon } from "./Icon";
 
 export interface FrameBadge {
   label: string;

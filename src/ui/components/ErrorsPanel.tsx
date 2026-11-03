@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
+import { Icon } from "../kit/Icon";
 import type { BuildError } from "../useStudioData";
-import { Icon } from "./Icon";
 
 interface Props {
   errors: BuildError[];

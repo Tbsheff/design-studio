@@ -11,12 +11,12 @@ import { arrange as arrangeRequest, errorText } from "../api";
 import type { PreviewPort } from "../bridge";
 import { activeFrame, canvasStore, defaultLayout } from "../canvasFrames";
 import { IS_MAC } from "../commands/keys";
+import { Icon } from "../kit/Icon";
 import { parentLayout } from "../sizing";
 import { uiStore } from "../storage";
 import { isTypingTarget } from "../typingTarget";
 import type { DirectEditCommit, DirectEditControl } from "../useDirectEdit";
 import { PREVIEW_ARRANGE_KEY_EVENT } from "../usePreviewFrames";
-import { Icon } from "./Icon";
 
 interface Props {
   projectId: string;

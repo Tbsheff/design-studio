@@ -8,8 +8,8 @@ import type {
   TweakControl,
   TweakValue,
 } from "../../shared/tweaks";
+import { Icon } from "../kit/Icon";
 import type { TweaksDraft } from "../useTweaks";
-import { Icon } from "./Icon";
 import { PanelHead } from "./SheetHead";
 import { ColorValue } from "./TokenInputs";
 

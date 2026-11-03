@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import type { ClipboardEvent, DragEvent, FormEvent, ReactNode } from "react";
 
-import { Icon } from "./Icon";
+import { Icon } from "../kit/Icon";
 
 export const IMAGE_TYPES = [
   "image/png",

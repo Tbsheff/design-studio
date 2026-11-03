@@ -9,11 +9,11 @@ import {
 
 import type { BridgeToParent, SelectionContext } from "../../shared/contracts";
 import type { SpacingHandlesProps } from "../features/spacing";
+import { Icon } from "../kit/Icon";
 import { formatMeasure } from "../measure";
 import type { SpacingBadge } from "../snap";
 import { frameSnapStore } from "../useFrameResize";
 import { guideStyle } from "./ArtboardOverlay";
-import { Icon } from "./Icon";
 
 const LazySpacingHandles = lazy(async () => {
   const mod = await import("../features/spacing/index.js");

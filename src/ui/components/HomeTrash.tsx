@@ -3,9 +3,9 @@ import { useEffect, useState } from "react";
 import type { TrashItem } from "../../shared/contracts";
 import { api, errorText, json } from "../api";
 import { formatRelative, formatTime } from "../format";
+import { Icon } from "../kit/Icon";
 import { getBlob } from "../platform/http";
 import { useModalDialog } from "../usePopover";
-import { Icon } from "./Icon";
 
 type Confirm =
   | { kind: "one"; item: TrashItem }

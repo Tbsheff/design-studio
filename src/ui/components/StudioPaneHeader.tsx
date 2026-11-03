@@ -4,11 +4,11 @@ import type { KeyboardEvent, ReactNode, RefObject } from "react";
 import { shortcutLabel } from "../../shared/keymap";
 import { chatSearchAvailable, chatSearchOpen } from "../chatSearchState";
 import { IS_MAC } from "../commands/keys";
+import { Icon } from "../kit/Icon";
+import type { IconName } from "../kit/Icon";
 import { useLive } from "../liveStore";
 import type { PanelTab } from "../usePanelTab";
 import { usePopover } from "../usePopover";
-import { Icon } from "./Icon";
-import type { IconName } from "./Icon";
 
 type ThemePref = "system" | "light" | "dark";
 

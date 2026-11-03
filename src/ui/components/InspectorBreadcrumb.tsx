@@ -11,7 +11,7 @@ import {
 import type { SelectionContext } from "../../shared/contracts";
 import { parseSelectionPath, pathCrumbs, type PathCrumb } from "../authoredCss";
 import type { PreviewPort } from "../bridge";
-import { Icon } from "./Icon";
+import { Icon } from "../kit/Icon";
 
 interface Props {
   selection: SelectionContext;

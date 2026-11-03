@@ -40,6 +40,7 @@ import {
 import { IS_MAC } from "../commands/keys";
 import { useCommands, type Command } from "../commands/registry";
 import { useDesktopCommand } from "../desktop";
+import { Icon, type IconName } from "../kit/Icon";
 import { skillInstruction } from "../skills";
 import { useDraft, type DraftStore } from "../storage";
 import { useCommentPrefill, type PrefillRequest } from "../useCommentPrefill";
@@ -66,7 +67,6 @@ import { ContextMeter } from "./ContextMeter";
 import { Disclosure } from "./Disclosure";
 import { HistorySearch, useHistorySearch } from "./HistorySearch";
 import { ComposerAlert, MAX_IMAGES, imageProblem } from "./HomeComposerParts";
-import { Icon, type IconName } from "./Icon";
 import { MentionChips, MentionList } from "./MentionPicker";
 import { QueuedMessages } from "./QueuedMessages";
 import { RunContextChip } from "./RunContextChip";

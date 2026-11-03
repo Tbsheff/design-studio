@@ -13,9 +13,9 @@ import {
 } from "../../shared/publish";
 import { errorText } from "../api";
 import { canvasFrameChoices } from "../exportApi";
+import { CopyButton } from "../kit/CopyButton";
 import { publishApi, type PublishRequest } from "../publishApi";
 import { canvasFrameName } from "./CanvasFrames";
-import { CopyButton } from "./CopyButton";
 import { PublicationRow } from "./PublicationRow";
 import { usePublishBackend } from "./PublishBackendSetup";
 import { PublishSetupBody, usePublishCli } from "./PublishSetup";

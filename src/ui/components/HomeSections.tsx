@@ -3,8 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import type { Project } from "../../shared/contracts";
 import { shortenHome } from "../../shared/folders";
 import { api, errorText } from "../api";
+import { Icon } from "../kit/Icon";
 import { projectsApi, useProjects } from "../projectsStore";
-import { Icon } from "./Icon";
 import type { CardActions } from "./ProjectGrid";
 
 export function useOnboarding(): { show: boolean; dismiss: () => void } {

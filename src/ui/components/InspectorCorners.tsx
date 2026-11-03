@@ -1,9 +1,9 @@
 import { useState } from "react";
 
 import { expandBox, SIDES, type ShiftPart, type Side } from "../cssValues";
+import { Icon } from "../kit/Icon";
 import { proxyEdit } from "../proxyEdit";
 import type { DirectEdit } from "../useDirectEdit";
-import { Icon } from "./Icon";
 import { NumberField } from "./NumberField";
 
 const CORNERS: { side: Side; short: string; label: string }[] = [

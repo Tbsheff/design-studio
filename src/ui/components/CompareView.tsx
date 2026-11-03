@@ -9,14 +9,14 @@ import {
 import type { KeyboardEvent } from "react";
 
 import type { ProjectKind, Version } from "../../shared/contracts";
+import { Icon } from "../kit/Icon";
 import { useUi } from "../storage";
 import { displayTitle, indexVersions } from "../versionLabels";
 import { CompareFrame } from "./CompareFrame";
 import { OverlayBoard, ReferenceBoard, SliderBoard } from "./CompareModes";
-import type { BoardProps } from "./CompareModes";
 
 import "../styles/reference.css";
-import { Icon } from "./Icon";
+import type { BoardProps } from "./CompareModes";
 
 type Mode = "side" | "slider" | "overlay" | "reference" | "code";
 

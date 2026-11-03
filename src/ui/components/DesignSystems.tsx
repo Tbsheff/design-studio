@@ -3,10 +3,10 @@ import { useEffect, useRef, useState } from "react";
 import type { PackProblem, PackSummary } from "../../shared/contracts";
 import { ApiError, errorText } from "../api";
 import { downloadBlob } from "../format";
+import { Icon } from "../kit/Icon";
 import { fontStack, refreshPacks, usePacks } from "../packs";
 import { packApi } from "../platform/pack-api";
 import { uiStore, type LibraryFrom } from "../storage";
-import { Icon } from "./Icon";
 import {
   DeletePackDialog,
   ImportConflictDialog,

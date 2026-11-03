@@ -5,11 +5,11 @@ import { canPickForChat } from "../../shared/comments";
 import type { DesignComment, SelectionContext } from "../../shared/contracts";
 import { canvasStore, shownFrames } from "../canvasFrames";
 import { commentPageName, pageShown } from "../commentAnchors";
+import { Icon } from "../kit/Icon";
 import { projectFromPath } from "../route";
 import type { CommentsControl } from "../useComments";
 import { CommentAuthor } from "./CommentAvatar";
 import { CommentReplies } from "./CommentPopover";
-import { Icon } from "./Icon";
 
 import "../styles/comments.css";
 

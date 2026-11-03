@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 
 import type { Direction, Project, Version } from "../../shared/contracts";
+import { Icon } from "../kit/Icon";
 import {
   displayTitle,
   indexVersions,
   type VersionIndex,
 } from "../versionLabels";
-import { Icon } from "./Icon";
 import { PanelHead } from "./SheetHead";
 import { VersionRow } from "./VersionRow";
 

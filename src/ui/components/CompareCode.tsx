@@ -8,9 +8,9 @@ import type {
 import { splitHunks, type PatchHunk } from "../../shared/hunk";
 import { errorText } from "../api";
 import { useProjectEvents } from "../events";
+import { Icon } from "../kit/Icon";
 import { displayTitle, indexVersions } from "../versionLabels";
 import { revertHunk, versionChanges } from "../versionsApi";
-import { Icon } from "./Icon";
 
 import "../styles/compare-code.css";
 import "../styles/compare-hunk.css";

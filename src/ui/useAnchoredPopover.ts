@@ -7,7 +7,7 @@ import {
 } from "react";
 import type { CSSProperties } from "react";
 
-import { placeFixed } from "./popoverPlacement";
+import { placeFixed } from "./domain/popoverPlacement";
 
 const HIDDEN: CSSProperties = {
   top: 0,

@@ -3,8 +3,8 @@ import type { FormEvent } from "react";
 
 import type { PackSummary } from "../../shared/contracts";
 import { errorText } from "../api";
+import { Icon } from "../kit/Icon";
 import { useModalDialog } from "../usePopover";
-import { Icon } from "./Icon";
 
 function useBusyAction(onClose: () => void) {
   const [busy, setBusy] = useState(false);

@@ -6,11 +6,11 @@ import type {
   Project,
 } from "../../shared/contracts";
 import { api, errorText } from "../api";
+import { useFitPopover } from "../domain/popoverPlacement";
+import { Icon } from "../kit/Icon";
 import { findPack, keySwatches, usePacks } from "../packs";
-import { useFitPopover } from "../popoverPlacement";
 import { usePopover } from "../usePopover";
 import { ChangePackDialog, SavePackDialog } from "./DesignSystemDialogs";
-import { Icon } from "./Icon";
 import { Swatches } from "./Swatches";
 
 export interface DesignSystemRef {

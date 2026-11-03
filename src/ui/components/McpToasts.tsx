@@ -4,8 +4,8 @@ import { createPortal } from "react-dom";
 import type { McpApprovalOutcome } from "../../shared/contracts";
 import { useInlineApprovalProject } from "../approvalSpot";
 import { appStream } from "../appStream";
+import { Icon } from "../kit/Icon";
 import type { McpApprovalCard } from "../useMcpFeed";
-import { Icon } from "./Icon";
 import { McpApproval } from "./McpFeed";
 
 import "../styles/mcp.css";

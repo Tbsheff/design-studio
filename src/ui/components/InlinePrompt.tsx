@@ -9,10 +9,10 @@ import {
   type EditScope,
   type EditScopeChoice,
 } from "../../shared/usage-scope";
+import { Icon } from "../kit/Icon";
 import { call } from "../platform/http";
 import { uiStore } from "../storage";
 import type { InlinePromptView } from "../useInlinePrompt";
-import { Icon } from "./Icon";
 
 import "../styles/inline-prompt.css";
 

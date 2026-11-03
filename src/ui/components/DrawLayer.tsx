@@ -18,13 +18,13 @@ import {
   strokePath,
   type StrokeBuilder,
 } from "../drawing";
+import { Icon } from "../kit/Icon";
 import type { CommentsControl } from "../useComments";
 import type { DrawTool } from "../useDrawTool";
 import { useProfileInitial } from "../useProfileInitial";
 import { CommentComposer, type ComposerSubmit } from "./CommentComposer";
 import type { CommentTools } from "./CommentLayer";
 import { MOD_LABEL } from "./CommentPopover";
-import { Icon } from "./Icon";
 
 import "../styles/drawing.css";
 

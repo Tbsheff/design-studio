@@ -9,7 +9,7 @@ import {
   type FinalCheckWithBaseline,
 } from "../../shared/final-check-baseline";
 import { api } from "../api";
-import { Icon } from "./Icon";
+import { Icon } from "../kit/Icon";
 
 interface Props {
   projectId: string;

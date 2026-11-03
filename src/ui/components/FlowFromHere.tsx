@@ -4,7 +4,7 @@ import type { PointerEvent as ReactPointerEvent } from "react";
 import type { FlowResult } from "../../shared/route-flow";
 import { api, errorText } from "../api";
 import { useCurrentFrameStates } from "../frameStates";
-import { Icon } from "./Icon";
+import { Icon } from "../kit/Icon";
 
 import "../styles/route-flow.css";
 

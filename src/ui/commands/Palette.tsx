@@ -3,8 +3,8 @@ import type { KeyboardEvent as ReactKeyboardEvent, ReactNode } from "react";
 
 import { chordMatches } from "../../shared/keymap";
 import { errorText, api } from "../api";
-import { Icon } from "../components/Icon";
 import { HealthDot, ProjectThumb } from "../components/ProjectThumb";
+import { Icon } from "../kit/Icon";
 import { useProjectHits, useRouteHits } from "../projectHits";
 import { openProject } from "../projectNav";
 import { projectsApi } from "../projectsStore";

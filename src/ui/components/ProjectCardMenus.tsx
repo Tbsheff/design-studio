@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { FormEvent, KeyboardEvent } from "react";
 
 import type { Project } from "../../shared/contracts";
-import { Icon } from "./Icon";
+import { Icon } from "../kit/Icon";
 import type { CardAction, MenuAt } from "./ProjectGrid";
 
 export function CardMenu({

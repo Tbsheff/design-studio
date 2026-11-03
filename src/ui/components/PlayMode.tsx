@@ -33,10 +33,10 @@ import {
   type PlayHandlers,
 } from "../features/link-interaction/play-runtime.js";
 import { usePlayTriggers } from "../features/link-interaction/use-play-triggers.js";
+import { Icon } from "../kit/Icon";
 import { randomToken } from "../session";
 import { linkQuery } from "../useLinkRects";
 import { frameTitle } from "./CanvasFrames";
-import { Icon } from "./Icon";
 import { hasOutgoing, playStartOf } from "./PrototypeLayer";
 
 import "../styles/prototype.css";

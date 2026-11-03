@@ -30,11 +30,11 @@ import {
   type PrototypeLink,
 } from "../../shared/links";
 import type { CanvasFrame } from "../canvasFrames";
+import { Icon } from "../kit/Icon";
+import { UiSelect, type UiSelectOption } from "../kit/UiSelect";
 import { linksApi } from "../linksApi";
 import type { LinkState } from "../useLinkRects";
 import { framePage, frameTitle } from "./CanvasFrames";
-import { Icon } from "./Icon";
-import { UiSelect, type UiSelectOption } from "./UiSelect";
 
 import "../styles/prototype.css";
 

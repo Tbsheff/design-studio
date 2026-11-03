@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import type { FolderInspection } from "../../shared/open-app";
 import { api, errorText } from "../api";
-import { Icon } from "./Icon";
+import { Icon } from "../kit/Icon";
 
 export type RunMode = "start" | "url";
 

@@ -1,10 +1,10 @@
 import { useState } from "react";
 
 import { errorText } from "../api";
+import { Icon } from "../kit/Icon";
 import { pickable, usePacks } from "../packs";
 import { uiStore, type LibraryFrom } from "../storage";
 import { useModalDialog } from "../usePopover";
-import { Icon } from "./Icon";
 import { PackList } from "./PackList";
 
 interface ChangeProps {

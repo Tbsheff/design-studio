@@ -20,6 +20,8 @@ import {
   ReasoningTrigger,
 } from "../ai/components/ai/reasoning";
 import { formatTime, formatUsd } from "../format";
+import { CopyButton } from "../kit/CopyButton";
+import { Icon } from "../kit/Icon";
 import { splitMarkdownBlocks } from "../markdownBlocks";
 import type { RunView } from "../runState";
 import {
@@ -28,8 +30,6 @@ import {
   withoutSkillLines,
 } from "../skills";
 import { contextShare } from "./ContextMeter";
-import { CopyButton } from "./CopyButton";
-import { Icon } from "./Icon";
 import { levelHint, levelLabel } from "./LevelControl";
 
 function runLevel(run: RunView): RunLevel | null {

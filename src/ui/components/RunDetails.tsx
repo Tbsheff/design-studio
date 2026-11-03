@@ -3,6 +3,7 @@ import type { KeyboardEvent } from "react";
 
 import type { RunStatus } from "../../shared/contracts";
 import { formatMs, formatTime, formatUsd } from "../format";
+import { Icon } from "../kit/Icon";
 import type { RunView } from "../runState";
 import {
   SKILL_TOOL,
@@ -11,7 +12,6 @@ import {
   toolTarget,
 } from "../toolLabels";
 import { useReturnFocusOnUnmount } from "../usePopover";
-import { Icon } from "./Icon";
 import { LatencyBreakdown } from "./LatencyBreakdown";
 
 const STATUS_TEXT: Record<RunStatus, string> = {

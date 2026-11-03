@@ -9,9 +9,9 @@ import type {
   Project,
 } from "../../shared/contracts";
 import { errorText } from "../api";
+import { useFitPopover } from "../domain/popoverPlacement";
 import { findPack, usePacks } from "../packs";
 import { packApi } from "../platform/pack-api";
-import { useFitPopover } from "../popoverPlacement";
 import type { RunView } from "../runState";
 import { CheckStatus, improvePassed } from "./DraftImprove";
 

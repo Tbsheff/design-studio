@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
 
-import { Icon } from "./Icon";
+import { Icon } from "../kit/Icon";
 
 const DATA_DISCLOSURE =
   "Prompts, selected element code, attached images and project files the agent reads are sent to Anthropic's API to generate designs. Projects, versions and history stay on this computer.";

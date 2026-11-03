@@ -18,10 +18,10 @@ import type {
 } from "../../shared/props";
 import { ApiError } from "../api";
 import { useProjectEvents } from "../events";
+import { UiSelect } from "../kit/UiSelect";
 import { propsApi } from "../propsApi";
 import { ComponentPreviewThumb } from "./ComponentPreviewThumb";
 import { InspectorSection } from "./InspectorFields";
-import { UiSelect } from "./UiSelect";
 
 import "../styles/inspector-props.css";
 

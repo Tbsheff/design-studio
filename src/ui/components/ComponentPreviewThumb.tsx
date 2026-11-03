@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 
 import { componentPreviewPath } from "../../shared/component-preview";
+import { Icon } from "../kit/Icon";
 import { getRaw, readBlob } from "../platform/http";
-import { Icon } from "./Icon";
 
 type Shown =
   | { state: "idle" | "loading" }

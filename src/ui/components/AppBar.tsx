@@ -19,10 +19,10 @@ import type {
 } from "../../shared/contracts";
 import { api, errorText } from "../api";
 import { APP_PANEL_EVENT, publishAppStatus } from "../appStatus";
+import { Icon } from "../kit/Icon";
 import { focusStageQuietly } from "../useInlineTextEdit";
 import { AppFailure } from "./AppFailure";
 import FlowTab from "./FlowTab";
-import { Icon } from "./Icon";
 
 import "../styles/attach-app.css";
 

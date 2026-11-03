@@ -14,13 +14,13 @@ import {
   keepVariationFrame,
   showVariationFrames,
 } from "../canvasVariations";
+import { Icon } from "../kit/Icon";
 import type { RunMap } from "../runState";
 import { budgetFor, money, type VariationsState } from "../useVariations";
 import { groupOf } from "../variationsApi";
 import type { CanvasDirections } from "./Canvas";
 import { ElementVariantsDialog } from "./ElementVariantsDialog";
 import type { FrameVariation } from "./FrameControls";
-import { Icon } from "./Icon";
 import { VariationBriefCard } from "./VariationBriefCard";
 
 interface GroupRun {

@@ -7,10 +7,10 @@ import {
   type ReviewKind,
   type ReviewSeverity,
 } from "../../shared/review";
+import { Icon } from "../kit/Icon";
 import { isTypingTarget } from "../typingTarget";
 import { PREVIEW_ESCAPE_EVENT } from "../useEscapeStop";
 import type { ReviewState } from "../useReview";
-import { Icon } from "./Icon";
 
 interface Props {
   review: ReviewState;

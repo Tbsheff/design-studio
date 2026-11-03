@@ -21,4 +21,4 @@ export type {
   VariantOption,
 } from "../../../shared/props.js";
 
-export { UiSelect } from "../../components/UiSelect.js";
+export { UiSelect } from "../../kit/UiSelect.js";

@@ -39,10 +39,10 @@ import {
 } from "../../shared/token-match";
 import { errorText, replaceStyle } from "../api";
 import type { PreviewPort } from "../bridge";
+import { Icon } from "../kit/Icon";
 import { requestAuthoredCss } from "../useAuthoredCss";
 import type { DesignTokens } from "../useDesignSystemState";
 import { usePopover } from "../usePopover";
-import { Icon } from "./Icon";
 import { InspectorSection } from "./InspectorFields";
 
 import "../styles/inspector-match.css";

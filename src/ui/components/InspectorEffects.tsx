@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef } from "react";
 
 import type { ShiftPart } from "../cssValues";
+import { Icon } from "../kit/Icon";
 import { proxyEdit } from "../proxyEdit";
 import {
   NEW_SHADOW,
@@ -12,7 +13,6 @@ import {
 } from "../shadows";
 import type { DirectEdit } from "../useDirectEdit";
 import { TokenUiContext, useTokenUi } from "../useTokenSnap";
-import { Icon } from "./Icon";
 import { ColorField, InspectorSection } from "./InspectorFields";
 import { AddButton } from "./InspectorShared";
 import { NumberField } from "./NumberField";

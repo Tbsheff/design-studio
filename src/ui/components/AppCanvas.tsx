@@ -23,9 +23,9 @@ import {
   setFramePath,
   type CanvasLayout,
 } from "../canvasFrames";
+import { Icon } from "../kit/Icon";
 import { OPEN_ROUTE_EVENT, takePendingRoute } from "../projectNav";
 import { FrameRedirectNote } from "./CanvasFrames";
-import { Icon } from "./Icon";
 
 const AppBar = lazy(() => import("./AppBar"));
 

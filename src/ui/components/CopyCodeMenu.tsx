@@ -3,9 +3,9 @@ import type { KeyboardEvent } from "react";
 
 import type { CopyCodeFormat } from "../../shared/export";
 import { activeExportFrame, exportApi, openExport } from "../exportApi";
+import { Icon } from "../kit/Icon";
+import type { IconName } from "../kit/Icon";
 import { usePopover } from "../usePopover";
-import { Icon } from "./Icon";
-import type { IconName } from "./Icon";
 
 import "../styles/export.css";
 

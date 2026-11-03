@@ -1,9 +1,9 @@
 import { lazy, Suspense, useCallback, useRef, useState } from "react";
 
 import type { PackSummary } from "../../shared/contracts";
+import { Icon } from "../kit/Icon";
 import { findPack, keySwatches, type PacksState } from "../packs";
 import { usePopover } from "../usePopover";
-import { Icon } from "./Icon";
 import { Swatches } from "./Swatches";
 
 const loadList = () => import("./PackList");

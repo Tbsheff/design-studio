@@ -5,10 +5,10 @@ import { parseEnvText } from "../../shared/app";
 import type { RunLevel } from "../../shared/contracts";
 import { shortenHome } from "../../shared/folders";
 import { api, ApiError } from "../api";
+import { Icon } from "../kit/Icon";
 import type { AppChip, RunMode } from "./HomeAppChip";
 import { Pop } from "./HomePopovers";
 import type { Close } from "./HomePopovers";
-import { Icon } from "./Icon";
 
 import "../styles/attach-app.css";
 

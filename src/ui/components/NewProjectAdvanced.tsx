@@ -1,8 +1,8 @@
 import { lazy, Suspense, useState } from "react";
 import type { ChangeEvent } from "react";
 
+import { Icon } from "../kit/Icon";
 import type { SettingsDraft } from "../settingsDraft";
-import { Icon } from "./Icon";
 
 const loadFields = () => import("./SettingsFields");
 

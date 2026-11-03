@@ -4,7 +4,7 @@ import {
   type ProjectType,
   type RouteHit,
 } from "../../shared/project-search";
-import type { IconName } from "../components/Icon";
+import type { IconName } from "../kit/Icon";
 import { rank, type Ranked } from "./fuzzy";
 import type { Command } from "./registry";
 

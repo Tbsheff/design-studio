@@ -5,13 +5,13 @@ import {
   type SelectMove,
   type SelectionContext,
 } from "../../shared/contracts";
+import { Icon } from "../kit/Icon";
 import type { LayerTree } from "../layersTree";
 import type { LiveStore } from "../liveStore";
 import { selectionTargets, structureMenuItems } from "../structureEdits";
 import { canvasHasKeys, isTypingTarget } from "../typingTarget";
 import type { LayerEdits } from "../useLayerEdits";
 import type { HoverBox } from "../usePreviewFrames";
-import { Icon } from "./Icon";
 import { LayersPanel } from "./LayersPanel";
 
 interface TreeFrames {

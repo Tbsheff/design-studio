@@ -10,6 +10,7 @@ import {
 
 import type { Version } from "../../shared/contracts";
 import { formatRelative, formatTime } from "../format";
+import { Icon, type IconName } from "../kit/Icon";
 import { usePopover } from "../usePopover";
 import {
   autoTitle,
@@ -21,7 +22,6 @@ import {
   type VersionIndex,
 } from "../versionLabels";
 import { openCompareInCode } from "../versionsApi";
-import { Icon, type IconName } from "./Icon";
 import { levelLabel } from "./LevelControl";
 import { VersionThumb } from "./VersionThumb";
 

@@ -11,10 +11,10 @@ import {
   tokensForProperty,
   type TokenFieldState,
 } from "../../shared/token-match";
+import { Icon } from "../kit/Icon";
 import { useAnchoredPopover } from "../useAnchoredPopover";
 import type { DirectEdit } from "../useDirectEdit";
 import { useTokenUi, type TokenUi } from "../useTokenSnap";
-import { Icon } from "./Icon";
 import { TokenPicker, tokenShortName } from "./TokenPicker";
 
 type View = "picker";

@@ -5,7 +5,7 @@ import {
   restoreTitle,
   runTitle,
 } from "../shared/version-title";
-import type { IconName } from "./components/Icon";
+import type { IconName } from "./kit/Icon";
 
 export type VersionIndex = ReadonlyMap<string, Version>;
 

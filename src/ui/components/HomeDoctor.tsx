@@ -1,6 +1,6 @@
+import { CopyButton } from "../kit/CopyButton";
+import { Icon } from "../kit/Icon";
 import { useModalDialog } from "../usePopover";
-import { CopyButton } from "./CopyButton";
-import { Icon } from "./Icon";
 
 export interface DoctorStep {
   ok: boolean;

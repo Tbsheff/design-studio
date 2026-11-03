@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 
 import type { Project, SelectionContext } from "../../shared/contracts";
+import { Icon } from "../kit/Icon";
 import { budgetFor, money } from "../useVariations";
 import { maxVariationsFor } from "../variationsApi";
-import { Icon } from "./Icon";
 
 interface Props {
   project: Project;

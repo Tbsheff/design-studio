@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { AppRoute } from "../../shared/contracts";
 import { dynamicNames, type FlowResult } from "../../shared/route-flow";
 import { api, errorText } from "../api";
-import { Icon } from "./Icon";
+import { Icon } from "../kit/Icon";
 
 import "../styles/route-flow.css";
 

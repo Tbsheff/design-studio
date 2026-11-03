@@ -2,7 +2,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import type { FormEvent } from "react";
 
 import type { ClarifyQuestion } from "../../shared/contracts";
-import { Icon } from "./Icon";
+import { Icon } from "../kit/Icon";
 import { useRovingRadioGroup } from "./LevelControl";
 
 function ClarifyQuestionField({

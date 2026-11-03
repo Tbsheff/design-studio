@@ -3,10 +3,10 @@ import { useEffect, useState } from "react";
 import type { McpActivity, McpApprovalOutcome } from "../../shared/contracts";
 import { errorText } from "../api";
 import { formatTime } from "../format";
+import { Icon, type IconName } from "../kit/Icon";
 import { mcpApi } from "../mcpApi";
 import type { RunView } from "../runState";
 import type { McpApprovalCard, McpFeedState } from "../useMcpFeed";
-import { Icon, type IconName } from "./Icon";
 
 export const MCP_ACTIVE_MS = 60_000;
 const RECENT_MS = 10 * 60_000;

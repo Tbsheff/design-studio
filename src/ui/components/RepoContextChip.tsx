@@ -5,8 +5,8 @@ import type {
   RepoContextState,
 } from "../../shared/repo-context";
 import { Chip } from "../ai/components/ai/chip";
+import { Icon } from "../kit/Icon";
 import { getJson } from "../platform/http";
-import { Icon } from "./Icon";
 
 const USE_NOTE: Record<RepoContextFile["use"], string | null> = {
   full: null,

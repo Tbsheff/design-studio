@@ -7,9 +7,9 @@ import type {
 } from "../../shared/contracts";
 import { Markdown } from "../ai/components/ai/markdown";
 import { errorText } from "../api";
+import { Icon } from "../kit/Icon";
 import { packApi } from "../platform/pack-api";
 import { useModalDialog } from "../usePopover";
-import { Icon } from "./Icon";
 import { PackBadges } from "./PackBadges";
 import { PackPreview } from "./PackPreview";
 

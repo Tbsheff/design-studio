@@ -1,4 +1,4 @@
-import { Icon } from "./Icon";
+import { Icon } from "../kit/Icon";
 
 export function ComposerComments({
   count,

@@ -1,6 +1,6 @@
 import { lazy, Suspense, useRef, useState } from "react";
 
-import { Icon } from "./Icon";
+import { Icon } from "../kit/Icon";
 
 const ThemeMenu = lazy(() => import("./ThemeMenu"));
 

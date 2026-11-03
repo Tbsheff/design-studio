@@ -4,11 +4,11 @@ import type { DirectStyleProperty } from "../../shared/contracts";
 import { colorHex, resolveTokenValue } from "../../shared/token-match";
 import { colorToHex, displayColor, isValidColor } from "../cssValues";
 import { useInherited } from "../editVariant";
+import { Icon, type IconName } from "../kit/Icon";
+import { UiSelect } from "../kit/UiSelect";
 import { sameEditValues, type DirectEdit } from "../useDirectEdit";
 import { useTokenUi } from "../useTokenSnap";
-import { Icon, type IconName } from "./Icon";
 import { TokenControl } from "./TokenControl";
-import { UiSelect } from "./UiSelect";
 
 interface FieldProps {
   prop: DirectStyleProperty;

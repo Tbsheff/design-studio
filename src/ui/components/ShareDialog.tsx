@@ -18,11 +18,11 @@ import {
 } from "../../shared/share";
 import { errorText } from "../api";
 import { canvasFrameChoices, frameRoute } from "../exportApi";
+import { CopyButton, copyText } from "../kit/CopyButton";
+import { Icon } from "../kit/Icon";
 import { shareApi, sharesChanged } from "../shareApi";
 import { useModalDialog } from "../usePopover";
 import { canvasFrameName, framePage } from "./CanvasFrames";
-import { CopyButton, copyText } from "./CopyButton";
-import { Icon } from "./Icon";
 import PublishPane from "./PublishPane";
 
 import "../styles/export.css";

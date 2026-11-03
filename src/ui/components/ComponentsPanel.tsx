@@ -6,6 +6,7 @@ import type {
   SelectionContext,
 } from "../../shared/contracts";
 import type { InsertableComponent } from "../../shared/insert";
+import { Icon } from "../kit/Icon";
 import { componentThumb, type ComponentList } from "../useComponents";
 import {
   DragGhost,
@@ -15,7 +16,6 @@ import {
   type ComponentDrag,
 } from "./ComponentInsert";
 import { ComponentPreviewThumb, trimmedUrl } from "./ComponentPreviewThumb";
-import { Icon } from "./Icon";
 import { PanelHead } from "./SheetHead";
 
 interface Props {

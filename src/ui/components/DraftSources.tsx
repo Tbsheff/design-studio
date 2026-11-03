@@ -9,8 +9,8 @@ import type {
 } from "../../shared/contracts";
 import { api } from "../api";
 import { useProjectEvents } from "../events";
+import { Icon } from "../kit/Icon";
 import { packApi } from "../platform/pack-api";
-import { Icon } from "./Icon";
 
 type ImproveEnd = { runId: string; status: RunStatus } | null;
 

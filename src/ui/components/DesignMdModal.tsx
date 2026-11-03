@@ -3,9 +3,9 @@ import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { Markdown } from "../ai/components/ai/markdown";
 import { api, errorText } from "../api";
 import { outlineOf, type OutlineItem } from "../designMdOutline";
+import { Icon } from "../kit/Icon";
 import { useModalDialog } from "../usePopover";
 import { MOD_LABEL } from "./CommentPopover";
-import { Icon } from "./Icon";
 
 function jumpTo(
   editor: HTMLTextAreaElement | null,

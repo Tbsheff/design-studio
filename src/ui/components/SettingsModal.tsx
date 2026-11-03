@@ -2,9 +2,9 @@ import { lazy, Suspense, useRef, useState } from "react";
 
 import type { Project } from "../../shared/contracts";
 import { api, errorText } from "../api";
+import { Icon } from "../kit/Icon";
 import { useModalDialog } from "../usePopover";
 import { CommandRules } from "./CommandRules";
-import { Icon } from "./Icon";
 import { parseDraft, SettingsFields, toDraft } from "./SettingsFields";
 import { ShipTemplates } from "./ShipTemplates";
 

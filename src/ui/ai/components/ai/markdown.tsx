@@ -9,7 +9,7 @@ import {
   CodeBlockTitle,
 } from "./code-block";
 import { cn } from "../../lib/utils";
-import { CopyButton } from "../../../components/CopyButton";
+import { CopyButton } from "../../../kit/CopyButton";
 
 type MarkdownProps = React.ComponentProps<"div"> & {
   children: string;

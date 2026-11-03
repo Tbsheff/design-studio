@@ -19,6 +19,8 @@ import {
   type PinAxis,
   type PinMode,
 } from "../constraints";
+import { Icon, type IconName } from "../kit/Icon";
+import { UiSelect } from "../kit/UiSelect";
 import { useLive } from "../liveStore";
 import {
   SIZE_MODES,
@@ -41,11 +43,9 @@ import {
   PREVIEW_LAYOUT_KEY_EVENT,
 } from "../usePreviewFrames";
 import { resizeReadout } from "../useResizeHandles";
-import { Icon, type IconName } from "./Icon";
 import { InspectorSection, SelectField } from "./InspectorFields";
 import { AddButton } from "./InspectorShared";
 import { NumberField } from "./NumberField";
-import { UiSelect } from "./UiSelect";
 
 type Patch = Parameters<DirectEdit["preview"]>[0];
 

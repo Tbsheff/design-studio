@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 
 import type { ProjectHit, ProjectType } from "../../shared/project-search";
 import { api } from "../api";
-import { Icon } from "./Icon";
-import type { IconName } from "./Icon";
+import { Icon } from "../kit/Icon";
+import type { IconName } from "../kit/Icon";
 
 import "../styles/project-nav.css";
 

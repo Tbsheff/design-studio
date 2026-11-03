@@ -13,10 +13,10 @@ import {
 import { createPortal } from "react-dom";
 
 import { RUN_LEVELS, type RunLevel } from "../../shared/contracts";
+import { Icon, type IconName } from "../kit/Icon";
 import { MODEL_OPTIONS } from "../settingsDraft";
 import { usePopover } from "../usePopover";
 import { usePresence } from "../usePresence";
-import { Icon, type IconName } from "./Icon";
 import {
   ChoiceItem,
   levelGist,

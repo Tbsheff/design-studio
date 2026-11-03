@@ -1,6 +1,7 @@
 import { memo } from "react";
 
 import type { CompiledTokenEntry } from "../../shared/contracts";
+import { Icon } from "../kit/Icon";
 import {
   aliasPath,
   varTarget,
@@ -8,7 +9,6 @@ import {
   type RawToken,
   type TokenField,
 } from "../tokenDraft";
-import { Icon } from "./Icon";
 import { ColorValue, DimensionValue, TextValue } from "./TokenInputs";
 
 interface RowProps {

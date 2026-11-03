@@ -15,7 +15,7 @@ import {
   postForceState,
   useEditVariant,
 } from "../editVariant";
-import { UiSelect } from "./UiSelect";
+import { UiSelect } from "../kit/UiSelect";
 
 import "../styles/inspector-variants.css";
 

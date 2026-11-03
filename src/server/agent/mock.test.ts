@@ -10,16 +10,16 @@ import type {
   StudioEvent,
 } from "../../shared/contracts.js";
 import { writeTestDraft } from "../design-system/test-draft.js";
-import type { AgentRunContext, ServerConfig } from "../types.js";
-import { createAgentRunner } from "./index.js";
-import { cleanPrompt, mockSkillRequests } from "./mock.js";
 import {
   createFakeBus,
   createFakePreview,
   createFakeProjects,
   createFakeVersions,
   createTempProject,
-} from "./test-fakes.js";
+} from "../testing/fakes.js";
+import type { AgentRunContext, ServerConfig } from "../types.js";
+import { createAgentRunner } from "./index.js";
+import { cleanPrompt, mockSkillRequests } from "./mock.js";
 
 const roots: string[] = [];
 

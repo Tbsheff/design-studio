@@ -3,8 +3,8 @@ import { rm } from "node:fs/promises";
 import { afterEach, describe, expect, it } from "vitest";
 
 import type { Project } from "../../shared/contracts.js";
+import { createTempProject } from "../testing/fakes.js";
 import { buildSystemPrompt } from "./prompt.js";
-import { createTempProject } from "./test-fakes.js";
 
 const roots: string[] = [];
 

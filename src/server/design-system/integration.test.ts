@@ -28,7 +28,6 @@ import {
   evaluateToolUse,
 } from "../agent/permissions.js";
 import { buildSystemPrompt } from "../agent/prompt.js";
-import { createFakePreview } from "../agent/test-fakes.js";
 import { buildUserText } from "../agent/user-message.js";
 import { createApp } from "../http/app.js";
 import { projectStorePorts } from "../main/project-ports.js";
@@ -44,6 +43,7 @@ import {
 } from "../store/projects.js";
 import { makeTempConfig } from "../store/testConfig.js";
 import { createVersionStore } from "../store/versions.js";
+import { createFakePreview } from "../testing/fakes.js";
 import type {
   AgentRunContext,
   AgentRunner,

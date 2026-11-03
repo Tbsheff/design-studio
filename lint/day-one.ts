@@ -278,7 +278,7 @@ const FILES = [
   "src/server/agent/style-tool.ts",
   "src/server/agent/taste.test.ts",
   "src/server/agent/taste.ts",
-  "src/server/agent/test-fakes.ts",
+  "src/server/testing/fakes.ts",
   "src/server/agent/todo-tracker.ts",
   "src/server/agent/tool-help.ts",
   "src/server/agent/tool-sets.ts",

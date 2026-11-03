@@ -4,6 +4,12 @@ import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 
 import type { StudioEvent, TelemetrySample } from "../../shared/contracts.js";
+import {
+  createFakeBus,
+  createFakeProjects,
+  createFakeVersions,
+  createTempProject,
+} from "../testing/fakes.js";
 import type { AgentRunContext } from "../types.js";
 import {
   createRunLifecycle,
@@ -11,12 +17,6 @@ import {
   DELTA_FLUSH_MS,
 } from "./lifecycle.js";
 import type { DriverSink, RunDriver } from "./lifecycle.js";
-import {
-  createFakeBus,
-  createFakeProjects,
-  createFakeVersions,
-  createTempProject,
-} from "./test-fakes.js";
 
 const roots: string[] = [];
 

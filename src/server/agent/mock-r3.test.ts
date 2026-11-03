@@ -9,17 +9,17 @@ import type {
   SelectionContext,
   StudioEvent,
 } from "../../shared/contracts.js";
-import type { AgentRunContext, ServerConfig } from "../types.js";
-import { createAgentRunner } from "./index.js";
-import { MOCK_BASH_OUTPUT } from "./mock.js";
-import { PLAN_MODE_DENY } from "./permissions.js";
 import {
   createFakeBus,
   createFakePreview,
   createFakeProjects,
   createFakeVersions,
   createTempProject,
-} from "./test-fakes.js";
+} from "../testing/fakes.js";
+import type { AgentRunContext, ServerConfig } from "../types.js";
+import { createAgentRunner } from "./index.js";
+import { MOCK_BASH_OUTPUT } from "./mock.js";
+import { PLAN_MODE_DENY } from "./permissions.js";
 
 const roots: string[] = [];
 

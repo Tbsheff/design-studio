@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import type { Project, TelemetrySample } from "../../shared/contracts.js";
-import { createFakePreview } from "../agent/test-fakes.js";
 import { projectStorePorts } from "../main/project-ports.js";
 import { createEventBus } from "../store/events.js";
 import {
@@ -10,6 +9,7 @@ import {
 } from "../store/projects.js";
 import { makeTempConfig } from "../store/testConfig.js";
 import { createVersionStore } from "../store/versions.js";
+import { createFakePreview } from "../testing/fakes.js";
 import type { AgentRunner, ServerConfig } from "../types.js";
 import { createApp } from "./app.js";
 

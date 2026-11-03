@@ -16,6 +16,13 @@ import type {
   TelemetrySample,
 } from "../../shared/contracts.js";
 import { draftDesignMd, writeTestDraft } from "../design-system/test-draft.js";
+import {
+  createFakeBus,
+  createFakePreview,
+  createFakeProjects,
+  createFakeVersions,
+  createTempProject,
+} from "../testing/fakes.js";
 import type { AgentRunContext } from "../types.js";
 import type { DriverOutcome } from "./lifecycle.js";
 import { createRunLifecycle } from "./lifecycle.js";
@@ -29,13 +36,6 @@ import {
   withUpdatedInstructions,
 } from "./sdk-driver.js";
 import { LOAD_ORDER } from "./skill-match.js";
-import {
-  createFakeBus,
-  createFakePreview,
-  createFakeProjects,
-  createFakeVersions,
-  createTempProject,
-} from "./test-fakes.js";
 
 type QueryFn = typeof query;
 

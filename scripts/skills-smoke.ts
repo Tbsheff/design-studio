@@ -18,7 +18,7 @@ import {
   createFakeProjects,
   createFakeVersions,
   createTempProject,
-} from "../src/server/agent/test-fakes.js";
+} from "../src/server/testing/fakes.js";
 import type { AgentRunContext } from "../src/server/types.js";
 import {
   DEFAULT_PREVIEW_PORT,

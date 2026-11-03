@@ -24,13 +24,13 @@ import type {
   Version,
 } from "../../shared/contracts.js";
 import { PACK_FILE, TOKENS_FILE } from "../../shared/contracts.js";
-import { createFakePreview } from "../agent/test-fakes.js";
 import { normalizeColor } from "../design-system/extract/values.js";
 import { projectStorePorts } from "../main/project-ports.js";
 import { createEventBus } from "../store/events.js";
 import { createProjectStore } from "../store/projects.js";
 import { makeTempConfig } from "../store/testConfig.js";
 import { createVersionStore } from "../store/versions.js";
+import { createFakePreview } from "../testing/fakes.js";
 import type {
   AgentRunContext,
   AgentRunner,

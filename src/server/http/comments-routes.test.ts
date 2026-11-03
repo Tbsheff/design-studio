@@ -9,7 +9,6 @@ import type {
   RunSummary,
   SelectionContext,
 } from "../../shared/contracts.js";
-import { createFakePreview } from "../agent/test-fakes.js";
 import { buildUserText } from "../agent/user-message.js";
 import { projectStorePorts } from "../main/project-ports.js";
 import { createEventBus } from "../store/events.js";
@@ -19,6 +18,7 @@ import {
 } from "../store/projects.js";
 import { makeTempConfig } from "../store/testConfig.js";
 import { createVersionStore } from "../store/versions.js";
+import { createFakePreview } from "../testing/fakes.js";
 import type {
   AgentRunContext,
   AgentRunner,

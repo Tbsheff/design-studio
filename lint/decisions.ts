@@ -1561,4 +1561,14 @@ export const decisionOverrides: OxlintOverride[] = [
       "import/no-relative-parent-imports": "off",
     },
   },
+  {
+    files: [
+      "src/server/agent/mobile-cut.probe.ts",
+      "src/server/canvas/links/click-probe.probe.ts",
+      "src/server/preview/app-source-filter.probe.ts",
+    ],
+    rules: {
+      "import/no-relative-parent-imports": "off",
+    },
+  },
 ];

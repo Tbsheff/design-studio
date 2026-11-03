@@ -7,6 +7,7 @@ import type {
   QualitySeverity,
 } from "../../shared/contracts.js";
 import { packagedResource } from "../resources.js";
+import { axeRunExpression } from "./axe.probe.js";
 
 const AXE_RULES = [
   "color-contrast",
@@ -125,10 +126,6 @@ function axeFindings(
 
 interface AxePage {
   evaluate<T>(expression: string): Promise<T>;
-}
-
-function axeRunExpression(rules: readonly string[]): string {
-  return `window.axe.run(document, { runOnly: { type: 'rule', values: ${JSON.stringify(rules)} }, resultTypes: ['violations'] }).then((result) => result.violations)`;
 }
 
 export async function runSharedAxe(page: AxePage): Promise<AxeViolation[]> {

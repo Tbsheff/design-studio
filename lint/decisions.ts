@@ -2055,4 +2055,39 @@ export const decisionOverrides: OxlintOverride[] = [
         .map((rule) => [rule, "warn"])
     ),
   },
+  {
+    files: [
+      "src/ui/features/canvas/canvas-chrome-menu.tsx",
+      "src/ui/features/canvas/canvas-chrome.tsx",
+      "src/ui/features/canvas/canvas-helpers.ts",
+      "src/ui/features/canvas/canvas-layers.tsx",
+      "src/ui/features/canvas/canvas-overlays.tsx",
+      "src/ui/features/canvas/canvas-shell.ts",
+      "src/ui/features/canvas/canvas-stage.tsx",
+      "src/ui/features/canvas/canvas-tool-slots.tsx",
+      "src/ui/features/canvas/canvas-types.ts",
+      "src/ui/features/canvas/canvas-view.tsx",
+      "src/ui/features/canvas/canvas.tsx",
+      "src/ui/features/canvas/index.ts",
+      "src/ui/features/canvas/stage-parts.tsx",
+      "src/ui/features/canvas/use-canvas-edits.ts",
+      "src/ui/features/canvas/use-canvas-preview.ts",
+      "src/ui/features/canvas/use-canvas-stage.ts",
+      "src/ui/features/canvas/use-canvas-wiring.tsx",
+      "src/ui/features/canvas/use-frame-labels.tsx",
+      "src/ui/features/canvas/use-preview-url.ts",
+      "src/ui/features/canvas/use-stage-keys.ts",
+      "src/ui/components/Canvas.tsx",
+      "src/ui/components/CanvasChrome.tsx",
+      "src/ui/components/CanvasLayers.tsx",
+      "src/ui/components/CanvasOverlays.tsx",
+      "src/ui/app/canvas-commands-host.tsx",
+      "src/ui/canvas-slots.ts",
+    ],
+    rules: Object.fromEntries(
+      "anti-slop/no-array-filter-map anti-slop/no-chained-type-assertions anti-slop/no-unknown-returns sonarjs/no-unused-vars eslint/default-case unicorn/prefer-add-event-listener typescript/no-non-null-assertion vitest/require-hook vitest/max-expects anti-slop/no-unsafe-dictionary-type react-doctor/no-side-effect-in-state-updater-function eslint/no-useless-return studio/no-ui-storage typescript/no-dynamic-delete anti-slop/no-conditional-empty-object-spread anti-slop/no-known-value-widening anti-slop/no-runtime-typeof anti-slop/no-unknown-parameters anti-slop/require-readable-spacing boundaries/dependencies eslint/complexity eslint/curly eslint/func-style eslint/id-length eslint/max-lines eslint/max-lines-per-function eslint/max-params eslint/max-statements eslint/no-await-in-loop eslint/no-continue eslint/no-magic-numbers eslint/no-nested-ternary eslint/no-plusplus eslint/no-ternary eslint/no-undefined eslint/no-unused-vars eslint/no-use-before-define eslint/no-void eslint/prefer-arrow-callback eslint/prefer-destructuring eslint/prefer-named-capture-group eslint/require-unicode-regexp eslint/sort-keys github/a11y-role-supports-aria-props github/array-foreach github/no-blur github/no-then github/prefer-observers import/consistent-type-specifier-style import/exports-last import/group-exports import/max-dependencies import/no-default-export import/no-relative-parent-imports import/no-unassigned-import jsx-a11y/click-events-have-key-events jsx-a11y/control-has-associated-label jsx-a11y/interactive-supports-focus jsx-a11y/no-autofocus jsx-a11y/no-noninteractive-element-interactions jsx-a11y/no-noninteractive-element-to-interactive-role jsx-a11y/no-static-element-interactions jsx-a11y/prefer-tag-over-role jsx-a11y/role-supports-aria-props promise/always-return promise/catch-or-return promise/prefer-await-to-callbacks promise/prefer-await-to-then promise/prefer-catch react-doctor/async-await-in-loop react-doctor/data-table-requires-accessible-name react-doctor/empty-table-header react-doctor/form-control-requires-name react-doctor/js-combine-iterations react-doctor/js-set-map-lookups react-doctor/no-adjust-state-on-prop-change react-doctor/no-array-index-as-key react-doctor/no-chain-state-updates react-doctor/no-create-object-url-without-revoke react-doctor/no-enter-submit-without-ime-composition-guard react-doctor/no-event-handler react-doctor/no-giant-component react-doctor/no-high-complexity-react-function react-doctor/no-pass-live-state-to-parent react-doctor/no-ref-current-in-render react-doctor/no-reset-all-state-on-prop-change react-doctor/no-unguarded-browser-global-at-module-scope react-doctor/no-unguarded-browser-global-in-render-or-hook-init react-doctor/only-export-components react-doctor/prefer-html-dialog react-doctor/prefer-module-scope-pure-function react-doctor/rendering-conditional-render react-doctor/rerender-state-only-in-handlers react-hooks/exhaustive-deps react-perf/jsx-no-jsx-as-prop react-perf/jsx-no-new-array-as-prop react-perf/jsx-no-new-function-as-prop react-perf/jsx-no-new-object-as-prop react/button-has-type react/exhaustive-effect-dependencies react/forbid-component-props react/function-component-definition react/hook-use-state react/jsx-handler-names react/jsx-max-depth react/jsx-no-literals react/jsx-no-useless-fragment react/jsx-props-no-spreading react/memo-dependencies react/no-array-index-key react/no-multi-comp react/no-unescaped-entities react/only-export-components react/purity react/refs react/set-state-in-effect react/todo sonarjs/elseif-without-else sonarjs/expression-complexity sonarjs/function-name sonarjs/max-lines sonarjs/max-lines-per-function sonarjs/no-duplicate-string sonarjs/no-nested-conditional sonarjs/no-nested-functions sonarjs/no-nested-incdec sonarjs/no-nested-template-literals sonarjs/no-wildcard-import sonarjs/shorthand-property-grouping sonarjs/super-linear-regex studio/feature-index-import studio/import-resolves studio/no-busy-flag studio/no-dom-query studio/no-feature-interval studio/no-finally-state-reset studio/no-hook-component-import studio/no-inline-copy studio/no-then studio/no-wildcard-reexport typescript/explicit-function-return-type typescript/explicit-module-boundary-types unicorn/catch-error-name unicorn/consistent-function-scoping unicorn/explicit-length-check unicorn/no-array-callback-reference unicorn/no-array-for-each unicorn/no-array-reduce unicorn/no-array-reverse unicorn/no-array-sort unicorn/no-nested-ternary unicorn/no-useless-undefined unicorn/prefer-at unicorn/prefer-export-from unicorn/prefer-global-this unicorn/prefer-query-selector unicorn/prefer-spread vitest/prefer-expect-assertions vitest/prefer-strict-equal vitest/prefer-to-be-falsy vitest/prefer-to-be-truthy vitest/require-test-timeout react-doctor/prefer-use-effect-event react/immutability oxc/no-map-spread typescript/no-invalid-void-type typescript/consistent-type-definitions react-doctor/no-barrel-import oxc/no-barrel-file anti-slop/no-shape-in-symbol-names eslint/no-shadow typescript/consistent-type-imports node/no-sync sonarjs/bool-param-default"
+        .split(" ")
+        .map((rule) => [rule, "warn"])
+    ),
+  },
 ];

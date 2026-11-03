@@ -1578,15 +1578,31 @@ export const decisionOverrides: OxlintOverride[] = [
     },
   },
   {
-    files: ["src/ui/projectList.ts"],
+    files: [
+      "src/server/page-probe/{element,layer-ref,lock-probe,owner-probe}.probe.ts",
+      "src/server/direct-edit/commit/{arrange-probe,style-scan}.probe.ts",
+      "src/server/design-rules/probe.probe.ts",
+      "src/server/review/probe.probe.ts",
+      "src/server/share/viewer-page.probe.ts",
+    ],
     rules: {
-      "unicorn/filename-case": "off",
+      "import/no-relative-parent-imports": "off",
     },
   },
   {
     files: ["src/ui/projectList.ts"],
     rules: {
       "github/filenames-match-regex": "off",
+      "unicorn/filename-case": "off",
+    },
+  },
+  {
+    files: [
+      "src/server/components/preview.probe.ts",
+      "src/server/components/preview-bundle.probe.ts",
+    ],
+    rules: {
+      "github/unescaped-html-literal": "off",
     },
   },
 ];

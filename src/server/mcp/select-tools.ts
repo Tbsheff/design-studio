@@ -27,9 +27,9 @@ import {
   scopeOf,
   type Viewport,
 } from "./layer-ref.js";
+import { matchExpression, matchReadyExpression } from "./select-tools.probe.js";
 
 const DEFAULT_VIEWPORT: Viewport = { width: 1440, height: 900 };
-const HEADLESS_MATCH = "window.__studioSelectMatching";
 
 export const MATCH_BY_TEXT =
   "component: every copy of the same element or component (the same JSX source; for a component root such as a Card, every Card); classes: elements with exactly the same class list; text-style: elements with their own text and the same font family, size, weight, style, line height, tracking and text transform (color is ignored).";
@@ -88,9 +88,7 @@ export async function selectMatchingOnPage(
     input.scope,
     input.page,
     async (probe) => {
-      const ready = await probe.evaluate<boolean>(
-        `typeof ${HEADLESS_MATCH} === 'function'`
-      );
+      const ready = await probe.evaluate<boolean>(matchReadyExpression());
 
       if (!ready) {
         throw new LayerRefError(
@@ -99,7 +97,7 @@ export async function selectMatchingOnPage(
       }
 
       const found = await probe.evaluate<HeadlessMatch>(
-        `${HEADLESS_MATCH}(${JSON.stringify(css)}, ${JSON.stringify(input.by)})`
+        matchExpression(css, input.by)
       );
 
       return { paths: found.found ? found.paths : [], extra: found };

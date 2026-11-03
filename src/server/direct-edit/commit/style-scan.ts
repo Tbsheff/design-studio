@@ -20,8 +20,11 @@ import { tokenFieldState } from "../../../shared/token-match.js";
 import { readDesignSystemState } from "../../design-system/state.js";
 import { onProbePage } from "../../preview/probe-page.js";
 import type { PreviewService } from "../../types.js";
+import {
+  scanQueryExpression,
+  scanReadyExpression,
+} from "./style-scan.probe.js";
 
-const HEADLESS_SCAN = "window.__studioStyleScan";
 const ROWS_MAX = 60;
 const MATCHES_MAX = 200;
 
@@ -37,9 +40,7 @@ export async function scanPageStyles(
   query: StyleQuery
 ): Promise<StyleScanResult> {
   return onProbePage(preview, url, viewport, async (page) => {
-    const ready = await page.evaluate<boolean>(
-      `typeof ${HEADLESS_SCAN} === 'function'`
-    );
+    const ready = await page.evaluate<boolean>(scanReadyExpression());
 
     if (!ready) {
       throw new Error(
@@ -47,9 +48,7 @@ export async function scanPageStyles(
       );
     }
 
-    return page.evaluate<StyleScanResult>(
-      `${HEADLESS_SCAN}(${JSON.stringify(query)})`
-    );
+    return page.evaluate<StyleScanResult>(scanQueryExpression(query));
   });
 }
 

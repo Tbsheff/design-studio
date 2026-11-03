@@ -51,21 +51,21 @@ const EDITS_OFF_TEXT =
 const DROPPED_KEYS: ReadonlySet<string> = new Set(["$schema", "not"]);
 
 const toInputSchema = (action: AnyAction): JsonSchema.JsonSchema => {
-  const document = Schema.toJsonSchemaDocument(action.input, {
+  const jsonSchemaDocument = Schema.toJsonSchemaDocument(action.input, {
     onExcessProperty: "error",
   });
 
-  const kept = Object.entries(document.schema).filter(
+  const kept = Object.entries(jsonSchemaDocument.schema).filter(
     ([key]) => !DROPPED_KEYS.has(key)
   );
 
   const base = { properties: {}, type: "object", ...Object.fromEntries(kept) };
 
-  if (Object.keys(document.definitions).length === 0) {
+  if (Object.keys(jsonSchemaDocument.definitions).length === 0) {
     return base;
   }
 
-  return { ...base, $defs: document.definitions };
+  return { ...base, $defs: jsonSchemaDocument.definitions };
 };
 
 const toToolDef = (action: AnyAction, toolName: string): ToolDef => ({

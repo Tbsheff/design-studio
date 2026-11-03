@@ -27,6 +27,8 @@ const main = () => {
   const tsc = errorsOf("node", [
     "node_modules/typescript/bin/tsc",
     "--noEmit",
+    "--pretty",
+    "false",
     "-p",
     "tsconfig.json",
   ]);

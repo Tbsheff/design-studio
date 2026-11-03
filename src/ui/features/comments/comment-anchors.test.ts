@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { createOrphanTracker } from "../shared/comments";
+import { createOrphanTracker } from "../../../shared/comments";
 import type {
   AnchorReport,
   CommentStatus,
   DesignComment,
-} from "../shared/contracts";
-import { parseLoc, reviewReport } from "./commentAnchors";
-import type { ReviewState } from "./commentAnchors";
+} from "../../../shared/contracts";
+import { parseLoc, reviewReport } from "./comment-anchors";
+import type { ReviewState } from "./comment-anchors";
 
 const rect = { x: 1, y: 2, width: 3, height: 4 };
 

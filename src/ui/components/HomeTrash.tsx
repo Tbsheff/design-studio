@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 
-import { STUDIO_TOKEN_HEADER, type TrashItem } from "../../shared/contracts";
+import type { TrashItem } from "../../shared/contracts";
 import { api, errorText, json } from "../api";
 import { formatRelative, formatTime } from "../format";
-import { getSession } from "../session";
+import { getBlob } from "../platform/http";
 import { useModalDialog } from "../usePopover";
 import { Icon } from "./Icon";
 
@@ -30,10 +30,7 @@ function useTrashThumb(item: TrashItem): string | null {
 
     let made: string | null = null;
     let live = true;
-    void fetch(`/api/trash/${encodeURIComponent(item.trashId)}/thumbnail`, {
-      headers: { [STUDIO_TOKEN_HEADER]: getSession().token },
-    })
-      .then((response) => (response.ok ? response.blob() : null))
+    void getBlob(`/api/trash/${encodeURIComponent(item.trashId)}/thumbnail`)
       .then((blob) => {
         if (!blob || !live) {
           return;

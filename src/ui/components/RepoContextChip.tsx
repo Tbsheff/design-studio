@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
 
-import { STUDIO_TOKEN_HEADER } from "../../shared/contracts";
 import type {
   RepoContextFile,
   RepoContextState,
 } from "../../shared/repo-context";
 import { Chip } from "../ai/components/ai/chip";
-import { getSession } from "../session";
+import { getJson } from "../platform/http";
 import { Icon } from "./Icon";
 
 const USE_NOTE: Record<RepoContextFile["use"], string | null> = {
@@ -55,10 +54,7 @@ function useRunContext(
 
     let live = true;
     const url = `/api/projects/${encodeURIComponent(projectId)}/d/${encodeURIComponent(directionId)}/run-context`;
-    fetch(url, { headers: { [STUDIO_TOKEN_HEADER]: getSession().token } })
-      .then((res) =>
-        res.ok ? (res.json() as Promise<RepoContextState>) : null
-      )
+    getJson<RepoContextState>(url)
       .then((state) => live && setFiles(state?.files ?? []))
       .catch(() => live && setFiles([]));
 

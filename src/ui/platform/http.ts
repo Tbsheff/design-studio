@@ -165,6 +165,39 @@ const call = async <Action extends AnyAction>(
   return (await res.json()) as WireOutput<Action>;
 };
 
-export { ApiError, call };
+const getRaw = (path: string, signal?: AbortSignal): Promise<Response> =>
+  fetch(path, { headers: tokenHeaders(), signal });
+
+const getJson = async <Body>(path: string): Promise<Body | null> => {
+  const res = await getRaw(path);
+
+  if (!res.ok) {
+    return null;
+  }
+
+  return (await res.json()) as Body;
+};
+
+const getBlob = async (path: string): Promise<Blob | null> => {
+  const res = await getRaw(path);
+
+  if (!res.ok) {
+    return null;
+  }
+
+  return res.blob();
+};
+
+const readBlob = async (url: string): Promise<Blob> => {
+  const res = await fetch(url);
+
+  if (!res.ok) {
+    throw new ApiError(res.status, `GET ${url} failed`);
+  }
+
+  return res.blob();
+};
+
+export { ApiError, call, getBlob, getJson, getRaw, readBlob };
 
 export type { ActionRoute, HttpMethod, RouteOf, WireFields, WireJson };

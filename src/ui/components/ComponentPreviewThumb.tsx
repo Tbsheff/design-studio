@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { componentPreviewPath } from "../../shared/component-preview";
-import { STUDIO_TOKEN_HEADER } from "../../shared/contracts";
-import { getSession } from "../session";
+import { getRaw, readBlob } from "../platform/http";
 import { Icon } from "./Icon";
 
 type Shown =
@@ -101,7 +100,7 @@ export async function trimmedUrl(url: string | null): Promise<string | null> {
     return url;
   }
 
-  const blob = await (await fetch(url)).blob();
+  const blob = await readBlob(url);
   const next = await trimmed(blob).catch(() => blob);
 
   if (next === blob) {
@@ -119,10 +118,10 @@ async function fetchPreview(
   id: string,
   signal: AbortSignal
 ): Promise<Shown> {
-  const res = await fetch(componentPreviewPath(projectId, directionId, id), {
-    headers: { [STUDIO_TOKEN_HEADER]: getSession().token },
-    signal,
-  });
+  const res = await getRaw(
+    componentPreviewPath(projectId, directionId, id),
+    signal
+  );
 
   if (res.ok) {
     const blob = await res.blob();

@@ -53,10 +53,12 @@ export function isJunkFile(name: string, options: PruneOptions): boolean {
   return !options.keepTypes && TYPE_FILE.test(name);
 }
 
+const TYPESCRIPT_PACKAGES = new Set(["typescript", "typescript-api"]);
+
 function isTypescriptLib(dir: string): boolean {
   return (
     path.basename(dir) === "lib" &&
-    path.basename(path.dirname(dir)) === "typescript"
+    TYPESCRIPT_PACKAGES.has(path.basename(path.dirname(dir)))
   );
 }
 

@@ -10,13 +10,13 @@ import type {
 import { nudgeStepOf } from "../shared/nudge";
 import { api, errorText } from "./api";
 import type { ParentMessageBody } from "./bridge";
-import { multiBlockReason } from "./mixedValues";
-import { startOptimistic } from "./optimisticEdit";
 import {
   canvasHasKeys,
   inspectorButtonFocused,
   isTypingTarget,
-} from "./typingTarget";
+} from "./features/commands/typing-target";
+import { multiBlockReason } from "./mixedValues";
+import { startOptimistic } from "./optimisticEdit";
 import { buildEditRequest, mergeCommit } from "./useDirectEdit";
 import { focusStageQuietly } from "./useInlineTextEdit";
 

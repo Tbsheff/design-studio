@@ -11,9 +11,9 @@ import {
 
 import { isModZoomKey, zoomKeyOf, type ZoomKey } from "../shared/contracts";
 import type { Box } from "./canvasFrames";
+import { isTypingTarget } from "./features/commands/typing-target";
 import { createLiveStore, type LiveStore } from "./platform/live-store";
 import { uiStore, type ZoomSetting } from "./storage";
-import { isTypingTarget } from "./typingTarget";
 
 export { isTypingTarget };
 

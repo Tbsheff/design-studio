@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 
 import type { KeyId } from "../../shared/keymap";
-import { KeyHint } from "../commands/keys";
+import { KeyHint } from "../features/commands/keys";
 import { Icon } from "../kit/Icon";
 import type { IconName } from "../kit/Icon";
 

@@ -9,7 +9,7 @@ import {
   collectCommands,
   commandBlocker,
   runCommand,
-} from "../commands/registry";
+} from "../features/commands/registry";
 import { Icon } from "../kit/Icon";
 import type { DirectEditControl } from "../useDirectEdit";
 import { PREVIEW_HISTORY_EVENT } from "../useUndoShortcut";

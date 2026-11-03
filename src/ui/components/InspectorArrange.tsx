@@ -10,11 +10,11 @@ import { shortcutLabel, type KeyId } from "../../shared/keymap";
 import { arrange as arrangeRequest, errorText } from "../api";
 import type { PreviewPort } from "../bridge";
 import { activeFrame, canvasStore, defaultLayout } from "../canvasFrames";
-import { IS_MAC } from "../commands/keys";
+import { IS_MAC } from "../features/commands/keys";
+import { isTypingTarget } from "../features/commands/typing-target";
 import { Icon } from "../kit/Icon";
 import { parentLayout } from "../sizing";
 import { uiStore } from "../storage";
-import { isTypingTarget } from "../typingTarget";
 import type { DirectEditCommit, DirectEditControl } from "../useDirectEdit";
 import { PREVIEW_ARRANGE_KEY_EVENT } from "../usePreviewFrames";
 

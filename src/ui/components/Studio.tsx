@@ -32,10 +32,10 @@ import {
   defaultLayout,
   type CanvasFrame,
 } from "../canvasFrames";
-import { focusNewProject } from "../commands/globalCommands";
-import { runCommand } from "../commands/registry";
 import { useDesktopContext } from "../desktop";
 import type { ExportTarget } from "../exportApi";
+import { focusNewProject } from "../features/commands/global-commands";
+import { runCommand } from "../features/commands/registry";
 import { setTelemetryScope } from "../perfTelemetry";
 import { POLISH_REQUEST } from "../polish";
 import { setProjectSwitcher } from "../projectNav";
@@ -188,7 +188,7 @@ function ExportLayer({
   );
 }
 
-import { useStudioCommands } from "../commands/useStudioCommands";
+import { useStudioCommands } from "../features/commands/use-studio-commands";
 import { prefetchCommandLayer } from "../screens";
 
 function firstText(...texts: (string | null | undefined)[]): string | null {

@@ -2,8 +2,9 @@ import { Component, lazy, Suspense, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 
 import { errorText } from "./api";
-import type { CommandLayer as Layer } from "./commands/registry";
 import { Home } from "./components/Home";
+import type { CommandLayer as Layer } from "./features/commands/registry";
+import { isTypingTarget } from "./features/commands/typing-target";
 import { isDesktop } from "./platform/desktop";
 import { installRouting } from "./platform/router";
 import {
@@ -16,7 +17,6 @@ import {
 } from "./screens";
 import { loadSession } from "./session";
 import { uiStore, useUi } from "./storage";
-import { isTypingTarget } from "./typingTarget";
 
 installRouting();
 

@@ -17,7 +17,7 @@ import {
   ChainOfThoughtIcon,
 } from "../ai/components/ai/chain-of-thought";
 import { Chip } from "../ai/components/ai/chip";
-import { IS_MAC } from "../commands/keys";
+import { IS_MAC } from "../features/commands/keys";
 import { formatMs } from "../format";
 import { Icon } from "../kit/Icon";
 import type { IconName } from "../kit/Icon";

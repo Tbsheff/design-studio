@@ -19,6 +19,7 @@ import {
   type PinAxis,
   type PinMode,
 } from "../constraints";
+import { isTypingTarget } from "../features/commands/typing-target";
 import { Icon, type IconName } from "../kit/Icon";
 import { UiSelect } from "../kit/UiSelect";
 import { useLive } from "../platform/live-store";
@@ -36,7 +37,6 @@ import {
   type SizeFacts,
   type SizeMode,
 } from "../sizing";
-import { isTypingTarget } from "../typingTarget";
 import type { DirectEdit } from "../useDirectEdit";
 import {
   PREVIEW_ARRANGE_KEY_EVENT,

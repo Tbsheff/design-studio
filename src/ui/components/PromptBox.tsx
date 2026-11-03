@@ -31,15 +31,15 @@ import {
   ComposerToolbarSpacer,
 } from "../ai/components/ai/composer";
 import { api, errorText } from "../api";
+import { useDesktopCommand } from "../desktop";
 import {
   composerCommands,
   isModeCycleKey,
   nextMode,
   slashCommands,
-} from "../commands/composerCommands";
-import { IS_MAC } from "../commands/keys";
-import { useCommands, type Command } from "../commands/registry";
-import { useDesktopCommand } from "../desktop";
+} from "../features/commands/composer-commands";
+import { IS_MAC } from "../features/commands/keys";
+import { useCommands, type Command } from "../features/commands/registry";
 import { Icon, type IconName } from "../kit/Icon";
 import { skillInstruction } from "../skills";
 import { useDraft, type DraftStore } from "../storage";

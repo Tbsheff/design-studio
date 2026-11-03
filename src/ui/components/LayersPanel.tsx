@@ -19,7 +19,7 @@ import type {
 } from "../../shared/contracts";
 import { reorderMoveOf } from "../../shared/reorder";
 import { STRUCTURE_KEY_IDS, structureKeyOf } from "../../shared/structure-keys";
-import { IS_MAC, tipWithKey } from "../commands/keys";
+import { IS_MAC, tipWithKey } from "../features/commands/keys";
 import { Icon, type IconName } from "../kit/Icon";
 import {
   adjacentMove,

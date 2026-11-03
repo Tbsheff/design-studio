@@ -8,8 +8,8 @@ import {
   type VectorToolId,
 } from "../shared/vector";
 import { json } from "./api";
-import { IS_MAC } from "./commands/keys";
-import { isTypingTarget } from "./typingTarget";
+import { IS_MAC } from "./features/commands/keys";
+import { isTypingTarget } from "./features/commands/typing-target";
 
 export type { VectorToolId };
 

@@ -3,7 +3,7 @@ import {
   TRY_VARIANTS_COMMAND,
   elementVariantsBlocker,
 } from "../shared/element-variants";
-import { useCommands } from "./commands/registry";
+import { useCommands } from "./features/commands/registry";
 import type { VariationsState } from "./useVariations";
 
 export function useTryVariants(

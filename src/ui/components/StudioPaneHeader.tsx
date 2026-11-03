@@ -3,7 +3,7 @@ import type { KeyboardEvent, ReactNode, RefObject } from "react";
 
 import { shortcutLabel } from "../../shared/keymap";
 import { chatSearchAvailable, chatSearchOpen } from "../chatSearchState";
-import { IS_MAC } from "../commands/keys";
+import { IS_MAC } from "../features/commands/keys";
 import { Icon } from "../kit/Icon";
 import type { IconName } from "../kit/Icon";
 import { useLive } from "../platform/live-store";

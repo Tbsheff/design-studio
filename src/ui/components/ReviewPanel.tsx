@@ -7,8 +7,8 @@ import {
   type ReviewKind,
   type ReviewSeverity,
 } from "../../shared/review";
+import { isTypingTarget } from "../features/commands/typing-target";
 import { Icon } from "../kit/Icon";
-import { isTypingTarget } from "../typingTarget";
 import { PREVIEW_ESCAPE_EVENT } from "../useEscapeStop";
 import type { ReviewState } from "../useReview";
 

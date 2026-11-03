@@ -10,9 +10,9 @@ import type {
 import { TRY_VARIANTS_COMMAND } from "../shared/element-variants";
 import { formatCopyCss } from "./authoredCss";
 import type { PreviewPort } from "./bridge";
-import { commandBlocker, runCommand } from "./commands/registry";
 import { PreviewMenu } from "./components/PreviewMenu";
 import type { PreviewMenuItem } from "./components/PreviewMenu";
+import { commandBlocker, runCommand } from "./features/commands/registry";
 import { IconSlot } from "./features/icons/icon-slot";
 import { useIconHost } from "./features/icons/use-icon-host";
 import { ImageGenerateSlot } from "./features/image-generate/image-generate-slot";

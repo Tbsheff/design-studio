@@ -18,12 +18,15 @@ import { STRUCTURE_KEY_IDS, structureKeyOf } from "../shared/structure-keys";
 import { api, errorText } from "./api";
 import { useBridge } from "./bridge";
 import type { BridgeFrame, ParentMessageBody } from "./bridge";
-import { IS_MAC } from "./commands/keys";
+import { IS_MAC } from "./features/commands/keys";
+import {
+  canvasHasKeys,
+  isTypingTarget,
+} from "./features/commands/typing-target";
 import type { LayerTree } from "./layersTree";
 import { pasteJsx } from "./pasteJsx";
 import { NO_SOURCE, dropRequest, selectionTargets } from "./structureEdits";
 import type { LayerDrop, SelectionOp } from "./structureEdits";
-import { canvasHasKeys, isTypingTarget } from "./typingTarget";
 import { useLayerLocks } from "./useLayerLocks";
 
 const RESELECT_MS = 5000;

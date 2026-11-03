@@ -10,8 +10,8 @@ import {
 
 import { matchesKey } from "../../shared/keymap";
 import { TYPE_LABELS, type ProjectHit } from "../../shared/project-search";
-import { IS_MAC, tipWithKey } from "../commands/keys";
-import { useCommands } from "../commands/registry";
+import { IS_MAC, tipWithKey } from "../features/commands/keys";
+import { useCommands } from "../features/commands/registry";
 import { Icon } from "../kit/Icon";
 import {
   noteProjectOpened,

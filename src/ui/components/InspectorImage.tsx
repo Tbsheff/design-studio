@@ -18,7 +18,8 @@ import {
   type SetImageRequest,
 } from "../../shared/image";
 import type { PreviewPort } from "../bridge";
-import { runCommand } from "../commands/registry";
+import { runCommand } from "../features/commands/registry";
+import { isTypingTarget } from "../features/commands/typing-target";
 import {
   clipboardImage,
   fileData,
@@ -28,7 +29,6 @@ import {
   imageTargetOf,
 } from "../imageApi";
 import { Icon } from "../kit/Icon";
-import { isTypingTarget } from "../typingTarget";
 import { InspectorSection } from "./InspectorFields";
 
 import "../styles/inspector-image.css";

@@ -37,7 +37,7 @@ const newDesignSystem = preloadable(() =>
 );
 
 const layer = preloadable(() =>
-  import("./commands/CommandLayer").then((m) => m.default)
+  import("./features/commands/command-layer").then((m) => m.CommandLayer)
 );
 
 export const Studio = studio.Screen;

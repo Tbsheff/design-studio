@@ -18,9 +18,9 @@ import type {
 import { sendTelemetry } from "./api";
 import { frameSrc, postToFrame, useBridge } from "./bridge";
 import type { BridgeFrame, ParentMessageBody } from "./bridge";
-import { runCommand, openLayer } from "./commands/registry";
-import { moveRegion } from "./commands/useStudioCommands";
 import { textEditability } from "./cssValues";
+import { runCommand, openLayer } from "./features/commands/registry";
+import { moveRegion } from "./features/commands/use-studio-commands";
 import { parseLayerTree } from "./layersTree";
 import type { LayerTree } from "./layersTree";
 import { reportAppStart } from "./perfTelemetry";

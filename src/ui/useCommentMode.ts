@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { SelectionContext } from "../shared/contracts";
-import { isTypingTarget } from "./typingTarget";
+import { isTypingTarget } from "./features/commands/typing-target";
 import type { CommentsControl } from "./useComments";
 
 type SetSelection = (

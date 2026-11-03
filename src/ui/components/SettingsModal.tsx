@@ -2,10 +2,10 @@ import { lazy, Suspense, useRef, useState } from "react";
 
 import type { Project } from "../../shared/contracts";
 import { api, errorText } from "../api";
+import { CommandRules } from "../features/commands/command-rules";
 import { KeysPanel } from "../features/settings";
 import { Icon } from "../kit/Icon";
 import { useModalDialog } from "../usePopover";
-import { CommandRules } from "./CommandRules";
 import { parseDraft, SettingsFields, toDraft } from "./SettingsFields";
 import { ShipTemplates } from "./ShipTemplates";
 

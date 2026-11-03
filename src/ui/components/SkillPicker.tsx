@@ -7,8 +7,8 @@ import type {
   SkillInfo,
 } from "../../shared/contracts";
 import { api, errorText } from "../api";
-import { rank } from "../commands/fuzzy";
-import type { Command } from "../commands/registry";
+import { rank } from "../features/commands/fuzzy";
+import type { Command } from "../features/commands/registry";
 import { Icon } from "../kit/Icon";
 import {
   NO_SKILLS_TEXT,

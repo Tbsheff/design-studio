@@ -35,7 +35,7 @@ import {
   scopeText,
   type PinOffset,
 } from "../commentPlacement";
-import { isTypingTarget } from "../typingTarget";
+import { isTypingTarget } from "../features/commands/typing-target";
 import type { CommentsControl } from "../useComments";
 import { INLINE_PROMPT_OPEN_EVENT } from "../useInlinePrompt";
 import { useProfileInitial } from "../useProfileInitial";

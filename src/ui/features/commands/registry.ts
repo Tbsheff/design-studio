@@ -1,0 +1,96 @@
+import { useEffect, useRef } from "react";
+
+import type { KeyId } from "../../../shared/keymap";
+import type { IconName } from "../../kit/Icon";
+import { createLiveStore } from "../../platform/live-store";
+
+export const COMMAND_EVENT = "studio:command";
+export const LAYER_EVENT = "studio:command-layer";
+
+export type CommandLayer = "palette" | "shortcuts";
+
+export interface Command {
+  id: string;
+  title: string;
+  group: string;
+  run: () => void;
+  keyId?: KeyId;
+  keywords?: string;
+  icon?: IconName;
+  disabled?: string;
+  slash?: string;
+}
+
+type Source = () => Command[];
+
+const sources = createLiveStore<readonly { current: Source }[]>([]);
+
+export function collectCommands(): Command[] {
+  const seen = new Set<string>();
+  const out: Command[] = [];
+
+  for (const source of [...sources.get()].reverse()) {
+    for (const command of source.current()) {
+      if (seen.has(command.id)) {
+        continue;
+      }
+
+      seen.add(command.id);
+      out.push(command);
+    }
+  }
+
+  return out;
+}
+
+export function runCommand(id: string): boolean {
+  const command = collectCommands().find((c) => c.id === id);
+
+  if (!command || command.disabled) {
+    return false;
+  }
+
+  command.run();
+
+  return true;
+}
+
+export function commandBlocker(id: string): string | null {
+  const command = collectCommands().find((c) => c.id === id);
+
+  return command ? (command.disabled ?? null) : "Not available here";
+}
+
+export function openLayer(layer: CommandLayer): void {
+  window.dispatchEvent(new CustomEvent(LAYER_EVENT, { detail: layer }));
+}
+
+export function useCommands(source: Source): void {
+  const ref = useRef(source);
+  ref.current = source;
+  useEffect(() => {
+    const entry = { current: () => ref.current() };
+    sources.set([...sources.get(), entry]);
+
+    return () => {
+      sources.set(sources.get().filter((e) => e !== entry));
+    };
+  }, []);
+}
+
+let listening = false;
+
+export function listenForCommands(): void {
+  if (listening) {
+    return;
+  }
+
+  listening = true;
+  window.addEventListener(COMMAND_EVENT, (event) => {
+    const id = (event as CustomEvent<unknown>).detail;
+
+    if (typeof id === "string") {
+      runCommand(id);
+    }
+  });
+}

@@ -7,7 +7,6 @@ import { resolveRunConfig } from "../../shared/run-levels.js";
 import { writeTestDraft } from "../design-system/test-draft.js";
 import { planTiles, type TileRequest } from "../preview/browser.js";
 import type { AgentRunContext } from "../types.js";
-import type { RunToolState } from "./check-tool.js";
 import { createFakePreview, createTempProject } from "./test-fakes.js";
 import {
   describeTiles,
@@ -16,6 +15,7 @@ import {
   takeScreenshot,
   type StudioToolDeps,
 } from "./tools.js";
+import type { RunToolState } from "./types.js";
 
 const roots: string[] = [];
 

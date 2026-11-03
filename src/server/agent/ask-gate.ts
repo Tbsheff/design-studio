@@ -4,7 +4,7 @@ import type {
   PermissionCard,
   PermissionDecision,
 } from "../../shared/contracts.js";
-import type { CommandRules, PermissionAsk } from "./lifecycle.js";
+import type { CommandRules, PermissionAsk } from "./types.js";
 
 export const ASK_TIMEOUT_MS = 280_000;
 

@@ -14,10 +14,10 @@ import type { QualityFinding } from "../../shared/contracts.js";
 import { extractJson } from "../../shared/extract-json.js";
 import { diffImages, readPng } from "../preview/visual-diff.js";
 import type { PreviewService } from "../types.js";
-import type { RunToolState } from "./check-tool.js";
 import { changedSince } from "./screens.js";
 import type { RunScreen } from "./screens.js";
 import type { TasteRule } from "./taste.js";
+import type { CriticImage, RunToolState } from "./types.js";
 
 type QueryFn = typeof query;
 
@@ -98,15 +98,6 @@ const SYSTEMS: Record<CriticKind, string> = {
   quick: QUICK_SYSTEM,
   regression: REGRESSION_SYSTEM,
 };
-
-export interface CriticImage {
-  label: string;
-  data: string;
-  key?: string;
-  screen?: string;
-  viewport?: "desktop" | "mobile";
-  path?: string;
-}
 
 export interface ChangedSource {
   file: string;

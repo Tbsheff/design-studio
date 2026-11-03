@@ -4,10 +4,10 @@ import type { query } from "@anthropic-ai/claude-agent-sdk";
 
 import type { AgentRunContext, PreviewService } from "../types.js";
 import { runScreens } from "./check-tool.js";
-import type { RunToolState } from "./check-tool.js";
 import { criticOutPrefix, regressionPairs, runCritic } from "./critic.js";
 import type { CriticIssue } from "./critic.js";
 import { warmScreens } from "./screens.js";
+import type { RunToolState } from "./types.js";
 
 type QueryFn = typeof query;
 

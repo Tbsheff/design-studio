@@ -10,11 +10,11 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import type { RunLevel } from "../../shared/contracts.js";
 import { resolveRunConfig } from "../../shared/run-levels.js";
-import type { RunToolState } from "./check-tool.js";
 import { criticText, parseCriticReply } from "./critic.js";
 import { createFakePreview, createTempProject } from "./test-fakes.js";
 import { runDesignReview } from "./tools.js";
 import type { StudioToolDeps } from "./tools.js";
+import type { RunToolState } from "./types.js";
 
 const roots: string[] = [];
 

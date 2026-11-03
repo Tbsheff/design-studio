@@ -8,10 +8,7 @@ import type {
   SelectionContext,
 } from "../../shared/contracts.js";
 import type { ResolvedRunConfig } from "../../shared/run-levels.js";
-import type { FrameStateDeps } from "../canvas/app-flow/frame-state-service.js";
-import type { CanvasService } from "../canvas/service.js";
 import type { RenderCheckOptions } from "../preview/browser.js";
-import type { ProbeRect } from "../preview/quality-probe.js";
 import {
   capFindings,
   countSeverities,
@@ -21,7 +18,6 @@ import {
 import { readScanFiles, scanTokenUse } from "../preview/token-scan.js";
 import { diffFinding, diffImages, readPng } from "../preview/visual-diff.js";
 import type { AgentRunContext, PreviewService } from "../types.js";
-import type { CriticImage } from "./critic.js";
 import { regionFindings } from "./fit-check.js";
 import { probeLayout } from "./layout-region.js";
 import { EDIT_TOOL_NAMES } from "./permissions.js";
@@ -32,7 +28,6 @@ import {
   missingShots,
   recordCheck,
 } from "./polish-loop.js";
-import type { LoopLog } from "./polish-loop.js";
 import { defaultShotTarget } from "./run-target.js";
 import type { ShotTarget } from "./run-target.js";
 import {
@@ -42,38 +37,9 @@ import {
   warmScreens,
 } from "./screens.js";
 import type { RunScreen } from "./screens.js";
+import type { BaselineShot, RunToolState } from "./types.js";
 
 const DIFF_VIEWPORTS: CheckViewport[] = ["desktop", "mobile"];
-
-export interface BaselineShot {
-  viewport: CheckViewport;
-  url?: string;
-  path: string;
-  selectionRects: ProbeRect[];
-}
-
-export interface RunToolState {
-  config: ResolvedRunConfig;
-  shots?: number;
-  log?: LoopLog;
-  counters?: { shots: number; checks: number; mobileShots?: number };
-  spentUsd: () => number;
-  criticCostUsd: number;
-  criticCalls: number;
-  lastFindings: QualityFinding[];
-  lastChecks: RenderCheckResult[];
-  baseline: Promise<BaselineShot[]> | null;
-  canvas?: CanvasService;
-  frameStates?: FrameStateDeps | null;
-  startedAt?: number;
-  screenCache?: { stamp: string; screens: RunScreen[] };
-  lastScreens?: RunScreen[];
-  reviewShots?: CriticImage[];
-  regressionDone?: boolean;
-  regressionNote?: string;
-  captureMark?: number;
-  reviews?: { at: number; frame: string | null }[];
-}
 
 export function freshCapture(
   ctx: AgentRunContext,

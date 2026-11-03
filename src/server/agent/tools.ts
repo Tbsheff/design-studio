@@ -86,7 +86,6 @@ import {
   freshCapture,
   runScreens,
   saveCheck,
-  type RunToolState,
 } from "./check-tool.js";
 import {
   listCommentsShape,
@@ -119,7 +118,6 @@ import {
   criticOutPrefix,
   describeCriticResult,
   runCritic,
-  type CriticImage,
 } from "./critic.js";
 import {
   editElementShape,
@@ -249,6 +247,7 @@ import {
 } from "./text-style-tool.js";
 import { TOOL_HELP, TOOL_SHORT, type StudioToolName } from "./tool-help.js";
 import { HELP_TOOL, studioToolsFor } from "./tool-sets.js";
+import type { CriticImage, RunToolState } from "./types.js";
 import {
   booleanShapesShape,
   drawVectorShape,

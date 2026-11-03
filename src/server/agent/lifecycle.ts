@@ -10,7 +10,6 @@ import type {
   LoopSummary,
   Project,
   PermissionDecision,
-  PermissionRequest,
   QueuedMessage,
   RunPart,
   RunSentRecord,
@@ -58,6 +57,7 @@ import { EDIT_TOOL_NAMES } from "./permissions.js";
 import type { RunFibers } from "./run-runner.js";
 import { createTodoTracker, evidenceOf } from "./todo-tracker.js";
 import type { TodoEvidence } from "./todo-tracker.js";
+import type { CommandRules, PermissionAsk } from "./types.js";
 
 export interface DriverSink {
   textDelta(text: string): void;
@@ -103,13 +103,6 @@ export interface PriorSession extends SessionTotals {
 
 export interface RunInbox {
   take(): QueuedMessage[];
-}
-
-export type PermissionAsk = Omit<PermissionRequest, "id">;
-
-export interface CommandRules {
-  allows(command: string): Promise<boolean>;
-  remember(rule: string): Promise<void>;
 }
 
 export interface DriverInput {

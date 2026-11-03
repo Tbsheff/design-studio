@@ -23,11 +23,7 @@ import type { CanvasService } from "../canvas/service.js";
 import { countSeverities } from "../preview/quality.js";
 import { runReviewFrameTool } from "../review/agent-tool.js";
 import type { PreviewService, AgentRunContext } from "../types.js";
-import {
-  buildCheckReport,
-  saveCheck,
-  type RunToolState,
-} from "./check-tool.js";
+import { buildCheckReport, saveCheck } from "./check-tool.js";
 import { regionFindings } from "./fit-check.js";
 import { probeLayout } from "./layout-region.js";
 import { cutLine, mobileCuts, type CutElement } from "./mobile-cut.js";
@@ -42,6 +38,7 @@ import {
   type BaseFile,
   type ChangedFile,
 } from "./screens.js";
+import type { RunToolState } from "./types.js";
 import type { ImagePart } from "./user-message.js";
 
 const CHECK_TOOL = "mcp__studio__render_check";

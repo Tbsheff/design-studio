@@ -30,11 +30,7 @@ import type { LayerLockStore } from "../store/layer-locks.js";
 import type { PreviewService } from "../types.js";
 import { createActionAsk, createBashGate, type ToolGate } from "./ask-gate.js";
 import { captureBaselineFindings } from "./baseline-findings.js";
-import {
-  captureBaseline,
-  prewarmChecks,
-  type RunToolState,
-} from "./check-tool.js";
+import { captureBaseline, prewarmChecks } from "./check-tool.js";
 import { designMdDigest } from "./design-md-digest.js";
 import {
   enforceDesignSystemCheck,
@@ -104,6 +100,7 @@ import { prepareSkills, type PreparedSkills } from "./skills.js";
 import { loadTasteRules, type TasteRule } from "./taste.js";
 import { leanBuiltins } from "./tool-sets.js";
 import { createStudioMcpServer } from "./tools.js";
+import type { RunToolState } from "./types.js";
 import {
   buildUserMessageParts,
   toSdkPrompt,

@@ -7,8 +7,9 @@ import {
   type BaselineFindings,
 } from "../../shared/final-check-baseline.js";
 import type { AgentRunContext, PreviewService } from "../types.js";
-import { buildCheckReport, type RunToolState } from "./check-tool.js";
+import { buildCheckReport } from "./check-tool.js";
 import { defaultShotTarget } from "./run-target.js";
+import type { RunToolState } from "./types.js";
 
 function wantsBaseline(ctx: AgentRunContext, run: RunToolState): boolean {
   return (

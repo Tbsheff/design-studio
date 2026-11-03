@@ -18,12 +18,12 @@ import {
   updateChange,
   updateFields,
 } from "../mcp/component-variant-tools.js";
-import type {
-  CreateFields,
-  UpdateFields,
-} from "../mcp/component-variant-tools.js";
 import { refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
+
+type CreateFields = z.output<z.ZodObject<typeof createFields>>;
+
+type UpdateFields = z.output<z.ZodObject<typeof updateFields>>;
 
 type ToolContent =
   | { data: string; mimeType: string; type: "image" }

@@ -497,6 +497,10 @@ export const decisionOverrides: OxlintOverride[] = [
     rules: { "import/no-relative-parent-imports": "off" },
   },
   {
+    files: ["src/server/agent/types.ts"],
+    rules: { "import/no-relative-parent-imports": "off" },
+  },
+  {
     files: ["src/server/direct-edit/direct-edit-core.ts"],
     rules: { "sonarjs/max-union-size": "off" },
   },

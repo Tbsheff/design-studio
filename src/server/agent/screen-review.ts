@@ -5,11 +5,11 @@ import type { QualityFinding } from "../../shared/contracts.js";
 import type { CanvasService } from "../canvas/service.js";
 import type { AgentRunContext, PreviewService } from "../types.js";
 import { runScreens } from "./check-tool.js";
-import type { RunToolState } from "./check-tool.js";
 import { EDIT_TOOL_NAMES } from "./permissions.js";
 import { isBlocking } from "./polish-loop.js";
 import { samePage } from "./screens.js";
 import type { RunScreen } from "./screens.js";
+import type { RunToolState } from "./types.js";
 import type { ImagePart } from "./user-message.js";
 
 const SIZES = [

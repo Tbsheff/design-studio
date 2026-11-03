@@ -12,12 +12,7 @@
   },
   "include": [
     "desktop/first-run-page.renderer.ts",
-    "desktop/first-run.renderer.ts",
-    "desktop/main.renderer.ts",
-    "desktop/native.renderer.ts",
-    "desktop/render-host.renderer.ts",
     "desktop/render-pool.renderer.ts",
-    "desktop/theme.renderer.ts",
     "desktop/window.renderer.ts"
   ]
 }

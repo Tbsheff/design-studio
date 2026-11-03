@@ -16,19 +16,27 @@ import { findStyles } from "./style-scan.js";
 
 const SELECTOR_MAX = 400;
 
-function elementOfId(
+const elementOfId = (
   layers: BridgeContext["layers"],
   id: unknown
-): Element | null {
-  if (!isNumber(id)) return null;
-  return layers.element(id);
-}
+): Element | null => {
+  if (!isNumber(id)) {
+    return null;
+  }
 
-function matchBase(selected: Element | null, selector: string): Element | null {
-  if (selected?.isConnected && selectorFor(selected) === selector)
+  return layers.element(id);
+};
+
+const matchBase = (
+  selected: Element | null,
+  selector: string
+): Element | null => {
+  if (selected?.isConnected && selectorFor(selected) === selector) {
     return selected;
+  }
+
   return queryElement(selector);
-}
+};
 
 type SelectionHandlers = Pick<
   MessageHandlers,
@@ -42,24 +50,31 @@ type SelectionHandlers = Pick<
   | "select-source"
 >;
 
-function createLookupHandlers(
+const createLookupHandlers = (
   context: BridgeContext
 ): Pick<
   SelectionHandlers,
   "element-at" | "hover-node" | "select-matching" | "select-node"
-> {
+> => {
   const { state, post, layers, locks, postHover, postSelect, postSelectMany } =
     context;
+
   return {
     "element-at": (message) => {
       if (
         !isString(message.requestId) ||
         !isNumber(message.x) ||
         !isNumber(message.y)
-      )
+      ) {
         return;
+      }
+
       const element = dropElement(message.x, message.y);
-      if (element) postHover(element);
+
+      if (element) {
+        postHover(element);
+      }
+
       post({
         inside: Boolean(element && insideTarget(element)),
         label: (element && shortLabel(element)) || "",
@@ -75,20 +90,26 @@ function createLookupHandlers(
         !isString(message.requestId) ||
         !isString(message.selector) ||
         !isMatchKind(message.by)
-      )
+      ) {
         return;
+      }
+
       const base = matchBase(state.selected, message.selector);
-      if (!base)
+
+      if (!base) {
         return post({
           count: 0,
           note: "Select the element again.",
           requestId: message.requestId,
           type: "matched",
         });
+      }
+
       const result = matchingElements(base, message.by, {
         skip: (element) => locks.isLocked(element),
         useLoc: APP_MODE !== "next",
       });
+
       void postSelectMany(result.elements, false);
       post({
         count: result.elements.length,
@@ -99,19 +120,34 @@ function createLookupHandlers(
     },
     "select-node": (message) => {
       const element = elementOfId(layers, message.id);
-      if (element) postSelect(element, message.additive === true);
+
+      if (element) {
+        postSelect(element, message.additive === true);
+      }
     },
   };
-}
+};
 
-function createRetryHandlers(
+const selectBySource = async (
+  sourceLoc: string,
+  tag: string,
+  postSelect: BridgeContext["postSelect"]
+): Promise<void> => {
+  const found = await appElementBySource(sourceLoc, tag);
+
+  if (found) {
+    postSelect(found, false);
+  }
+};
+
+const createRetryHandlers = (
   context: BridgeContext
 ): Pick<
   SelectionHandlers,
   "find-styles" | "select-at" | "select-selector" | "select-source"
-> {
-  const { state, post, layers, locks, postHover, postSelect, postSelectMany } =
-    context;
+> => {
+  const { post, postSelect } = context;
+
   return {
     "find-styles": (message) =>
       findStyles(message, {
@@ -121,76 +157,110 @@ function createRetryHandlers(
         selectorOf: selectorFor,
       }),
     "select-at": (message) => {
-      if (!isNumber(message.x) || !isNumber(message.y)) return;
+      if (!isNumber(message.x) || !isNumber(message.y)) {
+        return;
+      }
+
       const { x, y } = message;
+
       const attempt = (left: number): void => {
         const element = dropElement(x, y);
         const ready = element && (APP_MODE !== "next" || appHydrated(element));
-        if (element && (ready || left === 0)) postSelect(element, false);
-        else if (left > 0)
+
+        if (element && (ready || left === 0)) {
+          postSelect(element, false);
+        } else if (left > 0) {
           window.setTimeout(() => attempt(left - 1), SELECT_RETRY_MS);
+        }
       };
+
       attempt(SELECT_RETRIES);
     },
     "select-selector": (message) => {
-      const selector = message.selector;
-      if (!isString(selector) || selector.length > SELECTOR_MAX) return;
+      const { selector } = message;
+
+      if (!isString(selector) || selector.length > SELECTOR_MAX) {
+        return;
+      }
+
       const attempt = (left: number): void => {
         let element: Element | null = null;
+
         try {
           element = document.querySelector(selector);
         } catch {
           return;
         }
+
         const ready = element && (APP_MODE !== "next" || appHydrated(element));
+
         if (element && (ready || left === 0)) {
           element.scrollIntoView({ block: "center", inline: "nearest" });
           postSelect(element, false);
-        } else if (left > 0 && APP_MODE === "next")
+        } else if (left > 0 && APP_MODE === "next") {
           window.setTimeout(() => attempt(left - 1), SELECT_RETRY_MS);
+        }
       };
+
       attempt(SELECT_RETRIES);
     },
     "select-source": (message) => {
       const element = elementBySource(message, textOf);
-      if (element) postSelect(element, false);
-      else if (
+
+      if (element) {
+        postSelect(element, false);
+      } else if (
         APP_MODE === "next" &&
         isString(message.sourceLoc) &&
         isString(message.tag)
       ) {
-        void appElementBySource(message.sourceLoc, message.tag).then(
-          (found) => found && postSelect(found, false)
-        );
+        void selectBySource(message.sourceLoc, message.tag, postSelect);
       }
     },
   };
-}
+};
 
-function createSelectionHandlers(context: BridgeContext): SelectionHandlers {
-  return { ...createLookupHandlers(context), ...createRetryHandlers(context) };
-}
+const createSelectionHandlers = (
+  context: BridgeContext
+): SelectionHandlers => ({
+  ...createLookupHandlers(context),
+  ...createRetryHandlers(context),
+});
 
-function installClickMenus(context: BridgeContext): void {
+const installClickMenus = (context: BridgeContext): void => {
   const { state, post, textEditor, block, hitOf, postSelect } = context;
 
   const onContextMenu = (event: MouseEvent): void => {
     block(event);
     const element = hitOf(event);
-    if (state.mode !== "select" || !element || textEditor.owns(element)) return;
+
+    if (state.mode !== "select" || !element || textEditor.owns(element)) {
+      return;
+    }
+
     const inSelection =
       element === state.selected ||
       state.tracked.some((selector) => queryElement(selector) === element);
-    if (!inSelection) postSelect(element, false);
+
+    if (!inSelection) {
+      postSelect(element, false);
+    }
+
     post({ type: "context-menu", x: event.clientX, y: event.clientY });
   };
 
   const onDblClick = (event: MouseEvent): void => {
     const element = hitOf(event);
     let target: Element | null = null;
-    if (state.mode === "select" || element === state.selected) target = element;
-    if (textEditor.owns(element) || !textEditor.canEdit(target))
+
+    if (state.mode === "select" || element === state.selected) {
+      target = element;
+    }
+
+    if (textEditor.owns(element) || !textEditor.canEdit(target)) {
       return block(event);
+    }
+
     event.preventDefault();
     event.stopImmediatePropagation();
     textEditor.start(target, { x: event.clientX, y: event.clientY });
@@ -198,37 +268,50 @@ function installClickMenus(context: BridgeContext): void {
 
   window.addEventListener("dblclick", onDblClick, { capture: true });
   window.addEventListener("contextmenu", onContextMenu, { capture: true });
-}
+};
 
-function installHoverSelect(context: BridgeContext): void {
+const flushPendingHover = (context: BridgeContext): void => {
+  const { state, postHover } = context;
+
+  state.hoverFrame = 0;
+  const element = state.pendingHover;
+  state.pendingHover = null;
+
+  if (state.mode !== "select") {
+    return;
+  }
+
+  if (
+    element === state.lastHover &&
+    element &&
+    state.isAltHeld === state.isLastAltHeld
+  ) {
+    return;
+  }
+
+  state.lastHover = element;
+  state.isLastAltHeld = state.isAltHeld;
+  postHover(element);
+
+  if (element && APP_MODE === "next") {
+    void appSourceFor(element);
+  }
+};
+
+const installHoverSelect = (context: BridgeContext): void => {
   const {
     state,
-    post,
     textEditor,
     freeMove,
     marquee,
     links,
     block,
     hitOf,
-    postHover,
     postSelect,
   } = context;
 
   const flushHover = (): void => {
-    state.hoverFrame = 0;
-    const element = state.pendingHover;
-    state.pendingHover = null;
-    if (state.mode !== "select") return;
-    if (
-      element === state.lastHover &&
-      element &&
-      state.altHeld === state.lastAlt
-    )
-      return;
-    state.lastHover = element;
-    state.lastAlt = state.altHeld;
-    postHover(element);
-    if (element && APP_MODE === "next") void appSourceFor(element);
+    flushPendingHover(context);
   };
 
   const onPointerMove = (event: PointerEvent): void => {
@@ -237,26 +320,39 @@ function installHoverSelect(context: BridgeContext): void {
       textEditor.editing() ||
       freeMove.move(event) ||
       marquee.move(event)
-    )
+    ) {
       return;
-    state.altHeld = event.altKey;
+    }
+
+    state.isAltHeld = event.altKey;
     state.pendingHover = hitOf(event);
-    if (!state.hoverFrame)
+
+    if (!state.hoverFrame) {
       state.hoverFrame = window.requestAnimationFrame(flushHover);
+    }
   };
 
   const onClick = (event: MouseEvent): void => {
-    if (state.mode !== "select" && links.onClick(event)) return;
+    if (state.mode !== "select" && links.onClick(event)) {
+      return;
+    }
+
     if (
       state.mode !== "select" ||
       textEditor.owns(eventElement(event)) ||
       freeMove.takeClick() ||
       marquee.takeClick()
-    )
+    ) {
       return block(event);
+    }
+
     block(event);
     const element = hitOf(event);
-    if (!element) return;
+
+    if (!element) {
+      return;
+    }
+
     postSelect(element, event.shiftKey, { x: event.clientX, y: event.clientY });
   };
 
@@ -266,6 +362,6 @@ function installHoverSelect(context: BridgeContext): void {
   });
   window.addEventListener("click", onClick, { capture: true });
   installClickMenus(context);
-}
+};
 
 export { createSelectionHandlers, elementOfId, installHoverSelect };

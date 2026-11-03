@@ -90,7 +90,9 @@ function markFullScreen(window: BrowserWindow): void {
 
   const value = window.isFullScreen() ? "true" : "false";
   void window.webContents
-    .executeJavaScript(`(${markFullScreenInPage})(${JSON.stringify(value)})`)
+    .executeJavaScript(
+      `(() => { const __name = (target) => target; return (${markFullScreenInPage})(${JSON.stringify(value)}); })()`
+    )
     .catch(() => undefined);
 }
 

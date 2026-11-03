@@ -1,12 +1,14 @@
-import type { Project } from "../../../shared/contracts.js";
-import type { HomeSort } from "../../storage.js";
+import type { HomeSort, Project } from "./deps.js";
 
 const collator = new Intl.Collator([], {
   numeric: true,
   sensitivity: "base",
 });
 
-const sortProjects = (list: readonly Project[], sort: HomeSort): Project[] => {
+const toSortedProjects = (
+  list: readonly Project[],
+  sort: HomeSort
+): readonly Project[] => {
   if (sort === "name") {
     return list.toSorted(
       (left, right) =>
@@ -22,21 +24,24 @@ const sortProjects = (list: readonly Project[], sort: HomeSort): Project[] => {
   return list.toSorted((left, right) => right.updatedAt - left.updatedAt);
 };
 
-const fold = (text: string): string =>
+const toFolded = (text: string): string =>
   text
     .normalize("NFD")
     .replaceAll(/\p{Diacritic}/gu, "")
     .toLowerCase();
 
-const filterProjects = (list: readonly Project[], query: string): Project[] => {
-  const terms = fold(query).split(/\s+/u).filter(Boolean);
+const toFilteredProjects = (
+  list: readonly Project[],
+  query: string
+): readonly Project[] => {
+  const terms = toFolded(query).split(/\s+/u).filter(Boolean);
 
   if (terms.length === 0) {
-    return [...list];
+    return list;
   }
 
   return list.filter((project) => {
-    const haystack = fold(
+    const haystack = toFolded(
       `${project.name} ${project.imported?.sourcePath ?? ""}`
     );
 
@@ -44,7 +49,7 @@ const filterProjects = (list: readonly Project[], query: string): Project[] => {
   });
 };
 
-const thumbnailPending = (project: Project): boolean => {
+const isThumbnailPending = (project: Project): boolean => {
   const main =
     project.directions.find((direction) => direction.id === "main") ??
     project.directions[0];
@@ -54,7 +59,7 @@ const thumbnailPending = (project: Project): boolean => {
   return head !== null && project.thumbnail?.versionId !== head;
 };
 
-const gridColumns = (grid: HTMLElement | null): number => {
+const toGridColumns = (grid: HTMLElement | null): number => {
   if (!grid) {
     return 1;
   }
@@ -66,10 +71,10 @@ const gridColumns = (grid: HTMLElement | null): number => {
   return Math.max(1, columns);
 };
 
-const clampIndex = (value: number, count: number): number =>
+const toClampedIndex = (value: number, count: number): number =>
   Math.min(count - 1, Math.max(0, value));
 
-const nextGridIndex = (
+const toNextGridIndex = (
   key: string,
   index: number,
   count: number,
@@ -80,11 +85,11 @@ const nextGridIndex = (
   }
 
   if (key === "ArrowRight") {
-    return clampIndex(index + 1, count);
+    return toClampedIndex(index + 1, count);
   }
 
   if (key === "ArrowLeft") {
-    return clampIndex(index - 1, count);
+    return toClampedIndex(index - 1, count);
   }
 
   if (key === "ArrowDown") {
@@ -115,9 +120,9 @@ const nextGridIndex = (
 };
 
 export {
-  filterProjects,
-  gridColumns,
-  nextGridIndex,
-  sortProjects,
-  thumbnailPending,
+  toFilteredProjects,
+  toGridColumns,
+  toNextGridIndex,
+  toSortedProjects,
+  isThumbnailPending,
 };

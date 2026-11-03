@@ -1,1 +1,1 @@
-export { canPolishRun, POLISH_REQUEST } from "./polish.js";
+export { canPolishRun, POLISH_REQUEST } from "./polish-model.js";

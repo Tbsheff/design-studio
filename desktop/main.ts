@@ -3,11 +3,12 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { app, dialog, session, shell } from "electron";
+import type { BrowserWindow } from "electron";
 
 import { LOCKED_EXIT_CODE } from "../src/server/platform/data-lock/index.js";
 import { RENDER_IPC_ENV } from "../src/shared/render-rpc.js";
 import { createBoot } from "./boot.js";
-import type { Boot, Prepared, Runtime } from "./boot.js";
+import type { Boot, Prepared, ServerSession } from "./boot.js";
 import {
   bundledClaude,
   expectedClaudeVersion,
@@ -155,7 +156,10 @@ async function serverOverrides(
   };
 }
 
-async function launchServer(boot: Boot, current: Prepared): Promise<Runtime> {
+async function launchServer(
+  boot: Boot,
+  current: Prepared
+): Promise<ServerSession> {
   const portsFile = boot.userDataFile("ports.json");
   const ports = await pickPorts(readSavedPorts(portsFile));
   savePorts(portsFile, ports);
@@ -164,7 +168,7 @@ async function launchServer(boot: Boot, current: Prepared): Promise<Runtime> {
   const env = buildServerEnv(
     process.env,
     current.knownPath,
-    await serverOverrides(current, ports, claudePath)
+    await serverOverrides(boot, current, ports, claudePath)
   );
   const server = startServer({
     cwd: boot.layout.serverCwd,
@@ -180,13 +184,19 @@ async function launchServer(boot: Boot, current: Prepared): Promise<Runtime> {
   serveChild(boot.renderHost, server.child);
   boot.serverLink.attach(server.child, url);
   attachVault(server.child);
-  const next: Runtime = { ports, url, server, ready: false, claudePath };
-  boot.state.runtime = next;
+  const next: ServerSession = {
+    claudePath,
+    isReady: false,
+    ports,
+    server,
+    url,
+  };
+  boot.setSession(next);
   void server.exited.then((exit) => onServerExit(boot, next, exit));
   await server.ready;
   boot.markBoot("serverReady");
-  next.ready = true;
-  return next;
+  boot.markSessionReady(server);
+  return { ...next, isReady: true };
 }
 
 function exitText(exit: ServerExit): string {
@@ -200,10 +210,11 @@ function exitText(exit: ServerExit): string {
 const RESTART_PORT_WAIT_MS = 5000;
 
 async function restartServer(boot: Boot, previous: PortSet): Promise<void> {
-  if (!boot.state.prepared) return;
+  const { prepared } = boot.state();
+  if (!prepared) return;
   await waitForFree(previous, RESTART_PORT_WAIT_MS);
   try {
-    const next = await launchServer(boot, boot.state.prepared);
+    const next = await launchServer(boot, prepared);
     for (const window of boot.studioWindows()) void window.loadURL(next.url);
   } catch (error) {
     await failBoot(boot, error);
@@ -212,15 +223,14 @@ async function restartServer(boot: Boot, previous: PortSet): Promise<void> {
 
 async function onServerExit(
   boot: Boot,
-  owner: Runtime,
+  owner: ServerSession,
   exit: ServerExit
 ): Promise<void> {
   clearServerPid(boot.userDataFile("server.pid"));
   if (
-    boot.state.serverStopping ||
-    boot.state.serverStopped ||
-    !owner.ready ||
-    boot.state.runtime !== owner
+    boot.state().isServerStopping ||
+    boot.state().isServerStopped ||
+    !boot.isLiveSession(owner.server)
   )
     return;
   const { response } = await dialog.showMessageBox({
@@ -236,7 +246,7 @@ async function onServerExit(
   else await restartServer(boot, owner.ports);
 }
 
-function openWindow(boot: Boot, current: Runtime): BrowserWindow {
+function openWindow(boot: Boot, current: ServerSession): BrowserWindow {
   console.log(`[desktop] window: studio ${current.url}`);
   boot.markBoot("window");
   const window = createMainWindow({
@@ -252,12 +262,13 @@ function openWindow(boot: Boot, current: Runtime): BrowserWindow {
 }
 
 function focusWindow(boot: Boot): void {
-  if (!boot.state.windowsAllowed) return;
+  if (!boot.state().isWindowsAllowed) return;
   const window = boot
     .studioWindows()
     .find((candidate) => candidate.webContents.getURL().startsWith("http"));
   if (!window) {
-    if (boot.state.runtime) openWindow(boot, boot.state.runtime);
+    const current = boot.state().session;
+    if (current) openWindow(boot, current);
     return;
   }
   if (window.isMinimized()) window.restore();
@@ -265,29 +276,30 @@ function focusWindow(boot: Boot): void {
 }
 
 function stopServerThenQuit(boot: Boot, event: Electron.Event): void {
-  if (boot.state.serverStopped || !boot.state.runtime) return;
+  const current = boot.state().session;
+  if (boot.state().isServerStopped || !current) return;
   event.preventDefault();
-  if (boot.state.serverStopping) return;
-  boot.state.serverStopping = true;
-  void boot.state.runtime.server.stop().finally(() => {
+  if (boot.state().isServerStopping) return;
+  boot.markServerStopping();
+  void current.server.stop().finally(() => {
     boot.renderPool.destroy();
-    boot.state.serverStopped = true;
+    boot.markServerStopped();
     clearServerPid(boot.userDataFile("server.pid"));
     app.quit();
   });
 }
 
 async function failBoot(boot: Boot, error: unknown): Promise<void> {
-  if (boot.state.serverStopping) return;
+  if (boot.state().isServerStopping) return;
   const message = error instanceof Error ? error.message : String(error);
   console.error("[desktop] boot failed", error);
-  boot.state.serverStopping = true;
+  boot.markServerStopping();
   dialog.showErrorBox(
     "Design Studio could not start",
     `${message}\n\nLog: ${boot.logFile()}`
   );
-  await boot.state.runtime?.server.stop();
-  boot.state.serverStopped = true;
+  await boot.state().session?.server.stop();
+  boot.markServerStopped();
   app.exit(1);
 }
 
@@ -295,21 +307,25 @@ async function restartIfClaudeMoved(
   boot: Boot,
   current: Prepared
 ): Promise<void> {
-  const owner = boot.state.runtime;
-  if (!owner?.ready || boot.state.serverStopping || boot.state.serverStopped)
+  const owner = boot.state().session;
+  if (
+    !owner?.isReady ||
+    boot.state().isServerStopping ||
+    boot.state().isServerStopped
+  )
     return;
   const claudePath = (await locateClaude(boot, current))?.path ?? null;
   if (claudePath === owner.claudePath) return;
   console.log(
     `[desktop] claude moved to ${claudePath ?? "nothing"}; restarting the server`
   );
-  boot.state.runtime = null;
+  boot.setSession(null);
   await owner.server.stop();
   await restartServer(boot, owner.ports);
 }
 
 function checkSetup(boot: Boot): void {
-  const current = boot.state.prepared;
+  const current = boot.state().prepared;
   if (current)
     void openSetupWindow({
       ownDir: boot.ownDir,
@@ -334,17 +350,17 @@ async function runBoot(boot: Boot): Promise<void> {
   await app.whenReady();
   boot.markBoot("appReady");
   const updater = boot.createUpdater();
-  boot.state.updater = updater;
+  boot.setUpdater(updater);
   boot.native.install();
   guardPermissions(session.defaultSession);
   app.on("web-contents-created", (_event, contents) => {
     if (!isRenderContents(contents))
-      guardContents(contents, () => boot.state.runtime?.ports ?? null);
+      guardContents(contents, () => boot.state().session?.ports ?? null);
   });
   registerSetupIpc();
   await cleanStaleServer(boot.userDataFile("server.pid"));
   const prepared = await prepare(boot);
-  boot.state.prepared = prepared;
+  boot.setPrepared(prepared);
   boot.markBoot("prepared");
   if (!prepared) {
     app.exit(0);
@@ -354,10 +370,10 @@ async function runBoot(boot: Boot): Promise<void> {
     launchServer(boot, prepared),
     firstRun(boot, prepared),
   ]);
-  if (boot.state.serverStopping || boot.state.serverStopped) return;
+  if (boot.state().isServerStopping || boot.state().isServerStopped) return;
   await restartIfClaudeMoved(boot, prepared);
-  boot.state.windowsAllowed = true;
-  openWindow(boot, boot.state.runtime ?? current);
+  boot.allowWindows();
+  openWindow(boot, boot.state().session ?? current);
   updater.start();
 }
 

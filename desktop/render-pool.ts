@@ -367,10 +367,10 @@ export class RenderPool {
     const metrics = (await state.slot.window.webContents.debugger.sendCommand(
       "Page.getLayoutMetrics"
     )) as { cssContentSize: { width: number; height: number } };
-    const scroll = (await this.evaluate(state, `(${measureScrollSize})()`)) as [
-      number,
-      number,
-    ];
+    const scroll = (await this.evaluate(
+      state,
+      `(() => { const __name = (target) => target; return (${measureScrollSize})(); })()`
+    )) as [number, number];
     return {
       width: Math.max(Math.ceil(metrics.cssContentSize.width), scroll[0]),
       height: Math.max(Math.ceil(metrics.cssContentSize.height), scroll[1]),

@@ -38,55 +38,66 @@ import { createTextEditor } from "./text-edit.js";
 import { createThemeControl } from "./theme-control.js";
 import { forwardZoomInput } from "./zoom-forward.js";
 
-function createState(): BridgeState {
-  return {
-    altHeld: false,
-    forcedDark: false,
-    hoverFrame: 0,
-    lastAlt: false,
-    lastHover: null,
-    marqueeOn: false,
-    mode: "none",
-    pendingHover: null,
-    selected: null,
-    selectedAt: -Infinity,
-    tracked: [],
-  };
-}
+const createState = (): BridgeState => ({
+  isAltHeld: false,
+  isForcedDark: false,
+  hoverFrame: 0,
+  isLastAltHeld: false,
+  lastHover: null,
+  isMarqueeOn: false,
+  mode: "none",
+  pendingHover: null,
+  selected: null,
+  selectedAt: -Infinity,
+  tracked: [],
+});
 
-function appSourcesOf(): {
+const appSourcesOf = (): {
   prime: typeof primeAppSources;
   source: typeof appSourceFor;
-} | null {
-  if (APP_MODE === "next")
+} | null => {
+  if (APP_MODE === "next") {
     return { prime: primeAppSources, source: appSourceFor };
-  return null;
-}
+  }
 
-function buildCore(session: BridgeSession): BridgeCore {
+  return null;
+};
+
+const buildCore = (session: BridgeSession): BridgeCore => {
   const state = createState();
   const post = createPost(session);
   installErrorReporting(post);
   const layers = createLayerIndex();
+
   const locks = createLockSet(appSourcesOf(), (keys) => {
-    if (keys) post({ keys, type: "locks" });
+    if (keys) {
+      post({ keys, type: "locks" });
+    }
+
     post({ type: "tree", ...layers.build(locks.ownLocked) });
   });
+
   const hitOf = (event: Event): Element | null =>
     locks.hit(event, rootElementOf(eventElement(event)));
+
   const selection = createSelectionPosts(state, post, layers);
   const livePreview = createLivePreview();
+
   const textEditor = createTextEditor({
     onStart: (element) => {
       state.lastHover = null;
       state.pendingHover = null;
       post({ rect: null, type: "hover" });
-      if (state.selected !== element) selection.postSelect(element, false);
+
+      if (state.selected !== element) {
+        selection.postSelect(element, false);
+      }
     },
     post,
     previewText: (selector, text) => livePreview.previewText(selector, text),
     selectorFor,
   });
+
   const optimistic = createOptimistic({
     previewing: (element) => livePreview.previewing(element),
     release: (element, props, text) =>
@@ -102,6 +113,7 @@ function buildCore(session: BridgeSession): BridgeCore {
     sourceOf: sourceStrings,
     styleKeys: PREVIEW_STYLE_KEYS,
   });
+
   return {
     ...selection,
     anchors: createAnchorTracker(post),
@@ -122,9 +134,9 @@ function buildCore(session: BridgeSession): BridgeCore {
     themeControl: createThemeControl(),
     triggers: createTriggerBridge(post),
   };
-}
+};
 
-function startBridge(session: BridgeSession): void {
+const startBridge = (session: BridgeSession): void => {
   const core = buildCore(session);
   const context = { ...core, ...createPointerTools(core) };
   const postNudge = createPostNudge(context);
@@ -136,21 +148,26 @@ function startBridge(session: BridgeSession): void {
   forwardZoomInput(context.post);
   forwardHistoryKeys(context.post);
   installLifecycle(context);
-}
+};
 
-function markScopedElement(): void {
+const markScopedElement = (): void => {
   const loc = new URL(window.location.href).searchParams.get(
     ELEMENT_MARK_PARAM
   );
-  if (!loc || document.getElementById("studio-element-mark")) return;
+
+  if (!loc || document.getElementById("studio-element-mark")) {
+    return;
+  }
+
   const style = document.createElement("style");
   style.id = "studio-element-mark";
   style.textContent = `[${SOURCE_LOC_ATTR}="${CSS.escape(loc)}"]{outline:2px solid oklch(0.62 0.19 255) !important;outline-offset:4px !important;}`;
   (document.head ?? document.documentElement).appendChild(style);
-}
+};
 
 const marker = "__studioBridgeStarted";
 const globalScope = window as unknown as Record<string, unknown>;
+
 if (!globalScope[marker]) {
   globalScope[marker] = true;
   exposeHeadlessScan(selectorFor);
@@ -162,5 +179,8 @@ if (!globalScope[marker]) {
     )
   );
   const session = readSession();
-  if (session) startBridge(session);
+
+  if (session) {
+    startBridge(session);
+  }
 }

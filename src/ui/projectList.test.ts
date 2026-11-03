@@ -2,11 +2,11 @@ import { describe, expect, it } from "vitest";
 
 import type { Project } from "../shared/contracts";
 import {
-  filterProjects,
-  nextGridIndex,
-  sortProjects,
-  thumbnailPending,
-} from "./projectList";
+  toFilteredProjects,
+  toNextGridIndex,
+  toSortedProjects,
+  isThumbnailPending,
+} from "./features/home/index.js";
 
 function project(
   id: string,
@@ -49,17 +49,17 @@ const list = [
 
 describe("project list", () => {
   it("sorts by recent, name and created", () => {
-    expect(sortProjects(list, "recent").map((item) => item.id)).toEqual([
+    expect(toSortedProjects(list, "recent").map((item) => item.id)).toEqual([
       "a",
       "c",
       "b",
     ]);
-    expect(sortProjects(list, "name").map((item) => item.id)).toEqual([
+    expect(toSortedProjects(list, "name").map((item) => item.id)).toEqual([
       "b",
       "c",
       "a",
     ]);
-    expect(sortProjects(list, "created").map((item) => item.id)).toEqual([
+    expect(toSortedProjects(list, "created").map((item) => item.id)).toEqual([
       "b",
       "c",
       "a",
@@ -67,11 +67,13 @@ describe("project list", () => {
   });
 
   it("filters by every word, ignoring case and accents", () => {
-    expect(filterProjects(list, "cafe").map((item) => item.id)).toEqual(["c"]);
-    expect(filterProjects(list, "PAGE zeb").map((item) => item.id)).toEqual([
-      "a",
+    expect(toFilteredProjects(list, "cafe").map((item) => item.id)).toEqual([
+      "c",
     ]);
-    expect(filterProjects(list, "  ")).toHaveLength(3);
+    expect(toFilteredProjects(list, "PAGE zeb").map((item) => item.id)).toEqual(
+      ["a"]
+    );
+    expect(toFilteredProjects(list, "  ")).toHaveLength(3);
   });
 
   it("filters 50 projects in well under 50 ms", () => {
@@ -79,24 +81,24 @@ describe("project list", () => {
       project(`p${index}`, `Project ${index} landing page`, index, index)
     );
     const started = performance.now();
-    const shown = filterProjects(many, "lan 4");
+    const shown = toFilteredProjects(many, "lan 4");
     expect(performance.now() - started).toBeLessThan(50);
     expect(shown.length).toBeGreaterThan(0);
   });
 
   it("knows when a thumbnail is behind the head", () => {
-    expect(thumbnailPending(project("a", "A", 1, 1, null))).toBe(false);
-    expect(thumbnailPending(project("a", "A", 1, 1, "v2", "v1"))).toBe(true);
-    expect(thumbnailPending(project("a", "A", 1, 1, "v2", "v2"))).toBe(false);
+    expect(isThumbnailPending(project("a", "A", 1, 1, null))).toBe(false);
+    expect(isThumbnailPending(project("a", "A", 1, 1, "v2", "v1"))).toBe(true);
+    expect(isThumbnailPending(project("a", "A", 1, 1, "v2", "v2"))).toBe(false);
   });
 
   it("moves through the grid with arrow keys", () => {
-    expect(nextGridIndex("ArrowRight", 0, 5, 3)).toBe(1);
-    expect(nextGridIndex("ArrowRight", 4, 5, 3)).toBe(4);
-    expect(nextGridIndex("ArrowDown", 1, 5, 3)).toBe(4);
-    expect(nextGridIndex("ArrowDown", 2, 5, 3)).toBe(2);
-    expect(nextGridIndex("ArrowUp", 4, 5, 3)).toBe(1);
-    expect(nextGridIndex("End", 0, 5, 3)).toBe(4);
-    expect(nextGridIndex("Tab", 0, 5, 3)).toBeNull();
+    expect(toNextGridIndex("ArrowRight", 0, 5, 3)).toBe(1);
+    expect(toNextGridIndex("ArrowRight", 4, 5, 3)).toBe(4);
+    expect(toNextGridIndex("ArrowDown", 1, 5, 3)).toBe(4);
+    expect(toNextGridIndex("ArrowDown", 2, 5, 3)).toBe(2);
+    expect(toNextGridIndex("ArrowUp", 4, 5, 3)).toBe(1);
+    expect(toNextGridIndex("End", 0, 5, 3)).toBe(4);
+    expect(toNextGridIndex("Tab", 0, 5, 3)).toBeNull();
   });
 });

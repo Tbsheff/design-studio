@@ -5,17 +5,16 @@ import { packagedResource } from "../resources.js";
 let bundlePromise: Promise<string> | null = null;
 
 async function bundleBridge(): Promise<string> {
-  const { buildBridge } = await import("../../../desktop/build-shared.js");
+  const { bundleBridgeText } =
+    await import("../platform/bridge-build/index.js");
 
-  const result = await buildBridge({ outfile: null, logLevel: "silent" });
+  const text = await bundleBridgeText();
 
-  const output = result.outputFiles[0];
-
-  if (!output) {
+  if (text === null) {
     throw new Error("esbuild produced no output for bridge.ts");
   }
 
-  return output.text;
+  return text;
 }
 
 const PREBUILT_BRIDGE_FILE = "bridge.js";

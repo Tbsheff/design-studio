@@ -24,9 +24,9 @@ import {
   focusChatSearchButton,
 } from "../chatSearchState";
 import { ApprovalCard } from "../features/agent-approval";
+import { canPolishRun } from "../features/inspector/index.js";
 import { Icon } from "../kit/Icon";
 import { useLive } from "../platform/live-store";
-import { canPolishRun } from "../polish";
 import { loadRunsThrough, renameRun, runProjectId } from "../runHistoryApi";
 import type { RunView, ToolRow } from "../runState";
 import type { RewindControl } from "../useRewind";

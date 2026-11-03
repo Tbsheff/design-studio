@@ -15,7 +15,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { build } from "esbuild";
 import type { BuildOptions, Metafile } from "esbuild";
 
-import { buildBridge } from "./build-shared.js";
+import { buildBridge } from "../src/server/platform/bridge-build/index.js";
 import { linkEsbuildBinary, pruneModules } from "./prune.js";
 import type { PruneStats } from "./prune.js";
 

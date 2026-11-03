@@ -13,23 +13,33 @@ const TAG_NAME = /^[a-z][a-z0-9-]*$/iu;
 const anchorDom: AnchorDom<Element> = {
   bySelector: (selector) => queryElement(selector),
   bySource: (loc) =>
-    Array.from(document.querySelectorAll(`[${SOURCE_LOC_ATTR}]`)).filter(
+    [...document.querySelectorAll(`[${SOURCE_LOC_ATTR}]`)].filter(
       (element) => element.getAttribute(SOURCE_LOC_ATTR) === loc
     ),
   byTag: (tag) => {
-    if (!TAG_NAME.test(tag)) return [];
-    return Array.from(document.getElementsByTagName(tag));
+    if (!TAG_NAME.test(tag)) {
+      return [];
+    }
+
+    return [...document.getElementsByTagName(tag)];
   },
   tagOf: (element) => element.tagName.toLowerCase(),
   textOf: (element) => {
-    if (element instanceof HTMLElement) return element.innerText;
+    if (element instanceof HTMLElement) {
+      return element.innerText;
+    }
+
     return element.textContent ?? "";
   },
 };
 
-function isAnchorQuery(value: unknown): value is AnchorQuery {
-  if (!isObject(value)) return false;
+const isAnchorQuery = (value: unknown): value is AnchorQuery => {
+  if (!isObject(value)) {
+    return false;
+  }
+
   const query = value as Partial<AnchorQuery>;
+
   return (
     isString(query.id) &&
     isString(query.selector) &&
@@ -37,18 +47,25 @@ function isAnchorQuery(value: unknown): value is AnchorQuery {
     isString(query.textSnippet) &&
     (query.sourceLoc === null || isString(query.sourceLoc))
   );
-}
+};
 
-function anchorQueries(raw: unknown): AnchorQuery[] {
-  if (!Array.isArray(raw)) return [];
+const anchorQueries = (raw: unknown): AnchorQuery[] => {
+  if (!Array.isArray(raw)) {
+    return [];
+  }
+
   return raw.filter(isAnchorQuery).slice(0, MAX_ANCHORS);
-}
+};
 
-function resolveAnchorElement(
+const resolveAnchorElement = (
   query: AnchorQuery
-): { element: Element; report: AnchorReport } | null {
+): { element: Element; report: AnchorReport } | null => {
   const found = resolveAnchor(query, anchorDom);
-  if (!found) return null;
+
+  if (!found) {
+    return null;
+  }
+
   const report: AnchorReport = {
     id: query.id,
     rect: rectOf(found.element),
@@ -56,29 +73,42 @@ function resolveAnchorElement(
     sourceLoc: found.element.getAttribute(SOURCE_LOC_ATTR),
     via: found.via,
   };
+
   return { element: found.element, report };
-}
+};
 
 interface AnchorTracker {
-  track(queries: AnchorQuery[]): void;
-  schedule(): void;
+  readonly track: (queries: AnchorQuery[]) => void;
+  readonly schedule: () => void;
 }
 
-function createAnchorTracker(
+const createAnchorTracker = (
   post: (body: OutgoingBody) => void
-): AnchorTracker {
+): AnchorTracker => {
   let queries: AnchorQuery[] = [];
   let observed: (Element | null)[] = [];
   let frame = 0;
   const observer = resizeObserverFor(() => schedule());
 
   const observe = (elements: (Element | null)[]): void => {
-    if (!observer || sameElements(elements, observed)) return;
+    if (!observer || sameElements(elements, observed)) {
+      return;
+    }
+
     observed = elements;
     observer.disconnect();
-    if (elements.length === 0) return;
+
+    if (elements.length === 0) {
+      return;
+    }
+
     observer.observe(document.documentElement);
-    for (const element of elements) if (element) observer.observe(element);
+
+    for (const element of elements) {
+      if (element) {
+        observer.observe(element);
+      }
+    }
   };
 
   const send = (): void => {
@@ -98,24 +128,34 @@ function createAnchorTracker(
     });
   };
 
-  function schedule(): void {
-    if (queries.length === 0 || frame) return;
+  const schedule = (): void => {
+    if (queries.length === 0 || frame) {
+      return;
+    }
+
     frame = window.requestAnimationFrame(send);
-  }
+  };
 
   const track = (next: AnchorQuery[]): void => {
     queries = next;
-    if (frame) window.cancelAnimationFrame(frame);
+
+    if (frame) {
+      window.cancelAnimationFrame(frame);
+    }
+
     frame = 0;
+
     if (next.length === 0) {
       observe([]);
       post({ anchors: [], type: "anchor-rects" });
+
       return;
     }
+
     send();
   };
 
   return { schedule, track };
-}
+};
 
 export { anchorQueries, createAnchorTracker, resolveAnchorElement };

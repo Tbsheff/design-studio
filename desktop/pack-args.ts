@@ -1,10 +1,10 @@
 interface PackOptions {
-  identity: string;
-  updateUrl: string | null;
-  outDir: string | null;
+  readonly identity: string;
+  readonly updateUrl: string | null;
+  readonly outDir: string | null;
 }
 
-const packOptions = (env: NodeJS.ProcessEnv): PackOptions => {
+const toPackOptions = (env: NodeJS.ProcessEnv): PackOptions => {
   const updateUrl = env.STUDIO_UPDATE_URL || null;
 
   if (updateUrl && !/^https?:\/\//u.test(updateUrl)) {
@@ -20,7 +20,7 @@ const packOptions = (env: NodeJS.ProcessEnv): PackOptions => {
   };
 };
 
-const builderArgs = (options: PackOptions): string[] => {
+const toBuilderArgs = (options: PackOptions): string[] => {
   const args = [
     "--config",
     "electron-builder.yml",
@@ -45,6 +45,6 @@ const builderArgs = (options: PackOptions): string[] => {
   return args;
 };
 
-export { builderArgs, packOptions };
+export { toBuilderArgs, toPackOptions };
 
 export type { PackOptions };

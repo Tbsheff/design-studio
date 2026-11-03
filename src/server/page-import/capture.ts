@@ -1,6 +1,5 @@
 import type { Browser, BrowserType, Page } from "playwright-core";
 
-import { SCROLL_SCRIPT } from "./capture.probe.js";
 import type { Capture, CaptureFailure, CapturedPage } from "./captured.js";
 import { collectScript } from "./collect-script.js";
 import { PAGE_IMPORT_FONT_FACES_MAX, PAGE_IMPORT_NODES_MAX } from "./deps.js";
@@ -28,6 +27,9 @@ const MIN_LEFT_MS = 1000;
 const URL_TEXT_MAX = 160;
 
 const ERROR_STATUS = 400;
+
+const SCROLL_SCRIPT =
+  "window.scrollTo(0, document.documentElement.scrollHeight); window.scrollTo(0, 0);";
 
 const NO_BROWSER =
   "No Chromium browser was found. Install Google Chrome to import pages.";

@@ -50,7 +50,7 @@ async function send<T>(
   endpoint: Endpoint,
   method: string,
   path: string,
-  body?: BodyInit,
+  body?: NonNullable<RequestInit["body"]>,
   extra: Record<string, string> = {},
   timeoutMs = TIMEOUT_MS
 ): Promise<T> {

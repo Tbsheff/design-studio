@@ -20,6 +20,7 @@ import type { createTextEditor } from "./text-edit.js";
 import type { createThemeControl } from "./theme-control.js";
 
 type Rect = SelectionContext["rect"];
+
 type OutgoingBody = BridgeToParent extends infer Message
   ? Message extends BridgeToParent
     ? Omit<Message, "ns" | "token">
@@ -30,16 +31,16 @@ type Post = (body: OutgoingBody) => void;
 
 interface BridgeState {
   mode: "select" | "none";
-  marqueeOn: boolean;
+  isMarqueeOn: boolean;
   hoverFrame: number;
   pendingHover: Element | null;
   lastHover: Element | null;
   selected: Element | null;
   selectedAt: number;
   tracked: string[];
-  altHeld: boolean;
-  lastAlt: boolean;
-  forcedDark: boolean;
+  isAltHeld: boolean;
+  isLastAltHeld: boolean;
+  isForcedDark: boolean;
 }
 
 interface SelectionPosts {
@@ -53,7 +54,7 @@ interface SelectionPosts {
   repostSelected: () => void;
 }
 
-interface BridgeCore extends SelectionPosts {
+type BridgeCore = {
   session: BridgeSession;
   state: BridgeState;
   post: Post;
@@ -71,13 +72,13 @@ interface BridgeCore extends SelectionPosts {
   themeControl: ReturnType<typeof createThemeControl>;
   forceState: ReturnType<typeof createForceState>;
   sharePointer: ReturnType<typeof createSharePointer>;
-}
+} & SelectionPosts;
 
-interface BridgeContext extends BridgeCore {
+type BridgeContext = {
   marquee: ReturnType<typeof createMarquee>;
   freeMove: ReturnType<typeof createFreeMove>;
   block: (event: Event) => void;
-}
+} & BridgeCore;
 
 type MessageHandlers = {
   [Type in ParentToBridge["type"]]: (

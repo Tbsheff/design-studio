@@ -1,14 +1,34 @@
-import type {
-  ComponentUse,
-  SelectionContext,
-  SourceLoc,
-  TextSourceHints,
+import {
+  SOURCE_LOC_ATTR,
+  type ComponentUse,
+  type SelectionContext,
+  type SourceLoc,
+  type TextSourceHints,
 } from "../../shared/contracts.js";
 import type { ComponentOwner } from "../../shared/props.js";
 import type { PreviewService } from "../preview/index.js";
 import { probeOnPage } from "../preview/probe-page.js";
-import { probe, probeAll } from "./element.probe.js";
-import { parseLoc } from "./owner-probe.js";
+import { appSourceBody, ownerWalk, parseLoc } from "./owner-probe.js";
+
+const STYLE_KEYS = [
+  "display",
+  "position",
+  "color",
+  "background-color",
+  "font-family",
+  "font-size",
+  "font-weight",
+  "line-height",
+  "padding",
+  "margin",
+  "border-radius",
+  "width",
+  "height",
+  "gap",
+  "object-fit",
+  "object-position",
+  "background-image",
+];
 
 interface RawElement {
   tag: string;
@@ -21,6 +41,31 @@ interface RawElement {
   usedBy: ComponentUse | null;
   owners: ComponentOwner[];
   ancestors: string[];
+}
+
+function probe(selector: string): string {
+  return `(${probeBody()})(${JSON.stringify(selector)})`;
+}
+
+function probeBody(): string {
+  return `(async (selector) => {
+    let el;
+    try { el = document.querySelector(selector); } catch { return null; }
+    if (!el) return null;
+    const r = el.getBoundingClientRect();
+    const cs = getComputedStyle(el);
+    const styles = {};
+    for (const key of ${JSON.stringify(STYLE_KEYS)}) styles[key] = cs.getPropertyValue(key);
+    const ancestors = [];
+    for (let p = el.parentElement; p && ancestors.length < 6; p = p.parentElement) ancestors.push(p.tagName.toLowerCase() + (p.id ? '#' + p.id : ''));
+    const tagged = el.getAttribute(${JSON.stringify(SOURCE_LOC_ATTR)});
+    const app = tagged ? null : await (${appSourceBody()})(el);
+    return { tag: el.tagName.toLowerCase(), text: (el.textContent || '').trim().slice(0, 2000), outerHTML: el.outerHTML.slice(0, 10000), styles, rect: { x: Math.round(r.x), y: Math.round(r.y + scrollY), width: Math.round(r.width), height: Math.round(r.height) }, loc: tagged || app?.loc || null, usedAt: app?.usedAt ?? null, usedBy: app?.usedBy ?? null, owners: ${ownerWalk()}(el), ancestors };
+  })`;
+}
+
+function probeAll(selectors: string[]): string {
+  return `Promise.all((${JSON.stringify(selectors)}).map(${probeBody()}))`;
 }
 
 function contextOf(selector: string, raw: RawElement): SelectionContext {

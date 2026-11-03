@@ -277,6 +277,8 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/ui/features/commands/deps.ts",
       "src/ui/features/comments/deps.ts",
       "src/ui/features/design-system/deps.ts",
+      "src/ui/features/home/deps.ts",
+      "src/ui/features/inspector/deps.ts",
       "src/ui/features/versions-layers-tokens/deps.ts",
     ],
     rules: {
@@ -699,13 +701,8 @@ export const decisionOverrides: OxlintOverride[] = [
   {
     files: ["src/server/mcp/{key-auth,key-introspect}.ts"],
     rules: {
-      "import/no-relative-parent-imports": "off",
-    },
-  },
-  {
-    files: ["src/server/mcp/{key-auth,key-introspect}.ts"],
-    rules: {
       "anti-slop/require-readable-spacing": "warn",
+      "import/no-relative-parent-imports": "off",
       "sonarjs/no-nested-functions": "warn",
     },
   },
@@ -851,15 +848,11 @@ export const decisionOverrides: OxlintOverride[] = [
   {
     files: ["desktop/boot.ts"],
     rules: {
-      "anti-slop/require-readable-spacing": "off",
       "eslint/no-console": "off",
       "eslint/no-use-before-define": "off",
       "eslint/no-void": "off",
-      "github/no-then": "off",
       "node/no-process-env": "off",
-      "promise/prefer-await-to-then": "off",
       "sonarjs/shorthand-property-grouping": "off",
-      "unicorn/consistent-function-scoping": "off",
     },
   },
   {
@@ -980,25 +973,9 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/ui/commands/useStudioCommands.ts",
       "src/ui/components/CommandRules.tsx",
     ],
-    rules: { "import/no-relative-parent-imports": "off" },
-  },
-  {
-    files: [
-      "src/ui/commands/CommandLayer.tsx",
-      "src/ui/commands/Palette.tsx",
-      "src/ui/commands/ShortcutSheet.tsx",
-      "src/ui/commands/composerCommands.ts",
-      "src/ui/commands/fuzzy.ts",
-      "src/ui/commands/globalCommands.ts",
-      "src/ui/commands/keys.tsx",
-      "src/ui/commands/paletteRows.ts",
-      "src/ui/commands/registry.ts",
-      "src/ui/commands/useCanvasCommands.ts",
-      "src/ui/commands/useStudioCommands.ts",
-      "src/ui/components/CommandRules.tsx",
-    ],
     rules: {
       "github/filenames-match-regex": "off",
+      "import/no-relative-parent-imports": "off",
       "react/only-export-components": "off",
       "unicorn/filename-case": "off",
     },
@@ -1216,6 +1193,7 @@ export const decisionOverrides: OxlintOverride[] = [
     files: [
       "src/bridge/anchor-tracker.ts",
       "src/bridge/bridge-types.ts",
+      "src/bridge/dev-reload.ts",
       "src/bridge/element-info.ts",
       "src/bridge/live-preview.ts",
       "src/bridge/session.ts",
@@ -1223,38 +1201,6 @@ export const decisionOverrides: OxlintOverride[] = [
     ],
     rules: {
       "import/no-relative-parent-imports": "off",
-    },
-  },
-  {
-    files: [
-      "src/bridge/anchor-tracker.ts",
-      "src/bridge/bridge-types.ts",
-      "src/bridge/dom-input.ts",
-      "src/bridge/element-info.ts",
-      "src/bridge/live-preview.ts",
-      "src/bridge/rect-tracker.ts",
-      "src/bridge/session.ts",
-      "src/bridge/theme-control.ts",
-      "src/bridge/zoom-forward.ts",
-    ],
-    rules: {
-      "anti-slop/require-readable-spacing": "off",
-    },
-  },
-  {
-    files: [
-      "src/bridge/anchor-tracker.ts",
-      "src/bridge/dom-input.ts",
-      "src/bridge/element-info.ts",
-      "src/bridge/live-preview.ts",
-      "src/bridge/rect-tracker.ts",
-      "src/bridge/session.ts",
-      "src/bridge/theme-control.ts",
-      "src/bridge/zoom-forward.ts",
-    ],
-    rules: {
-      "eslint/curly": "off",
-      "eslint/func-style": "off",
     },
   },
   {
@@ -1269,12 +1215,6 @@ export const decisionOverrides: OxlintOverride[] = [
     ],
     rules: {
       "unicorn/prefer-global-this": "off",
-    },
-  },
-  {
-    files: ["src/bridge/session.ts", "src/bridge/zoom-forward.ts"],
-    rules: {
-      "eslint/no-useless-return": "off",
     },
   },
   {
@@ -1294,36 +1234,9 @@ export const decisionOverrides: OxlintOverride[] = [
     },
   },
   {
-    files: [
-      "src/bridge/element-info.ts",
-      "src/bridge/live-preview.ts",
-      "src/bridge/zoom-forward.ts",
-    ],
-    rules: {
-      "eslint/prefer-destructuring": "off",
-    },
-  },
-  {
-    files: ["src/bridge/dom-input.ts", "src/bridge/element-info.ts"],
-    rules: {
-      "eslint/require-unicode-regexp": "off",
-    },
-  },
-  {
-    files: [
-      "src/bridge/anchor-tracker.ts",
-      "src/bridge/element-info.ts",
-      "src/bridge/rect-tracker.ts",
-    ],
-    rules: {
-      "unicorn/prefer-spread": "off",
-    },
-  },
-  {
     files: ["src/bridge/element-info.ts"],
     rules: {
       "eslint/prefer-named-capture-group": "off",
-      "github/no-then": "off",
     },
   },
   {
@@ -1393,21 +1306,7 @@ export const decisionOverrides: OxlintOverride[] = [
     files: ["src/bridge/live-preview.ts"],
     rules: {
       "anti-slop/no-unsafe-dictionary-type": "off",
-      "eslint/max-params": "off",
       "eslint/no-continue": "off",
-      "typescript/explicit-function-return-type": "off",
-      "unicorn/consistent-function-scoping": "off",
-    },
-  },
-  {
-    files: [
-      "src/bridge/anchor-tracker.ts",
-      "src/bridge/live-preview.ts",
-      "src/bridge/rect-tracker.ts",
-      "src/bridge/theme-control.ts",
-    ],
-    rules: {
-      "typescript/method-signature-style": "off",
     },
   },
   {
@@ -1438,7 +1337,6 @@ export const decisionOverrides: OxlintOverride[] = [
     files: ["src/bridge/hover-select.ts", "src/bridge/message-handlers.ts"],
     rules: {
       "anti-slop/no-unknown-parameters": "off",
-      "eslint/prefer-destructuring": "off",
     },
   },
   {
@@ -1451,9 +1349,6 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/bridge/pointer-drag.ts",
     ],
     rules: {
-      "anti-slop/require-readable-spacing": "off",
-      "eslint/curly": "off",
-      "eslint/func-style": "off",
       "unicorn/prefer-global-this": "off",
     },
   },
@@ -1478,7 +1373,6 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/bridge/message-handlers.ts",
     ],
     rules: {
-      "eslint/no-unused-vars": "off",
       "sonarjs/elseif-without-else": "off",
     },
   },
@@ -1486,17 +1380,6 @@ export const decisionOverrides: OxlintOverride[] = [
     files: ["src/bridge/keyboard.ts", "src/bridge/pointer-drag.ts"],
     rules: {
       "eslint/no-void": "off",
-    },
-  },
-  {
-    files: [
-      "src/bridge/hover-select.ts",
-      "src/bridge/message-handlers.ts",
-      "src/bridge/outgoing.ts",
-    ],
-    rules: {
-      "github/no-then": "off",
-      "promise/prefer-await-to-then": "off",
     },
   },
   {
@@ -1525,13 +1408,6 @@ export const decisionOverrides: OxlintOverride[] = [
     },
   },
   {
-    files: ["src/bridge/hover-select.ts", "src/bridge/keyboard.ts"],
-    rules: {
-      "sonarjs/no-dead-store": "off",
-      "sonarjs/no-unused-vars": "off",
-    },
-  },
-  {
     files: [
       "src/bridge/bridge.ts",
       "src/bridge/message-handlers.ts",
@@ -1543,66 +1419,9 @@ export const decisionOverrides: OxlintOverride[] = [
     },
   },
   {
-    files: ["src/bridge/keyboard.ts"],
-    rules: {
-      "typescript/consistent-type-definitions": "off",
-    },
-  },
-  {
-    files: ["src/bridge/pointer-drag.ts"],
-    rules: {
-      "unicorn/consistent-function-scoping": "off",
-      "unicorn/prefer-spread": "off",
-    },
-  },
-  {
-    files: ["src/ui/features/inspector/polish.ts"],
+    files: ["desktop/build.ts"],
     rules: {
       "import/no-relative-parent-imports": "off",
-    },
-  },
-  {
-    files: [
-      "src/server/agent/mobile-cut.probe.ts",
-      "src/server/canvas/links/click-probe.probe.ts",
-      "src/server/preview/app-source-filter.probe.ts",
-    ],
-    rules: {
-      "import/no-relative-parent-imports": "off",
-    },
-  },
-  {
-    files: ["src/ui/features/home/project-list.ts"],
-    rules: {
-      "import/no-relative-parent-imports": "off",
-    },
-  },
-  {
-    files: [
-      "src/server/page-probe/{element,layer-ref,lock-probe,owner-probe}.probe.ts",
-      "src/server/direct-edit/commit/{arrange-probe,style-scan}.probe.ts",
-      "src/server/design-rules/probe.probe.ts",
-      "src/server/review/probe.probe.ts",
-      "src/server/share/viewer-page.probe.ts",
-    ],
-    rules: {
-      "import/no-relative-parent-imports": "off",
-    },
-  },
-  {
-    files: ["src/ui/projectList.ts"],
-    rules: {
-      "github/filenames-match-regex": "off",
-      "unicorn/filename-case": "off",
-    },
-  },
-  {
-    files: [
-      "src/server/components/preview.probe.ts",
-      "src/server/components/preview-bundle.probe.ts",
-    ],
-    rules: {
-      "github/unescaped-html-literal": "off",
     },
   },
 ];

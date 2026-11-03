@@ -3,12 +3,12 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { stagePackage } from "../desktop/build.js";
-import { builderArgs, packOptions } from "../desktop/pack-args.js";
+import { toBuilderArgs, toPackOptions } from "../desktop/pack-args.js";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 async function main(): Promise<void> {
-  const options = packOptions(process.env);
+  const options = toPackOptions(process.env);
   await stagePackage();
 
   const env: NodeJS.ProcessEnv = {
@@ -23,7 +23,7 @@ async function main(): Promise<void> {
 
   const result = spawnSync(
     path.join(ROOT, "node_modules", ".bin", "electron-builder"),
-    builderArgs(options),
+    toBuilderArgs(options),
     { cwd: ROOT, env, stdio: "inherit" }
   );
 

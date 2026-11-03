@@ -17,16 +17,24 @@ import { APP_MODE } from "./session.js";
 
 type PointerTools = Pick<BridgeContext, "block" | "freeMove" | "marquee">;
 
-function createPointerTools(core: BridgeCore): PointerTools {
+const createPointerTools = (core: BridgeCore): PointerTools => {
   const { state, post, textEditor, locks } = core;
 
   const block = (event: Event): void => {
     if (textEditor.owns(eventElement(event))) {
       event.stopImmediatePropagation();
+
       return;
     }
-    if (event.type === "pointerdown") textEditor.commit();
-    if (state.mode !== "select") return;
+
+    if (event.type === "pointerdown") {
+      textEditor.commit();
+    }
+
+    if (state.mode !== "select") {
+      return;
+    }
+
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation();
@@ -34,7 +42,7 @@ function createPointerTools(core: BridgeCore): PointerTools {
 
   const marquee = createMarquee({
     enabled: () =>
-      state.mode === "select" && state.marqueeOn && !textEditor.editing(),
+      state.mode === "select" && state.isMarqueeOn && !textEditor.editing(),
     locked: (element) => locks.isLocked(element),
     pick: (elements, additive) => void core.postSelectMany(elements, additive),
     show: (rect) => {
@@ -42,6 +50,7 @@ function createPointerTools(core: BridgeCore): PointerTools {
         state.lastHover = null;
         post({ rect: null, type: "hover" });
       }
+
       post({ rect, type: "marquee" });
     },
   });
@@ -51,10 +60,15 @@ function createPointerTools(core: BridgeCore): PointerTools {
     ownSource: async (element) => {
       let value = element.getAttribute(SOURCE_LOC_ATTR);
       let usedAt: ReturnType<typeof usedAtOf> | null = null;
+
       if (APP_MODE === "next") {
         value = await appSourceFor(element);
-        if (componentUseOf(element)?.root) usedAt = usedAtOf(element);
+
+        if (componentUseOf(element)?.root) {
+          usedAt = usedAtOf(element);
+        }
       }
+
       return { own: (value && parseLoc(value)) || null, usedAt };
     },
     post,
@@ -65,25 +79,43 @@ function createPointerTools(core: BridgeCore): PointerTools {
   });
 
   return { block, freeMove, marquee };
-}
+};
 
-function installFileDrop(context: BridgeContext): void {
+const hasFiles = (event: DragEvent): boolean =>
+  [...(event.dataTransfer?.types ?? [])].includes("Files");
+
+const installFileDrop = (context: BridgeContext): void => {
   const { post, postHover } = context;
-  const hasFiles = (event: DragEvent): boolean =>
-    Array.from(event.dataTransfer?.types ?? []).includes("Files");
+
   const onDragOver = (event: DragEvent): void => {
-    if (!hasFiles(event)) return;
+    if (!hasFiles(event)) {
+      return;
+    }
+
     event.preventDefault();
-    if (event.dataTransfer) event.dataTransfer.dropEffect = "copy";
+
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = "copy";
+    }
+
     const element = dropElement(event.clientX, event.clientY);
-    if (element) postHover(element);
+
+    if (element) {
+      postHover(element);
+    }
   };
+
   const onFileDrop = (event: DragEvent): void => {
-    if (!hasFiles(event)) return;
+    if (!hasFiles(event)) {
+      return;
+    }
+
     event.preventDefault();
-    const files = Array.from(event.dataTransfer?.files ?? [])
+
+    const files = [...(event.dataTransfer?.files ?? [])]
       .filter((file) => file.type.startsWith("image/"))
       .slice(0, 1);
+
     const element = dropElement(event.clientX, event.clientY);
     post({
       files,
@@ -94,23 +126,37 @@ function installFileDrop(context: BridgeContext): void {
       type: "file-drop",
     });
   };
+
   window.addEventListener("dragover", onDragOver, { capture: true });
   window.addEventListener("drop", onFileDrop, { capture: true });
-}
+};
 
-function installPointerDrag(context: BridgeContext): void {
+const installPointerDrag = (context: BridgeContext): void => {
   const { state, textEditor, freeMove, marquee, block, hitOf } = context;
 
   const onPointerDown = (event: PointerEvent): void => {
     block(event);
-    if (textEditor.owns(eventElement(event))) return;
-    if (state.mode === "select" && event.button === 0) holdTextSelection(true);
-    if (!freeMove.down(event, hitOf(event))) marquee.down(event, hitOf(event));
+
+    if (textEditor.owns(eventElement(event))) {
+      return;
+    }
+
+    if (state.mode === "select" && event.button === 0) {
+      holdTextSelection(true);
+    }
+
+    if (!freeMove.down(event, hitOf(event))) {
+      marquee.down(event, hitOf(event));
+    }
   };
 
   const onPointerUp = (event: PointerEvent): void => {
     holdTextSelection(false);
-    if (!freeMove.up(event)) marquee.up(event);
+
+    if (!freeMove.up(event)) {
+      marquee.up(event);
+    }
+
     block(event);
   };
 
@@ -124,6 +170,6 @@ function installPointerDrag(context: BridgeContext): void {
   window.addEventListener("mouseup", block, { capture: true });
   window.addEventListener("auxclick", block, { capture: true });
   installFileDrop(context);
-}
+};
 
 export { createPointerTools, installPointerDrag };

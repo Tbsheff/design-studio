@@ -1,7 +1,7 @@
 export {
-  filterProjects,
-  gridColumns,
-  nextGridIndex,
-  sortProjects,
-  thumbnailPending,
-} from "./project-list.js";
+  toFilteredProjects,
+  isThumbnailPending,
+  toSortedProjects,
+  toGridColumns,
+  toNextGridIndex,
+} from "./project-list-model.js";

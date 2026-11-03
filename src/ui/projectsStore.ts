@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import type { Project } from "../shared/contracts";
 import type { AppHealth, FoundApps } from "../shared/found-apps";
 import { api, errorText, json } from "./api";
-import { thumbnailPending } from "./projectList";
+import { isThumbnailPending } from "./features/home/index.js";
 
 export interface ProjectsState {
   projects: Project[] | null;
@@ -100,7 +100,7 @@ export function useProjects(
     void load();
   }, []);
   const projects = current.projects;
-  const lagging = projects?.some(thumbnailPending) ?? false;
+  const lagging = projects?.some(isThumbnailPending) ?? false;
 
   const watching =
     options.watch === true &&

@@ -18,16 +18,16 @@ import {
   type ProjectType,
 } from "../../shared/project-search";
 import { api, json, warmProject } from "../api";
+import {
+  toFilteredProjects,
+  toGridColumns,
+  toNextGridIndex,
+  toSortedProjects,
+} from "../features/home/index.js";
 import { formatRelative, formatTime } from "../format";
 import { homePrefs, useHomePrefs } from "../homePrefs";
 import { Icon } from "../kit/Icon";
 import { findPack, keySwatches } from "../packs";
-import {
-  filterProjects,
-  gridColumns,
-  nextGridIndex,
-  sortProjects,
-} from "../projectList";
 import { prefetchStudio } from "../screens";
 import { HOME_SORTS, uiStore, useUi, type HomeSort } from "../storage";
 import { LazySelect } from "./LazySelect";
@@ -696,7 +696,7 @@ function ProjectListStates({
   );
 }
 
-function useGridFocus(shown: Project[]) {
+function useGridFocus(shown: readonly Project[]) {
   const gridRef = useRef<HTMLDivElement>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
 
@@ -727,11 +727,11 @@ function useGridFocus(shown: Project[]) {
       return;
     }
 
-    const next = nextGridIndex(
+    const next = toNextGridIndex(
       event.key,
       shown.findIndex((project) => project.id === active),
       shown.length,
-      gridColumns(gridRef.current)
+      toGridColumns(gridRef.current)
     );
 
     if (next === null) {
@@ -761,7 +761,10 @@ export function ProjectGrid({
 }: Props) {
   const { homeSort } = useUi();
   const { view, favoritesOnly, favorites } = useHomeView();
-  const matched = sortProjects(filterProjects(projects ?? [], query), homeSort);
+  const matched = toSortedProjects(
+    toFilteredProjects(projects ?? [], query),
+    homeSort
+  );
 
   const shown = favoritesOnly
     ? matched.filter((project) => favorites.includes(project.id))

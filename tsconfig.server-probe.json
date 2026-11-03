@@ -13,23 +13,5 @@
     "types": ["node"],
     "noEmit": true
   },
-  "include": [
-    "src/server/agent-tools/sdk-shape.ts",
-    "src/server/canvas/links/link-tools.ts",
-    "src/server/export/copy-code.ts",
-    "src/server/export/inline-html.ts",
-    "src/server/export/page-scan.ts",
-    "src/server/export/pptx-xml.ts",
-    "src/server/export/vector-export.ts",
-    "src/server/export/vector.ts",
-    "src/server/platform/process/worker-client.ts",
-    "src/server/preview/annotate.ts",
-    "src/server/preview/browser.ts",
-    "src/server/preview/capture.ts",
-    "src/server/preview/frame-html-read.ts",
-    "src/server/preview/peek-pages.ts",
-    "src/server/preview/screens-probe.ts",
-    "src/server/publish/remote.ts",
-    "src/server/**/*.probe.ts"
-  ]
+  "include": ["src/server/export/page-scan.ts"]
 }

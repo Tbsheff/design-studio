@@ -1,11 +1,10 @@
-import type { RunRequest } from "../../../shared/contracts.js";
-import type { RunView } from "../../runState.js";
+import { copy } from "./copy.js";
+import type { RunRequest, RunView } from "./deps.js";
 
 const POLISH_REQUEST: RunRequest = {
   level: "polish",
   mode: "edit",
-  prompt:
-    "Polish this design: run every check, fix what you find, keep the content and structure.",
+  prompt: copy.polishPrompt,
 };
 
 const canPolishRun = (run: RunView, headVersionId: string | null): boolean => {

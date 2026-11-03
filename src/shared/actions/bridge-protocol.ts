@@ -20,22 +20,15 @@ const BridgePaintedMessageSchema = Schema.Struct({
   type: Schema.Literal("painted"),
 });
 
-const BridgeGenericMessageSchema = Schema.Struct({
-  ...BridgeEnvelopeFields,
-  type: Schema.String,
-});
-
 const BridgeMessageSchema = Schema.Union([
   BridgeReadyMessageSchema,
   BridgePaintedMessageSchema,
-  BridgeGenericMessageSchema,
 ]);
 
 type BridgeMessage = typeof BridgeMessageSchema.Type;
 
 export {
   BridgeEnvelopeFields,
-  BridgeGenericMessageSchema,
   BridgeMessageSchema,
   BridgePaintedMessageSchema,
   BridgeReadyMessageSchema,

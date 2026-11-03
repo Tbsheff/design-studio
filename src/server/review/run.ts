@@ -43,12 +43,6 @@ import {
 } from "./checks.js";
 import { verifyFixes } from "./fixes.js";
 import { reviewProbeExpression, type ProbeResult } from "./probe.js";
-import {
-  axeRunExpression,
-  insideRootExpression,
-  withinContextExpression,
-  withinCountExpression,
-} from "./run.probe.js";
 import { markShared, pageOwnDir } from "./shared-files.js";
 
 const LAYOUT_CAP = 12;
@@ -76,7 +70,7 @@ async function ownAxe(
   await page.evaluate(`${await loadAxeSource()}\n;0`);
 
   return page.evaluate<AxeViolation[]>(
-    axeRunExpression(context, REVIEW_AXE_RULES)
+    `window.axe.run(${context}, { runOnly: { type: 'rule', values: ${JSON.stringify(REVIEW_AXE_RULES)} }, resultTypes: ['violations'] }).then((result) => result.violations)`
   );
 }
 
@@ -87,10 +81,14 @@ async function readPage(
 ): Promise<PageFacts> {
   await waitForPage(page);
 
-  const context = within ? withinContextExpression(within) : "document";
+  const context = within
+    ? `document.querySelector(${JSON.stringify(within)})`
+    : "document";
 
   const matched = within
-    ? await page.evaluate<number>(withinCountExpression(within))
+    ? await page.evaluate<number>(
+        `(() => { try { return document.querySelectorAll(${JSON.stringify(within)}).length; } catch { return 0; } })()`
+      )
     : 0;
 
   if (within && matched === 0) {
@@ -131,7 +129,7 @@ async function insideRoot(
   const selectors = drafts.map((draft) => draft.selector);
 
   const inside = await page.evaluate<boolean[]>(
-    insideRootExpression(root, selectors)
+    `(() => { const root = document.querySelector(${JSON.stringify(root)}); return ${JSON.stringify(selectors)}.map((s) => { if (!root || !s) return false; try { const el = document.querySelector(s); return Boolean(el && root.contains(el)); } catch { return false; } }); })()`
   );
 
   return drafts.filter((_draft, index) => inside[index] === true);

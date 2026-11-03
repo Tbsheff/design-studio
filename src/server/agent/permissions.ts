@@ -111,6 +111,21 @@ export {
 } from "../platform/tool-policy/index.js";
 export type { ToolPolicy } from "../platform/tool-policy/index.js";
 
+export function holdsUntrustedInput(request: {
+  comments?: readonly unknown[];
+}): boolean {
+  return (request.comments?.length ?? 0) > 0;
+}
+
+export function withUntrustedLimits(
+  policy: ToolPolicy,
+  request: { comments?: readonly unknown[] }
+): ToolPolicy {
+  return holdsUntrustedInput(request)
+    ? { ...policy, allowBash: false, allowInstall: false }
+    : policy;
+}
+
 const LIST_ICONS_TOOL = "mcp__studio__list_icons";
 const INSERT_ICON_TOOL = "mcp__studio__insert_icon";
 const LIST_TEXT_STYLES_TOOL = "mcp__studio__list_text_styles";

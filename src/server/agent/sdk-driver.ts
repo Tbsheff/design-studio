@@ -606,17 +606,20 @@ function buildPolicy(
   const { ctx } = input;
   const settings = ctx.project.settings;
   const shellAllowed = true;
-  return {
-    ...(config.preset.skills ? {} : { skillsOff: SKILLS_OFF_MESSAGE }),
-    workTree: ctx.direction.workTree,
-    mode: ctx.request.mode,
-    allowBash: shellAllowed && settings.allowBash,
-    allowInstall: shellAllowed && settings.allowInstall,
-    skills: skills.enabled,
-    skillDirs: skills.readableDirs,
-    ...(ctx.project.designSystemFor ? { readOnlyDirs: [SOURCE_DIR] } : {}),
-    ...(ctx.request.plan ? { plan: true } : {}),
-  };
+  return withUntrustedLimits(
+    {
+      ...(config.preset.skills ? {} : { skillsOff: SKILLS_OFF_MESSAGE }),
+      workTree: ctx.direction.workTree,
+      mode: ctx.request.mode,
+      allowBash: shellAllowed && settings.allowBash,
+      allowInstall: shellAllowed && settings.allowInstall,
+      skills: skills.enabled,
+      skillDirs: skills.readableDirs,
+      ...(ctx.project.designSystemFor ? { readOnlyDirs: [SOURCE_DIR] } : {}),
+      ...(ctx.request.plan ? { plan: true } : {}),
+    },
+    ctx.request
+  );
 }
 
 const BUILTIN_PLUGINS_OFF = [
@@ -909,7 +912,8 @@ async function buildSdkOptions(
       ctx.designSystem ?? null,
       skills.invocableCount,
       setup.tasteRules,
-      ctx.designRules ?? []
+      ctx.designRules ?? [],
+      holdsUntrustedInput(ctx.request)
     ),
     ...(resume
       ? { resume, sessionStore: createScreenshotTrimStore(options.claudeHome) }

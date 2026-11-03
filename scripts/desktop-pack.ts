@@ -3,55 +3,9 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { stagePackage } from "../desktop/build.js";
+import { builderArgs, packOptions } from "../desktop/pack-args.js";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-
-export interface PackOptions {
-  identity: string;
-  updateUrl: string | null;
-  outDir: string | null;
-}
-
-export function packOptions(env: NodeJS.ProcessEnv): PackOptions {
-  const updateUrl = env.STUDIO_UPDATE_URL || null;
-
-  if (updateUrl && !/^https?:\/\//.test(updateUrl)) {
-    throw new Error(
-      `STUDIO_UPDATE_URL must be an http(s) URL, got ${updateUrl}`
-    );
-  }
-
-  return {
-    identity: env.STUDIO_SIGN_IDENTITY || "-",
-    updateUrl,
-    outDir: env.STUDIO_PACK_OUT || null,
-  };
-}
-
-export function builderArgs(options: PackOptions): string[] {
-  const args = [
-    "--config",
-    "electron-builder.yml",
-    "--mac",
-    "--arm64",
-    "--publish",
-    "never",
-    `-c.mac.identity=${options.identity}`,
-  ];
-
-  if (options.updateUrl) {
-    args.push(
-      "-c.publish.provider=generic",
-      `-c.publish.url=${options.updateUrl}`
-    );
-  }
-
-  if (options.outDir) {
-    args.push(`-c.directories.output=${options.outDir}`);
-  }
-
-  return args;
-}
 
 async function main(): Promise<void> {
   const options = packOptions(process.env);

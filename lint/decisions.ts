@@ -849,6 +849,20 @@ export const decisionOverrides: OxlintOverride[] = [
     },
   },
   {
+    files: ["desktop/boot.ts"],
+    rules: {
+      "anti-slop/require-readable-spacing": "off",
+      "eslint/no-console": "off",
+      "eslint/no-use-before-define": "off",
+      "eslint/no-void": "off",
+      "github/no-then": "off",
+      "node/no-process-env": "off",
+      "promise/prefer-await-to-then": "off",
+      "sonarjs/shorthand-property-grouping": "off",
+      "unicorn/consistent-function-scoping": "off",
+    },
+  },
+  {
     files: ["desktop/auth.ts"],
     rules: {
       "anti-slop/no-known-value-widening": "warn",

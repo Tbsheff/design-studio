@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { builderArgs, packOptions } from "../scripts/desktop-pack.js";
+import { builderArgs, packOptions } from "./pack-args.js";
 
 describe("desktop pack arguments", () => {
   it("signs ad-hoc, publishes nothing and writes no update feed by default", () => {

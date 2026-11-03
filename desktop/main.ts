@@ -2,10 +2,12 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { app, BrowserWindow, dialog, session, shell } from "electron";
+import { app, dialog, session, shell } from "electron";
 
 import { LOCKED_EXIT_CODE } from "../src/server/platform/data-lock/index.js";
 import { RENDER_IPC_ENV } from "../src/shared/render-rpc.js";
+import { createBoot } from "./boot.js";
+import type { Boot, Prepared, Runtime } from "./boot.js";
 import {
   bundledClaude,
   expectedClaudeVersion,
@@ -17,36 +19,25 @@ import {
   baseEnv,
   buildServerEnv,
   knownPathDirs,
-  loginShellPath,
   mergePath,
   nodeDirs,
 } from "./env.js";
 import { openSetupWindow, registerSetupIpc, setupNeeded } from "./first-run.js";
 import { chooseGit, FORCE_GIT_ENV } from "./git-choice.js";
-import type { GitChoice } from "./git-choice.js";
-import { NativeShell } from "./native.js";
 import { guardContents, guardPermissions } from "./navigation.js";
-import {
-  claudeBinary,
-  devLayout,
-  dugiteDir,
-  packagedLayout,
-  repoDataDir,
-} from "./paths.js";
+import { claudeBinary, dugiteDir, repoDataDir } from "./paths.js";
 import { pickPorts, readSavedPorts, savePorts, waitForFree } from "./ports.js";
 import type { PortSet } from "./ports.js";
-import { isRenderContents, RenderPool } from "./render-pool.js";
-import { RenderHost, serveChild } from "./render-rpc-host.js";
-import { ServerLink } from "./server-link.js";
+import { isRenderContents } from "./render-pool.js";
+import { serveChild } from "./render-rpc-host.js";
 import { startServer } from "./server-process.js";
-import type { ServerExit, ServerHandle } from "./server-process.js";
+import type { ServerExit } from "./server-process.js";
 import type { CheckInputs, ClaudeSetup } from "./setup-checks.js";
 import {
   cleanStaleServer,
   clearServerPid,
   writeServerPid,
 } from "./stale-server.js";
-import { Updater } from "./updater.js";
 import { attachVault } from "./vault-host.js";
 import { createMainWindow } from "./window.js";
 
@@ -54,83 +45,9 @@ declare const __STUDIO_RELEASE__: boolean | undefined;
 const RELEASE_BUILD =
   typeof __STUDIO_RELEASE__ !== "undefined" && __STUDIO_RELEASE__ === true;
 
-const PROCESS_STARTED_AT = Date.now() - Math.round(process.uptime() * 1000);
-const bootMarks: Record<string, number> = {};
-
-function markBoot(name: string): void {
-  bootMarks[name] ??= Date.now() - PROCESS_STARTED_AT;
-  console.log(`[desktop] boot ${name} ${bootMarks[name]}ms`);
-}
-
 const OWN_DIR = path.dirname(fileURLToPath(import.meta.url));
 const APP_NAME = "Design Studio";
 const SETUP_MODE_ENV = "STUDIO_DESKTOP_SETUP";
-const layout = app.isPackaged
-  ? packagedLayout(OWN_DIR, process.resourcesPath)
-  : devLayout(OWN_DIR);
-
-interface Prepared {
-  dataDir: string;
-  git: GitChoice;
-  knownPath: string;
-  loginPath: Promise<string[]>;
-}
-
-interface Runtime {
-  ports: PortSet;
-  url: string;
-  server: ServerHandle;
-  ready: boolean;
-  claudePath: string | null;
-}
-
-let earlyLoginPath: Promise<string[]> | null = null;
-
-function startLoginShell(): Promise<string[]> {
-  earlyLoginPath ??= loginShellPath(process.env).then((dirs) => {
-    markBoot("loginShell");
-    return dirs;
-  });
-  return earlyLoginPath;
-}
-
-let prepared: Prepared | null = null;
-let runtime: Runtime | null = null;
-let serverStopped = false;
-let serverStopping = false;
-let windowsAllowed = false;
-const renderPool = new RenderPool(() => (runtime ? [runtime.url] : []));
-const renderHost = new RenderHost(renderPool);
-let updater: Updater | null = null;
-const serverLink = new ServerLink(
-  (finished) => void native.runFinished(finished),
-  (notice) => native.mcpApproval(notice)
-);
-const native = new NativeShell({
-  link: serverLink,
-  studioWindows: () => studioWindows(),
-  studioOrigin: () => runtime?.url ?? null,
-  windowsAllowed: () => windowsAllowed,
-  focusWindow: () => focusWindow(),
-  checkSetup: () => checkSetup(),
-  updater: () => updater,
-  recentsFile: () => userDataFile("recent-projects.json"),
-  pushDeviceToken: (token) => void serverLink.pushCloudSession(token),
-});
-
-function studioWindows(): BrowserWindow[] {
-  return BrowserWindow.getAllWindows().filter(
-    (window) => !isRenderContents(window.webContents)
-  );
-}
-
-function userDataFile(...parts: string[]): string {
-  return path.join(app.getPath("userData"), ...parts);
-}
-
-function logFile(): string {
-  return userDataFile("logs", "server.log");
-}
 
 function knownPath(): string {
   const home = process.env.HOME ?? os.homedir();
@@ -139,16 +56,16 @@ function knownPath(): string {
   );
 }
 
-async function prepare(): Promise<Prepared | null> {
+async function prepare(boot: Boot): Promise<Prepared | null> {
   const fromEnv = process.env.STUDIO_DATA_DIR;
   const preferred = fromEnv
     ? path.resolve(fromEnv)
-    : layout.packaged
-      ? userDataFile("studio-data")
-      : repoDataDir(layout);
+    : boot.layout.packaged
+      ? boot.userDataFile("studio-data")
+      : repoDataDir(boot.layout);
   const choice = await chooseDataDir({
     preferred,
-    separate: userDataFile("studio-data-desktop"),
+    separate: boot.userDataFile("studio-data-desktop"),
     explicit: Boolean(fromEnv),
   });
   if ("quit" in choice) {
@@ -159,12 +76,15 @@ async function prepare(): Promise<Prepared | null> {
       );
     return null;
   }
-  const git = await chooseGit(dugiteDir(layout), process.env[FORCE_GIT_ENV]);
+  const git = await chooseGit(
+    dugiteDir(boot.layout),
+    process.env[FORCE_GIT_ENV]
+  );
   return {
     dataDir: choice.dir,
     git,
     knownPath: knownPath(),
-    loginPath: startLoginShell(),
+    loginPath: boot.startLoginShell(),
   };
 }
 
@@ -172,9 +92,12 @@ async function searchPath(current: Prepared): Promise<string[]> {
   return [...(await current.loginPath), ...current.knownPath.split(":")];
 }
 
-async function locateClaude(current: Prepared): Promise<ClaudeLocation | null> {
-  if (!layout.packaged && !process.env.STUDIO_CLAUDE_PATH)
-    return bundledClaude(claudeBinary(layout));
+async function locateClaude(
+  boot: Boot,
+  current: Prepared
+): Promise<ClaudeLocation | null> {
+  if (!boot.layout.packaged && !process.env.STUDIO_CLAUDE_PATH)
+    return bundledClaude(claudeBinary(boot.layout));
   return resolveClaude({
     env: process.env,
     home: process.env.HOME ?? os.homedir(),
@@ -182,22 +105,28 @@ async function locateClaude(current: Prepared): Promise<ClaudeLocation | null> {
   });
 }
 
-async function claudeSetup(current: Prepared): Promise<ClaudeSetup> {
-  const location = await locateClaude(current);
+async function claudeSetup(
+  boot: Boot,
+  current: Prepared
+): Promise<ClaudeSetup> {
+  const location = await locateClaude(boot, current);
   console.log(
     `[desktop] claude: ${location ? `${location.path} (${location.source}, real ${location.realPath})` : "not found"}`
   );
   return {
     location,
-    expectedVersion: expectedClaudeVersion(layout.modulesDir),
+    expectedVersion: expectedClaudeVersion(boot.layout.modulesDir),
   };
 }
 
-async function setupInputs(current: Prepared): Promise<CheckInputs> {
+async function setupInputs(
+  boot: Boot,
+  current: Prepared
+): Promise<CheckInputs> {
   const claudeEnv = baseEnv(process.env, mergePath(await searchPath(current)));
   return {
     git: current.git,
-    claude: await claudeSetup(current),
+    claude: await claudeSetup(boot, current),
     claudeEnv,
     dataDir: current.dataDir,
     env: process.env,
@@ -205,6 +134,7 @@ async function setupInputs(current: Prepared): Promise<CheckInputs> {
 }
 
 async function serverOverrides(
+  boot: Boot,
   current: Prepared,
   ports: PortSet,
   claudePath: string | null
@@ -219,42 +149,42 @@ async function serverOverrides(
     STUDIO_LOGIN_SHELL_PATH: (await current.loginPath).join(":"),
     [RENDER_IPC_ENV]: "1",
     ...current.git.env,
-    ...(layout.resourcesDir
-      ? { STUDIO_RESOURCES_DIR: layout.resourcesDir }
+    ...(boot.layout.resourcesDir
+      ? { STUDIO_RESOURCES_DIR: boot.layout.resourcesDir }
       : {}),
   };
 }
 
-async function launchServer(current: Prepared): Promise<Runtime> {
-  const portsFile = userDataFile("ports.json");
+async function launchServer(boot: Boot, current: Prepared): Promise<Runtime> {
+  const portsFile = boot.userDataFile("ports.json");
   const ports = await pickPorts(readSavedPorts(portsFile));
   savePorts(portsFile, ports);
   const url = `http://127.0.0.1:${ports.studio}`;
-  const claudePath = (await locateClaude(current))?.path ?? null;
+  const claudePath = (await locateClaude(boot, current))?.path ?? null;
   const env = buildServerEnv(
     process.env,
     current.knownPath,
     await serverOverrides(current, ports, claudePath)
   );
   const server = startServer({
-    cwd: layout.serverCwd,
-    args: layout.serverArgs,
+    cwd: boot.layout.serverCwd,
+    args: boot.layout.serverArgs,
     execPath: process.execPath,
     env,
     studioOrigin: url,
-    logFile: logFile(),
-    echo: !layout.packaged,
+    logFile: boot.logFile(),
+    echo: !boot.layout.packaged,
   });
-  markBoot("serverSpawned");
-  writeServerPid(userDataFile("server.pid"), server.pid);
-  serveChild(renderHost, server.child);
-  serverLink.attach(server.child, url);
+  boot.markBoot("serverSpawned");
+  writeServerPid(boot.userDataFile("server.pid"), server.pid);
+  serveChild(boot.renderHost, server.child);
+  boot.serverLink.attach(server.child, url);
   attachVault(server.child);
   const next: Runtime = { ports, url, server, ready: false, claudePath };
-  runtime = next;
-  void server.exited.then((exit) => onServerExit(next, exit));
+  boot.state.runtime = next;
+  void server.exited.then((exit) => onServerExit(boot, next, exit));
   await server.ready;
-  markBoot("serverReady");
+  boot.markBoot("serverReady");
   next.ready = true;
   return next;
 }
@@ -269,164 +199,175 @@ function exitText(exit: ServerExit): string {
 
 const RESTART_PORT_WAIT_MS = 5000;
 
-async function restartServer(previous: PortSet): Promise<void> {
-  if (!prepared) return;
+async function restartServer(boot: Boot, previous: PortSet): Promise<void> {
+  if (!boot.state.prepared) return;
   await waitForFree(previous, RESTART_PORT_WAIT_MS);
   try {
-    const next = await launchServer(prepared);
-    for (const window of studioWindows()) void window.loadURL(next.url);
+    const next = await launchServer(boot, boot.state.prepared);
+    for (const window of boot.studioWindows()) void window.loadURL(next.url);
   } catch (error) {
-    await failBoot(error);
+    await failBoot(boot, error);
   }
 }
 
-async function onServerExit(owner: Runtime, exit: ServerExit): Promise<void> {
-  clearServerPid(userDataFile("server.pid"));
-  if (serverStopping || serverStopped || !owner.ready || runtime !== owner)
+async function onServerExit(
+  boot: Boot,
+  owner: Runtime,
+  exit: ServerExit
+): Promise<void> {
+  clearServerPid(boot.userDataFile("server.pid"));
+  if (
+    boot.state.serverStopping ||
+    boot.state.serverStopped ||
+    !owner.ready ||
+    boot.state.runtime !== owner
+  )
     return;
   const { response } = await dialog.showMessageBox({
     type: "error",
     message: "The studio server stopped",
-    detail: `${exitText(exit)}\n\nLog: ${logFile()}`,
+    detail: `${exitText(exit)}\n\nLog: ${boot.logFile()}`,
     buttons: ["Restart", "Restart and Show Log", "Quit"],
     defaultId: 0,
     cancelId: 2,
   });
-  if (response === 1) shell.showItemInFolder(logFile());
+  if (response === 1) shell.showItemInFolder(boot.logFile());
   if (response === 2) app.quit();
-  else await restartServer(owner.ports);
+  else await restartServer(boot, owner.ports);
 }
 
-function openWindow(current: Runtime): BrowserWindow {
+function openWindow(boot: Boot, current: Runtime): BrowserWindow {
   console.log(`[desktop] window: studio ${current.url}`);
-  markBoot("window");
+  boot.markBoot("window");
   const window = createMainWindow({
     url: current.url,
-    preload: path.join(OWN_DIR, "preload.cjs"),
-    stateFile: userDataFile("window-state.json"),
+    preload: path.join(boot.ownDir, "preload.cjs"),
+    stateFile: boot.userDataFile("window-state.json"),
     version: app.getVersion(),
-    boot: { startedAt: PROCESS_STARTED_AT, marks: { ...bootMarks } },
+    boot: { startedAt: boot.startedAt, marks: { ...boot.marks } },
   });
-  window.once("ready-to-show", () => markBoot("readyToShow"));
-  native.trackWindow(window);
+  window.once("ready-to-show", () => boot.markBoot("readyToShow"));
+  boot.native.trackWindow(window);
   return window;
 }
 
-function focusWindow(): void {
-  if (!windowsAllowed) return;
-  const window = studioWindows().find((candidate) =>
-    candidate.webContents.getURL().startsWith("http")
-  );
+function focusWindow(boot: Boot): void {
+  if (!boot.state.windowsAllowed) return;
+  const window = boot
+    .studioWindows()
+    .find((candidate) => candidate.webContents.getURL().startsWith("http"));
   if (!window) {
-    if (runtime) openWindow(runtime);
+    if (boot.state.runtime) openWindow(boot, boot.state.runtime);
     return;
   }
   if (window.isMinimized()) window.restore();
   window.focus();
 }
 
-function stopServerThenQuit(event: Electron.Event): void {
-  if (serverStopped || !runtime) return;
+function stopServerThenQuit(boot: Boot, event: Electron.Event): void {
+  if (boot.state.serverStopped || !boot.state.runtime) return;
   event.preventDefault();
-  if (serverStopping) return;
-  serverStopping = true;
-  void runtime.server.stop().finally(() => {
-    renderPool.destroy();
-    serverStopped = true;
-    clearServerPid(userDataFile("server.pid"));
+  if (boot.state.serverStopping) return;
+  boot.state.serverStopping = true;
+  void boot.state.runtime.server.stop().finally(() => {
+    boot.renderPool.destroy();
+    boot.state.serverStopped = true;
+    clearServerPid(boot.userDataFile("server.pid"));
     app.quit();
   });
 }
 
-async function failBoot(error: unknown): Promise<void> {
-  if (serverStopping) return;
+async function failBoot(boot: Boot, error: unknown): Promise<void> {
+  if (boot.state.serverStopping) return;
   const message = error instanceof Error ? error.message : String(error);
   console.error("[desktop] boot failed", error);
-  serverStopping = true;
+  boot.state.serverStopping = true;
   dialog.showErrorBox(
     "Design Studio could not start",
-    `${message}\n\nLog: ${logFile()}`
+    `${message}\n\nLog: ${boot.logFile()}`
   );
-  await runtime?.server.stop();
-  serverStopped = true;
+  await boot.state.runtime?.server.stop();
+  boot.state.serverStopped = true;
   app.exit(1);
 }
 
-async function restartIfClaudeMoved(current: Prepared): Promise<void> {
-  const owner = runtime;
-  if (!owner?.ready || serverStopping || serverStopped) return;
-  const claudePath = (await locateClaude(current))?.path ?? null;
+async function restartIfClaudeMoved(
+  boot: Boot,
+  current: Prepared
+): Promise<void> {
+  const owner = boot.state.runtime;
+  if (!owner?.ready || boot.state.serverStopping || boot.state.serverStopped)
+    return;
+  const claudePath = (await locateClaude(boot, current))?.path ?? null;
   if (claudePath === owner.claudePath) return;
   console.log(
     `[desktop] claude moved to ${claudePath ?? "nothing"}; restarting the server`
   );
-  runtime = null;
+  boot.state.runtime = null;
   await owner.server.stop();
-  await restartServer(owner.ports);
+  await restartServer(boot, owner.ports);
 }
 
-function checkSetup(): void {
-  const current = prepared;
+function checkSetup(boot: Boot): void {
+  const current = boot.state.prepared;
   if (current)
     void openSetupWindow({
-      ownDir: OWN_DIR,
-      inputs: () => setupInputs(current),
+      ownDir: boot.ownDir,
+      inputs: () => setupInputs(boot, current),
       continueLabel: "Done",
-    }).then(() => restartIfClaudeMoved(current));
+    }).then(() => restartIfClaudeMoved(boot, current));
 }
 
-async function firstRun(current: Prepared): Promise<void> {
+async function firstRun(boot: Boot, current: Prepared): Promise<void> {
   const mode = process.env[SETUP_MODE_ENV];
   if (mode === "skip") return;
-  const { needed } = await setupNeeded(await setupInputs(current));
+  const { needed } = await setupNeeded(await setupInputs(boot, current));
   if (needed || mode === "always")
     await openSetupWindow({
-      ownDir: OWN_DIR,
-      inputs: () => setupInputs(current),
+      ownDir: boot.ownDir,
+      inputs: () => setupInputs(boot, current),
       continueLabel: "Continue",
     });
 }
 
-async function boot(): Promise<void> {
+async function runBoot(boot: Boot): Promise<void> {
   await app.whenReady();
-  markBoot("appReady");
-  updater = new Updater({
-    activeRuns: () => serverLink.activeRuns().length,
-    logFile: userDataFile("logs", "updater.log"),
-    resourcesPath: process.resourcesPath,
-  });
-  native.install();
+  boot.markBoot("appReady");
+  const updater = boot.createUpdater();
+  boot.state.updater = updater;
+  boot.native.install();
   guardPermissions(session.defaultSession);
   app.on("web-contents-created", (_event, contents) => {
     if (!isRenderContents(contents))
-      guardContents(contents, () => runtime?.ports ?? null);
+      guardContents(contents, () => boot.state.runtime?.ports ?? null);
   });
   registerSetupIpc();
-  await cleanStaleServer(userDataFile("server.pid"));
-  prepared = await prepare();
-  markBoot("prepared");
+  await cleanStaleServer(boot.userDataFile("server.pid"));
+  const prepared = await prepare(boot);
+  boot.state.prepared = prepared;
+  boot.markBoot("prepared");
   if (!prepared) {
     app.exit(0);
     return;
   }
   const [current] = await Promise.all([
-    launchServer(prepared),
-    firstRun(prepared),
+    launchServer(boot, prepared),
+    firstRun(boot, prepared),
   ]);
-  if (serverStopping || serverStopped) return;
-  await restartIfClaudeMoved(prepared);
-  windowsAllowed = true;
-  openWindow(runtime ?? current);
+  if (boot.state.serverStopping || boot.state.serverStopped) return;
+  await restartIfClaudeMoved(boot, prepared);
+  boot.state.windowsAllowed = true;
+  openWindow(boot, boot.state.runtime ?? current);
   updater.start();
 }
 
-function registerLifecycle(): void {
-  app.on("second-instance", (_event, argv) => native.secondInstance(argv));
-  app.on("activate", focusWindow);
+function registerLifecycle(boot: Boot): void {
+  app.on("second-instance", (_event, argv) => boot.native.secondInstance(argv));
+  app.on("activate", () => focusWindow(boot));
   app.on("window-all-closed", () => {
     if (process.platform !== "darwin") app.quit();
   });
-  app.on("before-quit", stopServerThenQuit);
+  app.on("before-quit", (event) => stopServerThenQuit(boot, event));
   process.on("SIGINT", () => app.quit());
   process.on("SIGTERM", () => app.quit());
 }
@@ -436,15 +377,24 @@ function applyUserDataOverride(): void {
   if (override) app.setPath("userData", path.resolve(override));
 }
 
+async function failOnReject(boot: Boot, pending: Promise<void>): Promise<void> {
+  try {
+    await pending;
+  } catch (error) {
+    await failBoot(boot, error);
+  }
+}
+
 function startApp(): void {
+  const boot = createBoot(OWN_DIR, { focusWindow, checkSetup });
   app.commandLine.appendSwitch("force-color-profile", "srgb");
   app.setName(APP_NAME);
   applyUserDataOverride();
   if (app.requestSingleInstanceLock()) {
-    native.registerEarly();
-    registerLifecycle();
-    void startLoginShell();
-    boot().catch(failBoot);
+    boot.native.registerEarly();
+    registerLifecycle(boot);
+    void boot.startLoginShell();
+    void failOnReject(boot, runBoot(boot));
   } else {
     app.quit();
   }

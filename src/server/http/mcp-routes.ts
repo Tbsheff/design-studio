@@ -11,6 +11,7 @@ import { bindMcpLifeRuntime } from "../mcp-life/index.js";
 import type { McpListenerRunnerApi } from "../mcp-life/index.js";
 import { createActivityLog, type ActivityLog } from "../mcp/activity.js";
 import { createApprovalQueue } from "../mcp/approvals.js";
+import { createCloudIntrospect } from "../mcp/key-introspect.js";
 import { createMcpService } from "../mcp/server.js";
 import { recentPages, startRender } from "../preview/render-wait.js";
 import { warmUpstream } from "../preview/warm-upstream.js";
@@ -116,11 +117,15 @@ export function registerMcpRoutes(
   const activity = createActivityLog(deps.dataDir, deps.bus);
   warmAfterEdits(deps);
 
-  const mcp = createMcpService(deps.dataDir, deps, deps.listener, {
-    ...deps,
-    request,
-    approvals,
-    activity,
+  const mcp = createMcpService(deps.dataDir, deps, {
+    edits: {
+      ...deps,
+      request,
+      approvals,
+      activity,
+    },
+    introspect: createCloudIntrospect(deps.runtime ?? null),
+    listener: deps.listener,
   });
 
   void mcp.boot();

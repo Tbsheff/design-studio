@@ -16,6 +16,7 @@ import {
   renderPending,
   renderSettled,
 } from "../preview/render-wait.js";
+import { toLegacyPrincipal } from "../store/principal.js";
 import { EditError } from "./edit-deps.js";
 import type { EditDeps } from "./edit-deps.js";
 import {
@@ -24,9 +25,12 @@ import {
   EDIT_TOOLS,
   RENDER_WAIT_TOOLS,
 } from "./edit-tools.js";
+import { createKeyResolver, offlineRefusal } from "./key-auth.js";
+import type { Introspect, Resolved } from "./key-auth.js";
 import { withLayerSelectors } from "./layer-tools.js";
 import { getFreePort, isPortFree, isSameText } from "./port-probe.js";
 import { ActionTools } from "./registry.js";
+import type { McpCaller } from "./registry.js";
 import { newToken, readMcpSettings, writeMcpSettings } from "./settings.js";
 import type { McpSettings } from "./settings.js";
 
@@ -63,7 +67,31 @@ interface Dispatch {
   deps: ExportDeps;
   edits: EditDeps | null;
   client: string;
+  key: Resolved | null;
   startSession: (client: string) => void;
+}
+
+function callerOf(ctx: Dispatch, edits: EditDeps | null): McpCaller {
+  return {
+    client: ctx.client,
+    edits,
+    principal: ctx.key?.principal ?? toLegacyPrincipal(),
+  };
+}
+
+function offlineReply(ctx: Dispatch, name: string): unknown {
+  const isRead = ActionTools.isAction(name)
+    ? ActionTools.isRead(name)
+    : !EDIT_NAMES.has(name);
+  const text = offlineRefusal(
+    name,
+    isRead,
+    ctx.key?.offlineSince ?? null,
+    Date.now()
+  );
+  return text === null
+    ? null
+    : { content: [{ type: "text", text }], isError: true };
 }
 
 function argsOf(raw: unknown): Record<string, unknown> {
@@ -207,8 +235,15 @@ async function callAny(
   name: string,
   args: unknown
 ): Promise<unknown> {
+  const offline = offlineReply(ctx, name);
+  if (offline !== null) return offline;
   if (ActionTools.isAction(name))
-    return ActionTools.call(ctx.deps, name, argsOf(args) as WireArgs, edits);
+    return ActionTools.call(
+      ctx.deps,
+      name,
+      argsOf(args) as WireArgs,
+      callerOf(ctx, edits)
+    );
   if (!EDIT_NAMES.has(name))
     return {
       content: [{ type: "text", text: `unknown tool ${name}` }],
@@ -295,10 +330,12 @@ async function dispatch(
 function createMcpApp(
   deps: ExportDeps,
   editDeps: EditDeps | null,
-  settings: () => McpSettings
+  settings: () => McpSettings,
+  introspect: Introspect
 ): Hono {
-  const app = new Hono();
+  const app = new Hono<{ Variables: { key: Resolved | null } }>();
   const clients = new Map<string, string>();
+  const keys = createKeyResolver(introspect);
   app.use("*", async (c, next) => {
     const { port, token } = settings();
     const host = c.req.header("host") ?? "";
@@ -307,11 +344,21 @@ function createMcpApp(
     if (c.req.header("origin") !== undefined)
       return c.json({ error: "forbidden" }, 403);
     const auth = c.req.header("authorization") ?? "";
-    if (!auth.startsWith("Bearer ") || !isSameText(auth.slice(7), token))
-      return c.json({ error: "unauthorized" }, 401, {
+    const unauthorized = (): Response =>
+      c.json({ error: "unauthorized" }, 401, {
         "www-authenticate": "Bearer",
       });
-    await next();
+    if (!auth.startsWith("Bearer ")) return unauthorized();
+    const bearer = auth.slice(7);
+    if (isSameText(bearer, token)) {
+      c.set("key", null);
+      return next();
+    }
+    const resolution = await keys.resolve(bearer);
+    if (resolution.kind === "denied") return unauthorized();
+    if (resolution.kind === "offline") return c.json({ error: "offline" }, 503);
+    c.set("key", resolution.resolved);
+    return next();
   });
   app.post("/mcp", async (c) => {
     const length = Number(c.req.header("content-length") ?? "0");
@@ -334,12 +381,17 @@ function createMcpApp(
     const batch = Array.isArray(parsed);
     const messages = (batch ? parsed : [parsed]) as RpcMessage[];
     let session: string | null = null;
+    const key = c.get("key");
     const ctx: Dispatch = {
       deps,
       edits: settings().edits ? editDeps : null,
       client:
-        clients.get(c.req.header("mcp-session-id") ?? "") ?? DEFAULT_CLIENT,
-      startSession: (client) => {
+        key?.client ??
+        clients.get(c.req.header("mcp-session-id") ?? "") ??
+        DEFAULT_CLIENT,
+      key,
+      startSession: (named) => {
+        const client = key?.client ?? named;
         session = randomBytes(16).toString("hex");
         clients.set(session, client);
         if (clients.size > MAX_SESSIONS)
@@ -364,6 +416,12 @@ function createMcpApp(
   return app;
 }
 
+export interface McpWiring {
+  edits: EditDeps | null;
+  introspect: Introspect;
+  listener: McpListenerRunnerApi | null;
+}
+
 export interface McpService {
   status(): Promise<McpStatus>;
   setEnabled(enabled: boolean): Promise<McpStatus>;
@@ -377,12 +435,17 @@ export interface McpService {
 export function createMcpService(
   dataDir: string,
   deps: ExportDeps,
-  listener: McpListenerRunnerApi | null,
-  edits: EditDeps | null = null
+  wiring: McpWiring
 ): McpService {
+  const { edits, introspect, listener } = wiring;
   let current: McpSettings | null = null;
   let lastError: string | null = null;
-  const app = createMcpApp(deps, edits, () => current as McpSettings);
+  const app = createMcpApp(
+    deps,
+    edits,
+    () => current as McpSettings,
+    introspect
+  );
 
   const load = async (): Promise<McpSettings> => {
     current ??= await readMcpSettings(dataDir);

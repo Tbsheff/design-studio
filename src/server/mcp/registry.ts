@@ -11,6 +11,7 @@ import type { Gate, Runner, WireArgs } from "../handlers/_core/run-action.js";
 import { ALL_ENTRIES } from "../handlers/all-entries.generated.js";
 import type { StudioRuntime } from "../main/runtime.js";
 import { toLegacyPrincipal } from "../store/principal.js";
+import type { Principal } from "../store/principal.js";
 import type { ApprovalQueue } from "./approvals.js";
 import { toToolResult } from "./tool-result.js";
 import type { TextResult } from "./tool-result.js";
@@ -153,11 +154,11 @@ const refuseAll: Gate = () =>
   Effect.fail(new Forbidden({ message: NO_GATE, perm: "confirm" }));
 
 const askGate =
-  (approvals: ApprovalQueue, tool: string): Gate =>
+  (approvals: ApprovalQueue, tool: string, client: string): Gate =>
   (card) =>
     Effect.flatMap(
       Effect.promise(() =>
-        approvals.ask({ ...card, client: "mcp", projectId: null, tool })
+        approvals.ask({ ...card, client, projectId: null, tool })
       ),
       (outcome) => {
         if (outcome === "allow") {
@@ -170,23 +171,34 @@ const askGate =
       }
     );
 
-const gateOf = (gates: GateDeps | null, tool: string): Gate => {
+const gateOf = (gates: GateDeps | null, tool: string, client: string): Gate => {
   const approvals = gates?.approvals ?? null;
 
   if (approvals === null) {
     return refuseAll;
   }
 
-  return askGate(approvals, tool);
+  return askGate(approvals, tool, client);
 };
+
+interface McpCaller {
+  readonly client: string;
+  readonly edits: GateDeps | null;
+  readonly principal: Principal;
+}
+
+interface ActionRun {
+  readonly gate: Gate;
+  readonly principal: Principal;
+}
 
 const runActionTool = async (
   runtime: StudioRuntime,
   tool: ActionRunner,
   args: WireArgs,
-  gate: Gate
+  context: ActionRun
 ): Promise<TextResult> => {
-  const program = tool.run(args, toLegacyPrincipal(), "json", gate);
+  const program = tool.run(args, context.principal, "json", context.gate);
 
   return toToolResult(tool.action, await runtime.runPromiseExit(program));
 };
@@ -198,8 +210,9 @@ const callActionTool = (
   deps: RuntimeDeps,
   name: string,
   args: WireArgs,
-  edits: GateDeps | null
+  caller: McpCaller
 ): Promise<TextResult> => {
+  const { edits } = caller;
   const tool = ACTION_TOOLS_BY_NAME.get(name);
   const runtime = deps.runtime ?? null;
 
@@ -215,11 +228,15 @@ const callActionTool = (
     return refuse(RUNTIME_OFF);
   }
 
-  return runActionTool(runtime, tool, args, gateOf(edits, name));
+  return runActionTool(runtime, tool, args, {
+    gate: gateOf(edits, name, caller.client),
+    principal: caller.principal,
+  });
 };
 
 const actionCaller = (
-  runtime: StudioRuntime | null | undefined
+  runtime: StudioRuntime | null | undefined,
+  principal: Principal = toLegacyPrincipal()
 ): CallById | null => {
   if (!runtime) {
     return null;
@@ -232,7 +249,10 @@ const actionCaller = (
       return refuse(`unknown action ${action.id}`);
     }
 
-    return runActionTool(runtime, runner, args as WireArgs, refuseAll);
+    return runActionTool(runtime, runner, args as WireArgs, {
+      gate: refuseAll,
+      principal,
+    });
   };
 };
 
@@ -257,6 +277,7 @@ const ActionTools = {
   call: callActionTool,
   isAction: isActionTool,
   isKnown: isKnownTool,
+  isRead: isReadActionTool,
   list: listActionTools,
 } as const;
 
@@ -274,4 +295,11 @@ export {
   toInputSchema,
 };
 
-export type { ActionRunner, ActionTool, CallById, GateDeps, RuntimeDeps };
+export type {
+  ActionRunner,
+  ActionTool,
+  CallById,
+  GateDeps,
+  McpCaller,
+  RuntimeDeps,
+};

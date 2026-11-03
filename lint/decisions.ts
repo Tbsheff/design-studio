@@ -617,6 +617,19 @@ export const decisionOverrides: OxlintOverride[] = [
     rules: { "eslint/sort-keys": "off" },
   },
   {
+    files: ["src/server/mcp/{key-auth,key-introspect}.ts"],
+    rules: {
+      "import/no-relative-parent-imports": "off",
+    },
+  },
+  {
+    files: ["src/server/mcp/{key-auth,key-introspect}.ts"],
+    rules: {
+      "anti-slop/require-readable-spacing": "warn",
+      "sonarjs/no-nested-functions": "warn",
+    },
+  },
+  {
     files: [
       "src/server/{agent/icon-tool,http/icon-routes,icons/deps,mcp/icon-tools}.ts",
       "src/server/{mcp/text-style-tools,agent/text-style-tool,text-styles/deps}.ts",

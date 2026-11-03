@@ -55,6 +55,7 @@ import type { BashEditResult, BashWriteCheck, FileText } from "./bash-edits.js";
 import { createCutWriteGuard } from "./cut-writes.js";
 import { isLeanRun } from "./lean-run.js";
 import { EDIT_TOOL_NAMES } from "./permissions.js";
+import type { RunFibers } from "./run-runner.js";
 import { createTodoTracker, evidenceOf } from "./todo-tracker.js";
 import type { TodoEvidence } from "./todo-tracker.js";
 
@@ -163,6 +164,7 @@ interface LifecycleDeps {
   projects: ProjectStore;
   versions: VersionStore;
   beforeCommit?: (project: Project, direction: Direction) => Promise<void>;
+  fibers?: RunFibers | null;
 }
 
 export const EMPTY_USAGE: RunUsage = {
@@ -999,12 +1001,15 @@ export function createRunLifecycle(
       if (stopping.get(runKey) === done) stopping.delete(runKey);
     });
 
+    deps.fibers?.launch(runId, done, () => controller.abort());
+
     const handle: RunHandle = {
       runId,
       cancel() {
         if (driverSettled || canceled) return;
         canceled = true;
-        controller.abort();
+        if (deps.fibers) deps.fibers.interrupt(runId);
+        else controller.abort();
         stopping.set(runKey, done);
         emitRun({ type: "run.stopping" });
       },

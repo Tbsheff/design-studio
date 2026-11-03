@@ -115,7 +115,7 @@ type StreamEventMessage = Extract<SDKMessage, { type: "stream_event" }>;
 type AssistantMessage = Extract<SDKMessage, { type: "assistant" }>;
 type UserMessage = Extract<SDKMessage, { type: "user" }>;
 
-interface SdkDriverOptions {
+export interface SdkDriverOptions {
   preview: PreviewService;
   canvas?: CanvasService;
   comments?: CommentStore;

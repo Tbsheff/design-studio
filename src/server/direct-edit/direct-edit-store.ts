@@ -18,7 +18,10 @@ import {
   treeOf,
 } from "./direct-edit-ops.js";
 import type { DirectionRef, EditBody } from "./direct-edit-ops.js";
-import { listPropsComponentsOf } from "./direct-edit-props-ops.js";
+import {
+  listPropsComponentsOf,
+  propsInstanceOf,
+} from "./direct-edit-props-ops.js";
 import { getReviewOf, getRulesOf } from "./direct-edit-review-ops.js";
 
 interface DirectEditStoreApi {
@@ -76,9 +79,16 @@ interface DirectEditStoreApi {
     Awaited<ReturnType<typeof getComponentPreviewOf>>,
     DirectEditFailure
   >;
+  readonly inspectPropsInstance: (
+    ref: DirectionRef,
+    body: Parameters<typeof propsInstanceOf>[2]
+  ) => Effect.Effect<
+    Awaited<ReturnType<typeof propsInstanceOf>>,
+    DirectEditFailure
+  >;
   readonly listPropsComponents: (
     ref: DirectionRef,
-    body: EditBody
+    body: Parameters<typeof listPropsComponentsOf>[2]
   ) => Effect.Effect<
     Awaited<ReturnType<typeof listPropsComponentsOf>>,
     DirectEditFailure
@@ -144,6 +154,16 @@ class DirectEditStore extends Context.Service<
       ) {
         return yield* attemptDirectEdit((runtime) => readTweaks(runtime, ref));
       }),
+      inspectPropsInstance: Effect.fn("DirectEditStore.inspectPropsInstance")(
+        function* run(
+          ref: DirectionRef,
+          body: Parameters<typeof propsInstanceOf>[2]
+        ) {
+          return yield* attemptDirectEdit((runtime) =>
+            propsInstanceOf(runtime, ref, body)
+          );
+        }
+      ),
       listComponentFolders: Effect.fn("DirectEditStore.listComponentFolders")(
         function* run(ref: DirectionRef) {
           return yield* attemptDirectEdit((runtime) =>
@@ -166,7 +186,10 @@ class DirectEditStore extends Context.Service<
         );
       }),
       listPropsComponents: Effect.fn("DirectEditStore.listPropsComponents")(
-        function* run(ref: DirectionRef, body: EditBody) {
+        function* run(
+          ref: DirectionRef,
+          body: Parameters<typeof listPropsComponentsOf>[2]
+        ) {
           return yield* attemptDirectEdit((runtime) =>
             listPropsComponentsOf(runtime, ref, body)
           );

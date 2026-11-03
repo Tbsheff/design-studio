@@ -4,6 +4,12 @@ import type { KnownFailure } from "../platform/attempt/index.js";
 import { attemptProject } from "./project-runtime.js";
 import type { StudioProjectStore } from "./project-types.js";
 
+interface EncodedUpload {
+  readonly data: string;
+  readonly mime: string;
+  readonly name: string;
+}
+
 interface ProjectWriterApi {
   readonly create: (
     ...args: Parameters<StudioProjectStore["create"]>
@@ -95,6 +101,13 @@ interface ProjectWriterApi {
     Awaited<ReturnType<StudioProjectStore["saveAttachment"]>>,
     KnownFailure
   >;
+  readonly saveEncodedAttachment: (
+    projectId: string,
+    upload: EncodedUpload
+  ) => Effect.Effect<
+    Awaited<ReturnType<StudioProjectStore["saveAttachment"]>>,
+    KnownFailure
+  >;
   readonly writeDesignMd: (
     ...args: Parameters<StudioProjectStore["writeDesignMd"]>
   ) => Effect.Effect<
@@ -117,6 +130,16 @@ class ProjectWriter extends Context.Service<ProjectWriter, ProjectWriterApi>()(
   public static readonly layer = Layer.succeed(
     ProjectWriter,
     ProjectWriter.of({
+      addDirection: Effect.fn("ProjectWriter.addDirection")(function* run(
+        ...args: Parameters<StudioProjectStore["addDirection"]>
+      ) {
+        return yield* attemptProject((store) => store.addDirection(...args));
+      }),
+      attachApp: Effect.fn("ProjectWriter.attachApp")(function* run(
+        ...args: Parameters<StudioProjectStore["attachApp"]>
+      ) {
+        return yield* attemptProject((store) => store.attachApp(...args));
+      }),
       create: Effect.fn("ProjectWriter.create")(function* run(
         ...args: Parameters<StudioProjectStore["create"]>
       ) {
@@ -127,20 +150,24 @@ class ProjectWriter extends Context.Service<ProjectWriter, ProjectWriterApi>()(
       ) {
         return yield* attemptProject((store) => store.createInFolder(...args));
       }),
+      discardCreated: Effect.fn("ProjectWriter.discardCreated")(function* run(
+        ...args: Parameters<StudioProjectStore["discardCreated"]>
+      ) {
+        return yield* attemptProject((store) => store.discardCreated(...args));
+      }),
       importFolder: Effect.fn("ProjectWriter.importFolder")(function* run(
         ...args: Parameters<StudioProjectStore["importFolder"]>
       ) {
         return yield* attemptProject((store) => store.importFolder(...args));
       }),
-      attachApp: Effect.fn("ProjectWriter.attachApp")(function* run(
-        ...args: Parameters<StudioProjectStore["attachApp"]>
+      markDesignSystemDeleted: Effect.fn(
+        "ProjectWriter.markDesignSystemDeleted"
+      )(function* run(
+        ...args: Parameters<StudioProjectStore["markDesignSystemDeleted"]>
       ) {
-        return yield* attemptProject((store) => store.attachApp(...args));
-      }),
-      discardCreated: Effect.fn("ProjectWriter.discardCreated")(function* run(
-        ...args: Parameters<StudioProjectStore["discardCreated"]>
-      ) {
-        return yield* attemptProject((store) => store.discardCreated(...args));
+        return yield* attemptProject((store) =>
+          store.markDesignSystemDeleted(...args)
+        );
       }),
       moveIntoFolder: Effect.fn("ProjectWriter.moveIntoFolder")(function* run(
         ...args: Parameters<StudioProjectStore["moveIntoFolder"]>
@@ -152,15 +179,43 @@ class ProjectWriter extends Context.Service<ProjectWriter, ProjectWriterApi>()(
       ) {
         return yield* attemptProject((store) => store.rename(...args));
       }),
+      reserveFolder: Effect.fn("ProjectWriter.reserveFolder")(function* run(
+        ...args: Parameters<StudioProjectStore["reserveFolder"]>
+      ) {
+        return yield* attemptProject((store) => store.reserveFolder(...args));
+      }),
       save: Effect.fn("ProjectWriter.save")(function* run(
         ...args: Parameters<StudioProjectStore["save"]>
       ) {
         return yield* attemptProject((store) => store.save(...args));
       }),
-      addDirection: Effect.fn("ProjectWriter.addDirection")(function* run(
-        ...args: Parameters<StudioProjectStore["addDirection"]>
+      saveAttachment: Effect.fn("ProjectWriter.saveAttachment")(function* run(
+        ...args: Parameters<StudioProjectStore["saveAttachment"]>
       ) {
-        return yield* attemptProject((store) => store.addDirection(...args));
+        return yield* attemptProject((store) => store.saveAttachment(...args));
+      }),
+      saveEncodedAttachment: Effect.fn("ProjectWriter.saveEncodedAttachment")(
+        function* run(projectId: string, upload: EncodedUpload) {
+          const bytes = new Uint8Array(Buffer.from(upload.data, "base64"));
+
+          return yield* attemptProject((store) =>
+            store.saveAttachment(projectId, {
+              bytes,
+              mime: upload.mime,
+              name: upload.name,
+            })
+          );
+        }
+      ),
+      setPackId: Effect.fn("ProjectWriter.setPackId")(function* run(
+        ...args: Parameters<StudioProjectStore["setPackId"]>
+      ) {
+        return yield* attemptProject((store) => store.setPackId(...args));
+      }),
+      setThumbnail: Effect.fn("ProjectWriter.setThumbnail")(function* run(
+        ...args: Parameters<StudioProjectStore["setThumbnail"]>
+      ) {
+        return yield* attemptProject((store) => store.setThumbnail(...args));
       }),
       updateDirection: Effect.fn("ProjectWriter.updateDirection")(function* run(
         ...args: Parameters<StudioProjectStore["updateDirection"]>
@@ -172,39 +227,10 @@ class ProjectWriter extends Context.Service<ProjectWriter, ProjectWriterApi>()(
       ) {
         return yield* attemptProject((store) => store.updateSettings(...args));
       }),
-      setThumbnail: Effect.fn("ProjectWriter.setThumbnail")(function* run(
-        ...args: Parameters<StudioProjectStore["setThumbnail"]>
-      ) {
-        return yield* attemptProject((store) => store.setThumbnail(...args));
-      }),
-      setPackId: Effect.fn("ProjectWriter.setPackId")(function* run(
-        ...args: Parameters<StudioProjectStore["setPackId"]>
-      ) {
-        return yield* attemptProject((store) => store.setPackId(...args));
-      }),
-      markDesignSystemDeleted: Effect.fn(
-        "ProjectWriter.markDesignSystemDeleted"
-      )(function* run(
-        ...args: Parameters<StudioProjectStore["markDesignSystemDeleted"]>
-      ) {
-        return yield* attemptProject((store) =>
-          store.markDesignSystemDeleted(...args)
-        );
-      }),
-      saveAttachment: Effect.fn("ProjectWriter.saveAttachment")(function* run(
-        ...args: Parameters<StudioProjectStore["saveAttachment"]>
-      ) {
-        return yield* attemptProject((store) => store.saveAttachment(...args));
-      }),
       writeDesignMd: Effect.fn("ProjectWriter.writeDesignMd")(function* run(
         ...args: Parameters<StudioProjectStore["writeDesignMd"]>
       ) {
         return yield* attemptProject((store) => store.writeDesignMd(...args));
-      }),
-      reserveFolder: Effect.fn("ProjectWriter.reserveFolder")(function* run(
-        ...args: Parameters<StudioProjectStore["reserveFolder"]>
-      ) {
-        return yield* attemptProject((store) => store.reserveFolder(...args));
       }),
     })
   );
@@ -212,4 +238,4 @@ class ProjectWriter extends Context.Service<ProjectWriter, ProjectWriterApi>()(
 
 export { ProjectWriter };
 
-export type { ProjectWriterApi };
+export type { EncodedUpload, ProjectWriterApi };

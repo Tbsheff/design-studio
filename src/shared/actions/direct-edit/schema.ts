@@ -280,11 +280,20 @@ const ComponentPreviewSchema = Schema.Struct({
   text: Schema.NullOr(Schema.String),
 });
 
-const PropsComponentListSchema = Schema.Struct({
-  components: Schema.Array(Schema.Unknown),
-  nextCursor: Schema.NullOr(Schema.String),
-  total: Schema.Number,
-  truncated: Schema.Boolean,
+const PropsComponentSchema = Schema.Struct({
+  asChild: Schema.Boolean,
+  cva: Schema.NullOr(Schema.Unknown),
+  example: Schema.String,
+  file: Schema.String,
+  folder: Schema.String,
+  import: Schema.String,
+  line: Schema.Number,
+  name: Schema.String,
+  note: Schema.NullOr(Schema.String),
+  parts: Schema.Array(Schema.String),
+  props: Schema.Array(Schema.Unknown),
+  source: Schema.String,
+  uses: Schema.Number,
 });
 
 const PropsInstanceSchema = Schema.Struct({
@@ -383,7 +392,7 @@ export {
   InsertResultSchema,
   FigmaImportOutputSchema,
   LastReviewSchema,
-  PropsComponentListSchema,
+  PropsComponentSchema,
   PropsInstanceSchema,
   ReviewFixResultSchema,
   ReviewResultSchema,

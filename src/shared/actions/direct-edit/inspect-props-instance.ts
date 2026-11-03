@@ -1,5 +1,6 @@
 import { Schema } from "effect";
 
+import { PropsInstanceFields } from "../../direct-edit-payload.js";
 import { defineAction } from "../_core/action.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
 import { Conflict } from "../_core/errors/conflict.js";
@@ -11,7 +12,7 @@ import { DirectEditNotFound } from "./errors/direct-edit-not-found.js";
 import { PropsInstanceSchema } from "./schema.js";
 
 const inspectPropsInstanceDirectEdit = defineAction({
-  access: "edit",
+  access: "read",
   agent: { off: "legacy-agent" },
   confirm: "none",
   description:
@@ -25,18 +26,16 @@ const inspectPropsInstanceDirectEdit = defineAction({
     DirectEditNotFound,
   ],
   http: {
-    method: "POST",
+    method: "GET",
     path: "/api/projects/:projectId/d/:directionId/props/instance",
   },
   id: "direct-edit.inspectPropsInstance",
   input: Schema.Struct({
+    ...PropsInstanceFields,
     directionId: DirectionIdSchema,
-    owners: Schema.optionalKey(Schema.Unknown),
     projectId: ProjectIdSchema,
-    use: Schema.optionalKey(Schema.Unknown),
-    usedAt: Schema.optionalKey(Schema.Unknown),
   }),
-  invalidates: ["version.list", "version.get"],
+  invalidates: [],
   mcp: { off: "legacy-mcp" },
   needs: "project.read",
   output: PropsInstanceSchema,

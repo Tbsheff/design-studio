@@ -1,6 +1,6 @@
 import { parseColor } from "./color.js";
 import { lengthPx } from "./length.js";
-import type { SweepKind, SweepToken } from "./types.js";
+import type { SweepToken } from "./types.js";
 
 interface TokenEntry {
   readonly cssVar: string;
@@ -35,7 +35,7 @@ const suffixOf = (cssVar: string, namespace: string): string | null => {
   return rest;
 };
 
-const lengthKindOf = (cssVar: string): SweepKind | null => {
+const lengthKindOf = (cssVar: string): keyof typeof NAMESPACE_OF | null => {
   if (RADIUS_VAR.test(cssVar)) {
     return "radius";
   }

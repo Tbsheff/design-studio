@@ -30,7 +30,12 @@ const createImage = defineAction({
     ...ImageCreateFields,
     projectId: ProjectIdSchema,
   }),
-  invalidates: ["image.inspect"],
+  invalidates: [
+    "canvas.getDoc",
+    "direct-edit.getTree",
+    "version.list",
+    "version.listHistory",
+  ],
   mcp: { name: "create_image" },
   needs: "project.update",
   output: ImageCreatedSchema,

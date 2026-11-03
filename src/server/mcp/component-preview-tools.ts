@@ -1,31 +1,10 @@
 import { z } from "zod";
 
-import { getComponentPreviewOf } from "../direct-edit/direct-edit-insert-ops.js";
-import { directEditCall } from "./direct-edit-call.js";
+import { COMPONENT_PREVIEW_PROPS_HEADER } from "../../shared/component-preview.js";
 import { EditError, loadTarget } from "./edit-deps.js";
-import { defineTool, directionId, projectId } from "./edit-kit.js";
+import type { EditDeps } from "./edit-deps.js";
+import { base, defineTool, directionId, projectId } from "./edit-kit.js";
 import type { Done, ToolSpec } from "./edit-kit.js";
-
-const PREVIEW_KEYS = ["file", "id", "name"] as const;
-
-type PreviewBody = Parameters<typeof getComponentPreviewOf>[2];
-
-const previewBodyOf = (input: {
-  readonly file?: string | undefined;
-  readonly id?: string | undefined;
-  readonly name?: string | undefined;
-}): PreviewBody =>
-  Object.fromEntries(
-    PREVIEW_KEYS.flatMap((key) => {
-      const value = input[key];
-
-      if (value) {
-        return [[key, value]];
-      }
-
-      return [];
-    })
-  );
 
 const previewSchema = z
   .object({
@@ -59,6 +38,32 @@ const previewSchema = z
     "pass name (and file) or id"
   );
 
+async function previewResponse(
+  deps: EditDeps,
+  url: string
+): Promise<{ png: Buffer; meta: string }> {
+  const res = await deps.request("GET", url);
+
+  if (res.ok) {
+    return {
+      png: Buffer.from(await res.arrayBuffer()),
+      meta: decodeURIComponent(
+        res.headers.get(COMPONENT_PREVIEW_PROPS_HEADER) ?? ""
+      ),
+    };
+  }
+
+  const body = (await res.json().catch(() => null)) as {
+    message?: unknown;
+  } | null;
+
+  throw new EditError(
+    typeof body?.message === "string"
+      ? body.message
+      : `component preview failed with ${res.status}`
+  );
+}
+
 const componentPreview = defineTool(
   "component_preview",
   previewSchema,
@@ -82,28 +87,24 @@ const componentPreview = defineTool(
       );
     }
 
-    const preview = await directEditCall(
-      { directionId: direction.id, projectId: project.id },
-      (runtime, ref) =>
-        getComponentPreviewOf(runtime, ref, previewBodyOf(input))
-    );
+    const query = input.id
+      ? `id=${encodeURIComponent(input.id)}`
+      : `name=${encodeURIComponent(input.name ?? "")}${input.file ? `&file=${encodeURIComponent(input.file)}` : ""}`;
 
-    const meta = JSON.stringify({
-      cached: preview.cached,
-      component: preview.component,
-      props: preview.props,
-      text: preview.text,
-    });
+    const { png, meta } = await previewResponse(
+      deps,
+      `${base(project, direction.id)}/component-preview?${query}`
+    );
 
     return {
       result: {
         content: [
           {
             type: "image",
-            data: preview.png,
+            data: png.toString("base64"),
             mimeType: "image/png",
           },
-          { type: "text", text: meta },
+          { type: "text", text: meta || "Component preview." },
         ],
       },
     };

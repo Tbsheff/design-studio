@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Effect, Schema } from "effect";
 
 const MAX_SELECT = 2000;
 
@@ -11,23 +11,25 @@ const TokenLayerSchema = Schema.Struct({
 });
 
 const TokenApplyFields = {
-  dryRun: Schema.optionalKey(
-    Schema.Boolean.annotate({
-      description:
-        "Default true. When true, list the changes and write nothing. Pass false to write.",
-    })
+  dryRun: Schema.Boolean.annotate({
+    description:
+      "Default true. When true, list the changes and write nothing. Pass false to write.",
+  }).pipe(Schema.withDecodingDefaultKey(Effect.succeed(true))),
+  kinds: Schema.Array(TokenKindSchema).pipe(
+    Schema.withDecodingDefaultKey(Effect.succeed([]))
   ),
-  kinds: Schema.optionalKey(Schema.Array(TokenKindSchema)),
-  layer: Schema.optionalKey(TokenLayerSchema),
-  page: Schema.optionalKey(
-    Schema.String.annotate({
+  layer: Schema.NullOr(TokenLayerSchema).pipe(
+    Schema.withDecodingDefaultKey(Effect.succeed(null))
+  ),
+  page: Schema.NullOr(Schema.String)
+    .annotate({
       description:
         "Source file of one page, relative to the project. Leave out to sweep every source file.",
     })
-  ),
-  select: Schema.optionalKey(
+    .pipe(Schema.withDecodingDefaultKey(Effect.succeed(null))),
+  select: Schema.NullOr(
     Schema.Array(Schema.String).check(Schema.isMaxLength(MAX_SELECT))
-  ),
+  ).pipe(Schema.withDecodingDefaultKey(Effect.succeed(null))),
 } as const;
 
 const TokenChangeSchema = Schema.Struct({

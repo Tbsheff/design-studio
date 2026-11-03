@@ -136,7 +136,7 @@ function useImageSet(props: Props) {
       });
 
       if (result.src) {
-        setPlaced(result.src.split("/").pop() ?? null);
+        setPlaced(String(result.src).split("/").pop() ?? null);
       }
 
       if (result.changed) {

@@ -16,7 +16,7 @@ const moveHiddenProject = defineAction({
   http: { method: "POST", path: "/api/hidden-projects/move" },
   id: "project.moveHidden",
   input: Schema.Struct({}),
-  invalidates: ["project.list", "project.listHidden"],
+  invalidates: ["project.list", "project.getHidden"],
   mcp: { off: "legacy-mcp" },
   needs: "project.update",
   output: HiddenMovedSchema,

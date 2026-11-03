@@ -5,10 +5,10 @@ import type { setDesignMdProject } from "../../../shared/actions/project/set-des
 import { ProjectOpsWriter } from "../../project-ops/index.js";
 import type { Handle } from "../_core/handler.js";
 
-type SetDesignMdProjectsInput = Input<typeof setDesignMdProject>;
+type SetDesignMdProjectInput = Input<typeof setDesignMdProject>;
 
 const handle = Effect.fn("project.setDesignMd")(function* run(
-  input: SetDesignMdProjectsInput
+  input: SetDesignMdProjectInput
 ) {
   const writer = yield* ProjectOpsWriter;
 

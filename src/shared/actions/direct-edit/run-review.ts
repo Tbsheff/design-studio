@@ -1,5 +1,6 @@
 import { Schema } from "effect";
 
+import { ReviewRunFields } from "../../direct-edit-payload.js";
 import { defineAction } from "../_core/action.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
 import { Conflict } from "../_core/errors/conflict.js";
@@ -30,13 +31,9 @@ const runReviewDirectEdit = defineAction({
   },
   id: "direct-edit.runReview",
   input: Schema.Struct({
+    ...ReviewRunFields,
     directionId: DirectionIdSchema,
-    frame: Schema.optionalKey(Schema.Unknown),
-    height: Schema.optionalKey(Schema.Unknown),
-    path: Schema.optionalKey(Schema.Unknown),
     projectId: ProjectIdSchema,
-    selector: Schema.optionalKey(Schema.Unknown),
-    width: Schema.optionalKey(Schema.Unknown),
   }),
   invalidates: ["direct-edit.getReview"],
   mcp: { off: "legacy-mcp" },

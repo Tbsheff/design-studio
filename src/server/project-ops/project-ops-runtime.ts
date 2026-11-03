@@ -9,25 +9,37 @@ import type {
   Version,
   VersionMeta,
 } from "../../shared/contracts.js";
-import type { AttachResponse } from "../app/first-version.js";
-import type { LoadedPack, PackRegistry } from "../design-system/packs.js";
+import type { AttachResponse } from "../app/index.js";
+import type { LoadedPack, PackRegistry } from "../design-system/index.js";
 import type { EventBus } from "../events/index.js";
 import { attemptKnown } from "../platform/attempt/index.js";
 import type { KnownFailure } from "../platform/attempt/index.js";
 import { makeRuntimeSlot } from "../platform/runtime-slot/index.js";
-import type { CommandRuleStore } from "../store/command-rules.js";
-import type { DefaultFolderStore } from "../store/default-folder.js";
-import type { StudioProjectStore } from "../store/projects.js";
+import type {
+  CommandRuleStore,
+  DefaultFolderStore,
+  StudioProjectStore,
+} from "../store/index.js";
+
+type CommitFileArgs = [
+  project: Project,
+  direction: Direction,
+  relativePath: string | string[],
+  title: string,
+  meta: VersionMeta,
+];
 
 interface ProjectOpsParsers {
-  readonly level: (raw: unknown) => RunLevel | undefined;
+  readonly level: (raw: string | undefined) => RunLevel | undefined;
   readonly packOf: (
     registry: PackRegistry,
-    raw: unknown
+    raw: string | null | undefined
   ) => Promise<LoadedPack | null>;
   readonly projectFile: (dir: string, requested: string) => Promise<string>;
-  readonly settings: (raw: unknown) => Partial<ProjectSettings> | undefined;
-  readonly startRun: (raw: unknown) => boolean;
+  readonly settings: <Fields extends object>(
+    raw: Fields | undefined
+  ) => Partial<ProjectSettings> | undefined;
+  readonly startRun: (raw: boolean | undefined) => boolean;
 }
 
 interface ProjectOpsRuntime {
@@ -74,13 +86,7 @@ interface ProjectOpsRuntime {
     input: RunRequest
   ) => Promise<string>;
   readonly versions: {
-    readonly commitFile: (
-      project: Project,
-      direction: Direction,
-      relativePath: string | string[],
-      title: string,
-      meta: VersionMeta
-    ) => Promise<Version | null>;
+    readonly commitFile: (...args: CommitFileArgs) => Promise<Version | null>;
     readonly ensureRepo: (project: Project) => Promise<void>;
   };
   readonly watchDirection: (project: Project, direction: Direction) => void;

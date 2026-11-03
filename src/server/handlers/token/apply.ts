@@ -12,12 +12,12 @@ const handle = Effect.fn("token.apply")(function* run(input: ApplyTokenInput) {
 
   return yield* sweeper.apply({
     directionId: input.directionId,
-    dryRun: input.dryRun ?? true,
-    kinds: input.kinds ?? [],
-    layer: input.layer ?? null,
-    page: input.page ?? null,
+    dryRun: input.dryRun,
+    kinds: input.kinds,
+    layer: input.layer,
+    page: input.page,
     projectId: input.projectId,
-    select: input.select ?? null,
+    select: input.select,
   });
 }) satisfies Handle<typeof applyToken>;
 

@@ -7,7 +7,6 @@ import type {
   Project,
 } from "../../shared/contracts.js";
 import type { LayerLocksView } from "../../shared/layer-locks.js";
-import { applyEditBody } from "../direct-edit/direct-edit-ops.js";
 import {
   describeLocks,
   lockDelta,
@@ -15,7 +14,6 @@ import {
   probeLock,
 } from "../layers/lock-probe.js";
 import type { ActivityDraft } from "./activity.js";
-import { directEditCall } from "./direct-edit-call.js";
 import {
   EditError,
   loadTarget,
@@ -124,10 +122,12 @@ async function sourceEdit(
   let result: DirectEditResult | null = null;
 
   for (const request of requests) {
-    result = (await directEditCall(
-      { directionId: loaded.direction.id, projectId: loaded.project.id },
-      (runtime, ref) => applyEditBody(runtime, ref, request)
-    )) as DirectEditResult;
+    result = await studioCall<DirectEditResult>(
+      deps,
+      "POST",
+      `${base(loaded.project, loaded.direction.id)}/direct-edit`,
+      request
+    );
     lines.push(
       request.style
         ? `${input.hidden ? "Hid" : "Showed"} ${element.tag} in ${result.file} (version ${result.version.id}).`

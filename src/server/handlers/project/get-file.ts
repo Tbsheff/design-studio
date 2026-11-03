@@ -5,10 +5,10 @@ import type { getFileProject } from "../../../shared/actions/project/get-file.js
 import { ProjectOpsStore } from "../../project-ops/index.js";
 import type { Handle } from "../_core/handler.js";
 
-type GetFileProjectsInput = Input<typeof getFileProject>;
+type GetFileProjectInput = Input<typeof getFileProject>;
 
 const handle = Effect.fn("project.getFile")(function* run(
-  input: GetFileProjectsInput
+  input: GetFileProjectInput
 ) {
   const store = yield* ProjectOpsStore;
 

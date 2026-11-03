@@ -1,6 +1,6 @@
 export { bindGalleryRuntime } from "./gallery-runtime.js";
 
-export { GalleryRunner } from "./gallery-runner.js";
+export { GalleryStore } from "./gallery-store.js";
 
 export { GalleryWriter } from "./gallery-writer.js";
 

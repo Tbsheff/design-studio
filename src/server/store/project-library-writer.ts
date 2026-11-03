@@ -46,30 +46,30 @@ class ProjectLibraryWriter extends Context.Service<
   public static readonly layer = Layer.succeed(
     ProjectLibraryWriter,
     ProjectLibraryWriter.of({
+      deleteForever: Effect.fn("ProjectLibraryWriter.deleteForever")(
+        function* run(...args: Parameters<ProjectLibrary["deleteForever"]>) {
+          return yield* attemptLibrary((store) => store.deleteForever(...args));
+        }
+      ),
       duplicate: Effect.fn("ProjectLibraryWriter.duplicate")(function* run(
         ...args: Parameters<ProjectLibrary["duplicate"]>
       ) {
         return yield* attemptLibrary((store) => store.duplicate(...args));
       }),
-      trash: Effect.fn("ProjectLibraryWriter.trash")(function* run(
-        ...args: Parameters<ProjectLibrary["trash"]>
+      emptyTrash: Effect.fn("ProjectLibraryWriter.emptyTrash")(function* run(
+        ...args: Parameters<ProjectLibrary["emptyTrash"]>
       ) {
-        return yield* attemptLibrary((store) => store.trash(...args));
+        return yield* attemptLibrary((store) => store.emptyTrash(...args));
       }),
       restore: Effect.fn("ProjectLibraryWriter.restore")(function* run(
         ...args: Parameters<ProjectLibrary["restore"]>
       ) {
         return yield* attemptLibrary((store) => store.restore(...args));
       }),
-      deleteForever: Effect.fn("ProjectLibraryWriter.deleteForever")(
-        function* run(...args: Parameters<ProjectLibrary["deleteForever"]>) {
-          return yield* attemptLibrary((store) => store.deleteForever(...args));
-        }
-      ),
-      emptyTrash: Effect.fn("ProjectLibraryWriter.emptyTrash")(function* run(
-        ...args: Parameters<ProjectLibrary["emptyTrash"]>
+      trash: Effect.fn("ProjectLibraryWriter.trash")(function* run(
+        ...args: Parameters<ProjectLibrary["trash"]>
       ) {
-        return yield* attemptLibrary((store) => store.emptyTrash(...args));
+        return yield* attemptLibrary((store) => store.trash(...args));
       }),
     })
   );

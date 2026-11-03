@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, useTransition } from "react";
 
 import { api, insertError } from "./deps.js";
 import type { IconInsertBody, SelectionContext } from "./deps.js";
@@ -24,7 +24,7 @@ interface InsertSetup {
 interface InsertState {
   readonly busy: boolean;
   readonly failure: string | null;
-  readonly run: (choice: InsertChoice) => Promise<void>;
+  readonly run: (choice: InsertChoice) => void;
 }
 
 const bodyOf = (setup: InsertSetup, choice: InsertChoice): IconInsertBody => {
@@ -44,28 +44,27 @@ const bodyOf = (setup: InsertSetup, choice: InsertChoice): IconInsertBody => {
 };
 
 const useIconInsert = (setup: InsertSetup): InsertState => {
-  const [busy, setBusy] = useState(false);
+  const [busy, startTransition] = useTransition();
   const [failure, setFailure] = useState<string | null>(null);
 
   const run = useCallback(
-    async (choice: InsertChoice): Promise<void> => {
-      setBusy(true);
+    (choice: InsertChoice): void => {
       setFailure(null);
 
-      try {
-        const done = await api.insertIcon(
-          setup.ids.projectId,
-          setup.ids.directionId,
-          bodyOf(setup, choice)
-        );
+      startTransition(async () => {
+        try {
+          const done = await api.insertIcon(
+            setup.ids.projectId,
+            setup.ids.directionId,
+            bodyOf(setup, choice)
+          );
 
-        setBusy(false);
-        setup.onDone(`${done.title}.`);
-        setup.onClose();
-      } catch (error) {
-        setBusy(false);
-        setFailure(insertError(error));
-      }
+          setup.onDone(`${done.title}.`);
+          setup.onClose();
+        } catch (error) {
+          setFailure(insertError(error));
+        }
+      });
     },
     [setup]
   );

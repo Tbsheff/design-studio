@@ -10,9 +10,9 @@ import type { AppEnv } from "../platform/bindings.js";
 import { CloudSettings } from "../platform/env.js";
 import { TenantDb } from "../tenant/db.js";
 import { AgentRequestRepo } from "../tenant/repos/agent-request.js";
+import { CommentRepo } from "../tenant/repos/comments.js";
 import { ProjectsRepo } from "../tenant/repos/projects.js";
 import { VersionsRepo } from "../tenant/repos/versions.js";
-import { CommentQueries } from "./comment-queries.js";
 import { runMethod, toFailure, toResult } from "./rpc.js";
 import type { RpcReply, RpcRequest } from "./rpc.js";
 
@@ -29,7 +29,7 @@ const reposLayer = Layer.mergeAll(
   ProjectsRepo.layer,
   VersionsRepo.layer,
   AgentRequestRepo.layer,
-  CommentQueries.layer
+  CommentRepo.layer
 ).pipe(Layer.provide(TenantDb.layer));
 
 const mcpLayer = Layer.mergeAll(

@@ -29,22 +29,22 @@ const GalleryFields = {
     description:
       "Name of the component, from the kit or the repo inventory. List the components to see the names.",
   }),
-  file: Schema.optionalKey(
-    Schema.String.annotate({
+  file: Schema.NullOr(Schema.String)
+    .annotate({
       description:
         "Source file of the component. Pass it when two components share a name.",
     })
-  ),
-  props: Schema.optionalKey(
-    GalleryPropsSchema.annotate({
-      description:
-        "Prop overrides applied to every cell, for example children text.",
-    })
-  ),
+    .pipe(Schema.withDecodingDefaultKey(Effect.succeed(null))),
+  props: GalleryPropsSchema.annotate({
+    description:
+      "Prop overrides applied to every cell, for example children text.",
+  }).pipe(Schema.withDecodingDefaultKey(Effect.succeed({}))),
   schemes: GallerySchemeChoiceSchema.pipe(
     Schema.withDecodingDefaultKey(Effect.succeed("both" as const))
   ),
-  states: Schema.optionalKey(Schema.Array(GalleryStateSchema)),
+  states: Schema.Array(GalleryStateSchema).pipe(
+    Schema.withDecodingDefaultKey(Effect.succeed([]))
+  ),
 } as const;
 
 const GalleryInspectFields = {

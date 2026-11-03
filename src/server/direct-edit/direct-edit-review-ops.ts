@@ -1,76 +1,55 @@
-import { z } from "zod";
-
+import type { Input } from "../../shared/actions/_core/action.js";
+import type { applyReviewFixDirectEdit } from "../../shared/actions/direct-edit/apply-review-fix.js";
+import type { runReviewDirectEdit } from "../../shared/actions/direct-edit/run-review.js";
+import type { runRulesTestDirectEdit } from "../../shared/actions/direct-edit/run-rules-test.js";
+import type { setRulesDirectEdit } from "../../shared/actions/direct-edit/set-rules.js";
 import type { Direction, Project, Version } from "../../shared/contracts.js";
-import {
-  DESIGN_RULES_TEXT_MAX,
-  type DesignRulesState,
-  type DesignRulesTestResult,
+import type {
+  DesignRule,
+  DesignRulesState,
+  DesignRulesTestResult,
 } from "../../shared/design-rules.js";
-import {
-  REVIEW_FIX_MAX,
-  type ReviewFinding,
-  type ReviewFixResult,
-  type ReviewResult,
+import type {
+  ReviewFinding,
+  ReviewFixResult,
+  ReviewResult,
 } from "../../shared/review.js";
-import { ruleHits } from "../design-rules/check.js";
-import { isTestable, parseRules } from "../design-rules/parse.js";
-import { loadDesignRules, saveDesignRules } from "../design-rules/store.js";
-import { applyFindingFixes } from "../review/fixes.js";
-import { resolveReviewFrame } from "../review/frame.js";
-import { lastReview, rememberReview, runReview } from "../review/run.js";
-import { BadRequestError } from "../store/errors.js";
+import {
+  isTestable,
+  loadDesignRules,
+  parseRules,
+  ruleHits,
+  saveDesignRules,
+} from "../design-rules/index.js";
+import { BadRequestError } from "../platform/errors/index.js";
+import {
+  applyFindingFixes,
+  lastReview,
+  rememberReview,
+  resolveReviewFrame,
+  runReview,
+} from "../review/index.js";
 import type { DirectEditRuntime } from "./direct-edit-core.js";
-import type { DirectionRef, EditBody } from "./direct-edit-ops.js";
+import type { DirectionRef } from "./direct-edit-ops.js";
 
-const side = z.number().int().min(200).max(4000);
-const rulesText = z.string().max(DESIGN_RULES_TEXT_MAX);
-const saveSchema = z.object({ text: rulesText }).strict();
+type RefKeys = "directionId" | "projectId";
 
-const testSchema = z
-  .object({
-    frame: z.string().trim().min(1).max(60).optional(),
-    height: side.optional(),
-    path: z.string().trim().max(300).optional(),
-    text: rulesText.optional(),
-    width: side.optional(),
-  })
-  .strict();
+type RulesSaveBody = Omit<Input<typeof setRulesDirectEdit>, RefKeys>;
 
-const reviewSchema = z
-  .object({
-    frame: z.string().trim().min(1).max(60).optional(),
-    height: side.optional(),
-    path: z.string().trim().max(300).optional(),
-    selector: z.string().trim().min(1).max(2000).optional(),
-    width: side.optional(),
-  })
-  .strict();
+type RulesTestBody = Omit<Input<typeof runRulesTestDirectEdit>, RefKeys>;
 
-const fixSchema = z
-  .object({
-    allowShared: z.boolean().optional(),
-    findingIds: z.array(z.string().min(1).max(80)).min(1).max(REVIEW_FIX_MAX),
-  })
-  .strict();
+type ReviewRunBody = Omit<Input<typeof runReviewDirectEdit>, RefKeys>;
 
-const parse = <Schema extends z.ZodType>(
-  schema: Schema,
-  body: unknown
-): z.output<Schema> => {
-  const parsed = schema.safeParse(body ?? {});
+type ReviewFixBody = Omit<Input<typeof applyReviewFixDirectEdit>, RefKeys>;
 
-  if (!parsed.success) {
-    const [issue] = parsed.error.issues;
+interface SavedRules {
+  readonly state: DesignRulesState;
+  readonly version: Version | null;
+  readonly versionId: string | null;
+}
 
-    throw new BadRequestError(
-      issue
-        ? `${issue.path.join(".") || "body"}: ${issue.message}`
-        : "body is not valid"
-    );
-  }
-
-  return parsed.data;
-};
+const NO_TESTABLE_NOTE =
+  "No rule here can be checked on a page. The agent and the critic still get them.";
 
 const readRulesState = (
   runtime: DirectEditRuntime,
@@ -83,7 +62,10 @@ const readRulesState = (
     studioDir: runtime.projectDir(project.id),
   });
 
-const getRulesOf = async (runtime: DirectEditRuntime, ref: DirectionRef) => {
+const getRulesOf = async (
+  runtime: DirectEditRuntime,
+  ref: DirectionRef
+): Promise<DesignRulesState> => {
   const { direction, project } = await runtime.loadDirection(
     ref.projectId,
     ref.directionId
@@ -92,107 +74,122 @@ const getRulesOf = async (runtime: DirectEditRuntime, ref: DirectionRef) => {
   return readRulesState(runtime, project, direction);
 };
 
-const writeRules = async (
+const commitRules = (
   runtime: DirectEditRuntime,
   project: Project,
   direction: Direction,
+  isInRepo: boolean
+): Promise<Version | null> => {
+  if (!isInRepo) {
+    return Promise.resolve(null);
+  }
+
+  return runtime.commitDesignMd(project, direction);
+};
+
+const writeRules = async (
+  runtime: DirectEditRuntime,
+  target: { readonly direction: Direction; readonly project: Project },
   value: string
-): Promise<{
-  state: DesignRulesState;
-  version: Version | null;
-  versionId: string | null;
-}> => {
+): Promise<SavedRules> => {
   const place = {
-    direction,
-    project,
-    studioDir: runtime.projectDir(project.id),
+    direction: target.direction,
+    project: target.project,
+    studioDir: runtime.projectDir(target.project.id),
   };
+
   const saved = await saveDesignRules(place, value);
 
-  const version = saved.inRepo
-    ? await runtime.commitDesignMd(project, direction)
-    : null;
+  const [version, state] = await Promise.all([
+    commitRules(runtime, target.project, target.direction, saved.inRepo),
+    loadDesignRules(place),
+  ]);
 
-  return {
-    state: await loadDesignRules(place),
-    version,
-    versionId: version?.id ?? null,
-  };
+  return { state, version, versionId: version?.id ?? null };
 };
 
 const setRulesIn = (
   runtime: DirectEditRuntime,
   ref: DirectionRef,
-  body: EditBody
-) => {
-  const input = parse(saveSchema, body);
-
-  return runtime.withDirection(
-    ref.projectId,
-    ref.directionId,
-    (project, direction) => writeRules(runtime, project, direction, input.text)
+  body: RulesSaveBody
+): Promise<SavedRules> =>
+  runtime.withDirection(ref.projectId, ref.directionId, (project, direction) =>
+    writeRules(runtime, { direction, project }, body.text)
   );
+
+const rulesOf = async (
+  runtime: DirectEditRuntime,
+  target: { readonly direction: Direction; readonly project: Project },
+  text: string | null
+): Promise<DesignRule[]> => {
+  if (text !== null) {
+    return parseRules(text);
+  }
+
+  const state = await readRulesState(runtime, target.project, target.direction);
+
+  return state.rules;
+};
+
+const testFrameOf = (frame: {
+  readonly height: number;
+  readonly path?: string | null;
+  readonly width: number;
+}): DesignRulesTestResult["frame"] => {
+  if (frame.path) {
+    return { height: frame.height, path: frame.path, width: frame.width };
+  }
+
+  return { height: frame.height, width: frame.width };
 };
 
 const runRulesTestIn = async (
   runtime: DirectEditRuntime,
   ref: DirectionRef,
-  body: EditBody
+  body: RulesTestBody
 ): Promise<DesignRulesTestResult> => {
-  const input = parse(testSchema, body);
-
   const { direction, project } = await runtime.loadDirection(
     ref.projectId,
     ref.directionId
   );
 
-  const rules =
-    input.text === undefined
-      ? (await readRulesState(runtime, project, direction)).rules
-      : parseRules(input.text);
+  const [rules, frame] = await Promise.all([
+    rulesOf(runtime, { direction, project }, body.text ?? null),
+    resolveReviewFrame(runtime.canvas, project, direction, body),
+  ]);
 
-  const frame = await resolveReviewFrame(
-    runtime.canvas,
-    project,
-    direction,
-    input
-  );
-
-  const notes: string[] = [];
-  const testable = rules.filter(isTestable);
+  const testable = rules.filter((rule) => isTestable(rule));
 
   if (testable.length === 0) {
-    notes.push(
-      "No rule here can be checked on a page. The agent and the critic still get them."
-    );
+    return {
+      frame: testFrameOf(frame),
+      hits: ruleHits(rules, []),
+      notes: [NO_TESTABLE_NOTE],
+      rules,
+    };
   }
 
-  const review =
-    testable.length > 0
-      ? await runReview(runtime.preview, {
-          direction,
-          frame,
-          project,
-          rules: testable,
-        })
-      : null;
+  const review = await runReview(runtime.preview, {
+    direction,
+    frame,
+    project,
+    rules: testable,
+  });
 
-  const findings =
-    review?.findings.filter((finding) => finding.kind === "rule") ?? [];
+  const findings = review.findings.filter((finding) => finding.kind === "rule");
 
   return {
-    frame: {
-      ...(frame.path ? { path: frame.path } : {}),
-      height: frame.height,
-      width: frame.width,
-    },
+    frame: testFrameOf(frame),
     hits: ruleHits(rules, findings),
-    notes,
+    notes: [],
     rules,
   };
 };
 
-const getReviewOf = async (runtime: DirectEditRuntime, ref: DirectionRef) => {
+const getReviewOf = async (
+  runtime: DirectEditRuntime,
+  ref: DirectionRef
+): Promise<{ readonly review: ReviewResult | null }> => {
   const { direction, project } = await runtime.loadDirection(
     ref.projectId,
     ref.directionId
@@ -204,10 +201,8 @@ const getReviewOf = async (runtime: DirectEditRuntime, ref: DirectionRef) => {
 const runReviewIn = async (
   runtime: DirectEditRuntime,
   ref: DirectionRef,
-  body: EditBody
+  body: ReviewRunBody
 ): Promise<ReviewResult> => {
-  const input = parse(reviewSchema, body);
-
   const { direction, project } = await runtime.loadDirection(
     ref.projectId,
     ref.directionId
@@ -217,7 +212,7 @@ const runReviewIn = async (
     runtime.canvas,
     project,
     direction,
-    input
+    body
   );
 
   const result = await runReview(runtime.preview, {
@@ -249,11 +244,14 @@ const currentReview = async (
     return last;
   }
 
+  const { frame } = last;
+  const rules = await runtime.rulesFor(project, direction);
+
   const fresh = await runReview(runtime.preview, {
     direction,
-    frame: last.frame,
+    frame,
     project,
-    rules: await runtime.rulesFor(project, direction),
+    rules,
   });
 
   rememberReview(fresh);
@@ -263,7 +261,7 @@ const currentReview = async (
 
 const skipReason = (
   finding: ReviewFinding | undefined,
-  allowShared: boolean
+  isSharedAllowed: boolean
 ): string | null => {
   if (!finding) {
     return "This finding is gone from the latest review. Run the review again.";
@@ -273,38 +271,71 @@ const skipReason = (
     return "This finding needs judgment, so it has no direct fix. Ask the agent or edit it yourself.";
   }
 
-  if (finding.shared && !allowShared) {
+  if (finding.shared && !isSharedAllowed) {
     return `The fix edits the shared file ${finding.shared}, outside the page's own route folder, so it changes every page that uses it. Pass allowShared: true to apply it.`;
   }
 
   return null;
 };
 
-const fixFindings = async (
-  runtime: DirectEditRuntime,
-  project: Project,
-  direction: Direction,
-  ids: string[],
-  allowShared: boolean
-): Promise<ReviewFixResult> => {
-  const review = await currentReview(runtime, project, direction);
+interface SortedFindings {
+  readonly chosen: ReviewFinding[];
+  readonly skipped: ReviewFixResult["skipped"];
+}
+
+const sortFindings = (
+  review: ReviewResult,
+  ids: readonly string[],
+  isSharedAllowed: boolean
+): SortedFindings => {
   const byId = new Map(review.findings.map((finding) => [finding.id, finding]));
   const chosen: ReviewFinding[] = [];
   const skipped: ReviewFixResult["skipped"] = [];
 
   for (const id of new Set(ids)) {
     const finding = byId.get(id);
-    const reason = skipReason(finding, allowShared);
+    const reason = skipReason(finding, isSharedAllowed);
 
     if (reason !== null) {
       skipped.push({ id, reason });
-    } else if (finding) {
+    }
+
+    if (reason === null && finding) {
       chosen.push(finding);
     }
   }
 
+  return { chosen, skipped };
+};
+
+const sharedFilesOf = (chosen: readonly ReviewFinding[]): string[] => [
+  ...new Set(
+    chosen.flatMap((finding) => {
+      if (finding.shared) {
+        return [finding.shared];
+      }
+
+      return [];
+    })
+  ),
+];
+
+const fixFindings = async (
+  runtime: DirectEditRuntime,
+  target: { readonly direction: Direction; readonly project: Project },
+  body: ReviewFixBody
+): Promise<ReviewFixResult> => {
+  const { direction, project } = target;
+  const review = await currentReview(runtime, project, direction);
+
+  const { chosen, skipped } = sortFindings(
+    review,
+    body.findingIds,
+    body.allowShared === true
+  );
+
   if (chosen.length === 0) {
-    return { applied: [], files: [], skipped, version: null };
+    return { applied: [], files: [], skipped: [...skipped], version: null };
   }
 
   const done = await applyFindingFixes(
@@ -314,40 +345,29 @@ const fixFindings = async (
     chosen
   );
 
-  const shared = [
-    ...new Set(
-      chosen.flatMap((finding) => (finding.shared ? [finding.shared] : []))
-    ),
-  ];
-
-  return {
+  const result: ReviewFixResult = {
     applied: chosen.map((finding) => finding.id),
     skipped,
     ...done,
-    ...(shared.length > 0 ? { shared } : {}),
   };
+
+  const shared = sharedFilesOf(chosen);
+
+  if (shared.length > 0) {
+    return { ...result, shared };
+  }
+
+  return result;
 };
 
 const applyReviewFixIn = (
   runtime: DirectEditRuntime,
   ref: DirectionRef,
-  body: EditBody
-) => {
-  const input = parse(fixSchema, body);
-
-  return runtime.withDirection(
-    ref.projectId,
-    ref.directionId,
-    (project, direction) =>
-      fixFindings(
-        runtime,
-        project,
-        direction,
-        input.findingIds,
-        input.allowShared === true
-      )
+  body: ReviewFixBody
+): Promise<ReviewFixResult> =>
+  runtime.withDirection(ref.projectId, ref.directionId, (project, direction) =>
+    fixFindings(runtime, { direction, project }, body)
   );
-};
 
 export {
   applyReviewFixIn,
@@ -357,3 +377,5 @@ export {
   runRulesTestIn,
   setRulesIn,
 };
+
+export type { ReviewFixBody, ReviewRunBody, RulesSaveBody, RulesTestBody };

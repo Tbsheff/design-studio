@@ -5,20 +5,29 @@ import type { searchProject } from "../../../shared/actions/project/search.js";
 import { McpReadStore } from "../../preview/index.js";
 import type { Handle } from "../_core/handler.js";
 
-type SearchProjectsInput = Input<typeof searchProject>;
-
-const DEFAULT_LIMIT = 20;
+type SearchProjectInput = Input<typeof searchProject>;
 
 const handle = Effect.fn("project.search")(function* run(
-  input: SearchProjectsInput
+  input: SearchProjectInput
 ) {
   const store = yield* McpReadStore;
 
-  return yield* store.projectSearch({
-    limit: input.limit ?? DEFAULT_LIMIT,
-    projectId: input.project ?? null,
-    query: input.query ?? "",
+  const found = yield* store.projectSearch({
+    limit: input.limit,
+    projectId: input.projectId,
+    query: input.query,
   });
+
+  const items = [
+    ...found.projects.map((hit) =>
+      Object.assign(hit, { kind: "project" as const })
+    ),
+    ...found.routes.map((hit) =>
+      Object.assign(hit, { kind: "route" as const })
+    ),
+  ];
+
+  return { items, next: null };
 }) satisfies Handle<typeof searchProject>;
 
 export { handle };

@@ -1,7 +1,7 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, useTransition } from "react";
 
 import type { SelectionContext, TextStyle } from "./deps.js";
-import { applyAll, createFrom, detachAll, tracked } from "./style-edits.js";
+import { applyAll, attempt, createFrom, detachAll } from "./style-edits.js";
 import type { Note } from "./style-edits.js";
 import { stylesOf, useStyleList } from "./use-style-list.js";
 import type { TextStyleIds } from "./use-style-list.js";
@@ -29,12 +29,18 @@ const useTextStyles = (
   targets: SelectionContext[]
 ): TextStylesState => {
   const list = useStyleList(ids);
-  const [busy, setBusy] = useState(false);
+  const [busy, startTransition] = useTransition();
   const [note, setNote] = useState<Note | null>(null);
 
   const run = useCallback(
     async (work: () => Promise<string>): Promise<boolean> => {
-      const outcome = await tracked(setBusy, work);
+      const pending = attempt(work);
+
+      startTransition(async () => {
+        await pending;
+      });
+
+      const outcome = await pending;
 
       setNote(outcome.note);
 

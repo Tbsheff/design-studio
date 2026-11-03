@@ -61,7 +61,6 @@ const createKey = Effect.fn("Keys.createKey")(function* run(
     actingUserId: input.userId,
     createdBy: input.userId,
     keyId: created.id,
-    orgId: input.orgId,
   });
 
   return { key: created.key, keyId: created.id };

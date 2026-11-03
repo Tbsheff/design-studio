@@ -22,7 +22,7 @@ const getDevServer = defineAction({
     }),
   }),
   invalidates: [],
-  mcp: { off: "ui-bootstrap" },
+  mcp: { off: "legacy-mcp" },
   needs: "project.read",
   output: DevServerViewSchema,
   scope: "project",

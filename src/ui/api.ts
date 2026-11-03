@@ -379,6 +379,12 @@ interface SearchWire {
   readonly routes: readonly unknown[];
 }
 
+interface SearchHitWire {
+  readonly kind: "project" | "route";
+}
+
+const PROJECT_PAGE_LIMIT = 200;
+
 interface AttachmentWire {
   readonly id: string;
   readonly mime: string;
@@ -406,8 +412,15 @@ const toProject = (wire: ProjectWire): Project => {
 };
 
 const toSearchResult = (
-  wire: SearchWire
+  query: string,
+  items: readonly SearchHitWire[]
 ): import("../shared/project-search").ProjectSearchResult => {
+  const wire: SearchWire = {
+    projects: items.filter((item) => item.kind === "project"),
+    query,
+    routes: items.filter((item) => item.kind === "route"),
+  };
+
   if (!isSearchResult(wire)) {
     throw new Error("The project search response is not valid.");
   }
@@ -425,18 +438,33 @@ const toAttachment = (wire: AttachmentWire): Attachment => {
 
 export const api = {
   listProjects: async (): Promise<Project[]> => {
-    const { items } = await call(projectsRoutes.listProject, {});
+    const all: ProjectWire[] = [];
+    let cursor: string | null = null;
 
-    return items.map((item) => toProject(item));
+    do {
+      const page: {
+        readonly items: readonly ProjectWire[];
+        readonly next: string | null;
+      } = await call(projectsRoutes.listProject, {
+        cursor,
+        limit: PROJECT_PAGE_LIMIT,
+      });
+
+      all.push(...page.items);
+      cursor = page.next;
+    } while (cursor !== null);
+
+    return all.map((item) => toProject(item));
   },
   searchProjects: async (q: string, project: string | null, limit = 20) => {
     const found = await call(projectsRoutes.searchProject, {
+      cursor: null,
       limit,
+      projectId: project,
       query: q,
-      ...(project ? { project } : {}),
     });
 
-    return toSearchResult(found);
+    return toSearchResult(q, found.items);
   },
   createProject: async (input: {
     name?: string;
@@ -597,7 +625,7 @@ export const api = {
     json<{ ok: true }>("DELETE", `/api/workspaces/${enc(id)}`),
   setDefaultFolder: (path: string) =>
     json<WorkspaceList>("PUT", "/api/workspaces/default", { path }),
-  hiddenProjects: () => call(projectsRoutes.listHiddenProject, {}),
+  hiddenProjects: () => call(projectsRoutes.getHiddenProject, {}),
   moveHiddenProjects: () => call(projectsRoutes.moveHiddenProject, {}),
   inspectFolder: (path: string, appDir?: string) =>
     json<FolderInspection>("POST", "/api/folders/inspect", {

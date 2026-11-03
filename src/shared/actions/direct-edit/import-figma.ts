@@ -1,5 +1,6 @@
 import { Schema } from "effect";
 
+import { FigmaImportFields } from "../../direct-edit-payload.js";
 import { defineAction } from "../_core/action.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
 import { Conflict } from "../_core/errors/conflict.js";
@@ -30,14 +31,9 @@ const importFigmaDirectEdit = defineAction({
   },
   id: "direct-edit.importFigma",
   input: Schema.Struct({
+    ...FigmaImportFields,
     directionId: DirectionIdSchema,
-    dryRun: Schema.optionalKey(Schema.Unknown),
-    link: Schema.optionalKey(Schema.Unknown),
-    nodeId: Schema.optionalKey(Schema.Unknown),
-    nodes: Schema.optionalKey(Schema.Unknown),
-    position: Schema.optionalKey(Schema.Unknown),
     projectId: ProjectIdSchema,
-    target: Schema.optionalKey(Schema.Unknown),
   }),
   invalidates: ["version.list", "version.get"],
   mcp: { off: "legacy-mcp" },

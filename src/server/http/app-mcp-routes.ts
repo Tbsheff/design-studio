@@ -47,6 +47,7 @@ const registerAppMcpRoutes = (
     appOpen,
     history: editHistory,
     listener: mcpListener,
+    ...(runtime === null ? {} : { runtime }),
   });
   slot.routes = mcpRoutes;
   if (runtime !== null) {

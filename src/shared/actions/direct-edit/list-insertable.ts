@@ -34,7 +34,7 @@ const listInsertableDirectEdit = defineAction({
     projectId: ProjectIdSchema,
   }),
   invalidates: [],
-  mcp: { off: "ui-bootstrap" },
+  mcp: { off: "legacy-mcp" },
   needs: "project.read",
   output: ListInsertableSchema,
   scope: "project",

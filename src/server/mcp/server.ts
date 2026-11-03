@@ -332,7 +332,7 @@ function createMcpApp(
   editDeps: EditDeps | null,
   settings: () => McpSettings,
   introspect: Introspect
-): Hono {
+): Hono<{ Variables: { key: Resolved | null } }> {
   const app = new Hono<{ Variables: { key: Resolved | null } }>();
   const clients = new Map<string, string>();
   const keys = createKeyResolver(introspect);

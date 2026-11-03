@@ -67,7 +67,9 @@ import {
   builtinToolNames,
   createCanUseTool,
   createPreToolUseGuard,
+  holdsUntrustedInput,
   type ToolPolicy,
+  withUntrustedLimits,
 } from "./permissions.js";
 import {
   continuationPrompt,

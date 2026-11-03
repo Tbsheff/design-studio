@@ -29,11 +29,6 @@ class WorkspaceStore extends Context.Service<
   public static readonly layer = Layer.succeed(
     WorkspaceStore,
     WorkspaceStore.of({
-      list: Effect.fn("WorkspaceStore.list")(function* run(
-        ...args: Parameters<LegacyWorkspaceStore["list"]>
-      ) {
-        return yield* attemptWorkspace((store) => store.list(...args));
-      }),
       currentFolder: Effect.fn("WorkspaceStore.currentFolder")(function* run(
         ...args: Parameters<DefaultFolderStore["current"]>
       ) {
@@ -48,6 +43,11 @@ class WorkspaceStore extends Context.Service<
           );
         }
       ),
+      list: Effect.fn("WorkspaceStore.list")(function* run(
+        ...args: Parameters<LegacyWorkspaceStore["list"]>
+      ) {
+        return yield* attemptWorkspace((store) => store.list(...args));
+      }),
     })
   );
 }

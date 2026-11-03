@@ -1,20 +1,71 @@
-import { Schema } from "effect";
+import { Effect, Schema } from "effect";
+
+import { ProjectIdSchema } from "../_core/ids.js";
+
+const DirectionSchema = Schema.Struct({
+  branch: Schema.String,
+  createdAt: Schema.Number,
+  headVersionId: Schema.NullOr(Schema.String),
+  id: Schema.String,
+  name: Schema.String,
+  parentVersionId: Schema.NullOr(Schema.String),
+  sessionId: Schema.NullOr(Schema.String),
+});
 
 const ProjectSchema = Schema.Struct({
-  directions: Schema.Array(Schema.Unknown),
+  directions: Schema.Array(DirectionSchema),
   id: Schema.String,
   name: Schema.String,
 });
 
-const ProjectListSchema = Schema.Struct({
-  items: Schema.Array(ProjectSchema),
+const ProjectTypeSchema = Schema.Literals([
+  "next",
+  "vite",
+  "html",
+  "react",
+  "design-system",
+]);
+
+const HealthSchema = Schema.Struct({
+  level: Schema.Literals(["ok", "busy", "warn", "failed", "off"]),
+  note: Schema.String,
 });
 
-const ProjectSearchResultSchema = Schema.Struct({
-  projects: Schema.Array(Schema.Unknown),
-  query: Schema.String,
-  routes: Schema.Array(Schema.Unknown),
+const ProjectHitSchema = Schema.Struct({
+  health: Schema.NullOr(HealthSchema),
+  id: Schema.String,
+  kind: Schema.Literal("project"),
+  name: Schema.String,
+  openedAt: Schema.NullOr(Schema.Number),
+  place: Schema.NullOr(Schema.String),
+  thumbnail: Schema.NullOr(Schema.String),
+  type: ProjectTypeSchema,
+  typeLabel: Schema.String,
+  updatedAt: Schema.Number,
 });
+
+const RouteHitSchema = Schema.Struct({
+  dynamic: Schema.Boolean,
+  file: Schema.String,
+  kind: Schema.Literal("route"),
+  projectId: Schema.String,
+  projectName: Schema.String,
+  route: Schema.String,
+});
+
+const SearchHitSchema = Schema.Union([ProjectHitSchema, RouteHitSchema]);
+
+const ProjectSearchFields = {
+  projectId: Schema.NullOr(ProjectIdSchema)
+    .annotate({
+      description:
+        "Project id that ranks first. Leave out to rank all projects the same.",
+    })
+    .pipe(Schema.withDecodingDefaultKey(Effect.succeed(null))),
+  query: Schema.String.annotate({
+    description: "Search text. Leave out to list recent projects.",
+  }).pipe(Schema.withDecodingDefaultKey(Effect.succeed(""))),
+} as const;
 
 const SettingsFields = {
   allowBash: Schema.optionalKey(Schema.Boolean),
@@ -36,7 +87,7 @@ const ProjectCreateFields = {
   parentPath: Schema.optionalKey(Schema.String),
   prompt: Schema.String,
   referenceUrls: Schema.optionalKey(Schema.Array(Schema.String)),
-  settings: Schema.optionalKey(Schema.Unknown),
+  settings: Schema.optionalKey(Schema.Struct(SettingsFields)),
   startRun: Schema.optionalKey(Schema.Boolean),
 } as const;
 
@@ -52,8 +103,6 @@ const ProjectImportFields = {
 } as const;
 
 const ProjectImportedSchema = Schema.Struct({
-  firstVersion: Schema.optionalKey(Schema.Unknown),
-  legacyCanvas: Schema.optionalKey(Schema.Unknown),
   project: ProjectSchema,
 });
 
@@ -70,14 +119,14 @@ const HiddenMovedSchema = Schema.Struct({
 });
 
 const CommandRulesSchema = Schema.Struct({
-  rules: Schema.Unknown,
+  rules: Schema.Array(Schema.String),
 });
 
 const AttachmentSchema = Schema.Struct({
   id: Schema.String,
   mime: Schema.String,
   name: Schema.String,
-  path: Schema.Unknown,
+  path: Schema.String,
 });
 
 const DesignMdContentSchema = Schema.Struct({
@@ -106,8 +155,8 @@ export {
   ProjectFileSchema,
   ProjectImportFields,
   ProjectImportedSchema,
-  ProjectListSchema,
   ProjectSchema,
-  ProjectSearchResultSchema,
+  ProjectSearchFields,
+  SearchHitSchema,
   SettingsFields,
 };

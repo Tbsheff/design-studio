@@ -15,11 +15,11 @@ const handle = Effect.fn("gallery.create")(function* run(
   return yield* writer.create({
     component: input.component,
     directionId: input.directionId,
-    file: input.file ?? null,
+    file: input.file,
     projectId: input.projectId,
-    props: input.props ?? {},
+    props: input.props,
     schemes: input.schemes,
-    states: input.states ?? [],
+    states: input.states,
   });
 }) satisfies Handle<typeof createGallery>;
 

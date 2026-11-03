@@ -5,21 +5,21 @@ import { galleryRuntime } from "./gallery-runtime.js";
 import { inspectGallery } from "./inspect-gallery.js";
 import type { GalleryInspected, InspectCommand } from "./inspect-gallery.js";
 
-interface GalleryRunnerApi {
+interface GalleryStoreApi {
   readonly inspect: (
     command: InspectCommand
   ) => Effect.Effect<GalleryInspected, KnownFailure>;
 }
 
-class GalleryRunner extends Context.Service<GalleryRunner, GalleryRunnerApi>()(
-  "design-studio/gallery/GalleryRunner"
+class GalleryStore extends Context.Service<GalleryStore, GalleryStoreApi>()(
+  "design-studio/gallery/GalleryStore"
 ) {
   declare public readonly access: "read";
 
   public static readonly layer = Layer.succeed(
-    GalleryRunner,
-    GalleryRunner.of({
-      inspect: Effect.fn("GalleryRunner.inspect")(function* run(
+    GalleryStore,
+    GalleryStore.of({
+      inspect: Effect.fn("GalleryStore.inspect")(function* run(
         command: InspectCommand
       ) {
         const runtime = yield* galleryRuntime;
@@ -30,6 +30,6 @@ class GalleryRunner extends Context.Service<GalleryRunner, GalleryRunnerApi>()(
   );
 }
 
-export { GalleryRunner };
+export { GalleryStore };
 
-export type { GalleryRunnerApi };
+export type { GalleryStoreApi };

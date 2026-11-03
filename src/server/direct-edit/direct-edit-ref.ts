@@ -3,6 +3,8 @@ interface DirectionInput {
   readonly projectId: string;
 }
 
+type RefKey = keyof DirectionInput;
+
 const REF_KEYS = new Set(["directionId", "projectId"]);
 
 const toRef = (input: DirectionInput): DirectionInput => ({
@@ -15,4 +17,12 @@ const toBody = (input: DirectionInput): Readonly<Record<string, unknown>> =>
     Object.entries(input).filter(([key]) => !REF_KEYS.has(key))
   );
 
-export { toBody, toRef };
+const toFields = <Fields extends DirectionInput>(
+  input: Fields
+): Omit<Fields, RefKey> => {
+  const fields = toBody(input);
+
+  return fields as Omit<Fields, RefKey>;
+};
+
+export { toBody, toFields, toRef };

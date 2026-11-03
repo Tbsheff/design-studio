@@ -3,12 +3,12 @@ import type { createProject } from "../../shared/actions/project/create.js";
 import type { importProject } from "../../shared/actions/project/import.js";
 import type { Project, ProjectKind, RunLevel } from "../../shared/contracts.js";
 import { nameFromPrompt } from "../../shared/folders.js";
-import type { AttachResponse } from "../app/first-version.js";
+import type { AttachResponse } from "../app/index.js";
 import {
   captureReferencePage,
   parseReferenceUrls,
-} from "../design-system/reference-page.js";
-import { BadRequestError } from "../store/errors.js";
+} from "../design-system/index.js";
+import { BadRequestError } from "../platform/errors/index.js";
 import type { ProjectOpsRuntime } from "./project-ops-runtime.js";
 
 type CreateInput = Input<typeof createProject>;
@@ -30,11 +30,7 @@ interface FirstRun {
   readonly referenceUrls: readonly string[];
 }
 
-const kindOf = (kind: string | undefined): ProjectKind => {
-  if (kind === undefined) {
-    return "html";
-  }
-
+const kindOf = (kind: string): ProjectKind => {
   if (kind !== "html" && kind !== "react") {
     throw new BadRequestError("kind must be html or react");
   }
@@ -77,12 +73,12 @@ const createProjectIn = async (
   runtime: ProjectOpsRuntime,
   input: CreateInput
 ): Promise<CreatedProject> => {
-  const kind = kindOf(input.kind);
+  const kind = kindOf(input.kind ?? "html");
   const settings = runtime.parsers.settings(input.settings);
   const pack = await runtime.parsers.packOf(runtime.packs, input.packId);
   const level = runtime.parsers.level(input.level);
   const shouldStartRun = runtime.parsers.startRun(input.startRun);
-  const { parentPath } = input;
+  const { parentPath: requestedParent, prompt } = input;
   const name = input.name ?? nameFromPrompt(input.prompt);
 
   const referenceUrls = parseReferenceUrls(
@@ -90,16 +86,16 @@ const createProjectIn = async (
     runtime.config.fetchAllowLoopback === true
   );
 
-  const folder = parentPath ?? (await runtime.defaultFolder.ensure());
+  const parentPath = requestedParent ?? (await runtime.defaultFolder.ensure());
 
   const created = await runtime.projects.createInFolder({
     kind,
-    settings,
     name,
-    parentPath: folder,
+    parentPath,
+    settings,
   });
 
-  await runtime.addParentFolder(parentPath, created);
+  await runtime.addParentFolder(requestedParent, created);
   await runtime.versions.ensureRepo(created);
   const project = await runtime.prepareCreated(created, pack, input.designMd);
   const main = runtime.projects.mainDirection(project);
@@ -109,25 +105,38 @@ const createProjectIn = async (
     return { project, runId: null };
   }
 
-  const first: FirstRun = { level, referenceUrls, prompt: input.prompt };
+  const first: FirstRun = { level, prompt, referenceUrls };
   const runId = await startFirstRun(runtime, project, first);
 
   return { project, runId };
+};
+
+interface ImportOptions {
+  readonly appDir?: string;
+  readonly skipApp: boolean;
+}
+
+const importOptionsOf = (
+  appDir: string | null,
+  skipApp: boolean
+): ImportOptions => {
+  if (appDir) {
+    return { appDir, skipApp };
+  }
+
+  return { skipApp };
 };
 
 const importProjectIn = async (
   runtime: ProjectOpsRuntime,
   input: ImportInput
 ): Promise<ImportedProject> => {
-  const options: { appDir?: string; skipApp: boolean } = {
-    skipApp: input.skipApp === true,
-  };
+  const skipApp = input.skipApp === true;
 
-  if (input.appDir) {
-    options.appDir = input.appDir;
-  }
-
-  const imported = await runtime.projects.importFolder(input.path, options);
+  const imported = await runtime.projects.importFolder(
+    input.path,
+    importOptionsOf(input.appDir ?? null, skipApp)
+  );
 
   if (imported.app) {
     return runtime.attach(imported);

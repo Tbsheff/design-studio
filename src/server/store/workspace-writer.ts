@@ -49,26 +49,6 @@ class WorkspaceWriter extends Context.Service<
       ) {
         return yield* attemptWorkspace((store) => store.add(...args));
       }),
-      rename: Effect.fn("WorkspaceWriter.rename")(function* run(
-        ...args: Parameters<LegacyWorkspaceStore["rename"]>
-      ) {
-        return yield* attemptWorkspace((store) => store.rename(...args));
-      }),
-      remove: Effect.fn("WorkspaceWriter.remove")(function* run(
-        ...args: Parameters<LegacyWorkspaceStore["remove"]>
-      ) {
-        return yield* attemptWorkspace((store) => store.remove(...args));
-      }),
-      ensureFolder: Effect.fn("WorkspaceWriter.ensureFolder")(function* run(
-        ...args: Parameters<DefaultFolderStore["ensure"]>
-      ) {
-        return yield* attemptDefaultFolder((store) => store.ensure(...args));
-      }),
-      setFolder: Effect.fn("WorkspaceWriter.setFolder")(function* run(
-        ...args: Parameters<DefaultFolderStore["set"]>
-      ) {
-        return yield* attemptDefaultFolder((store) => store.set(...args));
-      }),
       dismissOnboarding: Effect.fn("WorkspaceWriter.dismissOnboarding")(
         function* run(
           ...args: Parameters<DefaultFolderStore["dismissOnboarding"]>
@@ -78,6 +58,26 @@ class WorkspaceWriter extends Context.Service<
           );
         }
       ),
+      ensureFolder: Effect.fn("WorkspaceWriter.ensureFolder")(function* run(
+        ...args: Parameters<DefaultFolderStore["ensure"]>
+      ) {
+        return yield* attemptDefaultFolder((store) => store.ensure(...args));
+      }),
+      remove: Effect.fn("WorkspaceWriter.remove")(function* run(
+        ...args: Parameters<LegacyWorkspaceStore["remove"]>
+      ) {
+        return yield* attemptWorkspace((store) => store.remove(...args));
+      }),
+      rename: Effect.fn("WorkspaceWriter.rename")(function* run(
+        ...args: Parameters<LegacyWorkspaceStore["rename"]>
+      ) {
+        return yield* attemptWorkspace((store) => store.rename(...args));
+      }),
+      setFolder: Effect.fn("WorkspaceWriter.setFolder")(function* run(
+        ...args: Parameters<DefaultFolderStore["set"]>
+      ) {
+        return yield* attemptDefaultFolder((store) => store.set(...args));
+      }),
     })
   );
 }

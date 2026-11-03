@@ -21,7 +21,6 @@ import {
 import type { DirectionRef, EditBody } from "./direct-edit-ops.js";
 import {
   importFigmaIn,
-  propsInstanceOf,
   setPropsIn,
   setVariantClassesIn,
 } from "./direct-edit-props-ops.js";
@@ -113,52 +112,45 @@ interface DirectEditWriterApi {
     Awaited<ReturnType<typeof applySwapIn>>,
     DirectEditFailure
   >;
-  readonly inspectPropsInstance: (
-    ref: DirectionRef,
-    body: EditBody
-  ) => Effect.Effect<
-    Awaited<ReturnType<typeof propsInstanceOf>>,
-    DirectEditFailure
-  >;
   readonly setProps: (
     ref: DirectionRef,
-    body: EditBody
+    body: Parameters<typeof setPropsIn>[2]
   ) => Effect.Effect<Awaited<ReturnType<typeof setPropsIn>>, DirectEditFailure>;
   readonly setVariantClasses: (
     ref: DirectionRef,
-    body: EditBody
+    body: Parameters<typeof setVariantClassesIn>[2]
   ) => Effect.Effect<
     Awaited<ReturnType<typeof setVariantClassesIn>>,
     DirectEditFailure
   >;
   readonly setRules: (
     ref: DirectionRef,
-    body: EditBody
+    body: Parameters<typeof setRulesIn>[2]
   ) => Effect.Effect<Awaited<ReturnType<typeof setRulesIn>>, DirectEditFailure>;
   readonly runRulesTest: (
     ref: DirectionRef,
-    body: EditBody
+    body: Parameters<typeof runRulesTestIn>[2]
   ) => Effect.Effect<
     Awaited<ReturnType<typeof runRulesTestIn>>,
     DirectEditFailure
   >;
   readonly runReview: (
     ref: DirectionRef,
-    body: EditBody
+    body: Parameters<typeof runReviewIn>[2]
   ) => Effect.Effect<
     Awaited<ReturnType<typeof runReviewIn>>,
     DirectEditFailure
   >;
   readonly applyReviewFix: (
     ref: DirectionRef,
-    body: EditBody
+    body: Parameters<typeof applyReviewFixIn>[2]
   ) => Effect.Effect<
     Awaited<ReturnType<typeof applyReviewFixIn>>,
     DirectEditFailure
   >;
   readonly importFigma: (
     ref: DirectionRef,
-    body: EditBody
+    body: Parameters<typeof importFigmaIn>[2]
   ) => Effect.Effect<
     Awaited<ReturnType<typeof importFigmaIn>>,
     DirectEditFailure
@@ -183,7 +175,10 @@ class DirectEditWriter extends Context.Service<
         );
       }),
       applyReviewFix: Effect.fn("DirectEditWriter.applyReviewFix")(
-        function* run(ref: DirectionRef, body: EditBody) {
+        function* run(
+          ref: DirectionRef,
+          body: Parameters<typeof applyReviewFixIn>[2]
+        ) {
           return yield* attemptDirectEdit((runtime) =>
             applyReviewFixIn(runtime, ref, body)
           );
@@ -237,7 +232,7 @@ class DirectEditWriter extends Context.Service<
       }),
       importFigma: Effect.fn("DirectEditWriter.importFigma")(function* run(
         ref: DirectionRef,
-        body: EditBody
+        body: Parameters<typeof importFigmaIn>[2]
       ) {
         return yield* attemptDirectEdit((runtime) =>
           importFigmaIn(runtime, ref, body)
@@ -258,16 +253,9 @@ class DirectEditWriter extends Context.Service<
           insertJsxIn(runtime, ref, body)
         );
       }),
-      inspectPropsInstance: Effect.fn("DirectEditWriter.inspectPropsInstance")(
-        function* run(ref: DirectionRef, body: EditBody) {
-          return yield* attemptDirectEdit((runtime) =>
-            propsInstanceOf(runtime, ref, body)
-          );
-        }
-      ),
       runReview: Effect.fn("DirectEditWriter.runReview")(function* run(
         ref: DirectionRef,
-        body: EditBody
+        body: Parameters<typeof runReviewIn>[2]
       ) {
         return yield* attemptDirectEdit((runtime) =>
           runReviewIn(runtime, ref, body)
@@ -275,7 +263,7 @@ class DirectEditWriter extends Context.Service<
       }),
       runRulesTest: Effect.fn("DirectEditWriter.runRulesTest")(function* run(
         ref: DirectionRef,
-        body: EditBody
+        body: Parameters<typeof runRulesTestIn>[2]
       ) {
         return yield* attemptDirectEdit((runtime) =>
           runRulesTestIn(runtime, ref, body)
@@ -291,7 +279,7 @@ class DirectEditWriter extends Context.Service<
       }),
       setProps: Effect.fn("DirectEditWriter.setProps")(function* run(
         ref: DirectionRef,
-        body: EditBody
+        body: Parameters<typeof setPropsIn>[2]
       ) {
         return yield* attemptDirectEdit((runtime) =>
           setPropsIn(runtime, ref, body)
@@ -299,14 +287,17 @@ class DirectEditWriter extends Context.Service<
       }),
       setRules: Effect.fn("DirectEditWriter.setRules")(function* run(
         ref: DirectionRef,
-        body: EditBody
+        body: Parameters<typeof setRulesIn>[2]
       ) {
         return yield* attemptDirectEdit((runtime) =>
           setRulesIn(runtime, ref, body)
         );
       }),
       setVariantClasses: Effect.fn("DirectEditWriter.setVariantClasses")(
-        function* run(ref: DirectionRef, body: EditBody) {
+        function* run(
+          ref: DirectionRef,
+          body: Parameters<typeof setVariantClassesIn>[2]
+        ) {
           return yield* attemptDirectEdit((runtime) =>
             setVariantClassesIn(runtime, ref, body)
           );

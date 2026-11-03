@@ -1,5 +1,6 @@
 import type { Project } from "../../shared/contracts.js";
-import { ConflictError } from "../store/errors.js";
+import { ConflictError } from "../platform/errors/index.js";
+import { logError } from "../platform/logger/index.js";
 import type { ProjectOpsRuntime } from "./project-ops-runtime.js";
 
 interface MoveFailure {
@@ -16,14 +17,6 @@ interface HiddenCount {
   readonly count: number;
   readonly target: string;
 }
-
-const messageOf = (error: unknown): string => {
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return String(error);
-};
 
 const hiddenOf = async (runtime: ProjectOpsRuntime): Promise<Project[]> => {
   const all = await runtime.projects.list();
@@ -66,42 +59,76 @@ const moveOne = (
   });
 };
 
+interface MoveState {
+  readonly failed: MoveFailure[];
+  readonly moved: string[];
+  readonly target: string;
+}
+
+const moveOneSafely = async (
+  runtime: ProjectOpsRuntime,
+  state: MoveState,
+  project: Project
+): Promise<void> => {
+  const main = runtime.projects.mainDirection(project);
+
+  try {
+    const updated = await moveOne(runtime, project, state.target);
+
+    runtime.bus.emit({
+      direction: runtime.projects.mainDirection(updated),
+      directionId: main.id,
+      projectId: project.id,
+      type: "direction.updated",
+    });
+    state.moved.push(project.id);
+  } catch (error) {
+    logError(`[http] could not move project ${project.id}`, error);
+
+    if (error instanceof Error) {
+      state.failed.push({ error: error.message, projectId: project.id });
+
+      return;
+    }
+
+    state.failed.push({ error: String(error), projectId: project.id });
+  }
+};
+
+const moveFrom = async (
+  runtime: ProjectOpsRuntime,
+  state: MoveState,
+  projects: readonly Project[],
+  index: number
+): Promise<void> => {
+  const project = projects[index];
+
+  if (!project) {
+    return;
+  }
+
+  await moveOneSafely(runtime, state, project);
+  await moveFrom(runtime, state, projects, index + 1);
+};
+
 const moveHiddenIn = async (
   runtime: ProjectOpsRuntime
 ): Promise<HiddenMoved> => {
   const hidden = await hiddenOf(runtime);
-  const moved: string[] = [];
-  const failed: MoveFailure[] = [];
 
   if (hidden.length === 0) {
-    return { failed, moved };
+    return { failed: [], moved: [] };
   }
 
-  const target = await runtime.defaultFolder.ensure();
+  const state: MoveState = {
+    failed: [],
+    moved: [],
+    target: await runtime.defaultFolder.ensure(),
+  };
 
-  for (const project of hidden) {
-    const main = runtime.projects.mainDirection(project);
+  await moveFrom(runtime, state, hidden, 0);
 
-    try {
-      const updated = await moveOne(runtime, project, target);
-
-      runtime.bus.emit({
-        direction: runtime.projects.mainDirection(updated),
-        directionId: main.id,
-        projectId: project.id,
-        type: "direction.updated",
-      });
-      moved.push(project.id);
-    } catch (error) {
-      console.error(`[http] could not move project ${project.id}`, error);
-      failed.push({
-        error: messageOf(error),
-        projectId: project.id,
-      });
-    }
-  }
-
-  return { failed, moved };
+  return { failed: state.failed, moved: state.moved };
 };
 
 export { countHiddenIn, moveHiddenIn };

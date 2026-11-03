@@ -2,6 +2,7 @@ import { Context, Effect, Layer } from "effect";
 
 import { CloudBindings } from "../../platform/bindings.js";
 import { NotFound } from "../../shared-actions.js";
+import { CurrentOrg } from "../current-org.js";
 
 interface KeyRow {
   readonly acting_user_id: string;
@@ -28,20 +29,21 @@ interface KeyMetaInput {
   readonly actingUserId: string;
   readonly createdBy: string;
   readonly keyId: string;
-  readonly orgId: string;
 }
 
 interface KeyPermRepoApi {
-  readonly insertMeta: (input: KeyMetaInput) => Effect.Effect<void>;
+  readonly insertMeta: (
+    input: KeyMetaInput
+  ) => Effect.Effect<void, never, CurrentOrg>;
   readonly introspect: (
-    orgId: string,
     keyId: string
-  ) => Effect.Effect<KeyRecordWire, NotFound>;
-  readonly list: (orgId: string) => Effect.Effect<readonly KeyRecordWire[]>;
-  readonly revoke: (
-    orgId: string,
-    keyId: string
-  ) => Effect.Effect<void, NotFound>;
+  ) => Effect.Effect<KeyRecordWire, NotFound, CurrentOrg>;
+  readonly list: () => Effect.Effect<
+    readonly KeyRecordWire[],
+    never,
+    CurrentOrg
+  >;
+  readonly revoke: (keyId: string) => Effect.Effect<void, NotFound, CurrentOrg>;
 }
 
 const SELECT_KEY = `SELECT m.org_id AS org_id, m.key_id AS id, m.acting_user_id AS acting_user_id, m.created_at AS created_at, k."name" AS name, k."enabled" AS enabled, k."expiresAt" AS expires_at, k."permissions" AS permissions
@@ -93,6 +95,8 @@ class KeyPermRepo extends Context.Service<KeyPermRepo, KeyPermRepoApi>()(
       const insertMeta = Effect.fn("KeyPermRepo.insertMeta")(function* run(
         input: KeyMetaInput
       ) {
+        const org = yield* CurrentOrg;
+
         yield* Effect.promise(() =>
           db
             .prepare(
@@ -100,7 +104,7 @@ class KeyPermRepo extends Context.Service<KeyPermRepo, KeyPermRepoApi>()(
             )
             .bind(
               input.keyId,
-              input.orgId,
+              org.orgId,
               input.actingUserId,
               input.createdBy,
               Date.now()
@@ -110,13 +114,14 @@ class KeyPermRepo extends Context.Service<KeyPermRepo, KeyPermRepoApi>()(
       });
 
       const introspect = Effect.fn("KeyPermRepo.introspect")(function* run(
-        orgId: string,
         keyId: string
       ) {
+        const org = yield* CurrentOrg;
+
         const row = yield* Effect.promise(() =>
           db
             .prepare(`${SELECT_KEY} AND m.key_id = ?`)
-            .bind(orgId, keyId)
+            .bind(org.orgId, keyId)
             .first<KeyRow>()
         );
 
@@ -127,11 +132,13 @@ class KeyPermRepo extends Context.Service<KeyPermRepo, KeyPermRepoApi>()(
         return toRecord(row);
       });
 
-      const list = Effect.fn("KeyPermRepo.list")(function* run(orgId: string) {
+      const list = Effect.fn("KeyPermRepo.list")(function* run() {
+        const org = yield* CurrentOrg;
+
         const result = yield* Effect.promise(() =>
           db
             .prepare(`${SELECT_KEY} ORDER BY m.created_at DESC LIMIT ?`)
-            .bind(orgId, LIST_LIMIT)
+            .bind(org.orgId, LIST_LIMIT)
             .all<KeyRow>()
         );
 
@@ -139,15 +146,16 @@ class KeyPermRepo extends Context.Service<KeyPermRepo, KeyPermRepoApi>()(
       });
 
       const revoke = Effect.fn("KeyPermRepo.revoke")(function* run(
-        orgId: string,
         keyId: string
       ) {
+        const org = yield* CurrentOrg;
+
         const result = yield* Effect.promise(() =>
           db
             .prepare(
               'UPDATE "apikey" SET "enabled" = 0 WHERE "id" = ? AND "id" IN (SELECT key_id FROM key_meta WHERE org_id = ? AND key_id = ?)'
             )
-            .bind(keyId, orgId, keyId)
+            .bind(keyId, org.orgId, keyId)
             .run()
         );
 

@@ -5,9 +5,9 @@ import { CurrentKey } from "../http/middleware/current-key.js";
 import { BadRequest } from "../shared-actions.js";
 import { AgentRequestRepo } from "../tenant/repos/agent-request.js";
 import type { AgentRequestKind } from "../tenant/repos/agent-request.js";
+import { CommentRepo } from "../tenant/repos/comments.js";
 import { ProjectsRepo } from "../tenant/repos/projects.js";
 import { VersionsRepo } from "../tenant/repos/versions.js";
-import { CommentQueries } from "./comment-queries.js";
 
 type Permission = Parameters<typeof requirePerm>[0];
 
@@ -113,7 +113,7 @@ const listComments = Effect.fn("McpTool.list_comments")(function* run(
 ) {
   const input = yield* decode(ListCommentsInput, args);
   const projects = yield* ProjectsRepo;
-  const comments = yield* CommentQueries;
+  const comments = yield* CommentRepo;
 
   yield* projects.get(input.projectId);
 
@@ -157,17 +157,17 @@ const listVersions = Effect.fn("McpTool.list_versions")(function* run(
   };
 });
 
-const addComment = Effect.fn("McpTool.add_comment")(function* run(
+const createComment = Effect.fn("McpTool.create_comment")(function* run(
   args: unknown
 ) {
   const input = yield* decode(AddCommentInput, args);
   const key = yield* CurrentKey;
   const projects = yield* ProjectsRepo;
-  const comments = yield* CommentQueries;
+  const comments = yield* CommentRepo;
 
   yield* projects.get(input.projectId);
 
-  const id = yield* comments.add({
+  const id = yield* comments.create({
     authorId: key.actingUserId,
     body: input.body,
     projectId: input.projectId,
@@ -257,9 +257,9 @@ const TOOLS: readonly ToolDefinition[] = [
       { body: { type: "string" }, projectId: { type: "string" } },
       ["body", "projectId"]
     ),
-    name: "add_comment",
+    name: "create_comment",
     needs: "comment.write",
-    run: addComment,
+    run: createComment,
   },
   {
     description:

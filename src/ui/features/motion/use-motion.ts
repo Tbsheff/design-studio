@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import type { MutableRefObject } from "react";
 
 import { copy } from "./copy.js";
@@ -82,11 +82,26 @@ const useClearOnUnmount = (timer: MutableRefObject<Timer | null>): void => {
   );
 };
 
+type MotionBody = Parameters<typeof api.setMotion>[2];
+
+const sendMotion = async (
+  ids: MotionIds,
+  body: MotionBody
+): Promise<MotionNote> => {
+  try {
+    await api.setMotion(ids.projectId, ids.directionId, body);
+
+    return { kind: "ok", text: copy.applied };
+  } catch (error) {
+    return { kind: "error", text: insertError(error) };
+  }
+};
+
 const useMotion = (ids: MotionIds, scope: MotionScope): MotionView => {
   const [round, setRound] = useState(0);
   const loaded = useMotionInfo(ids, scope.target, round);
   const [edited, setEdited] = useState<Edited | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [busy, startTransition] = useTransition();
   const [own, setOwn] = useState<MotionNote | null>(null);
   const timer = useRef<Timer | null>(null);
   const draft = currentDraft(edited, loaded.info);
@@ -108,24 +123,26 @@ const useMotion = (ids: MotionIds, scope: MotionScope): MotionView => {
       return;
     }
 
-    setBusy(true);
+    const pending = sendMotion(ids, {
+      spec: specBody(draft, state, hasChildren),
+      target: {
+        selector: target.selector,
+        source: target.source,
+        tag: target.tag,
+      },
+    });
 
-    try {
-      await api.setMotion(ids.projectId, ids.directionId, {
-        spec: specBody(draft, state, hasChildren),
-        target: {
-          selector: target.selector,
-          source: target.source,
-          tag: target.tag,
-        },
-      });
-      setOwn({ kind: "ok", text: copy.applied });
+    startTransition(async () => {
+      await pending;
+    });
+
+    const sent = await pending;
+
+    setOwn(sent);
+
+    if (sent.kind === "ok") {
       setRound((count) => count + 1);
-    } catch (error) {
-      setOwn({ kind: "error", text: insertError(error) });
     }
-
-    setBusy(false);
   }, [draft, hasChildren, ids, state, target]);
 
   const onPreview = useCallback((): void => {

@@ -4,20 +4,25 @@ import type { CanvasEntries } from "../handlers/canvas/handlers.js";
 import type { CloudEntries } from "../handlers/cloud/handlers.js";
 import type { CommentEntries } from "../handlers/comment/handlers.js";
 import type { ConnectionEntries } from "../handlers/connection/handlers.js";
+import type { ContentEntries } from "../handlers/content/handlers.js";
 import type { DevServerEntries } from "../handlers/dev-server/handlers.js";
 import type { DirectEditEntries } from "../handlers/direct-edit/handlers.js";
 import type { EventsEntries } from "../handlers/events/handlers.js";
 import type { ExportEntries } from "../handlers/export/handlers.js";
+import type { GalleryEntries } from "../handlers/gallery/handlers.js";
+import type { ImageEntries } from "../handlers/image/handlers.js";
 import type { OrgScopeEntries } from "../handlers/org-scope/handlers.js";
 import type { PackEntries } from "../handlers/pack/handlers.js";
-import type { ProjectsEntries } from "../handlers/projects/handlers.js";
+import type { ProjectEntries } from "../handlers/project/handlers.js";
 import type { PublishEntries } from "../handlers/publish/handlers.js";
 import type { RunsEntries } from "../handlers/runs/handlers.js";
 import type { SessionEntries } from "../handlers/session/handlers.js";
 import type { ShareEntries } from "../handlers/share/handlers.js";
 import type { ShipEntries } from "../handlers/ship/handlers.js";
 import type { StudioEntries } from "../handlers/studio/handlers.js";
+import type { TokenEntries } from "../handlers/token/handlers.js";
 import type { VersionEntries } from "../handlers/version/handlers.js";
+import type { ViewportEntries } from "../handlers/viewport/handlers.js";
 import type { WorkspaceEntries } from "../handlers/workspace/handlers.js";
 import type {
   Authorizer,
@@ -54,22 +59,27 @@ interface EntriesByDomain {
   readonly canvas: typeof CanvasEntries;
   readonly cloud: typeof CloudEntries;
   readonly comments: typeof CommentEntries;
+  readonly content: typeof ContentEntries;
   readonly devserver: typeof DevServerEntries;
   readonly directEdit: typeof DirectEditEntries;
   readonly events: typeof EventsEntries;
   readonly export: typeof ExportEntries;
+  readonly gallery: typeof GalleryEntries;
+  readonly image: typeof ImageEntries;
   readonly mcpLife: typeof ConnectionEntries;
   readonly mcpRead: typeof WorkspaceEntries;
   readonly orgScope: typeof OrgScopeEntries;
   readonly packs: typeof PackEntries;
-  readonly projects: typeof ProjectsEntries;
+  readonly projects: typeof ProjectEntries;
   readonly publish: typeof PublishEntries;
   readonly runs: typeof RunsEntries;
   readonly session: typeof SessionEntries;
   readonly share: typeof ShareEntries;
   readonly ship: typeof ShipEntries;
   readonly studio: typeof StudioEntries;
+  readonly token: typeof TokenEntries;
   readonly versions: typeof VersionEntries;
+  readonly viewport: typeof ViewportEntries;
 }
 
 type RunnerNeeds = Authorizer | ProjectAccess;

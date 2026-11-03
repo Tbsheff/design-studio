@@ -1,8 +1,8 @@
 import { Context, Effect, Layer, Schema } from "effect";
 
-import type { CurrentOrg } from "../tenant/current-org.js";
-import { TenantDb } from "../tenant/db.js";
-import { tq } from "../tenant/sql.js";
+import type { CurrentOrg } from "../current-org.js";
+import { TenantDb } from "../db.js";
+import { tq } from "../sql.js";
 
 const COMMENT_PAGE_MAX = 100;
 
@@ -46,8 +46,8 @@ const commentInsert = tq<{
   VALUES (:org, :id, :projectId, :authorId, :body, :now, :now)
   RETURNING org_id`;
 
-interface CommentQueriesApi {
-  readonly add: (
+interface CommentRepoApi {
+  readonly create: (
     input: CommentCreate
   ) => Effect.Effect<string, never, CurrentOrg>;
   readonly list: (
@@ -57,18 +57,17 @@ interface CommentQueriesApi {
   ) => Effect.Effect<readonly CommentRow[], never, CurrentOrg>;
 }
 
-class CommentQueries extends Context.Service<
-  CommentQueries,
-  CommentQueriesApi
->()("design-studio/mcp/CommentQueries") {
+class CommentRepo extends Context.Service<CommentRepo, CommentRepoApi>()(
+  "design-studio/tenant/CommentRepo"
+) {
   declare public readonly access: "write";
 
   public static readonly layer = Layer.effect(
-    CommentQueries,
+    CommentRepo,
     Effect.gen(function* make() {
       const db = yield* TenantDb;
 
-      const add = Effect.fn("CommentQueries.add")(function* run(
+      const create = Effect.fn("CommentRepo.create")(function* run(
         input: CommentCreate
       ) {
         const id = crypto.randomUUID();
@@ -78,7 +77,7 @@ class CommentQueries extends Context.Service<
         return id;
       });
 
-      const list = Effect.fn("CommentQueries.list")(function* run(
+      const list = Effect.fn("CommentRepo.list")(function* run(
         projectId: string,
         after: string | null,
         limit: number
@@ -92,11 +91,11 @@ class CommentQueries extends Context.Service<
         );
       });
 
-      return CommentQueries.of({ add, list });
+      return CommentRepo.of({ create, list });
     })
   );
 }
 
-export { CommentQueries };
+export { CommentRepo };
 
-export type { CommentCreate, CommentQueriesApi, CommentRow };
+export type { CommentCreate, CommentRepoApi, CommentRow };

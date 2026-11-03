@@ -1,5 +1,6 @@
 import { Schema } from "effect";
 
+import { SetPropsFields } from "../../direct-edit-payload.js";
 import { defineAction } from "../_core/action.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
 import { Conflict } from "../_core/errors/conflict.js";
@@ -30,10 +31,9 @@ const setPropsDirectEdit = defineAction({
   },
   id: "direct-edit.setProps",
   input: Schema.Struct({
+    ...SetPropsFields,
     directionId: DirectionIdSchema,
     projectId: ProjectIdSchema,
-    props: Schema.optionalKey(Schema.Unknown),
-    source: Schema.optionalKey(Schema.Unknown),
   }),
   invalidates: ["version.list", "version.get"],
   mcp: { off: "legacy-mcp" },

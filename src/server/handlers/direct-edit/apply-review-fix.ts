@@ -2,7 +2,7 @@ import { Effect } from "effect";
 
 import type { Input } from "../../../shared/actions/_core/action.js";
 import type { applyReviewFixDirectEdit } from "../../../shared/actions/direct-edit/apply-review-fix.js";
-import { DirectEditWriter, toBody, toRef } from "../../direct-edit/index.js";
+import { DirectEditWriter, toFields, toRef } from "../../direct-edit/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type ApplyReviewFixDirectEditInput = Input<typeof applyReviewFixDirectEdit>;
@@ -12,7 +12,7 @@ const handle = Effect.fn("direct-edit.applyReviewFix")(function* run(
 ) {
   const service = yield* DirectEditWriter;
 
-  return yield* service.applyReviewFix(toRef(input), toBody(input));
+  return yield* service.applyReviewFix(toRef(input), toFields(input));
 }) satisfies Handle<typeof applyReviewFixDirectEdit>;
 
 export { handle };

@@ -57,6 +57,7 @@ import { actionCaller } from "../mcp/registry.js";
 import type { TileResult } from "../preview/browser.js";
 import { reviewFrameShape, runReviewFrameTool } from "../review/agent-tool.js";
 import type { CommentStore } from "../store/comments.js";
+import { toLegacyPrincipal } from "../store/index.js";
 import type { LayerLockStore } from "../store/layer-locks.js";
 import { defineTweaks } from "../tweaks/store.js";
 import type { AgentRunContext, PreviewService } from "../types.js";
@@ -1859,7 +1860,7 @@ export async function createStudioMcpServer(
     figmaImportTool,
     helpTool,
     ...buildAgentTools(
-      actionCaller(deps.runtime, undefined, deps.actionAsk ?? null),
+      actionCaller(deps.runtime, toLegacyPrincipal(), deps.actionAsk ?? null),
       tool
     ),
   ];

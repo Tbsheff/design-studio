@@ -1,5 +1,6 @@
 import { Schema } from "effect";
 
+import { ReviewFixFields } from "../../direct-edit-payload.js";
 import { defineAction } from "../_core/action.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
 import { Conflict } from "../_core/errors/conflict.js";
@@ -30,9 +31,8 @@ const applyReviewFixDirectEdit = defineAction({
   },
   id: "direct-edit.applyReviewFix",
   input: Schema.Struct({
-    allowShared: Schema.optionalKey(Schema.Unknown),
+    ...ReviewFixFields,
     directionId: DirectionIdSchema,
-    findingIds: Schema.optionalKey(Schema.Unknown),
     projectId: ProjectIdSchema,
   }),
   invalidates: ["direct-edit.getReview"],

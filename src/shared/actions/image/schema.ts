@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Effect, Schema } from "effect";
 
 const PROMPT_MAX = 500;
 
@@ -30,22 +30,28 @@ const ImageLayerSchema = Schema.Struct({
 });
 
 const ImageCreateFields = {
-  aspect: Schema.optionalKey(ImageAspectSchema),
-  layer: Schema.optionalKey(ImageLayerSchema),
+  aspect: ImageAspectSchema.pipe(
+    Schema.withDecodingDefaultKey(Effect.succeed("square" as const))
+  ),
+  layer: Schema.NullOr(ImageLayerSchema).pipe(
+    Schema.withDecodingDefaultKey(Effect.succeed(null))
+  ),
   prompt: Schema.String.check(
     Schema.isMinLength(1),
     Schema.isMaxLength(PROMPT_MAX)
   ),
-  reuse: Schema.optionalKey(
-    Schema.String.annotate({
+  reuse: Schema.NullOr(Schema.String)
+    .annotate({
       description:
         "Asset path from an earlier image.create result. Places that file and skips generation.",
     })
+    .pipe(Schema.withDecodingDefaultKey(Effect.succeed(null))),
+  seed: Schema.Int.check(
+    Schema.isBetween({ maximum: SEED_MAX, minimum: 0 })
+  ).pipe(Schema.withDecodingDefaultKey(Effect.succeed(0))),
+  style: ImageStyleSchema.pipe(
+    Schema.withDecodingDefaultKey(Effect.succeed("photo" as const))
   ),
-  seed: Schema.optionalKey(
-    Schema.Int.check(Schema.isBetween({ maximum: SEED_MAX, minimum: 0 }))
-  ),
-  style: Schema.optionalKey(ImageStyleSchema),
 } as const;
 
 const ImageCreatedSchema = Schema.Struct({

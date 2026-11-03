@@ -4,10 +4,13 @@ import { CanvasLive } from "../handlers/canvas/live.js";
 import { CloudLive } from "../handlers/cloud/live.js";
 import { CommentLive } from "../handlers/comment/live.js";
 import { ConnectionLive } from "../handlers/connection/live.js";
+import { ContentLive } from "../handlers/content/live.js";
 import { DevServerLive } from "../handlers/dev-server/live.js";
 import { DirectEditLive } from "../handlers/direct-edit/live.js";
 import { EventsLive } from "../handlers/events/live.js";
 import { ExportLive } from "../handlers/export/live.js";
+import { GalleryLive } from "../handlers/gallery/live.js";
+import { ImageLive } from "../handlers/image/live.js";
 import { OrgScopeLive } from "../handlers/org-scope/live.js";
 import { PackLive } from "../handlers/pack/live.js";
 import { ProjectLive } from "../handlers/project/live.js";
@@ -17,7 +20,9 @@ import { SessionLive } from "../handlers/session/live.js";
 import { ShareLive } from "../handlers/share/live.js";
 import { ShipLive } from "../handlers/ship/live.js";
 import { StudioLive } from "../handlers/studio/live.js";
+import { TokenLive } from "../handlers/token/live.js";
 import { VersionLive } from "../handlers/version/live.js";
+import { ViewportLive } from "../handlers/viewport/live.js";
 import { WorkspaceLive } from "../handlers/workspace/live.js";
 import {
   Authorizer,
@@ -34,12 +39,14 @@ const liveLayer = Layer.mergeAll(
   CanvasLive,
   CloudLive,
   CommentLive,
+  ConnectionLive,
+  ContentLive,
   DevServerLive,
   DirectEditLive,
   EventsLive,
   ExportLive,
-  ConnectionLive,
-  WorkspaceLive,
+  GalleryLive,
+  ImageLive,
   OrgScopeLive,
   PackLive,
   ProjectLive,
@@ -49,7 +56,10 @@ const liveLayer = Layer.mergeAll(
   ShareLive,
   ShipLive,
   StudioLive,
-  VersionLive
+  TokenLive,
+  VersionLive,
+  ViewportLive,
+  WorkspaceLive
 );
 
 type LiveServices = Layer.Success<typeof liveLayer>;

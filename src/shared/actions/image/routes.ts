@@ -2,7 +2,12 @@
 const routes = {
   createImage: {
     id: "image.create",
-    invalidates: ["image.inspect"],
+    invalidates: [
+      "canvas.getDoc",
+      "direct-edit.getTree",
+      "version.list",
+      "version.listHistory",
+    ],
     method: "POST",
     path: "/api/projects/:projectId/d/:directionId/images",
   },

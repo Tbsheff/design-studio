@@ -30,6 +30,12 @@ const routes = {
     method: "GET",
     path: "/api/projects/:projectId/files",
   },
+  getHiddenProject: {
+    id: "project.getHidden",
+    invalidates: [],
+    method: "GET",
+    path: "/api/hidden-projects",
+  },
   getProject: {
     id: "project.get",
     invalidates: [],
@@ -48,12 +54,6 @@ const routes = {
     method: "GET",
     path: "/api/projects/:projectId/command-rules",
   },
-  listHiddenProject: {
-    id: "project.listHidden",
-    invalidates: [],
-    method: "GET",
-    path: "/api/hidden-projects",
-  },
   listProject: {
     id: "project.list",
     invalidates: [],
@@ -62,7 +62,7 @@ const routes = {
   },
   moveHiddenProject: {
     id: "project.moveHidden",
-    invalidates: ["project.list", "project.listHidden"],
+    invalidates: ["project.list", "project.getHidden"],
     method: "POST",
     path: "/api/hidden-projects/move",
   },

@@ -5,10 +5,10 @@ import type { importProject } from "../../../shared/actions/project/import.js";
 import { ProjectOpsWriter } from "../../project-ops/index.js";
 import type { Handle } from "../_core/handler.js";
 
-type ImportProjectsInput = Input<typeof importProject>;
+type ImportProjectInput = Input<typeof importProject>;
 
 const handle = Effect.fn("project.import")(function* run(
-  input: ImportProjectsInput
+  input: ImportProjectInput
 ) {
   const writer = yield* ProjectOpsWriter;
 

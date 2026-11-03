@@ -5,15 +5,15 @@ import type { createAttachmentProject } from "../../../shared/actions/project/cr
 import { ProjectWriter } from "../../store/index.js";
 import type { Handle } from "../_core/handler.js";
 
-type CreateAttachmentProjectsInput = Input<typeof createAttachmentProject>;
+type CreateAttachmentProjectInput = Input<typeof createAttachmentProject>;
 
 const handle = Effect.fn("project.createAttachment")(function* run(
-  input: CreateAttachmentProjectsInput
+  input: CreateAttachmentProjectInput
 ) {
   const writer = yield* ProjectWriter;
 
-  return yield* writer.saveAttachment(input.projectId, {
-    bytes: new Uint8Array(Buffer.from(input.data, "base64")),
+  return yield* writer.saveEncodedAttachment(input.projectId, {
+    data: input.data,
     mime: input.mime,
     name: input.name,
   });

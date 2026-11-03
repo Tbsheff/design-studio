@@ -10,7 +10,7 @@ import {
   applyDirectEdit,
   planDirectEdit,
   type DirectEditDeps,
-} from "../direct-edit/index.js";
+} from "../direct-edit/commit/index.js";
 import { knownTokenVars } from "../direct-edit/tokens.js";
 import type { Draft, FixGuard } from "./checks.js";
 

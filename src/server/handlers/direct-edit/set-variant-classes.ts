@@ -2,7 +2,7 @@ import { Effect } from "effect";
 
 import type { Input } from "../../../shared/actions/_core/action.js";
 import type { setVariantClassesDirectEdit } from "../../../shared/actions/direct-edit/set-variant-classes.js";
-import { DirectEditWriter, toBody, toRef } from "../../direct-edit/index.js";
+import { DirectEditWriter, toFields, toRef } from "../../direct-edit/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type SetVariantClassesDirectEditInput = Input<
@@ -14,7 +14,7 @@ const handle = Effect.fn("direct-edit.setVariantClasses")(function* run(
 ) {
   const service = yield* DirectEditWriter;
 
-  return yield* service.setVariantClasses(toRef(input), toBody(input));
+  return yield* service.setVariantClasses(toRef(input), toFields(input));
 }) satisfies Handle<typeof setVariantClassesDirectEdit>;
 
 export { handle };

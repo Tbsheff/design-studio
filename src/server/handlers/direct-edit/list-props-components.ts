@@ -2,7 +2,7 @@ import { Effect } from "effect";
 
 import type { Input } from "../../../shared/actions/_core/action.js";
 import type { listPropsComponentsDirectEdit } from "../../../shared/actions/direct-edit/list-props-components.js";
-import { DirectEditStore, toBody, toRef } from "../../direct-edit/index.js";
+import { DirectEditStore, toFields, toRef } from "../../direct-edit/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type ListPropsComponentsDirectEditInput = Input<
@@ -14,7 +14,12 @@ const handle = Effect.fn("direct-edit.listPropsComponents")(function* run(
 ) {
   const service = yield* DirectEditStore;
 
-  return yield* service.listPropsComponents(toRef(input), toBody(input));
+  const list = yield* service.listPropsComponents(
+    toRef(input),
+    toFields(input)
+  );
+
+  return { items: list.components, next: list.nextCursor };
 }) satisfies Handle<typeof listPropsComponentsDirectEdit>;
 
 export { handle };

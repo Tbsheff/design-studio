@@ -88,7 +88,7 @@ const keysHandlers = (
           yield* requireOrg(params.orgId);
           yield* requirePerm(KEY_NEEDS.list);
 
-          return { items: yield* repo.list(params.orgId) };
+          return { items: yield* repo.list() };
         })
       )
       .handle("introspect", ({ params }) =>
@@ -97,7 +97,7 @@ const keysHandlers = (
           yield* requirePerm(KEY_NEEDS.introspect);
           yield* checkRate();
 
-          return yield* repo.introspect(params.orgId, params.keyId);
+          return yield* repo.introspect(params.keyId);
         })
       )
       .handle("create", ({ params, payload }) =>
@@ -118,7 +118,7 @@ const keysHandlers = (
         Effect.gen(function* run() {
           yield* requireOrg(params.orgId);
           yield* requirePerm(KEY_NEEDS.revoke);
-          yield* repo.revoke(params.orgId, params.keyId);
+          yield* repo.revoke(params.keyId);
 
           return { ok: true };
         })

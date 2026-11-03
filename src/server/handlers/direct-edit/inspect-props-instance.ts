@@ -2,7 +2,7 @@ import { Effect } from "effect";
 
 import type { Input } from "../../../shared/actions/_core/action.js";
 import type { inspectPropsInstanceDirectEdit } from "../../../shared/actions/direct-edit/inspect-props-instance.js";
-import { DirectEditWriter, toBody, toRef } from "../../direct-edit/index.js";
+import { DirectEditStore, toFields, toRef } from "../../direct-edit/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type InspectPropsInstanceDirectEditInput = Input<
@@ -12,9 +12,9 @@ type InspectPropsInstanceDirectEditInput = Input<
 const handle = Effect.fn("direct-edit.inspectPropsInstance")(function* run(
   input: InspectPropsInstanceDirectEditInput
 ) {
-  const service = yield* DirectEditWriter;
+  const service = yield* DirectEditStore;
 
-  return yield* service.inspectPropsInstance(toRef(input), toBody(input));
+  return yield* service.inspectPropsInstance(toRef(input), toFields(input));
 }) satisfies Handle<typeof inspectPropsInstanceDirectEdit>;
 
 export { handle };

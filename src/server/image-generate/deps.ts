@@ -1,30 +1,17 @@
 export {
   assertCanEdit,
-  publishVersion,
-  saveDeferred,
-} from "../direct-edit/index.js";
-
-export type { DirectEditDeps } from "../direct-edit/index.js";
-
-export { DirectEditError } from "../direct-edit/engine/errors.js";
-
-export {
+  DirectEditError,
   parseSetImage,
   planAsset,
   planChanged,
   planSetImage,
+  publishVersion,
+  saveDeferred,
+  savesSettled,
   writeImagePlan,
-} from "../direct-edit/image.js";
+} from "../direct-edit/index.js";
 
-export type { ImageBytes } from "../direct-edit/image-source.js";
-
-export type { InsertScope } from "../direct-edit/components-ops/insert.js";
-
-export { savesSettled } from "../direct-edit/save-queue.js";
-
-export { BadRequestError } from "../platform/errors/bad-request.js";
-
-export { ConflictError } from "../platform/errors/conflict.js";
+export { BadRequestError, ConflictError } from "../platform/errors/index.js";
 
 export { attemptKnown } from "../platform/attempt/index.js";
 
@@ -34,6 +21,12 @@ export {
 } from "../platform/runtime-slot/index.js";
 
 export { IMAGE_ALT_MAX } from "../../shared/image.js";
+
+export type {
+  DirectEditDeps,
+  ImageBytes,
+  InsertScope,
+} from "../direct-edit/index.js";
 
 export type {
   Direction,

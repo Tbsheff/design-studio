@@ -13,14 +13,14 @@ const handle = Effect.fn("image.create")(function* run(
   const generator = yield* ImageGeneratorRunner;
 
   return yield* generator.create({
-    aspect: input.aspect ?? "square",
+    aspect: input.aspect,
     directionId: input.directionId,
-    layer: input.layer ?? null,
+    layer: input.layer,
     projectId: input.projectId,
     prompt: input.prompt,
-    reuse: input.reuse ?? null,
-    seed: input.seed ?? 0,
-    style: input.style ?? "photo",
+    reuse: input.reuse,
+    seed: input.seed,
+    style: input.style,
   });
 }) satisfies Handle<typeof createImage>;
 

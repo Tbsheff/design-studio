@@ -4,10 +4,12 @@ import type {
   ComponentVariantResult,
   ComponentVariantTarget,
 } from "../shared/component-variant";
-import type { SourceLoc } from "../shared/contracts";
+import type { SourceLoc, Version } from "../shared/contracts";
 import type {
+  ComponentInstance,
   InstanceQuery,
   PropValue,
+  SetPropsResult,
   VariantClassRequest,
 } from "../shared/props";
 import { getBlob, json } from "./api";
@@ -21,28 +23,70 @@ interface VariantPreviewQuery {
   className: string | null;
 }
 
+const COMPONENT_PAGE_LIMIT = 100;
+
+const isInstance = <Value>(value: Value): value is Value & ComponentInstance =>
+  value instanceof Object && "use" in value && "values" in value;
+
+const toInstance = <Value>(value: Value): ComponentInstance | null => {
+  if (isInstance(value)) {
+    return value;
+  }
+
+  return null;
+};
+
+const isVersion = <Value>(value: Value): value is Value & Version =>
+  value instanceof Object && "id" in value && "title" in value;
+
+const toVersion = <Value>(value: Value): Version | null => {
+  if (isVersion(value)) {
+    return value;
+  }
+
+  return null;
+};
+
 const d = (pid: string, did: string) =>
   `/api/projects/${encodeURIComponent(pid)}/d/${encodeURIComponent(did)}`;
 
 export const propsApi = {
-  instance: (pid: string, did: string, query: InstanceQuery) =>
-    call(routes.inspectPropsInstanceDirectEdit, {
-      ...query,
+  instance: async (
+    pid: string,
+    did: string,
+    query: InstanceQuery
+  ): Promise<{ readonly instance: ComponentInstance | null }> => {
+    const result = await call(routes.inspectPropsInstanceDirectEdit, {
       directionId: did,
+      owners: JSON.stringify(query.owners ?? []),
       projectId: pid,
-    }),
-  setProps: (
+      use: JSON.stringify(query.use ?? null),
+      usedAt: JSON.stringify(query.usedAt ?? null),
+    });
+
+    return { instance: toInstance(result.instance) };
+  },
+  setProps: async (
     pid: string,
     did: string,
     source: SourceLoc,
     props: Record<string, PropValue | null>
-  ) =>
-    call(routes.setPropsDirectEdit, {
+  ): Promise<SetPropsResult> => {
+    const result = await call(routes.setPropsDirectEdit, {
       directionId: did,
       projectId: pid,
       props,
       source,
-    }),
+    });
+
+    return {
+      changed: [...result.changed],
+      file: result.file,
+      instance: toInstance(result.instance),
+      removed: [...result.removed],
+      version: toVersion(result.version),
+    };
+  },
   variantClasses: (pid: string, did: string, request: VariantClassRequest) =>
     call(routes.setVariantClassesDirectEdit, {
       ...request,
@@ -70,7 +114,9 @@ export const propsApi = {
     ),
   components: (pid: string, did: string) =>
     call(routes.listPropsComponentsDirectEdit, {
+      cursor: null,
       directionId: did,
+      limit: COMPONENT_PAGE_LIMIT,
       projectId: pid,
     }),
 };

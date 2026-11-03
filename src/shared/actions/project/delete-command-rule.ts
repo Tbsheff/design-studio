@@ -8,11 +8,11 @@ import { ProjectIdSchema } from "../_core/ids.js";
 import { CommandRulesSchema } from "./schema.js";
 
 const deleteCommandRuleProject = defineAction({
-  access: "edit",
+  access: "destructive",
   agent: { off: "legacy-agent" },
-  confirm: "none",
+  confirm: "user",
   description:
-    "Delete one saved command rule of a project. Returns the remaining rules.",
+    "Delete one saved command rule of a project, so that the shell command asks again before it runs. Returns the remaining rules.",
   errors: [BadRequest, Conflict, NotFound],
   http: {
     method: "POST",

@@ -105,8 +105,8 @@ const routes = {
   },
   inspectPropsInstanceDirectEdit: {
     id: "direct-edit.inspectPropsInstance",
-    invalidates: ["version.list", "version.get"],
-    method: "POST",
+    invalidates: [],
+    method: "GET",
     path: "/api/projects/:projectId/d/:directionId/props/instance",
   },
   inspectTokensDirectEdit: {

@@ -1,10 +1,9 @@
 import type { PackSummary, Project } from "../../../shared/contracts.js";
-import { oneLine } from "../edit-deps.js";
+import { oneLine, studioCall } from "../edit-deps.js";
 import type { EditDeps } from "../edit-deps.js";
 import { ok } from "../edit-kit.js";
 import type { Done } from "../edit-kit.js";
 import { packOf } from "./pack-of.js";
-import { createProjectCall } from "./projects-call.js";
 import { createdResult } from "./projects-result.js";
 import type { CreateProjectInput } from "./projects-schema.js";
 
@@ -60,7 +59,14 @@ const createProject = async (
 ): Promise<Done> => {
   const pack = await chosenPack(deps, input);
 
-  const { project } = await createProjectCall(createBody(input, pack));
+  const created = await studioCall<{ project: Project }>(
+    deps,
+    "POST",
+    "/api/projects",
+    createBody(input, pack)
+  );
+
+  const { project } = created;
 
   const main = mainDirection(project);
 

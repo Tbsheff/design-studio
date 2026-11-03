@@ -5,10 +5,10 @@ import type { moveHiddenProject } from "../../../shared/actions/project/move-hid
 import { ProjectOpsWriter } from "../../project-ops/index.js";
 import type { Handle } from "../_core/handler.js";
 
-type MoveHiddenProjectsInput = Input<typeof moveHiddenProject>;
+type MoveHiddenProjectInput = Input<typeof moveHiddenProject>;
 
 const handle = Effect.fn("project.moveHidden")(function* run(
-  _input: MoveHiddenProjectsInput
+  _input: MoveHiddenProjectInput
 ) {
   const writer = yield* ProjectOpsWriter;
 

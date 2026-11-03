@@ -5,9 +5,9 @@ import type { getProject } from "../../../shared/actions/project/get.js";
 import { ProjectStore } from "../../store/index.js";
 import type { Handle } from "../_core/handler.js";
 
-type GetProjectsInput = Input<typeof getProject>;
+type GetProjectInput = Input<typeof getProject>;
 
-const handle = Effect.fn("project.get")(function* run(input: GetProjectsInput) {
+const handle = Effect.fn("project.get")(function* run(input: GetProjectInput) {
   const store = yield* ProjectStore;
 
   return yield* store.get(input.projectId);

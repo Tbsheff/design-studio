@@ -13,11 +13,11 @@ const inspectImage = defineAction({
     name: "inspect_image",
     set: "core",
     short:
-      "Show which image provider the studio uses for generate_image and if it is ready.",
+      "Show which image provider the studio uses for create_image and if it is ready.",
   },
   confirm: "none",
   description:
-    "Show the image provider for generate_image: mock, openai or gemini, and whether it is ready. The studio never returns the key.",
+    "Show the image provider for create_image: mock, openai or gemini, and whether it is ready. The studio never returns the key.",
   errors: [BadRequest, NotFound],
   http: {
     method: "GET",

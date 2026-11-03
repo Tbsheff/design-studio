@@ -30,7 +30,7 @@ import {
   appTokenEntries,
   buildAppTokens,
 } from "../design-system/app-tokens/tokens.js";
-import { resolveSource } from "../direct-edit/index.js";
+import { resolveSource } from "../direct-edit/commit/index.js";
 import { tokenEntriesFor } from "../direct-edit/style-scan.js";
 import { tailwindClassesFor } from "../direct-edit/tailwind/copy.js";
 import {

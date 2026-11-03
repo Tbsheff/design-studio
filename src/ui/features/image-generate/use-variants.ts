@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, useTransition } from "react";
 
 import type { imageRoutes, useAction } from "./deps.js";
 import { SEEDS } from "./generate-model.js";
@@ -44,11 +44,13 @@ const isVariant = (entry: Variant | null): entry is Variant => entry !== null;
 
 interface Variants {
   readonly handleGenerate: () => void;
+  readonly isGenerating: boolean;
   readonly variants: readonly Variant[];
 }
 
 const useVariants = (run: Run, setup: VariantSetup): Variants => {
   const [variants, setVariants] = useState<readonly Variant[]>([]);
+  const [isGenerating, startTransition] = useTransition();
   const { aspect, directionId, projectId, prompt, style } = setup;
 
   const handleGenerate = useCallback((): void => {
@@ -56,7 +58,7 @@ const useVariants = (run: Run, setup: VariantSetup): Variants => {
       return;
     }
 
-    const collect = async (): Promise<void> => {
+    startTransition(async () => {
       const made = await Promise.all(
         SEEDS.map((seed) =>
           makeVariant(
@@ -68,12 +70,10 @@ const useVariants = (run: Run, setup: VariantSetup): Variants => {
       );
 
       setVariants(made.filter((entry) => isVariant(entry)));
-    };
-
-    collect();
+    });
   }, [aspect, directionId, projectId, prompt, run, style]);
 
-  return { handleGenerate, variants };
+  return { handleGenerate, isGenerating, variants };
 };
 
 export { useVariants };

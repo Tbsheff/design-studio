@@ -5,10 +5,10 @@ import type { getDesignMdProject } from "../../../shared/actions/project/get-des
 import { ProjectStore } from "../../store/index.js";
 import type { Handle } from "../_core/handler.js";
 
-type GetDesignMdProjectsInput = Input<typeof getDesignMdProject>;
+type GetDesignMdProjectInput = Input<typeof getDesignMdProject>;
 
 const handle = Effect.fn("project.getDesignMd")(function* run(
-  input: GetDesignMdProjectsInput
+  input: GetDesignMdProjectInput
 ) {
   const store = yield* ProjectStore;
   const content = yield* store.readDesignMd(input.projectId);

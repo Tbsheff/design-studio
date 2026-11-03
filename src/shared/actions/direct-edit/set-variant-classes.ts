@@ -1,5 +1,6 @@
 import { Schema } from "effect";
 
+import { VariantClassFields } from "../../direct-edit-payload.js";
 import { defineAction } from "../_core/action.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
 import { Conflict } from "../_core/errors/conflict.js";
@@ -30,14 +31,9 @@ const setVariantClassesDirectEdit = defineAction({
   },
   id: "direct-edit.setVariantClasses",
   input: Schema.Struct({
-    classes: Schema.optionalKey(Schema.Unknown),
-    cva: Schema.optionalKey(Schema.Unknown),
+    ...VariantClassFields,
     directionId: DirectionIdSchema,
-    file: Schema.optionalKey(Schema.Unknown),
     projectId: ProjectIdSchema,
-    prop: Schema.optionalKey(Schema.Unknown),
-    style: Schema.optionalKey(Schema.Unknown),
-    value: Schema.optionalKey(Schema.Unknown),
   }),
   invalidates: ["version.list", "version.get"],
   mcp: { off: "legacy-mcp" },

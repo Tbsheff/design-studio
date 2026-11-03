@@ -4,7 +4,7 @@ export { BadRequest } from "../../shared/actions/_core/errors/bad-request.js";
 
 export { NotFound } from "../../shared/actions/_core/errors/not-found.js";
 
-export { BadRequestError } from "../platform/errors/bad-request.js";
+export { BadRequestError } from "../platform/errors/index.js";
 
 export { attemptKnown } from "../platform/attempt/index.js";
 
@@ -19,21 +19,19 @@ export { withPagePath } from "../project-source/index.js";
 
 export { setForcedState } from "../state-styles/index.js";
 
-export { loadLibrary } from "../components/insert-list.js";
-
-export { humanize, propsFor } from "../components/component-search.js";
-
-export { componentSchema } from "../components/props-schema.js";
-
-export { bundleGallery } from "../components/preview-bundle.js";
+export {
+  bundleGallery,
+  componentSchema,
+  humanize,
+  loadLibrary,
+  propsFor,
+} from "../components/index.js";
 
 export { CANVAS_GAP } from "../../shared/canvas-file.js";
 
 export { withForcedParam } from "../../shared/state-styles.js";
 
-export type { SampleNode } from "../components/preview-bundle.js";
-
-export type { LibraryEntry } from "../components/insert-list.js";
+export type { LibraryEntry, SampleNode } from "../components/index.js";
 
 export type { KnownFailure } from "../platform/attempt/index.js";
 

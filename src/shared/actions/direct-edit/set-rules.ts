@@ -1,5 +1,6 @@
 import { Schema } from "effect";
 
+import { RulesSaveFields } from "../../direct-edit-payload.js";
 import { defineAction } from "../_core/action.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
 import { Conflict } from "../_core/errors/conflict.js";
@@ -30,9 +31,9 @@ const setRulesDirectEdit = defineAction({
   },
   id: "direct-edit.setRules",
   input: Schema.Struct({
+    ...RulesSaveFields,
     directionId: DirectionIdSchema,
     projectId: ProjectIdSchema,
-    text: Schema.optionalKey(Schema.Unknown),
   }),
   invalidates: ["direct-edit.getRules"],
   mcp: { off: "legacy-mcp" },

@@ -39,3 +39,9 @@ export { ProjectWriter } from "./project-writer.js";
 export { WorkspaceStore } from "./workspace-store.js";
 
 export { WorkspaceWriter } from "./workspace-writer.js";
+
+export type { CommandRuleStore } from "./command-rules.js";
+
+export type { DefaultFolderStore } from "./default-folder.js";
+
+export type { StudioProjectStore } from "./projects.js";

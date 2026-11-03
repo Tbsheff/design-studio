@@ -39,11 +39,6 @@ class ProjectStore extends Context.Service<ProjectStore, ProjectStoreApi>()(
   public static readonly layer = Layer.succeed(
     ProjectStore,
     ProjectStore.of({
-      list: Effect.fn("ProjectStore.list")(function* run(
-        ...args: Parameters<StudioProjectStore["list"]>
-      ) {
-        return yield* attemptProject((store) => store.list(...args));
-      }),
       get: Effect.fn("ProjectStore.get")(function* run(
         ...args: Parameters<StudioProjectStore["get"]>
       ) {
@@ -53,6 +48,11 @@ class ProjectStore extends Context.Service<ProjectStore, ProjectStoreApi>()(
         ...args: Parameters<StudioProjectStore["getAttachment"]>
       ) {
         return yield* attemptProject((store) => store.getAttachment(...args));
+      }),
+      list: Effect.fn("ProjectStore.list")(function* run(
+        ...args: Parameters<StudioProjectStore["list"]>
+      ) {
+        return yield* attemptProject((store) => store.list(...args));
       }),
       readDesignMd: Effect.fn("ProjectStore.readDesignMd")(function* run(
         ...args: Parameters<StudioProjectStore["readDesignMd"]>

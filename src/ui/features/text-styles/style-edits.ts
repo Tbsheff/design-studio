@@ -106,19 +106,6 @@ const attempt = async (work: () => Promise<string>): Promise<Outcome> => {
   }
 };
 
-const tracked = async (
-  setBusy: (busy: boolean) => void,
-  work: () => Promise<string>
-): Promise<Outcome> => {
-  setBusy(true);
-
-  try {
-    return await attempt(work);
-  } finally {
-    setBusy(false);
-  }
-};
-
-export { applyAll, createFrom, detachAll, tracked };
+export { applyAll, attempt, createFrom, detachAll };
 
 export type { Note };

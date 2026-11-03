@@ -1,18 +1,18 @@
 import { Effect } from "effect";
 
 import type { Input } from "../../../shared/actions/_core/action.js";
-import type { listHiddenProject } from "../../../shared/actions/project/list-hidden.js";
+import type { getHiddenProject } from "../../../shared/actions/project/get-hidden.js";
 import { ProjectOpsStore } from "../../project-ops/index.js";
 import type { Handle } from "../_core/handler.js";
 
-type ListHiddenProjectsInput = Input<typeof listHiddenProject>;
+type GetHiddenProjectInput = Input<typeof getHiddenProject>;
 
-const handle = Effect.fn("project.listHidden")(function* run(
-  _input: ListHiddenProjectsInput
+const handle = Effect.fn("project.getHidden")(function* run(
+  _input: GetHiddenProjectInput
 ) {
   const store = yield* ProjectOpsStore;
 
   return yield* store.countHidden();
-}) satisfies Handle<typeof listHiddenProject>;
+}) satisfies Handle<typeof getHiddenProject>;
 
 export { handle };

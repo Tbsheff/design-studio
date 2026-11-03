@@ -5,8 +5,16 @@ import { errorText, json } from "../api";
 const rulesPath = (projectId: string) =>
   `/api/projects/${encodeURIComponent(projectId)}/command-rules`;
 
-const listRules = (projectId: string) =>
-  json<{ rules: string[] }>("GET", rulesPath(projectId));
+const RULES_LIMIT = 200;
+
+const listRules = async (projectId: string) => {
+  const page = await json<{ items: string[] }>(
+    "GET",
+    `${rulesPath(projectId)}?limit=${RULES_LIMIT}&cursor=null`
+  );
+
+  return { rules: page.items };
+};
 
 const removeRule = (projectId: string, rule: string) =>
   json<{ rules: string[] }>("POST", `${rulesPath(projectId)}/remove`, { rule });

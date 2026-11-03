@@ -18,7 +18,7 @@ interface ProjectFileBytes {
 const listCommandRulesIn = async (
   runtime: ProjectOpsRuntime,
   projectId: string
-): Promise<{ readonly rules: unknown }> => {
+): Promise<{ readonly rules: readonly string[] }> => {
   const project = await runtime.projects.get(projectId);
 
   return { rules: await runtime.commandRules.list(project.id, null) };
@@ -28,7 +28,7 @@ const deleteCommandRuleIn = async (
   runtime: ProjectOpsRuntime,
   projectId: string,
   rule: string
-): Promise<{ readonly rules: unknown }> => {
+): Promise<{ readonly rules: readonly string[] }> => {
   const project = await runtime.projects.get(projectId);
 
   return { rules: await runtime.commandRules.remove(project.id, rule, null) };

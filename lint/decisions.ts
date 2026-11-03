@@ -265,6 +265,16 @@ export const SCOPED_OFF_REASONS: Record<string, string> = {
 
 export const decisionOverrides: OxlintOverride[] = [
   {
+    files: [
+      "src/shared/actions/token/*.ts",
+      "src/shared/actions/token/errors/status.ts",
+      "src/server/handlers/token/*.ts",
+      "src/server/token-sweep/*.ts",
+      "src/ui/features/token-sweep/deps.ts",
+    ],
+    rules: { "import/no-relative-parent-imports": "off" },
+  },
+  {
     files: ["src/server/image-generate/openai.ts"],
     rules: { "id-length": "off" },
   },

@@ -18,6 +18,7 @@ import { SessionActions } from "./session/index.js";
 import { ShareActions } from "./share/index.js";
 import { ShipActions } from "./ship/index.js";
 import { StudioActions } from "./studio/index.js";
+import { TokenActions } from "./token/index.js";
 import { VersionActions } from "./version/index.js";
 import { ViewportActions } from "./viewport/index.js";
 import { WorkspaceActions } from "./workspace/index.js";
@@ -42,6 +43,7 @@ const ALL_ACTIONS = {
   share: ShareActions,
   ship: ShipActions,
   studio: StudioActions,
+  token: TokenActions,
   version: VersionActions,
   viewport: ViewportActions,
   workspace: WorkspaceActions,

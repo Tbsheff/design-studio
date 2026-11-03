@@ -5,6 +5,7 @@ import type { DirectEditError } from "../../direct-edit/errors/index.js";
 import type { ImageError } from "../../image/errors/index.js";
 import type { PackError } from "../../pack/errors/index.js";
 import type { PublishError } from "../../publish/errors/index.js";
+import type { TokenError } from "../../token/errors/index.js";
 import type { ViewportError } from "../../viewport/errors/index.js";
 import type { CoreError } from "./index.js";
 
@@ -16,6 +17,7 @@ type StudioError =
   | ImageError
   | PackError
   | PublishError
+  | TokenError
   | ViewportError;
 
 type StudioErrorTag = StudioError["_tag"];

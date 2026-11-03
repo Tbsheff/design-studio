@@ -37,7 +37,13 @@ export function useStudioTokens(o: Options) {
     [confirmLeave]
   );
 
-  const panel = o.tokens ? { tokens: o.tokens, draft } : null;
+  const panel = o.tokens
+    ? {
+        sweep: { directionId: o.directionId, projectId: o.projectId },
+        tokens: o.tokens,
+        draft,
+      }
+    : null;
 
   return { draft, guard, panel };
 }

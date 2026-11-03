@@ -18,6 +18,7 @@ import { SessionEntries } from "./session/handlers.js";
 import { ShareEntries } from "./share/handlers.js";
 import { ShipEntries } from "./ship/handlers.js";
 import { StudioEntries } from "./studio/handlers.js";
+import { TokenEntries } from "./token/handlers.js";
 import { VersionEntries } from "./version/handlers.js";
 import { ViewportEntries } from "./viewport/handlers.js";
 import { WorkspaceEntries } from "./workspace/handlers.js";
@@ -42,6 +43,7 @@ const ALL_ENTRIES = {
   share: ShareEntries,
   ship: ShipEntries,
   studio: StudioEntries,
+  token: TokenEntries,
   version: VersionEntries,
   viewport: ViewportEntries,
   workspace: WorkspaceEntries,

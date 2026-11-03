@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 
 import type { CompiledTokenEntry } from "../../shared/contracts";
+import { TokenSweepSlot, tokenSweepCopy } from "../features/token-sweep";
 import { Icon } from "../kit/Icon";
 import {
   aliasPath,
@@ -20,6 +21,7 @@ import { TokenRow } from "./TokenRow";
 interface Props {
   tokens: DesignTokens;
   draft: TokenDraft;
+  sweep?: { projectId: string; directionId: string | null };
 }
 
 const THEMES: { id: ThemeChoice; label: string }[] = [
@@ -115,8 +117,9 @@ function useSwatch(entries: CompiledTokenEntry[]) {
   );
 }
 
-export function TokensPanel({ tokens, draft }: Props) {
+export function TokensPanel({ tokens, draft, sweep }: Props) {
   const [query, setQuery] = useState("");
+  const [sweepOpen, setSweepOpen] = useState(false);
   const file = tokens.file;
 
   const bases = useMemo(
@@ -155,9 +158,26 @@ export function TokensPanel({ tokens, draft }: Props) {
         titleClassName="tkp-title"
       >
         <div className="ins-header-end">
+          {sweep && (
+            <button
+              type="button"
+              className="btn small ghost"
+              aria-expanded={sweepOpen}
+              data-tip={tokenSweepCopy.openTip}
+              onClick={() => setSweepOpen((open) => !open)}
+            >
+              {tokenSweepCopy.open}
+            </button>
+          )}
           <ThemeToggle theme={draft.theme} onTheme={draft.setTheme} />
         </div>
       </PanelHead>
+      {sweep && sweepOpen && (
+        <TokenSweepSlot
+          projectId={sweep.projectId}
+          directionId={sweep.directionId}
+        />
+      )}
       {tokens.source && (
         <p
           className="tkp-source"

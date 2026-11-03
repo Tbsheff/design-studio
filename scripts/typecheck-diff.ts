@@ -23,20 +23,35 @@ const errorsOf = (command: string, args: string[]) => {
 const only = (left: Set<string>, right: Set<string>, mark: string) =>
   [...left].filter((key) => !right.has(key)).map((key) => `${mark} ${key}`);
 
+const PROJECTS = [
+  "tsconfig.server.json",
+  "tsconfig.ui.json",
+  "tsconfig.ui-test.json",
+  "tsconfig.desktop.json",
+  "tsconfig.server-probe.json",
+  "tsconfig.desktop-renderer.json",
+];
+
+const errorsOfProjects = (command: string, args: string[]) => {
+  const keys = new Set<string>();
+
+  for (const project of PROJECTS) {
+    for (const key of errorsOf(command, [...args, "-p", project])) {
+      keys.add(key);
+    }
+  }
+
+  return keys;
+};
+
 const main = () => {
-  const tsc = errorsOf("node", [
+  const tsc = errorsOfProjects("node", [
     "node_modules/typescript/bin/tsc",
     "--noEmit",
     "--pretty",
     "false",
-    "-p",
-    "tsconfig.json",
   ]);
-  const tsrs = errorsOf("node_modules/.bin/tsrs", [
-    "--noEmit",
-    "-p",
-    "tsconfig.json",
-  ]);
+  const tsrs = errorsOfProjects("node_modules/.bin/tsrs", ["--noEmit"]);
   const lines = [
     ...only(tsc, tsrs, "tsc-only"),
     ...only(tsrs, tsc, "tsrs-only"),

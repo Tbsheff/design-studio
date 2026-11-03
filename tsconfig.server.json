@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "tsBuildInfoFile": "./node_modules/.cache/tsbuild/server.tsbuildinfo",
+    "types": ["node"]
+  },
+  "include": [
+    "src/server",
+    "src/shared",
+    "src/bridge",
+    "scripts",
+    "e2e",
+    "*.ts"
+  ],
+  "exclude": ["scripts/stamp/probes"]
+}

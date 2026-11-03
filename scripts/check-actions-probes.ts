@@ -97,7 +97,7 @@ const plantProbes = async (): Promise<Planted> => {
   await writeFile(
     path.join(temp, "tsconfig.json"),
     JSON.stringify({
-      extends: "../tsconfig.json",
+      extends: "../tsconfig.base.json",
       include: ["stamp/probes/*.ts"],
     })
   );

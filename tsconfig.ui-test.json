@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "tsBuildInfoFile": "./node_modules/.cache/tsbuild/ui-test.tsbuildinfo",
+    "jsx": "react-jsx",
+    "types": ["node"]
+  },
+  "include": [
+    "src/ui/**/*.test.ts",
+    "src/ui/**/*.test.tsx",
+    "src/ui/styles/inspector-css.test.ts"
+  ],
+  "references": [{ "path": "./tsconfig.ui.json" }]
+}

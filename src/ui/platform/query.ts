@@ -7,10 +7,9 @@ import type {
   WireOutput,
 } from "../../shared/actions/_core/action.js";
 import type { ActionDone } from "../../shared/actions/app-stream.js";
-import { APP_STREAM_PATH } from "../../shared/app-stream";
 import { call } from "./http";
 import type { RouteOf } from "./http";
-import { getSession } from "./session";
+import { subscribeActionDone } from "./stream";
 
 interface Entry {
   readonly at: number;
@@ -38,15 +37,13 @@ type ActionState<Action extends AnyAction> = ReadState<Action> &
 
 type DoneListener = (done: ActionDone) => void;
 
-const ACTION_DONE_EVENT = "action.done";
-
 const WARM_MS = 4000;
 
 const entries = new Map<string, Entry>();
 
 const listeners = new Set<DoneListener>();
 
-let source: EventSource | null = null;
+let unsubscribe: (() => void) | null = null;
 
 const dropEntry = (key: string, value: Promise<unknown>): void => {
   if (entries.get(key)?.value === value) {
@@ -127,22 +124,17 @@ const parseDone = (raw: string): ActionDone | null => {
 };
 
 const openSource = (): void => {
-  if (source || typeof EventSource === "undefined") {
+  if (unsubscribe) {
     return;
   }
 
-  const url = `${APP_STREAM_PATH}?token=${encodeURIComponent(getSession().token)}`;
-  const next = new EventSource(url);
-
-  next.addEventListener(ACTION_DONE_EVENT, (event) => {
-    const done = parseDone((event as MessageEvent<string>).data);
+  unsubscribe = subscribeActionDone((raw) => {
+    const done = parseDone(raw);
 
     if (done) {
       notify(done);
     }
   });
-
-  source = next;
 };
 
 const subscribeDone = (listener: DoneListener): (() => void) => {
@@ -153,8 +145,8 @@ const subscribeDone = (listener: DoneListener): (() => void) => {
     listeners.delete(listener);
 
     if (listeners.size === 0) {
-      source?.close();
-      source = null;
+      unsubscribe?.();
+      unsubscribe = null;
     }
   };
 };

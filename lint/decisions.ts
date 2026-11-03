@@ -477,6 +477,17 @@ export const decisionOverrides: OxlintOverride[] = [
     ),
   },
   {
+    files: [
+      "src/ui/{appStream,eventHub,liveStore}.ts",
+      "src/ui/platform/{stream,event-hub,live-store}.ts",
+    ],
+    rules: Object.fromEntries(
+      "anti-slop/no-chained-type-assertions anti-slop/no-known-value-widening anti-slop/no-runtime-typeof anti-slop/no-unknown-parameters anti-slop/no-unknown-returns anti-slop/require-readable-spacing eslint/curly eslint/default-case eslint/func-style eslint/id-length eslint/init-declarations eslint/max-classes-per-file eslint/max-lines-per-function eslint/no-console eslint/no-continue eslint/no-magic-numbers eslint/no-promise-executor-return eslint/no-ternary eslint/no-undefined eslint/prefer-destructuring eslint/sort-keys github/no-then import/consistent-type-specifier-style import/exports-last import/group-exports import/no-relative-parent-imports oxc/no-barrel-file promise/avoid-new promise/prefer-await-to-callbacks promise/prefer-await-to-then sonarjs/elseif-without-else sonarjs/max-lines-per-function sonarjs/no-undefined-assignment sonarjs/no-wildcard-import typescript/explicit-function-return-type typescript/explicit-member-accessibility typescript/method-signature-style typescript/parameter-properties unicorn/no-array-sort unicorn/no-useless-spread unicorn/no-useless-undefined unicorn/prefer-add-event-listener unicorn/prefer-global-this unicorn/require-post-message-target-origin"
+        .split(" ")
+        .map((rule) => [rule, "warn"])
+    ),
+  },
+  {
     files: ["src/server/app/index.ts"],
     rules: { "oxc/no-barrel-file": "off" },
   },

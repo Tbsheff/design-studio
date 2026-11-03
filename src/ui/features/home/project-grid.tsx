@@ -7,6 +7,7 @@ import {
   type KeyboardEvent,
   type MouseEvent,
   type ReactNode,
+  type RefObject,
 } from "react";
 
 import type {
@@ -261,20 +262,30 @@ export function HealthCell({
   );
 }
 
-function ProjectCard({
-  project,
-  pack,
-  health,
-  homeDir,
-  active,
-  favorite,
-  actions,
-  onFocusCard,
-}: CardProps) {
-  const html = project.kind === "html";
-  const count = project.directions.length;
-  const thumb = useThumbnail(project);
-  const runFailed = useLastRunFailed(project);
+function toProjectAction(
+  actions: CardActions,
+  project: Project,
+  action: CardAction,
+  startRename: () => void
+): void {
+  if (action === "rename") {
+    startRename();
+  } else if (action === "open") {
+    actions.onOpen(project);
+  } else if (action === "duplicate") {
+    actions.onDuplicate(project);
+  } else if (action === "reveal") {
+    actions.onReveal(project);
+  } else {
+    actions.onDelete(project);
+  }
+}
+
+function isMenuKey(event: KeyboardEvent<HTMLButtonElement>): boolean {
+  return event.key === "ContextMenu" || (event.shiftKey && event.key === "F10");
+}
+
+function useProjectCard(project: Project, actions: CardActions) {
   const [menu, setMenu] = useState<MenuAt>(null);
   const [renaming, setRenaming] = useState(false);
   const openRef = useRef<HTMLButtonElement>(null);
@@ -291,18 +302,7 @@ function ProjectCard({
 
   const pick = (action: CardAction) => {
     closeMenu(action === "duplicate" || action === "reveal");
-
-    if (action === "rename") {
-      setRenaming(true);
-    } else if (action === "open") {
-      actions.onOpen(project);
-    } else if (action === "duplicate") {
-      actions.onDuplicate(project);
-    } else if (action === "reveal") {
-      actions.onReveal(project);
-    } else {
-      actions.onDelete(project);
-    }
+    toProjectAction(actions, project, action, () => setRenaming(true));
   };
 
   const onContextMenu = (event: MouseEvent<HTMLDivElement>) => {
@@ -321,10 +321,7 @@ function ProjectCard({
     if (event.key === "F2") {
       event.preventDefault();
       setRenaming(true);
-    } else if (
-      event.key === "ContextMenu" ||
-      (event.shiftKey && event.key === "F10")
-    ) {
+    } else if (isMenuKey(event)) {
       event.preventDefault();
       setMenu("keys");
     } else if (mod && event.key.toLowerCase() === "d") {
@@ -345,9 +342,35 @@ function ProjectCard({
     }
   };
 
+  return {
+    menu,
+    renaming,
+    openRef,
+    moreRef,
+    cardRef,
+    toggleMenu: () => setMenu((current) => (current ? null : "button")),
+    closeMenu,
+    pick,
+    onContextMenu,
+    onKeyDown,
+    finishRename,
+  };
+}
+
+function ProjectCardMeta({
+  project,
+  pack,
+  health,
+}: {
+  project: Project;
+  pack: PackSummary | null;
+  health: AppHealth | null;
+}) {
+  const runFailed = useLastRunFailed(project);
+  const count = project.directions.length;
   const badge = projectBadge(project);
 
-  const meta = (
+  return (
     <span className="project-meta">
       <span className={`home-badge ${badge.tone}`}>{badge.label}</span>
       <HealthCell
@@ -370,8 +393,13 @@ function ProjectCard({
       )}
     </span>
   );
+}
 
-  const preview: ReactNode = (
+function ProjectCardPreview({ project }: { project: Project }) {
+  const thumb = useThumbnail(project);
+  const html = project.kind === "html";
+
+  return (
     <span
       className={`project-thumb${thumb ? " has-image" : ""}`}
       aria-hidden="true"
@@ -390,53 +418,108 @@ function ProjectCard({
       )}
     </span>
   );
+}
+
+function ProjectCardOpen({
+  project,
+  pack,
+  health,
+  homeDir,
+  active,
+  card,
+  onOpen,
+  onFocusCard,
+}: {
+  project: Project;
+  pack: PackSummary | null;
+  health: AppHealth | null;
+  homeDir: string | null;
+  active: boolean;
+  card: ReturnType<typeof useProjectCard>;
+  onOpen: () => void;
+  onFocusCard: () => void;
+}) {
+  const meta = (
+    <ProjectCardMeta project={project} pack={pack} health={health} />
+  );
+
+  const preview = <ProjectCardPreview project={project} />;
+
+  if (card.renaming) {
+    return (
+      <div className="project-open renaming">
+        {preview}
+        <span className="project-body">
+          <Suspense
+            fallback={<span className="project-name">{project.name}</span>}
+          >
+            <RenameField project={project} onDone={card.finishRename} />
+          </Suspense>
+          {meta}
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      ref={card.openRef}
+      type="button"
+      className="project-open"
+      tabIndex={active ? 0 : -1}
+      onClick={onOpen}
+      onPointerEnter={() => warmOpen(project, false)}
+      onPointerDown={() => warmOpen(project, true)}
+      onFocus={() => {
+        warmOpen(project, false);
+        onFocusCard();
+      }}
+      onKeyDown={card.onKeyDown}
+    >
+      {preview}
+      <span className="project-body">
+        <span className="project-name" data-tip={project.name}>
+          {project.name}
+        </span>
+        <span className="project-place mono truncate">
+          {projectPlace(project, homeDir)}
+        </span>
+        {meta}
+      </span>
+    </button>
+  );
+}
+
+function ProjectCard({
+  project,
+  pack,
+  health,
+  homeDir,
+  active,
+  favorite,
+  actions,
+  onFocusCard,
+}: CardProps) {
+  const card = useProjectCard(project, actions);
+  const { menu } = card;
 
   return (
     <div
-      ref={cardRef}
+      ref={card.cardRef}
       className={`project-card${menu ? " menu-open" : ""}${favorite ? " favorite" : ""}`}
       data-project-id={project.id}
-      onContextMenu={onContextMenu}
+      onContextMenu={card.onContextMenu}
     >
-      {renaming ? (
-        <div className="project-open renaming">
-          {preview}
-          <span className="project-body">
-            <Suspense
-              fallback={<span className="project-name">{project.name}</span>}
-            >
-              <RenameField project={project} onDone={finishRename} />
-            </Suspense>
-            {meta}
-          </span>
-        </div>
-      ) : (
-        <button
-          ref={openRef}
-          type="button"
-          className="project-open"
-          tabIndex={active ? 0 : -1}
-          onClick={() => actions.onOpen(project)}
-          onPointerEnter={() => warmOpen(project, false)}
-          onPointerDown={() => warmOpen(project, true)}
-          onFocus={() => {
-            warmOpen(project, false);
-            onFocusCard();
-          }}
-          onKeyDown={onKeyDown}
-        >
-          {preview}
-          <span className="project-body">
-            <span className="project-name" data-tip={project.name}>
-              {project.name}
-            </span>
-            <span className="project-place mono truncate">
-              {projectPlace(project, homeDir)}
-            </span>
-            {meta}
-          </span>
-        </button>
-      )}
+      <ProjectCardOpen
+        project={project}
+        pack={pack}
+        health={health}
+        homeDir={homeDir}
+        active={active}
+        card={card}
+        onOpen={() => actions.onOpen(project)}
+        onFocusCard={onFocusCard}
+      />
       <button
         type="button"
         className="project-star icon-btn small"
@@ -454,7 +537,7 @@ function ProjectCard({
         <Star filled={favorite} />
       </button>
       <button
-        ref={moreRef}
+        ref={card.moreRef}
         type="button"
         className="project-more icon-btn"
         tabIndex={active ? 0 : -1}
@@ -463,7 +546,7 @@ function ProjectCard({
         aria-expanded={menu !== null}
         data-tip="More actions"
         data-tip-align="end"
-        onClick={() => setMenu((current) => (current ? null : "button"))}
+        onClick={card.toggleMenu}
         onMouseDown={(event) => event.stopPropagation()}
       >
         <Icon name="more" size={16} />
@@ -476,8 +559,8 @@ function ProjectCard({
               isFolderProject(project) ? projectPlace(project, homeDir) : null
             }
             at={menu}
-            onClose={closeMenu}
-            onPick={pick}
+            onClose={card.closeMenu}
+            onPick={card.pick}
           />
         </Suspense>
       )}
@@ -754,20 +837,7 @@ function useGridFocus(shown: readonly Project[]) {
   return { gridRef, active, setActiveId, focusAt, onGridKey };
 }
 
-export function ProjectGrid({
-  projects,
-  packs,
-  health,
-  homeDir,
-  error,
-  actions,
-  query,
-  onQuery,
-  searchRef,
-  filter = null,
-  tabs,
-  headActions,
-}: Props) {
+function useShownProjects(projects: Project[] | null, query: string) {
   const { homeSort } = useUi();
   const { view, favoritesOnly, favorites } = useHomeView();
   const matched = toSortedProjects(
@@ -779,13 +849,16 @@ export function ProjectGrid({
     ? matched.filter((project) => favorites.includes(project.id))
     : matched;
 
-  const { gridRef, active, setActiveId, focusAt, onGridKey } =
-    useGridFocus(shown);
+  return { view, favoritesOnly, favorites, matched, shown };
+}
 
-  const total = projects?.length ?? 0;
-  const first = shown[0];
-
-  const gridActions: CardActions = {
+function useGridActions(
+  shown: readonly Project[],
+  actions: CardActions,
+  gridRef: RefObject<HTMLDivElement | null>,
+  searchRef: RefObject<HTMLInputElement | null>
+): CardActions {
+  return {
     ...actions,
     onDelete: (project) => {
       const index = shown.findIndex((item) => item.id === project.id);
@@ -811,6 +884,34 @@ export function ProjectGrid({
       });
     },
   };
+}
+
+export function ProjectGrid({
+  projects,
+  packs,
+  health,
+  homeDir,
+  error,
+  actions,
+  query,
+  onQuery,
+  searchRef,
+  filter = null,
+  tabs,
+  headActions,
+}: Props) {
+  const { view, favoritesOnly, favorites, matched, shown } = useShownProjects(
+    projects,
+    query
+  );
+
+  const { gridRef, active, setActiveId, focusAt, onGridKey } =
+    useGridFocus(shown);
+
+  const total = projects?.length ?? 0;
+  const first = shown[0];
+
+  const gridActions = useGridActions(shown, actions, gridRef, searchRef);
 
   return (
     <section className="home-list" aria-label="Projects">

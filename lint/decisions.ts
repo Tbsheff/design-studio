@@ -451,6 +451,10 @@ export const decisionOverrides: OxlintOverride[] = [
     rules: { "node/no-process-env": "off" },
   },
   {
+    files: [".pnpmfile.mjs"],
+    rules: { "github/filenames-match-regex": "off" },
+  },
+  {
     files: [
       "src/shared/actions/image/{create,inspect}.ts",
       "src/shared/actions/image/errors/status.ts",

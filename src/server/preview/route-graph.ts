@@ -1,6 +1,5 @@
 import { createHash } from "node:crypto";
 import { mkdir, readFile, rename, stat, writeFile } from "node:fs/promises";
-import { createRequire } from "node:module";
 import path from "node:path";
 
 import type * as TS from "typescript-api";
@@ -9,6 +8,7 @@ import {
   compilerConfigFor,
   nodeModulesFile,
 } from "../components/props-program.js";
+import { loadTypeScript } from "../platform/ts-compiler/index.js";
 
 type Ts = typeof TS;
 
@@ -67,25 +67,18 @@ const CONFIG_FILES = [
   "pnpm-workspace.yaml",
 ];
 
-let tsModule: Promise<Ts> | null = null;
-let tsVersion: string | null = null;
+async function requireTs(): Promise<Ts> {
+  const ts = await loadTypeScript();
 
-function typescriptVersion(): string {
-  tsVersion ??= (
-    createRequire(import.meta.url)("typescript/package.json") as {
-      version: string;
-    }
-  ).version;
+  if (ts === null) {
+    throw new Error("The TypeScript compiler API is not installed.");
+  }
 
-  return tsVersion;
+  return ts;
 }
 
-function loadTs(): Promise<Ts> {
-  tsModule ??= import("typescript-api").then(
-    (loaded) => ((loaded as { default?: Ts }).default ?? loaded) as Ts
-  );
-
-  return tsModule;
+async function typescriptVersion(): Promise<string> {
+  return (await requireTs()).version;
 }
 
 function resolutionCache(
@@ -192,7 +185,7 @@ class WorkTreeGraph {
 
     if (
       saved.version !== SAVED_VERSION ||
-      saved.ts !== typescriptVersion() ||
+      saved.ts !== (await typescriptVersion()) ||
       saved.config !== (await configStamp(this.workTree, saved.configs))
     ) {
       return;
@@ -269,7 +262,7 @@ class WorkTreeGraph {
 
     const saved: SavedGraph = {
       version: SAVED_VERSION,
-      ts: typescriptVersion(),
+      ts: await typescriptVersion(),
       config: await configStamp(this.workTree, this.configs),
       configs: [...this.configs],
       files,
@@ -419,7 +412,7 @@ export class RouteGraph {
   }
 
   private async imports(scope: WalkScope, file: string): Promise<string[]> {
-    const ts = await loadTs();
+    const ts = await requireTs();
     const text = await readFile(file, "utf-8").catch(() => "");
 
     const specs = ts

@@ -16,6 +16,19 @@ export interface DoctorProblem {
   command: string | null;
 }
 
+function DoctorSteps({ steps }: { steps: DoctorProblem["steps"] }) {
+  return (
+    <ul className="home-doctor-steps" aria-label="Checks">
+      {steps.map((step) => (
+        <li key={step.text} className={step.ok ? "ok" : "bad"}>
+          <Icon name={step.ok ? "check" : "alert"} size={12} />
+          {step.text}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export default function HomeDoctor({
   problem,
   checking,
@@ -52,14 +65,7 @@ export default function HomeDoctor({
           <Icon name="close" size={14} />
         </button>
       </div>
-      <ul className="home-doctor-steps" aria-label="Checks">
-        {problem.steps.map((step) => (
-          <li key={step.text} className={step.ok ? "ok" : "bad"}>
-            <Icon name={step.ok ? "check" : "alert"} size={12} />
-            {step.text}
-          </li>
-        ))}
-      </ul>
+      <DoctorSteps steps={problem.steps} />
       <div className="home-doctor-box" role="status">
         <div className="home-doctor-text">
           <Icon name="alert" size={14} />

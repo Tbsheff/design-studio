@@ -150,6 +150,38 @@ export function Item({
   );
 }
 
+function PlusMenuSettings({
+  run,
+  actions,
+  locationLabel,
+}: {
+  run: (action: () => void) => () => void;
+  actions: PlusMenuActions;
+  locationLabel: string;
+}) {
+  return (
+    <div className="ui-menu-section">
+      <Item
+        icon="palette"
+        label="Design system"
+        meta={<Icon name="chevronRight" size={12} />}
+        onClick={run(actions.onDesignSystem)}
+      />
+      <Item
+        icon="sparkle"
+        label="Skills and limits"
+        onClick={run(actions.onSkills)}
+      />
+      <Item
+        icon="folder"
+        label="Location"
+        meta={locationLabel}
+        onClick={run(actions.onLocation)}
+      />
+    </div>
+  );
+}
+
 export function PlusMenu({
   trigger,
   onClose,
@@ -212,25 +244,11 @@ export function PlusMenu({
           onClick={run(actions.onImportSystem)}
         />
       </div>
-      <div className="ui-menu-section">
-        <Item
-          icon="palette"
-          label="Design system"
-          meta={<Icon name="chevronRight" size={12} />}
-          onClick={run(actions.onDesignSystem)}
-        />
-        <Item
-          icon="sparkle"
-          label="Skills and limits"
-          onClick={run(actions.onSkills)}
-        />
-        <Item
-          icon="folder"
-          label="Location"
-          meta={locationLabel}
-          onClick={run(actions.onLocation)}
-        />
-      </div>
+      <PlusMenuSettings
+        run={run}
+        actions={actions}
+        locationLabel={locationLabel}
+      />
     </Pop>
   );
 }

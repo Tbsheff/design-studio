@@ -14,6 +14,43 @@ const STARTER_IMAGES: Record<string, string> = {
   docs: new URL("../assets/starters/docs.png", import.meta.url).href,
 };
 
+function StarterCard({
+  starter,
+  disabled,
+  isBusy,
+  onPick,
+}: {
+  starter: Starter;
+  disabled: boolean;
+  isBusy: boolean;
+  onPick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      className="starter-card"
+      data-starter-id={starter.id}
+      disabled={disabled}
+      aria-busy={isBusy}
+      onClick={onPick}
+    >
+      <span className="starter-thumb">
+        <img
+          src={STARTER_IMAGES[starter.id]}
+          alt=""
+          width={640}
+          height={400}
+          loading="lazy"
+          draggable={false}
+        />
+        {isBusy && <span className="spinner" />}
+      </span>
+      <span className="starter-name">{starter.name}</span>
+      <span className="starter-desc">{starter.description}</span>
+    </button>
+  );
+}
+
 export function StarterGallery({
   disabled,
   onPick,
@@ -61,28 +98,12 @@ export function StarterGallery({
       <ul className="starter-grid">
         {(starters ?? []).map((starter) => (
           <li key={starter.id}>
-            <button
-              type="button"
-              className="starter-card"
-              data-starter-id={starter.id}
+            <StarterCard
+              starter={starter}
               disabled={disabled || busy !== null}
-              aria-busy={busy === starter.id}
-              onClick={() => void pick(starter)}
-            >
-              <span className="starter-thumb">
-                <img
-                  src={STARTER_IMAGES[starter.id]}
-                  alt=""
-                  width={640}
-                  height={400}
-                  loading="lazy"
-                  draggable={false}
-                />
-                {busy === starter.id && <span className="spinner" />}
-              </span>
-              <span className="starter-name">{starter.name}</span>
-              <span className="starter-desc">{starter.description}</span>
-            </button>
+              isBusy={busy === starter.id}
+              onPick={() => void pick(starter)}
+            />
           </li>
         ))}
         {starters === null &&

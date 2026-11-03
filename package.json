@@ -109,7 +109,7 @@
     "tailwindcss": "^4.3.3",
     "tsrs": "0.20.1-ts7.1.0-beta",
     "tsx": "^4.19.0",
-    "typescript": "^5.6.0",
+    "typescript": "^7.0.2",
     "typescript-api": "npm:typescript@6.0.3",
     "ultracite": "8.1.0",
     "vitest": "^3.0.0"

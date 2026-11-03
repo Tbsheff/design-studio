@@ -4,3 +4,5 @@ allowBuilds:
   electron: true
   electron-winstaller: false
   esbuild: true
+patchedDependencies:
+  "@typescript-eslint/parser@8.72.1": patches/@typescript-eslint__parser@8.72.1.patch

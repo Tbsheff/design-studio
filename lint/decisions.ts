@@ -315,6 +315,20 @@ export const decisionOverrides: OxlintOverride[] = [
   },
   {
     files: [
+      "src/{server/handlers/direct-edit/*,server/direct-edit/{direct-edit-core,direct-edit-ops,direct-edit-store,direct-edit-writer,direct-edit-ref},server/http/app-direct-edit-routes,shared/actions/direct-edit/*,shared/actions/direct-edit/errors/*,shared/actions/_core/errors/direct-edit-error}.ts",
+    ],
+    rules: { "import/no-relative-parent-imports": "off" },
+  },
+  {
+    files: ["src/server/direct-edit/direct-edit-core.ts"],
+    rules: { "sonarjs/max-union-size": "off" },
+  },
+  {
+    files: ["src/server/direct-edit/{direct-edit-ops,direct-edit-ref}.ts"],
+    rules: { "anti-slop/no-unsafe-dictionary-type": "off" },
+  },
+  {
+    files: [
       "src/server/{cloud/{cloud-session,cloud-session-store,cloud-client,cloud-session-writer},handlers/cloud/{get,set,delete,live,handlers}}.ts",
       "src/shared/actions/cloud/{get,set,delete}.ts",
       "src/server/canvas/links/link-{ops,runtime,store,writer}.ts",

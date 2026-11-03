@@ -1,5 +1,10 @@
 import { Layer } from "effect";
 
-const DirectEditLive = Layer.empty;
+import { DirectEditStore, DirectEditWriter } from "../../direct-edit/index.js";
+
+const DirectEditLive = Layer.mergeAll(
+  DirectEditStore.layer,
+  DirectEditWriter.layer
+);
 
 export { DirectEditLive };

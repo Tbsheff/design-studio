@@ -1,5 +1,6 @@
 // @generated
 import { CommentStatus } from "../comment/errors/status.js";
+import { DirectEditStatus } from "../direct-edit/errors/status.js";
 import { PackStatus } from "../pack/errors/status.js";
 import { PublishStatus } from "../publish/errors/status.js";
 import type { StudioErrorTag } from "./errors/all.js";
@@ -9,6 +10,7 @@ import { CoreStatus } from "./errors/status.js";
 const HTTP_STATUS = {
   ...CoreStatus,
   ...CommentStatus,
+  ...DirectEditStatus,
   ...PackStatus,
   ...PublishStatus,
   Defect: 500,

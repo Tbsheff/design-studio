@@ -4,6 +4,7 @@ import type { CoreErrorTag } from "./index.js";
 const CoreStatus = {
   BadRequest: 400,
   Conflict: 409,
+  DirectEditError: 422,
   Forbidden: 403,
   Gone: 410,
   NotFound: 404,

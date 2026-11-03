@@ -719,8 +719,13 @@ export const api = {
         pickMessage
       )
     ).json()) as PageImportResult,
-  renderCheck: (pid: string, did: string) =>
-    json<RenderCheckResult[]>("POST", `${d(pid, did)}/check`),
+  renderCheck: async (pid: string, did: string) =>
+    (
+      await json<{ results: RenderCheckResult[] }>(
+        "POST",
+        `${d(pid, did)}/check`
+      )
+    ).results,
   versionPreview: (pid: string, vid: string) =>
     json<{ url: string }>("GET", `${p(pid)}/versions/${enc(vid)}/preview`),
   exportVersion: async (pid: string, vid: string) => {

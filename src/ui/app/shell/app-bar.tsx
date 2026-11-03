@@ -19,7 +19,7 @@ const DoctorCard = lazy(async () => {
   return { default: loaded.DoctorCard };
 });
 
-interface AppBarProps {
+export interface AppBarProps {
   projectId: string;
   app: AttachedApp;
   onAddRoute: (route: string) => void;

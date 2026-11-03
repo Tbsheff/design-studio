@@ -172,6 +172,14 @@ function Swatch({ kind, value }: { kind: StyleKind; value: string }) {
   );
 }
 
-export { StateTag, Swatch, designCandidates, shownValue, uniqueTokens };
+export {
+  StateTag,
+  Swatch,
+  classCandidates,
+  designCandidates,
+  shownValue,
+  uniqueTokens,
+  varCandidates,
+};
 
 export type { Candidate };

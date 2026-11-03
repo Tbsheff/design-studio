@@ -25,7 +25,7 @@ export function wantsRegressionCheck(run: RunToolState): boolean {
   return Boolean(
     run.config.preset.regressionCheck &&
     run.config.criticModel &&
-    !run.regressionDone &&
+    !run.isRegressionDone &&
     run.reviewShots?.length
   );
 }
@@ -34,7 +34,7 @@ export async function desktopRegression(
   input: RegressionInput
 ): Promise<CriticIssue[]> {
   const { run } = input;
-  run.regressionDone = true;
+  run.isRegressionDone = true;
   const prefix = criticOutPrefix(input.runsDir, input.runId, "regression");
   const screens = await runScreens(input.preview, input.ctx, run.config, run);
   await warmScreens(input.preview, input.ctx.project, screens);

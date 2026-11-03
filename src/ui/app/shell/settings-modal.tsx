@@ -1,4 +1,4 @@
-import { Suspense, useRef, useState } from "react";
+import { Suspense, useRef, useState, useTransition } from "react";
 
 import type { Project } from "../../../shared/contracts";
 import { api, errorText } from "../../api";
@@ -18,28 +18,27 @@ interface Props {
 
 export function SettingsModal({ project, onSaved, onClose }: Props) {
   const [draft, setDraft] = useState(() => toDraft(project.settings));
-  const [saving, setSaving] = useState(false);
+  const [saving, startSave] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const saveShip = useRef<(() => Promise<void>) | null>(null);
 
   const dialog = useModalDialog(onClose);
-  const save = async () => {
+  const save = () => {
     const parsed = parseDraft(draft);
     if ("error" in parsed) {
       setError(parsed.error);
       return;
     }
-    setSaving(true);
     setError(null);
-    try {
-      await saveShip.current?.();
-      onSaved(await api.updateSettings(project.id, parsed.settings));
-      onClose();
-    } catch (err) {
-      setError(`Could not save settings. ${errorText(err)} Try again.`);
-    } finally {
-      setSaving(false);
-    }
+    startSave(async () => {
+      try {
+        await saveShip.current?.();
+        onSaved(await api.updateSettings(project.id, parsed.settings));
+        onClose();
+      } catch (err) {
+        setError(`Could not save settings. ${errorText(err)} Try again.`);
+      }
+    });
   };
 
   return (

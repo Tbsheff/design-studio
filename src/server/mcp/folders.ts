@@ -45,7 +45,7 @@ async function assertInOrgScope(folder: string): Promise<void> {
     return;
   }
 
-  const roots = lookupFolderRoots(caller.orgId);
+  const roots = await lookupFolderRoots();
 
   if (roots === null) {
     return;

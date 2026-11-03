@@ -39,7 +39,7 @@ interface RunToolState {
   screenCache?: { stamp: string; screens: RunScreen[] };
   lastScreens?: RunScreen[];
   reviewShots?: CriticImage[];
-  regressionDone?: boolean;
+  isRegressionDone?: boolean;
   regressionNote?: string;
   captureMark?: number;
   reviews?: { at: number; frame: string | null }[];
@@ -57,8 +57,8 @@ interface CriticImage {
 type PermissionAsk = Omit<PermissionRequest, "id">;
 
 interface DevicePolicy {
-  readonly allowBash: boolean;
-  readonly allowInstall: boolean;
+  readonly canInstall: boolean;
+  readonly canRunBash: boolean;
 }
 
 interface DevicePolicyInput {

@@ -10,6 +10,7 @@ import { IS_MAC } from "../../features/commands/keys";
 import { Icon } from "../../kit/Icon";
 import type { IconName } from "../../kit/Icon";
 import { usePopover } from "../../kit/use-popover";
+import { findElements } from "../../platform/find-element";
 import { useLive } from "../../platform/live-store";
 import type { PanelTab } from "../../platform/use-panel-tab";
 
@@ -78,11 +79,10 @@ function onMenuKey(event: KeyboardEvent<HTMLDivElement>) {
     return;
   }
 
-  const items = [
-    ...event.currentTarget.querySelectorAll<HTMLButtonElement>(
-      ".ui-menu-item:not(:disabled)"
-    ),
-  ];
+  const items = findElements(
+    event.currentTarget,
+    ".ui-menu-item:not(:disabled)"
+  );
 
   const at = items.indexOf(document.activeElement as HTMLButtonElement);
 

@@ -2,8 +2,9 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
 import { desktopBridge } from "../platform/desktop";
+import { toMountRoot } from "../platform/focus";
 import { watchLongFrames } from "../platform/telemetry";
-import { App } from "./App";
+import { App } from "./app";
 
 import "../styles/tokens.css";
 import "../styles/controls.css";
@@ -42,7 +43,7 @@ if (desktop?.platform === "darwin") {
 
 watchLongFrames();
 
-const root = document.querySelector("#root");
+const root = toMountRoot();
 
 if (root) {
   createRoot(root).render(

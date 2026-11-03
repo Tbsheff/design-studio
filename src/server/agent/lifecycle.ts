@@ -124,7 +124,7 @@ export interface DriverInput {
   inbox?: RunInbox;
   ask?: (request: PermissionAsk) => Promise<PermissionDecision>;
   commandRules?: CommandRules;
-  devicePolicy?: DevicePolicy;
+  devicePolicy: DevicePolicy | null;
   baseFile?: (relative: string) => Promise<Uint8Array | null>;
 }
 
@@ -148,7 +148,7 @@ export interface DriverOutcome {
   status: DriverStatus;
   usage: RunUsage;
   costUsd: number;
-  costEstimated?: boolean;
+  isCostEstimated?: boolean;
   criticCostUsd?: number;
   finalCheck?: FinalCheck;
   loop?: LoopSummary;
@@ -773,15 +773,15 @@ export function createRunLifecycle(
       deps.devicePolicy?.read(projectId).catch(() => null) ??
       Promise.resolve(null);
     const toDevicePolicy = (input: DevicePolicyInput | null): DevicePolicy => ({
-      allowBash: isOrgCapAllowed(
-        input?.capAllowBash ?? null,
-        input?.role ?? null,
-        ctx.project.settings.allowBash
-      ),
-      allowInstall: isOrgCapAllowed(
+      canInstall: isOrgCapAllowed(
         input?.capAllowInstall ?? null,
         input?.role ?? null,
         ctx.project.settings.allowInstall
+      ),
+      canRunBash: isOrgCapAllowed(
+        input?.capAllowBash ?? null,
+        input?.role ?? null,
+        ctx.project.settings.allowBash
       ),
     });
     const commandRules: CommandRules = {

@@ -10,7 +10,7 @@ import type {
   SelectionPosts,
 } from "./bridge-types.js";
 import { reloadIfChangedDuringLoad } from "./dev-reload.js";
-import { stringifyArg } from "./dom-input.js";
+import { stringifyArg, tryDom } from "./dom-input.js";
 import { rectOf, selectionFor, shortLabel } from "./element-info.js";
 import type { LayerIndex } from "./layers.js";
 import { APP_MODE, REDIRECTED_FROM } from "./session.js";
@@ -27,7 +27,7 @@ const createPost = (session: BridgeSession): Post => {
   const parentWindow = window.parent;
 
   return (body) => {
-    try {
+    tryDom(() => {
       const message = { ...body, ns: "studio", token: session.token };
 
       if (!session.port) {
@@ -37,9 +37,7 @@ const createPost = (session: BridgeSession): Post => {
       }
 
       session.port.postMessage(message, { transfer: [] });
-    } catch {
-      void 0;
-    }
+    });
   };
 };
 

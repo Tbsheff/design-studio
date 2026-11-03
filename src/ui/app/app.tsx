@@ -7,7 +7,7 @@ import { AppScreen } from "./app-screen";
 import { BootError } from "./boot-error";
 import { BootMessage } from "./boot-message";
 import { copy } from "./copy";
-import { prefetchStudio } from "./screens";
+import { prefetchStudio } from "./screen-preload";
 import { useCommandLayer } from "./use-command-layer";
 import { useSession } from "./use-session";
 

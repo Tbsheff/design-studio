@@ -8,16 +8,12 @@ import type { ExportDeps } from "../export/source.js";
 import type { WireArgs } from "../handlers/_core/run-action.js";
 import type { McpListenerRunnerApi } from "../mcp-life/index.js";
 import { toLegacyPrincipal } from "../store/principal.js";
-import { readProjectOrg } from "../store/project-org.js";
 import type { EditDeps } from "./edit-guards.js";
 import { EDIT_NAMES, EDIT_TOOLS } from "./edit-tools.js";
 import { createKeyResolver, offlineRefusal } from "./key-auth.js";
 import type { Introspect, Resolved } from "./key-auth.js";
-import {
-  setFolderRootsLookup,
-  setProjectOrgLookup,
-  withLegacyCaller,
-} from "./legacy/caller-scope.js";
+import { withLegacyCaller } from "./legacy/caller-scope.js";
+import type { FolderRootsLookup, LegacyCall } from "./legacy/caller-scope.js";
 import { getFreePort, isPortFree, isSameText } from "./port-probe.js";
 import { ActionTools } from "./registry.js";
 import type { McpCaller } from "./registry.js";
@@ -57,6 +53,7 @@ type RpcReply =
 interface Dispatch {
   deps: ExportDeps;
   edits: EditDeps | null;
+  folderRoots: FolderRootsLookup | null;
   client: string;
   key: Resolved | null;
   startSession: (client: string) => void;
@@ -93,9 +90,12 @@ async function callAny(
 ): Promise<unknown> {
   const offline = offlineReply(ctx, name);
   if (offline !== null) return offline;
-  const principal = ctx.key?.principal ?? toLegacyPrincipal();
+  const call: LegacyCall = {
+    folderRoots: ctx.folderRoots,
+    principal: ctx.key?.principal ?? toLegacyPrincipal(),
+  };
   if (ActionTools.isAction(name))
-    return withLegacyCaller(principal, async () =>
+    return withLegacyCaller(call, async () =>
       ActionTools.call(
         ctx.deps,
         name,
@@ -110,7 +110,7 @@ async function callAny(
     };
   if (!edits)
     return { content: [{ type: "text", text: EDITS_OFF }], isError: true };
-  return withLegacyCaller(principal, async () =>
+  return withLegacyCaller(call, async () =>
     runEdit(edits, name, args, ctx.client)
   );
 }
@@ -188,6 +188,24 @@ async function dispatch(
   }
 }
 
+const readFolderRoots = async (
+  edits: EditDeps
+): Promise<readonly string[] | null> => {
+  try {
+    return [await edits.projectsFolder()];
+  } catch {
+    return null;
+  }
+};
+
+const toFolderRoots = (edits: EditDeps | null): FolderRootsLookup | null => {
+  if (edits === null) {
+    return null;
+  }
+
+  return () => readFolderRoots(edits);
+};
+
 function createMcpApp(
   deps: ExportDeps,
   editDeps: EditDeps | null,
@@ -197,6 +215,7 @@ function createMcpApp(
   const app = new Hono<{ Variables: { key: Resolved | null } }>();
   const clients = new Map<string, string>();
   const keys = createKeyResolver(introspect);
+  const folderRoots = toFolderRoots(editDeps);
   app.use("*", async (c, next) => {
     const { port, token } = settings();
     const host = c.req.header("host") ?? "";
@@ -246,6 +265,7 @@ function createMcpApp(
     const ctx: Dispatch = {
       deps,
       edits: settings().edits ? editDeps : null,
+      folderRoots,
       client:
         key?.client ??
         clients.get(c.req.header("mcp-session-id") ?? "") ??
@@ -293,33 +313,12 @@ export interface McpService {
   stop(): Promise<void>;
 }
 
-let folderRoots: readonly string[] | null = null;
-
-async function refreshFolderRoots(edits: EditDeps): Promise<void> {
-  try {
-    folderRoots = [await edits.projectsFolder()];
-  } catch {
-    folderRoots = null;
-  }
-}
-
-function bindCallerLookups(edits: EditDeps | null): void {
-  setProjectOrgLookup(readProjectOrg);
-  if (edits === null) return;
-  void refreshFolderRoots(edits);
-  setFolderRootsLookup(() => {
-    void refreshFolderRoots(edits);
-    return folderRoots;
-  });
-}
-
 export function createMcpService(
   dataDir: string,
   deps: ExportDeps,
   wiring: McpWiring
 ): McpService {
   const { edits, introspect, listener } = wiring;
-  bindCallerLookups(edits);
   let current: McpSettings | null = null;
   let lastError: string | null = null;
   const app = createMcpApp(

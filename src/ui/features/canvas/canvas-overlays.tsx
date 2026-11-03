@@ -1,36 +1,14 @@
-import {
-  Suspense,
-  lazy,
-  useEffect,
-  useRef,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import type {
   BridgeToParent,
   SelectionContext,
 } from "../../../shared/contracts.js";
 import { formatMeasure } from "../../../shared/measure.js";
-import type { SpacingHandlesProps } from "../../canvas-slots.js";
 import { Icon } from "../../kit/Icon.js";
 import { guideStyle } from "./artboard-overlay.js";
 import type { SpacingBadge } from "./snap-model.js";
 import { frameSnapStore } from "./use-frame-resize.js";
-
-const LazySpacingHandles = lazy(async () => {
-  const mod = await import("../features/spacing/index.js");
-
-  return { default: mod.SpacingHandles };
-});
-
-function SpacingLayer({ host, selection, zoom }: SpacingHandlesProps) {
-  return (
-    <Suspense fallback={null}>
-      <LazySpacingHandles host={host} selection={selection} zoom={zoom} />
-    </Suspense>
-  );
-}
 
 function PresentLayer({
   url,
@@ -286,11 +264,4 @@ function MarqueeLayer({
   );
 }
 
-export {
-  FrameSnapLayer,
-  MarqueeLayer,
-  PresentLayer,
-  SpacingLayer,
-  TweakPrompt,
-  gapStyle,
-};
+export { FrameSnapLayer, MarqueeLayer, PresentLayer, TweakPrompt, gapStyle };

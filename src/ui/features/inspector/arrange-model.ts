@@ -199,6 +199,7 @@ export {
   SPACE_TOOLS,
   arrangeShown,
   commitWrites,
+  frameRequest,
   minCount,
   successText,
 };

@@ -29,6 +29,7 @@ import type {
   CommentStatus,
   CommentTarget,
   DesignComment,
+  JsonBody,
   RunMention,
   SelectionContext,
 } from "./deps.js";
@@ -267,7 +268,7 @@ export function useComments(
     async <T>(
       method: string,
       suffix: string,
-      body?: unknown
+      body?: JsonBody
     ): Promise<T | null> => {
       const did = didRef.current;
 

@@ -3,7 +3,7 @@ import type { Dispatch, SetStateAction } from "react";
 
 import type { CommandLayerName } from "../features/commands";
 import { isTypingTarget } from "../platform/typing-target.js";
-import { prefetchCommandLayer } from "./screens";
+import { prefetchCommandLayer } from "./screen-preload";
 
 const LAYER_EVENT = "studio:command-layer";
 

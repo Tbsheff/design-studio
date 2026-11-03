@@ -2,6 +2,8 @@ import { randomBytes } from "node:crypto";
 import { mkdir, readFile, rename, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 
+import { Option, Schema } from "effect";
+
 import { RULE_MAX_CHARS } from "../../shared/permissionRules.js";
 import { createKeyedMutex } from "./mutex.js";
 
@@ -64,9 +66,15 @@ const hasRuleFile = async (file: string): Promise<boolean> => {
   }
 };
 
-interface RuleFile {
-  readonly rules?: readonly string[];
-}
+const RuleFileSchema = Schema.Struct({
+  rules: Schema.optionalKey(Schema.Array(Schema.Unknown)),
+});
+
+type RuleFile = typeof RuleFileSchema.Type;
+
+const decodeRuleFile = Schema.decodeUnknownOption(
+  Schema.fromJsonString(RuleFileSchema)
+);
 
 const toRuleList = (parsed: RuleFile | null): string[] => {
   const rules = parsed?.rules ?? null;
@@ -84,7 +92,9 @@ const getRuleFile = async (file: string): Promise<string[]> => {
   }
 
   try {
-    return toRuleList(JSON.parse(await readFile(file, "utf-8")));
+    const decoded = decodeRuleFile(await readFile(file, "utf-8"));
+
+    return toRuleList(Option.getOrNull(decoded));
   } catch (error) {
     console.error("[command-rules] unreadable file", file, error);
 

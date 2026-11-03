@@ -1,64 +1,63 @@
-import { readFile } from "node:fs/promises";
 import path from "node:path";
 
+import { Effect } from "effect";
+
+import { BindingsFileSchema } from "../../shared/cloud-contracts.js";
+import type { BindingsFile } from "../../shared/cloud-contracts.js";
 import { loadConfig } from "../platform/config/index.js";
+import { toJsonFileReader } from "../platform/local-file/index.js";
 import { isOrgInScope } from "./org-scope.js";
 import type { OrgScope } from "./org-scope.js";
 import { LOCAL_ORG_ID } from "./org-visibility.js";
 
+type ProjectOrgs = ReadonlyMap<string, string>;
+
 const BINDINGS_FILE = "bindings.json";
 
-const readBindingsText = async (dataDir: string): Promise<string | null> => {
-  try {
-    return await readFile(path.join(dataDir, BINDINGS_FILE), "utf-8");
-  } catch {
-    return null;
-  }
-};
+const readBindingsFile = toJsonFileReader(BindingsFileSchema);
 
-const toBindingOrgs = (text: string): Map<string, string> => {
+const toProjectOrgs = (file: BindingsFile | null): ProjectOrgs => {
   const orgs = new Map<string, string>();
 
-  try {
-    const parsed = JSON.parse(text) as {
-      bindings?: Record<string, { orgId?: string }>;
-    };
-
-    for (const [keyText, binding] of Object.entries(parsed.bindings ?? {})) {
-      const orgId = binding.orgId ?? null;
-
-      if (orgId !== null && keyText.startsWith(`${orgId}:`)) {
-        orgs.set(keyText.slice(orgId.length + 1), orgId);
-      }
+  for (const [keyText, binding] of Object.entries(file?.bindings ?? {})) {
+    if (keyText.startsWith(`${binding.orgId}:`)) {
+      orgs.set(keyText.slice(binding.orgId.length + 1), binding.orgId);
     }
-  } catch {
-    return orgs;
   }
 
   return orgs;
 };
 
-const readProjectOrg = async (projectId: string): Promise<string | null> => {
-  const text = await readBindingsText(loadConfig().dataDir);
+const readProjectOrgs = Effect.fn("ProjectOrg.readProjectOrgs")(
+  function* run() {
+    const file = yield* readBindingsFile(
+      path.join(loadConfig().dataDir, BINDINGS_FILE)
+    ).pipe(Effect.catchDefect(() => Effect.succeed(null)));
 
-  if (text === null) {
-    return null;
+    return toProjectOrgs(file);
   }
+);
 
-  return toBindingOrgs(text).get(projectId) ?? null;
-};
-
-const isProjectInScope = async (
-  scope: OrgScope,
+const readProjectOrg = Effect.fn("ProjectOrg.readProjectOrg")(function* run(
   projectId: string
-): Promise<boolean> => {
-  if (scope.kind === "all") {
-    return true;
-  }
+) {
+  const orgs = yield* readProjectOrgs();
 
-  const orgId = (await readProjectOrg(projectId)) ?? LOCAL_ORG_ID;
+  return orgs.get(projectId) ?? null;
+});
 
-  return isOrgInScope(scope, orgId);
-};
+const isProjectVisible = (
+  scope: OrgScope,
+  orgs: ProjectOrgs,
+  projectId: string
+): boolean => isOrgInScope(scope, orgs.get(projectId) ?? LOCAL_ORG_ID);
 
-export { isProjectInScope, readProjectOrg };
+const toVisibleProjects = <Item extends { readonly id: string }>(
+  scope: OrgScope,
+  orgs: ProjectOrgs,
+  items: readonly Item[]
+): Item[] => items.filter((item) => isProjectVisible(scope, orgs, item.id));
+
+export { isProjectVisible, readProjectOrg, readProjectOrgs, toVisibleProjects };
+
+export type { ProjectOrgs };

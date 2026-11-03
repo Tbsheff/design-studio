@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import type { ComponentProps, ReactNode, RefObject } from "react";
 
 import { ChatPanel } from "../../features/chat/chat-panel";
@@ -12,8 +12,7 @@ import {
   CommentsPanel,
   QueuedComposerBar,
 } from "../../features/comments/comments-panel";
-import { Inspector } from "../../features/inspector/inspector";
-import { TweaksPanel } from "../../features/inspector/tweaks-panel";
+import { Inspector, TweaksPanel } from "../../features/inspector";
 import { ErrorsPanel } from "../../features/review/errors-panel";
 import { TokensPanel } from "../../features/versions-layers-tokens/tokens-panel";
 import { VersionsPanel } from "../../features/versions-layers-tokens/versions-panel";
@@ -121,7 +120,11 @@ function Sheet(props: Props & { tab: PanelTab }) {
         ) : null;
       }
       case "tweaks": {
-        return props.tweaks ? <TweaksPanel {...props.tweaks} /> : null;
+        return props.tweaks ? (
+          <Suspense fallback={null}>
+            <TweaksPanel {...props.tweaks} />
+          </Suspense>
+        ) : null;
       }
       case "comments": {
         return props.comments ? <CommentsPanel {...props.comments} /> : null;
@@ -177,7 +180,9 @@ export function LeftPane(props: Props) {
         </div>
         {edit && (
           <section className="pane-edit" aria-label="Edit">
-            <Inspector {...props.inspector} components={props.components} />
+            <Suspense fallback={null}>
+              <Inspector {...props.inspector} components={props.components} />
+            </Suspense>
             <McpEditStrip mcp={props.chat.mcp ?? null} />
           </section>
         )}

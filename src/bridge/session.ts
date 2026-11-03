@@ -7,24 +7,22 @@ import {
   BRIDGE_PASSIVE_PARAM,
 } from "../shared/contracts.js";
 import { appSourceMode } from "./app-source.js";
-import { isString } from "./dom-input.js";
+import { isObject, isString, tryDom } from "./dom-input.js";
 
 const STORAGE_PREFIX = "__studio_bridge:";
 
 interface BridgeSession {
-  token: string;
-  parentOrigin: string;
-  port: MessagePort | null;
+  readonly token: string;
+  readonly parentOrigin: string;
+  readonly port: MessagePort | null;
 }
 
 const storageKey = (): string => `${STORAGE_PREFIX}${window.location.pathname}`;
 
 const rememberOrigin = (parentOrigin: string): void => {
-  try {
+  tryDom(() => {
     window.sessionStorage.setItem(storageKey(), parentOrigin);
-  } catch {
-    void 0;
-  }
+  });
 };
 
 const APP_MODE = appSourceMode();
@@ -39,15 +37,13 @@ const stripBridgeParams = (url: URL): void => {
   url.searchParams.delete(BRIDGE_PARENT_ORIGIN_PARAM);
   url.searchParams.delete(APP_REDIRECT_PARAM);
 
-  try {
+  tryDom(() => {
     window.history.replaceState(
       window.history.state,
       "",
       url.pathname + url.search + url.hash
     );
-  } catch {
-    void 0;
-  }
+  });
 };
 
 const storedOrigin = (): string | null => {
@@ -78,25 +74,26 @@ const HELLO_RETRY_MS = 300;
 const DOC_ID_RADIX = 36;
 
 interface HandshakeData {
-  ns?: unknown;
-  token?: unknown;
-  type?: unknown;
+  readonly ns: "studio";
+  readonly token: string;
+  readonly type: typeof BRIDGE_HANDSHAKE_TYPE;
 }
 
-const isHandshake = (event: MessageEvent, parentOrigin: string): boolean => {
-  const data = (event.data ?? {}) as HandshakeData;
+const isStudioMessage = (data: unknown): data is { readonly ns: "studio" } =>
+  isObject(data) && "ns" in data && data.ns === "studio";
 
-  if (event.source !== window.parent || event.origin !== parentOrigin) {
+const isHandshakeData = (data: unknown): data is HandshakeData => {
+  if (!isStudioMessage(data) || !("type" in data) || !("token" in data)) {
     return false;
   }
 
-  return (
-    data.ns === "studio" &&
-    data.type === BRIDGE_HANDSHAKE_TYPE &&
-    isString(data.token) &&
-    event.ports.length > 0
-  );
+  return data.type === BRIDGE_HANDSHAKE_TYPE && isString(data.token);
 };
+
+const isFromParent = (event: MessageEvent, parentOrigin: string): boolean =>
+  event.source === window.parent &&
+  event.origin === parentOrigin &&
+  event.ports.length > 0;
 
 const awaitHandshake = (
   parentOrigin: string,
@@ -107,7 +104,9 @@ const awaitHandshake = (
   let timer = 0;
 
   const onMessage = (event: MessageEvent): void => {
-    if (!isHandshake(event, parentOrigin)) {
+    const data: unknown = event.data;
+
+    if (!isFromParent(event, parentOrigin) || !isHandshakeData(data)) {
       return;
     }
 
@@ -116,21 +115,19 @@ const awaitHandshake = (
     onSession({
       parentOrigin,
       port: event.ports[0] ?? null,
-      token: String((event.data as HandshakeData).token),
+      token: data.token,
     });
   };
 
   const hello = (): void => {
     attempts += 1;
 
-    try {
+    tryDom(() => {
       window.parent.postMessage(
         { docId, ns: "studio", type: BRIDGE_HELLO_TYPE },
         parentOrigin
       );
-    } catch {
-      void 0;
-    }
+    });
 
     if (attempts < HELLO_RETRIES) {
       timer = window.setTimeout(hello, HELLO_RETRY_MS);

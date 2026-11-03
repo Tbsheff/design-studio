@@ -1,22 +1,31 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import type {
   AppLogLine,
   AppServerStatus,
   AttachedApp,
   FirstVersionState,
+  StudioEvent,
 } from "../../../shared/contracts";
 import { api } from "../../api";
 import { publishAppStatus } from "../../platform/app-status";
+import { useProjectEvents } from "../../platform/events";
 
-const POLL_OPEN_MS = 1500;
-const POLL_CLOSED_MS = 5000;
+type AppState = Awaited<ReturnType<typeof api.appState>>;
 
-function useAppState(
+const readAppState = async (projectId: string): Promise<AppState | null> => {
+  try {
+    return await api.appState(projectId);
+  } catch {
+    return null;
+  }
+};
+
+const useAppState = (
   projectId: string,
   open: boolean,
   initial: AppServerStatus | null = null
-) {
+) => {
   const [status, setStatus] = useState<AppServerStatus | null>(initial);
   const [current, setCurrent] = useState<AttachedApp | null>(null);
   const [logs, setLogs] = useState<AppLogLine[]>([]);
@@ -26,46 +35,42 @@ function useAppState(
   );
 
   const [tick, setTick] = useState(0);
-  const settled = status?.state === "ready" && !firstVersion?.pending;
+
+  const onEvent = useCallback((event: StudioEvent) => {
+    if (event.type === "app.status") {
+      setTick((count) => count + 1);
+    }
+  }, []);
+
+  useProjectEvents(projectId, onEvent);
+
   useEffect(() => {
-    let alive = true;
+    let isAlive = true;
 
-    const load = () =>
-      api
-        .appState(projectId)
-        .then((state) => {
-          if (!alive) {
-            return;
-          }
+    const load = async (): Promise<void> => {
+      const state = await readAppState(projectId);
 
-          setStatus(state.status);
-          setCurrent(state.app);
-          setLogs(state.logs);
-          setFirstVersion(state.firstVersion ?? null);
-          publishAppStatus(projectId, state.status);
-        })
-        .catch(() => undefined);
+      if (!isAlive || state === null) {
+        return;
+      }
+
+      setStatus(state.status);
+      setCurrent(state.app);
+      setLogs(state.logs);
+      setFirstVersion(state.firstVersion ?? null);
+      publishAppStatus(projectId, state.status);
+    };
 
     void load();
 
-    const timer = window.setInterval(
-      load,
-      open || !settled ? POLL_OPEN_MS : POLL_CLOSED_MS
-    );
-
     return () => {
-      alive = false;
-      window.clearInterval(timer);
+      isAlive = false;
     };
-  }, [projectId, open, tick, settled]);
+  }, [projectId, open, tick]);
 
-  return {
-    status,
-    app: current,
-    logs,
-    firstVersion,
-    refresh: () => setTick((n) => n + 1),
-  };
-}
+  const refresh = useCallback(() => setTick((count) => count + 1), []);
 
-export { POLL_OPEN_MS, POLL_CLOSED_MS, useAppState };
+  return { app: current, firstVersion, logs, refresh, status };
+};
+
+export { useAppState };

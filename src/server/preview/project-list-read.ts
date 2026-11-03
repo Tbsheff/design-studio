@@ -1,6 +1,4 @@
 import type { Project } from "../../shared/contracts.js";
-import type { OrgScope } from "../store/org-scope.js";
-import { isProjectInScope } from "../store/project-org.js";
 import type { StudioProjectStore } from "../store/projects.js";
 
 interface ProjectSummary {
@@ -55,19 +53,13 @@ const toProjectSummary = (project: Project): ProjectSummary => {
 
 const readProjectList = async (
   projects: StudioProjectStore,
-  scope: OrgScope
+  isVisible: (projectId: string) => boolean
 ): Promise<readonly ProjectSummary[]> => {
   const all = await projects.list();
-  const list = all.filter((project) => !project.designSystemFor);
-
-  const visible = await Promise.all(
-    list.map((project) => isProjectInScope(scope, project.id))
-  );
-
   const summaries: ProjectSummary[] = [];
 
-  for (const [index, project] of list.entries()) {
-    if (visible[index] === true) {
+  for (const project of all) {
+    if (!project.designSystemFor && isVisible(project.id)) {
       summaries.push(toProjectSummary(project));
     }
   }

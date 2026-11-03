@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { setTelemetryScope } from "../../platform/telemetry";
-import { prefetchCommandLayer } from "../screens";
+import { prefetchCommandLayer } from "../screen-preload";
 import type { StudioBase } from "./studio-core-types";
 import type { StudioUi } from "./studio-ui-types";
 import { useHomeVariationsHandoff } from "./use-home-variations-handoff";

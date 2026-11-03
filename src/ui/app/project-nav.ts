@@ -1,5 +1,5 @@
 import { uiStore } from "../platform/storage.js";
-import { prefetchStudio } from "./screens.js";
+import { prefetchStudio } from "./screen-preload.js";
 
 export const OPEN_ROUTE_EVENT = "studio:open-route";
 

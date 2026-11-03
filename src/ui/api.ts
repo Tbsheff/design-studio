@@ -117,6 +117,7 @@ import {
   stepEditHistory,
 } from "./features/versions-layers-tokens/versions-api";
 import { call, pickMessage, request } from "./platform/http";
+import type { JsonBody } from "./platform/http";
 import { prefetch, readShared } from "./platform/query";
 
 export { ApiError } from "./platform/http";
@@ -255,10 +256,10 @@ const sendPresence = async (
 export function json<T>(
   method: string,
   path: string,
-  body?: unknown
+  body?: JsonBody
 ): Promise<T> {
   const load = async (): Promise<T> => {
-    const res = await request(method, path, body);
+    const res = await request(method, path, body ?? null);
 
     return (await res.json()) as T;
   };

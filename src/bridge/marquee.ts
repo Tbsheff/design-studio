@@ -2,6 +2,7 @@ import {
   MATCH_SELECT_MAX,
   type SelectionContext,
 } from "../shared/contracts.js";
+import { tryDom } from "./dom-input.js";
 import { isLayer } from "./layers.js";
 
 type Rect = SelectionContext["rect"];
@@ -109,11 +110,9 @@ export function createMarquee(ports: MarqueePorts): Marquee {
 
   const finish = (): void => {
     if (drag?.active) ports.show(null);
-    try {
+    tryDom(() => {
       if (drag) document.documentElement.releasePointerCapture(drag.pointer);
-    } catch {
-      void 0;
-    }
+    });
     drag = null;
   };
 
@@ -147,11 +146,9 @@ export function createMarquee(ports: MarqueePorts): Marquee {
         )
           return false;
         drag.active = true;
-        try {
+        tryDom(() => {
           document.documentElement.setPointerCapture(event.pointerId);
-        } catch {
-          void 0;
-        }
+        });
       }
       drag.last = boxOf(drag, event);
       ports.show(drag.last);

@@ -12,7 +12,22 @@ export { LocalOrgScope } from "./local-org-scope.js";
 
 export { isPermitted, toKeyPrincipal, toLegacyPrincipal } from "./principal.js";
 
-export { toOrgScope } from "./org-scope.js";
+export { isOrgInScope, toOrgScope } from "./org-scope.js";
+
+export type { OrgScope } from "./org-scope.js";
+
+export { LOCAL_ORG_ID } from "./org-visibility.js";
+
+export {
+  isProjectVisible,
+  readProjectOrg,
+  readProjectOrgs,
+  toVisibleProjects,
+} from "./project-org.js";
+
+export type { ProjectOrgs } from "./project-org.js";
+
+export { createCommandRuleStore } from "./command-rules.js";
 
 export { LocalPrincipal } from "./local-principal.js";
 

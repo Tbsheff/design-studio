@@ -10,9 +10,9 @@ import {
   type VariationStartRequest,
   type VariationStartResult,
 } from "../../../shared/contracts.js";
-import { sendJson, type WireFields } from "../../platform/http.js";
+import { sendJson, type JsonBody } from "../../platform/http.js";
 
-const post = <T>(path: string, body: WireFields = {}): Promise<T> =>
+const post = <T>(path: string, body: JsonBody = {}): Promise<T> =>
   sendJson<T>("POST", path, body);
 
 const base = (pid: string) =>

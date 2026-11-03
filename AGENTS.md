@@ -46,8 +46,8 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Start every function that returns `boolean`, `Promise<boolean>` or `Effect<boolean>` with `is`, `has`, `can` or `should`: `isOrgCapAllowed`, never `orgCapAllows` -> `studio/predicate-name` (auth files, not engines). (N9)
 - Start every top-level function with a verb from N3, or `to`, `from`, `is`, `has`, `can`, `should`: `toSafeSegment`, never `safeSegment` -> `studio/module-function-verb` (auth files, not engines). (N10)
 - Spell out `pid`, `sig`, `cf`, `ctx`, `cfg`, `msg` and a bare `org` in every name: `projectId`, `signature`, `LegacyCloudflareRecord`, `orgId`. Only plan-fixed wire keys (`CloudRefSchema` `pid`, `sig`) and spec names (`CfCli`, `CfFailed`) are exempt -> `studio/no-short-name` (auth files). (N11)
-- Type every `*_TYPES` list in `src/shared` and `src/bridge` from the message union (`readonly BridgeMessage['type'][]`), never `string[]`. Mark every field in `src/bridge/{session,bridge-types}.ts` `readonly` -> `studio/typed-string-list`, `studio/readonly-field`. (N12)
-- Start every boolean field with `is`, `has`, `can` or `should`, and write `field: T | null`, never `field?:`, in `src/server/agent/{index,lifecycle,types}.ts` (`canRunBash`, `devicePolicy: DevicePolicySource | null`) -> `studio/boolean-name`, `studio/no-optional-null`. (N13)
+- Type every `*_TYPES` list in `src/shared` and `src/bridge` from the message union (`readonly BridgeMessage['type'][]`), never `string[]`. Mark every field in `src/bridge/session.ts` `readonly` -> `studio/typed-string-list`, `studio/readonly-field`. (N12)
+- Start every boolean field with `is`, `has`, `can` or `should` in `src/server/agent/{index,lifecycle,types}.ts` (`canRunBash`, `isCostEstimated`) -> `studio/boolean-name`. (N13)
 
 ## 1. Where code goes
 
@@ -166,7 +166,7 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Never use `async` or `await` in `cloud/api/src/**` outside `index.ts`, `auth/**` and Durable Object class bodies. Use `Effect.fn` with `Effect.tryPromise` -> `studio/no-cloud-async`. (S18)
 - Never call `Effect.serviceOption` in `src/server/**`. Yield the service in a `Context.Service` layer -> `studio/no-service-option`. (S19)
 - Never put a Durable Object stub (`idFromName`, `DurableObjectStub`) in a service marked `access: "read"`. Use a write service -> `studio/read-service-no-stub`. (S20)
-- Never declare a module-level `let` in `src/server/{mcp,http,agent-tools,store,preview}`. Use a Layer, or `makeRuntimeSlot` from `src/server/platform/runtime-slot/index.ts` -> `studio/no-module-let`. (S21)
+- Never declare a module-level `let` in `src/server/{mcp,http,agent-tools,store}`. Carry per-call values in the call (as `withLegacyCaller` does). Use a Layer, or `makeRuntimeSlot` from `src/server/platform/runtime-slot/index.ts` -> `studio/no-module-let`. (S21)
 
 ## 4. Errors
 
@@ -261,7 +261,7 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Load heavy modules (playwright-core, esbuild, typescript, vite, the agent SDK) with a dynamic import on first use -> review, B12 `scripts/check-boot-imports.ts` (lands with S5-mcp-life). (P9)
 - Keep every perf budget. Only the merge step rewrites `scripts/perf/baseline.json`, and only downward -> G-perf (lands with S4a). (P10)
 - Read D1 and R2 only through their owners in `cloud/api/src/{platform,tenant,auth,http/middleware}`. Viewer, MCP and route code yields a tenant service, never `CloudBindings` -> `studio/no-direct-bindings`. (P11)
-- Never `JSON.parse` a file that you read by hand in `src/server/store`. Use the owning store (`DeviceBindings` for `bindings.json`) or `toJsonFileReader` from `src/server/platform/local-file/index.ts` -> `studio/no-hand-json-read`. (P12)
+- Never `JSON.parse` a file that you read by hand in the auth store files (`src/server/store/{command-rules,device-bindings,org-scope,project-org,...}.ts`). Use the owning store (`DeviceBindings` for `bindings.json`) or `toJsonFileReader` from `src/server/platform/local-file/index.ts` -> `studio/no-hand-json-read`. (P12)
 
 ## 8. Lint and hooks
 

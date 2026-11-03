@@ -9,7 +9,11 @@ import type { FoundApps } from "../../shared/found-apps.js";
 import type { ProjectSearchResult } from "../../shared/project-search.js";
 import type { RepoContextState } from "../../shared/repo-context.js";
 import type { ComponentUsage } from "../../shared/usage-scope.js";
-import type { OrgScope } from "../store/org-scope.js";
+import {
+  LocalOrgScope,
+  isProjectVisible,
+  readProjectOrgs,
+} from "../store/index.js";
 import { readDoctor, toDoctorText } from "./doctor-read.js";
 import { readFileList, readFileText } from "./file-read.js";
 import type {
@@ -73,12 +77,14 @@ interface McpReadStoreApi {
   readonly portPlan: (
     query: PortPlanQuery
   ) => Effect.Effect<PortPlanView, McpReadError>;
-  readonly projectList: (
-    scope: OrgScope
-  ) => Effect.Effect<readonly ProjectSummary[], McpReadError>;
+  readonly projectList: () => Effect.Effect<
+    readonly ProjectSummary[],
+    McpReadError,
+    LocalOrgScope
+  >;
   readonly projectSearch: (
     query: ProjectSearchQuery
-  ) => Effect.Effect<ProjectSearchResult, McpReadError>;
+  ) => Effect.Effect<ProjectSearchResult, McpReadError, LocalOrgScope>;
   readonly routeList: (
     query: RouteListQuery
   ) => Effect.Effect<RouteList, McpReadError>;
@@ -101,6 +107,14 @@ interface McpReadStoreApi {
     query: VersionListQuery
   ) => Effect.Effect<readonly VersionListEntry[], McpReadError>;
 }
+
+const toVisibility = Effect.fn("McpReadStore.toVisibility")(function* run() {
+  const scope = yield* LocalOrgScope;
+  const orgs = yield* readProjectOrgs();
+
+  return (projectId: string): boolean =>
+    isProjectVisible(scope, orgs, projectId);
+});
 
 class McpReadStore extends Context.Service<McpReadStore, McpReadStoreApi>()(
   "design-studio/preview/McpReadStore"
@@ -168,22 +182,27 @@ class McpReadStore extends Context.Service<McpReadStore, McpReadStoreApi>()(
       ) {
         return yield* attemptMcpRead((runtime) => runtime.planPort(query));
       }),
-      projectList: Effect.fn("McpReadStore.projectList")(function* run(
-        scope: OrgScope
-      ) {
+      projectList: Effect.fn("McpReadStore.projectList")(function* run() {
+        const isVisible = yield* toVisibility();
+
         return yield* attemptMcpRead((runtime) =>
-          readProjectList(runtime.projects, scope)
+          readProjectList(runtime.projects, isVisible)
         );
       }),
       projectSearch: Effect.fn("McpReadStore.projectSearch")(function* run(
         query: ProjectSearchQuery
       ) {
+        const isVisible = yield* toVisibility();
+
         return yield* attemptMcpRead((runtime) =>
           readProjectSearch(
             runtime.projects,
             runtime.preview,
             runtime.runsDir,
-            query
+            {
+              ...query,
+              isVisible,
+            }
           )
         );
       }),

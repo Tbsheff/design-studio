@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
 
-import { ImportPageSlot } from "../../canvas-slots.js";
 import { uiStore } from "../../platform/storage.js";
 import { useFileMenu } from "./canvas-chrome-menu.js";
 import type { ChromeProps } from "./canvas-chrome-menu.js";
@@ -173,15 +172,7 @@ function CanvasChrome(p: ChromeProps) {
           rulers={{ on: p.ui.rulers, onToggle: toggleRulers }}
         />
       )}
-      {importing && p.directionId && (
-        <ImportPageSlot
-          projectId={p.projectId}
-          directionId={p.directionId}
-          frames={p.frames}
-          zoom={p.zoom}
-          onClose={closeImport}
-        />
-      )}
+      {importing && p.directionId && p.importPage.render(closeImport)}
       {present && p.presentUrl && (
         <PresentLayer
           url={p.presentUrl}

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import type { FormEvent } from "react";
 
 import type { AppServerStatus, AttachedApp } from "../../../shared/contracts";
@@ -85,7 +85,7 @@ function UrlForm({
     app.mode === "url" ? (app.url ?? "") : suggested
   );
 
-  const [busy, setBusy] = useState(false);
+  const [busy, startSave] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
   const save = (event: FormEvent) => {
@@ -95,13 +95,15 @@ function UrlForm({
       return;
     }
 
-    setBusy(true);
     setError(null);
-    api
-      .appConfig(projectId, { url: url.trim() })
-      .then(onSaved)
-      .catch((err: unknown) => setError(errorText(err)))
-      .finally(() => setBusy(false));
+    startSave(async () => {
+      try {
+        await api.appConfig(projectId, { url: url.trim() });
+        onSaved();
+      } catch (err) {
+        setError(errorText(err));
+      }
+    });
   };
 
   return (

@@ -16,7 +16,7 @@ import {
   type Starter,
 } from "../../../shared/contracts.js";
 import { api, errorText } from "../../api.js";
-import { prefetchScreensWhenIdle } from "../../app/screens.js";
+import { prefetchScreensWhenIdle } from "../../app/screen-preload.js";
 import { uiStore, useUi } from "../../platform/storage.js";
 import { reportAppStart } from "../../platform/telemetry.js";
 import { maxVariationsFor } from "../canvas/variations-api.js";

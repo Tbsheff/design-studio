@@ -1112,7 +1112,7 @@ export const BRIDGE_PASSIVE_PARAM = "__studio_passive";
 export const BRIDGE_HEADLESS_PARAM = "__studio_headless";
 export const BRIDGE_HELLO_TYPE = "bridge-hello";
 export const BRIDGE_HANDSHAKE_TYPE = "bridge-handshake";
-export const CLOUD_BLOCKED_BRIDGE_TYPES: readonly string[] = [
+export const CLOUD_BLOCKED_BRIDGE_TYPES: readonly BridgeToParent["type"][] = [
   "text-commit",
   "text-edit",
   "move-start",

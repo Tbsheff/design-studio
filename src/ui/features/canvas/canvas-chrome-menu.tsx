@@ -6,7 +6,6 @@ import type {
   SelectionContext,
 } from "../../../shared/contracts.js";
 import { api } from "../../api.js";
-import { importPageItems } from "../../canvas-slots.js";
 import type { LiveStore } from "../../platform/live-store.js";
 import type { UiState } from "../../platform/storage.js";
 import {
@@ -24,7 +23,7 @@ import type {
   SetSelectMode,
 } from "./canvas-shell.js";
 import type { CanvasViewRow } from "./canvas-toolbar.js";
-import type { MenuGroup } from "./top-bar-menu.js";
+import type { MenuEntry, MenuGroup } from "./top-bar-menu.js";
 
 interface FrameLabelInfo {
   number?: string;
@@ -32,8 +31,18 @@ interface FrameLabelInfo {
   badge?: { title: string };
 }
 
+interface ChromeImportPage {
+  readonly items: (
+    kind: string,
+    directionId: string | null,
+    run: () => void
+  ) => MenuEntry[];
+  readonly render: (onClose: () => void) => ReactNode;
+}
+
 interface ChromeProps {
   matrix?: ReactNode;
+  importPage: ChromeImportPage;
   shell: CanvasShell | undefined;
   kind: ProjectKind;
   projectId: string;
@@ -150,7 +159,7 @@ function useFileMenu(p: ChromeProps, onImport: () => void) {
           disabled: !canAddFrame(p.layout),
           run: () => addAndShow(p, { width: f.width, height: f.height }),
         })),
-        ...importPageItems(p.kind, p.directionId, onImport),
+        ...p.importPage.items(p.kind, p.directionId, onImport),
       ],
     },
   ];
@@ -160,4 +169,4 @@ function useFileMenu(p: ChromeProps, onImport: () => void) {
 
 export { useFileMenu };
 
-export type { ChromeProps };
+export type { ChromeImportPage, ChromeProps };

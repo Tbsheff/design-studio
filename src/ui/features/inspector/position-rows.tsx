@@ -5,6 +5,7 @@ import { Icon } from "../../kit/Icon.js";
 import { UiSelect } from "../../kit/UiSelect.js";
 import {
   PIN_OPTIONS,
+  pinFields,
   pinModeOf,
   pinPatch,
   type InsetProp,

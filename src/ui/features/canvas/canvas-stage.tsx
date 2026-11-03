@@ -1,7 +1,9 @@
 import { Suspense, lazy } from "react";
 
-import { McpPointBadge, TabOrderSlot } from "../../canvas-slots.js";
+import { TabOrderSlot } from "../accessibility/index.js";
+import { McpPointBadge } from "../chat/index.js";
 import { CommentModePill } from "../comments/comment-layer.js";
+import type { SpacingHandlesProps } from "../spacing/index.js";
 import { FrameUndoBar } from "./add-frame-menu.js";
 import { frameDirection, frameName } from "./canvas-frames-model.js";
 import { FrameLabel } from "./canvas-frames.js";
@@ -13,11 +15,7 @@ import {
   quietOnPointer,
 } from "./canvas-helpers.js";
 import { EditNotice } from "./canvas-layers.js";
-import {
-  FrameSnapLayer,
-  MarqueeLayer,
-  SpacingLayer,
-} from "./canvas-overlays.js";
+import { FrameSnapLayer, MarqueeLayer } from "./canvas-overlays.js";
 import {
   CanvasComments,
   InlinePromptSlot,
@@ -41,6 +39,18 @@ import type { useCanvasStage } from "./use-canvas-stage.js";
 import type { useCanvasWiring } from "./use-canvas-wiring.js";
 
 const CanvasRulers = lazy(() => import("./canvas-rulers.js"));
+
+const LazySpacingHandles = lazy(async () => {
+  const loaded = await import("../spacing/index.js");
+
+  return { default: loaded.SpacingHandles };
+});
+
+const SpacingLayer = ({ host, selection, zoom }: SpacingHandlesProps) => (
+  <Suspense fallback={null}>
+    <LazySpacingHandles host={host} selection={selection} zoom={zoom} />
+  </Suspense>
+);
 
 interface CanvasStageProps {
   props: ViewProps;
@@ -217,14 +227,16 @@ const CanvasStage = ({ props, s, pv, ed, w }: CanvasStageProps) => {
       {capture && <div className="capture" data-testid="pan-capture" />}
       <FrameUndoBar onUndo={undoRemove} onDismiss={dismissUndo} />
       <EditNotice edits={layerEdits} />
-      <McpPointBadge
-        badge={pointBadge}
-        frameName={(id) => {
-          const f = canvasFrames.layout.frames.find((item) => item.id === id);
+      <Suspense fallback={null}>
+        <McpPointBadge
+          badge={pointBadge}
+          frameName={(id: string) => {
+            const f = canvasFrames.layout.frames.find((item) => item.id === id);
 
-          return f ? frameName(f) : id;
-        }}
-      />
+            return f ? frameName(f) : id;
+          }}
+        />
+      </Suspense>
     </div>
   );
 };

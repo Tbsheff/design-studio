@@ -613,11 +613,11 @@ function buildPolicy(
       allowBash:
         shellAllowed &&
         settings.allowBash &&
-        (input.devicePolicy?.allowBash ?? true),
+        (input.devicePolicy?.canRunBash ?? true),
       allowInstall:
         shellAllowed &&
         settings.allowInstall &&
-        (input.devicePolicy?.allowInstall ?? true),
+        (input.devicePolicy?.canInstall ?? true),
       skills: skills.enabled,
       skillDirs: skills.readableDirs,
       ...(ctx.project.designSystemFor ? { readOnlyDirs: [SOURCE_DIR] } : {}),
@@ -708,8 +708,8 @@ function mergeOutcomes(
     durationMs: addNullable(total.durationMs, next.durationMs),
     modelMs: total.modelMs + next.modelMs,
     finalText: next.finalText || total.finalText,
-    ...(total.costEstimated || next.costEstimated
-      ? { costEstimated: true }
+    ...(total.isCostEstimated || next.isCostEstimated
+      ? { isCostEstimated: true }
       : {}),
   };
 }
@@ -1067,7 +1067,7 @@ function noResultOutcome(
     status: "failed",
     usage: sumUsage(state),
     costUsd,
-    costEstimated: true,
+    isCostEstimated: true,
     durationMs: null,
     modelMs: state.apiMs,
     finalText: state.lastText,

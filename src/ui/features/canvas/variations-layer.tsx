@@ -12,15 +12,15 @@ import { Icon } from "../../kit/Icon.js";
 import type { RunMap } from "../chat/run-state-model.js";
 import { ElementVariantsDialog } from "../inspector/element-variants-dialog.js";
 import { canvasStore } from "./canvas-frames-model.js";
+import type { CanvasDirections } from "./canvas-types.js";
 import {
   framesOnCanvas,
   keepVariationFrame,
   showVariationFrames,
 } from "./canvas-variations-model.js";
-import type { CanvasDirections } from "./canvas.js";
-import type { FrameVariation } from "./frame-controls.js";
 import { budgetFor, money, type VariationsState } from "./use-variations.js";
 import { VariationBriefCard } from "./variation-brief-card.js";
+import type { FrameVariation } from "./variation-controls.js";
 import { groupOf } from "./variations-api.js";
 
 interface GroupRun {

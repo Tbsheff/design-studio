@@ -12,4 +12,10 @@ const McpToasts = lazy(async () => {
   return { default: loaded.McpToasts };
 });
 
-export { ChatPanel, McpToasts };
+const McpPointBadge = lazy(async () => {
+  const loaded = await import("./mcp-point-badge.js");
+
+  return { default: loaded.McpPointBadge };
+});
+
+export { ChatPanel, McpPointBadge, McpToasts };

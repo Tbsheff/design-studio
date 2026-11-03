@@ -24,6 +24,7 @@ import { Icon } from "../../kit/Icon.js";
 import type { PreviewPort } from "../../platform/bridge.js";
 import type { DesignTokens } from "../design-system/use-design-system-state.js";
 import { CopyCodeMenu } from "../share-publish-ship-export/copy-code-menu.js";
+import { AutoLayoutSection } from "./auto-layout-section.js";
 import { BoxModel, type DeclaredMargins } from "./box-model.js";
 import { SIDES } from "./css-values.js";
 import { VariantScopeContext, useEditVariant } from "./edit-variant.js";
@@ -41,7 +42,7 @@ import {
   InspectorSection,
   SelectField,
 } from "./inspector-fields.js";
-import { AutoLayoutSection, MinMaxRows, SizeRows } from "./inspector-layout.js";
+import { SizeRows } from "./inspector-layout.js";
 import {
   MultiCreateTokenHost,
   MultiNote,
@@ -71,6 +72,7 @@ import {
 } from "./inspector-tokens.js";
 import { InspectorVariantBar } from "./inspector-variant-bar.js";
 import { NumberField } from "./number-field.js";
+import { MinMaxRows } from "./size-limits.js";
 import { useAuthoredCss } from "./use-authored-css.js";
 import {
   sameEditValues,

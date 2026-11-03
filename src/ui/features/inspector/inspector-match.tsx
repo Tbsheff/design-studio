@@ -16,7 +16,12 @@ import { errorText, replaceStyle } from "../../api.js";
 import { InspectorSection } from "./inspector-fields.js";
 
 import "../../styles/inspector-match.css";
-import { designCandidates, uniqueTokens } from "./match-candidates.js";
+import {
+  classCandidates,
+  designCandidates,
+  uniqueTokens,
+  varCandidates,
+} from "./match-candidates.js";
 import {
   type RowActions,
   KindGroup,

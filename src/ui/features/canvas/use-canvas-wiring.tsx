@@ -1,6 +1,3 @@
-import { Suspense, useMemo } from "react";
-
-import { MatrixSlot, useFindHost } from "../../canvas-slots.js";
 import { HTML_FRAME_SANDBOX } from "../../platform/bridge.js";
 import { appRoutePages } from "./app-canvas-routes.js";
 import { useAppCanvas } from "./app-canvas.js";
@@ -11,8 +8,6 @@ import {
 } from "./canvas-frames-model.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";
 import {
-  frameLabelOf,
-  jumpToFrame,
   shellDirectionName,
   stageCursor,
   themeSwitch,
@@ -157,12 +152,6 @@ const useCanvasWiring = (
     passive,
   });
 
-  const findHost = useFindHost({
-    enabled: directionId !== null,
-    frames: canvasFrames,
-    post: frames.post,
-  });
-
   const commandsInput = {
     live,
     hasHead: headVersionId !== null,
@@ -203,21 +192,6 @@ const useCanvasWiring = (
   const capture = pz.spaceHeld || pz.panning || pz.zoomHeld;
   const stageMode = stageCursor(pz);
 
-  const matrixSlot = useMemo(
-    () => (
-      <Suspense fallback={null}>
-        <MatrixSlot
-          projectId={projectId}
-          directionId={directionId}
-          frame={active}
-          frameLabelOf={frameLabelOf}
-          onJumpToFrame={jumpToFrame}
-        />
-      </Suspense>
-    ),
-    [active, directionId, projectId]
-  );
-
   return {
     darkSwitch,
     lofiSwitch,
@@ -229,12 +203,10 @@ const useCanvasWiring = (
     onResizeStart,
     labelProps,
     proto,
-    findHost,
     commandsInput,
     appCanvas,
     capture,
     stageMode,
-    matrixSlot,
   };
 };
 

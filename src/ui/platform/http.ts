@@ -154,7 +154,7 @@ const readError = async (
   }
 };
 
-const requestOf = (method: HttpMethod, rest: WireFields): RequestInit => {
+const requestOf = (method: HttpMethod, rest: JsonBody): RequestInit => {
   const headers = tokenHeaders();
 
   if (QUERY_METHODS.has(method)) {
@@ -208,7 +208,9 @@ type ErrorPick = (data: {
 const pickError: ErrorPick = (data) => data.error ?? data.message;
 const pickMessage: ErrorPick = (data) => data.message ?? data.error;
 
-type RequestBody = FormData | WireFields | readonly WireJson[] | null;
+type JsonBody = Readonly<Record<never, never>>;
+
+type RequestBody = FormData | JsonBody | null;
 
 const payloadOf = (body: RequestBody): BodyInit | null => {
   if (body === null || body instanceof FormData) {
@@ -276,7 +278,7 @@ const request = async (
 const sendJson = async <Body>(
   method: HttpMethod,
   path: string,
-  body: WireFields
+  body: JsonBody
 ): Promise<Body> => {
   const res = await fetch(path, requestOf(method, body));
 
@@ -341,6 +343,7 @@ export type {
   ActionOf,
   ActionRoute,
   HttpMethod,
+  JsonBody,
   RouteInput,
   RouteOf,
   RouteOutput,

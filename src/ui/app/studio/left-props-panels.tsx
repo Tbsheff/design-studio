@@ -6,6 +6,7 @@ import { componentMention } from "../../features/chat/use-mentions";
 import { runCommand } from "../../features/commands";
 import { mergeCommit } from "../../features/inspector/use-direct-edit";
 import { renameVersion } from "../../features/versions-layers-tokens/versions-api";
+import { focusComposer } from "../../platform/focus";
 import type { DraftStore } from "../../platform/storage";
 import type { LeftPane } from "../shell/left-pane";
 import { appDirOf } from "./project-model";
@@ -13,15 +14,7 @@ import type { StudioCtx } from "./studio-context";
 
 type LeftProps = ComponentProps<typeof LeftPane>;
 
-const COMPOSER_INPUT = '.prompt [data-slot="composer-input"]';
 const COMPARE_LIMIT = 2;
-
-const focusComposer = (prompt: string): void => {
-  const input = document.querySelector<HTMLTextAreaElement>(COMPOSER_INPUT);
-
-  input?.focus();
-  input?.setSelectionRange(prompt.length, prompt.length);
-};
 
 const askAgent = async (
   prompt: string,
@@ -188,7 +181,7 @@ const openVersionIdOf = (ctx: StudioCtx): string | null => {
 const renameAndRefresh = async (
   projectId: string,
   versionId: string,
-  name: string,
+  name: string | null,
   refresh: () => void
 ): Promise<void> => {
   try {
@@ -203,7 +196,7 @@ const versionsActions = (ctx: StudioCtx): Partial<LeftProps["versions"]> => {
   const { data } = core;
 
   return {
-    onRename: (version: Version, name: string): Promise<void> =>
+    onRename: (version: Version, name: string | null): Promise<void> =>
       ui.act((): Promise<void> =>
         renameAndRefresh(projectId, version.id, name, data.refreshVersions)
       ),

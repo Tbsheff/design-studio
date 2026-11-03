@@ -26,7 +26,7 @@ const SimpleTabMemo = memo(SimpleTab, sameShared);
 const ToolsMemo = memo(InspectorTools, sameShared);
 const ArrangeMemo = memo(InspectorArrange, sameShared);
 
-export function Inspector(raw: InspectorProps) {
+function Inspector(raw: InspectorProps) {
   const props = useStableCallbacks(raw);
   const [ownTab, setOwnTab] = useState<InspectorTab>("simple");
   const tab = props.tab ?? ownTab;
@@ -114,6 +114,4 @@ export function Inspector(raw: InspectorProps) {
 }
 
 export { Inspector };
-
-export { inspectorEmptyReason, isDirectEditable } from "./inspector-model.js";
 export type { InspectorTab } from "./inspector-model.js";

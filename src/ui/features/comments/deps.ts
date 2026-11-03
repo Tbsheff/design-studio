@@ -67,6 +67,8 @@ export { projectFromPath } from "../../platform/router.js";
 
 export type { DraftStore } from "../../platform/storage.js";
 
+export type { JsonBody } from "../../platform/http.js";
+
 export { INLINE_PROMPT_OPEN_EVENT } from "../chat/use-inline-prompt.js";
 
 export { useMentions } from "../chat/use-mentions.js";

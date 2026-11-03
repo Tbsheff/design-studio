@@ -8,6 +8,7 @@ import type {
   SourceLoc,
 } from "../shared/contracts.js";
 import { authoredBox, authoredMargins } from "./authored.js";
+import { tryDom } from "./dom-input.js";
 import { isLayer } from "./layers.js";
 
 type Rect = SelectionContext["rect"];
@@ -415,23 +416,19 @@ export function createFreeMove(ports: FreeMovePorts): FreeMove {
   let swallow = false;
 
   const finish = (): void => {
-    try {
+    tryDom(() => {
       if (drag?.session)
         document.documentElement.releasePointerCapture(drag.pointer);
-    } catch {
-      void 0;
-    }
+    });
     drag = null;
   };
 
   const activate = (d: Drag, event: PointerEvent): Session => {
     const session = begin(d.element, ports);
     d.session = session;
-    try {
+    tryDom(() => {
       document.documentElement.setPointerCapture(event.pointerId);
-    } catch {
-      void 0;
-    }
+    });
     const announce = () => {
       if (d.cancelled) return;
       d.ready = true;

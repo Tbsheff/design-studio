@@ -4,7 +4,7 @@ import type { CommentPrefill } from "../../../shared/contracts";
 import {
   isDirectEditable,
   inspectorEmptyReason,
-} from "../../features/inspector/inspector";
+} from "../../features/inspector";
 import { uiStore } from "../../platform/storage";
 import { usePanelTab } from "../../platform/use-panel-tab";
 import { assignRef } from "./ref-model";

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import type { FormEvent } from "react";
 
 import { envText, parseEnvText } from "../../../shared/app";
@@ -29,7 +29,7 @@ function SettingsTab({
   const [url, setUrl] = useState(app.url ?? "");
   const [env, setEnv] = useState(() => envText(app.env));
   const [note, setNote] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [busy, startSave] = useTransition();
 
   const save = (event: FormEvent) => {
     event.preventDefault();
@@ -41,16 +41,16 @@ function SettingsTab({
       return;
     }
 
-    setBusy(true);
     setNote(null);
-    api
-      .appConfig(projectId, { url: url.trim(), env: parsed.env })
-      .then(() => {
+    startSave(async () => {
+      try {
+        await api.appConfig(projectId, { url: url.trim(), env: parsed.env });
         setNote("Saved. The dev server restarts.");
         onSaved();
-      })
-      .catch((err: unknown) => setNote(errorText(err)))
-      .finally(() => setBusy(false));
+      } catch (err) {
+        setNote(errorText(err));
+      }
+    });
   };
 
   return (

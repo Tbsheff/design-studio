@@ -22,7 +22,11 @@ import { useReview } from "./use-review.js";
 
 import "../../styles/review.css";
 
-const ReviewPanel = lazy(() => import("./review-panel.js"));
+const ReviewPanel = lazy(async () => {
+  const loaded = await import("./review-panel.js");
+
+  return { default: loaded.ReviewPanel };
+});
 
 interface Props {
   projectId: string;

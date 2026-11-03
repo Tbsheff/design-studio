@@ -20,6 +20,16 @@ const isNumber = (value: unknown): value is number => value === Number(value);
 
 const isObject = (value: unknown): value is object => value === Object(value);
 
+const tryDom = (task: () => void): boolean => {
+  try {
+    task();
+
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 const eventElement = (event: Event): Element | null => {
   const target = event.composedPath()[0] ?? event.target;
 
@@ -99,4 +109,5 @@ export {
   isTypingElement,
   rootElementOf,
   stringifyArg,
+  tryDom,
 };

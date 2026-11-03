@@ -1,57 +1,40 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 
-import type { Principal } from "../../store/principal.js";
-import { toLegacyPrincipal } from "../../store/principal.js";
-import { readProjectOrg } from "../../store/project-org.js";
+import { Effect } from "effect";
 
-type ProjectOrgLookup = (projectId: string) => Promise<string | null>;
+import type { Principal } from "../../store/index.js";
+import { readProjectOrg, toLegacyPrincipal } from "../../store/index.js";
 
-type FolderRootsLookup = (orgId: string) => readonly string[] | null;
+type FolderRootsLookup = () => Promise<readonly string[] | null>;
 
-const callerStore = new AsyncLocalStorage<Principal>();
+interface LegacyCall {
+  readonly folderRoots: FolderRootsLookup | null;
+  readonly principal: Principal;
+}
 
-let projectOrgLookup: ProjectOrgLookup | null = null;
-let folderRootsLookup: FolderRootsLookup | null = null;
+const callerStore = new AsyncLocalStorage<LegacyCall>();
 
 const withLegacyCaller = <Result>(
-  principal: Principal,
+  call: LegacyCall,
   run: () => Promise<Result>
-): Promise<Result> => callerStore.run(principal, run);
+): Promise<Result> => callerStore.run(call, run);
 
 const legacyCaller = (): Principal =>
-  callerStore.getStore() ?? toLegacyPrincipal();
+  callerStore.getStore()?.principal ?? toLegacyPrincipal();
 
-const setProjectOrgLookup = (lookup: ProjectOrgLookup | null): void => {
-  projectOrgLookup = lookup;
-};
+const lookupProjectOrg = (projectId: string): Promise<string | null> =>
+  Effect.runPromise(readProjectOrg(projectId));
 
-const setFolderRootsLookup = (lookup: FolderRootsLookup | null): void => {
-  folderRootsLookup = lookup;
-};
+const lookupFolderRoots = (): Promise<readonly string[] | null> => {
+  const folderRoots = callerStore.getStore()?.folderRoots ?? null;
 
-const lookupProjectOrg = (projectId: string): Promise<string | null> => {
-  if (projectOrgLookup === null) {
-    return readProjectOrg(projectId);
+  if (folderRoots === null) {
+    return Promise.resolve(null);
   }
 
-  return projectOrgLookup(projectId);
+  return folderRoots();
 };
 
-const lookupFolderRoots = (orgId: string): readonly string[] | null => {
-  if (folderRootsLookup === null) {
-    return null;
-  }
+export { legacyCaller, lookupFolderRoots, lookupProjectOrg, withLegacyCaller };
 
-  return folderRootsLookup(orgId);
-};
-
-export {
-  legacyCaller,
-  lookupFolderRoots,
-  lookupProjectOrg,
-  setFolderRootsLookup,
-  setProjectOrgLookup,
-  withLegacyCaller,
-};
-
-export type { FolderRootsLookup, ProjectOrgLookup };
+export type { FolderRootsLookup, LegacyCall };

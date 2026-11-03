@@ -9,6 +9,7 @@ import {
   useDesktopCommand,
   useDesktopContext,
 } from "../../platform/desktop";
+import { focusNewProject } from "../../platform/focus";
 import { uiStore } from "../../platform/storage";
 import { isTypingTarget } from "../../platform/typing-target.js";
 
@@ -22,14 +23,6 @@ function projectForFolder(
     (project) =>
       project.imported?.sourcePath === clean ||
       project.directions.some((direction) => direction.workTree === clean)
-  );
-}
-
-function focusNewProject(): void {
-  window.requestAnimationFrame(() =>
-    document
-      .querySelector<HTMLTextAreaElement>('[aria-label="Describe the design"]')
-      ?.focus()
   );
 }
 

@@ -5,6 +5,7 @@ import type { FrameStateDeps } from "../canvas/app-flow/frame-state-service.js";
 import type { CanvasService } from "../canvas/service.js";
 import { onSourceChange } from "../direct-edit/change-feed.js";
 import type { EditRecorder } from "../direct-edit/index.js";
+import { recentPages, startRender } from "../events/index.js";
 import type { ExportDeps } from "../export/source.js";
 import { bindMcpLifeRuntime } from "../mcp-life/index.js";
 import type { McpListenerRunnerApi } from "../mcp-life/index.js";
@@ -15,7 +16,6 @@ import {
   createMcpService,
 } from "../mcp/index.js";
 import type { ActivityLog, FixApp } from "../mcp/index.js";
-import { recentPages, startRender } from "../preview/render-wait.js";
 import { warmUpstream } from "../preview/warm-upstream.js";
 import type { LayerLockStore } from "../store/layer-locks.js";
 import type { AgentRunner, EventBus } from "../types.js";

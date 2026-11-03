@@ -548,11 +548,13 @@ function readJson(key: string): Record<string, unknown> {
   }
 }
 
-function writeJson(key: string, value: Record<string, unknown>): void {
+function writeJson(key: string, value: Record<string, unknown>): boolean {
   try {
     writeStored(key, JSON.stringify(value));
+
+    return true;
   } catch {
-    void 0;
+    return false;
   }
 }
 

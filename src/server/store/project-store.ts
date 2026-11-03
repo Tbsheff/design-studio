@@ -2,24 +2,27 @@ import { Context, Effect, Layer } from "effect";
 
 import { NotFound } from "../../shared/actions/_core/errors/not-found.js";
 import type { KnownFailure } from "../platform/attempt/index.js";
-import type { OrgScope } from "./org-scope.js";
-import { isProjectInScope } from "./project-org.js";
+import { LocalOrgScope } from "./local-org-scope.js";
+import {
+  isProjectVisible,
+  readProjectOrgs,
+  toVisibleProjects,
+} from "./project-org.js";
 import { attemptProject } from "./project-runtime.js";
 import type { StudioProjectStore } from "./project-types.js";
 
 interface ProjectStoreApi {
-  readonly list: (
-    scope: OrgScope
-  ) => Effect.Effect<
+  readonly list: () => Effect.Effect<
     Awaited<ReturnType<StudioProjectStore["list"]>>,
-    KnownFailure
+    KnownFailure,
+    LocalOrgScope
   >;
   readonly get: (
-    projectId: string,
-    scope: OrgScope
+    projectId: string
   ) => Effect.Effect<
     Awaited<ReturnType<StudioProjectStore["get"]>>,
-    KnownFailure
+    KnownFailure,
+    LocalOrgScope
   >;
   readonly getAttachment: (
     ...args: Parameters<StudioProjectStore["getAttachment"]>
@@ -28,25 +31,23 @@ interface ProjectStoreApi {
     KnownFailure
   >;
   readonly readDesignMd: (
-    projectId: string,
-    scope: OrgScope
+    projectId: string
   ) => Effect.Effect<
     Awaited<ReturnType<StudioProjectStore["readDesignMd"]>>,
-    KnownFailure
+    KnownFailure,
+    LocalOrgScope
   >;
 }
 
 const MISS_MESSAGE = "The project does not exist.";
 
 const requireInScope = Effect.fn("ProjectStore.requireInScope")(function* run(
-  projectId: string,
-  scope: OrgScope
+  projectId: string
 ) {
-  const isVisible = yield* Effect.promise(() =>
-    isProjectInScope(scope, projectId)
-  );
+  const scope = yield* LocalOrgScope;
+  const orgs = yield* readProjectOrgs();
 
-  if (!isVisible) {
+  if (!isProjectVisible(scope, orgs, projectId)) {
     return yield* new NotFound({ message: MISS_MESSAGE });
   }
 });
@@ -59,11 +60,8 @@ class ProjectStore extends Context.Service<ProjectStore, ProjectStoreApi>()(
   public static readonly layer = Layer.succeed(
     ProjectStore,
     ProjectStore.of({
-      get: Effect.fn("ProjectStore.get")(function* run(
-        projectId: string,
-        scope: OrgScope
-      ) {
-        yield* requireInScope(projectId, scope);
+      get: Effect.fn("ProjectStore.get")(function* run(projectId: string) {
+        yield* requireInScope(projectId);
 
         return yield* attemptProject((store) => store.get(projectId));
       }),
@@ -72,22 +70,17 @@ class ProjectStore extends Context.Service<ProjectStore, ProjectStoreApi>()(
       ) {
         return yield* attemptProject((store) => store.getAttachment(...args));
       }),
-      list: Effect.fn("ProjectStore.list")(function* run(scope: OrgScope) {
+      list: Effect.fn("ProjectStore.list")(function* run() {
+        const scope = yield* LocalOrgScope;
         const projects = yield* attemptProject((store) => store.list());
+        const orgs = yield* readProjectOrgs();
 
-        const visible = yield* Effect.promise(() =>
-          Promise.all(
-            projects.map((project) => isProjectInScope(scope, project.id))
-          )
-        );
-
-        return projects.filter((_project, index) => visible[index] === true);
+        return toVisibleProjects(scope, orgs, projects);
       }),
       readDesignMd: Effect.fn("ProjectStore.readDesignMd")(function* run(
-        projectId: string,
-        scope: OrgScope
+        projectId: string
       ) {
-        yield* requireInScope(projectId, scope);
+        yield* requireInScope(projectId);
 
         return yield* attemptProject((store) => store.readDesignMd(projectId));
       }),

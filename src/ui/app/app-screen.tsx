@@ -5,12 +5,8 @@ import { Home } from "../features/home/index.js";
 import { uiStore, useUi } from "../platform/storage";
 import { Screen } from "./screen";
 import { ScreenBoundary } from "./screen-boundary";
-import {
-  DesignSystems,
-  NewDesignSystem,
-  prefetchStudio,
-  Studio,
-} from "./screens";
+import { prefetchStudio } from "./screen-preload";
+import { DesignSystems, NewDesignSystem, Studio } from "./screens";
 
 const openProject = async (id: string): Promise<void> => {
   await prefetchStudio();

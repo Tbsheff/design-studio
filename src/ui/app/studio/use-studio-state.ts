@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState, useTransition } from "react";
 
 import type {
   CommentPrefill,
@@ -31,19 +31,15 @@ import type {
 const noop = (): null => null;
 
 const runAct = async <Result>(
-  setBusy: (busy: boolean) => void,
   setActionError: (message: string | null) => void,
   fn: () => Promise<Result>
 ): Promise<void> => {
-  setBusy(true);
   setActionError(null);
 
   try {
     await fn();
   } catch (error) {
     setActionError(errorText(error));
-  } finally {
-    setBusy(false);
   }
 };
 
@@ -84,12 +80,16 @@ const useStudioOpen = (): StudioOpen => {
 };
 
 const useStudioAct = (): StudioActing => {
-  const [busy, setBusy] = useState(false);
+  const [busy, startAct] = useTransition();
   const [actionError, setActionError] = useState<string | null>(null);
 
   const act = useCallback(
-    <Result>(fn: () => Promise<Result>): Promise<void> =>
-      runAct(setBusy, setActionError, fn),
+    async <Result>(fn: () => Promise<Result>): Promise<void> => {
+      const run = runAct(setActionError, fn);
+
+      startAct(() => run);
+      await run;
+    },
     []
   );
 

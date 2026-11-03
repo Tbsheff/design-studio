@@ -22,7 +22,7 @@ import {
   type ProjectType,
 } from "../../../shared/project-search.js";
 import { api, json, warmProject } from "../../api.js";
-import { prefetchStudio } from "../../app/screens.js";
+import { prefetchStudio } from "../../app/screen-preload.js";
 import { formatRelative, formatTime } from "../../domain/format.js";
 import { Icon } from "../../kit/Icon.js";
 import { LazySelect } from "../../kit/lazy-select.js";

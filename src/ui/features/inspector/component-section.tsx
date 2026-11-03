@@ -18,7 +18,7 @@ const ComponentSection = (props: InspectorProps) => {
 
   return (
     <Suspense fallback={null}>
-      <InspectorProps
+      <InspectorPropsPanel
         key={target.selector}
         projectId={props.projectId}
         directionId={props.directionId}

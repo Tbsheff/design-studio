@@ -1,12 +1,12 @@
 import { firstVersionBlock } from "../app/first-version.js";
 import { takeSaveFailures } from "../direct-edit/save-queue.js";
-import { withCallOrigin } from "../platform/call-origin/index.js";
-import { isKnownError } from "../platform/errors/index.js";
 import {
   renderedSince,
   renderPending,
   renderSettled,
-} from "../preview/render-wait.js";
+} from "../events/index.js";
+import { withCallOrigin } from "../platform/call-origin/index.js";
+import { isKnownError } from "../platform/errors/index.js";
 import { EditError } from "./edit-guards.js";
 import type { EditDeps } from "./edit-guards.js";
 import { callEditTool, EDIT_TOOLS, RENDER_WAIT_TOOLS } from "./edit-tools.js";

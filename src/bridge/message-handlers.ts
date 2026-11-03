@@ -16,6 +16,22 @@ import type { PostNudge } from "./keyboard.js";
 import { linkQueries } from "./play.js";
 import { neighborRects } from "./rect-tracker.js";
 
+const isParentMessage = (
+  data: unknown,
+  token: string
+): data is ParentToBridge => {
+  if (
+    !isObject(data) ||
+    !("ns" in data) ||
+    !("token" in data) ||
+    !("type" in data)
+  ) {
+    return false;
+  }
+
+  return data.ns === "studio" && data.token === token && isString(data.type);
+};
+
 const FORCE_SELECTOR_MAX = 2000;
 
 const listOf = (value: unknown): unknown[] => {
@@ -278,31 +294,21 @@ const installMessageHandlers = (
   };
 
   const onMessage = (event: MessageEvent): void => {
-    const data = event.data as Partial<ParentToBridge> | null;
+    const data: unknown = event.data;
 
-    if (
-      !data ||
-      !isObject(data) ||
-      data.ns !== "studio" ||
-      data.token !== session.token
-    ) {
+    if (!isParentMessage(data, session.token)) {
       return;
     }
 
-    const message = data as ParentToBridge;
-
-    if (
-      !isString(message.type) ||
-      !Object.hasOwn(messageHandlers, message.type)
-    ) {
+    if (!Object.hasOwn(messageHandlers, data.type)) {
       return;
     }
 
-    const handler = messageHandlers[message.type] as (
+    const handler = messageHandlers[data.type] as (
       message: ParentToBridge
     ) => void;
 
-    handler(message);
+    handler(data);
   };
 
   if (session.port) {

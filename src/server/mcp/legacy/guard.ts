@@ -1,8 +1,7 @@
 import { z } from "zod";
 
 import type { Permission } from "../../../shared/actions/_core/permissions.js";
-import { isOrgInScope, toOrgScope } from "../../store/org-scope.js";
-import { LOCAL_ORG_ID } from "../../store/org-visibility.js";
+import { LOCAL_ORG_ID, isOrgInScope, toOrgScope } from "../../store/index.js";
 import { isPermitted } from "../../store/principal.js";
 import type { Principal } from "../../store/principal.js";
 import { EditError } from "../edit-guards.js";

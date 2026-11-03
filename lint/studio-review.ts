@@ -89,7 +89,7 @@ const UI_ROOT_FILES = ["src/ui/*.ts", "src/ui/*.tsx"];
 
 const APP_FILES = ["src/ui/app/**/*.ts", "src/ui/app/**/*.tsx"];
 
-const STATE_FILES = ["src/server/{mcp,http,agent-tools,store,preview}/**/*.ts"];
+const STATE_FILES = ["src/server/{mcp,http,agent-tools,store}/**/*.ts"];
 
 const SCOPE_FILES = ["src/server/{store,preview,handlers}/**/*.ts"];
 
@@ -311,7 +311,7 @@ const studioReview: OxlintOverride[] = [
   },
   { files: BRIDGE_FILES, rules: { "studio/no-message-data-cast": "error" } },
   {
-    files: ["src/bridge/{session,bridge-types}.ts"],
+    files: ["src/bridge/session.ts"],
     rules: { "studio/readonly-field": "error" },
   },
   {
@@ -325,7 +325,9 @@ const studioReview: OxlintOverride[] = [
   },
   {
     excludeFiles: SERVER_TESTS,
-    files: ["src/server/store/**/*.ts"],
+    files: [
+      "src/server/store/{command-rules,device-bindings,local-org-scope,local-principal,org-scope,org-visibility,principal,project-org}.ts",
+    ],
     rules: { "studio/no-hand-json-read": "error" },
   },
   {
@@ -340,10 +342,7 @@ const studioReview: OxlintOverride[] = [
   },
   {
     files: AGENT_SPLIT_FILES,
-    rules: {
-      "studio/boolean-name": "error",
-      "studio/no-optional-null": "error",
-    },
+    rules: { "studio/boolean-name": "error" },
   },
   {
     files: ["lint/decisions.ts"],

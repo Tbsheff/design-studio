@@ -1,24 +1,31 @@
+import { routes } from "../shared/actions/direct-edit/routes.js";
 import type {
   InsertComponentRequest,
-  InsertComponentResult,
   InsertJsxRequest,
-  InsertJsxResult,
   InsertPosition,
   InsertableComponent,
-  InsertableList,
 } from "../shared/insert";
-import { ApiError, json } from "./api";
-
-const d = (pid: string, did: string) =>
-  `/api/projects/${encodeURIComponent(pid)}/d/${encodeURIComponent(did)}`;
+import { ApiError } from "./api";
+import { call } from "./platform/http";
 
 export const insertApi = {
   list: (pid: string, did: string) =>
-    json<InsertableList>("GET", `${d(pid, did)}/insert/components`),
+    call(routes.listInsertableDirectEdit, {
+      directionId: did,
+      projectId: pid,
+    }),
   insert: (pid: string, did: string, request: InsertComponentRequest) =>
-    json<InsertComponentResult>("POST", `${d(pid, did)}/insert`, request),
+    call(routes.insertComponentDirectEdit, {
+      ...request,
+      directionId: did,
+      projectId: pid,
+    }),
   insertJsx: (pid: string, did: string, request: InsertJsxRequest) =>
-    json<InsertJsxResult>("POST", `${d(pid, did)}/insert/jsx`, request),
+    call(routes.insertJsxDirectEdit, {
+      ...request,
+      directionId: did,
+      projectId: pid,
+    }),
 };
 
 export function insertError(error: unknown): string {

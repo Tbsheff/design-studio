@@ -1,21 +1,14 @@
-import path from "node:path";
-
 import type { Hono } from "hono";
 
-import { componentPreviewsFor } from "../components/preview.js";
-import { createComponentService } from "../components/thumbs.js";
 import { registerAccessibilityRoutes } from "./accessibility-routes.js";
 import type { AppContext } from "./app-context.js";
 import { readBody } from "./app-request.js";
-import { registerComponentCreateRoutes } from "./component-create-routes.js";
-import { registerComponentPreviewRoutes } from "./component-preview-routes.js";
 import { registerComponentVariantRoutes } from "./component-variant-routes.js";
 import { registerComponentRoutes } from "./components-routes.js";
 import { registerFigmaRoutes } from "./figma-routes.js";
 import { registerFillRoutes } from "./fill-routes.js";
 import { registerIconRoutes } from "./icon-routes.js";
 import { registerImageSearchRoutes } from "./image-search-routes.js";
-import { registerInsertRoutes } from "./insert-routes.js";
 import { registerLayerStateRoutes } from "./layer-state-routes.js";
 import { registerMotionRoutes } from "./motion-routes.js";
 import { registerPropsRoutes } from "./props-routes.js";
@@ -26,23 +19,8 @@ import { registerStackingRoutes } from "./stacking-routes.js";
 import { registerStateStyleRoutes } from "./state-style-routes.js";
 import { registerTextStyleRoutes } from "./text-style-routes.js";
 
-const registerComponentPanelRoutes = (app: Hono, ctx: AppContext): void => {
-  const { config, loadDirection, preview, projects } = ctx;
-  registerComponentRoutes(app, {
-    service: createComponentService({
-      preview,
-      scratchDir: (projectId) =>
-        path.join(projects.projectDir(projectId), ".component-shots"),
-    }),
-    loadDirection,
-  });
-  registerComponentPreviewRoutes(app, {
-    previews: componentPreviewsFor(
-      preview,
-      path.join(config.dataDir, "component-previews")
-    ),
-    loadDirection,
-  });
+const registerComponentPanelRoutes = (app: Hono): void => {
+  registerComponentRoutes(app);
 };
 
 const registerReviewPanelRoutes = (app: Hono, ctx: AppContext): void => {
@@ -94,7 +72,6 @@ const registerStylePanelRoutes = (app: Hono, ctx: AppContext): void => {
     withDirection,
   };
   const plain = { editDeps, readBody, loadDirection, withDirection };
-  registerInsertRoutes(app, withPreview);
   registerIconRoutes(app, withPreview);
   registerTextStyleRoutes(app, plain);
   registerMotionRoutes(app, plain);
@@ -109,27 +86,13 @@ const registerStylePanelRoutes = (app: Hono, ctx: AppContext): void => {
 };
 
 const registerDirectEditPanelRoutes = (app: Hono, ctx: AppContext): void => {
-  registerComponentPanelRoutes(app, ctx);
+  registerComponentPanelRoutes(app);
   registerReviewPanelRoutes(app, ctx);
   registerStylePanelRoutes(app, ctx);
 };
 
 const registerDirectEditCreateRoutes = (app: Hono, ctx: AppContext): void => {
-  const {
-    editDeps,
-    layerLocks,
-    loadDirection,
-    preview,
-    projects,
-    withDirection,
-  } = ctx;
-  registerComponentCreateRoutes(app, {
-    editDeps,
-    preview,
-    readBody,
-    loadDirection,
-    withDirection,
-  });
+  const { layerLocks, projects } = ctx;
   registerLayerStateRoutes(app, { projects, layerLocks, readBody });
 };
 

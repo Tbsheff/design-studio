@@ -109,15 +109,91 @@ const RenderCheckListSchema = Schema.Struct({
 
 type DirectEditResult = typeof DirectEditResultSchema.Type;
 
+const ListInsertableSchema = Schema.Struct({
+  components: Schema.Array(Schema.Unknown),
+  note: Schema.NullOr(Schema.String),
+  truncated: Schema.Boolean,
+});
+
+const InsertResultSchema = Schema.Struct({
+  asset: OptionalUnknownSchema,
+  changed: OptionalUnknownSchema,
+  file: OptionalUnknownSchema,
+  importAdded: OptionalUnknownSchema,
+  importFrom: OptionalUnknownSchema,
+  imports: OptionalUnknownSchema,
+  jsx: OptionalUnknownSchema,
+  mode: OptionalUnknownSchema,
+  select: OptionalUnknownSchema,
+  src: OptionalUnknownSchema,
+  title: OptionalUnknownSchema,
+  usedAt: OptionalUnknownSchema,
+  version: OptionalUnknownSchema,
+});
+
+const ComponentListSchema = Schema.Struct({
+  components: Schema.Array(Schema.Unknown),
+});
+
+const ComponentFolderListSchema = Schema.Struct({
+  folders: Schema.Array(Schema.Unknown),
+  note: Schema.NullOr(Schema.String),
+});
+
+const SwapCandidateListSchema = Schema.Struct({
+  candidates: Schema.Array(Schema.Unknown),
+  from: Schema.String,
+  note: Schema.NullOr(Schema.String),
+});
+
+const CreateComponentResultSchema = Schema.Struct({
+  file: Schema.String,
+  files: Schema.Array(Schema.String),
+  importFrom: Schema.Array(Schema.String),
+  name: Schema.String,
+  props: Schema.Array(Schema.Unknown),
+  select: Schema.Array(Schema.Unknown),
+  title: Schema.String,
+  variants: Schema.Array(Schema.String),
+  version: Schema.Unknown,
+});
+
+const SwapResultSchema = Schema.Struct({
+  added: Schema.Array(Schema.String),
+  dropped: Schema.Array(Schema.String),
+  file: Schema.String,
+  importFrom: Schema.String,
+  select: Schema.Array(Schema.Unknown),
+  title: Schema.String,
+  version: Schema.Unknown,
+});
+
+const ComponentPreviewSchema = Schema.Struct({
+  cached: Schema.Boolean,
+  component: Schema.Unknown,
+  hash: Schema.String,
+  png: Schema.String,
+  props: Schema.Unknown,
+  text: Schema.NullOr(Schema.String),
+});
+
 export {
   CommitTweaksResultSchema,
+  ComponentFolderListSchema,
+  ComponentListSchema,
+  ComponentPreviewSchema,
+  CreateComponentResultSchema,
   CreateTokenFields,
   CreateTokenResultSchema,
   DesignSystemStateSchema,
   DirectEditFields,
   DirectEditResultSchema,
+  InsertResultSchema,
+  ListInsertableSchema,
   PreviewUrlSchema,
   RenderCheckListSchema,
+  SwapCandidateListSchema,
+  SwapResultSchema,
   TokenChangesFields,
   TokenPreviewSchema,
   TweaksStateSchema,

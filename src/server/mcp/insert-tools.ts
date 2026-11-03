@@ -5,19 +5,21 @@ import {
   INSERT_TEXT_MAX,
   type InsertComponentResult,
   type InsertTarget,
-  type InsertableList,
 } from "../../shared/insert.js";
 import { PROP_NAME, PROP_TEXT_MAX, PROPS_MAX } from "../../shared/props.js";
 import { probeOwners } from "../components/owner-probe.js";
 import {
+  insertComponentIn,
+  listInsertableOf,
+} from "../direct-edit/direct-edit-insert-ops.js";
+import { directEditCall } from "./direct-edit-call.js";
+import {
   EditError,
   loadTarget,
   refuseWhileRunning,
-  studioCall,
   type EditDeps,
 } from "./edit-deps.js";
 import {
-  base,
   defineTool,
   directionId,
   ok,
@@ -148,14 +150,12 @@ export async function targetOf(
 }
 
 async function knownNames(
-  deps: EditDeps,
   project: Project,
   direction: Direction
 ): Promise<string> {
-  const list = await studioCall<InsertableList>(
-    deps,
-    "GET",
-    `${base(project, direction.id)}/insert/components`
+  const list = await directEditCall(
+    { directionId: direction.id, projectId: project.id },
+    listInsertableOf
   ).catch(() => null);
 
   const names = [...new Set((list?.components ?? []).map((item) => item.name))];
@@ -203,17 +203,15 @@ const insertComponent = defineTool(
     let result: InsertComponentResult;
 
     try {
-      result = await studioCall<InsertComponentResult>(
-        deps,
-        "POST",
-        `${base(project, direction.id)}/insert`,
-        body
-      );
+      result = (await directEditCall(
+        { directionId: direction.id, projectId: project.id },
+        (runtime, ref) => insertComponentIn(runtime, ref, body)
+      )) as InsertComponentResult;
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       throw new EditError(
         /no exported component/.test(message)
-          ? `${message}.${await knownNames(deps, project, direction)}`
+          ? `${message}.${await knownNames(project, direction)}`
           : message
       );
     }

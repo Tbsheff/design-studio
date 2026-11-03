@@ -1,29 +1,39 @@
-import type {
-  ComponentFolderList,
-  CreateComponentRequest,
-  CreateComponentResult,
-  SwapCandidateList,
-  SwapResult,
-} from "../shared/component-create";
+import { routes } from "../shared/actions/direct-edit/routes.js";
+import type { CreateComponentRequest } from "../shared/component-create";
 import type { SourceLoc } from "../shared/contracts";
-import { ApiError, json } from "./api";
-
-const d = (pid: string, did: string) =>
-  `/api/projects/${encodeURIComponent(pid)}/d/${encodeURIComponent(did)}/components`;
+import { ApiError } from "./api";
+import { call } from "./platform/http";
 
 export const componentCreateApi = {
   folders: (pid: string, did: string) =>
-    json<ComponentFolderList>("GET", `${d(pid, did)}/folders`),
+    call(routes.listComponentFoldersDirectEdit, {
+      directionId: did,
+      projectId: pid,
+    }),
   create: (pid: string, did: string, request: CreateComponentRequest) =>
-    json<CreateComponentResult>("POST", `${d(pid, did)}/create`, request),
+    call(routes.createComponentDirectEdit, {
+      ...request,
+      directionId: did,
+      projectId: pid,
+    }),
   swapCandidates: (pid: string, did: string, use: SourceLoc) =>
-    json<SwapCandidateList>("POST", `${d(pid, did)}/swap-candidates`, { use }),
+    call(routes.listSwapCandidatesDirectEdit, {
+      directionId: did,
+      projectId: pid,
+      use,
+    }),
   swap: (
     pid: string,
     did: string,
     use: SourceLoc,
     component: { name: string; file: string }
-  ) => json<SwapResult>("POST", `${d(pid, did)}/swap`, { use, component }),
+  ) =>
+    call(routes.applySwapDirectEdit, {
+      component,
+      directionId: did,
+      projectId: pid,
+      use,
+    }),
 };
 
 export function apiMessage(error: unknown): string {

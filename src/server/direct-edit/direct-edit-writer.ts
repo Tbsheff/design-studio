@@ -3,6 +3,16 @@ import { Context, Effect, Layer } from "effect";
 import { attemptDirectEdit } from "./direct-edit-core.js";
 import type { DirectEditFailure } from "./direct-edit-core.js";
 import {
+  applySwapIn,
+  createComponentIn,
+  deleteTextIn,
+  insertComponentIn,
+  insertJsxIn,
+  listSwapCandidatesOf,
+  setImageIn,
+  setVectorIn,
+} from "./direct-edit-insert-ops.js";
+import {
   applyEditBody,
   commitTweaksIn,
   createTokenIn,
@@ -54,6 +64,59 @@ interface DirectEditWriterApi {
     Awaited<ReturnType<typeof updateTokensIn>>,
     DirectEditFailure
   >;
+  readonly insertComponent: (
+    ref: DirectionRef,
+    body: EditBody
+  ) => Effect.Effect<
+    Awaited<ReturnType<typeof insertComponentIn>>,
+    DirectEditFailure
+  >;
+  readonly insertJsx: (
+    ref: DirectionRef,
+    body: EditBody
+  ) => Effect.Effect<
+    Awaited<ReturnType<typeof insertJsxIn>>,
+    DirectEditFailure
+  >;
+  readonly deleteText: (
+    ref: DirectionRef,
+    body: EditBody
+  ) => Effect.Effect<
+    Awaited<ReturnType<typeof deleteTextIn>>,
+    DirectEditFailure
+  >;
+  readonly setImage: (
+    ref: DirectionRef,
+    body: EditBody
+  ) => Effect.Effect<Awaited<ReturnType<typeof setImageIn>>, DirectEditFailure>;
+  readonly setVector: (
+    ref: DirectionRef,
+    body: EditBody
+  ) => Effect.Effect<
+    Awaited<ReturnType<typeof setVectorIn>>,
+    DirectEditFailure
+  >;
+  readonly createComponent: (
+    ref: DirectionRef,
+    body: EditBody
+  ) => Effect.Effect<
+    Awaited<ReturnType<typeof createComponentIn>>,
+    DirectEditFailure
+  >;
+  readonly applySwap: (
+    ref: DirectionRef,
+    body: EditBody
+  ) => Effect.Effect<
+    Awaited<ReturnType<typeof applySwapIn>>,
+    DirectEditFailure
+  >;
+  readonly listSwapCandidates: (
+    ref: DirectionRef,
+    body: EditBody
+  ) => Effect.Effect<
+    Awaited<ReturnType<typeof listSwapCandidatesOf>>,
+    DirectEditFailure
+  >;
 }
 
 class DirectEditWriter extends Context.Service<
@@ -65,6 +128,67 @@ class DirectEditWriter extends Context.Service<
   public static readonly layer = Layer.succeed(
     DirectEditWriter,
     DirectEditWriter.of({
+      insertComponent: Effect.fn("DirectEditWriter.insertComponent")(
+        function* run(ref: DirectionRef, body: EditBody) {
+          return yield* attemptDirectEdit((runtime) =>
+            insertComponentIn(runtime, ref, body)
+          );
+        }
+      ),
+      insertJsx: Effect.fn("DirectEditWriter.insertJsx")(function* run(
+        ref: DirectionRef,
+        body: EditBody
+      ) {
+        return yield* attemptDirectEdit((runtime) =>
+          insertJsxIn(runtime, ref, body)
+        );
+      }),
+      deleteText: Effect.fn("DirectEditWriter.deleteText")(function* run(
+        ref: DirectionRef,
+        body: EditBody
+      ) {
+        return yield* attemptDirectEdit((runtime) =>
+          deleteTextIn(runtime, ref, body)
+        );
+      }),
+      setImage: Effect.fn("DirectEditWriter.setImage")(function* run(
+        ref: DirectionRef,
+        body: EditBody
+      ) {
+        return yield* attemptDirectEdit((runtime) =>
+          setImageIn(runtime, ref, body)
+        );
+      }),
+      setVector: Effect.fn("DirectEditWriter.setVector")(function* run(
+        ref: DirectionRef,
+        body: EditBody
+      ) {
+        return yield* attemptDirectEdit((runtime) =>
+          setVectorIn(runtime, ref, body)
+        );
+      }),
+      createComponent: Effect.fn("DirectEditWriter.createComponent")(
+        function* run(ref: DirectionRef, body: EditBody) {
+          return yield* attemptDirectEdit((runtime) =>
+            createComponentIn(runtime, ref, body)
+          );
+        }
+      ),
+      applySwap: Effect.fn("DirectEditWriter.applySwap")(function* run(
+        ref: DirectionRef,
+        body: EditBody
+      ) {
+        return yield* attemptDirectEdit((runtime) =>
+          applySwapIn(runtime, ref, body)
+        );
+      }),
+      listSwapCandidates: Effect.fn("DirectEditWriter.listSwapCandidates")(
+        function* run(ref: DirectionRef, body: EditBody) {
+          return yield* attemptDirectEdit((runtime) =>
+            listSwapCandidatesOf(runtime, ref, body)
+          );
+        }
+      ),
       apply: Effect.fn("DirectEditWriter.apply")(function* run(
         ref: DirectionRef,
         body: EditBody

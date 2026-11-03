@@ -8,6 +8,8 @@ import { DirectEditError as WireDirectEditError } from "../../shared/actions/_co
 import { DirectEditConflict } from "../../shared/actions/direct-edit/errors/direct-edit-conflict.js";
 import { DirectEditNotFound } from "../../shared/actions/direct-edit/errors/direct-edit-not-found.js";
 import type { Direction, Project } from "../../shared/contracts.js";
+import type { ComponentPreviews } from "../components/preview.js";
+import type { ComponentService } from "../components/thumbs.js";
 import { attemptKnown } from "../platform/attempt/index.js";
 import type { KnownFailure } from "../platform/attempt/index.js";
 import { loadConfig } from "../platform/config/index.js";
@@ -20,6 +22,7 @@ import type { DirectEditDeps } from "./commit/edit-types.js";
 import { DirectEditError as EngineDirectEditError } from "./engine/errors.js";
 
 interface DirectEditRuntime {
+  readonly components: ComponentService;
   readonly editDeps: DirectEditDeps;
   readonly listWorkTree: (workTree: string) => Promise<string[]>;
   readonly loadDirection: (
@@ -27,6 +30,7 @@ interface DirectEditRuntime {
     directionId: string
   ) => Promise<{ direction: Direction; project: Project }>;
   readonly preview: PreviewService;
+  readonly previews: ComponentPreviews;
   readonly watchTokenSources: (project: Project) => void;
   readonly withDirection: <Value>(
     projectId: string,
@@ -70,6 +74,9 @@ const toDirectEditFailure = (
   return new WireDirectEditError(fields);
 };
 
+const directEditRuntimeOf = (): DirectEditRuntime | null =>
+  runtimes.peekAt(loadConfig().dataDir);
+
 const attemptDirectEdit = <Value>(
   task: (runtime: DirectEditRuntime) => Promise<Value>
 ): Effect.Effect<Value, DirectEditFailure> =>
@@ -82,6 +89,11 @@ const attemptDirectEdit = <Value>(
     return yield* attemptKnown(() => task(runtime), toDirectEditFailure);
   });
 
-export { attemptDirectEdit, bindDirectEditRuntime, toDirectEditFailure };
+export {
+  attemptDirectEdit,
+  bindDirectEditRuntime,
+  directEditRuntimeOf,
+  toDirectEditFailure,
+};
 
 export type { DirectEditFailure, DirectEditRuntime };

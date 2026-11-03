@@ -7,13 +7,12 @@ import {
   type InsertJsxResult,
 } from "../../shared/insert.js";
 import {
-  EditError,
-  loadTarget,
-  refuseWhileRunning,
-  studioCall,
-} from "./edit-deps.js";
+  deleteTextIn,
+  insertJsxIn,
+} from "../direct-edit/direct-edit-insert-ops.js";
+import { directEditCall } from "./direct-edit-call.js";
+import { EditError, loadTarget, refuseWhileRunning } from "./edit-deps.js";
 import {
-  base,
   defineTool,
   directionId,
   ok,
@@ -101,12 +100,10 @@ const insertJsx = defineTool(
     };
     let result: InsertJsxResult;
     try {
-      result = await studioCall<InsertJsxResult>(
-        deps,
-        "POST",
-        `${base(project, direction.id)}/insert/jsx`,
-        body
-      );
+      result = (await directEditCall(
+        { directionId: direction.id, projectId: project.id },
+        (runtime, ref) => insertJsxIn(runtime, ref, body)
+      )) as InsertJsxResult;
     } catch (error) {
       throw new EditError(
         error instanceof Error ? error.message : String(error)
@@ -180,12 +177,10 @@ const clearText = defineTool(
     const target = await targetOf(deps, project, direction, input);
     let result: InsertJsxResult;
     try {
-      result = await studioCall<InsertJsxResult>(
-        deps,
-        "POST",
-        `${base(project, direction.id)}/insert/clear-text`,
-        { target }
-      );
+      result = (await directEditCall(
+        { directionId: direction.id, projectId: project.id },
+        (runtime, ref) => deleteTextIn(runtime, ref, { target })
+      )) as InsertJsxResult;
     } catch (error) {
       throw new EditError(
         error instanceof Error ? error.message : String(error)

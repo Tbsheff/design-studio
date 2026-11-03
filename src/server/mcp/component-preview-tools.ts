@@ -1,9 +1,9 @@
 import { z } from "zod";
 
-import { COMPONENT_PREVIEW_PROPS_HEADER } from "../../shared/component-preview.js";
+import { getComponentPreviewOf } from "../direct-edit/direct-edit-insert-ops.js";
+import { directEditCall } from "./direct-edit-call.js";
 import { EditError, loadTarget } from "./edit-deps.js";
-import type { EditDeps } from "./edit-deps.js";
-import { base, defineTool, directionId, projectId } from "./edit-kit.js";
+import { defineTool, directionId, projectId } from "./edit-kit.js";
 import type { Done, ToolSpec } from "./edit-kit.js";
 
 const previewSchema = z
@@ -38,32 +38,6 @@ const previewSchema = z
     "pass name (and file) or id"
   );
 
-async function previewResponse(
-  deps: EditDeps,
-  url: string
-): Promise<{ png: Buffer; meta: string }> {
-  const res = await deps.request("GET", url);
-
-  if (res.ok) {
-    return {
-      png: Buffer.from(await res.arrayBuffer()),
-      meta: decodeURIComponent(
-        res.headers.get(COMPONENT_PREVIEW_PROPS_HEADER) ?? ""
-      ),
-    };
-  }
-
-  const body = (await res.json().catch(() => null)) as {
-    message?: unknown;
-  } | null;
-
-  throw new EditError(
-    typeof body?.message === "string"
-      ? body.message
-      : `component preview failed with ${res.status}`
-  );
-}
-
 const componentPreview = defineTool(
   "component_preview",
   previewSchema,
@@ -87,24 +61,32 @@ const componentPreview = defineTool(
       );
     }
 
-    const query = input.id
-      ? `id=${encodeURIComponent(input.id)}`
-      : `name=${encodeURIComponent(input.name ?? "")}${input.file ? `&file=${encodeURIComponent(input.file)}` : ""}`;
-
-    const { png, meta } = await previewResponse(
-      deps,
-      `${base(project, direction.id)}/component-preview?${query}`
+    const preview = await directEditCall(
+      { directionId: direction.id, projectId: project.id },
+      (runtime, ref) =>
+        getComponentPreviewOf(runtime, ref, {
+          ...(input.id ? { id: input.id } : {}),
+          ...(input.name ? { name: input.name } : {}),
+          ...(input.file ? { file: input.file } : {}),
+        })
     );
+
+    const meta = JSON.stringify({
+      cached: preview.cached,
+      component: preview.component,
+      props: preview.props,
+      text: preview.text,
+    });
 
     return {
       result: {
         content: [
           {
             type: "image",
-            data: png.toString("base64"),
+            data: preview.png,
             mimeType: "image/png",
           },
-          { type: "text", text: meta || "Component preview." },
+          { type: "text", text: meta },
         ],
       },
     };

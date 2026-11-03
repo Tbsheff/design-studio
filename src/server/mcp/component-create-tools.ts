@@ -10,13 +10,14 @@ import {
 } from "../../shared/component-create.js";
 import type { InsertTarget } from "../../shared/insert.js";
 import {
-  EditError,
-  loadTarget,
-  refuseWhileRunning,
-  studioCall,
-} from "./edit-deps.js";
+  applySwapIn,
+  createComponentIn,
+  listComponentFoldersOf,
+  listSwapCandidatesOf,
+} from "../direct-edit/direct-edit-insert-ops.js";
+import { directEditCall } from "./direct-edit-call.js";
+import { EditError, loadTarget, refuseWhileRunning } from "./edit-deps.js";
 import {
-  base,
   defineTool,
   directionId,
   ok,
@@ -166,21 +167,23 @@ const createComponent = defineTool(
     const folder =
       input.folder ??
       (
-        await studioCall<ComponentFolderList>(
-          deps,
-          "GET",
-          `${base(project, direction.id)}/components/folders`
-        )
+        (await directEditCall(
+          { directionId: direction.id, projectId: project.id },
+          listComponentFoldersOf
+        )) as ComponentFolderList
       ).folders.find((item) => item.kind === "app")?.folder ??
       "src/components";
     let result: CreateComponentResult;
     try {
-      result = await studioCall<CreateComponentResult>(
-        deps,
-        "POST",
-        `${base(project, direction.id)}/components/create`,
-        { targets, name: input.name, folder }
-      );
+      result = (await directEditCall(
+        { directionId: direction.id, projectId: project.id },
+        (runtime, ref) =>
+          createComponentIn(runtime, ref, {
+            folder,
+            name: input.name,
+            targets,
+          })
+      )) as CreateComponentResult;
     } catch (error) {
       throw new EditError(
         error instanceof Error ? error.message : String(error)
@@ -242,29 +245,26 @@ const swapInstance = defineTool(
           )
         ).use;
     if (!input.name) {
-      const list = await studioCall<SwapCandidateList>(
-        deps,
-        "POST",
-        `${base(project, direction.id)}/components/swap-candidates`,
-        { use }
-      );
+      const list = (await directEditCall(
+        { directionId: direction.id, projectId: project.id },
+        (runtime, ref) => listSwapCandidatesOf(runtime, ref, { use })
+      )) as SwapCandidateList;
       return { result: ok({ use, ...list }) };
     }
     refuseWhileRunning(deps, project, direction);
     let result: SwapResult;
     try {
-      result = await studioCall<SwapResult>(
-        deps,
-        "POST",
-        `${base(project, direction.id)}/components/swap`,
-        {
-          use,
-          component: {
-            name: input.name,
-            ...(input.file ? { file: input.file } : {}),
-          },
-        }
-      );
+      result = (await directEditCall(
+        { directionId: direction.id, projectId: project.id },
+        (runtime, ref) =>
+          applySwapIn(runtime, ref, {
+            component: {
+              name: input.name,
+              ...(input.file ? { file: input.file } : {}),
+            },
+            use,
+          })
+      )) as SwapResult;
     } catch (error) {
       throw new EditError(
         error instanceof Error ? error.message : String(error)

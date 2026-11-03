@@ -11,3 +11,7 @@ export { DirectEditStore } from "./direct-edit-store.js";
 export { DirectEditWriter } from "./direct-edit-writer.js";
 
 export { toBody, toRef } from "./direct-edit-ref.js";
+
+export { directEditRuntimeOf } from "./direct-edit-core.js";
+
+export { previewOriginOf, thumbOf } from "./direct-edit-insert-ops.js";

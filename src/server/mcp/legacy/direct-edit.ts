@@ -18,8 +18,9 @@ import { TWEAK_TOOLS } from "../tweak-tools.js";
 import { VARIANT_TOOLS } from "../variant-tools.js";
 import { VECTOR_TOOLS } from "../vector-tools.js";
 import { DIRECT_EDIT_INLINE_TOOLS } from "./direct-edit-inline.js";
+import { guardTools } from "./guard.js";
 
-const DIRECT_EDIT_LEGACY_TOOLS = [
+const DIRECT_EDIT_LEGACY_TOOLS_UNGUARDED = [
   ...DIRECT_EDIT_INLINE_TOOLS,
   ...VARIANT_TOOLS,
   ...PROPS_TOOLS,
@@ -41,5 +42,7 @@ const DIRECT_EDIT_LEGACY_TOOLS = [
   ...FIGMA_IMPORT_TOOLS,
   ...ICON_TOOLS,
 ];
+
+const DIRECT_EDIT_LEGACY_TOOLS = guardTools(DIRECT_EDIT_LEGACY_TOOLS_UNGUARDED);
 
 export { DIRECT_EDIT_LEGACY_TOOLS };

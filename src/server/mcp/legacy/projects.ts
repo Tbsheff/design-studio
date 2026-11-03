@@ -2,6 +2,7 @@ import { defineTool } from "../edit-kit.js";
 import type { ToolSpec } from "../edit-kit.js";
 import { attachApp } from "./attach-app.js";
 import { createProject } from "./create-project.js";
+import { guardTools } from "./guard.js";
 import { attachAppSchema, createProjectSchema } from "./projects-schema.js";
 
 const createProjectTool = defineTool(
@@ -26,6 +27,11 @@ const attachAppTool = defineTool(
   attachApp
 );
 
-const PROJECTS_LEGACY_TOOLS: ToolSpec[] = [createProjectTool, attachAppTool];
+const PROJECTS_LEGACY_TOOLS_UNGUARDED: ToolSpec[] = [
+  createProjectTool,
+  attachAppTool,
+];
+
+const PROJECTS_LEGACY_TOOLS = guardTools(PROJECTS_LEGACY_TOOLS_UNGUARDED);
 
 export { PROJECTS_LEGACY_TOOLS };

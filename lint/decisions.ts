@@ -562,6 +562,8 @@ export const decisionOverrides: OxlintOverride[] = [
   {
     files: [
       "src/server/mcp/legacy/attach-app.ts",
+      "src/server/mcp/legacy/caller-scope.ts",
+      "src/server/mcp/legacy/guard.ts",
       "src/server/mcp/legacy/canvas-frames.ts",
       "src/server/mcp/legacy/canvas-result.ts",
       "src/server/mcp/legacy/canvas-schema.ts",
@@ -604,6 +606,10 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/server/mcp/legacy/write-file.ts",
     ],
     rules: { "import/no-relative-parent-imports": "off" },
+  },
+  {
+    files: ["src/server/mcp/legacy/direct-edit.ts"],
+    rules: { "import/max-dependencies": "off" },
   },
   {
     files: ["src/ui/platform/query.ts"],

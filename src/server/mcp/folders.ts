@@ -2,6 +2,8 @@ import { realpath, stat } from "node:fs/promises";
 import { homedir } from "node:os";
 import path from "node:path";
 
+import { legacyCaller, lookupFolderRoots } from "./legacy/caller-scope.js";
+
 const MAX_PATH = 4096;
 
 const SYSTEM_TREES = [
@@ -34,6 +36,26 @@ export function isInside(target: string, folder: string): boolean {
 
 async function real(target: string): Promise<string> {
   return realpath(target).catch(() => path.resolve(target));
+}
+
+async function assertInOrgScope(folder: string): Promise<void> {
+  const caller = legacyCaller();
+
+  if (caller.kind !== "key") {
+    return;
+  }
+
+  const roots = lookupFolderRoots(caller.orgId);
+
+  if (roots === null) {
+    return;
+  }
+
+  const realRoots = await Promise.all(roots.map((root) => real(root)));
+
+  if (!realRoots.some((root) => isInside(folder, root))) {
+    throw new FolderError("folder is outside the folders of this org");
+  }
 }
 
 export async function safeFolder(
@@ -85,6 +107,8 @@ export async function safeFolder(
   if (blocked.some((tree) => isInside(folder, tree))) {
     throw new FolderError("cannot use a system folder");
   }
+
+  await assertInOrgScope(folder);
 
   return folder;
 }

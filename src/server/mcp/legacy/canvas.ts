@@ -20,6 +20,7 @@ import {
   canvasPointSchema,
   removeFrameSchema,
 } from "./canvas-schema.js";
+import { guardTools } from "./guard.js";
 
 const canvasListTool = defineTool(
   "canvas_list",
@@ -104,7 +105,7 @@ const addRouteFrameTool = defineTool(
   addRouteFrame
 );
 
-const CANVAS_LEGACY_TOOLS: ToolSpec[] = [
+const CANVAS_LEGACY_TOOLS_UNGUARDED: ToolSpec[] = [
   canvasListTool,
   canvasPlaceTool,
   canvasPointTool,
@@ -114,5 +115,7 @@ const CANVAS_LEGACY_TOOLS: ToolSpec[] = [
   ...LINK_INTERACTION_TOOLS,
   ...PAGE_IMPORT_TOOLS,
 ];
+
+const CANVAS_LEGACY_TOOLS = guardTools(CANVAS_LEGACY_TOOLS_UNGUARDED);
 
 export { CANVAS_LEGACY_TOOLS };

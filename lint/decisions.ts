@@ -349,6 +349,56 @@ export const decisionOverrides: OxlintOverride[] = [
     },
   },
   {
+    files: [
+      "src/server/app/dev-server-{ops,runner,runtime,store}.ts",
+      "src/server/handlers/devserver/*.ts",
+      "src/shared/actions/devserver/*.ts",
+    ],
+    rules: { "import/no-relative-parent-imports": "off" },
+  },
+  {
+    files: ["src/shared/actions/devserver/{create,set}.ts"],
+    rules: { "unicorn/max-nested-calls": "off" },
+  },
+  {
+    files: ["src/server/app/dev-server-{ops,runner}.ts"],
+    rules: {
+      "anti-slop/no-conditional-empty-object-spread": "warn",
+      "anti-slop/no-runtime-typeof": "warn",
+      "eslint/no-ternary": "warn",
+      "eslint/no-undefined": "warn",
+      "eslint/prefer-destructuring": "warn",
+      "eslint/sort-keys": "warn",
+      "github/no-then": "warn",
+      "promise/prefer-await-to-then": "warn",
+      "typescript/explicit-function-return-type": "warn",
+      "typescript/explicit-module-boundary-types": "warn",
+      "unicorn/no-useless-undefined": "warn",
+    },
+  },
+  {
+    files: [
+      "src/server/handlers/mcp-life/*.ts",
+      "src/shared/actions/mcp-life/*.ts",
+      "src/server/export/{approval-window-queue,mcp-activity-log,mcp-life-runtime,mcp-settings-store}.ts",
+    ],
+    rules: { "import/no-relative-parent-imports": "off" },
+  },
+  {
+    files: [
+      "src/shared/actions/mcp-life/{answer-approval,get-status,list-activity,list-approvals,set-status}.ts",
+    ],
+    rules: { "unicorn/max-nested-calls": "off" },
+  },
+  {
+    files: ["src/server/handlers/mcp-life/*.ts"],
+    rules: { "studio/no-deep-area-import": "off" },
+  },
+  {
+    files: ["src/shared/actions/mcp-life/answer-approval.ts"],
+    rules: { "studio/action-verb": "off" },
+  },
+  {
     files: ["src/server/platform/git/encoding.ts"],
     rules: { "sonarjs/hashing": "off" },
   },

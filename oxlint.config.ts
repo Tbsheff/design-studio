@@ -81,9 +81,9 @@ export default defineConfig({
   },
   overrides: [
     ...BOUNDARY_OVERRIDES,
+    ...studio,
     ...decisionOverrides,
     ...TEST_OVERRIDES,
     ...dayOne,
-    ...studio,
   ],
 });

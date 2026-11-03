@@ -1,15 +1,14 @@
+import { routes } from "../shared/actions/mcp-life/routes.js";
 import type { McpActivityList, McpStatus } from "../shared/export";
-import { json } from "./api";
+import { call } from "./platform/http";
 
 export const mcpApi = {
-  activity: (pid: string) =>
-    json<McpActivityList>(
-      "GET",
-      `/api/projects/${encodeURIComponent(pid)}/mcp/activity`
-    ),
-  answer: (id: string, allow: boolean) =>
-    json<{ ok: true }>("POST", `/api/mcp/approvals/${encodeURIComponent(id)}`, {
-      allow,
-    }),
-  disconnect: () => json<McpStatus>("POST", "/api/mcp", { edits: false }),
+  activity: async (pid: string): Promise<McpActivityList> =>
+    (await call(routes.listActivityMcpLife, {
+      projectId: pid,
+    })) as McpActivityList,
+  answer: async (id: string, allow: boolean): Promise<{ ok: true }> =>
+    (await call(routes.answerApprovalMcpLife, { allow, id })) as { ok: true },
+  disconnect: async (): Promise<McpStatus> =>
+    (await call(routes.setStatusMcpLife, { edits: false })) as McpStatus,
 };

@@ -1,18 +1,18 @@
-import type { Context, Hono } from "hono";
+import type { Hono } from "hono";
 
 import { STUDIO_TOKEN_HEADER } from "../../shared/contracts.js";
-import type { McpActivityList, McpApprovalPoll } from "../../shared/export.js";
+import type { McpApprovalPoll } from "../../shared/export.js";
 import type { FrameStateDeps } from "../canvas/app-flow/frame-state-service.js";
 import type { CanvasService } from "../canvas/service.js";
 import { onSourceChange } from "../direct-edit/change-feed.js";
 import type { EditRecorder } from "../direct-edit/index.js";
+import { bindMcpLifeRuntime } from "../export/mcp-life-runtime.js";
 import type { ExportDeps } from "../export/source.js";
 import { createActivityLog, type ActivityLog } from "../mcp/activity.js";
 import { createApprovalQueue } from "../mcp/approvals.js";
 import { createMcpService } from "../mcp/server.js";
 import { recentPages, startRender } from "../preview/render-wait.js";
 import { warmUpstream } from "../preview/warm-upstream.js";
-import { BadRequestError, NotFoundError } from "../store/errors.js";
 import type { AgentRunner, EventBus } from "../types.js";
 
 interface McpRouteDeps extends ExportDeps {
@@ -25,18 +25,6 @@ interface McpRouteDeps extends ExportDeps {
   projectsFolder: () => Promise<string>;
   appOpen: () => boolean;
   history?: EditRecorder;
-}
-
-const MAX_WAIT_S = 25;
-
-async function body(c: Context): Promise<Record<string, unknown>> {
-  const parsed: unknown = await c.req.json().catch(() => null);
-
-  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
-    throw new BadRequestError("body must be a JSON object");
-  }
-
-  return parsed as Record<string, unknown>;
 }
 
 function warmAfterEdits(deps: McpRouteDeps): void {
@@ -159,84 +147,11 @@ export function registerMcpRoutes(
     }
   };
 
-  const denyPending = (): void => {
-    for (const item of approvals.list()) {
-      approvals.answer(item.id, false);
-    }
-  };
-
-  app.get("/api/mcp", async (c) => c.json(await mcp.status()));
-
-  app.get("/api/projects/:pid/mcp/activity", async (c) => {
-    const project = await deps.projects.get(c.req.param("pid"));
-
-    return c.json({
-      activity: await activity.list(project.id),
-    } satisfies McpActivityList);
-  });
-
-  app.post("/api/mcp", async (c) => {
-    const input = await body(c);
-
-    if (input.rotate === true) {
-      await mcp.rotate();
-    }
-
-    if (typeof input.edits === "boolean") {
-      await mcp.setEdits(input.edits);
-
-      if (!input.edits) {
-        denyPending();
-      }
-    }
-
-    if (typeof input.enabled === "boolean") {
-      if (!input.enabled) {
-        denyPending();
-      }
-
-      const status = await mcp.setEnabled(input.enabled);
-      settingsChanged();
-
-      return c.json(status);
-    }
-
-    settingsChanged();
-
-    return c.json(await mcp.status());
-  });
-
-  app.get("/api/mcp/approvals", async (c) => {
-    if (!(await mcp.editsOn())) {
-      return c.json({ edits: false, pending: [] } satisfies McpApprovalPoll);
-    }
-
-    const wait = Math.min(
-      MAX_WAIT_S,
-      Math.max(0, Number.parseInt(c.req.query("wait") ?? "0", 10) || 0)
-    );
-
-    const pending = await approvals.poll(
-      c.req.query("seen") ?? "",
-      wait * 1000,
-      c.req.raw.signal
-    );
-
-    return c.json({ edits: true, pending } satisfies McpApprovalPoll);
-  });
-
-  app.post("/api/mcp/approvals/:id", async (c) => {
-    const input = await body(c);
-
-    if (typeof input.allow !== "boolean") {
-      throw new BadRequestError("allow must be true or false");
-    }
-
-    if (!approvals.answer(c.req.param("id"), input.allow)) {
-      throw new NotFoundError("approval request is not open");
-    }
-
-    return c.json({ ok: true });
+  bindMcpLifeRuntime({
+    activity,
+    approvals,
+    mcp,
+    onSettingsChanged: settingsChanged,
   });
 
   return { activity, approvalFeed };

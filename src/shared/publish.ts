@@ -118,6 +118,7 @@ export interface Publication {
   kind: PublishKind;
   title: string;
   backend: "app" | "legacy-worker";
+  isLegacy?: boolean;
   workerName: string | null;
   accountId: string | null;
   url: string | null;

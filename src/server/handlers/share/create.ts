@@ -2,6 +2,7 @@ import { Effect } from "effect";
 
 import type { Input } from "../../../shared/actions/_core/action.js";
 import type { createShare } from "../../../shared/actions/share/create.js";
+import { createCloudShare, findCloudOrg } from "../../publish/index.js";
 import { ShareLinkStore, ShareStore } from "../../share/index.js";
 import type { Handle, Preview } from "../_core/handler.js";
 
@@ -10,6 +11,12 @@ type CreateShareInput = Input<typeof createShare>;
 const handle = Effect.fn("share.create")(function* run(
   input: CreateShareInput
 ) {
+  const orgId = yield* findCloudOrg(input.projectId);
+
+  if (orgId !== null) {
+    return yield* createCloudShare(orgId, input);
+  }
+
   const links = yield* ShareLinkStore;
 
   return yield* links.create(input);

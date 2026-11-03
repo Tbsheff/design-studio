@@ -265,6 +265,12 @@ export const SCOPED_OFF_REASONS: Record<string, string> = {
 
 export const decisionOverrides: OxlintOverride[] = [
   {
+    files: ["src/server/publish/cloud-links.ts"],
+    rules: {
+      "import/no-relative-parent-imports": "off",
+    },
+  },
+  {
     files: [
       "cloud/api/src/http/share-routes.ts",
       "cloud/api/src/http/viewer-routes.ts",

@@ -243,7 +243,15 @@ export function PublicationRow({
       <div className="share-link-head">
         <span className="share-link-title">
           <span className="truncate">{p.title}</span>
-          {p.backend !== "app" && (
+          {p.isLegacy === true && (
+            <span
+              className="publish-legacy-tag"
+              data-tip="Published before cloud links. Read-only. Unpublish removes the local record only."
+            >
+              Legacy (read-only)
+            </span>
+          )}
+          {p.isLegacy !== true && p.backend !== "app" && (
             <span
               className="publish-legacy-tag"
               data-tip="Published before the shared publish Worker"

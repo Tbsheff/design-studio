@@ -49,6 +49,7 @@ const PublicationSchema = Schema.Struct({
   expiresAt: Schema.NullOr(Schema.Number),
   fileCount: Schema.Number,
   id: Schema.String,
+  isLegacy: Schema.optionalKey(Schema.Boolean),
   kind: PublishKindSchema,
   lastUpload: Schema.NullOr(LastUploadSchema),
   log: Schema.String,

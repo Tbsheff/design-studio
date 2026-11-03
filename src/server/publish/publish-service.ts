@@ -65,6 +65,10 @@ interface PublishServiceApi {
     projectId: string,
     publicationId: string
   ) => Effect.Effect<Publication, WriteError>;
+  readonly unpublishLocal: (
+    projectId: string,
+    publicationId: string
+  ) => Effect.Effect<Publication, NotFound>;
 }
 
 const MISSING_WORKER = /not found|does not exist|10007/iu;
@@ -249,6 +253,27 @@ const toServiceApi = (cf: CfCliApi): PublishServiceApi => ({
     }
 
     return toPublication(yield* deleteApp(core, found));
+  }),
+  unpublishLocal: Effect.fn("PublishService.unpublishLocal")(function* run(
+    projectId: string,
+    publicationId: string
+  ) {
+    const core = toCore();
+    const found = yield* getOwned(core, projectId, publicationId);
+
+    if (found.status === "removed") {
+      return { ...toPublication(found), isLegacy: true };
+    }
+
+    const removed: PublicationRecord = {
+      ...found,
+      status: "removed",
+      updatedAt: Date.now(),
+    };
+
+    const saved = yield* Effect.promise(() => core.files.put(removed));
+
+    return { ...toPublication(saved), isLegacy: true };
   }),
 });
 

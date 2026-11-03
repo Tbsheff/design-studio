@@ -41,6 +41,19 @@ const toCheck = (isOn: boolean): WireInput<typeof inspectPublish> => {
   return {};
 };
 
+const CLOUD_ID_PREFIX = "cloud_";
+
+interface PublicationFlags {
+  readonly id: string;
+  readonly isLegacy?: boolean;
+}
+
+const isCloudPublication = (item: PublicationFlags): boolean =>
+  item.id.startsWith(CLOUD_ID_PREFIX);
+
+const isReadOnlyPublication = (item: PublicationFlags): boolean =>
+  item.isLegacy === true;
+
 const planPath = (projectId: string): string =>
   `/api/projects/${encodeURIComponent(projectId)}/publish/plan`;
 
@@ -97,6 +110,6 @@ const publishApi = {
     call(routes.unpublishPublish, { projectId, publicationId }),
 };
 
-export { publishApi };
+export { isCloudPublication, isReadOnlyPublication, publishApi };
 
 export type { PublishRequest };

@@ -13,6 +13,7 @@ createServer({
     console.error(`[studio] ${error.message}`);
     process.exit(LOCKED_EXIT_CODE);
   }
+
   console.error("[studio] failed to start", error);
   process.exit(1);
 });

@@ -8,6 +8,7 @@ if (parentPort) {
     const out = new Uint8Array(
       halfSize(Buffer.from(png.buffer, png.byteOffset, png.byteLength))
     );
+
     return { result: out, transfer: [out.buffer] };
   });
 }

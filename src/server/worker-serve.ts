@@ -27,8 +27,8 @@ export function serveWorker<Q, R>(
         ),
       (error: unknown) =>
         port.postMessage({
-          id: message.id,
           error: error instanceof Error ? error.message : String(error),
+          id: message.id,
         } satisfies WorkerReply<R>)
     );
   });

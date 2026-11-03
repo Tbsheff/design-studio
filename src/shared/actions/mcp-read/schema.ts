@@ -101,22 +101,49 @@ const RouteListSchema = Schema.Struct({
   total: Schema.Number,
 });
 
+const FrameHtmlSchema = Schema.Struct({
+  html: Schema.String,
+});
+
+const DesignMdSchema = Schema.Struct({
+  text: Schema.String,
+});
+
+const TokensViewSchema = Schema.Struct({
+  errors: Schema.optionalKey(Schema.Unknown),
+  pack: Schema.optionalKey(Schema.Unknown),
+  source: Schema.optionalKey(Schema.Unknown),
+  text: Schema.optionalKey(Schema.String),
+  tokens: Schema.Array(Schema.Unknown),
+  tokensCss: Schema.optionalKey(Schema.String),
+});
+
+const ScreenshotSchema = Schema.Struct({
+  data: Schema.String,
+  mimeType: Schema.String,
+  text: Schema.String,
+});
+
 type DoctorViewText = typeof DoctorViewSchema.Type;
 
 type PortPlanView = typeof PortPlanViewSchema.Type;
 
 export {
   ComponentUsageSchema,
+  DesignMdSchema,
   DoctorViewSchema,
   FileListSchema,
   FileTextSchema,
   FoundAppsViewSchema,
+  FrameHtmlSchema,
   PathTextSchema,
   PortPlanViewSchema,
   ProjectSearchViewSchema,
   ProjectSummaryListSchema,
   RouteListSchema,
   RouteTextSchema,
+  ScreenshotSchema,
+  TokensViewSchema,
   VariantListSchema,
   VersionListSchema,
 };

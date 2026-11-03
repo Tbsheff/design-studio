@@ -1,16 +1,40 @@
 // @generated
 const routes = {
+  getDesignMdMcpRead: {
+    id: "mcp-read.getDesignMd",
+    invalidates: [],
+    method: "GET",
+    path: "/api/projects/:projectId/design-md",
+  },
   getDoctorMcpRead: {
     id: "mcp-read.getDoctor",
     invalidates: [],
     method: "GET",
     path: "/api/projects/:projectId/app/doctor",
   },
+  getFrameHtmlMcpRead: {
+    id: "mcp-read.getFrameHtml",
+    invalidates: [],
+    method: "GET",
+    path: "/api/projects/:projectId/frame-html",
+  },
   getPortPlanMcpRead: {
     id: "mcp-read.getPortPlan",
     invalidates: [],
     method: "GET",
     path: "/api/port/plan",
+  },
+  getScreenshotMcpRead: {
+    id: "mcp-read.getScreenshot",
+    invalidates: [],
+    method: "GET",
+    path: "/api/projects/:projectId/screenshot",
+  },
+  getTokensMcpRead: {
+    id: "mcp-read.getTokens",
+    invalidates: [],
+    method: "GET",
+    path: "/api/projects/:projectId/design-tokens",
   },
   getUsageMcpRead: {
     id: "mcp-read.getUsage",

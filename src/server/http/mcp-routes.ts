@@ -10,8 +10,8 @@ import type { ExportDeps } from "../export/source.js";
 import { createActivityLog, type ActivityLog } from "../mcp/activity.js";
 import { createApprovalQueue } from "../mcp/approvals.js";
 import { createMcpService } from "../mcp/server.js";
-import { warmUpstream } from "../mcp/tools.js";
 import { recentPages, startRender } from "../preview/render-wait.js";
+import { warmUpstream } from "../preview/warm-upstream.js";
 import { BadRequestError, NotFoundError } from "../store/errors.js";
 import type { AgentRunner, EventBus } from "../types.js";
 

@@ -29,9 +29,23 @@ interface GateDeps {
   readonly approvals?: ApprovalQueue | null | undefined;
 }
 
+type ResultBlock =
+  | { readonly text: string; readonly type: "text" }
+  | {
+      readonly data: string;
+      readonly mimeType: string;
+      readonly type: "image";
+    };
+
 interface TextResult {
-  readonly content: { readonly text: string; readonly type: "text" }[];
+  readonly content: ResultBlock[];
   readonly isError: boolean;
+}
+
+interface ImageOutput {
+  readonly data: string;
+  readonly mimeType: string;
+  readonly text: string;
 }
 
 type CallById = (action: AnyAction, args: WireArgs) => Promise<TextResult>;
@@ -149,7 +163,27 @@ const textResult = (text: string, isError: boolean): TextResult => ({
   isError,
 });
 
+const ImageOutputSchema = Schema.Struct({
+  data: Schema.String,
+  mimeType: Schema.String.check(Schema.isPattern(/^image\//u)),
+  text: Schema.String,
+});
+
+const isImageOutput = Schema.is(ImageOutputSchema);
+
+const imageResult = (value: ImageOutput): TextResult => ({
+  content: [
+    { data: value.data, mimeType: value.mimeType, type: "image" },
+    { text: value.text, type: "text" },
+  ],
+  isError: false,
+});
+
 const toToolResult = (exit: ActionExit): TextResult => {
+  if (Exit.isSuccess(exit) && isImageOutput(exit.value)) {
+    return imageResult(exit.value);
+  }
+
   if (Exit.isSuccess(exit)) {
     return textResult(JSON.stringify(exit.value), false);
   }

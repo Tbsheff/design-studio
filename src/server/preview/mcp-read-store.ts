@@ -17,6 +17,15 @@ import type {
   FileText,
 } from "./file-read.js";
 import { readFoundApps } from "./found-apps-read.js";
+import { readFrameHtml } from "./frame-html-read.js";
+import { readScreenshot } from "./frame-shot-read.js";
+import type {
+  FrameHtml,
+  FrameHtmlQuery,
+  FrameSourceQuery,
+  ScreenshotView,
+  ShotQuery,
+} from "./frame-source.js";
 import { attemptMcpRead } from "./mcp-read-core.js";
 import type { McpReadError, PortPlanQuery } from "./mcp-read-core.js";
 import { readProjectList } from "./project-list-read.js";
@@ -25,6 +34,8 @@ import { readProjectSearch } from "./project-search-read.js";
 import type { ProjectSearchQuery } from "./project-search-read.js";
 import { readRouteList } from "./route-read.js";
 import type { RouteList, RouteListQuery } from "./route-read.js";
+import { readDesignMd, readTokens } from "./token-read.js";
+import type { DesignMd, TokensView } from "./token-read.js";
 import { readUsage } from "./usage-read.js";
 import type { UsageQuery } from "./usage-read.js";
 import { readVariantList } from "./variant-read.js";
@@ -36,6 +47,9 @@ import type {
 } from "./version-list-read.js";
 
 interface McpReadStoreApi {
+  readonly designMd: (
+    query: FrameSourceQuery
+  ) => Effect.Effect<DesignMd, McpReadError>;
   readonly doctor: (
     projectId: string,
     isFresh: boolean
@@ -49,6 +63,9 @@ interface McpReadStoreApi {
   readonly foundApps: (
     isFresh: boolean
   ) => Effect.Effect<FoundApps, McpReadError>;
+  readonly frameHtml: (
+    query: FrameHtmlQuery
+  ) => Effect.Effect<FrameHtml, McpReadError>;
   readonly portPlan: (
     query: PortPlanQuery
   ) => Effect.Effect<PortPlanView, McpReadError>;
@@ -62,6 +79,12 @@ interface McpReadStoreApi {
   readonly routeList: (
     query: RouteListQuery
   ) => Effect.Effect<RouteList, McpReadError>;
+  readonly screenshot: (
+    query: ShotQuery
+  ) => Effect.Effect<ScreenshotView, McpReadError>;
+  readonly tokens: (
+    query: FrameSourceQuery
+  ) => Effect.Effect<TokensView, McpReadError>;
   readonly usage: (
     query: UsageQuery
   ) => Effect.Effect<ComponentUsage, McpReadError>;
@@ -81,6 +104,11 @@ class McpReadStore extends Context.Service<McpReadStore, McpReadStoreApi>()(
   public static readonly layer = Layer.succeed(
     McpReadStore,
     McpReadStore.of({
+      designMd: Effect.fn("McpReadStore.designMd")(function* run(
+        query: FrameSourceQuery
+      ) {
+        return yield* attemptMcpRead((runtime) => readDesignMd(runtime, query));
+      }),
       doctor: Effect.fn("McpReadStore.doctor")(function* run(
         projectId: string,
         isFresh: boolean
@@ -127,6 +155,13 @@ class McpReadStore extends Context.Service<McpReadStore, McpReadStoreApi>()(
           readFoundApps(runtime.projects, isFresh)
         );
       }),
+      frameHtml: Effect.fn("McpReadStore.frameHtml")(function* run(
+        query: FrameHtmlQuery
+      ) {
+        return yield* attemptMcpRead((runtime) =>
+          readFrameHtml(runtime, query)
+        );
+      }),
       portPlan: Effect.fn("McpReadStore.portPlan")(function* run(
         query: PortPlanQuery
       ) {
@@ -155,6 +190,18 @@ class McpReadStore extends Context.Service<McpReadStore, McpReadStoreApi>()(
         return yield* attemptMcpRead((runtime) =>
           readRouteList(runtime.projects, query)
         );
+      }),
+      screenshot: Effect.fn("McpReadStore.screenshot")(function* run(
+        query: ShotQuery
+      ) {
+        return yield* attemptMcpRead((runtime) =>
+          readScreenshot(runtime, query)
+        );
+      }),
+      tokens: Effect.fn("McpReadStore.tokens")(function* run(
+        query: FrameSourceQuery
+      ) {
+        return yield* attemptMcpRead((runtime) => readTokens(runtime, query));
       }),
       usage: Effect.fn("McpReadStore.usage")(function* run(query: UsageQuery) {
         return yield* attemptMcpRead((runtime) =>

@@ -27,3 +27,15 @@ export { VersionStore } from "./version-store.js";
 export { VersionWriter } from "./version-writer.js";
 
 export { BadRequestError, NotFoundError } from "./errors.js";
+
+export { ProjectLibraryStore } from "./project-library-store.js";
+
+export { ProjectLibraryWriter } from "./project-library-writer.js";
+
+export { ProjectStore } from "./project-store.js";
+
+export { ProjectWriter } from "./project-writer.js";
+
+export { WorkspaceStore } from "./workspace-store.js";
+
+export { WorkspaceWriter } from "./workspace-writer.js";

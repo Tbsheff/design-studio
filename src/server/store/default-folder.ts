@@ -13,6 +13,7 @@ import { z } from "zod";
 
 import { BadRequestError, isNodeError } from "./errors.js";
 import { createKeyedMutex } from "./mutex.js";
+import { bindDefaultFolderRuntime } from "./workspace-runtime.js";
 
 export {
   DEFAULT_FOLDER_NAME,
@@ -146,7 +147,7 @@ export function createDefaultFolderStore(
     return real;
   };
 
-  return {
+  const store: DefaultFolderStore = {
     async current(): Promise<string> {
       return presentPath(await configured());
     },
@@ -185,4 +186,8 @@ export function createDefaultFolderStore(
       });
     },
   };
+
+  bindDefaultFolderRuntime(dataDir, store);
+
+  return store;
 }

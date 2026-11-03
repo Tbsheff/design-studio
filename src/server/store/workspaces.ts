@@ -23,6 +23,7 @@ import {
   isNodeError,
 } from "./errors.js";
 import { createKeyedMutex } from "./mutex.js";
+import { bindWorkspaceRuntime } from "./workspace-runtime.js";
 
 export const WORKSPACES_FILE = "workspaces.json";
 export const DEFAULT_WORKSPACE_ID = "default";
@@ -230,7 +231,7 @@ export function createWorkspaceStore(
     return real;
   };
 
-  return {
+  const store: WorkspaceStore = {
     async list(): Promise<WorkspaceList> {
       const data = await read();
       const fallback = await defaultRow();
@@ -317,4 +318,8 @@ export function createWorkspaceStore(
       });
     },
   };
+
+  bindWorkspaceRuntime(dataDir, store);
+
+  return store;
 }

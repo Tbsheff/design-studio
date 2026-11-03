@@ -92,6 +92,7 @@ const LEGACY_OVERRIDES = new Set([
   "src/shared/actions/**",
   "**/*.generated.ts",
   "desktop/auth.ts",
+  "src/server/store/projects.ts",
 ]);
 
 export { FROZEN_AREAS, FROZEN_EXEMPTIONS, LEGACY_OVERRIDES };

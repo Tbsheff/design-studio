@@ -31,6 +31,7 @@ import {
   NotFoundError,
   assertSafeId,
 } from "./errors.js";
+import { bindProjectLibraryRuntime } from "./project-library-runtime.js";
 import type { StudioProjectStore } from "./projects.js";
 
 const COPIED_PROJECT_PARTS = ["git", "attachments"];
@@ -131,7 +132,7 @@ export function createProjectLibrary(deps: LibraryDeps): ProjectLibrary {
       .sort((a, b) => b.trashedAt - a.trashedAt);
   };
 
-  return {
+  const store: ProjectLibrary = {
     async duplicate(projectId: string): Promise<Project> {
       const source = await projects.get(projectId);
 
@@ -380,6 +381,10 @@ export function createProjectLibrary(deps: LibraryDeps): ProjectLibrary {
       return project;
     },
   };
+
+  bindProjectLibraryRuntime(config.dataDir, store);
+
+  return store;
 }
 
 async function readTrashedProject(dir: string): Promise<Project | null> {

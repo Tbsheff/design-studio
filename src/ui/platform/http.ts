@@ -193,6 +193,23 @@ const call = async <Route extends ActionRoute>(
   return (await res.json()) as RouteOutput<Route>;
 };
 
+const sendJson = async <Body>(
+  method: HttpMethod,
+  path: string,
+  body: WireFields
+): Promise<Body> => {
+  const res = await fetch(path, requestOf(method, body));
+
+  if (!res.ok) {
+    throw await readError(
+      res,
+      `${method} ${path} failed: ${String(res.status)}`
+    );
+  }
+
+  return (await res.json()) as Body;
+};
+
 const getRaw = (path: string, signal?: AbortSignal): Promise<Response> =>
   fetch(path, { headers: tokenHeaders(), signal });
 
@@ -226,7 +243,7 @@ const readBlob = async (url: string): Promise<Blob> => {
   return res.blob();
 };
 
-export { ApiError, call, getBlob, getJson, getRaw, readBlob };
+export { ApiError, call, getBlob, getJson, getRaw, readBlob, sendJson };
 
 export type {
   ActionOf,

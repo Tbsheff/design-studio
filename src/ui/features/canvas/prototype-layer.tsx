@@ -33,12 +33,12 @@ import {
   type PrototypeLink,
 } from "../../../shared/links.js";
 import { loadLinkInteraction } from "../../canvas-link-slots.js";
-import type { CanvasFrame } from "../../canvasFrames.js";
 import { Icon } from "../../kit/Icon.js";
 import { UiSelect, type UiSelectOption } from "../../kit/UiSelect.js";
-import { linksApi } from "../../linksApi.js";
-import type { LinkState } from "../../useLinkRects.js";
+import type { CanvasFrame } from "./canvas-frames-model.js";
 import { framePage, frameTitle } from "./canvas-frames.js";
+import { linksApi } from "./links-api.js";
+import type { LinkState } from "./use-link-rects.js";
 
 import "../../styles/prototype.css";
 

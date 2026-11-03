@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 
-import { FRAME_PRESETS } from "../../canvasFrames.js";
 import { Icon } from "../../kit/Icon.js";
+import { FRAME_PRESETS } from "./canvas-frames-model.js";
 
 export function AddFrameMenu({
   disabled,

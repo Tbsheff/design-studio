@@ -6,7 +6,7 @@ import {
 } from "../../../shared/contracts.js";
 import { LEVEL_PRESETS } from "../../../shared/run-levels.js";
 import { Icon } from "../../kit/Icon.js";
-import { budgetFor, money, type BriefDraft } from "../../useVariations.js";
+import { budgetFor, money, type BriefDraft } from "./use-variations.js";
 
 interface Props {
   project: Project;

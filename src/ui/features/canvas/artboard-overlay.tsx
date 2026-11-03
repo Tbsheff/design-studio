@@ -6,9 +6,9 @@ import {
   measureBetween,
   type MeasureLine,
 } from "../../../shared/measure.js";
-import { unionBox, type SnapGuide } from "../../snap.js";
-import type { HoverBox } from "../../usePreviewFrames.js";
-import type { ResizeControl, ResizeEdge } from "../../useResizeHandles.js";
+import { unionBox, type SnapGuide } from "./snap-model.js";
+import type { HoverBox } from "./use-preview-frames.js";
+import type { ResizeControl, ResizeEdge } from "./use-resize-handles.js";
 
 const LABEL_ROOM = 24;
 

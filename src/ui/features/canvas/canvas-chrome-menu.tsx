@@ -7,19 +7,19 @@ import type {
 } from "../../../shared/contracts.js";
 import { api } from "../../api.js";
 import { importPageItems } from "../../canvas-slots.js";
+import { frameBaseName, framePage } from "../../components/CanvasFrames.js";
+import type { CanvasViewRow } from "../../components/CanvasToolbar.js";
+import type { MenuGroup } from "../../components/CanvasTopBar.js";
+import type { LiveStore } from "../../platform/live-store.js";
+import type { UiState } from "../../storage.js";
 import {
   FRAME_PRESETS,
   canAddFrame,
   canvasStore,
   setFrameHidden,
   setFramePath,
-} from "../../canvasFrames.js";
-import type { CanvasFrame, CanvasLayout } from "../../canvasFrames.js";
-import { frameBaseName, framePage } from "../../components/CanvasFrames.js";
-import type { CanvasViewRow } from "../../components/CanvasToolbar.js";
-import type { MenuGroup } from "../../components/CanvasTopBar.js";
-import type { LiveStore } from "../../platform/live-store.js";
-import type { UiState } from "../../storage.js";
+} from "./canvas-frames-model.js";
+import type { CanvasFrame, CanvasLayout } from "./canvas-frames-model.js";
 import type {
   CanvasShell,
   CommentTool,

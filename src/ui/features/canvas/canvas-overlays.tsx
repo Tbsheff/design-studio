@@ -15,8 +15,8 @@ import { formatMeasure } from "../../../shared/measure.js";
 import type { SpacingHandlesProps } from "../../canvas-slots.js";
 import { guideStyle } from "../../components/ArtboardOverlay.js";
 import { Icon } from "../../kit/Icon.js";
-import type { SpacingBadge } from "../../snap.js";
-import { frameSnapStore } from "../../useFrameResize.js";
+import type { SpacingBadge } from "./snap-model.js";
+import { frameSnapStore } from "./use-frame-resize.js";
 
 const LazySpacingHandles = lazy(async () => {
   const mod = await import("../features/spacing/index.js");

@@ -1,7 +1,7 @@
 import { FindPanelSlot } from "../../canvas-slots.js";
-import { frameDirection, frameName } from "../../canvasFrames.js";
 import { ReviewEntry } from "../../components/ReviewEntry.js";
 import { CanvasChrome } from "./canvas-chrome.js";
+import { frameDirection, frameName } from "./canvas-frames-model.js";
 import { canvasClass, hostedClose } from "./canvas-helpers.js";
 import { CanvasLayersPanel } from "./canvas-layers.js";
 import { CanvasStage } from "./canvas-stage.js";

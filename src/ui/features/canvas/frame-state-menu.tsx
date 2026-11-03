@@ -1,12 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { FrameStatesView } from "../../../shared/frame-state.js";
-import {
-  frameStateOf,
-  setFrameSession,
-  setFrameState,
-  useCurrentFrameStates,
-} from "../../frameStates.js";
 import { Icon } from "../../kit/Icon.js";
 import { usePopover } from "../../usePopover.js";
 import {
@@ -18,6 +12,12 @@ import {
   UserForm,
   MockForm,
 } from "./frame-state-parts.js";
+import {
+  frameStateOf,
+  setFrameSession,
+  setFrameState,
+  useCurrentFrameStates,
+} from "./frame-states-model.js";
 
 function usePanelMenu() {
   const [open, setOpen] = useState(false);

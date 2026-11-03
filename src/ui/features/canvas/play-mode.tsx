@@ -38,12 +38,12 @@ import {
   type PlayHandlers,
   usePlayTriggers,
 } from "../../canvas-link-slots.js";
-import type { CanvasFrame } from "../../canvasFrames.js";
 import { Icon } from "../../kit/Icon.js";
 import { randomToken } from "../../session.js";
-import { linkQuery } from "../../useLinkRects.js";
+import type { CanvasFrame } from "./canvas-frames-model.js";
 import { frameTitle } from "./canvas-frames.js";
 import { hasOutgoing, playStartOf } from "./prototype-layer.js";
+import { linkQuery } from "./use-link-rects.js";
 
 import "../../styles/prototype.css";
 

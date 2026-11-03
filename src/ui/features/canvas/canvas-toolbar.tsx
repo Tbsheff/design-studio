@@ -4,12 +4,16 @@ import { PRESETS } from "../../domain/canvas-presets.js";
 import type { CanvasSource } from "../../domain/canvas-presets.js";
 import { Icon } from "../../kit/Icon.js";
 import type { ZoomSetting } from "../../storage.js";
-import { VECTOR_TOOLS, useVectorTool, vectorTool } from "../../vectorTool.js";
 import {
   type Props,
   ViewportControls,
   SourceControls,
 } from "./toolbar-viewport.js";
+import {
+  VECTOR_TOOLS,
+  useVectorTool,
+  vectorTool,
+} from "./vector-tool-model.js";
 
 export { PRESETS } from "../../domain/canvas-presets.js";
 

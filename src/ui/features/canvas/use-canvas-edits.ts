@@ -1,19 +1,19 @@
 import { useMemo } from "react";
 
-import { useCanvasPoint } from "../../useCanvasPoint.js";
-import { useCanvasPresence } from "../../useCanvasPresence.js";
 import { useComponentInsert } from "../../useComponentInsert.js";
 import { useElementNudge } from "../../useElementNudge.js";
-import { useFreeMove } from "../../useFreeMove.js";
 import { useImageDrop } from "../../useImageDrop.js";
 import { useInlinePrompt } from "../../useInlinePrompt.js";
 import { useLayerEdits } from "../../useLayerEdits.js";
 import { usePreviewMenu } from "../../usePreviewMenu.js";
-import { useResizeHandles } from "../../useResizeHandles.js";
 import { useCanvasVectorTools } from "./canvas-tool-slots.js";
 import type { ViewProps } from "./canvas-types.js";
+import { useCanvasPoint } from "./use-canvas-point.js";
+import { useCanvasPresence } from "./use-canvas-presence.js";
 import type { useCanvasPreview } from "./use-canvas-preview.js";
 import type { useCanvasStage } from "./use-canvas-stage.js";
+import { useFreeMove } from "./use-free-move.js";
+import { useResizeHandles } from "./use-resize-handles.js";
 
 const useCanvasEdits = (
   props: ViewProps,

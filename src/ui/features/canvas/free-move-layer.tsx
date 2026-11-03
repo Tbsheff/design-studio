@@ -1,7 +1,7 @@
 import { formatMeasure } from "../../../shared/measure.js";
-import type { FreeMoveView } from "../../useFreeMove.js";
 import { SnapGuides } from "./artboard-overlay.js";
 import { gapStyle } from "./canvas-overlays.js";
+import type { FreeMoveView } from "./use-free-move.js";
 
 export function FreeMoveLayer({ view }: { view: FreeMoveView | null }) {
   if (!view) {

@@ -10,8 +10,8 @@ import {
   type FrameStatesView,
   type MockUser,
 } from "../../../shared/frame-state.js";
-import { setFrameSession } from "../../frameStates.js";
 import { Icon } from "../../kit/Icon.js";
+import { setFrameSession } from "./frame-states-model.js";
 
 import "../../styles/frame-state.css";
 

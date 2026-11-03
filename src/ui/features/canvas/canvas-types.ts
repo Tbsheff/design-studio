@@ -10,13 +10,13 @@ import type {
   ZoomKey,
 } from "../../../shared/contracts.js";
 import type { PreviewPort } from "../../bridge.js";
-import type { CanvasFrame } from "../../canvasFrames.js";
 import type { CanvasSource } from "../../components/CanvasToolbar.js";
 import type { FrameVariation } from "../../components/FrameControls.js";
 import type { LiveStore } from "../../platform/live-store.js";
 import type { CommentsControl } from "../../useComments.js";
 import type { TextCommitHandler } from "../../useInlineTextEdit.js";
 import type { BuildError, FilesChange } from "../../useStudioData.js";
+import type { CanvasFrame } from "./canvas-frames-model.js";
 import type { CanvasShell } from "./canvas-shell.js";
 
 interface Props {

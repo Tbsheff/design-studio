@@ -3,7 +3,6 @@ import type { ComponentProps, MutableRefObject, ReactNode } from "react";
 
 import type { SelectionContext } from "../../../shared/contracts.js";
 import { tagFrame } from "../../bridge.js";
-import type { CanvasFrame } from "../../canvasFrames.js";
 import { ArtboardOverlay } from "../../components/ArtboardOverlay.js";
 import { StablePassiveFrame } from "../../components/CanvasFrames.js";
 import type { PassiveEntry } from "../../components/CanvasFrames.js";
@@ -12,16 +11,17 @@ import { FreeMoveLayer } from "../../components/FreeMoveLayer.js";
 import { RenderCheckPanel } from "../../components/RenderCheckPanel.js";
 import { createLiveStore, useLive } from "../../platform/live-store.js";
 import type { LiveStore } from "../../platform/live-store.js";
-import type { DirectionFrames } from "../../useDirectionFrames.js";
 import type { PageWait } from "../../useFirstBuild.js";
-import type { FreeMoveView } from "../../useFreeMove.js";
-import type { HoverBox } from "../../usePreviewFrames.js";
-import { useResizeLive } from "../../useResizeHandles.js";
-import type { ResizeHandles } from "../../useResizeHandles.js";
+import type { CanvasFrame } from "./canvas-frames-model.js";
 import { overlayHover } from "./canvas-helpers.js";
 import type { StageNote } from "./canvas-helpers.js";
+import type { DirectionFrames } from "./use-direction-frames.js";
 import type { useFrameLabels } from "./use-frame-labels.js";
+import type { FreeMoveView } from "./use-free-move.js";
+import type { HoverBox } from "./use-preview-frames.js";
 import type { useRenderCheck } from "./use-preview-url.js";
+import { useResizeLive } from "./use-resize-handles.js";
+import type { ResizeHandles } from "./use-resize-handles.js";
 
 function StageMessage({
   note: given,

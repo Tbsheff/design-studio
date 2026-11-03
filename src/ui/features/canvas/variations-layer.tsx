@@ -8,20 +8,20 @@ import type {
 } from "../../../shared/contracts.js";
 import type { ElementScope } from "../../../shared/element-variants.js";
 import { errorText } from "../../api.js";
-import { canvasStore } from "../../canvasFrames.js";
+import { ElementVariantsDialog } from "../../components/ElementVariantsDialog.js";
+import { Icon } from "../../kit/Icon.js";
+import type { RunMap } from "../../runState.js";
+import { canvasStore } from "./canvas-frames-model.js";
 import {
   framesOnCanvas,
   keepVariationFrame,
   showVariationFrames,
-} from "../../canvasVariations.js";
-import { ElementVariantsDialog } from "../../components/ElementVariantsDialog.js";
-import { Icon } from "../../kit/Icon.js";
-import type { RunMap } from "../../runState.js";
-import { budgetFor, money, type VariationsState } from "../../useVariations.js";
-import { groupOf } from "../../variationsApi.js";
+} from "./canvas-variations-model.js";
 import type { CanvasDirections } from "./canvas.js";
 import type { FrameVariation } from "./frame-controls.js";
+import { budgetFor, money, type VariationsState } from "./use-variations.js";
 import { VariationBriefCard } from "./variation-brief-card.js";
+import { groupOf } from "./variations-api.js";
 
 interface GroupRun {
   status: RunStatus | null;

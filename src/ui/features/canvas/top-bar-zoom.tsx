@@ -3,9 +3,13 @@ import { IS_MAC, tipWithKey } from "../../canvas-toolbar-slots.js";
 import { Icon } from "../../kit/Icon.js";
 import { useLive, type LiveStore } from "../../platform/live-store.js";
 import type { ZoomSetting } from "../../storage.js";
-import { VECTOR_TOOLS, useVectorTool, vectorTool } from "../../vectorTool.js";
 import { DropMenu } from "./top-bar-drop-menu.js";
 import type { MenuEntry, MenuGroup } from "./top-bar-menu.js";
+import {
+  VECTOR_TOOLS,
+  useVectorTool,
+  vectorTool,
+} from "./vector-tool-model.js";
 
 const ZOOMS = [0.5, 0.75, 1, 1.25, 2];
 

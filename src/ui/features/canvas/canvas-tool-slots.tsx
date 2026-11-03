@@ -4,14 +4,14 @@ import type { ComponentProps } from "react";
 import { CommentLayer } from "../../components/CommentLayer.js";
 import { DrawSurface } from "../../components/DrawLayer.js";
 import type { useCommentMode } from "../../useCommentMode.js";
-import type { DrawTool } from "../../useDrawTool.js";
 import type { InlinePromptView } from "../../useInlinePrompt.js";
+import type { Props } from "./canvas-types.js";
+import type { DrawTool } from "./use-draw-tool.js";
 import {
   useVectorTool,
   useVectorToolGuards,
   useVectorToolKeys,
-} from "../../vectorTool.js";
-import type { Props } from "./canvas-types.js";
+} from "./vector-tool-model.js";
 
 const VectorLayer = lazy(() => import("../../components/VectorLayer.js"));
 

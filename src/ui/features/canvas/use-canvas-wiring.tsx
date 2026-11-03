@@ -2,18 +2,14 @@ import { Suspense, useMemo } from "react";
 
 import { HTML_FRAME_SANDBOX } from "../../bridge.js";
 import { MatrixSlot, useFindHost } from "../../canvas-slots.js";
+import { appRoutePages, useAppCanvas } from "../../components/AppCanvas.js";
+import type { FrameMenuItem } from "../../components/FrameControls.js";
 import {
   canvasStore,
   frameDirection,
   useCanvasLofi,
-} from "../../canvasFrames.js";
-import type { CanvasFrame } from "../../canvasFrames.js";
-import { appRoutePages, useAppCanvas } from "../../components/AppCanvas.js";
-import type { FrameMenuItem } from "../../components/FrameControls.js";
-import { useLofiFrames } from "../../lofiFrames.js";
-import { useFrameActions } from "../../useCanvasFrames.js";
-import { useClickThrough } from "../../useClickThrough.js";
-import { usePrototype } from "../../usePrototype.js";
+} from "./canvas-frames-model.js";
+import type { CanvasFrame } from "./canvas-frames-model.js";
 import {
   frameLabelOf,
   jumpToFrame,
@@ -22,10 +18,14 @@ import {
   themeSwitch,
 } from "./canvas-helpers.js";
 import type { ViewProps } from "./canvas-types.js";
+import { useLofiFrames } from "./lofi-frames-model.js";
 import type { useCanvasEdits } from "./use-canvas-edits.js";
+import { useFrameActions } from "./use-canvas-frames.js";
 import type { useCanvasPreview } from "./use-canvas-preview.js";
 import type { useCanvasStage } from "./use-canvas-stage.js";
+import { useClickThrough } from "./use-click-through.js";
 import { useFrameLabels } from "./use-frame-labels.js";
+import { usePrototype } from "./use-prototype.js";
 import { useFrameChange } from "./use-stage-keys.js";
 
 const useCanvasWiring = (

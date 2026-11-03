@@ -4,12 +4,13 @@ import { routeLabel } from "../../../shared/app.js";
 import { cleanFrameLabel } from "../../../shared/canvas-file.js";
 import type { AttachedApp, BridgeToParent } from "../../../shared/contracts.js";
 import { api } from "../../api.js";
+import { readStored, writeStored } from "../../platform/storage.js";
 import {
   addFrame,
   canAddFrame,
   setFramePath,
   type CanvasLayout,
-} from "../../canvasFrames.js";
+} from "./canvas-frames-model.js";
 
 const AppBar = lazy(() => import("../../components/AppBar.js"));
 
@@ -129,9 +130,7 @@ export const MAX_HIDDEN_REDIRECTS = 50;
 
 export function readHiddenRedirects(): string[] {
   try {
-    const raw: unknown = JSON.parse(
-      localStorage.getItem(HIDDEN_REDIRECTS_KEY) ?? "[]"
-    );
+    const raw: unknown = JSON.parse(readStored(HIDDEN_REDIRECTS_KEY) ?? "[]");
     return Array.isArray(raw)
       ? raw.filter((item): item is string => typeof item === "string")
       : [];
@@ -142,7 +141,7 @@ export function readHiddenRedirects(): string[] {
 
 export function writeHiddenRedirects(keys: string[]): void {
   try {
-    localStorage.setItem(HIDDEN_REDIRECTS_KEY, JSON.stringify(keys));
+    writeStored(HIDDEN_REDIRECTS_KEY, JSON.stringify(keys));
   } catch {
     return;
   }

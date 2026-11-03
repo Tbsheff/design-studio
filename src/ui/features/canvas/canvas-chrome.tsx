@@ -8,12 +8,12 @@ import {
 import { CanvasTopBar } from "../../components/CanvasTopBar.js";
 import type { CanvasTool, PresentMode } from "../../components/CanvasTopBar.js";
 import { uiStore } from "../../storage.js";
-import { isTypingTarget } from "../../usePanZoom.js";
 import { useFileMenu } from "./canvas-chrome-menu.js";
 import type { ChromeProps } from "./canvas-chrome-menu.js";
 import { PresentLayer, TweakPrompt } from "./canvas-overlays.js";
 import { fileNameOf, reloadFrames, scopeOf, toolOf } from "./canvas-shell.js";
 import type { CanvasShell } from "./canvas-shell.js";
+import { isTypingTarget } from "./use-pan-zoom.js";
 
 const NOOP = () => undefined;
 

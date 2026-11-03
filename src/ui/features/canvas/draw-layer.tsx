@@ -14,6 +14,9 @@ import {
 } from "../../components/CommentComposer.js";
 import type { CommentTools } from "../../components/CommentLayer.js";
 import { MOD_LABEL } from "../../components/CommentPopover.js";
+import { Icon } from "../../kit/Icon.js";
+import type { CommentsControl } from "../../useComments.js";
+import { useProfileInitial } from "../../useProfileInitial.js";
 import {
   DRAW_COLORS,
   DRAW_SCREEN_WIDTH,
@@ -23,11 +26,8 @@ import {
   renderDrawingPng,
   strokePath,
   type StrokeBuilder,
-} from "../../drawing.js";
-import { Icon } from "../../kit/Icon.js";
-import type { CommentsControl } from "../../useComments.js";
-import type { DrawTool } from "../../useDrawTool.js";
-import { useProfileInitial } from "../../useProfileInitial.js";
+} from "./drawing-model.js";
+import type { DrawTool } from "./use-draw-tool.js";
 
 import "../../styles/drawing.css";
 

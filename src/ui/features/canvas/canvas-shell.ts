@@ -6,10 +6,10 @@ import type {
   ProjectKind,
   SelectionContext,
 } from "../../../shared/contracts.js";
-import type { CanvasFrame } from "../../canvasFrames.js";
 import type { CanvasTool } from "../../components/CanvasTopBar.js";
 import { uiStore } from "../../storage.js";
 import type { PanelTab } from "../../usePanelTab.js";
+import type { CanvasFrame } from "./canvas-frames-model.js";
 
 interface CanvasShell {
   pane: PanelTab;

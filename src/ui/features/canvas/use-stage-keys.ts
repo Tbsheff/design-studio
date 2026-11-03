@@ -3,11 +3,11 @@ import { useEffect, useRef } from "react";
 import { selectMoveOf } from "../../../shared/contracts.js";
 import type { SelectionContext } from "../../../shared/contracts.js";
 import { canvasHasKeys } from "../../platform/typing-target.js";
-import { isTypingTarget } from "../../usePanZoom.js";
-import { PREVIEW_LAYOUT_KEY_EVENT } from "../../usePreviewFrames.js";
-import type { usePreviewFrames } from "../../usePreviewFrames.js";
 import type { CanvasShell } from "./canvas-shell.js";
 import type { Props } from "./canvas-types.js";
+import { isTypingTarget } from "./use-pan-zoom.js";
+import { PREVIEW_LAYOUT_KEY_EVENT } from "./use-preview-frames.js";
+import type { usePreviewFrames } from "./use-preview-frames.js";
 
 function useSelectKey(
   setSelectMode: (update: (m: boolean) => boolean) => void,

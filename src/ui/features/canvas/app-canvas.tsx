@@ -5,11 +5,6 @@ import type {
   AttachedApp,
 } from "../../../shared/contracts.js";
 import { openAppPanel, useAppStatus } from "../../appStatus.js";
-import {
-  canAddFrame,
-  canvasStore,
-  type CanvasLayout,
-} from "../../canvasFrames.js";
 import { FrameRedirectNote } from "../../components/CanvasFrames.js";
 import { Icon } from "../../kit/Icon.js";
 import { OPEN_ROUTE_EVENT, takePendingRoute } from "../../projectNav.js";
@@ -23,6 +18,11 @@ import {
   readHiddenRedirects,
   writeHiddenRedirects,
 } from "./app-canvas-routes.js";
+import {
+  canAddFrame,
+  canvasStore,
+  type CanvasLayout,
+} from "./canvas-frames-model.js";
 
 const LOAD_HINT_MS = 30_000;
 

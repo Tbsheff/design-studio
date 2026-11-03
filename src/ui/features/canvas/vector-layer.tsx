@@ -14,13 +14,13 @@ import type { InsertTarget } from "../../../shared/insert.js";
 import type { VectorRequest, VectorResult } from "../../../shared/vector.js";
 import { errorText } from "../../api.js";
 import type { ParentMessageBody } from "../../bridge.js";
-import { penPath, type PenAnchor } from "../../drawing.js";
+import { penPath, type PenAnchor } from "./drawing-model.js";
 import {
   runVector,
   useVectorTool,
   vectorTool,
   type VectorToolId,
-} from "../../vectorTool.js";
+} from "./vector-tool-model.js";
 
 import "../../styles/vector.css";
 

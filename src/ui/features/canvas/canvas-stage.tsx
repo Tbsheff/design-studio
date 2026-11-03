@@ -1,12 +1,11 @@
 import { Suspense, lazy } from "react";
 
 import { McpPointBadge, TabOrderSlot } from "../../canvas-slots.js";
-import { frameDirection, frameName } from "../../canvasFrames.js";
 import { FrameLabel, FrameUndoBar } from "../../components/CanvasFrames.js";
 import { CommentModePill } from "../../components/CommentLayer.js";
 import { DrawBar } from "../../components/DrawLayer.js";
 import { FrameResizeHandles } from "../../components/FrameControls.js";
-import { unionRect } from "../../useCanvasFrames.js";
+import { frameDirection, frameName } from "./canvas-frames-model.js";
 import {
   activeFrameOf,
   commentToolsOf,
@@ -35,6 +34,7 @@ import {
   StepCover,
 } from "./stage-parts.js";
 import type { useCanvasEdits } from "./use-canvas-edits.js";
+import { unionRect } from "./use-canvas-frames.js";
 import type { useCanvasPreview } from "./use-canvas-preview.js";
 import type { useCanvasStage } from "./use-canvas-stage.js";
 import type { useCanvasWiring } from "./use-canvas-wiring.js";

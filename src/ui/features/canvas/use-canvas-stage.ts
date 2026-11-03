@@ -1,19 +1,10 @@
 import { useRef, useState } from "react";
 
-import { boundsOf, shownFrames } from "../../canvasFrames.js";
 import { useResetPassiveGateInFirstRender } from "../../components/CanvasFrames.js";
-import { markOf, withElementMark } from "../../elementMark.js";
-import { useFrameStates } from "../../frameStates.js";
 import { useUi } from "../../storage.js";
-import {
-  unionRect,
-  useCanvasFrames,
-  useZoomInput,
-} from "../../useCanvasFrames.js";
 import { useCommentMode } from "../../useCommentMode.js";
-import { useCanvasDraw } from "../../useDrawTool.js";
 import { useFirstBuildGate } from "../../useFirstBuild.js";
-import { usePanZoom } from "../../usePanZoom.js";
+import { boundsOf, shownFrames } from "./canvas-frames-model.js";
 import {
   activateOf,
   knownIds,
@@ -24,6 +15,15 @@ import {
 } from "./canvas-helpers.js";
 import { useShellPane } from "./canvas-shell.js";
 import type { ViewProps } from "./canvas-types.js";
+import { markOf, withElementMark } from "./element-mark-model.js";
+import { useFrameStates } from "./frame-states-model.js";
+import {
+  unionRect,
+  useCanvasFrames,
+  useZoomInput,
+} from "./use-canvas-frames.js";
+import { useCanvasDraw } from "./use-draw-tool.js";
+import { usePanZoom } from "./use-pan-zoom.js";
 import { usePreviewUrl, useRenderCheck } from "./use-preview-url.js";
 
 const useCanvasStage = (props: ViewProps) => {

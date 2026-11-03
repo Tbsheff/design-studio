@@ -5,7 +5,6 @@ import type {
   SelectMove,
   SelectionContext,
 } from "../../../shared/contracts.js";
-import { frameName } from "../../canvasFrames.js";
 import { LayersPanel } from "../../components/LayersPanel.js";
 import { Icon } from "../../kit/Icon.js";
 import type { LayerTree } from "../../layersTree.js";
@@ -13,8 +12,9 @@ import type { LiveStore } from "../../platform/live-store.js";
 import { canvasHasKeys } from "../../platform/typing-target.js";
 import { selectionTargets, structureMenuItems } from "../../structureEdits.js";
 import type { LayerEdits } from "../../useLayerEdits.js";
-import { isTypingTarget } from "../../usePanZoom.js";
-import type { HoverBox } from "../../usePreviewFrames.js";
+import { frameName } from "./canvas-frames-model.js";
+import { isTypingTarget } from "./use-pan-zoom.js";
+import type { HoverBox } from "./use-preview-frames.js";
 
 interface TreeFrames {
   tree: LayerTree | null;

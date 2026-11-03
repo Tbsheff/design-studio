@@ -5,15 +5,15 @@ import {
   useCanvasTheme,
   useTokenFrames,
 } from "../../tokenFrames.js";
-import { useDirectionFrames } from "../../useDirectionFrames.js";
 import { useFirstBuildCover } from "../../useFirstBuild.js";
 import { useInlineTextEdit } from "../../useInlineTextEdit.js";
 import { usePlannedEdits } from "../../usePlannedEdits.js";
-import { usePreviewFrames } from "../../usePreviewFrames.js";
 import { knownList, marqueeAllowed } from "./canvas-helpers.js";
 import { useLayersWatch, useSelectMoveKeys } from "./canvas-layers.js";
 import type { ViewProps } from "./canvas-types.js";
 import type { useCanvasStage } from "./use-canvas-stage.js";
+import { useDirectionFrames } from "./use-direction-frames.js";
+import { usePreviewFrames } from "./use-preview-frames.js";
 import { useFramePort } from "./use-preview-url.js";
 import { useStageKeys } from "./use-stage-keys.js";
 

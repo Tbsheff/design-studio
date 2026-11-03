@@ -1,10 +1,10 @@
 import { memo, useEffect, useRef, useState, type RefObject } from "react";
 
-import type { CanvasFrame } from "../../canvasFrames.js";
 import { FrameResizeHandles } from "../../components/FrameControls.js";
 import { FrameSkeleton } from "../../components/FrameSkeleton.js";
 import { PREVIEW_PAINTED_EVENT } from "../../useEditHistory.js";
 import { pageFileOf } from "../../useFirstBuild.js";
+import type { CanvasFrame } from "./canvas-frames-model.js";
 import { type LabelProps, frameBaseName, FrameLabel } from "./canvas-frames.js";
 
 const MOUNT_FALLBACK_MS = 1200;

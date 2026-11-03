@@ -16,6 +16,33 @@ const SERVER_TESTS = ["src/server/**/*.test.ts"];
 
 const UI_FILES = ["src/ui/**/*.ts", "src/ui/**/*.tsx"];
 
+const ADAPTER_FILES = [
+  "src/server/http/**/*.ts",
+  "src/server/mcp/**/*.ts",
+  "src/server/agent-tools/**/*.ts",
+];
+
+const SPEC_SERVICE_NAMES = [
+  "src/server/store/{authorizer,local-org-scope,local-principal,project-access}.ts",
+  "src/server/publish/cf-cli.ts",
+];
+
+const LEGACY_SERVICE_NAMES = [
+  "src/server/cloud/cloud-session.ts",
+  "src/server/comments/comment-run-starter.ts",
+  "src/server/events/{change-feed,render-tracker}.ts",
+  "src/server/mcp-life/mcp-activity-log.ts",
+  "src/server/publish/{local-runtime,publish-planner,publish-service}.ts",
+  "src/server/share/{live-refresher,share-listener}.ts",
+  "src/server/store/studio-info.ts",
+];
+
+const LEGACY_SERVICE_CODE = ["src/server/publish/local-runtime.ts"];
+
+const OPTIONAL_NULL_FILES = [
+  "src/server/{platform,events,run-log,project-source,page-probe,handlers,main,ship,agent-tools,mcp-life,http}/**/*.ts",
+];
+
 const studio: OxlintOverride[] = [
   {
     files: ["lint/plugins/studio/*.js"],
@@ -58,6 +85,51 @@ const studio: OxlintOverride[] = [
       "studio/no-async-in-service": "error",
       "studio/service-tag-area": "error",
     },
+  },
+  {
+    excludeFiles: SERVER_TESTS,
+    files: SERVER_FILES,
+    rules: {
+      "studio/function-verb": "error",
+      "studio/service-api-effect": "error",
+      "studio/service-file-name": "error",
+      "studio/service-import-index": "error",
+    },
+  },
+  {
+    excludeFiles: [...SERVER_TESTS, ...LEGACY_SERVICE_CODE],
+    files: SERVER_FILES,
+    rules: {
+      "studio/service-effect-only": "error",
+      "studio/service-file-exports": "error",
+    },
+  },
+  {
+    excludeFiles: [
+      ...SERVER_TESTS,
+      ...SPEC_SERVICE_NAMES,
+      ...LEGACY_SERVICE_NAMES,
+    ],
+    files: SERVER_FILES,
+    rules: { "studio/service-role": "error" },
+  },
+  {
+    excludeFiles: SERVER_TESTS,
+    files: ADAPTER_FILES,
+    rules: { "studio/no-adapter-service": "error" },
+  },
+  {
+    files: ["src/server/main/live-layer.ts"],
+    rules: { "studio/live-layer-domain": "error" },
+  },
+  {
+    files: ["lint/decisions.ts"],
+    rules: { "studio/no-fixable-off": "error" },
+  },
+  {
+    excludeFiles: SERVER_TESTS,
+    files: OPTIONAL_NULL_FILES,
+    rules: { "studio/no-optional-null": "error" },
   },
   {
     excludeFiles: ["src/server/platform/runtime-slot/**"],

@@ -1,4 +1,26 @@
+import path from "node:path";
+
+import { isServiceFilePath } from "./facts.js";
 import { rule } from "./ast.js";
+
+const LIVE_IMPORT = /^(?:effect|\.\.\/handlers\/[a-z0-9-]+\/live\.js)$/u;
+
+const CORE_SOURCE = "../store/index.js";
+
+const CORE_SERVICES = new Set([
+  "Authorizer",
+  "LocalOrgScope",
+  "LocalPrincipal",
+  "ProjectAccess",
+]);
+
+const LIVE_MESSAGE =
+  "Importing a service layer into the aggregator main/live-layer.ts is banned. Use the domain live layer: provide the service in src/server/handlers/<domain>/live.ts.";
+
+const INDEX_MESSAGE =
+  "Importing a service file from another folder past its index.ts is banned. Use the export from src/server/<area>/index.ts.";
+
+
 
 const DEEP_AREA = /^\.\.\/\.\.\/(?!platform\/)[a-z0-9-]+\/(?!index\.js$).+/u;
 
@@ -65,4 +87,73 @@ const noOutputGuess = rule((context) => ({
   },
 }));
 
-export { noDeepAreaImport, noLocalErrorBridge, noOutputGuess, noStubRoute };
+const isCoreImport = (node) =>
+  node.source.value === CORE_SOURCE &&
+  node.specifiers.every(
+    (specifier) =>
+      specifier.type === "ImportSpecifier" &&
+      CORE_SERVICES.has(specifier.imported.name)
+  );
+
+const isLiveImport = (node) =>
+  node.importKind === "type" ||
+  LIVE_IMPORT.test(String(node.source.value)) ||
+  isCoreImport(node);
+
+const liveLayerDomain = rule((context) => ({
+  ImportDeclaration: (node) => {
+    if (!isLiveImport(node)) {
+      context.report({ message: LIVE_MESSAGE, node: node.source });
+    }
+  },
+}));
+
+const resolveTs = (context, source) => {
+  if (!source.startsWith(".")) {
+    return null;
+  }
+
+  return path.resolve(path.dirname(context.filename), source.replace(/\.js$/u, ".ts"));
+};
+
+const isOwnArea = (filename, target) => {
+  const folder = path.dirname(filename);
+
+  if (path.dirname(target) === folder) {
+    return true;
+  }
+
+  return path.basename(filename) === "index.ts" && target.startsWith(`${folder}${path.sep}`);
+};
+
+const checkIndexImport = (context, node) => {
+  const source = node.source?.value ?? null;
+  const target = resolveTs(context, String(source));
+
+  if (target === null || isOwnArea(context.filename, target)) {
+    return;
+  }
+
+  if (isServiceFilePath(target)) {
+    context.report({ message: INDEX_MESSAGE, node: node.source });
+  }
+};
+
+const serviceImportIndex = rule((context) => ({
+  ExportAllDeclaration: (node) => checkIndexImport(context, node),
+  ExportNamedDeclaration: (node) => {
+    if (node.source) {
+      checkIndexImport(context, node);
+    }
+  },
+  ImportDeclaration: (node) => checkIndexImport(context, node),
+}));
+
+export {
+  liveLayerDomain,
+  noDeepAreaImport,
+  noLocalErrorBridge,
+  noOutputGuess,
+  noStubRoute,
+  serviceImportIndex,
+};

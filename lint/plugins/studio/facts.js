@@ -48,7 +48,22 @@ const toServiceAccess = () => {
   return access;
 };
 
-const cache = { actionAccess: new Map(), serviceAccess: null };
+const SERVICE_FILE = /extends Context\.Service</u;
+
+const toServiceFiles = () =>
+  new Set(
+    listTs(SERVER).filter((file) => SERVICE_FILE.test(readFileSync(file, "utf-8")))
+  );
+
+const cache = { actionAccess: new Map(), serviceAccess: null, serviceFiles: null };
+
+const isServiceFilePath = (file) => {
+  if (cache.serviceFiles === null) {
+    cache.serviceFiles = toServiceFiles();
+  }
+
+  return cache.serviceFiles.has(file);
+};
 
 const serviceAccessOf = (name) => {
   if (cache.serviceAccess === null) {
@@ -87,4 +102,4 @@ const actionAccessOf = (domain, tail) => {
 const relativeOf = (filename) =>
   path.relative(ROOT, filename).split(path.sep).join("/");
 
-export { actionAccessOf, relativeOf, serviceAccessOf };
+export { actionAccessOf, isServiceFilePath, relativeOf, serviceAccessOf };

@@ -1,11 +1,12 @@
+import { withMotion } from "../../../shared/links.js";
 import type {
+  LINK_ACTIONS,
   LinkEasing,
   LinkMotion,
   LinksFile,
   LinkTransition,
   PrototypeLink,
 } from "../../../shared/links.js";
-import { withMotion } from "../../../shared/links.js";
 import { NotFoundError } from "../../store/errors.js";
 import type { CanvasToolContext } from "../tools.js";
 import { implicitLinks, keepImplicit } from "./implicit-links.js";
@@ -33,8 +34,10 @@ interface LinkListed {
   readonly startFrame: string;
 }
 
+type FrameAction = (typeof LINK_ACTIONS)[number];
+
 interface LinkCreateQuery {
-  readonly action?: LinkMotion["action"];
+  readonly action?: FrameAction;
   readonly duration?: number;
   readonly easing?: LinkEasing;
   readonly fromFrame: string;
@@ -47,7 +50,7 @@ interface LinkCreateQuery {
 }
 
 interface LinkUpdateQuery {
-  readonly action?: LinkMotion["action"];
+  readonly action?: FrameAction;
   readonly duration?: number;
   readonly easing?: LinkEasing;
   readonly linkId: string;
@@ -57,7 +60,7 @@ interface LinkUpdateQuery {
 }
 
 interface LinkKeepQuery {
-  readonly action?: LinkMotion["action"];
+  readonly action?: FrameAction;
   readonly duration?: number;
   readonly easing?: LinkEasing;
   readonly ids: readonly string[] | "all";

@@ -11,6 +11,7 @@ import type {
 } from "../../shared/contracts.js";
 import { createFakePreview } from "../agent/test-fakes.js";
 import { buildUserText } from "../agent/user-message.js";
+import { projectStorePorts } from "../main/project-ports.js";
 import { createEventBus } from "../store/events.js";
 import {
   createProjectStore,
@@ -164,7 +165,7 @@ async function add(
 beforeEach(async () => {
   ({ config, cleanup } = await makeTempConfig());
   const versions = createVersionStore(config);
-  projects = createProjectStore(config, versions);
+  projects = createProjectStore(config, versions, projectStorePorts);
   started = [];
   handles = new Map();
   runningKeys = new Set();

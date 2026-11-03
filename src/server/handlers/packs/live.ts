@@ -1,7 +1,6 @@
 import { Layer } from "effect";
 
-import { PackStore } from "../../design-system/ops/pack-store.js";
-import { PackWriter } from "../../design-system/ops/pack-writer.js";
+import { PackStore, PackWriter } from "../../design-system/index.js";
 
 const PacksLive = Layer.mergeAll(PackStore.layer, PackWriter.layer);
 

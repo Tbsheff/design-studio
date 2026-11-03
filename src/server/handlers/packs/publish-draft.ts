@@ -2,7 +2,7 @@ import { Effect } from "effect";
 
 import type { Input } from "../../../shared/actions/_core/action.js";
 import type { publishDraftPacks } from "../../../shared/actions/packs/publish-draft.js";
-import { PackWriter } from "../../design-system/ops/pack-writer.js";
+import { PackWriter } from "../../design-system/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type PublishDraftPacksInput = Input<typeof publishDraftPacks>;

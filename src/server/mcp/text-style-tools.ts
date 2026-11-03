@@ -93,7 +93,7 @@ type CreateInput = z.output<typeof createSchema>;
 const editScope = async (
   deps: EditDeps,
   projectId: string,
-  directionId: string
+  directionId?: string
 ): Promise<TextStyleEditScope> => {
   const found = await loadTarget(deps, projectId, directionId);
 

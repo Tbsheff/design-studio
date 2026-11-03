@@ -42,8 +42,12 @@ import {
 } from "../canvasFrames";
 import { useCanvasCommands } from "../commands/useCanvasCommands";
 import { markOf, withElementMark } from "../elementMark";
-import { createLiveStore, useLive, type LiveStore } from "../liveStore";
 import { useLofiFrames } from "../lofiFrames";
+import {
+  createLiveStore,
+  useLive,
+  type LiveStore,
+} from "../platform/live-store";
 import { useStableProps } from "../stableProps";
 import { useUi } from "../storage";
 import {

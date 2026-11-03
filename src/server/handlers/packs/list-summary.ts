@@ -2,8 +2,7 @@ import { Effect } from "effect";
 
 import type { Input } from "../../../shared/actions/_core/action.js";
 import type { listSummaryPacks } from "../../../shared/actions/packs/list-summary.js";
-import { toPage } from "../../design-system/ops/library-reads.js";
-import { PackStore } from "../../design-system/ops/pack-store.js";
+import { PackStore, toPage } from "../../design-system/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type ListSummaryPacksInput = Input<typeof listSummaryPacks>;

@@ -9,7 +9,7 @@ import { VersionRenamedSchema } from "./schema.js";
 
 const renameVersions = defineAction({
   access: "edit",
-  agent: { off: "ui-bootstrap" },
+  agent: { off: "legacy-agent" },
   confirm: "none",
   description:
     "Set or clear the name of one saved version, shown in the studio Versions panel. A name is 80 characters or fewer; null or an empty name clears it.",

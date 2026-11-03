@@ -12,7 +12,7 @@ const FreshFieldSchema = Schema.Boolean.annotate({
 
 const listFoundAppsMcpRead = defineAction({
   access: "read",
-  agent: { off: "ui-bootstrap" },
+  agent: { off: "legacy-agent" },
   confirm: "none",
   description:
     'Read only. List the app folders Design Studio finds in the home folder, the same list as "Found on this Mac" on Home: ~/Documents, ~/code, ~/dev, ~/Projects and ~/Developer, two folders deep, with kind (next, vite or html), the Next.js apps of a monorepo (apps), and projectId when the folder is already a project. The scan never leaves the home folder, stops after 1 second (truncated: true) and is cached for a minute; fresh: true scans again. Pass a path to open_folder or attach_app to open one.',

@@ -258,6 +258,8 @@ type DesignSystemItem = typeof DesignSystemItemSchema.Type;
 
 type DraftStatus = typeof DraftStatusSchema.Type;
 
+type DraftImage = typeof DraftImageSchema.Type;
+
 export {
   ApplyResultSchema,
   CheckResultSchema,
@@ -284,6 +286,7 @@ export {
 
 export type {
   DesignSystemItem,
+  DraftImage,
   DraftResult,
   DraftStatus,
   PackFile,

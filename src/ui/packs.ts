@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 
-import type { listSummaryPacks } from "../shared/actions/packs/list-summary.js";
 import { routes } from "../shared/actions/packs/routes.js";
 import type { PackSummary } from "../shared/contracts";
 import { errorText } from "./api";
@@ -16,7 +15,7 @@ let cached: Promise<PackSummary[]> | null = null;
 const LIST_LIMIT = 200;
 
 async function listPacks(): Promise<PackSummary[]> {
-  const page = await call<typeof listSummaryPacks>(routes.listSummaryPacks, {
+  const page = await call(routes.listSummaryPacks, {
     cursor: null,
     limit: LIST_LIMIT,
   });

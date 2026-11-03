@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useSyncExternalStore } from "react";
 
 import type { StudioEvent } from "../shared/contracts";
-import { appStream } from "./appStream";
-import { createEventHub } from "./eventHub";
-import type { ConnectionState } from "./eventHub";
+import { createEventHub } from "./platform/event-hub";
+import type { ConnectionState } from "./platform/event-hub";
+import { appStream } from "./platform/stream";
 
-export type { ConnectionState } from "./eventHub";
+export type { ConnectionState } from "./platform/event-hub";
 
 const hub = createEventHub({
   open: (projectId, afterSeq) => appStream().source(projectId, afterSeq),

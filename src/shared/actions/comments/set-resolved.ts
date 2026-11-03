@@ -13,7 +13,7 @@ import {
 
 const setResolvedComments = defineAction({
   access: "edit",
-  agent: { off: "ui-bootstrap" },
+  agent: { off: "legacy-agent" },
   confirm: "none",
   description:
     "Mark a pinned comment as resolved. Use the comment id from list_comments or add_comment. A resolved comment stays in the list with status all or resolved.",

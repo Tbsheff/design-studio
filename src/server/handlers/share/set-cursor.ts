@@ -2,7 +2,7 @@ import { Effect } from "effect";
 
 import type { Input } from "../../../shared/actions/_core/action.js";
 import type { setCursorShare } from "../../../shared/actions/share/set-cursor.js";
-import { ShareLinkStore } from "../../share/share-link-store.js";
+import { ShareLinkStore } from "../../share/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type SetCursorShareInput = Input<typeof setCursorShare>;

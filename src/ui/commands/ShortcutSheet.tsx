@@ -7,10 +7,11 @@ import {
   type KeyGroup,
 } from "../../shared/keymap";
 import { Icon } from "../kit/Icon";
+import { isDesktop } from "../platform/desktop";
 import { IS_MAC, Keys } from "./keys";
 
 const MARK_MS = 900;
-const DESKTOP = typeof window !== "undefined" && "studioDesktop" in window;
+const DESKTOP = typeof window !== "undefined" && isDesktop();
 
 const GROUPS: KeyGroup[] = [
   "General",

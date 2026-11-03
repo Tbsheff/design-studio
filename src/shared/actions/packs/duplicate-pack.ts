@@ -11,7 +11,7 @@ import { PackSummarySchema } from "./schema.js";
 
 const duplicatePackPacks = defineAction({
   access: "edit",
-  agent: { off: "ui-bootstrap" },
+  agent: { off: "legacy-agent" },
   confirm: "none",
   description:
     "Copy a built-in or user design system to a new user pack. Leave out the name for the default name, which is the old name and copy.",

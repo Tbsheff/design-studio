@@ -2,7 +2,7 @@ import { Effect } from "effect";
 
 import type { Input } from "../../../shared/actions/_core/action.js";
 import type { updateShare } from "../../../shared/actions/share/update.js";
-import { ShareLinkStore } from "../../share/share-link-store.js";
+import { ShareLinkStore } from "../../share/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type UpdateShareInput = Input<typeof updateShare>;

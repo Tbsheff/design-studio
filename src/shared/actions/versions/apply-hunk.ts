@@ -35,9 +35,11 @@ const FromSchema = VersionIdSchema.annotate({
     "The older version of the diff. Leave out for the parent of versionId.",
 });
 
+const NullableFromSchema = Schema.NullOr(FromSchema);
+
 const applyHunkVersions = defineAction({
   access: "edit",
-  agent: { off: "ui-bootstrap" },
+  agent: { off: "legacy-agent" },
   confirm: "none",
   description:
     "Undo one change (one @@ hunk) of a saved version, the same as Undo this change in Compare > Code in the studio. It reverses only that hunk in the current file of the direction head and saves the result as one new version, which undo (Cmd+Z) can take back. Other changes in the file stay. When the hunk text is no longer in the file (it was undone or edited later), it changes nothing and says why. Use diff_versions first to see the hunks.",
@@ -52,7 +54,7 @@ const applyHunkVersions = defineAction({
       description: "Direction id. Use the main direction id for the main one.",
     }),
     file: FileSchema,
-    from: Schema.optionalKey(FromSchema),
+    from: Schema.optionalKey(NullableFromSchema),
     hunk: HunkNumberSchema,
     projectId: ProjectIdSchema.annotate({
       description: "Project id from list_projects",

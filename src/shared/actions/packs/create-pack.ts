@@ -18,7 +18,7 @@ const TagsSchema = Schema.Array(Schema.String);
 
 const createPackPacks = defineAction({
   access: "edit",
-  agent: { off: "ui-bootstrap" },
+  agent: { off: "legacy-agent" },
   confirm: "none",
   description:
     "Create a user design system in the studio library from a name, a mode, fonts and tokens. The new pack id is user- and a slug of the name.",

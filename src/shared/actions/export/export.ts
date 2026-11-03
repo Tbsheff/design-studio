@@ -2,6 +2,7 @@ import { Schema } from "effect";
 
 import { defineAction } from "../_core/action.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
+import { Conflict } from "../_core/errors/conflict.js";
 import { NotFound } from "../_core/errors/not-found.js";
 import { ProjectIdSchema, VersionIdSchema } from "../_core/ids.js";
 import {
@@ -29,7 +30,7 @@ const exportExport = defineAction({
   confirm: "none",
   description:
     "Export a saved version as a PNG, PDF, HTML, source zip, SVG or PPTX file with the same server code as the studio Export dialog. Returns the file as base64 content with its name, media type and a note. Changes no design file.",
-  errors: [BadRequest, NotFound],
+  errors: [BadRequest, Conflict, NotFound],
   http: { method: "POST", path: "/api/projects/:projectId/export" },
   id: "export.export",
   input: Schema.Struct({

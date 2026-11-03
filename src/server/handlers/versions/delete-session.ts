@@ -2,7 +2,7 @@ import { Effect } from "effect";
 
 import type { Input } from "../../../shared/actions/_core/action.js";
 import type { deleteSessionVersions } from "../../../shared/actions/versions/delete-session.js";
-import { VersionWriter } from "../../store/version-writer.js";
+import { VersionWriter } from "../../store/index.js";
 import type { Handle, Preview } from "../_core/handler.js";
 
 const SHORT_ID = 8;

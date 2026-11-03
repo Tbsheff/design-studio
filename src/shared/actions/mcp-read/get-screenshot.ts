@@ -65,7 +65,7 @@ const PaddingFieldSchema = Schema.Int.check(
 
 const getScreenshotMcpRead = defineAction({
   access: "read",
-  agent: { off: "ui-bootstrap" },
+  agent: { off: "legacy-agent" },
   confirm: "none",
   description:
     "Get a PNG screenshot of a page at a viewport size, or of one canvas frame (frameId sets the page, the direction, the frame state and the size; pass width to shoot that frame at another width), or of one element on it (element: layer id or CSS selector). Returns the PNG as base64 data with its media type and a note. Over MCP the PNG comes back as an image. Read only.",

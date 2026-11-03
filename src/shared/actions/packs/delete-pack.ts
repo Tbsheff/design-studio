@@ -11,7 +11,7 @@ import { OkSchema } from "./schema.js";
 
 const deletePackPacks = defineAction({
   access: "destructive",
-  agent: { off: "ui-bootstrap" },
+  agent: { off: "legacy-agent" },
   confirm: "user",
   description:
     "Delete a user design system from the studio library. Projects that use it keep their files. Its draft project is marked as deleted. Built-in packs cannot be deleted.",

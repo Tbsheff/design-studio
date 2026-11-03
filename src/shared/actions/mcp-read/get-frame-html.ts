@@ -27,7 +27,7 @@ const PageFieldSchema = PathTextSchema.annotate({
 
 const getFrameHtmlMcpRead = defineAction({
   access: "read",
-  agent: { off: "ui-bootstrap" },
+  agent: { off: "legacy-agent" },
   confirm: "none",
   description:
     "Get the HTML of one page. Static HTML projects return the source file. React projects return the rendered DOM. Read only.",

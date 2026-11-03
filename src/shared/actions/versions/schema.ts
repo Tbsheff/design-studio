@@ -1,12 +1,72 @@
 import { Schema } from "effect";
 
+const VersionMetaSchema = Schema.Struct({
+  client: Schema.optionalKey(Schema.String),
+  directionId: Schema.optionalKey(Schema.String),
+  kind: Schema.Literals([
+    "init",
+    "run",
+    "undo",
+    "restore",
+    "keep",
+    "fork",
+    "manual",
+  ]),
+  level: Schema.optionalKey(
+    Schema.Literals(["wireframe", "prototype", "polish"])
+  ),
+  origin: Schema.optionalKey(Schema.Literal("mcp")),
+  prompt: Schema.optionalKey(Schema.String),
+  restoredFrom: Schema.optionalKey(Schema.String),
+  runId: Schema.optionalKey(Schema.String),
+});
+
+const VersionFileDiffSchema = Schema.Struct({
+  additions: Schema.Number,
+  binary: Schema.Boolean,
+  deletions: Schema.Number,
+  oldPath: Schema.optionalKey(Schema.String),
+  patch: Schema.String,
+  path: Schema.String,
+  status: Schema.Literals(["added", "removed", "modified", "renamed"]),
+  truncated: Schema.Boolean,
+});
+
+const VersionThumbsSchema = Schema.Struct({
+  changedPct: Schema.NullOr(Schema.Number),
+  from: Schema.NullOr(Schema.String),
+  mask: Schema.NullOr(Schema.String),
+  to: Schema.NullOr(Schema.String),
+});
+
+const EditHistoryEntrySchema = Schema.Struct({
+  files: Schema.Array(Schema.String),
+  label: Schema.String,
+  versionId: Schema.String,
+});
+
+const HunkLineSchema = Schema.Struct({
+  noEol: Schema.Boolean,
+  sign: Schema.Literals(["+", "-", " "]),
+  text: Schema.String,
+});
+
+const PatchHunkSchema = Schema.Struct({
+  complete: Schema.Boolean,
+  header: Schema.String,
+  index: Schema.Number,
+  lines: Schema.Array(HunkLineSchema),
+  newStart: Schema.Number,
+  oldStart: Schema.Number,
+});
+
 const VersionSchema = Schema.Struct({
   changedFiles: Schema.Array(Schema.String),
   changedFilesTotal: Schema.optionalKey(Schema.Number),
   createdAt: Schema.Number,
   directionId: Schema.String,
   id: Schema.String,
-  meta: Schema.Unknown,
+  meta: VersionMetaSchema,
   name: Schema.optionalKey(Schema.String),
   parentId: Schema.NullOr(Schema.String),
   title: Schema.String,
@@ -17,9 +77,9 @@ const VersionListSchema = Schema.Struct({
 });
 
 const VersionChangesSchema = Schema.Struct({
-  files: Schema.Array(Schema.Unknown),
+  files: Schema.Array(VersionFileDiffSchema),
   from: Schema.String,
-  thumbs: Schema.optionalKey(Schema.Unknown),
+  thumbs: Schema.optionalKey(VersionThumbsSchema),
   to: Schema.String,
   totalFiles: Schema.Number,
   truncated: Schema.Boolean,
@@ -28,16 +88,16 @@ const VersionChangesSchema = Schema.Struct({
 const EditHistoryViewSchema = Schema.Struct({
   canRedo: Schema.Boolean,
   canUndo: Schema.Boolean,
-  redo: Schema.Array(Schema.Unknown),
+  redo: Schema.Array(EditHistoryEntrySchema),
   redoLabel: Schema.NullOr(Schema.String),
-  undo: Schema.Array(Schema.Unknown),
+  undo: Schema.Array(EditHistoryEntrySchema),
   undoLabel: Schema.NullOr(Schema.String),
 });
 
 const HunkListSchema = Schema.Struct({
   file: Schema.String,
   from: Schema.String,
-  hunks: Schema.Array(Schema.Unknown),
+  hunks: Schema.Array(PatchHunkSchema),
   to: Schema.String,
 });
 

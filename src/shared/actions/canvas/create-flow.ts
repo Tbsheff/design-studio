@@ -2,6 +2,7 @@ import { Schema } from "effect";
 
 import { defineAction } from "../_core/action.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
+import { Conflict } from "../_core/errors/conflict.js";
 import { NotFound } from "../_core/errors/not-found.js";
 import { ProjectIdSchema } from "../_core/ids.js";
 import {
@@ -12,11 +13,11 @@ import {
 
 const createFlowCanvas = defineAction({
   access: "edit",
-  agent: { off: "ui-bootstrap" },
+  agent: { off: "legacy-agent" },
   confirm: "none",
   description:
     "Lay out app route frames left to right and make prototype links from the links in their source. Pass routes, or from with depth. Frames already on the canvas are reused. Attached Next.js apps only. Dynamic segments get the sample params, saved for the next flow.",
-  errors: [BadRequest, NotFound],
+  errors: [BadRequest, Conflict, NotFound],
   http: { method: "POST", path: "/api/projects/:projectId/flow" },
   id: "canvas.createFlow",
   input: Schema.Struct({

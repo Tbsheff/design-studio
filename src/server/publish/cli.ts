@@ -4,7 +4,7 @@ import { compareCfVersion, type PublishAccount } from "../../shared/publish.js";
 import { findOnPath } from "../git/user-git.js";
 import { LOGIN_SHELL_PATH_ENV } from "../platform/config/index.js";
 import { spawnCf } from "./cf-cli.js";
-import type { CfChild } from "./cf-cli.js";
+import type { CfChild, CliResult } from "./cf-cli.js";
 import { scrubCliText } from "./scrub.js";
 
 export type { CliResult } from "./cf-cli.js";

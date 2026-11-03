@@ -1,5 +1,5 @@
 export { createEventBus, openEventBus } from "../events/bus.js";
 
-export { EventBus as EventBusService } from "../events/event-bus.js";
+export { EventQueue } from "../events/event-queue.js";
 
 export type { EventBus, FlushableEventBus } from "../events/bus.js";

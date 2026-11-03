@@ -6,7 +6,12 @@ type Access = "destructive" | "edit" | "read";
 
 type Method = "DELETE" | "GET" | "PATCH" | "POST" | "PUT";
 
-type OffReason = "run-control" | "secret" | "stream" | "ui-bootstrap";
+type OffReason =
+  | "legacy-agent"
+  | "run-control"
+  | "secret"
+  | "stream"
+  | "ui-bootstrap";
 
 type Scope = "device" | "org" | "project";
 

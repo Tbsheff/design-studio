@@ -2,6 +2,7 @@ import { Schema } from "effect";
 
 import { defineAction } from "../_core/action.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
+import { Conflict } from "../_core/errors/conflict.js";
 import { NotFound } from "../_core/errors/not-found.js";
 import { ProjectIdSchema } from "../_core/ids.js";
 
@@ -13,7 +14,7 @@ const setCursorShare = defineAction({
   confirm: "none",
   description:
     "Send the position of your cursor on the canvas to the viewers of the live share links of a project. Send a null frameId to hide the cursor.",
-  errors: [BadRequest, NotFound],
+  errors: [BadRequest, Conflict, NotFound],
   http: { method: "PUT", path: "/api/projects/:projectId/share-cursor" },
   id: "share.setCursor",
   input: Schema.Struct({

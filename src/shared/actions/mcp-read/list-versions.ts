@@ -17,7 +17,7 @@ const DirectionFieldSchema = DirectionIdSchema.annotate({
 
 const listVersionsMcpRead = defineAction({
   access: "read",
-  agent: { off: "ui-bootstrap" },
+  agent: { off: "legacy-agent" },
   confirm: "none",
   description: "List the saved versions of one direction, newest first.",
   errors: [BadRequest, Conflict, NotFound],

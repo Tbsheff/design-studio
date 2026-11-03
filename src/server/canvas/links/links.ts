@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-import type { Project } from "../../../shared/contracts.js";
+import type { CanvasWriteSource, Project } from "../../../shared/contracts.js";
 import {
   emptyLinksFile,
   LINKS_FILE,

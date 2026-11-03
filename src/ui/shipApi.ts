@@ -1,4 +1,3 @@
-import type { WireOutput } from "../shared/actions/_core/action.js";
 import type { getPlanShip } from "../shared/actions/ship/get-plan.js";
 import type { getSettingsShip } from "../shared/actions/ship/get-settings.js";
 import type { publishShip } from "../shared/actions/ship/publish.js";
@@ -6,6 +5,7 @@ import { routes } from "../shared/actions/ship/routes.js";
 import type { setSettingsShip } from "../shared/actions/ship/set-settings.js";
 import type { ShipRequest, ShipSettings } from "../shared/ship";
 import { call } from "./platform/http";
+import type { UiOutput } from "./platform/http";
 
 interface PlanBase {
   readonly baseVersionId?: string;
@@ -41,19 +41,19 @@ const shipApi = {
   prepare: (
     projectId: string,
     baseVersionId?: string
-  ): Promise<WireOutput<typeof getPlanShip>> =>
+  ): Promise<UiOutput<typeof getPlanShip>> =>
     call(routes.getPlanShip, { ...baseOf(baseVersionId), projectId }),
   saveSettings: (
     projectId: string,
     settings: ShipSettings
-  ): Promise<WireOutput<typeof setSettingsShip>> =>
+  ): Promise<UiOutput<typeof setSettingsShip>> =>
     call(routes.setSettingsShip, { ...toSettingsBody(settings), projectId }),
-  settings: (projectId: string): Promise<WireOutput<typeof getSettingsShip>> =>
+  settings: (projectId: string): Promise<UiOutput<typeof getSettingsShip>> =>
     call(routes.getSettingsShip, { projectId }),
   ship: (
     projectId: string,
     request: ShipRequest
-  ): Promise<WireOutput<typeof publishShip>> =>
+  ): Promise<UiOutput<typeof publishShip>> =>
     call(routes.publishShip, { ...toPublishBody(request), projectId }),
 };
 

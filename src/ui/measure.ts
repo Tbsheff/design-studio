@@ -1,1 +1,1 @@
-export * from "../shared/measure";
+export { formatMeasure, measureBetween } from "../shared/measure";

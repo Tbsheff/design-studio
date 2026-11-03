@@ -119,16 +119,11 @@ class McpReadStore extends Context.Service<McpReadStore, McpReadStoreApi>()(
         projectId: string,
         isFresh: boolean
       ) {
-        return yield* attemptMcpRead(async (runtime) =>
-          toDoctorText(
-            await readDoctor(
-              runtime.projects,
-              runtime.preview,
-              projectId,
-              isFresh
-            )
-          )
+        const view = yield* attemptMcpRead((runtime) =>
+          readDoctor(runtime.projects, runtime.preview, projectId, isFresh)
         );
+
+        return toDoctorText(view);
       }),
       fileList: Effect.fn("McpReadStore.fileList")(function* run(
         query: FileSourceQuery

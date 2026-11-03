@@ -2,8 +2,7 @@ import { Effect } from "effect";
 
 import type { Input } from "../../../shared/actions/_core/action.js";
 import type { createShare } from "../../../shared/actions/share/create.js";
-import { ShareLinkStore } from "../../share/share-link-store.js";
-import { ShareStore } from "../../share/share-store.js";
+import { ShareLinkStore, ShareStore } from "../../share/index.js";
 import type { Handle, Preview } from "../_core/handler.js";
 
 type CreateShareInput = Input<typeof createShare>;

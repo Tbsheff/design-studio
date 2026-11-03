@@ -2,7 +2,7 @@ import { Effect } from "effect";
 
 import type { Input } from "../../../shared/actions/_core/action.js";
 import type { inspectDraftPacks } from "../../../shared/actions/packs/inspect-draft.js";
-import { PackStore } from "../../design-system/ops/pack-store.js";
+import { PackStore } from "../../design-system/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type InspectDraftPacksInput = Input<typeof inspectDraftPacks>;

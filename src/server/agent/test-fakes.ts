@@ -26,7 +26,7 @@ interface FakeBus extends EventBus {
 
 export function createFakeBus(): FakeBus {
   const events: StudioEvent[] = [];
-  const listeners = new Set<(event: StudioEvent) => void>();
+  const listeners = new Set<(event: StudioEvent, line: string) => void>();
 
   return {
     events,
@@ -40,7 +40,7 @@ export function createFakeBus(): FakeBus {
       events.push(event);
 
       for (const listener of listeners) {
-        listener(event);
+        listener(event, JSON.stringify(event));
       }
 
       return event;

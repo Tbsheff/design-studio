@@ -2,17 +2,18 @@ import { Schema } from "effect";
 
 import { defineAction } from "../_core/action.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
+import { Conflict } from "../_core/errors/conflict.js";
 import { NotFound } from "../_core/errors/not-found.js";
 import { ProjectIdSchema } from "../_core/ids.js";
 import { FrameRefSchema, LinkFileSchema } from "./schema.js";
 
 const setStartLinkCanvas = defineAction({
   access: "edit",
-  agent: { off: "ui-bootstrap" },
+  agent: { off: "legacy-agent" },
   confirm: "none",
   description:
     "Set the frame where Play starts in the prototype. Each change is one step in the edit history.",
-  errors: [BadRequest, NotFound],
+  errors: [BadRequest, Conflict, NotFound],
   http: { method: "PUT", path: "/api/projects/:projectId/links/start" },
   id: "canvas.setStartLink",
   input: Schema.Struct({

@@ -2,17 +2,18 @@ import { Schema } from "effect";
 
 import { defineAction } from "../_core/action.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
+import { Conflict } from "../_core/errors/conflict.js";
 import { NotFound } from "../_core/errors/not-found.js";
 import { ProjectIdSchema } from "../_core/ids.js";
 import { FlowRouteLinksSchema, FlowRouteSchema } from "./schema.js";
 
 const listFlowLinksCanvas = defineAction({
   access: "read",
-  agent: { off: "ui-bootstrap" },
+  agent: { off: "legacy-agent" },
   confirm: "none",
   description:
     "List the links found in the source of one app route: kind (link, push, form, redirect), href, the route it goes to, the element to click (selector and text) and file:line. Attached Next.js apps only. The route is a pattern from list_routes or a concrete path.",
-  errors: [BadRequest, NotFound],
+  errors: [BadRequest, Conflict, NotFound],
   http: { method: "GET", path: "/api/projects/:projectId/flow/links" },
   id: "canvas.listFlowLinks",
   input: Schema.Struct({

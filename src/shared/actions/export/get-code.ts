@@ -2,6 +2,7 @@ import { Schema } from "effect";
 
 import { defineAction } from "../_core/action.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
+import { Conflict } from "../_core/errors/conflict.js";
 import { NotFound } from "../_core/errors/not-found.js";
 import {
   DirectionIdSchema,
@@ -51,11 +52,11 @@ const WidthFieldSchema = FrameSideSchema.annotate({
 
 const getCodeExport = defineAction({
   access: "read",
-  agent: { off: "ui-bootstrap" },
+  agent: { off: "legacy-agent" },
   confirm: "none",
   description:
     "Copy one element as code with the same server code as Copy as code in the studio. format html: markup with a <style> block of classes from the computed styles. tailwind: markup with Tailwind classes. react: a JSX component named after the layer with className or style objects, and kit components such as <Button> with their import lines. Read only: changes no file.",
-  errors: [BadRequest, NotFound],
+  errors: [BadRequest, Conflict, NotFound],
   http: { method: "GET", path: "/api/projects/:projectId/copy-code" },
   id: "export.getCode",
   input: Schema.Struct({

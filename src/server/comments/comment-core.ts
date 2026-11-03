@@ -1,13 +1,12 @@
 import { Effect } from "effect";
-import type { Cause } from "effect";
 
 import { BadRequest } from "../../shared/actions/_core/errors/bad-request.js";
-import { Conflict } from "../../shared/actions/_core/errors/conflict.js";
-import { NotFound } from "../../shared/actions/_core/errors/not-found.js";
+import type { Conflict } from "../../shared/actions/_core/errors/conflict.js";
+import type { NotFound } from "../../shared/actions/_core/errors/not-found.js";
 import type { Direction, Project, RunRequest } from "../../shared/contracts.js";
+import { attemptKnown } from "../platform/attempt/index.js";
 import { loadConfig } from "../platform/config/index.js";
 import type { CommentStore as CommentFiles } from "../store/comments.js";
-import { ConflictError, NotFoundError } from "../store/errors.js";
 import type { AgentRunner } from "../types.js";
 import type { PrefillDeps } from "./prefill.js";
 import type { RunWatcher } from "./run-watch.js";
@@ -61,26 +60,6 @@ const bindCommentRuntime = (dataDir: string, runtime: CommentRuntime): void => {
 const toCommentRuntime = (dataDir: string): CommentRuntime | null =>
   runtimes.get(dataDir) ?? null;
 
-const messageOf = (cause: unknown): string => {
-  if (cause instanceof Error) {
-    return cause.message;
-  }
-
-  return String(cause);
-};
-
-const toCommentError = (error: Cause.UnknownError): CommentError => {
-  if (error.cause instanceof NotFoundError) {
-    return new NotFound({ message: error.cause.message });
-  }
-
-  if (error.cause instanceof ConflictError) {
-    return new Conflict({ message: error.cause.message });
-  }
-
-  return new BadRequest({ message: messageOf(error.cause) });
-};
-
 const attemptComments = <Value>(
   task: (runtime: CommentRuntime) => Promise<Value>
 ): Effect.Effect<Value, CommentError> =>
@@ -91,9 +70,7 @@ const attemptComments = <Value>(
       return yield* new BadRequest({ message: NOT_READY });
     }
 
-    return yield* Effect.tryPromise(() => task(runtime)).pipe(
-      Effect.mapError((failure) => toCommentError(failure))
-    );
+    return yield* attemptKnown(() => task(runtime));
   });
 
 export { attemptComments, bindCommentRuntime, toCommentRuntime };

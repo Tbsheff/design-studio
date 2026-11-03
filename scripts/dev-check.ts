@@ -68,7 +68,10 @@ function freePort(): Promise<number> {
 
 function createBus(): EventBus & { events: StudioEvent[] } {
   const events: StudioEvent[] = [];
-  const listeners = new Map<string, Set<(event: StudioEvent) => void>>();
+  const listeners = new Map<
+    string,
+    Set<(event: StudioEvent, line: string) => void>
+  >();
 
   return {
     events,
@@ -82,7 +85,7 @@ function createBus(): EventBus & { events: StudioEvent[] } {
       events.push(event);
 
       for (const listener of listeners.get(input.projectId) ?? []) {
-        listener(event);
+        listener(event, JSON.stringify(event));
       }
 
       return event;
@@ -96,7 +99,7 @@ function createBus(): EventBus & { events: StudioEvent[] } {
     },
     subscribe(
       projectId: string,
-      listener: (event: StudioEvent) => void
+      listener: (event: StudioEvent, line: string) => void
     ): () => void {
       const set = listeners.get(projectId) ?? new Set();
       set.add(listener);

@@ -22,7 +22,7 @@ const keyOf = (
 ): string => {
   const source = target?.source;
 
-  if (!source || !directionId) {
+  if (!source || !ids.directionId) {
     return "";
   }
 

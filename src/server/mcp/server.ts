@@ -10,6 +10,7 @@ import { firstVersionBlock } from "../app/first-version.js";
 import { takeSaveFailures } from "../direct-edit/save-queue.js";
 import { withMcpOrigin } from "../edit-origin.js";
 import type { ExportDeps } from "../export/source.js";
+import type { WireArgs } from "../handlers/_core/run-action.js";
 import { isKnownError } from "../platform/errors/index.js";
 import {
   renderedSince,
@@ -108,8 +109,8 @@ const TAKES_PATH = new Set(
   EDIT_TOOLS.filter(
     (tool) =>
       "path" in
-      ((tool.inputSchema.properties as Record<string, unknown> | undefined) ??
-        {})
+      ((tool.inputSchema as { properties?: Record<string, unknown> })
+        .properties ?? {})
   ).map((tool) => tool.name)
 );
 
@@ -240,7 +241,7 @@ async function callAny(
   args: unknown
 ): Promise<unknown> {
   if (ActionTools.isAction(name))
-    return ActionTools.call(ctx.deps, name, argsOf(args), edits);
+    return ActionTools.call(ctx.deps, name, argsOf(args) as WireArgs, edits);
   if (!EDIT_NAMES.has(name))
     return {
       content: [{ type: "text", text: `unknown tool ${name}` }],

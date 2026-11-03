@@ -5,12 +5,15 @@ import type { ApprovalCard } from "../../../shared/actions/_core/approval-card.j
 import type { StudioError } from "../../../shared/actions/_core/errors/all.js";
 import { BadRequest } from "../../../shared/actions/_core/errors/bad-request.js";
 import type { NotFound } from "../../../shared/actions/_core/errors/not-found.js";
-import { EventBus } from "../../events/event-bus.js";
-import { Authorizer } from "../../store/authorizer.js";
-import { LocalOrgScope, scopeOf } from "../../store/local-org-scope.js";
-import { LocalPrincipal } from "../../store/local-principal.js";
-import type { Principal } from "../../store/local-principal.js";
-import { ProjectAccess } from "../../store/project-access.js";
+import { EventQueue } from "../../events/index.js";
+import {
+  Authorizer,
+  LocalOrgScope,
+  LocalPrincipal,
+  ProjectAccess,
+  scopeOf,
+} from "../../store/index.js";
+import type { Principal } from "../../store/index.js";
 import type { AnyAccess, Entry } from "./handler.js";
 
 type WireArgs = Readonly<Record<string, Schema.Json>>;
@@ -23,7 +26,7 @@ interface Decoded {
 
 type Gate = (card: ApprovalCard) => Effect.Effect<void, StudioError>;
 
-type RunNeeds = AnyAccess | Authorizer | EventBus | ProjectAccess;
+type RunNeeds = AnyAccess | Authorizer | EventQueue | ProjectAccess;
 
 type Proven = Effect.Effect<object, StudioError>;
 
@@ -65,13 +68,13 @@ const checkScope = (
 const announceDone = (
   action: AnyAction,
   input: Decoded
-): Effect.Effect<void, never, EventBus> =>
+): Effect.Effect<void, never, EventQueue> =>
   Effect.gen(function* announce() {
     if (action.access === "read") {
       return;
     }
 
-    const bus = yield* EventBus;
+    const bus = yield* EventQueue;
 
     yield* bus.announce({
       actionId: action.id,

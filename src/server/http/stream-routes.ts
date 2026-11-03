@@ -20,8 +20,8 @@ import {
   STREAM_APPROVALS,
   STREAM_HELLO,
 } from "../../shared/app-stream.js";
-import { EventBus } from "../events/event-bus.js";
 import type { RecordedEvent } from "../events/event-log.js";
+import { EventQueue } from "../events/event-queue.js";
 import type { StudioRuntime } from "../main/runtime.js";
 import { BadRequestError, NotFoundError } from "../store/errors.js";
 import type { ProjectStore } from "../types.js";
@@ -79,18 +79,18 @@ const followProject = (
   projectId: string,
   afterSeq: number,
   push: Push
-): Effect.Effect<void, never, EventBus> =>
+): Effect.Effect<void, never, EventQueue> =>
   Effect.gen(function* follow() {
-    const bus = yield* EventBus;
+    const bus = yield* EventQueue;
 
     yield* Stream.runForEach(bus.stream(projectId, afterSeq), (recorded) =>
       Effect.sync(() => push(toOutgoing(recorded)))
     );
   });
 
-const followDone = (push: Push): Effect.Effect<void, never, EventBus> =>
+const followDone = (push: Push): Effect.Effect<void, never, EventQueue> =>
   Effect.gen(function* follow() {
-    const bus = yield* EventBus;
+    const bus = yield* EventQueue;
 
     yield* Stream.runForEach(bus.done(), (done) =>
       Effect.sync(() => push(doneOutgoing(done)))

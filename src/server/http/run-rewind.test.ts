@@ -14,6 +14,7 @@ import type {
 import { forkBaseOf } from "../../shared/rewind.js";
 import { createAgentRunner } from "../agent/index.js";
 import { createFakePreview } from "../agent/test-fakes.js";
+import { projectStorePorts } from "../main/project-ports.js";
 import { createEventBus } from "../store/events.js";
 import {
   createProjectStore,
@@ -137,7 +138,7 @@ beforeEach(async () => {
   ({ config, cleanup } = await makeTempConfig());
   config = { ...config, agentMode: "mock" };
   const versions = createVersionStore(config);
-  projects = createProjectStore(config, versions);
+  projects = createProjectStore(config, versions, projectStorePorts);
   const bus = createEventBus(config.dataDir, new Map());
   const preview = {
     ...createFakePreview(),

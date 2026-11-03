@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 
-import type { healthStudio } from "../../shared/actions/studio/health.js";
 import { routes as studioRoutes } from "../../shared/actions/studio/routes.js";
 import type { DoctorCause } from "../../shared/app-doctor";
 import { api, errorText } from "../api";
@@ -32,10 +31,7 @@ export default function DoctorCard({
     let live = true;
     const read = async () => {
       try {
-        const health = await call<typeof healthStudio>(
-          studioRoutes.healthStudio,
-          {}
-        );
+        const health = await call(studioRoutes.healthStudio, {});
         if (live) {
           setVersion(health.version);
         }

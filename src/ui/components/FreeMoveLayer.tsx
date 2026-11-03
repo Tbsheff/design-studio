@@ -1,4 +1,4 @@
-import { formatMeasure } from "../measure";
+import { formatMeasure } from "../../shared/measure";
 import type { FreeMoveView } from "../useFreeMove";
 import { SnapGuides } from "./ArtboardOverlay";
 import { gapStyle } from "./CanvasOverlays";

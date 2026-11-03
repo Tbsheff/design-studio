@@ -21,12 +21,16 @@ const recentKeys = new Map<string, { at: number; handled: () => boolean }>();
 const recentCommands = new Map<string, number>();
 let installed = false;
 
-function bridge(): DesktopBridge | undefined {
-  return (window as unknown as { studioDesktop?: DesktopBridge }).studioDesktop;
+export function desktopBridge<
+  Bridge extends object = DesktopBridge,
+>(): Bridge | null {
+  return (
+    (window as unknown as { studioDesktop?: Bridge }).studioDesktop ?? null
+  );
 }
 
-function isDesktop(): boolean {
-  return bridge() !== undefined;
+export function isDesktop(): boolean {
+  return desktopBridge() !== null;
 }
 
 function shortcutName(event: KeyboardEvent): string | null {
@@ -86,7 +90,7 @@ function install(): void {
     },
     true
   );
-  bridge()?.onCommand?.(dispatchDesktopCommand);
+  desktopBridge()?.onCommand?.(dispatchDesktopCommand);
 }
 
 export function noteHandledShortcut(name: "undo" | "redo"): void {
@@ -128,7 +132,7 @@ export function useDesktopContext(
   const { projectId, directionId, running } = context;
   useEffect(() => {
     if (enabled) {
-      bridge()?.setContext?.({ projectId, directionId, running });
+      desktopBridge()?.setContext?.({ projectId, directionId, running });
     }
   }, [projectId, directionId, running, enabled]);
 }
@@ -139,14 +143,14 @@ type PickOutcome =
   | { kind: "unsupported" };
 
 export function hasNativePicker(): boolean {
-  return typeof bridge()?.pickFolder === "function";
+  return typeof desktopBridge()?.pickFolder === "function";
 }
 
 export async function pickFolder(options: {
   title: string;
   defaultPath?: string;
 }): Promise<PickOutcome> {
-  const native = bridge()?.pickFolder;
+  const native = desktopBridge()?.pickFolder;
 
   if (!native) {
     return { kind: "unsupported" };

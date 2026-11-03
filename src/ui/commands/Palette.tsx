@@ -5,6 +5,7 @@ import { chordMatches } from "../../shared/keymap";
 import { errorText, api } from "../api";
 import { HealthDot, ProjectThumb } from "../components/ProjectThumb";
 import { Icon } from "../kit/Icon";
+import { isDesktop } from "../platform/desktop";
 import { useProjectHits, useRouteHits } from "../projectHits";
 import { openProject } from "../projectNav";
 import { projectsApi } from "../projectsStore";
@@ -17,7 +18,7 @@ import { collectCommands } from "./registry";
 
 const RECENT_KEY = "design-studio.commands.recent.v1";
 const RECENT_MAX = 5;
-const DESKTOP = typeof window !== "undefined" && "studioDesktop" in window;
+const DESKTOP = typeof window !== "undefined" && isDesktop();
 
 function readRecent(): string[] {
   try {

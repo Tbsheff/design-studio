@@ -2,7 +2,7 @@ import { Effect } from "effect";
 
 import type { Input } from "../../../shared/actions/_core/action.js";
 import type { restoreVersions } from "../../../shared/actions/versions/restore.js";
-import { VersionWriter } from "../../store/version-writer.js";
+import { VersionWriter } from "../../store/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type RestoreVersionsInput = Input<typeof restoreVersions>;

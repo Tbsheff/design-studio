@@ -23,7 +23,7 @@ const TitleFieldSchema = ShipTitleSchema.annotate({
 
 const inspectShip = defineAction({
   access: "read",
-  agent: { off: "ui-bootstrap" },
+  agent: { off: "legacy-agent" },
   confirm: "none",
   description: `List the files the studio changed since a base version, with diffs, refused files, conflicts with the user's own changes, and the default branch name, commit message and pull request text. Read only. Ship works on an attached app project in a git repository. It uses a new branch in a separate git worktree, so the checked-out branch and files of the user do not change. It never force pushes and never commits .env files, secrets or node_modules.`,
   errors: [BadRequest, Conflict, NotFound],

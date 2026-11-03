@@ -6,7 +6,7 @@ import { chatSearchAvailable, chatSearchOpen } from "../chatSearchState";
 import { IS_MAC } from "../commands/keys";
 import { Icon } from "../kit/Icon";
 import type { IconName } from "../kit/Icon";
-import { useLive } from "../liveStore";
+import { useLive } from "../platform/live-store";
 import type { PanelTab } from "../usePanelTab";
 import { usePopover } from "../usePopover";
 

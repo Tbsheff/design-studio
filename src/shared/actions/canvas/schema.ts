@@ -131,10 +131,26 @@ const FlowParamsSchema = Schema.Record(
   Schema.String.check(Schema.isMaxLength(80))
 );
 
+const RouteLinkSchema = Schema.Struct({
+  element: Schema.NullOr(
+    Schema.Struct({
+      selector: Schema.String,
+      tag: Schema.String,
+      text: Schema.optionalKey(Schema.String),
+    })
+  ),
+  file: Schema.String,
+  href: Schema.String,
+  kind: Schema.Literals(["link", "push", "form", "redirect"]),
+  line: Schema.Number,
+  to: Schema.NullOr(Schema.String),
+});
+
 const FlowRouteLinksSchema = Schema.Struct({
-  links: Schema.Array(Schema.Unknown),
+  file: Schema.NullOr(Schema.String),
+  links: Schema.Array(RouteLinkSchema),
   route: Schema.String,
-  sourceFrame: Schema.NullOr(Schema.Unknown),
+  scanned: Schema.Number,
 });
 
 const FlowParamsListSchema = Schema.Struct({ params: Schema.Unknown });

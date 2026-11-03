@@ -10,9 +10,9 @@ import type {
 } from "../shared/contracts";
 import { api, errorText } from "./api";
 import type { ParentMessageBody } from "./bridge";
-import { createLiveStore } from "./liveStore";
-import type { LiveStore } from "./liveStore";
 import { startOptimistic } from "./optimisticEdit";
+import { createLiveStore } from "./platform/live-store";
+import type { LiveStore } from "./platform/live-store";
 import { snapRect } from "./snap";
 import type { Rect, SnapGuide, SpacingBadge } from "./snap";
 import { selectionTargets } from "./structureEdits";

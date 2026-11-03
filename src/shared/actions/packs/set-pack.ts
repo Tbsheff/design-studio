@@ -15,7 +15,7 @@ import { SaveResultSchema } from "./schema.js";
 
 const setPackPacks = defineAction({
   access: "edit",
-  agent: { off: "ui-bootstrap" },
+  agent: { off: "legacy-agent" },
   confirm: "none",
   description:
     "Save the design system of a direction to the studio library. asNew makes a new user pack; else it updates packId or the pack named in pack.json. A draft must pass the check unless force is true.",

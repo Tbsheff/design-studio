@@ -2,7 +2,7 @@ import { Effect } from "effect";
 
 import type { Input } from "../../../shared/actions/_core/action.js";
 import type { moveComments } from "../../../shared/actions/comments/move.js";
-import { CommentThreadStore } from "../../comments/comment-thread-store.js";
+import { CommentThreadStore } from "../../comments/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type MoveCommentsInput = Input<typeof moveComments>;

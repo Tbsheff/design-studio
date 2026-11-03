@@ -324,11 +324,8 @@ function planInputOf(target: PublishTarget, form: FormState): PublishRequest {
     viewerComments: form.viewerComments,
     noindex: !form.indexable,
     ...(target.directionId ? { directionId: target.directionId } : {}),
+    ...(form.passwordOn ? { password: form.password } : {}),
   };
-
-  if (form.passwordOn) {
-    input.password = form.password;
-  }
 
   if (target.kind === "viewer") {
     Object.assign(input, {

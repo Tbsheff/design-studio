@@ -3,8 +3,8 @@ import { createPortal } from "react-dom";
 
 import type { McpApprovalOutcome } from "../../shared/contracts";
 import { useInlineApprovalProject } from "../approvalSpot";
-import { appStream } from "../appStream";
 import { Icon } from "../kit/Icon";
+import { appStream } from "../platform/stream";
 import type { McpApprovalCard } from "../useMcpFeed";
 import { McpApproval } from "./McpFeed";
 

@@ -12,6 +12,7 @@ import type {
 } from "../../../shared/contracts.js";
 import { createFakePreview } from "../../agent/test-fakes.js";
 import { createApp } from "../../http/app.js";
+import { projectStorePorts } from "../../main/project-ports.js";
 import { createEventBus } from "../../store/events.js";
 import {
   createProjectStore,
@@ -105,7 +106,7 @@ function directEdit(project: Project, body: unknown): Promise<Response> {
 beforeEach(async () => {
   ({ config, cleanup } = await makeTempConfig());
   const versions = createVersionStore(config);
-  projects = createProjectStore(config, versions);
+  projects = createProjectStore(config, versions, projectStorePorts);
   bus = createEventBus(config.dataDir, new Map());
   running = new Set();
   app = createApp({

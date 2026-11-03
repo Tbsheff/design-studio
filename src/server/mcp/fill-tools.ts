@@ -167,7 +167,7 @@ const fillInputOf = (input: SetInput): FillInput => ({
 const editScope = async (
   deps: EditDeps,
   projectId: string,
-  directionId: string
+  directionId?: string
 ): Promise<FillEditScope> => {
   const found = await loadTarget(deps, projectId, directionId);
 

@@ -1,14 +1,14 @@
 import path from "node:path";
 
 import { Effect } from "effect";
-import type { Cause } from "effect";
 
 import { BadRequest } from "../../shared/actions/_core/errors/bad-request.js";
-import { Conflict } from "../../shared/actions/_core/errors/conflict.js";
-import { NotFound } from "../../shared/actions/_core/errors/not-found.js";
+import type { Conflict } from "../../shared/actions/_core/errors/conflict.js";
+import type { NotFound } from "../../shared/actions/_core/errors/not-found.js";
 import type { Project } from "../../shared/contracts.js";
+import { attemptKnown } from "../platform/attempt/index.js";
 import { loadConfig } from "../platform/config/index.js";
-import { assertSafeId, ConflictError, NotFoundError } from "../store/errors.js";
+import { assertSafeId } from "../store/errors.js";
 import type { StudioProjectStore } from "../store/projects.js";
 
 interface ShipActivityDraft {
@@ -74,22 +74,6 @@ const loadTarget = async (
   };
 };
 
-const toShipError = (error: Cause.UnknownError): ShipError => {
-  if (error.cause instanceof NotFoundError) {
-    return new NotFound({ message: error.cause.message });
-  }
-
-  if (error.cause instanceof ConflictError) {
-    return new Conflict({ message: error.cause.message });
-  }
-
-  if (error.cause instanceof Error) {
-    return new BadRequest({ message: error.cause.message });
-  }
-
-  return new BadRequest({ message: String(error.cause) });
-};
-
 const attemptShip = <Value>(
   projectId: string,
   task: (target: ShipTarget) => Promise<Value>
@@ -102,9 +86,9 @@ const attemptShip = <Value>(
       return yield* new BadRequest({ message: NOT_READY });
     }
 
-    return yield* Effect.tryPromise(async () =>
+    return yield* attemptKnown(async () =>
       task(await loadTarget(dataDir, runtime, projectId))
-    ).pipe(Effect.mapError((failure) => toShipError(failure)));
+    );
   });
 
 export { attemptShip, bindShipRuntime, toShipRuntime };

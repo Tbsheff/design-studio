@@ -20,7 +20,7 @@ import {
   type CanvasLayout,
 } from "../canvasFrames";
 import { importPageItems, ImportPageSlot } from "../features/page-import";
-import type { LiveStore } from "../liveStore";
+import type { LiveStore } from "../platform/live-store";
 import { uiStore, type UiState } from "../storage";
 import type { PanelTab } from "../usePanelTab";
 import { isTypingTarget } from "../usePanZoom";

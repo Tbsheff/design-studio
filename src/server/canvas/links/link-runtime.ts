@@ -1,10 +1,9 @@
 import { Effect } from "effect";
-import type { Cause } from "effect";
 
 import { BadRequest } from "../../../shared/actions/_core/errors/bad-request.js";
-import { NotFound } from "../../../shared/actions/_core/errors/not-found.js";
+import { attemptKnown } from "../../platform/attempt/index.js";
+import type { KnownFailure } from "../../platform/attempt/index.js";
 import { loadConfig } from "../../platform/config/index.js";
-import { BadRequestError, NotFoundError } from "../../store/errors.js";
 import type { StudioProjectStore } from "../../store/projects.js";
 import type { PreviewService } from "../../types.js";
 import type { FrameStateDeps } from "../app-flow/frame-state-service.js";
@@ -18,7 +17,7 @@ interface LinkRuntime {
   readonly projects: Pick<StudioProjectStore, "get" | "projectDir">;
 }
 
-type LinkFailure = BadRequest | NotFound;
+type LinkFailure = KnownFailure;
 
 const NOT_READY =
   "Links are not ready in this Design Studio process. Restart Design Studio.";
@@ -29,22 +28,12 @@ const bindLinkRuntime = (runtime: LinkRuntime): void => {
   runtimes.set(loadConfig().dataDir, runtime);
 };
 
-const toLinkError = (error: Cause.UnknownError): LinkFailure => {
-  const { cause } = error;
-
-  if (cause instanceof NotFoundError) {
-    return new NotFound({ message: cause.message });
-  }
-
-  if (cause instanceof LinkError || cause instanceof BadRequestError) {
+const toLinkFailure = (cause: unknown): BadRequest | null => {
+  if (cause instanceof LinkError) {
     return new BadRequest({ message: cause.message });
   }
 
-  if (cause instanceof Error) {
-    return new BadRequest({ message: cause.message });
-  }
-
-  return new BadRequest({ message: String(cause) });
+  return null;
 };
 
 const attemptLink = <Value>(
@@ -57,9 +46,7 @@ const attemptLink = <Value>(
       return yield* new BadRequest({ message: NOT_READY });
     }
 
-    return yield* Effect.tryPromise(() => task(runtime)).pipe(
-      Effect.mapError((failure) => toLinkError(failure))
-    );
+    return yield* attemptKnown(() => task(runtime), toLinkFailure);
   });
 
 const runtimeOf = (): LinkRuntime | null =>

@@ -113,7 +113,7 @@ const planSpacingSet = async (
   return {
     classes: classesOf(planned),
     mode: site.mode,
-    style: { ...style },
+    style: Object.fromEntries(props.map((prop) => [prop, css])),
     title: titleOf(request.input, css, token),
     token: token ?? null,
     written: [

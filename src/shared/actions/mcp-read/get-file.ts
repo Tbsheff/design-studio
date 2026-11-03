@@ -24,15 +24,15 @@ const PathFieldSchema = PathTextSchema.annotate({
   description: "File path from list_files",
 });
 
-const readFileMcpRead = defineAction({
+const getFileMcpRead = defineAction({
   access: "read",
-  agent: { off: "ui-bootstrap" },
+  agent: { off: "legacy-agent" },
   confirm: "none",
   description:
     "Read one text source file of a version. Returns path and text. Read only.",
   errors: [BadRequest, Conflict, NotFound],
   http: { method: "GET", path: "/api/projects/:projectId/source-file" },
-  id: "mcp-read.readFile",
+  id: "mcp-read.getFile",
   input: Schema.Struct({
     directionId: Schema.optionalKey(DirectionFieldSchema),
     path: PathFieldSchema,
@@ -46,4 +46,4 @@ const readFileMcpRead = defineAction({
   scope: "project",
 });
 
-export { readFileMcpRead };
+export { getFileMcpRead };

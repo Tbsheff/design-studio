@@ -2,7 +2,7 @@ import { Effect } from "effect";
 
 import type { Input } from "../../../shared/actions/_core/action.js";
 import type { getCodeExport } from "../../../shared/actions/export/get-code.js";
-import { ExportStore } from "../../export/export-store.js";
+import { ExportStore } from "../../export/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type GetCodeExportInput = Input<typeof getCodeExport>;

@@ -2,7 +2,7 @@ import { Effect } from "effect";
 
 import type { Input } from "../../../shared/actions/_core/action.js";
 import type { deleteCloud } from "../../../shared/actions/cloud/delete.js";
-import { CloudSession } from "../../cloud/session.js";
+import { CloudSession } from "../../cloud/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type DeleteCloudInput = Input<typeof deleteCloud>;

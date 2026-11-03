@@ -22,7 +22,7 @@ const DirectionFieldSchema = DirectionIdSchema.annotate({
 
 const listFilesMcpRead = defineAction({
   access: "read",
-  agent: { off: "ui-bootstrap" },
+  agent: { off: "legacy-agent" },
   confirm: "none",
   description:
     "List the source files of a version. Returns versionId and files with path and bytes. Read only.",

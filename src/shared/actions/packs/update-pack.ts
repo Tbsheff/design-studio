@@ -19,7 +19,7 @@ const TagsSchema = Schema.Array(Schema.String);
 
 const updatePackPacks = defineAction({
   access: "edit",
-  agent: { off: "ui-bootstrap" },
+  agent: { off: "legacy-agent" },
   confirm: "none",
   description:
     "Change a user design system in the studio library, for example its name. The pack id does not change. Built-in packs cannot change.",

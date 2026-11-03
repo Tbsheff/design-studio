@@ -2,7 +2,7 @@ import { Effect } from "effect";
 
 import type { Input } from "../../../shared/actions/_core/action.js";
 import type { listHunksVersions } from "../../../shared/actions/versions/list-hunks.js";
-import { VersionStore } from "../../store/version-store.js";
+import { VersionStore } from "../../store/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type ListHunksVersionsInput = Input<typeof listHunksVersions>;

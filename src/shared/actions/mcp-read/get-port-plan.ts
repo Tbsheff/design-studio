@@ -51,7 +51,7 @@ const RouteFieldSchema = RouteTextSchema.annotate({
 
 const getPortPlanMcpRead = defineAction({
   access: "read",
-  agent: { off: "ui-bootstrap" },
+  agent: { off: "legacy-agent" },
   confirm: "none",
   description:
     'Plan how to move an HTML prototype page into an attached app as one React route, the same plan the studio "Move to app" dialog uses: sections, steps, repeated blocks, headings, actions, images, links, tokens mapped to the app tokens, parts to leave out, and kit (app components that fit). With route it also returns the route file and routeExists. With flow: true or paths it plans a whole flow: pages in flow order with routes, the link map, unselected and unreached pages. Read only: it never starts a run.',

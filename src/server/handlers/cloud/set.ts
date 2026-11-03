@@ -2,8 +2,7 @@ import { Effect } from "effect";
 
 import type { Input } from "../../../shared/actions/_core/action.js";
 import type { setCloud } from "../../../shared/actions/cloud/set.js";
-import { CloudClient } from "../../cloud/client.js";
-import { CloudSession } from "../../cloud/session.js";
+import { CloudClient, CloudSession } from "../../cloud/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type SetCloudInput = Input<typeof setCloud>;

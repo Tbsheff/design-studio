@@ -60,12 +60,6 @@ const routes = {
     method: "GET",
     path: "/api/projects/:projectId/versions/:from/changes",
   },
-  listVersions: {
-    id: "versions.list",
-    invalidates: [],
-    method: "GET",
-    path: "/api/projects/:projectId/d/:directionId/versions",
-  },
   listHistoryVersions: {
     id: "versions.listHistory",
     invalidates: [],
@@ -77,6 +71,12 @@ const routes = {
     invalidates: [],
     method: "GET",
     path: "/api/projects/:projectId/versions/:from/hunks",
+  },
+  listVersions: {
+    id: "versions.list",
+    invalidates: [],
+    method: "GET",
+    path: "/api/projects/:projectId/d/:directionId/versions",
   },
   renameVersions: {
     id: "versions.rename",
@@ -90,18 +90,6 @@ const routes = {
     method: "PATCH",
     path: "/api/projects/:projectId/versions/:versionId",
   },
-  restoreVersions: {
-    id: "versions.restore",
-    invalidates: [
-      "versions.get",
-      "versions.inspectDiff",
-      "versions.list",
-      "versions.listHistory",
-      "versions.listHunks",
-    ],
-    method: "POST",
-    path: "/api/projects/:projectId/d/:directionId/restore",
-  },
   restoreHistoryVersions: {
     id: "versions.restoreHistory",
     invalidates: [
@@ -113,6 +101,18 @@ const routes = {
     ],
     method: "POST",
     path: "/api/projects/:projectId/d/:directionId/edit-history/undo",
+  },
+  restoreVersions: {
+    id: "versions.restore",
+    invalidates: [
+      "versions.get",
+      "versions.inspectDiff",
+      "versions.list",
+      "versions.listHistory",
+      "versions.listHunks",
+    ],
+    method: "POST",
+    path: "/api/projects/:projectId/d/:directionId/restore",
   },
 } as const;
 

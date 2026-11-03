@@ -1,6 +1,10 @@
 import type { Dirent } from "node:fs";
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
+
+import { format } from "oxfmt";
+import type { FormatOptions } from "oxfmt";
 
 interface GeneratedFile {
   path: string;
@@ -24,6 +28,18 @@ const camel = (ctx: string): string => {
   const name = pascal(ctx);
 
   return name.charAt(0).toLowerCase() + name.slice(1);
+};
+
+const FORMAT_CONFIG = path.join(ROOT, "oxfmt.config.ts");
+
+const formatFile = async (file: GeneratedFile): Promise<GeneratedFile> => {
+  const config: { default: FormatOptions } = await import(
+    pathToFileURL(FORMAT_CONFIG).href
+  );
+
+  const result = await format(file.path, file.text, config.default);
+
+  return { path: file.path, text: result.code };
 };
 
 const actionConst = (ctx: string, tail: string): string =>
@@ -85,6 +101,7 @@ export {
   actionConst,
   actionTails,
   camel,
+  formatFile,
   lines,
   pascal,
   readOrEmpty,

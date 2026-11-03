@@ -2,7 +2,7 @@ import { Effect } from "effect";
 
 import type { Input } from "../../../shared/actions/_core/action.js";
 import type { inspectPublish } from "../../../shared/actions/publish/inspect.js";
-import { PublishStore } from "../../publish/publish-store.js";
+import { PublishStore } from "../../publish/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type InspectPublishInput = Input<typeof inspectPublish>;

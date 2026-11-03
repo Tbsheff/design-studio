@@ -2,7 +2,7 @@ import { Effect } from "effect";
 
 import type { Input } from "../../../shared/actions/_core/action.js";
 import type { inspectDiffVersions } from "../../../shared/actions/versions/inspect-diff.js";
-import { VersionStore } from "../../store/version-store.js";
+import { VersionStore } from "../../store/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type InspectDiffVersionsInput = Input<typeof inspectDiffVersions>;

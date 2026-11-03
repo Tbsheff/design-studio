@@ -44,7 +44,7 @@ const toElement = (
   const given = contexts?.[comment.id];
 
   if (given) {
-    return given as SelectionContext;
+    return given;
   }
 
   return comment.context ?? null;

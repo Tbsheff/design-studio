@@ -19,12 +19,12 @@ const VersionsActions = {
   deleteSessionVersions,
   getVersions,
   inspectDiffVersions,
-  listVersions,
   listHistoryVersions,
   listHunksVersions,
+  listVersions,
   renameVersions,
-  restoreVersions,
   restoreHistoryVersions,
+  restoreVersions,
 } as const;
 
 export { VersionsActions };

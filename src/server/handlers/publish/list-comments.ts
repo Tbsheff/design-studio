@@ -2,7 +2,7 @@ import { Effect } from "effect";
 
 import type { Input } from "../../../shared/actions/_core/action.js";
 import type { listCommentsPublish } from "../../../shared/actions/publish/list-comments.js";
-import { PublishStore } from "../../publish/publish-store.js";
+import { PublishStore } from "../../publish/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type ListCommentsPublishInput = Input<typeof listCommentsPublish>;

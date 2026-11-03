@@ -1,4 +1,9 @@
 import { routes } from "../shared/actions/versions/routes.js";
+import type {
+  SessionEndSchema,
+  VersionChangesSchema,
+  VersionSchema,
+} from "../shared/actions/versions/schema.js";
 import { STUDIO_TOKEN_HEADER } from "../shared/contracts";
 import type {
   EditHistoryState,
@@ -12,31 +17,63 @@ import { getSession } from "./session";
 
 const MAX_THUMB_FETCHES = 2;
 
+type WireVersion = typeof VersionSchema.Encoded;
+
+const toVersion = (wire: WireVersion): Version => ({
+  ...wire,
+  changedFiles: [...wire.changedFiles],
+  meta: { ...wire.meta },
+});
+
+const toSessionEnd = (
+  wire: typeof SessionEndSchema.Encoded
+): EditSessionEnd => ({
+  headVersionId: wire.headVersionId,
+  version: wire.version && toVersion(wire.version),
+});
+
+const toChanges = (
+  wire: typeof VersionChangesSchema.Encoded
+): VersionChanges => ({
+  ...wire,
+  files: wire.files.map((file) => ({ ...file })),
+  thumbs: wire.thumbs && { ...wire.thumbs },
+});
+
 const base = (pid: string, vid: string) =>
   `/api/projects/${encodeURIComponent(pid)}/versions/${encodeURIComponent(vid)}`;
 
 const COMPARE_MODE_KEY = "design-studio.compare-mode";
 
-export const revertHunk = (
+export const revertHunk = async (
   pid: string,
   did: string,
   request: HunkRevertRequest
-) =>
-  call(routes.applyHunkVersions, {
+): Promise<HunkRevertResult> => {
+  const out = await call(routes.applyHunkVersions, {
     directionId: did,
     file: request.file,
     from: request.from ?? null,
     hunk: request.hunk,
     projectId: pid,
     versionId: request.to,
-  }) as Promise<HunkRevertResult>;
+  });
 
-export const restoreVersion = (pid: string, did: string, versionId: string) =>
-  call(routes.restoreVersions, {
-    directionId: did,
-    projectId: pid,
-    versionId,
-  }) as Promise<Version>;
+  return { ...out, version: toVersion(out.version) };
+};
+
+export const restoreVersion = async (
+  pid: string,
+  did: string,
+  versionId: string
+): Promise<Version> =>
+  toVersion(
+    await call(routes.restoreVersions, {
+      directionId: did,
+      projectId: pid,
+      versionId,
+    })
+  );
 
 const STEP_ROUTES = {
   redo: routes.applyHistoryVersions,
@@ -48,40 +85,50 @@ const END_ROUTES = {
   save: routes.createSessionVersions,
 } as const;
 
-export const stepEditHistory = (
+export const stepEditHistory = async (
   pid: string,
   did: string,
   kind: "redo" | "undo"
-) =>
-  call(STEP_ROUTES[kind], { directionId: did, projectId: pid }) as Promise<{
-    label: string;
-    state: EditHistoryState;
-    version: Version;
-  }>;
+): Promise<{ label: string; state: EditHistoryState; version: Version }> => {
+  const out = await call(STEP_ROUTES[kind], {
+    directionId: did,
+    projectId: pid,
+  });
 
-export const endEditSession = (
+  return {
+    label: out.label,
+    state: { ...out.state },
+    version: toVersion(out.version),
+  };
+};
+
+export const endEditSession = async (
   pid: string,
   did: string,
   action: "discard" | "save",
   baseVersionId: string
-) =>
-  call(END_ROUTES[action], {
-    baseVersionId,
-    directionId: did,
-    projectId: pid,
-  }) as Promise<EditSessionEnd>;
+): Promise<EditSessionEnd> =>
+  toSessionEnd(
+    await call(END_ROUTES[action], {
+      baseVersionId,
+      directionId: did,
+      projectId: pid,
+    })
+  );
 
-export const versionChanges = (
+export const versionChanges = async (
   pid: string,
   from: string,
   to: string
 ): Promise<VersionChanges> =>
-  call(routes.inspectDiffVersions, {
-    projectId: pid,
-    thumbnails: false,
-    from,
-    to,
-  }) as Promise<VersionChanges>;
+  toChanges(
+    await call(routes.inspectDiffVersions, {
+      projectId: pid,
+      thumbnails: false,
+      from,
+      to,
+    })
+  );
 
 export const getVersion = (pid: string, versionId: string) =>
   call(routes.getVersions, { versionId, projectId: pid });
@@ -113,7 +160,7 @@ export const renameVersion = (pid: string, vid: string, name: string | null) =>
     name,
     projectId: pid,
     versionId: vid,
-  }) as Promise<{ id: string; name: string | null }>;
+  });
 
 async function fetchPng(url: string, signal: AbortSignal): Promise<Response> {
   return fetch(url, {

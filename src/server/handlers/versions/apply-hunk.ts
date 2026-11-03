@@ -2,7 +2,7 @@ import { Effect } from "effect";
 
 import type { Input } from "../../../shared/actions/_core/action.js";
 import type { applyHunkVersions } from "../../../shared/actions/versions/apply-hunk.js";
-import { VersionWriter } from "../../store/version-writer.js";
+import { VersionWriter } from "../../store/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type ApplyHunkVersionsInput = Input<typeof applyHunkVersions>;

@@ -2,7 +2,7 @@ import { Effect } from "effect";
 
 import type { Input } from "../../../shared/actions/_core/action.js";
 import type { inspectShip } from "../../../shared/actions/ship/inspect.js";
-import { ShipStore } from "../../ship/ship-store.js";
+import { ShipStore } from "../../ship/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type InspectShipInput = Input<typeof inspectShip>;

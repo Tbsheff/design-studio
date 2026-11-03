@@ -134,7 +134,7 @@ type SetInput = z.output<typeof setSchema>;
 const editScope = async (
   deps: EditDeps,
   projectId: string,
-  directionId: string
+  directionId?: string
 ): Promise<MotionEditScope> => {
   const found = await loadTarget(deps, projectId, directionId);
 

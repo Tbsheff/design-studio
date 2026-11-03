@@ -29,7 +29,7 @@ const LimitFieldSchema = Schema.Int.check(
 
 const searchProjectsMcpRead = defineAction({
   access: "read",
-  agent: { off: "ui-bootstrap" },
+  agent: { off: "legacy-agent" },
   confirm: "none",
   description:
     'Find projects and app routes by text, like the studio Cmd+K palette: fuzzy match on the project name and app folder, and on the routes of the matched attached apps (and of projectId when given). Each project has type (next, vite, html, react, design-system), place, updatedAt, openedAt (last opened in the studio, or null) and health (level ok, busy, warn or off with a note such as "Needs install" or "Dev server ready"; null for prototypes). A query that starts with "/" searches the routes of every attached app. An empty query lists recent projects: last opened first, last edited when never opened. Read only.',

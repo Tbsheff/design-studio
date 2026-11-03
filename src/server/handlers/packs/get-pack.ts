@@ -2,7 +2,7 @@ import { Effect } from "effect";
 
 import type { Input } from "../../../shared/actions/_core/action.js";
 import type { getPackPacks } from "../../../shared/actions/packs/get-pack.js";
-import { PackStore } from "../../design-system/ops/pack-store.js";
+import { PackStore } from "../../design-system/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type GetPackPacksInput = Input<typeof getPackPacks>;

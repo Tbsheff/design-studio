@@ -2,7 +2,7 @@ import { Effect } from "effect";
 
 import type { Input } from "../../../shared/actions/_core/action.js";
 import type { setPublish } from "../../../shared/actions/publish/set.js";
-import { PublishService } from "../../publish/publications.js";
+import { PublishService } from "../../publish/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type SetPublishInput = Input<typeof setPublish>;

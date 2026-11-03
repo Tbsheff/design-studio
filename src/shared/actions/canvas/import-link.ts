@@ -2,6 +2,7 @@ import { Schema } from "effect";
 
 import { defineAction } from "../_core/action.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
+import { Conflict } from "../_core/errors/conflict.js";
 import { NotFound } from "../_core/errors/not-found.js";
 import { ProjectIdSchema } from "../_core/ids.js";
 import {
@@ -15,15 +16,15 @@ const LinkIdsSchema = Schema.Union([
   ImplicitLinkIdListSchema,
 ]);
 
-const keepLinkCanvas = defineAction({
+const importLinkCanvas = defineAction({
   access: "edit",
-  agent: { off: "ui-bootstrap" },
+  agent: { off: "legacy-agent" },
   confirm: "none",
   description:
     "Save implicit links (found from a href or location.href between pages, or Next.js Link) as normal prototype links, so they show solid on the canvas and can change action or transition. Pass the ids from list_implicit_links, or all. Play already uses implicit links without this.",
-  errors: [BadRequest, NotFound],
+  errors: [BadRequest, Conflict, NotFound],
   http: { method: "POST", path: "/api/projects/:projectId/links/keep" },
-  id: "canvas.keepLink",
+  id: "canvas.importLink",
   input: Schema.Struct({
     ...LinkMotionFields,
     ids: LinkIdsSchema,
@@ -38,4 +39,4 @@ const keepLinkCanvas = defineAction({
   scope: "project",
 });
 
-export { keepLinkCanvas };
+export { importLinkCanvas };

@@ -8,9 +8,9 @@ import {
 } from "react";
 
 import type { BridgeToParent, SelectionContext } from "../../shared/contracts";
+import { formatMeasure } from "../../shared/measure";
 import type { SpacingHandlesProps } from "../features/spacing";
 import { Icon } from "../kit/Icon";
-import { formatMeasure } from "../measure";
 import type { SpacingBadge } from "../snap";
 import { frameSnapStore } from "../useFrameResize";
 import { guideStyle } from "./ArtboardOverlay";

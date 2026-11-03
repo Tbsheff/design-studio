@@ -138,7 +138,7 @@ const guarded = async <Result>(
 const editScope = async (
   deps: EditDeps,
   projectId: string,
-  directionId: string
+  directionId?: string
 ): Promise<SpacingScope> => {
   const found = await loadTarget(deps, projectId, directionId);
 

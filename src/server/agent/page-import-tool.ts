@@ -9,10 +9,10 @@ import type { ImportPageInput } from "../page-import/input.js";
 import { refusal } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
 
-interface ToolText {
+type ToolText = Readonly<{
   content: { type: "text"; text: string }[];
   isError?: boolean;
-}
+}>;
 
 const RUN_SAVES = "The run saves the new page and frame in its version.";
 

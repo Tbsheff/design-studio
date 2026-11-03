@@ -2,7 +2,7 @@ import { Effect } from "effect";
 
 import type { Input } from "../../../shared/actions/_core/action.js";
 import type { setLanShare } from "../../../shared/actions/share/set-lan.js";
-import { ShareListener } from "../../share/share-listener.js";
+import { ShareListener } from "../../share/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type SetLanShareInput = Input<typeof setLanShare>;

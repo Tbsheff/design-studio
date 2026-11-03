@@ -2,17 +2,18 @@ import { Schema } from "effect";
 
 import { defineAction } from "../_core/action.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
+import { Conflict } from "../_core/errors/conflict.js";
 import { NotFound } from "../_core/errors/not-found.js";
 import { ProjectIdSchema } from "../_core/ids.js";
 import { LinkListSchema } from "./schema.js";
 
 const listLinksCanvas = defineAction({
   access: "read",
-  agent: { off: "ui-bootstrap" },
+  agent: { off: "legacy-agent" },
   confirm: "none",
   description:
     "List the saved prototype links of a project: id, frame, selector, target frame (or back), transition, and broken (null, or why the link no longer works). Also returns startFrame and the raw links file. Set check to true to render each page and mark links whose element is gone. Implicit links from page code come from list_implicit_links. Links live in the studio (.studio/links.json), not in the page code.",
-  errors: [BadRequest, NotFound],
+  errors: [BadRequest, Conflict, NotFound],
   http: { method: "GET", path: "/api/projects/:projectId/links" },
   id: "canvas.listLinks",
   input: Schema.Struct({

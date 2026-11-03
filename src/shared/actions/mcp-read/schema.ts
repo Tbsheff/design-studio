@@ -2,6 +2,7 @@ import { Schema } from "effect";
 
 import type { AppDoctorResult } from "../../app-doctor.js";
 import type { AppServerStatus } from "../../contracts.js";
+import { ImageOutputSchema } from "../_core/image-output.js";
 
 interface DoctorView {
   readonly doctor: AppDoctorResult;
@@ -126,11 +127,7 @@ const TokensViewSchema = Schema.Struct({
   tokensCss: Schema.optionalKey(Schema.String),
 });
 
-const ScreenshotSchema = Schema.Struct({
-  data: Schema.String,
-  mimeType: Schema.String,
-  text: Schema.String,
-});
+const ScreenshotSchema = ImageOutputSchema;
 
 type DoctorViewText = typeof DoctorViewSchema.Type;
 

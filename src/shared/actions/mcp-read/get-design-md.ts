@@ -22,7 +22,7 @@ const DirectionFieldSchema = DirectionIdSchema.annotate({
 
 const getDesignMdMcpRead = defineAction({
   access: "read",
-  agent: { off: "ui-bootstrap" },
+  agent: { off: "legacy-agent" },
   confirm: "none",
   description:
     "Get the DESIGN.md rules of the project. Returns text, or a short note when the project has no DESIGN.md. Read only.",

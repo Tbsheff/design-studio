@@ -2,17 +2,18 @@ import { Schema } from "effect";
 
 import { defineAction } from "../_core/action.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
+import { Conflict } from "../_core/errors/conflict.js";
 import { NotFound } from "../_core/errors/not-found.js";
 import { ProjectIdSchema } from "../_core/ids.js";
 import { FrameStatesViewSchema, MockUserSchema } from "./schema.js";
 
 const updateFrameSessionCanvas = defineAction({
   access: "edit",
-  agent: { off: "ui-bootstrap" },
+  agent: { off: "legacy-agent" },
   confirm: "none",
   description:
     "Change the session that signed-in frame states use: the mock user, or forget the cookies kept from a real sign-in.",
-  errors: [BadRequest, NotFound],
+  errors: [BadRequest, Conflict, NotFound],
   http: {
     method: "PATCH",
     path: "/api/projects/:projectId/frame-states/session",

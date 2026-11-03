@@ -11,7 +11,7 @@ import { EditorResultSchema } from "./schema.js";
 
 const startEditorPacks = defineAction({
   access: "edit",
-  agent: { off: "ui-bootstrap" },
+  agent: { off: "legacy-agent" },
   confirm: "none",
   description:
     "Open the draft project of a user design system so it can be edited. It returns the project that backs the pack, or makes a new one with a kit page.",

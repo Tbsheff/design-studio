@@ -13,7 +13,7 @@ import { SessionEndSchema } from "./schema.js";
 
 const deleteSessionVersions = defineAction({
   access: "destructive",
-  agent: { off: "ui-bootstrap" },
+  agent: { off: "legacy-agent" },
   confirm: "user",
   description:
     "Discard the open edit session of a direction and put the files back to baseVersionId, from the studio edit bar. The user must click Allow in Design Studio first.",

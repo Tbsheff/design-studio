@@ -2,7 +2,7 @@ import { Effect } from "effect";
 
 import type { Input } from "../../../shared/actions/_core/action.js";
 import type { setSettingsShip } from "../../../shared/actions/ship/set-settings.js";
-import { ShipRunner } from "../../ship/ship-runner.js";
+import { ShipRunner } from "../../ship/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type SetSettingsShipInput = Input<typeof setSettingsShip>;

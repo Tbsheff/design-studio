@@ -1,7 +1,5 @@
 import { Context, Effect, Layer } from "effect";
-import type { Cause } from "effect";
 
-import { BadRequest } from "../../shared/actions/_core/errors/bad-request.js";
 import { NotFound } from "../../shared/actions/_core/errors/not-found.js";
 import type { RemotePublication } from "../../shared/actions/publish-remote.js";
 import type {
@@ -10,8 +8,9 @@ import type {
   PublishBackendState,
   PublishCliState,
 } from "../../shared/actions/publish/schema.js";
+import { attemptKnown } from "../platform/attempt/index.js";
+import type { KnownFailure } from "../platform/attempt/index.js";
 import { loadConfig } from "../platform/config/index.js";
-import { NotFoundError } from "../store/errors.js";
 import { toPublishCore } from "./publish-core.js";
 import type { PublishCore } from "./publish-core.js";
 import { remoteClient, studioErrors } from "./remote.js";
@@ -27,27 +26,11 @@ interface PublishStoreApi {
   readonly comments: (
     projectId: string,
     publicationId: string
-  ) => Effect.Effect<PublicationCommentList, BadRequest | NotFound>;
+  ) => Effect.Effect<PublicationCommentList, KnownFailure>;
   readonly list: (projectId: string) => Effect.Effect<PublicationList>;
 }
 
 const openCore = (): PublishCore => toPublishCore(loadConfig().dataDir);
-
-const toMessage = (error: Cause.UnknownError): string => {
-  if (error.cause instanceof Error) {
-    return error.cause.message;
-  }
-
-  return String(error.cause);
-};
-
-const toReadError = (error: Cause.UnknownError): BadRequest | NotFound => {
-  if (error.cause instanceof NotFoundError) {
-    return new NotFound({ message: error.cause.message });
-  }
-
-  return new BadRequest({ message: toMessage(error) });
-};
 
 const mergeAll = async (
   core: PublishCore,
@@ -125,11 +108,11 @@ class PublishStore extends Context.Service<PublishStore, PublishStoreApi>()(
           return { comments: [] };
         }
 
-        const reply = yield* Effect.tryPromise(() =>
+        const reply = yield* attemptKnown(() =>
           studioErrors(async () =>
             remoteClient(await core.backend.endpoint()).comments(found.id)
           )
-        ).pipe(Effect.mapError((failure) => toReadError(failure)));
+        );
 
         return { comments: reply.comments };
       }),
@@ -146,13 +129,15 @@ class PublishStore extends Context.Service<PublishStore, PublishStoreApi>()(
           return plain;
         }
 
-        return yield* Effect.tryPromise(() =>
-          mergeAll(core, projectId, records)
-        ).pipe(
+        return yield* Effect.tryPromise({
+          catch: (error) =>
+            (error instanceof Error && error.message) || String(error),
+          try: () => mergeAll(core, projectId, records),
+        }).pipe(
           Effect.match({
             onFailure: (failure) => ({
               ...plain,
-              backendError: toMessage(failure),
+              backendError: failure,
             }),
             onSuccess: (merged) => merged,
           })

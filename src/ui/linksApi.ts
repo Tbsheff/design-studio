@@ -8,6 +8,7 @@ import type {
 } from "../shared/link-interaction";
 import {
   emptyLinksFile,
+  LINK_ACTIONS,
   type LinkAction,
   type LinkMotion,
   type LinkSource,
@@ -20,6 +21,16 @@ import { ApiError } from "./api";
 import { useProjectEvents } from "./events";
 import { call as callAction } from "./platform/http";
 import { getSession } from "./session";
+
+type FrameAction = (typeof LINK_ACTIONS)[number];
+
+const isFrameActionName = (action: LinkAction): action is FrameAction =>
+  (LINK_ACTIONS as readonly string[]).includes(action);
+
+const frameAction = (
+  action: LinkAction | undefined
+): { action?: FrameAction } =>
+  action !== undefined && isFrameActionName(action) ? { action } : {};
 
 async function call<T>(
   method: string,
@@ -168,7 +179,7 @@ export const linksApi = {
     const toFrame = change.to ? frameRefOf(change.to) : undefined;
 
     const { links } = await callAction(routes.updateLinkCanvas, {
-      ...(change.action ? { action: change.action } : {}),
+      ...frameAction(change.action),
       ...(change.duration === undefined ? {} : { duration: change.duration }),
       ...(change.easing ? { easing: change.easing } : {}),
       linkId: id,
@@ -184,8 +195,8 @@ export const linksApi = {
     ids: string[] | "all",
     motion: LinkMotion = {}
   ) => {
-    const { links } = await callAction(routes.keepLinkCanvas, {
-      ...(motion.action ? { action: motion.action } : {}),
+    const { links } = await callAction(routes.importLinkCanvas, {
+      ...frameAction(motion.action),
       ...(motion.duration === undefined ? {} : { duration: motion.duration }),
       ...(motion.easing ? { easing: motion.easing } : {}),
       ids,

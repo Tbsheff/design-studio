@@ -2,7 +2,7 @@ import { Effect } from "effect";
 
 import type { Input } from "../../../shared/actions/_core/action.js";
 import type { deleteComments } from "../../../shared/actions/comments/delete.js";
-import { CommentThreadStore } from "../../comments/comment-thread-store.js";
+import { CommentThreadStore } from "../../comments/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type DeleteCommentsInput = Input<typeof deleteComments>;

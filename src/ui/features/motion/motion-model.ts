@@ -1,4 +1,9 @@
-import { EASING_PRESETS, ENTRANCE_PRESETS, parseVariant } from "./deps.js";
+import {
+  EASING_PRESETS,
+  ENTRANCE_PRESETS,
+  MOTION_STATES,
+  parseVariant,
+} from "./deps.js";
 import type {
   EntrancePreset,
   MotionInfo,
@@ -137,10 +142,15 @@ const withKind = (draft: MotionDraft, kind: MotionKind): MotionDraft => {
   return { ...draft, durationMs: baseMs(kind), kind };
 };
 
-const stateOf = (variant: string): MotionState | null => {
-  const [first] = parseVariant(variant)?.states ?? [];
+const MOTION_STATE_NAMES: readonly string[] = MOTION_STATES;
 
-  return first ?? null;
+const isMotionState = (state: string): state is MotionState =>
+  MOTION_STATE_NAMES.includes(state);
+
+const stateOf = (variant: string): MotionState | null => {
+  const names: readonly string[] = parseVariant(variant)?.states ?? [];
+
+  return names.find((name): name is MotionState => isMotionState(name)) ?? null;
 };
 
 const transitionBody = (

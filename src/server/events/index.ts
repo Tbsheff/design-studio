@@ -1,6 +1,7 @@
 export { openEventBus } from "./bus.js";
 
 export {
+  ChangeFeed,
   emitSourceChange,
   noteTreeChange,
   noteTreeWrite,
@@ -34,3 +35,9 @@ export type { EventListener, RecordedEvent } from "./event-log.js";
 export type { SourceChange, SourceFileChange } from "./change-feed.js";
 
 export type { PlannedEdit } from "./planned-feed.js";
+
+export { EventQueue } from "./event-queue.js";
+
+export { RenderTracker } from "./render-tracker.js";
+
+export { SaveQueue } from "./save-queue.js";

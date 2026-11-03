@@ -2,11 +2,11 @@ import { readFile } from "node:fs/promises";
 
 import { z } from "zod";
 
-import { plainAttachmentName } from "../../shared/reference.js";
 import {
   COMPARE_TO_REFERENCE_TEXT,
-  scoreOutput,
-} from "../mcp/reference-tools.js";
+  plainAttachmentName,
+} from "../../shared/reference.js";
+import { scoreOutput } from "../mcp/reference-tools.js";
 import type { AgentRunContext, PreviewService } from "../types.js";
 import { compareToReference, referenceAttachment } from "./reference-check.js";
 import { resolveShotTarget } from "./run-target.js";

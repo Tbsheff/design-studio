@@ -6,6 +6,7 @@ import type {
   WireOutput,
 } from "../../shared/actions/_core/action.js";
 import type { WireBody } from "../../shared/actions/_core/wire.js";
+import type { AllActions } from "../../shared/actions/index.js";
 import { tokenHeaders } from "./session";
 
 type HttpMethod = Method;
@@ -30,6 +31,33 @@ interface ActionRoute {
 type RouteOf<Action extends AnyAction> = ActionRoute & {
   readonly id: Action["id"];
 };
+
+type StudioGroups = typeof AllActions;
+
+type StudioAction = {
+  [Group in keyof StudioGroups]: StudioGroups[Group][keyof StudioGroups[Group]];
+}[keyof StudioGroups];
+
+type ActionOf<Route extends ActionRoute> = Extract<
+  StudioAction,
+  { readonly id: Route["id"] }
+>;
+
+type RouteInput<Route extends ActionRoute> = WireInput<ActionOf<Route>>;
+
+type Writable<Value> = Value extends string
+  ? Value
+  : Value extends number
+    ? Value
+    : Value extends readonly (infer Item)[]
+      ? Writable<Item>[]
+      : Value extends object
+        ? { -readonly [Key in keyof Value]: Writable<Value[Key]> }
+        : Value;
+
+type UiOutput<Action extends AnyAction> = Writable<WireOutput<Action>>;
+
+type RouteOutput<Route extends ActionRoute> = UiOutput<ActionOf<Route>>;
 
 type WireError = Partial<WireBody>;
 
@@ -143,10 +171,10 @@ const targetOf = (route: ActionRoute, fields: WireFields): string => {
   return url;
 };
 
-const call = async <Action extends AnyAction>(
-  route: RouteOf<Action>,
-  input: WireInput<Action>
-): Promise<WireOutput<Action>> => {
+const call = async <Route extends ActionRoute>(
+  route: Route,
+  input: RouteInput<Route>
+): Promise<RouteOutput<Route>> => {
   const fields = input as WireFields;
   const target = targetOf(route, fields);
 
@@ -162,7 +190,7 @@ const call = async <Action extends AnyAction>(
     );
   }
 
-  return (await res.json()) as WireOutput<Action>;
+  return (await res.json()) as RouteOutput<Route>;
 };
 
 const getRaw = (path: string, signal?: AbortSignal): Promise<Response> =>
@@ -200,4 +228,14 @@ const readBlob = async (url: string): Promise<Blob> => {
 
 export { ApiError, call, getBlob, getJson, getRaw, readBlob };
 
-export type { ActionRoute, HttpMethod, RouteOf, WireFields, WireJson };
+export type {
+  ActionOf,
+  ActionRoute,
+  HttpMethod,
+  RouteInput,
+  RouteOf,
+  RouteOutput,
+  UiOutput,
+  WireFields,
+  WireJson,
+};

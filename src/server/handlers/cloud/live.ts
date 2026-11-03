@@ -1,8 +1,14 @@
 import { Layer } from "effect";
 
-import { CloudClient } from "../../cloud/client.js";
-import { CloudSession } from "../../cloud/session.js";
+import {
+  CloudClient,
+  CloudSession,
+  CloudSessionStore,
+} from "../../cloud/index.js";
 
-const CloudLive = Layer.mergeAll(CloudSession.layer, CloudClient.layer);
+const CloudLive = CloudSessionStore.layer.pipe(
+  Layer.provideMerge(CloudSession.layer),
+  Layer.merge(CloudClient.layer)
+);
 
 export { CloudLive };

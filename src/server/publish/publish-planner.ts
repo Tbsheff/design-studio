@@ -5,11 +5,12 @@ import { BadRequest } from "../../shared/actions/_core/errors/bad-request.js";
 import { NotFound } from "../../shared/actions/_core/errors/not-found.js";
 import type { PublishInput } from "../../shared/actions/publish/schema.js";
 import type { Publication, PublishPlan } from "../../shared/publish.js";
+import type { KnownFailure } from "../platform/attempt/index.js";
 import { attemptLegacy, planFor } from "./legacy-link.js";
 import { toPublishCard, toRestoreCard, toUnpublishCard } from "./plan-card.js";
 import { toPlanInput } from "./plan-input.js";
 
-type PlanError = BadRequest | NotFound;
+type PlanError = KnownFailure;
 
 interface PublishPlannerApi {
   readonly plan: (input: PublishInput) => Effect.Effect<PublishPlan, PlanError>;

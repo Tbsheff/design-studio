@@ -9,7 +9,7 @@ import { EditStepSchema } from "./schema.js";
 
 const applyHistoryVersions = defineAction({
   access: "edit",
-  agent: { off: "ui-bootstrap" },
+  agent: { off: "legacy-agent" },
   confirm: "none",
   description:
     "Redo the newest undone edit in the direction's edit history. This is the same undo history as the studio window (Cmd+Z), so the user and you share it. It holds direct edits, structure ops, batches, token and tweak edits, write_file changes to existing files, finished studio runs and version restores that changed text files, and prototype link and canvas frame changes, in the order they were made. For anything else (a new file, a design system apply) use restore_version. A new edit clears the redo list.",

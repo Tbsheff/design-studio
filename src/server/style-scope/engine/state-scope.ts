@@ -53,9 +53,10 @@ const statesOfVariant = (variants: string): StyleState[] => {
     return [];
   }
 
-  const found: StyleState[] = parsed.states.filter(
-    (state): state is StyleState =>
-      (STYLE_STATES as readonly string[]).includes(state)
+  const names: readonly string[] = parsed.states;
+
+  const found: StyleState[] = names.filter((state): state is StyleState =>
+    (STYLE_STATES as readonly string[]).includes(state)
   );
 
   if (parsed.dark) {

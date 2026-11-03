@@ -188,7 +188,7 @@ const guarded = async <Result>(
 const editScope = async (
   deps: EditDeps,
   projectId: string,
-  directionId: string
+  directionId?: string
 ): Promise<VariantScope> => {
   const found = await loadTarget(deps, projectId, directionId);
 

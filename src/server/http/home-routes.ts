@@ -70,7 +70,7 @@ export function registerHomeRoutes(app: Hono, deps: HomeRouteDeps): void {
     parentPath: string | undefined,
     name?: string
   ): Promise<Project> => {
-    const starter = findStarter(starterId);
+    const starter = findStarter(String(starterId));
 
     const created = await projects.createInFolder({
       parentPath: parentPath ?? (await defaultFolder.ensure()),

@@ -1,6 +1,3 @@
-import type { exportHandoffExport } from "../shared/actions/export/export-handoff.js";
-import type { exportExport } from "../shared/actions/export/export.js";
-import type { getHandoffExport } from "../shared/actions/export/get-handoff.js";
 import { routes as exportRoutes } from "../shared/actions/export/routes.js";
 import type { ExportFileResultWire } from "../shared/actions/export/schema.js";
 import { STUDIO_TOKEN_HEADER } from "../shared/contracts";
@@ -25,6 +22,7 @@ import {
   frameName,
   type CanvasFrame,
 } from "./canvasFrames";
+import { desktopBridge } from "./platform/desktop";
 import { call as callAction } from "./platform/http";
 import { getSession } from "./session";
 import { uiStore } from "./storage";
@@ -90,7 +88,7 @@ export const exportApi = {
     request: ExportRequest
   ): Promise<ExportedFile> =>
     toExportedFile(
-      await callAction<typeof exportExport>(exportRoutes.exportExport, {
+      await callAction(exportRoutes.exportExport, {
         format: request.format,
         frames: request.frames,
         projectId: pid,
@@ -101,14 +99,14 @@ export const exportApi = {
       })
     ),
   handoff: (pid: string, request: HandoffRequest): Promise<HandoffResult> =>
-    callAction<typeof exportHandoffExport>(exportRoutes.exportHandoffExport, {
+    callAction(exportRoutes.exportHandoffExport, {
       frames: request.frames,
       projectId: pid,
       versionId: request.versionId,
     }),
   handoffZip: async (pid: string, folder: string): Promise<ExportedFile> =>
     toExportedFile(
-      await callAction<typeof getHandoffExport>(exportRoutes.getHandoffExport, {
+      await callAction(exportRoutes.getHandoffExport, {
         folder,
         projectId: pid,
       })
@@ -131,7 +129,7 @@ export const exportApi = {
       ...(request.frame.path ? { path: request.frame.path } : {}),
     }),
   editors: async (): Promise<EditorInfo[]> =>
-    (await call("GET", "/api/editors")).json() as Promise<EditorInfo[]>,
+    (await (await call("GET", "/api/editors")).json()) as EditorInfo[],
   openInEditor: async (
     pid: string,
     did: string,
@@ -145,13 +143,13 @@ export const exportApi = {
     );
   },
   mcpStatus: async (): Promise<McpStatus> =>
-    (await call("GET", "/api/mcp")).json() as Promise<McpStatus>,
+    (await (await call("GET", "/api/mcp")).json()) as McpStatus,
   setMcp: async (input: {
     enabled?: boolean;
     edits?: boolean;
     rotate?: boolean;
   }): Promise<McpStatus> =>
-    (await call("POST", "/api/mcp", input)).json() as Promise<McpStatus>,
+    (await (await call("POST", "/api/mcp", input)).json()) as McpStatus,
 };
 
 export interface ExportPrefs {
@@ -301,14 +299,9 @@ interface RevealBridge {
 }
 
 export function canRevealDownload(): boolean {
-  return (
-    typeof (window as unknown as { studioDesktop?: RevealBridge }).studioDesktop
-      ?.revealExport === "function"
-  );
+  return typeof desktopBridge<RevealBridge>()?.revealExport === "function";
 }
 
 export function revealDownload(): void {
-  (
-    window as unknown as { studioDesktop?: RevealBridge }
-  ).studioDesktop?.revealExport?.();
+  desktopBridge<RevealBridge>()?.revealExport?.();
 }

@@ -2,7 +2,7 @@ import { Effect } from "effect";
 
 import type { Input } from "../../../shared/actions/_core/action.js";
 import type { searchMentionComments } from "../../../shared/actions/comments/search-mention.js";
-import { CommentStore } from "../../comments/comment-store.js";
+import { CommentStore } from "../../comments/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type SearchMentionCommentsInput = Input<typeof searchMentionComments>;

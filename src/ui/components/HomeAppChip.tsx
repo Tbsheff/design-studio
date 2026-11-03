@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { FolderInspection } from "../../shared/open-app";
 import { api, errorText } from "../api";
 import { Icon } from "../kit/Icon";
+import { desktopBridge } from "../platform/desktop";
 
 export type RunMode = "start" | "url";
 
@@ -99,9 +100,7 @@ export function droppedFolder(
     const file = item.getAsFile();
 
     const path = file
-      ? ((
-          window as unknown as { studioDesktop?: DropBridge }
-        ).studioDesktop?.pathForFile?.(file) ?? "")
+      ? (desktopBridge<DropBridge>()?.pathForFile?.(file) ?? "")
       : "";
 
     return path ? { path } : { unsupported: true };

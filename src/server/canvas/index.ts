@@ -11,3 +11,11 @@ const createCanvasService = (
 export * from "./service.js";
 
 export { createCanvasService };
+
+export { CanvasStore } from "./canvas-store.js";
+
+export { CanvasWriter } from "./canvas-writer.js";
+
+export { LinkStore } from "./links/link-store.js";
+
+export { LinkWriter } from "./links/link-writer.js";

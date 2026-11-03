@@ -164,7 +164,10 @@ const exportHtml = async (
   return toBytes(zipFiles(entries), ZIP, `${job.stem}-html.zip`, note);
 };
 
-const captureAll = async (job: ImageJob, scale: number): Promise<Shot[]> => {
+const captureAll = async (
+  job: ImageJob,
+  scale: ExportScale
+): Promise<Shot[]> => {
   const { captureFrame } = await import("./capture.js");
 
   return mapInOrder(job.frames, (frame) =>

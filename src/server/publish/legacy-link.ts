@@ -1,11 +1,10 @@
 import { Effect } from "effect";
-import type { Cause } from "effect";
 
 import { BadRequest } from "../../shared/actions/_core/errors/bad-request.js";
-import { NotFound } from "../../shared/actions/_core/errors/not-found.js";
 import type { PublishPlan, PublishPlanInput } from "../../shared/publish.js";
+import { attemptKnown } from "../platform/attempt/index.js";
+import type { KnownFailure } from "../platform/attempt/index.js";
 import { loadConfig } from "../platform/config/index.js";
-import { NotFoundError } from "../store/errors.js";
 import type {
   PublishDeps,
   PublishService as LegacyPublishService,
@@ -34,21 +33,9 @@ const linkLegacy = (
   return link;
 };
 
-const toPublishError = (error: Cause.UnknownError): BadRequest | NotFound => {
-  if (error.cause instanceof NotFoundError) {
-    return new NotFound({ message: error.cause.message });
-  }
-
-  if (error.cause instanceof Error) {
-    return new BadRequest({ message: error.cause.message });
-  }
-
-  return new BadRequest({ message: String(error.cause) });
-};
-
 const attemptLegacy = <Value>(
   task: (link: LegacyLink) => Promise<Value>
-): Effect.Effect<Value, BadRequest | NotFound> =>
+): Effect.Effect<Value, KnownFailure> =>
   Effect.gen(function* withLink() {
     const link = links.get(loadConfig().dataDir) ?? null;
 
@@ -56,9 +43,7 @@ const attemptLegacy = <Value>(
       return yield* new BadRequest({ message: NOT_READY });
     }
 
-    return yield* Effect.tryPromise(() => task(link)).pipe(
-      Effect.mapError((failure) => toPublishError(failure))
-    );
+    return yield* attemptKnown(() => task(link));
   });
 
 const toPlanKey = (projectId: string, input: PublishPlanInput): string =>

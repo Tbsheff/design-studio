@@ -1,7 +1,11 @@
 import type { ReactNode } from "react";
 
 import type { SelectionContext } from "../../shared/contracts";
-import { formatMeasure, measureBetween, type MeasureLine } from "../measure";
+import {
+  formatMeasure,
+  measureBetween,
+  type MeasureLine,
+} from "../../shared/measure";
 import { unionBox, type SnapGuide } from "../snap";
 import type { HoverBox } from "../usePreviewFrames";
 import type { ResizeControl, ResizeEdge } from "../useResizeHandles";

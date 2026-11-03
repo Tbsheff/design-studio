@@ -5,6 +5,7 @@ import type { DesktopCommand } from "../shared/desktop-link";
 import { api, errorText } from "./api";
 import { COMMAND_EVENT, LAYER_EVENT } from "./commands/registry";
 import { useDesktopCommand, useDesktopContext } from "./desktop";
+import { desktopBridge } from "./platform/desktop";
 import { uiStore } from "./storage";
 import { isTypingTarget } from "./typingTarget";
 
@@ -57,7 +58,7 @@ interface DropBridge {
 }
 
 function dropBridge(): DropBridge | undefined {
-  return (window as unknown as { studioDesktop?: DropBridge }).studioDesktop;
+  return desktopBridge<DropBridge>() ?? undefined;
 }
 
 function hasFiles(event: DragEvent): boolean {

@@ -318,12 +318,13 @@ const p = (pid: string) => `/api/projects/${enc(pid)}`;
 
 const d = (pid: string, did: string) => `${p(pid)}/d/${enc(did)}`;
 
-const warmPath = (path: string): void =>
+const warmPath = (path: string): void => {
   prefetch(`GET ${path}`, async () => {
     const res = await request("GET", path);
 
     return (await res.json()) as unknown;
   });
+};
 
 export function warmProject(pid: string, directionId: string | null): void {
   warmPath(p(pid));
@@ -388,9 +389,7 @@ export const api = {
   dismissOnboarding: () =>
     json<{ dismissed: boolean }>("POST", "/api/onboarding/dismiss"),
   listSkills: async (): Promise<SkillCatalog> =>
-    (await call<
-      typeof import("../shared/actions/studio/list-skills.js").listSkillsStudio
-    >(routes.listSkillsStudio, {})) as SkillCatalog,
+    (await call(routes.listSkillsStudio, {})) as SkillCatalog,
   getDesignSystem: (pid: string, did: string) =>
     json<DesignSystemState>("GET", `${d(pid, did)}/design-system`),
   createToken: async (pid: string, did: string, req: CreateTokenRequest) => {

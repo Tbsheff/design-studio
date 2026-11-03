@@ -2,7 +2,7 @@ import { Effect } from "effect";
 
 import type { Input } from "../../../shared/actions/_core/action.js";
 import type { listFlowLinksCanvas } from "../../../shared/actions/canvas/list-flow-links.js";
-import { CanvasStore } from "../../canvas/canvas-store.js";
+import { CanvasStore } from "../../canvas/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type ListFlowLinksCanvasInput = Input<typeof listFlowLinksCanvas>;

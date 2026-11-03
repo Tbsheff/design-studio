@@ -2,7 +2,7 @@ import { Effect } from "effect";
 
 import type { Input } from "../../../shared/actions/_core/action.js";
 import type { listComments } from "../../../shared/actions/comments/list.js";
-import { CommentStore } from "../../comments/comment-store.js";
+import { CommentStore } from "../../comments/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type ListCommentsInput = Input<typeof listComments>;

@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import type { Project, Version } from "../../shared/contracts.js";
 import { createFakePreview } from "../agent/test-fakes.js";
+import { projectStorePorts } from "../main/project-ports.js";
 import { createEventBus } from "../store/events.js";
 import {
   createProjectStore,
@@ -75,7 +76,7 @@ async function createHtml(
 beforeEach(async () => {
   ({ config, cleanup } = await makeTempConfig());
   versions = createVersionStore(config);
-  projects = createProjectStore(config, versions);
+  projects = createProjectStore(config, versions, projectStorePorts);
   started = [];
   runningKeys = new Set();
   app = createApp({

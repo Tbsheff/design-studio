@@ -7,7 +7,7 @@ import {
 } from "../../shared/contracts";
 import { Icon } from "../kit/Icon";
 import type { LayerTree } from "../layersTree";
-import type { LiveStore } from "../liveStore";
+import type { LiveStore } from "../platform/live-store";
 import { selectionTargets, structureMenuItems } from "../structureEdits";
 import { canvasHasKeys, isTypingTarget } from "../typingTarget";
 import type { LayerEdits } from "../useLayerEdits";

@@ -1,5 +1,4 @@
 import { Context, Effect, Layer } from "effect";
-import type { Cause } from "effect";
 
 import { BadRequest } from "../../shared/actions/_core/errors/bad-request.js";
 import { NotFound } from "../../shared/actions/_core/errors/not-found.js";
@@ -11,8 +10,9 @@ import type {
   PublishInput,
 } from "../../shared/actions/publish/schema.js";
 import type { Publication } from "../../shared/publish.js";
+import { attemptKnown } from "../platform/attempt/index.js";
+import type { KnownFailure } from "../platform/attempt/index.js";
 import { loadConfig } from "../platform/config/index.js";
-import { NotFoundError } from "../store/errors.js";
 import { CfCli } from "./cf-cli.js";
 import type { CfCliApi } from "./cf-cli.js";
 import { cliEnv, cliFailure, DEFAULT_TIMEOUT_MS } from "./cli.js";
@@ -27,9 +27,9 @@ import type { ReadyCli } from "./session.js";
 import { toPublication } from "./store.js";
 import type { PublicationRecord } from "./store.js";
 
-type WriteError = BadRequest | CfFailed | NotFound;
+type WriteError = CfFailed | KnownFailure;
 
-type SetupError = BadRequest | NotFound;
+type SetupError = KnownFailure;
 
 interface PublishServiceApi {
   readonly applyBackend: (
@@ -44,7 +44,7 @@ interface PublishServiceApi {
   readonly logout: () => Effect.Effect<PublishCliState, SetupError>;
   readonly publish: (
     input: PublishInput
-  ) => Effect.Effect<Publication, BadRequest | NotFound>;
+  ) => Effect.Effect<Publication, KnownFailure>;
   readonly rollback: (
     projectId: string,
     publicationId: string,
@@ -69,35 +69,19 @@ const openCore = (): PublishCore => toPublishCore(loadConfig().dataDir);
 
 const LOG_LINES = 20;
 
-const toWriteError = (error: Cause.UnknownError): BadRequest | NotFound => {
-  if (error.cause instanceof NotFoundError) {
-    return new NotFound({ message: error.cause.message });
-  }
-
-  if (error.cause instanceof Error) {
-    return new BadRequest({ message: error.cause.message });
-  }
-
-  return new BadRequest({ message: String(error.cause) });
-};
-
 const attempt = <Value>(
   task: () => Promise<Value>
-): Effect.Effect<Value, BadRequest | NotFound> =>
-  Effect.tryPromise(task).pipe(
-    Effect.mapError((failure) => toWriteError(failure))
-  );
+): Effect.Effect<Value, KnownFailure> => attemptKnown(task);
 
 const remote = <Value>(
   task: () => Promise<Value>
-): Effect.Effect<Value, BadRequest | NotFound> =>
-  attempt(() => studioErrors(task));
+): Effect.Effect<Value, KnownFailure> => attempt(() => studioErrors(task));
 
 const locked = <Value>(
   core: PublishCore,
   key: string,
   task: () => Promise<Value>
-): Effect.Effect<Value, BadRequest | NotFound> =>
+): Effect.Effect<Value, KnownFailure> =>
   attempt(() => core.lock(key, () => studioErrors(task)));
 
 const readyCli = (
@@ -168,7 +152,7 @@ const removeLegacy = (
 const removeApp = (
   core: PublishCore,
   found: PublicationRecord
-): Effect.Effect<PublicationRecord, BadRequest | NotFound> =>
+): Effect.Effect<PublicationRecord, KnownFailure> =>
   locked(core, found.id, async () => {
     const endpoint = await core.backend.endpoint();
     const out = await remoteClient(endpoint).revoke(found.id);

@@ -2,9 +2,10 @@ import { Effect } from "effect";
 
 import type { Input } from "../../../shared/actions/_core/action.js";
 import type { createComments } from "../../../shared/actions/comments/create.js";
-import { CommentThreadStore } from "../../comments/comment-thread-store.js";
-import type { CreateCommentInput } from "../../store/comments.js";
+import { CommentThreadStore } from "../../comments/index.js";
+import type { CreateCommentInput } from "../../store/index.js";
 import type { Handle } from "../_core/handler.js";
+import { toWritable } from "../_core/writable.js";
 
 type CreateCommentsInput = Input<typeof createComments>;
 
@@ -13,7 +14,7 @@ const toCreateInput = (
 ): CreateCommentInput => {
   const { attachmentIds, mentions, ...rest } = body;
 
-  const out: CreateCommentInput = { ...rest };
+  const out: CreateCommentInput = toWritable(rest);
 
   if (attachmentIds) {
     out.attachmentIds = [...attachmentIds];

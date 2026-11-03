@@ -1,9 +1,8 @@
 import { Effect } from "effect";
-import type { Cause } from "effect";
 
 import { BadRequest } from "../../../shared/actions/_core/errors/bad-request.js";
-import { Conflict } from "../../../shared/actions/_core/errors/conflict.js";
-import { NotFound } from "../../../shared/actions/_core/errors/not-found.js";
+import type { Conflict } from "../../../shared/actions/_core/errors/conflict.js";
+import type { NotFound } from "../../../shared/actions/_core/errors/not-found.js";
 import { CheckFailed } from "../../../shared/actions/packs/errors/check-failed.js";
 import { PackExists } from "../../../shared/actions/packs/errors/pack-exists.js";
 import type {
@@ -11,9 +10,8 @@ import type {
   PackSummary,
   Project,
 } from "../../../shared/contracts.js";
-import { DirectEditError } from "../../direct-edit/engine/errors.js";
+import { attemptKnown } from "../../platform/attempt/index.js";
 import { loadConfig } from "../../platform/config/index.js";
-import { ConflictError, NotFoundError } from "../../store/errors.js";
 import type { StudioProjectStore } from "../../store/projects.js";
 import type { AgentRunner, VersionStore } from "../../types.js";
 import type { LiveDrafts } from "../draft-live.js";
@@ -60,7 +58,7 @@ interface PackWriteRuntime extends PackRuntime {
   readonly edits: PackEditDeps;
 }
 
-type PackError = BadRequest | NotFound;
+type PackError = BadRequest | Conflict | NotFound;
 
 type PackWriteError =
   | BadRequest
@@ -98,27 +96,9 @@ const toWriteRuntime = (dataDir: string): PackWriteRuntime | null => {
   return { ...runtime, dataDir, drafts: runtime.drafts, edits: edit };
 };
 
-const toPackError = (error: Cause.UnknownError): PackError => {
-  if (error.cause instanceof NotFoundError) {
-    return new NotFound({ message: error.cause.message });
-  }
-
-  if (error.cause instanceof Error) {
-    return new BadRequest({ message: error.cause.message });
-  }
-
-  return new BadRequest({ message: String(error.cause) });
-};
-
 const toExisting = (existing: PackSummary): PackSummary => existing;
 
-const CONFLICT_STATUS = 409;
-
-const NOT_FOUND_STATUS = 404;
-
-const toWriteError = (error: Cause.UnknownError): PackWriteError => {
-  const { cause } = error;
-
+const toWriteFailure = (cause: unknown): CheckFailed | PackExists | null => {
   if (cause instanceof PackExistsError) {
     return new PackExists({
       code: "pack_exists",
@@ -135,19 +115,7 @@ const toWriteError = (error: Cause.UnknownError): PackWriteError => {
     });
   }
 
-  if (cause instanceof ConflictError) {
-    return new Conflict({ message: cause.message });
-  }
-
-  if (cause instanceof DirectEditError && cause.status === CONFLICT_STATUS) {
-    return new Conflict({ message: cause.message });
-  }
-
-  if (cause instanceof DirectEditError && cause.status === NOT_FOUND_STATUS) {
-    return new NotFound({ message: cause.message });
-  }
-
-  return toPackError(error);
+  return null;
 };
 
 const attemptPacks = <Value>(
@@ -161,9 +129,7 @@ const attemptPacks = <Value>(
       return yield* new BadRequest({ message: NOT_READY });
     }
 
-    return yield* Effect.tryPromise(() => task(runtime)).pipe(
-      Effect.mapError((failure) => toPackError(failure))
-    );
+    return yield* attemptKnown(() => task(runtime));
   });
 
 const attemptPackWrites = <Value>(
@@ -177,9 +143,7 @@ const attemptPackWrites = <Value>(
       return yield* new BadRequest({ message: NOT_READY });
     }
 
-    return yield* Effect.tryPromise(() => task(runtime)).pipe(
-      Effect.mapError((failure) => toWriteError(failure))
-    );
+    return yield* attemptKnown(() => task(runtime), toWriteFailure);
   });
 
 export {

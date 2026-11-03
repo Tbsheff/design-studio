@@ -2,6 +2,7 @@ import { Schema } from "effect";
 
 import { defineAction } from "../_core/action.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
+import { Conflict } from "../_core/errors/conflict.js";
 import { NotFound } from "../_core/errors/not-found.js";
 import { DirectionIdSchema, ProjectIdSchema } from "../_core/ids.js";
 import { ComponentUsageSchema, PathTextSchema } from "./schema.js";
@@ -31,11 +32,11 @@ const RouteFieldSchema = PathTextSchema.annotate({
 
 const getUsageMcpRead = defineAction({
   access: "read",
-  agent: { off: "ui-bootstrap" },
+  agent: { off: "legacy-agent" },
   confirm: "none",
   description:
     'List the app routes that render one source file, directly from the page or through a layout or any import chain, the same count the studio inline prompt shows as "All uses (N)". Returns file, component and routes ({route, file}). With usedAt or route it also returns callSite {file, kind: page, component or layout, routes, routeLocal, pageFile}: routeLocal false means no change can stay on one route. Prototype (HTML) projects return no routes. Read only.',
-  errors: [BadRequest, NotFound],
+  errors: [BadRequest, Conflict, NotFound],
   http: { method: "GET", path: "/api/projects/:projectId/usage" },
   id: "mcp-read.getUsage",
   input: Schema.Struct({

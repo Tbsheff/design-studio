@@ -31,6 +31,7 @@ import { buildSystemPrompt } from "../agent/prompt.js";
 import { createFakePreview } from "../agent/test-fakes.js";
 import { buildUserText } from "../agent/user-message.js";
 import { createApp } from "../http/app.js";
+import { projectStorePorts } from "../main/project-ports.js";
 import {
   recompileOnTokensChange,
   withDesignSystemWarning,
@@ -181,7 +182,7 @@ async function bothGeneratedFilesContain(
 beforeEach(async () => {
   ({ config, cleanup } = await makeTempConfig());
   versions = createVersionStore(config);
-  projects = createProjectStore(config, versions, {
+  projects = createProjectStore(config, versions, projectStorePorts, {
     installTemplateDeps: async (cacheDir) => {
       await mkdir(path.join(cacheDir, "node_modules", "react"), {
         recursive: true,

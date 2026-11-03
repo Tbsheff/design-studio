@@ -3,6 +3,7 @@ import { Schema } from "effect";
 import { SHARE_EXPIRY_HOURS } from "../../share.js";
 import { defineAction } from "../_core/action.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
+import { Conflict } from "../_core/errors/conflict.js";
 import { NotFound } from "../_core/errors/not-found.js";
 import {
   DirectionIdSchema,
@@ -59,7 +60,7 @@ const createShare = defineAction({
   confirm: "user",
   description:
     "Make a read-only share link for canvas frames so other people can view the design and comment. The user must click Allow in Design Studio first. Returns the link URL once. Viewers see only PNG snapshots, served on a separate listener on this computer unless the user turns on Allow on local network. Viewer comments land as drafts in the Comments pane. A live link swaps in new snapshots after each saved version. The link ends after its expiry and can be revoked.",
-  errors: [BadRequest, NotFound],
+  errors: [BadRequest, Conflict, NotFound],
   http: { method: "POST", path: "/api/projects/:projectId/shares" },
   id: "share.create",
   input: Schema.Struct({

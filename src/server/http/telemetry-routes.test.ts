@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import type { Project, TelemetrySample } from "../../shared/contracts.js";
 import { createFakePreview } from "../agent/test-fakes.js";
+import { projectStorePorts } from "../main/project-ports.js";
 import { createEventBus } from "../store/events.js";
 import {
   createProjectStore,
@@ -55,7 +56,7 @@ async function call<T>(
 beforeEach(async () => {
   ({ config, cleanup } = await makeTempConfig());
   const versions = createVersionStore(config);
-  projects = createProjectStore(config, versions);
+  projects = createProjectStore(config, versions, projectStorePorts);
   app = createApp({
     config,
     bus: createEventBus(config.dataDir, new Map()),

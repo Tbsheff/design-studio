@@ -2,6 +2,7 @@ import { Schema } from "effect";
 
 import { defineAction } from "../_core/action.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
+import { Conflict } from "../_core/errors/conflict.js";
 import { NotFound } from "../_core/errors/not-found.js";
 import { DirectionIdSchema, ProjectIdSchema } from "../_core/ids.js";
 import { PageFields, pageOf } from "../_core/list-page.js";
@@ -29,11 +30,11 @@ const StatusFieldSchema = Schema.NullOr(CommentFilterSchema).annotate({
 
 const listComments = defineAction({
   access: "read",
-  agent: { off: "ui-bootstrap" },
+  agent: { off: "legacy-agent" },
   confirm: "none",
   description:
     "List the comments pinned on a direction, from you, other outside agents and the user, with the same server code as the studio Comments pane: number, author, text, replies, element (selector, source file:line, component), frame, id and status. Read only. Use reply_comment and resolve_comment with the id. Listing comments never sends them to the studio agent.",
-  errors: [BadRequest, NotFound],
+  errors: [BadRequest, Conflict, NotFound],
   http: { method: "GET", path: "/api/projects/:projectId/comments" },
   id: "comments.list",
   input: Schema.Struct({

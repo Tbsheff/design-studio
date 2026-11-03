@@ -24,8 +24,8 @@ const routes = {
     method: "GET",
     path: "/api/projects/:projectId/canvas",
   },
-  keepLinkCanvas: {
-    id: "canvas.keepLink",
+  importLinkCanvas: {
+    id: "canvas.importLink",
     invalidates: ["canvas.listImplicitLinks", "canvas.listLinks"],
     method: "POST",
     path: "/api/projects/:projectId/links/keep",

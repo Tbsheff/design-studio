@@ -2,17 +2,18 @@ import { Schema } from "effect";
 
 import { defineAction } from "../_core/action.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
+import { Conflict } from "../_core/errors/conflict.js";
 import { NotFound } from "../_core/errors/not-found.js";
 import { ProjectIdSchema } from "../_core/ids.js";
 import { FrameStatesViewSchema } from "./schema.js";
 
 const listFrameStatesCanvas = defineAction({
   access: "read",
-  agent: { off: "ui-bootstrap" },
+  agent: { off: "legacy-agent" },
   confirm: "none",
   description:
     "List the preview states of an attached app (signed in, empty, loading, error and mock states), which frame shows which state, and the session in use.",
-  errors: [BadRequest, NotFound],
+  errors: [BadRequest, Conflict, NotFound],
   http: { method: "GET", path: "/api/projects/:projectId/frame-states" },
   id: "canvas.listFrameStates",
   input: Schema.Struct({

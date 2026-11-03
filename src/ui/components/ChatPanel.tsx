@@ -16,7 +16,7 @@ import {
   focusChatSearchButton,
 } from "../chatSearchState";
 import { Icon } from "../kit/Icon";
-import { useLive } from "../liveStore";
+import { useLive } from "../platform/live-store";
 import { canPolishRun } from "../polish";
 import { loadRunsThrough, renameRun } from "../runHistoryApi";
 import type { RunView, ToolRow } from "../runState";

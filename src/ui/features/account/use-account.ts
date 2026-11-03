@@ -23,8 +23,10 @@ interface AccountState {
 
 type Step = () => Promise<DesktopAccountView> | null;
 
+const idle = (): null => null;
+
 const useAccount = (): AccountState => {
-  const cloud = useAction(getCloudRoute);
+  const cloud = useAction(getCloudRoute, {});
   const [desktopView, setDesktopView] = useState<AccountView | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -33,7 +35,7 @@ const useAccount = (): AccountState => {
     const account = readDesktopAccount();
 
     if (account === null) {
-      return null;
+      return idle;
     }
 
     const stop = account.onChange((next) => {

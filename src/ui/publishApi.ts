@@ -1,4 +1,4 @@
-import type { WireInput, WireOutput } from "../shared/actions/_core/action.js";
+import type { WireInput } from "../shared/actions/_core/action.js";
 import type { applyPublish } from "../shared/actions/publish/apply.js";
 import type { deleteCommentPublish } from "../shared/actions/publish/delete-comment.js";
 import type { deletePublish } from "../shared/actions/publish/delete.js";
@@ -17,12 +17,13 @@ import type { unpublishPublish } from "../shared/actions/publish/unpublish.js";
 import type { PublishPlan } from "../shared/publish";
 import { json } from "./api";
 import { call } from "./platform/http";
+import type { UiOutput } from "./platform/http";
 
 type PublishRequest = Omit<WireInput<typeof publishPublish>, "projectId">;
 
-type CliState = WireOutput<typeof getPublish>;
+type CliState = UiOutput<typeof getPublish>;
 
-type BackendState = WireOutput<typeof inspectPublish>;
+type BackendState = UiOutput<typeof inspectPublish>;
 
 const toFlag = (isOn: boolean): WireInput<typeof getPublish> => {
   if (isOn) {
@@ -46,53 +47,53 @@ const planPath = (projectId: string): string =>
 const publishApi = {
   backend: (isCheck = false): Promise<BackendState> =>
     call(routes.inspectPublish, toCheck(isCheck)),
-  cancelLogin: (): Promise<WireOutput<typeof stopPublish>> =>
+  cancelLogin: (): Promise<UiOutput<typeof stopPublish>> =>
     call(routes.stopPublish, {}),
   cli: (isFresh = false): Promise<CliState> =>
     call(routes.getPublish, toFlag(isFresh)),
   comments: (
     projectId: string,
     publicationId: string
-  ): Promise<WireOutput<typeof listCommentsPublish>> =>
+  ): Promise<UiOutput<typeof listCommentsPublish>> =>
     call(routes.listCommentsPublish, { projectId, publicationId }),
   deleteComment: (
     projectId: string,
     publicationId: string,
     commentId: string
-  ): Promise<WireOutput<typeof deleteCommentPublish>> =>
+  ): Promise<UiOutput<typeof deleteCommentPublish>> =>
     call(routes.deleteCommentPublish, { commentId, projectId, publicationId }),
-  list: (projectId: string): Promise<WireOutput<typeof listPublish>> =>
+  list: (projectId: string): Promise<UiOutput<typeof listPublish>> =>
     call(routes.listPublish, { projectId }),
   login: (
     keyring: boolean,
     narrow: boolean
-  ): Promise<WireOutput<typeof startPublish>> =>
+  ): Promise<UiOutput<typeof startPublish>> =>
     call(routes.startPublish, { keyring, narrow }),
-  logout: (): Promise<WireOutput<typeof deletePublish>> =>
+  logout: (): Promise<UiOutput<typeof deletePublish>> =>
     call(routes.deletePublish, {}),
   plan: (projectId: string, input: PublishRequest): Promise<PublishPlan> =>
     json<PublishPlan>("POST", planPath(projectId), input),
   publish: (
     projectId: string,
     input: PublishRequest
-  ): Promise<WireOutput<typeof publishPublish>> =>
+  ): Promise<UiOutput<typeof publishPublish>> =>
     call(routes.publishPublish, { ...input, projectId }),
   rollback: (
     projectId: string,
     publicationId: string,
     versionId: string
-  ): Promise<WireOutput<typeof restorePublish>> =>
+  ): Promise<UiOutput<typeof restorePublish>> =>
     call(routes.restorePublish, { projectId, publicationId, versionId }),
   setAccount: (
     accountId: string | null
-  ): Promise<WireOutput<typeof setPublish>> =>
+  ): Promise<UiOutput<typeof setPublish>> =>
     call(routes.setPublish, { accountId }),
-  setup: (mode: PublishBackendMode): Promise<WireOutput<typeof applyPublish>> =>
+  setup: (mode: PublishBackendMode): Promise<UiOutput<typeof applyPublish>> =>
     call(routes.applyPublish, { mode }),
   unpublish: (
     projectId: string,
     publicationId: string
-  ): Promise<WireOutput<typeof unpublishPublish>> =>
+  ): Promise<UiOutput<typeof unpublishPublish>> =>
     call(routes.unpublishPublish, { projectId, publicationId }),
 };
 

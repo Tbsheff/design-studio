@@ -196,8 +196,8 @@ const renderOne = async (
   query: PreviewQuery
 ): Promise<Response> => {
   const { direction, project } = await deps.loadDirection(
-    ctx.req.param("pid"),
-    ctx.req.param("did")
+    ctx.req.param("pid") ?? "",
+    ctx.req.param("did") ?? ""
   );
 
   const result = await componentPreviewsFor(deps.preview).render(

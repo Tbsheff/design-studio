@@ -19,6 +19,7 @@ import type {
 } from "../../shared/contracts.js";
 import { createFakePreview } from "../agent/test-fakes.js";
 import { buildUserText } from "../agent/user-message.js";
+import { projectStorePorts } from "../main/project-ports.js";
 import { PREFERENCES_FILE } from "../store/default-folder.js";
 import { createEventBus } from "../store/events.js";
 import {
@@ -190,7 +191,7 @@ const head = (project: Project): string | null =>
 beforeEach(async () => {
   ({ config, cleanup } = await makeTempConfig());
   versions = createVersionStore(config);
-  projects = createProjectStore(config, versions);
+  projects = createProjectStore(config, versions, projectStorePorts);
   started = [];
   running = new Set();
   shots = 0;

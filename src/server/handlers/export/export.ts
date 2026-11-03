@@ -2,7 +2,7 @@ import { Effect } from "effect";
 
 import type { Input } from "../../../shared/actions/_core/action.js";
 import type { exportExport } from "../../../shared/actions/export/export.js";
-import { ExportWriter } from "../../export/export-writer.js";
+import { ExportWriter } from "../../export/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type ExportExportInput = Input<typeof exportExport>;

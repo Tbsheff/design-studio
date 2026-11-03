@@ -699,3 +699,5 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
       (await browsers.get()).elementShots(url, viewport, selectors, outPrefix),
   };
 }
+
+export { McpReadStore } from "./mcp-read-store.js";

@@ -2,6 +2,7 @@ import { Schema } from "effect";
 
 import { defineAction } from "../_core/action.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
+import { Conflict } from "../_core/errors/conflict.js";
 import { NotFound } from "../_core/errors/not-found.js";
 import { ProjectIdSchema } from "../_core/ids.js";
 import {
@@ -13,11 +14,11 @@ import {
 
 const createLinkCanvas = defineAction({
   access: "edit",
-  agent: { off: "ui-bootstrap" },
+  agent: { off: "legacy-agent" },
   confirm: "none",
   description:
     "Link an element (CSS selector on the page of fromFrame) to another frame: on click, go to toFrame (action navigate) or open it as a modal or drawer over the current frame, with a transition, a duration and an easing. toFrame back goes back to the frame before. A second link on the same element replaces the first. Each link change is one step in the edit history.",
-  errors: [BadRequest, NotFound],
+  errors: [BadRequest, Conflict, NotFound],
   http: { method: "POST", path: "/api/projects/:projectId/links" },
   id: "canvas.createLink",
   input: Schema.Struct({

@@ -2,7 +2,7 @@ import { Effect } from "effect";
 
 import type { Input } from "../../../shared/actions/_core/action.js";
 import type { getFrameHtmlMcpRead } from "../../../shared/actions/mcp-read/get-frame-html.js";
-import { McpReadStore } from "../../preview/mcp-read-store.js";
+import { McpReadStore } from "../../preview/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type GetFrameHtmlMcpReadInput = Input<typeof getFrameHtmlMcpRead>;

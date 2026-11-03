@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 
 import type { RunStatus } from "../shared/contracts";
+import { isDesktop } from "./platform/desktop";
 import type { RunMap } from "./runState";
 
 const STATUS_TEXT: Partial<Record<RunStatus, string>> = {
@@ -12,7 +13,7 @@ const STATUS_TEXT: Partial<Record<RunStatus, string>> = {
 function canNotify(): boolean {
   return (
     document.hidden &&
-    !("studioDesktop" in window) &&
+    !isDesktop() &&
     typeof Notification !== "undefined" &&
     Notification.permission === "granted"
   );

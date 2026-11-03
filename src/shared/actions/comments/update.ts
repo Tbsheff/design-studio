@@ -19,7 +19,7 @@ import {
 
 const updateComments = defineAction({
   access: "edit",
-  agent: { off: "ui-bootstrap" },
+  agent: { off: "legacy-agent" },
   confirm: "none",
   description:
     "Change the text, status, target or element of one comment in a direction, from the studio Comments pane. A status change follows the comment status rules.",

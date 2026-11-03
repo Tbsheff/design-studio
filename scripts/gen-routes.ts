@@ -13,6 +13,7 @@ import {
   lines,
   pascal,
   camel,
+  formatFile,
   readOrEmpty,
   stub,
 } from "./gen-common.js";
@@ -160,10 +161,26 @@ interface ContextScan {
   readonly handlers: string[];
 }
 
+const byConst =
+  (ctx: string) =>
+  (left: string, right: string): number =>
+    Number(actionConst(ctx, left) > actionConst(ctx, right)) -
+    Number(actionConst(ctx, left) < actionConst(ctx, right));
+
+const sortedTails = async (
+  dir: string,
+  skip: ReadonlySet<string>,
+  ctx: string
+): Promise<string[]> => {
+  const tails = await actionTails(dir, skip);
+
+  return tails.toSorted(byConst(ctx));
+};
+
 const scanContext = async (ctx: string): Promise<ContextScan> => ({
-  actions: await actionTails(path.join(ACTIONS, ctx), ACTION_SKIP),
+  actions: await sortedTails(path.join(ACTIONS, ctx), ACTION_SKIP, ctx),
   domain: ctx,
-  handlers: await actionTails(path.join(HANDLERS, ctx), HANDLER_SKIP),
+  handlers: await sortedTails(path.join(HANDLERS, ctx), HANDLER_SKIP, ctx),
 });
 
 const contextFiles = async (scan: ContextScan): Promise<GeneratedFile[]> => [
@@ -393,9 +410,13 @@ const buildAll = async (): Promise<Build> => {
     ...(await errorFiles(contexts)),
   ];
 
+  const formatted = await Promise.all(files.map((file) => formatFile(file)));
+
   return {
     errors,
-    files: files.toSorted((left, right) => left.path.localeCompare(right.path)),
+    files: formatted.toSorted((left, right) =>
+      left.path.localeCompare(right.path)
+    ),
   };
 };
 

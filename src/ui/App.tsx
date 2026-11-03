@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { errorText } from "./api";
 import type { CommandLayer as Layer } from "./commands/registry";
 import { Home } from "./components/Home";
+import { isDesktop } from "./platform/desktop";
 import { installRouting } from "./platform/router";
 import {
   CommandLayer,
@@ -54,8 +55,7 @@ class ScreenBoundary extends Component<
 
 const LAYER_EVENT = "studio:command-layer";
 
-const DesktopApp =
-  "studioDesktop" in window ? lazy(() => import("./DesktopApp")) : null;
+const DesktopApp = isDesktop() ? lazy(() => import("./DesktopApp")) : null;
 
 const McpToasts = lazy(() => import("./components/McpToasts"));
 

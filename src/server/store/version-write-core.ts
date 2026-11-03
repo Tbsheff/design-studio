@@ -1,5 +1,4 @@
 import { Effect } from "effect";
-import type { Cause } from "effect";
 
 import { BadRequest } from "../../shared/actions/_core/errors/bad-request.js";
 import { Conflict } from "../../shared/actions/_core/errors/conflict.js";
@@ -8,9 +7,9 @@ import type { Direction, Project, Version } from "../../shared/contracts.js";
 import { DirectEditError } from "../direct-edit/engine/errors.js";
 import type { EditHistory } from "../direct-edit/history.js";
 import type { DirectEditDeps } from "../direct-edit/index.js";
+import { attemptKnown } from "../platform/attempt/index.js";
 import { loadConfig } from "../platform/config/index.js";
 import type { VersionStore } from "../types.js";
-import { ConflictError, NotFoundError } from "./errors.js";
 import type { StudioProjectStore } from "./projects.js";
 import type { VersionNames } from "./version-names.js";
 
@@ -98,26 +97,12 @@ const fromDirectEdit = (error: DirectEditError): VersionWriteError => {
   return new BadRequest({ message: error.message });
 };
 
-const toVersionWriteError = (error: Cause.UnknownError): VersionWriteError => {
-  const { cause } = error;
-
+const toWriteFailure = (cause: unknown): VersionWriteError | null => {
   if (cause instanceof DirectEditError) {
     return fromDirectEdit(cause);
   }
 
-  if (cause instanceof NotFoundError) {
-    return new NotFound({ message: cause.message });
-  }
-
-  if (cause instanceof ConflictError) {
-    return new Conflict({ message: cause.message });
-  }
-
-  if (cause instanceof Error) {
-    return new BadRequest({ message: cause.message });
-  }
-
-  return new BadRequest({ message: String(cause) });
+  return null;
 };
 
 const attemptVersionWrite = <Value>(
@@ -130,9 +115,7 @@ const attemptVersionWrite = <Value>(
       return yield* new BadRequest({ message: NOT_READY });
     }
 
-    return yield* Effect.tryPromise(() => task(runtime)).pipe(
-      Effect.mapError((failure) => toVersionWriteError(failure))
-    );
+    return yield* attemptKnown(() => task(runtime), toWriteFailure);
   });
 
 export { attemptVersionWrite, bindVersionWriteRuntime };

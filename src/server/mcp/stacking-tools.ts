@@ -97,7 +97,7 @@ const guarded = async <Result>(
 const scopeOf = async (
   deps: EditDeps,
   projectId: string,
-  directionId: string
+  directionId?: string
 ): Promise<BreakpointScope> => {
   const found = await loadTarget(deps, projectId, directionId);
 

@@ -1,114 +1,88 @@
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 
-import type {
-  ActionId,
-  AnyAction,
-  WireInput,
-  WireOutput,
-} from "../../shared/actions/_core/action.js";
+import type { ActionId } from "../../shared/actions/_core/action.js";
 import type { ActionDone } from "../../shared/actions/app-stream.js";
 import { call } from "./http";
-import type { RouteOf } from "./http";
+import type { ActionRoute, RouteInput, RouteOutput } from "./http";
 import { subscribeActionDone } from "./stream";
 
-interface Entry {
-  readonly at: number;
-  readonly value: Promise<unknown>;
-  readonly warm: boolean;
-}
-
-interface ReadState<Action extends AnyAction> {
-  readonly data: WireOutput<Action> | null;
+interface ReadState<Route extends ActionRoute> {
+  readonly data: RouteOutput<Route> | null;
   readonly error: Error | null;
   readonly loading: boolean;
   readonly refetch: () => Promise<void>;
 }
 
-interface WriteState<Action extends AnyAction> {
+interface WriteState<Route extends ActionRoute> {
   readonly error: Error | null;
   readonly pending: boolean;
   readonly run: (
-    input: WireInput<Action>
-  ) => Promise<WireOutput<Action> | null>;
+    input: RouteInput<Route>
+  ) => Promise<RouteOutput<Route> | null>;
 }
 
-type ActionState<Action extends AnyAction> = ReadState<Action> &
-  WriteState<Action>;
+type ActionState<Route extends ActionRoute> = ReadState<Route> &
+  WriteState<Route>;
 
 type DoneListener = (done: ActionDone) => void;
 
-const WARM_MS = 4000;
+interface Snapshot<Route extends ActionRoute> {
+  readonly data: RouteOutput<Route> | null;
+  readonly error: Error | null;
+  readonly key: string;
+}
 
-const entries = new Map<string, Entry>();
+const idle = (): null => null;
+
+const inflight = new Map<string, Promise<unknown>>();
 
 const listeners = new Set<DoneListener>();
 
 let unsubscribe: (() => void) | null = null;
 
-const dropEntry = (key: string, value: Promise<unknown>): void => {
-  if (entries.get(key)?.value === value) {
-    entries.delete(key);
-  }
-};
-
-const track = async (
-  key: string,
-  value: Promise<unknown>,
-  warm: boolean
-): Promise<void> => {
+const settle = async (key: string, value: Promise<unknown>): Promise<void> => {
   try {
     await value;
-
-    if (!warm) {
-      dropEntry(key, value);
-    }
   } catch {
-    dropEntry(key, value);
-  }
-};
-
-const store = (key: string, value: Promise<unknown>, warm: boolean): void => {
-  void track(key, value, warm);
-  entries.set(key, { at: Date.now(), value, warm });
-};
-
-const prefetch = <Out>(key: string, load: () => Promise<Out>): void => {
-  const hit = entries.get(key);
-
-  if (hit && Date.now() - hit.at < WARM_MS) {
-    return;
+    inflight.delete(key);
   }
 
-  store(key, load(), true);
+  if (inflight.get(key) === value) {
+    inflight.delete(key);
+  }
 };
 
 const readShared = async <Out>(
   key: string,
   load: () => Promise<Out>
 ): Promise<Out> => {
-  const hit = entries.get(key);
+  const hit = inflight.get(key);
 
-  if (hit && (!hit.warm || Date.now() - hit.at < WARM_MS)) {
-    if (hit.warm) {
-      entries.delete(key);
-    }
-
-    try {
-      return (await hit.value) as Out;
-    } catch {
-      return readShared(key, load);
-    }
+  if (hit) {
+    return (await hit) as Out;
   }
 
   const next = load();
 
-  store(key, next, false);
+  inflight.set(key, next);
+  settle(key, next);
 
   return next;
 };
 
+const prefetch = async <Out>(
+  key: string,
+  load: () => Promise<Out>
+): Promise<void> => {
+  try {
+    await readShared(key, load);
+  } catch {
+    inflight.delete(key);
+  }
+};
+
 const notify = (done: ActionDone): void => {
-  entries.clear();
+  inflight.clear();
 
   for (const listener of listeners) {
     listener(done);
@@ -154,41 +128,38 @@ const subscribeDone = (listener: DoneListener): (() => void) => {
 const includesId = (done: ActionDone, id: ActionId): boolean =>
   done.actionId === id || done.invalidates.includes(id);
 
-const idle = (): null => null;
+const snapshotOf = <Route extends ActionRoute>(
+  data: RouteOutput<Route> | null,
+  error: Error | null,
+  key: string
+): Snapshot<Route> => ({ data, error, key });
 
-const useRead = <Action extends AnyAction>(
-  action: RouteOf<Action>,
-  input: WireInput<Action> | null
-): ReadState<Action> => {
-  const [data, setData] = useState<WireOutput<Action> | null>(null);
-  const [failed, setFailed] = useState<Error | null>(null);
-  const [loading, setLoading] = useState(input !== null);
-  const live = useRef(true);
+const useRead = <Route extends ActionRoute>(
+  action: Route,
+  input: RouteInput<Route> | null
+): ReadState<Route> => {
   const key = JSON.stringify([action.id, input]);
+  const [snapshot, setSnapshot] = useState<Snapshot<Route> | null>(null);
+  const live = useRef(true);
   const reads = input !== null;
 
   const refetch = useCallback(async (): Promise<void> => {
-    const [, current] = JSON.parse(key) as [ActionId, WireInput<Action> | null];
+    const [, current] = JSON.parse(key) as [ActionId, RouteInput<Route> | null];
 
     if (current === null) {
       return;
     }
 
     try {
-      const next = await readShared(key, () => call(action, current));
+      const data = await readShared(key, () => call(action, current));
 
       if (live.current) {
-        setData(next);
-        setFailed(null);
+        setSnapshot(snapshotOf<Route>(data, null, key));
       }
     } catch (error) {
       if (live.current) {
-        setFailed(error as Error);
+        setSnapshot(snapshotOf<Route>(null, error as Error, key));
       }
-    }
-
-    if (live.current) {
-      setLoading(false);
     }
   }, [action, key]);
 
@@ -208,24 +179,27 @@ const useRead = <Action extends AnyAction>(
 
     return subscribeDone((done): void => {
       if (includesId(done, action.id)) {
-        void refetch();
+        refetch();
       }
     });
   }, [action, reads, refetch]);
 
-  const error = failed;
+  const current = snapshot?.key === key;
+  const data = (current && snapshot?.data) || null;
+  const error = (current && snapshot?.error) || null;
+  const loading = reads && !current;
 
   return { data, error, loading, refetch };
 };
 
-const useWrite = <Action extends AnyAction>(
-  action: RouteOf<Action>
-): WriteState<Action> => {
+const useWrite = <Route extends ActionRoute>(
+  action: Route
+): WriteState<Route> => {
   const [failed, setFailed] = useState<Error | null>(null);
   const [pending, startTransition] = useTransition();
 
   const send = useCallback(
-    async (body: WireInput<Action>): Promise<WireOutput<Action> | null> => {
+    async (body: RouteInput<Route>): Promise<RouteOutput<Route> | null> => {
       try {
         const out = await call(action, body);
 
@@ -247,7 +221,7 @@ const useWrite = <Action extends AnyAction>(
   );
 
   const run = useCallback(
-    (body: WireInput<Action>): Promise<WireOutput<Action> | null> => {
+    (body: RouteInput<Route>): Promise<RouteOutput<Route> | null> => {
       const task = send(body);
 
       startTransition(async () => {
@@ -264,10 +238,10 @@ const useWrite = <Action extends AnyAction>(
   return { error, pending, run };
 };
 
-const useAction = <Action extends AnyAction>(
-  action: RouteOf<Action>,
-  input: WireInput<Action> | null = null
-): ActionState<Action> => {
+const useAction = <Route extends ActionRoute>(
+  action: Route,
+  input: RouteInput<Route> | null = null
+): ActionState<Route> => {
   const read = useRead(action, input);
   const write = useWrite(action);
 

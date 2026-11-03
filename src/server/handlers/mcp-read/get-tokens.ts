@@ -2,7 +2,7 @@ import { Effect } from "effect";
 
 import type { Input } from "../../../shared/actions/_core/action.js";
 import type { getTokensMcpRead } from "../../../shared/actions/mcp-read/get-tokens.js";
-import { McpReadStore } from "../../preview/mcp-read-store.js";
+import { McpReadStore } from "../../preview/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type GetTokensMcpReadInput = Input<typeof getTokensMcpRead>;

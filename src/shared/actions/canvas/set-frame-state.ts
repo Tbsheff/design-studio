@@ -2,6 +2,7 @@ import { Schema } from "effect";
 
 import { defineAction } from "../_core/action.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
+import { Conflict } from "../_core/errors/conflict.js";
 import { NotFound } from "../_core/errors/not-found.js";
 import { ProjectIdSchema } from "../_core/ids.js";
 import {
@@ -13,11 +14,11 @@ import {
 
 const setFrameStateCanvas = defineAction({
   access: "edit",
-  agent: { off: "ui-bootstrap" },
+  agent: { off: "legacy-agent" },
   confirm: "none",
   description:
     "Show one app frame in a preview state: default, session, empty, loading, error, an existing mock state id, or mock to make a new mock state. The frame reloads in the studio. Use get_screenshot with frameId to see it.",
-  errors: [BadRequest, NotFound],
+  errors: [BadRequest, Conflict, NotFound],
   http: {
     method: "PUT",
     path: "/api/projects/:projectId/frame-states/frames/:frame",

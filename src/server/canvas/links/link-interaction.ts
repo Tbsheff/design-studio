@@ -128,7 +128,9 @@ const probeSource = async (
   let found: Awaited<ReturnType<LinkProbe>>[number] = null;
 
   try {
-    [found] = await probe(frame, [{ id: "new", selector }]);
+    const probed = await probe(frame, [{ id: "new", selector }]);
+
+    found = probed[0] ?? null;
   } catch {
     throw new LinkError(`Could not render ${where} to check the selector.`);
   }

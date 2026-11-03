@@ -2,7 +2,7 @@ import { Effect } from "effect";
 
 import type { Input } from "../../../shared/actions/_core/action.js";
 import type { exportHandoffExport } from "../../../shared/actions/export/export-handoff.js";
-import { ExportWriter } from "../../export/export-writer.js";
+import { ExportWriter } from "../../export/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type ExportHandoffExportInput = Input<typeof exportHandoffExport>;

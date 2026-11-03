@@ -1,4 +1,5 @@
 import { copy } from "./copy.js";
+import { desktopBridge } from "./deps.js";
 import type { getCloud, WireOutput } from "./deps.js";
 
 type CloudWire = WireOutput<typeof getCloud>;
@@ -73,8 +74,7 @@ interface DesktopHost {
 }
 
 const readDesktopAccount = (): DesktopAccount | null => {
-  const scope = globalThis as { studioDesktop?: DesktopHost };
-  const host = scope.studioDesktop ?? null;
+  const host = desktopBridge<DesktopHost>();
 
   return host?.account ?? null;
 };

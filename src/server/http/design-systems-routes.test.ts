@@ -26,6 +26,7 @@ import type {
 import { PACK_FILE, TOKENS_FILE } from "../../shared/contracts.js";
 import { createFakePreview } from "../agent/test-fakes.js";
 import { normalizeColor } from "../design-system/extract/values.js";
+import { projectStorePorts } from "../main/project-ports.js";
 import { createEventBus } from "../store/events.js";
 import { createProjectStore } from "../store/projects.js";
 import { makeTempConfig } from "../store/testConfig.js";
@@ -71,7 +72,7 @@ function makeApp(
   patchVersions: (store: VersionStore) => VersionStore = (store) => store
 ): ReturnType<typeof createApp> {
   const versions = patchVersions(createVersionStore(config));
-  const projects = createProjectStore(config, versions);
+  const projects = createProjectStore(config, versions, projectStorePorts);
   return createApp({
     config: { ...config, fetchAllowLoopback: allowLoopback },
     bus: createEventBus(config.dataDir, new Map()),

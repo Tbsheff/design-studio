@@ -17,6 +17,7 @@ import type {
 import { PACK_FILE } from "../../shared/contracts.js";
 import { createFakePreview } from "../agent/test-fakes.js";
 import { zipFiles, type ZipEntry } from "../design-system/zip.js";
+import { projectStorePorts } from "../main/project-ports.js";
 import { createEventBus } from "../store/events.js";
 import { createProjectStore } from "../store/projects.js";
 import { makeTempConfig } from "../store/testConfig.js";
@@ -119,7 +120,7 @@ async function packEntries(id: string, folder = id): Promise<ZipEntry[]> {
 beforeEach(async () => {
   ({ config, cleanup } = await makeTempConfig());
   const versions = createVersionStore(config);
-  const projects = createProjectStore(config, versions);
+  const projects = createProjectStore(config, versions, projectStorePorts);
   app = createApp({
     config,
     bus: createEventBus(config.dataDir, new Map()),

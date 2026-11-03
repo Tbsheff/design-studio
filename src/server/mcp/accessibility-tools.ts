@@ -142,7 +142,7 @@ const runInspect = async (
   const page = frame.page ?? "";
 
   const [address, state] = await Promise.all([
-    pageUrl(deps, scope.project, scope.direction, frame.page ?? input.path),
+    pageUrl(deps, scope.project, scope.direction, page),
     readDesignSystemState(scope.project, scope.direction),
   ]);
 

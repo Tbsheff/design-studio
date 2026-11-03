@@ -16,7 +16,7 @@ const ContentSchema = Schema.String.annotate({
 
 const importPackPacks = defineAction({
   access: "edit",
-  agent: { off: "ui-bootstrap" },
+  agent: { off: "legacy-agent" },
   confirm: "none",
   description:
     "Import a design system zip in the export format as a new user pack. Mode ask fails with pack_exists when a user pack has the same id or name; replace and copy settle it.",

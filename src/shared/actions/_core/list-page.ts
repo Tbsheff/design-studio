@@ -11,8 +11,8 @@ const PAGE_DEFAULT = 50;
 
 const PAGE_MAX = 200;
 
-const LimitSchema = Schema.optionalKey(
-  Schema.Int.check(Schema.isBetween({ maximum: PAGE_MAX, minimum: 1 }))
+const LimitSchema = Schema.Int.check(
+  Schema.isBetween({ maximum: PAGE_MAX, minimum: 1 })
 ).pipe(Schema.withDecodingDefaultKey(Effect.succeed(PAGE_DEFAULT)));
 
 const PageFields = {

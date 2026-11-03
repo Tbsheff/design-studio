@@ -1,7 +1,6 @@
 import { Layer } from "effect";
 
-import { ExportStore } from "../../export/export-store.js";
-import { ExportWriter } from "../../export/export-writer.js";
+import { ExportStore, ExportWriter } from "../../export/index.js";
 
 const ExportLive = Layer.mergeAll(ExportStore.layer, ExportWriter.layer);
 

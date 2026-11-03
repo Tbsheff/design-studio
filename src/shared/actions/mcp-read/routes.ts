@@ -12,6 +12,12 @@ const routes = {
     method: "GET",
     path: "/api/projects/:projectId/app/doctor",
   },
+  getFileMcpRead: {
+    id: "mcp-read.getFile",
+    invalidates: [],
+    method: "GET",
+    path: "/api/projects/:projectId/source-file",
+  },
   getFrameHtmlMcpRead: {
     id: "mcp-read.getFrameHtml",
     invalidates: [],
@@ -83,12 +89,6 @@ const routes = {
     invalidates: [],
     method: "GET",
     path: "/api/projects/:projectId/versions",
-  },
-  readFileMcpRead: {
-    id: "mcp-read.readFile",
-    invalidates: [],
-    method: "GET",
-    path: "/api/projects/:projectId/source-file",
   },
   searchProjectsMcpRead: {
     id: "mcp-read.searchProjects",

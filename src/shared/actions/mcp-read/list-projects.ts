@@ -8,7 +8,7 @@ import { ProjectSummaryListSchema } from "./schema.js";
 
 const listProjectsMcpRead = defineAction({
   access: "read",
-  agent: { off: "ui-bootstrap" },
+  agent: { off: "legacy-agent" },
   confirm: "none",
   description:
     "List the design projects in Design Studio with their directions and newest version ids.",

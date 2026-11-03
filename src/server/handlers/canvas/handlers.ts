@@ -5,7 +5,7 @@ import { handle as createFlowCanvasHandle } from "./create-flow.js";
 import { handle as createLinkCanvasHandle } from "./create-link.js";
 import { handle as deleteLinkCanvasHandle } from "./delete-link.js";
 import { handle as getDocCanvasHandle } from "./get-doc.js";
-import { handle as keepLinkCanvasHandle } from "./keep-link.js";
+import { handle as importLinkCanvasHandle } from "./import-link.js";
 import { handle as listFlowLinksCanvasHandle } from "./list-flow-links.js";
 import { handle as listFlowParamsCanvasHandle } from "./list-flow-params.js";
 import { handle as listFrameStatesCanvasHandle } from "./list-frame-states.js";
@@ -23,7 +23,7 @@ const CanvasEntries = {
   createLinkCanvas: { handle: createLinkCanvasHandle },
   deleteLinkCanvas: { handle: deleteLinkCanvasHandle },
   getDocCanvas: { handle: getDocCanvasHandle },
-  keepLinkCanvas: { handle: keepLinkCanvasHandle },
+  importLinkCanvas: { handle: importLinkCanvasHandle },
   listFlowLinksCanvas: { handle: listFlowLinksCanvasHandle },
   listFlowParamsCanvas: { handle: listFlowParamsCanvasHandle },
   listFrameStatesCanvas: { handle: listFrameStatesCanvasHandle },

@@ -164,7 +164,40 @@ const TargetInputSchema = Schema.Struct({
   textSnippet: Schema.String.check(Schema.isMaxLength(SNIPPET_MAX)),
 });
 
-const SelectionContextSchema = Schema.Record(Schema.String, Schema.Unknown);
+const OwnerSchema = Schema.Struct({
+  name: Schema.String,
+  stack: Schema.String,
+});
+
+const OwnerListSchema = Schema.mutable(Schema.Array(OwnerSchema));
+
+const PathListSchema = Schema.mutable(Schema.Array(Schema.String));
+
+const UsedBySchema = Schema.Struct({
+  name: Schema.String,
+  root: Schema.Boolean,
+});
+
+const SelectionContextSchema = Schema.Struct({
+  ancestors: Schema.mutable(Schema.Array(Schema.String)),
+  component: Schema.optionalKey(Schema.String),
+  outerHTML: Schema.String,
+  owners: Schema.optionalKey(OwnerListSchema),
+  path: Schema.optionalKey(PathListSchema),
+  rect: Schema.Struct({
+    height: Schema.Number,
+    width: Schema.Number,
+    x: Schema.Number,
+    y: Schema.Number,
+  }),
+  selector: Schema.String,
+  source: Schema.NullOr(SourceLocSchema),
+  styles: Schema.Record(Schema.String, Schema.String),
+  tag: Schema.String,
+  text: Schema.String,
+  usedAt: Schema.optionalKey(Schema.NullOr(SourceLocSchema)),
+  usedBy: Schema.optionalKey(Schema.NullOr(UsedBySchema)),
+});
 
 const FrameLabelSchema = Schema.Trim.check(Schema.isMaxLength(LABEL_MAX));
 

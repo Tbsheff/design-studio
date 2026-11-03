@@ -27,12 +27,12 @@ const VersionsEntries = {
   },
   getVersions: { handle: getVersionsHandle },
   inspectDiffVersions: { handle: inspectDiffVersionsHandle },
-  listVersions: { handle: listVersionsHandle },
   listHistoryVersions: { handle: listHistoryVersionsHandle },
   listHunksVersions: { handle: listHunksVersionsHandle },
+  listVersions: { handle: listVersionsHandle },
   renameVersions: { handle: renameVersionsHandle },
-  restoreVersions: { handle: restoreVersionsHandle },
   restoreHistoryVersions: { handle: restoreHistoryVersionsHandle },
+  restoreVersions: { handle: restoreVersionsHandle },
 } satisfies Entries<typeof VersionsActions>;
 
 export { VersionsEntries };

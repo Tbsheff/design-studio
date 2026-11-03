@@ -2,7 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
 import { App } from "./App";
-import { watchLongFrames } from "./platform/telemetry";
+import { desktopBridge } from "./platform/desktop";
 
 import "./styles/tokens.css";
 import "./styles/controls.css";
@@ -32,9 +32,9 @@ import "./styles/frames.css";
 import "./styles/studio.css";
 import "./styles/responsive.css";
 import "./styles/shell.css";
+import { watchLongFrames } from "./platform/telemetry";
 
-const desktop = (window as unknown as { studioDesktop?: { platform: string } })
-  .studioDesktop;
+const desktop = desktopBridge<{ platform: string }>();
 
 if (desktop?.platform === "darwin") {
   document.documentElement.dataset.shell = "mac";

@@ -1,4 +1,3 @@
-import type { WireOutput } from "../shared/actions/_core/action.js";
 import type { createShare } from "../shared/actions/share/create.js";
 import type { deleteShare } from "../shared/actions/share/delete.js";
 import type { listShare } from "../shared/actions/share/list.js";
@@ -8,6 +7,7 @@ import type { updateShare } from "../shared/actions/share/update.js";
 import type { ExportFrame } from "../shared/export";
 import type { ShareExpiryHours } from "../shared/share";
 import { call } from "./platform/http";
+import type { UiOutput } from "./platform/http";
 
 interface CreateRequest {
   readonly directionId: string | null;
@@ -30,7 +30,7 @@ const shareApi = {
   create: (
     projectId: string,
     input: CreateRequest
-  ): Promise<WireOutput<typeof createShare>> =>
+  ): Promise<UiOutput<typeof createShare>> =>
     call(routes.createShare, {
       directionId: input.directionId,
       expiresInHours: input.expiresInHours,
@@ -39,20 +39,20 @@ const shareApi = {
       versionId: input.versionId,
       projectId,
     }),
-  list: (projectId: string): Promise<WireOutput<typeof listShare>> =>
+  list: (projectId: string): Promise<UiOutput<typeof listShare>> =>
     call(routes.listShare, { projectId }),
   revoke: (
     projectId: string,
     shareId: string
-  ): Promise<WireOutput<typeof deleteShare>> =>
+  ): Promise<UiOutput<typeof deleteShare>> =>
     call(routes.deleteShare, { projectId, shareId }),
-  setLan: (isOn: boolean): Promise<WireOutput<typeof setLanShare>> =>
+  setLan: (isOn: boolean): Promise<UiOutput<typeof setLanShare>> =>
     call(routes.setLanShare, { isOn }),
   setStudioCursor: (
     projectId: string,
     shareId: string,
     isOn: boolean
-  ): Promise<WireOutput<typeof updateShare>> =>
+  ): Promise<UiOutput<typeof updateShare>> =>
     call(routes.updateShare, { projectId, shareId, studioCursor: isOn }),
 };
 

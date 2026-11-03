@@ -1,8 +1,10 @@
 import { Layer } from "effect";
 
-import { CommentRunStarter } from "../../comments/comment-run-starter.js";
-import { CommentStore } from "../../comments/comment-store.js";
-import { CommentThreadStore } from "../../comments/comment-thread-store.js";
+import {
+  CommentRunStarter,
+  CommentStore,
+  CommentThreadStore,
+} from "../../comments/index.js";
 
 const CommentsLive = Layer.mergeAll(
   CommentStore.layer,

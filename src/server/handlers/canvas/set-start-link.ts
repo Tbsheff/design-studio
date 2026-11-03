@@ -2,7 +2,7 @@ import { Effect } from "effect";
 
 import type { Input } from "../../../shared/actions/_core/action.js";
 import type { setStartLinkCanvas } from "../../../shared/actions/canvas/set-start-link.js";
-import { LinkWriter } from "../../canvas/links/link-writer.js";
+import { LinkWriter } from "../../canvas/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type SetStartLinkCanvasInput = Input<typeof setStartLinkCanvas>;

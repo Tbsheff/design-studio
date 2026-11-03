@@ -2,7 +2,7 @@ import { Effect } from "effect";
 
 import type { Input } from "../../../shared/actions/_core/action.js";
 import type { listShare } from "../../../shared/actions/share/list.js";
-import { ShareStore } from "../../share/share-store.js";
+import { ShareStore } from "../../share/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type ListShareInput = Input<typeof listShare>;

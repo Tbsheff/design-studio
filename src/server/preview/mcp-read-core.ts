@@ -1,12 +1,11 @@
 import { Effect } from "effect";
-import type { Cause } from "effect";
 
 import { BadRequest } from "../../shared/actions/_core/errors/bad-request.js";
-import { Conflict } from "../../shared/actions/_core/errors/conflict.js";
-import { NotFound } from "../../shared/actions/_core/errors/not-found.js";
+import type { Conflict } from "../../shared/actions/_core/errors/conflict.js";
+import type { NotFound } from "../../shared/actions/_core/errors/not-found.js";
 import type { PortFlowPlan, PortPlan } from "../../shared/port.js";
+import { attemptKnown } from "../platform/attempt/index.js";
 import { loadConfig } from "../platform/config/index.js";
-import { ConflictError, NotFoundError } from "../store/errors.js";
 import type { StudioProjectStore } from "../store/projects.js";
 import type { AgentRunner, PreviewService, VersionStore } from "../types.js";
 
@@ -41,22 +40,6 @@ const bindMcpReadRuntime = (part: Partial<McpReadRuntime>): void => {
   runtimes.set(dataDir, { ...runtimes.get(dataDir), ...part });
 };
 
-const toMcpReadError = (error: Cause.UnknownError): McpReadError => {
-  if (error.cause instanceof NotFoundError) {
-    return new NotFound({ message: error.cause.message });
-  }
-
-  if (error.cause instanceof ConflictError) {
-    return new Conflict({ message: error.cause.message });
-  }
-
-  if (error.cause instanceof Error) {
-    return new BadRequest({ message: error.cause.message });
-  }
-
-  return new BadRequest({ message: String(error.cause) });
-};
-
 const REQUIRED_KEYS = [
   "planPort",
   "preview",
@@ -80,9 +63,7 @@ const attemptMcpRead = <Value>(
       return yield* new BadRequest({ message: NOT_READY });
     }
 
-    return yield* Effect.tryPromise(() => task(runtime)).pipe(
-      Effect.mapError((failure) => toMcpReadError(failure))
-    );
+    return yield* attemptKnown(() => task(runtime));
   });
 
 export { attemptMcpRead, bindMcpReadRuntime };

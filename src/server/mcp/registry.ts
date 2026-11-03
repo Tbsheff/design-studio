@@ -1,25 +1,24 @@
-import { Effect, Exit, Schema } from "effect";
+import { Effect, Schema } from "effect";
 import type { JsonSchema } from "effect";
 
 import type { AnyAction } from "../../shared/actions/_core/action.js";
-import type { StudioError } from "../../shared/actions/_core/errors/all.js";
 import { Forbidden } from "../../shared/actions/_core/errors/forbidden.js";
 import { AllActions } from "../../shared/actions/index.js";
+import type { AgentArgs } from "../agent-tools/registry.js";
 import type { Entries } from "../handlers/_core/handler.js";
 import { allowAll, makeRunner } from "../handlers/_core/run-action.js";
 import type { Gate, Runner, WireArgs } from "../handlers/_core/run-action.js";
 import { ALL_ENTRIES } from "../handlers/all-entries.generated.js";
-import { failureOf, toWireError } from "../http/wire-error.js";
 import type { StudioRuntime } from "../main/runtime.js";
 import { toLegacyPrincipal } from "../store/local-principal.js";
 import type { ApprovalQueue } from "./approvals.js";
+import { toToolResult } from "./tool-result.js";
+import type { TextResult } from "./tool-result.js";
 import type { ToolDef } from "./tool-types.js";
 
 type Group = Readonly<Record<string, AnyAction>>;
 
 type Domain = keyof typeof AllActions;
-
-type ActionExit = Exit.Exit<object, StudioError>;
 
 interface RuntimeDeps {
   readonly runtime?: StudioRuntime | null | undefined;
@@ -29,26 +28,7 @@ interface GateDeps {
   readonly approvals?: ApprovalQueue | null | undefined;
 }
 
-type ResultBlock =
-  | { readonly text: string; readonly type: "text" }
-  | {
-      readonly data: string;
-      readonly mimeType: string;
-      readonly type: "image";
-    };
-
-interface TextResult {
-  readonly content: ResultBlock[];
-  readonly isError: boolean;
-}
-
-interface ImageOutput {
-  readonly data: string;
-  readonly mimeType: string;
-  readonly text: string;
-}
-
-type CallById = (action: AnyAction, args: WireArgs) => Promise<TextResult>;
+type CallById = (action: AnyAction, args: AgentArgs) => Promise<TextResult>;
 
 interface ActionRunner {
   readonly action: AnyAction;
@@ -158,41 +138,6 @@ const isActionTool = (name: string): boolean => ACTION_TOOLS_BY_NAME.has(name);
 const isReadActionTool = (name: string): boolean =>
   ACTION_TOOLS_BY_NAME.get(name)?.action.access === "read";
 
-const textResult = (text: string, isError: boolean): TextResult => ({
-  content: [{ text, type: "text" }],
-  isError,
-});
-
-const ImageOutputSchema = Schema.Struct({
-  data: Schema.String,
-  mimeType: Schema.String.check(Schema.isPattern(/^image\//u)),
-  text: Schema.String,
-});
-
-const isImageOutput = Schema.is(ImageOutputSchema);
-
-const imageResult = (value: ImageOutput): TextResult => ({
-  content: [
-    { data: value.data, mimeType: value.mimeType, type: "image" },
-    { text: value.text, type: "text" },
-  ],
-  isError: false,
-});
-
-const toToolResult = (exit: ActionExit): TextResult => {
-  if (Exit.isSuccess(exit) && isImageOutput(exit.value)) {
-    return imageResult(exit.value);
-  }
-
-  if (Exit.isSuccess(exit)) {
-    return textResult(JSON.stringify(exit.value), false);
-  }
-
-  const wire = toWireError(failureOf(exit));
-
-  return textResult(JSON.stringify(wire.body), true);
-};
-
 const GATE_TEXT = {
   closed:
     "Design Studio is not open, so nobody can approve this action. Open the Design Studio window, then call the tool again.",
@@ -243,7 +188,7 @@ const runActionTool = async (
 ): Promise<TextResult> => {
   const program = tool.run(args, toLegacyPrincipal(), "json", gate);
 
-  return toToolResult(await runtime.runPromiseExit(program));
+  return toToolResult(tool.action, await runtime.runPromiseExit(program));
 };
 
 const refuse = (text: string): Promise<TextResult> =>
@@ -287,7 +232,7 @@ const actionCaller = (
       return refuse(`unknown action ${action.id}`);
     }
 
-    return runActionTool(runtime, runner, args, refuseAll);
+    return runActionTool(runtime, runner, args as WireArgs, refuseAll);
   };
 };
 
@@ -327,15 +272,6 @@ export {
   isReadActionTool,
   listActionTools,
   toInputSchema,
-  toToolResult,
 };
 
-export type {
-  ActionExit,
-  ActionRunner,
-  ActionTool,
-  CallById,
-  GateDeps,
-  RuntimeDeps,
-  TextResult,
-};
+export type { ActionRunner, ActionTool, CallById, GateDeps, RuntimeDeps };

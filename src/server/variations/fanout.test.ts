@@ -19,6 +19,7 @@ import {
 import { createMockDriver } from "../agent/mock.js";
 import { createFakePreview } from "../agent/test-fakes.js";
 import { createApp } from "../http/app.js";
+import { projectStorePorts } from "../main/project-ports.js";
 import { createEventBus } from "../store/events.js";
 import {
   createProjectStore,
@@ -150,7 +151,7 @@ async function settle(result: VariationStartResult): Promise<RunSummary[]> {
 beforeEach(async () => {
   ({ config, cleanup } = await makeTempConfig());
   versions = createVersionStore(config);
-  projects = createProjectStore(config, versions);
+  projects = createProjectStore(config, versions, projectStorePorts);
   const bus = createEventBus(config.dataDir, new Map());
   runner = createRunLifecycle({ bus, projects, versions }, testDriver);
   driverMode = "fail-b";

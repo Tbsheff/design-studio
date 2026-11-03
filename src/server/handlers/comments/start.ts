@@ -4,7 +4,7 @@ import type { Input } from "../../../shared/actions/_core/action.js";
 import { BadRequest } from "../../../shared/actions/_core/errors/bad-request.js";
 import { RunInProgress } from "../../../shared/actions/comments/errors/run-in-progress.js";
 import type { startComments } from "../../../shared/actions/comments/start.js";
-import { CommentRunStarter } from "../../comments/comment-run-starter.js";
+import { CommentRunStarter } from "../../comments/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type StartCommentsInput = Input<typeof startComments>;

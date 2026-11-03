@@ -23,6 +23,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { Project, Version } from "../../shared/contracts.js";
 import type { WorkspaceList } from "../../shared/folders.js";
 import { createFakePreview } from "../agent/test-fakes.js";
+import { projectStorePorts } from "../main/project-ports.js";
 import { createEventBus } from "../store/events.js";
 import {
   createProjectStore,
@@ -112,7 +113,7 @@ beforeEach(async () => {
   await writeFile(path.join(parent, "notes", "todo.md"), "todo\n");
   config.projectsDir = path.join(path.dirname(config.dataDir), "Design Studio");
   versions = createVersionStore(config);
-  projects = createProjectStore(config, versions, {
+  projects = createProjectStore(config, versions, projectStorePorts, {
     installTemplateDeps: async (cacheDir) => {
       await mkdir(path.join(cacheDir, "node_modules", "react"), {
         recursive: true,

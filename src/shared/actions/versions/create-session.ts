@@ -13,7 +13,7 @@ import { SessionEndSchema } from "./schema.js";
 
 const createSessionVersions = defineAction({
   access: "edit",
-  agent: { off: "ui-bootstrap" },
+  agent: { off: "legacy-agent" },
   confirm: "none",
   description:
     "Save the open edit session of a direction as one new version, from the studio edit bar. The session starts at baseVersionId.",

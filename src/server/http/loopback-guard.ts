@@ -38,11 +38,15 @@ const registerLoopbackGuard = (app: Hono, ctx: AppContext): void => {
     const origin = context.req.header("origin") ?? null;
 
     if (!isOriginAllowed(allowedOrigins, origin)) {
-      return context.json({ error: "forbidden" }, FORBIDDEN_STATUS);
+      return Promise.resolve(
+        context.json({ error: "forbidden" }, FORBIDDEN_STATUS)
+      );
     }
 
     if (readToken(context) !== config.studioToken) {
-      return context.json({ error: "forbidden" }, FORBIDDEN_STATUS);
+      return Promise.resolve(
+        context.json({ error: "forbidden" }, FORBIDDEN_STATUS)
+      );
     }
 
     return next();

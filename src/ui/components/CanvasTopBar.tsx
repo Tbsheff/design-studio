@@ -14,7 +14,7 @@ import { shortcutLabel } from "../../shared/keymap";
 import { PORT_OPEN_EVENT } from "../../shared/port";
 import { IS_MAC, tipWithKey } from "../commands/keys";
 import { Icon, type IconName } from "../kit/Icon";
-import { useLive, type LiveStore } from "../liveStore";
+import { useLive, type LiveStore } from "../platform/live-store";
 import { setPortAvailable, type PortOpenDetail } from "../portApi";
 import { uiStore, type ZoomSetting } from "../storage";
 import { usePopover } from "../usePopover";

@@ -1,19 +1,6 @@
 import type { WireInput } from "../../shared/actions/_core/action.js";
-import type { applyPackPacks } from "../../shared/actions/packs/apply-pack.js";
 import type { createDraftPacks } from "../../shared/actions/packs/create-draft.js";
-import type { deletePackPacks } from "../../shared/actions/packs/delete-pack.js";
-import type { duplicatePackPacks } from "../../shared/actions/packs/duplicate-pack.js";
-import type { exportPackPacks } from "../../shared/actions/packs/export-pack.js";
-import type { getDraftPacks } from "../../shared/actions/packs/get-draft.js";
-import type { getPackPacks } from "../../shared/actions/packs/get-pack.js";
-import type { importPackPacks } from "../../shared/actions/packs/import-pack.js";
-import type { inspectPackPacks } from "../../shared/actions/packs/inspect-pack.js";
-import type { listProblemPacks } from "../../shared/actions/packs/list-problem.js";
-import type { listSummaryPacks } from "../../shared/actions/packs/list-summary.js";
 import { routes } from "../../shared/actions/packs/routes.js";
-import type { setPackPacks } from "../../shared/actions/packs/set-pack.js";
-import type { startEditorPacks } from "../../shared/actions/packs/start-editor.js";
-import type { updatePackPacks } from "../../shared/actions/packs/update-pack.js";
 import type {
   ApplyPackResult,
   DesignSystemCheckResult,
@@ -30,19 +17,19 @@ import type {
 import { call } from "./http";
 
 const getPack = async (packId: string): Promise<PackDetail> =>
-  (await call<typeof getPackPacks>(routes.getPackPacks, {
+  (await call(routes.getPackPacks, {
     packId,
   })) as PackDetail;
 
 const checkPack = async (packId: string): Promise<DesignSystemCheckResult> =>
-  (await call<typeof inspectPackPacks>(routes.inspectPackPacks, {
+  (await call(routes.inspectPackPacks, {
     packId,
   })) as DesignSystemCheckResult;
 
 const getDesignSystemDraft = async (
   projectId: string
 ): Promise<DesignSystemDraftInfo> =>
-  (await call<typeof getDraftPacks>(routes.getDraftPacks, {
+  (await call(routes.getDraftPacks, {
     projectId,
   })) as DesignSystemDraftInfo;
 
@@ -72,7 +59,7 @@ const fromBase64 = (content: string, type: string): Blob =>
   );
 
 const listPacks = async (): Promise<PackSummary[]> => {
-  const page = await call<typeof listSummaryPacks>(routes.listSummaryPacks, {
+  const page = await call(routes.listSummaryPacks, {
     cursor: null,
     limit: LIST_LIMIT,
   });
@@ -81,7 +68,7 @@ const listPacks = async (): Promise<PackSummary[]> => {
 };
 
 const packProblems = async (): Promise<PackProblem[]> => {
-  const page = await call<typeof listProblemPacks>(routes.listProblemPacks, {
+  const page = await call(routes.listProblemPacks, {
     cursor: null,
     limit: LIST_LIMIT,
   });
@@ -90,7 +77,7 @@ const packProblems = async (): Promise<PackProblem[]> => {
 };
 
 const renamePack = async (packId: string, name: string): Promise<PackSummary> =>
-  (await call<typeof updatePackPacks>(routes.updatePackPacks, {
+  (await call(routes.updatePackPacks, {
     name,
     packId,
   })) as PackSummary;
@@ -100,24 +87,24 @@ const duplicatePack = async (
   name?: string
 ): Promise<PackSummary> => {
   if (name) {
-    return (await call<typeof duplicatePackPacks>(routes.duplicatePackPacks, {
+    return (await call(routes.duplicatePackPacks, {
       name,
       packId,
     })) as PackSummary;
   }
 
-  return (await call<typeof duplicatePackPacks>(routes.duplicatePackPacks, {
+  return (await call(routes.duplicatePackPacks, {
     packId,
   })) as PackSummary;
 };
 
 const deletePack = async (packId: string): Promise<{ ok: true }> =>
-  (await call<typeof deletePackPacks>(routes.deletePackPacks, {
+  (await call(routes.deletePackPacks, {
     packId,
   })) as { ok: true };
 
 const exportPack = async (packId: string): Promise<Blob> => {
-  const file = await call<typeof exportPackPacks>(routes.exportPackPacks, {
+  const file = await call(routes.exportPackPacks, {
     packId,
   });
 
@@ -128,13 +115,13 @@ const importPack = async (
   file: File,
   mode: ImportPackMode = "ask"
 ): Promise<ImportPackResult> =>
-  (await call<typeof importPackPacks>(routes.importPackPacks, {
+  (await call(routes.importPackPacks, {
     content: await toBase64(file),
     mode,
   })) as ImportPackResult;
 
 const openPackEditor = async (packId: string): Promise<OpenPackEditorResult> =>
-  (await call<typeof startEditorPacks>(routes.startEditorPacks, {
+  (await call(routes.startEditorPacks, {
     packId,
   })) as OpenPackEditorResult;
 
@@ -143,7 +130,7 @@ const applyPack = async (
   directionId: string,
   packId: string
 ): Promise<ApplyPackResult> =>
-  (await call<typeof applyPackPacks>(routes.applyPackPacks, {
+  (await call(routes.applyPackPacks, {
     directionId,
     packId,
     projectId,
@@ -154,7 +141,7 @@ const savePack = async (
   directionId: string,
   input: { name: string; packId?: string; asNew?: boolean; force?: boolean }
 ): Promise<SavePackResult> =>
-  (await call<typeof setPackPacks>(routes.setPackPacks, {
+  (await call(routes.setPackPacks, {
     ...input,
     directionId,
     projectId,
@@ -227,10 +214,7 @@ const createDesignSystemDraft = async (
     upload
   );
 
-  const result = await call<typeof createDraftPacks>(
-    routes.createDraftPacks,
-    input
-  );
+  const result = await call(routes.createDraftPacks, input);
 
   return result as DesignSystemDraftResult;
 };

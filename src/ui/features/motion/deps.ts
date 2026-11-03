@@ -18,6 +18,7 @@ export {
   MOTION_DELAY_MAX,
   MOTION_DURATION_MAX,
   MOTION_STAGGER_MAX,
+  MOTION_STATES,
 } from "../../../shared/motion.js";
 
 export type {

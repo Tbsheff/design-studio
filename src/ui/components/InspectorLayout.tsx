@@ -21,7 +21,7 @@ import {
 } from "../constraints";
 import { Icon, type IconName } from "../kit/Icon";
 import { UiSelect } from "../kit/UiSelect";
-import { useLive } from "../liveStore";
+import { useLive } from "../platform/live-store";
 import {
   SIZE_MODES,
   activeCell,

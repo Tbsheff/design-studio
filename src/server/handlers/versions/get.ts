@@ -2,7 +2,7 @@ import { Effect } from "effect";
 
 import type { Input } from "../../../shared/actions/_core/action.js";
 import type { getVersions } from "../../../shared/actions/versions/get.js";
-import { VersionStore } from "../../store/version-store.js";
+import { VersionStore } from "../../store/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type GetVersionsInput = Input<typeof getVersions>;

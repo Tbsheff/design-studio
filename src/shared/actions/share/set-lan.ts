@@ -5,7 +5,7 @@ import { ShareServerResultSchema } from "./schema.js";
 
 const setLanShare = defineAction({
   access: "edit",
-  agent: { off: "ui-bootstrap" },
+  agent: { off: "legacy-agent" },
   confirm: "none",
   description:
     "Turn Allow on local network on or off for the share listener. When it is on, other devices on your network can open share links too.",

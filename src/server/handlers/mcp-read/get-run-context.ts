@@ -2,7 +2,7 @@ import { Effect } from "effect";
 
 import type { Input } from "../../../shared/actions/_core/action.js";
 import type { getRunContextMcpRead } from "../../../shared/actions/mcp-read/get-run-context.js";
-import { McpReadStore } from "../../preview/mcp-read-store.js";
+import { McpReadStore } from "../../preview/index.js";
 import type { Handle } from "../_core/handler.js";
 
 type GetRunContextMcpReadInput = Input<typeof getRunContextMcpRead>;

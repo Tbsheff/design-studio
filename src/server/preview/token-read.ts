@@ -133,12 +133,17 @@ const readTokens = async (
     return appView ?? { text: NO_TOKENS, tokens: [] };
   }
 
-  return {
+  const view: TokensView = {
     errors: files.errors,
     pack: toPack(files.manifest),
     tokens: files.entries.map((entry) => toTokenEntry(entry)),
-    tokensCss: files.css,
   };
+
+  if (files.css === null) {
+    return view;
+  }
+
+  return { ...view, tokensCss: files.css };
 };
 
 const readDesignMd = async (

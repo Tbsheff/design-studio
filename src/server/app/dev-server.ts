@@ -182,16 +182,7 @@ export class AppServers {
   private readonly servers = new Map<string, AppServer>();
   private readonly pids: DevServerPids | null;
   private readonly reaped: Promise<void>;
-  private readonly onExit = (): void => {
-    for (const server of this.servers.values()) {
-      this.killGroup(server.child, "SIGKILL");
-    }
-
-    this.pids?.clearSync();
-  };
-
   constructor(private readonly deps: AppServerDeps) {
-    process.once("exit", this.onExit);
     this.pids = deps.dataDir ? new DevServerPids(deps.dataDir) : null;
     this.reaped = this.pids
       ? this.pids
@@ -687,6 +678,5 @@ export class AppServers {
   async stopAll(): Promise<void> {
     await Promise.all([...this.servers.keys()].map((id) => this.stop(id)));
     this.pids?.clearSync();
-    process.removeListener("exit", this.onExit);
   }
 }

@@ -391,8 +391,19 @@ export const decisionOverrides: OxlintOverride[] = [
     rules: { "unicorn/max-nested-calls": "off" },
   },
   {
-    files: ["src/server/handlers/mcp-life/*.ts"],
+    files: [
+      "src/server/handlers/mcp-life/*.ts",
+      "src/server/handlers/devserver/*.ts",
+    ],
     rules: { "studio/no-deep-area-import": "off" },
+  },
+  {
+    files: ["src/shared/actions/devserver/*.ts"],
+    rules: { "studio/agent-off-reason": "off" },
+  },
+  {
+    files: ["src/server/app/dev-server-runner.ts"],
+    rules: { "studio/no-local-error-bridge": "off" },
   },
   {
     files: ["src/shared/actions/mcp-life/answer-approval.ts"],

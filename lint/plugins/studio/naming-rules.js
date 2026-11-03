@@ -170,6 +170,14 @@ const signatureReturn = (node) => {
   return null;
 };
 
+const signatureKeyOf = (node) => {
+  if (node.key.type === "Identifier") {
+    return node.key.name;
+  }
+
+  return null;
+};
+
 const reportFlag = (context, node, name, message) => {
   if (name !== null && !FLAG_NAME.test(name)) {
     context.report({ message, node });
@@ -193,8 +201,8 @@ const booleanName = rule((context) => ({
     }
   },
   TSPropertySignature: (node) => {
-    if (isBooleanType(node.typeAnnotation?.typeAnnotation)) {
-      reportFlag(context, node.key, keyName(node), BOOLEAN_MESSAGE);
+    if (node.typeAnnotation?.typeAnnotation?.type === "TSBooleanKeyword") {
+      reportFlag(context, node.key, signatureKeyOf(node), BOOLEAN_MESSAGE);
     }
   },
 }));

@@ -75,6 +75,13 @@ const DEAD_CODE_FILES = [
 
 const LEGACY_SERVICE_OPTIONS = ["src/server/store/authorizer.ts"];
 
+const SPLIT_NAMING_FILES = [
+  "desktop/{boot,pack-args}.ts",
+  "src/ui/features/{home,inspector}/**/*.ts",
+];
+
+const NEW_FEATURE_FILES = ["src/ui/features/{home,inspector}/**"];
+
 const studioReview: OxlintOverride[] = [
   {
     files: ["lint/day-one.ts"],
@@ -202,6 +209,72 @@ const studioReview: OxlintOverride[] = [
     files: ["src/server/agent/{agent-sdk-client,run-runner}.ts"],
     rules: {
       "studio/no-undefined-type": "error",
+      "studio/readonly-field": "error",
+    },
+  },
+  {
+    files: ["lint/decisions.ts"],
+    rules: {
+      "studio/no-style-off": "error",
+      "studio/one-override-per-files": "error",
+    },
+  },
+  {
+    files: ["src/ui/**/*.ts", "src/ui/**/*.tsx"],
+    rules: {
+      "studio/feature-index-import": "error",
+      "studio/no-reexport-shim": "error",
+    },
+  },
+  {
+    files: NEW_FEATURE_FILES,
+    rules: { "studio/feature-file-layout": "error" },
+  },
+  {
+    files: ["src/server/**/*.probe.ts", "desktop/**/*.renderer.ts"],
+    rules: { "studio/dom-project-wired": "error" },
+  },
+  {
+    files: ["src/server/**/*.probe.ts"],
+    rules: {
+      "studio/area-import-index": "error",
+      "studio/probe-has-function": "error",
+    },
+  },
+  {
+    files: ["desktop/**/*.renderer.ts"],
+    rules: { "studio/renderer-has-function": "error" },
+  },
+  {
+    files: [...SERVER_FILES, "desktop/**/*.ts"],
+    rules: { "studio/serialized-fn-name-shim": "error" },
+  },
+  {
+    files: SERVER_FILES,
+    rules: { "studio/no-dynamic-app-import": "error" },
+  },
+  {
+    files: ["src/bridge/**/*.ts"],
+    rules: {
+      "studio/bridge-type-import": "error",
+      "studio/no-floating-async": "error",
+    },
+  },
+  {
+    files: ["src/shared/actions/**/*.ts"],
+    rules: { "studio/no-catch-all-union": "error" },
+  },
+  {
+    files: ["src/bridge/bridge-types.ts"],
+    rules: { "studio/boolean-name": "error" },
+  },
+  {
+    files: SPLIT_NAMING_FILES,
+    rules: {
+      "studio/boolean-name": "error",
+      "studio/module-function-verb": "error",
+      "studio/no-undefined-type": "error",
+      "studio/predicate-name": "error",
       "studio/readonly-field": "error",
     },
   },

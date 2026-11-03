@@ -23,16 +23,41 @@ const PIN_MESSAGE =
 
 const cache = new Map();
 
-const readCommitted = (relative) => {
+const LISTING_BUFFER = 67_108_864;
+
+const runGit = (args) => {
   try {
-    return execFileSync("git", ["show", `HEAD:${relative}`], {
+    return execFileSync("git", args, {
       cwd: ROOT,
       encoding: "utf-8",
+      maxBuffer: LISTING_BUFFER,
       stdio: ["ignore", "pipe", "ignore"],
     });
   } catch {
     return null;
   }
+};
+
+const readCommitted = (relative) => runGit(["show", `HEAD:${relative}`]);
+
+const headTree = { files: null, texts: new Map() };
+
+const isCommitted = (relative) => {
+  if (headTree.files === null) {
+    const listing = runGit(["ls-tree", "-r", "--name-only", "HEAD"]) ?? "";
+
+    headTree.files = new Set(listing.split("\n").filter(Boolean));
+  }
+
+  return headTree.files.has(relative);
+};
+
+const committedTextOf = (relative) => {
+  if (!headTree.texts.has(relative)) {
+    headTree.texts.set(relative, readCommitted(relative));
+  }
+
+  return headTree.texts.get(relative);
 };
 
 const toValues = (text) => {
@@ -91,4 +116,4 @@ const frozenPin = rule((context) => {
   };
 });
 
-export { frozenPin };
+export { committedTextOf, frozenPin, isCommitted };

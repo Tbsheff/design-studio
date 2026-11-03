@@ -11,7 +11,6 @@ import { ORG_SCOPE_AGENT_TOOLS } from "./org-scope.js";
 import { PACKS_AGENT_TOOLS } from "./packs.js";
 import { PROJECTS_AGENT_TOOLS } from "./projects.js";
 import { PUBLISH_AGENT_TOOLS } from "./publish.js";
-import { RUNS_AGENT_TOOLS } from "./runs.js";
 import { SESSION_AGENT_TOOLS } from "./session.js";
 import { SHIP_AGENT_TOOLS } from "./ship.js";
 import { STUDIO_AGENT_TOOLS } from "./studio.js";
@@ -31,7 +30,6 @@ const LEGACY_AGENT_TOOLS: readonly string[] = [
   ...PACKS_AGENT_TOOLS,
   ...PROJECTS_AGENT_TOOLS,
   ...PUBLISH_AGENT_TOOLS,
-  ...RUNS_AGENT_TOOLS,
   ...SESSION_AGENT_TOOLS,
   ...SHIP_AGENT_TOOLS,
   ...STUDIO_AGENT_TOOLS,

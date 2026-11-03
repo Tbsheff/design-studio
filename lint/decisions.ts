@@ -1534,4 +1534,10 @@ export const decisionOverrides: OxlintOverride[] = [
       "unicorn/prefer-spread": "off",
     },
   },
+  {
+    files: ["src/ui/features/inspector/polish.ts"],
+    rules: {
+      "import/no-relative-parent-imports": "off",
+    },
+  },
 ];

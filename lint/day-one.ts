@@ -1067,7 +1067,6 @@ const FILES = [
   "src/ui/features/design-system/packs.ts",
   "src/ui/pasteJsx.ts",
   "src/ui/perfTelemetry.ts",
-  "src/ui/polish.ts",
   "src/ui/popoverPlacement.ts",
   "src/ui/features/design-system/port-api.ts",
   "src/ui/projectHits.ts",

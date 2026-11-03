@@ -8,6 +8,7 @@ import { DevServerLive } from "./dev-server/live.js";
 import { DirectEditLive } from "./direct-edit/live.js";
 import { EventsLive } from "./events/live.js";
 import { ExportLive } from "./export/live.js";
+import { ImageLive } from "./image/live.js";
 import { OrgScopeLive } from "./org-scope/live.js";
 import { PackLive } from "./pack/live.js";
 import { ProjectsLive } from "./projects/live.js";
@@ -31,6 +32,7 @@ const ALL_LIVE = {
   directEdit: DirectEditLive,
   events: EventsLive,
   export: ExportLive,
+  image: ImageLive,
   orgScope: OrgScopeLive,
   pack: PackLive,
   projects: ProjectsLive,

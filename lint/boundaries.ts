@@ -129,6 +129,7 @@ export const LAYERS: Layer[] = [
       "comments",
       "content",
       "viewport",
+      "image-generate",
       "state-styles",
       "breakpoints",
       "style-scope",

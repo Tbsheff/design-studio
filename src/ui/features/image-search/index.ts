@@ -10,3 +10,5 @@ export type {
   ImageSearchHost,
   ImageSearchHostOptions,
 } from "./use-image-search-host.js";
+
+export type { GenerateTabProps, RenderGenerate } from "./generate-tab.js";

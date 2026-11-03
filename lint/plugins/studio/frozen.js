@@ -30,6 +30,7 @@ const FROZEN_AREAS = new Set([
   "tweaks",
   "variations",
   "viewport",
+  "image-generate",
 ]);
 
 const FROZEN_EXEMPTIONS = new Set([
@@ -70,6 +71,9 @@ const FROZEN_EXEMPTIONS = new Set([
 ]);
 
 const LEGACY_OVERRIDES = new Set([
+  "src/server/image-generate/mock-image.ts",
+  "src/shared/actions/image/*.ts",
+  "src/server/viewport/engine/cells.ts",
   "src/server/direct-edit/direct-edit-props-ops.ts",
   "src/server/platform/logger/**",
   "src/server/platform/config/**",

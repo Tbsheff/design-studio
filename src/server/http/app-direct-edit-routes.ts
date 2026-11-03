@@ -8,6 +8,7 @@ import {
 } from "../components/index.js";
 import { bindContentRuntime } from "../content/index.js";
 import { bindDirectEditRuntime } from "../direct-edit/index.js";
+import { bindImageGenerateRuntime } from "../image-generate/index.js";
 import type { AppContext } from "./app-context.js";
 import { listWorkTree } from "./mentions.js";
 
@@ -26,6 +27,7 @@ const registerDirectEditRoutes = (_app: Hono, ctx: AppContext): void => {
   } = ctx;
 
   bindContentRuntime({ editDeps, withDirection });
+  bindImageGenerateRuntime({ editDeps, preview, withDirection });
   bindDirectEditRuntime(config.dataDir, {
     canvas,
     commitDesignMd,

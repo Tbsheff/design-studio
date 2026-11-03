@@ -134,3 +134,24 @@ fieldset.chips {
   padding: 0;
   border: 0;
 }
+
+.tabs {
+  display: flex;
+  gap: var(--s-1);
+  padding: 0 var(--s-4);
+  border-bottom: 1px solid var(--line);
+}
+
+.tab {
+  padding: var(--s-2) var(--s-3);
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+
+.tab[aria-selected="true"] {
+  border-bottom-color: var(--accent);
+  color: var(--text);
+}

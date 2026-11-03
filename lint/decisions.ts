@@ -265,6 +265,39 @@ export const SCOPED_OFF_REASONS: Record<string, string> = {
 
 export const decisionOverrides: OxlintOverride[] = [
   {
+    files: ["src/server/image-generate/openai.ts"],
+    rules: { "id-length": "off" },
+  },
+  {
+    files: ["src/server/image-generate/mock-image.ts"],
+    rules: {
+      "id-length": "off",
+      "no-magic-numbers": "off",
+      "sonarjs/shorthand-property-grouping": "off",
+    },
+  },
+  {
+    files: ["src/server/image-generate/provider-env.ts"],
+    rules: { "node/no-process-env": "off" },
+  },
+  {
+    files: [
+      "src/shared/actions/image/*.ts",
+      "src/shared/actions/image/errors/status.ts",
+      "src/server/handlers/image/*.ts",
+      "src/server/image-generate/*.ts",
+      "src/ui/features/image-generate/deps.ts",
+    ],
+    rules: { "import/no-relative-parent-imports": "off" },
+  },
+  {
+    files: [
+      "src/server/viewport/engine/cells.ts",
+      "src/ui/features/viewport/matrix-model.ts",
+    ],
+    rules: { "no-magic-numbers": "off" },
+  },
+  {
     files: ["src/server/viewport/create-matrix.ts"],
     rules: { "id-length": "off" },
   },

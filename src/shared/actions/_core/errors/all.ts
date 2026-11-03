@@ -2,6 +2,7 @@
 import type { CommentError } from "../../comment/errors/index.js";
 import type { ContentError } from "../../content/errors/index.js";
 import type { DirectEditError } from "../../direct-edit/errors/index.js";
+import type { ImageError } from "../../image/errors/index.js";
 import type { PackError } from "../../pack/errors/index.js";
 import type { PublishError } from "../../publish/errors/index.js";
 import type { ViewportError } from "../../viewport/errors/index.js";
@@ -12,6 +13,7 @@ type StudioError =
   | CommentError
   | ContentError
   | DirectEditError
+  | ImageError
   | PackError
   | PublishError
   | ViewportError;

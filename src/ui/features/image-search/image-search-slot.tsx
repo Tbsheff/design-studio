@@ -14,10 +14,12 @@ const ImageSearchSlot = ({
   onClose,
   onDone,
   projectId,
+  renderGenerate,
   target,
 }: ImageSearchSheetProps): ReactElement => (
   <Suspense fallback={null}>
     <ImageSearchSheet
+      renderGenerate={renderGenerate}
       directionId={directionId}
       projectId={projectId}
       target={target}

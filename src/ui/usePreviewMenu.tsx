@@ -15,6 +15,8 @@ import { PreviewMenu } from "./components/PreviewMenu";
 import type { PreviewMenuItem } from "./components/PreviewMenu";
 import { IconSlot } from "./features/icons/icon-slot";
 import { useIconHost } from "./features/icons/use-icon-host";
+import { ImageGenerateSlot } from "./features/image-generate/image-generate-slot";
+import type { GenerateTabProps } from "./features/image-search/generate-tab";
 import { ImageSearchMount } from "./features/image-search/image-search-mount";
 import { useImageSearchHost } from "./features/image-search/use-image-search-host";
 import { pasteJsx } from "./pasteJsx";
@@ -22,6 +24,15 @@ import { uiStore } from "./storage";
 import { selectionTargets, structureMenuItems } from "./structureEdits";
 import { requestAuthoredCss } from "./useAuthoredCss";
 import type { LayerEdits } from "./useLayerEdits";
+
+const renderGenerateTab = (props: GenerateTabProps) => (
+  <ImageGenerateSlot
+    directionId={props.directionId}
+    projectId={props.projectId}
+    target={props.target}
+    onDone={props.onDone}
+  />
+);
 
 const CreateComponentDialog = lazy(
   () => import("./components/CreateComponentDialog")
@@ -270,6 +281,7 @@ export function usePreviewMenu(o: Options) {
         directionId={directionId}
         host={photos}
         projectId={o.ids.projectId}
+        renderGenerate={renderGenerateTab}
         onDone={o.edits.notify}
       />
     </>

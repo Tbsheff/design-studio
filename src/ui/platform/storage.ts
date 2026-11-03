@@ -233,3 +233,11 @@ export const writeStored = (key: string, value: string): void => {
     return;
   }
 };
+
+export const removeStored = (key: string): void => {
+  try {
+    globalThis.localStorage.removeItem(key);
+  } catch {
+    return;
+  }
+};

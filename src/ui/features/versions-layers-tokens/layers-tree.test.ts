@@ -11,7 +11,7 @@ import {
   siblingRow,
   treeKeyAction,
   visibleRows,
-} from "./layersTree";
+} from "./layers-tree.js";
 
 const raw = {
   nodes: [

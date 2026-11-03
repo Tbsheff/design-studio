@@ -1,0 +1,301 @@
+import {
+  lazy,
+  Suspense,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import type { KeyboardEvent } from "react";
+
+import type { ProjectKind, Version } from "../../../shared/contracts.js";
+import { Icon } from "../../kit/Icon.js";
+import { readStored, writeStored } from "../../platform/storage.js";
+import { useUi } from "../../storage.js";
+import { CompareFrame } from "./compare-frame.js";
+import { OverlayBoard, ReferenceBoard, SliderBoard } from "./compare-modes.js";
+import type { BoardProps } from "./compare-modes.js";
+import { COPY } from "./copy.js";
+
+import "../../styles/reference.css";
+import { displayTitle, indexVersions } from "./version-labels.js";
+
+type Mode = "side" | "slider" | "overlay" | "reference" | "code";
+
+const CompareCode = lazy(async () => {
+  const loaded = await import("./compare-code.js");
+
+  return { default: loaded.CompareCode };
+});
+
+const MODES: { id: Mode; label: string; tip: string }[] = [
+  {
+    id: "side",
+    label: "Side by side",
+    tip: "Both versions next to each other",
+  },
+  {
+    id: "slider",
+    label: "Slider",
+    tip: "Drag a line to wipe between versions",
+  },
+  {
+    id: "overlay",
+    label: "Overlay",
+    tip: "The newer version with changed pixels in red",
+  },
+  {
+    id: "reference",
+    label: "Reference",
+    tip: "A screenshot or mock over the newer version, with a slider",
+  },
+  { id: "code", label: "Code", tip: "The line changes in each changed file" },
+];
+
+const MODE_KEY = "design-studio.compare-mode";
+
+const STACK_GAIN = 1.25;
+
+function savedMode(): Mode {
+  try {
+    const value = readStored(MODE_KEY);
+
+    return MODES.some((mode) => mode.id === value) ? (value as Mode) : "side";
+  } catch {
+    return "side";
+  }
+}
+
+function ModeSwitch({
+  mode,
+  onMode,
+}: {
+  mode: Mode;
+  onMode: (mode: Mode) => void;
+}) {
+  const buttonsRef = useRef<(HTMLButtonElement | null)[]>([]);
+
+  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    const delta =
+      event.key === "ArrowRight" || event.key === "ArrowDown"
+        ? 1
+        : event.key === "ArrowLeft" || event.key === "ArrowUp"
+          ? -1
+          : 0;
+
+    if (delta === 0) {
+      return;
+    }
+
+    event.preventDefault();
+
+    const index =
+      (MODES.findIndex((item) => item.id === mode) + delta + MODES.length) %
+      MODES.length;
+
+    const next = MODES[index];
+
+    if (!next) {
+      return;
+    }
+
+    onMode(next.id);
+
+    buttonsRef.current[index]?.focus();
+  };
+
+  return (
+    <div
+      className="segmented compare-modes"
+      role="radiogroup"
+      aria-label={COPY.labelCompareMode}
+      onKeyDown={onKeyDown}
+    >
+      {MODES.map((item) => (
+        <button
+          key={item.id}
+          type="button"
+          ref={(node) => {
+            buttonsRef.current[MODES.indexOf(item)] = node;
+          }}
+          role="radio"
+          aria-checked={mode === item.id}
+          tabIndex={mode === item.id ? 0 : -1}
+          className={mode === item.id ? "on" : ""}
+          {...{ "aria-description": item.tip }}
+          onClick={() => onMode(item.id)}
+        >
+          {item.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function SidePane(props: BoardProps & { side: "A" | "B" }) {
+  const version = props.side === "A" ? props.older : props.newer;
+  const title = props.side === "A" ? props.olderTitle : props.newerTitle;
+
+  return (
+    <div className="compare-pane">
+      <div
+        className="compare-label"
+        data-tip={title}
+        style={{ width: props.viewport.width * props.scale }}
+      >
+        <span className="badge accent">{props.side}</span>
+        <span className="compare-title truncate">{title}</span>
+      </div>
+      <div className="compare-stage">
+        <div
+          className="compare-board"
+          style={{
+            width: props.viewport.width * props.scale,
+            height: props.viewport.height * props.scale,
+          }}
+        >
+          <CompareFrame
+            projectId={props.projectId}
+            version={version}
+            title={title}
+            kind={props.kind}
+            viewport={props.viewport}
+            scale={props.scale}
+            onError={props.onError}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface Props {
+  projectId: string;
+  kind: ProjectKind;
+  left: Version;
+  right: Version;
+  versions?: Version[];
+  onClose: () => void;
+}
+
+export function CompareView({
+  projectId,
+  kind,
+  left,
+  right,
+  versions,
+  onClose,
+}: Props) {
+  const { viewport } = useUi();
+  const ref = useRef<HTMLDivElement>(null);
+  const [mode, setModeState] = useState<Mode>(savedMode);
+  const [scale, setScale] = useState(0.5);
+  const [stacked, setStacked] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const [older, newer] =
+    left.createdAt <= right.createdAt ? [left, right] : [right, left];
+
+  const index = useMemo(
+    () => indexVersions(versions ?? [left, right]),
+    [versions, left, right]
+  );
+
+  const setMode = (next: Mode) => {
+    setModeState(next);
+
+    writeStored(MODE_KEY, next);
+  };
+
+  useLayoutEffect(() => {
+    const el = ref.current;
+
+    if (!el) {
+      return;
+    }
+
+    const measure = () => {
+      const fit = (w: number, h: number) =>
+        Math.max(0.1, Math.min(1, w / viewport.width, h / viewport.height));
+
+      const single = fit(el.clientWidth - 32, el.clientHeight - 76);
+
+      if (mode !== "side") {
+        setStacked(false);
+        setScale(single);
+
+        return;
+      }
+
+      const across = fit((el.clientWidth - 48) / 2, el.clientHeight - 76);
+      const down = fit(el.clientWidth - 32, (el.clientHeight - 48) / 2 - 36);
+      const stack = down > across * STACK_GAIN;
+      setStacked(stack);
+      setScale(stack ? down : across);
+    };
+
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    measure();
+
+    return () => ro.disconnect();
+  }, [viewport.width, viewport.height, mode]);
+
+  const board: BoardProps = {
+    projectId,
+    kind,
+    older,
+    newer,
+    olderTitle: displayTitle(older, index),
+    newerTitle: displayTitle(newer, index),
+    viewport: { width: viewport.width, height: viewport.height },
+    scale,
+    onError: setError,
+  };
+
+  return (
+    <div className="canvas">
+      <div className="toolbar">
+        <Icon name="compare" />
+        <strong className="toolbar-title">Compare</strong>
+        <span className="dims-readout">
+          {viewport.width} × {viewport.height}
+        </span>
+        <ModeSwitch mode={mode} onMode={setMode} />
+        <div className="spacer" />
+        <button className="btn small has-icon" onClick={onClose}>
+          <Icon name="close" size={14} />
+          Close compare
+        </button>
+      </div>
+      {mode === "code" ? (
+        <div className="compare-code-scroll" data-mode={mode}>
+          <Suspense fallback={null}>
+            <CompareCode projectId={projectId} older={older} newer={newer} />
+          </Suspense>
+        </div>
+      ) : (
+        <div
+          className={`compare ${mode === "side" ? (stacked ? "stacked" : "") : "single"}`}
+          ref={ref}
+          data-mode={mode}
+        >
+          {error && (
+            <div className="stage-message" role="alert">
+              {error}
+            </div>
+          )}
+          {mode === "side" && (
+            <>
+              <SidePane {...board} side="A" />
+              <SidePane {...board} side="B" />
+            </>
+          )}
+          {mode === "slider" && <SliderBoard {...board} />}
+          {mode === "overlay" && <OverlayBoard {...board} />}
+          {mode === "reference" && <ReferenceBoard {...board} />}
+        </div>
+      )}
+    </div>
+  );
+}

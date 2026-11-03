@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import type { CompiledTokenEntry } from "../shared/contracts";
-import { valuesFromStyles } from "./cssValues";
-import { lintValues } from "./tokenLint";
+import type { CompiledTokenEntry } from "../../../shared/contracts.js";
+import { valuesFromStyles } from "../../cssValues.js";
+import { lintValues } from "./token-lint.js";
 
 const entries: CompiledTokenEntry[] = [
   {

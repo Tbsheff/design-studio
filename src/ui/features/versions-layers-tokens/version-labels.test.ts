@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import type { Version, VersionMeta } from "../shared/contracts";
+import type { Version, VersionMeta } from "../../../shared/contracts.js";
 import {
   displayTitle,
   indexVersions,
   kindInfo,
   originOf,
   undoneOf,
-} from "./versionLabels";
+} from "./version-labels.js";
 
 function version(
   id: string,

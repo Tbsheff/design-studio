@@ -1,0 +1,33 @@
+const COPY = {
+  labelChangeTintOpacity: "Change tint opacity",
+  labelCloseLayers: "Close layers",
+  labelCompareMode: "Compare mode",
+  labelComparePosition: "Compare position",
+  labelCreateToken: "Create token",
+  labelDirectionName: "Direction name",
+  labelFilterTokens: "Filter tokens",
+  labelLayerActions: "Layer actions",
+  labelLayerName: "Layer name",
+  labelLayers: "Layers",
+  labelMoreVersionActions: "More version actions",
+  labelPreviewTheme: "Preview theme",
+  labelRawValue: "Raw value",
+  labelReferenceOpacity: "Reference opacity",
+  labelUndo: "Undo",
+  labelVersionActions: "Version actions",
+  labelVersionList: "Version list",
+  labelVersionName: "Version name",
+  placeholderFilterTokens: "Filter tokens",
+  placeholderNameThisLayer: "Name this layer",
+  placeholderSearchTokens: "Search tokens",
+  tipClose1: "Close  ⌥1",
+  tipDragOrUse: "Drag, or use ← →",
+  tipRemoveDarkValue: "Remove dark value",
+  tipUndoOnlyThisChangeInTheHeadAsANewVersion:
+    "Undo only this change in the head, as a new version",
+  tipUndoTheHeadVersionZ: "Undo the head version (⌘Z)",
+  titleTokens: "Tokens",
+  titleVersions: "Versions",
+} as const;
+
+export { COPY };

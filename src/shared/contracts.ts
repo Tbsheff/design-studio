@@ -7,6 +7,8 @@ import type { StatesRequest } from "./states";
 import type { StyleQuery, StyleScanResult } from "./style-search";
 import type { EditScope } from "./usage-scope";
 
+export type LegacyBinding<T> = T;
+
 export type ProjectKind = "html" | "react";
 
 export interface ProjectSettings {
@@ -58,7 +60,7 @@ export interface SkillCatalog {
 export interface Direction {
   id: string;
   name: string;
-  workTree: string;
+  workTree: LegacyBinding<string>;
   branch: string;
   headVersionId: string | null;
   parentVersionId: string | null;
@@ -157,7 +159,7 @@ export interface Project {
   createdAt: number;
   updatedAt: number;
   openedAt?: number;
-  imported: { sourcePath: string; created?: boolean } | null;
+  imported: { sourcePath: LegacyBinding<string>; created?: boolean } | null;
   packId?: string | null;
   designSystemFor?: string | null;
   designSystemDeleted?: boolean;
@@ -173,10 +175,10 @@ export type AppFramework = "next" | "vite";
 
 export interface AttachedApp {
   framework: AppFramework;
-  appDir: string;
+  appDir: LegacyBinding<string>;
   mode: "managed" | "url";
   url?: string;
-  env?: Record<string, string>;
+  env?: LegacyBinding<Record<string, string>>;
 }
 
 export type AppServerState =
@@ -370,7 +372,7 @@ export interface Attachment {
   id: string;
   name: string;
   mime: string;
-  path: string;
+  path: LegacyBinding<string>;
 }
 
 export type RunMode = "edit" | "critique";

@@ -1,27 +1,13 @@
 import { readFile } from "node:fs/promises";
-import { fileURLToPath } from "node:url";
 
 import { packagedResource } from "../resources.js";
-
-const BRIDGE_ENTRY = fileURLToPath(
-  new URL("../../bridge/bridge.ts", import.meta.url)
-);
 
 let bundlePromise: Promise<string> | null = null;
 
 async function bundleBridge(): Promise<string> {
-  const { build } = await import("esbuild");
+  const { buildBridge } = await import("../../../desktop/build-shared.js");
 
-  const result = await build({
-    entryPoints: [BRIDGE_ENTRY],
-    bundle: true,
-    format: "iife",
-    minify: true,
-    write: false,
-    platform: "browser",
-    target: ["es2020"],
-    logLevel: "silent",
-  });
+  const result = await buildBridge({ outfile: null, logLevel: "silent" });
 
   const output = result.outputFiles[0];
 

@@ -15,6 +15,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { build } from "esbuild";
 import type { BuildOptions, Metafile } from "esbuild";
 
+import { buildBridge } from "./build-shared.js";
 import { linkEsbuildBinary, pruneModules } from "./prune.js";
 import type { PruneStats } from "./prune.js";
 
@@ -256,18 +257,8 @@ export function dependencyClosure(names: string[]): string[] {
   return [...seen].sort();
 }
 
-async function buildBridge(file: string): Promise<void> {
-  const entry = path.join(ROOT, "src", "bridge", "bridge.ts");
-  await build({
-    entryPoints: [entry],
-    bundle: true,
-    format: "iife",
-    minify: true,
-    platform: "browser",
-    target: ["es2020"],
-    outfile: file,
-    logLevel: "warning",
-  });
+async function buildBridgeFile(file: string): Promise<void> {
+  await buildBridge({ outfile: file, logLevel: "warning" });
 }
 
 function copyPackage(source: string, target: string): void {
@@ -439,7 +430,7 @@ export async function stagePackage(): Promise<void> {
   const serverDir = path.join(STAGE_RESOURCES, "server");
   const metafiles = await buildServer(serverDir);
   await stagePublishWorker(serverDir);
-  await buildBridge(path.join(STAGE_RESOURCES, "bridge.js"));
+  await buildBridgeFile(path.join(STAGE_RESOURCES, "bridge.js"));
   copyStatic(STAGE_RESOURCES);
   copySlimGit(path.join(STAGE_RESOURCES, "git"));
   const packages = copyServerModules(serverDir, metafiles);

@@ -1,18 +1,7 @@
-import {
-  lazy,
-  Suspense,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import type {
   CommentPrefill,
-  CompiledTokenEntry,
-  Project,
-  RunCanvasRef,
   RunEffort,
   RunLevel,
   RunMention,
@@ -20,10 +9,35 @@ import type {
   SelectionContext,
   Version,
 } from "../../shared/contracts";
-import { projectTypeOf, TYPE_LABELS } from "../../shared/project-search";
 import { statesPrompt } from "../../shared/states";
 import type { InlineRunExtras } from "../../shared/usage-scope";
 import { api, errorText } from "../api";
+import { prefetchCommandLayer } from "../app/screens";
+import {
+  ExportLayer,
+  RulesSlot,
+  ShareLayer,
+  ShipLayer,
+} from "../app/studio/layers";
+import {
+  appDirOf,
+  exportTarget,
+  kindLabel,
+  nameOf,
+  paneAttr,
+  reviewPair,
+  shipOpener,
+  whenDirection,
+} from "../app/studio/project-model";
+import {
+  buildPlanRequest,
+  composeRequest,
+  firstText,
+  withCommentIds,
+} from "../app/studio/request-model";
+import { neverRan, runById, runStepOf } from "../app/studio/run-model";
+import { hasDarkMode, tokenEntries } from "../app/studio/token-model";
+import { useHomeVariationsHandoff } from "../app/studio/use-home-variations-handoff";
 import { useInlineApprovals } from "../approvalSpot";
 import type { PreviewPort } from "../bridge";
 import {
@@ -33,9 +47,9 @@ import {
   type CanvasFrame,
 } from "../canvasFrames";
 import { useDesktopContext } from "../desktop";
-import type { ExportTarget } from "../exportApi";
 import { focusNewProject } from "../features/commands/global-commands";
 import { runCommand } from "../features/commands/registry";
+import { useStudioCommands } from "../features/commands/use-studio-commands";
 import { POLISH_REQUEST } from "../features/inspector/index.js";
 import { setTelemetryScope } from "../perfTelemetry";
 import { setProjectSwitcher } from "../projectNav";
@@ -44,7 +58,6 @@ import { emptyRun, shownPending, type RunView } from "../runState";
 import { randomToken } from "../session";
 import {
   createDraftStore,
-  homeVariations,
   uiStore,
   useDraftActive,
   useUi,
@@ -99,240 +112,7 @@ import {
   UnfinishedSlot,
   runStoppedUnsaved,
 } from "./StudioParts";
-import { runStepText } from "./ToolChips";
 import { VariationsTop, canvasVariations } from "./VariationsLayer";
-
-const ExportDialog = lazy(() =>
-  import("./ExportDialog").then((m) => ({ default: m.ExportDialog }))
-);
-
-const ShipDialog = lazy(() => import("./ShipDialog"));
-const RulesEditor = lazy(() => import("./RulesEditor"));
-const ShareDialog = lazy(() => import("./ShareDialog"));
-
-function RulesSlot({
-  projectId,
-  directionId,
-}: {
-  projectId: string;
-  directionId: string | null;
-}) {
-  if (!directionId) {
-    return null;
-  }
-
-  return (
-    <Suspense fallback={null}>
-      <RulesEditor
-        key={directionId}
-        projectId={projectId}
-        directionId={directionId}
-      />
-    </Suspense>
-  );
-}
-
-function ShipLayer({
-  projectId,
-  open,
-  onClose,
-}: {
-  projectId: string;
-  open: boolean;
-  onClose: () => void;
-}) {
-  if (!open) {
-    return null;
-  }
-
-  return (
-    <Suspense fallback={null}>
-      <ShipDialog projectId={projectId} onClose={onClose} />
-    </Suspense>
-  );
-}
-
-function ShareLayer({
-  target,
-  onClose,
-}: {
-  target: ShareTarget | null;
-  onClose: () => void;
-}) {
-  if (!target) {
-    return null;
-  }
-
-  return (
-    <Suspense fallback={null}>
-      <ShareDialog target={target} onClose={onClose} />
-    </Suspense>
-  );
-}
-
-function ExportLayer({
-  target,
-  onClose,
-}: {
-  target: ExportTarget | null;
-  onClose: () => void;
-}) {
-  if (!target) {
-    return null;
-  }
-
-  return (
-    <Suspense fallback={null}>
-      <ExportDialog target={target} onClose={onClose} />
-    </Suspense>
-  );
-}
-
-import { prefetchCommandLayer } from "../app/screens";
-import { useStudioCommands } from "../features/commands/use-studio-commands";
-
-function firstText(...texts: (string | null | undefined)[]): string | null {
-  return texts.find((text) => typeof text === "string") ?? null;
-}
-
-function useHomeVariationsHandoff(
-  projectId: string,
-  ready: boolean,
-  propose: ReturnType<typeof useVariations>["propose"]
-): void {
-  useEffect(() => {
-    if (!ready) {
-      return;
-    }
-
-    const intent = homeVariations.take(projectId);
-
-    if (intent) {
-      void propose(intent.prompt, intent.level, [], intent.count);
-    }
-  }, [ready, projectId, propose]);
-}
-
-interface ComposeInput {
-  prompt: string;
-  mode: ComposerMode;
-  attachmentIds: string[];
-  level: RunLevel;
-  effort: RunEffort | null;
-  mentions: RunMention[];
-  selection: SelectionContext[];
-  canvas?: RunCanvasRef;
-}
-
-function composeRequest(input: ComposeInput): RunRequest {
-  return {
-    prompt: input.prompt,
-    ...modeOf(input.mode),
-    level: input.level,
-    ...effortOf(input.effort),
-    ...(input.mentions.length > 0 ? { mentions: input.mentions } : {}),
-    selection: input.selection.length > 0 ? input.selection : undefined,
-    attachmentIds:
-      input.attachmentIds.length > 0 ? input.attachmentIds : undefined,
-    ...(input.canvas ? { canvas: input.canvas } : {}),
-  };
-}
-
-function withCommentIds(request: RunRequest, commentIds: string[]): RunRequest {
-  return commentIds.length > 0 && request.mode === "edit"
-    ? { ...request, commentIds }
-    : request;
-}
-
-function buildPlanRequest(run: RunView): RunRequest {
-  const level = run.request?.level;
-
-  return {
-    prompt: "Build the plan above.",
-    mode: "edit",
-    ...(level ? { level } : {}),
-  };
-}
-
-function hasDarkMode(
-  tokens: { mode: string; entries: CompiledTokenEntry[] } | null
-): boolean {
-  return (
-    tokens?.mode === "light" &&
-    tokens.entries.some(
-      (entry) => entry.darkValue !== undefined && entry.darkValue !== null
-    )
-  );
-}
-
-function tokenEntries(
-  tokens: { entries: CompiledTokenEntry[] } | null
-): CompiledTokenEntry[] {
-  return tokens?.entries ?? [];
-}
-
-function modeOf(mode: ComposerMode): Pick<RunRequest, "mode" | "plan"> {
-  return mode === "plan" ? { mode: "edit", plan: true } : { mode };
-}
-
-function effortOf(effort: RunEffort | null): Pick<RunRequest, "effort"> {
-  return effort ? { effort } : {};
-}
-
-function shipOpener(
-  project: { app?: unknown },
-  setOpen: (open: boolean) => void
-): (() => void) | null {
-  return project.app ? () => setOpen(true) : null;
-}
-
-function reviewPair(
-  list: readonly Version[],
-  versionId: string
-): [Version, Version] | null {
-  const v = list.find((x) => x.id === versionId);
-  const parent = v ? list.find((x) => x.id === v.parentId) : undefined;
-
-  return v && parent ? [parent, v] : null;
-}
-
-function exportTarget(
-  versions: Version[],
-  direction: { headVersionId: string | null } | null
-): string | null {
-  return (
-    (versions.find((v) => v.id === direction?.headVersionId) ?? versions[0])
-      ?.id ?? null
-  );
-}
-
-function runById<T>(runs: Record<string, T>, id: string | null): T | null {
-  return id ? (runs[id] ?? null) : null;
-}
-
-function paneAttr(collapsed: boolean): string {
-  return collapsed ? "collapsed" : "open";
-}
-
-function nameOf(direction: { name: string } | null): string | null {
-  return direction?.name ?? null;
-}
-
-function kindLabel(project: Project): string {
-  return TYPE_LABELS[projectTypeOf(project)];
-}
-
-function whenDirection<T>(did: string | null, value: T): T | null {
-  return did ? value : null;
-}
-
-function neverRan(runsLoaded: boolean, runs: readonly unknown[]): boolean {
-  return runsLoaded && runs.length === 0;
-}
-
-function appDirOf(project: { app?: { appDir: string } | null }): string | null {
-  return project.app?.appDir ?? null;
-}
 
 async function askAgent(
   prompt: string,
@@ -352,13 +132,6 @@ async function askAgent(
     input?.focus();
     input?.setSelectionRange(prompt.length, prompt.length);
   });
-}
-
-function runStepOf(
-  run: RunView | null,
-  direction: { workTree: string } | null | undefined
-): string | null {
-  return runStepText(run, direction?.workTree ?? null);
 }
 
 export function Studio({

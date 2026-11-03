@@ -11,7 +11,8 @@
     "resolveJsonModule": true,
     "allowImportingTsExtensions": true,
     "types": ["node"],
-    "noEmit": true
+    "noEmit": true,
+    "rootDir": "."
   },
   "include": ["src/server/export/page-scan.ts"]
 }

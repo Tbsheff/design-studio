@@ -12,7 +12,8 @@
     "resolveJsonModule": true,
     "allowImportingTsExtensions": true,
     "types": ["node", "vite/client"],
-    "noEmit": true
+    "noEmit": true,
+    "rootDir": "."
   },
   "include": ["src", "e2e", "scripts", "desktop", "*.ts"],
   "exclude": ["desktop/dist", "scripts/stamp/probes"]

@@ -10,7 +10,7 @@
     "exactOptionalPropertyTypes": true,
     "skipLibCheck": true,
     "noEmit": true,
-    "baseUrl": ".",
+    "rootDir": "../..",
     "paths": {
       "effect": ["../../node_modules/effect"],
       "effect/*": ["../../node_modules/effect/*"]

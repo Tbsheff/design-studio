@@ -69,6 +69,7 @@ const DEAD_CODE_FILES = [
   "cloud/api/src/tenant/repos/share.ts",
   "cloud/api/src/cron.ts",
   "src/server/publish/cloud-links.ts",
+  "src/ui/features/share-publish-ship-export/publish-api.ts",
 ];
 
 const LEGACY_SERVICE_OPTIONS = ["src/server/store/authorizer.ts"];
@@ -79,6 +80,20 @@ const SPLIT_NAMING_FILES = [
 ];
 
 const NEW_FEATURE_FILES = ["src/ui/features/{home,inspector}/**"];
+
+const BRIDGE_FILES = ["src/bridge/**/*.ts"];
+
+const GUARD_UI_FILES = ["src/ui/**/*.ts", "src/ui/**/*.tsx"];
+
+const UI_ROOT_FILES = ["src/ui/*.ts", "src/ui/*.tsx"];
+
+const APP_FILES = ["src/ui/app/**/*.ts", "src/ui/app/**/*.tsx"];
+
+const STATE_FILES = ["src/server/{mcp,http,agent-tools,store,preview}/**/*.ts"];
+
+const SCOPE_FILES = ["src/server/{store,preview,handlers}/**/*.ts"];
+
+const AGENT_SPLIT_FILES = ["src/server/agent/{index,lifecycle,types}.ts"];
 
 const studioReview: OxlintOverride[] = [
   {
@@ -252,7 +267,7 @@ const studioReview: OxlintOverride[] = [
     rules: { "studio/no-dynamic-app-import": "error" },
   },
   {
-    files: ["src/bridge/**/*.ts"],
+    files: BRIDGE_FILES,
     rules: {
       "studio/bridge-type-import": "error",
       "studio/no-floating-async": "error",
@@ -275,6 +290,68 @@ const studioReview: OxlintOverride[] = [
       "studio/predicate-name": "error",
       "studio/readonly-field": "error",
     },
+  },
+  { files: GUARD_UI_FILES, rules: { "studio/lazy-default-export": "error" } },
+  { files: UI_ROOT_FILES, rules: { "studio/no-ui-root-hub": "error" } },
+  {
+    files: ["src/ui/features/*/index.ts"],
+    rules: { "studio/feature-index-lazy": "error" },
+  },
+  {
+    files: APP_FILES,
+    rules: {
+      "studio/no-busy-flag": "error",
+      "studio/no-dom-query": "error",
+      "studio/no-feature-interval": "error",
+    },
+  },
+  {
+    files: ["src/**/*.ts", "src/**/*.tsx", "desktop/**/*.ts"],
+    rules: { "studio/no-void-placeholder": "error" },
+  },
+  { files: BRIDGE_FILES, rules: { "studio/no-message-data-cast": "error" } },
+  {
+    files: ["src/bridge/{session,bridge-types}.ts"],
+    rules: { "studio/readonly-field": "error" },
+  },
+  {
+    files: [...BRIDGE_FILES, "src/shared/**/*.ts"],
+    rules: { "studio/typed-string-list": "error" },
+  },
+  {
+    excludeFiles: SERVER_TESTS,
+    files: STATE_FILES,
+    rules: { "studio/no-module-let": "error" },
+  },
+  {
+    excludeFiles: SERVER_TESTS,
+    files: ["src/server/store/**/*.ts"],
+    rules: { "studio/no-hand-json-read": "error" },
+  },
+  {
+    excludeFiles: SERVER_TESTS,
+    files: SCOPE_FILES,
+    rules: { "studio/no-server-scope-param": "error" },
+  },
+  {
+    excludeFiles: SERVER_TESTS,
+    files: SERVER_FILES,
+    rules: { "studio/no-deep-store-import": "error" },
+  },
+  {
+    files: AGENT_SPLIT_FILES,
+    rules: {
+      "studio/boolean-name": "error",
+      "studio/no-optional-null": "error",
+    },
+  },
+  {
+    files: ["lint/decisions.ts"],
+    rules: { "studio/override-file-once": "error" },
+  },
+  {
+    files: ["lint/legacy.ts"],
+    rules: { "studio/frozen-pin": "error" },
   },
 ];
 

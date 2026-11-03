@@ -1,6 +1,7 @@
 import { keyName, propertyOf, rule } from "./ast.js";
 import { sourceOf } from "./facts.js";
 import { FROZEN_AREAS, FROZEN_EXEMPTIONS, LEGACY_OVERRIDES, SCOPE_EXEMPTIONS } from "./frozen.js";
+import { computedRulesOf, isPinned } from "./override-pins.js";
 
 const WARN_MAX = 3;
 
@@ -20,6 +21,9 @@ const BUNDLE_MESSAGE =
 
 const FIXABLE_MESSAGE =
   "Turning a fixable style rule (no-magic-numbers, no-shape-in-symbol-names, no-undefined, no-ternary, sort-keys, max-lines-per-function) off or to warn in a decision override is banned. Use a code fix: a named const, a better name, null, if/else, sorted keys, a split function.";
+
+const COMPUTED_MESSAGE =
+  "A rules map that a decision override builds from a string list is banned, because the guards cannot see its rules (L6c). Use a rules object with at most 3 forced rules for exact files in lint/decisions.ts. Old entries may only shrink.";
 
 const GLOB_MESSAGE =
   "A glob in the files of a decision override is banned. Use the exact file paths that the forced reason covers in lint/decisions.ts.";
@@ -77,10 +81,26 @@ const checkFiles = (context, files) => {
   }
 };
 
+const checkComputed = (context, files, rules) => {
+  const computed = computedRulesOf(rules);
+
+  if (computed === null) {
+    return;
+  }
+
+  if (!computed.names.every((name) => isPinned(files, name))) {
+    context.report({ message: COMPUTED_MESSAGE, node: rules });
+  }
+};
+
 const narrowOverride = rule((context) => ({
   ObjectExpression: (node) => {
     const files = propertyOf(node, "files");
     const rules = propertyOf(node, "rules");
+
+    if (files !== null && rules !== null) {
+      checkComputed(context, files.value, rules.value);
+    }
 
     if (files === null || rules === null || rules.value.type !== "ObjectExpression") {
       return;

@@ -29,8 +29,10 @@ import { noStyleOff, oneOverridePerFiles } from "./override-rules.js";
 import { domProjectWired, probeHasFunction, rendererHasFunction, serializedFnNameShim } from "./probe-rules.js";
 import { serverOneRuntime, serverRunEntry, spanNameMatch } from "./runtime-rules.js";
 import { noJsonSchema, projectScopeNeeds } from "./scope-rules.js";
+import { catchupRules } from "./catchup-rules.js";
 
 const reviewRules = {
+  ...catchupRules,
   "adapter-import-index": adapterImportIndex,
   "bridge-type-import": bridgeTypeImport,
   "cloud-platform-import": cloudPlatformImport,

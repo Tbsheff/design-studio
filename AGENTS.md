@@ -46,6 +46,8 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Start every function that returns `boolean`, `Promise<boolean>` or `Effect<boolean>` with `is`, `has`, `can` or `should`: `isOrgCapAllowed`, never `orgCapAllows` -> `studio/predicate-name` (auth files, not engines). (N9)
 - Start every top-level function with a verb from N3, or `to`, `from`, `is`, `has`, `can`, `should`: `toSafeSegment`, never `safeSegment` -> `studio/module-function-verb` (auth files, not engines). (N10)
 - Spell out `pid`, `sig`, `cf`, `ctx`, `cfg`, `msg` and a bare `org` in every name: `projectId`, `signature`, `LegacyCloudflareRecord`, `orgId`. Only plan-fixed wire keys (`CloudRefSchema` `pid`, `sig`) and spec names (`CfCli`, `CfFailed`) are exempt -> `studio/no-short-name` (auth files). (N11)
+- Type every `*_TYPES` list in `src/shared` and `src/bridge` from the message union (`readonly BridgeMessage['type'][]`), never `string[]`. Mark every field in `src/bridge/{session,bridge-types}.ts` `readonly` -> `studio/typed-string-list`, `studio/readonly-field`. (N12)
+- Start every boolean field with `is`, `has`, `can` or `should`, and write `field: T | null`, never `field?:`, in `src/server/agent/{index,lifecycle,types}.ts` (`canRunBash`, `devicePolicy: DevicePolicySource | null`) -> `studio/boolean-name`, `studio/no-optional-null`. (N13)
 
 ## 1. Where code goes
 
@@ -81,6 +83,7 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Make a `*.probe.ts` sibling only for a typed in-page function that the `lib: [ES2023]` dry run flags. Keep string and `String.raw` sources in the parent -> `studio/probe-has-function`, `studio/area-import-index` on probe files. (W17)
 - Make a `*.renderer.ts` file only for a typed in-page function. Never leave a stub that holds only a name const -> `studio/renderer-has-function`. (W18)
 - Never `import()` from `src/server` into another app (`desktop/`, `scripts/`). Put code that both apps need in `src/server/platform/<module>/index.ts`, as `platform/bridge-build` does -> `studio/no-dynamic-app-import`. (W19)
+- Import a `src/server/store` or `src/server/preview` file from another server area only through `store/index.ts` or `preview/index.ts`. Old deep imports may stay until the file changes; a new one fails -> `studio/no-deep-store-import`. (W19a)
 - Import `src/shared/actions/**` in `src/bridge/**` only with `import type` (for example `BridgeMessage`), and mark every floating async call in the bridge with `void` -> `studio/bridge-type-import`, `studio/no-floating-async`. (W20)
 - Serialize an in-page function only inside an IIFE that first declares `const __name = (target) => target;`, as `scanExpression` in `src/server/export/page-scan.ts` does -> `studio/serialized-fn-name-shim`. (W21)
 - Import another adapter (`http`, `mcp`, `agent-tools`) only through its `index.ts`, and never as a value from `src/server/variations` -> `studio/adapter-import-index`. (W16)
@@ -163,6 +166,7 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Never use `async` or `await` in `cloud/api/src/**` outside `index.ts`, `auth/**` and Durable Object class bodies. Use `Effect.fn` with `Effect.tryPromise` -> `studio/no-cloud-async`. (S18)
 - Never call `Effect.serviceOption` in `src/server/**`. Yield the service in a `Context.Service` layer -> `studio/no-service-option`. (S19)
 - Never put a Durable Object stub (`idFromName`, `DurableObjectStub`) in a service marked `access: "read"`. Use a write service -> `studio/read-service-no-stub`. (S20)
+- Never declare a module-level `let` in `src/server/{mcp,http,agent-tools,store,preview}`. Use a Layer, or `makeRuntimeSlot` from `src/server/platform/runtime-slot/index.ts` -> `studio/no-module-let`. (S21)
 
 ## 4. Errors
 
@@ -203,6 +207,7 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Never run a query inside a loop or an array callback. Use one `db.batch` -> `studio/no-query-in-loop`. (T15)
 - Give every SQL `UPDATE` and `DELETE` in `cloud/api/src` an `org_id =` or `:org` term -> `studio/sql-write-org-filter`. (T16)
 - Provide `CurrentOrg` only in `cloud/api/src/http/middleware/**` -> `studio/no-current-org-provide`. (T17)
+- Never take an `OrgScope` parameter in a service method (`Effect.fn` generator), an `*Api` member or a handler step in `src/server/{store,preview,handlers}`. Yield `LocalOrgScope` inside the method -> `studio/no-server-scope-param`. (T18)
 
 ## 6. UI
 
@@ -238,6 +243,10 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Never import a `.tsx` or `components/` file in a `use-*.ts` hook. Move the shared value to a model or platform module -> `studio/no-hook-component-import`. (U17)
 - Never cast `JSON.parse` output with `as` in a feature. Use a type guard or a Schema decoder -> `studio/no-json-cast`. (U18)
 - Put the text of `title`, `aria-label`, `data-tip`, `placeholder` and `alt` in the feature `copy.ts` -> `studio/no-inline-copy`. (U19)
+- Never call `lazy(() => import("./x.js"))` on a module with no default export. Use `lazy(async () => ({ default: (await import("./x.js")).X }))` -> `studio/lazy-default-export`. (U20)
+- Never add a root `src/ui/*.ts` file that imports or re-exports feature code (a `*-slots.ts` hub). Import through the feature `index.ts`, and let `src/ui/app` compose features -> `studio/no-ui-root-hub`. (U21)
+- Export a component from a feature `index.ts` only as a lazy named export, never `export { X } from "./x.js"` on a `.tsx` file. Old lines may stay until the file changes -> `studio/feature-index-lazy`. (U22)
+- Apply U7a, U12 and U14 to `src/ui/app/**` as well: no DOM query, no `setInterval`, no busy flag -> `studio/no-dom-query`, `studio/no-feature-interval`, `studio/no-busy-flag`. (U23)
 
 ## 7. Performance
 
@@ -252,6 +261,7 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Load heavy modules (playwright-core, esbuild, typescript, vite, the agent SDK) with a dynamic import on first use -> review, B12 `scripts/check-boot-imports.ts` (lands with S5-mcp-life). (P9)
 - Keep every perf budget. Only the merge step rewrites `scripts/perf/baseline.json`, and only downward -> G-perf (lands with S4a). (P10)
 - Read D1 and R2 only through their owners in `cloud/api/src/{platform,tenant,auth,http/middleware}`. Viewer, MCP and route code yields a tenant service, never `CloudBindings` -> `studio/no-direct-bindings`. (P11)
+- Never `JSON.parse` a file that you read by hand in `src/server/store`. Use the owning store (`DeviceBindings` for `bindings.json`) or `toJsonFileReader` from `src/server/platform/local-file/index.ts` -> `studio/no-hand-json-read`. (P12)
 
 ## 8. Lint and hooks
 
@@ -282,6 +292,12 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Make every boolean flag (`isX`, `hasX`, `canX`, `shouldX`) required in publish, share, handler and feature code. Never `isX?: boolean` or `Schema.optionalKey(Schema.Boolean)` -> `studio/no-optional-flag`. (L14)
 - Never add a `lint/day-one.ts` entry for a file in a budget-0 folder. Fix the file to 0 diagnostics -> `studio/day-one-frozen`. (L15)
 - Never export a value that no file imports in the new cloud viewer and share code, `cron.ts` and `src/ui/publishApi.ts` -> `studio/no-unused-export`. (L16)
+- Never write a `void 0;` placeholder statement. Return a value from the catch, or let the error go to the caller -> `studio/no-void-placeholder`. (L17)
+- Never cast message data with `as` (`event.data as T`) in `src/bridge`. Use a type guard on the message type -> `studio/no-message-data-cast`. (L18)
+- Never build a decision override rules map from a string list (`Object.fromEntries("a b".split(" "))`), and never put a `studio/*` rule in one. Old entries may only shrink against `HEAD` -> `studio/narrow-override`, `studio/no-studio-override`. (L19)
+- Never list one file in two decision overrides -> `studio/override-file-once`. (L20)
+- Never turn `unicorn/filename-case`, `only-export-components` or `jsx-props-no-spreading` off in `lint/decisions.ts`. Rename the file, split it, or pass explicit props -> `studio/no-fixable-off`. (L21)
+- Never add a file to `UI_CROSS_FEATURE_FILES` in `lint/legacy.ts`. It may only shrink -> `studio/frozen-pin`. (L22)
 
 ## 9. Verify
 

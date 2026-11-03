@@ -320,7 +320,7 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/server/direct-edit/planned-feed.ts",
       "src/server/git/user-git.ts",
       "src/server/preview/{ports,render-contract,render-wait}.ts",
-      "src/server/cloud/cloud-migration-runner.ts",
+      "src/server/cloud/{cloud-migration-runner,outbox-store}.ts",
       "src/server/store/{device-bindings,authorizer,data-lock,default-folder,events,git-objects,local-principal,principal,mutex,project-access,skill-store,starters,studio-info}.ts",
       "src/{server/handlers/_core/handler,server/handlers/_core/run-action,server/handlers/studio/handlers,server/handlers/studio/health,server/handlers/studio/list-skills,server/handlers/studio/live,shared/actions/studio/health,shared/actions/studio/list-skills}.ts",
       "src/server/{http/mount,http/mount-all,http/wire-error,mcp/registry,agent-tools/registry,agent-tools/sdk-shape}.ts",

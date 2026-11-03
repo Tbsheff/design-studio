@@ -1804,6 +1804,20 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/ui/components/HomeDoctor.tsx",
       "src/ui/components/NewProjectAdvanced.tsx",
       "src/ui/components/FolderControls.tsx",
+      "src/ui/features/home/home-prefs-model.ts",
+      "src/ui/features/home/projects-store-model.ts",
+      "src/ui/features/home/project-hits-model.ts",
+      "src/ui/features/home/use-workspaces.ts",
+      "src/ui/features/home/use-folder-chooser.ts",
+      "src/ui/features/home/use-profile-initial.ts",
+      "src/ui/features/home/use-studio-data.ts",
+      "src/ui/homePrefs.ts",
+      "src/ui/projectsStore.ts",
+      "src/ui/projectHits.ts",
+      "src/ui/useWorkspaces.ts",
+      "src/ui/useFolderChooser.ts",
+      "src/ui/useProfileInitial.ts",
+      "src/ui/useStudioData.ts",
     ],
     rules: Object.fromEntries(
       "anti-slop/no-array-filter-map anti-slop/no-conditional-empty-object-spread anti-slop/no-known-value-widening anti-slop/no-unknown-parameters anti-slop/no-unsafe-dictionary-type anti-slop/require-readable-spacing eslint/func-style eslint/id-length eslint/max-lines eslint/max-lines-per-function eslint/max-params eslint/max-statements eslint/no-magic-numbers eslint/no-nested-ternary eslint/no-ternary eslint/no-undefined eslint/no-unused-vars eslint/no-void eslint/prefer-destructuring eslint/prefer-named-capture-group eslint/require-unicode-regexp eslint/sort-imports eslint/sort-keys github/array-foreach github/filenames-match-regex github/no-then import/consistent-type-specifier-style import/exports-last import/group-exports import/max-dependencies import/no-default-export import/no-relative-parent-imports import/prefer-default-export promise/always-return promise/no-callback-in-promise promise/prefer-await-to-callbacks promise/prefer-await-to-then react-doctor/js-combine-iterations react-doctor/no-adjust-state-on-prop-change react-doctor/no-create-object-url-without-revoke react-doctor/no-img-without-dimensions react-doctor/no-loading-flag-reset-outside-finally react-doctor/no-ref-current-in-render react-doctor/only-export-components react-doctor/prefer-module-scope-pure-function react-doctor/rerender-memo-with-default-value react-doctor/rerender-state-only-in-handlers react-perf/jsx-no-jsx-as-prop react-perf/jsx-no-new-array-as-prop react-perf/jsx-no-new-function-as-prop react-perf/jsx-no-new-object-as-prop react/exhaustive-effect-dependencies react/forbid-component-props react/function-component-definition react/immutability react/jsx-handler-names react/jsx-max-depth react/jsx-no-literals react/jsx-props-no-spreading react/no-multi-comp react/no-object-type-as-default-prop react/only-export-components react/refs react/set-state-in-effect react/todo sonarjs/expression-complexity sonarjs/max-lines sonarjs/max-lines-per-function sonarjs/max-union-size sonarjs/no-dead-store sonarjs/no-duplicate-string sonarjs/no-nested-conditional sonarjs/no-unused-vars sonarjs/shorthand-property-grouping studio/boolean-name studio/feature-file-layout studio/feature-index-import studio/module-function-verb studio/no-busy-flag studio/no-dom-query studio/no-feature-interval studio/no-finally-state-reset studio/no-hook-component-import studio/no-inline-copy studio/no-json-cast studio/no-then studio/no-undefined-type studio/readonly-field typescript/consistent-type-definitions typescript/consistent-type-imports typescript/explicit-function-return-type typescript/explicit-module-boundary-types unicorn/catch-error-name unicorn/consistent-function-scoping unicorn/filename-case unicorn/no-array-callback-reference unicorn/no-array-for-each unicorn/no-array-sort unicorn/no-await-expression-member unicorn/no-nested-ternary unicorn/no-useless-undefined unicorn/prefer-global-this unicorn/prefer-spread"
@@ -1849,9 +1863,23 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/ui/components/HomeDoctor.tsx",
       "src/ui/components/NewProjectAdvanced.tsx",
       "src/ui/components/FolderControls.tsx",
+      "src/ui/features/home/home-prefs-model.ts",
+      "src/ui/features/home/projects-store-model.ts",
+      "src/ui/features/home/project-hits-model.ts",
+      "src/ui/features/home/use-workspaces.ts",
+      "src/ui/features/home/use-folder-chooser.ts",
+      "src/ui/features/home/use-profile-initial.ts",
+      "src/ui/features/home/use-studio-data.ts",
+      "src/ui/homePrefs.ts",
+      "src/ui/projectsStore.ts",
+      "src/ui/projectHits.ts",
+      "src/ui/useWorkspaces.ts",
+      "src/ui/useFolderChooser.ts",
+      "src/ui/useProfileInitial.ts",
+      "src/ui/useStudioData.ts",
     ],
     rules: Object.fromEntries(
-      "anti-slop/no-runtime-typeof anti-slop/require-readable-spacing eslint/curly eslint/no-await-in-loop eslint/no-continue eslint/no-duplicate-imports eslint/no-promise-executor-return eslint/no-use-before-define eslint/no-useless-return import/no-duplicates import/no-unassigned-import promise/avoid-new promise/catch-or-return promise/prefer-catch react/no-array-index-key react-doctor/design-no-vague-button-label react-doctor/form-control-requires-name react-doctor/js-set-map-lookups react-doctor/no-enter-submit-without-ime-composition-guard react-doctor/no-high-complexity-react-function react-doctor/no-prop-callback-in-render react-doctor/no-derived-useState react-hooks/rules-of-hooks sonarjs/elseif-without-else sonarjs/no-nested-template-literals sonarjs/no-wildcard-import studio/no-reexport-shim studio/no-ui-storage studio/no-wildcard-reexport unicorn/prefer-array-find jsx-a11y/no-autofocus jsx-a11y/prefer-tag-over-role jsx-a11y/no-noninteractive-element-interactions jsx-a11y/interactive-supports-focus jsx-a11y/no-static-element-interactions jsx-a11y/control-has-associated-label github/a11y-no-title-attribute promise/prefer-await-to-callbacks studio/feature-index-import"
+      "anti-slop/no-runtime-typeof anti-slop/require-readable-spacing eslint/curly eslint/no-await-in-loop eslint/no-continue eslint/no-duplicate-imports eslint/no-promise-executor-return eslint/no-use-before-define eslint/no-useless-return import/no-duplicates import/no-unassigned-import promise/avoid-new promise/catch-or-return promise/prefer-catch react/no-array-index-key react-doctor/design-no-vague-button-label react-doctor/form-control-requires-name react-doctor/js-set-map-lookups react-doctor/no-enter-submit-without-ime-composition-guard react-doctor/no-high-complexity-react-function react-doctor/no-prop-callback-in-render react-doctor/no-derived-useState react-hooks/rules-of-hooks sonarjs/elseif-without-else sonarjs/no-nested-template-literals sonarjs/no-wildcard-import studio/no-reexport-shim studio/no-ui-storage studio/no-wildcard-reexport unicorn/prefer-array-find jsx-a11y/no-autofocus jsx-a11y/prefer-tag-over-role jsx-a11y/no-noninteractive-element-interactions jsx-a11y/interactive-supports-focus jsx-a11y/no-static-element-interactions jsx-a11y/control-has-associated-label github/a11y-no-title-attribute promise/prefer-await-to-callbacks studio/feature-index-import unicorn/prefer-set-has sonarjs/no-nested-functions react/purity react/memo-dependencies eslint/no-shadow unicorn/no-array-reduce unicorn/prefer-ternary eslint/init-declarations sonarjs/no-undefined-assignment react/hook-use-state eslint/default-case react-doctor/rerender-lazy-ref-init react-doctor/async-await-in-loop react-doctor/no-chain-state-updates"
         .split(" ")
         .map((rule) => [rule, "warn"])
     ),

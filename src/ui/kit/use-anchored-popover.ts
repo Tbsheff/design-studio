@@ -10,10 +10,10 @@ import type { CSSProperties } from "react";
 import { placeFixed } from "../domain/popoverPlacement.js";
 
 const HIDDEN: CSSProperties = {
-  top: 0,
   left: 0,
   opacity: 0,
   pointerEvents: "none",
+  top: 0,
 };
 
 export function useAnchoredPopover<T extends string>(
@@ -32,17 +32,23 @@ export function useAnchoredPopover<T extends string>(
     ) {
       returnTo.current = document.activeElement;
     }
+
     setView(next);
   }, []);
 
   const close = useCallback((refocus: boolean) => {
     setView(null);
     setStyle(HIDDEN);
-    if (refocus) returnTo.current?.focus();
+
+    if (refocus) {
+      returnTo.current?.focus();
+    }
   }, []);
 
   useLayoutEffect(() => {
-    if (!view || !trigger.current || !panel.current) return;
+    if (!view || !trigger.current || !panel.current) {
+      return;
+    }
     setStyle(
       placeFixed(
         anchor ? anchor(trigger.current) : trigger.current,
@@ -53,26 +59,35 @@ export function useAnchoredPopover<T extends string>(
   }, [view, anchor]);
 
   useEffect(() => {
-    if (!view) return;
+    if (!view) {
+      return;
+    }
     const inside = (target: EventTarget | null) =>
       target instanceof Node &&
       (panel.current?.contains(target) || trigger.current?.contains(target));
-    const onDown = (e: MouseEvent) => {
-      if (!inside(e.target)) close(false);
+
+    const onDown = (e: Event) => {
+      if (!inside(e.target)) {
+        close(false);
+      }
     };
+
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape") return;
+      if (e.key !== "Escape") {
+        return;
+      }
       e.preventDefault();
       e.stopPropagation();
       close(true);
     };
-    const onScroll = (e: Event) => {
-      if (!inside(e.target)) close(false);
-    };
+
+    const onScroll = onDown;
+
     document.addEventListener("mousedown", onDown);
     window.addEventListener("keydown", onKey, true);
     window.addEventListener("scroll", onScroll, true);
     window.addEventListener("resize", onScroll);
+
     return () => {
       document.removeEventListener("mousedown", onDown);
       window.removeEventListener("keydown", onKey, true);
@@ -81,5 +96,5 @@ export function useAnchoredPopover<T extends string>(
     };
   }, [view, close]);
 
-  return { view, open, close, trigger, panel, style };
+  return { close, open, panel, style, trigger, view };
 }

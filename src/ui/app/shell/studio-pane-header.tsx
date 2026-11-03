@@ -16,7 +16,10 @@ import type { PanelTab } from "../../platform/use-panel-tab";
 
 type ThemePref = "system" | "light" | "dark";
 
-type ThemeApi = { get: () => ThemePref; set: (pref: ThemePref) => void };
+interface ThemeApi {
+  get: () => ThemePref;
+  set: (pref: ThemePref) => void;
+}
 
 const themeApi = (): ThemeApi | undefined =>
   (window as unknown as { studioTheme?: ThemeApi }).studioTheme;
@@ -109,17 +112,17 @@ function ProjectMenu(
 
   const panels: Item[] = [
     {
+      icon: "history",
       id: "versions",
       label: "Versions",
-      icon: "history",
       run: () => props.onTab("versions"),
     },
     ...(props.hasTokens
       ? [
           {
+            icon: "token" as const,
             id: "tokens",
             label: "Tokens",
-            icon: "token" as const,
             run: () => props.onTab("tokens"),
           },
         ]
@@ -127,9 +130,9 @@ function ProjectMenu(
     ...(props.hasComponents
       ? [
           {
+            icon: "component" as const,
             id: "components",
             label: "Components",
-            icon: "component" as const,
             run: () => props.onTab("components"),
           },
         ]
@@ -137,39 +140,42 @@ function ProjectMenu(
     ...(props.hasTweaks
       ? [
           {
+            icon: "sliders" as const,
             id: "tweaks",
             label: "Tweaks",
-            icon: "sliders" as const,
             run: () => props.onTab("tweaks"),
           },
         ]
       : []),
     {
+      icon: "palette",
       id: "system",
       label: "Design system",
-      icon: "palette",
       run: () => props.onTab("system"),
     },
     {
+      icon: "doc",
       id: "design-md",
       label: "Edit DESIGN.md",
-      icon: "doc",
       run: props.onDesignMd,
     },
   ];
 
   const project: Item[] = [
-    { id: "rename", label: "Rename", icon: "pencil", run: props.onStartRename },
+    { icon: "pencil", id: "rename", label: "Rename", run: props.onStartRename },
     {
+      icon: "settings",
       id: "settings",
       label: "Project settings",
-      icon: "settings",
       run: props.onSettings,
     },
   ];
 
   const themes: Item[] = (["system", "light", "dark"] as const).map(
     (value) => ({
+      checked: pref === value,
+      icon:
+        value === "dark" ? "moon" : value === "light" ? "sparkle" : "desktop",
       id: `theme-${value}`,
       label:
         value === "system"
@@ -177,9 +183,6 @@ function ProjectMenu(
           : value === "light"
             ? "Light theme"
             : "Dark theme",
-      icon:
-        value === "dark" ? "moon" : value === "light" ? "sparkle" : "desktop",
-      checked: pref === value,
       run: () => themeApi()?.set(value),
     })
   );
@@ -209,16 +212,16 @@ function ProjectMenu(
         <MenuItems
           items={[
             {
+              icon: "sidebar",
               id: "rail",
               label: props.railOpen ? "Hide project list" : "Show project list",
-              icon: "sidebar",
               meta: shortcutLabel("project-rail", IS_MAC),
               run: props.onToggleRail,
             },
             {
+              icon: "arrowLeft",
               id: "home",
               label: "All projects",
-              icon: "arrowLeft",
               run: props.onExit,
             },
           ]}

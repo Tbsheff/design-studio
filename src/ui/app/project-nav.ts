@@ -50,9 +50,10 @@ export function openProject(projectId: string, route?: string): void {
     return;
   }
 
-  void prefetchStudio().then(() =>
-    uiStore.set({ activeProjectId: projectId, screen: "home" })
-  );
+  void (async () => {
+    await prefetchStudio();
+    uiStore.set({ activeProjectId: projectId, screen: "home" });
+  })();
 }
 
 export function goHome(): void {

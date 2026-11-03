@@ -34,10 +34,10 @@ interface Props<V extends string> {
 }
 
 const HIDDEN: CSSProperties = {
-  top: 0,
   left: 0,
   opacity: 0,
   pointerEvents: "none",
+  top: 0,
 };
 
 function step(
@@ -150,7 +150,7 @@ export function UiSelect<V extends string>(p: Props<V>) {
   const root = useRef<HTMLSpanElement>(null);
   const button = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
-  const typed = useRef({ text: "", at: 0 });
+  const typed = useRef({ at: 0, text: "" });
   const listId = useId();
   const current = p.options.findIndex((o) => o.value === p.value);
 
@@ -186,7 +186,7 @@ export function UiSelect<V extends string>(p: Props<V>) {
 
   const show = () => {
     setActive(
-      current >= 0 && !p.options[current]?.disabled
+      current !== -1 && !p.options[current]?.disabled
         ? current
         : edge(p.options, false)
     );
@@ -211,7 +211,7 @@ export function UiSelect<V extends string>(p: Props<V>) {
   const find = (key: string): number => {
     const now = Date.now();
     const text = now - typed.current.at < 700 ? typed.current.text + key : key;
-    typed.current = { text, at: now };
+    typed.current = { at: now, text };
 
     return typeahead(p.options, text.length > 1 ? active - 1 : active, text);
   };
@@ -293,7 +293,7 @@ export function UiSelect<V extends string>(p: Props<V>) {
     }
   };
 
-  const label = current >= 0 ? p.options[current]?.label : p.placeholder;
+  const label = current === -1 ? p.placeholder : p.options[current]?.label;
   const activeId = open && active >= 0 ? `${listId}-${active}` : undefined;
 
   return (
@@ -317,7 +317,7 @@ export function UiSelect<V extends string>(p: Props<V>) {
       >
         {p.icon}
         <span
-          className={`ui-select-value truncate${current < 0 ? " placeholder" : ""}`}
+          className={`ui-select-value truncate${current === -1 ? " placeholder" : ""}`}
         >
           {label ?? ""}
         </span>

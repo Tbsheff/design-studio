@@ -1,9 +1,7 @@
 import type { ReactNode } from "react";
 
-import {
-  MODEL_OPTIONS,
-  type SettingsDraft,
-} from "../../features/chat/settings-draft-model";
+import { MODEL_OPTIONS } from "../../features/chat/settings-draft-model";
+import type { SettingsDraft } from "../../features/chat/settings-draft-model";
 import { SkillsChecklist } from "../../features/chat/skills-checklist";
 
 export {
@@ -22,7 +20,9 @@ interface Props {
 export function SettingsFields({ draft, onChange, shellExtra }: Props) {
   const set = (patch: Partial<SettingsDraft>) =>
     onChange({ ...draft, ...patch });
+
   const known = MODEL_OPTIONS.some((m) => m.id === draft.model);
+
   return (
     <div className="settings-fields">
       <label className="field">

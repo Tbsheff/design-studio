@@ -108,7 +108,7 @@ export function useDesktopCommand(handler: Handler): void {
   latest.current = handler;
   useEffect(() => {
     if (!isDesktop()) {
-      return undefined;
+      return;
     }
 
     install();
@@ -132,7 +132,7 @@ export function useDesktopContext(
   const { projectId, directionId, running } = context;
   useEffect(() => {
     if (enabled) {
-      desktopBridge()?.setContext?.({ projectId, directionId, running });
+      desktopBridge()?.setContext?.({ directionId, projectId, running });
     }
   }, [projectId, directionId, running, enabled]);
 }

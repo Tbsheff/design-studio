@@ -23,20 +23,24 @@ export function SettingsModal({ project, onSaved, onClose }: Props) {
   const saveShip = useRef<(() => Promise<void>) | null>(null);
 
   const dialog = useModalDialog(onClose);
+
   const save = () => {
     const parsed = parseDraft(draft);
+
     if ("error" in parsed) {
       setError(parsed.error);
+
       return;
     }
+
     setError(null);
     startSave(async () => {
       try {
         await saveShip.current?.();
         onSaved(await api.updateSettings(project.id, parsed.settings));
         onClose();
-      } catch (err) {
-        setError(`Could not save settings. ${errorText(err)} Try again.`);
+      } catch (caught) {
+        setError(`Could not save settings. ${errorText(caught)} Try again.`);
       }
     });
   };

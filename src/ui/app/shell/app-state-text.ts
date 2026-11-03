@@ -1,10 +1,10 @@
 import type { AppServerStatus } from "../../../shared/contracts";
 
 const STATE_TEXT: Record<AppServerStatus["state"], string> = {
-  idle: "Not started",
-  starting: "Starting",
-  ready: "Running",
   failed: "Failed",
+  idle: "Not started",
+  ready: "Running",
+  starting: "Starting",
   stopped: "Stopped",
 };
 

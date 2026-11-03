@@ -44,11 +44,11 @@ function SettingsTab({
     setNote(null);
     startSave(async () => {
       try {
-        await api.appConfig(projectId, { url: url.trim(), env: parsed.env });
+        await api.appConfig(projectId, { env: parsed.env, url: url.trim() });
         setNote("Saved. The dev server restarts.");
         onSaved();
-      } catch (err) {
-        setNote(errorText(err));
+      } catch (error) {
+        setNote(errorText(error));
       }
     });
   };

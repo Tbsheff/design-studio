@@ -149,5 +149,5 @@ export function useModalDialog(onDismiss: () => boolean | void) {
     }
   };
 
-  return { ref, onMouseDown: onBackdropMouseDown };
+  return { onMouseDown: onBackdropMouseDown, ref };
 }

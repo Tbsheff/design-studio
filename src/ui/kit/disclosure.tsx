@@ -16,6 +16,7 @@ export function Disclosure({
   trail?: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+
   return (
     <div className={`disclosure-line ${open ? "open" : ""} ${className}`}>
       {lead}

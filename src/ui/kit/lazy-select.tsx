@@ -5,14 +5,18 @@ import { Icon } from "./Icon";
 import type { UiSelectProps } from "./UiSelect";
 
 const UiSelect = lazy(() =>
-  import("./UiSelect").then((m) => ({
-    default: m.UiSelect as (p: UiSelectProps<string>) => JSX.Element,
-  }))
+  (async () => {
+    const loaded = await import("./UiSelect");
+    return {
+      default: loaded.UiSelect as (p: UiSelectProps<string>) => JSX.Element,
+    };
+  })()
 );
 
 function Placeholder<V extends string>(p: UiSelectProps<V>) {
   const label =
     p.options.find((o) => o.value === p.value)?.label ?? p.placeholder ?? "";
+
   return (
     <span className={`ui-select-root ${p.className ?? ""}`}>
       <button

@@ -38,10 +38,14 @@ export default function AppBar({ projectId, app, onAddRoute }: AppBarProps) {
     useAlerts(status, open);
 
   const retry = () =>
-    void api
-      .appControl(projectId, managed ? "restart" : "start")
-      .then(refresh)
-      .catch(() => undefined);
+    void (async () => {
+      try {
+        await api.appControl(projectId, managed ? "restart" : "start");
+        refresh();
+      } catch {
+        refresh();
+      }
+    })();
 
   const showLog = () => {
     setTab("logs");

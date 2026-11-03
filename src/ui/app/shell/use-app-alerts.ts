@@ -30,7 +30,7 @@ function usePanelFocus(setOpen: (open: boolean) => void) {
     });
   };
 
-  return { remember, close };
+  return { close, remember };
 }
 
 function useOpenRequests(
@@ -75,7 +75,7 @@ function useAlerts(status: AppServerStatus | null, open: boolean) {
 
   const failed = failKey !== null && failKey !== hidden && !open && !showDoctor;
 
-  return { cause, doctorKey, showDoctor, failKey, failed, setHidden };
+  return { cause, doctorKey, failKey, failed, setHidden, showDoctor };
 }
 
 export { usePanelFocus, useOpenRequests, useAlerts };

@@ -392,35 +392,76 @@ const toAttachment = (wire: AttachmentWire): Attachment => {
 };
 
 export const api = {
-  listProjects: async (): Promise<Project[]> => {
-    const all: ProjectWire[] = [];
-    let cursor: string | null = null;
+  addWorkspace: (path: string, label?: string) =>
+    json<WorkspaceFolder>("POST", "/api/workspaces", {
+      path,
+      ...(label ? { label } : {}),
+    }),
+  answerPermission: (
+    pid: string,
+    runId: string,
+    requestId: string,
+    decision: PermissionDecision
+  ) =>
+    json<{ ok: boolean }>(
+      "POST",
+      `${p(pid)}/runs/${enc(runId)}/permissions/${enc(requestId)}`,
+      decision
+    ),
+  appConfig: (
+    pid: string,
+    input: { url?: string; env?: Record<string, string> }
+  ) => json<{ app: AttachedApp }>("POST", `${p(pid)}/app/config`, input),
+  appControl: (pid: string, action: "start" | "stop" | "restart") =>
+    json<AppServerStatus>("POST", `${p(pid)}/app/${action}`),
+  appFix: (pid: string, kind: DoctorCauseKind) =>
+    json<AppFixResult>("POST", `${p(pid)}/app/doctor/fix`, { kind }),
+  appRoutes: (pid: string) =>
+    json<{ routes: AppRoute[] }>("GET", `${p(pid)}/app/routes`),
+  appState: (pid: string) =>
+    json<{
+      app: AttachedApp;
+      status: AppServerStatus | null;
+      logs: AppLogLine[];
+      firstVersion: FirstVersionState | null;
+    }>("GET", `${p(pid)}/app`),
+  applyTextStyle: (pid: string, did: string, body: TextStyleApplyBody) =>
+    timedEdit(pid, did, "text-style", 1, () =>
+      json<TextStyleApplyResult>(
+        "POST",
+        `${d(pid, did)}/text-styles/apply`,
+        body
+      )
+    ),
+  attachApp: (input: AttachAppRequest) =>
+    json<{ project: Project }>("POST", "/api/projects/attach", input),
+  buildFlow: (pid: string, input: FlowInput) =>
+    json<FlowResult>("POST", `${p(pid)}/flow`, input),
+  cancelRun: (pid: string, runId: string) =>
+    json<{ ok: boolean }>("POST", `${p(pid)}/runs/${enc(runId)}/cancel`),
+  clarify: (prompt: string) =>
+    json<{ questions: ClarifyQuestion[] }>("POST", "/api/clarify", { prompt }),
+  commitTweaks: async (
+    pid: string,
+    did: string,
+    values: Record<string, TweakValue>
+  ) => {
+    const res = await request(
+      "POST",
+      `${d(pid, did)}/tweaks/commit`,
+      { values },
+      pickMessage
+    );
 
-    do {
-      const page: {
-        readonly items: readonly ProjectWire[];
-        readonly next: string | null;
-      } = await call(projectsRoutes.listProject, {
-        cursor,
-        limit: PROJECT_PAGE_LIMIT,
-      });
-
-      all.push(...page.items);
-      cursor = page.next;
-    } while (cursor !== null);
-
-    return all.map((item) => toProject(item));
+    return (await res.json()) as CommitTweaksResult;
   },
-  searchProjects: async (q: string, project: string | null, limit = 20) => {
-    const found = await call(projectsRoutes.searchProject, {
-      cursor: null,
-      limit,
-      projectId: project,
-      query: q,
-    });
-
-    return toSearchResult(q, found.items);
-  },
+  createDirection: (pid: string, fromVersionId: string, name: string) =>
+    json<Direction>("POST", `${p(pid)}/directions`, { fromVersionId, name }),
+  createFromStarter: (starterId: string, parentPath?: string) =>
+    json<{ project: Project }>("POST", "/api/projects/from-starter", {
+      starterId,
+      ...(parentPath ? { parentPath } : {}),
+    }),
   createProject: async (input: {
     name?: string;
     prompt: string;
@@ -437,37 +478,20 @@ export const api = {
 
     return { project: toProject(created.project), runId: created.runId };
   },
-  starters: () => json<Starter[]>("GET", "/api/starters"),
-  createFromStarter: (starterId: string, parentPath?: string) =>
-    json<{ project: Project }>("POST", "/api/projects/from-starter", {
-      starterId,
-      ...(parentPath ? { parentPath } : {}),
-    }),
   createSample: (parentPath?: string) =>
     json<{ project: Project }>(
       "POST",
       "/api/projects/sample",
       parentPath ? { parentPath } : {}
     ),
-  renameProject: (pid: string, name: string) =>
-    json<Project>("PATCH", p(pid), { name }),
-  markProjectOpened: (pid: string) =>
-    json<{ openedAt: number }>("POST", `${p(pid)}/opened`),
-  duplicateProject: (pid: string) =>
-    json<{ project: Project }>("POST", `${p(pid)}/duplicate`),
-  trashProject: (pid: string) => json<TrashedProject>("DELETE", p(pid)),
-  restoreProject: (trashId: string) =>
-    json<{ project: Project }>("POST", `/api/trash/${enc(trashId)}/restore`),
-  thumbnail: async (pid: string, versionId: string) =>
-    (await request("GET", `${p(pid)}/thumbnail/${enc(versionId)}`)).blob(),
-  clarify: (prompt: string) =>
-    json<{ questions: ClarifyQuestion[] }>("POST", "/api/clarify", { prompt }),
-  onboarding: () => json<{ dismissed: boolean }>("GET", "/api/onboarding"),
-  dismissOnboarding: () =>
-    json<{ dismissed: boolean }>("POST", "/api/onboarding/dismiss"),
-  listSkills: (): Promise<SkillCatalog> => call(routes.listSkillsStudio, {}),
-  getDesignSystem: (pid: string, did: string) =>
-    json<DesignSystemState>("GET", `${d(pid, did)}/design-system`),
+  createTextStyle: (pid: string, did: string, body: TextStyleCreateBody) =>
+    timedEdit(pid, did, "text-style", 1, () =>
+      json<TextStyleCreateResult>(
+        "POST",
+        `${d(pid, did)}/text-styles/create`,
+        body
+      )
+    ),
   createToken: async (pid: string, did: string, req: CreateTokenRequest) => {
     const res = await request(
       "POST",
@@ -478,234 +502,14 @@ export const api = {
 
     return (await res.json()) as CreateTokenResult;
   },
-  previewTokens: async (
-    pid: string,
-    did: string,
-    changes: TokenChange[]
-  ): Promise<TokenPreviewResult> => {
-    const { routes: directEditRoutes } =
-      await import("../shared/actions/direct-edit/routes.js");
-
-    return call(directEditRoutes.inspectTokensDirectEdit, {
-      changes: JSON.stringify(changes),
-      directionId: did,
-      projectId: pid,
-    });
-  },
-  updateTokens: async (pid: string, did: string, changes: TokenChange[]) => {
-    const res = await request(
-      "POST",
-      `${d(pid, did)}/design-system/tokens/update`,
-      { changes },
-      pickMessage
-    );
-
-    return (await res.json()) as UpdateTokensResult;
-  },
-  getCanvas: (pid: string) => json<CanvasSnapshot>("GET", `${p(pid)}/canvas`),
-  putCanvas: (
-    pid: string,
-    body: {
-      canvas: CanvasFile;
-      baseHash: string | null;
-      writer: string;
-      migrate?: boolean;
-    }
-  ) => json<CanvasSnapshot>("PUT", `${p(pid)}/canvas`, body),
-  putCanvasPresence: (pid: string, body: Omit<CanvasPresence, "at">) =>
-    sendPresence(pid, body),
-  getTweaks: (pid: string, did: string) =>
-    json<TweaksState>("GET", `${d(pid, did)}/tweaks`),
-  commitTweaks: async (
-    pid: string,
-    did: string,
-    values: Record<string, TweakValue>
-  ) => {
-    const res = await request(
-      "POST",
-      `${d(pid, did)}/tweaks/commit`,
-      { values },
-      pickMessage
-    );
-
-    return (await res.json()) as CommitTweaksResult;
-  },
-  importProject: async (
-    path: string,
-    options: { appDir?: string; skipApp?: boolean } = {}
-  ) => {
-    const imported = await call(projectsRoutes.importProject, {
-      path,
-      ...options,
-    });
-
-    return { project: toProject(imported.project) };
-  },
-  attachApp: (input: AttachAppRequest) =>
-    json<{ project: Project }>("POST", "/api/projects/attach", input),
-  appState: (pid: string) =>
-    json<{
-      app: AttachedApp;
-      status: AppServerStatus | null;
-      logs: AppLogLine[];
-      firstVersion: FirstVersionState | null;
-    }>("GET", `${p(pid)}/app`),
-  appControl: (pid: string, action: "start" | "stop" | "restart") =>
-    json<AppServerStatus>("POST", `${p(pid)}/app/${action}`),
-  appConfig: (
-    pid: string,
-    input: { url?: string; env?: Record<string, string> }
-  ) => json<{ app: AttachedApp }>("POST", `${p(pid)}/app/config`, input),
-  appRoutes: (pid: string) =>
-    json<{ routes: AppRoute[] }>("GET", `${p(pid)}/app/routes`),
-  flowParams: (pid: string) =>
-    json<{ params: Record<string, string> }>("GET", `${p(pid)}/flow/params`),
-  buildFlow: (pid: string, input: FlowInput) =>
-    json<FlowResult>("POST", `${p(pid)}/flow`, input),
-  openSource: (pid: string, did: string, source: string) =>
-    json<{ opened: boolean; path: string }>(
-      "POST",
-      `${d(pid, did)}/open-source`,
-      { source }
+  detachTextStyle: (pid: string, did: string, body: TextStyleDetachBody) =>
+    timedEdit(pid, did, "text-style", 1, () =>
+      json<{ file: string; versionId: string }>(
+        "POST",
+        `${d(pid, did)}/text-styles/detach`,
+        body
+      )
     ),
-  listWorkspaces: () => json<WorkspaceList>("GET", "/api/workspaces"),
-  addWorkspace: (path: string, label?: string) =>
-    json<WorkspaceFolder>("POST", "/api/workspaces", {
-      path,
-      ...(label ? { label } : {}),
-    }),
-  renameWorkspace: (id: string, label: string) =>
-    json<WorkspaceFolder>("PATCH", `/api/workspaces/${enc(id)}`, { label }),
-  removeWorkspace: (id: string) =>
-    json<{ ok: true }>("DELETE", `/api/workspaces/${enc(id)}`),
-  setDefaultFolder: (path: string) =>
-    json<WorkspaceList>("PUT", "/api/workspaces/default", { path }),
-  hiddenProjects: () => call(projectsRoutes.getHiddenProject, {}),
-  moveHiddenProjects: () => call(projectsRoutes.moveHiddenProject, {}),
-  inspectFolder: (path: string, appDir?: string) =>
-    json<FolderInspection>("POST", "/api/folders/inspect", {
-      path,
-      ...(appDir ? { appDir } : {}),
-    }),
-  getProject: async (pid: string) =>
-    toProject(await call(projectsRoutes.getProject, { projectId: pid })),
-  updateSettings: async (pid: string, settings: Partial<ProjectSettings>) =>
-    toProject(
-      await call(projectsRoutes.updateProject, {
-        ...settings,
-        projectId: pid,
-      })
-    ),
-  uploadAttachment: async (pid: string, file: File) =>
-    toAttachment(
-      await call(projectsRoutes.createAttachmentProject, {
-        data: await fileToBase64(file),
-        mime: file.type,
-        name: file.name,
-        projectId: pid,
-      })
-    ),
-  getDesignMd: (pid: string) =>
-    call(projectsRoutes.getDesignMdProject, { projectId: pid }),
-  putDesignMd: (pid: string, content: string) =>
-    call(projectsRoutes.setDesignMdProject, { content, projectId: pid }),
-  projectFile: async (pid: string, filePath: string) => {
-    const file = await call(projectsRoutes.getFileProject, {
-      path: filePath,
-      projectId: pid,
-    });
-
-    return base64ToBlob(file.data, file.mimeType);
-  },
-  listRuns: async (pid: string) => {
-    const page = await json<{ items: RunSummary[] }>(
-      "GET",
-      `${p(pid)}${RUNS_PAGE}`
-    );
-
-    return page.items;
-  },
-  createDirection: (pid: string, fromVersionId: string, name: string) =>
-    json<Direction>("POST", `${p(pid)}/directions`, { fromVersionId, name }),
-  listVersions: async (pid: string, did: string) => {
-    const list = await call(versionsRoutes.listVersion, {
-      directionId: did,
-      projectId: pid,
-    });
-
-    const items: Version[] = list.items;
-
-    return items;
-  },
-  status: (pid: string, did: string) =>
-    json<WorkTreeStatus>("GET", `${d(pid, did)}/status`),
-  startRun: (
-    pid: string,
-    did: string,
-    req: RunRequest & { referenceUrls?: string[] }
-  ) => json<{ runId: string }>("POST", `${d(pid, did)}/runs`, req),
-  undo: (pid: string, did: string) =>
-    json<Version>("POST", `${d(pid, did)}/undo`),
-  editHistory: (pid: string, did: string): Promise<EditHistoryState> =>
-    call(versionsRoutes.listHistoryVersion, {
-      limit: 1,
-      directionId: did,
-      projectId: pid,
-    }),
-  editHistoryStep: (pid: string, did: string, kind: "undo" | "redo") =>
-    stepEditHistory(pid, did, kind),
-  editSession: (pid: string, did: string, base?: string) =>
-    json<EditSessionState>(
-      "GET",
-      `${d(pid, did)}/edit-session${base ? `?base=${enc(base)}` : ""}`
-    ),
-  endEditSession: (
-    pid: string,
-    did: string,
-    action: "save" | "discard",
-    baseVersionId: string
-  ) => endEditSession(pid, did, action, baseVersionId),
-  elementClasses: (
-    pid: string,
-    did: string,
-    loc: { file: string; line: number; col: number },
-    variant = ""
-  ) =>
-    json<{
-      tailwind: TailwindOutcome | null;
-      element: ElementSourceInfo | null;
-      variants?: import("../shared/variants").VariantSupport;
-    }>(
-      "GET",
-      `${d(pid, did)}/classes?file=${enc(loc.file)}&line=${loc.line}&col=${loc.col}${variant ? `&variant=${enc(variant)}` : ""}`
-    ),
-  textSource: (
-    pid: string,
-    did: string,
-    source: SourceLoc,
-    hints: TextSourceHints
-  ) =>
-    json<TextSourceAnswer>("POST", `${d(pid, did)}/text-source`, {
-      source,
-      hints,
-    }),
-  elementSource: (
-    pid: string,
-    did: string,
-    loc: { file: string; line: number; col: number }
-  ) =>
-    json<{ file: string; line: number; code: string | null }>(
-      "GET",
-      `${d(pid, did)}/source?file=${enc(loc.file)}&line=${loc.line}&col=${loc.col}`
-    ),
-  restore: (pid: string, did: string, versionId: string) =>
-    restoreVersion(pid, did, versionId),
-  keep: (pid: string, did: string) =>
-    json<Version>("POST", `${d(pid, did)}/keep`),
-  discard: (pid: string, did: string) =>
-    json<WorkTreeStatus>("POST", `${d(pid, did)}/discard`),
-  directionPreview: (pid: string, did: string) =>
-    json<{ url: string }>("GET", `${d(pid, did)}/preview`),
   directEdit: (pid: string, did: string, req: DirectEditRequest) =>
     timedEdit(
       pid,
@@ -733,19 +537,285 @@ export const api = {
           )
         ).json()) as DirectEditBatchResult
     ),
-  structureEdit: (pid: string, did: string, req: StructureEditRequest) =>
-    timedEdit(
-      pid,
-      did,
-      req.op,
-      req.targets.length,
-      async () =>
-        (await (
-          await request("POST", `${d(pid, did)}/direct-edit`, req, pickMessage)
-        ).json()) as StructureEditResult
+  directionPreview: (pid: string, did: string) =>
+    json<{ url: string }>("GET", `${d(pid, did)}/preview`),
+  discard: (pid: string, did: string) =>
+    json<WorkTreeStatus>("POST", `${d(pid, did)}/discard`),
+  dismissOnboarding: () =>
+    json<{ dismissed: boolean }>("POST", "/api/onboarding/dismiss"),
+  duplicateProject: (pid: string) =>
+    json<{ project: Project }>("POST", `${p(pid)}/duplicate`),
+  editHistory: (pid: string, did: string): Promise<EditHistoryState> =>
+    call(versionsRoutes.listHistoryVersion, {
+      limit: 1,
+      directionId: did,
+      projectId: pid,
+    }),
+  editHistoryStep: (pid: string, did: string, kind: "undo" | "redo") =>
+    stepEditHistory(pid, did, kind),
+  editSession: (pid: string, did: string, base?: string) =>
+    json<EditSessionState>(
+      "GET",
+      `${d(pid, did)}/edit-session${base ? `?base=${enc(base)}` : ""}`
     ),
-  workTreeFiles: (pid: string, did: string) =>
-    json<{ files: string[] }>("GET", `${d(pid, did)}/tree`),
+  elementClasses: (
+    pid: string,
+    did: string,
+    loc: { file: string; line: number; col: number },
+    variant = ""
+  ) =>
+    json<{
+      tailwind: TailwindOutcome | null;
+      element: ElementSourceInfo | null;
+      variants?: import("../shared/variants").VariantSupport;
+    }>(
+      "GET",
+      `${d(pid, did)}/classes?file=${enc(loc.file)}&line=${loc.line}&col=${loc.col}${variant ? `&variant=${enc(variant)}` : ""}`
+    ),
+  elementSource: (
+    pid: string,
+    did: string,
+    loc: { file: string; line: number; col: number }
+  ) =>
+    json<{ file: string; line: number; code: string | null }>(
+      "GET",
+      `${d(pid, did)}/source?file=${enc(loc.file)}&line=${loc.line}&col=${loc.col}`
+    ),
+  endEditSession: (
+    pid: string,
+    did: string,
+    action: "save" | "discard",
+    baseVersionId: string
+  ) => endEditSession(pid, did, action, baseVersionId),
+  exportVersion: async (pid: string, vid: string) => {
+    const res = await request("GET", `${p(pid)}/versions/${enc(vid)}/export`);
+
+    return res.blob();
+  },
+  flowParams: (pid: string) =>
+    json<{ params: Record<string, string> }>("GET", `${p(pid)}/flow/params`),
+  getCanvas: (pid: string) => json<CanvasSnapshot>("GET", `${p(pid)}/canvas`),
+  getDesignMd: (pid: string) =>
+    call(projectsRoutes.getDesignMdProject, { projectId: pid }),
+  getDesignSystem: (pid: string, did: string) =>
+    json<DesignSystemState>("GET", `${d(pid, did)}/design-system`),
+  getFill: (pid: string, did: string, source: SourceLoc) =>
+    json<FillInfo>(
+      "GET",
+      `${d(pid, did)}/fill?${new URLSearchParams({
+        file: source.file,
+        line: String(source.line),
+        col: String(source.col),
+      }).toString()}`
+    ),
+  getProject: async (pid: string) =>
+    toProject(await call(projectsRoutes.getProject, { projectId: pid })),
+  getRun: (pid: string, runId: string) =>
+    json<{ summary: RunSummary; events: StudioEvent[] }>(
+      "GET",
+      `${p(pid)}/runs/${enc(runId)}`
+    ),
+  getSpacing: (
+    pid: string,
+    did: string,
+    source: SourceLoc,
+    computed: SpacingComputed
+  ) =>
+    json<SpacingBox>(
+      "GET",
+      `${d(pid, did)}/spacing?${new URLSearchParams({
+        file: source.file,
+        line: String(source.line),
+        col: String(source.col),
+        gap: computed.gap,
+        margin: computed.margin,
+        padding: computed.padding,
+      }).toString()}`
+    ),
+  getTelemetry: (pid: string) =>
+    json<TelemetrySample[]>("GET", `/api/telemetry?projectId=${enc(pid)}`),
+  getTweaks: (pid: string, did: string) =>
+    json<TweaksState>("GET", `${d(pid, did)}/tweaks`),
+  hiddenProjects: () => call(projectsRoutes.getHiddenProject, {}),
+  importPage: async (
+    pid: string,
+    did: string,
+    req: Omit<PageImportRequest, "name">
+  ) =>
+    (await (
+      await request(
+        "POST",
+        `${d(pid, did)}/import-page`,
+        {
+          url: req.url,
+          width: req.width,
+          ...(req.selector ? { selector: req.selector } : {}),
+        },
+        pickMessage
+      )
+    ).json()) as PageImportResult,
+  importProject: async (
+    path: string,
+    options: { appDir?: string; skipApp?: boolean } = {}
+  ) => {
+    const imported = await call(projectsRoutes.importProject, {
+      path,
+      ...options,
+    });
+
+    return { project: toProject(imported.project) };
+  },
+  insertIcon: (pid: string, did: string, body: IconInsertBody) =>
+    timedEdit(pid, did, "icon", 1, () =>
+      json<IconInsertReply>("POST", `${d(pid, did)}/icons/insert`, body)
+    ),
+  inspectFolder: (path: string, appDir?: string) =>
+    json<FolderInspection>("POST", "/api/folders/inspect", {
+      path,
+      ...(appDir ? { appDir } : {}),
+    }),
+  keep: (pid: string, did: string) =>
+    json<Version>("POST", `${d(pid, did)}/keep`),
+  listIcons: (pid: string, did: string, q: IconListQuery) =>
+    json<IconList>(
+      "GET",
+      `${d(pid, did)}/icons?${new URLSearchParams({
+        query: q.query,
+        limit: String(q.limit ?? 48),
+        ...(q.library ? { library: q.library } : {}),
+      }).toString()}`
+    ),
+  listMotion: (pid: string, did: string, source: SourceLoc) =>
+    json<MotionInfo>(
+      "GET",
+      `${d(pid, did)}/motion?${new URLSearchParams({
+        file: source.file,
+        line: String(source.line),
+        col: String(source.col),
+      }).toString()}`
+    ),
+  listProjects: async (): Promise<Project[]> => {
+    const all: ProjectWire[] = [];
+    let cursor: string | null = null;
+
+    do {
+      const page: {
+        readonly items: readonly ProjectWire[];
+        readonly next: string | null;
+      } = await call(projectsRoutes.listProject, {
+        cursor,
+        limit: PROJECT_PAGE_LIMIT,
+      });
+
+      all.push(...page.items);
+      cursor = page.next;
+    } while (cursor !== null);
+
+    return all.map((item) => toProject(item));
+  },
+  listRuns: async (pid: string) => {
+    const page = await json<{ items: RunSummary[] }>(
+      "GET",
+      `${p(pid)}${RUNS_PAGE}`
+    );
+
+    return page.items;
+  },
+  listSkills: (): Promise<SkillCatalog> => call(routes.listSkillsStudio, {}),
+  listTextStyles: (pid: string, did: string) =>
+    json<TextStyleList>("GET", `${d(pid, did)}/text-styles?limit=100`),
+  listVersions: async (pid: string, did: string) => {
+    const list = await call(versionsRoutes.listVersion, {
+      directionId: did,
+      projectId: pid,
+    });
+
+    const items: Version[] = list.items;
+
+    return items;
+  },
+  listWorkspaces: () => json<WorkspaceList>("GET", "/api/workspaces"),
+  markProjectOpened: (pid: string) =>
+    json<{ openedAt: number }>("POST", `${p(pid)}/opened`),
+  moveHiddenProjects: () => call(projectsRoutes.moveHiddenProject, {}),
+  onboarding: () => json<{ dismissed: boolean }>("GET", "/api/onboarding"),
+  openSource: (pid: string, did: string, source: string) =>
+    json<{ opened: boolean; path: string }>(
+      "POST",
+      `${d(pid, did)}/open-source`,
+      { source }
+    ),
+  postTelemetry: (sample: TelemetrySample) =>
+    json<{ ok: boolean }>("POST", "/api/telemetry", sample),
+  previewTokens: async (
+    pid: string,
+    did: string,
+    changes: TokenChange[]
+  ): Promise<TokenPreviewResult> => {
+    const { routes: directEditRoutes } =
+      await import("../shared/actions/direct-edit/routes.js");
+
+    return call(directEditRoutes.inspectTokensDirectEdit, {
+      changes: JSON.stringify(changes),
+      directionId: did,
+      projectId: pid,
+    });
+  },
+  projectFile: async (pid: string, filePath: string) => {
+    const file = await call(projectsRoutes.getFileProject, {
+      path: filePath,
+      projectId: pid,
+    });
+
+    return base64ToBlob(file.data, file.mimeType);
+  },
+  putCanvas: (
+    pid: string,
+    body: {
+      canvas: CanvasFile;
+      baseHash: string | null;
+      writer: string;
+      migrate?: boolean;
+    }
+  ) => json<CanvasSnapshot>("PUT", `${p(pid)}/canvas`, body),
+  putCanvasPresence: (pid: string, body: Omit<CanvasPresence, "at">) =>
+    sendPresence(pid, body),
+  putDesignMd: (pid: string, content: string) =>
+    call(projectsRoutes.setDesignMdProject, { content, projectId: pid }),
+  removeWorkspace: (id: string) =>
+    json<{ ok: true }>("DELETE", `/api/workspaces/${enc(id)}`),
+  renameProject: (pid: string, name: string) =>
+    json<Project>("PATCH", p(pid), { name }),
+  renameWorkspace: (id: string, label: string) =>
+    json<WorkspaceFolder>("PATCH", `/api/workspaces/${enc(id)}`, { label }),
+  renderCheck: async (pid: string, did: string) =>
+    (
+      await json<{ results: RenderCheckResult[] }>(
+        "POST",
+        `${d(pid, did)}/check`
+      )
+    ).results,
+  restore: (pid: string, did: string, versionId: string) =>
+    restoreVersion(pid, did, versionId),
+  restoreProject: (trashId: string) =>
+    json<{ project: Project }>("POST", `/api/trash/${enc(trashId)}/restore`),
+  review: (pid: string, did: string, body: ReviewRequest) =>
+    json<ReviewResult>("POST", `${d(pid, did)}/review`, body),
+  reviewFix: (pid: string, did: string, findingIds: string[]) =>
+    json<ReviewFixResult>("POST", `${d(pid, did)}/review/fix`, {
+      findingIds,
+      allowShared: true,
+    }),
+  searchProjects: async (q: string, project: string | null, limit = 20) => {
+    const found = await call(projectsRoutes.searchProject, {
+      cursor: null,
+      limit,
+      projectId: project,
+      query: q,
+    });
+
+    return toSearchResult(q, found.items);
+  },
   searchText: async (
     pid: string,
     did: string,
@@ -768,6 +838,69 @@ export const api = {
       )
     ).json()) as import("../shared/text-search").TextSearchResult;
   },
+  setDefaultFolder: (path: string) =>
+    json<WorkspaceList>("PUT", "/api/workspaces/default", { path }),
+  setFill: (pid: string, did: string, body: FillSetBody) =>
+    timedEdit(pid, did, "fill", 1, () =>
+      json<FillSetReply>("POST", `${d(pid, did)}/fill`, body)
+    ),
+  setMotion: (pid: string, did: string, body: MotionSetBody) =>
+    timedEdit(pid, did, "motion", 1, () =>
+      json<MotionSetResult>("POST", `${d(pid, did)}/motion`, body)
+    ),
+  setQueue: (pid: string, runId: string, items: QueuedMessage[]) =>
+    json<{ ok: boolean }>("PUT", `${p(pid)}/runs/${enc(runId)}/queue`, {
+      items,
+    }),
+  setSpacing: (pid: string, did: string, body: SpacingSetBody) =>
+    timedEdit(pid, did, "spacing", 1, () =>
+      json<SpacingSetResult>("POST", `${d(pid, did)}/spacing`, body)
+    ),
+  startRun: (
+    pid: string,
+    did: string,
+    req: RunRequest & { referenceUrls?: string[] }
+  ) => json<{ runId: string }>("POST", `${d(pid, did)}/runs`, req),
+  starters: () => json<Starter[]>("GET", "/api/starters"),
+  status: (pid: string, did: string) =>
+    json<WorkTreeStatus>("GET", `${d(pid, did)}/status`),
+  steerRun: (pid: string, runId: string, text: string) =>
+    json<{ ok: boolean }>("POST", `${p(pid)}/runs/${enc(runId)}/steer`, {
+      text,
+    }),
+  structureEdit: (pid: string, did: string, req: StructureEditRequest) =>
+    timedEdit(
+      pid,
+      did,
+      req.op,
+      req.targets.length,
+      async () =>
+        (await (
+          await request("POST", `${d(pid, did)}/direct-edit`, req, pickMessage)
+        ).json()) as StructureEditResult
+    ),
+  textSource: (
+    pid: string,
+    did: string,
+    source: SourceLoc,
+    hints: TextSourceHints
+  ) =>
+    json<TextSourceAnswer>("POST", `${d(pid, did)}/text-source`, {
+      source,
+      hints,
+    }),
+  thumbnail: async (pid: string, versionId: string) =>
+    (await request("GET", `${p(pid)}/thumbnail/${enc(versionId)}`)).blob(),
+  trashProject: (pid: string) => json<TrashedProject>("DELETE", p(pid)),
+  undo: (pid: string, did: string) =>
+    json<Version>("POST", `${d(pid, did)}/undo`),
+  updateSettings: async (pid: string, settings: Partial<ProjectSettings>) =>
+    toProject(
+      await call(projectsRoutes.updateProject, {
+        ...settings,
+        projectId: pid,
+      })
+    ),
   updateText: async (
     pid: string,
     did: string,
@@ -789,162 +922,29 @@ export const api = {
         pickMessage
       )
     ).json()) as import("../shared/text-search").TextUpdateResult,
-  importPage: async (
-    pid: string,
-    did: string,
-    req: Omit<PageImportRequest, "name">
-  ) =>
-    (await (
-      await request(
-        "POST",
-        `${d(pid, did)}/import-page`,
-        {
-          url: req.url,
-          width: req.width,
-          ...(req.selector ? { selector: req.selector } : {}),
-        },
-        pickMessage
-      )
-    ).json()) as PageImportResult,
-  renderCheck: async (pid: string, did: string) =>
-    (
-      await json<{ results: RenderCheckResult[] }>(
-        "POST",
-        `${d(pid, did)}/check`
-      )
-    ).results,
+  updateTokens: async (pid: string, did: string, changes: TokenChange[]) => {
+    const res = await request(
+      "POST",
+      `${d(pid, did)}/design-system/tokens/update`,
+      { changes },
+      pickMessage
+    );
+
+    return (await res.json()) as UpdateTokensResult;
+  },
+  uploadAttachment: async (pid: string, file: File) =>
+    toAttachment(
+      await call(projectsRoutes.createAttachmentProject, {
+        data: await fileToBase64(file),
+        mime: file.type,
+        name: file.name,
+        projectId: pid,
+      })
+    ),
   versionPreview: (pid: string, vid: string) =>
     json<{ url: string }>("GET", `${p(pid)}/versions/${enc(vid)}/preview`),
-  exportVersion: async (pid: string, vid: string) => {
-    const res = await request("GET", `${p(pid)}/versions/${enc(vid)}/export`);
-
-    return res.blob();
-  },
-  getRun: (pid: string, runId: string) =>
-    json<{ summary: RunSummary; events: StudioEvent[] }>(
-      "GET",
-      `${p(pid)}/runs/${enc(runId)}`
-    ),
-  cancelRun: (pid: string, runId: string) =>
-    json<{ ok: boolean }>("POST", `${p(pid)}/runs/${enc(runId)}/cancel`),
-  setQueue: (pid: string, runId: string, items: QueuedMessage[]) =>
-    json<{ ok: boolean }>("PUT", `${p(pid)}/runs/${enc(runId)}/queue`, {
-      items,
-    }),
-  steerRun: (pid: string, runId: string, text: string) =>
-    json<{ ok: boolean }>("POST", `${p(pid)}/runs/${enc(runId)}/steer`, {
-      text,
-    }),
-  answerPermission: (
-    pid: string,
-    runId: string,
-    requestId: string,
-    decision: PermissionDecision
-  ) =>
-    json<{ ok: boolean }>(
-      "POST",
-      `${p(pid)}/runs/${enc(runId)}/permissions/${enc(requestId)}`,
-      decision
-    ),
-  postTelemetry: (sample: TelemetrySample) =>
-    json<{ ok: boolean }>("POST", "/api/telemetry", sample),
-  getTelemetry: (pid: string) =>
-    json<TelemetrySample[]>("GET", `/api/telemetry?projectId=${enc(pid)}`),
-  review: (pid: string, did: string, body: ReviewRequest) =>
-    json<ReviewResult>("POST", `${d(pid, did)}/review`, body),
-  reviewFix: (pid: string, did: string, findingIds: string[]) =>
-    json<ReviewFixResult>("POST", `${d(pid, did)}/review/fix`, {
-      findingIds,
-      allowShared: true,
-    }),
-  appFix: (pid: string, kind: DoctorCauseKind) =>
-    json<AppFixResult>("POST", `${p(pid)}/app/doctor/fix`, { kind }),
-  listIcons: (pid: string, did: string, q: IconListQuery) =>
-    json<IconList>(
-      "GET",
-      `${d(pid, did)}/icons?${new URLSearchParams({
-        query: q.query,
-        limit: String(q.limit ?? 48),
-        ...(q.library ? { library: q.library } : {}),
-      }).toString()}`
-    ),
-  insertIcon: (pid: string, did: string, body: IconInsertBody) =>
-    timedEdit(pid, did, "icon", 1, () =>
-      json<IconInsertReply>("POST", `${d(pid, did)}/icons/insert`, body)
-    ),
-  getFill: (pid: string, did: string, source: SourceLoc) =>
-    json<FillInfo>(
-      "GET",
-      `${d(pid, did)}/fill?${new URLSearchParams({
-        file: source.file,
-        line: String(source.line),
-        col: String(source.col),
-      }).toString()}`
-    ),
-  setFill: (pid: string, did: string, body: FillSetBody) =>
-    timedEdit(pid, did, "fill", 1, () =>
-      json<FillSetReply>("POST", `${d(pid, did)}/fill`, body)
-    ),
-  getSpacing: (
-    pid: string,
-    did: string,
-    source: SourceLoc,
-    computed: SpacingComputed
-  ) =>
-    json<SpacingBox>(
-      "GET",
-      `${d(pid, did)}/spacing?${new URLSearchParams({
-        file: source.file,
-        line: String(source.line),
-        col: String(source.col),
-        gap: computed.gap,
-        margin: computed.margin,
-        padding: computed.padding,
-      }).toString()}`
-    ),
-  setSpacing: (pid: string, did: string, body: SpacingSetBody) =>
-    timedEdit(pid, did, "spacing", 1, () =>
-      json<SpacingSetResult>("POST", `${d(pid, did)}/spacing`, body)
-    ),
-  listMotion: (pid: string, did: string, source: SourceLoc) =>
-    json<MotionInfo>(
-      "GET",
-      `${d(pid, did)}/motion?${new URLSearchParams({
-        file: source.file,
-        line: String(source.line),
-        col: String(source.col),
-      }).toString()}`
-    ),
-  setMotion: (pid: string, did: string, body: MotionSetBody) =>
-    timedEdit(pid, did, "motion", 1, () =>
-      json<MotionSetResult>("POST", `${d(pid, did)}/motion`, body)
-    ),
-  listTextStyles: (pid: string, did: string) =>
-    json<TextStyleList>("GET", `${d(pid, did)}/text-styles?limit=100`),
-  applyTextStyle: (pid: string, did: string, body: TextStyleApplyBody) =>
-    timedEdit(pid, did, "text-style", 1, () =>
-      json<TextStyleApplyResult>(
-        "POST",
-        `${d(pid, did)}/text-styles/apply`,
-        body
-      )
-    ),
-  createTextStyle: (pid: string, did: string, body: TextStyleCreateBody) =>
-    timedEdit(pid, did, "text-style", 1, () =>
-      json<TextStyleCreateResult>(
-        "POST",
-        `${d(pid, did)}/text-styles/create`,
-        body
-      )
-    ),
-  detachTextStyle: (pid: string, did: string, body: TextStyleDetachBody) =>
-    timedEdit(pid, did, "text-style", 1, () =>
-      json<{ file: string; versionId: string }>(
-        "POST",
-        `${d(pid, did)}/text-styles/detach`,
-        body
-      )
-    ),
+  workTreeFiles: (pid: string, did: string) =>
+    json<{ files: string[] }>("GET", `${d(pid, did)}/tree`),
 };
 
 function editKind(req: DirectEditRequest): string {
@@ -977,18 +977,18 @@ async function timedEdit<T>(
   const started = performance.now();
   const result = await commit();
   sendTelemetry({
-    kind: "edit.commit",
-    projectId: pid,
+    detail: { count, kind },
     directionId: did,
+    kind: "edit.commit",
     ms: Math.round(performance.now() - started),
-    detail: { kind, count },
+    projectId: pid,
   });
 
   return result;
 }
 
 export function sendTelemetry(sample: Omit<TelemetrySample, "ts">): void {
-  api.postTelemetry({ ...sample, ts: Date.now() }).catch(() => undefined);
+  api.postTelemetry({ ...sample, ts: Date.now() }).catch(() => {});
 }
 
 export function errorText(err: unknown): string {

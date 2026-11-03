@@ -6,6 +6,7 @@ export default function DesktopApp({
   activeProjectId: string | null;
 }) {
   const error = useDesktopApp(activeProjectId);
+
   return error ? (
     <div className="desktop-notice" role="alert">
       {error}

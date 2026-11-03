@@ -13,10 +13,10 @@ export interface PopoverBounds {
 
 export function popoverBounds(anchor: Element): PopoverBounds {
   const bounds = {
-    left: MARGIN,
-    top: MARGIN,
-    right: window.innerWidth - MARGIN,
     bottom: window.innerHeight - MARGIN,
+    left: MARGIN,
+    right: window.innerWidth - MARGIN,
+    top: MARGIN,
   };
 
   const boundary = anchor.closest("[data-popover-boundary]");
@@ -62,8 +62,8 @@ export function placeFixed(
   return {
     ...vertical,
     left,
-    maxWidth: room,
     maxHeight: space,
+    maxWidth: room,
     overflowY: height > space ? "auto" : undefined,
   };
 }
@@ -84,8 +84,8 @@ function layoutRect(panel: HTMLElement): {
 
   return {
     left,
-    top: base.top + panel.offsetTop,
     right: left + panel.offsetWidth,
+    top: base.top + panel.offsetTop,
   };
 }
 
@@ -109,7 +109,7 @@ function fitVertical(
   from: DOMRect,
   bounds: PopoverBounds
 ): void {
-  const style = panel.style;
+  const { style } = panel;
   const height = panel.scrollHeight;
   const below = bounds.bottom - top;
   const above = from.top - POPOVER_GAP - bounds.top;

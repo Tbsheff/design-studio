@@ -28,10 +28,10 @@ function clipBox(host: Element): {
   bottom: number;
 } {
   const box = {
+    bottom: window.innerHeight,
     left: 0,
     right: window.innerWidth,
     top: 0,
-    bottom: window.innerHeight,
   };
 
   for (
@@ -73,15 +73,15 @@ function restoreAuto(host: Element): void {
   }
 
   if (auto.includes("align")) {
-    host.removeAttribute("data-tip-align");
+    delete host.dataset.tipAlign;
   }
 
   if (auto.includes("side")) {
-    host.removeAttribute("data-tip-side");
+    delete host.dataset.tipSide;
   }
 
   if (auto.includes("was-top")) {
-    host.setAttribute("data-tip-side", "top");
+    host.dataset.tipSide = "top";
   }
 
   host.removeAttribute(AUTO);
@@ -93,7 +93,7 @@ function fitAlign(
   box: Box,
   width: number
 ): string[] {
-  if (host.hasAttribute("data-tip-align")) {
+  if (Object.hasOwn(host.dataset, "tipAlign")) {
     return [];
   }
 
@@ -105,7 +105,7 @@ function fitAlign(
     return [];
   }
 
-  host.setAttribute("data-tip-align", overRight ? "end" : "start");
+  host.dataset.tipAlign = overRight ? "end" : "start";
 
   return ["align"];
 }
@@ -118,16 +118,16 @@ function fitSide(
 ): string[] {
   const fitsBelow = rect.bottom + 6 + height <= box.bottom - EDGE;
   const fitsAbove = rect.top - 6 - height >= box.top + EDGE;
-  const side = host.getAttribute("data-tip-side");
+  const side = host.dataset.tipSide;
 
   if (side === null && !fitsBelow && fitsAbove) {
-    host.setAttribute("data-tip-side", "top");
+    host.dataset.tipSide = "top";
 
     return ["side"];
   }
 
   if (side === "top" && !fitsAbove && fitsBelow) {
-    host.setAttribute("data-tip-side", "bottom");
+    host.dataset.tipSide = "bottom";
 
     return ["side", "was-top"];
   }
@@ -138,8 +138,8 @@ function fitSide(
 function fitTip(host: Element): void {
   restoreAuto(host);
   const tip = getComputedStyle(host, "::after");
-  const width = parseFloat(tip.width);
-  const height = parseFloat(tip.height);
+  const width = Number.parseFloat(tip.width);
+  const height = Number.parseFloat(tip.height);
 
   if (!width || !height) {
     return;

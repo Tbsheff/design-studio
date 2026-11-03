@@ -6,8 +6,8 @@ export function formatTime(ts: number): string {
   return sameDay
     ? d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })
     : `${d.toLocaleDateString(undefined, {
-        month: "short",
         day: "numeric",
+        month: "short",
       })} ${d.toLocaleTimeString(undefined, {
         hour: "2-digit",
         minute: "2-digit",
@@ -43,7 +43,7 @@ export function downloadBlob(blob: Blob, name: string): void {
   const a = document.createElement("a");
   a.href = url;
   a.download = name;
-  document.body.appendChild(a);
+  document.body.append(a);
   a.click();
   a.remove();
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
@@ -78,13 +78,13 @@ export function formatRelative(ts: number, now = Date.now()): string {
   }
 
   return new Date(ts).toLocaleDateString(undefined, {
-    month: "short",
     day: "numeric",
+    month: "short",
   });
 }
 
 export function baseName(p: string): string {
   const parts = p.split(/[\\/]/).filter(Boolean);
 
-  return parts[parts.length - 1] ?? p;
+  return parts.at(-1) ?? p;
 }

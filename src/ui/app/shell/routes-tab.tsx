@@ -18,10 +18,22 @@ function RoutesTab({
   const [filter, setFilter] = useState("");
   const [custom, setCustom] = useState("");
   useEffect(() => {
-    api
-      .appRoutes(projectId)
-      .then((result) => setRoutes(result.routes))
-      .catch((err: unknown) => setError(errorText(err)));
+    let isLive = true;
+    void (async () => {
+      try {
+        const result = await api.appRoutes(projectId);
+        if (isLive) {
+          setRoutes(result.routes);
+        }
+      } catch (caught: unknown) {
+        if (isLive) {
+          setError(errorText(caught));
+        }
+      }
+    })();
+    return () => {
+      isLive = false;
+    };
   }, [projectId]);
 
   const matches = useMemo(() => {

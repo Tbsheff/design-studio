@@ -78,5 +78,5 @@ export function usePanelTab(projectId: string, eligible: boolean) {
     [projectId]
   );
 
-  return { tab, choose, show: choose };
+  return { choose, show: choose, tab };
 }

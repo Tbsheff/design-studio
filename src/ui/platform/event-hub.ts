@@ -1,43 +1,43 @@
 import type { StudioEvent, StudioEventBody } from "../../shared/contracts";
 
 const EVERY_EVENT_TYPE: Record<StudioEventBody["type"], true> = {
-  "run.started": true,
-  "run.text.delta": true,
-  "run.text": true,
-  "run.thinking.delta": true,
-  "run.thinking": true,
-  "run.tool.started": true,
-  "run.tool.finished": true,
-  "run.user": true,
-  "run.queue": true,
-  "run.stopping": true,
-  "run.permission": true,
-  "run.permission.resolved": true,
-  "run.todos": true,
-  "run.usage": true,
-  "run.retry": true,
-  "run.finished": true,
-  "files.changed": true,
-  "version.created": true,
-  "direction.updated": true,
-  "status.changed": true,
-  "preview.build-error": true,
-  "comments.changed": true,
-  "edit-history.changed": true,
-  "versions.changed": true,
+  "app.status": true,
   "canvas.changed": true,
   "canvas.point": true,
-  "links.changed": true,
-  "mcp.approval": true,
-  "mcp.approval.resolved": true,
-  "mcp.activity": true,
-  "mcp.point": true,
+  "comments.changed": true,
   "design-system.sources": true,
-  "app.status": true,
-  "frame-states.changed": true,
-  "layer-locks.changed": true,
+  "direction.updated": true,
+  "edit-history.changed": true,
   "edit.planned": true,
   "edit.unplanned": true,
+  "files.changed": true,
+  "frame-states.changed": true,
+  "layer-locks.changed": true,
+  "links.changed": true,
+  "mcp.activity": true,
+  "mcp.approval": true,
+  "mcp.approval.resolved": true,
+  "mcp.point": true,
+  "preview.build-error": true,
+  "run.finished": true,
+  "run.permission": true,
+  "run.permission.resolved": true,
+  "run.queue": true,
+  "run.retry": true,
+  "run.started": true,
+  "run.stopping": true,
+  "run.text": true,
+  "run.text.delta": true,
+  "run.thinking": true,
+  "run.thinking.delta": true,
+  "run.todos": true,
+  "run.tool.finished": true,
+  "run.tool.started": true,
+  "run.usage": true,
+  "run.user": true,
+  "status.changed": true,
+  "version.created": true,
+  "versions.changed": true,
 };
 
 export const EVENT_TYPES = Object.keys(
@@ -169,14 +169,14 @@ export function createEventHub(deps: HubDeps): EventHub {
     }
 
     const channel: Channel = {
-      listeners: new Set(),
-      stateListeners: new Set(),
-      state: "connecting",
-      lastSeq: 0,
-      source: null,
-      retryTimer: undefined,
-      retryDelay: 500,
       closing: false,
+      lastSeq: 0,
+      listeners: new Set(),
+      retryDelay: 500,
+      retryTimer: undefined,
+      source: null,
+      state: "connecting",
+      stateListeners: new Set(),
     };
 
     channels.set(projectId, channel);
@@ -212,6 +212,12 @@ export function createEventHub(deps: HubDeps): EventHub {
   };
 
   return {
+    openCount() {
+      return channels.size;
+    },
+    state(projectId) {
+      return channels.get(projectId)?.state ?? "connecting";
+    },
     subscribe(projectId, listener) {
       const channel = channelFor(projectId);
       channel.listeners.add(listener);
@@ -229,12 +235,6 @@ export function createEventHub(deps: HubDeps): EventHub {
         channel.stateListeners.delete(onChange);
         release(projectId, channel);
       };
-    },
-    state(projectId) {
-      return channels.get(projectId)?.state ?? "connecting";
-    },
-    openCount() {
-      return channels.size;
     },
   };
 }

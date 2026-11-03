@@ -5,9 +5,11 @@ import {
   BRIDGE_HELLO_TYPE,
   BRIDGE_PARENT_ORIGIN_PARAM,
   CLOUD_BLOCKED_BRIDGE_TYPES,
-  type BridgeToParent,
-  type ParentToBridge,
-  type ProjectKind,
+} from "../../shared/contracts.js";
+import type {
+  BridgeToParent,
+  ParentToBridge,
+  ProjectKind,
 } from "../../shared/contracts.js";
 
 export interface BridgeFrame {

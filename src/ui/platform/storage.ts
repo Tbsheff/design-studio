@@ -17,7 +17,11 @@ export interface LibraryFrom {
   directionId: string;
 }
 
-const SCREENS: Screen[] = ["home", "new-design-system", "design-systems"];
+const SCREENS: Screen[] = new Set([
+  "home",
+  "new-design-system",
+  "design-systems",
+]);
 
 export interface UiState {
   activeProjectId: string | null;
@@ -85,9 +89,7 @@ function loadUiState(): UiState {
     return {
       activeProjectId: parsed.activeProjectId ?? null,
       screen:
-        parsed.screen && SCREENS.includes(parsed.screen)
-          ? parsed.screen
-          : "home",
+        parsed.screen && SCREENS.has(parsed.screen) ? parsed.screen : "home",
       libraryFrom:
         parsed.screen === "design-systems"
           ? libraryFromOf(parsed.libraryFrom)

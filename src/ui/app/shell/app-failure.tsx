@@ -30,15 +30,25 @@ function useInstallHint(
     }
 
     let live = true;
-    api
-      .getProject(projectId)
-      .then((project) =>
-        project.imported
-          ? api.inspectFolder(project.imported.sourcePath, app.appDir)
-          : null
-      )
-      .then((result) => live && setHint(result))
-      .catch(() => live && setHint(null));
+    void (async () => {
+      try {
+        const project = await api.getProject(projectId);
+        let result = null;
+        if (project.imported) {
+          result = await api.inspectFolder(
+            project.imported.sourcePath,
+            app.appDir
+          );
+        }
+        if (live) {
+          setHint(result);
+        }
+      } catch {
+        if (live) {
+          setHint(null);
+        }
+      }
+    })();
 
     return () => {
       live = false;
@@ -100,8 +110,8 @@ function UrlForm({
       try {
         await api.appConfig(projectId, { url: url.trim() });
         onSaved();
-      } catch (err) {
-        setError(errorText(err));
+      } catch (caught) {
+        setError(errorText(caught));
       }
     });
   };

@@ -39,10 +39,14 @@ function AppPanel({
   const managed = (status?.mode ?? app.mode) === "managed";
 
   const control = (action: "start" | "stop" | "restart") =>
-    void api
-      .appControl(projectId, action)
-      .then(refresh)
-      .catch(() => undefined);
+    void (async () => {
+      try {
+        await api.appControl(projectId, action);
+        refresh();
+      } catch {
+        refresh();
+      }
+    })();
 
   const settingsApp = fresh ?? app;
 

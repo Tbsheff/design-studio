@@ -44,12 +44,12 @@ interface Props {
 }
 
 const SHEET_TITLES: Partial<Record<PanelTab, string>> = {
-  versions: "Versions",
-  tokens: "Tokens",
-  components: "Components",
-  tweaks: "Tweaks",
-  system: "Design system",
   comments: "Comments",
+  components: "Components",
+  system: "Design system",
+  tokens: "Tokens",
+  tweaks: "Tweaks",
+  versions: "Versions",
 };
 
 export function visiblePane(
@@ -62,11 +62,12 @@ export function visiblePane(
   }
 ): PanelTab {
   const missing: Partial<Record<PanelTab, boolean>> = {
-    tokens: !has.tokens,
     comments: !has.comments,
-    tweaks: !has.tweaks,
     components: !has.components,
+    tokens: !has.tokens,
+    tweaks: !has.tweaks,
   };
+
   return missing[tab] ? "chat" : tab;
 }
 
@@ -106,19 +107,23 @@ function Sheet(props: Props & { tab: PanelTab }) {
   const [slot, setSlot] = useState<HTMLDivElement | null>(null);
   const sheet = useMemo(() => ({ slot }), [slot]);
   const title = SHEET_TITLES[props.tab] ?? "";
+
   const body = (() => {
     switch (props.tab) {
       case "versions": {
         return <VersionsPanel {...props.versions} />;
       }
+
       case "tokens": {
         return props.tokens ? <TokensPanel {...props.tokens} /> : null;
       }
+
       case "components": {
         return props.components ? (
           <ComponentsPanel {...props.components} />
         ) : null;
       }
+
       case "tweaks": {
         return props.tweaks ? (
           <Suspense fallback={null}>
@@ -126,17 +131,21 @@ function Sheet(props: Props & { tab: PanelTab }) {
           </Suspense>
         ) : null;
       }
+
       case "comments": {
         return props.comments ? <CommentsPanel {...props.comments} /> : null;
       }
+
       case "system": {
         return <div className="pane-system">{props.system}</div>;
       }
+
       default: {
         return null;
       }
     }
   })();
+
   return (
     <section
       className={`pane-sheet pane-sheet-${props.tab}`}
@@ -157,15 +166,17 @@ function Sheet(props: Props & { tab: PanelTab }) {
 
 export function LeftPane(props: Props) {
   const tab = visiblePane(props.tab, {
-    tokens: props.tokens !== null,
     comments: Boolean(props.comments),
-    tweaks: Boolean(props.tweaks),
     components: Boolean(props.components),
+    tokens: props.tokens !== null,
+    tweaks: Boolean(props.tweaks),
   });
+
   const chat = tab === "chat";
   const edit = tab === "design";
   const sheet = !chat && !edit;
-  const comments = props.comments;
+  const { comments } = props;
+
   return (
     <aside
       className="pane-left"

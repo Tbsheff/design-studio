@@ -62,7 +62,7 @@ function hasFiles(event: DragEvent): boolean {
 }
 
 function droppedFolder(event: DragEvent, bridge: DropBridge): string | null {
-  for (const item of Array.from(event.dataTransfer?.items ?? [])) {
+  for (const item of event.dataTransfer?.items ?? []) {
     if (item.kind !== "file" || !item.webkitGetAsEntry()?.isDirectory) {
       continue;
     }
@@ -91,7 +91,7 @@ function useFolderDrop(): void {
     const bridge = dropBridge();
 
     if (!bridge?.pathForFile || !bridge.openDropped) {
-      return undefined;
+      return;
     }
 
     const onDragOver = (event: DragEvent) => {
@@ -146,11 +146,14 @@ function useAppCommands(setError: (error: string | null) => void): void {
       uiStore.set({ activeProjectId: command.projectId });
     } else if (command.type === "open-folder") {
       setError(null);
-      openFolder(command.path)
-        .then((id) => uiStore.set({ activeProjectId: id }))
-        .catch((err) =>
-          setError(`Cannot open ${command.path}: ${errorText(err)}`)
-        );
+      void (async () => {
+        try {
+          const id = await openFolder(command.path);
+          uiStore.set({ activeProjectId: id });
+        } catch (error) {
+          setError(`Cannot open ${command.path}: ${errorText(error)}`);
+        }
+      })();
     } else if (command.type === "undo" || command.type === "redo") {
       textEdit(command.type);
     } else if (command.type === "command") {
@@ -164,7 +167,7 @@ function useAppCommands(setError: (error: string | null) => void): void {
 export function useDesktopApp(activeProjectId: string | null): string | null {
   const [error, setError] = useState<string | null>(null);
   useDesktopContext(
-    { projectId: null, directionId: null, running: false },
+    { directionId: null, projectId: null, running: false },
     activeProjectId === null
   );
   useAppCommands(setError);

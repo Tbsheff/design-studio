@@ -242,7 +242,7 @@ function studioPointer(projectId: string, stage: () => HTMLElement | null) {
       pointX: body.x,
       pointY: body.y,
       projectId,
-    }).catch(() => undefined);
+    }).catch(() => null);
   };
 
   const queue = (value: StudioCursorInput | null) => {

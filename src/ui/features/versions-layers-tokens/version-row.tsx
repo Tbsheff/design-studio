@@ -4,13 +4,13 @@ import {
   useLayoutEffect,
   useRef,
   useState,
-  type KeyboardEvent,
-  type RefObject,
 } from "react";
+import type { KeyboardEvent, RefObject } from "react";
 
 import type { Version } from "../../../shared/contracts.js";
 import { formatRelative, formatTime } from "../../domain/format.js";
-import { Icon, type IconName } from "../../kit/Icon.js";
+import { Icon } from "../../kit/Icon.js";
+import type { IconName } from "../../kit/Icon.js";
 import { usePopover } from "../../kit/use-popover.js";
 import { levelLabel } from "../chat/level-control.js";
 import { COPY } from "./copy.js";
@@ -22,8 +22,8 @@ import {
   kindInfo,
   originOf,
   undoneOf,
-  type VersionIndex,
 } from "./version-labels.js";
+import type { VersionIndex } from "./version-labels.js";
 import { VersionThumb } from "./version-thumb.js";
 import { openCompareInCode } from "./versions-api.js";
 
@@ -63,27 +63,38 @@ function RenameField({
 }) {
   const [value, setValue] = useState(initial);
   const done = useRef(false);
+
   const finish = (name: string | null | undefined) => {
-    if (done.current) return;
+    if (done.current) {
+      return;
+    }
     done.current = true;
     onDone(name);
   };
+
   const commit = () => {
     const name = value.trim().replaceAll(/\s+/g, " ");
-    if (name === initial) return finish(undefined);
+
+    if (name === initial) {
+      return finish(undefined);
+    }
     finish(name === "" || name === fallback ? null : name);
   };
+
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     event.stopPropagation();
+
     if (event.key === "Enter") {
       event.preventDefault();
       commit();
     }
+
     if (event.key === "Escape") {
       event.preventDefault();
       finish(undefined);
     }
   };
+
   return (
     <input
       className="version-rename"
@@ -164,6 +175,7 @@ function VersionDetail({
   const prompt = fullText(v);
   const origin = originOf(v, index);
   const undone = undoneOf(v, index);
+
   return (
     <dl className="version-detail" id={id}>
       {prompt && (
@@ -214,8 +226,11 @@ function fileCount(v: Version): number {
 }
 
 function VersionLevel({ version: v }: { version: Version }) {
-  const level = v.meta.level;
-  if (!level) return null;
+  const { level } = v.meta;
+
+  if (!level) {
+    return null;
+  }
   return (
     <>
       <span className="dot" />
@@ -230,6 +245,7 @@ function VersionMeta({ version: v }: { version: Version }) {
   const kind = kindInfo(v);
   const files = fileCount(v);
   const more = files - v.changedFiles.length;
+
   return (
     <div className="version-meta">
       <span
@@ -266,11 +282,12 @@ function VersionMeta({ version: v }: { version: Version }) {
 
 function rowClasses(props: VersionRowProps): string {
   const flags = {
-    head: props.isHead,
-    selected: props.isOpen,
-    picked: props.picked,
     expanded: props.expanded,
+    head: props.isHead,
+    picked: props.picked,
+    selected: props.isOpen,
   };
+
   return [
     "version",
     ...Object.entries(flags)
@@ -287,7 +304,9 @@ export function VersionRow(props: VersionRowProps) {
   const toggle = useRef<HTMLButtonElement>(null);
   const endRename = (name: string | null | undefined) => {
     setRenaming(false);
-    if (name !== undefined) props.onRename(name);
+    if (name !== undefined) {
+      props.onRename(name);
+    }
     requestAnimationFrame(() => toggle.current?.focus({ preventScroll: true }));
   };
   return (
@@ -369,33 +388,36 @@ interface MoreItem {
 function moreItems(props: VersionRowProps): MoreItem[] {
   const { version: v, isHead } = props;
   const items: MoreItem[] = [];
-  const onReview = props.onReview;
+  const { onReview } = props;
+
   if (onReview && v.parentId !== null) {
     items.push({
+      icon: "code",
       id: "review",
       label: "Review changes",
-      icon: "code",
       run: () => {
         openCompareInCode();
         onReview();
       },
     });
   }
+
   items.push(
     {
+      icon: "download",
       id: "export",
       label: "Export…",
-      icon: "download",
       run: props.onExport,
     },
     {
+      icon: "branch",
       id: "branch",
       label: "New direction from here",
-      icon: "branch",
       run: props.onBranch,
     }
   );
-  if (isHead && v.meta.level !== "polish")
+
+  if (isHead && v.meta.level !== "polish") {
     items.push({
       id: "polish",
       label: "Polish this",
@@ -403,28 +425,36 @@ function moreItems(props: VersionRowProps): MoreItem[] {
       hint: props.locked ? "Wait for the run" : undefined,
       run: props.onPolish,
     });
+  }
   return items;
 }
 
 const MENU_STEP: Record<string, (index: number, count: number) => number> = {
   ArrowDown: (index, count) => (index + 1) % count,
   ArrowUp: (index, count) => (index - 1 + count) % count,
-  Home: () => 0,
   End: (_index, count) => count - 1,
+  Home: () => 0,
 };
 
 function onMenuKey(
   event: KeyboardEvent<HTMLDivElement>,
   close: (refocus: boolean) => void
 ) {
-  if (event.key === "Tab") close(false);
+  if (event.key === "Tab") {
+    close(false);
+  }
   const step = MENU_STEP[event.key];
-  if (!step) return;
+
+  if (!step) {
+    return;
+  }
   event.preventDefault();
+
   const items = findElements(
     event.currentTarget,
     '[role="menuitem"]:not(:disabled)'
   );
+
   const index = items.indexOf(document.activeElement as HTMLElement);
   items[step(Math.max(0, index), items.length)]?.focus();
 }
@@ -440,16 +470,24 @@ function useMenuPlace(
   const [place, setPlace] = useState<{ left: number; top: number } | null>(
     null
   );
+
   useLayoutEffect(() => {
-    if (!open) return setPlace(null);
+    if (!open) {
+      return setPlace(null);
+    }
     const button = trigger.current?.getBoundingClientRect();
     const el = menu.current;
-    if (!button || !el) return;
+
+    if (!button || !el) {
+      return;
+    }
     const below = button.bottom + MENU_GAP;
+
     const top =
       below + el.offsetHeight > window.innerHeight - MENU_EDGE
         ? button.top - MENU_GAP - el.offsetHeight
         : below;
+
     setPlace({
       left: Math.max(
         MENU_EDGE,
@@ -459,11 +497,13 @@ function useMenuPlace(
     });
   }, [open, trigger, menu]);
   useEffect(() => {
-    if (place && menu.current)
+    if (place && menu.current) {
       findElement(menu.current, '[role="menuitem"]:not(:disabled)')?.focus({
         preventScroll: true,
       });
+    }
   }, [place, menu]);
+
   return place;
 }
 
@@ -478,12 +518,18 @@ function VersionMoreMenu({
   const root = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
   const menu = useRef<HTMLDivElement>(null);
+
   const close = useCallback((refocus: boolean) => {
     setOpen(false);
-    if (refocus) trigger.current?.focus({ preventScroll: true });
+
+    if (refocus) {
+      trigger.current?.focus({ preventScroll: true });
+    }
   }, []);
+
   usePopover(open, root, close);
   const place = useMenuPlace(open, trigger, menu);
+
   return (
     <div className="version-more" ref={root}>
       <button
@@ -541,6 +587,7 @@ function VersionMoreMenu({
 
 function VersionActions(props: VersionRowProps) {
   const { isHead, picked } = props;
+
   return (
     <div
       className="version-actions"

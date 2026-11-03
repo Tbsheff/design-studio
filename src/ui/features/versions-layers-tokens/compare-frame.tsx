@@ -38,17 +38,18 @@ export function CompareFrame({
   useEffect(() => {
     let alive = true;
     const token = randomToken();
+
     const load = async () => {
       try {
         const { url } = await api.versionPreview(projectId, version.id);
 
         if (alive) {
-          setSlot({ token, src: frameSrc(url) });
+          setSlot({ src: frameSrc(url), token });
         }
-      } catch (err) {
+      } catch (error) {
         if (alive) {
           report.current(
-            `Could not load this version. ${errorText(err)} Close compare and try again.`
+            `Could not load this version. ${errorText(error)} Close compare and try again.`
           );
         }
       }

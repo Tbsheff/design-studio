@@ -6,17 +6,20 @@ import {
   PUBLISH_PASSWORD_MIN,
   publishExpiryText,
   publishSize,
-  type Publication,
-  type PublishExpiryDays,
-  type PublishKind,
-  type PublishPlan,
+} from "../../../shared/publish.js";
+import type {
+  Publication,
+  PublishExpiryDays,
+  PublishKind,
+  PublishPlan,
 } from "../../../shared/publish.js";
 import { errorText } from "../../api.js";
 import { CopyButton } from "../../kit/CopyButton.js";
 import { canvasFrameName } from "../canvas/canvas-frames.js";
 import { canvasFrameChoices } from "./export-api.js";
 import { PublicationRow } from "./publication-row.js";
-import { publishApi, type PublishRequest } from "./publish-api.js";
+import { publishApi } from "./publish-api.js";
+import type { PublishRequest } from "./publish-api.js";
 import { usePublishBackend } from "./publish-backend-setup.js";
 import { PublishSetupBody, usePublishCli } from "./publish-setup.js";
 
@@ -45,10 +48,10 @@ function usePublications(projectId: string) {
   }, [projectId]);
 
   useEffect(() => {
-    void reload().catch(() => undefined);
+    void reload().catch(() => null);
   }, [reload]);
 
-  return { list, backendError, reload };
+  return { backendError, list, reload };
 }
 
 function Toggle({
@@ -319,18 +322,18 @@ function planInputOf(target: PublishTarget, form: FormState): PublishRequest {
   ).filter((f) => form.picked.has(f.id));
 
   const input: PublishRequest = {
-    versionId: target.versionId ?? undefined,
     expiresInDays: form.expiry,
-    viewerComments: form.viewerComments,
     noindex: !form.indexable,
+    versionId: target.versionId ?? undefined,
+    viewerComments: form.viewerComments,
     ...(target.directionId ? { directionId: target.directionId } : {}),
     ...(form.passwordOn ? { password: form.password } : {}),
   };
 
   if (target.kind === "viewer") {
     Object.assign(input, {
-      frames: frames.map((f) => f.id),
       comments: form.comments,
+      frames: frames.map((f) => f.id),
     });
   }
 
@@ -370,8 +373,8 @@ function usePublishFlow(target: PublishTarget) {
 
     try {
       await task();
-    } catch (err) {
-      setError(errorText(err));
+    } catch (failure) {
+      setError(errorText(failure));
     } finally {
       setBusy(null);
     }
@@ -412,16 +415,16 @@ function usePublishFlow(target: PublishTarget) {
     });
 
   return {
-    pubs,
-    plan,
-    setPlan,
     busy,
-    error,
-    done,
     check,
     confirm,
-    unpublish,
+    done,
+    error,
+    plan,
+    pubs,
     rollback,
+    setPlan,
+    unpublish,
   };
 }
 
@@ -524,17 +527,17 @@ function PublishPane({
   const flow = usePublishFlow(target);
 
   const [form, setForm] = useState<FormState>(() => ({
+    comments: false,
+    expiry: PUBLISH_DEFAULT_EXPIRY_DAYS,
+    indexable: false,
+    password: "",
+    passwordOn: false,
     picked: new Set(
       canvasFrameChoices(target.projectId, target.directionId)
         .slice(0, PUBLISH_MAX_FRAMES)
         .map((f) => f.id)
     ),
-    passwordOn: false,
-    password: "",
-    expiry: PUBLISH_DEFAULT_EXPIRY_DAYS,
-    comments: false,
     viewerComments: false,
-    indexable: false,
   }));
 
   const ready = backend.backend?.ready === true;

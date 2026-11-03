@@ -6,38 +6,38 @@ import { lintValues } from "./token-lint.js";
 
 const entries: CompiledTokenEntry[] = [
   {
-    path: "color.primary",
     cssVar: "--primary",
+    darkValue: "#ff6666",
+    path: "color.primary",
     type: "color",
     value: "#ff0000",
-    darkValue: "#ff6666",
   },
   {
-    path: "color.fg",
     cssVar: "--fg",
+    darkValue: "#eeeeee",
+    path: "color.fg",
     type: "color",
     value: "#111111",
-    darkValue: "#eeeeee",
   },
   {
-    path: "font.body",
     cssVar: "--font-body",
+    darkValue: null,
+    path: "font.body",
     type: "fontFamily",
     value: "Inter, sans-serif",
-    darkValue: null,
   },
   {
-    path: "space.4",
     cssVar: "--space-4",
+    darkValue: null,
+    path: "space.4",
     type: "dimension",
     value: "16px",
-    darkValue: null,
   },
 ];
 
 const css = (text: string) => ({
-  rules: [{ selector: ".x", css: text, source: "index.html" }],
   inline: "",
+  rules: [{ selector: ".x", css: text, source: "index.html" }],
 });
 
 describe(lintValues, () => {
@@ -49,6 +49,7 @@ describe(lintValues, () => {
       "light",
       css("color: #fa0a14;")
     );
+
     expect(issue?.kind).toBe("color");
     expect(issue?.token.cssVar).toBe("--primary");
     expect(issue?.deltaE).toBeGreaterThan(0);
@@ -57,9 +58,10 @@ describe(lintValues, () => {
 
   it("flags a raw value that equals a token, and skips values written as var()", () => {
     const values = valuesFromStyles({
-      color: "rgb(255, 0, 0)",
       "background-color": "rgb(17, 17, 17)",
+      color: "rgb(255, 0, 0)",
     });
+
     const issues = lintValues(
       values,
       entries,
@@ -84,11 +86,11 @@ describe(lintValues, () => {
 
   it("groups a padding shorthand near a space token and flags a font outside the font tokens", () => {
     const values = valuesFromStyles({
-      "padding-top": "15px",
-      "padding-right": "15px",
+      "font-family": "Comic Sans MS",
       "padding-bottom": "15px",
       "padding-left": "15px",
-      "font-family": "Comic Sans MS",
+      "padding-right": "15px",
+      "padding-top": "15px",
     });
     const issues = lintValues(
       values,
@@ -96,6 +98,7 @@ describe(lintValues, () => {
       "light",
       css('padding: 15px; font-family: "Comic Sans MS";')
     );
+
     const padding = issues.find((issue) => issue.kind === "size");
     expect(padding?.props).toEqual([
       "padding-top",

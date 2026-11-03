@@ -125,15 +125,15 @@ const versionChanges = async (
 ): Promise<VersionChanges> =>
   toChanges(
     await call(routes.inspectDiffVersion, {
-      projectId: pid,
-      thumbnails: false,
       from,
       to,
+      projectId: pid,
+      thumbnails: false,
     })
   );
 
 export const getVersion = (pid: string, versionId: string) =>
-  call(routes.getVersion, { versionId, projectId: pid });
+  call(routes.getVersion, { projectId: pid, versionId });
 
 export const listEditHistory = (pid: string, did: string, limit: number) =>
   call(routes.listHistoryVersion, {
@@ -309,7 +309,7 @@ export function requestThumb(
   if (thumbs.has(key)) {
     onResult(thumbs.get(key) ?? null);
 
-    return () => undefined;
+    return () => 0;
   }
 
   let request = requests.get(key);
@@ -317,10 +317,10 @@ export function requestThumb(
   if (!request) {
     request = {
       key,
-      url: `${base(pid, vid)}/thumb`,
-      listeners: new Set(),
       controller: new AbortController(),
+      listeners: new Set(),
       started: false,
+      url: `${base(pid, vid)}/thumb`,
     };
     requests.set(key, request);
     waiting.push(request);
@@ -372,7 +372,7 @@ export async function versionDiff(
   }
 
   return {
-    url: URL.createObjectURL(await res.blob()),
     changedPct: Number(res.headers.get("x-changed-pct") ?? 0),
+    url: URL.createObjectURL(await res.blob()),
   };
 }

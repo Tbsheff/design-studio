@@ -65,7 +65,7 @@ export function rawToken(
   entry: CompiledTokenEntry
 ): RawToken {
   if (entry.source) {
-    return { value: entry.source.value, darkValue: entry.source.darkValue };
+    return { darkValue: entry.source.darkValue, value: entry.source.value };
   }
 
   let node: unknown = file;
@@ -75,10 +75,10 @@ export function rawToken(
   }
 
   if (!isRecord(node) || typeof node.$value !== "string") {
-    return { value: entry.value, darkValue: entry.darkValue };
+    return { darkValue: entry.darkValue, value: entry.value };
   }
 
-  return { value: node.$value, darkValue: darkOf(node) };
+  return { darkValue: darkOf(node), value: node.$value };
 }
 
 export function shownRaw(
@@ -86,9 +86,9 @@ export function shownRaw(
   pending: PendingToken | undefined
 ): RawToken {
   return {
-    value: pending?.value ?? base.value,
     darkValue:
       pending?.darkValue === undefined ? base.darkValue : pending.darkValue,
+    value: pending?.value ?? base.value,
   };
 }
 
@@ -186,7 +186,7 @@ function overlayEntry(
         ? null
         : resolveCss(pending.darkValue, entries, true);
 
-  return { ...entry, value, darkValue };
+  return { ...entry, darkValue, value };
 }
 
 export function overlayTokens(
@@ -213,12 +213,12 @@ interface TokenSection {
 }
 
 const SECTIONS: { id: string; label: string; groups: string[] }[] = [
-  { id: "color", label: "Color", groups: ["color"] },
-  { id: "type", label: "Typography", groups: ["font", "text"] },
-  { id: "space", label: "Space", groups: ["space"] },
-  { id: "radius", label: "Radius", groups: ["radius"] },
-  { id: "shadow", label: "Shadow", groups: ["shadow"] },
-  { id: "breakpoint", label: "Breakpoints", groups: ["breakpoint"] },
+  { groups: ["color"], id: "color", label: "Color" },
+  { groups: ["font", "text"], id: "type", label: "Typography" },
+  { groups: ["space"], id: "space", label: "Space" },
+  { groups: ["radius"], id: "radius", label: "Radius" },
+  { groups: ["shadow"], id: "shadow", label: "Shadow" },
+  { groups: ["breakpoint"], id: "breakpoint", label: "Breakpoints" },
 ];
 
 function matchesQuery(
@@ -246,17 +246,17 @@ export function tokenSections(
   const known = new Set(SECTIONS.flatMap((s) => s.groups));
 
   const sections = SECTIONS.map((s) => ({
-    id: s.id,
-    label: s.label,
     entries: visible.filter((e) =>
       s.groups.includes(e.path.split(".")[0] ?? "")
     ),
+    id: s.id,
+    label: s.label,
   }));
 
   const other = {
+    entries: visible.filter((e) => !known.has(e.path.split(".")[0] ?? "")),
     id: "other",
     label: "Other",
-    entries: visible.filter((e) => !known.has(e.path.split(".")[0] ?? "")),
   };
 
   return [...sections, other].filter((s) => s.entries.length > 0);

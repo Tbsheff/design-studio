@@ -17,8 +17,8 @@ export function usePublishBackend() {
     try {
       setBackend(await publishApi.backend(check));
       setError(null);
-    } catch (err) {
-      setError(errorText(err));
+    } catch (failure) {
+      setError(errorText(failure));
     }
   }, []);
 
@@ -40,8 +40,8 @@ export function usePublishBackend() {
     try {
       setError(null);
       setBackend(await publishApi.setup(mode));
-    } catch (err) {
-      setError(errorText(err));
+    } catch (failure) {
+      setError(errorText(failure));
     }
   }, []);
 
@@ -51,11 +51,11 @@ export function usePublishBackend() {
 export type BackendHook = ReturnType<typeof usePublishBackend>;
 
 const MARK: Record<SetupStep["status"], string> = {
+  done: "✓",
+  failed: "✕",
   pending: "○",
   running: "◌",
-  done: "✓",
   skipped: "–",
-  failed: "✕",
 };
 
 function StepRow({ step }: { step: SetupStep }) {

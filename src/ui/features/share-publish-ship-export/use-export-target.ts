@@ -24,8 +24,8 @@ export function useExportTarget(
 
       const version = list.find((v) => v.id === versionId);
       setTarget({
-        projectId,
         directionId: current?.id ?? null,
+        projectId,
         versionId,
         versionLabel: version
           ? (version.name ?? version.title)
@@ -41,10 +41,10 @@ export function useExportTarget(
   const close = useCallback(() => setTarget(null), []);
 
   return {
-    target,
+    canOpen: Boolean(direction?.headVersionId),
+    close,
     open,
     openHead: () => open(),
-    close,
-    canOpen: Boolean(direction?.headVersionId),
+    target,
   };
 }

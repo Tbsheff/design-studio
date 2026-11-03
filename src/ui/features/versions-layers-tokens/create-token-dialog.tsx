@@ -1,16 +1,14 @@
-import {
-  useState,
-  useTransition,
-  type FormEvent,
-  type KeyboardEvent,
-} from "react";
+import { useState, useTransition } from "react";
+import type { FormEvent, KeyboardEvent } from "react";
 
 import {
   TOKEN_GROUP_FOR_PROPERTY,
   TOKEN_NAME_PATTERN,
-  type CompiledTokenEntry,
-  type CreateTokenResult,
-  type TokenGroupName,
+} from "../../../shared/contracts.js";
+import type {
+  CompiledTokenEntry,
+  CreateTokenResult,
+  TokenGroupName,
 } from "../../../shared/contracts.js";
 import { cssVarFor } from "../../../shared/token-match.js";
 import { ApiError, errorText } from "../../api.js";
@@ -37,10 +35,10 @@ interface DialogProps {
 const SERIES: Record<TokenGroupName, (n: number) => string> = {
   color: (n) => `brand-${n + 1}`,
   font: (n) => (n === 0 ? "alt" : `alt-${n + 1}`),
-  text: (n) => `${n + 5}xl`,
-  space: (n) => String(n + 1),
   radius: (n) => (n === 0 ? "xl" : `xl-${n + 1}`),
   shadow: (n) => (n === 0 ? "xl" : `xl-${n + 1}`),
+  space: (n) => String(n + 1),
+  text: (n) => `${n + 5}xl`,
 };
 
 function suggestName(
@@ -114,10 +112,10 @@ function problemsOf(f: {
     f.group === "color" ? valueError(f.group, f.dark, true) : null;
 
   return {
-    nameProblem,
-    valueProblem,
     darkProblem,
     invalid: Boolean(nameProblem || valueProblem || darkProblem),
+    nameProblem,
+    valueProblem,
   };
 }
 
@@ -260,8 +258,8 @@ export function CreateTokenDialog({
           value: value.trim(),
         });
         onClose();
-      } catch (err) {
-        setFailure(serverError(err));
+      } catch (error) {
+        setFailure(serverError(error));
       }
     });
   };

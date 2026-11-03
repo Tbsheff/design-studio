@@ -39,9 +39,9 @@ export function useStudioTokens(o: Options) {
 
   const panel = o.tokens
     ? {
+        draft,
         sweep: { directionId: o.directionId, projectId: o.projectId },
         tokens: o.tokens,
-        draft,
       }
     : null;
 

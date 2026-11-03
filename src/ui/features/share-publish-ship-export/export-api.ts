@@ -21,8 +21,8 @@ import {
   canvasStore,
   defaultLayout,
   frameName,
-  type CanvasFrame,
 } from "../canvas/canvas-frames-model.js";
+import type { CanvasFrame } from "../canvas/canvas-frames-model.js";
 
 const p = (pid: string) => `/api/projects/${encodeURIComponent(pid)}`;
 const PREFS_KEY = "design-studio.export.v1";
@@ -50,6 +50,19 @@ function toExportedFile(file: ExportFileResultWire): ExportedFile {
 }
 
 export const exportApi = {
+  copyCode: (pid: string, request: CopyCodeRequest): Promise<CopyCodeResult> =>
+    callAction(exportRoutes.getCodeExport, {
+      directionId: request.directionId ?? null,
+      format: request.format,
+      height: request.frame.height,
+      projectId: pid,
+      targetSelector: request.selector,
+      versionId: request.versionId ?? null,
+      width: request.frame.width,
+      ...(request.frame.path ? { path: request.frame.path } : {}),
+    }),
+  editors: async (): Promise<EditorInfo[]> =>
+    (await getJson<EditorInfo[]>("/api/editors")) ?? [],
   exportFile: async (
     pid: string,
     request: ExportRequest
@@ -78,26 +91,6 @@ export const exportApi = {
         projectId: pid,
       })
     ),
-  revealHandoff: async (pid: string, folder: string): Promise<void> => {
-    await sendJson(
-      "POST",
-      `${p(pid)}/handoff/${encodeURIComponent(folder)}/reveal`,
-      {}
-    );
-  },
-  copyCode: (pid: string, request: CopyCodeRequest): Promise<CopyCodeResult> =>
-    callAction(exportRoutes.getCodeExport, {
-      directionId: request.directionId ?? null,
-      format: request.format,
-      height: request.frame.height,
-      projectId: pid,
-      targetSelector: request.selector,
-      versionId: request.versionId ?? null,
-      width: request.frame.width,
-      ...(request.frame.path ? { path: request.frame.path } : {}),
-    }),
-  editors: async (): Promise<EditorInfo[]> =>
-    (await getJson<EditorInfo[]>("/api/editors")) ?? [],
   openInEditor: async (
     pid: string,
     did: string,
@@ -110,6 +103,13 @@ export const exportApi = {
       file ? { editor, file } : { editor }
     );
   },
+  revealHandoff: async (pid: string, folder: string): Promise<void> => {
+    await sendJson(
+      "POST",
+      `${p(pid)}/handoff/${encodeURIComponent(folder)}/reveal`,
+      {}
+    );
+  },
 };
 
 export interface ExportPrefs {
@@ -120,7 +120,7 @@ export interface ExportPrefs {
 
 const DEFAULT_PREFS: ExportPrefs = { format: "png", scale: 2, scope: "page" };
 
-const FORMATS: ExportFormat[] = [
+const FORMATS: ExportFormat[] = new Set([
   "png",
   "pdf",
   "html",
@@ -128,7 +128,7 @@ const FORMATS: ExportFormat[] = [
   "handoff",
   "svg",
   "pptx",
-];
+]);
 
 export function readExportPrefs(): ExportPrefs {
   try {
@@ -137,7 +137,7 @@ export function readExportPrefs(): ExportPrefs {
     ) as Partial<ExportPrefs>;
 
     return {
-      format: FORMATS.includes(raw.format as ExportFormat)
+      format: FORMATS.has(raw.format as ExportFormat)
         ? (raw.format as ExportFormat)
         : DEFAULT_PREFS.format,
       scale:
@@ -166,9 +166,9 @@ function toExport(
   name = frame.label?.trim() || frameName(frame)
 ): ExportFrame {
   return {
+    height: frame.height,
     name,
     width: frame.width,
-    height: frame.height,
     ...(frame.path ? { path: frame.path } : {}),
   };
 }
@@ -204,9 +204,9 @@ export function canvasFrameChoices(
   const names = choiceNames(list);
 
   return list.map((frame, index) => ({
-    id: frame.id,
-    frame: toExport(frame, names[index]),
     active: frame.id === active.id,
+    frame: toExport(frame, names[index]),
+    id: frame.id,
   }));
 }
 

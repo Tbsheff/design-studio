@@ -42,10 +42,10 @@ function useDraftText(value: string, onChange: (next: string) => void) {
   };
 
   return {
-    shown: text ?? value,
     change,
     onKeyDown,
     settle: () => setText(null),
+    shown: text ?? value,
   };
 }
 
@@ -151,7 +151,7 @@ function useScrub(value: string, onChange: (next: string) => void) {
     }
 
     event.preventDefault();
-    start.current = { x: event.clientX, value };
+    start.current = { value, x: event.clientX };
     event.currentTarget.setPointerCapture(event.pointerId);
   };
 
@@ -182,10 +182,10 @@ function useScrub(value: string, onChange: (next: string) => void) {
   };
 
   return {
+    onPointerCancel: onPointerUp,
     onPointerDown,
     onPointerMove,
     onPointerUp,
-    onPointerCancel: onPointerUp,
   };
 }
 

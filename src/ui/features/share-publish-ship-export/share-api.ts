@@ -36,8 +36,8 @@ const shareApi = {
       expiresInHours: input.expiresInHours,
       frames: [...input.frameIds],
       live: input.live,
-      versionId: input.versionId,
       projectId,
+      versionId: input.versionId,
     }),
   list: (projectId: string): Promise<UiOutput<typeof listShare>> =>
     call(routes.listShare, { projectId }),

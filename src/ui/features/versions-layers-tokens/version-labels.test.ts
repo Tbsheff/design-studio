@@ -16,13 +16,13 @@ function version(
   parentId: string | null = null
 ): Version {
   return {
-    id,
+    changedFiles: [],
+    createdAt: 0,
     directionId: "main",
+    id,
+    meta,
     parentId,
     title,
-    meta,
-    createdAt: 0,
-    changedFiles: [],
   };
 }
 
@@ -35,25 +35,30 @@ const run = version(
       "A landing page for a small independent bookshop: hero, featured books, events calendar, newsletter signup",
   }
 );
+
 const edit = version("b", "Edit h1: color", { kind: "manual" }, "a");
+
 const undo = version(
   "c",
   'Undo to "A landing page for a small independent bookshop: hero, featured books, events calendar, n"',
   { kind: "undo", restoredFrom: "a" },
   "b"
 );
+
 const tokens = version(
   "d",
   "Update tokens: --primary",
   { kind: "manual" },
   "c"
 );
+
 const undo2 = version(
   "e",
   'Undo to "Undo to "A landing page for a small independent bookshop: hero, featured books, events calendar, n""',
   { kind: "undo", restoredFrom: "c" },
   "d"
 );
+
 const index = indexVersions([run, edit, undo, tokens, undo2]);
 
 describe("version labels", () => {
@@ -78,6 +83,7 @@ describe("version labels", () => {
       kind: "undo",
       restoredFrom: "zzz",
     });
+
     expect(displayTitle(orphan, index)).toBe("Back to Edit h1: color");
   });
 

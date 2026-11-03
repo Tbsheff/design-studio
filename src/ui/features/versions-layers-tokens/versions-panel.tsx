@@ -1,15 +1,13 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { FormEvent } from "react";
 
 import type { Direction, Project, Version } from "../../../shared/contracts.js";
 import { Icon } from "../../kit/Icon.js";
 import { PanelHead } from "../../kit/sheet-head.js";
 import { COPY } from "./copy.js";
 import { findElement } from "./find-element.js";
-import {
-  displayTitle,
-  indexVersions,
-  type VersionIndex,
-} from "./version-labels.js";
+import { displayTitle, indexVersions } from "./version-labels.js";
+import type { VersionIndex } from "./version-labels.js";
 import { VersionRow } from "./version-row.js";
 
 interface Props {
@@ -119,18 +117,18 @@ function useFork(
     try {
       await onNewDirection(from, name.trim());
       setFrom(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+    } catch (failure) {
+      setError(failure instanceof Error ? failure.message : String(failure));
     }
   };
 
   return {
+    cancel: () => setFrom(null),
+    error,
     from,
     name,
-    error,
     setName,
     start,
-    cancel: () => setFrom(null),
     submit,
   };
 }
@@ -354,11 +352,11 @@ export function VersionsPanel(props: Props) {
 
   const rename = (v: Version, name: string | null) => {
     setRenamed((prev) => ({
-      source: versions,
       names: new Map(prev?.source === versions ? prev.names : []).set(
         v.id,
         name
       ),
+      source: versions,
     }));
     void props.onRename?.(v, name);
   };

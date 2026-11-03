@@ -1,7 +1,9 @@
-import { useEffect, useRef, useState, type RefObject } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { RefObject } from "react";
 
 import { Icon } from "../../kit/Icon.js";
-import { cachedThumb, requestThumb, type ThumbResult } from "./versions-api.js";
+import { cachedThumb, requestThumb } from "./versions-api.js";
+import type { ThumbResult } from "./versions-api.js";
 
 interface Props {
   projectId: string;

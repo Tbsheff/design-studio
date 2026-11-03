@@ -21,6 +21,7 @@ export function ShipTemplates({ projectId, saveRef }: Props) {
       .settings(projectId)
       .then((settings) => live && setDraft(settings))
       .catch(() => live && setLoadError("Could not read the ship templates."));
+
     return () => {
       live = false;
     };
@@ -29,6 +30,7 @@ export function ShipTemplates({ projectId, saveRef }: Props) {
   saveRef.current = draft
     ? async () => void (await shipApi.saveSettings(projectId, draft))
     : null;
+
   const set = (patch: Partial<ShipSettings>) =>
     setDraft((prev) => (prev ? { ...prev, ...patch } : prev));
 

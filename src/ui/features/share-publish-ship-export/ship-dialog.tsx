@@ -1,20 +1,13 @@
-import {
-  useEffect,
-  useMemo,
-  useState,
-  type Dispatch,
-  type FormEvent,
-  type SetStateAction,
-} from "react";
+import { useEffect, useMemo, useState } from "react";
+import type { Dispatch, FormEvent, SetStateAction } from "react";
 
-import {
-  renderBranchName,
-  renderShipTemplate,
-  type ShipFile,
-  type ShipMode,
-  type ShipPrepare,
-  type ShipRequest,
-  type ShipResult,
+import { renderBranchName, renderShipTemplate } from "../../../shared/ship.js";
+import type {
+  ShipFile,
+  ShipMode,
+  ShipPrepare,
+  ShipRequest,
+  ShipResult,
 } from "../../../shared/ship.js";
 import { errorText } from "../../api.js";
 import { CopyButton } from "../../kit/CopyButton.js";
@@ -32,25 +25,25 @@ interface Props {
 
 const STATUS_LETTER: Record<ShipFile["status"], string> = {
   added: "A",
-  modified: "M",
   deleted: "D",
+  modified: "M",
 };
 
 const MODES: { id: ShipMode; label: string; hint: string }[] = [
   {
+    hint: "Commit on a new local branch. Nothing leaves this computer.",
     id: "branch",
     label: "Branch only",
-    hint: "Commit on a new local branch. Nothing leaves this computer.",
   },
   {
+    hint: "Commit, then push the branch to the remote. No force push.",
     id: "push",
     label: "Push branch",
-    hint: "Commit, then push the branch to the remote. No force push.",
   },
   {
+    hint: "Commit, push, then run gh pr create.",
     id: "pr",
     label: "Open pull request",
-    hint: "Commit, push, then run gh pr create.",
   },
 ];
 
@@ -70,18 +63,18 @@ function shippable(file: ShipFile): boolean {
 
 function freshDraft(plan: ShipPrepare, mode: ShipMode): Draft {
   return {
-    files: new Set(plan.files.filter(shippable).map((f) => f.path)),
+    body: null,
     branch: null,
     commitMessage: null,
-    title: null,
-    body: null,
+    files: new Set(plan.files.filter(shippable).map((f) => f.path)),
     issue: plan.settings.issueId,
     mode,
+    title: null,
   };
 }
 
 function modeBlock(plan: ShipPrepare, mode: ShipMode): string | null {
-  const repo = plan.repo;
+  const { repo } = plan;
 
   if (!repo || mode === "branch") {
     return null;
@@ -285,17 +278,17 @@ function fieldsOf(plan: ShipPrepare, draft: Draft): Fields {
 
   const vars = {
     ...plan.vars,
+    files: plan.files.filter((f) => draft.files.has(f.path)).map((f) => f.path),
     issue: draft.issue,
     title,
-    files: plan.files.filter((f) => draft.files.has(f.path)).map((f) => f.path),
   };
 
   return {
-    title,
+    body: draft.body ?? renderShipTemplate(plan.settings.bodyTemplate, vars),
     branch:
       draft.branch ?? renderBranchName(plan.settings.branchTemplate, vars),
-    body: draft.body ?? renderShipTemplate(plan.settings.bodyTemplate, vars),
     commitMessage: draft.commitMessage ?? plan.defaults.commitMessage,
+    title,
   };
 }
 
@@ -339,13 +332,13 @@ function shipRequestOf(
 
   return {
     baseVersionId: plan.base.versionId,
-    headVersionId: plan.headVersionId,
-    files,
+    body: fields.body,
     branch: fields.branch.trim(),
     commitMessage: fields.commitMessage,
-    title: fields.title,
-    body: fields.body,
+    files,
+    headVersionId: plan.headVersionId,
     mode: draft.mode,
+    title: fields.title,
   };
 }
 
@@ -383,14 +376,14 @@ function usePlan(projectId: string, baseId: string | undefined) {
           next.files.find(shippable)?.path ?? next.files[0]?.path ?? null
         );
       })
-      .catch((err: unknown) => live && setLoadError(errorText(err)));
+      .catch((error: unknown) => live && setLoadError(errorText(error)));
 
     return () => {
       live = false;
     };
   }, [projectId, baseId]);
 
-  return { plan, draft, setDraft, focus, setFocus, loadError };
+  return { draft, focus, loadError, plan, setDraft, setFocus };
 }
 
 function FileList({
@@ -621,7 +614,7 @@ function PlanView({
     return <ShipEmpty text={plan.blocked} />;
   }
 
-  const bases = plan.bases.map((b) => ({ value: b.versionId, label: b.title }));
+  const bases = plan.bases.map((b) => ({ label: b.title, value: b.versionId }));
 
   return (
     <>
@@ -659,7 +652,7 @@ function PlanView({
 }
 
 export function ShipDialog({ projectId, onClose }: Props) {
-  const [baseId, setBaseId] = useState<string | undefined>(undefined);
+  const [baseId, setBaseId] = useState<string | undefined>();
 
   const { plan, draft, setDraft, focus, setFocus, loadError } = usePlan(
     projectId,
@@ -698,8 +691,8 @@ export function ShipDialog({ projectId, onClose }: Props) {
 
     try {
       setResult(await shipApi.ship(projectId, request));
-    } catch (err) {
-      setError(errorText(err));
+    } catch (failure) {
+      setError(errorText(failure));
     } finally {
       setBusy(false);
     }

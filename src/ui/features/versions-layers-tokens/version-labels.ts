@@ -21,42 +21,42 @@ const KIND_INFO: Record<
   Exclude<Version["meta"]["kind"], "manual">,
   KindInfo
 > = {
-  init: { label: "Start", icon: "file", hint: "First version of this project" },
-  run: {
-    label: "Run",
-    icon: "sparkle",
-    hint: "Made by the agent from a prompt",
-  },
-  undo: { label: "Undo", icon: "undo", hint: "Undid the version below it" },
-  restore: {
-    label: "Restore",
-    icon: "restore",
-    hint: "Brought back an earlier version",
-  },
+  fork: { hint: "Start of a new direction", icon: "branch", label: "Branch" },
+  init: { hint: "First version of this project", icon: "file", label: "Start" },
   keep: {
-    label: "Kept",
-    icon: "check",
     hint: "Kept changes from a stopped run, or a chosen element variant",
+    icon: "check",
+    label: "Kept",
   },
-  fork: { label: "Branch", icon: "branch", hint: "Start of a new direction" },
+  restore: {
+    hint: "Brought back an earlier version",
+    icon: "restore",
+    label: "Restore",
+  },
+  run: {
+    hint: "Made by the agent from a prompt",
+    icon: "sparkle",
+    label: "Run",
+  },
+  undo: { hint: "Undid the version below it", icon: "undo", label: "Undo" },
 };
 
 const EDIT_INFO: Record<
   "tokens" | "design-md" | "design-system" | "element",
   KindInfo
 > = {
-  "design-system": {
-    label: "Design system",
-    icon: "palette",
-    hint: "You applied or switched the design system",
-  },
-  tokens: { label: "Tokens", icon: "token", hint: "You changed design tokens" },
   "design-md": {
-    label: "DESIGN.md",
-    icon: "doc",
     hint: "You edited DESIGN.md",
+    icon: "doc",
+    label: "DESIGN.md",
   },
-  element: { label: "Edit", icon: "pencil", hint: "You edited an element" },
+  "design-system": {
+    hint: "You applied or switched the design system",
+    icon: "palette",
+    label: "Design system",
+  },
+  element: { hint: "You edited an element", icon: "pencil", label: "Edit" },
+  tokens: { hint: "You changed design tokens", icon: "token", label: "Tokens" },
 };
 
 export function indexVersions(versions: Version[]): VersionIndex {
@@ -115,7 +115,7 @@ export function displayTitle(v: Version, index: VersionIndex): string {
 }
 
 export function autoTitle(v: Version, index: VersionIndex): string {
-  const kind = v.meta.kind;
+  const { kind } = v.meta;
 
   if (!isRestoreKind(kind)) {
     return v.meta.kind === "run" ? runTitle(v.title) : v.title;

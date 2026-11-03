@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 
-import {
-  publishExpiryText,
-  type Publication,
-  type PublicationComment,
+import { publishExpiryText } from "../../../shared/publish.js";
+import type {
+  Publication,
+  PublicationComment,
 } from "../../../shared/publish.js";
 import { errorText } from "../../api.js";
 import { CopyButton } from "../../kit/CopyButton.js";
@@ -108,8 +108,8 @@ function Comments({
   const load = useCallback(async () => {
     try {
       setList((await publishApi.comments(projectId, p.id)).comments);
-    } catch (err) {
-      setError(errorText(err));
+    } catch (failure) {
+      setError(errorText(failure));
     }
   }, [projectId, p.id]);
 
@@ -122,8 +122,8 @@ function Comments({
       await publishApi.deleteComment(projectId, p.id, cid);
       await load();
       onChanged();
-    } catch (err) {
-      setError(errorText(err));
+    } catch (failure) {
+      setError(errorText(failure));
     }
   };
 

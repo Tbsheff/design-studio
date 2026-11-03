@@ -32,9 +32,9 @@ interface Props {
 }
 
 const POSITIONS: { value: JsxInsertPosition; label: string }[] = [
-  { value: "inside", label: "Inside the selection" },
-  { value: "after", label: "After the selection" },
-  { value: "before", label: "Before the selection" },
+  { label: "Inside the selection", value: "inside" },
+  { label: "After the selection", value: "after" },
+  { label: "Before the selection", value: "before" },
 ];
 
 function route(ids: Props["ids"]): string {
@@ -93,9 +93,9 @@ function usePreview(
     setLoading(true);
     json<FigmaImportPreview>("POST", route(ids), {
       ...base,
-      target,
-      position,
       dryRun: true,
+      position,
+      target,
       ...(nodeId ? { nodeId } : {}),
     })
       .then((result) => {
@@ -114,7 +114,7 @@ function usePreview(
     };
   }, [ids, base, target, nodeId, position]);
 
-  return { preview, failure, loading, setFailure };
+  return { failure, loading, preview, setFailure };
 }
 
 interface PlainFailure {
@@ -126,9 +126,9 @@ interface PlainFailure {
 function plainFailure(raw: string): PlainFailure {
   if (LINKS_OFF.test(raw)) {
     return {
-      text: "Design Studio cannot open Figma links here.",
-      fix: "Paste the frame JSON below instead of the link.",
       details: raw,
+      fix: "Paste the frame JSON below instead of the link.",
+      text: "Design Studio cannot open Figma links here.",
     };
   }
 
@@ -136,17 +136,17 @@ function plainFailure(raw: string): PlainFailure {
 
   if (status) {
     return {
-      text: `Figma refused to share this file (error ${status[1]}).`,
-      fix: "Check that your Figma token can open this file.",
       details: raw,
+      fix: "Check that your Figma token can open this file.",
+      text: `Figma refused to share this file (error ${status[1]}).`,
     };
   }
 
   if (raw.length > 140 || /https?:\/\/|[A-Z]+_[A-Z_]+=?/.test(raw)) {
-    return { text: "The Figma frame did not load.", fix: null, details: raw };
+    return { details: raw, fix: null, text: "The Figma frame did not load." };
   }
 
-  return { text: raw, fix: null, details: null };
+  return { details: null, fix: null, text: raw };
 }
 
 const LINKS_OFF = /Figma API, which is off/;
@@ -349,15 +349,15 @@ export function FigmaImportDialog({
     try {
       const result = await json<FigmaImportResult>("POST", route(ids), {
         ...base,
-        target,
-        position,
         nodeId: preview.frame.id,
+        position,
+        target,
       });
 
       const kit = result.stats.kit.map((use) => use.component);
       const added = result.imports.filter((item) => item.added).length;
       onDone(
-        `Imported ${result.frame.name}${kit.length ? ` with ${[...new Set(kit)].join(", ")}` : ""}${added ? `, ${plural(added, "import")} added` : ""}.`
+        `Imported ${result.frame.name}${kit.length > 0 ? ` with ${[...new Set(kit)].join(", ")}` : ""}${added ? `, ${plural(added, "import")} added` : ""}.`
       );
       onClose();
     } catch (error) {
@@ -404,8 +404,8 @@ export function FigmaImportDialog({
                 aria-label="Frame"
                 value={chosen}
                 options={frames.map((frame) => ({
-                  value: frame.id,
                   label: `${frame.name}${frame.width ? ` · ${frame.width}×${frame.height}` : ""}`,
+                  value: frame.id,
                 }))}
                 onChange={setNodeId}
               />

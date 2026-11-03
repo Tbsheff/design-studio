@@ -41,9 +41,11 @@ function menuKeys(
 
   event.preventDefault();
 
-  const items = Array.from(
-    event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="menuitem"]')
-  );
+  const items = [
+    ...event.currentTarget.querySelectorAll<HTMLButtonElement>(
+      '[role="menuitem"]'
+    ),
+  ];
 
   const index = items.indexOf(document.activeElement as HTMLButtonElement);
   items[(Math.max(0, index) + step + items.length) % items.length]?.focus();
@@ -178,32 +180,32 @@ export function CopyCodeMenu({
     return (
       await exportApi.copyCode(projectId, {
         directionId,
-        selector,
         format,
         frame: activeExportFrame(projectId),
+        selector,
       })
     ).code;
   };
 
   const items: { label: string; icon: IconName; run: () => void }[] = [
     {
-      label: "Copy HTML and CSS",
       icon: "code",
+      label: "Copy HTML and CSS",
       run: () => void copy("HTML", code("html")),
     },
     {
-      label: "Copy Tailwind",
       icon: "code",
+      label: "Copy Tailwind",
       run: () => void copy("Tailwind", code("tailwind")),
     },
     {
-      label: "Copy React",
       icon: "code",
+      label: "Copy React",
       run: () => void copy("React", code("react")),
     },
     {
-      label: "Export PNG…",
       icon: "image",
+      label: "Export PNG…",
       run: () => {
         close(false);
         openExport({ format: "png", selector });

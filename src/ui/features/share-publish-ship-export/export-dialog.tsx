@@ -1,23 +1,19 @@
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type KeyboardEvent,
-} from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { KeyboardEvent } from "react";
 
-import {
-  EXPORT_SCALES,
-  type EditorInfo,
-  type ExportFormat,
-  type ExportFrame,
-  type ExportScale,
-  type ExportScope,
-  type HandoffResult,
-  type McpStatus,
+import { EXPORT_SCALES } from "../../../shared/export.js";
+import type {
+  EditorInfo,
+  ExportFormat,
+  ExportFrame,
+  ExportScale,
+  ExportScope,
+  HandoffResult,
+  McpStatus,
 } from "../../../shared/export.js";
 import { downloadBlob } from "../../domain/format.js";
-import { Icon, type IconName } from "../../kit/Icon.js";
+import { Icon } from "../../kit/Icon.js";
+import type { IconName } from "../../kit/Icon.js";
 import { useModalDialog } from "../../kit/use-popover.js";
 import { canvasFrameName, framePage } from "../canvas/canvas-frames.js";
 import { mcpApi } from "../chat/mcp-model.js";
@@ -29,9 +25,8 @@ import {
   readExportPrefs,
   revealDownload,
   saveExportPrefs,
-  type ExportTarget,
-  type FrameChoice,
 } from "./export-api.js";
+import type { ExportTarget, FrameChoice } from "./export-api.js";
 
 import "../../styles/export.css";
 
@@ -50,58 +45,58 @@ interface FormatInfo {
 
 const FORMATS: FormatInfo[] = [
   {
+    action: "Export PNG",
+    hint: "One image per frame. Many frames download as a zip.",
+    icon: "image",
     id: "png",
     label: "PNG",
-    icon: "image",
-    hint: "One image per frame. Many frames download as a zip.",
-    action: "Export PNG",
   },
   {
+    action: "Export SVG",
+    hint: "Vector shapes and live text, with font names. Pictures stay embedded. Many frames download as a zip.",
+    icon: "pencil",
     id: "svg",
     label: "SVG",
-    icon: "pencil",
-    hint: "Vector shapes and live text, with font names. Pictures stay embedded. Many frames download as a zip.",
-    action: "Export SVG",
   },
   {
+    action: "Export PDF",
+    hint: "One page per frame, at 2× for sharp print.",
+    icon: "doc",
     id: "pdf",
     label: "PDF",
-    icon: "doc",
-    hint: "One page per frame, at 2× for sharp print.",
-    action: "Export PDF",
   },
   {
+    action: "Export PPTX",
+    hint: "One slide per frame, or per slide of a deck, with text, boxes, shadows, gradients, SVG icons and images you can edit in Keynote or PowerPoint.",
+    icon: "play",
     id: "pptx",
     label: "PPTX",
-    icon: "play",
-    hint: "One slide per frame, or per slide of a deck, with text, boxes, shadows, gradients, SVG icons and images you can edit in Keynote or PowerPoint.",
-    action: "Export PPTX",
   },
   {
+    action: "Export HTML",
+    hint: "One file with CSS, fonts and images inside. Opens offline.",
+    icon: "code",
     id: "html",
     label: "HTML",
-    icon: "code",
-    hint: "One file with CSS, fonts and images inside. Opens offline.",
-    action: "Export HTML",
   },
   {
+    action: "Export zip",
+    hint: "The project files of this version as a zip.",
+    icon: "folder",
     id: "zip",
     label: "Source",
-    icon: "folder",
-    hint: "The project files of this version as a zip.",
-    action: "Export zip",
   },
   {
+    action: "Create handoff",
+    hint: "A folder for a coding agent: HANDOFF.md, tokens, screens and source.",
+    icon: "terminal",
     id: "handoff",
     label: "Handoff",
-    icon: "terminal",
-    hint: "A folder for a coding agent: HANDOFF.md, tokens, screens and source.",
-    action: "Create handoff",
   },
 ];
 
 const MOBILE_MAX = 600;
-const MOBILE_FRAME = { name: "Mobile", width: 390, height: 844 };
+const MOBILE_FRAME = { height: 844, name: "Mobile", width: 390 };
 
 type Status =
   | { kind: "idle" }
@@ -110,9 +105,9 @@ type Status =
   | { kind: "error"; text: string };
 
 const RADIO_STEP: Record<string, (index: number, count: number) => number> = {
-  ArrowRight: (i, n) => (i + 1) % n,
   ArrowDown: (i, n) => (i + 1) % n,
   ArrowLeft: (i, n) => (i - 1 + n) % n,
+  ArrowRight: (i, n) => (i + 1) % n,
   ArrowUp: (i, n) => (i - 1 + n) % n,
 };
 
@@ -123,11 +118,11 @@ function onRadioKey(event: KeyboardEvent<HTMLDivElement>): void {
     return;
   }
 
-  const radios = Array.from(
-    event.currentTarget.querySelectorAll<HTMLButtonElement>(
+  const radios = [
+    ...event.currentTarget.querySelectorAll<HTMLButtonElement>(
       '[role="radio"]:not(:disabled)'
-    )
-  );
+    ),
+  ];
 
   const index = radios.indexOf(document.activeElement as HTMLButtonElement);
 
@@ -323,8 +318,9 @@ function ConnectClaudeCode() {
     let live = true;
     mcpApi.status().then(
       (s) => live && setStatus(s),
-      (e: unknown) =>
-        live && setError(e instanceof Error ? e.message : String(e))
+      (failure: unknown) =>
+        live &&
+        setError(failure instanceof Error ? failure.message : String(failure))
     );
 
     return () => {
@@ -342,8 +338,8 @@ function ConnectClaudeCode() {
 
     try {
       setStatus(await mcpApi.set(input));
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+    } catch (failure) {
+      setError(failure instanceof Error ? failure.message : String(failure));
     } finally {
       setBusy(false);
     }
@@ -473,15 +469,6 @@ function useExportOptions(target: ExportTarget): Options {
     Boolean(target.selector) && (format === "png" || format === "svg");
 
   return {
-    projectId: target.projectId,
-    format,
-    scale,
-    scope,
-    frames,
-    picked,
-    chosen: frames.filter((f) => picked.has(f.id)).map((f) => f.frame),
-    selectionOnly,
-    needsFrames: format !== "zip" && !selectionOnly,
     choose: (next) => {
       setFormat(next);
       saveExportPrefs({ format: next, scale, scope });
@@ -494,6 +481,15 @@ function useExportOptions(target: ExportTarget): Options {
       setScope(next);
       saveExportPrefs({ format, scale, scope: next });
     },
+    chosen: frames.filter((f) => picked.has(f.id)).map((f) => f.frame),
+    format,
+    frames,
+    needsFrames: format !== "zip" && !selectionOnly,
+    picked,
+    projectId: target.projectId,
+    scale,
+    scope,
+    selectionOnly,
     toggle: (id) =>
       setPicked((prev) => {
         const next = new Set(prev);
@@ -519,7 +515,7 @@ function useEditors(active: boolean): EditorInfo[] {
     let live = true;
     exportApi.editors().then(
       (list) => live && setEditors(list),
-      () => undefined
+      () => null
     );
 
     return () => {
@@ -542,10 +538,10 @@ async function exportOnce(
 
   const file = await exportApi.exportFile(target.projectId, {
     format: options.format as Exclude<ExportFormat, "handoff">,
-    versionId: target.versionId,
     frames: useSelection && selectionFrame ? [selectionFrame] : options.chosen,
     scale: options.scale,
     scope: options.scope,
+    versionId: target.versionId,
     ...(useSelection ? { selector: target.selector } : {}),
   });
 
@@ -553,9 +549,9 @@ async function exportOnce(
 
   return {
     kind: "done",
-    text: `Saved ${file.name}`,
     note: file.note,
     reveal: canRevealDownload(),
+    text: `Saved ${file.name}`,
   };
 }
 
@@ -719,8 +715,8 @@ export function ExportDialog({ target, onClose }: Props) {
       if (format === "handoff") {
         setHandoff(
           await exportApi.handoff(target.projectId, {
-            versionId: target.versionId,
             frames: handoffFrames(options.chosen),
+            versionId: target.versionId,
           })
         );
         setStatus({ kind: "idle" });
@@ -767,9 +763,9 @@ export function ExportDialog({ target, onClose }: Props) {
           label="Format"
           value={format}
           options={FORMATS.map((f) => ({
+            icon: f.icon,
             id: f.id,
             label: f.label,
-            icon: f.icon,
           }))}
           onChange={(next) => {
             options.choose(next);

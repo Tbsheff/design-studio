@@ -14,8 +14,8 @@ import {
   shownRaw,
   tokenSections,
   varTarget,
-  type RawToken,
 } from "./token-draft.js";
+import type { RawToken } from "./token-draft.js";
 import { TokenRow } from "./token-row.js";
 import type { TokenDraft } from "./use-token-draft.js";
 
@@ -121,7 +121,7 @@ function useSwatch(entries: CompiledTokenEntry[]) {
 export function TokensPanel({ tokens, draft, sweep }: Props) {
   const [query, setQuery] = useState("");
   const [sweepOpen, setSweepOpen] = useState(false);
-  const file = tokens.file;
+  const { file } = tokens;
 
   const bases = useMemo(
     () =>

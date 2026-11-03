@@ -20,8 +20,8 @@ export function usePublishCli() {
 
     try {
       setCli(await task());
-    } catch (err) {
-      setError(errorText(err));
+    } catch (failure) {
+      setError(errorText(failure));
     } finally {
       setBusy(false);
     }
@@ -37,14 +37,14 @@ export function usePublishCli() {
     }
 
     const timer = window.setInterval(
-      () => void publishApi.cli().then(setCli, () => undefined),
+      () => void publishApi.cli().then(setCli, () => null),
       2000
     );
 
     return () => window.clearInterval(timer);
   }, [waiting]);
 
-  return { cli, busy, error, run };
+  return { busy, cli, error, run };
 }
 
 export function cliReady(cli: PublishCliState | null): boolean {

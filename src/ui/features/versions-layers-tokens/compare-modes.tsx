@@ -1,19 +1,18 @@
-import {
-  useEffect,
-  useRef,
-  useState,
-  type ChangeEvent,
-  type DragEvent,
-  type KeyboardEvent,
-  type PointerEvent,
-  type ReactNode,
-  type RefObject,
+import { useEffect, useRef, useState } from "react";
+import type {
+  ChangeEvent,
+  DragEvent,
+  KeyboardEvent,
+  PointerEvent,
+  ReactNode,
+  RefObject,
 } from "react";
 
 import type { ProjectKind, Version } from "../../../shared/contracts.js";
 import { CompareFrame } from "./compare-frame.js";
 import { COPY } from "./copy.js";
-import { versionDiff, type DiffMaskResult } from "./versions-api.js";
+import { versionDiff } from "./versions-api.js";
+import type { DiffMaskResult } from "./versions-api.js";
 
 export interface BoardProps {
   projectId: string;
@@ -28,12 +27,12 @@ export interface BoardProps {
 }
 
 const KEY_STEP: Record<string, (pos: number, big: boolean) => number> = {
-  ArrowLeft: (pos, big) => pos - (big ? 10 : 2),
   ArrowDown: (pos, big) => pos - (big ? 10 : 2),
+  ArrowLeft: (pos, big) => pos - (big ? 10 : 2),
   ArrowRight: (pos, big) => pos + (big ? 10 : 2),
   ArrowUp: (pos, big) => pos + (big ? 10 : 2),
-  Home: () => 0,
   End: () => 100,
+  Home: () => 0,
 };
 
 const clampPct = (value: number) => Math.min(100, Math.max(0, value));
@@ -89,7 +88,7 @@ function useWipe() {
   };
 
   const boardProps = {
-    ref: board,
+    onPointerCancel: () => setDragging(false),
     onPointerDown: (event: PointerEvent<HTMLDivElement>) => {
       if (event.button !== 0) {
         return;
@@ -104,7 +103,7 @@ function useWipe() {
     onPointerMove: (event: PointerEvent<HTMLDivElement>) =>
       dragging && fromPointer(event.clientX),
     onPointerUp: () => setDragging(false),
-    onPointerCancel: () => setDragging(false),
+    ref: board,
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -119,7 +118,7 @@ function useWipe() {
     setPos((current) => clampPct(step(current, event.shiftKey)));
   };
 
-  return { pos, dragging, boardProps, handle, onKeyDown };
+  return { boardProps, dragging, handle, onKeyDown, pos };
 }
 
 function WipeHandle({
@@ -191,7 +190,7 @@ export function SliderBoard(props: BoardProps) {
         {...wipe.boardProps}
         className={`compare-board locked slider ${wipe.dragging ? "dragging" : ""}`}
         data-testid="compare-slider"
-        style={{ width, height: viewport.height * scale }}
+        style={{ height: viewport.height * scale, width }}
       >
         <CompareFrame
           projectId={props.projectId}
@@ -246,6 +245,7 @@ function useDiffMask(
     const controller = new AbortController();
     let url: string | null = null;
     setState({ status: "loading" });
+
     const settle = (next: MaskState) => {
       if (!controller.signal.aborted) {
         setState(next);
@@ -387,8 +387,8 @@ export function OverlayBoard(props: BoardProps) {
       <div
         className="compare-board locked"
         style={{
-          width: viewport.width * scale,
           height: viewport.height * scale,
+          width: viewport.width * scale,
         }}
       >
         <CompareFrame
@@ -434,7 +434,7 @@ function usePicture() {
       URL.revokeObjectURL(lastPicture.url);
     }
 
-    lastPicture = { url: URL.createObjectURL(file), name: file.name };
+    lastPicture = { name: file.name, url: URL.createObjectURL(file) };
     setPictureState(lastPicture);
   };
 
@@ -547,7 +547,7 @@ export function ReferenceBoard(props: BoardProps) {
           {...wipe.boardProps}
           className={`compare-board locked slider ${wipe.dragging ? "dragging" : ""}`}
           data-testid="compare-reference"
-          style={{ width, height: viewport.height * scale }}
+          style={{ height: viewport.height * scale, width }}
         >
           <CompareFrame
             projectId={props.projectId}
@@ -584,7 +584,7 @@ export function ReferenceBoard(props: BoardProps) {
       ) : (
         <PicturePicker
           onPick={setPicture}
-          size={{ width, height: viewport.height * scale }}
+          size={{ height: viewport.height * scale, width }}
         />
       )}
     </Stage>

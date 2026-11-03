@@ -1,20 +1,18 @@
-import {
-  TOKEN_GROUP_FOR_PROPERTY,
-  type CompiledTokenEntry,
-  type DirectStyleProperty,
-  type TokenMatch,
+import { TOKEN_GROUP_FOR_PROPERTY } from "../../../shared/contracts.js";
+import type {
+  CompiledTokenEntry,
+  DirectStyleProperty,
+  TokenMatch,
 } from "../../../shared/contracts.js";
 import {
   isSnappable,
   isUnsetValue,
   matchForProperty,
   tokensForProperty,
-  type TokenMode,
 } from "../../../shared/token-match.js";
-import {
-  parseDeclarations,
-  type AuthoredCss,
-} from "../inspector/authored-css.js";
+import type { TokenMode } from "../../../shared/token-match.js";
+import { parseDeclarations } from "../inspector/authored-css.js";
+import type { AuthoredCss } from "../inspector/authored-css.js";
 import type { StyleValues } from "../inspector/css-values.js";
 
 export type LintKind = "color" | "size" | "font";
@@ -28,11 +26,11 @@ export interface LintIssue {
 }
 
 const SHORTHANDS: Record<string, DirectStyleProperty[]> = {
-  padding: ["padding-top", "padding-right", "padding-bottom", "padding-left"],
-  margin: ["margin-top", "margin-right", "margin-bottom", "margin-left"],
   background: ["background-color"],
   border: ["border-color"],
   font: ["font-family", "font-size"],
+  margin: ["margin-top", "margin-right", "margin-bottom", "margin-left"],
+  padding: ["padding-top", "padding-right", "padding-bottom", "padding-left"],
 };
 
 const LINTED = Object.keys(TOKEN_GROUP_FOR_PROPERTY) as DirectStyleProperty[];
@@ -107,10 +105,10 @@ function fontFallback(
   return entry
     ? {
         cssVar: entry.cssVar,
-        path: entry.path,
-        value: entry.value,
         distance: 1,
         exact: false,
+        path: entry.path,
+        value: entry.value,
       }
     : null;
 }
@@ -122,7 +120,7 @@ function noBorder(values: StyleValues): boolean {
     style === "" ||
     style === "none" ||
     style === "hidden" ||
-    !(parseFloat(values["border-width"] ?? "") > 0)
+    !(Number.parseFloat(values["border-width"] ?? "") > 0)
   );
 }
 
@@ -153,11 +151,11 @@ function issueFor(
   if (kind === "color") {
     return best
       ? {
+          deltaE: Math.round(best.distance * 1000) / 10,
           kind,
           props: [prop],
-          value,
           token: best,
-          deltaE: Math.round(best.distance * 1000) / 10,
+          value,
         }
       : null;
   }
@@ -165,11 +163,11 @@ function issueFor(
   if (kind === "font") {
     const token = best?.exact ? best : fontFallback(prop, entries);
 
-    return token ? { kind, props: [prop], value, token, deltaE: null } : null;
+    return token ? { deltaE: null, kind, props: [prop], token, value } : null;
   }
 
   return best && isSnappable(group, best)
-    ? { kind, props: [prop], value, token: best, deltaE: null }
+    ? { deltaE: null, kind, props: [prop], token: best, value }
     : null;
 }
 

@@ -1,4 +1,5 @@
-import { useRef, type KeyboardEvent } from "react";
+import { useRef } from "react";
+import type { KeyboardEvent } from "react";
 import { createPortal } from "react-dom";
 
 import type {
@@ -9,12 +10,13 @@ import {
   modeValue,
   tokenFieldState,
   tokensForProperty,
-  type TokenFieldState,
 } from "../../../shared/token-match.js";
+import type { TokenFieldState } from "../../../shared/token-match.js";
 import { Icon } from "../../kit/Icon.js";
 import { useAnchoredPopover } from "../../kit/use-anchored-popover.js";
 import type { DirectEdit } from "../inspector/use-direct-edit.js";
-import { useTokenUi, type TokenUi } from "../inspector/use-token-snap.js";
+import { useTokenUi } from "../inspector/use-token-snap.js";
+import type { TokenUi } from "../inspector/use-token-snap.js";
 import { COPY } from "./copy.js";
 import { findElements } from "./find-element.js";
 import { TokenPicker, tokenShortName } from "./token-picker.js";
@@ -63,7 +65,7 @@ function RawMenu({
     items[(next + items.length) % items.length]?.focus();
   };
 
-  const snap = state.snap;
+  const { snap } = state;
 
   return (
     <div

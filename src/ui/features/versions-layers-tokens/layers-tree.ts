@@ -1,9 +1,5 @@
-import {
-  LAYER_LABEL_MAX,
-  LAYER_TREE_MAX,
-  type LayerNode,
-  type ReorderMove,
-} from "../../../shared/contracts.js";
+import { LAYER_LABEL_MAX, LAYER_TREE_MAX } from "../../../shared/contracts.js";
+import type { LayerNode, ReorderMove } from "../../../shared/contracts.js";
 
 const LOC_MAX = 1100;
 
@@ -45,13 +41,13 @@ export function parseLayerTree(raw: {
 
     const depth = Math.min(count(n.depth), (nodes.at(-1)?.depth ?? -1) + 1);
     nodes.push({
-      id: n.id,
-      depth,
-      tag: text(n.tag, 32).replaceAll(/[^a-z0-9-]/gi, ""),
-      name: text(n.name, LAYER_LABEL_MAX),
-      text: text(n.text, LAYER_LABEL_MAX),
       childCount: count(n.childCount),
+      depth,
       hidden: n.hidden === true,
+      id: n.id,
+      name: text(n.name, LAYER_LABEL_MAX),
+      tag: text(n.tag, 32).replaceAll(/[^a-z0-9-]/gi, ""),
+      text: text(n.text, LAYER_LABEL_MAX),
       ...(typeof n.loc === "string" && n.loc.length <= LOC_MAX
         ? { loc: n.loc }
         : {}),
@@ -89,13 +85,13 @@ export function layerKeys(nodes: LayerNode[]): Map<number, string> {
   const keys = new Map<number, string>();
 
   const stack: { key: string; counts: Map<string, number> }[] = [
-    { key: "", counts: new Map() },
+    { counts: new Map(), key: "" },
   ];
 
   for (const node of nodes) {
     stack.length = Math.min(stack.length, node.depth + 1);
 
-    const parent = stack[stack.length - 1] as {
+    const parent = stack.at(-1) as {
       key: string;
       counts: Map<string, number>;
     };
@@ -104,7 +100,7 @@ export function layerKeys(nodes: LayerNode[]): Map<number, string> {
     parent.counts.set(node.tag, index + 1);
     const key = `${parent.key}/${node.tag}${index}`;
     keys.set(node.id, key);
-    stack.push({ key, counts: new Map() });
+    stack.push({ counts: new Map(), key });
   }
 
   return keys;
@@ -118,7 +114,7 @@ export function ancestorsOf(nodes: LayerNode[], id: number): number[] {
   }
 
   const out: number[] = [];
-  let depth = (nodes[index] as LayerNode).depth;
+  let { depth } = nodes[index] as LayerNode;
 
   for (let i = index - 1; i >= 0 && depth > 0; i -= 1) {
     const node = nodes[i] as LayerNode;
@@ -182,7 +178,7 @@ function expandAction(
     }
 
     if (collapsed.has(node.id)) {
-      return { toggle: node.id, open: true };
+      return { open: true, toggle: node.id };
     }
 
     const child = firstChildOf(nodes, node);
@@ -191,7 +187,7 @@ function expandAction(
   }
 
   if (node.childCount > 0 && !collapsed.has(node.id)) {
-    return { toggle: node.id, open: false };
+    return { open: false, toggle: node.id };
   }
 
   const parent = parentOf(nodes, node.id);
@@ -298,7 +294,7 @@ export function dropTarget(
   if (y < index * rowHeight) {
     const prev = siblingRow(rows, index, -1);
 
-    return prev === null ? null : { move: "up", line: prev * rowHeight };
+    return prev === null ? null : { line: prev * rowHeight, move: "up" };
   }
 
   if (y < subtreeEnd(rows, index) * rowHeight) {
@@ -309,7 +305,7 @@ export function dropTarget(
 
   return next === null
     ? null
-    : { move: "down", line: subtreeEnd(rows, next) * rowHeight };
+    : { line: subtreeEnd(rows, next) * rowHeight, move: "down" };
 }
 
 const FALLBACK_LABEL = /^[#.]/;
@@ -358,18 +354,18 @@ function edgeDrop(
   const next = rows[index + 1];
 
   if (!after) {
-    return { drop: { before: row.id }, line: index * rowHeight, into: null };
+    return { drop: { before: row.id }, into: null, line: index * rowHeight };
   }
 
   if (next && next.depth > row.depth) {
     return {
       drop: { before: next.id },
-      line: (index + 1) * rowHeight,
       into: null,
+      line: (index + 1) * rowHeight,
     };
   }
 
-  return { drop: { after: row.id }, line: (index + 1) * rowHeight, into: null };
+  return { drop: { after: row.id }, into: null, line: (index + 1) * rowHeight };
 }
 
 export function layerDrop(
@@ -396,7 +392,7 @@ export function layerDrop(
     row.childCount > 0 || (CONTAINER_TAGS.has(row.tag) && row.text === "");
 
   if (canHold && frac > EDGE_ZONE && frac < 1 - EDGE_ZONE) {
-    return { drop: { into: row.id }, line: null, into: row.id };
+    return { drop: { into: row.id }, into: row.id, line: null };
   }
 
   return edgeDrop(rows, index, frac >= 0.5, rowHeight);

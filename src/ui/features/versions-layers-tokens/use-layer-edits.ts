@@ -37,6 +37,7 @@ const RESELECT_MS = 5000;
 const NODE_WAIT_MS = 2000;
 const NOTICE_MS = 4000;
 const SELECT_AGAIN = "The element moved. Select it again.";
+
 const HIDDEN_ELSEWHERE =
   "Its CSS or a parent hides this element, so Show cannot change it here.";
 
@@ -121,12 +122,17 @@ function requestFor(
   change: LayerChange
 ): DirectEditRequest {
   const base = {
-    source,
     selector: target.selector,
+    source,
     tag: target.tag.toLowerCase(),
   };
-  if ("move" in change) return { ...base, move: change.move };
-  if ("name" in change) return { ...base, name: change.name };
+
+  if ("move" in change) {
+    return { ...base, move: change.move };
+  }
+  if ("name" in change) {
+    return { ...base, name: change.name };
+  }
   return { ...base, style: { display: change.hidden ? "none" : null } };
 }
 
@@ -135,15 +141,17 @@ function withOverrides(
   names: ReadonlyMap<number, string>,
   hidden: ReadonlyMap<number, boolean>
 ): LayerTree | null {
-  if (!tree || (names.size === 0 && hidden.size === 0)) return tree;
+  if (!tree || (names.size === 0 && hidden.size === 0)) {
+    return tree;
+  }
   return {
     ...tree,
     nodes: tree.nodes.map((n) =>
       names.has(n.id) || hidden.has(n.id)
         ? {
             ...n,
-            name: names.get(n.id) ?? n.name,
             hidden: hidden.get(n.id) ?? n.hidden,
+            name: names.get(n.id) ?? n.name,
           }
         : n
     ),
@@ -154,18 +162,26 @@ function useNotice() {
   const [notice, setNotice] = useState<string | null>(null);
   const timer = useRef<number | null>(null);
   const clearNotice = useCallback(() => setNotice(null), []);
+
   const notify = useCallback((message: string) => {
     setNotice(message);
-    if (timer.current !== null) window.clearTimeout(timer.current);
+
+    if (timer.current !== null) {
+      window.clearTimeout(timer.current);
+    }
     timer.current = window.setTimeout(() => setNotice(null), NOTICE_MS);
   }, []);
+
   useEffect(
     () => () => {
-      if (timer.current !== null) window.clearTimeout(timer.current);
+      if (timer.current !== null) {
+        window.clearTimeout(timer.current);
+      }
     },
     []
   );
-  return { notice, notify, clearNotice };
+
+  return { clearNotice, notice, notify };
 }
 
 export function useLayerEdits(o: Options): LayerEdits {
@@ -174,10 +190,12 @@ export function useLayerEdits(o: Options): LayerEdits {
   const { notice, notify, clearNotice } = useNotice();
   const [inflight, setInflight] = useState(false);
   const busyRef = useRef(false);
+
   const releaseBusy = useCallback(() => {
     busyRef.current = false;
     setInflight(false);
   }, []);
+
   const reselect = useRef<Reselect | null>(null);
   const [reselecting, setReselecting] = useState(false);
   const nodeTask = useRef<NodeTask | null>(null);
@@ -187,6 +205,7 @@ export function useLayerEdits(o: Options): LayerEdits {
   const treeFresh = treeToken !== null && treeToken === o.frames.frontToken;
   const treeFreshRef = useRef(treeFresh);
   treeFreshRef.current = treeFresh;
+
   const locks = useLayerLocks(
     o.projectId,
     o.directionId,
@@ -195,8 +214,9 @@ export function useLayerEdits(o: Options): LayerEdits {
   );
 
   useEffect(() => {
-    if (o.treeWanted && o.frames.frontToken)
+    if (o.treeWanted && o.frames.frontToken) {
       o.frames.post({ type: "request-tree" });
+    }
   }, [o.treeWanted, o.frames.frontToken, o.frames.post]);
 
   useEffect(() => {
@@ -206,10 +226,15 @@ export function useLayerEdits(o: Options): LayerEdits {
 
   const expire = useCallback(
     (pending: Reselect) => {
-      if (reselect.current !== pending) return;
+      if (reselect.current !== pending) {
+        return;
+      }
       reselect.current = null;
       setReselecting(false);
-      if (!pending.move) return;
+
+      if (!pending.move) {
+        return;
+      }
       live.current.setSelection(() => []);
       notify(SELECT_AGAIN);
     },
@@ -219,30 +244,41 @@ export function useLayerEdits(o: Options): LayerEdits {
   const sendReselect = useCallback(() => {
     const pending = reselect.current;
     const cur = live.current;
-    if (!pending) return;
-    if (Date.now() > pending.until) {
-      expire(pending);
+
+    if (!pending) {
       return;
     }
-    if (pending.newFrame && cur.frames.frontToken === pending.token) return;
+    if (Date.now() > pending.until) {
+      expire(pending);
+
+      return;
+    }
+
+    if (pending.newFrame && cur.frames.frontToken === pending.token) {
+      return;
+    }
     cur.frames.post({
-      type: "select-source",
       sourceLoc: pending.loc,
       tag: pending.tag,
       text: pending.move ? pending.text : "",
+      type: "select-source",
     });
   }, [expire]);
 
   const resolveReselect = useCallback(
     (token: string, selection: SelectionContext) => {
       const pending = reselect.current;
+
       if (
         !pending ||
         !selection.source ||
         locKey(selection.source) !== pending.loc
-      )
+      ) {
         return;
-      if (pending.newFrame && token === pending.token) return;
+      }
+      if (pending.newFrame && token === pending.token) {
+        return;
+      }
       reselect.current = null;
       setReselecting(false);
     },
@@ -252,7 +288,10 @@ export function useLayerEdits(o: Options): LayerEdits {
   useEffect(() => {
     const pending = reselect.current;
     const last = o.selection.at(-1);
-    if (!pending) return;
+
+    if (!pending) {
+      return;
+    }
     if (!last || last.selector !== pending.fromSelector) {
       reselect.current = null;
       setReselecting(false);
@@ -268,6 +307,7 @@ export function useLayerEdits(o: Options): LayerEdits {
         newFrame: live.current.kind === "html",
         until: Date.now() + RESELECT_MS,
       };
+
       reselect.current = pending;
       setReselecting(true);
       window.setTimeout(() => expire(pending), RESELECT_MS);
@@ -279,40 +319,49 @@ export function useLayerEdits(o: Options): LayerEdits {
   const applyStructure = useCallback(
     async (request: StructureEditRequest) => {
       const cur = live.current;
+
       if (
         !cur.enabled ||
         !cur.directionId ||
         busyRef.current ||
         reselect.current?.move
-      )
+      ) {
         return;
+      }
       busyRef.current = true;
       reselect.current = null;
       setInflight(true);
       const token = cur.frames.frontToken;
       const head = cur.headVersionId;
+
       try {
         const result = await api.structureEdit(
           cur.projectId,
           cur.directionId,
           request
         );
-        if (result.version.id === head) return;
-        const first = result.select[0];
-        if (!first) {
-          live.current.setSelection(() => []);
+
+        if (result.version.id === head) {
           return;
         }
+        const first = result.select[0];
+
+        if (!first) {
+          live.current.setSelection(() => []);
+
+          return;
+        }
+
         beginReselect({
+          fromSelector: live.current.selection.at(-1)?.selector ?? "",
           loc: locKey(first),
+          move: true,
           tag: first.tag,
           text: "",
           token,
-          move: true,
-          fromSelector: live.current.selection.at(-1)?.selector ?? "",
         });
-      } catch (err) {
-        notify(errorText(err));
+      } catch (error) {
+        notify(errorText(error));
       } finally {
         releaseBusy();
       }
@@ -325,6 +374,7 @@ export function useLayerEdits(o: Options): LayerEdits {
   const runOp = useCallback(
     (op: SelectionOp) => {
       const targets = selectionTargets(live.current.selection);
+
       if (targets) {
         void applyStructure({ op, targets });
       } else {
@@ -336,8 +386,11 @@ export function useLayerEdits(o: Options): LayerEdits {
 
   const cutSelection = useCallback(() => {
     const targets = selectionTargets(live.current.selection);
-    if (!targets) return notify(NO_SOURCE);
-    setCut({ targets, head: live.current.headVersionId });
+
+    if (!targets) {
+      return notify(NO_SOURCE);
+    }
+    setCut({ head: live.current.headVersionId, targets });
     const what = targets.length === 1 ? "1 layer" : `${targets.length} layers`;
     notify(
       `Cut ${what}. Select a frame and press ${shortcutLabel("layer-paste", IS_MAC)} to move ${targets.length === 1 ? "it" : "them"} there.`
@@ -348,28 +401,39 @@ export function useLayerEdits(o: Options): LayerEdits {
     const cur = live.current;
     const into = selectionTargets(cur.selection.slice(-1))?.[0];
     const last = cur.selection.at(-1);
-    if (!cut && cur.enabled && cur.directionId && last)
+
+    if (!cut && cur.enabled && cur.directionId && last) {
       return void pasteJsx(
         { projectId: cur.projectId, directionId: cur.directionId },
         last,
         notify
       );
-    if (!cut)
+    }
+    if (!cut) {
       return notify(
         `Cut a layer first (${shortcutLabel("layer-cut", IS_MAC)}), then select where it goes.`
       );
-    if (!into) return notify(NO_SOURCE);
+    }
+    if (!into) {
+      return notify(NO_SOURCE);
+    }
     setCut(null);
-    if (cut.head !== live.current.headVersionId)
+
+    if (cut.head !== live.current.headVersionId) {
       return notify("The design changed after the cut. Cut the layer again.");
-    void applyStructure({ op: "move", targets: cut.targets, into });
+    }
+    void applyStructure({ into, op: "move", targets: cut.targets });
   }, [cut, applyStructure, notify]);
 
   const structureKey = useCallback(
     (key: StructureKey) => {
-      if (key === "cut") cutSelection();
-      else if (key === "paste") pasteInto();
-      else runOp(key);
+      if (key === "cut") {
+        cutSelection();
+      } else if (key === "paste") {
+        pasteInto();
+      } else {
+        runOp(key);
+      }
     },
     [cutSelection, pasteInto, runOp]
   );
@@ -382,6 +446,7 @@ export function useLayerEdits(o: Options): LayerEdits {
         drop,
         live.current.selection
       );
+
       if (request) {
         void applyStructure(request);
       } else {
@@ -398,60 +463,76 @@ export function useLayerEdits(o: Options): LayerEdits {
       nodeId: number | null = null
     ) => {
       const cur = live.current;
-      if (!cur.enabled || !cur.directionId || busyRef.current) return;
+
+      if (!cur.enabled || !cur.directionId || busyRef.current) {
+        return;
+      }
       if (!target.source) {
         notify(
           "This element has no source location, so it cannot be changed here."
         );
+
         return;
       }
+
       busyRef.current = true;
       reselect.current = null;
       setInflight(true);
-      if ("hidden" in change)
+
+      if ("hidden" in change) {
         cur.frames.post({
           type: "preview-style",
           selector: target.selector,
           style: { display: change.hidden ? "none" : null },
         });
+      }
       const token = cur.frames.frontToken;
       const head = cur.headVersionId;
+
       try {
         const result = await api.directEdit(
           cur.projectId,
           cur.directionId,
           requestFor(target, target.source, change)
         );
+
         const move = "move" in change;
+
         if (result.version.id === head) {
-          if (nodeId !== null)
+          if (nodeId !== null) {
             setHidden((prev) => (prev.delete(nodeId) ? new Map(prev) : prev));
-          if ("hidden" in change && !change.hidden) notify(HIDDEN_ELSEWHERE);
+          }
+          if ("hidden" in change && !change.hidden) {
+            notify(HIDDEN_ELSEWHERE);
+          }
           return;
         }
-        const moved = result.moved;
-        if (moved)
+
+        const { moved } = result;
+
+        if (moved) {
           live.current.setSelection((prev) =>
             prev.map((s) =>
               s.selector === target.selector ? { ...s, source: moved } : s
             )
           );
+        }
         beginReselect({
+          fromSelector: target.selector,
           loc: locKey(result.moved ?? target.source),
+          move,
           tag: target.tag.toLowerCase(),
           text: target.text,
           token,
-          move,
-          fromSelector: target.selector,
         });
-      } catch (err) {
+      } catch (error) {
         if ("hidden" in change)
           cur.frames.post({
             type: "preview-style",
             selector: target.selector,
             style: { display: change.hidden ? null : "none" },
           });
-        notify(errorText(err));
+        notify(errorText(error));
       } finally {
         releaseBusy();
       }
@@ -463,18 +544,23 @@ export function useLayerEdits(o: Options): LayerEdits {
     (id: number, run: (target: SelectionContext) => void) => {
       const cur = live.current;
       const last = cur.selection.at(-1);
+
       if (!treeFreshRef.current) {
         cur.frames.post({ type: "request-tree" });
+
         return;
       }
+
       if (
         cur.frames.selectedNode === id &&
         last &&
         cur.selection.length === 1
       ) {
         run(last);
+
         return;
       }
+
       nodeTask.current = { id, run, until: Date.now() + NODE_WAIT_MS };
       cur.frames.selectNode(id, false);
     },
@@ -484,9 +570,15 @@ export function useLayerEdits(o: Options): LayerEdits {
   useEffect(() => {
     const task = nodeTask.current;
     const last = o.selection.at(-1);
-    if (!task || o.frames.selectedNode !== task.id || !last) return;
+
+    if (!task || o.frames.selectedNode !== task.id || !last) {
+      return;
+    }
     nodeTask.current = null;
-    if (Date.now() <= task.until) task.run(last);
+
+    if (Date.now() <= task.until) {
+      task.run(last);
+    }
   }, [o.selection, o.frames.selectedNode]);
 
   const movesBlocked = () => busyRef.current || reselect.current?.move === true;
@@ -494,7 +586,10 @@ export function useLayerEdits(o: Options): LayerEdits {
   const moveSelected = useCallback(
     (move: ReorderMove) => {
       const last = live.current.selection.at(-1);
-      if (!last || movesBlocked()) return;
+
+      if (!last || movesBlocked()) {
+        return;
+      }
       void apply(last, { move });
     },
     [apply]
@@ -502,7 +597,9 @@ export function useLayerEdits(o: Options): LayerEdits {
 
   const renameNode = useCallback(
     (id: number, name: string | null) => {
-      if (name !== null) setNames((prev) => new Map(prev).set(id, name));
+      if (name !== null) {
+        setNames((prev) => new Map(prev).set(id, name));
+      }
       forNode(id, (target) => void apply(target, { name }));
     },
     [apply, forNode]
@@ -518,7 +615,9 @@ export function useLayerEdits(o: Options): LayerEdits {
 
   const moveNode = useCallback(
     (id: number, move: ReorderMove) => {
-      if (movesBlocked()) return;
+      if (movesBlocked()) {
+        return;
+      }
       forNode(id, (target) => void apply(target, { move }));
     },
     [apply, forNode]
@@ -527,36 +626,49 @@ export function useLayerEdits(o: Options): LayerEdits {
   useBridge(
     () =>
       live.current.frames.slots.map((slot): BridgeFrame => ({
+        element: live.current.frames.elements.current[slot.token] ?? null,
         key: slot.token,
+        kind: live.current.kind,
         token: slot.token,
         url: slot.src,
-        kind: live.current.kind,
-        element: live.current.frames.elements.current[slot.token] ?? null,
       })),
     (frame, msg: BridgeToParent) => {
-      if (frame.token !== live.current.frames.frontToken) return;
+      if (frame.token !== live.current.frames.frontToken) {
+        return;
+      }
       locks.onBridge(msg);
-      if (msg.type === "tree") setTreeToken(frame.token);
-      if (msg.type === "painted") sendReselect();
+
+      if (msg.type === "tree") {
+        setTreeToken(frame.token);
+      }
+      if (msg.type === "painted") {
+        sendReselect();
+      }
       if (
         msg.type === "select" &&
         msg.selection &&
         typeof msg.selection === "object"
-      )
+      ) {
         resolveReselect(frame.token, msg.selection);
+      }
       if (
         msg.type === "structure-key" &&
         Object.hasOwn(STRUCTURE_KEY_IDS, msg.key) &&
         live.current.selection.at(-1)?.selector === msg.selector
-      )
+      ) {
         structureKeyRef.current(msg.key);
+      }
       if (
         msg.type !== "reorder-key" ||
         (msg.move !== "up" && msg.move !== "down")
-      )
+      ) {
         return;
+      }
       const last = live.current.selection.at(-1);
-      if (last && last.selector === msg.selector) moveSelected(msg.move);
+
+      if (last && last.selector === msg.selector) {
+        moveSelected(msg.move);
+      }
     }
   );
 
@@ -566,21 +678,32 @@ export function useLayerEdits(o: Options): LayerEdits {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const cur = live.current;
+
       if (
         !cur.selectMode ||
         cur.selection.length === 0 ||
         isTypingTarget(e.target) ||
         !canvasHasKeys()
-      )
+      ) {
         return;
+      }
       const move = reorderMoveOf(e);
       const structure = move || e.repeat ? null : structureKeyOf(e, IS_MAC);
-      if (!move && !structure) return;
+
+      if (!move && !structure) {
+        return;
+      }
       e.preventDefault();
-      if (move) moveSelected(move);
-      else if (structure) structureKeyRef.current(structure);
+
+      if (move) {
+        moveSelected(move);
+      } else if (structure) {
+        structureKeyRef.current(structure);
+      }
     };
+
     window.addEventListener("keydown", onKey);
+
     return () => window.removeEventListener("keydown", onKey);
   }, [moveSelected]);
 
@@ -588,22 +711,23 @@ export function useLayerEdits(o: Options): LayerEdits {
     () => withOverrides(o.frames.tree, names, hidden),
     [o.frames.tree, names, hidden]
   );
+
   return {
-    enabled: o.enabled,
+    applyStructure,
     busy: inflight || reselecting,
-    settled: !inflight && !reselecting && treeFresh,
-    tree,
-    notice,
+    canPaste: cut !== null,
     clearNotice,
+    dropNode,
+    enabled: o.enabled,
+    moveNode,
+    moveSelected,
+    notice,
     notify,
     renameNode,
     setNodeHidden,
     setNodeLocked: locks.setNodeLocked,
-    moveNode,
-    moveSelected,
+    settled: !inflight && !reselecting && treeFresh,
     structureKey,
-    dropNode,
-    applyStructure,
-    canPaste: cut !== null,
+    tree,
   };
 }

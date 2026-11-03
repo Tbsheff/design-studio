@@ -1,19 +1,13 @@
-import {
-  useEffect,
-  useId,
-  useMemo,
-  useRef,
-  useState,
-  type KeyboardEvent,
-} from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
+import type { KeyboardEvent } from "react";
 
 import type { CompiledTokenEntry } from "../../../shared/contracts.js";
 import {
   colorHex,
   lengthToPx,
   modeValue,
-  type TokenMode,
 } from "../../../shared/token-match.js";
+import type { TokenMode } from "../../../shared/token-match.js";
 import { Icon } from "../../kit/Icon.js";
 import { COPY } from "./copy.js";
 import { findElement } from "./find-element.js";
@@ -153,8 +147,8 @@ export function TokenPicker({
     const moves: Record<string, number> = {
       ArrowDown: index + 1,
       ArrowUp: index - 1,
-      Home: 0,
       End: list.length - 1,
+      Home: 0,
     };
 
     const next = moves[event.key];

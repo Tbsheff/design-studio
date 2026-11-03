@@ -26,6 +26,7 @@ import type { PendingMap, PendingToken, TokenField } from "./token-draft.js";
 
 const PREVIEW_THROTTLE_MS = 60;
 const MAX_PREVIEW_TRIES = 4;
+
 const releaseFlag = (set: (value: boolean) => void) => {
   set(false);
 };
@@ -45,7 +46,10 @@ interface Options {
   onCommitted: (version: Version) => void;
 }
 
-type PreviewOutcome = { css: string | null; errors: Record<string, string> };
+interface PreviewOutcome {
+  css: string | null;
+  errors: Record<string, string>;
+}
 
 function substitute(
   changes: TokenChange[],
@@ -86,8 +90,8 @@ async function previewWithFallback(
       if (result.errors.length === 0) {
         for (const change of rest) {
           good[change.path] = {
-            value: change.value,
             darkValue: change.darkValue,
+            value: change.value,
           };
         }
 
@@ -95,8 +99,8 @@ async function previewWithFallback(
       }
 
       messages = result.errors;
-    } catch (err) {
-      messages = [errorText(err)];
+    } catch (error) {
+      messages = [errorText(error)];
     }
 
     const bad = errorPaths(messages, rest);
@@ -220,13 +224,13 @@ export function useTokenDraft(o: Options) {
   const edit = useCallback(
     (entry: CompiledTokenEntry, field: TokenField, value: string | null) => {
       const map = pendingRef.current;
-      const last = history.current[history.current.length - 1];
+      const last = history.current.at(-1);
 
       if (!last || last.path !== entry.path || last.field !== field) {
         history.current.push({
-          path: entry.path,
-          field,
           before: map[entry.path],
+          field,
+          path: entry.path,
         });
       }
 
@@ -279,11 +283,11 @@ export function useTokenDraft(o: Options) {
       clearDraft();
       holdTokenCssUntilReload();
       opts.current.onCommitted(result.version);
-    } catch (err) {
-      setCommitError(commitMessage(err));
+    } catch (error) {
+      setCommitError(commitMessage(error));
       setErrors((prev) => ({
         ...prev,
-        ...errorPaths([errorText(err)], changes),
+        ...errorPaths([errorText(error)], changes),
       }));
     } finally {
       releaseFlag(setCommitting);
@@ -316,20 +320,20 @@ export function useTokenDraft(o: Options) {
   );
 
   return {
-    pending,
-    errors,
-    count,
-    theme,
-    committing,
-    commitError,
-    effective,
-    edit,
-    revert,
-    undoLast,
-    setTheme,
     commit,
-    discard: reset,
+    commitError,
+    committing,
     confirmLeave,
+    count,
+    discard: reset,
+    edit,
+    effective,
+    errors,
+    pending,
+    revert,
+    setTheme,
+    theme,
+    undoLast,
   };
 }
 

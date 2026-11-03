@@ -1,20 +1,16 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  type FormEvent,
-  type ReactNode,
-} from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import type { FormEvent, ReactNode } from "react";
 
 import type { PublishKind } from "../../../shared/publish.js";
 import {
   SHARE_DEFAULT_EXPIRY_HOURS,
   SHARE_MAX_FRAMES,
   shareUrl,
-  type ShareExpiryHours,
-  type ShareLink,
-  type ShareServerState,
+} from "../../../shared/share.js";
+import type {
+  ShareExpiryHours,
+  ShareLink,
+  ShareServerState,
 } from "../../../shared/share.js";
 import { errorText } from "../../api.js";
 import { CopyButton, copyText } from "../../kit/CopyButton.js";
@@ -211,14 +207,14 @@ function linkMeta(link: ShareLink, now: number): string {
   return [...parts, endsText(link, now)].join(" · ");
 }
 
-type RowProps = {
+interface RowProps {
   server: ShareServerState;
   now: number;
   onRevoke: (id: string) => void;
   onCursor: (id: string, on: boolean) => void;
   busy: boolean;
   copied: string | null;
-};
+}
 
 function LinkRow({
   link,
@@ -345,10 +341,10 @@ function useShares(projectId: string) {
   const [links, setLinks] = useState<ShareLink[]>([]);
 
   const [server, setServer] = useState<ShareServerState>({
-    running: false,
     lan: false,
-    localUrl: null,
     lanUrl: null,
+    localUrl: null,
+    running: false,
   });
 
   const [error, setError] = useState<string | null>(null);
@@ -361,7 +357,7 @@ function useShares(projectId: string) {
   }, [projectId]);
 
   useEffect(() => {
-    reload().catch((err: unknown) => setError(errorText(err)));
+    reload().catch((failure: unknown) => setError(errorText(failure)));
   }, [reload]);
   const watching = links.some((l) => l.live && l.active);
   useEffect(() => {
@@ -370,7 +366,7 @@ function useShares(projectId: string) {
     }
 
     const timer = window.setInterval(
-      () => void reload().catch(() => undefined),
+      () => void reload().catch(() => null),
       3000
     );
 
@@ -386,8 +382,8 @@ function useShares(projectId: string) {
         await task();
         await reload();
         sharesChanged(projectId);
-      } catch (err) {
-        setError(errorText(err));
+      } catch (failure) {
+        setError(errorText(failure));
       } finally {
         setBusy(false);
       }
@@ -395,7 +391,7 @@ function useShares(projectId: string) {
     [reload, projectId]
   );
 
-  return { links, server, error, busy, act };
+  return { act, busy, error, links, server };
 }
 
 function useCopyNew(links: ShareLink[], server: ShareServerState) {
@@ -532,7 +528,7 @@ function LinkShare({
   const chosen = chosenChoices.map((f) => f.frame);
   const live = shares.links.filter((l) => l.active);
   const shown = [...live, ...shares.links.filter((l) => !l.active).slice(0, 3)];
-  const versionId = target.versionId;
+  const { versionId } = target;
 
   const canCreate =
     Boolean(versionId) &&
@@ -565,11 +561,11 @@ function LinkShare({
     void shares.act(async () => {
       const made = await shareApi.create(target.projectId, {
         directionId: target.directionId,
-        versionId,
-        frames: chosen,
-        frameIds: chosenChoices.map((f) => f.id),
         expiresInHours: expiry,
+        frameIds: chosenChoices.map((f) => f.id),
+        frames: chosen,
         live: liveView,
+        versionId,
       });
 
       sessionTokens.set(made.link.id, made.token);

@@ -3,13 +3,8 @@ import { memo } from "react";
 import type { CompiledTokenEntry } from "../../../shared/contracts.js";
 import { Icon } from "../../kit/Icon.js";
 import { COPY } from "./copy.js";
-import {
-  aliasPath,
-  varTarget,
-  type PendingToken,
-  type RawToken,
-  type TokenField,
-} from "./token-draft.js";
+import { aliasPath, varTarget } from "./token-draft.js";
+import type { PendingToken, RawToken, TokenField } from "./token-draft.js";
 import { ColorValue, DimensionValue, TextValue } from "./token-inputs.js";
 
 interface RowProps {
@@ -28,7 +23,7 @@ interface RowProps {
   onRevert: (path: string) => void;
 }
 
-const SHORT: Record<string, string> = { space: "SP", radius: "R", text: "Aa" };
+const SHORT: Record<string, string> = { radius: "R", space: "SP", text: "Aa" };
 
 function AliasChip({
   value,
@@ -170,7 +165,7 @@ function rowChanged(pending: PendingToken | undefined): boolean {
   );
 }
 
-export const TokenRow = memo(function TokenRow(props: RowProps) {
+const TokenRowBase = (props: RowProps) => {
   const { entry, shown, pending, error } = props;
   const changed = rowChanged(pending);
   const color = entry.type === "color";
@@ -236,4 +231,6 @@ export const TokenRow = memo(function TokenRow(props: RowProps) {
       )}
     </li>
   );
-});
+};
+
+export const TokenRow = memo(TokenRowBase);

@@ -5,15 +5,12 @@ import type {
   VersionChanges,
   VersionFileDiff,
 } from "../../../shared/contracts.js";
-import { splitHunks, type PatchHunk } from "../../../shared/hunk.js";
+import { splitHunks } from "../../../shared/hunk.js";
+import type { PatchHunk } from "../../../shared/hunk.js";
 import { Icon } from "../../kit/Icon.js";
 import { COPY } from "./copy.js";
-import {
-  hunkKey,
-  useHunkReview,
-  type HunkState,
-  type HunkReview,
-} from "./use-hunk-review.js";
+import { hunkKey, useHunkReview } from "./use-hunk-review.js";
+import type { HunkState, HunkReview } from "./use-hunk-review.js";
 import { displayTitle, indexVersions } from "./version-labels.js";
 import { watchVersionChanges } from "./versions-api.js";
 
@@ -30,25 +27,25 @@ interface Line {
 const OPEN_ALL_MAX = 8;
 
 function hunkRows(hunk: PatchHunk): Line[] {
-  const at = { old: hunk.oldStart, new: hunk.newStart };
+  const at = { new: hunk.newStart, old: hunk.oldStart };
 
   return hunk.lines.map((line) => {
     if (line.sign === "+") {
-      return { kind: "add", oldNo: null, newNo: at.new++, text: line.text };
+      return { kind: "add", newNo: at.new++, oldNo: null, text: line.text };
     }
 
     if (line.sign === "-") {
-      return { kind: "del", oldNo: at.old++, newNo: null, text: line.text };
+      return { kind: "del", newNo: null, oldNo: at.old++, text: line.text };
     }
 
-    return { kind: "ctx", oldNo: at.old++, newNo: at.new++, text: line.text };
+    return { kind: "ctx", newNo: at.new++, oldNo: at.old++, text: line.text };
   });
 }
 
 const STATUS_WORD: Record<VersionFileDiff["status"], string> = {
   added: "Added",
-  removed: "Removed",
   modified: "Changed",
+  removed: "Removed",
   renamed: "Renamed",
 };
 

@@ -149,8 +149,8 @@ function SidePane(props: BoardProps & { side: "A" | "B" }) {
         <div
           className="compare-board"
           style={{
-            width: props.viewport.width * props.scale,
             height: props.viewport.height * props.scale,
+            width: props.viewport.width * props.scale,
           }}
         >
           <CompareFrame
@@ -241,15 +241,15 @@ export function CompareView({
   }, [viewport.width, viewport.height, mode]);
 
   const board: BoardProps = {
-    projectId,
     kind,
-    older,
     newer,
-    olderTitle: displayTitle(older, index),
     newerTitle: displayTitle(newer, index),
-    viewport: { width: viewport.width, height: viewport.height },
-    scale,
+    older,
+    olderTitle: displayTitle(older, index),
     onError: setError,
+    projectId,
+    scale,
+    viewport: { height: viewport.height, width: viewport.width },
   };
 
   return (

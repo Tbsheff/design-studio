@@ -83,7 +83,54 @@ function openDropped(folder: unknown): void {
   if (typeof folder === 'string' && folder) { ipcRenderer.send(DROP_FOLDER_CHANNEL, folder); }
 }
 
-contextBridge.exposeInMainWorld('studioDesktop', Object.freeze({ platform: process.platform, version: appVersion(), boot: bootTimes(), onCommand, setContext, pickFolder, revealExport, pathForFile, openDropped }));
+const ACCOUNT_STATES = ['signed-out', 'pending', 'needs-confirm', 'signed-in'];
+
+interface AccountView {
+  user: { id: string; email: string; name: string } | null;
+  orgs: { id: string; name: string; role: string }[];
+  state: string;
+}
+
+function toAccountView(value: unknown): AccountView {
+  const empty: AccountView = { user: null, orgs: [], state: 'signed-out' };
+
+  if (typeof value !== 'object' || value === null) { return empty; }
+
+  const record = value as Record<string, unknown>;
+  const state = typeof record.state === 'string' && ACCOUNT_STATES.includes(record.state) ? record.state : 'signed-out';
+  const user = record.user as AccountView['user'];
+  const orgs = Array.isArray(record.orgs) ? (record.orgs as AccountView['orgs']) : [];
+
+  return {
+    user: user ? { id: String(user.id), email: String(user.email), name: String(user.name) } : null,
+    orgs: orgs.map((org) => ({ id: String(org.id), name: String(org.name), role: String(org.role) })),
+    state
+  };
+}
+
+async function accountCall(channel: string): Promise<AccountView> {
+  return toAccountView(await ipcRenderer.invoke(channel));
+}
+
+function onAccountChange(handler: (view: AccountView) => void): () => void {
+  if (typeof handler !== 'function') { return () => undefined; }
+
+  const listener = (_event: unknown, view: unknown): void => handler(toAccountView(view));
+
+  ipcRenderer.on('studio:account-change', listener);
+
+  return () => { ipcRenderer.removeListener('studio:account-change', listener); };
+}
+
+const account = Object.freeze({
+  get: () => accountCall('studio:account-get'),
+  signIn: () => accountCall('studio:account-sign-in'),
+  confirm: () => accountCall('studio:account-confirm'),
+  signOut: () => accountCall('studio:account-sign-out'),
+  onChange: onAccountChange
+});
+
+contextBridge.exposeInMainWorld('studioDesktop', Object.freeze({ platform: process.platform, version: appVersion(), boot: bootTimes(), onCommand, setContext, pickFolder, revealExport, pathForFile, openDropped, account }));
 
 const THEME_GET_CHANNEL = 'studio:theme-get';
 const THEME_SET_CHANNEL = 'studio:theme-set';

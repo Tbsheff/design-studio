@@ -24,6 +24,7 @@ import {
   type DesktopCommand,
   type DesktopContext,
 } from "../src/shared/desktop-link.js";
+import { AccountAuth } from "./auth.js";
 import { buildDockMenu, buildMenu, type MenuState } from "./menu.js";
 import { NOTIFY_ENV, runNotice } from "./notify.js";
 import {
@@ -50,6 +51,7 @@ export interface NativeDeps {
   checkSetup: () => void;
   updater: () => Updater | null;
   recentsFile: () => string;
+  pushDeviceToken?: (token: string | null) => void;
 }
 
 function uniquePath(dir: string, name: string): string {
@@ -81,8 +83,17 @@ export class NativeShell {
   private pickerOpen = false;
   private unseenRuns = 0;
   private readonly loaded = new WeakSet<WebContents>();
+  private readonly auth: AccountAuth;
 
-  constructor(private readonly deps: NativeDeps) {}
+  constructor(private readonly deps: NativeDeps) {
+    this.auth = new AccountAuth({
+      isStudio: (contents): boolean => this.isStudio(contents),
+      studioContents: (): WebContents[] =>
+        this.deps.studioWindows().map((window) => window.webContents),
+      pushDeviceToken: (token): void => this.deps.pushDeviceToken?.(token),
+      focusWindow: (): void => this.deps.focusWindow(),
+    });
+  }
 
   registerEarly(): void {
     app.on("will-finish-launching", () => {
@@ -112,6 +123,7 @@ export class NativeShell {
     ipcMain.on(DESKTOP_IPC.dropFolder, (event, raw: unknown) =>
       this.onDropFolder(event.sender, raw)
     );
+    this.auth.install(ipcMain);
     session.defaultSession.on("will-download", (_event, item, contents) =>
       this.onDownload(item, contents)
     );
@@ -177,6 +189,13 @@ export class NativeShell {
   }
 
   openUrl(url: string): void {
+    if (
+      url.startsWith("designstudio://auth/") ||
+      url === "designstudio://auth"
+    ) {
+      this.auth.handleCallback(url);
+      return;
+    }
     const command = parseDeepLink(url);
     if (!command) {
       console.warn(`[desktop] ignored link ${url.slice(0, 200)}`);

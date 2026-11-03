@@ -1,12 +1,12 @@
 import { useEffect, useRef } from "react";
 
-import { AddButton } from "../../components/InspectorShared.js";
 import type { ShiftPart } from "../../cssValues.js";
 import { proxyEdit } from "../../proxyEdit.js";
 import { NEW_SHADOW, blurOf, withBlur, type Shadow } from "../../shadows.js";
 import type { DirectEdit } from "../../useDirectEdit.js";
 import { writeShadows, shadowView } from "./effects-model.js";
 import { InspectorSection } from "./inspector-fields.js";
+import { AddButton } from "./inspector-shared.js";
 import { NumberField } from "./number-field.js";
 import { ShadowRow } from "./shadow-row.js";
 

@@ -15,3 +15,4 @@ const StackingSlot = lazy(async () => {
 export { AccessibilitySlot, StackingSlot };
 
 export { runCommand } from "./features/commands/registry.js";
+export { IS_MAC } from "./features/commands/keys.js";

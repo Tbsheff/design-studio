@@ -1553,6 +1553,29 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/ui/features/inspector/use-stable-callbacks.ts",
       "src/ui/features/inspector/use-use-site.ts",
       "src/ui/features/inspector/vector-section.tsx",
+      "src/ui/features/inspector/layout-keys.ts",
+      "src/ui/features/inspector/auto-layout-section.tsx",
+      "src/ui/features/inspector/size-row.tsx",
+      "src/ui/features/inspector/size-limits.tsx",
+      "src/ui/features/inspector/position-rows.tsx",
+      "src/ui/features/inspector/inspector-layout.tsx",
+      "src/ui/features/inspector/match-scan.ts",
+      "src/ui/features/inspector/match-candidates.tsx",
+      "src/ui/features/inspector/match-token-picker.tsx",
+      "src/ui/features/inspector/match-rows.tsx",
+      "src/ui/features/inspector/inspector-match.tsx",
+      "src/ui/features/inspector/arrange-model.ts",
+      "src/ui/features/inspector/use-arrange.ts",
+      "src/ui/features/inspector/inspector-arrange.tsx",
+      "src/ui/features/inspector/inspector-rows.tsx",
+      "src/ui/features/inspector/inspector-shared.tsx",
+      "src/ui/features/inspector/inspector-source.tsx",
+      "src/ui/components/InspectorLayout.tsx",
+      "src/ui/components/InspectorMatch.tsx",
+      "src/ui/components/InspectorArrange.tsx",
+      "src/ui/components/InspectorRows.tsx",
+      "src/ui/components/InspectorShared.tsx",
+      "src/ui/components/InspectorSource.tsx",
       "src/ui/components/Inspector.tsx",
       "src/ui/components/InspectorBreadcrumb.tsx",
       "src/ui/components/InspectorClasses.tsx",
@@ -1569,6 +1592,32 @@ export const decisionOverrides: OxlintOverride[] = [
     ],
     rules: Object.fromEntries(
       "anti-slop/no-array-filter-map anti-slop/no-chained-type-assertions anti-slop/no-conditional-empty-object-spread anti-slop/no-object-parameters anti-slop/no-runtime-typeof anti-slop/no-shape-in-symbol-names anti-slop/no-unknown-parameters anti-slop/no-unknown-returns anti-slop/no-unsafe-dictionary-type anti-slop/require-readable-spacing boundaries/dependencies eslint/arrow-body-style eslint/curly eslint/func-style eslint/id-length eslint/max-lines-per-function eslint/max-params eslint/no-continue eslint/no-magic-numbers eslint/no-nested-ternary eslint/no-restricted-globals eslint/no-shadow eslint/no-ternary eslint/no-undefined eslint/no-unused-vars eslint/no-use-before-define eslint/no-useless-return eslint/no-void eslint/prefer-destructuring eslint/prefer-named-capture-group eslint/require-unicode-regexp eslint/sort-keys github/array-foreach github/filenames-match-regex github/no-blur github/no-inner-html github/no-then import/consistent-type-specifier-style import/exports-last import/group-exports import/no-default-export import/no-relative-parent-imports import/no-unassigned-import oxc/no-map-spread promise/always-return promise/prefer-await-to-callbacks promise/prefer-await-to-then react-doctor/js-combine-iterations react-doctor/no-array-index-as-key react-doctor/no-enter-submit-without-ime-composition-guard react-doctor/no-floating-then-in-jsx-handler react-doctor/no-high-complexity-react-function react-doctor/no-ref-current-in-render react-doctor/no-self-updating-effect react-doctor/only-export-components react-doctor/pointer-capture-needs-cancel-handler react-doctor/prefer-module-scope-pure-function react-doctor/rerender-lazy-ref-init react-hooks/exhaustive-deps react-perf/jsx-no-jsx-as-prop react-perf/jsx-no-new-array-as-prop react-perf/jsx-no-new-function-as-prop react-perf/jsx-no-new-object-as-prop react/exhaustive-effect-dependencies react/forbid-component-props react/function-component-definition react/jsx-handler-names react/jsx-max-depth react/jsx-no-constructed-context-values react/jsx-no-literals react/jsx-no-undef react/jsx-props-no-spreading react/no-array-index-key react/no-multi-comp react/only-export-components react/purity react/refs react/set-state-in-effect sonarjs/elseif-without-else sonarjs/expression-complexity sonarjs/function-name sonarjs/no-duplicate-string sonarjs/no-nested-conditional sonarjs/shorthand-property-grouping sonarjs/super-linear-regex sonarjs/too-many-break-or-continue-in-loop studio/boolean-name studio/feature-file-layout studio/feature-index-import studio/import-resolves studio/module-function-verb studio/no-busy-flag studio/no-dom-query studio/no-hook-component-import studio/no-inline-copy studio/no-then studio/no-ui-storage studio/no-undefined-type studio/predicate-name studio/readonly-field typescript/explicit-function-return-type typescript/explicit-module-boundary-types typescript/no-import-type-side-effects unicorn/catch-error-name unicorn/consistent-function-scoping unicorn/filename-case unicorn/max-nested-calls unicorn/no-array-for-each unicorn/no-nested-ternary unicorn/prefer-global-this unicorn/prefer-spread vitest/prefer-expect-assertions vitest/require-test-timeout github/a11y-role-supports-aria-props jsx-a11y/interactive-supports-focus jsx-a11y/no-noninteractive-element-interactions jsx-a11y/no-noninteractive-tabindex jsx-a11y/prefer-tag-over-role jsx-a11y/role-has-required-aria-props"
+        .split(" ")
+        .map((rule) => [rule, "warn"])
+    ),
+  },
+  {
+    files: [
+      "src/ui/features/inspector/layout-keys.ts",
+      "src/ui/features/inspector/auto-layout-section.tsx",
+      "src/ui/features/inspector/size-row.tsx",
+      "src/ui/features/inspector/size-limits.tsx",
+      "src/ui/features/inspector/position-rows.tsx",
+      "src/ui/features/inspector/inspector-layout.tsx",
+      "src/ui/features/inspector/match-scan.ts",
+      "src/ui/features/inspector/match-candidates.tsx",
+      "src/ui/features/inspector/match-token-picker.tsx",
+      "src/ui/features/inspector/match-rows.tsx",
+      "src/ui/features/inspector/inspector-match.tsx",
+      "src/ui/features/inspector/arrange-model.ts",
+      "src/ui/features/inspector/use-arrange.ts",
+      "src/ui/features/inspector/inspector-arrange.tsx",
+      "src/ui/features/inspector/inspector-rows.tsx",
+      "src/ui/features/inspector/inspector-shared.tsx",
+      "src/ui/features/inspector/inspector-source.tsx",
+    ],
+    rules: Object.fromEntries(
+      "anti-slop/no-known-value-widening jsx-a11y/role-supports-aria-props oxc/no-accumulating-spread promise/avoid-new promise/no-callback-in-promise react-doctor/no-adjust-state-on-prop-change react-doctor/no-pass-data-to-parent react-doctor/no-pass-live-state-to-parent react-doctor/no-reset-all-state-on-prop-change react-doctor/no-spread-accumulator-in-reduce react/memo-dependencies react/todo react/use-memo sonarjs/no-nested-template-literals studio/no-finally-state-reset typescript/consistent-type-definitions unicorn/no-array-callback-reference unicorn/no-array-reduce unicorn/no-array-sort unicorn/prefer-number-coercion unicorn/prefer-number-properties"
         .split(" ")
         .map((rule) => [rule, "warn"])
     ),

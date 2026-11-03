@@ -1,9 +1,9 @@
 import { createElement } from "react";
 import type { ReactElement } from "react";
 
-import { LeftPane } from "../../components/LeftPane";
 import { RunCommentsContext } from "../../components/RunComments";
-import { StudioPaneHeader } from "../../components/StudioPaneHeader";
+import { LeftPane } from "../shell/left-pane";
+import { StudioPaneHeader } from "../shell/studio-pane-header";
 import {
   chatProps,
   detailsProps,

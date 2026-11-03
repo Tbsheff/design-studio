@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import type { ReactElement } from "react";
 
-import { StudioModals, StudioToast } from "../../components/StudioParts";
+import { StudioModals, StudioToast } from "../shell/studio-parts";
 import { ExportLayer, ShareLayer, ShipLayer } from "./layers";
 import { firstText } from "./request-model";
 import type { StudioCtxProps } from "./studio-context";

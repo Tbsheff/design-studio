@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 
-import { StudioBoot } from "../components/StudioParts";
+import { StudioBoot } from "./shell/studio-parts";
 import { StudioReady } from "./studio/studio-ready";
 import { useStudioCompose } from "./studio/use-studio-compose";
 import { useStudioPanes } from "./studio/use-studio-panes";

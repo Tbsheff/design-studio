@@ -4,8 +4,8 @@ import { api } from "../../api";
 import type { DraftBar } from "../../components/DraftBar";
 import type { ImproveControl } from "../../components/DraftImprove";
 import { improveRequest } from "../../components/DraftImprove";
-import type { UnfinishedSlot } from "../../components/StudioParts";
-import { runStoppedUnsaved } from "../../components/StudioParts";
+import type { UnfinishedSlot } from "../shell/studio-parts";
+import { runStoppedUnsaved } from "../shell/studio-parts";
 import type { StudioCtx } from "./studio-context";
 
 const saveHandlerOf = (

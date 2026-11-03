@@ -1,9 +1,9 @@
 import type { ComponentProps } from "react";
 
-import type { CenterView } from "../../components/StudioParts";
 import { canvasVariations } from "../../components/VariationsLayer";
 import { uiStore } from "../../storage";
 import { CanvasCommandsHost } from "../canvas-commands-host";
+import type { CenterView } from "../shell/studio-parts";
 import { nameOf, whenDirection } from "./project-model";
 import { neverRan, runStepOf } from "./run-model";
 import type { StudioCtx } from "./studio-context";

@@ -10,8 +10,8 @@ import {
   canTransition,
   isSendable,
   statusAfterRun,
-  type CommentActor,
 } from "../../shared/comments.js";
+import type { CommentActor } from "../../shared/comments.js";
 import type {
   CommentDrawing,
   CommentFrame,
@@ -123,7 +123,7 @@ export interface CommentStore {
 }
 
 function emptyFile(): CommentFile {
-  return { nextN: 1, comments: [] };
+  return { comments: [], nextN: 1 };
 }
 
 function isCommentFile(value: unknown): value is CommentFile {
@@ -215,10 +215,10 @@ export function createCommentStore(
       if (JSON.stringify(data) !== before) {
         await write(file, data);
         bus.emit({
-          type: "comments.changed",
-          projectId,
-          directionId,
           comments: data.comments,
+          directionId,
+          projectId,
+          type: "comments.changed",
         });
       }
 
@@ -275,20 +275,31 @@ export function createCommentStore(
   };
 
   return {
-    async followSource(projectId, directionId, remap) {
-      if (!existsSync(fileOf(projectId, directionId))) {
-        return;
-      }
+    addReply(projectId, directionId, commentId, text, author) {
+      return mutate(projectId, directionId, (data) => {
+        const comment = find(data, commentId);
+        const replies = comment.replies ?? [];
 
-      await mutate(projectId, directionId, (data) => {
-        for (const comment of data.comments) {
-          followed(comment, remap);
+        if (replies.length >= COMMENT_REPLIES_MAX) {
+          throw new BadRequestError(
+            `a comment can have at most ${COMMENT_REPLIES_MAX} replies`
+          );
         }
-      });
-    },
 
-    async list(projectId, directionId) {
-      return (await read(fileOf(projectId, directionId))).comments;
+        const now = Date.now();
+        comment.replies = [
+          ...replies,
+          {
+            id: nanoid(10),
+            text,
+            createdAt: now,
+            ...(author ? { author } : {}),
+          },
+        ];
+        comment.updatedAt = now;
+
+        return comment;
+      });
     },
 
     create(projectId, directionId, input) {
@@ -321,34 +332,63 @@ export function createCommentStore(
       });
     },
 
-    update(projectId, directionId, commentId, input, actor = "user") {
+    finishRun(projectId, directionId, outcome) {
       return mutate(projectId, directionId, (data) => {
-        const comment = find(data, commentId);
+        const next = statusAfterRun(outcome.status);
 
-        if (input.status !== undefined) {
-          move(comment, input.status, actor);
+        const touched = data.comments.filter(
+          (comment) =>
+            comment.status === "sent" && comment.runId === outcome.runId
+        );
+
+        for (const comment of touched) {
+          move(comment, next, "server");
+
+          if (next === "resolved") {
+            comment.versionId = outcome.versionId;
+          } else {
+            delete comment.runId;
+            delete comment.versionId;
+          }
         }
 
-        if (input.text !== undefined) {
-          comment.text = input.text;
-        }
+        return touched;
+      });
+    },
 
-        if (input.target !== undefined) {
-          comment.target = input.target;
-        }
+    async followSource(projectId, directionId, remap) {
+      if (!existsSync(fileOf(projectId, directionId))) {
+        return;
+      }
 
-        if (input.context !== undefined) {
-          comment.context = input.context;
+      await mutate(projectId, directionId, (data) => {
+        for (const comment of data.comments) {
+          followed(comment, remap);
         }
+      });
+    },
 
-        if (input.status === "queued") {
-          delete comment.runId;
+    async list(projectId, directionId) {
+      return (await read(fileOf(projectId, directionId))).comments;
+    },
+
+    markSent(projectId, directionId, ids, runId) {
+      return mutate(projectId, directionId, (data) => {
+        const sent = ids.map((id) => find(data, id));
+
+        for (const comment of sent) {
+          if (!isSendable(comment.status)) {
+            throw new ConflictError(
+              `bad_transition: ${comment.status} -> sent`
+            );
+          }
+
+          move(comment, "sent", "server");
+          comment.runId = runId;
           delete comment.versionId;
         }
 
-        comment.updatedAt = Date.now();
-
-        return comment;
+        return sent;
       });
     },
 
@@ -356,33 +396,6 @@ export function createCommentStore(
       await mutate(projectId, directionId, (data) => {
         find(data, commentId);
         data.comments = data.comments.filter((item) => item.id !== commentId);
-      });
-    },
-
-    addReply(projectId, directionId, commentId, text, author) {
-      return mutate(projectId, directionId, (data) => {
-        const comment = find(data, commentId);
-        const replies = comment.replies ?? [];
-
-        if (replies.length >= COMMENT_REPLIES_MAX) {
-          throw new BadRequestError(
-            `a comment can have at most ${COMMENT_REPLIES_MAX} replies`
-          );
-        }
-
-        const now = Date.now();
-        comment.replies = [
-          ...replies,
-          {
-            id: nanoid(10),
-            text,
-            createdAt: now,
-            ...(author ? { author } : {}),
-          },
-        ];
-        comment.updatedAt = now;
-
-        return comment;
       });
     },
 
@@ -415,26 +428,6 @@ export function createCommentStore(
       });
     },
 
-    markSent(projectId, directionId, ids, runId) {
-      return mutate(projectId, directionId, (data) => {
-        const sent = ids.map((id) => find(data, id));
-
-        for (const comment of sent) {
-          if (!isSendable(comment.status)) {
-            throw new ConflictError(
-              `bad_transition: ${comment.status} -> sent`
-            );
-          }
-
-          move(comment, "sent", "server");
-          comment.runId = runId;
-          delete comment.versionId;
-        }
-
-        return sent;
-      });
-    },
-
     requeue(projectId, directionId, ids) {
       return mutate(projectId, directionId, (data) => {
         const moved = ids
@@ -449,27 +442,34 @@ export function createCommentStore(
       });
     },
 
-    finishRun(projectId, directionId, outcome) {
+    update(projectId, directionId, commentId, input, actor = "user") {
       return mutate(projectId, directionId, (data) => {
-        const next = statusAfterRun(outcome.status);
+        const comment = find(data, commentId);
 
-        const touched = data.comments.filter(
-          (comment) =>
-            comment.status === "sent" && comment.runId === outcome.runId
-        );
-
-        for (const comment of touched) {
-          move(comment, next, "server");
-
-          if (next === "resolved") {
-            comment.versionId = outcome.versionId;
-          } else {
-            delete comment.runId;
-            delete comment.versionId;
-          }
+        if (input.status !== undefined) {
+          move(comment, input.status, actor);
         }
 
-        return touched;
+        if (input.text !== undefined) {
+          comment.text = input.text;
+        }
+
+        if (input.target !== undefined) {
+          comment.target = input.target;
+        }
+
+        if (input.context !== undefined) {
+          comment.context = input.context;
+        }
+
+        if (input.status === "queued") {
+          delete comment.runId;
+          delete comment.versionId;
+        }
+
+        comment.updatedAt = Date.now();
+
+        return comment;
       });
     },
   };

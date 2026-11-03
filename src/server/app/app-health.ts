@@ -36,11 +36,11 @@ function needsInstall(
   const hint = installCommand(root, appDir);
 
   return {
+    command: hint.full,
+    detail: installDetail(project.name, hint),
     projectId: project.id,
     state: "install",
     title: "Dependencies are not installed",
-    detail: installDetail(project.name, hint),
-    command: hint.full,
   };
 }
 
@@ -49,14 +49,14 @@ async function attachedHealth(
   root: string,
   apps: AppControl | undefined
 ): Promise<AppHealth> {
-  const app = project.app;
+  const { app } = project;
 
   const base: AppHealth = {
+    command: null,
+    detail: null,
     projectId: project.id,
     state: "ready",
     title: null,
-    detail: null,
-    command: null,
   };
 
   if (!app) {
@@ -80,10 +80,10 @@ async function attachedHealth(
 
     return {
       ...base,
+      command: cause?.command ?? null,
+      detail: cause?.detail ?? status.message,
       state: "failed",
       title: cause?.title ?? "The dev server failed",
-      detail: cause?.detail ?? status.message,
-      command: cause?.command ?? null,
     };
   }
 
@@ -109,11 +109,11 @@ export async function projectHealth(
 
   if (!root) {
     return {
+      command: null,
+      detail: null,
       projectId: project.id,
       state: "static",
       title: null,
-      detail: null,
-      command: null,
     };
   }
 
@@ -126,10 +126,10 @@ export async function projectHealth(
   }
 
   return {
+    command: null,
+    detail: null,
     projectId: project.id,
     state: "static",
     title: null,
-    detail: null,
-    command: null,
   };
 }

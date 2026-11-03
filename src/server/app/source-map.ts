@@ -60,10 +60,10 @@ export function parseStack(stack: string): StackFrame[] {
     }
 
     frames.push({
-      file: match[2],
-      methodName: match[1] ?? "<unknown>",
-      line1: Number(match[3]),
       column1: Number(match[4]),
+      file: match[2],
+      line1: Number(match[3]),
+      methodName: match[1] ?? "<unknown>",
     });
 
     if (frames.length >= MAX_FRAMES_PER_STACK) {
@@ -174,14 +174,14 @@ async function serverFrames(
   const response = await fetch(
     new URL("/__nextjs_original-stack-frames", target.upstream),
     {
-      method: "POST",
-      headers: { "content-type": "application/json" },
       body: JSON.stringify({
         frames: frames.map((frame) => ({ ...frame, arguments: [] })),
         isServer: true,
         isEdgeServer: false,
         isAppDirectory: true,
       }),
+      headers: { "content-type": "application/json" },
+      method: "POST",
       signal: AbortSignal.timeout(10_000),
     }
   );
@@ -227,7 +227,7 @@ function chunkMap(chunkUrl: string): Promise<SourceMapConsumer | null> {
   }
 
   const consumer = loadChunkMap(chunkUrl).catch(() => null);
-  chunkMaps.set(chunkUrl, { consumer, at: Date.now() });
+  chunkMaps.set(chunkUrl, { at: Date.now(), consumer });
 
   return consumer;
 }
@@ -244,8 +244,8 @@ async function clientFrames(
       const consumer = await chunkMap(frame.file);
 
       const position = consumer?.originalPositionFor({
-        line: frame.line1,
         column: frame.column1 - 1,
+        line: frame.line1,
       });
 
       if (!position?.source || position.line === null) {
@@ -253,10 +253,10 @@ async function clientFrames(
       }
 
       return {
-        file: position.source,
-        line1: position.line,
         column1: (position.column ?? 0) + 1,
+        file: position.source,
         ignored: position.source.includes("node_modules"),
+        line1: position.line,
       };
     })
   );

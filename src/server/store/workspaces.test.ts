@@ -31,15 +31,15 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  await rm(dataDir, { recursive: true, force: true });
-  await rm(outside, { recursive: true, force: true });
+  await rm(dataDir, { force: true, recursive: true });
+  await rm(outside, { force: true, recursive: true });
 });
 
 describe("workspace store", () => {
   it("starts empty and reports the home dir", async () => {
     await expect(store.list()).resolves.toEqual({
-      homeDir: "/Users/tester",
       folders: [],
+      homeDir: "/Users/tester",
     });
   });
 
@@ -50,15 +50,17 @@ describe("workspace store", () => {
     await symlink(real, link, "dir");
     const added = await store.add({ path: link });
     expect(added).toMatchObject({
-      path: real,
       label: "Client Work",
       missing: false,
+      path: real,
     });
     await expect(store.add({ path: `${real}/` })).resolves.toEqual(added);
     expect((await store.list()).folders).toHaveLength(1);
+
     const saved = JSON.parse(
       await readFile(path.join(dataDir, WORKSPACES_FILE), "utf-8")
     ) as { version: number; folders: unknown[] };
+
     expect(saved.version).toBe(1);
     expect(saved.folders).toHaveLength(1);
   });
@@ -81,7 +83,7 @@ describe("workspace store", () => {
   });
 
   it("renames and removes without touching the folder on disk", async () => {
-    const added = await store.add({ path: outside, label: "Mine" });
+    const added = await store.add({ label: "Mine", path: outside });
     expect(added.label).toBe("Mine");
     expect((await store.rename(added.id, "  Sites  ")).label).toBe("Sites");
     await expect(store.rename(added.id, "   ")).rejects.toThrow(
@@ -109,15 +111,17 @@ describe("workspace store", () => {
   });
 
   it("keeps only valid entries from a hand-edited file", async () => {
-    const good = { id: "abc123", path: outside, label: "Good", addedAt: 1 };
+    const good = { addedAt: 1, id: "abc123", label: "Good", path: outside };
+
     const bad = [
-      { id: "x", path: "relative", label: "Bad", addedAt: 1 },
-      { id: "../", path: outside, label: "Bad", addedAt: 1 },
+      { addedAt: 1, id: "x", label: "Bad", path: "relative" },
+      { addedAt: 1, id: "../", label: "Bad", path: outside },
       "nope",
     ];
+
     await writeFile(
       path.join(dataDir, WORKSPACES_FILE),
-      JSON.stringify({ version: 1, folders: [good, ...bad] })
+      JSON.stringify({ folders: [good, ...bad], version: 1 })
     );
     expect((await store.list()).folders.map((folder) => folder.id)).toEqual([
       "abc123",
@@ -131,9 +135,11 @@ describe("workspace store", () => {
       ["a", "b", "c", "d"].map(async (name) => {
         const dir = path.join(outside, name);
         await mkdir(dir);
+
         return dir;
       })
     );
+
     await Promise.all(dirs.map((dir) => store.add({ path: dir })));
     expect(
       (await store.list()).folders.map((folder) => folder.label).sort()

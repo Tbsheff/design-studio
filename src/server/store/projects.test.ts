@@ -47,7 +47,7 @@ afterEach(async () => {
 
 describe("project store", () => {
   it("creates an html project with the documented layout", async () => {
-    const project = await projects.create({ name: "Landing", kind: "html" });
+    const project = await projects.create({ kind: "html", name: "Landing" });
     expect(project.id).toHaveLength(10);
     expect(project.entry).toBe("index.html");
     expect(project.settings).toEqual(DEFAULT_SETTINGS);
@@ -67,11 +67,12 @@ describe("project store", () => {
   });
 
   it("creates react projects from the template with one shared install", async () => {
-    const first = await projects.create({ name: "A", kind: "react" });
-    const second = await projects.create({ name: "B", kind: "react" });
+    const first = await projects.create({ kind: "react", name: "A" });
+    const second = await projects.create({ kind: "react", name: "B" });
     expect(installCalls).toBe(1);
+
     for (const project of [first, second]) {
-      const workTree = project.directions[0]!.workTree;
+      const { workTree } = project.directions[0]!;
       expect(existsSync(path.join(workTree, "src/App.tsx"))).toBe(true);
       expect(
         lstatSync(path.join(workTree, "node_modules")).isSymbolicLink()
@@ -86,6 +87,7 @@ describe("project store", () => {
 
   it("imports a folder without writing into it and detects the kind", async () => {
     const folder = await mkdtemp(path.join(os.tmpdir(), "studio import "));
+
     try {
       await writeFile(path.join(folder, "index.html"), "<h1>hi</h1>");
       const project = await projects.importFolder(folder);
@@ -104,19 +106,21 @@ describe("project store", () => {
       await expect(projects.importFolder(empty)).rejects.toThrow(
         /vite dependency or an index.html/
       );
-      await rm(empty, { recursive: true, force: true });
+      await rm(empty, { force: true, recursive: true });
     } finally {
-      await rm(folder, { recursive: true, force: true });
+      await rm(folder, { force: true, recursive: true });
     }
   });
 
   it("stores attachments and DESIGN.md", async () => {
-    const project = await projects.create({ name: "Files", kind: "html" });
+    const project = await projects.create({ kind: "html", name: "Files" });
+
     const attachment = await projects.saveAttachment(project.id, {
-      name: "shot.png",
-      mime: "image/png",
       bytes: new Uint8Array([1, 2, 3]),
+      mime: "image/png",
+      name: "shot.png",
     });
+
     expect(attachment.path).toBe(
       path.join(
         projects.projectDir(project.id),
@@ -138,11 +142,13 @@ describe("project store", () => {
   });
 
   it("updates directions atomically and rejects unsafe ids", async () => {
-    const project = await projects.create({ name: "Ids", kind: "html" });
+    const project = await projects.create({ kind: "html", name: "Ids" });
+
     const updated = await projects.updateDirection(project.id, "main", {
-      headVersionId: "abc",
       branch: "evil",
+      headVersionId: "abc",
     });
+
     expect(updated.headVersionId).toBe("abc");
     expect(updated.branch).toBe("d/main");
     await expect(projects.get("../outside")).rejects.toThrow(/invalid/);
@@ -150,15 +156,17 @@ describe("project store", () => {
   });
 
   it("reads the old $2 default budget as no limit once, and keeps custom and later-set limits", async () => {
-    const project = await projects.create({ name: "Budget", kind: "html" });
+    const project = await projects.create({ kind: "html", name: "Budget" });
     expect(project.settings.maxBudgetUsd).toBeNull();
     const file = path.join(projects.projectDir(project.id), "project.json");
+
     const legacy = async (maxBudgetUsd: number) => {
       const stored = JSON.parse(await readFile(file, "utf-8"));
       delete stored.settingsVersion;
       stored.settings.maxBudgetUsd = maxBudgetUsd;
       await writeFile(file, JSON.stringify(stored));
     };
+
     await legacy(2);
     expect((await projects.get(project.id)).settings.maxBudgetUsd).toBeNull();
     await legacy(0.75);
@@ -166,8 +174,8 @@ describe("project store", () => {
     await legacy(2);
     await projects.updateSettings(project.id, { maxTurns: 9 });
     expect(JSON.parse(await readFile(file, "utf-8"))).toMatchObject({
-      settingsVersion: 2,
       settings: { maxBudgetUsd: null, maxTurns: 9 },
+      settingsVersion: 2,
     });
     await projects.updateSettings(project.id, { maxBudgetUsd: 2 });
     expect((await projects.get(project.id)).settings.maxBudgetUsd).toBe(2);
@@ -178,32 +186,34 @@ describe("event bus", () => {
   it("keeps seq across a new bus instance and replays from the file", async () => {
     const bus = await openEventBus(config.dataDir);
     const received: number[] = [];
+
     const unsubscribe = bus.subscribe("p1", (event) =>
       received.push(event.seq)
     );
+
     bus.emit({
-      type: "files.changed",
-      projectId: "p1",
-      paths: ["a"],
       changedAt: 1,
-    });
-    bus.emit({
-      type: "files.changed",
+      paths: ["a"],
       projectId: "p1",
-      paths: ["b"],
-      changedAt: 2,
+      type: "files.changed",
     });
     bus.emit({
-      type: "status.changed",
+      changedAt: 2,
+      paths: ["b"],
+      projectId: "p1",
+      type: "files.changed",
+    });
+    bus.emit({
       projectId: "p2",
-      status: { dirty: false, changed: [] },
+      status: { changed: [], dirty: false },
+      type: "status.changed",
     });
     unsubscribe();
     bus.emit({
-      type: "files.changed",
-      projectId: "p1",
-      paths: ["c"],
       changedAt: 3,
+      paths: ["c"],
+      projectId: "p1",
+      type: "files.changed",
     });
     expect(received).toEqual([1, 2]);
     await bus.flush();
@@ -212,19 +222,21 @@ describe("event bus", () => {
     expect((await restarted.since("p1", 1)).map((event) => event.seq)).toEqual([
       2, 3,
     ]);
+
     const next = restarted.emit({
-      type: "files.changed",
-      projectId: "p1",
-      paths: ["d"],
       changedAt: 4,
+      paths: ["d"],
+      projectId: "p1",
+      type: "files.changed",
     });
+
     expect(next.seq).toBe(4);
     expect(
       restarted.emit({
-        type: "files.changed",
-        projectId: "p2",
-        paths: [],
         changedAt: 5,
+        paths: [],
+        projectId: "p2",
+        type: "files.changed",
       }).seq
     ).toBe(2);
     await expect(restarted.since("p1", 0)).resolves.toHaveLength(4);

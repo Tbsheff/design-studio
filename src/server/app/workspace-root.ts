@@ -67,10 +67,10 @@ async function rootAt(
   }
 
   return {
-    root: dir,
     appDir: rel,
     name:
       typeof pkg?.name === "string" && pkg.name ? pkg.name : path.basename(dir),
+    root: dir,
   };
 }
 

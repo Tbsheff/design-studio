@@ -11,11 +11,11 @@ import type { CommentStore } from "./comments.js";
 import { createEventBus } from "./events.js";
 
 const target: CommentTarget = {
+  rectHint: { height: 10, width: 10, x: 0, y: 0 },
   selector: "body > h1",
-  sourceLoc: { file: "index.html", line: 4, col: 5 },
+  sourceLoc: { col: 5, file: "index.html", line: 4 },
   tag: "h1",
   textSnippet: "Hi",
-  rectHint: { x: 0, y: 0, width: 10, height: 10 },
 };
 
 let dataDir: string;
@@ -31,31 +31,32 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  await rm(dataDir, { recursive: true, force: true });
+  await rm(dataDir, { force: true, recursive: true });
 });
 
 describe("comment store", () => {
   it("stores comments per direction in the data dir, not the work tree", async () => {
     const created = await store.create("p1", "main", {
-      text: "Bigger",
       target,
+      text: "Bigger",
     });
+
     expect(created).toMatchObject({ n: 1, status: "queued", text: "Bigger" });
     const file = path.join(dataDir, "projects", "p1", "comments", "main.json");
     expect(existsSync(file)).toBe(true);
     expect(JSON.parse(await readFile(file, "utf-8")).comments).toHaveLength(1);
     await expect(store.list("p1", "other")).resolves.toEqual([]);
     expect(events.at(-1)).toMatchObject({
-      type: "comments.changed",
       directionId: "main",
+      type: "comments.changed",
     });
   });
 
   it("gives stable increasing numbers that are not reused after delete", async () => {
-    const a = await store.create("p1", "main", { text: "A", target });
-    await store.create("p1", "main", { text: "B", target });
+    const a = await store.create("p1", "main", { target, text: "A" });
+    await store.create("p1", "main", { target, text: "B" });
     await store.remove("p1", "main", a.id);
-    const c = await store.create("p1", "main", { text: "C", target });
+    const c = await store.create("p1", "main", { target, text: "C" });
     expect(c.n).toBe(3);
   });
 
@@ -66,12 +67,14 @@ describe("comment store", () => {
   });
 
   it("sends, then resolves with the version on a completed run", async () => {
-    const a = await store.create("p1", "main", { text: "A", target });
+    const a = await store.create("p1", "main", { target, text: "A" });
+
     const b = await store.create("p1", "main", {
-      text: "B",
-      target,
       status: "draft",
+      target,
+      text: "B",
     });
+
     await store.markSent("p1", "main", [a.id, b.id], "run1");
     expect(
       (await store.list("p1", "main")).map((c) => [c.status, c.runId])
@@ -101,7 +104,7 @@ describe("comment store", () => {
   });
 
   it("returns comments to the queue when the run fails or is canceled", async () => {
-    const a = await store.create("p1", "main", { text: "A", target });
+    const a = await store.create("p1", "main", { target, text: "A" });
     await store.markSent("p1", "main", [a.id], "run1");
     await store.finishRun("p1", "main", {
       runId: "run1",
@@ -114,7 +117,7 @@ describe("comment store", () => {
   });
 
   it("blocks invalid user transitions", async () => {
-    const a = await store.create("p1", "main", { text: "A", target });
+    const a = await store.create("p1", "main", { target, text: "A" });
     await expect(
       store.update("p1", "main", a.id, { status: "sent" })
     ).rejects.toThrow(/bad_transition/);
@@ -128,12 +131,14 @@ describe("comment store", () => {
   });
 
   it("re-pins an orphan with a new target", async () => {
-    const a = await store.create("p1", "main", { text: "A", target });
+    const a = await store.create("p1", "main", { target, text: "A" });
     await store.update("p1", "main", a.id, { status: "orphaned" });
+
     const moved = await store.update("p1", "main", a.id, {
       status: "queued",
       target: { ...target, selector: "main > h2", tag: "h2" },
     });
+
     expect(moved).toMatchObject({
       status: "queued",
       target: { selector: "main > h2", tag: "h2" },
@@ -142,11 +147,12 @@ describe("comment store", () => {
 
   it("moves drafts to the queue on requeue and leaves others", async () => {
     const a = await store.create("p1", "main", {
-      text: "A",
-      target,
       status: "draft",
+      target,
+      text: "A",
     });
-    const b = await store.create("p1", "main", { text: "B", target });
+
+    const b = await store.create("p1", "main", { target, text: "B" });
     await store.requeue("p1", "main", [a.id, b.id]);
     expect((await store.list("p1", "main")).map((c) => c.status)).toEqual([
       "queued",
@@ -167,7 +173,7 @@ describe("comment store", () => {
   });
 
   it("writes nothing and emits nothing when a change is a no-op", async () => {
-    const a = await store.create("p1", "main", { text: "A", target });
+    const a = await store.create("p1", "main", { target, text: "A" });
     const count = events.length;
     await store.finishRun("p1", "main", {
       runId: "nope",

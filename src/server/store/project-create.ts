@@ -74,7 +74,7 @@ const createProjectCreation = (core: ProjectCore) => {
     );
 
     project.imported = input.created
-      ? { sourcePath: folder, created: true }
+      ? { created: true, sourcePath: folder }
       : { sourcePath: folder };
     project.settings = { ...project.settings, ...input.settings };
 
@@ -104,52 +104,6 @@ const createProjectCreation = (core: ProjectCore) => {
     });
 
   const api = {
-    async create(input: {
-      name: string;
-      kind: ProjectKind;
-      settings?: Partial<ProjectSettings>;
-    }): Promise<Project> {
-      if (input.kind !== "html" && input.kind !== "react") {
-        throw new BadRequestError("kind must be html or react");
-      }
-
-      const id = nanoid(10);
-      const now = Date.now();
-
-      const workTree = path.join(
-        projectDir(id),
-        "directions",
-        MAIN_DIRECTION_ID
-      );
-
-      const project = newProject(
-        id,
-        input.name.trim() || "Untitled",
-        input.kind,
-        newDirection(MAIN_DIRECTION_ID, "Main", workTree, now),
-        now
-      );
-
-      project.settings = { ...project.settings, ...input.settings };
-
-      try {
-        await mkdir(workTree, { recursive: true });
-        await mkdir(attachmentsDir(id), { recursive: true });
-
-        if (input.kind === "react") {
-          await cp(templateDir, workTree, { recursive: true });
-          await linkNodeModules(workTree, await ensureTemplateModules());
-        }
-
-        await writeProject(project);
-      } catch (error) {
-        await rm(projectDir(id), { recursive: true, force: true });
-        throw error;
-      }
-
-      return project;
-    },
-
     async attachApp(input: AttachAppRequest): Promise<Project> {
       if (typeof input.folder !== "string" || input.folder.trim() === "") {
         throw new BadRequestError(
@@ -220,48 +174,50 @@ const createProjectCreation = (core: ProjectCore) => {
       return project;
     },
 
-    async importFolder(
-      sourcePath: string,
-      options: ImportOptions = {}
-    ): Promise<Project> {
-      const folder = await resolveUserFolder(sourcePath);
-
-      if (options.appDir) {
-        return api.attachApp({ folder, appDir: options.appDir });
+    async create(input: {
+      name: string;
+      kind: ProjectKind;
+      settings?: Partial<ProjectSettings>;
+    }): Promise<Project> {
+      if (input.kind !== "html" && input.kind !== "react") {
+        throw new BadRequestError("kind must be html or react");
       }
 
-      if (
-        !options.skipApp &&
-        (await apps.detectApp(folder)).framework === "next"
-      ) {
-        return api.attachApp({ folder });
+      const id = nanoid(10);
+      const now = Date.now();
+
+      const workTree = path.join(
+        projectDir(id),
+        "directions",
+        MAIN_DIRECTION_ID
+      );
+
+      const project = newProject(
+        id,
+        input.name.trim() || "Untitled",
+        input.kind,
+        newDirection(MAIN_DIRECTION_ID, "Main", workTree, now),
+        now
+      );
+
+      project.settings = { ...project.settings, ...input.settings };
+
+      try {
+        await mkdir(workTree, { recursive: true });
+        await mkdir(attachmentsDir(id), { recursive: true });
+
+        if (input.kind === "react") {
+          await cp(templateDir, workTree, { recursive: true });
+          await linkNodeModules(workTree, await ensureTemplateModules());
+        }
+
+        await writeProject(project);
+      } catch (error) {
+        await rm(projectDir(id), { recursive: true, force: true });
+        throw error;
       }
 
-      const packageFile = path.join(folder, "package.json");
-      const hasPackage = existsSync(packageFile);
-
-      const isVite =
-        hasPackage &&
-        hasViteDependency(await readJson(packageFile).catch(() => null));
-
-      const appWithTokens =
-        hasPackage && !isVite && (await packs.findTokenFile(folder)) !== null;
-
-      if (
-        !isVite &&
-        !appWithTokens &&
-        !existsSync(path.join(folder, "index.html"))
-      ) {
-        throw new BadRequestError(
-          "folder needs a package.json with a vite dependency or an index.html"
-        );
-      }
-
-      return registerFolder(folder, {
-        name: path.basename(folder),
-        kind: isVite ? "react" : "html",
-        created: false,
-      });
+      return project;
     },
 
     async createInFolder(input: {
@@ -326,6 +282,50 @@ const createProjectCreation = (core: ProjectCore) => {
         }
 
         await rm(projectDir(projectId), { recursive: true, force: true });
+      });
+    },
+
+    async importFolder(
+      sourcePath: string,
+      options: ImportOptions = {}
+    ): Promise<Project> {
+      const folder = await resolveUserFolder(sourcePath);
+
+      if (options.appDir) {
+        return api.attachApp({ folder, appDir: options.appDir });
+      }
+
+      if (
+        !options.skipApp &&
+        (await apps.detectApp(folder)).framework === "next"
+      ) {
+        return api.attachApp({ folder });
+      }
+
+      const packageFile = path.join(folder, "package.json");
+      const hasPackage = existsSync(packageFile);
+
+      const isVite =
+        hasPackage &&
+        hasViteDependency(await readJson(packageFile).catch(() => null));
+
+      const appWithTokens =
+        hasPackage && !isVite && (await packs.findTokenFile(folder)) !== null;
+
+      if (
+        !isVite &&
+        !appWithTokens &&
+        !existsSync(path.join(folder, "index.html"))
+      ) {
+        throw new BadRequestError(
+          "folder needs a package.json with a vite dependency or an index.html"
+        );
+      }
+
+      return registerFolder(folder, {
+        name: path.basename(folder),
+        kind: isVite ? "react" : "html",
+        created: false,
       });
     },
 

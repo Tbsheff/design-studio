@@ -29,43 +29,6 @@ const createProjectFiles = (core: ProjectCore) => {
   const { attachmentsDir, lock, projectFile, readProject, writeProject } = core;
 
   return {
-    async saveAttachment(
-      projectId: string,
-      file: { name: string; mime: string; bytes: Uint8Array }
-    ): Promise<Attachment> {
-      const problem = attachmentProblem(file.name, file.mime);
-
-      if (problem) {
-        throw new BadRequestError(problem);
-      }
-
-      await readProject(projectId);
-      const id = nanoid(12);
-      const dir = attachmentsDir(projectId);
-      await mkdir(dir, { recursive: true });
-
-      const filePath = path.join(
-        dir,
-        `${id}.${extensionFor(file.name, file.mime)}`
-      );
-
-      await writeFile(filePath, file.bytes);
-
-      const attachment: Attachment = {
-        id,
-        name: path.basename(file.name || id),
-        mime: file.mime || "application/octet-stream",
-        path: filePath,
-      };
-
-      await writeFileAtomic(
-        path.join(dir, `${id}.json`),
-        JSON.stringify(attachment)
-      );
-
-      return attachment;
-    },
-
     async getAttachment(
       projectId: string,
       attachmentId: string
@@ -103,13 +66,43 @@ const createProjectFiles = (core: ProjectCore) => {
       }
     },
 
-    async writeDesignMd(projectId: string, content: string): Promise<void> {
-      const project = await readProject(projectId);
-      await writeFileAtomic(
-        path.join(mainDirection(project).workTree, DESIGN_MD_FILE),
-        content
+    async saveAttachment(
+      projectId: string,
+      file: { name: string; mime: string; bytes: Uint8Array }
+    ): Promise<Attachment> {
+      const problem = attachmentProblem(file.name, file.mime);
+
+      if (problem) {
+        throw new BadRequestError(problem);
+      }
+
+      await readProject(projectId);
+      const id = nanoid(12);
+      const dir = attachmentsDir(projectId);
+      await mkdir(dir, { recursive: true });
+
+      const filePath = path.join(
+        dir,
+        `${id}.${extensionFor(file.name, file.mime)}`
       );
+
+      await writeFile(filePath, file.bytes);
+
+      const attachment: Attachment = {
+        id,
+        name: path.basename(file.name || id),
+        mime: file.mime || "application/octet-stream",
+        path: filePath,
+      };
+
+      await writeFileAtomic(
+        path.join(dir, `${id}.json`),
+        JSON.stringify(attachment)
+      );
+
+      return attachment;
     },
+
     setThumbnail(
       projectId: string,
       thumbnail: ProjectThumbnail
@@ -123,6 +116,14 @@ const createProjectFiles = (core: ProjectCore) => {
         project.thumbnail = thumbnail;
         await writeProject(project);
       });
+    },
+
+    async writeDesignMd(projectId: string, content: string): Promise<void> {
+      const project = await readProject(projectId);
+      await writeFileAtomic(
+        path.join(mainDirection(project).workTree, DESIGN_MD_FILE),
+        content
+      );
     },
   };
 };

@@ -116,7 +116,7 @@ const createProjectStore = (
           }
         }
       } catch (error) {
-        await rm(workTree, { recursive: true, force: true });
+        await rm(workTree, { force: true, recursive: true });
         throw error;
       }
 
@@ -151,9 +151,9 @@ const createProjectStore = (
         const updated: Direction = {
           ...current,
           ...patch,
+          branch: current.branch,
           id: current.id,
           workTree: current.workTree,
-          branch: current.branch,
         };
 
         project.directions[index] = updated;

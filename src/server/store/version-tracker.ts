@@ -197,16 +197,16 @@ export function createChangeTracker(maxPaths: number): ChangeTracker {
     }
 
     try {
-      const watcher = watch(root, { recursive: true, persistent: false });
+      const watcher = watch(root, { persistent: false, recursive: true });
 
       const entry: Tracked = {
-        root,
-        watcher,
-        paths: new Set(),
-        synced: false,
-        overflow: false,
-        generation: 0,
         cookies: new Map(),
+        generation: 0,
+        overflow: false,
+        paths: new Set(),
+        root,
+        synced: false,
+        watcher,
       };
 
       watcher.on("change", (_event, filename) => onEvent(entry, filename));
@@ -240,18 +240,6 @@ export function createChangeTracker(maxPaths: number): ChangeTracker {
       return scans;
     },
 
-    endFullScan(key, generation) {
-      const entry = tracked.get(key);
-
-      if (!entry || generation === null || entry.generation !== generation) {
-        return false;
-      }
-
-      entry.synced = true;
-
-      return true;
-    },
-
     async changedSinceScan(key, root) {
       const entry = tracked.get(key);
 
@@ -274,6 +262,26 @@ export function createChangeTracker(maxPaths: number): ChangeTracker {
       return paths;
     },
 
+    close() {
+      for (const key of [...tracked.keys()]) {
+        forget(key);
+      }
+    },
+
+    endFullScan(key, generation) {
+      const entry = tracked.get(key);
+
+      if (!entry || generation === null || entry.generation !== generation) {
+        return false;
+      }
+
+      entry.synced = true;
+
+      return true;
+    },
+
+    forget,
+
     note(key, paths) {
       const entry = tracked.get(key);
 
@@ -283,14 +291,6 @@ export function createChangeTracker(maxPaths: number): ChangeTracker {
         for (const relative of paths) {
           add(entry, relative);
         }
-      }
-    },
-
-    forget,
-
-    close() {
-      for (const key of [...tracked.keys()]) {
-        forget(key);
       }
     },
   };

@@ -53,7 +53,7 @@ export function installHint(root: string, appDir: string): InstallHint {
     const manager = lockManager(dir);
 
     if (manager) {
-      return { manager, dir, command: `${manager} install` };
+      return { command: `${manager} install`, dir, manager };
     }
 
     if (dir === top) {
@@ -65,5 +65,5 @@ export function installHint(root: string, appDir: string): InstallHint {
 
   const manager = declaredManager(top) ?? "npm";
 
-  return { manager, dir: top, command: `${manager} install` };
+  return { command: `${manager} install`, dir: top, manager };
 }

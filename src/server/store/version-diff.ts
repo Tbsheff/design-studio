@@ -18,11 +18,11 @@ interface Entry {
 
 const STATUS: Record<string, VersionFileDiff["status"]> = {
   A: "added",
+  C: "added",
   D: "removed",
   M: "modified",
-  T: "modified",
   R: "renamed",
-  C: "added",
+  T: "modified",
 };
 
 export function parseNameStatus(text: string): Entry[] {
@@ -36,13 +36,13 @@ export function parseNameStatus(text: string): Entry[] {
     if (code === "R" || code === "C") {
       const oldPath = parts[i + 1] ?? "";
       entries.push({
-        status,
         path: parts[i + 2] ?? oldPath,
+        status,
         ...(code === "R" ? { oldPath } : {}),
       });
       i += 3;
     } else {
-      entries.push({ status, path: parts[i + 1] ?? "" });
+      entries.push({ path: parts[i + 1] ?? "", status });
       i += 2;
     }
   }
@@ -72,7 +72,7 @@ function countLines(patch: string): {
     }
   }
 
-  return { additions, deletions, binary };
+  return { additions, binary, deletions };
 }
 
 async function fileDiff(
@@ -135,9 +135,9 @@ export async function diffVersionFiles(
   }
 
   return {
+    files,
     from,
     to,
-    files,
     totalFiles: entries.length,
     truncated:
       entries.length > shown.length || files.some((file) => file.truncated),

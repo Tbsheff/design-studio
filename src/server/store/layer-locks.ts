@@ -1,10 +1,8 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-import {
-  cleanLockKeys,
-  type LayerLocksView,
-} from "../../shared/layer-locks.js";
+import { cleanLockKeys } from "../../shared/layer-locks.js";
+import type { LayerLocksView } from "../../shared/layer-locks.js";
 import { writeAtomic } from "../platform/atomic-write/index.js";
 import type { EventBus } from "../types.js";
 import { assertSafeId } from "./errors.js";
@@ -105,10 +103,10 @@ export function createLayerLockStore(deps: LayerLockDeps): LayerLockStore {
         createDir: true,
       });
       deps.bus.emit({
-        type: "layer-locks.changed",
-        projectId,
         directionId: did,
         keys,
+        projectId,
+        type: "layer-locks.changed",
       });
 
       return { directionId: did, keys };

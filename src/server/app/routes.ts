@@ -66,13 +66,13 @@ async function listAppRoutes(
       if (entry.isFile() && PAGE_FILE.test(entry.name)) {
         const route = `/${segments.join("/")}`;
         routes.push({
-          route,
+          dynamic: segments.some((segment) => segment.startsWith("[")),
           file: path
             .relative(workTree, path.join(dir, entry.name))
             .split(path.sep)
             .join("/"),
-          dynamic: segments.some((segment) => segment.startsWith("[")),
           group,
+          route,
         });
       }
     }

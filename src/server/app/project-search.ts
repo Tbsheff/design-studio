@@ -3,13 +3,12 @@ import path from "node:path";
 
 import type { AppServerStatus, Project } from "../../shared/contracts.js";
 import { fuzzyScore } from "../../shared/fuzzy.js";
-import {
-  projectTypeOf,
-  TYPE_LABELS,
-  type ProjectHealth,
-  type ProjectHit,
-  type ProjectSearchResult,
-  type RouteHit,
+import { projectTypeOf, TYPE_LABELS } from "../../shared/project-search.js";
+import type {
+  ProjectHealth,
+  ProjectHit,
+  ProjectSearchResult,
+  RouteHit,
 } from "../../shared/project-search.js";
 import { latestRunStatus } from "../run-log/index.js";
 import { listAppRoutes } from "./routes.js";
@@ -133,7 +132,7 @@ function lastRunFailed(
     () => false
   );
 
-  runCache.set(project.id, { key: project.updatedAt, at: Date.now(), failed });
+  runCache.set(project.id, { at: Date.now(), failed, key: project.updatedAt });
 
   return failed;
 }
@@ -160,19 +159,19 @@ async function hitOf(
   const type = projectTypeOf(project);
 
   return {
-    id: project.id,
-    name: project.name,
-    type,
-    typeLabel: TYPE_LABELS[type],
-    place: placeOf(project),
-    updatedAt: project.updatedAt,
-    openedAt: project.openedAt ?? null,
     health: projectHealth(
       project,
       project.app ? (deps.appStatus?.(project) ?? null) : null,
       await lastRunFailed(project, deps)
     ),
+    id: project.id,
+    name: project.name,
+    openedAt: project.openedAt ?? null,
+    place: placeOf(project),
     thumbnail: project.thumbnail?.versionId ?? null,
+    type,
+    typeLabel: TYPE_LABELS[type],
+    updatedAt: project.updatedAt,
   };
 }
 
@@ -189,11 +188,11 @@ function appRoutes(project: Project): Promise<RouteHit[]> {
     main && project.app
       ? listAppRoutes(main.workTree, project.app.appDir).then((list) =>
           list.map((r) => ({
+            dynamic: r.dynamic,
+            file: r.file,
             projectId: project.id,
             projectName: project.name,
             route: r.route,
-            file: r.file,
-            dynamic: r.dynamic,
           }))
         )
       : Promise.resolve([]);
@@ -291,10 +290,10 @@ export async function searchProjects(
   ).flat();
 
   return {
-    query,
     projects: await Promise.all(
       matched.slice(0, limit).map((p) => hitOf(p, deps))
     ),
+    query,
     routes,
   };
 }

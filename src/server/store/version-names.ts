@@ -85,6 +85,19 @@ export function createVersionNames(
 
   return {
     all: read,
+    async apply(projectId, versions) {
+      const names = await read(projectId);
+
+      if (Object.keys(names).length === 0) {
+        return versions;
+      }
+
+      return versions.map((version) => {
+        const name = names[version.id];
+
+        return name ? { ...version, name } : version;
+      });
+    },
     set(projectId, versionId, name) {
       assertSafeId(versionId, "versionId");
 
@@ -105,19 +118,6 @@ export function createVersionNames(
         cache.set(projectId, next);
 
         return name;
-      });
-    },
-    async apply(projectId, versions) {
-      const names = await read(projectId);
-
-      if (Object.keys(names).length === 0) {
-        return versions;
-      }
-
-      return versions.map((version) => {
-        const name = names[version.id];
-
-        return name ? { ...version, name } : version;
       });
     },
   };

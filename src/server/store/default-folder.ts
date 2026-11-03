@@ -26,14 +26,14 @@ const MAX_PATH_LENGTH = 4096;
 
 const preferencesSchema = z
   .object({
-    version: z.literal(1),
+    onboardingDismissed: z.boolean().optional(),
     projectsDir: z
       .string()
       .min(1)
       .max(MAX_PATH_LENGTH)
       .refine((value) => path.isAbsolute(value), "must be absolute")
       .optional(),
-    onboardingDismissed: z.boolean().optional(),
+    version: z.literal(1),
   })
   .strict();
 
@@ -152,6 +152,12 @@ export function createDefaultFolderStore(
       return presentPath(await configured());
     },
 
+    dismissOnboarding(): Promise<void> {
+      return lock("file", async () =>
+        write({ ...(await read()), version: 1, onboardingDismissed: true })
+      );
+    },
+
     async ensure(): Promise<string> {
       const target = await configured();
 
@@ -168,12 +174,6 @@ export function createDefaultFolderStore(
 
     async onboardingDismissed(): Promise<boolean> {
       return (await read()).onboardingDismissed === true;
-    },
-
-    dismissOnboarding(): Promise<void> {
-      return lock("file", async () =>
-        write({ ...(await read()), version: 1, onboardingDismissed: true })
-      );
     },
 
     async set(raw: string): Promise<string> {

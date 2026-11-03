@@ -69,7 +69,7 @@ export function cachedFileList(
     (known && fresh ? await reusable(known, watchRoot, accept) : null) ??
     load())();
 
-  lists.set(key, { stamp, at: known && fresh ? known.at : Date.now(), files });
+  lists.set(key, { at: known && fresh ? known.at : Date.now(), files, stamp });
   files.catch(() => lists.get(key)?.files === files && lists.delete(key));
 
   return files;
@@ -99,7 +99,7 @@ export async function cachedUseCount(
       counts.clear();
     }
 
-    entry = { stamp, at: Date.now(), counts: new Map() };
+    entry = { at: Date.now(), counts: new Map(), stamp };
     counts.set(watchRoot, entry);
   } else if (changed.length > 0) {
     for (const byFile of entry.counts.values()) {

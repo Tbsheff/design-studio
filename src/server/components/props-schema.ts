@@ -26,6 +26,7 @@ import {
 import type { ProgramScope, TypedProps } from "./props-program.js";
 
 export { compilerOptionsFor } from "./props-program.js";
+
 export { loadTypeScript } from "../platform/ts-compiler/index.js";
 
 type Ts = typeof TS;
@@ -72,7 +73,7 @@ export function parseModuleFile(code: string, file: string): t.File | null {
   }
 
   try {
-    return parse(code, { sourceType: "module", plugins, errorRecovery: true });
+    return parse(code, { errorRecovery: true, plugins, sourceType: "module" });
   } catch {
     return null;
   }
@@ -208,7 +209,7 @@ function declaredOf(
       : statement;
 
   if (target.type === "FunctionDeclaration" && target.id) {
-    return [{ name: target.id.name, node: target, init: target }];
+    return [{ init: target, name: target.id.name, node: target }];
   }
 
   if (target.type !== "VariableDeclaration") {
@@ -217,7 +218,7 @@ function declaredOf(
 
   return target.declarations.flatMap((decl) =>
     decl.id.type === "Identifier" && decl.init
-      ? [{ name: decl.id.name, node: decl, init: decl.init }]
+      ? [{ init: decl.init, name: decl.id.name, node: decl }]
       : []
   );
 }
@@ -238,11 +239,11 @@ export function declaredComponents(ast: t.File): Declared[] {
       }
 
       out.push({
-        name,
-        line: node.loc?.start.line ?? 1,
-        start: node.start ?? 0,
-        end: node.end ?? 0,
         defaults: paramDefaults(fn),
+        end: node.end ?? 0,
+        line: node.loc?.start.line ?? 1,
+        name,
+        start: node.start ?? 0,
       });
     }
   }
@@ -256,7 +257,7 @@ export function defaultExportName(ast: t.File): string | null {
       continue;
     }
 
-    const declaration = statement.declaration;
+    const { declaration } = statement;
 
     if (
       (declaration.type === "FunctionDeclaration" ||
@@ -327,8 +328,8 @@ export function reExportSource(
 
       if (name === exported) {
         return {
-          source: statement.source.value,
           imported: specifier.local.name,
+          source: statement.source.value,
         };
       }
     }
@@ -394,13 +395,13 @@ function objectProperty(
 function classText(node: t.Node): { text: string; editable: boolean } | null {
   if (node.type === "StringLiteral") {
     return {
-      text: node.value,
       editable: !(node.extra?.raw as string | undefined)?.includes("\\"),
+      text: node.value,
     };
   }
 
   if (node.type === "TemplateLiteral" && node.expressions.length === 0) {
-    return { text: node.quasis[0]?.value.cooked ?? "", editable: false };
+    return { editable: false, text: node.quasis[0]?.value.cooked ?? "" };
   }
 
   if (node.type === "ArrayExpression") {
@@ -409,7 +410,7 @@ function classText(node: t.Node): { text: string; editable: boolean } | null {
     );
 
     return parts.every((part) => part !== null)
-      ? { text: parts.join(" "), editable: false }
+      ? { editable: false, text: parts.join(" ") }
       : null;
   }
 
@@ -452,10 +453,10 @@ function variantGroups(config: t.ObjectExpression): VariantGroup[] {
       return value !== null && classes
         ? [
             {
-              value,
               classes: classes.text,
-              line: option.loc?.start.line ?? 1,
               editable: classes.editable,
+              line: option.loc?.start.line ?? 1,
+              value,
             },
           ]
         : [];
@@ -467,9 +468,9 @@ function variantGroups(config: t.ObjectExpression): VariantGroup[] {
         : undefined;
 
     groups.push({
-      prop,
-      options: options.slice(0, MAX_OPTIONS),
       default: fallback === undefined ? null : String(fallback),
+      options: options.slice(0, MAX_OPTIONS),
+      prop,
     });
   }
 
@@ -507,9 +508,9 @@ export function cvaCalls(ast: t.File): CvaCall[] {
 
     out.push({
       info: {
-        name: node.id.name,
-        line: node.loc?.start.line ?? 1,
         base: baseText,
+        line: node.loc?.start.line ?? 1,
+        name: node.id.name,
         variants,
       },
       node: node.init,
@@ -560,10 +561,10 @@ function variantSpecs(
 
     if (isBoolean) {
       return {
-        name: group.prop,
         control: "boolean",
-        optional: true,
         from: "variant",
+        name: group.prop,
+        optional: true,
         ...(fallback === undefined
           ? {}
           : { default: fallback === true || fallback === "true" }),
@@ -571,11 +572,11 @@ function variantSpecs(
     }
 
     return {
-      name: group.prop,
       control: "select",
-      options: values,
-      optional: true,
       from: "variant",
+      name: group.prop,
+      optional: true,
+      options: values,
       ...(fallback === undefined ? {} : { default: String(fallback) }),
     };
   });
@@ -792,9 +793,9 @@ interface TypedRead {
 
 function failed(error: unknown): TypedRead {
   return {
-    typed: null,
-    note: failureNote(error),
     keep: !(error instanceof ProgramBudgetError && error.timedOut),
+    note: failureNote(error),
+    typed: null,
   };
 }
 
@@ -806,9 +807,9 @@ function readTyped(
 ): TypedRead {
   if (!program) {
     return {
-      typed: null,
-      note: "TypeScript is not available, so only cva variants are shown.",
       keep: true,
+      note: "TypeScript is not available, so only cva variants are shown.",
+      typed: null,
     };
   }
 
@@ -822,11 +823,11 @@ function readTyped(
     const typed = typedProps(scope, ref.file, ref.name, defaults);
 
     return typed
-      ? { typed, note: typedNote(typed), keep: !typed.timedOut }
+      ? { keep: !typed.timedOut, note: typedNote(typed), typed }
       : {
-          typed: null,
-          note: "The props type could not be read; only cva variants are shown.",
           keep: true,
+          note: "The props type could not be read; only cva variants are shown.",
+          typed: null,
         };
   } catch (error) {
     return failed(error);
@@ -844,7 +845,7 @@ function buildSchema(
   );
 
   if (!declared) {
-    return { schema: null, keep: true };
+    return { keep: true, schema: null };
   }
 
   const cva = linkedCva(parsed.code, declared, cvaCalls(parsed.ast));
@@ -865,16 +866,16 @@ function buildSchema(
   ];
 
   const schema: ComponentSchema = {
-    name: ref.name,
+    asChild: props.some((spec) => spec.name === "asChild"),
+    cva,
     file: path.relative(root, ref.file).split(path.sep).join("/"),
     line: declared.line,
-    props,
-    cva,
-    asChild: props.some((spec) => spec.name === "asChild"),
+    name: ref.name,
     note,
+    props,
   };
 
-  return { schema, keep };
+  return { keep, schema };
 }
 
 export async function componentSchemas(
@@ -901,14 +902,14 @@ export async function componentSchemas(
 
       const built = parsed
         ? buildSchema(parsed, ref, root, program)
-        : { schema: null, keep: true };
+        : { keep: true, schema: null };
 
       fresh.set(key, built.schema);
 
       if (built.keep) {
         remember(key, {
-          stamp: key.slice(key.lastIndexOf("|") + 1),
           schema: built.schema,
+          stamp: key.slice(key.lastIndexOf("|") + 1),
         });
       }
     }

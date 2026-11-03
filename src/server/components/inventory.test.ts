@@ -23,7 +23,7 @@ function tree(files: Record<string, string>): string {
 
 afterEach(() => {
   for (const dir of dirs.splice(0)) {
-    rmSync(dir, { recursive: true, force: true });
+    rmSync(dir, { force: true, recursive: true });
   }
 });
 
@@ -56,10 +56,10 @@ const helper = () => 1;
 describe(listComponents, () => {
   it("finds React components, counts uses and points at the root host element by source loc", async () => {
     const root = tree({
+      "node_modules/x/Bad.tsx": BUTTON,
+      "src/App.tsx": APP,
       "src/components/Button.tsx": BUTTON,
       "src/components/Card.tsx": CARD,
-      "src/App.tsx": APP,
-      "node_modules/x/Bad.tsx": BUTTON,
     });
 
     const found = await listComponents(root, "react");

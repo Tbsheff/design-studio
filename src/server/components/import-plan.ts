@@ -67,10 +67,10 @@ function hostFor(
 
   return {
     ...ts.sys,
-    fileExists: (file) => ts.sys.fileExists(file) || plannedReal(file) === want,
     directoryExists: (dir) =>
       ts.sys.directoryExists(dir) ||
       want.startsWith(path.resolve(dir) + path.sep),
+    fileExists: (file) => ts.sys.fileExists(file) || plannedReal(file) === want,
   };
 }
 
@@ -434,7 +434,7 @@ function existingBinding(
         importedName(specifier) === wanted(need) &&
         resolves(decl.source.value)
       ) {
-        return { splice: null, specifier: decl.source.value, added: false };
+        return { added: false, specifier: decl.source.value, splice: null };
       }
 
       throw refuse(
@@ -503,13 +503,13 @@ function extendSplice(
   const last = named.at(-1);
 
   if (last?.end != null) {
-    return { start: last.end, end: last.end, text: `, ${need.name}` };
+    return { end: last.end, start: last.end, text: `, ${need.name}` };
   }
 
   if (fallback?.end != null) {
     return {
-      start: fallback.end,
       end: fallback.end,
+      start: fallback.end,
       text: `, { ${need.name} }`,
     };
   }
@@ -549,16 +549,16 @@ function importLines(
     .join("\n");
 
   if (last?.end != null) {
-    return { start: last.end, end: last.end, text: `\n${text}` };
+    return { end: last.end, start: last.end, text: `\n${text}` };
   }
 
   const after = directiveEnd(ast);
 
   if (after >= 0) {
-    return { start: after, end: after, text: `\n\n${text}` };
+    return { end: after, start: after, text: `\n\n${text}` };
   }
 
-  return { start: 0, end: 0, text: `${text}\n\n` };
+  return { end: 0, start: 0, text: `${text}\n\n` };
 }
 
 function newLine(
@@ -602,16 +602,16 @@ export function planImport(
     const splice = extendSplice(decl, need);
 
     if (splice) {
-      return { splice, specifier: decl.source.value, added: true };
+      return { added: true, specifier: decl.source.value, splice };
     }
   }
 
   const specifier = pickSpecifier(ts, need, resolves);
 
   return {
-    splice: newLine(code, ast, need, specifier),
-    specifier,
     added: true,
+    specifier,
+    splice: newLine(code, ast, need, specifier),
   };
 }
 
@@ -648,9 +648,9 @@ function groupNeed(
 
   if (existing) {
     groups.items.push({
+      added: false,
       name: need.name,
       specifier: existing.specifier,
-      added: false,
     });
 
     return;
@@ -669,16 +669,16 @@ function groupNeed(
   if (decl) {
     addTo(groups.extend, decl, need.name);
     groups.items.push({
+      added: true,
       name: need.name,
       specifier: decl.source.value,
-      added: true,
     });
 
     return;
   }
 
   const specifier = pickSpecifier(ts, need, resolves);
-  const entry = groups.fresh.get(specifier) ?? { named: [], fallback: null };
+  const entry = groups.fresh.get(specifier) ?? { fallback: null, named: [] };
 
   if (
     need.kind === "default" &&
@@ -697,7 +697,7 @@ function groupNeed(
   }
 
   groups.fresh.set(specifier, entry);
-  groups.items.push({ name: need.name, specifier, added: true });
+  groups.items.push({ added: true, name: need.name, specifier });
 }
 
 function extendText(
@@ -711,7 +711,7 @@ function extendText(
     .at(-1);
 
   if (last?.end != null) {
-    return { start: last.end, end: last.end, text: `, ${names.join(", ")}` };
+    return { end: last.end, start: last.end, text: `, ${names.join(", ")}` };
   }
 
   const fallback = decl.specifiers.find(
@@ -720,7 +720,7 @@ function extendText(
 
   const at = fallback?.end ?? 0;
 
-  return { start: at, end: at, text: `, { ${names.join(", ")} }` };
+  return { end: at, start: at, text: `, { ${names.join(", ")} }` };
 }
 
 function bindingOf(entry: {
@@ -763,5 +763,5 @@ export function planImports(
     splices.push(importLines(code, ast, lines));
   }
 
-  return { splices, items: groups.items };
+  return { items: groups.items, splices };
 }

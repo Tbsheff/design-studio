@@ -28,12 +28,14 @@ import {
   startFrameOf,
   staticLinkIssue,
   upsertLink,
-  type LinkIssue,
-  type LinkMotion,
-  type LinkQuery,
-  type LinksFile,
-  type LinkTransition,
-  type PrototypeLink,
+} from "../../../shared/links.js";
+import type {
+  LinkIssue,
+  LinkMotion,
+  LinkQuery,
+  LinksFile,
+  LinkTransition,
+  PrototypeLink,
 } from "../../../shared/links.js";
 import { frameStatesView } from "../../app/frame-state.js";
 import { waitForPage } from "../../export/capture.js";
@@ -41,26 +43,40 @@ import { withPagePath } from "../../export/source.js";
 import type { RenderPage } from "../../preview/render-backend.js";
 import type { PreviewService } from "../../types.js";
 import type { FrameStateDeps } from "../app-flow/frame-state-service.js";
-import {
-  findFrame,
-  frameRef,
-  type CanvasToolContext,
-  type ToolText,
-} from "../tools.js";
+import { findFrame, frameRef } from "../tools.js";
+import type { CanvasToolContext, ToolText } from "../tools.js";
 import { clickProbeScript } from "./click-probe.js";
-import {
-  implicitLinks,
-  keepImplicit,
-  type AnchorReader,
-  type ClickReader,
-  type ImplicitDeps,
-  type PageAnchor,
+import { implicitLinks, keepImplicit } from "./implicit-links.js";
+import type {
+  AnchorReader,
+  ClickReader,
+  ImplicitDeps,
+  PageAnchor,
 } from "./implicit-links.js";
 
 export const BACK_REF = "back";
 
 export const linkSpecSchema = z
   .object({
+    action: z
+      .enum(LINK_ACTIONS)
+      .optional()
+      .describe(
+        'navigate (default) replaces the frame; modal opens toFrame centred over the current frame; drawer opens it from the right edge. A backdrop click or Esc closes an overlay, and a "back" link inside it closes it too. Make modal and drawer frames the size of the dialog or panel, not a full page.'
+      ),
+    duration: z
+      .number()
+      .int()
+      .min(LINK_DURATION_MIN)
+      .max(LINK_DURATION_MAX)
+      .optional()
+      .describe(`Transition length in ms. Default ${LINK_DURATION_DEFAULT}.`),
+    easing: z
+      .enum(LINK_EASINGS)
+      .optional()
+      .describe(
+        "ease-out (default), ease-in, ease-in-out, linear or spring (small overshoot)."
+      ),
     fromFrame: frameRef.describe(
       "Frame id or @label of the frame that has the element."
     ),
@@ -80,25 +96,6 @@ export const linkSpecSchema = z
       .optional()
       .describe(
         "instant (default), dissolve, slide-left, slide-right (both frames move sideways), push-up, push-down, move-in (the new frame moves up over the old one), move-out (the old frame moves down off the new one), or smart-animate (layers with the same id, or the same tag and text, move from their old place to the new one; the rest fade in). Use smart-animate between two states of one screen."
-      ),
-    action: z
-      .enum(LINK_ACTIONS)
-      .optional()
-      .describe(
-        'navigate (default) replaces the frame; modal opens toFrame centred over the current frame; drawer opens it from the right edge. A backdrop click or Esc closes an overlay, and a "back" link inside it closes it too. Make modal and drawer frames the size of the dialog or panel, not a full page.'
-      ),
-    duration: z
-      .number()
-      .int()
-      .min(LINK_DURATION_MIN)
-      .max(LINK_DURATION_MAX)
-      .optional()
-      .describe(`Transition length in ms. Default ${LINK_DURATION_DEFAULT}.`),
-    easing: z
-      .enum(LINK_EASINGS)
-      .optional()
-      .describe(
-        "ease-out (default), ease-in, ease-in-out, linear or spring (small overshoot)."
       ),
   })
   .strict();
@@ -168,25 +165,26 @@ export function text(value: unknown): ToolText {
   return {
     content: [
       {
-        type: "text",
         text:
           typeof value === "string" ? value : JSON.stringify(value, null, 2),
+        type: "text",
       },
     ],
   };
 }
 
 export function failure(message: string): ToolText {
-  return { content: [{ type: "text", text: message }], isError: true };
+  return { content: [{ text: message, type: "text" }], isError: true };
 }
 
 export async function framesOf(
   ctx: CanvasToolContext
 ): Promise<CanvasFileFrame[]> {
   const frames = (await ctx.canvas.read(ctx.project)).canvas?.frames ?? [];
+
   return frames.length > 0
     ? frames
-    : [{ id: "f1", width: 1440, height: 900, x: 0, y: 0, order: 0 }];
+    : [{ height: 900, id: "f1", order: 0, width: 1440, x: 0, y: 0 }];
 }
 
 export function frameOf(
@@ -194,15 +192,18 @@ export function frameOf(
   ref: string
 ): CanvasFileFrame {
   const frame = findFrame(frames, ref);
-  if (!frame)
+
+  if (!frame) {
     throw new LinkError(
       `No frame ${ref}. Call canvas_list for the ids and labels.`
     );
+  }
   return frame;
 }
 
 function frameTitle(frames: readonly CanvasFileFrame[], id: string): string {
   const frame = frames.find((item) => item.id === id);
+
   return frame?.label ?? frame?.path ?? (id === "f1" ? "the first frame" : id);
 }
 
@@ -211,10 +212,16 @@ function targetTitle(
   frames: readonly CanvasFileFrame[]
 ): string {
   const { to } = link;
-  if ("frame" in to) return frameTitle(frames, to.frame);
-  if ("selector" in to)
+
+  if ("frame" in to) {
+    return frameTitle(frames, to.frame);
+  }
+  if ("selector" in to) {
     return `${ACTION_LABELS[linkAction(link)]} ${to.selector}`;
-  if ("url" in to) return to.url;
+  }
+  if ("url" in to) {
+    return to.url;
+  }
   return isBackTarget(to) ? "Back" : ACTION_LABELS["close-overlay"];
 }
 
@@ -224,6 +231,7 @@ export function linkTitle(
 ): string {
   const target = targetTitle(link, frames);
   const what = sourceName(link.from);
+
   return `${what} in ${frameTitle(frames, link.from.frame)} → ${target}`;
 }
 
@@ -234,10 +242,14 @@ async function withStateHost(
   frameStates: FrameStateDeps | null
 ): Promise<string> {
   const states = project.app ? frameStates : null;
-  if (!states) return url;
+
+  if (!states) {
+    return url;
+  }
   const view = await frameStatesView(states.projectDir(project.id)).catch(
     () => null
   );
+
   return withFrameStateHost(url, view?.frames[frameId] ?? null);
 }
 
@@ -248,7 +260,10 @@ export function probeWithPreview(
   frameStates: FrameStateDeps | null
 ): LinkProbe | undefined {
   const withPage = preview.withPage?.bind(preview);
-  if (!withPage) return undefined;
+
+  if (!withPage) {
+    return undefined;
+  }
   const open = async <T>(
     frame: CanvasFileFrame,
     task: (page: RenderPage) => Promise<T>
@@ -256,6 +271,7 @@ export function probeWithPreview(
     const direction =
       project.directions.find((item) => item.id === frame.directionId) ??
       fallback;
+
     const url = await withStateHost(
       project,
       frame.id,
@@ -265,28 +281,36 @@ export function probeWithPreview(
       ),
       frameStates
     );
+
     return withPage(
       url,
-      { width: frame.width, height: frame.height },
+      { height: frame.height, width: frame.width },
       async (page) => {
         await waitForPage(page);
+
         return task(page);
       }
     );
   };
+
   const run = <T>(frame: CanvasFileFrame, script: string): Promise<T> =>
     open(frame, (page) => page.evaluate<T>(script));
+
   const probe: LinkProbe = (frame, queries) =>
     run<(ProbedElement | null)[]>(frame, resolveScript(queries));
+
   probe.anchors = (frame) =>
     open(frame, async (page) => {
       const anchors = await page.evaluate<PageAnchor[]>(ANCHOR_SCRIPT);
+
       const clicked = await page
         .evaluate<PageAnchor[]>(
           clickProbeScript(anchors.map((anchor) => anchor.selector))
         )
         .catch(() => []);
+
       const seen = new Set(anchors.map((anchor) => anchor.selector));
+
       return [
         ...anchors,
         ...clicked.filter((anchor) => !seen.has(anchor.selector)),
@@ -294,6 +318,7 @@ export function probeWithPreview(
     });
   probe.clicks = (frame, skip) =>
     run<PageAnchor[]>(frame, clickProbeScript(skip));
+
   return probe;
 }
 
@@ -349,12 +374,13 @@ export function linkListText(
   note: string
 ): ToolText {
   const start = startFrameOf(file, frames);
+
   return text({
-    startFrame: start,
     links: links.map((link) =>
       describeLink(link, frames, staticLinkIssue(link, frames), start)
     ),
     note,
+    startFrame: start,
   });
 }
 
@@ -393,22 +419,31 @@ async function probeIssues(
 ): Promise<boolean> {
   let checked = false;
   const byFrame = new Map<string, PrototypeLink[]>();
-  for (const link of links)
+
+  for (const link of links) {
     if (issues.get(link.id) === null)
       byFrame.set(link.from.frame, [
         ...(byFrame.get(link.from.frame) ?? []),
         link,
       ]);
+  }
   for (const [frameId, list] of byFrame) {
     const frame = frames.find((item) => item.id === frameId);
-    if (!frame) continue;
+
+    if (!frame) {
+      continue;
+    }
     const found = await probe(frame, list.map(queryOf)).catch(() => null);
-    if (!found) continue;
+
+    if (!found) {
+      continue;
+    }
     checked = true;
     list.forEach((link, index) =>
       issues.set(link.id, found[index] ? null : "element-missing")
     );
   }
+
   return checked;
 }
 
@@ -427,11 +462,14 @@ export async function listLinkView(
   const file = await ctx.canvas.links.read(ctx.project);
   const implicit = withImplicit ? await implicitOf(ctx, probe, file) : [];
   const all = [...file.links, ...implicit];
+
   const issues = new Map<string, LinkIssue | null>(
     all.map((link) => [link.id, staticLinkIssue(link, frames)])
   );
+
   const checked = probe ? await probeIssues(probe, all, frames, issues) : false;
   const start = startFrameOf(file, frames);
+
   const notes = [
     all.length === 0
       ? "No prototype links yet. add_link makes one; Play in the studio then starts at startFrame."
@@ -440,12 +478,13 @@ export async function listLinkView(
         : null,
     implicit.length > 0 ? IMPLICIT_NOTE : null,
   ].filter(Boolean);
+
   return {
-    startFrame: start,
     links: all.map((link) =>
       describeLink(link, frames, issues.get(link.id) ?? null, start)
     ),
     note: notes.length > 0 ? notes.join(" ") : undefined,
+    startFrame: start,
   };
 }
 
@@ -462,24 +501,30 @@ export async function keepLinks(
   probe?: LinkProbe,
   motion: LinkMotion = {}
 ): Promise<ToolText> {
-  if (ctx.plan)
+  if (ctx.plan) {
     return failure("Plan mode is on, so the links stay as they are.");
-  if (ctx.mode === "critique")
+  }
+  if (ctx.mode === "critique") {
     return failure("Links are not available in critique runs.");
+  }
   const frames = await framesOf(ctx);
+
   const done = await keepImplicit(
     implicitDeps(ctx.canvas, ctx.project, probe),
     ids,
     "agent",
     motion
   );
-  if (done.kept.length === 0)
+
+  if (done.kept.length === 0) {
     return failure(
       done.missing.length > 0
         ? `No implicit link ${done.missing.join(", ")}. Call list_links for the ids (implicit: true).`
         : "No implicit links to keep."
     );
+  }
   const start = startFrameOf(done.file, frames);
+
   return text({
     kept: done.kept.map((link) => describeLink(link, frames, null, start)),
     ...(done.missing.length > 0 ? { notFound: done.missing } : {}),
@@ -509,17 +554,24 @@ export async function saveLink(
   const from = frameOf(frames, spec.fromFrame);
   const back = spec.toFrame.trim().toLowerCase() === BACK_REF;
   const to = back ? null : frameOf(frames, spec.toFrame);
-  if (to && to.id === from.id)
+
+  if (to && to.id === from.id) {
     throw new LinkError(
       'A link goes to another frame. Pick a different toFrame, or "back".'
     );
-  if (back && spec.action && spec.action !== "navigate")
+  }
+  if (back && spec.action && spec.action !== "navigate") {
     throw new LinkError(
       'A "back" link cannot open an overlay. Use action navigate, or a toFrame.'
     );
+  }
   const selector = cleanLinkSelector(spec.selector);
-  if (!selector) throw new LinkError("selector is empty or too long.");
+
+  if (!selector) {
+    throw new LinkError("selector is empty or too long.");
+  }
   let hint: SaveHint = given ?? {};
+
   if (probe && !given) {
     const [found] = await probe(from, [{ id: "new", selector }]).catch(
       (error: unknown) => {
@@ -528,15 +580,19 @@ export async function saveLink(
         );
       }
     );
-    if (!found)
+
+    if (!found) {
       throw new LinkError(
         `No element matches ${selector} on ${from.path || "the entry page"} of ${from.id}. Check the selector with get_frame_html.`
       );
+    }
     const label = cleanLinkText(found.text);
     hint = { tag: found.tag, ...(label ? { text: label } : {}) };
   }
+
   const transition: LinkTransition = spec.transition ?? "instant";
   let saved: PrototypeLink | null = null;
+
   const file = await ctx.canvas.links.update(
     ctx.project,
     (current) => {
@@ -545,6 +601,7 @@ export async function saveLink(
         to: to ? { frame: to.id } : { back: true },
         transition,
       };
+
       const next = upsertLink(
         current,
         withMotion(base, {
@@ -553,13 +610,19 @@ export async function saveLink(
           ...(spec.easing ? { easing: spec.easing } : {}),
         })
       );
+
       saved = next.link;
+
       return next.file;
     },
     source
   );
+
   const link = saved as PrototypeLink | null;
-  if (!link) throw new LinkError("The link was not saved.");
+
+  if (!link) {
+    throw new LinkError("The link was not saved.");
+  }
   return { file, frames, link };
 }
 
@@ -568,27 +631,32 @@ export async function addLink(
   spec: LinkSpec,
   probe?: LinkProbe
 ): Promise<{ result: ToolText; link?: PrototypeLink; title?: string }> {
-  if (ctx.plan)
+  if (ctx.plan) {
     return {
       result: failure(
         "Plan mode is on, so the links stay as they are. Describe the links in the plan."
       ),
     };
-  if (ctx.mode === "critique")
+  }
+  if (ctx.mode === "critique") {
     return { result: failure("Links are not available in critique runs.") };
+  }
   try {
     const { file, frames, link } = await saveLink(ctx, spec, probe, "agent");
     const title = linkTitle(link, frames);
+
     return {
+      link,
       result: text({
         link: describeLink(link, frames, null, startFrameOf(file, frames)),
         links: file.links.length,
       }),
-      link,
       title,
     };
   } catch (error) {
-    if (error instanceof LinkError) return { result: failure(error.message) };
+    if (error instanceof LinkError) {
+      return { result: failure(error.message) };
+    }
     throw error;
   }
 }
@@ -597,18 +665,21 @@ export async function removeLink(
   ctx: CanvasToolContext,
   id: string
 ): Promise<{ result: ToolText; title?: string }> {
-  if (ctx.plan)
+  if (ctx.plan) {
     return {
       result: failure("Plan mode is on, so the links stay as they are."),
     };
-  if (ctx.mode === "critique")
+  }
+  if (ctx.mode === "critique") {
     return { result: failure("Links are not available in critique runs.") };
+  }
   const frames = await framesOf(ctx);
   let removed: PrototypeLink | null = null;
   await ctx.canvas.links.update(
     ctx.project,
     (file) => {
       removed = file.links.find((link) => link.id === id) ?? null;
+
       return removed
         ? { ...file, links: file.links.filter((link) => link.id !== id) }
         : null;
@@ -616,9 +687,12 @@ export async function removeLink(
     "agent"
   );
   const link = removed as PrototypeLink | null;
-  if (!link)
+
+  if (!link) {
     return { result: failure(`No link ${id}. Call list_links for the ids.`) };
+  }
   const title = linkTitle(link, frames);
+
   return { result: text({ removed: id, title }), title };
 }
 
@@ -626,12 +700,14 @@ export async function setStartFrame(
   ctx: CanvasToolContext,
   ref: string
 ): Promise<{ result: ToolText; frame?: CanvasFileFrame }> {
-  if (ctx.plan)
+  if (ctx.plan) {
     return {
       result: failure("Plan mode is on, so the links stay as they are."),
     };
-  if (ctx.mode === "critique")
+  }
+  if (ctx.mode === "critique") {
     return { result: failure("Links are not available in critique runs.") };
+  }
   try {
     const frames = await framesOf(ctx);
     const frame = frameOf(frames, ref);
@@ -640,16 +716,19 @@ export async function setStartFrame(
       (file): LinksFile => ({ ...file, start: frame.id }),
       "agent"
     );
+
     return {
+      frame,
       result: text({
         startFrame: frame.id,
         label: frame.label ?? null,
         note: "Play in the studio starts at this frame.",
       }),
-      frame,
     };
   } catch (error) {
-    if (error instanceof LinkError) return { result: failure(error.message) };
+    if (error instanceof LinkError) {
+      return { result: failure(error.message) };
+    }
     throw error;
   }
 }
@@ -664,6 +743,13 @@ export const editLinksShape = {
     .max(20)
     .optional()
     .describe("Links to add (or replace, for the same element)."),
+  keep: z
+    .array(z.string().regex(/^(i[0-9a-z]{1,12}|all)$/))
+    .max(50)
+    .optional()
+    .describe(
+      'Ids of implicit links (implicit: true in list_links, from <a href> between pages) to save as normal links, or ["all"]. Then add the same selector again to change its action or transition.'
+    ),
   remove: z
     .array(z.string().regex(/^l\d{1,5}$/))
     .max(50)
@@ -672,13 +758,6 @@ export const editLinksShape = {
   startFrame: frameRef
     .optional()
     .describe("Frame id or @label where Play starts."),
-  keep: z
-    .array(z.string().regex(/^(i[0-9a-z]{1,12}|all)$/))
-    .max(50)
-    .optional()
-    .describe(
-      'Ids of implicit links (implicit: true in list_links, from <a href> between pages) to save as normal links, or ["all"]. Then add the same selector again to change its action or transition.'
-    ),
 };
 
 export interface EditLinksArgs {
@@ -697,8 +776,11 @@ async function keepStep(
   keep: string[] | undefined,
   probe?: LinkProbe
 ): Promise<{ failed: boolean; line: string } | null> {
-  if (!keep || keep.length === 0) return null;
+  if (!keep || keep.length === 0) {
+    return null;
+  }
   const done = await keepLinks(ctx, keep.includes("all") ? "all" : keep, probe);
+
   return done.isError
     ? { failed: true, line: `Not kept: ${firstText(done)}` }
     : { failed: false, line: `Kept implicit links: ${firstText(done)}` };
@@ -712,10 +794,12 @@ export async function editLinks(
   const lines: string[] = [];
   let failed = false;
   const kept = await keepStep(ctx, args.keep, probe);
+
   if (kept) {
     failed ||= kept.failed;
     lines.push(kept.line);
   }
+
   for (const spec of args.add ?? []) {
     const done = await addLink(ctx, spec, probe);
     failed ||= done.result.isError === true;
@@ -725,6 +809,7 @@ export async function editLinks(
         : `Linked ${done.title ?? ""} (${done.link?.id ?? ""})`
     );
   }
+
   for (const id of args.remove ?? []) {
     const done = await removeLink(ctx, id);
     failed ||= done.result.isError === true;
@@ -734,6 +819,7 @@ export async function editLinks(
         : `Removed ${done.title ?? id}`
     );
   }
+
   if (args.startFrame) {
     const done = await setStartFrame(ctx, args.startFrame);
     failed ||= done.result.isError === true;
@@ -743,10 +829,12 @@ export async function editLinks(
         : `Play starts at ${done.frame ? frameLabel(done.frame) : args.startFrame}`
     );
   }
-  if (lines.length === 0)
+
+  if (lines.length === 0) {
     return failure("Pass add, remove, keep or startFrame.");
+  }
   return {
-    content: [{ type: "text", text: lines.join("\n") }],
+    content: [{ text: lines.join("\n"), type: "text" }],
     ...(failed ? { isError: true } : {}),
   };
 }

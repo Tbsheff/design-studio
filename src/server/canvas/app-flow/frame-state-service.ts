@@ -1,16 +1,16 @@
 import type { Project } from "../../../shared/contracts.js";
-import {
-  STATE_HINTS,
-  type FrameStateDef,
-  type FrameStatesView,
+import { STATE_HINTS } from "../../../shared/frame-state.js";
+import type {
+  FrameStateDef,
+  FrameStatesView,
 } from "../../../shared/frame-state.js";
 import { sessionCookieNames } from "../../app/frame-state-proxy.js";
 import {
   frameStatesView,
   setFrameSession,
   setFrameState,
-  type SessionChange,
 } from "../../app/frame-state.js";
+import type { SessionChange } from "../../app/frame-state.js";
 import { BadRequestError } from "../../store/errors.js";
 import type { EventBus } from "../../types.js";
 import type { CanvasService } from "../service.js";
@@ -65,9 +65,9 @@ function emitView(
   view: FrameStatesView
 ): void {
   deps.bus.emit({
-    type: "frame-states.changed",
     projectId: project.id,
     states: view,
+    type: "frame-states.changed",
   });
 }
 

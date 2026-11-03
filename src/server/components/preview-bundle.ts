@@ -32,33 +32,34 @@ const EMPTY_SPEC = /^(server-only|client-only)$/;
 const NEXT_STUB = /^next\/(link|image|navigation|router|dynamic)$/;
 
 const ASSET_LOADERS = {
+  ".avif": "dataurl",
   ".css": "empty",
-  ".scss": "empty",
-  ".sass": "empty",
+  ".gif": "dataurl",
+  ".jpeg": "dataurl",
+  ".jpg": "dataurl",
   ".less": "empty",
   ".png": "dataurl",
-  ".jpg": "dataurl",
-  ".jpeg": "dataurl",
-  ".gif": "dataurl",
-  ".webp": "dataurl",
-  ".avif": "dataurl",
+  ".sass": "empty",
+  ".scss": "empty",
   ".svg": "dataurl",
+  ".ttf": "dataurl",
+  ".webp": "dataurl",
   ".woff": "dataurl",
   ".woff2": "dataurl",
-  ".ttf": "dataurl",
 } as const;
 
 const NEXT_STUBS: Record<string, string> = {
-  link: `import * as React from 'react';
-const Link = React.forwardRef(function Link({ href, prefetch, replace, scroll, shallow, passHref, legacyBehavior, locale, ...rest }, ref) {
-  return React.createElement('a', { ref, href: typeof href === 'string' ? href : (href && href.pathname) || '#', ...rest });
-});
-export default Link;`,
+  dynamic: `export default function dynamic() { return function Dynamic() { return null; }; }`,
   image: `import * as React from 'react';
 const Image = React.forwardRef(function Image({ src, fill, priority, quality, placeholder, blurDataURL, loader, unoptimized, ...rest }, ref) {
   return React.createElement('img', { ref, src: typeof src === 'string' ? src : src && src.src, ...rest });
 });
 export default Image;`,
+  link: `import * as React from 'react';
+const Link = React.forwardRef(function Link({ href, prefetch, replace, scroll, shallow, passHref, legacyBehavior, locale, ...rest }, ref) {
+  return React.createElement('a', { ref, href: typeof href === 'string' ? href : (href && href.pathname) || '#', ...rest });
+});
+export default Link;`,
   navigation: `const router = { push() {}, replace() {}, back() {}, forward() {}, refresh() {}, prefetch() {} };
 export const useRouter = () => router;
 export const usePathname = () => '/';
@@ -73,7 +74,6 @@ export const RedirectType = { push: 'push', replace: 'replace' };`,
   router: `const router = { push() {}, replace() {}, back() {}, prefetch: async () => {}, pathname: '/', query: {}, asPath: '/', isReady: true, events: { on() {}, off() {} } };
 export const useRouter = () => router;
 export default router;`,
-  dynamic: `export default function dynamic() { return function Dynamic() { return null; }; }`,
 };
 
 function previewPlugin(appDir: string): Plugin {
@@ -86,16 +86,16 @@ function previewPlugin(appDir: string): Plugin {
         try {
           return { path: appRequire.resolve(args.path) };
         } catch {
-          return undefined;
+          return null;
         }
       });
       build.onResolve({ filter: EMPTY_SPEC }, () => ({
-        path: "empty",
         namespace: "studio-empty",
+        path: "empty",
       }));
       build.onResolve({ filter: NEXT_STUB }, (args) => ({
-        path: args.path.slice("next/".length),
         namespace: "studio-next",
+        path: args.path.slice("next/".length),
       }));
       build.onLoad({ filter: /.*/, namespace: "studio-empty" }, () => ({
         contents: "export {};",
@@ -201,27 +201,27 @@ async function buildBundle(
 
   try {
     const result = await build({
-      stdin: {
-        contents,
-        resolveDir: request.appDir,
-        loader: "jsx",
-        sourcefile: "studio-component-preview.jsx",
-      },
       absWorkingDir: request.root,
-      bundle: true,
-      write: false,
-      format: "iife",
-      platform: "browser",
-      target: ["es2020"],
-      minify: true,
-      jsx: "automatic",
-      loader: ASSET_LOADERS,
-      define: { "process.env.NODE_ENV": '"production"' },
       banner: {
         js: 'var process = globalThis.process || { env: { NODE_ENV: "production" } };',
       },
-      plugins: [previewPlugin(request.appDir)],
+      bundle: true,
+      define: { "process.env.NODE_ENV": '"production"' },
+      format: "iife",
+      jsx: "automatic",
+      loader: ASSET_LOADERS,
       logLevel: "silent",
+      minify: true,
+      platform: "browser",
+      plugins: [previewPlugin(request.appDir)],
+      stdin: {
+        contents,
+        loader: "jsx",
+        resolveDir: request.appDir,
+        sourcefile: "studio-component-preview.jsx",
+      },
+      target: ["es2020"],
+      write: false,
     });
 
     const output = result.outputFiles[0];
@@ -236,14 +236,12 @@ async function buildBundle(
       throw error;
     }
 
-    const errors = (
-      error as {
-        errors?: {
-          text: string;
-          location: { file: string; line: number } | null;
-        }[];
-      }
-    ).errors;
+    const { errors } = error as {
+      errors?: {
+        text: string;
+        location: { file: string; line: number } | null;
+      }[];
+    };
 
     throw new BundleError(
       errors

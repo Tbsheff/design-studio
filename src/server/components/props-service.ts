@@ -84,8 +84,8 @@ export async function instanceFor(
 
   return resolveInstance(
     {
-      workTree: direction.workTree,
       previewOrigin: await previewOrigin(preview, project, direction),
+      workTree: direction.workTree,
     },
     query,
     usesIn(files, direction.workTree)
@@ -122,6 +122,6 @@ export function warmPropsTypes(project: Project, direction: Direction): void {
   setTimeout(() => {
     void Promise.all([loadTypeScript(), realpath(direction.workTree)])
       .then(([ts, root]) => ts && warmProgram(ts, root))
-      .catch(() => undefined);
+      .catch(() => null);
   }, WARM_DELAY_MS).unref();
 }

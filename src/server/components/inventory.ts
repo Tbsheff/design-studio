@@ -1,13 +1,11 @@
 import { readdir, readFile, stat } from "node:fs/promises";
 import path from "node:path";
 
-import { parse, type ParserPlugin } from "@babel/parser";
+import { parse } from "@babel/parser";
+import type { ParserPlugin } from "@babel/parser";
 
-import {
-  SOURCE_LOC_ATTR,
-  type ComponentInfo,
-  type ProjectKind,
-} from "../../shared/contracts.js";
+import { SOURCE_LOC_ATTR } from "../../shared/contracts.js";
+import type { ComponentInfo, ProjectKind } from "../../shared/contracts.js";
 
 const SKIP_DIRS = new Set([
   "node_modules",
@@ -187,7 +185,7 @@ function declaredComponents(
     isNode(target.id) &&
     typeof target.id.name === "string"
   ) {
-    return [{ name: target.id.name, body: target }];
+    return [{ body: target, name: target.id.name }];
   }
 
   if (
@@ -212,7 +210,7 @@ function declaredComponents(
     const body = componentBody(decl.init);
 
     if (body) {
-      out.push({ name: decl.id.name, body });
+      out.push({ body, name: decl.id.name });
     }
   }
 
@@ -233,7 +231,7 @@ function rootHost(body: AstNode): { line: number; column: number } | null {
     const name = jsxName(node.name);
 
     if (name && /^[a-z]/.test(name) && node.loc) {
-      found = { line: node.loc.start.line, column: node.loc.start.column + 1 };
+      found = { column: node.loc.start.column + 1, line: node.loc.start.line };
     }
   });
 
@@ -247,9 +245,9 @@ function parseModule(code: string, file: string): AstNode | null {
 
   try {
     const ast: unknown = parse(code, {
-      sourceType: "module",
-      plugins,
       errorRecovery: true,
+      plugins,
+      sourceType: "module",
     });
 
     return isNode(ast) ? ast : null;
@@ -279,13 +277,13 @@ function collectDeclared(
 
       if (host) {
         found.set(name, {
-          id: name,
-          name,
-          source: "react",
           file: rel,
+          id: name,
           line: body.loc?.start.line ?? host.line,
-          uses: 0,
+          name,
           selector: `[${SOURCE_LOC_ATTR}="${rel}:${host.line}:${host.column}"]`,
+          source: "react",
+          uses: 0,
         });
       }
     }
@@ -370,7 +368,7 @@ function bump(
   if (known) {
     known.count += 1;
   } else {
-    map.set(key, { file, line, count: 1 });
+    map.set(key, { count: 1, file, line });
   }
 }
 
@@ -420,13 +418,13 @@ function patternsOf(
 
     names.add(name);
     out.push({
-      id: name,
-      name,
-      source: "html",
       file: info.file,
+      id: name,
       line: info.line,
-      uses: info.count,
+      name,
       selector: selector(key),
+      source: "html",
+      uses: info.count,
     });
   }
 

@@ -5,8 +5,10 @@ import {
   CANVAS_GAP,
   CANVAS_MAX_FRAMES,
   cleanFrameLabel,
-  type CanvasFile,
-  type CanvasFileFrame,
+} from "../../../shared/canvas-file.js";
+import type {
+  CanvasFile,
+  CanvasFileFrame,
 } from "../../../shared/canvas-file.js";
 import type {
   CanvasWriteSource,
@@ -14,35 +16,32 @@ import type {
   Project,
 } from "../../../shared/contracts.js";
 import { DEFAULT_FRAME_STATE } from "../../../shared/frame-state.js";
-import { upsertLink, type LinksFile } from "../../../shared/links.js";
+import { upsertLink } from "../../../shared/links.js";
+import type { LinksFile } from "../../../shared/links.js";
 import {
   cleanParams,
   dynamicNames,
   FLOW_MAX_DEPTH,
   FLOW_MAX_FRAMES,
-  type FlowFrame,
-  type FlowInput,
-  type FlowLinkMade,
-  type FlowResult,
-  type FlowSkipped,
-  type RouteLink,
-  type RouteLinksResult,
+} from "../../../shared/route-flow.js";
+import type {
+  FlowFrame,
+  FlowInput,
+  FlowLinkMade,
+  FlowResult,
+  FlowSkipped,
+  RouteLink,
+  RouteLinksResult,
 } from "../../../shared/route-flow.js";
 import { frameStatesView } from "../../app/frame-state.js";
 import { BadRequestError } from "../../store/errors.js";
 import type { CanvasService } from "../service.js";
-import {
-  applyPlacement,
-  CANVAS_VIEWPORTS,
-  findFrame,
-  type PlaceSpec,
-} from "../tools.js";
-import { applyFrameState, type FrameStateDeps } from "./frame-state-service.js";
-import {
-  cleanHref,
-  createRouteScanner,
-  type RouteScanner,
-} from "./route-links.js";
+import { applyPlacement, CANVAS_VIEWPORTS, findFrame } from "../tools.js";
+import type { PlaceSpec } from "../tools.js";
+import { applyFrameState } from "./frame-state-service.js";
+import type { FrameStateDeps } from "./frame-state-service.js";
+import { cleanHref, createRouteScanner } from "./route-links.js";
+import type { RouteScanner } from "./route-links.js";
 
 export const FLOW_NOTE =
   'Attached Next.js apps only. The studio reads the route source with Babel (the page file and the files it imports, not layouts): <Link href> and other href props, router.push/replace, redirect() and form actions, with route constants and helper functions from imports. Dynamic segments get the sample params ({slug: "acme", patientId: "123"}), kept in the studio data dir. A clickable source becomes a prototype link, so Play walks the app flow; a redirect in code makes a frame but no link. New frames from a frame keep its preview state (signed in and so on).';
@@ -73,7 +72,7 @@ export function toFlowDeps(
   frameStates: FrameStateDeps | null | undefined
 ): FlowDeps | null {
   return frameStates
-    ? { canvas, projectDir: frameStates.projectDir, frameStates }
+    ? { canvas, frameStates, projectDir: frameStates.projectDir }
     : null;
 }
 
@@ -89,7 +88,7 @@ function appOf(project: Project): { workTree: string; appDir: string } {
     throw new BadRequestError("Flow works only for attached app projects.");
   }
 
-  return { workTree: main.workTree, appDir: project.app.appDir };
+  return { appDir: project.app.appDir, workTree: main.workTree };
 }
 
 async function scannerFor(project: Project): Promise<RouteScanner> {
@@ -166,7 +165,7 @@ function resolveRoute(
   );
 
   if (exact) {
-    return { route: exact.route, params: {} };
+    return { params: {}, route: exact.route };
   }
 
   const href = cleanHref(raw.startsWith("/") ? raw : `/${raw}`);
@@ -178,7 +177,7 @@ function resolveRoute(
     );
   }
 
-  return { route, params: paramsFrom(route, href) };
+  return { params: paramsFrom(route, href), route };
 }
 
 export function concretePath(
@@ -219,7 +218,7 @@ function flowLabel(route: string): string {
     return "Home";
   }
 
-  const last = segments[segments.length - 1] as string;
+  const last = segments.at(-1) as string;
   const dynamic = last.startsWith("[");
 
   const word =
@@ -263,7 +262,7 @@ async function walkFlow(
   depth: number,
   limit: number
 ): Promise<{ nodes: FlowNode[]; cut: string[] }> {
-  const nodes: FlowNode[] = starts.map((route) => ({ route, level: 0 }));
+  const nodes: FlowNode[] = starts.map((route) => ({ level: 0, route }));
   const cut: string[] = [];
   let level = starts;
 
@@ -282,7 +281,7 @@ async function walkFlow(
         if (nodes.length >= limit) {
           cut.push(target);
         } else {
-          nodes.push({ route: target, level: step });
+          nodes.push({ level: step, route: target });
           next.push(target);
         }
       }
@@ -291,7 +290,7 @@ async function walkFlow(
     level = next;
   }
 
-  return { nodes, cut };
+  return { cut, nodes };
 }
 
 function overlaps(
@@ -343,13 +342,13 @@ function frameAt(
 }
 
 function layoutSpecs(o: LayoutInput): PlaceSpec[] {
-  const frames = o.file.frames;
+  const { frames } = o.file;
 
   const anchorFrame =
     o.anchorPath === null ? undefined : frameAt(frames, o.anchorPath);
 
   const size = anchorFrame
-    ? { width: anchorFrame.width, height: anchorFrame.height }
+    ? { height: anchorFrame.height, width: anchorFrame.width }
     : o.size;
 
   const anchor = anchorFrame
@@ -401,12 +400,12 @@ function layoutSpecs(o: LayoutInput): PlaceSpec[] {
     });
     specs.push({
       ...(existing ? { frame: existing.id } : { label: flowLabel(node.route) }),
-      path: pathText,
-      x: at.x,
-      y: at.y,
-      width: size.width,
       height: size.height,
       hidden: false,
+      path: pathText,
+      width: size.width,
+      x: at.x,
+      y: at.y,
     });
   }
 
@@ -420,12 +419,12 @@ function seeded(file: CanvasFile, size: Size): CanvasFile {
         ...file,
         frames: [
           {
-            id: "f1",
-            width: size.width,
             height: size.height,
+            id: "f1",
+            order: 0,
+            width: size.width,
             x: 0,
             y: 0,
-            order: 0,
           },
         ],
       };
@@ -467,8 +466,8 @@ function planOne(
         fromRoute: route,
         href: link.href,
         kind: link.kind,
-        source: sourceOf(link),
         reason: skipReason(link),
+        source: sourceOf(link),
       });
     }
 
@@ -491,12 +490,12 @@ function planOne(
 
   out.file = next.file;
   out.made.push({
-    id: next.link.id,
     fromFrame: from.id,
-    toFrame: to.id,
+    id: next.link.id,
     kind: link.kind,
-    text: text ?? null,
     source: sourceOf(link),
+    text: text ?? null,
+    toFrame: to.id,
   });
 }
 
@@ -566,8 +565,8 @@ async function startRoutes(
     );
 
     return {
-      routes: [resolved.route],
       params: resolved.params,
+      routes: [resolved.route],
       sourceFrame: frame?.id ?? null,
     };
   }
@@ -581,11 +580,11 @@ async function startRoutes(
   }
 
   return {
-    routes: [...new Set(list.map((item) => item.route))],
     params: Object.assign({}, ...list.map((item) => item.params)) as Record<
       string,
       string
     >,
+    routes: [...new Set(list.map((item) => item.route))],
     sourceFrame: null,
   };
 }
@@ -665,13 +664,13 @@ async function planFlow(
   const anchorPath = paths.get(start.routes[0] as string) ?? null;
 
   return {
-    nodes,
-    cut: walked.cut,
-    paths,
-    params,
-    missing,
-    sourceFrame: start.sourceFrame,
     anchorPath,
+    cut: walked.cut,
+    missing,
+    nodes,
+    params,
+    paths,
+    sourceFrame: start.sourceFrame,
   };
 }
 
@@ -701,7 +700,7 @@ async function writeLinks(
   source: CanvasWriteSource
 ): Promise<Planned & { start: string | null }> {
   let planned: Planned = {
-    file: { version: 1, links: [] },
+    file: { links: [], version: 1 },
     made: [],
     skipped: [],
   };
@@ -714,7 +713,7 @@ async function writeLinks(
     project,
     (current) => {
       planned = planLinks({ frameOf, scans }, current);
-      const start = planned.file.start;
+      const { start } = planned.file;
 
       const startOk =
         start !== undefined &&
@@ -740,9 +739,9 @@ export async function buildFlow(
   const scanner = await scannerFor(project);
 
   const before = (await deps.canvas.read(project)).canvas ?? {
-    version: 1,
     frames: [],
     lofi: [],
+    version: 1,
   };
 
   const plan = await planFlow(deps, project, scanner, input, before);
@@ -758,11 +757,11 @@ export async function buildFlow(
       applyPlacement(
         seeded(file, size),
         layoutSpecs({
+          anchorPath: plan.anchorPath,
           file: seeded(file, size),
+          move: !input.from,
           nodes: plan.nodes,
           paths: plan.paths,
-          move: !input.from,
-          anchorPath: plan.anchorPath,
           size,
         }),
         direction.id
@@ -804,10 +803,10 @@ export async function buildFlow(
     return frame
       ? [
           {
-            id: frame.id,
-            route: node.route,
-            path: `/${frame.path ?? ""}`,
             added: isNew,
+            id: frame.id,
+            path: `/${frame.path ?? ""}`,
+            route: node.route,
             state: isNew ? state : null,
           },
         ]
@@ -819,13 +818,13 @@ export async function buildFlow(
   );
 
   return {
+    cut: plan.cut,
     frames: flowFrames,
     links: written.made,
-    skipped: written.skipped,
-    params: plan.params,
     missingParams: [...plan.missing].filter((name) => needed.has(name)),
+    params: plan.params,
+    skipped: written.skipped,
     startFrame: written.start,
-    cut: plan.cut,
   };
 }
 

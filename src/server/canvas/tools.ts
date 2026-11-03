@@ -9,9 +9,8 @@ import {
   cleanFrameLabel,
   cleanFramePath,
   nextFrameId,
-  type CanvasFile,
-  type CanvasFileFrame,
 } from "../../shared/canvas-file.js";
+import type { CanvasFile, CanvasFileFrame } from "../../shared/canvas-file.js";
 import type { Direction, Project, RunMode } from "../../shared/contracts.js";
 import type { CanvasService } from "./service.js";
 
@@ -19,11 +18,26 @@ export const frameRef = z.string().trim().min(1).max(60);
 
 export const placeSchema = z
   .object({
+    above: frameRef.optional(),
+    below: frameRef
+      .optional()
+      .describe(
+        "Put the frame under this frame (id or @label), left edges lined up."
+      ),
     frame: frameRef
       .optional()
       .describe(
         "Id or @label of a frame to move or change. Leave out to add a new frame."
       ),
+    gap: z
+      .number()
+      .int()
+      .min(0)
+      .max(2000)
+      .optional()
+      .describe("Space between the frames in px. Default 80."),
+    height: z.number().int().min(200).max(4000).optional(),
+    hidden: z.boolean().optional(),
     label: z
       .string()
       .max(40)
@@ -31,12 +45,18 @@ export const placeSchema = z
       .describe(
         'Short name shown on the frame label, for example "Empty" or "Pricing".'
       ),
+    leftOf: frameRef.optional(),
     path: z
       .string()
       .max(200)
       .optional()
       .describe(
         'Page the frame shows, relative to the project root, for example "states/empty.html". Empty string = the entry page.'
+      ),
+    rightOf: frameRef
+      .optional()
+      .describe(
+        "Put the frame to the right of this frame, top edges lined up."
       ),
     viewport: z
       .enum(["desktop", "tablet", "mobile"])
@@ -45,26 +65,6 @@ export const placeSchema = z
         "Frame size preset: desktop 1440x900, tablet 768x1024, mobile 390x844."
       ),
     width: z.number().int().min(200).max(4000).optional(),
-    height: z.number().int().min(200).max(4000).optional(),
-    below: frameRef
-      .optional()
-      .describe(
-        "Put the frame under this frame (id or @label), left edges lined up."
-      ),
-    rightOf: frameRef
-      .optional()
-      .describe(
-        "Put the frame to the right of this frame, top edges lined up."
-      ),
-    leftOf: frameRef.optional(),
-    above: frameRef.optional(),
-    gap: z
-      .number()
-      .int()
-      .min(0)
-      .max(2000)
-      .optional()
-      .describe("Space between the frames in px. Default 80."),
     x: z
       .number()
       .int()
@@ -75,14 +75,13 @@ export const placeSchema = z
       .int()
       .optional()
       .describe("Absolute canvas y. Overrides the relative y."),
-    hidden: z.boolean().optional(),
   })
   .strict();
 
 export const CANVAS_VIEWPORTS = {
-  desktop: { width: 1440, height: 900 },
-  tablet: { width: 768, height: 1024 },
-  mobile: { width: 390, height: 844 },
+  desktop: { height: 900, width: 1440 },
+  mobile: { height: 844, width: 390 },
+  tablet: { height: 1024, width: 768 },
 } as const;
 
 export type CanvasViewport = keyof typeof CANVAS_VIEWPORTS;
@@ -134,27 +133,27 @@ function text(value: unknown): ToolText {
   return {
     content: [
       {
-        type: "text",
         text:
           typeof value === "string" ? value : JSON.stringify(value, null, 2),
+        type: "text",
       },
     ],
   };
 }
 
 function failure(message: string): ToolText {
-  return { content: [{ type: "text", text: message }], isError: true };
+  return { content: [{ text: message, type: "text" }], isError: true };
 }
 
 function describeFrame(frame: CanvasFileFrame, ownerId: string) {
   return {
+    direction:
+      frame.directionId ?? `${ownerId} (follows the current direction)`,
+    height: frame.height,
     id: frame.id,
     label: frame.label ?? null,
     page: frame.path ?? "(entry page)",
-    direction:
-      frame.directionId ?? `${ownerId} (follows the current direction)`,
     width: frame.width,
-    height: frame.height,
     x: frame.x,
     y: frame.y,
     ...(frame.hidden ? { hidden: true } : {}),
@@ -243,7 +242,7 @@ function sizeOf(
   const clamp = (n: number) =>
     Math.round(Math.min(CANVAS_MAX_SIDE, Math.max(CANVAS_MIN_SIDE, n)));
 
-  return { width: clamp(width), height: clamp(height) };
+  return { height: clamp(height), width: clamp(width) };
 }
 
 function relationOf(
@@ -263,7 +262,7 @@ function relationOf(
 
   const relation = found[0];
 
-  return relation ? { relation, ref: spec[relation] as string } : null;
+  return relation ? { ref: spec[relation] as string, relation } : null;
 }
 
 function relativeSpot(
@@ -456,9 +455,9 @@ function placeOne(
 
   return withOptional(base, {
     directionId: existing ? existing.directionId : directionId,
-    path: pathOf(spec, existing),
-    label: labelOf(spec, existing, frames),
     hidden: spec.hidden ?? existing?.hidden,
+    label: labelOf(spec, existing, frames),
+    path: pathOf(spec, existing),
   });
 }
 
@@ -498,6 +497,11 @@ export async function canvasList(ctx: CanvasToolContext): Promise<ToolText> {
   return text({
     frames: frames.map((frame) => describeFrame(frame, owner.id)),
     lofi: canvas?.lofi ?? [],
+    note:
+      frames.length === 0
+        ? 'No saved layout yet. The canvas shows one frame (f1) with the entry page at the size the user picked. canvas_place with frame "f1" or a new frame saves the layout.'
+        : undefined,
+    thisRun: { direction: ctx.direction.id },
     user: presence
       ? {
           currentDirection: presence.directionId,
@@ -508,11 +512,6 @@ export async function canvasList(ctx: CanvasToolContext): Promise<ToolText> {
       : {
           note: "The studio window is not open, so the selection and the frame in view are not known.",
         },
-    thisRun: { direction: ctx.direction.id },
-    note:
-      frames.length === 0
-        ? 'No saved layout yet. The canvas shows one frame (f1) with the entry page at the size the user picked. canvas_place with frame "f1" or a new frame saves the layout.'
-        : undefined,
   });
 }
 
@@ -524,18 +523,18 @@ function withoutQuery(spec: PlaceSpec): {
   const cut = raw === undefined ? -1 : raw.search(/[?#]/);
 
   if (raw === undefined || cut < 0) {
-    return { spec, note: null };
+    return { note: null, spec };
   }
 
   const page = raw.slice(0, cut);
 
   if (cleanFramePath(page) === null) {
-    return { spec, note: null };
+    return { note: null, spec };
   }
 
   return {
-    spec: { ...spec, path: page },
     note: `Path ${raw} is placed as ${page.trim() || "the entry page"}: a frame loads its page without a query string or #hash, so ${raw.slice(cut)} is not kept. Show that state with its own page, or with set_frame_state in an attached app.`,
+    spec: { ...spec, path: page },
   };
 }
 
@@ -592,11 +591,11 @@ export async function canvasPlace(
     );
 
     return text({
-      warnings,
+      frames: result.canvas?.frames.length ?? 0,
       placed: placed.map((frame) =>
         describeFrame(frame, ctx.canvas.ownerOf(ctx.project).id)
       ),
-      frames: result.canvas?.frames.length ?? 0,
+      warnings,
     });
   } catch (error) {
     if (error instanceof PlaceError) {
@@ -619,12 +618,12 @@ function seedDefault(file: CanvasFile, ctx: CanvasToolContext): CanvasFile {
     ...file,
     frames: [
       {
-        id: "f1",
-        width: size.width,
         height: size.height,
+        id: "f1",
+        order: 0,
+        width: size.width,
         x: 0,
         y: 0,
-        order: 0,
       },
     ],
   };

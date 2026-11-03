@@ -116,6 +116,7 @@ const readLinkList = async (
   query: LinkListQuery
 ): Promise<LinkListed> => {
   const context = await contextOf(runtime, query.projectId);
+
   const view = await listLinkView(
     context,
     query.check ? probeOf(runtime, context) : undefined,
@@ -146,6 +147,7 @@ const writeCreate = async (
   query: LinkCreateQuery
 ): Promise<LinkSaved> => {
   const context = await contextOf(runtime, query.projectId);
+
   const given =
     query.tag || query.text
       ? {

@@ -29,12 +29,12 @@ export function recordLayout(
   }
 
   history.record({
-    projectId: project.id,
     directionId: owner.id,
-    label,
-    versionId: owner.headVersionId,
     files: [],
+    label,
     layout: change,
+    projectId: project.id,
+    versionId: owner.headVersionId,
   });
 }
 

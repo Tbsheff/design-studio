@@ -2,22 +2,20 @@ import path from "node:path";
 
 import type { Project } from "../../shared/contracts.js";
 import type { InsertComponentRequest } from "../../shared/insert.js";
-import {
-  COMPONENT_LIST_MAX,
-  type ComponentListItem,
-  type ComponentListQuery,
-  type ComponentSchemaList,
-  type ComponentSchema,
-  type ComponentSource,
-  type PropSpec,
-  type PropValue,
+import { COMPONENT_LIST_MAX } from "../../shared/props.js";
+import type {
+  ComponentListItem,
+  ComponentListQuery,
+  ComponentSchemaList,
+  ComponentSchema,
+  ComponentSource,
+  PropSpec,
+  PropValue,
 } from "../../shared/props.js";
-import {
-  importResolver,
-  pickSpecifier,
-  type ImportNeed,
-} from "./import-plan.js";
-import { loadLibrary, type Library, type LibraryEntry } from "./insert-list.js";
+import { importResolver, pickSpecifier } from "./import-plan.js";
+import type { ImportNeed } from "./import-plan.js";
+import { loadLibrary } from "./insert-list.js";
+import type { Library, LibraryEntry } from "./insert-list.js";
 import { componentSchemas, loadTypeScript } from "./props-schema.js";
 
 type Ts = NonNullable<Awaited<ReturnType<typeof loadTypeScript>>>;
@@ -210,7 +208,7 @@ function rank(library: Library, request: ComponentListQuery): Ranked[] {
     const tier = tierOf(entry, query, fileText);
 
     if (tier >= 0) {
-      out.push({ entry, source, tier, local: locals.has(entry) });
+      out.push({ local: locals.has(entry), entry, source, tier });
     }
   }
 
@@ -293,7 +291,7 @@ function seenOf(
       }
 
       done.add(specifier);
-      out.push({ specifier, from });
+      out.push({ from, specifier });
     }
   }
 
@@ -307,13 +305,13 @@ function importLine(
   entry: LibraryEntry
 ): string {
   const need: ImportNeed = {
-    name: entry.name,
-    kind: entry.kind,
+    allowPaths: project.app?.framework === "next",
     componentFile: entry.absolute,
-    targetFile: appTarget(project, library),
+    kind: entry.kind,
+    name: entry.name,
     root: library.root,
     seen: [],
-    allowPaths: project.app?.framework === "next",
+    targetFile: appTarget(project, library),
   };
 
   const specifier =
@@ -391,19 +389,19 @@ async function searchComponents(
       const schema = schemas[index] ?? null;
 
       const base = schema ?? {
-        name: entry.name,
+        asChild: false,
+        cva: null,
         file: entry.file,
         line: entry.line,
-        props: [],
-        cva: null,
-        asChild: false,
+        name: entry.name,
         note: null,
+        props: [],
       };
 
       const example = jsxFor(entry, schema, {
         component: { name: entry.name },
-        target: { source: null },
         position: "inside",
+        target: { source: null },
       });
 
       const importText = local
@@ -412,15 +410,15 @@ async function searchComponents(
 
       return {
         ...base,
-        name: entry.name,
-        file: entry.file,
-        line: entry.line,
-        uses: entry.uses,
-        source,
-        folder: entry.folder,
-        parts: partsOf(library, entry),
-        import: importText,
         example,
+        file: entry.file,
+        folder: entry.folder,
+        import: importText,
+        line: entry.line,
+        name: entry.name,
+        parts: partsOf(library, entry),
+        source,
+        uses: entry.uses,
       };
     }
   );
@@ -429,9 +427,9 @@ async function searchComponents(
 
   return {
     components,
+    nextCursor: next < ranked.length ? String(next) : null,
     total: ranked.length,
     truncated: next < ranked.length,
-    nextCursor: next < ranked.length ? String(next) : null,
   };
 }
 

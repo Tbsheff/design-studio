@@ -153,7 +153,7 @@ export function revertLinks(
 
   return back.start === undefined
     ? { ...rest, links }
-    : { ...rest, start: back.start, links };
+    : { ...rest, links, start: back.start };
 }
 
 function frameName(frame: CanvasFileFrame): string {
@@ -167,11 +167,11 @@ function changedFramesLabel(
   changed: { from: CanvasFileFrame; to: CanvasFileFrame }[]
 ): string {
   const moved = changed.every(({ from, to }) =>
-    same({ ...from, x: 0, y: 0, order: 0 }, { ...to, x: 0, y: 0, order: 0 })
+    same({ ...from, order: 0, x: 0, y: 0 }, { ...to, order: 0, x: 0, y: 0 })
   );
 
   const resized = changed.every(({ from, to }) =>
-    same({ ...from, width: 0, height: 0 }, { ...to, width: 0, height: 0 })
+    same({ ...from, height: 0, width: 0 }, { ...to, height: 0, width: 0 })
   );
 
   const verb = moved ? "Move" : resized ? "Resize" : "Change";

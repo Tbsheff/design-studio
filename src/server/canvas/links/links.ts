@@ -7,16 +7,12 @@ import {
   LINKS_FILE,
   parseLinksText,
   serializeLinksFile,
-  type LinksFile,
 } from "../../../shared/links.js";
+import type { LinksFile } from "../../../shared/links.js";
 import { createKeyedMutex } from "../../store/mutex.js";
 import type { EventBus } from "../../types.js";
-import {
-  canvasOwner,
-  writeAtomic,
-  type LinksService,
-  type LinksWritten,
-} from "../service.js";
+import { canvasOwner, writeAtomic } from "../service.js";
+import type { LinksService, LinksWritten } from "../service.js";
 
 export function linksPath(workTree: string): string {
   return path.join(workTree, ...LINKS_FILE.split("/"));
@@ -46,16 +42,19 @@ export function createLinksService(
     source: CanvasWriteSource
   ): void => {
     bus.emit({
-      type: "links.changed",
-      projectId: project.id,
       directionId: canvasOwner(project).id,
+      projectId: project.id,
+      type: "links.changed",
       links,
       source,
     });
   };
 
   return {
-    read,
+    async announce(project) {
+      const links = await lock(keyOf(project), () => read(project));
+      emit(project, links, "restore");
+    },
 
     update(project, change, source) {
       return lock(keyOf(project), async () => {
@@ -81,9 +80,6 @@ export function createLinksService(
       });
     },
 
-    async announce(project) {
-      const links = await lock(keyOf(project), () => read(project));
-      emit(project, links, "restore");
-    },
+    read,
   };
 }

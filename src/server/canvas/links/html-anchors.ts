@@ -65,7 +65,7 @@ function attr(el: Element, name: string): string | null {
 }
 
 function childrenOf(node: Node): Node[] {
-  const content = (node as { content?: Node }).content;
+  const { content } = node as { content?: Node };
   const own = "childNodes" in node ? node.childNodes : [];
 
   return content && "childNodes" in content
@@ -104,10 +104,10 @@ export interface PageTree {
 
 export function pageTree(html: string): PageTree {
   const tree: PageTree = {
-    elements: [],
-    scripts: [],
     byId: new Map(),
+    elements: [],
     formOf: new Map(),
+    scripts: [],
   };
 
   const walk = (node: Node, form: Element | null): void => {

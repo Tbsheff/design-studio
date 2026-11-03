@@ -7,8 +7,8 @@ import {
   emptyCanvasFile,
   parseCanvasText,
   serializeCanvasFile,
-  type CanvasFile,
 } from "../../shared/canvas-file.js";
+import type { CanvasFile } from "../../shared/canvas-file.js";
 import type {
   CanvasPresence,
   CanvasWriteSource,
@@ -157,7 +157,7 @@ export async function setAsideLegacyCanvas(
     return null;
   }
 
-  const workTree = canvasOwner(project).workTree;
+  const { workTree } = canvasOwner(project);
   const legacy = await readCanvasAt(workTree);
 
   if (legacy.text === null) {
@@ -169,7 +169,7 @@ export async function setAsideLegacyCanvas(
   if (await tracked(workTree, CANVAS_FILE)) {
     await writeAtomic(own, serializeCanvasFile(emptyCanvasFile()));
 
-    return { file: CANVAS_FILE, movedTo: null, frames };
+    return { file: CANVAS_FILE, frames, movedTo: null };
   }
 
   const movedTo = setAsideName(new Date());
@@ -178,7 +178,7 @@ export async function setAsideLegacyCanvas(
     path.join(workTree, ...movedTo.split("/"))
   );
 
-  return { file: CANVAS_FILE, movedTo, frames };
+  return { file: CANVAS_FILE, frames, movedTo };
 }
 
 function hashOf(text: string): string {
@@ -215,7 +215,7 @@ export function createCanvasCore(
 
   const links = createLinksService(bus, (project, before, after, source) => {
     for (const listener of listeners) {
-      listener(project, { kind: "links", before, after }, source);
+      listener(project, { after, before, kind: "links" }, source);
     }
   });
 
@@ -235,12 +235,12 @@ export function createCanvasCore(
     write: CanvasWrite
   ): void => {
     bus.emit({
-      type: "canvas.changed",
-      projectId: project.id,
-      directionId: canvasOwner(project).id,
       canvas: snapshot.canvas,
+      directionId: canvasOwner(project).id,
       hash: snapshot.hash,
+      projectId: project.id,
       source: write.source,
+      type: "canvas.changed",
       ...(write.writer ? { writer: write.writer } : {}),
     });
   };
@@ -267,7 +267,7 @@ export function createCanvasCore(
       (current === null ? null : parseCanvasText(current)) ?? emptyCanvasFile();
 
     for (const listener of listeners) {
-      listener(project, { kind: "canvas", before, after: saved }, write.source);
+      listener(project, { after: saved, before, kind: "canvas" }, write.source);
     }
 
     return snapshot;
@@ -277,24 +277,45 @@ export function createCanvasCore(
     `${project.id}/${canvasOwner(project).id}`;
 
   return {
-    ownerOf: canvasOwner,
+    async announce(project) {
+      const snapshot = await lock(keyOf(project), () => snapshotOf(project));
+      emit(project, snapshot, { source: "restore" });
+      await links.announce(project);
+    },
 
     links,
 
+    onLayoutChange(listener) {
+      listeners.add(listener);
+    },
+
+    ownerOf: canvasOwner,
+
+    point(project, frameId, selector) {
+      bus.emit({
+        type: "canvas.point",
+        projectId: project.id,
+        directionId: canvasOwner(project).id,
+        frameId,
+        at: Date.now(),
+        ...(selector ? { selector } : {}),
+      });
+    },
+
+    presence(projectId) {
+      const found = presences.get(projectId);
+
+      if (!found || Date.now() - found.at > PRESENCE_TTL_MS) {
+        return null;
+      }
+
+      return found;
+    },
+
     read: snapshotOf,
 
-    write(project, canvas, write) {
-      return lock(keyOf(project), async () => {
-        if (write.baseHash !== undefined) {
-          const current = await snapshotOf(project);
-
-          if (current.hash !== write.baseHash) {
-            throw new ConflictError("canvas_stale");
-          }
-        }
-
-        return store(project, canvas, write);
-      });
+    setPresence(projectId, presence) {
+      presences.set(projectId, presence);
     },
 
     update(project, change, write) {
@@ -310,38 +331,17 @@ export function createCanvasCore(
       });
     },
 
-    async announce(project) {
-      const snapshot = await lock(keyOf(project), () => snapshotOf(project));
-      emit(project, snapshot, { source: "restore" });
-      await links.announce(project);
-    },
+    write(project, canvas, write) {
+      return lock(keyOf(project), async () => {
+        if (write.baseHash !== undefined) {
+          const current = await snapshotOf(project);
 
-    setPresence(projectId, presence) {
-      presences.set(projectId, presence);
-    },
+          if (current.hash !== write.baseHash) {
+            throw new ConflictError("canvas_stale");
+          }
+        }
 
-    presence(projectId) {
-      const found = presences.get(projectId);
-
-      if (!found || Date.now() - found.at > PRESENCE_TTL_MS) {
-        return null;
-      }
-
-      return found;
-    },
-
-    onLayoutChange(listener) {
-      listeners.add(listener);
-    },
-
-    point(project, frameId, selector) {
-      bus.emit({
-        type: "canvas.point",
-        projectId: project.id,
-        directionId: canvasOwner(project).id,
-        frameId,
-        at: Date.now(),
-        ...(selector ? { selector } : {}),
+        return store(project, canvas, write);
       });
     },
   };

@@ -85,7 +85,7 @@ function attrsOf(node: t.JSXOpeningElement): Map<string, t.Node | null> {
       continue;
     }
 
-    const value = attr.value;
+    const { value } = attr;
     out.set(
       attr.name.name,
       value === null || value === undefined
@@ -204,6 +204,7 @@ function linkSelector(href: string): string | null {
   const bare = originless(href).split(/[?#]/)[0] ?? "";
   const pieces = bare.split(/\[[^\]]*\]/).filter((piece) => piece.length > 1);
   const exact = !/\[[^\]]*\]/.test(bare);
+
   const safe = pieces
     .map((piece) => piece.replaceAll(/["\\]/g, ""))
     .slice(0, 3);
@@ -238,7 +239,7 @@ function elementOf(
     return null;
   }
 
-  return { tag, selector, ...(text ? { text } : {}) };
+  return { selector, tag, ...(text ? { text } : {}) };
 }
 
 function mappedElements(root: t.Node): Set<t.Node> {
@@ -425,7 +426,7 @@ async function readRedirects(project: SourceProject): Promise<Redirect[]> {
     const destination = props.get("destination");
 
     if (source && destination) {
-      out.push({ source, destination });
+      out.push({ destination, source });
     }
   });
 
@@ -443,7 +444,7 @@ function ownerName(node: t.Node): string {
 }
 
 function callNavArg(node: t.CallExpression): t.Node | null {
-  const callee = node.callee;
+  const { callee } = node;
   const arg = node.arguments[0];
 
   if (
@@ -617,9 +618,9 @@ class RouteScanner {
     }
 
     const fn = await this.evaluator.value(expr, {
+      depth: 0,
       mod,
       params: new Map(),
-      depth: 0,
     });
 
     if (fn?.kind !== "fn") {
@@ -664,11 +665,11 @@ class RouteScanner {
     }
 
     return {
-      kind,
-      href,
-      file: this.relative(call.mod.file),
-      line: lineOf(call.arg),
       element: element(href),
+      file: this.relative(call.mod.file),
+      href,
+      kind,
+      line: lineOf(call.arg),
     };
   }
 
@@ -800,7 +801,7 @@ class RouteScanner {
     const item = this.routes.find((entry) => entry.route === route);
 
     if (!item) {
-      return { route, file: null, links: [], scanned: 0 };
+      return { file: null, links: [], route, scanned: 0 };
     }
 
     const modules = await this.files(path.join(this.workTree, item.file));
@@ -824,7 +825,7 @@ class RouteScanner {
       }
     }
 
-    return { route, file: item.file, links, scanned: modules.length };
+    return { file: item.file, links, route, scanned: modules.length };
   }
 }
 

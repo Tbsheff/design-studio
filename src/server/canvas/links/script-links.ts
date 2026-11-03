@@ -84,7 +84,7 @@ function balancedEnd(src: string, open: number): number {
       i = skipString(src, i);
     } else if (OPEN[ch]) {
       stack.push(OPEN[ch]);
-    } else if (ch === stack[stack.length - 1]) {
+    } else if (ch === stack.at(-1)) {
       stack.pop();
 
       if (stack.length === 0) {
@@ -265,10 +265,10 @@ export function scriptTargets(
   };
 
   const out: ScriptTargets = {
-    href: new Map(),
     click: new Map(),
-    submit: new Map(),
+    href: new Map(),
     onAttr: (code) => (code ? targetIn(code) : null),
+    submit: new Map(),
   };
 
   for (const re of HREF_RES) {

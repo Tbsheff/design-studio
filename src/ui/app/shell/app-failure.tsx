@@ -30,7 +30,7 @@ function useInstallHint(
     }
 
     let live = true;
-    void (async () => {
+    const loadHint = async (): Promise<void> => {
       try {
         const project = await api.getProject(projectId);
         let result = null;
@@ -48,7 +48,8 @@ function useInstallHint(
           setHint(null);
         }
       }
-    })();
+    };
+    void loadHint();
 
     return () => {
       live = false;

@@ -17,10 +17,10 @@ import {
 } from "../mcp/select-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
 
-interface ToolText {
+type ToolText = Readonly<{
   content: { type: "text"; text: string }[];
   isError?: boolean;
-}
+}>;
 
 const DEFAULT_VIEWPORT = { height: 900, width: 1440 };
 

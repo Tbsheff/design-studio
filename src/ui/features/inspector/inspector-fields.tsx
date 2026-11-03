@@ -8,13 +8,9 @@ import type { IconName } from "../../kit/Icon.js";
 import { UiSelect } from "../../kit/UiSelect.js";
 import { readStored, writeStored } from "../../platform/storage.js";
 import { TokenControl } from "../versions-layers-tokens/token-control.js";
-import {
-  colorToHex,
-  displayColor,
-  isValidColor,
-  sameEditValues,
-} from "./css-values.js";
+import { colorToHex, displayColor, isValidColor } from "./css-values.js";
 import { useInherited } from "./edit-variant.js";
+import { sameEditValues } from "./use-direct-edit.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 import { useTokenUi } from "./use-token-snap.js";
 

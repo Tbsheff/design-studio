@@ -1,1 +1,0 @@
-Design Studio is a local design tool. These tools read its projects: list_projects (or search_projects with a query) first, then get_tokens, get_design_md, get_frame_html, get_screenshot, list_files and read_file with a projectId. For an attached app, list_routes lists its routes. list_found_apps lists the app folders found in the home folder.

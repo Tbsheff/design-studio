@@ -19,11 +19,11 @@ import {
   frontFrame,
   headVersion,
   openHome,
+  type StudioApi,
 } from "../../support/studio";
-import type { StudioApi } from "../../support/studio";
 import { saveResult } from "./helpers";
 
-const FONT_HOSTS = new Set(["fonts.googleapis.com", "fonts.gstatic.com"]);
+const FONT_HOSTS = ["fonts.googleapis.com", "fonts.gstatic.com"];
 
 async function exportTo(
   api: StudioApi,
@@ -70,7 +70,7 @@ async function openOffline(indexFile: string): Promise<{
       if (
         url.protocol === "file:" ||
         url.protocol === "data:" ||
-        FONT_HOSTS.has(url.hostname)
+        FONT_HOSTS.includes(url.hostname)
       ) {
         if (url.protocol !== "file:") {
           allowed.push(url.href);
@@ -94,13 +94,13 @@ async function openOffline(indexFile: string): Promise<{
       .textContent()
       .catch(() => null);
 
-    return { allowed, blocked, h1, pageErrors };
+    return { h1, blocked, allowed, pageErrors };
   } finally {
     await browser.close();
   }
 }
 
-test("aC-56: standalone HTML export opens from file:// with network blocked", async ({
+test("AC-56: standalone HTML export opens from file:// with network blocked", async ({
   page,
 }) => {
   const api = await openHome(page);
@@ -113,9 +113,7 @@ test("aC-56: standalone HTML export opens from file:// with network blocked", as
   );
 
   await api.waitForRuns(project.id, 1);
-  await expect
-    .soft(frontFrame(page).locator("h1"))
-    .toHaveText("Export html page");
+  await expect(frontFrame(page).locator("h1")).toHaveText("Export html page");
   const head = await headVersion(api, project.id, "main");
   const out = await exportTo(api, project.id, head.id, "html");
   const files = readdirSync(out, { recursive: true }).map(String);
@@ -127,21 +125,21 @@ test("aC-56: standalone HTML export opens from file:// with network blocked", as
   ].map((match) => match[1]);
 
   const result = {
-    externalUrls,
     files,
+    externalUrls,
     hasBridge: html.includes("bridge.js"),
     hasLocAttr: html.includes("data-studio-loc"),
     offline,
   };
 
   saveResult("ac56-mock", result);
-  expect.soft(offline.h1).toBe("Export html page");
-  expect.soft(result.hasBridge).toBe(false);
-  expect.soft(result.hasLocAttr).toBe(false);
-  expect.soft(offline.pageErrors).toEqual([]);
+  expect(offline.h1).toBe("Export html page");
+  expect(result.hasBridge).toBe(false);
+  expect(result.hasLocAttr).toBe(false);
+  expect(offline.pageErrors).toEqual([]);
 });
 
-test("aC-57: React export is a normal buildable Vite app", async ({ page }) => {
+test("AC-57: React export is a normal buildable Vite app", async ({ page }) => {
   test.setTimeout(600_000);
   const api = await openHome(page);
 
@@ -153,11 +151,9 @@ test("aC-57: React export is a normal buildable Vite app", async ({ page }) => {
   );
 
   await api.waitForRuns(project.id, 1, 180_000);
-  await expect
-    .soft(frontFrame(page).locator("h1"))
-    .toHaveText("Export react page", {
-      timeout: 90_000,
-    });
+  await expect(frontFrame(page).locator("h1")).toHaveText("Export react page", {
+    timeout: 90_000,
+  });
   const head = await headVersion(api, project.id, "main");
   const out = await exportTo(api, project.id, head.id, "react");
 
@@ -200,23 +196,23 @@ test("aC-57: React export is a normal buildable Vite app", async ({ page }) => {
     .join("\n");
 
   const result = {
-    buildTail: build.trim().split("\n").slice(-5),
-    bundleHasHeading: bundleText.includes("Export react page"),
-    bundleHasLocAttr: bundleText.includes("data-studio-loc"),
-    distHasBridge:
-      distHtml.includes("bridge.js") || bundleText.includes("__studio"),
-    distHasIndex: distHtml.length > 0,
-    files,
-    installTail: install.trim().split("\n").slice(-2),
     out,
+    files,
     scripts: pkg.scripts,
     viteConfigHasStudio: /studio/i.test(viteConfig),
+    installTail: install.trim().split("\n").slice(-2),
+    buildTail: build.trim().split("\n").slice(-5),
+    distHasIndex: distHtml.length > 0,
+    distHasBridge:
+      distHtml.includes("bridge.js") || bundleText.includes("__studio"),
+    bundleHasHeading: bundleText.includes("Export react page"),
+    bundleHasLocAttr: bundleText.includes("data-studio-loc"),
   };
 
   saveResult("ac57", result);
-  expect.soft(result.distHasIndex).toBe(true);
-  expect.soft(result.viteConfigHasStudio).toBe(false);
-  expect.soft(result.bundleHasHeading).toBe(true);
-  expect.soft(result.bundleHasLocAttr).toBe(false);
-  expect.soft(result.distHasBridge).toBe(false);
+  expect(result.distHasIndex).toBe(true);
+  expect(result.viteConfigHasStudio).toBe(false);
+  expect(result.bundleHasHeading).toBe(true);
+  expect(result.bundleHasLocAttr).toBe(false);
+  expect(result.distHasBridge).toBe(false);
 });

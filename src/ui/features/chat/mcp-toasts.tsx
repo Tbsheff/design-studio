@@ -66,7 +66,7 @@ const useApprovalFeed = (): [
 const topModal = (): HTMLDialogElement | null => {
   const open = document.querySelectorAll<HTMLDialogElement>("dialog:modal");
 
-  return open.at(-1) ?? null;
+  return [...open].at(-1) ?? null;
 };
 
 const useTopModal = (watch: boolean): HTMLDialogElement | null => {

@@ -35,69 +35,60 @@ test.beforeAll(async () => {
 test.afterAll(async () => {
   await pool.close();
   await new Promise<void>((resolve) => server.close(() => resolve()));
-  rmSync(outDir, { force: true, recursive: true });
+  rmSync(outDir, { recursive: true, force: true });
 });
 
 test("render_check reports a sideways-scrolling table and a clipped nav at 390px, with selectors and cut items", async () => {
   const results = await pool.renderCheck(url, outDir, "fixture");
-  expect
-    .soft(results.map((result) => result.backend))
-    .toEqual(
-      results.map(() => (wantsElectronRenderer() ? "electron" : "playwright"))
-    );
+  expect(results.map((result) => result.backend)).toEqual(
+    results.map(() => (wantsElectronRenderer() ? "electron" : "playwright"))
+  );
   const mobile = results.find((result) => result.viewport === "mobile");
   const desktop = results.find((result) => result.viewport === "desktop");
-  expect.soft(mobile?.horizontalOverflow).toBe(false);
+  expect(mobile?.horizontalOverflow).toBe(false);
 
   const nav = mobile?.layout.find((finding) =>
     finding.selector.includes("nav.site-nav")
   );
-
-  expect
-    .soft(nav)
-    .toMatchObject({ axis: "x", kind: "clipped", severity: "error" });
-  expect.soft(nav?.cutItems).toContain("Settings");
-  expect.soft(nav?.scrollSize).toBeGreaterThan(nav?.clientSize ?? Infinity);
+  expect(nav).toMatchObject({ kind: "clipped", severity: "error", axis: "x" });
+  expect(nav?.cutItems).toContain("Settings");
+  expect(nav?.scrollSize).toBeGreaterThan(nav?.clientSize ?? Infinity);
 
   const table = mobile?.layout.find((finding) =>
     finding.selector.includes("div.table-wrap")
   );
-
-  expect.soft(table).toMatchObject({
-    axis: "x",
+  expect(table).toMatchObject({
     kind: "scrolls-sideways",
     severity: "warning",
+    axis: "x",
   });
-  expect.soft(table?.cutItems.length).toBeGreaterThan(0);
-  expect.soft(table?.detail).toMatch(/scroll sideways/);
+  expect(table?.cutItems.length).toBeGreaterThan(0);
+  expect(table?.detail).toMatch(/scroll sideways/);
 
-  expect
-    .soft(
-      mobile?.layout.some(
-        (finding) =>
-          finding.selector.includes("sr-only") ||
-          finding.selector.includes("truncate") ||
-          finding.selector.includes("offscreen")
-      )
+  expect(
+    mobile?.layout.some(
+      (finding) =>
+        finding.selector.includes("sr-only") ||
+        finding.selector.includes("truncate") ||
+        finding.selector.includes("offscreen")
     )
-    .toBe(false);
-  expect.soft(mobile?.layout.length).toBeLessThanOrEqual(10);
-  expect.soft(desktop?.layout).toEqual([]);
-  expect.soft(desktop?.layoutTotal).toBe(0);
+  ).toBe(false);
+  expect(mobile?.layout.length).toBeLessThanOrEqual(10);
+  expect(desktop?.layout).toEqual([]);
+  expect(desktop?.layoutTotal).toBe(0);
 });
 
 test("screenshotTiles returns viewport-wide tiles from an offset and reports the page height", async () => {
   const tiles = await pool.screenshotTiles(url, {
+    viewport: { width: 390, height: 844 },
+    tileHeight: 200,
     from: 0,
     maxTiles: 2,
     outPrefix: path.join(outDir, "tile"),
-    tileHeight: 200,
-    viewport: { height: 844, width: 390 },
   });
-
-  expect.soft(tiles.paths.length).toBeGreaterThan(0);
-  expect.soft(tiles.from).toBe(0);
-  expect.soft(tiles.to).toBeLessThanOrEqual(tiles.pageHeight);
+  expect(tiles.paths.length).toBeGreaterThan(0);
+  expect(tiles.from).toBe(0);
+  expect(tiles.to).toBeLessThanOrEqual(tiles.pageHeight);
   const png = readFileSync(tiles.paths[0] ?? "");
-  expect.soft(png.readUInt32BE(16)).toBe(390);
+  expect(png.readUInt32BE(16)).toBe(390);
 });

@@ -32,9 +32,9 @@ function hostCommand(): {
   env: NodeJS.ProcessEnv;
 } {
   return {
+    file: path.join(ROOT, "node_modules", ".bin", "electron"),
     args: [path.join(ROOT, "desktop", "dist", "render-host.js")],
     env: hostEnv(),
-    file: path.join(ROOT, "node_modules", ".bin", "electron"),
   };
 }
 
@@ -43,9 +43,9 @@ export function startRenderHost(): Promise<RenderHostHandle> {
 
   const child = spawn(command.file, command.args, {
     cwd: ROOT,
-    detached: true,
     env: command.env,
     stdio: ["pipe", "pipe", "pipe"],
+    detached: true,
   });
 
   return new Promise((resolve, reject) => {
@@ -78,13 +78,13 @@ export function startRenderHost(): Promise<RenderHostHandle> {
       };
 
       resolve({
+        pid: child.pid,
         child,
         env: {
           [RENDER_BACKEND_ENV]: "electron",
           [RENDER_SOCKET_ENV]: info.socket,
           [RENDER_TOKEN_ENV]: info.token,
         },
-        pid: child.pid,
       });
     });
   });

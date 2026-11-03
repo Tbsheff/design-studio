@@ -19,7 +19,7 @@ const liveTokens = new Set<string>();
 const HOLD_FALLBACK_MS = 4000;
 
 interface HoldState {
-  timer: number | null;
+  timer: ReturnType<typeof globalThis.setTimeout> | null;
   expired: boolean;
   fresh: Set<string>;
   painted: Set<string>;

@@ -29,6 +29,11 @@ export function takePendingRoute(projectId: string): string | null {
   return route;
 }
 
+const openProjectHome = async (projectId: string): Promise<void> => {
+  await prefetchStudio();
+  uiStore.set({ activeProjectId: projectId, screen: "home" });
+};
+
 export function openProject(projectId: string, route?: string): void {
   if (uiStore.get().activeProjectId === projectId) {
     pending = null;
@@ -50,10 +55,7 @@ export function openProject(projectId: string, route?: string): void {
     return;
   }
 
-  void (async () => {
-    await prefetchStudio();
-    uiStore.set({ activeProjectId: projectId, screen: "home" });
-  })();
+  void openProjectHome(projectId);
 }
 
 export function goHome(): void {

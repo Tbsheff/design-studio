@@ -9,7 +9,6 @@ export function spawnDetachedToLog(
   logPath: string
 ): ChildProcess {
   const fd = openSync(logPath, "a");
-
   try {
     return spawn(file, args, {
       ...options,

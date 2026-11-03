@@ -31,7 +31,7 @@ async function openProject(
   const { project } = await api.call<{ project: Project }>(
     "POST",
     "/api/projects",
-    { kind: "html", prompt }
+    { prompt, kind: "html" }
   );
 
   await api.waitForRuns(project.id, 1);
@@ -44,7 +44,7 @@ async function openProject(
     );
   }, project.id);
   await page.reload();
-  await expect.soft(page.locator(".topbar")).toBeVisible();
+  await expect(page.locator(".topbar")).toBeVisible();
 
   return api.project(project.id);
 }
@@ -69,10 +69,10 @@ async function probe(frame: FrameLocator): Promise<Probe> {
     const h1 = document.querySelector("h1");
 
     return {
+      radius: card ? getComputedStyle(card).borderTopLeftRadius : "",
       color: h1 ? getComputedStyle(h1).color : "",
       gap: cards ? getComputedStyle(cards).rowGap : "",
       marker: (window as unknown as { __marker?: string }).__marker ?? null,
-      radius: card ? getComputedStyle(card).borderTopLeftRadius : "",
     };
   });
 }
@@ -81,7 +81,7 @@ async function shoot(page: Page, name: string, focus: Locator): Promise<void> {
   mkdirSync(REVIEW_DIR, { recursive: true });
 
   for (const [width, height] of SIZES) {
-    await page.setViewportSize({ height, width });
+    await page.setViewportSize({ width, height });
     await page.waitForTimeout(300);
     await focus.evaluate((el) => el.scrollIntoView({ block: "center" }));
     await page.waitForTimeout(100);
@@ -90,7 +90,7 @@ async function shoot(page: Page, name: string, focus: Locator): Promise<void> {
     });
   }
 
-  await page.setViewportSize({ height: 1000, width: 1600 });
+  await page.setViewportSize({ width: 1600, height: 1000 });
   await page.waitForTimeout(250);
 }
 
@@ -121,13 +121,13 @@ test("tweaks panel: empty state offers a suggest run", async ({ page }) => {
   const project = await openProject(page, api, "Plain Page");
   await page.getByRole("tab", { name: /^Tweaks/ }).click();
   const empty = page.locator(".twk-empty");
-  await expect.soft(empty).toContainText("No tweaks yet");
+  await expect(empty).toContainText("No tweaks yet");
   await shoot(page, "empty", empty);
   await empty.getByRole("button", { name: "Suggest tweaks" }).click();
   const runs = await api.waitForRuns(project.id, 2);
-  expect.soft(runs.some((run) => run.request.task === "tweaks")).toBe(true);
+  expect(runs.some((run) => run.request.task === "tweaks")).toBe(true);
   await page.getByRole("tab", { name: /^Tweaks/ }).click();
-  await expect.soft(page.locator("li.twk-row")).toHaveCount(3);
+  await expect(page.locator("li.twk-row")).toHaveCount(3);
 });
 
 test("tweaks panel: drag previews every frame with no reload, commit makes one version, undo restores bytes", async ({
@@ -138,11 +138,11 @@ test("tweaks panel: drag previews every frame with no reload, commit makes one v
   const main = mainDirection(project);
   const indexPath = path.join(main.workTree, "index.html");
   const tweaksPath = path.join(main.workTree, TWEAKS_FILE);
-  await expect.soft(frontFrame(page).locator("h1")).toHaveText("Tweaks Studio");
+  await expect(frontFrame(page).locator("h1")).toHaveText("Tweaks Studio");
 
   await sendPrompt(page, "Add a short note");
   await api.waitForRuns(project.id, 2);
-  await expect.soft(frontFrame(page).locator(".mock-edit")).toHaveCount(1);
+  await expect(frontFrame(page).locator(".mock-edit")).toHaveCount(1);
   const htmlBefore = readFileSync(indexPath, "utf-8");
   const tweaksBefore = readFileSync(tweaksPath, "utf-8");
 
@@ -151,31 +151,29 @@ test("tweaks panel: drag previews every frame with no reload, commit makes one v
   await expect.poll(async () => (await probe(front)).radius).toBe("12px");
 
   await page.getByRole("tab", { name: /^Tweaks/ }).click();
-  await expect.soft(page.locator("li.twk-row")).toHaveCount(3);
+  await expect(page.locator("li.twk-row")).toHaveCount(3);
   const radiusRow = page.locator('li.twk-row[data-tweak="radius"]');
   const slider = radiusRow.locator('input[type="range"]');
   await dragSlider(page, slider, 0.75);
   await expect.poll(async () => (await probe(front)).radius).not.toBe("12px");
   const dragged = (await probe(front)).radius;
-  await expect.soft(radiusRow.locator(".twk-readout")).toHaveText(dragged);
-  expect.soft((await probe(front)).marker).toBe("kept");
-  await expect.soft(radiusRow).toHaveClass(/changed/);
+  await expect(radiusRow.locator(".twk-readout")).toHaveText(dragged);
+  expect((await probe(front)).marker).toBe("kept");
+  await expect(radiusRow).toHaveClass(/changed/);
 
   await page.getByLabel("Accent", { exact: true }).fill("#ff3366");
   await expect
     .poll(async () => (await probe(front)).color)
     .toBe("rgb(255, 51, 102)");
-  await expect.soft(page.locator(".twk-count")).toHaveText("2 changes");
-  await expect
-    .soft(page.getByRole("tab", { name: /^Tweaks/ }))
-    .toContainText("2");
+  await expect(page.locator(".twk-count")).toHaveText("2 changes");
+  await expect(page.getByRole("tab", { name: /^Tweaks/ })).toContainText("2");
   await page.locator(".twk-title").click();
   await page.keyboard.press("ControlOrMeta+z");
-  await expect.soft(page.locator(".twk-count")).toHaveText("1 change");
+  await expect(page.locator(".twk-count")).toHaveText("1 change");
   await expect
     .poll(async () => (await probe(front)).color)
     .toBe("rgb(15, 107, 92)");
-  expect.soft((await probe(front)).radius).toBe(dragged);
+  expect((await probe(front)).radius).toBe(dragged);
 
   const gapSlider = page.locator(
     'li.twk-row[data-tweak="gap"] input[type="range"]'
@@ -185,24 +183,24 @@ test("tweaks panel: drag previews every frame with no reload, commit makes one v
   await page.keyboard.press("ArrowRight");
   await page.keyboard.press("ArrowRight");
   await expect.poll(async () => (await probe(front)).gap).toBe("32px");
-  await expect.soft(page.locator(".twk-count")).toHaveText("2 changes");
+  await expect(page.locator(".twk-count")).toHaveText("2 changes");
   await shoot(page, "panel-pending", radiusRow);
   await page
     .locator('li.twk-row[data-tweak="gap"]')
     .getByRole("button", { name: "Reset Card gap" })
     .click();
   await expect.poll(async () => (await probe(front)).gap).toBe("24px");
-  expect.soft((await probe(front)).marker).toBe("kept");
+  expect((await probe(front)).marker).toBe("kept");
 
   await showVersions(page);
   const rows = page.locator("li.version");
   await rows.nth(0).getByRole("button", { name: "Compare" }).click();
   await rows.nth(1).getByRole("button", { name: "Compare" }).click();
   await page
-    .getByRole("button", { exact: true, name: "Compare" })
+    .getByRole("button", { name: "Compare", exact: true })
     .first()
     .click();
-  await expect.soft(page.locator(".compare-pane")).toHaveCount(2);
+  await expect(page.locator(".compare-pane")).toHaveCount(2);
 
   const panes = [
     page.frameLocator(".compare-pane:nth-child(1) iframe"),
@@ -210,33 +208,33 @@ test("tweaks panel: drag previews every frame with no reload, commit makes one v
   ];
 
   for (const pane of panes) {
-    await expect.soft(pane.locator("h1")).toHaveText("Tweaks Studio");
+    await expect(pane.locator("h1")).toHaveText("Tweaks Studio");
     await expect.poll(async () => (await probe(pane)).radius).toBe(dragged);
   }
 
   await page.getByRole("button", { name: "Close compare" }).click();
-  await expect.soft(front.locator("h1")).toBeVisible();
+  await expect(front.locator("h1")).toBeVisible();
 
   await page.getByRole("tab", { name: /^Tweaks/ }).click();
   const versionsBefore = (await api.versions(project.id, main.id)).length;
-  await page.getByRole("button", { exact: true, name: "Commit" }).click();
-  await expect.soft(page.locator(".twk-footer")).toHaveCount(0);
+  await page.getByRole("button", { name: "Commit", exact: true }).click();
+  await expect(page.locator(".twk-footer")).toHaveCount(0);
   await expect
     .poll(() => readFileSync(indexPath, "utf-8"))
     .toContain(`--tw-radius: ${dragged};`);
-  expect
-    .soft(readFileSync(indexPath, "utf-8"))
-    .toBe(htmlBefore.replace("--tw-radius: 12px;", `--tw-radius: ${dragged};`));
+  expect(readFileSync(indexPath, "utf-8")).toBe(
+    htmlBefore.replace("--tw-radius: 12px;", `--tw-radius: ${dragged};`)
+  );
   await expect
     .poll(async () => (await api.versions(project.id, main.id)).length)
     .toBe(versionsBefore + 1);
   const head = (await api.versions(project.id, main.id))[0];
-  expect.soft(head?.title).toBe("Tweak: Corner radius");
-  expect
-    .soft(JSON.parse(readFileSync(tweaksPath, "utf-8")).controls[1].default)
-    .toBe(Number.parseFloat(dragged));
-  await expect.soft(radiusRow.locator(".twk-readout")).toHaveText(dragged);
-  await expect.soft(radiusRow).not.toHaveClass(/changed/);
+  expect(head?.title).toBe("Tweak: Corner radius");
+  expect(
+    JSON.parse(readFileSync(tweaksPath, "utf-8")).controls[1].default
+  ).toBe(Number.parseFloat(dragged));
+  await expect(radiusRow.locator(".twk-readout")).toHaveText(dragged);
+  await expect(radiusRow).not.toHaveClass(/changed/);
   await expect
     .poll(async () => (await probe(frontFrame(page))).radius)
     .toBe(dragged);
@@ -244,8 +242,8 @@ test("tweaks panel: drag previews every frame with no reload, commit makes one v
   await page.locator(".twk-title").click();
   await page.keyboard.press("ControlOrMeta+z");
   await expect.poll(() => readFileSync(indexPath, "utf-8")).toBe(htmlBefore);
-  expect.soft(readFileSync(tweaksPath, "utf-8")).toBe(tweaksBefore);
-  await expect.soft(radiusRow.locator(".twk-readout")).toHaveText("12px");
+  expect(readFileSync(tweaksPath, "utf-8")).toBe(tweaksBefore);
+  await expect(radiusRow.locator(".twk-readout")).toHaveText("12px");
   await expect
     .poll(async () => (await probe(frontFrame(page))).radius)
     .toBe("12px");

@@ -19,7 +19,7 @@ function RoutesTab({
   const [custom, setCustom] = useState("");
   useEffect(() => {
     let isLive = true;
-    void (async () => {
+    const loadRoutes = async (): Promise<void> => {
       try {
         const result = await api.appRoutes(projectId);
         if (isLive) {
@@ -30,7 +30,8 @@ function RoutesTab({
           setError(errorText(caught));
         }
       }
-    })();
+    };
+    void loadRoutes();
     return () => {
       isLive = false;
     };

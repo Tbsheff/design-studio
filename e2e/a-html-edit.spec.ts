@@ -27,14 +27,13 @@ function changedLines(
 ): { index: number; before: string; after: string }[] {
   const a = before.split("\n");
   const b = after.split("\n");
-  expect.soft(b).toHaveLength(a.length);
-
+  expect(b.length).toBe(a.length);
   return a.flatMap((line, index) =>
-    line === b[index] ? [] : [{ after: b[index] ?? "", before: line, index }]
+    line === b[index] ? [] : [{ index, before: line, after: b[index] ?? "" }]
   );
 }
 
-test("a: HTML mock create, select edit, undo, restore, export", async ({
+test("A: HTML mock create, select edit, undo, restore, export", async ({
   page,
   context,
 }) => {
@@ -43,9 +42,9 @@ test("a: HTML mock create, select edit, undo, restore, export", async ({
   const main = mainDirection(project);
   const frame = frontFrame(page);
 
-  await expect.soft(frame.locator("h1")).toHaveText(CREATE_PROMPT);
+  await expect(frame.locator("h1")).toHaveText(CREATE_PROMPT);
   await api.waitForRuns(project.id, 1);
-  await expect.soft(page.locator("li.version")).toHaveCount(1);
+  await expect(page.locator("li.version")).toHaveCount(1);
   const firstHead = await headVersion(api, project.id, main.id);
 
   const indexFile = path.join(main.workTree, "index.html");
@@ -54,61 +53,57 @@ test("a: HTML mock create, select edit, undo, restore, export", async ({
   const cardsBefore = await frame.locator(".card").allTextContents();
 
   await selectInFrame(page, "h1");
-  await expect.soft(page.locator(".chip")).toHaveCount(1);
+  await expect(page.locator(".chip")).toHaveCount(1);
   await sendPrompt(page, EDIT_PROMPT);
 
-  await expect.soft(frame.locator("h1")).toHaveText(EDIT_PROMPT);
+  await expect(frame.locator("h1")).toHaveText(EDIT_PROMPT);
   await api.waitForRuns(project.id, 2);
-  await expect.soft(frame.locator(".lede")).toHaveText(ledeBefore ?? "");
-  expect
-    .soft(await frame.locator(".card").allTextContents())
-    .toEqual(cardsBefore);
+  await expect(frame.locator(".lede")).toHaveText(ledeBefore ?? "");
+  expect(await frame.locator(".card").allTextContents()).toEqual(cardsBefore);
 
   const afterEdit = readFileSync(indexFile, "utf-8");
   const diff = changedLines(beforeEdit, afterEdit);
-  expect.soft(diff).toHaveLength(1);
-  expect.soft(diff[0]?.before.trim()).toBe(`<h1>${CREATE_PROMPT}</h1>`);
-  expect.soft(diff[0]?.after.trim()).toBe(`<h1>${EDIT_PROMPT}</h1>`);
-  await expect.soft(page.locator("li.version")).toHaveCount(2);
+  expect(diff).toHaveLength(1);
+  expect(diff[0]?.before.trim()).toBe(`<h1>${CREATE_PROMPT}</h1>`);
+  expect(diff[0]?.after.trim()).toBe(`<h1>${EDIT_PROMPT}</h1>`);
+  await expect(page.locator("li.version")).toHaveCount(2);
   const editVersion = await headVersion(api, project.id, main.id);
-  expect.soft(editVersion.meta.prompt).toBe(EDIT_PROMPT);
-  expect.soft(editVersion.changedFiles).toEqual(["index.html"]);
+  expect(editVersion.meta.prompt).toBe(EDIT_PROMPT);
+  expect(editVersion.changedFiles).toEqual(["index.html"]);
 
   await showVersions(page);
-  await page.getByRole("button", { exact: true, name: "Undo" }).click();
+  await page.getByRole("button", { name: "Undo", exact: true }).click();
   await expect
     .poll(async () => (await headVersion(api, project.id, main.id)).meta.kind)
     .toBe("undo");
-  await expect.soft(frame.locator("h1")).toHaveText(CREATE_PROMPT);
-  expect.soft(readFileSync(indexFile, "utf-8")).toBe(beforeEdit);
-  await expect.soft(page.locator("li.version")).toHaveCount(3);
+  await expect(frame.locator("h1")).toHaveText(CREATE_PROMPT);
+  expect(readFileSync(indexFile, "utf-8")).toBe(beforeEdit);
+  await expect(page.locator("li.version")).toHaveCount(3);
   const versionsAfterUndo = await api.versions(project.id, main.id);
-  expect
-    .soft(versionsAfterUndo.map((version) => version.id))
-    .toContain(editVersion.id);
+  expect(versionsAfterUndo.map((version) => version.id)).toContain(
+    editVersion.id
+  );
   const undoHead = await headVersion(api, project.id, main.id);
-  expect.soft(undoHead.meta.kind).toBe("undo");
-  expect.soft(undoHead.id).not.toBe(firstHead.id);
+  expect(undoHead.meta.kind).toBe("undo");
+  expect(undoHead.id).not.toBe(firstHead.id);
 
   const undoneRow = page.locator("li.version").filter({
     has: page.locator(`.version-title span[title="${EDIT_PROMPT}"]`),
   });
-
-  await expect.soft(undoneRow).toHaveCount(1);
+  await expect(undoneRow).toHaveCount(1);
   await undoneRow.getByRole("button", { name: "Restore" }).click();
   await expect
     .poll(async () => (await headVersion(api, project.id, main.id)).meta.kind)
     .toBe("restore");
-  await expect.soft(frame.locator("h1")).toHaveText(EDIT_PROMPT);
-  expect.soft(readFileSync(indexFile, "utf-8")).toBe(afterEdit);
+  await expect(frame.locator("h1")).toHaveText(EDIT_PROMPT);
+  expect(readFileSync(indexFile, "utf-8")).toBe(afterEdit);
   const restoredHead = await headVersion(api, project.id, main.id);
-  expect.soft(restoredHead.meta.kind).toBe("restore");
-  await expect.soft(page.locator("li.version")).toHaveCount(4);
+  expect(restoredHead.meta.kind).toBe("restore");
+  await expect(page.locator("li.version")).toHaveCount(4);
 
   const headRow = versionRow(page, restoredHead.title).filter({
     has: page.locator(".badge", { hasText: "Head" }),
   });
-
   await headRow.getByRole("button", { name: "Export" }).click();
   const exportDialog = page.getByRole("dialog", { name: "Export" });
   await exportDialog.getByRole("radio", { name: "Source" }).click();
@@ -118,12 +113,10 @@ test("a: HTML mock create, select edit, undo, restore, export", async ({
   const outDir = mkdtempSync(path.join(os.tmpdir(), "studio export "));
   const zipPath = path.join(outDir, "design.zip");
   await download.saveAs(zipPath);
-
   const listing = execFileSync("unzip", ["-Z1", zipPath], { encoding: "utf-8" })
     .split("\n")
     .filter(Boolean);
-
-  expect.soft(listing).toContain("index.html");
+  expect(listing).toContain("index.html");
   const extracted = path.join(outDir, "site");
   execFileSync("unzip", ["-q", zipPath, "-d", extracted]);
 
@@ -132,16 +125,16 @@ test("a: HTML mock create, select edit, undo, restore, export", async ({
     "utf-8"
   );
 
-  expect.soft(exportedHtml).not.toContain("data-studio-loc");
-  expect.soft(exportedHtml).not.toContain("__studio");
-  expect.soft(existsSync(path.join(extracted, ".studio"))).toBe(false);
+  expect(exportedHtml).not.toContain("data-studio-loc");
+  expect(exportedHtml).not.toContain("__studio");
+  expect(existsSync(path.join(extracted, ".studio"))).toBe(false);
 
   const standalone = await context.newPage();
   const errors: string[] = [];
   standalone.on("pageerror", (error) => errors.push(error.message));
   await standalone.goto(pathToFileURL(path.join(extracted, "index.html")).href);
-  await expect.soft(standalone.locator("h1")).toHaveText(EDIT_PROMPT);
-  await expect.soft(standalone.locator(".lede")).toHaveText(ledeBefore ?? "");
-  expect.soft(errors).toEqual([]);
+  await expect(standalone.locator("h1")).toHaveText(EDIT_PROMPT);
+  await expect(standalone.locator(".lede")).toHaveText(ledeBefore ?? "");
+  expect(errors).toEqual([]);
   await standalone.close();
 });

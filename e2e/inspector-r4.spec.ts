@@ -25,7 +25,7 @@ async function openProject(
   const { project } = await api.call<{ project: Project }>(
     "POST",
     "/api/projects",
-    { kind: "html", prompt, ...(packId ? { packId } : {}) }
+    { prompt, kind: "html", ...(packId ? { packId } : {}) }
   );
 
   await api.waitForRuns(project.id, 1);
@@ -38,7 +38,7 @@ async function openProject(
     );
   }, project.id);
   await page.reload();
-  await expect.soft(frontFrame(page).locator("h1")).toHaveText(prompt);
+  await expect(frontFrame(page).locator("h1")).toHaveText(prompt);
 
   return api.project(project.id);
 }
@@ -52,7 +52,7 @@ function lineOf(file: string, needle: string): string {
 }
 
 async function settled(page: Page): Promise<void> {
-  await expect.soft(page.locator(".ins-status.saving")).toHaveCount(0);
+  await expect(page.locator(".ins-status.saving")).toHaveCount(0);
 }
 
 async function selectCard(page: Page): Promise<void> {
@@ -61,7 +61,7 @@ async function selectCard(page: Page): Promise<void> {
     .locator(".card")
     .first()
     .click({ position: { x: 6, y: 6 } });
-  await expect.soft(page.locator(".ins-tag")).toHaveText("article");
+  await expect(page.locator(".ins-tag")).toHaveText("article");
 }
 
 async function selectCards(page: Page): Promise<void> {
@@ -70,7 +70,7 @@ async function selectCards(page: Page): Promise<void> {
     (document.activeElement as HTMLElement | null)?.blur()
   );
   await page.keyboard.press("Shift+Enter");
-  await expect.soft(page.locator(".ins-tag")).toHaveText("section");
+  await expect(page.locator(".ins-tag")).toHaveText("section");
 }
 
 async function stampOnPress(button: Locator): Promise<void> {
@@ -116,7 +116,7 @@ async function shot(page: Page, name: string, section: string): Promise<void> {
     .screenshot({ path: path.join(SHOTS, `after-w3-${name}.png`) });
 }
 
-test("inspector R4: auto layout, sizing, align self and timing", async ({
+test("Inspector R4: auto layout, sizing, align self and timing", async ({
   page,
 }) => {
   const api = await openHome(page);
@@ -127,16 +127,16 @@ test("inspector R4: auto layout, sizing, align self and timing", async ({
 
   await selectCards(page);
   const layout = page.getByRole("region", { name: "Auto layout" });
-  await expect
-    .soft(layout.getByRole("button", { name: /Add auto layout/ }))
-    .toBeVisible();
+  await expect(
+    layout.getByRole("button", { name: /Add auto layout/ })
+  ).toBeVisible();
   const before = lineOf(file, 'aria-label="Highlights"');
   const composer = page.locator(".prompt textarea");
   await composer.click();
   await page.keyboard.press("Shift+A");
-  await expect.soft(composer).toHaveValue("A");
+  await expect(composer).toHaveValue("A");
   await page.waitForTimeout(300);
-  expect.soft(lineOf(file, 'aria-label="Highlights"')).toBe(before);
+  expect(lineOf(file, 'aria-label="Highlights"')).toBe(before);
   await composer.fill("");
   await page.evaluate(() =>
     (document.activeElement as HTMLElement | null)?.blur()
@@ -146,23 +146,21 @@ test("inspector R4: auto layout, sizing, align self and timing", async ({
     .poll(() => lineOf(file, 'aria-label="Highlights"'))
     .toContain("display: flex");
   await settled(page);
-  await expect.soft(frame.locator(".cards")).toHaveCSS("display", "flex");
-  await expect
-    .soft(layout.getByRole("group", { name: "Direction" }))
-    .toBeVisible();
-  await expect
-    .soft(layout.getByRole("button", { name: /Add auto layout/ }))
-    .toHaveCount(0);
-  await expect
-    .soft(layout.getByLabel("Display", { exact: true }))
-    .toHaveValue("flex");
+  await expect(frame.locator(".cards")).toHaveCSS("display", "flex");
+  await expect(layout.getByRole("group", { name: "Direction" })).toBeVisible();
+  await expect(
+    layout.getByRole("button", { name: /Add auto layout/ })
+  ).toHaveCount(0);
+  await expect(layout.getByLabel("Display", { exact: true })).toHaveValue(
+    "flex"
+  );
 
   await selectCard(page);
   const widthMode = page.getByLabel("Width sizing");
   await widthMode.selectOption("fill");
   await expect.poll(() => lineOf(file, "First idea")).toContain("flex: 1");
   await settled(page);
-  await expect.soft(widthMode).toHaveValue("fill");
+  await expect(widthMode).toHaveValue("fill");
   const self = page.getByRole("group", { name: "Align self" });
   await self.getByRole("button", { name: "Align self center" }).click();
   await expect
@@ -200,37 +198,35 @@ test("inspector R4: auto layout, sizing, align self and timing", async ({
     `[r4-timing] row->column preview ${previewMs} ms, file bytes ${fileMs} ms`
   );
   test.info().annotations.push({
-    description: `preview ${previewMs} ms, file ${fileMs} ms`,
     type: "timing",
+    description: `preview ${previewMs} ms, file ${fileMs} ms`,
   });
-  expect.soft(previewMs).toBeLessThan(250);
-  expect
-    .soft(lineOf(file, 'aria-label="Highlights"'))
-    .toMatch(/style="[^"]*flex-direction: column/);
+  expect(previewMs).toBeLessThan(250);
+  expect(lineOf(file, 'aria-label="Highlights"')).toMatch(
+    /style="[^"]*flex-direction: column/
+  );
   await settled(page);
   await layout.getByRole("button", { name: "Align center center" }).click();
   await expect
     .poll(() => lineOf(file, 'aria-label="Highlights"'))
     .toContain("justify-content: center");
-  expect
-    .soft(lineOf(file, 'aria-label="Highlights"'))
-    .toContain("align-items: center");
+  expect(lineOf(file, 'aria-label="Highlights"')).toContain(
+    "align-items: center"
+  );
   await settled(page);
   await shot(page, "flex", "Auto layout");
 
   await selectInFrame(page, "h1");
   await page.getByLabel("Width sizing").selectOption("fill");
   await expect.poll(() => lineOf(file, "<h1")).toContain("width: 100%");
-  expect.soft(lineOf(file, "<h1")).not.toContain("flex:");
+  expect(lineOf(file, "<h1")).not.toContain("flex:");
   await settled(page);
-  await expect
-    .soft(page.getByRole("group", { name: "Align self" }))
-    .toHaveCount(0);
+  await expect(page.getByRole("group", { name: "Align self" })).toHaveCount(0);
   const display = layout.getByLabel("Display", { exact: true });
-  await expect.soft(display).toHaveValue("block");
-  await expect
-    .soft(layout.getByRole("button", { name: /Add auto layout/ }))
-    .toBeVisible();
+  await expect(display).toHaveValue("block");
+  await expect(
+    layout.getByRole("button", { name: /Add auto layout/ })
+  ).toBeVisible();
   await display.selectOption("grid");
   await expect.poll(() => lineOf(file, "<h1")).toContain("display: grid");
   await settled(page);
@@ -238,7 +234,7 @@ test("inspector R4: auto layout, sizing, align self and timing", async ({
   await expect.poll(() => lineOf(file, "<h1")).toContain("display: none");
 });
 
-test("inspector R4: math, per-corner radius, shadow read back and scroll", async ({
+test("Inspector R4: math, per-corner radius, shadow read back and scroll", async ({
   page,
 }) => {
   const api = await openHome(page);
@@ -259,10 +255,10 @@ test("inspector R4: math, per-corner radius, shadow read back and scroll", async
   await sent;
   const requestMs = Date.now() - enterAt;
   console.log(`[r4-timing] Enter -> direct-edit request ${requestMs} ms`);
-  expect.soft(requestMs).toBeLessThan(200);
+  expect(requestMs).toBeLessThan(200);
   await expect.poll(() => lineOf(file, "<h1")).toContain("font-size: 16px");
   await settled(page);
-  await expect.soft(size).toHaveValue("16px");
+  await expect(size).toHaveValue("16px");
   await size.fill("+8");
   await size.press("Enter");
   await expect.poll(() => lineOf(file, "<h1")).toContain("font-size: 24px");
@@ -340,7 +336,7 @@ test("inspector R4: math, per-corner radius, shadow read back and scroll", async
     .toContain("filter: blur(2px)");
   await settled(page);
   const card = lineOf(file, "First idea");
-  expect.soft(card.match(/box-shadow:/g)).toHaveLength(1);
+  expect(card.match(/box-shadow:/g)).toHaveLength(1);
   await shot(page, "effects", "Effects");
 
   const fields = [
@@ -360,17 +356,15 @@ test("inspector R4: math, per-corner radius, shadow read back and scroll", async
     );
 
   const before = await read();
-  expect
-    .soft(before)
-    .toEqual(["-4px", "8px", "12px", "0", "var(--line)", "2px"]);
+  expect(before).toEqual(["-4px", "8px", "12px", "0", "var(--line)", "2px"]);
 
   await page.reload();
-  await expect.soft(frontFrame(page).locator("h1")).toHaveText("Kiln Effects");
+  await expect(frontFrame(page).locator("h1")).toHaveText("Kiln Effects");
   await selectCard(page);
-  expect.soft(await read()).toEqual(before);
-  await expect
-    .soft(page.getByLabel("Top right radius", { exact: true }))
-    .toHaveValue("8px");
+  expect(await read()).toEqual(before);
+  await expect(
+    page.getByLabel("Top right radius", { exact: true })
+  ).toHaveValue("8px");
 
   for (const [width, height] of [
     [1600, 1000],
@@ -378,12 +372,12 @@ test("inspector R4: math, per-corner radius, shadow read back and scroll", async
     [1280, 720],
     [800, 934],
   ] as const) {
-    await page.setViewportSize({ height, width });
+    await page.setViewportSize({ width, height });
     await page
       .locator(".ins-scroll")
       .evaluate((el) => el.scrollTo(0, el.scrollHeight));
     const blurField = page.getByLabel("Layer blur", { exact: true });
-    await expect.soft(blurField).toBeVisible();
+    await expect(blurField).toBeVisible();
 
     const reach = await blurField.evaluate((el) => {
       const r = el.getBoundingClientRect();
@@ -393,24 +387,24 @@ test("inspector R4: math, per-corner radius, shadow read back and scroll", async
         ?.getBoundingClientRect();
 
       return {
-        bottom: r.bottom,
         hit:
           document.elementFromPoint(
             r.left + r.width / 2,
             r.top + r.height / 2
           ) === el,
+        bottom: r.bottom,
         promptTop: prompt?.top ?? Infinity,
       };
     });
 
-    expect.soft(reach, `${width}x${height}`).toMatchObject({ hit: true });
-    expect
-      .soft(reach.bottom, `${width}x${height}`)
-      .toBeLessThanOrEqual(reach.promptTop);
+    expect(reach, `${width}x${height}`).toMatchObject({ hit: true });
+    expect(reach.bottom, `${width}x${height}`).toBeLessThanOrEqual(
+      reach.promptTop
+    );
   }
 });
 
-test("inspector R4: a shadow color token stays a token after reload", async ({
+test("Inspector R4: a shadow color token stays a token after reload", async ({
   page,
 }) => {
   const api = await openHome(page);
@@ -448,25 +442,21 @@ test("inspector R4: a shadow color token stays a token after reload", async ({
     .poll(() => lineOf(file, "<h1"))
     .toMatch(/box-shadow: 0 4px 12px 0 var\(--primary\)/);
   await settled(page);
-  expect
-    .soft(lineOf(file, "<h1"))
-    .not.toMatch(/(^|[^-])color: var\(--primary\)/);
-  await expect
-    .soft(page.getByRole("button", { name: "Shadow 1 color: token --primary" }))
-    .toBeVisible();
+  expect(lineOf(file, "<h1")).not.toMatch(/(^|[^-])color: var\(--primary\)/);
+  await expect(
+    page.getByRole("button", { name: "Shadow 1 color: token --primary" })
+  ).toBeVisible();
 
   await page.reload();
-  await expect
-    .soft(frontFrame(page).locator("h1"))
-    .toHaveText("Kiln Token Shadow");
+  await expect(frontFrame(page).locator("h1")).toHaveText("Kiln Token Shadow");
   await selectInFrame(page, "h1");
-  await expect
-    .soft(page.getByLabel("Shadow 1 color", { exact: true }))
-    .toHaveValue("var(--primary)");
-  await expect
-    .soft(page.getByRole("button", { name: "Shadow 1 color: token --primary" }))
-    .toBeVisible();
-  await expect
-    .soft(page.getByLabel("Shadow 1 y offset", { exact: true }))
-    .toHaveValue("4px");
+  await expect(page.getByLabel("Shadow 1 color", { exact: true })).toHaveValue(
+    "var(--primary)"
+  );
+  await expect(
+    page.getByRole("button", { name: "Shadow 1 color: token --primary" })
+  ).toBeVisible();
+  await expect(
+    page.getByLabel("Shadow 1 y offset", { exact: true })
+  ).toHaveValue("4px");
 });

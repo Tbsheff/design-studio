@@ -12,13 +12,13 @@ import { compareToReference, referenceAttachment } from "./reference-check.js";
 import { resolveShotTarget } from "./run-target.js";
 import type { TargetDeps } from "./run-target.js";
 
-interface ToolResult {
+type ToolResult = Readonly<{
   content: (
     | { type: "text"; text: string }
     | { type: "image"; data: string; mimeType: string }
   )[];
   isError?: boolean;
-}
+}>;
 
 export const compareReferenceShape = {
   attachment: z
@@ -127,7 +127,7 @@ export async function runCompareToReference(
       url: shot.url,
       file: attachment.path,
       mime: attachment.mime,
-      ...(shot.size > 0 ? { frameWidth: shot.size.width } : {}),
+      ...(shot.size === null ? {} : { frameWidth: shot.size.width }),
       outDir: deps.runsDir,
       stem: `${deps.runId}-compare-${calls}`,
     });

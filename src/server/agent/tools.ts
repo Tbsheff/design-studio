@@ -666,7 +666,7 @@ function shotBox(
     return { box: VIEWPORTS[viewport], name: viewport };
   }
 
-  if (target.size > 0) {
+  if (target.size !== null) {
     return { box: target.size, name: viewportName(target.size.width) };
   }
 

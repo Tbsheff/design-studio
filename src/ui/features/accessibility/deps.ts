@@ -2,6 +2,8 @@ export { json, replaceStyle } from "../../api.js";
 
 export { postToFrame, useBridge } from "../../platform/bridge.js";
 
+export { createLiveStore, useLive } from "../../platform/live-store.js";
+
 export type { BridgeFrame } from "../../platform/bridge.js";
 
 export { insertError } from "../design-system/component-insert-api.js";

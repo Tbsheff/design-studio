@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState, useTransition } from "react";
 
 import type {
   McpActivity,
@@ -86,10 +86,23 @@ export const feedShown = (mcp: McpFeedControl | null): boolean =>
   mcp !== null && (mcp.activity.length > 0 || mcp.approvals.length > 0);
 
 const DisconnectButton = () => {
-  const [state, setState] = useState<"idle" | "busy" | "done">("idle");
+  const [isDone, setIsDone] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  if (state === "done") {
+  const disconnect = () => {
+    setError(null);
+    startTransition(async () => {
+      try {
+        await mcpApi.disconnect();
+        setIsDone(true);
+      } catch (caught: unknown) {
+        setError(errorText(caught));
+      }
+    });
+  };
+
+  if (isDone) {
     return <span className="mcp-block-note">Edits off</span>;
   }
 
@@ -103,20 +116,10 @@ const DisconnectButton = () => {
       <button
         type="button"
         className="mcp-block-btn"
-        disabled={state === "busy"}
+        disabled={isPending}
         data-tip="Turn off Allow edits. The MCP server keeps running."
         data-tip-align="end"
-        onClick={() => {
-          setState("busy");
-          setError(null);
-          mcpApi
-            .disconnect()
-            .then(() => setState("done"))
-            .catch((caught: unknown) => {
-              setState("idle");
-              setError(errorText(caught));
-            });
-        }}
+        onClick={disconnect}
       >
         Disconnect
       </button>
@@ -299,11 +302,14 @@ export const McpBlock = ({
   );
 };
 
-const OUTCOME_TEXT: Record<McpApprovalOutcome, string> = {
-  allow: "Allowed",
-  closed: "Closed",
-  deny: "Denied",
-  timeout: "Expired",
+const OUTCOME_VIEW: Record<
+  McpApprovalOutcome,
+  { readonly icon: IconName; readonly text: string }
+> = {
+  allow: { icon: "check", text: "Allowed" },
+  closed: { icon: "alert", text: "Closed" },
+  deny: { icon: "close", text: "Denied" },
+  timeout: { icon: "alert", text: "Expired" },
 };
 
 const countdown = (ms: number): string => {
@@ -323,7 +329,7 @@ export const McpApproval = ({
 }) => {
   const { approval } = card;
   const [local, setLocal] = useState<McpApprovalOutcome | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const now = useNow(1000, card.outcome === null && local === null);
 
@@ -337,17 +343,8 @@ export const McpApproval = ({
         data-testid="mcp-approval"
         data-outcome={outcome}
       >
-        <Icon
-          name={
-            outcome === "allow"
-              ? "check"
-              : outcome === "deny"
-                ? "close"
-                : "alert"
-          }
-          size={14}
-        />
-        <strong>{OUTCOME_TEXT[outcome]}</strong>
+        <Icon name={OUTCOME_VIEW[outcome].icon} size={14} />
+        <strong>{OUTCOME_VIEW[outcome].text}</strong>
         <span className="mcp-approval-done-text" data-tip={approval.title}>
           {approval.title}
         </span>
@@ -356,13 +353,13 @@ export const McpApproval = ({
   }
 
   const answer = (allow: boolean) => {
-    setBusy(true);
     setError(null);
-    mcpApi
-      .answer(approval.id, allow)
-      .then(() => onAnswer?.(allow))
-      .catch((caught: unknown) => {
-        setBusy(false);
+    startTransition(async () => {
+      try {
+        await mcpApi.answer(approval.id, allow);
+        setLocal(allow ? "allow" : "deny");
+        onAnswer?.(allow);
+      } catch (caught: unknown) {
         const text = errorText(caught);
 
         if (/not open/u.test(text)) {
@@ -370,7 +367,8 @@ export const McpApproval = ({
         } else {
           setError(text);
         }
-      });
+      }
+    });
   };
 
   return (
@@ -392,7 +390,7 @@ export const McpApproval = ({
         <button
           type="button"
           className="btn small primary"
-          disabled={busy}
+          disabled={isPending}
           onClick={() => answer(true)}
         >
           Allow once
@@ -400,7 +398,7 @@ export const McpApproval = ({
         <button
           type="button"
           className="btn small"
-          disabled={busy}
+          disabled={isPending}
           onClick={() => answer(false)}
         >
           Deny

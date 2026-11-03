@@ -30,18 +30,18 @@ async function createDtcgDraft(
 ): Promise<Project> {
   const before = new Set((await api.projects()).map((project) => project.id));
   await page
-    .getByRole("button", { exact: true, name: "Design system" })
+    .getByRole("button", { name: "Design system", exact: true })
     .click();
   await page.getByRole("button", { name: "New design system…" }).click();
-  await expect
-    .soft(page.getByRole("heading", { name: "New design system" }))
-    .toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "New design system" })
+  ).toBeVisible();
   await page.getByLabel("Design system name").fill(name);
   await page.getByLabel("Tokens file upload").setInputFiles(DTCG);
   await page.getByRole("button", { name: "Create draft" }).click();
-  await expect
-    .soft(page.getByRole("region", { name: "Design system draft" }))
-    .toContainText(name);
+  await expect(
+    page.getByRole("region", { name: "Design system draft" })
+  ).toContainText(name);
   const project = (await api.projects()).find((item) => !before.has(item.id));
 
   if (!project) {
@@ -71,14 +71,14 @@ async function pickerOptions(page: Page): Promise<string[]> {
     .locator(".topbar")
     .getByRole("button", { name: "Projects" })
     .click();
-  await expect
-    .soft(page.getByRole("heading", { name: "New project" }))
-    .toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "New project" })
+  ).toBeVisible();
   await page
-    .getByRole("button", { exact: true, name: "Design system" })
+    .getByRole("button", { name: "Design system", exact: true })
     .click();
   const list = page.getByRole("listbox", { name: "Design systems" });
-  await expect.soft(list.getByRole("option").first()).toBeVisible();
+  await expect(list.getByRole("option").first()).toBeVisible();
 
   return list.getByRole("option").allTextContents();
 }
@@ -89,69 +89,61 @@ test("improve with AI: a DTCG draft passes the check, then Save to library puts 
   const api = await openHome(page);
   const project = await createDtcgDraft(page, api, "Harbor Kit");
   const packId = project.designSystemFor as string;
-  expect.soft(await packOf(api, packId)).toMatchObject({ draft: true });
+  expect(await packOf(api, packId)).toMatchObject({ draft: true });
 
   const bar = page.getByRole("region", { name: "Design system draft" });
   await bar.getByRole("button", { name: /^\d+ problems?$/ }).click();
-  await expect
-    .soft(bar.getByRole("region", { name: "Design system check problems" }))
-    .toContainText("still has a to-do line");
-  await expect
-    .soft(bar.getByRole("button", { name: "Save to library" }))
-    .not.toHaveClass(/primary/);
+  await expect(
+    bar.getByRole("region", { name: "Design system check problems" })
+  ).toContainText("still has a to-do line");
+  await expect(
+    bar.getByRole("button", { name: "Save to library" })
+  ).not.toHaveClass(/primary/);
 
   await improve(page, "Calm, quiet neutrals");
   const [run] = await api.waitForRuns(project.id, 1);
-  expect.soft(run).toMatchObject({
-    designSystemCheck: { passed: true, rounds: 0 },
-    request: { task: "design-system" },
+  expect(run).toMatchObject({
     status: "completed",
+    request: { task: "design-system" },
+    designSystemCheck: { passed: true, rounds: 0 },
   });
-  expect
-    .soft(run?.request.prompt)
-    .toBe("Improve this design system.\n\nFocus: Calm, quiet neutrals");
-  await expect
-    .soft(bar.locator(".draft-check.passed"))
-    .toHaveText("Check passed");
-  await expect
-    .soft(bar.getByRole("button", { name: "Save to library" }))
-    .toHaveClass(/primary/);
+  expect(run?.request.prompt).toBe(
+    "Improve this design system.\n\nFocus: Calm, quiet neutrals"
+  );
+  await expect(bar.locator(".draft-check.passed")).toHaveText("Check passed");
+  await expect(
+    bar.getByRole("button", { name: "Save to library" })
+  ).toHaveClass(/primary/);
   const tree = mainDirection(project).workTree;
-  expect
-    .soft(readFileSync(path.join(tree, "DESIGN.md"), "utf-8"))
-    .not.toMatch(/^_To do:/m);
+  expect(readFileSync(path.join(tree, "DESIGN.md"), "utf-8")).not.toMatch(
+    /^_To do:/m
+  );
 
   const coverage = JSON.parse(
     readFileSync(path.join(tree, "source", "coverage.json"), "utf-8")
   ) as DesignSystemCoverage;
 
-  expect.soft(coverage.version).toBe(1);
+  expect(coverage.version).toBe(1);
 
   await bar.getByRole("button", { name: "Save to library" }).click();
-  await expect
-    .soft(
-      page.locator(".ds-toast", {
-        hasText: "Saved Harbor Kit to your library.",
-      })
-    )
-    .toBeVisible();
-  expect.soft((await packOf(api, packId))?.draft).toBeUndefined();
+  await expect(
+    page.locator(".ds-toast", { hasText: "Saved Harbor Kit to your library." })
+  ).toBeVisible();
+  expect((await packOf(api, packId))?.draft).toBeUndefined();
 
   const detail = await api.call<{ designMd: string }>(
     "GET",
     `/api/packs/${packId}`
   );
 
-  expect.soft(detail.designMd).not.toMatch(/^_To do:/m);
+  expect(detail.designMd).not.toMatch(/^_To do:/m);
 
   const options = await pickerOptions(page);
-  expect
-    .soft(
-      options.some(
-        (text) => text.includes("Harbor Kit") && text.includes("Yours")
-      )
+  expect(
+    options.some(
+      (text) => text.includes("Harbor Kit") && text.includes("Yours")
     )
-    .toBe(true);
+  ).toBe(true);
 });
 
 test("improve with AI: the studio sends the agent back when the check fails, and an unsaved draft stays out of the picker", async ({
@@ -161,34 +153,28 @@ test("improve with AI: the studio sends the agent back when the check fails, and
   const project = await createDtcgDraft(page, api, "Ember Kit");
   await improve(page, "Warmer accents [ds-fail-once]");
   const [run] = await api.waitForRuns(project.id, 1);
-  expect.soft(run).toMatchObject({
-    designSystemCheck: { passed: true, rounds: 1 },
+  expect(run).toMatchObject({
     status: "completed",
+    designSystemCheck: { passed: true, rounds: 1 },
   });
-  expect
-    .soft(run?.finalText)
-    .toContain("Design system check: passed after 1 studio fix round(s).");
+  expect(run?.finalText).toContain(
+    "Design system check: passed after 1 studio fix round(s)."
+  );
 
   const detail = await api.call<{
     sent: { text: string; continuation?: number }[];
   }>("GET", `/api/runs/${run?.id}`);
 
-  expect
-    .soft(detail.sent.map((item) => item.continuation ?? 0))
-    .toEqual([0, 1]);
-  expect
-    .soft(detail.sent[1]?.text)
-    .toContain("[design-md] DESIGN.md still has a to-do line");
+  expect(detail.sent.map((item) => item.continuation ?? 0)).toEqual([0, 1]);
+  expect(detail.sent[1]?.text).toContain(
+    "[design-md] DESIGN.md still has a to-do line"
+  );
   const bar = page.getByRole("region", { name: "Design system draft" });
-  await expect
-    .soft(bar.locator(".draft-check.passed"))
-    .toHaveText("Check passed");
+  await expect(bar.locator(".draft-check.passed")).toHaveText("Check passed");
 
   const options = await pickerOptions(page);
-  expect.soft(options.some((text) => text.includes("Ember Kit"))).toBe(false);
-  expect
-    .soft(await packOf(api, project.designSystemFor as string))
-    .toMatchObject({
-      draft: true,
-    });
+  expect(options.some((text) => text.includes("Ember Kit"))).toBe(false);
+  expect(await packOf(api, project.designSystemFor as string)).toMatchObject({
+    draft: true,
+  });
 });

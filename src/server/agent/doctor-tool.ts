@@ -1,10 +1,10 @@
 import { describeDoctor, DOCTOR_NOTE } from "../../shared/app-doctor.js";
 import type { AgentRunContext, PreviewService } from "../types.js";
 
-interface ToolText {
+type ToolText = Readonly<{
   content: { type: "text"; text: string }[];
   isError?: boolean;
-}
+}>;
 
 export const APP_DOCTOR_DESCRIPTION = `Attached apps only. Read only. Name the cause when the app dev server fails or a frame shows an error overlay, with the same server code as the doctor card in the studio and the MCP app_doctor tool: env validation (with the env key that skips it), missing .env, port in use, missing install, sign-in redirect. fresh: true requests the app root again first. You cannot apply the fix; tell the user to press the fix button on the doctor card. ${DOCTOR_NOTE}`;
 

@@ -1,4 +1,4 @@
-import { ApiError, call, directEditRoutes } from "./deps.js";
+import { ApiError, call, createLiveStore, directEditRoutes } from "./deps.js";
 import type {
   InsertComponentRequest,
   InsertJsxRequest,
@@ -27,10 +27,6 @@ interface InsertHost {
     component: InsertableComponent,
     position: InsertPosition
   ) => void;
-}
-
-interface HostSlot {
-  current: InsertHost | null;
 }
 
 type InsertOutput = RouteOutput<
@@ -91,17 +87,17 @@ const insertError = (error: unknown): string => {
   return String(error);
 };
 
-const slot: HostSlot = { current: null };
+const hostStore = createLiveStore<InsertHost | null>(null);
 
 const insertBus = {
   clear: (owner: InsertHost): void => {
-    if (slot.current === owner) {
-      slot.current = null;
+    if (hostStore.get() === owner) {
+      hostStore.set(null);
     }
   },
-  get: (): InsertHost | null => slot.current,
+  get: (): InsertHost | null => hostStore.get(),
   set: (next: InsertHost | null): void => {
-    slot.current = next;
+    hostStore.set(next);
   },
 };
 

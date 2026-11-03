@@ -71,7 +71,7 @@ const useTweaksState = (o: Options) => {
   live.current = key;
 
   useEffect(() => {
-    const { directionId } = o;
+    const directionId = o.directionId;
 
     if (!directionId) {
       return;

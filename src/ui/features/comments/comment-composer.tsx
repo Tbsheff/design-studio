@@ -112,10 +112,9 @@ interface ImageChip {
 
 const IMAGE_MAX = 4;
 
-const imageCounter = { value: 0 };
-
 const useImages = (projectId: string) => {
   const [images, setImages] = useState<ImageChip[]>([]);
+  const imageCounter = useRef(0);
   const live = useRef(images);
   live.current = images;
   useEffect(
@@ -144,8 +143,8 @@ const useImages = (projectId: string) => {
     const room = IMAGE_MAX - live.current.length;
 
     for (const file of files.slice(0, Math.max(0, room))) {
-      imageCounter.value += 1;
-      const key = `img${imageCounter.value}`;
+      imageCounter.current += 1;
+      const key = `img${imageCounter.current}`;
       setImages((prev) => [
         ...prev,
         {

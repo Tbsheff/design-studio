@@ -20,7 +20,7 @@ import { CopyCodeMenu } from "../share-publish-ship-export/copy-code-menu.js";
 import { AutoLayoutSection } from "./auto-layout-section.js";
 import { BoxModel } from "./box-model.js";
 import type { DeclaredMargins } from "./box-model.js";
-import { SIDES, sameEditValues } from "./css-values.js";
+import { SIDES } from "./css-values.js";
 import { VariantScopeContext, useEditVariant } from "./edit-variant.js";
 import { InspectorBreadcrumb } from "./inspector-breadcrumb.js";
 import {
@@ -68,7 +68,7 @@ import { InspectorVariantBar } from "./inspector-variant-bar.js";
 import { NumberField } from "./number-field.js";
 import { MinMaxRows } from "./size-limits.js";
 import { useAuthoredCss } from "./use-authored-css.js";
-import { useDirectEdit } from "./use-direct-edit.js";
+import { sameEditValues, useDirectEdit } from "./use-direct-edit.js";
 import type {
   DirectEdit,
   DirectEditCommit,

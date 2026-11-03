@@ -47,7 +47,7 @@ const ORPHAN_GRACE_MS = 1500;
 
 const ADDED_MS = 2400;
 
-let addedTimer: number | null = null;
+let addedTimer: ReturnType<typeof globalThis.setTimeout> | null = null;
 
 const justAddedStore = createLiveStore(false);
 

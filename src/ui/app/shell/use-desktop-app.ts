@@ -136,6 +136,18 @@ function runAppCommand(id: string): void {
   );
 }
 
+const openFolderCommand = async (
+  folder: string,
+  setError: (error: string | null) => void
+): Promise<void> => {
+  try {
+    const id = await openFolder(folder);
+    uiStore.set({ activeProjectId: id });
+  } catch (error) {
+    setError(`Cannot open ${folder}: ${errorText(error)}`);
+  }
+};
+
 function useAppCommands(setError: (error: string | null) => void): void {
   useDesktopCommand((command: DesktopCommand) => {
     if (command.type === "new-project") {
@@ -146,14 +158,7 @@ function useAppCommands(setError: (error: string | null) => void): void {
       uiStore.set({ activeProjectId: command.projectId });
     } else if (command.type === "open-folder") {
       setError(null);
-      void (async () => {
-        try {
-          const id = await openFolder(command.path);
-          uiStore.set({ activeProjectId: id });
-        } catch (error) {
-          setError(`Cannot open ${command.path}: ${errorText(error)}`);
-        }
-      })();
+      void openFolderCommand(command.path, setError);
     } else if (command.type === "undo" || command.type === "redo") {
       textEdit(command.type);
     } else if (command.type === "command") {

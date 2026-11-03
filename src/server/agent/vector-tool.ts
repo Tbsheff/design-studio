@@ -15,10 +15,10 @@ import type { DirectToolDeps } from "./direct-tools.js";
 import { targetOf } from "./insert-tool.js";
 import { editPageUrl } from "./run-target.js";
 
-interface ToolText {
+type ToolText = Readonly<{
   content: { type: "text"; text: string }[];
   isError?: boolean;
-}
+}>;
 
 const color = z.string().trim().max(100).regex(VECTOR_COLOR);
 

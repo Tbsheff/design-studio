@@ -23,10 +23,10 @@ import { canvasFrames, refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
 import { isContextFrame, pageUrl } from "./run-target.js";
 
-interface ToolText {
+type ToolText = Readonly<{
   content: { type: "text"; text: string }[];
   isError?: boolean;
-}
+}>;
 
 const property = z
   .enum([...STYLE_KINDS, ...SEARCH_PROPERTIES] as [string, ...string[]])

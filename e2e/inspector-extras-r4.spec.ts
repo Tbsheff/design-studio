@@ -52,10 +52,11 @@ async function extrasProject(page: Page): Promise<void> {
 
   writeFileSync(path.join(main.workTree, "extras.css"), SHEET);
   writeFileSync(path.join(main.workTree, "index.html"), PAGE);
-  await expect.soft(frontFrame(page).locator("h1")).toHaveText("Extras Page");
-  await expect
-    .soft(frontFrame(page).locator("article.card"))
-    .toHaveCSS("mix-blend-mode", "multiply");
+  await expect(frontFrame(page).locator("h1")).toHaveText("Extras Page");
+  await expect(frontFrame(page).locator("article.card")).toHaveCSS(
+    "mix-blend-mode",
+    "multiply"
+  );
 }
 
 async function selectCard(page: Page): Promise<void> {
@@ -68,59 +69,62 @@ async function selectCard(page: Page): Promise<void> {
   }
 
   await card.click({ position: { x: 12, y: box.height / 2 } });
-  await expect.soft(page.locator(".ins-tag")).toHaveText("article");
+  await expect(page.locator(".ins-tag")).toHaveText("article");
 }
 
 async function selectedBox(page: Page) {
   return page.locator(".overlay .box.selected").boundingBox();
 }
 
-test("r4-8: the breadcrumb lists each ancestor, collapses the middle, and a click selects it", async ({
+test("R4-8: the breadcrumb lists each ancestor, collapses the middle, and a click selects it", async ({
   page,
 }) => {
   await extrasProject(page);
   await selectInFrame(page, "h1");
   const crumbs = page.getByRole("navigation", { name: "Element path" });
-  await expect.soft(page.locator(".ins-tag")).toHaveText("h1");
-  await expect
-    .soft(crumbs.locator(".ins-crumb"))
-    .toHaveText(["…", "div.col", "article.card", "h1.title"]);
-  await expect
-    .soft(crumbs.locator(".ins-crumb.gap"))
-    .toHaveAttribute("data-tip", "main.shell › section.wrap › div.row");
+  await expect(page.locator(".ins-tag")).toHaveText("h1");
+  await expect(crumbs.locator(".ins-crumb")).toHaveText([
+    "…",
+    "div.col",
+    "article.card",
+    "h1.title",
+  ]);
+  await expect(crumbs.locator(".ins-crumb.gap")).toHaveAttribute(
+    "data-tip",
+    "main.shell › section.wrap › div.row"
+  );
 
   await page.getByLabel("Font size", { exact: true }).fill("40");
   await page.getByLabel("Font size", { exact: true }).press("Enter");
-  await expect.soft(page.locator(".ins-status.saved")).toBeVisible();
-  await expect
-    .soft(frontFrame(page).locator("h1"))
-    .toHaveCSS("font-size", "40px");
-  await expect.soft(page.locator("iframe.frame.back")).toHaveCount(0);
-  await expect.soft(crumbs.locator(".ins-crumb")).toHaveCount(4);
+  await expect(page.locator(".ins-status.saved")).toBeVisible();
+  await expect(frontFrame(page).locator("h1")).toHaveCSS("font-size", "40px");
+  await expect(page.locator("iframe.frame.back")).toHaveCount(0);
+  await expect(crumbs.locator(".ins-crumb")).toHaveCount(4);
 
   const before = await selectedBox(page);
   await crumbs
-    .getByRole("button", { exact: true, name: "article.card" })
+    .getByRole("button", { name: "article.card", exact: true })
     .click();
-  await expect.soft(page.locator(".ins-tag")).toHaveText("article");
-  await expect
-    .soft(crumbs.locator(".ins-crumb.current"))
-    .toHaveText("article.card");
-  await expect
-    .soft(crumbs.locator(".ins-crumb"))
-    .toHaveText(["…", "div.row", "div.col", "article.card"]);
+  await expect(page.locator(".ins-tag")).toHaveText("article");
+  await expect(crumbs.locator(".ins-crumb.current")).toHaveText("article.card");
+  await expect(crumbs.locator(".ins-crumb")).toHaveText([
+    "…",
+    "div.row",
+    "div.col",
+    "article.card",
+  ]);
   await expect
     .poll(async () => JSON.stringify(await selectedBox(page)))
     .not.toBe(JSON.stringify(before));
 
   await crumbs.getByRole("button", { name: "Select section.wrap" }).click();
-  await expect.soft(page.locator(".ins-tag")).toHaveText("section");
-  await crumbs.getByRole("button", { exact: true, name: "main.shell" }).click();
-  await expect.soft(page.locator(".ins-tag")).toHaveText("main");
-  await expect.soft(crumbs).toHaveCount(0);
+  await expect(page.locator(".ins-tag")).toHaveText("section");
+  await crumbs.getByRole("button", { name: "main.shell", exact: true }).click();
+  await expect(page.locator(".ins-tag")).toHaveText("main");
+  await expect(crumbs).toHaveCount(0);
 });
 
-test("r4-8: Copy CSS puts the authored rules and the inline style on the clipboard", async ({
+test("R4-8: Copy CSS puts the authored rules and the inline style on the clipboard", async ({
   page,
   context,
 }) => {
@@ -130,43 +134,46 @@ test("r4-8: Copy CSS puts the authored rules and the inline style on the clipboa
   await extrasProject(page);
   await selectCard(page);
   await page.getByRole("button", { name: "Copy CSS" }).click();
-  await expect.soft(page.locator(".ins-copy-css")).toHaveText("Copied");
-  expect
-    .soft(await page.evaluate(() => navigator.clipboard.readText()))
-    .toBe(EXPECTED_COPY);
+  await expect(page.locator(".ins-copy-css")).toHaveText("Copied");
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
+    EXPECTED_COPY
+  );
 });
 
-test("r4-9: Other styles lists authored CSS the panel does not cover", async ({
+test("R4-9: Other styles lists authored CSS the panel does not cover", async ({
   page,
 }) => {
   await extrasProject(page);
   await selectCard(page);
   const section = page.getByRole("region", { name: "Other styles" });
   const toggle = section.getByRole("button", { name: /Other styles/ });
-  await expect.soft(toggle).toHaveAttribute("aria-expanded", "false");
-  await expect.soft(section.locator(".ins-other-count")).toHaveText("2");
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  await expect(section.locator(".ins-other-count")).toHaveText("2");
   await toggle.click();
   const rows = section.locator(".ins-other-row");
-  await expect
-    .soft(rows.locator(".ins-other-decl"))
-    .toHaveText(["transform: rotate(2deg)", "mix-blend-mode: multiply"]);
-  await expect
-    .soft(rows.locator(".ins-other-source"))
-    .toHaveText(["extras.css", "inline"]);
-  await expect
-    .soft(rows.first())
-    .toHaveAttribute("title", "transform: rotate(2deg)\nFrom extras.css");
-  await expect.soft(section).not.toContainText("filter");
-  await expect.soft(section).not.toContainText("padding");
-  await expect.soft(section).not.toContainText("border-radius");
+  await expect(rows.locator(".ins-other-decl")).toHaveText([
+    "transform: rotate(2deg)",
+    "mix-blend-mode: multiply",
+  ]);
+  await expect(rows.locator(".ins-other-source")).toHaveText([
+    "extras.css",
+    "inline",
+  ]);
+  await expect(rows.first()).toHaveAttribute(
+    "title",
+    "transform: rotate(2deg)\nFrom extras.css"
+  );
+  await expect(section).not.toContainText("filter");
+  await expect(section).not.toContainText("padding");
+  await expect(section).not.toContainText("border-radius");
   await section.scrollIntoViewIfNeeded();
   await page
     .locator(".inspector")
     .screenshot({ path: test.info().outputPath("inspector-extras.png") });
 
   await selectInFrame(page, "h1");
-  await expect.soft(page.locator(".ins-tag")).toHaveText("h1");
-  await expect
-    .soft(page.getByRole("region", { name: "Other styles" }))
-    .toHaveCount(0);
+  await expect(page.locator(".ins-tag")).toHaveText("h1");
+  await expect(page.getByRole("region", { name: "Other styles" })).toHaveCount(
+    0
+  );
 });

@@ -6,12 +6,10 @@ import {
   useMemo,
   useRef,
   useState,
-} from "react";
-import type {
-  KeyboardEvent,
-  PointerEvent as ReactPointerEvent,
-  RefObject,
-  UIEvent,
+  type KeyboardEvent,
+  type PointerEvent as ReactPointerEvent,
+  type RefObject,
+  type UIEvent,
 } from "react";
 
 import type {
@@ -24,10 +22,8 @@ import {
   STRUCTURE_KEY_IDS,
   structureKeyOf,
 } from "../../../shared/structure-keys.js";
-import { Icon } from "../../kit/Icon.js";
-import type { IconName } from "../../kit/Icon.js";
-import { PreviewMenu } from "../canvas/preview-menu.js";
-import type { PreviewMenuItem } from "../canvas/preview-menu.js";
+import { Icon, type IconName } from "../../kit/Icon.js";
+import { PreviewMenu, type PreviewMenuItem } from "../canvas/preview-menu.js";
 import { focusStageQuietly } from "../canvas/use-inline-text-edit.js";
 import type { LayerDrop } from "../inspector/structure-edits.js";
 import { COPY } from "./copy.js";
@@ -42,11 +38,10 @@ import {
   layerKeys,
   treeKeyAction,
   visibleRows,
+  type LayerTree,
 } from "./layers-tree.js";
-import type { LayerTree } from "./layers-tree.js";
 
 const ROW = 28;
-
 const TEXT_TAGS = new Set([
   "p",
   "h1",
@@ -77,9 +72,7 @@ const TEXT_TAGS = new Set([
   "q",
   "abbr",
 ]);
-
 const IMAGE_TAGS = new Set(["img", "picture", "video", "canvas", "iframe"]);
-
 const VECTOR_TAGS = new Set([
   "svg",
   "path",
@@ -92,30 +85,18 @@ const VECTOR_TAGS = new Set([
   "g",
   "use",
 ]);
-
 const CONTROL_TAGS = new Set(["button", "input", "select", "textarea"]);
 
 function layerIcon(node: LayerNode): IconName {
   const tag = node.tag.toLowerCase();
-
-  if (IMAGE_TAGS.has(tag)) {
-    return "image";
-  }
-  if (VECTOR_TAGS.has(tag)) {
-    return "token";
-  }
-  if (tag === "a") {
-    return "link";
-  }
-  if (CONTROL_TAGS.has(tag)) {
-    return "pointer";
-  }
-  if (TEXT_TAGS.has(tag) || (node.childCount === 0 && node.text)) {
+  if (IMAGE_TAGS.has(tag)) return "image";
+  if (VECTOR_TAGS.has(tag)) return "token";
+  if (tag === "a") return "link";
+  if (CONTROL_TAGS.has(tag)) return "pointer";
+  if (TEXT_TAGS.has(tag) || (node.childCount === 0 && node.text))
     return "alignLeft";
-  }
   return "frame";
 }
-
 const OVERSCAN = 8;
 const OPEN_DEPTH = 2;
 const DRAG_START_PX = 4;
@@ -153,12 +134,10 @@ const openStates = new Map<string, OpenState>();
 
 function openStateFor(scope: string): OpenState {
   let state = openStates.get(scope);
-
   if (!state) {
     state = { collapsed: new Set(), known: new Set(), scrollTop: 0 };
     openStates.set(scope, state);
   }
-
   return state;
 }
 
@@ -168,15 +147,10 @@ function idsOf(
   collapsed: ReadonlySet<string>
 ): Set<number> {
   const out = new Set<number>();
-
   for (const node of nodes) {
     const key = keys.get(node.id);
-
-    if (key !== undefined && collapsed.has(key)) {
-      out.add(node.id);
-    }
+    if (key !== undefined && collapsed.has(key)) out.add(node.id);
   }
-
   return out;
 }
 
@@ -186,21 +160,15 @@ function addDefaults(
   state: OpenState
 ): boolean {
   let changed = false;
-
   for (const node of nodes) {
     const key = keys.get(node.id);
-
-    if (key === undefined || state.known.has(key)) {
-      continue;
-    }
+    if (key === undefined || state.known.has(key)) continue;
     state.known.add(key);
-
     if (node.childCount > 0 && node.depth >= OPEN_DEPTH) {
       state.collapsed.add(key);
       changed = true;
     }
   }
-
   return changed;
 }
 
@@ -213,57 +181,37 @@ function useCollapsed(
   const state = openStateFor(scope);
   const [version, setVersion] = useState(0);
   const bump = useCallback(() => setVersion((v) => v + 1), []);
-
-  if (addDefaults(nodes, keys, state)) {
+  if (addDefaults(nodes, keys, state))
     state.collapsed = new Set(state.collapsed);
-  }
   const collapsed = useMemo(
     () => idsOf(nodes, keys, state.collapsed),
     [nodes, keys, state.collapsed, version]
   );
-
   useLayoutEffect(() => {
-    if (selectedNode === null) {
-      return;
-    }
+    if (selectedNode === null) return;
     const open = ancestorsOf(nodes, selectedNode).filter((id) =>
       collapsed.has(id)
     );
-
-    if (open.length === 0) {
-      return;
-    }
+    if (open.length === 0) return;
     const next = new Set(state.collapsed);
-
-    for (const id of open) {
-      next.delete(keys.get(id) ?? "");
-    }
+    for (const id of open) next.delete(keys.get(id) ?? "");
     state.collapsed = next;
     bump();
   }, [nodes, keys, selectedNode, collapsed, state, bump]);
-
   const toggle = useCallback(
     (id: number, open?: boolean) => {
       const key = keys.get(id);
-
-      if (key === undefined) {
-        return;
-      }
+      if (key === undefined) return;
       const next = new Set(state.collapsed);
       const shouldOpen = open ?? next.has(key);
-
-      if (shouldOpen) {
-        next.delete(key);
-      } else {
-        next.add(key);
-      }
+      if (shouldOpen) next.delete(key);
+      else next.add(key);
       state.collapsed = next;
       bump();
     },
     [keys, state, bump]
   );
-
-  return { collapsed, keys, toggle };
+  return { collapsed, toggle, keys };
 }
 
 function useLatest<A extends unknown[], R>(
@@ -271,7 +219,6 @@ function useLatest<A extends unknown[], R>(
 ): (...args: A) => R {
   const ref = useRef(fn);
   ref.current = fn;
-
   return useCallback((...args: A) => ref.current(...args), []);
 }
 
@@ -284,15 +231,11 @@ function RenameInput({
 }) {
   const [value, setValue] = useState(initial);
   const done = useRef(false);
-
   const finish = (next: string | null, step?: 1 | -1) => {
-    if (done.current) {
-      return;
-    }
+    if (done.current) return;
     done.current = true;
     onDone(next, step);
   };
-
   return (
     <input
       className="layers-rename"
@@ -308,12 +251,9 @@ function RenameInput({
       onDoubleClick={(e) => e.stopPropagation()}
       onKeyDown={(e) => {
         e.stopPropagation();
-
-        if (e.key === "Enter") {
-          finish(value.trim());
-        } else if (e.key === "Escape") {
-          finish(null);
-        } else if (e.key === "Tab") {
+        if (e.key === "Enter") finish(value.trim());
+        else if (e.key === "Escape") finish(null);
+        else if (e.key === "Tab") {
           e.preventDefault();
           finish(value.trim(), e.shiftKey ? -1 : 1);
         }
@@ -351,7 +291,6 @@ function LockButton({
   onToggle: (node: LayerNode) => void;
 }) {
   const label = node.locked ? "Unlock" : "Lock";
-
   return (
     <button
       type="button"
@@ -401,7 +340,7 @@ function EyeButton({
   );
 }
 
-const LayerRowBase = (p: RowProps) => {
+const LayerRow = memo(function LayerRow(p: RowProps) {
   const { node } = p;
   const full = [node.tag, node.name, node.text].filter(Boolean).join(" ");
   return (
@@ -469,9 +408,7 @@ const LayerRowBase = (p: RowProps) => {
       )}
     </div>
   );
-};
-
-const LayerRow = memo(LayerRowBase);
+});
 
 interface RowDrop {
   line: number | null;
@@ -492,23 +429,19 @@ function rowDrop(
 ): RowDrop | null {
   const { onDrop, onMove } = handlers;
   const target = onDrop ? layerDrop(rows, id, y, ROW) : null;
-
-  if (onDrop && target?.into != null) {
+  if (onDrop && target?.into != null)
     return {
       line: null,
       into: target.into,
       commit: () => onDrop(id, target.drop),
     };
-  }
   const swap = onMove
     ? (onDrop ? adjacentMove : dropTarget)(rows, id, y, ROW)
     : null;
-
-  if (swap && onMove) {
+  if (swap && onMove)
     return { line: swap.line, into: null, commit: () => onMove(id, swap.move) };
-  }
   return target && onDrop
-    ? { commit: () => onDrop(id, target.drop), into: null, line: target.line }
+    ? { line: target.line, into: null, commit: () => onDrop(id, target.drop) }
     : null;
 }
 
@@ -520,56 +453,42 @@ function useRowDrag(
   const drag = useRef<{ id: number; startY: number; active: boolean } | null>(
     null
   );
-
   const [drop, setDrop] = useState<RowDrop | null>(null);
   const [dragging, setDragging] = useState<number | null>(null);
-
   const reset = () => {
     drag.current = null;
     setDrop(null);
     setDragging(null);
   };
-
   const onPress = (id: number, e: ReactPointerEvent<HTMLDivElement>) => {
     drag.current =
       handlers.onMove || handlers.onDrop
-        ? { id, active: false, startY: e.clientY }
+        ? { id, startY: e.clientY, active: false }
         : null;
   };
-
   const onPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
     const cur = drag.current;
-
-    if (!cur || (e.buttons & 1) === 0) {
-      return;
-    }
+    if (!cur || (e.buttons & 1) === 0) return;
     if (!cur.active) {
-      if (Math.abs(e.clientY - cur.startY) < DRAG_START_PX) {
-        return;
-      }
+      if (Math.abs(e.clientY - cur.startY) < DRAG_START_PX) return;
       cur.active = true;
       setDragging(cur.id);
       e.currentTarget.setPointerCapture(e.pointerId);
     }
-
     const top = rowsRef.current?.getBoundingClientRect().top ?? 0;
     setDrop(rowDrop(rows, cur.id, e.clientY - top, handlers));
   };
-
   const onPointerUp = () => {
-    if (drag.current?.active && drop) {
-      drop.commit();
-    }
+    if (drag.current?.active && drop) drop.commit();
     reset();
   };
-
   return {
-    onPointerCancel: reset,
-    dragging,
     drop,
+    dragging,
+    onPress,
     onPointerMove,
     onPointerUp,
-    onPress,
+    onPointerCancel: reset,
   };
 }
 
@@ -578,11 +497,11 @@ const TOOLS: {
   label: string;
   icon: "copy" | "frame" | "expand" | "trash" | "layers";
 }[] = [
-  { icon: "copy", key: "duplicate", label: "Duplicate" },
-  { icon: "layers", key: "group", label: "Group selection" },
-  { icon: "frame", key: "wrap", label: "Wrap in auto layout" },
-  { icon: "expand", key: "unwrap", label: "Unwrap" },
-  { icon: "trash", key: "delete", label: "Delete" },
+  { key: "duplicate", label: "Duplicate", icon: "copy" },
+  { key: "group", label: "Group selection", icon: "layers" },
+  { key: "wrap", label: "Wrap in auto layout", icon: "frame" },
+  { key: "unwrap", label: "Unwrap", icon: "expand" },
+  { key: "delete", label: "Delete", icon: "trash" },
 ];
 
 function LayerTools({
@@ -626,19 +545,12 @@ function useRowMenu(
   onSelect: (id: number, additive: boolean) => void
 ) {
   const [at, setAt] = useState<{ x: number; y: number } | null>(null);
-
   const open = (node: LayerNode, point: { x: number; y: number }) => {
-    if (!edits?.menuItems) {
-      return;
-    }
-    if (node.id !== selectedNode) {
-      onSelect(node.id, false);
-    }
+    if (!edits?.menuItems) return;
+    if (node.id !== selectedNode) onSelect(node.id, false);
     setAt(point);
   };
-
   const close = () => setAt(null);
-
   const menu =
     at && edits?.menuItems ? (
       <PreviewMenu
@@ -648,8 +560,7 @@ function useRowMenu(
         onClose={close}
       />
     ) : null;
-
-  return { menu, open };
+  return { open, menu };
 }
 
 function isLockKey(e: KeyboardEvent<HTMLDivElement>): boolean {
@@ -681,50 +592,38 @@ function useListWindow(
   ready: boolean
 ) {
   const [scroll, setScrollState] = useState({
-    height: 600,
     top: state.scrollTop,
+    height: 600,
   });
-
   const setScroll = useCallback(
     (next: { top: number; height: number }) =>
       setScrollState((prev) => (sameWindow(prev, next) ? prev : next)),
     []
   );
-
   const restored = useRef(false);
   useLayoutEffect(() => {
     const el = listRef.current;
-
-    if (!el) {
-      return;
-    }
+    if (!el) return;
     const ro = new ResizeObserver(() =>
-      setScroll({ height: el.clientHeight, top: el.scrollTop })
+      setScroll({ top: el.scrollTop, height: el.clientHeight })
     );
-
     ro.observe(el);
-
     return () => ro.disconnect();
   }, [listRef, setScroll]);
   useLayoutEffect(() => {
     const el = listRef.current;
-
-    if (!el || !ready || restored.current) {
-      return;
-    }
+    if (!el || !ready || restored.current) return;
     restored.current = true;
     el.scrollTop = state.scrollTop;
   }, [listRef, state, ready]);
-
   const onScroll = (e: UIEvent<HTMLDivElement>) => {
     state.scrollTop = e.currentTarget.scrollTop;
     setScroll({
-      height: e.currentTarget.clientHeight,
       top: e.currentTarget.scrollTop,
+      height: e.currentTarget.clientHeight,
     });
   };
-
-  return { onScroll, scroll };
+  return { scroll, onScroll };
 }
 
 const PENDING_MS = 1500;
@@ -736,25 +635,18 @@ function usePendingSelect(
   const [pending, setPending] = useState<number | null>(null);
   useEffect(() => setPending(null), [selectedNode]);
   useEffect(() => {
-    if (pending === null) {
-      return;
-    }
+    if (pending === null) return;
     const timer = window.setTimeout(() => setPending(null), PENDING_MS);
-
     return () => window.clearTimeout(timer);
   }, [pending]);
-
   const select = useCallback(
     (id: number, additive: boolean) => {
-      if (!additive) {
-        setPending(id);
-      }
+      if (!additive) setPending(id);
       onSelect(id, additive);
     },
     [onSelect]
   );
-
-  return { select, shown: pending ?? selectedNode };
+  return { shown: pending ?? selectedNode, select };
 }
 
 export function LayersPanel({
@@ -771,102 +663,75 @@ export function LayersPanel({
 }: Props) {
   const nodes = useMemo(() => tree?.nodes ?? [], [tree]);
   const latestSelect = useLatest(onSelectProp);
-
   const { shown: selectedNode, select: onSelect } = usePendingSelect(
     confirmed,
     latestSelect
   );
-
   const scope = scopeOf(frameName);
   const { collapsed, toggle, keys } = useCollapsed(nodes, selectedNode, scope);
   const rows = useMemo(() => visibleRows(nodes, collapsed), [nodes, collapsed]);
   const listRef = useRef<HTMLDivElement>(null);
   const rowsRef = useRef<HTMLDivElement>(null);
-
   const { scroll, onScroll } = useListWindow(
     listRef,
     openStateFor(scope),
     rows.length > 0
   );
-
   const [editingKey, setEditingKey] = useState<string | null>(null);
-
   const setEditing = useCallback(
     (id: number | null) =>
       setEditingKey(id === null ? null : (keys.get(id) ?? null)),
     [keys]
   );
-
   const startRename = useLatest(setEditing);
-
   const drag = useRowDrag(rows, rowsRef, {
-    onDrop: edits?.onDrop ?? null,
     onMove: edits?.onMove ?? null,
+    onDrop: edits?.onDrop ?? null,
   });
-
   const rowMenu = useRowMenu(edits, selectedNode, onSelect);
   const rowHover = useLatest(onHover);
   const rowSelect = useLatest(onSelect);
   const rowToggle = useLatest(toggle);
   const rowPress = useLatest(drag.onPress);
   const rowMenuOpen = useLatest(rowMenu.open);
-
   const rowHidden = useLatest((n: LayerNode) =>
     edits?.onToggleHidden(n.id, !n.hidden)
   );
-
   const rowLocked = useLatest((n: LayerNode) =>
     onToggleLocked?.(n.id, !n.locked)
   );
 
   const selectedIndex =
     selectedNode === null ? -1 : rows.findIndex((r) => r.id === selectedNode);
-
   useEffect(() => {
     const el = listRef.current;
-
-    if (!el || selectedIndex < 0) {
-      return;
-    }
+    if (!el || selectedIndex < 0) return;
     const top = selectedIndex * ROW;
-
-    if (top < el.scrollTop) {
-      el.scrollTop = top;
-    } else if (top + ROW > el.scrollTop + el.clientHeight) {
+    if (top < el.scrollTop) el.scrollTop = top;
+    else if (top + ROW > el.scrollTop + el.clientHeight)
       el.scrollTop = top + ROW - el.clientHeight;
-    }
   }, [selectedIndex]);
 
   const first = Math.max(0, Math.floor(scroll.top / ROW) - OVERSCAN);
-
   const last = Math.min(
     rows.length,
     Math.ceil((scroll.top + scroll.height) / ROW) + OVERSCAN
   );
-
   const selectedRow = selectedIndex >= 0 ? rows[selectedIndex] : undefined;
 
   const editKey = (e: KeyboardEvent<HTMLDivElement>): boolean => {
-    if (!edits || !selectedRow) {
-      return false;
-    }
+    if (!edits || !selectedRow) return false;
     const move = reorderMoveOf(e);
-
     if (move) {
       edits.onMoveSelected(move);
-
       return true;
     }
-
     const structure =
       edits.onStructureKey && !e.repeat ? structureKeyOf(e, IS_MAC) : null;
-
     if (structure) {
       edits.onStructureKey?.(structure);
-
       return true;
     }
-
     if (
       e.key === "F2" &&
       !e.shiftKey &&
@@ -875,10 +740,8 @@ export function LayersPanel({
       !e.ctrlKey
     ) {
       setEditing(selectedRow.id);
-
       return true;
     }
-
     if (
       e.key.toLowerCase() === "h" &&
       e.shiftKey &&
@@ -886,10 +749,8 @@ export function LayersPanel({
       !e.altKey
     ) {
       edits.onToggleHidden(selectedRow.id, !selectedRow.hidden);
-
       return true;
     }
-
     return false;
   };
 
@@ -904,23 +765,17 @@ export function LayersPanel({
       e.preventDefault();
       e.stopPropagation();
       focusStageQuietly();
-
       return;
     }
-
     if (onToggleLocked && selectedRow && isLockKey(e)) {
       e.preventDefault();
       onToggleLocked(selectedRow.id, !selectedRow.locked);
-
       return;
     }
-
     if (editKey(e)) {
       e.preventDefault();
-
       return;
     }
-
     const action = treeKeyAction(
       e.key,
       e.shiftKey,
@@ -929,17 +784,10 @@ export function LayersPanel({
       selectedIndex >= 0 ? selectedNode : null,
       collapsed
     );
-
-    if (!action) {
-      return;
-    }
+    if (!action) return;
     e.preventDefault();
-
-    if ("select" in action) {
-      onSelect(action.select, false);
-    } else {
-      toggle(action.toggle, action.open);
-    }
+    if ("select" in action) onSelect(action.select, false);
+    else toggle(action.toggle, action.open);
   };
 
   const finishRename = useLatest(
@@ -947,15 +795,9 @@ export function LayersPanel({
       const at = rows.findIndex((r) => r.id === node.id);
       const next = step && at !== -1 ? rows[at + step] : undefined;
       setEditing(next ? next.id : null);
-
-      if (next) {
-        onSelect(next.id, false);
-      } else {
-        listRef.current?.focus();
-      }
-      if (value === null || !edits || value === editableName(node.name)) {
-        return;
-      }
+      if (next) onSelect(next.id, false);
+      else listRef.current?.focus();
+      if (value === null || !edits || value === editableName(node.name)) return;
       edits.onRename(node.id, value === "" ? null : value);
     }
   );

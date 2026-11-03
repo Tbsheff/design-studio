@@ -120,7 +120,7 @@ export interface ExportPrefs {
 
 const DEFAULT_PREFS: ExportPrefs = { format: "png", scale: 2, scope: "page" };
 
-const FORMATS: ExportFormat[] = new Set([
+const FORMATS: ReadonlySet<ExportFormat> = new Set<ExportFormat>([
   "png",
   "pdf",
   "html",

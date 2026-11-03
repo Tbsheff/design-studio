@@ -22,7 +22,7 @@ async function openPackProject(page: Page, api: StudioApi): Promise<Project> {
   const { project } = await api.call<{ project: Project }>(
     "POST",
     "/api/projects",
-    { kind: "html", packId: "editorial", prompt: TITLE }
+    { prompt: TITLE, kind: "html", packId: "editorial" }
   );
 
   await api.waitForRuns(project.id, 1);
@@ -35,7 +35,7 @@ async function openPackProject(page: Page, api: StudioApi): Promise<Project> {
     );
   }, project.id);
   await page.reload();
-  await expect.soft(page.locator(".topbar")).toBeVisible();
+  await expect(page.locator(".topbar")).toBeVisible();
 
   return api.project(project.id);
 }
@@ -48,10 +48,10 @@ async function slowGoogleFonts(page: Page): Promise<{ slow: () => void }> {
     }
 
     await route.fulfill({
-      body: "body{}",
+      status: 200,
       contentType: "text/css",
       headers: { "cache-control": "no-store" },
-      status: 200,
+      body: "body{}",
     });
   });
 
@@ -104,8 +104,8 @@ async function sample(page: Page, start: number): Promise<Sample | null> {
     ).__framePainted;
 
     return {
-      painted: el ? painted(el.contentWindow) : false,
       src: el?.src ?? null,
+      painted: el ? painted(el.contentWindow) : false,
     };
   });
 
@@ -122,10 +122,10 @@ async function sample(page: Page, start: number): Promise<Sample | null> {
 
   const png = await page.screenshot({
     clip: {
-      height: Math.min(box.height, 400),
-      width: Math.min(box.width, 600),
       x: box.x,
       y: box.y,
+      width: Math.min(box.width, 600),
+      height: Math.min(box.height, 400),
     },
   });
 
@@ -161,20 +161,16 @@ async function watchFrames(
 }
 
 function expectNoBlank(name: string, samples: Sample[]): void {
-  expect
-    .soft(
-      new Set(samples.map((s) => s.src)).size,
-      `${name} should reload the frame`
-    )
-    .toBeGreaterThan(1);
+  expect(
+    new Set(samples.map((s) => s.src)).size,
+    `${name} should reload the frame`
+  ).toBeGreaterThan(1);
 
   const bad = samples
     .filter((s) => s.blank || !s.painted)
-    .map(({ t, painted, blank }) => ({ blank, painted, t }));
+    .map(({ t, painted, blank }) => ({ t, painted, blank }));
 
-  expect
-    .soft(bad, `${name}: the visible frame was blank or unpainted`)
-    .toEqual([]);
+  expect(bad, `${name}: the visible frame was blank or unpainted`).toEqual([]);
 }
 
 test("token commit and version undo keep the old frame until the reload paints, with slow Google Fonts", async ({
@@ -184,7 +180,7 @@ test("token commit and version undo keep the old frame until the reload paints, 
   await trackPainted(page);
   const api = await openHome(page);
   await openPackProject(page, api);
-  await expect.soft(frontFrame(page).locator("h1")).toHaveText(TITLE);
+  await expect(frontFrame(page).locator("h1")).toHaveText(TITLE);
 
   await page.getByRole("tab", { name: /^Tokens/ }).click();
 
@@ -193,15 +189,15 @@ test("token commit and version undo keep the old frame until the reload paints, 
     .getByLabel("--primary value", { exact: true });
 
   await input.fill(COMMITTED);
-  await expect.soft(page.locator(".tkp-count")).toHaveText("1 change");
+  await expect(page.locator(".tkp-count")).toHaveText("1 change");
   await page.waitForTimeout(500);
   fonts.slow();
 
   const commit = await watchFrames(page, () =>
-    page.getByRole("button", { exact: true, name: "Commit" }).click()
+    page.getByRole("button", { name: "Commit", exact: true }).click()
   );
 
-  await expect.soft(page.locator(".tkp-footer")).toHaveCount(0);
+  await expect(page.locator(".tkp-footer")).toHaveCount(0);
   expectNoBlank("commit", commit);
 
   await page.locator(".tkp-title").click();
@@ -210,9 +206,9 @@ test("token commit and version undo keep the old frame until the reload paints, 
     page.keyboard.press("ControlOrMeta+z")
   );
 
-  await expect.soft(input).not.toHaveValue(COMMITTED);
+  await expect(input).not.toHaveValue(COMMITTED);
   expectNoBlank("undo", undo);
-  await expect.soft(frontFrame(page).locator("h1")).toHaveText(TITLE);
+  await expect(frontFrame(page).locator("h1")).toHaveText(TITLE);
 });
 
 test("direct style edit keeps the old frame until the reload paints, with slow Google Fonts", async ({
@@ -222,7 +218,7 @@ test("direct style edit keeps the old frame until the reload paints, with slow G
   await trackPainted(page);
   const api = await openHome(page);
   await openPackProject(page, api);
-  await expect.soft(frontFrame(page).locator("h1")).toHaveText(TITLE);
+  await expect(frontFrame(page).locator("h1")).toHaveText(TITLE);
   await selectInFrame(page, "h1");
   const color = page.getByLabel("Text color", { exact: true });
   await page.waitForTimeout(500);
@@ -234,7 +230,8 @@ test("direct style edit keeps the old frame until the reload paints, with slow G
   });
 
   expectNoBlank("direct edit", edit);
-  await expect
-    .soft(frontFrame(page).locator("h1"))
-    .toHaveCSS("color", "rgb(194, 65, 12)");
+  await expect(frontFrame(page).locator("h1")).toHaveCSS(
+    "color",
+    "rgb(194, 65, 12)"
+  );
 });

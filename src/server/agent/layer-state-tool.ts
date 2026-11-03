@@ -28,10 +28,10 @@ import { refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
 import { editPageUrl } from "./run-target.js";
 
-interface ToolText {
+type ToolText = Readonly<{
   content: { type: "text"; text: string }[];
   isError?: boolean;
-}
+}>;
 
 export const LAYER_STATE_TOOL = "set_layer_state";
 export const LIST_LOCKS_TOOL = "list_locked_layers";

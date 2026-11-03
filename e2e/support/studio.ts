@@ -16,12 +16,12 @@ export class StudioApi {
 
   async call<T>(method: string, route: string, body?: unknown): Promise<T> {
     const res = await fetch(`${BASE_URL}${route}`, {
-      body: body === undefined ? undefined : JSON.stringify(body),
+      method,
       headers: {
         "x-studio-token": this.token,
         ...(body === undefined ? {} : { "content-type": "application/json" }),
       },
-      method,
+      body: body === undefined ? undefined : JSON.stringify(body),
     });
 
     if (!res.ok) {
@@ -109,12 +109,12 @@ export async function openFolderByPath(
 ): Promise<void> {
   await page.getByRole("button", { name: "Or paste a path" }).click();
   await page.getByPlaceholder("/Users/me/projects/site").fill(folder);
-  await page.getByRole("button", { exact: true, name: "Open" }).click();
+  await page.getByRole("button", { name: "Open", exact: true }).click();
 }
 
 export async function clickCreate(page: Page): Promise<void> {
   const prompt = await page.getByLabel("Describe the design").inputValue();
-  await page.getByRole("button", { exact: true, name: "Create" }).click();
+  await page.getByRole("button", { name: "Create", exact: true }).click();
 
   if (needsQuestions(prompt)) {
     await page.getByRole("button", { name: "Skip questions" }).click();

@@ -34,7 +34,7 @@ function layerChildren(element: Element): Element[] {
 }
 
 function nameOf(element: Element): string {
-  const dataName = element.dataset.name;
+  const dataName = element.getAttribute("data-name");
 
   if (dataName) {
     return clip(dataName, LAYER_LABEL_MAX);

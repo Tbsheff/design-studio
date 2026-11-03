@@ -1,5 +1,7 @@
 const OFF = "data-tip-off";
 const AUTO = "data-tip-auto";
+const TIP_ALIGN = "data-tip-align";
+const TIP_SIDE = "data-tip-side";
 const EDGE = 4;
 
 function release(host: Element): void {
@@ -73,15 +75,15 @@ function restoreAuto(host: Element): void {
   }
 
   if (auto.includes("align")) {
-    delete host.dataset.tipAlign;
+    host.removeAttribute(TIP_ALIGN);
   }
 
   if (auto.includes("side")) {
-    delete host.dataset.tipSide;
+    host.removeAttribute(TIP_SIDE);
   }
 
   if (auto.includes("was-top")) {
-    host.dataset.tipSide = "top";
+    host.setAttribute(TIP_SIDE, "top");
   }
 
   host.removeAttribute(AUTO);
@@ -93,7 +95,7 @@ function fitAlign(
   box: Box,
   width: number
 ): string[] {
-  if (Object.hasOwn(host.dataset, "tipAlign")) {
+  if (host.hasAttribute(TIP_ALIGN)) {
     return [];
   }
 
@@ -105,7 +107,7 @@ function fitAlign(
     return [];
   }
 
-  host.dataset.tipAlign = overRight ? "end" : "start";
+  host.setAttribute(TIP_ALIGN, overRight ? "end" : "start");
 
   return ["align"];
 }
@@ -118,16 +120,16 @@ function fitSide(
 ): string[] {
   const fitsBelow = rect.bottom + 6 + height <= box.bottom - EDGE;
   const fitsAbove = rect.top - 6 - height >= box.top + EDGE;
-  const side = host.dataset.tipSide;
+  const side = host.getAttribute(TIP_SIDE);
 
   if (side === null && !fitsBelow && fitsAbove) {
-    host.dataset.tipSide = "top";
+    host.setAttribute(TIP_SIDE, "top");
 
     return ["side"];
   }
 
   if (side === "top" && !fitsAbove && fitsBelow) {
-    host.dataset.tipSide = "bottom";
+    host.setAttribute(TIP_SIDE, "bottom");
 
     return ["side", "was-top"];
   }

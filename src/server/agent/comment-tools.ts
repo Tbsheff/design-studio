@@ -47,10 +47,10 @@ interface CommentToolDeps {
   comments?: CommentStore;
 }
 
-interface Text {
+type Text = Readonly<{
   content: { type: "text"; text: string }[];
   isError?: boolean;
-}
+}>;
 
 function text(value: string, isError = false): Text {
   return {

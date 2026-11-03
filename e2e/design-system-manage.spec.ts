@@ -39,7 +39,7 @@ async function setUi(
 const yours = (page: Page) => page.getByRole("region", { name: /^Yours/ });
 
 const detail = (page: Page, name: string) =>
-  page.getByRole("dialog", { exact: true, name: `${name} design system` });
+  page.getByRole("dialog", { name: `${name} design system`, exact: true });
 
 async function shot(page: Page, file: string): Promise<void> {
   if (!SHOTS) {
@@ -48,8 +48,8 @@ async function shot(page: Page, file: string): Promise<void> {
 
   mkdirSync(SHOTS, { recursive: true });
   await page.screenshot({
-    animations: "disabled",
     path: path.join(SHOTS, file),
+    animations: "disabled",
   });
 }
 
@@ -64,29 +64,25 @@ test("design systems screen: copy, rename, export, delete, import, open in edito
   await removePacksNamed(api, NAME);
 
   await page
-    .getByRole("button", { exact: true, name: "Design systems" })
+    .getByRole("button", { name: "Design systems", exact: true })
     .click();
-  await expect
-    .soft(page.getByRole("heading", { level: 1, name: "Design systems" }))
-    .toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Design systems", level: 1 })
+  ).toBeVisible();
   const builtin = page.getByRole("region", { name: /^Built-in/ });
-  await expect.soft(builtin.getByRole("button")).toHaveCount(8);
+  await expect(builtin.getByRole("button")).toHaveCount(8);
   await shot(page, "library.png");
 
   await builtin
-    .getByRole("button", { exact: true, name: "Modern Minimal" })
+    .getByRole("button", { name: "Modern Minimal", exact: true })
     .click();
   const original = detail(page, "Modern Minimal");
-  await expect.soft(original.getByText("Check passed")).toBeVisible();
-  await expect
-    .soft(original.getByRole("region", { name: "Light" }))
-    .toBeVisible();
-  await expect
-    .soft(original.getByRole("region", { name: "Dark" }))
-    .toBeVisible();
-  await expect
-    .soft(original.getByRole("button", { exact: true, name: "Delete" }))
-    .toHaveCount(0);
+  await expect(original.getByText("Check passed")).toBeVisible();
+  await expect(original.getByRole("region", { name: "Light" })).toBeVisible();
+  await expect(original.getByRole("region", { name: "Dark" })).toBeVisible();
+  await expect(
+    original.getByRole("button", { name: "Delete", exact: true })
+  ).toHaveCount(0);
   await shot(page, "detail.png");
 
   if (SHOTS) {
@@ -99,14 +95,14 @@ test("design systems screen: copy, rename, export, delete, import, open in edito
   await original.getByRole("button", { name: "Make a copy to edit" }).click();
 
   const copy = detail(page, "Modern Minimal copy");
-  await expect.soft(copy).toBeVisible();
-  await expect.soft(copy.getByText("Copy", { exact: true })).toBeVisible();
+  await expect(copy).toBeVisible();
+  await expect(copy.getByText("Copy", { exact: true })).toBeVisible();
   await copy.getByRole("button", { name: "Rename" }).click();
   const rename = page.getByRole("dialog", { name: "Rename design system" });
   await rename.getByLabel("Design system name").fill(NAME);
-  await rename.getByRole("button", { exact: true, name: "Rename" }).click();
+  await rename.getByRole("button", { name: "Rename", exact: true }).click();
   const renamed = detail(page, NAME);
-  await expect.soft(renamed).toBeVisible();
+  await expect(renamed).toBeVisible();
 
   const packId = (await api.call<PackSummary[]>("GET", "/api/packs")).find(
     (pack) => pack.name === NAME
@@ -115,28 +111,26 @@ test("design systems screen: copy, rename, export, delete, import, open in edito
   const downloadEvent = page.waitForEvent("download");
   await renamed.getByRole("button", { name: "Export" }).click();
   const download = await downloadEvent;
-  expect.soft(download.suggestedFilename()).toBe(`${packId}.zip`);
+  expect(download.suggestedFilename()).toBe(`${packId}.zip`);
   const zip = testInfo.outputPath(`${packId}.zip`);
   await download.saveAs(zip);
 
-  await renamed.getByRole("button", { exact: true, name: "Delete" }).click();
+  await renamed.getByRole("button", { name: "Delete", exact: true }).click();
   const confirm = page.getByRole("dialog", { name: "Delete design system" });
-  await expect
-    .soft(confirm.getByText("Projects that use it keep their files."))
-    .toBeVisible();
-  await confirm.getByRole("button", { exact: true, name: "Delete" }).click();
-  await expect.soft(page.getByText(`Deleted ${NAME}.`)).toBeVisible();
-  await expect
-    .soft(yours(page).getByRole("button", { exact: true, name: NAME }))
-    .toHaveCount(0);
+  await expect(
+    confirm.getByText("Projects that use it keep their files.")
+  ).toBeVisible();
+  await confirm.getByRole("button", { name: "Delete", exact: true }).click();
+  await expect(page.getByText(`Deleted ${NAME}.`)).toBeVisible();
+  await expect(
+    yours(page).getByRole("button", { name: NAME, exact: true })
+  ).toHaveCount(0);
 
   await page.getByLabel("Design system zip").setInputFiles(zip);
   const imported = detail(page, NAME);
-  await expect.soft(imported).toBeVisible();
-  await expect
-    .soft(imported.getByText("Imported", { exact: true }))
-    .toBeVisible();
-  await expect.soft(page.getByText(`Imported ${NAME}.`)).toBeVisible();
+  await expect(imported).toBeVisible();
+  await expect(imported.getByText("Imported", { exact: true })).toBeVisible();
+  await expect(page.getByText(`Imported ${NAME}.`)).toBeVisible();
   await imported.getByRole("button", { name: "Close design system" }).click();
 
   await page.getByLabel("Design system zip").setInputFiles(zip);
@@ -145,86 +139,82 @@ test("design systems screen: copy, rename, export, delete, import, open in edito
     name: "Design system already in your library",
   });
 
-  await expect
-    .soft(
-      conflict.getByRole("heading", {
-        name: `${NAME} is already in your library`,
-      })
-    )
-    .toBeVisible();
+  await expect(
+    conflict.getByRole("heading", {
+      name: `${NAME} is already in your library`,
+    })
+  ).toBeVisible();
   await conflict.getByRole("button", { name: "Keep both" }).click();
   await detail(page, NAME)
     .getByRole("button", { name: "Close design system" })
     .click();
-  await expect
-    .soft(yours(page).getByRole("button", { exact: true, name: NAME }))
-    .toHaveCount(2);
+  await expect(
+    yours(page).getByRole("button", { name: NAME, exact: true })
+  ).toHaveCount(2);
   await shot(page, "library-yours.png");
 
   await yours(page)
-    .getByRole("button", { exact: true, name: NAME })
+    .getByRole("button", { name: NAME, exact: true })
     .first()
     .click();
   await detail(page, NAME)
     .getByRole("button", { name: "Open in editor" })
     .click();
-  await expect.soft(page.locator(".topbar")).toBeVisible();
-  await expect
-    .soft(page.getByRole("region", { name: "Design system draft" }))
-    .toBeVisible();
+  await expect(page.locator(".topbar")).toBeVisible();
+  await expect(
+    page.getByRole("region", { name: "Design system draft" })
+  ).toBeVisible();
 
   const ids = (await api.call<PackSummary[]>("GET", "/api/packs"))
     .filter((pack) => pack.name === NAME)
     .map((pack) => pack.id);
 
-  expect.soft(ids).toHaveLength(2);
+  expect(ids).toHaveLength(2);
 
   const backing = (await api.projects()).find(
     (project) => project.name === `${NAME} design system`
   );
 
-  expect.soft(ids).toContain(backing?.designSystemFor);
+  expect(ids).toContain(backing?.designSystemFor);
   const editorPack = backing!.designSystemFor!;
 
   await setUi(page, { activeProjectId: null, screen: "design-systems" });
   await yours(page)
-    .getByRole("button", { exact: true, name: NAME })
+    .getByRole("button", { name: NAME, exact: true })
     .first()
     .click();
   await detail(page, NAME)
     .getByRole("button", { name: "Open in editor" })
     .click();
-  await expect.soft(page.locator(".topbar")).toBeVisible();
-  expect
-    .soft(
-      (await api.projects()).filter(
-        (project) => project.designSystemFor === editorPack
-      )
+  await expect(page.locator(".topbar")).toBeVisible();
+  expect(
+    (await api.projects()).filter(
+      (project) => project.designSystemFor === editorPack
     )
-    .toHaveLength(1);
+  ).toHaveLength(1);
 
   await setUi(page, { activeProjectId: null, screen: "design-systems" });
   await yours(page)
-    .getByRole("button", { exact: true, name: NAME })
+    .getByRole("button", { name: NAME, exact: true })
     .first()
     .click();
   await detail(page, NAME)
     .getByRole("button", { name: "Use in new project" })
     .click();
-  await expect
-    .soft(page.getByRole("heading", { name: "New project" }))
-    .toBeVisible();
-  await expect
-    .soft(page.getByRole("button", { exact: true, name: "Design system" }))
-    .toContainText(NAME);
+  await expect(
+    page.getByRole("heading", { name: "New project" })
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Design system", exact: true })
+  ).toContainText(NAME);
 
   const { project } = await api.call<{ project: Project }>(
     "POST",
     "/api/projects",
     {
       kind: "html",
-      packId: "editorial",
       prompt: "Manage target",
+      packId: "editorial",
       startRun: false,
     }
   );
@@ -239,24 +229,22 @@ test("design systems screen: copy, rename, export, delete, import, open in edito
     .getByRole("button", { name: "Change design system…" })
     .click();
   await page.getByRole("button", { name: "Manage…" }).click();
-  await expect
-    .soft(page.getByRole("heading", { level: 1, name: "Design systems" }))
-    .toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Design systems", level: 1 })
+  ).toBeVisible();
   await yours(page)
-    .getByRole("button", { exact: true, name: NAME })
+    .getByRole("button", { name: NAME, exact: true })
     .first()
     .click();
   await detail(page, NAME)
     .getByRole("button", { name: "Apply to current project" })
     .click();
-  await expect
-    .soft(
-      page
-        .locator(".topbar")
-        .getByRole("button", { name: `Design system: ${NAME}` })
-    )
-    .toBeVisible();
-  expect.soft(ids).toContain((await api.project(project.id)).packId);
+  await expect(
+    page
+      .locator(".topbar")
+      .getByRole("button", { name: `Design system: ${NAME}` })
+  ).toBeVisible();
+  expect(ids).toContain((await api.project(project.id)).packId);
 
   await removePacksNamed(api, NAME);
 });

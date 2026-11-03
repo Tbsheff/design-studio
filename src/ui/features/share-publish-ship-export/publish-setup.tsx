@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
 
 import type { PublishCliState } from "../../../shared/publish.js";
 import { errorText } from "../../api.js";
@@ -11,24 +11,23 @@ import "../../styles/publish.css";
 
 export function usePublishCli() {
   const [cli, setCli] = useState<PublishCliState | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  const run = useCallback(async (task: () => Promise<PublishCliState>) => {
-    setBusy(true);
+  const run = useCallback((task: () => Promise<PublishCliState>) => {
     setError(null);
-
-    try {
-      setCli(await task());
-    } catch (failure) {
-      setError(errorText(failure));
-    } finally {
-      setBusy(false);
-    }
+    startTransition(async () => {
+      try {
+        const next = await task();
+        setCli(next);
+      } catch (failure) {
+        setError(errorText(failure));
+      }
+    });
   }, []);
 
   useEffect(() => {
-    void run(() => publishApi.cli());
+    run(() => publishApi.cli());
   }, [run]);
   const waiting = cli?.login.running === true;
   useEffect(() => {
@@ -36,15 +35,16 @@ export function usePublishCli() {
       return;
     }
 
-    const timer = window.setInterval(
-      () => void publishApi.cli().then(setCli, () => null),
-      2000
-    );
+    const refresh = (): void => {
+      run(() => publishApi.cli());
+    };
 
-    return () => window.clearInterval(timer);
-  }, [waiting]);
+    window.addEventListener("focus", refresh);
 
-  return { busy, cli, error, run };
+    return () => window.removeEventListener("focus", refresh);
+  }, [waiting, run]);
+
+  return { busy: isPending, cli, error, run };
 }
 
 export function cliReady(cli: PublishCliState | null): boolean {

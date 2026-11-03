@@ -23,7 +23,7 @@ const composer = (page: Page) =>
 async function newProject(page: Page, name: string, kind: "html" | "react") {
   const api = await openHome(page);
   const project = await createProjectViaUi(page, api, name, kind);
-  await expect.soft(h1(page)).toHaveText(name, {
+  await expect(h1(page)).toHaveText(name, {
     timeout: kind === "react" ? 90_000 : 20_000,
   });
   await api.waitForRuns(project.id, 1);
@@ -34,7 +34,7 @@ async function newProject(page: Page, name: string, kind: "html" | "react") {
     kind === "react" ? path.join("src", "App.tsx") : "index.html"
   );
 
-  return { api, file, project };
+  return { api, project, file };
 }
 
 async function runCount(api: StudioApi, pid: string): Promise<number> {
@@ -107,15 +107,15 @@ async function frontSrc(page: Page): Promise<string | null> {
 
 async function swapped(page: Page, before: string | null): Promise<void> {
   await expect.poll(() => frontSrc(page)).not.toBe(before);
-  await expect.soft(page.locator("iframe.frame")).toHaveCount(1);
+  await expect(page.locator("iframe.frame")).toHaveCount(1);
 }
 
 function stats(values: number[]): { median: number; max: number } {
   const sorted = [...values].sort((a, b) => a - b);
 
   return {
-    max: sorted.at(-1) ?? 0,
     median: sorted[Math.floor(sorted.length / 2)] ?? 0,
+    max: sorted.at(-1) ?? 0,
   };
 }
 
@@ -149,7 +149,7 @@ function armCaretProbe(): void {
   );
 }
 
-test("r4-1: dblclick, type, Cmd+Enter writes the h1 to the source in under 200 ms with no model call", async ({
+test("R4-1: dblclick, type, Cmd+Enter writes the h1 to the source in under 200 ms with no model call", async ({
   page,
 }) => {
   await page.addInitScript(armCaretProbe);
@@ -200,10 +200,10 @@ test("r4-1: dblclick, type, Cmd+Enter writes the h1 to the source in under 200 m
     fromKey.push(onDisk - pressed);
     fromCommit.push(onDisk - commitAt);
     await swapped(page, src);
-    await expect.soft(h1(page)).toHaveText(text);
-    await expect.soft(h1(page)).not.toHaveAttribute("contenteditable");
-    await expect.soft(page.getByLabel("Text content")).toHaveValue(text);
-    await expect.soft(page.locator(".ins-status.saving")).toHaveCount(0);
+    await expect(h1(page)).toHaveText(text);
+    await expect(h1(page)).not.toHaveAttribute("contenteditable");
+    await expect(page.getByLabel("Text content")).toHaveValue(text);
+    await expect(page.locator(".ins-status.saving")).toHaveCount(0);
   }
 
   const key = stats(fromKey);
@@ -222,12 +222,12 @@ test("r4-1: dblclick, type, Cmd+Enter writes the h1 to the source in under 200 m
   console.log(
     `[R4-1] dblclick event -> first frame with caret ms, in frame ${JSON.stringify(caretInFrame)} median ${inFrame.median} max ${inFrame.max}`
   );
-  expect.soft(commit.max).toBeLessThan(200);
-  expect.soft(key.median).toBeLessThan(200);
-  expect.soft(await runCount(api, project.id)).toBe(runsBefore);
+  expect(commit.max).toBeLessThan(200);
+  expect(key.median).toBeLessThan(200);
+  expect(await runCount(api, project.id)).toBe(runsBefore);
 });
 
-test("r4-1: Esc cancels, keeps select mode, restores the text; blur commits; Enter keeps the R2 child move", async ({
+test("R4-1: Esc cancels, keeps select mode, restores the text; blur commits; Enter keeps the R2 child move", async ({
   page,
 }) => {
   const { api, project, file } = await newProject(
@@ -242,16 +242,17 @@ test("r4-1: Esc cancels, keeps select mode, restores the text; blur commits; Ent
 
   await editH1(page);
   await page.keyboard.type(" zzz");
-  await expect.soft(h1(page)).toHaveText(/zzz/);
+  await expect(h1(page)).toHaveText(/zzz/);
   await page.keyboard.press("Escape");
-  await expect.soft(h1(page)).toHaveText("Inline Esc Probe");
-  await expect.soft(h1(page)).not.toHaveAttribute("contenteditable");
-  await expect
-    .soft(page.getByRole("button", { name: /^Select/ }))
-    .toHaveAttribute("aria-pressed", "true");
-  await expect.soft(page.locator(".overlay .box.selected")).toHaveCount(1);
+  await expect(h1(page)).toHaveText("Inline Esc Probe");
+  await expect(h1(page)).not.toHaveAttribute("contenteditable");
+  await expect(page.getByRole("button", { name: /^Select/ })).toHaveAttribute(
+    "aria-pressed",
+    "true"
+  );
+  await expect(page.locator(".overlay .box.selected")).toHaveCount(1);
   await page.waitForTimeout(300);
-  expect.soft(readFileSync(file, "utf-8")).toBe(original);
+  expect(readFileSync(file, "utf-8")).toBe(original);
 
   await page.keyboard.press("Enter");
   await expect.poll(() => caretReady(page)).toBe(true);
@@ -259,9 +260,9 @@ test("r4-1: Esc cancels, keeps select mode, restores the text; blur commits; Ent
   let src = await frontSrc(page);
   await page.keyboard.press("Enter");
   await bytesOnDisk(file, "<h1>Typed After Enter</h1>");
-  await expect
-    .soft(page.getByLabel("Text content"))
-    .toHaveValue("Typed After Enter");
+  await expect(page.getByLabel("Text content")).toHaveValue(
+    "Typed After Enter"
+  );
   await swapped(page, src);
 
   await editH1(page);
@@ -270,7 +271,7 @@ test("r4-1: Esc cancels, keeps select mode, restores the text; blur commits; Ent
   src = await frontSrc(page);
   await frontFrame(page).locator("p.lede").click();
   await bytesOnDisk(file, "<h1>Blur In Frame</h1>");
-  await expect.soft(page.locator(".ins-tag")).toHaveText("p");
+  await expect(page.locator(".ins-tag")).toHaveText("p");
   await swapped(page, src);
 
   await selectInFrame(page, "h1");
@@ -283,18 +284,16 @@ test("r4-1: Esc cancels, keeps select mode, restores the text; blur commits; Ent
   await swapped(page, src);
 
   await selectInFrame(page, "article.card h2");
-  await expect.soft(page.locator(".ins-tag")).toHaveText("h2");
+  await expect(page.locator(".ins-tag")).toHaveText("h2");
   await page.keyboard.press("Shift+Enter");
-  await expect.soft(page.locator(".ins-tag")).toHaveText("article");
+  await expect(page.locator(".ins-tag")).toHaveText("article");
   await page.keyboard.press("Enter");
-  await expect.soft(page.locator(".ins-tag")).toHaveText("h2");
-  await expect
-    .soft(frontFrame(page).locator("[contenteditable]"))
-    .toHaveCount(0);
-  expect.soft(await runCount(api, project.id)).toBe(runsBefore);
+  await expect(page.locator(".ins-tag")).toHaveText("h2");
+  await expect(frontFrame(page).locator("[contenteditable]")).toHaveCount(0);
+  expect(await runCount(api, project.id)).toBe(runsBefore);
 });
 
-test("r4-1: inline edit is off while a run is active", async ({ page }) => {
+test("R4-1: inline edit is off while a run is active", async ({ page }) => {
   const { api, project, file } = await newProject(
     page,
     "Inline Run Probe",
@@ -303,34 +302,28 @@ test("r4-1: inline edit is off while a run is active", async ({ page }) => {
 
   await composer(page).fill("Walk while editing [steps]");
   await composer(page).press("Meta+Enter");
-  await expect
-    .soft(
-      page
-        .locator("[data-run-id]")
-        .last()
-        .locator('.tool-row[data-state="pending"]')
-    )
-    .toHaveCount(1);
+  await expect(
+    page
+      .locator("[data-run-id]")
+      .last()
+      .locator('.tool-row[data-state="pending"]')
+  ).toHaveCount(1);
   const during = readFileSync(file, "utf-8");
   await selectInFrame(page, "h1");
   await h1(page).dblclick();
   await h1(page).press("Enter");
   await page.waitForTimeout(200);
-  await expect
-    .soft(frontFrame(page).locator("[contenteditable]"))
-    .toHaveCount(0);
-  expect.soft(readFileSync(file, "utf-8")).toBe(during);
+  await expect(frontFrame(page).locator("[contenteditable]")).toHaveCount(0);
+  expect(readFileSync(file, "utf-8")).toBe(during);
   await api.waitForRuns(project.id, 2);
-  await expect
-    .soft(
-      page.locator("[data-run-id]").last().locator(".run-foot .status.running")
-    )
-    .toHaveCount(0);
+  await expect(
+    page.locator("[data-run-id]").last().locator(".run-foot .status.running")
+  ).toHaveCount(0);
   await editH1(page);
   await page.keyboard.press("Escape");
 });
 
-test("r4-1: React project, two inline edits in a row write App.tsx", async ({
+test("R4-1: React project, two inline edits in a row write App.tsx", async ({
   page,
 }) => {
   const { api, project, file } = await newProject(
@@ -348,16 +341,16 @@ test("r4-1: React project, two inline edits in a row write App.tsx", async ({
     await page.keyboard.type(text);
     await page.keyboard.press("Meta+Enter");
     await bytesOnDisk(file, `<h1>${text}</h1>`);
-    await expect.soft(h1(page)).toHaveText(text);
-    await expect.soft(h1(page)).not.toHaveAttribute("contenteditable");
-    await expect.soft(page.getByLabel("Text content")).toHaveValue(text);
-    await expect.soft(page.locator(".ins-status.saving")).toHaveCount(0);
+    await expect(h1(page)).toHaveText(text);
+    await expect(h1(page)).not.toHaveAttribute("contenteditable");
+    await expect(page.getByLabel("Text content")).toHaveValue(text);
+    await expect(page.locator(".ins-status.saving")).toHaveCount(0);
   }
 
   await page.waitForTimeout(500);
-  await expect.soft(h1(page)).toHaveText("Inline Orbit Two");
+  await expect(h1(page)).toHaveText("Inline Orbit Two");
   await setSelectMode(page, false);
-  expect.soft(await runCount(api, project.id)).toBe(runsBefore);
+  expect(await runCount(api, project.id)).toBe(runsBefore);
 });
 
 async function boxMatchesH1(page: Page): Promise<number> {
@@ -376,7 +369,7 @@ async function boxMatchesH1(page: Page): Promise<number> {
     : Number.POSITIVE_INFINITY;
 }
 
-test("r4-1: a quick second edit survives the frame swap; the box follows growing text; Enter from the studio starts the edit", async ({
+test("R4-1: a quick second edit survives the frame swap; the box follows growing text; Enter from the studio starts the edit", async ({
   page,
 }) => {
   const { api, project, file } = await newProject(
@@ -398,18 +391,18 @@ test("r4-1: a quick second edit survives the frame swap; the box follows growing
   await page.keyboard.type("Lede typed while the frame reloads");
   await bytesOnDisk(file, "<h1>Swap First</h1>");
   await page.waitForTimeout(2000);
-  await expect.soft(lede).toHaveAttribute("contenteditable", /.+/);
-  await expect.soft(lede).toHaveText("Lede typed while the frame reloads");
+  await expect(lede).toHaveAttribute("contenteditable", /.+/);
+  await expect(lede).toHaveText("Lede typed while the frame reloads");
   await page.keyboard.press("Meta+Enter");
   await bytesOnDisk(file, "Lede typed while the frame reloads</p>");
-  await expect.soft(page.locator(".canvas.text-editing")).toHaveCount(0);
-  await expect.soft(page.locator("iframe.frame")).toHaveCount(1);
-  await expect.soft(h1(page)).toHaveText("Swap First");
+  await expect(page.locator(".canvas.text-editing")).toHaveCount(0);
+  await expect(page.locator("iframe.frame")).toHaveCount(1);
+  await expect(h1(page)).toHaveText("Swap First");
 
   await selectInFrame(page, "h1");
   const before = await page.locator(".overlay .box.selected").boundingBox();
   await editH1(page);
-  await expect.soft(page.locator(".canvas.text-editing")).toHaveCount(1);
+  await expect(page.locator(".canvas.text-editing")).toHaveCount(1);
   await page.keyboard.press("Meta+A");
   await page.keyboard.type(
     "A much longer heading that has to wrap onto a second and maybe a third line in this frame"
@@ -420,19 +413,19 @@ test("r4-1: a quick second edit survives the frame swap; the box follows growing
 
   if (shot) {
     await page.screenshot({
+      path: path.join(ROOT, "design-review", "inline-text-editing.png"),
       clip: {
-        height: shot.height + 48,
-        width: shot.width + 48,
         x: shot.x - 24,
         y: shot.y - 24,
+        width: shot.width + 48,
+        height: shot.height + 48,
       },
-      path: path.join(ROOT, "design-review", "inline-text-editing.png"),
     });
   }
 
-  expect.soft(after?.height ?? 0).toBeGreaterThan(before?.height ?? 0);
+  expect((after?.height ?? 0) > (before?.height ?? 0)).toBe(true);
   await page.keyboard.press("Escape");
-  await expect.soft(h1(page)).toHaveText("Swap First");
+  await expect(h1(page)).toHaveText("Swap First");
   await expect.poll(() => boxMatchesH1(page)).toBeLessThan(2);
 
   await page.evaluate(() => {
@@ -447,10 +440,10 @@ test("r4-1: a quick second edit survives the frame swap; the box follows growing
   await page.keyboard.type("From Studio Enter");
   await page.keyboard.press("Enter");
   await bytesOnDisk(file, "<h1>From Studio Enter</h1>");
-  expect.soft(await runCount(api, project.id)).toBe(runsBefore);
+  expect(await runCount(api, project.id)).toBe(runsBefore);
 });
 
-test("r4-1: a failed write shows in the inspector and restores the text; a run start ends an open edit", async ({
+test("R4-1: a failed write shows in the inspector and restores the text; a run start ends an open edit", async ({
   page,
 }) => {
   const { api, project, file } = await newProject(
@@ -465,34 +458,30 @@ test("r4-1: a failed write shows in the inspector and restores the text; a run s
 
   await page.route(/\/direct-edit$/, (route) =>
     route.fulfill({
-      body: JSON.stringify({ error: "run_active", message: "busy" }),
-      contentType: "application/json",
       status: 409,
+      contentType: "application/json",
+      body: JSON.stringify({ error: "run_active", message: "busy" }),
     })
   );
   await editH1(page);
   await page.keyboard.press("Meta+A");
   await page.keyboard.type("Never Saved");
   await page.keyboard.press("Meta+Enter");
-  await expect
-    .soft(page.locator(".ins-error"))
-    .toContainText("Agent is running");
-  await expect.soft(h1(page)).toHaveText("Inline Error Probe");
-  expect.soft(readFileSync(file, "utf-8")).toBe(original);
+  await expect(page.locator(".ins-error")).toContainText("Agent is running");
+  await expect(h1(page)).toHaveText("Inline Error Probe");
+  expect(readFileSync(file, "utf-8")).toBe(original);
   await page.unroute(/\/direct-edit$/);
 
   await editH1(page);
   await page.keyboard.type(" zzz");
-  await expect.soft(page.locator(".canvas.text-editing")).toHaveCount(1);
+  await expect(page.locator(".canvas.text-editing")).toHaveCount(1);
   await api.call("POST", `/api/projects/${project.id}/d/${main.id}/runs`, {
-    mode: "edit",
     prompt: "Run while editing [steps]",
+    mode: "edit",
   });
-  await expect
-    .soft(frontFrame(page).locator("[contenteditable]"))
-    .toHaveCount(0);
-  await expect.soft(page.locator(".canvas.text-editing")).toHaveCount(0);
-  await expect.soft(h1(page)).not.toHaveText(/zzz/);
+  await expect(frontFrame(page).locator("[contenteditable]")).toHaveCount(0);
+  await expect(page.locator(".canvas.text-editing")).toHaveCount(0);
+  await expect(h1(page)).not.toHaveText(/zzz/);
   await api.waitForRuns(project.id, 2);
-  expect.soft(readFileSync(file, "utf-8")).not.toContain("zzz");
+  expect(readFileSync(file, "utf-8")).not.toContain("zzz");
 });

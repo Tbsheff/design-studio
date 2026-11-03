@@ -2,6 +2,8 @@ export { routes as directEditRoutes } from "../../../shared/actions/direct-edit/
 
 export { ApiError, call, getBlob } from "../../platform/http.js";
 
+export { createLiveStore } from "../../platform/live-store.js";
+
 export type {
   InsertComponentRequest,
   InsertJsxRequest,

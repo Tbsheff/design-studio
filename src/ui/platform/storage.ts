@@ -17,7 +17,7 @@ export interface LibraryFrom {
   directionId: string;
 }
 
-const SCREENS: Screen[] = new Set([
+const SCREENS: ReadonlySet<Screen> = new Set<Screen>([
   "home",
   "new-design-system",
   "design-systems",

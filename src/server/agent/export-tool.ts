@@ -40,10 +40,10 @@ export const exportFrameShape = {
 
 const schema = z.object(exportFrameShape).strict();
 
-interface ToolText {
+type ToolText = Readonly<{
   content: { type: "text"; text: string }[];
   isError?: boolean;
-}
+}>;
 
 const text = (message: string, isError = false): ToolText => ({
   content: [{ text: message, type: "text" }],

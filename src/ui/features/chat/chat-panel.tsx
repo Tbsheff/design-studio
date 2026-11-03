@@ -163,3 +163,4 @@ const ChatPanel = ({
 };
 
 export { ChatPanel };
+export type { Props as ChatPanelProps };

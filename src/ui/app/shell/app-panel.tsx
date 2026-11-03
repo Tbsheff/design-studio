@@ -1,3 +1,5 @@
+import { useTransition } from "react";
+
 import { envText } from "../../../shared/app";
 import type { AppServerStatus } from "../../../shared/contracts";
 import { api } from "../../api";
@@ -38,15 +40,18 @@ function AppPanel({
   const state = status?.state ?? "idle";
   const managed = (status?.mode ?? app.mode) === "managed";
 
-  const control = (action: "start" | "stop" | "restart") =>
-    void (async () => {
+  const [, startTransition] = useTransition();
+
+  const control = (action: "start" | "stop" | "restart") => {
+    startTransition(async () => {
       try {
         await api.appControl(projectId, action);
         refresh();
       } catch {
         refresh();
       }
-    })();
+    });
+  };
 
   const settingsApp = fresh ?? app;
 

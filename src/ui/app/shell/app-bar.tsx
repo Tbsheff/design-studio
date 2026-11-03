@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useState, useTransition } from "react";
 
 import type { AttachedApp } from "../../../shared/contracts";
 import { api } from "../../api";
@@ -37,15 +37,18 @@ export default function AppBar({ projectId, app, onAddRoute }: AppBarProps) {
   const { cause, doctorKey, showDoctor, failKey, failed, setHidden } =
     useAlerts(status, open);
 
-  const retry = () =>
-    void (async () => {
+  const [, startTransition] = useTransition();
+
+  const retry = () => {
+    startTransition(async () => {
       try {
         await api.appControl(projectId, managed ? "restart" : "start");
         refresh();
       } catch {
         refresh();
       }
-    })();
+    });
+  };
 
   const showLog = () => {
     setTab("logs");

@@ -74,24 +74,24 @@ function saveResults(name: string, value: Stats): void {
   const method = {
     clocks:
       "visible = rAF poll inside the preview frame (performance.timeOrigin + now) minus the trigger event stamp in the studio page (performance.timeOrigin + event.timeStamp); two documents, one browser clock. bytes = Node Date.now() poll of the file every 2 ms minus Node Date.now() just before Playwright sends the input; one Node clock, includes Playwright dispatch.",
-    flex: "click Vertical: pointerdown -> computed flex-direction column in the frame; click -> file",
     fontVisible:
       "the number field previews on every input event, so visible is input event -> computed font-size in the frame (already true before Enter); bytes is Enter -> file",
-    move: "Alt+Arrow keydown -> the new preview frame is front (no live preview for moves; studio page rAF), then the order is checked in the frame; key -> file",
+    flex: "click Vertical: pointerdown -> computed flex-direction column in the frame; click -> file",
+    text: "dblclick event -> first frame with an active contenteditable caret (in frame); Cmd+Enter -> file",
+    resize: "pointermove -> computed width in the frame; pointerup -> file",
     rename:
       "Enter keydown -> layers row shows the new name (studio page rAF); Enter -> file",
-    resize: "pointermove -> computed width in the frame; pointerup -> file",
-    samples: `${SAMPLES} measured samples per type after one discarded warm-up edit; p95 of 7 samples is the max`,
-    text: "dblclick event -> first frame with an active contenteditable caret (in frame); Cmd+Enter -> file",
+    move: "Alt+Arrow keydown -> the new preview frame is front (no live preview for moves; studio page rAF), then the order is checked in the frame; key -> file",
     undo: "Cmd+Z keydown -> the new preview frame is front (studio page rAF), then font-size is checked in the frame; key -> file",
+    samples: `${SAMPLES} measured samples per type after one discarded warm-up edit; p95 of 7 samples is the max`,
   };
 
   const body = {
+    runId: RUN_ID,
     measuredAt: new Date().toISOString(),
+    targetMs: TARGET_MS,
     method,
     results: { ...kept, [name]: value },
-    runId: RUN_ID,
-    targetMs: TARGET_MS,
   };
 
   writeFileSync(RESULTS_FILE, `${JSON.stringify(body, null, 2)}\n`);
@@ -102,13 +102,13 @@ function stats(values: number[]): Stats {
 
   const at = (q: number): number =>
     sorted[Math.min(sorted.length - 1, Math.ceil(q * sorted.length) - 1)] ??
-    Number.NaN;
+    NaN;
 
   return {
-    max: sorted.at(-1) ?? NaN,
-    median: at(0.5),
     n: sorted.length,
+    median: at(0.5),
     p95: at(0.95),
+    max: sorted.at(-1) ?? NaN,
     samples: values.map((v) => Math.round(v)),
   };
 }
@@ -199,7 +199,7 @@ async function stampOf(page: Page, key: string): Promise<number> {
   return page.evaluate(
     (k) =>
       (window as unknown as { __stamp: Record<string, number> }).__stamp[k] ??
-      Number.NaN,
+      NaN,
     key
   );
 }
@@ -261,7 +261,7 @@ async function watch(
       };
 
       const report = (at: number) =>
-        window.top?.postMessage({ latencyId: key, latencySeen: at }, "*");
+        window.top?.postMessage({ latencySeen: at, latencyId: key }, "*");
 
       const check = () =>
         done()
@@ -322,9 +322,9 @@ async function watchSwap(page: Page): Promise<() => Promise<number>> {
 }
 
 async function settled(page: Page, ctx: Ctx): Promise<void> {
-  await expect.soft(page.locator(".ins-status.saving")).toHaveCount(0);
-  await expect.soft(page.locator("iframe.frame.back")).toHaveCount(0);
-  await expect.soft(page.locator("iframe.frame")).toHaveCount(1);
+  await expect(page.locator(".ins-status.saving")).toHaveCount(0);
+  await expect(page.locator("iframe.frame.back")).toHaveCount(0);
+  await expect(page.locator("iframe.frame")).toHaveCount(1);
   const versions = await ctx.api.versions(ctx.pid, ctx.did);
   await expect
     .poll(
@@ -339,25 +339,25 @@ async function settled(page: Page, ctx: Ctx): Promise<void> {
 
 async function keepFixture(page: Page): Promise<void> {
   const banner = page.locator(".banner", { hasText: "Unfinished changes" });
-  await expect.soft(banner).toBeVisible();
-  await banner.getByRole("button", { exact: true, name: "Keep" }).click();
-  await expect.soft(banner).toHaveCount(0);
+  await expect(banner).toBeVisible();
+  await banner.getByRole("button", { name: "Keep", exact: true }).click();
+  await expect(banner).toHaveCount(0);
 }
 
 async function htmlProject(page: Page, title: string): Promise<Ctx> {
   await page.addInitScript(armStamps);
   const api = await openHome(page);
   const project = await createProjectViaUi(page, api, title, "html");
-  await expect.soft(frontFrame(page).locator("h1")).toHaveText(title);
+  await expect(frontFrame(page).locator("h1")).toHaveText(title);
   await api.waitForRuns(project.id, 1);
   const main = mainDirection(project);
   const file = path.join(main.workTree, "index.html");
   writeFileSync(file, PAGE);
-  await expect.soft(frontFrame(page).locator("#c1")).toHaveText("Card one");
+  await expect(frontFrame(page).locator("#c1")).toHaveText("Card one");
   await keepFixture(page);
-  await expect.soft(page.locator("iframe.frame.back")).toHaveCount(0);
+  await expect(page.locator("iframe.frame.back")).toHaveCount(0);
 
-  return { api, did: main.id, file, pid: project.id };
+  return { api, file, pid: project.id, did: main.id };
 }
 
 async function focusStudio(page: Page): Promise<void> {
@@ -383,7 +383,7 @@ async function fontSample(
 ): Promise<{ visible: number; bytes: number }> {
   const field = page.getByLabel("Font size", { exact: true });
   const needle = `font-size: ${size}px`;
-  expect.soft(readFileSync(ctx.file, "utf-8")).not.toContain(needle);
+  expect(readFileSync(ctx.file, "utf-8")).not.toContain(needle);
 
   const seen = await watch(frontFrame(page).locator("h1"), {
     kind: "style",
@@ -399,7 +399,7 @@ async function fontSample(
   const bytes = (await bytesAt(ctx.file, (s) => s.includes(needle))) - t0;
   await settled(page, ctx);
 
-  return { bytes, visible };
+  return { visible, bytes };
 }
 
 test("edit latency R4: number field font size", async ({ page }) => {
@@ -415,12 +415,10 @@ test("edit latency R4: number field font size", async ({ page }) => {
     bytes.push(sample.bytes);
   }
 
-  expect
-    .soft(record("font-size visible", visible).p95)
-    .toBeLessThanOrEqual(TARGET_MS);
-  expect
-    .soft(record("font-size bytes", bytes).p95)
-    .toBeLessThanOrEqual(TARGET_MS);
+  expect(record("font-size visible", visible).p95).toBeLessThanOrEqual(
+    TARGET_MS
+  );
+  expect(record("font-size bytes", bytes).p95).toBeLessThanOrEqual(TARGET_MS);
 });
 
 async function flexSample(
@@ -450,26 +448,24 @@ async function flexSample(
   const visible = (await seen()) - (await stampOf(page, "pointerdown"));
   await settled(page, ctx);
 
-  return { bytes, visible };
+  return { visible, bytes };
 }
 
 async function selectCards(page: Page): Promise<void> {
   await selectInFrame(page, "#c1");
   await focusStudio(page);
   await page.keyboard.press("Shift+Enter");
-  await expect.soft(page.locator(".ins-tag")).toHaveText("section");
+  await expect(page.locator(".ins-tag")).toHaveText("section");
 }
 
 test("edit latency R4: flex direction row to column", async ({ page }) => {
   const ctx = await htmlProject(page, "Latency Flex Direction");
   await selectCards(page);
-  await expect
-    .soft(
-      page
-        .getByRole("region", { name: "Auto layout" })
-        .getByRole("group", { name: "Direction" })
-    )
-    .toBeVisible();
+  await expect(
+    page
+      .getByRole("region", { name: "Auto layout" })
+      .getByRole("group", { name: "Direction" })
+  ).toBeVisible();
   await flexSample(page, ctx);
   const visible: number[] = [];
   const bytes: number[] = [];
@@ -480,12 +476,12 @@ test("edit latency R4: flex direction row to column", async ({ page }) => {
     bytes.push(sample.bytes);
   }
 
-  expect
-    .soft(record("flex-direction visible", visible).p95)
-    .toBeLessThanOrEqual(TARGET_MS);
-  expect
-    .soft(record("flex-direction bytes", bytes).p95)
-    .toBeLessThanOrEqual(TARGET_MS);
+  expect(record("flex-direction visible", visible).p95).toBeLessThanOrEqual(
+    TARGET_MS
+  );
+  expect(record("flex-direction bytes", bytes).p95).toBeLessThanOrEqual(
+    TARGET_MS
+  );
 });
 
 async function caretMs(page: Page): Promise<number> {
@@ -509,7 +505,7 @@ async function textSample(
   text: string,
   needle: string
 ): Promise<{ caret: number; bytes: number }> {
-  expect.soft(readFileSync(ctx.file, "utf-8")).not.toContain(needle);
+  expect(readFileSync(ctx.file, "utf-8")).not.toContain(needle);
   const h1 = frontFrame(page).locator("h1");
   await h1.evaluate(
     () => ((window as unknown as { __caretMs?: number }).__caretMs = undefined)
@@ -521,12 +517,12 @@ async function textSample(
   const t0 = Date.now();
   await page.keyboard.press("Meta+Enter");
   const bytes = (await bytesAt(ctx.file, (s) => s.includes(needle))) - t0;
-  await expect.soft(page.getByLabel("Text content")).toHaveValue(text);
+  await expect(page.getByLabel("Text content")).toHaveValue(text);
   await settled(page, ctx);
-  await expect.soft(h1).toHaveText(text);
-  await expect.soft(h1).not.toHaveAttribute("contenteditable");
+  await expect(h1).toHaveText(text);
+  await expect(h1).not.toHaveAttribute("contenteditable");
 
-  return { bytes, caret };
+  return { caret, bytes };
 }
 
 async function textRuns(page: Page, ctx: Ctx, label: string): Promise<void> {
@@ -543,12 +539,12 @@ async function textRuns(page: Page, ctx: Ctx, label: string): Promise<void> {
   }
 
   const key = label.toLowerCase().replaceAll(/\s+/g, "-");
-  expect
-    .soft(record(`${key} dblclick-caret visible`, caret).p95)
-    .toBeLessThanOrEqual(TARGET_MS);
-  expect
-    .soft(record(`${key} cmd-enter bytes`, bytes).p95)
-    .toBeLessThanOrEqual(TARGET_MS);
+  expect(
+    record(`${key} dblclick-caret visible`, caret).p95
+  ).toBeLessThanOrEqual(TARGET_MS);
+  expect(record(`${key} cmd-enter bytes`, bytes).p95).toBeLessThanOrEqual(
+    TARGET_MS
+  );
 }
 
 test("edit latency R4: inline text edit on canvas, HTML", async ({ page }) => {
@@ -568,17 +564,18 @@ test("edit latency R4: inline text edit on canvas, React", async ({ page }) => {
     "react"
   );
 
-  await expect
-    .soft(frontFrame(page).locator("h1"))
-    .toHaveText("Latency Inline React", { timeout: 90_000 });
+  await expect(frontFrame(page).locator("h1")).toHaveText(
+    "Latency Inline React",
+    { timeout: 90_000 }
+  );
   await api.waitForRuns(project.id, 1);
   const main = mainDirection(project);
 
   const ctx: Ctx = {
     api,
-    did: main.id,
     file: path.join(main.workTree, "src", "App.tsx"),
     pid: project.id,
+    did: main.id,
   };
 
   await textRuns(page, ctx, "Text react");
@@ -593,12 +590,12 @@ async function resizeSample(
   const card = frontFrame(page).locator("#c1");
 
   const start = await card.evaluate((el) =>
-    Math.round(Number.parseFloat(getComputedStyle(el).width))
+    Math.round(parseFloat(getComputedStyle(el).width))
   );
 
   const want = start + 4 + delta;
   const needle = `width: ${want}px`;
-  expect.soft(readFileSync(ctx.file, "utf-8")).not.toContain(needle);
+  expect(readFileSync(ctx.file, "utf-8")).not.toContain(needle);
   const box = await handle.boundingBox();
 
   if (!box) {
@@ -610,7 +607,7 @@ async function resizeSample(
   await page.mouse.move(x, y);
   await page.mouse.down();
   await page.mouse.move(x + 4, y, { steps: 2 });
-  await expect.soft(card).toHaveCSS("width", `${start + 4}px`);
+  await expect(card).toHaveCSS("width", `${start + 4}px`);
 
   const seen = await watch(card, {
     kind: "style",
@@ -625,9 +622,9 @@ async function resizeSample(
   await page.mouse.up();
   const bytes = (await bytesAt(ctx.file, (s) => s.includes(needle))) - t0;
   await settled(page, ctx);
-  await expect.soft(page.getByTestId("resize-label")).toHaveCount(0);
+  await expect(page.getByTestId("resize-label")).toHaveCount(0);
 
-  return { bytes, visible };
+  return { visible, bytes };
 }
 
 test("edit latency R4: resize handle drag", async ({ page }) => {
@@ -651,9 +648,7 @@ test("edit latency R4: resize handle drag", async ({ page }) => {
     bytes.push(sample.bytes);
   }
 
-  expect
-    .soft(record("resize visible", visible).p95)
-    .toBeLessThanOrEqual(TARGET_MS);
+  expect(record("resize visible", visible).p95).toBeLessThanOrEqual(TARGET_MS);
   record("resize bytes", bytes);
 });
 
@@ -664,10 +659,10 @@ async function renameSample(
   to: string
 ): Promise<{ visible: number; bytes: number }> {
   const needle = `data-name="${to}"`;
-  expect.soft(readFileSync(ctx.file, "utf-8")).not.toContain(needle);
+  expect(readFileSync(ctx.file, "utf-8")).not.toContain(needle);
   await page.locator(".layers-row", { hasText: from }).first().dblclick();
   const input = page.getByLabel("Layer name");
-  await expect.soft(input).toBeFocused();
+  await expect(input).toBeFocused();
   await input.fill(to);
   const row = page.locator(".layers-list");
   const seen = await watch(row, { kind: "text", want: to });
@@ -677,19 +672,18 @@ async function renameSample(
   const bytes = (await bytesAt(ctx.file, (s) => s.includes(needle))) - t0;
   const visible = (await seen()) - (await stampOf(page, "key:Enter"));
   await settled(page, ctx);
-  await expect
-    .soft(page.locator(".layers-list"))
-    .toHaveAttribute("aria-busy", "false");
-  await expect
-    .soft(page.locator(".layers-row", { hasText: to }))
-    .toHaveCount(1);
+  await expect(page.locator(".layers-list")).toHaveAttribute(
+    "aria-busy",
+    "false"
+  );
+  await expect(page.locator(".layers-row", { hasText: to })).toHaveCount(1);
 
-  return { bytes, visible };
+  return { visible, bytes };
 }
 
 test("edit latency R4: layers rename", async ({ page }) => {
   const ctx = await htmlProject(page, "Latency Rename");
-  await page.getByRole("button", { exact: true, name: "Layers" }).click();
+  await page.getByRole("button", { name: "Layers", exact: true }).click();
   let name = "Section title";
   await renameSample(page, ctx, name, "Warm name");
   name = "Warm name";
@@ -704,9 +698,7 @@ test("edit latency R4: layers rename", async ({ page }) => {
     bytes.push(sample.bytes);
   }
 
-  expect
-    .soft(record("rename visible", visible).p95)
-    .toBeLessThanOrEqual(TARGET_MS);
+  expect(record("rename visible", visible).p95).toBeLessThanOrEqual(TARGET_MS);
   record("rename bytes", bytes);
 });
 
@@ -720,7 +712,7 @@ async function moveSample(
   down: boolean
 ): Promise<{ visible: number; bytes: number }> {
   const want = down ? ["c2", "c1", "c3"] : ["c1", "c2", "c3"];
-  expect.soft(order(readFileSync(ctx.file, "utf-8"))).not.toEqual(want);
+  expect(order(readFileSync(ctx.file, "utf-8"))).not.toEqual(want);
   const seen = await watchSwap(page);
   await focusStudio(page);
   await clearStamps(page);
@@ -736,17 +728,15 @@ async function moveSample(
     (await seen()) -
     (await stampOf(page, down ? "key:ArrowDown" : "key:ArrowUp"));
 
-  await expect
-    .soft(
-      frontFrame(page)
-        .locator(".cards > article")
-        .nth(down ? 1 : 0)
-    )
-    .toHaveText("Card one");
+  await expect(
+    frontFrame(page)
+      .locator(".cards > article")
+      .nth(down ? 1 : 0)
+  ).toHaveText("Card one");
   await settled(page, ctx);
-  await expect.soft(page.getByLabel("Text content")).toHaveValue("Card one");
+  await expect(page.getByLabel("Text content")).toHaveValue("Card one");
 
-  return { bytes, visible };
+  return { visible, bytes };
 }
 
 test("edit latency R4: Alt+Down and Alt+Up move", async ({ page }) => {
@@ -762,9 +752,7 @@ test("edit latency R4: Alt+Down and Alt+Up move", async ({ page }) => {
     bytes.push(sample.bytes);
   }
 
-  expect
-    .soft(record("move visible", visible).p95)
-    .toBeLessThanOrEqual(TARGET_MS);
+  expect(record("move visible", visible).p95).toBeLessThanOrEqual(TARGET_MS);
   record("move bytes", bytes);
 });
 
@@ -789,12 +777,10 @@ async function undoSample(
   await page.keyboard.press("ControlOrMeta+z");
   const bytes = (await bytesAt(ctx.file, (s) => s === before)) - t0;
   const visible = (await seen()) - (await stampOf(page, "key:z"));
-  await expect
-    .soft(frontFrame(page).locator("h1"))
-    .toHaveCSS("font-size", "32px");
+  await expect(frontFrame(page).locator("h1")).toHaveCSS("font-size", "32px");
   await settled(page, ctx);
 
-  return { bytes, visible };
+  return { visible, bytes };
 }
 
 test("edit latency R4: Cmd+Z undo", async ({ page }) => {
@@ -809,8 +795,6 @@ test("edit latency R4: Cmd+Z undo", async ({ page }) => {
     bytes.push(sample.bytes);
   }
 
-  expect
-    .soft(record("undo visible", visible).p95)
-    .toBeLessThanOrEqual(TARGET_MS);
+  expect(record("undo visible", visible).p95).toBeLessThanOrEqual(TARGET_MS);
   record("undo bytes", bytes);
 });

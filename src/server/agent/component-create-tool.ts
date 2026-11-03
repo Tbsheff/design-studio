@@ -18,10 +18,10 @@ import type { DirectToolDeps } from "./direct-tools.js";
 import { targetOf } from "./insert-tool.js";
 import { resolveSelectors } from "./kit-tools.js";
 
-interface ToolText {
+type ToolText = Readonly<{
   content: { type: "text"; text: string }[];
   isError?: boolean;
-}
+}>;
 
 const LOC = /^(.+):(\d+):(\d+)$/;
 

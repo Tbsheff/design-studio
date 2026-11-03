@@ -4,7 +4,8 @@ import {
   resolveTokenValue,
   varName,
 } from "../../../shared/token-match.js";
-import { formatNumber, parseNumber, sameEditValues } from "./css-values.js";
+import { formatNumber, parseNumber } from "./css-values.js";
+import { sameEditValues } from "./use-direct-edit.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 import type { TokenUi } from "./use-token-snap.js";
 

@@ -50,7 +50,7 @@ export type RenderResponse =
   | { type: typeof RENDER_MESSAGE; id: number; ok: true; value: unknown }
   | { type: typeof RENDER_MESSAGE; id: number; ok: false; error: string };
 
-const RENDER_OPS: readonly RenderOp[] = new Set([
+const RENDER_OPS: ReadonlySet<RenderOp> = new Set<RenderOp>([
   "open",
   "goto",
   "evaluate",

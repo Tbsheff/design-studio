@@ -23,10 +23,7 @@ import type { StudioApi } from "./support/studio";
 const SHOTS = process.env.STUDIO_FOLDERS_SHOTS === "1";
 const SHOT_DIR = path.join(ROOT, "design-review");
 
-interface PickRequest {
-  title?: string;
-  defaultPath?: string;
-}
+type PickRequest = { title?: string; defaultPath?: string };
 
 function tempFolder(name: string): string {
   const base = path.join(readState().workDir, "folders");
@@ -46,13 +43,13 @@ async function stubPicker(
     const reply = answer(request);
 
     if (reply.status === 204) {
-      await route.fulfill({ body: "", status: 204 });
+      await route.fulfill({ status: 204, body: "" });
     } else if (reply.path) {
-      await route.fulfill({ json: { path: reply.path }, status: 200 });
+      await route.fulfill({ status: 200, json: { path: reply.path } });
     } else {
       await route.fulfill({
-        json: { error: "the folder picker needs macOS; paste a path instead" },
         status: reply.status,
+        json: { error: "the folder picker needs macOS; paste a path instead" },
       });
     }
   });
@@ -83,9 +80,9 @@ async function goHome(page: Page): Promise<void> {
     .getByRole("navigation", { name: "Breadcrumb" })
     .getByRole("button", { name: "Projects" })
     .click();
-  await expect
-    .soft(page.getByRole("heading", { name: "Start a new project" }))
-    .toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Start a new project" })
+  ).toBeVisible();
 }
 
 async function shoot(
@@ -98,8 +95,8 @@ async function shoot(
   }
 
   for (const size of [
-    { height: 900, width: 1440 },
-    { height: 934, width: 800 },
+    { width: 1440, height: 900 },
+    { width: 800, height: 934 },
   ]) {
     await page.setViewportSize(size);
     await prepare?.();
@@ -109,7 +106,7 @@ async function shoot(
     });
   }
 
-  await page.setViewportSize({ height: 1000, width: 1600 });
+  await page.setViewportSize({ width: 1600, height: 1000 });
 }
 
 test.describe.configure({ mode: "serial" });
@@ -121,67 +118,65 @@ test("create a project in a chosen folder: new subfolder only, listed under Fold
   writeFileSync(path.join(parent, "sibling.txt"), "keep\n");
   mkdirSync(path.join(parent, "folder-pricing-page"));
   writeFileSync(path.join(parent, "folder-pricing-page", "mine.txt"), "mine\n");
-  const picks = await stubPicker(page, () => ({ path: parent, status: 200 }));
+  const picks = await stubPicker(page, () => ({ status: 200, path: parent }));
   const api = await openHome(page);
   await forgetAllFolders(api);
   await page.reload();
 
   await page.getByLabel("Describe the design").fill("Folder pricing page");
-  await expect
-    .soft(page.getByTestId("location-target"))
-    .toContainText("Design Studio/folder-pricing-page");
+  await expect(page.getByTestId("location-target")).toContainText(
+    "Design Studio/folder-pricing-page"
+  );
   await page.getByLabel("Location").selectOption({ label: "Choose folder…" });
-  await expect.soft(page.getByLabel("Location")).toHaveValue(parent);
-  await expect
-    .soft(page.getByTestId("location-target"))
-    .toContainText("folder-pricing-page");
-  expect.soft(picks).toHaveLength(1);
-  await expect.soft(folderRow(page, path.basename(parent))).toBeVisible();
+  await expect(page.getByLabel("Location")).toHaveValue(parent);
+  await expect(page.getByTestId("location-target")).toContainText(
+    "folder-pricing-page"
+  );
+  expect(picks).toHaveLength(1);
+  await expect(folderRow(page, path.basename(parent))).toBeVisible();
   await shoot(page, "location", async () => {
     await page.locator(".home").evaluate((home) => home.scrollTo({ top: 0 }));
   });
 
   const before = new Set((await api.projects()).map((project) => project.id));
   await clickCreate(page);
-  await expect.soft(page.locator(".topbar")).toBeVisible();
+  await expect(page.locator(".topbar")).toBeVisible();
 
   const project = (await api.projects()).find(
     (candidate) => !before.has(candidate.id)
   ) as Project;
 
   const folder = path.join(parent, "folder-pricing-page-2");
-  expect.soft(project.imported).toEqual({ created: true, sourcePath: folder });
-  expect.soft(project.directions[0]?.workTree).toBe(folder);
-  expect
-    .soft(readdirSync(parent).sort())
-    .toEqual(["folder-pricing-page", "folder-pricing-page-2", "sibling.txt"]);
-  expect
-    .soft(readdirSync(path.join(parent, "folder-pricing-page")))
-    .toEqual(["mine.txt"]);
-  expect.soft(existsSync(path.join(folder, ".git"))).toBe(false);
+  expect(project.imported).toEqual({ sourcePath: folder, created: true });
+  expect(project.directions[0]?.workTree).toBe(folder);
+  expect(readdirSync(parent).sort()).toEqual([
+    "folder-pricing-page",
+    "folder-pricing-page-2",
+    "sibling.txt",
+  ]);
+  expect(readdirSync(path.join(parent, "folder-pricing-page"))).toEqual([
+    "mine.txt",
+  ]);
+  expect(existsSync(path.join(folder, ".git"))).toBe(false);
   await api.waitForRuns(project.id, 1);
-  expect.soft(existsSync(path.join(folder, "index.html"))).toBe(true);
+  expect(existsSync(path.join(folder, "index.html"))).toBe(true);
 
   await goHome(page);
-  await expect.soft(page.getByLabel("Location")).toHaveValue(parent);
+  await expect(page.getByLabel("Location")).toHaveValue(parent);
   const row = folderRow(page, path.basename(parent));
-  await expect.soft(row.locator(".folder-count")).toHaveText("1 project");
+  await expect(row.locator(".folder-count")).toHaveText("1 project");
   await row.locator(".folder-main").click();
-  await expect
-    .soft(
-      page.getByRole("heading", {
-        name: `Projects in ${path.basename(parent)}`,
-      })
-    )
-    .toBeVisible();
-  await expect.soft(page.locator(".project-card")).toHaveCount(1);
-  await expect
-    .soft(page.locator(".project-card .project-name"))
-    .toHaveText("Folder pricing page");
+  await expect(
+    page.getByRole("heading", { name: `Projects in ${path.basename(parent)}` })
+  ).toBeVisible();
+  await expect(page.locator(".project-card")).toHaveCount(1);
+  await expect(page.locator(".project-card .project-name")).toHaveText(
+    "Folder pricing page"
+  );
   await page.getByRole("button", { name: "Show all" }).click();
-  await expect
-    .soft(page.getByRole("heading", { name: "Recent projects" }))
-    .toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Recent projects" })
+  ).toBeVisible();
 });
 
 test("open a folder from a saved folder through the picker, then rename and remove the saved folder", async ({
@@ -201,45 +196,46 @@ test("open a folder from a saved folder through the picker, then rename and remo
     path: parent,
   });
 
-  const picks = await stubPicker(page, () => ({ path: site, status: 200 }));
+  const picks = await stubPicker(page, () => ({ status: 200, path: site }));
   await page.reload();
 
   const row = folderRow(page, "Work");
-  await expect.soft(row.locator(".folder-count")).toHaveText("0 projects");
+  await expect(row.locator(".folder-count")).toHaveText("0 projects");
   await row.getByRole("button", { name: "Open folder here…" }).click();
-  await expect
-    .soft(page.locator("form.open-folder .folder-path"))
-    .toHaveAttribute("title", site);
-  expect.soft(picks[0]?.defaultPath).toBe(parent);
-  await page.getByRole("button", { exact: true, name: "Open" }).click();
-  await expect.soft(page.locator(".topbar")).toBeVisible();
+  await expect(page.locator("form.open-folder .folder-path")).toHaveAttribute(
+    "title",
+    site
+  );
+  expect(picks[0]?.defaultPath).toBe(parent);
+  await page.getByRole("button", { name: "Open", exact: true }).click();
+  await expect(page.locator(".topbar")).toBeVisible();
 
   const imported = (await api.projects()).filter(
     (project) => project.imported?.sourcePath === site
   );
 
-  expect.soft(imported).toHaveLength(1);
-  expect.soft(imported[0]?.imported?.created).toBeUndefined();
+  expect(imported).toHaveLength(1);
+  expect(imported[0]?.imported?.created).toBeUndefined();
 
   await goHome(page);
-  await expect.soft(row.locator(".folder-count")).toHaveText("1 project");
+  await expect(row.locator(".folder-count")).toHaveText("1 project");
   await row.getByRole("button", { name: "Rename Work" }).click();
   await page.getByLabel("Name for Work").fill("Day job");
   await page.getByLabel("Name for Work").press("Enter");
-  await expect.soft(folderRow(page, "Day job")).toBeVisible();
-  expect
-    .soft((await folders(api)).find((folder) => folder.id === saved.id)?.label)
-    .toBe("Day job");
+  await expect(folderRow(page, "Day job")).toBeVisible();
+  expect(
+    (await folders(api)).find((folder) => folder.id === saved.id)?.label
+  ).toBe("Day job");
 
   await folderRow(page, "Day job")
     .getByRole("button", { name: "Remove Day job from the list" })
     .click();
-  await expect.soft(folderRow(page, "Day job")).toHaveCount(0);
-  expect.soft(await folders(api)).toEqual([]);
-  expect.soft(existsSync(path.join(site, "index.html"))).toBe(true);
+  await expect(folderRow(page, "Day job")).toHaveCount(0);
+  expect(await folders(api)).toEqual([]);
+  expect(existsSync(path.join(site, "index.html"))).toBe(true);
 });
 
-test("add folder: a canceled picker adds nothing, a picked folder is saved, a moved folder shows Missing", async ({
+test("Add folder: a canceled picker adds nothing, a picked folder is saved, a moved folder shows Missing", async ({
   page,
 }) => {
   const parent = tempFolder("Moving");
@@ -250,15 +246,13 @@ test("add folder: a canceled picker adds nothing, a picked folder is saved, a mo
   await page.reload();
 
   await page.getByRole("button", { name: "Add folder…" }).click();
-  await expect.soft(page.locator(".home-folders-empty")).toBeVisible();
-  expect.soft(await folders(api)).toEqual([]);
+  await expect(page.locator(".home-folders-empty")).toBeVisible();
+  expect(await folders(api)).toEqual([]);
 
-  answer = { path: parent, status: 200 };
+  answer = { status: 200, path: parent };
   await page.getByRole("button", { name: "Add folder…" }).click();
-  await expect.soft(folderRow(page, "Moving")).toBeVisible();
-  expect
-    .soft((await folders(api)).map((folder) => folder.path))
-    .toEqual([parent]);
+  await expect(folderRow(page, "Moving")).toBeVisible();
+  expect((await folders(api)).map((folder) => folder.path)).toEqual([parent]);
 
   const other = tempFolder("Design Archive");
   await api.call("POST", "/api/workspaces", { path: other });
@@ -267,16 +261,14 @@ test("add folder: a canceled picker adds nothing, a picked folder is saved, a mo
     "POST",
     "/api/projects",
     {
-      kind: "html",
-      parentPath: other,
       prompt: "Archive landing",
+      kind: "html",
       startRun: false,
+      parentPath: other,
     }
   );
 
-  expect
-    .soft(path.dirname(created.project.imported?.sourcePath ?? ""))
-    .toBe(other);
+  expect(path.dirname(created.project.imported?.sourcePath ?? "")).toBe(other);
   await page.reload();
   await shoot(page, "home", async () => {
     await page.locator("#folders-heading").scrollIntoViewIfNeeded();
@@ -291,19 +283,13 @@ test("add folder: a canceled picker adds nothing, a picked folder is saved, a mo
 
   renameSync(parent, `${parent} moved`);
   await page.reload();
-  await expect
-    .soft(folderRow(page, "Moving").getByText("Missing"))
-    .toBeVisible();
-  await expect
-    .soft(
-      folderRow(page, "Moving").getByRole("button", {
-        name: "New project here",
-      })
-    )
-    .toBeDisabled();
-  await expect
-    .soft(page.getByLabel("Location").locator("option", { hasText: "Moving" }))
-    .toHaveCount(0);
+  await expect(folderRow(page, "Moving").getByText("Missing")).toBeVisible();
+  await expect(
+    folderRow(page, "Moving").getByRole("button", { name: "New project here" })
+  ).toBeDisabled();
+  await expect(
+    page.getByLabel("Location").locator("option", { hasText: "Moving" })
+  ).toHaveCount(0);
   await forgetAllFolders(api);
 });
 
@@ -311,15 +297,13 @@ test("off macOS the picker falls back to pasting a path", async ({ page }) => {
   await stubPicker(page, () => ({ status: 501 }));
   await openHome(page);
   await page.getByRole("button", { name: "Choose folder…" }).click();
-  await expect
-    .soft(page.getByText("The folder picker needs macOS. Paste the full path."))
-    .toBeVisible();
-  await expect
-    .soft(page.getByPlaceholder("/Users/me/projects/site"))
-    .toBeVisible();
-  await expect
-    .soft(page.getByRole("button", { name: "Choose folder…" }))
-    .toHaveCount(0);
+  await expect(
+    page.getByText("The folder picker needs macOS. Paste the full path.")
+  ).toBeVisible();
+  await expect(page.getByPlaceholder("/Users/me/projects/site")).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Choose folder…" })
+  ).toHaveCount(0);
 });
 
 test("create with no location: a readable folder in the default Design Studio folder", async ({
@@ -327,23 +311,21 @@ test("create with no location: a readable folder in the default Design Studio fo
 }) => {
   const api = await openHome(page);
   const row = folderRow(page, "Design Studio");
-  await expect.soft(row.locator(".folder-default")).toHaveText("Default");
-  await expect
-    .soft(row.getByRole("button", { name: /^Remove/ }))
-    .toHaveCount(0);
-  await expect.soft(page.getByLabel("Location")).toHaveValue("default");
+  await expect(row.locator(".folder-default")).toHaveText("Default");
+  await expect(row.getByRole("button", { name: /^Remove/ })).toHaveCount(0);
+  await expect(page.getByLabel("Location")).toHaveValue("default");
 
   const countBefore = Number(
     (await row.locator(".folder-count").textContent())?.split(" ")[0]
   );
 
   await page.getByLabel("Describe the design").fill("Default folder landing");
-  await expect
-    .soft(page.getByTestId("location-target"))
-    .toContainText("Design Studio/default-folder-landing");
+  await expect(page.getByTestId("location-target")).toContainText(
+    "Design Studio/default-folder-landing"
+  );
   const before = new Set((await api.projects()).map((project) => project.id));
   await clickCreate(page);
-  await expect.soft(page.locator(".topbar")).toBeVisible();
+  await expect(page.locator(".topbar")).toBeVisible();
 
   const project = (await api.projects()).find(
     (candidate) => !before.has(candidate.id)
@@ -354,27 +336,25 @@ test("create with no location: a readable folder in the default Design Studio fo
     "default-folder-landing"
   );
 
-  expect.soft(project.imported).toEqual({ created: true, sourcePath: folder });
-  expect.soft(project.directions[0]?.workTree).toBe(folder);
+  expect(project.imported).toEqual({ sourcePath: folder, created: true });
+  expect(project.directions[0]?.workTree).toBe(folder);
   await api.waitForRuns(project.id, 1);
-  expect.soft(existsSync(path.join(folder, "index.html"))).toBe(true);
+  expect(existsSync(path.join(folder, "index.html"))).toBe(true);
 
   await goHome(page);
   const countAfter = countBefore + 1;
-  await expect
-    .soft(row.locator(".folder-count"))
-    .toHaveText(`${countAfter} project${countAfter === 1 ? "" : "s"}`);
+  await expect(row.locator(".folder-count")).toHaveText(
+    `${countAfter} project${countAfter === 1 ? "" : "s"}`
+  );
   await row.locator(".folder-main").click();
-  await expect
-    .soft(page.getByRole("heading", { name: "Projects in Design Studio" }))
-    .toBeVisible();
-  await expect
-    .soft(
-      page.locator(".project-card .project-name", {
-        hasText: "Default folder landing",
-      })
-    )
-    .toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Projects in Design Studio" })
+  ).toBeVisible();
+  await expect(
+    page.locator(".project-card .project-name", {
+      hasText: "Default folder landing",
+    })
+  ).toBeVisible();
 });
 
 test("hidden projects move to the default folder only when the user clicks Move", async ({
@@ -385,7 +365,7 @@ test("hidden projects move to the default folder only when the user clicks Move"
   const { project: source } = await api.call<{ project: Project }>(
     "POST",
     "/api/projects",
-    { kind: "html", prompt: "Hidden source page", startRun: false }
+    { prompt: "Hidden source page", kind: "html", startRun: false }
   );
 
   const { dataDir } = readState();
@@ -407,14 +387,14 @@ test("hidden projects move to the default folder only when the user clicks Move"
 
   const hidden: Project = {
     ...stored,
+    id,
+    name: "Old hidden page",
+    imported: null,
     directions: stored.directions.map((direction) => ({
       ...direction,
       workTree,
       headVersionId: null,
     })),
-    id,
-    imported: null,
-    name: "Old hidden page",
   };
 
   writeFileSync(
@@ -424,14 +404,12 @@ test("hidden projects move to the default folder only when the user clicks Move"
   await page.reload();
 
   const note = page.locator(".home-hidden-note");
-  await expect
-    .soft(note)
-    .toContainText("1 project is in the app's hidden folder");
-  expect
-    .soft(readFileSync(path.join(workTree, "index.html"), "utf-8"))
-    .toContain("Old hidden");
+  await expect(note).toContainText("1 project is in the app's hidden folder");
+  expect(readFileSync(path.join(workTree, "index.html"), "utf-8")).toContain(
+    "Old hidden"
+  );
   await note.getByRole("button", { name: /^Move to / }).click();
-  await expect.soft(note).toHaveCount(0);
+  await expect(note).toHaveCount(0);
 
   const folder = path.join(
     realpathSync(projectsDirFor(dataDir)),
@@ -439,18 +417,14 @@ test("hidden projects move to the default folder only when the user clicks Move"
   );
 
   const moved = await api.call<Project>("GET", `/api/projects/${id}`);
-  expect.soft(moved.directions[0]?.workTree).toBe(folder);
-  expect.soft(moved.imported).toEqual({ created: true, sourcePath: folder });
-  expect
-    .soft(readFileSync(path.join(folder, "index.html"), "utf-8"))
-    .toContain("Old hidden");
-  expect.soft(existsSync(workTree)).toBe(false);
+  expect(moved.directions[0]?.workTree).toBe(folder);
+  expect(moved.imported).toEqual({ sourcePath: folder, created: true });
+  expect(readFileSync(path.join(folder, "index.html"), "utf-8")).toContain(
+    "Old hidden"
+  );
+  expect(existsSync(workTree)).toBe(false);
   await folderRow(page, "Design Studio").locator(".folder-main").click();
-  await expect
-    .soft(
-      page.locator(".project-card .project-name", {
-        hasText: "Old hidden page",
-      })
-    )
-    .toBeVisible();
+  await expect(
+    page.locator(".project-card .project-name", { hasText: "Old hidden page" })
+  ).toBeVisible();
 });

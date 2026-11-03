@@ -22,10 +22,10 @@ import {
   pageUrl,
 } from "./run-target.js";
 
-interface ToolText {
+type ToolText = Readonly<{
   content: { type: "text"; text: string }[];
   isError?: boolean;
-}
+}>;
 
 const EDIT_VIEWPORT: Viewport = { height: 900, width: 1440 };
 const SELECTOR_KEYS = ["selector", "targetSelector"] as const;

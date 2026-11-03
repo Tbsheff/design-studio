@@ -7,7 +7,7 @@ import type { Project, TrashedProject } from "../src/shared/contracts";
 import { readState } from "./support/server";
 import { mainDirection, openHome } from "./support/studio";
 
-test("r7 trash: a deleted project shows in Trash, Restore brings it back, Delete forever removes the data folder and keeps the work tree", async ({
+test("R7 trash: a deleted project shows in Trash, Restore brings it back, Delete forever removes the data folder and keeps the work tree", async ({
   page,
 }) => {
   const trashCalls: string[] = [];
@@ -24,7 +24,7 @@ test("r7 trash: a deleted project shows in Trash, Restore brings it back, Delete
     { starterId: "form" }
   );
 
-  const { workTree } = mainDirection(project);
+  const workTree = mainDirection(project).workTree;
   await expect
     .poll(
       async () => (await api.project(project.id)).thumbnail?.versionId ?? null,
@@ -38,28 +38,28 @@ test("r7 trash: a deleted project shows in Trash, Restore brings it back, Delete
   );
 
   await page.reload();
-  await expect
-    .soft(page.getByRole("heading", { name: "Start a new project" }))
-    .toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Start a new project" })
+  ).toBeVisible();
   await page.waitForTimeout(300);
-  expect.soft(trashCalls).toEqual([]);
+  expect(trashCalls).toEqual([]);
 
-  await page.getByRole("button", { exact: true, name: "Trash" }).click();
+  await page.getByRole("button", { name: "Trash", exact: true }).click();
   const dialog = page.getByRole("dialog", { name: "Trash" });
-  await expect.soft(dialog).toBeVisible();
+  await expect(dialog).toBeVisible();
   const row = dialog.locator(`.trash-row[data-trash-id="${first.trashId}"]`);
-  await expect.soft(row).toContainText(project.name);
-  await expect.soft(row).toContainText("Deleted just now");
-  await expect.soft(row).toContainText("Files in your folder stay");
-  await expect.soft(row.locator(".trash-thumb img")).toBeVisible();
+  await expect(row).toContainText(project.name);
+  await expect(row).toContainText("Deleted just now");
+  await expect(row).toContainText("Files in your folder stay");
+  await expect(row.locator(".trash-thumb img")).toBeVisible();
 
   await row.getByRole("button", { name: `Restore ${project.name}` }).click();
-  await expect.soft(row).toHaveCount(0);
+  await expect(row).toHaveCount(0);
   await dialog.getByRole("button", { name: "Done" }).click();
-  await expect.soft(dialog).toHaveCount(0);
-  await expect
-    .soft(page.locator(`.project-card[data-project-id="${project.id}"]`))
-    .toBeVisible();
+  await expect(dialog).toHaveCount(0);
+  await expect(
+    page.locator(`.project-card[data-project-id="${project.id}"]`)
+  ).toBeVisible();
 
   const second = await api.call<TrashedProject>(
     "DELETE",
@@ -73,18 +73,18 @@ test("r7 trash: a deleted project shows in Trash, Restore brings it back, Delete
     second.trashId
   );
 
-  expect.soft(existsSync(trashed)).toBe(true);
+  expect(existsSync(trashed)).toBe(true);
   await page.reload();
-  await page.getByRole("button", { exact: true, name: "Trash" }).click();
+  await page.getByRole("button", { name: "Trash", exact: true }).click();
   const again = dialog.locator(`.trash-row[data-trash-id="${second.trashId}"]`);
-  await expect.soft(again).toBeVisible();
+  await expect(again).toBeVisible();
 
   await dialog.getByRole("button", { name: /^Empty trash/ }).click();
   const emptyConfirm = page.getByRole("dialog", { name: "Empty the trash?" });
-  await expect.soft(emptyConfirm).toBeVisible();
+  await expect(emptyConfirm).toBeVisible();
   await emptyConfirm.getByRole("button", { name: "Cancel" }).click();
-  await expect.soft(emptyConfirm).toHaveCount(0);
-  await expect.soft(again).toBeVisible();
+  await expect(emptyConfirm).toHaveCount(0);
+  await expect(again).toBeVisible();
 
   await again
     .getByRole("button", { name: `Delete ${project.name} forever` })
@@ -94,16 +94,16 @@ test("r7 trash: a deleted project shows in Trash, Restore brings it back, Delete
     name: `Delete “${project.name}” forever?`,
   });
 
-  await expect.soft(confirm).toContainText("Files in your folder stay.");
+  await expect(confirm).toContainText("Files in your folder stay.");
   await confirm.getByRole("button", { name: "Delete forever" }).click();
-  await expect.soft(confirm).toHaveCount(0);
-  await expect.soft(again).toHaveCount(0);
-  await expect.soft(dialog).toBeVisible();
-  expect.soft(existsSync(trashed)).toBe(false);
-  expect.soft(existsSync(path.join(workTree, "index.html"))).toBe(true);
-  expect
-    .soft((await api.projects()).map((item) => item.id))
-    .not.toContain(project.id);
+  await expect(confirm).toHaveCount(0);
+  await expect(again).toHaveCount(0);
+  await expect(dialog).toBeVisible();
+  expect(existsSync(trashed)).toBe(false);
+  expect(existsSync(path.join(workTree, "index.html"))).toBe(true);
+  expect((await api.projects()).map((item) => item.id)).not.toContain(
+    project.id
+  );
   await page.keyboard.press("Escape");
-  await expect.soft(dialog).toHaveCount(0);
+  await expect(dialog).toHaveCount(0);
 });

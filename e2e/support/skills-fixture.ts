@@ -56,8 +56,8 @@ export function writeSkillsFixture(home: string): void {
   writeFileSync(
     path.join(plugin, ".claude-plugin", "plugin.json"),
     JSON.stringify({
-      mcpServers: { demo: { command: "false" } },
       name: "demo-plugin",
+      mcpServers: { demo: { command: "false" } },
     })
   );
   skill(
@@ -69,8 +69,8 @@ export function writeSkillsFixture(home: string): void {
   writeFileSync(
     path.join(home, "plugins", "installed_plugins.json"),
     JSON.stringify({
-      plugins: { "demo-plugin@demo": [{ scope: "user", installPath: plugin }] },
       version: 2,
+      plugins: { "demo-plugin@demo": [{ scope: "user", installPath: plugin }] },
     })
   );
   writeFileSync(

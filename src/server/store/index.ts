@@ -10,7 +10,7 @@ export type { BindingKey, DeviceBindingsApi } from "./device-bindings.js";
 
 export { LocalOrgScope } from "./local-org-scope.js";
 
-export { toLegacyPrincipal } from "./principal.js";
+export { isPermitted, toKeyPrincipal, toLegacyPrincipal } from "./principal.js";
 
 export { toOrgScope } from "./org-scope.js";
 

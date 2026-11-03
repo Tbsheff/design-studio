@@ -1,16 +1,32 @@
-import { Context, Effect, Layer } from "effect";
+import { Context, Effect, Layer, Option } from "effect";
 
-import type { Forbidden } from "../../shared/actions/_core/errors/forbidden.js";
+import { Forbidden } from "../../shared/actions/_core/errors/forbidden.js";
 import type { Permission } from "../../shared/actions/_core/permissions.js";
+import { LocalPrincipal } from "./local-principal.js";
+import { isPermitted } from "./principal.js";
 
 interface AuthorizerApi {
   readonly require: (needs: Permission) => Effect.Effect<void, Forbidden>;
 }
 
-const requireLegacy = Effect.fn("Authorizer.require")(function* run(
-  _needs: Permission
+const requirePrincipal = Effect.fn("Authorizer.require")(function* run(
+  needs: Permission
 ) {
-  yield* Effect.void;
+  const found = yield* Effect.serviceOption(LocalPrincipal);
+
+  if (Option.isNone(found)) {
+    return yield* new Forbidden({
+      message: "No principal for this call.",
+      perm: needs,
+    });
+  }
+
+  if (!isPermitted(found.value, needs)) {
+    return yield* new Forbidden({
+      message: `Missing permission ${needs}.`,
+      perm: needs,
+    });
+  }
 });
 
 class Authorizer extends Context.Service<Authorizer, AuthorizerApi>()(
@@ -20,7 +36,7 @@ class Authorizer extends Context.Service<Authorizer, AuthorizerApi>()(
 
   public static readonly layer = Layer.succeed(
     Authorizer,
-    Authorizer.of({ require: requireLegacy })
+    Authorizer.of({ require: requirePrincipal })
   );
 }
 

@@ -26,6 +26,7 @@ const SPEC_SERVICE_NAMES = [
   "src/server/store/{authorizer,local-org-scope,local-principal,project-access}.ts",
   "src/server/publish/cf-cli.ts",
   "src/server/store/device-bindings.ts",
+  "src/server/cloud/sync-worker.ts",
 ];
 
 const LEGACY_SERVICE_NAMES = [

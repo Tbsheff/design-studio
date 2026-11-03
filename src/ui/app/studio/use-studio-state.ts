@@ -1,0 +1,141 @@
+import { useCallback, useMemo, useRef, useState } from "react";
+
+import type {
+  CommentPrefill,
+  SelectionContext,
+  Version,
+} from "../../../shared/contracts";
+import { errorText } from "../../api";
+import type { PreviewPort } from "../../bridge";
+import type { CanvasSource } from "../../components/CanvasToolbar";
+import type { InspectorTab } from "../../components/Inspector";
+import { useRail } from "../../components/ProjectRail";
+import type { ShareTarget } from "../../components/ShareDialog";
+import { createDraftStore, useDraftActive, useUi } from "../../storage";
+import type { DraftStore } from "../../storage";
+import type { PrefillRequest } from "../../useCommentPrefill";
+import type { DirectEditControl } from "../../useDirectEdit";
+import type { EditSessionHandle } from "../../useEditSession";
+import type { MentionRequest } from "../../useMentions";
+import type {
+  StudioActing,
+  StudioOpen,
+  StudioRefs,
+  StudioUi,
+} from "./studio-ui-types";
+
+const noop = (): null => null;
+
+const runAct = async <Result>(
+  setBusy: (busy: boolean) => void,
+  setActionError: (message: string | null) => void,
+  fn: () => Promise<Result>
+): Promise<void> => {
+  setBusy(true);
+  setActionError(null);
+
+  try {
+    await fn();
+  } catch (error) {
+    setActionError(errorText(error));
+  } finally {
+    setBusy(false);
+  }
+};
+
+const useStudioRefs = (): StudioRefs => ({
+  columnsRef: useRef<HTMLDivElement>(null),
+  editControl: useRef<DirectEditControl | null>(null),
+  editSession: useRef<EditSessionHandle | null>(null),
+  port: useRef<PreviewPort | null>(null),
+  prefillChat: useRef<(next: CommentPrefill) => void>(noop),
+  undoRef: useRef<() => void>(noop),
+});
+
+const useStudioOpen = (): StudioOpen => {
+  const [compare, setCompare] = useState<Version[]>([]);
+  const [compareOpen, setCompareOpen] = useState(false);
+  const [detailsRunId, setDetailsRunId] = useState<string | null>(null);
+  const [designOpen, setDesignOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [shipOpen, setShipOpen] = useState(false);
+  const [shareTarget, setShareTarget] = useState<ShareTarget | null>(null);
+
+  return {
+    compare,
+    compareOpen,
+    designOpen,
+    detailsRunId,
+    setCompare,
+    setCompareOpen,
+    setDesignOpen,
+    setDetailsRunId,
+    setSettingsOpen,
+    setShareTarget,
+    setShipOpen,
+    settingsOpen,
+    shareTarget,
+    shipOpen,
+  };
+};
+
+const useStudioAct = (): StudioActing => {
+  const [busy, setBusy] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  const act = useCallback(
+    <Result>(fn: () => Promise<Result>): Promise<void> =>
+      runAct(setBusy, setActionError, fn),
+    []
+  );
+
+  return { act, actionError, busy, setActionError };
+};
+
+const useStudioState = (): StudioUi => {
+  const refs = useStudioRefs();
+  const open = useStudioOpen();
+  const acting = useStudioAct();
+  const [selection, setSelection] = useState<SelectionContext[]>([]);
+  const draft = useMemo((): DraftStore => createDraftStore(), []);
+  const composerActive = useDraftActive(draft);
+  const [source, setSource] = useState<CanvasSource>({ kind: "live" });
+  const [staleNotice, setStaleNotice] = useState<string | null>(null);
+  const { chatWidth, paneCollapsed } = useUi();
+  const [layersHost, setLayersHost] = useState<HTMLDivElement | null>(null);
+  const [inspectorTab, setInspectorTab] = useState<InspectorTab>("simple");
+  const [prefill, setPrefill] = useState<PrefillRequest | null>(null);
+
+  const [mentionRequest, setMentionRequest] = useState<MentionRequest | null>(
+    null
+  );
+
+  const rail = useRail();
+
+  return {
+    ...refs,
+    ...open,
+    ...acting,
+    chatWidth,
+    composerActive,
+    draft,
+    inspectorTab,
+    layersHost,
+    mentionRequest,
+    paneCollapsed,
+    prefill,
+    rail,
+    selection,
+    setInspectorTab,
+    setLayersHost,
+    setMentionRequest,
+    setPrefill,
+    setSelection,
+    setSource,
+    setStaleNotice,
+    source,
+    staleNotice,
+  };
+};
+
+export { useStudioState };

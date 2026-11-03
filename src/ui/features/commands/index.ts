@@ -18,4 +18,10 @@ const CommandRules = lazy(async () => {
 
 export { CommandLayer, CommandRules, loadCommandLayer };
 
+export { focusNewProject } from "./global-commands.js";
+
+export { runCommand } from "./registry.js";
+
+export { useStudioCommands } from "./use-studio-commands.js";
+
 export type { CommandLayer as CommandLayerName } from "./registry.js";

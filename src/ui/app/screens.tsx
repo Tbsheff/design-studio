@@ -39,7 +39,7 @@ const preloadable = <Props extends object>(
 };
 
 const studio = preloadable(async () => {
-  const loaded = await import("../components/Studio");
+  const loaded = await import("./studio");
 
   return loaded.Studio;
 });

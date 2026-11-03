@@ -9,8 +9,8 @@ import {
   keyCounts,
   layoutKey,
   takeKey,
-  type FinalCheckWithBaseline,
 } from "../../../shared/final-check-baseline.js";
+import type { FinalCheckWithBaseline } from "../../../shared/final-check-baseline.js";
 import { api } from "../../api.js";
 import { Icon } from "../../kit/Icon.js";
 
@@ -112,7 +112,7 @@ function useOldKeys(
           );
         }
       })
-      .catch(() => undefined);
+      .catch(() => null);
 
     return () => {
       alive = false;
@@ -147,17 +147,17 @@ function hideOld(
   };
 
   const shown = (results ?? []).map((result) => ({
-    result,
-    problems: [...result.pageErrors, ...result.consoleErrors].filter((p) =>
-      keep(consoleKey(result.viewport, p))
-    ),
     layout: (result.layout ?? []).filter(
       (f) => f.severity !== "error" || keep(layoutKey(result.viewport, f))
     ),
     overflow: result.horizontalOverflow && keep(`${result.viewport}|overflow`),
+    problems: [...result.pageErrors, ...result.consoleErrors].filter((p) =>
+      keep(consoleKey(result.viewport, p))
+    ),
+    result,
   }));
 
-  return { shown, hidden };
+  return { hidden, shown };
 }
 
 export function RenderCheckPanel({

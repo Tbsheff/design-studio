@@ -1,11 +1,11 @@
-import { useEffect, useRef, type RefObject } from "react";
+import { useEffect, useRef } from "react";
+import type { RefObject } from "react";
 
-import {
-  REVIEW_KIND_LABEL,
-  REVIEW_KINDS,
-  type ReviewFinding,
-  type ReviewKind,
-  type ReviewSeverity,
+import { REVIEW_KIND_LABEL, REVIEW_KINDS } from "../../../shared/review.js";
+import type {
+  ReviewFinding,
+  ReviewKind,
+  ReviewSeverity,
 } from "../../../shared/review.js";
 import { Icon } from "../../kit/Icon.js";
 import { isTypingTarget } from "../../platform/typing-target.js";
@@ -34,8 +34,8 @@ interface Actions {
 
 const SEVERITY_WORD: Record<ReviewSeverity, string> = {
   high: "High",
-  medium: "Medium",
   low: "Low",
+  medium: "Medium",
 };
 
 function fixBlocked(live: boolean, running: boolean): string | null {
@@ -170,7 +170,7 @@ function Group({
 }
 
 function Summary({ review }: { review: ReviewState }) {
-  const result = review.result;
+  const { result } = review;
 
   if (!result) {
     return null;
@@ -202,7 +202,7 @@ function Body({
   live: boolean;
   a: Actions;
 }) {
-  const result = review.result;
+  const { result } = review;
 
   return (
     <div className="review-body">
@@ -266,12 +266,12 @@ function ReviewPanel(p: Props) {
   useEscapeClose(panel, p.onClose);
 
   const a: Actions = {
+    canAsk: p.canAsk,
     fixBlocked: fixBlocked(p.live, p.running),
     fixing: p.review.fixing,
-    canAsk: p.canAsk,
-    onSelect: p.onSelect,
     onAsk: p.onAsk,
     onFix: (list) => void p.review.fix(list),
+    onSelect: p.onSelect,
   };
 
   return (

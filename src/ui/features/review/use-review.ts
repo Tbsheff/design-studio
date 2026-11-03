@@ -86,7 +86,8 @@ export function useReview(input: ReviewInput): ReviewState {
         setRanAt(started);
       })
       .catch(
-        (err: unknown) => ticket === pending.current && setError(errorText(err))
+        (caught: unknown) =>
+          ticket === pending.current && setError(errorText(caught))
       )
       .finally(() => ticket === pending.current && setBusy(false));
   }, [latest]);
@@ -112,8 +113,8 @@ export function useReview(input: ReviewInput): ReviewState {
         if (done.applied.length === 0) {
           setError(done.skipped[0]?.reason ?? "Nothing was fixed.");
         }
-      } catch (err) {
-        setError(errorText(err));
+      } catch (caught) {
+        setError(errorText(caught));
       } finally {
         setFixing(null);
       }
@@ -129,7 +130,7 @@ export function useReview(input: ReviewInput): ReviewState {
   }, [change, latest]);
 
   const stale = result !== null && (resultKey !== key || changedAt > ranAt);
-  const open = input.open;
+  const { open } = input;
   useEffect(() => {
     if (!open || busy || fixing || error) {
       return;
@@ -145,12 +146,12 @@ export function useReview(input: ReviewInput): ReviewState {
   }, [open, stale, result, busy, fixing, error, run]);
 
   return {
-    result: resultKey === key ? result : null,
-    stale,
     busy,
-    fixing,
     error,
-    run,
     fix,
+    fixing,
+    result: resultKey === key ? result : null,
+    run,
+    stale,
   };
 }

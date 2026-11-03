@@ -5,8 +5,8 @@ import {
   useLayoutEffect,
   useRef,
   useState,
-  type RefObject,
 } from "react";
+import type { RefObject } from "react";
 import { createPortal } from "react-dom";
 
 import type {
@@ -16,7 +16,8 @@ import type {
 } from "../../../shared/review.js";
 import { Icon } from "../../kit/Icon.js";
 import type { ParentMessageBody } from "../../platform/bridge.js";
-import { frameName, type CanvasFrame } from "../canvas/canvas-frames-model.js";
+import { frameName } from "../canvas/canvas-frames-model.js";
+import type { CanvasFrame } from "../canvas/canvas-frames-model.js";
 import type { FilesChange } from "../home/use-studio-data.js";
 import { useReview } from "./use-review.js";
 
@@ -116,11 +117,11 @@ export function ReviewEntry(p: Props) {
   useCloseOnToolChange(p.toolKey, close);
 
   const review = useReview({
-    projectId: p.projectId,
     directionId: p.directionId,
     frame: p.frame,
     lastChange: p.lastChange,
     open: open && p.live,
+    projectId: p.projectId,
   });
 
   const count = review.result ? review.result.findings.length : null;
@@ -128,7 +129,7 @@ export function ReviewEntry(p: Props) {
 
   const select = (finding: ReviewFinding) => {
     if (finding.selector) {
-      p.post({ type: "select-selector", selector: finding.selector });
+      p.post({ selector: finding.selector, type: "select-selector" });
     }
   };
 

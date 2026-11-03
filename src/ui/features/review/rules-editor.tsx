@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 
-import {
-  DESIGN_RULE_KIND_LABEL,
-  type DesignRule,
-  type DesignRuleHit,
-  type DesignRulesState,
-  type DesignRulesTestResult,
+import { DESIGN_RULE_KIND_LABEL } from "../../../shared/design-rules.js";
+import type {
+  DesignRule,
+  DesignRuleHit,
+  DesignRulesState,
+  DesignRulesTestResult,
 } from "../../../shared/design-rules.js";
 import { errorText, rulesApi } from "../../api.js";
 import { activeFrame, canvasStore } from "../canvas/canvas-frames-model.js";
@@ -83,7 +83,7 @@ function liveFrame(projectId: string) {
   const layout = canvasStore.get(projectId);
 
   if (!layout) {
-    return undefined;
+    return;
   }
 
   const frame = activeFrame(layout);
@@ -126,7 +126,7 @@ function RulesEditor({ projectId, directionId }: Props) {
         setState(next);
         setText(next.text);
       },
-      (err: unknown) => live && setError(errorText(err))
+      (caught: unknown) => live && setError(errorText(caught))
     );
 
     return () => {
@@ -155,8 +155,8 @@ function RulesEditor({ projectId, directionId }: Props) {
         setText(saved.state.text);
         setNote(saved.versionId ? "Saved as a new version." : "Saved.");
       }
-    } catch (err) {
-      setError(errorText(err));
+    } catch (caught) {
+      setError(errorText(caught));
     } finally {
       setBusy(null);
     }

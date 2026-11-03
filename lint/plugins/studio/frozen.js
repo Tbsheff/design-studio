@@ -61,7 +61,7 @@ const FROZEN_EXEMPTIONS = new Set([
   "src/shared/actions/direct-edit/run-rules-test.ts",
   "src/shared/actions/viewport/run.ts",
   "src/server/http/components-routes.ts",
-  "src/server/mcp/{component-create-tools,component-preview-tools,direct-edit-call,figma-import-tools,insert-tools,jsx-insert-tools,props-tools,review-tools,rules-tools}.ts",
+  "src/server/mcp/{component-create-tools,component-preview-tools,arrange-tools,direct-edit-call,figma-import-tools,image-tools,insert-tools,jsx-insert-tools,layer-state-tools,move-tools,props-tools,review-tools,rules-tools,style-tools,tweak-tools,vector-tools}.ts",
   "src/server/direct-edit/{direct-edit-props-ops,direct-edit-review-ops}.ts",
   "cloud/api/src/http/{errors,groups/wire-errors,middleware/member-auth,groups/authorizer,middleware/viewer,middleware/org-grant,middleware/agent-auth,groups/projects,groups/gates}.ts",
   "cloud/api/src/tenant/{resolver,viewer-db,repos/projects,db,current-org,blobs}.ts",

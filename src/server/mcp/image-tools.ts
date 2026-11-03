@@ -13,16 +13,16 @@ import {
   type SetImageResult,
 } from "../../shared/image.js";
 import { probeOwners } from "../components/owner-probe.js";
+import { setImageIn } from "../direct-edit/direct-edit-insert-ops.js";
 import { imageFromPath } from "../direct-edit/image-source.js";
+import { directEditCall } from "./direct-edit-call.js";
 import {
   EditError,
   loadTarget,
   refuseWhileRunning,
-  studioCall,
   type EditDeps,
 } from "./edit-deps.js";
 import {
-  base,
   defineTool,
   directionId,
   ok,
@@ -238,12 +238,10 @@ const setImage = defineTool(
     let result: SetImageResult;
 
     try {
-      result = await studioCall<SetImageResult>(
-        deps,
-        "POST",
-        `${base(project, direction.id)}/image`,
-        body
-      );
+      result = (await directEditCall(
+        { directionId: direction.id, projectId: project.id },
+        (runtime, ref) => setImageIn(runtime, ref, body)
+      )) as SetImageResult;
     } catch (error) {
       throw new EditError(
         error instanceof Error ? error.message : String(error)

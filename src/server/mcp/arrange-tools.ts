@@ -14,16 +14,16 @@ import {
   DEFAULT_ARRANGE_VIEWPORT,
   measureTargets,
 } from "../direct-edit/arrange.js";
+import { applyEditBody } from "../direct-edit/direct-edit-ops.js";
 import { DirectEditError } from "../direct-edit/errors.js";
+import { directEditCall } from "./direct-edit-call.js";
 import {
   EditError,
   loadTarget,
   refuseWhileRunning,
-  studioCall,
   type EditDeps,
 } from "./edit-deps.js";
 import {
-  base,
   defineTool,
   directionId,
   ok,
@@ -178,12 +178,10 @@ const arrange = defineTool(
       },
     };
 
-    const result = await studioCall<ArrangeResult>(
-      deps,
-      "POST",
-      `${base(target.project, target.direction.id)}/direct-edit`,
-      body
-    );
+    const result = (await directEditCall(
+      { directionId: target.direction.id, projectId: target.project.id },
+      (runtime, ref) => applyEditBody(runtime, ref, body)
+    )) as ArrangeResult;
 
     const output = {
       changed: result.changed,

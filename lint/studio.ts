@@ -82,7 +82,7 @@ const LEGACY_DOM_QUERIES = ["src/ui/features/icons/use-icon-host.ts"];
 
 const LEGACY_RUNTIME_CALLS = [
   "src/server/http/components-routes.ts",
-  "src/server/mcp/{component-create-tools,component-preview-tools,direct-edit-call,figma-import-tools,insert-tools,jsx-insert-tools,props-tools,review-tools,rules-tools}.ts",
+  "src/server/mcp/{component-create-tools,component-preview-tools,arrange-tools,direct-edit-call,figma-import-tools,image-tools,insert-tools,jsx-insert-tools,layer-state-tools,move-tools,props-tools,review-tools,rules-tools,style-tools,tweak-tools,vector-tools}.ts",
 ];
 
 const LEGACY_APP_IMPORTS = [

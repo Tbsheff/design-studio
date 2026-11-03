@@ -9,15 +9,15 @@ import {
   type VectorRequest,
   type VectorResult,
 } from "../../shared/vector.js";
+import { setVectorIn } from "../direct-edit/direct-edit-insert-ops.js";
+import { directEditCall } from "./direct-edit-call.js";
 import {
   EditError,
   loadTarget,
   refuseWhileRunning,
-  studioCall,
   type EditDeps,
 } from "./edit-deps.js";
 import {
-  base,
   defineTool,
   directionId,
   ok,
@@ -182,19 +182,17 @@ const paintSchema = z
   );
 
 async function callVector(
-  deps: EditDeps,
+  _deps: EditDeps,
   project: Project,
   direction: Direction,
   body: VectorRequest
 ): Promise<Done> {
   let result: VectorResult;
   try {
-    result = await studioCall<VectorResult>(
-      deps,
-      "POST",
-      `${base(project, direction.id)}/vector`,
-      body
-    );
+    result = (await directEditCall(
+      { directionId: direction.id, projectId: project.id },
+      (runtime, ref) => setVectorIn(runtime, ref, body)
+    )) as VectorResult;
   } catch (error) {
     throw new EditError(error instanceof Error ? error.message : String(error));
   }

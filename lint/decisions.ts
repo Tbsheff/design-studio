@@ -392,6 +392,7 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/server/mcp/rules-tools.ts",
       "src/server/mcp/review-tools.ts",
       "src/server/mcp/figma-import-tools.ts",
+      "src/server/mcp/{arrange,image,layer-state,move,style,tweak,vector}-tools.ts",
     ],
     rules: {
       "anti-slop/no-conditional-empty-object-spread": "warn",

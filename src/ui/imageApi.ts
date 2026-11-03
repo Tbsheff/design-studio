@@ -1,14 +1,12 @@
+import { routes } from "../shared/actions/direct-edit/routes.js";
 import type { SelectionContext } from "../shared/contracts";
 import {
   IMAGE_BYTES_MAX,
   imageKindOf,
   type SetImageRequest,
-  type SetImageResult,
 } from "../shared/image";
-import { ApiError, json } from "./api";
-
-const d = (pid: string, did: string) =>
-  `/api/projects/${encodeURIComponent(pid)}/d/${encodeURIComponent(did)}`;
+import { ApiError } from "./api";
+import { call } from "./platform/http";
 
 export function imageTargetOf(
   selection: SelectionContext
@@ -100,5 +98,9 @@ export function imageError(error: unknown): string {
 
 export const imageApi = {
   set: (pid: string, did: string, request: SetImageRequest) =>
-    json<SetImageResult>("POST", `${d(pid, did)}/image`, request),
+    call(routes.setImageDirectEdit, {
+      ...request,
+      directionId: did,
+      projectId: pid,
+    }),
 };

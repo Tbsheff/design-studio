@@ -36,32 +36,32 @@ export interface HtmlServer {
 const SAFE_ID = /^[A-Za-z0-9_.-]+$/;
 
 const CONTENT_TYPES: Record<string, string> = {
-  ".html": "text/html; charset=utf-8",
-  ".htm": "text/html; charset=utf-8",
+  ".avif": "image/avif",
   ".css": "text/css; charset=utf-8",
+  ".gif": "image/gif",
+  ".htm": "text/html; charset=utf-8",
+  ".html": "text/html; charset=utf-8",
+  ".ico": "image/x-icon",
+  ".jpeg": "image/jpeg",
+  ".jpg": "image/jpeg",
   ".js": "text/javascript; charset=utf-8",
-  ".mjs": "text/javascript; charset=utf-8",
   ".json": "application/json; charset=utf-8",
   ".map": "application/json; charset=utf-8",
-  ".txt": "text/plain; charset=utf-8",
   ".md": "text/plain; charset=utf-8",
-  ".svg": "image/svg+xml",
+  ".mjs": "text/javascript; charset=utf-8",
+  ".mp3": "audio/mpeg",
+  ".mp4": "video/mp4",
+  ".otf": "font/otf",
+  ".pdf": "application/pdf",
   ".png": "image/png",
-  ".jpg": "image/jpeg",
-  ".jpeg": "image/jpeg",
-  ".gif": "image/gif",
+  ".svg": "image/svg+xml",
+  ".ttf": "font/ttf",
+  ".txt": "text/plain; charset=utf-8",
+  ".wav": "audio/wav",
+  ".webm": "video/webm",
   ".webp": "image/webp",
-  ".avif": "image/avif",
-  ".ico": "image/x-icon",
   ".woff": "font/woff",
   ".woff2": "font/woff2",
-  ".ttf": "font/ttf",
-  ".otf": "font/otf",
-  ".mp4": "video/mp4",
-  ".webm": "video/webm",
-  ".mp3": "audio/mpeg",
-  ".wav": "audio/wav",
-  ".pdf": "application/pdf",
 };
 
 function frameAncestors(studioOrigin: string): string {
@@ -255,9 +255,9 @@ export async function startHtmlServer(
 
   const securityHeaders = {
     "content-security-policy": frameAncestors(options.studioOrigin),
-    "x-content-type-options": "nosniff",
-    "referrer-policy": "no-referrer",
     "cross-origin-resource-policy": "same-origin",
+    "referrer-policy": "no-referrer",
+    "x-content-type-options": "nosniff",
   };
 
   app.get(BRIDGE_SCRIPT_PATH, async (c) => {
@@ -265,8 +265,8 @@ export async function startHtmlServer(
 
     return c.body(script, 200, {
       ...securityHeaders,
-      "content-type": "text/javascript; charset=utf-8",
       "cache-control": "no-store",
+      "content-type": "text/javascript; charset=utf-8",
     });
   });
 
@@ -314,8 +314,8 @@ export async function startHtmlServer(
 
     const headers = {
       ...securityHeaders,
-      "content-type": contentType,
       "cache-control": "no-store",
+      "content-type": contentType,
     };
 
     if (extension === ".html" || extension === ".htm") {

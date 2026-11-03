@@ -10,6 +10,7 @@ if (parentPort) {
   const graph = new RouteGraph(
     (workerData as { cacheDir: string | null } | undefined)?.cacheDir ?? null
   );
+
   serveWorker<GraphRequest, GraphReply>(parentPort, async (request) => ({
     result: await answerGraph(graph, request),
   }));

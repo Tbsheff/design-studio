@@ -69,7 +69,7 @@ export async function dropOutsideApp<T extends { selector: string | null }>(
 
   const drop = new Set(selectors.filter((_, index) => outside[index] === true));
 
-  return drop.size
+  return drop.size > 0
     ? findings.filter(
         (finding) => !finding.selector || !drop.has(finding.selector)
       )

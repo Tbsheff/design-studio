@@ -139,12 +139,12 @@ function declarationFindings(
     return [
       {
         check: "tokens" as const,
-        severity: "medium" as const,
-        viewport: null,
-        selector: null,
-        source,
-        message: `${match[1]}: ${literal} is a raw value where the token ${token.cssVar} (${token.value}) exists.`,
         fix: `Use var(${token.cssVar}).`,
+        message: `${match[1]}: ${literal} is a raw value where the token ${token.cssVar} (${token.value}) exists.`,
+        selector: null,
+        severity: "medium" as const,
+        source,
+        viewport: null,
       },
     ];
   });

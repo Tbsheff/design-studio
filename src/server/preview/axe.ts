@@ -104,11 +104,11 @@ function nodeFinding(
 
   return {
     check: "a11y",
-    severity: severityForImpact(violation.impact),
-    viewport,
-    selector: node.target.map(String).join(" "),
-    source: LOC_IN_HTML.exec(node.html)?.[1] ?? null,
     message: `${violation.id}: ${violation.help}${detail ? ` (${detail})` : ""}`,
+    selector: node.target.map(String).join(" "),
+    severity: severityForImpact(violation.impact),
+    source: LOC_IN_HTML.exec(node.html)?.[1] ?? null,
+    viewport,
   };
 }
 

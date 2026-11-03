@@ -34,7 +34,7 @@ const roots: string[] = [];
 
 afterEach(async () => {
   await Promise.all(
-    roots.splice(0).map((root) => rm(root, { recursive: true, force: true }))
+    roots.splice(0).map((root) => rm(root, { force: true, recursive: true }))
   );
 });
 
@@ -54,6 +54,7 @@ async function waitFor(check: () => boolean, ms: number): Promise<boolean> {
 
 describe(WatcherManager, () => {
   it("reports a file written right after watch() starts, before the watcher is ready", async () => {
+    expect.hasAssertions();
     const misses: number[] = [];
 
     for (let attempt = 0; attempt < 20; attempt += 1) {
@@ -90,6 +91,6 @@ describe(WatcherManager, () => {
       await manager.closeAll();
     }
 
-    expect(misses).toEqual([]);
+    expect(misses).toStrictEqual([]);
   });
 });

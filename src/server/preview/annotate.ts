@@ -134,7 +134,7 @@ export function annotateHtml(
 }
 
 function applyInsertions(source: string, insertions: Insertion[]): string {
-  const ordered = insertions.map((insertion, index) => ({ insertion, index }));
+  const ordered = insertions.map((insertion, index) => ({ index, insertion }));
   ordered.sort(
     (a, b) => a.insertion.offset - b.insertion.offset || b.index - a.index
   );

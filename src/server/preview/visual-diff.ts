@@ -93,9 +93,9 @@ function bandsOf(diff: Buffer, width: number, height: number): DiffBand[] {
 
     if (pct >= 0.5) {
       bands.push({
-        y,
-        height: bandHeight,
         changedPct: Math.round(pct * 10) / 10,
+        height: bandHeight,
+        y,
       });
     }
   }
@@ -112,13 +112,13 @@ export function diffImages(
   const height = comparedHeightFor(before, after, masks);
 
   const base = {
-    comparedHeight: height,
-    beforeHeight: before.height,
     afterHeight: after.height,
+    beforeHeight: before.height,
+    comparedHeight: height,
   };
 
   if (height === 0 || width === 0) {
-    return { ...base, changedPct: 0, bands: [] };
+    return { ...base, bands: [], changedPct: 0 };
   }
 
   const a = cropTo(before, width, height);
@@ -132,10 +132,10 @@ export function diffImages(
   const diff = Buffer.alloc(width * height * 4);
 
   const changed = pixelmatch(a, b, diff, width, height, {
-    threshold: 0.1,
-    diffMask: true,
     diffColor: [255, 0, 0],
     diffColorAlt: [255, 0, 0],
+    diffMask: true,
+    threshold: 0.1,
   });
 
   const grown = masks.length === 0 ? Math.abs(before.height - after.height) : 0;
@@ -143,8 +143,8 @@ export function diffImages(
 
   return {
     ...base,
-    changedPct: Math.round(pct * 10) / 10,
     bands: [...bandsOf(diff, width, height), ...grownBands(height, grown)],
+    changedPct: Math.round(pct * 10) / 10,
   };
 }
 
@@ -153,9 +153,9 @@ function grownBands(from: number, rows: number): DiffBand[] {
 
   for (let y = from; y < from + rows; y += BAND_HEIGHT) {
     bands.push({
-      y,
-      height: Math.min(BAND_HEIGHT, from + rows - y),
       changedPct: 100,
+      height: Math.min(BAND_HEIGHT, from + rows - y),
+      y,
     });
   }
 
@@ -174,12 +174,12 @@ export function diffMask(before: PNG, after: PNG): DiffMask {
   const height = Math.min(before.height, after.height);
 
   const out = new PNG({
-    width: Math.max(1, width),
     height: Math.max(1, height),
+    width: Math.max(1, width),
   });
 
   if (width === 0 || height === 0) {
-    return { png: PNG.sync.write(out), width, height, changed: 0 };
+    return { changed: 0, height, png: PNG.sync.write(out), width };
   }
 
   const changed = pixelmatch(
@@ -189,14 +189,14 @@ export function diffMask(before: PNG, after: PNG): DiffMask {
     width,
     height,
     {
-      threshold: 0.1,
-      diffMask: true,
       diffColor: [255, 0, 0],
       diffColorAlt: [255, 0, 0],
+      diffMask: true,
+      threshold: 0.1,
     }
   );
 
-  return { png: PNG.sync.write(out), width, height, changed };
+  return { changed, height, png: PNG.sync.write(out), width };
 }
 
 export async function readPng(file: string): Promise<PNG> {
@@ -232,11 +232,11 @@ export function diffFinding(
 
   return {
     check: "visual-diff",
-    severity: unexpected ? "medium" : "low",
-    viewport,
-    selector: null,
-    source: null,
     message: `${diff.changedPct}% of pixels changed ${scope}${describeBands(diff.bands)}.${heightNote}${unexpected ? " This change was not requested." : ""}`,
+    selector: null,
+    severity: unexpected ? "medium" : "low",
+    source: null,
+    viewport,
     ...(unexpected
       ? {
           fix: "Check that the edit stayed inside the requested scope, and undo unrelated changes.",
@@ -246,7 +246,7 @@ export function diffFinding(
 }
 
 export function resizePng(source: PNG, width: number, height: number): PNG {
-  const out = new PNG({ width, height });
+  const out = new PNG({ height, width });
   const sx = source.width / width;
   const sy = source.height / height;
 
@@ -306,7 +306,7 @@ export function topOf(png: PNG, height: number): PNG {
     return png;
   }
 
-  const out = new PNG({ width: png.width, height });
+  const out = new PNG({ height, width: png.width });
   png.data.copy(out.data, 0, 0, png.width * height * 4);
 
   return out;
@@ -428,10 +428,10 @@ function markContent(
 function contentDiff(a: PNG, b: PNG): ContentMap {
   const mask = Buffer.alloc(a.width * a.height * 4);
   pixelmatch(a.data, b.data, mask, a.width, a.height, {
-    threshold: CONTENT_THRESHOLD,
-    diffMask: true,
     diffColor: [255, 0, 0],
     diffColorAlt: [255, 0, 0],
+    diffMask: true,
+    threshold: CONTENT_THRESHOLD,
   });
   const content = new Uint8Array(a.width * a.height);
   const backA = backgroundOf(a);
@@ -454,7 +454,7 @@ function contentDiff(a: PNG, b: PNG): ContentMap {
     }
   }
 
-  return { width: a.width, height: a.height, cells: content };
+  return { cells: content, height: a.height, width: a.width };
 }
 
 function contentDiffersPct(
@@ -602,7 +602,7 @@ function sumOf(
 }
 
 function matchEdges(reference: PNG, render: PNG): EdgeMatch {
-  const plane = { width: reference.width, height: reference.height };
+  const plane = { height: reference.height, width: reference.width };
   const edgesA = edgesOf(reference);
   const edgesB = edgesOf(render);
 
@@ -660,10 +660,10 @@ export function diffPictures(reference: PNG, render: PNG): PictureDiff {
   const mask = Buffer.alloc(width * height * 4);
 
   const changed = pixelmatch(a.data, b.data, mask, width, height, {
-    threshold: 0.15,
-    diffMask: true,
     diffColor: [255, 0, 0],
     diffColorAlt: [255, 0, 0],
+    diffMask: true,
+    threshold: 0.15,
   });
 
   const contentWidth = Math.min(CONTENT_WIDTH, reference.width);
@@ -683,19 +683,19 @@ export function diffPictures(reference: PNG, render: PNG): PictureDiff {
   const contentScore = 100 - contentDiffersPct(content);
   const edgeScore = edgeScoreOf(edges);
 
-  const regions = gridRegions({ mask, width, height }, content, edges).map(
+  const regions = gridRegions({ height, mask, width }, content, edges).map(
     (region) => scaleRegion(region, reference.width / width)
   );
 
   return {
-    differsPct: round1((changed / (width * height)) * 100),
     contentScore: round1(contentScore),
+    differsPct: round1((changed / (width * height)) * 100),
     edgeScore: round1(edgeScore),
-    score: Math.round(blend(contentScore, edgeScore)),
-    regions,
     mask,
-    maskWidth: width,
     maskHeight: height,
+    maskWidth: width,
+    regions,
+    score: Math.round(blend(contentScore, edgeScore)),
   };
 }
 
@@ -727,10 +727,10 @@ function changedPct(grid: Plane & { mask: Buffer }, box: Box): number {
 function scaleRegion(region: PictureRegion, scale: number): PictureRegion {
   return {
     ...region,
+    height: Math.round(region.height * scale),
+    width: Math.round(region.width * scale),
     x: Math.round(region.x * scale),
     y: Math.round(region.y * scale),
-    width: Math.round(region.width * scale),
-    height: Math.round(region.height * scale),
   };
 }
 
@@ -747,21 +747,21 @@ function gridRegions(
       const contentPct = contentDiffersPct(content, cellBox(content, row, col));
       const edgePct = edgeScoreOf(edges, cellBox(edges, row, col));
       regions.push({
+        contentDiffersPct: round1(contentPct),
+        differsPct: changedPct(grid, box),
+        edgeMatchPct: round1(edgePct),
+        height: box.y1 - box.y0,
         name: `${ROW_NAMES[row]} ${COL_NAMES[col]}`,
+        weight: blend(100 - contentPct, edgePct),
+        width: box.x1 - box.x0,
         x: box.x0,
         y: box.y0,
-        width: box.x1 - box.x0,
-        height: box.y1 - box.y0,
-        differsPct: changedPct(grid, box),
-        contentDiffersPct: round1(contentPct),
-        edgeMatchPct: round1(edgePct),
-        weight: blend(100 - contentPct, edgePct),
       });
     }
   }
 
   return regions
-    .sort((left, right) => left.weight - right.weight)
+    .toSorted((left, right) => left.weight - right.weight)
     .map(({ weight: _weight, ...region }) => region);
 }
 
@@ -780,7 +780,7 @@ function blit(target: PNG, source: PNG, left: number): void {
 }
 
 function tinted(render: PNG, diff: PictureDiff): PNG {
-  const out = new PNG({ width: render.width, height: render.height });
+  const out = new PNG({ height: render.height, width: render.width });
 
   for (let y = 0; y < render.height; y += 1) {
     const my = Math.min(
@@ -830,7 +830,7 @@ export function pictureSheet(
 
   const ref = resizePng(reference, width, height);
   const got = resizePng(render, width, height);
-  const sheet = new PNG({ width: width * 3 + GAP * 2, height });
+  const sheet = new PNG({ height, width: width * 3 + GAP * 2 });
   sheet.data.fill(128);
   blit(sheet, ref, 0);
   blit(sheet, got, width + GAP);

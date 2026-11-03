@@ -31,9 +31,9 @@ const PING_MS = 15_000;
 
 const cursorSchema = z
   .object({
+    frame: z.number().int().min(0).max(100).nullable(),
     key: z.string().regex(/^[A-Za-z0-9_-]{24}$/),
     name: z.string().trim().max(SHARE_NAME_MAX),
-    frame: z.number().int().min(0).max(100).nullable(),
     x: z.number().min(0).max(100_000),
     y: z.number().min(0).max(100_000),
   })
@@ -41,9 +41,9 @@ const cursorSchema = z
 
 const postSchema = z
   .object({
+    frame: z.number().int().min(0).max(100),
     name: z.string().trim().min(1).max(SHARE_NAME_MAX),
     text: z.string().trim().min(1).max(SHARE_COMMENT_MAX),
-    frame: z.number().int().min(0).max(100),
     x: z.number().int().min(0).max(100_000).nullable(),
     y: z.number().int().min(0).max(100_000).nullable(),
   })
@@ -57,12 +57,12 @@ export interface ViewerAppDeps {
 
 const BASE_HEADERS: Record<string, string> = {
   "cache-control": "no-store",
+  "cross-origin-opener-policy": "same-origin",
+  "cross-origin-resource-policy": "same-origin",
   "referrer-policy": "no-referrer",
   "x-content-type-options": "nosniff",
   "x-frame-options": "DENY",
   "x-robots-tag": "noindex, nofollow",
-  "cross-origin-resource-policy": "same-origin",
-  "cross-origin-opener-policy": "same-origin",
 };
 
 function csp(nonce: string): string {
@@ -161,13 +161,13 @@ function viewerComment(
   const pinned = comment.target.selector !== "body" || hint.width > 0;
 
   return {
-    n: comment.n,
     author: comment.author ?? "Viewer",
-    text: comment.text,
+    createdAt: comment.createdAt,
     frame: Math.max(0, index),
+    n: comment.n,
+    text: comment.text,
     x: pinned ? Math.round(hint.x) : null,
     y: pinned ? Math.round(hint.y) : null,
-    createdAt: comment.createdAt,
   };
 }
 
@@ -195,15 +195,18 @@ async function postComment(
 
   const spot =
     input.x !== null && input.y !== null
-      ? { x: input.x, y: input.y, width: 1, height: 1 }
-      : { x: 0, y: 0, width: 0, height: 0 };
+      ? { height: 1, width: 1, x: input.x, y: input.y }
+      : { height: 0, width: 0, x: 0, y: 0 };
 
   const comment = await deps.comments.create(
     record.projectId,
     record.directionId,
     {
-      text: input.text,
+      author: input.name,
+      from: "viewer",
+      status: "draft",
       target: {
+        rectHint: spot,
         selector: "body",
         tag: "body",
         textSnippet:
@@ -213,13 +216,10 @@ async function postComment(
                 200
               )
             : "",
-        rectHint: spot,
       },
-      status: "draft",
-      author: input.name,
-      from: "viewer",
+      text: input.text,
       ...(frame
-        ? { frame: { path: frame.path ?? "", label: frame.name } }
+        ? { frame: { label: frame.name, path: frame.path ?? "" } }
         : {}),
     }
   );
@@ -252,20 +252,20 @@ export function createViewerApp(deps: ViewerAppDeps): Hono {
   const ICON_CACHE = "public, max-age=86400";
   app.get("/favicon.svg", (c) =>
     c.body(FAVICON_SVG, 200, {
-      "content-type": "image/svg+xml",
       "cache-control": ICON_CACHE,
+      "content-type": "image/svg+xml",
     })
   );
   app.get("/favicon-32.png", (c) =>
     c.body(new Uint8Array(FAVICON_PNG_32), 200, {
-      "content-type": "image/png",
       "cache-control": ICON_CACHE,
+      "content-type": "image/png",
     })
   );
   app.get("/favicon-16.png", (c) =>
     c.body(new Uint8Array(FAVICON_PNG_16), 200, {
-      "content-type": "image/png",
       "cache-control": ICON_CACHE,
+      "content-type": "image/png",
     })
   );
 
@@ -281,11 +281,11 @@ export function createViewerApp(deps: ViewerAppDeps): Hono {
     const html = viewerHtml(
       {
         base: `/s/${c.req.param("token")}`,
-        title: record.title,
         expiresAt: record.expiresAt,
         frames: record.frames,
         live: record.live === true,
         rev: record.rev ?? 0,
+        title: record.title,
       },
       nonce
     );
@@ -398,7 +398,7 @@ export function createViewerApp(deps: ViewerAppDeps): Hono {
 
       const send = (event: string, data: unknown): void => {
         last = stream
-          .writeSSE({ event, data: JSON.stringify(data) })
+          .writeSSE({ data: JSON.stringify(data), event })
           .catch(() => done());
       };
 

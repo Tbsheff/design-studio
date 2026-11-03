@@ -48,10 +48,10 @@ function graphClient(
 
   return new WorkerClient({
     file: WORKER_FILE,
+    idleMs,
+    inProcess: answer,
     label,
     workerData: { cacheDir },
-    inProcess: answer,
-    idleMs,
   });
 }
 
@@ -65,7 +65,7 @@ export class RouteStamps {
   private readonly graph: WorkerClient<GraphRequest, GraphReply>;
   private readonly usageGraph: WorkerClient<GraphRequest, GraphReply>;
 
-  constructor(cacheDir: string | null = null) {
+  public constructor(cacheDir: string | null = null) {
     this.graph = graphClient("route graph", cacheDir, ROUTE_GRAPH_IDLE_MS);
     this.usageGraph = graphClient(
       "usage graph",
@@ -88,7 +88,7 @@ export class RouteStamps {
     return list;
   }
 
-  async stamp(
+  public async stamp(
     workTree: string,
     appDir: string,
     pathname: string
@@ -119,17 +119,17 @@ export class RouteStamps {
     ]);
   }
 
-  async edges(workTree: string, roots: string[]): Promise<ImportEdges> {
+  public async edges(workTree: string, roots: string[]): Promise<ImportEdges> {
     return (
       ((await this.usageGraph.run({
         kind: "edges",
-        workTree,
         roots,
+        workTree,
       })) as ImportEdges | null) ?? []
     );
   }
 
-  async close(): Promise<void> {
+  public async close(): Promise<void> {
     await Promise.all(
       [this.graph, this.usageGraph].map(async (client) => {
         if (client.started) {
@@ -161,8 +161,8 @@ export class RouteStamps {
 
     return (await this.graph.run({
       kind: "stamp",
-      workTree,
       roots: await this.roots(workTree, appDir, pageFile),
+      workTree,
     })) as ContentStamp | null;
   }
 

@@ -2,11 +2,12 @@ import {
   RENDER_BACKEND_ENV,
   RENDER_IPC_ENV,
   RENDER_SOCKET_ENV,
-  type RenderBackendName,
 } from "../../shared/render-rpc.js";
+import type { RenderBackendName } from "../../shared/render-rpc.js";
 import type { RenderBackend } from "./render-contract.js";
 
 export { NAVIGATION_TIMEOUT_MS, SETTLE_TIMEOUT_MS } from "./render-contract.js";
+
 export type { RenderBackend, RenderPage } from "./render-contract.js";
 
 export function chooseBackend(

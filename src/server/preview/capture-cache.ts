@@ -33,9 +33,9 @@ async function cloneFile(from: string, to: string): Promise<void> {
 export class CaptureCache<T> {
   private readonly entries = new Map<string, Entry<T>>();
 
-  constructor(private readonly dir: string) {}
+  public constructor(private readonly dir: string) {}
 
-  peek(key: string, stamp: string | null): T | null {
+  public peek(key: string, stamp: string | null): T | null {
     const entry = stamp ? this.entries.get(key) : undefined;
 
     return entry && entry.stamp === stamp && Date.now() - entry.at < MAX_AGE_MS
@@ -43,7 +43,7 @@ export class CaptureCache<T> {
       : null;
   }
 
-  async hit(
+  public async hit(
     key: string,
     stamp: string | null,
     outFiles: string[]
@@ -77,7 +77,7 @@ export class CaptureCache<T> {
     return entry.value;
   }
 
-  async store(
+  public async store(
     key: string,
     stamp: string | null,
     value: T,
@@ -100,7 +100,7 @@ export class CaptureCache<T> {
     }
 
     this.entries.delete(key);
-    this.entries.set(key, { stamp, at: Date.now(), value, files: kept });
+    this.entries.set(key, { at: Date.now(), files: kept, stamp, value });
 
     while (this.entries.size > MAX_ENTRIES) {
       const oldest = this.entries.keys().next().value;

@@ -54,7 +54,7 @@ function walk(node: AstNode, visit: (node: AstNode) => void): void {
 }
 
 function hasLocAttribute(opening: AstNode): boolean {
-  const attributes = opening.attributes;
+  const { attributes } = opening;
 
   if (!Array.isArray(attributes)) {
     return false;
@@ -65,7 +65,7 @@ function hasLocAttribute(opening: AstNode): boolean {
       return false;
     }
 
-    const name = attr.name;
+    const { name } = attr;
 
     return (
       isAstNode(name) &&
@@ -100,7 +100,7 @@ export function tagJsxSource(
   let ast: unknown;
 
   try {
-    ast = parse(code, { sourceType: "module", plugins, errorRecovery: false });
+    ast = parse(code, { errorRecovery: false, plugins, sourceType: "module" });
   } catch {
     return null;
   }
@@ -116,7 +116,7 @@ export function tagJsxSource(
       return;
     }
 
-    const name = node.name;
+    const { name } = node;
 
     if (!isHostElementName(name)) {
       return;
@@ -144,6 +144,6 @@ export function tagJsxSource(
 
   return {
     code: magic.toString(),
-    map: magic.generateMap({ hires: true, source: id, includeContent: true }),
+    map: magic.generateMap({ hires: true, includeContent: true, source: id }),
   };
 }

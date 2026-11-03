@@ -5,6 +5,7 @@ import { handle as getDesignMdMcpReadHandle } from "./get-design-md.js";
 import { handle as getDoctorMcpReadHandle } from "./get-doctor.js";
 import { handle as getFrameHtmlMcpReadHandle } from "./get-frame-html.js";
 import { handle as getPortPlanMcpReadHandle } from "./get-port-plan.js";
+import { handle as getRunContextMcpReadHandle } from "./get-run-context.js";
 import { handle as getScreenshotMcpReadHandle } from "./get-screenshot.js";
 import { handle as getTokensMcpReadHandle } from "./get-tokens.js";
 import { handle as getUsageMcpReadHandle } from "./get-usage.js";
@@ -22,6 +23,7 @@ const McpReadEntries = {
   getDoctorMcpRead: { handle: getDoctorMcpReadHandle },
   getFrameHtmlMcpRead: { handle: getFrameHtmlMcpReadHandle },
   getPortPlanMcpRead: { handle: getPortPlanMcpReadHandle },
+  getRunContextMcpRead: { handle: getRunContextMcpReadHandle },
   getScreenshotMcpRead: { handle: getScreenshotMcpReadHandle },
   getTokensMcpRead: { handle: getTokensMcpReadHandle },
   getUsageMcpRead: { handle: getUsageMcpReadHandle },

@@ -13,7 +13,7 @@ import { failureOf, toWireError } from "../http/wire-error.js";
 import type { StudioRuntime } from "../main/runtime.js";
 import { toLegacyPrincipal } from "../store/local-principal.js";
 import type { ApprovalQueue } from "./approvals.js";
-import type { ToolDef } from "./tools.js";
+import type { ToolDef } from "./tool-types.js";
 
 type Group = Readonly<Record<string, AnyAction>>;
 

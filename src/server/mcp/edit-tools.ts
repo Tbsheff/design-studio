@@ -29,7 +29,7 @@ import { SESSION_LEGACY_TOOLS } from "./legacy/session.js";
 import { STUDIO_LEGACY_TOOLS } from "./legacy/studio.js";
 import { VERSIONS_LEGACY_TOOLS } from "./legacy/versions.js";
 import { ACTION_EDIT_TOOLS } from "./registry.js";
-import type { ToolDef, ToolResult } from "./tools.js";
+import type { ToolDef, ToolResult } from "./tool-types.js";
 
 const LEGACY_TOOLS: ToolSpec[] = [
   ...CANVAS_LEGACY_TOOLS,

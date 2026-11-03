@@ -7,6 +7,7 @@ import type {
 import type { ElementVariantInfo } from "../../shared/element-variants.js";
 import type { FoundApps } from "../../shared/found-apps.js";
 import type { ProjectSearchResult } from "../../shared/project-search.js";
+import type { RepoContextState } from "../../shared/repo-context.js";
 import type { ComponentUsage } from "../../shared/usage-scope.js";
 import { readDoctor, toDoctorText } from "./doctor-read.js";
 import { readFileList, readFileText } from "./file-read.js";
@@ -34,6 +35,8 @@ import { readProjectSearch } from "./project-search-read.js";
 import type { ProjectSearchQuery } from "./project-search-read.js";
 import { readRouteList } from "./route-read.js";
 import type { RouteList, RouteListQuery } from "./route-read.js";
+import { readRunContext } from "./run-context-read.js";
+import type { RunContextQuery } from "./run-context-read.js";
 import { readDesignMd, readTokens } from "./token-read.js";
 import type { DesignMd, TokensView } from "./token-read.js";
 import { readUsage } from "./usage-read.js";
@@ -79,6 +82,9 @@ interface McpReadStoreApi {
   readonly routeList: (
     query: RouteListQuery
   ) => Effect.Effect<RouteList, McpReadError>;
+  readonly runContext: (
+    query: RunContextQuery
+  ) => Effect.Effect<RepoContextState, McpReadError>;
   readonly screenshot: (
     query: ShotQuery
   ) => Effect.Effect<ScreenshotView, McpReadError>;
@@ -189,6 +195,13 @@ class McpReadStore extends Context.Service<McpReadStore, McpReadStoreApi>()(
       ) {
         return yield* attemptMcpRead((runtime) =>
           readRouteList(runtime.projects, query)
+        );
+      }),
+      runContext: Effect.fn("McpReadStore.runContext")(function* run(
+        query: RunContextQuery
+      ) {
+        return yield* attemptMcpRead((runtime) =>
+          readRunContext(runtime.projects, query)
         );
       }),
       screenshot: Effect.fn("McpReadStore.screenshot")(function* run(

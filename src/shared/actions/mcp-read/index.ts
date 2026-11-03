@@ -3,6 +3,7 @@ import { getDesignMdMcpRead } from "./get-design-md.js";
 import { getDoctorMcpRead } from "./get-doctor.js";
 import { getFrameHtmlMcpRead } from "./get-frame-html.js";
 import { getPortPlanMcpRead } from "./get-port-plan.js";
+import { getRunContextMcpRead } from "./get-run-context.js";
 import { getScreenshotMcpRead } from "./get-screenshot.js";
 import { getTokensMcpRead } from "./get-tokens.js";
 import { getUsageMcpRead } from "./get-usage.js";
@@ -20,6 +21,7 @@ const McpReadActions = {
   getDoctorMcpRead,
   getFrameHtmlMcpRead,
   getPortPlanMcpRead,
+  getRunContextMcpRead,
   getScreenshotMcpRead,
   getTokensMcpRead,
   getUsageMcpRead,

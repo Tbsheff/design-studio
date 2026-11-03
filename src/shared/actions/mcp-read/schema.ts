@@ -48,6 +48,14 @@ const PortPlanViewSchema = Schema.Struct({
   unselected: Schema.optionalKey(Schema.Unknown),
 });
 
+const RunContextSchema = Schema.Struct({
+  appDir: Schema.NullOr(Schema.String),
+  bytes: Schema.Number,
+  files: Schema.Array(Schema.Unknown),
+  text: Schema.NullOr(Schema.String),
+  workspaceRoot: Schema.NullOr(Schema.String),
+});
+
 const ComponentUsageSchema = Schema.Struct({
   callSite: Schema.optionalKey(Schema.Unknown),
   component: Schema.NullOr(Schema.String),
@@ -142,6 +150,7 @@ export {
   ProjectSummaryListSchema,
   RouteListSchema,
   RouteTextSchema,
+  RunContextSchema,
   ScreenshotSchema,
   TokensViewSchema,
   VariantListSchema,

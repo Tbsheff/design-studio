@@ -18,7 +18,7 @@ import { evaluateToolUse } from "../platform/tool-policy/index.js";
 import type { ActivityDraft } from "./activity.js";
 import { EditError, type EditDeps } from "./edit-deps.js";
 import { describeElement } from "./element.js";
-import type { ToolResult } from "./tools.js";
+import type { ToolResult } from "./tool-types.js";
 
 export const SELECTOR_MAX = 2000;
 export const PATH_MAX = 300;

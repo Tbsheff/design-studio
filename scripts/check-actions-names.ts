@@ -148,14 +148,11 @@ const agentLegacy = async (): Promise<Set<string>> => {
 };
 
 const mcpLegacy = async (): Promise<Set<string>> => {
-  const [edit, read] = await Promise.all([
-    loadModule<{ EDIT_NAMES: ReadonlySet<string> }>(
-      "src/server/mcp/edit-tools.ts"
-    ),
-    loadModule<{ TOOLS: readonly NamedTool[] }>("src/server/mcp/tools.ts"),
-  ]);
+  const edit = await loadModule<{ EDIT_NAMES: ReadonlySet<string> }>(
+    "src/server/mcp/edit-tools.ts"
+  );
 
-  return new Set([...edit.EDIT_NAMES, ...read.TOOLS.map((tool) => tool.name)]);
+  return new Set(edit.EDIT_NAMES);
 };
 
 const editsNote = async (): Promise<string> => {

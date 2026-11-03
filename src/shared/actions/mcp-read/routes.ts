@@ -24,6 +24,12 @@ const routes = {
     method: "GET",
     path: "/api/port/plan",
   },
+  getRunContextMcpRead: {
+    id: "mcp-read.getRunContext",
+    invalidates: [],
+    method: "GET",
+    path: "/api/projects/:projectId/run-context",
+  },
   getScreenshotMcpRead: {
     id: "mcp-read.getScreenshot",
     invalidates: [],

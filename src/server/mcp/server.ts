@@ -28,7 +28,6 @@ import { withLayerSelectors } from "./layer-tools.js";
 import { ActionTools } from "./registry.js";
 import { newToken, readMcpSettings, writeMcpSettings } from "./settings.js";
 import type { McpSettings } from "./settings.js";
-import { callTool, ToolError, TOOLS } from "./tools.js";
 
 const PROTOCOLS = ["2025-06-18", "2025-03-26", "2024-11-05"];
 const MAX_BODY = 1024 * 1024;
@@ -90,34 +89,6 @@ function freePort(): Promise<number> {
       );
     });
   });
-}
-
-async function runTool(
-  deps: ExportDeps,
-  name: string,
-  raw: unknown
-): Promise<unknown> {
-  const args =
-    typeof raw === "object" && raw !== null && !Array.isArray(raw)
-      ? (raw as Record<string, unknown>)
-      : {};
-  try {
-    return await callTool(deps, name, args);
-  } catch (error) {
-    const known = error instanceof ToolError || isKnownError(error);
-    if (!known) console.error("[mcp] tool failed", name, error);
-    return {
-      content: [
-        {
-          type: "text",
-          text: known
-            ? (error as Error).message
-            : "The tool failed. See the Design Studio log.",
-        },
-      ],
-      isError: true,
-    };
-  }
 }
 
 interface Dispatch {
@@ -270,7 +241,11 @@ async function callAny(
 ): Promise<unknown> {
   if (ActionTools.isAction(name))
     return ActionTools.call(ctx.deps, name, argsOf(args), edits);
-  if (!EDIT_NAMES.has(name)) return runTool(ctx.deps, name, args);
+  if (!EDIT_NAMES.has(name))
+    return {
+      content: [{ type: "text", text: `unknown tool ${name}` }],
+      isError: true,
+    };
   if (!edits)
     return { content: [{ type: "text", text: EDITS_OFF }], isError: true };
   return runEdit(edits, name, args, ctx.client);
@@ -332,13 +307,13 @@ async function dispatch(
     }
     case "tools/list": {
       return reply({
-        tools: ActionTools.list(TOOLS, EDIT_TOOLS, edits),
+        tools: ActionTools.list([], EDIT_TOOLS, edits),
       });
     }
     case "tools/call": {
       const name =
         typeof message.params?.name === "string" ? message.params.name : "";
-      if (!EDIT_NAMES.has(name) && !ActionTools.isKnown(TOOLS, name))
+      if (!EDIT_NAMES.has(name) && !ActionTools.isKnown([], name))
         return fail(-32_602, `unknown tool ${name}`);
       return reply(await callAny(ctx, edits, name, message.params?.arguments));
     }

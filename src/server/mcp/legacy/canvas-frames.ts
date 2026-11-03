@@ -7,7 +7,7 @@ import { EditError, loadTarget, refuseWhileRunning } from "../edit-deps.js";
 import type { EditDeps } from "../edit-deps.js";
 import { ok } from "../edit-kit.js";
 import type { Done } from "../edit-kit.js";
-import type { ToolResult } from "../tools.js";
+import type { ToolResult } from "../tool-types.js";
 import {
   pointEvent,
   pointMessage,

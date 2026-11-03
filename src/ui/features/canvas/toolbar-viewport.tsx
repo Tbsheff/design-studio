@@ -1,0 +1,216 @@
+import { useState, type KeyboardEvent, type ReactNode } from "react";
+
+import { PRESETS } from "../../domain/canvas-presets.js";
+import type { CanvasSource } from "../../domain/canvas-presets.js";
+import { Icon } from "../../kit/Icon.js";
+import { uiStore, type Viewport } from "../../storage.js";
+
+export interface Props {
+  viewport: Viewport;
+  drawMode?: boolean;
+  onToggleDraw?: () => void;
+  source: CanvasSource;
+  onSource: (s: CanvasSource) => void;
+  hasHead: boolean;
+  checking: boolean;
+  onCheck: () => void;
+  addFrame?: ReactNode;
+  theme?: { dark: boolean; onToggle: () => void };
+  lofi?: { on: boolean; onToggle: () => void };
+  links?: { on: boolean; onToggle: () => void };
+  rulers?: { on: boolean; onToggle: () => void };
+}
+
+const RADIO_STEP: Record<string, (index: number, count: number) => number> = {
+  ArrowRight: (index, count) => (index + 1) % count,
+  ArrowDown: (index, count) => (index + 1) % count,
+  ArrowLeft: (index, count) => (index - 1 + count) % count,
+  ArrowUp: (index, count) => (index - 1 + count) % count,
+  Home: () => 0,
+  End: (_index, count) => count - 1,
+};
+
+function onRadioGroupKey(event: KeyboardEvent<HTMLDivElement>) {
+  const step = RADIO_STEP[event.key];
+
+  if (!step) {
+    return;
+  }
+
+  const radios = Array.from(
+    event.currentTarget.querySelectorAll<HTMLButtonElement>(
+      '[role="radio"]:not(:disabled)'
+    )
+  );
+
+  const index = radios.indexOf(document.activeElement as HTMLButtonElement);
+
+  if (index === -1) {
+    return;
+  }
+
+  event.preventDefault();
+  const next = radios[step(index, radios.length)];
+  next?.focus();
+  next?.click();
+}
+
+export function ViewportControls({ viewport }: { viewport: Viewport }) {
+  const [customW, setCustomW] = useState(String(viewport.width));
+  const [customH, setCustomH] = useState(String(viewport.height));
+  const [shown, setShown] = useState(`${viewport.width}x${viewport.height}`);
+
+  if (shown !== `${viewport.width}x${viewport.height}`) {
+    setShown(`${viewport.width}x${viewport.height}`);
+    setCustomW(String(viewport.width));
+    setCustomH(String(viewport.height));
+  }
+
+  const applyCustom = () => {
+    const w = Math.max(
+      200,
+      Math.min(4000, Number.parseInt(customW, 10) || viewport.width)
+    );
+
+    const h = Math.max(
+      200,
+      Math.min(4000, Number.parseInt(customH, 10) || viewport.height)
+    );
+
+    setCustomW(String(w));
+    setCustomH(String(h));
+    uiStore.set({ viewport: { preset: "custom", width: w, height: h } });
+  };
+
+  const onDimKey = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== "Enter") {
+      return;
+    }
+
+    e.preventDefault();
+    applyCustom();
+  };
+
+  return (
+    <div className="toolbar-group">
+      <div
+        className="segmented icons"
+        role="radiogroup"
+        aria-label="Viewport"
+        onKeyDown={onRadioGroupKey}
+      >
+        {PRESETS.map((p) => (
+          <button
+            key={p.id}
+            role="radio"
+            aria-label={p.label}
+            data-tip={p.label}
+            data-tip-align={p.id === "desktop" ? "start" : undefined}
+            aria-checked={viewport.preset === p.id}
+            tabIndex={viewport.preset === p.id ? 0 : -1}
+            className={viewport.preset === p.id ? "on" : ""}
+            onClick={() =>
+              uiStore.set({
+                viewport: { preset: p.id, width: p.width, height: p.height },
+              })
+            }
+          >
+            <Icon name={p.icon} />
+          </button>
+        ))}
+        <button
+          role="radio"
+          aria-label="Custom"
+          data-tip="Custom size"
+          aria-checked={viewport.preset === "custom"}
+          tabIndex={viewport.preset === "custom" ? 0 : -1}
+          className={viewport.preset === "custom" ? "on" : ""}
+          onClick={applyCustom}
+        >
+          <Icon name="custom" />
+        </button>
+      </div>
+      {viewport.preset === "custom" ? (
+        <form
+          className="dims"
+          onSubmit={(e) => {
+            e.preventDefault();
+            applyCustom();
+          }}
+        >
+          <input
+            aria-label="Width"
+            value={customW}
+            onChange={(e) => setCustomW(e.target.value)}
+            onBlur={applyCustom}
+            onKeyDown={onDimKey}
+          />
+          <span className="x">×</span>
+          <input
+            aria-label="Height"
+            value={customH}
+            onChange={(e) => setCustomH(e.target.value)}
+            onBlur={applyCustom}
+            onKeyDown={onDimKey}
+          />
+        </form>
+      ) : (
+        <span className="dims-readout">
+          {viewport.width} × {viewport.height}
+        </span>
+      )}
+    </div>
+  );
+}
+
+export function SourceControls({
+  source,
+  onSource,
+  hasHead,
+}: Pick<Props, "source" | "onSource" | "hasHead">) {
+  return (
+    <div className="toolbar-group source">
+      <div
+        className="segmented source-seg"
+        role="radiogroup"
+        aria-label="Preview source"
+        onKeyDown={onRadioGroupKey}
+      >
+        <button
+          role="radio"
+          aria-checked={source.kind === "live"}
+          tabIndex={source.kind === "last" ? -1 : 0}
+          className={source.kind === "live" ? "on" : ""}
+          aria-label="Live"
+          data-tip="Live preview"
+          onClick={() => onSource({ kind: "live" })}
+        >
+          <Icon name="radio" className="seg-icon" />
+          <span className="seg-label">Live</span>
+        </button>
+        <button
+          role="radio"
+          aria-checked={source.kind === "last"}
+          tabIndex={source.kind === "last" ? 0 : -1}
+          className={source.kind === "last" ? "on" : ""}
+          disabled={!hasHead}
+          aria-label="Last completed"
+          data-tip="Last completed version"
+          onClick={() => onSource({ kind: "last" })}
+        >
+          <Icon name="history" className="seg-icon" />
+          <span className="seg-label">Last completed</span>
+        </button>
+      </div>
+      {source.kind === "version" && (
+        <span className="pill">
+          <Icon name="eye" size={14} />
+          <span className="pill-text">Viewing {source.title}</span>
+          <button className="link" onClick={() => onSource({ kind: "live" })}>
+            Back to live
+          </button>
+        </span>
+      )}
+    </div>
+  );
+}

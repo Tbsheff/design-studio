@@ -50,6 +50,7 @@ import { readSnapshot } from "./token-snapshot.js";
 import type { FileSnapshot } from "./token-snapshot.js";
 
 export { readSnapshot } from "./token-snapshot.js";
+
 export type { FileSnapshot } from "./token-snapshot.js";
 
 const MAX_NAME = 40;
@@ -79,25 +80,20 @@ export const VALUE_CHECKS: Record<TokenGroupName, ValueCheck> = {
     FONT_STACK.test(value)
       ? null
       : "is not a font stack (no ; : { } < > or \\)",
-  text: isDimension,
-  space: isDimension,
   radius: isDimension,
   shadow: (value) =>
     SHADOW.test(value)
       ? null
       : "is not a box-shadow (letters, digits, spaces and . , % # ( ) + / - only)",
+  space: isDimension,
+  text: isDimension,
 };
 
 const valueSchema = z.string().trim().min(1).max(MAX_VALUE);
 
 const requestSchema = z
   .object({
-    group: z.enum(GROUPS),
-    name: z
-      .string()
-      .max(MAX_NAME)
-      .regex(TOKEN_NAME_PATTERN, 'name must be lowercase words joined by "-"'),
-    value: valueSchema,
+    apply: z.unknown().optional(),
     darkValue: valueSchema.optional(),
     description: z
       .string()
@@ -107,7 +103,12 @@ const requestSchema = z
         "description has a control character"
       )
       .optional(),
-    apply: z.unknown().optional(),
+    group: z.enum(GROUPS),
+    name: z
+      .string()
+      .max(MAX_NAME)
+      .regex(TOKEN_NAME_PATTERN, 'name must be lowercase words joined by "-"'),
+    value: valueSchema,
   })
   .strict();
 
@@ -173,8 +174,8 @@ function parseCreateTokenRequest(raw: unknown): ParsedCreate {
   checkValues(token);
 
   return {
-    token,
     edit: apply === undefined ? null : parseDirectEditRequest(apply),
+    token,
   };
 }
 
@@ -294,7 +295,7 @@ function createTitle(cssVar: string, plan: PlannedEdit | null): string {
     return `Add token ${cssVar}`;
   }
 
-  const style = plan.patch.applied.style;
+  const { style } = plan.patch.applied;
 
   return `Add token ${cssVar} and apply to ${plan.patch.tag}${style.length > 0 ? ` ${style.join(", ")}` : ""}`;
 }
@@ -358,10 +359,10 @@ async function createdChanges(
 
   return [
     {
+      after: plan.patch.code,
+      before: plan.original,
       file: plan.target.file,
       relative: plan.target.relative,
-      before: plan.original,
-      after: plan.patch.code,
     },
     ...changes,
   ];
@@ -373,7 +374,7 @@ async function writeAndCommit(
   direction: Direction,
   input: CommitInput
 ): Promise<Version> {
-  const workTree = direction.workTree;
+  const { workTree } = direction;
 
   const snapshots = await Promise.all(
     DESIGN_FILES.map((relative) => readSnapshot(workTree, relative))
@@ -425,7 +426,7 @@ export async function createToken(
 ): Promise<CreateTokenResult> {
   const { token, edit } = parseCreateTokenRequest(raw);
   assertCanEdit(deps, project, direction);
-  const workTree = direction.workTree;
+  const { workTree } = direction;
   const files = await requireDesignSystem(workTree);
   const cssVar = cssVarFor([token.group, token.name]);
   assertTokenIsNew(files, token, cssVar);
@@ -440,10 +441,10 @@ export async function createToken(
     edit === null ? null : await planDirectEdit(workTree, edit, next.vars);
 
   const version = await writeAndCommit(deps, project, direction, {
-    tokensText: next.text,
-    plan,
     cssVar,
+    plan,
     token,
+    tokensText: next.text,
   });
 
   await publishVersion(deps, project, direction, version);
@@ -451,12 +452,12 @@ export async function createToken(
   const result =
     plan === null
       ? null
-      : { file: plan.target.relative, version, applied: plan.patch.applied };
+      : { applied: plan.patch.applied, file: plan.target.relative, version };
 
   return {
-    state: await readDesignSystemState(project, direction),
     cssVar,
-    version,
     edit: result,
+    state: await readDesignSystemState(project, direction),
+    version,
   };
 }

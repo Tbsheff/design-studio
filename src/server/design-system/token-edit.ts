@@ -62,7 +62,7 @@ function membersOf(text: string, open: number): Member[] {
     }
 
     const end = valueEnd(text, valueStart);
-    members.push({ key, keyStart: index, valueStart, valueEnd: end });
+    members.push({ key, keyStart: index, valueEnd: end, valueStart });
     index = skipSpace(text, end);
 
     if (text[index] === ",") {

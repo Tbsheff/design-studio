@@ -37,18 +37,21 @@ const GROUP_WEIGHTS: Record<string, number> = {
   font: 0.2,
   radius: 0.1,
   shadow: 0.08,
-  text: 0.06,
   space: 0.06,
+  text: 0.06,
 };
+
 const TOKEN_WEIGHTS: Record<string, number> = {
   "color.bg": 2,
+  "color.danger": 0.5,
   "color.fg": 2,
   "color.primary": 2,
   "color.success": 0.5,
   "color.warning": 0.5,
-  "color.danger": 0.5,
 };
-const CONFIDENCE_SCORE = { high: 1, medium: 0.75, derived: 0.6, fallback: 0 };
+
+const CONFIDENCE_SCORE = { derived: 0.6, fallback: 0, high: 1, medium: 0.75 };
+
 const BRAND_COLORS = new Set([
   "color.primary",
   "color.ring",
@@ -56,6 +59,7 @@ const BRAND_COLORS = new Set([
   "color.warning",
   "color.danger",
 ]);
+
 export const SYSTEM_FAMILIES = new Set([
   "arial",
   "helvetica",
@@ -94,6 +98,7 @@ export interface Pick {
 }
 
 const KEY_TOKENS = ["color.bg", "color.fg", "color.primary", "font.body"];
+
 const NAMED_SOURCES = new Set<CoverageEntry["source"]>([
   "folder",
   "tokens-file",
@@ -132,6 +137,7 @@ function choose(
           ? (candidate.dark ?? candidate.value)
           : candidate.value) !== undefined
     );
+
   usable.sort(
     (a, b) =>
       rank(a.candidate) - rank(b.candidate) ||
@@ -139,6 +145,7 @@ function choose(
         Number(a.candidate.canonical === true) ||
       a.order - b.order
   );
+
   return usable[0]?.candidate ?? null;
 }
 
@@ -148,23 +155,32 @@ function nodeAt(
 ): TokenNode | null {
   const [group, name] = token.split(".");
   const groupNode = tokens[group ?? ""];
-  if (typeof groupNode !== "object" || groupNode === null) return null;
+
+  if (typeof groupNode !== "object" || groupNode === null) {
+    return null;
+  }
   const node = (groupNode as Record<string, unknown>)[name ?? ""];
+
   return typeof node === "object" && node !== null ? (node as TokenNode) : null;
 }
 
 function baseDark(node: TokenNode | null): string | undefined {
   const modes = node?.$extensions?.["studio.modes"];
-  if (typeof modes !== "object" || modes === null) return undefined;
-  const dark = (modes as Record<string, unknown>).dark;
+
+  if (typeof modes !== "object" || modes === null) {
+    return undefined;
+  }
+  const { dark } = modes as Record<string, unknown>;
+
   return typeof dark === "string" ? dark : undefined;
 }
 
 function deriveDark(token: string, value: string): string {
-  if (token === "color.accent")
+  if (token === "color.accent") {
     return (lightnessOf(value) ?? 0) > 0.75
       ? shiftLightness(value, () => 0.3, 0.7)
       : shiftLightness(value, (l) => Math.min(0.86, Math.max(0.68, l + 0.18)));
+  }
   return shiftLightness(value, (l) => Math.min(0.86, Math.max(0.68, l + 0.18)));
 }
 
@@ -174,20 +190,25 @@ function basePick(
   mode: "light" | "dark"
 ): Pick | null {
   const node = nodeAt(base.tokens as unknown as Record<string, unknown>, token);
-  if (!node || typeof node.$value !== "string") return null;
+
+  if (!node || typeof node.$value !== "string") {
+    return null;
+  }
   const dark = baseDark(node);
+
   const value =
     mode === "dark" && base.manifest.mode === "light"
       ? (dark ?? node.$value)
       : node.$value;
+
   return {
     value,
     ...(mode === "light" && dark ? { dark } : {}),
     entry: {
-      token,
-      source: "base",
       confidence: "fallback",
       evidence: `${base.manifest.name} (base)`,
+      source: "base",
+      token,
     },
   };
 }
@@ -202,10 +223,10 @@ function derived(
     value,
     ...(dark ? { dark } : {}),
     entry: {
-      token,
-      source: "derived",
       confidence: "medium",
       evidence: `derived from ${from}`,
+      source: "derived",
+      token,
     },
   };
 }
@@ -215,10 +236,15 @@ function darkFor(
   candidate: Candidate,
   value: string
 ): string | undefined {
-  if (!candidate.token.startsWith("color.")) return undefined;
-  if (candidate.dark) return candidate.dark;
-  if (BRAND_COLORS.has(candidate.token) || candidate.token === "color.accent")
+  if (!candidate.token.startsWith("color.")) {
+    return undefined;
+  }
+  if (candidate.dark) {
+    return candidate.dark;
+  }
+  if (BRAND_COLORS.has(candidate.token) || candidate.token === "color.accent") {
     return deriveDark(candidate.token, value);
+  }
   return baseDark(
     nodeAt(base.tokens as unknown as Record<string, unknown>, candidate.token)
   );
@@ -231,21 +257,26 @@ function extracted(
 ): Pick {
   const value =
     mode === "dark" ? (candidate.dark ?? candidate.value)! : candidate.value!;
+
   const dark = mode === "light" ? darkFor(base, candidate, value) : undefined;
   const verified = candidate.canonical === true || candidate.verified === true;
+
   const entry: CoverageEntry = {
-    token: candidate.token,
-    source: candidate.source,
     confidence: candidate.confidence,
     evidence: candidate.evidence,
+    source: candidate.source,
+    token: candidate.token,
     ...(verified ? { verified } : {}),
   };
+
   const alias =
     mode === "dark"
       ? (candidate.darkAlias ?? (candidate.dark ? undefined : candidate.alias))
       : candidate.alias;
+
   const darkAlias =
     mode === "light" && candidate.dark ? candidate.darkAlias : undefined;
+
   return {
     value,
     ...(dark ? { dark } : {}),
@@ -260,20 +291,27 @@ type Picks = Map<string, Pick>;
 
 function isReal(picks: Picks, token: string): boolean {
   const pick = picks.get(token);
+
   return pick !== undefined && pick.entry.source !== "base";
 }
 
 function deriveMissing(picks: Picks, mode: "light" | "dark"): void {
   const real = (token: string) =>
     isReal(picks, token) ? picks.get(token)! : null;
+
   const set = (token: string, make: () => Pick) => {
-    if (!isReal(picks, token)) picks.set(token, make());
+    if (!isReal(picks, token)) {
+      picks.set(token, make());
+    }
   };
+
   const darkOf = (pick: Pick, fn: (value: string) => string) =>
     mode === "light" && pick.dark ? fn(pick.dark) : undefined;
+
   const primary = real("color.primary");
   const bg = real("color.bg");
   const fg = real("color.fg");
+
   if (primary) {
     set("color.primary-fg", () =>
       derived(
@@ -299,8 +337,10 @@ function deriveMissing(picks: Picks, mode: "light" | "dark"): void {
       )
     );
   }
+
   const accent = real("color.accent");
-  if (accent)
+
+  if (accent) {
     set("color.accent-fg", () =>
       derived(
         "color.accent-fg",
@@ -309,9 +349,11 @@ function deriveMissing(picks: Picks, mode: "light" | "dark"): void {
         "color.accent"
       )
     );
+  }
   if (bg) {
     const towardsFg = (value: string, step: number) =>
       shiftLightness(value, (l) => (l > 0.5 ? l - step : l + step));
+
     set("color.surface", () =>
       derived(
         "color.surface",
@@ -328,7 +370,8 @@ function deriveMissing(picks: Picks, mode: "light" | "dark"): void {
         "color.bg"
       )
     );
-    if (!fg)
+
+    if (!fg) {
       set("color.fg", () =>
         derived(
           "color.fg",
@@ -337,11 +380,15 @@ function deriveMissing(picks: Picks, mode: "light" | "dark"): void {
           "color.bg"
         )
       );
+    }
   }
+
   const text = real("color.fg");
+
   if (text && (bg || isReal(picks, "color.bg"))) {
     const muted = (value: string) =>
       shiftLightness(value, (l) => (l < 0.5 ? l + 0.3 : l - 0.25), 0.8);
+
     set("color.fg-muted", () =>
       derived(
         "color.fg-muted",
@@ -351,11 +398,14 @@ function deriveMissing(picks: Picks, mode: "light" | "dark"): void {
       )
     );
   }
+
   const body = real("font.body");
-  if (body)
+
+  if (body) {
     set("font.display", () =>
       derived("font.display", body.value, undefined, "font.body")
     );
+  }
 }
 
 function guardContrast(picks: Picks): void {
@@ -367,31 +417,41 @@ function guardContrast(picks: Picks): void {
   ) => {
     const fillPick = picks.get(fill);
     const inkPick = picks.get(ink);
-    if (!fillPick || !inkPick) return;
+
+    if (!fillPick || !inkPick) {
+      return;
+    }
     const weak = (a: string, b: string) =>
       contrast(a, b) < minimum ||
       Math.abs((lightnessOf(a) ?? 0) - (lightnessOf(b) ?? 0)) < lightnessGap;
+
     const value = weak(fillPick.value, inkPick.value)
       ? readableOn(fillPick.value)
       : inkPick.value;
+
     const fillDark = fillPick.dark;
     const inkDark = inkPick.dark;
+
     const dark =
       fillDark && inkDark && weak(fillDark, inkDark)
         ? readableOn(fillDark)
         : inkDark;
-    if (value === inkPick.value && dark === inkDark) return;
+
+    if (value === inkPick.value && dark === inkDark) {
+      return;
+    }
     picks.set(ink, {
       value,
       ...(dark ? { dark } : {}),
       entry: {
-        token: ink,
-        source: "derived",
         confidence: "medium",
         evidence: `adjusted for contrast on ${fill}`,
+        source: "derived",
+        token: ink,
       },
     });
   };
+
   fix("color.bg", "color.fg", 7, 0.4);
   fix("color.primary", "color.primary-fg", 4.5, 0);
   fix("color.accent", "color.accent-fg", 4.5, 0);
@@ -406,13 +466,16 @@ function entryValue(entry: CoverageEntry, strict: boolean): number {
     entry.source === "derived"
       ? CONFIDENCE_SCORE.derived
       : CONFIDENCE_SCORE[entry.confidence];
+
   return strict && KEY_TOKENS.includes(entry.token) && entry.verified !== true
     ? Math.min(value, CONFIDENCE_SCORE.derived)
     : value;
 }
 
 export function unverifiedKeys(entries: CoverageEntry[]): string[] {
-  if (!checkable(entries)) return [];
+  if (!checkable(entries)) {
+    return [];
+  }
   return KEY_TOKENS.filter(
     (token) => entries.find((entry) => entry.token === token)?.verified !== true
   );
@@ -421,19 +484,24 @@ export function unverifiedKeys(entries: CoverageEntry[]): string[] {
 export function scoreOf(entries: CoverageEntry[]): number {
   const strict = checkable(entries);
   let total = 0;
+
   for (const [group, weight] of Object.entries(GROUP_WEIGHTS)) {
     const inGroup = entries.filter((entry) =>
       entry.token.startsWith(`${group}.`)
     );
+
     let sum = 0;
     let weights = 0;
+
     for (const entry of inGroup) {
       const tokenWeight = TOKEN_WEIGHTS[entry.token] ?? 1;
       sum += tokenWeight * entryValue(entry, strict);
       weights += tokenWeight;
     }
+
     total += weights === 0 ? 0 : (weight * sum) / weights;
   }
+
   return Math.round(total * 100);
 }
 
@@ -441,9 +509,15 @@ export function gradeOf(
   score: number,
   entries: CoverageEntry[] = []
 ): CoverageGrade {
-  if (score >= 80 && unverifiedKeys(entries).length === 0) return "excellent";
-  if (score >= 60) return "usable";
-  if (score >= 40) return "needs-review";
+  if (score >= 80 && unverifiedKeys(entries).length === 0) {
+    return "excellent";
+  }
+  if (score >= 60) {
+    return "usable";
+  }
+  if (score >= 40) {
+    return "needs-review";
+  }
   return "rebuild";
 }
 
@@ -453,36 +527,62 @@ function writeToken(
   pick: Pick
 ): void {
   const node = nodeAt(tokens, token);
-  if (!node) return;
+
+  if (!node) {
+    return;
+  }
   node.$value = pick.value;
   const extensions = { ...node.$extensions };
-  if (pick.dark) extensions["studio.modes"] = { dark: pick.dark };
-  else delete extensions["studio.modes"];
-  if (pick.sourceVar)
+
+  if (pick.dark) {
+    extensions["studio.modes"] = { dark: pick.dark };
+  } else {
+    delete extensions["studio.modes"];
+  }
+  if (pick.sourceVar) {
     extensions[APP_VAR_EXTENSION] = { cssVar: pick.sourceVar };
-  else delete extensions[APP_VAR_EXTENSION];
-  if (Object.keys(extensions).length > 0) node.$extensions = extensions;
-  else delete node.$extensions;
+  } else {
+    delete extensions[APP_VAR_EXTENSION];
+  }
+  if (Object.keys(extensions).length > 0) {
+    node.$extensions = extensions;
+  } else {
+    delete node.$extensions;
+  }
 }
 
 function flattenToDark(tokens: Record<string, unknown>): void {
   const visit = (node: unknown) => {
-    if (typeof node !== "object" || node === null) return;
+    if (typeof node !== "object" || node === null) {
+      return;
+    }
     const record = node as TokenNode;
+
     if ("$value" in record) {
       const dark = baseDark(record);
-      if (dark) record.$value = dark;
+
+      if (dark) {
+        record.$value = dark;
+      }
       if (record.$extensions) {
         const rest = { ...record.$extensions };
         delete rest["studio.modes"];
-        if (Object.keys(rest).length > 0) record.$extensions = rest;
-        else delete record.$extensions;
+
+        if (Object.keys(rest).length > 0) {
+          record.$extensions = rest;
+        } else {
+          delete record.$extensions;
+        }
       }
+
       return;
     }
-    for (const [key, child] of Object.entries(record))
+
+    for (const [key, child] of Object.entries(record)) {
       if (!key.startsWith("$")) visit(child);
+    }
   };
+
   visit(tokens);
 }
 
@@ -493,28 +593,37 @@ function manifestFonts(
 ): PackManifest["fonts"] {
   const family = (token: string, fallback: string) =>
     primaryFamily(picks.get(token)?.value ?? "") ?? fallback;
+
   const display = family("font.display", base.manifest.fonts.display);
   const body = family("font.body", base.manifest.fonts.body);
   const mono = family("font.mono", base.manifest.fonts.mono);
+
   const changed = ["font.display", "font.body", "font.mono"].some((token) =>
     isReal(picks, token)
   );
-  if (!changed) return base.manifest.fonts;
+
+  if (!changed) {
+    return base.manifest.fonts;
+  }
   const webFamilies = [display, body, mono].filter(
     (name) => !SYSTEM_FAMILIES.has(name.toLowerCase())
   );
+
   const harvested = harvests
     .map((harvest) => harvest.googleFontsUrl)
     .find((url): url is string => url !== undefined);
+
   const covers = (url: string) =>
     webFamilies.every((name) =>
       url.includes(`family=${name.replaceAll(" ", "+")}`)
     );
+
   const googleFontsUrl =
     harvested && covers(harvested)
       ? harvested
       : (googleFontsUrlFor(webFamilies) ?? undefined);
-  return { display, body, mono, ...(googleFontsUrl ? { googleFontsUrl } : {}) };
+
+  return { body, display, mono, ...(googleFontsUrl ? { googleFontsUrl } : {}) };
 }
 
 function cssNameOf(group: string, name: string): string {
@@ -523,20 +632,29 @@ function cssNameOf(group: string, name: string): string {
 
 function takenNames(tokens: Record<string, unknown>): Set<string> {
   const out = new Set<string>();
+
   for (const [group, node] of Object.entries(tokens)) {
-    if (group.startsWith("$") || typeof node !== "object" || node === null)
+    if (group.startsWith("$") || typeof node !== "object" || node === null) {
       continue;
+    }
     const visit = (value: unknown, path: string[]) => {
-      if (typeof value !== "object" || value === null) return;
-      if ("$value" in value) {
-        out.add(cssNameOf(group, path.join("-")));
+      if (typeof value !== "object" || value === null) {
         return;
       }
-      for (const [key, child] of Object.entries(value))
+      if ("$value" in value) {
+        out.add(cssNameOf(group, path.join("-")));
+
+        return;
+      }
+
+      for (const [key, child] of Object.entries(value)) {
         if (!key.startsWith("$")) visit(child, [...path, key]);
+      }
     };
+
     visit(node, []);
   }
+
   return out;
 }
 
@@ -547,67 +665,81 @@ function addExtras(
 ): AliasLink[] {
   const taken = takenNames(tokens);
   const links: AliasLink[] = [];
+
   for (const extra of extras) {
     const css = cssNameOf(extra.group, extra.name);
-    if (taken.has(css)) continue;
+
+    if (taken.has(css)) {
+      continue;
+    }
     taken.add(css);
     const group = (tokens[extra.group] ??= {}) as Record<string, unknown>;
+
     const dark =
       mode === "light" && extra.dark && extra.dark !== extra.value
         ? { $extensions: { "studio.modes": { dark: extra.dark } } }
         : {};
+
     group[extra.name] = {
-      $value: mode === "dark" && extra.dark ? extra.dark : extra.value,
-      $type: extra.type,
       $description: `From ${extra.evidence}`,
+      $type: extra.type,
+      $value: mode === "dark" && extra.dark ? extra.dark : extra.value,
       ...dark,
     };
-    if (extra.alias || extra.darkAlias)
+
+    if (extra.alias || extra.darkAlias) {
       links.push({
         path: `${extra.group}.${extra.name}`,
         ...(extra.alias ? { alias: extra.alias } : {}),
         ...(extra.darkAlias ? { darkAlias: extra.darkAlias } : {}),
       });
+    }
   }
+
   return links;
 }
 
 function pickLinks(picks: Picks): AliasLink[] {
   const links: AliasLink[] = [];
-  for (const [token, pick] of picks)
+
+  for (const [token, pick] of picks) {
     if (pick.alias || pick.darkAlias)
       links.push({
         path: token,
         ...(pick.alias ? { alias: pick.alias } : {}),
         ...(pick.darkAlias ? { darkAlias: pick.darkAlias } : {}),
       });
+  }
   return links;
 }
 
 export function libraryCoverage(pack: LoadedPack): Coverage {
   const tokens = pack.tokens as unknown as Record<string, unknown>;
+
   const entries: CoverageEntry[] = requiredPaths().map((token) =>
     nodeAt(tokens, token)
       ? {
-          token,
-          source: "library",
           confidence: "high",
           evidence: "set in the saved design system",
+          source: "library",
+          token,
         }
-      : { token, source: "base", confidence: "fallback", evidence: "missing" }
+      : { confidence: "fallback", evidence: "missing", source: "base", token }
   );
+
   const score = scoreOf(entries);
+
   return {
-    version: 1,
-    score,
-    grade: gradeOf(score),
     basePackId: pack.manifest.id,
-    mode: pack.manifest.mode,
-    tokens: entries,
     fallbacks: entries
       .filter((entry) => entry.confidence === "fallback")
       .map((entry) => entry.token),
+    grade: gradeOf(score),
+    mode: pack.manifest.mode,
+    score,
     sources: [],
+    tokens: entries,
+    version: 1,
   };
 }
 
@@ -619,60 +751,76 @@ export function mapDraft(
 ): MappedDraft {
   const candidates = harvests.flatMap((harvest) => harvest.candidates);
   const picks: Picks = new Map();
+
   for (const token of requiredPaths()) {
     const found = choose(candidates, token, mode);
+
     const pick = found
       ? extracted(base, found, mode)
       : basePick(base, token, mode);
-    if (pick) picks.set(token, pick);
+
+    if (pick) {
+      picks.set(token, pick);
+    }
   }
+
   deriveMissing(picks, mode);
   guardContrast(picks);
+
   const tokens = structuredClone(base.tokens) as unknown as Record<
     string,
     unknown
   >;
-  if (mode === "dark" && base.manifest.mode === "light") flattenToDark(tokens);
-  for (const [token, pick] of picks)
+
+  if (mode === "dark" && base.manifest.mode === "light") {
+    flattenToDark(tokens);
+  }
+  for (const [token, pick] of picks) {
     if (pick.entry.source !== "base")
       writeToken(
         tokens,
         token,
         mode === "dark" ? { ...pick, dark: undefined } : pick
       );
+  }
   const extraLinks = addExtras(
     tokens,
     harvests.flatMap((harvest) => harvest.extras ?? []),
     mode
   );
+
   applyAliases(tokens, [...pickLinks(picks), ...extraLinks], mode);
-  if (tokens.$description !== undefined)
+
+  if (tokens.$description !== undefined) {
     tokens.$description =
       "Draft tokens made from your sources; gaps filled from the base pack.";
+  }
   const entries = requiredPaths().map(
     (token) =>
       picks.get(token)?.entry ?? {
-        token,
-        source: "base" as const,
         confidence: "fallback" as const,
         evidence: "missing",
+        source: "base" as const,
+        token,
       }
   );
+
   const score = scoreOf(entries);
+
   return {
-    tokens,
-    fonts: manifestFonts(base, picks, harvests),
     coverage: {
-      version: 1,
-      score,
-      grade: gradeOf(score, entries),
       basePackId: base.manifest.id,
-      mode,
-      tokens: entries,
       fallbacks: entries
         .filter((entry) => entry.confidence === "fallback")
         .map((entry) => entry.token),
+      grade: gradeOf(score, entries),
+      mode,
+      score,
       sources,
+      tokens: entries,
+      version: 1,
     },
+    fonts: manifestFonts(base, picks, harvests),
+    tokens,
   };
 }

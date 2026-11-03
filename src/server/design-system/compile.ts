@@ -40,13 +40,13 @@ const CORE_GROUPS = [
 ] as const;
 
 const GROUP_DEFAULT_TYPES: Record<string, TokenType> = {
+  breakpoint: "dimension",
   color: "color",
   font: "fontFamily",
-  text: "dimension",
-  space: "dimension",
   radius: "dimension",
   shadow: "shadow",
-  breakpoint: "dimension",
+  space: "dimension",
+  text: "dimension",
 };
 
 const TOKEN_TYPES = new Set<TokenType>([
@@ -168,7 +168,7 @@ function darkOf(
     return null;
   }
 
-  const dark = extensions["studio.modes"].dark;
+  const { dark } = extensions["studio.modes"];
 
   if (dark === undefined) {
     return null;
@@ -205,12 +205,12 @@ function readToken(
   }
 
   const token: RawToken = {
-    path: where,
-    group,
     cssVar: cssVarFor(segments),
-    type,
-    light,
     dark,
+    group,
+    light,
+    path: where,
+    type,
   };
 
   if (typeof node.$description === "string") {
@@ -477,7 +477,7 @@ function substituteAliases(
     return target ? `var(${target.cssVar})` : "";
   });
 
-  return { text, refs, missing };
+  return { missing, refs, text };
 }
 
 function resolveValue(
@@ -542,7 +542,7 @@ function compileToken(
     return null;
   }
 
-  return { raw: token, light, dark };
+  return { dark, light, raw: token };
 }
 
 function followsDark(
@@ -604,10 +604,10 @@ function buildLayers(
   byPath: Map<string, CompiledToken>
 ): Layers {
   const layers: Layers = {
-    baseLight: [],
     baseDark: [],
-    modernLight: [],
+    baseLight: [],
     modernDark: [],
+    modernLight: [],
   };
 
   for (const token of compiled) {
@@ -667,10 +667,10 @@ function dependentsOf(
 
 function buildPreviewLayers(compiled: CompiledToken[]): Layers {
   const layers: Layers = {
-    baseLight: [],
     baseDark: [],
-    modernLight: [],
+    baseLight: [],
     modernDark: [],
+    modernLight: [],
   };
 
   for (const token of compiled) {
@@ -719,11 +719,11 @@ function renderCss(layers: Layers, mode: ThemeMode): string {
 
 function toEntry(token: CompiledToken): CompiledTokenEntry {
   const entry: CompiledTokenEntry = {
-    path: token.raw.path,
     cssVar: token.raw.cssVar,
+    darkValue: token.dark?.css ?? null,
+    path: token.raw.path,
     type: token.raw.type,
     value: token.light.css,
-    darkValue: token.dark?.css ?? null,
   };
 
   if (token.raw.description !== undefined) {
@@ -742,9 +742,9 @@ export function compileTokens(
   if (!isRecord(file)) {
     return {
       css: "",
+      emitted: [],
       entries: [],
       errors: ["tokens file must be a JSON object"],
-      emitted: [],
     };
   }
 
@@ -770,9 +770,9 @@ export function compileTokens(
 
     return {
       css,
+      emitted: compiled.map((token) => token.raw.cssVar),
       entries,
       errors,
-      emitted: compiled.map((token) => token.raw.cssVar),
     };
   }
 
@@ -786,9 +786,9 @@ export function compileTokens(
 
   return {
     css,
+    emitted: subset.map((token) => token.raw.cssVar),
     entries,
     errors,
-    emitted: subset.map((token) => token.raw.cssVar),
   };
 }
 
@@ -800,14 +800,14 @@ export function parseTokenFile(text: string): {
     const parsed = JSON.parse(text) as unknown;
 
     if (!isRecord(parsed)) {
-      return { file: null, error: "tokens.json must be a JSON object" };
+      return { error: "tokens.json must be a JSON object", file: null };
     }
 
-    return { file: parsed as TokenFile, error: null };
+    return { error: null, file: parsed as TokenFile };
   } catch (error) {
     return {
-      file: null,
       error: `tokens.json is not valid JSON: ${error instanceof Error ? error.message : String(error)}`,
+      file: null,
     };
   }
 }

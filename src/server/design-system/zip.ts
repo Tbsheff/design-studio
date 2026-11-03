@@ -36,7 +36,7 @@ function dosTime(date: Date): { time: number; day: number } {
     ((date.getMonth() + 1) << 5) |
     date.getDate();
 
-  return { time, day };
+  return { day, time };
 }
 
 export function zipFiles(entries: ZipEntry[], date: Date = new Date()): Buffer {
@@ -160,15 +160,15 @@ function readCentral(bytes: Buffer, at: number, end: number): CentralEntry {
   const madeByUnix = bytes.readUInt16LE(at + 4) >> 8 === 3;
 
   return {
-    name: bytes.subarray(at + 46, at + 46 + nameLength).toString("utf-8"),
-    flags: bytes.readUInt16LE(at + 8),
-    method: bytes.readUInt16LE(at + 10),
     crc: bytes.readUInt32LE(at + 16),
+    flags: bytes.readUInt16LE(at + 8),
+    localAt: bytes.readUInt32LE(at + 42),
+    method: bytes.readUInt16LE(at + 10),
+    name: bytes.subarray(at + 46, at + 46 + nameLength).toString("utf-8"),
+    next: at + 46 + nameLength + skip,
     packedSize: bytes.readUInt32LE(at + 20),
     size: bytes.readUInt32LE(at + 24),
     unixMode: madeByUnix ? bytes.readUInt32LE(at + 38) >>> 16 : 0,
-    localAt: bytes.readUInt32LE(at + 42),
-    next: at + 46 + nameLength + skip,
   };
 }
 
@@ -269,7 +269,7 @@ function readDirectory(
     throw new ZipError("not a zip file");
   }
 
-  return { count, centralStart, end };
+  return { centralStart, count, end };
 }
 
 export function unzipFiles(bytes: Buffer, limits: UnzipLimits): ZipEntry[] {
@@ -298,8 +298,8 @@ export function unzipFiles(bytes: Buffer, limits: UnzipLimits): ZipEntry[] {
     }
 
     entries.push({
-      name: entry.name,
       data: readData(bytes, entry, centralStart, limits),
+      name: entry.name,
     });
   }
 

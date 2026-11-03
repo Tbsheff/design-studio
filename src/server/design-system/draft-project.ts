@@ -126,10 +126,10 @@ export function updateCoverage(
     }
 
     return {
-      token: entry.token,
-      source: "agent",
       confidence: "medium",
       evidence: AGENT_EVIDENCE,
+      source: "agent",
+      token: entry.token,
     };
   });
 
@@ -137,12 +137,12 @@ export function updateCoverage(
 
   return {
     ...coverage,
-    score,
-    grade: gradeOf(score, entries),
-    tokens: entries,
     fallbacks: entries
       .filter((entry) => entry.confidence === "fallback")
       .map((entry) => entry.token),
+    grade: gradeOf(score, entries),
+    score,
+    tokens: entries,
   };
 }
 

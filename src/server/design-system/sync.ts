@@ -91,22 +91,22 @@ export async function readDesignSystemFiles(
 
   if (!parsed.file) {
     return {
-      tokens: null,
-      manifest,
-      entries: [],
       css: null,
+      entries: [],
       errors: [parsed.error ?? "tokens.json is invalid"],
+      manifest,
+      tokens: null,
     };
   }
 
   const compiled = compileTokens(parsed.file, { mode: modeOf(manifest) });
 
   return {
-    tokens: parsed.file,
-    manifest,
-    entries: compiled.entries,
     css: compiled.css,
+    entries: compiled.entries,
     errors: compiled.errors,
+    manifest,
+    tokens: parsed.file,
   };
 }
 
@@ -147,11 +147,11 @@ async function syncUnlocked(workTree: string): Promise<SyncResult> {
   const files = await readDesignSystemFiles(workTree);
 
   if (!files) {
-    return { present: false, changed: [], errors: [] };
+    return { changed: [], errors: [], present: false };
   }
 
   if (files.errors.length > 0 || files.css === null) {
-    return { present: true, changed: [], errors: files.errors };
+    return { changed: [], errors: files.errors, present: true };
   }
 
   const changed: string[] = [];
@@ -164,7 +164,7 @@ async function syncUnlocked(workTree: string): Promise<SyncResult> {
     changed.push(DESIGN_MD_FILE);
   }
 
-  return { present: true, changed, errors: [] };
+  return { changed, errors: [], present: true };
 }
 
 export function syncDesignSystem(workTree: string): Promise<SyncResult> {

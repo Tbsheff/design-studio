@@ -25,8 +25,6 @@ const filledDesignMd = (name: string) =>
 
 function filesOf(pack: LoadedPack): DesignSystemFiles {
   return {
-    tokensText: pack.tokensText,
-    manifestText: JSON.stringify(pack.manifest),
     designMd: filledDesignMd(pack.manifest.name),
     kitHtml: renderKitPage({
       name: pack.manifest.name,
@@ -35,16 +33,18 @@ function filesOf(pack: LoadedPack): DesignSystemFiles {
         ? { googleFontsUrl: pack.manifest.fonts.googleFontsUrl }
         : {}),
     }),
+    manifestText: JSON.stringify(pack.manifest),
+    tokensText: pack.tokensText,
   };
 }
 
-type Tokens = {
+interface Tokens {
   color: Record<
     string,
     { $value: string; $extensions?: { "studio.modes"?: { dark?: string } } }
   >;
   font: Record<string, { $value: string }>;
-};
+}
 
 function withTokens(
   files: DesignSystemFiles,
@@ -52,6 +52,7 @@ function withTokens(
 ): DesignSystemFiles {
   const tokens = JSON.parse(files.tokensText ?? "{}") as Tokens;
   edit(tokens);
+
   return { ...files, tokensText: JSON.stringify(tokens) };
 }
 
@@ -93,19 +94,24 @@ describe("design system check", () => {
     const missing = withTokens(filesOf(light), (tokens) => {
       delete (tokens.color as Record<string, unknown>)["ring"];
     });
+
     expect(messages(missing, "tokens").join("\n")).toMatch(/color\.ring/);
     expect(rules({ ...filesOf(light), tokensText: "{ not json" })).toContain(
       "tokens"
     );
+
     const hex = withTokens(filesOf(light), (tokens) => {
       tokens.color["danger"]!.$value = "#ff0000";
     });
+
     expect(messages(hex, "tokens")).toContain(
       "color.danger must be an OKLCH value (oklch(L% C H)) or an alias."
     );
+
     const noDark = withTokens(filesOf(light), (tokens) => {
       delete tokens.color["primary"]!.$extensions;
     });
+
     expect(messages(noDark, "tokens")).toContain(
       'color.primary has no dark value ($extensions["studio.modes"].dark).'
     );
@@ -116,11 +122,13 @@ describe("design system check", () => {
     const lightFail = withTokens(filesOf(light), (tokens) => {
       tokens.color["fg-muted"]!.$value = "oklch(90% 0 0)";
     });
+
     expect(messages(lightFail, "contrast")).toEqual([
       expect.stringMatching(
         /^--fg-muted on --bg in light mode is \d\.\d\d:1; AA needs 4\.5:1\.$/
       ),
     ]);
+
     const darkFail = withTokens(filesOf(light), (tokens) => {
       tokens.color["primary-fg"]!.$extensions = {
         "studio.modes": {
@@ -130,23 +138,28 @@ describe("design system check", () => {
         },
       };
     });
+
     expect(messages(darkFail, "contrast")).toEqual([
       expect.stringMatching(
         /^--primary-fg on --primary in dark mode is 1\.00:1/
       ),
     ]);
+
     const extraPair = withTokens(filesOf(light), (tokens) => {
       tokens.color["danger-fg"] = {
-        $value: tokens.color["danger"]!.$value,
         $extensions: { "studio.modes": { dark: "oklch(99% 0 0)" } },
+        $value: tokens.color["danger"]!.$value,
       };
     });
+
     expect(messages(extraPair, "contrast")[0]).toMatch(
       /^--danger-fg on --danger in light mode/
     );
+
     const darkPack = withTokens(filesOf(dark), (tokens) => {
       tokens.color["fg"]!.$value = tokens.color["bg"]!.$value;
     });
+
     expect(messages(darkPack, "contrast")).toEqual(
       expect.arrayContaining([
         expect.stringMatching(/^--fg on --bg is 1\.00:1/),
@@ -158,10 +171,11 @@ describe("design system check", () => {
   it("contrast follows aliases in each mode", () => {
     const aliased = withTokens(filesOf(light), (tokens) => {
       tokens.color["accent-fg"] = {
-        $value: "{color.accent}",
         $extensions: { "studio.modes": { dark: "{color.accent}" } },
+        $value: "{color.accent}",
       };
     });
+
     expect(messages(aliased, "contrast")).toEqual([
       expect.stringMatching(
         /^--accent-fg on --accent in light mode is 1\.00:1/
@@ -172,6 +186,7 @@ describe("design system check", () => {
 
   it("a DESIGN.md needs the 9 sections, with text, and no to-do lines", () => {
     const files = filesOf(light);
+
     const noSection = {
       ...files,
       designMd: files.designMd!.replace(
@@ -179,9 +194,11 @@ describe("design system check", () => {
         "## Breakpoints"
       ),
     };
+
     expect(messages(noSection, "design-md")).toEqual([
       'DESIGN.md has no "## Responsive Behavior" section.',
     ]);
+
     const empty = {
       ...files,
       designMd: files.designMd!.replace(
@@ -189,14 +206,18 @@ describe("design system check", () => {
         ""
       ),
     };
+
     expect(messages(empty, "design-md")).toEqual([
       '"## Typography Rules" in DESIGN.md is empty.',
     ]);
+
     const todo = {
       ...files,
       designMd: `${files.designMd}\n_To do: add example prompts._\n- _To do: and more._\n`,
     };
+
     expect(messages(todo, "design-md")).toHaveLength(2);
+
     const quoted = {
       ...files,
       designMd: files.designMd!.replace(
@@ -204,11 +225,14 @@ describe("design system check", () => {
         '# Modern Minimal\n\nLines that start with "_To do:" still need work.'
       ),
     };
+
     expect(messages(quoted, "design-md")).toEqual([]);
+
     const fenced = {
       ...files,
       designMd: `${files.designMd}\n\`\`\`\n## Not a heading\n\`\`\`\n`,
     };
+
     expect(messages(fenced, "design-md")).toEqual([]);
     expect(messages({ ...files, designMd: null }, "design-md")).toEqual([
       "DESIGN.md is missing or empty.",
@@ -217,6 +241,7 @@ describe("design system check", () => {
 
   it("kit page: no raw colors in style blocks or style attributes", () => {
     const files = filesOf(light);
+
     const raw = {
       ...files,
       kitHtml: files
@@ -229,10 +254,12 @@ describe("design system check", () => {
           '<div class="chip" style="background: rebeccapurple">'
         ),
     };
+
     const found = messages(raw, "kit-colors");
     expect(found).toHaveLength(2);
     expect(found.join("\n")).toMatch(/#1f6feb/);
     expect(found.join("\n")).toMatch(/rebeccapurple/);
+
     const okShadow = {
       ...files,
       kitHtml: files.kitHtml!.replace(
@@ -240,19 +267,23 @@ describe("design system check", () => {
         ".btn { border-color: transparent; color: currentColor;"
       ),
     };
+
     expect(messages(okShadow, "kit-colors")).toEqual([]);
   });
 
   it("fonts: token fonts, the kit page font link and pack.json agree", () => {
     const files = filesOf(light);
+
     const changed = withTokens(files, (tokens) => {
       tokens.font["display"]!.$value = "'Fraunces', Georgia, serif";
     });
+
     expect(messages(changed, "fonts")).toEqual([
       "The font Fraunces is in tokens.json but not in the Google Fonts <link> of index.html.",
       "design-system/pack.json fonts.display is Geist, but font.display in tokens.json is Fraunces.",
       "design-system/pack.json fonts.googleFontsUrl does not load Fraunces.",
     ]);
+
     const extra = {
       ...files,
       kitHtml: files.kitHtml!.replace(
@@ -260,16 +291,18 @@ describe("design system check", () => {
         "family=Lobster&family=Geist+Mono"
       ),
     };
+
     expect(messages(extra, "fonts")).toEqual([
       "The Google Fonts <link> of index.html loads Lobster, which no font token uses.",
     ]);
+
     const system = withTokens(
       {
         ...files,
-        kitHtml: renderKitPage({ name: "Plain", mode: "light" }),
+        kitHtml: renderKitPage({ mode: "light", name: "Plain" }),
         manifestText: JSON.stringify({
           ...light.manifest,
-          fonts: { display: "Georgia", body: "Georgia", mono: "Menlo" },
+          fonts: { body: "Georgia", display: "Georgia", mono: "Menlo" },
         }),
       },
       (tokens) => {
@@ -278,6 +311,7 @@ describe("design system check", () => {
         tokens.font["mono"]!.$value = "Menlo, monospace";
       }
     );
+
     expect(messages(system, "fonts")).toEqual([]);
   });
 

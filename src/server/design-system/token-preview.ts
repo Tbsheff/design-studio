@@ -44,10 +44,10 @@ async function readSource(
   const parsed = parseTokenFile(text);
 
   return {
-    stamp,
-    file: parsed.file,
     error: parsed.error,
+    file: parsed.file,
     mode: manifest?.mode === "dark" ? "dark" : "light",
+    stamp,
   };
 }
 

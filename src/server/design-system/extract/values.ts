@@ -137,8 +137,8 @@ export function shiftLightness(
 
   return formatColor({
     ...color,
-    l: Math.min(0.98, Math.max(0.05, lightness(color.l))),
     c: color.c * chromaScale,
+    l: Math.min(0.98, Math.max(0.05, lightness(color.l))),
   });
 }
 

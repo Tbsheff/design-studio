@@ -48,8 +48,8 @@ export async function writeTestDraft(
   await writeFile(
     path.join(workTree, KIT_PAGE_FILE),
     renderKitPage({
-      name: pack.manifest.name,
       mode: pack.manifest.mode,
+      name: pack.manifest.name,
       ...(pack.manifest.fonts.googleFontsUrl
         ? { googleFontsUrl: pack.manifest.fonts.googleFontsUrl }
         : {}),

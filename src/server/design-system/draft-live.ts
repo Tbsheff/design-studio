@@ -126,7 +126,7 @@ export function planSources(
   const list: DraftSourceStatus[] = [];
 
   const add = (id: string, kind: DraftSourceStatus["kind"], label: string) =>
-    list.push({ id, kind, label, state: "queued", detail: "Waiting" });
+    list.push({ detail: "Waiting", id, kind, label, state: "queued" });
 
   if (request.designMd?.trim()) {
     add("design-md", "design-md", "DESIGN.md");
@@ -154,11 +154,11 @@ export function planSources(
 
   if (imageCount > 0) {
     list.push({
+      detail: `${plural(imageCount, "image")}: used by the AI step`,
       id: "images",
       kind: "images",
       label: "Images",
       state: "read",
-      detail: `${plural(imageCount, "image")}: used by the AI step`,
     });
   }
 
@@ -254,45 +254,45 @@ function harvestedState(
   const { detail, total } = countDetail(harvest);
 
   const report: SourceReport = {
+    found: total,
     kind: harvest.source,
     label,
     ok: true,
-    found: total,
   };
 
   if (total >= THIN_VALUES) {
-    return { state: "read", detail, harvest, report };
+    return { detail, harvest, report, state: "read" };
   }
 
   if (kind === "brief") {
     return {
-      state: "read",
       detail:
         total > 0
           ? `${detail}. The AI step reads the rest.`
           : "Kept for the AI step",
       harvest,
       report,
+      state: "read",
     };
   }
 
   if (kind === "design-md") {
     return {
-      state: "read",
       detail: total > 0 ? `Used as DESIGN.md. ${detail}` : "Used as DESIGN.md",
       harvest,
       report,
+      state: "read",
     };
   }
 
   return {
-    state: "thin",
     detail:
       total > 0
         ? `Found only ${detail}. ${thinText}`
         : `Found no design values. ${thinText}`,
     harvest,
     report,
+    state: "thin",
   };
 }
 
@@ -308,8 +308,8 @@ export function urlProblem(error: unknown): {
 
   if (error instanceof FetchBlockedError) {
     return {
-      state: "blocked",
       detail: `This address is on a private or local network, so the studio does not read it. ${PASTE_HINT}`,
+      state: "blocked",
     };
   }
 
@@ -319,16 +319,16 @@ export function urlProblem(error: unknown): {
     )
   ) {
     return {
-      state: "blocked",
       detail: `This site blocks automated reading. ${PASTE_HINT}`,
+      state: "blocked",
     };
   }
 
   if (/\b404\b|\b410\b/.test(message)) {
     return {
-      state: "failed",
       detail:
         'The site answered "page not found". Check the address and make a new draft.',
+      state: "failed",
     };
   }
 
@@ -337,36 +337,36 @@ export function urlProblem(error: unknown): {
     (error instanceof Error && error.name === "SiteTimeLimitError")
   ) {
     return {
-      state: "failed",
       detail: `The site did not answer in time. ${PASTE_HINT}`,
+      state: "failed",
     };
   }
 
   if (/ENOTFOUND|EAI_AGAIN|has no address/i.test(message)) {
     return {
-      state: "failed",
       detail: "The studio could not find this site. Check the address.",
+      state: "failed",
     };
   }
 
   if (/ECONNREFUSED/i.test(message)) {
     return {
-      state: "failed",
       detail:
         "Nothing answered at this address. Check that the site is up and the address is right.",
+      state: "failed",
     };
   }
 
   if (/ECONNRESET|socket hang up/i.test(message)) {
     return {
-      state: "failed",
       detail: `The site closed the connection. ${PASTE_HINT}`,
+      state: "failed",
     };
   }
 
   return {
-    state: "failed",
     detail: `The studio could not read this site. ${PASTE_HINT}`,
+    state: "failed",
   };
 }
 
@@ -395,13 +395,13 @@ function urlResult(result: UrlHarvest): SourceResult {
   const base = harvested(result.harvest, "url", result.snapshot.url, thinText);
 
   const extra = {
-    url: result,
     report: {
+      found: base.report.found,
       kind: "url" as const,
       label: result.snapshot.url,
       ok: true,
-      found: base.report.found,
     },
+    url: result,
     ...(result.method ? { method: result.method } : {}),
   };
 
@@ -413,8 +413,8 @@ function urlResult(result: UrlHarvest): SourceResult {
       ...base,
       ...extra,
       ...withNote,
-      state: "blocked",
       detail: `This site blocks automated reading (${result.blocked}). The studio kept what a plain read found${base.detail && base.state === "read" ? `: ${base.detail}` : ""}. ${PASTE_HINT}`,
+      state: "blocked",
     };
   }
 
@@ -431,15 +431,15 @@ async function readSource(
     error: unknown,
     kind: SourceReport["kind"]
   ): SourceResult => ({
-    state: "failed",
     detail,
     report: {
+      error: errorText(error),
+      found: 0,
       kind,
       label: source.label,
       ok: false,
-      found: 0,
-      error: errorText(error),
     },
+    state: "failed",
   });
 
   if (source.kind === "design-md") {
@@ -518,15 +518,15 @@ async function readSource(
     const problem = urlProblem(error);
 
     return {
-      state: problem.state,
       detail: problem.detail,
       report: {
+        error: errorText(error),
+        found: 0,
         kind: "url",
         label: url,
         ok: false,
-        found: 0,
-        error: errorText(error),
       },
+      state: problem.state,
     };
   }
 }
@@ -546,10 +546,10 @@ function pendingGroups(entries: CoverageEntry[], done: boolean): KitGroup[] {
 
   const groups: Record<KitGroup, boolean> = {
     colors: filled(["color."]),
-    type: filled(["font.", "text."]),
-    spacing: filled(["space."]),
-    radius: filled(["radius.", "shadow."]),
     components: filled(["color."]),
+    radius: filled(["radius.", "shadow."]),
+    spacing: filled(["space."]),
+    type: filled(["font.", "text."]),
   };
 
   return KIT_GROUPS.filter((group) => !groups[group]);
@@ -597,19 +597,19 @@ async function updateMeta(
     : [];
 
   const shots = job.shots.map((item) => ({
-    id: item.id,
-    name: item.name,
-    mime: item.mime,
     from: "website screenshot",
+    id: item.id,
+    mime: item.mime,
+    name: item.name,
   }));
 
   const extra = job.logo ? [job.logo] : [];
 
   const next = {
     ...meta,
-    inputs: draft.inputs,
     attachments: [...listed, ...shots],
     files: [KIT_PAGE_FILE, ...extra, ...draft.files.map((item) => item.path)],
+    inputs: draft.inputs,
   };
 
   await writeFile(file, `${JSON.stringify(next, null, 2)}\n`);
@@ -634,15 +634,14 @@ function staleState(state: DraftSourcesState): DraftSourcesState {
       ? source
       : {
           ...source,
-          state: "failed" as const,
           detail:
             "The studio stopped before it read this source. Make a new draft to try again.",
+          state: "failed" as const,
         }
   );
 
   return {
     ...state,
-    sources,
     done: true,
     improve:
       state.improve.state === "waiting"
@@ -651,6 +650,7 @@ function staleState(state: DraftSourcesState): DraftSourcesState {
             reason: "The studio stopped while it read the sources.",
           }
         : state.improve,
+    sources,
   };
 }
 
@@ -659,7 +659,7 @@ function merge(job: Job): Harvested {
   const ordered = ["tokens-file", "folder", "url", "design-md", "brief"];
 
   const done = job.planned
-    .map((source) => ({ source, result: job.results.get(source.id) }))
+    .map((source) => ({ result: job.results.get(source.id), source }))
     .filter(
       (item): item is { source: Planned; result: SourceResult } =>
         item.result !== undefined
@@ -690,10 +690,10 @@ function merge(job: Job): Harvested {
 
   if (images) {
     out.reports.push({
+      found: 0,
       kind: "images",
       label: images.detail.split(":")[0] ?? "images",
       ok: true,
-      found: 0,
     });
   }
 
@@ -760,7 +760,7 @@ export function createLiveDrafts(deps: LiveDraftDeps): LiveDrafts {
         : draft.files.filter((file) => file.path.endsWith("coverage.json"));
 
       await writeFiles(direction.workTree, [
-        { path: KIT_PAGE_FILE, content: draft.kitHtml },
+        { content: draft.kitHtml, path: KIT_PAGE_FILE },
         ...files,
       ]);
 
@@ -792,9 +792,9 @@ export function createLiveDrafts(deps: LiveDraftDeps): LiveDrafts {
       job.state = {
         ...job.state,
         improve: {
-          state: "skipped",
           reason:
             "No source could be read. Fix the sources above, or use Improve with AI.",
+          state: "skipped",
         },
       };
 
@@ -807,7 +807,7 @@ export function createLiveDrafts(deps: LiveDraftDeps): LiveDrafts {
     try {
       const started = await deps.startImprove(projectId);
       job.state = { ...job.state, improve: started.start };
-      const runId = started.start.runId;
+      const { runId } = started.start;
 
       if (runId && started.ended) {
         void started.ended
@@ -823,8 +823,8 @@ export function createLiveDrafts(deps: LiveDraftDeps): LiveDrafts {
       job.state = {
         ...job.state,
         improve: {
-          state: "skipped",
           reason: `The AI step did not start: ${errorText(error)}`,
+          state: "skipped",
         },
       };
     }
@@ -835,7 +835,7 @@ export function createLiveDrafts(deps: LiveDraftDeps): LiveDrafts {
     runId: string,
     status: RunStatus
   ): Promise<void> => {
-    const done: DraftImproveStart = { state: "done", runId, status };
+    const done: DraftImproveStart = { runId, state: "done", status };
     const live = jobs.get(projectId);
 
     if (live?.state.improve.runId === runId) {
@@ -867,9 +867,9 @@ export function createLiveDrafts(deps: LiveDraftDeps): LiveDrafts {
     if (shot && shot.length <= MAX_SHOT_BYTES) {
       job.shots.push(
         await deps.saveAttachment(projectId, {
-          name: `${source.id}-screenshot.png`,
-          mime: "image/png",
           bytes: new Uint8Array(shot),
+          mime: "image/png",
+          name: `${source.id}-screenshot.png`,
         })
       );
     }
@@ -898,7 +898,7 @@ export function createLiveDrafts(deps: LiveDraftDeps): LiveDrafts {
   ): Promise<void> => {
     const startedAt = Date.now();
     job.chain = job.chain.then(async () => {
-      setSource(job, source.id, { state: "reading", detail: "Reading…" });
+      setSource(job, source.id, { detail: "Reading…", state: "reading" });
       await save(projectId, job);
     });
     await job.chain;
@@ -908,15 +908,15 @@ export function createLiveDrafts(deps: LiveDraftDeps): LiveDrafts {
       result = await readSource(source, input.request, deps.fetcher);
     } catch (error) {
       result = {
-        state: "failed",
         detail: `The studio could not read this source: ${errorText(error)}`,
         report: {
+          error: errorText(error),
+          found: 0,
           kind: source.kind === "images" ? "images" : source.kind,
           label: source.label,
           ok: false,
-          found: 0,
-          error: errorText(error),
         },
+        state: "failed",
       };
     }
 
@@ -930,9 +930,9 @@ export function createLiveDrafts(deps: LiveDraftDeps): LiveDrafts {
           )
       );
       setSource(job, source.id, {
-        state: result.state,
         detail: result.detail,
         ms: Date.now() - startedAt,
+        state: result.state,
         ...(result.note ? { note: result.note } : {}),
         ...(result.method ? { method: result.method } : {}),
       });
@@ -973,6 +973,11 @@ export function createLiveDrafts(deps: LiveDraftDeps): LiveDrafts {
   };
 
   return {
+    isReading(projectId) {
+      const job = jobs.get(projectId);
+
+      return job !== undefined && !job.state.done;
+    },
     plan(request, imageCount) {
       return {
         sources: planSources(request, imageCount),
@@ -980,6 +985,17 @@ export function createLiveDrafts(deps: LiveDraftDeps): LiveDrafts {
         startedAt: Date.now(),
         improve: { state: "waiting" },
       };
+    },
+    async read(projectId) {
+      const live = jobs.get(projectId);
+
+      if (live) {
+        return live.state;
+      }
+
+      const stored = await readJson<DraftSourcesState>(stateFile(projectId));
+
+      return stored ? staleState(stored) : null;
     },
     start(input) {
       const projectId = input.project.id;
@@ -1018,22 +1034,6 @@ export function createLiveDrafts(deps: LiveDraftDeps): LiveDrafts {
           await save(projectId, job).catch(() => undefined);
         })
         .finally(() => jobs.delete(projectId));
-    },
-    async read(projectId) {
-      const live = jobs.get(projectId);
-
-      if (live) {
-        return live.state;
-      }
-
-      const stored = await readJson<DraftSourcesState>(stateFile(projectId));
-
-      return stored ? staleState(stored) : null;
-    },
-    isReading(projectId) {
-      const job = jobs.get(projectId);
-
-      return job !== undefined && !job.state.done;
     },
   };
 }

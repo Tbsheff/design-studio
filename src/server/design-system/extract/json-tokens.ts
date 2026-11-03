@@ -131,9 +131,9 @@ function tokenOf(
 ): { value: unknown; type: string | null; dark: unknown } | null {
   if ("$value" in node) {
     return {
-      value: node.$value,
-      type: typeof node.$type === "string" ? node.$type : null,
       dark: modeDark(node),
+      type: typeof node.$type === "string" ? node.$type : null,
+      value: node.$value,
     };
   }
 
@@ -145,9 +145,9 @@ function tokenOf(
 
   if ("value" in node && (typeof node.type === "string" || plainValue)) {
     return {
-      value: node.value,
-      type: typeof node.type === "string" ? node.type : null,
       dark: undefined,
+      type: typeof node.type === "string" ? node.type : null,
+      value: node.value,
     };
   }
 
@@ -162,7 +162,7 @@ function pushToken(
   out: FlatToken[]
 ): void {
   if (type?.toLowerCase() !== "typography" || !isRecord(value)) {
-    out.push({ path, type, value, dark });
+    out.push({ dark, path, type, value });
 
     return;
   }
@@ -173,11 +173,11 @@ function pushToken(
     }
 
     out.push({
+      dark: isRecord(dark) ? dark[part] : undefined,
+      part,
       path,
       type: part,
       value: value[part],
-      dark: isRecord(dark) ? dark[part] : undefined,
-      part,
     });
   }
 }
@@ -412,11 +412,11 @@ function addToEntry(
   const id = `${name}|${token.part ?? ""}`;
 
   const entry = entries.get(id) ?? {
+    evidence: `${context.label}: ${token.path.join(".")}`,
+    keys: [],
+    kind: (token.part === "fontFamily" ? "font" : kind) as JsonKind,
     name,
     path: token.path,
-    kind: (token.part === "fontFamily" ? "font" : kind) as JsonKind,
-    keys: [],
-    evidence: `${context.label}: ${token.path.join(".")}`,
   };
 
   if (token.part) {
@@ -439,7 +439,7 @@ function addToEntry(
       Object.assign(entry, { dark: lightText, darkRef: aliasRef(token.value) });
     }
   } else if (entry.value === undefined && lightText !== null) {
-    Object.assign(entry, { value: lightText, ref: aliasRef(token.value) });
+    Object.assign(entry, { ref: aliasRef(token.value), value: lightText });
   }
 
   const darkText =
@@ -465,7 +465,7 @@ function addToEntry(
 function requiredMatch(
   entry: Entry
 ): { match: NameMatch; cap?: "medium" } | null {
-  const last = entry.path[entry.path.length - 1] ?? "";
+  const last = entry.path.at(-1) ?? "";
 
   if (entry.part === "fontFamily") {
     const match =
@@ -473,12 +473,12 @@ function requiredMatch(
       matchFontName(entry.path[0] ?? "") ??
       matchFontName(last);
 
-    return match ? { match, cap: "medium" } : null;
+    return match ? { cap: "medium", match } : null;
   }
 
   if (entry.kind === "fontSize") {
     const step = (REQUIRED_TOKENS.text as readonly string[]).includes(last)
-      ? { token: `text.${last}`, confidence: "high" as const }
+      ? { confidence: "high" as const, token: `text.${last}` }
       : null;
 
     const match = matchScaleName(entry.name, "text") ?? step;
@@ -529,46 +529,46 @@ function lineHeightType(value: string): ExtraToken["type"] {
 const EXTRA_SPECS: Partial<Record<JsonKind, ExtraSpec>> = {
   color: {
     group: "color",
-    type: "color",
-    strip: /^colou?rs?-/,
     normalize: normalizeColor,
+    strip: /^colou?rs?-/,
+    type: "color",
   },
   font: {
     group: "font",
-    type: "fontFamily",
-    strip: /^(font-?famil(y|ies)|fonts?|typeface)-/,
     normalize: (value) => fontStack(value, genericFor(value)),
-  },
-  shadow: {
-    group: "shadow",
-    type: "shadow",
-    strip: /^(box-?shadows?|shadows?|elevation)-/,
-    normalize: normalizeShadow,
+    strip: /^(font-?famil(y|ies)|fonts?|typeface)-/,
+    type: "fontFamily",
   },
   fontSize: {
     group: "text",
-    type: "dimension",
-    strip: /^(font-?sizes?|text|fs|size)-/,
     normalize: normalizeLength,
+    strip: /^(font-?sizes?|text|fs|size)-/,
+    type: "dimension",
   },
   fontWeight: {
     group: "font-weight",
-    type: "fontWeight",
+    normalize: (value) => value,
     strip: /^(font-?weights?|weights?)-/,
-    normalize: (value) => value,
-  },
-  lineHeight: {
-    group: "line-height",
-    type: "number",
-    strip: /^(line-?heights?|leading)-/,
-    normalize: (value) => value,
+    type: "fontWeight",
   },
   letterSpacing: {
     group: "letter-spacing",
-    type: "dimension",
-    strip: /^(letter-?spacing|tracking)-/,
     normalize: (value) =>
       /^-?\d*\.?\d+(px|rem|em)$/.test(value) ? value : null,
+    strip: /^(letter-?spacing|tracking)-/,
+    type: "dimension",
+  },
+  lineHeight: {
+    group: "line-height",
+    normalize: (value) => value,
+    strip: /^(line-?heights?|leading)-/,
+    type: "number",
+  },
+  shadow: {
+    group: "shadow",
+    normalize: normalizeShadow,
+    strip: /^(box-?shadows?|shadows?|elevation)-/,
+    type: "shadow",
   },
 };
 
@@ -625,14 +625,14 @@ function produce(entry: Entry, seenFonts: Set<string>): Produced | string {
 
   if (found) {
     return {
-      kind: "candidate",
+      entry,
       item: {
         ...found,
         ...(isCanonicalName(entry.name, found.token)
           ? { canonical: true }
           : {}),
       },
-      entry,
+      kind: "candidate",
     };
   }
 
@@ -651,7 +651,7 @@ function produce(entry: Entry, seenFonts: Set<string>): Produced | string {
       seenFonts.add(entry.value ?? "");
     }
 
-    return { kind: "extra", item: extra, entry };
+    return { entry, item: extra, kind: "extra" };
   }
 
   if (entry.kind === "color" && entry.value !== undefined) {
@@ -730,11 +730,11 @@ function contextFor(
   );
 
   return {
-    resolver: new Resolver(tokens, studio),
-    studio,
-    sets,
     darkSets: new Set([...sets].filter((name) => /dark/i.test(name))),
     label,
+    resolver: new Resolver(tokens, studio),
+    sets,
+    studio,
   };
 }
 
@@ -744,12 +744,12 @@ function sourceOf(raw: Record<string, unknown>): {
   figma: boolean;
 } {
   if (!isFigmaVariables(raw)) {
-    return { file: raw, skipped: [], figma: false };
+    return { figma: false, file: raw, skipped: [] };
   }
 
   const converted = figmaToDtcg(raw);
 
-  return { file: converted.tree, skipped: converted.skipped, figma: true };
+  return { figma: true, file: converted.tree, skipped: converted.skipped };
 }
 
 export function harvestJsonTokens(text: string, label: string): Harvest {
@@ -800,10 +800,10 @@ export function harvestJsonTokens(text: string, label: string): Harvest {
   );
 
   return {
-    source: "tokens-file",
-    label,
     candidates,
     extras,
+    label,
+    source: "tokens-file",
     ...(unmapped.length > 0
       ? { unmapped: unmapped.slice(0, MAX_UNMAPPED) }
       : {}),

@@ -62,10 +62,10 @@ const applySchema = z
 
 const saveSchema = z
   .object({
-    name: z.string().trim().min(1).max(80),
-    packId: z.string().trim().min(1).max(64).optional(),
     asNew: z.boolean().optional(),
     force: z.boolean().optional(),
+    name: z.string().trim().min(1).max(80),
+    packId: z.string().trim().min(1).max(64).optional(),
   })
   .strict();
 
@@ -155,7 +155,7 @@ export async function applyPackToDirection(
     );
   }
 
-  const workTree = direction.workTree;
+  const { workTree } = direction;
   const { notes, previous } = await currentNotes(workTree);
 
   const tracked = wiresReact(project)
@@ -208,15 +208,15 @@ export async function applyPackToDirection(
   const wired = project.kind !== "react" || wiresReact(project);
 
   return {
+    notice: wired ? null : NOT_WIRED_NOTICE,
     project: updated,
     state: await readDesignSystemState(
       updated,
       deps.projects.directionOf(updated, direction.id)
     ),
     version,
-    written,
     wired,
-    notice: wired ? null : NOT_WIRED_NOTICE,
+    written,
   };
 }
 
@@ -260,7 +260,7 @@ async function pointAtSavedPack(
   direction: Direction,
   saved: LoadedPack
 ): Promise<Version | null> {
-  const workTree = direction.workTree;
+  const { workTree } = direction;
   const snapshot = await readSnapshot(workTree, PACK_FILE);
   let version: Version | null;
 
@@ -314,7 +314,7 @@ export async function saveDirectionPack(
     );
   }
 
-  const workTree = direction.workTree;
+  const { workTree } = direction;
 
   if (project.designSystemFor && request.force !== true) {
     const check = await checkDesignSystem(workTree);
@@ -336,19 +336,19 @@ export async function saveDirectionPack(
   const prose = designMd === null ? "" : splitDesignMd(designMd).prose.trim();
 
   const input = {
-    name: request.name,
     description: manifest.description,
-    mode: manifest.mode,
-    fonts: manifest.fonts,
-    tokensJson: tokensText,
     designMd: prose === "" ? `# ${request.name}\n` : prose,
+    draft: false,
+    fonts: manifest.fonts,
+    license: manifest.license,
+    mode: manifest.mode,
+    name: request.name,
     provenance:
       manifest.provenance === "imported"
         ? ("imported" as const)
         : ("extracted" as const),
     tags: manifest.tags,
-    license: manifest.license,
-    draft: false,
+    tokensJson: tokensText,
   };
 
   if (request.asNew && request.packId !== undefined) {
@@ -367,8 +367,8 @@ export async function saveDirectionPack(
   const version = await pointAtSavedPack(deps, project, direction, saved);
 
   return {
-    pack: saved.summary,
     created: target === undefined,
+    pack: saved.summary,
     project: await deps.projects.get(project.id),
     version,
   };

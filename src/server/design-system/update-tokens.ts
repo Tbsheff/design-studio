@@ -101,7 +101,7 @@ async function writeAndCommit(
   text: string,
   changes: TokenChange[]
 ): Promise<Version> {
-  const workTree = direction.workTree;
+  const { workTree } = direction;
 
   const snapshots = await Promise.all(
     DESIGN_FILES.map((relative) => readSnapshot(workTree, relative))
@@ -196,7 +196,7 @@ export async function updateTokens(
 ): Promise<UpdateTokensResult> {
   const changes = parseTokenChanges(raw);
   assertCanEdit(deps, project, direction);
-  const workTree = direction.workTree;
+  const { workTree } = direction;
   const text = await plannedTokensText(workTree, changes);
 
   if (text === null) {

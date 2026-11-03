@@ -53,7 +53,7 @@ function splitName(name: string): { folder: string; file: string } {
     );
   }
 
-  return { folder, file };
+  return { file, folder };
 }
 
 function readManifest(text: string): PackManifest {
@@ -122,16 +122,16 @@ export function readPackZip(bytes: Buffer): PackZip {
   return {
     folderId,
     input: {
-      name: manifest.name,
       description: manifest.description,
-      mode: manifest.mode,
-      fonts: manifest.fonts,
-      tokensJson: files.get("tokens.json") ?? "",
       designMd: files.get(DESIGN_MD_FILE) ?? "",
+      draft: false,
+      fonts: manifest.fonts,
+      license: manifest.license,
+      mode: manifest.mode,
+      name: manifest.name,
       provenance: "imported",
       tags: manifest.tags,
-      license: manifest.license,
-      draft: false,
+      tokensJson: files.get("tokens.json") ?? "",
     },
   };
 }

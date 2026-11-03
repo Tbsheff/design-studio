@@ -45,21 +45,21 @@ export function parseAppTokens(
   const tokens = buildAppTokens(sheet);
 
   return {
-    root,
-    file,
     absolute,
-    text,
-    sheet,
-    tokens,
     entries: appTokenEntries(tokens, file),
+    file,
+    root,
+    sheet,
     summary: {
-      kind: "css",
-      file,
-      tailwind: sheet.tailwind,
-      declarations: sheet.declarations.length,
-      tokens: tokens.length,
       darkTokens: tokens.filter((token) => token.dark).length,
+      declarations: sheet.declarations.length,
+      file,
+      kind: "css",
+      tailwind: sheet.tailwind,
+      tokens: tokens.length,
     },
+    text,
+    tokens,
   };
 }
 
@@ -89,7 +89,7 @@ export async function readAppTokensAt(
     await readFile(absolute, "utf-8")
   );
 
-  cache.set(absolute, { stamp, loaded });
+  cache.set(absolute, { loaded, stamp });
 
   return loaded;
 }
@@ -119,12 +119,12 @@ export async function appTokensFor(
 
 export function appTokenState(loaded: LoadedAppTokens): DesignSystemState {
   return {
-    packId: null,
-    manifest: null,
-    tokens: null,
-    entries: loaded.entries,
     css: null,
+    entries: loaded.entries,
     errors: [],
+    manifest: null,
+    packId: null,
     source: loaded.summary,
+    tokens: null,
   };
 }

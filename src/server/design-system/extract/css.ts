@@ -63,7 +63,7 @@ function emit(stack: Frame[], frame: Frame, out: CssRule[]): void {
   const own = frame.prelude;
 
   if (/^@theme\b/i.test(own)) {
-    out.push({ selector: ":root", media, decls: frame.decls });
+    out.push({ decls: frame.decls, media, selector: ":root" });
 
     return;
   }
@@ -78,9 +78,9 @@ function emit(stack: Frame[], frame: Frame, out: CssRule[]): void {
 
   const selector = parent ? own.replaceAll("&", parent.prelude) : own;
   out.push({
-    selector: selector.replaceAll(/\s+/g, " ").trim(),
-    media,
     decls: frame.decls,
+    media,
+    selector: selector.replaceAll(/\s+/g, " ").trim(),
   });
 }
 
@@ -133,7 +133,7 @@ function parenEnd(text: string, start: number): number {
 
 function structural(char: string, state: ScanState): boolean {
   if (char === "{") {
-    state.stack.push({ prelude: state.buffer.trim(), decls: [] });
+    state.stack.push({ decls: [], prelude: state.buffer.trim() });
   } else if (char === ";") {
     pushDecl(state.stack.at(-1), state.buffer);
   } else if (char === "}") {
@@ -154,7 +154,7 @@ function structural(char: string, state: ScanState): boolean {
 
 export function parseCss(source: string): CssRule[] {
   const text = stripComments(source);
-  const state: ScanState = { stack: [], buffer: "", out: [] };
+  const state: ScanState = { buffer: "", out: [], stack: [] };
   let index = 0;
 
   while (index < text.length) {
@@ -268,7 +268,7 @@ export function customProperties(rules: CssRule[]): CustomProperties {
     }
   }
 
-  return { root, dark };
+  return { dark, root };
 }
 
 const MAX_RESOLVED_LENGTH = 4096;

@@ -126,8 +126,10 @@ export function removeTokenBlock(markdown: string): string {
   }
 
   const end = markdown.indexOf(DESIGN_MD_TOKENS_END, start);
+
   const tail =
     end === -1 ? "" : markdown.slice(end + DESIGN_MD_TOKENS_END.length);
+
   const head = markdown.slice(0, start).replace(/\n*$/, "");
   const rest = tail.replace(/^\n*/, "");
 
@@ -176,7 +178,7 @@ export function splitDesignMd(markdown: string): DesignMdParts {
   const range = notesRange(lines);
 
   if (!range) {
-    return { prose: `${lines.join("\n").trimEnd()}\n`, notes: "" };
+    return { notes: "", prose: `${lines.join("\n").trimEnd()}\n` };
   }
 
   const notes = lines
@@ -188,5 +190,5 @@ export function splitDesignMd(markdown: string): DesignMdParts {
     .join("\n")
     .trimEnd();
 
-  return { prose: `${prose}\n`, notes };
+  return { notes, prose: `${prose}\n` };
 }

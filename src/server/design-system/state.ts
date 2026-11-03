@@ -42,12 +42,12 @@ export async function readDesignSystemState(
   }
 
   return {
-    packId: files ? (files.manifest?.id ?? project.packId ?? null) : null,
-    manifest: files?.manifest ?? null,
-    tokens: files?.tokens ?? null,
-    entries: files?.entries ?? [],
     css: files?.css ?? null,
+    entries: files?.entries ?? [],
     errors: files?.errors ?? [],
+    manifest: files?.manifest ?? null,
+    packId: files ? (files.manifest?.id ?? project.packId ?? null) : null,
+    tokens: files?.tokens ?? null,
   };
 }
 
@@ -80,8 +80,8 @@ export async function loadDesignSystemPromptContext(
       ? {
           designMd: null,
           entries: app.entries,
-          googleFontsUrl: null,
           errors: [],
+          googleFontsUrl: null,
           source: app.summary,
         }
       : null;
@@ -97,7 +97,7 @@ export async function loadDesignSystemPromptContext(
   return {
     designMd: designMd === null ? null : capDesignMd(stripTokenBlock(designMd)),
     entries: files.entries,
-    googleFontsUrl: typeof fontsUrl === "string" ? fontsUrl : null,
     errors: files.errors,
+    googleFontsUrl: typeof fontsUrl === "string" ? fontsUrl : null,
   };
 }

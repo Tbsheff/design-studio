@@ -22,10 +22,10 @@ function harvestCssFile(text: string, label: string): Harvest {
   }
 
   return {
-    source: "tokens-file",
-    label,
     candidates: found.candidates,
     extras: found.extras,
+    label,
+    source: "tokens-file",
   };
 }
 

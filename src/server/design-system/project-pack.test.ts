@@ -19,10 +19,8 @@ import type {
 import { createApp } from "../http/app.js";
 import { projectStorePorts } from "../main/project-ports.js";
 import { createEventBus } from "../store/events.js";
-import {
-  createProjectStore,
-  type StudioProjectStore,
-} from "../store/projects.js";
+import { createProjectStore } from "../store/projects.js";
+import type { StudioProjectStore } from "../store/projects.js";
 import { makeTempConfig } from "../store/testConfig.js";
 import { createVersionStore } from "../store/versions.js";
 import { createFakePreview } from "../testing/fakes.js";
@@ -40,13 +38,13 @@ const temps: string[] = [];
 
 function fakeRunner(): AgentRunner {
   return {
+    get: () => undefined,
+    isRunning: (pid, did) => running.has(`${pid}/${did}`),
     start: () => ({
       runId: "run1",
       cancel: () => undefined,
       done: new Promise(() => undefined),
     }),
-    get: () => undefined,
-    isRunning: (pid, did) => running.has(`${pid}/${did}`),
   };
 }
 
@@ -61,9 +59,9 @@ function call(method: string, url: string, body?: unknown): Promise<Response> {
 
   return Promise.resolve(
     app.request(url, {
-      method,
-      headers,
       body: body === undefined ? undefined : JSON.stringify(body),
+      headers,
+      method,
     })
   );
 }
@@ -80,8 +78,8 @@ async function create(extra: Record<string, unknown>): Promise<Project> {
   return (
     await ok<{ project: Project }>(
       call("POST", "/api/projects", {
-        prompt: "A page",
         kind: "html",
+        prompt: "A page",
         startRun: false,
         ...extra,
       })
@@ -118,31 +116,31 @@ beforeEach(async () => {
   });
   running = new Set();
   app = createApp({
-    config,
     bus: createEventBus(config.dataDir, new Map()),
-    projects,
-    versions,
-    runner: fakeRunner(),
+    config,
     preview: {
       ...createFakePreview(),
       directionUrl: async () => "http://127.0.0.1:0/",
     },
+    projects,
+    runner: fakeRunner(),
+    versions,
   });
 });
 
 afterEach(async () => {
   await cleanup();
 
-  while (temps.length) {
-    await rm(temps.pop() as string, { recursive: true, force: true });
+  while (temps.length > 0) {
+    await rm(temps.pop() as string, { force: true, recursive: true });
   }
 });
 
 describe("apply or switch a pack on a project", { timeout: 30_000 }, () => {
   it("switches packs as one version, keeps project notes, and undo restores the old pack", async () => {
     const project = await create({
-      packId: "editorial",
       designMd: "Use big type.",
+      packId: "editorial",
     });
 
     const before = await read(project, TOKENS_CSS_FILE);
@@ -152,10 +150,10 @@ describe("apply or switch a pack on a project", { timeout: 30_000 }, () => {
       ["DESIGN.md", PACK_FILE, TOKENS_CSS_FILE, TOKENS_FILE].sort()
     );
     expect(result).toMatchObject({
-      wired: true,
       notice: null,
       project: { packId: "brutalist" },
       state: { packId: "brutalist" },
+      wired: true,
     });
     await expect(titles(project)).resolves.toEqual([
       "Switch to Brutalist design system",
@@ -233,7 +231,7 @@ describe("apply or switch a pack on a project", { timeout: 30_000 }, () => {
     temps.push(folder);
     await writeFile(
       path.join(folder, "package.json"),
-      JSON.stringify({ name: "x", dependencies: { vite: "^7.0.0" } })
+      JSON.stringify({ dependencies: { vite: "^7.0.0" }, name: "x" })
     );
     await writeFile(
       path.join(folder, "index.html"),
@@ -245,14 +243,12 @@ describe("apply or switch a pack on a project", { timeout: 30_000 }, () => {
       "console.log('hi');\n"
     );
 
-    const project = (
-      await ok<{ project: Project }>(
-        call("POST", "/api/projects/import", { path: folder })
-      )
-    ).project;
+    const { project } = await ok<{ project: Project }>(
+      call("POST", "/api/projects/import", { path: folder })
+    );
 
     const result = await ok<ApplyPackResult>(apply(project, "editorial"));
-    expect(result).toMatchObject({ wired: false, notice: NOT_WIRED_NOTICE });
+    expect(result).toMatchObject({ notice: NOT_WIRED_NOTICE, wired: false });
     expect(result.written.sort()).toEqual(
       ["DESIGN.md", PACK_FILE, TOKENS_CSS_FILE, TOKENS_FILE].sort()
     );
@@ -268,8 +264,8 @@ describe(
   () => {
     it("round-trips: save, then apply to another project gives the same tokens", async () => {
       const source = await create({
-        packId: "editorial",
         designMd: "Source-only notes.",
+        packId: "editorial",
       });
 
       const saved = await ok<SavePackResult>(
@@ -281,8 +277,8 @@ describe(
         pack: {
           id: "user-house-style",
           name: "House Style",
-          source: "user",
           provenance: "extracted",
+          source: "user",
         },
       });
       const listed = await ok<PackSummary[]>(call("GET", "/api/packs"));
@@ -297,8 +293,8 @@ describe(
       expect(detail.designMd.startsWith("# Editorial")).toBe(true);
 
       const target = await create({
-        packId: "brutalist",
         designMd: "Target notes.",
+        packId: "brutalist",
       });
 
       await ok<ApplyPackResult>(apply(target, "user-house-style"));
@@ -348,8 +344,8 @@ describe(
         created: true,
         pack: { id: "user-field-notes" },
         version: {
-          title: "Save Field Notes to library",
           changedFiles: [PACK_FILE],
+          title: "Save Field Notes to library",
         },
       });
       expect(JSON.parse(await read(project, PACK_FILE))).toMatchObject({
@@ -403,7 +399,7 @@ describe(
       const project = await create({ packId: "editorial" });
       await writeFile(
         path.join(project.directions[0]!.workTree, PACK_FILE),
-        JSON.stringify({ id: "editorial", name: "E", extra: 1 })
+        JSON.stringify({ extra: 1, id: "editorial", name: "E" })
       );
       const response = await save(project, { name: "Broken" });
       expect(response.status).toBe(400);

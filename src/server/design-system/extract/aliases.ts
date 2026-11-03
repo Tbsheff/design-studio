@@ -15,10 +15,10 @@ const WHOLE_ALIAS = /^\{([^{}]+)\}$/;
 const GROUP_TYPES: Record<string, string> = {
   color: "color",
   font: "fontFamily",
-  text: "dimension",
-  space: "dimension",
   radius: "dimension",
   shadow: "shadow",
+  space: "dimension",
+  text: "dimension",
 };
 
 function nodeAt(tokens: Record<string, unknown>, path: string): Node | null {

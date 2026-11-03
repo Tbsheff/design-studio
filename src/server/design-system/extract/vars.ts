@@ -51,10 +51,10 @@ const VALIDATORS: Record<
   color: (_token, text) => normalizeColor(text),
   font: (token, text) =>
     fontStack(text, token === "font.mono" ? "monospace" : genericFor(text)),
-  shadow: (_token, text) => normalizeShadow(text),
   radius: radiusValue,
-  text: (_token, text) => scaleValue(text),
+  shadow: (_token, text) => normalizeShadow(text),
   space: (_token, text) => scaleValue(text),
+  text: (_token, text) => scaleValue(text),
 };
 
 const SIMPLE_CALC =
@@ -158,7 +158,7 @@ export function candidatesFromVars(
 
     const found = candidate(
       match,
-      { value, dark },
+      { dark, value },
       source,
       `${label}: ${name}`
     );
@@ -220,7 +220,7 @@ export function extraToken(
     const name = extraName(varName, /^(shadow|elevation)-?/);
 
     return name
-      ? { group: "shadow", name, type: "shadow", value: shadow, evidence }
+      ? { evidence, group: "shadow", name, type: "shadow", value: shadow }
       : null;
   }
 
@@ -234,7 +234,7 @@ export function extraToken(
     const name = extraName(varName, prefix);
 
     return name
-      ? { group, name, type: "dimension", value: length, evidence }
+      ? { evidence, group, name, type: "dimension", value: length }
       : null;
   }
 
@@ -246,7 +246,7 @@ export function extraToken(
     const name = extraName(varName, /^font-(family-)?/);
 
     return name
-      ? { group: "font", name, type: "fontFamily", value: font, evidence }
+      ? { evidence, group: "font", name, type: "fontFamily", value: font }
       : null;
   }
 
@@ -293,7 +293,7 @@ export function harvestCssVars(
     const match = matchVarName(name, value ?? dark ?? "");
 
     const found = match
-      ? candidate(match, { value, dark }, source, evidence)
+      ? candidate(match, { dark, value }, source, evidence)
       : null;
 
     if (found) {

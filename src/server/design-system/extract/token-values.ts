@@ -115,22 +115,22 @@ export function shadowText(value: unknown): string | null {
 }
 
 const WEIGHTS: Record<string, number> = {
-  thin: 100,
-  hairline: 100,
-  extralight: 200,
-  ultralight: 200,
-  light: 300,
-  regular: 400,
-  normal: 400,
-  book: 400,
-  medium: 500,
-  semibold: 600,
-  demibold: 600,
-  bold: 700,
-  extrabold: 800,
-  ultrabold: 800,
   black: 900,
+  bold: 700,
+  book: 400,
+  demibold: 600,
+  extrabold: 800,
+  extralight: 200,
+  hairline: 100,
   heavy: 900,
+  light: 300,
+  medium: 500,
+  normal: 400,
+  regular: 400,
+  semibold: 600,
+  thin: 100,
+  ultrabold: 800,
+  ultralight: 200,
 };
 
 export function fontWeightText(value: unknown): string | null {
@@ -154,7 +154,7 @@ export function lineHeightText(
 ): { value: string; type: "number" | "dimension" } | null {
   if (typeof value === "number") {
     return value > 0 && value <= 4
-      ? { value: String(value), type: "number" }
+      ? { type: "number", value: String(value) }
       : value > 4
         ? { value: `${value}px`, type: "dimension" }
         : null;
@@ -171,7 +171,7 @@ export function lineHeightText(
   }
 
   if (/^\d*\.?\d+(px|rem|em|%)$/.test(text)) {
-    return { value: text, type: "dimension" };
+    return { type: "dimension", value: text };
   }
 
   return null;
@@ -201,22 +201,22 @@ export function letterSpacingText(value: unknown): string | null {
 }
 
 const TYPE_KINDS: Record<string, JsonKind> = {
-  color: "color",
-  fontfamily: "font",
-  fontfamilies: "font",
-  shadow: "shadow",
+  borderradius: "dimension",
   boxshadow: "shadow",
+  color: "color",
+  dimension: "dimension",
+  fontfamilies: "font",
+  fontfamily: "font",
   fontsize: "fontSize",
   fontsizes: "fontSize",
   fontweight: "fontWeight",
   fontweights: "fontWeight",
+  letterspacing: "letterSpacing",
   lineheight: "lineHeight",
   lineheights: "lineHeight",
-  letterspacing: "letterSpacing",
-  dimension: "dimension",
-  borderradius: "dimension",
-  spacing: "dimension",
+  shadow: "shadow",
   sizing: "dimension",
+  spacing: "dimension",
 };
 
 export function kindOf(type: string | null, value: unknown): JsonKind {

@@ -9,6 +9,21 @@ export interface NameMatch {
 }
 
 const COLOR_NAMES: Record<string, { high: string[]; medium: string[] }> = {
+  accent: {
+    high: ["accent", "highlight", "accent-default", "accent-500"],
+    medium: ["secondary", "tertiary", "accent-secondary"],
+  },
+  "accent-fg": {
+    high: [
+      "accent-fg",
+      "accent-foreground",
+      "on-accent",
+      "accent-contrast",
+      "accent-content",
+      "accent-text",
+    ],
+    medium: ["secondary-foreground", "on-secondary", "secondary-content"],
+  },
   bg: {
     high: [
       "bg",
@@ -25,21 +40,30 @@ const COLOR_NAMES: Record<string, { high: string[]; medium: string[] }> = {
     ],
     medium: ["base-100", "base", "white", "paper"],
   },
-  surface: {
+  border: {
     high: [
-      "surface",
-      "card",
-      "panel",
-      "bg-subtle",
-      "bg-surface",
-      "background-secondary",
-      "bg-secondary",
-      "surface-1",
-      "elevated",
-      "bg-elevated",
-      "card-bg",
+      "border",
+      "border-color",
+      "border-default",
+      "divider",
+      "line",
+      "stroke",
+      "outline",
+      "border-subtle",
     ],
-    medium: ["popover", "muted", "base-200", "bg-muted", "surface-raised"],
+    medium: ["input", "separator", "hairline"],
+  },
+  danger: {
+    high: [
+      "danger",
+      "destructive",
+      "error",
+      "negative",
+      "critical",
+      "danger-500",
+      "error-500",
+    ],
+    medium: ["red"],
   },
   fg: {
     high: [
@@ -74,19 +98,6 @@ const COLOR_NAMES: Record<string, { high: string[]; medium: string[] }> = {
     ],
     medium: ["subtle", "gray", "grey", "neutral", "muted-color"],
   },
-  border: {
-    high: [
-      "border",
-      "border-color",
-      "border-default",
-      "divider",
-      "line",
-      "stroke",
-      "outline",
-      "border-subtle",
-    ],
-    medium: ["input", "separator", "hairline"],
-  },
   primary: {
     high: [
       "primary",
@@ -117,41 +128,6 @@ const COLOR_NAMES: Record<string, { high: string[]; medium: string[] }> = {
     ],
     medium: [],
   },
-  accent: {
-    high: ["accent", "highlight", "accent-default", "accent-500"],
-    medium: ["secondary", "tertiary", "accent-secondary"],
-  },
-  "accent-fg": {
-    high: [
-      "accent-fg",
-      "accent-foreground",
-      "on-accent",
-      "accent-contrast",
-      "accent-content",
-      "accent-text",
-    ],
-    medium: ["secondary-foreground", "on-secondary", "secondary-content"],
-  },
-  success: {
-    high: ["success", "positive", "ok", "valid", "success-500"],
-    medium: ["green"],
-  },
-  warning: {
-    high: ["warning", "caution", "warn", "warning-500"],
-    medium: ["yellow", "amber", "orange"],
-  },
-  danger: {
-    high: [
-      "danger",
-      "destructive",
-      "error",
-      "negative",
-      "critical",
-      "danger-500",
-      "error-500",
-    ],
-    medium: ["red"],
-  },
   ring: {
     high: [
       "ring",
@@ -163,24 +139,33 @@ const COLOR_NAMES: Record<string, { high: string[]; medium: string[] }> = {
     ],
     medium: [],
   },
+  success: {
+    high: ["success", "positive", "ok", "valid", "success-500"],
+    medium: ["green"],
+  },
+  surface: {
+    high: [
+      "surface",
+      "card",
+      "panel",
+      "bg-subtle",
+      "bg-surface",
+      "background-secondary",
+      "bg-secondary",
+      "surface-1",
+      "elevated",
+      "bg-elevated",
+      "card-bg",
+    ],
+    medium: ["popover", "muted", "base-200", "bg-muted", "surface-raised"],
+  },
+  warning: {
+    high: ["warning", "caution", "warn", "warning-500"],
+    medium: ["yellow", "amber", "orange"],
+  },
 };
 
 const FONT_NAMES: Record<string, { high: string[]; medium: string[] }> = {
-  display: {
-    high: [
-      "display",
-      "heading",
-      "headings",
-      "header",
-      "title",
-      "headline",
-      "font-display",
-      "font-heading",
-      "font-headings",
-      "font-title",
-    ],
-    medium: ["serif", "brand"],
-  },
   body: {
     high: [
       "body",
@@ -199,6 +184,21 @@ const FONT_NAMES: Record<string, { high: string[]; medium: string[] }> = {
     ],
     medium: ["ui", "main", "copy"],
   },
+  display: {
+    high: [
+      "display",
+      "heading",
+      "headings",
+      "header",
+      "title",
+      "headline",
+      "font-display",
+      "font-heading",
+      "font-headings",
+      "font-title",
+    ],
+    medium: ["serif", "brand"],
+  },
   mono: {
     high: ["mono", "code", "monospace", "font-mono", "font-code"],
     medium: ["pre"],
@@ -206,41 +206,41 @@ const FONT_NAMES: Record<string, { high: string[]; medium: string[] }> = {
 };
 
 const RADIUS_SUFFIX: Record<string, NameMatch> = {
-  sm: { token: "sm", confidence: "high" },
-  small: { token: "sm", confidence: "high" },
-  s: { token: "sm", confidence: "high" },
-  xs: { token: "sm", confidence: "medium" },
-  md: { token: "md", confidence: "high" },
-  medium: { token: "md", confidence: "high" },
-  m: { token: "md", confidence: "high" },
-  base: { token: "md", confidence: "high" },
-  default: { token: "md", confidence: "high" },
-  "": { token: "md", confidence: "medium" },
-  lg: { token: "lg", confidence: "high" },
-  large: { token: "lg", confidence: "high" },
-  l: { token: "lg", confidence: "high" },
-  xl: { token: "lg", confidence: "medium" },
-  pill: { token: "pill", confidence: "high" },
-  full: { token: "pill", confidence: "high" },
-  round: { token: "pill", confidence: "high" },
-  rounded: { token: "pill", confidence: "medium" },
-  circle: { token: "pill", confidence: "medium" },
+  "": { confidence: "medium", token: "md" },
+  base: { confidence: "high", token: "md" },
+  circle: { confidence: "medium", token: "pill" },
+  default: { confidence: "high", token: "md" },
+  full: { confidence: "high", token: "pill" },
+  l: { confidence: "high", token: "lg" },
+  large: { confidence: "high", token: "lg" },
+  lg: { confidence: "high", token: "lg" },
+  m: { confidence: "high", token: "md" },
+  md: { confidence: "high", token: "md" },
+  medium: { confidence: "high", token: "md" },
+  pill: { confidence: "high", token: "pill" },
+  round: { confidence: "high", token: "pill" },
+  rounded: { confidence: "medium", token: "pill" },
+  s: { confidence: "high", token: "sm" },
+  sm: { confidence: "high", token: "sm" },
+  small: { confidence: "high", token: "sm" },
+  xl: { confidence: "medium", token: "lg" },
+  xs: { confidence: "medium", token: "sm" },
 };
 
 const SHADOW_SUFFIX: Record<string, string> = {
-  sm: "sm",
-  small: "sm",
+  "": "md",
   "1": "sm",
-  xs: "sm",
+  "2": "md",
+  "3": "lg",
+  default: "md",
+  large: "lg",
+  lg: "lg",
   md: "md",
   medium: "md",
-  "2": "md",
-  "": "md",
-  default: "md",
-  lg: "lg",
-  large: "lg",
-  "3": "lg",
+  sm: "sm",
+  small: "sm",
   xl: "lg",
+  xs: "sm",
 };
 
 const PREFIXES = [
@@ -295,13 +295,13 @@ function lookup(
 ): NameMatch | null {
   for (const [token, names] of Object.entries(table)) {
     if (names.high.includes(name)) {
-      return { token, confidence: "high" };
+      return { confidence: "high", token };
     }
   }
 
   for (const [token, names] of Object.entries(table)) {
     if (names.medium.includes(name)) {
-      return { token, confidence: "medium" };
+      return { confidence: "medium", token };
     }
   }
 
@@ -327,7 +327,7 @@ export function matchColorName(raw: string): NameMatch | null {
   const found = lookup(COLOR_NAMES, name);
 
   return found
-    ? { token: `color.${found.token}`, confidence: found.confidence }
+    ? { confidence: found.confidence, token: `color.${found.token}` }
     : null;
 }
 
@@ -351,7 +351,7 @@ export function matchFontName(raw: string): NameMatch | null {
     lookup(FONT_NAMES, name);
 
   return found
-    ? { token: `font.${found.token}`, confidence: found.confidence }
+    ? { confidence: found.confidence, token: `font.${found.token}` }
     : null;
 }
 
@@ -375,7 +375,7 @@ export function matchRadiusName(raw: string): NameMatch | null {
   const found = RADIUS_SUFFIX[suffix];
 
   return found
-    ? { token: `radius.${found.token}`, confidence: found.confidence }
+    ? { confidence: found.confidence, token: `radius.${found.token}` }
     : null;
 }
 
@@ -398,8 +398,8 @@ export function matchShadowName(raw: string): NameMatch | null {
 
   return found
     ? {
-        token: `shadow.${found}`,
         confidence: suffix === "" ? "medium" : "high",
+        token: `shadow.${found}`,
       }
     : null;
 }
@@ -432,7 +432,7 @@ export function matchScaleName(
   const required: readonly string[] = REQUIRED_TOKENS[group];
 
   return required.includes(suffix)
-    ? { token: `${group}.${suffix}`, confidence: "high" }
+    ? { confidence: "high", token: `${group}.${suffix}` }
     : null;
 }
 
@@ -463,19 +463,19 @@ export function matchName(raw: string, kind: ValueKind): NameMatch | null {
 }
 
 const CANONICAL: Record<string, string[]> = {
-  "color.bg": ["bg", "background"],
-  "color.surface": ["surface", "card"],
-  "color.fg": ["fg", "foreground"],
-  "color.fg-muted": ["fg-muted", "muted-foreground"],
-  "color.border": ["border"],
-  "color.primary": ["primary"],
-  "color.primary-fg": ["primary-fg", "primary-foreground"],
   "color.accent": ["accent"],
   "color.accent-fg": ["accent-fg", "accent-foreground"],
-  "color.success": ["success"],
-  "color.warning": ["warning"],
+  "color.bg": ["bg", "background"],
+  "color.border": ["border"],
   "color.danger": ["danger", "destructive"],
+  "color.fg": ["fg", "foreground"],
+  "color.fg-muted": ["fg-muted", "muted-foreground"],
+  "color.primary": ["primary"],
+  "color.primary-fg": ["primary-fg", "primary-foreground"],
   "color.ring": ["ring"],
+  "color.success": ["success"],
+  "color.surface": ["surface", "card"],
+  "color.warning": ["warning"],
 };
 
 export function isCanonicalName(raw: string, token: string): boolean {

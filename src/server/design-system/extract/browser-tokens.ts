@@ -198,7 +198,7 @@ function pushBorder(live: LivePage, push: Push): void {
 
   const inputBorder = mostCommon(
     styles(live, "input")
-      .filter((style) => parseFloat(style.borderWidth) > 0)
+      .filter((style) => Number.parseFloat(style.borderWidth) > 0)
       .map((style) => opaque(style.borderColor))
   );
 
@@ -248,7 +248,7 @@ function pushFonts(live: LivePage, push: Push): void {
 
 function sizeOf(live: LivePage, role: string): number | undefined {
   const sizes = styles(live, role)
-    .map((style) => parseFloat(style.size))
+    .map((style) => Number.parseFloat(style.size))
     .filter((size) => Number.isFinite(size) && size > 0);
 
   return sizes.length > 0 ? Number(mostCommon(sizes.map(String))) : undefined;
@@ -335,7 +335,9 @@ function pushRadii(live: LivePage, push: Push): void {
 function blurOf(shadow: string): number {
   const lengths = shadow.match(/-?\d*\.?\d+px/g) ?? [];
 
-  return lengths.length >= 3 ? Math.abs(parseFloat(lengths[2] ?? "0")) : 0;
+  return lengths.length >= 3
+    ? Math.abs(Number.parseFloat(lengths[2] ?? "0"))
+    : 0;
 }
 
 function pushShadows(live: LivePage, push: Push): void {
@@ -409,7 +411,7 @@ export function computedCandidates(
     }
 
     const found = candidate(
-      { token, confidence: "medium" },
+      { confidence: "medium", token },
       { value },
       "url",
       `${label}: computed ${evidence}`,

@@ -97,7 +97,7 @@ function fontsIn(
     return [];
   }
 
-  return [{ token: role[1], stack: value }];
+  return [{ stack: value, token: role[1] }];
 }
 
 function colorCandidates(
@@ -121,7 +121,7 @@ function colorCandidates(
       /\bdark\b/i.test(heading);
 
     const found = candidate(
-      { token: named.token, confidence: "medium" },
+      { confidence: "medium", token: named.token },
       dark ? { dark: color } : { value: color },
       source,
       `${label}: "${named.name}"`,
@@ -145,7 +145,7 @@ function fontCandidates(
   return fontsIn(line, /typograph|font|type\b/i.test(heading)).flatMap(
     (font) => {
       const found = candidate(
-        { token: font.token, confidence: "medium" },
+        { confidence: "medium", token: font.token },
         { value: font.stack },
         source,
         `${label}: ${font.token.replace("font.", "")} font`,
@@ -173,7 +173,7 @@ function proseLines(markdown: string): { line: string; heading: string }[] {
     } else if (/^#{1,6}\s/.test(raw)) {
       heading = raw;
     } else {
-      out.push({ line: raw.slice(0, 400), heading });
+      out.push({ heading, line: raw.slice(0, 400) });
     }
   }
 
@@ -190,7 +190,7 @@ export function harvestDesignText(
     ...fontCandidates(line, heading, source, label),
   ]);
 
-  return { source, label, candidates };
+  return { candidates, label, source };
 }
 
 export function firstHeading(markdown: string): string | null {

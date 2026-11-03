@@ -280,7 +280,7 @@ export async function findTokenFile(workTree: string): Promise<string | null> {
   }
 
   const file = await detect(root);
-  cache.set(root, { file, at: Date.now() });
+  cache.set(root, { at: Date.now(), file });
 
   return file;
 }

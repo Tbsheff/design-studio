@@ -36,16 +36,15 @@ export const EVIDENCE_FILE = `${SOURCE_DIR}/evidence.md`;
 
 export const draftRequestSchema = z
   .object({
-    name: z.string().trim().max(80).optional(),
-    mode: z.enum(["light", "dark", "auto"]).default("auto"),
     basePackId: z.string().trim().min(1).max(64).default(DEFAULT_BASE_PACK),
-    urls: z.array(z.string().trim().min(1).max(2000)).max(MAX_URLS).default([]),
+    brief: z.string().max(4000).optional(),
     designMd: z
       .string()
       .max(512 * 1024)
       .optional(),
-    brief: z.string().max(4000).optional(),
     folderPath: z.string().trim().max(4096).optional(),
+    mode: z.enum(["light", "dark", "auto"]).default("auto"),
+    name: z.string().trim().max(80).optional(),
     tokensFile: z
       .object({
         name: z.string().trim().min(1).max(200),
@@ -53,6 +52,7 @@ export const draftRequestSchema = z
       })
       .strict()
       .optional(),
+    urls: z.array(z.string().trim().min(1).max(2000)).max(MAX_URLS).default([]),
   })
   .strict();
 
@@ -331,10 +331,10 @@ async function readUrls(
       const harvested = await harvestUrl(url, deps.fetcher);
       out.push(harvested);
       reports.push({
+        found: harvested.harvest.candidates.length,
         kind: "url",
         label: harvested.snapshot.url,
         ok: true,
-        found: harvested.harvest.candidates.length,
       });
     } catch (error) {
       if (error instanceof FetchBlockedError) {
@@ -344,11 +344,11 @@ async function readUrls(
       }
 
       reports.push({
+        error: errorText(error),
+        found: 0,
         kind: "url",
         label: url,
         ok: false,
-        found: 0,
-        error: errorText(error),
       });
     }
   }
@@ -361,10 +361,10 @@ function snapshotFiles(urlHarvests: UrlHarvest[]): DraftFile[] {
     const dir = `${SOURCE_DIR}/url-${index + 1}`;
 
     return [
-      { path: `${dir}/page.html.txt`, content: item.snapshot.html },
+      { content: item.snapshot.html, path: `${dir}/page.html.txt` },
       ...item.snapshot.stylesheets.map((sheet, sheetIndex) => ({
-        path: `${dir}/style-${sheetIndex + 1}.css.txt`,
         content: `/* ${sheet.url.replaceAll("*/", "")} */\n${sheet.css}`,
+        path: `${dir}/style-${sheetIndex + 1}.css.txt`,
       })),
     ];
   });
@@ -387,10 +387,10 @@ function readTokensFile(
     const harvest = harvestTokensFile(file.text, label);
     out.harvests.push(harvest);
     out.reports.push({
+      found: harvest.candidates.length + (harvest.extras?.length ?? 0),
       kind: "tokens-file",
       label,
       ok: true,
-      found: harvest.candidates.length + (harvest.extras?.length ?? 0),
     });
   } catch (error) {
     if (error instanceof TokensFileError) {
@@ -414,10 +414,10 @@ async function readFolder(folderPath: string, out: Harvested): Promise<void> {
 
   out.harvests.push(out.folder.harvest);
   out.reports.push({
+    found: out.folder.harvest.candidates.length,
     kind: "folder",
     label: out.folder.harvest.label,
     ok: true,
-    found: out.folder.harvest.candidates.length,
   });
 }
 
@@ -433,7 +433,7 @@ function readText(
   const label = kind === "design-md" ? "DESIGN.md" : "brief";
   const harvest = harvestDesignText(text, kind, label);
   out.harvests.push(harvest);
-  out.reports.push({ kind, label, ok: true, found: harvest.candidates.length });
+  out.reports.push({ found: harvest.candidates.length, kind, label, ok: true });
 }
 
 async function harvestAll(
@@ -442,9 +442,9 @@ async function harvestAll(
   options: { allowLoopback: boolean; imageCount: number }
 ): Promise<Harvested> {
   const out: Harvested = {
+    folder: null,
     harvests: [],
     reports: [],
-    folder: null,
     urlHarvests: [],
   };
 
@@ -468,10 +468,10 @@ async function harvestAll(
 
   if (options.imageCount > 0) {
     out.reports.push({
+      found: 0,
       kind: "images",
       label: `${options.imageCount} image${options.imageCount === 1 ? "" : "s"}`,
       ok: true,
-      found: 0,
     });
   }
 
@@ -489,15 +489,15 @@ function inputsOf(
   base: LoadedPack
 ): Record<string, unknown> {
   return {
-    urls: request.urls,
+    basePackId: base.manifest.id,
     brief: Boolean(request.brief?.trim()),
     designMd: Boolean(request.designMd?.trim()),
     folderPath: request.folderPath?.trim() || null,
+    mode: request.mode,
     tokensFile: request.tokensFile
       ? path.basename(request.tokensFile.name)
       : null,
-    basePackId: base.manifest.id,
-    mode: request.mode,
+    urls: request.urls,
   };
 }
 
@@ -513,28 +513,28 @@ function sourceFiles(
     ...(request.tokensFile
       ? [
           {
-            path: `${SOURCE_DIR}/tokens-file.json.txt`,
             content: request.tokensFile.text,
+            path: `${SOURCE_DIR}/tokens-file.json.txt`,
           },
         ]
       : []),
     ...(request.brief?.trim()
       ? [
           {
-            path: `${SOURCE_DIR}/brief.md`,
             content: `${request.brief.trim()}\n`,
+            path: `${SOURCE_DIR}/brief.md`,
           },
         ]
       : []),
-    { path: COVERAGE_FILE, content: `${JSON.stringify(coverage, null, 2)}\n` },
+    { content: `${JSON.stringify(coverage, null, 2)}\n`, path: COVERAGE_FILE },
     {
-      path: EVIDENCE_FILE,
       content: evidence(
         coverage,
         harvested.urlHarvests,
         harvested.folder,
         snapshots
       ),
+      path: EVIDENCE_FILE,
     },
   ];
 }
@@ -564,7 +564,7 @@ export async function buildDraft(
 }
 
 export function emptyHarvested(): Harvested {
-  return { harvests: [], reports: [], folder: null, urlHarvests: [] };
+  return { folder: null, harvests: [], reports: [], urlHarvests: [] };
 }
 
 export function assembleDraft(
@@ -582,12 +582,12 @@ export function assembleDraft(
   const designMd =
     pastedMd ??
     composeDraftDesignMd({
-      name,
-      brief: request.brief,
       baseName: base.manifest.name,
-      fonts: mapped.fonts,
-      tokens: mapped.tokens,
+      brief: request.brief,
       coverage: mapped.coverage,
+      fonts: mapped.fonts,
+      name,
+      tokens: mapped.tokens,
     });
 
   const imported =
@@ -596,9 +596,9 @@ export function assembleDraft(
     (request.tokensFile !== undefined || pastedMd !== null);
 
   return {
-    name,
-    mode,
     coverage: mapped.coverage,
+    files: sourceFiles(request, harvested, mapped.coverage),
+    inputs: inputsOf(request, base),
     kitHtml: renderKitPage({
       name,
       mode,
@@ -608,22 +608,22 @@ export function assembleDraft(
       ...(pending.length > 0 ? { pending } : {}),
       ...(logo ? { logo } : {}),
     }),
-    files: sourceFiles(request, harvested, mapped.coverage),
-    inputs: inputsOf(request, base),
+    mode,
+    name,
     pack: {
-      name,
       description:
         `${name}: draft design system from ${sourceSummary(mapped.coverage)}.`.slice(
           0,
           400
         ),
-      mode,
-      fonts: mapped.fonts,
-      tokensJson: mapped.tokens,
       designMd,
-      provenance: imported ? "imported" : "extracted",
-      license: "Custom",
       draft: true,
+      fonts: mapped.fonts,
+      license: "Custom",
+      mode,
+      name,
+      provenance: imported ? "imported" : "extracted",
+      tokensJson: mapped.tokens,
     },
   };
 }

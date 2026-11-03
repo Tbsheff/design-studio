@@ -90,11 +90,11 @@ async function designSystemInjectionFor(
   const fontsUrl = manifest?.fonts?.googleFontsUrl;
 
   return {
-    tokensHref: tokensHrefFor(htmlRelative),
     fontsUrl:
       typeof fontsUrl === "string" && fontsUrl.startsWith(GOOGLE_FONTS_PREFIX)
         ? fontsUrl
         : null,
+    tokensHref: tokensHrefFor(htmlRelative),
   };
 }
 

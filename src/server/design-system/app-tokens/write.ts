@@ -147,14 +147,14 @@ function insertDark(
     .filter((decl) => decl.start > block.open && decl.end < block.close)
     .at(-1);
 
-  const text = loaded.text;
+  const { text } = loaded;
   const before = lineStart(text, block.close);
   const onOwnLine = text.slice(before, block.close).trim() === "";
   const line = `${indentOf(text, last)}${token.name}: ${value};\n`;
 
   return onOwnLine
-    ? { start: before, end: before, text: line }
-    : { start: block.close, end: block.close, text: `\n${line}` };
+    ? { end: before, start: before, text: line }
+    : { end: block.close, start: block.close, text: `\n${line}` };
 }
 
 function removeDecl(text: string, decl: CssDeclaration): Splice {
@@ -165,8 +165,8 @@ function removeDecl(text: string, decl: CssDeclaration): Splice {
     text.slice(start, decl.declStart) + text.slice(decl.declEnd, end);
 
   return rest.trim() === ""
-    ? { start, end, text: "" }
-    : { start: decl.declStart, end: decl.declEnd, text: "" };
+    ? { end, start, text: "" }
+    : { end: decl.declEnd, start: decl.declStart, text: "" };
 }
 
 function splicesFor(loaded: LoadedAppTokens, change: TokenChange): Splice[] {
@@ -183,7 +183,7 @@ function splicesFor(loaded: LoadedAppTokens, change: TokenChange): Splice[] {
     }
 
     if (value !== token.light.value) {
-      out.push({ start: token.light.start, end: token.light.end, text: value });
+      out.push({ end: token.light.end, start: token.light.start, text: value });
     }
   }
 
@@ -197,7 +197,7 @@ function splicesFor(loaded: LoadedAppTokens, change: TokenChange): Splice[] {
     if (!token.dark) {
       out.push(insertDark(loaded, token, value));
     } else if (value !== token.dark.value) {
-      out.push({ start: token.dark.start, end: token.dark.end, text: value });
+      out.push({ end: token.dark.end, start: token.dark.start, text: value });
     }
   }
 
@@ -237,7 +237,7 @@ function expected(
         ? null
         : normalized(change.darkValue);
 
-  return { light, dark };
+  return { dark, light };
 }
 
 function verify(
@@ -300,7 +300,7 @@ function updateMeta(
   changes: TokenChange[]
 ): VersionMeta {
   const parts = changes.map((change) => {
-    const name = tokenOf(loaded, change).name;
+    const { name } = tokenOf(loaded, change);
 
     const bits = [
       change.value === undefined ? "" : `= ${change.value}`,
@@ -328,7 +328,7 @@ async function writeAndCommit(
   text: string,
   changes: TokenChange[]
 ): Promise<Version> {
-  const workTree = direction.workTree;
+  const { workTree } = direction;
   const snapshot = await readSnapshot(workTree, loaded.file);
 
   try {

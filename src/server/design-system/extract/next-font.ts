@@ -97,11 +97,11 @@ function fontCandidate(
 
   return value
     ? {
-        token,
-        value,
-        source: "folder",
         confidence,
         evidence: `${file}: next/font ${family}`,
+        source: "folder",
+        token,
+        value,
         verified: true,
       }
     : null;

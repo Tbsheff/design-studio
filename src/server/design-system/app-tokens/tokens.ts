@@ -159,15 +159,15 @@ export function buildAppTokens(sheet: CssTokenSheet): AppToken[] {
     const { group, type } = tokenGroup(name, value);
 
     return {
+      dark,
+      darkValue: dark || darkResolved !== value ? darkResolved : null,
+      group,
+      light,
+      lights: all,
       name,
       path: `${group}.${name.slice(2)}`,
-      group,
       type,
-      light,
-      dark,
-      lights: all,
       value,
-      darkValue: dark || darkResolved !== value ? darkResolved : null,
     };
   });
 }
@@ -177,18 +177,18 @@ export function appTokenEntries(
   file: string
 ): CompiledTokenEntry[] {
   return tokens.map((token) => ({
-    path: token.path,
     cssVar: token.name,
-    type: token.type,
-    value: token.value,
     darkValue: token.darkValue,
+    path: token.path,
     source: {
-      file,
-      line: (token.light ?? token.dark)?.line ?? 0,
-      value: token.light?.value ?? token.dark?.value ?? "",
       darkLine: token.dark?.line ?? null,
       darkValue: token.dark?.value ?? null,
+      file,
+      line: (token.light ?? token.dark)?.line ?? 0,
       lines: token.lights.map((decl) => decl.line),
+      value: token.light?.value ?? token.dark?.value ?? "",
     },
+    type: token.type,
+    value: token.value,
   }));
 }

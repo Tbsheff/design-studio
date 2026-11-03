@@ -11,9 +11,9 @@ export const MAX_REFERENCE_URLS = 3;
 export const MAX_REFERENCE_TEXT = 6000;
 
 const REFERENCE_POLICY = {
-  timeoutMs: 8000,
   maxBytes: 2 * 1024 * 1024,
   maxRedirects: 3,
+  timeoutMs: 8000,
 };
 
 const SKIPPED = new Set([
@@ -129,7 +129,7 @@ export function pageOutline(html: string): { title: string; text: string } {
     text = `${text.slice(0, MAX_REFERENCE_TEXT)}\n[cut at ${MAX_REFERENCE_TEXT} characters]`;
   }
 
-  return { title: title.slice(0, 200), text };
+  return { text, title: title.slice(0, 200) };
 }
 
 export function parseReferenceUrls(
@@ -171,20 +171,20 @@ export async function captureReferencePage(
 
     if (!/html/i.test(fetched.contentType)) {
       return {
-        url,
-        title: "",
-        text: "",
         error: `not an HTML page (${fetched.contentType || "unknown type"})`,
+        text: "",
+        title: "",
+        url,
       };
     }
 
     return { url: fetched.url, ...pageOutline(fetched.body.toString("utf-8")) };
   } catch (error) {
     return {
-      url,
-      title: "",
-      text: "",
       error: error instanceof Error ? error.message : String(error),
+      text: "",
+      title: "",
+      url,
     };
   }
 }

@@ -141,19 +141,19 @@ function classify(
   const inToken = parents.some((frame) => frame.scope !== null);
 
   if (inToken) {
-    return { scope: null, allowsChildren: false };
+    return { allowsChildren: false, scope: null };
   }
 
   if (parents.some((frame) => !frame.allowsChildren)) {
-    return { scope: null, allowsChildren: false };
+    return { allowsChildren: false, scope: null };
   }
 
   const lower = prelude.toLowerCase();
 
   if (/^@theme\b/.test(lower)) {
     return {
-      scope: parents.length === 0 ? "theme" : null,
       allowsChildren: false,
+      scope: parents.length === 0 ? "theme" : null,
     };
   }
 
@@ -161,18 +161,18 @@ function classify(
     /^@layer\b/.test(lower) ||
     /^@media\s*\(\s*prefers-color-scheme\s*:\s*(dark|light)\s*\)$/.test(lower)
   ) {
-    return { scope: null, allowsChildren: true };
+    return { allowsChildren: true, scope: null };
   }
 
   if (lower.startsWith("@")) {
-    return { scope: null, allowsChildren: false };
+    return { allowsChildren: false, scope: null };
   }
 
   const darkMedia = parents.some((frame) =>
     /prefers-color-scheme\s*:\s*dark/.test(frame.prelude.toLowerCase())
   );
 
-  return { scope: selectorScope(prelude, darkMedia), allowsChildren: false };
+  return { allowsChildren: false, scope: selectorScope(prelude, darkMedia) };
 }
 
 function clean(text: string): string {
@@ -219,15 +219,15 @@ function declaration(scan: Scan, from: number, to: number): void {
 
   const declEnd = scan.source[to] === ";" ? to + 1 : end;
   scan.out.declarations.push({
-    name: match[2]!,
-    value: clean(scan.source.slice(start, end)),
-    scope: frame.scope,
     block: frame.prelude,
-    line: lineAt(scan.starts, nameStart),
-    start,
-    end,
-    declStart: nameStart,
     declEnd,
+    declStart: nameStart,
+    end,
+    line: lineAt(scan.starts, nameStart),
+    name: match[2]!,
+    scope: frame.scope,
+    start,
+    value: clean(scan.source.slice(start, end)),
   });
 }
 
@@ -265,16 +265,16 @@ export function readCssTokens(source: string): CssTokenSheet {
   const masked = maskComments(source);
 
   const scan: Scan = {
-    source,
     masked,
-    starts: lineStarts(source),
-    stack: [],
     out: {
-      declarations: [],
       blocks: [],
+      declarations: [],
       tailwind: TAILWIND_IMPORT.test(masked),
       themeBlocks: 0,
     },
+    source,
+    stack: [],
+    starts: lineStarts(source),
   };
 
   let statement = 0;
@@ -296,7 +296,7 @@ export function readCssTokens(source: string): CssTokenSheet {
     if (char === "{") {
       const prelude = clean(masked.slice(statement, index));
       const kind = classify(prelude, scan.stack);
-      scan.stack.push({ prelude, open: index, ...kind });
+      scan.stack.push({ open: index, prelude, ...kind });
 
       if (kind.scope === "theme") {
         scan.out.themeBlocks += 1;
@@ -312,10 +312,10 @@ export function readCssTokens(source: string): CssTokenSheet {
 
       if (frame?.scope) {
         scan.out.blocks.push({
+          close: index,
+          open: frame.open,
           prelude: frame.prelude,
           scope: frame.scope,
-          open: frame.open,
-          close: index,
         });
       }
 

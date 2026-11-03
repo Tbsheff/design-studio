@@ -29,8 +29,8 @@ import { packRegistry } from "./packs.js";
 const roots: string[] = [];
 
 afterEach(async () => {
-  while (roots.length) {
-    await rm(roots.pop() as string, { recursive: true, force: true });
+  while (roots.length > 0) {
+    await rm(roots.pop() as string, { force: true, recursive: true });
   }
 });
 
@@ -44,7 +44,7 @@ async function draftTree(request: Record<string, unknown>) {
 
   const draft = await buildDraft(
     parseDraftRequest(request, 0),
-    { registry: packRegistry(), fetcher: noFetch },
+    { fetcher: noFetch, registry: packRegistry() },
     { allowLoopback: false, imageCount: 0 }
   );
 
@@ -59,7 +59,7 @@ async function draftTree(request: Record<string, unknown>) {
     `${JSON.stringify(draft.coverage, null, 2)}\n`
   );
 
-  return { root, coverage: draft.coverage };
+  return { coverage: draft.coverage, root };
 }
 
 type Tokens = Record<
@@ -104,15 +104,15 @@ describe("draft coverage after a run", () => {
       next.tokens.find((item) => item.token === token);
 
     expect(entry("radius.pill")).toEqual({
-      token: "radius.pill",
-      source: "agent",
       confidence: "medium",
       evidence: "changed by an Improve with AI run",
+      source: "agent",
+      token: "radius.pill",
     });
     expect(entry("color.success")).toMatchObject({ source: "agent" });
     expect(entry("shadow.lg")).toMatchObject({
-      source: "base",
       confidence: "fallback",
+      source: "base",
     });
     expect(next.fallbacks).not.toContain("radius.pill");
     expect(next.fallbacks).toContain("shadow.lg");

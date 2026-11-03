@@ -76,7 +76,7 @@ function pickModes<T>(
     (defaultMode === dark ? undefined : defaultMode) ??
     modes.find((mode) => mode !== dark);
 
-  return { light, dark: dark === light ? undefined : dark };
+  return { dark: dark === light ? undefined : dark, light };
 }
 
 function restValue(value: unknown): unknown {
@@ -134,13 +134,13 @@ function restVars(meta: Record<string, unknown>): FigmaVar[] {
 
     const scopes = Array.isArray(item.scopes) ? item.scopes.map(String) : [];
     out.push({
-      key: item.id,
       collection: String(collection?.name ?? ""),
-      name: item.name,
-      type: String(item.resolvedType) as FigmaType,
-      scopes,
-      light: valueIn(picked.light),
       dark: valueIn(picked.dark),
+      key: item.id,
+      light: valueIn(picked.light),
+      name: item.name,
+      scopes,
+      type: String(item.resolvedType) as FigmaType,
     });
   }
 
@@ -148,18 +148,18 @@ function restVars(meta: Record<string, unknown>): FigmaVar[] {
 }
 
 const PLUGIN_TYPES: Record<string, FigmaType> = {
-  color: "COLOR",
-  number: "FLOAT",
-  float: "FLOAT",
-  string: "STRING",
   boolean: "BOOLEAN",
+  color: "COLOR",
+  float: "FLOAT",
+  number: "FLOAT",
+  string: "STRING",
 };
 
 function pluginValue(
   variable: Record<string, unknown>,
   collection: string
 ): unknown {
-  const value = variable.value;
+  const { value } = variable;
 
   if (
     variable.isAlias !== true &&
@@ -210,13 +210,13 @@ function pluginVars(collections: Record<string, unknown>[]): FigmaVar[] {
         : [];
 
       out.push({
-        key: `${name}/${varName}`,
         collection: name,
-        name: varName,
-        type: PLUGIN_TYPES[String(variable.type).toLowerCase()] ?? "STRING",
-        scopes,
-        light: pluginValue(variable, name),
         dark: darkVar ? pluginValue(darkVar, name) : undefined,
+        key: `${name}/${varName}`,
+        light: pluginValue(variable, name),
+        name: varName,
+        scopes,
+        type: PLUGIN_TYPES[String(variable.type).toLowerCase()] ?? "STRING",
       });
     }
   }
@@ -380,7 +380,7 @@ function place(
     }
   }
 
-  at[path[path.length - 1] ?? "x"] = node;
+  at[path.at(-1) ?? "x"] = node;
 }
 
 export function figmaToDtcg(file: Record<string, unknown>): FigmaConversion {
@@ -422,5 +422,5 @@ export function figmaToDtcg(file: Record<string, unknown>): FigmaConversion {
     ? list(meta.variableCollections).length
     : (collections?.length ?? 0);
 
-  return { tree, skipped, collections: collectionCount };
+  return { collections: collectionCount, skipped, tree };
 }

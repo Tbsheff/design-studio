@@ -23,12 +23,12 @@ const valueSchema = z.string().trim().min(1).max(MAX_VALUE);
 
 const changeSchema = z
   .object({
+    darkValue: valueSchema.nullable().optional(),
     path: z
       .string()
       .max(MAX_PATH)
       .regex(PATH_PATTERN, "path must look like color.primary"),
     value: valueSchema.optional(),
-    darkValue: valueSchema.nullable().optional(),
   })
   .strict()
   .refine(

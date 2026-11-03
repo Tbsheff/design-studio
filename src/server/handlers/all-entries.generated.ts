@@ -14,7 +14,7 @@ import { OrgScopeEntries } from "./org-scope/handlers.js";
 import { PackEntries } from "./pack/handlers.js";
 import { ProjectEntries } from "./project/handlers.js";
 import { PublishEntries } from "./publish/handlers.js";
-import { RunsEntries } from "./runs/handlers.js";
+import { RunEntries } from "./run/handlers.js";
 import { SessionEntries } from "./session/handlers.js";
 import { ShareEntries } from "./share/handlers.js";
 import { ShipEntries } from "./ship/handlers.js";
@@ -40,7 +40,7 @@ const ALL_ENTRIES = {
   pack: PackEntries,
   project: ProjectEntries,
   publish: PublishEntries,
-  runs: RunsEntries,
+  run: RunEntries,
   session: SessionEntries,
   share: ShareEntries,
   ship: ShipEntries,

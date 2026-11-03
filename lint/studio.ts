@@ -94,7 +94,7 @@ const NO_READ_CHANGES = [
 
 const LEGACY_DOM_QUERIES = ["src/ui/features/icons/use-icon-host.ts"];
 
-const LEGACY_RUNTIME_CALLS = ["src/server/http/components-routes.ts"];
+const LEGACY_CALLS = ["src/server/http/{app-runs,components}-routes.ts"];
 
 const LEGACY_APP_IMPORTS = [
   "cloud/api/src/http/{errors,groups/wire-errors,middleware/member-auth,groups/authorizer,middleware/viewer,middleware/org-grant,middleware/agent-auth,groups/projects,groups/gates}.ts",
@@ -130,6 +130,7 @@ const NEW_SERVER_FILES = [
 const LEGACY_DEEP_IMPORTS = ["src/server/direct-edit/direct-edit-ops.ts"];
 
 const LEGACY_LIST_PAGES = [
+  "src/shared/actions/run/list.ts",
   "src/shared/actions/canvas/{list-flow-links,list-flow-params,list-frame-states,list-implicit-links,list-links}.ts",
   "src/shared/actions/comment/search-mention.ts",
   "src/shared/actions/connection/{list-activity,list-approvals}.ts",
@@ -157,6 +158,7 @@ const TENANT_SQL_FILES = [
 ];
 
 const LEGACY_RUNTIME_SLOTS = [
+  "src/server/run-log/run-log-runtime.ts",
   "src/server/app/dev-server-runtime.ts",
   "src/server/canvas/links/link-runtime.ts",
   "src/server/comments/comment-core.ts",
@@ -269,7 +271,7 @@ const studio: OxlintOverride[] = [
     },
   },
   {
-    excludeFiles: [...SERVER_TESTS, ...LEGACY_RUNTIME_CALLS],
+    excludeFiles: [...SERVER_TESTS, ...LEGACY_CALLS],
     files: ADAPTER_FILES,
     rules: { "studio/no-adapter-runtime-call": "error" },
   },

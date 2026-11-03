@@ -14,7 +14,7 @@ import { OrgScopeActions } from "./org-scope/index.js";
 import { PackActions } from "./pack/index.js";
 import { ProjectActions } from "./project/index.js";
 import { PublishActions } from "./publish/index.js";
-import { RunsActions } from "./runs/index.js";
+import { RunActions } from "./run/index.js";
 import { SessionActions } from "./session/index.js";
 import { ShareActions } from "./share/index.js";
 import { ShipActions } from "./ship/index.js";
@@ -40,7 +40,7 @@ const ALL_ACTIONS = {
   pack: PackActions,
   project: ProjectActions,
   publish: PublishActions,
-  runs: RunsActions,
+  run: RunActions,
   session: SessionActions,
   share: ShareActions,
   ship: ShipActions,

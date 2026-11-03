@@ -1,12 +1,35 @@
 import { useSyncExternalStore } from "react";
 
+import { routes as runsRoutes } from "../shared/actions/run/routes.js";
 import type { RunSummary } from "../shared/contracts";
-import { json } from "./api";
+import { call } from "./platform/http";
 
-export function renameRun(runId: string, title: string): Promise<RunSummary> {
-  return json<RunSummary>("PATCH", `/api/runs/${encodeURIComponent(runId)}`, {
-    title,
-  });
+interface PageBody {
+  readonly nextBefore: number | null;
+  readonly runs: readonly RunWire[];
+}
+
+type RunWire = RunSummary | { readonly id: string };
+
+const isRunSummary = (value: RunWire): value is RunSummary =>
+  "id" in value && "status" in value && "request" in value;
+
+const toPage = (body: PageBody): RunPage => ({
+  nextBefore: body.nextBefore,
+  runs: body.runs.filter(isRunSummary),
+});
+
+export async function renameRun(
+  runId: string,
+  title: string
+): Promise<RunSummary> {
+  const renamed = await call(runsRoutes.renameRun, { runId, title });
+
+  if (!isRunSummary(renamed)) {
+    throw new Error("The studio returned a run without a request.");
+  }
+
+  return renamed;
 }
 
 export interface RunPage {
@@ -14,41 +37,38 @@ export interface RunPage {
   nextBefore: number | null;
 }
 
-export function listRunPage(
+export async function listRunPage(
   projectId: string,
   limit: number,
   before: number | null
 ): Promise<RunPage> {
-  const after = before === null ? "" : `&before=${before}`;
+  if (before === null) {
+    return toPage(await call(runsRoutes.listRun, { limit, projectId }));
+  }
 
-  return json<RunPage>(
-    "GET",
-    `/api/projects/${encodeURIComponent(projectId)}/runs?limit=${limit}${after}`
-  );
+  return toPage(await call(runsRoutes.listRun, { before, limit, projectId }));
 }
 
 export const SEARCH_LIMIT = 20;
 
-export function searchRunPage(
+export async function searchRunPage(
   directionId: string,
   query: string
 ): Promise<RunPage> {
   const projectId = history?.projectId;
 
   if (!projectId) {
-    return Promise.resolve({ runs: [], nextBefore: null });
+    return { runs: [], nextBefore: null };
   }
 
-  const params = new URLSearchParams({
-    q: query,
-    direction: directionId,
-    limit: String(SEARCH_LIMIT),
-    light: "1",
-  });
-
-  return json<RunPage>(
-    "GET",
-    `/api/projects/${encodeURIComponent(projectId)}/runs?${params.toString()}`
+  return toPage(
+    await call(runsRoutes.listRun, {
+      direction: directionId,
+      limit: SEARCH_LIMIT,
+      light: "1",
+      q: query,
+      projectId,
+    })
   );
 }
 

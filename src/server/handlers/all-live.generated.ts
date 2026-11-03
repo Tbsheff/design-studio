@@ -14,7 +14,7 @@ import { OrgScopeLive } from "./org-scope/live.js";
 import { PackLive } from "./pack/live.js";
 import { ProjectLive } from "./project/live.js";
 import { PublishLive } from "./publish/live.js";
-import { RunsLive } from "./runs/live.js";
+import { RunLive } from "./run/live.js";
 import { SessionLive } from "./session/live.js";
 import { ShareLive } from "./share/live.js";
 import { ShipLive } from "./ship/live.js";
@@ -40,7 +40,7 @@ const ALL_LIVE = {
   pack: PackLive,
   project: ProjectLive,
   publish: PublishLive,
-  runs: RunsLive,
+  run: RunLive,
   session: SessionLive,
   share: ShareLive,
   ship: ShipLive,

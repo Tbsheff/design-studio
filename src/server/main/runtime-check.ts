@@ -15,7 +15,7 @@ import type { OrgScopeEntries } from "../handlers/org-scope/handlers.js";
 import type { PackEntries } from "../handlers/pack/handlers.js";
 import type { ProjectEntries } from "../handlers/project/handlers.js";
 import type { PublishEntries } from "../handlers/publish/handlers.js";
-import type { RunsEntries } from "../handlers/runs/handlers.js";
+import type { RunEntries } from "../handlers/run/handlers.js";
 import type { SessionEntries } from "../handlers/session/handlers.js";
 import type { ShareEntries } from "../handlers/share/handlers.js";
 import type { ShipEntries } from "../handlers/ship/handlers.js";
@@ -72,7 +72,7 @@ interface EntriesByDomain {
   readonly packs: typeof PackEntries;
   readonly projects: typeof ProjectEntries;
   readonly publish: typeof PublishEntries;
-  readonly runs: typeof RunsEntries;
+  readonly run: typeof RunEntries;
   readonly session: typeof SessionEntries;
   readonly share: typeof ShareEntries;
   readonly ship: typeof ShipEntries;

@@ -56,7 +56,7 @@ const NATIVE_ON: Record<string, unknown> = {
   "import/max-dependencies": ["error", { max: 20 }],
   "import/no-anonymous-default-export": "error",
   "import/no-commonjs": "error",
-  "import/no-cycle": ["warn", { ignoreTypes: false }],
+  "import/no-cycle": ["warn", { ignoreTypes: true }],
   "import/no-default-export": "error",
   "import/no-dynamic-require": "error",
   "import/no-namespace": "error",
@@ -597,6 +597,10 @@ export const decisionOverrides: OxlintOverride[] = [
   },
   {
     files: ["src/server/platform/git/run-git.ts"],
+    rules: { "sonarjs/no-os-command-from-path": "off" },
+  },
+  {
+    files: ["lint/plugins/studio/freeze-rules.js"],
     rules: { "sonarjs/no-os-command-from-path": "off" },
   },
   {

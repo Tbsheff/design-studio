@@ -130,7 +130,6 @@ const NEW_SERVER_FILES = [
 const LEGACY_DEEP_IMPORTS = ["src/server/direct-edit/direct-edit-ops.ts"];
 
 const LEGACY_LIST_PAGES = [
-  "src/shared/actions/run/list.ts",
   "src/shared/actions/canvas/{list-flow-links,list-flow-params,list-frame-states,list-implicit-links,list-links}.ts",
   "src/shared/actions/comment/search-mention.ts",
   "src/shared/actions/connection/{list-activity,list-approvals}.ts",
@@ -209,7 +208,7 @@ const studio: OxlintOverride[] = [
   },
   {
     files: [
-      "lint/plugins/studio/{facts,tool-facts,dead-code-rules,import-rules}.js",
+      "lint/plugins/studio/{facts,tool-facts,dead-code-rules,import-rules,boundary-rules,freeze-rules}.js",
     ],
     rules: { "node/no-sync": "off" },
   },

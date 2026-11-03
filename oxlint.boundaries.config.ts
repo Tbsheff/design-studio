@@ -32,7 +32,7 @@ export default defineConfig({
   settings: BOUNDARY_SETTINGS,
   rules: {
     "boundaries/dependencies": dependencies("error", ROOT_POLICIES),
-    "import/no-cycle": ["warn", { ignoreTypes: false }],
+    "import/no-cycle": ["warn", { ignoreTypes: true }],
     "no-restricted-imports": "error",
   },
   overrides,

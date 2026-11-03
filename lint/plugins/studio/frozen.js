@@ -39,7 +39,6 @@ const FROZEN_AREAS = new Set([
 const FROZEN_EXEMPTIONS = new Set([
   "src/server/http/{app-runs,components}-routes.ts",
   "src/server/run-log/run-log-runtime.ts",
-  "src/shared/actions/run/list.ts",
   "cloud/api/src/mcp/mount.ts",
   "cloud/api/src/http/middleware/auth-calls.ts",
   "cloud/api/src/http/groups/gates.ts",

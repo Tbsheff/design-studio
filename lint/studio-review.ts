@@ -13,6 +13,13 @@ const FEATURE_UI_FILES = [
   "src/ui/features/**/*.tsx",
 ];
 
+const ADAPTER_IMPORT_FILES = [
+  "src/server/http/**/*.ts",
+  "src/server/mcp/**/*.ts",
+  "src/server/agent-tools/**/*.ts",
+  "src/server/variations/**/*.ts",
+];
+
 const PLATFORM_FILES = "cloud/api/src/platform/**";
 
 const PROBE_FILES = "cloud/api/src/tenant/probes/**";
@@ -147,6 +154,56 @@ const studioReview: OxlintOverride[] = [
     excludeFiles: [...ORG_MIDDLEWARE, ...LEGACY_ORG_PROVIDERS],
     files: CLOUD_FILES,
     rules: { "studio/no-current-org-provide": "error" },
+  },
+  {
+    excludeFiles: SERVER_TESTS,
+    files: SERVER_FILES,
+    rules: {
+      "studio/no-action-name-reuse": "error",
+      "studio/server-one-runtime": "error",
+      "studio/server-run-entry": "error",
+      "studio/span-name-match": "error",
+    },
+  },
+  {
+    excludeFiles: SERVER_TESTS,
+    files: ADAPTER_IMPORT_FILES,
+    rules: { "studio/adapter-import-index": "error" },
+  },
+  {
+    files: ["src/shared/actions/**/*.ts"],
+    rules: {
+      "studio/no-json-schema": "error",
+      "studio/project-scope-needs": "error",
+    },
+  },
+  {
+    files: FEATURE_UI_FILES,
+    rules: {
+      "studio/no-feature-fetch": "error",
+      "studio/no-feature-interval": "error",
+    },
+  },
+  {
+    files: ["lint/plugins/studio/frozen.js", "lint/day-one.ts"],
+    rules: { "studio/frozen-pin": "error" },
+  },
+  {
+    excludeFiles: SERVER_TESTS,
+    files: [
+      "src/server/run-log/run-log-{store,writer,runtime,controls,reads}.ts",
+    ],
+    rules: {
+      "studio/no-awaited-return-type": "error",
+      "studio/no-feature-async": "error",
+    },
+  },
+  {
+    files: ["src/server/agent/{agent-sdk-client,run-runner}.ts"],
+    rules: {
+      "studio/no-undefined-type": "error",
+      "studio/readonly-field": "error",
+    },
   },
 ];
 

@@ -38,7 +38,10 @@ import {
   withFinalText,
 } from "../../shared/run-parts.js";
 import { runTitle } from "../../shared/version-title.js";
-import { createCommandRuleStore } from "../store/command-rules.js";
+import {
+  createCommandRuleStore,
+  isOrgCapAllowed,
+} from "../store/command-rules.js";
 import { BadRequestError } from "../store/errors.js";
 import type {
   AgentRunContext,
@@ -57,7 +60,13 @@ import { EDIT_TOOL_NAMES } from "./permissions.js";
 import type { RunFibers } from "./run-runner.js";
 import { createTodoTracker, evidenceOf } from "./todo-tracker.js";
 import type { TodoEvidence } from "./todo-tracker.js";
-import type { CommandRules, PermissionAsk } from "./types.js";
+import type {
+  CommandRules,
+  DevicePolicy,
+  DevicePolicyInput,
+  DevicePolicySource,
+  PermissionAsk,
+} from "./types.js";
 
 export interface DriverSink {
   textDelta(text: string): void;
@@ -115,6 +124,7 @@ export interface DriverInput {
   inbox?: RunInbox;
   ask?: (request: PermissionAsk) => Promise<PermissionDecision>;
   commandRules?: CommandRules;
+  devicePolicy?: DevicePolicy;
   baseFile?: (relative: string) => Promise<Uint8Array | null>;
 }
 
@@ -158,6 +168,7 @@ interface LifecycleDeps {
   versions: VersionStore;
   beforeCommit?: (project: Project, direction: Direction) => Promise<void>;
   fibers?: RunFibers | null;
+  devicePolicy?: DevicePolicySource;
 }
 
 export const EMPTY_USAGE: RunUsage = {
@@ -758,11 +769,30 @@ export function createRunLifecycle(
       }
     >();
     const ruleStore = createCommandRuleStore(deps.projects.projectDir);
+    const policyRead: Promise<DevicePolicyInput | null> =
+      deps.devicePolicy?.read(projectId).catch(() => null) ??
+      Promise.resolve(null);
+    const toDevicePolicy = (input: DevicePolicyInput | null): DevicePolicy => ({
+      allowBash: isOrgCapAllowed(
+        input?.capAllowBash ?? null,
+        input?.role ?? null,
+        ctx.project.settings.allowBash
+      ),
+      allowInstall: isOrgCapAllowed(
+        input?.capAllowInstall ?? null,
+        input?.role ?? null,
+        ctx.project.settings.allowInstall
+      ),
+    });
     const commandRules: CommandRules = {
-      allows: async (command) =>
-        anyRuleMatches(await ruleStore.list(projectId, null), command),
+      allows: async (command) => {
+        const policy = await policyRead;
+        const rules = await ruleStore.list(projectId, policy?.scope ?? null);
+        return anyRuleMatches(rules, command);
+      },
       remember: async (rule) => {
-        await ruleStore.add(projectId, rule, null);
+        const policy = await policyRead;
+        await ruleStore.add(projectId, rule, policy?.scope ?? null);
       },
     };
     const deniedTools = new Set<string>();
@@ -922,6 +952,7 @@ export function createRunLifecycle(
       let failure: string | null = null;
       try {
         const prior = await priorSessionFor(lean, runsDir, ctx.direction);
+        const devicePolicy = toDevicePolicy(await policyRead);
         outcome = await driver({
           ctx: driverCtx,
           runId,
@@ -932,6 +963,7 @@ export function createRunLifecycle(
           inbox,
           ask,
           commandRules,
+          devicePolicy,
           baseFile,
         });
       } catch (error) {

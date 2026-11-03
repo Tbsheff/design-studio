@@ -8,6 +8,10 @@ import type { ResolvedRunConfig } from "../../shared/run-levels.js";
 import type { FrameStateDeps } from "../canvas/app-flow/frame-state-service.js";
 import type { CanvasService } from "../canvas/service.js";
 import type { ProbeRect } from "../preview/quality-probe.js";
+import type {
+  CommandRuleRole,
+  CommandRuleScope,
+} from "../store/command-rules.js";
 import type { LoopLog } from "./polish-loop.js";
 import type { RunScreen } from "./screens.js";
 
@@ -52,6 +56,22 @@ interface CriticImage {
 
 type PermissionAsk = Omit<PermissionRequest, "id">;
 
+interface DevicePolicy {
+  readonly allowBash: boolean;
+  readonly allowInstall: boolean;
+}
+
+interface DevicePolicyInput {
+  readonly capAllowBash: boolean | null;
+  readonly capAllowInstall: boolean | null;
+  readonly role: CommandRuleRole | null;
+  readonly scope: CommandRuleScope | null;
+}
+
+interface DevicePolicySource {
+  readonly read: (projectId: string) => Promise<DevicePolicyInput>;
+}
+
 interface CommandRules {
   allows: (command: string) => Promise<boolean>;
   remember: (rule: string) => Promise<void>;
@@ -61,6 +81,9 @@ export type {
   BaselineShot,
   CommandRules,
   CriticImage,
+  DevicePolicy,
+  DevicePolicyInput,
+  DevicePolicySource,
   PermissionAsk,
   RunToolState,
 };

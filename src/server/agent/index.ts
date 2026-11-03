@@ -22,6 +22,7 @@ import { createRunLifecycle } from "./lifecycle.js";
 import type { RunDriver } from "./lifecycle.js";
 import type { RunFibers } from "./run-runner.js";
 import type { SdkDriverOptions } from "./sdk-driver.js";
+import type { DevicePolicySource } from "./types.js";
 
 interface AgentRunnerDeps {
   config: ServerConfig;
@@ -34,6 +35,7 @@ interface AgentRunnerDeps {
   layerLocks?: LayerLockStore | null;
   frameStates?: FrameStateDeps | null;
   runtime?: StudioRuntime | null;
+  devicePolicy?: DevicePolicySource;
 }
 
 function claudeExecutableOption(): { claudeExecutable?: string } {

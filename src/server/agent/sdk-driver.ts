@@ -610,8 +610,14 @@ function buildPolicy(
       ...(config.preset.skills ? {} : { skillsOff: SKILLS_OFF_MESSAGE }),
       workTree: ctx.direction.workTree,
       mode: ctx.request.mode,
-      allowBash: shellAllowed && settings.allowBash,
-      allowInstall: shellAllowed && settings.allowInstall,
+      allowBash:
+        shellAllowed &&
+        settings.allowBash &&
+        (input.devicePolicy?.allowBash ?? true),
+      allowInstall:
+        shellAllowed &&
+        settings.allowInstall &&
+        (input.devicePolicy?.allowInstall ?? true),
       skills: skills.enabled,
       skillDirs: skills.readableDirs,
       ...(ctx.project.designSystemFor ? { readOnlyDirs: [SOURCE_DIR] } : {}),

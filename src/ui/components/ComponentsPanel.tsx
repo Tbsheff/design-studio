@@ -6,6 +6,7 @@ import type {
   SelectionContext,
 } from "../../shared/contracts";
 import type { InsertableComponent } from "../../shared/insert";
+import { GalleryHost, galleryCopy } from "../features/gallery";
 import { Icon } from "../kit/Icon";
 import { componentThumb, type ComponentList } from "../useComponents";
 import {
@@ -187,9 +188,10 @@ interface CardProps {
     component: InsertableComponent,
     at: { x: number; y: number }
   ) => void;
+  onGallery: (component: InsertableComponent) => void;
 }
 
-function Card({ item, props, drag, onInsertMenu }: CardProps) {
+function Card({ item, props, drag, onInsertMenu, onGallery }: CardProps) {
   const { info, insert } = item;
   const tip = insert
     ? `Click to mention @${info.name}. Drag onto the canvas to insert it.`
@@ -241,6 +243,18 @@ function Card({ item, props, drag, onInsertMenu }: CardProps) {
           <Icon name="plus" size={14} />
         </button>
       )}
+      {insert && (
+        <button
+          type="button"
+          className="icon-btn small cmp-insert"
+          aria-label={`${galleryCopy.open}: ${info.name}`}
+          data-tip={galleryCopy.openTip}
+          data-testid="component-gallery"
+          onClick={() => onGallery(insert)}
+        >
+          <Icon name="layers" size={14} />
+        </button>
+      )}
     </li>
   );
 }
@@ -253,6 +267,7 @@ export function ComponentsPanel(props: Props) {
     component: InsertableComponent;
     at: { x: number; y: number };
   } | null>(null);
+  const [gallery, setGallery] = useState<InsertableComponent | null>(null);
   const drag = useComponentDrag();
   const { all, shown, error, retry } = useItems(props, canInsert, query);
   const count = all?.length ?? 0;
@@ -338,12 +353,20 @@ export function ComponentsPanel(props: Props) {
                     props={props}
                     drag={drag}
                     onInsertMenu={(component, at) => setMenu({ component, at })}
+                    onGallery={setGallery}
                   />
                 ))}
               </ul>
             </section>
           ))}
       </div>
+      <GalleryHost
+        component={gallery}
+        directionId={directionId}
+        projectId={props.projectId}
+        selection={props.selection}
+        onClose={() => setGallery(null)}
+      />
       {count > 0 && (
         <p className="cmp-foot">
           {canInsert

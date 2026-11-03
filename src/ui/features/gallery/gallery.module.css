@@ -1,0 +1,85 @@
+.panel {
+  display: grid;
+  gap: var(--s-2);
+  padding: var(--s-3);
+  border-top: 1px solid var(--line);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.title {
+  margin-right: auto;
+  font-size: var(--t-sm);
+}
+
+.primary,
+.secondary {
+  height: 24px;
+  padding: 0 var(--s-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-control-sm);
+  font: inherit;
+  font-size: var(--t-xs);
+  cursor: pointer;
+}
+
+.primary {
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+.error {
+  color: var(--danger-text);
+  font-size: var(--t-xs);
+}
+
+.note {
+  color: var(--text-dim);
+  font-size: var(--t-xs);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: var(--s-1);
+}
+
+.cell {
+  display: grid;
+  gap: 2px;
+  min-height: 40px;
+  padding: var(--s-1) var(--s-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-control-sm);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: var(--t-xs);
+  text-align: left;
+  cursor: pointer;
+}
+
+.cell[data-selected="true"] {
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+}
+
+.failing {
+  border-color: var(--danger-text);
+}
+
+.cellLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cellMeta {
+  color: var(--text-dim);
+}

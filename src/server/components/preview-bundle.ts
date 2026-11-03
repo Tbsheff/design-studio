@@ -18,6 +18,13 @@ export interface BundleRequest {
   appDir: string;
 }
 
+export interface GalleryBundleRequest {
+  file: string;
+  cells: { id: string; tree: SampleNode }[];
+  root: string;
+  appDir: string;
+}
+
 export class BundleError extends Error {}
 
 const REACT_SPEC = /^(react|react-dom)(\/.*)?$/;
@@ -138,6 +145,40 @@ try {
 `;
 }
 
+function galleryEntrySource(request: GalleryBundleRequest): string {
+  const cells = request.cells
+    .map(
+      (cell) => `[${JSON.stringify(cell.id)}, () => ${nodeSource(cell.tree)}]`
+    )
+    .join(",\n");
+
+  return `import * as React from 'react';
+import { createRoot } from 'react-dom/client';
+import * as Module from ${JSON.stringify(request.file)};
+function part(name) {
+  const value = Module[name];
+  if (typeof value === 'function' || (typeof value === 'object' && value !== null)) return value;
+  throw new Error('The file does not export ' + name + ' as a component');
+}
+window.__studioGalleryErrors = window.__studioGalleryErrors || {};
+class Boundary extends React.Component {
+  constructor(props) { super(props); this.state = { failed: false }; }
+  static getDerivedStateFromError() { return { failed: true }; }
+  componentDidCatch(error) { window.__studioGalleryErrors[this.props.cell] = String((error && error.message) || error); }
+  render() { return this.state.failed ? null : this.props.children; }
+}
+for (const [id, make] of [${cells}]) {
+  const host = document.getElementById('gc-' + id);
+  if (!host) continue;
+  try {
+    createRoot(host).render(React.createElement(Boundary, { cell: id }, make()));
+  } catch (error) {
+    window.__studioGalleryErrors[id] = String((error && error.message) || error);
+  }
+}
+`;
+}
+
 function firstError(
   errors: { text: string; location: { file: string; line: number } | null }[]
 ): string {
@@ -152,13 +193,16 @@ function firstError(
     : error.text;
 }
 
-export async function bundlePreview(request: BundleRequest): Promise<string> {
+async function buildBundle(
+  contents: string,
+  request: { root: string; appDir: string }
+): Promise<string> {
   const { build } = await import("esbuild");
 
   try {
     const result = await build({
       stdin: {
-        contents: entrySource(request),
+        contents,
         resolveDir: request.appDir,
         loader: "jsx",
         sourcefile: "studio-component-preview.jsx",
@@ -209,4 +253,12 @@ export async function bundlePreview(request: BundleRequest): Promise<string> {
           : String(error)
     );
   }
+}
+
+export function bundlePreview(request: BundleRequest): Promise<string> {
+  return buildBundle(entrySource(request), request);
+}
+
+export function bundleGallery(request: GalleryBundleRequest): Promise<string> {
+  return buildBundle(galleryEntrySource(request), request);
 }

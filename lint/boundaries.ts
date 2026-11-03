@@ -131,6 +131,7 @@ export const LAYERS: Layer[] = [
       "viewport",
       "image-generate",
       "token-sweep",
+      "gallery",
       "state-styles",
       "breakpoints",
       "style-scope",

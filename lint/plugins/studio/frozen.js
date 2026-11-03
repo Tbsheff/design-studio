@@ -33,6 +33,7 @@ const FROZEN_AREAS = new Set([
   "image-generate",
   "token-sweep",
   "project-ops",
+  "gallery",
 ]);
 
 const FROZEN_EXEMPTIONS = new Set([
@@ -75,6 +76,10 @@ const FROZEN_EXEMPTIONS = new Set([
 ]);
 
 const LEGACY_OVERRIDES = new Set([
+  "src/shared/actions/gallery/*.ts",
+  "src/server/handlers/gallery/*.ts",
+  "src/server/gallery/*.ts",
+  "src/server/gallery/engine/*.ts",
   "src/shared/actions/token/*.ts",
   "src/server/handlers/token/*.ts",
   "src/server/token-sweep/*.ts",

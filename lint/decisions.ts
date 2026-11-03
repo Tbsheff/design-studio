@@ -286,8 +286,18 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/server/handlers/token/*.ts",
       "src/server/token-sweep/*.ts",
       "src/ui/features/token-sweep/deps.ts",
+      "src/shared/actions/gallery/*.ts",
+      "src/shared/actions/gallery/errors/status.ts",
+      "src/server/handlers/gallery/*.ts",
+      "src/server/gallery/*.ts",
+      "src/server/gallery/engine/*.ts",
+      "src/ui/features/gallery/deps.ts",
     ],
     rules: { "import/no-relative-parent-imports": "off" },
+  },
+  {
+    files: ["src/server/gallery/engine/page.ts"],
+    rules: { "github/unescaped-html-literal": "off" },
   },
   {
     files: ["src/server/image-generate/openai.ts"],
@@ -323,7 +333,10 @@ export const decisionOverrides: OxlintOverride[] = [
     rules: { "no-magic-numbers": "off" },
   },
   {
-    files: ["src/server/viewport/create-matrix.ts"],
+    files: [
+      "src/server/gallery/create-gallery.ts",
+      "src/server/viewport/create-matrix.ts",
+    ],
     rules: { "id-length": "off" },
   },
   {

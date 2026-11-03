@@ -1,6 +1,7 @@
 import type { Hono } from "hono";
 
 import { bindLinkRuntime } from "../canvas/index.js";
+import { bindGalleryRuntime } from "../gallery/index.js";
 import { bindViewportRuntime } from "../viewport/index.js";
 import type { AppContext } from "./app-context.js";
 import { readBody } from "./app-request.js";
@@ -25,6 +26,7 @@ const registerAppCanvasRoutes = (app: Hono, ctx: AppContext): void => {
     loadDirection,
     preview,
   });
+  bindGalleryRuntime({ canvas, loadDirection, preview });
   bindLinkRuntime({
     canvas,
     frameStates,

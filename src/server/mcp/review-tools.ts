@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { applyReviewFixDirectEdit } from "../../shared/actions/direct-edit/apply-review-fix.js";
+import { runReviewDirectEdit } from "../../shared/actions/direct-edit/run-review.js";
 import {
   REVIEW_FIX_MAX,
   type ReviewFinding,
@@ -7,9 +9,9 @@ import {
   type ReviewResult,
 } from "../../shared/review.js";
 import { frameRef } from "../canvas/tools.js";
-import { loadTarget, refuseWhileRunning, studioCall } from "./edit-deps.js";
+import { callAction } from "./action-call.js";
+import { loadTarget, refuseWhileRunning } from "./edit-guards.js";
 import {
-  base,
   defineTool,
   directionId,
   ok,
@@ -115,17 +117,14 @@ const reviewFrame = defineTool(
 
     const size = input.viewport ? VIEWPORTS[input.viewport] : {};
 
-    const review = await studioCall<ReviewResult>(
-      deps,
-      "POST",
-      `${base(project, direction.id)}/review`,
-      {
-        ...(input.frame ? { frame: input.frame } : {}),
-        ...(input.path ? { path: input.path } : {}),
-        ...(input.selector ? { selector: input.selector } : {}),
-        ...size,
-      }
-    );
+    const review = await callAction<ReviewResult>(deps, runReviewDirectEdit, {
+      ...(input.frame ? { frame: input.frame } : {}),
+      ...(input.path ? { path: input.path } : {}),
+      ...(input.selector ? { selector: input.selector } : {}),
+      ...size,
+      directionId: direction.id,
+      projectId: project.id,
+    });
 
     const fixable = review.findings.filter((finding) => finding.fix).length;
 
@@ -160,11 +159,15 @@ const applyFix = defineTool(
     refuseWhileRunning(deps, project, direction);
     const ids = input.findingIds ?? [input.findingId ?? ""];
 
-    const result = await studioCall<ReviewFixResult>(
+    const result = await callAction<ReviewFixResult>(
       deps,
-      "POST",
-      `${base(project, direction.id)}/review/fix`,
-      { findingIds: ids, ...(input.allowShared ? { allowShared: true } : {}) }
+      applyReviewFixDirectEdit,
+      {
+        findingIds: ids,
+        ...(input.allowShared ? { allowShared: true } : {}),
+        directionId: direction.id,
+        projectId: project.id,
+      }
     );
 
     const warning = result.shared

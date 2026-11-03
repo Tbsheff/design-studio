@@ -8,7 +8,7 @@ interface EditOrigin {
 
 const store = new AsyncLocalStorage<EditOrigin>();
 
-const withMcpOrigin = <Result>(
+const withCallOrigin = <Result>(
   client: string,
   task: () => Promise<Result>
 ): Promise<Result> => store.run({ client }, task);
@@ -36,5 +36,5 @@ export {
   isOutsideRequest,
   isOwnEdit,
   stampOrigin,
-  withMcpOrigin,
+  withCallOrigin,
 };

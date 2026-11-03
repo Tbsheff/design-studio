@@ -3,6 +3,7 @@ import path from "node:path";
 
 import { z } from "zod";
 
+import { setImageDirectEdit } from "../../shared/actions/direct-edit/set-image.js";
 import type { Direction, Project } from "../../shared/contracts.js";
 import {
   IMAGE_ALT_MAX,
@@ -14,15 +15,14 @@ import {
 } from "../../shared/image.js";
 import { probeOwners } from "../components/owner-probe.js";
 import { imageFromPath } from "../direct-edit/image-source.js";
+import { callAction } from "./action-call.js";
 import {
   EditError,
   loadTarget,
   refuseWhileRunning,
-  studioCall,
   type EditDeps,
-} from "./edit-deps.js";
+} from "./edit-guards.js";
 import {
-  base,
   defineTool,
   directionId,
   ok,
@@ -238,12 +238,11 @@ const setImage = defineTool(
     let result: SetImageResult;
 
     try {
-      result = await studioCall<SetImageResult>(
-        deps,
-        "POST",
-        `${base(project, direction.id)}/image`,
-        body
-      );
+      result = await callAction<SetImageResult>(deps, setImageDirectEdit, {
+        ...body,
+        directionId: direction.id,
+        projectId: project.id,
+      });
     } catch (error) {
       throw new EditError(
         error instanceof Error ? error.message : String(error)

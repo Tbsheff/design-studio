@@ -1,3 +1,4 @@
+import { applyDirectEdit } from "../../../shared/actions/direct-edit/apply.js";
 import type {
   DirectEditResult,
   SelectionContext,
@@ -9,16 +10,11 @@ import {
   textComesFromData,
 } from "../../direct-edit/edit-site.js";
 import type { EditSite, EditSiteScope } from "../../direct-edit/edit-site.js";
+import { callAction } from "../action-call.js";
 import { editSummary } from "../activity-text.js";
+import { EditError, loadTarget, refuseWhileRunning } from "../edit-guards.js";
+import type { EditDeps } from "../edit-guards.js";
 import {
-  EditError,
-  loadTarget,
-  refuseWhileRunning,
-  studioCall,
-} from "../edit-deps.js";
-import type { EditDeps } from "../edit-deps.js";
-import {
-  base,
   hasClasses,
   ok,
   pageUrl,
@@ -48,7 +44,8 @@ interface EditCall {
   input: EditElementInput;
   scope: EditSiteScope;
   site: EditSite;
-  url: string;
+  directionId: string;
+  projectId: string;
 }
 
 const hasStyle = (input: EditElementInput): boolean =>
@@ -116,12 +113,11 @@ const retryOnComponent = async (
   };
 
   try {
-    return await studioCall<DirectEditResult>(
-      call.deps,
-      "POST",
-      call.url,
-      editBody(call.input, element, component)
-    );
+    return await callAction<DirectEditResult>(call.deps, applyDirectEdit, {
+      ...editBody(call.input, element, component),
+      directionId: call.directionId,
+      projectId: call.projectId,
+    });
   } catch {
     throw error;
   }
@@ -129,12 +125,11 @@ const retryOnComponent = async (
 
 const postEdit = async (call: EditCall): Promise<DirectEditResult> => {
   try {
-    return await studioCall<DirectEditResult>(
-      call.deps,
-      "POST",
-      call.url,
-      editBody(call.input, call.element, call.site)
-    );
+    return await callAction<DirectEditResult>(call.deps, applyDirectEdit, {
+      ...editBody(call.input, call.element, call.site),
+      directionId: call.directionId,
+      projectId: call.projectId,
+    });
   } catch (error) {
     if (!(error instanceof EditError)) {
       throw error;
@@ -176,9 +171,18 @@ const editElement = async (
     throw new EditError(site.error);
   }
 
-  const url = `${base(project, direction.id)}/direct-edit`;
+  const directionId = direction.id;
+  const projectId = project.id;
 
-  const result = await postEdit({ deps, element, input, scope, site, url });
+  const result = await postEdit({
+    deps,
+    directionId,
+    element,
+    input,
+    projectId,
+    scope,
+    site,
+  });
 
   const summary = editSummary(
     element.tag,

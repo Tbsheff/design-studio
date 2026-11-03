@@ -2,10 +2,11 @@ import { z } from "zod";
 
 import type { CanvasFile } from "../../shared/canvas-file.js";
 import type { Direction, Project, Version } from "../../shared/contracts.js";
-import { EditError, studioCall } from "./edit-deps.js";
-import type { EditDeps } from "./edit-deps.js";
+import { EditError } from "./edit-guards.js";
+import type { EditDeps } from "./edit-guards.js";
 import { defineTool, id, ok, projectId, versionActivity } from "./edit-kit.js";
 import type { ToolSpec } from "./edit-kit.js";
+import { keepVariant as keepVariantPort } from "./studio-ports.js";
 
 const keepInput = z
   .object({
@@ -44,15 +45,10 @@ const keepVariant = defineTool(
       );
     }
 
-    const kept = await studioCall<{
-      versionId: string;
-      directionId: string;
-      label: string;
-    }>(
-      deps,
-      "POST",
-      `/api/projects/${encodeURIComponent(project.id)}/variations/${encodeURIComponent(input.groupId)}/keep`,
-      { directionId: input.directionId }
+    const kept = await keepVariantPort(
+      project.id,
+      input.groupId,
+      input.directionId
     );
 
     const latest = await deps.projects.get(project.id);

@@ -1,17 +1,19 @@
+import { getDesignSystemDirectEdit } from "../../../shared/actions/direct-edit/get-design-system.js";
+import { updateTokensDirectEdit } from "../../../shared/actions/direct-edit/update-tokens.js";
 import type {
   CompiledTokenEntry,
   DesignSystemState,
   UpdateTokensResult,
 } from "../../../shared/contracts.js";
+import { callAction } from "../action-call.js";
 import {
   EditError,
   loadTarget,
   oneLine,
   refuseWhileRunning,
-  studioCall,
-} from "../edit-deps.js";
-import type { EditDeps } from "../edit-deps.js";
-import { base, ok, versionActivity } from "../edit-kit.js";
+} from "../edit-guards.js";
+import type { EditDeps } from "../edit-guards.js";
+import { ok, versionActivity } from "../edit-kit.js";
 import type { Done } from "../edit-kit.js";
 import { tokenResult } from "./direct-edit-result.js";
 import type { SetTokenInput } from "./direct-edit-schema.js";
@@ -80,17 +82,20 @@ const setToken = async (
 
   refuseWhileRunning(deps, project, direction);
 
-  const url = `${base(project, direction.id)}/design-system`;
+  const target = { directionId: direction.id, projectId: project.id };
 
-  const state = await studioCall<DesignSystemState>(deps, "GET", url);
+  const state = await callAction<DesignSystemState>(
+    deps,
+    getDesignSystemDirectEdit,
+    target
+  );
 
   const entry = findEntry(state, input.name);
 
-  const result = await studioCall<UpdateTokensResult>(
+  const result = await callAction<UpdateTokensResult>(
     deps,
-    "POST",
-    `${url}/tokens/update`,
-    { changes: [tokenChange(entry, input)] }
+    updateTokensDirectEdit,
+    { ...target, changes: [tokenChange(entry, input)] }
   );
 
   const after =

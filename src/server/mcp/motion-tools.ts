@@ -17,8 +17,8 @@ import { setMotion } from "../motion/set.js";
 import type { MotionSetDone } from "../motion/set.js";
 import { MotionError } from "../motion/site.js";
 import { specOf } from "../motion/spec.js";
-import { EditError, loadTarget, refuseWhileRunning } from "./edit-deps.js";
-import type { EditDeps } from "./edit-deps.js";
+import { EditError, loadTarget, refuseWhileRunning } from "./edit-guards.js";
+import type { EditDeps } from "./edit-guards.js";
 import {
   defineTool,
   directionId as directionIdSchema,

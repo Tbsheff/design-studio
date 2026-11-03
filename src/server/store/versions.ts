@@ -31,7 +31,11 @@ import {
   isRestoreKind,
   restoreTitle,
 } from "../../shared/version-title.js";
-import { isOutsideEdit, isOwnEdit, stampOrigin } from "../edit-origin.js";
+import {
+  isOutsideEdit,
+  isOwnEdit,
+  stampOrigin,
+} from "../platform/call-origin/index.js";
 import { ObjectStore, gitIdent } from "../platform/git/objects.js";
 import type { CommitInfo, TreeEntry } from "../platform/git/objects.js";
 import {

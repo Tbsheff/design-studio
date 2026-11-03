@@ -18,8 +18,8 @@ import type { IconEditScope, IconInsertResult } from "../icons/apply.js";
 import type { IconInsertRequest } from "../icons/insert.js";
 import { listIcons } from "../icons/list.js";
 import { IconError } from "../icons/set.js";
-import { EditError, loadTarget, refuseWhileRunning } from "./edit-deps.js";
-import type { EditDeps } from "./edit-deps.js";
+import { EditError, loadTarget, refuseWhileRunning } from "./edit-guards.js";
+import type { EditDeps } from "./edit-guards.js";
 import {
   defineTool,
   directionId as directionIdSchema,

@@ -5,6 +5,7 @@ import {
   cleanLockKeys,
 } from "../../shared/layer-locks.js";
 import { applyDelta } from "../layers/lock-probe.js";
+import { bindStudioPorts } from "../mcp/studio-ports.js";
 import { BadRequestError, NotFoundError } from "../store/errors.js";
 import type { LayerLockStore } from "../store/layer-locks.js";
 import type { StudioProjectStore } from "../store/projects.js";
@@ -20,6 +21,7 @@ export function registerLayerStateRoutes(
   deps: LayerStateRouteDeps
 ): void {
   const store = deps.layerLocks;
+  bindStudioPorts({ layerLocks: store });
 
   const direction = async (c: Context) => {
     const project = await deps.projects.get(c.req.param("pid") ?? "");

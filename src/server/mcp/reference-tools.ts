@@ -10,8 +10,8 @@ import {
 import type { ReferenceScore } from "../../shared/reference.js";
 import { compareToReference, mimeOfPath, scoreLines } from "../agent/index.js";
 import { findFrame, frameRef } from "../canvas/tools.js";
-import { EditError, loadTarget } from "./edit-deps.js";
-import type { EditDeps } from "./edit-deps.js";
+import { EditError, loadTarget } from "./edit-guards.js";
+import type { EditDeps } from "./edit-guards.js";
 import {
   defineTool,
   directionId,

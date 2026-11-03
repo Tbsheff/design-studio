@@ -7,7 +7,7 @@ import {
 } from "../direct-edit/save-queue.js";
 import { isKnownError } from "../platform/errors/index.js";
 import type { ActivityDraft } from "./activity.js";
-import { EditError, type EditDeps } from "./edit-deps.js";
+import { EditError, type EditDeps } from "./edit-guards.js";
 import type { Done, Meta, ToolSpec } from "./edit-kit.js";
 import { mcpErrorText } from "./error-copy.js";
 import { FolderError } from "./folders.js";

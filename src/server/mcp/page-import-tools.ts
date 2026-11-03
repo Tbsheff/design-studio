@@ -8,8 +8,8 @@ import {
   toImportRequest,
 } from "../page-import/index.js";
 import type { ImportCommit } from "../page-import/index.js";
-import { EditError, loadTarget, refuseWhileRunning } from "./edit-deps.js";
-import type { EditDeps } from "./edit-deps.js";
+import { EditError, loadTarget, refuseWhileRunning } from "./edit-guards.js";
+import type { EditDeps } from "./edit-guards.js";
 import {
   defineTool,
   directionId as directionIdSchema,

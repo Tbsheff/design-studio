@@ -1,16 +1,12 @@
+import { applyDirectEdit } from "../../../shared/actions/direct-edit/apply.js";
 import type {
   SourceLoc,
   StructureEditResult,
 } from "../../../shared/contracts.js";
-import { loadTarget, refuseWhileRunning, studioCall } from "../edit-deps.js";
-import type { EditDeps } from "../edit-deps.js";
-import {
-  base,
-  ok,
-  pageUrl,
-  sourceElement,
-  versionActivity,
-} from "../edit-kit.js";
+import { callAction } from "../action-call.js";
+import { loadTarget, refuseWhileRunning } from "../edit-guards.js";
+import type { EditDeps } from "../edit-guards.js";
+import { ok, pageUrl, sourceElement, versionActivity } from "../edit-kit.js";
 import type { Done } from "../edit-kit.js";
 import { structureResult } from "./direct-edit-result.js";
 import type { EditElementInput } from "./direct-edit-schema.js";
@@ -131,12 +127,11 @@ const structureElement = async (
 
   const targets = [element, ...more];
 
-  const result = await studioCall<StructureEditResult>(
-    deps,
-    "POST",
-    `${base(project, direction.id)}/direct-edit`,
-    structureBody(op, targets, into)
-  );
+  const result = await callAction<StructureEditResult>(deps, applyDirectEdit, {
+    ...structureBody(op, targets, into),
+    directionId: direction.id,
+    projectId: project.id,
+  });
 
   const summary = `${OP_WORDS[op]} ${countText(targets, element.tag)}${intoText(into)}`;
 

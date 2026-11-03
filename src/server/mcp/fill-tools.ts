@@ -18,8 +18,8 @@ import { getFill } from "../fill/get.js";
 import { setFill } from "../fill/set.js";
 import type { FillSetDone } from "../fill/set.js";
 import type { FillInput } from "../fill/spec.js";
-import { EditError, loadTarget, refuseWhileRunning } from "./edit-deps.js";
-import type { EditDeps } from "./edit-deps.js";
+import { EditError, loadTarget, refuseWhileRunning } from "./edit-guards.js";
+import type { EditDeps } from "./edit-guards.js";
 import {
   defineTool,
   directionId as directionIdSchema,

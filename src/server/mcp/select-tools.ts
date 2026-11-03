@@ -7,7 +7,7 @@ import {
 } from "../../shared/contracts.js";
 import { findFrame, frameRef } from "../canvas/tools.js";
 import type { PreviewService } from "../types.js";
-import { EditError, loadTarget, type EditDeps } from "./edit-deps.js";
+import { EditError, loadTarget, type EditDeps } from "./edit-guards.js";
 import {
   defineTool,
   directionId,

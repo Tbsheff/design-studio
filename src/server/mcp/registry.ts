@@ -16,7 +16,7 @@ import { toLegacyPrincipal } from "../store/principal.js";
 import type { Principal } from "../store/principal.js";
 import type { ApprovalQueue } from "./approvals.js";
 import { toToolResult } from "./tool-result.js";
-import type { TextResult } from "./tool-result.js";
+import type { ActionExit, TextResult } from "./tool-result.js";
 import type { ToolDef } from "./tool-types.js";
 
 type Group = Readonly<Record<string, AnyAction>>;
@@ -294,6 +294,21 @@ const actionCaller = (
   };
 };
 
+const runActionExit = (
+  runtime: StudioRuntime,
+  action: AnyAction,
+  args: WireArgs,
+  principal: Principal
+): Promise<ActionExit> => {
+  const runner = RUNNERS_BY_ID.get(action.id);
+
+  if (!runner) {
+    return Promise.reject(new Error(`unknown action ${action.id}`));
+  }
+
+  return runtime.runPromiseExit(runner.run(args, principal, "json"));
+};
+
 const isKnownTool = (tools: readonly ToolDef[], name: string): boolean =>
   isActionTool(name) || tools.some((tool) => tool.name === name);
 
@@ -330,6 +345,7 @@ export {
   isKnownTool,
   isReadActionTool,
   listActionTools,
+  runActionExit,
   toInputSchema,
 };
 

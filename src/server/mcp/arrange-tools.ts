@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { applyDirectEdit } from "../../shared/actions/direct-edit/apply.js";
 import {
   ALIGN_OPS,
   DISTRIBUTE_OPS,
@@ -15,15 +16,14 @@ import {
   measureTargets,
 } from "../direct-edit/arrange.js";
 import { DirectEditError } from "../direct-edit/errors.js";
+import { callAction } from "./action-call.js";
 import {
   EditError,
   loadTarget,
   refuseWhileRunning,
-  studioCall,
   type EditDeps,
-} from "./edit-deps.js";
+} from "./edit-guards.js";
 import {
-  base,
   defineTool,
   directionId,
   ok,
@@ -178,12 +178,11 @@ const arrange = defineTool(
       },
     };
 
-    const result = await studioCall<ArrangeResult>(
-      deps,
-      "POST",
-      `${base(target.project, target.direction.id)}/direct-edit`,
-      body
-    );
+    const result = await callAction<ArrangeResult>(deps, applyDirectEdit, {
+      ...body,
+      directionId: target.direction.id,
+      projectId: target.project.id,
+    });
 
     const output = {
       changed: result.changed,

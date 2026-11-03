@@ -555,7 +555,7 @@ const FILES = [
   "src/server/mcp/component-preview-tools.ts",
   "src/server/mcp/context-tools.ts",
   "src/server/mcp/doctor-tools.ts",
-  "src/server/mcp/edit-deps.ts",
+  "src/server/mcp/edit-guards.ts",
   "src/server/mcp/edit-kit.ts",
   "src/server/mcp/edit-tools.ts",
   "src/server/page-probe/element.ts",

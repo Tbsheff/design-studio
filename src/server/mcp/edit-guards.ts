@@ -13,11 +13,9 @@ import type { AgentRunner, EventBus } from "../types.js";
 import type { ActivityLog } from "./activity.js";
 import { APPROVAL_TIMEOUT_MS } from "./approvals.js";
 import type { ApprovalAsk, ApprovalQueue } from "./approvals.js";
-import { mcpErrorText } from "./error-copy.js";
 import { downloadsFolder, isInside, safeFolder } from "./folders.js";
 
 export interface EditDeps extends ExportDeps {
-  request(method: string, url: string, body?: unknown): Promise<Response>;
   runner: AgentRunner;
   canvas: CanvasService;
   frameStates: FrameStateDeps;
@@ -33,62 +31,6 @@ export { EditError } from "../page-probe/edit-error.js";
 
 export const RUN_BUSY =
   "A studio run is editing this design. Try again when it finishes.";
-
-const REFUSALS: Record<string, string> = {
-  run_in_progress: RUN_BUSY,
-};
-
-async function failure(res: Response): Promise<EditError> {
-  const parsed = (await res.json().catch(() => null)) as {
-    error?: string;
-    message?: string;
-  } | null;
-
-  const code = parsed?.error ?? `${res.status}`;
-
-  return new EditError(
-    REFUSALS[code] ?? mcpErrorText(parsed?.message ?? code),
-    code
-  );
-}
-
-export async function studioCall<T>(
-  deps: EditDeps,
-  method: string,
-  url: string,
-  body?: unknown
-): Promise<T> {
-  const res = await deps.request(method, url, body);
-
-  if (!res.ok) {
-    throw await failure(res);
-  }
-
-  return (await res.json()) as T;
-}
-
-export async function studioFile(
-  deps: EditDeps,
-  method: string,
-  url: string,
-  body?: unknown
-): Promise<{ bytes: Buffer; name: string; note: string | null }> {
-  const res = await deps.request(method, url, body);
-
-  if (!res.ok) {
-    throw await failure(res);
-  }
-
-  const match = /filename="([^"]+)"/.exec(
-    res.headers.get("content-disposition") ?? ""
-  );
-
-  return {
-    bytes: Buffer.from(await res.arrayBuffer()),
-    name: path.basename(match?.[1] ?? "export.bin"),
-    note: res.headers.get("x-studio-export-note"),
-  };
-}
 
 export async function loadTarget(
   deps: EditDeps,

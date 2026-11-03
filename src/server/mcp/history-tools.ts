@@ -3,6 +3,7 @@ import path from "node:path";
 
 import { z } from "zod";
 
+import { applyDirectEdit } from "../../shared/actions/direct-edit/apply.js";
 import type {
   DirectEditBatchResult,
   Project,
@@ -17,16 +18,11 @@ import {
   siteRequest,
 } from "../direct-edit/edit-site.js";
 import { publishVersion } from "../direct-edit/index.js";
+import { callAction } from "./action-call.js";
 import { listWords } from "./activity-text.js";
+import { EditError, loadTarget, refuseWhileRunning } from "./edit-guards.js";
+import type { EditDeps } from "./edit-guards.js";
 import {
-  EditError,
-  loadTarget,
-  refuseWhileRunning,
-  studioCall,
-} from "./edit-deps.js";
-import type { EditDeps } from "./edit-deps.js";
-import {
-  base,
   checkWritePath,
   classes,
   variant,
@@ -199,11 +195,14 @@ async function batchElements(
       batchRequest(project, direction, edit, found[index] ?? null, index)
     )
   );
-  const result = await studioCall<DirectEditBatchResult>(
+  const result = await callAction<DirectEditBatchResult>(
     deps,
-    "POST",
-    `${base(project, direction.id)}/direct-edit`,
-    { edits: planned.map((item) => item.request) }
+    applyDirectEdit,
+    {
+      edits: planned.map((item) => item.request),
+      directionId: direction.id,
+      projectId: project.id,
+    }
   );
   if (result.files.length === 0)
     return {

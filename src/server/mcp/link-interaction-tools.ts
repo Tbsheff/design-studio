@@ -11,8 +11,8 @@ import {
 } from "../canvas/links/link-interaction.js";
 import { probeWithPreview } from "../canvas/links/link-tools.js";
 import type { CanvasToolContext } from "../canvas/tools.js";
-import { loadTarget, refuseWhileRunning } from "./edit-deps.js";
-import type { EditDeps } from "./edit-deps.js";
+import { loadTarget, refuseWhileRunning } from "./edit-guards.js";
+import type { EditDeps } from "./edit-guards.js";
 import {
   defineTool,
   directionId as directionIdSchema,

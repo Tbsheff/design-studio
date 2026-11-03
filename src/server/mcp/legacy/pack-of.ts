@@ -1,13 +1,14 @@
+import { listPack } from "../../../shared/actions/pack/list.js";
 import type { PackSummary } from "../../../shared/contracts.js";
-import { EditError, studioCall } from "../edit-deps.js";
-import type { EditDeps } from "../edit-deps.js";
+import { callAction } from "../action-call.js";
+import { EditError } from "../edit-guards.js";
+import type { EditDeps } from "../edit-guards.js";
 
 const packOf = async (deps: EditDeps, packId: string): Promise<PackSummary> => {
-  const packs = await studioCall<{ items: PackSummary[] }>(
-    deps,
-    "GET",
-    "/api/packs?cursor=null&limit=200"
-  );
+  const packs = await callAction<{ items: PackSummary[] }>(deps, listPack, {
+    cursor: null,
+    limit: 200,
+  });
 
   const pack = packs.items.find((item) => item.id === packId);
 

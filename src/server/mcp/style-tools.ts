@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { applyDirectEdit } from "../../shared/actions/direct-edit/apply.js";
 import type { Project } from "../../shared/contracts.js";
 import {
   SEARCH_PROPERTIES,
@@ -18,15 +19,14 @@ import {
   tokenEntriesFor,
   tokenLookupFor,
 } from "../direct-edit/style-scan.js";
+import { callAction } from "./action-call.js";
 import {
   EditError,
   loadTarget,
   refuseWhileRunning,
-  studioCall,
   type EditDeps,
-} from "./edit-deps.js";
+} from "./edit-guards.js";
 import {
-  base,
   defineTool,
   directionId,
   ok,
@@ -260,12 +260,11 @@ const replaceStyle = defineTool(
 
     const body = { replaceStyle: { matches, token: input.token } };
 
-    const result = await studioCall<StyleReplaceResult>(
-      deps,
-      "POST",
-      `${base(target.project, target.direction.id)}/direct-edit`,
-      body
-    );
+    const result = await callAction<StyleReplaceResult>(deps, applyDirectEdit, {
+      ...body,
+      directionId: target.direction.id,
+      projectId: target.project.id,
+    });
 
     const summary = replaceSummary(result, input.token);
 

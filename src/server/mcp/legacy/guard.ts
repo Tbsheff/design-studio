@@ -5,7 +5,7 @@ import { isOrgInScope, toOrgScope } from "../../store/org-scope.js";
 import { LOCAL_ORG_ID } from "../../store/org-visibility.js";
 import { isPermitted } from "../../store/principal.js";
 import type { Principal } from "../../store/principal.js";
-import { EditError } from "../edit-deps.js";
+import { EditError } from "../edit-guards.js";
 import type { Done, ToolSpec } from "../edit-kit.js";
 import { legacyCaller, lookupProjectOrg } from "./caller-scope.js";
 

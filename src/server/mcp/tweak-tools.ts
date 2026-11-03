@@ -1,9 +1,11 @@
 import { z } from "zod";
 
+import { getTweaksDirectEdit } from "../../shared/actions/direct-edit/get-tweaks.js";
+import { updateTweaksDirectEdit } from "../../shared/actions/direct-edit/update-tweaks.js";
 import type { CommitTweaksResult, TweaksState } from "../../shared/tweaks.js";
-import { loadTarget, refuseWhileRunning, studioCall } from "./edit-deps.js";
+import { callAction } from "./action-call.js";
+import { loadTarget, refuseWhileRunning } from "./edit-guards.js";
 import {
-  base,
   defineTool,
   directionId,
   ok,
@@ -60,11 +62,10 @@ const listTweaks = defineTool(
       input.projectId,
       input.directionId
     );
-    const state = await studioCall<TweaksState>(
-      deps,
-      "GET",
-      `${base(project, direction.id)}/tweaks`
-    );
+    const state = await callAction<TweaksState>(deps, getTweaksDirectEdit, {
+      directionId: direction.id,
+      projectId: project.id,
+    });
     return {
       result: ok({
         controls: controlsView(state),
@@ -90,11 +91,14 @@ const setTweak = defineTool(
       input.directionId
     );
     refuseWhileRunning(deps, project, direction);
-    const result = await studioCall<CommitTweaksResult>(
+    const result = await callAction<CommitTweaksResult>(
       deps,
-      "POST",
-      `${base(project, direction.id)}/tweaks/commit`,
-      { values: { [input.id]: input.value } }
+      updateTweaksDirectEdit,
+      {
+        values: { [input.id]: input.value },
+        directionId: direction.id,
+        projectId: project.id,
+      }
     );
     const control = result.state.controls.find((item) => item.id === input.id);
     const value = result.state.current[input.id] ?? input.value;

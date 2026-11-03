@@ -1,5 +1,8 @@
 import { z } from "zod";
 
+import { getRulesDirectEdit } from "../../shared/actions/direct-edit/get-rules.js";
+import { runRulesTestDirectEdit } from "../../shared/actions/direct-edit/run-rules-test.js";
+import { setRulesDirectEdit } from "../../shared/actions/direct-edit/set-rules.js";
 import type { Version } from "../../shared/contracts.js";
 import {
   DESIGN_RULES_TEXT_MAX,
@@ -8,9 +11,9 @@ import {
   type DesignRulesTestResult,
 } from "../../shared/design-rules.js";
 import { frameRef } from "../canvas/tools.js";
-import { loadTarget, refuseWhileRunning, studioCall } from "./edit-deps.js";
+import { callAction } from "./action-call.js";
+import { loadTarget, refuseWhileRunning } from "./edit-guards.js";
 import {
-  base,
   defineTool,
   directionId,
   ok,
@@ -80,11 +83,10 @@ const getRules = defineTool(
       input.projectId,
       input.directionId
     );
-    const state = await studioCall<DesignRulesState>(
-      deps,
-      "GET",
-      `${base(project, direction.id)}/rules`
-    );
+    const state = await callAction<DesignRulesState>(deps, getRulesDirectEdit, {
+      directionId: direction.id,
+      projectId: project.id,
+    });
     return {
       result: ok({
         origin: state.origin,
@@ -113,12 +115,14 @@ const setRules = defineTool(
       input.directionId
     );
     refuseWhileRunning(deps, project, direction);
-    const saved = await studioCall<{
+    const saved = await callAction<{
       state: DesignRulesState;
       versionId: string | null;
       version: Version | null;
-    }>(deps, "PUT", `${base(project, direction.id)}/rules`, {
+    }>(deps, setRulesDirectEdit, {
       text: input.text,
+      directionId: direction.id,
+      projectId: project.id,
     });
     const output = ok({
       origin: saved.state.origin,
@@ -162,11 +166,10 @@ const testRules = defineTool(
       ...(input.path ? { path: input.path } : {}),
       ...size,
     };
-    const result = await studioCall<DesignRulesTestResult>(
+    const result = await callAction<DesignRulesTestResult>(
       deps,
-      "POST",
-      `${base(project, direction.id)}/rules/test`,
-      body
+      runRulesTestDirectEdit,
+      { ...body, directionId: direction.id, projectId: project.id }
     );
     const hits = new Map(result.hits.map((hit) => [hit.ruleId, hit]));
     const rules = result.rules.map((rule) => ({

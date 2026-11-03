@@ -4,23 +4,23 @@ import path from "node:path";
 
 import { z } from "zod";
 
+import { importFigmaDirectEdit } from "../../shared/actions/direct-edit/import-figma.js";
 import {
   FIGMA_NODES_MAX_BYTES,
   type FigmaImportPreview,
   type FigmaImportResult,
 } from "../../shared/figma-nodes.js";
 import { JSX_INSERT_POSITIONS } from "../../shared/insert.js";
+import { callAction } from "./action-call.js";
 import {
   approve,
   EditError,
   loadTarget,
   oneLine,
   refuseWhileRunning,
-  studioCall,
   type EditDeps,
-} from "./edit-deps.js";
+} from "./edit-guards.js";
 import {
-  base,
   defineTool,
   directionId,
   ok,
@@ -205,11 +205,10 @@ const importFigmaFrame = defineTool(
     let result: FigmaImportResult | FigmaImportPreview;
 
     try {
-      result = await studioCall<FigmaImportResult | FigmaImportPreview>(
+      result = await callAction<FigmaImportResult | FigmaImportPreview>(
         deps,
-        "POST",
-        `${base(project, direction.id)}/figma/import`,
-        body
+        importFigmaDirectEdit,
+        { ...body, directionId: direction.id, projectId: project.id }
       );
     } catch (error) {
       throw new EditError(

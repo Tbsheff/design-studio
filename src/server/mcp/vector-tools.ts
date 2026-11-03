@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { setVectorDirectEdit } from "../../shared/actions/direct-edit/set-vector.js";
 import type { Project } from "../../shared/contracts.js";
 import {
   BOOLEAN_OPS,
@@ -9,15 +10,14 @@ import {
   type VectorRequest,
   type VectorResult,
 } from "../../shared/vector.js";
+import { callAction } from "./action-call.js";
 import {
   EditError,
   loadTarget,
   refuseWhileRunning,
-  studioCall,
   type EditDeps,
-} from "./edit-deps.js";
+} from "./edit-guards.js";
 import {
-  base,
   defineTool,
   directionId,
   ok,
@@ -189,12 +189,11 @@ async function callVector(
 ): Promise<Done> {
   let result: VectorResult;
   try {
-    result = await studioCall<VectorResult>(
-      deps,
-      "POST",
-      `${base(project, direction.id)}/vector`,
-      body
-    );
+    result = await callAction<VectorResult>(deps, setVectorDirectEdit, {
+      ...body,
+      directionId: direction.id,
+      projectId: project.id,
+    });
   } catch (error) {
     throw new EditError(error instanceof Error ? error.message : String(error));
   }

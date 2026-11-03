@@ -13,8 +13,8 @@ import {
 } from "../stacking/input.js";
 import { setStacking, toStackingResult } from "../stacking/set.js";
 import type { StackingTarget } from "../stacking/set.js";
-import { EditError, loadTarget, refuseWhileRunning } from "./edit-deps.js";
-import type { EditDeps } from "./edit-deps.js";
+import { EditError, loadTarget, refuseWhileRunning } from "./edit-guards.js";
+import type { EditDeps } from "./edit-guards.js";
 import {
   defineTool,
   directionId as directionIdSchema,

@@ -1,9 +1,10 @@
 import { z } from "zod";
 
-import { COMPONENT_PREVIEW_PROPS_HEADER } from "../../shared/component-preview.js";
-import { EditError, loadTarget } from "./edit-deps.js";
-import type { EditDeps } from "./edit-deps.js";
-import { base, defineTool, directionId, projectId } from "./edit-kit.js";
+import { getComponentPreviewDirectEdit } from "../../shared/actions/direct-edit/get-component-preview.js";
+import { callAction } from "./action-call.js";
+import { EditError, loadTarget } from "./edit-guards.js";
+import type { EditDeps } from "./edit-guards.js";
+import { defineTool, directionId, projectId } from "./edit-kit.js";
 import type { Done, ToolSpec } from "./edit-kit.js";
 
 const previewSchema = z
@@ -38,30 +39,30 @@ const previewSchema = z
     "pass name (and file) or id"
   );
 
+interface PreviewTarget {
+  directionId: string;
+  file?: string | undefined;
+  id?: string | undefined;
+  name?: string | undefined;
+  projectId: string;
+}
+
+interface PreviewOutput {
+  png: string;
+  text: string | null;
+}
+
 async function previewResponse(
   deps: EditDeps,
-  url: string
+  input: PreviewTarget
 ): Promise<{ png: Buffer; meta: string }> {
-  const res = await deps.request("GET", url);
-
-  if (res.ok) {
-    return {
-      png: Buffer.from(await res.arrayBuffer()),
-      meta: decodeURIComponent(
-        res.headers.get(COMPONENT_PREVIEW_PROPS_HEADER) ?? ""
-      ),
-    };
-  }
-
-  const body = (await res.json().catch(() => null)) as {
-    message?: unknown;
-  } | null;
-
-  throw new EditError(
-    typeof body?.message === "string"
-      ? body.message
-      : `component preview failed with ${res.status}`
+  const out = await callAction<PreviewOutput>(
+    deps,
+    getComponentPreviewDirectEdit,
+    input
   );
+
+  return { png: Buffer.from(out.png, "base64"), meta: out.text ?? "" };
 }
 
 const componentPreview = defineTool(
@@ -87,14 +88,15 @@ const componentPreview = defineTool(
       );
     }
 
-    const query = input.id
-      ? `id=${encodeURIComponent(input.id)}`
-      : `name=${encodeURIComponent(input.name ?? "")}${input.file ? `&file=${encodeURIComponent(input.file)}` : ""}`;
+    const lookup = input.id
+      ? { id: input.id }
+      : { file: input.file, name: input.name ?? "" };
 
-    const { png, meta } = await previewResponse(
-      deps,
-      `${base(project, direction.id)}/component-preview?${query}`
-    );
+    const { png, meta } = await previewResponse(deps, {
+      ...lookup,
+      directionId: direction.id,
+      projectId: project.id,
+    });
 
     return {
       result: {

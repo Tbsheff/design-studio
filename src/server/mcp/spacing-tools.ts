@@ -12,8 +12,8 @@ import { SpacingError } from "../spacing/errors.js";
 import { getSpacing } from "../spacing/get.js";
 import type { SpacingElement } from "../spacing/get.js";
 import { setSpacing, toSpacingResult } from "../spacing/set.js";
-import { EditError, loadTarget, refuseWhileRunning } from "./edit-deps.js";
-import type { EditDeps } from "./edit-deps.js";
+import { EditError, loadTarget, refuseWhileRunning } from "./edit-guards.js";
+import type { EditDeps } from "./edit-guards.js";
 import {
   defineTool,
   directionId as directionIdSchema,

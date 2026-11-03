@@ -1,8 +1,11 @@
+import { createDevServer } from "../../../shared/actions/dev-server/create.js";
+import { getDevServer } from "../../../shared/actions/dev-server/get.js";
 import type { AppServerStatus, Project } from "../../../shared/contracts.js";
 import { attachReadiness } from "../../app/first-version.js";
 import type { AttachResponse } from "../../app/first-version.js";
-import { approve, oneLine, studioCall } from "../edit-deps.js";
-import type { EditDeps } from "../edit-deps.js";
+import { callAction } from "../action-call.js";
+import { approve, oneLine } from "../edit-guards.js";
+import type { EditDeps } from "../edit-guards.js";
 import { ok } from "../edit-kit.js";
 import type { Done } from "../edit-kit.js";
 import { safeFolder } from "../folders.js";
@@ -100,10 +103,10 @@ const serverView = async (
   project: Project
 ): Promise<ServerView | null> => {
   try {
-    const state = await studioCall<{ status: AppServerStatus | null }>(
+    const state = await callAction<{ status: AppServerStatus | null }>(
       deps,
-      "GET",
-      `/api/projects/${encodeURIComponent(project.id)}/app`
+      getDevServer,
+      { projectId: project.id }
     );
 
     const { status } = state;
@@ -138,12 +141,9 @@ const attachApp = async (
   await askToAttach(deps, folder, workspace, client);
 
   const { project, firstVersion, legacyCanvas } =
-    await studioCall<AttachResponse>(
-      deps,
-      "POST",
-      "/api/projects/attach",
-      attachBody(input, folder)
-    );
+    await callAction<AttachResponse>(deps, createDevServer, {
+      ...attachBody(input, folder),
+    });
 
   const [main] = project.directions;
 

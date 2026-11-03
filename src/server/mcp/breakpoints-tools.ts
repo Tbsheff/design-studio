@@ -13,8 +13,8 @@ import {
 import { listBreakpoints } from "../breakpoints/list.js";
 import { setBreakpointStyle, toBreakpointResult } from "../breakpoints/set.js";
 import { DirectEditError } from "../direct-edit/engine/errors.js";
-import { EditError, loadTarget, refuseWhileRunning } from "./edit-deps.js";
-import type { EditDeps } from "./edit-deps.js";
+import { EditError, loadTarget, refuseWhileRunning } from "./edit-guards.js";
+import type { EditDeps } from "./edit-guards.js";
 import {
   defineTool,
   directionId as directionIdSchema,

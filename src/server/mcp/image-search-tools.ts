@@ -15,8 +15,8 @@ import type { PlaceScope } from "../image-search/place.js";
 import { searchImages } from "../image-search/search.js";
 import { elementTarget, sourceTarget } from "../image-search/target.js";
 import type { PlaceTarget } from "../image-search/target.js";
-import { EditError, loadTarget, refuseWhileRunning } from "./edit-deps.js";
-import type { EditDeps } from "./edit-deps.js";
+import { EditError, loadTarget, refuseWhileRunning } from "./edit-guards.js";
+import type { EditDeps } from "./edit-guards.js";
 import {
   defineTool,
   directionId as directionIdSchema,

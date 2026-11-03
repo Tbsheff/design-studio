@@ -14,6 +14,7 @@ import {
 } from "../../shared/contracts.js";
 import { levelOf, resolveRunConfig } from "../../shared/run-levels.js";
 import { readDesignSystemState } from "../design-system/state.js";
+import { bindStudioPorts } from "../mcp/studio-ports.js";
 import { bindMcpReadRuntime } from "../preview/mcp-read-core.js";
 import {
   BadRequestError,
@@ -32,7 +33,12 @@ import {
 import { listElementVariants } from "./element-variants.js";
 import { createGroupRegistry, fanOut, groupDirections } from "./fanout.js";
 import { buildReference, labelOf, mixPrompt } from "./reference.js";
-import { buildScope, keepElementVariant, type KeepDeps } from "./scope.js";
+import {
+  buildScope,
+  keepElementVariant,
+  type KeepDeps,
+  type KeepResult,
+} from "./scope.js";
 
 interface VariationRouteDeps {
   config: ServerConfig;
@@ -305,17 +311,18 @@ export function registerVariationRoutes(
     return c.json(await listElementVariants(project, runner));
   });
 
-  app.post("/api/projects/:pid/variations/:gid/keep", async (c) => {
-    const pid = c.req.param("pid");
-    const groupId = assertSafeId(c.req.param("gid"), "groupId");
-    const input = parse(KeepBody, await body(c));
+  const keep = async (
+    pid: string,
+    groupId: string,
+    directionId: string
+  ): Promise<KeepResult> => {
     const project = await projects.get(pid);
     const variant = groupDirections(project, groupId).find(
-      (direction) => direction.id === input.directionId
+      (direction) => direction.id === directionId
     );
     if (!variant)
       throw new BadRequestError(
-        `direction ${input.directionId} is not in variation group ${groupId}`
+        `direction ${directionId} is not in variation group ${groupId}`
       );
     const target = variant.variation?.scope?.sourceDirectionId;
     if (!target) throw new BadRequestError("This is not an element variant");
@@ -323,7 +330,15 @@ export function registerVariationRoutes(
       keepElementVariant(deps.edit, latest, variant.id)
     );
     for (const runId of groups.runIds(groupId)) runner.get(runId)?.cancel();
-    return c.json(result);
+    return result;
+  };
+
+  bindStudioPorts({ keepVariant: keep });
+
+  app.post("/api/projects/:pid/variations/:gid/keep", async (c) => {
+    const groupId = assertSafeId(c.req.param("gid"), "groupId");
+    const input = parse(KeepBody, await body(c));
+    return c.json(await keep(c.req.param("pid"), groupId, input.directionId));
   });
 
   app.post("/api/projects/:pid/variations/:gid/cancel", async (c) => {

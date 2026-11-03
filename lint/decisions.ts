@@ -452,7 +452,7 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/server/events/planned-feed.ts",
       "src/server/events/render-wait.ts",
       "src/server/platform/config/index.ts",
-      "src/server/platform/edit-origin/index.ts",
+      "src/server/platform/call-origin/index.ts",
       "src/server/platform/git/batch-reader.ts",
       "src/server/platform/git/objects.ts",
       "src/server/platform/git/run-git.ts",
@@ -1178,5 +1178,9 @@ export const decisionOverrides: OxlintOverride[] = [
     rules: {
       "unicorn/filename-case": "off",
     },
+  },
+  {
+    files: ["src/server/mcp/action-call.ts", "src/server/mcp/studio-ports.ts"],
+    rules: { "import/no-relative-parent-imports": "off" },
   },
 ];

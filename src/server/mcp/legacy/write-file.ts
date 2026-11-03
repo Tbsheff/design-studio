@@ -4,8 +4,8 @@ import path from "node:path";
 import type { Direction, Project, Version } from "../../../shared/contracts.js";
 import { firstVersionBlock } from "../../app/first-version.js";
 import { publishVersion } from "../../direct-edit/index.js";
-import { EditError, loadTarget, refuseWhileRunning } from "../edit-deps.js";
-import type { EditDeps } from "../edit-deps.js";
+import { EditError, loadTarget, refuseWhileRunning } from "../edit-guards.js";
+import type { EditDeps } from "../edit-guards.js";
 import {
   checkWritePath,
   ok,

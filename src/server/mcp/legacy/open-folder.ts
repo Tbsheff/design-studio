@@ -2,9 +2,11 @@ import path from "node:path";
 
 import { z } from "zod";
 
+import { importProject } from "../../../shared/actions/project/import.js";
 import type { Direction, Project } from "../../../shared/contracts.js";
-import { approve, oneLine, studioCall } from "../edit-deps.js";
-import type { EditDeps } from "../edit-deps.js";
+import { callAction } from "../action-call.js";
+import { approve, oneLine } from "../edit-guards.js";
+import type { EditDeps } from "../edit-guards.js";
 import { defineTool, ok } from "../edit-kit.js";
 import type { Done } from "../edit-kit.js";
 import { isInside, safeFolder } from "../folders.js";
@@ -125,10 +127,9 @@ const findOpen = async (
 };
 
 const importFolder = async (deps: EditDeps, folder: string): Promise<Done> => {
-  const { project } = await studioCall<{ project: Project }>(
+  const { project } = await callAction<{ project: Project }>(
     deps,
-    "POST",
-    "/api/projects/import",
+    importProject,
     { path: folder }
   );
 

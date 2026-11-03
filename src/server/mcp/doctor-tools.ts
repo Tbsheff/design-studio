@@ -1,7 +1,8 @@
 import { z } from "zod";
 
-import { DOCTOR_NOTE, type AppFixResult } from "../../shared/app-doctor.js";
-import { loadTarget, studioCall } from "./edit-deps.js";
+import { DOCTOR_NOTE } from "../../shared/app-doctor.js";
+import { fixApp } from "../http/doctor-routes.js";
+import { loadTarget } from "./edit-guards.js";
 import { defineTool, projectId } from "./edit-kit.js";
 
 const KINDS = [
@@ -26,11 +27,14 @@ const applyAppFix = defineTool(
   },
   async (deps, input) => {
     const { project } = await loadTarget(deps, input.projectId);
-    const done = await studioCall<AppFixResult>(
-      deps,
-      "POST",
-      `/api/projects/${encodeURIComponent(project.id)}/app/doctor/fix`,
-      { kind: input.kind }
+    const done = await fixApp(
+      {
+        preview: deps.preview,
+        projects: deps.projects,
+        readBody: () => Promise.resolve({}),
+      },
+      project.id,
+      input.kind
     );
     return {
       result: { content: [{ type: "text", text: done.applied }] },

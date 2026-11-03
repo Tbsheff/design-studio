@@ -1,11 +1,8 @@
-import {
-  loadTarget,
-  oneLine,
-  refuseWhileRunning,
-  studioCall,
-} from "../edit-deps.js";
-import type { EditDeps } from "../edit-deps.js";
-import { base, defineTool, ok, versionActivity } from "../edit-kit.js";
+import { applyPackPack } from "../../../shared/actions/pack/apply-pack.js";
+import { callAction } from "../action-call.js";
+import { loadTarget, oneLine, refuseWhileRunning } from "../edit-guards.js";
+import type { EditDeps } from "../edit-guards.js";
+import { defineTool, ok, versionActivity } from "../edit-kit.js";
 import type { Done, ToolSpec } from "../edit-kit.js";
 import { guardTools } from "./guard.js";
 import { openFolderTool } from "./open-folder.js";
@@ -33,12 +30,11 @@ const applyDesignSystem = async (
 
   refuseWhileRunning(deps, project, direction);
 
-  const result = await studioCall<ApplyResult>(
-    deps,
-    "POST",
-    `${base(project, direction.id)}/design-system/apply`,
-    { packId: pack.id }
-  );
+  const result = await callAction<ApplyResult>(deps, applyPackPack, {
+    directionId: direction.id,
+    packId: pack.id,
+    projectId: project.id,
+  });
 
   return {
     activity: versionActivity(

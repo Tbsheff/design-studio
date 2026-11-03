@@ -1,28 +1,23 @@
 import { z } from "zod";
 
+import { applyDirectEdit } from "../../shared/actions/direct-edit/apply.js";
 import type {
   DirectEditRequest,
   DirectEditResult,
   Direction,
   Project,
 } from "../../shared/contracts.js";
-import type { LayerLocksView } from "../../shared/layer-locks.js";
 import {
   describeLocks,
   lockDelta,
   lockOutcome,
   probeLock,
 } from "../layers/lock-probe.js";
+import { callAction } from "./action-call.js";
 import type { ActivityDraft } from "./activity.js";
+import { EditError, loadTarget, refuseWhileRunning } from "./edit-guards.js";
+import type { EditDeps } from "./edit-guards.js";
 import {
-  EditError,
-  loadTarget,
-  refuseWhileRunning,
-  studioCall,
-} from "./edit-deps.js";
-import type { EditDeps } from "./edit-deps.js";
-import {
-  base,
   defineTool,
   directionId,
   ok,
@@ -34,6 +29,7 @@ import {
   versionActivity,
 } from "./edit-kit.js";
 import type { Done } from "./edit-kit.js";
+import { changeLocks, readLocks } from "./studio-ports.js";
 
 export const LAYER_STATE_NOTE =
   "Lock, hide and rename use the same server code as the eye, lock and name in the studio Layers panel. Lock is studio state saved in the Design Studio data folder (not in the project files and not a version): a click on the canvas passes through a locked layer and its children, in the studio and for every MCP client. Hide writes display: none and rename writes data-name in the source, each as one version the user can undo.";
@@ -79,10 +75,6 @@ const listSchema = z
 
 type Loaded = { project: Project; direction: Direction };
 
-function locksUrl(loaded: Loaded): string {
-  return `${base(loaded.project, loaded.direction.id)}/layer-locks`;
-}
-
 async function sourceEdit(
   deps: EditDeps,
   loaded: Loaded,
@@ -122,12 +114,11 @@ async function sourceEdit(
   let result: DirectEditResult | null = null;
 
   for (const request of requests) {
-    result = await studioCall<DirectEditResult>(
-      deps,
-      "POST",
-      `${base(loaded.project, loaded.direction.id)}/direct-edit`,
-      request
-    );
+    result = await callAction<DirectEditResult>(deps, applyDirectEdit, {
+      ...request,
+      directionId: loaded.direction.id,
+      projectId: loaded.project.id,
+    });
     lines.push(
       request.style
         ? `${input.hidden ? "Hid" : "Showed"} ${element.tag} in ${result.file} (version ${result.version.id}).`
@@ -182,11 +173,7 @@ const setLayerState = defineTool(
     const lines = [...edited.lines];
 
     if (input.locked !== undefined) {
-      const current = await studioCall<LayerLocksView>(
-        deps,
-        "GET",
-        locksUrl(loaded)
-      );
+      const current = await readLocks(loaded.project.id, loaded.direction.id);
 
       const probe = await probeLock(
         deps.preview,
@@ -201,10 +188,9 @@ const setLayerState = defineTool(
         );
       }
 
-      const view = await studioCall<LayerLocksView>(
-        deps,
-        "PUT",
-        locksUrl(loaded),
+      const view = await changeLocks(
+        loaded.project.id,
+        loaded.direction.id,
         lockDelta(probe, input.locked)
       );
 
@@ -240,11 +226,7 @@ const listLockedLayers = defineTool(
   async (deps, input): Promise<Done> => {
     const loaded = await loadTarget(deps, input.projectId, input.directionId);
 
-    const view = await studioCall<LayerLocksView>(
-      deps,
-      "GET",
-      locksUrl(loaded)
-    );
+    const view = await readLocks(loaded.project.id, loaded.direction.id);
 
     const probe =
       view.keys.length > 0

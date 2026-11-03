@@ -6,10 +6,10 @@ import { Hono } from "hono";
 import type { McpStatus } from "../../shared/export.js";
 import { firstVersionBlock } from "../app/first-version.js";
 import { takeSaveFailures } from "../direct-edit/save-queue.js";
-import { withMcpOrigin } from "../edit-origin.js";
 import type { ExportDeps } from "../export/source.js";
 import type { WireArgs } from "../handlers/_core/run-action.js";
 import type { McpListenerRunnerApi } from "../mcp-life/index.js";
+import { withCallOrigin } from "../platform/call-origin/index.js";
 import { isKnownError } from "../platform/errors/index.js";
 import {
   renderedSince,
@@ -17,8 +17,8 @@ import {
   renderSettled,
 } from "../preview/render-wait.js";
 import { toLegacyPrincipal } from "../store/principal.js";
-import { EditError } from "./edit-deps.js";
-import type { EditDeps } from "./edit-deps.js";
+import { EditError } from "./edit-guards.js";
+import type { EditDeps } from "./edit-guards.js";
 import {
   callEditTool,
   EDIT_NAMES,
@@ -193,7 +193,7 @@ async function runEdit(
     const blocked = await firstVersionRefusal(edits, name, args.projectId);
     if (blocked)
       return { content: [{ type: "text", text: blocked }], isError: true };
-    const result = await withMcpOrigin(client, async () =>
+    const result = await withCallOrigin(client, async () =>
       callEditTool(
         edits,
         name,

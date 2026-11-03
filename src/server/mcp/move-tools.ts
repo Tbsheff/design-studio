@@ -1,19 +1,15 @@
 import { z } from "zod";
 
+import { applyDirectEdit } from "../../shared/actions/direct-edit/apply.js";
 import type {
   DirectEditResult,
   SourceLoc,
   StructureEditResult,
 } from "../../shared/contracts.js";
+import { callAction } from "./action-call.js";
+import { EditError, loadTarget, refuseWhileRunning } from "./edit-guards.js";
+import type { EditDeps } from "./edit-guards.js";
 import {
-  EditError,
-  loadTarget,
-  refuseWhileRunning,
-  studioCall,
-} from "./edit-deps.js";
-import type { EditDeps } from "./edit-deps.js";
-import {
-  base,
   defineTool,
   directionId,
   ok,
@@ -119,12 +115,14 @@ async function moveAbsolute(deps: EditDeps, input: MoveInput): Promise<Done> {
     ? { component: element.component }
     : { tag: element.tag.toLowerCase() };
 
-  const result = await studioCall<DirectEditResult>(
-    deps,
-    "POST",
-    `${base(project, direction.id)}/direct-edit`,
-    { source: element.source, selector: input.selector, ...target, style }
-  );
+  const result = await callAction<DirectEditResult>(deps, applyDirectEdit, {
+    source: element.source,
+    selector: input.selector,
+    ...target,
+    style,
+    directionId: direction.id,
+    projectId: project.id,
+  });
 
   const summary = `Moved ${element.tag} to ${Object.entries(style)
     .map(([key, value]) => `${key} ${value}`)
@@ -187,11 +185,10 @@ const moveElement = defineTool(
       ...(input.before ? { before: place } : { after: place }),
     };
 
-    const result = await studioCall<StructureEditResult>(
+    const result = await callAction<StructureEditResult>(
       deps,
-      "POST",
-      `${base(project, direction.id)}/direct-edit`,
-      body
+      applyDirectEdit,
+      { ...body, directionId: direction.id, projectId: project.id }
     );
 
     const summary = `${input.copy ? "Copied" : "Moved"} ${element.tag} ${input.before ? "before" : "after"} ${ref.tag}`;

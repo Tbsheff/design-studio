@@ -13,8 +13,8 @@ import type { SearchTarget } from "../text-search/scope.js";
 import { searchText } from "../text-search/search-text.js";
 import { updateText } from "../text-search/update-text.js";
 import type { UpdateCommit } from "../text-search/update-text.js";
-import { EditError, loadTarget, refuseWhileRunning } from "./edit-deps.js";
-import type { EditDeps } from "./edit-deps.js";
+import { EditError, loadTarget, refuseWhileRunning } from "./edit-guards.js";
+import type { EditDeps } from "./edit-guards.js";
 import {
   defineTool,
   directionId as directionIdSchema,

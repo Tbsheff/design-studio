@@ -12,8 +12,8 @@ import type { TextStyleEditScope } from "../text-styles/commit.js";
 import { computedTextValues, createTextStyle } from "../text-styles/create.js";
 import type { TextStyleCreateDone } from "../text-styles/create.js";
 import { listTextStyles, TextStyleError } from "../text-styles/list.js";
-import { EditError, loadTarget, refuseWhileRunning } from "./edit-deps.js";
-import type { EditDeps } from "./edit-deps.js";
+import { EditError, loadTarget, refuseWhileRunning } from "./edit-guards.js";
+import type { EditDeps } from "./edit-guards.js";
 import {
   defineTool,
   directionId as directionIdSchema,

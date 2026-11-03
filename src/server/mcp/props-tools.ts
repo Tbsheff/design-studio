@@ -1,5 +1,8 @@
 import { z } from "zod";
 
+import { inspectPropsInstanceDirectEdit } from "../../shared/actions/direct-edit/inspect-props-instance.js";
+import { listPropsComponentsDirectEdit } from "../../shared/actions/direct-edit/list-props-components.js";
+import { setPropsDirectEdit } from "../../shared/actions/direct-edit/set-props.js";
 import type { Project, SourceLoc } from "../../shared/contracts.js";
 import {
   COMPONENT_LIST_MAX,
@@ -13,13 +16,13 @@ import {
   type SetPropsResult,
 } from "../../shared/props.js";
 import { probeOwners } from "../components/owner-probe.js";
+import { callAction } from "./action-call.js";
 import {
   EditError,
   loadTarget,
   refuseWhileRunning,
-  studioCall,
   type EditDeps,
-} from "./edit-deps.js";
+} from "./edit-guards.js";
 import {
   base,
   defineTool,
@@ -130,17 +133,15 @@ export async function useSiteOf(
     throw new EditError(`No element matches ${sel} on the page.`);
   }
 
-  const query = new URLSearchParams({
+  const { instance } = await callAction<{
+    instance: ComponentInstance | null;
+  }>(deps, inspectPropsInstanceDirectEdit, {
+    directionId: direction.id,
     owners: JSON.stringify(probed.owners),
+    projectId: project.id,
     use: "null",
     usedAt: JSON.stringify(probed.usedAt ?? null),
   });
-
-  const { instance } = await studioCall<{ instance: ComponentInstance | null }>(
-    deps,
-    "GET",
-    `${base(project, direction.id)}/props/instance?${query}`
-  );
 
   if (!instance) {
     throw new EditError(
@@ -228,25 +229,17 @@ const listComponents = defineTool(
       };
     }
 
-    const params = new URLSearchParams({
-      cursor: input.cursor ?? "null",
-      limit: String(input.limit ?? 20),
-    });
-
-    for (const key of ["query", "source"] as const) {
-      if (input[key]) {
-        params.set(key, input[key] as string);
-      }
-    }
-
-    const page = await studioCall<{
+    const page = await callAction<{
       items: ComponentSchemaList["components"];
       next: string | null;
-    }>(
-      deps,
-      "GET",
-      `${base(project, direction.id)}/props/components?${params}`
-    );
+    }>(deps, listPropsComponentsDirectEdit, {
+      cursor: input.cursor ?? null,
+      directionId: direction.id,
+      limit: input.limit ?? 20,
+      projectId: project.id,
+      ...(input.query ? { query: input.query } : {}),
+      ...(input.source ? { source: input.source } : {}),
+    });
 
     const list: ComponentSchemaList = {
       components: page.items,
@@ -292,12 +285,12 @@ const setProps = defineTool(
           )
         ).use;
 
-    const result = await studioCall<SetPropsResult>(
-      deps,
-      "POST",
-      `${base(project, direction.id)}/props`,
-      { source, props: input.props }
-    );
+    const result = await callAction<SetPropsResult>(deps, setPropsDirectEdit, {
+      source,
+      props: input.props,
+      directionId: direction.id,
+      projectId: project.id,
+    });
 
     const tag = result.instance?.tag ?? "component";
 

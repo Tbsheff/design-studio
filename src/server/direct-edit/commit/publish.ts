@@ -4,7 +4,7 @@ import type {
   Version,
   VersionMeta,
 } from "../../../shared/contracts.js";
-import { isOutsideRequest } from "../../edit-origin.js";
+import { isOutsideRequest } from "../../platform/call-origin/index.js";
 import { noteTreeWrite } from "../change-feed.js";
 import { DirectEditError } from "../engine/errors.js";
 import { announcePlanned, withdrawPlanned } from "../planned-feed.js";

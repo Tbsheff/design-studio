@@ -16,7 +16,7 @@ const isInsideRoot = (child: string, root: string | null): boolean =>
   (child === root ||
     SEPARATORS.some((separator) => child.startsWith(root + separator)));
 
-const checkSourceUpload = (facts: UploadFacts): GuardResult => {
+const inspectSourceUpload = (facts: UploadFacts): GuardResult => {
   if (facts.resolved === null) {
     return { code: "path_unresolved", ok: false };
   }
@@ -36,6 +36,6 @@ const checkSourceUpload = (facts: UploadFacts): GuardResult => {
   return { ok: true };
 };
 
-export { checkSourceUpload, isInsideRoot };
+export { inspectSourceUpload, isInsideRoot };
 
 export type { GuardResult, UploadFacts };

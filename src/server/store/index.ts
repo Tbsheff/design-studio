@@ -4,6 +4,10 @@ export { Authorizer } from "./authorizer.js";
 
 export type { CreateCommentInput } from "./comments.js";
 
+export { DeviceBindings } from "./device-bindings.js";
+
+export type { BindingKey, DeviceBindingsApi } from "./device-bindings.js";
+
 export { LocalOrgScope } from "./local-org-scope.js";
 
 export { toLegacyPrincipal } from "./principal.js";
@@ -12,7 +16,7 @@ export { toOrgScope } from "./org-scope.js";
 
 export { LocalPrincipal } from "./local-principal.js";
 
-export type { Principal } from "./local-principal.js";
+export type { Principal } from "./principal.js";
 
 export { ProjectAccess } from "./project-access.js";
 

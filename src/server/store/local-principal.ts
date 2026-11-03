@@ -15,10 +15,3 @@ class LocalPrincipal extends Context.Service<LocalPrincipal, Principal>()(
 }
 
 export { LocalPrincipal };
-
-export type {
-  KeyPrincipal,
-  LegacyPrincipal,
-  Principal,
-  UiPrincipal,
-} from "./principal.js";

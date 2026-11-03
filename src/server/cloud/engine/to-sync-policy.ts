@@ -50,7 +50,7 @@ const NEVER_SYNC: readonly string[] = [
   "allowInstall",
 ];
 
-const pickSyncPolicy = (input: PolicyInput): SyncPolicy => {
+const toSyncPolicy = (input: PolicyInput): SyncPolicy => {
   if (input.kind === "native") {
     return "full";
   }
@@ -60,7 +60,7 @@ const pickSyncPolicy = (input: PolicyInput): SyncPolicy => {
 
 const listUploadKinds = (
   policy: SyncPolicy,
-  hasFrames = false
+  hasFrames: boolean
 ): readonly UploadKind[] => {
   if (policy === "full") {
     return [...METADATA_KINDS, ...FULL_ONLY_KINDS, ...FRAME_KINDS];
@@ -74,16 +74,10 @@ const listUploadKinds = (
 };
 
 const canUpload = (input: PolicyInput, uploadKind: UploadKind): boolean =>
-  listUploadKinds(pickSyncPolicy(input), input.hasFrames).includes(uploadKind);
+  listUploadKinds(toSyncPolicy(input), input.hasFrames).includes(uploadKind);
 
 const isNeverSynced = (name: string): boolean => NEVER_SYNC.includes(name);
 
-export {
-  canUpload,
-  isNeverSynced,
-  listUploadKinds,
-  NEVER_SYNC,
-  pickSyncPolicy,
-};
+export { canUpload, isNeverSynced, listUploadKinds, NEVER_SYNC, toSyncPolicy };
 
 export type { PolicyInput, ProjectKind, SyncPolicy, UploadKind };

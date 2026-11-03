@@ -1,64 +1,90 @@
 import { randomBytes } from "node:crypto";
-import { existsSync } from "node:fs";
-import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rename, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { RULE_MAX_CHARS } from "../../shared/permissionRules.js";
 import { createKeyedMutex } from "./mutex.js";
 
-export const COMMAND_RULES_MAX = 200;
+const COMMAND_RULES_MAX = 200;
 const SEGMENT_MAX = 80;
+const TEMP_SUFFIX_BYTES = 4;
 
-export interface CommandRuleScope {
-  deviceId: string;
-  userId: string;
+interface CommandRuleScope {
+  readonly deviceId: string;
+  readonly userId: string;
 }
 
-export type CommandRuleRole = "owner" | "admin" | "member" | "viewer";
+type CommandRuleRole = "owner" | "admin" | "member" | "viewer";
 
-export interface CommandRuleStore {
-  list(projectId: string, scope?: CommandRuleScope | null): Promise<string[]>;
-  add(
+interface CommandRuleStore {
+  readonly add: (
     projectId: string,
     rule: string,
-    scope?: CommandRuleScope | null
-  ): Promise<string[]>;
-  remove(
+    scope: CommandRuleScope | null
+  ) => Promise<string[]>;
+  readonly list: (
+    projectId: string,
+    scope: CommandRuleScope | null
+  ) => Promise<string[]>;
+  readonly remove: (
     projectId: string,
     rule: string,
-    scope?: CommandRuleScope | null
-  ): Promise<string[]>;
+    scope: CommandRuleScope | null
+  ) => Promise<string[]>;
 }
 
-export const orgCapAllows = (
-  cap: boolean | null | undefined,
-  role: CommandRuleRole | null | undefined,
-  setting: boolean
+const isOrgCapAllowed = (
+  cap: boolean | null,
+  role: CommandRuleRole | null,
+  isSettingOn: boolean
 ): boolean => {
-  if (!setting || role === "viewer") {
+  if (!isSettingOn || role === "viewer") {
     return false;
   }
 
   return cap !== false;
 };
 
-const safeSegment = (value: string): string =>
+const toSafeSegment = (value: string): string =>
   value.replaceAll(/[^A-Za-z0-9_-]/gu, "_").slice(0, SEGMENT_MAX);
 
 const lock = createKeyedMutex();
 
-const read = async (file: string): Promise<string[]> => {
-  if (!existsSync(file)) {
+const hasRuleFile = async (file: string): Promise<boolean> => {
+  try {
+    await stat(file);
+
+    return true;
+  } catch (error) {
+    if (error instanceof Error && "code" in error && error.code === "ENOENT") {
+      return false;
+    }
+
+    throw error;
+  }
+};
+
+interface RuleFile {
+  readonly rules?: readonly string[];
+}
+
+const toRuleList = (parsed: RuleFile | null): string[] => {
+  const rules = parsed?.rules ?? null;
+
+  if (!Array.isArray(rules)) {
+    return [];
+  }
+
+  return rules.filter((rule): rule is string => typeof rule === "string");
+};
+
+const getRuleFile = async (file: string): Promise<string[]> => {
+  if (!(await hasRuleFile(file))) {
     return [];
   }
 
   try {
-    const parsed: unknown = JSON.parse(await readFile(file, "utf-8"));
-    const rules = (parsed as { rules?: unknown } | null)?.rules;
-
-    return Array.isArray(rules)
-      ? rules.filter((rule): rule is string => typeof rule === "string")
-      : [];
+    return toRuleList(JSON.parse(await readFile(file, "utf-8")));
   } catch (error) {
     console.error("[command-rules] unreadable file", file, error);
 
@@ -66,59 +92,76 @@ const read = async (file: string): Promise<string[]> => {
   }
 };
 
-const write = async (file: string, rules: string[]): Promise<void> => {
+const setRuleFile = async (file: string, rules: string[]): Promise<void> => {
   await mkdir(path.dirname(file), { recursive: true });
-  const temp = `${file}.${randomBytes(4).toString("hex")}.tmp`;
+  const temp = `${file}.${randomBytes(TEMP_SUFFIX_BYTES).toString("hex")}.tmp`;
   await writeFile(temp, JSON.stringify({ rules }, null, 2));
   await rename(temp, file);
 };
 
-export function createCommandRuleStore(
+const toAddedRules = (rules: string[], rule: string): string[] => {
+  if (!rule || rule.length > RULE_MAX_CHARS || rules.includes(rule)) {
+    return rules;
+  }
+
+  return [...rules, rule].slice(-COMMAND_RULES_MAX);
+};
+
+const toRemovedRules = (rules: string[], rule: string): string[] => {
+  if (!rules.includes(rule)) {
+    return rules;
+  }
+
+  return rules.filter((item) => item !== rule);
+};
+
+const createCommandRuleStore = (
   projectDir: (projectId: string) => string
-): CommandRuleStore {
-  const legacyFileOf = (projectId: string): string =>
+): CommandRuleStore => {
+  const toLegacyFile = (projectId: string): string =>
     path.join(projectDir(projectId), "command-rules.json");
 
-  const fileOf = (
+  const toScopedFile = (
     projectId: string,
-    scope?: CommandRuleScope | null
+    scope: CommandRuleScope | null
   ): string => {
     if (!scope?.deviceId || !scope.userId) {
-      return legacyFileOf(projectId);
+      return toLegacyFile(projectId);
     }
 
     return path.join(
       projectDir(projectId),
-      `command-rules.${safeSegment(scope.deviceId)}.${safeSegment(scope.userId)}.json`
+      `command-rules.${toSafeSegment(scope.deviceId)}.${toSafeSegment(scope.userId)}.json`
     );
   };
 
-  const readScoped = (
+  const getScoped = async (
     projectId: string,
-    scope?: CommandRuleScope | null
+    scope: CommandRuleScope | null
   ): Promise<string[]> => {
-    const file = fileOf(projectId, scope);
+    const file = toScopedFile(projectId, scope);
+    const legacyFile = toLegacyFile(projectId);
 
-    if (file !== legacyFileOf(projectId) && !existsSync(file)) {
-      return read(legacyFileOf(projectId));
+    if (file !== legacyFile && !(await hasRuleFile(file))) {
+      return getRuleFile(legacyFile);
     }
 
-    return read(file);
+    return getRuleFile(file);
   };
 
-  const mutate = (
+  const updateScoped = (
     projectId: string,
-    scope: CommandRuleScope | null | undefined,
+    scope: CommandRuleScope | null,
     change: (rules: string[]) => string[]
   ): Promise<string[]> => {
-    const file = fileOf(projectId, scope);
+    const file = toScopedFile(projectId, scope);
 
     return lock(file, async () => {
-      const before = await readScoped(projectId, scope);
+      const before = await getScoped(projectId, scope);
       const after = change(before);
 
       if (after !== before) {
-        await write(file, after);
+        await setRuleFile(file, after);
       }
 
       return after;
@@ -126,18 +169,14 @@ export function createCommandRuleStore(
   };
 
   return {
-    list: (projectId, scope) => readScoped(projectId, scope),
     add: (projectId, rule, scope) =>
-      mutate(projectId, scope, (rules) => {
-        if (!rule || rule.length > RULE_MAX_CHARS || rules.includes(rule)) {
-          return rules;
-        }
-
-        return [...rules, rule].slice(-COMMAND_RULES_MAX);
-      }),
+      updateScoped(projectId, scope, (rules) => toAddedRules(rules, rule)),
+    list: (projectId, scope) => getScoped(projectId, scope),
     remove: (projectId, rule, scope) =>
-      mutate(projectId, scope, (rules) =>
-        rules.includes(rule) ? rules.filter((item) => item !== rule) : rules
-      ),
+      updateScoped(projectId, scope, (rules) => toRemovedRules(rules, rule)),
   };
-}
+};
+
+export { COMMAND_RULES_MAX, createCommandRuleStore, isOrgCapAllowed };
+
+export type { CommandRuleRole, CommandRuleScope, CommandRuleStore };

@@ -11,10 +11,8 @@ class LocalOrgScope extends Context.Service<LocalOrgScope, OrgScope>()(
 
   public static readonly layer = Layer.succeed(
     LocalOrgScope,
-    toPrincipalScope(toLegacyPrincipal())
+    toPrincipalScope(toLegacyPrincipal(), [])
   );
 }
 
 export { LocalOrgScope };
-
-export type { EveryOrg, OrgScope, SomeOrgs } from "./org-scope.js";

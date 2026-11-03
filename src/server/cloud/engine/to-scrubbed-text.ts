@@ -4,13 +4,13 @@ const MCP_KEY_PATTERN = /ds_mcp_[\w-]+/gu;
 
 const REDACTED = "[redacted]";
 
-const scrubText = (text: string): string =>
+const toScrubbedText = (text: string): string =>
   text
     .replaceAll(STUDIO_TOKEN_PATTERN, `__studio_token=${REDACTED}`)
     .replaceAll(JWT_PATTERN, REDACTED)
     .replaceAll(MCP_KEY_PATTERN, REDACTED);
 
-const scrubBuffer = (buffer: Buffer): Buffer =>
-  Buffer.from(scrubText(buffer.toString("latin1")), "latin1");
+const toScrubbedBuffer = (buffer: Buffer): Buffer =>
+  Buffer.from(toScrubbedText(buffer.toString("latin1")), "latin1");
 
-export { scrubBuffer, scrubText };
+export { toScrubbedBuffer, toScrubbedText };

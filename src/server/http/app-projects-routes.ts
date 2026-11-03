@@ -235,14 +235,14 @@ const registerProjectDetailRoutes = (app: Hono, ctx: AppContext): void => {
   app.get("/api/projects/:pid/command-rules", async (c) => {
     const project = await projects.get(c.req.param("pid"));
 
-    return c.json({ rules: await commandRules.list(project.id) });
+    return c.json({ rules: await commandRules.list(project.id, null) });
   });
 
   app.post("/api/projects/:pid/command-rules/remove", async (c) => {
     const project = await projects.get(c.req.param("pid"));
     const rule = requireString(await readBody(c), "rule");
 
-    return c.json({ rules: await commandRules.remove(project.id, rule) });
+    return c.json({ rules: await commandRules.remove(project.id, rule, null) });
   });
 
   app.post("/api/projects/:pid/attachments", async (c) => {

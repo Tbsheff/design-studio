@@ -765,9 +765,9 @@ export function createRunLifecycle(
     const ruleStore = createCommandRuleStore(deps.projects.projectDir);
     const commandRules: CommandRules = {
       allows: async (command) =>
-        anyRuleMatches(await ruleStore.list(projectId), command),
+        anyRuleMatches(await ruleStore.list(projectId, null), command),
       remember: async (rule) => {
-        await ruleStore.add(projectId, rule);
+        await ruleStore.add(projectId, rule, null);
       },
     };
     const deniedTools = new Set<string>();

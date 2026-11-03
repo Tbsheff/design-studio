@@ -5,8 +5,8 @@ import path from "node:path";
 
 import { Context, Effect, Layer } from "effect";
 
-import { checkSourceUpload } from "./engine/check-source-upload.js";
-import type { GuardResult } from "./engine/check-source-upload.js";
+import { inspectSourceUpload } from "./engine/inspect-source-upload.js";
+import type { GuardResult } from "./engine/inspect-source-upload.js";
 
 interface SourceBindings {
   readonly appDir: string;
@@ -137,7 +137,7 @@ class SourceIndexStore extends Context.Service<
 
         const isKnownHash = check.index.has(check.sha256);
 
-        return checkSourceUpload({
+        return inspectSourceUpload({
           appRoot,
           isKnownHash,
           resolved,

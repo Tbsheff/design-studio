@@ -2,6 +2,7 @@ import { lazy, Suspense, useRef, useState } from "react";
 
 import type { Project } from "../../shared/contracts";
 import { api, errorText } from "../api";
+import { KeysPanel } from "../features/settings";
 import { Icon } from "../kit/Icon";
 import { useModalDialog } from "../usePopover";
 import { CommandRules } from "./CommandRules";
@@ -23,7 +24,6 @@ export function SettingsModal({ project, onSaved, onClose }: Props) {
   const saveShip = useRef<(() => Promise<void>) | null>(null);
 
   const dialog = useModalDialog(onClose);
-
   const save = async () => {
     const parsed = parseDraft(draft);
     if ("error" in parsed) {
@@ -74,6 +74,7 @@ export function SettingsModal({ project, onSaved, onClose }: Props) {
         )}
         <Suspense fallback={null}>
           <PublishSetup />
+          <KeysPanel />
         </Suspense>
         {error && (
           <div className="alert error" role="alert">

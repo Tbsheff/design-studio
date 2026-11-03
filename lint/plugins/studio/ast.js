@@ -78,4 +78,13 @@ const rule = (create) => ({
   meta: { schema: [], type: "problem" },
 });
 
-export { lastName, propertyOf, rule, specOf, stringAt, fieldOf, verbOf };
+export {
+  fieldOf,
+  keyName,
+  lastName,
+  propertyOf,
+  rule,
+  specOf,
+  stringAt,
+  verbOf,
+};

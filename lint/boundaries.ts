@@ -128,6 +128,7 @@ export const LAYERS: Layer[] = [
       "design-rules",
       "comments",
       "icons",
+      "mcp-life",
     ],
   },
   {

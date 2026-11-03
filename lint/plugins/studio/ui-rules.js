@@ -1,3 +1,4 @@
+import { relativeOf } from "./facts.js";
 import { lastName, rule } from "./ast.js";
 
 const DESKTOP = "studioDesktop";
@@ -85,7 +86,163 @@ const noCacheTtl = rule((context) => ({
   VariableDeclarator: (node) => reportCache(context, node.id),
 }));
 
+const THEN_MESSAGE =
+  "A .then chain on an action call or in a platform, feature, app, kit or domain file is banned. Use await in an async function, or startTransition from react.";
+
+const WIRE_CAST_MESSAGE =
+  "A type cast on action data in the UI is banned. Use WireOutput<typeof action> from src/shared/actions/_core/action.ts and the typed call from src/ui/platform/http.ts.";
+
+const NEW_UI = /^src\/ui\/(?:app|domain|features|kit|platform)\//u;
+
+const ACTION_IMPORT = /(?:^\.|platform)\/http(?:\.js)?$|\/shared\/actions\/[a-z0-9-]+\/routes(?:\.js)?$/u;
+
+const importsActions = (context) =>
+  context.sourceCode.ast.body.some(
+    (node) =>
+      node.type === "ImportDeclaration" &&
+      node.importKind !== "type" &&
+      ACTION_IMPORT.test(String(node.source.value))
+  );
+
+const isThenCall = (node) =>
+  node.callee.type === "MemberExpression" &&
+  !node.callee.computed &&
+  node.callee.property.name === "then";
+
+const noThen = rule((context) => {
+  const isNew = NEW_UI.test(relativeOf(context.filename));
+
+  if (!isNew && !importsActions(context)) {
+    return {};
+  }
+
+  return {
+    CallExpression: (node) => {
+      if (isThenCall(node)) {
+        context.report({ message: THEN_MESSAGE, node });
+      }
+    },
+  };
+});
+
+const unwrap = (node) => {
+  if (node?.type === "AwaitExpression" || node?.type === "TSNonNullExpression") {
+    return unwrap(node.argument ?? node.expression);
+  }
+
+  if (node?.type === "ParenthesizedExpression") {
+    return unwrap(node.expression);
+  }
+
+  return node;
+};
+
+const HTTP_IMPORT = /(?:^\.|platform)\/http(?:\.js)?$/u;
+
+const ROUTES_IMPORT = /\/shared\/actions\/[a-z0-9-]+\/routes(?:\.js)?$/u;
+
+const isImportFrom = (node, pattern) =>
+  node.type === "ImportDeclaration" && pattern.test(String(node.source.value));
+
+const specifierNames = (node, imported) =>
+  node.specifiers.flatMap((specifier) => {
+    if (imported === null || specifier.imported?.name === imported) {
+      return [specifier.local.name];
+    }
+
+    return [];
+  });
+
+const localNames = (context, pattern, imported) =>
+  context.sourceCode.ast.body.flatMap((node) => {
+    if (!isImportFrom(node, pattern)) {
+      return [];
+    }
+
+    return specifierNames(node, imported);
+  });
+
+const isActionArgument = (node, names) =>
+  node?.type === "Identifier" ||
+  (node?.type === "MemberExpression" &&
+    node.object.type === "Identifier" &&
+    names.routes.has(node.object.name));
+
+const isActionCall = (node, names) => {
+  const inner = unwrap(node);
+
+  return (
+    inner?.type === "CallExpression" &&
+    inner.callee.type === "Identifier" &&
+    names.call.has(inner.callee.name) &&
+    isActionArgument(inner.arguments[0], names)
+  );
+};
+
+const rootName = (node) => {
+  const inner = unwrap(node);
+
+  if (inner?.type === "MemberExpression") {
+    return rootName(inner.object);
+  }
+
+  if (inner?.type === "Identifier") {
+    return inner.name;
+  }
+
+  return null;
+};
+
+const patternNames = (pattern) => {
+  if (pattern.type === "Identifier") {
+    return [pattern.name];
+  }
+
+  if (pattern.type === "ObjectPattern") {
+    return pattern.properties.flatMap((property) =>
+      patternNames(property.value ?? property.argument)
+    );
+  }
+
+  return [];
+};
+
+const isNeverCast = (node) => node.typeAnnotation.type === "TSNeverKeyword";
+
+const noWireCast = rule((context) => {
+  if (!importsActions(context)) {
+    return {};
+  }
+
+  const fromCall = new Set();
+
+  const names = {
+    call: new Set(localNames(context, HTTP_IMPORT, "call")),
+    routes: new Set(localNames(context, ROUTES_IMPORT, null)),
+  };
+
+  const isWire = (node) =>
+    isActionCall(node, names) || fromCall.has(rootName(node));
+
+  return {
+    TSAsExpression: (node) => {
+      if (isWire(node.expression) || isNeverCast(node)) {
+        context.report({ message: WIRE_CAST_MESSAGE, node });
+      }
+    },
+    VariableDeclarator: (node) => {
+      if (isActionCall(node.init, names)) {
+        for (const name of patternNames(node.id)) {
+          fromCall.add(name);
+        }
+      }
+    },
+  };
+});
+
 export {
+  noThen,
+  noWireCast,
   noCacheTtl,
   noDesktopGlobal,
   noPromiseCast,

@@ -304,7 +304,7 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/server/store/{authorizer,data-lock,default-folder,events,git-objects,local-principal,mutex,project-access,skill-store,starters,studio-info}.ts",
       "src/{server/handlers/_core/handler,server/handlers/_core/run-action,server/handlers/studio/handlers,server/handlers/studio/health,server/handlers/studio/list-skills,server/handlers/studio/live,shared/actions/studio/health,shared/actions/studio/list-skills}.ts",
       "src/server/{http/mount,http/mount-all,http/wire-error,mcp/registry,agent-tools/registry,agent-tools/sdk-shape}.ts",
-      "{cloud/publish-worker/src/protocol,src/server/handlers/versions/{live,handlers,list,get,inspect-diff,list-history,list-hunks,apply-history,apply-hunk,create-session,delete-session,rename,restore,restore-history},src/server/store/version-{read,read-core,store,write,write-core,writer},src/shared/actions/versions/{schema,list,get,inspect-diff,list-history,list-hunks,apply-history,apply-hunk,create-session,delete-session,rename,restore,restore-history},src/server/handlers/publish/{live,get,handlers,inspect,list,list-comments,publish,unpublish,restore,delete-comment,start,stop,delete,set,apply},src/server/publish/{cf-cli,publications,publish-core,publish-store,legacy-link,plan-card,plan-input,publish-planner},src/shared/actions/_core/http-status,src/shared/actions/_core/errors/all,src/shared/actions/publish/{errors/status,get,inspect,list,list-comments,publish,unpublish,restore,delete-comment,start,stop,delete,set,apply},src/server/handlers/share/{live,handlers,list,create,delete,update,set-cursor,set-lan},src/server/share/{share-core,share-store,share-listener,live-refresher,share-attempt,share-cards,share-link-store,share-links},src/shared/actions/share/{list,create,delete,update,set-cursor,set-lan},src/server/handlers/comments/{live,handlers,list,search-mention,create,update,delete,delete-reply,create-reply,export,insert,move,set-resolved,start},src/server/comments/{comment-core,comment-store,comment-thread-store,comment-page,work-tree,index,comment-insert,frame-target,comment-run-starter,run-payload,run-watch},src/shared/actions/comments/{schema,errors/status,list,search-mention,create,update,delete,delete-reply,create-reply,export,insert,move,set-resolved,start},src/server/handlers/ship/{live,handlers,get-plan,inspect,publish,get-settings,set-settings},src/server/ship/{ship-core,ship-plans,ship-settings,ship-store,ship-runner},src/shared/actions/ship/{schema,get-plan,inspect,publish,get-settings,set-settings},src/server/handlers/export/{live,handlers,get-code,export,export-frame,export-folder,export-handoff,get-handoff},src/server/export/{export-core,export-store,copy-target,export-writer,export-file,export-runs,export-frames,export-write,folder-export,frame-selector},src/shared/actions/export/{schema,get-code,export,export-frame,export-folder,export-handoff,get-handoff},src/server/handlers/packs/{live,handlers,list,get-pack,inspect-pack,get-draft,inspect-draft,apply-pack,create-draft,create-pack,delete-pack,duplicate-pack,export-pack,import-pack,list-summary,list-problem,publish-draft,set-pack,start-editor,update-pack},src/server/design-system/ops/{library-core,library-reads,pack-store,library-backing,library-cards,library-draft-input,library-drafts,library-writes,pack-writer},src/shared/actions/packs/{schema,list,get-pack,inspect-pack,get-draft,inspect-draft,errors/status,errors/pack-exists,apply-pack,create-draft,create-pack,delete-pack,duplicate-pack,export-pack,import-pack,list-summary,list-problem,publish-draft,set-pack,start-editor,update-pack},src/server/handlers/mcp-read/{live,handlers,get-doctor,get-port-plan,get-usage,list-projects,search-projects,list-found-apps,list-versions,list-files,get-file,list-variants,list-routes,get-frame-html,get-tokens,get-design-md,get-screenshot,get-run-context},src/server/variations/element-variants,src/server/preview/{mcp-read-core,mcp-read-store,doctor-read,usage-read,project-list-read,project-search-read,found-apps-read,version-list-read,file-read,variant-read,route-read,frame-source,frame-html-read,frame-shot-pick,frame-shot-read,token-read,warm-upstream,run-context-read},src/server/mcp/tool-result,src/server/platform/attempt/index,src/shared/actions/mcp-read/{schema,get-doctor,get-port-plan,get-usage,list-projects,search-projects,list-found-apps,list-versions,list-files,get-file,list-variants,list-routes,get-frame-html,get-tokens,get-design-md,get-screenshot,get-run-context}}.ts",
+      "{cloud/publish-worker/src/protocol,src/server/handlers/version/{live,handlers,list,get,inspect-diff,list-history,list-hunks,apply-history,apply-hunk,create-session,delete-session,rename,restore,restore-history},src/server/store/version-{read,read-core,store,write,write-core,writer},src/shared/actions/version/{schema,list,get,inspect-diff,list-history,list-hunks,apply-history,apply-hunk,create-session,delete-session,rename,restore,restore-history},src/server/handlers/publish/{live,get,handlers,inspect,list,list-comments,publish,unpublish,restore,delete-comment,start,stop,delete,set,apply},src/server/publish/{cf-cli,publications,publish-core,publish-store,legacy-link,plan-card,plan-input,publish-planner},src/shared/actions/_core/http-status,src/shared/actions/_core/errors/all,src/shared/actions/publish/{errors/status,get,inspect,list,list-comments,publish,unpublish,restore,delete-comment,start,stop,delete,set,apply},src/server/handlers/share/{live,handlers,list,create,delete,update,set-cursor,set-lan},src/server/share/{share-core,share-store,share-listener,live-refresher,share-attempt,share-cards,share-link-store,share-links},src/shared/actions/share/{list,create,delete,update,set-cursor,set-lan},src/server/handlers/comment/{live,handlers,list,search-mention,create,update,delete,delete-reply,create-reply,export,insert,move,set-resolved,start},src/server/comments/{comment-core,comment-store,comment-thread-store,comment-page,work-tree,index,comment-insert,frame-target,comment-run-starter,run-payload,run-watch},src/shared/actions/comment/{schema,errors/status,list,search-mention,create,update,delete,delete-reply,create-reply,export,insert,move,set-resolved,start},src/server/handlers/ship/{live,handlers,get-plan,inspect,publish,get-settings,set-settings},src/server/ship/{ship-core,ship-plans,ship-settings,ship-store,ship-runner},src/shared/actions/ship/{schema,get-plan,inspect,publish,get-settings,set-settings},src/server/handlers/export/{live,handlers,get-code,export,export-frame,export-folder,export-handoff,get-handoff},src/server/export/{export-core,export-store,copy-target,export-writer,export-file,export-runs,export-frames,export-write,folder-export,frame-selector},src/shared/actions/export/{schema,get-code,export,export-frame,export-folder,export-handoff,get-handoff},src/server/handlers/pack/{live,handlers,list,get-pack,inspect-pack,get-draft,inspect-draft,apply-pack,create-draft,create-pack,delete-pack,duplicate-pack,export-pack,import-pack,list-summary,list-problem,publish-draft,set-pack,start-editor,update-pack},src/server/design-system/ops/{library-core,library-reads,pack-store,library-backing,library-cards,library-draft-input,library-drafts,library-writes,pack-writer},src/shared/actions/pack/{schema,list,get-pack,inspect-pack,get-draft,inspect-draft,errors/status,errors/pack-exists,apply-pack,create-draft,create-pack,delete-pack,duplicate-pack,export-pack,import-pack,list-summary,list-problem,publish-draft,set-pack,start-editor,update-pack},src/server/handlers/workspace/{live,handlers,get-doctor,get-port-plan,get-usage,list-projects,search-projects,list-found-apps,list-versions,list-files,get-file,list-variants,list-routes,get-frame-html,get-tokens,get-design-md,get-screenshot,get-run-context},src/server/variations/element-variants,src/server/preview/{mcp-read-core,mcp-read-store,doctor-read,usage-read,project-list-read,project-search-read,found-apps-read,version-list-read,file-read,variant-read,route-read,frame-source,frame-html-read,frame-shot-pick,frame-shot-read,token-read,warm-upstream,run-context-read},src/server/mcp/tool-result,src/server/platform/attempt/index,src/shared/actions/workspace/{schema,get-doctor,get-port-plan,get-usage,list-projects,search-projects,list-found-apps,list-versions,list-files,get-file,list-variants,list-routes,get-frame-html,get-tokens,get-design-md,get-screenshot,get-run-context}}.ts",
       "src/server/agent/legacy/agent-ops.ts",
       "src/server/agent/legacy/direct-edit.ts",
       "scripts/stamp/{names,templates,templates-ui,write}.ts",
@@ -314,7 +314,7 @@ export const decisionOverrides: OxlintOverride[] = [
   },
   {
     files: [
-      "src/server/{cloud/{session,session-store,client},handlers/cloud/{get,set,delete,live,handlers}}.ts",
+      "src/server/{cloud/{session,session-store,client,cloud-session-writer},handlers/cloud/{get,set,delete,live,handlers}}.ts",
       "src/shared/actions/cloud/{get,set,delete}.ts",
       "src/server/canvas/links/link-{ops,runtime,store,writer}.ts",
       "src/server/canvas/canvas-{ops,runtime,store,writer}.ts",
@@ -351,13 +351,13 @@ export const decisionOverrides: OxlintOverride[] = [
   {
     files: [
       "src/server/app/dev-server-{ops,runner,runtime,store}.ts",
-      "src/server/handlers/devserver/*.ts",
-      "src/shared/actions/devserver/*.ts",
+      "src/server/handlers/dev-server/*.ts",
+      "src/shared/actions/dev-server/*.ts",
     ],
     rules: { "import/no-relative-parent-imports": "off" },
   },
   {
-    files: ["src/shared/actions/devserver/{create,set}.ts"],
+    files: ["src/shared/actions/dev-server/{create,set}.ts"],
     rules: { "unicorn/max-nested-calls": "off" },
   },
   {
@@ -378,36 +378,18 @@ export const decisionOverrides: OxlintOverride[] = [
   },
   {
     files: [
-      "src/server/handlers/mcp-life/*.ts",
-      "src/shared/actions/mcp-life/*.ts",
-      "src/server/export/{approval-window-queue,mcp-activity-log,mcp-life-runtime,mcp-settings-store}.ts",
+      "src/server/handlers/connection/*.ts",
+      "src/shared/actions/connection/*.ts",
+      "src/server/mcp-life/*.ts",
+      "src/server/platform/runtime-slot/index.ts",
     ],
     rules: { "import/no-relative-parent-imports": "off" },
   },
   {
     files: [
-      "src/shared/actions/mcp-life/{answer-approval,get-status,list-activity,list-approvals,set-status}.ts",
+      "src/shared/actions/connection/{set-approval,get-status,list-activity,list-approvals,set-status}.ts",
     ],
     rules: { "unicorn/max-nested-calls": "off" },
-  },
-  {
-    files: [
-      "src/server/handlers/mcp-life/*.ts",
-      "src/server/handlers/devserver/*.ts",
-    ],
-    rules: { "studio/no-deep-area-import": "off" },
-  },
-  {
-    files: ["src/shared/actions/devserver/*.ts"],
-    rules: { "studio/agent-off-reason": "off" },
-  },
-  {
-    files: ["src/server/app/dev-server-runner.ts"],
-    rules: { "studio/no-local-error-bridge": "off" },
-  },
-  {
-    files: ["src/shared/actions/mcp-life/answer-approval.ts"],
-    rules: { "studio/action-verb": "off" },
   },
   {
     files: ["src/server/platform/git/encoding.ts"],
@@ -536,7 +518,7 @@ export const decisionOverrides: OxlintOverride[] = [
   },
   {
     files: [
-      "src/{server/comments/frame-target,server/comments/run-payload,shared/run-target,server/http/spacing-routes,ui/features/spacing/spacing-bands,server/share/share-links,shared/actions/comments/schema}.ts",
+      "src/{server/comments/frame-target,server/comments/run-payload,shared/run-target,server/http/spacing-routes,ui/features/spacing/spacing-bands,server/share/share-links,shared/actions/comment/schema}.ts",
     ],
     rules: { "eslint/id-length": "off" },
   },
@@ -544,7 +526,7 @@ export const decisionOverrides: OxlintOverride[] = [
     files: [
       "src/server/http/app-{context,project-files,request,run-parse,*-routes}.ts",
       "cloud/api/src/http/{api,groups/*}.ts",
-      "{src/ui/api,lint/decisions,src/shared/actions/versions/{index,routes},src/server/handlers/versions/handlers}.ts",
+      "{src/ui/api,lint/decisions,src/shared/actions/version/{index,routes},src/server/handlers/version/handlers}.ts",
     ],
     rules: Object.fromEntries(
       "eslint/max-classes-per-file eslint/new-cap anti-slop/no-chained-type-assertions eslint/no-await-in-loop eslint/no-nested-ternary react-doctor/async-await-in-loop sonarjs/no-nested-conditional unicorn/max-nested-calls unicorn/no-nested-ternary anti-slop/no-conditional-empty-object-spread anti-slop/no-runtime-typeof anti-slop/no-unknown-parameters anti-slop/no-unsafe-dictionary-type anti-slop/require-readable-spacing eslint/func-style eslint/id-length eslint/init-declarations eslint/max-lines eslint/max-lines-per-function eslint/max-statements eslint/no-console eslint/no-continue eslint/no-empty-function eslint/no-magic-numbers eslint/no-promise-executor-return eslint/no-ternary eslint/no-undefined eslint/no-use-before-define eslint/require-unicode-regexp eslint/sort-keys github/no-then import/max-dependencies node/no-sync promise/avoid-new promise/prefer-await-to-callbacks promise/prefer-await-to-then react-doctor/server-sequential-independent-await sonarjs/elseif-without-else sonarjs/max-lines sonarjs/max-lines-per-function sonarjs/no-duplicate-string sonarjs/shorthand-property-grouping sonarjs/too-many-break-or-continue-in-loop typescript/explicit-function-return-type typescript/explicit-module-boundary-types unicorn/no-await-expression-member unicorn/no-useless-undefined unicorn/prefer-number-coercion eslint/no-loop-func eslint/no-unmodified-loop-condition sonarjs/no-nested-functions sonarjs/max-union-size sonarjs/expression-complexity sonarjs/super-linear-regex"

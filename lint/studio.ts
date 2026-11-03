@@ -10,6 +10,12 @@ const AGGREGATORS = [
   "src/server/agent-tools/registry.ts",
 ];
 
+const SERVER_FILES = ["src/server/**/*.ts"];
+
+const SERVER_TESTS = ["src/server/**/*.test.ts"];
+
+const UI_FILES = ["src/ui/**/*.ts", "src/ui/**/*.tsx"];
+
 const studio: OxlintOverride[] = [
   {
     files: ["lint/plugins/studio/*.js"],
@@ -20,20 +26,53 @@ const studio: OxlintOverride[] = [
     rules: { "import/no-default-export": "off" },
   },
   {
+    files: ["lint/plugins/studio/facts.js"],
+    rules: { "node/no-sync": "off" },
+  },
+  {
     files: ["src/shared/actions/**/*.ts"],
     rules: {
+      "studio/action-domain-name": "error",
       "studio/action-verb": "error",
       "studio/agent-off-reason": "error",
+      "studio/write-needs-write-permission": "error",
     },
   },
   {
     files: ["src/server/handlers/**/*.ts"],
-    rules: { "studio/no-deep-area-import": "error" },
+    rules: {
+      "studio/handler-satisfies": "error",
+      "studio/no-deep-area-import": "error",
+      "studio/read-yields-read-service": "error",
+    },
   },
   {
     excludeFiles: ["src/server/platform/attempt/**"],
-    files: ["src/server/**/*.ts"],
+    files: SERVER_FILES,
     rules: { "studio/no-local-error-bridge": "error" },
+  },
+  {
+    excludeFiles: SERVER_TESTS,
+    files: SERVER_FILES,
+    rules: {
+      "studio/no-async-in-service": "error",
+      "studio/service-tag-area": "error",
+    },
+  },
+  {
+    excludeFiles: ["src/server/platform/runtime-slot/**"],
+    files: SERVER_FILES,
+    rules: { "studio/no-runtime-map": "error" },
+  },
+  {
+    excludeFiles: [...SERVER_TESTS, "src/server/direct-edit/engine/**"],
+    files: ["src/server/**/engine/**/*.ts"],
+    rules: { "studio/engine-pure": "error" },
+  },
+  {
+    excludeFiles: ["lint/studio.ts"],
+    files: ["lint/*.ts"],
+    rules: { "studio/no-studio-override": "error" },
   },
   {
     files: ["cloud/api/src/http/**/*.ts"],
@@ -41,12 +80,18 @@ const studio: OxlintOverride[] = [
   },
   { files: AGGREGATORS, rules: { "studio/no-output-guess": "error" } },
   {
-    files: ["src/ui/**/*.ts", "src/ui/**/*.tsx"],
+    files: UI_FILES,
     rules: {
       "studio/no-promise-cast": "error",
+      "studio/no-then": "error",
       "studio/no-wildcard-reexport": "error",
       "studio/read-needs-input": "error",
     },
+  },
+  {
+    excludeFiles: ["src/ui/platform/pack-api.ts"],
+    files: UI_FILES,
+    rules: { "studio/no-wire-cast": "error" },
   },
   {
     files: ["src/ui/platform/**/*.ts", "src/ui/platform/**/*.tsx"],
@@ -54,7 +99,7 @@ const studio: OxlintOverride[] = [
   },
   {
     excludeFiles: ["src/ui/platform/**"],
-    files: ["src/ui/**/*.ts", "src/ui/**/*.tsx"],
+    files: UI_FILES,
     rules: { "studio/no-desktop-global": "error" },
   },
 ];

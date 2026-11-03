@@ -22,22 +22,27 @@ const NO_SERVER = ban(
   ["**/server/**"],
   "Importing src/server from this side is banned. Use the op types from src/shared/contract."
 );
+
 const NO_UI = ban(
   ["**/ui/**"],
   "Importing src/ui from this side is banned. Use the shared types from src/shared."
 );
+
 const NO_BRIDGE = ban(
   ["**/bridge/**"],
   "Importing src/bridge from this side is banned. Use the bridge message types from src/shared."
 );
+
 const NO_DESKTOP = ban(
   ["**/desktop/**"],
   "Importing desktop from this side is banned. Use the desktop helpers from src/ui/platform."
 );
+
 const NO_NODE = ban(
   ["node:*"],
   "Node built-ins on this platform are banned. Use Web APIs or the helpers from src/shared."
 );
+
 const NO_REACT = ban(
   ["react", "react/*", "react-dom", "react-dom/*"],
   "React in src/shared is banned. Use plain TypeScript from src/shared."

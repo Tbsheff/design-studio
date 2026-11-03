@@ -1,0 +1,296 @@
+import { lazy, Suspense, useCallback, useRef, useState } from "react";
+import type { MutableRefObject } from "react";
+
+import type {
+  ProjectKind,
+  SelectionContext,
+  SelectMove,
+  ZoomKey,
+} from "../../../shared/contracts.js";
+import { TRY_VARIANTS_COMMAND } from "../../../shared/element-variants.js";
+import { formatCopyCss } from "../../authoredCss.js";
+import type { PreviewPort } from "../../bridge.js";
+import {
+  commandBlocker,
+  IconSlot,
+  ImageGenerateSlot,
+  ImageSearchMount,
+  runCommand,
+  useIconHost,
+  useImageSearchHost,
+  type GenerateTabProps,
+} from "../../canvas-preview-slots.js";
+import { pasteJsx } from "../../pasteJsx.js";
+import { uiStore } from "../../storage.js";
+import { selectionTargets, structureMenuItems } from "../../structureEdits.js";
+import { requestAuthoredCss } from "../../useAuthoredCss.js";
+import type { LayerEdits } from "../../useLayerEdits.js";
+import { PreviewMenu } from "./preview-menu.js";
+import type { PreviewMenuItem } from "./preview-menu.js";
+
+const renderGenerateTab = (props: GenerateTabProps) => (
+  <ImageGenerateSlot
+    directionId={props.directionId}
+    projectId={props.projectId}
+    target={props.target}
+    onDone={props.onDone}
+  />
+);
+
+const CreateComponentDialog = lazy(async () => {
+  const loaded = await import("../../components/CreateComponentDialog.js");
+
+  return { default: loaded.CreateComponentDialog };
+});
+
+interface Options {
+  selection: SelectionContext[];
+  port: MutableRefObject<PreviewPort | null> | undefined;
+  selectRelative: (selector: string, move: SelectMove) => void;
+  zoom: (key: ZoomKey) => void;
+  edits: Pick<
+    LayerEdits,
+    "enabled" | "structureKey" | "canPaste" | "busy" | "notify"
+  >;
+  ids: { projectId: string; directionId: string | null; kind: ProjectKind };
+}
+
+async function copyCss(
+  port: PreviewPort | null,
+  selector: string
+): Promise<void> {
+  const css = await requestAuthoredCss(port, selector);
+
+  if (css) {
+    await navigator.clipboard
+      .writeText(formatCopyCss(css))
+      .catch(() => undefined);
+  }
+}
+
+function structureItems(o: Options): PreviewMenuItem[] {
+  const edits = o.edits;
+
+  if (!edits.enabled) {
+    return [];
+  }
+
+  const state = {
+    count: o.selection.length,
+    hasSource: selectionTargets(o.selection) !== null,
+    canPaste: edits.canPaste,
+    busy: edits.busy,
+  };
+
+  return structureMenuItems(state, edits.structureKey, true);
+}
+
+function pasteItem(o: Options, target: SelectionContext): PreviewMenuItem[] {
+  if (!o.edits.enabled || !o.ids.directionId) {
+    return [];
+  }
+
+  const blocked =
+    !target.source && !target.owners?.length
+      ? "This element has no source location"
+      : o.edits.busy
+        ? "Wait for the last edit to finish"
+        : null;
+
+  const ids = { projectId: o.ids.projectId, directionId: o.ids.directionId };
+
+  return [
+    {
+      id: "paste-jsx",
+      label: "Paste JSX or Figma",
+      icon: "code",
+      divider: true,
+      run: () => pasteJsx(ids, target, o.edits.notify),
+      ...disabledBy(blocked),
+    },
+  ];
+}
+
+function createItem(o: Options, open: () => void): PreviewMenuItem[] {
+  if (!o.edits.enabled || !o.ids.directionId) {
+    return [];
+  }
+
+  const blocked = createBlocker(o);
+
+  const label =
+    o.selection.length > 1
+      ? `Create component from ${o.selection.length}…`
+      : "Create component…";
+
+  return [
+    {
+      id: "create-component",
+      label,
+      icon: "component",
+      run: open,
+      ...disabledBy(blocked),
+    },
+  ];
+}
+
+function createBlocker(o: Options): string | null {
+  if (o.ids.kind !== "react") {
+    return "Components need a React project. This is a plain HTML page";
+  }
+
+  if (o.selection.some((item) => !item.source && !item.owners?.length)) {
+    return "An element has no source location";
+  }
+
+  return o.edits.busy ? "Wait for the last edit to finish" : null;
+}
+
+function disabledBy(reason: string | null): { disabled?: string } {
+  return reason ? { disabled: reason } : {};
+}
+
+function menuItems(
+  o: Options,
+  target: SelectionContext,
+  openCreate: () => void,
+  iconItems: (target: SelectionContext) => PreviewMenuItem[]
+): PreviewMenuItem[] {
+  return [
+    {
+      id: "ask",
+      label: "Ask the agent about this",
+      icon: "chat",
+      run: () =>
+        void (
+          runCommand("selection.ask-inline") ||
+          runCommand("panel.focus-composer")
+        ),
+    },
+    {
+      id: "variants",
+      label: "Try variants…",
+      icon: "compare",
+      run: () => void runCommand(TRY_VARIANTS_COMMAND),
+      ...disabledBy(commandBlocker(TRY_VARIANTS_COMMAND)),
+    },
+    {
+      id: "parent",
+      label: "Select parent",
+      icon: "pointer",
+      keyId: "select-parent",
+      run: () => o.selectRelative(target.selector, "parent"),
+    },
+    {
+      id: "child",
+      label: "Select child",
+      icon: "pointer",
+      keyId: "select-child",
+      run: () => o.selectRelative(target.selector, "child"),
+    },
+    {
+      id: "copy-css",
+      label: "Copy CSS",
+      icon: "copy",
+      run: () => copyCss(o.port?.current ?? null, target.selector),
+    },
+    {
+      id: "zoom",
+      label: "Zoom to selection",
+      icon: "search",
+      keyId: "zoom-selection",
+      run: () => o.zoom("selection"),
+    },
+    {
+      id: "layers",
+      label: "Show in layers",
+      icon: "layers",
+      keyId: "layers",
+      run: () => uiStore.set({ layersOpen: true }),
+    },
+    ...structureItems(o),
+    ...pasteItem(o, target),
+    ...iconItems(target),
+    ...createItem(o, openCreate),
+  ];
+}
+
+export function usePreviewMenu(o: Options) {
+  const [at, setAt] = useState<{ x: number; y: number } | null>(null);
+  const latest = useRef(o);
+  latest.current = o;
+
+  const onContextMenu = useCallback(
+    (point: { x: number; y: number }) => setAt(point),
+    []
+  );
+
+  const close = useCallback(() => setAt(null), []);
+  const [creating, setCreating] = useState<SelectionContext[] | null>(null);
+  const target = o.selection.at(-1);
+  const openCreate = () => setCreating(latest.current.selection);
+  const directionId = o.ids.directionId;
+  const hostOptions = {
+    directionId,
+    busy: o.edits.busy,
+    enabled: o.edits.enabled,
+    notify: o.edits.notify,
+    projectId: o.ids.projectId,
+    selection: o.selection,
+  };
+  const icons = useIconHost(hostOptions);
+  const photos = useImageSearchHost(hostOptions);
+
+  const dialog =
+    creating && directionId ? (
+      <Suspense fallback={null}>
+        <CreateComponentDialog
+          ids={{ projectId: o.ids.projectId, directionId }}
+          selection={creating}
+          onDone={o.edits.notify}
+          onClose={() => setCreating(null)}
+        />
+      </Suspense>
+    ) : null;
+
+  const items =
+    at && target
+      ? menuItems(latest.current, target, openCreate, (item) => [
+          ...icons.items(item),
+          ...photos.items(item),
+        ])
+      : [];
+
+  const menu = (
+    <>
+      {at && target ? (
+        <PreviewMenu
+          at={at}
+          label={`Actions for ${target.tag}`}
+          items={items}
+          onClose={close}
+        />
+      ) : null}
+      {dialog}
+      {icons.opened && directionId ? (
+        <IconSlot
+          projectId={o.ids.projectId}
+          directionId={directionId}
+          mode={icons.opened.mode}
+          target={icons.opened.target}
+          onClose={icons.close}
+          onDone={o.edits.notify}
+        />
+      ) : null}
+      <ImageSearchMount
+        directionId={directionId}
+        host={photos}
+        projectId={o.ids.projectId}
+        renderGenerate={renderGenerateTab}
+        onDone={o.edits.notify}
+      />
+    </>
+  );
+
+  return { onContextMenu, menu };
+}

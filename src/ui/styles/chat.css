@@ -1213,3 +1213,22 @@
 .run[data-run-id] {
   scroll-margin-top: calc(36px + var(--s-4));
 }
+
+.permission-rows {
+  margin: 0;
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+}
+.permission-row {
+  display: flex;
+  gap: 8px;
+}
+.permission-row dt {
+  color: var(--text-muted, inherit);
+  min-width: 64px;
+}
+.permission-row dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}

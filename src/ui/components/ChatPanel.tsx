@@ -1,4 +1,12 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  Suspense,
+} from "react";
 import type { ReactNode } from "react";
 
 import type { Direction } from "../../shared/contracts";
@@ -15,6 +23,7 @@ import {
   chatSearchOpen,
   focusChatSearchButton,
 } from "../chatSearchState";
+import { ApprovalCard } from "../features/agent-approval";
 import { Icon } from "../kit/Icon";
 import { useLive } from "../platform/live-store";
 import { canPolishRun } from "../polish";
@@ -329,13 +338,19 @@ const RunEntry = memo(function RunEntry({
         <MessageContent className="run-body gap-3">
           <RunParts run={run} running={running} workTree={workTree} />
           {running &&
-            run.permissions.map((request) => (
-              <PermissionPrompt
-                key={request.id}
-                runId={runId}
-                request={request}
-              />
-            ))}
+            run.permissions.map((request) =>
+              request.card ? (
+                <Suspense key={request.id} fallback={null}>
+                  <ApprovalCard runId={runId} request={request} />
+                </Suspense>
+              ) : (
+                <PermissionPrompt
+                  key={request.id}
+                  runId={runId}
+                  request={request}
+                />
+              )
+            )}
           {running && (
             <LiveStatus
               run={run}

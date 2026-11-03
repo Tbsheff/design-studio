@@ -10,6 +10,7 @@ import { openHome, sendPrompt } from "./support/studio";
 import type { StudioApi } from "./support/studio";
 
 const REVIEW_DIR = path.join(ROOT, "design-review");
+
 const SIZES = [
   [1440, 900],
   [800, 934],
@@ -19,8 +20,9 @@ async function openProject(page: Page, api: StudioApi): Promise<Project> {
   const { project } = await api.call<{ project: Project }>(
     "POST",
     "/api/projects",
-    { prompt: "Chat Panel Bakery", kind: "html" }
+    { kind: "html", prompt: "Chat Panel Bakery" }
   );
+
   await api.waitForRuns(project.id, 1);
   await page.evaluate((id) => {
     const raw = localStorage.getItem("design-studio.ui.v1");
@@ -31,7 +33,8 @@ async function openProject(page: Page, api: StudioApi): Promise<Project> {
     );
   }, project.id);
   await page.reload();
-  await expect(page.locator(".topbar")).toBeVisible();
+  await expect.soft(page.locator(".topbar")).toBeVisible();
+
   return api.project(project.id);
 }
 
@@ -58,82 +61,96 @@ test("chat panel: markdown replies, tool rows, live status, error, composer", as
     .locator(".msg.assistant .msg-body")
     .filter({ has: page.locator("code", { hasText: "index.html" }) })
     .first();
-  await expect(
-    firstReply.locator("code", { hasText: "index.html" })
-  ).toBeVisible();
-  await expect(firstReply).not.toContainText("`");
-  await expect(
-    page.getByRole("button", { name: /^Show (more|less)$/ })
-  ).toHaveCount(0);
-  await expect(chat.locator(".run .status.completed")).toHaveCount(1);
-  await expect(
-    chat.locator("[data-run-id]").first().locator(".tool-row")
-  ).toHaveCount(5);
+
+  await expect
+    .soft(firstReply.locator("code", { hasText: "index.html" }))
+    .toBeVisible();
+  await expect.soft(firstReply).not.toContainText("`");
+  await expect
+    .soft(page.getByRole("button", { name: /^Show (more|less)$/ }))
+    .toHaveCount(0);
+  await expect.soft(chat.locator(".run .status.completed")).toHaveCount(1);
+  await expect
+    .soft(chat.locator("[data-run-id]").first().locator(".tool-row"))
+    .toHaveCount(5);
+
   const fileRows = chat.locator(".tool-row").filter({
     has: page.locator("[data-slot=chip]", { hasText: "index.html" }),
   });
-  await expect(fileRows.and(chat.locator(".tool-row.done"))).toHaveCount(1);
-  await expect(
-    chat
-      .locator('.tool-row.done[data-tool="mcp__studio__render_check"]')
-      .first()
-  ).toBeVisible();
-  await expect(chat.locator(".tool-row [data-slot=chip]").first()).toHaveText(
-    "index.html"
-  );
+
+  await expect
+    .soft(fileRows.and(chat.locator(".tool-row.done")))
+    .toHaveCount(1);
+  await expect
+    .soft(
+      chat
+        .locator('.tool-row.done[data-tool="mcp__studio__render_check"]')
+        .first()
+    )
+    .toBeVisible();
+  await expect
+    .soft(chat.locator(".tool-row [data-slot=chip]").first())
+    .toHaveText("index.html");
 
   const input = page.getByPlaceholder("Describe a change");
   await input.focus();
+
   const inputStyle = await input.evaluate((el) => {
     const s = getComputedStyle(el);
+
     return {
-      shadow: s.boxShadow,
-      radius: s.borderRadius,
-      padding: s.padding,
       font: s.fontFamily,
+      padding: s.padding,
+      radius: s.borderRadius,
+      shadow: s.boxShadow,
     };
   });
-  expect(inputStyle).toMatchObject({
-    shadow: "none",
-    radius: "0px",
+
+  expect.soft(inputStyle).toMatchObject({
     padding: "8px 12px",
+    radius: "0px",
+    shadow: "none",
   });
-  expect(inputStyle.font).toContain("Inter");
+  expect.soft(inputStyle.font).toContain("Inter");
+
   const triggerStyle = await chat
     .locator("[data-slot=action-trigger]")
     .first()
     .evaluate((el) => {
       const s = getComputedStyle(el);
+
       return {
-        border: s.borderTopWidth,
         background: s.backgroundColor,
+        border: s.borderTopWidth,
         font: s.fontFamily,
       };
     });
-  expect(triggerStyle).toMatchObject({
-    border: "0px",
+
+  expect.soft(triggerStyle).toMatchObject({
     background: "rgba(0, 0, 0, 0)",
+    border: "0px",
   });
-  expect(triggerStyle.font).toContain("Inter");
+  expect.soft(triggerStyle.font).toContain("Inter");
 
   let runs = 1;
+
   for (const [width, height] of SIZES) {
-    await page.setViewportSize({ width, height });
+    await page.setViewportSize({ height, width });
     await sendPrompt(page, `[slow] Add opening hours at ${width}`);
     runs += 1;
-    await expect(chat.locator(".tool-row.pending")).toHaveCount(1);
-    await expect(page.locator(".live-status [role=status]")).toBeVisible();
-    await expect(
-      page.getByRole("button", { name: "Stop", exact: true })
-    ).toBeVisible();
+    await expect.soft(chat.locator(".tool-row.pending")).toHaveCount(1);
+    await expect.soft(page.locator(".live-status [role=status]")).toBeVisible();
+    await expect
+      .soft(page.getByRole("button", { exact: true, name: "Stop" }))
+      .toBeVisible();
     await shoot(page, "streaming", width, height);
     await api.waitForRuns(project.id, runs);
-    await expect(chat.locator(".run .status.completed")).toHaveCount(runs);
-    await expect(chat.locator(".tool-row.pending")).toHaveCount(0);
+    await expect.soft(chat.locator(".run .status.completed")).toHaveCount(runs);
+    await expect.soft(chat.locator(".tool-row.pending")).toHaveCount(0);
     await fileRows.last().locator("[data-slot=action-trigger]").click();
-    await expect(
-      chat.locator("[data-slot=action-content]").last()
-    ).toContainText(`Add opening hours at ${width}`);
+    await expect
+      .soft(chat.locator("[data-slot=action-content]").last())
+      .toContainText(`Add opening hours at ${width}`);
     await page.waitForTimeout(250);
     await shoot(page, "tool-rows", width, height);
   }
@@ -141,17 +158,19 @@ test("chat panel: markdown replies, tool rows, live status, error, composer", as
   await sendPrompt(page, "[fail] Add a footer");
   runs += 1;
   await api.waitForRuns(project.id, runs);
-  await expect(chat.locator(".status.failed")).toHaveCount(1);
-  await expect(chat.locator(".run-error")).toContainText(
-    "Mock failure after first write."
-  );
-  await expect(
-    page.getByRole("button", { name: /^Show (more|less)$/ })
-  ).toHaveCount(0);
+  await expect.soft(chat.locator(".status.failed")).toHaveCount(1);
+  await expect
+    .soft(chat.locator(".run-error"))
+    .toContainText("Mock failure after first write.");
+  await expect
+    .soft(page.getByRole("button", { name: /^Show (more|less)$/ }))
+    .toHaveCount(0);
+
   for (const [width, height] of SIZES) {
-    await page.setViewportSize({ width, height });
+    await page.setViewportSize({ height, width });
     await page.waitForTimeout(300);
     await shoot(page, "finished", width, height);
   }
-  await page.setViewportSize({ width: 1600, height: 1000 });
+
+  await page.setViewportSize({ height: 1000, width: 1600 });
 });

@@ -35,11 +35,11 @@ export function desktopEnv(
   return {
     ...env,
     STUDIO_AGENT: "mock",
-    STUDIO_DATA_DIR: path.join(work, "data"),
-    STUDIO_PROJECTS_DIR: path.join(work, "Design Studio"),
     STUDIO_CLAUDE_HOME: claudeHome,
-    STUDIO_DESKTOP_USER_DATA: path.join(work, "user-data"),
+    STUDIO_DATA_DIR: path.join(work, "data"),
     STUDIO_DESKTOP_SETUP: "skip",
+    STUDIO_DESKTOP_USER_DATA: path.join(work, "user-data"),
+    STUDIO_PROJECTS_DIR: path.join(work, "Design Studio"),
     ...extra,
   };
 }
@@ -49,9 +49,9 @@ export function launchDesktop(
 ): Promise<ElectronApplication> {
   if (PACKAGED_EXECUTABLE) {
     return electron.launch({
-      executablePath: PACKAGED_EXECUTABLE,
       args: [],
       env,
+      executablePath: PACKAGED_EXECUTABLE,
       timeout: 120_000,
     });
   }

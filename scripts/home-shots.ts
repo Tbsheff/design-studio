@@ -18,8 +18,8 @@ const PNG_1PX = Buffer.from(
 async function shot(page: Page, name: string, fullPage = false): Promise<void> {
   await page.waitForTimeout(400);
   await page.screenshot({
-    path: path.join(out, `${prefix}-${name}.png`),
     fullPage,
+    path: path.join(out, `${prefix}-${name}.png`),
   });
   console.log(`${prefix}-${name}.png`);
 }
@@ -35,8 +35,8 @@ async function main(): Promise<void> {
   const browser = await chromium.launch({ channel: "chrome", headless: true });
 
   const page = await browser.newPage({
-    viewport: { width: 1440, height: 900 },
     deviceScaleFactor: 2,
+    viewport: { height: 900, width: 1440 },
   });
 
   await page.goto(base);
@@ -44,7 +44,7 @@ async function main(): Promise<void> {
   await shot(page, "home-first-run", true);
 
   await page.getByLabel("Describe the design").fill("Bakery landing page");
-  await page.getByRole("button", { name: "Create", exact: true }).click();
+  await page.getByRole("button", { exact: true, name: "Create" }).click();
   await page.getByRole("heading", { name: "A few quick questions" }).waitFor();
   await page.locator(".clarify-q").first().getByRole("radio").first().click();
   await shot(page, "home-questions");
@@ -57,16 +57,16 @@ async function main(): Promise<void> {
     data.setData("text/plain", "https://example.com/pricing");
     document.querySelector('[aria-label="Describe the design"]')?.dispatchEvent(
       new ClipboardEvent("paste", {
-        clipboardData: data,
         bubbles: true,
         cancelable: true,
+        clipboardData: data,
       })
     );
   });
   await page.setInputFiles('input[type="file"]', {
-    name: "moodboard.png",
-    mimeType: "image/png",
     buffer: PNG_1PX,
+    mimeType: "image/png",
+    name: "moodboard.png",
   });
   await page
     .getByLabel("Describe the design")
@@ -80,12 +80,12 @@ async function main(): Promise<void> {
       async ([r, b, t]) =>
         (
           await fetch(r as string, {
-            method: "POST",
-            headers: {
-              "x-studio-token": t as string,
-              "content-type": "application/json",
-            },
             body: JSON.stringify(b),
+            headers: {
+              "content-type": "application/json",
+              "x-studio-token": t as string,
+            },
+            method: "POST",
           })
         ).json(),
       [route, body, studioToken] as const

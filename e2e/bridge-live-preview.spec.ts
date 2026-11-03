@@ -5,6 +5,7 @@ import { loadBridgeScript } from "../src/server/preview/index";
 
 const ORIGIN = "http://bridge-preview.localhost:4999";
 const TOKEN = "live-preview-token";
+
 const PAGE = `<!doctype html><html><head><script src="/__studio/bridge.js"></script></head><body>
 <h1 id="title" style="color: green !important; margin: 0 auto">Hello <!-- c --></h1>
 <p id="plain">Plain</p>
@@ -15,18 +16,23 @@ async function openBridgePage(page: Page): Promise<void> {
   const bridge = await loadBridgeScript();
   await page.route(`${ORIGIN}/**`, async (route) => {
     const url = new URL(route.request().url());
+
     if (url.pathname === "/__studio/bridge.js") {
-      await route.fulfill({ contentType: "text/javascript", body: bridge });
+      await route.fulfill({ body: bridge, contentType: "text/javascript" });
+
       return;
     }
+
     if (url.pathname === "/__studio/changes") {
       await route.fulfill({
-        contentType: "application/json",
         body: '{"changedAt":0}',
+        contentType: "application/json",
       });
+
       return;
     }
-    await route.fulfill({ contentType: "text/html", body: PAGE });
+
+    await route.fulfill({ body: PAGE, contentType: "text/html" });
   });
   await page.goto(
     `${ORIGIN}/index.html?__studio_token=${TOKEN}&__studio_parent=${encodeURIComponent(ORIGIN)}`
@@ -61,13 +67,14 @@ function snapshot(page: Page): Promise<{
 }> {
   return page.evaluate(() => {
     const byId = (id: string): Element =>
-      document.getElementById(id) as Element;
+      document.querySelector(`#${id}`) as Element;
+
     return {
-      title: byId("title").getAttribute("style"),
-      plain: byId("plain").getAttribute("style"),
-      titleHtml: byId("title").innerHTML,
-      plainHtml: byId("plain").innerHTML,
       parentHtml: byId("parent").innerHTML,
+      plain: byId("plain").getAttribute("style"),
+      plainHtml: byId("plain").innerHTML,
+      title: byId("title").getAttribute("style"),
+      titleHtml: byId("title").innerHTML,
     };
   });
 }
@@ -79,78 +86,83 @@ test("bridge live preview applies style and text and resets them exactly", async
   const before = await snapshot(page);
 
   await send(page, {
-    type: "preview-style",
     selector: "#title",
     style: { color: "red", "font-size": "40px", position: "fixed" },
+    type: "preview-style",
   });
   await send(page, {
-    type: "preview-style",
     selector: "#plain",
     style: { "background-color": "blue", "margin-top": null },
+    type: "preview-style",
   });
   await send(page, {
-    type: "preview-style",
     selector: "#title",
     style: { color: "purple" },
+    type: "preview-style",
   });
   await send(page, {
-    type: "preview-text",
     selector: "#plain",
     text: "Live <text>",
+    type: "preview-text",
   });
   await send(page, {
-    type: "preview-text",
     selector: "#plain",
     text: "Live again",
+    type: "preview-text",
   });
-  await send(page, { type: "preview-text", selector: "#parent", text: "nope" });
+  await send(page, { selector: "#parent", text: "nope", type: "preview-text" });
 
   const during = await page.evaluate(() => {
-    const title = document.getElementById("title") as HTMLElement;
-    const plain = document.getElementById("plain") as HTMLElement;
+    const title = document.querySelector("#title") as HTMLElement;
+    const plain = document.querySelector("#plain") as HTMLElement;
+
     return {
       color: title.style.getPropertyValue("color"),
-      size: title.style.getPropertyValue("font-size"),
-      position: title.style.getPropertyValue("position"),
+      parentHtml: (document.getElementById("parent") as HTMLElement).innerHTML,
       plainBg: plain.style.getPropertyValue("background-color"),
       plainText: plain.textContent,
-      parentHtml: (document.getElementById("parent") as HTMLElement).innerHTML,
+      position: title.style.getPropertyValue("position"),
+      size: title.style.getPropertyValue("font-size"),
     };
   });
-  expect(during).toEqual({
+
+  expect.soft(during).toEqual({
     color: "purple",
-    size: "40px",
-    position: "",
+    parentHtml: before.parentHtml,
     plainBg: "blue",
     plainText: "Live again",
-    parentHtml: before.parentHtml,
+    position: "",
+    size: "40px",
   });
 
   await send(
     page,
-    { type: "preview-style", selector: "#plain", style: { color: "red" } },
+    { selector: "#plain", style: { color: "red" }, type: "preview-style" },
     "wrong-token"
   );
-  expect((await snapshot(page)).plain).toBe("background-color: blue;");
+  expect.soft((await snapshot(page)).plain).toBe("background-color: blue;");
 
   await send(page, { type: "preview-reset" });
   const after = await snapshot(page);
-  expect(after.plain).toBeNull();
-  expect(after.plainHtml).toBe(before.plainHtml);
-  expect(after.titleHtml).toBe(before.titleHtml);
+  expect.soft(after.plain).toBeNull();
+  expect.soft(after.plainHtml).toBe(before.plainHtml);
+  expect.soft(after.titleHtml).toBe(before.titleHtml);
+
   const titleStyle = await page.evaluate(() => {
-    const title = document.getElementById("title") as HTMLElement;
+    const title = document.querySelector("#title") as HTMLElement;
+
     return {
       color: title.style.getPropertyValue("color"),
+      margin: title.style.getPropertyValue("margin"),
       priority: title.style.getPropertyPriority("color"),
       size: title.style.getPropertyValue("font-size"),
-      margin: title.style.getPropertyValue("margin"),
     };
   });
-  expect(titleStyle).toEqual({
+
+  expect.soft(titleStyle).toEqual({
     color: "green",
+    margin: "0px auto",
     priority: "important",
     size: "",
-    margin: "0px auto",
   });
 });

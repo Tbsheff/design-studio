@@ -22,17 +22,17 @@ async function exists(page: Page, selector: string): Promise<boolean> {
 
 async function main(): Promise<void> {
   const browser = await chromium.launch({
-    channel: "chrome",
-    headless: true,
     args: [
       "--disable-site-isolation-trials",
       "--disable-features=IsolateOrigins,site-per-process",
     ],
+    channel: "chrome",
+    headless: true,
   });
 
   const page = await browser.newPage({
-    viewport: { width: 1440, height: 900 },
     deviceScaleFactor: 2,
+    viewport: { height: 900, width: 1440 },
   });
 
   await page.goto(base);
@@ -47,9 +47,9 @@ async function main(): Promise<void> {
     async (t) =>
       (
         await fetch("/api/projects/from-starter", {
-          method: "POST",
-          headers: { "x-studio-token": t, "content-type": "application/json" },
           body: JSON.stringify({ starterId: "landing" }),
+          headers: { "content-type": "application/json", "x-studio-token": t },
+          method: "POST",
         })
       ).json(),
     token
@@ -95,7 +95,7 @@ async function main(): Promise<void> {
       await page.keyboard.up("Alt");
     }
 
-    await page.getByRole("button", { name: "Layers", exact: true }).click();
+    await page.getByRole("button", { exact: true, name: "Layers" }).click();
     await page.locator(".layers-row").first().waitFor();
     await shot(page, "canvas-layers");
   }
@@ -103,14 +103,14 @@ async function main(): Promise<void> {
   if (await exists(page, '[aria-label="Add frame"]')) {
     for (const size of ["Tablet 768", "Mobile 390"]) {
       await page
-        .getByRole("button", { name: "Add frame", exact: true })
+        .getByRole("button", { exact: true, name: "Add frame" })
         .click();
       await page.getByRole("menuitem", { name: size }).click();
     }
 
     await page.keyboard.press("Shift+Digit1");
     await shot(page, "canvas-frames");
-    await page.getByRole("button", { name: "Add frame", exact: true }).click();
+    await page.getByRole("button", { exact: true, name: "Add frame" }).click();
     await shot(page, "canvas-add-frame-menu");
     await page.keyboard.press("Escape");
   }

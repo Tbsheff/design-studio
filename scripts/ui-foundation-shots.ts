@@ -8,13 +8,14 @@ const base = process.env.STUDIO_URL ?? "http://127.0.0.1:4870";
 const sheet = process.env.SHEET_URL;
 const out = path.resolve(process.argv[2] ?? "/tmp/ui-foundation");
 const prefix = process.argv[3] ?? "after";
+
 mkdirSync(out, { recursive: true });
 
 async function shot(page: Page, name: string, fullPage = false): Promise<void> {
   await page.waitForTimeout(500);
   await page.screenshot({
-    path: path.join(out, `${prefix}-${name}.png`),
     fullPage,
+    path: path.join(out, `${prefix}-${name}.png`),
   });
   console.log(`${prefix}-${name}.png`);
 }
@@ -23,17 +24,19 @@ async function openProject(page: Page): Promise<void> {
   const token =
     (await page.locator('meta[name="studio-token"]').getAttribute("content")) ??
     "";
+
   const project = await page.evaluate(
     async (t) =>
       (
         await fetch("/api/projects/from-starter", {
-          method: "POST",
-          headers: { "x-studio-token": t, "content-type": "application/json" },
           body: JSON.stringify({ starterId: "landing" }),
+          headers: { "content-type": "application/json", "x-studio-token": t },
+          method: "POST",
         })
       ).json(),
     token
   );
+
   await page.goto(base);
   await page
     .locator(
@@ -46,11 +49,13 @@ async function openProject(page: Page): Promise<void> {
 
 async function main(): Promise<void> {
   const browser = await chromium.launch({ channel: "chrome", headless: true });
+
   for (const theme of ["dark", "light"] as const) {
     const context = await browser.newContext({
-      viewport: { width: 1440, height: 900 },
       deviceScaleFactor: 1,
+      viewport: { height: 900, width: 1440 },
     });
+
     await context.addInitScript(
       (value) => localStorage.setItem("design-studio.theme", value),
       theme
@@ -61,13 +66,16 @@ async function main(): Promise<void> {
     await shot(page, `home-${theme}`);
     await openProject(page);
     await shot(page, `studio-${theme}`);
+
     if (sheet) {
       await page.goto(`${sheet}?theme=${theme}`);
       await page.waitForLoadState("networkidle");
       await shot(page, `primitives-${theme}`, true);
     }
+
     await context.close();
   }
+
   await browser.close();
 }
 

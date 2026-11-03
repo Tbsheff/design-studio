@@ -9,10 +9,12 @@ import {
 import os from "node:os";
 import path from "node:path";
 
-import { expect, type Frame, type Page } from "@playwright/test";
+import { expect } from "@playwright/test";
+import type { Frame, Page } from "@playwright/test";
 
 import { ROOT } from "../../e2e/support/server";
-import { openHome, type StudioApi } from "../../e2e/support/studio";
+import { openHome } from "../../e2e/support/studio";
+import type { StudioApi } from "../../e2e/support/studio";
 import type { Project, RunSummary } from "../../src/shared/contracts";
 import { BACKUP_STATE } from "./ports";
 
@@ -62,7 +64,7 @@ export async function createProject(
   const { project } = await api.call<{ project: Project }>(
     "POST",
     "/api/projects",
-    { prompt, kind }
+    { kind, prompt }
   );
 
   await api.waitForRuns(project.id, 1, 120_000);
@@ -91,7 +93,7 @@ export async function importHtmlFixture(
 
   await openStudio(page, project.id);
 
-  return { api, project, folder };
+  return { api, folder, project };
 }
 
 export async function startRun(
@@ -104,7 +106,7 @@ export async function startRun(
   const { runId } = await api.call<{ runId: string }>(
     "POST",
     `/api/projects/${pid}/d/${did}/runs`,
-    { prompt, mode: "edit", ...extra }
+    { mode: "edit", prompt, ...extra }
   );
 
   return runId;
@@ -163,8 +165,8 @@ export function git(projectId: string, args: string[]): string {
   const gitDir = path.join(readState().dataDir, "projects", projectId, "git");
 
   return execFileSync("git", args, {
-    env: { ...process.env, GIT_DIR: gitDir },
     encoding: "utf-8",
+    env: { ...process.env, GIT_DIR: gitDir },
   });
 }
 
@@ -195,7 +197,7 @@ export function changedLines(
 
   for (let index = 0; index < max; index += 1) {
     if (a[index] !== b[index]) {
-      out.push({ index, before: a[index] ?? "", after: b[index] ?? "" });
+      out.push({ after: b[index] ?? "", before: a[index] ?? "", index });
     }
   }
 

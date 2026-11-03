@@ -52,14 +52,14 @@ async function call<T>(
   return page.evaluate(
     async ({ t, m, u, b }) => {
       const res = await fetch(u, {
-        method: m,
-        headers: { "x-studio-token": t, "content-type": "application/json" },
         body: b === undefined ? undefined : JSON.stringify(b),
+        headers: { "content-type": "application/json", "x-studio-token": t },
+        method: m,
       });
 
       return res.json();
     },
-    { t: token, m: method, u: url, b: body }
+    { b: body, m: method, t: token, u: url }
   ) as Promise<T>;
 }
 
@@ -94,17 +94,17 @@ const frame = (page: Page) => page.frameLocator("iframe.frame.front");
 
 async function main(): Promise<void> {
   const browser = await chromium.launch({
-    channel: "chrome",
-    headless: true,
     args: [
       "--disable-site-isolation-trials",
       "--disable-features=IsolateOrigins,site-per-process",
     ],
+    channel: "chrome",
+    headless: true,
   });
 
   const page = await browser.newPage({
-    viewport: { width: 1440, height: 900 },
     deviceScaleFactor: 2,
+    viewport: { height: 900, width: 1440 },
   });
 
   debugPage = page;
@@ -119,9 +119,9 @@ async function main(): Promise<void> {
   const created = await call<{
     project: { id: string; directions: { workTree: string }[] };
   }>(page, token, "POST", "/api/projects", {
-    prompt: "Harbor Coffee",
     kind: "html",
     packId: "editorial",
+    prompt: "Harbor Coffee",
     startRun: false,
   });
 
@@ -173,7 +173,7 @@ async function main(): Promise<void> {
   });
   await step("inspector", async () => {
     await page
-      .getByRole("button", { name: "Select", exact: true })
+      .getByRole("button", { exact: true, name: "Select" })
       .click(SHORT);
     await page.waitForTimeout(500);
     const target = frame(page).locator(".cta").first();
@@ -193,7 +193,7 @@ async function main(): Promise<void> {
   });
   await step("design-md", async () => {
     await page
-      .getByRole("button", { name: "DESIGN.md", exact: true })
+      .getByRole("button", { exact: true, name: "DESIGN.md" })
       .click(SHORT);
     await page.locator("dialog.modal[open]").waitFor(SHORT);
     await shot(page, "design-md");

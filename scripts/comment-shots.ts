@@ -35,17 +35,17 @@ async function api<T>(
           ?.content ?? "";
 
       const res = await fetch(url, {
-        method,
-        headers: {
-          "x-studio-token": token,
-          "content-type": "application/json",
-        },
         body: body === undefined ? undefined : JSON.stringify(body),
+        headers: {
+          "content-type": "application/json",
+          "x-studio-token": token,
+        },
+        method,
       });
 
       return res.json();
     },
-    { method, url, body }
+    { body, method, url }
   ) as Promise<T>;
 }
 
@@ -71,7 +71,7 @@ async function openProject(
   await page.waitForTimeout(800);
   const did = project.directions[0]?.id ?? "main";
 
-  return { id: project.id, did };
+  return { did, id: project.id };
 }
 
 async function run(
@@ -79,8 +79,8 @@ async function run(
   browser: Awaited<ReturnType<typeof chromium.launch>>
 ): Promise<void> {
   const page = await browser.newPage({
-    viewport: { width: 1440, height: 900 },
     deviceScaleFactor: 2,
+    viewport: { height: 900, width: 1440 },
   });
 
   const { id, did } = await openProject(page, theme);
@@ -174,8 +174,8 @@ async function run(
     .locator("textarea")
     .pressSequentially("Make the headline one line on desktop.");
   await api(page, "POST", `/api/projects/${id}/d/${did}/runs`, {
-    prompt: "Tighten the hero spacing [slow]",
     mode: "edit",
+    prompt: "Tighten the hero spacing [slow]",
   });
   await page.getByTestId("comment-run-hint").waitFor({ timeout: 4000 });
   await shot(page, theme, "6-run-active");
@@ -189,14 +189,14 @@ async function run(
   await page.close();
 }
 
-type Row = {
+interface Row {
   id: string;
   text: string;
   status: string;
   mentions?: unknown[];
   attachmentIds?: string[];
   runId?: string;
-};
+}
 
 async function until<T>(
   read: () => Promise<T>,
@@ -237,7 +237,7 @@ async function verify(page: Page, id: string, did: string): Promise<void> {
         "GET",
         `/api/projects/${id}/runs`
       )
-    ).map((run) => ({ status: run.status, prompt: run.request.prompt }));
+    ).map((run) => ({ prompt: run.request.prompt, status: run.status }));
 
   const idle = async () =>
     until(
@@ -336,9 +336,9 @@ async function verify(page: Page, id: string, did: string): Promise<void> {
     data.items.add(new File([bytes], "dot.png", { type: "image/png" }));
     card.dispatchEvent(
       new DragEvent("drop", {
-        dataTransfer: data,
         bubbles: true,
         cancelable: true,
+        dataTransfer: data,
       })
     );
   });
@@ -362,8 +362,8 @@ async function verify(page: Page, id: string, did: string): Promise<void> {
 
   const before = (await list()).length;
   await api(page, "POST", `/api/projects/${id}/d/${did}/runs`, {
-    prompt: "Warm up the palette [slow]",
     mode: "edit",
+    prompt: "Warm up the palette [slow]",
   });
   await openCard(page, "h1");
 
@@ -394,12 +394,12 @@ async function verify(page: Page, id: string, did: string): Promise<void> {
 
 async function main(): Promise<void> {
   const browser = await chromium.launch({
-    channel: "chrome",
-    headless: true,
     args: [
       "--disable-site-isolation-trials",
       "--disable-features=IsolateOrigins,site-per-process",
     ],
+    channel: "chrome",
+    headless: true,
   });
 
   const themes = (process.env.THEMES ?? "light,dark").split(",") as Theme[];

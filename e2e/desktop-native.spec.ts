@@ -40,15 +40,17 @@ async function call<T>(
   body?: unknown
 ): Promise<T> {
   const res = await fetch(`${origin}${route}`, {
-    method,
+    body: body === undefined ? undefined : JSON.stringify(body),
     headers: {
       "x-studio-token": token,
       ...(body === undefined ? {} : { "content-type": "application/json" }),
     },
-    body: body === undefined ? undefined : JSON.stringify(body),
+    method,
   });
-  if (!res.ok)
+
+  if (!res.ok) {
     throw new Error(`${method} ${route} -> ${res.status} ${await res.text()}`);
+  }
   return (await res.json()) as T;
 }
 
@@ -61,7 +63,10 @@ function recorded(): Promise<Recorded> {
 async function clickMenu(id: string): Promise<void> {
   await app.evaluate(({ Menu }, menuId) => {
     const item = Menu.getApplicationMenu()?.getMenuItemById(menuId);
-    if (!item) throw new Error(`no menu item ${menuId}`);
+
+    if (!item) {
+      throw new Error(`no menu item ${menuId}`);
+    }
     item.click();
   }, id);
 }
@@ -79,12 +84,14 @@ function site(name: string): string {
     path.join(dir, "index.html"),
     `<!doctype html><html><body><h1>${name}</h1></body></html>\n`
   );
+
   return realpathSync(dir);
 }
 
 async function openedProjectName(): Promise<string> {
-  await expect(page.locator(".topbar")).toBeVisible();
-  return (await page.locator(".topbar").innerText()).trim();
+  await expect.soft(page.locator(".topbar")).toBeVisible();
+
+  return (await page.locator(".topbar").textContent()).trim();
 }
 
 test.beforeAll(async () => {
@@ -95,14 +102,16 @@ test.beforeAll(async () => {
   mkdirSync(path.join(work, "downloads"), { recursive: true });
   app = await launchDesktop(
     desktopEnv(work, {
-      STUDIO_DESKTOP_NOTIFY: "off",
       STUDIO_DESKTOP_DOWNLOADS: path.join(work, "downloads"),
+      STUDIO_DESKTOP_NOTIFY: "off",
     })
   );
   page = await app.firstWindow({ timeout: 120_000 });
-  await expect(page.getByRole("heading", { name: "New project" })).toBeVisible({
-    timeout: 60_000,
-  });
+  await expect
+    .soft(page.getByRole("heading", { name: "New project" }))
+    .toBeVisible({
+      timeout: 60_000,
+    });
   origin = new URL(page.url()).origin;
   token =
     (await page.locator('meta[name="studio-token"]').getAttribute("content")) ??
@@ -110,12 +119,13 @@ test.beforeAll(async () => {
   await app.evaluate(({ app: electronApp, shell }) => {
     const rec: Recorded = {
       commands: [],
-      notices: [],
-      reveals: [],
-      exports: [],
-      recents: [],
       dialogs: [],
+      exports: [],
+      notices: [],
+      recents: [],
+      reveals: [],
     };
+
     (globalThis as unknown as { __rec: Recorded }).__rec = rec;
     electronApp.on("studio-command" as "ready", (command: unknown) =>
       rec.commands.push(command as { type: string })
@@ -136,12 +146,15 @@ test.beforeAll(async () => {
 });
 
 test.afterAll(async () => {
-  if (app) await app.close();
+  if (app) {
+    await app.close();
+  }
 });
 
 test("the menus carry the native shortcuts", async () => {
   const items = await app.evaluate(({ Menu }) => {
     const out: Record<string, string> = {};
+
     const walk = (menu: Electron.Menu | null | undefined, top: string) => {
       for (const item of menu?.items ?? []) {
         const key = item.id || item.role || item.label;
@@ -149,41 +162,49 @@ test("the menus carry the native shortcuts", async () => {
         walk(item.submenu, top || item.label);
       }
     };
+
     walk(Menu.getApplicationMenu(), "");
+
     return out;
   });
-  expect(items).toMatchObject({
+
+  expect.soft(items).toMatchObject({
+    "Edit/redo": "Shift+CmdOrCtrl+Z",
+    "Edit/undo": "CmdOrCtrl+Z",
     "File/new-project": "CmdOrCtrl+N",
     "File/open-folder": "CmdOrCtrl+O",
-    "Edit/undo": "CmdOrCtrl+Z",
-    "Edit/redo": "Shift+CmdOrCtrl+Z",
     "Run/run": "CmdOrCtrl+Enter",
     "Run/stop": "CmdOrCtrl+.",
-    "View/zoom-in": "CmdOrCtrl+=",
-    "View/zoom-out": "CmdOrCtrl+-",
     "View/zoom-actual": "CmdOrCtrl+0",
     "View/zoom-fit": "CmdOrCtrl+1",
+    "View/zoom-in": "CmdOrCtrl+=",
+    "View/zoom-out": "CmdOrCtrl+-",
     "View/zoom-selection": "CmdOrCtrl+2",
   });
-  expect(Object.keys(items)).toEqual(
-    expect.arrayContaining([
-      "File/recentdocuments",
-      "File/reveal-work-tree",
-      "File/reveal-export",
-    ])
-  );
-  expect(
-    Object.keys(items).filter((key) =>
-      /\/(zoomin|zoomout|resetzoom)$/.test(key)
+  expect
+    .soft(Object.keys(items))
+    .toEqual(
+      expect.arrayContaining([
+        "File/recentdocuments",
+        "File/reveal-work-tree",
+        "File/reveal-export",
+      ])
+    );
+  expect
+    .soft(
+      Object.keys(items).filter((key) =>
+        /\/(zoomin|zoomout|resetzoom)$/.test(key)
+      )
     )
-  ).toEqual([]);
+    .toEqual([]);
 });
 
 async function canvasZoom(): Promise<number> {
   const transform = await page
     .locator(".artboard")
     .evaluate((el) => (el as HTMLElement).style.transform);
-  return Number(/scale\(([\d.]+)\)/.exec(transform)?.[1] ?? NaN);
+
+  return Number(/scale\(([\d.]+)\)/.exec(transform)?.[1] ?? Number.NaN);
 }
 
 function studioZoomFactor(): Promise<number> {
@@ -191,12 +212,15 @@ function studioZoomFactor(): Promise<number> {
     const win = BrowserWindow.getAllWindows().find((w) =>
       w.webContents.getURL().startsWith(studioOrigin)
     );
-    if (!win) throw new Error("no studio window");
+
+    if (!win) {
+      throw new Error("no studio window");
+    }
     return win.webContents.getZoomFactor();
   }, origin);
 }
 
-test("R2-1: zoom keys and View menu zoom the canvas, never the page", async () => {
+test("r2-1: zoom keys and View menu zoom the canvas, never the page", async () => {
   const folder = site("zoom folder");
   await app.evaluate(({ dialog }, chosen) => {
     dialog.showOpenDialog = (async () => ({
@@ -207,19 +231,21 @@ test("R2-1: zoom keys and View menu zoom the canvas, never the page", async () =
   await clickMenu("open-folder");
   await expect.poll(openedProjectName).toContain("zoom folder");
   const frame = page.frameLocator("iframe.frame.front");
-  await expect(frame.locator("h1")).toHaveText("zoom folder");
+  await expect.soft(frame.locator("h1")).toHaveText("zoom folder");
   const seen: Record<string, number[]> = {};
+
   for (const where of ["studio", "frame"] as const) {
-    if (where === "studio")
+    if (where === "studio") {
       await page.evaluate(() =>
         (document.activeElement as HTMLElement | null)?.blur()
       );
-    else {
+    } else {
       await frame.locator("h1").click();
       await expect
         .poll(() => page.evaluate(() => document.activeElement?.tagName))
         .toBe("IFRAME");
     }
+
     await page.keyboard.press("Meta+Digit0");
     await expect.poll(canvasZoom).toBe(1);
     await page.keyboard.press("Meta+Equal");
@@ -236,12 +262,16 @@ test("R2-1: zoom keys and View menu zoom the canvas, never the page", async () =
         const onSignal = (e: Event) => {
           const isFitKey =
             e instanceof KeyboardEvent && e.code === "Digit1" && e.shiftKey;
+
           const isFitMessage =
             e instanceof MessageEvent &&
             (e.data as { type?: string; key?: string } | null)?.type ===
               "zoom-key" &&
             (e.data as { key?: string }).key === "fit";
-          if (!isFitKey && !isFitMessage) return;
+
+          if (!isFitKey && !isFitMessage) {
+            return;
+          }
           window.removeEventListener("keydown", onSignal, true);
           window.removeEventListener("message", onSignal, true);
           queueMicrotask(() =>
@@ -252,43 +282,53 @@ test("R2-1: zoom keys and View menu zoom the canvas, never the page", async () =
             )
           );
         };
+
         window.addEventListener("keydown", onSignal, true);
         window.addEventListener("message", onSignal, true);
       });
     });
+
     const keyFrame =
       where === "studio"
         ? page.mainFrame()
         : page.frames().find((f) => f.parentFrame() === page.mainFrame());
+
     await keyFrame?.evaluate(() =>
       window.addEventListener(
         "keydown",
         (e) => {
-          if (e.code === "Digit1")
+          if (e.code === "Digit1") {
             (window as unknown as { __fitKey: number }).__fitKey = Date.now();
+          }
         },
         { capture: true }
       )
     );
     await page.keyboard.press("Shift+Digit1");
+
     const painted = await page.evaluate(
       () =>
         (window as unknown as { __fitPainted: Promise<number> }).__fitPainted
     );
+
     const pressed =
       (await keyFrame?.evaluate(
         () => (window as unknown as { __fitKey?: number }).__fitKey ?? 0
       )) ?? 0;
-    expect(painted).toBeGreaterThan(0);
-    expect(painted - pressed).toBeLessThanOrEqual(34.4);
-    await expect(page.getByLabel("Zoom", { exact: true })).toHaveValue("fit");
+
+    expect.soft(painted).toBeGreaterThan(0);
+    expect.soft(painted - pressed).toBeLessThanOrEqual(34.4);
+    await expect
+      .soft(page.getByLabel("Zoom", { exact: true }))
+      .toHaveValue("fit");
     seen[where] = [
       await canvasZoom(),
       await studioZoomFactor(),
       painted - pressed,
     ];
-    expect(await studioZoomFactor()).toBe(1);
+    expect.soft(await studioZoomFactor()).toBe(1);
   }
+
   await clickMenu("zoom-actual");
   await expect.poll(canvasZoom).toBe(1);
   await clickMenu("zoom-in");
@@ -296,12 +336,14 @@ test("R2-1: zoom keys and View menu zoom the canvas, never the page", async () =
   await clickMenu("zoom-out");
   await expect.poll(canvasZoom).toBeCloseTo(1, 4);
   await clickMenu("zoom-fit");
-  await expect(page.getByLabel("Zoom", { exact: true })).toHaveValue("fit");
-  expect(await studioZoomFactor()).toBe(1);
+  await expect
+    .soft(page.getByLabel("Zoom", { exact: true }))
+    .toHaveValue("fit");
+  expect.soft(await studioZoomFactor()).toBe(1);
   console.log(`R2-1 desktop ${JSON.stringify(seen)}`);
 });
 
-test("Open Folder imports a folder, opens it, and records it as recent", async () => {
+test("open Folder imports a folder, opens it, and records it as recent", async () => {
   const folder = site("menu folder");
   await app.evaluate(({ dialog }, chosen) => {
     dialog.showOpenDialog = (async () => ({
@@ -312,21 +354,23 @@ test("Open Folder imports a folder, opens it, and records it as recent", async (
   await clickMenu("open-folder");
   await expect.poll(openedProjectName).toContain("menu folder");
   const projects = await call<Project[]>("GET", "/api/projects");
-  expect(
-    projects.filter((project) => project.imported?.sourcePath === folder)
-  ).toHaveLength(1);
+  expect
+    .soft(projects.filter((project) => project.imported?.sourcePath === folder))
+    .toHaveLength(1);
   await expect
     .poll(async () => (await recorded()).recents.map((entry) => entry.folder))
     .toContain(folder);
+
   const recents = JSON.parse(
     readFileSync(path.join(userData, "recent-projects.json"), "utf-8")
   ) as { folder: string }[];
-  expect(recents[0]?.folder).toBe(folder);
+
+  expect.soft(recents[0]?.folder).toBe(folder);
 
   await clickMenu("new-project");
-  await expect(
-    page.getByRole("heading", { name: "New project" })
-  ).toBeVisible();
+  await expect
+    .soft(page.getByRole("heading", { name: "New project" }))
+    .toBeVisible();
   await expect
     .poll(() =>
       page.evaluate(() => document.activeElement?.getAttribute("aria-label"))
@@ -334,52 +378,59 @@ test("Open Folder imports a folder, opens it, and records it as recent", async (
     .toBe("Describe the design");
   await clickMenu("open-folder");
   await expect.poll(openedProjectName).toContain("menu folder");
-  expect(
-    (await call<Project[]>("GET", "/api/projects")).filter(
-      (project) => project.imported?.sourcePath === folder
+  expect
+    .soft(
+      (await call<Project[]>("GET", "/api/projects")).filter(
+        (project) => project.imported?.sourcePath === folder
+      )
     )
-  ).toHaveLength(1);
+    .toHaveLength(1);
 });
 
 test("a folder dropped on the Dock (open-file) is imported; files and relative paths are ignored", async () => {
   const folder = site("dock folder");
   await clickMenu("new-project");
-  await expect(
-    page.getByRole("heading", { name: "New project" })
-  ).toBeVisible();
+  await expect
+    .soft(page.getByRole("heading", { name: "New project" }))
+    .toBeVisible();
   const before = (await recorded()).commands.length;
   await app.evaluate(
     ({ app: electronApp }, args) => {
-      const event = { preventDefault: () => undefined };
+      const event = { preventDefault: () => {} };
       electronApp.emit("open-file", event, args.file);
       electronApp.emit("open-file", event, "relative/folder");
       electronApp.emit("open-file", event, args.folder);
     },
-    { folder, file: path.join(folder, "index.html") }
+    { file: path.join(folder, "index.html"), folder }
   );
   await expect.poll(openedProjectName).toContain("dock folder");
-  expect((await recorded()).commands.slice(before)).toEqual([
-    { type: "open-folder", path: folder },
-  ]);
+  expect
+    .soft((await recorded()).commands.slice(before))
+    .toEqual([{ path: folder, type: "open-folder" }]);
 });
 
 test("designstudio://open deep links open the project; bad links are dropped; a second instance forwards its link", async () => {
   const projects = await call<Project[]>("GET", "/api/projects");
+
   const first = projects.find((project) =>
     project.name.includes("menu folder")
   );
+
   const second = projects.find((project) =>
     project.name.includes("dock folder")
   );
-  if (!first || !second) throw new Error("projects missing");
+
+  if (!first || !second) {
+    throw new Error("projects missing");
+  }
   await clickMenu("new-project");
-  await expect(
-    page.getByRole("heading", { name: "New project" })
-  ).toBeVisible();
+  await expect
+    .soft(page.getByRole("heading", { name: "New project" }))
+    .toBeVisible();
   const before = (await recorded()).commands.length;
   await app.evaluate(
     ({ app: electronApp }, ids) => {
-      const event = { preventDefault: () => undefined };
+      const event = { preventDefault: () => {} };
       electronApp.emit(
         "open-url",
         event,
@@ -395,9 +446,9 @@ test("designstudio://open deep links open the project; bad links are dropped; a 
     { first: first.id }
   );
   await expect.poll(openedProjectName).toContain("menu folder");
-  expect((await recorded()).commands.slice(before)).toEqual([
-    { type: "open-project", projectId: first.id },
-  ]);
+  expect
+    .soft((await recorded()).commands.slice(before))
+    .toEqual([{ projectId: first.id, type: "open-project" }]);
   await app.evaluate(({ app: electronApp }, id) => {
     electronApp.emit(
       "second-instance",
@@ -412,25 +463,32 @@ test("designstudio://open deep links open the project; bad links are dropped; a 
   await expect.poll(openedProjectName).toContain("dock folder");
 });
 
-test("Undo goes to the text field when typing and to version undo on the canvas", async () => {
+test("undo goes to the text field when typing and to version undo on the canvas", async () => {
   await clickMenu("new-project");
   await page.getByLabel("Describe the design").fill("Native undo check");
   await page.getByRole("radio", { name: "HTML" }).click();
   await clickCreate(page);
-  await expect(page.locator(".topbar")).toBeVisible();
+  await expect.soft(page.locator(".topbar")).toBeVisible();
+
   const project = (await call<Project[]>("GET", "/api/projects")).find((item) =>
     item.name.includes("Native undo check")
   );
+
   const main = project?.directions[0];
-  if (!project || !main) throw new Error("project missing");
+
+  if (!project || !main) {
+    throw new Error("project missing");
+  }
   await expect.poll(() => finished(project.id), { timeout: 60_000 }).toBe(1);
   await call("POST", `/api/projects/${project.id}/d/${main.id}/runs`, {
-    prompt: "Make the headline bolder",
     mode: "edit",
+    prompt: "Make the headline bolder",
   });
   await expect.poll(() => finished(project.id), { timeout: 60_000 }).toBe(2);
+
   const versions = () =>
     call<Version[]>("GET", `/api/projects/${project.id}/d/${main.id}/versions`);
+
   await expect
     .poll(async () => (await versions()).length)
     .toBeGreaterThanOrEqual(2);
@@ -441,7 +499,7 @@ test("Undo goes to the text field when typing and to version undo on the canvas"
   await page.keyboard.type("abc");
   await clickMenu("undo");
   await expect.poll(() => box.inputValue()).not.toBe("abc");
-  expect((await versions()).length).toBe(count);
+  expect.soft(await versions()).toHaveLength(count);
 
   await box.fill("");
   await page.evaluate(() =>
@@ -451,11 +509,14 @@ test("Undo goes to the text field when typing and to version undo on the canvas"
   await expect.poll(async () => (await versions())[0]?.meta.kind).toBe("undo");
 });
 
-test("Run sends the draft, Stop cancels the run, and a background finish notifies", async () => {
+test("run sends the draft, Stop cancels the run, and a background finish notifies", async () => {
   const project = (await call<Project[]>("GET", "/api/projects")).find((item) =>
     item.name.includes("Native undo check")
   );
-  if (!project) throw new Error("project missing");
+
+  if (!project) {
+    throw new Error("project missing");
+  }
   const done = await finished(project.id);
   await page
     .getByPlaceholder("Describe a change")
@@ -488,9 +549,13 @@ test("Run sends the draft, Stop cancels the run, and a background finish notifie
         ).filter((run) => run.status === "canceled").length
     )
     .toBe(1);
-  expect(
-    (await recorded()).notices.filter((notice) => notice.status === "canceled")
-  ).toEqual([]);
+  expect
+    .soft(
+      (await recorded()).notices.filter(
+        (notice) => notice.status === "canceled"
+      )
+    )
+    .toEqual([]);
 
   await app.evaluate(({ BrowserWindow }) =>
     BrowserWindow.getAllWindows()
@@ -498,26 +563,31 @@ test("Run sends the draft, Stop cancels the run, and a background finish notifie
       ?.minimize()
   );
   const main = project.directions[0];
-  if (!main) throw new Error("no direction");
+
+  if (!main) {
+    throw new Error("no direction");
+  }
   await call("POST", `/api/projects/${project.id}/d/${main.id}/runs`, {
-    prompt: "Background finish",
     mode: "edit",
+    prompt: "Background finish",
   });
   await expect
     .poll(() => finished(project.id), { timeout: 60_000 })
     .toBe(done + 2);
+
   const background = async () =>
     (await recorded()).notices.filter((item) =>
       item.body.includes("Background finish")
     );
+
   await expect.poll(async () => (await background()).length).toBe(1);
   const [notice] = await background();
-  expect(notice).toMatchObject({
-    title: "Run finished",
+  expect.soft(notice).toMatchObject({
     projectId: project.id,
     status: "completed",
+    title: "Run finished",
   });
-  expect(notice?.body).toContain("Background finish");
+  expect.soft(notice?.body).toContain("Background finish");
   await app.evaluate(({ BrowserWindow }) =>
     BrowserWindow.getAllWindows()
       .find((window) => window.isMinimized())
@@ -532,19 +602,23 @@ test("Run sends the draft, Stop cancels the run, and a background finish notifie
     .toBe(false);
 });
 
-test("Reveal in Finder shows the work tree in the default projects folder and the last export", async () => {
+test("reveal in Finder shows the work tree in the default projects folder and the last export", async () => {
   const project = (await call<Project[]>("GET", "/api/projects")).find((item) =>
     item.name.includes("Native undo check")
   );
+
   const main = project?.directions[0];
-  if (!project || !main) throw new Error("project missing");
+
+  if (!project || !main) {
+    throw new Error("project missing");
+  }
   await clickMenu("reveal-work-tree");
   await expect
     .poll(async () => (await recorded()).reveals)
     .toContain(main.workTree);
-  expect(
-    main.workTree.startsWith(path.join(work, "Design Studio") + path.sep)
-  ).toBe(true);
+  expect
+    .soft(main.workTree.startsWith(path.join(work, "Design Studio") + path.sep))
+    .toBe(true);
 
   await page.evaluate(() => {
     const link = document.createElement("a");
@@ -556,26 +630,37 @@ test("Reveal in Finder shows the work tree in the default projects folder and th
   });
   await expect.poll(async () => (await recorded()).exports.length).toBe(1);
   const [exported] = (await recorded()).exports;
-  expect(exported).toBe(path.join(work, "downloads", "export check.zip"));
-  expect(existsSync(exported ?? "")).toBe(true);
+  expect.soft(exported).toBe(path.join(work, "downloads", "export check.zip"));
+  expect.soft(existsSync(exported ?? "")).toBe(true);
   await clickMenu("reveal-export");
   await expect.poll(async () => (await recorded()).reveals).toContain(exported);
 });
 
-test("R3-2: Esc in the desktop window stops a run, with focus in the studio and in the preview", async () => {
+test("r3-2: Esc in the desktop window stops a run, with focus in the studio and in the preview", async () => {
   const accelerators = await app.evaluate(({ Menu }) => {
     const out: string[] = [];
+
     const walk = (items: Electron.MenuItem[]) => {
       for (const item of items) {
-        if (item.accelerator) out.push(String(item.accelerator));
-        if (item.submenu) walk(item.submenu.items);
+        if (item.accelerator) {
+          out.push(String(item.accelerator));
+        }
+        if (item.submenu) {
+          walk(item.submenu.items);
+        }
       }
     };
+
     walk(Menu.getApplicationMenu()?.items ?? []);
+
     return out;
   });
-  expect(accelerators.filter((key) => /^(Esc|Escape)$/i.test(key))).toEqual([]);
+
+  expect
+    .soft(accelerators.filter((key) => /^(Esc|Escape)$/i.test(key)))
+    .toEqual([]);
   const round = test.info().repeatEachIndex;
+
   const openFresh = async (name: string) => {
     const folder = site(name);
     await app.evaluate(({ dialog }, chosen) => {
@@ -586,24 +671,30 @@ test("R3-2: Esc in the desktop window stops a run, with focus in the studio and 
     }, folder);
     await clickMenu("open-folder");
     await expect.poll(openedProjectName).toContain(name);
+
     const project = (await call<Project[]>("GET", "/api/projects")).find(
       (item) => item.imported?.sourcePath === folder
     );
+
     const main = project?.directions[0];
-    if (!project || !main) throw new Error(`${name} project missing`);
-    return { project, main };
+
+    if (!project || !main) {
+      throw new Error(`${name} project missing`);
+    }
+    return { main, project };
   };
+
   const stopsWithin = async (
     project: Project,
     runId: string,
     press: () => Promise<void>
   ) => {
     const card = page.locator(`[data-run-id="${runId}"]`);
-    await expect(
-      card.locator('.tool-row[data-state="done"]').first()
-    ).toBeVisible({ timeout: 20_000 });
+    await expect
+      .soft(card.locator('.tool-row[data-state="done"]').first())
+      .toBeVisible({ timeout: 20_000 });
     await press();
-    await expect(card.locator(".run-foot .status.canceled")).toBeVisible({
+    await expect.soft(card.locator(".run-foot .status.canceled")).toBeVisible({
       timeout: 2000,
     });
     await expect
@@ -619,11 +710,13 @@ test("R3-2: Esc in the desktop window stops a run, with focus in the studio and 
   const studio = await openFresh(`esc studio ${round}`);
   const box = page.getByPlaceholder("Describe a change");
   await box.fill("Desktop Esc studio [steps]");
+
   const sent = page.waitForResponse(
     (response) =>
       response.request().method() === "POST" &&
       response.url().endsWith(`/d/${studio.main.id}/runs`)
   );
+
   await box.press("Meta+Enter");
   const { runId: studioRun } = (await (await sent).json()) as { runId: string };
   await stopsWithin(studio.project, studioRun, async () => {
@@ -633,20 +726,22 @@ test("R3-2: Esc in the desktop window stops a run, with focus in the studio and 
 
   const preview = await openFresh(`esc preview ${round}`);
   const frame = page.frameLocator("iframe.frame.front");
-  await expect(frame.locator("h1")).toHaveText(`esc preview ${round}`);
+  await expect.soft(frame.locator("h1")).toHaveText(`esc preview ${round}`);
   await frame.locator("h1").click();
   await expect
     .poll(() => page.evaluate(() => document.activeElement?.tagName))
     .toBe("IFRAME");
+
   const { runId: previewRun } = await call<{ runId: string }>(
     "POST",
     `/api/projects/${preview.project.id}/d/${preview.main.id}/runs`,
-    { prompt: "Desktop Esc preview [steps]", mode: "edit" }
+    { mode: "edit", prompt: "Desktop Esc preview [steps]" }
   );
+
   await stopsWithin(preview.project, previewRun, async () => {
-    expect(await page.evaluate(() => document.activeElement?.tagName)).toBe(
-      "IFRAME"
-    );
+    expect
+      .soft(await page.evaluate(() => document.activeElement?.tagName))
+      .toBe("IFRAME");
     await page.keyboard.press("Escape");
   });
 });
@@ -659,14 +754,20 @@ test("window bounds are saved per display layout", async () => {
         const window = BrowserWindow.getAllWindows().find(
           (candidate) => candidate.isVisible() && !candidate.isMinimized()
         );
-        if (window && window.getNormalBounds().width !== 1100)
+
+        if (window && window.getNormalBounds().width !== 1100) {
           window.setBounds({ x: 40, y: 60, width: 1100, height: 760 });
+        }
       });
-      if (!existsSync(file)) return null;
+
+      if (!existsSync(file)) {
+        return null;
+      }
       const state = JSON.parse(readFileSync(file, "utf-8")) as {
         last: string;
         layouts: Record<string, { bounds: { width: number } }>;
       };
+
       return state.layouts[state.last]?.bounds.width ?? null;
     })
     .toBe(1100);
@@ -674,7 +775,7 @@ test("window bounds are saved per display layout", async () => {
   const key = (JSON.parse(readFileSync(file, "utf-8")) as { last: string })
     .last;
 
-  expect(key).toMatch(/^\d+:-?\d+,-?\d+,\d+x\d+/);
+  expect.soft(key).toMatch(/^\d+:-?\d+,-?\d+,\d+x\d+/);
 });
 
 test("the app uses the native folder dialog for Location and Open Folder, attached to the studio window", async () => {
@@ -682,12 +783,13 @@ test("the app uses the native folder dialog for Location and Open Folder, attach
   mkdirSync(parent, { recursive: true });
   const realParent = realpathSync(parent);
   const menuSite = site("menu picked site");
-  type DialogCall = {
+
+  interface DialogCall {
     parented: boolean;
     title: string | null;
     properties: string[];
     defaultPath: string | null;
-  };
+  }
   await app.evaluate(
     ({ dialog, BrowserWindow }, answers) => {
       const calls: DialogCall[] = [];
@@ -700,16 +802,18 @@ test("the app uses the native folder dialog for Location and Open Folder, attach
       ) => {
         const options = (second ?? first) as Electron.OpenDialogOptions;
         calls.push({
-          parented: first instanceof BrowserWindow,
-          title: options.title ?? null,
-          properties: options.properties ?? [],
           defaultPath: options.defaultPath ?? null,
+          parented: first instanceof BrowserWindow,
+          properties: options.properties ?? [],
+          title: options.title ?? null,
         });
+
         return { canceled: false, filePaths: [queue.shift() ?? ""] };
       }) as unknown as typeof dialog.showOpenDialog;
     },
     [realParent, menuSite]
   );
+
   const dialogCalls = () =>
     app.evaluate(
       () =>
@@ -717,43 +821,47 @@ test("the app uses the native folder dialog for Location and Open Folder, attach
     );
 
   await clickMenu("new-project");
-  await expect(
-    page.getByRole("heading", { name: "New project" })
-  ).toBeVisible();
+  await expect
+    .soft(page.getByRole("heading", { name: "New project" }))
+    .toBeVisible();
   await page.getByLabel("Describe the design").fill("Desktop folder page");
   await page.getByLabel("Location").selectOption({ label: "Choose folder…" });
-  await expect(page.getByLabel("Location")).toHaveValue(realParent);
+  await expect.soft(page.getByLabel("Location")).toHaveValue(realParent);
   const [locationCall] = await dialogCalls();
-  expect(locationCall).toMatchObject({
+  expect.soft(locationCall).toMatchObject({
     parented: true,
     title: "Choose where to save the new project",
   });
-  expect(locationCall?.properties).toEqual(
-    expect.arrayContaining(["openDirectory", "createDirectory"])
-  );
+  expect
+    .soft(locationCall?.properties)
+    .toEqual(expect.arrayContaining(["openDirectory", "createDirectory"]));
 
   await clickCreate(page);
   await expect.poll(openedProjectName).toContain("Desktop folder page");
+
   const created = (await call<Project[]>("GET", "/api/projects")).find(
     (project) => project.name === "Desktop folder page"
   );
-  expect(created?.imported).toEqual({
-    sourcePath: path.join(realParent, "desktop-folder-page"),
+
+  expect.soft(created?.imported).toEqual({
     created: true,
+    sourcePath: path.join(realParent, "desktop-folder-page"),
   });
   await expect.poll(() => finished(created!.id), { timeout: 60_000 }).toBe(1);
 
   await clickMenu("open-folder");
   await expect.poll(openedProjectName).toContain("menu picked site");
   const calls = await dialogCalls();
-  expect(calls).toHaveLength(2);
-  expect(calls[1]).toMatchObject({ parented: true, title: "Open Folder" });
-  expect(calls[1]?.properties).toEqual(
-    expect.arrayContaining(["openDirectory", "createDirectory"])
-  );
-  expect(
-    (await call<Project[]>("GET", "/api/projects")).filter(
-      (project) => project.imported?.sourcePath === menuSite
+  expect.soft(calls).toHaveLength(2);
+  expect.soft(calls[1]).toMatchObject({ parented: true, title: "Open Folder" });
+  expect
+    .soft(calls[1]?.properties)
+    .toEqual(expect.arrayContaining(["openDirectory", "createDirectory"]));
+  expect
+    .soft(
+      (await call<Project[]>("GET", "/api/projects")).filter(
+        (project) => project.imported?.sourcePath === menuSite
+      )
     )
-  ).toHaveLength(1);
+    .toHaveLength(1);
 });

@@ -32,7 +32,7 @@ async function viteFrame(page: Page, origin: string): Promise<Frame> {
   return frame;
 }
 
-test("B: React mock edit through selection uses HMR without reload", async ({
+test("b: React mock edit through selection uses HMR without reload", async ({
   page,
 }) => {
   const api = await openHome(page);
@@ -40,19 +40,19 @@ test("B: React mock edit through selection uses HMR without reload", async ({
   const main = mainDirection(project);
   const frame = frontFrame(page);
 
-  await expect(frame.locator("h1")).toHaveText(CREATE_PROMPT, {
+  await expect.soft(frame.locator("h1")).toHaveText(CREATE_PROMPT, {
     timeout: 60_000,
   });
   await api.waitForRuns(project.id, 1);
   const previewBefore = (await api.preview(project.id, main.id)).url;
-  const origin = new URL(previewBefore).origin;
-  expect(origin).toMatch(/^http:\/\/127\.0\.0\.1:\d+$/);
+  const { origin } = new URL(previewBefore);
+  expect.soft(origin).toMatch(/^http:\/\/127\.0\.0\.1:\d+$/);
 
   const iframeSrcBefore = await page
     .locator("iframe.frame.front")
     .getAttribute("src");
 
-  expect(iframeSrcBefore?.startsWith(origin)).toBe(true);
+  expect.soft(iframeSrcBefore?.startsWith(origin)).toBe(true);
 
   const appFile = path.join(main.workTree, "src", "App.tsx");
   const sourceBefore = readFileSync(appFile, "utf-8");
@@ -65,39 +65,50 @@ test("B: React mock edit through selection uses HMR without reload", async ({
 
   await selectInFrame(page, "h1");
   await sendPrompt(page, EDIT_PROMPT);
-  await expect(frame.locator("h1")).toHaveText(EDIT_PROMPT);
+  await expect.soft(frame.locator("h1")).toHaveText(EDIT_PROMPT);
   await api.waitForRuns(project.id, 2);
 
   const sameFrame = await viteFrame(page, origin);
-  expect(
-    await sameFrame.evaluate(
-      () => (window as unknown as { __marker?: number }).__marker
+  expect
+    .soft(
+      await sameFrame.evaluate(
+        () => (window as unknown as { __marker?: number }).__marker
+      )
     )
-  ).toBe(1);
-  expect(await page.locator("iframe.frame").count()).toBe(1);
-  expect(await page.locator("iframe.frame.front").getAttribute("src")).toBe(
+    .toBe(1);
+  await expect(page.locator("iframe.frame")).toHaveCount(1);
+  await expect(page.locator("iframe.frame.front")).toHaveAttribute(
+    "src",
     iframeSrcBefore
   );
-  expect((await api.preview(project.id, main.id)).url).toBe(previewBefore);
-  await expect(frame.locator("section.hero p")).toHaveText(
-    paragraphBefore ?? ""
-  );
+  expect.soft((await api.preview(project.id, main.id)).url).toBe(previewBefore);
+  await expect
+    .soft(frame.locator("section.hero p"))
+    .toHaveText(paragraphBefore ?? "");
 
   const sourceAfter = readFileSync(appFile, "utf-8");
-  expect(sourceAfter).toBe(
-    sourceBefore.replace(`<h1>${CREATE_PROMPT}</h1>`, `<h1>${EDIT_PROMPT}</h1>`)
-  );
+  expect
+    .soft(sourceAfter)
+    .toBe(
+      sourceBefore.replace(
+        `<h1>${CREATE_PROMPT}</h1>`,
+        `<h1>${EDIT_PROMPT}</h1>`
+      )
+    );
 
   await api.call("PUT", `/api/projects/${project.id}/design-md`, {
     content: "# Notes\n\nNo DOM change here.\n",
   });
   await page.waitForTimeout(3500);
-  expect(await page.locator("iframe.frame.front").getAttribute("src")).toBe(
+  await expect(page.locator("iframe.frame.front")).toHaveAttribute(
+    "src",
     iframeSrcBefore
   );
-  expect(
-    await (
-      await viteFrame(page, origin)
-    ).evaluate(() => (window as unknown as { __marker?: number }).__marker)
-  ).toBe(1);
+  expect
+    .soft(
+      await (
+        await viteFrame(page, origin)
+      ).evaluate(() => (window as unknown as { __marker?: number }).__marker)
+    )
+    .toBe(1);
 });

@@ -80,7 +80,7 @@ async function compareRects(page: Page, selector: string) {
   const el = await frame.evaluate((sel) => {
     const r = document.querySelector(sel)?.getBoundingClientRect();
 
-    return r ? { x: r.x, y: r.y, width: r.width, height: r.height } : null;
+    return r ? { height: r.height, width: r.width, x: r.x, y: r.y } : null;
   }, selector);
 
   const box = await page
@@ -93,10 +93,10 @@ async function compareRects(page: Page, selector: string) {
   }
 
   const expected = {
+    height: el.height * zoom,
+    width: el.width * zoom,
     x: iframe.x + el.x * zoom,
     y: iframe.y + el.y * zoom,
-    width: el.width * zoom,
-    height: el.height * zoom,
   };
 
   const delta = Math.max(
@@ -106,15 +106,15 @@ async function compareRects(page: Page, selector: string) {
     Math.abs(expected.height - box.height)
   );
 
-  return { zoom, expected, box, delta };
+  return { box, delta, expected, zoom };
 }
 
-test("AC-25 click nested span, image, button and links to select them", async ({
+test("aC-25 click nested span, image, button and links to select them", async ({
   page,
 }) => {
   const { project } = await importHtmlFixture(page, FIXTURE);
   const frame = frontFrame(page);
-  await expect(frame.locator("h1")).toContainText("Fixture");
+  await expect.soft(frame.locator("h1")).toContainText("Fixture");
   const raw = await frameOf(page);
   const urlBefore = raw.url();
   await setSelectMode(page, true);
@@ -129,22 +129,23 @@ test("AC-25 click nested span, image, button and links to select them", async ({
     ["a.hash", "a"],
   ] as const) {
     await frame.locator(selector).click();
-    await expect(page.locator(".overlay .box.selected")).toHaveCount(1);
-    await expect(page.locator(".chip").first())
+    await expect.soft(page.locator(".overlay .box.selected")).toHaveCount(1);
+    await expect
+      .soft(page.locator(".chip").first())
       .toHaveAttribute(
         "title",
         new RegExp(`${tag}(:nth-of-type\\(\\d+\\))?$`),
         { timeout: 5000 }
       )
-      .catch(() => undefined);
+      .catch(() => {});
     const chip = await page.locator(".chip").first().getAttribute("title");
     const chipText = await page.locator(".chip").first().textContent();
     const current = await frameOf(page);
     results.push({
-      selector,
       chipSelector: chip,
       chipText,
       frameUrlSame: current.url() === urlBefore,
+      selector,
       title: await current.title(),
     });
 
@@ -152,7 +153,7 @@ test("AC-25 click nested span, image, button and links to select them", async ({
       console.log(`[AC-25 mismatch] ${selector} -> ${chipText} ${chip}`);
     }
 
-    expect(chipText?.startsWith(tag)).toBe(true);
+    expect.soft(chipText?.startsWith(tag)).toBe(true);
   }
 
   const frameCount = page
@@ -162,28 +163,28 @@ test("AC-25 click nested span, image, button and links to select them", async ({
   const finalFrame = await frameOf(page);
   const scrollY = await finalFrame.evaluate(() => window.scrollY);
   evidence("AC-25", {
+    frameCount,
     projectId: project.id,
     results,
-    frameCount,
     scrollYAfterHashClick: scrollY,
-    urlBefore: urlBefore.split("?")[0],
     urlAfter: finalFrame.url().split("?")[0],
+    urlBefore: urlBefore.split("?")[0],
   });
 
   for (const row of results) {
-    expect(row.frameUrlSame).toBe(true);
-    expect(row.title).toBe("Fixture");
+    expect.soft(row.frameUrlSame).toBe(true);
+    expect.soft(row.title).toBe("Fixture");
   }
 
-  expect(scrollY).toBe(0);
+  expect.soft(scrollY).toBe(0);
 });
 
-test("AC-26 selection highlight matches the element and leaves the DOM unchanged", async ({
+test("aC-26 selection highlight matches the element and leaves the DOM unchanged", async ({
   page,
 }) => {
   const { project, folder } = await importHtmlFixture(page, FIXTURE);
   const frame = frontFrame(page);
-  await expect(frame.locator("h1")).toContainText("Fixture");
+  await expect.soft(frame.locator("h1")).toContainText("Fixture");
   const fileBefore = readFileSync(path.join(folder, "index.html"), "utf-8");
 
   const domBefore = await (
@@ -193,7 +194,7 @@ test("AC-26 selection highlight matches the element and leaves the DOM unchanged
   await setSelectMode(page, true);
   await frame.locator("p.card-body").first().hover();
   await frame.locator("h2.card-title").first().click();
-  await expect(page.locator(".overlay .box.selected")).toHaveCount(1);
+  await expect.soft(page.locator(".overlay .box.selected")).toHaveCount(1);
 
   const domAfterSelect = await (
     await frameOf(page)
@@ -221,32 +222,32 @@ test("AC-26 selection highlight matches the element and leaves the DOM unchanged
 
   const fileAfter = readFileSync(path.join(folder, "index.html"), "utf-8");
   evidence("AC-26", {
-    projectId: project.id,
+    afterScroll,
+    at100,
+    at50,
     domIdenticalAfterSelect: domBefore === domAfterSelect,
     domIdenticalAtEnd: domBefore === domEnd,
     domLength: domBefore.length,
     fileUnchanged: fileBefore === fileAfter,
-    at100,
-    at50,
-    afterScroll,
+    projectId: project.id,
     scrolled,
   });
-  expect(domAfterSelect).toBe(domBefore);
-  expect(domEnd).toBe(domBefore);
-  expect(fileAfter).toBe(fileBefore);
-  expect(at100.delta).toBeLessThanOrEqual(2);
-  expect(at50.delta).toBeLessThanOrEqual(2);
-  expect(afterScroll.delta).toBeLessThanOrEqual(2);
-  expect(scrolled).toBe(120);
+  expect.soft(domAfterSelect).toBe(domBefore);
+  expect.soft(domEnd).toBe(domBefore);
+  expect.soft(fileAfter).toBe(fileBefore);
+  expect.soft(at100.delta).toBeLessThanOrEqual(2);
+  expect.soft(at50.delta).toBeLessThanOrEqual(2);
+  expect.soft(afterScroll.delta).toBeLessThanOrEqual(2);
+  expect.soft(scrolled).toBe(120);
 });
 
-test("AC-30 AC-32 AC-27 shift-select two elements, one prompt, one version with both changes", async ({
+test("aC-30 AC-32 AC-27 shift-select two elements, one prompt, one version with both changes", async ({
   page,
 }) => {
   const { api, project, folder } = await importHtmlFixture(page, FIXTURE);
   const main = mainDirection(project);
   const frame = frontFrame(page);
-  await expect(frame.locator("h1")).toContainText("Fixture");
+  await expect.soft(frame.locator("h1")).toContainText("Fixture");
   const versionsBefore = await api.versions(project.id, main.id);
   const file = path.join(folder, "index.html");
   const before = readFileSync(file, "utf-8");
@@ -255,8 +256,8 @@ test("AC-30 AC-32 AC-27 shift-select two elements, one prompt, one version with 
   await frame
     .locator(".card.second h2.card-title")
     .click({ modifiers: ["Shift"] });
-  await expect(page.locator(".overlay .box.selected")).toHaveCount(2);
-  await expect(page.locator(".chip")).toHaveCount(2);
+  await expect.soft(page.locator(".overlay .box.selected")).toHaveCount(2);
+  await expect.soft(page.locator(".chip")).toHaveCount(2);
 
   const otherColorsBefore = await frame
     .locator("h1, p, button, a")
@@ -286,46 +287,48 @@ test("AC-30 AC-32 AC-27 shift-select two elements, one prompt, one version with 
   const after = readFileSync(file, "utf-8");
   const diff = changedLines(before, after);
   const stored = runFile(project.id, run.id);
-  const userText = buildUserText({ request: stored.request, designMd: "" });
+  const userText = buildUserText({ designMd: "", request: stored.request });
   evidence("AC-30", {
-    runs: runs.length,
-    versionsBefore: versionsBefore.length,
-    versionsAfter: versionsAfter.length,
+    diff,
     newVersion: versionsAfter.find(
       (v) => !versionsBefore.some((b) => b.id === v.id)
     ),
-    diff,
     otherColorsSame:
       JSON.stringify(otherColorsBefore) === JSON.stringify(otherColorsAfter),
+    runs: runs.length,
+    versionsAfter: versionsAfter.length,
+    versionsBefore: versionsBefore.length,
   });
   evidence("AC-27-html", {
     runFileSelection: stored.request.selection?.map((s) => ({
-      source: s.source,
-      selector: s.selector,
-      tag: s.tag,
-      styleKeys: Object.keys(s.styles).length,
-      outerHTML: s.outerHTML,
       ancestors: s.ancestors,
+      outerHTML: s.outerHTML,
+      selector: s.selector,
+      source: s.source,
+      styleKeys: Object.keys(s.styles).length,
+      tag: s.tag,
     })),
     userText,
   });
-  expect(runs).toHaveLength(1);
-  expect(versionsAfter.length).toBe(versionsBefore.length + 1);
-  expect(diff).toHaveLength(2);
-  expect(
-    diff.every(
-      (row) =>
-        row.after.includes('class="card-title"') &&
-        row.after.includes("color: #c00")
+  expect.soft(runs).toHaveLength(1);
+  expect.soft(versionsAfter).toHaveLength(versionsBefore.length + 1);
+  expect.soft(diff).toHaveLength(2);
+  expect
+    .soft(
+      diff.every(
+        (row) =>
+          row.after.includes('class="card-title"') &&
+          row.after.includes("color: #c00")
+      )
     )
-  ).toBe(true);
-  expect(otherColorsAfter).toEqual(otherColorsBefore);
-  expect(stored.request.selection).toHaveLength(2);
-  expect(stored.request.selection?.map((s) => s.source?.line)).toEqual([
-    18, 26,
-  ]);
-  expect(userText).toContain("source: index.html:18:1");
-  expect(userText).toContain("source: index.html:26:1");
-  expect(userText.match(/styles: color: /g)?.length).toBe(2);
-  expect(userText.match(/outerHTML:/g)?.length).toBe(2);
+    .toBe(true);
+  expect.soft(otherColorsAfter).toEqual(otherColorsBefore);
+  expect.soft(stored.request.selection).toHaveLength(2);
+  expect
+    .soft(stored.request.selection?.map((s) => s.source?.line))
+    .toEqual([18, 26]);
+  expect.soft(userText).toContain("source: index.html:18:1");
+  expect.soft(userText).toContain("source: index.html:26:1");
+  expect.soft(userText.match(/styles: color: /g)?.length).toBe(2);
+  expect.soft(userText.match(/outerHTML:/g)?.length).toBe(2);
 });

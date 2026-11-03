@@ -3,7 +3,8 @@ import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-import { expect, test, type Frame, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import type { Frame, Page } from "@playwright/test";
 
 import {
   BASE_URL,
@@ -16,8 +17,8 @@ import {
   frontFrame,
   mainDirection,
   openHome,
-  type StudioApi,
 } from "../../support/studio";
+import type { StudioApi } from "../../support/studio";
 import { frameByUrl, saveResult } from "./helpers";
 
 async function probeFrame(
@@ -37,7 +38,7 @@ async function probeFrame(
         try {
           out[name] = { ok: true, value: await fn() };
         } catch (error) {
-          out[name] = { ok: false, error: String(error).slice(0, 140) };
+          out[name] = { error: String(error).slice(0, 140), ok: false };
         }
       };
 
@@ -80,10 +81,10 @@ async function probeFrame(
       );
       await attempt("noCorsPostCreateProject", async () => {
         const res = await fetch(`${studioOrigin}/api/projects`, {
+          body: JSON.stringify({ prompt: "csrf no-cors", kind: "html" }),
+          headers: { "content-type": "text/plain" },
           method: "POST",
           mode: "no-cors",
-          headers: { "content-type": "text/plain" },
-          body: JSON.stringify({ prompt: "csrf no-cors", kind: "html" }),
         });
 
         return res.type;
@@ -92,7 +93,7 @@ async function probeFrame(
         const sink = document.createElement("iframe");
         sink.name = "csrf-sink";
         sink.style.display = "none";
-        document.body.appendChild(sink);
+        document.body.append(sink);
         const form = document.createElement("form");
         form.method = "POST";
         form.action = `${studioOrigin}/api/projects`;
@@ -101,8 +102,8 @@ async function probeFrame(
         const field = document.createElement("input");
         field.name = '{"prompt":"csrf form","kind":"html","x":"';
         field.value = '"}';
-        form.appendChild(field);
-        document.body.appendChild(form);
+        form.append(field);
+        document.body.append(form);
         form.submit();
         await new Promise((resolve) => setTimeout(resolve, 1500));
 
@@ -133,30 +134,30 @@ async function serverSideChecks(
   previewOrigin: string
 ): Promise<Record<string, number>> {
   const postWithPreviewOrigin = await fetch(`${BASE_URL}/api/projects`, {
-    method: "POST",
-    headers: {
-      "x-studio-token": api.token,
-      origin: previewOrigin,
-      "content-type": "application/json",
-    },
     body: JSON.stringify({ prompt: "csrf with token", kind: "html" }),
+    headers: {
+      "content-type": "application/json",
+      origin: previewOrigin,
+      "x-studio-token": api.token,
+    },
+    method: "POST",
   });
 
   const getWithPreviewOrigin = await fetch(`${BASE_URL}/api/projects`, {
-    headers: { "x-studio-token": api.token, origin: previewOrigin },
+    headers: { origin: previewOrigin, "x-studio-token": api.token },
   });
 
   const sessionSameSite = await fetch(`${BASE_URL}/api/session`, {
-    headers: { "sec-fetch-site": "same-site", origin: previewOrigin },
+    headers: { origin: previewOrigin, "sec-fetch-site": "same-site" },
   });
 
   const sessionNoHeader = await fetch(`${BASE_URL}/api/session`);
 
   return {
-    postCreateWithValidTokenButPreviewOrigin: postWithPreviewOrigin.status,
     getProjectsWithValidTokenButPreviewOrigin: getWithPreviewOrigin.status,
-    getSessionSameSite: sessionSameSite.status,
     getSessionNoFetchMetadata: sessionNoHeader.status,
+    getSessionSameSite: sessionSameSite.status,
+    postCreateWithValidTokenButPreviewOrigin: postWithPreviewOrigin.status,
   };
 }
 
@@ -195,7 +196,7 @@ async function cookiesOf(page: Page): Promise<number> {
   return (await page.context().cookies()).length;
 }
 
-test("AC-51: preview frames cannot reach studio credentials or API", async ({
+test("aC-51: preview frames cannot reach studio credentials or API", async ({
   page,
 }) => {
   test.setTimeout(300_000);
@@ -212,7 +213,9 @@ test("AC-51: preview frames cannot reach studio credentials or API", async ({
   await page.getByRole("button", { name: "Projects" }).click();
   const html = await createProjectViaUi(page, api, "Isolation html", "html");
   await api.waitForRuns(html.id, 1);
-  await expect(frontFrame(page).locator("h1")).toHaveText("Isolation html");
+  await expect
+    .soft(frontFrame(page).locator("h1"))
+    .toHaveText("Isolation html");
 
   const htmlFrame = await frameByUrl(
     page,
@@ -235,9 +238,11 @@ test("AC-51: preview frames cannot reach studio credentials or API", async ({
   await page.getByRole("button", { name: "Projects" }).click();
   const react = await createProjectViaUi(page, api, "Isolation react", "react");
   await api.waitForRuns(react.id, 1, 180_000);
-  await expect(frontFrame(page).locator("h1")).toHaveText("Isolation react", {
-    timeout: 90_000,
-  });
+  await expect
+    .soft(frontFrame(page).locator("h1"))
+    .toHaveText("Isolation react", {
+      timeout: 90_000,
+    });
   const reactUrl = (await api.preview(react.id, "main")).url;
   const reactOrigin = new URL(reactUrl).origin;
   const reactFrame = await frameByUrl(page, reactOrigin);
@@ -247,7 +252,7 @@ test("AC-51: preview frames cannot reach studio credentials or API", async ({
     .locator("iframe.frame.front")
     .getAttribute("sandbox");
 
-  const dataDir = readState().dataDir;
+  const { dataDir } = readState();
 
   const viteFsProbe = await reactFrame.evaluate(
     async (targets) => {
@@ -267,10 +272,10 @@ test("AC-51: preview frames cannot reach studio credentials or API", async ({
     },
     {
       etcHosts: "/@fs/etc/hosts",
-      ownProjectJson: `/@fs${dataDir}/projects/${react.id}/project.json`,
-      ownEventsLog: `/@fs${dataDir}/projects/${react.id}/events.jsonl`,
       otherProjectIndexHtml: `/@fs${mainDirection(first).workTree}/index.html`,
       otherProjectJson: `/@fs${dataDir}/projects/${first.id}/project.json`,
+      ownEventsLog: `/@fs${dataDir}/projects/${react.id}/events.jsonl`,
+      ownProjectJson: `/@fs${dataDir}/projects/${react.id}/project.json`,
     }
   );
 
@@ -329,43 +334,49 @@ export default defineConfig({ plugins: [react()] });
   writeFileSync(viteConfig, originalConfig);
 
   const result = {
-    htmlSandbox,
-    reactSandbox,
-    htmlProbe,
-    reactProbe,
-    viteFsProbe,
-    projectsBefore,
-    projectsAfter: projectsAfter.length,
     csrfProjects: csrfProjects.map((project) => project.name),
+    htmlProbe,
+    htmlSandbox,
+    projectsAfter: projectsAfter.length,
+    projectsBefore,
+    reactProbe,
+    reactSandbox,
     serverSideFromHtmlPreviewOrigin: server,
     serverSideFromReactPreviewOrigin: serverVite,
     studioCookies,
     viteConfig: {
-      markerSource,
       marker: viteConfigMarker,
-      studioListenerPid: studioListener,
+      markerSource,
       statePid: readState().pid,
+      studioListenerPid: studioListener,
     },
+    viteFsProbe,
   };
 
   saveResult("ac51", result);
 
   for (const probe of [htmlProbe, reactProbe]) {
-    expect((probe.parentDocumentTitle as { ok: boolean }).ok).toBe(false);
-    expect((probe.topStudioTokenMeta as { ok: boolean }).ok).toBe(false);
-    expect((probe.parentLocalStorage as { ok: boolean }).ok).toBe(false);
-    expect((probe.fetchStudioIndexHtml as { ok: boolean }).ok).toBe(false);
-    expect((probe.fetchProjectsNoToken as { ok: boolean }).ok).toBe(false);
-    expect((probe.fetchProjectsGuessedToken as { ok: boolean }).ok).toBe(false);
-    expect((probe.fetchApiSession as { ok: boolean }).ok).toBe(false);
+    expect.soft((probe.parentDocumentTitle as { ok: boolean }).ok).toBe(false);
+    expect.soft((probe.topStudioTokenMeta as { ok: boolean }).ok).toBe(false);
+    expect.soft((probe.parentLocalStorage as { ok: boolean }).ok).toBe(false);
+    expect.soft((probe.fetchStudioIndexHtml as { ok: boolean }).ok).toBe(false);
+    expect.soft((probe.fetchProjectsNoToken as { ok: boolean }).ok).toBe(false);
+    expect
+      .soft((probe.fetchProjectsGuessedToken as { ok: boolean }).ok)
+      .toBe(false);
+    expect.soft((probe.fetchApiSession as { ok: boolean }).ok).toBe(false);
   }
 
-  expect(csrfProjects).toHaveLength(0);
-  expect(server.postCreateWithValidTokenButPreviewOrigin).toBe(403);
-  expect(serverVite.postCreateWithValidTokenButPreviewOrigin).toBe(403);
-  expect(server.getSessionSameSite).toBe(403);
-  expect(htmlProbe.fetchOtherProjectPreview).toEqual({ ok: true, value: 403 });
-  expect((htmlProbe.fetchOtherProjectOrigin as { ok: boolean }).ok).toBe(false);
+  expect.soft(csrfProjects).toHaveLength(0);
+  expect.soft(server.postCreateWithValidTokenButPreviewOrigin).toBe(403);
+  expect.soft(serverVite.postCreateWithValidTokenButPreviewOrigin).toBe(403);
+  expect.soft(server.getSessionSameSite).toBe(403);
+  expect
+    .soft(htmlProbe.fetchOtherProjectPreview)
+    .toEqual({ ok: true, value: 403 });
+  expect
+    .soft((htmlProbe.fetchOtherProjectOrigin as { ok: boolean }).ok)
+    .toBe(false);
 
   const configMarker = viteConfigMarker as {
     pid: number;
@@ -374,12 +385,14 @@ export default defineConfig({ plugins: [react()] });
   } | null;
 
   if (configMarker) {
-    expect(
-      configMarker.pid,
-      "vite.config.ts must not run inside the studio server process"
-    ).not.toBe(studioListener);
-    expect(configMarker.pid).not.toBe(readState().pid);
-    expect(configMarker.studioDataDirEnv).toBeNull();
-    expect(configMarker.studioPortEnv).toBeNull();
+    expect
+      .soft(
+        configMarker.pid,
+        "vite.config.ts must not run inside the studio server process"
+      )
+      .not.toBe(studioListener);
+    expect.soft(configMarker.pid).not.toBe(readState().pid);
+    expect.soft(configMarker.studioDataDirEnv).toBeNull();
+    expect.soft(configMarker.studioPortEnv).toBeNull();
   }
 });

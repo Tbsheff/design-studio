@@ -47,8 +47,8 @@ export default async function globalSetup(): Promise<void> {
 
   const state = {
     dataDir,
-    workDir,
     pid,
+    workDir,
     ...(renderHostPid ? { renderHostPid } : {}),
   };
 

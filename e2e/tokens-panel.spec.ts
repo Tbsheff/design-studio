@@ -33,9 +33,9 @@ async function openProject(page: Page, api: StudioApi): Promise<Project> {
     "POST",
     "/api/projects",
     {
-      prompt: "Tokens Panel Journal",
       kind: "html",
       packId: "editorial",
+      prompt: "Tokens Panel Journal",
     }
   );
 
@@ -49,7 +49,7 @@ async function openProject(page: Page, api: StudioApi): Promise<Project> {
     );
   }, project.id);
   await page.reload();
-  await expect(page.locator(".topbar")).toBeVisible();
+  await expect.soft(page.locator(".topbar")).toBeVisible();
 
   return api.project(project.id);
 }
@@ -59,7 +59,7 @@ async function plant(frame: FrameLocator): Promise<void> {
     const w = window as unknown as { __marker?: string };
     w.__marker = "kept";
 
-    if (document.getElementById("tk-probe")) {
+    if (document.querySelector("#tk-probe")) {
       return;
     }
 
@@ -67,7 +67,7 @@ async function plant(frame: FrameLocator): Promise<void> {
     probe.id = "tk-probe";
     probe.textContent = "probe";
     probe.style.color = "var(--primary)";
-    body.appendChild(probe);
+    body.append(probe);
   });
 }
 
@@ -77,7 +77,7 @@ async function probe(
   return frame.locator("#tk-probe").evaluate((el) => ({
     color: getComputedStyle(el).color,
     marker: (window as unknown as { __marker?: string }).__marker ?? null,
-    theme: document.documentElement.getAttribute("data-theme"),
+    theme: document.documentElement.dataset.theme,
   }));
 }
 
@@ -100,7 +100,7 @@ async function shoot(page: Page, name: string, focus: Locator): Promise<void> {
   mkdirSync(REVIEW_DIR, { recursive: true });
 
   for (const [width, height] of SIZES) {
-    await page.setViewportSize({ width, height });
+    await page.setViewportSize({ height, width });
     await page.waitForTimeout(300);
     await focus.evaluate((el) => el.scrollIntoView({ block: "center" }));
     await page.waitForTimeout(100);
@@ -112,7 +112,7 @@ async function shoot(page: Page, name: string, focus: Locator): Promise<void> {
     });
   }
 
-  await page.setViewportSize({ width: 1600, height: 1000 });
+  await page.setViewportSize({ height: 1000, width: 1600 });
   await page.waitForTimeout(250);
 }
 
@@ -124,40 +124,42 @@ test("tokens panel: live preview in every frame, theme, discard, commit, undo", 
   const main = mainDirection(project);
   const tokensJson = path.join(main.workTree, "design-system", "tokens.json");
   const tokensCss = path.join(main.workTree, "design-system", "tokens.css");
-  await expect(frontFrame(page).locator("h1")).toHaveText(
-    "Tokens Panel Journal"
-  );
+  await expect
+    .soft(frontFrame(page).locator("h1"))
+    .toHaveText("Tokens Panel Journal");
 
   await sendPrompt(page, "Add a short note");
   await api.waitForRuns(project.id, 2);
-  await expect(frontFrame(page).locator(".mock-edit")).toHaveCount(1);
-  await expect(page.locator("li.version")).toHaveCount(
-    (await api.versions(project.id, main.id)).length
-  );
+  await expect.soft(frontFrame(page).locator(".mock-edit")).toHaveCount(1);
+  await expect
+    .soft(page.locator("li.version"))
+    .toHaveCount((await api.versions(project.id, main.id)).length);
   const jsonBefore = readFileSync(tokensJson, "utf-8");
   const cssBefore = readFileSync(tokensCss, "utf-8");
 
   const front = frontFrame(page);
   await plant(front);
   const original = (await probe(front)).color;
-  expect(near(original, FAR)).toBe(false);
+  expect.soft(near(original, FAR)).toBe(false);
 
   await page.getByRole("tab", { name: /^Tokens/ }).click();
   const row = page.locator('li.tkp-row[data-token="--primary"]');
   const input = row.getByLabel("--primary value", { exact: true });
   await input.fill(FAR);
   await expectColor(front, FAR);
-  expect((await probe(front)).marker).toBe("kept");
-  await expect(row).toHaveClass(/changed/);
-  await expect(page.getByRole("tab", { name: /^Tokens/ })).toContainText("1");
-  await expect(page.locator(".tkp-count")).toHaveText("1 change");
+  expect.soft((await probe(front)).marker).toBe("kept");
+  await expect.soft(row).toHaveClass(/changed/);
+  await expect
+    .soft(page.getByRole("tab", { name: /^Tokens/ }))
+    .toContainText("1");
+  await expect.soft(page.locator(".tkp-count")).toHaveText("1 change");
 
   await input.fill("not-a-colour");
-  await expect(row.locator(".tkp-error")).toBeVisible();
+  await expect.soft(row.locator(".tkp-error")).toBeVisible();
   await page.waitForTimeout(200);
   await expectColor(front, FAR);
   await input.fill(FAR);
-  await expect(row.locator(".tkp-error")).toHaveCount(0);
+  await expect.soft(row.locator(".tkp-error")).toHaveCount(0);
   await expectColor(front, FAR);
 
   const space = page
@@ -167,34 +169,34 @@ test("tokens panel: live preview in every frame, theme, discard, commit, undo", 
 
   await space.focus();
   await page.keyboard.press("ArrowUp");
-  await expect(page.locator(".tkp-count")).toHaveText("2 changes");
+  await expect.soft(page.locator(".tkp-count")).toHaveText("2 changes");
   await page.locator(".tkp-title").click();
   await page.keyboard.press("ControlOrMeta+z");
-  await expect(page.locator(".tkp-count")).toHaveText("1 change");
+  await expect.soft(page.locator(".tkp-count")).toHaveText("1 change");
   await shoot(page, "pending", row);
 
   await page
     .locator(".tkp-theme")
-    .getByRole("button", { name: "Dark", exact: true })
+    .getByRole("button", { exact: true, name: "Dark" })
     .click();
   await expect.poll(async () => (await probe(front)).theme).toBe("dark");
-  expect((await probe(front)).marker).toBe("kept");
+  expect.soft((await probe(front)).marker).toBe("kept");
   await shoot(page, "dark", row);
   await page
     .locator(".tkp-theme")
-    .getByRole("button", { name: "Auto", exact: true })
+    .getByRole("button", { exact: true, name: "Auto" })
     .click();
-  await expect.poll(async () => (await probe(front)).theme).toBe(null);
+  await expect.poll(async () => (await probe(front)).theme).toBeNull();
 
   await showVersions(page);
   const rows = page.locator("li.version");
   await rows.nth(0).getByRole("button", { name: "Compare" }).click();
   await rows.nth(1).getByRole("button", { name: "Compare" }).click();
   await page
-    .getByRole("button", { name: "Compare", exact: true })
+    .getByRole("button", { exact: true, name: "Compare" })
     .first()
     .click();
-  await expect(page.locator(".compare-pane")).toHaveCount(2);
+  await expect.soft(page.locator(".compare-pane")).toHaveCount(2);
 
   const panes = [
     page.frameLocator(".compare-pane:nth-child(1) iframe"),
@@ -202,7 +204,7 @@ test("tokens panel: live preview in every frame, theme, discard, commit, undo", 
   ];
 
   for (const pane of panes) {
-    await expect(pane.locator("h1")).toHaveText("Tokens Panel Journal");
+    await expect.soft(pane.locator("h1")).toHaveText("Tokens Panel Journal");
     await plant(pane);
     await expectColor(pane, FAR);
   }
@@ -212,45 +214,45 @@ test("tokens panel: live preview in every frame, theme, discard, commit, undo", 
 
   for (const pane of panes) {
     await expectColor(pane, FAR_2);
-    expect((await probe(pane)).marker).toBe("kept");
+    expect.soft((await probe(pane)).marker).toBe("kept");
   }
 
   await page.getByRole("button", { name: "Close compare" }).click();
-  await expect(front.locator("h1")).toBeVisible();
+  await expect.soft(front.locator("h1")).toBeVisible();
   await plant(front);
   await expectColor(front, FAR_2);
 
-  await page.getByRole("button", { name: "Discard", exact: true }).click();
+  await page.getByRole("button", { exact: true, name: "Discard" }).click();
   await expectColor(front, original);
-  expect((await probe(front)).marker).toBe("kept");
-  await expect(page.locator(".tkp-footer")).toHaveCount(0);
-  await expect(row).not.toHaveClass(/changed/);
-  expect(readFileSync(tokensJson, "utf-8")).toBe(jsonBefore);
+  expect.soft((await probe(front)).marker).toBe("kept");
+  await expect.soft(page.locator(".tkp-footer")).toHaveCount(0);
+  await expect.soft(row).not.toHaveClass(/changed/);
+  expect.soft(readFileSync(tokensJson, "utf-8")).toBe(jsonBefore);
 
   const versionsBefore = (await api.versions(project.id, main.id)).length;
   await input.fill(COMMITTED);
   await expectColor(front, COMMITTED);
-  await page.getByRole("button", { name: "Commit", exact: true }).click();
-  await expect(page.locator(".tkp-footer")).toHaveCount(0);
+  await page.getByRole("button", { exact: true, name: "Commit" }).click();
+  await expect.soft(page.locator(".tkp-footer")).toHaveCount(0);
   await expect
     .poll(() => readFileSync(tokensJson, "utf-8"))
     .toContain(COMMITTED);
-  expect(readFileSync(tokensCss, "utf-8")).not.toBe(cssBefore);
+  expect.soft(readFileSync(tokensCss, "utf-8")).not.toBe(cssBefore);
   await expect
     .poll(async () => (await api.versions(project.id, main.id)).length)
     .toBe(versionsBefore + 1);
-  await expect(page.locator("li.version")).toHaveCount(versionsBefore + 1);
+  await expect.soft(page.locator("li.version")).toHaveCount(versionsBefore + 1);
   await page.waitForTimeout(500);
-  expect((await api.versions(project.id, main.id)).length).toBe(
-    versionsBefore + 1
-  );
-  await expect(input).toHaveValue(COMMITTED);
+  expect
+    .soft(await api.versions(project.id, main.id))
+    .toHaveLength(versionsBefore + 1);
+  await expect.soft(input).toHaveValue(COMMITTED);
   await plant(frontFrame(page));
   await expectColor(frontFrame(page), COMMITTED);
 
   await page.locator(".tkp-title").click();
   await page.keyboard.press("ControlOrMeta+z");
   await expect.poll(() => readFileSync(tokensJson, "utf-8")).toBe(jsonBefore);
-  expect(readFileSync(tokensCss, "utf-8")).toBe(cssBefore);
-  await expect(input).not.toHaveValue(COMMITTED);
+  expect.soft(readFileSync(tokensCss, "utf-8")).toBe(cssBefore);
+  await expect.soft(input).not.toHaveValue(COMMITTED);
 });

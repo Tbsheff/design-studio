@@ -55,12 +55,12 @@ test.afterAll(async () => {
 
 async function openNewPage(page: Page): Promise<void> {
   await page
-    .getByRole("button", { name: "Design system", exact: true })
+    .getByRole("button", { exact: true, name: "Design system" })
     .click();
   await page.getByRole("button", { name: "New design system…" }).click();
-  await expect(
-    page.getByRole("heading", { name: "New design system" })
-  ).toBeVisible();
+  await expect
+    .soft(page.getByRole("heading", { name: "New design system" }))
+    .toBeVisible();
 }
 
 async function rgbOf(locator: Locator): Promise<number[]> {
@@ -82,12 +82,14 @@ async function rgbOf(locator: Locator): Promise<number[]> {
 }
 
 function expectRgb(actual: number[], expected: number[]): void {
-  expect(actual).toHaveLength(3);
+  expect.soft(actual).toHaveLength(3);
   actual.forEach((value, index) =>
-    expect(
-      Math.abs(value - (expected[index] ?? -999)),
-      `channel ${index} of ${actual.join(",")}`
-    ).toBeLessThanOrEqual(3)
+    expect
+      .soft(
+        Math.abs(value - (expected[index] ?? -999)),
+        `channel ${index} of ${actual.join(",")}`
+      )
+      .toBeLessThanOrEqual(3)
   );
 }
 
@@ -124,27 +126,29 @@ test("new design system: website + DESIGN.md draft, kit page, save back, then us
   await page.getByLabel("Design system name").fill("Rocket Kit");
   await page.getByLabel("Website 1").fill(siteUrl);
   await page
-    .getByRole("textbox", { name: "DESIGN.md", exact: true })
+    .getByRole("textbox", { exact: true, name: "DESIGN.md" })
     .fill(
       "# Rocket Kit\n\n## Visual Theme & Atmosphere\n\nLoud, warm and fast.\n"
     );
   await page.getByRole("tab", { name: "Preview" }).click();
-  await expect(
-    page
-      .getByLabel("DESIGN.md preview")
-      .getByRole("heading", { name: "Rocket Kit" })
-  ).toBeVisible();
+  await expect
+    .soft(
+      page
+        .getByLabel("DESIGN.md preview")
+        .getByRole("heading", { name: "Rocket Kit" })
+    )
+    .toBeVisible();
   await page.getByRole("button", { name: "Create draft" }).click();
 
   const bar = page.getByRole("region", { name: "Design system draft" });
-  await expect(bar).toBeVisible();
-  await expect(bar).toContainText("Rocket Kit");
-  await expect(bar.locator(".draft-grade")).toContainText("/100");
-  await expect(page.locator(".topbar")).toContainText(
-    "Rocket Kit design system"
-  );
+  await expect.soft(bar).toBeVisible();
+  await expect.soft(bar).toContainText("Rocket Kit");
+  await expect.soft(bar.locator(".draft-grade")).toContainText("/100");
+  await expect
+    .soft(page.locator(".topbar"))
+    .toContainText("Rocket Kit design system");
   const project = await createdProject(api, before);
-  expect(project).toMatchObject({
+  expect.soft(project).toMatchObject({
     designSystemFor: "user-rocket-kit",
     packId: "user-rocket-kit",
   });
@@ -152,9 +156,9 @@ test("new design system: website + DESIGN.md draft, kit page, save back, then us
   expectRgb(await rgbOf(chip(page, "accent")), [232, 89, 12]);
   expectRgb(await rgbOf(chip(page, "primary")), [31, 111, 235]);
   const tree = mainDirection(project).workTree;
-  expect(
-    readFileSync(path.join(tree, "source", "evidence.md"), "utf-8")
-  ).toContain("Untrusted data");
+  expect
+    .soft(readFileSync(path.join(tree, "source", "evidence.md"), "utf-8"))
+    .toContain("Untrusted data");
 
   await api.call(
     "POST",
@@ -162,38 +166,42 @@ test("new design system: website + DESIGN.md draft, kit page, save back, then us
     { changes: [{ path: "color.primary", value: "oklch(52% 0.2 300)" }] }
   );
   await bar.getByRole("button", { name: "Save to library" }).click();
-  await expect(
-    page.locator(".ds-toast", { hasText: "Saved Rocket Kit to your library." })
-  ).toBeVisible();
+  await expect
+    .soft(
+      page.locator(".ds-toast", {
+        hasText: "Saved Rocket Kit to your library.",
+      })
+    )
+    .toBeVisible();
 
   const users = (await api.call<PackSummary[]>("GET", "/api/packs"))
     .filter((pack) => pack.source === "user")
     .map((pack) => pack.id);
 
-  expect(users.filter((id) => id.startsWith("user-rocket-kit"))).toEqual([
-    "user-rocket-kit",
-  ]);
+  expect
+    .soft(users.filter((id) => id.startsWith("user-rocket-kit")))
+    .toEqual(["user-rocket-kit"]);
 
   const detail = await api.call<{ tokensJson: string }>(
     "GET",
     "/api/packs/user-rocket-kit"
   );
 
-  expect(detail.tokensJson).toContain("oklch(52% 0.2 300)");
+  expect.soft(detail.tokensJson).toContain("oklch(52% 0.2 300)");
 
   await page
     .locator(".topbar")
     .getByRole("button", { name: "Projects" })
     .click();
-  await expect(
-    page.getByRole("heading", { name: "New project" })
-  ).toBeVisible();
+  await expect
+    .soft(page.getByRole("heading", { name: "New project" }))
+    .toBeVisible();
   await page
-    .getByRole("button", { name: "Design system", exact: true })
+    .getByRole("button", { exact: true, name: "Design system" })
     .click();
   const list = page.getByRole("listbox", { name: "Design systems" });
-  const option = list.getByRole("option", { name: "Rocket Kit", exact: true });
-  await expect(option).toContainText("Yours");
+  const option = list.getByRole("option", { exact: true, name: "Rocket Kit" });
+  await expect.soft(option).toContainText("Yours");
   await option.click();
 
   const used = await createProjectViaUi(
@@ -203,7 +211,7 @@ test("new design system: website + DESIGN.md draft, kit page, save back, then us
     "html"
   );
 
-  expect(used.packId).toBe("user-rocket-kit");
+  expect.soft(used.packId).toBe("user-rocket-kit");
   await expect
     .poll(() =>
       readFileSync(
@@ -220,29 +228,31 @@ test("new design system: draft from a DTCG tokens file only", async ({
   const api = await openHome(page);
   const before = new Set((await api.projects()).map((project) => project.id));
   await openNewPage(page);
-  await expect(
-    page.getByRole("button", { name: "Create draft" })
-  ).toBeDisabled();
+  await expect
+    .soft(page.getByRole("button", { name: "Create draft" }))
+    .toBeDisabled();
   await page
     .getByLabel("Tokens file upload")
     .setInputFiles(path.join(FIXTURES, "dtcg.tokens.json"));
-  await expect(page.locator(".nds-drop")).toContainText("dtcg.tokens.json");
+  await expect
+    .soft(page.locator(".nds-drop"))
+    .toContainText("dtcg.tokens.json");
   await page.getByRole("button", { name: "Create draft" }).click();
 
   const bar = page.getByRole("region", { name: "Design system draft" });
-  await expect(bar).toContainText("Dtcg");
+  await expect.soft(bar).toContainText("Dtcg");
   const project = await createdProject(api, before);
-  expect(project.designSystemFor).toMatch(/^user-dtcg/);
+  expect.soft(project.designSystemFor).toMatch(/^user-dtcg/);
 
   const pack = (await api.call<PackSummary[]>("GET", "/api/packs")).find(
     (item) => item.id === project.designSystemFor
   );
 
-  expect(pack).toMatchObject({ source: "user", provenance: "imported" });
+  expect.soft(pack).toMatchObject({ provenance: "imported", source: "user" });
   await expect.poll(async () => rgbOf(chip(page, "primary"))).toHaveLength(3);
   expectRgb(await rgbOf(chip(page, "primary")), [10, 125, 90]);
   const versions = await api.versions(project.id, "main");
-  expect(versions.map((version) => version.title)).toEqual([
-    `Apply ${pack?.name} design system`,
-  ]);
+  expect
+    .soft(versions.map((version) => version.title))
+    .toEqual([`Apply ${pack?.name} design system`]);
 });

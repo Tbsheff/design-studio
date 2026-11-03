@@ -8,7 +8,9 @@ import boundariesConfig from "../oxlint.boundaries.config.ts";
 import mainConfig from "../oxlint.config.ts";
 import fastConfig from "../oxlint.fast.config.ts";
 
-type Pattern = { group: string[] };
+interface Pattern {
+  group: string[];
+}
 
 const TEST_ONLY_GROUPS = new Set(["node:*", "**/test-fakes*", "**/testing/**"]);
 const TEST_FILE = /\.test\.tsx?$/u;

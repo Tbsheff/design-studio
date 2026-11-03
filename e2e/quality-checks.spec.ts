@@ -63,13 +63,13 @@ test.beforeAll(async () => {
     res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
 
     const pages: Record<string, string> = {
-      "/menu.html": WITH_MENU,
+      "/ctas.html": CTAS,
+      "/doubled.html": DOUBLED,
       "/generic.html": GENERIC,
+      "/menu.html": WITH_MENU,
+      "/responsive.html": RESPONSIVE,
       "/table-first.html": TABLE_FIRST,
       "/table-then-cards.html": TABLE_THEN_CARDS,
-      "/doubled.html": DOUBLED,
-      "/responsive.html": RESPONSIVE,
-      "/ctas.html": CTAS,
     };
 
     res.end(pages[(req.url ?? "").split("?")[0] ?? ""] ?? FIXTURE);
@@ -83,13 +83,13 @@ test.beforeAll(async () => {
 test.afterAll(async () => {
   await pool.close();
   await new Promise<void>((resolve) => server.close(() => resolve()));
-  rmSync(outDir, { recursive: true, force: true });
+  rmSync(outDir, { force: true, recursive: true });
 });
 
 const OPTIONS = {
-  viewports: ["desktop", "tablet", "mobile"] as const,
-  quality: true,
   placeholder: "high" as const,
+  quality: true,
+  viewports: ["desktop", "tablet", "mobile"] as const,
 };
 
 test("quality checks find contrast, alt, label, tap-target and placeholder problems, with timings", async () => {
@@ -98,11 +98,9 @@ test("quality checks find contrast, alt, label, tap-target and placeholder probl
     viewports: [...OPTIONS.viewports],
   });
 
-  expect(results.map((result) => result.viewport)).toEqual([
-    "desktop",
-    "tablet",
-    "mobile",
-  ]);
+  expect
+    .soft(results.map((result) => result.viewport))
+    .toEqual(["desktop", "tablet", "mobile"]);
   const desktop = results.find((result) => result.viewport === "desktop");
   const mobile = results.find((result) => result.viewport === "mobile");
 
@@ -110,143 +108,168 @@ test("quality checks find contrast, alt, label, tap-target and placeholder probl
     .filter((finding) => finding.check === "a11y")
     .map((finding) => finding.message.split(":")[0]);
 
-  expect(a11y).toEqual(
-    expect.arrayContaining(["color-contrast", "image-alt", "label"])
-  );
-  expect(
-    desktop?.quality?.find((finding) =>
-      finding.message.startsWith("color-contrast")
-    )?.severity
-  ).toBe("high");
+  expect
+    .soft(a11y)
+    .toEqual(expect.arrayContaining(["color-contrast", "image-alt", "label"]));
+  expect
+    .soft(
+      desktop?.quality?.find((finding) =>
+        finding.message.startsWith("color-contrast")
+      )?.severity
+    )
+    .toBe("high");
 
   const taps = (mobile?.quality ?? []).filter(
     (finding) => finding.check === "tap-target"
   );
 
-  expect(
-    taps.find((finding) => finding.selector?.includes("button.tiny"))?.severity
-  ).toBe("high");
-  expect(
-    taps.some((finding) => finding.selector?.includes("button.extended"))
-  ).toBe(false);
-  expect(taps.some((finding) => finding.selector?.includes("button.big"))).toBe(
-    false
-  );
-  expect(taps.some((finding) => finding.message.includes('"terms"'))).toBe(
-    false
-  );
+  expect
+    .soft(
+      taps.find((finding) => finding.selector?.includes("button.tiny"))
+        ?.severity
+    )
+    .toBe("high");
+  expect
+    .soft(taps.some((finding) => finding.selector?.includes("button.extended")))
+    .toBe(false);
+  expect
+    .soft(taps.some((finding) => finding.selector?.includes("button.big")))
+    .toBe(false);
+  expect
+    .soft(taps.some((finding) => finding.message.includes('"terms"')))
+    .toBe(false);
 
   const placeholders = (desktop?.quality ?? []).filter(
     (finding) => finding.check === "placeholder"
   );
 
-  expect(
-    placeholders.find((finding) => finding.selector?.includes("p#draft"))
-      ?.severity
-  ).toBe("high");
-  expect(
-    placeholders.find((finding) => finding.message.includes("Sample data"))
-      ?.severity
-  ).toBe("low");
-  expect(
-    placeholders.find((finding) => finding.selector?.includes("p#mail"))
-      ?.severity
-  ).toBe("high");
-  expect(
-    mobile?.quality?.some((finding) => finding.check === "placeholder")
-  ).toBe(false);
+  expect
+    .soft(
+      placeholders.find((finding) => finding.selector?.includes("p#draft"))
+        ?.severity
+    )
+    .toBe("high");
+  expect
+    .soft(
+      placeholders.find((finding) => finding.message.includes("Sample data"))
+        ?.severity
+    )
+    .toBe("low");
+  expect
+    .soft(
+      placeholders.find((finding) => finding.selector?.includes("p#mail"))
+        ?.severity
+    )
+    .toBe("high");
+  expect
+    .soft(mobile?.quality?.some((finding) => finding.check === "placeholder"))
+    .toBe(false);
 
   for (const result of results) {
-    expect(result.timingsMs?.total).toBeLessThan(5000);
+    expect.soft(result.timingsMs?.total).toBeLessThan(5000);
   }
 });
 
 test("the nav rule flags a desktop nav that mobile hides with no menu, and accepts a menu button", async () => {
   const hidden = await pool.renderCheck(`${base}/index.html`, outDir, "n1", {
-    viewports: ["desktop", "mobile"],
     quality: false,
+    viewports: ["desktop", "mobile"],
   });
 
-  expect(hidden[0]?.nav?.visibleLinks).toBe(4);
-  expect(hidden[1]?.nav).toMatchObject({ visibleLinks: 0, menuControl: false });
-  expect(navFindings(hidden)).toMatchObject([
-    { check: "nav-mobile", severity: "high", viewport: "mobile" },
-  ]);
+  expect.soft(hidden[0]?.nav?.visibleLinks).toBe(4);
+  expect
+    .soft(hidden[1]?.nav)
+    .toMatchObject({ menuControl: false, visibleLinks: 0 });
+  expect
+    .soft(navFindings(hidden))
+    .toMatchObject([
+      { check: "nav-mobile", severity: "high", viewport: "mobile" },
+    ]);
 
   const menu = await pool.renderCheck(`${base}/menu.html`, outDir, "n2", {
-    viewports: ["desktop", "mobile"],
     quality: false,
+    viewports: ["desktop", "mobile"],
   });
 
-  expect(menu[1]?.nav?.menuControl).toBe(true);
-  expect(navFindings(menu)).toEqual([]);
+  expect.soft(menu[1]?.nav?.menuControl).toBe(true);
+  expect.soft(navFindings(menu)).toEqual([]);
 });
 
 test("wireframe-style checks skip quality probes", async () => {
   const results = await pool.renderCheck(`${base}/index.html`, outDir, "w", {
-    viewports: ["desktop", "mobile"],
-    quality: false,
     placeholder: "off",
+    quality: false,
+    viewports: ["desktop", "mobile"],
   });
 
-  expect(results.every((result) => (result.quality ?? []).length === 0)).toBe(
-    true
-  );
+  expect
+    .soft(results.every((result) => (result.quality ?? []).length === 0))
+    .toBe(true);
 });
 
 test("the generic-layout check names the stock pricing pattern and passes a table-first page", async () => {
   const generic = await pool.renderCheck(`${base}/generic.html`, outDir, "g1", {
-    viewports: ["desktop", "mobile"],
     quality: true,
+    viewports: ["desktop", "mobile"],
   });
 
   const found = (generic[0]?.quality ?? []).filter(
     (finding) => finding.check === "generic-layout"
   );
 
-  expect(found).toHaveLength(1);
-  expect(found[0]).toMatchObject({ severity: "medium", viewport: "desktop" });
-  expect(found[0]?.message).toContain(
-    "three equal plan cards in one row with the middle one filled or raised, then a comparison table, then an FAQ"
-  );
-  expect(
-    (generic[1]?.quality ?? []).some(
-      (finding) => finding.check === "generic-layout"
+  expect.soft(found).toHaveLength(1);
+  expect
+    .soft(found[0])
+    .toMatchObject({ severity: "medium", viewport: "desktop" });
+  expect
+    .soft(found[0]?.message)
+    .toContain(
+      "three equal plan cards in one row with the middle one filled or raised, then a comparison table, then an FAQ"
+    );
+  expect
+    .soft(
+      (generic[1]?.quality ?? []).some(
+        (finding) => finding.check === "generic-layout"
+      )
     )
-  ).toBe(false);
+    .toBe(false);
 
   const tableFirst = await pool.renderCheck(
     `${base}/table-first.html`,
     outDir,
     "g2",
-    { viewports: ["desktop"], quality: true }
+    { quality: true, viewports: ["desktop"] }
   );
 
-  expect(
-    (tableFirst[0]?.quality ?? []).some(
-      (finding) => finding.check === "generic-layout"
+  expect
+    .soft(
+      (tableFirst[0]?.quality ?? []).some(
+        (finding) => finding.check === "generic-layout"
+      )
     )
-  ).toBe(false);
-  expect(generic[0]?.timingsMs?.total).toBeLessThan(5000);
+    .toBe(false);
+  expect.soft(generic[0]?.timingsMs?.total).toBeLessThan(5000);
 
   const moved = await pool.renderCheck(
     `${base}/table-then-cards.html`,
     outDir,
     "g3",
-    { viewports: ["desktop"], quality: true }
+    { quality: true, viewports: ["desktop"] }
   );
 
-  expect(
-    (moved[0]?.quality ?? []).some(
-      (finding) => finding.check === "generic-layout"
+  expect
+    .soft(
+      (moved[0]?.quality ?? []).some(
+        (finding) => finding.check === "generic-layout"
+      )
     )
-  ).toBe(false);
+    .toBe(false);
 });
 
 test("duplicate-content flags the prices and plans doubled by run g at desktop, and passes a cards-on-mobile, table-on-desktop page", async () => {
   const doubled = await pool.renderCheck(`${base}/doubled.html`, outDir, "d1", {
-    viewports: ["desktop", "mobile"],
     quality: true,
+    viewports: ["desktop", "mobile"],
   });
 
   const desktop = (doubled[0]?.quality ?? []).filter(
@@ -254,39 +277,49 @@ test("duplicate-content flags the prices and plans doubled by run g at desktop, 
   );
 
   const texts = desktop.map((finding) => finding.message);
-  expect(desktop.every((finding) => finding.severity === "medium")).toBe(true);
+  expect
+    .soft(desktop.every((finding) => finding.severity === "medium"))
+    .toBe(true);
 
   for (const price of ["$19/mo", "$49/mo", "$129/mo"]) {
-    expect(
-      texts.some((text) => text.includes(`"${price}" shows 2 times at desktop`))
-    ).toBe(true);
+    expect
+      .soft(
+        texts.some((text) =>
+          text.includes(`"${price}" shows 2 times at desktop`)
+        )
+      )
+      .toBe(true);
   }
 
   const responsive = await pool.renderCheck(
     `${base}/responsive.html`,
     outDir,
     "d2",
-    { viewports: ["desktop", "mobile"], quality: true }
+    { quality: true, viewports: ["desktop", "mobile"] }
   );
 
   for (const result of responsive) {
-    expect(
-      (result.quality ?? []).filter(
-        (finding) => finding.check === "duplicate-content"
+    expect
+      .soft(
+        (result.quality ?? []).filter(
+          (finding) => finding.check === "duplicate-content"
+        )
       )
-    ).toEqual([]);
+      .toEqual([]);
   }
 
   const ctas = await pool.renderCheck(`${base}/ctas.html`, outDir, "d3", {
-    viewports: ["desktop"],
     quality: true,
+    viewports: ["desktop"],
   });
 
   const ctaHits = (ctas[0]?.quality ?? []).filter(
     (finding) => finding.check === "duplicate-content"
   );
 
-  expect(ctaHits.map((finding) => finding.message)).toEqual([
-    expect.stringContaining('"Start trial" shows 2 times at desktop'),
-  ]);
+  expect
+    .soft(ctaHits.map((finding) => finding.message))
+    .toEqual([
+      expect.stringContaining('"Start trial" shows 2 times at desktop'),
+    ]);
 });

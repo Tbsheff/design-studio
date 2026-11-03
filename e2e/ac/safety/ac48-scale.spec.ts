@@ -2,7 +2,8 @@ import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 import type { Project, StudioEvent } from "../../../src/shared/contracts";
 import { BASE_URL, readState } from "../../support/server";
@@ -11,8 +12,8 @@ import {
   frontFrame,
   mainDirection,
   openHome,
-  type StudioApi,
 } from "../../support/studio";
+import type { StudioApi } from "../../support/studio";
 import { p50, p95, saveResult } from "./helpers";
 
 const SAMPLES = 15;
@@ -32,7 +33,7 @@ const PAINT_PROBE = () => {
     } | null;
 
     if (data?.ns === "studio" && data.type === "painted") {
-      w.__painted.push({ token: data.token ?? "", receivedAt: Date.now() });
+      w.__painted.push({ receivedAt: Date.now(), token: data.token ?? "" });
     }
   });
 };
@@ -76,8 +77,8 @@ class EventTap {
 
           if (data) {
             this.events.push({
-              receivedAt: Date.now(),
               event: JSON.parse(data.slice(6)) as StudioEvent,
+              receivedAt: Date.now(),
             });
           }
 
@@ -108,7 +109,7 @@ class EventTap {
       await new Promise((resolve) => setTimeout(resolve, 5));
     }
 
-    return NaN;
+    return Number.NaN;
   }
 
   close(): void {
@@ -164,8 +165,8 @@ function timeGitAdd(project: Project): number[] {
   const env = {
     ...process.env,
     GIT_DIR: gitDir,
-    GIT_WORK_TREE: mainDirection(project).workTree,
     GIT_INDEX_FILE: path.join(gitDir, "index-main"),
+    GIT_WORK_TREE: mainDirection(project).workTree,
   };
 
   const out: number[] = [];
@@ -199,7 +200,7 @@ async function measure(page: Page, api: StudioApi, project: Project) {
       file,
       original.replace(/<h1>[^<]*<\/h1>/, `<h1>${text}</h1>`)
     );
-    await expect(frontFrame(page).locator("h1")).toHaveText(text);
+    await expect.soft(frontFrame(page).locator("h1")).toHaveText(text);
     paint.push((await paintedAfter(page, await frontToken(page), t0)) - t0);
     filesChanged.push((await tap.firstAfter("files.changed", t0)) - t0);
     statusChanged.push((await tap.firstAfter("status.changed", t0)) - t0);
@@ -217,15 +218,15 @@ async function measure(page: Page, api: StudioApi, project: Project) {
   });
 
   return {
-    paint: summarize(paint),
     filesChanged: summarize(filesChanged),
-    statusChanged: summarize(statusChanged),
     getStatus: summarize(status),
     gitAddAll: summarize(gitAdd),
+    paint: summarize(paint),
+    statusChanged: summarize(statusChanged),
   };
 }
 
-test("AC-48: single-file change cost does not grow with 3,000 extra files", async ({
+test("aC-48: single-file change cost does not grow with 3,000 extra files", async ({
   page,
 }) => {
   test.setTimeout(600_000);
@@ -234,13 +235,13 @@ test("AC-48: single-file change cost does not grow with 3,000 extra files", asyn
 
   const small = await createProjectViaUi(page, api, "Scale small", "html");
   await api.waitForRuns(small.id, 1);
-  await expect(frontFrame(page).locator("h1")).toHaveText("Scale small");
+  await expect.soft(frontFrame(page).locator("h1")).toHaveText("Scale small");
   const smallResult = await measure(page, api, small);
 
   await page.getByRole("button", { name: "Projects" }).click();
   const large = await createProjectViaUi(page, api, "Scale large", "html");
   await api.waitForRuns(large.id, 1);
-  await expect(frontFrame(page).locator("h1")).toHaveText("Scale large");
+  await expect.soft(frontFrame(page).locator("h1")).toHaveText("Scale large");
   const root = mainDirection(large).workTree;
 
   for (let i = 0; i < EXTRA_FILES; i += 1) {
@@ -266,15 +267,15 @@ test("AC-48: single-file change cost does not grow with 3,000 extra files", asyn
     })
     .toBe(false);
   await page.reload();
-  await expect(frontFrame(page).locator("h1")).toHaveText("Scale large");
+  await expect.soft(frontFrame(page).locator("h1")).toHaveText("Scale large");
   const largeResult = await measure(page, api, large);
 
   const result = {
-    extraFiles: EXTRA_FILES,
-    samples: SAMPLES,
     coldStatusMsAfterAdding3000: Math.round(coldStatusMs),
-    small: smallResult,
+    extraFiles: EXTRA_FILES,
     large: largeResult,
+    samples: SAMPLES,
+    small: smallResult,
   };
 
   saveResult(
@@ -282,7 +283,7 @@ test("AC-48: single-file change cost does not grow with 3,000 extra files", asyn
     result
   );
   console.log(
-    `[ac48] ${JSON.stringify({ small: { paint: smallResult.paint.p95, files: smallResult.filesChanged.p95, status: smallResult.getStatus.p95, git: smallResult.gitAddAll.p95 }, large: { paint: largeResult.paint.p95, files: largeResult.filesChanged.p95, status: largeResult.getStatus.p95, git: largeResult.gitAddAll.p95 } })}`
+    `[ac48] ${JSON.stringify({ large: { files: largeResult.filesChanged.p95, git: largeResult.gitAddAll.p95, paint: largeResult.paint.p95, status: largeResult.getStatus.p95 }, small: { files: smallResult.filesChanged.p95, git: smallResult.gitAddAll.p95, paint: smallResult.paint.p95, status: smallResult.getStatus.p95 } })}`
   );
   expect
     .soft(largeResult.paint.p95)

@@ -1,9 +1,18 @@
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 
-type Diagnostic = { code: string; filename: string; severity: string };
+interface Diagnostic {
+  code: string;
+  filename: string;
+  severity: string;
+}
 type Counts = Record<string, number>;
-type Baseline = { total: number; rules: Counts; dirs: Counts };
+
+interface Baseline {
+  total: number;
+  rules: Counts;
+  dirs: Counts;
+}
 
 const BASELINE = new URL("lint-baseline.json", import.meta.url);
 
@@ -31,7 +40,9 @@ const lint = (): Diagnostic[] => {
     ["-c", "oxlint.config.ts", "--format=json"],
     { encoding: "utf-8", maxBuffer: 2 ** 31 - 1 }
   );
+
   const parsed: { diagnostics?: Diagnostic[] } = JSON.parse(run.stdout || "{}");
+
   return parsed.diagnostics ?? [];
 };
 
@@ -45,14 +56,16 @@ const dirOf = (file: string) =>
 const countAll = (diagnostics: Diagnostic[]): Baseline => {
   const rules: Counts = {};
   const dirs: Counts = {};
+
   for (const diagnostic of diagnostics) {
     bump(rules, diagnostic.code);
     bump(dirs, dirOf(diagnostic.filename));
   }
+
   return {
-    total: diagnostics.length,
-    rules: sortKeys(rules),
     dirs: sortKeys(dirs),
+    rules: sortKeys(rules),
+    total: diagnostics.length,
   };
 };
 
@@ -83,6 +96,7 @@ const write = (baseline: Baseline) =>
 
 const report = (lines: string[], ok: string) => {
   process.stdout.write(`${lines.length > 0 ? lines.join("\n") : ok}\n`);
+
   return lines.length > 0 ? 1 : 0;
 };
 
@@ -91,20 +105,24 @@ const main = () => {
   const now = countAll(diagnostics);
   const before = readBaseline();
   const update = process.argv.includes("--update");
+
   if (!before) {
     return update
       ? (write(now),
         report([], `lint-gate: baseline recorded, ${now.total} diagnostics`))
       : report(["lint-gate: no baseline; run with --update"], "");
   }
+
   const problems = [
     ...rises("rule", now.rules, before.rules),
     ...rises("dir", now.dirs, before.dirs),
     ...budgetBreaks(diagnostics),
   ];
+
   if (update && problems.length === 0) {
     write(now);
   }
+
   return report(
     problems,
     `lint-gate: pass, ${now.total} diagnostics (baseline ${before.total})${update ? ", baseline lowered" : ""}`

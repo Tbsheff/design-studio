@@ -65,7 +65,7 @@ export function treeHash(
     hash.update(`${key}\0${value}\n`);
   }
 
-  return { hash: hash.digest("hex"), files };
+  return { files, hash: hash.digest("hex") };
 }
 
 export function diffTrees(
@@ -79,7 +79,7 @@ export function diffTrees(
     (key) => before.has(key) && before.get(key) !== after.get(key)
   );
 
-  return { added, removed, changed };
+  return { added, changed, removed };
 }
 
 export function p95(values: number[]): number {
@@ -87,7 +87,7 @@ export function p95(values: number[]): number {
 
   return (
     sorted[Math.min(sorted.length - 1, Math.ceil(0.95 * sorted.length) - 1)] ??
-    NaN
+    Number.NaN
   );
 }
 
@@ -96,7 +96,7 @@ export function p50(values: number[]): number {
 
   return (
     sorted[Math.min(sorted.length - 1, Math.ceil(0.5 * sorted.length) - 1)] ??
-    NaN
+    Number.NaN
   );
 }
 

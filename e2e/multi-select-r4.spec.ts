@@ -23,7 +23,7 @@ async function openProject(
   const { project } = await api.call<{ project: Project }>(
     "POST",
     "/api/projects",
-    { prompt, kind: "html" }
+    { kind: "html", prompt }
   );
 
   await api.waitForRuns(project.id, 1);
@@ -36,7 +36,7 @@ async function openProject(
     );
   }, project.id);
   await page.reload();
-  await expect(frontFrame(page).locator("h1")).toHaveText(prompt);
+  await expect.soft(frontFrame(page).locator("h1")).toHaveText(prompt);
 
   return api.project(project.id);
 }
@@ -47,7 +47,7 @@ async function settled(
   pid: string,
   did: string
 ): Promise<void> {
-  await expect(page.locator(".ins-status.saving")).toHaveCount(0);
+  await expect.soft(page.locator(".ins-status.saving")).toHaveCount(0);
   const versions = await api.versions(pid, did);
   await expect
     .poll(
@@ -85,7 +85,7 @@ const textSelection = (page: Page) =>
     .locator("body")
     .evaluate(() => String(document.getSelection()));
 
-test("Multi-select: Shift+click toggles, Mixed radius, one batch write, one undo", async ({
+test("multi-select: Shift+click toggles, Mixed radius, one batch write, one undo", async ({
   page,
 }) => {
   const api = await openHome(page);
@@ -100,7 +100,7 @@ test("Multi-select: Shift+click toggles, Mixed radius, one batch write, one undo
 
   await setSelectMode(page, true);
   await cards.nth(0).click(corner);
-  await expect(page.locator(".ins-tag")).toHaveText("article");
+  await expect.soft(page.locator(".ins-tag")).toHaveText("article");
   await radius.fill("4");
   await radius.press("Enter");
   await expect
@@ -111,31 +111,33 @@ test("Multi-select: Shift+click toggles, Mixed radius, one batch write, one undo
   const versionsAtStart = (await api.versions(project.id, main.id)).length;
 
   await cards.nth(1).click(corner);
-  await expect(boxes).toHaveCount(1);
+  await expect.soft(boxes).toHaveCount(1);
   await cards.nth(0).click({ ...corner, modifiers: ["Shift"] });
-  await expect(boxes).toHaveCount(2);
+  await expect.soft(boxes).toHaveCount(2);
   await cards.nth(2).click({ ...corner, modifiers: ["Shift"] });
-  await expect(boxes).toHaveCount(3);
-  expect(await textSelection(page)).toBe("");
-  await expect(page.locator(".ins-count")).toHaveText("3 elements");
-  await expect(page.getByRole("region", { name: "Text" })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Copy CSS" })).toHaveCount(0);
-  await expect(page.getByTestId("resize-frame")).toHaveCount(0);
+  await expect.soft(boxes).toHaveCount(3);
+  expect.soft(await textSelection(page)).toBe("");
+  await expect.soft(page.locator(".ins-count")).toHaveText("3 elements");
+  await expect.soft(page.getByRole("region", { name: "Text" })).toHaveCount(0);
+  await expect
+    .soft(page.getByRole("button", { name: "Copy CSS" }))
+    .toHaveCount(0);
+  await expect.soft(page.getByTestId("resize-frame")).toHaveCount(0);
 
-  await expect(radius).toHaveValue("");
-  await expect(radius).toHaveAttribute("placeholder", "Mixed");
+  await expect.soft(radius).toHaveValue("");
+  await expect.soft(radius).toHaveAttribute("placeholder", "Mixed");
   await shot(page, "mixed");
 
   await radius.fill("+8");
-  await expect(radius).toHaveAttribute("aria-invalid", "true");
+  await expect.soft(radius).toHaveAttribute("aria-invalid", "true");
   await radius.press("Enter");
-  await expect(radius).toHaveAttribute("placeholder", "Mixed");
-  expect(read()).toBe(start);
+  await expect.soft(radius).toHaveAttribute("placeholder", "Mixed");
+  expect.soft(read()).toBe(start);
 
   await radius.fill("8");
 
   for (let i = 0; i < 3; i += 1) {
-    await expect(cards.nth(i)).toHaveCSS("border-top-left-radius", "8px");
+    await expect.soft(cards.nth(i)).toHaveCSS("border-top-left-radius", "8px");
   }
 
   await radius.press("Enter");
@@ -147,13 +149,13 @@ test("Multi-select: Shift+click toggles, Mixed radius, one batch write, one undo
     )
     .toBe(3);
   await settled(page, api, project.id, main.id);
-  expect(
-    cardLines(file).some((line) => line.includes("border-radius: 4px"))
-  ).toBe(false);
-  expect((await api.versions(project.id, main.id)).length).toBe(
-    versionsAtStart + 1
-  );
-  await expect(radius).toHaveValue("8px");
+  expect
+    .soft(cardLines(file).some((line) => line.includes("border-radius: 4px")))
+    .toBe(false);
+  expect
+    .soft(await api.versions(project.id, main.id))
+    .toHaveLength(versionsAtStart + 1);
+  await expect.soft(radius).toHaveValue("8px");
   await shot(page, "shared");
 
   await page.locator(".canvas .stage").click({ position: { x: 8, y: 8 } });
@@ -162,38 +164,36 @@ test("Multi-select: Shift+click toggles, Mixed radius, one batch write, one undo
     .not.toBe("IFRAME");
   await page.keyboard.press("ControlOrMeta+z");
   await expect.poll(read).toBe(start);
-  await expect(frontFrame(page).locator(".card").nth(1)).toHaveCSS(
-    "border-top-left-radius",
-    "12px"
-  );
-  await expect(frontFrame(page).locator(".card").nth(0)).toHaveCSS(
-    "border-top-left-radius",
-    "4px"
-  );
+  await expect
+    .soft(frontFrame(page).locator(".card").nth(1))
+    .toHaveCSS("border-top-left-radius", "12px");
+  await expect
+    .soft(frontFrame(page).locator(".card").nth(0))
+    .toHaveCSS("border-top-left-radius", "4px");
 
   await setSelectMode(page, true);
   await cards.nth(0).click(corner);
   await cards.nth(1).click({ ...corner, modifiers: ["Shift"] });
   await cards.nth(2).click({ ...corner, modifiers: ["Shift"] });
-  await expect(boxes).toHaveCount(3);
+  await expect.soft(boxes).toHaveCount(3);
   await cards.nth(1).click({ ...corner, modifiers: ["Shift"] });
-  await expect(boxes).toHaveCount(2);
-  await expect(page.locator(".ins-count")).toHaveText("2 elements");
+  await expect.soft(boxes).toHaveCount(2);
+  await expect.soft(page.locator(".ins-count")).toHaveText("2 elements");
   await cards.nth(1).click({ ...corner, modifiers: ["Shift"] });
-  await expect(boxes).toHaveCount(3);
+  await expect.soft(boxes).toHaveCount(3);
   await cards.nth(2).click(corner);
-  await expect(boxes).toHaveCount(1);
-  await expect(page.locator(".ins-tag")).toHaveText("article");
-  expect(await textSelection(page)).toBe("");
+  await expect.soft(boxes).toHaveCount(1);
+  await expect.soft(page.locator(".ins-tag")).toHaveText("article");
+  expect.soft(await textSelection(page)).toBe("");
 
   await page.keyboard.press("Alt+1");
   const cardRows = page.locator('.layers-row[title="article .card"]');
-  await expect(cardRows).toHaveCount(3);
+  await expect.soft(cardRows).toHaveCount(3);
   await cardRows.nth(0).click({ modifiers: ["Shift"] });
-  await expect(boxes).toHaveCount(2);
-  await expect(page.locator(".ins-count")).toHaveText("2 elements");
+  await expect.soft(boxes).toHaveCount(2);
+  await expect.soft(page.locator(".ins-count")).toHaveText("2 elements");
   await cardRows.nth(0).click({ modifiers: ["Shift"] });
-  await expect(boxes).toHaveCount(1);
+  await expect.soft(boxes).toHaveCount(1);
   await cardRows.nth(1).click();
-  await expect(boxes).toHaveCount(1);
+  await expect.soft(boxes).toHaveCount(1);
 });

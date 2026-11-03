@@ -11,15 +11,16 @@ export function listProcesses(): ProcessRow[] {
   const out = execFileSync("ps", ["-A", "-o", "pid=,ppid=,pgid=,command="], {
     encoding: "utf-8",
   });
+
   return out
     .split("\n")
     .map((line) => /^\s*(\d+)\s+(\d+)\s+(\d+)\s+(.*)$/.exec(line))
     .filter((match): match is RegExpExecArray => match !== null)
     .map((match) => ({
+      command: match[4] ?? "",
+      pgid: Number(match[3]),
       pid: Number(match[1]),
       ppid: Number(match[2]),
-      pgid: Number(match[3]),
-      command: match[4] ?? "",
     }));
 }
 
@@ -42,6 +43,7 @@ export function groupMembers(pgid: number): ProcessRow[] {
 export function alive(pid: number): boolean {
   try {
     process.kill(pid, 0);
+
     return true;
   } catch {
     return false;

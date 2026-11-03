@@ -25,7 +25,13 @@ import {
   type LinkTransition,
   type PrototypeLink,
 } from "../../shared/links";
-import { frameSrc, postToFrame, useBridge, type BridgeFrame } from "../bridge";
+import {
+  frameSrc,
+  postToFrame,
+  tagFrame,
+  useBridge,
+  type BridgeFrame,
+} from "../bridge";
 import type { CanvasFrame } from "../canvasFrames";
 import {
   bridgeTrigger,
@@ -313,7 +319,7 @@ function usePlay(p: Props) {
       const slot: Slot = {
         key: token,
         frame,
-        src: frameSrc(url, token, { [BRIDGE_PASSIVE_PARAM]: "1" }),
+        src: frameSrc(url, { [BRIDGE_PASSIVE_PARAM]: "1" }),
         token,
         ...(first ? INSTANT : effective),
         phase: "loading",
@@ -688,7 +694,7 @@ export default function PlayMode(p: Props) {
     current?.frame;
 
   const bind = (token: string) => (el: HTMLIFrameElement | null) => {
-    play.elements.current[token] = el;
+    play.elements.current[token] = tagFrame(el, token);
   };
 
   return (

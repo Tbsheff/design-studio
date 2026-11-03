@@ -267,7 +267,6 @@ const installMessageHandlers = (
   postNudge: PostNudge
 ): void => {
   const { session } = context;
-  const parentWindow = window.parent;
 
   const messageHandlers: MessageHandlers = {
     ...createModeHandlers(context),
@@ -279,13 +278,6 @@ const installMessageHandlers = (
   };
 
   const onMessage = (event: MessageEvent): void => {
-    if (
-      event.source !== parentWindow ||
-      event.origin !== session.parentOrigin
-    ) {
-      return;
-    }
-
     const data = event.data as Partial<ParentToBridge> | null;
 
     if (
@@ -313,7 +305,10 @@ const installMessageHandlers = (
     handler(message);
   };
 
-  window.addEventListener("message", onMessage);
+  if (session.port) {
+    session.port.addEventListener("message", onMessage);
+    session.port.start();
+  }
 };
 
 export { installMessageHandlers };

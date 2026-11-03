@@ -28,10 +28,15 @@ const createPost = (session: BridgeSession): Post => {
 
   return (body) => {
     try {
-      parentWindow.postMessage(
-        { ...body, ns: "studio", token: session.token },
-        session.parentOrigin
-      );
+      const message = { ...body, ns: "studio", token: session.token };
+
+      if (!session.port) {
+        parentWindow.postMessage(message, session.parentOrigin);
+
+        return;
+      }
+
+      session.port.postMessage(message, { transfer: [] });
     } catch {
       void 0;
     }

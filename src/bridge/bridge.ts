@@ -178,9 +178,5 @@ if (!globalScope[marker]) {
       new URL(window.location.href).searchParams.get(FORCE_STATE_PARAM)
     )
   );
-  const session = readSession();
-
-  if (session) {
-    startBridge(session);
-  }
+  readSession(startBridge);
 }

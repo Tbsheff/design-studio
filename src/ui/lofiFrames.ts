@@ -1,12 +1,13 @@
 import { useEffect, useRef, type RefObject } from "react";
 
-import {
-  BRIDGE_TOKEN_PARAM,
-  type BridgeToParent,
-  type ProjectKind,
-} from "../shared/contracts";
+import type { BridgeToParent, ProjectKind } from "../shared/contracts";
 import { lofiCss } from "../shared/lofi";
-import { postToFrame, useBridge, type BridgeFrame } from "./bridge";
+import {
+  frameTokenOf,
+  postToFrame,
+  useBridge,
+  type BridgeFrame,
+} from "./bridge";
 
 let cssLoad: Promise<string> | null = null;
 
@@ -49,16 +50,6 @@ interface LofiFrame extends BridgeFrame {
   directionId: string | null;
 }
 
-function tokenOf(src: string): string | null {
-  try {
-    return new URL(src, window.location.href).searchParams.get(
-      BRIDGE_TOKEN_PARAM
-    );
-  } catch {
-    return null;
-  }
-}
-
 function stageFrames(
   stage: HTMLElement | null,
   kind: ProjectKind,
@@ -73,7 +64,7 @@ function stageFrames(
   for (const element of stage.querySelectorAll<HTMLIFrameElement>(
     "iframe.frame"
   )) {
-    const token = tokenOf(element.src);
+    const token = frameTokenOf(element);
 
     if (!token) {
       continue;

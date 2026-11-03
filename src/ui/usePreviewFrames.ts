@@ -467,7 +467,7 @@ export function usePreviewFrames(o: Options) {
     }
 
     const token = randomToken();
-    setSlots([{ token, src: frameSrc(baseUrl, token) }]);
+    setSlots([{ token, src: frameSrc(baseUrl) }]);
     setFrontToken(token);
   }, []);
 
@@ -531,7 +531,7 @@ export function usePreviewFrames(o: Options) {
 
     reselectOnSwap.current = change.reload === true;
     const token = randomToken();
-    const src = frameSrc(o.baseUrl, token, { v: String(change.changedAt) });
+    const src = frameSrc(o.baseUrl, { v: String(change.changedAt) });
     setSlots((prev) => [
       ...prev.filter((s) => s.token === frontRef.current),
       { token, src },

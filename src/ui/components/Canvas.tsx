@@ -26,7 +26,7 @@ import {
   type SelectionContext,
 } from "../../shared/contracts";
 import { api, errorText } from "../api";
-import { HTML_FRAME_SANDBOX, type PreviewPort } from "../bridge";
+import { HTML_FRAME_SANDBOX, tagFrame, type PreviewPort } from "../bridge";
 import {
   boundsOf,
   canHideFrame,
@@ -483,7 +483,7 @@ function PreviewSlots({
     <iframe
       key={slot.token}
       ref={(el) => {
-        frames.elements.current[slot.token] = el;
+        frames.elements.current[slot.token] = tagFrame(el, slot.token);
       }}
       title="Design preview"
       className={`frame ${slot.token === frames.frontToken ? "front" : "back"}`}
@@ -549,7 +549,7 @@ function OtherFrames({
         register,
         frameRef: (el) => {
           if (slot) {
-            passive.elements.current[slot.token] = el;
+            passive.elements.current[slot.token] = tagFrame(el, slot.token);
           }
         },
         onNextLoad: passive.onSwapDone,

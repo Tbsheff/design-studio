@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import type { ProjectKind, Version } from "../../../shared/contracts.js";
 import { api, errorText } from "../../api.js";
-import { HTML_FRAME_SANDBOX, frameSrc } from "../../bridge.js";
+import { HTML_FRAME_SANDBOX, frameSrc, tagFrame } from "../../bridge.js";
 import { randomToken } from "../../session.js";
 import { useTokenFrames } from "../../tokenFrames.js";
 
@@ -39,7 +39,7 @@ export function CompareFrame({
         const { url } = await api.versionPreview(projectId, version.id);
 
         if (alive) {
-          setSlot({ token, src: frameSrc(url, token) });
+          setSlot({ token, src: frameSrc(url) });
         }
       } catch (err) {
         if (alive) {
@@ -64,7 +64,7 @@ export function CompareFrame({
   return (
     <iframe
       ref={(el) => {
-        elements.current[slot.token] = el;
+        elements.current[slot.token] = tagFrame(el, slot.token);
       }}
       title={`Version ${title}`}
       src={slot.src}

@@ -4,7 +4,7 @@ import path from "node:path";
 
 import {
   BRIDGE_PARENT_ORIGIN_PARAM,
-  BRIDGE_TOKEN_PARAM,
+  BRIDGE_HEADLESS_PARAM,
 } from "../../shared/contracts.js";
 import type {
   CheckViewport,
@@ -50,8 +50,6 @@ export type {
   TileRequest,
   TileResult,
 } from "./ports.js";
-
-const SERVER_TOKEN = "server";
 
 const QUIET_EXPRESSION = `new Promise((resolve) => {
   let timer = 0;
@@ -251,7 +249,7 @@ function errorText(error: unknown): string {
 
 function withServerBridgeParams(url: string, parentOrigin: string): string {
   const target = new URL(url);
-  target.searchParams.set(BRIDGE_TOKEN_PARAM, SERVER_TOKEN);
+  target.searchParams.set(BRIDGE_HEADLESS_PARAM, "1");
   target.searchParams.set(BRIDGE_PARENT_ORIGIN_PARAM, parentOrigin);
 
   return target.toString();

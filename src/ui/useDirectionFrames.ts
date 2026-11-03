@@ -147,9 +147,7 @@ export function useDirectionFrames(o: Options) {
           )
         : null;
 
-      return page
-        ? frameSrc(page, token, { [BRIDGE_PASSIVE_PARAM]: "1" })
-        : null;
+      return page ? frameSrc(page, { [BRIDGE_PASSIVE_PARAM]: "1" }) : null;
     };
 
     const src = build(gated ? gate.shownFor(frame.id) : null);

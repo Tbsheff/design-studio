@@ -20,6 +20,18 @@ const BridgePaintedMessageSchema = Schema.Struct({
   type: Schema.Literal("painted"),
 });
 
+const BridgeHelloMessageSchema = Schema.Struct({
+  docId: Schema.String,
+  ns: BridgeNamespaceSchema,
+  type: Schema.Literal("bridge-hello"),
+});
+
+const BridgeHandshakeMessageSchema = Schema.Struct({
+  ns: BridgeNamespaceSchema,
+  token: Schema.String,
+  type: Schema.Literal("bridge-handshake"),
+});
+
 const BridgeMessageSchema = Schema.Union([
   BridgeReadyMessageSchema,
   BridgePaintedMessageSchema,
@@ -29,6 +41,8 @@ type BridgeMessage = typeof BridgeMessageSchema.Type;
 
 export {
   BridgeEnvelopeFields,
+  BridgeHandshakeMessageSchema,
+  BridgeHelloMessageSchema,
   BridgeMessageSchema,
   BridgePaintedMessageSchema,
   BridgeReadyMessageSchema,

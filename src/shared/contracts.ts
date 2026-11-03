@@ -1109,6 +1109,24 @@ export const STUDIO_TOKEN_HEADER = "x-studio-token";
 export const BRIDGE_TOKEN_PARAM = "__studio_token";
 export const BRIDGE_PARENT_ORIGIN_PARAM = "__studio_parent";
 export const BRIDGE_PASSIVE_PARAM = "__studio_passive";
+export const BRIDGE_HEADLESS_PARAM = "__studio_headless";
+export const BRIDGE_HELLO_TYPE = "bridge-hello";
+export const BRIDGE_HANDSHAKE_TYPE = "bridge-handshake";
+export const CLOUD_BLOCKED_BRIDGE_TYPES: readonly string[] = [
+  "text-commit",
+  "text-edit",
+  "move-start",
+  "move-live",
+  "move-drop",
+  "move-cancel",
+  "nudge-key",
+  "reorder-key",
+  "structure-key",
+  "arrange-key",
+  "tool-key",
+  "file-drop",
+  "optimistic-result",
+];
 export const ELEMENT_MARK_PARAM = "__studio_mark";
 export const SOURCE_LOC_ATTR = "data-studio-loc";
 export const BRIDGE_SCRIPT_PATH = "/__studio/bridge.js";

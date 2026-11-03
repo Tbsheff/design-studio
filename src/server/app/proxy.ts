@@ -7,7 +7,7 @@ import {
   BRIDGE_CHANGES_PATH,
   BRIDGE_PARENT_ORIGIN_PARAM,
   BRIDGE_SCRIPT_PATH,
-  BRIDGE_TOKEN_PARAM,
+  BRIDGE_HEADLESS_PARAM,
 } from "../../shared/contracts.js";
 import { FRAME_STATE_ATTR, stateOfHost } from "../../shared/frame-state.js";
 import {
@@ -268,10 +268,10 @@ export function createAppProxy(options: AppProxyOptions) {
     }
     if (!sameUpstream(location, upstream)) return { external: location };
     const original = new URL(req.url ?? "/", "http://studio.invalid");
-    const token = original.searchParams.get(BRIDGE_TOKEN_PARAM);
+    const headless = original.searchParams.get(BRIDGE_HEADLESS_PARAM);
     const parent = original.searchParams.get(BRIDGE_PARENT_ORIGIN_PARAM);
-    if (token && parent && isDocumentRequest(req)) {
-      location.searchParams.set(BRIDGE_TOKEN_PARAM, token);
+    if (parent && isDocumentRequest(req)) {
+      if (headless) location.searchParams.set(BRIDGE_HEADLESS_PARAM, headless);
       location.searchParams.set(BRIDGE_PARENT_ORIGIN_PARAM, parent);
       if (!location.searchParams.has(APP_REDIRECT_PARAM))
         location.searchParams.set(APP_REDIRECT_PARAM, original.pathname);

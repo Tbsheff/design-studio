@@ -113,6 +113,7 @@ import type {
 } from "../shared/tweaks";
 import { ApiError, call } from "./platform/http";
 import type { WireFields } from "./platform/http";
+import { prefetch, readShared } from "./platform/query";
 import { getSession } from "./session";
 import { endEditSession, restoreVersion, stepEditHistory } from "./versionsApi";
 
@@ -287,54 +288,22 @@ async function request(
   return res;
 }
 
-const WARM_MS = 4000;
-const warm = new Map<string, { at: number; value: Promise<unknown> }>();
-
-function takeWarm(path: string): Promise<unknown> | null {
-  const hit = warm.get(path);
-
-  if (!hit) {
-    return null;
-  }
-
-  warm.delete(path);
-
-  return Date.now() - hit.at < WARM_MS ? hit.value : null;
-}
-
-export function warmGet(path: string): void {
-  const hit = warm.get(path);
-
-  if (hit && Date.now() - hit.at < WARM_MS) {
-    return;
-  }
-
-  const value = request("GET", path).then(
-    (res) => res.json() as Promise<unknown>
-  );
-
-  value.catch(() => warm.delete(path));
-  warm.set(path, { at: Date.now(), value });
-}
-
-export async function json<T>(
+export function json<T>(
   method: string,
   path: string,
   body?: unknown
 ): Promise<T> {
-  const early = method === "GET" ? takeWarm(path) : null;
+  const load = async (): Promise<T> => {
+    const res = await request(method, path, body);
 
-  if (early) {
-    try {
-      return (await early) as T;
-    } catch {
-      return json<T>(method, path, body);
-    }
+    return (await res.json()) as T;
+  };
+
+  if (method === "GET") {
+    return readShared(`GET ${path}`, load);
   }
 
-  const res = await request(method, path, body);
-
-  return (await res.json()) as T;
+  return load();
 }
 
 export async function getBlob(path: string): Promise<Blob> {
@@ -349,31 +318,20 @@ const p = (pid: string) => `/api/projects/${enc(pid)}`;
 
 const d = (pid: string, did: string) => `${p(pid)}/d/${enc(did)}`;
 
-const treeInFlight = new Map<string, Promise<{ files: string[] }>>();
+const warmPath = (path: string): void =>
+  prefetch(`GET ${path}`, async () => {
+    const res = await request("GET", path);
 
-function sharedTree(url: string): Promise<{ files: string[] }> {
-  const open = treeInFlight.get(url);
-
-  if (open) {
-    return open;
-  }
-
-  const next = json<{ files: string[] }>("GET", url).finally(() =>
-    treeInFlight.delete(url)
-  );
-
-  treeInFlight.set(url, next);
-
-  return next;
-}
+    return (await res.json()) as unknown;
+  });
 
 export function warmProject(pid: string, directionId: string | null): void {
-  warmGet(p(pid));
-  warmGet(`${p(pid)}/runs`);
-  warmGet(`${p(pid)}/canvas`);
+  warmPath(p(pid));
+  warmPath(`${p(pid)}/runs`);
+  warmPath(`${p(pid)}/canvas`);
 
   if (directionId) {
-    warmGet(`${d(pid, directionId)}/preview`);
+    warmPath(`${d(pid, directionId)}/preview`);
   }
 }
 
@@ -689,7 +647,7 @@ export const api = {
         ).json()) as StructureEditResult
     ),
   workTreeFiles: (pid: string, did: string) =>
-    sharedTree(`${d(pid, did)}/tree`),
+    json<{ files: string[] }>("GET", `${d(pid, did)}/tree`),
   searchText: async (
     pid: string,
     did: string,

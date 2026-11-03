@@ -392,6 +392,10 @@ export const decisionOverrides: OxlintOverride[] = [
     rules: { "import/no-relative-parent-imports": "off" },
   },
   {
+    files: ["src/ui/platform/query.ts"],
+    rules: { "import/no-relative-parent-imports": "off" },
+  },
+  {
     files: [
       "src/server/mcp/legacy/canvas-result.ts",
       "src/server/mcp/legacy/canvas-schema.ts",

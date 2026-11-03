@@ -1,6 +1,6 @@
 import { Context, Effect, Layer } from "effect";
 
-import { createImage } from "./create-image.js";
+import { createImageFile } from "./create-image.js";
 import type { ImageCommand, ImageCreated } from "./create-image.js";
 import type { KnownFailure } from "./deps.js";
 import { attemptImage } from "./image-generate-runtime.js";
@@ -23,7 +23,9 @@ class ImageGeneratorRunner extends Context.Service<
       create: Effect.fn("ImageGeneratorRunner.create")(function* run(
         command: ImageCommand
       ) {
-        return yield* attemptImage((runtime) => createImage(runtime, command));
+        return yield* attemptImage((runtime) =>
+          createImageFile(runtime, command)
+        );
       }),
     })
   );

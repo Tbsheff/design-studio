@@ -10,13 +10,23 @@ interface ApprovalAnswer {
   readonly error: string | null;
 }
 
+interface AnswerTarget {
+  readonly projectId: string;
+  readonly requestId: string;
+  readonly runId: string;
+}
+
 const sendAnswer = async (
-  runId: string,
-  requestId: string,
+  target: AnswerTarget,
   decision: PermissionDecision
 ): Promise<boolean> => {
   try {
-    await api.answerPermission(runId, requestId, decision);
+    await api.answerPermission(
+      target.projectId,
+      target.runId,
+      target.requestId,
+      decision
+    );
 
     return true;
   } catch {
@@ -25,6 +35,7 @@ const sendAnswer = async (
 };
 
 const useApprovalAnswer = (
+  projectId: string,
   runId: string,
   requestId: string
 ): ApprovalAnswer => {
@@ -35,7 +46,7 @@ const useApprovalAnswer = (
     async (decision: PermissionDecision): Promise<void> => {
       setError(null);
 
-      const pending = sendAnswer(runId, requestId, decision);
+      const pending = sendAnswer({ projectId, requestId, runId }, decision);
 
       startTransition(async () => {
         await pending;
@@ -47,7 +58,7 @@ const useApprovalAnswer = (
         setError(copy.answerFailed);
       }
     },
-    [runId, requestId]
+    [projectId, runId, requestId]
   );
 
   return { answer, busy, error };

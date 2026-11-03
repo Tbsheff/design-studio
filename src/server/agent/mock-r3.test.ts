@@ -9,6 +9,8 @@ import type {
   SelectionContext,
   StudioEvent,
 } from "../../shared/contracts.js";
+import { bootAgentRunner } from "../main/agent-runner.js";
+import { buildRuntime } from "../main/runtime.js";
 import {
   createFakeBus,
   createFakePreview,
@@ -17,7 +19,6 @@ import {
   createTempProject,
 } from "../testing/fakes.js";
 import type { AgentRunContext, ServerConfig } from "../types.js";
-import { createAgentRunner } from "./index.js";
 import { MOCK_BASH_OUTPUT } from "./mock.js";
 import { PLAN_MODE_DENY } from "./permissions.js";
 
@@ -48,13 +49,16 @@ async function setup(kind: "html" | "react" = "html") {
     previewOrigin: "",
   };
 
-  const runner = createAgentRunner({
-    config,
-    bus,
-    projects,
-    versions,
-    preview: createFakePreview(),
-  });
+  const runner = bootAgentRunner(
+    {
+      config,
+      bus,
+      projects,
+      versions,
+      preview: createFakePreview(),
+    },
+    buildRuntime(config)
+  );
 
   function context(request: RunRequest): AgentRunContext {
     const project = structuredClone(projects.current);

@@ -8,6 +8,10 @@ import { useEscapeStop } from "./useEscapeStop";
 
 const NO_QUEUE: QueuedMessage[] = [];
 
+const cancelQuietly = (projectId: string, runId: string): void => {
+  void api.cancelRun(projectId, runId).catch(() => undefined);
+};
+
 export interface RunControls {
   onCancel: () => void;
   queue: QueuedMessage[];
@@ -20,12 +24,13 @@ export type TrackSend = (
 ) => Promise<{ runId: string; stopped: boolean }>;
 
 export function useRunControls(
+  projectId: string,
   activeRun: RunView | null,
   draft: DraftStore,
   act: (fn: () => Promise<unknown>) => Promise<void>
 ): RunControls & { trackSend: TrackSend } {
-  const live = useRef({ activeRun, draft, act });
-  live.current = { activeRun, draft, act };
+  const live = useRef({ activeRun, act, draft, projectId });
+  live.current = { activeRun, act, draft, projectId };
   const [sending, setSending] = useState(0);
   const pending = useRef({ count: 0, stop: false });
 
@@ -48,7 +53,7 @@ export function useRunControls(
         const stopped = pending.current.stop;
 
         if (stopped) {
-          void api.cancelRun(runId).catch(() => undefined);
+          cancelQuietly(live.current.projectId, runId);
         }
 
         return { runId, stopped };
@@ -97,7 +102,7 @@ export function useRunControls(
             );
           }
 
-          return api.cancelRun(run.runId);
+          return api.cancelRun(live.current.projectId, run.runId);
         });
       },
       onQueueChange: (items: QueuedMessage[]) =>
@@ -106,7 +111,7 @@ export function useRunControls(
           setLocal({ runId: run.runId, items });
 
           try {
-            await api.setQueue(run.runId, items);
+            await api.setQueue(live.current.projectId, run.runId, items);
           } catch (error) {
             setLocal(null);
             throw error;
@@ -115,7 +120,7 @@ export function useRunControls(
           }
         }),
       onSteer: (text: string) =>
-        withRun((run) => api.steerRun(run.runId, text)),
+        withRun((run) => api.steerRun(live.current.projectId, run.runId, text)),
     };
   }, []);
 
@@ -128,9 +133,9 @@ export function useRunControls(
   }, [serverQueue, activeId]);
   useEffect(() => {
     if (activeId && pending.current.stop) {
-      void api.cancelRun(activeId).catch(() => undefined);
+      cancelQuietly(projectId, activeId);
     }
-  }, [activeId]);
+  }, [activeId, projectId]);
   useEscapeStop(activeRun !== null || sending > 0, controls.onCancel);
 
   const queue =

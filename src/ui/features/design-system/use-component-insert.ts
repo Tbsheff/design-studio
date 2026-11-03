@@ -14,10 +14,10 @@ import type {
 import { useBridge } from "../../bridge.js";
 import type { BridgeFrame, ParentMessageBody } from "../../bridge.js";
 import { NO_SOURCE } from "../../structureEdits.js";
-import { insertApi, insertBus, insertError } from "./component-insert.js";
-import type { DropHint, InsertHost } from "./component-insert.js";
+import { insertApi, insertBus, insertError } from "./component-insert-api.js";
+import type { DropHint, InsertHost } from "./component-insert-api.js";
 
-const RESELECT_EVERY_MS = 350;
+const FRAME_CHANGES = new Set(["painted", "ready", "tree"]);
 const RESELECT_FOR_MS = 6000;
 
 interface Frames {
@@ -142,57 +142,52 @@ export function useComponentInsert(o: Options): void {
     name: string;
     target: string;
     until: number;
-    timer: number;
   } | null>(null);
 
   const seq = useRef(0);
 
   const stopReselect = useCallback(() => {
-    if (reselect.current) {
-      window.clearInterval(reselect.current.timer);
-    }
-
     reselect.current = null;
   }, []);
 
+  const tickReselect = useCallback(() => {
+    const job = reselect.current;
+
+    if (!job) {
+      return;
+    }
+
+    const last = live.current.selection.at(-1);
+
+    const landed =
+      last &&
+      last.selector !== job.target &&
+      last.owners?.[0]?.name === job.name;
+
+    if (landed || Date.now() > job.until) {
+      return stopReselect();
+    }
+
+    live.current.frames.post({
+      selector: job.selector,
+      type: "select-selector",
+    });
+  }, [stopReselect]);
+
   const startReselect = useCallback(
     (selector: string, name: string, target: string) => {
-      stopReselect();
-
-      const tick = () => {
-        const job = reselect.current;
-
-        if (!job) {
-          return;
-        }
-
-        const last = live.current.selection.at(-1);
-
-        const landed =
-          last &&
-          last.selector !== job.target &&
-          last.owners?.[0]?.name === job.name;
-
-        if (landed || Date.now() > job.until) {
-          return stopReselect();
-        }
-
-        live.current.frames.post({
-          selector: job.selector,
-          type: "select-selector",
-        });
-      };
-
       reselect.current = {
         name,
         selector,
         target,
-        timer: window.setInterval(tick, RESELECT_EVERY_MS),
         until: Date.now() + RESELECT_FOR_MS,
       };
+      tickReselect();
     },
-    [stopReselect]
+    [tickReselect]
   );
+
+  useEffect(tickReselect, [o.selection, tickReselect]);
 
   useEffect(() => stopReselect, [stopReselect]);
 
@@ -258,6 +253,14 @@ export function useComponentInsert(o: Options): void {
         url: slot.src,
       })),
     (frame, msg: BridgeToParent) => {
+      const isFront = frame.token === live.current.frames.frontToken;
+
+      if (isFront && FRAME_CHANGES.has(msg.type)) {
+        tickReselect();
+
+        return;
+      }
+
       if (
         msg.type !== "element-at" ||
         frame.token !== live.current.frames.frontToken

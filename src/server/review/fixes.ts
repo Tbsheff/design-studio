@@ -7,7 +7,7 @@ import type {
 import type { ReviewFinding, ReviewFixResult } from "../../shared/review.js";
 import { applyDirectEditBatch } from "../direct-edit/batch.js";
 import {
-  applyDirectEdit,
+  commitDirectEdit,
   planDirectEdit,
   type DirectEditDeps,
 } from "../direct-edit/commit/index.js";
@@ -163,7 +163,7 @@ export async function applyFindingFixes(
   const edits = mergeEdits(findings);
 
   if (edits.length === 1 && edits[0]) {
-    const result = await applyDirectEdit(deps, project, direction, edits[0]);
+    const result = await commitDirectEdit(deps, project, direction, edits[0]);
 
     return { files: [result.file], version: result.version };
   }

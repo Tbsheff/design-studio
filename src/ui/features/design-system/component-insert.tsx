@@ -11,8 +11,8 @@ import type {
 import { PreviewMenu } from "../../components/PreviewMenu.js";
 import type { PreviewMenuItem } from "../../components/PreviewMenu.js";
 import { NO_SOURCE } from "../../structureEdits.js";
-import { insertApi, insertBus, insertError } from "./component-insert.js";
-import type { DropHint } from "./component-insert.js";
+import { insertApi, insertBus, insertError } from "./component-insert-api.js";
+import type { DropHint } from "./component-insert-api.js";
 
 const DRAG_START_PX = 4;
 

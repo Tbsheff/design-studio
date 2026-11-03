@@ -2,7 +2,7 @@ import { Context, Effect, Layer } from "effect";
 
 import type { KnownFailure } from "./deps.js";
 import { galleryRuntime } from "./gallery-runtime.js";
-import { inspectGallery } from "./inspect-gallery.js";
+import { inspectGalleryFolder } from "./inspect-gallery.js";
 import type { GalleryInspected, InspectCommand } from "./inspect-gallery.js";
 
 interface GalleryStoreApi {
@@ -24,7 +24,7 @@ class GalleryStore extends Context.Service<GalleryStore, GalleryStoreApi>()(
       ) {
         const runtime = yield* galleryRuntime;
 
-        return yield* inspectGallery(runtime, command);
+        return yield* inspectGalleryFolder(runtime, command);
       }),
     })
   );

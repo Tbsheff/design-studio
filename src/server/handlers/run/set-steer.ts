@@ -12,7 +12,7 @@ const handle = Effect.fn("run.setSteer")(function* run(
 ) {
   const service = yield* RunLogWriter;
 
-  return yield* service.steer(input.runId, input.text);
+  return yield* service.steer(input.projectId, input.runId, input.text);
 }) satisfies Handle<typeof setSteerRun>;
 
 export { handle };

@@ -53,8 +53,16 @@ interface StudioRuntimeHandle {
 
 type CallById = (action: CallableAction, args: Fields) => Promise<TextResult>;
 
+interface StudioConfigHandle {
+  readonly agentMode: string;
+}
+
+interface ConfigModule {
+  readonly loadConfig: () => StudioConfigHandle;
+}
+
 interface RuntimeModule {
-  readonly buildRuntime: () => StudioRuntimeHandle;
+  readonly buildRuntime: (config: StudioConfigHandle) => StudioRuntimeHandle;
   readonly disposeRuntime: (runtime: StudioRuntimeHandle) => Promise<void>;
 }
 
@@ -133,6 +141,10 @@ const loadAgentTools = async (): Promise<LoadedAgent> => {
     "src/server/main/runtime.ts"
   );
 
+  const configModule = await importSource<ConfigModule>(
+    "src/server/platform/config/index.ts"
+  );
+
   const mcpRegistry = await importSource<McpRegistryModule>(
     "src/server/mcp/registry.ts"
   );
@@ -142,7 +154,7 @@ const loadAgentTools = async (): Promise<LoadedAgent> => {
   );
 
   const sdk = await import("@anthropic-ai/claude-agent-sdk");
-  const runtime = runtimeModule.buildRuntime();
+  const runtime = runtimeModule.buildRuntime(configModule.loadConfig());
 
   const tools = agentRegistry.buildAgentTools(
     mcpRegistry.actionCaller(runtime),

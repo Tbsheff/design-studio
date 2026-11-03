@@ -7,10 +7,10 @@ import type {
 } from "../store/comments.js";
 import { attemptComments } from "./comment-core.js";
 import type { CommentError } from "./comment-core.js";
-import { insertComment } from "./comment-insert.js";
+import { insertCommentAnchor } from "./comment-insert.js";
 import type { InsertRequest, InsertedComment } from "./comment-insert.js";
 import {
-  createComment,
+  createCommentThread,
   createCommentPrefill,
   createCommentReply,
   runOnTarget,
@@ -83,14 +83,14 @@ class CommentThreadStore extends Context.Service<
         input: CreateCommentInput
       ) {
         return yield* attemptComments((runtime) =>
-          createComment(runtime, ref, input)
+          createCommentThread(runtime, ref, input)
         );
       }),
       insert: Effect.fn("CommentThreadStore.insert")(function* run(
         request: InsertRequest
       ) {
         return yield* attemptComments((runtime) =>
-          insertComment(runtime, request)
+          insertCommentAnchor(runtime, request)
         );
       }),
       prefill: Effect.fn("CommentThreadStore.prefill")(function* run(

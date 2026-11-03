@@ -4,7 +4,6 @@ import type {
   VersionChangesSchema,
   VersionSchema,
 } from "../../../shared/actions/version/schema.js";
-import { STUDIO_TOKEN_HEADER } from "../../../shared/contracts.js";
 import type {
   EditHistoryState,
   EditSessionEnd,
@@ -15,9 +14,8 @@ import type {
   HunkRevertRequest,
   HunkRevertResult,
 } from "../../../shared/hunk.js";
-import { call } from "../../platform/http.js";
+import { call, getRaw } from "../../platform/http.js";
 import { writeStored } from "../../platform/storage.js";
-import { getSession } from "../../session.js";
 
 const MAX_THUMB_FETCHES = 2;
 
@@ -162,11 +160,8 @@ export const renameVersion = (pid: string, vid: string, name: string | null) =>
     versionId: vid,
   });
 
-async function fetchPng(url: string, signal: AbortSignal): Promise<Response> {
-  return fetch(url, {
-    headers: { [STUDIO_TOKEN_HEADER]: getSession().token },
-    signal,
-  });
+function fetchPng(url: string, signal: AbortSignal): Promise<Response> {
+  return getRaw(url, signal);
 }
 
 export type ThumbResult = string | null;

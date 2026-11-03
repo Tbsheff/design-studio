@@ -10,7 +10,7 @@ type StopRunInput = Input<typeof stopRun>;
 const handle = Effect.fn("run.stop")(function* run(input: StopRunInput) {
   const service = yield* RunLogWriter;
 
-  return yield* service.stop(input.runId);
+  return yield* service.stop(input.projectId, input.runId);
 }) satisfies Handle<typeof stopRun>;
 
 export { handle };

@@ -1,26 +1,36 @@
-import { Effect } from "effect";
+import type { Effect } from "effect";
 
-import type { Direction, Project } from "../../shared/contracts.js";
-import { attemptKnown } from "../platform/attempt/index.js";
-import type { KnownFailure } from "../platform/attempt/index.js";
+import type {
+  Direction,
+  PermissionDecision,
+  Project,
+  QueuedMessage,
+} from "../../shared/contracts.js";
+import type { RepoContextState } from "../../shared/repo-context.js";
 import { makeRuntimeSlot } from "../platform/runtime-slot/index.js";
 
-interface Decision {
-  allow: boolean;
-  always?: string;
-  note?: string;
+interface ActiveRun {
+  readonly answer?: (
+    requestId: string,
+    decision: PermissionDecision
+  ) => boolean;
+  readonly cancel: () => void;
+  readonly setQueue?: (items: QueuedMessage[]) => boolean;
+  readonly steer?: (text: string) => boolean;
 }
 
-interface ActiveRun {
-  readonly answer?: (requestId: string, decision: Decision) => boolean;
-  readonly cancel: () => void;
-  readonly setQueue?: (items: { id: string; text: string }[]) => boolean;
-  readonly steer?: (text: string) => boolean;
+interface StartRunCall {
+  readonly body: object;
+  readonly directionId: string;
+  readonly projectId: string;
 }
 
 interface RunLogRuntime {
   readonly findRunProject: (runId: string) => Promise<string | null>;
-  readonly loadContext: (project: Project, workTree: string) => Promise<object>;
+  readonly loadContext: (
+    project: Project,
+    workTree: string
+  ) => Promise<RepoContextState>;
   readonly loadDirection: (
     projectId: string,
     directionId: string
@@ -34,27 +44,14 @@ interface RunLogRuntime {
   readonly startRun: (input: StartRunCall) => Promise<string>;
 }
 
-interface StartRunCall {
-  readonly body: object;
-  readonly directionId: string;
-  readonly projectId: string;
-}
-
 const slot = makeRuntimeSlot<RunLogRuntime>("Run log");
 
 const bindRunLogRuntime = (runtime: RunLogRuntime): void => {
   slot.bind(runtime);
 };
 
-const attemptRunLog = <Value>(
-  task: (runtime: RunLogRuntime) => Promise<Value>
-): Effect.Effect<Value, KnownFailure> =>
-  Effect.gen(function* withRuntime() {
-    const runtime = yield* slot.read;
+const readRunLogRuntime: Effect.Effect<RunLogRuntime> = slot.read;
 
-    return yield* attemptKnown(() => task(runtime));
-  });
+export { bindRunLogRuntime, readRunLogRuntime };
 
-export { attemptRunLog, bindRunLogRuntime };
-
-export type { ActiveRun, Decision, RunLogRuntime, StartRunCall };
+export type { ActiveRun, RunLogRuntime, StartRunCall };

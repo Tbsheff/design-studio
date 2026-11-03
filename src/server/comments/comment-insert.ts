@@ -77,7 +77,7 @@ const insertBody = (
   return body;
 };
 
-const insertComment = async (
+const insertCommentAnchor = async (
   runtime: CommentRuntime,
   request: InsertRequest
 ): Promise<InsertedComment> => {
@@ -104,6 +104,6 @@ const insertComment = async (
   };
 };
 
-export { insertComment };
+export { insertCommentAnchor };
 
 export type { InsertRequest, InsertedComment };

@@ -8,13 +8,18 @@ import type { EditRecorder } from "../direct-edit/index.js";
 import type { ExportDeps } from "../export/source.js";
 import { bindMcpLifeRuntime } from "../mcp-life/index.js";
 import type { McpListenerRunnerApi } from "../mcp-life/index.js";
-import { createActivityLog, type ActivityLog } from "../mcp/activity.js";
-import { createApprovalQueue } from "../mcp/approvals.js";
-import { createCloudIntrospect } from "../mcp/key-introspect.js";
-import { createMcpService } from "../mcp/server.js";
+import {
+  createActivityLog,
+  createApprovalQueue,
+  createCloudIntrospect,
+  createMcpService,
+} from "../mcp/index.js";
+import type { ActivityLog, FixApp } from "../mcp/index.js";
 import { recentPages, startRender } from "../preview/render-wait.js";
 import { warmUpstream } from "../preview/warm-upstream.js";
+import type { LayerLockStore } from "../store/layer-locks.js";
 import type { AgentRunner, EventBus } from "../types.js";
+import type { KeepVariant } from "../variations/routes.js";
 
 interface McpRouteDeps extends ExportDeps {
   dataDir: string;
@@ -27,6 +32,9 @@ interface McpRouteDeps extends ExportDeps {
   appOpen: () => boolean;
   history?: EditRecorder;
   listener: McpListenerRunnerApi | null;
+  fixApp: FixApp;
+  keepVariant: KeepVariant;
+  layerLocks: LayerLockStore | null;
 }
 
 function warmAfterEdits(deps: McpRouteDeps): void {

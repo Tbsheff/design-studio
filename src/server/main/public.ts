@@ -2,7 +2,6 @@ import { serve } from "@hono/node-server";
 import { Effect } from "effect";
 
 import type { StudioEvent } from "../../shared/contracts.js";
-import { createAgentRunner } from "../agent/index.js";
 import { createCanvasService } from "../canvas/index.js";
 import { followSourceMoves } from "../direct-edit/follow-moves.js";
 import { withSaveQueue } from "../direct-edit/save-queue.js";
@@ -18,6 +17,7 @@ import { logError, logInfo } from "../platform/logger/index.js";
 import { createPreviewService, loadBridgeScript } from "../preview/index.js";
 import { createCommentStore } from "../store/comments.js";
 import { createVersionStore } from "../store/versions.js";
+import { bootAgentRunner } from "./agent-runner.js";
 import { desktopSender, linkDesktop } from "./desktop-link.js";
 import { handleSignals, prepareDataDir } from "./lifecycle.js";
 import {
@@ -196,18 +196,20 @@ const buildApp = (
   followSourceMoves(comments, layerLocks);
   pageProbe.start();
 
-  const runner = createAgentRunner({
-    bus,
-    canvas,
-    comments,
-    config,
-    frameStates,
-    layerLocks,
-    preview,
-    projects,
-    runtime,
-    versions,
-  });
+  const runner = bootAgentRunner(
+    {
+      bus,
+      canvas,
+      comments,
+      config,
+      frameStates,
+      layerLocks,
+      preview,
+      projects,
+      versions,
+    },
+    runtime
+  );
 
   const hooks = options.thumbnails;
 
@@ -250,7 +252,7 @@ const createServer = async (
 
   await prepareDataDir(config);
 
-  const runtime = buildRuntime();
+  const runtime = buildRuntime(config);
 
   const [mcpListener, stores] = await Promise.all([
     runtime.runPromise(

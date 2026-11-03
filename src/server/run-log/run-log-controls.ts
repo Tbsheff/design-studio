@@ -1,22 +1,25 @@
-import { randomBytes } from "node:crypto";
-import { readFile, rename, writeFile } from "node:fs/promises";
-import path from "node:path";
+import { readFile } from "node:fs/promises";
 
-import type { RunSummary } from "../../shared/contracts.js";
-import { RUN_TITLE_MAX } from "../../shared/rewind.js";
-import {
-  BadRequestError,
-  ConflictError,
-  NotFoundError,
-  assertSafeId,
-} from "../store/errors.js";
-import { createKeyedMutex } from "../store/mutex.js";
+import { Effect } from "effect";
+
+import { BadRequest } from "../../shared/actions/_core/errors/bad-request.js";
+import { Conflict } from "../../shared/actions/_core/errors/conflict.js";
+import { NotFound } from "../../shared/actions/_core/errors/not-found.js";
 import type {
-  ActiveRun,
-  Decision,
-  RunLogRuntime,
-  StartRunCall,
-} from "./run-log-runtime.js";
+  AckSchema,
+  QueueItemsSchema,
+} from "../../shared/actions/run/schema.js";
+import type { PermissionDecision, RunSummary } from "../../shared/contracts.js";
+import { RUN_TITLE_MAX } from "../../shared/rewind.js";
+import { writeAtomic } from "../platform/atomic-write/index.js";
+import { attemptKnown } from "../platform/attempt/index.js";
+import { findRunFile } from "./run-log-reads.js";
+import { readRunLogRuntime } from "./run-log-runtime.js";
+import type { ActiveRun, StartRunCall } from "./run-log-runtime.js";
+
+type RunAck = typeof AckSchema.Type;
+
+type QueueItems = typeof QueueItemsSchema.Type;
 
 interface PermissionAnswer {
   readonly allow: boolean;
@@ -24,118 +27,108 @@ interface PermissionAnswer {
   readonly note?: string;
 }
 
-interface QueueItem {
-  readonly id: string;
-  readonly text: string;
-}
-
-interface RunAck {
-  readonly ok: boolean;
-}
-
-interface TitleEdit {
-  readonly file: string;
-  readonly projectId: string;
-  readonly runId: string;
-  readonly title: string;
-}
-
-const titleLock = createKeyedMutex();
-
 const ACK: RunAck = { ok: true };
 
-const activeHandle = (runtime: RunLogRuntime, raw: string): ActiveRun => {
-  const handle = runtime.runner.get(assertSafeId(raw, "runId"));
+const JSON_INDENT = 2;
+
+const findActiveRun = Effect.fn("RunLog.findActiveRun")(function* run(
+  projectId: string,
+  runId: string
+) {
+  const runtime = yield* readRunLogRuntime;
+
+  yield* findRunFile(runtime, projectId, runId);
+
+  const handle: ActiveRun | undefined = runtime.runner.get(runId);
 
   if (!handle) {
-    throw new NotFoundError("run is not active");
+    return yield* new NotFound({ message: "The run is not active." });
   }
 
   return handle;
-};
+});
 
-const stopRun = (runtime: RunLogRuntime, runId: string): RunAck => {
-  activeHandle(runtime, runId).cancel();
+const runFinished = (): Conflict => new Conflict({ message: "run_finished" });
+
+const stopActiveRun = Effect.fn("RunLog.stopActiveRun")(function* run(
+  projectId: string,
+  runId: string
+) {
+  const handle = yield* findActiveRun(projectId, runId);
+
+  handle.cancel();
 
   return ACK;
-};
+});
 
-const steerRun = (
-  runtime: RunLogRuntime,
+const steerActiveRun = Effect.fn("RunLog.steerActiveRun")(function* run(
+  projectId: string,
   runId: string,
   rawText: string
-): RunAck => {
-  const handle = activeHandle(runtime, runId);
+) {
   const text = rawText.trim();
 
   if (text === "") {
-    throw new BadRequestError("text is required");
+    return yield* new BadRequest({ message: "text is required" });
   }
+
+  const handle = yield* findActiveRun(projectId, runId);
 
   if (!handle.steer?.(text)) {
-    throw new ConflictError("run_finished");
+    return yield* runFinished();
   }
 
   return ACK;
-};
+});
 
-const setRunQueue = (
-  runtime: RunLogRuntime,
+const setActiveQueue = Effect.fn("RunLog.setActiveQueue")(function* run(
+  projectId: string,
   runId: string,
-  items: readonly QueueItem[]
-): RunAck => {
-  const handle = activeHandle(runtime, runId);
+  items: QueueItems
+) {
+  const handle = yield* findActiveRun(projectId, runId);
 
-  if (!handle.setQueue?.([...items])) {
-    throw new ConflictError("run_finished");
+  if (!handle.setQueue?.(items.map((item) => ({ ...item })))) {
+    return yield* runFinished();
   }
 
   return ACK;
-};
+});
 
-const toDecision = (answer: PermissionAnswer): Decision => {
+const toDecision = (answer: PermissionAnswer): PermissionDecision => {
   if (answer.allow) {
-    const allowed: Decision = { allow: true };
-
     if (answer.always) {
-      allowed.always = answer.always;
+      return { allow: true, always: answer.always };
     }
 
-    return allowed;
+    return { allow: true };
   }
 
-  const denied: Decision = { allow: false };
   const note = answer.note?.trim() ?? "";
 
   if (note !== "") {
-    denied.note = note;
+    return { allow: false, note };
   }
 
-  return denied;
+  return { allow: false };
 };
 
-const answerPermission = (
-  runtime: RunLogRuntime,
+const answerActiveRun = Effect.fn("RunLog.answerActiveRun")(function* run(
+  projectId: string,
   runId: string,
   requestId: string,
   answer: PermissionAnswer
-): RunAck => {
-  const handle = activeHandle(runtime, runId);
+) {
+  const handle = yield* findActiveRun(projectId, runId);
 
   if (!handle.answer?.(requestId, toDecision(answer))) {
-    throw new NotFoundError("permission request is not open");
+    return yield* new NotFound({
+      message: "The permission request is not open.",
+    });
   }
 
   return ACK;
-};
-
-const readSummary = async (edit: TitleEdit): Promise<RunSummary> => {
-  try {
-    return JSON.parse(await readFile(edit.file, "utf-8")) as RunSummary;
-  } catch {
-    throw new NotFoundError(`run ${edit.runId} not found`);
-  }
-};
+});
 
 const withTitle = (current: RunSummary, title: string): RunSummary => {
   const next: RunSummary = { ...current };
@@ -148,69 +141,77 @@ const withTitle = (current: RunSummary, title: string): RunSummary => {
   return next;
 };
 
-const JSON_INDENT = 2;
+const readSummary = (
+  file: string,
+  runId: string
+): Effect.Effect<RunSummary, NotFound> => {
+  const missing = new NotFound({
+    message: `Run ${runId} is not in this project.`,
+  });
 
-const TEMP_BYTES = 4;
-
-const rewriteTitle = async (
-  runtime: RunLogRuntime,
-  edit: TitleEdit
-): Promise<RunSummary> => {
-  const current = await readSummary(edit);
-
-  if (
-    current.status === "running" &&
-    runtime.runner.isRunning(edit.projectId, current.directionId)
-  ) {
-    throw new ConflictError("run_in_progress");
-  }
-
-  const next = withTitle(current, edit.title);
-  const suffix = randomBytes(TEMP_BYTES).toString("hex");
-  const temp = `${edit.file}.${suffix}.tmp`;
-  await writeFile(temp, `${JSON.stringify(next, null, JSON_INDENT)}\n`);
-  await rename(temp, edit.file);
-
-  return next;
-};
-
-const renameRun = async (
-  runtime: RunLogRuntime,
-  rawId: string,
-  rawTitle: string
-): Promise<RunSummary> => {
-  const runId = assertSafeId(rawId, "runId");
-  const title = rawTitle.trim();
-
-  if (title.length > RUN_TITLE_MAX) {
-    throw new BadRequestError(`title is longer than ${RUN_TITLE_MAX}`);
-  }
-
-  const projectId = await runtime.findRunProject(runId);
-
-  if (projectId === null) {
-    throw new NotFoundError(`run ${runId} not found`);
-  }
-
-  const file = path.join(runtime.runsDir(projectId), `${runId}.json`);
-
-  return titleLock(runId, () =>
-    rewriteTitle(runtime, { file, projectId, runId, title })
+  return Effect.tryPromise({
+    catch: () => missing,
+    try: () => readFile(file, "utf-8"),
+  }).pipe(
+    Effect.flatMap((text) =>
+      Effect.try({
+        catch: () => missing,
+        try: () => JSON.parse(text) as RunSummary,
+      })
+    )
   );
 };
 
-const startRunCall = async (
-  runtime: RunLogRuntime,
+const setRunTitle = Effect.fn("RunLog.setRunTitle")(function* run(
+  projectId: string,
+  runId: string,
+  rawTitle: string
+) {
+  const title = rawTitle.trim();
+
+  if (title.length > RUN_TITLE_MAX) {
+    return yield* new BadRequest({
+      message: `title is longer than ${RUN_TITLE_MAX}`,
+    });
+  }
+
+  const runtime = yield* readRunLogRuntime;
+  const base = yield* findRunFile(runtime, projectId, runId);
+  const file = `${base}.json`;
+  const current = yield* readSummary(file, runId);
+
+  const isActive =
+    current.status === "running" &&
+    runtime.runner.isRunning(projectId, current.directionId);
+
+  if (isActive) {
+    return yield* new Conflict({ message: "run_in_progress" });
+  }
+
+  const next = withTitle(current, title);
+  const text = `${JSON.stringify(next, null, JSON_INDENT)}\n`;
+
+  yield* Effect.promise(() => writeAtomic(file, text));
+
+  return next;
+});
+
+const startRunWith = Effect.fn("RunLog.startRunWith")(function* run(
   input: StartRunCall
-): Promise<{ runId: string }> => ({ runId: await runtime.startRun(input) });
+) {
+  const runtime = yield* readRunLogRuntime;
+  const runId = yield* attemptKnown(() => runtime.startRun(input));
+
+  return { runId };
+});
 
 export {
-  answerPermission,
-  renameRun,
-  setRunQueue,
-  startRunCall,
-  steerRun,
-  stopRun,
+  answerActiveRun,
+  setActiveQueue,
+  setRunTitle,
+  startRunWith,
+  steerActiveRun,
+  stopActiveRun,
 };
 
-export type { RunAck };
+export type { PermissionAnswer, QueueItems, RunAck };

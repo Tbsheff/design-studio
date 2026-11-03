@@ -3,7 +3,7 @@ import { Exit } from "effect";
 import type { AnyAction } from "../../shared/actions/_core/action.js";
 import type { WireBody } from "../../shared/actions/_core/wire.js";
 import type { WireArgs } from "../handlers/_core/run-action.js";
-import { failureOf, toWireError } from "../http/wire-error.js";
+import { failureOf, toWireError } from "../handlers/_core/wire-error.js";
 import { toLegacyPrincipal } from "../store/principal.js";
 import { EditError, RUN_BUSY } from "./edit-guards.js";
 import type { EditDeps } from "./edit-guards.js";
@@ -29,7 +29,7 @@ const roundTrip = <Value, Source>(value: Source): Value => {
   return JSON.parse(text) as Value;
 };
 
-const callAction = async <Output, Input = WireArgs>(
+const callAction = async <Output, Input extends object = object>(
   deps: Pick<EditDeps, "runtime">,
   action: AnyAction,
   input: Input

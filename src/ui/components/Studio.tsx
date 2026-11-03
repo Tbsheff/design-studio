@@ -586,7 +586,12 @@ export function Studio({
     }
   }, []);
 
-  const { trackSend, ...runControls } = useRunControls(activeRun, draft, act);
+  const { trackSend, ...runControls } = useRunControls(
+    projectId,
+    activeRun,
+    draft,
+    act
+  );
   const exporter = useExportTarget(projectId, direction, versions);
   const commandActions = useStudioCommands();
   const tryVariants = useTryVariants(project, selection, variations);

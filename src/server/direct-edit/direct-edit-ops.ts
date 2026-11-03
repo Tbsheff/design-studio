@@ -26,7 +26,7 @@ import { commitTweaks } from "../tweaks/commit.js";
 import { readTweaksState } from "../tweaks/store.js";
 import { applyArrange, isArrangeBody } from "./arrange.js";
 import { applyDirectEditBatch } from "./batch.js";
-import { applyDirectEdit } from "./commit/apply.js";
+import { commitDirectEdit } from "./commit/apply.js";
 import type { DirectEditRuntime } from "./direct-edit-core.js";
 import { applyStyleReplace } from "./replace.js";
 import { applyStructureEdit } from "./structure-apply.js";
@@ -149,7 +149,7 @@ const applyEditBody = (
         return applyDirectEditBatch(editDeps, project, direction, body);
       }
 
-      return applyDirectEdit(editDeps, project, direction, body);
+      return commitDirectEdit(editDeps, project, direction, body);
     }
   );
 

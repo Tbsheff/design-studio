@@ -12,7 +12,7 @@ const handle = Effect.fn("run.setQueue")(function* run(
 ) {
   const service = yield* RunLogWriter;
 
-  return yield* service.setQueue(input.runId, input.items);
+  return yield* service.setQueue(input.projectId, input.runId, input.items);
 }) satisfies Handle<typeof setQueueRun>;
 
 export { handle };

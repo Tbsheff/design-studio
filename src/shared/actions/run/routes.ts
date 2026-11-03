@@ -10,7 +10,7 @@ const routes = {
     id: "run.get",
     invalidates: [],
     method: "GET",
-    path: "/api/runs/:runId",
+    path: "/api/projects/:projectId/runs/:runId",
   },
   listRun: {
     id: "run.list",
@@ -22,25 +22,25 @@ const routes = {
     id: "run.rename",
     invalidates: ["run.get", "run.list"],
     method: "PATCH",
-    path: "/api/runs/:runId",
+    path: "/api/projects/:projectId/runs/:runId",
   },
   setPermissionRun: {
     id: "run.setPermission",
     invalidates: ["run.get"],
     method: "POST",
-    path: "/api/runs/:runId/permissions/:requestId",
+    path: "/api/projects/:projectId/runs/:runId/permissions/:requestId",
   },
   setQueueRun: {
     id: "run.setQueue",
     invalidates: ["run.get"],
     method: "PUT",
-    path: "/api/runs/:runId/queue",
+    path: "/api/projects/:projectId/runs/:runId/queue",
   },
   setSteerRun: {
     id: "run.setSteer",
     invalidates: ["run.get"],
     method: "POST",
-    path: "/api/runs/:runId/steer",
+    path: "/api/projects/:projectId/runs/:runId/steer",
   },
   startRun: {
     id: "run.start",
@@ -52,7 +52,7 @@ const routes = {
     id: "run.stop",
     invalidates: ["run.get", "run.list"],
     method: "POST",
-    path: "/api/runs/:runId/cancel",
+    path: "/api/projects/:projectId/runs/:runId/cancel",
   },
 } as const;
 

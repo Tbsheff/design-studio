@@ -182,7 +182,7 @@ function useRunPages(
         setRunsLoaded(true);
         for (const s of next.runs.filter((r) => r.status === "running")) {
           api
-            .getRun(s.id)
+            .getRun(c.projectId, s.id)
             .then(
               ({ events }) =>
                 cursor.current === c &&

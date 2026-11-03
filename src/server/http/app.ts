@@ -24,7 +24,6 @@ import {
 import { registerAppPublishRoutes } from "./app-publish-routes.js";
 import {
   registerProjectRunsRoutes,
-  registerRunsControlRoutes,
   registerRunsRoutes,
   registerRunsVariationRoutes,
 } from "./app-runs-routes.js";
@@ -67,7 +66,6 @@ export function createApp(deps: AppDeps): Hono {
   registerVersionsRoutes(app, ctx);
   registerDirectEditRoutes(app, ctx);
   registerRunsRoutes(app, ctx);
-  registerRunsControlRoutes(app, ctx);
   registerAppExportRoutes(app, ctx);
   registerAppCommentsRoutes(app, ctx);
   registerDirectEditPanelRoutes(app, ctx);
@@ -75,8 +73,8 @@ export function createApp(deps: AppDeps): Hono {
   registerHomeProjectRoutes(app, ctx);
   registerVersionsHistoryRoutes(app, ctx, mcpSlot);
   registerAppCanvasRoutes(app, ctx);
-  registerRunsVariationRoutes(app, ctx);
-  const mcpRoutes = registerAppMcpRoutes(app, ctx, mcpSlot);
+  const variations = registerRunsVariationRoutes(app, ctx);
+  const mcpRoutes = registerAppMcpRoutes(app, ctx, mcpSlot, variations);
   registerAppShipRoutes(app, ctx, mcpRoutes);
   registerAppShareRoutes(app, ctx);
   registerAppPublishRoutes(app, ctx);

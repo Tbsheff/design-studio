@@ -12,7 +12,9 @@ const handle = Effect.fn("run.getContext")(function* run(
 ) {
   const service = yield* RunLogStore;
 
-  return yield* service.context(input.projectId, input.directionId);
+  const context = yield* service.context(input.projectId, input.directionId);
+
+  return { ...context, files: context.files.slice(0, input.limit) };
 }) satisfies Handle<typeof getContextRun>;
 
 export { handle };

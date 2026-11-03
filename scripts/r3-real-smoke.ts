@@ -138,8 +138,13 @@ async function main(): Promise<void> {
       return (await res.json()) as T;
     };
 
-    const list = (pid: string) =>
-      call<RunSummary[]>("GET", `/api/projects/${pid}/runs`);
+    const list = async (pid: string) =>
+      (
+        await call<{ items: RunSummary[] }>(
+          "GET",
+          `/api/projects/${pid}/runs?cursor=null&limit=200`
+        )
+      ).items;
 
     const finished = (pid: string, runId: string) =>
       waitFor(
@@ -218,7 +223,7 @@ async function main(): Promise<void> {
 
     const detail = await call<{ sent: RunSentRecord[] }>(
       "GET",
-      `/api/runs/${runId}`
+      `/api/projects/${project.id}/runs/${runId}`
     );
 
     const inRun = detail.sent.some((record) =>

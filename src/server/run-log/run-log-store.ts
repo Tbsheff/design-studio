@@ -1,25 +1,28 @@
 import { Context, Effect, Layer } from "effect";
 
-import type { KnownFailure } from "../platform/attempt/index.js";
-import { listRuns, readRun, readRunContext } from "./run-log-reads.js";
-import type { RunListInput } from "./run-log-reads.js";
-import { attemptRunLog } from "./run-log-runtime.js";
+import type { BadRequest } from "../../shared/actions/_core/errors/bad-request.js";
+import type { NotFound } from "../../shared/actions/_core/errors/not-found.js";
+import type { RepoContextState } from "../../shared/repo-context.js";
+import type { RunPage } from "./run-list.js";
+import { getRunContext, getRunDetail, listRunPage } from "./run-log-reads.js";
+import type { RunDetail, RunListInput } from "./run-log-reads.js";
 
-interface RunLogApi {
+interface RunLogStoreApi {
   readonly context: (
     projectId: string,
     directionId: string
-  ) => Effect.Effect<Awaited<ReturnType<typeof readRunContext>>, KnownFailure>;
+  ) => Effect.Effect<RepoContextState, NotFound>;
   readonly get: (
+    projectId: string,
     runId: string
-  ) => Effect.Effect<Awaited<ReturnType<typeof readRun>>, KnownFailure>;
+  ) => Effect.Effect<RunDetail, NotFound>;
   readonly list: (
     projectId: string,
     input: RunListInput
-  ) => Effect.Effect<Awaited<ReturnType<typeof listRuns>>, KnownFailure>;
+  ) => Effect.Effect<RunPage, BadRequest | NotFound>;
 }
 
-class RunLogStore extends Context.Service<RunLogStore, RunLogApi>()(
+class RunLogStore extends Context.Service<RunLogStore, RunLogStoreApi>()(
   "design-studio/run-log/RunLogStore"
 ) {
   declare public readonly access: "read";
@@ -31,23 +34,24 @@ class RunLogStore extends Context.Service<RunLogStore, RunLogApi>()(
         projectId: string,
         directionId: string
       ) {
-        return yield* attemptRunLog((runtime) =>
-          readRunContext(runtime, projectId, directionId)
-        );
+        return yield* getRunContext(projectId, directionId);
       }),
-      get: Effect.fn("RunLogStore.get")(function* run(runId: string) {
-        return yield* attemptRunLog((runtime) => readRun(runtime, runId));
+      get: Effect.fn("RunLogStore.get")(function* run(
+        projectId: string,
+        runId: string
+      ) {
+        return yield* getRunDetail(projectId, runId);
       }),
       list: Effect.fn("RunLogStore.list")(function* run(
         projectId: string,
         input: RunListInput
       ) {
-        return yield* attemptRunLog((runtime) =>
-          listRuns(runtime, projectId, input)
-        );
+        return yield* listRunPage(projectId, input);
       }),
     })
   );
 }
 
 export { RunLogStore };
+
+export type { RunLogStoreApi };

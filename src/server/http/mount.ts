@@ -10,9 +10,9 @@ import type {
   WireArgs,
   WireForm,
 } from "../handlers/_core/run-action.js";
+import { failureOf, toWireError } from "../handlers/_core/wire-error.js";
 import type { StudioRuntime } from "../main/runtime.js";
 import { toLegacyPrincipal } from "../store/principal.js";
-import { failureOf, toWireError } from "./wire-error.js";
 
 type Group = Readonly<Record<string, AnyAction>>;
 

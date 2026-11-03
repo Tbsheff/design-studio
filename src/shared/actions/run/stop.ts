@@ -1,10 +1,8 @@
 import { Schema } from "effect";
 
 import { defineAction } from "../_core/action.js";
-import { BadRequest } from "../_core/errors/bad-request.js";
-import { Conflict } from "../_core/errors/conflict.js";
 import { NotFound } from "../_core/errors/not-found.js";
-import { RunIdSchema } from "../_core/ids.js";
+import { ProjectIdSchema, RunIdSchema } from "../_core/ids.js";
 import { AckSchema } from "./schema.js";
 
 const stopRun = defineAction({
@@ -12,17 +10,18 @@ const stopRun = defineAction({
   agent: { off: "run-control" },
   confirm: "none",
   description: "Stop one active run. Fails when the run is not active.",
-  errors: [BadRequest, Conflict, NotFound],
-  http: { method: "POST", path: "/api/runs/:runId/cancel" },
+  errors: [NotFound],
+  http: { method: "POST", path: "/api/projects/:projectId/runs/:runId/cancel" },
   id: "run.stop",
   input: Schema.Struct({
+    projectId: ProjectIdSchema,
     runId: RunIdSchema,
   }),
   invalidates: ["run.get", "run.list"],
   mcp: { off: "run-control" },
   needs: "project.update",
   output: AckSchema,
-  scope: "org",
+  scope: "project",
 });
 
 export { stopRun };

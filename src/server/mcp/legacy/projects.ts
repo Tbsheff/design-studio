@@ -1,7 +1,7 @@
 import { defineTool } from "../edit-kit.js";
 import type { ToolSpec } from "../edit-kit.js";
 import { attachApp } from "./attach-app.js";
-import { createProject } from "./create-project.js";
+import { createProjectTool as runCreateProject } from "./create-project.js";
 import { guardTools } from "./guard.js";
 import { attachAppSchema, createProjectSchema } from "./projects-schema.js";
 
@@ -13,7 +13,7 @@ const createProjectTool = defineTool(
       "Create an empty design project in the default projects folder. Returns the project id and the direction id.",
     title: "Create project",
   },
-  createProject
+  runCreateProject
 );
 
 const attachAppTool = defineTool(

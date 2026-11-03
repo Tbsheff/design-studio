@@ -8,7 +8,7 @@ import { DirectionIdSchema, ProjectIdSchema } from "../_core/ids.js";
 import { DirectEditConflict } from "./errors/direct-edit-conflict.js";
 import { DirectEditFailed } from "./errors/direct-edit-failed.js";
 import { DirectEditNotFound } from "./errors/direct-edit-not-found.js";
-import { CommitTweaksResultSchema, TokenChangesFields } from "./schema.js";
+import { CommitTweaksResultSchema, TweakValuesFields } from "./schema.js";
 
 const updateTweaksDirectEdit = defineAction({
   access: "edit",
@@ -31,7 +31,7 @@ const updateTweaksDirectEdit = defineAction({
   id: "direct-edit.updateTweaks",
   input: Schema.Struct({
     directionId: DirectionIdSchema,
-    ...TokenChangesFields,
+    ...TweakValuesFields,
     projectId: ProjectIdSchema,
   }),
   invalidates: ["direct-edit.getTweaks"],

@@ -36,20 +36,52 @@ const AckSchema = Schema.Struct({ ok: Schema.Boolean });
 
 const RunStartedSchema = Schema.Struct({ runId: Schema.String });
 
-const RunDetailSchema = Schema.Struct({
-  events: Schema.Array(Schema.Json),
-  sent: Schema.Array(Schema.Json),
-  summary: Schema.NullOr(Schema.Json),
-});
-
-const RunPageSchema = Schema.Struct({
-  nextBefore: Schema.NullOr(Schema.Number),
-  runs: Schema.Array(Schema.Json),
-});
-
 const RunSummarySchema = Schema.Struct({
+  directionId: Schema.String,
+  finishedAt: Schema.NullOr(Schema.Number),
   id: Schema.String,
+  projectId: Schema.String,
+  startedAt: Schema.Number,
   status: Schema.String,
+  title: Schema.optionalKey(Schema.String),
+});
+
+const RunEventSchema = Schema.Struct({
+  seq: Schema.Number,
+  ts: Schema.Number,
+  type: Schema.String,
+});
+
+const RunSentSchema = Schema.Struct({
+  directionId: Schema.String,
+  projectId: Schema.String,
+  runId: Schema.String,
+  text: Schema.String,
+  ts: Schema.Number,
+  type: Schema.Literal("run.sent"),
+});
+
+const RunDetailSchema = Schema.Struct({
+  events: Schema.Array(RunEventSchema),
+  sent: Schema.Array(RunSentSchema),
+  summary: Schema.NullOr(RunSummarySchema),
+});
+
+const RepoContextFileSchema = Schema.Struct({
+  bytes: Schema.Number,
+  droppedLines: Schema.Number,
+  path: Schema.String,
+  scope: Schema.String,
+  sentBytes: Schema.Number,
+  use: Schema.String,
+});
+
+const RepoContextSchema = Schema.Struct({
+  appDir: Schema.NullOr(Schema.String),
+  bytes: Schema.Number,
+  files: Schema.Array(RepoContextFileSchema),
+  text: Schema.NullOr(Schema.String),
+  workspaceRoot: Schema.NullOr(Schema.String),
 });
 
 export {
@@ -58,8 +90,8 @@ export {
   NoteSchema,
   QueueItemsSchema,
   RequestIdSchema,
+  RepoContextSchema,
   RunDetailSchema,
-  RunPageSchema,
   RunStartedSchema,
   RunSummarySchema,
   TextSchema,

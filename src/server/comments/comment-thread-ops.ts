@@ -68,7 +68,7 @@ const createCommentReply = (
     );
   });
 
-const createComment = async (
+const createCommentThread = async (
   runtime: CommentRuntime,
   ref: CommentRef,
   input: CreateCommentInput
@@ -104,6 +104,11 @@ const createCommentPrefill = async (
   return buildPrefill(runtime.prefill, project, direction, chosen);
 };
 
-export { createComment, createCommentPrefill, createCommentReply, runOnTarget };
+export {
+  createCommentThread,
+  createCommentPrefill,
+  createCommentReply,
+  runOnTarget,
+};
 
 export type { CommentRef, ReplyRequest };

@@ -1,4 +1,4 @@
-export { applyDirectEdit } from "./apply.js";
+export { commitDirectEdit } from "./apply.js";
 
 export { planDirectEdit } from "./edit-plan.js";
 

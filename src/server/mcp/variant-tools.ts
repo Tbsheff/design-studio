@@ -6,7 +6,6 @@ import { EditError } from "./edit-guards.js";
 import type { EditDeps } from "./edit-guards.js";
 import { defineTool, id, ok, projectId, versionActivity } from "./edit-kit.js";
 import type { ToolSpec } from "./edit-kit.js";
-import { keepVariant as keepVariantPort } from "./studio-ports.js";
 
 const keepInput = z
   .object({
@@ -45,7 +44,7 @@ const keepVariant = defineTool(
       );
     }
 
-    const kept = await keepVariantPort(
+    const kept = await deps.keepVariant(
       project.id,
       input.groupId,
       input.directionId

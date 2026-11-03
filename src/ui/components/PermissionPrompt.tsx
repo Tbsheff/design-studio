@@ -9,9 +9,11 @@ import { api, errorText } from "../api";
 import { Icon } from "../kit/Icon";
 
 export function PermissionPrompt({
+  projectId,
   runId,
   request,
 }: {
+  projectId: string;
   runId: string;
   request: PermissionRequest;
 }) {
@@ -22,10 +24,12 @@ export function PermissionPrompt({
   const answer = (decision: PermissionDecision) => {
     setBusy(true);
     setError(null);
-    api.answerPermission(runId, request.id, decision).catch((err: unknown) => {
-      setBusy(false);
-      setError(errorText(err));
-    });
+    api
+      .answerPermission(projectId, runId, request.id, decision)
+      .catch((err: unknown) => {
+        setBusy(false);
+        setError(errorText(err));
+      });
   };
   const command =
     request.toolName === "Bash"

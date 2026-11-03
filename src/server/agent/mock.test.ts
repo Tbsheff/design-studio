@@ -10,6 +10,8 @@ import type {
   StudioEvent,
 } from "../../shared/contracts.js";
 import { writeTestDraft } from "../design-system/test-draft.js";
+import { bootAgentRunner } from "../main/agent-runner.js";
+import { buildRuntime } from "../main/runtime.js";
 import {
   createFakeBus,
   createFakePreview,
@@ -18,7 +20,6 @@ import {
   createTempProject,
 } from "../testing/fakes.js";
 import type { AgentRunContext, ServerConfig } from "../types.js";
-import { createAgentRunner } from "./index.js";
 import { cleanPrompt, mockSkillRequests } from "./mock.js";
 
 const roots: string[] = [];
@@ -45,13 +46,16 @@ async function setup(kind: "html" | "react" = "html") {
     studioOrigin: "",
     previewOrigin: "",
   };
-  const runner = createAgentRunner({
-    config,
-    bus,
-    projects,
-    versions,
-    preview: createFakePreview(),
-  });
+  const runner = bootAgentRunner(
+    {
+      config,
+      bus,
+      projects,
+      versions,
+      preview: createFakePreview(),
+    },
+    buildRuntime(config)
+  );
   function context(request: RunRequest): AgentRunContext {
     const project = structuredClone(projects.current);
     const direction = project.directions[0];

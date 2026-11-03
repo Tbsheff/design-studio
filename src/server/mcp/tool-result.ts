@@ -3,7 +3,7 @@ import { Exit } from "effect";
 import type { AnyAction } from "../../shared/actions/_core/action.js";
 import type { StudioError } from "../../shared/actions/_core/errors/all.js";
 import { ImageOutputSchema } from "../../shared/actions/_core/image-output.js";
-import { failureOf, toWireError } from "../http/wire-error.js";
+import { failureOf, toWireError } from "../handlers/_core/wire-error.js";
 
 type ResultBlock =
   | { readonly text: string; readonly type: "text" }

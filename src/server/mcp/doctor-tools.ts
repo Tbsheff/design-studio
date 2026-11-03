@@ -1,7 +1,6 @@
 import { z } from "zod";
 
 import { DOCTOR_NOTE } from "../../shared/app-doctor.js";
-import { fixApp } from "../http/doctor-routes.js";
 import { loadTarget } from "./edit-guards.js";
 import { defineTool, projectId } from "./edit-kit.js";
 
@@ -27,15 +26,7 @@ const applyAppFix = defineTool(
   },
   async (deps, input) => {
     const { project } = await loadTarget(deps, input.projectId);
-    const done = await fixApp(
-      {
-        preview: deps.preview,
-        projects: deps.projects,
-        readBody: () => Promise.resolve({}),
-      },
-      project.id,
-      input.kind
-    );
+    const done = await deps.fixApp(project.id, input.kind);
     return {
       result: { content: [{ type: "text", text: done.applied }] },
       activity: {

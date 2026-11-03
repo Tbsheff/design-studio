@@ -173,7 +173,11 @@ const setLayerState = defineTool(
     const lines = [...edited.lines];
 
     if (input.locked !== undefined) {
-      const current = await readLocks(loaded.project.id, loaded.direction.id);
+      const current = await readLocks(
+        deps,
+        loaded.project.id,
+        loaded.direction.id
+      );
 
       const probe = await probeLock(
         deps.preview,
@@ -189,6 +193,7 @@ const setLayerState = defineTool(
       }
 
       const view = await changeLocks(
+        deps,
         loaded.project.id,
         loaded.direction.id,
         lockDelta(probe, input.locked)
@@ -226,7 +231,7 @@ const listLockedLayers = defineTool(
   async (deps, input): Promise<Done> => {
     const loaded = await loadTarget(deps, input.projectId, input.directionId);
 
-    const view = await readLocks(loaded.project.id, loaded.direction.id);
+    const view = await readLocks(deps, loaded.project.id, loaded.direction.id);
 
     const probe =
       view.keys.length > 0

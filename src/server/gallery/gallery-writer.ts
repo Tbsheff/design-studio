@@ -1,6 +1,6 @@
 import { Context, Effect, Layer } from "effect";
 
-import { createGallery } from "./create-gallery.js";
+import { createGalleryFolder } from "./create-gallery.js";
 import type { GalleryCommand, GalleryCreated } from "./create-gallery.js";
 import type { KnownFailure } from "./deps.js";
 import { galleryRuntime } from "./gallery-runtime.js";
@@ -24,7 +24,7 @@ class GalleryWriter extends Context.Service<GalleryWriter, GalleryWriterApi>()(
       ) {
         const runtime = yield* galleryRuntime;
 
-        return yield* createGallery(runtime, command);
+        return yield* createGalleryFolder(runtime, command);
       }),
     })
   );

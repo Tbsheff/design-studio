@@ -227,7 +227,7 @@ const addedRows = (request: ContentRequest, clones: Splice | null): number => {
   return request.repeat - 1;
 };
 
-const applyContent = (
+const applyContentEdits = (
   source: string,
   request: ContentRequest
 ): ContentResult => {
@@ -273,6 +273,6 @@ const applyContent = (
   };
 };
 
-export { applyContent };
+export { applyContentEdits };
 
 export type { ContentFailure, ContentMode, ContentRequest, ContentResult };

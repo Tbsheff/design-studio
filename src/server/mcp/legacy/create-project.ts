@@ -55,7 +55,7 @@ const mainDirection = (
   project.directions[0] ??
   null;
 
-const createProject = async (
+const createProjectTool = async (
   deps: EditDeps,
   input: CreateProjectInput
 ): Promise<Done> => {
@@ -81,4 +81,4 @@ const createProject = async (
   };
 };
 
-export { createProject };
+export { createProjectTool };

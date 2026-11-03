@@ -330,6 +330,8 @@ const p = (pid: string) => `/api/projects/${enc(pid)}`;
 
 const d = (pid: string, did: string) => `${p(pid)}/d/${enc(did)}`;
 
+const RUNS_PAGE = "/runs?cursor=null&limit=200";
+
 const warmPath = (path: string): void => {
   prefetch(`GET ${path}`, async () => {
     const res = await request("GET", path);
@@ -340,7 +342,7 @@ const warmPath = (path: string): void => {
 
 export function warmProject(pid: string, directionId: string | null): void {
   warmPath(p(pid));
-  warmPath(`${p(pid)}/runs`);
+  warmPath(`${p(pid)}${RUNS_PAGE}`);
   warmPath(`${p(pid)}/canvas`);
 
   if (directionId) {
@@ -662,7 +664,14 @@ export const api = {
 
     return base64ToBlob(file.data, file.mimeType);
   },
-  listRuns: (pid: string) => json<RunSummary[]>("GET", `${p(pid)}/runs`),
+  listRuns: async (pid: string) => {
+    const page = await json<{ items: RunSummary[] }>(
+      "GET",
+      `${p(pid)}${RUNS_PAGE}`
+    );
+
+    return page.items;
+  },
   createDirection: (pid: string, fromVersionId: string, name: string) =>
     json<Direction>("POST", `${p(pid)}/directions`, { fromVersionId, name }),
   listVersions: async (pid: string, did: string) => {
@@ -858,25 +867,30 @@ export const api = {
 
     return res.blob();
   },
-  getRun: (runId: string) =>
+  getRun: (pid: string, runId: string) =>
     json<{ summary: RunSummary; events: StudioEvent[] }>(
       "GET",
-      `/api/runs/${enc(runId)}`
+      `${p(pid)}/runs/${enc(runId)}`
     ),
-  cancelRun: (runId: string) =>
-    json<{ ok: boolean }>("POST", `/api/runs/${enc(runId)}/cancel`),
-  setQueue: (runId: string, items: QueuedMessage[]) =>
-    json<{ ok: boolean }>("PUT", `/api/runs/${enc(runId)}/queue`, { items }),
-  steerRun: (runId: string, text: string) =>
-    json<{ ok: boolean }>("POST", `/api/runs/${enc(runId)}/steer`, { text }),
+  cancelRun: (pid: string, runId: string) =>
+    json<{ ok: boolean }>("POST", `${p(pid)}/runs/${enc(runId)}/cancel`),
+  setQueue: (pid: string, runId: string, items: QueuedMessage[]) =>
+    json<{ ok: boolean }>("PUT", `${p(pid)}/runs/${enc(runId)}/queue`, {
+      items,
+    }),
+  steerRun: (pid: string, runId: string, text: string) =>
+    json<{ ok: boolean }>("POST", `${p(pid)}/runs/${enc(runId)}/steer`, {
+      text,
+    }),
   answerPermission: (
+    pid: string,
     runId: string,
     requestId: string,
     decision: PermissionDecision
   ) =>
     json<{ ok: boolean }>(
       "POST",
-      `/api/runs/${enc(runId)}/permissions/${enc(requestId)}`,
+      `${p(pid)}/runs/${enc(runId)}/permissions/${enc(requestId)}`,
       decision
     ),
   postTelemetry: (sample: TelemetrySample) =>

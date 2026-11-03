@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 
-import { STUDIO_TOKEN_HEADER } from "../../../shared/contracts.js";
 import type { ComponentInfo } from "../../../shared/contracts.js";
 import { json } from "../../api.js";
-import { getSession } from "../../session.js";
 import type { FilesChange } from "../../useStudioData.js";
+import { getBlob } from "./deps.js";
 
 const REFRESH_MS = 400;
 
@@ -18,16 +17,15 @@ export async function componentThumb(
   id: string,
   version: string
 ): Promise<string | null> {
-  const res = await fetch(
-    `${base(projectId, directionId)}/${encodeURIComponent(id)}/thumb?v=${encodeURIComponent(version)}`,
-    { headers: { [STUDIO_TOKEN_HEADER]: getSession().token } }
+  const blob = await getBlob(
+    `${base(projectId, directionId)}/${encodeURIComponent(id)}/thumb?v=${encodeURIComponent(version)}`
   );
 
-  if (!res.ok) {
+  if (blob === null) {
     return null;
   }
 
-  return URL.createObjectURL(await res.blob());
+  return URL.createObjectURL(blob);
 }
 
 export interface ComponentList {

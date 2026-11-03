@@ -8,16 +8,23 @@ import type { PermissionRequest } from "./deps.js";
 import { useApprovalAnswer } from "./use-approval-answer.js";
 
 interface ApprovalCardProps {
+  readonly projectId: string;
   readonly request: PermissionRequest;
   readonly runId: string;
 }
 
 const ApprovalCard = ({
+  projectId,
   request,
   runId,
 }: ApprovalCardProps): ReactElement | null => {
   const { card } = request;
-  const { answer, busy, error } = useApprovalAnswer(runId, request.id);
+
+  const { answer, busy, error } = useApprovalAnswer(
+    projectId,
+    runId,
+    request.id
+  );
 
   if (!card) {
     return null;

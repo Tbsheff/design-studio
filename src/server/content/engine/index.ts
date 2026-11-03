@@ -1,4 +1,4 @@
-export { applyContent } from "./apply-content.js";
+export { applyContentEdits } from "./apply-content.js";
 
 export type {
   ContentFailure,

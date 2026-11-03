@@ -3,8 +3,8 @@ import { readdir, readFile, stat } from "node:fs/promises";
 import path from "node:path";
 
 import type { RunSummary } from "../../shared/contracts.js";
-import { runMatches, runQueryTerms } from "../../shared/rewind.js";
-import { BadRequestError, isNodeError } from "../platform/errors/index.js";
+import { runMatches } from "../../shared/rewind.js";
+import { isNodeError } from "../platform/errors/index.js";
 
 interface CachedRun {
   mtimeMs: number;
@@ -13,16 +13,16 @@ interface CachedRun {
 }
 
 interface RunListQuery {
-  limit: number | null;
-  before: number | null;
-  light: boolean;
-  terms: string[];
-  directionId: string | null;
+  readonly before: number | null;
+  readonly directionId: string | null;
+  readonly isLight: boolean;
+  readonly limit: number;
+  readonly terms: string[];
 }
 
 interface RunPage {
-  runs: RunSummary[];
-  nextBefore: number | null;
+  readonly items: RunSummary[];
+  readonly next: string | null;
 }
 
 interface StampedFile {
@@ -30,9 +30,6 @@ interface StampedFile {
   at: number;
 }
 
-type QueryReader = (name: string) => string | undefined;
-
-const LIMIT_MAX = 200;
 const CACHE_MAX = 2000;
 const LATEST_SCAN = 3;
 const LIGHT_TEXT_MAX = 400;
@@ -166,36 +163,6 @@ const latestRunStatus = async (
   return runs.at(0)?.status ?? null;
 };
 
-const whole = (raw: string | undefined, name: string): number | null => {
-  if (!raw) {
-    return null;
-  }
-
-  const value = Number(raw);
-
-  if (!Number.isInteger(value) || value < 0) {
-    throw new BadRequestError(`${name} must be a whole number`);
-  }
-
-  return value;
-};
-
-const clampLimit = (limit: number | null): number | null => {
-  if (limit === null) {
-    return null;
-  }
-
-  return Math.min(Math.max(limit, 1), LIMIT_MAX);
-};
-
-const runListQuery = (query: QueryReader): RunListQuery => ({
-  before: whole(query("before"), "before"),
-  directionId: query("direction") || null,
-  light: query("light") === "1",
-  limit: clampLimit(whole(query("limit"), "limit")),
-  terms: runQueryTerms(query("q") ?? ""),
-});
-
 const lightRun = (run: RunSummary): RunSummary => {
   const rest: RunSummary = { ...run };
 
@@ -236,59 +203,28 @@ const matchRuns = (all: RunSummary[], query: RunListQuery): RunSummary[] => {
   return all.filter((run) => runPasses(run, query));
 };
 
-const isPlainQuery = (query: RunListQuery): boolean => {
-  const filtered = query.terms.length > 0 || query.directionId !== null;
-  const paged = query.limit !== null || query.before !== null;
-
-  return !paged && !query.light && !filtered;
-};
-
-const pageOf = (after: RunSummary[], limit: number | null): RunSummary[] => {
-  if (limit === null) {
-    return after;
-  }
-
-  return after.slice(0, limit);
-};
-
-const nextBeforeOf = (
-  page: RunSummary[],
-  after: RunSummary[]
-): number | null => {
+const nextOf = (page: RunSummary[], after: RunSummary[]): string | null => {
   const last = page.at(-1);
 
   if (last && page.length < after.length) {
-    return last.startedAt;
+    return String(last.startedAt);
   }
 
   return null;
 };
 
-const runListBody = (
-  all: RunSummary[],
-  query: RunListQuery
-): RunSummary[] | RunPage => {
-  if (isPlainQuery(query)) {
-    return all;
-  }
-
+const pageRuns = (all: RunSummary[], query: RunListQuery): RunPage => {
   const after = matchRuns(all, query);
-  const page = pageOf(after, query.limit);
-  let runs = page;
+  const page = after.slice(0, query.limit);
+  const next = nextOf(page, after);
 
-  if (query.light) {
-    runs = page.map((run) => lightRun(run));
+  if (query.isLight) {
+    return { items: page.map((run) => lightRun(run)), next };
   }
 
-  return { nextBefore: nextBeforeOf(page, after), runs };
+  return { items: page, next };
 };
 
-export {
-  isRunSummary,
-  latestRunStatus,
-  listRunSummaries,
-  runListBody,
-  runListQuery,
-};
+export { isRunSummary, latestRunStatus, listRunSummaries, pageRuns };
 
 export type { RunListQuery, RunPage };

@@ -4,7 +4,7 @@ import { defineAction } from "../_core/action.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
 import { Conflict } from "../_core/errors/conflict.js";
 import { NotFound } from "../_core/errors/not-found.js";
-import { RunIdSchema } from "../_core/ids.js";
+import { ProjectIdSchema, RunIdSchema } from "../_core/ids.js";
 import { AckSchema, TextSchema } from "./schema.js";
 
 const setSteerRun = defineAction({
@@ -14,9 +14,10 @@ const setSteerRun = defineAction({
   description:
     "Send a steer message to one active run. Fails when the run has finished.",
   errors: [BadRequest, Conflict, NotFound],
-  http: { method: "POST", path: "/api/runs/:runId/steer" },
+  http: { method: "POST", path: "/api/projects/:projectId/runs/:runId/steer" },
   id: "run.setSteer",
   input: Schema.Struct({
+    projectId: ProjectIdSchema,
     runId: RunIdSchema,
     text: TextSchema,
   }),
@@ -24,7 +25,7 @@ const setSteerRun = defineAction({
   mcp: { off: "run-control" },
   needs: "project.update",
   output: AckSchema,
-  scope: "org",
+  scope: "project",
 });
 
 export { setSteerRun };

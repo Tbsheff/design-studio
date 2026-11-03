@@ -13,7 +13,7 @@ import {
   writeAndCommitAll,
 } from "../direct-edit/index.js";
 import type { ContentRuntime } from "./content-runtime.js";
-import { applyContent } from "./engine/index.js";
+import { applyContentEdits } from "./engine/index.js";
 import type { ContentFailure, ContentMode, Preset } from "./engine/index.js";
 
 interface ContentCommand {
@@ -61,7 +61,7 @@ const writeContent = async (
 
   const target = await resolveSource(direction.workTree, command.file);
   const original = await readFile(target.file, "utf-8");
-  const result = applyContent(original, command);
+  const result = applyContentEdits(original, command);
 
   if (!result.ok) {
     return { refused: FAILURE_TEXT[result.code] };

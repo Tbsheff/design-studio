@@ -27,7 +27,7 @@ import { ApprovalCard } from "../features/agent-approval";
 import { Icon } from "../kit/Icon";
 import { useLive } from "../platform/live-store";
 import { canPolishRun } from "../polish";
-import { loadRunsThrough, renameRun } from "../runHistoryApi";
+import { loadRunsThrough, renameRun, runProjectId } from "../runHistoryApi";
 import type { RunView, ToolRow } from "../runState";
 import type { RewindControl } from "../useRewind";
 import { RunFeedbackRow } from "./ChatFeedback";
@@ -341,11 +341,16 @@ const RunEntry = memo(function RunEntry({
             run.permissions.map((request) =>
               request.card ? (
                 <Suspense key={request.id} fallback={null}>
-                  <ApprovalCard runId={runId} request={request} />
+                  <ApprovalCard
+                    projectId={runProjectId()}
+                    runId={runId}
+                    request={request}
+                  />
                 </Suspense>
               ) : (
                 <PermissionPrompt
                   key={request.id}
+                  projectId={runProjectId()}
                   runId={runId}
                   request={request}
                 />

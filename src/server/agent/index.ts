@@ -1,7 +1,5 @@
 import path from "node:path";
 
-import { Effect, Layer, ManagedRuntime } from "effect";
-
 import { TOKENS_FILE } from "../../shared/contracts.js";
 import type { Direction, Project } from "../../shared/contracts.js";
 import type { FrameStateDeps } from "../canvas/app-flow/frame-state-service.js";
@@ -10,7 +8,6 @@ import { refreshDraftCoverage } from "../design-system/draft-project.js";
 import { packRegistry, type PackRegistry } from "../design-system/packs.js";
 import { buildErrorMessage, syncDesignSystem } from "../design-system/sync.js";
 import type { StudioRuntime } from "../main/runtime.js";
-import { loadConfig } from "../platform/config/index.js";
 import type { CommentStore } from "../store/comments.js";
 import type { LayerLockStore } from "../store/layer-locks.js";
 import type {
@@ -21,10 +18,8 @@ import type {
   ServerConfig,
   VersionStore,
 } from "../types.js";
-import { AgentSdkClient } from "./agent-sdk-client.js";
 import { createRunLifecycle } from "./lifecycle.js";
 import type { RunDriver } from "./lifecycle.js";
-import { RunRunner } from "./run-runner.js";
 import type { RunFibers } from "./run-runner.js";
 import type { SdkDriverOptions } from "./sdk-driver.js";
 
@@ -47,36 +42,7 @@ function claudeExecutableOption(): { claudeExecutable?: string } {
   return executable ? { claudeExecutable: executable } : {};
 }
 
-const pickAgentSdk = (): Layer.Layer<AgentSdkClient> => {
-  if (loadConfig().agentMode === "mock") {
-    return AgentSdkClient.layerTest;
-  }
-
-  return AgentSdkClient.layer;
-};
-
-const AgentRunLive = Layer.mergeAll(
-  RunRunner.layer,
-  Layer.unwrap(Effect.sync(pickAgentSdk))
-);
-
-const agentRuntimes = {
-  current: null as ManagedRuntime.ManagedRuntime<
-    RunRunner | AgentSdkClient,
-    never
-  > | null,
-};
-
-const agentRuntime = (): ManagedRuntime.ManagedRuntime<
-  RunRunner | AgentSdkClient,
-  never
-> => {
-  agentRuntimes.current ??= ManagedRuntime.make(AgentRunLive);
-
-  return agentRuntimes.current;
-};
-
-function sdkOptions(deps: AgentRunnerDeps): SdkDriverOptions {
+function toSdkOptions(deps: AgentRunnerDeps): SdkDriverOptions {
   const canvas = deps.canvas ? { canvas: deps.canvas } : {};
 
   return {
@@ -92,55 +58,16 @@ function sdkOptions(deps: AgentRunnerDeps): SdkDriverOptions {
   };
 }
 
-const createDriverEffect = (
-  deps: AgentRunnerDeps
-): Effect.Effect<RunDriver, never, AgentSdkClient> =>
-  Effect.gen(function* resolveDriver() {
-    const sdk = yield* AgentSdkClient;
-
-    return yield* sdk.createDriver(sdkOptions(deps));
-  });
-
-const bindRunFibers = (
-  runtime: ManagedRuntime.ManagedRuntime<RunRunner | AgentSdkClient, never>
-): RunFibers => ({
-  interrupt: (runId) => {
-    runtime.runFork(
-      Effect.gen(function* interruptRun() {
-        const runner = yield* RunRunner;
-
-        yield* runner.interrupt(runId);
-      })
-    );
-  },
-  launch: (runId, done, abort) => {
-    runtime.runFork(
-      Effect.gen(function* launchRun() {
-        const runner = yield* RunRunner;
-
-        yield* runner.launch(runId, done, abort);
-      })
-    );
-  },
-});
-
-function lazyDriver(deps: AgentRunnerDeps): RunDriver {
-  const resolved = { driver: null as Promise<RunDriver> | null };
-
-  return async (input) => {
-    if (!resolved.driver) {
-      resolved.driver = agentRuntime().runPromise(createDriverEffect(deps));
-    }
-
-    const driver = await resolved.driver;
-
-    return driver(input);
-  };
+interface AgentRunParts {
+  readonly driver: RunDriver;
+  readonly fibers: RunFibers | null;
 }
 
-function createAgentRunner(deps: AgentRunnerDeps): AgentRunner {
-  const driver = lazyDriver(deps);
-  const fibers = bindRunFibers(agentRuntime());
+function createAgentRunner(
+  deps: AgentRunnerDeps,
+  parts: AgentRunParts
+): AgentRunner {
+  const { driver, fibers } = parts;
 
   const registry = packRegistry(undefined, {
     userDir: path.join(deps.config.dataDir, "packs"),
@@ -187,7 +114,11 @@ function designSystemBeforeCommit(
   };
 }
 
-export { AgentRunLive, createAgentRunner, designSystemBeforeCommit };
+export { createAgentRunner, designSystemBeforeCommit, toSdkOptions };
+export type { AgentRunParts, AgentRunnerDeps };
+export type { RunDriver } from "./lifecycle.js";
+export type { RunFibers } from "./run-runner.js";
+export type { SdkDriverOptions } from "./sdk-driver.js";
 export { askQuestions } from "./clarify.js";
 export { COMMENT_STATUSES, describeCommentList } from "./comment-tools.js";
 export { isLeanRun, leanContext, leanRunConfig } from "./lean-run.js";

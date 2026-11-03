@@ -1,23 +1,27 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
+import { Effect } from "effect";
+
+import { BadRequest } from "../../shared/actions/_core/errors/bad-request.js";
+import { NotFound } from "../../shared/actions/_core/errors/not-found.js";
 import type {
-  Direction,
-  Project,
   RunSentRecord,
   RunSummary,
   StudioEvent,
 } from "../../shared/contracts.js";
-import { NotFoundError, assertSafeId, isNodeError } from "../store/errors.js";
-import { listRunSummaries, runListBody, runListQuery } from "./run-list.js";
-import type { RunPage } from "./run-list.js";
+import { runQueryTerms } from "../../shared/rewind.js";
+import { attemptKnown } from "../platform/attempt/index.js";
+import type { KnownFailure } from "../platform/attempt/index.js";
+import { listRunSummaries, pageRuns } from "./run-list.js";
+import { readRunLogRuntime } from "./run-log-runtime.js";
 import type { RunLogRuntime } from "./run-log-runtime.js";
 
 interface RunListInput {
-  readonly before?: number;
+  readonly cursor: string | null;
   readonly direction?: string;
-  readonly light?: string;
-  readonly limit?: number;
+  readonly light?: boolean;
+  readonly limit: number;
   readonly q?: string;
 }
 
@@ -27,17 +31,20 @@ interface RunDetail {
   readonly summary: RunSummary | null;
 }
 
-const readOptional = async (file: string): Promise<string | null> => {
-  try {
-    return await readFile(file, "utf-8");
-  } catch (error) {
-    if (isNodeError(error) && error.code === "ENOENT") {
-      return null;
-    }
-
-    throw error;
-  }
-};
+const readOptional = (file: string): Effect.Effect<string | null> =>
+  Effect.tryPromise({
+    catch: (error) => ({
+      isMissing:
+        error instanceof Error && "code" in error && error.code === "ENOENT",
+    }),
+    try: () => readFile(file, "utf-8"),
+  }).pipe(
+    Effect.catchIf(
+      (failure) => failure.isMissing,
+      () => Effect.succeed(null)
+    ),
+    Effect.orDie
+  );
 
 const parseLines = (text: string): (StudioEvent | RunSentRecord)[] =>
   text
@@ -53,28 +60,27 @@ const parseSummary = (text: string | null): RunSummary | null => {
   return JSON.parse(text) as RunSummary;
 };
 
-const readRun = async (
+const missingRun = (runId: string): NotFound =>
+  new NotFound({ message: `Run ${runId} is not in this project.` });
+
+const findRunFile = Effect.fn("RunLog.findRunFile")(function* run(
   runtime: RunLogRuntime,
-  rawId: string
-): Promise<RunDetail> => {
-  const runId = assertSafeId(rawId, "runId");
-  const projectId = await runtime.findRunProject(runId);
+  projectId: string,
+  runId: string
+) {
+  const owner = yield* Effect.promise(() => runtime.findRunProject(runId));
 
-  if (projectId === null) {
-    throw new NotFoundError(`run ${runId} not found`);
+  if (owner !== projectId) {
+    return yield* missingRun(runId);
   }
 
-  const base = path.join(runtime.runsDir(projectId), runId);
+  return path.join(runtime.runsDir(projectId), runId);
+});
 
-  const [summaryText, eventsText] = await Promise.all([
-    readOptional(`${base}.json`),
-    readOptional(`${base}.jsonl`),
-  ]);
-
-  if (summaryText === null && eventsText === null) {
-    throw new NotFoundError(`run ${runId} not found`);
-  }
-
+const toRunDetail = (
+  summaryText: string | null,
+  eventsText: string | null
+): RunDetail => {
   const lines = parseLines(eventsText ?? "");
 
   const sent = lines.filter(
@@ -88,39 +94,85 @@ const readRun = async (
   return { events, sent, summary: parseSummary(summaryText) };
 };
 
-const queryReader = (input: RunListInput) => {
-  const values = new Map<string, string>();
+const getRunDetail = Effect.fn("RunLog.getRunDetail")(function* run(
+  projectId: string,
+  runId: string
+) {
+  const runtime = yield* readRunLogRuntime;
+  const base = yield* findRunFile(runtime, projectId, runId);
 
-  for (const [key, value] of Object.entries(input)) {
-    values.set(key, String(value));
+  const [summaryText, eventsText] = yield* Effect.all([
+    readOptional(`${base}.json`),
+    readOptional(`${base}.jsonl`),
+  ]);
+
+  if (summaryText === null && eventsText === null) {
+    return yield* missingRun(runId);
   }
 
-  return (name: string): string | undefined => values.get(name);
+  return toRunDetail(summaryText, eventsText);
+});
+
+const CURSOR = /^\d{1,16}$/u;
+
+const toBefore = (cursor: string | null): number | null => {
+  if (cursor === null) {
+    return null;
+  }
+
+  return Number(cursor);
 };
 
-const listRuns = async (
-  runtime: RunLogRuntime,
+const onlyNotFound = <Value>(
+  effect: Effect.Effect<Value, KnownFailure>
+): Effect.Effect<Value, NotFound> =>
+  effect.pipe(
+    Effect.catchTag("BadRequest", Effect.die),
+    Effect.catchTag("Conflict", Effect.die)
+  );
+
+const listRunPage = Effect.fn("RunLog.listRunPage")(function* run(
   projectId: string,
   input: RunListInput
-): Promise<RunPage> => {
-  await runtime.projects.get(projectId);
+) {
+  const runtime = yield* readRunLogRuntime;
 
-  const query = runListQuery(queryReader(input));
+  if (input.cursor !== null && !CURSOR.test(input.cursor)) {
+    return yield* new BadRequest({
+      message: "cursor must be the next value of an earlier page.",
+    });
+  }
 
-  return runListBody(await listRunSummaries(runtime.runsDir(projectId)), query);
-};
+  yield* onlyNotFound(attemptKnown(() => runtime.projects.get(projectId)));
 
-const readRunContext = async (
-  runtime: RunLogRuntime,
+  const all = yield* Effect.promise(() =>
+    listRunSummaries(runtime.runsDir(projectId))
+  );
+
+  return pageRuns(all, {
+    before: toBefore(input.cursor),
+    directionId: input.direction ?? null,
+    isLight: input.light === true,
+    limit: input.limit,
+    terms: runQueryTerms(input.q ?? ""),
+  });
+});
+
+const getRunContext = Effect.fn("RunLog.getRunContext")(function* run(
   projectId: string,
   directionId: string
-): Promise<object> => {
-  const loaded: { direction: Direction; project: Project } =
-    await runtime.loadDirection(projectId, directionId);
+) {
+  const runtime = yield* readRunLogRuntime;
 
-  return runtime.loadContext(loaded.project, loaded.direction.workTree);
-};
+  const loaded = yield* onlyNotFound(
+    attemptKnown(() => runtime.loadDirection(projectId, directionId))
+  );
 
-export { listRuns, readRun, readRunContext };
+  return yield* Effect.promise(() =>
+    runtime.loadContext(loaded.project, loaded.direction.workTree)
+  );
+});
+
+export { findRunFile, getRunContext, getRunDetail, listRunPage, onlyNotFound };
 
 export type { RunDetail, RunListInput };

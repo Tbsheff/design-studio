@@ -76,7 +76,7 @@ function previewOriginFor(
   return origin ? { previewOrigin: () => origin(project, direction) } : {};
 }
 
-export async function applyDirectEdit(
+export async function commitDirectEdit(
   deps: DirectEditDeps,
   project: Project,
   direction: Direction,

@@ -337,7 +337,7 @@ const messageOf = (cause: unknown): string => {
   return String(cause);
 };
 
-const createGallery = Effect.fn("createGallery")(function* run(
+const createGalleryFolder = Effect.fn("createGalleryFolder")(function* run(
   runtime: GalleryRuntime,
   command: GalleryCommand
 ) {
@@ -395,6 +395,6 @@ const createGallery = Effect.fn("createGallery")(function* run(
   return created;
 });
 
-export { createGallery };
+export { createGalleryFolder };
 
 export type { GalleryCommand, GalleryCreated, PlacedFrame };

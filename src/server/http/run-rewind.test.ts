@@ -12,8 +12,9 @@ import type {
   Version,
 } from "../../shared/contracts.js";
 import { forkBaseOf } from "../../shared/rewind.js";
-import { createAgentRunner } from "../agent/index.js";
+import { bootAgentRunner } from "../main/agent-runner.js";
 import { projectStorePorts } from "../main/project-ports.js";
+import { buildRuntime } from "../main/runtime.js";
 import { createEventBus } from "../store/events.js";
 import {
   createProjectStore,
@@ -144,7 +145,10 @@ beforeEach(async () => {
     ...createFakePreview(),
     directionUrl: async () => "http://127.0.0.1:0/",
   };
-  runner = createAgentRunner({ config, bus, projects, versions, preview });
+  runner = bootAgentRunner(
+    { config, bus, projects, versions, preview },
+    buildRuntime(config)
+  );
   app = createApp({ config, bus, projects, versions, runner, preview });
 });
 

@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
+import type { AppFixResult } from "../../shared/app-doctor.js";
 import type { Direction, Project } from "../../shared/contracts.js";
 import type { FrameStateDeps } from "../canvas/app-flow/frame-state-service.js";
 import type { CanvasService } from "../canvas/service.js";
@@ -9,7 +10,9 @@ import type { EditHistory } from "../direct-edit/history.js";
 import type { EditRecorder } from "../direct-edit/index.js";
 import type { ExportDeps } from "../export/source.js";
 import { EditError } from "../page-probe/edit-error.js";
+import type { LayerLockStore } from "../store/layer-locks.js";
 import type { AgentRunner, EventBus } from "../types.js";
+import type { KeepVariant } from "../variations/routes.js";
 import type { ActivityLog } from "./activity.js";
 import { APPROVAL_TIMEOUT_MS } from "./approvals.js";
 import type { ApprovalAsk, ApprovalQueue } from "./approvals.js";
@@ -25,7 +28,15 @@ export interface EditDeps extends ExportDeps {
   dataDir: string;
   projectsFolder(): Promise<string>;
   history?: EditRecorder & Partial<Pick<EditHistory, "mark" | "dropUnsaved">>;
+  fixApp: FixApp;
+  keepVariant: KeepVariant;
+  layerLocks: LayerLockStore | null;
 }
+
+export type FixApp = (
+  projectId: string,
+  kind: unknown
+) => Promise<AppFixResult>;
 
 export { EditError } from "../page-probe/edit-error.js";
 

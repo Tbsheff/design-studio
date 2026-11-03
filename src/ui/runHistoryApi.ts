@@ -1,29 +1,61 @@
 import { useSyncExternalStore } from "react";
 
+import type { WireOutput } from "../shared/actions/_core/action.js";
+import type { listRun } from "../shared/actions/run/list.js";
 import { routes as runsRoutes } from "../shared/actions/run/routes.js";
 import type { RunSummary } from "../shared/contracts";
 import { call } from "./platform/http";
 
-interface PageBody {
-  readonly nextBefore: number | null;
-  readonly runs: readonly RunWire[];
+interface RunHistory {
+  projectId: string;
+  through: (runId: string) => Promise<boolean>;
 }
 
-type RunWire = RunSummary | { readonly id: string };
+let history: RunHistory | null = null;
+
+type PageBody = WireOutput<typeof listRun>;
+
+type RunWire = PageBody["items"][number];
 
 const isRunSummary = (value: RunWire): value is RunSummary =>
-  "id" in value && "status" in value && "request" in value;
+  "request" in value;
+
+const toNextBefore = (next: string | null): number | null => {
+  if (next === null) {
+    return null;
+  }
+
+  return Number(next);
+};
+
+const toCursor = (before: number | null): string | null => {
+  if (before === null) {
+    return null;
+  }
+
+  return String(before);
+};
 
 const toPage = (body: PageBody): RunPage => ({
-  nextBefore: body.nextBefore,
-  runs: body.runs.filter(isRunSummary),
+  nextBefore: toNextBefore(body.next),
+  runs: body.items.filter(isRunSummary),
 });
 
 export async function renameRun(
   runId: string,
   title: string
 ): Promise<RunSummary> {
-  const renamed = await call(runsRoutes.renameRun, { runId, title });
+  const projectId = history?.projectId;
+
+  if (!projectId) {
+    throw new Error("Open a project to rename its runs.");
+  }
+
+  const renamed = await call(runsRoutes.renameRun, {
+    projectId,
+    runId,
+    title,
+  });
 
   if (!isRunSummary(renamed)) {
     throw new Error("The studio returned a run without a request.");
@@ -42,11 +74,13 @@ export async function listRunPage(
   limit: number,
   before: number | null
 ): Promise<RunPage> {
-  if (before === null) {
-    return toPage(await call(runsRoutes.listRun, { limit, projectId }));
-  }
-
-  return toPage(await call(runsRoutes.listRun, { before, limit, projectId }));
+  return toPage(
+    await call(runsRoutes.listRun, {
+      cursor: toCursor(before),
+      limit,
+      projectId,
+    })
+  );
 }
 
 export const SEARCH_LIMIT = 20;
@@ -55,32 +89,30 @@ export async function searchRunPage(
   directionId: string,
   query: string
 ): Promise<RunPage> {
-  const projectId = history?.projectId;
+  const ownerProjectId = history?.projectId;
 
-  if (!projectId) {
+  if (!ownerProjectId) {
     return { runs: [], nextBefore: null };
   }
 
   return toPage(
     await call(runsRoutes.listRun, {
+      cursor: null,
       direction: directionId,
+      light: true,
       limit: SEARCH_LIMIT,
-      light: "1",
+      projectId: ownerProjectId,
       q: query,
-      projectId,
     })
   );
 }
 
-interface RunHistory {
-  projectId: string;
-  through: (runId: string) => Promise<boolean>;
-}
-
-let history: RunHistory | null = null;
-
 export function publishRunHistory(next: RunHistory | null): void {
   history = next;
+}
+
+export function runProjectId(): string {
+  return history?.projectId ?? "";
 }
 
 export function loadRunsThrough(runId: string): Promise<boolean> {

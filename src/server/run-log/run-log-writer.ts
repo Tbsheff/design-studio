@@ -1,44 +1,55 @@
-import { Context, Effect, Layer } from "effect";
+import { Context, Effect, Layer, Semaphore } from "effect";
 
+import type { BadRequest } from "../../shared/actions/_core/errors/bad-request.js";
+import type { Conflict } from "../../shared/actions/_core/errors/conflict.js";
+import type { NotFound } from "../../shared/actions/_core/errors/not-found.js";
 import type { RunSummary } from "../../shared/contracts.js";
-import type { KnownFailure } from "../platform/attempt/index.js";
 import {
-  answerPermission,
-  renameRun,
-  setRunQueue,
-  startRunCall,
-  steerRun,
-  stopRun,
+  answerActiveRun,
+  setActiveQueue,
+  setRunTitle,
+  startRunWith,
+  steerActiveRun,
+  stopActiveRun,
 } from "./run-log-controls.js";
-import { attemptRunLog } from "./run-log-runtime.js";
-import type { Decision, StartRunCall } from "./run-log-runtime.js";
+import type {
+  PermissionAnswer,
+  QueueItems,
+  RunAck,
+} from "./run-log-controls.js";
+import type { StartRunCall } from "./run-log-runtime.js";
 
-interface RunAck {
-  readonly ok: boolean;
-}
+type WriteFailure = BadRequest | Conflict | NotFound;
 
 interface RunLogWriterApi {
   readonly answer: (
+    projectId: string,
     runId: string,
     requestId: string,
-    answer: Decision
-  ) => Effect.Effect<RunAck, KnownFailure>;
+    answer: PermissionAnswer
+  ) => Effect.Effect<RunAck, NotFound>;
   readonly rename: (
+    projectId: string,
     runId: string,
     title: string
-  ) => Effect.Effect<RunSummary, KnownFailure>;
+  ) => Effect.Effect<RunSummary, WriteFailure>;
   readonly setQueue: (
+    projectId: string,
     runId: string,
-    items: readonly { id: string; text: string }[]
-  ) => Effect.Effect<RunAck, KnownFailure>;
+    items: QueueItems
+  ) => Effect.Effect<RunAck, Conflict | NotFound>;
   readonly start: (
     input: StartRunCall
-  ) => Effect.Effect<{ runId: string }, KnownFailure>;
+  ) => Effect.Effect<{ readonly runId: string }, WriteFailure>;
   readonly steer: (
+    projectId: string,
     runId: string,
     text: string
-  ) => Effect.Effect<RunAck, KnownFailure>;
-  readonly stop: (runId: string) => Effect.Effect<RunAck, KnownFailure>;
+  ) => Effect.Effect<RunAck, WriteFailure>;
+  readonly stop: (
+    projectId: string,
+    runId: string
+  ) => Effect.Effect<RunAck, NotFound>;
 }
 
 class RunLogWriter extends Context.Service<RunLogWriter, RunLogWriterApi>()(
@@ -46,54 +57,59 @@ class RunLogWriter extends Context.Service<RunLogWriter, RunLogWriterApi>()(
 ) {
   declare public readonly access: "write";
 
-  public static readonly layer = Layer.succeed(
+  public static readonly layer = Layer.effect(
     RunLogWriter,
-    RunLogWriter.of({
-      answer: Effect.fn("RunLogWriter.answer")(function* run(
-        runId: string,
-        requestId: string,
-        answer: Decision
-      ) {
-        return yield* attemptRunLog((runtime) =>
-          Promise.resolve(answerPermission(runtime, runId, requestId, answer))
-        );
-      }),
-      rename: Effect.fn("RunLogWriter.rename")(function* run(
-        runId: string,
-        title: string
-      ) {
-        return yield* attemptRunLog((runtime) =>
-          renameRun(runtime, runId, title)
-        );
-      }),
-      setQueue: Effect.fn("RunLogWriter.setQueue")(function* run(
-        runId: string,
-        items: readonly { id: string; text: string }[]
-      ) {
-        return yield* attemptRunLog((runtime) =>
-          Promise.resolve(setRunQueue(runtime, runId, items))
-        );
-      }),
-      start: Effect.fn("RunLogWriter.start")(function* run(
-        input: StartRunCall
-      ) {
-        return yield* attemptRunLog((runtime) => startRunCall(runtime, input));
-      }),
-      steer: Effect.fn("RunLogWriter.steer")(function* run(
-        runId: string,
-        text: string
-      ) {
-        return yield* attemptRunLog((runtime) =>
-          Promise.resolve(steerRun(runtime, runId, text))
-        );
-      }),
-      stop: Effect.fn("RunLogWriter.stop")(function* run(runId: string) {
-        return yield* attemptRunLog((runtime) =>
-          Promise.resolve(stopRun(runtime, runId))
-        );
-      }),
+    Effect.gen(function* build() {
+      const titleLock = yield* Semaphore.make(1);
+
+      return RunLogWriter.of({
+        answer: Effect.fn("RunLogWriter.answer")(function* run(
+          projectId: string,
+          runId: string,
+          requestId: string,
+          answer: PermissionAnswer
+        ) {
+          return yield* answerActiveRun(projectId, runId, requestId, answer);
+        }),
+        rename: Effect.fn("RunLogWriter.rename")(function* run(
+          projectId: string,
+          runId: string,
+          title: string
+        ) {
+          return yield* titleLock.withPermits(1)(
+            setRunTitle(projectId, runId, title)
+          );
+        }),
+        setQueue: Effect.fn("RunLogWriter.setQueue")(function* run(
+          projectId: string,
+          runId: string,
+          items: QueueItems
+        ) {
+          return yield* setActiveQueue(projectId, runId, items);
+        }),
+        start: Effect.fn("RunLogWriter.start")(function* run(
+          input: StartRunCall
+        ) {
+          return yield* startRunWith(input);
+        }),
+        steer: Effect.fn("RunLogWriter.steer")(function* run(
+          projectId: string,
+          runId: string,
+          text: string
+        ) {
+          return yield* steerActiveRun(projectId, runId, text);
+        }),
+        stop: Effect.fn("RunLogWriter.stop")(function* run(
+          projectId: string,
+          runId: string
+        ) {
+          return yield* stopActiveRun(projectId, runId);
+        }),
+      });
     })
   );
 }
 
 export { RunLogWriter };
+
+export type { RunLogWriterApi };

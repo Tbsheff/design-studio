@@ -31,7 +31,7 @@ export function useDraftSources(
 
     let live = true;
     api
-      .getRun(runId)
+      .getRun(projectId, runId)
       .then(
         (run) =>
           live &&
@@ -43,7 +43,7 @@ export function useDraftSources(
     return () => {
       live = false;
     };
-  }, [runId]);
+  }, [projectId, runId]);
   useEffect(() => {
     setState(null);
 

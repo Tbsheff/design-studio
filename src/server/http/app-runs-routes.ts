@@ -45,11 +45,10 @@ const registerProjectRunsRoutes = (app: Hono, ctx: AppContext): void => {
   });
 };
 
-const registerRunsControlRoutes = (_app: Hono, ctx: AppContext): void => {
-  bindRuns(ctx);
-};
-
-const registerRunsVariationRoutes = (app: Hono, ctx: AppContext): void => {
+const registerRunsVariationRoutes = (
+  app: Hono,
+  ctx: AppContext
+): ReturnType<typeof registerVariationRoutes> => {
   const {
     config,
     editDeps,
@@ -60,7 +59,7 @@ const registerRunsVariationRoutes = (app: Hono, ctx: AppContext): void => {
     withDirection,
   } = ctx;
 
-  registerVariationRoutes(app, {
+  return registerVariationRoutes(app, {
     config,
     edit: editDeps,
     forkDirection,
@@ -73,7 +72,6 @@ const registerRunsVariationRoutes = (app: Hono, ctx: AppContext): void => {
 
 export {
   registerProjectRunsRoutes,
-  registerRunsControlRoutes,
   registerRunsRoutes,
   registerRunsVariationRoutes,
 };

@@ -101,7 +101,7 @@ const probeScheme = (
     )
   ).pipe(Effect.map((probe) => toReports(manifest, scheme, probe)));
 
-const inspectGallery = Effect.fn("inspectGallery")(function* run(
+const inspectGalleryFolder = Effect.fn("inspectGalleryFolder")(function* run(
   runtime: GalleryRuntime,
   command: InspectCommand
 ) {
@@ -151,6 +151,6 @@ const inspectGallery = Effect.fn("inspectGallery")(function* run(
   return inspected;
 });
 
-export { inspectGallery };
+export { inspectGalleryFolder };
 
 export type { CellReport, GalleryInspected, InspectCommand };

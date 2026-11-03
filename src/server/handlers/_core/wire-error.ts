@@ -1,10 +1,10 @@
 import { Cause, Exit } from "effect";
 
-import type { StudioError } from "../../shared/actions/_core/errors/all.js";
-import type { HttpStatus } from "../../shared/actions/_core/errors/http-status-codes.js";
-import { statusOf } from "../../shared/actions/_core/http-status.js";
-import { toWire } from "../../shared/actions/_core/wire.js";
-import type { WireBody, WireData } from "../../shared/actions/_core/wire.js";
+import type { StudioError } from "../../../shared/actions/_core/errors/all.js";
+import type { HttpStatus } from "../../../shared/actions/_core/errors/http-status-codes.js";
+import { statusOf } from "../../../shared/actions/_core/http-status.js";
+import { toWire } from "../../../shared/actions/_core/wire.js";
+import type { WireBody, WireData } from "../../../shared/actions/_core/wire.js";
 
 interface WireError {
   readonly body: WireBody & WireData;

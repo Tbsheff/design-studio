@@ -94,7 +94,7 @@ const placeCommandOf = (command: ImageCommand): PlaceCommand | null => {
   };
 };
 
-const createImage = async (
+const createImageFile = async (
   runtime: ImageGenerateRuntime,
   command: ImageCommand
 ): Promise<ImageCreated> => {
@@ -154,6 +154,6 @@ const createImage = async (
   }
 };
 
-export { createImage };
+export { createImageFile };
 
 export type { ImageCommand, ImageCreated };

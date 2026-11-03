@@ -12,9 +12,9 @@ const handle = Effect.fn("run.setPermission")(function* run(
 ) {
   const service = yield* RunLogWriter;
 
-  const { requestId, runId, ...answer } = input;
+  const { projectId, requestId, runId, ...answer } = input;
 
-  return yield* service.answer(runId, requestId, answer);
+  return yield* service.answer(projectId, runId, requestId, answer);
 }) satisfies Handle<typeof setPermissionRun>;
 
 export { handle };

@@ -87,6 +87,10 @@ const TokenChangesFields = {
   changes: Schema.Unknown,
 } as const;
 
+const TweakValuesFields = {
+  values: Schema.Unknown,
+} as const;
+
 const CreateTokenFields = {
   apply: OptionalUnknownSchema,
   darkValue: OptionalUnknownSchema,
@@ -409,6 +413,7 @@ export {
   SwapCandidateListSchema,
   SwapResultSchema,
   TokenChangesFields,
+  TweakValuesFields,
   TokenChangesQueryFields,
   TokenPreviewSchema,
   TweaksStateSchema,

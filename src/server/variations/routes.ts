@@ -14,7 +14,6 @@ import {
 } from "../../shared/contracts.js";
 import { levelOf, resolveRunConfig } from "../../shared/run-levels.js";
 import { readDesignSystemState } from "../design-system/state.js";
-import { bindStudioPorts } from "../mcp/studio-ports.js";
 import { bindMcpReadRuntime } from "../preview/mcp-read-core.js";
 import {
   BadRequestError,
@@ -154,10 +153,20 @@ function sourceDirection(
   return direction;
 }
 
+type KeepVariant = (
+  projectId: string,
+  groupId: string,
+  directionId: string
+) => Promise<KeepResult>;
+
+interface VariationRoutes {
+  readonly keepVariant: KeepVariant;
+}
+
 export function registerVariationRoutes(
   app: Hono,
   deps: VariationRouteDeps
-): void {
+): VariationRoutes {
   const { projects, runner } = deps;
   bindMcpReadRuntime({ runner });
   const briefs =
@@ -333,8 +342,6 @@ export function registerVariationRoutes(
     return result;
   };
 
-  bindStudioPorts({ keepVariant: keep });
-
   app.post("/api/projects/:pid/variations/:gid/keep", async (c) => {
     const groupId = assertSafeId(c.req.param("gid"), "groupId");
     const input = parse(KeepBody, await body(c));
@@ -358,4 +365,8 @@ export function registerVariationRoutes(
     }
     return c.json({ canceled });
   });
+
+  return { keepVariant: keep };
 }
+
+export type { KeepVariant, VariationRoutes };

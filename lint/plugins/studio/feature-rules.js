@@ -3,7 +3,7 @@ import { rule } from "./ast.js";
 const GLOBAL_OBJECTS = new Set(["globalThis", "window"]);
 
 const FETCH_MESSAGE =
-  "fetch in UI feature code is banned (U1), because the studio token header and the error shape live in the platform layer. Use call(action, input) from src/ui/platform/http.ts, or a binary helper in src/ui/platform/blob.ts.";
+  "fetch in UI feature code is banned (U1), because the studio token header and the error shape live in the platform layer. Use call(action, input), getBlob or getRaw from src/ui/platform/http.ts.";
 
 const INTERVAL_MESSAGE =
   "setInterval in UI feature code is banned (U12), because polling repeats work that an event already reports. Use the event from src/ui/platform/event-hub.ts or the live store, and refresh through action.invalidates.";

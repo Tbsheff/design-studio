@@ -217,7 +217,7 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Refresh data only through `action.invalidates`: `useAction` refetches after its own call, and the `action.done` SSE event (emitted by `run-action.ts`) covers MCP and agent calls (lands with S5-events). No polling, no TTL caches -> check-actions (bans `setInterval` with a fetch in `ui/platform`) (lands with S4s). (U12)
 - Never keep a time-based cache (warm, TTL, max age) in `src/ui/platform/**`. Dedupe in-flight reads only -> `studio/no-cache-ttl`. (U12a)
 - Use `.ui-menu` styles, 28 px rows, `data-tip` tooltips and `tokens.css`. Check dark and light -> review-only, screenshots. (U13)
-- Never call `fetch` in `src/ui/features/**`. Use `call` from `src/ui/platform/http.ts` or a helper in `src/ui/platform/blob.ts` -> `studio/no-feature-fetch`. (U14)
+- Never call `fetch` in `src/ui/features/**`. Use `call`, `getBlob` or `getRaw` from `src/ui/platform/http.ts` -> `studio/no-feature-fetch`. (U14)
 - Never call `setInterval` in `src/ui/features/**`. React to an event -> `studio/no-feature-interval`. (U15)
 - Never make a busy flag with `useState(false)` (`busy`, `loading`, `saving`, `pending`). Use `useTransition` and `isPending` -> `studio/no-busy-flag`. (U14)
 - Never use `querySelector`, `getElementById` or a `MutationObserver` in `src/ui/features`. Take a slot, render prop or callback prop from the owner -> `studio/no-dom-query` (icons host is frozen). (U7a)

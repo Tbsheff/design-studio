@@ -214,7 +214,11 @@ function shareGroups(
   ];
 }
 
-const PortToAppDialog = lazy(() => import("./PortToAppDialog"));
+const PortToAppDialog = lazy(async () => {
+  const loaded = await import("./PortToAppDialog");
+
+  return { default: loaded.PortToAppDialog };
+});
 
 function usePortDialog(available: boolean): {
   target: PortDialogTarget | null;

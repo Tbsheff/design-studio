@@ -34,9 +34,11 @@ const renderGenerateTab = (props: GenerateTabProps) => (
   />
 );
 
-const CreateComponentDialog = lazy(
-  () => import("./components/CreateComponentDialog")
-);
+const CreateComponentDialog = lazy(async () => {
+  const loaded = await import("./components/CreateComponentDialog");
+
+  return { default: loaded.CreateComponentDialog };
+});
 
 interface Options {
   selection: SelectionContext[];

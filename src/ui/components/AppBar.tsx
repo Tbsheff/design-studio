@@ -26,7 +26,11 @@ import FlowTab from "./FlowTab";
 
 import "../styles/attach-app.css";
 
-const DoctorCard = lazy(() => import("./DoctorCard"));
+const DoctorCard = lazy(async () => {
+  const loaded = await import("./DoctorCard");
+
+  return { default: loaded.DoctorCard };
+});
 
 interface AppBarProps {
   projectId: string;

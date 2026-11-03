@@ -2,7 +2,7 @@ import { existsSync, readFileSync, realpathSync } from "node:fs";
 import path from "node:path";
 
 import type * as t from "@babel/types";
-import type * as TS from "typescript";
+import type * as TS from "typescript-api";
 
 import { refuse } from "../direct-edit/engine/structure-ops.js";
 import { compilerOptionsFor } from "./props-program.js";

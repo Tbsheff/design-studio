@@ -1,7 +1,7 @@
 import { existsSync, statSync } from "node:fs";
 import path from "node:path";
 
-import type * as TS from "typescript";
+import type * as TS from "typescript-api";
 
 import type { PropSpec, PropValue } from "../../shared/props.js";
 

@@ -5,7 +5,7 @@ import path from "node:path";
 import { parse } from "@babel/parser";
 import type { ParserPlugin } from "@babel/parser";
 import type * as t from "@babel/types";
-import type * as TS from "typescript";
+import type * as TS from "typescript-api";
 
 import type {
   ComponentSchema,

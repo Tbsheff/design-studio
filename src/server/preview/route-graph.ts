@@ -3,7 +3,7 @@ import { mkdir, readFile, rename, stat, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import path from "node:path";
 
-import type * as TS from "typescript";
+import type * as TS from "typescript-api";
 
 import {
   compilerConfigFor,
@@ -81,7 +81,7 @@ function typescriptVersion(): string {
 }
 
 function loadTs(): Promise<Ts> {
-  tsModule ??= import("typescript").then(
+  tsModule ??= import("typescript-api").then(
     (loaded) => ((loaded as { default?: Ts }).default ?? loaded) as Ts
   );
 

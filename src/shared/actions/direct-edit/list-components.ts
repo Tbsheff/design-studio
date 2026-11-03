@@ -2,9 +2,11 @@ import { Schema } from "effect";
 
 import { defineAction } from "../_core/action.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
-import { DirectEditError } from "../_core/errors/direct-edit-error.js";
+import { Conflict } from "../_core/errors/conflict.js";
 import { NotFound } from "../_core/errors/not-found.js";
 import { DirectionIdSchema, ProjectIdSchema } from "../_core/ids.js";
+import { DirectEditConflict } from "./errors/direct-edit-conflict.js";
+import { DirectEditFailed } from "./errors/direct-edit-failed.js";
 import { DirectEditNotFound } from "./errors/direct-edit-not-found.js";
 import { ComponentListSchema } from "./schema.js";
 
@@ -14,7 +16,14 @@ const listComponentsDirectEdit = defineAction({
   confirm: "none",
   description:
     "List the components of a direction with their file, name and usage count.",
-  errors: [BadRequest, NotFound, DirectEditError, DirectEditNotFound],
+  errors: [
+    BadRequest,
+    Conflict,
+    NotFound,
+    DirectEditFailed,
+    DirectEditConflict,
+    DirectEditNotFound,
+  ],
   http: {
     method: "GET",
     path: "/api/projects/:projectId/d/:directionId/components",

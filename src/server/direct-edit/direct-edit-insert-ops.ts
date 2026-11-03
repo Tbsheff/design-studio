@@ -1,19 +1,15 @@
-import { z } from "zod";
-
 import type { Direction, Project } from "../../shared/contracts.js";
 import {
   applyCreateComponent,
+  applyInsertComponent,
+  applySwap,
   componentFolders,
-} from "../components/extract.js";
-import { listInsertable } from "../components/insert-list.js";
-import { applyInsertComponent } from "../components/insert.js";
-import {
+  listInsertable,
   PreviewTargetError,
-  type PreviewResult,
-  type PreviewTarget,
-} from "../components/preview.js";
-import { applySwap, swapCandidates } from "../components/swap.js";
-import { BadRequestError, NotFoundError } from "../store/errors.js";
+  swapCandidates,
+} from "../components/index.js";
+import type { PreviewResult, PreviewTarget } from "../components/index.js";
+import { BadRequestError, NotFoundError } from "../store/index.js";
 import type { PreviewService } from "../types.js";
 import type { DirectEditRuntime } from "./direct-edit-core.js";
 import type { DirectionRef, EditBody } from "./direct-edit-ops.js";
@@ -22,23 +18,23 @@ import { applySetImage } from "./image.js";
 import { applyClearText, applyInsertJsx } from "./jsx-insert.js";
 import { applyVector } from "./vector-ops.js";
 
-const NAME_RE = /^[A-Z][A-Za-z0-9_$]{0,63}$/;
+const NAME_RE = /^[A-Z][A-Za-z0-9_$]{0,63}$/u;
 
 const TEXT_MAX = 1000;
 
-const COMPONENT_ID_RE = /^[A-Z][A-Za-z0-9]{0,47}$/;
+const COMPONENT_ID_RE = /^[A-Z][A-Za-z0-9]{0,47}$/u;
 
-const useSchema = z
-  .object({
-    use: z
-      .object({
-        file: z.string().min(1).max(1000),
-        line: z.number().int().min(1),
-        col: z.number().int().min(1),
-      })
-      .strict(),
-  })
-  .strict();
+const VERSION_KEY_MAX = 40;
+
+const UNPROCESSABLE = 422;
+
+type PreviewResultOk = Extract<PreviewResult, { ok: true }>;
+
+interface SourceUse {
+  readonly col: number;
+  readonly file: string;
+  readonly line: number;
+}
 
 type Applier<Value> = (
   deps: DirectEditRuntime["editDeps"],
@@ -48,7 +44,7 @@ type Applier<Value> = (
     project: Project;
     workTree: string;
   },
-  body: unknown
+  body: EditBody
 ) => Promise<Value>;
 
 const previewOriginOf = async (
@@ -76,64 +72,67 @@ const applyWith = <Value>(
   runtime.withDirection(
     ref.projectId,
     ref.directionId,
-    async (project, direction) =>
-      apply(
+    async (project, direction) => {
+      const previewOrigin = await previewOriginOf(
+        runtime.preview,
+        project,
+        direction
+      );
+
+      return apply(
         runtime.editDeps,
-        {
-          direction,
-          previewOrigin: await previewOriginOf(
-            runtime.preview,
-            project,
-            direction
-          ),
-          project,
-          workTree: direction.workTree,
-        },
+        { direction, previewOrigin, project, workTree: direction.workTree },
         body
-      )
+      );
+    }
   );
 
 const insertComponentIn = (
   runtime: DirectEditRuntime,
   ref: DirectionRef,
   body: EditBody
-) => applyWith(runtime, ref, applyInsertComponent, body);
+): ReturnType<typeof applyInsertComponent> =>
+  applyWith(runtime, ref, applyInsertComponent, body);
 
 const insertJsxIn = (
   runtime: DirectEditRuntime,
   ref: DirectionRef,
   body: EditBody
-) => applyWith(runtime, ref, applyInsertJsx, body);
+): ReturnType<typeof applyInsertJsx> =>
+  applyWith(runtime, ref, applyInsertJsx, body);
 
 const deleteTextIn = (
   runtime: DirectEditRuntime,
   ref: DirectionRef,
   body: EditBody
-) => applyWith(runtime, ref, applyClearText, body);
+): ReturnType<typeof applyClearText> =>
+  applyWith(runtime, ref, applyClearText, body);
 
 const setImageIn = (
   runtime: DirectEditRuntime,
   ref: DirectionRef,
   body: EditBody
-) => applyWith(runtime, ref, applySetImage, body);
+): ReturnType<typeof applySetImage> =>
+  applyWith(runtime, ref, applySetImage, body);
 
 const setVectorIn = (
   runtime: DirectEditRuntime,
   ref: DirectionRef,
   body: EditBody
-) => applyWith(runtime, ref, applyVector, body);
+): ReturnType<typeof applyVector> => applyWith(runtime, ref, applyVector, body);
 
 const createComponentIn = (
   runtime: DirectEditRuntime,
   ref: DirectionRef,
   body: EditBody
-) => applyWith(runtime, ref, applyCreateComponent, body);
+): ReturnType<typeof applyCreateComponent> =>
+  applyWith(runtime, ref, applyCreateComponent, body);
 
 const applySwapIn = (
   runtime: DirectEditRuntime,
   ref: DirectionRef,
   body: EditBody
-) => applyWith(runtime, ref, applySwap, body);
+): ReturnType<typeof applySwap> => applyWith(runtime, ref, applySwap, body);
 
 const listInsertableOf = async (
   runtime: DirectEditRuntime,
@@ -174,20 +173,18 @@ const listComponentFoldersOf = async (
 const listSwapCandidatesOf = async (
   runtime: DirectEditRuntime,
   ref: DirectionRef,
-  body: EditBody
+  use: SourceUse
 ): Promise<Awaited<ReturnType<typeof swapCandidates>>> => {
-  const parsed = useSchema.safeParse(body);
-
-  if (!parsed.success) {
-    throw new BadRequestError("use must be { file, line, col }");
-  }
-
   const { direction, project } = await runtime.loadDirection(
     ref.projectId,
     ref.directionId
   );
 
-  return swapCandidates(project, direction.workTree, parsed.data.use);
+  return swapCandidates(project, direction.workTree, {
+    col: use.col,
+    file: use.file,
+    line: use.line,
+  });
 };
 
 const thumbOf = async (
@@ -209,7 +206,7 @@ const thumbOf = async (
     project,
     direction,
     componentId,
-    version.slice(0, 40)
+    version.slice(0, VERSION_KEY_MAX)
   );
 
   if (!png) {
@@ -238,7 +235,11 @@ const targetOf = (body: EditBody): PreviewTarget => {
     throw new BadRequestError("invalid file");
   }
 
-  return { name, ...(file ? { file } : {}) };
+  if (file) {
+    return { file, name };
+  }
+
+  return { name };
 };
 
 const renderPreview = async (
@@ -258,11 +259,20 @@ const renderPreview = async (
   }
 };
 
+interface ComponentPreviewBody {
+  readonly cached: boolean;
+  readonly component: PreviewResultOk["component"];
+  readonly hash: string;
+  readonly png: string;
+  readonly props: PreviewResultOk["props"];
+  readonly text: string | null;
+}
+
 const getComponentPreviewOf = async (
   runtime: DirectEditRuntime,
   ref: DirectionRef,
   body: EditBody
-) => {
+): Promise<ComponentPreviewBody> => {
   const target = targetOf(body);
 
   const { direction, project } = await runtime.loadDirection(
@@ -273,7 +283,7 @@ const getComponentPreviewOf = async (
   const result = await renderPreview(runtime, project, direction, target);
 
   if (!result.ok) {
-    throw new DirectEditError("invalid_request", result.reason, 422);
+    throw new DirectEditError("invalid_request", result.reason, UNPROCESSABLE);
   }
 
   return {
@@ -302,3 +312,5 @@ export {
   setVectorIn,
   thumbOf,
 };
+
+export type { SourceUse };

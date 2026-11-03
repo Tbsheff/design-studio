@@ -197,6 +197,26 @@ export interface CanvasCommentTools {
   onSteer?: (text: string) => void;
 }
 
+function frameLabelOf(frameId: string): Element | null {
+  return document.querySelector(
+    `.frame-label[data-frame-id="${CSS.escape(frameId)}"]`
+  );
+}
+
+function jumpToFrame(frameId: string): void {
+  const id = CSS.escape(frameId);
+
+  const target =
+    document.querySelector(`.canvas-frame[data-frame-id="${id}"]`) ??
+    frameLabelOf(frameId);
+
+  target?.scrollIntoView({
+    behavior: "smooth",
+    block: "center",
+    inline: "center",
+  });
+}
+
 function shellDirectionName(shell: CanvasShell | undefined): string | null {
   return shell?.directionName ?? null;
 }
@@ -1705,9 +1725,25 @@ function CanvasView(props: ViewProps) {
   const capture = pz.spaceHeld || pz.panning || pz.zoomHeld;
   const stageMode = stageCursor(pz);
 
+  const matrixSlot = useMemo(
+    () => (
+      <Suspense fallback={null}>
+        <MatrixSlot
+          projectId={projectId}
+          directionId={directionId}
+          frame={active}
+          frameLabelOf={frameLabelOf}
+          onJumpToFrame={jumpToFrame}
+        />
+      </Suspense>
+    ),
+    [active, directionId, projectId]
+  );
+
   return (
     <div className={canvasClass(inline.editing)}>
       <CanvasChrome
+        matrix={matrixSlot}
         shell={props.shell}
         kind={kind}
         projectId={projectId}
@@ -1760,13 +1796,6 @@ function CanvasView(props: ViewProps) {
         shell={props.shell}
         toolKey={`${protoOn}-${comment.on}-${layersOpen}`}
       />
-      <Suspense fallback={null}>
-        <MatrixSlot
-          projectId={projectId}
-          directionId={directionId}
-          frame={active}
-        />
-      </Suspense>
       {previewMenu.menu}
       <div className="canvas-body">
         {layersOpen &&

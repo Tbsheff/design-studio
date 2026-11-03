@@ -6,6 +6,27 @@ import { EditError, loadTarget } from "./edit-deps.js";
 import { defineTool, directionId, projectId } from "./edit-kit.js";
 import type { Done, ToolSpec } from "./edit-kit.js";
 
+const PREVIEW_KEYS = ["file", "id", "name"] as const;
+
+type PreviewBody = Parameters<typeof getComponentPreviewOf>[2];
+
+const previewBodyOf = (input: {
+  readonly file?: string | undefined;
+  readonly id?: string | undefined;
+  readonly name?: string | undefined;
+}): PreviewBody =>
+  Object.fromEntries(
+    PREVIEW_KEYS.flatMap((key) => {
+      const value = input[key];
+
+      if (value) {
+        return [[key, value]];
+      }
+
+      return [];
+    })
+  );
+
 const previewSchema = z
   .object({
     projectId,
@@ -64,11 +85,7 @@ const componentPreview = defineTool(
     const preview = await directEditCall(
       { directionId: direction.id, projectId: project.id },
       (runtime, ref) =>
-        getComponentPreviewOf(runtime, ref, {
-          ...(input.id ? { id: input.id } : {}),
-          ...(input.name ? { name: input.name } : {}),
-          ...(input.file ? { file: input.file } : {}),
-        })
+        getComponentPreviewOf(runtime, ref, previewBodyOf(input))
     );
 
     const meta = JSON.stringify({

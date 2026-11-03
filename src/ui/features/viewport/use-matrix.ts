@@ -3,8 +3,8 @@ import { useCallback, useState, useTransition } from "react";
 import { DEFAULT_WIDTHS, toggleWidth } from "./matrix-model.js";
 import type { MatrixReportView, Scheme } from "./matrix-model.js";
 import { useCreateMatrix } from "./use-create.js";
-import { useInspectMatrix } from "./use-inspect.js";
-import type { InspectInput } from "./use-inspect.js";
+import { useRunMatrix } from "./use-run.js";
+import type { RunInput } from "./use-run.js";
 
 interface MatrixOptions {
   readonly directionId: string | null;
@@ -30,7 +30,7 @@ const requestOf = (
   directionId: string,
   scheme: Scheme,
   chosen: readonly number[]
-): InspectInput => ({
+): RunInput => ({
   directionId,
   page: options.page,
   projectId: options.projectId,
@@ -43,9 +43,9 @@ const useMatrix = (options: MatrixOptions): MatrixView => {
   const create = useCreateMatrix();
   const [widths, setWidths] = useState<readonly number[]>(DEFAULT_WIDTHS);
   const [scheme, setScheme] = useState<Scheme>("both");
-  const [request, setRequest] = useState<InspectInput | null>(null);
+  const [report, setReport] = useState<MatrixReportView | null>(null);
   const [isSubmitting, startSubmit] = useTransition();
-  const inspect = useInspectMatrix(request);
+  const runner = useRunMatrix();
 
   const handleCreate = useCallback(() => {
     if (directionId === null) {
@@ -55,21 +55,35 @@ const useMatrix = (options: MatrixOptions): MatrixView => {
     const body = requestOf(options, directionId, scheme, widths);
 
     startSubmit(async () => {
-      const result = await create.run(body);
+      const created = await create.run(body);
 
-      if (result !== null) {
-        setRequest(body);
+      if (created === null) {
+        return;
+      }
+
+      const checked = await runner.run(body);
+
+      if (checked !== null) {
+        setReport(checked);
       }
     });
-  }, [create, directionId, options, scheme, widths]);
+  }, [create, directionId, options, runner, scheme, widths]);
 
   const handleCheck = useCallback(() => {
     if (directionId === null) {
       return;
     }
 
-    setRequest(requestOf(options, directionId, scheme, widths));
-  }, [directionId, options, scheme, widths]);
+    const body = requestOf(options, directionId, scheme, widths);
+
+    startSubmit(async () => {
+      const checked = await runner.run(body);
+
+      if (checked !== null) {
+        setReport(checked);
+      }
+    });
+  }, [directionId, options, runner, scheme, widths]);
 
   const handleWidth = useCallback((picked: number) => {
     setWidths((current) => toggleWidth(current, picked));
@@ -77,11 +91,10 @@ const useMatrix = (options: MatrixOptions): MatrixView => {
 
   const handleScheme = useCallback((picked: Scheme) => setScheme(picked), []);
 
-  const error = create.error?.message ?? inspect.error?.message ?? null;
-  const isBusy = isSubmitting || create.pending || inspect.loading;
+  const error = create.error?.message ?? runner.error?.message ?? null;
+  const isBusy = isSubmitting || create.pending || runner.pending;
 
   const canRun = directionId !== null;
-  const report = inspect.data;
 
   return {
     canRun,

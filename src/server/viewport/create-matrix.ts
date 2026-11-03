@@ -1,6 +1,9 @@
+import { Effect, Result } from "effect";
+
 import {
   applyPlacement,
-  BadRequestError,
+  attemptKnown,
+  BadRequest,
   CANVAS_GAP,
   setForcedState,
 } from "./deps.js";
@@ -30,6 +33,11 @@ interface PlacedFrame {
 interface MatrixCreated {
   readonly frames: readonly PlacedFrame[];
   readonly page: string;
+}
+
+interface PlacementOutcome {
+  placement: Placement | null;
+  refusal: string | null;
 }
 
 interface Placement {
@@ -102,18 +110,17 @@ const placeCells = (
   const seeded = seedFrames(file);
   const slots = toGrid(toCells(command), originOf(seeded.frames));
   const specs = slots.map((slot) => toSpec(slot, command.page, seeded.frames));
+  const next = applyPlacement(seeded, specs, directionId);
 
-  try {
-    const next = applyPlacement(seeded, specs, directionId);
+  return { file: next.file, placed: next.placed, slots };
+};
 
-    return { file: next.file, placed: next.placed, slots };
-  } catch (error) {
-    if (error instanceof Error) {
-      throw new BadRequestError(error.message);
-    }
-
-    throw error;
+const messageOf = (cause: unknown): string => {
+  if (cause instanceof Error) {
+    return cause.message;
   }
+
+  return String(cause);
 };
 
 const toPlaced = (
@@ -162,36 +169,50 @@ const forceSchemes = (
   }
 };
 
-const createMatrix = async (
+const createMatrix = Effect.fn("createMatrix")(function* run(
   runtime: ViewportRuntime,
   command: MatrixCommand
-): Promise<MatrixCreated> => {
-  const { direction, project } = await runtime.loadDirection(
-    command.projectId,
-    command.directionId
+) {
+  const { direction, project } = yield* attemptKnown(() =>
+    runtime.loadDirection(command.projectId, command.directionId)
   );
 
-  let slots: readonly GridSlot[] = [];
-  let placed: readonly CanvasFileFrame[] = [];
+  const outcome: PlacementOutcome = { placement: null, refusal: null };
 
-  const snapshot = await runtime.canvas.update(
-    project,
-    (file) => {
-      const next = placeCells(file, command, direction.id);
+  const snapshot = yield* attemptKnown(() =>
+    runtime.canvas.update(
+      project,
+      (file) => {
+        const placed = Result.try(() =>
+          placeCells(file, command, direction.id)
+        );
 
-      ({ placed, slots } = next);
+        if (Result.isFailure(placed)) {
+          outcome.refusal = messageOf(placed.failure);
 
-      return next.file;
-    },
-    { source: "agent" }
+          return file;
+        }
+
+        outcome.placement = placed.success;
+
+        return placed.success.file;
+      },
+      { source: "agent" }
+    )
   );
 
-  const frames = toPlaced(slots, placed);
+  if (outcome.refusal !== null || outcome.placement === null) {
+    return yield* new BadRequest({
+      message: outcome.refusal ?? "The matrix placement did not run.",
+    });
+  }
+
+  const frames = toPlaced(outcome.placement.slots, outcome.placement.placed);
 
   forceSchemes(project.id, snapshot.canvas?.frames ?? [], frames);
 
   return { frames, page: command.page };
-};
+});
 
 export { createMatrix };
 

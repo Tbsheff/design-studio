@@ -1,7 +1,11 @@
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
+import { Effect } from "effect";
 import { PNG } from "pngjs";
+
+import { attemptKnown } from "./deps.js";
+import type { KnownFailure } from "./deps.js";
 
 interface SheetShot {
   readonly file: string;
@@ -60,14 +64,12 @@ const paste = (sheet: PNG, shot: PNG, target: PasteTarget): void => {
 const widthOf = (shots: readonly PNG[]): number =>
   shots.reduce((sum, shot) => sum + thumbWidth(shot) + SHEET_GAP, SHEET_GAP);
 
-const readShot = async (shot: SheetShot): Promise<PNG> =>
-  PNG.sync.read(await readFile(shot.file));
+const readShot = (shot: SheetShot): Effect.Effect<PNG, KnownFailure> =>
+  attemptKnown(() => readFile(shot.file)).pipe(
+    Effect.map((bytes) => PNG.sync.read(bytes))
+  );
 
-const composeSheet = async (
-  shots: readonly SheetShot[],
-  outPath: string
-): Promise<string> => {
-  const pngs = await Promise.all(shots.map((shot) => readShot(shot)));
+const toSheet = (shots: readonly SheetShot[], pngs: readonly PNG[]): PNG => {
   const rows = Math.max(...shots.map((shot) => shot.row)) + 1;
 
   const perRow = Array.from({ length: rows }, (_row, index) =>
@@ -91,25 +93,29 @@ const composeSheet = async (
     }
   }
 
-  await mkdir(path.dirname(outPath), { recursive: true });
-  await writeFile(outPath, PNG.sync.write(sheet));
+  return sheet;
+};
+
+const composeSheet = Effect.fn("composeSheet")(function* run(
+  shots: readonly SheetShot[],
+  outPath: string
+) {
+  const pngs = yield* Effect.all(shots.map((shot) => readShot(shot)));
+  const sheet = toSheet(shots, pngs);
+
+  yield* attemptKnown(() => mkdir(path.dirname(outPath), { recursive: true }));
+  yield* attemptKnown(() => writeFile(outPath, PNG.sync.write(sheet)));
 
   return outPath;
-};
+});
 
-const removeShot = async (shot: SheetShot): Promise<void> => {
-  try {
-    await rm(shot.file, { force: true });
-  } catch (error) {
-    if (!(error instanceof Error)) {
-      throw error;
-    }
-  }
-};
-
-const removeShots = async (shots: readonly SheetShot[]): Promise<void> => {
-  await Promise.all(shots.map((shot) => removeShot(shot)));
-};
+const removeShots = (shots: readonly SheetShot[]): Effect.Effect<void> =>
+  Effect.all(
+    shots.map((shot) =>
+      attemptKnown(() => rm(shot.file, { force: true })).pipe(Effect.ignore)
+    ),
+    { discard: true }
+  );
 
 export { composeSheet, removeShots };
 

@@ -22,7 +22,7 @@ const updateShare = defineAction({
     studioCursor: Schema.Boolean,
   }),
   invalidates: ["share.list"],
-  mcp: { off: "ui-bootstrap" },
+  mcp: { off: "legacy-mcp" },
   needs: "project.update",
   output: ShareLinkResultSchema,
   scope: "project",

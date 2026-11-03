@@ -23,7 +23,7 @@ const setPresenceCanvas = defineAction({
     }),
   }),
   invalidates: [],
-  mcp: { off: "ui-bootstrap" },
+  mcp: { off: "legacy-mcp" },
   needs: "project.update",
   output: CanvasPresenceSavedSchema,
   scope: "project",

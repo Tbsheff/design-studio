@@ -41,7 +41,7 @@ const updatePackPack = defineAction({
     tokensJson: Schema.optionalKey(TokensJsonSchema),
   }),
   invalidates: ["pack.listSummary", "pack.list", "pack.getPack"],
-  mcp: { off: "ui-bootstrap" },
+  mcp: { off: "legacy-mcp" },
   needs: "pack.write",
   output: PackSummarySchema,
   scope: "org",

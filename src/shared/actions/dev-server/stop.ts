@@ -21,7 +21,7 @@ const stopDevServer = defineAction({
     }),
   }),
   invalidates: ["dev-server.get"],
-  mcp: { off: "ui-bootstrap" },
+  mcp: { off: "legacy-mcp" },
   needs: "project.update",
   output: AppServerStatusSchema,
   scope: "project",

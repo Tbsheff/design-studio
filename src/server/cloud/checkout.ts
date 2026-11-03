@@ -1,6 +1,8 @@
 import { lstat, mkdir, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
+import { Effect, Result } from "effect";
+
 type CheckoutCode =
   | "executed_file"
   | "path_escape"
@@ -47,13 +49,16 @@ const toSegments = (entryPath: string): readonly string[] | null => {
 };
 
 const hasPackageScripts = (bytes: Uint8Array): boolean => {
-  try {
-    const parsed: unknown = JSON.parse(new TextDecoder().decode(bytes));
+  const parsed = Result.try(
+    (): object | null =>
+      JSON.parse(new TextDecoder().decode(bytes)) as object | null
+  );
 
-    return !(parsed instanceof Object) || "scripts" in parsed;
-  } catch {
+  if (Result.isFailure(parsed)) {
     return true;
   }
+
+  return !(parsed.success instanceof Object) || "scripts" in parsed.success;
 };
 
 const isExecutedFile = (
@@ -106,57 +111,72 @@ const inspectCheckout = (
   return null;
 };
 
-const isSymlinkAt = async (target: string): Promise<boolean> => {
-  try {
-    const stat = await lstat(target);
+const isSymlinkAt = (target: string): Effect.Effect<boolean> =>
+  Effect.promise(() => lstat(target)).pipe(
+    Effect.map((stat) => stat.isSymbolicLink()),
+    Effect.orElseSucceed(() => false)
+  );
 
-    return stat.isSymbolicLink();
-  } catch {
-    return false;
-  }
-};
+const toRefused = (
+  code: CheckoutCode,
+  entry: CheckoutEntry
+): CheckoutResult => ({ code, ok: false, path: entry.path });
 
-const toWrittenEntry = async (
+const WRITTEN: CheckoutResult = { files: 1, ok: true };
+
+const toWrittenEntry = Effect.fn("toWrittenEntry")(function* run(
   root: string,
   entry: CheckoutEntry
-): Promise<void> => {
+) {
   const target = path.join(root, ...entry.path.split("/"));
   const parent = path.dirname(target);
-  await mkdir(parent, { mode: DIR_MODE, recursive: true });
 
-  if ((await isSymlinkAt(parent)) || (await isSymlinkAt(target))) {
-    throw new Error("symlink");
+  yield* Effect.promise(() =>
+    mkdir(parent, { mode: DIR_MODE, recursive: true })
+  );
+
+  const isLinked = (yield* isSymlinkAt(parent)) || (yield* isSymlinkAt(target));
+
+  if (isLinked) {
+    return toRefused("symlink", entry);
   }
 
   const temp = `${target}.checkout-tmp`;
-  await writeFile(temp, entry.bytes, { flag: "w", mode: FILE_MODE });
-  await rename(temp, target);
-};
 
-const toEntryResult = async (
+  yield* Effect.promise(() =>
+    writeFile(temp, entry.bytes, { flag: "w", mode: FILE_MODE })
+  );
+  yield* Effect.promise(() => rename(temp, target));
+
+  return WRITTEN;
+});
+
+const deleteTemp = (root: string, entry: CheckoutEntry): Effect.Effect<void> =>
+  Effect.promise(() =>
+    rm(`${path.join(root, entry.path)}.checkout-tmp`, { force: true })
+  ).pipe(Effect.ignore);
+
+const toEntryResult = (
   root: string,
   entry: CheckoutEntry
-): Promise<CheckoutResult> => {
-  try {
-    await toWrittenEntry(root, entry);
+): Effect.Effect<CheckoutResult> =>
+  toWrittenEntry(root, entry).pipe(
+    Effect.catchDefect(() =>
+      deleteTemp(root, entry).pipe(Effect.as(toRefused("write_failed", entry)))
+    ),
+    Effect.tap((result) => {
+      if (result.ok) {
+        return Effect.void;
+      }
 
-    return { files: 1, ok: true };
-  } catch (error) {
-    await rm(`${path.join(root, entry.path)}.checkout-tmp`, { force: true });
-    const isLink = error instanceof Error && error.message === "symlink";
+      return deleteTemp(root, entry);
+    })
+  );
 
-    if (isLink) {
-      return { code: "symlink", ok: false, path: entry.path };
-    }
-
-    return { code: "write_failed", ok: false, path: entry.path };
-  }
-};
-
-const runCheckout = async (
+const runCheckout = Effect.fn("runCheckout")(function* run(
   root: string,
   entries: readonly CheckoutEntry[]
-): Promise<CheckoutResult> => {
+) {
   const refused = inspectCheckout(entries);
 
   if (refused !== null) {
@@ -164,16 +184,20 @@ const runCheckout = async (
   }
 
   const resolvedRoot = path.resolve(root);
-  await mkdir(resolvedRoot, { mode: DIR_MODE, recursive: true });
 
-  const results = await Promise.all(
-    entries.map((entry) => toEntryResult(resolvedRoot, entry))
+  yield* Effect.promise(() =>
+    mkdir(resolvedRoot, { mode: DIR_MODE, recursive: true })
+  );
+
+  const results = yield* Effect.all(
+    entries.map((entry) => toEntryResult(resolvedRoot, entry)),
+    { concurrency: "unbounded" }
   );
 
   const failed = results.find((result) => !result.ok);
 
   return failed ?? { files: results.length, ok: true };
-};
+});
 
 export { runCheckout, inspectCheckout };
 

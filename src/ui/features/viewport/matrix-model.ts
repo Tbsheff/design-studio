@@ -20,9 +20,31 @@ interface MatrixReportView {
   readonly findings: readonly MatrixFindingView[];
 }
 
-const WIDTH_CHOICES: readonly number[] = [320, 375, 414, 768, 1024, 1280, 1440];
+const SMALL_PHONE = 320;
 
-const DEFAULT_WIDTHS: readonly number[] = [375, 768, 1280];
+const PHONE = 375;
+
+const LARGE_PHONE = 414;
+
+const TABLET = 768;
+
+const LARGE_TABLET = 1024;
+
+const LAPTOP = 1280;
+
+const DESKTOP = 1440;
+
+const WIDTH_CHOICES: readonly number[] = [
+  SMALL_PHONE,
+  PHONE,
+  LARGE_PHONE,
+  TABLET,
+  LARGE_TABLET,
+  LAPTOP,
+  DESKTOP,
+];
+
+const DEFAULT_WIDTHS: readonly number[] = [PHONE, TABLET, LAPTOP];
 
 const SCHEMES: readonly Scheme[] = ["light", "dark", "both"];
 

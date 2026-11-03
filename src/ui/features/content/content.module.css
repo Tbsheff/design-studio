@@ -27,36 +27,11 @@
   min-width: 0;
 }
 
-.chip {
-  height: 24px;
-  min-width: 28px;
-  padding: 0 var(--s-2);
-  border: 1px solid transparent;
-  border-radius: var(--r-control-sm);
-  background: transparent;
-  color: var(--text-2);
-  font: inherit;
-  font-size: var(--t-xs);
-  cursor: pointer;
-}
-
-.chip:hover {
-  background: var(--surface-hover);
-  color: var(--text);
-}
-
-.chip:focus-visible,
 .step:focus-visible,
 .primary:focus-visible,
 .secondary:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
-}
-
-.on {
-  border-color: var(--accent-line);
-  background: var(--accent-soft);
-  color: var(--accent-text);
 }
 
 .stepper {

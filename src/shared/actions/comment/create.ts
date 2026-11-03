@@ -44,7 +44,7 @@ const createComment = defineAction({
     text: CommentTextSchema,
   }),
   invalidates: ["comment.list"],
-  mcp: { off: "ui-bootstrap" },
+  mcp: { off: "legacy-mcp" },
   needs: "comment.write",
   output: CommentSchema,
   scope: "project",

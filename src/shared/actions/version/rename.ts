@@ -33,7 +33,7 @@ const renameVersion = defineAction({
     "version.listHistory",
     "version.listHunks",
   ],
-  mcp: { off: "ui-bootstrap" },
+  mcp: { off: "legacy-mcp" },
   needs: "project.update",
   output: VersionRenamedSchema,
   scope: "project",

@@ -25,7 +25,7 @@ const deleteCommentPublish = defineAction({
     commentId: CommentIdSchema,
   }),
   invalidates: ["publish.listComments", "publish.list"],
-  mcp: { off: "ui-bootstrap" },
+  mcp: { off: "legacy-mcp" },
   needs: "comment.delete",
   output: DeletedSchema,
   scope: "project",

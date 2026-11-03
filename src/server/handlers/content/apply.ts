@@ -17,11 +17,11 @@ const handle = Effect.fn("content.apply")(function* run(
     directionId: input.directionId,
     file: input.layer.file,
     line: input.layer.line,
-    mode: input.mode ?? "sample",
-    preset: input.preset ?? "generic",
+    mode: input.mode,
+    preset: input.preset,
     projectId: input.projectId,
-    repeat: input.repeat ?? 1,
-    seed: input.seed ?? 1,
+    repeat: input.repeat,
+    seed: input.seed,
   });
 }) satisfies Handle<typeof applyContent>;
 

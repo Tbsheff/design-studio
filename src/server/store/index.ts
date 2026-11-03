@@ -25,3 +25,5 @@ export { StudioInfo } from "./studio-info.js";
 export { VersionStore } from "./version-store.js";
 
 export { VersionWriter } from "./version-writer.js";
+
+export { BadRequestError, NotFoundError } from "./errors.js";

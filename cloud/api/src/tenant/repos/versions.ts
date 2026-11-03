@@ -1,8 +1,8 @@
 import { Context, Effect, Layer, Schema } from "effect";
 
-import type { NotFound } from "../../../../../src/shared/actions/_core/errors/not-found.js";
+import type { NotFound } from "../../shared-actions.js";
 import type { CurrentOrg } from "../current-org.js";
-import { TenantDb } from "../db.js";
+import { TenantDb, toBatchEntry } from "../db.js";
 import { tq } from "../sql.js";
 
 const PAGE_MAX = 100;
@@ -70,6 +70,11 @@ interface VersionFileAdd {
   readonly mode: number;
   readonly path: string;
   readonly versionId: string;
+}
+
+interface StoredFile {
+  readonly blob: BlobRefAdd;
+  readonly file: VersionFileAdd;
 }
 
 interface BlobRefAdd {
@@ -209,6 +214,9 @@ interface VersionsRepoApi {
   readonly retainBlob: (
     input: BlobRefAdd
   ) => Effect.Effect<void, never, CurrentOrg>;
+  readonly storeFiles: (
+    files: readonly StoredFile[]
+  ) => Effect.Effect<void, never, CurrentOrg>;
 }
 
 const clampLimit = (limit: number): number =>
@@ -284,6 +292,13 @@ class VersionsRepo extends Context.Service<VersionsRepo, VersionsRepoApi>()(
         releaseBlob: (id) => db.write(blobRelease, { id, now: Date.now() }),
         retainBlob: (input) =>
           db.insert(blobRetain, { ...input, now: Date.now() }),
+        storeFiles: (files) =>
+          db.writeAll(
+            files.flatMap((stored) => [
+              toBatchEntry(blobRetain, { ...stored.blob, now: Date.now() }),
+              toBatchEntry(fileAdd, stored.file),
+            ])
+          ),
       });
     })
   );

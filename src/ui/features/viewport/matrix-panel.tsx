@@ -10,9 +10,10 @@ import styles from "./viewport.module.css";
 
 interface MatrixPanelProps {
   readonly matrix: MatrixView;
+  readonly onJump: (frameId: string) => void;
 }
 
-const MatrixPanel = ({ matrix }: MatrixPanelProps): ReactElement => (
+const MatrixPanel = ({ matrix, onJump }: MatrixPanelProps): ReactElement => (
   <section
     aria-label={copy.menuLabel}
     className={`ui-menu topbar-menu align-end ${styles.panel}`}
@@ -45,7 +46,7 @@ const MatrixPanel = ({ matrix }: MatrixPanelProps): ReactElement => (
     {matrix.report && (
       <>
         <span className={styles.label}>{copy.findings}</span>
-        <FindingsList report={matrix.report} />
+        <FindingsList onJump={onJump} report={matrix.report} />
         <span className={styles.path}>{matrix.report.contactSheet}</span>
       </>
     )}

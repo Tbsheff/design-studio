@@ -8,7 +8,7 @@ import type {
 } from "./content-model.js";
 import type { SelectionContext } from "./deps.js";
 import { useApplyContent } from "./use-apply.js";
-import { useRestoreVersion } from "./use-reset.js";
+import { useResetContent } from "./use-reset.js";
 
 interface ContentOptions {
   readonly directionId: string;
@@ -34,7 +34,6 @@ interface ContentView {
 const useContent = (options: ContentOptions): ContentView => {
   const { directionId, projectId, target } = options;
   const apply = useApplyContent();
-  const restore = useRestoreVersion();
   const [preset, setPreset] = useState<ContentPreset>("generic");
   const [mode, setMode] = useState<ContentMode>("sample");
   const [repeat, setRepeat] = useState(1);
@@ -65,14 +64,15 @@ const useContent = (options: ContentOptions): ContentView => {
     });
   }, [apply, directionId, mode, preset, projectId, repeat, source]);
 
-  const handleReset = useCallback(() => {
-    if (previous === null) {
-      return;
-    }
+  const onReset = useCallback(() => setPrevious(null), []);
 
-    restore.run({ directionId, projectId, versionId: previous });
-    setPrevious(null);
-  }, [directionId, previous, projectId, restore]);
+  const { handleReset, restore } = useResetContent({
+    directionId,
+    onReset,
+    previous,
+    projectId,
+    startSubmit,
+  });
 
   const handlePreset = useCallback((picked: ContentPreset) => {
     setPreset(picked);

@@ -412,15 +412,19 @@ export const api = {
 
     return (await res.json()) as CreateTokenResult;
   },
-  previewTokens: async (pid: string, did: string, changes: TokenChange[]) => {
-    const res = await request(
-      "POST",
-      `${d(pid, did)}/design-system/preview`,
-      { changes },
-      pickMessage
-    );
+  previewTokens: async (
+    pid: string,
+    did: string,
+    changes: TokenChange[]
+  ): Promise<TokenPreviewResult> => {
+    const { routes: directEditRoutes } =
+      await import("../shared/actions/direct-edit/routes.js");
 
-    return (await res.json()) as TokenPreviewResult;
+    return call(directEditRoutes.inspectTokensDirectEdit, {
+      changes: JSON.stringify(changes),
+      directionId: did,
+      projectId: pid,
+    });
   },
   updateTokens: async (pid: string, did: string, changes: TokenChange[]) => {
     const res = await request(

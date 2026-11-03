@@ -2,19 +2,26 @@
 const routes = {
   applyDirectEdit: {
     id: "direct-edit.apply",
-    invalidates: [],
+    invalidates: ["direct-edit.getTree", "version.list", "version.listHistory"],
     method: "POST",
     path: "/api/projects/:projectId/d/:directionId/direct-edit",
   },
   applySwapDirectEdit: {
     id: "direct-edit.applySwap",
-    invalidates: [],
+    invalidates: ["direct-edit.getTree", "version.list", "version.listHistory"],
     method: "POST",
     path: "/api/projects/:projectId/d/:directionId/components/swap",
   },
   createComponentDirectEdit: {
     id: "direct-edit.createComponent",
-    invalidates: [],
+    invalidates: [
+      "direct-edit.getTree",
+      "direct-edit.listComponentFolders",
+      "direct-edit.listComponents",
+      "direct-edit.listInsertable",
+      "version.list",
+      "version.listHistory",
+    ],
     method: "POST",
     path: "/api/projects/:projectId/d/:directionId/components/create",
   },
@@ -26,7 +33,7 @@ const routes = {
   },
   deleteTextDirectEdit: {
     id: "direct-edit.deleteText",
-    invalidates: [],
+    invalidates: ["direct-edit.getTree", "version.list", "version.listHistory"],
     method: "POST",
     path: "/api/projects/:projectId/d/:directionId/insert/clear-text",
   },
@@ -62,20 +69,20 @@ const routes = {
   },
   insertComponentDirectEdit: {
     id: "direct-edit.insertComponent",
-    invalidates: [],
+    invalidates: ["direct-edit.getTree", "version.list", "version.listHistory"],
     method: "POST",
     path: "/api/projects/:projectId/d/:directionId/insert",
   },
   insertJsxDirectEdit: {
     id: "direct-edit.insertJsx",
-    invalidates: [],
+    invalidates: ["direct-edit.getTree", "version.list", "version.listHistory"],
     method: "POST",
     path: "/api/projects/:projectId/d/:directionId/insert/jsx",
   },
   inspectTokensDirectEdit: {
     id: "direct-edit.inspectTokens",
     invalidates: [],
-    method: "POST",
+    method: "GET",
     path: "/api/projects/:projectId/d/:directionId/design-system/preview",
   },
   listComponentFoldersDirectEdit: {
@@ -99,7 +106,7 @@ const routes = {
   listSwapCandidatesDirectEdit: {
     id: "direct-edit.listSwapCandidates",
     invalidates: [],
-    method: "POST",
+    method: "GET",
     path: "/api/projects/:projectId/d/:directionId/components/swap-candidates",
   },
   runDirectEdit: {
@@ -110,13 +117,13 @@ const routes = {
   },
   setImageDirectEdit: {
     id: "direct-edit.setImage",
-    invalidates: [],
+    invalidates: ["direct-edit.getTree", "version.list", "version.listHistory"],
     method: "POST",
     path: "/api/projects/:projectId/d/:directionId/image",
   },
   setVectorDirectEdit: {
     id: "direct-edit.setVector",
-    invalidates: [],
+    invalidates: ["direct-edit.getTree", "version.list", "version.listHistory"],
     method: "POST",
     path: "/api/projects/:projectId/d/:directionId/vector",
   },

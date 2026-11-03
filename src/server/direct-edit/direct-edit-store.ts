@@ -7,9 +7,12 @@ import {
   listComponentFoldersOf,
   listComponentsOf,
   listInsertableOf,
+  listSwapCandidatesOf,
 } from "./direct-edit-insert-ops.js";
+import type { SourceUse } from "./direct-edit-insert-ops.js";
 import {
   designSystemOf,
+  previewTokenChanges,
   previewUrlOf,
   readTweaks,
   treeOf,
@@ -50,6 +53,20 @@ interface DirectEditStoreApi {
     Awaited<ReturnType<typeof listComponentFoldersOf>>,
     DirectEditFailure
   >;
+  readonly listSwapCandidates: (
+    ref: DirectionRef,
+    use: SourceUse
+  ) => Effect.Effect<
+    Awaited<ReturnType<typeof listSwapCandidatesOf>>,
+    DirectEditFailure
+  >;
+  readonly previewTokens: (
+    ref: DirectionRef,
+    body: EditBody
+  ) => Effect.Effect<
+    Awaited<ReturnType<typeof previewTokenChanges>>,
+    DirectEditFailure
+  >;
   readonly getComponentPreview: (
     ref: DirectionRef,
     body: EditBody
@@ -68,27 +85,6 @@ class DirectEditStore extends Context.Service<
   public static readonly layer = Layer.succeed(
     DirectEditStore,
     DirectEditStore.of({
-      listInsertable: Effect.fn("DirectEditStore.listInsertable")(function* run(
-        ref: DirectionRef
-      ) {
-        return yield* attemptDirectEdit((runtime) =>
-          listInsertableOf(runtime, ref)
-        );
-      }),
-      listComponents: Effect.fn("DirectEditStore.listComponents")(function* run(
-        ref: DirectionRef
-      ) {
-        return yield* attemptDirectEdit((runtime) =>
-          listComponentsOf(runtime, ref)
-        );
-      }),
-      listComponentFolders: Effect.fn("DirectEditStore.listComponentFolders")(
-        function* run(ref: DirectionRef) {
-          return yield* attemptDirectEdit((runtime) =>
-            listComponentFoldersOf(runtime, ref)
-          );
-        }
-      ),
       getComponentPreview: Effect.fn("DirectEditStore.getComponentPreview")(
         function* run(ref: DirectionRef, body: EditBody) {
           return yield* attemptDirectEdit((runtime) =>
@@ -119,6 +115,42 @@ class DirectEditStore extends Context.Service<
         ref: DirectionRef
       ) {
         return yield* attemptDirectEdit((runtime) => readTweaks(runtime, ref));
+      }),
+      listComponentFolders: Effect.fn("DirectEditStore.listComponentFolders")(
+        function* run(ref: DirectionRef) {
+          return yield* attemptDirectEdit((runtime) =>
+            listComponentFoldersOf(runtime, ref)
+          );
+        }
+      ),
+      listComponents: Effect.fn("DirectEditStore.listComponents")(function* run(
+        ref: DirectionRef
+      ) {
+        return yield* attemptDirectEdit((runtime) =>
+          listComponentsOf(runtime, ref)
+        );
+      }),
+      listInsertable: Effect.fn("DirectEditStore.listInsertable")(function* run(
+        ref: DirectionRef
+      ) {
+        return yield* attemptDirectEdit((runtime) =>
+          listInsertableOf(runtime, ref)
+        );
+      }),
+      listSwapCandidates: Effect.fn("DirectEditStore.listSwapCandidates")(
+        function* run(ref: DirectionRef, use: SourceUse) {
+          return yield* attemptDirectEdit((runtime) =>
+            listSwapCandidatesOf(runtime, ref, use)
+          );
+        }
+      ),
+      previewTokens: Effect.fn("DirectEditStore.previewTokens")(function* run(
+        ref: DirectionRef,
+        body: EditBody
+      ) {
+        return yield* attemptDirectEdit((runtime) =>
+          previewTokenChanges(runtime, ref, body)
+        );
       }),
     })
   );

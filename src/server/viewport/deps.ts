@@ -1,6 +1,6 @@
-export { applyPlacement } from "../canvas/tools.js";
+export { applyPlacement } from "../canvas/index.js";
 
-export { BadRequestError } from "../platform/errors/bad-request.js";
+export { BadRequest } from "../../shared/actions/_core/errors/bad-request.js";
 
 export { attemptKnown } from "../platform/attempt/index.js";
 
@@ -9,9 +9,7 @@ export {
   requireBound,
 } from "../platform/runtime-slot/index.js";
 
-export { probeOnPage } from "../preview/probe-page.js";
-
-export { layoutProbeExpression } from "../preview/layout-probe.js";
+export { layoutProbeExpression, probeOnPage } from "../page-probe/index.js";
 
 export { withPagePath } from "../project-source/index.js";
 
@@ -25,9 +23,7 @@ export { withForcedParam } from "../../shared/state-styles.js";
 
 export type { KnownFailure } from "../platform/attempt/index.js";
 
-export type { CanvasService } from "../canvas/service.js";
-
-export type { PlaceSpec } from "../canvas/tools.js";
+export type { CanvasService, PlaceSpec } from "../canvas/index.js";
 
 export type { CanvasFile, CanvasFileFrame } from "../../shared/canvas-file.js";
 

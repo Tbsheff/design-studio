@@ -26,7 +26,7 @@ const setDocCanvas = defineAction({
     writer: Schema.optionalKey(WriterIdSchema),
   }),
   invalidates: ["canvas.getDoc"],
-  mcp: { off: "ui-bootstrap" },
+  mcp: { off: "legacy-mcp" },
   needs: "project.update",
   output: CanvasDocSchema,
   scope: "project",

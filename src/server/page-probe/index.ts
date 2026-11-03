@@ -11,3 +11,7 @@ export * from "./lock-probe.js";
 export * from "./owner-probe.js";
 
 export * from "./source-loc.js";
+
+export { layoutProbeExpression } from "../preview/layout-probe.js";
+
+export { probeOnPage } from "../preview/probe-page.js";

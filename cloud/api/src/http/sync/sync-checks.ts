@@ -1,7 +1,6 @@
 import { Effect } from "effect";
 
-import { BadRequest } from "../../../../../../src/shared/actions/_core/errors/bad-request.js";
-import { Conflict } from "../../../../../../src/shared/actions/_core/errors/conflict.js";
+import { BadRequest, Conflict } from "../../shared-actions.js";
 import { ProjectsRepo } from "../../tenant/repos/projects.js";
 import { requireOrg } from "../groups/authorizer.js";
 import { findRefusedFile } from "./manifest-guard.js";

@@ -1,15 +1,17 @@
 import { Effect } from "effect";
 
+import { DirectEditConflict } from "../../shared/actions/direct-edit/errors/direct-edit-conflict.js";
+import { DirectEditFailed } from "../../shared/actions/direct-edit/errors/direct-edit-failed.js";
+import { DirectEditNotFound } from "../../shared/actions/direct-edit/errors/direct-edit-not-found.js";
 import {
   CONFLICT_CODES,
   NOT_FOUND_CODES,
-} from "../../shared/actions/_core/errors/direct-edit-code.js";
-import { DirectEditError as WireDirectEditError } from "../../shared/actions/_core/errors/direct-edit-error.js";
-import { DirectEditConflict } from "../../shared/actions/direct-edit/errors/direct-edit-conflict.js";
-import { DirectEditNotFound } from "../../shared/actions/direct-edit/errors/direct-edit-not-found.js";
+} from "../../shared/actions/direct-edit/schema.js";
 import type { Direction, Project } from "../../shared/contracts.js";
-import type { ComponentPreviews } from "../components/preview.js";
-import type { ComponentService } from "../components/thumbs.js";
+import type {
+  ComponentPreviews,
+  ComponentService,
+} from "../components/index.js";
 import { attemptKnown } from "../platform/attempt/index.js";
 import type { KnownFailure } from "../platform/attempt/index.js";
 import { loadConfig } from "../platform/config/index.js";
@@ -19,7 +21,7 @@ import {
 } from "../platform/runtime-slot/index.js";
 import type { PreviewService } from "../types.js";
 import type { DirectEditDeps } from "./commit/edit-types.js";
-import { DirectEditError as EngineDirectEditError } from "./engine/errors.js";
+import { DirectEditError } from "./engine/errors.js";
 
 interface DirectEditRuntime {
   readonly components: ComponentService;
@@ -43,7 +45,7 @@ type DirectEditFailure =
   | DirectEditConflict
   | DirectEditNotFound
   | KnownFailure
-  | WireDirectEditError;
+  | DirectEditFailed;
 
 const runtimes = makeRuntimeSlot<DirectEditRuntime>("DirectEdit");
 
@@ -56,8 +58,8 @@ const bindDirectEditRuntime = (
 
 const toDirectEditFailure = (
   cause: unknown
-): DirectEditConflict | DirectEditNotFound | WireDirectEditError | null => {
-  if (!(cause instanceof EngineDirectEditError)) {
+): DirectEditConflict | DirectEditNotFound | DirectEditFailed | null => {
+  if (!(cause instanceof DirectEditError)) {
     return null;
   }
 
@@ -71,7 +73,7 @@ const toDirectEditFailure = (
     return new DirectEditNotFound(fields);
   }
 
-  return new WireDirectEditError(fields);
+  return new DirectEditFailed(fields);
 };
 
 const directEditRuntimeOf = (): DirectEditRuntime | null =>

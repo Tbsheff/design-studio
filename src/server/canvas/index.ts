@@ -17,3 +17,9 @@ export { CanvasStore } from "./canvas-store.js";
 export { CanvasWriter } from "./canvas-writer.js";
 
 export { LinkStore, LinkWriter } from "./links/index.js";
+
+export { bindLinkRuntime } from "./links/link-runtime.js";
+
+export { applyPlacement } from "./tools.js";
+
+export type { PlaceSpec } from "./tools.js";

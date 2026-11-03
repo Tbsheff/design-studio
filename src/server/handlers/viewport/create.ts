@@ -14,10 +14,10 @@ const handle = Effect.fn("viewport.create")(function* run(
 
   return yield* writer.create({
     directionId: input.directionId,
-    page: input.page ?? "",
+    page: input.page,
     projectId: input.projectId,
-    schemes: input.schemes ?? "both",
-    widths: input.widths ?? [],
+    schemes: input.schemes,
+    widths: input.widths,
   });
 }) satisfies Handle<typeof createViewport>;
 

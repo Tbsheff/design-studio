@@ -6,11 +6,11 @@ const routes = {
     method: "POST",
     path: "/api/projects/:projectId/d/:directionId/viewport-matrix",
   },
-  inspectViewport: {
-    id: "viewport.inspect",
+  runViewport: {
+    id: "viewport.run",
     invalidates: [],
-    method: "GET",
-    path: "/api/projects/:projectId/d/:directionId/viewport-matrix",
+    method: "POST",
+    path: "/api/projects/:projectId/d/:directionId/viewport-matrix/run",
   },
 } as const;
 

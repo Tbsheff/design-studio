@@ -1,6 +1,6 @@
 import { Schema } from "effect";
 
-import { DirectEditCodeSchema } from "../../_core/errors/direct-edit-code.js";
+import { DirectEditCodeSchema } from "../schema.js";
 
 class DirectEditNotFound extends Schema.TaggedError<DirectEditNotFound>()(
   "DirectEditNotFound",

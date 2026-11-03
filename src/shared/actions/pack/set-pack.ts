@@ -40,7 +40,7 @@ const setPackPack = defineAction({
     "pack.getDraft",
     "pack.inspectDraft",
   ],
-  mcp: { off: "ui-bootstrap" },
+  mcp: { off: "legacy-mcp" },
   needs: "pack.write",
   output: SaveResultSchema,
   scope: "project",

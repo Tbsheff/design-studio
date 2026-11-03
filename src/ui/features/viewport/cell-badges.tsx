@@ -10,6 +10,7 @@ import styles from "./viewport.module.css";
 
 interface CellBadgesProps {
   readonly findings: readonly MatrixFindingView[];
+  readonly hostOf: (frameId: string) => Element | null;
 }
 
 interface BadgeHost {
@@ -18,13 +19,14 @@ interface BadgeHost {
   readonly frameId: string;
 }
 
-const hostsOf = (findings: readonly MatrixFindingView[]): BadgeHost[] => {
+const hostsOf = (
+  findings: readonly MatrixFindingView[],
+  hostOf: (frameId: string) => Element | null
+): BadgeHost[] => {
   const hosts: BadgeHost[] = [];
 
   for (const [frameId, count] of countByFrame(findings)) {
-    const element = document.querySelector(
-      `.frame-label[data-frame-id="${CSS.escape(frameId)}"]`
-    );
+    const element = hostOf(frameId);
 
     if (element !== null) {
       hosts.push({ count, element, frameId });
@@ -34,8 +36,8 @@ const hostsOf = (findings: readonly MatrixFindingView[]): BadgeHost[] => {
   return hosts;
 };
 
-const CellBadges = ({ findings }: CellBadgesProps): ReactElement => {
-  const hosts = useMemo(() => hostsOf(findings), [findings]);
+const CellBadges = ({ findings, hostOf }: CellBadgesProps): ReactElement => {
+  const hosts = useMemo(() => hostsOf(findings, hostOf), [findings, hostOf]);
 
   return (
     <>

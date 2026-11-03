@@ -30,7 +30,7 @@ const deleteReplyComment = defineAction({
     replyId: SafeIdTextSchema,
   }),
   invalidates: ["comment.list"],
-  mcp: { off: "ui-bootstrap" },
+  mcp: { off: "legacy-mcp" },
   needs: "comment.delete",
   output: CommentSchema,
   scope: "project",

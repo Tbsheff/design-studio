@@ -106,7 +106,7 @@ export async function pasteJsx(
       jsx,
     });
 
-    const added = result.imports.filter((item) => item.added).length;
+    const added = (result.imports ?? []).filter((item) => item.added).length;
     notify(
       `${result.title}${added > 0 ? `, ${added} import${added === 1 ? "" : "s"} added` : ""}.`
     );

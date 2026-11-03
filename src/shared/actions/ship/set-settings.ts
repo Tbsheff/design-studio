@@ -21,7 +21,7 @@ const setSettingsShip = defineAction({
     projectId: ProjectIdSchema,
   }),
   invalidates: ["ship.getSettings", "ship.getPlan"],
-  mcp: { off: "ui-bootstrap" },
+  mcp: { off: "legacy-mcp" },
   needs: "project.update",
   output: ShipSettingsSchema,
   scope: "project",

@@ -192,6 +192,7 @@ interface FrameLabelInfo {
 }
 
 interface ChromeProps {
+  matrix?: ReactNode;
   shell: CanvasShell | undefined;
   kind: ProjectKind;
   projectId: string;
@@ -434,6 +435,7 @@ export function CanvasChrome(p: ChromeProps) {
     <>
       <CanvasTopBar
         shapeTools={<VectorToolButtons />}
+        matrix={p.matrix}
         paneCollapsed={bar.paneCollapsed}
         onExpandPane={bar.onExpandPane}
         onReload={() => reloadFrames(p.stage())}

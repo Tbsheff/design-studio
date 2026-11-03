@@ -18,21 +18,23 @@ export const componentCreateApi = {
     }),
   swapCandidates: (pid: string, did: string, use: SourceLoc) =>
     call(routes.listSwapCandidatesDirectEdit, {
+      col: use.col,
       directionId: did,
+      file: use.file,
+      line: use.line,
       projectId: pid,
-      use,
     }),
   swap: (
     pid: string,
     did: string,
-    use: SourceLoc,
+    source: SourceLoc,
     component: { name: string; file: string }
   ) =>
     call(routes.applySwapDirectEdit, {
       component,
       directionId: did,
       projectId: pid,
-      use,
+      use: source,
     }),
 };
 

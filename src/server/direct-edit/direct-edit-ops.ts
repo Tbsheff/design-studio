@@ -12,7 +12,7 @@ import type {
 import { isStyleReplaceBody } from "../../shared/style-search.js";
 import type { StyleReplaceResult } from "../../shared/style-search.js";
 import type { CommitTweaksResult, TweaksState } from "../../shared/tweaks.js";
-import { warmPropsTypes } from "../components/props-service.js";
+import { warmPropsTypes } from "../components/index.js";
 import { appTokensFor } from "../design-system/app-tokens/source.js";
 import {
   previewAppTokens,

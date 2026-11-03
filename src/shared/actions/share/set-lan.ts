@@ -16,7 +16,7 @@ const setLanShare = defineAction({
     isOn: Schema.Boolean,
   }),
   invalidates: ["share.list"],
-  mcp: { off: "ui-bootstrap" },
+  mcp: { off: "legacy-mcp" },
   needs: "project.update",
   output: ShareServerResultSchema,
   scope: "device",

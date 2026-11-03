@@ -31,7 +31,7 @@ const applyPackPack = defineAction({
     projectId: ProjectIdSchema,
   }),
   invalidates: ["pack.getDraft", "pack.inspectDraft"],
-  mcp: { off: "ui-bootstrap" },
+  mcp: { off: "legacy-mcp" },
   needs: "project.update",
   output: ApplyResultSchema,
   scope: "project",

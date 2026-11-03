@@ -1,8 +1,8 @@
 import { Context, Effect, Layer, Schema } from "effect";
 
-import type { NotFound } from "../../../../../src/shared/actions/_core/errors/not-found.js";
+import type { NotFound } from "../../shared-actions.js";
 import type { CurrentOrg } from "../current-org.js";
-import { TenantDb } from "../db.js";
+import { TenantDb, toBatchEntry } from "../db.js";
 import { tq } from "../sql.js";
 
 const PAGE_MAX = 100;
@@ -71,6 +71,9 @@ interface ChangesRepoApi {
   readonly append: (
     input: ChangeAppend
   ) => Effect.Effect<void, never, CurrentOrg>;
+  readonly appendAll: (
+    inputs: readonly ChangeAppend[]
+  ) => Effect.Effect<void, never, CurrentOrg>;
   readonly head: () => Effect.Effect<ChangeRow, NotFound, CurrentOrg>;
   readonly list: (
     after: number,
@@ -100,6 +103,12 @@ class ChangesRepo extends Context.Service<ChangesRepo, ChangesRepoApi>()(
 
       return ChangesRepo.of({
         append: (input) => db.insert(append, { ...input, now: Date.now() }),
+        appendAll: (inputs) =>
+          db.writeAll(
+            inputs.map((input) =>
+              toBatchEntry(append, { ...input, now: Date.now() })
+            )
+          ),
         head: () => db.first(head, {}, ChangeRowSchema),
         list: Effect.fn("ChangesRepo.list")(function* run(after, limit) {
           const size = Math.min(Math.max(1, limit), PAGE_MAX);

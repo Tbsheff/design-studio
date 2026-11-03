@@ -5,14 +5,13 @@ import type {
   Project,
   VersionMeta,
 } from "../../shared/contracts.js";
-import { writeAndCommitAll } from "../direct-edit/batch.js";
-import { resolveSource } from "../direct-edit/commit/edit-source.js";
 import {
   announceWhile,
   assertCanEdit,
   publishVersion,
-} from "../direct-edit/commit/publish.js";
-import { DirectEditError } from "../direct-edit/engine/errors.js";
+  resolveSource,
+  writeAndCommitAll,
+} from "../direct-edit/index.js";
 import type { ContentRuntime } from "./content-runtime.js";
 import { applyContent } from "./engine/index.js";
 import type { ContentFailure, ContentMode, Preset } from "./engine/index.js";
@@ -27,6 +26,10 @@ interface ContentCommand {
   readonly projectId: string;
   readonly repeat: number;
   readonly seed: number;
+}
+
+interface ContentRefused {
+  readonly refused: string;
 }
 
 interface ContentWritten {
@@ -53,7 +56,7 @@ const writeContent = async (
   project: Project,
   direction: Direction,
   command: ContentCommand
-): Promise<ContentWritten> => {
+): Promise<ContentRefused | ContentWritten> => {
   const headVersionId = assertCanEdit(runtime.editDeps, project, direction);
 
   const target = await resolveSource(direction.workTree, command.file);
@@ -61,7 +64,7 @@ const writeContent = async (
   const result = applyContent(original, command);
 
   if (!result.ok) {
-    throw new DirectEditError("invalid_request", FAILURE_TEXT[result.code]);
+    return { refused: FAILURE_TEXT[result.code] };
   }
 
   const meta: VersionMeta = { kind: "manual", prompt: promptOf(command) };
@@ -111,7 +114,7 @@ const writeContent = async (
 const runContent = (
   runtime: ContentRuntime,
   command: ContentCommand
-): Promise<ContentWritten> =>
+): Promise<ContentRefused | ContentWritten> =>
   runtime.withDirection(
     command.projectId,
     command.directionId,
@@ -120,4 +123,4 @@ const runContent = (
 
 export { runContent };
 
-export type { ContentCommand, ContentWritten };
+export type { ContentCommand, ContentRefused, ContentWritten };

@@ -2,6 +2,8 @@ export { DirectEditError, parseDirectEditRequest } from "./engine/index.js";
 
 export * from "./commit/index.js";
 
+export { writeAndCommitAll } from "./commit/batch.js";
+
 export { bindDirectEditRuntime } from "./direct-edit-core.js";
 
 export type { DirectEditRuntime } from "./direct-edit-core.js";

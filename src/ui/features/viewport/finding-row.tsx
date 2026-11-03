@@ -2,7 +2,6 @@ import { useCallback } from "react";
 import type { ReactElement } from "react";
 
 import { copy } from "./copy.js";
-import { jumpToCell } from "./jump.js";
 import { cellText, KIND_TEXT } from "./matrix-model.js";
 import type { MatrixFindingView } from "./matrix-model.js";
 
@@ -10,16 +9,17 @@ import styles from "./viewport.module.css";
 
 interface FindingRowProps {
   readonly finding: MatrixFindingView;
+  readonly onJump: (frameId: string) => void;
 }
 
-const FindingRow = ({ finding }: FindingRowProps): ReactElement => {
+const FindingRow = ({ finding, onJump }: FindingRowProps): ReactElement => {
   const { frameId } = finding;
 
   const handleJump = useCallback(() => {
     if (frameId !== null) {
-      jumpToCell(frameId);
+      onJump(frameId);
     }
-  }, [frameId]);
+  }, [frameId, onJump]);
 
   return (
     <li className={styles.row}>

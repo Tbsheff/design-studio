@@ -14,7 +14,17 @@ interface MatrixRequest {
   readonly widths: readonly number[];
 }
 
-const DEFAULT_WIDTHS: readonly number[] = [375, 768, 1280];
+const PHONE_WIDTH = 375;
+
+const TABLET_WIDTH = 768;
+
+const DESKTOP_WIDTH = 1280;
+
+const DEFAULT_WIDTHS: readonly number[] = [
+  PHONE_WIDTH,
+  TABLET_WIDTH,
+  DESKTOP_WIDTH,
+];
 
 const PHONE_MAX = 480;
 
@@ -26,7 +36,7 @@ const TABLET_HEIGHT = 1024;
 
 const DESKTOP_HEIGHT = 900;
 
-const TAP_CHECK_MAX = 768;
+const TAP_CHECK_MAX = TABLET_WIDTH;
 
 const heightOf = (width: number): number => {
   if (width <= PHONE_MAX) {

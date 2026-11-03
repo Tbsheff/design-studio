@@ -25,7 +25,7 @@ const createDevServer = defineAction({
     url: Schema.optionalKey(Schema.NullOr(SourceFieldSchema)),
   }),
   invalidates: ["dev-server.get"],
-  mcp: { off: "ui-bootstrap" },
+  mcp: { off: "legacy-mcp" },
   needs: "project.create",
   output: DevServerAttachedSchema,
   scope: "org",

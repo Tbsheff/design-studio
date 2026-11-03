@@ -22,7 +22,7 @@ const startEditorPack = defineAction({
     packId: PackIdSchema,
   }),
   invalidates: ["pack.list"],
-  mcp: { off: "ui-bootstrap" },
+  mcp: { off: "legacy-mcp" },
   needs: "pack.write",
   output: EditorResultSchema,
   scope: "org",

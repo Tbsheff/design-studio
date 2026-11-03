@@ -1,19 +1,19 @@
 import { useCallback, useRef, useState } from "react";
 import type { ReactElement } from "react";
-import { createPortal } from "react-dom";
 
 import { CellBadges } from "./cell-badges.js";
 import { copy } from "./copy.js";
 import { Icon, usePopover } from "./deps.js";
 import { MatrixPanel } from "./matrix-panel.js";
 import { useMatrix } from "./use-matrix.js";
-import { useSlot } from "./use-slot.js";
 
 import styles from "./viewport.module.css";
 
 interface SlotProps {
   readonly directionId: string | null;
   readonly frame: { readonly path?: string | undefined };
+  readonly frameLabelOf: (frameId: string) => Element | null;
+  readonly onJumpToFrame: (frameId: string) => void;
   readonly projectId: string;
 }
 
@@ -22,7 +22,6 @@ const ICON_SIZE = 14;
 const MatrixSlot = (props: SlotProps): ReactElement => {
   const root = useRef<HTMLSpanElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
-  const slot = useSlot();
   const [isOpen, setIsOpen] = useState(false);
 
   const matrix = useMatrix({
@@ -38,7 +37,7 @@ const MatrixSlot = (props: SlotProps): ReactElement => {
 
   const count = matrix.report?.findings.length ?? 0;
 
-  const entry = (
+  return (
     <span className={`topbar-anchor ${styles.anchor}`} ref={root}>
       <button
         aria-expanded={isOpen}
@@ -55,15 +54,14 @@ const MatrixSlot = (props: SlotProps): ReactElement => {
         <span>{copy.title}</span>
         {count > 0 && <span className={styles.count}>{count}</span>}
       </button>
-      {isOpen && <MatrixPanel matrix={matrix} />}
+      {isOpen && <MatrixPanel matrix={matrix} onJump={props.onJumpToFrame} />}
+      {matrix.report && (
+        <CellBadges
+          findings={matrix.report.findings}
+          hostOf={props.frameLabelOf}
+        />
+      )}
     </span>
-  );
-
-  return (
-    <>
-      {slot && createPortal(entry, slot)}
-      {matrix.report && <CellBadges findings={matrix.report.findings} />}
-    </>
   );
 };
 

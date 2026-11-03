@@ -1,5 +1,50 @@
 import { Schema } from "effect";
 
+const DirectEditCodeSchema = Schema.Literals([
+  "attribute_not_literal",
+  "cannot_move",
+  "cannot_restructure",
+  "classes_not_editable",
+  "element_not_found",
+  "history_empty",
+  "history_stale",
+  "invalid_request",
+  "invalid_source",
+  "invalid_token",
+  "invalid_tweak_value",
+  "no_base_version",
+  "no_change",
+  "no_design_system",
+  "no_tweaks",
+  "not_host_element",
+  "parse_failed",
+  "run_in_progress",
+  "source_not_found",
+  "stale_selection",
+  "style_not_literal",
+  "text_from_data",
+  "text_not_editable",
+  "token_exists",
+  "tokens_invalid",
+  "tweak_not_declared",
+  "unknown_token",
+  "unknown_tweak",
+  "variant_not_supported",
+]);
+
+type DirectEditCode = typeof DirectEditCodeSchema.Type;
+
+const CONFLICT_CODES: readonly DirectEditCode[] = [
+  "history_stale",
+  "run_in_progress",
+  "token_exists",
+];
+
+const NOT_FOUND_CODES: readonly DirectEditCode[] = [
+  "no_design_system",
+  "no_tweaks",
+];
+
 const OptionalUnknownSchema = Schema.optionalKey(Schema.Unknown);
 
 const DesignSystemStateSchema = Schema.Struct({
@@ -16,6 +61,27 @@ const TokenPreviewSchema = Schema.Struct({
   css: Schema.String,
   errors: Schema.Array(Schema.String),
 });
+
+const TokenChangeSchema = Schema.Struct({
+  darkValue: Schema.optionalKey(Schema.NullOr(Schema.String)),
+  path: Schema.String,
+  value: Schema.optionalKey(Schema.String),
+});
+
+const TokenChangesQueryFields = {
+  changes: Schema.fromJsonString(Schema.Array(TokenChangeSchema)),
+} as const;
+
+const FILE_TEXT_MAX = 1000;
+
+const SourceUseFields = {
+  col: Schema.Int.check(Schema.isGreaterThanOrEqualTo(1)),
+  file: Schema.String.check(
+    Schema.isMinLength(1),
+    Schema.isMaxLength(FILE_TEXT_MAX)
+  ),
+  line: Schema.Int.check(Schema.isGreaterThanOrEqualTo(1)),
+} as const;
 
 const TokenChangesFields = {
   changes: Schema.Unknown,
@@ -109,8 +175,45 @@ const RenderCheckListSchema = Schema.Struct({
 
 type DirectEditResult = typeof DirectEditResultSchema.Type;
 
+const InsertableComponentSchema = Schema.Struct({
+  children: Schema.Boolean,
+  file: Schema.String,
+  folder: Schema.String,
+  id: Schema.String,
+  line: Schema.Number,
+  name: Schema.String,
+  uses: Schema.Number,
+});
+
+const InsertJsxImportSchema = Schema.Struct({
+  added: Schema.Boolean,
+  name: Schema.String,
+  specifier: Schema.String,
+});
+
+const ComponentFolderSchema = Schema.Struct({
+  folder: Schema.String,
+  kebab: Schema.Boolean,
+  kind: Schema.Literals(["kit", "app"]),
+  label: Schema.String,
+});
+
+const SwapCandidateSchema = Schema.Struct({
+  add: Schema.Array(Schema.String),
+  drop: Schema.Array(Schema.String),
+  file: Schema.String,
+  keep: Schema.Array(Schema.String),
+  name: Schema.String,
+});
+
+const CreatedPropSchema = Schema.Struct({
+  name: Schema.String,
+  optional: Schema.Boolean,
+  type: Schema.String,
+});
+
 const ListInsertableSchema = Schema.Struct({
-  components: Schema.Array(Schema.Unknown),
+  components: Schema.Array(InsertableComponentSchema),
   note: Schema.NullOr(Schema.String),
   truncated: Schema.Boolean,
 });
@@ -121,7 +224,7 @@ const InsertResultSchema = Schema.Struct({
   file: OptionalUnknownSchema,
   importAdded: OptionalUnknownSchema,
   importFrom: OptionalUnknownSchema,
-  imports: OptionalUnknownSchema,
+  imports: Schema.optionalKey(Schema.Array(InsertJsxImportSchema)),
   jsx: OptionalUnknownSchema,
   mode: OptionalUnknownSchema,
   select: OptionalUnknownSchema,
@@ -136,12 +239,12 @@ const ComponentListSchema = Schema.Struct({
 });
 
 const ComponentFolderListSchema = Schema.Struct({
-  folders: Schema.Array(Schema.Unknown),
+  folders: Schema.Array(ComponentFolderSchema),
   note: Schema.NullOr(Schema.String),
 });
 
 const SwapCandidateListSchema = Schema.Struct({
-  candidates: Schema.Array(Schema.Unknown),
+  candidates: Schema.Array(SwapCandidateSchema),
   from: Schema.String,
   note: Schema.NullOr(Schema.String),
 });
@@ -151,7 +254,7 @@ const CreateComponentResultSchema = Schema.Struct({
   files: Schema.Array(Schema.String),
   importFrom: Schema.Array(Schema.String),
   name: Schema.String,
-  props: Schema.Array(Schema.Unknown),
+  props: Schema.Array(CreatedPropSchema),
   select: Schema.Array(Schema.Unknown),
   title: Schema.String,
   variants: Schema.Array(Schema.String),
@@ -178,6 +281,7 @@ const ComponentPreviewSchema = Schema.Struct({
 });
 
 export {
+  CONFLICT_CODES,
   CommitTweaksResultSchema,
   ComponentFolderListSchema,
   ComponentListSchema,
@@ -186,19 +290,23 @@ export {
   CreateTokenFields,
   CreateTokenResultSchema,
   DesignSystemStateSchema,
+  DirectEditCodeSchema,
   DirectEditFields,
   DirectEditResultSchema,
   InsertResultSchema,
   ListInsertableSchema,
+  NOT_FOUND_CODES,
   PreviewUrlSchema,
   RenderCheckListSchema,
+  SourceUseFields,
   SwapCandidateListSchema,
   SwapResultSchema,
   TokenChangesFields,
+  TokenChangesQueryFields,
   TokenPreviewSchema,
   TweaksStateSchema,
   UpdateTokensResultSchema,
   WorkTreeSchema,
 };
 
-export type { DirectEditResult };
+export type { DirectEditCode, DirectEditResult };

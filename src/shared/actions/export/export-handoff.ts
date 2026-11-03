@@ -22,7 +22,7 @@ const exportHandoffExport = defineAction({
     versionId: VersionIdSchema,
   }),
   invalidates: [],
-  mcp: { off: "ui-bootstrap" },
+  mcp: { off: "legacy-mcp" },
   needs: "project.read",
   output: HandoffFolderResultSchema,
   scope: "project",

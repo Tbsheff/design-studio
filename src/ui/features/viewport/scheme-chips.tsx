@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 
-import { ChipButton } from "./chip-button.js";
 import { copy } from "./copy.js";
+import { ChipButton } from "./deps.js";
 import { SCHEMES } from "./matrix-model.js";
 import type { Scheme } from "./matrix-model.js";
 
@@ -20,6 +20,7 @@ const SchemeChips = ({ onPick, scheme }: SchemeChipsProps): ReactElement => (
         key={entry}
         label={copy.scheme[entry]}
         onPick={onPick}
+        tip={null}
         value={entry}
       />
     ))}

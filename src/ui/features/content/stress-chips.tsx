@@ -1,9 +1,9 @@
 import type { ReactElement } from "react";
 
-import { ChipButton } from "./chip-button.js";
 import { STRESS_MODES } from "./content-model.js";
 import type { ContentMode, StressMode } from "./content-model.js";
 import { copy } from "./copy.js";
+import { ChipButton } from "./deps.js";
 
 import styles from "./content.module.css";
 

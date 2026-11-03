@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 
-import { ChipButton } from "./chip-button.js";
 import { copy } from "./copy.js";
+import { ChipButton } from "./deps.js";
 import { WIDTH_CHOICES } from "./matrix-model.js";
 
 import styles from "./viewport.module.css";
@@ -19,6 +19,7 @@ const WidthChips = ({ onPick, widths }: WidthChipsProps): ReactElement => (
         key={entry}
         label={String(entry)}
         onPick={onPick}
+        tip={null}
         value={entry}
       />
     ))}

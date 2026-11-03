@@ -1,7 +1,7 @@
 import type { Hono } from "hono";
 
-import { bindLinkRuntime } from "../canvas/links/link-runtime.js";
-import { bindViewportRuntime } from "../viewport/viewport-runtime.js";
+import { bindLinkRuntime } from "../canvas/index.js";
+import { bindViewportRuntime } from "../viewport/index.js";
 import type { AppContext } from "./app-context.js";
 import { readBody } from "./app-request.js";
 import { registerLinkInteractionRoutes } from "./link-interaction-routes.js";

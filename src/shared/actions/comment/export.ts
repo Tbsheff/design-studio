@@ -25,7 +25,7 @@ const exportComment = defineAction({
     projectId: ProjectIdSchema,
   }),
   invalidates: [],
-  mcp: { off: "ui-bootstrap" },
+  mcp: { off: "legacy-mcp" },
   needs: "comment.read",
   output: CommentPrefillSchema,
   scope: "project",

@@ -11,7 +11,7 @@ const createViewport = defineAction({
   access: "edit",
   agent: {
     lean: false,
-    name: "create_viewport_matrix",
+    name: "create_viewport",
     set: "core",
     short:
       "Place a labeled group of canvas frames for one page at several widths and light or dark schemes.",
@@ -31,7 +31,7 @@ const createViewport = defineAction({
     projectId: ProjectIdSchema,
   }),
   invalidates: ["canvas.getDoc"],
-  mcp: { name: "create_viewport_matrix" },
+  mcp: { name: "create_viewport" },
   needs: "project.update",
   output: ViewportCreatedSchema,
   scope: "project",

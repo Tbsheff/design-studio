@@ -1,7 +1,8 @@
 import type { Hono } from "hono";
 
 import { directEditRuntimeOf, thumbOf } from "../direct-edit/index.js";
-import { BadRequestError } from "../store/errors.js";
+
+const UNAVAILABLE = 503;
 
 const THUMB_HEADERS = {
   "cache-control": "private, max-age=3600",
@@ -13,7 +14,10 @@ const registerComponentRoutes = (app: Hono): void => {
     const runtime = directEditRuntimeOf();
 
     if (runtime === null) {
-      throw new BadRequestError("direct edit is not ready");
+      return c.json(
+        { error: "unavailable", message: "Direct edit is not ready yet." },
+        UNAVAILABLE
+      );
     }
 
     const png = await thumbOf(

@@ -1,6 +1,18 @@
-import { Schema } from "effect";
+import { Effect, Schema } from "effect";
 
 const MAX_WIDTHS = 6;
+
+const PHONE_WIDTH = 375;
+
+const TABLET_WIDTH = 768;
+
+const DESKTOP_WIDTH = 1280;
+
+const DEFAULT_WIDTHS: readonly number[] = [
+  PHONE_WIDTH,
+  TABLET_WIDTH,
+  DESKTOP_WIDTH,
+];
 
 const ViewportWidthSchema = Schema.Int.check(
   Schema.isBetween({ maximum: 4000, minimum: 200 })
@@ -18,19 +30,16 @@ const ViewportFindingKindSchema = Schema.Literals([
 ]);
 
 const ViewportMatrixFields = {
-  page: Schema.optionalKey(
-    Schema.String.annotate({
-      description:
-        "Page path relative to the project root. Leave out for the entry page.",
-    })
+  page: Schema.String.annotate({
+    description:
+      "Page path relative to the project root. Leave out for the entry page.",
+  }).pipe(Schema.withDecodingDefaultKey(Effect.succeed(""))),
+  schemes: ViewportSchemeSchema.pipe(
+    Schema.withDecodingDefaultKey(Effect.succeed("both" as const))
   ),
-  schemes: Schema.optionalKey(ViewportSchemeSchema),
-  widths: Schema.optionalKey(
-    Schema.Array(ViewportWidthSchema).check(
-      Schema.isMaxLength(MAX_WIDTHS),
-      Schema.isMinLength(1)
-    )
-  ),
+  widths: Schema.Array(ViewportWidthSchema)
+    .check(Schema.isMaxLength(MAX_WIDTHS), Schema.isMinLength(1))
+    .pipe(Schema.withDecodingDefaultKey(Effect.succeed(DEFAULT_WIDTHS))),
 } as const;
 
 const ViewportFrameSchema = Schema.Struct({

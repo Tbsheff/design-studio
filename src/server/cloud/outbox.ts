@@ -1,3 +1,5 @@
+import type { Effect } from "effect";
+
 import { inspectSourceUpload } from "./engine/inspect-source-upload.js";
 import type { UploadFacts } from "./engine/inspect-source-upload.js";
 import { toScrubbedText } from "./engine/to-scrubbed-text.js";

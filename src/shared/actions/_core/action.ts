@@ -8,6 +8,7 @@ type Method = "DELETE" | "GET" | "PATCH" | "POST" | "PUT";
 
 type OffReason =
   | "legacy-agent"
+  | "legacy-mcp"
   | "run-control"
   | "secret"
   | "stream"

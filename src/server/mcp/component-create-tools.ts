@@ -247,7 +247,7 @@ const swapInstance = defineTool(
     if (!input.name) {
       const list = (await directEditCall(
         { directionId: direction.id, projectId: project.id },
-        (runtime, ref) => listSwapCandidatesOf(runtime, ref, { use })
+        (runtime, ref) => listSwapCandidatesOf(runtime, ref, use)
       )) as SwapCandidateList;
       return { result: ok({ use, ...list }) };
     }

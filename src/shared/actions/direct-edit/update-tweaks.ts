@@ -3,10 +3,10 @@ import { Schema } from "effect";
 import { defineAction } from "../_core/action.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
 import { Conflict } from "../_core/errors/conflict.js";
-import { DirectEditError } from "../_core/errors/direct-edit-error.js";
 import { NotFound } from "../_core/errors/not-found.js";
 import { DirectionIdSchema, ProjectIdSchema } from "../_core/ids.js";
 import { DirectEditConflict } from "./errors/direct-edit-conflict.js";
+import { DirectEditFailed } from "./errors/direct-edit-failed.js";
 import { DirectEditNotFound } from "./errors/direct-edit-not-found.js";
 import { CommitTweaksResultSchema, TokenChangesFields } from "./schema.js";
 
@@ -20,7 +20,7 @@ const updateTweaksDirectEdit = defineAction({
     BadRequest,
     Conflict,
     NotFound,
-    DirectEditError,
+    DirectEditFailed,
     DirectEditConflict,
     DirectEditNotFound,
   ],
@@ -35,7 +35,7 @@ const updateTweaksDirectEdit = defineAction({
     projectId: ProjectIdSchema,
   }),
   invalidates: ["direct-edit.getTweaks"],
-  mcp: { off: "ui-bootstrap" },
+  mcp: { off: "legacy-mcp" },
   needs: "project.update",
   output: CommitTweaksResultSchema,
   scope: "project",

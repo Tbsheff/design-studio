@@ -1,10 +1,17 @@
 import os from "node:os";
 import path from "node:path";
 
+import { Effect } from "effect";
+
 import { composeSheet, removeShots } from "./contact-sheet.js";
 import type { SheetShot } from "./contact-sheet.js";
-import { probeOnPage, withForcedParam, withPagePath } from "./deps.js";
-import type { CanvasFileFrame, Project } from "./deps.js";
+import {
+  attemptKnown,
+  probeOnPage,
+  withForcedParam,
+  withPagePath,
+} from "./deps.js";
+import type { CanvasFileFrame, KnownFailure, Project } from "./deps.js";
 import { checksTapTargets, toCells } from "./engine/cells.js";
 import type { CellScheme, MatrixCell, MatrixRequest } from "./engine/cells.js";
 import { matrixProbe } from "./probe.js";
@@ -150,77 +157,80 @@ const sheetPathOf = (runtime: ViewportRuntime, project: Project): string =>
     `${project.id}-${Date.now()}.png`
   );
 
-const shootOne = async (
+const shootOne = (
   runtime: ViewportRuntime,
   item: CellUrl,
   at: number,
   schemes: readonly CellScheme[]
-): Promise<SheetShot> => {
+): Effect.Effect<SheetShot, KnownFailure> => {
   const file = path.join(os.tmpdir(), `ds-matrix-${Date.now()}-${at}.png`);
 
-  await runtime.preview.screenshot(
-    item.url,
-    { height: item.cell.height, width: item.cell.width },
-    file
+  return attemptKnown(() =>
+    runtime.preview.screenshot(
+      item.url,
+      { height: item.cell.height, width: item.cell.width },
+      file
+    )
+  ).pipe(
+    Effect.as<SheetShot>({ file, row: schemes.indexOf(item.cell.scheme) })
   );
-
-  return { file, row: schemes.indexOf(item.cell.scheme) };
 };
 
-const makeSheet = async (
+const makeSheet = (
   runtime: ViewportRuntime,
   project: Project,
   urls: readonly CellUrl[]
-): Promise<string | null> => {
+): Effect.Effect<string | null> => {
   const schemes = [...new Set(urls.map((item) => item.cell.scheme))];
-  let shots: readonly SheetShot[] = [];
 
-  try {
-    shots = await Promise.all(
-      urls.map((item, at) => shootOne(runtime, item, at, schemes))
-    );
-
-    return await composeSheet(shots, sheetPathOf(runtime, project));
-  } catch {
-    return null;
-  } finally {
-    await removeShots(shots);
-  }
+  return Effect.acquireUseRelease(
+    Effect.all(urls.map((item, at) => shootOne(runtime, item, at, schemes))),
+    (shots) => composeSheet(shots, sheetPathOf(runtime, project)),
+    (shots) => removeShots(shots)
+  ).pipe(Effect.orElseSucceed((): string | null => null));
 };
 
-const probeCell = async (
+const probeCell = Effect.fn("probeCell")(function* run(
   runtime: ViewportRuntime,
   item: CellUrl,
   frames: readonly CanvasFileFrame[]
-): Promise<CellResult> => {
+) {
   const { cell, url } = item;
 
-  const raw = await probeOnPage<RawMatrixProbe>(
-    runtime.preview,
-    url,
-    { height: cell.height, width: cell.width },
-    matrixProbe(checksTapTargets(cell.width))
+  const raw = yield* attemptKnown(() =>
+    probeOnPage<RawMatrixProbe>(
+      runtime.preview,
+      url,
+      { height: cell.height, width: cell.width },
+      matrixProbe(checksTapTargets(cell.width))
+    )
   );
 
   const frameId = frameIdOf(frames, cell);
   const findings = toFindings(cell, frameId, raw);
 
-  return { findings, report: toReport(cell, frameId, findings, raw) };
-};
+  const result: CellResult = {
+    findings,
+    report: toReport(cell, frameId, findings, raw),
+  };
 
-const inspectMatrix = async (
+  return result;
+});
+
+const inspectMatrix = Effect.fn("inspectMatrix")(function* run(
   runtime: ViewportRuntime,
   command: InspectCommand
-): Promise<MatrixInspected> => {
-  const { direction, project } = await runtime.loadDirection(
-    command.projectId,
-    command.directionId
+) {
+  const { direction, project } = yield* attemptKnown(() =>
+    runtime.loadDirection(command.projectId, command.directionId)
   );
 
-  const [base, snapshot] = await Promise.all([
-    runtime.preview.directionUrl(project, direction),
-    runtime.canvas.read(project),
-  ]);
+  const [base, snapshot] = yield* attemptKnown(() =>
+    Promise.all([
+      runtime.preview.directionUrl(project, direction),
+      runtime.canvas.read(project),
+    ])
+  );
 
   const frames = snapshot.canvas?.frames ?? [];
 
@@ -229,18 +239,28 @@ const inspectMatrix = async (
     url: urlOf(base, command.page, cell.scheme),
   }));
 
-  const [results, sheet] = await Promise.all([
-    Promise.all(urls.map((item) => probeCell(runtime, item, frames))),
-    makeSheet(runtime, project, urls),
-  ]);
+  const [results, sheet] = yield* Effect.all(
+    [
+      Effect.all(
+        urls.map((item) => probeCell(runtime, item, frames)),
+        {
+          concurrency: "unbounded",
+        }
+      ),
+      makeSheet(runtime, project, urls),
+    ],
+    { concurrency: "unbounded" }
+  );
 
-  return {
+  const inspected: MatrixInspected = {
     cells: results.map((result) => result.report),
     contactSheet: sheet,
     findings: results.flatMap((result) => result.findings),
     page: command.page,
   };
-};
+
+  return inspected;
+});
 
 export { inspectMatrix };
 

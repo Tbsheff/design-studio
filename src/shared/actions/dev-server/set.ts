@@ -26,7 +26,7 @@ const setDevServer = defineAction({
     url: Schema.optionalKey(Schema.NullOr(Schema.String)),
   }),
   invalidates: ["dev-server.get"],
-  mcp: { off: "ui-bootstrap" },
+  mcp: { off: "legacy-mcp" },
   needs: "project.update",
   output: DevServerConfigSavedSchema,
   scope: "project",

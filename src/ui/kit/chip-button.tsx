@@ -1,13 +1,13 @@
 import { useCallback } from "react";
 import type { ReactElement } from "react";
 
-import styles from "./content.module.css";
+import styles from "./chip-button.module.css";
 
-interface ChipButtonProps<Value extends string> {
+interface ChipButtonProps<Value extends number | string> {
   readonly isOn: boolean;
   readonly label: string;
   readonly onPick: (value: Value) => void;
-  readonly tip: string;
+  readonly tip: string | null;
   readonly value: Value;
 }
 
@@ -19,7 +19,7 @@ const classOf = (isOn: boolean): string => {
   return styles.chip ?? "";
 };
 
-const ChipButton = <Value extends string>({
+const ChipButton = <Value extends number | string>({
   isOn,
   label,
   onPick,

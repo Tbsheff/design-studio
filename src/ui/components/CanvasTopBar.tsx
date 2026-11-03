@@ -482,6 +482,7 @@ function OverflowMenu(p: OverflowProps) {
 
 interface Props {
   shapeTools?: ReactNode;
+  matrix?: ReactNode;
   paneCollapsed: boolean;
   onExpandPane: () => void;
   onReload: () => void;
@@ -660,7 +661,7 @@ export function CanvasTopBar(p: Props) {
         </button>
       </div>
       {p.shapeTools}
-      <span data-topbar-slot="matrix" style={{ display: "contents" }} />
+      {p.matrix}
       <span data-topbar-slot="review" style={{ display: "contents" }} />
       <DropMenu
         label="Present"

@@ -6,10 +6,8 @@ import { Conflict } from "../_core/errors/conflict.js";
 import { NotFound } from "../_core/errors/not-found.js";
 import { DirectionIdSchema, ProjectIdSchema } from "../_core/ids.js";
 import {
+  ContentInputFields,
   ContentLayerSchema,
-  ContentModeSchema,
-  ContentPresetSchema,
-  ContentRepeatSchema,
   ContentResultSchema,
 } from "./schema.js";
 
@@ -34,11 +32,8 @@ const applyContent = defineAction({
   input: Schema.Struct({
     directionId: DirectionIdSchema,
     layer: ContentLayerSchema,
-    mode: Schema.optionalKey(ContentModeSchema),
-    preset: Schema.optionalKey(ContentPresetSchema),
     projectId: ProjectIdSchema,
-    repeat: Schema.optionalKey(ContentRepeatSchema),
-    seed: Schema.optionalKey(Schema.Int),
+    ...ContentInputFields,
   }),
   invalidates: ["version.list", "version.get"],
   mcp: { name: "apply_content" },

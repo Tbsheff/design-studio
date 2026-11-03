@@ -28,7 +28,7 @@ const importPackPack = defineAction({
     mode: Schema.optionalKey(ImportModeSchema),
   }),
   invalidates: ["pack.listSummary", "pack.list", "pack.getPack"],
-  mcp: { off: "ui-bootstrap" },
+  mcp: { off: "legacy-mcp" },
   needs: "pack.write",
   output: ImportResultSchema,
   scope: "org",

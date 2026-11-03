@@ -1,10 +1,9 @@
-import { Effect } from "effect";
+import type { Effect } from "effect";
 
-import { attemptKnown, makeRuntimeSlot, requireBound } from "./deps.js";
+import { makeRuntimeSlot } from "./deps.js";
 import type {
   CanvasService,
   Direction,
-  KnownFailure,
   PreviewService,
   Project,
 } from "./deps.js";
@@ -25,15 +24,8 @@ const bindViewportRuntime = (runtime: ViewportRuntime): void => {
   runtimes.bind(runtime);
 };
 
-const attemptViewport = <Value>(
-  task: (runtime: ViewportRuntime) => Promise<Value>
-): Effect.Effect<Value, KnownFailure> =>
-  Effect.gen(function* withRuntime() {
-    const runtime = yield* requireBound("Viewport", runtimes.peek());
+const viewportRuntime: Effect.Effect<ViewportRuntime> = runtimes.read;
 
-    return yield* attemptKnown(() => task(runtime));
-  });
-
-export { attemptViewport, bindViewportRuntime };
+export { bindViewportRuntime, viewportRuntime };
 
 export type { ViewportRuntime };

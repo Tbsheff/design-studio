@@ -39,7 +39,7 @@ const updateComment = defineAction({
     text: Schema.optionalKey(CommentTextSchema),
   }),
   invalidates: ["comment.list"],
-  mcp: { off: "ui-bootstrap" },
+  mcp: { off: "legacy-mcp" },
   needs: "comment.write",
   output: CommentSchema,
   scope: "project",

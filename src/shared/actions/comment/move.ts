@@ -25,7 +25,7 @@ const moveComment = defineAction({
     projectId: ProjectIdSchema,
   }),
   invalidates: ["comment.list"],
-  mcp: { off: "ui-bootstrap" },
+  mcp: { off: "legacy-mcp" },
   needs: "comment.write",
   output: CommentOrderSchema,
   scope: "project",

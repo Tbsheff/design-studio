@@ -1,10 +1,10 @@
 // @generated
 import { createViewport } from "./create.js";
-import { inspectViewport } from "./inspect.js";
+import { runViewport } from "./run.js";
 
 const ViewportActions = {
   createViewport,
-  inspectViewport,
+  runViewport,
 } as const;
 
 export { ViewportActions };

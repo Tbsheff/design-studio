@@ -39,6 +39,9 @@ interface TenantDbApi {
     statement: TenantStatement<Params>,
     values: Params
   ) => Effect.Effect<void, NotFound, CurrentOrg>;
+  readonly writeAll: (
+    entries: readonly BatchEntry[]
+  ) => Effect.Effect<void, never, CurrentOrg>;
 }
 
 const mismatch = (
@@ -85,6 +88,14 @@ const needsReturning = (
   return Effect.void;
 };
 
+const toBatchEntry = <Params extends ParamValues>(
+  statement: TenantStatement<Params>,
+  values: Params
+): BatchEntry => ({
+  statement: { ...statement, bind: (org) => statement.bind(org, values) },
+  values,
+});
+
 const makeBatch = (db: D1Database): TenantDbApi["batch"] =>
   Effect.fn("TenantDb.batch")(function* run(entries) {
     const org = yield* CurrentOrg;
@@ -105,6 +116,8 @@ const makeBatch = (db: D1Database): TenantDbApi["batch"] =>
   });
 
 const makeDb = (db: D1Database): TenantDbApi => {
+  const runBatch = makeBatch(db);
+
   const rowsOf = Effect.fn("TenantDb.rowsOf")(function* run(
     statement: TenantStatement<ParamValues>,
     values: ParamValues
@@ -137,7 +150,7 @@ const makeDb = (db: D1Database): TenantDbApi => {
 
       return yield* decodeRows(rows, schema);
     }),
-    batch: makeBatch(db),
+    batch: runBatch,
     first: Effect.fn("TenantDb.first")(
       function* run(statement, values, schema) {
         const rows = yield* rowsOf(statement, values);
@@ -167,6 +180,7 @@ const makeDb = (db: D1Database): TenantDbApi => {
         return yield* mismatch(statement, "a by-id write changed many rows");
       }
     }),
+    writeAll: (entries) => runBatch(entries).pipe(Effect.asVoid),
   };
 };
 
@@ -185,6 +199,6 @@ class TenantDb extends Context.Service<TenantDb, TenantDbApi>()(
   );
 }
 
-export { TenantDb };
+export { TenantDb, toBatchEntry };
 
 export type { BatchEntry, RowSchema, TenantDbApi };

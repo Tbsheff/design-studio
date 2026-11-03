@@ -1,13 +1,13 @@
 import { Effect } from "effect";
 import type { HttpApiBuilder } from "effect/http-api";
 
-import { BadRequest } from "../../../../../../src/shared/actions/_core/errors/bad-request.js";
-import { Conflict } from "../../../../../../src/shared/actions/_core/errors/conflict.js";
+import { BadRequest, Conflict } from "../../shared-actions.js";
 import { TenantBlobs } from "../../tenant/blobs.js";
 import { ChangesRepo } from "../../tenant/repos/changes.js";
 import { ProjectsRepo } from "../../tenant/repos/projects.js";
 import { VersionsRepo } from "../../tenant/repos/versions.js";
 import { requireOrg, requirePerm } from "../groups/authorizer.js";
+import { CurrentUser } from "../middleware/current-user.js";
 import {
   requireCloudRef,
   requireDetached,
@@ -29,6 +29,8 @@ const CREATE_ANY = "*";
 const toBytes = (data: string): Uint8Array =>
   Uint8Array.from(atob(data), (char) => char.codePointAt(0) ?? 0);
 
+const BLOB_CHECKS = 8;
+
 const toHex = (bytes: ArrayBuffer): string =>
   [...new Uint8Array(bytes)]
     .map((byte) => byte.toString(HEX_RADIX).padStart(2, "0"))
@@ -38,20 +40,18 @@ const findMissing = Effect.fn("Sync.findMissing")(function* run(
   blobIds: readonly string[]
 ) {
   const blobs = yield* TenantBlobs;
-  const missing: string[] = [];
 
-  for (const name of blobIds) {
-    const found = yield* blobs.get({ kind: "blob", name }).pipe(
-      Effect.as(true),
-      Effect.orElseSucceed(() => false)
-    );
+  const found = yield* Effect.all(
+    blobIds.map((name) =>
+      blobs.get({ kind: "blob", name }).pipe(
+        Effect.as(true),
+        Effect.orElseSucceed(() => false)
+      )
+    ),
+    { concurrency: BLOB_CHECKS }
+  );
 
-    if (!found) {
-      missing.push(name);
-    }
-  }
-
-  return { missing };
+  return { missing: blobIds.filter((_name, index) => found[index] !== true) };
 });
 
 const putProject = Effect.fn("Sync.putProject")(function* run(input: {
@@ -105,7 +105,7 @@ const push = Effect.fn("Sync.push")(function* run(input: {
   readonly sig: string;
 }) {
   yield* requireCloudRef(input.orgId, input.projectId, input.sig);
-  const org = yield* requirePerm("project.update");
+  yield* requirePerm("project.update");
   const projects = yield* ProjectsRepo;
   const changes = yield* ChangesRepo;
   const project = yield* projects.get(input.projectId);
@@ -118,9 +118,15 @@ const push = Effect.fn("Sync.push")(function* run(input: {
     .rename({ id: project.id, name: project.name, rev: input.rev })
     .pipe(Effect.mapError(() => new Conflict({ message: STALE_PROJECT })));
 
-  for (const change of input.changes) {
-    yield* changes.append({ ...change, actorId: null, deviceId: org.orgId });
-  }
+  const user = yield* CurrentUser;
+
+  yield* changes.appendAll(
+    input.changes.map((change) => ({
+      ...change,
+      actorId: user.userId,
+      deviceId: null,
+    }))
+  );
 
   return { rev: input.rev + 1 };
 });
@@ -241,16 +247,18 @@ const commit = Effect.fn("Sync.commit")(function* run(input: {
     parentVersionId: head.head_version_id,
   });
 
-  for (const file of input.files) {
-    yield* versions.retainBlob({ id: file.blobId, size: file.size });
-    yield* versions.addFile({
-      blobId: file.blobId,
-      id: crypto.randomUUID(),
-      mode: file.mode,
-      path: file.path,
-      versionId,
-    });
-  }
+  yield* versions.storeFiles(
+    input.files.map((file) => ({
+      blob: { id: file.blobId, size: file.size },
+      file: {
+        blobId: file.blobId,
+        id: crypto.randomUUID(),
+        mode: file.mode,
+        path: file.path,
+        versionId,
+      },
+    }))
+  );
 
   yield* versions
     .advanceHead({

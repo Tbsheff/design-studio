@@ -29,7 +29,7 @@ const deleteComment = defineAction({
     projectId: ProjectIdSchema,
   }),
   invalidates: ["comment.list"],
-  mcp: { off: "ui-bootstrap" },
+  mcp: { off: "legacy-mcp" },
   needs: "comment.delete",
   output: CommentRemovedSchema,
   scope: "project",

@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Effect, Schema } from "effect";
 
 const ContentModeSchema = Schema.Literals([
   "sample",
@@ -32,6 +32,19 @@ const ContentLayerSchema = Schema.Struct({
   }),
 });
 
+const ContentInputFields = {
+  mode: ContentModeSchema.pipe(
+    Schema.withDecodingDefaultKey(Effect.succeed("sample" as const))
+  ),
+  preset: ContentPresetSchema.pipe(
+    Schema.withDecodingDefaultKey(Effect.succeed("generic" as const))
+  ),
+  repeat: ContentRepeatSchema.pipe(
+    Schema.withDecodingDefaultKey(Effect.succeed(1))
+  ),
+  seed: Schema.Int.pipe(Schema.withDecodingDefaultKey(Effect.succeed(1))),
+} as const;
+
 const ContentResultSchema = Schema.Struct({
   files: Schema.Array(Schema.String),
   previousVersionId: Schema.String,
@@ -41,6 +54,7 @@ const ContentResultSchema = Schema.Struct({
 });
 
 export {
+  ContentInputFields,
   ContentLayerSchema,
   ContentModeSchema,
   ContentPresetSchema,

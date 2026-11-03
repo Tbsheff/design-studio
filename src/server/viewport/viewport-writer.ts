@@ -3,7 +3,7 @@ import { Context, Effect, Layer } from "effect";
 import { createMatrix } from "./create-matrix.js";
 import type { MatrixCommand, MatrixCreated } from "./create-matrix.js";
 import type { KnownFailure } from "./deps.js";
-import { attemptViewport } from "./viewport-runtime.js";
+import { viewportRuntime } from "./viewport-runtime.js";
 
 interface ViewportWriterApi {
   readonly create: (
@@ -23,9 +23,9 @@ class ViewportWriter extends Context.Service<
       create: Effect.fn("ViewportWriter.create")(function* run(
         command: MatrixCommand
       ) {
-        return yield* attemptViewport((runtime) =>
-          createMatrix(runtime, command)
-        );
+        const runtime = yield* viewportRuntime;
+
+        return yield* createMatrix(runtime, command);
       }),
     })
   );

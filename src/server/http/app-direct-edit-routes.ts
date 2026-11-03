@@ -2,10 +2,12 @@ import path from "node:path";
 
 import type { Hono } from "hono";
 
-import { componentPreviewsFor } from "../components/preview.js";
-import { createComponentService } from "../components/thumbs.js";
-import { bindContentRuntime } from "../content/content-runtime.js";
-import { bindDirectEditRuntime } from "../direct-edit/direct-edit-core.js";
+import {
+  componentPreviewsFor,
+  createComponentService,
+} from "../components/index.js";
+import { bindContentRuntime } from "../content/index.js";
+import { bindDirectEditRuntime } from "../direct-edit/index.js";
 import type { AppContext } from "./app-context.js";
 import { listWorkTree } from "./mentions.js";
 

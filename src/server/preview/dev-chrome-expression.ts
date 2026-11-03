@@ -1,4 +1,4 @@
-const devChromeExpression = (selector: string): string =>
+const toDevChromeExpression = (selector: string): string =>
   `(() => {
     const LOC = '[data-studio-loc]';
     const seen = new WeakMap();
@@ -27,4 +27,4 @@ const devChromeExpression = (selector: string): string =>
     return (el) => Boolean(el && el.matches && check(el));
   })()`;
 
-export { devChromeExpression };
+export { toDevChromeExpression };

@@ -1,13 +1,15 @@
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 
+import { toTsconfigProjects } from "./tsconfig-projects.ts";
+
 const OUT_DIR = new URL("../artifacts/", import.meta.url);
 const OUT = new URL("typecheck-diff.txt", OUT_DIR);
 const BASELINE = new URL("typecheck-diff.baseline.txt", OUT_DIR);
 const ERROR_LINE =
   /^(?<file>[^\s(][^(]*)\((?<line>\d+),\d+\): error (?<code>TS\d+)/u;
 
-const errorsOf = (command: string, args: string[]) => {
+const toErrorKeys = (command: string, args: string[]) => {
   const run = spawnSync(command, args, {
     encoding: "utf-8",
     maxBuffer: 2 ** 31 - 1,
@@ -20,23 +22,18 @@ const errorsOf = (command: string, args: string[]) => {
   return new Set(keys);
 };
 
-const only = (left: Set<string>, right: Set<string>, mark: string) =>
+const toOnlyLines = (left: Set<string>, right: Set<string>, mark: string) =>
   [...left].filter((key) => !right.has(key)).map((key) => `${mark} ${key}`);
 
-const PROJECTS = [
-  "tsconfig.server.json",
-  "tsconfig.ui.json",
-  "tsconfig.ui-test.json",
-  "tsconfig.desktop.json",
-  "tsconfig.server-probe.json",
-  "tsconfig.desktop-renderer.json",
-];
-
-const errorsOfProjects = (command: string, args: string[]) => {
+const toProjectErrors = (
+  projects: readonly string[],
+  command: string,
+  args: string[]
+) => {
   const keys = new Set<string>();
 
-  for (const project of PROJECTS) {
-    for (const key of errorsOf(command, [...args, "-p", project])) {
+  for (const project of projects) {
+    for (const key of toErrorKeys(command, [...args, "-p", project])) {
       keys.add(key);
     }
   }
@@ -44,18 +41,21 @@ const errorsOfProjects = (command: string, args: string[]) => {
   return keys;
 };
 
-const main = () => {
-  const tsc = errorsOf("node", [
+const runTypecheckDiff = async () => {
+  const projects = await toTsconfigProjects();
+  const tsc = toErrorKeys("node", [
     "node_modules/typescript/bin/tsc",
     "-b",
     "tsconfig.json",
     "--pretty",
     "false",
   ]);
-  const tsrs = errorsOfProjects("node_modules/.bin/tsrs", ["--noEmit"]);
+  const tsrs = toProjectErrors(projects, "node_modules/.bin/tsrs", [
+    "--noEmit",
+  ]);
   const lines = [
-    ...only(tsc, tsrs, "tsc-only"),
-    ...only(tsrs, tsc, "tsrs-only"),
+    ...toOnlyLines(tsc, tsrs, "tsc-only"),
+    ...toOnlyLines(tsrs, tsc, "tsrs-only"),
   ].sort();
   mkdirSync(OUT_DIR, { recursive: true });
   writeFileSync(OUT, lines.length > 0 ? `${lines.join("\n")}\n` : "");
@@ -68,4 +68,4 @@ const main = () => {
   return fresh.length > 0 ? 1 : 0;
 };
 
-process.exitCode = main();
+process.exitCode = await runTypecheckDiff();

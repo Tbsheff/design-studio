@@ -18,7 +18,7 @@ function sameSelectors(
   );
 }
 
-interface CommentMode {
+export interface CommentMode {
   available: boolean;
   on: boolean;
   setOn: (on: boolean) => void;

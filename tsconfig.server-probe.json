@@ -4,7 +4,7 @@
     "composite": true,
     "tsBuildInfoFile": "./node_modules/.cache/tsbuild/server-probe.tsbuildinfo",
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
-    "types": ["node"]
+    "types": []
   },
   "include": ["src/server/export/page-scan.ts"]
 }

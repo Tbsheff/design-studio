@@ -97,3 +97,5 @@ export {
   setDesignMdIn,
   updateSettingsIn,
 };
+
+export type { DesignMdSaved, ProjectFileBytes };

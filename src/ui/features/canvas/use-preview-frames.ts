@@ -37,6 +37,7 @@ import { textEditability } from "../inspector/css-values.js";
 import { PREVIEW_PAINTED_EVENT } from "../inspector/use-edit-history.js";
 import { parseLayerTree } from "../versions-layers-tokens/layers-tree.js";
 import type { LayerTree } from "../versions-layers-tokens/layers-tree.js";
+import type { PreviewSlot } from "./preview-slot-model.js";
 import { PREVIEW_HISTORY_EVENT } from "./use-undo-shortcut.js";
 import { PREVIEW_TOOL_KEY_EVENT } from "./vector-tool-model.js";
 
@@ -103,11 +104,6 @@ function forwardKeyMessage(msg: KeyMessage): void {
       new CustomEvent(PREVIEW_HISTORY_EVENT, { detail: { redo: msg.redo } })
     );
   }
-}
-
-interface Slot {
-  token: string;
-  src: string;
 }
 
 interface PendingSwap {
@@ -294,7 +290,7 @@ function sameRect(
 }
 
 export function usePreviewFrames(o: Options) {
-  const [slots, setSlots] = useState<Slot[]>([]);
+  const [slots, setSlots] = useState<PreviewSlot[]>([]);
   const [frontToken, setFrontToken] = useState<string | null>(null);
 
   const [hover] = useState<LiveStore<HoverBox | null>>(() =>
@@ -338,7 +334,7 @@ export function usePreviewFrames(o: Options) {
   opts.current = o;
 
   const frameFor = useCallback(
-    (slot: Slot): BridgeFrame => ({
+    (slot: PreviewSlot): BridgeFrame => ({
       key: slot.token,
       token: slot.token,
       url: slot.src,

@@ -2,9 +2,9 @@
   "files": [],
   "references": [
     { "path": "./tsconfig.server.json" },
+    { "path": "./tsconfig.bridge.json" },
     { "path": "./tsconfig.ui.json" },
     { "path": "./tsconfig.ui-test.json" },
-    { "path": "./tsconfig.desktop.json" },
     { "path": "./tsconfig.server-probe.json" },
     { "path": "./tsconfig.desktop-renderer.json" }
   ]

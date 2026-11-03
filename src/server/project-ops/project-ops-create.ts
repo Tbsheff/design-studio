@@ -150,3 +150,5 @@ const importProjectIn = async (
 };
 
 export { createProjectIn, importProjectIn };
+
+export type { CreatedProject, ImportedProject };

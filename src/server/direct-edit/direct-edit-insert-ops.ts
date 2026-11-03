@@ -313,4 +313,4 @@ export {
   thumbOf,
 };
 
-export type { SourceUse };
+export type { ComponentPreviewBody, SourceUse };

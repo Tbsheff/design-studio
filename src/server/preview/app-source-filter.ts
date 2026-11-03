@@ -1,5 +1,5 @@
 import { APP_SOURCE_PATH, DEV_CHROME_SELECTOR } from "../../shared/app.js";
-import { devChromeExpression } from "./dev-chrome-expression.js";
+import { toDevChromeExpression } from "./dev-chrome-expression.js";
 import type { RenderPage } from "./render-backend.js";
 
 const MAX_ANCESTORS = 40;
@@ -8,7 +8,7 @@ export function outsideAppExpression(selectors: readonly string[]): string {
   return `(async (selectors) => {
     const fiberOf = (node) => { const key = Object.keys(node).find((k) => k.startsWith('__reactFiber$')); return key ? node[key] : null; };
     const stackOf = (f) => [f?._debugStack?.stack, f?.debugStack?.stack, f?.stack].find((v) => typeof v === 'string' && v.length > 0) || '';
-    const isDevChrome = ${devChromeExpression(DEV_CHROME_SELECTOR)};
+    const isDevChrome = ${toDevChromeExpression(DEV_CHROME_SELECTOR)};
     const pinnedOf = (el) => { for (let node = el; node && node !== document.body && node !== document.documentElement; node = node.parentElement) { const p = getComputedStyle(node).position; if (p === 'fixed' || p === 'sticky') return node; } return null; };
     const pinned = [];
     const chains = selectors.map((selector) => {

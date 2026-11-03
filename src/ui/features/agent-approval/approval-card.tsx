@@ -52,3 +52,5 @@ const ApprovalCard = ({
 };
 
 export { ApprovalCard };
+
+export type { ApprovalCardProps };

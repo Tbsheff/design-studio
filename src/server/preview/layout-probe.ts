@@ -1,6 +1,6 @@
 import { DEV_CHROME_SELECTOR } from "../../shared/app.js";
 import type { LayoutFinding } from "../../shared/contracts.js";
-import { devChromeExpression } from "./dev-chrome-expression.js";
+import { toDevChromeExpression } from "./dev-chrome-expression.js";
 
 const MAX_LAYOUT_FINDINGS = 10;
 
@@ -117,5 +117,5 @@ const LAYOUT_PROBE_SOURCE = String.raw`(cap, isDevChrome) => {
 }`;
 
 export function layoutProbeExpression(cap = MAX_LAYOUT_FINDINGS): string {
-  return `(${LAYOUT_PROBE_SOURCE})(${Number(cap)}, ${devChromeExpression(DEV_CHROME_SELECTOR)})`;
+  return `(${LAYOUT_PROBE_SOURCE})(${Number(cap)}, ${toDevChromeExpression(DEV_CHROME_SELECTOR)})`;
 }

@@ -132,3 +132,5 @@ const DoctorCard = ({
 };
 
 export { DoctorCard };
+
+export type { DoctorCardProps };

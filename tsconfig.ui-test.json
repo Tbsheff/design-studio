@@ -4,12 +4,8 @@
     "composite": true,
     "tsBuildInfoFile": "./node_modules/.cache/tsbuild/ui-test.tsbuildinfo",
     "jsx": "react-jsx",
-    "types": ["node"]
+    "lib": ["ES2024", "DOM", "DOM.Iterable"],
+    "types": ["node", "vite/client"]
   },
-  "include": [
-    "src/ui/**/*.test.ts",
-    "src/ui/**/*.test.tsx",
-    "src/ui/styles/inspector-css.test.ts"
-  ],
-  "references": [{ "path": "./tsconfig.ui.json" }]
+  "include": ["src/ui", "src/shared"]
 }

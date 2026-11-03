@@ -1,5 +1,5 @@
 import { defineConfig } from "oxlint";
-import type { OxlintOverride } from "oxlint";
+import type { OxlintConfig, OxlintOverride } from "oxlint";
 
 import { ELEMENTS, ROOT_POLICIES, dependencies } from "./lint/boundaries.ts";
 import { coarse } from "./lint/coarse.ts";
@@ -75,7 +75,7 @@ export const BOUNDARY_OVERRIDES: OxlintOverride[] = [
   },
 ];
 
-export default defineConfig({
+export default defineConfig<OxlintConfig>({
   env: core.env,
   extends: [core, react, js, antiSlop],
   jsPlugins: [

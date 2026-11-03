@@ -3,6 +3,7 @@
   "compilerOptions": {
     "composite": true,
     "tsBuildInfoFile": "./node_modules/.cache/tsbuild/desktop-renderer.tsbuildinfo",
+    "lib": ["ES2024", "DOM", "DOM.Iterable"],
     "types": []
   },
   "include": [

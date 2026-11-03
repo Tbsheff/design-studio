@@ -34,3 +34,5 @@ const Studio = ({ projectId, onExit }: StudioProps): ReactElement => {
 };
 
 export { Studio };
+
+export type { StudioProps };

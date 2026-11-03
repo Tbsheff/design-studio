@@ -132,3 +132,5 @@ const moveHiddenIn = async (
 };
 
 export { countHiddenIn, moveHiddenIn };
+
+export type { HiddenCount, HiddenMoved };

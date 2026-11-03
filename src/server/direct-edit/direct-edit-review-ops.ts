@@ -378,4 +378,10 @@ export {
   setRulesIn,
 };
 
-export type { ReviewFixBody, ReviewRunBody, RulesSaveBody, RulesTestBody };
+export type {
+  ReviewFixBody,
+  ReviewRunBody,
+  RulesSaveBody,
+  RulesTestBody,
+  SavedRules,
+};

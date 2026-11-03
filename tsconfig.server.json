@@ -3,15 +3,17 @@
   "compilerOptions": {
     "composite": true,
     "tsBuildInfoFile": "./node_modules/.cache/tsbuild/server.tsbuildinfo",
-    "types": ["node"]
+    "lib": ["ES2024", "DOM", "DOM.Iterable"]
   },
   "include": [
     "src/server",
     "src/shared",
-    "src/bridge",
     "scripts",
     "e2e",
+    "lint",
+    "desktop/**/*.ts",
+    "desktop/**/*.cts",
     "*.ts"
   ],
-  "exclude": ["scripts/stamp/probes"]
+  "exclude": ["scripts/stamp/probes", "src/server/templates", "desktop/dist"]
 }

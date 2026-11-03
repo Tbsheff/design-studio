@@ -66,3 +66,5 @@ const MatrixSlot = (props: SlotProps): ReactElement => {
 };
 
 export { MatrixSlot };
+
+export type { SlotProps };

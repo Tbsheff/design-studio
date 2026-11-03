@@ -33,12 +33,16 @@ function subsequence(token: string, text: string): number[] | null {
   return marks;
 }
 
+interface TokenContext {
+  title: string;
+  list: { word: string; at: number }[];
+  used: Set<number>;
+  extra: string;
+}
+
 function tokenScore(
   token: string,
-  title: string,
-  list: { word: string; at: number }[],
-  used: Set<number>,
-  extra: string
+  { title, list, used, extra }: TokenContext
 ): { score: number; marks: number[] } | null {
   const prefix = list.findIndex(
     (w, i) => !used.has(i) && w.word.startsWith(token)
@@ -102,7 +106,12 @@ export function rank<T>(
     let ok = true;
 
     for (const token of tokens) {
-      const hit = tokenScore(token, lower, list, used, keywords.toLowerCase());
+      const hit = tokenScore(token, {
+        extra: keywords.toLowerCase(),
+        title: lower,
+        list,
+        used,
+      });
 
       if (!hit) {
         ok = false;

@@ -98,8 +98,7 @@ function projectRow(
   hit: ProjectHit,
   group: string,
   actions: RowActions,
-  marks: number[] = [],
-  keys?: string
+  { marks = [], keys }: { marks?: number[]; keys?: string } = {}
 ): Row {
   const meta = projectMeta(hit);
 
@@ -186,13 +185,9 @@ function emptyRows(input: RowInput): Row[] {
   const recentProjects = others
     .slice(0, context.length > 0 ? RECENT_IN_STUDIO : RECENT_PROJECTS)
     .map((hit, i) =>
-      projectRow(
-        hit,
-        "Recent",
-        input.actions,
-        [],
-        input.mac ? `Ctrl+${i + 1}` : undefined
-      )
+      projectRow(hit, "Recent", input.actions, {
+        keys: input.mac ? `Ctrl+${i + 1}` : undefined,
+      })
     );
 
   const contextIds = new Set(context.map((c) => c.id));
@@ -312,7 +307,9 @@ function looseMatches(input: RowInput): Row[] {
       }
 
       seen.add(r.item.id);
-      out.push(projectRow(r.item, "Matches", input.actions, r.marks));
+      out.push(
+        projectRow(r.item, "Matches", input.actions, { marks: r.marks })
+      );
     }
   }
 
@@ -333,7 +330,9 @@ function projectMatches(input: RowInput): Row[] {
   ).slice(0, MAX_PROJECTS);
 
   return ranked.length > 0
-    ? ranked.map((r) => projectRow(r.item, "Projects", input.actions, r.marks))
+    ? ranked.map((r) =>
+        projectRow(r.item, "Projects", input.actions, { marks: r.marks })
+      )
     : looseMatches(input);
 }
 

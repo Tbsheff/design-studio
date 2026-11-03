@@ -136,8 +136,7 @@ function useChipFlow({
         found.name,
         shortHome(found.path, homeDir),
         found.kind === "vite" ? "Vite" : "Next.js",
-        install,
-        homeDir
+        { ...install, homeDir }
       ),
       check: async () =>
         (await api.inspectFolder(found.path, chip.appDir ?? undefined))

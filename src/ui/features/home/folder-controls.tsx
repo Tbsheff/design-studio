@@ -74,21 +74,20 @@ const CHOOSE = "choose";
 function locationOptions(
   usable: WorkspaceFolder[],
   value: string | null,
-  fallback: string,
   homeDir: string | null,
-  unsupported: boolean
+  labels: { fallback: string; unsupported: boolean }
 ): UiSelectOption[] {
   const custom =
     value && !usable.some((folder) => folder.path === value)
       ? [{ value, label: shortenHome(value, homeDir) }]
       : [];
   return [
-    { value: DEFAULT, label: fallback },
+    { value: DEFAULT, label: labels.fallback },
     ...usable.map((folder) => ({ value: folder.path, label: folder.label })),
     ...custom,
     {
       value: CHOOSE,
-      label: unsupported ? "Paste a folder path…" : "Choose folder…",
+      label: labels.unsupported ? "Paste a folder path…" : "Choose folder…",
     },
   ];
 }
@@ -146,13 +145,10 @@ export function LocationField({
         id="new-project-location"
         value={value ?? DEFAULT}
         disabled={chooser.picking}
-        options={locationOptions(
-          usable,
-          value,
-          fallback?.label ?? "Design Studio",
-          homeDir,
-          chooser.unsupported
-        )}
+        options={locationOptions(usable, value, homeDir, {
+          fallback: fallback?.label ?? "Design Studio",
+          unsupported: chooser.unsupported,
+        })}
         onChange={(next) => {
           if (next === CHOOSE) {
             void pick();

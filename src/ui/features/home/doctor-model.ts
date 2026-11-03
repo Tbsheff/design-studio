@@ -52,8 +52,7 @@ function installProblem(
   name: string,
   place: string,
   kindLabel: string,
-  install: { command: string; dir: string },
-  homeDir: string | null
+  install: { command: string; dir: string; homeDir: string | null }
 ): DoctorProblem {
   return {
     name,
@@ -64,7 +63,7 @@ function installProblem(
       { ok: false, text: "node_modules is missing" },
     ],
     detail: INSTALL_DETAIL,
-    command: `cd ${shellPath(install.dir, homeDir)} && ${install.command}`,
+    command: `cd ${shellPath(install.dir, install.homeDir)} && ${install.command}`,
   };
 }
 

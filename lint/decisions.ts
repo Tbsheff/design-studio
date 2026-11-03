@@ -752,6 +752,7 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/server/mcp/legacy/studio.ts",
       "src/server/mcp/legacy/versions.ts",
       "src/server/mcp/legacy/write-file.ts",
+      "src/server/mcp/run-edit.ts",
     ],
     rules: { "import/no-relative-parent-imports": "off" },
   },
@@ -820,6 +821,7 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/server/http/app-{context,project-files,request,run-parse,*-routes}.ts",
       "cloud/api/src/http/{api,groups/*,groups/keys/*,sync/*}.ts",
       "{src/ui/api,lint/decisions,src/shared/actions/version/{index,routes},src/server/handlers/version/handlers}.ts",
+      "src/server/mcp/run-edit.ts",
     ],
     rules: Object.fromEntries(
       "eslint/max-classes-per-file eslint/new-cap anti-slop/no-chained-type-assertions eslint/no-await-in-loop eslint/no-nested-ternary react-doctor/async-await-in-loop sonarjs/no-nested-conditional unicorn/max-nested-calls unicorn/no-nested-ternary anti-slop/no-conditional-empty-object-spread anti-slop/no-runtime-typeof anti-slop/no-unknown-parameters anti-slop/no-unsafe-dictionary-type anti-slop/require-readable-spacing eslint/func-style eslint/id-length eslint/init-declarations eslint/max-lines eslint/max-lines-per-function eslint/max-statements eslint/no-console eslint/no-continue eslint/no-empty-function eslint/no-magic-numbers eslint/no-promise-executor-return eslint/no-ternary eslint/no-undefined eslint/no-use-before-define eslint/require-unicode-regexp eslint/sort-keys github/no-then import/max-dependencies node/no-sync promise/avoid-new promise/prefer-await-to-callbacks promise/prefer-await-to-then react-doctor/server-sequential-independent-await sonarjs/elseif-without-else sonarjs/max-lines sonarjs/max-lines-per-function sonarjs/no-duplicate-string sonarjs/shorthand-property-grouping sonarjs/too-many-break-or-continue-in-loop typescript/explicit-function-return-type typescript/explicit-module-boundary-types unicorn/no-await-expression-member unicorn/no-useless-undefined unicorn/prefer-number-coercion eslint/no-loop-func eslint/no-unmodified-loop-condition sonarjs/max-union-size sonarjs/expression-complexity sonarjs/super-linear-regex"
@@ -829,6 +831,7 @@ export const decisionOverrides: OxlintOverride[] = [
   },
   {
     files: [
+      "src/server/mcp/run-edit.ts",
       "src/ui/{appStream,eventHub,liveStore}.ts",
       "src/ui/platform/{stream,event-hub,live-store}.ts",
     ],

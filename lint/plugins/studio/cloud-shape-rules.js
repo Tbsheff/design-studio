@@ -19,6 +19,12 @@ const STATUS_NAME = /^(?:HTTP_[A-Z_]+|[A-Z_]+_STATUS)$/u;
 
 const STATUS_CODE = /^[1-5]\d{2}$/u;
 
+const HTTP_FOLDER = /^cloud\/api\/src\/http\//u;
+
+const CONSTANT_NAME = /^[A-Z][A-Z0-9_]*$/u;
+
+const MEASURE_NAME = /(?:BYTES|COUNT|DAYS|HOURS|LENGTH|LIMIT|MAX|MIN|MS|PARTS|RADIX|SECONDS|SIZE|WIDTH)/u;
+
 const VIEWER_SCOPE_MESSAGE =
   "A viewer-scope import in a tenant repo is banned, because a repo runs under CurrentOrg and a viewer has none. Use a ViewerDb method in cloud/api/src/tenant/viewer-db.ts that yields ViewerScope.";
 
@@ -161,13 +167,27 @@ const noPlainError = rule((context) => {
   };
 });
 
+const MIN_HTTP_FOLDER_STATUS = 200;
+
+const isStatusName = (name, isHttpFile) => {
+  if (STATUS_NAME.test(name)) {
+    return true;
+  }
+
+  return isHttpFile && CONSTANT_NAME.test(name) && !MEASURE_NAME.test(name);
+};
+
 const noLocalHttpStatus = rule((context) => ({
   VariableDeclarator: (node) => {
-    if (node.id.type !== "Identifier" || !STATUS_NAME.test(node.id.name)) {
+    const isHttpFile = HTTP_FOLDER.test(relativeOf(context.filename));
+
+    if (node.id.type !== "Identifier" || !isStatusName(node.id.name, isHttpFile)) {
       return;
     }
 
-    if (node.init?.type === "Literal" && STATUS_CODE.test(String(node.init.value))) {
+    const isCode = node.init?.type === "Literal" && STATUS_CODE.test(String(node.init.value));
+
+    if (isCode && (!isHttpFile || STATUS_NAME.test(node.id.name) || node.init.value >= MIN_HTTP_FOLDER_STATUS)) {
       context.report({ message: STATUS_MESSAGE, node });
     }
   },

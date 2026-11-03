@@ -1,5 +1,7 @@
 import type { OxlintOverride } from "oxlint";
 
+import { studioReview } from "./studio-review.ts";
+
 const STUDIO_PLUGIN = "./lint/plugins/studio.js";
 
 const AGGREGATORS = [
@@ -59,6 +61,7 @@ const AUTH_FILES = [
 
 const OPTIONAL_NULL_FILES = [
   "src/server/{platform,events,run-log,project-source,page-probe,handlers,main,ship,agent-tools,mcp-life,http}/**/*.ts",
+  "src/server/publish/**/*.ts",
 ];
 
 const ACTION_FILES = ["src/shared/actions/**/*.ts"];
@@ -204,7 +207,9 @@ const studio: OxlintOverride[] = [
     rules: { "import/no-default-export": "off" },
   },
   {
-    files: ["lint/plugins/studio/{facts,tool-facts}.js"],
+    files: [
+      "lint/plugins/studio/{facts,tool-facts,dead-code-rules,import-rules}.js",
+    ],
     rules: { "node/no-sync": "off" },
   },
   {
@@ -314,7 +319,7 @@ const studio: OxlintOverride[] = [
     },
   },
   {
-    files: ["lint/studio.ts", "lint/boundaries.ts"],
+    files: ["lint/studio.ts", "lint/studio-review.ts", "lint/boundaries.ts"],
     rules: { "studio/frozen-exemption": "error" },
   },
   {
@@ -378,7 +383,7 @@ const studio: OxlintOverride[] = [
     rules: { "studio/engine-pure": "error" },
   },
   {
-    excludeFiles: ["lint/studio.ts"],
+    excludeFiles: ["lint/studio.ts", "lint/studio-review.ts"],
     files: ["lint/*.ts"],
     rules: { "studio/no-studio-override": "error" },
   },
@@ -488,6 +493,7 @@ const studio: OxlintOverride[] = [
       "studio/no-plain-error": "error",
     },
   },
+  ...studioReview,
 ];
 
 export { STUDIO_PLUGIN, studio };

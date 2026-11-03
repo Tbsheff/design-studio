@@ -73,7 +73,7 @@ import {
   descriptionToolName,
   listPage,
 } from "./studio/spec-shape-rules.js";
-import { noBusyFlag } from "./studio/ui-state-rules.js";
+import { reviewRules } from "./studio/review-rules.js";
 import { awaitWrite, noAppImport, noDomQuery } from "./studio/surface-rules.js";
 import { noOptionalNull } from "./studio/type-rules.js";
 import {
@@ -97,6 +97,7 @@ import {
 const studio = {
   meta: { name: "studio" },
   rules: {
+    ...reviewRules,
     "action-domain-name": actionDomainName,
     "action-domain-object": actionDomainObject,
     "action-schema-typed": actionSchemaTyped,
@@ -130,7 +131,6 @@ const studio = {
     "no-adapter-service": noAdapterService,
     "no-app-import": noAppImport,
     "no-async-in-service": noAsyncInService,
-    "no-busy-flag": noBusyFlag,
     "no-cache-ttl": noCacheTtl,
     "no-deep-area-import": noDeepAreaImport,
     "no-desktop-global": noDesktopGlobal,

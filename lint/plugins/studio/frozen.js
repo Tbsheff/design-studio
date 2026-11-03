@@ -37,6 +37,11 @@ const FROZEN_AREAS = new Set([
 ]);
 
 const FROZEN_EXEMPTIONS = new Set([
+  "cloud/api/src/mcp/mount.ts",
+  "cloud/api/src/http/middleware/auth-calls.ts",
+  "cloud/api/src/http/groups/gates.ts",
+  "cloud/api/src/http/sync/sync-gate.ts",
+  "src/server/store/authorizer.ts",
   "src/ui/features/icons/use-icon-host.ts",
   "src/server/store/{authorizer,local-org-scope,local-principal,project-access}.ts",
   "src/server/publish/cf-cli.ts",
@@ -110,6 +115,11 @@ const FROZEN_EXEMPTIONS = new Set([
 ]);
 
 const SCOPE_EXEMPTIONS = new Set([
+  "cloud/api/src/index.ts",
+  "cloud/api/src/auth/**",
+  "cloud/api/src/tenant/{resolver,sweep-db}.ts",
+  "cloud/api/src/platform/**",
+  "cloud/api/src/http/middleware/**",
   "src/server/**/*.test.ts",
   "src/server/cloud/**/*.ts",
   "src/server/store/{command-rules,device-bindings,local-org-scope,local-principal,org-scope,org-visibility,principal}.ts",
@@ -124,6 +134,7 @@ const SCOPE_EXEMPTIONS = new Set([
   "src/server/direct-edit/engine/**",
   "src/server/**/engine/**",
   "lint/studio.ts",
+  "lint/studio-review.ts",
   "src/ui/platform/pack-api.ts",
   "src/ui/platform/**",
 ]);
@@ -148,4 +159,37 @@ const LEGACY_OVERRIDES = new Set([
   "src/server/store/projects.ts",
 ]);
 
-export { FROZEN_AREAS, FROZEN_EXEMPTIONS, LEGACY_OVERRIDES, SCOPE_EXEMPTIONS };
+const DAY_ONE_BUDGET_ZERO = new Set([
+  "src/server/page-probe/owner-probe.ts",
+  "src/server/page-probe/lock-probe.ts",
+  "src/server/page-probe/element.ts",
+  "src/server/page-probe/layer-ids.ts",
+  "src/server/page-probe/layer-ref.ts",
+  "src/server/page-probe/line-map.ts",
+  "src/server/page-probe/source-loc.ts",
+  "src/ui/features/commands/command-layer.tsx",
+  "src/ui/features/commands/command-rules.tsx",
+  "src/ui/features/commands/composer-commands.ts",
+  "src/ui/features/commands/fuzzy.ts",
+  "src/ui/features/commands/global-commands.ts",
+  "src/ui/features/commands/keys.tsx",
+  "src/ui/features/commands/palette-rows.ts",
+  "src/ui/features/commands/palette.tsx",
+  "src/ui/features/commands/registry.ts",
+  "src/ui/features/commands/shortcut-sheet.tsx",
+  "src/ui/features/commands/use-canvas-commands.ts",
+  "src/ui/features/commands/use-studio-commands.ts",
+  "src/ui/features/comments/comment-anchors.ts",
+  "src/ui/features/comments/comment-avatar.tsx",
+  "src/ui/features/comments/comment-composer.tsx",
+  "src/ui/features/comments/comment-layer.tsx",
+  "src/ui/features/comments/comment-placement.ts",
+  "src/ui/features/comments/comment-popover.tsx",
+  "src/ui/features/comments/comments-panel.tsx",
+  "src/ui/features/comments/composer-comments.tsx",
+  "src/ui/features/comments/use-comment-mode.ts",
+  "src/ui/features/comments/use-comment-prefill.ts",
+  "src/ui/features/comments/use-comments.ts",
+]);
+
+export { DAY_ONE_BUDGET_ZERO, FROZEN_AREAS, FROZEN_EXEMPTIONS, LEGACY_OVERRIDES, SCOPE_EXEMPTIONS };

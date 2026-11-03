@@ -75,6 +75,9 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Never import a service file past its area `index.ts` from a handler (`../../canvas/canvas-store.js`). Export the service from `src/server/<area>/index.ts` -> `studio/no-deep-area-import`. (W14a)
 
 - Put npm-publishable code only in `packages/ui` or `packages/common/<name>`. Put every app in `apps/<name>`: `apps/desktop` (Electron, local server, UI, bridge), `apps/api` (auth and tenant Worker), `apps/publish` (published-design Worker), `apps/web` (browser app for sign-in, orgs, keys and confirms). Shared code goes in publishable packages: `packages/common/<name>` (shared non-UI code, first `packages/common/actions`) and `packages/ui` (UI kit). A package never imports an app. Today the repo root and `cloud/*` are the old paths; new cloud API code goes in `apps/api` -> review-only. (W15)
+- Write each relative import as a path that resolves to a file. When you move a file, change its relative imports -> `studio/import-resolves`. (W17)
+- End each relative import in `src/ui/features/**` with `.js` -> `studio/relative-import-js`. (W18)
+- Import only `cloud/api/src/platform/**`, `shared-actions.ts` and `src/shared/**` from `cloud/api/src/platform`. Type a Durable Object binding as `DurableObjectNamespace` there -> `studio/cloud-platform-import`. (W19)
 ## 2. How to add an action
 
 - Stamp every new action with `pnpm run new:action <domain> <verb> ...` (lands with S4s). Never copy an action, route, tool or handler by hand -> check-actions (pair rule, template shape) (lands with S4s), `gen-routes --check`. (E1)
@@ -106,6 +109,10 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Use a read verb (`get`, `list`, `search`, `inspect`) only with `access: "read"` and `GET`. A POST that writes takes a write or run verb -> `studio/read-verb-access`. (E5a)
 - Never set `mcp: { off: "ui-bootstrap" }` on an edit or destructive action. Use `mcp { name }`, or `{ off: "legacy-mcp" }` while a legacy tool still serves it -> `studio/mcp-off-reason`. (E8a)
 - Never leave `invalidates: []` on an edit or destructive action. List the read ids whose data it changes -> `studio/edit-invalidates` (pure run and export actions are listed). (E11a)
+- Build each Schema decoder once, as a module-level const, in `cloud/api/src/http/**` and `src/server/publish/**` -> `studio/no-inline-decode`. (E22)
+- Never read a request field with `String(x ?? "")`. Decode the body with a `Schema.Struct` -> `studio/no-string-coerce`. (E23)
+- Never write `map((x) => x)` -> `studio/no-identity-map`. (E24)
+- Never write to a field of a function parameter in a handler or in cloud code. Build a new object: `({ ...item, isLegacy: true })` -> `studio/no-param-field-write`. (E25)
 
 ## 3. Services and Effect
 
@@ -138,6 +145,9 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Never use `async`, `await`, `throw`, `try`, `new Promise` or `.catch` in new feature server code (`viewport`, `content`, `cloud/checkout.ts`). Use `Effect.fn` and `return yield* new X({ message })` -> `studio/no-feature-async`. (S11c)
 - Mark a service `access: "write"` when its file or local imports write files, remove files, spawn or take screenshots -> `studio/read-service-io`. (S6a)
 - Name every new `Context.Service` class in another server file (a domain `live.ts`), so a live layer provides it -> `studio/service-wired`. (S10a)
+- Never use `async` or `await` in `cloud/api/src/**` outside `index.ts`, `auth/**` and Durable Object class bodies. Use `Effect.fn` with `Effect.tryPromise` -> `studio/no-cloud-async`. (S18)
+- Never call `Effect.serviceOption` in `src/server/**`. Yield the service in a `Context.Service` layer -> `studio/no-service-option`. (S19)
+- Never put a Durable Object stub (`idFromName`, `DurableObjectStub`) in a service marked `access: "read"`. Use a write service -> `studio/read-service-no-stub`. (S20)
 
 ## 4. Errors
 
@@ -173,6 +183,10 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Write `tq` tenant queries only in `cloud/api/src/tenant/repos/<table>.ts` -> `studio/tenant-sql-in-repos`. (T11)
 - Never call raw `db.prepare()` in a tenant repo. Use `tq` with `TenantDb` -> `studio/repo-uses-tq`. (T12)
 - Never take `orgId` as a parameter or read `input.orgId` in a tenant repo. Bind `:org` from `CurrentOrg` -> `studio/no-org-id-param`. (T13)
+- Call `db.prepare` in `cloud/api/src` only in the tenant gate files (`tenant/{db,viewer-db,sql,blobs,resolver,sweep-db}.ts`, `platform/**`, `auth/**`) -> `studio/no-raw-prepare`. (T14)
+- Never run a query inside a loop or an array callback. Use one `db.batch` -> `studio/no-query-in-loop`. (T15)
+- Give every SQL `UPDATE` and `DELETE` in `cloud/api/src` an `org_id =` or `:org` term -> `studio/sql-write-org-filter`. (T16)
+- Provide `CurrentOrg` only in `cloud/api/src/http/middleware/**` -> `studio/no-current-org-provide`. (T17)
 
 ## 6. UI
 
@@ -198,6 +212,11 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Never make a busy flag with `useState(false)` (`busy`, `loading`, `saving`, `pending`). Use `useTransition` and `isPending` -> `studio/no-busy-flag`. (U14)
 - Never use `querySelector`, `getElementById` or a `MutationObserver` in `src/ui/features`. Take a slot, render prop or callback prop from the owner -> `studio/no-dom-query` (icons host is frozen). (U7a)
 - Await every `action.run(...)` write in a feature, inside a transition, before you change state -> `studio/await-write`. (U9a)
+- Read and write `localStorage` and `sessionStorage` only through `src/ui/platform/storage.ts` -> `studio/no-ui-storage`. (U15)
+- Never call a state setter in a `finally` block in a feature. Use `useTransition` -> `studio/no-finally-state-reset`. (U16)
+- Never import a `.tsx` or `components/` file in a `use-*.ts` hook. Move the shared value to a model or platform module -> `studio/no-hook-component-import`. (U17)
+- Never cast `JSON.parse` output with `as` in a feature. Use a type guard or a Schema decoder -> `studio/no-json-cast`. (U18)
+- Put the text of `title`, `aria-label`, `data-tip`, `placeholder` and `alt` in the feature `copy.ts` -> `studio/no-inline-copy`. (U19)
 
 ## 7. Performance
 
@@ -236,6 +255,9 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Mark every type field `readonly` -> `studio/readonly-field` (auth files). (L11)
 - Never write the `undefined` type, an optional parameter or a default parameter. Use a required `T | null` parameter and pass `null` -> `studio/no-undefined-type` (auth files). (L12)
 - Never import a `*Sync` function from `node:fs`. Use `src/server/platform/local-file/index.ts` or `node:fs/promises` -> `studio/no-sync-fs` (auth files). (L13)
+- Make every boolean flag (`isX`, `hasX`, `canX`, `shouldX`) required in publish, share, handler and feature code. Never `isX?: boolean` or `Schema.optionalKey(Schema.Boolean)` -> `studio/no-optional-flag`. (L14)
+- Never add a `lint/day-one.ts` entry for a file in a budget-0 folder. Fix the file to 0 diagnostics -> `studio/day-one-frozen`. (L15)
+- Never export a value that no file imports in the new cloud viewer and share code, `cron.ts` and `src/ui/publishApi.ts` -> `studio/no-unused-export`. (L16)
 
 ## 9. Verify
 

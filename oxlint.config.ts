@@ -73,7 +73,9 @@ export default defineConfig({
     STUDIO_PLUGIN,
   ],
   options: { typeAware: false },
-  ignorePatterns: LINT_IGNORES,
+  ignorePatterns: LINT_IGNORES.filter(
+    (pattern) => pattern !== "lint/day-one.ts"
+  ),
   settings: { ...jsPluginSettings, ...BOUNDARY_SETTINGS },
   rules: {
     ...decisions.rules,

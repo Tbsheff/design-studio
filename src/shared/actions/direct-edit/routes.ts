@@ -87,7 +87,7 @@ const routes = {
   },
   importFigmaDirectEdit: {
     id: "direct-edit.importFigma",
-    invalidates: [],
+    invalidates: ["version.list", "version.get"],
     method: "POST",
     path: "/api/projects/:projectId/d/:directionId/figma/import",
   },
@@ -105,7 +105,7 @@ const routes = {
   },
   inspectPropsInstanceDirectEdit: {
     id: "direct-edit.inspectPropsInstance",
-    invalidates: [],
+    invalidates: ["version.list", "version.get"],
     method: "POST",
     path: "/api/projects/:projectId/d/:directionId/props/instance",
   },
@@ -171,7 +171,7 @@ const routes = {
   },
   setPropsDirectEdit: {
     id: "direct-edit.setProps",
-    invalidates: [],
+    invalidates: ["version.list", "version.get"],
     method: "POST",
     path: "/api/projects/:projectId/d/:directionId/props",
   },
@@ -183,7 +183,7 @@ const routes = {
   },
   setVariantClassesDirectEdit: {
     id: "direct-edit.setVariantClasses",
-    invalidates: [],
+    invalidates: ["version.list", "version.get"],
     method: "POST",
     path: "/api/projects/:projectId/d/:directionId/props/variant-classes",
   },

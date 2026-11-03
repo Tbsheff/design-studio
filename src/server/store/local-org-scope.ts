@@ -1,7 +1,7 @@
 import { Context, Layer } from "effect";
 
-import { toOrgScope } from "./org-scope.js";
 import type { OrgScope } from "./org-scope.js";
+import { toPrincipalScope } from "./org-visibility.js";
 import { toLegacyPrincipal } from "./principal.js";
 
 class LocalOrgScope extends Context.Service<LocalOrgScope, OrgScope>()(
@@ -11,7 +11,7 @@ class LocalOrgScope extends Context.Service<LocalOrgScope, OrgScope>()(
 
   public static readonly layer = Layer.succeed(
     LocalOrgScope,
-    toOrgScope(toLegacyPrincipal())
+    toPrincipalScope(toLegacyPrincipal())
   );
 }
 

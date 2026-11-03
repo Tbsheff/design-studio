@@ -1571,4 +1571,22 @@ export const decisionOverrides: OxlintOverride[] = [
       "import/no-relative-parent-imports": "off",
     },
   },
+  {
+    files: ["src/ui/features/home/project-list.ts"],
+    rules: {
+      "import/no-relative-parent-imports": "off",
+    },
+  },
+  {
+    files: ["src/ui/projectList.ts"],
+    rules: {
+      "unicorn/filename-case": "off",
+    },
+  },
+  {
+    files: ["src/ui/projectList.ts"],
+    rules: {
+      "github/filenames-match-regex": "off",
+    },
+  },
 ];

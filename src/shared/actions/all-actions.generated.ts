@@ -11,7 +11,7 @@ import { ExportActions } from "./export/index.js";
 import { ImageActions } from "./image/index.js";
 import { OrgScopeActions } from "./org-scope/index.js";
 import { PackActions } from "./pack/index.js";
-import { ProjectsActions } from "./projects/index.js";
+import { ProjectActions } from "./project/index.js";
 import { PublishActions } from "./publish/index.js";
 import { RunsActions } from "./runs/index.js";
 import { SessionActions } from "./session/index.js";
@@ -36,7 +36,7 @@ const ALL_ACTIONS = {
   image: ImageActions,
   orgScope: OrgScopeActions,
   pack: PackActions,
-  projects: ProjectsActions,
+  project: ProjectActions,
   publish: PublishActions,
   runs: RunsActions,
   session: SessionActions,

@@ -94,6 +94,7 @@ export interface CanvasSnapshot {
   hash: string | null;
 }
 
+import { routes as projectsRoutes } from "../shared/actions/project/routes.js";
 import { routes } from "../shared/actions/studio/routes.js";
 import { routes as versionsRoutes } from "../shared/actions/version/routes.js";
 import type {
@@ -347,14 +348,97 @@ export function warmProject(pid: string, directionId: string | null): void {
   }
 }
 
+const BASE64_CHUNK = 32_768;
+
+const fileToBase64 = async (file: File): Promise<string> => {
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  let binary = "";
+
+  for (let at = 0; at < bytes.length; at += BASE64_CHUNK) {
+    binary += String.fromCodePoint(...bytes.subarray(at, at + BASE64_CHUNK));
+  }
+
+  return btoa(binary);
+};
+
+const base64ToBlob = (data: string, mimeType: string): Blob => {
+  const binary = atob(data);
+  const bytes = Uint8Array.from(binary, (char) => char.codePointAt(0) ?? 0);
+
+  return new Blob([bytes], { type: mimeType });
+};
+
+interface ProjectWire {
+  readonly directions: readonly unknown[];
+  readonly id: string;
+}
+
+interface SearchWire {
+  readonly projects: readonly unknown[];
+  readonly query: string;
+  readonly routes: readonly unknown[];
+}
+
+interface AttachmentWire {
+  readonly id: string;
+  readonly mime: string;
+  readonly name: string;
+  readonly path: unknown;
+}
+
+const isProject = (wire: ProjectWire): wire is Project =>
+  typeof wire.id === "string" && Array.isArray(wire.directions);
+
+const isSearchResult = (
+  wire: SearchWire
+): wire is import("../shared/project-search").ProjectSearchResult =>
+  Array.isArray(wire.projects) && Array.isArray(wire.routes);
+
+const isAttachment = (wire: AttachmentWire): wire is Attachment =>
+  typeof wire.id === "string" && typeof wire.name === "string";
+
+const toProject = (wire: ProjectWire): Project => {
+  if (!isProject(wire)) {
+    throw new Error("The project response is not valid.");
+  }
+
+  return wire;
+};
+
+const toSearchResult = (
+  wire: SearchWire
+): import("../shared/project-search").ProjectSearchResult => {
+  if (!isSearchResult(wire)) {
+    throw new Error("The project search response is not valid.");
+  }
+
+  return wire;
+};
+
+const toAttachment = (wire: AttachmentWire): Attachment => {
+  if (!isAttachment(wire)) {
+    throw new Error("The attachment response is not valid.");
+  }
+
+  return wire;
+};
+
 export const api = {
-  listProjects: () => json<Project[]>("GET", "/api/projects"),
-  searchProjects: (q: string, project: string | null, limit = 20) =>
-    json<import("../shared/project-search").ProjectSearchResult>(
-      "GET",
-      `/api/project-search?${new URLSearchParams({ q, limit: String(limit), ...(project ? { project } : {}) }).toString()}`
-    ),
-  createProject: (input: {
+  listProjects: async (): Promise<Project[]> => {
+    const { items } = await call(projectsRoutes.listProject, {});
+
+    return items.map((item) => toProject(item));
+  },
+  searchProjects: async (q: string, project: string | null, limit = 20) => {
+    const found = await call(projectsRoutes.searchProject, {
+      limit,
+      query: q,
+      ...(project ? { project } : {}),
+    });
+
+    return toSearchResult(found);
+  },
+  createProject: async (input: {
     name?: string;
     prompt: string;
     kind: ProjectKind;
@@ -365,12 +449,11 @@ export const api = {
     startRun?: boolean;
     parentPath?: string;
     referenceUrls?: string[];
-  }) =>
-    json<{ project: Project; runId: string | null }>(
-      "POST",
-      "/api/projects",
-      input
-    ),
+  }) => {
+    const created = await call(projectsRoutes.createProject, input);
+
+    return { project: toProject(created.project), runId: created.runId };
+  },
   starters: () => json<Starter[]>("GET", "/api/starters"),
   createFromStarter: (starterId: string, parentPath?: string) =>
     json<{ project: Project }>("POST", "/api/projects/from-starter", {
@@ -464,14 +547,17 @@ export const api = {
 
     return (await res.json()) as CommitTweaksResult;
   },
-  importProject: (
+  importProject: async (
     path: string,
     options: { appDir?: string; skipApp?: boolean } = {}
-  ) =>
-    json<{ project: Project }>("POST", "/api/projects/import", {
+  ) => {
+    const imported = await call(projectsRoutes.importProject, {
       path,
       ...options,
-    }),
+    });
+
+    return { project: toProject(imported.project) };
+  },
   attachApp: (input: AttachAppRequest) =>
     json<{ project: Project }>("POST", "/api/projects/attach", input),
   appState: (pid: string) =>
@@ -511,35 +597,42 @@ export const api = {
     json<{ ok: true }>("DELETE", `/api/workspaces/${enc(id)}`),
   setDefaultFolder: (path: string) =>
     json<WorkspaceList>("PUT", "/api/workspaces/default", { path }),
-  hiddenProjects: () =>
-    json<{ count: number; target: string }>("GET", "/api/hidden-projects"),
-  moveHiddenProjects: () =>
-    json<{ moved: string[]; failed: { projectId: string; error: string }[] }>(
-      "POST",
-      "/api/hidden-projects/move"
-    ),
+  hiddenProjects: () => call(projectsRoutes.listHiddenProject, {}),
+  moveHiddenProjects: () => call(projectsRoutes.moveHiddenProject, {}),
   inspectFolder: (path: string, appDir?: string) =>
     json<FolderInspection>("POST", "/api/folders/inspect", {
       path,
       ...(appDir ? { appDir } : {}),
     }),
-  getProject: (pid: string) => json<Project>("GET", p(pid)),
-  updateSettings: (pid: string, settings: Partial<ProjectSettings>) =>
-    json<Project>("PATCH", `${p(pid)}/settings`, settings),
-  uploadAttachment: (pid: string, file: File) => {
-    const form = new FormData();
-    form.append("file", file, file.name);
-
-    return json<Attachment>("POST", `${p(pid)}/attachments`, form);
-  },
+  getProject: async (pid: string) =>
+    toProject(await call(projectsRoutes.getProject, { projectId: pid })),
+  updateSettings: async (pid: string, settings: Partial<ProjectSettings>) =>
+    toProject(
+      await call(projectsRoutes.updateProject, {
+        ...settings,
+        projectId: pid,
+      })
+    ),
+  uploadAttachment: async (pid: string, file: File) =>
+    toAttachment(
+      await call(projectsRoutes.createAttachmentProject, {
+        data: await fileToBase64(file),
+        mime: file.type,
+        name: file.name,
+        projectId: pid,
+      })
+    ),
   getDesignMd: (pid: string) =>
-    json<{ content: string }>("GET", `${p(pid)}/design-md`),
+    call(projectsRoutes.getDesignMdProject, { projectId: pid }),
   putDesignMd: (pid: string, content: string) =>
-    json<{ ok: boolean }>("PUT", `${p(pid)}/design-md`, { content }),
+    call(projectsRoutes.setDesignMdProject, { content, projectId: pid }),
   projectFile: async (pid: string, filePath: string) => {
-    const res = await request("GET", `${p(pid)}/files?path=${enc(filePath)}`);
+    const file = await call(projectsRoutes.getFileProject, {
+      path: filePath,
+      projectId: pid,
+    });
 
-    return res.blob();
+    return base64ToBlob(file.data, file.mimeType);
   },
   listRuns: (pid: string) => json<RunSummary[]>("GET", `${p(pid)}/runs`),
   createDirection: (pid: string, fromVersionId: string, name: string) =>

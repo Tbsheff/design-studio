@@ -11,7 +11,7 @@ import { ExportEntries } from "./export/handlers.js";
 import { ImageEntries } from "./image/handlers.js";
 import { OrgScopeEntries } from "./org-scope/handlers.js";
 import { PackEntries } from "./pack/handlers.js";
-import { ProjectsEntries } from "./projects/handlers.js";
+import { ProjectEntries } from "./project/handlers.js";
 import { PublishEntries } from "./publish/handlers.js";
 import { RunsEntries } from "./runs/handlers.js";
 import { SessionEntries } from "./session/handlers.js";
@@ -36,7 +36,7 @@ const ALL_ENTRIES = {
   image: ImageEntries,
   orgScope: OrgScopeEntries,
   pack: PackEntries,
-  projects: ProjectsEntries,
+  project: ProjectEntries,
   publish: PublishEntries,
   runs: RunsEntries,
   session: SessionEntries,

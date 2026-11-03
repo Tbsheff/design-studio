@@ -11,7 +11,7 @@ import { ExportLive } from "./export/live.js";
 import { ImageLive } from "./image/live.js";
 import { OrgScopeLive } from "./org-scope/live.js";
 import { PackLive } from "./pack/live.js";
-import { ProjectsLive } from "./projects/live.js";
+import { ProjectLive } from "./project/live.js";
 import { PublishLive } from "./publish/live.js";
 import { RunsLive } from "./runs/live.js";
 import { SessionLive } from "./session/live.js";
@@ -36,7 +36,7 @@ const ALL_LIVE = {
   image: ImageLive,
   orgScope: OrgScopeLive,
   pack: PackLive,
-  projects: ProjectsLive,
+  project: ProjectLive,
   publish: PublishLive,
   runs: RunsLive,
   session: SessionLive,

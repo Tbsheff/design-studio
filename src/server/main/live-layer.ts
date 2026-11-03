@@ -10,7 +10,7 @@ import { EventsLive } from "../handlers/events/live.js";
 import { ExportLive } from "../handlers/export/live.js";
 import { OrgScopeLive } from "../handlers/org-scope/live.js";
 import { PackLive } from "../handlers/pack/live.js";
-import { ProjectsLive } from "../handlers/projects/live.js";
+import { ProjectLive } from "../handlers/project/live.js";
 import { PublishLive } from "../handlers/publish/live.js";
 import { RunsLive } from "../handlers/runs/live.js";
 import { SessionLive } from "../handlers/session/live.js";
@@ -42,7 +42,7 @@ const liveLayer = Layer.mergeAll(
   WorkspaceLive,
   OrgScopeLive,
   PackLive,
-  ProjectsLive,
+  ProjectLive,
   PublishLive,
   RunsLive,
   SessionLive,

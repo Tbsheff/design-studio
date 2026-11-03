@@ -19,7 +19,6 @@ import { createMcpSlot, registerAppMcpRoutes } from "./app-mcp-routes.js";
 import { registerAppPacksRoutes } from "./app-packs-routes.js";
 import {
   registerHomeProjectRoutes,
-  registerProjectDetailRoutes,
   registerProjectsRoutes,
 } from "./app-projects-routes.js";
 import { registerAppPublishRoutes } from "./app-publish-routes.js";
@@ -63,7 +62,6 @@ export function createApp(deps: AppDeps): Hono {
   registerStudioRoutes(app, ctx);
   registerDevserverRoutes(app, ctx);
   registerWorkspacesRoutes(app, ctx);
-  registerProjectDetailRoutes(app, ctx);
   registerEventsRoutes(app, ctx);
   registerProjectRunsRoutes(app, ctx);
   registerVersionsRoutes(app, ctx);

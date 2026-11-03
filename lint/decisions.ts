@@ -824,7 +824,11 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/server/store/projects.ts",
       "src/server/store/project-{core,create,files,helpers,types}.ts",
       "src/server/store/{project-store,project-writer,project-runtime,project-library-runtime,project-library-store,project-library-writer,workspace-runtime,workspace-store,workspace-writer}.ts",
-      "src/server/handlers/projects/live.ts",
+      "src/server/handlers/project/live.ts",
+      "src/server/handlers/project/*.ts",
+      "src/server/project-ops/*.ts",
+      "src/server/mcp/legacy/projects-call.ts",
+      "src/shared/actions/project/*.ts",
     ],
     rules: {
       "anti-slop/no-conditional-empty-object-spread": "warn",

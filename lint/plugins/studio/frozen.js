@@ -32,6 +32,7 @@ const FROZEN_AREAS = new Set([
   "viewport",
   "image-generate",
   "token-sweep",
+  "project-ops",
 ]);
 
 const FROZEN_EXEMPTIONS = new Set([
@@ -68,6 +69,8 @@ const FROZEN_EXEMPTIONS = new Set([
   "cloud/api/src/tenant/{resolver,viewer-db,repos/projects,db,current-org,blobs}.ts",
   "cloud/api/src/auth/{rate-limit,permissions}.ts",
   "src/server/content/write-content.ts",
+  "src/server/mcp/legacy/projects-call.ts",
+  "src/shared/actions/project/schema.ts",
   "src/server/direct-edit/direct-edit-ops.ts",
 ]);
 

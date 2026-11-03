@@ -53,6 +53,7 @@ const OPTIONAL_NULL_FILES = [
 const ACTION_FILES = ["src/shared/actions/**/*.ts"];
 
 const LEGACY_UNTYPED_SCHEMAS = [
+  "src/shared/actions/project/schema.ts",
   "src/shared/actions/{canvas,comment,dev-server,pack,workspace}/**/*.ts",
   "src/shared/actions/direct-edit/**/*.ts",
 ];
@@ -81,6 +82,7 @@ const NO_READ_CHANGES = [
 const LEGACY_DOM_QUERIES = ["src/ui/features/icons/use-icon-host.ts"];
 
 const LEGACY_RUNTIME_CALLS = [
+  "src/server/mcp/legacy/projects-call.ts",
   "src/server/http/components-routes.ts",
   "src/server/mcp/{component-create-tools,component-preview-tools,arrange-tools,direct-edit-call,figma-import-tools,image-tools,insert-tools,jsx-insert-tools,layer-state-tools,move-tools,props-tools,review-tools,rules-tools,style-tools,tweak-tools,vector-tools}.ts",
 ];

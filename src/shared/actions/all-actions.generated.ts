@@ -3,6 +3,7 @@ import { CanvasActions } from "./canvas/index.js";
 import { CloudActions } from "./cloud/index.js";
 import { CommentActions } from "./comment/index.js";
 import { ConnectionActions } from "./connection/index.js";
+import { ContentActions } from "./content/index.js";
 import { DevServerActions } from "./dev-server/index.js";
 import { DirectEditActions } from "./direct-edit/index.js";
 import { EventsActions } from "./events/index.js";
@@ -24,6 +25,7 @@ const ALL_ACTIONS = {
   cloud: CloudActions,
   comment: CommentActions,
   connection: ConnectionActions,
+  content: ContentActions,
   devServer: DevServerActions,
   directEdit: DirectEditActions,
   events: EventsActions,

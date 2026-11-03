@@ -1,4 +1,5 @@
 import {
+  Suspense,
   memo,
   useEffect,
   useMemo,
@@ -15,6 +16,7 @@ import type {
 import type { PreviewPort } from "../bridge";
 import { SIDES } from "../cssValues";
 import { VariantScopeContext, useEditVariant } from "../editVariant";
+import { ContentPanel } from "../features/content";
 import { FillSlot } from "../features/fill";
 import { MotionSlot } from "../features/motion";
 import { StateStylesSlot } from "../features/state-styles";
@@ -690,6 +692,15 @@ export function SimpleEditor(props: SimpleEditorProps) {
                   port={props.port}
                   status={edit.status}
                 />
+              )}
+              {props.directionId && props.target.source && (
+                <Suspense fallback={null}>
+                  <ContentPanel
+                    projectId={props.projectId}
+                    directionId={props.directionId}
+                    target={props.target}
+                  />
+                </Suspense>
               )}
               <TokenLint ui={tk.ui} edit={edit} css={authored.css} />
               <SimpleSections

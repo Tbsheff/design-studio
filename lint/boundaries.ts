@@ -127,6 +127,7 @@ export const LAYERS: Layer[] = [
       "figma",
       "design-rules",
       "comments",
+      "content",
       "icons",
       "mcp-life",
     ],

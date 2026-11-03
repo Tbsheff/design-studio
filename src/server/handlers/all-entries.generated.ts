@@ -3,6 +3,7 @@ import { CanvasEntries } from "./canvas/handlers.js";
 import { CloudEntries } from "./cloud/handlers.js";
 import { CommentEntries } from "./comment/handlers.js";
 import { ConnectionEntries } from "./connection/handlers.js";
+import { ContentEntries } from "./content/handlers.js";
 import { DevServerEntries } from "./dev-server/handlers.js";
 import { DirectEditEntries } from "./direct-edit/handlers.js";
 import { EventsEntries } from "./events/handlers.js";
@@ -24,6 +25,7 @@ const ALL_ENTRIES = {
   cloud: CloudEntries,
   comment: CommentEntries,
   connection: ConnectionEntries,
+  content: ContentEntries,
   devServer: DevServerEntries,
   directEdit: DirectEditEntries,
   events: EventsEntries,

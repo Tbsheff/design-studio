@@ -264,6 +264,25 @@ export const SCOPED_OFF_REASONS: Record<string, string> = {
 };
 
 export const decisionOverrides: OxlintOverride[] = [
+  {
+    files: [
+      "src/shared/actions/content/*.ts",
+      "src/shared/actions/content/errors/status.ts",
+      "src/server/handlers/content/*.ts",
+      "src/server/content/*.ts",
+      "src/ui/features/content/deps.ts",
+      "src/ui/features/content/use-apply.ts",
+    ],
+    rules: { "import/no-relative-parent-imports": "off" },
+  },
+  {
+    files: ["src/server/content/engine/random.ts"],
+    rules: {
+      "no-bitwise": "off",
+      "no-magic-numbers": "off",
+      "unicorn/numeric-separators-style": "off",
+    },
+  },
   { files: NODE_RUNTIMES, rules: { "import/no-nodejs-modules": "off" } },
   {
     files: ["src/server/platform/logger/**", "scripts/**"],

@@ -3,6 +3,7 @@ import { CanvasLive } from "./canvas/live.js";
 import { CloudLive } from "./cloud/live.js";
 import { CommentLive } from "./comment/live.js";
 import { ConnectionLive } from "./connection/live.js";
+import { ContentLive } from "./content/live.js";
 import { DevServerLive } from "./dev-server/live.js";
 import { DirectEditLive } from "./direct-edit/live.js";
 import { EventsLive } from "./events/live.js";
@@ -24,6 +25,7 @@ const ALL_LIVE = {
   cloud: CloudLive,
   comment: CommentLive,
   connection: ConnectionLive,
+  content: ContentLive,
   devServer: DevServerLive,
   directEdit: DirectEditLive,
   events: EventsLive,

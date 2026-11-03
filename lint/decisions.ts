@@ -266,6 +266,42 @@ export const SCOPED_OFF_REASONS: Record<string, string> = {
 export const decisionOverrides: OxlintOverride[] = [
   {
     files: [
+      "src/ui/app/App.tsx",
+      "src/ui/app/app-notice.tsx",
+      "src/ui/app/app-screen.tsx",
+      "src/ui/app/main.tsx",
+      "src/ui/app/screen-boundary.tsx",
+      "src/ui/app/screens.tsx",
+      "src/ui/app/use-command-layer.ts",
+      "src/ui/app/use-session.ts",
+    ],
+    rules: {
+      "import/no-relative-parent-imports": "off",
+    },
+  },
+  {
+    files: ["src/ui/app/App.tsx"],
+    rules: {
+      "github/filenames-match-regex": "off",
+      "unicorn/filename-case": "off",
+    },
+  },
+  {
+    files: ["src/ui/app/main.tsx"],
+    rules: {
+      "import/no-unassigned-import": "off",
+    },
+  },
+  {
+    files: ["src/ui/app/screens.tsx"],
+    rules: {
+      "react-doctor/only-export-components": "off",
+      "react/jsx-props-no-spreading": "off",
+      "react/only-export-components": "off",
+    },
+  },
+  {
+    files: [
       "src/server/cloud/cloud-fetch.ts",
       "src/server/cloud/cloud-link-client.ts",
       "src/server/cloud/cloud-link-rows.ts",

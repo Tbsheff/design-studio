@@ -1,4 +1,4 @@
-import { prefetchStudio } from "./screens";
+import { prefetchStudio } from "./app/screens";
 import { uiStore } from "./storage";
 
 export const OPEN_ROUTE_EVENT = "studio:open-route";

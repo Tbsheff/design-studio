@@ -188,8 +188,8 @@ function ExportLayer({
   );
 }
 
+import { prefetchCommandLayer } from "../app/screens";
 import { useStudioCommands } from "../features/commands/use-studio-commands";
-import { prefetchCommandLayer } from "../screens";
 
 function firstText(...texts: (string | null | undefined)[]): string | null {
   return texts.find((text) => typeof text === "string") ?? null;

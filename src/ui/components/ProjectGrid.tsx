@@ -18,6 +18,7 @@ import {
   type ProjectType,
 } from "../../shared/project-search";
 import { api, json, warmProject } from "../api";
+import { prefetchStudio } from "../app/screens";
 import {
   toFilteredProjects,
   toGridColumns,
@@ -28,7 +29,6 @@ import { formatRelative, formatTime } from "../format";
 import { homePrefs, useHomePrefs } from "../homePrefs";
 import { Icon } from "../kit/Icon";
 import { findPack, keySwatches } from "../packs";
-import { prefetchStudio } from "../screens";
 import { HOME_SORTS, uiStore, useUi, type HomeSort } from "../storage";
 import { LazySelect } from "./LazySelect";
 import { Swatches } from "./Swatches";

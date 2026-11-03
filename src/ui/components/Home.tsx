@@ -28,6 +28,7 @@ import {
 import { shortenHome, type WorkspaceList } from "../../shared/folders";
 import type { AppHealth } from "../../shared/found-apps";
 import { api, errorText } from "../api";
+import { prefetchScreensWhenIdle } from "../app/screens";
 import { hasNativePicker, pickFolder } from "../folderPicker";
 import { homePrefs, useHomePrefs } from "../homePrefs";
 import { Icon } from "../kit/Icon";
@@ -35,7 +36,6 @@ import { onOpenAppRequest, takeOpenAppRequest } from "../openAppRequest";
 import { findPack, pickable, usePacks, type PacksState } from "../packs";
 import { reportAppStart } from "../perfTelemetry";
 import { projectsApi, useAppHealth } from "../projectsStore";
-import { prefetchScreensWhenIdle } from "../screens";
 import {
   MODEL_OPTIONS,
   modelLabel,

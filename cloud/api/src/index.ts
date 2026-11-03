@@ -3,6 +3,7 @@ import { Hono } from "hono";
 
 import { AuthGateway } from "./auth/gateway.js";
 import { AuthRateLimit } from "./auth/rate-limit.js";
+import { mountMcp } from "./mcp/mount.js";
 import { CloudBindings, configLayer } from "./platform/bindings.js";
 import type { AppEnv } from "./platform/bindings.js";
 import { CloudSettings } from "./platform/env.js";
@@ -43,6 +44,8 @@ app.on(
   "/api/auth/*",
   async (context) => await runtime.runPromise(handleAuth(context.req.raw))
 );
+
+mountMcp(app);
 
 const worker = { fetch: app.fetch } satisfies ExportedHandler;
 

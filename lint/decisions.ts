@@ -1213,6 +1213,7 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/bridge/live-preview.ts",
       "src/bridge/rect-tracker.ts",
       "src/bridge/session.ts",
+      "src/bridge/theme-control.ts",
       "src/bridge/zoom-forward.ts",
     ],
     rules: {
@@ -1227,11 +1228,25 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/bridge/live-preview.ts",
       "src/bridge/rect-tracker.ts",
       "src/bridge/session.ts",
+      "src/bridge/theme-control.ts",
       "src/bridge/zoom-forward.ts",
     ],
     rules: {
       "eslint/curly": "off",
       "eslint/func-style": "off",
+    },
+  },
+  {
+    files: [
+      "src/bridge/anchor-tracker.ts",
+      "src/bridge/dom-input.ts",
+      "src/bridge/element-info.ts",
+      "src/bridge/live-preview.ts",
+      "src/bridge/rect-tracker.ts",
+      "src/bridge/session.ts",
+      "src/bridge/zoom-forward.ts",
+    ],
+    rules: {
       "unicorn/prefer-global-this": "off",
     },
   },
@@ -1335,6 +1350,7 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/bridge/dom-input.ts",
       "src/bridge/live-preview.ts",
       "src/bridge/rect-tracker.ts",
+      "src/bridge/theme-control.ts",
     ],
     rules: {
       "anti-slop/no-unknown-parameters": "off",
@@ -1367,6 +1383,7 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/bridge/anchor-tracker.ts",
       "src/bridge/live-preview.ts",
       "src/bridge/rect-tracker.ts",
+      "src/bridge/theme-control.ts",
     ],
     rules: {
       "typescript/method-signature-style": "off",

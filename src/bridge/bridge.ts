@@ -54,7 +54,6 @@ import {
   PREVIEW_STYLE_KEYS,
   createLivePreview,
   createPreviewStyles,
-  createThemeControl,
 } from "./live-preview.js";
 import { createLockSet } from "./locks.js";
 import { createMarquee } from "./marquee.js";
@@ -79,6 +78,7 @@ import type { BridgeSession } from "./session.js";
 import { createSharePointer } from "./share-pointer.js";
 import { exposeHeadlessScan, findStyles } from "./style-scan.js";
 import { createTextEditor } from "./text-edit.js";
+import { createThemeControl } from "./theme-control.js";
 import { forwardZoomInput, reloadIfChangedDuringLoad } from "./zoom-forward.js";
 
 function startBridge(session: BridgeSession): void {

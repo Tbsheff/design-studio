@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { errorText } from "./api";
 import type { CommandLayer as Layer } from "./commands/registry";
 import { Home } from "./components/Home";
-import { installRouting } from "./route";
+import { installRouting } from "./platform/router";
 import {
   CommandLayer,
   DesignSystems,

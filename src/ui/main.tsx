@@ -2,7 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
 import { App } from "./App";
-import { watchLongFrames } from "./perfTelemetry";
+import { watchLongFrames } from "./platform/telemetry";
 
 import "./styles/tokens.css";
 import "./styles/controls.css";

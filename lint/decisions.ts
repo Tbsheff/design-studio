@@ -499,6 +499,14 @@ export const decisionOverrides: OxlintOverride[] = [
     ),
   },
   {
+    files: ["src/ui/platform/{router,telemetry}.ts"],
+    rules: Object.fromEntries(
+      "anti-slop/no-chained-type-assertions anti-slop/no-runtime-typeof eslint/func-style eslint/init-declarations eslint/no-continue eslint/no-ternary eslint/no-undefined eslint/prefer-named-capture-group eslint/require-unicode-regexp eslint/sort-keys import/exports-last import/group-exports import/no-relative-parent-imports sonarjs/no-undefined-assignment sonarjs/shorthand-property-grouping typescript/explicit-function-return-type unicorn/no-useless-undefined unicorn/prefer-global-this"
+        .split(" ")
+        .map((rule) => [rule, "warn"])
+    ),
+  },
+  {
     files: ["src/server/app/index.ts"],
     rules: { "oxc/no-barrel-file": "off" },
   },

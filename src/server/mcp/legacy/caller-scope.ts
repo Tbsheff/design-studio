@@ -2,6 +2,7 @@ import { AsyncLocalStorage } from "node:async_hooks";
 
 import type { Principal } from "../../store/principal.js";
 import { toLegacyPrincipal } from "../../store/principal.js";
+import { readProjectOrg } from "../../store/project-org.js";
 
 type ProjectOrgLookup = (projectId: string) => Promise<string | null>;
 
@@ -30,7 +31,7 @@ const setFolderRootsLookup = (lookup: FolderRootsLookup | null): void => {
 
 const lookupProjectOrg = (projectId: string): Promise<string | null> => {
   if (projectOrgLookup === null) {
-    return Promise.resolve(null);
+    return readProjectOrg(projectId);
   }
 
   return projectOrgLookup(projectId);

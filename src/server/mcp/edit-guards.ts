@@ -11,12 +11,15 @@ import type { EditRecorder } from "../direct-edit/index.js";
 import type { ExportDeps } from "../export/source.js";
 import { EditError } from "../page-probe/edit-error.js";
 import type { LayerLockStore } from "../store/layer-locks.js";
+import { isOrgInScope, toOrgScope } from "../store/org-scope.js";
+import { LOCAL_ORG_ID } from "../store/org-visibility.js";
 import type { AgentRunner, EventBus } from "../types.js";
 import type { KeepVariant } from "../variations/routes.js";
 import type { ActivityLog } from "./activity.js";
 import { APPROVAL_TIMEOUT_MS } from "./approvals.js";
 import type { ApprovalAsk, ApprovalQueue } from "./approvals.js";
 import { downloadsFolder, isInside, safeFolder } from "./folders.js";
+import { legacyCaller, lookupProjectOrg } from "./legacy/caller-scope.js";
 
 export interface EditDeps extends ExportDeps {
   runner: AgentRunner;
@@ -43,11 +46,24 @@ export { EditError } from "../page-probe/edit-error.js";
 export const RUN_BUSY =
   "A studio run is editing this design. Try again when it finishes.";
 
+const requireProjectInScope = async (projectId: string): Promise<void> => {
+  const orgId = (await lookupProjectOrg(projectId)) ?? LOCAL_ORG_ID;
+
+  if (!isOrgInScope(toOrgScope(legacyCaller()), orgId)) {
+    throw new EditError(
+      "404 not found: the project does not exist.",
+      "not_found"
+    );
+  }
+};
+
 export async function loadTarget(
   deps: EditDeps,
   projectId: string,
   directionId?: string
 ): Promise<{ project: Project; direction: Direction }> {
+  await requireProjectInScope(projectId);
+
   const project = await deps.projects.get(projectId);
 
   if (project.designSystemFor && project.designSystemDeleted) {

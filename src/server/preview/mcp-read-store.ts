@@ -9,6 +9,7 @@ import type { FoundApps } from "../../shared/found-apps.js";
 import type { ProjectSearchResult } from "../../shared/project-search.js";
 import type { RepoContextState } from "../../shared/repo-context.js";
 import type { ComponentUsage } from "../../shared/usage-scope.js";
+import type { OrgScope } from "../store/org-scope.js";
 import { readDoctor, toDoctorText } from "./doctor-read.js";
 import { readFileList, readFileText } from "./file-read.js";
 import type {
@@ -72,10 +73,9 @@ interface McpReadStoreApi {
   readonly portPlan: (
     query: PortPlanQuery
   ) => Effect.Effect<PortPlanView, McpReadError>;
-  readonly projectList: () => Effect.Effect<
-    readonly ProjectSummary[],
-    McpReadError
-  >;
+  readonly projectList: (
+    scope: OrgScope
+  ) => Effect.Effect<readonly ProjectSummary[], McpReadError>;
   readonly projectSearch: (
     query: ProjectSearchQuery
   ) => Effect.Effect<ProjectSearchResult, McpReadError>;
@@ -168,9 +168,11 @@ class McpReadStore extends Context.Service<McpReadStore, McpReadStoreApi>()(
       ) {
         return yield* attemptMcpRead((runtime) => runtime.planPort(query));
       }),
-      projectList: Effect.fn("McpReadStore.projectList")(function* run() {
+      projectList: Effect.fn("McpReadStore.projectList")(function* run(
+        scope: OrgScope
+      ) {
         return yield* attemptMcpRead((runtime) =>
-          readProjectList(runtime.projects)
+          readProjectList(runtime.projects, scope)
         );
       }),
       projectSearch: Effect.fn("McpReadStore.projectSearch")(function* run(

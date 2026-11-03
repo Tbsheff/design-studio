@@ -4,10 +4,10 @@ import type { AnyAction } from "../../shared/actions/_core/action.js";
 import type { WireBody } from "../../shared/actions/_core/wire.js";
 import type { WireArgs } from "../handlers/_core/run-action.js";
 import { failureOf, toWireError } from "../handlers/_core/wire-error.js";
-import { toLegacyPrincipal } from "../store/principal.js";
 import { EditError, RUN_BUSY } from "./edit-guards.js";
 import type { EditDeps } from "./edit-guards.js";
 import { mcpErrorText } from "./error-copy.js";
+import { legacyCaller } from "./legacy/caller-scope.js";
 import { runActionExit } from "./registry.js";
 
 const RUNTIME_OFF =
@@ -44,7 +44,7 @@ const callAction = async <Output, Input extends object = object>(
     runtime,
     action,
     roundTrip<WireArgs, Input>(input),
-    toLegacyPrincipal()
+    legacyCaller()
   );
 
   if (Exit.isSuccess(exit)) {

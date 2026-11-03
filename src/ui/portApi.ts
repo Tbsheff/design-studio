@@ -1,6 +1,4 @@
-import type { WireInput } from "../shared/actions/_core/action.js";
-import type { getPortPlanMcpRead } from "../shared/actions/mcp-read/get-port-plan.js";
-import { routes } from "../shared/actions/mcp-read/routes.js";
+import { routes } from "../shared/actions/workspace/routes.js";
 import type {
   PortFlowPlan,
   PortPlan,
@@ -10,6 +8,7 @@ import type {
 import { PORT_OPEN_EVENT } from "../shared/port";
 import { json } from "./api";
 import { call } from "./platform/http";
+import type { RouteOutput } from "./platform/http";
 
 export interface PortOpenDetail {
   frameId: string | null;
@@ -65,21 +64,37 @@ function planInput(input: PlanRequest, isFlow: boolean): PlanFields {
   return fields;
 }
 
-async function readPlan<Plan>(
-  input: PlanRequest,
-  isFlow: boolean
-): Promise<Plan> {
-  const plan: unknown = await call(
-    routes.getPortPlanMcpRead,
-    planInput(input, isFlow) as WireInput<typeof getPortPlanMcpRead>
-  );
+type PlanWire = RouteOutput<typeof routes.getPortPlanWorkspace>;
 
-  return plan as Plan;
-}
+const isFlowPlan = (plan: PlanWire): plan is PlanWire & PortFlowPlan =>
+  Array.isArray(plan.pages);
+
+const isPagePlan = (plan: PlanWire): plan is PlanWire & PortPlan =>
+  Array.isArray(plan.sections);
+
+const readPagePlan = async (input: PlanRequest): Promise<PortPlan> => {
+  const plan = await call(routes.getPortPlanWorkspace, planInput(input, false));
+
+  if (!isPagePlan(plan)) {
+    throw new Error("The server sent a flow plan for a page plan request.");
+  }
+
+  return plan;
+};
+
+const readFlowPlan = async (input: PlanRequest): Promise<PortFlowPlan> => {
+  const plan = await call(routes.getPortPlanWorkspace, planInput(input, true));
+
+  if (!isFlowPlan(plan)) {
+    throw new Error("The server sent a page plan for a flow plan request.");
+  }
+
+  return plan;
+};
 
 export const portApi = {
-  plan: (input: PlanRequest) => readPlan<PortPlan>(input, false),
-  flowPlan: (input: PlanRequest) => readPlan<PortFlowPlan>(input, true),
+  plan: readPagePlan,
+  flowPlan: readFlowPlan,
   start: (input: PortStartRequest) =>
     json<PortStartResult>("POST", "/api/port/start", input),
 };

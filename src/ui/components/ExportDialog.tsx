@@ -29,6 +29,7 @@ import {
 } from "../exportApi";
 import { downloadBlob } from "../format";
 import { Icon, type IconName } from "../kit/Icon";
+import { mcpApi } from "../mcpApi";
 import { useModalDialog } from "../usePopover";
 import { canvasFrameName, framePage } from "./CanvasFrames";
 
@@ -320,7 +321,7 @@ function ConnectClaudeCode() {
   const [copied, copy] = useCopied();
   useEffect(() => {
     let live = true;
-    exportApi.mcpStatus().then(
+    mcpApi.status().then(
       (s) => live && setStatus(s),
       (e: unknown) =>
         live && setError(e instanceof Error ? e.message : String(e))
@@ -340,7 +341,7 @@ function ConnectClaudeCode() {
     setError(null);
 
     try {
-      setStatus(await exportApi.setMcp(input));
+      setStatus(await mcpApi.set(input));
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {

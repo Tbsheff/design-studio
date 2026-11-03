@@ -104,6 +104,21 @@ function setFile(projectId: string, file: LinksFile): void {
   listeners.forEach((listener) => listener());
 }
 
+const fetchLinks = async (
+  projectId: string,
+  entry: ReturnType<typeof entryOf>
+): Promise<void> => {
+  try {
+    const { links } = await callAction(routes.listLinksCanvas, { projectId });
+    entry.loaded = true;
+    setFile(projectId, links);
+  } catch (error: unknown) {
+    console.error("[links] load failed", error);
+  } finally {
+    entry.loading = false;
+  }
+};
+
 function load(projectId: string): void {
   const entry = entryOf(projectId);
 
@@ -113,15 +128,7 @@ function load(projectId: string): void {
 
   entry.loading = true;
   entry.requestedAt = Date.now();
-  callAction(routes.listLinksCanvas, { projectId })
-    .then(({ links }) => {
-      entry.loaded = true;
-      setFile(projectId, links as LinksFile);
-    })
-    .catch((error: unknown) => console.error("[links] load failed", error))
-    .finally(() => {
-      entry.loading = false;
-    });
+  void fetchLinks(projectId, entry);
 }
 
 function receive(event: StudioEvent): void {
@@ -138,10 +145,10 @@ function receive(event: StudioEvent): void {
   setFile(event.projectId, event.links);
 }
 
-function writeFile(projectId: string, links: unknown): LinksFile {
-  setFile(projectId, links as LinksFile);
+function writeFile(projectId: string, links: LinksFile): LinksFile {
+  setFile(projectId, links);
 
-  return links as LinksFile;
+  return links;
 }
 
 const frameRefOf = (target: LinkTarget): string | undefined => {
@@ -167,9 +174,9 @@ export const linksApi = {
       transition: link.transition,
     });
 
-    setFile(projectId, links as LinksFile);
+    setFile(projectId, links);
 
-    return saved as PrototypeLink | null;
+    return saved;
   },
   update: async (
     projectId: string,
@@ -195,7 +202,7 @@ export const linksApi = {
     ids: string[] | "all",
     motion: LinkMotion = {}
   ) => {
-    const { links } = await callAction(routes.importLinkCanvas, {
+    const { links } = await callAction(routes.applyImplicitLinkCanvas, {
       ...frameAction(motion.action),
       ...(motion.duration === undefined ? {} : { duration: motion.duration }),
       ...(motion.easing ? { easing: motion.easing } : {}),
@@ -256,6 +263,25 @@ export function useLinks(projectId: string): LinksFile {
 }
 
 const IMPLICIT_DEBOUNCE_MS = 400;
+
+const fetchImplicit = async (
+  projectId: string,
+  isCurrent: () => boolean,
+  setLinks: (links: PrototypeLink[]) => void
+): Promise<void> => {
+  try {
+    const { implicit } = await callAction(routes.listImplicitLinksCanvas, {
+      projectId,
+    });
+
+    if (isCurrent()) {
+      setLinks(implicit);
+    }
+  } catch (error: unknown) {
+    console.error("[links] implicit load failed", error);
+  }
+};
+
 const REPLAY_SLACK_MS = 1000;
 
 export function useImplicitLinks(
@@ -268,15 +294,7 @@ export function useImplicitLinks(
   const fetchNow = useRef(() => undefined as void);
   fetchNow.current = () => {
     const at = ++seq.current;
-    callAction(routes.listImplicitLinksCanvas, { projectId })
-      .then(({ implicit }) => {
-        if (at === seq.current) {
-          setLinks(implicit as PrototypeLink[]);
-        }
-      })
-      .catch((error: unknown) =>
-        console.error("[links] implicit load failed", error)
-      );
+    void fetchImplicit(projectId, () => at === seq.current, setLinks);
   };
 
   const later = () => {

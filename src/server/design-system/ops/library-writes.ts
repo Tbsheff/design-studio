@@ -1,11 +1,11 @@
 import type { Input } from "../../../shared/actions/_core/action.js";
-import type { applyPackPacks } from "../../../shared/actions/packs/apply-pack.js";
-import type { createPackPacks } from "../../../shared/actions/packs/create-pack.js";
-import type { importPackPacks } from "../../../shared/actions/packs/import-pack.js";
-import type { publishDraftPacks } from "../../../shared/actions/packs/publish-draft.js";
-import type { PublishedDraft } from "../../../shared/actions/packs/schema.js";
-import type { setPackPacks } from "../../../shared/actions/packs/set-pack.js";
-import type { updatePackPacks } from "../../../shared/actions/packs/update-pack.js";
+import type { applyPackPack } from "../../../shared/actions/pack/apply-pack.js";
+import type { createPackPack } from "../../../shared/actions/pack/create-pack.js";
+import type { importPackPack } from "../../../shared/actions/pack/import-pack.js";
+import type { publishDraftPack } from "../../../shared/actions/pack/publish-draft.js";
+import type { PublishedDraft } from "../../../shared/actions/pack/schema.js";
+import type { setPackPack } from "../../../shared/actions/pack/set-pack.js";
+import type { updatePackPack } from "../../../shared/actions/pack/update-pack.js";
 import type {
   ApplyPackResult,
   DesignSystemCheckResult,
@@ -19,17 +19,17 @@ import { applyPackToDirection, saveDirectionPack } from "../project-pack.js";
 import type { PackWriteRuntime } from "./library-core.js";
 import { readDraftInfo } from "./library-reads.js";
 
-type ApplyInput = Input<typeof applyPackPacks>;
+type ApplyInput = Input<typeof applyPackPack>;
 
-type ImportInput = Input<typeof importPackPacks>;
+type ImportInput = Input<typeof importPackPack>;
 
-type PublishInput = Input<typeof publishDraftPacks>;
+type PublishInput = Input<typeof publishDraftPack>;
 
-type SaveInput = Input<typeof setPackPacks>;
+type SaveInput = Input<typeof setPackPack>;
 
-type CreateInput = Input<typeof createPackPacks>;
+type CreateInput = Input<typeof createPackPack>;
 
-type UpdatePatch = Omit<Input<typeof updatePackPacks>, "packId">;
+type UpdatePatch = Omit<Input<typeof updatePackPack>, "packId">;
 
 const ATTACHED_APP =
   "An attached app keeps its own design system in its code. Applying a studio pack would overwrite files in your repository.";

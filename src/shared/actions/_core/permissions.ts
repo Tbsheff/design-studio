@@ -31,6 +31,7 @@ const PERMISSIONS = [
   "publication.read",
   "share.revoke",
   "studio.read",
+  "studio.write",
 ] as const;
 
 type ConfirmPermission = (typeof CONFIRM_PERMISSIONS)[number];

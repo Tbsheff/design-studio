@@ -1,6 +1,6 @@
 import { Context, Effect, Layer } from "effect";
 
-import type { MentionFiles } from "../../shared/actions/comments/schema.js";
+import type { MentionFiles } from "../../shared/actions/comment/schema.js";
 import { filterComments } from "../../shared/comments.js";
 import type { CommentFilter } from "../../shared/comments.js";
 import { attemptComments } from "./comment-core.js";

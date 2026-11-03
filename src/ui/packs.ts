@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { routes } from "../shared/actions/packs/routes.js";
+import { routes } from "../shared/actions/pack/routes.js";
 import type { PackSummary } from "../shared/contracts";
 import { errorText } from "./api";
 import { call } from "./platform/http";
@@ -15,12 +15,14 @@ let cached: Promise<PackSummary[]> | null = null;
 const LIST_LIMIT = 200;
 
 async function listPacks(): Promise<PackSummary[]> {
-  const page = await call(routes.listSummaryPacks, {
+  const page = await call(routes.listSummaryPack, {
     cursor: null,
     limit: LIST_LIMIT,
   });
 
-  return page.items as PackSummary[];
+  const items: PackSummary[] = page.items;
+
+  return items;
 }
 
 function loadPacks(): Promise<PackSummary[]> {
@@ -57,9 +59,22 @@ export function usePacks(): PacksState {
   }, []);
   useEffect(() => {
     let live = true;
-    loadPacks()
-      .then((packs) => live && setState({ packs, error: null }))
-      .catch((err) => live && setState({ packs: [], error: errorText(err) }));
+
+    const read = async (): Promise<void> => {
+      try {
+        const packs = await loadPacks();
+
+        if (live) {
+          setState({ packs, error: null });
+        }
+      } catch (err: unknown) {
+        if (live) {
+          setState({ packs: [], error: errorText(err) });
+        }
+      }
+    };
+
+    void read();
 
     return () => {
       live = false;

@@ -49,7 +49,7 @@ const OFF_REASONS = new Set([
 
 const AGENT_OFF_REASONS = new Set([...OFF_REASONS, "legacy-agent"]);
 
-const LEGACY_AGENT_MAX = 73;
+const LEGACY_AGENT_MAX = 78;
 
 const TOOL_NAME = /^[a-z][a-z0-9_]*$/u;
 

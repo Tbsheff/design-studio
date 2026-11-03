@@ -29,9 +29,11 @@ export default function DoctorCard({
   const [version, setVersion] = useState<string | null>(null);
   useEffect(() => {
     let live = true;
+
     const read = async () => {
       try {
         const health = await call(studioRoutes.healthStudio, {});
+
         if (live) {
           setVersion(health.version);
         }
@@ -41,22 +43,31 @@ export default function DoctorCard({
         }
       }
     };
+
     void read();
+
     return () => {
       live = false;
     };
   }, []);
+
   const fix = () => {
     setBusy(true);
     setError(null);
-    api
-      .appFix(projectId, cause.kind)
-      .then(onFixed)
-      .catch((err: unknown) => {
+
+    const run = async (): Promise<void> => {
+      try {
+        await api.appFix(projectId, cause.kind);
+        onFixed();
+      } catch (err: unknown) {
         setError(errorText(err));
         setBusy(false);
-      });
+      }
+    };
+
+    void run();
   };
+
   return (
     <div className="app-fail app-doctor" role="alert" data-kind={cause.kind}>
       <div className="app-fail-head">

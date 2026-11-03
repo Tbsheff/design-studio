@@ -13,7 +13,6 @@ import type {
   ExportScope,
   HandoffRequest,
   HandoffResult,
-  McpStatus,
 } from "../shared/export";
 import {
   activeFrame,
@@ -142,14 +141,6 @@ export const exportApi = {
       file ? { editor, file } : { editor }
     );
   },
-  mcpStatus: async (): Promise<McpStatus> =>
-    (await (await call("GET", "/api/mcp")).json()) as McpStatus,
-  setMcp: async (input: {
-    enabled?: boolean;
-    edits?: boolean;
-    rotate?: boolean;
-  }): Promise<McpStatus> =>
-    (await (await call("POST", "/api/mcp", input)).json()) as McpStatus,
 };
 
 export interface ExportPrefs {

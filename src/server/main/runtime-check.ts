@@ -2,15 +2,14 @@ import type { Effect, Layer } from "effect";
 
 import type { CanvasEntries } from "../handlers/canvas/handlers.js";
 import type { CloudEntries } from "../handlers/cloud/handlers.js";
-import type { CommentsEntries } from "../handlers/comments/handlers.js";
-import type { DevserverEntries } from "../handlers/devserver/handlers.js";
+import type { CommentEntries } from "../handlers/comment/handlers.js";
+import type { ConnectionEntries } from "../handlers/connection/handlers.js";
+import type { DevServerEntries } from "../handlers/dev-server/handlers.js";
 import type { DirectEditEntries } from "../handlers/direct-edit/handlers.js";
 import type { EventsEntries } from "../handlers/events/handlers.js";
 import type { ExportEntries } from "../handlers/export/handlers.js";
-import type { McpLifeEntries } from "../handlers/mcp-life/handlers.js";
-import type { McpReadEntries } from "../handlers/mcp-read/handlers.js";
 import type { OrgScopeEntries } from "../handlers/org-scope/handlers.js";
-import type { PacksEntries } from "../handlers/packs/handlers.js";
+import type { PackEntries } from "../handlers/pack/handlers.js";
 import type { ProjectsEntries } from "../handlers/projects/handlers.js";
 import type { PublishEntries } from "../handlers/publish/handlers.js";
 import type { RunsEntries } from "../handlers/runs/handlers.js";
@@ -18,7 +17,8 @@ import type { SessionEntries } from "../handlers/session/handlers.js";
 import type { ShareEntries } from "../handlers/share/handlers.js";
 import type { ShipEntries } from "../handlers/ship/handlers.js";
 import type { StudioEntries } from "../handlers/studio/handlers.js";
-import type { VersionsEntries } from "../handlers/versions/handlers.js";
+import type { VersionEntries } from "../handlers/version/handlers.js";
+import type { WorkspaceEntries } from "../handlers/workspace/handlers.js";
 import type { Authorizer } from "../store/authorizer.js";
 import type { LocalOrgScope } from "../store/local-org-scope.js";
 import type { LocalPrincipal } from "../store/local-principal.js";
@@ -51,15 +51,15 @@ type NeedsOf<DomainEntries> = {
 interface EntriesByDomain {
   readonly canvas: typeof CanvasEntries;
   readonly cloud: typeof CloudEntries;
-  readonly comments: typeof CommentsEntries;
-  readonly devserver: typeof DevserverEntries;
+  readonly comments: typeof CommentEntries;
+  readonly devserver: typeof DevServerEntries;
   readonly directEdit: typeof DirectEditEntries;
   readonly events: typeof EventsEntries;
   readonly export: typeof ExportEntries;
-  readonly mcpLife: typeof McpLifeEntries;
-  readonly mcpRead: typeof McpReadEntries;
+  readonly mcpLife: typeof ConnectionEntries;
+  readonly mcpRead: typeof WorkspaceEntries;
   readonly orgScope: typeof OrgScopeEntries;
-  readonly packs: typeof PacksEntries;
+  readonly packs: typeof PackEntries;
   readonly projects: typeof ProjectsEntries;
   readonly publish: typeof PublishEntries;
   readonly runs: typeof RunsEntries;
@@ -67,7 +67,7 @@ interface EntriesByDomain {
   readonly share: typeof ShareEntries;
   readonly ship: typeof ShipEntries;
   readonly studio: typeof StudioEntries;
-  readonly versions: typeof VersionsEntries;
+  readonly versions: typeof VersionEntries;
 }
 
 type RunnerNeeds = Authorizer | ProjectAccess;

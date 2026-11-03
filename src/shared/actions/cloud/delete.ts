@@ -15,7 +15,7 @@ const deleteCloud = defineAction({
   input: Schema.Struct({}),
   invalidates: ["cloud.get"],
   mcp: { off: "secret" },
-  needs: "studio.read",
+  needs: "studio.write",
   output: CloudStateViewSchema,
   scope: "device",
 });

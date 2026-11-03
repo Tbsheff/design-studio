@@ -201,6 +201,7 @@ export interface AppControl {
   stop(projectId: string): Promise<void>;
   restart(project: Project): Promise<string>;
   forget(projectId: string): void;
+  readonly stopAll?: () => Promise<void>;
   doctor?(
     project: Project,
     fresh?: boolean

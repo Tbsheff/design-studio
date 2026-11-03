@@ -174,6 +174,47 @@ function useVisible(
   return visible;
 }
 
+interface PreviewLoad {
+  readonly controller: AbortController;
+  readonly directionId: string;
+  readonly id: string;
+  readonly projectId: string;
+  readonly setShown: (update: (prev: Shown) => Shown) => void;
+}
+
+const keepReady = (prev: Shown, next: Shown): Shown =>
+  next.state === "none" && prev.state === "ready" ? prev : next;
+
+const showPreview = async (load: PreviewLoad): Promise<void> => {
+  const { controller } = load;
+
+  try {
+    const next = await fetchPreview(
+      load.projectId,
+      load.directionId,
+      load.id,
+      controller.signal
+    );
+
+    if (!controller.signal.aborted) {
+      load.setShown((prev) => keepReady(prev, next));
+
+      return;
+    }
+
+    if (next.state === "ready") {
+      URL.revokeObjectURL(next.src);
+    }
+  } catch {
+    if (!controller.signal.aborted) {
+      load.setShown(() => ({
+        state: "none",
+        reason: "The preview did not load.",
+      }));
+    }
+  }
+};
+
 export function ComponentPreviewThumb({
   projectId,
   directionId,
@@ -199,24 +240,7 @@ export function ComponentPreviewThumb({
 
     const controller = new AbortController();
     setShown((prev) => (prev.state === "ready" ? prev : { state: "loading" }));
-    fetchPreview(projectId, directionId, id, controller.signal).then(
-      (next) => {
-        if (controller.signal.aborted) {
-          if (next.state === "ready") {
-            URL.revokeObjectURL(next.src);
-          }
-
-          return;
-        }
-
-        setShown((prev) =>
-          next.state === "none" && prev.state === "ready" ? prev : next
-        );
-      },
-      () =>
-        !controller.signal.aborted &&
-        setShown({ state: "none", reason: "The preview did not load." })
-    );
+    void showPreview({ controller, directionId, id, projectId, setShown });
 
     return () => controller.abort();
   }, [projectId, directionId, id, version, visible]);

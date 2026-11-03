@@ -3,7 +3,7 @@ import { Context, Effect, Layer } from "effect";
 import type {
   DoctorViewText,
   PortPlanView,
-} from "../../shared/actions/mcp-read/schema.js";
+} from "../../shared/actions/workspace/schema.js";
 import type { ElementVariantInfo } from "../../shared/element-variants.js";
 import type { FoundApps } from "../../shared/found-apps.js";
 import type { ProjectSearchResult } from "../../shared/project-search.js";

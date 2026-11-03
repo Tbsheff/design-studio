@@ -17,6 +17,7 @@ import { CfCli } from "./cf-cli.js";
 import type { CfCliApi } from "./cf-cli.js";
 import { cliEnv, cliFailure, DEFAULT_TIMEOUT_MS } from "./cli.js";
 import { attemptLegacy, planFor, takePlan } from "./legacy-link.js";
+import type { LegacyLink } from "./legacy-link.js";
 import { toPlanInput } from "./plan-input.js";
 import { toPublishCore } from "./publish-core.js";
 import type { PublishCore } from "./publish-core.js";
@@ -165,6 +166,42 @@ const removeApp = (
     });
   });
 
+const deleteRemoteComment = async (
+  core: PublishCore,
+  publicationId: string,
+  commentId: string
+): Promise<{ deleted: string }> =>
+  remoteClient(await core.backend.endpoint()).deleteComment(
+    publicationId,
+    commentId
+  );
+
+const publishLegacy = async (
+  link: LegacyLink,
+  input: PublishInput
+): Promise<Publication> => {
+  const planInput = await toPlanInput(link, input);
+  const held = await planFor(link, input.projectId, planInput);
+
+  takePlan(link, input.projectId, planInput);
+
+  return link.service.publish(input.projectId, held.id);
+};
+
+const rollbackRemote = async (
+  core: PublishCore,
+  found: PublicationRecord,
+  versionId: string
+): Promise<PublicationRecord> => {
+  const endpoint = await core.backend.endpoint();
+  const next = await remoteClient(endpoint).rollback(found.id, versionId);
+
+  return core.files.put({
+    ...mergeRemote(found, next, endpoint.url),
+    updatedAt: Date.now(),
+  });
+};
+
 const setupApi = {
   applyBackend: Effect.fn("PublishService.applyBackend")(function* run(
     mode: PublishBackendMode
@@ -210,24 +247,12 @@ const makeApi = (cf: CfCliApi): PublishServiceApi => ({
     const core = openCore();
     const found = yield* readOwned(core, projectId, publicationId);
 
-    yield* remote(async () =>
-      remoteClient(await core.backend.endpoint()).deleteComment(
-        found.id,
-        commentId
-      )
-    );
+    yield* remote(() => deleteRemoteComment(core, found.id, commentId));
   }),
   publish: Effect.fn("PublishService.publish")(function* run(
     input: PublishInput
   ) {
-    return yield* attemptLegacy(async (link) => {
-      const planInput = await toPlanInput(link, input);
-      const held = await planFor(link, input.projectId, planInput);
-
-      takePlan(link, input.projectId, planInput);
-
-      return link.service.publish(input.projectId, held.id);
-    });
+    return yield* attemptLegacy((link) => publishLegacy(link, input));
   }),
   rollback: Effect.fn("PublishService.rollback")(function* run(
     projectId: string,
@@ -243,15 +268,9 @@ const makeApi = (cf: CfCliApi): PublishServiceApi => ({
       });
     }
 
-    const saved = yield* locked(core, found.id, async () => {
-      const endpoint = await core.backend.endpoint();
-      const next = await remoteClient(endpoint).rollback(found.id, versionId);
-
-      return core.files.put({
-        ...mergeRemote(found, next, endpoint.url),
-        updatedAt: Date.now(),
-      });
-    });
+    const saved = yield* locked(core, found.id, () =>
+      rollbackRemote(core, found, versionId)
+    );
 
     return toPublication(saved);
   }),

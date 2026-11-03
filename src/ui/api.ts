@@ -95,7 +95,7 @@ export interface CanvasSnapshot {
 }
 
 import { routes } from "../shared/actions/studio/routes.js";
-import { routes as versionsRoutes } from "../shared/actions/versions/routes.js";
+import { routes as versionsRoutes } from "../shared/actions/version/routes.js";
 import type {
   DesignRulesState,
   DesignRulesTestResult,
@@ -288,6 +288,17 @@ async function request(
   return res;
 }
 
+const sendPresence = async (
+  pid: string,
+  body: Omit<CanvasPresence, "at">
+): Promise<void> => {
+  await request(
+    "PUT",
+    `/api/projects/${encodeURIComponent(pid)}/canvas/presence`,
+    body
+  );
+};
+
 export function json<T>(
   method: string,
   path: string,
@@ -388,8 +399,7 @@ export const api = {
   onboarding: () => json<{ dismissed: boolean }>("GET", "/api/onboarding"),
   dismissOnboarding: () =>
     json<{ dismissed: boolean }>("POST", "/api/onboarding/dismiss"),
-  listSkills: async (): Promise<SkillCatalog> =>
-    (await call(routes.listSkillsStudio, {})) as SkillCatalog,
+  listSkills: (): Promise<SkillCatalog> => call(routes.listSkillsStudio, {}),
   getDesignSystem: (pid: string, did: string) =>
     json<DesignSystemState>("GET", `${d(pid, did)}/design-system`),
   createToken: async (pid: string, did: string, req: CreateTokenRequest) => {
@@ -433,7 +443,7 @@ export const api = {
     }
   ) => json<CanvasSnapshot>("PUT", `${p(pid)}/canvas`, body),
   putCanvasPresence: (pid: string, body: Omit<CanvasPresence, "at">) =>
-    request("PUT", `${p(pid)}/canvas/presence`, body).then(() => undefined),
+    sendPresence(pid, body),
   getTweaks: (pid: string, did: string) =>
     json<TweaksState>("GET", `${d(pid, did)}/tweaks`),
   commitTweaks: async (
@@ -531,12 +541,14 @@ export const api = {
   createDirection: (pid: string, fromVersionId: string, name: string) =>
     json<Direction>("POST", `${p(pid)}/directions`, { fromVersionId, name }),
   listVersions: async (pid: string, did: string) => {
-    const list = await call(versionsRoutes.listVersions, {
+    const list = await call(versionsRoutes.listVersion, {
       directionId: did,
       projectId: pid,
     });
 
-    return list.items as Version[];
+    const items: Version[] = list.items;
+
+    return items;
   },
   status: (pid: string, did: string) =>
     json<WorkTreeStatus>("GET", `${d(pid, did)}/status`),
@@ -548,7 +560,7 @@ export const api = {
   undo: (pid: string, did: string) =>
     json<Version>("POST", `${d(pid, did)}/undo`),
   editHistory: (pid: string, did: string): Promise<EditHistoryState> =>
-    call(versionsRoutes.listHistoryVersions, {
+    call(versionsRoutes.listHistoryVersion, {
       limit: 1,
       directionId: did,
       projectId: pid,

@@ -21,6 +21,12 @@ export type { AppServerDeps } from "./dev-server.js";
 
 export { DevServerPids } from "./dev-server-pids.js";
 
+export { DevServerRunner } from "./dev-server-runner.js";
+
+export { bindDevServerRuntime } from "./dev-server-runtime.js";
+
+export { DevServerStore } from "./dev-server-store.js";
+
 export type { DevServerRecord } from "./dev-server-pids.js";
 
 export {

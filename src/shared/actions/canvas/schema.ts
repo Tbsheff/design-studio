@@ -1,5 +1,7 @@
 import { Schema } from "effect";
 
+import { FRAME_STATE_KINDS } from "../../frame-state.js";
+import { LINK_EXTRA_ACTIONS } from "../../link-interaction.js";
 import {
   LINK_ACTIONS,
   LINK_DURATION_MAX,
@@ -50,30 +52,77 @@ const LinkMotionFields = {
   transition: Schema.optionalKey(LinkTransitionSchema),
 } as const;
 
+const LinkSourceSchema = Schema.Struct({
+  frame: Schema.String,
+  label: Schema.optionalKey(Schema.String),
+  path: Schema.String,
+  selector: Schema.String,
+  tag: Schema.optionalKey(Schema.String),
+  text: Schema.optionalKey(Schema.String),
+});
+
+const LinkTargetSchema = Schema.Union([
+  Schema.Struct({ frame: Schema.String }),
+  Schema.Struct({ back: Schema.Literal(true) }),
+  Schema.Struct({
+    selector: Schema.String,
+    visibility: Schema.optionalKey(Schema.Literals(["show", "hide"])),
+  }),
+  Schema.Struct({ url: Schema.String }),
+  Schema.Struct({ close: Schema.Literal(true) }),
+]);
+
+const LinkTriggerSchema = Schema.Union([
+  Schema.Struct({ kind: Schema.Literal("hover") }),
+  Schema.Struct({ kind: Schema.Literal("press") }),
+  Schema.Struct({ kind: Schema.Literal("delay"), ms: Schema.Number }),
+  Schema.Struct({ key: Schema.String, kind: Schema.Literal("key") }),
+]);
+
+const PrototypeLinkSchema = Schema.Struct({
+  action: Schema.optionalKey(
+    Schema.Literals(["modal", "drawer", ...LINK_EXTRA_ACTIONS])
+  ),
+  duration: Schema.optionalKey(Schema.Number),
+  easing: Schema.optionalKey(LinkEasingSchema),
+  from: LinkSourceSchema,
+  id: Schema.String,
+  implicit: Schema.optionalKey(Schema.Literal(true)),
+  to: LinkTargetSchema,
+  transition: LinkTransitionSchema,
+  trigger: Schema.optionalKey(LinkTriggerSchema),
+});
+
+const LinksFileSchema = Schema.Struct({
+  links: Schema.Array(PrototypeLinkSchema),
+  start: Schema.optionalKey(Schema.String),
+  version: Schema.Number,
+});
+
 const LinkListSchema = Schema.Struct({
   items: Schema.Array(Schema.Unknown),
-  links: Schema.Unknown,
+  links: LinksFileSchema,
   note: Schema.NullOr(Schema.String),
   startFrame: Schema.String,
 });
 
 const ImplicitLinkListSchema = Schema.Struct({
-  implicit: Schema.Array(Schema.Unknown),
+  implicit: Schema.Array(PrototypeLinkSchema),
 });
 
 const LinkSavedSchema = Schema.Struct({
-  link: Schema.NullOr(Schema.Unknown),
-  links: Schema.Unknown,
+  link: Schema.NullOr(PrototypeLinkSchema),
+  links: LinksFileSchema,
   title: Schema.NullOr(Schema.String),
 });
 
 const LinkKeptSchema = Schema.Struct({
   kept: Schema.Array(Schema.Unknown),
-  links: Schema.Unknown,
+  links: LinksFileSchema,
 });
 
 const LinkFileSchema = Schema.Struct({
-  links: Schema.Unknown,
+  links: LinksFileSchema,
 });
 
 const BaseHashSchema = Schema.NullOr(
@@ -165,18 +214,6 @@ const FlowBuiltSchema = Schema.Struct({
   startFrame: Schema.NullOr(Schema.String),
 });
 
-const FrameStatesViewSchema = Schema.Struct({
-  frames: Schema.Unknown,
-  session: Schema.Unknown,
-  states: Schema.Array(Schema.Unknown),
-});
-
-const FrameStateSetSchema = Schema.Struct({
-  frameId: Schema.String,
-  state: Schema.Unknown,
-  view: FrameStatesViewSchema,
-});
-
 const FrameStateIdSchema = Schema.String.check(
   Schema.isPattern(/^[a-z][a-z0-9-]{0,23}$/u)
 );
@@ -208,6 +245,41 @@ const FrameMockSchema = Schema.Struct({
 const MockUserSchema = Schema.Struct({
   email: Schema.String.check(Schema.isMinLength(3), Schema.isMaxLength(120)),
   name: Schema.String.check(Schema.isMinLength(1), Schema.isMaxLength(80)),
+});
+
+const SavedMockRuleSchema = Schema.Struct({
+  body: Schema.optionalKey(Schema.Unknown),
+  delayMs: Schema.optionalKey(Schema.Number),
+  method: Schema.optionalKey(Schema.String),
+  path: Schema.String,
+  status: Schema.optionalKey(Schema.Number),
+});
+
+const FrameStateDefSchema = Schema.Struct({
+  id: Schema.String,
+  kind: Schema.Literals(FRAME_STATE_KINDS),
+  mocks: Schema.optionalKey(Schema.Array(SavedMockRuleSchema)),
+  name: Schema.String,
+  signedIn: Schema.Boolean,
+});
+
+const FrameSessionInfoSchema = Schema.Struct({
+  captured: Schema.Array(Schema.String),
+  capturedAt: Schema.NullOr(Schema.Number),
+  user: Schema.Struct({ email: Schema.String, name: Schema.String }),
+  usesMockUser: Schema.Boolean,
+});
+
+const FrameStatesViewSchema = Schema.Struct({
+  frames: Schema.Record(Schema.String, Schema.String),
+  session: FrameSessionInfoSchema,
+  states: Schema.Array(FrameStateDefSchema),
+});
+
+const FrameStateSetSchema = Schema.Struct({
+  frameId: Schema.String,
+  state: FrameStateDefSchema,
+  view: FrameStatesViewSchema,
 });
 
 export {

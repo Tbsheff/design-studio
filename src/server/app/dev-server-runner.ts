@@ -1,46 +1,22 @@
 import { Context, Effect, Layer } from "effect";
-import type { Cause } from "effect";
 
-import { BadRequest } from "../../shared/actions/_core/errors/bad-request.js";
-import { NotFound } from "../../shared/actions/_core/errors/not-found.js";
-import { BadRequestError, NotFoundError } from "../store/errors.js";
+import { attemptKnown } from "../platform/attempt/index.js";
+import type { KnownFailure } from "../platform/attempt/index.js";
+import { requireBound } from "../platform/runtime-slot/index.js";
 import { applyConfig, attachApp, controlServer } from "./dev-server-ops.js";
 import type { AttachInput, Control } from "./dev-server-ops.js";
 import { devServerRuntimeOf } from "./dev-server-runtime.js";
 import type { DevServerRuntime } from "./dev-server-runtime.js";
 
-type DevServerFailure = BadRequest | NotFound;
-
-const NOT_READY =
-  "App servers are not ready in this Design Studio process. Restart Design Studio.";
-
-const toFailure = (error: Cause.UnknownError): DevServerFailure => {
-  const { cause } = error;
-
-  if (cause instanceof NotFoundError) {
-    return new NotFound({ message: cause.message });
-  }
-
-  if (cause instanceof BadRequestError || cause instanceof Error) {
-    return new BadRequest({ message: cause.message });
-  }
-
-  return new BadRequest({ message: String(cause) });
-};
+type DevServerFailure = KnownFailure;
 
 const attemptServer = <Value>(
   task: (runtime: DevServerRuntime) => Promise<Value>
 ): Effect.Effect<Value, DevServerFailure> =>
   Effect.gen(function* withRuntime() {
-    const runtime = devServerRuntimeOf();
+    const runtime = yield* requireBound("App server", devServerRuntimeOf());
 
-    if (runtime === null) {
-      return yield* new BadRequest({ message: NOT_READY });
-    }
-
-    return yield* Effect.tryPromise(() => task(runtime)).pipe(
-      Effect.mapError((failure) => toFailure(failure))
-    );
+    return yield* attemptKnown(() => task(runtime));
   });
 
 interface DevServerRunnerApi {
@@ -64,11 +40,12 @@ interface DevServerRunnerApi {
   >;
 }
 
-const stopSupervised = Effect.promise(async () => {
-  await devServerRuntimeOf()
-    ?.preview.apps?.stopAll()
-    .catch(() => undefined);
-});
+const stopApps = (): Promise<void> =>
+  devServerRuntimeOf()?.preview.apps?.stopAll?.() ?? Promise.resolve();
+
+const stopSupervised = Effect.tryPromise(stopApps).pipe(
+  Effect.orElseSucceed(() => null)
+);
 
 const supervise = Effect.acquireRelease(
   Effect.succeed("dev-server-supervisor"),

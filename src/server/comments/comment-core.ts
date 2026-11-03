@@ -1,11 +1,15 @@
 import { Effect } from "effect";
 
-import { BadRequest } from "../../shared/actions/_core/errors/bad-request.js";
+import type { BadRequest } from "../../shared/actions/_core/errors/bad-request.js";
 import type { Conflict } from "../../shared/actions/_core/errors/conflict.js";
 import type { NotFound } from "../../shared/actions/_core/errors/not-found.js";
 import type { Direction, Project, RunRequest } from "../../shared/contracts.js";
 import { attemptKnown } from "../platform/attempt/index.js";
 import { loadConfig } from "../platform/config/index.js";
+import {
+  makeRuntimeSlot,
+  requireBound,
+} from "../platform/runtime-slot/index.js";
 import type { CommentStore as CommentFiles } from "../store/comments.js";
 import type { AgentRunner } from "../types.js";
 import type { PrefillDeps } from "./prefill.js";
@@ -48,27 +52,23 @@ interface CommentRuntime {
 
 type CommentError = BadRequest | Conflict | NotFound;
 
-const NOT_READY =
-  "Comments are not ready in this Design Studio process. Restart Design Studio.";
-
-const runtimes = new Map<string, CommentRuntime>();
+const runtimes = makeRuntimeSlot<CommentRuntime>("Comments");
 
 const bindCommentRuntime = (dataDir: string, runtime: CommentRuntime): void => {
-  runtimes.set(dataDir, runtime);
+  runtimes.bindAt(dataDir, runtime);
 };
 
 const toCommentRuntime = (dataDir: string): CommentRuntime | null =>
-  runtimes.get(dataDir) ?? null;
+  runtimes.peekAt(dataDir);
 
 const attemptComments = <Value>(
   task: (runtime: CommentRuntime) => Promise<Value>
 ): Effect.Effect<Value, CommentError> =>
   Effect.gen(function* withRuntime() {
-    const runtime = toCommentRuntime(loadConfig().dataDir);
-
-    if (runtime === null) {
-      return yield* new BadRequest({ message: NOT_READY });
-    }
+    const runtime = yield* requireBound(
+      "Comments",
+      toCommentRuntime(loadConfig().dataDir)
+    );
 
     return yield* attemptKnown(() => task(runtime));
   });

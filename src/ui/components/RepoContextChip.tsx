@@ -54,9 +54,22 @@ function useRunContext(
 
     let live = true;
     const url = `/api/projects/${encodeURIComponent(projectId)}/d/${encodeURIComponent(directionId)}/run-context`;
-    getJson<RepoContextState>(url)
-      .then((state) => live && setFiles(state?.files ?? []))
-      .catch(() => live && setFiles([]));
+
+    const read = async (): Promise<void> => {
+      try {
+        const state = await getJson<RepoContextState>(url);
+
+        if (live) {
+          setFiles(state?.files ?? []);
+        }
+      } catch {
+        if (live) {
+          setFiles([]);
+        }
+      }
+    };
+
+    void read();
 
     return () => {
       live = false;

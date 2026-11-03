@@ -1,10 +1,13 @@
 import { Effect } from "effect";
 
-import { BadRequest } from "../../shared/actions/_core/errors/bad-request.js";
 import type { CanvasService } from "../canvas/service.js";
 import { attemptKnown } from "../platform/attempt/index.js";
 import type { KnownFailure } from "../platform/attempt/index.js";
 import { loadConfig } from "../platform/config/index.js";
+import {
+  makeRuntimeSlot,
+  requireBound,
+} from "../platform/runtime-slot/index.js";
 import type { CommentStore } from "../store/comments.js";
 import type { ExportDeps } from "./source.js";
 
@@ -18,28 +21,21 @@ interface ExportRuntime extends ExportDeps {
 
 type ExportError = KnownFailure;
 
-const NOT_READY =
-  "Export is not ready in this Design Studio process. Restart Design Studio.";
-
-const runtimes = new Map<string, ExportRuntime>();
+const runtimes = makeRuntimeSlot<ExportRuntime>("Export");
 
 const bindExportRuntime = (dataDir: string, runtime: ExportRuntime): void => {
-  runtimes.set(dataDir, runtime);
+  runtimes.bindAt(dataDir, runtime);
 };
 
 const toExportRuntime = (dataDir: string): ExportRuntime | null =>
-  runtimes.get(dataDir) ?? null;
+  runtimes.peekAt(dataDir);
 
 const attemptExport = <Value>(
   task: (runtime: ExportRuntime) => Promise<Value>
 ): Effect.Effect<Value, ExportError> =>
   Effect.gen(function* withRuntime() {
     const { dataDir } = loadConfig();
-    const runtime = toExportRuntime(dataDir);
-
-    if (runtime === null) {
-      return yield* new BadRequest({ message: NOT_READY });
-    }
+    const runtime = yield* requireBound("Export", toExportRuntime(dataDir));
 
     return yield* attemptKnown(() => task(runtime));
   });

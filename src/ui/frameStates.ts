@@ -12,8 +12,11 @@ import {
 } from "../shared/frame-state";
 import { useProjectEvents } from "./events";
 import { call } from "./platform/http";
+import type { RouteInput } from "./platform/http";
 
-const viewOf = (wire: unknown): FrameStatesView => wire as FrameStatesView;
+type FrameStateMock = NonNullable<
+  RouteInput<typeof routes.setFrameStateCanvas>["mock"]
+>;
 
 const views = new Map<string, FrameStatesView>();
 const loading = new Set<string>();
@@ -37,29 +40,36 @@ function store(projectId: string, view: FrameStatesView): void {
   notify();
 }
 
+const emptyView = (): FrameStatesView => ({
+  states: [],
+  frames: {},
+  session: {
+    user: { ...DEFAULT_MOCK_USER },
+    usesMockUser: true,
+    captured: [],
+    capturedAt: null,
+  },
+});
+
+const fetchView = async (projectId: string): Promise<void> => {
+  try {
+    store(projectId, await call(routes.listFrameStatesCanvas, { projectId }));
+  } catch {
+    if (!views.has(projectId)) {
+      store(projectId, emptyView());
+    }
+  } finally {
+    loading.delete(projectId);
+  }
+};
+
 function load(projectId: string): void {
   if (loading.has(projectId)) {
     return;
   }
 
   loading.add(projectId);
-  call(routes.listFrameStatesCanvas, { projectId })
-    .then((view) => store(projectId, viewOf(view)))
-    .catch(() => {
-      if (!views.has(projectId)) {
-        store(projectId, {
-          states: [],
-          frames: {},
-          session: {
-            user: { ...DEFAULT_MOCK_USER },
-            usesMockUser: true,
-            captured: [],
-            capturedAt: null,
-          },
-        });
-      }
-    })
-    .finally(() => loading.delete(projectId));
+  void fetchView(projectId);
 }
 
 export type FrameStatesRead = FrameStatesView | null | undefined;
@@ -136,18 +146,18 @@ export async function setFrameState(
   projectId: string,
   frameId: string,
   state: string,
-  mock?: { name?: string; rules?: unknown[] }
+  mock?: FrameStateMock
 ): Promise<FrameStateDef> {
   const done = await call(routes.setFrameStateCanvas, {
     frame: frameId,
     projectId,
     state,
-    ...(mock ? { mock: mock as never } : {}),
+    ...(mock ? { mock } : {}),
   });
 
-  store(projectId, viewOf(done.view));
+  store(projectId, done.view);
 
-  return done.state as FrameStateDef;
+  return done.state;
 }
 
 export async function setFrameSession(
@@ -160,5 +170,5 @@ export async function setFrameSession(
     ...(change.user ? { user: change.user } : {}),
   });
 
-  store(projectId, viewOf(view));
+  store(projectId, view);
 }

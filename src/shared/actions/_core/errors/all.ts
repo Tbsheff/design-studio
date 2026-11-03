@@ -1,10 +1,10 @@
 // @generated
-import type { CommentsError } from "../../comments/errors/index.js";
-import type { PacksError } from "../../packs/errors/index.js";
+import type { CommentError } from "../../comment/errors/index.js";
+import type { PackError } from "../../pack/errors/index.js";
 import type { PublishError } from "../../publish/errors/index.js";
 import type { CoreError } from "./index.js";
 
-type StudioError = CoreError | CommentsError | PacksError | PublishError;
+type StudioError = CoreError | CommentError | PackError | PublishError;
 
 type StudioErrorTag = StudioError["_tag"];
 

@@ -2,6 +2,16 @@ import { useEffect, useState } from "react";
 
 import { Icon } from "./Icon";
 
+const textOf = (text: string | (() => string)): string =>
+  typeof text === "function" ? text() : text;
+
+const reportCopy = async (
+  copied: Promise<boolean>,
+  report: (state: "copied" | "failed") => void
+): Promise<void> => {
+  report((await copied) ? "copied" : "failed");
+};
+
 export async function copyText(text: string): Promise<boolean> {
   try {
     await navigator.clipboard.writeText(text);
@@ -22,6 +32,7 @@ export function CopyButton({
   className?: string;
 }) {
   const [state, setState] = useState<"idle" | "copied" | "failed">("idle");
+
   useEffect(() => {
     if (state === "idle") {
       return;
@@ -45,9 +56,7 @@ export function CopyButton({
       data-tip-side="top"
       onClick={(event) => {
         event.stopPropagation();
-        void copyText(typeof text === "function" ? text() : text).then((ok) =>
-          setState(ok ? "copied" : "failed")
-        );
+        void reportCopy(copyText(textOf(text)), setState);
       }}
     >
       <span className="copy-icon" aria-hidden="true">

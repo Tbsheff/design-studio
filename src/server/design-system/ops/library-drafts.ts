@@ -1,4 +1,4 @@
-import type { DraftResult } from "../../../shared/actions/packs/schema.js";
+import type { DraftResult } from "../../../shared/actions/pack/schema.js";
 import type {
   DesignSystemDraftResult,
   OpenPackEditorResult,

@@ -1,7 +1,10 @@
 import { Context, Effect, Layer } from "effect";
 
 import { NotFound } from "../../shared/actions/_core/errors/not-found.js";
-import type { RemotePublication } from "../../shared/actions/publish-remote.js";
+import type {
+  RemoteComment,
+  RemotePublication,
+} from "../../shared/actions/publish-remote.js";
 import type {
   PublicationCommentList,
   PublicationList,
@@ -60,6 +63,12 @@ const mergeAll = async (
   };
 };
 
+const readRemoteComments = async (
+  core: PublishCore,
+  publicationId: string
+): Promise<{ comments: RemoteComment[] }> =>
+  remoteClient(await core.backend.endpoint()).comments(publicationId);
+
 const readOwned = (
   core: PublishCore,
   projectId: string,
@@ -109,9 +118,7 @@ class PublishStore extends Context.Service<PublishStore, PublishStoreApi>()(
         }
 
         const reply = yield* attemptKnown(() =>
-          studioErrors(async () =>
-            remoteClient(await core.backend.endpoint()).comments(found.id)
-          )
+          studioErrors(() => readRemoteComments(core, found.id))
         );
 
         return { comments: reply.comments };

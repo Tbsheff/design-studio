@@ -360,6 +360,30 @@ export function startShareLive(
     }
   };
 
+  const listen = async (
+    own: AbortController,
+    reconnect: () => void
+  ): Promise<void> => {
+    try {
+      const res = await fetch(
+        `/api/projects/${encodeURIComponent(projectId)}/share-presence`,
+        { headers: authHeaders(), signal: own.signal }
+      );
+
+      if (res.ok) {
+        await readEvents(res, handle);
+      }
+    } catch {
+      own.abort();
+    } finally {
+      if (control === own && !stopped) {
+        layer.set([]);
+        pointer.set(false);
+        retry = window.setTimeout(reconnect, RETRY_MS);
+      }
+    }
+  };
+
   const connect = () => {
     window.clearTimeout(retry);
     control?.abort();
@@ -370,21 +394,7 @@ export function startShareLive(
 
     const own = new AbortController();
     control = own;
-    void fetch(
-      `/api/projects/${encodeURIComponent(projectId)}/share-presence`,
-      { headers: authHeaders(), signal: own.signal }
-    )
-      .then((res) => (res.ok ? readEvents(res, handle) : undefined))
-      .catch(() => undefined)
-      .finally(() => {
-        if (control !== own || stopped) {
-          return;
-        }
-
-        layer.set([]);
-        pointer.set(false);
-        retry = window.setTimeout(connect, RETRY_MS);
-      });
+    void listen(own, connect);
   };
 
   const onChanged = (event: Event) => {

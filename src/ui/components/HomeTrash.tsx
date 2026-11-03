@@ -30,16 +30,25 @@ function useTrashThumb(item: TrashItem): string | null {
 
     let made: string | null = null;
     let live = true;
-    void getBlob(`/api/trash/${encodeURIComponent(item.trashId)}/thumbnail`)
-      .then((blob) => {
+
+    const show = async (): Promise<void> => {
+      try {
+        const blob = await getBlob(
+          `/api/trash/${encodeURIComponent(item.trashId)}/thumbnail`
+        );
+
         if (!blob || !live) {
           return;
         }
 
         made = URL.createObjectURL(blob);
         setUrl(made);
-      })
-      .catch(() => undefined);
+      } catch {
+        made = null;
+      }
+    };
+
+    void show();
 
     return () => {
       live = false;
@@ -209,10 +218,16 @@ export default function HomeTrash({
 
   const load = () => {
     setError(null);
-    trashApi
-      .list()
-      .then(setItems)
-      .catch((err: unknown) => setError(errorText(err)));
+
+    const read = async (): Promise<void> => {
+      try {
+        setItems(await trashApi.list());
+      } catch (err: unknown) {
+        setError(errorText(err));
+      }
+    };
+
+    void read();
   };
 
   useEffect(load, []);

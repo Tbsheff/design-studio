@@ -1,7 +1,7 @@
 import type {
   DesignSystemItem,
   DraftStatus,
-} from "../../../shared/actions/packs/schema.js";
+} from "../../../shared/actions/pack/schema.js";
 import type {
   DesignSystemCoverage,
   DesignSystemDraftInfo,

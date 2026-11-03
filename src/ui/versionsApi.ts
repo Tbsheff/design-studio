@@ -1,9 +1,9 @@
-import { routes } from "../shared/actions/versions/routes.js";
+import { routes } from "../shared/actions/version/routes.js";
 import type {
   SessionEndSchema,
   VersionChangesSchema,
   VersionSchema,
-} from "../shared/actions/versions/schema.js";
+} from "../shared/actions/version/schema.js";
 import { STUDIO_TOKEN_HEADER } from "../shared/contracts";
 import type {
   EditHistoryState,
@@ -50,7 +50,7 @@ export const revertHunk = async (
   did: string,
   request: HunkRevertRequest
 ): Promise<HunkRevertResult> => {
-  const out = await call(routes.applyHunkVersions, {
+  const out = await call(routes.applyHunkVersion, {
     directionId: did,
     file: request.file,
     from: request.from ?? null,
@@ -68,7 +68,7 @@ export const restoreVersion = async (
   versionId: string
 ): Promise<Version> =>
   toVersion(
-    await call(routes.restoreVersions, {
+    await call(routes.restoreVersion, {
       directionId: did,
       projectId: pid,
       versionId,
@@ -76,13 +76,13 @@ export const restoreVersion = async (
   );
 
 const STEP_ROUTES = {
-  redo: routes.applyHistoryVersions,
-  undo: routes.restoreHistoryVersions,
+  redo: routes.applyHistoryVersion,
+  undo: routes.restoreHistoryVersion,
 } as const;
 
 const END_ROUTES = {
-  discard: routes.deleteSessionVersions,
-  save: routes.createSessionVersions,
+  discard: routes.deleteSessionVersion,
+  save: routes.createSessionVersion,
 } as const;
 
 export const stepEditHistory = async (
@@ -116,13 +116,13 @@ export const endEditSession = async (
     })
   );
 
-export const versionChanges = async (
+const versionChanges = async (
   pid: string,
   from: string,
   to: string
 ): Promise<VersionChanges> =>
   toChanges(
-    await call(routes.inspectDiffVersions, {
+    await call(routes.inspectDiffVersion, {
       projectId: pid,
       thumbnails: false,
       from,
@@ -131,10 +131,10 @@ export const versionChanges = async (
   );
 
 export const getVersion = (pid: string, versionId: string) =>
-  call(routes.getVersions, { versionId, projectId: pid });
+  call(routes.getVersion, { versionId, projectId: pid });
 
 export const listEditHistory = (pid: string, did: string, limit: number) =>
-  call(routes.listHistoryVersions, {
+  call(routes.listHistoryVersion, {
     limit,
     directionId: did,
     projectId: pid,
@@ -145,7 +145,7 @@ export const listHunks = (
   from: string,
   to: string,
   file: string
-) => call(routes.listHunksVersions, { file, from, to, projectId: pid });
+) => call(routes.listHunksVersion, { file, from, to, projectId: pid });
 
 export function openCompareInCode(): void {
   try {
@@ -156,7 +156,7 @@ export function openCompareInCode(): void {
 }
 
 export const renameVersion = (pid: string, vid: string, name: string | null) =>
-  call(routes.renameVersions, {
+  call(routes.renameVersion, {
     name,
     projectId: pid,
     versionId: vid,
@@ -206,6 +206,86 @@ function finish(
   }
 }
 
+const readThumb = async (request: ThumbRequest): Promise<void> => {
+  const res = await fetchPng(request.url, request.controller.signal);
+
+  if (res.status === 404) {
+    finish(request, null, true);
+
+    return;
+  }
+
+  if (!res.ok) {
+    finish(request, null, false);
+
+    return;
+  }
+
+  finish(request, URL.createObjectURL(await res.blob()), true);
+};
+
+interface VersionChangesResult {
+  readonly changes: VersionChanges | null;
+  readonly error: string | null;
+}
+
+const settleChanges = async (
+  pid: string,
+  range: { readonly from: string; readonly to: string }
+): Promise<VersionChangesResult> => {
+  try {
+    const changes = await versionChanges(pid, range.from, range.to);
+
+    return { changes, error: null };
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      return { changes: null, error: error.message };
+    }
+
+    return { changes: null, error: String(error) };
+  }
+};
+
+export const watchVersionChanges = (
+  pid: string,
+  range: { readonly from: string; readonly to: string },
+  onResult: (result: VersionChangesResult) => void
+): (() => void) => {
+  const state = { live: true };
+
+  const read = async (): Promise<void> => {
+    const result = await settleChanges(pid, range);
+
+    if (state.live) {
+      onResult(result);
+    }
+  };
+
+  void read();
+
+  return () => {
+    state.live = false;
+  };
+};
+
+const loadThumb = async (
+  request: ThumbRequest,
+  onSettled: () => void
+): Promise<void> => {
+  try {
+    await readThumb(request);
+  } catch {
+    if (request.controller.signal.aborted) {
+      forget(request);
+    } else {
+      finish(request, null, false);
+    }
+  } finally {
+    inFlight -= 1;
+    onSettled();
+  }
+};
+
 function pump(): void {
   while (inFlight < MAX_THUMB_FETCHES && waiting.length > 0) {
     const request = waiting.shift();
@@ -216,29 +296,7 @@ function pump(): void {
 
     request.started = true;
     inFlight += 1;
-    fetchPng(request.url, request.controller.signal)
-      .then(async (res) => {
-        if (res.status === 404) {
-          return finish(request, null, true);
-        }
-
-        if (!res.ok) {
-          return finish(request, null, false);
-        }
-
-        finish(request, URL.createObjectURL(await res.blob()), true);
-      })
-      .catch(() => {
-        if (request.controller.signal.aborted) {
-          forget(request);
-        } else {
-          finish(request, null, false);
-        }
-      })
-      .finally(() => {
-        inFlight -= 1;
-        pump();
-      });
+    void loadThumb(request, pump);
   }
 }
 

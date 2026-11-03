@@ -1,5 +1,5 @@
 import type { Project } from "../../shared/contracts.js";
-import { loadConfig } from "../platform/config/index.js";
+import { makeRuntimeSlot } from "../platform/runtime-slot/index.js";
 import type { StudioProjectStore } from "../store/projects.js";
 import type { PreviewService } from "../types.js";
 import type { AttachResponse } from "./first-version.js";
@@ -14,14 +14,13 @@ interface DevServerRuntime {
   >;
 }
 
-const runtimes = new Map<string, DevServerRuntime>();
+const runtimes = makeRuntimeSlot<DevServerRuntime>("App server");
 
 const bindDevServerRuntime = (runtime: DevServerRuntime): void => {
-  runtimes.set(loadConfig().dataDir, runtime);
+  runtimes.bind(runtime);
 };
 
-const devServerRuntimeOf = (): DevServerRuntime | null =>
-  runtimes.get(loadConfig().dataDir) ?? null;
+const devServerRuntimeOf = (): DevServerRuntime | null => runtimes.peek();
 
 export { bindDevServerRuntime, devServerRuntimeOf };
 

@@ -24,6 +24,8 @@ import { usePopover } from "../usePopover";
 
 import "../styles/frame-state.css";
 
+type MockRules = NonNullable<FrameStateDef["mocks"]>;
+
 type Panel = "list" | "user" | "mock";
 
 const stop = (e: ReactPointerEvent) => e.stopPropagation();
@@ -190,14 +192,14 @@ function MockForm({
   onSave,
   onBack,
 }: {
-  onSave: (name: string, rules: unknown[]) => Promise<void>;
+  onSave: (name: string, rules: MockRules) => Promise<void>;
   onBack: () => void;
 }) {
   const [name, setName] = useState("Mock data");
   const [rules, setRules] = useState(MOCK_EXAMPLE);
   const [error, setError] = useState<string | null>(null);
   const submit = () => {
-    let parsed: unknown;
+    let parsed: MockRules | null = null;
     try {
       parsed = JSON.parse(rules);
     } catch {

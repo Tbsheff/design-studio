@@ -3,14 +3,14 @@ import { homedir } from "node:os";
 import path from "node:path";
 
 import type { Input } from "../../../shared/actions/_core/action.js";
-import type { createDraftPacks } from "../../../shared/actions/packs/create-draft.js";
-import type { DraftImage } from "../../../shared/actions/packs/schema.js";
+import type { createDraftPack } from "../../../shared/actions/pack/create-draft.js";
+import type { DraftImage } from "../../../shared/actions/pack/schema.js";
 import { safeFolder } from "../../mcp/folders.js";
 import { BadRequestError } from "../../store/errors.js";
 import { MAX_TOKENS_FILE_BYTES } from "../extract/draft.js";
 import type { ImageInput } from "./library-backing.js";
 
-type DraftInput = Input<typeof createDraftPacks>;
+type DraftInput = Input<typeof createDraftPack>;
 
 interface DraftRaw {
   basePackId?: string;

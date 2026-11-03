@@ -1,6 +1,6 @@
 import type { WireInput } from "../../shared/actions/_core/action.js";
-import type { createDraftPacks } from "../../shared/actions/packs/create-draft.js";
-import { routes } from "../../shared/actions/packs/routes.js";
+import type { createDraftPack } from "../../shared/actions/pack/create-draft.js";
+import { routes } from "../../shared/actions/pack/routes.js";
 import type {
   ApplyPackResult,
   DesignSystemCheckResult,
@@ -17,19 +17,19 @@ import type {
 import { call } from "./http";
 
 const getPack = async (packId: string): Promise<PackDetail> =>
-  (await call(routes.getPackPacks, {
+  (await call(routes.getPackPack, {
     packId,
   })) as PackDetail;
 
 const checkPack = async (packId: string): Promise<DesignSystemCheckResult> =>
-  (await call(routes.inspectPackPacks, {
+  (await call(routes.inspectPackPack, {
     packId,
   })) as DesignSystemCheckResult;
 
 const getDesignSystemDraft = async (
   projectId: string
 ): Promise<DesignSystemDraftInfo> =>
-  (await call(routes.getDraftPacks, {
+  (await call(routes.getDraftPack, {
     projectId,
   })) as DesignSystemDraftInfo;
 
@@ -59,7 +59,7 @@ const fromBase64 = (content: string, type: string): Blob =>
   );
 
 const listPacks = async (): Promise<PackSummary[]> => {
-  const page = await call(routes.listSummaryPacks, {
+  const page = await call(routes.listSummaryPack, {
     cursor: null,
     limit: LIST_LIMIT,
   });
@@ -68,7 +68,7 @@ const listPacks = async (): Promise<PackSummary[]> => {
 };
 
 const packProblems = async (): Promise<PackProblem[]> => {
-  const page = await call(routes.listProblemPacks, {
+  const page = await call(routes.listProblemPack, {
     cursor: null,
     limit: LIST_LIMIT,
   });
@@ -77,7 +77,7 @@ const packProblems = async (): Promise<PackProblem[]> => {
 };
 
 const renamePack = async (packId: string, name: string): Promise<PackSummary> =>
-  (await call(routes.updatePackPacks, {
+  (await call(routes.updatePackPack, {
     name,
     packId,
   })) as PackSummary;
@@ -87,24 +87,24 @@ const duplicatePack = async (
   name?: string
 ): Promise<PackSummary> => {
   if (name) {
-    return (await call(routes.duplicatePackPacks, {
+    return (await call(routes.duplicatePackPack, {
       name,
       packId,
     })) as PackSummary;
   }
 
-  return (await call(routes.duplicatePackPacks, {
+  return (await call(routes.duplicatePackPack, {
     packId,
   })) as PackSummary;
 };
 
 const deletePack = async (packId: string): Promise<{ ok: true }> =>
-  (await call(routes.deletePackPacks, {
+  (await call(routes.deletePackPack, {
     packId,
   })) as { ok: true };
 
 const exportPack = async (packId: string): Promise<Blob> => {
-  const file = await call(routes.exportPackPacks, {
+  const file = await call(routes.exportPackPack, {
     packId,
   });
 
@@ -115,13 +115,13 @@ const importPack = async (
   file: File,
   mode: ImportPackMode = "ask"
 ): Promise<ImportPackResult> =>
-  (await call(routes.importPackPacks, {
+  (await call(routes.importPackPack, {
     content: await toBase64(file),
     mode,
   })) as ImportPackResult;
 
 const openPackEditor = async (packId: string): Promise<OpenPackEditorResult> =>
-  (await call(routes.startEditorPacks, {
+  (await call(routes.startEditorPack, {
     packId,
   })) as OpenPackEditorResult;
 
@@ -130,7 +130,7 @@ const applyPack = async (
   directionId: string,
   packId: string
 ): Promise<ApplyPackResult> =>
-  (await call(routes.applyPackPacks, {
+  (await call(routes.applyPackPack, {
     directionId,
     packId,
     projectId,
@@ -141,13 +141,13 @@ const savePack = async (
   directionId: string,
   input: { name: string; packId?: string; asNew?: boolean; force?: boolean }
 ): Promise<SavePackResult> =>
-  (await call(routes.setPackPacks, {
+  (await call(routes.setPackPack, {
     ...input,
     directionId,
     projectId,
   })) as SavePackResult;
 
-type DraftWire = WireInput<typeof createDraftPacks>;
+type DraftWire = WireInput<typeof createDraftPack>;
 
 type DraftRequestWire = Omit<DraftWire, "images" | "improve" | "tokensUpload">;
 
@@ -214,7 +214,7 @@ const createDesignSystemDraft = async (
     upload
   );
 
-  const result = await call(routes.createDraftPacks, input);
+  const result = await call(routes.createDraftPack, input);
 
   return result as DesignSystemDraftResult;
 };

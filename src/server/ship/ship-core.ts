@@ -2,12 +2,16 @@ import path from "node:path";
 
 import { Effect } from "effect";
 
-import { BadRequest } from "../../shared/actions/_core/errors/bad-request.js";
+import type { BadRequest } from "../../shared/actions/_core/errors/bad-request.js";
 import type { Conflict } from "../../shared/actions/_core/errors/conflict.js";
 import type { NotFound } from "../../shared/actions/_core/errors/not-found.js";
 import type { Project } from "../../shared/contracts.js";
 import { attemptKnown } from "../platform/attempt/index.js";
 import { loadConfig } from "../platform/config/index.js";
+import {
+  makeRuntimeSlot,
+  requireBound,
+} from "../platform/runtime-slot/index.js";
 import { assertSafeId } from "../store/errors.js";
 import type { StudioProjectStore } from "../store/projects.js";
 
@@ -44,17 +48,14 @@ interface ShipTarget {
 
 type ShipError = BadRequest | Conflict | NotFound;
 
-const NOT_READY =
-  "Ship is not ready in this Design Studio process. Restart Design Studio.";
-
-const runtimes = new Map<string, ShipRuntime>();
+const runtimes = makeRuntimeSlot<ShipRuntime>("Ship");
 
 const bindShipRuntime = (dataDir: string, runtime: ShipRuntime): void => {
-  runtimes.set(dataDir, runtime);
+  runtimes.bindAt(dataDir, runtime);
 };
 
 const toShipRuntime = (dataDir: string): ShipRuntime | null =>
-  runtimes.get(dataDir) ?? null;
+  runtimes.peekAt(dataDir);
 
 const toProjectDir = (dataDir: string, projectId: string): string =>
   path.join(dataDir, "projects", assertSafeId(projectId, "projectId"));
@@ -74,20 +75,23 @@ const loadTarget = async (
   };
 };
 
+const runOnTarget = async <Value>(
+  root: string,
+  current: ShipRuntime,
+  projectId: string,
+  task: (target: ShipTarget) => Promise<Value>
+): Promise<Value> => task(await loadTarget(root, current, projectId));
+
 const attemptShip = <Value>(
   projectId: string,
   task: (target: ShipTarget) => Promise<Value>
 ): Effect.Effect<Value, ShipError> =>
   Effect.gen(function* withTarget() {
     const { dataDir } = loadConfig();
-    const runtime = toShipRuntime(dataDir);
+    const runtime = yield* requireBound("Ship", toShipRuntime(dataDir));
 
-    if (runtime === null) {
-      return yield* new BadRequest({ message: NOT_READY });
-    }
-
-    return yield* attemptKnown(async () =>
-      task(await loadTarget(dataDir, runtime, projectId))
+    return yield* attemptKnown(() =>
+      runOnTarget(dataDir, runtime, projectId, task)
     );
   });
 

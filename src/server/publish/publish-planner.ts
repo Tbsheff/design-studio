@@ -7,6 +7,7 @@ import type { PublishInput } from "../../shared/actions/publish/schema.js";
 import type { Publication, PublishPlan } from "../../shared/publish.js";
 import type { KnownFailure } from "../platform/attempt/index.js";
 import { attemptLegacy, planFor } from "./legacy-link.js";
+import type { LegacyLink } from "./legacy-link.js";
 import { toPublishCard, toRestoreCard, toUnpublishCard } from "./plan-card.js";
 import { toPlanInput } from "./plan-input.js";
 
@@ -45,12 +46,16 @@ const findPublication = (
     return found;
   });
 
+const planLegacy = async (
+  link: LegacyLink,
+  input: PublishInput
+): Promise<PublishPlan> =>
+  planFor(link, input.projectId, await toPlanInput(link, input));
+
 const plan = Effect.fn("PublishPlanner.plan")(function* run(
   input: PublishInput
 ) {
-  return yield* attemptLegacy(async (link) =>
-    planFor(link, input.projectId, await toPlanInput(link, input))
-  );
+  return yield* attemptLegacy((link) => planLegacy(link, input));
 });
 
 const makeApi = (): PublishPlannerApi => ({

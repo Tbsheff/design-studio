@@ -1,8 +1,6 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 
-import type { WireInput } from "../../shared/actions/_core/action.js";
-import type { getUsageMcpRead } from "../../shared/actions/mcp-read/get-usage.js";
-import { routes } from "../../shared/actions/mcp-read/routes.js";
+import { routes } from "../../shared/actions/workspace/routes.js";
 import {
   isSharedLayout,
   type ComponentUsage,
@@ -46,11 +44,8 @@ function usageInput(
 
 async function readUsage(fields: UsageFields): Promise<ComponentUsage | null> {
   try {
-    const data: unknown = await call(
-      routes.getUsageMcpRead,
-      fields as WireInput<typeof getUsageMcpRead>
-    );
-    return data as ComponentUsage;
+    const data: ComponentUsage = await call(routes.getUsageWorkspace, fields);
+    return data;
   } catch {
     return null;
   }

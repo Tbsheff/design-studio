@@ -1,10 +1,12 @@
 import { Effect } from "effect";
 
-import { BadRequest } from "../../shared/actions/_core/errors/bad-request.js";
 import type { PublishPlan, PublishPlanInput } from "../../shared/publish.js";
 import { attemptKnown } from "../platform/attempt/index.js";
 import type { KnownFailure } from "../platform/attempt/index.js";
-import { loadConfig } from "../platform/config/index.js";
+import {
+  makeRuntimeSlot,
+  requireBound,
+} from "../platform/runtime-slot/index.js";
 import type {
   PublishDeps,
   PublishService as LegacyPublishService,
@@ -16,10 +18,7 @@ interface LegacyLink {
   readonly service: LegacyPublishService;
 }
 
-const NOT_READY =
-  "Publish is not ready in this Design Studio process. Restart Design Studio.";
-
-const links = new Map<string, LegacyLink>();
+const links = makeRuntimeSlot<LegacyLink>("Publish");
 
 const linkLegacy = (
   deps: PublishDeps,
@@ -28,7 +27,7 @@ const linkLegacy = (
   const plans = new Map<string, PublishPlan>();
   const link: LegacyLink = { deps, plans, service };
 
-  links.set(deps.dataDir, link);
+  links.bindAt(deps.dataDir, link);
 
   return link;
 };
@@ -37,11 +36,7 @@ const attemptLegacy = <Value>(
   task: (link: LegacyLink) => Promise<Value>
 ): Effect.Effect<Value, KnownFailure> =>
   Effect.gen(function* withLink() {
-    const link = links.get(loadConfig().dataDir) ?? null;
-
-    if (link === null) {
-      return yield* new BadRequest({ message: NOT_READY });
-    }
+    const link = yield* requireBound("Publish", links.peek());
 
     return yield* attemptKnown(() => task(link));
   });

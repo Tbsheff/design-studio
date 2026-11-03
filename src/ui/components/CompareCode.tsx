@@ -10,7 +10,7 @@ import { errorText } from "../api";
 import { useProjectEvents } from "../events";
 import { Icon } from "../kit/Icon";
 import { displayTitle, indexVersions } from "../versionLabels";
-import { revertHunk, versionChanges } from "../versionsApi";
+import { revertHunk, watchVersionChanges } from "../versionsApi";
 
 import "../styles/compare-code.css";
 import "../styles/compare-hunk.css";
@@ -354,18 +354,13 @@ function useChanges(projectId: string, from: string, to: string) {
   } | null>(null);
 
   const key = `${projectId}/${from}/${to}`;
-  useEffect(() => {
-    let live = true;
-    versionChanges(projectId, from, to).then(
-      (changes) => live && setState({ key, changes, error: null }),
-      (error: unknown) =>
-        live && setState({ key, changes: null, error: errorText(error) })
-    );
-
-    return () => {
-      live = false;
-    };
-  }, [projectId, from, to, key]);
+  useEffect(
+    () =>
+      watchVersionChanges(projectId, { from, to }, (result) =>
+        setState({ key, ...result })
+      ),
+    [projectId, from, to, key]
+  );
 
   return state?.key === key ? state : null;
 }

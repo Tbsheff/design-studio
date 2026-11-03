@@ -8,7 +8,10 @@ import { DirectEditError } from "../direct-edit/engine/errors.js";
 import type { EditHistory } from "../direct-edit/history.js";
 import type { DirectEditDeps } from "../direct-edit/index.js";
 import { attemptKnown } from "../platform/attempt/index.js";
-import { loadConfig } from "../platform/config/index.js";
+import {
+  makeRuntimeSlot,
+  requireBound,
+} from "../platform/runtime-slot/index.js";
 import type { VersionStore } from "../types.js";
 import type { StudioProjectStore } from "./projects.js";
 import type { VersionNames } from "./version-names.js";
@@ -56,9 +59,6 @@ const STATUS_NOT_FOUND = 404;
 
 const STATUS_CONFLICT = 409;
 
-const NOT_READY =
-  "Version writes are not ready in this Design Studio process. Restart Design Studio.";
-
 const REQUIRED_KEYS = [
   "editDeps",
   "emitStatus",
@@ -73,17 +73,26 @@ const REQUIRED_KEYS = [
   "withDirection",
 ] as const;
 
-const runtimes = new Map<string, Partial<VersionWriteRuntime>>();
+const slot = makeRuntimeSlot<Partial<VersionWriteRuntime>>("Version write");
 
 const bindVersionWriteRuntime = (part: Partial<VersionWriteRuntime>): void => {
-  const { dataDir } = loadConfig();
-  runtimes.set(dataDir, { ...runtimes.get(dataDir), ...part });
+  slot.bind({ ...slot.peek(), ...part });
 };
 
 const isReady = (
   runtime: Partial<VersionWriteRuntime> | null
 ): runtime is VersionWriteRuntime =>
   runtime !== null && REQUIRED_KEYS.every((key) => key in runtime);
+
+const readyOrNull = (
+  runtime: Partial<VersionWriteRuntime> | null
+): VersionWriteRuntime | null => {
+  if (isReady(runtime)) {
+    return runtime;
+  }
+
+  return null;
+};
 
 const fromDirectEdit = (error: DirectEditError): VersionWriteError => {
   if (error.status === STATUS_NOT_FOUND) {
@@ -109,11 +118,8 @@ const attemptVersionWrite = <Value>(
   task: (runtime: VersionWriteRuntime) => Promise<Value>
 ): Effect.Effect<Value, VersionWriteError> =>
   Effect.gen(function* withRuntime() {
-    const runtime = runtimes.get(loadConfig().dataDir) ?? null;
-
-    if (!isReady(runtime)) {
-      return yield* new BadRequest({ message: NOT_READY });
-    }
+    const found = slot.peek();
+    const runtime = yield* requireBound("Version write", readyOrNull(found));
 
     return yield* attemptKnown(() => task(runtime), toWriteFailure);
   });

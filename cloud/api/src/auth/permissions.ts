@@ -11,7 +11,7 @@ const STATEMENTS = {
   project: ["create", "delete", "publish", "read", "share", "update"],
   publication: ["delete", "read", "update"],
   share: ["revoke"],
-  studio: ["read"],
+  studio: ["read", "write"],
 } as const;
 
 type Statements = typeof STATEMENTS;
@@ -55,7 +55,7 @@ const MEMBER_GRANT: RoleGrant = {
   project: ["create", "read", "share", "update"],
   publication: ["read"],
   share: ["revoke"],
-  studio: ["read"],
+  studio: ["read", "write"],
 };
 
 const VIEWER_GRANT: RoleGrant = {
@@ -63,7 +63,7 @@ const VIEWER_GRANT: RoleGrant = {
   pack: ["read"],
   project: ["read"],
   publication: ["read"],
-  studio: ["read"],
+  studio: ["read", "write"],
 };
 
 const ROLE_GRANTS: Readonly<Record<RoleName, RoleGrant>> = {

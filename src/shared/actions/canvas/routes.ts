@@ -1,5 +1,11 @@
 // @generated
 const routes = {
+  applyImplicitLinkCanvas: {
+    id: "canvas.applyImplicitLink",
+    invalidates: ["canvas.listImplicitLinks", "canvas.listLinks"],
+    method: "POST",
+    path: "/api/projects/:projectId/links/keep",
+  },
   createFlowCanvas: {
     id: "canvas.createFlow",
     invalidates: ["canvas.getDoc", "canvas.listFlowParams", "canvas.listLinks"],
@@ -23,12 +29,6 @@ const routes = {
     invalidates: [],
     method: "GET",
     path: "/api/projects/:projectId/canvas",
-  },
-  importLinkCanvas: {
-    id: "canvas.importLink",
-    invalidates: ["canvas.listImplicitLinks", "canvas.listLinks"],
-    method: "POST",
-    path: "/api/projects/:projectId/links/keep",
   },
   listFlowLinksCanvas: {
     id: "canvas.listFlowLinks",

@@ -1,9 +1,9 @@
 // @generated
+import { applyImplicitLinkCanvas } from "./apply-implicit-link.js";
 import { createFlowCanvas } from "./create-flow.js";
 import { createLinkCanvas } from "./create-link.js";
 import { deleteLinkCanvas } from "./delete-link.js";
 import { getDocCanvas } from "./get-doc.js";
-import { importLinkCanvas } from "./import-link.js";
 import { listFlowLinksCanvas } from "./list-flow-links.js";
 import { listFlowParamsCanvas } from "./list-flow-params.js";
 import { listFrameStatesCanvas } from "./list-frame-states.js";
@@ -17,11 +17,11 @@ import { updateFrameSessionCanvas } from "./update-frame-session.js";
 import { updateLinkCanvas } from "./update-link.js";
 
 const CanvasActions = {
+  applyImplicitLinkCanvas,
   createFlowCanvas,
   createLinkCanvas,
   deleteLinkCanvas,
   getDocCanvas,
-  importLinkCanvas,
   listFlowLinksCanvas,
   listFlowParamsCanvas,
   listFrameStatesCanvas,

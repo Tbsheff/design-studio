@@ -2,12 +2,12 @@ import { Context, Effect, Layer } from "effect";
 
 import type { Input } from "../../../shared/actions/_core/action.js";
 import type { ApprovalCard } from "../../../shared/actions/_core/approval-card.js";
-import type { applyPackPacks } from "../../../shared/actions/packs/apply-pack.js";
+import type { applyPackPack } from "../../../shared/actions/pack/apply-pack.js";
 import type {
   DesignSystemItem,
   DraftStatus,
   PackFile,
-} from "../../../shared/actions/packs/schema.js";
+} from "../../../shared/actions/pack/schema.js";
 import type {
   DesignSystemCheckResult,
   DesignSystemDraftInfo,
@@ -30,7 +30,7 @@ import { listItems, readDraftInfo, readDraftStatus } from "./library-reads.js";
 
 interface PackStoreApi {
   readonly applyCard: (
-    input: Input<typeof applyPackPacks>
+    input: Input<typeof applyPackPack>
   ) => Effect.Effect<ApprovalCard, PackError>;
   readonly check: (
     packId: string
@@ -57,7 +57,7 @@ interface PackStoreApi {
 }
 
 class PackStore extends Context.Service<PackStore, PackStoreApi>()(
-  "design-studio/packs/PackStore"
+  "design-studio/design-system/PackStore"
 ) {
   declare public readonly access: "read";
 
@@ -65,7 +65,7 @@ class PackStore extends Context.Service<PackStore, PackStoreApi>()(
     PackStore,
     PackStore.of({
       applyCard: Effect.fn("PackStore.applyCard")(function* run(
-        input: Input<typeof applyPackPacks>
+        input: Input<typeof applyPackPack>
       ) {
         return yield* attemptPacks((runtime) => toApplyCard(runtime, input));
       }),

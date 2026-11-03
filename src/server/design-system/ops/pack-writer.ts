@@ -1,16 +1,16 @@
 import { Context, Effect, Layer } from "effect";
 
 import type { Input } from "../../../shared/actions/_core/action.js";
-import type { applyPackPacks } from "../../../shared/actions/packs/apply-pack.js";
-import type { createPackPacks } from "../../../shared/actions/packs/create-pack.js";
-import type { importPackPacks } from "../../../shared/actions/packs/import-pack.js";
-import type { publishDraftPacks } from "../../../shared/actions/packs/publish-draft.js";
+import type { applyPackPack } from "../../../shared/actions/pack/apply-pack.js";
+import type { createPackPack } from "../../../shared/actions/pack/create-pack.js";
+import type { importPackPack } from "../../../shared/actions/pack/import-pack.js";
+import type { publishDraftPack } from "../../../shared/actions/pack/publish-draft.js";
 import type {
   DraftResult,
   PublishedDraft,
-} from "../../../shared/actions/packs/schema.js";
-import type { setPackPacks } from "../../../shared/actions/packs/set-pack.js";
-import type { updatePackPacks } from "../../../shared/actions/packs/update-pack.js";
+} from "../../../shared/actions/pack/schema.js";
+import type { setPackPack } from "../../../shared/actions/pack/set-pack.js";
+import type { updatePackPack } from "../../../shared/actions/pack/update-pack.js";
 import type {
   ApplyPackResult,
   ImportPackResult,
@@ -33,13 +33,13 @@ import {
   updatePack,
 } from "./library-writes.js";
 
-type PackFields = Input<typeof createPackPacks>;
+type PackFields = Input<typeof createPackPack>;
 
-type PackPatch = Omit<Input<typeof updatePackPacks>, "packId">;
+type PackPatch = Omit<Input<typeof updatePackPack>, "packId">;
 
 interface PackWriterApi {
   readonly apply: (
-    input: Input<typeof applyPackPacks>
+    input: Input<typeof applyPackPack>
   ) => Effect.Effect<ApplyPackResult, PackWriteError>;
   readonly create: (
     fields: PackFields
@@ -55,16 +55,16 @@ interface PackWriterApi {
     name: string | null
   ) => Effect.Effect<PackSummary, PackWriteError>;
   readonly import: (
-    input: Input<typeof importPackPacks>
+    input: Input<typeof importPackPack>
   ) => Effect.Effect<ImportPackResult, PackWriteError>;
   readonly openEditor: (
     packId: string
   ) => Effect.Effect<OpenPackEditorResult, PackWriteError>;
   readonly publishDraft: (
-    input: Input<typeof publishDraftPacks>
+    input: Input<typeof publishDraftPack>
   ) => Effect.Effect<PublishedDraft, PackWriteError>;
   readonly save: (
-    input: Input<typeof setPackPacks>
+    input: Input<typeof setPackPack>
   ) => Effect.Effect<SavePackResult, PackWriteError>;
   readonly update: (
     packId: string,
@@ -73,7 +73,7 @@ interface PackWriterApi {
 }
 
 class PackWriter extends Context.Service<PackWriter, PackWriterApi>()(
-  "design-studio/packs/PackWriter"
+  "design-studio/design-system/PackWriter"
 ) {
   declare public readonly access: "write";
 
@@ -81,7 +81,7 @@ class PackWriter extends Context.Service<PackWriter, PackWriterApi>()(
     PackWriter,
     PackWriter.of({
       apply: Effect.fn("PackWriter.apply")(function* run(
-        input: Input<typeof applyPackPacks>
+        input: Input<typeof applyPackPack>
       ) {
         return yield* attemptPackWrites((runtime) => applyPack(runtime, input));
       }),
@@ -111,7 +111,7 @@ class PackWriter extends Context.Service<PackWriter, PackWriterApi>()(
         );
       }),
       import: Effect.fn("PackWriter.import")(function* run(
-        input: Input<typeof importPackPacks>
+        input: Input<typeof importPackPack>
       ) {
         return yield* attemptPackWrites((runtime) =>
           importPack(runtime, input)
@@ -125,14 +125,14 @@ class PackWriter extends Context.Service<PackWriter, PackWriterApi>()(
         );
       }),
       publishDraft: Effect.fn("PackWriter.publishDraft")(function* run(
-        input: Input<typeof publishDraftPacks>
+        input: Input<typeof publishDraftPack>
       ) {
         return yield* attemptPackWrites((runtime) =>
           publishDraft(runtime, input)
         );
       }),
       save: Effect.fn("PackWriter.save")(function* run(
-        input: Input<typeof setPackPacks>
+        input: Input<typeof setPackPack>
       ) {
         return yield* attemptPackWrites((runtime) => setPack(runtime, input));
       }),

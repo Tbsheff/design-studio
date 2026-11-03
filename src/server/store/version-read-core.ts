@@ -1,6 +1,5 @@
 import { Effect } from "effect";
 
-import { BadRequest } from "../../shared/actions/_core/errors/bad-request.js";
 import type {
   Direction,
   Project,
@@ -9,7 +8,10 @@ import type {
 import type { EditHistory } from "../direct-edit/history.js";
 import { attemptKnown } from "../platform/attempt/index.js";
 import type { KnownFailure } from "../platform/attempt/index.js";
-import { loadConfig } from "../platform/config/index.js";
+import {
+  makeRuntimeSlot,
+  requireBound,
+} from "../platform/runtime-slot/index.js";
 import type { VersionStore } from "../types.js";
 import type { StudioProjectStore } from "./projects.js";
 import type { VersionNames } from "./version-names.js";
@@ -33,9 +35,6 @@ interface VersionTarget {
 
 type VersionReadError = KnownFailure;
 
-const NOT_READY =
-  "Version reads are not ready in this Design Studio process. Restart Design Studio.";
-
 const REQUIRED_KEYS = [
   "history",
   "names",
@@ -44,11 +43,10 @@ const REQUIRED_KEYS = [
   "versions",
 ] as const;
 
-const runtimes = new Map<string, Partial<VersionReadRuntime>>();
+const slot = makeRuntimeSlot<Partial<VersionReadRuntime>>("Version read");
 
 const bindVersionReadRuntime = (part: Partial<VersionReadRuntime>): void => {
-  const { dataDir } = loadConfig();
-  runtimes.set(dataDir, { ...runtimes.get(dataDir), ...part });
+  slot.bind({ ...slot.peek(), ...part });
 };
 
 const isReady = (
@@ -56,15 +54,22 @@ const isReady = (
 ): runtime is VersionReadRuntime =>
   runtime !== null && REQUIRED_KEYS.every((key) => key in runtime);
 
+const readyOrNull = (
+  runtime: Partial<VersionReadRuntime> | null
+): VersionReadRuntime | null => {
+  if (isReady(runtime)) {
+    return runtime;
+  }
+
+  return null;
+};
+
 const attemptVersionRead = <Value>(
   task: (runtime: VersionReadRuntime) => Promise<Value>
 ): Effect.Effect<Value, VersionReadError> =>
   Effect.gen(function* withRuntime() {
-    const runtime = runtimes.get(loadConfig().dataDir) ?? null;
-
-    if (!isReady(runtime)) {
-      return yield* new BadRequest({ message: NOT_READY });
-    }
+    const found = slot.peek();
+    const runtime = yield* requireBound("Version read", readyOrNull(found));
 
     return yield* attemptKnown(() => task(runtime));
   });

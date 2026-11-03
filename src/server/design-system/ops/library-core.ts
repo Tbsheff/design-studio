@@ -1,10 +1,10 @@
 import { Effect } from "effect";
 
-import { BadRequest } from "../../../shared/actions/_core/errors/bad-request.js";
+import type { BadRequest } from "../../../shared/actions/_core/errors/bad-request.js";
 import type { Conflict } from "../../../shared/actions/_core/errors/conflict.js";
 import type { NotFound } from "../../../shared/actions/_core/errors/not-found.js";
-import { CheckFailed } from "../../../shared/actions/packs/errors/check-failed.js";
-import { PackExists } from "../../../shared/actions/packs/errors/pack-exists.js";
+import { CheckFailed } from "../../../shared/actions/pack/errors/check-failed.js";
+import { PackExists } from "../../../shared/actions/pack/errors/pack-exists.js";
 import type {
   Direction,
   PackSummary,
@@ -12,6 +12,10 @@ import type {
 } from "../../../shared/contracts.js";
 import { attemptKnown } from "../../platform/attempt/index.js";
 import { loadConfig } from "../../platform/config/index.js";
+import {
+  makeRuntimeSlot,
+  requireBound,
+} from "../../platform/runtime-slot/index.js";
 import type { StudioProjectStore } from "../../store/projects.js";
 import type { AgentRunner, VersionStore } from "../../types.js";
 import type { LiveDrafts } from "../draft-live.js";
@@ -67,27 +71,26 @@ type PackWriteError =
   | NotFound
   | PackExists;
 
-const NOT_READY =
-  "Design systems are not ready in this Design Studio process. Restart Design Studio.";
+const PACK_LABEL = "Design system";
 
-const runtimes = new Map<string, PackRuntime>();
+const runtimes = makeRuntimeSlot<PackRuntime>(PACK_LABEL);
 
-const edits = new Map<string, PackEditDeps>();
+const edits = makeRuntimeSlot<PackEditDeps>(PACK_LABEL);
 
 const bindPackRuntime = (dataDir: string, runtime: PackRuntime): void => {
-  runtimes.set(dataDir, runtime);
+  runtimes.bindAt(dataDir, runtime);
 };
 
 const bindPackEdits = (dataDir: string, deps: PackEditDeps): void => {
-  edits.set(dataDir, deps);
+  edits.bindAt(dataDir, deps);
 };
 
 const toPackRuntime = (dataDir: string): PackRuntime | null =>
-  runtimes.get(dataDir) ?? null;
+  runtimes.peekAt(dataDir);
 
 const toWriteRuntime = (dataDir: string): PackWriteRuntime | null => {
-  const runtime = runtimes.get(dataDir) ?? null;
-  const edit = edits.get(dataDir) ?? null;
+  const runtime = runtimes.peekAt(dataDir);
+  const edit = edits.peekAt(dataDir);
 
   if (runtime === null || edit === null || runtime.drafts === null) {
     return null;
@@ -123,11 +126,7 @@ const attemptPacks = <Value>(
 ): Effect.Effect<Value, PackError> =>
   Effect.gen(function* withRuntime() {
     const { dataDir } = loadConfig();
-    const runtime = toPackRuntime(dataDir);
-
-    if (runtime === null) {
-      return yield* new BadRequest({ message: NOT_READY });
-    }
+    const runtime = yield* requireBound(PACK_LABEL, toPackRuntime(dataDir));
 
     return yield* attemptKnown(() => task(runtime));
   });
@@ -137,11 +136,7 @@ const attemptPackWrites = <Value>(
 ): Effect.Effect<Value, PackWriteError> =>
   Effect.gen(function* withWriteRuntime() {
     const { dataDir } = loadConfig();
-    const runtime = toWriteRuntime(dataDir);
-
-    if (runtime === null) {
-      return yield* new BadRequest({ message: NOT_READY });
-    }
+    const runtime = yield* requireBound(PACK_LABEL, toWriteRuntime(dataDir));
 
     return yield* attemptKnown(() => task(runtime), toWriteFailure);
   });

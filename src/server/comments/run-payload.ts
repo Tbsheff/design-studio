@@ -1,4 +1,4 @@
-import type { SelectionContextsSchema } from "../../shared/actions/comments/schema.js";
+import type { SelectionContextsSchema } from "../../shared/actions/comment/schema.js";
 import { agentText } from "../../shared/comments.js";
 import type {
   DesignComment,

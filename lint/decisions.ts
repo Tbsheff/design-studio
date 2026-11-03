@@ -241,6 +241,18 @@ const NODE_RUNTIMES = [
 ];
 
 export const SCOPED_OFF_REASONS: Record<string, string> = {
+  "import/no-relative-parent-imports":
+    "Off in src/ui/app files: the app composes sibling folders (features, platform, domain, kit) and the studio files import from the parent app folder. The budget-0 app folder has no shim to avoid this.",
+  "github/filenames-match-regex":
+    "Off in src/ui/app/App.tsx: the Vite entry and importers fix the file name App.tsx.",
+  "unicorn/filename-case":
+    "Off in src/ui/app/App.tsx: the Vite entry and importers fix the file name App.tsx.",
+  "import/no-unassigned-import":
+    "Off in src/ui/app/main.tsx: the Vite entry imports the global css file for its side effect.",
+  "react/only-export-components":
+    "Off in src/ui/app/screens.tsx: the preload wrapper exports lazy screens next to a helper.",
+  "react/jsx-props-no-spreading":
+    "Off in src/ui/app/screens.tsx: the preload wrapper forwards props to a lazy component.",
   "import/no-nodejs-modules":
     "Off where the code runs on Node: it can never reach 0 there. The coarse ban covers browser code.",
   "no-console":
@@ -262,6 +274,8 @@ export const SCOPED_OFF_REASONS: Record<string, string> = {
   "max-lines":
     "Off in generated files and the per-context index, routes and handlers files, which list every op of a context (D29).",
 };
+
+export const APP_BUDGET_ZERO_GLOBS = ["src/ui/app/**"];
 
 export const decisionOverrides: OxlintOverride[] = [
   {

@@ -82,9 +82,17 @@ export const legacy: OxlintOverride[] = [
   ...layerEntries,
   {
     files: ["src/ui/**"],
+    excludeFiles: ["src/ui/app/**"],
     rules: {
       "no-restricted-globals": ["warn", ...UI_GLOBALS],
       "no-restricted-properties": ["warn", ...STUDIO_DESKTOP],
+    },
+  },
+  {
+    files: ["src/ui/app/**"],
+    rules: {
+      "no-restricted-globals": ["error", ...UI_GLOBALS],
+      "no-restricted-properties": ["error", ...STUDIO_DESKTOP],
     },
   },
   {

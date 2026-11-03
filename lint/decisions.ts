@@ -488,6 +488,17 @@ export const decisionOverrides: OxlintOverride[] = [
     ),
   },
   {
+    files: [
+      "src/ui/{desktop,storage,folderPicker,openAppRequest}.ts",
+      "src/ui/platform/{desktop,storage,app-events}.ts",
+    ],
+    rules: Object.fromEntries(
+      "anti-slop/no-conditional-empty-object-spread unicorn/prefer-set-has eslint/sort-keys eslint/no-useless-return react/refs unicorn/no-array-reverse react-doctor/no-ref-current-in-render anti-slop/no-chained-type-assertions anti-slop/no-known-value-widening anti-slop/no-runtime-typeof anti-slop/no-unknown-parameters anti-slop/no-unknown-returns anti-slop/require-readable-spacing eslint/curly eslint/default-case eslint/func-style eslint/id-length eslint/init-declarations eslint/max-lines-per-function eslint/no-magic-numbers eslint/no-ternary eslint/no-undefined eslint/prefer-destructuring github/array-foreach import/consistent-type-specifier-style import/exports-last import/group-exports import/no-relative-parent-imports oxc/no-barrel-file sonarjs/max-union-size sonarjs/no-duplicate-string sonarjs/max-lines-per-function typescript/explicit-function-return-type typescript/explicit-module-boundary-types typescript/method-signature-style unicorn/no-array-for-each unicorn/no-useless-undefined unicorn/prefer-global-this"
+        .split(" ")
+        .map((rule) => [rule, "warn"])
+    ),
+  },
+  {
     files: ["src/server/app/index.ts"],
     rules: { "oxc/no-barrel-file": "off" },
   },

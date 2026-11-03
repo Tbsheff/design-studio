@@ -79,11 +79,11 @@ export interface MeasureResult {
 
 export const ARRANGE_SHORTCUTS: Record<string, ArrangeAction> = {
   "Alt+KeyA": { align: "left" },
-  "Alt+KeyH": { align: "center" },
   "Alt+KeyD": { align: "right" },
-  "Alt+KeyW": { align: "top" },
-  "Alt+KeyV": { align: "middle" },
+  "Alt+KeyH": { align: "center" },
   "Alt+KeyS": { align: "bottom" },
+  "Alt+KeyV": { align: "middle" },
+  "Alt+KeyW": { align: "top" },
   "Alt+Shift+KeyH": { distribute: "horizontal" },
   "Alt+Shift+KeyV": { distribute: "vertical" },
   "Ctrl+Alt+KeyT": { tidy: true },

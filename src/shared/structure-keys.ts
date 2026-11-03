@@ -3,13 +3,13 @@ import { matchesKey } from "./keymap.js";
 import type { KeyId, KeyInput } from "./keymap.js";
 
 export const STRUCTURE_KEY_IDS: Record<StructureKey, KeyId> = {
+  cut: "layer-cut",
   delete: "layer-delete",
   duplicate: "layer-duplicate",
-  wrap: "layer-wrap",
-  unwrap: "layer-unwrap",
-  cut: "layer-cut",
-  paste: "layer-paste",
   group: "layer-group",
+  paste: "layer-paste",
+  unwrap: "layer-unwrap",
+  wrap: "layer-wrap",
 };
 
 const ORDER = Object.keys(STRUCTURE_KEY_IDS) as StructureKey[];

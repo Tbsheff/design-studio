@@ -118,33 +118,33 @@ const NEED_THREE = "Distribute needs three or more elements.";
 const NEED_TWO = "Tidy up needs two or more elements.";
 
 const ALIGN_AXIS: Record<AlignOp, Axis> = {
-  left: "horizontal",
+  bottom: "vertical",
   center: "horizontal",
+  left: "horizontal",
+  middle: "vertical",
   right: "horizontal",
   top: "vertical",
-  middle: "vertical",
-  bottom: "vertical",
 };
 
 const ALIGN_EDGE: Record<AlignOp, Edge> = {
-  left: "start",
-  top: "start",
+  bottom: "end",
   center: "center",
+  left: "start",
   middle: "center",
   right: "end",
-  bottom: "end",
+  top: "start",
 };
 
 const FLEX_VALUE: Record<Edge, string> = {
-  start: "flex-start",
   center: "center",
   end: "flex-end",
+  start: "flex-start",
 };
 
 const GRID_VALUE: Record<Edge, string> = {
-  start: "start",
   center: "center",
   end: "end",
+  start: "start",
 };
 
 const px = (value: number) => `${Math.round(value)}px`;
@@ -234,7 +234,7 @@ function boundsOf(rects: MeasureRect[]): MeasureRect {
   const right = Math.max(...rects.map((rect) => rect.x + rect.width));
   const bottom = Math.max(...rects.map((rect) => rect.y + rect.height));
 
-  return { x, y, width: right - x, height: bottom - y };
+  return { height: bottom - y, width: right - x, x, y };
 }
 
 function write(
@@ -243,9 +243,9 @@ function write(
 ): PlannedArrangeWrite {
   return {
     selector: element.selector,
-    tag: element.tag,
     source: element.source,
     style,
+    tag: element.tag,
   };
 }
 
@@ -257,10 +257,10 @@ function done(
   const kept = writes.filter((entry) => Object.keys(entry.style).length > 0);
 
   return {
-    ok: true,
     mode,
-    writes: kept,
     note: kept.length === 0 ? ALREADY_ALIGNED : note,
+    ok: true,
+    writes: kept,
   };
 }
 
@@ -497,7 +497,7 @@ function gridPlan(
   }
 
   return done("auto-layout", [
-    write(parent, { "row-gap": null, "column-gap": null }),
+    write(parent, { "column-gap": null, "row-gap": null }),
     write(parent, { gap: px(gap) }),
   ]);
 }
@@ -587,7 +587,7 @@ function absoluteDistribute(facts: ArrangeFacts, axis: Axis): ArrangePlan {
   const list = sorted(facts.targets, axis);
 
   const total =
-    endOf((list[list.length - 1] as Item).rect, axis) -
+    endOf((list.at(-1) as Item).rect, axis) -
     startOf((list[0] as Item).rect, axis);
 
   const sizes = list.reduce((sum, item) => sum + sizeOf(item.rect, axis), 0);
@@ -685,7 +685,7 @@ export function planArrangeFacts(
     return absolutePlan(facts, action);
   }
 
-  const parent = facts.parent;
+  const { parent } = facts;
 
   if (!parent) {
     return refuse("The element has no parent to arrange in.");

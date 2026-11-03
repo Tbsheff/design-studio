@@ -9,18 +9,19 @@ export const REVIEW_KINDS = [
   "clipped",
   "rule",
 ] as const;
+
 export type ReviewKind = (typeof REVIEW_KINDS)[number];
 
 export type ReviewSeverity = "high" | "medium" | "low";
 
 export const REVIEW_KIND_LABEL: Record<ReviewKind, string> = {
-  contrast: "Color contrast",
-  "tap-target": "Tap target size",
-  "alt-text": "Missing alt text",
   a11y: "Accessibility",
-  "off-token": "Off-token values",
+  "alt-text": "Missing alt text",
   clipped: "Clipped or overflowing",
+  contrast: "Color contrast",
+  "off-token": "Off-token values",
   rule: "Design rules",
+  "tap-target": "Tap target size",
 };
 
 export const REVIEW_FIX_MAX = 50;

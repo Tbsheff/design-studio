@@ -1,7 +1,9 @@
 import type { ExportFrame } from "./export.js";
 
 export const SHARE_EXPIRY_HOURS = [1, 24, 168] as const;
+
 export type ShareExpiryHours = (typeof SHARE_EXPIRY_HOURS)[number];
+
 export const SHARE_DEFAULT_EXPIRY_HOURS: ShareExpiryHours = 24;
 export const SHARE_MAX_FRAMES = 12;
 export const SHARE_NAME_MAX = 60;

@@ -7,6 +7,7 @@ export function wordCount(prompt: string): number {
 
 export function needsQuestions(prompt: string): boolean {
   const count = wordCount(prompt);
+
   return count > 0 && count < CLARIFY_WORD_LIMIT;
 }
 
@@ -17,6 +18,7 @@ export function formatAnswers(
   const lines = answers
     .filter((item) => item.answer.trim() !== "")
     .map((item) => `- ${item.question} ${item.answer.trim()}`);
+
   return lines.length === 0
     ? prompt.trim()
     : `${prompt.trim()}${ANSWERS_HEAD}${lines.join("\n")}`;
@@ -24,5 +26,6 @@ export function formatAnswers(
 
 export function withoutAnswers(prompt: string): string {
   const at = prompt.indexOf(ANSWERS_HEAD);
+
   return at === -1 ? prompt : prompt.slice(0, at);
 }

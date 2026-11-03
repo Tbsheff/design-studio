@@ -42,10 +42,10 @@ export type DesignRule =
 
 export const DESIGN_RULE_KIND_LABEL: Record<DesignRuleKind, string> = {
   class: "Classes",
-  token: "Tokens",
-  font: "Font",
   component: "Component",
+  font: "Font",
   text: "Agent only",
+  token: "Tokens",
 };
 
 export type DesignRulesOrigin = "design-md" | "studio" | "app-docs" | "none";

@@ -50,14 +50,14 @@ export type RenderResponse =
   | { type: typeof RENDER_MESSAGE; id: number; ok: true; value: unknown }
   | { type: typeof RENDER_MESSAGE; id: number; ok: false; error: string };
 
-const RENDER_OPS: readonly RenderOp[] = [
+const RENDER_OPS: readonly RenderOp[] = new Set([
   "open",
   "goto",
   "evaluate",
   "screenshot",
   "errors",
   "close",
-];
+]);
 
 export function isRenderRequest(value: unknown): value is RenderRequest {
   if (typeof value !== "object" || value === null) {
@@ -69,7 +69,7 @@ export function isRenderRequest(value: unknown): value is RenderRequest {
   return (
     record.type === RENDER_MESSAGE &&
     Number.isInteger(record.id) &&
-    RENDER_OPS.includes(record.op as RenderOp) &&
+    RENDER_OPS.has(record.op as RenderOp) &&
     typeof record.args === "object" &&
     record.args !== null
   );

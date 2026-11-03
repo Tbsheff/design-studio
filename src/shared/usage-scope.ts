@@ -77,8 +77,8 @@ export function parseEditScope(raw: unknown): EditScope | undefined {
 
   return {
     choice,
-    file,
     component: shortText(value.component),
+    file,
     routes,
     ...(callSite ? { callSite } : {}),
   };

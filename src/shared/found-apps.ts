@@ -33,7 +33,7 @@ export interface AppHealth {
 }
 
 export const FOUND_KIND_LABEL: Record<FoundAppKind, string> = {
+  html: "HTML",
   next: "Next.js",
   vite: "Vite",
-  html: "HTML",
 };

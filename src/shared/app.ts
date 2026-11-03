@@ -25,7 +25,7 @@ export function sharedSourceOf(
   selection: Pick<SelectionContext, "source" | "usedAt" | "usedBy">,
   appDir: string
 ): SharedSource | null {
-  const source = selection.source;
+  const { source } = selection;
 
   if (!source || !isOutsideAppDir(source.file, appDir)) {
     return null;
@@ -97,7 +97,7 @@ export function parseEnvText(text: string): {
     }
   }
 
-  return { env, bad };
+  return { bad, env };
 }
 
 export function envText(env: Record<string, string> | undefined): string {

@@ -71,7 +71,7 @@ export function fuzzyRank<T>(
     const score = fuzzyScore(key(item), query);
 
     if (score !== null) {
-      scored.push({ item, score, index });
+      scored.push({ index, item, score });
     }
   });
   scored.sort((a, b) => b.score - a.score || a.index - b.index);

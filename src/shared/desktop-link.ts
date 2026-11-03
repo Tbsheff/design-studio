@@ -77,9 +77,9 @@ export interface DesktopContext {
 export const DESKTOP_IPC = {
   command: "studio:command",
   context: "studio:context",
+  dropFolder: "studio:drop-folder",
   pickFolder: "studio:pick-folder",
   revealExport: "studio:reveal-export",
-  dropFolder: "studio:drop-folder",
 } as const;
 
 const MAX_PICK_TITLE = 200;
@@ -133,7 +133,7 @@ export function parsePickFolderRequest(
       ? raw
       : null;
 
-  return { title, defaultPath };
+  return { defaultPath, title };
 }
 
 const PROJECT_ID = /^[A-Za-z0-9_-]{1,64}$/;
@@ -160,7 +160,7 @@ export function parseDeepLink(raw: string): DesktopCommand | null {
   if (action === "open") {
     const projectId = url.searchParams.get("project");
 
-    return isProjectId(projectId) ? { type: "open-project", projectId } : null;
+    return isProjectId(projectId) ? { projectId, type: "open-project" } : null;
   }
 
   if (action === "new") {

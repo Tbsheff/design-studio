@@ -58,7 +58,7 @@ export function parseStatesRequest(raw: unknown): StatesRequest | null {
     return null;
   }
 
-  return { path, frame: r.frame, width, height };
+  return { frame: r.frame, height, path, width };
 }
 
 export function statesTaskBlock(

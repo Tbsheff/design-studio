@@ -23,12 +23,13 @@ function entry(
   darkValue: string | null = null
 ): CompiledTokenEntry {
   const [group = "", ...rest] = path.split(".");
+
   return {
-    path,
     cssVar: cssVarFor(group, rest.join("-")),
+    darkValue,
+    path,
     type,
     value,
-    darkValue,
   };
 }
 
@@ -113,7 +114,7 @@ describe(matchColor, () => {
 
   it("resolves var() as an exact match and ignores transparent or invalid values", () => {
     expect(matchColor("var(--accent)", ENTRIES)).toEqual([
-      expect.objectContaining({ cssVar: "--accent", exact: true, distance: 0 }),
+      expect.objectContaining({ cssVar: "--accent", distance: 0, exact: true }),
     ]);
     expect(matchColor("var(--missing)", ENTRIES)).toEqual([]);
     expect(matchColor("rgba(0, 0, 0, 0)", ENTRIES)).toEqual([]);
@@ -142,8 +143,8 @@ describe(matchDimension, () => {
     const near = matchDimension("17.5px", ENTRIES, "space")[0];
     expect(near).toMatchObject({
       cssVar: "--space-4",
-      exact: false,
       distance: 1.5,
+      exact: false,
     });
     expect(isSnappable("space", near)).toBe(true);
   });

@@ -63,11 +63,11 @@ export function focalOf(value: string | undefined): { x: number; y: number } {
   const parts = (value ?? "").trim().split(/\s+/);
 
   const word: Record<string, number> = {
-    left: 0,
-    top: 0,
-    center: 50,
-    right: 100,
     bottom: 100,
+    center: 50,
+    left: 0,
+    right: 100,
+    top: 0,
   };
 
   const read = (part: string | undefined): number => {

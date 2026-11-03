@@ -58,8 +58,8 @@ export interface FrameStatesView {
 }
 
 export const DEFAULT_MOCK_USER: MockUser = {
-  name: "Preview User",
   email: "preview@example.com",
+  name: "Preview User",
 };
 
 export const BUILT_IN_STATES: readonly FrameStateDef[] = [
@@ -72,14 +72,14 @@ export const BUILT_IN_STATES: readonly FrameStateDef[] = [
 
 export const STATE_HINTS: Record<FrameStateKind, string> = {
   default: "No change. The frame shows what a new visitor sees.",
-  session:
-    "Sends a session cookie and answers the auth session call with the mock user. Cookies the app sets here are kept by the studio, so a real sign-in in this frame sticks.",
   empty:
     "Signed in. /api and tRPC calls in the browser come back with every list empty. A call that fails gets an empty list.",
+  error: "Signed in. /api and tRPC calls in the browser get a 500 error.",
   loading:
     "Signed in. /api and tRPC calls in the browser get no answer, so loading UI stays.",
-  error: "Signed in. /api and tRPC calls in the browser get a 500 error.",
   mock: "Signed in. Calls that match a rule get the mock answer. Other calls go to the app.",
+  session:
+    "Sends a session cookie and answers the auth session call with the mock user. Cookies the app sets here are kept by the studio, so a real sign-in in this frame sticks.",
 };
 
 export function isFrameStateId(value: unknown): value is string {
@@ -102,7 +102,7 @@ export function stateOfHost(
     return null;
   }
 
-  return { state: match[1] ?? null, base: match[2] };
+  return { base: match[2], state: match[1] ?? null };
 }
 
 export function withFrameStateHost(

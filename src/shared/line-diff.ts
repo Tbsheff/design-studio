@@ -94,7 +94,7 @@ function toHunks(ops: DiffLine[]): DiffHunk[] {
         .some((next) => next.kind !== "same");
 
     if (!current && nearChange) {
-      current = { oldStart: oldLine, newStart: newLine, lines: [] };
+      current = { lines: [], newStart: newLine, oldStart: oldLine };
       hunks.push(current);
       trailingSame = 0;
     }
@@ -166,7 +166,7 @@ function sameEnds(
     endB -= 1;
   }
 
-  return { start, endA, endB };
+  return { endA, endB, start };
 }
 
 function addRange(ranges: [number, number][], from: number, to: number): void {
@@ -219,8 +219,8 @@ export function diffLines(before: string, after: string): LineDiff {
   if (!middle) {
     return {
       added: endB - start,
-      removed: endA - start,
       hunks: [],
+      removed: endA - start,
       truncated: true,
     };
   }

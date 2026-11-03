@@ -22,6 +22,7 @@ describe(runTitle, () => {
   it("cuts long clauses at a word and stays idempotent", () => {
     const long =
       "Rebuild the whole pricing section with three tiers and a comparison table that scrolls sideways on phones";
+
     const title = runTitle(long);
     expect(title.length).toBeLessThanOrEqual(RUN_TITLE_MAX);
     expect(title.endsWith("…")).toBe(true);

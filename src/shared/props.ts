@@ -6,6 +6,7 @@ import type {
 } from "./contracts.js";
 
 export type PropValue = string | number | boolean;
+
 export type PropControl = "select" | "boolean" | "text" | "number";
 
 export interface PropSpec {
@@ -99,6 +100,7 @@ export interface VariantClassResult {
 }
 
 export type ComponentSource = "package" | "app";
+
 export const COMPONENT_SOURCES = ["package", "app", "all"] as const;
 export const COMPONENT_LIST_MAX = 100;
 

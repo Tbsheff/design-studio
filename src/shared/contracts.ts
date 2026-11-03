@@ -952,157 +952,157 @@ export interface RenderCheckResult {
 }
 
 export const API_ROUTES = {
-  getSession: "GET /api/session (same-origin only) -> {token, previewOrigin}",
-  listProjects: "GET /api/projects -> Project[]",
-  markProjectOpened:
-    "POST /api/projects/:pid/opened -> {openedAt} (sets Project.openedAt for Recent; updatedAt does not change)",
-  createProject:
-    "POST /api/projects {name?, prompt, kind, designMd?, packId?, settings?: Partial<ProjectSettings>, level?, startRun?: boolean} -> {project, runId} (startRun false: no first run, runId null; with no parentPath the project gets a new subfolder in the default projects folder)",
-  listPacks:
-    "GET /api/packs -> PackSummary[] (built-in packs first, then user packs; user packs are read again when their files change)",
-  packProblems:
-    "GET /api/packs/problems -> PackProblem[] (packs skipped because a file is missing or invalid)",
-  getPack: "GET /api/packs/:id -> PackDetail (404 unknown)",
-  createPack:
-    "POST /api/packs CreateUserPackInput -> PackSummary (new user pack user-<slug of name>[-2, -3…]; 400 invalid)",
-  updatePack:
-    "PATCH /api/packs/:id UpdateUserPackInput -> PackSummary (same id; 400 built-in or invalid, 404 unknown)",
-  duplicatePack:
-    'POST /api/packs/:id/duplicate {name?} -> PackSummary (built-in or user; default name "<name> copy")',
-  deletePack:
-    "DELETE /api/packs/:id -> {ok} (user packs only; 400 built-in, 404 unknown; projects that use it keep their files)",
-  exportPack:
-    "GET /api/packs/:id/export -> application/zip (<id>/pack.json, <id>/tokens.json, <id>/DESIGN.md)",
-  importPack:
-    "POST /api/packs/import (multipart: file = zip in the export format, mode = ask | replace | copy) -> ImportPackResult (new user pack, provenance imported; 409 pack_exists {existing} when mode is ask and a user pack has the same id or name; 400 bad zip, extra entries, path outside the folder, larger than 2 MB, invalid files)",
-  checkPack:
-    "GET /api/packs/:id/check -> DesignSystemCheckResult (tokens, contrast, DESIGN.md and pack fonts; no kit page rules)",
-  openPackEditor:
-    "POST /api/packs/:id/editor -> OpenPackEditorResult (the backing project whose designSystemFor is the pack id, else a new one with a kit page; 400 built-in)",
-  applyPack:
-    'POST /api/projects/:pid/d/:did/design-system/apply {packId} -> ApplyPackResult (one version "Apply <name> design system" or "Switch to <name> design system"; keeps ## Project notes; 409 run active, 400 unknown pack)',
-  savePack:
-    'POST /api/projects/:pid/d/:did/design-system/save {name, packId?, asNew?} -> SavePackResult (asNew creates a new user pack; else updates packId, else the user pack named in pack.json, else creates one; then pack.json names the saved pack, one version "Save <name> to library" when it changed; 400 built-in packId or invalid files, 404 no design system, 409 run active, 409 check_failed in a design-system project while the check fails unless force: true)',
-  getDesignSystem:
-    "GET /api/projects/:pid/d/:did/design-system -> DesignSystemState",
-  previewTokens:
-    "POST /api/projects/:pid/d/:did/design-system/preview {changes: TokenChange[]} -> TokenPreviewResult (no files written)",
-  updateTokens:
-    "POST /api/projects/:pid/d/:did/design-system/tokens/update {changes: TokenChange[]} -> UpdateTokensResult (one version; 409 run active, 422 invalid, 404 unknown path)",
-  createToken:
-    "POST /api/projects/:pid/d/:did/design-system/tokens CreateTokenRequest -> CreateTokenResult (409 run active, 409 token_exists, 422 invalid, 404 no design system)",
-  importProject:
-    "POST /api/projects/import {path, appDir?, skipApp?} -> {project} (a Next.js app or a workspace with Next.js apps under apps/* attaches as an app project; 409 pick_app {candidates} when more than one app matches; skipApp imports the folder without the app, for example only its tokens)",
-  attachApp:
-    "POST /api/projects/attach AttachAppRequest -> {project, firstVersion, legacyCanvas} (folder: managed dev server, or url: a dev server the user runs; the project points at the folder, nothing is copied; a new attach saves the first version in the background and moves an old .studio/canvas.json aside)",
-  appStatus:
-    "GET /api/projects/:pid/app -> {app, status, logs, firstVersion} (404 when the project is not an attached app; firstVersion is null once the first version is saved)",
-  appControl:
-    "POST /api/projects/:pid/app/start | stop | restart -> AppServerStatus",
-  appConfig:
-    "POST /api/projects/:pid/app/config {url?, env?} -> {app} (empty url = the studio starts next dev; then the dev server restarts)",
-  appRoutes:
-    "GET /api/projects/:pid/app/routes -> {routes: AppRoute[]} (app router page files under the app dir)",
-  routeLinks:
-    "GET /api/projects/:pid/flow/links?route= -> RouteLinksResult (links found in the route source: <Link href>, router.push, redirect and form actions)",
-  flowParams:
-    "GET /api/projects/:pid/flow/params -> {params} (sample values for dynamic segments, kept in the studio data dir)",
-  buildFlow:
-    "POST /api/projects/:pid/flow {routes?|from?, depth?, params?} -> FlowResult (route frames laid out left to right, prototype links from the source links)",
-  openSource:
-    'POST /api/projects/:pid/d/:did/open-source {source: "file:line:col"} -> {opened, path} (opens the file in the editor from STUDIO_EDITOR, default code; 422 when no editor runs)',
-  createDesignSystemDraft:
-    'POST /api/design-systems/draft (JSON DraftRequest, or multipart: request = JSON text, tokensFile = file, images = files) -> DesignSystemDraftResult within about 1 s (draft user pack from the base pack + backing HTML project "<name> design system" with a skeleton kit page; one version). Then each source is read in the background: design-system.sources events, the kit page and tokens are rewritten after each source, one version "Read sources" at the end, then one Improve with AI run starts by itself (not with ?improve=off, which MCP sends: improve is skipped); when that run ends, improve.state is done with the run status. 400 no source, blocked URL, unknown base pack',
-  getDesignSystemDraft:
-    "GET /api/projects/:pid/design-system-draft -> DesignSystemDraftInfo with sources (DraftSourcesState or null) (404 when the project is not a design-system project)",
-  createInFolder:
-    "POST /api/projects {..., parentPath} -> {project, runId} (makes a new subfolder <slug of name>[-2, -3…] in parentPath, registers it like an imported folder, adds parentPath to the saved folders)",
-  listWorkspaces: "GET /api/workspaces -> WorkspaceList {homeDir, folders}",
-  addWorkspace:
-    "POST /api/workspaces {path, label?} -> WorkspaceFolder (realpath, must be a folder; same path returns the saved entry)",
-  updateWorkspace: "PATCH /api/workspaces/:id {label} -> WorkspaceFolder",
-  removeWorkspace:
-    "DELETE /api/workspaces/:id -> {ok} (forgets the folder; never touches disk; 400 for the default folder)",
-  setDefaultFolder:
-    "PUT /api/workspaces/default {path} -> WorkspaceList (realpath, must be a folder outside the data dir; the old default is kept as a saved folder)",
-  hiddenProjects:
-    "GET /api/hidden-projects -> {count, target} (projects whose main work tree is in the data dir)",
-  moveHiddenProjects:
-    "POST /api/hidden-projects/move -> {moved: pid[], failed: {projectId, error}[]} (copies each main work tree into a new subfolder of the default folder, then removes the old one)",
-  pickFolder:
-    "POST /api/pick-folder {title?, defaultPath?} -> {path} | 204 canceled | 409 a picker is open | 501 not macOS | 504 timed out",
-  getProject: "GET /api/projects/:pid -> Project",
-  updateSettings:
-    "PATCH /api/projects/:pid/settings Partial<ProjectSettings> (model 1..200 chars, maxBudgetUsd 0.01..50 or null for no limit, maxTurns 1..200 int, allowBash, allowInstall, autoApprove (all three on by default), disabledSkills: skill ids from GET /api/skills) -> Project",
-  listSkills:
-    "GET /api/skills -> SkillCatalog (rescans ~/.claude/skills and enabled plugins on each call)",
-  projectEvents:
-    "GET /api/projects/:pid/events (SSE; Last-Event-ID or ?after=seq)",
-  uploadAttachment:
-    "POST /api/projects/:pid/attachments (multipart file; png, jpeg, gif or webp only, else 400) -> Attachment",
-  getDesignMd: "GET /api/projects/:pid/design-md -> {content}",
-  putDesignMd:
-    'PUT /api/projects/:pid/design-md {content} -> {ok, versionId} (commits a manual version "Update DESIGN.md" on main)',
-  projectFile:
-    "GET /api/projects/:pid/files?path= -> image/png (png under checks/ or runs/ only)",
-  listRuns: "GET /api/projects/:pid/runs -> RunSummary[]",
-  createDirection:
-    "POST /api/projects/:pid/directions {fromVersionId, name} -> Direction",
-  listVersions: "GET /api/projects/:pid/d/:did/versions -> Version[]",
-  workTreeStatus: "GET /api/projects/:pid/d/:did/status -> WorkTreeStatus",
-  startRun: "POST /api/projects/:pid/d/:did/runs RunRequest -> {runId}",
-  undo: "POST /api/projects/:pid/d/:did/undo -> Version",
-  restore: "POST /api/projects/:pid/d/:did/restore {versionId} -> Version",
-  keepUnfinished: "POST /api/projects/:pid/d/:did/keep -> Version",
-  discardUnfinished: "POST /api/projects/:pid/d/:did/discard -> WorkTreeStatus",
-  directionPreview: "GET /api/projects/:pid/d/:did/preview -> {url}",
-  renderCheck: "POST /api/projects/:pid/d/:did/check -> RenderCheckResult[]",
-  variationBriefs:
-    "POST /api/projects/:pid/variations/briefs VariationBriefsRequest -> VariationBriefsResult (count 2..4, react 2..3)",
-  startVariations:
-    "POST /api/projects/:pid/variations VariationStartRequest -> VariationStartResult (N new directions + N parallel runs)",
-  cancelVariations:
-    "POST /api/projects/:pid/variations/:gid/cancel -> {canceled: runId[]}",
-  mixVariation:
-    "POST /api/projects/:pid/variations/mix VariationMixRequest -> {runId} (edit run on the target with the element as a <reference-element>)",
-  listComments: "GET /api/projects/:pid/d/:did/comments -> DesignComment[]",
-  createComment:
-    "POST /api/projects/:pid/d/:did/comments {text, target, context?, status?: draft|queued, attachmentIds?, mentions?, drawing?} -> DesignComment",
-  profile: "GET /api/profile -> {name: string | null}",
-  updateComment:
-    "PATCH /api/projects/:pid/d/:did/comments/:cid {text?, status?, target?, context?} -> DesignComment (409 bad_transition)",
-  deleteComment: "DELETE /api/projects/:pid/d/:did/comments/:cid -> {ok}",
   addCommentReply:
     "POST /api/projects/:pid/d/:did/comments/:cid/replies {text} -> DesignComment",
-  deleteCommentReply:
-    "DELETE /api/projects/:pid/d/:did/comments/:cid/replies/:rid -> DesignComment",
-  reorderComments:
-    "POST /api/projects/:pid/d/:did/comments/reorder {ids} -> DesignComment[]",
-  sendComments:
-    "POST /api/projects/:pid/d/:did/comments/send {ids?, contexts?, level?} -> {runId, comments} (409 run_in_progress: comments stay queued)",
-  directEdit:
-    'POST /api/projects/:pid/d/:did/direct-edit DirectEditRequest {style?, text?, classes? {add?, remove?}, variant? ("md:hover:": style writes md:hover: classes, or a media/:hover rule in a plain HTML file)} -> DirectEditResult with tailwind? (409 while a run is active, 422 when the source cannot be patched); also takes DirectEditBatch {edits} (1-50 style/text edits) -> DirectEditBatchResult with one version, and StructureEditRequest {op: delete|duplicate|wrap|unwrap|move|group, targets, into?|before?|after? (move needs one; duplicate may take one to place the copy there), style? (duplicate of one target: style for the copy)} -> StructureEditResult with one version, and {replaceStyle: {matches, token}} (style search and replace, up to 500 matches; .map() copies and className built in code are skipped with a reason) -> StyleReplaceResult with one version, and {arrange: ArrangeRequest} (align, distribute or tidy up siblings: parent justify/align/gap in an auto layout, left/top for absolute children; refusals are 422 with the reason) -> ArrangeResult with one version',
-  elementClasses:
-    "GET /api/projects/:pid/d/:did/classes?file&line&col&variant? -> {tailwind: TailwindOutcome | null, element: ElementSourceInfo | null, variants: VariantSupport} (the class list of the element, whether style edits write classes or inline style, the component name when the JSX element is a component use, whether its className reads the className prop, and the data expression its text comes from)",
-  versionPreview: "GET /api/projects/:pid/versions/:vid/preview -> {url}",
-  exportVersion:
-    "GET /api/projects/:pid/versions/:vid/export -> application/zip",
-  renameVersion:
-    "PATCH /api/projects/:pid/versions/:vid {name: string|null} -> {id, name} (trimmed, max 80, empty or null removes)",
-  versionThumb:
-    "GET /api/projects/:pid/versions/:vid/thumb -> image/png 640x400 (rendered on first request, 404 no_page)",
-  versionDiff:
-    "GET /api/projects/:pid/versions/:vid/diff/:other?w=&h= -> image/png mask, red where the first viewport changed (x-changed-pct)",
-  getRun: "GET /api/runs/:runId -> {summary, events}",
-  cancelRun: "POST /api/runs/:runId/cancel -> {ok}",
-  postTelemetry: "POST /api/telemetry TelemetrySample -> {ok}",
-  getTelemetry: "GET /api/telemetry?projectId= -> TelemetrySample[]",
+  addWorkspace:
+    "POST /api/workspaces {path, label?} -> WorkspaceFolder (realpath, must be a folder; same path returns the saved entry)",
+  appConfig:
+    "POST /api/projects/:pid/app/config {url?, env?} -> {app} (empty url = the studio starts next dev; then the dev server restarts)",
+  appControl:
+    "POST /api/projects/:pid/app/start | stop | restart -> AppServerStatus",
   appDoctor:
     "GET /api/projects/:pid/app/doctor?fresh=1 -> {status, doctor: AppDoctorResult} (classifies the dev log of the current start and one request to the app root; fresh=1 requests the root again)",
   appFix:
     "POST /api/projects/:pid/app/doctor/fix {kind} -> AppFixResult (runs the doctor again and applies only the fix it computed, then restarts the dev server; 409 when the doctor no longer sees that problem)",
+  appRoutes:
+    "GET /api/projects/:pid/app/routes -> {routes: AppRoute[]} (app router page files under the app dir)",
+  appStatus:
+    "GET /api/projects/:pid/app -> {app, status, logs, firstVersion} (404 when the project is not an attached app; firstVersion is null once the first version is saved)",
+  applyPack:
+    'POST /api/projects/:pid/d/:did/design-system/apply {packId} -> ApplyPackResult (one version "Apply <name> design system" or "Switch to <name> design system"; keeps ## Project notes; 409 run active, 400 unknown pack)',
+  attachApp:
+    "POST /api/projects/attach AttachAppRequest -> {project, firstVersion, legacyCanvas} (folder: managed dev server, or url: a dev server the user runs; the project points at the folder, nothing is copied; a new attach saves the first version in the background and moves an old .studio/canvas.json aside)",
+  buildFlow:
+    "POST /api/projects/:pid/flow {routes?|from?, depth?, params?} -> FlowResult (route frames laid out left to right, prototype links from the source links)",
+  cancelRun: "POST /api/runs/:runId/cancel -> {ok}",
+  cancelVariations:
+    "POST /api/projects/:pid/variations/:gid/cancel -> {canceled: runId[]}",
+  checkPack:
+    "GET /api/packs/:id/check -> DesignSystemCheckResult (tokens, contrast, DESIGN.md and pack fonts; no kit page rules)",
+  createComment:
+    "POST /api/projects/:pid/d/:did/comments {text, target, context?, status?: draft|queued, attachmentIds?, mentions?, drawing?} -> DesignComment",
+  createDesignSystemDraft:
+    'POST /api/design-systems/draft (JSON DraftRequest, or multipart: request = JSON text, tokensFile = file, images = files) -> DesignSystemDraftResult within about 1 s (draft user pack from the base pack + backing HTML project "<name> design system" with a skeleton kit page; one version). Then each source is read in the background: design-system.sources events, the kit page and tokens are rewritten after each source, one version "Read sources" at the end, then one Improve with AI run starts by itself (not with ?improve=off, which MCP sends: improve is skipped); when that run ends, improve.state is done with the run status. 400 no source, blocked URL, unknown base pack',
+  createDirection:
+    "POST /api/projects/:pid/directions {fromVersionId, name} -> Direction",
+  createInFolder:
+    "POST /api/projects {..., parentPath} -> {project, runId} (makes a new subfolder <slug of name>[-2, -3…] in parentPath, registers it like an imported folder, adds parentPath to the saved folders)",
+  createPack:
+    "POST /api/packs CreateUserPackInput -> PackSummary (new user pack user-<slug of name>[-2, -3…]; 400 invalid)",
+  createProject:
+    "POST /api/projects {name?, prompt, kind, designMd?, packId?, settings?: Partial<ProjectSettings>, level?, startRun?: boolean} -> {project, runId} (startRun false: no first run, runId null; with no parentPath the project gets a new subfolder in the default projects folder)",
+  createToken:
+    "POST /api/projects/:pid/d/:did/design-system/tokens CreateTokenRequest -> CreateTokenResult (409 run active, 409 token_exists, 422 invalid, 404 no design system)",
+  deleteComment: "DELETE /api/projects/:pid/d/:did/comments/:cid -> {ok}",
+  deleteCommentReply:
+    "DELETE /api/projects/:pid/d/:did/comments/:cid/replies/:rid -> DesignComment",
+  deletePack:
+    "DELETE /api/packs/:id -> {ok} (user packs only; 400 built-in, 404 unknown; projects that use it keep their files)",
+  directEdit:
+    'POST /api/projects/:pid/d/:did/direct-edit DirectEditRequest {style?, text?, classes? {add?, remove?}, variant? ("md:hover:": style writes md:hover: classes, or a media/:hover rule in a plain HTML file)} -> DirectEditResult with tailwind? (409 while a run is active, 422 when the source cannot be patched); also takes DirectEditBatch {edits} (1-50 style/text edits) -> DirectEditBatchResult with one version, and StructureEditRequest {op: delete|duplicate|wrap|unwrap|move|group, targets, into?|before?|after? (move needs one; duplicate may take one to place the copy there), style? (duplicate of one target: style for the copy)} -> StructureEditResult with one version, and {replaceStyle: {matches, token}} (style search and replace, up to 500 matches; .map() copies and className built in code are skipped with a reason) -> StyleReplaceResult with one version, and {arrange: ArrangeRequest} (align, distribute or tidy up siblings: parent justify/align/gap in an auto layout, left/top for absolute children; refusals are 422 with the reason) -> ArrangeResult with one version',
+  directionPreview: "GET /api/projects/:pid/d/:did/preview -> {url}",
+  discardUnfinished: "POST /api/projects/:pid/d/:did/discard -> WorkTreeStatus",
+  duplicatePack:
+    'POST /api/packs/:id/duplicate {name?} -> PackSummary (built-in or user; default name "<name> copy")',
+  elementClasses:
+    "GET /api/projects/:pid/d/:did/classes?file&line&col&variant? -> {tailwind: TailwindOutcome | null, element: ElementSourceInfo | null, variants: VariantSupport} (the class list of the element, whether style edits write classes or inline style, the component name when the JSX element is a component use, whether its className reads the className prop, and the data expression its text comes from)",
+  exportPack:
+    "GET /api/packs/:id/export -> application/zip (<id>/pack.json, <id>/tokens.json, <id>/DESIGN.md)",
+  exportVersion:
+    "GET /api/projects/:pid/versions/:vid/export -> application/zip",
+  flowParams:
+    "GET /api/projects/:pid/flow/params -> {params} (sample values for dynamic segments, kept in the studio data dir)",
+  getDesignMd: "GET /api/projects/:pid/design-md -> {content}",
+  getDesignSystem:
+    "GET /api/projects/:pid/d/:did/design-system -> DesignSystemState",
+  getDesignSystemDraft:
+    "GET /api/projects/:pid/design-system-draft -> DesignSystemDraftInfo with sources (DraftSourcesState or null) (404 when the project is not a design-system project)",
+  getPack: "GET /api/packs/:id -> PackDetail (404 unknown)",
+  getProject: "GET /api/projects/:pid -> Project",
+  getRun: "GET /api/runs/:runId -> {summary, events}",
+  getSession: "GET /api/session (same-origin only) -> {token, previewOrigin}",
+  getTelemetry: "GET /api/telemetry?projectId= -> TelemetrySample[]",
+  hiddenProjects:
+    "GET /api/hidden-projects -> {count, target} (projects whose main work tree is in the data dir)",
+  importPack:
+    "POST /api/packs/import (multipart: file = zip in the export format, mode = ask | replace | copy) -> ImportPackResult (new user pack, provenance imported; 409 pack_exists {existing} when mode is ask and a user pack has the same id or name; 400 bad zip, extra entries, path outside the folder, larger than 2 MB, invalid files)",
+  importProject:
+    "POST /api/projects/import {path, appDir?, skipApp?} -> {project} (a Next.js app or a workspace with Next.js apps under apps/* attaches as an app project; 409 pick_app {candidates} when more than one app matches; skipApp imports the folder without the app, for example only its tokens)",
+  keepUnfinished: "POST /api/projects/:pid/d/:did/keep -> Version",
+  listComments: "GET /api/projects/:pid/d/:did/comments -> DesignComment[]",
+  listPacks:
+    "GET /api/packs -> PackSummary[] (built-in packs first, then user packs; user packs are read again when their files change)",
+  listProjects: "GET /api/projects -> Project[]",
+  listRuns: "GET /api/projects/:pid/runs -> RunSummary[]",
+  listSkills:
+    "GET /api/skills -> SkillCatalog (rescans ~/.claude/skills and enabled plugins on each call)",
+  listVersions: "GET /api/projects/:pid/d/:did/versions -> Version[]",
+  listWorkspaces: "GET /api/workspaces -> WorkspaceList {homeDir, folders}",
+  markProjectOpened:
+    "POST /api/projects/:pid/opened -> {openedAt} (sets Project.openedAt for Recent; updatedAt does not change)",
+  mixVariation:
+    "POST /api/projects/:pid/variations/mix VariationMixRequest -> {runId} (edit run on the target with the element as a <reference-element>)",
+  moveHiddenProjects:
+    "POST /api/hidden-projects/move -> {moved: pid[], failed: {projectId, error}[]} (copies each main work tree into a new subfolder of the default folder, then removes the old one)",
+  openPackEditor:
+    "POST /api/packs/:id/editor -> OpenPackEditorResult (the backing project whose designSystemFor is the pack id, else a new one with a kit page; 400 built-in)",
+  openSource:
+    'POST /api/projects/:pid/d/:did/open-source {source: "file:line:col"} -> {opened, path} (opens the file in the editor from STUDIO_EDITOR, default code; 422 when no editor runs)',
+  packProblems:
+    "GET /api/packs/problems -> PackProblem[] (packs skipped because a file is missing or invalid)",
+  pickFolder:
+    "POST /api/pick-folder {title?, defaultPath?} -> {path} | 204 canceled | 409 a picker is open | 501 not macOS | 504 timed out",
+  postTelemetry: "POST /api/telemetry TelemetrySample -> {ok}",
+  previewTokens:
+    "POST /api/projects/:pid/d/:did/design-system/preview {changes: TokenChange[]} -> TokenPreviewResult (no files written)",
+  profile: "GET /api/profile -> {name: string | null}",
+  projectEvents:
+    "GET /api/projects/:pid/events (SSE; Last-Event-ID or ?after=seq)",
+  projectFile:
+    "GET /api/projects/:pid/files?path= -> image/png (png under checks/ or runs/ only)",
+  putDesignMd:
+    'PUT /api/projects/:pid/design-md {content} -> {ok, versionId} (commits a manual version "Update DESIGN.md" on main)',
+  removeWorkspace:
+    "DELETE /api/workspaces/:id -> {ok} (forgets the folder; never touches disk; 400 for the default folder)",
+  renameVersion:
+    "PATCH /api/projects/:pid/versions/:vid {name: string|null} -> {id, name} (trimmed, max 80, empty or null removes)",
+  renderCheck: "POST /api/projects/:pid/d/:did/check -> RenderCheckResult[]",
+  reorderComments:
+    "POST /api/projects/:pid/d/:did/comments/reorder {ids} -> DesignComment[]",
+  restore: "POST /api/projects/:pid/d/:did/restore {versionId} -> Version",
+  routeLinks:
+    "GET /api/projects/:pid/flow/links?route= -> RouteLinksResult (links found in the route source: <Link href>, router.push, redirect and form actions)",
+  savePack:
+    'POST /api/projects/:pid/d/:did/design-system/save {name, packId?, asNew?} -> SavePackResult (asNew creates a new user pack; else updates packId, else the user pack named in pack.json, else creates one; then pack.json names the saved pack, one version "Save <name> to library" when it changed; 400 built-in packId or invalid files, 404 no design system, 409 run active, 409 check_failed in a design-system project while the check fails unless force: true)',
+  sendComments:
+    "POST /api/projects/:pid/d/:did/comments/send {ids?, contexts?, level?} -> {runId, comments} (409 run_in_progress: comments stay queued)",
+  setDefaultFolder:
+    "PUT /api/workspaces/default {path} -> WorkspaceList (realpath, must be a folder outside the data dir; the old default is kept as a saved folder)",
   setImage:
     'POST /api/projects/:pid/d/:did/image SetImageRequest {target, mode? (auto|img|background|insert), image? {name, data base64} | url? (https, 10 MB, image types), fit? (cover|contain|fill), focal? ("x% y%"), alt?, position? (inside|after)} -> SetImageResult (copies the file into the assets folder with a content-hashed name: the app public/ for Next and Vite, assets/ for HTML; writes src, alt, object-fit/position or background-* as one version)',
+  startRun: "POST /api/projects/:pid/d/:did/runs RunRequest -> {runId}",
+  startVariations:
+    "POST /api/projects/:pid/variations VariationStartRequest -> VariationStartResult (N new directions + N parallel runs)",
+  undo: "POST /api/projects/:pid/d/:did/undo -> Version",
+  updateComment:
+    "PATCH /api/projects/:pid/d/:did/comments/:cid {text?, status?, target?, context?} -> DesignComment (409 bad_transition)",
+  updatePack:
+    "PATCH /api/packs/:id UpdateUserPackInput -> PackSummary (same id; 400 built-in or invalid, 404 unknown)",
+  updateSettings:
+    "PATCH /api/projects/:pid/settings Partial<ProjectSettings> (model 1..200 chars, maxBudgetUsd 0.01..50 or null for no limit, maxTurns 1..200 int, allowBash, allowInstall, autoApprove (all three on by default), disabledSkills: skill ids from GET /api/skills) -> Project",
+  updateTokens:
+    "POST /api/projects/:pid/d/:did/design-system/tokens/update {changes: TokenChange[]} -> UpdateTokensResult (one version; 409 run active, 422 invalid, 404 unknown path)",
+  updateWorkspace: "PATCH /api/workspaces/:id {label} -> WorkspaceFolder",
+  uploadAttachment:
+    "POST /api/projects/:pid/attachments (multipart file; png, jpeg, gif or webp only, else 400) -> Attachment",
+  variationBriefs:
+    "POST /api/projects/:pid/variations/briefs VariationBriefsRequest -> VariationBriefsResult (count 2..4, react 2..3)",
+  versionDiff:
+    "GET /api/projects/:pid/versions/:vid/diff/:other?w=&h= -> image/png mask, red where the first viewport changed (x-changed-pct)",
+  versionPreview: "GET /api/projects/:pid/versions/:vid/preview -> {url}",
+  versionThumb:
+    "GET /api/projects/:pid/versions/:vid/thumb -> image/png 640x400 (rendered on first request, 404 no_page)",
+  workTreeStatus: "GET /api/projects/:pid/d/:did/status -> WorkTreeStatus",
 } as const;
 
 export const STUDIO_TOKEN_HEADER = "x-studio-token";
@@ -1112,6 +1112,7 @@ export const BRIDGE_PASSIVE_PARAM = "__studio_passive";
 export const BRIDGE_HEADLESS_PARAM = "__studio_headless";
 export const BRIDGE_HELLO_TYPE = "bridge-hello";
 export const BRIDGE_HANDSHAKE_TYPE = "bridge-handshake";
+
 export const CLOUD_BLOCKED_BRIDGE_TYPES: readonly BridgeToParent["type"][] = [
   "text-commit",
   "text-edit",
@@ -1127,6 +1128,7 @@ export const CLOUD_BLOCKED_BRIDGE_TYPES: readonly BridgeToParent["type"][] = [
   "file-drop",
   "optimistic-result",
 ];
+
 export const ELEMENT_MARK_PARAM = "__studio_mark";
 export const SOURCE_LOC_ATTR = "data-studio-loc";
 export const BRIDGE_SCRIPT_PATH = "/__studio/bridge.js";
@@ -1467,10 +1469,10 @@ export type AppKey =
   | "stop";
 
 const MOD_APP_KEYS: Record<string, AppKey> = {
-  KeyK: "palette",
-  KeyP: "palette",
   Backslash: "project-rail",
   KeyI: "ask-inline",
+  KeyK: "palette",
+  KeyP: "palette",
   Period: "stop",
 };
 
@@ -1543,9 +1545,9 @@ export interface ZoomKeyInput {
 }
 
 const MOD_ZOOM_KEYS: Record<string, ZoomKey> = {
-  "=": "in",
   "+": "in",
   "-": "out",
+  "=": "in",
   _: "out",
 };
 
@@ -1562,9 +1564,9 @@ const SHIFT_ZOOM_CODES: Record<string, ZoomKey> = {
 };
 
 const BARE_ZOOM_KEYS: Record<string, ZoomKey> = {
-  "=": "in",
   "+": "in",
   "-": "out",
+  "=": "in",
 };
 
 export function zoomKeyOf(event: ZoomKeyInput): ZoomKey | null {
@@ -2010,14 +2012,14 @@ export const LEGACY_DEFAULT_BUDGET_USD = 2;
 export const SETTINGS_VERSION = 2;
 
 export const DEFAULT_SETTINGS: ProjectSettings = {
-  model: "claude-sonnet-5-5",
-  maxBudgetUsd: null,
-  maxTurns: 40,
   allowBash: true,
   allowInstall: true,
   autoApprove: true,
-  disabledSkills: [],
   defaultLevel: "prototype",
+  disabledSkills: [],
+  maxBudgetUsd: null,
+  maxTurns: 40,
+  model: "claude-sonnet-5-5",
 };
 
 export const DESIGN_SYSTEM_DIR = "design-system";
@@ -2079,10 +2081,10 @@ export const REQUIRED_TOKENS = {
     "ring",
   ],
   font: ["display", "body", "mono"],
-  text: ["xs", "sm", "base", "lg", "xl", "2xl", "3xl", "4xl"],
-  space: ["1", "2", "3", "4", "5", "6", "8", "10", "12"],
   radius: ["sm", "md", "lg", "pill"],
   shadow: ["sm", "md", "lg"],
+  space: ["1", "2", "3", "4", "5", "6", "8", "10", "12"],
+  text: ["xs", "sm", "base", "lg", "xl", "2xl", "3xl", "4xl"],
 } as const;
 
 export interface PackManifest {
@@ -2335,21 +2337,21 @@ export type TokenGroupName =
 export const TOKEN_GROUP_FOR_PROPERTY: Partial<
   Record<DirectStyleProperty, TokenGroupName>
 > = {
-  color: "color",
   "background-color": "color",
   "border-color": "color",
+  "border-radius": "radius",
+  color: "color",
   "font-family": "font",
   "font-size": "text",
-  "padding-top": "space",
-  "padding-right": "space",
-  "padding-bottom": "space",
-  "padding-left": "space",
-  "margin-top": "space",
-  "margin-right": "space",
+  gap: "space",
   "margin-bottom": "space",
   "margin-left": "space",
-  gap: "space",
-  "border-radius": "radius",
+  "margin-right": "space",
+  "margin-top": "space",
+  "padding-bottom": "space",
+  "padding-left": "space",
+  "padding-right": "space",
+  "padding-top": "space",
 };
 
 export const TOKEN_NAME_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;

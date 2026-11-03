@@ -20,6 +20,7 @@ function cutAtWord(text: string, max: number): string {
 
 export function runTitle(prompt: string): string {
   const flat = prompt.replaceAll("\r", "").trim();
+
   const clause = (flat.split(CLAUSE_END)[0] ?? "")
     .replaceAll(/\s+/g, " ")
     .trim();

@@ -140,8 +140,8 @@ export function levelCounts(
   const counts: Record<CheckLevel, number> = {
     error: 0,
     high: 0,
-    medium: 0,
     low: 0,
+    medium: 0,
   };
 
   for (const item of items) {

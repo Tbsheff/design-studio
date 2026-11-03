@@ -37,7 +37,7 @@ describe(slugify, () => {
       "/abs/path",
       "a/../b",
       ".hidden",
-      "C:\\x",
+      String.raw`C:\x`,
     ]) {
       const slug = slugify(name);
       expect(slug).toMatch(/^[a-z0-9]+(-[a-z0-9]+)*$/);
@@ -75,6 +75,7 @@ describe("folder helpers", () => {
       project("c", "/other"),
       project("d", null),
     ];
+
     expect(projectsInFolder(list, "/w").map((item) => item.id)).toEqual([
       "a",
       "b",

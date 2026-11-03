@@ -56,13 +56,13 @@ export function elementVariantsBlocker(
 }
 
 const NUMBER_WORDS: Record<string, number> = {
-  two: 2,
-  three: 3,
-  four: 4,
   a: 3,
-  some: 3,
-  few: 3,
   couple: 2,
+  few: 3,
+  four: 4,
+  some: 3,
+  three: 3,
+  two: 2,
 };
 
 export function elementVariantsIntent(prompt: string): number | null {

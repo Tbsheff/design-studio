@@ -54,8 +54,7 @@ function isOptional(schema: z.ZodType): boolean {
 }
 
 function objectShape(schema: z.ZodType): Record<string, z.ZodType> | null {
-  const shape = (schema as unknown as { shape?: Record<string, z.ZodType> })
-    .shape;
+  const { shape } = schema as unknown as { shape?: Record<string, z.ZodType> };
 
   return defOf(schema).type === "object" && shape ? shape : null;
 }

@@ -34,11 +34,11 @@ export interface ProjectSearchResult {
 }
 
 export const TYPE_LABELS: Record<ProjectType, string> = {
-  next: "App · Next.js",
-  vite: "App · Vite",
-  html: "Prototype · HTML",
-  react: "Prototype · React",
   "design-system": "System",
+  html: "Prototype · HTML",
+  next: "App · Next.js",
+  react: "Prototype · React",
+  vite: "App · Vite",
 };
 
 interface TypedProject {

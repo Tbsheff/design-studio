@@ -12,21 +12,21 @@ export interface ShipSettings {
 }
 
 export const DEFAULT_SHIP_SETTINGS: ShipSettings = {
-  user: "",
-  branchTemplate: "{user}/{issue}-{slug}",
   bodyTemplate: "{summary}\n\n### Studio versions\n{versions}\n\nFixes {ISSUE}",
+  branchTemplate: "{user}/{issue}-{slug}",
   issueId: "",
+  user: "",
 };
 
 export const SHIP_TEXT_MAX = {
-  user: 40,
-  branchTemplate: 200,
+  body: 20_000,
   bodyTemplate: 4000,
+  branch: 200,
+  branchTemplate: 200,
+  commitMessage: 4000,
   issueId: 40,
   title: 200,
-  commitMessage: 4000,
-  body: 20_000,
-  branch: 200,
+  user: 40,
 };
 
 export interface ShipRecord {
@@ -152,16 +152,16 @@ const PLACEHOLDER = /\{(user|slug|issue|ISSUE|title|summary|versions|files)\}/g;
 
 function values(vars: ShipTemplateVars): Record<string, string> {
   return {
-    user: vars.user,
+    ISSUE: vars.issue.trim(),
+    files: vars.files.map((file) => `- \`${file}\``).join("\n"),
+    issue: vars.issue.trim().toLowerCase(),
     slug: vars.title.trim()
       ? slugify(vars.title).slice(0, 40).replace(/-+$/, "")
       : "",
-    issue: vars.issue.trim().toLowerCase(),
-    ISSUE: vars.issue.trim(),
-    title: vars.title.trim(),
     summary: vars.summary.trim(),
+    title: vars.title.trim(),
+    user: vars.user,
     versions: vars.versions.map((title) => `- ${title}`).join("\n"),
-    files: vars.files.map((file) => `- \`${file}\``).join("\n"),
   };
 }
 
@@ -245,7 +245,7 @@ const SECRET_EXTENSIONS = [
 
 export function refusedPath(file: string): string | null {
   const parts = file.split("/");
-  const name = (parts[parts.length - 1] ?? "").toLowerCase();
+  const name = (parts.at(-1) ?? "").toLowerCase();
 
   if (parts.some((part) => part === "node_modules")) {
     return "node_modules is never committed.";

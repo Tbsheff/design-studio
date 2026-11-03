@@ -20,18 +20,18 @@ export type CommentActor = "user" | "server";
 
 const USER_TRANSITIONS: Record<CommentStatus, readonly CommentStatus[]> = {
   draft: ["queued", "orphaned", "resolved"],
-  queued: ["orphaned", "resolved"],
-  sent: [],
-  resolved: ["queued"],
   orphaned: ["queued", "resolved"],
+  queued: ["orphaned", "resolved"],
+  resolved: ["queued"],
+  sent: [],
 };
 
 const SERVER_TRANSITIONS: Record<CommentStatus, readonly CommentStatus[]> = {
   draft: ["sent", "queued"],
-  queued: ["sent"],
-  sent: ["resolved", "queued"],
-  resolved: [],
   orphaned: [],
+  queued: ["sent"],
+  resolved: [],
+  sent: ["resolved", "queued"],
 };
 
 export function canTransition(
@@ -80,11 +80,11 @@ export function targetFromSelection(
   selection: SelectionContext
 ): CommentTarget {
   return {
+    rectHint: selection.rect,
     selector: selection.selector,
     sourceLoc: selection.source,
     tag: selection.tag,
     textSnippet: snippetOf(selection.text),
-    rectHint: selection.rect,
   };
 }
 
@@ -237,6 +237,9 @@ export function createOrphanTracker(graceMs: number): OrphanTracker {
   const missingSince = new Map<string, number>();
 
   return {
+    forget(id) {
+      missingSince.delete(id);
+    },
     observe(id, found, now) {
       if (found) {
         missingSince.delete(id);
@@ -253,9 +256,6 @@ export function createOrphanTracker(graceMs: number): OrphanTracker {
       }
 
       return now - since >= graceMs;
-    },
-    forget(id) {
-      missingSince.delete(id);
     },
   };
 }
@@ -312,20 +312,20 @@ export function strokesBox(
   }
 
   return {
+    height: Math.round(maxY - minY),
+    width: Math.round(maxX - minX),
     x: Math.round(minX),
     y: Math.round(minY),
-    width: Math.round(maxX - minX),
-    height: Math.round(maxY - minY),
   };
 }
 
 export function drawingTarget(box: SelectionContext["rect"]): CommentTarget {
   return {
+    rectHint: box,
     selector: "body",
     sourceLoc: null,
     tag: "body",
     textSnippet: "",
-    rectHint: box,
   };
 }
 
@@ -348,7 +348,7 @@ export function frameText(frame: CommentFrame | undefined): string {
 function elementWhere(
   comment: Pick<DesignComment, "target" | "context">
 ): string[] {
-  const context = comment.context;
+  const { context } = comment;
   const loc = context?.source ?? comment.target.sourceLoc ?? null;
   const parts = [`selector ${context?.selector ?? comment.target.selector}`];
 

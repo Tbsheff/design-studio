@@ -40,11 +40,12 @@ describe(diffLines, () => {
       lines(3000, "a").join("\n"),
       lines(3000, "b").join("\n")
     );
+
     expect(diff).toMatchObject({
       added: 3000,
+      hunks: [],
       removed: 3000,
       truncated: true,
-      hunks: [],
     });
   });
 });

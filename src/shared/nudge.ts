@@ -1,8 +1,8 @@
 const ARROWS: Record<string, [number, number]> = {
+  ArrowDown: [0, 1],
   ArrowLeft: [-1, 0],
   ArrowRight: [1, 0],
   ArrowUp: [0, -1],
-  ArrowDown: [0, 1],
 };
 
 const BIG_STEP = 10;

@@ -21,9 +21,9 @@ interface FakeElement {
 
 function dom(elements: FakeElement[]): AnchorDom<FakeElement> {
   return {
-    bySource: (loc) => elements.filter((element) => element.loc === loc),
     bySelector: (selector) =>
       elements.find((element) => element.selector === selector) ?? null,
+    bySource: (loc) => elements.filter((element) => element.loc === loc),
     byTag: (tag) => elements.filter((element) => element.tag === tag),
     tagOf: (element) => element.tag,
     textOf: (element) => element.text,
@@ -41,9 +41,9 @@ const query = (patch: Partial<AnchorQuery> = {}): AnchorQuery => ({
 
 describe(resolveAnchor, () => {
   const h1: FakeElement = {
-    tag: "h1",
     loc: "index.html:5:3",
     selector: "body > h1",
+    tag: "h1",
     text: "Hello world",
   };
 
@@ -57,9 +57,9 @@ describe(resolveAnchor, () => {
 
   it("rejects a source match with another tag and falls back to the selector", () => {
     const shifted: FakeElement = {
-      tag: "p",
       loc: "index.html:5:3",
       selector: "body > p",
+      tag: "p",
       text: "Other",
     };
 
@@ -72,17 +72,17 @@ describe(resolveAnchor, () => {
 
   it("picks the selector match among repeated source locations", () => {
     const items = [1, 2, 3].map((n) => ({
-      tag: "li",
       loc: "App.tsx:10:9",
       selector: `ul > li:nth-of-type(${n})`,
+      tag: "li",
       text: `Item ${n}`,
     }));
 
     const result = resolveAnchor(
       query({
-        tag: "li",
-        sourceLoc: "App.tsx:10:9",
         selector: "ul > li:nth-of-type(2)",
+        sourceLoc: "App.tsx:10:9",
+        tag: "li",
         textSnippet: "Item 2",
       }),
       dom(items)
@@ -93,17 +93,17 @@ describe(resolveAnchor, () => {
 
   it("picks the text match among repeated source locations when the selector is stale", () => {
     const items = [1, 2, 3].map((n) => ({
-      tag: "li",
       loc: "App.tsx:10:9",
       selector: `ul > li:nth-of-type(${n})`,
+      tag: "li",
       text: `Item ${n}`,
     }));
 
     const result = resolveAnchor(
       query({
-        tag: "li",
-        sourceLoc: "App.tsx:10:9",
         selector: "ol > li",
+        sourceLoc: "App.tsx:10:9",
+        tag: "li",
         textSnippet: "Item 3",
       }),
       dom(items)
@@ -114,24 +114,24 @@ describe(resolveAnchor, () => {
 
   it("skips a selector hit whose text disagrees when the text matches elsewhere", () => {
     const inserted: FakeElement = {
-      tag: "p",
       loc: "index.html:6:5",
       selector: "body > main > p",
+      tag: "p",
       text: "New eyebrow",
     };
 
     const lede: FakeElement = {
-      tag: "p",
       loc: "index.html:8:5",
       selector: "body > main > p:nth-of-type(2)",
+      tag: "p",
       text: "A calm lede",
     };
 
     const result = resolveAnchor(
       query({
-        tag: "p",
-        sourceLoc: "index.html:7:5",
         selector: "body > main > p",
+        sourceLoc: "index.html:7:5",
+        tag: "p",
         textSnippet: "A calm lede",
       }),
       dom([inserted, lede])
@@ -150,9 +150,9 @@ describe(resolveAnchor, () => {
 
   it("falls back to the text snippet when source and selector miss", () => {
     const other: FakeElement = {
-      tag: "h1",
       loc: "index.html:9:3",
       selector: "section > h1",
+      tag: "h1",
       text: "  Hello\n world ",
     };
 
@@ -164,9 +164,9 @@ describe(resolveAnchor, () => {
 
   it("returns null when nothing matches", () => {
     const other: FakeElement = {
-      tag: "h2",
       loc: "index.html:9:3",
       selector: "section > h2",
+      tag: "h2",
       text: "Hello world",
     };
 
@@ -175,15 +175,15 @@ describe(resolveAnchor, () => {
 
   it("does not match an empty snippet by text", () => {
     const other: FakeElement = {
-      tag: "h1",
       loc: null,
       selector: "x",
+      tag: "h1",
       text: "",
     };
 
     expect(
       resolveAnchor(
-        query({ sourceLoc: null, selector: "nope", textSnippet: "" }),
+        query({ selector: "nope", sourceLoc: null, textSnippet: "" }),
         dom([other])
       )
     ).toBeNull();
@@ -193,18 +193,18 @@ describe(resolveAnchor, () => {
     const long = "a".repeat(120);
 
     const element: FakeElement = {
-      tag: "p",
       loc: null,
       selector: "p",
+      tag: "p",
       text: long,
     };
 
     expect(
       resolveAnchor(
         query({
-          tag: "p",
-          sourceLoc: null,
           selector: "nope",
+          sourceLoc: null,
+          tag: "p",
           textSnippet: snippetOf(long),
         }),
         dom([element])
@@ -272,22 +272,22 @@ describe("orphan tracker", () => {
 describe("helpers", () => {
   it("builds a target from a selection", () => {
     const target = targetFromSelection({
+      ancestors: [],
+      outerHTML: "<h1>Big title</h1>",
+      rect: { height: 4, width: 3, x: 1, y: 2 },
       selector: "body > h1",
+      source: { col: 3, file: "index.html", line: 5 },
+      styles: {},
       tag: "h1",
       text: "  Big\n  title ",
-      outerHTML: "<h1>Big title</h1>",
-      styles: {},
-      rect: { x: 1, y: 2, width: 3, height: 4 },
-      source: { file: "index.html", line: 5, col: 3 },
-      ancestors: [],
     });
 
     expect(target).toEqual({
+      rectHint: { height: 4, width: 3, x: 1, y: 2 },
       selector: "body > h1",
+      sourceLoc: { col: 3, file: "index.html", line: 5 },
       tag: "h1",
       textSnippet: "Big title",
-      sourceLoc: { file: "index.html", line: 5, col: 3 },
-      rectHint: { x: 1, y: 2, width: 3, height: 4 },
     });
   });
 

@@ -30,6 +30,7 @@ import { domProjectWired, probeHasFunction, rendererHasFunction, serializedFnNam
 import { serverOneRuntime, serverRunEntry, spanNameMatch } from "./runtime-rules.js";
 import { noJsonSchema, projectScopeNeeds } from "./scope-rules.js";
 import { catchupRules } from "./catchup-rules.js";
+import { exactCompilerPin, tsCompilerOwner } from "./compiler-rules.js";
 
 const reviewRules = {
   ...catchupRules,
@@ -38,6 +39,7 @@ const reviewRules = {
   "cloud-platform-import": cloudPlatformImport,
   "day-one-frozen": dayOneFrozen,
   "dom-project-wired": domProjectWired,
+  "exact-compiler-pin": exactCompilerPin,
   "feature-file-layout": featureFileLayout,
   "feature-index-import": featureIndexImport,
   "frozen-pin": frozenPin,
@@ -80,6 +82,7 @@ const reviewRules = {
   "server-run-entry": serverRunEntry,
   "span-name-match": spanNameMatch,
   "sql-write-org-filter": sqlWriteOrgFilter,
+  "ts-compiler-owner": tsCompilerOwner,
 };
 
 export { reviewRules };

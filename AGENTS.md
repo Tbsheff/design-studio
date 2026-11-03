@@ -90,6 +90,7 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Write each relative import as a path that resolves to a file. When you move a file, change its relative imports -> `studio/import-resolves`. (W17)
 - End each relative import in `src/ui/features/**` with `.js` -> `studio/relative-import-js`. (W18)
 - Import only `cloud/api/src/platform/**`, `shared-actions.ts` and `src/shared/**` from `cloud/api/src/platform`. Type a Durable Object binding as `DurableObjectNamespace` there -> `studio/cloud-platform-import`. (W19)
+- Load the TypeScript compiler only with `loadTypeScript` from `src/server/platform/ts-compiler/index.ts`, and read its version from `.version` of the loaded module. Import only types from `typescript-api` elsewhere. Never use the bare `typescript` specifier (TS 7 has no JS API), also not `typescript/package.json` -> `studio/ts-compiler-owner`. (W22)
 ## 2. How to add an action
 
 - Stamp every new action with `pnpm run new:action <domain> <verb> ...` (lands with S4s). Never copy an action, route, tool or handler by hand -> check-actions (pair rule, template shape) (lands with S4s), `gen-routes --check`. (E1)
@@ -292,6 +293,7 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Make every boolean flag (`isX`, `hasX`, `canX`, `shouldX`) required in publish, share, handler and feature code. Never `isX?: boolean` or `Schema.optionalKey(Schema.Boolean)` -> `studio/no-optional-flag`. (L14)
 - Never add a `lint/day-one.ts` entry for a file in a budget-0 folder. Fix the file to 0 diagnostics -> `studio/day-one-frozen`. (L15)
 - Never export a value that no file imports in the new cloud viewer and share code, `cron.ts` and `src/ui/publishApi.ts` -> `studio/no-unused-export`. (L16)
+- Pin `typescript` and `typescript-api` to an exact version (`"7.0.2"`, `"npm:typescript@6.0.3"`) in `package.json` and `cloud/api/package.json`, and keep `COMPILER_API` in `.pnpmfile.mjs` equal to the `typescript-api` pin. `.pnpmfile.mjs` gives every package that peers on `typescript` the compiler API package; never patch a package to change its `typescript` require -> `studio/exact-compiler-pin` (on the ts-compiler owner, `scripts/typecheck-diff.ts` and `.pnpmfile.mjs`; full tree in `lint:gate`). (L17)
 - Never write a `void 0;` placeholder statement. Return a value from the catch, or let the error go to the caller -> `studio/no-void-placeholder`. (L17)
 - Never cast message data with `as` (`event.data as T`) in `src/bridge`. Use a type guard on the message type -> `studio/no-message-data-cast`. (L18)
 - Never build a decision override rules map from a string list (`Object.fromEntries("a b".split(" "))`), and never put a `studio/*` rule in one. Old entries may only shrink against `HEAD` -> `studio/narrow-override`, `studio/no-studio-override`. (L19)

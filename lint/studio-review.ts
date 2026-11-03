@@ -95,6 +95,20 @@ const SCOPE_FILES = ["src/server/{store,preview,handlers}/**/*.ts"];
 
 const AGENT_SPLIT_FILES = ["src/server/agent/{index,lifecycle,types}.ts"];
 
+const APP_SOURCE_FILES = ["src/**/*.ts", "src/**/*.tsx", "desktop/**/*.ts"];
+
+const COMPILER_IMPORT_FILES = [
+  ...APP_SOURCE_FILES,
+  "{scripts,e2e}/**/*.ts",
+  ...CLOUD_FILES,
+];
+
+const COMPILER_PIN_ANCHORS = [
+  "src/server/platform/ts-compiler/index.ts",
+  "scripts/typecheck-diff.ts",
+  ".pnpmfile.mjs",
+];
+
 const studioReview: OxlintOverride[] = [
   {
     files: ["lint/day-one.ts"],
@@ -109,7 +123,7 @@ const studioReview: OxlintOverride[] = [
     },
   },
   {
-    files: ["src/**/*.ts", "src/**/*.tsx", ...CLOUD_FILES],
+    files: [...APP_SOURCE_FILES.slice(0, 2), ...CLOUD_FILES],
     rules: { "studio/import-resolves": "error" },
   },
   {
@@ -306,7 +320,7 @@ const studioReview: OxlintOverride[] = [
     },
   },
   {
-    files: ["src/**/*.ts", "src/**/*.tsx", "desktop/**/*.ts"],
+    files: APP_SOURCE_FILES,
     rules: { "studio/no-void-placeholder": "error" },
   },
   { files: BRIDGE_FILES, rules: { "studio/no-message-data-cast": "error" } },
@@ -351,6 +365,14 @@ const studioReview: OxlintOverride[] = [
   {
     files: ["lint/legacy.ts"],
     rules: { "studio/frozen-pin": "error" },
+  },
+  {
+    files: COMPILER_IMPORT_FILES,
+    rules: { "studio/ts-compiler-owner": "error" },
+  },
+  {
+    files: COMPILER_PIN_ANCHORS,
+    rules: { "studio/exact-compiler-pin": "error" },
   },
 ];
 

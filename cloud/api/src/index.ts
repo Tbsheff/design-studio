@@ -3,12 +3,15 @@ import { Hono } from "hono";
 
 import { AuthGateway } from "./auth/gateway.js";
 import { AuthRateLimit } from "./auth/rate-limit.js";
+import { runHourly } from "./cron.js";
+import { mountShare } from "./http/share-routes.js";
 import { mountViewer } from "./http/viewer-routes.js";
 import { mcpLayer } from "./mcp/layer.js";
 import { mountMcp } from "./mcp/mount.js";
 import { CloudBindings, configLayer } from "./platform/bindings.js";
-import type { AppEnv } from "./platform/bindings.js";
+import type { AppEnv, CloudEnv } from "./platform/bindings.js";
 import { CloudSettings } from "./platform/env.js";
+import { shareLayer } from "./share/layer.js";
 import { viewerLayer } from "./viewer/layer.js";
 
 const platformLayer = Layer.mergeAll(
@@ -20,7 +23,7 @@ const authLayer = Layer.mergeAll(AuthGateway.layer, AuthRateLimit.layer).pipe(
   Layer.provideMerge(platformLayer)
 );
 
-const appLayer = Layer.mergeAll(mcpLayer, viewerLayer).pipe(
+const appLayer = Layer.mergeAll(mcpLayer, viewerLayer, shareLayer).pipe(
   Layer.provideMerge(authLayer)
 );
 
@@ -56,9 +59,18 @@ mountMcp(app, runtime);
 
 mountViewer(app, runtime);
 
-const worker = { fetch: app.fetch } satisfies ExportedHandler;
+mountShare(app, runtime);
+
+const worker = {
+  fetch: app.fetch,
+  scheduled: (_controller, env, context): void => {
+    context.waitUntil(runHourly(env, Date.now()));
+  },
+} satisfies ExportedHandler<CloudEnv>;
 
 export { RateLimiter } from "./platform/rate-limiter.js";
+
+export { ShareLive } from "./share/share-live.js";
 
 export { UnlockLockout } from "./viewer/unlock-lockout.js";
 

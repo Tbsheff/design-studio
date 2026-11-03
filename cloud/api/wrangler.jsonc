@@ -31,6 +31,10 @@
         "name": "UNLOCK",
         "class_name": "UnlockLockout",
       },
+      {
+        "name": "SHARE_LIVE",
+        "class_name": "ShareLive",
+      },
     ],
   },
   "migrations": [
@@ -42,7 +46,14 @@
       "tag": "v2",
       "new_sqlite_classes": ["UnlockLockout"],
     },
+    {
+      "tag": "v3",
+      "new_sqlite_classes": ["ShareLive"],
+    },
   ],
+  "triggers": {
+    "crons": ["0 * * * *"],
+  },
   "vars": {
     "AUTH_URL": "http://localhost:8787",
     "WEB_ORIGIN": "http://localhost:5173",

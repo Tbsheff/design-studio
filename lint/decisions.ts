@@ -266,6 +266,7 @@ export const SCOPED_OFF_REASONS: Record<string, string> = {
 export const decisionOverrides: OxlintOverride[] = [
   {
     files: [
+      "cloud/api/src/http/share-routes.ts",
       "cloud/api/src/http/viewer-routes.ts",
       "cloud/api/src/mcp/layer.ts",
       "cloud/api/src/mcp/mount.ts",
@@ -277,6 +278,11 @@ export const decisionOverrides: OxlintOverride[] = [
       "cloud/api/src/viewer/read-password.ts",
       "cloud/api/src/viewer/read-site-file.ts",
       "cloud/api/src/viewer/unlock.ts",
+      "cloud/api/src/share/add-comment.ts",
+      "cloud/api/src/share/layer.ts",
+      "cloud/api/src/share/read-share.ts",
+      "cloud/api/src/share/share-live.ts",
+      "cloud/api/src/tenant/repos/share.ts",
     ],
     rules: { "import/no-relative-parent-imports": "off" },
   },
@@ -766,7 +772,7 @@ export const decisionOverrides: OxlintOverride[] = [
   },
   {
     files: [
-      "cloud/api/src/{platform/{bindings,rate-limiter},viewer/unlock-lockout,auth/options}.ts",
+      "cloud/api/src/{platform/{bindings,rate-limiter},viewer/unlock-lockout,share/{share-live,live-client},auth/options}.ts",
     ],
     rules: { "sonarjs/no-implicit-dependencies": "off" },
   },

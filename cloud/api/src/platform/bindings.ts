@@ -8,7 +8,7 @@ type CloudEnv = Cloudflare.Env;
 
 type AppEnv = Omit<
   CloudEnv,
-  "DB" | "FILES" | "PUB_COOKIE_KEY" | "RATE" | "UNLOCK"
+  "DB" | "FILES" | "PUB_COOKIE_KEY" | "RATE" | "SHARE_LIVE" | "UNLOCK"
 >;
 
 interface CloudBindingsApi {

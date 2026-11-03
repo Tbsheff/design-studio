@@ -5,28 +5,23 @@ import type { Context, Hono } from "hono";
 
 import type {
   Direction,
-  EditSessionEnd,
   EditSessionState,
   Project,
   TextSourceAnswer,
-  VersionMeta,
 } from "../../shared/contracts.js";
 import { firstVersionWaitText } from "../app/first-version.js";
 import { elementClassInfo } from "../direct-edit/class-info.js";
-import type { EditHistory, HistoryStep } from "../direct-edit/history.js";
+import type { EditHistory } from "../direct-edit/history.js";
 import { htmlElementSpan } from "../direct-edit/html.js";
 import {
   DirectEditError,
-  assertCanEdit,
   parseDirectEditRequest,
-  publishVersion,
   resolveSource,
   type DirectEditDeps,
 } from "../direct-edit/index.js";
 import { jsxElementSpan } from "../direct-edit/jsx.js";
-import { recordRunInHistory } from "../direct-edit/run-record.js";
 import { findTextSource } from "../direct-edit/text-source.js";
-import { BadRequestError, ConflictError } from "../store/errors.js";
+import { BadRequestError } from "../store/errors.js";
 import type { StudioProjectStore } from "../store/projects.js";
 import { bindVersionReadRuntime } from "../store/version-read-core.js";
 
@@ -34,25 +29,14 @@ interface EditHistoryRouteDeps {
   history: EditHistory;
   editDeps: DirectEditDeps;
   projects: Pick<StudioProjectStore, "get" | "mainDirection">;
-  withDirection: <T>(
-    pid: string,
-    did: string,
-    task: (project: Project, direction: Direction) => Promise<T>
-  ) => Promise<T>;
   readBody: (c: Context) => Promise<unknown>;
   loadDirection: (
     pid: string,
     did: string
   ) => Promise<{ project: Project; direction: Direction }>;
-  onRestored?: (workTree: string, relatives: string[]) => void;
-  onRemapped?: (
-    projectId: string,
-    remapped: Record<string, { id: string; parentId: string }>
-  ) => void;
 }
 
 const SHA = /^[0-9a-f]{40}$/;
-const MAX_LISTED = 12;
 const MAX_SNIPPET = 20_000;
 
 interface ElementSource {
@@ -80,46 +64,13 @@ function baseOf(raw: unknown): string {
   return raw;
 }
 
-function sessionTitle(titles: string[]): string {
-  if (titles.length === 1) return titles[0] ?? "Edit";
-  return `Edit session: ${titles.length} edits`;
-}
-
-function sessionMeta(titles: string[]): VersionMeta {
-  const listed = titles.slice(0, MAX_LISTED).join("; ");
-  const more =
-    titles.length > MAX_LISTED ? ` (+${titles.length - MAX_LISTED} more)` : "";
-  return { kind: "manual", prompt: `Edit session: ${listed}${more}` };
-}
-
 export function registerEditHistoryRoutes(
   app: Hono,
   deps: EditHistoryRouteDeps
 ): void {
-  const { history, editDeps, withDirection } = deps;
+  const { history, editDeps } = deps;
 
   bindVersionReadRuntime({ history });
-
-  const stepRoute = (kind: HistoryStep) => async (c: Context) => {
-    try {
-      const result = await withDirection(
-        c.req.param("pid") ?? "",
-        c.req.param("did") ?? "",
-        (project, direction) => history.step(kind, editDeps, project, direction)
-      );
-      return c.json(result);
-    } catch (error) {
-      if (error instanceof DirectEditError)
-        return c.json(
-          { error: error.code, message: error.message },
-          error.status
-        );
-      throw error;
-    }
-  };
-
-  app.post("/api/projects/:pid/d/:did/edit-history/undo", stepRoute("undo"));
-  app.post("/api/projects/:pid/d/:did/edit-history/redo", stepRoute("redo"));
 
   app.get("/api/projects/:pid/d/:did/edit-session", async (c) => {
     const raw = c.req.query("base");
@@ -151,89 +102,6 @@ export function registerEditHistoryRoutes(
     })();
     return c.json(state);
   });
-
-  const endRoute = (action: "save" | "discard") => async (c: Context) => {
-    const body = (await deps.readBody(c)) as { baseVersionId?: unknown } | null;
-    const base = baseOf(body?.baseVersionId);
-    try {
-      const result = await withDirection(
-        c.req.param("pid") ?? "",
-        c.req.param("did") ?? "",
-        async (project, direction): Promise<EditSessionEnd> => {
-          const store = editDeps.versions;
-          if (!store.sessionSince || !store.endSession)
-            throw new BadRequestError("Edit sessions are not supported");
-          assertCanEdit(editDeps, project, direction);
-          const span = await store.sessionSince(project, direction, base);
-          if (span.foreign !== null) {
-            if (action === "discard") throw new ConflictError(span.foreign);
-            return {
-              version: null,
-              headVersionId: direction.headVersionId ?? base,
-            };
-          }
-          const ended = await store.endSession(
-            project,
-            direction,
-            base,
-            action,
-            sessionTitle(span.titles),
-            sessionMeta(span.titles)
-          );
-          if (ended.version) {
-            await publishVersion(editDeps, project, direction, ended.version);
-          } else if (ended.head !== direction.headVersionId) {
-            const updated = await editDeps.projects.updateDirection(
-              project.id,
-              direction.id,
-              { headVersionId: ended.head }
-            );
-            editDeps.bus.emit({
-              type: "direction.updated",
-              projectId: project.id,
-              directionId: direction.id,
-              direction: updated,
-            });
-            const status = await store.status(project, direction);
-            editDeps.bus.emit({
-              type: "status.changed",
-              projectId: project.id,
-              directionId: direction.id,
-              status,
-            });
-          }
-          if (action === "discard" && ended.changed.length > 0)
-            deps.onRestored?.(direction.workTree, ended.changed);
-          if (ended.remapped) deps.onRemapped?.(project.id, ended.remapped);
-          if (span.count > 0) {
-            history.forget(project.id, direction.id);
-            if (ended.version)
-              await recordRunInHistory(
-                history,
-                editDeps.versions,
-                project,
-                direction,
-                ended.version.id
-              ).catch(() => undefined);
-            editDeps.bus.emit({
-              type: "versions.changed",
-              projectId: project.id,
-              directionId: direction.id,
-            });
-          }
-          return { version: ended.version, headVersionId: ended.head };
-        }
-      );
-      return c.json(result);
-    } catch (error) {
-      if (error instanceof DirectEditError)
-        return c.json(
-          { error: error.code, message: error.message },
-          error.status
-        );
-      throw error;
-    }
-  };
 
   app.get("/api/projects/:pid/d/:did/source", async (c) => {
     const file = c.req.query("file") ?? "";
@@ -351,10 +219,4 @@ export function registerEditHistoryRoutes(
       throw error;
     }
   });
-
-  app.post("/api/projects/:pid/d/:did/edit-session/save", endRoute("save"));
-  app.post(
-    "/api/projects/:pid/d/:did/edit-session/discard",
-    endRoute("discard")
-  );
 }

@@ -1,5 +1,53 @@
 // @generated
 const routes = {
+  applyHistoryVersions: {
+    id: "versions.applyHistory",
+    invalidates: [
+      "versions.get",
+      "versions.inspectDiff",
+      "versions.list",
+      "versions.listHistory",
+      "versions.listHunks",
+    ],
+    method: "POST",
+    path: "/api/projects/:projectId/d/:directionId/edit-history/redo",
+  },
+  applyHunkVersions: {
+    id: "versions.applyHunk",
+    invalidates: [
+      "versions.get",
+      "versions.inspectDiff",
+      "versions.list",
+      "versions.listHistory",
+      "versions.listHunks",
+    ],
+    method: "POST",
+    path: "/api/projects/:projectId/d/:directionId/hunks/revert",
+  },
+  createSessionVersions: {
+    id: "versions.createSession",
+    invalidates: [
+      "versions.get",
+      "versions.inspectDiff",
+      "versions.list",
+      "versions.listHistory",
+      "versions.listHunks",
+    ],
+    method: "POST",
+    path: "/api/projects/:projectId/d/:directionId/edit-session/save",
+  },
+  deleteSessionVersions: {
+    id: "versions.deleteSession",
+    invalidates: [
+      "versions.get",
+      "versions.inspectDiff",
+      "versions.list",
+      "versions.listHistory",
+      "versions.listHunks",
+    ],
+    method: "POST",
+    path: "/api/projects/:projectId/d/:directionId/edit-session/discard",
+  },
   getVersions: {
     id: "versions.get",
     invalidates: [],
@@ -29,6 +77,42 @@ const routes = {
     invalidates: [],
     method: "GET",
     path: "/api/projects/:projectId/versions/:from/hunks",
+  },
+  renameVersions: {
+    id: "versions.rename",
+    invalidates: [
+      "versions.get",
+      "versions.inspectDiff",
+      "versions.list",
+      "versions.listHistory",
+      "versions.listHunks",
+    ],
+    method: "PATCH",
+    path: "/api/projects/:projectId/versions/:versionId",
+  },
+  restoreVersions: {
+    id: "versions.restore",
+    invalidates: [
+      "versions.get",
+      "versions.inspectDiff",
+      "versions.list",
+      "versions.listHistory",
+      "versions.listHunks",
+    ],
+    method: "POST",
+    path: "/api/projects/:projectId/d/:directionId/restore",
+  },
+  restoreHistoryVersions: {
+    id: "versions.restoreHistory",
+    invalidates: [
+      "versions.get",
+      "versions.inspectDiff",
+      "versions.list",
+      "versions.listHistory",
+      "versions.listHunks",
+    ],
+    method: "POST",
+    path: "/api/projects/:projectId/d/:directionId/edit-history/undo",
   },
 } as const;
 

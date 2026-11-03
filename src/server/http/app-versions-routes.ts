@@ -2,20 +2,18 @@ import type { Hono } from "hono";
 
 import { CANVAS_FILE } from "../../shared/canvas-file.js";
 import { invalidateTokenSource } from "../design-system/token-preview.js";
-import { recordRunInHistory } from "../direct-edit/run-record.js";
 import { BadRequestError } from "../store/errors.js";
 import { bindVersionReadRuntime } from "../store/version-read-core.js";
+import { bindVersionWriteRuntime } from "../store/version-write-core.js";
 import type { AppContext } from "./app-context.js";
 import type { McpSlot } from "./app-mcp-routes.js";
-import { readBody, requireString } from "./app-request.js";
+import { readBody } from "./app-request.js";
 import { registerEditHistoryRoutes } from "./edit-history-routes.js";
-import { registerHunkRoutes } from "./hunk-routes.js";
 import { registerVersionRoutes } from "./version-routes.js";
 
 const registerVersionsRoutes = (app: Hono, ctx: AppContext): void => {
   const {
     bus,
-    editHistory,
     emitStatus,
     preview,
     projects,
@@ -38,38 +36,6 @@ const registerVersionsRoutes = (app: Hono, ctx: AppContext): void => {
         );
 
         await recordVersion(project, direction, restored, "undo");
-        await syncPackId(project, direction);
-        await emitStatus(project, direction);
-
-        return restored;
-      }
-    );
-
-    return c.json(version);
-  });
-
-  app.post("/api/projects/:pid/d/:did/restore", async (c) => {
-    const versionId = requireString(await readBody(c), "versionId");
-
-    const version = await withDirection(
-      c.req.param("pid"),
-      c.req.param("did"),
-      async (project, direction) => {
-        const restored = await versions.restore(
-          project,
-          direction,
-          versionId,
-          "restore"
-        );
-
-        await recordVersion(project, direction, restored, "restore");
-        await recordRunInHistory(
-          editHistory,
-          versions,
-          project,
-          direction,
-          restored.id
-        ).catch(() => editHistory.clear(project.id, direction.id));
         await syncPackId(project, direction);
         await emitStatus(project, direction);
 
@@ -164,8 +130,11 @@ const registerVersionsHistoryRoutes = (
     announceCanvasAt,
     editDeps,
     editHistory,
+    emitStatus,
     loadDirection,
     projects,
+    recordVersion,
+    syncPackId,
     thumbnails,
     versionNames,
     versions,
@@ -176,31 +145,34 @@ const registerVersionsHistoryRoutes = (
     projects,
     versions,
   });
-  registerVersionRoutes(app, {
-    projects,
-    versions,
-    thumbnails,
-    names: versionNames,
-    readBody,
-  });
-  registerEditHistoryRoutes(app, {
-    history: editHistory,
+  registerVersionRoutes(app, { projects, thumbnails });
+  bindVersionWriteRuntime({
     editDeps,
-    projects,
-    withDirection,
-    readBody,
-    loadDirection,
+    emitStatus,
+    history: editHistory,
+    names: versionNames,
+    onRemapped: (projectId, remapped) => {
+      mcpSlot.routes?.activity.remap(projectId, remapped).catch(() => null);
+    },
     onRestored: (workTree, relatives) => {
       invalidateTokenSource(workTree);
       if (relatives.includes(CANVAS_FILE)) {
         announceCanvasAt(workTree).catch(() => null);
       }
     },
-    onRemapped: (projectId, remapped) => {
-      mcpSlot.routes?.activity.remap(projectId, remapped).catch(() => null);
-    },
+    projects,
+    recordVersion,
+    syncPackId,
+    versions,
+    withDirection,
   });
-  registerHunkRoutes(app, { editDeps, withDirection, readBody });
+  registerEditHistoryRoutes(app, {
+    history: editHistory,
+    editDeps,
+    projects,
+    readBody,
+    loadDirection,
+  });
 };
 
 export { registerVersionsHistoryRoutes, registerVersionsRoutes };

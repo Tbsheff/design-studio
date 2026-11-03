@@ -29,7 +29,6 @@ import type {
   TailwindOutcome,
   ElementSourceInfo,
   EditHistoryState,
-  EditSessionEnd,
   EditSessionState,
   Direction,
   Project,
@@ -115,6 +114,7 @@ import type {
 import { ApiError, call } from "./platform/http";
 import type { WireFields } from "./platform/http";
 import { getSession } from "./session";
+import { endEditSession, restoreVersion, stepEditHistory } from "./versionsApi";
 
 export { ApiError } from "./platform/http";
 
@@ -596,36 +596,19 @@ export const api = {
       directionId: did,
       projectId: pid,
     }),
-  editHistoryStep: async (pid: string, did: string, kind: "undo" | "redo") => {
-    const res = await request(
-      "POST",
-      `${d(pid, did)}/edit-history/${kind}`,
-      undefined,
-      pickMessage
-    );
-
-    return (await res.json()) as { state: EditHistoryState; version: Version };
-  },
+  editHistoryStep: (pid: string, did: string, kind: "undo" | "redo") =>
+    stepEditHistory(pid, did, kind),
   editSession: (pid: string, did: string, base?: string) =>
     json<EditSessionState>(
       "GET",
       `${d(pid, did)}/edit-session${base ? `?base=${enc(base)}` : ""}`
     ),
-  endEditSession: async (
+  endEditSession: (
     pid: string,
     did: string,
     action: "save" | "discard",
     baseVersionId: string
-  ) => {
-    const res = await request(
-      "POST",
-      `${d(pid, did)}/edit-session/${action}`,
-      { baseVersionId },
-      pickMessage
-    );
-
-    return (await res.json()) as EditSessionEnd;
-  },
+  ) => endEditSession(pid, did, action, baseVersionId),
   elementClasses: (
     pid: string,
     did: string,
@@ -660,7 +643,7 @@ export const api = {
       `${d(pid, did)}/source?file=${enc(loc.file)}&line=${loc.line}&col=${loc.col}`
     ),
   restore: (pid: string, did: string, versionId: string) =>
-    json<Version>("POST", `${d(pid, did)}/restore`, { versionId }),
+    restoreVersion(pid, did, versionId),
   keep: (pid: string, did: string) =>
     json<Version>("POST", `${d(pid, did)}/keep`),
   discard: (pid: string, did: string) =>

@@ -41,9 +41,43 @@ const HunkListSchema = Schema.Struct({
   to: Schema.String,
 });
 
+const VersionRenamedSchema = Schema.Struct({
+  id: Schema.String,
+  name: Schema.NullOr(Schema.String),
+});
+
+const EditStepSchema = Schema.Struct({
+  label: Schema.String,
+  state: Schema.Struct({
+    canRedo: Schema.Boolean,
+    canUndo: Schema.Boolean,
+    redoLabel: Schema.NullOr(Schema.String),
+    undoLabel: Schema.NullOr(Schema.String),
+  }),
+  version: VersionSchema,
+});
+
+const HunkRevertedSchema = Schema.Struct({
+  file: Schema.String,
+  from: Schema.String,
+  hunk: Schema.Number,
+  label: Schema.String,
+  to: Schema.String,
+  version: VersionSchema,
+});
+
+const SessionEndSchema = Schema.Struct({
+  headVersionId: Schema.String,
+  version: Schema.NullOr(VersionSchema),
+});
+
 export {
   EditHistoryViewSchema,
+  EditStepSchema,
   HunkListSchema,
+  HunkRevertedSchema,
+  SessionEndSchema,
+  VersionRenamedSchema,
   VersionChangesSchema,
   VersionListSchema,
   VersionSchema,

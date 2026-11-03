@@ -1,10 +1,9 @@
 import path from "node:path";
 
-import type { Context, Hono } from "hono";
+import type { Hono } from "hono";
 
 import type { VersionThumbs } from "../../shared/contracts.js";
 import type { StudioProjectStore } from "../store/projects.js";
-import { parseVersionName, type VersionNames } from "../store/version-names.js";
 import { bindVersionReadRuntime } from "../store/version-read-core.js";
 import {
   clampViewport,
@@ -13,14 +12,10 @@ import {
   versionThumbName,
   type ThumbnailService,
 } from "../thumbnails.js";
-import type { VersionStore } from "../types.js";
 
 interface VersionRouteDeps {
   projects: StudioProjectStore;
-  versions: VersionStore;
   thumbnails: ThumbnailService;
-  names: VersionNames;
-  readBody: (c: Context) => Promise<Record<string, unknown>>;
 }
 
 const png = (bytes: Buffer, headers: Record<string, string> = {}): Response =>
@@ -71,7 +66,7 @@ async function versionThumbs(
 }
 
 export function registerVersionRoutes(app: Hono, deps: VersionRouteDeps): void {
-  const { projects, versions, thumbnails, names, readBody } = deps;
+  const { thumbnails } = deps;
 
   bindVersionReadRuntime({
     thumbs: (project, from, to) =>
@@ -103,17 +98,5 @@ export function registerVersionRoutes(app: Hono, deps: VersionRouteDeps): void {
           png(result.png, { "x-changed-pct": String(result.changedPct) }),
         gone
       );
-  });
-
-  app.patch("/api/projects/:pid/versions/:vid", async (c) => {
-    const body = await readBody(c);
-    const name = parseVersionName(body.name);
-    const project = await projects.get(c.req.param("pid"));
-    const version = await versions.get(project, c.req.param("vid"));
-
-    return c.json({
-      id: version.id,
-      name: await names.set(project.id, version.id, name),
-    });
   });
 }

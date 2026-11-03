@@ -5,8 +5,6 @@ import { z } from "zod";
 
 import type {
   DirectEditBatchResult,
-  EditHistoryList,
-  EditHistoryState,
   Project,
   SelectionContext,
   Version,
@@ -23,7 +21,6 @@ import { listWords } from "./activity-text.js";
 import {
   EditError,
   loadTarget,
-  oneLine,
   refuseWhileRunning,
   studioCall,
 } from "./edit-deps.js";
@@ -51,91 +48,8 @@ import { describeElements, textHintsOf } from "./element.js";
 const BATCH_MAX = 50;
 const FILES_MAX = 20;
 const FILE_MAX = 512 * 1024;
-const HISTORY_NOTE =
-  "This is the same undo history as the studio window (Cmd+Z), so the user and you share it. It holds direct edits, structure ops, batches, token and tweak edits, write_file changes to existing files, finished studio runs and version restores that changed text files, and prototype link and canvas frame changes, in the order they were made. For anything else (a new file, a design system apply) use restore_version.";
 
 type Direction = Project["directions"][number];
-
-const target = z.object({ projectId, directionId }).strict();
-
-async function historyState(
-  deps: EditDeps,
-  project: Project,
-  direction: Direction
-): Promise<EditHistoryState & EditHistoryList> {
-  return studioCall<EditHistoryState & EditHistoryList>(
-    deps,
-    "GET",
-    `${base(project, direction.id)}/edit-history/list?limit=20`
-  );
-}
-
-async function step(
-  deps: EditDeps,
-  input: z.output<typeof target>,
-  kind: "undo" | "redo"
-): Promise<Done> {
-  const { project, direction } = await loadTarget(
-    deps,
-    input.projectId,
-    input.directionId
-  );
-  refuseWhileRunning(deps, project, direction);
-  const before = await historyState(deps, project, direction);
-  const listed = kind === "undo" ? before.undoLabel : before.redoLabel;
-  if (!listed)
-    throw new EditError(
-      kind === "undo"
-        ? "Nothing to undo in this direction. Use list_versions and restore_version for older changes."
-        : "Nothing to redo in this direction."
-    );
-  const result = await studioCall<{
-    state: EditHistoryState;
-    version: Version;
-    label?: string;
-  }>(deps, "POST", `${base(project, direction.id)}/edit-history/${kind}`);
-  const label = result.label ?? listed;
-  const verb = kind === "undo" ? "Undid" : "Redid";
-  const output = ok({
-    [kind === "undo" ? "undid" : "redid"]: label,
-    versionId: result.version.id,
-    title: label,
-    headTitle: result.version.title,
-    canUndo: result.state.canUndo,
-    undoLabel: result.state.undoLabel,
-    canRedo: result.state.canRedo,
-    redoLabel: result.state.redoLabel,
-  });
-  return {
-    result: output,
-    activity: versionActivity(
-      project,
-      direction,
-      `${verb} “${oneLine(label, 80)}”`,
-      result.version
-    ),
-  };
-}
-
-const undo = defineTool(
-  "undo",
-  target,
-  {
-    title: "Undo last edit",
-    description: `Undo the newest edit in the direction's edit history and save the result as a version. ${HISTORY_NOTE} The result names the edit it undid (undid and title); headTitle is the title of the version the direction is on now.`,
-  },
-  (deps, input) => step(deps, input, "undo")
-);
-
-const redo = defineTool(
-  "redo",
-  target,
-  {
-    title: "Redo edit",
-    description: `Redo the newest undone edit in the direction's edit history. ${HISTORY_NOTE} A new edit clears the redo list.`,
-  },
-  (deps, input) => step(deps, input, "redo")
-);
 
 const batchEdit = z
   .object({
@@ -472,4 +386,4 @@ const batch = defineTool(
   }
 );
 
-export const HISTORY_TOOLS = [undo, redo, batch];
+export const HISTORY_TOOLS = [batch];

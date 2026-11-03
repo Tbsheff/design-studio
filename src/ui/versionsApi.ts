@@ -1,8 +1,12 @@
 import { routes } from "../shared/actions/versions/routes.js";
 import { STUDIO_TOKEN_HEADER } from "../shared/contracts";
-import type { VersionChanges } from "../shared/contracts";
+import type {
+  EditHistoryState,
+  EditSessionEnd,
+  Version,
+  VersionChanges,
+} from "../shared/contracts";
 import type { HunkRevertRequest, HunkRevertResult } from "../shared/hunk";
-import { json } from "./api";
 import { call } from "./platform/http";
 import { getSession } from "./session";
 
@@ -18,11 +22,54 @@ export const revertHunk = (
   did: string,
   request: HunkRevertRequest
 ) =>
-  json<HunkRevertResult>(
-    "POST",
-    `/api/projects/${encodeURIComponent(pid)}/d/${encodeURIComponent(did)}/hunks/revert`,
-    request
-  );
+  call(routes.applyHunkVersions, {
+    directionId: did,
+    file: request.file,
+    from: request.from ?? null,
+    hunk: request.hunk,
+    projectId: pid,
+    versionId: request.to,
+  }) as Promise<HunkRevertResult>;
+
+export const restoreVersion = (pid: string, did: string, versionId: string) =>
+  call(routes.restoreVersions, {
+    directionId: did,
+    projectId: pid,
+    versionId,
+  }) as Promise<Version>;
+
+const STEP_ROUTES = {
+  redo: routes.applyHistoryVersions,
+  undo: routes.restoreHistoryVersions,
+} as const;
+
+const END_ROUTES = {
+  discard: routes.deleteSessionVersions,
+  save: routes.createSessionVersions,
+} as const;
+
+export const stepEditHistory = (
+  pid: string,
+  did: string,
+  kind: "redo" | "undo"
+) =>
+  call(STEP_ROUTES[kind], { directionId: did, projectId: pid }) as Promise<{
+    label: string;
+    state: EditHistoryState;
+    version: Version;
+  }>;
+
+export const endEditSession = (
+  pid: string,
+  did: string,
+  action: "discard" | "save",
+  baseVersionId: string
+) =>
+  call(END_ROUTES[action], {
+    baseVersionId,
+    directionId: did,
+    projectId: pid,
+  }) as Promise<EditSessionEnd>;
 
 export const versionChanges = (
   pid: string,
@@ -62,7 +109,11 @@ export function openCompareInCode(): void {
 }
 
 export const renameVersion = (pid: string, vid: string, name: string | null) =>
-  json<{ id: string; name: string | null }>("PATCH", base(pid, vid), { name });
+  call(routes.renameVersions, {
+    name,
+    projectId: pid,
+    versionId: vid,
+  }) as Promise<{ id: string; name: string | null }>;
 
 async function fetchPng(url: string, signal: AbortSignal): Promise<Response> {
   return fetch(url, {

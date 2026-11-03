@@ -1,6 +1,7 @@
 import type { Hono } from "hono";
 
 import { bindLinkRuntime } from "../canvas/links/link-runtime.js";
+import { bindViewportRuntime } from "../viewport/viewport-runtime.js";
 import type { AppContext } from "./app-context.js";
 import { readBody } from "./app-request.js";
 import { registerLinkInteractionRoutes } from "./link-interaction-routes.js";
@@ -10,6 +11,7 @@ import { registerTextSearchRoutes } from "./text-search-routes.js";
 const registerAppCanvasRoutes = (app: Hono, ctx: AppContext): void => {
   const {
     canvas,
+    config,
     editDeps,
     frameStates,
     loadDirection,
@@ -17,6 +19,12 @@ const registerAppCanvasRoutes = (app: Hono, ctx: AppContext): void => {
     projects,
     withDirection,
   } = ctx;
+  bindViewportRuntime({
+    canvas,
+    dataDir: config.dataDir,
+    loadDirection,
+    preview,
+  });
   bindLinkRuntime({
     canvas,
     frameStates,

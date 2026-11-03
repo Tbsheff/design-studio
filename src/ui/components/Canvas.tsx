@@ -120,6 +120,7 @@ const InlinePrompt = lazy(() => import("./InlinePrompt"));
 import { TabOrderSlot } from "../features/accessibility/tab-order-slot";
 import { FindPanelSlot } from "../features/text-search/find-panel-slot";
 import { useFindHost } from "../features/text-search/use-find-host";
+import { MatrixSlot } from "../features/viewport";
 import {
   frameStateUrl,
   useFrameStates,
@@ -1759,6 +1760,13 @@ function CanvasView(props: ViewProps) {
         shell={props.shell}
         toolKey={`${protoOn}-${comment.on}-${layersOpen}`}
       />
+      <Suspense fallback={null}>
+        <MatrixSlot
+          projectId={projectId}
+          directionId={directionId}
+          frame={active}
+        />
+      </Suspense>
       {previewMenu.menu}
       <div className="canvas-body">
         {layersOpen &&

@@ -18,6 +18,7 @@ import { ShareActions } from "./share/index.js";
 import { ShipActions } from "./ship/index.js";
 import { StudioActions } from "./studio/index.js";
 import { VersionActions } from "./version/index.js";
+import { ViewportActions } from "./viewport/index.js";
 import { WorkspaceActions } from "./workspace/index.js";
 
 const ALL_ACTIONS = {
@@ -40,6 +41,7 @@ const ALL_ACTIONS = {
   ship: ShipActions,
   studio: StudioActions,
   version: VersionActions,
+  viewport: ViewportActions,
   workspace: WorkspaceActions,
 } as const;
 

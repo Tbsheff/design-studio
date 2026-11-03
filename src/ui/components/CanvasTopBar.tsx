@@ -660,6 +660,7 @@ export function CanvasTopBar(p: Props) {
         </button>
       </div>
       {p.shapeTools}
+      <span data-topbar-slot="matrix" style={{ display: "contents" }} />
       <span data-topbar-slot="review" style={{ display: "contents" }} />
       <DropMenu
         label="Present"

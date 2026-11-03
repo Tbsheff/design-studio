@@ -18,6 +18,7 @@ import { ShareLive } from "./share/live.js";
 import { ShipLive } from "./ship/live.js";
 import { StudioLive } from "./studio/live.js";
 import { VersionLive } from "./version/live.js";
+import { ViewportLive } from "./viewport/live.js";
 import { WorkspaceLive } from "./workspace/live.js";
 
 const ALL_LIVE = {
@@ -40,6 +41,7 @@ const ALL_LIVE = {
   ship: ShipLive,
   studio: StudioLive,
   version: VersionLive,
+  viewport: ViewportLive,
   workspace: WorkspaceLive,
 } as const;
 

@@ -4,6 +4,7 @@ import type { ContentError } from "../../content/errors/index.js";
 import type { DirectEditError } from "../../direct-edit/errors/index.js";
 import type { PackError } from "../../pack/errors/index.js";
 import type { PublishError } from "../../publish/errors/index.js";
+import type { ViewportError } from "../../viewport/errors/index.js";
 import type { CoreError } from "./index.js";
 
 type StudioError =
@@ -12,7 +13,8 @@ type StudioError =
   | ContentError
   | DirectEditError
   | PackError
-  | PublishError;
+  | PublishError
+  | ViewportError;
 
 type StudioErrorTag = StudioError["_tag"];
 

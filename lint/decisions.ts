@@ -266,6 +266,29 @@ export const SCOPED_OFF_REASONS: Record<string, string> = {
 export const decisionOverrides: OxlintOverride[] = [
   {
     files: [
+      "src/server/viewport/engine/cells.ts",
+      "src/ui/features/viewport/matrix-model.ts",
+    ],
+    rules: { "no-magic-numbers": "off" },
+  },
+  {
+    files: ["src/server/viewport/create-matrix.ts"],
+    rules: { "id-length": "off" },
+  },
+  {
+    files: [
+      "src/shared/actions/viewport/*.ts",
+      "src/shared/actions/viewport/errors/status.ts",
+      "src/server/handlers/viewport/*.ts",
+      "src/server/viewport/*.ts",
+      "src/ui/features/viewport/deps.ts",
+      "src/ui/features/viewport/use-create.ts",
+      "src/ui/features/viewport/use-inspect.ts",
+    ],
+    rules: { "import/no-relative-parent-imports": "off" },
+  },
+  {
+    files: [
       "src/shared/actions/content/*.ts",
       "src/shared/actions/content/errors/status.ts",
       "src/server/handlers/content/*.ts",

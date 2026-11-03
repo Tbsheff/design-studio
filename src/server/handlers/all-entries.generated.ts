@@ -18,6 +18,7 @@ import { ShareEntries } from "./share/handlers.js";
 import { ShipEntries } from "./ship/handlers.js";
 import { StudioEntries } from "./studio/handlers.js";
 import { VersionEntries } from "./version/handlers.js";
+import { ViewportEntries } from "./viewport/handlers.js";
 import { WorkspaceEntries } from "./workspace/handlers.js";
 
 const ALL_ENTRIES = {
@@ -40,6 +41,7 @@ const ALL_ENTRIES = {
   ship: ShipEntries,
   studio: StudioEntries,
   version: VersionEntries,
+  viewport: ViewportEntries,
   workspace: WorkspaceEntries,
 } as const;
 

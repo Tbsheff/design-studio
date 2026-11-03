@@ -18,4 +18,16 @@ const ShipDialog = lazy(async () => {
   return { default: loaded.ShipDialog };
 });
 
-export { ExportDialog, ShareDialog, ShipDialog };
+const PublishPane = lazy(async () => {
+  const loaded = await import("./publish-pane.js");
+
+  return { default: loaded.PublishPane };
+});
+
+const PublishSetup = lazy(async () => {
+  const loaded = await import("./publish-setup.js");
+
+  return { default: loaded.PublishSetup };
+});
+
+export { ExportDialog, PublishPane, PublishSetup, ShareDialog, ShipDialog };

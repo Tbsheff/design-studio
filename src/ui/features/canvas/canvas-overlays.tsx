@@ -13,8 +13,8 @@ import type {
 } from "../../../shared/contracts.js";
 import { formatMeasure } from "../../../shared/measure.js";
 import type { SpacingHandlesProps } from "../../canvas-slots.js";
-import { guideStyle } from "../../components/ArtboardOverlay.js";
 import { Icon } from "../../kit/Icon.js";
+import { guideStyle } from "./artboard-overlay.js";
 import type { SpacingBadge } from "./snap-model.js";
 import { frameSnapStore } from "./use-frame-resize.js";
 

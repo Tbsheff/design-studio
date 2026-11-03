@@ -4,7 +4,7 @@ import type { KeyboardEvent } from "react";
 import type { CopyCodeFormat } from "../../../shared/export.js";
 import { Icon } from "../../kit/Icon.js";
 import type { IconName } from "../../kit/Icon.js";
-import { usePopover } from "../../usePopover.js";
+import { usePopover } from "../../kit/use-popover.js";
 import { activeExportFrame, exportApi, openExport } from "./export-api.js";
 
 import "../../styles/export.css";

@@ -6,17 +6,21 @@ import type {
   Version,
 } from "../../../shared/contracts";
 import { errorText } from "../../api";
-import type { PreviewPort } from "../../bridge";
-import type { CanvasSource } from "../../components/CanvasToolbar";
-import type { InspectorTab } from "../../components/Inspector";
-import { useRail } from "../../components/ProjectRail";
-import type { ShareTarget } from "../../components/ShareDialog";
+import type { CanvasSource } from "../../features/canvas/canvas-toolbar";
+import type { MentionRequest } from "../../features/chat/use-mentions";
 import type { PrefillRequest } from "../../features/comments";
-import { createDraftStore, useDraftActive, useUi } from "../../storage";
-import type { DraftStore } from "../../storage";
-import type { DirectEditControl } from "../../useDirectEdit";
-import type { EditSessionHandle } from "../../useEditSession";
-import type { MentionRequest } from "../../useMentions";
+import { useRail } from "../../features/home/project-rail";
+import type { InspectorTab } from "../../features/inspector/inspector";
+import type { DirectEditControl } from "../../features/inspector/use-direct-edit";
+import type { EditSessionHandle } from "../../features/inspector/use-edit-session";
+import type { ShareTarget } from "../../features/share-publish-ship-export/share-dialog";
+import type { PreviewPort } from "../../platform/bridge";
+import {
+  createDraftStore,
+  useDraftActive,
+  useUi,
+} from "../../platform/storage";
+import type { DraftStore } from "../../platform/storage";
 import type {
   StudioActing,
   StudioOpen,

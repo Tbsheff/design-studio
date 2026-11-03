@@ -96,7 +96,7 @@ export function useCanvasPresence(o: PresenceInput): void {
   useEffect(() => {
     let stop: (() => void) | null = null;
     let gone = false;
-    void import("../../shareLive.js").then((mod) => {
+    void import("../share-publish-ship-export/share-live.js").then((mod) => {
       if (!gone) {
         stop = mod.startShareLive(o.projectId, () => latest.current.stage());
       }

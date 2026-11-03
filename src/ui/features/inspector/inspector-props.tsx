@@ -17,10 +17,10 @@ import type {
   VariantGroup,
 } from "../../../shared/props.js";
 import { ApiError } from "../../api.js";
-import { ComponentPreviewThumb } from "../../components/ComponentPreviewThumb.js";
-import { useProjectEvents } from "../../events.js";
 import { VariantSheet } from "../../inspector-slots.js";
 import { UiSelect } from "../../kit/UiSelect.js";
+import { useProjectEvents } from "../../platform/events.js";
+import { ComponentPreviewThumb } from "../design-system/component-preview-thumb.js";
 import { InspectorSection } from "./inspector-fields.js";
 import { propsApi } from "./props-api.js";
 

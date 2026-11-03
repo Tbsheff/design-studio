@@ -8,7 +8,7 @@ import {
   type DesignRulesTestResult,
 } from "../../../shared/design-rules.js";
 import { errorText, rulesApi } from "../../api.js";
-import { activeFrame, canvasStore } from "../../canvasFrames.js";
+import { activeFrame, canvasStore } from "../canvas/canvas-frames-model.js";
 
 import "../../styles/rules.css";
 

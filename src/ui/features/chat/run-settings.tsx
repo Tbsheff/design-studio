@@ -14,10 +14,10 @@ import type {
   RunLevel,
   RunMode,
 } from "../../../shared/contracts.js";
-import { VariationsControl } from "../../components/VariationsControl.js";
 import { placeFixed } from "../../domain/popoverPlacement.js";
 import { Icon } from "../../kit/Icon.js";
-import { usePopover } from "../../usePopover.js";
+import { usePopover } from "../../kit/use-popover.js";
+import { VariationsControl } from "../canvas/variations-control.js";
 import {
   LevelControl,
   levelHint,

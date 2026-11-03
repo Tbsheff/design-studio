@@ -1,6 +1,6 @@
 import type { Starter } from "../../../shared/contracts.js";
-import { homePrefs } from "../../homePrefs.js";
 import { Icon } from "../../kit/Icon.js";
+import { homePrefs } from "./home-prefs-model.js";
 import type { HomeTemplate } from "./home-templates.js";
 import type { TemplatesModule } from "./lazy-parts.js";
 

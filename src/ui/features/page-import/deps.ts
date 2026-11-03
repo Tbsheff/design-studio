@@ -1,8 +1,8 @@
 export { api } from "../../api.js";
 
-export { canvasStore } from "../../canvasFrames.js";
+export { canvasStore } from "../canvas/canvas-frames-model.js";
 
-export type { CanvasFrame } from "../../canvasFrames.js";
+export type { CanvasFrame } from "../canvas/canvas-frames-model.js";
 
 export {
   PAGE_IMPORT_SELECTOR_MAX,

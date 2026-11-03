@@ -1,15 +1,14 @@
-import { lazy, Suspense, useRef, useState } from "react";
+import { Suspense, useRef, useState } from "react";
 
 import type { Project } from "../../../shared/contracts";
 import { api, errorText } from "../../api";
-import { ShipTemplates } from "../../components/ShipTemplates";
 import { CommandRules } from "../../features/commands/command-rules";
 import { KeysPanel } from "../../features/settings";
+import { PublishSetup } from "../../features/share-publish-ship-export/index.js";
+import { ShipTemplates } from "../../features/share-publish-ship-export/ship-templates";
 import { Icon } from "../../kit/Icon";
-import { useModalDialog } from "../../usePopover";
+import { useModalDialog } from "../../kit/use-popover";
 import { parseDraft, SettingsFields, toDraft } from "./settings-fields";
-
-const PublishSetup = lazy(() => import("../../components/PublishSetup"));
 
 interface Props {
   project: Project;

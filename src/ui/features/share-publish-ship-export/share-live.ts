@@ -4,9 +4,12 @@ import type {
   SharePresenceEvent,
   StudioCursorInput,
 } from "../../../shared/share.js";
-import type { BridgeFrame } from "../../bridge.js";
+import type { BridgeFrame } from "../../platform/bridge.js";
 import { call, getRaw } from "../../platform/http.js";
-import { onSharePointer, setSharePointer } from "../../tokenFrames.js";
+import {
+  onSharePointer,
+  setSharePointer,
+} from "../design-system/token-frames.js";
 import { SHARES_CHANGED } from "./share-api.js";
 
 import "../../styles/share-live.css";

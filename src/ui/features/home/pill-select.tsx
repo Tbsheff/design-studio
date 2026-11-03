@@ -1,6 +1,6 @@
 import type { RefObject } from "react";
 
-import { StableText } from "../../components/StableText.js";
+import { StableText } from "../chat/stable-text.js";
 import { loadPops } from "./lazy-parts.js";
 
 function PillSelect({

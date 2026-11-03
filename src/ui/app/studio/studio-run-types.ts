@@ -5,10 +5,10 @@ import type {
   RunRequest,
 } from "../../../shared/contracts";
 import type { InlineRunExtras } from "../../../shared/usage-scope";
-import type { CanvasFrame } from "../../canvasFrames";
-import type { ComposerMode } from "../../components/RunSettings";
-import type { RunView } from "../../runState";
-import type { useRunControls } from "../../useRunControls";
+import type { CanvasFrame } from "../../features/canvas/canvas-frames-model";
+import type { ComposerMode } from "../../features/chat/run-settings";
+import type { RunView } from "../../features/chat/run-state-model";
+import type { useRunControls } from "../../features/chat/use-run-controls";
 
 type StudioRunControls = Omit<ReturnType<typeof useRunControls>, "trackSend">;
 

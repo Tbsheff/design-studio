@@ -7,7 +7,7 @@ import {
   parentLayout,
   sizeModeOf,
   sizePatch,
-} from "./sizing";
+} from "./features/inspector/sizing";
 
 const rowParent = parentLayout({
   "parent-display": "flex",

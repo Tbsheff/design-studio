@@ -2,9 +2,9 @@ import { lazy, Suspense, useState } from "react";
 import type { ChangeEvent } from "react";
 
 import { Icon } from "../../kit/Icon.js";
-import type { SettingsDraft } from "../../settingsDraft.js";
+import type { SettingsDraft } from "../chat/settings-draft-model.js";
 
-const loadFields = () => import("../../components/SettingsFields.js");
+const loadFields = () => import("../../app/shell/settings-fields.js");
 
 const SettingsFields = lazy(() =>
   loadFields().then((m) => ({ default: m.SettingsFields }))

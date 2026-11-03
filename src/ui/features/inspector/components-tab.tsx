@@ -1,4 +1,4 @@
-import { ComponentsPanel } from "../../components/ComponentsPanel.js";
+import { ComponentsPanel } from "../../app/components-panel-host.js";
 import { copy } from "./copy.js";
 import type { InspectorProps } from "./inspector-model.js";
 

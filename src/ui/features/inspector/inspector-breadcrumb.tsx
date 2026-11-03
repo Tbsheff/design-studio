@@ -9,8 +9,8 @@ import {
 } from "react";
 
 import type { SelectionContext } from "../../../shared/contracts.js";
-import type { PreviewPort } from "../../bridge.js";
 import { Icon } from "../../kit/Icon.js";
+import type { PreviewPort } from "../../platform/bridge.js";
 import {
   parseSelectionPath,
   pathCrumbs,

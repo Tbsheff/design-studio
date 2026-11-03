@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 import type { ComponentInfo } from "../../../shared/contracts.js";
 import { json } from "../../api.js";
-import type { FilesChange } from "../../useStudioData.js";
+import type { FilesChange } from "../home/use-studio-data.js";
 import { getBlob } from "./deps.js";
 
 const REFRESH_MS = 400;

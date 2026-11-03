@@ -2,10 +2,10 @@ import { memo, useState, type KeyboardEvent, type ReactNode } from "react";
 
 import type { DirectStyleProperty } from "../../../shared/contracts.js";
 import { colorHex, resolveTokenValue } from "../../../shared/token-match.js";
-import { TokenControl } from "../../components/TokenControl.js";
 import { Icon, type IconName } from "../../kit/Icon.js";
 import { UiSelect } from "../../kit/UiSelect.js";
 import { readStored, writeStored } from "../../platform/storage.js";
+import { TokenControl } from "../versions-layers-tokens/token-control.js";
 import { colorToHex, displayColor, isValidColor } from "./css-values.js";
 import { useInherited } from "./edit-variant.js";
 import { sameEditValues, type DirectEdit } from "./use-direct-edit.js";

@@ -2,9 +2,9 @@ import { createElement, useCallback } from "react";
 import type { ReactElement } from "react";
 
 import type { Version } from "../../../shared/contracts";
-import { DraftBar } from "../../components/DraftBar";
-import { ImproveControl } from "../../components/DraftImprove";
-import { VariationsTop } from "../../components/VariationsLayer";
+import { VariationsTop } from "../../features/canvas/variations-layer";
+import { DraftBar } from "../../features/chat/draft-bar";
+import { ImproveControl } from "../../features/chat/draft-improve";
 import { CenterView, UnfinishedSlot } from "../shell/studio-parts";
 import { improveProps, saveHandlerOf, unfinishedProps } from "./center-bars";
 import { canvasProps } from "./center-props";

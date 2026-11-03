@@ -7,17 +7,17 @@ export type {
   SpacingStep,
 } from "../../api.js";
 
-export type { ParentMessageBody } from "../../bridge.js";
+export type { ParentMessageBody } from "../../platform/bridge.js";
 
-export { startOptimistic } from "../../optimisticEdit.js";
+export { startOptimistic } from "../inspector/optimistic-edit.js";
 
-export { snapOff } from "../../snap.js";
+export { snapOff } from "../canvas/snap-model.js";
 
-export { resizeReadout } from "../../useResizeHandles.js";
+export { resizeReadout } from "../canvas/use-resize-handles.js";
 
 export { useLive } from "../../platform/live-store.js";
 
-export { buildEditRequest, mergeCommit } from "../../useDirectEdit.js";
+export { buildEditRequest, mergeCommit } from "../inspector/use-direct-edit.js";
 
 export { BOX_SIDES } from "../../../shared/spacing.js";
 

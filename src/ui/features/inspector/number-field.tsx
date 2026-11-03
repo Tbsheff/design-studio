@@ -1,6 +1,6 @@
 import { memo, type ReactNode } from "react";
 
-import { TokenControl } from "../../components/TokenControl.js";
+import { TokenControl } from "../versions-layers-tokens/token-control.js";
 import { sameSpec, type NumberSpec } from "./number-field-model.js";
 import { NumberInput } from "./number-input.js";
 import { useScrub } from "./use-scrub.js";

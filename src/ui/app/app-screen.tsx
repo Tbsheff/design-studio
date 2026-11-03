@@ -2,7 +2,7 @@ import { Suspense, useCallback } from "react";
 import type { ReactNode } from "react";
 
 import { Home } from "../features/home/index.js";
-import { uiStore, useUi } from "../storage";
+import { uiStore, useUi } from "../platform/storage";
 import { Screen } from "./screen";
 import { ScreenBoundary } from "./screen-boundary";
 import {

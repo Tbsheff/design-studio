@@ -10,7 +10,7 @@ import {
   parseNumber,
   stepValue,
   valuesFromStyles,
-} from "./cssValues";
+} from "./features/inspector/css-values";
 
 describe("cssValues", () => {
   it("parses numbers with units", () => {

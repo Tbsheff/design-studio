@@ -10,19 +10,26 @@ import type {
   WorkTreeStatus,
 } from "../../../shared/contracts.js";
 import { api, errorText } from "../../api.js";
-import { createDeltaBatcher, frameOrTimeout } from "../../deltaBatch.js";
-import { useProjectEvents } from "../../events.js";
-import type { ConnectionState } from "../../events.js";
-import { reportFirstToken } from "../../perfTelemetry.js";
+import { useProjectEvents } from "../../platform/events.js";
+import type { ConnectionState } from "../../platform/events.js";
+import { uiStore, useUi } from "../../platform/storage.js";
+import { reportFirstToken } from "../../platform/telemetry.js";
 import {
   listRunPage,
   publishOlderRuns,
   publishRunHistory,
-} from "../../runHistoryApi.js";
-import { applyRunEvent, emptyRun, runFromSummary } from "../../runState.js";
-import type { RunMap } from "../../runState.js";
-import { uiStore, useUi } from "../../storage.js";
-import { useRunNotice } from "../../useRunNotice.js";
+} from "../chat/run-history-model.js";
+import {
+  applyRunEvent,
+  emptyRun,
+  runFromSummary,
+} from "../chat/run-state-model.js";
+import type { RunMap } from "../chat/run-state-model.js";
+import { useRunNotice } from "../chat/use-run-notice.js";
+import {
+  createDeltaBatcher,
+  frameOrTimeout,
+} from "../inspector/delta-batch.js";
 
 export interface BuildError {
   id: string;

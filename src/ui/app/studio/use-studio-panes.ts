@@ -4,9 +4,9 @@ import type { CommentPrefill } from "../../../shared/contracts";
 import {
   isDirectEditable,
   inspectorEmptyReason,
-} from "../../components/Inspector";
-import { uiStore } from "../../storage";
-import { usePanelTab } from "../../usePanelTab";
+} from "../../features/inspector/inspector";
+import { uiStore } from "../../platform/storage";
+import { usePanelTab } from "../../platform/use-panel-tab";
 import { assignRef } from "./ref-model";
 import type { PanelTab, StudioPanes, StudioUi } from "./studio-ui-types";
 

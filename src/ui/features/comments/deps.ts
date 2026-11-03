@@ -31,13 +31,13 @@ export type {
 
 export { ApiError, api, errorText, json } from "../../api.js";
 
-export { postToFrame, useBridge } from "../../bridge.js";
+export { postToFrame, useBridge } from "../../platform/bridge.js";
 
-export type { BridgeFrame } from "../../bridge.js";
+export type { BridgeFrame } from "../../platform/bridge.js";
 
-export { canvasStore, shownFrames } from "../../canvasFrames.js";
+export { canvasStore, shownFrames } from "../canvas/canvas-frames-model.js";
 
-export { DrawingStrokes, PenIcon } from "../../components/DrawLayer.js";
+export { DrawingStrokes, PenIcon } from "../canvas/draw-layer.js";
 
 export {
   MentionList,
@@ -45,13 +45,13 @@ export {
   mentionKey,
   mentionLabel,
   mentionTitle,
-} from "../../components/MentionPicker.js";
+} from "../chat/mention-picker.js";
 
-export type { MentionOption } from "../../components/MentionPicker.js";
+export type { MentionOption } from "../chat/mention-picker.js";
 
 export type { PendingAttachment } from "../../domain/pending-attachment.js";
 
-export { useProjectEvents } from "../../events.js";
+export { useProjectEvents } from "../../platform/events.js";
 
 export { Icon } from "../../kit/Icon.js";
 
@@ -63,12 +63,12 @@ export { readStored, writeStored } from "../../platform/storage.js";
 
 export { isTypingTarget } from "../../platform/typing-target.js";
 
-export { projectFromPath } from "../../route.js";
+export { projectFromPath } from "../../platform/router.js";
 
-export type { DraftStore } from "../../storage.js";
+export type { DraftStore } from "../../platform/storage.js";
 
-export { INLINE_PROMPT_OPEN_EVENT } from "../../useInlinePrompt.js";
+export { INLINE_PROMPT_OPEN_EVENT } from "../chat/use-inline-prompt.js";
 
-export { useMentions } from "../../useMentions.js";
+export { useMentions } from "../chat/use-mentions.js";
 
-export { useProfileInitial } from "../../useProfileInitial.js";
+export { useProfileInitial } from "../home/use-profile-initial.js";

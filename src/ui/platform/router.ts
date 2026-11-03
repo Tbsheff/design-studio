@@ -1,4 +1,4 @@
-import { uiStore } from "../storage";
+import { uiStore } from "./storage";
 
 const PROJECT_PATH = /^\/p\/([^/]+)\/?$/;
 

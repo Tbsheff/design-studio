@@ -19,7 +19,7 @@ import {
   setFramePath,
   viewportOf,
   withFramePath,
-} from "./canvasFrames";
+} from "./features/canvas/canvas-frames-model";
 
 const desktop = { preset: "desktop" as const, width: 1440, height: 900 };
 

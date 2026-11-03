@@ -14,9 +14,9 @@ import {
 } from "../../../shared/contracts.js";
 import { cssVarFor } from "../../../shared/token-match.js";
 import { ApiError, errorText } from "../../api.js";
-import { displayColor, isValidColor } from "../../cssValues.js";
-import { useModalDialog } from "../../usePopover.js";
-import type { CreateRequest } from "../../useTokenSnap.js";
+import { useModalDialog } from "../../kit/use-popover.js";
+import { displayColor, isValidColor } from "../inspector/css-values.js";
+import type { CreateRequest } from "../inspector/use-token-snap.js";
 import { COPY } from "./copy.js";
 
 export interface CreateTokenSubmit {

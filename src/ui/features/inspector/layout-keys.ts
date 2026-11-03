@@ -4,7 +4,7 @@ import { isTypingTarget } from "../../platform/typing-target.js";
 import {
   PREVIEW_ARRANGE_KEY_EVENT,
   PREVIEW_LAYOUT_KEY_EVENT,
-} from "../../usePreviewFrames.js";
+} from "../canvas/use-preview-frames.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 
 type Patch = Parameters<DirectEdit["preview"]>[0];

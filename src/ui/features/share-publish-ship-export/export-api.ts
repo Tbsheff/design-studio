@@ -13,16 +13,16 @@ import type {
   HandoffRequest,
   HandoffResult,
 } from "../../../shared/export.js";
+import { desktopBridge } from "../../platform/desktop.js";
+import { call as callAction, getJson, sendJson } from "../../platform/http.js";
+import { readStored, uiStore, writeStored } from "../../platform/storage.js";
 import {
   activeFrame,
   canvasStore,
   defaultLayout,
   frameName,
   type CanvasFrame,
-} from "../../canvasFrames.js";
-import { desktopBridge } from "../../platform/desktop.js";
-import { call as callAction, getJson, sendJson } from "../../platform/http.js";
-import { readStored, uiStore, writeStored } from "../../platform/storage.js";
+} from "../canvas/canvas-frames-model.js";
 
 const p = (pid: string) => `/api/projects/${encodeURIComponent(pid)}`;
 const PREFS_KEY = "design-studio.export.v1";

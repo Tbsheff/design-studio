@@ -1,9 +1,16 @@
 import { describe, expect, it } from "vitest";
 
 import type { SelectionContext, Version } from "../shared/contracts";
-import { isHistoryStep, refreshedSelection, stepToast } from "./useEditHistory";
-import { historyKeyOf, routeHistoryCommand } from "./useUndoShortcut";
-import type { ShortcutState } from "./useUndoShortcut";
+import {
+  historyKeyOf,
+  routeHistoryCommand,
+} from "./features/canvas/use-undo-shortcut";
+import type { ShortcutState } from "./features/canvas/use-undo-shortcut";
+import {
+  isHistoryStep,
+  refreshedSelection,
+  stepToast,
+} from "./features/inspector/use-edit-history";
 
 function key(
   over: Partial<KeyboardEvent>

@@ -1,9 +1,9 @@
 import { runCommand, TabOrderToggle } from "../../canvas-toolbar-slots.js";
-import { PenIcon } from "../../components/DrawLayer.js";
 import { PRESETS } from "../../domain/canvas-presets.js";
 import type { CanvasSource } from "../../domain/canvas-presets.js";
 import { Icon } from "../../kit/Icon.js";
-import type { ZoomSetting } from "../../storage.js";
+import type { ZoomSetting } from "../../platform/storage.js";
+import { PenIcon } from "./draw-layer.js";
 import {
   type Props,
   ViewportControls,

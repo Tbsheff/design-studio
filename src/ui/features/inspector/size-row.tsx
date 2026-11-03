@@ -9,7 +9,7 @@ import {
 import type { SelectionContext } from "../../../shared/contracts.js";
 import { UiSelect } from "../../kit/UiSelect.js";
 import { useLive } from "../../platform/live-store.js";
-import { resizeReadout } from "../../useResizeHandles.js";
+import { resizeReadout } from "../canvas/use-resize-handles.js";
 import { write } from "./layout-keys.js";
 import { NumberField } from "./number-field.js";
 import {

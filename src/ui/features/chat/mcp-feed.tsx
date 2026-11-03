@@ -5,7 +5,7 @@ import type {
   McpApprovalOutcome,
 } from "../../../shared/contracts.js";
 import { errorText } from "../../api.js";
-import { formatTime } from "../../format.js";
+import { formatTime } from "../../domain/format.js";
 import { Icon, type IconName } from "../../kit/Icon.js";
 import { mcpApi } from "./mcp-model.js";
 import type { RunView } from "./run-state-model.js";

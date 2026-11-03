@@ -8,7 +8,7 @@ import type {
 } from "../../../shared/usage-scope.js";
 import { IS_MAC, useCommands } from "../../chat-slots.js";
 import { isTypingTarget } from "../../platform/typing-target.js";
-import { unionRect } from "../../useCanvasFrames.js";
+import { unionRect } from "../canvas/use-canvas-frames.js";
 
 export const INLINE_PROMPT_COMMAND = "selection.ask-inline";
 

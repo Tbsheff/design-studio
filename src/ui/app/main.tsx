@@ -52,6 +52,6 @@ if (root) {
   );
 }
 
-const tipGuard = await import("../tipGuard");
+const tipGuard = await import("../platform/tip-guard");
 
 tipGuard.installTipGuard();

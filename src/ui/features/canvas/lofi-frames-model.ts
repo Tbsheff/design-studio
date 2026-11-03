@@ -7,7 +7,7 @@ import {
   postToFrame,
   useBridge,
   type BridgeFrame,
-} from "../../bridge.js";
+} from "../../platform/bridge.js";
 import { readBlob } from "../../platform/http.js";
 
 let cssLoad: Promise<string> | null = null;

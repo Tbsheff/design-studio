@@ -60,7 +60,6 @@ const LINKED_FILES = [
   "src/shared/publish.ts",
   "src/shared/actions/{publish,share}/**/*.ts",
   "src/server/publish/**/*.ts",
-  "src/ui/publishApi.ts",
   ...HANDLER_FILES,
   ...FEATURE_UI_FILES,
 ];
@@ -69,7 +68,6 @@ const DEAD_CODE_FILES = [
   "cloud/api/src/{viewer,share}/**/*.ts",
   "cloud/api/src/tenant/repos/share.ts",
   "cloud/api/src/cron.ts",
-  "src/ui/publishApi.ts",
   "src/server/publish/cloud-links.ts",
 ];
 
@@ -109,7 +107,7 @@ const studioReview: OxlintOverride[] = [
     },
   },
   {
-    files: [...FEATURE_UI_FILES, "src/ui/components/PublicationRow.tsx"],
+    files: [...FEATURE_UI_FILES],
     rules: { "studio/no-inline-copy": "error" },
   },
   { files: UI_BUDGET_FILES, rules: { "studio/no-ui-storage": "error" } },

@@ -1,14 +1,11 @@
 import { useCallback, useMemo, useState } from "react";
 
 import type { CompiledTokenEntry } from "../../../shared/contracts.js";
-import { PanelHead } from "../../components/SheetHead.js";
-import {
-  TokenSweepSlot,
-  tokenSweepCopy,
-} from "../../components/TokenSweepBridge.js";
 import { Icon } from "../../kit/Icon.js";
-import type { ThemeChoice } from "../../tokenFrames.js";
-import type { DesignTokens } from "../../useDesignSystemState.js";
+import { PanelHead } from "../../kit/sheet-head.js";
+import type { ThemeChoice } from "../design-system/token-frames.js";
+import type { DesignTokens } from "../design-system/use-design-system-state.js";
+import { TokenSweepSlot, tokenSweepCopy } from "../token-sweep/index.js";
 import { COPY } from "./copy.js";
 import {
   aliasPath,

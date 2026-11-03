@@ -4,7 +4,7 @@ import type { FormEvent } from "react";
 import type { PackSummary } from "../../../shared/contracts.js";
 import { errorText } from "../../api.js";
 import { Icon } from "../../kit/Icon.js";
-import { useModalDialog } from "../../usePopover.js";
+import { useModalDialog } from "../../kit/use-popover.js";
 import { COPY } from "./copy.js";
 
 function useBusyAction(onClose: () => void) {

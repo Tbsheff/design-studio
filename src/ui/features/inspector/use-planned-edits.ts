@@ -1,8 +1,8 @@
 import { useRef } from "react";
 
 import type { StudioEvent } from "../../../shared/contracts.js";
-import { useProjectEvents } from "../../events.js";
-import { postToLiveFrames } from "../../tokenFrames.js";
+import { useProjectEvents } from "../../platform/events.js";
+import { postToLiveFrames } from "../design-system/token-frames.js";
 
 const FRESH_MS = 5000;
 

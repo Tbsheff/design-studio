@@ -7,11 +7,8 @@ import type {
 } from "../../../shared/contracts.js";
 import { api } from "../../api.js";
 import { importPageItems } from "../../canvas-slots.js";
-import { frameBaseName, framePage } from "../../components/CanvasFrames.js";
-import type { CanvasViewRow } from "../../components/CanvasToolbar.js";
-import type { MenuGroup } from "../../components/CanvasTopBar.js";
 import type { LiveStore } from "../../platform/live-store.js";
-import type { UiState } from "../../storage.js";
+import type { UiState } from "../../platform/storage.js";
 import {
   FRAME_PRESETS,
   canAddFrame,
@@ -20,11 +17,14 @@ import {
   setFramePath,
 } from "./canvas-frames-model.js";
 import type { CanvasFrame, CanvasLayout } from "./canvas-frames-model.js";
+import { frameBaseName, framePage } from "./canvas-frames.js";
 import type {
   CanvasShell,
   CommentTool,
   SetSelectMode,
 } from "./canvas-shell.js";
+import type { CanvasViewRow } from "./canvas-toolbar.js";
+import type { MenuGroup } from "./top-bar-menu.js";
 
 interface FrameLabelInfo {
   number?: string;

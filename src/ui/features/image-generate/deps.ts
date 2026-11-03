@@ -1,8 +1,8 @@
 export { routes as imageRoutes } from "../../../shared/actions/image/routes.js";
 
-export { openAppPanel } from "../../appStatus.js";
+export { openAppPanel } from "../../platform/app-status.js";
 
-export { imageTargetOf } from "../../imageApi.js";
+export { imageTargetOf } from "../inspector/image-api.js";
 
 export { useAction } from "../../platform/query.js";
 

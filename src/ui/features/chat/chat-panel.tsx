@@ -7,8 +7,6 @@ import {
   ConversationContent,
   ConversationScrollButton,
 } from "../../ai/components/ai/conversation.js";
-import { feedShown, McpItem, timelineOf } from "../../components/McpFeed.js";
-import type { McpFeedControl } from "../../components/McpFeed.js";
 import { Icon } from "../../kit/Icon.js";
 import {
   ChatLead,
@@ -19,6 +17,8 @@ import {
 import { PendingEntry, RunEntry } from "./chat-run-entry.js";
 import { ChatSearch } from "./chat-search.js";
 import { reviewOf, turnProps, undoProps } from "./chat-turn-model.js";
+import { feedShown, McpItem, timelineOf } from "./mcp-feed.js";
+import type { McpFeedControl } from "./mcp-feed.js";
 import type { RunView } from "./run-state-model.js";
 import {
   useLatest,

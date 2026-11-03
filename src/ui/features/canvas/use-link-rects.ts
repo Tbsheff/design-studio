@@ -9,7 +9,11 @@ import {
   type LinksFile,
   type PrototypeLink,
 } from "../../../shared/links.js";
-import { postToFrame, useBridge, type BridgeFrame } from "../../bridge.js";
+import {
+  postToFrame,
+  useBridge,
+  type BridgeFrame,
+} from "../../platform/bridge.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";
 
 type Rect = NonNullable<LinkRectReport["rect"]>;

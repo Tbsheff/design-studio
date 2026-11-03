@@ -1,16 +1,16 @@
 export { json } from "../../api.js";
 
-export { useCommands } from "../../commands/registry.js";
+export { useCommands } from "../commands/registry.js";
 
-export type { Command } from "../../commands/registry.js";
+export type { Command } from "../commands/registry.js";
 
-export type { PreviewMenuItem } from "../../components/PreviewMenu.js";
+export type { PreviewMenuItem } from "../canvas/preview-menu.js";
 
-export { insertError } from "../../componentInsert.js";
+export { insertError } from "../design-system/component-insert-api.js";
 
-export { imageTargetOf } from "../../imageApi.js";
+export { imageTargetOf } from "../inspector/image-api.js";
 
-export { useModalDialog } from "../../usePopover.js";
+export { useModalDialog } from "../../kit/use-popover.js";
 
 export type { SelectionContext } from "../../../shared/contracts.js";
 

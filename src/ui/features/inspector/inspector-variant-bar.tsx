@@ -8,8 +8,8 @@ import {
   type VariantState,
   type VariantSupport,
 } from "../../../shared/variants.js";
-import type { PreviewPort } from "../../bridge.js";
 import { UiSelect } from "../../kit/UiSelect.js";
+import type { PreviewPort } from "../../platform/bridge.js";
 import {
   editVariantStore,
   fitFrameTo,

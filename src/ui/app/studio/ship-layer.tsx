@@ -1,7 +1,7 @@
-import { lazy, Suspense } from "react";
+import { Suspense } from "react";
 import type { ReactNode } from "react";
 
-const ShipDialog = lazy(() => import("../../components/ShipDialog"));
+import { ShipDialog } from "../../features/share-publish-ship-export/index.js";
 
 interface ShipLayerProps {
   projectId: string;

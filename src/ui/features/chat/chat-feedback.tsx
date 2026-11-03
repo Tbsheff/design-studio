@@ -1,16 +1,12 @@
 import { memo, useMemo } from "react";
 
 import type { RunStatus } from "../../../shared/contracts.js";
-import {
-  DiffBadge,
-  fileChanges,
-  type FileChange,
-} from "../../components/ToolChips.js";
-import { baseName, formatMs, formatUsd } from "../../format.js";
+import { baseName, formatMs, formatUsd } from "../../domain/format.js";
 import { CopyButton } from "../../kit/CopyButton.js";
 import { Icon } from "../../kit/Icon.js";
 import { useRunFeedback, type Thumb } from "./run-feedback-model.js";
 import { runText, type RunView } from "./run-state-model.js";
+import { DiffBadge, fileChanges, type FileChange } from "./tool-chips.js";
 
 const STATUS_LABEL: Record<RunStatus, string> = {
   running: "Running",

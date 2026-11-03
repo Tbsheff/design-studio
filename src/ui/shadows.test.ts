@@ -7,7 +7,7 @@ import {
   parseShadows,
   splitTopLevel,
   withBlur,
-} from "./shadows";
+} from "./features/inspector/shadows";
 
 describe(parseShadows, () => {
   it("reads none and empty as no shadows", () => {

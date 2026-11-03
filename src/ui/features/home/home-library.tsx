@@ -3,18 +3,14 @@ import { useEffect, useState } from "react";
 import type { Project, RunSummary } from "../../../shared/contracts.js";
 import type { AppHealth } from "../../../shared/found-apps.js";
 import { json } from "../../api.js";
-import {
-  isFolderProject,
-  projectBadge,
-  useThumbnail,
-} from "../../components/ProjectGrid.js";
-import { formatRelative } from "../../format.js";
-import { homePrefs, type HomeFilter } from "../../homePrefs.js";
+import { formatRelative } from "../../domain/format.js";
 import { Icon } from "../../kit/Icon.js";
+import { homePrefs, type HomeFilter } from "./home-prefs-model.js";
+import { isFolderProject, projectBadge, useThumbnail } from "./project-grid.js";
 
-export { ProjectGrid } from "../../components/ProjectGrid.js";
+export { ProjectGrid } from "./project-grid.js";
 
-export { PackCards } from "../../components/HomePopovers.js";
+export { PackCards } from "./home-popovers.js";
 
 const FILTERS: { id: HomeFilter; label: string }[] = [
   { id: "all", label: "All" },

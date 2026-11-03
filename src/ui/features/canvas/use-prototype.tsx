@@ -25,6 +25,14 @@ import {
 } from "../../../shared/links.js";
 import { api } from "../../api.js";
 import {
+  frameDirection,
+  frameName,
+  withFramePath,
+  type CanvasFrame,
+} from "./canvas-frames-model.js";
+import { frameStateOf, useCurrentFrameStates } from "./frame-states-model.js";
+import { linksApi, useImplicitLinks, useLinks } from "./links-api.js";
+import {
   LinkArrows,
   LinkDragLine,
   LinkHandle,
@@ -33,18 +41,10 @@ import {
   playStartOf,
   PrototypeBar,
   useLinkDrag,
-} from "../../components/PrototypeLayer.js";
-import {
-  frameDirection,
-  frameName,
-  withFramePath,
-  type CanvasFrame,
-} from "./canvas-frames-model.js";
-import { frameStateOf, useCurrentFrameStates } from "./frame-states-model.js";
-import { linksApi, useImplicitLinks, useLinks } from "./links-api.js";
+} from "./prototype-layer.js";
 import { useLinkRects } from "./use-link-rects.js";
 
-const PlayMode = lazy(() => import("../../components/PlayMode.js"));
+const PlayMode = lazy(() => import("./play-mode.js"));
 
 interface Options {
   projectId: string;

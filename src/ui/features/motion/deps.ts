@@ -1,14 +1,14 @@
 export { api } from "../../api.js";
 
-export { insertError } from "../../componentInsert.js";
+export { insertError } from "../design-system/component-insert-api.js";
 
 export type { MotionSetBody, MotionSpecBody } from "../../api.js";
 
-export type { PreviewPort } from "../../bridge.js";
+export type { PreviewPort } from "../../platform/bridge.js";
 
-export { postForceState, useEditVariant } from "../../editVariant.js";
+export { postForceState, useEditVariant } from "../inspector/edit-variant.js";
 
-export { InspectorSection } from "../../components/InspectorFields.js";
+export { InspectorSection } from "../inspector/inspector-fields.js";
 
 export type { SelectionContext } from "../../../shared/contracts.js";
 

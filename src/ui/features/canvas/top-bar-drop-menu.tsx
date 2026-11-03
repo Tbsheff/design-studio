@@ -8,13 +8,16 @@ import {
 } from "react";
 
 import { PORT_OPEN_EVENT } from "../../../shared/port.js";
-import type { PortDialogTarget } from "../../components/PortToAppDialog.js";
-import { setPortAvailable, type PortOpenDetail } from "../../portApi.js";
-import { uiStore } from "../../storage.js";
+import { uiStore } from "../../platform/storage.js";
+import {
+  setPortAvailable,
+  type PortOpenDetail,
+} from "../design-system/port-api.js";
+import type { PortDialogTarget } from "../design-system/port-to-app-dialog.js";
 import { type MenuGroup, MenuPopover } from "./top-bar-menu.js";
 
 export const PortToAppDialog = lazy(async () => {
-  const loaded = await import("../../components/PortToAppDialog.js");
+  const loaded = await import("../design-system/port-to-app-dialog.js");
 
   return { default: loaded.PortToAppDialog };
 });

@@ -13,8 +13,6 @@ import type {
   DirectStyleProperty,
   SelectionContext,
 } from "../../../shared/contracts.js";
-import type { PreviewPort } from "../../bridge.js";
-import { CopyCodeMenu } from "../../components/CopyCodeMenu.js";
 import {
   ContentPanel,
   FillSlot,
@@ -23,7 +21,9 @@ import {
   TextStyleSlot,
 } from "../../inspector-slots.js";
 import { Icon } from "../../kit/Icon.js";
-import type { DesignTokens } from "../../useDesignSystemState.js";
+import type { PreviewPort } from "../../platform/bridge.js";
+import type { DesignTokens } from "../design-system/use-design-system-state.js";
+import { CopyCodeMenu } from "../share-publish-ship-export/copy-code-menu.js";
 import { BoxModel, type DeclaredMargins } from "./box-model.js";
 import { SIDES } from "./css-values.js";
 import { VariantScopeContext, useEditVariant } from "./edit-variant.js";

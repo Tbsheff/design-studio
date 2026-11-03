@@ -2,13 +2,13 @@ export { api } from "../../api.js";
 
 export type { FillInputBody, FillStopBody } from "../../api.js";
 
-export { insertError } from "../../componentInsert.js";
+export { insertError } from "../design-system/component-insert-api.js";
 
-export type { PreviewPort } from "../../bridge.js";
+export type { PreviewPort } from "../../platform/bridge.js";
 
-export { ColorField } from "../../components/InspectorFields.js";
+export { ColorField } from "../inspector/inspector-fields.js";
 
-export type { DirectEdit } from "../../useDirectEdit.js";
+export type { DirectEdit } from "../inspector/use-direct-edit.js";
 
 export type { SelectionContext } from "../../../shared/contracts.js";
 

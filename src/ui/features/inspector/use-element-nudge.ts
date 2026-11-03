@@ -9,13 +9,13 @@ import type {
 } from "../../../shared/contracts.js";
 import { nudgeStepOf } from "../../../shared/nudge.js";
 import { api, errorText } from "../../api.js";
-import type { ParentMessageBody } from "../../bridge.js";
+import type { ParentMessageBody } from "../../platform/bridge.js";
 import {
   canvasHasKeys,
   inspectorButtonFocused,
   isTypingTarget,
 } from "../../platform/typing-target.js";
-import { focusStageQuietly } from "../../useInlineTextEdit.js";
+import { focusStageQuietly } from "../canvas/use-inline-text-edit.js";
 import { multiBlockReason } from "./mixed-values.js";
 import { startOptimistic } from "./optimistic-edit.js";
 import { buildEditRequest, mergeCommit } from "./use-direct-edit.js";

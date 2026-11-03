@@ -14,10 +14,10 @@ import type {
   ReviewResult,
   ReviewSeverity,
 } from "../../../shared/review.js";
-import type { ParentMessageBody } from "../../bridge.js";
-import { frameName, type CanvasFrame } from "../../canvasFrames.js";
 import { Icon } from "../../kit/Icon.js";
-import type { FilesChange } from "../../useStudioData.js";
+import type { ParentMessageBody } from "../../platform/bridge.js";
+import { frameName, type CanvasFrame } from "../canvas/canvas-frames-model.js";
+import type { FilesChange } from "../home/use-studio-data.js";
 import { useReview } from "./use-review.js";
 
 import "../../styles/review.css";

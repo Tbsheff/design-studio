@@ -17,7 +17,7 @@ import {
   type LinkTransition,
   type PrototypeLink,
 } from "../../../shared/links.js";
-import { useProjectEvents } from "../../events.js";
+import { useProjectEvents } from "../../platform/events.js";
 import { call as callAction, sendJson } from "../../platform/http.js";
 
 type FrameAction = (typeof LINK_ACTIONS)[number];

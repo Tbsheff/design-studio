@@ -1,9 +1,9 @@
 import { lazy, Suspense, useCallback, useRef, useState } from "react";
 
 import type { PackSummary } from "../../../shared/contracts.js";
-import { Swatches } from "../../components/Swatches.js";
 import { Icon } from "../../kit/Icon.js";
-import { usePopover } from "../../usePopover.js";
+import { usePopover } from "../../kit/use-popover.js";
+import { Swatches } from "../inspector/swatches.js";
 import { COPY } from "./copy.js";
 import { findPack, keySwatches } from "./packs.js";
 import type { PacksState } from "./packs.js";

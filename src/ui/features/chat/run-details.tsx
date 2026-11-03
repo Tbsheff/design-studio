@@ -2,9 +2,9 @@ import { useEffect, useRef } from "react";
 import type { KeyboardEvent } from "react";
 
 import type { RunStatus } from "../../../shared/contracts.js";
-import { formatMs, formatTime, formatUsd } from "../../format.js";
+import { formatMs, formatTime, formatUsd } from "../../domain/format.js";
 import { Icon } from "../../kit/Icon.js";
-import { useReturnFocusOnUnmount } from "../../usePopover.js";
+import { useReturnFocusOnUnmount } from "../../kit/use-popover.js";
 import { LatencyBreakdown } from "./latency-breakdown.js";
 import type { RunView } from "./run-state-model.js";
 import {

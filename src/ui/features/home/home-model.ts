@@ -8,13 +8,9 @@ import type {
 } from "../../../shared/contracts.js";
 import { type WorkspaceList, shortenHome } from "../../../shared/folders.js";
 import { api } from "../../api.js";
-import {
-  type AppChip,
-  chipName,
-  chipProblem,
-} from "../../components/HomeAppChip.js";
-import { modelLabel } from "../../settingsDraft.js";
-import { homeVariations } from "../../storage.js";
+import { homeVariations } from "../../platform/storage.js";
+import { modelLabel } from "../chat/settings-draft-model.js";
+import { type AppChip, chipName, chipProblem } from "./home-app-chip.js";
 import type { ImageDraft, ReferenceDraft } from "./home-composer-parts.js";
 
 type Busy = "create" | "ask" | "starter" | null;

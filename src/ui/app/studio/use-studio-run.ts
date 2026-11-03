@@ -2,16 +2,20 @@ import type { Project, RunRequest } from "../../../shared/contracts";
 import { statesPrompt } from "../../../shared/states";
 import type { InlineRunExtras } from "../../../shared/usage-scope";
 import { api } from "../../api";
-import { activeFrame, canvasStore, defaultLayout } from "../../canvasFrames";
-import type { CanvasFrame } from "../../canvasFrames";
-import { POLISH_REQUEST } from "../../features/inspector";
-import { emptyRun } from "../../runState";
-import type { RunView } from "../../runState";
-import { randomToken } from "../../session";
-import { uiStore } from "../../storage";
-import { useRunControls } from "../../useRunControls";
-import type { TrackSend } from "../../useRunControls";
-import { TWEAKS_REQUEST } from "../../useTweaks";
+import {
+  activeFrame,
+  canvasStore,
+  defaultLayout,
+} from "../../features/canvas/canvas-frames-model";
+import type { CanvasFrame } from "../../features/canvas/canvas-frames-model";
+import { emptyRun } from "../../features/chat/run-state-model";
+import type { RunView } from "../../features/chat/run-state-model";
+import { useRunControls } from "../../features/chat/use-run-controls";
+import type { TrackSend } from "../../features/chat/use-run-controls";
+import { POLISH_REQUEST } from "../../features/inspector/polish-model";
+import { TWEAKS_REQUEST } from "../../features/inspector/use-tweaks";
+import { randomToken } from "../../platform/session";
+import { uiStore } from "../../platform/storage";
 import {
   buildPlanRequest,
   composeRequest,

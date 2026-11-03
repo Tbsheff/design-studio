@@ -9,10 +9,10 @@ import {
 } from "react";
 
 import type { Version } from "../../../shared/contracts.js";
-import { levelLabel } from "../../components/LevelControl.js";
-import { formatRelative, formatTime } from "../../format.js";
+import { formatRelative, formatTime } from "../../domain/format.js";
 import { Icon, type IconName } from "../../kit/Icon.js";
-import { usePopover } from "../../usePopover.js";
+import { usePopover } from "../../kit/use-popover.js";
+import { levelLabel } from "../chat/level-control.js";
 import { COPY } from "./copy.js";
 import { findElement, findElements } from "./find-element.js";
 import {

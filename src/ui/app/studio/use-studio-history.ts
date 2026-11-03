@@ -1,6 +1,6 @@
 import type { Version } from "../../../shared/contracts";
 import { api } from "../../api";
-import { openCompareInCode } from "../../versionsApi";
+import { openCompareInCode } from "../../features/versions-layers-tokens/versions-api";
 import { reviewPair } from "./project-model";
 import { assignRef } from "./ref-model";
 import type {

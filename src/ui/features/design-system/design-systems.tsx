@@ -2,13 +2,13 @@ import { useEffect, useRef, useState, useTransition } from "react";
 
 import type { PackProblem, PackSummary } from "../../../shared/contracts.js";
 import { ApiError, errorText } from "../../api.js";
-import { StudioToast } from "../../components/StudioParts.js";
-import { Swatches } from "../../components/Swatches.js";
-import { downloadBlob } from "../../format.js";
+import { StudioToast } from "../../app/shell/studio-parts.js";
+import { downloadBlob } from "../../domain/format.js";
 import { Icon } from "../../kit/Icon.js";
 import { packApi } from "../../platform/pack-api.js";
-import { uiStore } from "../../storage.js";
-import type { LibraryFrom } from "../../storage.js";
+import { uiStore } from "../../platform/storage.js";
+import type { LibraryFrom } from "../../platform/storage.js";
+import { Swatches } from "../inspector/swatches.js";
 import { COPY } from "./copy.js";
 import {
   DeletePackDialog,

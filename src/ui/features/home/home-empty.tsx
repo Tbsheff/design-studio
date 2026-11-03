@@ -9,7 +9,7 @@ import {
 } from "../../../shared/found-apps.js";
 import { api } from "../../api.js";
 import { Icon } from "../../kit/Icon.js";
-import { projectsApi } from "../../projectsStore.js";
+import { projectsApi } from "./projects-store-model.js";
 
 const MAX_FOUND = 6;
 const MAX_STARTERS = 4;

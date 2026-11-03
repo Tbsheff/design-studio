@@ -1,16 +1,16 @@
-export { insertError } from "../../componentInsert.js";
+export { insertError } from "../design-system/component-insert-api.js";
 
 export { json } from "../../api.js";
 
-export type { PreviewPort } from "../../bridge.js";
+export type { PreviewPort } from "../../platform/bridge.js";
 
-export { activeFrame, canvasStore } from "../../canvasFrames.js";
+export { activeFrame, canvasStore } from "../canvas/canvas-frames-model.js";
 
 export {
   editVariantStore,
   postForceState,
   useEditVariant,
-} from "../../editVariant.js";
+} from "../inspector/edit-variant.js";
 
 export { parseVariant, variantPrefix } from "../../../shared/variants.js";
 
@@ -24,4 +24,4 @@ export type {
   StyleState,
 } from "../../../shared/state-styles.js";
 
-export type { SaveStatus } from "../../useDirectEdit.js";
+export type { SaveStatus } from "../inspector/use-direct-edit.js";

@@ -3,11 +3,14 @@ import { useEffect, useState } from "react";
 import type { Project } from "../../../shared/contracts";
 import type { DesktopCommand } from "../../../shared/desktop-link";
 import { api, errorText } from "../../api";
-import { useDesktopCommand, useDesktopContext } from "../../desktop";
 import { COMMAND_EVENT, LAYER_EVENT } from "../../features/commands/registry";
-import { desktopBridge } from "../../platform/desktop";
+import {
+  desktopBridge,
+  useDesktopCommand,
+  useDesktopContext,
+} from "../../platform/desktop";
+import { uiStore } from "../../platform/storage";
 import { isTypingTarget } from "../../platform/typing-target.js";
-import { uiStore } from "../../storage";
 
 function projectForFolder(
   projects: Project[],

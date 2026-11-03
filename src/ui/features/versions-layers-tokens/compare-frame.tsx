@@ -2,9 +2,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import type { ProjectKind, Version } from "../../../shared/contracts.js";
 import { api, errorText } from "../../api.js";
-import { HTML_FRAME_SANDBOX, frameSrc, tagFrame } from "../../bridge.js";
-import { randomToken } from "../../session.js";
-import { useTokenFrames } from "../../tokenFrames.js";
+import {
+  HTML_FRAME_SANDBOX,
+  frameSrc,
+  tagFrame,
+} from "../../platform/bridge.js";
+import { randomToken } from "../../platform/session.js";
+import { useTokenFrames } from "../design-system/token-frames.js";
 
 interface Props {
   projectId: string;

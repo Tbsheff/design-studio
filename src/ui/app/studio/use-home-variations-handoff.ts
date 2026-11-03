@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 
-import { homeVariations } from "../../storage";
-import type { useVariations } from "../../useVariations";
+import type { useVariations } from "../../features/canvas/use-variations";
+import { homeVariations } from "../../platform/storage";
 
 const useHomeVariationsHandoff = (
   projectId: string,

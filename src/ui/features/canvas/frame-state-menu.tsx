@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { FrameStatesView } from "../../../shared/frame-state.js";
 import { Icon } from "../../kit/Icon.js";
-import { usePopover } from "../../usePopover.js";
+import { usePopover } from "../../kit/use-popover.js";
 import {
   type Panel,
   stop,

@@ -10,8 +10,8 @@ import type {
 } from "../../../shared/contracts.js";
 import { errorText } from "../../api.js";
 import { useFitPopover } from "../../domain/popoverPlacement.js";
-import { findPack, usePacks } from "../../packs.js";
 import { packApi } from "../../platform/pack-api.js";
+import { findPack, usePacks } from "../design-system/packs.js";
 import { CheckStatus, improvePassed } from "./draft-improve.js";
 import type { RunView } from "./run-state-model.js";
 

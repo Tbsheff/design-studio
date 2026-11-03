@@ -6,11 +6,11 @@ import type {
   BridgeToParent,
 } from "../../../shared/contracts.js";
 import { api, errorText } from "../../api.js";
-import type { ParentMessageBody } from "../../bridge.js";
-import { startOptimistic } from "../../optimisticEdit.js";
+import type { ParentMessageBody } from "../../platform/bridge.js";
 import { createLiveStore, useLive } from "../../platform/live-store.js";
 import type { LiveStore } from "../../platform/live-store.js";
-import { buildEditRequest, mergeCommit } from "../../useDirectEdit.js";
+import { startOptimistic } from "../inspector/optimistic-edit.js";
+import { buildEditRequest, mergeCommit } from "../inspector/use-direct-edit.js";
 import { snapOff, snapRect } from "./snap-model.js";
 import type { Rect, SnapGuide } from "./snap-model.js";
 

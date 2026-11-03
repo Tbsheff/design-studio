@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { MutableRefObject } from "react";
 
-import type { PreviewPort } from "../../bridge.js";
+import type { PreviewPort } from "../../platform/bridge.js";
 import { parseAuthoredReply } from "./authored-css.js";
 import type { AuthoredCss } from "./authored-css.js";
 

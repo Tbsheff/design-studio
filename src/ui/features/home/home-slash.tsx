@@ -2,8 +2,8 @@ import { useLayoutEffect } from "react";
 import type { KeyboardEvent, RefObject } from "react";
 
 import type { RunLevel } from "../../../shared/contracts.js";
-import { levelGroup, modelGroup } from "../../components/slashGroups.js";
-import { SlashMenu, useSlashMenu } from "../../components/SlashMenu.js";
+import { levelGroup, modelGroup } from "../chat/slash-groups.js";
+import { SlashMenu, useSlashMenu } from "../chat/slash-menu.js";
 
 const INPUT_ATTRS = [
   "aria-controls",

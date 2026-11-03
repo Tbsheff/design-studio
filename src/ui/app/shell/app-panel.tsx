@@ -1,7 +1,7 @@
 import { envText } from "../../../shared/app";
 import type { AppServerStatus } from "../../../shared/contracts";
 import { api } from "../../api";
-import FlowTab from "../../components/FlowTab";
+import FlowTab from "../../features/canvas/flow-tab";
 import { Icon } from "../../kit/Icon";
 import type { AppBarProps } from "./app-bar";
 import { envSuggestion, SettingsTab } from "./app-settings-tab";

@@ -1,4 +1,4 @@
-import { baseName } from "../../format.js";
+import { baseName } from "../../domain/format.js";
 import { shortInput } from "./run-state-model.js";
 
 const PATH_KEYS = ["file_path", "path", "filePath", "notebook_path"];

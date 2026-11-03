@@ -1,8 +1,8 @@
 import { memo, useMemo } from "react";
 
-import { ToolChips, ToolSummary } from "../../components/ToolChips.js";
 import { AssistantText, SentWhileRunning, Thinking } from "./chat-parts.js";
 import type { RunView, ToolRow } from "./run-state-model.js";
+import { ToolChips, ToolSummary } from "./tool-chips.js";
 
 type Segment =
   | { kind: "text"; key: string; text: string; open: boolean }

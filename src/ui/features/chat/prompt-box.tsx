@@ -40,23 +40,21 @@ import {
   useCommands,
   type Command,
 } from "../../chat-slots.js";
-import { MOD_LABEL } from "../../components/CommentPopover.js";
-import { ComposerComments } from "../../components/ComposerComments.js";
-import { Disclosure } from "../../components/Disclosure.js";
+import { Disclosure } from "../../kit/disclosure.js";
+import { Icon, type IconName } from "../../kit/Icon.js";
+import { useDesktopCommand } from "../../platform/desktop.js";
+import { useDraft, type DraftStore } from "../../platform/storage.js";
+import { MOD_LABEL } from "../comments/comment-popover.js";
+import { ComposerComments } from "../comments/composer-comments.js";
+import {
+  useCommentPrefill,
+  type PrefillRequest,
+} from "../comments/use-comment-prefill.js";
 import {
   ComposerAlert,
   MAX_IMAGES,
   imageProblem,
-} from "../../components/HomeComposerParts.js";
-import { RunContextChip } from "../../components/RunContextChip.js";
-import { MODE_LABEL, type ComposerMode } from "../../components/RunSettings.js";
-import { useDesktopCommand } from "../../desktop.js";
-import { Icon, type IconName } from "../../kit/Icon.js";
-import { useDraft, type DraftStore } from "../../storage.js";
-import {
-  useCommentPrefill,
-  type PrefillRequest,
-} from "../../useCommentPrefill.js";
+} from "../home/home-composer-parts.js";
 import { BudgetIndicator } from "./budget-indicator.js";
 import { useComposerFocus } from "./composer-focus.js";
 import {
@@ -74,6 +72,8 @@ import { ContextMeter } from "./context-meter.js";
 import { HistorySearch, useHistorySearch } from "./history-search.js";
 import { MentionChips, MentionList } from "./mention-picker.js";
 import { QueuedMessages } from "./queued-messages.js";
+import { RunContextChip } from "./run-context-chip.js";
+import { MODE_LABEL, type ComposerMode } from "./run-settings.js";
 import {
   SkillChips,
   SkillsIndicator,
@@ -87,9 +87,7 @@ import { useMentions, type MentionRequest } from "./use-mentions.js";
 import type { RunCanvasChip } from "./use-run-canvas.js";
 import { useRunLevel } from "./use-run-level.js";
 
-const RepoContextChip = lazy(
-  () => import("../../components/RepoContextChip.js")
-);
+const RepoContextChip = lazy(() => import("./repo-context-chip.js"));
 
 interface Props {
   projectId: string;

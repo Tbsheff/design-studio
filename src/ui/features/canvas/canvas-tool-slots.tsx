@@ -1,11 +1,11 @@
 import { Suspense, lazy } from "react";
 import type { ComponentProps } from "react";
 
-import { CommentLayer } from "../../components/CommentLayer.js";
-import { DrawSurface } from "../../components/DrawLayer.js";
-import type { useCommentMode } from "../../useCommentMode.js";
-import type { InlinePromptView } from "../../useInlinePrompt.js";
+import type { InlinePromptView } from "../chat/use-inline-prompt.js";
+import { CommentLayer } from "../comments/comment-layer.js";
+import type { useCommentMode } from "../comments/use-comment-mode.js";
 import type { Props } from "./canvas-types.js";
+import { DrawSurface } from "./draw-layer.js";
 import type { DrawTool } from "./use-draw-tool.js";
 import {
   useVectorTool,
@@ -13,9 +13,9 @@ import {
   useVectorToolKeys,
 } from "./vector-tool-model.js";
 
-const VectorLayer = lazy(() => import("../../components/VectorLayer.js"));
+const VectorLayer = lazy(() => import("./vector-layer.js"));
 
-const InlinePrompt = lazy(() => import("../../components/InlinePrompt.js"));
+const InlinePrompt = lazy(() => import("../chat/inline-prompt.js"));
 
 type CommentLayerProps = Parameters<typeof CommentLayer>[0];
 

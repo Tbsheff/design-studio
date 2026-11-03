@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 
 import type { Direction, Project, Version } from "../../../shared/contracts.js";
-import { PanelHead } from "../../components/SheetHead.js";
 import { Icon } from "../../kit/Icon.js";
+import { PanelHead } from "../../kit/sheet-head.js";
 import { COPY } from "./copy.js";
 import { findElement } from "./find-element.js";
 import {

@@ -13,7 +13,7 @@ import type {
 import type { InsertTarget } from "../../../shared/insert.js";
 import type { VectorRequest, VectorResult } from "../../../shared/vector.js";
 import { errorText } from "../../api.js";
-import type { ParentMessageBody } from "../../bridge.js";
+import type { ParentMessageBody } from "../../platform/bridge.js";
 import { penPath, type PenAnchor } from "./drawing-model.js";
 import {
   runVector,

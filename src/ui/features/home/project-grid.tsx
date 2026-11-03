@@ -23,13 +23,18 @@ import {
 } from "../../../shared/project-search.js";
 import { api, json, warmProject } from "../../api.js";
 import { prefetchStudio } from "../../app/screens.js";
-import { LazySelect } from "../../components/LazySelect.js";
-import { Swatches } from "../../components/Swatches.js";
-import { formatRelative, formatTime } from "../../format.js";
-import { homePrefs, useHomePrefs } from "../../homePrefs.js";
+import { formatRelative, formatTime } from "../../domain/format.js";
 import { Icon } from "../../kit/Icon.js";
-import { findPack, keySwatches } from "../../packs.js";
-import { HOME_SORTS, uiStore, useUi, type HomeSort } from "../../storage.js";
+import { LazySelect } from "../../kit/lazy-select.js";
+import {
+  HOME_SORTS,
+  uiStore,
+  useUi,
+  type HomeSort,
+} from "../../platform/storage.js";
+import { findPack, keySwatches } from "../design-system/packs.js";
+import { Swatches } from "../inspector/swatches.js";
+import { homePrefs, useHomePrefs } from "./home-prefs-model.js";
 import {
   toFilteredProjects,
   toGridColumns,

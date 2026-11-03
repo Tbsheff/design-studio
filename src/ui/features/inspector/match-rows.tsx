@@ -6,7 +6,7 @@ import {
   type StyleValueRow,
 } from "../../../shared/style-search.js";
 import { Icon } from "../../kit/Icon.js";
-import { usePopover } from "../../usePopover.js";
+import { usePopover } from "../../kit/use-popover.js";
 import { shownValue, StateTag, Swatch } from "./match-candidates.js";
 import {
   type Scope,

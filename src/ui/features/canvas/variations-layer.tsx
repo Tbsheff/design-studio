@@ -8,9 +8,9 @@ import type {
 } from "../../../shared/contracts.js";
 import type { ElementScope } from "../../../shared/element-variants.js";
 import { errorText } from "../../api.js";
-import { ElementVariantsDialog } from "../../components/ElementVariantsDialog.js";
 import { Icon } from "../../kit/Icon.js";
-import type { RunMap } from "../../runState.js";
+import type { RunMap } from "../chat/run-state-model.js";
+import { ElementVariantsDialog } from "../inspector/element-variants-dialog.js";
 import { canvasStore } from "./canvas-frames-model.js";
 import {
   framesOnCanvas,

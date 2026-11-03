@@ -4,7 +4,7 @@ import type {
   DomPatch,
   TailwindOutcome,
 } from "../../../shared/contracts.js";
-import type { PreviewPort } from "../../bridge.js";
+import type { PreviewPort } from "../../platform/bridge.js";
 
 const RESULT_WAIT_MS = 30_000;
 

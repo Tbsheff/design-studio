@@ -1,12 +1,12 @@
 export { json, replaceStyle } from "../../api.js";
 
-export { postToFrame, useBridge } from "../../bridge.js";
+export { postToFrame, useBridge } from "../../platform/bridge.js";
 
-export type { BridgeFrame } from "../../bridge.js";
+export type { BridgeFrame } from "../../platform/bridge.js";
 
-export { insertError } from "../../componentInsert.js";
+export { insertError } from "../design-system/component-insert-api.js";
 
-export { InspectorSection } from "../../components/InspectorFields.js";
+export { InspectorSection } from "../inspector/inspector-fields.js";
 
 export {
   ACCESSIBILITY_LABEL_MAX,

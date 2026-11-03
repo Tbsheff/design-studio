@@ -16,28 +16,28 @@ import type {
   ZoomKey,
 } from "../../../shared/contracts.js";
 import { sendTelemetry } from "../../api.js";
-import { frameSrc, postToFrame, useBridge } from "../../bridge.js";
-import type { BridgeFrame, ParentMessageBody } from "../../bridge.js";
 import {
   runCommand,
   openLayer,
   moveRegion,
   IS_MAC,
 } from "../../canvas-hook-slots.js";
-import { textEditability } from "../../cssValues.js";
-import { parseLayerTree } from "../../layersTree.js";
-import type { LayerTree } from "../../layersTree.js";
-import { reportAppStart } from "../../perfTelemetry.js";
+import { frameSrc, postToFrame, useBridge } from "../../platform/bridge.js";
+import type { BridgeFrame, ParentMessageBody } from "../../platform/bridge.js";
 import { createLiveStore } from "../../platform/live-store.js";
 import type { LiveStore } from "../../platform/live-store.js";
-import { randomToken } from "../../session.js";
-import { PREVIEW_PAINTED_EVENT } from "../../useEditHistory.js";
+import { randomToken } from "../../platform/session.js";
+import { reportAppStart } from "../../platform/telemetry.js";
 import {
   PREVIEW_ESCAPE_EVENT,
   PREVIEW_STOP_EVENT,
-} from "../../useEscapeStop.js";
-import type { BuildError, FilesChange } from "../../useStudioData.js";
-import { PREVIEW_HISTORY_EVENT } from "../../useUndoShortcut.js";
+} from "../chat/use-escape-stop.js";
+import type { BuildError, FilesChange } from "../home/use-studio-data.js";
+import { textEditability } from "../inspector/css-values.js";
+import { PREVIEW_PAINTED_EVENT } from "../inspector/use-edit-history.js";
+import { parseLayerTree } from "../versions-layers-tokens/layers-tree.js";
+import type { LayerTree } from "../versions-layers-tokens/layers-tree.js";
+import { PREVIEW_HISTORY_EVENT } from "./use-undo-shortcut.js";
 import { PREVIEW_TOOL_KEY_EVENT } from "./vector-tool-model.js";
 
 export const PREVIEW_LAYOUT_KEY_EVENT = "studio:preview-layout-key";

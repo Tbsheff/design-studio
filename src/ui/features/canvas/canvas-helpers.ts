@@ -4,17 +4,17 @@ import type {
 } from "react";
 
 import type { AttachedApp, Direction } from "../../../shared/contracts.js";
-import type { CommentTools } from "../../components/CommentLayer.js";
-import { broadcastTheme } from "../../tokenFrames.js";
-import type { ThemeChoice } from "../../tokenFrames.js";
-import type { CommentsControl } from "../../useComments.js";
-import { QUIET_FOCUS_ATTR } from "../../useInlineTextEdit.js";
+import type { CommentTools } from "../comments/comment-layer.js";
+import type { CommentsControl } from "../comments/use-comments.js";
+import { broadcastTheme } from "../design-system/token-frames.js";
+import type { ThemeChoice } from "../design-system/token-frames.js";
 import { withFramePath } from "./canvas-frames-model.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";
 import type { CanvasShell } from "./canvas-shell.js";
 import type { CanvasDirections, Props } from "./canvas-types.js";
 import { frameStateUrl } from "./frame-states-model.js";
 import type { FrameStatesRead } from "./frame-states-model.js";
+import { QUIET_FOCUS_ATTR } from "./use-inline-text-edit.js";
 
 function frameLabelOf(frameId: string): Element | null {
   return document.querySelector(

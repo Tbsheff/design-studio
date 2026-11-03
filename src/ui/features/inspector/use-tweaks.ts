@@ -15,9 +15,9 @@ import { api, errorText } from "../../api.js";
 import {
   broadcastTweakCss,
   holdTweakCssUntilReload,
-} from "../../tokenFrames.js";
-import type { FilesChange } from "../../useStudioData.js";
-import { AGENT_BUSY_MESSAGE } from "../../useTokenDraft.js";
+} from "../design-system/token-frames.js";
+import type { FilesChange } from "../home/use-studio-data.js";
+import { AGENT_BUSY_MESSAGE } from "../versions-layers-tokens/use-token-draft.js";
 import { isApiConflict } from "./api-error.js";
 
 type TweakMap = Record<string, TweakValue>;

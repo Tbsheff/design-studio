@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { DRAW_POINTS_MAX, DRAW_STROKES_MAX } from "../../../shared/comments.js";
 import type { DrawStroke } from "../../../shared/contracts.js";
-import { useDesktopCommand } from "../../desktop.js";
+import { useDesktopCommand } from "../../platform/desktop.js";
 import { isTypingTarget } from "../../platform/typing-target.js";
 import { DRAW_COLORS } from "./drawing-model.js";
 

@@ -2,8 +2,8 @@ import { createContext, useContext, useSyncExternalStore } from "react";
 
 import type { DirectStyleProperty } from "../../../shared/contracts.js";
 import { parseVariant } from "../../../shared/variants.js";
-import type { PreviewPort } from "../../bridge.js";
-import { uiStore } from "../../storage.js";
+import type { PreviewPort } from "../../platform/bridge.js";
+import { uiStore } from "../../platform/storage.js";
 
 let prefix = "";
 let restore: { width: number; set: number } | null = null;

@@ -10,8 +10,7 @@ import type { KeyboardEvent } from "react";
 
 import type { ProjectKind, Version } from "../../../shared/contracts.js";
 import { Icon } from "../../kit/Icon.js";
-import { readStored, writeStored } from "../../platform/storage.js";
-import { useUi } from "../../storage.js";
+import { readStored, useUi, writeStored } from "../../platform/storage.js";
 import { CompareFrame } from "./compare-frame.js";
 import { OverlayBoard, ReferenceBoard, SliderBoard } from "./compare-modes.js";
 import type { BoardProps } from "./compare-modes.js";

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import type { TextEditMessage } from "../../usePreviewFrames.js";
+import type { TextEditMessage } from "./use-preview-frames.js";
 
 export const MAX_INLINE_TEXT = 5000;
 

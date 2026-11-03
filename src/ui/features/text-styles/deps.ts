@@ -2,9 +2,9 @@ export { api } from "../../api.js";
 
 export type { TextStyleTargetBody } from "../../api.js";
 
-export { insertError } from "../../componentInsert.js";
+export { insertError } from "../design-system/component-insert-api.js";
 
-export { usePopover } from "../../usePopover.js";
+export { usePopover } from "../../kit/use-popover.js";
 
 export type { SelectionContext } from "../../../shared/contracts.js";
 

@@ -1,11 +1,10 @@
 import { Suspense, lazy } from "react";
 
 import { McpPointBadge, TabOrderSlot } from "../../canvas-slots.js";
-import { FrameLabel, FrameUndoBar } from "../../components/CanvasFrames.js";
-import { CommentModePill } from "../../components/CommentLayer.js";
-import { DrawBar } from "../../components/DrawLayer.js";
-import { FrameResizeHandles } from "../../components/FrameControls.js";
+import { CommentModePill } from "../comments/comment-layer.js";
+import { FrameUndoBar } from "./add-frame-menu.js";
 import { frameDirection, frameName } from "./canvas-frames-model.js";
+import { FrameLabel } from "./canvas-frames.js";
 import {
   activeFrameOf,
   commentToolsOf,
@@ -25,6 +24,8 @@ import {
   VectorSlot,
 } from "./canvas-tool-slots.js";
 import type { ViewProps } from "./canvas-types.js";
+import { DrawBar } from "./draw-layer.js";
+import { FrameResizeHandles } from "./frame-resize-handles.js";
 import {
   FreeMoveSlot,
   LiveOverlay,
@@ -39,7 +40,7 @@ import type { useCanvasPreview } from "./use-canvas-preview.js";
 import type { useCanvasStage } from "./use-canvas-stage.js";
 import type { useCanvasWiring } from "./use-canvas-wiring.js";
 
-const CanvasRulers = lazy(() => import("../../components/CanvasRulers.js"));
+const CanvasRulers = lazy(() => import("./canvas-rulers.js"));
 
 interface CanvasStageProps {
   props: ViewProps;

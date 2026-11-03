@@ -5,11 +5,7 @@ import {
   type RunLevel,
 } from "../../../shared/contracts.js";
 import { LEVEL_PRESETS } from "../../../shared/run-levels.js";
-import {
-  levelGist,
-  levelHint,
-  levelLabel,
-} from "../../components/LevelControl.js";
+import { levelGist, levelHint, levelLabel } from "./level-control.js";
 import { MODEL_OPTIONS, modelLabel } from "./settings-draft-model.js";
 import type { SlashGroup } from "./slash-menu.js";
 

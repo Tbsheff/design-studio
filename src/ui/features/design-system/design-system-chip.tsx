@@ -6,10 +6,10 @@ import type {
   Project,
 } from "../../../shared/contracts.js";
 import { api, errorText } from "../../api.js";
-import { Swatches } from "../../components/Swatches.js";
 import { useFitPopover } from "../../domain/popoverPlacement.js";
 import { Icon } from "../../kit/Icon.js";
-import { usePopover } from "../../usePopover.js";
+import { usePopover } from "../../kit/use-popover.js";
+import { Swatches } from "../inspector/swatches.js";
 import { COPY } from "./copy.js";
 import { ChangePackDialog, SavePackDialog } from "./design-system-dialogs.js";
 import type { DesignSystemActions } from "./design-system-model.js";

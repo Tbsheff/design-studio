@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 
 import type { ProjectKind } from "../../../shared/contracts.js";
-import type { FilesChange } from "../../useStudioData.js";
+import type { FilesChange } from "../home/use-studio-data.js";
 
 const SWAP_RELEASE_MS = 4000;
 

@@ -8,15 +8,15 @@ import {
 
 import { strokesBox } from "../../../shared/comments.js";
 import type { CommentDrawing, DrawStroke } from "../../../shared/contracts.js";
+import { Icon } from "../../kit/Icon.js";
 import {
   CommentComposer,
   type ComposerSubmit,
-} from "../../components/CommentComposer.js";
-import type { CommentTools } from "../../components/CommentLayer.js";
-import { MOD_LABEL } from "../../components/CommentPopover.js";
-import { Icon } from "../../kit/Icon.js";
-import type { CommentsControl } from "../../useComments.js";
-import { useProfileInitial } from "../../useProfileInitial.js";
+} from "../comments/comment-composer.js";
+import type { CommentTools } from "../comments/comment-layer.js";
+import { MOD_LABEL } from "../comments/comment-popover.js";
+import type { CommentsControl } from "../comments/use-comments.js";
+import { useProfileInitial } from "../home/use-profile-initial.js";
 import {
   DRAW_COLORS,
   DRAW_SCREEN_WIDTH,

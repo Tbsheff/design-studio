@@ -9,7 +9,7 @@ import {
   parseDeclarations,
   parseSelectionPath,
   pathCrumbs,
-} from "./authoredCss";
+} from "./features/inspector/authored-css";
 
 describe(parseDeclarations, () => {
   it("keeps semicolons inside url() and quotes, and keeps !important", () => {

@@ -9,12 +9,12 @@ import type {
   StructureEditRequest,
 } from "../../../shared/contracts.js";
 import { api, errorText } from "../../api.js";
-import type { ParentMessageBody } from "../../bridge.js";
-import { startOptimistic } from "../../optimisticEdit.js";
+import type { ParentMessageBody } from "../../platform/bridge.js";
 import { createLiveStore } from "../../platform/live-store.js";
 import type { LiveStore } from "../../platform/live-store.js";
-import { selectionTargets } from "../../structureEdits.js";
-import { buildEditRequest, mergeCommit } from "../../useDirectEdit.js";
+import { startOptimistic } from "../inspector/optimistic-edit.js";
+import { selectionTargets } from "../inspector/structure-edits.js";
+import { buildEditRequest, mergeCommit } from "../inspector/use-direct-edit.js";
 import { snapRect } from "./snap-model.js";
 import type { Rect, SnapGuide, SpacingBadge } from "./snap-model.js";
 

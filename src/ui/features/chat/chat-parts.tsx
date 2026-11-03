@@ -19,12 +19,12 @@ import {
   ReasoningContent,
   ReasoningTrigger,
 } from "../../ai/components/ai/reasoning.js";
-import { levelHint, levelLabel } from "../../components/LevelControl.js";
-import { formatTime, formatUsd } from "../../format.js";
+import { formatTime, formatUsd } from "../../domain/format.js";
+import { splitMarkdownBlocks } from "../../domain/markdown-blocks.js";
 import { CopyButton } from "../../kit/CopyButton.js";
 import { Icon } from "../../kit/Icon.js";
-import { splitMarkdownBlocks } from "../../markdownBlocks.js";
 import { contextShare } from "./context-meter.js";
+import { levelHint, levelLabel } from "./level-control.js";
 import type { RunView } from "./run-state-model.js";
 import {
   skillDisplayName,

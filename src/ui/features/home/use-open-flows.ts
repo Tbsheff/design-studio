@@ -1,9 +1,9 @@
 import type { Project, Starter } from "../../../shared/contracts.js";
 import type { AppHealth } from "../../../shared/found-apps.js";
 import { api, errorText } from "../../api.js";
-import { projectsApi } from "../../projectsStore.js";
 import { healthProblem } from "./doctor-model.js";
 import { type Busy, shortHome } from "./home-model.js";
+import { projectsApi } from "./projects-store-model.js";
 import { useDoctorGate } from "./use-doctor-gate.js";
 
 interface FlowDeps {

@@ -7,15 +7,19 @@ import type {
 } from "../../../shared/contracts.js";
 import { TRY_VARIANTS_COMMAND } from "../../../shared/element-variants.js";
 import { api, errorText } from "../../api.js";
-import type { PreviewPort } from "../../bridge.js";
 import {
   collectCommands,
   commandBlocker,
   runCommand,
 } from "../../inspector-slots.js";
 import { Icon } from "../../kit/Icon.js";
-import { PREVIEW_HISTORY_EVENT } from "../../useUndoShortcut.js";
-import { VECTOR_TOOLS, useVectorTool, vectorTool } from "../../vectorTool.js";
+import type { PreviewPort } from "../../platform/bridge.js";
+import { PREVIEW_HISTORY_EVENT } from "../canvas/use-undo-shortcut.js";
+import {
+  VECTOR_TOOLS,
+  useVectorTool,
+  vectorTool,
+} from "../canvas/vector-tool-model.js";
 import type { DirectEditControl } from "./use-direct-edit.js";
 
 interface Props {

@@ -2,7 +2,11 @@ import { useRef, useState } from "react";
 import type { KeyboardEvent, PointerEvent } from "react";
 
 import { colorHex } from "../../../shared/token-match.js";
-import { colorToHex, formatNumber, parseNumber } from "../../cssValues.js";
+import {
+  colorToHex,
+  formatNumber,
+  parseNumber,
+} from "../inspector/css-values.js";
 
 interface ValueProps {
   label: string;

@@ -8,9 +8,9 @@ import type {
   TweakControl,
   TweakValue,
 } from "../../../shared/tweaks.js";
-import { PanelHead } from "../../components/SheetHead.js";
-import { ColorValue } from "../../components/TokenInputs.js";
 import { Icon } from "../../kit/Icon.js";
+import { PanelHead } from "../../kit/sheet-head.js";
+import { ColorValue } from "../versions-layers-tokens/token-inputs.js";
 import type { TweaksDraft } from "./use-tweaks.js";
 
 interface Props {

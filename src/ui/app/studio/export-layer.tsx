@@ -1,10 +1,11 @@
 import { lazy, Suspense } from "react";
 import type { ReactNode } from "react";
 
-import type { ExportTarget } from "../../exportApi";
+import type { ExportTarget } from "../../features/share-publish-ship-export/export-api";
 
 const ExportDialog = lazy(async () => {
-  const loaded = await import("../../components/ExportDialog");
+  const loaded =
+    await import("../../features/share-publish-ship-export/export-dialog");
 
   return { default: loaded.ExportDialog };
 });

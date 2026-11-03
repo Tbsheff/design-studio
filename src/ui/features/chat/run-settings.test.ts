@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { createDraftStore, homeVariations } from "../../storage.js";
+import { createDraftStore, homeVariations } from "../../platform/storage.js";
 import { nextRadioOption } from "./level-control.js";
 import { designsHint, runSettingsSummary } from "./run-settings.js";
 

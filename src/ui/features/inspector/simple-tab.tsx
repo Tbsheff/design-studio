@@ -1,8 +1,4 @@
 import { imageKindOf } from "../../../shared/image.js";
-import {
-  SimpleEditor,
-  SimpleMultiEditor,
-} from "../../components/InspectorSimple.js";
 import { AccessibilitySection } from "./accessibility-section.js";
 import { ComponentSection } from "./component-section.js";
 import { copy } from "./copy.js";
@@ -13,6 +9,7 @@ import {
   inspectorEmptyReason,
   type InspectorProps,
 } from "./inspector-model.js";
+import { SimpleEditor, SimpleMultiEditor } from "./inspector-simple.js";
 import { StackingSection } from "./stacking-section.js";
 import { useUseSite } from "./use-use-site.js";
 import { VectorSection } from "./vector-section.js";

@@ -1,12 +1,15 @@
 import { useEffect, useRef } from "react";
 
-import { setProjectSwitcher } from "../../projectNav";
-import { setLeaveCheck } from "../../route";
-import { uiStore } from "../../storage";
-import { useEditHistory, useSelectionRefresh } from "../../useEditHistory";
-import { useStudioTokens } from "../../useStudioTokens";
-import { useTweaks } from "../../useTweaks";
-import { undoAllowed } from "../../useUndoShortcut";
+import { undoAllowed } from "../../features/canvas/use-undo-shortcut";
+import {
+  useEditHistory,
+  useSelectionRefresh,
+} from "../../features/inspector/use-edit-history";
+import { useTweaks } from "../../features/inspector/use-tweaks";
+import { useStudioTokens } from "../../features/versions-layers-tokens/use-studio-tokens";
+import { setLeaveCheck } from "../../platform/router";
+import { uiStore } from "../../platform/storage";
+import { setProjectSwitcher } from "../project-nav";
 import type { StudioBase, StudioEdit } from "./studio-core-types";
 import type { StudioUi } from "./studio-ui-types";
 

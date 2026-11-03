@@ -3,9 +3,9 @@ import { useEffect, useRef, useState } from "react";
 import type { Project } from "../../../shared/contracts.js";
 import { shortenHome } from "../../../shared/folders.js";
 import { api, errorText } from "../../api.js";
-import type { CardActions } from "../../components/ProjectGrid.js";
 import { Icon } from "../../kit/Icon.js";
-import { projectsApi, useProjects } from "../../projectsStore.js";
+import type { CardActions } from "./project-grid.js";
+import { projectsApi, useProjects } from "./projects-store-model.js";
 
 export function useOnboarding(): { show: boolean; dismiss: () => void } {
   const [show, setShow] = useState(false);

@@ -1,12 +1,12 @@
 import type { RefObject } from "react";
 
+import { Icon } from "../../kit/Icon.js";
 import {
   type AppChip,
   chipBlocker,
   chipName,
   chipProblem,
-} from "../../components/HomeAppChip.js";
-import { Icon } from "../../kit/Icon.js";
+} from "./home-app-chip.js";
 import type { Pop } from "./home-model.js";
 import { loadAppMenu } from "./lazy-parts.js";
 

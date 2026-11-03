@@ -1,5 +1,12 @@
 import type { Project, Version } from "../../../shared/contracts";
-import type { useDraftChrome } from "../../components/DraftSources";
+import type { useTryVariants } from "../../features/canvas/use-try-variants";
+import type { useVariations } from "../../features/canvas/use-variations";
+import type { useDraftChrome } from "../../features/chat/draft-sources";
+import type { RunView } from "../../features/chat/run-state-model";
+import type { useChatState } from "../../features/chat/use-chat-state";
+import type { useMcpFeed } from "../../features/chat/use-mcp-feed";
+import type { useRewind } from "../../features/chat/use-rewind";
+import type { useRunCanvas } from "../../features/chat/use-run-canvas";
 import type { useStudioCommands } from "../../features/commands";
 import type { useComments } from "../../features/comments";
 import type {
@@ -7,18 +14,11 @@ import type {
   useDesignSystemState,
   usePackActions,
 } from "../../features/design-system";
-import type { RunView } from "../../runState";
-import type { useChatState } from "../../useChatState";
-import type { useEditHistory } from "../../useEditHistory";
-import type { useExportTarget } from "../../useExportTarget";
-import type { useMcpFeed } from "../../useMcpFeed";
-import type { useRewind } from "../../useRewind";
-import type { useRunCanvas } from "../../useRunCanvas";
-import type { useStudioData } from "../../useStudioData";
-import type { useStudioTokens } from "../../useStudioTokens";
-import type { useTryVariants } from "../../useTryVariants";
-import type { useTweaks } from "../../useTweaks";
-import type { useVariations } from "../../useVariations";
+import type { useStudioData } from "../../features/home/use-studio-data";
+import type { useEditHistory } from "../../features/inspector/use-edit-history";
+import type { useTweaks } from "../../features/inspector/use-tweaks";
+import type { useExportTarget } from "../../features/share-publish-ship-export/use-export-target";
+import type { useStudioTokens } from "../../features/versions-layers-tokens/use-studio-tokens";
 import type { Setter } from "./studio-ui-types";
 
 type StudioData = ReturnType<typeof useStudioData>;

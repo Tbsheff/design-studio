@@ -6,13 +6,13 @@ import {
   type WorkspaceList,
 } from "../../../shared/folders.js";
 import { api, errorText } from "../../api.js";
-import { Disclosure } from "../../components/Disclosure.js";
-import { LocationField } from "../../components/FolderControls.js";
-import { NewProjectAdvanced } from "../../components/NewProjectAdvanced.js";
-import type { SettingsDraft } from "../../settingsDraft.js";
-import type { FolderChooser } from "../../useFolderChooser.js";
+import { Disclosure } from "../../kit/disclosure.js";
+import type { SettingsDraft } from "../chat/settings-draft-model.js";
+import { LocationField } from "./folder-controls.js";
+import { NewProjectAdvanced } from "./new-project-advanced.js";
+import type { FolderChooser } from "./use-folder-chooser.js";
 
-export { FoldersSection } from "../../components/FolderControls.js";
+export { FoldersSection } from "./folder-controls.js";
 
 function HiddenProjectsNote({
   homeDir,

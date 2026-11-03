@@ -5,8 +5,11 @@ import type {
   SwapCandidateList,
 } from "../../../shared/component-create.js";
 import type { SourceLoc } from "../../../shared/contracts.js";
-import { apiMessage, componentCreateApi } from "../../componentCreateApi.js";
-import { usePopover } from "../../usePopover.js";
+import { usePopover } from "../../kit/use-popover.js";
+import {
+  apiMessage,
+  componentCreateApi,
+} from "../design-system/component-create-api.js";
 
 import "../../styles/create-component.css";
 

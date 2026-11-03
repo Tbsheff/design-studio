@@ -1,9 +1,8 @@
-import { lazy, Suspense } from "react";
+import { Suspense } from "react";
 import type { ReactNode } from "react";
 
-import type { ShareTarget } from "../../components/ShareDialog";
-
-const ShareDialog = lazy(() => import("../../components/ShareDialog"));
+import { ShareDialog } from "../../features/share-publish-ship-export/index.js";
+import type { ShareTarget } from "../../features/share-publish-ship-export/share-dialog";
 
 interface ShareLayerProps {
   target: ShareTarget | null;

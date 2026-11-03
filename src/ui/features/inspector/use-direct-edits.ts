@@ -6,7 +6,7 @@ import type {
   SelectionContext,
 } from "../../../shared/contracts.js";
 import { api, errorText } from "../../api.js";
-import type { PreviewPort } from "../../bridge.js";
+import type { PreviewPort } from "../../platform/bridge.js";
 import { isApiConflict, isApiError } from "./api-error.js";
 import { changedProps, valuesFromStyles } from "./css-values.js";
 import type { StyleValues } from "./css-values.js";

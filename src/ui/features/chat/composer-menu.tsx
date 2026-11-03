@@ -13,13 +13,15 @@ import {
 import { createPortal } from "react-dom";
 
 import { RUN_LEVELS, type RunLevel } from "../../../shared/contracts.js";
+import { Icon, type IconName } from "../../kit/Icon.js";
+import { usePopover } from "../../kit/use-popover.js";
 import {
   ChoiceItem,
   levelGist,
   levelHint,
   levelLabel,
   useRovingRadioGroup,
-} from "../../components/LevelControl.js";
+} from "./level-control.js";
 import {
   EFFORT_HINT,
   EFFORT_LABEL,
@@ -32,9 +34,7 @@ import {
   type ComposerMode,
   type DesignsSetting,
   type EffortSetting,
-} from "../../components/RunSettings.js";
-import { Icon, type IconName } from "../../kit/Icon.js";
-import { usePopover } from "../../usePopover.js";
+} from "./run-settings.js";
 import { MODEL_OPTIONS } from "./settings-draft-model.js";
 import { effectiveModel, shortModel } from "./slash-groups.js";
 import { StableText } from "./stable-text.js";

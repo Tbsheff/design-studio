@@ -8,8 +8,6 @@ import type {
   ZoomKey,
 } from "../../../shared/contracts.js";
 import { TRY_VARIANTS_COMMAND } from "../../../shared/element-variants.js";
-import { formatCopyCss } from "../../authoredCss.js";
-import type { PreviewPort } from "../../bridge.js";
 import {
   commandBlocker,
   IconSlot,
@@ -20,11 +18,16 @@ import {
   useImageSearchHost,
   type GenerateTabProps,
 } from "../../canvas-preview-slots.js";
-import { pasteJsx } from "../../pasteJsx.js";
-import { uiStore } from "../../storage.js";
-import { selectionTargets, structureMenuItems } from "../../structureEdits.js";
-import { requestAuthoredCss } from "../../useAuthoredCss.js";
-import type { LayerEdits } from "../../useLayerEdits.js";
+import type { PreviewPort } from "../../platform/bridge.js";
+import { uiStore } from "../../platform/storage.js";
+import { formatCopyCss } from "../inspector/authored-css.js";
+import { pasteJsx } from "../inspector/paste-jsx.js";
+import {
+  selectionTargets,
+  structureMenuItems,
+} from "../inspector/structure-edits.js";
+import { requestAuthoredCss } from "../inspector/use-authored-css.js";
+import type { LayerEdits } from "../versions-layers-tokens/use-layer-edits.js";
 import { PreviewMenu } from "./preview-menu.js";
 import type { PreviewMenuItem } from "./preview-menu.js";
 
@@ -38,7 +41,7 @@ const renderGenerateTab = (props: GenerateTabProps) => (
 );
 
 const CreateComponentDialog = lazy(async () => {
-  const loaded = await import("../../components/CreateComponentDialog.js");
+  const loaded = await import("../design-system/create-component-dialog.js");
 
   return { default: loaded.CreateComponentDialog };
 });

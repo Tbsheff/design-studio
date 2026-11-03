@@ -1,7 +1,7 @@
 import { createElement } from "react";
 import type { ReactElement } from "react";
 
-import { RunCommentsContext } from "../../components/RunComments";
+import { RunCommentsContext } from "../../features/chat/run-comments";
 import { LeftPane } from "../shell/left-pane";
 import { StudioPaneHeader } from "../shell/studio-pane-header";
 import {

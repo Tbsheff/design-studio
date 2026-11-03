@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 
 import type { PackSummary } from "../../../shared/contracts.js";
-import { Swatches } from "../../components/Swatches.js";
 import { Icon } from "../../kit/Icon.js";
+import { Swatches } from "../inspector/swatches.js";
 import { COPY } from "./copy.js";
 import { findPack, fontStack, keySwatches, loadPackFonts } from "./packs.js";
 

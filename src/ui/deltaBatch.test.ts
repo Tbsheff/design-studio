@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import type { RunSummary, StudioEvent } from "../shared/contracts";
-import { createDeltaBatcher, mergeDeltas } from "./deltaBatch";
-import { applyRunEvent, runText } from "./runState";
-import type { RunMap } from "./runState";
+import { applyRunEvent, runText } from "./features/chat/run-state-model";
+import type { RunMap } from "./features/chat/run-state-model";
+import {
+  createDeltaBatcher,
+  mergeDeltas,
+} from "./features/inspector/delta-batch";
 
 let seq = 0;
 

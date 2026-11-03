@@ -6,11 +6,11 @@ import {
   type ProjectKind,
 } from "../../../shared/contracts.js";
 import { api } from "../../api.js";
-import { frameSrc } from "../../bridge.js";
-import { randomToken } from "../../session.js";
-import { useTokenFrames } from "../../tokenFrames.js";
-import type { FilesChange } from "../../useStudioData.js";
-import { useSwapGate, type GateTarget } from "../../useSwapGate.js";
+import { frameSrc } from "../../platform/bridge.js";
+import { randomToken } from "../../platform/session.js";
+import { useTokenFrames } from "../design-system/token-frames.js";
+import type { FilesChange } from "../home/use-studio-data.js";
+import { useSwapGate, type GateTarget } from "../inspector/use-swap-gate.js";
 import {
   frameDirection,
   withFramePath,

@@ -1,6 +1,6 @@
 import { CopyButton } from "../../kit/CopyButton.js";
 import { Icon } from "../../kit/Icon.js";
-import { useModalDialog } from "../../usePopover.js";
+import { useModalDialog } from "../../kit/use-popover.js";
 
 export interface DoctorStep {
   ok: boolean;

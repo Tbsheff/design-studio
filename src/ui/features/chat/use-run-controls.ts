@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import type { QueuedMessage } from "../../../shared/contracts.js";
 import { api } from "../../api.js";
-import type { DraftStore } from "../../storage.js";
+import type { DraftStore } from "../../platform/storage.js";
 import type { RunView } from "./run-state-model.js";
 import { useEscapeStop } from "./use-escape-stop.js";
 

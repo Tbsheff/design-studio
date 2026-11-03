@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 import { errorText } from "../../api.js";
-import { hasNativePicker, pickFolder } from "../../folderPicker.js";
+import { hasNativePicker, pickFolder } from "../../platform/desktop.js";
 
 type ChooseResult =
   | { path: string; unsupported: false }

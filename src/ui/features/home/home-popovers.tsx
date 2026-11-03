@@ -12,18 +12,22 @@ import {
   type PackSummary,
   type RunLevel,
 } from "../../../shared/contracts.js";
+import { useFitPopover } from "../../domain/popoverPlacement.js";
+import { Icon } from "../../kit/Icon.js";
+import { usePopover } from "../../kit/use-popover.js";
+import { VariationsControl } from "../canvas/variations-control.js";
 import {
   ChoiceItem,
   levelGist,
   levelHint,
   levelLabel,
-} from "../../components/LevelControl.js";
-import { VariationsControl } from "../../components/VariationsControl.js";
-import { useFitPopover } from "../../domain/popoverPlacement.js";
-import { Icon } from "../../kit/Icon.js";
-import { fontStack, loadPackFonts, type PacksState } from "../../packs.js";
-import { MODEL_OPTIONS } from "../../settingsDraft.js";
-import { usePopover } from "../../usePopover.js";
+} from "../chat/level-control.js";
+import { MODEL_OPTIONS } from "../chat/settings-draft-model.js";
+import {
+  fontStack,
+  loadPackFonts,
+  type PacksState,
+} from "../design-system/packs.js";
 
 export type Close = (refocus: boolean) => void;
 

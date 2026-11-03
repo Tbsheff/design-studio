@@ -19,16 +19,16 @@ import {
   structureKeyOf,
 } from "../../../shared/structure-keys.js";
 import { api, errorText } from "../../api.js";
-import { useBridge } from "../../bridge.js";
-import type { BridgeFrame, ParentMessageBody } from "../../bridge.js";
-import { pasteJsx } from "../../pasteJsx.js";
+import { useBridge } from "../../platform/bridge.js";
+import type { BridgeFrame, ParentMessageBody } from "../../platform/bridge.js";
 import { canvasHasKeys, isTypingTarget } from "../../platform/typing-target.js";
+import { pasteJsx } from "../inspector/paste-jsx.js";
 import {
   NO_SOURCE,
   dropRequest,
   selectionTargets,
-} from "../../structureEdits.js";
-import type { LayerDrop, SelectionOp } from "../../structureEdits.js";
+} from "../inspector/structure-edits.js";
+import type { LayerDrop, SelectionOp } from "../inspector/structure-edits.js";
 import { IS_MAC } from "./deps.js";
 import type { LayerTree } from "./layers-tree.js";
 import { useLayerLocks } from "./use-layer-locks.js";

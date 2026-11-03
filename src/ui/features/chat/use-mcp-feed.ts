@@ -5,7 +5,7 @@ import type {
   McpApprovalOutcome,
   McpApprovalRecord,
 } from "../../../shared/contracts.js";
-import { useProjectEvents } from "../../events.js";
+import { useProjectEvents } from "../../platform/events.js";
 import { mcpApi } from "./mcp-model.js";
 
 export interface McpApprovalCard {

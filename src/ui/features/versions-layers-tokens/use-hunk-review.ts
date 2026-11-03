@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 
 import { errorText } from "../../api.js";
-import { useProjectEvents } from "../../events.js";
+import { useProjectEvents } from "../../platform/events.js";
 import { revertHunk } from "./versions-api.js";
 
 type HunkState =

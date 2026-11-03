@@ -11,15 +11,15 @@ import type {
   PortStartResult,
 } from "../../../shared/port.js";
 import { api, errorText } from "../../api.js";
-import { pageName } from "../../components/FrameControls.js";
-import { canvasFrameChoices } from "../../exportApi.js";
-import type { FrameChoice } from "../../exportApi.js";
-import { hasNativePicker, pickFolder } from "../../folderPicker.js";
 import { Icon } from "../../kit/Icon.js";
 import { UiSelect } from "../../kit/UiSelect.js";
 import type { UiSelectOption } from "../../kit/UiSelect.js";
-import { uiStore } from "../../storage.js";
-import { useModalDialog } from "../../usePopover.js";
+import { useModalDialog } from "../../kit/use-popover.js";
+import { hasNativePicker, pickFolder } from "../../platform/desktop.js";
+import { uiStore } from "../../platform/storage.js";
+import { pageName } from "../canvas/frame-controls.js";
+import { canvasFrameChoices } from "../share-publish-ship-export/export-api.js";
+import type { FrameChoice } from "../share-publish-ship-export/export-api.js";
 import { COPY } from "./copy.js";
 import { portApi } from "./port-api.js";
 

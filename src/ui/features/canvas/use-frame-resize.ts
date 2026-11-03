@@ -1,8 +1,7 @@
 import { useRef } from "react";
 import type { PointerEvent as ReactPointerEvent, RefObject } from "react";
 
-import type { ResizeEdge } from "../../components/FrameControls.js";
-import { uiStore } from "../../storage.js";
+import { uiStore } from "../../platform/storage.js";
 import {
   activeFrame,
   RESIZE_MIN,
@@ -11,6 +10,7 @@ import {
   shownFrames,
 } from "./canvas-frames-model.js";
 import type { Box, CanvasFrame, CanvasLayout } from "./canvas-frames-model.js";
+import type { ResizeEdge } from "./frame-resize-handles.js";
 import { snapOff, snapRect } from "./snap-model.js";
 import type { SnapGuide, SpacingBadge } from "./snap-model.js";
 import type { CanvasFrames } from "./use-canvas-frames.js";

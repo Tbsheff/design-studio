@@ -1,7 +1,7 @@
 import { useCallback, useRef } from "react";
 import type { KeyboardEvent, PointerEvent, RefObject } from "react";
 
-import { uiStore, useUi } from "../../storage.js";
+import { uiStore, useUi } from "../../platform/storage.js";
 
 const MIN_CHAT = 300;
 const MAX_CHAT = 640;

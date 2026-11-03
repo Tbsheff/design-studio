@@ -1,4 +1,4 @@
-import { useRovingRadioGroup } from "../../components/LevelControl.js";
+import { useRovingRadioGroup } from "../chat/level-control.js";
 
 interface Props {
   value: number;

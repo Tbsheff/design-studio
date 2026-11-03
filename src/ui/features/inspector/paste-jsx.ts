@@ -7,7 +7,10 @@ import type {
   InsertTarget,
   JsxInsertPosition,
 } from "../../../shared/insert.js";
-import { insertApi, insertError } from "../../componentInsert.js";
+import {
+  insertApi,
+  insertError,
+} from "../design-system/component-insert-api.js";
 
 const VOID = new Set([
   "img",
@@ -52,7 +55,7 @@ async function openFigmaImport(
   const [{ createElement }, { createRoot }, dialog] = await Promise.all([
     import("react"),
     import("react-dom/client"),
-    import("../../components/FigmaImportDialog.js"),
+    import("../share-publish-ship-export/figma-import-dialog.js"),
   ]);
 
   const host = document.createElement("div");
@@ -67,7 +70,7 @@ async function openFigmaImport(
   };
 
   root.render(
-    createElement(dialog.default, {
+    createElement(dialog.FigmaImportDialog, {
       ids,
       target: targetOf(selection),
       text,

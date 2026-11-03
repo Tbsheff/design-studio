@@ -1,10 +1,10 @@
-export { insertError } from "../../componentInsert.js";
+export { insertError } from "../design-system/component-insert-api.js";
 
 export { json } from "../../api.js";
 
-export { useEditVariant } from "../../editVariant.js";
+export { useEditVariant } from "../inspector/edit-variant.js";
 
-export { InspectorSection } from "../../components/InspectorFields.js";
+export { InspectorSection } from "../inspector/inspector-fields.js";
 
 export { parseVariant } from "../../../shared/variants.js";
 

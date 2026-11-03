@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { setTelemetryScope } from "../../perfTelemetry";
+import { setTelemetryScope } from "../../platform/telemetry";
 import { prefetchCommandLayer } from "../screens";
 import type { StudioBase } from "./studio-core-types";
 import type { StudioUi } from "./studio-ui-types";

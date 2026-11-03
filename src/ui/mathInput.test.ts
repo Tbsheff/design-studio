@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { evaluateMath, resolveNumberInput } from "./mathInput";
+import {
+  evaluateMath,
+  resolveNumberInput,
+} from "./features/inspector/math-input";
 
 describe(evaluateMath, () => {
   it("handles operator precedence and parentheses", () => {

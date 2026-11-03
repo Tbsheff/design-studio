@@ -18,7 +18,7 @@ import type {
 import { ApiError, json } from "../../api.js";
 import { Icon } from "../../kit/Icon.js";
 import { UiSelect } from "../../kit/UiSelect.js";
-import { useModalDialog } from "../../usePopover.js";
+import { useModalDialog } from "../../kit/use-popover.js";
 
 import "../../styles/figma-import.css";
 

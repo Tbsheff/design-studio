@@ -1,9 +1,8 @@
 import { useRef, useState } from "react";
 
-import { useResetPassiveGateInFirstRender } from "../../components/CanvasFrames.js";
-import { useUi } from "../../storage.js";
-import { useCommentMode } from "../../useCommentMode.js";
-import { useFirstBuildGate } from "../../useFirstBuild.js";
+import { useUi } from "../../platform/storage.js";
+import { useFirstBuildGate } from "../chat/use-first-build.js";
+import { useCommentMode } from "../comments/use-comment-mode.js";
 import { boundsOf, shownFrames } from "./canvas-frames-model.js";
 import {
   activateOf,
@@ -17,6 +16,7 @@ import { useShellPane } from "./canvas-shell.js";
 import type { ViewProps } from "./canvas-types.js";
 import { markOf, withElementMark } from "./element-mark-model.js";
 import { useFrameStates } from "./frame-states-model.js";
+import { useResetPassiveGateInFirstRender } from "./passive-frame.js";
 import {
   unionRect,
   useCanvasFrames,

@@ -1,12 +1,12 @@
-export { linksApi } from "../../linksApi.js";
+export { linksApi } from "../canvas/links-api.js";
 
-export type { LinkInteractionChange } from "../../linksApi.js";
+export type { LinkInteractionChange } from "../canvas/links-api.js";
 
 export { UiSelect } from "../../kit/UiSelect.js";
 
 export type { UiSelectOption } from "../../kit/UiSelect.js";
 
-export type { CanvasFrame } from "../../canvasFrames.js";
+export type { CanvasFrame } from "../canvas/canvas-frames-model.js";
 
 export {
   ACTION_LABELS,

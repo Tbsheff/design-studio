@@ -2,9 +2,9 @@ import type { RefObject } from "react";
 
 import type { PackSummary, Project } from "../../../shared/contracts.js";
 import type { AppHealth } from "../../../shared/found-apps.js";
-import { homePrefs, useHomePrefs } from "../../homePrefs.js";
-import { type PacksState, pickable } from "../../packs.js";
-import { uiStore } from "../../storage.js";
+import { uiStore } from "../../platform/storage.js";
+import { type PacksState, pickable } from "../design-system/packs.js";
+import { homePrefs, useHomePrefs } from "./home-prefs-model.js";
 import { useProjectActions } from "./home-sections.js";
 import type { LibraryModule } from "./lazy-parts.js";
 

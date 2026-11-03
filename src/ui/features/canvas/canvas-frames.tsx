@@ -4,16 +4,16 @@ import type {
   ReactNode,
 } from "react";
 
-import { openAppPanel } from "../../appStatus.js";
-import { FlowFromHere } from "../../components/FlowFromHere.js";
-import type { ResizeEdge } from "../../components/FrameControls.js";
-import { FrameStateMenu } from "../../components/FrameStateMenu.js";
 import { Icon } from "../../kit/Icon.js";
+import { openAppPanel } from "../../platform/app-status.js";
 import {
   canvasStore,
   frameName,
   type CanvasFrame,
 } from "./canvas-frames-model.js";
+import { FlowFromHere } from "./flow-from-here.js";
+import type { ResizeEdge } from "./frame-resize-handles.js";
+import { FrameStateMenu } from "./frame-state-menu.js";
 
 export interface FrameBadge {
   label: string;

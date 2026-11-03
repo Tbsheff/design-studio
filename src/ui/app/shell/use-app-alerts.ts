@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { AppServerStatus } from "../../../shared/contracts";
-import { APP_PANEL_EVENT } from "../../appStatus";
-import { focusStageQuietly } from "../../useInlineTextEdit";
+import { focusStageQuietly } from "../../features/canvas/use-inline-text-edit";
+import { APP_PANEL_EVENT } from "../../platform/app-status";
 import type { Tab } from "./app-tabs";
 
 function usePanelFocus(setOpen: (open: boolean) => void) {

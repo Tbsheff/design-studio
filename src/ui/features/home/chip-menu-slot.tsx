@@ -1,6 +1,6 @@
 import { type RefObject, Suspense } from "react";
 
-import type { AppChip } from "../../components/HomeAppChip.js";
+import type { AppChip } from "./home-app-chip.js";
 import { AppMenu } from "./lazy-parts.js";
 
 function ChipMenuSlot({

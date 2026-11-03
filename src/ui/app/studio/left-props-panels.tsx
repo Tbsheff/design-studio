@@ -2,11 +2,11 @@ import type { ComponentProps } from "react";
 
 import type { SelectionContext, Version } from "../../../shared/contracts";
 import { api } from "../../api";
+import { componentMention } from "../../features/chat/use-mentions";
 import { runCommand } from "../../features/commands";
-import type { DraftStore } from "../../storage";
-import { mergeCommit } from "../../useDirectEdit";
-import { componentMention } from "../../useMentions";
-import { renameVersion } from "../../versionsApi";
+import { mergeCommit } from "../../features/inspector/use-direct-edit";
+import { renameVersion } from "../../features/versions-layers-tokens/versions-api";
+import type { DraftStore } from "../../platform/storage";
 import type { LeftPane } from "../shell/left-pane";
 import { appDirOf } from "./project-model";
 import type { StudioCtx } from "./studio-context";

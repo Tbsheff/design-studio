@@ -1,6 +1,6 @@
-import { BrandMark } from "../../components/BrandMark.js";
-import { ThemeButton } from "../../components/ThemeButton.js";
+import { BrandMark } from "../../kit/brand-mark.js";
 import { Icon } from "../../kit/Icon.js";
+import { ThemeButton } from "../../kit/theme-button.js";
 import { loadTrash } from "./lazy-parts.js";
 
 function Header({ onTrash }: { onTrash: () => void }) {

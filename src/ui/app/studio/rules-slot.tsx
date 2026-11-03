@@ -1,7 +1,7 @@
-import { lazy, Suspense } from "react";
+import { Suspense } from "react";
 import type { ReactNode } from "react";
 
-const RulesEditor = lazy(() => import("../../components/RulesEditor"));
+import { RulesEditor } from "../../features/review/index.js";
 
 interface RulesSlotProps {
   projectId: string;

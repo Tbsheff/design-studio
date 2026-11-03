@@ -1,18 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { ImportPageSlot } from "../../canvas-slots.js";
-import {
-  CanvasViewRow,
-  VectorToolButtons,
-} from "../../components/CanvasToolbar.js";
-import { CanvasTopBar } from "../../components/CanvasTopBar.js";
-import type { CanvasTool, PresentMode } from "../../components/CanvasTopBar.js";
-import { uiStore } from "../../storage.js";
+import { uiStore } from "../../platform/storage.js";
 import { useFileMenu } from "./canvas-chrome-menu.js";
 import type { ChromeProps } from "./canvas-chrome-menu.js";
 import { PresentLayer, TweakPrompt } from "./canvas-overlays.js";
 import { fileNameOf, reloadFrames, scopeOf, toolOf } from "./canvas-shell.js";
 import type { CanvasShell } from "./canvas-shell.js";
+import { CanvasViewRow, VectorToolButtons } from "./canvas-toolbar.js";
+import { CanvasTopBar } from "./canvas-top-bar.js";
+import type { CanvasTool, PresentMode } from "./top-bar-menu.js";
 import { isTypingTarget } from "./use-pan-zoom.js";
 
 const NOOP = () => undefined;

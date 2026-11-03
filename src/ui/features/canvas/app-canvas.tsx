@@ -4,10 +4,9 @@ import type {
   AppServerStatus,
   AttachedApp,
 } from "../../../shared/contracts.js";
-import { openAppPanel, useAppStatus } from "../../appStatus.js";
-import { FrameRedirectNote } from "../../components/CanvasFrames.js";
+import { OPEN_ROUTE_EVENT, takePendingRoute } from "../../app/project-nav.js";
 import { Icon } from "../../kit/Icon.js";
-import { OPEN_ROUTE_EVENT, takePendingRoute } from "../../projectNav.js";
+import { openAppPanel, useAppStatus } from "../../platform/app-status.js";
 import {
   routeFrameId,
   addRouteFrame,
@@ -23,6 +22,7 @@ import {
   canvasStore,
   type CanvasLayout,
 } from "./canvas-frames-model.js";
+import { FrameRedirectNote } from "./canvas-frames.js";
 
 const LOAD_HINT_MS = 30_000;
 

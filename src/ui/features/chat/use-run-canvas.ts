@@ -6,11 +6,15 @@ import type {
   SelectionContext,
 } from "../../../shared/contracts.js";
 import { stateLabel } from "../../../shared/frame-state.js";
-import { activeFrame, canvasStore, defaultLayout } from "../../canvasFrames.js";
-import type { CanvasFrame } from "../../canvasFrames.js";
-import { frameStateOf, useFrameStates } from "../../frameStates.js";
-import { uiStore } from "../../storage.js";
-import { inViewIds } from "../../useCanvasPresence.js";
+import { uiStore } from "../../platform/storage.js";
+import {
+  activeFrame,
+  canvasStore,
+  defaultLayout,
+} from "../canvas/canvas-frames-model.js";
+import type { CanvasFrame } from "../canvas/canvas-frames-model.js";
+import { frameStateOf, useFrameStates } from "../canvas/frame-states-model.js";
+import { inViewIds } from "../canvas/use-canvas-presence.js";
 
 export interface RunCanvasChip {
   frameId: string;

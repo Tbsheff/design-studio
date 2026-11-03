@@ -2,7 +2,7 @@ import { type MutableRefObject } from "react";
 
 import type { SelectionContext } from "../../../shared/contracts.js";
 import { type ImageFit } from "../../../shared/image.js";
-import type { PreviewPort } from "../../bridge.js";
+import type { PreviewPort } from "../../platform/bridge.js";
 
 interface Props {
   projectId: string;

@@ -1,9 +1,9 @@
 import { Suspense, useMemo } from "react";
 
-import { HTML_FRAME_SANDBOX } from "../../bridge.js";
 import { MatrixSlot, useFindHost } from "../../canvas-slots.js";
-import { appRoutePages, useAppCanvas } from "../../components/AppCanvas.js";
-import type { FrameMenuItem } from "../../components/FrameControls.js";
+import { HTML_FRAME_SANDBOX } from "../../platform/bridge.js";
+import { appRoutePages } from "./app-canvas-routes.js";
+import { useAppCanvas } from "./app-canvas.js";
 import {
   canvasStore,
   frameDirection,
@@ -18,6 +18,7 @@ import {
   themeSwitch,
 } from "./canvas-helpers.js";
 import type { ViewProps } from "./canvas-types.js";
+import type { FrameMenuItem } from "./frame-more-menu.js";
 import { useLofiFrames } from "./lofi-frames-model.js";
 import type { useCanvasEdits } from "./use-canvas-edits.js";
 import { useFrameActions } from "./use-canvas-frames.js";

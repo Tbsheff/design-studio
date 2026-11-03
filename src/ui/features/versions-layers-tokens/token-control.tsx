@@ -12,9 +12,9 @@ import {
   type TokenFieldState,
 } from "../../../shared/token-match.js";
 import { Icon } from "../../kit/Icon.js";
-import { useAnchoredPopover } from "../../useAnchoredPopover.js";
-import type { DirectEdit } from "../../useDirectEdit.js";
-import { useTokenUi, type TokenUi } from "../../useTokenSnap.js";
+import { useAnchoredPopover } from "../../kit/use-anchored-popover.js";
+import type { DirectEdit } from "../inspector/use-direct-edit.js";
+import { useTokenUi, type TokenUi } from "../inspector/use-token-snap.js";
 import { COPY } from "./copy.js";
 import { findElements } from "./find-element.js";
 import { TokenPicker, tokenShortName } from "./token-picker.js";

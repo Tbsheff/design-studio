@@ -7,8 +7,8 @@ import type {
   SelectionContext,
 } from "../../../shared/contracts.js";
 import type { InsertableComponent } from "../../../shared/insert.js";
-import { PanelHead } from "../../components/SheetHead.js";
 import { Icon } from "../../kit/Icon.js";
+import { PanelHead } from "../../kit/sheet-head.js";
 import {
   DragGhost,
   InsertMenu,

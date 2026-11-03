@@ -2,10 +2,10 @@ import type { ComponentProps } from "react";
 
 import type { SelectionContext } from "../../../shared/contracts";
 import { api } from "../../api";
-import { fixPrompt } from "../../components/ErrorsPanel";
-import { toggleRail } from "../../components/ProjectRail";
-import { shownPending } from "../../runState";
-import { uiStore } from "../../storage";
+import { shownPending } from "../../features/chat/run-state-model";
+import { toggleRail } from "../../features/home/project-rail";
+import { fixPrompt } from "../../features/review/errors-panel";
+import { uiStore } from "../../platform/storage";
 import type { LeftPane } from "../shell/left-pane";
 import type { StudioPaneHeader } from "../shell/studio-pane-header";
 import { kindLabel, nameOf } from "./project-model";

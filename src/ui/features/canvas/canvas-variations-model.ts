@@ -1,4 +1,4 @@
-import { uiStore } from "../../storage.js";
+import { uiStore } from "../../platform/storage.js";
 import {
   activeFrame,
   canvasStore,

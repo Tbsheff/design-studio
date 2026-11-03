@@ -12,7 +12,7 @@ import {
   type CanvasLayout,
 } from "./canvas-frames-model.js";
 
-const AppBar = lazy(() => import("../../components/AppBar.js"));
+const AppBar = lazy(() => import("../../app/shell/app-bar.js"));
 
 export function routeFrameId(
   layout: CanvasLayout,

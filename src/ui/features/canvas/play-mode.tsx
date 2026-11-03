@@ -26,20 +26,20 @@ import {
   type PrototypeLink,
 } from "../../../shared/links.js";
 import {
-  frameSrc,
-  postToFrame,
-  tagFrame,
-  useBridge,
-  type BridgeFrame,
-} from "../../bridge.js";
-import {
   bridgeTrigger,
   runLink,
   type PlayHandlers,
   usePlayTriggers,
 } from "../../canvas-link-slots.js";
 import { Icon } from "../../kit/Icon.js";
-import { randomToken } from "../../session.js";
+import {
+  frameSrc,
+  postToFrame,
+  tagFrame,
+  useBridge,
+  type BridgeFrame,
+} from "../../platform/bridge.js";
+import { randomToken } from "../../platform/session.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";
 import { frameTitle } from "./canvas-frames.js";
 import { hasOutgoing, playStartOf } from "./prototype-layer.js";

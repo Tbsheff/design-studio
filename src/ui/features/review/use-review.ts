@@ -2,8 +2,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { ReviewFinding, ReviewResult } from "../../../shared/review.js";
 import { api, errorText } from "../../api.js";
-import type { CanvasFrame } from "../../canvasFrames.js";
-import type { FilesChange } from "../../useStudioData.js";
+import type { CanvasFrame } from "../canvas/canvas-frames-model.js";
+import type { FilesChange } from "../home/use-studio-data.js";
 
 const RERUN_MS = 900;
 const SIDE_MIN = 200;

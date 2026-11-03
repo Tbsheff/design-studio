@@ -8,9 +8,9 @@ import type {
   InsertableComponent,
   InsertableList,
 } from "../../../shared/insert.js";
-import { PreviewMenu } from "../../components/PreviewMenu.js";
-import type { PreviewMenuItem } from "../../components/PreviewMenu.js";
-import { NO_SOURCE } from "../../structureEdits.js";
+import { PreviewMenu } from "../canvas/preview-menu.js";
+import type { PreviewMenuItem } from "../canvas/preview-menu.js";
+import { NO_SOURCE } from "../inspector/structure-edits.js";
 import { insertApi, insertBus, insertError } from "./component-insert-api.js";
 import type { DropHint } from "./component-insert-api.js";
 

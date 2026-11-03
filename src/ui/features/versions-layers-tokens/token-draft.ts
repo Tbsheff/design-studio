@@ -3,7 +3,7 @@ import type {
   TokenChange,
   TokenFile,
 } from "../../../shared/contracts.js";
-import type { DesignTokens } from "../../useDesignSystemState.js";
+import type { DesignTokens } from "../design-system/use-design-system-state.js";
 
 export interface PendingToken {
   value?: string;

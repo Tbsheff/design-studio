@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 import type { TelemetrySample } from "../../../shared/contracts.js";
 import { api } from "../../api.js";
-import { formatMs } from "../../format.js";
+import { formatMs } from "../../domain/format.js";
 import type { RunView } from "./run-state-model.js";
 
 const FILE_WRITE_TOOLS = new Set(["Write", "Edit", "MultiEdit"]);

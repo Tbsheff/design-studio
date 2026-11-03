@@ -14,7 +14,7 @@ import { useAppState } from "./use-app-state";
 import "../../styles/attach-app.css";
 
 const DoctorCard = lazy(async () => {
-  const loaded = await import("../../components/DoctorCard");
+  const loaded = await import("../../features/design-system/doctor-card");
 
   return { default: loaded.DoctorCard };
 });

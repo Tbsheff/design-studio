@@ -1,7 +1,7 @@
 import { useRef, type KeyboardEvent, type RefObject } from "react";
 
 import { Icon, type IconName } from "../../kit/Icon.js";
-import { usePopover } from "../../usePopover.js";
+import { usePopover } from "../../kit/use-popover.js";
 
 export type CanvasTool = "select" | "comment" | "edit" | "prototype" | null;
 

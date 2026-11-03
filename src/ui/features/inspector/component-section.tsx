@@ -2,9 +2,7 @@ import { Suspense, lazy } from "react";
 
 import type { InspectorProps } from "./inspector-model.js";
 
-const InspectorPropsPanel = lazy(
-  () => import("../../components/InspectorProps.js")
-);
+const InspectorPropsPanel = lazy(() => import("./inspector-props.js"));
 
 const ComponentSection = (props: InspectorProps) => {
   const target = props.selection[0];

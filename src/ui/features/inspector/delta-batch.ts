@@ -1,6 +1,6 @@
 import type { StudioEvent } from "../../../shared/contracts.js";
-import { applyRunEvent } from "../../runState.js";
-import type { RunMap } from "../../runState.js";
+import { applyRunEvent } from "../chat/run-state-model.js";
+import type { RunMap } from "../chat/run-state-model.js";
 
 type DeltaEvent = Extract<
   StudioEvent,

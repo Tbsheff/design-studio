@@ -10,9 +10,9 @@ import {
 } from "../../../shared/canvas-file.js";
 import type { StudioEvent } from "../../../shared/contracts.js";
 import { ApiError, api } from "../../api.js";
-import { useProjectEvents } from "../../events.js";
+import { useProjectEvents } from "../../platform/events.js";
 import { readStored, writeStored } from "../../platform/storage.js";
-import type { Viewport } from "../../storage.js";
+import type { Viewport } from "../../platform/storage.js";
 
 export { cleanFramePath } from "../../../shared/canvas-file.js";
 

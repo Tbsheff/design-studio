@@ -7,7 +7,7 @@ import type {
   FirstVersionState,
 } from "../../../shared/contracts";
 import { api } from "../../api";
-import { publishAppStatus } from "../../appStatus";
+import { publishAppStatus } from "../../platform/app-status";
 
 const POLL_OPEN_MS = 1500;
 const POLL_CLOSED_MS = 5000;

@@ -61,6 +61,18 @@ export const BOUNDARY_OVERRIDES: OxlintOverride[] = [
   ...coarse,
   ...serverOrder,
   ...legacy,
+  {
+    files: ["src/ui/**"],
+    rules: { "import/no-cycle": ["error", { ignoreTypes: true }] },
+  },
+  {
+    files: [
+      "src/ui/api.ts",
+      "src/ui/platform/query.ts",
+      "src/ui/platform/stream.ts",
+    ],
+    rules: { "import/no-cycle": ["warn", { ignoreTypes: true }] },
+  },
 ];
 
 export default defineConfig({

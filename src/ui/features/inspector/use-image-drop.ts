@@ -2,7 +2,7 @@ import { useRef, type MutableRefObject } from "react";
 
 import type { BridgeToParent, ProjectKind } from "../../../shared/contracts.js";
 import { imageKindOf, type SetImageRequest } from "../../../shared/image.js";
-import { useBridge, type BridgeFrame } from "../../bridge.js";
+import { useBridge, type BridgeFrame } from "../../platform/bridge.js";
 import { NO_SOURCE } from "./structure-edits.js";
 
 interface Options {

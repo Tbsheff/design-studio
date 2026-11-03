@@ -20,8 +20,8 @@ import {
   varName,
   type TokenMode,
 } from "../../../shared/token-match.js";
-import { uiStore, useUi } from "../../storage.js";
-import type { DesignTokens } from "../../useDesignSystemState.js";
+import { uiStore, useUi } from "../../platform/storage.js";
+import type { DesignTokens } from "../design-system/use-design-system-state.js";
 import type { StyleValues } from "./css-values.js";
 
 export interface SnapNote {

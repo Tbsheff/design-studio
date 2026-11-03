@@ -1,11 +1,10 @@
 import { useMemo } from "react";
 
-import { useComponentInsert } from "../../useComponentInsert.js";
-import { useElementNudge } from "../../useElementNudge.js";
-import { useImageDrop } from "../../useImageDrop.js";
-import { useInlinePrompt } from "../../useInlinePrompt.js";
-import { useLayerEdits } from "../../useLayerEdits.js";
-import { usePreviewMenu } from "../../usePreviewMenu.js";
+import { useInlinePrompt } from "../chat/use-inline-prompt.js";
+import { useComponentInsert } from "../design-system/use-component-insert.js";
+import { useElementNudge } from "../inspector/use-element-nudge.js";
+import { useImageDrop } from "../inspector/use-image-drop.js";
+import { useLayerEdits } from "../versions-layers-tokens/use-layer-edits.js";
 import { useCanvasVectorTools } from "./canvas-tool-slots.js";
 import type { ViewProps } from "./canvas-types.js";
 import { useCanvasPoint } from "./use-canvas-point.js";
@@ -13,6 +12,7 @@ import { useCanvasPresence } from "./use-canvas-presence.js";
 import type { useCanvasPreview } from "./use-canvas-preview.js";
 import type { useCanvasStage } from "./use-canvas-stage.js";
 import { useFreeMove } from "./use-free-move.js";
+import { usePreviewMenu } from "./use-preview-menu.js";
 import { useResizeHandles } from "./use-resize-handles.js";
 
 const useCanvasEdits = (

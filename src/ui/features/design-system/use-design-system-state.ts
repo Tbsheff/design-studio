@@ -9,7 +9,7 @@ import type {
 } from "../../../shared/contracts.js";
 import type { TokenMode } from "../../../shared/token-match.js";
 import { api } from "../../api.js";
-import type { FilesChange } from "../../useStudioData.js";
+import type { FilesChange } from "../home/use-studio-data.js";
 
 export interface DesignTokens {
   entries: CompiledTokenEntry[];

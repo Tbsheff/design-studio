@@ -14,9 +14,9 @@ import {
   type SelectionContext,
   type ZoomKey,
 } from "../../../shared/contracts.js";
-import { useDesktopCommand } from "../../desktop.js";
-import { uiStore, useUi } from "../../storage.js";
-import type { FilesChange } from "../../useStudioData.js";
+import { useDesktopCommand } from "../../platform/desktop.js";
+import { uiStore, useUi } from "../../platform/storage.js";
+import type { FilesChange } from "../home/use-studio-data.js";
 import {
   activeFrame,
   addFrame,

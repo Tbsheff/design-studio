@@ -54,7 +54,7 @@ function relabel(briefs: VariationBrief[]): VariationBrief[] {
   }));
 }
 
-export { formatUsd as money } from "../../format.js";
+export { formatUsd as money } from "../../domain/format.js";
 
 export function budgetFor(
   project: Project | null,

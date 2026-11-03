@@ -8,8 +8,8 @@ import type {
   RunStatus,
 } from "../../../shared/contracts.js";
 import { api } from "../../api.js";
-import { useProjectEvents } from "../../events.js";
 import { Icon } from "../../kit/Icon.js";
+import { useProjectEvents } from "../../platform/events.js";
 import { packApi } from "../../platform/pack-api.js";
 
 type ImproveEnd = { runId: string; status: RunStatus } | null;

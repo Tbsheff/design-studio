@@ -7,15 +7,6 @@ import type {
 } from "../../../shared/contracts.js";
 import { api } from "../../api.js";
 import {
-  FrameMoreMenu,
-  FramePageMenu,
-  VariationControls,
-} from "../../components/FrameControls.js";
-import type {
-  FrameMenuItem,
-  FrameVariation,
-} from "../../components/FrameControls.js";
-import {
   canHideFrame,
   frameName,
   setFrameHidden,
@@ -23,7 +14,12 @@ import {
 } from "./canvas-frames-model.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";
 import type { CanvasDirections, Props } from "./canvas-types.js";
+import { FramePageMenu } from "./frame-controls.js";
+import { FrameMoreMenu } from "./frame-more-menu.js";
+import type { FrameMenuItem } from "./frame-more-menu.js";
 import type { useCanvasFrames, useFrameActions } from "./use-canvas-frames.js";
+import { VariationControls } from "./variation-controls.js";
+import type { FrameVariation } from "./variation-controls.js";
 
 interface LabelInput {
   projectId: string;

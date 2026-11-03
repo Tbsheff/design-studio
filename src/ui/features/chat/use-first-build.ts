@@ -2,8 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 
 import type { ProjectKind } from "../../../shared/contracts.js";
 import { api } from "../../api.js";
-import { PREVIEW_PAINTED_EVENT } from "../../useEditHistory.js";
-import type { FilesChange } from "../../useStudioData.js";
+import type { FilesChange } from "../home/use-studio-data.js";
+import { PREVIEW_PAINTED_EVENT } from "../inspector/use-edit-history.js";
 
 const TREE_CAP = 3000;
 const PAINT_FALLBACK_MS = 5000;

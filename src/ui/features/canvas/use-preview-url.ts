@@ -6,10 +6,10 @@ import type {
   RenderCheckResult,
 } from "../../../shared/contracts.js";
 import { api, errorText } from "../../api.js";
-import type { PreviewPort } from "../../bridge.js";
-import type { CanvasSource } from "../../components/CanvasToolbar.js";
-import type { FilesChange } from "../../useStudioData.js";
+import type { PreviewPort } from "../../platform/bridge.js";
+import type { FilesChange } from "../home/use-studio-data.js";
 import { NO_VERSION_TEXT, RECT_REFRESH_MS } from "./canvas-helpers.js";
+import type { CanvasSource } from "./canvas-toolbar.js";
 
 function usePreviewUrl(
   projectId: string,

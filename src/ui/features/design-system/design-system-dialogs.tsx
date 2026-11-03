@@ -2,9 +2,9 @@ import { useState, useTransition } from "react";
 
 import { errorText } from "../../api.js";
 import { Icon } from "../../kit/Icon.js";
-import { uiStore } from "../../storage.js";
-import type { LibraryFrom } from "../../storage.js";
-import { useModalDialog } from "../../usePopover.js";
+import { useModalDialog } from "../../kit/use-popover.js";
+import { uiStore } from "../../platform/storage.js";
+import type { LibraryFrom } from "../../platform/storage.js";
 import { COPY } from "./copy.js";
 import { PackList } from "./pack-list.js";
 import { pickable, usePacks } from "./packs.js";

@@ -3,7 +3,7 @@ import { Suspense, type ReactNode } from "react";
 import { tipWithKey } from "../../canvas-toolbar-slots.js";
 import { Icon } from "../../kit/Icon.js";
 import type { LiveStore } from "../../platform/live-store.js";
-import type { ZoomSetting } from "../../storage.js";
+import type { ZoomSetting } from "../../platform/storage.js";
 import {
   PortToAppDialog,
   usePortDialog,

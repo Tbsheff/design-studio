@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { splitMarkdownBlocks } from "./markdownBlocks";
+import { splitMarkdownBlocks } from "./domain/markdown-blocks";
 
 describe(splitMarkdownBlocks, () => {
   it("splits paragraphs on blank lines", () => {

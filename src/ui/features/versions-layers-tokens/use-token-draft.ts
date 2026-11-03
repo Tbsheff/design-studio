@@ -11,9 +11,9 @@ import {
   broadcastTokenCss,
   holdTokenCssUntilReload,
   useCanvasTheme,
-} from "../../tokenFrames.js";
-import type { ThemeChoice } from "../../tokenFrames.js";
-import type { DesignTokens } from "../../useDesignSystemState.js";
+} from "../design-system/token-frames.js";
+import type { ThemeChoice } from "../design-system/token-frames.js";
+import type { DesignTokens } from "../design-system/use-design-system-state.js";
 import {
   errorPaths,
   overlayTokens,

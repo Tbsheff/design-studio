@@ -2,14 +2,14 @@ import { type RefObject, useCallback, useEffect, useState } from "react";
 
 import type { RunLevel } from "../../../shared/contracts.js";
 import { api, errorText } from "../../api.js";
+import { hasNativePicker, pickFolder } from "../../platform/desktop.js";
+import { installProblem } from "./doctor-model.js";
 import {
   chipBlocker,
   chipProblem,
   droppedFolder,
   useAppChip,
-} from "../../components/HomeAppChip.js";
-import { hasNativePicker, pickFolder } from "../../folderPicker.js";
-import { installProblem } from "./doctor-model.js";
+} from "./home-app-chip.js";
 import type { ImageDraft, ReferenceDraft } from "./home-composer-parts.js";
 import { type Busy, focusPrompt, shortHome } from "./home-model.js";
 import { loadAppMenu } from "./lazy-parts.js";

@@ -1,7 +1,7 @@
 import type { ComponentProps } from "react";
 
-import { canvasVariations } from "../../components/VariationsLayer";
-import { uiStore } from "../../storage";
+import { canvasVariations } from "../../features/canvas/variations-layer";
+import { uiStore } from "../../platform/storage";
 import { CanvasCommandsHost } from "../canvas-commands-host";
 import type { CenterView } from "../shell/studio-parts";
 import { nameOf, whenDirection } from "./project-model";

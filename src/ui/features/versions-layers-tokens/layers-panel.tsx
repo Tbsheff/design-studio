@@ -22,13 +22,10 @@ import {
   STRUCTURE_KEY_IDS,
   structureKeyOf,
 } from "../../../shared/structure-keys.js";
-import {
-  PreviewMenu,
-  type PreviewMenuItem,
-} from "../../components/PreviewMenu.js";
 import { Icon, type IconName } from "../../kit/Icon.js";
-import type { LayerDrop } from "../../structureEdits.js";
-import { focusStageQuietly } from "../../useInlineTextEdit.js";
+import { PreviewMenu, type PreviewMenuItem } from "../canvas/preview-menu.js";
+import { focusStageQuietly } from "../canvas/use-inline-text-edit.js";
+import type { LayerDrop } from "../inspector/structure-edits.js";
 import { COPY } from "./copy.js";
 import { IS_MAC, tipWithKey } from "./deps.js";
 import {

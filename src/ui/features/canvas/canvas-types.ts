@@ -9,15 +9,15 @@ import type {
   SelectionContext,
   ZoomKey,
 } from "../../../shared/contracts.js";
-import type { PreviewPort } from "../../bridge.js";
-import type { CanvasSource } from "../../components/CanvasToolbar.js";
-import type { FrameVariation } from "../../components/FrameControls.js";
+import type { PreviewPort } from "../../platform/bridge.js";
 import type { LiveStore } from "../../platform/live-store.js";
-import type { CommentsControl } from "../../useComments.js";
-import type { TextCommitHandler } from "../../useInlineTextEdit.js";
-import type { BuildError, FilesChange } from "../../useStudioData.js";
+import type { CommentsControl } from "../comments/use-comments.js";
+import type { BuildError, FilesChange } from "../home/use-studio-data.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";
 import type { CanvasShell } from "./canvas-shell.js";
+import type { CanvasSource } from "./canvas-toolbar.js";
+import type { TextCommitHandler } from "./use-inline-text-edit.js";
+import type { FrameVariation } from "./variation-controls.js";
 
 interface Props {
   projectId: string;

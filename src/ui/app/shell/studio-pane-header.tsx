@@ -2,13 +2,16 @@ import { useCallback, useRef, useState } from "react";
 import type { KeyboardEvent, ReactNode, RefObject } from "react";
 
 import { shortcutLabel } from "../../../shared/keymap";
-import { chatSearchAvailable, chatSearchOpen } from "../../chatSearchState";
+import {
+  chatSearchAvailable,
+  chatSearchOpen,
+} from "../../features/chat/chat-search-model";
 import { IS_MAC } from "../../features/commands/keys";
 import { Icon } from "../../kit/Icon";
 import type { IconName } from "../../kit/Icon";
+import { usePopover } from "../../kit/use-popover";
 import { useLive } from "../../platform/live-store";
-import type { PanelTab } from "../../usePanelTab";
-import { usePopover } from "../../usePopover";
+import type { PanelTab } from "../../platform/use-panel-tab";
 
 type ThemePref = "system" | "light" | "dark";
 

@@ -1,26 +1,26 @@
 import { useMemo, useState } from "react";
 import type { ComponentProps, ReactNode, RefObject } from "react";
 
-import { ChatPanel } from "../../components/ChatPanel";
-import { ChatSplitter } from "../../components/ChatSplitter";
+import { ChatPanel } from "../../features/chat/chat-panel";
+import { ChatSplitter } from "../../features/chat/chat-splitter";
+import { McpEditStrip } from "../../features/chat/mcp-feed";
+import { PromptBox } from "../../features/chat/prompt-box";
+import { RunDetails } from "../../features/chat/run-details";
+import type { RunView } from "../../features/chat/run-state-model";
+import { TodoPanel } from "../../features/chat/todo-panel";
 import {
   CommentsPanel,
   QueuedComposerBar,
-} from "../../components/CommentsPanel";
-import { ComponentsPanel } from "../../components/ComponentsPanel";
-import { ErrorsPanel } from "../../components/ErrorsPanel";
-import { Inspector } from "../../components/Inspector";
-import { McpEditStrip } from "../../components/McpFeed";
-import { PromptBox } from "../../components/PromptBox";
-import { RunDetails } from "../../components/RunDetails";
-import { SheetSlot } from "../../components/SheetHead";
-import { TodoPanel } from "../../components/TodoPanel";
-import { TokensPanel } from "../../components/TokensPanel";
-import { TweaksPanel } from "../../components/TweaksPanel";
-import { VersionsPanel } from "../../components/VersionsPanel";
+} from "../../features/comments/comments-panel";
+import { Inspector } from "../../features/inspector/inspector";
+import { TweaksPanel } from "../../features/inspector/tweaks-panel";
+import { ErrorsPanel } from "../../features/review/errors-panel";
+import { TokensPanel } from "../../features/versions-layers-tokens/tokens-panel";
+import { VersionsPanel } from "../../features/versions-layers-tokens/versions-panel";
 import { Icon } from "../../kit/Icon";
-import type { RunView } from "../../runState";
-import type { PanelTab } from "../../usePanelTab";
+import { SheetSlot } from "../../kit/sheet-head";
+import type { PanelTab } from "../../platform/use-panel-tab";
+import { ComponentsPanel } from "../components-panel-host";
 
 interface Props {
   collapsed?: boolean;

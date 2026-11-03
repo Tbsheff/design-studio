@@ -6,8 +6,8 @@ import type {
   RunRequest,
   SelectionContext,
 } from "../../../shared/contracts";
-import type { ComposerMode } from "../../components/RunSettings";
-import type { RunView } from "../../runState";
+import type { ComposerMode } from "../../features/chat/run-settings";
+import type { RunView } from "../../features/chat/run-state-model";
 
 interface ComposeInput {
   prompt: string;

@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 import { installRouting } from "../platform/router";
-import { uiStore, useUi } from "../storage";
+import { uiStore, useUi } from "../platform/storage";
 import { AppNotice } from "./app-notice";
 import { AppScreen } from "./app-screen";
 import { BootError } from "./boot-error";

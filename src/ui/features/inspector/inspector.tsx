@@ -1,7 +1,5 @@
 import { memo, useEffect, useState } from "react";
 
-import { InspectorTools } from "../../components/InspectorTools.js";
-import { InspectorTweaks } from "../../components/InspectorTweaks.js";
 import { Icon } from "../../kit/Icon.js";
 import { ComponentsTab } from "./components-tab.js";
 import { resetEditVariant } from "./edit-variant.js";
@@ -9,6 +7,8 @@ import { InspectorArrange } from "./inspector-arrange.js";
 import { InspectorCode } from "./inspector-code.js";
 import type { InspectorProps, InspectorTab } from "./inspector-model.js";
 import { InspectorAppContext } from "./inspector-shared.js";
+import { InspectorTools } from "./inspector-tools.js";
+import { InspectorTweaks } from "./inspector-tweaks.js";
 import { LeavePrompt } from "./leave-prompt.js";
 import { ProTab } from "./pro-tab.js";
 import { sameShared } from "./same-props.js";

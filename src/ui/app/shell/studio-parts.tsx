@@ -6,10 +6,10 @@ import type {
   RunStatus,
   Version,
 } from "../../../shared/contracts";
-import { Canvas } from "../../components/Canvas";
-import { CompareView } from "../../components/CompareView";
-import { DesignMdModal } from "../../components/DesignMdModal";
-import { UnfinishedBanner } from "../../components/UnfinishedBanner";
+import { Canvas } from "../../features/canvas/canvas";
+import { UnfinishedBanner } from "../../features/chat/unfinished-banner";
+import { DesignMdModal } from "../../features/design-system/design-md-modal";
+import { CompareView } from "../../features/versions-layers-tokens/compare-view";
 import { SettingsModal } from "./settings-modal";
 
 interface CenterProps {

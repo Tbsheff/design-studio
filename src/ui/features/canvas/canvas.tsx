@@ -1,7 +1,7 @@
 import { memo, useLayoutEffect, useState } from "react";
 
 import { createLiveStore } from "../../platform/live-store.js";
-import { useStableProps } from "../../stableProps.js";
+import { useStableProps } from "../inspector/stable-props.js";
 import type { Props } from "./canvas-types.js";
 import { CanvasView } from "./canvas-view.js";
 

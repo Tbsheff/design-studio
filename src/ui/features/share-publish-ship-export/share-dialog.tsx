@@ -17,12 +17,12 @@ import {
   type ShareServerState,
 } from "../../../shared/share.js";
 import { errorText } from "../../api.js";
-import { canvasFrameName, framePage } from "../../components/CanvasFrames.js";
-import PublishPane from "../../components/PublishPane.js";
 import { CopyButton, copyText } from "../../kit/CopyButton.js";
 import { Icon } from "../../kit/Icon.js";
-import { useModalDialog } from "../../usePopover.js";
+import { useModalDialog } from "../../kit/use-popover.js";
+import { canvasFrameName, framePage } from "../canvas/canvas-frames.js";
 import { canvasFrameChoices, frameRoute } from "./export-api.js";
+import { PublishPane } from "./publish-pane.js";
 import { shareApi, sharesChanged } from "./share-api.js";
 
 import "../../styles/export.css";

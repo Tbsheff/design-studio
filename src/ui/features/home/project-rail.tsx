@@ -13,17 +13,17 @@ import {
   TYPE_LABELS,
   type ProjectHit,
 } from "../../../shared/project-search.js";
-import { BrandMark } from "../../components/BrandMark.js";
-import { IS_MAC, tipWithKey } from "../../home-commands.js";
-import { useCommands } from "../../home-commands.js";
+import { openProject } from "../../app/project-nav.js";
+import { BrandMark } from "../../kit/brand-mark.js";
 import { Icon } from "../../kit/Icon.js";
 import { readStored, writeStored } from "../../platform/storage.js";
+import { IS_MAC, tipWithKey } from "../commands/keys.js";
+import { useCommands } from "../commands/registry.js";
 import {
   noteProjectOpened,
   refreshProjectHits,
   useProjectHits,
-} from "../../projectHits.js";
-import { openProject } from "../../projectNav.js";
+} from "./project-hits-model.js";
 import { HealthDot, ProjectThumb } from "./project-thumb.js";
 
 import "../../styles/project-nav.css";

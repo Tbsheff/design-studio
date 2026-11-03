@@ -111,9 +111,13 @@ import type {
   TweaksState,
   TweakValue,
 } from "../shared/tweaks";
+import {
+  endEditSession,
+  restoreVersion,
+  stepEditHistory,
+} from "./features/versions-layers-tokens/versions-api";
 import { call, pickMessage, request } from "./platform/http";
 import { prefetch, readShared } from "./platform/query";
-import { endEditSession, restoreVersion, stepEditHistory } from "./versionsApi";
 
 export { ApiError } from "./platform/http";
 

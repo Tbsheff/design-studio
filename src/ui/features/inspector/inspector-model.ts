@@ -5,11 +5,11 @@ import type {
   SelectionContext,
 } from "../../../shared/contracts.js";
 import { isSvgShapeTag } from "../../../shared/vector.js";
-import type { PreviewPort } from "../../bridge.js";
-import type { ComponentsPanel } from "../../components/ComponentsPanel.js";
-import type { InspectorTweaksProps } from "../../components/InspectorTweaks.js";
-import type { DesignTokens } from "../../useDesignSystemState.js";
+import type { ComponentsPanel } from "../../app/components-panel-host.js";
+import type { PreviewPort } from "../../platform/bridge.js";
+import type { DesignTokens } from "../design-system/use-design-system-state.js";
 import { copy } from "./copy.js";
+import type { InspectorTweaksProps } from "./inspector-tweaks.js";
 import type { DirectEditCommit, DirectEditControl } from "./use-direct-edit.js";
 import type { EditSessionHandle, SessionAction } from "./use-edit-session.js";
 

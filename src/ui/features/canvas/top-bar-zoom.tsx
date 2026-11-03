@@ -2,7 +2,7 @@ import { shortcutLabel } from "../../../shared/keymap.js";
 import { IS_MAC, tipWithKey } from "../../canvas-toolbar-slots.js";
 import { Icon } from "../../kit/Icon.js";
 import { useLive, type LiveStore } from "../../platform/live-store.js";
-import type { ZoomSetting } from "../../storage.js";
+import type { ZoomSetting } from "../../platform/storage.js";
 import { DropMenu } from "./top-bar-drop-menu.js";
 import type { MenuEntry, MenuGroup } from "./top-bar-menu.js";
 import {

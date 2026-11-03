@@ -11,8 +11,11 @@ import {
   tokensForProperty,
   type TokenMode,
 } from "../../../shared/token-match.js";
-import { parseDeclarations, type AuthoredCss } from "../../authoredCss.js";
-import type { StyleValues } from "../../cssValues.js";
+import {
+  parseDeclarations,
+  type AuthoredCss,
+} from "../inspector/authored-css.js";
+import type { StyleValues } from "../inspector/css-values.js";
 
 export type LintKind = "color" | "size" | "font";
 

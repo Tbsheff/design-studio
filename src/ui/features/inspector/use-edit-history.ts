@@ -13,10 +13,10 @@ import type {
   Version,
 } from "../../../shared/contracts.js";
 import { api, errorText } from "../../api.js";
-import { useProjectEvents } from "../../events.js";
-import { historyKeyOf } from "../../useUndoShortcut.js";
-import type { HistoryKind, RedoShortcut } from "../../useUndoShortcut.js";
-import { historyPhrase } from "../../versionLabels.js";
+import { useProjectEvents } from "../../platform/events.js";
+import { historyKeyOf } from "../canvas/use-undo-shortcut.js";
+import type { HistoryKind, RedoShortcut } from "../canvas/use-undo-shortcut.js";
+import { historyPhrase } from "../versions-layers-tokens/version-labels.js";
 
 export const PREVIEW_PAINTED_EVENT = "studio:preview-painted";
 

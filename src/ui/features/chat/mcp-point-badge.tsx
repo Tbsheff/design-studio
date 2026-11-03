@@ -1,6 +1,6 @@
-import { authorInitial } from "../../components/CommentAvatar.js";
 import { Icon } from "../../kit/Icon.js";
-import type { McpPointBadge as Badge } from "../../useCanvasPoint.js";
+import type { McpPointBadge as Badge } from "../canvas/use-canvas-point.js";
+import { authorInitial } from "../comments/comment-avatar.js";
 
 export function McpPointBadge({
   badge,

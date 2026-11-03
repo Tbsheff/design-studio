@@ -3,11 +3,11 @@
 @plugin '@tailwindcss/typography';
 
 @source '../ai';
-@source '../components/ChatPanel.tsx';
-@source '../components/ChatParts.tsx';
-@source '../components/ToolChips.tsx';
-@source '../components/PromptBox.tsx';
-@source '../components/ComposerParts.tsx';
+@source '../features/chat/chat-panel.tsx';
+@source '../features/chat/chat-parts.tsx';
+@source '../features/chat/tool-chips.tsx';
+@source '../features/chat/prompt-box.tsx';
+@source '../features/chat/composer-parts.tsx';
 
 @custom-variant dark (&:where(.dark, .dark *));
 

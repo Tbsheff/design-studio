@@ -2,9 +2,7 @@ import { Suspense, lazy } from "react";
 
 import { vectorShown, type InspectorProps } from "./inspector-model.js";
 
-const InspectorVector = lazy(
-  () => import("../../components/InspectorVector.js")
-);
+const InspectorVector = lazy(() => import("./inspector-vector.js"));
 
 const VectorSection = (props: InspectorProps) => {
   if (!vectorShown(props.selection)) {

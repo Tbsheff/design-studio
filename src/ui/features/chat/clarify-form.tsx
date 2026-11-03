@@ -2,8 +2,8 @@ import { useEffect, useId, useRef, useState } from "react";
 import type { FormEvent } from "react";
 
 import type { ClarifyQuestion } from "../../../shared/contracts.js";
-import { useRovingRadioGroup } from "../../components/LevelControl.js";
 import { Icon } from "../../kit/Icon.js";
+import { useRovingRadioGroup } from "./level-control.js";
 
 function ClarifyQuestionField({
   item,

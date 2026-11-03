@@ -9,7 +9,7 @@ import {
 } from "../../../shared/usage-scope.js";
 import { Icon } from "../../kit/Icon.js";
 import { call } from "../../platform/http.js";
-import { uiStore } from "../../storage.js";
+import { uiStore } from "../../platform/storage.js";
 import type { InlinePromptView } from "./use-inline-prompt.js";
 
 import "../../styles/inline-prompt.css";

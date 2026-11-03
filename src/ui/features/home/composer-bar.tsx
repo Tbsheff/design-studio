@@ -8,16 +8,13 @@ import {
 } from "react";
 
 import type { PackSummary, ProjectKind } from "../../../shared/contracts.js";
-import type {
-  ModelSettings,
-  PlusMenuActions,
-} from "../../components/HomePopovers.js";
 import { Icon } from "../../kit/Icon.js";
-import { type PacksState, pickable } from "../../packs.js";
-import { uiStore } from "../../storage.js";
-import { usePresence } from "../../usePresence.js";
+import { uiStore } from "../../platform/storage.js";
+import { usePresence } from "../chat/use-presence.js";
+import { type PacksState, pickable } from "../design-system/packs.js";
 import { AppSlot, type AppSlotProps } from "./app-slot.js";
 import { type Busy, LEVEL_LABEL, type Pop } from "./home-model.js";
+import type { ModelSettings, PlusMenuActions } from "./home-popovers.js";
 import {
   FolderPathPop,
   LevelPopover,

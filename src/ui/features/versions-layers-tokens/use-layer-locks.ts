@@ -6,8 +6,8 @@ import {
   type LayerLocksView,
 } from "../../../shared/layer-locks.js";
 import { json } from "../../api.js";
-import type { ParentMessageBody } from "../../bridge.js";
-import { useProjectEvents } from "../../events.js";
+import type { ParentMessageBody } from "../../platform/bridge.js";
+import { useProjectEvents } from "../../platform/events.js";
 import { readStored, removeStored } from "../../platform/storage.js";
 
 const LEGACY_PREFIX = "studio.layer-locks";

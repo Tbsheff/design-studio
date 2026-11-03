@@ -2,9 +2,9 @@ import { useMemo } from "react";
 import type { ReactElement } from "react";
 
 import type { Project } from "../../../shared/contracts";
-import { chatWidthStyle } from "../../components/ChatSplitter";
-import { ProjectRail } from "../../components/ProjectRail";
+import { chatWidthStyle } from "../../features/chat/chat-splitter";
 import { focusNewProject } from "../../features/commands";
+import { ProjectRail } from "../../features/home/project-rail";
 import { useBindStudioCommands } from "./bind-studio-commands";
 import { paneAttr, shipOpener } from "./project-model";
 import { StudioCenter } from "./studio-center";

@@ -1,5 +1,5 @@
-import { runStepText } from "../../components/ToolChips";
-import type { RunView } from "../../runState";
+import type { RunView } from "../../features/chat/run-state-model";
+import { runStepText } from "../../features/chat/tool-chips";
 
 const runById = <Run>(
   runs: Record<string, Run>,

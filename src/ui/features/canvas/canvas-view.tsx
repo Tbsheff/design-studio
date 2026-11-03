@@ -1,5 +1,5 @@
 import { FindPanelSlot } from "../../canvas-slots.js";
-import { ReviewEntry } from "../../components/ReviewEntry.js";
+import { ReviewEntry } from "../review/review-entry.js";
 import { CanvasChrome } from "./canvas-chrome.js";
 import { frameDirection, frameName } from "./canvas-frames-model.js";
 import { canvasClass, hostedClose } from "./canvas-helpers.js";

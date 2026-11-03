@@ -17,18 +17,17 @@ import {
 } from "../../../shared/contracts.js";
 import { api, errorText } from "../../api.js";
 import { prefetchScreensWhenIdle } from "../../app/screens.js";
-import { AppChipView } from "../../components/HomeAppChip.js";
-import type { ModelSettings } from "../../components/HomePopovers.js";
-import { homePrefs, useHomePrefs } from "../../homePrefs.js";
-import { findPack, usePacks } from "../../packs.js";
-import { reportAppStart } from "../../perfTelemetry.js";
-import { useAppHealth } from "../../projectsStore.js";
-import { MODEL_OPTIONS, parseDraft, toDraft } from "../../settingsDraft.js";
-import { uiStore, useUi } from "../../storage.js";
-import { useFolderChooser } from "../../useFolderChooser.js";
-import { usePresence } from "../../usePresence.js";
-import { locationFor, useWorkspaces } from "../../useWorkspaces.js";
-import { maxVariationsFor } from "../../variationsApi.js";
+import { uiStore, useUi } from "../../platform/storage.js";
+import { reportAppStart } from "../../platform/telemetry.js";
+import { maxVariationsFor } from "../canvas/variations-api.js";
+import {
+  MODEL_OPTIONS,
+  parseDraft,
+  toDraft,
+} from "../chat/settings-draft-model.js";
+import { usePresence } from "../chat/use-presence.js";
+import { findPack, usePacks } from "../design-system/packs.js";
+import { AppChipView } from "./home-app-chip.js";
 import {
   type ImageDraft,
   type ReferenceDraft,
@@ -45,6 +44,8 @@ import {
   isEmpty,
   modelSummary,
 } from "./home-model.js";
+import type { ModelSettings } from "./home-popovers.js";
+import { homePrefs, useHomePrefs } from "./home-prefs-model.js";
 import {
   type HomeToastState,
   useHomeProjects,
@@ -57,11 +58,14 @@ import {
   loadSlash,
   loadTemplates,
 } from "./lazy-parts.js";
+import { useAppHealth } from "./projects-store-model.js";
 import { useChipFlow } from "./use-chip-flow.js";
 import { useDoctorGate } from "./use-doctor-gate.js";
+import { useFolderChooser } from "./use-folder-chooser.js";
 import { useModule } from "./use-module.js";
 import { useOpenFlows } from "./use-open-flows.js";
 import { useRootDrop } from "./use-root-drop.js";
+import { locationFor, useWorkspaces } from "./use-workspaces.js";
 
 function useHomeScreen(onOpen: (projectId: string) => void) {
   const [prompt, setPrompt] = useState("");

@@ -9,9 +9,9 @@ import {
 
 import { Markdown } from "../../ai/components/ai/markdown.js";
 import { api, errorText } from "../../api.js";
-import { MOD_LABEL } from "../../components/CommentPopover.js";
 import { Icon } from "../../kit/Icon.js";
-import { useModalDialog } from "../../usePopover.js";
+import { useModalDialog } from "../../kit/use-popover.js";
+import { MOD_LABEL } from "../comments/comment-popover.js";
 import { COPY } from "./copy.js";
 import { outlineOf } from "./design-md-outline.js";
 import type { OutlineItem } from "./design-md-outline.js";

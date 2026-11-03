@@ -7,8 +7,8 @@ import type {
   Version,
 } from "../../../shared/contracts.js";
 import { api, errorText } from "../../api.js";
-import type { PreviewPort } from "../../bridge.js";
-import { useProjectEvents } from "../../events.js";
+import type { PreviewPort } from "../../platform/bridge.js";
+import { useProjectEvents } from "../../platform/events.js";
 import type { DirectEditControl } from "./use-direct-edit.js";
 
 export type SessionAction = "save" | "discard";

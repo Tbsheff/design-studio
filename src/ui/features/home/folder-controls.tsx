@@ -9,10 +9,10 @@ import {
   type WorkspaceFolder,
   type WorkspaceList,
 } from "../../../shared/folders.js";
-import { LazySelect } from "../../components/LazySelect.js";
 import { Icon } from "../../kit/Icon.js";
+import { LazySelect } from "../../kit/lazy-select.js";
 import type { UiSelectOption } from "../../kit/UiSelect.js";
-import type { FolderChooser } from "../../useFolderChooser.js";
+import type { FolderChooser } from "./use-folder-chooser.js";
 
 function FolderPath({
   path,

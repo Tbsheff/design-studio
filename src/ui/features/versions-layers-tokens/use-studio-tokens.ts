@@ -1,10 +1,10 @@
 import { useCallback } from "react";
 
 import type { Version } from "../../../shared/contracts.js";
-import { useTokenFrameSync } from "../../tokenFrames.js";
-import type { DesignTokens } from "../../useDesignSystemState.js";
-import { useUndoShortcut } from "../../useUndoShortcut.js";
-import type { RedoShortcut } from "../../useUndoShortcut.js";
+import { useUndoShortcut } from "../canvas/use-undo-shortcut.js";
+import type { RedoShortcut } from "../canvas/use-undo-shortcut.js";
+import { useTokenFrameSync } from "../design-system/token-frames.js";
+import type { DesignTokens } from "../design-system/use-design-system-state.js";
 import { useTokenDraft } from "./use-token-draft.js";
 
 interface Options {

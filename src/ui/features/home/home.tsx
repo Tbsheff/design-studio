@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 
 import { formatAnswers } from "../../../shared/clarify.js";
-import { uiStore } from "../../storage.js";
+import { uiStore } from "../../platform/storage.js";
 import { ChipMenuSlot } from "./chip-menu-slot.js";
 import { ComposerBar } from "./composer-bar.js";
 import { DropHint } from "./drop-hint.js";

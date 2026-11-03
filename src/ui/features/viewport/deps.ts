@@ -6,6 +6,6 @@ export { Icon } from "../../kit/Icon.js";
 
 export { useAction } from "../../platform/query.js";
 
-export { usePopover } from "../../usePopover.js";
+export { usePopover } from "../../kit/use-popover.js";
 
 export type { ActionState } from "../../platform/query.js";

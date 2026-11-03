@@ -8,8 +8,8 @@ import type {
 import { Markdown } from "../../ai/components/ai/markdown.js";
 import { errorText } from "../../api.js";
 import { Icon } from "../../kit/Icon.js";
+import { useModalDialog } from "../../kit/use-popover.js";
 import { packApi } from "../../platform/pack-api.js";
-import { useModalDialog } from "../../usePopover.js";
 import { COPY } from "./copy.js";
 import { PackBadges } from "./pack-badges.js";
 import { PackPreview } from "./pack-preview.js";

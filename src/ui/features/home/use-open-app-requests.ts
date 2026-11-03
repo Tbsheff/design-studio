@@ -1,6 +1,9 @@
 import { useEffect, useRef } from "react";
 
-import { onOpenAppRequest, takeOpenAppRequest } from "../../openAppRequest.js";
+import {
+  onOpenAppRequest,
+  takeOpenAppRequest,
+} from "../../platform/app-events.js";
 
 function useOpenAppRequests(
   onPath: (path: string) => void,

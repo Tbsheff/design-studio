@@ -15,8 +15,8 @@ import {
   type ZoomKey,
 } from "../../../shared/contracts.js";
 import { createLiveStore, type LiveStore } from "../../platform/live-store.js";
+import { uiStore, type ZoomSetting } from "../../platform/storage.js";
 import { isTypingTarget } from "../../platform/typing-target.js";
-import { uiStore, type ZoomSetting } from "../../storage.js";
 import type { Box } from "./canvas-frames-model.js";
 
 export { isTypingTarget };

@@ -3,9 +3,13 @@ import type { MutableRefObject } from "react";
 import type { ArrangeAction, ArrangeResult } from "../../../shared/arrange.js";
 import type { SelectionContext } from "../../../shared/contracts.js";
 import type { KeyId } from "../../../shared/keymap.js";
-import type { PreviewPort } from "../../bridge.js";
-import { activeFrame, canvasStore, defaultLayout } from "../../canvasFrames.js";
-import { uiStore } from "../../storage.js";
+import type { PreviewPort } from "../../platform/bridge.js";
+import { uiStore } from "../../platform/storage.js";
+import {
+  activeFrame,
+  canvasStore,
+  defaultLayout,
+} from "../canvas/canvas-frames-model.js";
 import { parentLayout } from "./sizing.js";
 import type { DirectEditCommit, DirectEditControl } from "./use-direct-edit.js";
 

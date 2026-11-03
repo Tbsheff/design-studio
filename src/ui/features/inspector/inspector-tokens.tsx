@@ -15,15 +15,18 @@ import type {
 } from "../../../shared/contracts.js";
 import { colorHex, cssVarFor, varName } from "../../../shared/token-match.js";
 import { api } from "../../api.js";
-import type { PreviewPort } from "../../bridge.js";
+import { Icon } from "../../kit/Icon.js";
+import type { PreviewPort } from "../../platform/bridge.js";
+import type { DesignTokens } from "../design-system/use-design-system-state.js";
 import {
   CreateTokenDialog,
   type CreateTokenSubmit,
-} from "../../components/CreateTokenDialog.js";
-import { TokenControl } from "../../components/TokenControl.js";
-import { Icon } from "../../kit/Icon.js";
-import { lintValues, type LintIssue } from "../../tokenLint.js";
-import type { DesignTokens } from "../../useDesignSystemState.js";
+} from "../versions-layers-tokens/create-token-dialog.js";
+import { TokenControl } from "../versions-layers-tokens/token-control.js";
+import {
+  lintValues,
+  type LintIssue,
+} from "../versions-layers-tokens/token-lint.js";
 import type { AuthoredCss } from "./authored-css.js";
 import type { StyleValues } from "./css-values.js";
 import {

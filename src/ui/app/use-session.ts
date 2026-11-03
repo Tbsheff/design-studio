@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { errorText } from "../api";
-import { loadSession } from "../session";
+import { loadSession } from "../platform/session";
 
 interface SessionState {
   error: string | null;

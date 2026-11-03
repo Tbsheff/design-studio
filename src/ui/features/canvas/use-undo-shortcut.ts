@@ -4,7 +4,7 @@ import {
   noteHandledShortcut,
   recentDesktopCommand,
   useDesktopCommand,
-} from "../../desktop.js";
+} from "../../platform/desktop.js";
 import { editsText } from "../../platform/typing-target.js";
 
 export const PREVIEW_HISTORY_EVENT = "studio:preview-history";

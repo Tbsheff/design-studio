@@ -1,14 +1,17 @@
 import type { ReactNode } from "react";
 
-import { SkillsChecklist } from "../../components/SkillsChecklist";
-import { MODEL_OPTIONS, type SettingsDraft } from "../../settingsDraft";
+import {
+  MODEL_OPTIONS,
+  type SettingsDraft,
+} from "../../features/chat/settings-draft-model";
+import { SkillsChecklist } from "../../features/chat/skills-checklist";
 
 export {
   modelLabel,
   parseDraft,
   toDraft,
   type SettingsDraft,
-} from "../../settingsDraft";
+} from "../../features/chat/settings-draft-model";
 
 interface Props {
   draft: SettingsDraft;

@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest";
 
 import type { SelectionContext } from "../shared/contracts";
-import { valuesFromStyles } from "./cssValues";
+import { nextSelection } from "./features/canvas/use-preview-frames";
+import { valuesFromStyles } from "./features/inspector/css-values";
 import {
   batchEdits,
   dependsOnCurrent,
   mergeValues,
   multiBlockReason,
-} from "./mixedValues";
-import { nextSelection } from "./usePreviewFrames";
+} from "./features/inspector/mixed-values";
 
 function card(
   line: number,

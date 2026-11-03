@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import { agentText, strokesBox } from "../shared/comments";
-import { createStrokeBuilder, minStepFor, strokePath } from "./drawing";
+import {
+  createStrokeBuilder,
+  minStepFor,
+  strokePath,
+} from "./features/canvas/drawing-model";
 
 describe("drawing strokes", () => {
   it("smooths jitter, drops tiny steps, and ends at the pointer", () => {

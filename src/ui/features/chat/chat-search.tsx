@@ -3,7 +3,7 @@ import type { KeyboardEvent } from "react";
 
 import type { RunStatus, RunSummary } from "../../../shared/contracts.js";
 import { runQueryTerms } from "../../../shared/rewind.js";
-import { formatRelative } from "../../format.js";
+import { formatRelative } from "../../domain/format.js";
 import { Icon } from "../../kit/Icon.js";
 import { searchRunPage, SEARCH_LIMIT } from "./run-history-model.js";
 

@@ -6,8 +6,8 @@ import type {
   StructureTarget,
 } from "../../../shared/contracts.js";
 import { STRUCTURE_KEY_IDS } from "../../../shared/structure-keys.js";
-import { parseLoc } from "../../commentAnchors.js";
-import type { PreviewMenuItem } from "../../components/PreviewMenu.js";
+import type { PreviewMenuItem } from "../canvas/preview-menu.js";
+import { parseLoc } from "../comments/comment-anchors.js";
 
 export type SelectionOp = "delete" | "duplicate" | "wrap" | "unwrap" | "group";
 

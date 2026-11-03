@@ -10,7 +10,7 @@ import {
   type FrameStatesView,
   type MockUser,
 } from "../../../shared/frame-state.js";
-import { useProjectEvents } from "../../events.js";
+import { useProjectEvents } from "../../platform/events.js";
 import { call } from "../../platform/http.js";
 import type { RouteInput } from "../../platform/http.js";
 

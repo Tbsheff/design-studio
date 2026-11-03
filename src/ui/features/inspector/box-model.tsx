@@ -1,8 +1,8 @@
 import { useState, type ReactNode } from "react";
 
 import type { DirectStyleProperty } from "../../../shared/contracts.js";
-import { TokenControl } from "../../components/TokenControl.js";
 import { Icon } from "../../kit/Icon.js";
+import { TokenControl } from "../versions-layers-tokens/token-control.js";
 import { SIDES, type Side } from "./css-values.js";
 import { NumberInput } from "./number-field.js";
 import type { DirectEdit } from "./use-direct-edit.js";

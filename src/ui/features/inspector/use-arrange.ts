@@ -6,7 +6,7 @@ import {
 } from "../../../shared/arrange.js";
 import { arrange as arrangeRequest, errorText } from "../../api.js";
 import { isTypingTarget } from "../../platform/typing-target.js";
-import { PREVIEW_ARRANGE_KEY_EVENT } from "../../usePreviewFrames.js";
+import { PREVIEW_ARRANGE_KEY_EVENT } from "../canvas/use-preview-frames.js";
 import {
   type Props,
   type Message,

@@ -1,14 +1,14 @@
 import { useMemo } from "react";
 
-import { useInlineApprovals } from "../../approvalSpot";
-import { useDraftChrome } from "../../components/DraftSources";
+import { useTryVariants } from "../../features/canvas/use-try-variants";
+import { useInlineApprovals } from "../../features/chat/approval-spot-model";
+import { useDraftChrome } from "../../features/chat/draft-sources";
+import { useChatState } from "../../features/chat/use-chat-state";
+import { useMcpFeed } from "../../features/chat/use-mcp-feed";
+import { useRewind } from "../../features/chat/use-rewind";
 import { useStudioCommands } from "../../features/commands";
 import { useComponents } from "../../features/design-system";
-import { useChatState } from "../../useChatState";
-import { useExportTarget } from "../../useExportTarget";
-import { useMcpFeed } from "../../useMcpFeed";
-import { useRewind } from "../../useRewind";
-import { useTryVariants } from "../../useTryVariants";
+import { useExportTarget } from "../../features/share-publish-ship-export/use-export-target";
 import type { StudioCore } from "./studio-core-types";
 import type { StudioPanes, StudioUi } from "./studio-ui-types";
 import { useStudioBase } from "./use-studio-base";

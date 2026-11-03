@@ -1,0 +1,34 @@
+import { Suspense, lazy } from "react";
+
+import { imageKindOf } from "../../../shared/image.js";
+import type { InspectorProps } from "./inspector-model.js";
+
+const InspectorImage = lazy(() => import("./inspector-image.js"));
+
+const ImageSection = (props: InspectorProps) => {
+  const target = props.selection[0];
+
+  if (
+    props.selection.length !== 1 ||
+    !target ||
+    !props.directionId ||
+    !imageKindOf(target)
+  ) {
+    return null;
+  }
+
+  return (
+    <Suspense fallback={null}>
+      <InspectorImage
+        key={target.selector}
+        projectId={props.projectId}
+        directionId={props.directionId}
+        selection={target}
+        editable={props.editable}
+        port={props.port}
+      />
+    </Suspense>
+  );
+};
+
+export { ImageSection };

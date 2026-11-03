@@ -7,6 +7,7 @@ import { mountMcp } from "./mcp/mount.js";
 import { CloudBindings, configLayer } from "./platform/bindings.js";
 import type { AppEnv } from "./platform/bindings.js";
 import { CloudSettings } from "./platform/env.js";
+import { mountViewer } from "./viewer/mount.js";
 
 const platformLayer = Layer.mergeAll(
   CloudBindings.layer,
@@ -46,6 +47,8 @@ app.on(
 );
 
 mountMcp(app);
+
+mountViewer(app);
 
 const worker = { fetch: app.fetch } satisfies ExportedHandler;
 

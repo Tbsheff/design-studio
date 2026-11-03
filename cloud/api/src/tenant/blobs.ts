@@ -95,6 +95,14 @@ const makeKeyOf = (
     return `${prefixOf(org.orgId, ref.kind)}${ref.name}`;
   });
 
+const toBlobKey = (orgId: string, hash: string): string | null => {
+  if (!HASH_PATTERN.test(hash)) {
+    return null;
+  }
+
+  return `${prefixOf(orgId, "blob")}${hash}`;
+};
+
 const toPage = (prefix: string, listed: R2Objects): BlobPage => {
   const names = listed.objects.map((object) => object.key.slice(prefix.length));
 
@@ -161,6 +169,6 @@ class TenantBlobs extends Context.Service<TenantBlobs, TenantBlobsApi>()(
   );
 }
 
-export { TenantBlobs };
+export { TenantBlobs, toBlobKey };
 
 export type { BlobBody, BlobKind, BlobPage, BlobRef, TenantBlobsApi };

@@ -270,6 +270,10 @@ export const decisionOverrides: OxlintOverride[] = [
       "cloud/api/src/mcp/rpc.ts",
       "cloud/api/src/mcp/tools.ts",
       "cloud/api/src/tenant/repos/agent-request.ts",
+      "cloud/api/src/tenant/repos/publication.ts",
+      "cloud/api/src/viewer/mount.ts",
+      "cloud/api/src/viewer/path.ts",
+      "cloud/api/src/viewer/read-site-file.ts",
     ],
     rules: {
       "anti-slop/no-known-value-widening": "off",

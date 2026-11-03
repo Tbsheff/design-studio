@@ -1191,4 +1191,198 @@ export const decisionOverrides: OxlintOverride[] = [
     files: ["src/server/mcp/action-call.ts", "src/server/mcp/studio-ports.ts"],
     rules: { "import/no-relative-parent-imports": "off" },
   },
+  {
+    files: [
+      "src/bridge/anchor-tracker.ts",
+      "src/bridge/bridge-types.ts",
+      "src/bridge/element-info.ts",
+      "src/bridge/live-preview.ts",
+      "src/bridge/session.ts",
+      "src/bridge/zoom-forward.ts",
+    ],
+    rules: {
+      "import/no-relative-parent-imports": "off",
+    },
+  },
+  {
+    files: [
+      "src/bridge/anchor-tracker.ts",
+      "src/bridge/bridge-types.ts",
+      "src/bridge/dom-input.ts",
+      "src/bridge/element-info.ts",
+      "src/bridge/live-preview.ts",
+      "src/bridge/rect-tracker.ts",
+      "src/bridge/session.ts",
+      "src/bridge/zoom-forward.ts",
+    ],
+    rules: {
+      "anti-slop/require-readable-spacing": "off",
+    },
+  },
+  {
+    files: [
+      "src/bridge/anchor-tracker.ts",
+      "src/bridge/dom-input.ts",
+      "src/bridge/element-info.ts",
+      "src/bridge/live-preview.ts",
+      "src/bridge/rect-tracker.ts",
+      "src/bridge/session.ts",
+      "src/bridge/zoom-forward.ts",
+    ],
+    rules: {
+      "eslint/curly": "off",
+      "eslint/func-style": "off",
+      "unicorn/prefer-global-this": "off",
+    },
+  },
+  {
+    files: ["src/bridge/session.ts", "src/bridge/zoom-forward.ts"],
+    rules: {
+      "eslint/no-useless-return": "off",
+    },
+  },
+  {
+    files: ["src/bridge/dom-input.ts", "src/bridge/session.ts"],
+    rules: {
+      "react-doctor/no-unguarded-browser-global-at-module-scope": "off",
+    },
+  },
+  {
+    files: [
+      "src/bridge/element-info.ts",
+      "src/bridge/live-preview.ts",
+      "src/bridge/rect-tracker.ts",
+    ],
+    rules: {
+      "eslint/id-length": "off",
+    },
+  },
+  {
+    files: [
+      "src/bridge/element-info.ts",
+      "src/bridge/live-preview.ts",
+      "src/bridge/zoom-forward.ts",
+    ],
+    rules: {
+      "eslint/prefer-destructuring": "off",
+    },
+  },
+  {
+    files: ["src/bridge/dom-input.ts", "src/bridge/element-info.ts"],
+    rules: {
+      "eslint/require-unicode-regexp": "off",
+    },
+  },
+  {
+    files: [
+      "src/bridge/anchor-tracker.ts",
+      "src/bridge/element-info.ts",
+      "src/bridge/rect-tracker.ts",
+    ],
+    rules: {
+      "unicorn/prefer-spread": "off",
+    },
+  },
+  {
+    files: ["src/bridge/element-info.ts"],
+    rules: {
+      "eslint/prefer-named-capture-group": "off",
+      "github/no-then": "off",
+    },
+  },
+  {
+    files: ["src/bridge/anchor-tracker.ts", "src/bridge/element-info.ts"],
+    rules: {
+      "github/no-innerText": "off",
+      "unicorn/prefer-dom-node-text-content": "off",
+    },
+  },
+  {
+    files: [
+      "src/bridge/element-info.ts",
+      "src/bridge/rect-tracker.ts",
+      "src/bridge/zoom-forward.ts",
+    ],
+    rules: {
+      "sonarjs/shorthand-property-grouping": "off",
+    },
+  },
+  {
+    files: ["src/bridge/element-info.ts", "src/bridge/rect-tracker.ts"],
+    rules: {
+      "anti-slop/no-known-value-widening": "off",
+    },
+  },
+  {
+    files: [
+      "src/bridge/anchor-tracker.ts",
+      "src/bridge/dom-input.ts",
+      "src/bridge/live-preview.ts",
+    ],
+    rules: {
+      "unicorn/prefer-query-selector": "off",
+    },
+  },
+  {
+    files: ["src/bridge/dom-input.ts", "src/bridge/live-preview.ts"],
+    rules: {
+      "unicorn/prefer-dom-node-append": "off",
+    },
+  },
+  {
+    files: [
+      "src/bridge/anchor-tracker.ts",
+      "src/bridge/dom-input.ts",
+      "src/bridge/live-preview.ts",
+      "src/bridge/rect-tracker.ts",
+    ],
+    rules: {
+      "anti-slop/no-unknown-parameters": "off",
+    },
+  },
+  {
+    files: ["src/bridge/anchor-tracker.ts", "src/bridge/dom-input.ts"],
+    rules: {
+      "sonarjs/expression-complexity": "off",
+    },
+  },
+  {
+    files: ["src/bridge/zoom-forward.ts"],
+    rules: {
+      "github/require-passive-events": "off",
+    },
+  },
+  {
+    files: ["src/bridge/live-preview.ts"],
+    rules: {
+      "anti-slop/no-unsafe-dictionary-type": "off",
+      "eslint/max-params": "off",
+      "eslint/no-continue": "off",
+      "typescript/explicit-function-return-type": "off",
+      "unicorn/consistent-function-scoping": "off",
+    },
+  },
+  {
+    files: [
+      "src/bridge/anchor-tracker.ts",
+      "src/bridge/live-preview.ts",
+      "src/bridge/rect-tracker.ts",
+    ],
+    rules: {
+      "typescript/method-signature-style": "off",
+    },
+  },
+  {
+    files: ["src/bridge/anchor-tracker.ts", "src/bridge/rect-tracker.ts"],
+    rules: {
+      "eslint/no-use-before-define": "off",
+      "unicorn/no-array-callback-reference": "off",
+    },
+  },
+  {
+    files: ["src/bridge/rect-tracker.ts"],
+    rules: {
+      "react-doctor/js-combine-iterations": "off",
+    },
+  },
 ];

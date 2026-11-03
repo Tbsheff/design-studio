@@ -5,6 +5,8 @@ import type { AnyAction } from "../../shared/actions/_core/action.js";
 import { Forbidden } from "../../shared/actions/_core/errors/forbidden.js";
 import { AllActions } from "../../shared/actions/index.js";
 import type { AgentArgs } from "../agent-tools/registry.js";
+import { actionDeniedMessage } from "../agent/ask-gate.js";
+import type { ActionAsk } from "../agent/ask-gate.js";
 import type { Entries } from "../handlers/_core/handler.js";
 import { allowAll, makeRunner } from "../handlers/_core/run-action.js";
 import type { Gate, Runner, WireArgs } from "../handlers/_core/run-action.js";
@@ -234,9 +236,45 @@ const callActionTool = (
   });
 };
 
+const agentGate =
+  (ask: ActionAsk, tool: string, args: WireArgs): Gate =>
+  (card) =>
+    Effect.flatMap(
+      Effect.promise(() => ask(tool, args, card)),
+      (decision) => {
+        if (decision.allow) {
+          return Effect.void;
+        }
+
+        return Effect.fail(
+          new Forbidden({
+            message: actionDeniedMessage(decision),
+            perm: "confirm",
+          })
+        );
+      }
+    );
+
+const callerGate = (
+  ask: ActionAsk | null,
+  action: AnyAction,
+  args: WireArgs
+): Gate => {
+  if (ask === null) {
+    return refuseAll;
+  }
+
+  if ("name" in action.agent) {
+    return agentGate(ask, action.agent.name, args);
+  }
+
+  return agentGate(ask, action.id, args);
+};
+
 const actionCaller = (
   runtime: StudioRuntime | null | undefined,
-  principal: Principal = toLegacyPrincipal()
+  principal: Principal = toLegacyPrincipal(),
+  ask: ActionAsk | null = null
 ): CallById | null => {
   if (!runtime) {
     return null;
@@ -250,7 +288,7 @@ const actionCaller = (
     }
 
     return runActionTool(runtime, runner, args as WireArgs, {
-      gate: refuseAll,
+      gate: callerGate(ask, action, args as WireArgs),
       principal,
     });
   };

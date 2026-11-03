@@ -1,6 +1,9 @@
 import type { PermissionResult } from "@anthropic-ai/claude-agent-sdk";
 
-import type { PermissionDecision } from "../../shared/contracts.js";
+import type {
+  PermissionCard,
+  PermissionDecision,
+} from "../../shared/contracts.js";
 import type { CommandRules, PermissionAsk } from "./lifecycle.js";
 
 export const ASK_TIMEOUT_MS = 280_000;
@@ -96,4 +99,52 @@ export function createBashGate(
 
     return next;
   };
+}
+
+export type ActionAsk = (
+  tool: string,
+  input: unknown,
+  card: PermissionCard
+) => Promise<PermissionDecision>;
+
+export function createActionAsk(
+  ask: (request: PermissionAsk) => Promise<PermissionDecision>,
+  timeoutMs = ASK_TIMEOUT_MS
+): ActionAsk {
+  return async (tool, input, card) => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    const timeout = new Promise<PermissionDecision>((resolve) => {
+      timer = setTimeout(
+        () => resolve({ allow: false, note: "No answer in time." }),
+        timeoutMs
+      );
+    });
+
+    const decision = await Promise.race([
+      ask({
+        card,
+        detail: card.detail,
+        input,
+        title: card.title,
+        toolName: tool,
+        toolUseId: null,
+      }),
+      timeout,
+    ]);
+
+    clearTimeout(timer);
+
+    return decision;
+  };
+}
+
+export function actionDeniedMessage(
+  decision: Extract<PermissionDecision, { allow: false }>
+): string {
+  const note = decision.note?.trim();
+
+  return note
+    ? `The user denied this action and wrote: ${note}`
+    : "The user denied this action in Design Studio. Do not run it again; ask the user.";
 }

@@ -28,7 +28,7 @@ import { buildEnv } from "../platform/config/index.js";
 import type { CommentStore } from "../store/comments.js";
 import type { LayerLockStore } from "../store/layer-locks.js";
 import type { PreviewService } from "../types.js";
-import { createBashGate, type ToolGate } from "./ask-gate.js";
+import { createActionAsk, createBashGate, type ToolGate } from "./ask-gate.js";
 import { captureBaselineFindings } from "./baseline-findings.js";
 import {
   captureBaseline,
@@ -812,6 +812,14 @@ function baselineGate(
   return () => gate;
 }
 
+function actionAskOf(input: DriverInput) {
+  if (!input.ask) {
+    return null;
+  }
+
+  return createActionAsk(input.ask);
+}
+
 async function buildSdkOptions(
   options: SdkDriverOptions,
   input: DriverInput,
@@ -833,6 +841,7 @@ async function buildSdkOptions(
     layerLocks: options.layerLocks ?? null,
     frameStates: options.frameStates ?? null,
     runtime: options.runtime,
+    actionAsk: actionAskOf(input),
     ctx,
     runsDir: input.runsDir,
     runId: input.runId,

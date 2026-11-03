@@ -630,8 +630,15 @@ export interface QueuedMessage {
   text: string;
 }
 
+export interface PermissionCard {
+  action: string;
+  detail: string;
+  title: string;
+}
+
 export interface PermissionRequest {
   id: string;
+  card?: PermissionCard;
   toolUseId: string | null;
   toolName: string;
   input: unknown;

@@ -72,6 +72,7 @@ import {
   runArrange,
   runMeasure,
 } from "./arrange-tool.js";
+import type { ActionAsk } from "./ask-gate.js";
 import {
   listBreakpointsInput,
   runListBreakpoints,
@@ -327,6 +328,7 @@ export interface StudioToolDeps {
   frameStates?: FrameStateDeps | null;
   exportsDir?: string;
   runtime?: StudioRuntime | null | undefined;
+  actionAsk?: ActionAsk | null;
 }
 
 const CANVAS_OFF = "The canvas is not available in this run.";
@@ -1856,7 +1858,10 @@ export async function createStudioMcpServer(
     compareReferenceTool,
     figmaImportTool,
     helpTool,
-    ...buildAgentTools(actionCaller(deps.runtime), tool),
+    ...buildAgentTools(
+      actionCaller(deps.runtime, undefined, deps.actionAsk ?? null),
+      tool
+    ),
   ];
 
   return createSdkMcpServer({

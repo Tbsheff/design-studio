@@ -2,10 +2,12 @@ import { useCallback, useMemo, useState } from "react";
 
 import { lastImproveRun } from "../../components/DraftImprove";
 import { useDesktopContext } from "../../desktop";
+import { useComments } from "../../features/comments";
+import {
+  useDesignSystemState,
+  usePackActions,
+} from "../../features/design-system";
 import type { RunView } from "../../runState";
-import { useComments } from "../../useComments";
-import { useDesignSystemState } from "../../useDesignSystemState";
-import { usePackActions } from "../../usePackActions";
 import { useRunCanvas } from "../../useRunCanvas";
 import { useStudioData } from "../../useStudioData";
 import { useVariations } from "../../useVariations";

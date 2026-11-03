@@ -19,3 +19,17 @@ const ComposerComments = lazy(async () => {
 });
 
 export { CommentLayer, CommentsPanel, ComposerComments };
+
+export { useComments } from "./use-comments.js";
+
+export { useCommentPrefill } from "./use-comment-prefill.js";
+
+export type {
+  CommentExtras,
+  CommentPatch,
+  CommentsControl,
+  DescribeAnchors,
+  OnPrefill,
+} from "./use-comments.js";
+
+export type { PrefillRequest } from "./use-comment-prefill.js";

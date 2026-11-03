@@ -1,15 +1,17 @@
 import type { Project, Version } from "../../../shared/contracts";
 import type { useDraftChrome } from "../../components/DraftSources";
 import type { useStudioCommands } from "../../features/commands";
+import type { useComments } from "../../features/comments";
+import type {
+  useComponents,
+  useDesignSystemState,
+  usePackActions,
+} from "../../features/design-system";
 import type { RunView } from "../../runState";
 import type { useChatState } from "../../useChatState";
-import type { useComments } from "../../useComments";
-import type { useComponents } from "../../useComponents";
-import type { useDesignSystemState } from "../../useDesignSystemState";
 import type { useEditHistory } from "../../useEditHistory";
 import type { useExportTarget } from "../../useExportTarget";
 import type { useMcpFeed } from "../../useMcpFeed";
-import type { usePackActions } from "../../usePackActions";
 import type { useRewind } from "../../useRewind";
 import type { useRunCanvas } from "../../useRunCanvas";
 import type { useStudioData } from "../../useStudioData";

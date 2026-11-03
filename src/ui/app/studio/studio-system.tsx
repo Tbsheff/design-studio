@@ -4,7 +4,7 @@ import type { ReactElement } from "react";
 import {
   DesignSystemChip,
   designSystemRef,
-} from "../../components/DesignSystemChip";
+} from "../../features/design-system";
 import { EDIT_DESIGN_LABEL, SYSTEM_TEXT } from "./copy";
 import { RulesSlot } from "./layers";
 import type { StudioCtxProps } from "./studio-context";

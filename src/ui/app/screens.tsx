@@ -45,15 +45,15 @@ const studio = preloadable(async () => {
 });
 
 const designSystems = preloadable(async () => {
-  const loaded = await import("../components/DesignSystems");
+  const loaded = await import("../features/design-system");
 
-  return loaded.DesignSystems;
+  return loaded.loadDesignSystems();
 });
 
 const newDesignSystem = preloadable(async () => {
-  const loaded = await import("../components/NewDesignSystem");
+  const loaded = await import("../features/design-system");
 
-  return loaded.NewDesignSystem;
+  return loaded.loadNewDesignSystem();
 });
 
 const Studio = studio.Screen;

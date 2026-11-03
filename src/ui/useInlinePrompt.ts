@@ -5,7 +5,7 @@ import { matchesKey } from "../shared/keymap";
 import type { EditScope, InlineRunExtras } from "../shared/usage-scope";
 import { IS_MAC } from "./features/commands/keys";
 import { useCommands } from "./features/commands/registry";
-import { isTypingTarget } from "./features/commands/typing-target";
+import { isTypingTarget } from "./platform/typing-target.js";
 import { unionRect } from "./useCanvasFrames";
 
 export const INLINE_PROMPT_COMMAND = "selection.ask-inline";

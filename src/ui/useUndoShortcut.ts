@@ -5,7 +5,7 @@ import {
   recentDesktopCommand,
   useDesktopCommand,
 } from "./desktop";
-import { editsText } from "./features/commands/typing-target";
+import { editsText } from "./platform/typing-target.js";
 
 export const PREVIEW_HISTORY_EVENT = "studio:preview-history";
 

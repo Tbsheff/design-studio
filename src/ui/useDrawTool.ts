@@ -4,7 +4,7 @@ import { DRAW_POINTS_MAX, DRAW_STROKES_MAX } from "../shared/comments";
 import type { DrawStroke } from "../shared/contracts";
 import { useDesktopCommand } from "./desktop";
 import { DRAW_COLORS } from "./drawing";
-import { isTypingTarget } from "./features/commands/typing-target";
+import { isTypingTarget } from "./platform/typing-target.js";
 
 export interface DrawTool {
   available: boolean;

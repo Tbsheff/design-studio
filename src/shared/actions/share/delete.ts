@@ -4,6 +4,8 @@ import { defineAction } from "../_core/action.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
 import { Conflict } from "../_core/errors/conflict.js";
 import { NotFound } from "../_core/errors/not-found.js";
+import { Unauthenticated } from "../_core/errors/unauthenticated.js";
+import { Unavailable } from "../_core/errors/unavailable.js";
 import { ProjectIdSchema } from "../_core/ids.js";
 import { ShareIdSchema, ShareRevokedSchema } from "./schema.js";
 
@@ -19,7 +21,7 @@ const deleteShare = defineAction({
   confirm: "user",
   description:
     "Turn off a share link now. The link, its images and its comment form stop working at once and the snapshot images are deleted. Comments already sent stay in the Comments pane.",
-  errors: [BadRequest, Conflict, NotFound],
+  errors: [BadRequest, Conflict, NotFound, Unauthenticated, Unavailable],
   http: { method: "DELETE", path: "/api/projects/:projectId/shares/:shareId" },
   id: "share.delete",
   input: Schema.Struct({

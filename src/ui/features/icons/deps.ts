@@ -12,7 +12,7 @@ export type { PreviewMenuItem } from "../../components/PreviewMenu.js";
 
 export { insertError } from "../../componentInsert.js";
 
-export { isTypingTarget } from "../../typingTarget.js";
+export { isTypingTarget } from "../../platform/typing-target.js";
 
 export { useModalDialog } from "../../usePopover.js";
 

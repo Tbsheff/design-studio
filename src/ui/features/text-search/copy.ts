@@ -1,8 +1,4 @@
-const FIND_TEXT_EVENT = "studio:find-text";
-
 const FIND_TEXT_KEY = "find-text";
-
-const FIND_TEXT_COMMAND = "edit.find-text";
 
 const copy = {
   caseSensitive: "Match case",
@@ -41,12 +37,4 @@ const undoText = (updated: number, undoKey: string): string =>
 const staleText = (stale: number): string =>
   `${plural(stale, "hit")} changed before the replace and stayed as they are.`;
 
-export {
-  copy,
-  countText,
-  FIND_TEXT_COMMAND,
-  FIND_TEXT_EVENT,
-  FIND_TEXT_KEY,
-  staleText,
-  undoText,
-};
+export { copy, countText, FIND_TEXT_KEY, staleText, undoText };

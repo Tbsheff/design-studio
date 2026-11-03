@@ -5,8 +5,8 @@ import type { DesktopCommand } from "../shared/desktop-link";
 import { api, errorText } from "./api";
 import { useDesktopCommand, useDesktopContext } from "./desktop";
 import { COMMAND_EVENT, LAYER_EVENT } from "./features/commands/registry";
-import { isTypingTarget } from "./features/commands/typing-target";
 import { desktopBridge } from "./platform/desktop";
+import { isTypingTarget } from "./platform/typing-target.js";
 import { uiStore } from "./storage";
 
 function projectForFolder(

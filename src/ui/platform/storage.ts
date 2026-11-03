@@ -217,3 +217,19 @@ export const homeVariations = {
     return intent;
   },
 };
+
+export const readStored = (key: string): string | null => {
+  try {
+    return globalThis.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+};
+
+export const writeStored = (key: string, value: string): void => {
+  try {
+    globalThis.localStorage.setItem(key, value);
+  } catch {
+    return;
+  }
+};

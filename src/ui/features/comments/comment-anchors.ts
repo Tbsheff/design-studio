@@ -1,15 +1,11 @@
-import {
-  canOrphan,
-  formatLoc,
-  matchesFrame,
-  type OrphanTracker,
-} from "../../../shared/comments";
+import { canOrphan, formatLoc, matchesFrame } from "./deps.js";
 import type {
   AnchorReport,
   DesignComment,
+  OrphanTracker,
   SourceLoc,
-} from "../../../shared/contracts";
-import type { CommentPatch } from "./use-comments";
+} from "./deps.js";
+import type { CommentPatch } from "./use-comments.js";
 
 interface ReportReview {
   patch: CommentPatch | null;

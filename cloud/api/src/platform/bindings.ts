@@ -1,8 +1,9 @@
 import { env } from "cloudflare:workers";
 import { ConfigProvider, Context, Layer } from "effect";
 
-import type { UnlockLockout } from "../viewer/unlock-lockout.js";
 import type { RateLimiter } from "./rate-limiter.js";
+import type { ShareLive } from "./share-live.js";
+import type { UnlockLockout } from "./unlock-lockout.js";
 
 type CloudEnv = Cloudflare.Env;
 
@@ -16,6 +17,7 @@ interface CloudBindingsApi {
   readonly db: D1Database;
   readonly files: R2Bucket;
   readonly rate: DurableObjectNamespace<RateLimiter>;
+  readonly shareLive: DurableObjectNamespace<ShareLive>;
   readonly unlock: DurableObjectNamespace<UnlockLockout>;
 }
 
@@ -42,6 +44,7 @@ class CloudBindings extends Context.Service<CloudBindings, CloudBindingsApi>()(
       db: cloudEnv.DB,
       files: cloudEnv.FILES,
       rate: cloudEnv.RATE,
+      shareLive: cloudEnv.SHARE_LIVE,
       unlock: cloudEnv.UNLOCK,
     })
   );

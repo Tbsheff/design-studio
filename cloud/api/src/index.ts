@@ -12,6 +12,7 @@ import { CloudBindings, configLayer } from "./platform/bindings.js";
 import type { AppEnv, CloudEnv } from "./platform/bindings.js";
 import { CloudSettings } from "./platform/env.js";
 import { shareLayer } from "./share/layer.js";
+import { SweepDb } from "./tenant/sweep-db.js";
 import { viewerLayer } from "./viewer/layer.js";
 
 const platformLayer = Layer.mergeAll(
@@ -23,9 +24,12 @@ const authLayer = Layer.mergeAll(AuthGateway.layer, AuthRateLimit.layer).pipe(
   Layer.provideMerge(platformLayer)
 );
 
-const appLayer = Layer.mergeAll(mcpLayer, viewerLayer, shareLayer).pipe(
-  Layer.provideMerge(authLayer)
-);
+const appLayer = Layer.mergeAll(
+  mcpLayer,
+  viewerLayer,
+  shareLayer,
+  SweepDb.layer
+).pipe(Layer.provideMerge(authLayer));
 
 const runtime = ManagedRuntime.make(appLayer);
 
@@ -63,15 +67,17 @@ mountShare(app, runtime);
 
 const worker = {
   fetch: app.fetch,
-  scheduled: (_controller, env, context): void => {
-    context.waitUntil(runHourly(env, Date.now()));
+  scheduled: (_controller, _env, context): void => {
+    const now = Date.now();
+
+    context.waitUntil(runtime.runPromise(runHourly(now)));
   },
 } satisfies ExportedHandler<CloudEnv>;
 
 export { RateLimiter } from "./platform/rate-limiter.js";
 
-export { ShareLive } from "./share/share-live.js";
+export { ShareLive } from "./platform/share-live.js";
 
-export { UnlockLockout } from "./viewer/unlock-lockout.js";
+export { UnlockLockout } from "./platform/unlock-lockout.js";
 
 export { worker as default };

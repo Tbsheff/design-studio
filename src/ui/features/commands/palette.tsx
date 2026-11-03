@@ -8,21 +8,29 @@ import {
 } from "react";
 import type { KeyboardEvent as ReactKeyboardEvent, ReactNode } from "react";
 
-import { chordMatches } from "../../../shared/keymap";
-import { errorText, api } from "../../api";
-import { HealthDot, ProjectThumb } from "../../components/ProjectThumb";
-import { Icon } from "../../kit/Icon";
-import { isDesktop } from "../../platform/desktop";
-import { useProjectHits, useRouteHits } from "../../projectHits";
-import { openProject } from "../../projectNav";
-import { projectsApi } from "../../projectsStore";
-import { uiStore } from "../../storage";
-import { findElement } from "./find-element";
-import { globalCommands } from "./global-commands";
-import { IS_MAC, Keys } from "./keys";
-import { buildRows, typePair } from "./palette-rows";
-import type { Row } from "./palette-rows";
-import { collectCommands } from "./registry";
+import { copy } from "./copy.js";
+import {
+  HealthDot,
+  Icon,
+  ProjectThumb,
+  api,
+  chordMatches,
+  errorText,
+  findElement,
+  isDesktop,
+  openProject,
+  projectsApi,
+  readStored,
+  uiStore,
+  useProjectHits,
+  useRouteHits,
+  writeStored,
+} from "./deps.js";
+import { globalCommands } from "./global-commands.js";
+import { IS_MAC, Keys } from "./keys.js";
+import { buildRows, typePair } from "./palette-rows.js";
+import type { Row } from "./palette-rows.js";
+import { collectCommands } from "./registry.js";
 
 const RECENT_KEY = "design-studio.commands.recent.v1";
 const RECENT_MAX = 5;
@@ -30,7 +38,7 @@ const DESKTOP = typeof window !== "undefined" && isDesktop();
 
 function readRecent(): string[] {
   try {
-    const raw: unknown = JSON.parse(localStorage.getItem(RECENT_KEY) ?? "[]");
+    const raw: unknown = JSON.parse(readStored(RECENT_KEY) ?? "[]");
 
     return Array.isArray(raw)
       ? raw
@@ -43,16 +51,12 @@ function readRecent(): string[] {
 }
 
 function noteRecent(id: string): void {
-  try {
-    localStorage.setItem(
-      RECENT_KEY,
-      JSON.stringify(
-        [id, ...readRecent().filter((x) => x !== id)].slice(0, RECENT_MAX)
-      )
-    );
-  } catch {
-    return;
-  }
+  writeStored(
+    RECENT_KEY,
+    JSON.stringify(
+      [id, ...readRecent().filter((x) => x !== id)].slice(0, RECENT_MAX)
+    )
+  );
 }
 
 function Marked({ text, marks }: { text: string; marks: number[] }): ReactNode {
@@ -312,7 +316,7 @@ export function Palette({
         className="cmdk"
         role="dialog"
         aria-modal="true"
-        aria-label="Command palette"
+        aria-label={copy.palette}
         aria-busy={busy || undefined}
       >
         <div className="cmdk-search">
@@ -330,8 +334,8 @@ export function Palette({
               rows[current] ? `${listId}-${current}` : undefined
             }
             aria-autocomplete="list"
-            aria-label="Go to anything, or describe something new"
-            placeholder="Go to anything, or describe something new"
+            aria-label={copy.paletteInput}
+            placeholder={copy.paletteInput}
             spellCheck={false}
             value={query}
             onChange={(e) => {
@@ -354,7 +358,7 @@ export function Palette({
           role="listbox"
           id={listId}
           ref={listRef}
-          aria-label="Results"
+          aria-label={copy.results}
         >
           {rows.length === 0 && (
             <p className="cmdk-empty">

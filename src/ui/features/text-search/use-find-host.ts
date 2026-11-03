@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { FIND_TEXT_EVENT, FIND_TEXT_KEY } from "./copy.js";
-import { IS_MAC, matchesKey } from "./deps.js";
+import { FIND_TEXT_KEY } from "./copy.js";
+import { FIND_TEXT_EVENT, IS_MAC, matchesKey } from "./deps.js";
 import type { CanvasFrame, TextHit } from "./deps.js";
 import { locOf } from "./text-search-model.js";
 

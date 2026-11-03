@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 
-import { errorText, json } from "../../api";
+import { errorText, json } from "./deps.js";
 
 const rulesPath = (projectId: string) =>
   `/api/projects/${encodeURIComponent(projectId)}/command-rules`;
@@ -21,7 +21,7 @@ const removeRule = (projectId: string, rule: string) =>
 
 export function CommandRules({ projectId }: { projectId: string }) {
   const [rules, setRules] = useState<string[] | null>(null);
-  const [busy, setBusy] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -46,17 +46,17 @@ export function CommandRules({ projectId }: { projectId: string }) {
     };
   }, [projectId]);
 
-  const remove = async (rule: string) => {
-    setBusy(rule);
+  const remove = (rule: string) => {
     setError(null);
+    startTransition(async () => {
+      try {
+        const result = await removeRule(projectId, rule);
 
-    try {
-      setRules((await removeRule(projectId, rule)).rules);
-    } catch (err) {
-      setError(errorText(err));
-    } finally {
-      setBusy(null);
-    }
+        startTransition(() => setRules(result.rules));
+      } catch (err) {
+        startTransition(() => setError(errorText(err)));
+      }
+    });
   };
 
   return (
@@ -75,9 +75,9 @@ export function CommandRules({ projectId }: { projectId: string }) {
               <button
                 type="button"
                 className="btn small"
-                disabled={busy !== null}
+                disabled={isPending}
                 aria-label={`Remove ${rule}`}
-                onClick={() => void remove(rule)}
+                onClick={() => remove(rule)}
               >
                 Remove
               </button>

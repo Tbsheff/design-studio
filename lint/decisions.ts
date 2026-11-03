@@ -265,7 +265,18 @@ export const SCOPED_OFF_REASONS: Record<string, string> = {
 
 export const decisionOverrides: OxlintOverride[] = [
   {
-    files: ["src/server/publish/cloud-links.ts"],
+    files: [
+      "src/server/cloud/cloud-fetch.ts",
+      "src/server/cloud/cloud-link-client.ts",
+      "src/server/cloud/cloud-link-rows.ts",
+      "src/server/cloud/cloud-list-client.ts",
+      "src/server/publish/linked-publication-store.ts",
+      "src/server/publish/linked-publication-writer.ts",
+      "src/server/share/linked-share-writer.ts",
+      "src/ui/domain/deps.ts",
+      "src/ui/features/commands/deps.ts",
+      "src/ui/features/comments/deps.ts",
+    ],
     rules: {
       "import/no-relative-parent-imports": "off",
     },
@@ -287,8 +298,9 @@ export const decisionOverrides: OxlintOverride[] = [
       "cloud/api/src/share/add-comment.ts",
       "cloud/api/src/share/layer.ts",
       "cloud/api/src/share/read-share.ts",
-      "cloud/api/src/share/share-live.ts",
+      "cloud/api/src/platform/share-live.ts",
       "cloud/api/src/tenant/repos/share.ts",
+      "cloud/api/src/tenant/sweep-db.ts",
     ],
     rules: { "import/no-relative-parent-imports": "off" },
   },
@@ -766,19 +778,12 @@ export const decisionOverrides: OxlintOverride[] = [
     },
   },
   {
-    files: [
-      "cloud/api/src/platform/bindings.ts",
-      "cloud/api/src/platform/cloud-env.d.ts",
-    ],
-    rules: { "import/no-relative-parent-imports": "off" },
-  },
-  {
     files: ["*.config.ts", "cloud/api/src/index.ts"],
     rules: { "import/no-default-export": "off" },
   },
   {
     files: [
-      "cloud/api/src/{platform/{bindings,rate-limiter},viewer/unlock-lockout,share/{share-live,live-client},auth/options}.ts",
+      "cloud/api/src/{platform/{bindings,rate-limiter,share-live,unlock-lockout},auth/options}.ts",
     ],
     rules: { "sonarjs/no-implicit-dependencies": "off" },
   },
@@ -895,16 +900,6 @@ export const decisionOverrides: OxlintOverride[] = [
   },
   {
     files: [
-      "src/ui/features/commands/command-rules.tsx",
-      "src/ui/features/commands/composer-commands.ts",
-      "src/ui/features/commands/global-commands.ts",
-      "src/ui/features/commands/keys.tsx",
-      "src/ui/features/commands/palette-rows.ts",
-      "src/ui/features/commands/palette.tsx",
-      "src/ui/features/commands/registry.ts",
-      "src/ui/features/commands/shortcut-sheet.tsx",
-      "src/ui/features/commands/use-canvas-commands.ts",
-      "src/ui/features/commands/use-studio-commands.ts",
       "src/ui/commands/CommandLayer.tsx",
       "src/ui/commands/Palette.tsx",
       "src/ui/commands/ShortcutSheet.tsx",
@@ -934,7 +929,6 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/ui/commands/useCanvasCommands.ts",
       "src/ui/commands/useStudioCommands.ts",
       "src/ui/components/CommandRules.tsx",
-      "src/ui/typingTarget.ts",
     ],
     rules: {
       "github/filenames-match-regex": "off",
@@ -944,17 +938,6 @@ export const decisionOverrides: OxlintOverride[] = [
   },
   {
     files: [
-      "src/ui/features/comments/comment-avatar.tsx",
-      "src/ui/features/comments/comment-composer.tsx",
-      "src/ui/features/comments/comment-layer.tsx",
-      "src/ui/features/comments/comment-popover.tsx",
-      "src/ui/features/comments/comments-panel.tsx",
-      "src/ui/features/comments/composer-comments.tsx",
-      "src/ui/features/comments/use-comments.ts",
-      "src/ui/features/comments/use-comment-mode.ts",
-      "src/ui/features/comments/use-comment-prefill.ts",
-      "src/ui/features/comments/comment-anchors.ts",
-      "src/ui/features/comments/comment-placement.ts",
       "src/ui/components/CommentAvatar.tsx",
       "src/ui/components/CommentComposer.tsx",
       "src/ui/components/CommentLayer.tsx",

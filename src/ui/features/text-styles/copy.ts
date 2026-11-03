@@ -13,6 +13,7 @@ const copy = {
   mixed: "Mixed",
   name: "Style name",
   nameHint: "Lowercase letters, digits and dashes, for example card-title",
+  namePlaceholder: "card-title",
   noSource: "This element has no source location",
   none: "None",
   save: "Create",

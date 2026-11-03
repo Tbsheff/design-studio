@@ -15,17 +15,12 @@ import { Chip } from "../ai/components/ai/chip";
 
 import "../styles/reference.css";
 import { api } from "../api";
+import type { PendingAttachment } from "../domain/pending-attachment";
 import { Icon } from "../kit/Icon";
 import { projectFromPath } from "../route";
 import { modelLabel } from "../settingsDraft";
 
-export interface PendingAttachment {
-  localId: string;
-  name: string;
-  previewUrl: string;
-  attachment: UploadedAttachment | null;
-  error: string | null;
-}
+export type { PendingAttachment } from "../domain/pending-attachment";
 
 export function SelectionChips({
   selection,

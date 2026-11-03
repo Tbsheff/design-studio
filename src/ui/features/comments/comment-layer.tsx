@@ -8,50 +8,54 @@ import {
 } from "react";
 
 import {
-  anchorQueryOf,
-  canPickForChat,
-  createOrphanTracker,
-  hasPin,
-} from "../../../shared/comments";
-import type {
-  AnchorQuery,
-  AnchorReport,
-  CommentDrawing,
-  DesignComment,
-  ProjectKind,
-  SelectionContext,
-} from "../../../shared/contracts";
-import { postToFrame, useBridge, type BridgeFrame } from "../../bridge";
-import { DrawingStrokes, PenIcon } from "../../components/DrawLayer";
-import { mentionLabel } from "../../components/MentionPicker";
-import { createLiveStore, useLive } from "../../platform/live-store";
-import { isTypingTarget } from "../../typingTarget";
-import { INLINE_PROMPT_OPEN_EVENT } from "../../useInlinePrompt";
-import { useProfileInitial } from "../../useProfileInitial";
-import {
   onActiveFrame,
   reviewReport,
   type ActiveFrame,
-} from "./comment-anchors";
-import { AvatarFace } from "./comment-avatar";
+} from "./comment-anchors.js";
+import { AvatarFace } from "./comment-avatar.js";
 import {
   CommentComposer,
   type ComposerSources,
   type ComposerSubmit,
-} from "./comment-composer";
+} from "./comment-composer.js";
 import {
   breadcrumbOf,
   offsetIn,
   pinPlacement,
   scopeText,
   type PinOffset,
-} from "./comment-placement";
-import { OpenCommentPopover } from "./comment-popover";
-import { ChatPickBar } from "./comments-panel";
-import { findElement } from "./find-element";
-import type { CommentsControl } from "./use-comments";
+} from "./comment-placement.js";
+import { OpenCommentPopover } from "./comment-popover.js";
+import { ChatPickBar } from "./comments-panel.js";
+import {
+  DrawingStrokes,
+  INLINE_PROMPT_OPEN_EVENT,
+  PenIcon,
+  anchorQueryOf,
+  canPickForChat,
+  createLiveStore,
+  createOrphanTracker,
+  findElement,
+  hasPin,
+  isTypingTarget,
+  mentionLabel,
+  postToFrame,
+  useBridge,
+  useLive,
+  useProfileInitial,
+} from "./deps.js";
+import type {
+  AnchorQuery,
+  AnchorReport,
+  BridgeFrame,
+  CommentDrawing,
+  DesignComment,
+  ProjectKind,
+  SelectionContext,
+} from "./deps.js";
+import type { CommentsControl } from "./use-comments.js";
 
-import "../../styles/comments.css";
+import "./comments.css";
 
 type Rect = SelectionContext["rect"];
 
@@ -139,17 +143,29 @@ function visible(
   );
 }
 
+const KEY_MARK = "\n";
+
+function toActiveFrame(key: string): ActiveFrame | null {
+  if (key === "") {
+    return null;
+  }
+
+  const [id = "", path = "", ...ids] = key.split(KEY_MARK);
+
+  return { id, ids, path };
+}
+
 function useShown(
   control: CommentsControl,
   active: ActiveFrame | undefined
 ): DesignComment[] {
   const showResolved = control.showResolved;
-  const activeKey = active ? JSON.stringify(active) : "";
+  const activeKey = active
+    ? [active.id, active.path, ...active.ids].join(KEY_MARK)
+    : "";
 
   return useMemo(() => {
-    const frame: ActiveFrame | null = activeKey
-      ? (JSON.parse(activeKey) as ActiveFrame)
-      : null;
+    const frame = toActiveFrame(activeKey);
 
     return control.comments.filter(
       (c) =>

@@ -2,7 +2,6 @@ import { Context, Effect, Layer, Schema } from "effect";
 
 import { CloudBindings } from "../platform/bindings.js";
 import { NotFound } from "../shared-actions.js";
-import type { UnlockLockout } from "../viewer/unlock-lockout.js";
 import type { RowSchema } from "./db.js";
 import {
   RowOrgMismatch,
@@ -15,6 +14,13 @@ import { ViewerScope } from "./viewer-scope.js";
 const PROJECT_MISSING = "The project does not exist.";
 
 const FILE_MISSING = "The file does not exist.";
+
+const PUBLICATION_MISSING = "The publication does not exist.";
+
+const PasswordRowSchema = Schema.Struct({
+  org_id: Schema.String,
+  password_hash: Schema.NullOr(Schema.String),
+});
 
 const ViewedProjectSchema = Schema.Struct({
   id: Schema.String,
@@ -79,8 +85,6 @@ const passwordByPublication = tq<{ readonly publicationId: string }>`
   WHERE p.org_id = :org AND p.id = :publicationId AND p.deleted_at IS NULL`;
 
 interface ViewerDbApi {
-  readonly cookieKey: string;
-  readonly lockout: (name: string) => DurableObjectStub<UnlockLockout>;
   readonly passwordHash: () => Effect.Effect<string | null, never, ViewerScope>;
   readonly project: () => Effect.Effect<ViewedProject, NotFound, ViewerScope>;
   readonly readFile: (
@@ -132,9 +136,6 @@ const makeViewerDb = (bindings: typeof CloudBindings.Service): ViewerDbApi => {
   const firstRow = makeFirstRow(db);
 
   return {
-    cookieKey: bindings.cookieKey,
-    lockout: (name: string) =>
-      bindings.unlock.get(bindings.unlock.idFromName(name)),
     passwordHash: Effect.fn("ViewerDb.passwordHash")(function* run() {
       const scope = yield* ViewerScope;
 
@@ -142,18 +143,21 @@ const makeViewerDb = (bindings: typeof CloudBindings.Service): ViewerDbApi => {
         return null;
       }
 
-      const bound = passwordByPublication.bind(scope.orgId, {
-        publicationId: scope.publicationId,
-      });
+      const row = yield* firstRow({
+        bound: passwordByPublication.bind(scope.orgId, {
+          publicationId: scope.publicationId,
+        }),
+        missing: PUBLICATION_MISSING,
+        orgId: scope.orgId,
+        schema: PasswordRowSchema,
+        sql: passwordByPublication.sql,
+      }).pipe(Effect.catchTag("NotFound", () => Effect.succeed(null)));
 
-      const row = yield* Effect.promise(() =>
-        db
-          .prepare(passwordByPublication.sql)
-          .bind(...bound)
-          .first<{ readonly password_hash: string | null }>()
-      );
+      if (row === null) {
+        return null;
+      }
 
-      return row?.password_hash ?? null;
+      return row.password_hash;
     }),
     project: Effect.fn("ViewerDb.project")(function* run() {
       const scope = yield* ViewerScope;

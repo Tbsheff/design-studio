@@ -32,7 +32,7 @@ const ColorField = ({ picker }: ColorFieldProps): ReactElement => {
         className="mono"
         list={listId}
         name="color"
-        placeholder="currentColor"
+        placeholder={copy.colorPlaceholder}
         spellCheck={false}
         value={picker.color}
         onChange={picker.handleColor}

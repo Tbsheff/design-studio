@@ -1,0 +1,68 @@
+const TYPING_TAGS = new Set(["INPUT", "SELECT", "TEXTAREA"]);
+
+const NON_TEXT_INPUTS = new Set([
+  "button",
+  "checkbox",
+  "color",
+  "file",
+  "image",
+  "radio",
+  "range",
+  "reset",
+  "submit",
+]);
+
+const ARROW_OWNERS =
+  '[role="radiogroup"], [role="radio"], [role="tablist"], [role="tab"], [role="menu"], [role="menubar"], [role="listbox"], [role="option"], [role="tree"], [role="treeitem"], [role="grid"], [role="slider"], [role="spinbutton"], [role="combobox"]';
+
+const isTypingTarget = (target: EventTarget | null): boolean => {
+  if (!(target instanceof HTMLElement)) {
+    return false;
+  }
+
+  return (
+    target.isContentEditable ||
+    TYPING_TAGS.has(target.tagName) ||
+    target.getAttribute("role") === "combobox"
+  );
+};
+
+const editsText = (target: EventTarget | null): boolean => {
+  if (!(target instanceof HTMLElement)) {
+    return false;
+  }
+
+  if (target.isContentEditable || target.tagName === "TEXTAREA") {
+    return true;
+  }
+
+  return (
+    target instanceof HTMLInputElement && !NON_TEXT_INPUTS.has(target.type)
+  );
+};
+
+const inspectorButtonFocused = (): HTMLButtonElement | null => {
+  const active = document.activeElement;
+
+  if (!(active instanceof HTMLButtonElement)) {
+    return null;
+  }
+
+  if (active.closest(".inspector") === null || active.closest(ARROW_OWNERS)) {
+    return null;
+  }
+
+  return active;
+};
+
+const canvasHasKeys = (): boolean => {
+  const active = document.activeElement;
+
+  return (
+    !active ||
+    active === document.body ||
+    (active instanceof HTMLElement && active.matches(".canvas .stage"))
+  );
+};
+
+export { canvasHasKeys, editsText, inspectorButtonFocused, isTypingTarget };

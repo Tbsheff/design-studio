@@ -2,6 +2,7 @@ const copy = {
   cancel: "Cancel",
   color: "Color token",
   colorHelp: "Leave empty to use the text color.",
+  colorPlaceholder: "currentColor",
   colorProblem: "Use a token name such as primary or muted-foreground",
   empty: "No icon matches this search.",
   failed: "Could not load icons.",

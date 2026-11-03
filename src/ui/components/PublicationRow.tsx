@@ -6,8 +6,9 @@ import {
   type PublicationComment,
 } from "../../shared/publish";
 import { errorText } from "../api";
+import { copy } from "../features/publish/copy";
 import { CopyButton } from "../kit/CopyButton";
-import { publishApi } from "../publishApi";
+import { isReadOnlyPublication, publishApi } from "../publishApi";
 
 function statusText(p: Publication, now: number): string {
   if (p.status === "removed") {
@@ -59,7 +60,7 @@ function Versions({
   return (
     <ol
       className="publish-versions"
-      aria-label="Published versions"
+      aria-label={copy.versions}
       data-testid="publish-versions"
     >
       {p.versions.map((v) => (
@@ -81,7 +82,7 @@ function Versions({
               className="btn ghost small"
               disabled={busy}
               onClick={() => onRollback(p, v.id)}
-              data-tip="Point the address back at this version. Nothing uploads."
+              data-tip={copy.restoreTip}
             >
               Make live
             </button>
@@ -143,7 +144,7 @@ function Comments({
               type="button"
               className="btn ghost small danger"
               onClick={() => void remove(c.id)}
-              data-tip="Deletes the comment for everyone"
+              data-tip={copy.deleteCommentTip}
             >
               Delete
             </button>
@@ -165,7 +166,7 @@ function RowActions({
   open: string | null;
   setOpen: (v: string | null) => void;
 }) {
-  const app = p.backend === "app";
+  const app = p.backend === "app" && !isReadOnlyPublication(p);
   const toggle = (name: string) => setOpen(open === name ? null : name);
 
   return (
@@ -176,7 +177,7 @@ function RowActions({
           className="btn ghost small"
           aria-expanded={open === "versions"}
           onClick={() => toggle("versions")}
-          data-tip="Published versions; make an older one live"
+          data-tip={copy.versionsTip}
         >
           Versions {p.versions.length}
         </button>
@@ -187,7 +188,7 @@ function RowActions({
           className="btn ghost small"
           aria-expanded={open === "comments"}
           onClick={() => toggle("comments")}
-          data-tip="Read and delete viewer comments"
+          data-tip={copy.commentsTip}
         >
           Comments {p.commentCount}
         </button>
@@ -198,7 +199,7 @@ function RowActions({
           className="btn ghost small"
           disabled={busy}
           onClick={() => onRepublish(p)}
-          data-tip="Check the head version for this address, then confirm"
+          data-tip={copy.publishTip}
         >
           Republish
         </button>
@@ -243,19 +244,13 @@ export function PublicationRow({
       <div className="share-link-head">
         <span className="share-link-title">
           <span className="truncate">{p.title}</span>
-          {p.isLegacy === true && (
-            <span
-              className="publish-legacy-tag"
-              data-tip="Published before cloud links. Read-only. Unpublish removes the local record only."
-            >
-              Legacy (read-only)
+          {isReadOnlyPublication(p) && (
+            <span className="publish-legacy-tag" data-tip={copy.legacyTip}>
+              {copy.legacy}
             </span>
           )}
-          {p.isLegacy !== true && p.backend !== "app" && (
-            <span
-              className="publish-legacy-tag"
-              data-tip="Published before the shared publish Worker"
-            >
+          {!isReadOnlyPublication(p) && p.backend !== "app" && (
+            <span className="publish-legacy-tag" data-tip={copy.workerTip}>
               Old Worker
             </span>
           )}

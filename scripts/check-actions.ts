@@ -23,8 +23,7 @@ interface LineRule extends RuleText {
   scope: string[];
 }
 
-interface Source {
-  file: string;
+interface Source extends Pick<Hit, "file"> {
   lines: string[];
 }
 
@@ -79,6 +78,7 @@ const ALL = ROOTS.map((root) => `${root}/**`);
 
 const LINE_RULES: LineRule[] = [
   {
+    allowed: ["cloud/api/src/platform/{share-live,unlock-lockout}.ts"],
     fix: "use Effect.gen with yield*, and fail with return yield* new X({ message })",
     id: "S11",
     re: /\bthrow\b|\btry\s*\{|\basync\s|\bawait\s|\bnew Promise\b/u,

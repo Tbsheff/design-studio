@@ -12,24 +12,7 @@ import {
   type RefObject,
 } from "react";
 
-import type {
-  CompiledTokenEntry,
-  ComponentInfo,
-  RunMention,
-  SelectionContext,
-} from "../../../shared/contracts";
-import { api } from "../../api";
-import {
-  MentionList,
-  mentionIcon,
-  mentionKey,
-  mentionLabel,
-  mentionTitle,
-  type MentionOption,
-} from "../../components/MentionPicker";
-import { Icon } from "../../kit/Icon";
-import { useMentions } from "../../useMentions";
-import { AvatarFace } from "./comment-avatar";
+import { AvatarFace } from "./comment-avatar.js";
 import {
   CARD_WIDTH,
   placeComposer,
@@ -37,8 +20,28 @@ import {
   type Breadcrumb,
   type CardSide,
   type PinOffset,
-} from "./comment-placement";
-import { MOD_LABEL, trapTab } from "./comment-popover";
+} from "./comment-placement.js";
+import { MOD_LABEL, trapTab } from "./comment-popover.js";
+import { copy } from "./copy.js";
+import {
+  Icon,
+  MentionList,
+  api,
+  mentionIcon,
+  mentionKey,
+  mentionLabel,
+  mentionTitle,
+  readStored,
+  useMentions,
+  writeStored,
+} from "./deps.js";
+import type {
+  CompiledTokenEntry,
+  ComponentInfo,
+  MentionOption,
+  RunMention,
+  SelectionContext,
+} from "./deps.js";
 
 type Rect = SelectionContext["rect"];
 
@@ -101,19 +104,11 @@ const CLAUDE_OPTION: MentionOption = {
 };
 
 function readSend(): boolean {
-  try {
-    return window.localStorage.getItem(SEND_KEY) === "1";
-  } catch {
-    return false;
-  }
+  return readStored(SEND_KEY) === "1";
 }
 
 function writeSend(on: boolean): void {
-  try {
-    window.localStorage.setItem(SEND_KEY, on ? "1" : "0");
-  } catch {
-    return;
-  }
+  writeStored(SEND_KEY, on ? "1" : "0");
 }
 
 function reducedMotion(): boolean {
@@ -584,7 +579,7 @@ export function CommentComposer(props: ComposerProps) {
             }
             rows={1}
             aria-label={props.label}
-            placeholder="Add a comment or ask Claude…"
+            placeholder={copy.composer}
             value={text}
             maxLength={2000}
             onChange={(event) => setText(event.target.value)}

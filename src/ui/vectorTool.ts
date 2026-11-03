@@ -9,7 +9,7 @@ import {
 } from "../shared/vector";
 import { json } from "./api";
 import { IS_MAC } from "./features/commands/keys";
-import { isTypingTarget } from "./features/commands/typing-target";
+import { isTypingTarget } from "./platform/typing-target.js";
 
 export type { VectorToolId };
 

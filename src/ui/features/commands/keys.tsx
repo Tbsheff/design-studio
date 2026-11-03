@@ -1,16 +1,8 @@
-import {
-  binding,
-  keyParts,
-  shortcutLabel,
-  type KeyId,
-} from "../../../shared/keymap";
+import { binding, keyParts } from "./deps.js";
+import type { KeyId } from "./deps.js";
+import { IS_MAC } from "./key-model.js";
 
-export const IS_MAC =
-  typeof navigator !== "undefined" &&
-  /mac|iphone|ipad/i.test(
-    (navigator as Navigator & { userAgentData?: { platform?: string } })
-      .userAgentData?.platform || navigator.userAgent
-  );
+export { IS_MAC, tipWithKey } from "./key-model.js";
 
 export function Keys({
   keys,
@@ -31,8 +23,4 @@ export function Keys({
 export function KeyHint({ id }: { id: KeyId }) {
   const first = binding(id).keys[0];
   return first ? <Keys keys={first} /> : null;
-}
-
-export function tipWithKey(label: string, id: KeyId): string {
-  return `${label}  ${shortcutLabel(id, IS_MAC)}`;
 }

@@ -1,26 +1,33 @@
 import { Effect } from "effect";
 
 import {
+  PASS_SECONDS,
+  PassCookieClient,
+  toHex,
+} from "../platform/pass-cookie-client.js";
+import { UnlockLockoutClient } from "../platform/unlock-lockout-client.js";
+import {
   NOT_FOUND,
   SEE_OTHER,
   TOO_MANY_REQUESTS,
   UNAUTHORIZED,
 } from "../shared-actions.js";
-import { ViewerDb } from "../tenant/viewer-db.js";
-import { PASS_SECONDS, signPass, toCookieName, toHex } from "./pass-cookie.js";
+import { toCookieName } from "./pass-cookie.js";
 import { toSalt, verifyPassword } from "./password.js";
 import { readPassword } from "./read-password.js";
 
 const encoder = new TextEncoder();
 
-const toIpHash = async (slug: string, ip: string): Promise<string> => {
-  const digest = await crypto.subtle.digest(
-    "SHA-256",
-    encoder.encode(`${slug}|${ip}`)
+const toIpHash = Effect.fn("Viewer.ipHash")(function* run(
+  slug: string,
+  ip: string
+) {
+  const digest = yield* Effect.promise(() =>
+    crypto.subtle.digest("SHA-256", encoder.encode(`${slug}|${ip}`))
   );
 
   return toHex(digest);
-};
+});
 
 const toLockedResponse = (retryAfter: number): Response =>
   new Response("Too many tries. Try again later.", {
@@ -43,21 +50,18 @@ const unlockSite = Effect.fn("Viewer.unlock")(function* run(
   }
 
   const salt = toSalt(gate.passwordHash);
-  const viewerDb = yield* ViewerDb;
-  const ipHash = yield* Effect.promise(async () => await toIpHash(slug, ip));
-  const lock = viewerDb.lockout(ipHash);
-  const state = yield* Effect.promise(async () => await lock.check());
+  const lockout = yield* UnlockLockoutClient;
+  const ipHash = yield* toIpHash(slug, ip);
+  const state = yield* lockout.check(ipHash);
 
   if (state.isLocked) {
     return toLockedResponse(state.retryAfter);
   }
 
-  const isMatch = yield* Effect.promise(
-    async () => await verifyPassword(gate.passwordHash ?? "", password)
-  );
+  const isMatch = yield* verifyPassword(gate.passwordHash, password);
 
   if (!isMatch || salt === null) {
-    const failed = yield* Effect.promise(async () => await lock.fail());
+    const failed = yield* lockout.fail(ipHash);
 
     if (failed.isLocked) {
       return toLockedResponse(failed.retryAfter);
@@ -69,17 +73,13 @@ const unlockSite = Effect.fn("Viewer.unlock")(function* run(
     });
   }
 
-  yield* Effect.promise(async () => {
-    await lock.clear();
-  });
+  yield* lockout.clear(ipHash);
 
-  const value = yield* Effect.promise(
-    async () =>
-      await signPass(
-        viewerDb.cookieKey,
-        { orgId: gate.orgId, publicationId: gate.publicationId, salt, slug },
-        Date.now()
-      )
+  const cookies = yield* PassCookieClient;
+
+  const value = yield* cookies.sign(
+    { orgId: gate.orgId, publicationId: gate.publicationId, salt, slug },
+    Date.now()
   );
 
   return new Response(null, {

@@ -15,7 +15,7 @@ export { snapOff } from "../../snap.js";
 
 export { resizeReadout } from "../../useResizeHandles.js";
 
-export { useLive } from "../../platform/live-store";
+export { useLive } from "../../platform/live-store.js";
 
 export { buildEditRequest, mergeCommit } from "../../useDirectEdit.js";
 

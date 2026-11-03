@@ -1,4 +1,5 @@
-import { Icon } from "../../kit/Icon";
+import { copy } from "./copy.js";
+import { Icon } from "./deps.js";
 
 interface AvatarProps {
   initial: string | null;
@@ -54,7 +55,7 @@ export function CommentAuthor({
       </span>
       {author}
       {viewer && (
-        <span className="comment-viewer-tag" data-tip="Sent from a share link">
+        <span className="comment-viewer-tag" data-tip={copy.viewerTag}>
           Viewer
         </span>
       )}

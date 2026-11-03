@@ -1,14 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import {
-  chordMatches,
-  KEYMAP,
-  type KeyBinding,
-  type KeyGroup,
-} from "../../../shared/keymap";
-import { Icon } from "../../kit/Icon";
-import { isDesktop } from "../../platform/desktop";
-import { IS_MAC, Keys } from "./keys";
+import { copy } from "./copy.js";
+import { Icon, KEYMAP, chordMatches, isDesktop } from "./deps.js";
+import type { KeyBinding, KeyGroup } from "./deps.js";
+import { IS_MAC, Keys } from "./keys.js";
 
 const MARK_MS = 900;
 const DESKTOP = typeof window !== "undefined" && isDesktop();
@@ -109,13 +104,13 @@ export function ShortcutSheet({ onClose }: { onClose: () => void }) {
   }, [query]);
 
   return (
-    <aside className="keysheet" ref={rootRef} aria-label="Keyboard shortcuts">
+    <aside className="keysheet" ref={rootRef} aria-label={copy.shortcuts}>
       <header className="keysheet-head">
         <h2>Keyboard shortcuts</h2>
         <button
           type="button"
           className="icon-btn small"
-          aria-label="Close shortcuts"
+          aria-label={copy.closeShortcuts}
           onClick={onClose}
         >
           <Icon name="close" size={14} />
@@ -124,8 +119,8 @@ export function ShortcutSheet({ onClose }: { onClose: () => void }) {
       <div className="keysheet-search">
         <Icon name="search" size={14} />
         <input
-          aria-label="Filter shortcuts"
-          placeholder="Filter"
+          aria-label={copy.filterShortcuts}
+          placeholder={copy.filter}
           spellCheck={false}
           value={query}
           onChange={(e) => setQuery(e.target.value)}

@@ -1,11 +1,10 @@
 import { Effect } from "effect";
 
 import type { Permission } from "../../shared/actions/_core/permissions.js";
-import { CloudSession } from "../cloud/index.js";
+import { CLOUD_ORIGIN, CloudSession } from "../cloud/index.js";
 import type { StudioRuntime } from "../main/runtime.js";
 import type { Introspect, IntrospectResult } from "./key-auth.js";
 
-const CLOUD_ORIGIN = "https://api.designstudio.app";
 const OFFLINE: IntrospectResult = { kind: "offline" };
 const UNKNOWN: IntrospectResult = { kind: "unknown" };
 const TIMEOUT_MS = 5000;

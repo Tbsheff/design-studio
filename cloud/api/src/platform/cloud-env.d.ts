@@ -1,6 +1,6 @@
-import type { ShareLive } from "../share/share-live.js";
-import type { UnlockLockout } from "../viewer/unlock-lockout.js";
 import type { RateLimiter } from "./rate-limiter.js";
+import type { ShareLive } from "./share-live.js";
+import type { UnlockLockout } from "./unlock-lockout.js";
 
 declare global {
   namespace Cloudflare {

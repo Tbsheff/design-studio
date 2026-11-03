@@ -1,12 +1,7 @@
-import {
-  TYPE_LABELS,
-  type ProjectHit,
-  type ProjectType,
-  type RouteHit,
-} from "../../../shared/project-search";
-import type { IconName } from "../../kit/Icon";
-import { rank, type Ranked } from "./fuzzy";
-import type { Command } from "./registry";
+import { TYPE_LABELS } from "./deps.js";
+import type { IconName, ProjectHit, ProjectType, RouteHit } from "./deps.js";
+import { rank, type Ranked } from "./fuzzy.js";
+import type { Command } from "./registry.js";
 
 export type RowKind = "command" | "project" | "route" | "new";
 

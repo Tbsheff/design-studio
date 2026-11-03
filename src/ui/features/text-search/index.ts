@@ -1,4 +1,4 @@
-export { FIND_TEXT_COMMAND, FIND_TEXT_EVENT } from "./copy.js";
+export { FIND_TEXT_COMMAND, FIND_TEXT_EVENT } from "./deps.js";
 
 export { FindPanelSlot } from "./find-panel-slot.js";
 

@@ -1,7 +1,7 @@
 import { useLayoutEffect, useState } from "react";
 import type { RefObject } from "react";
 
-import type { SelectionContext } from "../../../shared/contracts";
+import type { SelectionContext } from "./deps.js";
 
 type Rect = SelectionContext["rect"];
 type Size = { width: number; height: number };

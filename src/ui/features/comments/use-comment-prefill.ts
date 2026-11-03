@@ -1,9 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 
-import type { CommentPrefill } from "../../../shared/contracts";
-import type { PendingAttachment } from "../../components/ComposerParts";
-import type { DraftStore } from "../../storage";
+import type { CommentPrefill, DraftStore, PendingAttachment } from "./deps.js";
 
 export type PrefillRequest = CommentPrefill & { seq: number };
 

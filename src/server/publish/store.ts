@@ -6,7 +6,7 @@ import type { ExportFrame } from "../../shared/export.js";
 import type { Publication, PublishBackendMode } from "../../shared/publish.js";
 import { createKeyedMutex } from "../store/mutex.js";
 
-export interface PublicationRecord extends Publication {
+export interface PublicationRecord extends Omit<Publication, "isLegacy"> {
   frames: ExportFrame[] | null;
   frameIds: string[] | null;
   withComments: boolean;
@@ -53,6 +53,7 @@ export function toPublication(r: PublicationRecord): Publication {
     kind: r.kind,
     title: r.title,
     backend: r.backend ?? "legacy-worker",
+    isLegacy: false,
     workerName: r.workerName ?? null,
     accountId: r.accountId ?? null,
     url: r.url,

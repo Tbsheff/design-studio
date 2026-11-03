@@ -2,6 +2,7 @@ import { Context, Effect, Layer } from "effect";
 
 import type { Gone } from "../../../../../src/shared/actions/_core/errors/gone.js";
 import type { NotFound } from "../../../../../src/shared/actions/_core/errors/not-found.js";
+import { CurrentOrg } from "../../tenant/current-org.js";
 import { Resolver } from "../../tenant/resolver.js";
 import { ViewerScope } from "../../tenant/viewer-scope.js";
 import type { PublicScope, ShareScope } from "../../tenant/viewer-scope.js";
@@ -51,13 +52,21 @@ const withShare =
   ): Effect.Effect<
     Value,
     Failure | ViewerAuthError,
-    Exclude<Needs, ViewerScope> | ViewerAuth
+    Exclude<Exclude<Needs, ViewerScope>, CurrentOrg> | ViewerAuth
   > =>
     Effect.gen(function* run() {
       const auth = yield* ViewerAuth;
       const scope = yield* auth.readShare(token);
 
-      return yield* Effect.provideService(handler, ViewerScope, scope);
+      return yield* handler.pipe(
+        Effect.provideService(ViewerScope, scope),
+        Effect.provideService(CurrentOrg, {
+          orgId: scope.orgId,
+          perms: [],
+          role: "viewer",
+          via: "share",
+        })
+      );
     });
 
 const withPublic =

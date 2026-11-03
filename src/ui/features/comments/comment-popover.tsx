@@ -7,21 +7,17 @@ import {
   type ReactNode,
 } from "react";
 
-import type {
-  DesignComment,
-  SelectionContext,
-} from "../../../shared/contracts";
-import { Icon } from "../../kit/Icon";
-import { useProfileInitial } from "../../useProfileInitial";
-import { AvatarFace, CommentAuthor } from "./comment-avatar";
+import { AvatarFace, CommentAuthor } from "./comment-avatar.js";
 import {
   CARD_WIDTH,
   placeComposer,
   useCardSize,
   type Breadcrumb,
   type CardSide,
-} from "./comment-placement";
-import { findElement, findElements } from "./find-element";
+} from "./comment-placement.js";
+import { copy } from "./copy.js";
+import { Icon, findElement, findElements, useProfileInitial } from "./deps.js";
+import type { DesignComment, SelectionContext } from "./deps.js";
 
 type Rect = SelectionContext["rect"];
 
@@ -179,7 +175,7 @@ function ReplyBox({
       <GrowingArea
         className="comment-reply-input"
         label={`Reply to comment ${comment.n}`}
-        placeholder="Reply…"
+        placeholder={copy.reply}
         value={text}
         disabled={busy}
         onChange={setText}
@@ -257,7 +253,7 @@ export function OpenCommentPopover(props: OpenProps) {
       <div className="comment-field">
         <GrowingArea
           label={`Edit comment ${comment.n}`}
-          placeholder="Comment"
+          placeholder={copy.comment}
           value={text}
           onChange={setText}
           onEnter={() => changed && props.onSave(text.trim())}
@@ -315,8 +311,8 @@ export function OpenCommentPopover(props: OpenProps) {
             <button
               type="button"
               className="thread-icon"
-              aria-label="Fix with agent"
-              data-tip="Fix with agent: fill the chat"
+              aria-label={copy.fix}
+              data-tip={copy.fixTip}
               data-tip-side="top"
               data-testid="comment-fix-open"
               onClick={props.onFix}
@@ -328,8 +324,8 @@ export function OpenCommentPopover(props: OpenProps) {
             <button
               type="button"
               className="thread-icon"
-              aria-label="Resolve"
-              data-tip="Resolve"
+              aria-label={copy.resolve}
+              data-tip={copy.resolve}
               data-tip-side="top"
               onClick={props.onResolve}
             >
@@ -340,8 +336,8 @@ export function OpenCommentPopover(props: OpenProps) {
             <button
               type="button"
               className="thread-icon"
-              aria-label="Reopen"
-              data-tip="Reopen"
+              aria-label={copy.reopen}
+              data-tip={copy.reopen}
               data-tip-side="top"
               onClick={props.onReopen}
             >
@@ -351,8 +347,8 @@ export function OpenCommentPopover(props: OpenProps) {
           <button
             type="button"
             className="thread-icon danger"
-            aria-label="Delete"
-            data-tip="Delete"
+            aria-label={copy.delete}
+            data-tip={copy.delete}
             data-tip-side="top"
             onClick={props.onDelete}
           >
@@ -361,7 +357,7 @@ export function OpenCommentPopover(props: OpenProps) {
           <button
             type="button"
             className="thread-icon"
-            aria-label="Close comment"
+            aria-label={copy.close}
             onClick={props.onClose}
           >
             <Icon name="close" size={14} />

@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import type { SelectionContext } from "../../../shared/contracts";
-import { isTypingTarget } from "../../typingTarget";
-import type { CommentsControl } from "./use-comments";
+import { isTypingTarget } from "./deps.js";
+import type { SelectionContext } from "./deps.js";
+import type { CommentsControl } from "./use-comments.js";
 
 type SetSelection = (
   updater: (prev: SelectionContext[]) => SelectionContext[]

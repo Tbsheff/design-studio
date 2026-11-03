@@ -49,7 +49,7 @@ const PublicationSchema = Schema.Struct({
   expiresAt: Schema.NullOr(Schema.Number),
   fileCount: Schema.Number,
   id: Schema.String,
-  isLegacy: Schema.optionalKey(Schema.Boolean),
+  isLegacy: Schema.Boolean,
   kind: PublishKindSchema,
   lastUpload: Schema.NullOr(LastUploadSchema),
   log: Schema.String,
@@ -251,6 +251,14 @@ const DeletedSchema = Schema.Struct({ ok: Schema.Literal(true) });
 
 const PublishBackendModeSchema = Schema.Literals(["cloudflare", "local"]);
 
+const CLOUD_ID_PREFIX = "cloud_";
+
+const toCloudId = (id: string): string => `${CLOUD_ID_PREFIX}${id}`;
+
+const isCloudId = (id: string): boolean => id.startsWith(CLOUD_ID_PREFIX);
+
+const fromCloudId = (id: string): string => id.slice(CLOUD_ID_PREFIX.length);
+
 type PublishInput = typeof PublishInputSchema.Type;
 
 type PublicationList = typeof PublicationListSchema.Type;
@@ -264,7 +272,11 @@ type PublishBackendState = typeof PublishBackendStateSchema.Type;
 type PublishBackendMode = typeof PublishBackendModeSchema.Type;
 
 export {
+  CLOUD_ID_PREFIX,
   DeletedSchema,
+  fromCloudId,
+  isCloudId,
+  toCloudId,
   ListProjectIdSchema,
   PublicationResultSchema,
   PublicationTargetFields,

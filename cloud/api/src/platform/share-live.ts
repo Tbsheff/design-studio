@@ -45,16 +45,6 @@ class ShareLive extends DurableObject {
     });
   }
 
-  public publish(message: string): number {
-    const frame = toFrame("update", message);
-
-    for (const stream of this.streams) {
-      stream.enqueue(frame);
-    }
-
-    return this.streams.size;
-  }
-
   public async revoke(): Promise<number> {
     await this.ctx.storage.put(REVOKED_KEY, true);
     const closed = this.streams.size;

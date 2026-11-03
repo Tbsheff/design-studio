@@ -19,12 +19,9 @@ import { api, errorText } from "./api";
 import { useBridge } from "./bridge";
 import type { BridgeFrame, ParentMessageBody } from "./bridge";
 import { IS_MAC } from "./features/commands/keys";
-import {
-  canvasHasKeys,
-  isTypingTarget,
-} from "./features/commands/typing-target";
 import type { LayerTree } from "./layersTree";
 import { pasteJsx } from "./pasteJsx";
+import { canvasHasKeys, isTypingTarget } from "./platform/typing-target.js";
 import { NO_SOURCE, dropRequest, selectionTargets } from "./structureEdits";
 import type { LayerDrop, SelectionOp } from "./structureEdits";
 import { useLayerLocks } from "./useLayerLocks";

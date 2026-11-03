@@ -1,6 +1,5 @@
 import { Context, Effect, Layer } from "effect";
 
-import type { NotFound } from "../../shared-actions.js";
 import type { CurrentOrg } from "../current-org.js";
 import { TenantDb } from "../db.js";
 import { tq } from "../sql.js";
@@ -27,24 +26,11 @@ const heldInsert = tq<{
   VALUES (:org, :id, :shareId, :authorName, :anchor, :body, 1, :now)
   RETURNING org_id`;
 
-const promoteHeld = tq<{
-  readonly id: string;
-  readonly shareId: string;
-}>`
-  UPDATE share_comment
-  SET is_held = 0, rev = rev + 1
-  WHERE org_id = :org AND share_id = :shareId AND id = :id AND is_held = 1 AND deleted_at IS NULL
-  RETURNING org_id`;
-
 interface ShareRepoApi {
   readonly addHeld: (
     shareId: string,
     comment: HeldComment
   ) => Effect.Effect<string, never, CurrentOrg>;
-  readonly promote: (
-    shareId: string,
-    commentId: string
-  ) => Effect.Effect<void, NotFound, CurrentOrg>;
 }
 
 class ShareRepo extends Context.Service<ShareRepo, ShareRepoApi>()(
@@ -76,14 +62,7 @@ class ShareRepo extends Context.Service<ShareRepo, ShareRepoApi>()(
         return id;
       });
 
-      const promote = Effect.fn("ShareRepo.promote")(function* run(
-        shareId: string,
-        commentId: string
-      ) {
-        yield* db.write(promoteHeld, { id: commentId, shareId });
-      });
-
-      return ShareRepo.of({ addHeld, promote });
+      return ShareRepo.of({ addHeld });
     })
   );
 }

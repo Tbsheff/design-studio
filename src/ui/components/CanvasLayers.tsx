@@ -5,13 +5,10 @@ import {
   type SelectMove,
   type SelectionContext,
 } from "../../shared/contracts";
-import {
-  canvasHasKeys,
-  isTypingTarget,
-} from "../features/commands/typing-target";
 import { Icon } from "../kit/Icon";
 import type { LayerTree } from "../layersTree";
 import type { LiveStore } from "../platform/live-store";
+import { canvasHasKeys, isTypingTarget } from "../platform/typing-target.js";
 import { selectionTargets, structureMenuItems } from "../structureEdits";
 import type { LayerEdits } from "../useLayerEdits";
 import type { HoverBox } from "../usePreviewFrames";

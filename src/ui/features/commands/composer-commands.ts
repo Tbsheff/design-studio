@@ -1,9 +1,7 @@
-import type { RunLevel } from "../../../shared/contracts";
-import { matchesKey, type KeyInput } from "../../../shared/keymap";
-import { LEVEL_PRESETS } from "../../../shared/run-levels";
-import type { ComposerMode } from "../../components/RunSettings";
-import { IS_MAC } from "./keys";
-import { collectCommands, type Command } from "./registry";
+import { LEVEL_PRESETS, matchesKey } from "./deps.js";
+import type { ComposerMode, KeyInput, RunLevel } from "./deps.js";
+import { IS_MAC } from "./key-model.js";
+import { collectCommands, type Command } from "./registry.js";
 
 const MODE_ORDER: ComposerMode[] = ["edit", "plan", "critique"];
 const MODE_TITLES: Record<ComposerMode, string> = {

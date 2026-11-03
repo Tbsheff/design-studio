@@ -1,46 +1,17 @@
 import { useState, type KeyboardEvent, type ReactNode } from "react";
 
+import { PRESETS } from "../domain/canvas-presets";
+import type { CanvasSource } from "../domain/canvas-presets";
 import { TabOrderToggle } from "../features/accessibility/tab-order-toggle";
 import { runCommand } from "../features/commands/registry";
-import { Icon, type IconName } from "../kit/Icon";
+import { Icon } from "../kit/Icon";
 import { uiStore, type Viewport, type ZoomSetting } from "../storage";
 import { VECTOR_TOOLS, useVectorTool, vectorTool } from "../vectorTool";
 import { PenIcon } from "./DrawLayer";
 
-export const PRESETS: {
-  id: Viewport["preset"];
-  label: string;
-  icon: IconName;
-  width: number;
-  height: number;
-}[] = [
-  {
-    id: "desktop",
-    label: "Desktop 1440",
-    icon: "desktop",
-    width: 1440,
-    height: 900,
-  },
-  {
-    id: "tablet",
-    label: "Tablet 768",
-    icon: "tablet",
-    width: 768,
-    height: 1024,
-  },
-  {
-    id: "mobile",
-    label: "Mobile 390",
-    icon: "mobile",
-    width: 390,
-    height: 844,
-  },
-];
+export { PRESETS } from "../domain/canvas-presets";
 
-export type CanvasSource =
-  | { kind: "live" }
-  | { kind: "last" }
-  | { kind: "version"; versionId: string; title: string };
+export type { CanvasSource } from "../domain/canvas-presets";
 
 interface Props {
   viewport: Viewport;

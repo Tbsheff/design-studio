@@ -19,10 +19,10 @@ import {
   type PinAxis,
   type PinMode,
 } from "../constraints";
-import { isTypingTarget } from "../features/commands/typing-target";
 import { Icon, type IconName } from "../kit/Icon";
 import { UiSelect } from "../kit/UiSelect";
 import { useLive } from "../platform/live-store";
+import { isTypingTarget } from "../platform/typing-target.js";
 import {
   SIZE_MODES,
   activeCell,

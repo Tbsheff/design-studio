@@ -1,9 +1,10 @@
 import { useEffect, useRef } from "react";
 
-import "../../styles/commands.css";
-import { Palette } from "./palette";
-import type { CommandLayer as Layer } from "./registry";
-import { ShortcutSheet } from "./shortcut-sheet";
+import { Palette } from "./palette.js";
+import type { CommandLayer as Layer } from "./registry.js";
+import { ShortcutSheet } from "./shortcut-sheet.js";
+
+import "./commands.css";
 
 const CommandLayer = ({
   layer,

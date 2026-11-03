@@ -61,7 +61,6 @@ const AUTH_FILES = [
 
 const OPTIONAL_NULL_FILES = [
   "src/server/{platform,events,run-log,project-source,page-probe,handlers,main,ship,agent-tools,mcp-life,http}/**/*.ts",
-  "src/server/publish/**/*.ts",
 ];
 
 const ACTION_FILES = ["src/shared/actions/**/*.ts"];

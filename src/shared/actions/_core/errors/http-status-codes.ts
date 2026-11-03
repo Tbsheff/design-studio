@@ -1,4 +1,5 @@
 const OK = 200;
+const CREATED = 201;
 const ACCEPTED = 202;
 const SEE_OTHER = 303;
 const BAD_REQUEST = 400;
@@ -33,6 +34,7 @@ export {
   BAD_GATEWAY,
   BAD_REQUEST,
   CONFLICT,
+  CREATED,
   DEFECT,
   FORBIDDEN,
   GONE,

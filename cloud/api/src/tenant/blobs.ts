@@ -32,8 +32,14 @@ const auditBadId = tq<{
   VALUES (:org, :id, :actorKind, :action, :targetTable, :detail, :createdAt)
   RETURNING org_id`;
 
+interface SweptBlob {
+  readonly id: string;
+  readonly orgId: string;
+}
+
 interface TenantBlobsApi {
   readonly delete: (ref: BlobRef) => Effect.Effect<void, never, CurrentOrg>;
+  readonly deleteSwept: (blob: SweptBlob) => Effect.Effect<void>;
   readonly get: (
     ref: BlobRef
   ) => Effect.Effect<R2ObjectBody, NotFound, CurrentOrg>;
@@ -96,6 +102,13 @@ const makeBlobs = (files: R2Bucket, db: TenantDbApi): TenantBlobsApi => {
       const key = yield* keyOf(ref);
 
       yield* Effect.promise(() => files.delete(key));
+    }),
+    deleteSwept: Effect.fn("TenantBlobs.deleteSwept")(function* run(blob) {
+      const key = toBlobKey(blob.orgId, { kind: "blob", name: blob.id });
+
+      if (key !== null) {
+        yield* Effect.promise(() => files.delete(key));
+      }
     }),
     get: Effect.fn("TenantBlobs.get")(function* run(ref) {
       const key = yield* keyOf(ref);
@@ -167,4 +180,4 @@ class TenantBlobs extends Context.Service<TenantBlobs, TenantBlobsApi>()(
 
 export { TenantBlobs };
 
-export type { BlobBody, BlobPage, TenantBlobsApi };
+export type { BlobBody, BlobPage, SweptBlob, TenantBlobsApi };

@@ -1,20 +1,21 @@
 import { useState, useSyncExternalStore, useTransition } from "react";
 import type { ReactNode } from "react";
 
-import { canPickForChat } from "../../../shared/comments";
-import type {
-  DesignComment,
-  SelectionContext,
-} from "../../../shared/contracts";
-import { canvasStore, shownFrames } from "../../canvasFrames";
-import { Icon } from "../../kit/Icon";
-import { projectFromPath } from "../../route";
-import { commentPageName, pageShown } from "./comment-anchors";
-import { CommentAuthor } from "./comment-avatar";
-import { CommentReplies } from "./comment-popover";
-import type { CommentsControl } from "./use-comments";
+import { commentPageName, pageShown } from "./comment-anchors.js";
+import { CommentAuthor } from "./comment-avatar.js";
+import { CommentReplies } from "./comment-popover.js";
+import { copy } from "./copy.js";
+import {
+  Icon,
+  canPickForChat,
+  canvasStore,
+  projectFromPath,
+  shownFrames,
+} from "./deps.js";
+import type { DesignComment, SelectionContext } from "./deps.js";
+import type { CommentsControl } from "./use-comments.js";
 
-import "../../styles/comments.css";
+import "./comments.css";
 
 interface Props {
   control: CommentsControl;
@@ -73,19 +74,23 @@ function targetTip(comment: DesignComment): string {
   return `${comment.target.tag}${snippet} · ${targetWhere(comment)}${page}`;
 }
 
+const PATH_MARK = "\n";
+
 function shownPathsKey(): string {
   const projectId = projectFromPath(window.location.pathname);
   const layout = projectId ? canvasStore.get(projectId) : undefined;
 
   return layout
-    ? JSON.stringify(shownFrames(layout).map((frame) => frame.path ?? ""))
+    ? shownFrames(layout)
+        .map((frame) => `${PATH_MARK}${frame.path ?? ""}`)
+        .join("")
     : "";
 }
 
 function useShownPaths(): string[] | null {
   const key = useSyncExternalStore(canvasStore.subscribe, shownPathsKey);
 
-  return key ? (JSON.parse(key) as string[]) : null;
+  return key ? key.split(PATH_MARK).slice(1) : null;
 }
 
 function notShownText(
@@ -168,7 +173,7 @@ function FixButton({
       type="button"
       className="icon-btn small"
       aria-label={`Fix comment ${comment.n} with the agent`}
-      data-tip="Fix with agent"
+      data-tip={copy.fix}
       data-testid="comment-fix"
       disabled={control.preparing}
       onClick={() => void control.toChat([comment.id])}
@@ -195,7 +200,7 @@ export function ChatPickBar({
     <div
       className={`comments-pick-bar ${className ?? ""}`}
       role="toolbar"
-      aria-label="Selected comments"
+      aria-label={copy.selected}
       data-testid="comments-pick-bar"
     >
       <span className="label">{count} selected</span>
@@ -348,7 +353,7 @@ function QueuedRow({
               type="button"
               className="icon-btn small"
               aria-label={`Resolve comment ${comment.n}`}
-              data-tip="Resolve"
+              data-tip={copy.resolve}
               onClick={() =>
                 void control.update(comment.id, { status: "resolved" })
               }
@@ -599,7 +604,7 @@ function CommentsComposer({
       data-testid="comments-composer"
     >
       <textarea
-        aria-label="Add a comment"
+        aria-label={copy.add}
         rows={2}
         maxLength={2000}
         value={text}
@@ -674,7 +679,7 @@ export function CommentsPanel({
             <button
               type="button"
               className="icon-btn small"
-              aria-label="Dismiss notice"
+              aria-label={copy.dismissNotice}
               onClick={control.clearNotice}
             >
               <Icon name="close" />
@@ -708,7 +713,7 @@ export function CommentsPanel({
             )}
           </div>
         )}
-        <Section title="From viewers" count={viewers.length}>
+        <Section title={copy.fromViewers} count={viewers.length}>
           {viewers.map((comment) => (
             <DoneRow
               key={comment.id}
@@ -719,7 +724,7 @@ export function CommentsPanel({
             />
           ))}
         </Section>
-        <Section title="From outside agents" count={outside.length}>
+        <Section title={copy.fromOutside} count={outside.length}>
           {outside.map((comment) => (
             <DoneRow
               key={comment.id}
@@ -730,7 +735,7 @@ export function CommentsPanel({
             />
           ))}
         </Section>
-        <Section title="Queued" count={queued.length}>
+        <Section title={copy.queued} count={queued.length}>
           {queued.map((comment, index) => (
             <QueuedRow
               key={comment.id}
@@ -741,7 +746,7 @@ export function CommentsPanel({
             />
           ))}
         </Section>
-        <Section title="In chat" count={control.inChat.length}>
+        <Section title={copy.inChat} count={control.inChat.length}>
           {control.inChat.map((comment, index) => (
             <QueuedRow
               key={comment.id}
@@ -757,7 +762,7 @@ export function CommentsPanel({
             The agent is running. Queued comments wait until it finishes.
           </p>
         )}
-        <Section title="Sent" count={sent.length}>
+        <Section title={copy.sent} count={sent.length}>
           {sent.map((comment) => (
             <DoneRow
               key={comment.id}
@@ -768,12 +773,15 @@ export function CommentsPanel({
             />
           ))}
         </Section>
-        <Section title="Orphaned" count={orphaned.length}>
+        <Section title={copy.orphaned} count={orphaned.length}>
           {orphaned.map((comment) => (
             <OrphanRow key={comment.id} comment={comment} control={control} />
           ))}
         </Section>
-        <Section title="Resolved" count={showResolved ? resolved.length : 0}>
+        <Section
+          title={copy.resolved}
+          count={showResolved ? resolved.length : 0}
+        >
           {resolved.map((comment) => (
             <DoneRow
               key={comment.id}

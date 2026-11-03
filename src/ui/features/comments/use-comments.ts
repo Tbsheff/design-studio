@@ -1,12 +1,26 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import type { MutableRefObject } from "react";
 
 import {
+  ApiError,
   anchorQueryOf,
+  api,
   canPickForChat,
   drawingTarget,
+  errorText,
+  json,
+  readStored,
   targetFromSelection,
-} from "../../../shared/comments";
+  useProjectEvents,
+  writeStored,
+} from "./deps.js";
 import type {
   AnchorQuery,
   CommentDrawing,
@@ -17,9 +31,7 @@ import type {
   DesignComment,
   RunMention,
   SelectionContext,
-} from "../../../shared/contracts";
-import { ApiError, api, errorText, json } from "../../api";
-import { useProjectEvents } from "../../events";
+} from "./deps.js";
 
 export type DescribeAnchors = (
   queries: AnchorQuery[]
@@ -101,11 +113,7 @@ export type OnPrefill = (prefill: CommentPrefill) => void;
 const SHOW_RESOLVED_KEY = "studio.comments.showResolved";
 
 function readShowResolved(): boolean {
-  try {
-    return window.localStorage.getItem(SHOW_RESOLVED_KEY) === "1";
-  } catch {
-    return false;
-  }
+  return readStored(SHOW_RESOLVED_KEY) === "1";
 }
 
 const RUNNING_NOTICE = "Agent is running: queued";
@@ -190,13 +198,13 @@ export function useComments(
 ): CommentsControl {
   const [comments, setComments] = useState<DesignComment[]>([]);
   const [notice, setNotice] = useState<string | null>(null);
-  const [sending, setSending] = useState(false);
+  const [sending, startSending] = useTransition();
   const [openId, setOpenId] = useState<string | null>(null);
   const [repinId, setRepinId] = useState<string | null>(null);
   const [showResolved, setShowResolvedState] = useState(readShowResolved);
   const describeRef = useRef<DescribeAnchors | null>(null);
   const frameRef = useRef<CommentFrame | null>(null);
-  const [preparing, setPreparing] = useState(false);
+  const [preparing, startPreparing] = useTransition();
   const prefillRef = useRef(onPrefill);
   prefillRef.current = onPrefill;
   const didRef = useRef(directionId);
@@ -284,30 +292,34 @@ export function useComments(
         return;
       }
 
-      setSending(true);
+      const pending = (async (): Promise<void> => {
+        try {
+          const contexts = await describeWithTimeout(
+            describeRef.current,
+            chosen.filter((comment) => !comment.drawing)
+          );
 
-      try {
-        const contexts = await describeWithTimeout(
-          describeRef.current,
-          chosen.filter((comment) => !comment.drawing)
-        );
+          await call("POST", "/send", {
+            ids: chosen.map((comment) => comment.id),
+            contexts,
+          });
+          setNotice(null);
+        } catch (err) {
+          setNotice(
+            err instanceof ApiError &&
+              err.status === 409 &&
+              err.tag === "run_in_progress"
+              ? RUNNING_NOTICE
+              : errorText(err)
+          );
+        }
+      })();
 
-        await call("POST", "/send", {
-          ids: chosen.map((comment) => comment.id),
-          contexts,
-        });
-        setNotice(null);
-      } catch (err) {
-        setNotice(
-          err instanceof ApiError &&
-            err.status === 409 &&
-            err.tag === "run_in_progress"
-            ? RUNNING_NOTICE
-            : errorText(err)
-        );
-      } finally {
-        setSending(false);
-      }
+      startSending(async () => {
+        await pending;
+      });
+
+      await pending;
     },
     [call]
   );
@@ -593,11 +605,7 @@ export function useComments(
   const setShowResolved = useCallback((on: boolean) => {
     setShowResolvedState(on);
 
-    try {
-      window.localStorage.setItem(SHOW_RESOLVED_KEY, on ? "1" : "0");
-    } catch {
-      return;
-    }
+    writeStored(SHOW_RESOLVED_KEY, on ? "1" : "0");
   }, []);
 
   const queued = useMemo(
@@ -622,23 +630,31 @@ export function useComments(
         return;
       }
 
-      setPreparing(true);
+      const pending = (async (): Promise<void> => {
+        try {
+          const prefill = await call<CommentPrefill>("POST", "/prefill", {
+            ids,
+          });
 
-      try {
-        const prefill = await call<CommentPrefill>("POST", "/prefill", { ids });
+          if (prefill) {
+            prefillRef.current?.(prefill);
+            setChatIds((prev) => [
+              ...new Set([...prev, ...prefill.commentIds]),
+            ]);
+          }
 
-        if (prefill) {
-          prefillRef.current?.(prefill);
-          setChatIds((prev) => [...new Set([...prev, ...prefill.commentIds])]);
+          clearPicks();
+          setNotice(null);
+        } catch (err) {
+          setNotice(errorText(err));
         }
+      })();
 
-        clearPicks();
-        setNotice(null);
-      } catch (err) {
-        setNotice(errorText(err));
-      } finally {
-        setPreparing(false);
-      }
+      startPreparing(async () => {
+        await pending;
+      });
+
+      await pending;
     },
     [call, clearPicks]
   );

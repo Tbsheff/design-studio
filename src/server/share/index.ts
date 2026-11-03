@@ -1,3 +1,5 @@
+export { LinkedShareWriter } from "./linked-share-writer.js";
+
 export { LiveRefresher } from "./live-refresher.js";
 
 export { ShareLinkStore } from "./share-link-store.js";

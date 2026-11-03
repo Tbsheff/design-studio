@@ -1,8 +1,7 @@
 import { useEffect, useRef } from "react";
 
-import type { KeyId } from "../../../shared/keymap";
-import type { IconName } from "../../kit/Icon";
-import { createLiveStore } from "../../platform/live-store";
+import { createLiveStore } from "./deps.js";
+import type { IconName, KeyId } from "./deps.js";
 
 export const COMMAND_EVENT = "studio:command";
 export const LAYER_EVENT = "studio:command-layer";

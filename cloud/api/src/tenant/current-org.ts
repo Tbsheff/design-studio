@@ -2,9 +2,9 @@ import { Context } from "effect";
 
 import type { Permission } from "../../../../src/shared/actions/_core/permissions.js";
 
-type OrgRole = "admin" | "member" | "owner";
+type OrgRole = "admin" | "member" | "owner" | "viewer";
 
-type OrgVia = "jwt" | "key" | "session";
+type OrgVia = "jwt" | "key" | "session" | "share";
 
 interface CurrentOrgApi {
   readonly orgId: string;

@@ -1,7 +1,6 @@
 import { Effect } from "effect";
 
 import { NotFound } from "../shared-actions.js";
-import { CurrentOrg } from "../tenant/current-org.js";
 import { ShareRepo } from "../tenant/repos/share.js";
 import { ViewerScope } from "../tenant/viewer-scope.js";
 
@@ -21,15 +20,7 @@ const addComment = Effect.fn("Share.addComment")(function* run(
   }
 
   const repo = yield* ShareRepo;
-
-  const id = yield* repo.addHeld(scope.shareId, input).pipe(
-    Effect.provideService(CurrentOrg, {
-      orgId: scope.orgId,
-      perms: [],
-      role: "member",
-      via: "key",
-    })
-  );
+  const id = yield* repo.addHeld(scope.shareId, input);
 
   return { id, isHeld: true };
 });

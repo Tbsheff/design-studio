@@ -1,16 +1,14 @@
 import { useEffect, useRef } from "react";
 
-import { matchesKey, type KeyId } from "../../../shared/keymap";
-import type { PanelTab } from "../../usePanelTab";
-import { findElement } from "./find-element";
-import { IS_MAC } from "./keys";
+import { findElement, isTypingTarget, matchesKey } from "./deps.js";
+import type { KeyId, PanelTab } from "./deps.js";
+import { IS_MAC } from "./key-model.js";
 import {
   listenForCommands,
   runCommand,
   useCommands,
   type Command,
-} from "./registry";
-import { isTypingTarget } from "./typing-target";
+} from "./registry.js";
 
 export interface StudioActions {
   running: boolean;

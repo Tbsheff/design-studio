@@ -1,15 +1,14 @@
 import { Context, Effect, Layer, Schema } from "effect";
 
 import type { Unauthenticated } from "../../shared/actions/_core/errors/unauthenticated.js";
-import { Unavailable } from "../../shared/actions/_core/errors/unavailable.js";
+import type { Unavailable } from "../../shared/actions/_core/errors/unavailable.js";
 import {
   CloudOrgSchema,
   CloudUserSchema,
 } from "../../shared/actions/cloud/schema.js";
+import { getJsonResponse } from "./cloud-fetch.js";
 import { CloudSession } from "./cloud-session.js";
 import type { CloudProfile } from "./cloud-session.js";
-
-const CLOUD_ORIGIN = "https://api.designstudio.app";
 
 const OrgListSchema = Schema.Array(CloudOrgSchema);
 
@@ -78,51 +77,6 @@ const PullResultSchema = Schema.Struct({
 
 const toSyncPath = (target: SyncTarget, leaf: string): string =>
   `/v1/o/${encodeURIComponent(target.orgId)}/projects/${encodeURIComponent(target.projectId)}/sync/${leaf}`;
-
-const toUnavailable = (): Unavailable =>
-  new Unavailable({ message: "The cloud did not answer." });
-
-interface JsonCall {
-  readonly body: string | null;
-  readonly headers: Readonly<Record<string, string>>;
-  readonly jwt: string;
-  readonly method: "GET" | "POST";
-  readonly path: string;
-}
-
-const getJsonResponse = <Value>(
-  call: JsonCall,
-  schema: Schema.Codec<Value, unknown>
-): Effect.Effect<Value, Unavailable> =>
-  Effect.gen(function* read() {
-    const response = yield* Effect.tryPromise({
-      catch: toUnavailable,
-      try: (signal) =>
-        fetch(new URL(call.path, CLOUD_ORIGIN), {
-          body: call.body,
-          headers: {
-            ...call.headers,
-            authorization: `Bearer ${call.jwt}`,
-          },
-          method: call.method,
-          redirect: "error",
-          signal,
-        }),
-    });
-
-    if (!response.ok) {
-      return yield* toUnavailable();
-    }
-
-    const body = yield* Effect.tryPromise({
-      catch: toUnavailable,
-      try: () => response.json(),
-    });
-
-    return yield* Schema.decodeUnknownEffect(schema)(body).pipe(
-      Effect.mapError(toUnavailable)
-    );
-  });
 
 const getJson = <Value>(
   path: string,

@@ -1,10 +1,8 @@
 import { useRef } from "react";
 
-import type { ZoomKey } from "../../../shared/contracts";
-import type { KeyId } from "../../../shared/keymap";
-import { PRESETS, type CanvasSource } from "../../components/CanvasToolbar";
-import { uiStore, type Viewport } from "../../storage";
-import { useCommands, type Command } from "./registry";
+import { PRESETS, uiStore } from "./deps.js";
+import type { CanvasSource, KeyId, ViewportPreset, ZoomKey } from "./deps.js";
+import { useCommands, type Command } from "./registry.js";
 
 export interface CanvasActions {
   live: boolean;
@@ -21,12 +19,7 @@ export interface CanvasActions {
   lofi: { on: boolean; toggle: () => void } | null;
   onCheck: () => void;
   checking: boolean;
-  presets: {
-    id: Viewport["preset"];
-    label: string;
-    width: number;
-    height: number;
-  }[];
+  presets: readonly ViewportPreset[];
   play: () => void;
 }
 

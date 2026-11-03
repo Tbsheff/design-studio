@@ -118,7 +118,6 @@ const VectorLayer = lazy(() => import("./VectorLayer"));
 const InlinePrompt = lazy(() => import("./InlinePrompt"));
 
 import { TabOrderSlot } from "../features/accessibility/tab-order-slot";
-import { canvasHasKeys } from "../features/commands/typing-target";
 import { FindPanelSlot } from "../features/text-search/find-panel-slot";
 import { useFindHost } from "../features/text-search/use-find-host";
 import { MatrixSlot } from "../features/viewport";
@@ -127,6 +126,7 @@ import {
   useFrameStates,
   type FrameStatesRead,
 } from "../frameStates";
+import { canvasHasKeys } from "../platform/typing-target.js";
 import { useCanvasPoint } from "../useCanvasPoint";
 import { useCanvasPresence } from "../useCanvasPresence";
 import { useClickThrough } from "../useClickThrough";

@@ -16,7 +16,7 @@ const ASSET_TAIL = /\.(?:css|json|svg|png|jpe?g|gif|webp|woff2?|html|md|txt|wasm
 
 const PLATFORM = "cloud/api/src/platform/";
 
-const PLATFORM_ALLOWED = /^(?:cloud\/api\/src\/platform\/|cloud\/api\/src\/shared-actions\.ts$|src\/shared\/)/u;
+const PLATFORM_ALLOWED = /^(?:cloud\/api\/src\/platform\/|cloud\/api\/src\/shared-actions\.(?:js|ts)$|src\/shared\/)/u;
 
 const HOOK_FILE = /^use-[a-z0-9-]+\.ts$/u;
 

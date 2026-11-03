@@ -1,13 +1,13 @@
-import { pickFolder } from "../../folderPicker";
-import { requestOpenApp } from "../../openAppRequest";
-import { goHome } from "../../projectNav";
-import { uiStore } from "../../storage";
 import {
   FIND_TEXT_COMMAND,
   FIND_TEXT_EVENT,
-} from "../features/text-search/copy";
-import { findElement } from "./find-element";
-import type { Command } from "./registry";
+  findElement,
+  goHome,
+  pickFolder,
+  requestOpenApp,
+  uiStore,
+} from "./deps.js";
+import type { Command } from "./registry.js";
 
 export function focusNewProject(): void {
   window.requestAnimationFrame(() =>

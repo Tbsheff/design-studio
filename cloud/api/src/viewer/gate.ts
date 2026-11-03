@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import { ViewerDb } from "../tenant/viewer-db.js";
-import { readCookie, toCookieName, verifyPass } from "./pass-cookie.js";
+import { PassCookieClient } from "../platform/pass-cookie-client.js";
+import { readCookie, toCookieName } from "./pass-cookie.js";
 import { toSalt } from "./password.js";
 import { readPassword } from "./read-password.js";
 
@@ -21,16 +21,12 @@ const isPassed = Effect.fn("Viewer.isPassed")(function* run(
     return false;
   }
 
-  const viewerDb = yield* ViewerDb;
+  const cookies = yield* PassCookieClient;
 
-  return yield* Effect.promise(
-    async () =>
-      await verifyPass(
-        viewerDb.cookieKey,
-        { orgId: gate.orgId, publicationId: gate.publicationId, salt, slug },
-        readCookie(cookieHeader, toCookieName(slug)),
-        Date.now()
-      )
+  return yield* cookies.verify(
+    { orgId: gate.orgId, publicationId: gate.publicationId, salt, slug },
+    readCookie(cookieHeader, toCookieName(slug)),
+    Date.now()
   );
 });
 

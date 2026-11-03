@@ -1,5 +1,6 @@
 const OK = 200;
 const ACCEPTED = 202;
+const SEE_OTHER = 303;
 const BAD_REQUEST = 400;
 const UNAUTHORIZED = 401;
 const FORBIDDEN = 403;
@@ -38,6 +39,7 @@ export {
   NOT_FOUND,
   NOT_IMPLEMENTED,
   OK,
+  SEE_OTHER,
   TOO_MANY_REQUESTS,
   UNAUTHORIZED,
   UNAVAILABLE,

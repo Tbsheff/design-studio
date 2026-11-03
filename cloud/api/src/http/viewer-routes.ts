@@ -6,6 +6,7 @@ import type { AppEnv } from "../platform/bindings.js";
 import { GONE, NOT_FOUND, UNAUTHORIZED } from "../shared-actions.js";
 import type { viewerLayer } from "../viewer/layer.js";
 import { readSiteFile } from "../viewer/read-site-file.js";
+import { unlockSite } from "../viewer/unlock.js";
 import { withPublic } from "./middleware/viewer.js";
 
 type ViewerRuntime = ManagedRuntime.ManagedRuntime<
@@ -26,18 +27,46 @@ const SITE_HEADERS = {
 const toText = (text: string, status: number): Response =>
   new Response(text, { headers: { "cache-control": "no-store" }, status });
 
+const toUnlockPage = (slug: string): Response =>
+  new Response(
+    `<!doctype html><meta charset="utf-8"><title>Password</title><form method="post" action="/p/${encodeURIComponent(slug)}/unlock"><label>Password <input type="password" name="password" autofocus required></label> <button type="submit">Open</button></form>`,
+    {
+      headers: {
+        "cache-control": "no-store",
+        "content-type": "text/html; charset=utf-8",
+      },
+      status: UNAUTHORIZED,
+    }
+  );
+
+const toSiteHeaders = (
+  contentType: string,
+  isPasswordProtected: boolean
+): Headers => {
+  const headers = new Headers(SITE_HEADERS);
+
+  headers.set("content-type", contentType);
+
+  if (isPasswordProtected) {
+    headers.set("cache-control", "private, no-store");
+  }
+
+  return headers;
+};
+
 const toFilePath = (url: string): string =>
   new URL(url).pathname.split("/").slice(SLUG_PATH_PARTS).join("/");
 
 const serveSite = Effect.fn("Viewer.serve")(function* run(
   slug: string,
-  rawPath: string
+  rawPath: string,
+  cookieHeader: string | null
 ) {
-  return yield* readSiteFile(rawPath).pipe(
+  return yield* readSiteFile(slug, rawPath, cookieHeader).pipe(
     Effect.map(
       (site) =>
         new Response(site.object.body, {
-          headers: { ...SITE_HEADERS, "content-type": site.contentType },
+          headers: toSiteHeaders(site.contentType, site.isPasswordProtected),
         })
     ),
     withPublic(slug),
@@ -47,9 +76,7 @@ const serveSite = Effect.fn("Viewer.serve")(function* run(
     Effect.catchTag("NotFound", () =>
       Effect.succeed(toText("Not found.", NOT_FOUND))
     ),
-    Effect.catchTag("Unauthenticated", () =>
-      Effect.succeed(toText("This page needs a password.", UNAUTHORIZED))
-    )
+    Effect.catchTag("Unauthenticated", () => Effect.succeed(toUnlockPage(slug)))
   );
 });
 
@@ -60,14 +87,43 @@ const mountViewer = (
   app.get(
     "/p/:slug",
     async (context) =>
-      await runtime.runPromise(serveSite(context.req.param("slug"), ""))
+      await runtime.runPromise(
+        serveSite(
+          context.req.param("slug"),
+          "",
+          context.req.header("cookie") ?? null
+        )
+      )
   );
+
+  app.post("/p/:slug/unlock", async (context) => {
+    const slug = context.req.param("slug");
+    const form = await context.req.parseBody();
+    const password = String(form["password"] ?? "");
+    const ip = context.req.header("cf-connecting-ip") ?? "unknown";
+
+    return await runtime.runPromise(
+      unlockSite(slug, password, ip).pipe(
+        withPublic(slug),
+        Effect.catchTag("NotFound", () =>
+          Effect.succeed(toText("Not found.", NOT_FOUND))
+        ),
+        Effect.catchTag("Gone", () =>
+          Effect.succeed(toText("This page is no longer available.", GONE))
+        )
+      )
+    );
+  });
 
   app.get(
     "/p/:slug/*",
     async (context) =>
       await runtime.runPromise(
-        serveSite(context.req.param("slug"), toFilePath(context.req.url))
+        serveSite(
+          context.req.param("slug"),
+          toFilePath(context.req.url),
+          context.req.header("cookie") ?? null
+        )
       )
   );
 };

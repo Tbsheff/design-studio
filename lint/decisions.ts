@@ -272,8 +272,11 @@ export const decisionOverrides: OxlintOverride[] = [
       "cloud/api/src/mcp/rpc.ts",
       "cloud/api/src/mcp/tools.ts",
       "cloud/api/src/tenant/repos/agent-request.ts",
+      "cloud/api/src/viewer/gate.ts",
       "cloud/api/src/viewer/layer.ts",
+      "cloud/api/src/viewer/read-password.ts",
       "cloud/api/src/viewer/read-site-file.ts",
+      "cloud/api/src/viewer/unlock.ts",
     ],
     rules: { "import/no-relative-parent-imports": "off" },
   },
@@ -751,11 +754,20 @@ export const decisionOverrides: OxlintOverride[] = [
     },
   },
   {
+    files: [
+      "cloud/api/src/platform/bindings.ts",
+      "cloud/api/src/platform/cloud-env.d.ts",
+    ],
+    rules: { "import/no-relative-parent-imports": "off" },
+  },
+  {
     files: ["*.config.ts", "cloud/api/src/index.ts"],
     rules: { "import/no-default-export": "off" },
   },
   {
-    files: ["cloud/api/src/{platform/{bindings,rate-limiter},auth/options}.ts"],
+    files: [
+      "cloud/api/src/{platform/{bindings,rate-limiter},viewer/unlock-lockout,auth/options}.ts",
+    ],
     rules: { "sonarjs/no-implicit-dependencies": "off" },
   },
   {

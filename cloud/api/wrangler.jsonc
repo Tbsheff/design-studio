@@ -27,12 +27,20 @@
         "name": "RATE",
         "class_name": "RateLimiter",
       },
+      {
+        "name": "UNLOCK",
+        "class_name": "UnlockLockout",
+      },
     ],
   },
   "migrations": [
     {
       "tag": "v1",
       "new_sqlite_classes": ["RateLimiter"],
+    },
+    {
+      "tag": "v2",
+      "new_sqlite_classes": ["UnlockLockout"],
     },
   ],
   "vars": {

@@ -14,6 +14,8 @@ export {
   GONE,
   NOT_FOUND,
   OK,
+  SEE_OTHER,
+  TOO_MANY_REQUESTS,
   UNAUTHORIZED,
 } from "../../../src/shared/actions/_core/errors/http-status-codes.js";
 

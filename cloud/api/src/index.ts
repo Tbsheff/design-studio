@@ -60,4 +60,6 @@ const worker = { fetch: app.fetch } satisfies ExportedHandler;
 
 export { RateLimiter } from "./platform/rate-limiter.js";
 
+export { UnlockLockout } from "./viewer/unlock-lockout.js";
+
 export { worker as default };

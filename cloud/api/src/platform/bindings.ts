@@ -1,16 +1,22 @@
 import { env } from "cloudflare:workers";
 import { ConfigProvider, Context, Layer } from "effect";
 
+import type { UnlockLockout } from "../viewer/unlock-lockout.js";
 import type { RateLimiter } from "./rate-limiter.js";
 
 type CloudEnv = Cloudflare.Env;
 
-type AppEnv = Omit<CloudEnv, "DB" | "FILES" | "RATE">;
+type AppEnv = Omit<
+  CloudEnv,
+  "DB" | "FILES" | "PUB_COOKIE_KEY" | "RATE" | "UNLOCK"
+>;
 
 interface CloudBindingsApi {
+  readonly cookieKey: string;
   readonly db: D1Database;
   readonly files: R2Bucket;
   readonly rate: DurableObjectNamespace<RateLimiter>;
+  readonly unlock: DurableObjectNamespace<UnlockLockout>;
 }
 
 const cloudEnv: CloudEnv = env;
@@ -32,9 +38,11 @@ class CloudBindings extends Context.Service<CloudBindings, CloudBindingsApi>()(
   public static readonly layer = Layer.succeed(
     CloudBindings,
     CloudBindings.of({
+      cookieKey: cloudEnv.PUB_COOKIE_KEY,
       db: cloudEnv.DB,
       files: cloudEnv.FILES,
       rate: cloudEnv.RATE,
+      unlock: cloudEnv.UNLOCK,
     })
   );
 }

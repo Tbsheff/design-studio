@@ -2,6 +2,7 @@ import { Context, Effect, Layer, Schema } from "effect";
 
 import { CloudBindings } from "../platform/bindings.js";
 import { NotFound } from "../shared-actions.js";
+import type { UnlockLockout } from "../viewer/unlock-lockout.js";
 import type { RowSchema } from "./db.js";
 import {
   RowOrgMismatch,
@@ -72,7 +73,15 @@ const publishedFile = tq<{
   WHERE f.org_id = :org AND f.publication_version_id = :versionId AND f.path = :path
     AND v.publication_id = :publicationId AND v.committed_at IS NOT NULL AND p.deleted_at IS NULL`;
 
+const passwordByPublication = tq<{ readonly publicationId: string }>`
+  SELECT p.org_id, p.password_hash
+  FROM publication p
+  WHERE p.org_id = :org AND p.id = :publicationId AND p.deleted_at IS NULL`;
+
 interface ViewerDbApi {
+  readonly cookieKey: string;
+  readonly lockout: (name: string) => DurableObjectStub<UnlockLockout>;
+  readonly passwordHash: () => Effect.Effect<string | null, never, ViewerScope>;
   readonly project: () => Effect.Effect<ViewedProject, NotFound, ViewerScope>;
   readonly readFile: (
     path: string
@@ -118,10 +127,34 @@ const makeFirstRow =
       return row;
     });
 
-const makeViewerDb = (db: D1Database): ViewerDbApi => {
+const makeViewerDb = (bindings: typeof CloudBindings.Service): ViewerDbApi => {
+  const { db } = bindings;
   const firstRow = makeFirstRow(db);
 
   return {
+    cookieKey: bindings.cookieKey,
+    lockout: (name: string) =>
+      bindings.unlock.get(bindings.unlock.idFromName(name)),
+    passwordHash: Effect.fn("ViewerDb.passwordHash")(function* run() {
+      const scope = yield* ViewerScope;
+
+      if (scope.kind !== "public") {
+        return null;
+      }
+
+      const bound = passwordByPublication.bind(scope.orgId, {
+        publicationId: scope.publicationId,
+      });
+
+      const row = yield* Effect.promise(() =>
+        db
+          .prepare(passwordByPublication.sql)
+          .bind(...bound)
+          .first<{ readonly password_hash: string | null }>()
+      );
+
+      return row?.password_hash ?? null;
+    }),
     project: Effect.fn("ViewerDb.project")(function* run() {
       const scope = yield* ViewerScope;
 
@@ -167,7 +200,7 @@ class ViewerDb extends Context.Service<ViewerDb, ViewerDbApi>()(
     Effect.gen(function* make() {
       const bindings = yield* CloudBindings;
 
-      return ViewerDb.of(makeViewerDb(bindings.db));
+      return ViewerDb.of(makeViewerDb(bindings));
     })
   );
 }

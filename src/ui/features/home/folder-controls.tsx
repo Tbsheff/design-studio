@@ -48,7 +48,9 @@ function PastePath({
       className="paste-path"
       onSubmit={(e) => {
         e.preventDefault();
-        if (value.trim()) onSubmit(value.trim());
+        if (value.trim()) {
+          onSubmit(value.trim());
+        }
       }}
     >
       <input
@@ -131,8 +133,11 @@ export function LocationField({
       "Choose where to save the new project",
       value ?? undefined
     );
-    if (picked.path) await useFolder(picked.path);
-    else if (picked.unsupported) setPasting(true);
+    if (picked.path) {
+      await useFolder(picked.path);
+    } else if (picked.unsupported) {
+      setPasting(true);
+    }
   };
   return (
     <div className="home-location">
@@ -149,8 +154,9 @@ export function LocationField({
           chooser.unsupported
         )}
         onChange={(next) => {
-          if (next === CHOOSE) void pick();
-          else {
+          if (next === CHOOSE) {
+            void pick();
+          } else {
             setPasting(false);
             onChange(next === DEFAULT ? null : next);
           }
@@ -217,7 +223,9 @@ function FolderRow({
       stopEditing();
       return;
     }
-    if (await onRename(next)) stopEditing();
+    if (await onRename(next)) {
+      stopEditing();
+    }
   };
   return (
     <li
@@ -377,8 +385,11 @@ export function FoldersSection({
       "Choose the default folder for new projects",
       current.path
     );
-    if (picked.path) await onSetDefault(picked.path);
-    else if (picked.unsupported) setPastingDefault(true);
+    if (picked.path) {
+      await onSetDefault(picked.path);
+    } else if (picked.unsupported) {
+      setPastingDefault(true);
+    }
   };
   const add = async () => {
     if (chooser.unsupported) {
@@ -386,8 +397,11 @@ export function FoldersSection({
       return;
     }
     const picked = await chooser.choose("Choose a folder you work in");
-    if (picked.path) await onAdd(picked.path);
-    else if (picked.unsupported) setPasting(true);
+    if (picked.path) {
+      await onAdd(picked.path);
+    } else if (picked.unsupported) {
+      setPasting(true);
+    }
   };
   return (
     <section
@@ -414,7 +428,9 @@ export function FoldersSection({
           action="Add"
           onSubmit={(path) =>
             void onAdd(path).then((saved) => {
-              if (saved) setPasting(false);
+              if (saved) {
+                setPasting(false);
+              }
             })
           }
         />
@@ -425,7 +441,9 @@ export function FoldersSection({
           action="Use as default"
           onSubmit={(path) =>
             void onSetDefault(path).then((ok) => {
-              if (ok) setPastingDefault(false);
+              if (ok) {
+                setPastingDefault(false);
+              }
             })
           }
         />

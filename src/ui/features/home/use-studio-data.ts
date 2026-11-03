@@ -87,15 +87,20 @@ function trackFirstToken(
   event: StudioEvent
 ): void {
   if (event.type === "run.started") {
-    if (sends.pending === null || event.ts < sends.pending - 1000) return;
+    if (sends.pending === null || event.ts < sends.pending - 1000) {
+      return;
+    }
     sends.byRun.set(event.runId, sends.pending);
     sends.pending = null;
     return;
   }
-  if (event.type !== "run.text.delta" && event.type !== "run.thinking.delta")
+  if (event.type !== "run.text.delta" && event.type !== "run.thinking.delta") {
     return;
+  }
   const sentAt = sends.byRun.get(event.runId);
-  if (sentAt === undefined) return;
+  if (sentAt === undefined) {
+    return;
+  }
   sends.byRun.delete(event.runId);
   reportFirstToken(projectId, event.directionId, event.runId, sentAt);
 }
@@ -131,16 +136,20 @@ function mergeSummaries(prev: RunMap, list: RunSummary[]): RunMap {
   const next: RunMap = { ...prev };
   for (const s of list) {
     const known = next[s.id];
-    if (!known?.summary) next[s.id] = runFromSummary(s);
-    else if (s.title && !known.summary.title)
+    if (!known?.summary) {
+      next[s.id] = runFromSummary(s);
+    } else if (s.title && !known.summary.title) {
       next[s.id] = { ...known, summary: { ...known.summary, title: s.title } };
+    }
   }
   return next;
 }
 
 function countRuns(cursor: RunCursor, list: RunSummary[]): void {
   for (const s of list) {
-    if (cursor.seen.has(s.id)) continue;
+    if (cursor.seen.has(s.id)) {
+      continue;
+    }
     cursor.seen.add(s.id);
     cursor.byDirection.set(
       s.directionId,
@@ -150,7 +159,9 @@ function countRuns(cursor: RunCursor, list: RunSummary[]): void {
 }
 
 function loadedFor(cursor: RunCursor, directionId: string | null): number {
-  if (directionId === null) return cursor.seen.size;
+  if (directionId === null) {
+    return cursor.seen.size;
+  }
   return cursor.byDirection.get(directionId) ?? 0;
 }
 
@@ -167,8 +178,9 @@ function useRunPages(
   direction.current = directionId;
 
   const publish = useCallback((c: RunCursor, load: (() => void) | null) => {
-    if (cursor.current === c)
+    if (cursor.current === c) {
       publishOlderRuns({ more: !c.done, loading: c.loading }, load);
+    }
   }, []);
 
   const page = useCallback(
@@ -180,7 +192,9 @@ function useRunPages(
           first ? FIRST_RUNS : size,
           c.before
         );
-        if (cursor.current !== c) return;
+        if (cursor.current !== c) {
+          return;
+        }
         first = false;
         countRuns(c, next.runs);
         c.before = next.nextBefore;
@@ -210,7 +224,9 @@ function useRunPages(
 
   const fill = useCallback(
     async (c: RunCursor, want: (c: RunCursor) => boolean, size = MORE_RUNS) => {
-      if (c.loading || c.done) return;
+      if (c.loading || c.done) {
+        return;
+      }
       c.loading = true;
       publish(c, null);
       const work = page(c, want, size).catch(() => setRunsLoaded(true));
@@ -232,9 +248,14 @@ function useRunPages(
       const c = cursor.current;
       while (cursor.current === c && !c.seen.has(runId) && !c.done) {
         const before = c.before;
-        if (c.pending) await c.pending;
-        else await fill(c, (x) => !x.seen.has(runId), THROUGH_RUNS);
-        if (c.before === before && !c.pending) break;
+        if (c.pending) {
+          await c.pending;
+        } else {
+          await fill(c, (x) => !x.seen.has(runId), THROUGH_RUNS);
+        }
+        if (c.before === before && !c.pending) {
+          break;
+        }
       }
       return c.seen.has(runId);
     },
@@ -252,7 +273,9 @@ function useRunPages(
     setRunsLoaded(false);
     void fill(c, wantMore(FIRST_RUNS));
     return () => {
-      if (cursor.current === c) cursor.current = newCursor(projectId);
+      if (cursor.current === c) {
+        cursor.current = newCursor(projectId);
+      }
       publishOlderRuns({ more: false, loading: false }, null);
     };
   }, [projectId, fill, wantMore, setRunsLoaded]);
@@ -263,8 +286,9 @@ function useRunPages(
       directionId !== null &&
       !c.loading &&
       loadedFor(c, directionId) < FIRST_RUNS
-    )
+    ) {
       void fill(c, wantMore(FIRST_RUNS));
+    }
   }, [directionId, fill, wantMore]);
 }
 
@@ -318,7 +342,9 @@ export function useStudioData(projectId: string): StudioData {
 
   const refreshVersions = useCallback(() => {
     const did = directionRef.current;
-    if (!did) return;
+    if (!did) {
+      return;
+    }
     api
       .listVersions(projectId, did)
       .then((v) => directionRef.current === did && setVersions(v))
@@ -330,8 +356,9 @@ export function useStudioData(projectId: string): StudioData {
       setVersions((prev) =>
         prev.some((v) => v.id === version.id) ? prev : [version, ...prev]
       );
-      if ((version.changedFilesTotal ?? 0) > version.changedFiles.length)
+      if ((version.changedFilesTotal ?? 0) > version.changedFiles.length) {
         refreshVersions();
+      }
     },
     [refreshVersions]
   );
@@ -339,7 +366,9 @@ export function useStudioData(projectId: string): StudioData {
   useEffect(() => {
     setVersions([]);
     setStatus(null);
-    if (!directionId) return;
+    if (!directionId) {
+      return;
+    }
     refreshVersions();
     api
       .status(projectId, directionId)
@@ -353,7 +382,9 @@ export function useStudioData(projectId: string): StudioData {
       const dup = prev.find(
         (x) => x.message === e.message && x.file === e.file && x.line === e.line
       );
-      if (dup) return prev;
+      if (dup) {
+        return prev;
+      }
       return [...prev.slice(-49), { ...e, id: `${ts}-${prev.length}`, ts }];
     });
   }, []);
@@ -368,7 +399,7 @@ export function useStudioData(projectId: string): StudioData {
       trackFirstToken(sends.current, projectId, event);
       switch (event.type) {
         case "files.changed": {
-          if (live && event.directionId)
+          if (live && event.directionId) {
             setLastChange({
               directionId: event.directionId,
               changedAt: event.changedAt,
@@ -376,20 +407,26 @@ export function useStudioData(projectId: string): StudioData {
               paths: event.paths,
               ...(event.reload ? { reload: true } : {}),
             });
+          }
           break;
         }
         case "version.created": {
-          if (event.version.directionId === directionRef.current)
+          if (event.version.directionId === directionRef.current) {
             addVersion(event.version);
+          }
           break;
         }
         case "versions.changed": {
-          if (active) refreshVersions();
+          if (active) {
+            refreshVersions();
+          }
           break;
         }
         case "direction.updated": {
           setProject((prev) => {
-            if (!prev) return prev;
+            if (!prev) {
+              return prev;
+            }
             const exists = prev.directions.some(
               (x) => x.id === event.direction.id
             );
@@ -403,11 +440,13 @@ export function useStudioData(projectId: string): StudioData {
           break;
         }
         case "status.changed": {
-          if (live && active) setStatus(event.status);
+          if (live && active) {
+            setStatus(event.status);
+          }
           break;
         }
         case "preview.build-error": {
-          if (live && active)
+          if (live && active) {
             addError({
               directionId: event.directionId ?? null,
               source: "build",
@@ -415,6 +454,7 @@ export function useStudioData(projectId: string): StudioData {
               file: event.file,
               line: event.line,
             });
+          }
           break;
         }
       }
@@ -431,7 +471,7 @@ export function useStudioData(projectId: string): StudioData {
         const existing = prev[runId];
         const status =
           stopped && !existing?.summary ? { status: "canceled" as const } : {};
-        if (existing)
+        if (existing) {
           return {
             ...prev,
             [runId]: {
@@ -441,6 +481,7 @@ export function useStudioData(projectId: string): StudioData {
               ...status,
             },
           };
+        }
         return {
           ...prev,
           [runId]: { ...emptyRun(runId, did, Date.now(), request), ...status },
@@ -454,7 +495,9 @@ export function useStudioData(projectId: string): StudioData {
     const at = Date.now();
     sends.current.pending = at;
     return () => {
-      if (sends.current.pending === at) sends.current.pending = null;
+      if (sends.current.pending === at) {
+        sends.current.pending = null;
+      }
     };
   }, []);
 

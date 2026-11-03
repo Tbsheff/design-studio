@@ -249,6 +249,10 @@ class AccountAuth {
     this.emit();
   }
 
+  restore(): void {
+    this.load();
+  }
+
   async confirm(): Promise<AccountView> {
     this.load();
     if (!this.session) return this.view();

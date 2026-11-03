@@ -124,6 +124,7 @@ export class NativeShell {
       this.onDropFolder(event.sender, raw)
     );
     this.auth.install(ipcMain);
+    this.auth.restore();
     session.defaultSession.on("will-download", (_event, item, contents) =>
       this.onDownload(item, contents)
     );

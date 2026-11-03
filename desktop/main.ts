@@ -115,6 +115,7 @@ const native = new NativeShell({
   checkSetup: () => checkSetup(),
   updater: () => updater,
   recentsFile: () => userDataFile("recent-projects.json"),
+  pushDeviceToken: (token) => void serverLink.pushCloudSession(token),
 });
 
 function studioWindows(): BrowserWindow[] {

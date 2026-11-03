@@ -26,6 +26,8 @@ export class ServerLink {
   private token: string | null = null;
   private dataDir: string | null = null;
   private origin: string | null = null;
+  private cloudJwt: string | null = null;
+  private pushedJwt: string | null = null;
   private readonly active = new Map<string, DesktopRunInfo>();
 
   constructor(
@@ -38,6 +40,7 @@ export class ServerLink {
     this.token = null;
     this.dataDir = null;
     this.origin = origin;
+    this.pushedJwt = null;
     this.active.clear();
     child.on("message", (raw: unknown) => {
       if (isDesktopLinkMessage(raw)) {
@@ -51,6 +54,7 @@ export class ServerLink {
     if (message.kind === "hello") {
       this.token = message.token;
       this.dataDir = message.dataDir;
+      void this.syncCloudSession();
     } else if (message.kind === "run-started") {
       this.active.set(message.run.runId, message.run);
     } else if (message.kind === "mcp-approval") {
@@ -69,6 +73,35 @@ export class ServerLink {
         costUsd: message.costUsd,
         error: message.error,
       });
+    }
+  }
+
+  pushCloudSession(jwt: string | null): Promise<void> {
+    this.cloudJwt = jwt;
+    return this.syncCloudSession();
+  }
+
+  private async syncCloudSession(): Promise<void> {
+    const { cloudJwt: jwt, token, origin } = this;
+    if (!token || !origin || jwt === this.pushedJwt) {
+      return;
+    }
+
+    const headers = {
+      "content-type": "application/json",
+      "x-studio-token": token,
+    };
+    const request = { method: "DELETE", headers } as RequestInit;
+    if (jwt) {
+      request.method = "PUT";
+      request.body = JSON.stringify({ jwt, expiresAt: jwtExpiryMs(jwt) });
+    }
+
+    const res = await fetch(`${origin}/api/cloud/session`, request).catch(
+      () => null
+    );
+    if (res?.ok && this.cloudJwt === jwt) {
+      this.pushedJwt = jwt;
     }
   }
 
@@ -116,6 +149,26 @@ export class ServerLink {
       project.imported?.sourcePath ?? null
     );
   }
+}
+
+const DEFAULT_JWT_LIFETIME_MS = 15 * 60 * 1000;
+
+function jwtExpiryMs(jwt: string): number {
+  const fallback = Date.now() + DEFAULT_JWT_LIFETIME_MS;
+  try {
+    const [, part = ""] = jwt.split(".");
+    const claims = JSON.parse(
+      Buffer.from(part, "base64url").toString("utf-8")
+    ) as { exp?: unknown };
+    const { exp } = claims;
+    if (typeof exp === "number" && Number.isFinite(exp)) {
+      return exp * 1000;
+    }
+  } catch {
+    return fallback;
+  }
+
+  return fallback;
 }
 
 function inside(child: string, parent: string): boolean {

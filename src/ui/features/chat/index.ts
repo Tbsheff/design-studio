@@ -6,4 +6,10 @@ const ChatPanel = lazy(async () => {
   return { default: loaded.ChatPanel };
 });
 
-export { ChatPanel };
+const McpToasts = lazy(async () => {
+  const loaded = await import("./mcp-toasts.js");
+
+  return { default: loaded.McpToasts };
+});
+
+export { ChatPanel, McpToasts };

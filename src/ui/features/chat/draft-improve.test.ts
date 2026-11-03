@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import type { RunSummary } from "../../shared/contracts";
-import { emptyRun, type RunView } from "../runState";
-import { improvePassed, improveRequest, lastImproveRun } from "./DraftImprove";
+import type { RunSummary } from "../../../shared/contracts.js";
+import { emptyRun, type RunView } from "../../runState.js";
+import {
+  improvePassed,
+  improveRequest,
+  lastImproveRun,
+} from "./draft-improve.js";
 
 const view = (
   task: "design-system" | undefined,
@@ -20,22 +24,26 @@ const view = (
 
 describe("improve with AI", () => {
   it("builds a design-system run with the optional focus and never a wireframe level", () => {
-    expect(improveRequest("  ", "prototype")).toEqual({
+    expect.hasAssertions();
+
+    expect(improveRequest("  ", "prototype")).toStrictEqual({
       prompt: "Improve this design system.",
       mode: "edit",
       task: "design-system",
       level: "prototype",
     });
-    expect(improveRequest("Warmer neutrals", "wireframe")).toEqual({
+    expect(improveRequest("Warmer neutrals", "wireframe")).toStrictEqual({
       prompt: "Improve this design system.\n\nFocus: Warmer neutrals",
       mode: "edit",
       task: "design-system",
       level: "prototype",
     });
     expect(improveRequest("", "polish").level).toBe("polish");
-  });
+  }, 5000);
 
   it("finds the latest improve run and says whether it passed", () => {
+    expect.hasAssertions();
+
     const passed = view(
       "design-system",
       {
@@ -46,7 +54,7 @@ describe("improve with AI", () => {
     );
     const later = view(undefined, { status: "completed" }, 2);
     expect(lastImproveRun([passed, later])).toBe(passed);
-    expect(improvePassed(passed)).toBe(true);
+    expect([improvePassed(passed)]).toStrictEqual([true]);
     const failed = view(
       "design-system",
       {
@@ -60,7 +68,7 @@ describe("improve with AI", () => {
       3
     );
     expect(lastImproveRun([passed, later, failed])).toBe(failed);
-    expect(improvePassed(failed)).toBe(false);
-    expect(improvePassed(null)).toBe(false);
-  });
+    expect([improvePassed(failed)]).toStrictEqual([false]);
+    expect([improvePassed(null)]).toStrictEqual([false]);
+  }, 5000);
 });

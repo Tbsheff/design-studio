@@ -1,11 +1,10 @@
 import { lazy, Suspense } from "react";
 import type { Dispatch, ReactNode, SetStateAction } from "react";
 
+import { McpToasts } from "../features/chat";
 import { CommandLayer } from "../features/commands";
 import type { CommandLayerName } from "../features/commands";
 import { isDesktop } from "../platform/desktop";
-
-const McpToasts = lazy(() => import("../components/McpToasts"));
 
 const DesktopApp = lazy(() => import("../DesktopApp"));
 

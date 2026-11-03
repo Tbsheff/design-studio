@@ -14,14 +14,18 @@ import {
 } from "../../shared/props.js";
 import { probeOwners } from "../components/owner-probe.js";
 import {
+  listPropsComponentsOf,
+  propsInstanceOf,
+  setPropsIn,
+} from "../direct-edit/direct-edit-props-ops.js";
+import { directEditCall } from "./direct-edit-call.js";
+import {
   EditError,
   loadTarget,
   refuseWhileRunning,
-  studioCall,
   type EditDeps,
 } from "./edit-deps.js";
 import {
-  base,
   defineTool,
   directionId,
   ok,
@@ -130,12 +134,14 @@ export async function useSiteOf(
     throw new EditError(`No element matches ${sel} on the page.`);
   }
 
-  const { instance } = await studioCall<{ instance: ComponentInstance | null }>(
-    deps,
-    "POST",
-    `${base(project, direction.id)}/props/instance`,
-    { owners: probed.owners, usedAt: probed.usedAt }
-  );
+  const { instance } = (await directEditCall(
+    { directionId: direction.id, projectId: project.id },
+    (runtime, ref) =>
+      propsInstanceOf(runtime, ref, {
+        owners: probed.owners,
+        usedAt: probed.usedAt,
+      })
+  )) as { instance: ComponentInstance | null };
 
   if (!instance) {
     throw new EditError(
@@ -223,19 +229,17 @@ const listComponents = defineTool(
       };
     }
 
-    const params = new URLSearchParams({ limit: String(input.limit ?? 20) });
+    const query = {
+      cursor: input.cursor,
+      limit: input.limit ?? 20,
+      query: input.query,
+      source: input.source,
+    };
 
-    for (const key of ["query", "source", "cursor"] as const) {
-      if (input[key]) {
-        params.set(key, input[key] as string);
-      }
-    }
-
-    const list = await studioCall<ComponentSchemaList>(
-      deps,
-      "GET",
-      `${base(project, direction.id)}/props/components?${params}`
-    );
+    const list = (await directEditCall(
+      { directionId: direction.id, projectId: project.id },
+      (runtime, ref) => listPropsComponentsOf(runtime, ref, query)
+    )) as ComponentSchemaList;
 
     return { result: ok(compactList(list)) };
   }
@@ -274,12 +278,10 @@ const setProps = defineTool(
           )
         ).use;
 
-    const result = await studioCall<SetPropsResult>(
-      deps,
-      "POST",
-      `${base(project, direction.id)}/props`,
-      { source, props: input.props }
-    );
+    const result = (await directEditCall(
+      { directionId: direction.id, projectId: project.id },
+      (runtime, ref) => setPropsIn(runtime, ref, { props: input.props, source })
+    )) as SetPropsResult;
 
     const tag = result.instance?.tag ?? "component";
 

@@ -6,6 +6,12 @@ const routes = {
     method: "POST",
     path: "/api/projects/:projectId/d/:directionId/direct-edit",
   },
+  applyReviewFixDirectEdit: {
+    id: "direct-edit.applyReviewFix",
+    invalidates: ["direct-edit.getReview"],
+    method: "POST",
+    path: "/api/projects/:projectId/d/:directionId/review/fix",
+  },
   applySwapDirectEdit: {
     id: "direct-edit.applySwap",
     invalidates: ["direct-edit.getTree", "version.list", "version.listHistory"],
@@ -55,6 +61,18 @@ const routes = {
     method: "GET",
     path: "/api/projects/:projectId/d/:directionId/preview",
   },
+  getReviewDirectEdit: {
+    id: "direct-edit.getReview",
+    invalidates: [],
+    method: "GET",
+    path: "/api/projects/:projectId/d/:directionId/review",
+  },
+  getRulesDirectEdit: {
+    id: "direct-edit.getRules",
+    invalidates: [],
+    method: "GET",
+    path: "/api/projects/:projectId/d/:directionId/rules",
+  },
   getTreeDirectEdit: {
     id: "direct-edit.getTree",
     invalidates: [],
@@ -67,6 +85,12 @@ const routes = {
     method: "GET",
     path: "/api/projects/:projectId/d/:directionId/tweaks",
   },
+  importFigmaDirectEdit: {
+    id: "direct-edit.importFigma",
+    invalidates: [],
+    method: "POST",
+    path: "/api/projects/:projectId/d/:directionId/figma/import",
+  },
   insertComponentDirectEdit: {
     id: "direct-edit.insertComponent",
     invalidates: ["direct-edit.getTree", "version.list", "version.listHistory"],
@@ -78,6 +102,12 @@ const routes = {
     invalidates: ["direct-edit.getTree", "version.list", "version.listHistory"],
     method: "POST",
     path: "/api/projects/:projectId/d/:directionId/insert/jsx",
+  },
+  inspectPropsInstanceDirectEdit: {
+    id: "direct-edit.inspectPropsInstance",
+    invalidates: [],
+    method: "POST",
+    path: "/api/projects/:projectId/d/:directionId/props/instance",
   },
   inspectTokensDirectEdit: {
     id: "direct-edit.inspectTokens",
@@ -103,6 +133,12 @@ const routes = {
     method: "GET",
     path: "/api/projects/:projectId/d/:directionId/insert/components",
   },
+  listPropsComponentsDirectEdit: {
+    id: "direct-edit.listPropsComponents",
+    invalidates: [],
+    method: "GET",
+    path: "/api/projects/:projectId/d/:directionId/props/components",
+  },
   listSwapCandidatesDirectEdit: {
     id: "direct-edit.listSwapCandidates",
     invalidates: [],
@@ -115,11 +151,41 @@ const routes = {
     method: "POST",
     path: "/api/projects/:projectId/d/:directionId/check",
   },
+  runReviewDirectEdit: {
+    id: "direct-edit.runReview",
+    invalidates: ["direct-edit.getReview"],
+    method: "POST",
+    path: "/api/projects/:projectId/d/:directionId/review",
+  },
+  runRulesTestDirectEdit: {
+    id: "direct-edit.runRulesTest",
+    invalidates: [],
+    method: "POST",
+    path: "/api/projects/:projectId/d/:directionId/rules/test",
+  },
   setImageDirectEdit: {
     id: "direct-edit.setImage",
     invalidates: ["direct-edit.getTree", "version.list", "version.listHistory"],
     method: "POST",
     path: "/api/projects/:projectId/d/:directionId/image",
+  },
+  setPropsDirectEdit: {
+    id: "direct-edit.setProps",
+    invalidates: [],
+    method: "POST",
+    path: "/api/projects/:projectId/d/:directionId/props",
+  },
+  setRulesDirectEdit: {
+    id: "direct-edit.setRules",
+    invalidates: ["direct-edit.getRules"],
+    method: "PUT",
+    path: "/api/projects/:projectId/d/:directionId/rules",
+  },
+  setVariantClassesDirectEdit: {
+    id: "direct-edit.setVariantClasses",
+    invalidates: [],
+    method: "POST",
+    path: "/api/projects/:projectId/d/:directionId/props/variant-classes",
   },
   setVectorDirectEdit: {
     id: "direct-edit.setVector",

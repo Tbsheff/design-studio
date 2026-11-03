@@ -74,6 +74,7 @@ const NO_READ_CHANGES = [
   "src/shared/actions/comment/export.ts",
   "src/shared/actions/export/{export,export-folder,export-frame,export-handoff}.ts",
   "src/shared/actions/direct-edit/run.ts",
+  "src/shared/actions/direct-edit/run-rules-test.ts",
   "src/shared/actions/viewport/run.ts",
 ];
 
@@ -81,7 +82,7 @@ const LEGACY_DOM_QUERIES = ["src/ui/features/icons/use-icon-host.ts"];
 
 const LEGACY_RUNTIME_CALLS = [
   "src/server/http/components-routes.ts",
-  "src/server/mcp/{component-create-tools,component-preview-tools,direct-edit-call,insert-tools,jsx-insert-tools}.ts",
+  "src/server/mcp/{component-create-tools,component-preview-tools,direct-edit-call,figma-import-tools,insert-tools,jsx-insert-tools,props-tools,review-tools,rules-tools}.ts",
 ];
 
 const LEGACY_APP_IMPORTS = [
@@ -110,7 +111,18 @@ const NEW_SERVER_FILES = [
   "src/server/direct-edit/direct-edit-*.ts",
 ];
 
-const CYCLE_DEEP_IMPORTS = ["src/server/direct-edit/direct-edit-ops.ts"];
+const CYCLE_DEEP_IMPORTS = [
+  "src/server/direct-edit/direct-edit-ops.ts",
+  "src/server/direct-edit/{direct-edit-props-ops,direct-edit-review-ops}.ts",
+];
+
+const ZOD_PARSE_FILES = [
+  "src/server/direct-edit/{direct-edit-props-ops,direct-edit-review-ops}.ts",
+];
+
+const POST_READ_FILES = [
+  "src/shared/actions/direct-edit/inspect-props-instance.ts",
+];
 
 const AREA_INDEX_FILES = [
   ...AUTH_FILES,
@@ -147,10 +159,12 @@ const studio: OxlintOverride[] = [
   },
   {
     files: ACTION_FILES,
-    rules: {
-      "studio/mcp-off-reason": "error",
-      "studio/read-verb-access": "error",
-    },
+    rules: { "studio/mcp-off-reason": "error" },
+  },
+  {
+    excludeFiles: POST_READ_FILES,
+    files: ACTION_FILES,
+    rules: { "studio/read-verb-access": "error" },
   },
   {
     excludeFiles: LEGACY_UNTYPED_SCHEMAS,
@@ -201,7 +215,7 @@ const studio: OxlintOverride[] = [
     rules: { "studio/no-feature-async": "error" },
   },
   {
-    excludeFiles: [...SERVER_TESTS, ...AUTH_FILES],
+    excludeFiles: [...SERVER_TESTS, ...AUTH_FILES, ...ZOD_PARSE_FILES],
     files: NEW_SERVER_FILES,
     rules: { "studio/no-zod-import": "error" },
   },

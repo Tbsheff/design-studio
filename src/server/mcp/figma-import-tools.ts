@@ -10,17 +10,17 @@ import {
   type FigmaImportResult,
 } from "../../shared/figma-nodes.js";
 import { JSX_INSERT_POSITIONS } from "../../shared/insert.js";
+import { importFigmaIn } from "../direct-edit/direct-edit-props-ops.js";
+import { directEditCall } from "./direct-edit-call.js";
 import {
   approve,
   EditError,
   loadTarget,
   oneLine,
   refuseWhileRunning,
-  studioCall,
   type EditDeps,
 } from "./edit-deps.js";
 import {
-  base,
   defineTool,
   directionId,
   ok,
@@ -205,12 +205,10 @@ const importFigmaFrame = defineTool(
     let result: FigmaImportResult | FigmaImportPreview;
 
     try {
-      result = await studioCall<FigmaImportResult | FigmaImportPreview>(
-        deps,
-        "POST",
-        `${base(project, direction.id)}/figma/import`,
-        body
-      );
+      result = (await directEditCall(
+        { directionId: direction.id, projectId: project.id },
+        (runtime, ref) => importFigmaIn(runtime, ref, body)
+      )) as FigmaImportResult | FigmaImportPreview;
     } catch (error) {
       throw new EditError(
         error instanceof Error ? error.message : String(error)

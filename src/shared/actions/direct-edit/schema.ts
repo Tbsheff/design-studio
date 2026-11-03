@@ -280,6 +280,93 @@ const ComponentPreviewSchema = Schema.Struct({
   text: Schema.NullOr(Schema.String),
 });
 
+const PropsComponentListSchema = Schema.Struct({
+  components: Schema.Array(Schema.Unknown),
+  nextCursor: Schema.NullOr(Schema.String),
+  total: Schema.Number,
+  truncated: Schema.Boolean,
+});
+
+const PropsInstanceSchema = Schema.Struct({
+  instance: Schema.NullOr(Schema.Unknown),
+});
+
+const SetPropsResultSchema = Schema.Struct({
+  changed: Schema.Array(Schema.String),
+  file: Schema.String,
+  instance: Schema.NullOr(Schema.Unknown),
+  removed: Schema.Array(Schema.String),
+  version: Schema.NullOr(Schema.Unknown),
+});
+
+const VariantClassResultSchema = Schema.Struct({
+  classes: Schema.Array(Schema.String),
+  file: Schema.String,
+  note: Schema.NullOr(Schema.String),
+  version: Schema.NullOr(Schema.Unknown),
+});
+
+const RulesStateSchema = Schema.Struct({
+  editable: Schema.Boolean,
+  file: Schema.NullOr(Schema.String),
+  importFrom: Schema.Array(Schema.String),
+  imported: Schema.NullOr(Schema.String),
+  origin: Schema.String,
+  rules: Schema.Array(Schema.Unknown),
+  text: Schema.String,
+});
+
+const SaveRulesResultSchema = Schema.Struct({
+  state: RulesStateSchema,
+  version: Schema.NullOr(Schema.Unknown),
+  versionId: Schema.NullOr(Schema.String),
+});
+
+const RulesTestResultSchema = Schema.Struct({
+  frame: Schema.Unknown,
+  hits: Schema.Array(Schema.Unknown),
+  notes: Schema.Array(Schema.String),
+  rules: Schema.Array(Schema.Unknown),
+});
+
+const LastReviewSchema = Schema.Struct({
+  review: Schema.NullOr(Schema.Unknown),
+});
+
+const ReviewResultSchema = Schema.Struct({
+  counts: Schema.Unknown,
+  directionId: Schema.String,
+  findings: Schema.Array(Schema.Unknown),
+  frame: Schema.Unknown,
+  matched: OptionalUnknownSchema,
+  notes: Schema.Array(Schema.String),
+  projectId: Schema.String,
+  ranAt: Schema.Number,
+  versionId: Schema.NullOr(Schema.String),
+});
+
+const ReviewFixResultSchema = Schema.Struct({
+  applied: Schema.Array(Schema.String),
+  files: Schema.Array(Schema.String),
+  shared: Schema.optionalKey(Schema.Array(Schema.String)),
+  skipped: Schema.Array(Schema.Unknown),
+  version: Schema.NullOr(Schema.Unknown),
+});
+
+const FigmaImportOutputSchema = Schema.Struct({
+  file: OptionalUnknownSchema,
+  fileName: OptionalUnknownSchema,
+  frame: OptionalUnknownSchema,
+  frames: OptionalUnknownSchema,
+  imports: OptionalUnknownSchema,
+  markup: OptionalUnknownSchema,
+  select: OptionalUnknownSchema,
+  stats: OptionalUnknownSchema,
+  title: OptionalUnknownSchema,
+  usedAt: OptionalUnknownSchema,
+  version: OptionalUnknownSchema,
+});
+
 export {
   CONFLICT_CODES,
   CommitTweaksResultSchema,
@@ -294,6 +381,17 @@ export {
   DirectEditFields,
   DirectEditResultSchema,
   InsertResultSchema,
+  FigmaImportOutputSchema,
+  LastReviewSchema,
+  PropsComponentListSchema,
+  PropsInstanceSchema,
+  ReviewFixResultSchema,
+  ReviewResultSchema,
+  RulesStateSchema,
+  RulesTestResultSchema,
+  SaveRulesResultSchema,
+  SetPropsResultSchema,
+  VariantClassResultSchema,
   ListInsertableSchema,
   NOT_FOUND_CODES,
   PreviewUrlSchema,

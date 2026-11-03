@@ -1,3 +1,4 @@
+import { routes } from "../shared/actions/direct-edit/routes.js";
 import type {
   ComponentVariantChange,
   ComponentVariantResult,
@@ -5,15 +6,12 @@ import type {
 } from "../shared/component-variant";
 import type { SourceLoc } from "../shared/contracts";
 import type {
-  ComponentInstance,
-  ComponentSchemaList,
   InstanceQuery,
   PropValue,
-  SetPropsResult,
   VariantClassRequest,
-  VariantClassResult,
 } from "../shared/props";
 import { getBlob, json } from "./api";
+import { call } from "./platform/http";
 
 interface VariantPreviewQuery {
   file: string;
@@ -28,23 +26,29 @@ const d = (pid: string, did: string) =>
 
 export const propsApi = {
   instance: (pid: string, did: string, query: InstanceQuery) =>
-    json<{ instance: ComponentInstance | null }>(
-      "POST",
-      `${d(pid, did)}/props/instance`,
-      query
-    ),
+    call(routes.inspectPropsInstanceDirectEdit, {
+      ...query,
+      directionId: did,
+      projectId: pid,
+    }),
   setProps: (
     pid: string,
     did: string,
     source: SourceLoc,
     props: Record<string, PropValue | null>
-  ) => json<SetPropsResult>("POST", `${d(pid, did)}/props`, { source, props }),
+  ) =>
+    call(routes.setPropsDirectEdit, {
+      directionId: did,
+      projectId: pid,
+      props,
+      source,
+    }),
   variantClasses: (pid: string, did: string, request: VariantClassRequest) =>
-    json<VariantClassResult>(
-      "POST",
-      `${d(pid, did)}/props/variant-classes`,
-      request
-    ),
+    call(routes.setVariantClassesDirectEdit, {
+      ...request,
+      directionId: did,
+      projectId: pid,
+    }),
   writeVariant: (
     pid: string,
     did: string,
@@ -65,7 +69,10 @@ export const propsApi = {
       ).toString()}`
     ),
   components: (pid: string, did: string) =>
-    json<ComponentSchemaList>("GET", `${d(pid, did)}/props/components`),
+    call(routes.listPropsComponentsDirectEdit, {
+      directionId: did,
+      projectId: pid,
+    }),
 };
 
 export type { VariantPreviewQuery };

@@ -13,17 +13,22 @@ import { listWorkTree } from "./mentions.js";
 
 const registerDirectEditRoutes = (_app: Hono, ctx: AppContext): void => {
   const {
+    canvas,
+    commitDesignMd,
     config,
     editDeps,
     loadDirection,
     preview,
     projects,
+    rulesFor,
     watchTokenSources,
     withDirection,
   } = ctx;
 
   bindContentRuntime({ editDeps, withDirection });
   bindDirectEditRuntime(config.dataDir, {
+    canvas,
+    commitDesignMd,
     components: createComponentService({
       preview,
       scratchDir: (projectId) =>
@@ -37,6 +42,8 @@ const registerDirectEditRoutes = (_app: Hono, ctx: AppContext): void => {
       preview,
       path.join(config.dataDir, "component-previews")
     ),
+    projectDir: projects.projectDir,
+    rulesFor,
     watchTokenSources,
     withDirection,
   });

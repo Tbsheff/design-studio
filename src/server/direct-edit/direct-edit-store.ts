@@ -18,6 +18,8 @@ import {
   treeOf,
 } from "./direct-edit-ops.js";
 import type { DirectionRef, EditBody } from "./direct-edit-ops.js";
+import { listPropsComponentsOf } from "./direct-edit-props-ops.js";
+import { getReviewOf, getRulesOf } from "./direct-edit-review-ops.js";
 
 interface DirectEditStoreApi {
   readonly getDesignSystem: (
@@ -74,6 +76,22 @@ interface DirectEditStoreApi {
     Awaited<ReturnType<typeof getComponentPreviewOf>>,
     DirectEditFailure
   >;
+  readonly listPropsComponents: (
+    ref: DirectionRef,
+    body: EditBody
+  ) => Effect.Effect<
+    Awaited<ReturnType<typeof listPropsComponentsOf>>,
+    DirectEditFailure
+  >;
+  readonly getRules: (
+    ref: DirectionRef
+  ) => Effect.Effect<Awaited<ReturnType<typeof getRulesOf>>, DirectEditFailure>;
+  readonly getReview: (
+    ref: DirectionRef
+  ) => Effect.Effect<
+    Awaited<ReturnType<typeof getReviewOf>>,
+    DirectEditFailure
+  >;
 }
 
 class DirectEditStore extends Context.Service<
@@ -106,6 +124,16 @@ class DirectEditStore extends Context.Service<
           previewUrlOf(runtime, ref)
         );
       }),
+      getReview: Effect.fn("DirectEditStore.getReview")(function* run(
+        ref: DirectionRef
+      ) {
+        return yield* attemptDirectEdit((runtime) => getReviewOf(runtime, ref));
+      }),
+      getRules: Effect.fn("DirectEditStore.getRules")(function* run(
+        ref: DirectionRef
+      ) {
+        return yield* attemptDirectEdit((runtime) => getRulesOf(runtime, ref));
+      }),
       getTree: Effect.fn("DirectEditStore.getTree")(function* run(
         ref: DirectionRef
       ) {
@@ -137,6 +165,13 @@ class DirectEditStore extends Context.Service<
           listInsertableOf(runtime, ref)
         );
       }),
+      listPropsComponents: Effect.fn("DirectEditStore.listPropsComponents")(
+        function* run(ref: DirectionRef, body: EditBody) {
+          return yield* attemptDirectEdit((runtime) =>
+            listPropsComponentsOf(runtime, ref, body)
+          );
+        }
+      ),
       listSwapCandidates: Effect.fn("DirectEditStore.listSwapCandidates")(
         function* run(ref: DirectionRef, use: SourceUse) {
           return yield* attemptDirectEdit((runtime) =>

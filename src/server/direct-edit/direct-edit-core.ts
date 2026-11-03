@@ -7,7 +7,9 @@ import {
   CONFLICT_CODES,
   NOT_FOUND_CODES,
 } from "../../shared/actions/direct-edit/schema.js";
-import type { Direction, Project } from "../../shared/contracts.js";
+import type { Direction, Project, Version } from "../../shared/contracts.js";
+import type { DesignRule } from "../../shared/design-rules.js";
+import type { CanvasService } from "../canvas/index.js";
 import type {
   ComponentPreviews,
   ComponentService,
@@ -24,6 +26,11 @@ import type { DirectEditDeps } from "./commit/edit-types.js";
 import { DirectEditError } from "./engine/errors.js";
 
 interface DirectEditRuntime {
+  readonly canvas: CanvasService;
+  readonly commitDesignMd: (
+    project: Project,
+    direction: Direction
+  ) => Promise<Version | null>;
   readonly components: ComponentService;
   readonly editDeps: DirectEditDeps;
   readonly listWorkTree: (workTree: string) => Promise<string[]>;
@@ -33,6 +40,11 @@ interface DirectEditRuntime {
   ) => Promise<{ direction: Direction; project: Project }>;
   readonly preview: PreviewService;
   readonly previews: ComponentPreviews;
+  readonly projectDir: (projectId: string) => string;
+  readonly rulesFor: (
+    project: Project,
+    direction: Direction
+  ) => Promise<DesignRule[]>;
   readonly watchTokenSources: (project: Project) => void;
   readonly withDirection: <Value>(
     projectId: string,

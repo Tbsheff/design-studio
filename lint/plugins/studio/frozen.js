@@ -57,9 +57,11 @@ const FROZEN_EXEMPTIONS = new Set([
   "src/shared/actions/comment/export.ts",
   "src/shared/actions/export/{export,export-folder,export-frame,export-handoff}.ts",
   "src/shared/actions/direct-edit/run.ts",
+  "src/shared/actions/direct-edit/run-rules-test.ts",
   "src/shared/actions/viewport/run.ts",
   "src/server/http/components-routes.ts",
-  "src/server/mcp/{component-create-tools,component-preview-tools,direct-edit-call,insert-tools,jsx-insert-tools}.ts",
+  "src/server/mcp/{component-create-tools,component-preview-tools,direct-edit-call,figma-import-tools,insert-tools,jsx-insert-tools,props-tools,review-tools,rules-tools}.ts",
+  "src/server/direct-edit/{direct-edit-props-ops,direct-edit-review-ops}.ts",
   "cloud/api/src/http/{errors,groups/wire-errors,middleware/member-auth,groups/authorizer,middleware/viewer,middleware/org-grant,middleware/agent-auth,groups/projects,groups/gates}.ts",
   "cloud/api/src/tenant/{resolver,viewer-db,repos/projects,db,current-org,blobs}.ts",
   "cloud/api/src/auth/{rate-limit,permissions}.ts",
@@ -68,6 +70,7 @@ const FROZEN_EXEMPTIONS = new Set([
 ]);
 
 const LEGACY_OVERRIDES = new Set([
+  "src/server/direct-edit/direct-edit-props-ops.ts",
   "src/server/platform/logger/**",
   "src/server/platform/config/**",
   "src/server/events/{bus,event-queue,event-core,event-log,event-writer,render-tracker,save-lanes,save-queue}.ts",

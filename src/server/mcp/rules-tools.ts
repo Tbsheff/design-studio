@@ -8,9 +8,14 @@ import {
   type DesignRulesTestResult,
 } from "../../shared/design-rules.js";
 import { frameRef } from "../canvas/tools.js";
-import { loadTarget, refuseWhileRunning, studioCall } from "./edit-deps.js";
 import {
-  base,
+  getRulesOf,
+  runRulesTestIn,
+  setRulesIn,
+} from "../direct-edit/direct-edit-review-ops.js";
+import { directEditCall } from "./direct-edit-call.js";
+import { loadTarget, refuseWhileRunning } from "./edit-deps.js";
+import {
   defineTool,
   directionId,
   ok,
@@ -80,11 +85,10 @@ const getRules = defineTool(
       input.projectId,
       input.directionId
     );
-    const state = await studioCall<DesignRulesState>(
-      deps,
-      "GET",
-      `${base(project, direction.id)}/rules`
-    );
+    const state = (await directEditCall(
+      { directionId: direction.id, projectId: project.id },
+      getRulesOf
+    )) as DesignRulesState;
     return {
       result: ok({
         origin: state.origin,
@@ -113,13 +117,14 @@ const setRules = defineTool(
       input.directionId
     );
     refuseWhileRunning(deps, project, direction);
-    const saved = await studioCall<{
+    const saved = (await directEditCall(
+      { directionId: direction.id, projectId: project.id },
+      (runtime, ref) => setRulesIn(runtime, ref, { text: input.text })
+    )) as {
       state: DesignRulesState;
       versionId: string | null;
       version: Version | null;
-    }>(deps, "PUT", `${base(project, direction.id)}/rules`, {
-      text: input.text,
-    });
+    };
     const output = ok({
       origin: saved.state.origin,
       rules: saved.state.rules.map(outline),
@@ -162,12 +167,10 @@ const testRules = defineTool(
       ...(input.path ? { path: input.path } : {}),
       ...size,
     };
-    const result = await studioCall<DesignRulesTestResult>(
-      deps,
-      "POST",
-      `${base(project, direction.id)}/rules/test`,
-      body
-    );
+    const result = (await directEditCall(
+      { directionId: direction.id, projectId: project.id },
+      (runtime, ref) => runRulesTestIn(runtime, ref, body)
+    )) as DesignRulesTestResult;
     const hits = new Map(result.hits.map((hit) => [hit.ruleId, hit]));
     const rules = result.rules.map((rule) => ({
       ...outline(rule),

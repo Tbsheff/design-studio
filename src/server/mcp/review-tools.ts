@@ -7,9 +7,13 @@ import {
   type ReviewResult,
 } from "../../shared/review.js";
 import { frameRef } from "../canvas/tools.js";
-import { loadTarget, refuseWhileRunning, studioCall } from "./edit-deps.js";
 import {
-  base,
+  applyReviewFixIn,
+  runReviewIn,
+} from "../direct-edit/direct-edit-review-ops.js";
+import { directEditCall } from "./direct-edit-call.js";
+import { loadTarget, refuseWhileRunning } from "./edit-deps.js";
+import {
   defineTool,
   directionId,
   ok,
@@ -115,17 +119,16 @@ const reviewFrame = defineTool(
 
     const size = input.viewport ? VIEWPORTS[input.viewport] : {};
 
-    const review = await studioCall<ReviewResult>(
-      deps,
-      "POST",
-      `${base(project, direction.id)}/review`,
-      {
-        ...(input.frame ? { frame: input.frame } : {}),
-        ...(input.path ? { path: input.path } : {}),
-        ...(input.selector ? { selector: input.selector } : {}),
-        ...size,
-      }
-    );
+    const review = (await directEditCall(
+      { directionId: direction.id, projectId: project.id },
+      (runtime, ref) =>
+        runReviewIn(runtime, ref, {
+          ...(input.frame ? { frame: input.frame } : {}),
+          ...(input.path ? { path: input.path } : {}),
+          ...(input.selector ? { selector: input.selector } : {}),
+          ...size,
+        })
+    )) as ReviewResult;
 
     const fixable = review.findings.filter((finding) => finding.fix).length;
 
@@ -160,12 +163,14 @@ const applyFix = defineTool(
     refuseWhileRunning(deps, project, direction);
     const ids = input.findingIds ?? [input.findingId ?? ""];
 
-    const result = await studioCall<ReviewFixResult>(
-      deps,
-      "POST",
-      `${base(project, direction.id)}/review/fix`,
-      { findingIds: ids, ...(input.allowShared ? { allowShared: true } : {}) }
-    );
+    const result = (await directEditCall(
+      { directionId: direction.id, projectId: project.id },
+      (runtime, ref) =>
+        applyReviewFixIn(runtime, ref, {
+          findingIds: ids,
+          ...(input.allowShared ? { allowShared: true } : {}),
+        })
+    )) as ReviewFixResult;
 
     const warning = result.shared
       ? `This fix changed shared file${result.shared.length === 1 ? "" : "s"} ${result.shared.join(", ")}, used outside this page. Check the other pages, or undo.`

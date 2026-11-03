@@ -7,9 +7,9 @@ import type {
 import { errorText } from "../../api.js";
 import { formatTime } from "../../format.js";
 import { Icon, type IconName } from "../../kit/Icon.js";
-import { mcpApi } from "../../mcpApi.js";
-import type { RunView } from "../../runState.js";
-import type { McpApprovalCard, McpFeedState } from "../../useMcpFeed.js";
+import { mcpApi } from "./mcp-model.js";
+import type { RunView } from "./run-state-model.js";
+import type { McpApprovalCard, McpFeedState } from "./use-mcp-feed.js";
 
 export const MCP_ACTIVE_MS = 60_000;
 const RECENT_MS = 10 * 60_000;

@@ -24,13 +24,13 @@ import { formatTime, formatUsd } from "../../format.js";
 import { CopyButton } from "../../kit/CopyButton.js";
 import { Icon } from "../../kit/Icon.js";
 import { splitMarkdownBlocks } from "../../markdownBlocks.js";
-import type { RunView } from "../../runState.js";
+import { contextShare } from "./context-meter.js";
+import type { RunView } from "./run-state-model.js";
 import {
   skillDisplayName,
   skillsFromPrompt,
   withoutSkillLines,
-} from "../../skills.js";
-import { contextShare } from "./context-meter.js";
+} from "./skills-model.js";
 
 function runLevel(run: RunView): RunLevel | null {
   return run.summary?.level ?? run.request?.level ?? null;

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import type { SkillInfo } from "../../../shared/contracts.js";
 import { Icon } from "../../kit/Icon.js";
-import { NO_SKILLS_TEXT, plural, useSkillCatalog } from "../../skills.js";
+import { NO_SKILLS_TEXT, plural, useSkillCatalog } from "./skills-model.js";
 
 interface Props {
   disabled: string[];

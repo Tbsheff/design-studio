@@ -1,16 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { useLive } from "../../platform/live-store.js";
+import type { TurnActions } from "./chat-rewind.js";
 import {
   chatSearchAvailable,
   chatSearchOpen,
   focusChatSearchButton,
-} from "../../chatSearchState.js";
-import { useLive } from "../../platform/live-store.js";
-import { loadRunsThrough, renameRun } from "../../runHistoryApi.js";
-import type { RunView } from "../../runState.js";
-import type { RewindControl } from "../../useRewind.js";
-import type { TurnActions } from "./chat-rewind.js";
+} from "./chat-search-model.js";
 import type { PolishProps } from "./chat-turn-model.js";
+import { loadRunsThrough, renameRun } from "./run-history-model.js";
+import type { RunView } from "./run-state-model.js";
+import type { RewindControl } from "./use-rewind.js";
 
 function useLatest<T>(value: T): { readonly current: T } {
   const ref = useRef(value);

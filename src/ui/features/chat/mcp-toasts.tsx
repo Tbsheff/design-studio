@@ -2,11 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import type { McpApprovalOutcome } from "../../../shared/contracts.js";
-import { useInlineApprovalProject } from "../../approvalSpot.js";
 import { Icon } from "../../kit/Icon.js";
 import { appStream } from "../../platform/stream.js";
-import type { McpApprovalCard } from "../../useMcpFeed.js";
+import { useInlineApprovalProject } from "./approval-spot-model.js";
 import { McpApproval } from "./mcp-feed.js";
+import type { McpApprovalCard } from "./use-mcp-feed.js";
 
 import "../../styles/mcp.css";
 

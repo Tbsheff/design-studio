@@ -4,15 +4,15 @@ import type { KeyboardEvent } from "react";
 import type { RunStatus } from "../../../shared/contracts.js";
 import { formatMs, formatTime, formatUsd } from "../../format.js";
 import { Icon } from "../../kit/Icon.js";
-import type { RunView } from "../../runState.js";
+import { useReturnFocusOnUnmount } from "../../usePopover.js";
+import { LatencyBreakdown } from "./latency-breakdown.js";
+import type { RunView } from "./run-state-model.js";
 import {
   SKILL_TOOL,
   prettyToolName,
   skillToolName,
   toolTarget,
-} from "../../toolLabels.js";
-import { useReturnFocusOnUnmount } from "../../usePopover.js";
-import { LatencyBreakdown } from "./latency-breakdown.js";
+} from "./tool-labels-model.js";
 
 const STATUS_TEXT: Record<RunStatus, string> = {
   running: "Running",

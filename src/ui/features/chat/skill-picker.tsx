@@ -10,6 +10,7 @@ import { api, errorText } from "../../api.js";
 import { rank } from "../../chat-slots.js";
 import type { Command } from "../../chat-slots.js";
 import { Icon } from "../../kit/Icon.js";
+import { SkillsChecklist } from "./skills-checklist.js";
 import {
   NO_SKILLS_TEXT,
   enabledSkills,
@@ -17,8 +18,7 @@ import {
   plural,
   skillDisplayName,
   useSkillCatalog,
-} from "../../skills.js";
-import { SkillsChecklist } from "./skills-checklist.js";
+} from "./skills-model.js";
 import type { SlashChoice, SlashSection } from "./slash-menu.js";
 
 function matches(skill: SkillInfo, query: string): boolean {

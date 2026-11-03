@@ -7,7 +7,7 @@ import {
 } from "react";
 
 import { useConversation } from "../../ai/components/ai/conversation.js";
-import { requestOlderRuns, useOlderRuns } from "../../runHistoryApi.js";
+import { requestOlderRuns, useOlderRuns } from "./run-history-model.js";
 
 const FIRST = 12;
 const STEP = 16;

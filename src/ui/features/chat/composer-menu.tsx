@@ -34,11 +34,11 @@ import {
   type EffortSetting,
 } from "../../components/RunSettings.js";
 import { Icon, type IconName } from "../../kit/Icon.js";
-import { MODEL_OPTIONS } from "../../settingsDraft.js";
 import { usePopover } from "../../usePopover.js";
-import { usePresence } from "../../usePresence.js";
+import { MODEL_OPTIONS } from "./settings-draft-model.js";
 import { effectiveModel, shortModel } from "./slash-groups.js";
 import { StableText } from "./stable-text.js";
+import { usePresence } from "./use-presence.js";
 
 function usePlacedPopover(
   trigger: RefObject<HTMLButtonElement | null>,

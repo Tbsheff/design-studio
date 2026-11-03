@@ -10,8 +10,6 @@ import {
 import { feedShown, McpItem, timelineOf } from "../../components/McpFeed.js";
 import type { McpFeedControl } from "../../components/McpFeed.js";
 import { Icon } from "../../kit/Icon.js";
-import type { RunView } from "../../runState.js";
-import type { RewindControl } from "../../useRewind.js";
 import {
   ChatLead,
   RunAnnouncer,
@@ -21,12 +19,14 @@ import {
 import { PendingEntry, RunEntry } from "./chat-run-entry.js";
 import { ChatSearch } from "./chat-search.js";
 import { reviewOf, turnProps, undoProps } from "./chat-turn-model.js";
+import type { RunView } from "./run-state-model.js";
 import {
   useLatest,
   usePolish,
   useRunSearch,
   useTurnActions,
 } from "./use-chat-panel.js";
+import type { RewindControl } from "./use-rewind.js";
 
 interface Props {
   rewind?: RewindControl;

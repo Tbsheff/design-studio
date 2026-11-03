@@ -7,7 +7,7 @@ import type {
   RunRequest,
 } from "../../../shared/contracts.js";
 import { useFitPopover } from "../../domain/popoverPlacement.js";
-import type { RunView } from "../../runState.js";
+import type { RunView } from "./run-state-model.js";
 
 export const IMPROVE_PROMPT = "Improve this design system.";
 

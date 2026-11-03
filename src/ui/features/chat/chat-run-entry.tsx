@@ -4,8 +4,6 @@ import { Message, MessageContent } from "../../ai/components/ai/message.js";
 import { ApprovalCard, canPolishRun } from "../../chat-slots.js";
 import { RunCommentsCard } from "../../components/RunComments.js";
 import { LiveStatus } from "../../components/ToolChips.js";
-import { runProjectId } from "../../runHistoryApi.js";
-import type { RunView } from "../../runState.js";
 import { RunFeedbackRow } from "./chat-feedback.js";
 import {
   PlanCard,
@@ -18,6 +16,8 @@ import { UserTurn } from "./chat-rewind.js";
 import { RunParts } from "./chat-run-parts.js";
 import type { PolishProps, TurnProps } from "./chat-turn-model.js";
 import { PermissionPrompt } from "./permission-prompt.js";
+import { runProjectId } from "./run-history-model.js";
+import type { RunView } from "./run-state-model.js";
 
 interface EntryProps extends TurnProps {
   run: RunView;

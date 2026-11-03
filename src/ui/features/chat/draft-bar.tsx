@@ -12,8 +12,8 @@ import { errorText } from "../../api.js";
 import { useFitPopover } from "../../domain/popoverPlacement.js";
 import { findPack, usePacks } from "../../packs.js";
 import { packApi } from "../../platform/pack-api.js";
-import type { RunView } from "../../runState.js";
 import { CheckStatus, improvePassed } from "./draft-improve.js";
+import type { RunView } from "./run-state-model.js";
 
 const GRADE_LABELS: Record<CoverageGrade, string> = {
   excellent: "Excellent",

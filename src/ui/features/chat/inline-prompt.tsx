@@ -10,7 +10,7 @@ import {
 import { Icon } from "../../kit/Icon.js";
 import { call } from "../../platform/http.js";
 import { uiStore } from "../../storage.js";
-import type { InlinePromptView } from "../../useInlinePrompt.js";
+import type { InlinePromptView } from "./use-inline-prompt.js";
 
 import "../../styles/inline-prompt.css";
 

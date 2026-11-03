@@ -52,16 +52,11 @@ import { RunContextChip } from "../../components/RunContextChip.js";
 import { MODE_LABEL, type ComposerMode } from "../../components/RunSettings.js";
 import { useDesktopCommand } from "../../desktop.js";
 import { Icon, type IconName } from "../../kit/Icon.js";
-import { skillInstruction } from "../../skills.js";
 import { useDraft, type DraftStore } from "../../storage.js";
 import {
   useCommentPrefill,
   type PrefillRequest,
 } from "../../useCommentPrefill.js";
-import { useComposerKeys } from "../../useComposerKeys.js";
-import { useMentions, type MentionRequest } from "../../useMentions.js";
-import type { RunCanvasChip } from "../../useRunCanvas.js";
-import { useRunLevel } from "../../useRunLevel.js";
 import { BudgetIndicator } from "./budget-indicator.js";
 import { useComposerFocus } from "./composer-focus.js";
 import {
@@ -84,8 +79,13 @@ import {
   SkillsIndicator,
   useSlashSections,
 } from "./skill-picker.js";
+import { skillInstruction } from "./skills-model.js";
 import { effortGroup, levelGroup, modelGroup } from "./slash-groups.js";
 import { SlashMenu, useSlashMenu, type SlashGroup } from "./slash-menu.js";
+import { useComposerKeys } from "./use-composer-keys.js";
+import { useMentions, type MentionRequest } from "./use-mentions.js";
+import type { RunCanvasChip } from "./use-run-canvas.js";
+import { useRunLevel } from "./use-run-level.js";
 
 const RepoContextChip = lazy(
   () => import("../../components/RepoContextChip.js")

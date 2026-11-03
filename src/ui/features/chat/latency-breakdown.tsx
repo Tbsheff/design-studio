@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import type { TelemetrySample } from "../../../shared/contracts.js";
 import { api } from "../../api.js";
 import { formatMs } from "../../format.js";
-import type { RunView } from "../../runState.js";
+import type { RunView } from "./run-state-model.js";
 
 const FILE_WRITE_TOOLS = new Set(["Write", "Edit", "MultiEdit"]);
 const PREVIEW_GRACE_MS = 15_000;

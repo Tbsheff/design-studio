@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { ToolRow } from "../../runState.js";
+import type { ToolRow } from "./run-state-model.js";
 import { fileChanges, groupRepeats } from "./tool-chips.js";
 
 const row = (

@@ -10,7 +10,7 @@ import {
   levelHint,
   levelLabel,
 } from "../../components/LevelControl.js";
-import { MODEL_OPTIONS, modelLabel } from "../../settingsDraft.js";
+import { MODEL_OPTIONS, modelLabel } from "./settings-draft-model.js";
 import type { SlashGroup } from "./slash-menu.js";
 
 export function effectiveModel(model: string, level: RunLevel): string {

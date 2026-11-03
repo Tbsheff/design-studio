@@ -5,7 +5,7 @@ import type { RunStatus, RunSummary } from "../../../shared/contracts.js";
 import { runQueryTerms } from "../../../shared/rewind.js";
 import { formatRelative } from "../../format.js";
 import { Icon } from "../../kit/Icon.js";
-import { searchRunPage, SEARCH_LIMIT } from "../../runHistoryApi.js";
+import { searchRunPage, SEARCH_LIMIT } from "./run-history-model.js";
 
 interface Props {
   query: string;

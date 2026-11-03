@@ -4,8 +4,8 @@ import type { KeyboardEvent } from "react";
 import { RUN_TITLE_MAX } from "../../../shared/rewind.js";
 import { Icon } from "../../kit/Icon.js";
 import type { IconName } from "../../kit/Icon.js";
-import type { RunView } from "../../runState.js";
 import { UserMessage } from "./chat-parts.js";
+import type { RunView } from "./run-state-model.js";
 
 export interface TurnRewind {
   restoreTip: string | null;

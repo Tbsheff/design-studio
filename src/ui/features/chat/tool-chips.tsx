@@ -21,14 +21,14 @@ import { IS_MAC } from "../../chat-slots.js";
 import { formatMs } from "../../format.js";
 import { Icon } from "../../kit/Icon.js";
 import type { IconName } from "../../kit/Icon.js";
-import type { RunView, ToolRow } from "../../runState.js";
+import type { RunView, ToolRow } from "./run-state-model.js";
 import {
   SKILL_TOOL,
   toolGroupLabel,
   toolSubject,
   toolTally,
   toolVerb,
-} from "../../toolLabels.js";
+} from "./tool-labels-model.js";
 
 const TOOL_ICON: Record<string, IconName> = {
   Write: "pencil",

@@ -4,8 +4,8 @@ import type { ReactNode } from "react";
 import { useConversation } from "../../ai/components/ai/conversation.js";
 import type { TimelineItem } from "../../components/McpFeed.js";
 import { Icon } from "../../kit/Icon.js";
-import type { RunView } from "../../runState.js";
 import { EarlierRuns, useHistoryWindow } from "./chat-panel-window.js";
+import type { RunView } from "./run-state-model.js";
 
 function StickOnNewRun({ runId }: { runId: string | null }) {
   const { stickToBottom } = useConversation();

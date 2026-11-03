@@ -1,7 +1,7 @@
 import { forkBaseOf } from "../../../shared/rewind.js";
-import type { RunView } from "../../runState.js";
-import type { RewindControl } from "../../useRewind.js";
 import type { TurnActions } from "./chat-rewind.js";
+import type { RunView } from "./run-state-model.js";
+import type { RewindControl } from "./use-rewind.js";
 
 interface PolishProps {
   headVersionId: string | null;

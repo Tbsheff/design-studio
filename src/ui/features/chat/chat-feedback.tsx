@@ -9,8 +9,8 @@ import {
 import { baseName, formatMs, formatUsd } from "../../format.js";
 import { CopyButton } from "../../kit/CopyButton.js";
 import { Icon } from "../../kit/Icon.js";
-import { useRunFeedback, type Thumb } from "../../runFeedback.js";
-import { runText, type RunView } from "../../runState.js";
+import { useRunFeedback, type Thumb } from "./run-feedback-model.js";
+import { runText, type RunView } from "./run-state-model.js";
 
 const STATUS_LABEL: Record<RunStatus, string> = {
   running: "Running",

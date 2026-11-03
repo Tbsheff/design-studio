@@ -1,20 +1,20 @@
 import { describe, expect, it } from "vitest";
 
-import type { RunSummary, StudioEvent } from "../shared/contracts";
+import type { RunSummary, StudioEvent } from "../../../shared/contracts.js";
 import {
   applyRunEvent,
   emptyRun,
   runFromSummary,
   runText,
   shownPending,
-} from "./runState";
-import type { RunMap } from "./runState";
+} from "./run-state-model.js";
+import type { RunMap } from "./run-state-model.js";
 
-let seq = 0;
+const counter = { seq: 0 };
 const ev = (body: Record<string, unknown>): StudioEvent =>
   ({
-    seq: ++seq,
-    ts: 1000 + seq,
+    seq: ++counter.seq,
+    ts: 1000 + counter.seq,
     projectId: "p",
     directionId: "d",
     runId: "r1",
@@ -23,6 +23,7 @@ const ev = (body: Record<string, unknown>): StudioEvent =>
 
 describe("run state", () => {
   it("keeps live thinking and order when the run finishes with an old summary", () => {
+    expect.hasAssertions();
     const events = [
       ev({ type: "run.started", request: { prompt: "x", mode: "edit" } }),
       ev({ type: "run.thinking", text: "A" }),
@@ -62,16 +63,17 @@ describe("run state", () => {
       finalText: "",
     } as unknown as RunSummary;
     const done = applyRunEvent(live, ev({ type: "run.finished", summary }));
-    expect(done.r1?.parts).toEqual([
+    expect(done.r1?.parts).toStrictEqual([
       { kind: "thinking", text: "A" },
       { kind: "tool", toolUseId: "t1" },
       { kind: "thinking", text: "B" },
       { kind: "text", text: "Partial" },
     ]);
     expect(runText(done.r1!)).toBe("Partial");
-  });
+  }, 5000);
 
   it("shows Stopped as soon as the stop is asked, and drops late stream events", () => {
+    expect.hasAssertions();
     const live = [
       ev({ type: "run.started", request: { prompt: "x", mode: "edit" } }),
       ev({ type: "run.text.delta", text: "Kept" }),
@@ -86,12 +88,13 @@ describe("run state", () => {
       }),
     ].reduce(applyRunEvent, {} as RunMap);
     expect(live.r1?.status).toBe("canceled");
-    expect(live.r1?.queue).toEqual([]);
+    expect(live.r1?.queue).toStrictEqual([]);
     expect(runText(live.r1!)).toBe("Kept");
-    expect(live.r1?.tools).toEqual([]);
-  });
+    expect(live.r1?.tools).toStrictEqual([]);
+  }, 5000);
 
   it("keeps a run seeded as stopped stopped when run.started arrives late", () => {
+    expect.hasAssertions();
     const seeded: RunMap = {
       r1: { ...emptyRun("r1", "d", 1), status: "canceled" },
     };
@@ -101,7 +104,7 @@ describe("run state", () => {
     );
     expect(live.r1?.status).toBe("canceled");
     expect(live.r1?.request?.prompt).toBe("x");
-  });
+  }, 5000);
 });
 
 describe(shownPending, () => {
@@ -109,6 +112,7 @@ describe(shownPending, () => {
   const pending = emptyRun("pending-1", "main", 10_000, request);
 
   it("shows the pending send until a run with the same prompt starts in the direction", () => {
+    expect.hasAssertions();
     expect(shownPending(pending, [], "main")).toBe(pending);
     expect(
       shownPending(pending, [emptyRun("old", "main", 2000, request)], "main")
@@ -126,14 +130,16 @@ describe(shownPending, () => {
     expect(
       shownPending(pending, [emptyRun("r1", "main", 9500, request)], "main")
     ).toBeNull();
-  });
+  }, 5000);
 
   it("hides the pending send in another direction or when there is none", () => {
+    expect.hasAssertions();
     expect(shownPending(pending, [], "alt")).toBeNull();
     expect(shownPending(null, [], "main")).toBeNull();
-  });
+  }, 5000);
 
   it("keeps a stored run title when a replayed run.finished has none", () => {
+    expect.hasAssertions();
     const plain = {
       id: "r9",
       directionId: "d",
@@ -155,5 +161,5 @@ describe(shownPending, () => {
         ev({ type: "run.finished", runId: "r9", summary: plain })
       ).r9?.summary?.title
     ).toBeUndefined();
-  });
+  }, 5000);
 });

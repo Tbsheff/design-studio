@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import type { RunSummary } from "../../../shared/contracts.js";
-import { emptyRun, type RunView } from "../../runState.js";
 import {
   improvePassed,
   improveRequest,
   lastImproveRun,
 } from "./draft-improve.js";
+import { emptyRun, type RunView } from "./run-state-model.js";
 
 const view = (
   task: "design-system" | undefined,

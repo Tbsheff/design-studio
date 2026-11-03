@@ -19,7 +19,7 @@ import type { PendingAttachment } from "../../domain/pending-attachment.js";
 import { Icon } from "../../kit/Icon.js";
 import { readBlob } from "../../platform/http.js";
 import { projectFromPath } from "../../route.js";
-import { modelLabel } from "../../settingsDraft.js";
+import { modelLabel } from "./settings-draft-model.js";
 
 export type { PendingAttachment } from "../../domain/pending-attachment.js";
 

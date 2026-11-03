@@ -61,6 +61,21 @@ const committedTextOf = (relative) => {
   return headTree.texts.get(relative);
 };
 
+const changedTree = { files: null };
+
+const toNameList = (listing) => (listing ?? "").split("\0").filter(Boolean);
+
+const isChanged = (relative) => {
+  if (changedTree.files === null) {
+    const tracked = toNameList(runGit(["diff", "--name-only", "-z", "HEAD"]));
+    const untracked = toNameList(runGit(["ls-files", "--others", "--exclude-standard", "-z"]));
+
+    changedTree.files = new Set([...tracked, ...untracked]);
+  }
+
+  return changedTree.files.has(relative);
+};
+
 const toValues = (text) => {
   if (text === null) {
     return null;
@@ -117,4 +132,4 @@ const frozenPin = rule((context) => {
   };
 });
 
-export { committedTextOf, frozenPin, isCommitted };
+export { committedTextOf, frozenPin, isChanged, isCommitted };

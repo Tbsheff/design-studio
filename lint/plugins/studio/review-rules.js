@@ -31,6 +31,8 @@ import { serverOneRuntime, serverRunEntry, spanNameMatch } from "./runtime-rules
 import { noJsonSchema, projectScopeNeeds } from "./scope-rules.js";
 import { catchupRules } from "./catchup-rules.js";
 import { exactCompilerPin, tsCompilerOwner } from "./compiler-rules.js";
+import { sliceOwnedChange } from "./slice-rules.js";
+import { noTsconfigList, tsconfigDomLib, tsconfigLeafMinimal, typecheckWired } from "./tsconfig-rules.js";
 
 const reviewRules = {
   ...catchupRules,
@@ -69,6 +71,7 @@ const reviewRules = {
   "no-service-option": noServiceOption,
   "no-string-coerce": noStringCoerce,
   "no-style-off": noStyleOff,
+  "no-tsconfig-list": noTsconfigList,
   "no-ui-storage": noUiStorage,
   "no-unused-export": noUnusedExport,
   "one-override-per-files": oneOverridePerFiles,
@@ -80,9 +83,13 @@ const reviewRules = {
   "serialized-fn-name-shim": serializedFnNameShim,
   "server-one-runtime": serverOneRuntime,
   "server-run-entry": serverRunEntry,
+  "slice-owned-change": sliceOwnedChange,
   "span-name-match": spanNameMatch,
   "sql-write-org-filter": sqlWriteOrgFilter,
   "ts-compiler-owner": tsCompilerOwner,
+  "tsconfig-dom-lib": tsconfigDomLib,
+  "tsconfig-leaf-minimal": tsconfigLeafMinimal,
+  "typecheck-wired": typecheckWired,
 };
 
 export { reviewRules };

@@ -1,4 +1,6 @@
 import { keyName, rule } from "./ast.js";
+import { relativeOf } from "./facts.js";
+import { committedTextOf, isChanged, isCommitted } from "./freeze-rules.js";
 
 const FLAG_NAME = /^(?:is|has|can|should)[A-Z0-9]/u;
 
@@ -28,6 +30,9 @@ const SHORT_MESSAGE =
 
 const VERB_MESSAGE =
   "A top-level function whose name does not start with an allowed verb is banned. Use a verb from docs/naming.md section 4, or to, from, is, has, can, should (for example toSafeSegment for safeSegment).";
+
+const NEW_VERB_MESSAGE =
+  "A new or moved top-level function whose name does not start with an allowed verb is banned (N5b), because a move is the cheap moment to fix a noun name. Use a verb from docs/naming.md section 4, or to, from, is, has, can, should (toDevChromeExpression for devChromeExpression, toProjectErrors for errorsOfProjects).";
 
 const isNamedObject = (node, objectName) =>
   node.object.type === "Identifier" && node.object.name === objectName;
@@ -237,6 +242,40 @@ const moduleFunctionVerb = rule((context) => ({
   },
 }));
 
+const committedTextAt = (relative) => {
+  if (!isCommitted(relative)) {
+    return null;
+  }
+
+  return committedTextOf(relative);
+};
+
+const isDeclaredIn = (text, name) => {
+  if (text === null) {
+    return false;
+  }
+
+  return new RegExp(`(?:const|let|var|function\\*?)\\s+${name}\\b`, "u").test(text);
+};
+
+const newFunctionVerb = rule((context) => ({
+  Program: (program) => {
+    const relative = relativeOf(context.filename);
+
+    if (!isChanged(relative)) {
+      return;
+    }
+
+    const committed = committedTextAt(relative);
+
+    for (const { id } of topLevelFunctions(program)) {
+      if (!MODULE_VERB.test(id.name) && !isDeclaredIn(committed, id.name)) {
+        context.report({ message: NEW_VERB_MESSAGE, node: id });
+      }
+    }
+  },
+}));
+
 const toWords = (name) =>
   name
     .replaceAll(/(?<lower>[a-z0-9])(?<upper>[A-Z])/gu, "$<lower> $<upper>")
@@ -332,4 +371,4 @@ const noShortName = rule((context) => ({
   },
 }));
 
-export { booleanName, moduleFunctionVerb, noShortName, predicateName };
+export { booleanName, moduleFunctionVerb, newFunctionVerb, noShortName, predicateName };

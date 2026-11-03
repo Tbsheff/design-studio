@@ -1,11 +1,6 @@
-import { readFileSync } from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-
 import { rule } from "./ast.js";
 import { relativeOf } from "./facts.js";
-
-const ROOT = fileURLToPath(new URL("../../../", import.meta.url));
+import { isReferenced, isSolutionBuilt, isTsrsLooped, readJson } from "./tsconfig-rules.js";
 
 const DOM_PROJECTS = [
   { project: "tsconfig.server-probe.json", suffix: ".probe.ts" },
@@ -32,38 +27,16 @@ const SHIM_MESSAGE =
 
 const FUNCTION_NAME = /^[a-z]/u;
 
-const cache = new Map();
-
-const parseJson = (relative) => {
-  try {
-    const text = readFileSync(path.join(ROOT, relative), "utf-8");
-
-    return JSON.parse(text);
-  } catch {
-    return null;
-  }
-};
-
-const readJson = (relative) => {
-  if (!cache.has(relative)) {
-    cache.set(relative, parseJson(relative));
-  }
-
-  return cache.get(relative);
-};
-
 const isScriptWired = (project) => {
   const scripts = readJson("package.json")?.scripts ?? {};
 
-  const references = readJson("tsconfig.json")?.references ?? [];
+  if (!isReferenced(project) || !isSolutionBuilt(scripts.typecheck)) {
+    return false;
+  }
 
-  const isReferenced = references.some(
-    ({ path: referenced }) => path.normalize(String(referenced)) === path.normalize(project)
-  );
+  const tsrs = scripts["typecheck:tsrs"];
 
-  const isBuilt = String(scripts.typecheck ?? "").includes("tsc -b tsconfig.json");
-
-  return isReferenced && isBuilt && String(scripts["typecheck:tsrs"] ?? "").includes(project);
+  return isTsrsLooped(tsrs) || String(tsrs ?? "").includes(project);
 };
 
 const isIncluded = (project, relative) => {

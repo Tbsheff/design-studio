@@ -208,7 +208,7 @@ const studio: OxlintOverride[] = [
   },
   {
     files: [
-      "lint/plugins/studio/{facts,tool-facts,dead-code-rules,import-rules,boundary-rules,freeze-rules,probe-rules,catchup-rules}.js",
+      "lint/plugins/studio/{facts,tool-facts,dead-code-rules,import-rules,boundary-rules,freeze-rules,probe-rules,catchup-rules,slice-rules,tsconfig-rules}.js",
     ],
     rules: { "node/no-sync": "off" },
   },

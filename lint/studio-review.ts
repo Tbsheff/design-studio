@@ -109,7 +109,33 @@ const COMPILER_PIN_ANCHORS = [
   ".pnpmfile.mjs",
 ];
 
+const TSCONFIG_OWNER = ["scripts/tsconfig-projects.ts"];
+
+const NEW_VERB_FILES = ["src/server/**/*.ts", "scripts/**/*.ts"];
+
+const LINTED_FILES = ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.mjs", "**/*.cjs"];
+
 const studioReview: OxlintOverride[] = [
+  {
+    files: LINTED_FILES,
+    rules: { "studio/slice-owned-change": "error" },
+  },
+  {
+    files: NEW_VERB_FILES,
+    rules: { "studio/new-function-verb": "error" },
+  },
+  {
+    files: ["scripts/**/*.ts"],
+    rules: { "studio/no-tsconfig-list": "error" },
+  },
+  {
+    files: TSCONFIG_OWNER,
+    rules: {
+      "studio/tsconfig-dom-lib": "error",
+      "studio/tsconfig-leaf-minimal": "error",
+      "studio/typecheck-wired": "error",
+    },
+  },
   {
     files: ["lint/day-one.ts"],
     rules: {

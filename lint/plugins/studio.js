@@ -10,6 +10,7 @@ import { noFixableOff, noStudioOverride } from "./studio/lint-rules.js";
 import {
   booleanName,
   moduleFunctionVerb,
+  newFunctionVerb,
   noShortName,
   predicateName,
 } from "./studio/naming-rules.js";
@@ -127,6 +128,7 @@ const studio = {
     "mcp-off-reason": mcpOffReason,
     "module-function-verb": moduleFunctionVerb,
     "narrow-override": narrowOverride,
+    "new-function-verb": newFunctionVerb,
     "no-adapter-runtime-call": noAdapterRuntimeCall,
     "no-adapter-service": noAdapterService,
     "no-app-import": noAppImport,

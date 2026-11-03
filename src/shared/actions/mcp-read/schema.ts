@@ -55,6 +55,28 @@ const ComponentUsageSchema = Schema.Struct({
   routes: Schema.Array(Schema.Unknown),
 });
 
+const ProjectSummaryListSchema = Schema.Struct({
+  items: Schema.Array(Schema.Unknown),
+});
+
+const ProjectSearchViewSchema = Schema.Struct({
+  projects: Schema.Array(Schema.Unknown),
+  query: Schema.String,
+  routes: Schema.Array(Schema.Unknown),
+});
+
+const FoundAppsViewSchema = Schema.Struct({
+  apps: Schema.Array(Schema.Unknown),
+  home: Schema.String,
+  roots: Schema.Array(Schema.String),
+  scannedAt: Schema.Number,
+  truncated: Schema.Boolean,
+});
+
+const VersionListSchema = Schema.Struct({
+  items: Schema.Array(Schema.Unknown),
+});
+
 type DoctorViewText = typeof DoctorViewSchema.Type;
 
 type PortPlanView = typeof PortPlanViewSchema.Type;
@@ -62,9 +84,13 @@ type PortPlanView = typeof PortPlanViewSchema.Type;
 export {
   ComponentUsageSchema,
   DoctorViewSchema,
+  FoundAppsViewSchema,
   PathTextSchema,
   PortPlanViewSchema,
+  ProjectSearchViewSchema,
+  ProjectSummaryListSchema,
   RouteTextSchema,
+  VersionListSchema,
 };
 
 export type { DoctorView, DoctorViewText, PortPlanView };

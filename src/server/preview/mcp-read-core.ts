@@ -8,7 +8,7 @@ import type { PortFlowPlan, PortPlan } from "../../shared/port.js";
 import { loadConfig } from "../platform/config/index.js";
 import { ConflictError, NotFoundError } from "../store/errors.js";
 import type { StudioProjectStore } from "../store/projects.js";
-import type { PreviewService } from "../types.js";
+import type { PreviewService, VersionStore } from "../types.js";
 
 interface PortPlanQuery {
   readonly flow: boolean;
@@ -24,6 +24,8 @@ interface McpReadRuntime {
   readonly planPort: (query: PortPlanQuery) => Promise<PortFlowPlan | PortPlan>;
   readonly preview: PreviewService | null;
   readonly projects: StudioProjectStore;
+  readonly runsDir: (projectId: string) => string;
+  readonly versions: VersionStore;
 }
 
 type McpReadError = BadRequest | Conflict | NotFound;
@@ -54,13 +56,18 @@ const toMcpReadError = (error: Cause.UnknownError): McpReadError => {
   return new BadRequest({ message: String(error.cause) });
 };
 
+const REQUIRED_KEYS = [
+  "planPort",
+  "preview",
+  "projects",
+  "runsDir",
+  "versions",
+] as const;
+
 const isReady = (
   runtime: Partial<McpReadRuntime> | null
 ): runtime is McpReadRuntime =>
-  runtime !== null &&
-  "projects" in runtime &&
-  "planPort" in runtime &&
-  "preview" in runtime;
+  runtime !== null && REQUIRED_KEYS.every((key) => key in runtime);
 
 const attemptMcpRead = <Value>(
   task: (runtime: McpReadRuntime) => Promise<Value>

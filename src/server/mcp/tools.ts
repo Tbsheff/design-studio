@@ -17,9 +17,7 @@ import {
   firstVersionState,
   firstVersionWaitText,
 } from "../app/first-version.js";
-import { findApps } from "../app/found-apps.js";
 import { frameStatesView, stateOfFrame } from "../app/frame-state.js";
-import { searchProjects } from "../app/project-search.js";
 import { listAppRoutes } from "../app/routes.js";
 import { readProjectCanvas } from "../canvas/service.js";
 import { findFrame } from "../canvas/tools.js";
@@ -156,43 +154,6 @@ function def(
 
 export const TOOLS: ToolDef[] = [
   def(
-    "list_projects",
-    "List projects",
-    "List the design projects in Design Studio with their directions and newest version ids.",
-    {}
-  ),
-  def(
-    "search_projects",
-    "Search projects",
-    'Find projects and app routes by text, like the studio Cmd+K palette: fuzzy match on the project name and app folder, and on the routes of the matched attached apps (and of projectId when given). Each project has type (next, vite, html, react, design-system), place, updatedAt, openedAt (last opened in the studio, or null) and health (level ok, busy, warn or off with a note such as "Needs install" or "Dev server ready"; null for prototypes). A query that starts with "/" searches the routes of every attached app. An empty query lists recent projects: last opened first, last edited when never opened. Read only.',
-    {
-      query: {
-        type: "string",
-        maxLength: 100,
-        description:
-          'Search text, for example "bona" or "/f2f". Leave out for recent projects.',
-      },
-      projectId: {
-        type: "string",
-        description:
-          "Project id from list_projects whose routes are always searched, like the open project in the studio.",
-      },
-      limit: {
-        type: "integer",
-        minimum: 1,
-        maximum: 100,
-        description: "Most projects to return. Default 20.",
-      },
-    }
-  ),
-  def(
-    "list_versions",
-    "List versions",
-    "List the saved versions of one direction, newest first.",
-    { projectId: PROJECT, directionId: DIRECTION },
-    ["projectId"]
-  ),
-  def(
     "get_frame_html",
     "Get page HTML",
     "Get the HTML of one page. Static HTML projects return the source file. React projects return the rendered DOM.",
@@ -297,18 +258,6 @@ export const TOOLS: ToolDef[] = [
       },
     },
     ["projectId"]
-  ),
-  def(
-    "list_found_apps",
-    "List app folders found on this Mac",
-    'Read only. List the app folders Design Studio finds in the home folder, the same list as "Found on this Mac" on Home: ~/Documents, ~/code, ~/dev, ~/Projects and ~/Developer, two folders deep, with kind (next, vite or html), the Next.js apps of a monorepo (apps), and projectId when the folder is already a project. The scan never leaves the home folder, stops after 1 second (truncated: true) and is cached for a minute; fresh: true scans again. Pass a path to open_folder or attach_app to open one.',
-    {
-      fresh: {
-        type: "boolean",
-        description:
-          "Scan again instead of using the cached list. Default false.",
-      },
-    }
   ),
   def(
     "list_files",
@@ -500,32 +449,6 @@ async function listFiles(
       });
   }
   return out;
-}
-
-function summary(project: Project): unknown {
-  return {
-    id: project.id,
-    name: project.name,
-    kind: project.kind,
-    entry: project.entry || "index.html",
-    updatedAt: new Date(project.updatedAt).toISOString(),
-    folder:
-      project.imported?.sourcePath ?? project.directions[0]?.workTree ?? null,
-    ...(project.app
-      ? {
-          app: {
-            framework: project.app.framework,
-            appDir: project.app.appDir,
-            mode: project.app.mode,
-          },
-        }
-      : {}),
-    directions: project.directions.map((d) => ({
-      id: d.id,
-      name: d.name,
-      headVersionId: d.headVersionId,
-    })),
-  };
 }
 
 const RENDERED_DOM = `(() => { const doc = document.documentElement.cloneNode(true); for (const node of doc.querySelectorAll('script, link[rel="modulepreload"], style[id^="studio-"]')) node.remove(); for (const node of doc.querySelectorAll('[${SOURCE_LOC_ATTR}]')) node.removeAttribute('${SOURCE_LOC_ATTR}'); return '<!doctype html>\\n' + doc.outerHTML; })()`;
@@ -841,28 +764,6 @@ const PROJECT_TOOLS: Record<
   string,
   (deps: ExportDeps, args: Args) => Promise<ToolResult>
 > = {
-  search_projects: async (deps, args) =>
-    json(
-      await searchProjects(
-        {
-          projects: deps.projects,
-          appStatus: (p) => deps.preview.apps?.status(p) ?? null,
-          runsDir: (projectId) =>
-            path.join(deps.projects.projectDir(projectId), "runs"),
-        },
-        {
-          query: str(args, "query") ?? "",
-          projectId: str(args, "projectId") ?? null,
-          limit: int(args, "limit", 1, 100, 20),
-        }
-      )
-    ),
-  list_found_apps: async (deps, args) =>
-    json(
-      await findApps(await deps.projects.list(), {
-        fresh: args.fresh === true,
-      })
-    ),
   list_variants: async (deps, args) => {
     const project = await deps.projects.get(
       str(args, "projectId", true) as string
@@ -900,35 +801,6 @@ export async function callTool(
     : undefined;
   if (projectTool) return projectTool(deps, args);
   switch (name) {
-    case "list_projects":
-      return json(
-        (await deps.projects.list())
-          .filter((p) => !p.designSystemFor)
-          .map(summary)
-      );
-    case "list_versions": {
-      const project = await deps.projects.get(
-        str(args, "projectId", true) as string
-      );
-      const directionId = str(args, "directionId");
-      const direction = directionId
-        ? project.directions.find((d) => d.id === directionId)
-        : project.directions[0];
-      if (!direction) throw new ToolError("direction not found");
-      const versions = (await deps.versions.list(project, direction)).slice(
-        0,
-        50
-      );
-      return json(
-        versions.map((v) => ({
-          id: v.id,
-          name: v.name ?? v.title,
-          kind: v.meta.kind,
-          createdAt: new Date(v.createdAt).toISOString(),
-          changedFiles: v.changedFiles.slice(0, 20),
-        }))
-      );
-    }
     case "get_frame_html":
       return frameHtml(deps, args);
     case "get_tokens":

@@ -13,6 +13,7 @@ import {
   captureReferencePage,
   parseReferenceUrls,
 } from "../design-system/reference-page.js";
+import { bindMcpReadRuntime } from "../preview/mcp-read-core.js";
 import { BadRequestError, ConflictError } from "../store/errors.js";
 import { createProjectLibrary } from "../store/project-library.js";
 import type { AppContext } from "./app-context.js";
@@ -50,6 +51,8 @@ const registerProjectsRoutes = (app: Hono, ctx: AppContext): void => {
     watch: (project: Project, direction: Direction) =>
       watchDirection(project, direction),
   };
+
+  bindMcpReadRuntime({ preview, projects, runsDir, versions });
 
   app.get("/api/projects", async (c) => c.json(await projects.list()));
 

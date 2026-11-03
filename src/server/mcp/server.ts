@@ -1,8 +1,5 @@
-import { randomBytes, timingSafeEqual } from "node:crypto";
-import type { Server } from "node:http";
-import net from "node:net";
+import { randomBytes } from "node:crypto";
 
-import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 
 import type { McpStatus } from "../../shared/export.js";
@@ -26,6 +23,8 @@ import {
   RENDER_WAIT_TOOLS,
 } from "./edit-tools.js";
 import { withLayerSelectors } from "./layer-tools.js";
+import { freePort, portFree, sameText } from "./mcp-server-layer.js";
+import type { McpServerApi } from "./mcp-server-layer.js";
 import { ActionTools } from "./registry.js";
 import { newToken, readMcpSettings, writeMcpSettings } from "./settings.js";
 import type { McpSettings } from "./settings.js";
@@ -58,39 +57,6 @@ type RpcReply =
       id: string | number | null;
       error: { code: number; message: string };
     };
-
-function same(a: string, b: string): boolean {
-  const left = Buffer.from(a);
-  const right = Buffer.from(b);
-  return left.length === right.length && timingSafeEqual(left, right);
-}
-
-function portFree(port: number): Promise<boolean> {
-  return new Promise((resolve) => {
-    const probe = net.createServer();
-    probe.unref();
-    probe.once("error", () => resolve(false));
-    probe.listen({ port, host: "127.0.0.1", exclusive: true }, () =>
-      probe.close(() => resolve(true))
-    );
-  });
-}
-
-function freePort(): Promise<number> {
-  return new Promise((resolve, reject) => {
-    const probe = net.createServer();
-    probe.unref();
-    probe.once("error", reject);
-    probe.listen({ port: 0, host: "127.0.0.1" }, () => {
-      const address = probe.address();
-      probe.close(() =>
-        typeof address === "object" && address
-          ? resolve(address.port)
-          : reject(new Error("no free port"))
-      );
-    });
-  });
-}
 
 interface Dispatch {
   deps: ExportDeps;
@@ -340,7 +306,7 @@ function createMcpApp(
     if (c.req.header("origin") !== undefined)
       return c.json({ error: "forbidden" }, 403);
     const auth = c.req.header("authorization") ?? "";
-    if (!auth.startsWith("Bearer ") || !same(auth.slice(7), token))
+    if (!auth.startsWith("Bearer ") || !sameText(auth.slice(7), token))
       return c.json({ error: "unauthorized" }, 401, {
         "www-authenticate": "Bearer",
       });
@@ -410,10 +376,10 @@ export interface McpService {
 export function createMcpService(
   dataDir: string,
   deps: ExportDeps,
+  listener: McpServerApi,
   edits: EditDeps | null = null
 ): McpService {
   let current: McpSettings | null = null;
-  let server: Server | null = null;
   let lastError: string | null = null;
   const app = createMcpApp(deps, edits, () => current as McpSettings);
 
@@ -422,27 +388,16 @@ export function createMcpService(
     return current;
   };
 
-  const stop = async (): Promise<void> => {
-    const running = server;
-    server = null;
-    if (running)
-      await new Promise<void>((resolve) => running.close(() => resolve()));
-  };
+  const stop = (): Promise<void> => listener.close();
 
   const start = async (): Promise<void> => {
     const settings = await load();
-    if (server) return;
+    if (listener.isListening()) return;
     if (!(await portFree(settings.port))) {
       settings.port = await freePort();
       await writeMcpSettings(dataDir, settings);
     }
-    server = await new Promise<Server>((resolve, reject) => {
-      const created = serve(
-        { fetch: app.fetch, port: settings.port, hostname: "127.0.0.1" },
-        () => resolve(created as Server)
-      ) as Server;
-      created.once("error", reject);
-    });
+    await listener.listen(settings.port, app.fetch);
   };
 
   const status = async (): Promise<McpStatus> => {
@@ -452,7 +407,7 @@ export function createMcpService(
     return {
       enabled: settings.enabled,
       edits: settings.edits,
-      running: server !== null,
+      running: listener.isListening(),
       url: settings.enabled ? url : null,
       command: settings.enabled ? command : null,
       error: lastError,

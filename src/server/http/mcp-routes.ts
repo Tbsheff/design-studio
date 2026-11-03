@@ -1,3 +1,4 @@
+import { Effect } from "effect";
 import type { Hono } from "hono";
 
 import { STUDIO_TOKEN_HEADER } from "../../shared/contracts.js";
@@ -7,9 +8,11 @@ import type { CanvasService } from "../canvas/service.js";
 import { onSourceChange } from "../direct-edit/change-feed.js";
 import type { EditRecorder } from "../direct-edit/index.js";
 import type { ExportDeps } from "../export/source.js";
+import type { StudioRuntime } from "../main/runtime.js";
 import { bindMcpLifeRuntime } from "../mcp-life/mcp-life-runtime.js";
 import { createActivityLog, type ActivityLog } from "../mcp/activity.js";
 import { createApprovalQueue } from "../mcp/approvals.js";
+import { makeHolder, McpServer } from "../mcp/mcp-server-layer.js";
 import { createMcpService } from "../mcp/server.js";
 import { recentPages, startRender } from "../preview/render-wait.js";
 import { warmUpstream } from "../preview/warm-upstream.js";
@@ -25,6 +28,7 @@ interface McpRouteDeps extends ExportDeps {
   projectsFolder: () => Promise<string>;
   appOpen: () => boolean;
   history?: EditRecorder;
+  runtime?: StudioRuntime | null;
 }
 
 function warmAfterEdits(deps: McpRouteDeps): void {
@@ -114,7 +118,15 @@ export function registerMcpRoutes(
   const activity = createActivityLog(deps.dataDir, deps.bus);
   warmAfterEdits(deps);
 
-  const mcp = createMcpService(deps.dataDir, deps, {
+  const listener = deps.runtime
+    ? deps.runtime.runSync(
+        Effect.gen(function* find() {
+          return yield* McpServer;
+        })
+      )
+    : makeHolder();
+
+  const mcp = createMcpService(deps.dataDir, deps, listener, {
     ...deps,
     request,
     approvals,

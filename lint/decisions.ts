@@ -429,6 +429,19 @@ export const decisionOverrides: OxlintOverride[] = [
     rules: { "react-doctor/no-barrel-import": "off" },
   },
   {
+    files: ["src/server/mcp/mcp-server-layer.ts"],
+    rules: {
+      "anti-slop/no-runtime-typeof": "off",
+      "eslint/id-length": "off",
+      "eslint/no-ternary": "off",
+      "promise/avoid-new": "off",
+    },
+  },
+  {
+    files: ["src/server/http/mcp-routes.ts"],
+    rules: { "node/no-sync": "off" },
+  },
+  {
     files: [
       "src/server/mcp/legacy/attach-app.ts",
       "src/server/mcp/legacy/canvas-frames.ts",

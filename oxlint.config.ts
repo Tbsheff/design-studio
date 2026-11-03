@@ -10,6 +10,7 @@ import {
   playwrightAll,
   vitestAll,
 } from "./lint/decisions.ts";
+import { toKeptOptions } from "./lint/keep-options.ts";
 import { legacy } from "./lint/legacy.ts";
 import { antiSlop, core, js, jsPluginSettings, react } from "./lint/presets.ts";
 import { serverOrder } from "./lint/server-order.ts";
@@ -96,7 +97,7 @@ export default defineConfig<OxlintConfig>({
   overrides: [
     ...BOUNDARY_OVERRIDES,
     ...studio,
-    ...decisionOverrides,
+    ...decisionOverrides.map((override) => toKeptOptions(override)),
     ...TEST_OVERRIDES,
     ...dayOne,
   ],

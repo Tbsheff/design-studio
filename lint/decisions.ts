@@ -227,6 +227,10 @@ export const playwrightAll: LintRules = Object.fromEntries(
     .map(([id]) => [`playwright/${id}`, "error" as const])
 );
 
+playwrightAll["playwright/require-soft-assertions"] = "off";
+
+playwrightAll["unicorn/prefer-dom-node-text-content"] = "off";
+
 const SERVER_MAIN = "src/server/main/**";
 
 const NODE_RUNTIMES = [

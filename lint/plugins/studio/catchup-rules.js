@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 
 import { rule } from "./ast.js";
+import { autofixRules } from "./autofix-rules.js";
 import { relativeOf } from "./facts.js";
 import { committedTextOf } from "./freeze-rules.js";
 import { committedUsesOf, fileValuesOf, partsOf } from "./override-pins.js";
@@ -372,6 +373,7 @@ const noDeepStoreImport = rule((context) => {
 });
 
 const catchupRules = {
+  ...autofixRules,
   "feature-index-lazy": featureIndexLazy,
   "lazy-default-export": lazyDefaultExport,
   "no-deep-store-import": noDeepStoreImport,

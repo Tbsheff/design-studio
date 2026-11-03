@@ -400,6 +400,25 @@ const studioReview: OxlintOverride[] = [
     files: COMPILER_PIN_ANCHORS,
     rules: { "studio/exact-compiler-pin": "error" },
   },
+  {
+    files: COMPILER_IMPORT_FILES,
+    rules: {
+      "studio/import-case-exact": "error",
+      "studio/no-file-growth": "error",
+    },
+  },
+  {
+    files: GUARD_UI_FILES,
+    rules: {
+      "studio/no-hook-in-tsx": "error",
+      "studio/no-module-box": "error",
+      "studio/no-void-async-iife": "error",
+    },
+  },
+  { files: FEATURE_UI_FILES, rules: { "studio/pure-model-import": "error" } },
+  { files: STATE_FILES, rules: { "studio/no-module-box": "error" } },
+  { files: SERVER_FILES, rules: { "studio/no-boot-file-read": "error" } },
+  { files: ["e2e/**/*.ts"], rules: { "studio/no-soft-expect": "error" } },
 ];
 
 export { studioReview };

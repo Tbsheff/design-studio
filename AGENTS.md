@@ -30,6 +30,7 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Never use a verb outside the N3 list in an action id, even when a legacy tool name has one (`keep_links`). Keep the old name with `mcp.name` -> `studio/action-verb`. (N3a)
 - Keep every tool name that is in `artifacts/mcp-snapshots/*.json`. Its definition sets `tool: "<old name>"`, and check-actions lists it as a legacy name. A new action never sets `tool` -> check-actions (lands with W9b). (N4)
 - Name files and folders in kebab-case with singular folders, and a React component file in PascalCase. Name a service class `<Noun><Role>` (Store, Runner, Watcher, Queue, Client, Cache), an error `<Noun><Problem>Error`, an event `<domain>.<pastVerb>`, an env var `STUDIO_<NOUN>`. Start a function with a verb above or `to`, `from`, `is`, `has`. Start a boolean with `is`, `has`, `can` or `should` -> `unicorn/filename-case`, review. (N5)
+- Write each relative import with the exact case of the file name on disk (`../../kit/disclosure.js` for `disclosure.tsx`). A Linux build cannot find a path whose case differs -> `studio/import-case-exact`. (N5e)
 - Name each action domain with one singular kebab-case noun that is also its folder name (`version`, `dev-server`, `connection`). Never use a plural (`versions`) or a surface word (`mcp`, `http`, `agent`, `tool`, `route`) -> `studio/action-domain-name`. (N5a)
 - Start each top-level function in a service file with a verb from `docs/naming.md` section 4 or `to`, `from`, `is`, `has` (`isPortFree`, `toFreePort`, `createListener`). Never `make`, `read`, `find` or a noun -> `studio/function-verb`. (N5b)
 - End each new service class name with a role: Store, Writer, Runner, Watcher, Queue, Client or Cache (`McpListenerRunner`). The spec names (`Authorizer`, `LocalPrincipal`, `LocalOrgScope`, `ProjectAccess`, `CfCli`) and the legacy names listed in `lint/studio.ts` keep their names -> `studio/service-role`. (N5c)
@@ -38,6 +39,7 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Use the package test: can someone outside this repo `pnpm add` it and use it without our server, env or secrets? Yes: a package in `packages/ui` or `packages/common/<name>`. No: an app in `apps/<name>`. A package imports only packages, through their `exports` map -> boundaries (a package that imports `apps/**` fails) (lands with the layout wave). (N7)
 - Name split desktop, bridge and new feature code by N5 and L4: a top-level function starts with a verb, a boolean field starts with `is`, `has`, `can` or `should`, and every field is `readonly` with `| null`, never `?:` -> `studio/module-function-verb`, `studio/boolean-name`, `studio/predicate-name`, `studio/readonly-field`, `studio/no-undefined-type` on `desktop/{boot,pack-args}.ts`, `src/bridge/bridge-types.ts` and `src/ui/features/{home,inspector}/**`. (N8)
 - Never give a server function or const the name of an action const (`stopRun`, `createProject`). Use another verb or noun -> `studio/no-action-name-reuse`. (N8)
+- Never add an `api`, `http` or `use-*` import to a pure `*-model.ts` or `*-values.ts` file. Put request helpers in a hook or an `edit-request-model.ts` that takes its inputs as parameters -> `studio/pure-model-import` (new imports only). (N8b)
 - Use the status constants from `cloud/api/src/shared-actions.ts` in cloud code. Never declare a local `HTTP_*` or `*_STATUS` number. Add a missing code to `src/shared/actions/_core/errors/http-status-codes.ts` -> `studio/no-local-http-status`. (N8)
 - Name each handler action type with the derived name: `type GetProjectInput = Input<typeof getProject>`, never a plural or short form -> `studio/derived-type-name`. (N8)
 - Start each cloud MCP tool name in `cloud/api/src/mcp` with an N3 verb (`create_comment`, never `add_comment`) -> `studio/cloud-tool-verb`. (N9)
@@ -171,6 +173,7 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Never call `Effect.serviceOption` in `src/server/**`. Yield the service in a `Context.Service` layer -> `studio/no-service-option`. (S19)
 - Never put a Durable Object stub (`idFromName`, `DurableObjectStub`) in a service marked `access: "read"`. Use a write service -> `studio/read-service-no-stub`. (S20)
 - Never declare a module-level `let` in `src/server/{mcp,http,agent-tools,store}`. Carry per-call values in the call (as `withLegacyCaller` does). Use a Layer, or `makeRuntimeSlot` from `src/server/platform/runtime-slot/index.ts` -> `studio/no-module-let`. (S21)
+- Never hide module state in a one-field object (`const counter = { value: 0 }` with `counter.value += 1`). Use `useRef` or `useId` in the component, or `createLiveStore` from `src/ui/platform/live-store.ts` -> `studio/no-module-box`. (S21a)
 
 ## 4. Errors
 
@@ -225,9 +228,11 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Never cast action data in the UI (`(await call(routes.x, input)) as T`, `value as never`, a field of a call result). Type the local value with the route output, or narrow it with a type guard -> `studio/no-wire-cast`. (U4b)
 - Never import `effect` or `zod` values in `src/ui` or `src/bridge` -> `no-restricted-imports` (lands with M9b), check-bundle (lands with S4s). (U5)
 - Give each feature this shape: `index.ts` (lazy named exports only), one component per kebab-case `.tsx`, `use-<thing>.ts` hooks, `copy.ts`, `<thing>-model.ts` -> new:feature (lands with S4s), `react/no-multi-comp`, `react/jsx-no-literals`, `unicorn/filename-case`. (U6)
+- Never add a hook to a `.tsx` component file. Put each hook in `use-<thing>.ts` next to the component -> `studio/no-hook-in-tsx` (new hooks only). (U6a)
 - Never import one feature from another. `ui/app` composes features -> boundaries (feature to feature disallowed) (lands with M9b). (U7)
 - Never import a component in a hook -> boundaries (lands with M9b), review. (U8)
 - Track pending writes with `useTransition`. Never make a busy flag. Use `await`, never `.then` -> `react-doctor/no-loading-flag-reset-outside-finally`, `promise/prefer-await-to-then`. (U9)
+- Never write a `void (async () => { ... })()` IIFE in `src/ui`. Use a named async handler inside `startTransition` -> `studio/no-void-async-iife`. (U9b)
 - Never write `.then` in `src/ui/{app,domain,features,kit,platform}/**` or in a UI file that calls an action. Use `await` in an async function -> `studio/no-then`. (U9a)
 - Wrap every function prop in `useCallback` -> `react_perf/jsx-no-new-function-as-prop` and the other `react_perf` rules. (U10)
 - Lazy-load every dialog, panel and route that is not on Home -> check-bundle (B1) (lands with S4s). (U11)
@@ -263,6 +268,7 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Keep pure engines sync. Return `{ ok: true, value } | { ok: false, code }`. Never throw for an expected case -> boundaries, `no-restricted-imports` (lands with M9b). (P7)
 - Serialize each SSE event once per project, for all subscribers -> S-replay smoke (lands with S5-events), review-only. (P8)
 - Load heavy modules (playwright-core, esbuild, typescript, vite, the agent SDK) with a dynamic import on first use -> review, B12 `scripts/check-boot-imports.ts` (lands with S5-mcp-life). (P9)
+- Never read a file at module load in `src/server` (`readFileSync` or a resource read outside a function). Keep the text in a TS const, or read it on first use in an Effect service -> `studio/no-boot-file-read`. (P9a)
 - Keep every perf budget. Only the merge step rewrites `scripts/perf/baseline.json`, and only downward -> G-perf (lands with S4a). (P10)
 - Read D1 and R2 only through their owners in `cloud/api/src/{platform,tenant,auth,http/middleware}`. Viewer, MCP and route code yields a tenant service, never `CloudBindings` -> `studio/no-direct-bindings`. (P11)
 - Never `JSON.parse` a file that you read by hand in the auth store files (`src/server/store/{command-rules,device-bindings,org-scope,project-org,...}.ts`). Use the owning store (`DeviceBindings` for `bindings.json`) or `toJsonFileReader` from `src/server/platform/local-file/index.ts` -> `studio/no-hand-json-read`. (P12)
@@ -271,11 +277,13 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 
 - Write no comments. The only allowed one is the `// @generated` header -> no-comments pre-commit hook. (L1)
 - Keep each function at complexity 20 or less, 80 lines, 4 params and 30 statements. Keep files at 500 lines or less -> cccc hook, `complexity`, `max-*` rules. (L2)
+- Never make a file that is over 500 lines longer than it is at `HEAD`. Split into new lint-clean files, or leave the split for a later slice -> `studio/no-file-growth`. (L2a)
 - Put one `export { }` block and one `export type { }` block at the end of each file. No default exports -> `import/group-exports`, `import/exports-last`, `import/no-default-export`. (L3)
 - Never write `export * from` in `src/ui`. Use named re-exports, or import from the real module -> `studio/no-wildcard-reexport`. (L3a)
 - Use arrow consts, `null` (never `undefined`), `readonly` fields and no ternaries -> `func-style`, `no-undefined`, `no-ternary`. (L4)
 - Never write an optional field typed `T | null` in budget-0 server folders, `http` or `mcp-life`. Make it required: `field: T | null` -> `studio/no-optional-null`. (L4a)
 - Keep new folders at 0 diagnostics with every rule on. Run `pnpm run lint:gate`: 0 errors, and the warning count may only go down -> budget-0 folders in `scripts/lint-gate.ts`, G-lint. (L5)
+- Let `toKeptOptions` in `lint/keep-options.ts` add the preset options to each `"warn"` in `decisionOverrides`, so a demoted rule keeps its limits (`max-statements` 30, `no-magic-numbers` ignore list, arrow components). Never write a demotion that drops options -> `oxlint.config.ts`. (L5a)
 - Never edit `scripts/lint-baseline.json`, `oxlint.config.ts`, `lint/**` or `scripts/waves.json` in a slice. The merge step owns them. A slice may add only the narrowest scoped entry to `decisionOverrides` in `lint/decisions.ts` for a reason the spec forces, and must name it in its commit -> check-ownership. (L6)
 - Change only files that the slice named in `.claude/goal/active-slice` (`<wave>/<slice>`, written when the slice starts, deleted at merge) owns in Appendix A of `.claude/goal/roadmap.md`. Add a path to the slice's globs before the slice runs. The rule sees JS and TS files only, never JSON or md -> `studio/slice-owned-change`. (L6e)
 - Never turn a `studio/*` rule off or down in `lint/*.ts` overrides. Fix the code, or change the rule scope in `lint/studio.ts` in the lint merge step -> `studio/no-studio-override`. (L6a)
@@ -310,6 +318,7 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 ## 9. Verify
 
 - Write no tests and run no tests -> review-only. (V1)
+- Never use `expect.soft` in an e2e spec, except perf specs and the `e2e/ac/safety` measurement specs. Never apply the `require-soft-assertions` or `prefer-dom-node-text-content` autofixes to e2e (both are off there) -> `studio/no-soft-expect`. (V1a)
 - Start the app: `STUDIO_AGENT=mock STUDIO_DATA_DIR=$(mktemp -d) pnpm run dev` -> G-smoke. (V2)
 - Prove each new action with `pnpm exec tsx scripts/call-action.ts <action id> '<json>'` (lands with S4s). It calls the action over HTTP, MCP and the agent dispatcher, diffs the 3 outputs and prints ms and spawns. For a `confirm: "user"` action it answers the card with `POST /api/mcp/approvals/:id` in the dev run, so the real gate runs -> the stamp prints this line. (V3)
 - Click the action in the UI. Take dark and light screenshots with playwright-core -> review-only. (V4)

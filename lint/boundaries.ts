@@ -130,7 +130,10 @@ export const LAYERS: Layer[] = [
       "icons",
     ],
   },
-  { name: "share", areas: ["share", "publish", "ship", "variations", "git"] },
+  {
+    name: "share",
+    areas: ["share", "publish", "ship", "variations", "git", "cloud"],
+  },
   { name: "handlers", type: "handlers", paths: ["src/server/handlers"] },
   { name: "agent", type: "agent", paths: ["src/server/agent"] },
   {

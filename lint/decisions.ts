@@ -313,6 +313,13 @@ export const decisionOverrides: OxlintOverride[] = [
     rules: { "import/no-relative-parent-imports": "off" },
   },
   {
+    files: [
+      "src/server/{cloud/{session,client},handlers/cloud/{get,set,delete,live,handlers}}.ts",
+      "src/shared/actions/cloud/{get,set,delete}.ts",
+    ],
+    rules: { "import/no-relative-parent-imports": "off" },
+  },
+  {
     files: ["src/server/platform/git/encoding.ts"],
     rules: { "sonarjs/hashing": "off" },
   },

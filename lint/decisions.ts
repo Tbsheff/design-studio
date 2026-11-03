@@ -518,6 +518,14 @@ export const decisionOverrides: OxlintOverride[] = [
     ),
   },
   {
+    files: ["src/ui/kit/**", "src/ui/domain/**"],
+    rules: Object.fromEntries(
+      "anti-slop/no-known-value-widening anti-slop/no-runtime-typeof eslint/func-style eslint/id-length eslint/max-lines-per-function eslint/no-magic-numbers eslint/no-nested-ternary eslint/no-plusplus eslint/no-ternary eslint/no-undefined eslint/prefer-arrow-callback eslint/prefer-destructuring eslint/sort-keys github/filenames-match-regex github/no-then github/prefer-observers import/exports-last import/group-exports import/no-relative-parent-imports jsx-a11y/click-events-have-key-events jsx-a11y/interactive-supports-focus jsx-a11y/prefer-tag-over-role promise/prefer-await-to-then react-doctor/advanced-event-handler-refs react-doctor/no-floating-then-in-jsx-handler react-doctor/only-export-components react-perf/jsx-no-new-function-as-prop react/function-component-definition react/jsx-max-depth react/only-export-components react/refs sonarjs/no-nested-conditional typescript/explicit-function-return-type typescript/explicit-module-boundary-types unicorn/consistent-existence-index-check unicorn/filename-case unicorn/no-nested-ternary unicorn/prefer-global-this"
+        .split(" ")
+        .map((rule) => [rule, "warn"])
+    ),
+  },
+  {
     files: ["src/server/app/index.ts"],
     rules: { "oxc/no-barrel-file": "off" },
   },

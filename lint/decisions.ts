@@ -863,6 +863,13 @@ export const decisionOverrides: OxlintOverride[] = [
     },
   },
   {
+    files: ["desktop/first-run-page.renderer.ts", "desktop/first-run-page.ts"],
+    rules: {
+      "eslint/no-void": "off",
+      "unicorn/prefer-top-level-await": "off",
+    },
+  },
+  {
     files: ["desktop/auth.ts"],
     rules: {
       "anti-slop/no-known-value-widening": "warn",

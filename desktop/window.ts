@@ -10,6 +10,7 @@ import type {
   WindowState,
   WindowStateFile,
 } from "./window-state.js";
+import { markFullScreenInPage } from "./window.renderer.js";
 
 export interface WindowOptions {
   url: string;
@@ -89,9 +90,7 @@ function markFullScreen(window: BrowserWindow): void {
 
   const value = window.isFullScreen() ? "true" : "false";
   void window.webContents
-    .executeJavaScript(
-      `document.documentElement.dataset.fullscreen = '${value}'`
-    )
+    .executeJavaScript(`(${markFullScreenInPage})(${JSON.stringify(value)})`)
     .catch(() => undefined);
 }
 

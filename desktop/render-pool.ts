@@ -7,6 +7,7 @@ import { PNG } from "pngjs";
 
 import type { RenderClip, RenderErrors } from "../src/shared/render-rpc.js";
 import { pngSize } from "./png-size.js";
+import { measureScrollSize } from "./render-pool.renderer.js";
 
 const POOL_SIZE = 4;
 const IDLE_CLOSE_MS = 30_000;
@@ -366,10 +367,10 @@ export class RenderPool {
     const metrics = (await state.slot.window.webContents.debugger.sendCommand(
       "Page.getLayoutMetrics"
     )) as { cssContentSize: { width: number; height: number } };
-    const scroll = (await this.evaluate(
-      state,
-      "[document.documentElement.scrollWidth, document.documentElement.scrollHeight]"
-    )) as [number, number];
+    const scroll = (await this.evaluate(state, `(${measureScrollSize})()`)) as [
+      number,
+      number,
+    ];
     return {
       width: Math.max(Math.ceil(metrics.cssContentSize.width), scroll[0]),
       height: Math.max(Math.ceil(metrics.cssContentSize.height), scroll[1]),

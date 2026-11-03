@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ES2024", "DOM", "DOM.Iterable"],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "skipLibCheck": true,
+    "types": [],
+    "noEmit": true
+  },
+  "include": [
+    "desktop/first-run-page.renderer.ts",
+    "desktop/first-run.renderer.ts",
+    "desktop/main.renderer.ts",
+    "desktop/native.renderer.ts",
+    "desktop/render-host.renderer.ts",
+    "desktop/render-pool.renderer.ts",
+    "desktop/theme.renderer.ts",
+    "desktop/window.renderer.ts"
+  ]
+}

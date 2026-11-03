@@ -77,6 +77,30 @@ const VersionListSchema = Schema.Struct({
   items: Schema.Array(Schema.Unknown),
 });
 
+const FileListSchema = Schema.Struct({
+  files: Schema.Array(
+    Schema.Struct({ bytes: Schema.Number, path: Schema.String })
+  ),
+  versionId: Schema.String,
+});
+
+const FileTextSchema = Schema.Struct({
+  path: Schema.String,
+  text: Schema.String,
+});
+
+const VariantListSchema = Schema.Struct({
+  items: Schema.Array(Schema.Unknown),
+});
+
+const RouteListSchema = Schema.Struct({
+  appDir: Schema.String,
+  framework: Schema.String,
+  nextCursor: Schema.NullOr(Schema.String),
+  routes: Schema.Array(Schema.Unknown),
+  total: Schema.Number,
+});
+
 type DoctorViewText = typeof DoctorViewSchema.Type;
 
 type PortPlanView = typeof PortPlanViewSchema.Type;
@@ -84,12 +108,16 @@ type PortPlanView = typeof PortPlanViewSchema.Type;
 export {
   ComponentUsageSchema,
   DoctorViewSchema,
+  FileListSchema,
+  FileTextSchema,
   FoundAppsViewSchema,
   PathTextSchema,
   PortPlanViewSchema,
   ProjectSearchViewSchema,
   ProjectSummaryListSchema,
+  RouteListSchema,
   RouteTextSchema,
+  VariantListSchema,
   VersionListSchema,
 };
 

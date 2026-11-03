@@ -14,6 +14,7 @@ import {
 } from "../../shared/contracts.js";
 import { levelOf, resolveRunConfig } from "../../shared/run-levels.js";
 import { readDesignSystemState } from "../design-system/state.js";
+import { bindMcpReadRuntime } from "../preview/mcp-read-core.js";
 import {
   BadRequestError,
   ConflictError,
@@ -152,6 +153,7 @@ export function registerVariationRoutes(
   deps: VariationRouteDeps
 ): void {
   const { projects, runner } = deps;
+  bindMcpReadRuntime({ runner });
   const briefs =
     deps.briefs ??
     (deps.config.agentMode === "mock"

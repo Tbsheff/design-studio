@@ -4,10 +4,18 @@ import type {
   DoctorViewText,
   PortPlanView,
 } from "../../shared/actions/mcp-read/schema.js";
+import type { ElementVariantInfo } from "../../shared/element-variants.js";
 import type { FoundApps } from "../../shared/found-apps.js";
 import type { ProjectSearchResult } from "../../shared/project-search.js";
 import type { ComponentUsage } from "../../shared/usage-scope.js";
 import { readDoctor, toDoctorText } from "./doctor-read.js";
+import { readFileList, readFileText } from "./file-read.js";
+import type {
+  FileList,
+  FileReadQuery,
+  FileSourceQuery,
+  FileText,
+} from "./file-read.js";
 import { readFoundApps } from "./found-apps-read.js";
 import { attemptMcpRead } from "./mcp-read-core.js";
 import type { McpReadError, PortPlanQuery } from "./mcp-read-core.js";
@@ -15,8 +23,12 @@ import { readProjectList } from "./project-list-read.js";
 import type { ProjectSummary } from "./project-list-read.js";
 import { readProjectSearch } from "./project-search-read.js";
 import type { ProjectSearchQuery } from "./project-search-read.js";
+import { readRouteList } from "./route-read.js";
+import type { RouteList, RouteListQuery } from "./route-read.js";
 import { readUsage } from "./usage-read.js";
 import type { UsageQuery } from "./usage-read.js";
+import { readVariantList } from "./variant-read.js";
+import type { VariantListQuery } from "./variant-read.js";
 import { readVersionList } from "./version-list-read.js";
 import type {
   VersionListEntry,
@@ -28,6 +40,12 @@ interface McpReadStoreApi {
     projectId: string,
     isFresh: boolean
   ) => Effect.Effect<DoctorViewText, McpReadError>;
+  readonly fileList: (
+    query: FileSourceQuery
+  ) => Effect.Effect<FileList, McpReadError>;
+  readonly fileText: (
+    query: FileReadQuery
+  ) => Effect.Effect<FileText, McpReadError>;
   readonly foundApps: (
     isFresh: boolean
   ) => Effect.Effect<FoundApps, McpReadError>;
@@ -41,9 +59,15 @@ interface McpReadStoreApi {
   readonly projectSearch: (
     query: ProjectSearchQuery
   ) => Effect.Effect<ProjectSearchResult, McpReadError>;
+  readonly routeList: (
+    query: RouteListQuery
+  ) => Effect.Effect<RouteList, McpReadError>;
   readonly usage: (
     query: UsageQuery
   ) => Effect.Effect<ComponentUsage, McpReadError>;
+  readonly variantList: (
+    query: VariantListQuery
+  ) => Effect.Effect<readonly ElementVariantInfo[], McpReadError>;
   readonly versionList: (
     query: VersionListQuery
   ) => Effect.Effect<readonly VersionListEntry[], McpReadError>;
@@ -69,6 +93,30 @@ class McpReadStore extends Context.Service<McpReadStore, McpReadStoreApi>()(
               projectId,
               isFresh
             )
+          )
+        );
+      }),
+      fileList: Effect.fn("McpReadStore.fileList")(function* run(
+        query: FileSourceQuery
+      ) {
+        return yield* attemptMcpRead((runtime) =>
+          readFileList(
+            runtime.projects,
+            runtime.versions,
+            runtime.preview,
+            query
+          )
+        );
+      }),
+      fileText: Effect.fn("McpReadStore.fileText")(function* run(
+        query: FileReadQuery
+      ) {
+        return yield* attemptMcpRead((runtime) =>
+          readFileText(
+            runtime.projects,
+            runtime.versions,
+            runtime.preview,
+            query
           )
         );
       }),
@@ -101,9 +149,23 @@ class McpReadStore extends Context.Service<McpReadStore, McpReadStoreApi>()(
           )
         );
       }),
+      routeList: Effect.fn("McpReadStore.routeList")(function* run(
+        query: RouteListQuery
+      ) {
+        return yield* attemptMcpRead((runtime) =>
+          readRouteList(runtime.projects, query)
+        );
+      }),
       usage: Effect.fn("McpReadStore.usage")(function* run(query: UsageQuery) {
         return yield* attemptMcpRead((runtime) =>
           readUsage(runtime.projects, runtime.preview, query)
+        );
+      }),
+      variantList: Effect.fn("McpReadStore.variantList")(function* run(
+        query: VariantListQuery
+      ) {
+        return yield* attemptMcpRead((runtime) =>
+          readVariantList(runtime.projects, runtime.runner, query)
         );
       }),
       versionList: Effect.fn("McpReadStore.versionList")(function* run(

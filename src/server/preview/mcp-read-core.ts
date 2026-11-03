@@ -8,7 +8,7 @@ import type { PortFlowPlan, PortPlan } from "../../shared/port.js";
 import { loadConfig } from "../platform/config/index.js";
 import { ConflictError, NotFoundError } from "../store/errors.js";
 import type { StudioProjectStore } from "../store/projects.js";
-import type { PreviewService, VersionStore } from "../types.js";
+import type { AgentRunner, PreviewService, VersionStore } from "../types.js";
 
 interface PortPlanQuery {
   readonly flow: boolean;
@@ -24,6 +24,7 @@ interface McpReadRuntime {
   readonly planPort: (query: PortPlanQuery) => Promise<PortFlowPlan | PortPlan>;
   readonly preview: PreviewService | null;
   readonly projects: StudioProjectStore;
+  readonly runner: Pick<AgentRunner, "isRunning"> | null;
   readonly runsDir: (projectId: string) => string;
   readonly versions: VersionStore;
 }

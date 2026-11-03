@@ -18,6 +18,12 @@ const routes = {
     method: "GET",
     path: "/api/projects/:projectId/usage",
   },
+  listFilesMcpRead: {
+    id: "mcp-read.listFiles",
+    invalidates: [],
+    method: "GET",
+    path: "/api/projects/:projectId/source-files",
+  },
   listFoundAppsMcpRead: {
     id: "mcp-read.listFoundApps",
     invalidates: [],
@@ -30,11 +36,29 @@ const routes = {
     method: "GET",
     path: "/api/projects-summary",
   },
+  listRoutesMcpRead: {
+    id: "mcp-read.listRoutes",
+    invalidates: [],
+    method: "GET",
+    path: "/api/projects/:projectId/routes",
+  },
+  listVariantsMcpRead: {
+    id: "mcp-read.listVariants",
+    invalidates: [],
+    method: "GET",
+    path: "/api/projects/:projectId/variants",
+  },
   listVersionsMcpRead: {
     id: "mcp-read.listVersions",
     invalidates: [],
     method: "GET",
     path: "/api/projects/:projectId/versions",
+  },
+  readFileMcpRead: {
+    id: "mcp-read.readFile",
+    invalidates: [],
+    method: "GET",
+    path: "/api/projects/:projectId/source-file",
   },
   searchProjectsMcpRead: {
     id: "mcp-read.searchProjects",

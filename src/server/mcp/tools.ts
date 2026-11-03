@@ -1,4 +1,4 @@
-import { readFile, readdir, realpath, stat } from "node:fs/promises";
+import { readFile, realpath } from "node:fs/promises";
 import path from "node:path";
 
 import {
@@ -18,7 +18,6 @@ import {
   firstVersionWaitText,
 } from "../app/first-version.js";
 import { frameStatesView, stateOfFrame } from "../app/frame-state.js";
-import { listAppRoutes } from "../app/routes.js";
 import { readProjectCanvas } from "../canvas/service.js";
 import { findFrame } from "../canvas/tools.js";
 import { findTokenFile } from "../design-system/app-tokens/detect.js";
@@ -37,7 +36,6 @@ import {
 } from "../export/source.js";
 import { noteRenderedPage } from "../preview/render-wait.js";
 import { forcedOf } from "../state-styles/forced-store.js";
-import { listElementVariants } from "../variations/element-variants.js";
 import {
   isLayerRef,
   LayerRefError,
@@ -73,7 +71,6 @@ export interface ToolDef {
 type Args = Record<string, unknown>;
 
 const MAX_TEXT = 256 * 1024;
-const MAX_FILES = 2000;
 const MAX_SHOT_HEIGHT = 6000;
 const SKIP = new Set([
   "node_modules",
@@ -85,26 +82,6 @@ const SKIP = new Set([
   ".turbo",
   ".DS_Store",
 ]);
-const TEXT_EXT = new Set([
-  ".html",
-  ".htm",
-  ".css",
-  ".js",
-  ".mjs",
-  ".cjs",
-  ".ts",
-  ".tsx",
-  ".jsx",
-  ".json",
-  ".md",
-  ".txt",
-  ".svg",
-  ".xml",
-  ".yml",
-  ".yaml",
-  ".toml",
-]);
-
 const PROJECT = {
   type: "string",
   description: "Project id from list_projects",
@@ -226,57 +203,6 @@ export const TOOLS: ToolDef[] = [
       },
     },
     ["projectId"]
-  ),
-  def(
-    "list_variants",
-    "List element variants",
-    'List the element variants of a project ("Try variants" in the studio): group id, label, title, direction id, file and line range, and state (running, ready, unchanged, rejected with the reason, kept or discarded). Read only. Only the user starts variant runs, in the studio; keep_variant applies a ready one.',
-    { projectId: PROJECT },
-    ["projectId"]
-  ),
-  def(
-    "list_routes",
-    "List app routes",
-    "List the routes of an attached Next.js app from its app router (app/**/page.tsx): route, page file, dynamic, route group. Pages hold 50 routes; pass nextCursor as cursor for the next page.",
-    {
-      projectId: PROJECT,
-      query: {
-        type: "string",
-        maxLength: 100,
-        description:
-          'Search text matched against the route, page file and route group, for example "f2f" or "admin/users".',
-      },
-      limit: {
-        type: "integer",
-        minimum: 1,
-        maximum: 500,
-        description: "Routes per page. Default 50.",
-      },
-      cursor: {
-        type: "string",
-        description: "nextCursor from the previous page.",
-      },
-    },
-    ["projectId"]
-  ),
-  def(
-    "list_files",
-    "List files",
-    "List the source files of a version.",
-    { projectId: PROJECT, versionId: VERSION, directionId: DIRECTION },
-    ["projectId"]
-  ),
-  def(
-    "read_file",
-    "Read file",
-    "Read one text source file of a version.",
-    {
-      projectId: PROJECT,
-      versionId: VERSION,
-      directionId: DIRECTION,
-      path: { type: "string", description: "File path from list_files" },
-    },
-    ["projectId", "path"]
   ),
 ];
 
@@ -431,50 +357,7 @@ async function insideRoot(root: string, relative: string): Promise<string> {
   return full;
 }
 
-async function listFiles(
-  root: string,
-  prefix = "",
-  out: { path: string; bytes: number }[] = []
-): Promise<{ path: string; bytes: number }[]> {
-  for (const item of await readdir(path.join(root, prefix), {
-    withFileTypes: true,
-  })) {
-    if (SKIP.has(item.name) || out.length >= MAX_FILES) continue;
-    const relative = prefix ? `${prefix}/${item.name}` : item.name;
-    if (item.isDirectory()) await listFiles(root, relative, out);
-    else if (item.isFile())
-      out.push({
-        path: relative,
-        bytes: (await stat(path.join(root, relative))).size,
-      });
-  }
-  return out;
-}
-
 const RENDERED_DOM = `(() => { const doc = document.documentElement.cloneNode(true); for (const node of doc.querySelectorAll('script, link[rel="modulepreload"], style[id^="studio-"]')) node.remove(); for (const node of doc.querySelectorAll('[${SOURCE_LOC_ATTR}]')) node.removeAttribute('${SOURCE_LOC_ATTR}'); return '<!doctype html>\\n' + doc.outerHTML; })()`;
-
-function pageOf<
-  T extends { route: string; file: string; group?: string | null },
->(
-  routes: T[],
-  args: Args
-): { routes: T[]; total: number; nextCursor: string | null } {
-  const query = str(args, "query")?.toLowerCase();
-  const found = query
-    ? routes.filter((r) =>
-        `${r.route} ${r.file} ${r.group ?? ""}`.toLowerCase().includes(query)
-      )
-    : routes;
-  const cursor = str(args, "cursor");
-  const offset = cursor && /^\d{1,6}$/.test(cursor) ? Number(cursor) : 0;
-  const limit = int(args, "limit", 1, 500, 50);
-  const next = offset + limit;
-  return {
-    routes: found.slice(offset, next),
-    total: found.length,
-    nextCursor: next < found.length ? String(next) : null,
-  };
-}
 
 async function frameHtml(deps: ExportDeps, args: Args): Promise<ToolResult> {
   const src = await source(deps, args);
@@ -760,46 +643,11 @@ async function screenshot(deps: ExportDeps, raw: Args): Promise<ToolResult> {
   }
 }
 
-const PROJECT_TOOLS: Record<
-  string,
-  (deps: ExportDeps, args: Args) => Promise<ToolResult>
-> = {
-  list_variants: async (deps, args) => {
-    const project = await deps.projects.get(
-      str(args, "projectId", true) as string
-    );
-    return json(
-      await listElementVariants(
-        project,
-        deps.runner ?? { isRunning: () => false }
-      )
-    );
-  },
-  list_routes: async (deps, args) => {
-    const project = await deps.projects.get(
-      str(args, "projectId", true) as string
-    );
-    if (!project.app)
-      throw new ToolError("this project is not an attached app");
-    const main = project.directions[0];
-    if (!main) throw new ToolError("project has no direction");
-    return json({
-      appDir: project.app.appDir,
-      framework: project.app.framework,
-      ...pageOf(await listAppRoutes(main.workTree, project.app.appDir), args),
-    });
-  },
-};
-
 export async function callTool(
   deps: ExportDeps,
   name: string,
   args: Args
 ): Promise<ToolResult> {
-  const projectTool = Object.hasOwn(PROJECT_TOOLS, name)
-    ? PROJECT_TOOLS[name]
-    : undefined;
-  if (projectTool) return projectTool(deps, args);
   switch (name) {
     case "get_frame_html":
       return frameHtml(deps, args);
@@ -815,25 +663,6 @@ export async function callTool(
     }
     case "get_screenshot":
       return screenshot(deps, args);
-    case "list_files": {
-      const src = await source(deps, args);
-      return json({
-        versionId: src.version.id,
-        files: await listFiles(src.root),
-      });
-    }
-    case "read_file": {
-      const src = await source(deps, args);
-      const file = await insideRoot(
-        src.root,
-        str(args, "path", true) as string
-      );
-      if (!TEXT_EXT.has(path.extname(file).toLowerCase()))
-        throw new ToolError("only text files can be read");
-      if ((await stat(file)).size > MAX_TEXT)
-        throw new ToolError("the file is too large");
-      return text(await readFile(file, "utf-8"));
-    }
     default:
       throw new ToolError(`unknown tool ${name}`);
   }

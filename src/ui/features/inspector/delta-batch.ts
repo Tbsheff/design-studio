@@ -17,10 +17,10 @@ export interface DeltaBatcher {
   dispose(): void;
 }
 
-export function mergeDeltas(
+export const mergeDeltas = (
   pending: DeltaEvent[],
   event: DeltaEvent
-): DeltaEvent[] {
+): DeltaEvent[] => {
   const last = pending.at(-1);
 
   if (!last || last.runId !== event.runId || last.type !== event.type) {
@@ -28,12 +28,12 @@ export function mergeDeltas(
   }
 
   return [...pending.slice(0, -1), { ...event, text: last.text + event.text }];
-}
+};
 
-export function createDeltaBatcher(
+export const createDeltaBatcher = (
   update: RunsUpdate,
   schedule: Schedule
-): DeltaBatcher {
+): DeltaBatcher => {
   let pending: DeltaEvent[] = [];
   let cancel: (() => void) | null = null;
 
@@ -55,6 +55,10 @@ export function createDeltaBatcher(
   };
 
   return {
+    dispose() {
+      take();
+    },
+    flush,
     push(event) {
       if (
         event.type === "run.text.delta" ||
@@ -74,12 +78,8 @@ export function createDeltaBatcher(
 
       update((runs) => applyRunEvent(batch.reduce(applyRunEvent, runs), event));
     },
-    flush,
-    dispose() {
-      take();
-    },
   };
-}
+};
 
 export const frameOrTimeout =
   (fallbackMs: number): Schedule =>

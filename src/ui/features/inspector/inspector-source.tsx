@@ -4,17 +4,16 @@ import type { SourceLoc } from "../../../shared/contracts.js";
 import { api, errorText } from "../../api.js";
 import { Icon } from "../../kit/Icon.js";
 
-export function locText(source: SourceLoc): string {
-  return `${source.file}:${source.line}:${source.col}`;
-}
+export const locText = (source: SourceLoc): string =>
+  `${source.file}:${source.line}:${source.col}`;
 
-function shortPath(file: string): string {
+const shortPath = (file: string): string => {
   const parts = file.split("/");
 
   return parts.length > 2 ? parts.slice(-2).join("/") : file;
-}
+};
 
-export function SourceLink({
+export const SourceLink = ({
   projectId,
   directionId,
   source,
@@ -22,7 +21,7 @@ export function SourceLink({
   projectId: string;
   directionId: string | null;
   source: SourceLoc | null;
-}) {
+}) => {
   const [note, setNote] = useState<string | null>(null);
 
   if (!source) {
@@ -40,7 +39,7 @@ export function SourceLink({
     api
       .openSource(projectId, directionId, text)
       .then((result) => setNote(`Opened ${result.path}`))
-      .catch((err: unknown) => setNote(errorText(err)));
+      .catch((error: unknown) => setNote(errorText(error)));
   };
 
   return (
@@ -65,4 +64,4 @@ export function SourceLink({
       )}
     </>
   );
-}
+};

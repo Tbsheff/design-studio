@@ -1,20 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import {
-  isRawClass,
-  type StyleKind,
-  type StyleValueRow,
-} from "../../../shared/style-search.js";
+import { isRawClass } from "../../../shared/style-search.js";
+import type { StyleKind, StyleValueRow } from "../../../shared/style-search.js";
 import { Icon } from "../../kit/Icon.js";
 import { usePopover } from "../../kit/use-popover.js";
 import { shownValue, StateTag, Swatch } from "./match-candidates.js";
-import {
-  type Scope,
-  type Status,
-  ROWS_SHOWN,
-  KIND_LABEL,
-  rowKey,
-} from "./match-scan.js";
+import { ROWS_SHOWN, KIND_LABEL, rowKey } from "./match-scan.js";
+import type { Scope, Status } from "./match-scan.js";
 
 interface RowActions {
   selectValue: (row: StyleValueRow) => void;
@@ -22,7 +14,7 @@ interface RowActions {
   replace: (row: StyleValueRow) => void;
 }
 
-function RowMenu({
+const RowMenu = ({
   row,
   actions,
   replaceLabel,
@@ -30,7 +22,7 @@ function RowMenu({
   row: StyleValueRow;
   actions: RowActions;
   replaceLabel: string;
-}) {
+}) => {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -120,9 +112,9 @@ function RowMenu({
       )}
     </div>
   );
-}
+};
 
-function ValueRow({
+const ValueRow = ({
   row,
   actions,
   replaceLabel,
@@ -130,24 +122,22 @@ function ValueRow({
   row: StyleValueRow;
   actions: RowActions;
   replaceLabel: string;
-}) {
-  return (
-    <li className="sm-row" data-testid="style-value" data-row={rowKey(row)}>
-      <Swatch kind={row.kind} value={row.value} />
-      <span className="sm-value">{shownValue(row)}</span>
-      <StateTag row={row} onReplace={() => actions.replace(row)} />
-      <span
-        className="sm-count"
-        data-tip={`${row.count} ${row.count === 1 ? "element" : "elements"}`}
-      >
-        {row.count}
-      </span>
-      <RowMenu row={row} actions={actions} replaceLabel={replaceLabel} />
-    </li>
-  );
-}
+}) => (
+  <li className="sm-row" data-testid="style-value" data-row={rowKey(row)}>
+    <Swatch kind={row.kind} value={row.value} />
+    <span className="sm-value">{shownValue(row)}</span>
+    <StateTag row={row} onReplace={() => actions.replace(row)} />
+    <span
+      className="sm-count"
+      data-tip={`${row.count} ${row.count === 1 ? "element" : "elements"}`}
+    >
+      {row.count}
+    </span>
+    <RowMenu row={row} actions={actions} replaceLabel={replaceLabel} />
+  </li>
+);
 
-function KindGroup({
+const KindGroup = ({
   kind,
   rows,
   actions,
@@ -157,7 +147,7 @@ function KindGroup({
   rows: StyleValueRow[];
   actions: RowActions;
   replaceLabel: string;
-}) {
+}) => {
   const [all, setAll] = useState(false);
 
   if (rows.length === 0) {
@@ -191,39 +181,37 @@ function KindGroup({
       )}
     </div>
   );
-}
+};
 
-function ScopeToggle({
+const ScopeToggle = ({
   scope,
   onScope,
 }: {
   scope: Scope;
   onScope: (scope: Scope) => void;
-}) {
-  return (
-    <div
-      className="segmented sm-scope"
-      role="radiogroup"
-      aria-label="Values from"
-    >
-      {(["selection", "page"] as const).map((id) => (
-        <button
-          key={id}
-          type="button"
-          role="radio"
-          aria-checked={scope === id}
-          tabIndex={scope === id ? 0 : -1}
-          className={scope === id ? "on" : ""}
-          onClick={() => onScope(id)}
-        >
-          {id === "selection" ? "Selection" : "Page"}
-        </button>
-      ))}
-    </div>
-  );
-}
+}) => (
+  <div
+    className="segmented sm-scope"
+    role="radiogroup"
+    aria-label="Values from"
+  >
+    {(["selection", "page"] as const).map((id) => (
+      <button
+        key={id}
+        type="button"
+        role="radio"
+        aria-checked={scope === id}
+        tabIndex={scope === id ? 0 : -1}
+        className={scope === id ? "on" : ""}
+        onClick={() => onScope(id)}
+      >
+        {id === "selection" ? "Selection" : "Page"}
+      </button>
+    ))}
+  </div>
+);
 
-function StatusLine({ status }: { status: Status }) {
+const StatusLine = ({ status }: { status: Status }) => {
   if (status.kind === "idle") {
     return null;
   }
@@ -237,7 +225,7 @@ function StatusLine({ status }: { status: Status }) {
       {status.text}
     </p>
   );
-}
+};
 
 export { KindGroup, ScopeToggle, StatusLine };
 

@@ -1,9 +1,6 @@
 import { copy } from "./copy.js";
-import {
-  unsavedLabel,
-  type EditSession,
-  type SessionAction,
-} from "./use-edit-session.js";
+import { unsavedLabel } from "./use-edit-session.js";
+import type { EditSession, SessionAction } from "./use-edit-session.js";
 
 const SessionHeader = ({
   session,

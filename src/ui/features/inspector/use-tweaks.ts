@@ -5,11 +5,11 @@ import type {
   RunRequest,
   Version,
 } from "../../../shared/contracts.js";
-import {
-  tweaksPreviewCss,
-  type TweakControl,
-  type TweaksState,
-  type TweakValue,
+import { tweaksPreviewCss } from "../../../shared/tweaks.js";
+import type {
+  TweakControl,
+  TweaksState,
+  TweakValue,
 } from "../../../shared/tweaks.js";
 import { api, errorText } from "../../api.js";
 import {
@@ -23,9 +23,9 @@ import { isApiConflict } from "./api-error.js";
 type TweakMap = Record<string, TweakValue>;
 
 export const TWEAKS_REQUEST: RunRequest = {
+  mode: "edit",
   prompt:
     "Suggest tweaks for this design: add 3 to 8 live controls (spacing, accent color, radius, density, font size, a layout toggle) bound to CSS variables. Keep the look the same at the default values.",
-  mode: "edit",
   task: "tweaks",
 };
 
@@ -42,21 +42,18 @@ interface Options {
   onCommitted: (version: Version) => void;
 }
 
-function changeStamp(
+const changeStamp = (
   change: FilesChange | null,
   directionId: string | null
-): number {
-  return change && change.directionId === directionId ? change.receivedAt : 0;
-}
+): number =>
+  change && change.directionId === directionId ? change.receivedAt : 0;
 
-function baseValue(
+const baseValue = (
   state: TweaksState | null,
   control: TweakControl
-): TweakValue {
-  return state?.current[control.id] ?? control.default;
-}
+): TweakValue => state?.current[control.id] ?? control.default;
 
-function useTweaksState(o: Options) {
+const useTweaksState = (o: Options) => {
   const [loaded, setLoaded] = useState<{
     key: string;
     state: TweaksState;
@@ -74,7 +71,7 @@ function useTweaksState(o: Options) {
   live.current = key;
 
   useEffect(() => {
-    const directionId = o.directionId;
+    const { directionId } = o;
 
     if (!directionId) {
       return;
@@ -92,7 +89,8 @@ function useTweaksState(o: Options) {
         setLoadError(null);
       })
       .catch(
-        (err: unknown) => live.current === want && setLoadError(errorText(err))
+        (error: unknown) =>
+          live.current === want && setLoadError(errorText(error))
       );
   }, [o.projectId, o.directionId, headVersionId, stamp]);
 
@@ -103,10 +101,10 @@ function useTweaksState(o: Options) {
 
   const state = loaded?.key === key ? loaded.state : null;
 
-  return { state, loadError, replace };
-}
+  return { loadError, replace, state };
+};
 
-export function useTweaks(o: Options) {
+export const useTweaks = (o: Options) => {
   const { state, loadError, replace } = useTweaksState(o);
   const [pending, setPendingMap] = useState<TweakMap>({});
   const [committing, setCommitting] = useState(false);
@@ -170,10 +168,10 @@ export function useTweaks(o: Options) {
   const edit = useCallback(
     (control: TweakControl, value: TweakValue) => {
       const map = pendingRef.current;
-      const last = history.current[history.current.length - 1];
+      const last = history.current.at(-1);
 
       if (!last || last.id !== control.id) {
-        history.current.push({ id: control.id, before: map[control.id] });
+        history.current.push({ before: map[control.id], id: control.id });
       }
 
       const next = { ...map };
@@ -238,8 +236,10 @@ export function useTweaks(o: Options) {
       clearDraft();
       holdTweakCssUntilReload();
       opts.current.onCommitted(result.version);
-    } catch (err) {
-      setCommitError(isApiConflict(err) ? AGENT_BUSY_MESSAGE : errorText(err));
+    } catch (error) {
+      setCommitError(
+        isApiConflict(error) ? AGENT_BUSY_MESSAGE : errorText(error)
+      );
     } finally {
       setCommitting(false);
     }
@@ -282,21 +282,21 @@ export function useTweaks(o: Options) {
   }, [state, pending]);
 
   return {
-    state,
+    commit,
+    commitError,
+    committing,
+    confirmLeave,
+    count,
+    discard,
+    edit,
     loadError,
     pending,
-    values,
-    count,
-    committing,
-    commitError,
-    edit,
     revert,
-    undoLast,
+    state,
     undoChain,
-    discard,
-    commit,
-    confirmLeave,
+    undoLast,
+    values,
   };
-}
+};
 
 export type TweaksDraft = ReturnType<typeof useTweaks>;

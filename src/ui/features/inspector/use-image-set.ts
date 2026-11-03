@@ -1,8 +1,9 @@
 import { useRef, useState } from "react";
 
-import { type SetImageRequest } from "../../../shared/image.js";
+import type { SetImageRequest } from "../../../shared/image.js";
 import { fileData, imageApi, imageError, imageTargetOf } from "./image-api.js";
-import { RESELECT_AFTER_MS, type Props } from "./image-model.js";
+import { RESELECT_AFTER_MS } from "./image-model.js";
+import type { Props } from "./image-model.js";
 
 const useImageSet = (props: Props) => {
   const [busy, setBusy] = useState(false);
@@ -14,8 +15,8 @@ const useImageSet = (props: Props) => {
       window.setTimeout(
         () =>
           props.port?.current?.post({
-            type: "select-selector",
             selector: props.selection.selector,
+            type: "select-selector",
           }),
         wait
       );
@@ -45,8 +46,8 @@ const useImageSet = (props: Props) => {
       if (result.changed) {
         reselect();
       }
-    } catch (failure) {
-      setError(imageError(failure));
+    } catch (err) {
+      setError(imageError(err));
     }
   };
 
@@ -74,7 +75,7 @@ const useImageSet = (props: Props) => {
     return queue.current;
   };
 
-  return { busy, error, run, setError, placed };
+  return { busy, error, placed, run, setError };
 };
 
 export { useImageSet };

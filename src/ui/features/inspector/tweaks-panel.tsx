@@ -24,7 +24,7 @@ interface Group {
   controls: TweakControl[];
 }
 
-function groupControls(controls: TweakControl[]): Group[] {
+const groupControls = (controls: TweakControl[]): Group[] => {
   const groups = new Map<string, TweakControl[]>();
 
   for (const control of controls) {
@@ -32,14 +32,13 @@ function groupControls(controls: TweakControl[]): Group[] {
     groups.set(label, [...(groups.get(label) ?? []), control]);
   }
 
-  return [...groups].map(([label, list]) => ({ label, controls: list }));
-}
+  return [...groups].map(([label, list]) => ({ controls: list, label }));
+};
 
-function slug(value: string): string {
-  return value.toLowerCase().replaceAll(/[^a-z0-9]+/g, "-");
-}
+const slug = (value: string): string =>
+  value.toLowerCase().replaceAll(/[^a-z0-9]+/gu, "-");
 
-function readout(control: TweakControl, value: TweakValue): string {
+const readout = (control: TweakControl, value: TweakValue): string => {
   if (control.type === "range") {
     return `${value}${control.unit ?? ""}`;
   }
@@ -56,11 +55,11 @@ function readout(control: TweakControl, value: TweakValue): string {
   }
 
   return String(value);
-}
+};
 
 type EditFn = (control: TweakControl, value: TweakValue) => void;
 
-function RangeInput({
+const RangeInput = ({
   control,
   value,
   onEdit,
@@ -68,7 +67,7 @@ function RangeInput({
   control: RangeTweak;
   value: number;
   onEdit: EditFn;
-}) {
+}) => {
   const id = `twk-${control.id}`;
 
   return (
@@ -84,9 +83,9 @@ function RangeInput({
       onChange={(event) => onEdit(control, Number(event.currentTarget.value))}
     />
   );
-}
+};
 
-function ToggleInput({
+const ToggleInput = ({
   control,
   value,
   onEdit,
@@ -94,22 +93,20 @@ function ToggleInput({
   control: ToggleTweak;
   value: boolean;
   onEdit: EditFn;
-}) {
-  return (
-    <button
-      id={`twk-${control.id}`}
-      type="button"
-      role="switch"
-      aria-checked={value}
-      className={`twk-switch ${value ? "on" : ""}`}
-      onClick={() => onEdit(control, !value)}
-    >
-      <span className="twk-switch-knob" aria-hidden="true" />
-    </button>
-  );
-}
+}) => (
+  <button
+    id={`twk-${control.id}`}
+    type="button"
+    role="switch"
+    aria-checked={value}
+    className={`twk-switch ${value ? "on" : ""}`}
+    onClick={() => onEdit(control, !value)}
+  >
+    <span className="twk-switch-knob" aria-hidden="true" />
+  </button>
+);
 
-function SelectInput({
+const SelectInput = ({
   control,
   value,
   onEdit,
@@ -117,24 +114,22 @@ function SelectInput({
   control: SelectTweak;
   value: string;
   onEdit: EditFn;
-}) {
-  return (
-    <select
-      id={`twk-${control.id}`}
-      className="ins-input twk-select"
-      value={value}
-      onChange={(event) => onEdit(control, event.currentTarget.value)}
-    >
-      {control.options.map((option) => (
-        <option key={option.value} value={option.value}>
-          {option.label}
-        </option>
-      ))}
-    </select>
-  );
-}
+}) => (
+  <select
+    id={`twk-${control.id}`}
+    className="ins-input twk-select"
+    value={value}
+    onChange={(event) => onEdit(control, event.currentTarget.value)}
+  >
+    {control.options.map((option) => (
+      <option key={option.value} value={option.value}>
+        {option.label}
+      </option>
+    ))}
+  </select>
+);
 
-function ColorInput({
+const ColorInput = ({
   control,
   value,
   onEdit,
@@ -142,18 +137,16 @@ function ColorInput({
   control: ColorTweak;
   value: string;
   onEdit: EditFn;
-}) {
-  return (
-    <ColorValue
-      label={control.label}
-      value={value}
-      swatch={value}
-      onChange={(next) => onEdit(control, next)}
-    />
-  );
-}
+}) => (
+  <ColorValue
+    label={control.label}
+    value={value}
+    swatch={value}
+    onChange={(next) => onEdit(control, next)}
+  />
+);
 
-function ControlInput({
+const ControlInput = ({
   control,
   value,
   onEdit,
@@ -161,7 +154,7 @@ function ControlInput({
   control: TweakControl;
   value: TweakValue;
   onEdit: EditFn;
-}) {
+}) => {
   if (control.type === "range") {
     return (
       <RangeInput control={control} value={Number(value)} onEdit={onEdit} />
@@ -181,9 +174,9 @@ function ControlInput({
   }
 
   return <ColorInput control={control} value={String(value)} onEdit={onEdit} />;
-}
+};
 
-function ControlRow({
+const ControlRow = ({
   control,
   value,
   changed,
@@ -193,7 +186,7 @@ function ControlRow({
   value: TweakValue;
   changed: boolean;
   draft: TweaksDraft;
-}) {
+}) => {
   const labelFor = control.type === "color" ? undefined : `twk-${control.id}`;
 
   return (
@@ -223,9 +216,9 @@ function ControlRow({
       <ControlInput control={control} value={value} onEdit={draft.edit} />
     </li>
   );
-}
+};
 
-function Footer({ draft }: { draft: TweaksDraft }) {
+const Footer = ({ draft }: { draft: TweaksDraft }) => {
   if (draft.count === 0 && !draft.commitError) {
     return null;
   }
@@ -263,43 +256,41 @@ function Footer({ draft }: { draft: TweaksDraft }) {
       )}
     </div>
   );
-}
+};
 
-function EmptyState({
+const EmptyState = ({
   running,
   onSuggest,
 }: {
   running: boolean;
   onSuggest: () => void;
-}) {
-  return (
-    <div className="twk-empty">
-      <span className="twk-empty-icon" aria-hidden="true">
-        <Icon name="settings" size={18} />
-      </span>
-      <h3 className="twk-empty-title">No tweaks yet</h3>
-      <p className="twk-empty-text">
-        Tweaks are live controls for this design: sliders, colors, switches and
-        menus, each bound to a CSS variable. Drag them to preview every frame at
-        once with no model call. Commit saves the values as one version.
-      </p>
-      <button
-        type="button"
-        className="btn small primary"
-        disabled={running}
-        onClick={onSuggest}
-      >
-        <Icon name="sparkle" size={13} />
-        Suggest tweaks
-      </button>
-      {running && (
-        <p className="twk-empty-note">Wait for the current run to finish.</p>
-      )}
-    </div>
-  );
-}
+}) => (
+  <div className="twk-empty">
+    <span className="twk-empty-icon" aria-hidden="true">
+      <Icon name="settings" size={18} />
+    </span>
+    <h3 className="twk-empty-title">No tweaks yet</h3>
+    <p className="twk-empty-text">
+      Tweaks are live controls for this design: sliders, colors, switches and
+      menus, each bound to a CSS variable. Drag them to preview every frame at
+      once with no model call. Commit saves the values as one version.
+    </p>
+    <button
+      type="button"
+      className="btn small primary"
+      disabled={running}
+      onClick={onSuggest}
+    >
+      <Icon name="sparkle" size={13} />
+      Suggest tweaks
+    </button>
+    {running && (
+      <p className="twk-empty-note">Wait for the current run to finish.</p>
+    )}
+  </div>
+);
 
-function Problems({ problems }: { problems: string[] }) {
+const Problems = ({ problems }: { problems: string[] }) => {
   if (problems.length === 0) {
     return null;
   }
@@ -321,49 +312,47 @@ function Problems({ problems }: { problems: string[] }) {
       </div>
     </div>
   );
-}
+};
 
-function Header({
+const Header = ({
   draft,
   running,
   onSuggest,
   hasControls,
-}: Props & { hasControls: boolean }) {
-  return (
-    <PanelHead title="Tweaks" className="twk-header" titleClassName="twk-title">
-      <div className="twk-header-end">
-        {draft.count > 0 && (
-          <button
-            type="button"
-            className="btn small ghost"
-            onClick={draft.discard}
-          >
-            Reset all
-          </button>
-        )}
-        {hasControls && (
-          <button
-            type="button"
-            className="btn small ghost"
-            disabled={running}
-            data-tip={
-              running
-                ? "Wait for the current run to finish"
-                : "Ask the agent for tweak controls"
-            }
-            onClick={onSuggest}
-          >
-            <Icon name="sparkle" size={13} />
-            Suggest
-          </button>
-        )}
-      </div>
-    </PanelHead>
-  );
-}
+}: Props & { hasControls: boolean }) => (
+  <PanelHead title="Tweaks" className="twk-header" titleClassName="twk-title">
+    <div className="twk-header-end">
+      {draft.count > 0 && (
+        <button
+          type="button"
+          className="btn small ghost"
+          onClick={draft.discard}
+        >
+          Reset all
+        </button>
+      )}
+      {hasControls && (
+        <button
+          type="button"
+          className="btn small ghost"
+          disabled={running}
+          data-tip={
+            running
+              ? "Wait for the current run to finish"
+              : "Ask the agent for tweak controls"
+          }
+          onClick={onSuggest}
+        >
+          <Icon name="sparkle" size={13} />
+          Suggest
+        </button>
+      )}
+    </div>
+  </PanelHead>
+);
 
-export function TweaksPanel({ draft, running, onSuggest }: Props) {
-  const state = draft.state;
+export const TweaksPanel = ({ draft, running, onSuggest }: Props) => {
+  const { state } = draft;
 
   const groups = useMemo(
     () => groupControls(state?.controls ?? []),
@@ -426,4 +415,4 @@ export function TweaksPanel({ draft, running, onSuggest }: Props) {
       <Footer draft={draft} />
     </div>
   );
-}
+};

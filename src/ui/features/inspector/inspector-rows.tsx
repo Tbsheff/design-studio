@@ -1,15 +1,17 @@
-import { memo, useState, type KeyboardEvent } from "react";
+import { memo, useState } from "react";
+import type { KeyboardEvent } from "react";
 
 import type {
   DirectStyleProperty,
   SelectionContext,
 } from "../../../shared/contracts.js";
-import { textEditability } from "./css-values.js";
+import { sameEditValues, textEditability } from "./css-values.js";
 import { DataTextNote, useInspectorApp } from "./inspector-shared.js";
-import { sameEditValues, type DirectEdit } from "./use-direct-edit.js";
+import type { DirectEdit } from "./use-direct-edit.js";
 
-function useRowKeys(onCommit: () => void, onRevert: () => void) {
-  return (event: KeyboardEvent<HTMLInputElement>) => {
+const useRowKeys =
+  (onCommit: () => void, onRevert: () => void) =>
+  (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter") {
       event.preventDefault();
       onCommit();
@@ -19,15 +21,14 @@ function useRowKeys(onCommit: () => void, onRevert: () => void) {
       onRevert();
     }
   };
-}
 
-export function ContentRow({
+export const ContentRow = ({
   selection,
   edit,
 }: {
   selection: SelectionContext;
   edit: DirectEdit;
-}) {
+}) => {
   const state = textEditability(selection);
   const onKeyDown = useRowKeys(edit.commit, edit.revertText);
   const data = useInspectorApp().element?.textFromData;
@@ -67,11 +68,11 @@ export function ContentRow({
       />
     </div>
   );
-}
+};
 
-const UNSAFE = /[;{}<>\\]/;
+const UNSAFE = /[;{}<>\\]/u;
 
-export function CssTextRow({
+export const CssTextRow = ({
   prop,
   label,
   short,
@@ -85,7 +86,7 @@ export function CssTextRow({
   edit: DirectEdit;
   placeholder: string;
   wide?: boolean;
-}) {
+}) => {
   const [text, setText] = useState<string | null>(null);
   const value = edit.values[prop];
   const shown = text ?? (value === "none" ? "" : value);
@@ -137,15 +138,14 @@ export function CssTextRow({
       />
     </div>
   );
-}
+};
 
-function hasLine(value: string, line: string): boolean {
-  return value.split(/\s+/).includes(line);
-}
+const hasLine = (value: string, line: string): boolean =>
+  value.split(/\s+/u).includes(line);
 
-function toggleLine(value: string, line: string): string {
+const toggleLine = (value: string, line: string): string => {
   const parts = value
-    .split(/\s+/)
+    .split(/\s+/u)
     .filter((part) => part !== "" && part !== "none");
 
   const next = parts.includes(line)
@@ -153,9 +153,9 @@ function toggleLine(value: string, line: string): string {
     : [...parts, line];
 
   return next.length === 0 ? "none" : next.join(" ");
-}
+};
 
-function TextStyleTogglesView({ edit }: { edit: DirectEdit }) {
+const TextStyleTogglesView = ({ edit }: { edit: DirectEdit }) => {
   const italic =
     edit.values["font-style"] === "italic" ||
     edit.values["font-style"] === "oblique";
@@ -169,21 +169,22 @@ function TextStyleTogglesView({ edit }: { edit: DirectEdit }) {
 
   const items = [
     {
+      glyph: <em>I</em>,
       key: "i",
       label: "Italic",
       on: italic,
       run: () => write({ "font-style": italic ? "normal" : "italic" }),
-      glyph: <em>I</em>,
     },
     {
+      glyph: <u>U</u>,
       key: "u",
       label: "Underline",
       on: hasLine(decoration, "underline"),
       run: () =>
         write({ "text-decoration-line": toggleLine(decoration, "underline") }),
-      glyph: <u>U</u>,
     },
     {
+      glyph: <s>S</s>,
       key: "s",
       label: "Strikethrough",
       on: hasLine(decoration, "line-through"),
@@ -191,7 +192,6 @@ function TextStyleTogglesView({ edit }: { edit: DirectEdit }) {
         write({
           "text-decoration-line": toggleLine(decoration, "line-through"),
         }),
-      glyph: <s>S</s>,
     },
   ];
 
@@ -212,7 +212,7 @@ function TextStyleTogglesView({ edit }: { edit: DirectEdit }) {
       ))}
     </div>
   );
-}
+};
 
 export const TextStyleToggles = memo(TextStyleTogglesView, (a, b) =>
   sameEditValues(a.edit, b.edit, ["font-style", "text-decoration-line"])

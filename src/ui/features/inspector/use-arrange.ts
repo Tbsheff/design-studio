@@ -1,22 +1,20 @@
-import { useEffect, useRef, useState, type MutableRefObject } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { MutableRefObject } from "react";
 
-import {
-  ARRANGE_SHORTCUTS,
-  type ArrangeAction,
-} from "../../../shared/arrange.js";
+import { ARRANGE_SHORTCUTS } from "../../../shared/arrange.js";
+import type { ArrangeAction } from "../../../shared/arrange.js";
 import { arrange as arrangeRequest, errorText } from "../../api.js";
 import { isTypingTarget } from "../../platform/typing-target.js";
 import { PREVIEW_ARRANGE_KEY_EVENT } from "../canvas/use-preview-frames.js";
 import {
-  type Props,
-  type Message,
   OK_MS,
   successText,
   commitWrites,
   frameRequest,
 } from "./arrange-model.js";
+import type { Props, Message } from "./arrange-model.js";
 
-function useArrange(props: Props) {
+const useArrange = (props: Props) => {
   const latest = useRef(props);
   latest.current = props;
   const [busy, setBusy] = useState(false);
@@ -50,8 +48,8 @@ function useArrange(props: Props) {
       const targets = cur.selection.map((s) => ({ selector: s.selector }));
 
       const result = await arrangeRequest(cur.projectId, cur.directionId, {
-        targets,
         action,
+        targets,
         ...frameRequest(cur.projectId),
       });
 
@@ -61,8 +59,8 @@ function useArrange(props: Props) {
           ? { kind: "ok", text: successText(result) }
           : { kind: "note", text: result.note ?? "Already aligned." }
       );
-    } catch (err) {
-      setMessage({ kind: "error", text: errorText(err) });
+    } catch (error) {
+      setMessage({ kind: "error", text: errorText(error) });
     } finally {
       busyRef.current = false;
       setBusy(false);
@@ -70,21 +68,21 @@ function useArrange(props: Props) {
   };
 
   return { busy, message, run };
-}
+};
 
-function chordOf(event: KeyboardEvent): string | null {
+const chordOf = (event: KeyboardEvent): string | null => {
   if (event.metaKey || event.repeat || !event.altKey) {
     return null;
   }
 
   return `${event.ctrlKey ? "Ctrl+" : ""}Alt+${event.shiftKey ? "Shift+" : ""}${event.code}`;
-}
+};
 
-function useArrangeKeys(
+const useArrangeKeys = (
   root: MutableRefObject<HTMLElement | null>,
   active: boolean,
   run: (action: ArrangeAction) => void
-): void {
+): void => {
   const latest = useRef({ active, run });
   latest.current = { active, run };
   useEffect(() => {
@@ -120,6 +118,6 @@ function useArrangeKeys(
       window.removeEventListener(PREVIEW_ARRANGE_KEY_EVENT, onForwarded);
     };
   }, [root]);
-}
+};
 
 export { useArrange, useArrangeKeys };

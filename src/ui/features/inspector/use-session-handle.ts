@@ -1,4 +1,5 @@
-import { useEffect, type MutableRefObject } from "react";
+import { useEffect } from "react";
+import type { MutableRefObject } from "react";
 
 import type { EditSession, EditSessionHandle } from "./use-edit-session.js";
 
@@ -12,12 +13,12 @@ const useSessionHandle = (
     }
 
     ref.current = {
-      dirty: session.dirty,
       count: session.count,
+      dirty: session.dirty,
+      discard: session.discard,
       net: session.net,
       requestExit: session.requestExit,
       save: session.save,
-      discard: session.discard,
     };
   });
   useEffect(

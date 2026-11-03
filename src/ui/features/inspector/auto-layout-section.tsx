@@ -1,6 +1,8 @@
-import { useRef, type ReactNode } from "react";
+import { useRef } from "react";
+import type { ReactNode } from "react";
 
-import { Icon, type IconName } from "../../kit/Icon.js";
+import { Icon } from "../../kit/Icon.js";
+import type { IconName } from "../../kit/Icon.js";
 import { UiSelect } from "../../kit/UiSelect.js";
 import { InspectorSection, SelectField } from "./inspector-fields.js";
 import { AddButton } from "./inspector-shared.js";
@@ -15,8 +17,8 @@ import {
 import type { DirectEdit } from "./use-direct-edit.js";
 
 const DIRECTIONS: { value: string; icon: IconName; label: string }[] = [
-  { value: "row", icon: "arrowRight", label: "Horizontal" },
-  { value: "column", icon: "arrowDown", label: "Vertical" },
+  { icon: "arrowRight", label: "Horizontal", value: "row" },
+  { icon: "arrowDown", label: "Vertical", value: "column" },
 ];
 
 const POSITIONS = ["start", "center", "end"];
@@ -31,13 +33,19 @@ const DISPLAYS = [
   "none",
 ];
 
-function gridValue(value: string): string {
-  if (value === "flex-start") return "start";
-  if (value === "flex-end") return "end";
-  return value;
-}
+const gridValue = (value: string): string => {
+  if (value === "flex-start") {
+    return "start";
+  }
 
-function AlignGrid({
+  if (value === "flex-end") {
+    return "end";
+  }
+
+  return value;
+};
+
+const AlignGrid = ({
   edit,
   isRow,
   grid = false,
@@ -45,19 +53,22 @@ function AlignGrid({
   edit: DirectEdit;
   isRow: boolean;
   grid?: boolean;
-}) {
+}) => {
   const justifyProp = grid ? "justify-items" : "justify-content";
+
   const active = activeCell(
     edit.values[justifyProp],
     edit.values["align-items"],
     isRow
   );
+
   return (
     <div className="ins-align-grid" role="group" aria-label="Alignment">
       {[0, 1, 2].map((row) =>
         [0, 1, 2].map((col) => {
           const on = active?.col === col && active.row === row;
           const label = `Align ${POSITIONS[row]} ${POSITIONS[col]}`;
+
           return (
             <button
               key={`${row}-${col}`}
@@ -72,12 +83,12 @@ function AlignGrid({
                   edit,
                   grid
                     ? {
-                        "justify-items": gridValue(cell.justify),
                         "align-items": gridValue(cell.align),
+                        "justify-items": gridValue(cell.justify),
                       }
                     : {
-                        "justify-content": cell.justify,
                         "align-items": cell.align,
+                        "justify-content": cell.justify,
                       }
                 );
               }}
@@ -89,38 +100,48 @@ function AlignGrid({
       )}
     </div>
   );
-}
+};
 
 type GapMode = "fixed" | "auto";
 
 const GAP_MODES: { value: GapMode; label: string }[] = [
-  { value: "fixed", label: "Fixed" },
-  { value: "auto", label: "Auto" },
+  { label: "Fixed", value: "fixed" },
+  { label: "Auto", value: "auto" },
 ];
 
 const DEFAULT_GAP = "8px";
 
-function useLastGap(edit: DirectEdit): string {
+const useLastGap = (edit: DirectEdit): string => {
   const last = useRef(
-    parseFloat(edit.values.gap) > 0 ? edit.values.gap : DEFAULT_GAP
+    Number.parseFloat(edit.values.gap) > 0 ? edit.values.gap : DEFAULT_GAP
   );
-  if (parseFloat(edit.values.gap) > 0) last.current = edit.values.gap;
-  return last.current;
-}
 
-function GapModeField({ edit }: { edit: DirectEdit }) {
+  if (Number.parseFloat(edit.values.gap) > 0) {
+    last.current = edit.values.gap;
+  }
+
+  return last.current;
+};
+
+const GapModeField = ({ edit }: { edit: DirectEdit }) => {
   const mode: GapMode =
     edit.values["justify-content"] === "space-between" ? "auto" : "fixed";
+
   const lastGap = useLastGap(edit);
+
   const change = (next: GapMode) => {
-    if (next === mode) return;
+    if (next === mode) {
+      return;
+    }
+
     write(
       edit,
       next === "auto"
-        ? { "justify-content": "space-between", gap: "" }
-        : { "justify-content": "", gap: lastGap }
+        ? { gap: "", "justify-content": "space-between" }
+        : { gap: lastGap, "justify-content": "" }
     );
   };
+
   return (
     <div
       className="ins-field select ins-gap-mode"
@@ -137,9 +158,9 @@ function GapModeField({ edit }: { edit: DirectEdit }) {
       />
     </div>
   );
-}
+};
 
-function GapFields({
+const GapFields = ({
   edit,
   split,
   auto,
@@ -147,49 +168,54 @@ function GapFields({
   edit: DirectEdit;
   split: boolean;
   auto: boolean;
-}) {
+}) => {
   if (split) {
     return (
       <div className="ins-gap-pair">
         <NumberField
           short="Row"
-          spec={{ prop: "row-gap", label: "Row gap", edit, min: 0 }}
+          spec={{ edit, label: "Row gap", min: 0, prop: "row-gap" }}
         />
         <NumberField
           short="Col"
-          spec={{ prop: "column-gap", label: "Column gap", edit, min: 0 }}
+          spec={{ edit, label: "Column gap", min: 0, prop: "column-gap" }}
         />
       </div>
     );
   }
-  if (auto) return null;
+
+  if (auto) {
+    return null;
+  }
+
   return (
     <NumberField
       short="Gap"
-      spec={{ prop: "gap", label: "Gap", edit, min: 0 }}
+      spec={{ edit, label: "Gap", min: 0, prop: "gap" }}
     />
   );
-}
+};
 
-function GridControls({ edit }: { edit: DirectEdit }) {
-  return (
-    <div className="ins-flex">
-      <AlignGrid edit={edit} isRow grid />
-      <div className="ins-flex-side">
-        <GapFields edit={edit} split auto={false} />
-      </div>
+const GridControls = ({ edit }: { edit: DirectEdit }) => (
+  <div className="ins-flex">
+    <AlignGrid edit={edit} isRow grid />
+    <div className="ins-flex-side">
+      <GapFields edit={edit} split auto={false} />
     </div>
-  );
-}
+  </div>
+);
 
-function FlexControls({ edit }: { edit: DirectEdit }) {
+const FlexControls = ({ edit }: { edit: DirectEdit }) => {
   const direction = edit.values["flex-direction"].startsWith("column")
     ? "column"
     : "row";
+
   const wraps =
     edit.values["flex-wrap"] === "wrap" ||
     edit.values["flex-wrap"] === "wrap-reverse";
+
   const auto = edit.values["justify-content"] === "space-between";
+
   return (
     <div className="ins-flex">
       <AlignGrid edit={edit} isRow={direction === "row"} />
@@ -232,9 +258,9 @@ function FlexControls({ edit }: { edit: DirectEdit }) {
       </div>
     </div>
   );
-}
+};
 
-function AutoLayoutSection({
+const AutoLayoutSection = ({
   edit,
   title = "Auto layout",
   lead,
@@ -244,7 +270,7 @@ function AutoLayoutSection({
   title?: string;
   lead?: ReactNode;
   children?: ReactNode;
-}) {
+}) => {
   const root = useRef<HTMLDivElement>(null);
   const flex = isFlexDisplay(edit.values.display);
   const grid = isGridDisplay(edit.values.display);
@@ -254,13 +280,17 @@ function AutoLayoutSection({
       if (
         !isFlexDisplay(edit.values.display) &&
         !isGridDisplay(edit.values.display)
-      )
+      ) {
         write(edit, { display: "flex" });
+      }
     },
     () => {
-      if (isFlexDisplay(edit.values.display)) write(edit, { display: "block" });
+      if (isFlexDisplay(edit.values.display)) {
+        write(edit, { display: "block" });
+      }
     }
   );
+
   const remove = (
     <button
       type="button"
@@ -274,6 +304,7 @@ function AutoLayoutSection({
       <Icon name="close" size={12} />
     </button>
   );
+
   return (
     <InspectorSection title={title} aside={flex ? remove : undefined}>
       {lead}
@@ -301,6 +332,6 @@ function AutoLayoutSection({
       {children}
     </InspectorSection>
   );
-}
+};
 
 export { AutoLayoutSection };

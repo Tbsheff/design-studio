@@ -26,17 +26,15 @@ const SimpleTabMemo = memo(SimpleTab, sameShared);
 const ToolsMemo = memo(InspectorTools, sameShared);
 const ArrangeMemo = memo(InspectorArrange, sameShared);
 
-function Inspector(raw: InspectorProps) {
+const Inspector = (raw: InspectorProps) => {
   const props = useStableCallbacks(raw);
   const [ownTab, setOwnTab] = useState<InspectorTab>("simple");
   const tab = props.tab ?? ownTab;
   const onTab = props.onTab ?? setOwnTab;
 
   const session = useEditSession({
-    projectId: props.projectId,
-    directionId: props.directionId,
     control: props.control,
-    port: props.port,
+    directionId: props.directionId,
     onEnded: (action, result) => {
       if (props.onSessionEnd) {
         props.onSessionEnd(action, result);
@@ -44,10 +42,12 @@ function Inspector(raw: InspectorProps) {
         props.onStale("");
       }
     },
+    port: props.port,
+    projectId: props.projectId,
   });
 
   useSessionHandle(props.session, session);
-  const port = props.port;
+  const { port } = props;
   useEffect(() => () => resetEditVariant(port.current), [port]);
 
   return (
@@ -111,7 +111,8 @@ function Inspector(raw: InspectorProps) {
       </div>
     </InspectorAppContext.Provider>
   );
-}
+};
 
 export { Inspector };
+
 export type { InspectorTab } from "./inspector-model.js";

@@ -76,13 +76,10 @@ const inspectorEmptyReason = (
   return null;
 };
 
-const vectorShown = (selection: SelectionContext[]): boolean => {
-  return (
-    selection.length > 0 &&
-    selection.length <= 2 &&
-    selection.every((item) => isSvgShapeTag(item.tag))
-  );
-};
+const vectorShown = (selection: SelectionContext[]): boolean =>
+  selection.length > 0 &&
+  selection.length <= 2 &&
+  selection.every((item) => isSvgShapeTag(item.tag));
 
 export {
   EMPTY_HINT,

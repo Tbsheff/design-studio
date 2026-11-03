@@ -1,31 +1,29 @@
 import type { CompiledTokenEntry } from "../../../shared/contracts.js";
 import { TOKEN_GROUP_FOR_PROPERTY } from "../../../shared/contracts.js";
-import {
-  isRawClass,
-  kindOf,
-  type StyleHit,
-  type StyleKind,
-  type StyleValueRow,
+import { isRawClass, kindOf } from "../../../shared/style-search.js";
+import type {
+  StyleHit,
+  StyleKind,
+  StyleValueRow,
 } from "../../../shared/style-search.js";
 import {
   colorHex,
   lengthToPx,
   matchForProperty,
-  type TokenMode,
 } from "../../../shared/token-match.js";
+import type { TokenMode } from "../../../shared/token-match.js";
 import type { PageVar } from "./match-scan.js";
 
-function shownValue(row: Pick<StyleValueRow, "kind" | "value">): string {
-  return row.kind === "color" ? (colorHex(row.value) ?? row.value) : row.value;
-}
+const shownValue = (row: Pick<StyleValueRow, "kind" | "value">): string =>
+  row.kind === "color" ? (colorHex(row.value) ?? row.value) : row.value;
 
-function StateTag({
+const StateTag = ({
   row,
   onReplace,
 }: {
   row: StyleValueRow;
   onReplace: () => void;
-}) {
+}) => {
   if (row.state === "raw") {
     return (
       <button
@@ -68,7 +66,7 @@ function StateTag({
       {more}
     </span>
   );
-}
+};
 
 interface Candidate {
   token: string;
@@ -76,11 +74,11 @@ interface Candidate {
   hint: string;
 }
 
-function designCandidates(
+const designCandidates = (
   row: StyleValueRow,
   entries: CompiledTokenEntry[],
   mode: TokenMode
-): Candidate[] {
+): Candidate[] => {
   const property = row.properties[0];
 
   if (!property || !TOKEN_GROUP_FOR_PROPERTY[property]) {
@@ -88,13 +86,13 @@ function designCandidates(
   }
 
   return matchForProperty(property, row.value, entries, mode).map((match) => ({
+    hint: match.path,
     token: match.cssVar,
     value: match.value,
-    hint: match.path,
   }));
-}
+};
 
-function sameValue(kind: StyleKind, a: string, b: string): boolean {
+const sameValue = (kind: StyleKind, a: string, b: string): boolean => {
   if (kind === "color") {
     return colorHex(a) !== null && colorHex(a) === colorHex(b);
   }
@@ -102,36 +100,32 @@ function sameValue(kind: StyleKind, a: string, b: string): boolean {
   const px = lengthToPx(a);
 
   return px !== null && px === lengthToPx(b);
-}
+};
 
-function fitsKind(kind: StyleKind, value: string): boolean {
-  return kind === "color"
-    ? colorHex(value) !== null
-    : lengthToPx(value) !== null;
-}
+const fitsKind = (kind: StyleKind, value: string): boolean =>
+  kind === "color" ? colorHex(value) !== null : lengthToPx(value) !== null;
 
-function varCandidates(row: StyleValueRow, vars: PageVar[]): Candidate[] {
-  return vars
+const varCandidates = (row: StyleValueRow, vars: PageVar[]): Candidate[] =>
+  vars
     .filter((v) => fitsKind(row.kind, v.value))
     .map((v) => ({
+      hint: sameValue(row.kind, v.value, row.value) ? "same value" : "",
       token: v.name,
       value: v.value,
-      hint: sameValue(row.kind, v.value, row.value) ? "same value" : "",
     }))
     .sort(
       (a, b) =>
         Number(Boolean(b.hint)) - Number(Boolean(a.hint)) ||
         a.token.localeCompare(b.token)
     );
-}
 
-function uniqueTokens(list: Candidate[]): Candidate[] {
+const uniqueTokens = (list: Candidate[]): Candidate[] => {
   const seen = new Set<string>();
 
   return list.filter((c) => !seen.has(c.token) && Boolean(seen.add(c.token)));
-}
+};
 
-function classCandidates(row: StyleValueRow, page: StyleHit[]): Candidate[] {
+const classCandidates = (row: StyleValueRow, page: StyleHit[]): Candidate[] => {
   const seen = new Map<string, Candidate>();
 
   for (const hit of page) {
@@ -145,9 +139,9 @@ function classCandidates(row: StyleValueRow, page: StyleHit[]): Candidate[] {
     }
 
     seen.set(hit.cls, {
+      hint: hit.value === row.value ? "same value" : "",
       token: hit.cls,
       value: hit.value,
-      hint: hit.value === row.value ? "same value" : "",
     });
   }
 
@@ -156,9 +150,9 @@ function classCandidates(row: StyleValueRow, page: StyleHit[]): Candidate[] {
       Number(b.value === row.value) - Number(a.value === row.value) ||
       a.token.localeCompare(b.token)
   );
-}
+};
 
-function Swatch({ kind, value }: { kind: StyleKind; value: string }) {
+const Swatch = ({ kind, value }: { kind: StyleKind; value: string }) => {
   if (kind !== "color") {
     return null;
   }
@@ -170,7 +164,7 @@ function Swatch({ kind, value }: { kind: StyleKind; value: string }) {
       aria-hidden="true"
     />
   );
-}
+};
 
 export {
   StateTag,

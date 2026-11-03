@@ -30,15 +30,21 @@ const SwapInstanceMenu = lazy(() => import("./swap-instance-menu.js"));
 
 type SheetMode = "create" | "edit";
 
-function authorModeOf(value: string): SheetMode | null {
-  if (value === ":new") return "create";
-  if (value === ":edit") return "edit";
+const authorModeOf = (value: string): SheetMode | null => {
+  if (value === ":new") {
+    return "create";
+  }
+
+  if (value === ":edit") {
+    return "edit";
+  }
+
   return null;
-}
+};
 
 const AUTHOR_OPTIONS = [
-  { value: ":new", label: "New variant…" },
-  { value: ":edit", label: "Edit variant…" },
+  { label: "New variant…", value: ":new" },
+  { label: "Edit variant…", value: ":edit" },
 ];
 
 interface InspectorPropsProps {
@@ -54,43 +60,53 @@ type Status =
   | { kind: "saved"; text: string }
   | { kind: "error"; text: string };
 
-function messageOf(error: unknown): string {
+const messageOf = (error: unknown): string => {
   if (
     error instanceof ApiError &&
     error.data &&
     typeof (error.data as { message?: unknown }).message === "string"
-  )
+  ) {
     return (error.data as { message: string }).message;
-  return error instanceof Error ? error.message : String(error);
-}
+  }
 
-function useInstance(
+  return error instanceof Error ? error.message : String(error);
+};
+
+const useInstance = (
   projectId: string,
   directionId: string | null,
   selection: SelectionContext
-) {
+) => {
   const [instance, setInstance] = useState<ComponentInstance | null>(null);
   const [loaded, setLoaded] = useState(false);
+
   const query = useRef({
     owners: selection.owners,
     usedAt: selection.usedAt ?? null,
   });
+
   query.current = {
     owners: selection.owners,
     usedAt: selection.usedAt ?? null,
   };
+
   const key = JSON.stringify([
     selection.owners?.map((owner) => owner.stack),
     selection.usedAt ?? null,
   ]);
+
   const live = useRef(0);
+
   const load = useCallback(() => {
     const { owners, usedAt } = query.current;
+
     if (!directionId || ((owners?.length ?? 0) === 0 && !usedAt)) {
       setInstance(null);
       setLoaded(true);
+
       return;
     }
+
     const ticket = ++live.current;
     propsApi
       .instance(projectId, directionId, { owners, usedAt })
@@ -98,30 +114,36 @@ function useInstance(
       .catch(() => ticket === live.current && setInstance(null))
       .finally(() => ticket === live.current && setLoaded(true));
   }, [projectId, directionId, key]);
+
   useEffect(load, [load]);
+
   const refresh = useCallback(() => {
-    if (!directionId || !instance) return;
+    if (!directionId || !instance) {
+      return;
+    }
+
     const ticket = ++live.current;
     propsApi
       .instance(projectId, directionId, { use: instance.use })
       .then((result) => ticket === live.current && setInstance(result.instance))
       .catch(() => undefined);
   }, [projectId, directionId, instance]);
-  useProjectEvents(projectId, (event) => {
-    if (event.type === "version.created" && event.directionId === directionId)
-      refresh();
-  });
-  return { instance, loaded, setInstance };
-}
 
-function valueOf(
+  useProjectEvents(projectId, (event) => {
+    if (event.type === "version.created" && event.directionId === directionId) {
+      refresh();
+    }
+  });
+
+  return { instance, loaded, setInstance };
+};
+
+const valueOf = (
   instance: ComponentInstance,
   spec: PropSpec
-): PropValue | undefined {
-  return instance.values[spec.name] ?? spec.default;
-}
+): PropValue | undefined => instance.values[spec.name] ?? spec.default;
 
-function SelectProp({
+const SelectProp = ({
   spec,
   value,
   overridden,
@@ -135,16 +157,23 @@ function SelectProp({
   disabled: boolean;
   onChange: (value: PropValue | null) => void;
   onAuthor?: ((mode: SheetMode) => void) | undefined;
-}) {
+}) => {
   const current = value === undefined ? "" : String(value);
   const options = spec.options ?? [];
+
   const list =
     current && !options.includes(current) ? [current, ...options] : options;
+
   const pick = (next: string) => {
     const mode = authorModeOf(next);
-    if (mode && onAuthor) onAuthor(mode);
-    else onChange(next === "" ? null : next);
+
+    if (mode && onAuthor) {
+      onAuthor(mode);
+    } else {
+      onChange(next === "" ? null : next);
+    }
   };
+
   return (
     <div className={`ins-field select prp-field${overridden ? " set" : ""}`}>
       <label
@@ -163,11 +192,11 @@ function SelectProp({
         disabled={disabled}
         options={[
           ...list.map((option) => ({
-            value: option,
             label:
               option === spec.default && option !== "default"
                 ? `${option} (default)`
                 : option,
+            value: option,
           })),
           ...(onAuthor ? AUTHOR_OPTIONS : []),
         ]}
@@ -175,9 +204,9 @@ function SelectProp({
       />
     </div>
   );
-}
+};
 
-function BooleanProp({
+const BooleanProp = ({
   spec,
   value,
   disabled,
@@ -187,8 +216,9 @@ function BooleanProp({
   value: PropValue | undefined;
   disabled: boolean;
   onChange: (value: PropValue | null) => void;
-}) {
+}) => {
   const on = value === true || value === "true";
+
   return (
     <div className="prp-bool">
       <span className="prp-name" id={`prp-${spec.name}-label`}>
@@ -207,9 +237,9 @@ function BooleanProp({
       </button>
     </div>
   );
-}
+};
 
-function TextProp({
+const TextProp = ({
   spec,
   value,
   disabled,
@@ -219,24 +249,40 @@ function TextProp({
   value: PropValue | undefined;
   disabled: boolean;
   onChange: (value: PropValue | null) => void;
-}) {
+}) => {
   const [draft, setDraft] = useState<string | null>(null);
   const shown = draft ?? (value === undefined ? "" : String(value));
+
   const commit = () => {
-    if (draft === null) return;
+    if (draft === null) {
+      return;
+    }
+
     const next = draft;
     setDraft(null);
-    if (next === (value === undefined ? "" : String(value))) return;
-    if (next.trim() === "") onChange(null);
-    else onChange(spec.control === "number" ? Number(next) : next);
+
+    if (next === (value === undefined ? "" : String(value))) {
+      return;
+    }
+
+    if (next.trim() === "") {
+      onChange(null);
+    } else {
+      onChange(spec.control === "number" ? Number(next) : next);
+    }
   };
+
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "Enter") commit();
+    if (event.key === "Enter") {
+      commit();
+    }
+
     if (event.key === "Escape") {
       event.stopPropagation();
       setDraft(null);
     }
   };
+
   return (
     <div className="ins-field wide prp-field">
       <label
@@ -261,9 +307,9 @@ function TextProp({
       />
     </div>
   );
-}
+};
 
-function PropRow({
+const PropRow = ({
   instance,
   spec,
   disabled,
@@ -275,10 +321,11 @@ function PropRow({
   disabled: boolean;
   onChange: (name: string, value: PropValue | null) => void;
   onAuthor?: ((prop: string, mode: SheetMode) => void) | undefined;
-}) {
+}) => {
   const value = valueOf(instance, spec);
   const locked = instance.dynamic.includes(spec.name);
   const change = (next: PropValue | null) => onChange(spec.name, next);
+
   if (locked) {
     return (
       <div className="ins-field wide readonly prp-field">
@@ -287,7 +334,8 @@ function PropRow({
       </div>
     );
   }
-  if (spec.control === "select")
+
+  if (spec.control === "select") {
     return (
       <SelectProp
         spec={spec}
@@ -298,7 +346,9 @@ function PropRow({
         onAuthor={onAuthor && ((mode) => onAuthor(spec.name, mode))}
       />
     );
-  if (spec.control === "boolean")
+  }
+
+  if (spec.control === "boolean") {
     return (
       <BooleanProp
         spec={spec}
@@ -307,22 +357,24 @@ function PropRow({
         onChange={change}
       />
     );
+  }
+
   return (
     <TextProp spec={spec} value={value} disabled={disabled} onChange={change} />
   );
-}
+};
 
 const PADDING: { label: string; props: string[] }[] = [
   { label: "Padding X", props: ["padding-left", "padding-right"] },
   { label: "Padding Y", props: ["padding-top", "padding-bottom"] },
 ];
 
-type ClassBody = {
+interface ClassBody {
   style?: Record<string, string | null>;
   classes?: { add?: string[]; remove?: string[] };
-};
+}
 
-function VariantPicker({
+const VariantPicker = ({
   groups,
   group,
   value,
@@ -334,38 +386,36 @@ function VariantPicker({
   value: string;
   onProp: (prop: string) => void;
   onValue: (value: string) => void;
-}) {
-  return (
-    <div className="ins-grid">
-      <div className="ins-field select">
-        <UiSelect
-          className="ins-select"
-          aria-label="Variant prop"
-          value={group.prop}
-          options={groups.map((entry) => ({
-            value: entry.prop,
-            label: entry.prop,
-          }))}
-          onChange={onProp}
-        />
-      </div>
-      <div className="ins-field select">
-        <UiSelect
-          className="ins-select"
-          aria-label="Variant value"
-          value={value}
-          options={group.options.map((entry) => ({
-            value: entry.value,
-            label: entry.value,
-          }))}
-          onChange={onValue}
-        />
-      </div>
+}) => (
+  <div className="ins-grid">
+    <div className="ins-field select">
+      <UiSelect
+        className="ins-select"
+        aria-label="Variant prop"
+        value={group.prop}
+        options={groups.map((entry) => ({
+          label: entry.prop,
+          value: entry.prop,
+        }))}
+        onChange={onProp}
+      />
     </div>
-  );
-}
+    <div className="ins-field select">
+      <UiSelect
+        className="ins-select"
+        aria-label="Variant value"
+        value={value}
+        options={group.options.map((entry) => ({
+          label: entry.value,
+          value: entry.value,
+        }))}
+        onChange={onValue}
+      />
+    </div>
+  </div>
+);
 
-function ClassChips({
+const ClassChips = ({
   label,
   classes,
   editable,
@@ -375,30 +425,29 @@ function ClassChips({
   classes: string[];
   editable: boolean;
   onRemove: (name: string) => void;
-}) {
-  return (
-    <div className="prp-classes" aria-label={label}>
-      {classes.map((name) => (
-        <span key={name} className="prp-class">
-          <code>{name}</code>
-          {editable && (
-            <button
-              type="button"
-              className="prp-class-x"
-              aria-label={`Remove ${name}`}
-              onClick={() => onRemove(name)}
-            >
-              ×
-            </button>
-          )}
-        </span>
-      ))}
-    </div>
-  );
-}
+}) => (
+  <div className="prp-classes" aria-label={label}>
+    {classes.map((name) => (
+      <span key={name} className="prp-class">
+        <code>{name}</code>
+        {editable && (
+          <button
+            type="button"
+            className="prp-class-x"
+            aria-label={`Remove ${name}`}
+            onClick={() => onRemove(name)}
+          >
+            ×
+          </button>
+        )}
+      </span>
+    ))}
+  </div>
+);
 
-function ClassEditors({ send }: { send: (body: ClassBody) => void }) {
+const ClassEditors = ({ send }: { send: (body: ClassBody) => void }) => {
   const [adding, setAdding] = useState("");
+
   return (
     <>
       <div className="ins-grid">
@@ -428,30 +477,36 @@ function ClassEditors({ send }: { send: (body: ClassBody) => void }) {
           spellCheck={false}
           onChange={(event) => setAdding(event.target.value)}
           onKeyDown={(event) => {
-            if (event.key !== "Enter" || adding.trim() === "") return;
-            send({ classes: { add: adding.trim().split(/\s+/) } });
+            if (event.key !== "Enter" || adding.trim() === "") {
+              return;
+            }
+
+            send({ classes: { add: adding.trim().split(/\s+/u) } });
             setAdding("");
           }}
         />
       </div>
     </>
   );
-}
+};
 
-function initialValue(
+const initialValue = (
   instance: ComponentInstance,
   group: VariantGroup | undefined
-): string {
-  if (!group) return "";
+): string => {
+  if (!group) {
+    return "";
+  }
+
   return String(
     instance.values[group.prop] ??
       group.default ??
       group.options[0]?.value ??
       ""
   );
-}
+};
 
-function VariantStyles({
+const VariantStyles = ({
   projectId,
   directionId,
   instance,
@@ -461,24 +516,30 @@ function VariantStyles({
   directionId: string;
   instance: ComponentInstance;
   onStatus: (status: Status) => void;
-}) {
+}) => {
   const cva = instance.component?.cva;
   const groups = cva?.variants ?? [];
   const [prop, setProp] = useState(groups[0]?.prop ?? "");
   const group = groups.find((entry) => entry.prop === prop) ?? groups[0];
   const current = initialValue(instance, group);
   const [value, setValue] = useState(current);
+
   const option =
     group?.options.find((entry) => entry.value === value) ?? group?.options[0];
+
   useEffect(() => setValue(current), [current]);
-  const component = instance.component;
-  if (!cva || !group || !option || !component) return null;
+  const { component } = instance;
+
+  if (!cva || !group || !option || !component) {
+    return null;
+  }
+
   const send = (body: ClassBody) => {
     onStatus({ kind: "saving" });
     propsApi
       .variantClasses(projectId, directionId, {
-        file: component.file,
         cva: cva.name,
+        file: component.file,
         prop: group.prop,
         value: option.value,
         ...body,
@@ -495,8 +556,10 @@ function VariantStyles({
         onStatus({ kind: "error", text: messageOf(error) })
       );
   };
+
   const uses =
     instance.uses > 1 ? ` (${instance.uses} uses in this project)` : "";
+
   return (
     <div className="prp-variant" aria-label="Variant styles">
       <p className="ins-note prp-warn" role="note">
@@ -512,7 +575,7 @@ function VariantStyles({
       />
       <ClassChips
         label={`${group.prop} ${option.value} classes`}
-        classes={option.classes.split(/\s+/).filter(Boolean)}
+        classes={option.classes.split(/\s+/u).filter(Boolean)}
         editable={option.editable}
         onRemove={(name) => send({ classes: { remove: [name] } })}
       />
@@ -525,23 +588,33 @@ function VariantStyles({
       )}
     </div>
   );
-}
+};
 
-function PxField({
+const PxField = ({
   label,
   onCommit,
 }: {
   label: string;
   onCommit: (px: number | null) => void;
-}) {
+}) => {
   const [text, setText] = useState("");
+
   const commit = () => {
     const trimmed = text.trim();
-    if (trimmed === "") return;
-    const px = Number(trimmed.replace(/px$/, ""));
-    if (Number.isFinite(px) && px >= 0) onCommit(px);
+
+    if (trimmed === "") {
+      return;
+    }
+
+    const px = Number(trimmed.replace(/px$/u, ""));
+
+    if (Number.isFinite(px) && px >= 0) {
+      onCommit(px);
+    }
+
     setText("");
   };
+
   return (
     <div className="ins-field">
       <span className="ins-scrub static">
@@ -559,9 +632,9 @@ function PxField({
       />
     </div>
   );
-}
+};
 
-function PropRows({
+const PropRows = ({
   instance,
   component,
   disabled,
@@ -573,9 +646,10 @@ function PropRows({
   disabled: boolean;
   onChange: (name: string, value: PropValue | null) => void;
   onAuthor?: ((prop: string, mode: SheetMode) => void) | undefined;
-}) {
+}) => {
   const variants = component.props.filter((spec) => spec.from === "variant");
   const others = component.props.filter((spec) => spec.from !== "variant");
+
   return (
     <>
       {variants.length > 0 && (
@@ -616,9 +690,9 @@ function PropRows({
       )}
     </>
   );
-}
+};
 
-function SwapButton({
+const SwapButton = ({
   projectId,
   directionId,
   instance,
@@ -628,9 +702,10 @@ function SwapButton({
   directionId: string;
   instance: ComponentInstance;
   onStatus: (status: Status) => void;
-}) {
+}) => {
   const [open, setOpen] = useState(false);
   const close = useCallback(() => setOpen(false), []);
+
   return (
     <div className="prp-swap">
       <button
@@ -662,9 +737,9 @@ function SwapButton({
       )}
     </div>
   );
-}
+};
 
-function AuthorSheet({
+const AuthorSheet = ({
   projectId,
   directionId,
   instance,
@@ -680,7 +755,7 @@ function AuthorSheet({
   onClose: () => void;
   onUse: (name: string, value: PropValue | null) => void;
   onStatus: (status: Status) => void;
-}) {
+}) => {
   const onSaved = useCallback(
     (saved: {
       key: string;
@@ -689,17 +764,30 @@ function AuthorSheet({
       value: string;
     }) => {
       onClose();
-      if (saved.shouldUseOnSelected) onUse(saved.key, saved.value);
-      else onStatus({ kind: "saved", text: saved.title });
+
+      if (saved.shouldUseOnSelected) {
+        onUse(saved.key, saved.value);
+      } else {
+        onStatus({ kind: "saved", text: saved.title });
+      }
     },
     [onClose, onUse, onStatus]
   );
-  if (!sheet) return null;
-  const component = instance.component;
+
+  if (!sheet) {
+    return null;
+  }
+
+  const { component } = instance;
+
   const group = component?.cva?.variants.find(
     (entry) => entry.prop === sheet.prop
   );
-  if (!component || !group) return null;
+
+  if (!component || !group) {
+    return null;
+  }
+
   return (
     <Suspense fallback={null}>
       <VariantSheet
@@ -714,12 +802,17 @@ function AuthorSheet({
       />
     </Suspense>
   );
-}
+};
 
-function StatusLine({ status }: { status: Status }) {
-  if (status.kind === "idle") return null;
-  if (status.kind === "saving")
+const StatusLine = ({ status }: { status: Status }) => {
+  if (status.kind === "idle") {
+    return null;
+  }
+
+  if (status.kind === "saving") {
     return <p className="ins-note prp-status">Saving…</p>;
+  }
+
   return (
     <p
       className={`ins-note prp-status${status.kind === "error" ? " error" : ""}`}
@@ -728,7 +821,7 @@ function StatusLine({ status }: { status: Status }) {
       {status.text}
     </p>
   );
-}
+};
 
 export default function InspectorProps({
   projectId,
@@ -741,20 +834,31 @@ export default function InspectorProps({
     directionId,
     selection
   );
+
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const [styles, setStyles] = useState(false);
+
   const [sheet, setSheet] = useState<{ prop: string; mode: SheetMode } | null>(
     null
   );
+
   const closeSheet = useCallback(() => setSheet(null), []);
+
   const openSheet = useCallback(
     (prop: string, mode: SheetMode) => {
-      if (editable) setSheet({ prop, mode });
+      if (editable) {
+        setSheet({ mode, prop });
+      }
     },
     [editable]
   );
+
   const component = instance?.component;
-  if (!instance || !component || !directionId) return null;
+
+  if (!instance || !component || !directionId) {
+    return null;
+  }
+
   const onChange = (name: string, value: PropValue | null) => {
     setStatus({ kind: "saving" });
     setInstance({
@@ -769,7 +873,10 @@ export default function InspectorProps({
     propsApi
       .setProps(projectId, directionId, instance.use, { [name]: value })
       .then((result) => {
-        if (result.instance) setInstance(result.instance);
+        if (result.instance) {
+          setInstance(result.instance);
+        }
+
         setStatus(
           result.version &&
             (result.changed.length > 0 || result.removed.length > 0)
@@ -781,7 +888,9 @@ export default function InspectorProps({
         setStatus({ kind: "error", text: messageOf(error) })
       );
   };
+
   const disabled = !editable || status.kind === "saving";
+
   const chip = (
     <span
       className="prp-chip"
@@ -791,6 +900,7 @@ export default function InspectorProps({
       {component.name}
     </span>
   );
+
   return (
     <InspectorSection title="Component" className="prp" aside={chip}>
       <p className="prp-where">

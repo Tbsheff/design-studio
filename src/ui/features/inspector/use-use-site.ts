@@ -13,7 +13,7 @@ const useUseSite = (props: InspectorProps) => {
 
   const use =
     shared?.use && shared.name
-      ? { source: shared.use, component: shared.name }
+      ? { component: shared.name, source: shared.use }
       : null;
 
   const component = useElementClasses(
@@ -37,7 +37,7 @@ const useUseSite = (props: InspectorProps) => {
   return {
     editingUse,
     effective,
-    sharedEditing: shared ? { shared, editingUse, onToggle: toggle } : null,
+    sharedEditing: shared ? { editingUse, onToggle: toggle, shared } : null,
   };
 };
 

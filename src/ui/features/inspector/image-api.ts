@@ -1,29 +1,24 @@
 import { routes } from "../../../shared/actions/direct-edit/routes.js";
 import type { SelectionContext } from "../../../shared/contracts.js";
-import {
-  IMAGE_BYTES_MAX,
-  imageKindOf,
-  type SetImageRequest,
-} from "../../../shared/image.js";
+import { IMAGE_BYTES_MAX, imageKindOf } from "../../../shared/image.js";
+import type { SetImageRequest } from "../../../shared/image.js";
 import { call } from "../../platform/http.js";
 import { isApiError } from "./api-error.js";
 
-export function imageTargetOf(
+export const imageTargetOf = (
   selection: SelectionContext
-): SetImageRequest["target"] {
-  return {
-    source: selection.source,
-    tag: selection.tag.toLowerCase(),
-    selector: selection.selector,
-    background: imageKindOf(selection) === "background",
-    ...(selection.source ? {} : { html: selection.outerHTML.slice(0, 4000) }),
-    ...(selection.owners?.length ? { owners: selection.owners } : {}),
-  };
-}
+): SetImageRequest["target"] => ({
+  background: imageKindOf(selection) === "background",
+  selector: selection.selector,
+  source: selection.source,
+  tag: selection.tag.toLowerCase(),
+  ...(selection.source ? {} : { html: selection.outerHTML.slice(0, 4000) }),
+  ...(selection.owners?.length ? { owners: selection.owners } : {}),
+});
 
-export async function fileData(
+export const fileData = async (
   file: Blob & { name?: string }
-): Promise<{ name: string; data: string }> {
+): Promise<{ name: string; data: string }> => {
   if (file.size > IMAGE_BYTES_MAX) {
     throw new Error("The image is larger than 10 MB.");
   }
@@ -40,12 +35,12 @@ export async function fileData(
     file.type.split("/")[1]?.replace("svg+xml", "svg").replace("jpeg", "jpg") ??
     "png";
 
-  return { name: file.name || `pasted-image.${ext}`, data: btoa(binary) };
-}
+  return { data: btoa(binary), name: file.name || `pasted-image.${ext}` };
+};
 
-export function imageFileOf(
+export const imageFileOf = (
   list: DataTransferItemList | FileList | null | undefined
-): File | null {
+): File | null => {
   if (!list) {
     return null;
   }
@@ -64,9 +59,9 @@ export function imageFileOf(
   }
 
   return null;
-}
+};
 
-export async function clipboardImage(): Promise<Blob | null> {
+export const clipboardImage = async (): Promise<Blob | null> => {
   const items = await navigator.clipboard.read();
 
   for (const item of items) {
@@ -78,9 +73,9 @@ export async function clipboardImage(): Promise<Blob | null> {
   }
 
   return null;
-}
+};
 
-export function imageError(error: unknown): string {
+export const imageError = (error: unknown): string => {
   if (
     isApiError(error) &&
     typeof (error.data as { message?: unknown } | undefined)?.message ===
@@ -94,7 +89,7 @@ export function imageError(error: unknown): string {
   }
 
   return "The image could not be placed.";
-}
+};
 
 export const imageApi = {
   set: (pid: string, did: string, request: SetImageRequest) =>

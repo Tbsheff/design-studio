@@ -13,22 +13,20 @@ export interface ParentLayout {
 }
 
 export const SIZE_MODES: { value: SizeMode; label: string }[] = [
-  { value: "fixed", label: "Fixed" },
-  { value: "hug", label: "Hug" },
-  { value: "fill", label: "Fill" },
+  { label: "Fixed", value: "fixed" },
+  { label: "Hug", value: "hug" },
+  { label: "Fill", value: "fill" },
 ];
 
 const HUG_VALUES = new Set(["fit-content", "max-content", "min-content"]);
 
-export function isFlexDisplay(display: string): boolean {
-  return display === "flex" || display === "inline-flex";
-}
+export const isFlexDisplay = (display: string): boolean =>
+  display === "flex" || display === "inline-flex";
 
-export function isGridDisplay(display: string): boolean {
-  return display === "grid" || display === "inline-grid";
-}
+export const isGridDisplay = (display: string): boolean =>
+  display === "grid" || display === "inline-grid";
 
-export function parentLayout(styles: Record<string, string>): ParentLayout {
+export const parentLayout = (styles: Record<string, string>): ParentLayout => {
   const display = (styles["parent-display"] ?? "").trim();
   const direction = (styles["parent-flex-direction"] ?? "").trim();
 
@@ -37,18 +35,18 @@ export function parentLayout(styles: Record<string, string>): ParentLayout {
     grid: display === "grid" || display === "inline-grid",
     row: !direction.startsWith("column"),
   };
-}
+};
 
-export function axisRole(axis: Axis, parent: ParentLayout): AxisRole {
+export const axisRole = (axis: Axis, parent: ParentLayout): AxisRole => {
   if (!parent.flex) {
     return "none";
   }
 
   return (axis === "width") === parent.row ? "main" : "cross";
-}
+};
 
-export function flexGrow(flex: string): number {
-  const first = flex.trim().split(/\s+/)[0] ?? "";
+export const flexGrow = (flex: string): number => {
+  const first = flex.trim().split(/\s+/u)[0] ?? "";
 
   if (first === "auto") {
     return 1;
@@ -57,7 +55,7 @@ export function flexGrow(flex: string): number {
   const grow = Number(first);
 
   return Number.isFinite(grow) ? grow : 0;
-}
+};
 
 type Values = Pick<StyleValues, Axis | "flex" | "align-self">;
 
@@ -78,20 +76,18 @@ const BLOCK_DISPLAYS = new Set([
   "flow-root",
 ]);
 
-export function sizeFacts(styles: Record<string, string>): SizeFacts {
-  return {
-    authored: {
-      width: (styles["authored-width"] ?? "").trim(),
-      height: (styles["authored-height"] ?? "").trim(),
-    },
-    display: (styles.display ?? "").trim(),
-    parentAlignItems: (styles["parent-align-items"] ?? "").trim(),
-    parentJustifyItems: (styles["parent-justify-items"] ?? "").trim(),
-    justifySelf: (styles["own-justify-self"] ?? "").trim(),
-  };
-}
+export const sizeFacts = (styles: Record<string, string>): SizeFacts => ({
+  authored: {
+    height: (styles["authored-height"] ?? "").trim(),
+    width: (styles["authored-width"] ?? "").trim(),
+  },
+  display: (styles.display ?? "").trim(),
+  justifySelf: (styles["own-justify-self"] ?? "").trim(),
+  parentAlignItems: (styles["parent-align-items"] ?? "").trim(),
+  parentJustifyItems: (styles["parent-justify-items"] ?? "").trim(),
+});
 
-function stretchesByDefault(values: Values, facts: SizeFacts): boolean {
+const stretchesByDefault = (values: Values, facts: SizeFacts): boolean => {
   const self = values["align-self"].trim();
 
   if (self === "stretch") {
@@ -106,11 +102,15 @@ function stretchesByDefault(values: Values, facts: SizeFacts): boolean {
       facts.parentAlignItems === "normal" ||
       facts.parentAlignItems === "stretch")
   );
-}
+};
 
 const STRETCHY = new Set(["", "auto", "normal", "stretch", "legacy"]);
 
-function gridStretches(axis: Axis, values: Values, facts: SizeFacts): boolean {
+const gridStretches = (
+  axis: Axis,
+  values: Values,
+  facts: SizeFacts
+): boolean => {
   const self =
     axis === "width" ? facts.justifySelf : values["align-self"].trim();
 
@@ -125,14 +125,14 @@ function gridStretches(axis: Axis, values: Values, facts: SizeFacts): boolean {
   return STRETCHY.has(
     axis === "width" ? facts.parentJustifyItems : facts.parentAlignItems
   );
-}
+};
 
-function naturalMode(
+const naturalMode = (
   axis: Axis,
   values: Values,
   parent: ParentLayout,
   facts: SizeFacts
-): SizeMode {
+): SizeMode => {
   const role = axisRole(axis, parent);
 
   if (role === "main") {
@@ -148,9 +148,9 @@ function naturalMode(
   }
 
   return axis === "width" && BLOCK_DISPLAYS.has(facts.display) ? "fill" : "hug";
-}
+};
 
-function authoredMode(size: string): SizeMode | null {
+const authoredMode = (size: string): SizeMode | null => {
   if (size === "" || size === "auto") {
     return null;
   }
@@ -164,14 +164,14 @@ function authoredMode(size: string): SizeMode | null {
   }
 
   return "fixed";
-}
+};
 
-export function sizeModeOf(
+export const sizeModeOf = (
   axis: Axis,
   values: Values,
   parent: ParentLayout,
   facts?: SizeFacts
-): SizeMode {
+): SizeMode => {
   const role = axisRole(axis, parent);
 
   if (role === "main" && flexGrow(values.flex) > 0) {
@@ -190,13 +190,13 @@ export function sizeModeOf(
     authoredMode(facts.authored[axis]) ??
     naturalMode(axis, values, parent, facts)
   );
-}
+};
 
-function clearing(
+const clearing = (
   axis: Axis,
   values: Values,
   parent: ParentLayout
-): Partial<StyleValues> {
+): Partial<StyleValues> => {
   const role = axisRole(axis, parent);
 
   return {
@@ -205,14 +205,14 @@ function clearing(
       ? { "align-self": "" }
       : {}),
   };
-}
+};
 
-function fillPatch(
+const fillPatch = (
   axis: Axis,
   values: Values,
   parent: ParentLayout,
   facts: SizeFacts
-): Partial<StyleValues> {
+): Partial<StyleValues> => {
   const role = axisRole(axis, parent);
   const size = facts.authored[axis] ? { [axis]: "" } : {};
 
@@ -227,16 +227,16 @@ function fillPatch(
   }
 
   return { [axis]: "100%" };
-}
+};
 
-export function sizePatch(
+export const sizePatch = (
   axis: Axis,
   mode: SizeMode,
   values: Values,
   parent: ParentLayout,
   usedPx: string,
   facts?: SizeFacts
-): Partial<StyleValues> {
+): Partial<StyleValues> => {
   const clear = clearing(axis, values, parent);
 
   if (mode === "fixed") {
@@ -255,9 +255,9 @@ export function sizePatch(
     axis,
     {
       ...values,
-      flex: "",
       "align-self":
         values["align-self"] === "stretch" ? "" : values["align-self"],
+      flex: "",
     },
     parent,
     facts
@@ -275,15 +275,15 @@ export function sizePatch(
     [axis]: natural === "hug" && !sizedByRule ? "" : "fit-content",
     ...clear,
   };
-}
+};
 
-function legacyPatch(
+const legacyPatch = (
   axis: Axis,
   mode: SizeMode,
   values: Values,
   parent: ParentLayout,
   clear: Partial<StyleValues>
-): Partial<StyleValues> {
+): Partial<StyleValues> => {
   const role = axisRole(axis, parent);
 
   const authoredSize =
@@ -302,7 +302,7 @@ function legacyPatch(
   }
 
   return { [axis]: "100%" };
-}
+};
 
 export interface AlignCell {
   justify: string;
@@ -311,7 +311,7 @@ export interface AlignCell {
 
 const AXIS_VALUES = ["flex-start", "center", "flex-end"] as const;
 
-export function alignSlot(value: string): number | null {
+export const alignSlot = (value: string): number | null => {
   const v = value.trim();
 
   if (
@@ -333,22 +333,26 @@ export function alignSlot(value: string): number | null {
   }
 
   return null;
-}
+};
 
-export function alignCell(col: number, row: number, isRow: boolean): AlignCell {
+export const alignCell = (
+  col: number,
+  row: number,
+  isRow: boolean
+): AlignCell => {
   const across = AXIS_VALUES[col] ?? "flex-start";
   const down = AXIS_VALUES[row] ?? "flex-start";
 
   return isRow
-    ? { justify: across, align: down }
-    : { justify: down, align: across };
-}
+    ? { align: down, justify: across }
+    : { align: across, justify: down };
+};
 
-export function activeCell(
+export const activeCell = (
   justify: string,
   align: string,
   isRow: boolean
-): { col: number; row: number } | null {
+): { col: number; row: number } | null => {
   const j = alignSlot(justify);
 
   const a =
@@ -361,4 +365,4 @@ export function activeCell(
   }
 
   return isRow ? { col: j, row: a } : { col: a, row: j };
-}
+};

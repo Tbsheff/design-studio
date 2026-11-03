@@ -7,21 +7,20 @@ export interface ProxyOptions {
   mixed?: boolean;
 }
 
-export function proxyEdit(
+export const proxyEdit = (
   edit: DirectEdit,
   slot: DirectStyleProperty,
   value: string,
   write: (next: string) => Partial<StyleValues>,
   real: DirectStyleProperty[],
   options: ProxyOptions = {}
-): DirectEdit {
+): DirectEdit => {
   const realMixed = real.some((prop) => edit.mixed.has(prop));
   const part = realMixed ? options.part : undefined;
   const mixed = options.mixed ?? realMixed;
 
   return {
     ...edit,
-    values: { ...edit.values, [slot]: value },
     mixed: mixed ? new Set([slot]) : new Set<DirectStyleProperty>(),
     preview: (patch) => {
       const next = patch[slot];
@@ -36,11 +35,12 @@ export function proxyEdit(
         edit.preview(write(next));
       }
     },
+    revert: () => edit.revert(real),
     shift: (_props, delta, bounds) => {
       if (part) {
         edit.shift(real, delta, bounds, part);
       }
     },
-    revert: () => edit.revert(real),
+    values: { ...edit.values, [slot]: value },
   };
-}
+};

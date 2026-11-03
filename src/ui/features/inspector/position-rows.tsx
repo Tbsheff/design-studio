@@ -3,42 +3,38 @@ import { useCallback, useEffect, useState } from "react";
 import type { SelectionContext } from "../../../shared/contracts.js";
 import { Icon } from "../../kit/Icon.js";
 import { UiSelect } from "../../kit/UiSelect.js";
-import {
-  PIN_OPTIONS,
-  pinFields,
-  pinModeOf,
-  pinPatch,
-  type InsetProp,
-  type PinAxis,
-  type PinMode,
-} from "./constraints.js";
+import { PIN_OPTIONS, pinFields, pinModeOf, pinPatch } from "./constraints.js";
+import type { InsetProp, PinAxis, PinMode } from "./constraints.js";
 import { write } from "./layout-keys.js";
 import { NumberField } from "./number-field.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 
-const IN_FLOW = { position: "", top: "", right: "", bottom: "", left: "" };
+const IN_FLOW = { bottom: "", left: "", position: "", right: "", top: "" };
 
-function isPositioned(value: string): boolean {
-  return value === "absolute" || value === "fixed";
-}
+const isPositioned = (value: string): boolean =>
+  value === "absolute" || value === "fixed";
 
-function PositionRows({
+const PositionRows = ({
   edit,
   selection,
 }: {
   edit: DirectEdit;
   selection: SelectionContext;
-}) {
+}) => {
   const on = isPositioned(edit.values.position);
+
   const toggle = () => {
-    if (on) write(edit, IN_FLOW);
-    else
+    if (on) {
+      write(edit, IN_FLOW);
+    } else {
       write(edit, {
-        position: "absolute",
         left: selection.styles["offset-left"] || "0px",
+        position: "absolute",
         top: selection.styles["offset-top"] || "0px",
       });
+    }
   };
+
   return (
     <>
       <div className="ins-layout-row">
@@ -60,13 +56,13 @@ function PositionRows({
       {on && <ConstraintRows edit={edit} selection={selection} />}
     </>
   );
-}
+};
 
 const INSET_FIELDS: Record<InsetProp, { short: string; label: string }> = {
-  left: { short: "X", label: "Left (X)" },
-  right: { short: "R", label: "Right" },
-  top: { short: "Y", label: "Top (Y)" },
-  bottom: { short: "B", label: "Bottom" },
+  bottom: { label: "Bottom", short: "B" },
+  left: { label: "Left (X)", short: "X" },
+  right: { label: "Right", short: "R" },
+  top: { label: "Top (Y)", short: "Y" },
 };
 
 const PIN_TIPS: Record<PinAxis, string> = {
@@ -76,39 +72,46 @@ const PIN_TIPS: Record<PinAxis, string> = {
 
 const PIN_RESELECT_MS = [400, 1000, 2000, 3500, 6000];
 
-type QueuedPins = {
+interface QueuedPins {
   selector: string;
   pins: Partial<Record<PinAxis, { mode: PinMode; from: PinMode }>>;
-};
+}
 
-function pinStyles(
+const pinStyles = (
   edit: DirectEdit,
   selection: SelectionContext
-): Record<string, string> {
+): Record<string, string> => {
   const margins = (
     ["margin-top", "margin-right", "margin-bottom", "margin-left"] as const
   ).map((prop) => [prop, edit.values[prop] ?? ""]);
+
   return { ...selection.styles, ...Object.fromEntries(margins) };
-}
+};
 
-function hasPinGeometry(selection: SelectionContext): boolean {
-  return (
-    selection.styles["container-width"] !== undefined &&
-    selection.styles["pin-left"] !== undefined
-  );
-}
+const hasPinGeometry = (selection: SelectionContext): boolean =>
+  selection.styles["container-width"] !== undefined &&
+  selection.styles["pin-left"] !== undefined;
 
-function useQueuedPins(
+const useQueuedPins = (
   edit: DirectEdit,
   selection: SelectionContext,
   applied: (modes: Partial<Record<PinAxis, PinMode>>) => void
-) {
+) => {
   const [queued, setQueued] = useState<QueuedPins | null>(null);
   const ready = hasPinGeometry(selection);
   useEffect(() => {
-    if (!queued) return;
-    if (queued.selector !== selection.selector) return setQueued(null);
-    if (!ready) return;
+    if (!queued) {
+      return;
+    }
+
+    if (queued.selector !== selection.selector) {
+      return setQueued(null);
+    }
+
+    if (!ready) {
+      return;
+    }
+
     const patch = (
       Object.entries(queued.pins) as [
         PinAxis,
@@ -121,6 +124,7 @@ function useQueuedPins(
       }),
       {}
     );
+
     setQueued(null);
     applied(
       Object.fromEntries(
@@ -131,24 +135,30 @@ function useQueuedPins(
     edit.commit();
   }, [queued, ready, selection, edit, applied]);
   const waiting = queued !== null && !ready;
-  const reselect = edit.reselect;
+  const { reselect } = edit;
   useEffect(() => {
-    if (!waiting) return;
+    if (!waiting) {
+      return;
+    }
+
     const timers = PIN_RESELECT_MS.map((ms) => window.setTimeout(reselect, ms));
+
     return () => timers.forEach((timer) => window.clearTimeout(timer));
   }, [waiting, reselect]);
+
   const queue = (axis: PinAxis, mode: PinMode, from: PinMode) =>
     setQueued((prev) => ({
-      selector: selection.selector,
       pins: {
         ...(prev?.selector === selection.selector ? prev.pins : {}),
-        [axis]: { mode, from: prev?.pins[axis]?.from ?? from },
+        [axis]: { from: prev?.pins[axis]?.from ?? from, mode },
       },
+      selector: selection.selector,
     }));
-  return { ready, queue };
-}
 
-function PinSelect({
+  return { queue, ready };
+};
+
+const PinSelect = ({
   axis,
   mode,
   edit,
@@ -164,14 +174,22 @@ function PinSelect({
   onPick: (axis: PinAxis, mode: PinMode) => void;
   ready: boolean;
   queue: (axis: PinAxis, mode: PinMode, from: PinMode) => void;
-}) {
+}) => {
   const change = (next: PinMode) => {
-    if (next === mode) return;
+    if (next === mode) {
+      return;
+    }
+
     onPick(axis, next);
-    if (!ready) return queue(axis, next, mode);
+
+    if (!ready) {
+      return queue(axis, next, mode);
+    }
+
     edit.preview(pinPatch(axis, next, pinStyles(edit, selection), mode), true);
     edit.commit();
   };
+
   return (
     <div
       className="ins-field select ins-pin"
@@ -190,25 +208,32 @@ function PinSelect({
       />
     </div>
   );
-}
+};
 
-function usePinModes(selection: SelectionContext): {
+const usePinModes = (
+  selection: SelectionContext
+): {
   modes: Record<PinAxis, PinMode>;
   pick: (next: Partial<Record<PinAxis, PinMode>>) => void;
-} {
+} => {
   const authored = ["left", "right", "top", "bottom"]
     .map((side) => selection.styles[`authored-${side}`] ?? "")
     .join("|");
+
   const key = `${selection.selector}|${authored}`;
+
   const [picked, setPicked] = useState<{
     key: string;
     modes: Partial<Record<PinAxis, PinMode>>;
   }>({ key, modes: {} });
+
   const fresh = picked.key === key ? picked.modes : {};
+
   const modes = {
     x: fresh.x ?? pinModeOf("x", selection.styles),
     y: fresh.y ?? pinModeOf("y", selection.styles),
   };
+
   const pick = useCallback(
     (next: Partial<Record<PinAxis, PinMode>>) =>
       setPicked((prev) => ({
@@ -220,19 +245,21 @@ function usePinModes(selection: SelectionContext): {
       })),
     [key, selection.selector]
   );
-  return { modes, pick };
-}
 
-function ConstraintRows({
+  return { modes, pick };
+};
+
+const ConstraintRows = ({
   edit,
   selection,
 }: {
   edit: DirectEdit;
   selection: SelectionContext;
-}) {
+}) => {
   const { modes, pick } = usePinModes(selection);
   const { ready, queue } = useQueuedPins(edit, selection, pick);
   const fields = [...pinFields("x", modes.x), ...pinFields("y", modes.y)];
+
   return (
     <>
       {fields.length > 0 && (
@@ -241,7 +268,7 @@ function ConstraintRows({
             <NumberField
               key={prop}
               short={INSET_FIELDS[prop].short}
-              spec={{ prop, label: INSET_FIELDS[prop].label, edit }}
+              spec={{ edit, label: INSET_FIELDS[prop].label, prop }}
             />
           ))}
         </div>
@@ -272,6 +299,6 @@ function ConstraintRows({
       </div>
     </>
   );
-}
+};
 
 export { PositionRows, isPositioned };

@@ -1,7 +1,7 @@
-import { type MutableRefObject } from "react";
+import type { MutableRefObject } from "react";
 
 import type { SelectionContext } from "../../../shared/contracts.js";
-import { type ImageFit } from "../../../shared/image.js";
+import type { ImageFit } from "../../../shared/image.js";
 import type { PreviewPort } from "../../platform/bridge.js";
 
 interface Props {
@@ -15,19 +15,19 @@ interface Props {
 const RESELECT_AFTER_MS = [700, 1800];
 
 const FIT_LABEL: Record<ImageFit, string> = {
-  cover: "Cover",
   contain: "Contain",
+  cover: "Cover",
   fill: "Fill",
 };
 
 const FIT_TIP: Record<ImageFit, string> = {
-  cover: "Fill the box and crop the edges",
   contain: "Show the whole image inside the box",
+  cover: "Fill the box and crop the edges",
   fill: "Stretch the image to the box",
 };
 
 const attrOf = (html: string, name: string): string | null => {
-  const open = /^<[^>]*>/.exec(html)?.[0] ?? "";
+  const open = /^<[^>]*>/u.exec(html)?.[0] ?? "";
   const match = new RegExp(`\\s${name}="([^"]*)"`, "i").exec(open);
 
   if (!match) {
@@ -53,7 +53,7 @@ const currentFit = (
     return raw;
   }
 
-  return background && /^100% 100%$/.test(raw) ? "fill" : null;
+  return background && /^100% 100%$/u.test(raw) ? "fill" : null;
 };
 
 const sourceName = (
@@ -61,14 +61,14 @@ const sourceName = (
   background: boolean
 ): string => {
   const raw = background
-    ? (/url\(["']?([^"')]+)/.exec(
+    ? (/url\(["']?([^"')]+)/u.exec(
         selection.styles["background-image"] ?? ""
       )?.[1] ?? "")
     : (attrOf(selection.outerHTML, "src") ?? "");
 
-  const nextUrl = /\/_next\/image\?(?:.*&)?url=([^&]+)/.exec(raw)?.[1];
+  const nextUrl = /\/_next\/image\?(?:.*&)?url=([^&]+)/u.exec(raw)?.[1];
   const path = nextUrl ? decodeURIComponent(nextUrl) : raw;
-  const last = path.split(/[?#]/)[0]?.split("/").pop() ?? "";
+  const last = path.split(/[?#]/u)[0]?.split("/").pop() ?? "";
 
   return last.startsWith("data:") || last === ""
     ? "Inline image"

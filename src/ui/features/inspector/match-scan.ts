@@ -1,10 +1,5 @@
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type MutableRefObject,
-} from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { MutableRefObject } from "react";
 
 import type { SelectionContext } from "../../../shared/contracts.js";
 import type {
@@ -55,14 +50,14 @@ const KIND_EXAMPLE: Record<StyleKind, string> = {
   spacing: "--space-4 or p-4",
 };
 
-const CUSTOM_PROP = /(--[\w-]+)\s*:\s*([^;]+)/g;
+const CUSTOM_PROP = /(--[\w-]+)\s*:\s*([^;]+)/gu;
 
 interface PageVar {
   name: string;
   value: string;
 }
 
-function parseVars(css: string[]): PageVar[] {
+const parseVars = (css: string[]): PageVar[] => {
   const found = new Map<string, string>();
 
   for (const text of css) {
@@ -74,12 +69,12 @@ function parseVars(css: string[]): PageVar[] {
   }
 
   return [...found].map(([name, value]) => ({ name, value }));
-}
+};
 
-function usePageVars(
+const usePageVars = (
   port: MutableRefObject<PreviewPort | null>,
   open: boolean
-): PageVar[] {
+): PageVar[] => {
   const [vars, setVars] = useState<PageVar[]>([]);
   useEffect(() => {
     if (!open) {
@@ -99,17 +94,16 @@ function usePageVars(
   }, [port, open]);
 
   return vars;
-}
+};
 
-function rowKey(row: Pick<StyleValueRow, "kind" | "value">): string {
-  return `${row.kind}|${row.value}`;
-}
+const rowKey = (row: Pick<StyleValueRow, "kind" | "value">): string =>
+  `${row.kind}|${row.value}`;
 
-function requestStyles(
+const requestStyles = (
   port: PreviewPort | null,
   query: StyleQuery,
   select: boolean
-): Promise<{ result: StyleScanResult; selected: number } | null> {
+): Promise<{ result: StyleScanResult; selected: number } | null> => {
   const listen = port?.listen;
 
   if (!port || !listen) {
@@ -137,11 +131,11 @@ function requestStyles(
       resolve(value);
     }
 
-    port.post({ type: "find-styles", requestId, query, select });
+    port.post({ query, requestId, select, type: "find-styles" });
   });
-}
+};
 
-function lookupFor(tokens: DesignTokens | null): TokenLookup | null {
+const lookupFor = (tokens: DesignTokens | null): TokenLookup | null => {
   if (!tokens || tokens.entries.length === 0) {
     return null;
   }
@@ -151,13 +145,13 @@ function lookupFor(tokens: DesignTokens | null): TokenLookup | null {
 
     return state.kind === "token" ? state.match.cssVar : null;
   };
-}
+};
 
-function useStyleScan(
+const useStyleScan = (
   port: MutableRefObject<PreviewPort | null>,
   query: StyleQuery,
   key: string
-) {
+) => {
   const [hits, setHits] = useState<StyleHit[] | null>(null);
   const [nonce, setNonce] = useState(0);
   const queryRef = useRef(query);
@@ -189,7 +183,7 @@ function useStyleScan(
   }, [port]);
 
   return { hits, refresh: useCallback(() => setNonce((n) => n + 1), []) };
-}
+};
 
 export {
   KIND_EXAMPLE,

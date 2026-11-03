@@ -16,18 +16,18 @@ export interface ElementClasses {
 }
 
 const NO_CLASSES: ElementClasses = {
-  tailwind: null,
   element: null,
+  tailwind: null,
   variants: null,
 };
 
-export function useElementClasses(
+export const useElementClasses = (
   projectId: string,
   directionId: string | null,
   source: SourceLoc | null,
   savedAt: number,
   variant = ""
-): ElementClasses {
+): ElementClasses => {
   const [info, setInfo] = useState<ElementClasses>(NO_CLASSES);
   const file = source?.file;
   const line = source?.line;
@@ -46,12 +46,12 @@ export function useElementClasses(
 
     let live = true;
     api
-      .elementClasses(projectId, directionId, { file, line, col }, variant)
+      .elementClasses(projectId, directionId, { col, file, line }, variant)
       .then((result) => {
         if (live) {
           setInfo({
-            tailwind: result.tailwind,
             element: result.element ?? null,
+            tailwind: result.tailwind,
             variants: result.variants ?? null,
           });
         }
@@ -68,22 +68,22 @@ export function useElementClasses(
   }, [projectId, directionId, file, line, col, savedAt, variant]);
 
   return info;
-}
+};
 
-export function domClasses(outerHTML: string): string[] {
+export const domClasses = (outerHTML: string): string[] => {
   const raw =
-    /^<[^>]*\bclass="([^"]*)"/.exec(outerHTML.slice(0, 4000))?.[1] ?? "";
+    /^<[^>]*\bclass="([^"]*)"/u.exec(outerHTML.slice(0, 4000))?.[1] ?? "";
 
-  return raw.split(/\s+/).filter(Boolean);
-}
+  return raw.split(/\s+/u).filter(Boolean);
+};
 
-export function ClassLine({
+export const ClassLine = ({
   info,
   resolved,
 }: {
   info: TailwindOutcome | null;
   resolved: string[];
-}) {
+}) => {
   if (!info || info.mode === "none") {
     return null;
   }
@@ -114,4 +114,4 @@ export function ClassLine({
       {info.note && <p className="ins-note ins-classes-note">{info.note}</p>}
     </InspectorSection>
   );
-}
+};

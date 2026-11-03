@@ -1,6 +1,7 @@
 import { useModalDialog } from "../../kit/use-popover.js";
 import { copy } from "./copy.js";
-import { unsavedLabel, type EditSession } from "./use-edit-session.js";
+import { unsavedLabel } from "./use-edit-session.js";
+import type { EditSession } from "./use-edit-session.js";
 
 const LeaveDialog = ({ session }: { session: EditSession }) => {
   const dialog = useModalDialog(() => void session.answer("cancel"));

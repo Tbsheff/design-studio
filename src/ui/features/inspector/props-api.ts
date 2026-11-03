@@ -51,6 +51,13 @@ const d = (pid: string, did: string) =>
   `/api/projects/${encodeURIComponent(pid)}/d/${encodeURIComponent(did)}`;
 
 export const propsApi = {
+  components: (pid: string, did: string) =>
+    call(routes.listPropsComponentsDirectEdit, {
+      cursor: null,
+      directionId: did,
+      limit: COMPONENT_PAGE_LIMIT,
+      projectId: pid,
+    }),
   instance: async (
     pid: string,
     did: string,
@@ -93,6 +100,14 @@ export const propsApi = {
       directionId: did,
       projectId: pid,
     }),
+  variantPreview: (pid: string, did: string, query: VariantPreviewQuery) =>
+    getBlob(
+      `${d(pid, did)}/component-variant/preview?${new URLSearchParams(
+        Object.entries(query).filter(
+          (entry): entry is [string, string] => typeof entry[1] === "string"
+        )
+      ).toString()}`
+    ),
   writeVariant: (
     pid: string,
     did: string,
@@ -102,23 +117,8 @@ export const propsApi = {
     json<ComponentVariantResult & { png: string | null }>(
       "POST",
       `${d(pid, did)}/component-variant`,
-      { target, change }
+      { change, target }
     ),
-  variantPreview: (pid: string, did: string, query: VariantPreviewQuery) =>
-    getBlob(
-      `${d(pid, did)}/component-variant/preview?${new URLSearchParams(
-        Object.entries(query).filter(
-          (entry): entry is [string, string] => typeof entry[1] === "string"
-        )
-      ).toString()}`
-    ),
-  components: (pid: string, did: string) =>
-    call(routes.listPropsComponentsDirectEdit, {
-      cursor: null,
-      directionId: did,
-      limit: COMPONENT_PAGE_LIMIT,
-      projectId: pid,
-    }),
 };
 
 export type { VariantPreviewQuery };

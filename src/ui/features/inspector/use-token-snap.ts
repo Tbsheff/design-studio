@@ -8,18 +8,18 @@ import {
   useState,
 } from "react";
 
-import {
-  TOKEN_GROUP_FOR_PROPERTY,
-  type CompiledTokenEntry,
-  type DirectStyleProperty,
+import { TOKEN_GROUP_FOR_PROPERTY } from "../../../shared/contracts.js";
+import type {
+  CompiledTokenEntry,
+  DirectStyleProperty,
 } from "../../../shared/contracts.js";
 import {
   isSnappable,
   isUnsetValue,
   matchForProperty,
   varName,
-  type TokenMode,
 } from "../../../shared/token-match.js";
+import type { TokenMode } from "../../../shared/token-match.js";
 import { uiStore, useUi } from "../../platform/storage.js";
 import type { DesignTokens } from "../design-system/use-design-system-state.js";
 import type { StyleValues } from "./css-values.js";
@@ -45,18 +45,16 @@ export interface TokenUi {
 
 export const TokenUiContext = createContext<TokenUi | null>(null);
 
-export function useTokenUi(): TokenUi | null {
-  return useContext(TokenUiContext);
-}
+export const useTokenUi = (): TokenUi | null => useContext(TokenUiContext);
 
 const NOTE_MS = 8000;
 
-export function snapTarget(
+export const snapTarget = (
   prop: DirectStyleProperty,
   value: string,
   entries: CompiledTokenEntry[],
   mode: TokenMode
-): string | null {
+): string | null => {
   const group = TOKEN_GROUP_FOR_PROPERTY[prop];
 
   if (!group || group === "font" || varName(value) || isUnsetValue(value)) {
@@ -66,11 +64,11 @@ export function snapTarget(
   const best = matchForProperty(prop, value, entries, mode)[0];
 
   return isSnappable(group, best) ? best.cssVar : null;
-}
+};
 
-export function useSnapSetting(
+export const useSnapSetting = (
   projectId: string
-): [boolean, (on: boolean) => void] {
+): [boolean, (on: boolean) => void] => {
   const ui = useUi();
   const on = ui.snapByProject[projectId] ?? true;
 
@@ -83,13 +81,13 @@ export function useSnapSetting(
   );
 
   return [on, set];
-}
+};
 
-export function useTokenSnap(tokens: DesignTokens | null, snapOn: boolean) {
+export const useTokenSnap = (tokens: DesignTokens | null, snapOn: boolean) => {
   const [note, setNote] = useState<SnapNote | null>(null);
   const kept = useRef<Partial<StyleValues>>({});
-  const live = useRef({ tokens, snapOn });
-  live.current = { tokens, snapOn };
+  const live = useRef({ snapOn, tokens });
+  live.current = { snapOn, tokens };
 
   const rewrite = useCallback((style: Partial<StyleValues>) => {
     const { tokens: t, snapOn: on } = live.current;
@@ -146,7 +144,7 @@ export function useTokenSnap(tokens: DesignTokens | null, snapOn: boolean) {
   }, [note]);
 
   return useMemo(
-    () => ({ rewrite, note, keepRaw, dismiss }),
+    () => ({ dismiss, keepRaw, note, rewrite }),
     [rewrite, note, keepRaw, dismiss]
   );
-}
+};

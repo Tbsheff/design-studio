@@ -29,29 +29,27 @@ const VOID = new Set([
   "embed",
 ]);
 
-function targetOf(selection: SelectionContext): InsertTarget {
-  return {
-    source: selection.source,
-    tag: selection.tag.toLowerCase(),
-    selector: selection.selector,
-    ...(selection.owners?.length ? { owners: selection.owners } : {}),
-  };
-}
+const targetOf = (selection: SelectionContext): InsertTarget => ({
+  selector: selection.selector,
+  source: selection.source,
+  tag: selection.tag.toLowerCase(),
+  ...(selection.owners?.length ? { owners: selection.owners } : {}),
+});
 
-async function clipboardText(): Promise<string | null> {
+const clipboardText = async (): Promise<string | null> => {
   try {
     return await navigator.clipboard.readText();
   } catch {
     return null;
   }
-}
+};
 
-async function openFigmaImport(
+const openFigmaImport = async (
   ids: { projectId: string; directionId: string },
   selection: SelectionContext,
   text: string,
   notify: (message: string) => void
-): Promise<void> {
+): Promise<void> => {
   const [{ createElement }, { createRoot }, dialog] = await Promise.all([
     import("react"),
     import("react-dom/client"),
@@ -71,21 +69,21 @@ async function openFigmaImport(
 
   root.render(
     createElement(dialog.FigmaImportDialog, {
+      canNest: !VOID.has(selection.tag.toLowerCase()),
       ids,
+      onClose: close,
+      onDone: notify,
       target: targetOf(selection),
       text,
-      canNest: !VOID.has(selection.tag.toLowerCase()),
-      onDone: notify,
-      onClose: close,
     })
   );
-}
+};
 
-export async function pasteJsx(
+export const pasteJsx = async (
   ids: { projectId: string; directionId: string },
   selection: SelectionContext,
   notify: (message: string) => void
-): Promise<void> {
+): Promise<void> => {
   const jsx = (await clipboardText())?.trim();
 
   if (jsx === undefined) {
@@ -110,9 +108,9 @@ export async function pasteJsx(
 
   try {
     const result = await insertApi.insertJsx(ids.projectId, ids.directionId, {
-      target: targetOf(selection),
-      position,
       jsx,
+      position,
+      target: targetOf(selection),
     });
 
     const added = (result.imports ?? []).filter((item) => item.added).length;
@@ -122,4 +120,4 @@ export async function pasteJsx(
   } catch (error) {
     notify(insertError(error));
   }
-}
+};

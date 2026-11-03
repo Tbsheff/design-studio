@@ -16,53 +16,53 @@ interface AxisKeys {
 
 const AXES: Record<PinAxis, AxisKeys> = {
   x: {
-    start: "left",
-    end: "right",
-    size: "width",
-    offset: "pin-left",
-    container: "container-width",
     box: "box-width",
+    container: "container-width",
+    end: "right",
     inner: "size-width",
+    offset: "pin-left",
+    size: "width",
+    start: "left",
   },
   y: {
-    start: "top",
-    end: "bottom",
-    size: "height",
-    offset: "pin-top",
-    container: "container-height",
     box: "box-height",
+    container: "container-height",
+    end: "bottom",
     inner: "size-height",
+    offset: "pin-top",
+    size: "height",
+    start: "top",
   },
 };
 
 export const PIN_OPTIONS: Record<PinAxis, { value: PinMode; label: string }[]> =
   {
     x: [
-      { value: "start", label: "Left" },
-      { value: "end", label: "Right" },
-      { value: "both", label: "Left and right" },
-      { value: "center", label: "Center" },
-      { value: "scale", label: "Scale" },
+      { label: "Left", value: "start" },
+      { label: "Right", value: "end" },
+      { label: "Left and right", value: "both" },
+      { label: "Center", value: "center" },
+      { label: "Scale", value: "scale" },
     ],
     y: [
-      { value: "start", label: "Top" },
-      { value: "end", label: "Bottom" },
-      { value: "both", label: "Top and bottom" },
-      { value: "center", label: "Center" },
-      { value: "scale", label: "Scale" },
+      { label: "Top", value: "start" },
+      { label: "Bottom", value: "end" },
+      { label: "Top and bottom", value: "both" },
+      { label: "Center", value: "center" },
+      { label: "Scale", value: "scale" },
     ],
   };
 
-function isSet(value: string | undefined): boolean {
+const isSet = (value: string | undefined): boolean => {
   const text = (value ?? "").trim();
 
   return text !== "" && text !== "auto";
-}
+};
 
-export function pinModeOf(
+export const pinModeOf = (
   axis: PinAxis,
   styles: Record<string, string>
-): PinMode {
+): PinMode => {
   const keys = AXES[axis];
   const start = styles[`authored-${keys.start}`] ?? "";
   const end = styles[`authored-${keys.end}`] ?? "";
@@ -79,22 +79,18 @@ export function pinModeOf(
     return "center";
   }
 
-  if (/%\s*$/.test(start)) {
+  if (/%\s*$/u.test(start)) {
     return "scale";
   }
 
   return "start";
-}
+};
 
-function px(value: number): string {
-  return `${Number(value.toFixed(2))}px`;
-}
+const px = (value: number): string => `${Number(value.toFixed(2))}px`;
 
-function percent(value: number): string {
-  return `${Number(value.toFixed(2))}%`;
-}
+const percent = (value: number): string => `${Number(value.toFixed(2))}%`;
 
-function centered(offset: number): string {
+const centered = (offset: number): string => {
   const rounded = Number(offset.toFixed(2));
 
   if (rounded === 0) {
@@ -102,20 +98,20 @@ function centered(offset: number): string {
   }
 
   return `calc(50% ${rounded < 0 ? "-" : "+"} ${Math.abs(rounded)}px)`;
-}
+};
 
-function numberOf(styles: Record<string, string>, key: string): number {
-  const value = parseFloat(styles[key] ?? "");
+const numberOf = (styles: Record<string, string>, key: string): number => {
+  const value = Number.parseFloat(styles[key] ?? "");
 
   return Number.isFinite(value) ? value : 0;
-}
+};
 
-export function pinPatch(
+export const pinPatch = (
   axis: PinAxis,
   mode: PinMode,
   styles: Record<string, string>,
   current: PinMode = pinModeOf(axis, styles)
-): Record<string, string> {
+): Record<string, string> => {
   const keys = AXES[axis];
   const pos = numberOf(styles, keys.offset);
   const size = numberOf(styles, keys.box);
@@ -158,9 +154,9 @@ export function pinPatch(
   }
 
   return { [keys.start]: px(pos), [keys.end]: "", ...fixed };
-}
+};
 
-export function pinFields(axis: PinAxis, mode: PinMode): InsetProp[] {
+export const pinFields = (axis: PinAxis, mode: PinMode): InsetProp[] => {
   const keys = AXES[axis];
 
   if (mode === "start") {
@@ -176,4 +172,4 @@ export function pinFields(axis: PinAxis, mode: PinMode): InsetProp[] {
   }
 
   return [];
-}
+};

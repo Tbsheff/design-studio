@@ -6,15 +6,14 @@ import { postToLiveFrames } from "../design-system/token-frames.js";
 
 const FRESH_MS = 5000;
 
-function patchIds(id: string, count: number): string[] {
-  return Array.from({ length: count }, (_, index) => `${id}:${index}`);
-}
+const patchIds = (id: string, count: number): string[] =>
+  Array.from({ length: count }, (_, index) => `${id}:${index}`);
 
-export function usePlannedEdits(
+export const usePlannedEdits = (
   projectId: string,
   directionId: string | null,
   live: boolean
-): void {
+): void => {
   const counts = useRef(new Map<string, number>());
   useProjectEvents(projectId, (event: StudioEvent) => {
     if (
@@ -34,9 +33,9 @@ export function usePlannedEdits(
       counts.current.set(event.id, event.patches.length);
       event.patches.forEach((patch, index) =>
         postToLiveFrames({
-          type: "optimistic-apply",
           id: `${event.id}:${index}`,
           patch: { ...patch, trusted: false },
+          type: "optimistic-apply",
           written: true,
         })
       );
@@ -45,14 +44,14 @@ export function usePlannedEdits(
     if (event.type === "edit.unplanned") {
       for (const id of patchIds(event.id, counts.current.get(event.id) ?? 0)) {
         postToLiveFrames({
-          type: "optimistic-settle",
           id,
           ok: false,
           reason: "The edit was not saved.",
+          type: "optimistic-settle",
         });
       }
 
       counts.current.delete(event.id);
     }
   });
-}
+};

@@ -1,4 +1,5 @@
-import { useState, type KeyboardEvent } from "react";
+import { useState } from "react";
+import type { KeyboardEvent } from "react";
 
 import type { SelectionContext } from "../../../shared/contracts.js";
 import type { InsertTarget } from "../../../shared/insert.js";
@@ -6,9 +7,11 @@ import {
   BOOLEAN_OPS,
   VECTOR_COLOR,
   isSvgShapeTag,
-  type BooleanOpName,
-  type VectorPaint,
-  type VectorRequest,
+} from "../../../shared/vector.js";
+import type {
+  BooleanOpName,
+  VectorPaint,
+  VectorRequest,
 } from "../../../shared/vector.js";
 import { errorText } from "../../api.js";
 import { runVector } from "../canvas/vector-tool-model.js";
@@ -24,68 +27,79 @@ interface Props {
   editable: boolean;
 }
 
-const SHAPE_TAG = /<(path|rect|circle|ellipse|polygon|polyline|line)\b[^>]*>/i;
+const SHAPE_TAG = /<(path|rect|circle|ellipse|polygon|polyline|line)\b[^>]*>/iu;
+
 const BOOLEAN_LABEL: Record<BooleanOpName, string> = {
-  union: "Union",
-  subtract: "Subtract",
-  intersect: "Intersect",
   exclude: "Exclude",
+  intersect: "Intersect",
+  subtract: "Subtract",
+  union: "Union",
 };
+
 const BOOLEAN_TIP: Record<BooleanOpName, string> = {
-  union: "Union: join the two shapes into one path",
-  subtract: "Subtract: cut the second shape out of the first",
-  intersect: "Intersect: keep only where they overlap",
   exclude: "Exclude: keep only where they do not overlap",
+  intersect: "Intersect: keep only where they overlap",
+  subtract: "Subtract: cut the second shape out of the first",
+  union: "Union: join the two shapes into one path",
 };
+
 const BOOLEAN_GLYPH: Record<
   BooleanOpName,
   { a: string; b: string; fill: "a" | "b" | "both" | "cut" }
 > = {
-  union: { a: "M2.5 2.5h7v7h-7z", b: "M6.5 6.5h7v7h-7z", fill: "both" },
-  subtract: { a: "M2.5 2.5h7v7h-7z", b: "M6.5 6.5h7v7h-7z", fill: "a" },
-  intersect: { a: "M2.5 2.5h7v7h-7z", b: "M6.5 6.5h7v7h-7z", fill: "cut" },
   exclude: { a: "M2.5 2.5h7v7h-7z", b: "M6.5 6.5h7v7h-7z", fill: "both" },
+  intersect: { a: "M2.5 2.5h7v7h-7z", b: "M6.5 6.5h7v7h-7z", fill: "cut" },
+  subtract: { a: "M2.5 2.5h7v7h-7z", b: "M6.5 6.5h7v7h-7z", fill: "a" },
+  union: { a: "M2.5 2.5h7v7h-7z", b: "M6.5 6.5h7v7h-7z", fill: "both" },
 };
 
-function attrOf(tag: string, name: string): string | null {
+const attrOf = (tag: string, name: string): string | null => {
   const attr = new RegExp(`\\s${name}="([^"]*)"`, "i").exec(tag)?.[1];
-  if (attr !== undefined) return attr;
-  const style = /\sstyle="([^"]*)"/i.exec(tag)?.[1] ?? "";
+
+  if (attr !== undefined) {
+    return attr;
+  }
+
+  const style = /\sstyle="([^"]*)"/iu.exec(tag)?.[1] ?? "";
+
   return (
     new RegExp(`(?:^|;)\\s*${name}\\s*:\\s*([^;]+)`, "i")
       .exec(style)?.[1]
       ?.trim() ?? null
   );
-}
+};
 
-function paintOf(selection: SelectionContext): {
+const paintOf = (
+  selection: SelectionContext
+): {
   fill: string;
   stroke: string;
   width: string;
-} {
+} => {
   const html = selection.outerHTML;
-  const own = /^<[^>]*>/.exec(html)?.[0] ?? "";
+  const own = /^<[^>]*>/u.exec(html)?.[0] ?? "";
+
   const shape =
     selection.tag.toLowerCase() === "svg"
       ? (SHAPE_TAG.exec(html.slice(own.length))?.[0] ?? own)
       : own;
+
   const pick = (name: string) => attrOf(shape, name) ?? attrOf(own, name) ?? "";
+
   return {
     fill: pick("fill"),
     stroke: pick("stroke"),
     width: pick("stroke-width"),
   };
-}
+};
 
-function targetOf(selection: SelectionContext): InsertTarget {
-  return {
-    source: selection.source,
-    tag: selection.tag.toLowerCase(),
-    selector: selection.selector,
-  };
-}
+const targetOf = (selection: SelectionContext): InsertTarget => ({
+  selector: selection.selector,
+  source: selection.source,
+  tag: selection.tag.toLowerCase(),
+});
 
-function ColorRow({
+const ColorRow = ({
   label,
   value,
   disabled,
@@ -95,29 +109,43 @@ function ColorRow({
   value: string;
   disabled: boolean;
   onSave: (value: string | null) => void;
-}) {
+}) => {
   const [text, setText] = useState<string | null>(null);
+
   const shown =
     text ??
-    (/^#[0-9a-f]+$/i.test(value) ? value.toLowerCase() : value || "none");
+    (/^#[0-9a-f]+$/iu.test(value) ? value.toLowerCase() : value || "none");
+
   const valid = (raw: string) =>
     raw.trim() === "" || VECTOR_COLOR.test(raw.trim());
+
   const settle = () => {
-    if (text === null) return;
+    if (text === null) {
+      return;
+    }
+
     const next = text.trim();
     setText(null);
-    if (!valid(next) || next.toLowerCase() === value.toLowerCase()) return;
+
+    if (!valid(next) || next.toLowerCase() === value.toLowerCase()) {
+      return;
+    }
+
     onSave(next === "" || next === "none" ? null : next);
   };
+
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "Enter") settle();
-    else if (event.key === "Escape") {
+    if (event.key === "Enter") {
+      settle();
+    } else if (event.key === "Escape") {
       event.stopPropagation();
       setText(null);
     }
   };
+
   const hex = colorToHex(value) ?? "#ffffff";
   const id = `vector-${label.toLowerCase()}`;
+
   return (
     <div className="ins-field color">
       <label htmlFor={id} className="ins-scrub static">
@@ -153,9 +181,9 @@ function ColorRow({
       </span>
     </div>
   );
-}
+};
 
-function WidthRow({
+const WidthRow = ({
   value,
   disabled,
   onSave,
@@ -163,17 +191,30 @@ function WidthRow({
   value: string;
   disabled: boolean;
   onSave: (value: number | null) => void;
-}) {
+}) => {
   const [text, setText] = useState<string | null>(null);
+
   const settle = () => {
-    if (text === null) return;
+    if (text === null) {
+      return;
+    }
+
     const next = text.trim();
     setText(null);
-    if (next === value) return;
+
+    if (next === value) {
+      return;
+    }
+
     const width = Number.parseFloat(next);
-    if (next === "") onSave(null);
-    else if (Number.isFinite(width) && width >= 0) onSave(width);
+
+    if (next === "") {
+      onSave(null);
+    } else if (Number.isFinite(width) && width >= 0) {
+      onSave(width);
+    }
   };
+
   return (
     <div className="ins-field">
       <label htmlFor="vector-stroke-width" className="ins-scrub static">
@@ -193,12 +234,14 @@ function WidthRow({
       />
     </div>
   );
-}
+};
 
-function BooleanGlyph({ op }: { op: BooleanOpName }) {
+const BooleanGlyph = ({ op }: { op: BooleanOpName }) => {
   const glyph = BOOLEAN_GLYPH[op];
+
   const filled = (which: "a" | "b") =>
     glyph.fill === "both" || glyph.fill === which;
+
   return (
     <svg
       width="16"
@@ -226,43 +269,55 @@ function BooleanGlyph({ op }: { op: BooleanOpName }) {
       )}
     </svg>
   );
-}
+};
 
-function useRun(props: Props) {
+const useRun = (props: Props) => {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
   const run = async (request: VectorRequest): Promise<boolean> => {
-    if (!props.directionId) return false;
+    if (!props.directionId) {
+      return false;
+    }
+
     setBusy(true);
     setError(null);
+
     try {
       await runVector(props.projectId, props.directionId, request);
+
       return true;
     } catch (err) {
       setError(errorText(err));
+
       return false;
     } finally {
       setBusy(false);
     }
   };
-  return { busy, error, run };
-}
 
-function PaintRows({
+  return { busy, error, run };
+};
+
+const PaintRows = ({
   props,
   target,
 }: {
   props: Props;
   target: SelectionContext;
-}) {
+}) => {
   const { busy, error, run } = useRun(props);
   const [saved, setSaved] = useState<Partial<ReturnType<typeof paintOf>>>({});
   const paint = { ...paintOf(target), ...saved };
   const disabled = busy || !props.editable;
+
   const save = (change: VectorPaint) =>
     void run({ op: "paint", target: targetOf(target), ...change }).then(
       (ok) => {
-        if (!ok) return;
+        if (!ok) {
+          return;
+        }
+
         setSaved((prev) => ({
           ...prev,
           ...(change.fill === undefined ? {} : { fill: change.fill ?? "none" }),
@@ -278,6 +333,7 @@ function PaintRows({
         }));
       }
     );
+
   return (
     <InspectorSection title="Fill and stroke" className="vector-paint">
       <div className="ins-grid">
@@ -308,18 +364,20 @@ function PaintRows({
       )}
     </InspectorSection>
   );
-}
+};
 
-function BooleanRow({ props }: { props: Props }) {
+const BooleanRow = ({ props }: { props: Props }) => {
   const { busy, error, run } = useRun(props);
   const [a, b] = props.selection as [SelectionContext, SelectionContext];
+
   const go = (op: BooleanOpName) =>
     void run({
-      op: "boolean",
       boolean: op,
-      targets: [targetOf(a), targetOf(b)],
+      op: "boolean",
       rects: [a.rect, b.rect],
+      targets: [targetOf(a), targetOf(b)],
     });
+
   return (
     <InspectorSection title="Boolean">
       <div
@@ -347,16 +405,19 @@ function BooleanRow({ props }: { props: Props }) {
       )}
     </InspectorSection>
   );
-}
+};
 
 export default function InspectorVector(props: Props) {
   if (
     !props.directionId ||
     props.selection.length > 2 ||
     !props.selection.every((item) => isSvgShapeTag(item.tag) && item.source)
-  )
+  ) {
     return null;
+  }
+
   const only = props.selection.length === 1 ? props.selection[0] : undefined;
+
   return (
     <div className="vector-inspector">
       {only ? (

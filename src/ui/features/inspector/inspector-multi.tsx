@@ -20,7 +20,7 @@ import { NumberField } from "./number-field.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 import type { CreateRequest } from "./use-token-snap.js";
 
-export function MultiNote({ reason }: { reason: string | null }) {
+export const MultiNote = ({ reason }: { reason: string | null }) => {
   if (!reason) {
     return null;
   }
@@ -31,24 +31,22 @@ export function MultiNote({ reason }: { reason: string | null }) {
       <span>{reason}</span>
     </div>
   );
-}
+};
 
-export function MultiSizeSection({ edit }: { edit: DirectEdit }) {
-  return (
-    <InspectorSection title="Size">
-      <div className="ins-grid">
-        <NumberField
-          short="W"
-          spec={{ prop: "width", label: "Width", edit, min: 0 }}
-        />
-        <NumberField
-          short="H"
-          spec={{ prop: "height", label: "Height", edit, min: 0 }}
-        />
-      </div>
-    </InspectorSection>
-  );
-}
+export const MultiSizeSection = ({ edit }: { edit: DirectEdit }) => (
+  <InspectorSection title="Size">
+    <div className="ins-grid">
+      <NumberField
+        short="W"
+        spec={{ edit, label: "Width", min: 0, prop: "width" }}
+      />
+      <NumberField
+        short="H"
+        spec={{ edit, label: "Height", min: 0, prop: "height" }}
+      />
+    </div>
+  </InspectorSection>
+);
 
 interface HostProps {
   projectId: string;
@@ -59,14 +57,14 @@ interface HostProps {
   onClose: () => void;
 }
 
-export function MultiCreateTokenHost({
+export const MultiCreateTokenHost = ({
   projectId,
   directionId,
   tokens,
   edit,
   request,
   onClose,
-}: HostProps) {
+}: HostProps) => {
   if (!tokens || !request) {
     return null;
   }
@@ -111,7 +109,7 @@ export function MultiCreateTokenHost({
       onClose={onClose}
     />
   );
-}
+};
 
 const MATCH_OPTIONS: { by: MatchKind; label: string; tip: string }[] = [
   {
@@ -138,23 +136,23 @@ let matchNote: { text: string; at: number } | null = null;
 let matchSeq = 0;
 const matchSubs = new Set<() => void>();
 
-function setMatchNote(text: string | null): void {
-  matchNote = text ? { text, at: Date.now() } : null;
+const setMatchNote = (text: string | null): void => {
+  matchNote = text ? { at: Date.now(), text } : null;
 
   for (const sub of matchSubs) {
     sub();
   }
-}
+};
 
-function subscribeMatch(sub: () => void): () => void {
+const subscribeMatch = (sub: () => void): (() => void) => {
   matchSubs.add(sub);
 
   return () => matchSubs.delete(sub);
-}
+};
 
-function matchedText(
+const matchedText = (
   message: Extract<BridgeToParent, { type: "matched" }>
-): string {
+): string => {
   if (message.note) {
     return message.note;
   }
@@ -162,9 +160,13 @@ function matchedText(
   return message.count <= 1
     ? "No other element matches."
     : `Selected ${message.count} matching elements.`;
-}
+};
 
-function askMatching(port: PreviewPort, selector: string, by: MatchKind): void {
+const askMatching = (
+  port: PreviewPort,
+  selector: string,
+  by: MatchKind
+): void => {
   matchSeq += 1;
   const requestId = `match-${matchSeq}`;
   setMatchNote(null);
@@ -185,16 +187,16 @@ function askMatching(port: PreviewPort, selector: string, by: MatchKind): void {
     stop?.();
   }
 
-  port.post({ type: "select-matching", requestId, selector, by });
-}
+  port.post({ by, requestId, selector, type: "select-matching" });
+};
 
-function SelectMatchingView({
+const SelectMatchingView = ({
   selection,
   port,
 }: {
   selection: SelectionContext[];
   port: MutableRefObject<PreviewPort | null>;
-}) {
+}) => {
   const note = useSyncExternalStore(subscribeMatch, () => matchNote);
   const base = selection.at(-1);
 
@@ -233,7 +235,7 @@ function SelectMatchingView({
       )}
     </InspectorSection>
   );
-}
+};
 
 export const SelectMatchingSection = memo(
   SelectMatchingView,

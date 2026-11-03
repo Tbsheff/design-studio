@@ -1,10 +1,5 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  type KeyboardEvent,
-} from "react";
+import { createContext, useContext, useEffect, useState } from "react";
+import type { KeyboardEvent } from "react";
 
 import type { SharedSource } from "../../../shared/app.js";
 import type {
@@ -16,7 +11,8 @@ import type {
 } from "../../../shared/contracts.js";
 import { api } from "../../api.js";
 import { Icon } from "../../kit/Icon.js";
-import { textHints, type DirectEdit } from "./use-direct-edit.js";
+import { textHints } from "./css-values.js";
+import type { DirectEdit } from "./use-direct-edit.js";
 
 export interface InspectorApp {
   appDir: string | null;
@@ -30,36 +26,33 @@ export const InspectorAppContext = createContext<InspectorApp>({
   element: null,
 });
 
-export function useInspectorApp(): InspectorApp {
-  return useContext(InspectorAppContext);
-}
+export const useInspectorApp = (): InspectorApp =>
+  useContext(InspectorAppContext);
 
-function loc(source: { file: string; line: number }): string {
-  return `${source.file}:${source.line}`;
-}
+const loc = (source: { file: string; line: number }): string =>
+  `${source.file}:${source.line}`;
 
-function shortLoc(source: { file: string; line: number }): string {
-  return `${source.file.split("/").pop() ?? source.file}:${source.line}`;
-}
+const shortLoc = (source: { file: string; line: number }): string =>
+  `${source.file.split("/").pop() ?? source.file}:${source.line}`;
 
-export function dataTextPrompt(text: string, data: TextFromData): string {
+export const dataTextPrompt = (text: string, data: TextFromData): string => {
   const shown = text.length > 80 ? `${text.slice(0, 79)}…` : text;
 
   return `The text "${shown}" comes from data: ${data.expression} in ${loc(data)}. Change it to: `;
-}
+};
 
 type TextEditScope = Pick<
   DirectEdit,
   "scope" | "text" | "status" | "previewText" | "revertText" | "commit"
 >;
 
-function useTextSource(
+const useTextSource = (
   edit: TextEditScope,
   selection: SelectionContext
-): TextSourceAnswer | null {
+): TextSourceAnswer | null => {
   const [answer, setAnswer] = useState<TextSourceAnswer | null>(null);
   const { projectId, directionId } = edit.scope;
-  const source = selection.source;
+  const { source } = selection;
   const savedAt = edit.status.kind === "saved" ? edit.status.at : 0;
 
   const key = JSON.stringify([
@@ -88,15 +81,15 @@ function useTextSource(
   }, [projectId, directionId, key]);
 
   return answer;
-}
+};
 
-function SourceTextRow({
+const SourceTextRow = ({
   found,
   edit,
 }: {
   found: TextSourceInfo;
   edit: TextEditScope;
-}) {
+}) => {
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter") {
       event.preventDefault();
@@ -134,9 +127,9 @@ function SourceTextRow({
       </div>
     </>
   );
-}
+};
 
-export function DataTextNote({
+export const DataTextNote = ({
   data,
   selection,
   edit,
@@ -144,7 +137,7 @@ export function DataTextNote({
   data: TextFromData;
   selection: SelectionContext;
   edit: TextEditScope;
-}) {
+}) => {
   const answer = useTextSource(edit, selection);
 
   if (answer && "found" in answer) {
@@ -166,9 +159,9 @@ export function DataTextNote({
       reason={answer && "reason" in answer ? answer.reason : null}
     />
   );
-}
+};
 
-function DataTextAsk({
+const DataTextAsk = ({
   data,
   text,
   reason,
@@ -176,7 +169,7 @@ function DataTextAsk({
   data: TextFromData;
   text: string;
   reason: string | null;
-}) {
+}) => {
   const { ask } = useInspectorApp();
 
   return (
@@ -198,9 +191,9 @@ function DataTextAsk({
       )}
     </div>
   );
-}
+};
 
-export function SharedSourceNote({
+export const SharedSourceNote = ({
   shared,
   editingUse,
   canUse,
@@ -210,7 +203,7 @@ export function SharedSourceNote({
   editingUse: boolean;
   canUse: boolean;
   onToggle: () => void;
-}) {
+}) => {
   const what = shared.name ?? shared.file.split("/").pop() ?? shared.file;
 
   if (editingUse && shared.use) {
@@ -241,9 +234,9 @@ export function SharedSourceNote({
       )}
     </div>
   );
-}
+};
 
-export function AddButton({
+export const AddButton = ({
   label,
   tip,
   shortcut,
@@ -253,19 +246,17 @@ export function AddButton({
   tip?: string;
   shortcut?: string;
   onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      className="ins-add"
-      aria-label={`Add ${label.toLowerCase()}`}
-      aria-keyshortcuts={shortcut}
-      data-tip={tip}
-      data-tip-align={tip ? "start" : undefined}
-      onClick={onClick}
-    >
-      <Icon name="plus" size={12} />
-      {label}
-    </button>
-  );
-}
+}) => (
+  <button
+    type="button"
+    className="ins-add"
+    aria-label={`Add ${label.toLowerCase()}`}
+    aria-keyshortcuts={shortcut}
+    data-tip={tip}
+    data-tip-align={tip ? "start" : undefined}
+    onClick={onClick}
+  >
+    <Icon name="plus" size={12} />
+    {label}
+  </button>
+);

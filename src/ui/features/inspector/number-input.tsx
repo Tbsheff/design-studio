@@ -1,4 +1,5 @@
-import { memo, useRef, useState, type KeyboardEvent } from "react";
+import { memo, useRef, useState } from "react";
+import type { KeyboardEvent } from "react";
 
 import { normalizeLength, stepValue } from "./css-values.js";
 import { useInherited } from "./edit-variant.js";
@@ -14,8 +15,8 @@ import {
   isValidValue,
   selectSoon,
   sameSpec,
-  type NumberSpec,
 } from "./number-field-model.js";
+import type { NumberSpec } from "./number-field-model.js";
 import { useTokenUi } from "./use-token-snap.js";
 
 interface InputProps {
@@ -35,11 +36,22 @@ const useNumberText = (spec: NumberSpec) => {
   const mixed = edit.mixed.has(prop);
 
   const apply = (raw: string) => {
-    if (start.current === null) start.current = current;
+    if (start.current === null) {
+      start.current = current;
+    }
+
     setText(raw);
-    if (mixed && dependsOnCurrent(raw, unit)) return;
+
+    if (mixed && dependsOnCurrent(raw, unit)) {
+      return;
+    }
+
     const math = resolveNumberInput(raw, start.current, unit);
-    if (math === null && /[-+*/(]\s*$/.test(raw)) return;
+
+    if (math === null && /[-+*/(]\s*$/u.test(raw)) {
+      return;
+    }
+
     const next = clamp(math ?? normalizeLength(raw, unit), spec);
     last.current = next;
     edit.preview(patchFor(spec, next));
@@ -50,8 +62,11 @@ const useNumberText = (spec: NumberSpec) => {
     start.current = null;
     last.current = null;
     setText(null);
-    if (typed !== null && !isValidValue(prop, typed))
+
+    if (typed !== null && !isValidValue(prop, typed)) {
       edit.revert(spec.targets ?? [prop]);
+    }
+
     edit.commit();
   };
 
@@ -71,7 +86,7 @@ const useNumberText = (spec: NumberSpec) => {
     edit.revert(spec.targets ?? [prop]);
   };
 
-  return { text, current, mixed, unit, apply, settle, nudge, cancel };
+  return { apply, cancel, current, mixed, nudge, settle, text, unit };
 };
 
 const NumberInputView = ({ spec, id, className }: InputProps) => {
@@ -79,9 +94,11 @@ const NumberInputView = ({ spec, id, className }: InputProps) => {
   const keepSelection = useRef(false);
   const field = useNumberText(spec);
   const inherited = useInherited(spec.prop);
+
   const shown =
     field.text ??
     (focused ? field.current : (spec.display ?? displayLength(field.current)));
+
   const refused =
     field.mixed &&
     field.text !== null &&
@@ -89,14 +106,18 @@ const NumberInputView = ({ spec, id, className }: InputProps) => {
 
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     const input = event.currentTarget;
+
     if (event.key === "ArrowUp" || event.key === "ArrowDown") {
       event.preventDefault();
       const delta = stepOf(event, spec) * (event.key === "ArrowUp" ? 1 : -1);
+
       if (field.mixed) {
         shiftMixed(spec, delta);
         spec.edit.commitSoon();
+
         return;
       }
+
       field.nudge(delta, shown);
       selectSoon(input);
     } else if (event.key === "Enter") {
@@ -130,7 +151,10 @@ const NumberInputView = ({ spec, id, className }: InputProps) => {
         keepSelection.current = document.activeElement !== event.currentTarget;
       }}
       onMouseUp={(event) => {
-        if (!keepSelection.current) return;
+        if (!keepSelection.current) {
+          return;
+        }
+
         keepSelection.current = false;
         event.preventDefault();
       }}

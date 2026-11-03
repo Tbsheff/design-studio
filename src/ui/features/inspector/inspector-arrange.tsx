@@ -6,17 +6,15 @@ import { shortcutLabel } from "../../../shared/keymap.js";
 import { IS_MAC } from "../../inspector-slots.js";
 import { Icon } from "../../kit/Icon.js";
 import {
-  type Props,
-  type Message,
-  type Tool,
   ALIGN_TOOLS,
   SPACE_TOOLS,
   arrangeShown,
   minCount,
 } from "./arrange-model.js";
+import type { Props, Message, Tool } from "./arrange-model.js";
 import { useArrange, useArrangeKeys } from "./use-arrange.js";
 
-function ToolButton({
+const ToolButton = ({
   tool,
   disabled,
   why,
@@ -26,7 +24,7 @@ function ToolButton({
   disabled: boolean;
   why: string | null;
   onRun: (action: ArrangeAction) => void;
-}) {
+}) => {
   const tip = why
     ? `${tool.label}: ${why}`
     : `${tool.label} ${shortcutLabel(tool.key, IS_MAC)}`;
@@ -56,9 +54,9 @@ function ToolButton({
       </svg>
     </button>
   );
-}
+};
 
-function ArrangeMessage({ message }: { message: Message | null }) {
+const ArrangeMessage = ({ message }: { message: Message | null }) => {
   if (!message) {
     return null;
   }
@@ -81,9 +79,9 @@ function ArrangeMessage({ message }: { message: Message | null }) {
       <span>{message.text}</span>
     </div>
   );
-}
+};
 
-function ArrangeBar({
+const ArrangeBar = ({
   selection,
   busy,
   onRun,
@@ -91,7 +89,7 @@ function ArrangeBar({
   selection: SelectionContext[];
   busy: boolean;
   onRun: (action: ArrangeAction) => void;
-}) {
+}) => {
   const button = (tool: Tool) => {
     const need = minCount(tool.action, selection);
 
@@ -116,9 +114,9 @@ function ArrangeBar({
       {SPACE_TOOLS.map(button)}
     </div>
   );
-}
+};
 
-function InspectorArrange(props: Props) {
+const InspectorArrange = (props: Props) => {
   const root = useRef<HTMLDivElement>(null);
   const arrange = useArrange(props);
 
@@ -144,6 +142,6 @@ function InspectorArrange(props: Props) {
       <ArrangeMessage message={arrange.message} />
     </div>
   );
-}
+};
 
 export { InspectorArrange };

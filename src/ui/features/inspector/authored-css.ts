@@ -1,7 +1,5 @@
-import {
-  DIRECT_STYLE_PROPERTIES,
-  type AuthoredRule,
-} from "../../../shared/contracts.js";
+import { DIRECT_STYLE_PROPERTIES } from "../../../shared/contracts.js";
+import type { AuthoredRule } from "../../../shared/contracts.js";
 
 export interface AuthoredCss {
   rules: AuthoredRule[];
@@ -52,16 +50,16 @@ const COVERED = new Set<string>([
   "flex-flow",
 ]);
 
-const NOT_BORDER_BOX = /^border-(collapse|spacing|image)/;
+const NOT_BORDER_BOX = /^border-(collapse|spacing|image)/u;
 
 const IMAGE_VALUE =
-  /(url|gradient|image|image-set|element|cross-fade|paint)\s*\(/i;
+  /(url|gradient|image|image-set|element|cross-fade|paint)\s*\(/iu;
 
-function splitTopLevel(
+const splitTopLevel = (
   text: string,
   separator: string,
   limit = Infinity
-): string[] {
+): string[] => {
   const parts: string[] = [];
   let quote: string | null = null;
   let depth = 0;
@@ -91,15 +89,15 @@ function splitTopLevel(
   parts.push(text.slice(start));
 
   return parts;
-}
+};
 
-export function parseDeclarations(
+export const parseDeclarations = (
   css: string
-): { prop: string; value: string }[] {
+): { prop: string; value: string }[] => {
   const out: { prop: string; value: string }[] = [];
 
   for (const chunk of splitTopLevel(
-    css.replaceAll(/\/\*[\s\S]*?\*\//g, ""),
+    css.replaceAll(/\/\*[\s\S]*?\*\//gu, ""),
     ";"
   )) {
     const [rawProp = "", rawValue] = splitTopLevel(chunk, ":", 1);
@@ -117,18 +115,18 @@ export function parseDeclarations(
   }
 
   return out;
-}
+};
 
-function isColorOnly(value: string): boolean {
-  const plain = value.replace(/\s*!important\s*$/i, "").trim();
+const isColorOnly = (value: string): boolean => {
+  const plain = value.replace(/\s*!important\s*$/iu, "").trim();
 
   return (
     !IMAGE_VALUE.test(plain) &&
     splitTopLevel(plain, " ").filter((part) => part !== "").length === 1
   );
-}
+};
 
-export function isCoveredDeclaration(prop: string, value: string): boolean {
+export const isCoveredDeclaration = (prop: string, value: string): boolean => {
   if (prop === "background") {
     return isColorOnly(value);
   }
@@ -138,9 +136,9 @@ export function isCoveredDeclaration(prop: string, value: string): boolean {
   }
 
   return prop.startsWith("border-") && !NOT_BORDER_BOX.test(prop);
-}
+};
 
-export function otherStyles(css: AuthoredCss): AuthoredDeclaration[] {
+export const otherStyles = (css: AuthoredCss): AuthoredDeclaration[] => {
   const winners = new Map<string, AuthoredDeclaration>();
 
   const take = (text: string, source: string) => {
@@ -150,7 +148,7 @@ export function otherStyles(css: AuthoredCss): AuthoredDeclaration[] {
       }
 
       winners.delete(prop);
-      winners.set(prop, { prop, value, source });
+      winners.set(prop, { prop, source, value });
     }
   };
 
@@ -161,17 +159,17 @@ export function otherStyles(css: AuthoredCss): AuthoredDeclaration[] {
   take(css.inline, INLINE_SOURCE);
 
   return [...winners.values()];
-}
+};
 
-function block(head: string, css: string): string {
+const block = (head: string, css: string): string => {
   const lines = parseDeclarations(css).map(
     ({ prop, value }) => `  ${prop}: ${value};`
   );
 
   return `${head} {\n${lines.join("\n")}\n}`;
-}
+};
 
-export function formatCopyCss(css: AuthoredCss): string {
+export const formatCopyCss = (css: AuthoredCss): string => {
   const blocks = css.rules.map((rule) => block(rule.selector, rule.css));
 
   if (parseDeclarations(css.inline).length > 0) {
@@ -179,16 +177,15 @@ export function formatCopyCss(css: AuthoredCss): string {
   }
 
   return blocks.join("\n\n");
-}
+};
 
-function cappedString(value: unknown, max: number): string | null {
-  return typeof value === "string" && value.length <= max ? value : null;
-}
+const cappedString = (value: unknown, max: number): string | null =>
+  typeof value === "string" && value.length <= max ? value : null;
 
-export function parseAuthoredReply(message: {
+export const parseAuthoredReply = (message: {
   rules?: unknown;
   inline?: unknown;
-}): AuthoredCss | null {
+}): AuthoredCss | null => {
   if (!Array.isArray(message.rules)) {
     return null;
   }
@@ -228,13 +225,13 @@ export function parseAuthoredReply(message: {
       break;
     }
 
-    rules.push({ selector, css: ruleCss, source });
+    rules.push({ css: ruleCss, selector, source });
   }
 
-  return { rules, inline };
-}
+  return { inline, rules };
+};
 
-export function parseSelectionPath(raw: unknown): string[] {
+export const parseSelectionPath = (raw: unknown): string[] => {
   if (!Array.isArray(raw)) {
     return [];
   }
@@ -250,7 +247,7 @@ export function parseSelectionPath(raw: unknown): string[] {
   }
 
   return path.map((label) => label.slice(0, MAX_LABEL));
-}
+};
 
 export interface PathCrumb {
   label: string;
@@ -261,11 +258,10 @@ export type Crumb =
   | ({ kind: "node" } & PathCrumb)
   | { kind: "gap"; hidden: PathCrumb[] };
 
-export function pathCrumbs(path: string[]): PathCrumb[] {
-  return path.map((label, index) => ({ label, levels: path.length - index }));
-}
+export const pathCrumbs = (path: string[]): PathCrumb[] =>
+  path.map((label, index) => ({ label, levels: path.length - index }));
 
-export function collapseCrumbs(crumbs: PathCrumb[], max = 4): Crumb[] {
+export const collapseCrumbs = (crumbs: PathCrumb[], max = 4): Crumb[] => {
   const nodes = crumbs.map((crumb): Crumb => ({ kind: "node", ...crumb }));
 
   if (crumbs.length <= max) {
@@ -276,7 +272,7 @@ export function collapseCrumbs(crumbs: PathCrumb[], max = 4): Crumb[] {
 
   return [
     nodes[0] as Crumb,
-    { kind: "gap", hidden: crumbs.slice(1, crumbs.length - keep) },
+    { hidden: crumbs.slice(1, crumbs.length - keep), kind: "gap" },
     ...nodes.slice(crumbs.length - keep),
   ];
-}
+};

@@ -6,14 +6,15 @@ import { SizeRow } from "./size-row.js";
 import { parentLayout } from "./sizing.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 
-function SizeRows({
+const SizeRows = ({
   edit,
   selection,
 }: {
   edit: DirectEdit;
   selection: SelectionContext;
-}) {
+}) => {
   const parent = parentLayout(selection.styles);
+
   return (
     <>
       <div className="ins-grid">
@@ -27,20 +28,18 @@ function SizeRows({
       <PositionRows edit={edit} selection={selection} />
     </>
   );
-}
+};
 
-function SizeSection({
+const SizeSection = ({
   edit,
   selection,
 }: {
   edit: DirectEdit;
   selection: SelectionContext;
-}) {
-  return (
-    <InspectorSection title="Size">
-      <SizeRows edit={edit} selection={selection} />
-    </InspectorSection>
-  );
-}
+}) => (
+  <InspectorSection title="Size">
+    <SizeRows edit={edit} selection={selection} />
+  </InspectorSection>
+);
 
 export { SizeRows, SizeSection };

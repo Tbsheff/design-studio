@@ -9,9 +9,9 @@ let prefix = "";
 let restore: { width: number; set: number } | null = null;
 const listeners = new Set<() => void>();
 
-function emit(): void {
+const emit = (): void => {
   listeners.forEach((listener) => listener());
-}
+};
 
 export const editVariantStore = {
   get: (): string => prefix,
@@ -32,20 +32,19 @@ export const editVariantStore = {
   },
 };
 
-export function useEditVariant(): string {
-  return useSyncExternalStore(editVariantStore.subscribe, editVariantStore.get);
-}
+export const useEditVariant = (): string =>
+  useSyncExternalStore(editVariantStore.subscribe, editVariantStore.get);
 
-export function fitFrameTo(width: number | null): void {
-  const viewport = uiStore.get().viewport;
+export const fitFrameTo = (width: number | null): void => {
+  const { viewport } = uiStore.get();
 
   if (width === null) {
     if (restore && viewport.width === restore.set) {
       uiStore.set({
         viewport: {
+          height: viewport.height,
           preset: "custom",
           width: restore.width,
-          height: viewport.height,
         },
       });
     }
@@ -57,34 +56,34 @@ export function fitFrameTo(width: number | null): void {
 
   restore =
     !restore || viewport.width !== restore.set
-      ? { width: viewport.width, set: width }
+      ? { set: width, width: viewport.width }
       : { ...restore, set: width };
 
   if (viewport.width !== width) {
     uiStore.set({
-      viewport: { preset: "custom", width, height: viewport.height },
+      viewport: { height: viewport.height, preset: "custom", width },
     });
   }
-}
+};
 
-export function postForceState(
+export const postForceState = (
   port: PreviewPort | null,
   selector: string | null,
   variant: string
-): void {
+): void => {
   const parsed = parseVariant(variant);
   const states = parsed?.states ?? [];
   const dark = parsed?.dark ?? false;
   port?.post({
-    type: "force-state",
+    dark,
     selector,
     states,
-    dark,
     track: selector !== null && variant !== "",
+    type: "force-state",
   });
-}
+};
 
-export function resetEditVariant(port: PreviewPort | null): void {
+export const resetEditVariant = (port: PreviewPort | null): void => {
   if (prefix === "") {
     return;
   }
@@ -92,7 +91,7 @@ export function resetEditVariant(port: PreviewPort | null): void {
   editVariantStore.set("");
   fitFrameTo(null);
   postForceState(port, null, "");
-}
+};
 
 export interface VariantScope {
   prefix: string;
@@ -104,8 +103,8 @@ export const VariantScopeContext = createContext<VariantScope>({
   props: new Set(),
 });
 
-export function useInherited(prop: DirectStyleProperty): boolean {
+export const useInherited = (prop: DirectStyleProperty): boolean => {
   const scope = useContext(VariantScopeContext);
 
   return scope.prefix !== "" && !scope.props.has(prop);
-}
+};

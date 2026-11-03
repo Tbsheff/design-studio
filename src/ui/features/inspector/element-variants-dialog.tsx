@@ -14,12 +14,12 @@ interface Props {
 
 const COUNTS = [2, 3, 4];
 
-export function ElementVariantsDialog({
+export const ElementVariantsDialog = ({
   project,
   element,
   onStart,
   onCancel,
-}: Props) {
+}: Props) => {
   const max = maxVariationsFor(project.kind);
   const [note, setNote] = useState("");
   const [count, setCount] = useState(Math.min(3, max));
@@ -120,4 +120,4 @@ export function ElementVariantsDialog({
       </footer>
     </section>
   );
-}
+};

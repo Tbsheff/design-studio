@@ -1,10 +1,5 @@
-import {
-  useEffect,
-  useRef,
-  useState,
-  type FocusEvent,
-  type PointerEvent as ReactPointerEvent,
-} from "react";
+import { useEffect, useRef, useState } from "react";
+import type { FocusEvent, PointerEvent as ReactPointerEvent } from "react";
 
 import type { SelectionContext } from "../../../shared/contracts.js";
 import { UiSelect } from "../../kit/UiSelect.js";
@@ -18,17 +13,20 @@ import {
   sizeFacts,
   sizeModeOf,
   sizePatch,
-  type Axis,
-  type SizeFacts,
-  type SizeMode,
 } from "./sizing.js";
+import type { Axis, SizeFacts, SizeMode } from "./sizing.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 
-function liveFacts(edit: DirectEdit, selection: SelectionContext): SizeFacts {
+const liveFacts = (
+  edit: DirectEdit,
+  selection: SelectionContext
+): SizeFacts => {
   const facts = sizeFacts(selection.styles);
+
   const drafted = (["width", "height"] as const).filter((axis) =>
     edit.dirty.includes(axis)
   );
+
   return drafted.length === 0
     ? facts
     : {
@@ -40,14 +38,15 @@ function liveFacts(edit: DirectEdit, selection: SelectionContext): SizeFacts {
           ),
         },
       };
-}
+};
 
-function roundedPx(value: string): string {
+const roundedPx = (value: string): string => {
   const px = Number.parseFloat(value);
+
   return value.endsWith("px") && Number.isFinite(px)
     ? `${Math.round(px * 10) / 10}px`
     : value;
-}
+};
 
 interface FixedDrag {
   axis: Axis;
@@ -57,21 +56,31 @@ interface FixedDrag {
   used: string;
 }
 
-function startFixedDrag(
+const startFixedDrag = (
   event: ReactPointerEvent<HTMLLabelElement>,
   o: FixedDrag
-): void {
-  if (event.button !== 0) return;
+): void => {
+  if (event.button !== 0) {
+    return;
+  }
+
   event.preventDefault();
+
   const start = {
-    x: event.clientX,
     value: Math.round(Number.parseFloat(o.used) || 0),
     values: o.edit.values,
+    x: event.clientX,
   };
+
   let moved = false;
+
   const move = (ev: PointerEvent) => {
     const steps = Math.trunc((ev.clientX - start.x) / 2);
-    if (steps === 0 && !moved) return;
+
+    if (steps === 0 && !moved) {
+      return;
+    }
+
     moved = true;
     document.body.classList.add("ins-scrubbing");
     const next = Math.max(0, start.value + steps * (ev.shiftKey ? 10 : 1));
@@ -79,30 +88,39 @@ function startFixedDrag(
       sizePatch(o.axis, "fixed", start.values, o.parent, `${next}px`, o.facts)
     );
   };
+
   const stop = () => {
     window.removeEventListener("pointermove", move);
     window.removeEventListener("pointerup", stop);
     window.removeEventListener("pointercancel", stop);
     document.body.classList.remove("ins-scrubbing");
-    if (!moved) return;
+
+    if (!moved) {
+      return;
+    }
+
     o.edit.commit();
+
     const eat = (click: MouseEvent) => {
       click.preventDefault();
       click.stopPropagation();
     };
+
     window.addEventListener("click", eat, { capture: true, once: true });
     window.setTimeout(
       () => window.removeEventListener("click", eat, { capture: true }),
       0
     );
   };
+
   window.addEventListener("pointermove", move);
   window.addEventListener("pointerup", stop);
   window.addEventListener("pointercancel", stop);
-}
+};
 
-function LiveSize({ axis, value }: { axis: Axis; value: number }) {
+const LiveSize = ({ axis, value }: { axis: Axis; value: number }) => {
   const short = axis === "width" ? "W" : "H";
+
   return (
     <div
       className="ins-field ins-size-display"
@@ -121,9 +139,9 @@ function LiveSize({ axis, value }: { axis: Axis; value: number }) {
       />
     </div>
   );
-}
+};
 
-function SizeValue({
+const SizeValue = ({
   axis,
   mode,
   used,
@@ -135,25 +153,31 @@ function SizeValue({
   used: string;
   edit: DirectEdit;
   onDrag: (event: ReactPointerEvent<HTMLLabelElement>) => void;
-}) {
+}) => {
   const [editing, setEditing] = useState(false);
   const wrap = useRef<HTMLDivElement>(null);
   const short = axis === "width" ? "W" : "H";
   const name = axis === "width" ? "Width" : "Height";
   useEffect(() => {
-    if (editing)
+    if (editing) {
       wrap.current?.querySelector<HTMLInputElement>("input.ins-input")?.focus();
+    }
   }, [editing]);
   useEffect(() => {
-    if (mode !== "fixed" && !wrap.current?.contains(document.activeElement))
+    if (mode !== "fixed" && !wrap.current?.contains(document.activeElement)) {
       setEditing(false);
+    }
   }, [mode]);
+
   if (mode === "fixed" || editing) {
     const leave = (event: FocusEvent<HTMLDivElement>) => {
       const next = event.relatedTarget;
-      if (!(next instanceof Node && event.currentTarget.contains(next)))
+
+      if (!(next instanceof Node && event.currentTarget.contains(next))) {
         setEditing(false);
+      }
     };
+
     return (
       <div
         ref={wrap}
@@ -162,14 +186,17 @@ function SizeValue({
       >
         <NumberField
           short={short}
-          spec={{ prop: axis, label: name, edit, min: 0 }}
+          spec={{ edit, label: name, min: 0, prop: axis }}
         />
       </div>
     );
   }
+
   const label =
     SIZE_MODES.find((option) => option.value === mode)?.label ?? mode;
+
   const px = roundedPx(used);
+
   return (
     <div
       className="ins-field ins-size-display"
@@ -197,9 +224,9 @@ function SizeValue({
       />
     </div>
   );
-}
+};
 
-function SizeRow({
+const SizeRow = ({
   axis,
   edit,
   selection,
@@ -207,7 +234,7 @@ function SizeRow({
   axis: Axis;
   edit: DirectEdit;
   selection: SelectionContext;
-}) {
+}) => {
   const parent = parentLayout(selection.styles);
   const facts = liveFacts(edit, selection);
   const mode = sizeModeOf(axis, edit.values, parent, facts);
@@ -215,6 +242,7 @@ function SizeRow({
   const used = selection.styles[`used-${axis}`] ?? edit.values[axis];
   const live = useLive(resizeReadout);
   const resizing = live?.selector === selection.selector ? live : null;
+
   return (
     <>
       {resizing ? (
@@ -230,7 +258,7 @@ function SizeRow({
           used={used}
           edit={edit}
           onDrag={(event) =>
-            startFixedDrag(event, { axis, edit, parent, facts, used })
+            startFixedDrag(event, { axis, edit, facts, parent, used })
           }
         />
       )}
@@ -247,6 +275,6 @@ function SizeRow({
       </div>
     </>
   );
-}
+};
 
 export { SizeRow };

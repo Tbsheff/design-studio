@@ -1,7 +1,9 @@
-import { memo, type ReactNode } from "react";
+import { memo } from "react";
+import type { ReactNode } from "react";
 
 import { TokenControl } from "../versions-layers-tokens/token-control.js";
-import { sameSpec, type NumberSpec } from "./number-field-model.js";
+import { sameSpec } from "./number-field-model.js";
+import type { NumberSpec } from "./number-field-model.js";
 import { NumberInput } from "./number-input.js";
 import { useScrub } from "./use-scrub.js";
 
@@ -24,6 +26,7 @@ const NumberFieldView = ({
 }: NumberFieldProps) => {
   const id = idProp ?? `ins-${spec.prop}`;
   const scrub = useScrub(spec);
+
   return (
     <div className={`ins-field ${className ?? ""}`}>
       <label htmlFor={id} className="ins-scrub" {...scrub}>
@@ -44,6 +47,7 @@ const NumberFieldView = ({
 
 const sameField = (a: NumberFieldProps, b: NumberFieldProps): boolean => {
   const sameIcon = (a.icon === undefined) === (b.icon === undefined);
+
   return (
     sameIcon &&
     a.short === b.short &&
@@ -59,4 +63,5 @@ const NumberField = memo(NumberFieldView, sameField);
 export { NumberField };
 
 export { NumberInput } from "./number-input.js";
+
 export type { NumberSpec } from "./number-field-model.js";

@@ -1,14 +1,15 @@
 import type { ShiftPart } from "./css-values.js";
-import { formatShadows, parseShadows, type Shadow } from "./shadows.js";
+import { formatShadows, parseShadows } from "./shadows.js";
+import type { Shadow } from "./shadows.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 
 type Part = "x" | "y" | "blur" | "spread";
 
 const PARTS: { part: Part; short: string; label: string; min?: number }[] = [
-  { part: "x", short: "X", label: "X offset" },
-  { part: "y", short: "Y", label: "Y offset" },
-  { part: "blur", short: "B", label: "Blur", min: 0 },
-  { part: "spread", short: "S", label: "Spread" },
+  { label: "X offset", part: "x", short: "X" },
+  { label: "Y offset", part: "y", short: "Y" },
+  { label: "Blur", min: 0, part: "blur", short: "B" },
+  { label: "Spread", part: "spread", short: "S" },
 ];
 
 type Field = Part | "color";
@@ -30,23 +31,20 @@ const eachList = (
   return list ? formatShadows(change(list)) : raw;
 };
 
-const fieldPart = (index: number, field: Field): ShiftPart => {
-  return {
-    key: `${index}.${field}`,
-    map: (raw, change) =>
-      eachList(raw, (list) =>
-        list.map((s, i) =>
-          i === index
-            ? {
-                ...s,
-                [field]:
-                  change(s[field]) || (field === "color" ? s.color : "0"),
-              }
-            : s
-        )
-      ),
-  };
-};
+const fieldPart = (index: number, field: Field): ShiftPart => ({
+  key: `${index}.${field}`,
+  map: (raw, change) =>
+    eachList(raw, (list) =>
+      list.map((s, i) =>
+        i === index
+          ? {
+              ...s,
+              [field]: change(s[field]) || (field === "color" ? s.color : "0"),
+            }
+          : s
+      )
+    ),
+});
 
 const writeShadows = (
   edit: DirectEdit,

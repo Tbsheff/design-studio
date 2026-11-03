@@ -10,13 +10,13 @@ export interface InspectorTweaksProps {
   onSuggest: (prompt?: string) => void;
 }
 
-function TweaksPrompt({
+const TweaksPrompt = ({
   running,
   onSuggest,
 }: {
   running: boolean;
   onSuggest?: (prompt?: string) => void;
-}) {
+}) => {
   const [text, setText] = useState("");
 
   const send = () => {
@@ -77,15 +77,15 @@ function TweaksPrompt({
       {!onSuggest && <p className="ins-note">Tweaks are not available here.</p>}
     </div>
   );
-}
+};
 
-export function InspectorTweaks({
+export const InspectorTweaks = ({
   tweaks,
   blocked = false,
 }: {
   tweaks?: InspectorTweaksProps;
   blocked?: boolean;
-}) {
+}) => {
   const controls = tweaks?.draft.state?.controls.length ?? 0;
 
   if (!tweaks || (tweaks.draft.state && controls === 0)) {
@@ -104,4 +104,4 @@ export function InspectorTweaks({
       onSuggest={() => tweaks.onSuggest()}
     />
   );
-}
+};

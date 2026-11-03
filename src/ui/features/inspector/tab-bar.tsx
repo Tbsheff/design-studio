@@ -1,6 +1,8 @@
-import { useRef, type KeyboardEvent } from "react";
+import { useRef } from "react";
+import type { KeyboardEvent } from "react";
 
-import { TABS, type InspectorTab } from "./inspector-model.js";
+import { TABS } from "./inspector-model.js";
+import type { InspectorTab } from "./inspector-model.js";
 
 const TabBar = ({
   tab,
@@ -17,10 +19,10 @@ const TabBar = ({
     const at = TABS.findIndex((t) => t.id === tab);
 
     const target = {
-      ArrowRight: at + 1,
       ArrowLeft: at - 1,
-      Home: 0,
+      ArrowRight: at + 1,
       End: TABS.length - 1,
+      Home: 0,
     }[event.key];
 
     if (target === undefined) {

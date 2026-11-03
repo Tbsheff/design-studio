@@ -5,10 +5,8 @@ import { copy } from "./copy.js";
 import { useEditVariant } from "./edit-variant.js";
 import { EmptyState } from "./empty-state.js";
 import { ImageSection } from "./image-section.js";
-import {
-  inspectorEmptyReason,
-  type InspectorProps,
-} from "./inspector-model.js";
+import { inspectorEmptyReason } from "./inspector-model.js";
+import type { InspectorProps } from "./inspector-model.js";
 import { SimpleEditor, SimpleMultiEditor } from "./inspector-simple.js";
 import { StackingSection } from "./stacking-section.js";
 import { useUseSite } from "./use-use-site.js";

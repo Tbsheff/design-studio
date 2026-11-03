@@ -40,24 +40,28 @@ interface SessionView {
 
 const EMPTY: SessionView = {
   base: null,
-  count: 0,
-  net: 0,
-  dirty: false,
   blocked: null,
+  count: 0,
+  dirty: false,
+  net: 0,
 };
 
 const UNDO_PROMPT = 'Undo of "';
 const REFRESH_MS = 120;
 
-export function unsavedLabel(count: number): string {
+export const unsavedLabel = (count: number): string => {
   if (count === 0) {
     return "No unsaved edits";
   }
 
   return count === 1 ? "1 unsaved edit" : `${count} unsaved edits`;
-}
+};
 
-function netSteps(versions: Version[], base: string, fallback: number): number {
+const netSteps = (
+  versions: Version[],
+  base: string,
+  fallback: number
+): number => {
   const byId = new Map(versions.map((version) => [version.id, version]));
   let net = 0;
   let at = versions[0];
@@ -71,13 +75,13 @@ function netSteps(versions: Version[], base: string, fallback: number): number {
   }
 
   return at ? net : fallback;
-}
+};
 
-async function readSession(
+const readSession = async (
   projectId: string,
   directionId: string,
   base: string
-): Promise<SessionView> {
+): Promise<SessionView> => {
   const state: EditSessionState = await api.editSession(
     projectId,
     directionId,
@@ -86,10 +90,10 @@ async function readSession(
 
   const view = {
     base,
-    count: state.count,
-    net: 0,
-    dirty: state.dirty,
     blocked: state.blocked,
+    count: state.count,
+    dirty: state.dirty,
+    net: 0,
   };
 
   if (!state.dirty || state.count === 0) {
@@ -104,13 +108,11 @@ async function readSession(
     ...view,
     net: versions ? netSteps(versions, base, state.count) : state.count,
   };
-}
+};
 
-function fresh(base: string | null): SessionView {
-  return { ...EMPTY, base };
-}
+const fresh = (base: string | null): SessionView => ({ ...EMPTY, base });
 
-export function useEditSession(o: Options) {
+export const useEditSession = (o: Options) => {
   const { projectId, directionId } = o;
   const [view, setView] = useState<SessionView>(EMPTY);
   const [busy, setBusy] = useState<SessionAction | null>(null);
@@ -141,7 +143,7 @@ export function useEditSession(o: Options) {
   useEffect(begin, [begin]);
 
   const refresh = useCallback(() => {
-    const base = viewRef.current.base;
+    const { base } = viewRef.current;
 
     if (!directionId || !base) {
       return;
@@ -190,7 +192,7 @@ export function useEditSession(o: Options) {
 
   const end = useCallback(async (action: SessionAction): Promise<boolean> => {
     const cur = opts.current;
-    const base = viewRef.current.base;
+    const { base } = viewRef.current;
 
     if (!cur.directionId || !base) {
       return true;
@@ -270,15 +272,15 @@ export function useEditSession(o: Options) {
 
   return {
     ...view,
-    busy,
-    error,
-    asking,
-    save,
-    discard,
-    requestExit,
     answer,
+    asking,
+    busy,
     clearError: () => setError(null),
+    discard,
+    error,
+    requestExit,
+    save,
   };
-}
+};
 
 export type EditSession = ReturnType<typeof useEditSession>;

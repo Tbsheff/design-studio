@@ -1,8 +1,11 @@
-import { useRef, type MutableRefObject } from "react";
+import { useRef } from "react";
+import type { MutableRefObject } from "react";
 
 import type { BridgeToParent, ProjectKind } from "../../../shared/contracts.js";
-import { imageKindOf, type SetImageRequest } from "../../../shared/image.js";
-import { useBridge, type BridgeFrame } from "../../platform/bridge.js";
+import { imageKindOf } from "../../../shared/image.js";
+import type { SetImageRequest } from "../../../shared/image.js";
+import { useBridge } from "../../platform/bridge.js";
+import type { BridgeFrame } from "../../platform/bridge.js";
 import { NO_SOURCE } from "./structure-edits.js";
 
 interface Options {
@@ -20,13 +23,13 @@ interface Options {
 
 type FileDrop = Extract<BridgeToParent, { type: "file-drop" }>;
 
-async function place(
+const place = async (
   o: Options,
   directionId: string,
   drop: FileDrop,
   file: File
-): Promise<void> {
-  const selection = drop.selection;
+): Promise<void> => {
+  const { selection } = drop;
 
   if (!selection) {
     return;
@@ -40,14 +43,14 @@ async function place(
     const kind = imageKindOf(selection);
 
     const request: SetImageRequest = {
-      target: imageTargetOf(selection),
       image,
+      target: imageTargetOf(selection),
       ...(kind
         ? {}
         : {
+            alt: "",
             mode: "insert" as const,
             position: drop.inside ? ("inside" as const) : ("after" as const),
-            alt: "",
           }),
     };
 
@@ -56,9 +59,9 @@ async function place(
   } catch (error) {
     o.notify(imageError(error));
   }
-}
+};
 
-function refusal(o: Options, drop: FileDrop): string | null {
+const refusal = (o: Options, drop: FileDrop): string | null => {
   if (!drop.files[0]) {
     return "Drop an image file: PNG, JPEG, WebP, AVIF, GIF or SVG.";
   }
@@ -76,20 +79,20 @@ function refusal(o: Options, drop: FileDrop): string | null {
   }
 
   return null;
-}
+};
 
-export function useImageDrop(o: Options): void {
+export const useImageDrop = (o: Options): void => {
   const live = useRef(o);
   live.current = o;
   const busy = useRef(false);
   useBridge(
     () =>
       live.current.frames.slots.map((slot): BridgeFrame => ({
+        element: live.current.frames.elements.current[slot.token] ?? null,
         key: slot.token,
+        kind: live.current.kind,
         token: slot.token,
         url: slot.src,
-        kind: live.current.kind,
-        element: live.current.frames.elements.current[slot.token] ?? null,
       })),
     (frame, msg: BridgeToParent) => {
       if (
@@ -121,4 +124,4 @@ export function useImageDrop(o: Options): void {
       });
     }
   );
-}
+};

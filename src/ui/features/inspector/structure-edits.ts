@@ -19,42 +19,39 @@ export type LayerDrop =
 export const NO_SOURCE =
   "This element has no source location, so it cannot be changed here.";
 
-export function selectionTargets(
+export const selectionTargets = (
   selection: SelectionContext[]
-): StructureTarget[] | null {
+): StructureTarget[] | null => {
   if (selection.length === 0 || selection.some((entry) => !entry.source)) {
     return null;
   }
 
   return selection.map((entry) => ({
-    source: entry.source as NonNullable<SelectionContext["source"]>,
     selector: entry.selector,
+    source: entry.source as NonNullable<SelectionContext["source"]>,
     tag: entry.tag.toLowerCase(),
   }));
-}
+};
 
-export function nodeTarget(
+export const nodeTarget = (
   node: LayerNode | undefined
-): StructureTarget | null {
+): StructureTarget | null => {
   const source = parseLoc(node?.loc);
 
   return node && source ? { source, tag: node.tag } : null;
-}
+};
 
-function sameLoc(a: StructureTarget, b: StructureTarget): boolean {
-  return (
-    a.source.file === b.source.file &&
-    a.source.line === b.source.line &&
-    a.source.col === b.source.col
-  );
-}
+const sameLoc = (a: StructureTarget, b: StructureTarget): boolean =>
+  a.source.file === b.source.file &&
+  a.source.line === b.source.line &&
+  a.source.col === b.source.col;
 
-export function dropRequest(
+export const dropRequest = (
   nodes: LayerNode[],
   id: number,
   drop: LayerDrop,
   selection: SelectionContext[]
-): StructureEditRequest | null {
+): StructureEditRequest | null => {
   const byId = (key: number) =>
     nodeTarget(nodes.find((node) => node.id === key));
 
@@ -79,13 +76,13 @@ export function dropRequest(
       : [dragged];
 
   if ("into" in drop) {
-    return { op: "move", targets, into: ref };
+    return { into: ref, op: "move", targets };
   }
 
   return "before" in drop
-    ? { op: "move", targets, before: ref }
-    : { op: "move", targets, after: ref };
-}
+    ? { before: ref, op: "move", targets }
+    : { after: ref, op: "move", targets };
+};
 
 export interface StructureMenuState {
   count: number;
@@ -95,23 +92,23 @@ export interface StructureMenuState {
 }
 
 const LABELS: Record<StructureKey, string> = {
+  cut: "Cut to move",
   delete: "Delete",
   duplicate: "Duplicate",
-  wrap: "Wrap in auto layout",
-  unwrap: "Unwrap",
-  cut: "Cut to move",
-  paste: "Move cut layers here",
   group: "Group selection",
+  paste: "Move cut layers here",
+  unwrap: "Unwrap",
+  wrap: "Wrap in auto layout",
 };
 
 const ICONS: Record<StructureKey, PreviewMenuItem["icon"]> = {
+  cut: "arrowRight",
   delete: "trash",
   duplicate: "copy",
-  wrap: "frame",
-  unwrap: "expand",
-  cut: "arrowRight",
-  paste: "arrowDown",
   group: "layers",
+  paste: "arrowDown",
+  unwrap: "expand",
+  wrap: "frame",
 };
 
 const MENU_ORDER: StructureKey[] = [
@@ -124,10 +121,10 @@ const MENU_ORDER: StructureKey[] = [
   "delete",
 ];
 
-function blockReason(
+const blockReason = (
   key: StructureKey,
   state: StructureMenuState
-): string | undefined {
+): string | undefined => {
   if (!state.hasSource) {
     return NO_SOURCE;
   }
@@ -141,14 +138,14 @@ function blockReason(
   }
 
   return undefined;
-}
+};
 
-export function structureMenuItems(
+export const structureMenuItems = (
   state: StructureMenuState,
   run: (key: StructureKey) => void,
   leadDivider = false
-): PreviewMenuItem[] {
-  return MENU_ORDER.map((key, index) => {
+): PreviewMenuItem[] =>
+  MENU_ORDER.map((key, index) => {
     const disabled = blockReason(key, state);
 
     const label =
@@ -157,13 +154,12 @@ export function structureMenuItems(
         : LABELS[key];
 
     return {
-      id: `structure-${key}`,
-      label,
-      icon: ICONS[key],
-      keyId: STRUCTURE_KEY_IDS[key],
-      run: () => run(key),
       divider: (leadDivider && index === 0) || key === "delete",
+      icon: ICONS[key],
+      id: `structure-${key}`,
+      keyId: STRUCTURE_KEY_IDS[key],
+      label,
+      run: () => run(key),
       ...(disabled ? { disabled } : {}),
     };
   });
-}

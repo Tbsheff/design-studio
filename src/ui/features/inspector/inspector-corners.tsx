@@ -1,44 +1,44 @@
 import { useState } from "react";
 
 import { Icon } from "../../kit/Icon.js";
-import { expandBox, SIDES, type ShiftPart, type Side } from "./css-values.js";
+import { expandBox, SIDES } from "./css-values.js";
+import type { ShiftPart, Side } from "./css-values.js";
 import { NumberField } from "./number-field.js";
 import { proxyEdit } from "./proxy-edit.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 
 const CORNERS: { side: Side; short: string; label: string }[] = [
-  { side: "top", short: "TL", label: "Top left radius" },
-  { side: "right", short: "TR", label: "Top right radius" },
-  { side: "left", short: "BL", label: "Bottom left radius" },
-  { side: "bottom", short: "BR", label: "Bottom right radius" },
+  { label: "Top left radius", short: "TL", side: "top" },
+  { label: "Top right radius", short: "TR", side: "right" },
+  { label: "Bottom left radius", short: "BL", side: "left" },
+  { label: "Bottom right radius", short: "BR", side: "bottom" },
 ];
 
-export function joinCorners(corners: Record<Side, string>): string {
+export const joinCorners = (corners: Record<Side, string>): string => {
   const values = SIDES.map((side) => corners[side] || "0");
+
   return values.every((value) => value === values[0])
     ? (values[0] ?? "0")
     : values.join(" ");
-}
+};
 
-function cornersOf(radius: string): Record<Side, string> {
-  return expandBox(radius.split("/")[0]);
-}
+const cornersOf = (radius: string): Record<Side, string> =>
+  expandBox(radius.split("/")[0]);
 
-function cornerPart(side: Side): ShiftPart {
-  return {
-    key: side,
-    map: (raw, change) =>
-      joinCorners({
-        ...cornersOf(raw),
-        [side]: change(cornersOf(raw)[side] || "0"),
-      }),
-  };
-}
+const cornerPart = (side: Side): ShiftPart => ({
+  key: side,
+  map: (raw, change) =>
+    joinCorners({
+      ...cornersOf(raw),
+      [side]: change(cornersOf(raw)[side] || "0"),
+    }),
+});
 
 const ALL_CORNERS: ShiftPart = {
   key: "all",
   map: (raw, change) => {
     const corners = cornersOf(raw);
+
     return joinCorners(
       Object.fromEntries(
         SIDES.map((side) => [side, change(corners[side] || "0")])
@@ -47,23 +47,26 @@ const ALL_CORNERS: ShiftPart = {
   },
 };
 
-function differ(radius: string): boolean {
+const differ = (radius: string): boolean => {
   const corners = cornersOf(radius);
-  return SIDES.some((side) => corners[side] !== corners.top);
-}
 
-export function RadiusField({
+  return SIDES.some((side) => corners[side] !== corners.top);
+};
+
+export const RadiusField = ({
   edit,
   short = "R",
 }: {
   edit: DirectEdit;
   short?: string;
-}) {
+}) => {
   const [split, setSplit] = useState(() =>
     differ(edit.values["border-radius"])
   );
+
   const radius = edit.values["border-radius"];
   const corners = cornersOf(radius);
+
   const toggle = (
     <button
       type="button"
@@ -77,14 +80,13 @@ export function RadiusField({
       <Icon name="corners" size={14} />
     </button>
   );
+
   if (!split) {
     return (
       <div className="ins-radius">
         <NumberField
           short={short}
           spec={{
-            prop: "border-radius",
-            label: "Border radius",
             edit: proxyEdit(
               edit,
               "border-radius",
@@ -93,13 +95,16 @@ export function RadiusField({
               ["border-radius"],
               { part: ALL_CORNERS }
             ),
+            label: "Border radius",
             min: 0,
+            prop: "border-radius",
           }}
         />
         {toggle}
       </div>
     );
   }
+
   return (
     <div className="ins-radius split">
       <div className="ins-grid">
@@ -110,9 +115,6 @@ export function RadiusField({
             short={short}
             tokens={false}
             spec={{
-              prop: "border-radius",
-              label,
-              min: 0,
               edit: proxyEdit(
                 edit,
                 "border-radius",
@@ -123,6 +125,9 @@ export function RadiusField({
                 ["border-radius"],
                 { part: cornerPart(side) }
               ),
+              label,
+              min: 0,
+              prop: "border-radius",
             }}
           />
         ))}
@@ -130,4 +135,4 @@ export function RadiusField({
       {toggle}
     </div>
   );
-}
+};

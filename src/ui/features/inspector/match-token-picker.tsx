@@ -1,16 +1,18 @@
-import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { KeyboardEvent } from "react";
 
 import type { StyleValueRow } from "../../../shared/style-search.js";
-import { shownValue, type Candidate, Swatch } from "./match-candidates.js";
+import { shownValue, Swatch } from "./match-candidates.js";
+import type { Candidate } from "./match-candidates.js";
 import { PICK_SHOWN, KIND_EXAMPLE } from "./match-scan.js";
 
-function TokenPicker(props: {
+const TokenPicker = (props: {
   row: StyleValueRow;
   candidates: Candidate[];
   target: string;
   onPick: (token: string) => void;
   onClose: () => void;
-}) {
+}) => {
   const [text, setText] = useState("");
   const input = useRef<HTMLInputElement>(null);
   useEffect(() => {
@@ -106,6 +108,6 @@ function TokenPicker(props: {
       </div>
     </div>
   );
-}
+};
 
 export { TokenPicker };

@@ -7,7 +7,8 @@ import { AddButton } from "./inspector-shared.js";
 import { NumberField } from "./number-field.js";
 import { proxyEdit } from "./proxy-edit.js";
 import { ShadowRow } from "./shadow-row.js";
-import { NEW_SHADOW, blurOf, withBlur, type Shadow } from "./shadows.js";
+import { NEW_SHADOW, blurOf, withBlur } from "./shadows.js";
+import type { Shadow } from "./shadows.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 
 const BLUR_PART: ShiftPart = {
@@ -16,7 +17,7 @@ const BLUR_PART: ShiftPart = {
 };
 
 const LayerBlur = ({ edit }: { edit: DirectEdit }) => {
-  const filter = edit.values.filter;
+  const { filter } = edit.values;
 
   const blur = proxyEdit(
     edit,
@@ -32,7 +33,7 @@ const LayerBlur = ({ edit }: { edit: DirectEdit }) => {
       id="ins-layer-blur"
       short="Blur"
       tokens={false}
-      spec={{ prop: "width", label: "Layer blur", edit: blur, min: 0 }}
+      spec={{ edit: blur, label: "Layer blur", min: 0, prop: "width" }}
     />
   );
 };

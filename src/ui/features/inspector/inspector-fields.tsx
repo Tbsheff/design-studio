@@ -1,14 +1,21 @@
-import { memo, useState, type KeyboardEvent, type ReactNode } from "react";
+import { memo, useState } from "react";
+import type { KeyboardEvent, ReactNode } from "react";
 
 import type { DirectStyleProperty } from "../../../shared/contracts.js";
 import { colorHex, resolveTokenValue } from "../../../shared/token-match.js";
-import { Icon, type IconName } from "../../kit/Icon.js";
+import { Icon } from "../../kit/Icon.js";
+import type { IconName } from "../../kit/Icon.js";
 import { UiSelect } from "../../kit/UiSelect.js";
 import { readStored, writeStored } from "../../platform/storage.js";
 import { TokenControl } from "../versions-layers-tokens/token-control.js";
-import { colorToHex, displayColor, isValidColor } from "./css-values.js";
+import {
+  colorToHex,
+  displayColor,
+  isValidColor,
+  sameEditValues,
+} from "./css-values.js";
 import { useInherited } from "./edit-variant.js";
-import { sameEditValues, type DirectEdit } from "./use-direct-edit.js";
+import type { DirectEdit } from "./use-direct-edit.js";
 import { useTokenUi } from "./use-token-snap.js";
 
 interface FieldProps {
@@ -20,16 +27,13 @@ interface FieldProps {
 
 const NEUTRAL_SWATCH = "#ffffff";
 
-function sameField(a: FieldProps, b: FieldProps): boolean {
-  return (
-    a.prop === b.prop &&
-    a.label === b.label &&
-    a.short === b.short &&
-    sameEditValues(a.edit, b.edit, [a.prop])
-  );
-}
+const sameField = (a: FieldProps, b: FieldProps): boolean =>
+  a.prop === b.prop &&
+  a.label === b.label &&
+  a.short === b.short &&
+  sameEditValues(a.edit, b.edit, [a.prop]);
 
-function ColorFieldView({ prop, label, short, edit }: FieldProps) {
+const ColorFieldView = ({ prop, label, short, edit }: FieldProps) => {
   const [text, setText] = useState<string | null>(null);
   const ui = useTokenUi();
   const value = edit.values[prop];
@@ -59,7 +63,7 @@ function ColorFieldView({ prop, label, short, edit }: FieldProps) {
     }
   };
 
-  const id = `ins-${prop}-${label.replaceAll(/\W+/g, "-").toLowerCase()}`;
+  const id = `ins-${prop}-${label.replaceAll(/\W+/gu, "-").toLowerCase()}`;
 
   return (
     <div className={`ins-field color ${inherited ? "inherited" : ""}`}>
@@ -106,15 +110,15 @@ function ColorFieldView({ prop, label, short, edit }: FieldProps) {
       <TokenControl prop={prop} label={label} edit={edit} />
     </div>
   );
-}
+};
 
-function SelectFieldView({
+const SelectFieldView = ({
   prop,
   label,
   short,
   edit,
   options,
-}: FieldProps & { options: string[] }) {
+}: FieldProps & { options: string[] }) => {
   const value = edit.values[prop];
 
   const list =
@@ -134,7 +138,7 @@ function SelectFieldView({
         aria-label={label}
         value={value}
         placeholder={edit.mixed.has(prop) ? "Mixed" : "—"}
-        options={list.map((option) => ({ value: option, label: option }))}
+        options={list.map((option) => ({ label: option, value: option }))}
         onChange={(next) => {
           edit.preview({ [prop]: next });
           edit.commit();
@@ -142,16 +146,16 @@ function SelectFieldView({
       />
     </div>
   );
-}
+};
 
 const ALIGN: { value: string; icon: IconName; label: string }[] = [
-  { value: "left", icon: "alignLeft", label: "Align left" },
-  { value: "center", icon: "alignCenter", label: "Align center" },
-  { value: "right", icon: "alignRight", label: "Align right" },
-  { value: "justify", icon: "alignJustify", label: "Justify" },
+  { icon: "alignLeft", label: "Align left", value: "left" },
+  { icon: "alignCenter", label: "Align center", value: "center" },
+  { icon: "alignRight", label: "Align right", value: "right" },
+  { icon: "alignJustify", label: "Justify", value: "justify" },
 ];
 
-function alignOf(value: string): string {
+const alignOf = (value: string): string => {
   if (value === "start") {
     return "left";
   }
@@ -161,9 +165,9 @@ function alignOf(value: string): string {
   }
 
   return value;
-}
+};
 
-function AlignFieldView({ edit }: { edit: DirectEdit }) {
+const AlignFieldView = ({ edit }: { edit: DirectEdit }) => {
   const current = alignOf(edit.values["text-align"]);
 
   return (
@@ -190,11 +194,11 @@ function AlignFieldView({ edit }: { edit: DirectEdit }) {
       ))}
     </div>
   );
-}
+};
 
 const OPEN_KEY = "studio.inspector.sections";
 
-function readOpen(): Record<string, boolean> {
+const readOpen = (): Record<string, boolean> => {
   try {
     const raw: unknown = JSON.parse(readStored(OPEN_KEY) ?? "{}");
 
@@ -204,14 +208,14 @@ function readOpen(): Record<string, boolean> {
   } catch {
     return {};
   }
-}
+};
 
 const sectionOpen = readOpen();
 
-export function useSectionOpen(
+export const useSectionOpen = (
   title: string,
   initial = true
-): [boolean, () => void] {
+): [boolean, () => void] => {
   const [open, setOpen] = useState(() => sectionOpen[title] ?? initial);
 
   const toggle = () => {
@@ -222,7 +226,7 @@ export function useSectionOpen(
   };
 
   return [open, toggle];
-}
+};
 
 interface SectionProps {
   title: string;
@@ -233,14 +237,14 @@ interface SectionProps {
   initialOpen?: boolean;
 }
 
-export function InspectorSection({
+export const InspectorSection = ({
   title,
   children,
   aside,
   className,
   label,
   initialOpen,
-}: SectionProps) {
+}: SectionProps) => {
   const [open, toggle] = useSectionOpen(title, initialOpen);
 
   const hasBody =
@@ -270,7 +274,7 @@ export function InspectorSection({
       {open && children}
     </section>
   );
-}
+};
 
 export const ColorField = memo(ColorFieldView, sameField);
 

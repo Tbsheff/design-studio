@@ -20,9 +20,9 @@ type Snippet =
   | { kind: "error"; message: string };
 
 const TOKEN =
-  /(<!--[\s\S]*?-->|\{\/\*[\s\S]*?\*\/\})|(<\/?[A-Za-z][\w.:-]*|\/?>)|("[^"]*"|'[^']*'|`[^`]*`)|([A-Za-z_:][\w:.-]*)(?==)|(\{|\})/g;
+  /(<!--[\s\S]*?-->|\{\/\*[\s\S]*?\*\/\})|(<\/?[A-Za-z][\w.:-]*|\/?>)|("[^"]*"|'[^']*'|`[^`]*`)|([A-Za-z_:][\w:.-]*)(?==)|(\{|\})/gu;
 
-export function highlight(code: string): ReactNode[] {
+export const highlight = (code: string): ReactNode[] => {
   const out: ReactNode[] = [];
   let at = 0;
   let index = 0;
@@ -58,13 +58,13 @@ export function highlight(code: string): ReactNode[] {
   }
 
   return out;
-}
+};
 
-function useSnippet(
+const useSnippet = (
   projectId: string,
   directionId: string | null,
   selection: SelectionContext | null
-): Snippet {
+): Snippet => {
   const [snippet, setSnippet] = useState<Snippet>({ kind: "loading" });
   const [tick, setTick] = useState(0);
   useProjectEvents(projectId, (event) => {
@@ -78,11 +78,11 @@ function useSnippet(
   useEffect(() => {
     if (!directionId || !source) {
       setSnippet({
-        kind: "ready",
         code: fallback,
-        file: "",
-        line: 0,
         exact: false,
+        file: "",
+        kind: "ready",
+        line: 0,
       });
 
       return;
@@ -100,24 +100,24 @@ function useSnippet(
         setSnippet(
           result.code === null
             ? {
-                kind: "ready",
                 code: fallback,
-                file: result.file,
-                line: result.line,
                 exact: false,
+                file: result.file,
+                kind: "ready",
+                line: result.line,
               }
             : {
-                kind: "ready",
                 code: result.code,
-                file: result.file,
-                line: result.line,
                 exact: true,
+                file: result.file,
+                kind: "ready",
+                line: result.line,
               }
         );
       })
       .catch(
-        (err: unknown) =>
-          live && setSnippet({ kind: "error", message: errorText(err) })
+        (error: unknown) =>
+          live && setSnippet({ kind: "error", message: errorText(error) })
       );
 
     return () => {
@@ -126,9 +126,9 @@ function useSnippet(
   }, [projectId, directionId, key, tick, fallback]);
 
   return snippet;
-}
+};
 
-function OpenInEditor({
+const OpenInEditor = ({
   projectId,
   directionId,
   file,
@@ -136,7 +136,7 @@ function OpenInEditor({
   projectId: string;
   directionId: string;
   file: string;
-}) {
+}) => {
   const [editors, setEditors] = useState<EditorInfo[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
@@ -171,9 +171,9 @@ function OpenInEditor({
       {error && <span className="ins-code-error">{error}</span>}
     </>
   );
-}
+};
 
-function CopySnippet({ code }: { code: string }) {
+const CopySnippet = ({ code }: { code: string }) => {
   const [copied, setCopied] = useState(false);
   useEffect(() => {
     if (!copied) {
@@ -197,9 +197,9 @@ function CopySnippet({ code }: { code: string }) {
       <span aria-live="polite">{copied ? "Copied" : "Copy"}</span>
     </button>
   );
-}
+};
 
-export function InspectorCode({ projectId, directionId, selection }: Props) {
+export const InspectorCode = ({ projectId, directionId, selection }: Props) => {
   const snippet = useSnippet(projectId, directionId, selection);
 
   if (!selection) {
@@ -261,4 +261,4 @@ export function InspectorCode({ projectId, directionId, selection }: Props) {
       )}
     </div>
   );
-}
+};

@@ -1,12 +1,15 @@
-import { memo, useEffect, type MutableRefObject } from "react";
+import { memo, useEffect } from "react";
+import type { MutableRefObject } from "react";
 
 import {
   DEFAULT_BREAKPOINTS,
   parseVariant,
   variantPrefix,
-  type ParsedVariant,
-  type VariantState,
-  type VariantSupport,
+} from "../../../shared/variants.js";
+import type {
+  ParsedVariant,
+  VariantState,
+  VariantSupport,
 } from "../../../shared/variants.js";
 import { UiSelect } from "../../kit/UiSelect.js";
 import type { PreviewPort } from "../../platform/bridge.js";
@@ -35,15 +38,15 @@ const STATES: { id: VariantState; label: string }[] = [
 const SHOWN_BREAKPOINTS = 4;
 const BASE: ParsedVariant = { breakpoint: null, dark: false, states: [] };
 
-function breakpointsOf(support: VariantSupport | null) {
+const breakpointsOf = (support: VariantSupport | null) => {
   const list = support?.breakpoints.length
     ? support.breakpoints
     : DEFAULT_BREAKPOINTS;
 
   return list.slice(0, SHOWN_BREAKPOINTS);
-}
+};
 
-function Chip({
+const Chip = ({
   label,
   pressed,
   tip,
@@ -53,21 +56,19 @@ function Chip({
   pressed: boolean;
   tip: string;
   onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      className={`ins-variant-chip ${pressed ? "on" : ""}`}
-      aria-pressed={pressed}
-      data-tip={tip}
-      onClick={onClick}
-    >
-      {label}
-    </button>
-  );
-}
+}) => (
+  <button
+    type="button"
+    className={`ins-variant-chip ${pressed ? "on" : ""}`}
+    aria-pressed={pressed}
+    data-tip={tip}
+    onClick={onClick}
+  >
+    {label}
+  </button>
+);
 
-function summary(prefix: string, support: VariantSupport | null): string {
+const summary = (prefix: string, support: VariantSupport | null): string => {
   if (support?.mode === "none") {
     return support.reason ?? "This element cannot take variant styles.";
   }
@@ -84,16 +85,16 @@ function summary(prefix: string, support: VariantSupport | null): string {
   }
 
   return `Set here: ${set.join(support?.mode === "css" ? "; " : " ")}. Dim values come from the base.`;
-}
+};
 
 const ANY_WIDTH = "";
 
-function InspectorVariantBarView({
+const InspectorVariantBarView = ({
   selector,
   port,
   support,
   quietNote,
-}: Props) {
+}: Props) => {
   const prefix = useEditVariant();
   const current = parseVariant(prefix) ?? BASE;
   const off = support?.mode === "none";
@@ -134,10 +135,10 @@ function InspectorVariantBarView({
     });
 
   const widths = [
-    { value: ANY_WIDTH, label: "All widths" },
+    { label: "All widths", value: ANY_WIDTH },
     ...breakpoints.map((entry) => ({
-      value: entry.name,
       label: `${entry.name} ${entry.px}+`,
+      value: entry.name,
     })),
   ];
 
@@ -191,7 +192,7 @@ function InspectorVariantBarView({
       )}
     </div>
   );
-}
+};
 
 export const InspectorVariantBar = memo(InspectorVariantBarView);
 

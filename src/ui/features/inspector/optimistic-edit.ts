@@ -15,13 +15,13 @@ export interface OptimisticEdit {
 
 let counter = 0;
 
-function nextId(): string {
+const nextId = (): string => {
   counter += 1;
 
   return `ui-${Date.now().toString(36)}-${counter}`;
-}
+};
 
-export function domPatchFor(req: DirectEditRequest): DomPatch | null {
+export const domPatchFor = (req: DirectEditRequest): DomPatch | null => {
   if (req.variant || req.move !== undefined || req.insert !== undefined) {
     return null;
   }
@@ -41,13 +41,13 @@ export function domPatchFor(req: DirectEditRequest): DomPatch | null {
     ...(style ? { style } : {}),
     ...(req.text === undefined ? {} : { text: req.text }),
   };
-}
+};
 
-function watchResult(
+const watchResult = (
   port: PreviewPort,
   id: string,
   onProblem: (reason: string) => void
-): void {
+): void => {
   if (!port.listen) {
     return;
   }
@@ -66,18 +66,18 @@ function watchResult(
   });
 
   const timer = window.setTimeout(stop, RESULT_WAIT_MS);
-}
-
-const NOOP: OptimisticEdit = {
-  saved: () => undefined,
-  failed: () => undefined,
 };
 
-export function startOptimistic(
+const NOOP: OptimisticEdit = {
+  failed: () => undefined,
+  saved: () => undefined,
+};
+
+export const startOptimistic = (
   port: PreviewPort | null | undefined,
   req: DirectEditRequest,
   onProblem: (reason: string) => void
-): OptimisticEdit {
+): OptimisticEdit => {
   const patch = domPatchFor(req);
 
   if (!port || !patch) {
@@ -85,20 +85,20 @@ export function startOptimistic(
   }
 
   const id = nextId();
-  port.post({ type: "optimistic-apply", id, patch, written: false });
+  port.post({ id, patch, type: "optimistic-apply", written: false });
   watchResult(port, id, onProblem);
 
   return {
+    failed: (reason) =>
+      port.post({ id, ok: false, reason, type: "optimistic-settle" }),
     saved: (tailwind) =>
       port.post({
-        type: "optimistic-settle",
         id,
         ok: true,
+        type: "optimistic-settle",
         ...(tailwind?.mode === "classes" && tailwind.delta
           ? { classes: tailwind.delta }
           : {}),
       }),
-    failed: (reason) =>
-      port.post({ type: "optimistic-settle", id, ok: false, reason }),
   };
-}
+};

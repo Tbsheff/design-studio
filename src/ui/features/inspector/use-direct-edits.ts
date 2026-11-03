@@ -40,17 +40,17 @@ interface Options {
 
 const DEBOUNCE_MS = 250;
 
-function failureText(err: unknown): string {
+const failureText = (err: unknown): string => {
   if (isApiConflict(err)) {
     return "Agent is running. Wait or cancel.";
   }
 
   return errorText(err);
-}
+};
 
-export function useDirectEdits(
+export const useDirectEdits = (
   o: Options
-): DirectEdit & { blocked: string | null } {
+): DirectEdit & { blocked: string | null } => {
   const opts = useRef(o);
   opts.current = o;
 
@@ -88,7 +88,7 @@ export function useDirectEdits(
     const port = opts.current.port.current;
 
     for (const s of opts.current.selections) {
-      port?.post({ type: "preview-style", selector: s.selector, style });
+      port?.post({ selector: s.selector, style, type: "preview-style" });
     }
   }, []);
 
@@ -132,7 +132,7 @@ export function useDirectEdits(
 
   const pendingStyle = useCallback(() => {
     const style = changedProps(draftRef.current, mergedRef.current.values);
-    const rewrite = opts.current.rewrite;
+    const { rewrite } = opts.current;
 
     if (!rewrite || Object.keys(style).length === 0) {
       return style;
@@ -176,7 +176,7 @@ export function useDirectEdits(
     setStatus({ kind: "saving" });
 
     const problem = (message: string) =>
-      setStatus({ kind: "error", message, code: "optimistic_mismatch" });
+      setStatus({ code: "optimistic_mismatch", kind: "error", message });
 
     const optimistic = edits.map((edit) =>
       startOptimistic(cur.port.current, edit, problem)
@@ -194,14 +194,14 @@ export function useDirectEdits(
         }
 
         setShifts(withoutShifts(shifts.current, [], sent));
-        setStatus({ kind: "saved", at: Date.now() });
+        setStatus({ at: Date.now(), kind: "saved" });
       })
-      .catch((err: unknown) => {
+      .catch((error: unknown) => {
         for (const one of optimistic) {
-          one.failed(failureText(err));
+          one.failed(failureText(error));
         }
 
-        fail(err);
+        fail(error);
       });
 
     inflight.current = request;
@@ -278,7 +278,7 @@ export function useDirectEdits(
         const style = own ? shiftedStyle(own, only) : {};
 
         if (Object.keys(style).length > 0) {
-          port?.post({ type: "preview-style", selector: s.selector, style });
+          port?.post({ selector: s.selector, style, type: "preview-style" });
         }
       });
       setStatus((s) => (s.kind === "error" ? { kind: "idle" } : s));
@@ -304,7 +304,7 @@ export function useDirectEdits(
           props.map((prop) => [prop, own?.[prop] ? own[prop] : null])
         );
 
-        port?.post({ type: "preview-style", selector: s.selector, style });
+        port?.post({ selector: s.selector, style, type: "preview-style" });
       });
     },
     [setDraft, setShifts]
@@ -345,7 +345,7 @@ export function useDirectEdits(
 
       setDraft(next);
       setShifts(withoutShifts(shifts.current, Object.keys(style)));
-      setStatus({ kind: "saved", at: Date.now() });
+      setStatus({ at: Date.now(), kind: "saved" });
     },
     [setDraft, setShifts]
   );
@@ -354,7 +354,7 @@ export function useDirectEdits(
   const noop = useCallback(() => undefined, []);
 
   useEffect(() => {
-    o.control.current = { cancel, settle, commitText };
+    o.control.current = { cancel, commitText, settle };
 
     return () => {
       if (o.control.current?.cancel === cancel) {
@@ -394,30 +394,30 @@ export function useDirectEdits(
   );
 
   const scope = useMemo(
-    () => ({ projectId: o.projectId, directionId: o.directionId }),
+    () => ({ directionId: o.directionId, projectId: o.projectId }),
     [o.projectId, o.directionId]
   );
 
   return {
-    values,
-    mixed,
-    each: bases,
-    text: "",
-    status,
-    tailwind: null,
-    preview,
-    shift,
-    revert,
+    absorb,
+    blocked,
     commit,
     commitSoon,
-    previewText: noop,
-    revertText: noop,
-    reset,
-    drain,
-    absorb,
     dirty,
-    blocked,
-    scope,
+    drain,
+    each: bases,
+    mixed,
+    preview,
+    previewText: noop,
     reselect: noop,
+    reset,
+    revert,
+    revertText: noop,
+    scope,
+    shift,
+    status,
+    tailwind: null,
+    text: "",
+    values,
   };
-}
+};

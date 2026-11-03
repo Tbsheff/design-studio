@@ -21,7 +21,7 @@ interface Props {
   onClose: () => void;
 }
 
-function hintOf(item: SwapCandidate): string {
+const hintOf = (item: SwapCandidate): string => {
   if (item.drop.length > 0) {
     return `drops ${item.drop.join(", ")}`;
   }
@@ -31,7 +31,7 @@ function hintOf(item: SwapCandidate): string {
   }
 
   return "all props fit";
-}
+};
 
 export default function SwapInstanceMenu({
   projectId,
@@ -52,7 +52,7 @@ export default function SwapInstanceMenu({
       .then((result) => live && setList(result))
       .catch(
         (error: unknown) =>
-          live && setList({ from: "", candidates: [], note: apiMessage(error) })
+          live && setList({ candidates: [], from: "", note: apiMessage(error) })
       );
 
     return () => {
@@ -63,7 +63,7 @@ export default function SwapInstanceMenu({
   const pick = (item: SwapCandidate) => {
     setBusy(item.name);
     componentCreateApi
-      .swap(projectId, directionId, use, { name: item.name, file: item.file })
+      .swap(projectId, directionId, use, { file: item.file, name: item.name })
       .then((result) =>
         onDone({
           ok: true,

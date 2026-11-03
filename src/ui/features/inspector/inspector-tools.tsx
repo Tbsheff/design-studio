@@ -34,48 +34,42 @@ interface Props {
   onRedo?: () => void;
 }
 
-function Glyph({ d }: { d: string }) {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 16 16"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.4"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d={d} />
-    </svg>
-  );
-}
+const Glyph = ({ d }: { d: string }) => (
+  <svg
+    width="14"
+    height="14"
+    viewBox="0 0 16 16"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.4"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d={d} />
+  </svg>
+);
 
 const GLYPHS = {
   directSelect: "M4 2.5l7.5 4-3.25 1L6.5 11zM9.75 9.75l3 3",
-  text: "M3.5 3.5h9M8 3.5v9M6.25 12.5h3.5",
   frame: "M5 2v12M11 2v12M2 5h12M2 11h12",
   redo: "M10.5 4l3 3-3 3M13.25 7H6a3.25 3.25 0 0 0 0 6.5h2.5",
+  text: "M3.5 3.5h9M8 3.5v9M6.25 12.5h3.5",
 };
 
 const INSERTS: { kind: InsertKind; label: string; glyph: string }[] = [
-  { kind: "text", label: "Text", glyph: GLYPHS.text },
-  { kind: "frame", label: "Frame", glyph: GLYPHS.frame },
+  { glyph: GLYPHS.text, kind: "text", label: "Text" },
+  { glyph: GLYPHS.frame, kind: "frame", label: "Frame" },
 ];
 
-function isHtmlFile(file: string | undefined): boolean {
-  return file !== undefined && /\.html?$/i.test(file);
-}
+const isHtmlFile = (file: string | undefined): boolean =>
+  file !== undefined && /\.html?$/iu.test(file);
 
-function canvasSelectMode(): boolean {
-  return (
-    collectCommands().find((command) => command.id === "tool.select")?.title ===
-    "Stop selecting"
-  );
-}
+const canvasSelectMode = (): boolean =>
+  collectCommands().find((command) => command.id === "tool.select")?.title ===
+  "Stop selecting";
 
-function ToolButton({
+const ToolButton = ({
   label,
   pressed,
   disabled,
@@ -91,24 +85,22 @@ function ToolButton({
   align?: "start" | "end";
   onClick: () => void;
   children: ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      className="ins-tool"
-      aria-label={label}
-      aria-pressed={pressed}
-      disabled={disabled}
-      data-tip={tip ?? label}
-      data-tip-align={align}
-      onClick={onClick}
-    >
-      {children}
-    </button>
-  );
-}
+}) => (
+  <button
+    type="button"
+    className="ins-tool"
+    aria-label={label}
+    aria-pressed={pressed}
+    disabled={disabled}
+    data-tip={tip ?? label}
+    data-tip-align={align}
+    onClick={onClick}
+  >
+    {children}
+  </button>
+);
 
-function VariantsButton() {
+const VariantsButton = () => {
   const blocked = commandBlocker(TRY_VARIANTS_COMMAND);
 
   return (
@@ -126,9 +118,9 @@ function VariantsButton() {
       <Icon name="compare" size={14} />
     </button>
   );
-}
+};
 
-function VectorButtons() {
+const VectorButtons = () => {
   const { tool, available } = useVectorTool();
 
   return (
@@ -151,9 +143,9 @@ function VectorButtons() {
       ))}
     </>
   );
-}
+};
 
-export function InspectorTools(props: Props) {
+export const InspectorTools = (props: Props) => {
   const [notice, setNotice] = useState<string | null>(null);
   const last = props.selection.at(-1);
 
@@ -179,9 +171,9 @@ export function InspectorTools(props: Props) {
   const directSelect = () => {
     if (last) {
       props.port.current?.post({
-        type: "select-relative",
-        selector: last.selector,
         move: "child",
+        selector: last.selector,
+        type: "select-relative",
       });
     }
   };
@@ -210,13 +202,13 @@ export function InspectorTools(props: Props) {
     try {
       await props.control.current?.settle();
       await api.directEdit(props.projectId, props.directionId, {
-        source,
-        selector: last.selector,
-        tag: last.tag,
         insert: kind,
+        selector: last.selector,
+        source,
+        tag: last.tag,
       });
-    } catch (err) {
-      setNotice(errorText(err));
+    } catch (error) {
+      setNotice(errorText(error));
     }
   };
 
@@ -283,4 +275,4 @@ export function InspectorTools(props: Props) {
       )}
     </div>
   );
-}
+};

@@ -74,15 +74,14 @@ const FLUSH_ON = new Set<BridgeToParent["type"]>([
 
 const shown = new Set<string>();
 
-function axisStyle(
+const axisStyle = (
   prop: string,
   start: number,
   delta: number
-): Record<string, string> {
-  return delta === 0 ? {} : { [prop]: `${Math.round(start + delta)}px` };
-}
+): Record<string, string> =>
+  delta === 0 ? {} : { [prop]: `${Math.round(start + delta)}px` };
 
-export function nudgeStyle(b: Step): Record<string, string> {
+export const nudgeStyle = (b: Step): Record<string, string> => {
   const { base, dx, dy } = b;
 
   if (base.mode === "margin") {
@@ -108,9 +107,9 @@ export function nudgeStyle(b: Step): Record<string, string> {
       base.fromBottom ? -dy : dy
     ),
   };
-}
+};
 
-function movable(base: NudgeBase, dx: number, dy: number): boolean {
+const movable = (base: NudgeBase, dx: number, dy: number): boolean => {
   if (base.mode === "position") {
     return true;
   }
@@ -119,11 +118,10 @@ function movable(base: NudgeBase, dx: number, dy: number): boolean {
     base.mode === "margin" &&
     ((dx !== 0 && !base.lockX) || (dy !== 0 && !base.lockY))
   );
-}
+};
 
-function burstKey(selectors: string[]): string {
-  return selectors.toSorted().join("\n");
-}
+const burstKey = (selectors: string[]): string =>
+  selectors.toSorted().join("\n");
 
 interface Saved {
   edit: DirectEditRequest;
@@ -132,8 +130,8 @@ interface Saved {
   back: Record<string, string>;
 }
 
-function savedOf(b: Burst): Saved[] {
-  return b.items.flatMap((item) => {
+const savedOf = (b: Burst): Saved[] =>
+  b.items.flatMap((item) => {
     const style = nudgeStyle({ base: item.base, dx: b.dx, dy: b.dy });
     const edit = buildEditRequest(item.target, style);
 
@@ -145,17 +143,16 @@ function savedOf(b: Burst): Saved[] {
       Object.keys(style).map((key) => [key, item.target.styles[key] ?? ""])
     );
 
-    return [{ edit, selector: item.target.selector, style, back }];
+    return [{ back, edit, selector: item.target.selector, style }];
   });
-}
 
 const OVERLAY_OPEN =
   'dialog[open], [role="dialog"], [role="menu"], [role="listbox"], [data-esc-owner]';
 
-function picksNew(
+const picksNew = (
   message: BridgeToParent,
   current: SelectionContext[]
-): boolean {
+): boolean => {
   if (message.type !== "select" && message.type !== "select-many") {
     return false;
   }
@@ -170,9 +167,9 @@ function picksNew(
   }
 
   return burstKey(picked) !== burstKey(current.map((s) => s.selector));
-}
+};
 
-function keysToCanvas(): void {
+const keysToCanvas = (): void => {
   const focused = document.activeElement;
 
   if (
@@ -181,9 +178,9 @@ function keysToCanvas(): void {
   ) {
     focused.blur();
   }
-}
+};
 
-function blurToCanvas(event: KeyboardEvent): boolean {
+const blurToCanvas = (event: KeyboardEvent): boolean => {
   const focused = document.activeElement;
 
   if (
@@ -216,9 +213,9 @@ function blurToCanvas(event: KeyboardEvent): boolean {
   event.stopImmediatePropagation();
 
   return true;
-}
+};
 
-function takeArrowKeys(): boolean {
+const takeArrowKeys = (): boolean => {
   if (canvasHasKeys()) {
     return true;
   }
@@ -232,9 +229,9 @@ function takeArrowKeys(): boolean {
   button.blur();
 
   return true;
-}
+};
 
-export function useElementNudge(o: Options): void {
+export const useElementNudge = (o: Options): void => {
   const live = useRef(o);
   live.current = o;
   const burst = useRef<Burst | null>(null);
@@ -307,12 +304,12 @@ export function useElementNudge(o: Options): void {
         }
 
         live.current.refreshRects();
-      } catch (err) {
+      } catch (error) {
         for (const one of optimistic) {
-          one.failed(errorText(err));
+          one.failed(errorText(error));
         }
 
-        restore(list, errorText(err));
+        restore(list, errorText(error));
       }
     };
 
@@ -340,7 +337,7 @@ export function useElementNudge(o: Options): void {
       const picked = wanted.flatMap((item) => {
         const target = cur.selection.find((s) => s.selector === item.selector);
 
-        return target ? [{ target, base: item.base }] : [];
+        return target ? [{ base: item.base, target }] : [];
       });
 
       if (picked.length === 0) {
@@ -374,7 +371,7 @@ export function useElementNudge(o: Options): void {
         hintOnce(items.length === 0 ? FLOW_HINT : SOME_HINT);
       }
 
-      return items.length === 0 ? null : { key, items, dx: 0, dy: 0 };
+      return items.length === 0 ? null : { dx: 0, dy: 0, items, key };
     };
 
     const press = (wanted: NudgeItem[], dx: number, dy: number) => {
@@ -400,9 +397,9 @@ export function useElementNudge(o: Options): void {
 
       for (const item of b.items) {
         live.current.post({
-          type: "preview-style",
           selector: item.target.selector,
           style: nudgeStyle({ base: item.base, dx: b.dx, dy: b.dy }),
+          type: "preview-style",
         });
       }
 
@@ -441,7 +438,7 @@ export function useElementNudge(o: Options): void {
       }
 
       event.preventDefault();
-      cur.post({ type: "nudge", dx: step.dx, dy: step.dy });
+      cur.post({ dx: step.dx, dy: step.dy, type: "nudge" });
     };
 
     flushNow.current = flush;
@@ -451,7 +448,7 @@ export function useElementNudge(o: Options): void {
       if (message.type === "nudge-key") {
         press(
           [
-            { selector: message.selector, base: message.base },
+            { base: message.base, selector: message.selector },
             ...(message.others ?? []),
           ],
           message.dx,
@@ -487,4 +484,4 @@ export function useElementNudge(o: Options): void {
       flushNow.current();
     }
   }, [key]);
-}
+};

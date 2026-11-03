@@ -1,26 +1,27 @@
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
+import type { ReactNode } from "react";
 
 import type { DirectStyleProperty } from "../../../shared/contracts.js";
 import { Icon } from "../../kit/Icon.js";
 import { TokenControl } from "../versions-layers-tokens/token-control.js";
-import { SIDES, type Side } from "./css-values.js";
+import { SIDES } from "./css-values.js";
+import type { Side } from "./css-values.js";
 import { NumberInput } from "./number-field.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 
 type Box = "padding" | "margin";
 
 const SIDE_LABEL: Record<Side, string> = {
-  top: "top",
-  right: "right",
   bottom: "bottom",
   left: "left",
+  right: "right",
+  top: "top",
 };
 
-function propsOf(box: Box): DirectStyleProperty[] {
-  return SIDES.map((side) => `${box}-${side}` as DirectStyleProperty);
-}
+const propsOf = (box: Box): DirectStyleProperty[] =>
+  SIDES.map((side) => `${box}-${side}` as DirectStyleProperty);
 
-function LinkToggle({
+const LinkToggle = ({
   box,
   linked,
   onToggle,
@@ -28,8 +29,9 @@ function LinkToggle({
   box: Box;
   linked: boolean;
   onToggle: () => void;
-}) {
+}) => {
   const name = box === "padding" ? "Padding" : "Margin";
+
   return (
     <button
       type="button"
@@ -44,22 +46,21 @@ function LinkToggle({
       <Icon name={linked ? "link" : "unlink"} size={14} />
     </button>
   );
-}
+};
 
 export type DeclaredMargins = Partial<Record<Side, string>>;
 
-function autoShown(
+const autoShown = (
   declared: DeclaredMargins | undefined,
   side: Side,
   edit: DirectEdit,
   prop: DirectStyleProperty
-): string | undefined {
-  return declared?.[side]?.trim() === "auto" && !edit.dirty.includes(prop)
+): string | undefined =>
+  declared?.[side]?.trim() === "auto" && !edit.dirty.includes(prop)
     ? "auto"
     : undefined;
-}
 
-function SideInput({
+const SideInput = ({
   box,
   side,
   edit,
@@ -71,13 +72,15 @@ function SideInput({
   edit: DirectEdit;
   linked: boolean;
   declared?: DeclaredMargins;
-}) {
+}) => {
   const prop = `${box}-${side}` as DirectStyleProperty;
   const name = box === "padding" ? "Padding" : "Margin";
   const label = `${name} ${SIDE_LABEL[side]}`;
   const targets = linked ? propsOf(box) : undefined;
+
   const display =
     box === "margin" ? autoShown(declared, side, edit, prop) : undefined;
+
   return (
     <span
       className={`side-cell ${side}`}
@@ -86,12 +89,12 @@ function SideInput({
       <NumberInput
         className="side"
         spec={{
-          prop,
-          label,
-          edit,
-          min: box === "padding" ? 0 : undefined,
-          targets,
           display,
+          edit,
+          label,
+          min: box === "padding" ? 0 : undefined,
+          prop,
+          targets,
         }}
       />
       <TokenControl
@@ -103,17 +106,18 @@ function SideInput({
       />
     </span>
   );
-}
+};
 
-function BoxRing(props: {
+const BoxRing = (props: {
   box: Box;
   edit: DirectEdit;
   linked: boolean;
   onToggle: () => void;
   declared?: DeclaredMargins;
   children: ReactNode;
-}) {
+}) => {
   const { box, edit, linked, declared } = props;
+
   return (
     <div className={`box-ring ${box}`}>
       <div className="box-ring-head">
@@ -153,17 +157,18 @@ function BoxRing(props: {
       />
     </div>
   );
-}
+};
 
-export function BoxModel({
+export const BoxModel = ({
   edit,
   declared,
 }: {
   edit: DirectEdit;
   declared?: DeclaredMargins;
-}) {
+}) => {
   const [linkPadding, setLinkPadding] = useState(false);
   const [linkMargin, setLinkMargin] = useState(false);
+
   return (
     <div className="box-model">
       <BoxRing
@@ -184,4 +189,4 @@ export function BoxModel({
       </BoxRing>
     </div>
   );
-}
+};

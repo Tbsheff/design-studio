@@ -1,4 +1,5 @@
-import { useState, type KeyboardEvent, type PointerEvent } from "react";
+import { useState } from "react";
+import type { KeyboardEvent, PointerEvent } from "react";
 
 import { focalOf, focalText } from "../../../shared/image.js";
 
@@ -27,10 +28,10 @@ const FocalPad = ({
     const step = event.shiftKey ? 10 : 5;
 
     const move = {
+      ArrowDown: [0, step],
       ArrowLeft: [-step, 0],
       ArrowRight: [step, 0],
       ArrowUp: [0, -step],
-      ArrowDown: [0, step],
     }[event.key];
 
     if (!move) {

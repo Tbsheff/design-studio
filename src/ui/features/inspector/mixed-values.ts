@@ -22,7 +22,7 @@ export interface MergedValues {
 
 const ALL_PROPS = Object.keys(valuesFromStyles({})) as DirectStyleProperty[];
 
-export function mergeValues(list: StyleValues[]): MergedValues {
+export const mergeValues = (list: StyleValues[]): MergedValues => {
   const first = list[0] ?? valuesFromStyles({});
   const values = { ...first };
   const mixed = new Set<DirectStyleProperty>();
@@ -34,21 +34,21 @@ export function mergeValues(list: StyleValues[]): MergedValues {
     }
   }
 
-  return { values, mixed };
-}
+  return { mixed, values };
+};
 
-function locKey(selection: SelectionContext): string | null {
+const locKey = (selection: SelectionContext): string | null => {
   const s =
     selection.usedBy?.root && selection.usedAt
       ? selection.usedAt
       : selection.source;
 
   return s ? `${s.file}:${s.line}:${s.col}` : null;
-}
+};
 
-export function multiBlockReason(
+export const multiBlockReason = (
   selections: SelectionContext[]
-): string | null {
+): string | null => {
   if (selections.length > MAX_MULTI_EDIT) {
     return `Select ${MAX_MULTI_EDIT} elements or fewer to edit them together.`;
   }
@@ -64,7 +64,7 @@ export function multiBlockReason(
   }
 
   return null;
-}
+};
 
 export type { Shift, ShiftPart };
 
@@ -78,7 +78,7 @@ export interface PropShift extends Shift {
 
 export type Shifts = Partial<Record<DirectStyleProperty, PropShift>>;
 
-function shiftedProp(raw: string, shift: PropShift): string | null {
+const shiftedProp = (raw: string, shift: PropShift): string | null => {
   let value = shift.delta === 0 ? raw : shiftedValue(raw, shift);
 
   if (value === null) {
@@ -90,12 +90,12 @@ function shiftedProp(raw: string, shift: PropShift): string | null {
   }
 
   return value;
-}
+};
 
-export function shiftedStyle(
+export const shiftedStyle = (
   base: StyleValues,
   shifts: Shifts
-): Partial<StyleValues> {
+): Partial<StyleValues> => {
   const style: Partial<StyleValues> = {};
 
   for (const [prop, shift] of Object.entries(shifts) as [
@@ -110,14 +110,14 @@ export function shiftedStyle(
   }
 
   return changedProps(style, base);
-}
+};
 
-function withPart(
+const withPart = (
   prev: PropShift | undefined,
   part: ShiftPart,
   delta: number,
   bounds: Omit<Shift, "delta">
-): PropShift {
+): PropShift => {
   const parts = { ...prev?.parts };
   const old = parts[part.key];
   delete parts[part.key];
@@ -128,16 +128,16 @@ function withPart(
     part: { ...part, ...(set === undefined ? {} : { set }) },
   };
 
-  return { delta: prev?.delta ?? 0, min: prev?.min, max: prev?.max, parts };
-}
+  return { delta: prev?.delta ?? 0, max: prev?.max, min: prev?.min, parts };
+};
 
-export function addShift(
+export const addShift = (
   shifts: Shifts,
   props: readonly DirectStyleProperty[],
   delta: number,
   bounds: Omit<Shift, "delta">,
   part?: ShiftPart
-): Shifts {
+): Shifts => {
   const next = { ...shifts };
 
   for (const prop of props) {
@@ -147,9 +147,12 @@ export function addShift(
   }
 
   return next;
-}
+};
 
-function leftParts(cur: PropShift, done: PropShift): Record<string, PartShift> {
+const leftParts = (
+  cur: PropShift,
+  done: PropShift
+): Record<string, PartShift> => {
   const parts: Record<string, PartShift> = {};
 
   for (const [key, part] of Object.entries(cur.parts ?? {})) {
@@ -171,9 +174,9 @@ function leftParts(cur: PropShift, done: PropShift): Record<string, PartShift> {
   }
 
   return parts;
-}
+};
 
-function leftShift(cur: PropShift, done: PropShift): PropShift | null {
+const leftShift = (cur: PropShift, done: PropShift): PropShift | null => {
   const delta = cur.delta - done.delta;
   const parts = leftParts(cur, done);
 
@@ -182,13 +185,13 @@ function leftShift(cur: PropShift, done: PropShift): PropShift | null {
   }
 
   return { ...cur, delta, parts };
-}
+};
 
-export function withoutShifts(
+export const withoutShifts = (
   shifts: Shifts,
   props: readonly string[],
   sent?: Shifts
-): Shifts {
+): Shifts => {
   const next = { ...shifts };
 
   for (const prop of props as DirectStyleProperty[]) {
@@ -210,19 +213,19 @@ export function withoutShifts(
   }
 
   return next;
-}
+};
 
 export interface OwnEdit {
   edit: DirectEditRequest;
   style: Partial<StyleValues>;
 }
 
-export function ownEdits(
+export const ownEdits = (
   selections: SelectionContext[],
   bases: StyleValues[],
   style: Partial<StyleValues>,
   shifts: Shifts = {}
-): OwnEdit[] {
+): OwnEdit[] => {
   const out: OwnEdit[] = [];
   selections.forEach((selection, i) => {
     const base = bases[i] ?? valuesFromStyles(selection.styles);
@@ -235,19 +238,15 @@ export function ownEdits(
   });
 
   return out;
-}
+};
 
-export function batchEdits(
+export const batchEdits = (
   selections: SelectionContext[],
   bases: StyleValues[],
   style: Partial<StyleValues>
-): DirectEditRequest[] {
-  return ownEdits(selections, bases, style).map((item) => item.edit);
-}
+): DirectEditRequest[] =>
+  ownEdits(selections, bases, style).map((item) => item.edit);
 
-export function dependsOnCurrent(raw: string, unit: string): boolean {
-  return (
-    resolveNumberInput(raw, `0${unit}`, unit) !==
-    resolveNumberInput(raw, `1${unit}`, unit)
-  );
-}
+export const dependsOnCurrent = (raw: string, unit: string): boolean =>
+  resolveNumberInput(raw, `0${unit}`, unit) !==
+  resolveNumberInput(raw, `1${unit}`, unit);

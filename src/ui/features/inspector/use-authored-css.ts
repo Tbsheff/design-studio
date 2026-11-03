@@ -12,10 +12,10 @@ export interface AuthoredCssState {
   request: () => Promise<AuthoredCss | null>;
 }
 
-export function requestAuthoredCss(
+export const requestAuthoredCss = (
   port: PreviewPort | null,
   selector: string
-): Promise<AuthoredCss | null> {
+): Promise<AuthoredCss | null> => {
   const listen = port?.listen;
 
   if (!port || !listen) {
@@ -41,14 +41,14 @@ export function requestAuthoredCss(
       resolve(result);
     }
 
-    port.post({ type: "request-authored", requestId, selector });
+    port.post({ requestId, selector, type: "request-authored" });
   });
-}
+};
 
-export function useAuthoredCss(
+export const useAuthoredCss = (
   port: MutableRefObject<PreviewPort | null>,
   selector: string
-): AuthoredCssState {
+): AuthoredCssState => {
   const [css, setCss] = useState<AuthoredCss | null>(null);
   const live = useRef(true);
 
@@ -72,4 +72,4 @@ export function useAuthoredCss(
   }, [request]);
 
   return { css, request };
-}
+};

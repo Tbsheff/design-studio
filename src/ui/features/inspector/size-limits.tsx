@@ -1,26 +1,34 @@
 import { useState } from "react";
 
-import { Icon, type IconName } from "../../kit/Icon.js";
+import { Icon } from "../../kit/Icon.js";
+import type { IconName } from "../../kit/Icon.js";
 import { AddButton } from "./inspector-shared.js";
 import { write } from "./layout-keys.js";
 import { NumberField } from "./number-field.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 
 const SELF: { value: string; icon: IconName; label: string }[] = [
-  { value: "flex-start", icon: "selfStart", label: "Align self start" },
-  { value: "center", icon: "selfCenter", label: "Align self center" },
-  { value: "flex-end", icon: "selfEnd", label: "Align self end" },
-  { value: "stretch", icon: "selfStretch", label: "Align self stretch" },
+  { icon: "selfStart", label: "Align self start", value: "flex-start" },
+  { icon: "selfCenter", label: "Align self center", value: "center" },
+  { icon: "selfEnd", label: "Align self end", value: "flex-end" },
+  { icon: "selfStretch", label: "Align self stretch", value: "stretch" },
 ];
 
-function selfSlot(value: string): string {
-  if (value === "start" || value === "self-start") return "flex-start";
-  if (value === "end" || value === "self-end") return "flex-end";
-  return value;
-}
+const selfSlot = (value: string): string => {
+  if (value === "start" || value === "self-start") {
+    return "flex-start";
+  }
 
-function AlignSelf({ edit, column }: { edit: DirectEdit; column: boolean }) {
+  if (value === "end" || value === "self-end") {
+    return "flex-end";
+  }
+
+  return value;
+};
+
+const AlignSelf = ({ edit, column }: { edit: DirectEdit; column: boolean }) => {
   const current = selfSlot(edit.values["align-self"]);
+
   return (
     <div
       className={`segmented icons ins-self ${column ? "column" : ""}`}
@@ -46,25 +54,23 @@ function AlignSelf({ edit, column }: { edit: DirectEdit; column: boolean }) {
       ))}
     </div>
   );
-}
+};
 
 const LIMITS = [
-  { prop: "min-width", short: "Min W", label: "Min width" },
-  { prop: "max-width", short: "Max W", label: "Max width" },
-  { prop: "min-height", short: "Min H", label: "Min height" },
-  { prop: "max-height", short: "Max H", label: "Max height" },
+  { label: "Min width", prop: "min-width", short: "Min W" },
+  { label: "Max width", prop: "max-width", short: "Max W" },
+  { label: "Min height", prop: "min-height", short: "Min H" },
+  { label: "Max height", prop: "max-height", short: "Max H" },
 ] as const;
 
 const UNSET_LIMITS = new Set(["", "auto", "none", "0", "0px"]);
 
-function limitsSet(edit: DirectEdit): boolean {
-  return LIMITS.some(
-    (limit) => !UNSET_LIMITS.has(edit.values[limit.prop].trim())
-  );
-}
+const limitsSet = (edit: DirectEdit): boolean =>
+  LIMITS.some((limit) => !UNSET_LIMITS.has(edit.values[limit.prop].trim()));
 
-function MinMaxRows({ edit }: { edit: DirectEdit }) {
+const MinMaxRows = ({ edit }: { edit: DirectEdit }) => {
   const [open, setOpen] = useState(false);
+
   if (!open && !limitsSet(edit)) {
     return (
       <div className="ins-add-row ins-limits-add">
@@ -76,17 +82,18 @@ function MinMaxRows({ edit }: { edit: DirectEdit }) {
       </div>
     );
   }
+
   return (
     <div className="ins-grid ins-limits">
       {LIMITS.map((limit) => (
         <NumberField
           key={limit.prop}
           short={limit.short}
-          spec={{ prop: limit.prop, label: limit.label, edit, min: 0 }}
+          spec={{ edit, label: limit.label, min: 0, prop: limit.prop }}
         />
       ))}
     </div>
   );
-}
+};
 
 export { AlignSelf, MinMaxRows };

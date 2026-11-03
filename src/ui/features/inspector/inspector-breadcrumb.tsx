@@ -5,35 +5,32 @@ import {
   useLayoutEffect,
   useRef,
   useState,
-  type MutableRefObject,
 } from "react";
+import type { MutableRefObject } from "react";
 
 import type { SelectionContext } from "../../../shared/contracts.js";
 import { Icon } from "../../kit/Icon.js";
 import type { PreviewPort } from "../../platform/bridge.js";
-import {
-  parseSelectionPath,
-  pathCrumbs,
-  type PathCrumb,
-} from "./authored-css.js";
+import { parseSelectionPath, pathCrumbs } from "./authored-css.js";
+import type { PathCrumb } from "./authored-css.js";
 
 interface Props {
   selection: SelectionContext;
   port: MutableRefObject<PreviewPort | null>;
 }
 
-function elementLabel(selection: SelectionContext): string {
-  const firstClass = /^<[^>]*\bclass="([^"\s]+)/.exec(
+const elementLabel = (selection: SelectionContext): string => {
+  const firstClass = /^<[^>]*\bclass="([^"\s]+)/u.exec(
     selection.outerHTML.slice(0, 4000)
   )?.[1];
 
   return firstClass ? `${selection.tag}.${firstClass}` : selection.tag;
-}
+};
 
 const GAP_CRUMB_PX = 28;
 
-function fitCount(el: HTMLOListElement, total: number): number {
-  const items = Array.from(el.children) as HTMLElement[];
+const fitCount = (el: HTMLOListElement, total: number): number => {
+  const items = [...el.children] as HTMLElement[];
   const first = items[0];
 
   if (!first || el.scrollWidth <= el.clientWidth + 1) {
@@ -54,12 +51,12 @@ function fitCount(el: HTMLOListElement, total: number): number {
   }
 
   return 0;
-}
+};
 
-function useFitCount(
+const useFitCount = (
   list: MutableRefObject<HTMLOListElement | null>,
   total: number
-): number {
+): number => {
   const [shown, setShown] = useState(total);
   useLayoutEffect(() => {
     const el = list.current;
@@ -94,23 +91,21 @@ function useFitCount(
   }, [list, total]);
 
   return Math.min(shown, total);
-}
+};
 
-function Separator() {
-  return (
-    <li aria-hidden="true" className="ins-crumb-sep">
-      <Icon name="chevronRight" size={12} />
-    </li>
-  );
-}
+const Separator = () => (
+  <li aria-hidden="true" className="ins-crumb-sep">
+    <Icon name="chevronRight" size={12} />
+  </li>
+);
 
-function HiddenCrumbs({
+const HiddenCrumbs = ({
   hidden,
   onSelect,
 }: {
   hidden: PathCrumb[];
   onSelect: (levels: number) => void;
-}) {
+}) => {
   const nearest = hidden.at(-1);
 
   if (!nearest) {
@@ -134,9 +129,9 @@ function HiddenCrumbs({
       <Separator />
     </>
   );
-}
+};
 
-function InspectorBreadcrumbView({ selection, port }: Props) {
+const InspectorBreadcrumbView = ({ selection, port }: Props) => {
   const list = useRef<HTMLOListElement>(null);
   const path = pathCrumbs(parseSelectionPath(selection.path));
   const count = useFitCount(list, path.length);
@@ -148,9 +143,9 @@ function InspectorBreadcrumbView({ selection, port }: Props) {
   const select = (levels: number) => {
     for (let step = 0; step < levels; step += 1) {
       port.current?.post({
-        type: "select-relative",
-        selector: selection.selector,
         move: "parent",
+        selector: selection.selector,
+        type: "select-relative",
       });
     }
 
@@ -194,7 +189,7 @@ function InspectorBreadcrumbView({ selection, port }: Props) {
       </ol>
     </nav>
   );
-}
+};
 
 export const InspectorBreadcrumb = memo(
   InspectorBreadcrumbView,

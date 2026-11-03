@@ -8,9 +8,11 @@ import {
   replaceSummary,
   summarizeHits,
   unlocatedCount,
-  type StyleHit,
-  type StyleQuery,
-  type StyleValueRow,
+} from "../../../shared/style-search.js";
+import type {
+  StyleHit,
+  StyleQuery,
+  StyleValueRow,
 } from "../../../shared/style-search.js";
 import { errorText, replaceStyle } from "../../api.js";
 import { InspectorSection } from "./inspector-fields.js";
@@ -22,30 +24,24 @@ import {
   uniqueTokens,
   varCandidates,
 } from "./match-candidates.js";
+import { KindGroup, ScopeToggle, StatusLine } from "./match-rows.js";
+import type { RowActions } from "./match-rows.js";
 import {
-  type RowActions,
-  KindGroup,
-  ScopeToggle,
-  StatusLine,
-} from "./match-rows.js";
-import {
-  type InspectorMatchProps,
-  type Scope,
-  type Status,
   usePageVars,
   rowKey,
   requestStyles,
   lookupFor,
   useStyleScan,
 } from "./match-scan.js";
+import type { InspectorMatchProps, Scope, Status } from "./match-scan.js";
 import { TokenPicker } from "./match-token-picker.js";
 
-function useReplace(
+const useReplace = (
   props: InspectorMatchProps,
   setStatus: (status: Status) => void,
   refresh: () => void
-) {
-  return useCallback(
+) =>
+  useCallback(
     async (hits: StyleHit[], token: string) => {
       const matches = matchesOf(hits);
       const unlocated = unlocatedCount(hits);
@@ -83,9 +79,8 @@ function useReplace(
     },
     [props, setStatus, refresh]
   );
-}
 
-function selectedText(count: number, total: number): string {
+const selectedText = (count: number, total: number): string => {
   if (count === 0) {
     return "No element on this page has a source location for that value.";
   }
@@ -93,9 +88,9 @@ function selectedText(count: number, total: number): string {
   return total > count
     ? `Selected ${count} of ${total} elements (the first ${count}).`
     : `Selected ${count} ${count === 1 ? "element" : "elements"}.`;
-}
+};
 
-function focusRow(key: string): void {
+const focusRow = (key: string): void => {
   window.requestAnimationFrame(() => {
     const row = document.querySelector<HTMLElement>(
       `.sm-section [data-row="${CSS.escape(key)}"]`
@@ -103,9 +98,9 @@ function focusRow(key: string): void {
 
     (row?.querySelector<HTMLElement>('[aria-haspopup="menu"]') ?? row)?.focus();
   });
-}
+};
 
-function InspectorMatch(props: InspectorMatchProps) {
+const InspectorMatch = (props: InspectorMatchProps) => {
   const single = props.selection.length === 1;
   const [scope, setScope] = useState<Scope>("selection");
   const [picking, setPicking] = useState<StyleValueRow | null>(null);
@@ -170,12 +165,12 @@ function InspectorMatch(props: InspectorMatchProps) {
   );
 
   const actions: RowActions = {
-    selectValue: (row) => void selectBy(row, { value: row.value }),
-    selectClass: (row, cls) => void selectBy(row, { className: cls }),
     replace: (row) => {
       setStatus({ kind: "idle" });
       setPicking(row);
     },
+    selectClass: (row, cls) => void selectBy(row, { className: cls }),
+    selectValue: (row) => void selectBy(row, { value: row.value }),
   };
 
   const targets = picking
@@ -248,11 +243,10 @@ function InspectorMatch(props: InspectorMatchProps) {
       <StatusLine status={status} />
     </InspectorSection>
   );
-}
+};
 
-function sameItems(a: SelectionContext[], b: SelectionContext[]): boolean {
-  return a.length === b.length && a.every((item, i) => item === b[i]);
-}
+const sameItems = (a: SelectionContext[], b: SelectionContext[]): boolean =>
+  a.length === b.length && a.every((item, i) => item === b[i]);
 
 export default memo(
   InspectorMatch,

@@ -10,18 +10,21 @@ export interface Shadow {
 }
 
 export const NEW_SHADOW: Shadow = {
-  x: "0",
-  y: "4px",
   blur: "12px",
-  spread: "0",
   color: "rgb(0 0 0 / 0.12)",
   inset: false,
+  spread: "0",
+  x: "0",
+  y: "4px",
 };
 
-const LENGTH_RE = /^-?\d*\.?\d+(px|rem|em)?$/i;
-const BLUR_RE = /^blur\(\s*([^()]*)\s*\)$/i;
+const LENGTH_RE = /^-?\d*\.?\d+(px|rem|em)?$/iu;
+const BLUR_RE = /^blur\(\s*([^()]*)\s*\)$/iu;
 
-export function splitTopLevel(value: string, separator: "," | " "): string[] {
+export const splitTopLevel = (
+  value: string,
+  separator: "," | " "
+): string[] => {
   const parts: string[] = [];
   let depth = 0;
   let current = "";
@@ -34,7 +37,8 @@ export function splitTopLevel(value: string, separator: "," | " "): string[] {
     }
 
     const splits =
-      depth === 0 && (separator === " " ? /\s/.test(char) : char === separator);
+      depth === 0 &&
+      (separator === " " ? /\s/u.test(char) : char === separator);
 
     if (splits) {
       if (current.trim()) {
@@ -52,9 +56,9 @@ export function splitTopLevel(value: string, separator: "," | " "): string[] {
   }
 
   return parts;
-}
+};
 
-function tidyLength(raw: string): string {
+const tidyLength = (raw: string): string => {
   const parsed = parseNumber(raw);
 
   if (!parsed) {
@@ -64,9 +68,9 @@ function tidyLength(raw: string): string {
   return parsed.value === 0
     ? "0"
     : formatNumber(parsed.value, parsed.unit || "px");
-}
+};
 
-function parseOne(raw: string): Shadow | null {
+const parseOne = (raw: string): Shadow | null => {
   const lengths: string[] = [];
   const colors: string[] = [];
   let inset = false;
@@ -87,10 +91,10 @@ function parseOne(raw: string): Shadow | null {
 
   const [x = "0", y = "0", blur = "0", spread = "0"] = lengths;
 
-  return { x, y, blur, spread, color: colors[0] ?? "", inset };
-}
+  return { blur, color: colors[0] ?? "", inset, spread, x, y };
+};
 
-export function parseShadows(value: string): Shadow[] | null {
+export const parseShadows = (value: string): Shadow[] | null => {
   const text = value.trim();
 
   if (text === "" || text.toLowerCase() === "none") {
@@ -110,9 +114,9 @@ export function parseShadows(value: string): Shadow[] | null {
   }
 
   return list;
-}
+};
 
-function formatOne(shadow: Shadow): string {
+const formatOne = (shadow: Shadow): string => {
   const parts = [
     shadow.inset ? "inset" : "",
     tidyLength(shadow.x || "0"),
@@ -123,13 +127,12 @@ function formatOne(shadow: Shadow): string {
   ];
 
   return parts.filter(Boolean).join(" ");
-}
+};
 
-export function formatShadows(list: Shadow[]): string {
-  return list.map(formatOne).join(", ");
-}
+export const formatShadows = (list: Shadow[]): string =>
+  list.map(formatOne).join(", ");
 
-export function blurOf(filter: string): string {
+export const blurOf = (filter: string): string => {
   for (const part of splitTopLevel(filter, " ")) {
     const match = BLUR_RE.exec(part);
 
@@ -139,9 +142,9 @@ export function blurOf(filter: string): string {
   }
 
   return "";
-}
+};
 
-export function withBlur(filter: string, blur: string): string {
+export const withBlur = (filter: string, blur: string): string => {
   const others = splitTopLevel(
     filter.trim().toLowerCase() === "none" ? "" : filter,
     " "
@@ -151,4 +154,4 @@ export function withBlur(filter: string, blur: string): string {
   const keep = blur.trim() !== "" && !(amount && amount.value === 0);
 
   return [...others, ...(keep ? [`blur(${blur.trim()})`] : [])].join(" ");
-}
+};

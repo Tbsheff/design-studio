@@ -97,13 +97,13 @@ export interface GateTarget {
   headVersionId: string | null;
 }
 
-export function useSwapGate(
+export const useSwapGate = (
   kind: ProjectKind,
   targets: GateTarget[],
   lastChange: FilesChange | null,
   hold: boolean,
   liveDirectionId: string | null = null
-): SwapGate {
+): SwapGate => {
   const queue = useRef(new SwapQueue());
   const [version, bump] = useReducer((n: number) => n + 1, 0);
   const heads = useRef<Record<string, string>>({});
@@ -183,10 +183,10 @@ export function useSwapGate(
 
       const now = Date.now();
       queue.current.offer(target.key, {
-        directionId: target.directionId,
         changedAt: now,
-        receivedAt: now,
+        directionId: target.directionId,
         paths: [],
+        receivedAt: now,
       });
       bump();
     }
@@ -220,5 +220,5 @@ export function useSwapGate(
     [version]
   );
 
-  return { shownFor, nextFor, onSwapDone };
-}
+  return { nextFor, onSwapDone, shownFor };
+};

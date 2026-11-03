@@ -21,10 +21,10 @@ import { historyPhrase } from "../versions-layers-tokens/version-labels.js";
 export const PREVIEW_PAINTED_EVENT = "studio:preview-painted";
 
 const EMPTY: EditHistoryState = {
-  canUndo: false,
   canRedo: false,
-  undoLabel: null,
+  canUndo: false,
   redoLabel: null,
+  undoLabel: null,
 };
 
 const TOAST_MS = 2400;
@@ -50,17 +50,14 @@ interface Options {
   onError: (message: string) => void;
 }
 
-const HISTORY_STEP_TITLE = /^(Undo|Redo): /;
+const HISTORY_STEP_TITLE = /^(Undo|Redo): /u;
 
-export function isHistoryStep(version: Version | undefined): boolean {
-  return (
-    version !== undefined &&
-    version.meta.kind === "manual" &&
-    HISTORY_STEP_TITLE.test(version.title)
-  );
-}
+export const isHistoryStep = (version: Version | undefined): boolean =>
+  version !== undefined &&
+  version.meta.kind === "manual" &&
+  HISTORY_STEP_TITLE.test(version.title);
 
-export function stepToast(kind: HistoryKind, label: string | null): string {
+export const stepToast = (kind: HistoryKind, label: string | null): string => {
   const word = kind === "undo" ? "Undid" : "Redid";
 
   if (!label) {
@@ -74,29 +71,28 @@ export function stepToast(kind: HistoryKind, label: string | null): string {
   }
 
   return `${word} ${label.charAt(0).toLowerCase()}${label.slice(1)}`;
-}
+};
 
-export function refreshedSelection(
+export const refreshedSelection = (
   prev: SelectionContext[],
   selectors: string[],
   contexts: (SelectionContext | null)[]
-): SelectionContext[] {
-  return prev.map((item) => {
+): SelectionContext[] =>
+  prev.map((item) => {
     const context = contexts[selectors.indexOf(item.selector)];
 
     return context
       ? {
           ...item,
-          styles: context.styles,
-          text: context.text,
           rect: context.rect,
           source: context.source ?? item.source,
+          styles: context.styles,
+          text: context.text,
         }
       : item;
   });
-}
 
-export function useEditHistory(o: Options) {
+export const useEditHistory = (o: Options) => {
   const { projectId, directionId } = o;
   const [state, setState] = useState<EditHistoryState>(EMPTY);
   const [toast, setToast] = useState<string | null>(null);
@@ -128,7 +124,7 @@ export function useEditHistory(o: Options) {
       return;
     }
 
-    const mine = { key, again: false };
+    const mine = { again: false, key };
     loading.current = mine;
     const started = generation.current;
     api
@@ -207,8 +203,8 @@ export function useEditHistory(o: Options) {
           stepToast(kind, kind === "undo" ? known.undoLabel : known.redoLabel)
         );
         cur.onStepped(result.version);
-      } catch (err) {
-        cur.onError(errorText(err));
+      } catch (error) {
+        cur.onError(errorText(error));
       } finally {
         generation.current += 1;
       }
@@ -244,8 +240,8 @@ export function useEditHistory(o: Options) {
     onUndo: () => step("undo", versionFallback(fallback)),
   });
 
-  return { state, toast, step, undoChain, redo };
-}
+  return { redo, state, step, toast, undoChain };
+};
 
 interface RefreshWatch {
   change: { directionId: string; changedAt: number } | null;
@@ -253,24 +249,24 @@ interface RefreshWatch {
   dropDrafts: () => void;
 }
 
-function sameStyles(
+const sameStyles = (
   a: Record<string, string>,
   b: Record<string, string>
-): boolean {
+): boolean => {
   const keys = Object.keys(a);
 
   return (
     keys.length === Object.keys(b).length &&
     keys.every((key) => a[key] === b[key])
   );
-}
+};
 
-function stylesMoved(
+const stylesMoved = (
   prev: SelectionContext[],
   selectors: string[],
   contexts: (SelectionContext | null)[]
-): boolean {
-  return prev.some((item) => {
+): boolean =>
+  prev.some((item) => {
     const context = contexts[selectors.indexOf(item.selector)];
 
     return (
@@ -279,14 +275,13 @@ function stylesMoved(
       !sameStyles(context.styles, item.styles)
     );
   });
-}
 
-export function useSelectionRefresh(
+export const useSelectionRefresh = (
   selection: SelectionContext[],
   setSelection: Dispatch<SetStateAction<SelectionContext[]>>,
   describeRef: MutableRefObject<Describe | null>,
   watch: RefreshWatch
-) {
+) => {
   const { change, directionId } = watch;
   const current = useRef(selection);
   current.current = selection;
@@ -408,4 +403,4 @@ export function useSelectionRefresh(
     },
     [refresh]
   );
-}
+};

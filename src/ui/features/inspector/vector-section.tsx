@@ -1,6 +1,7 @@
 import { Suspense, lazy } from "react";
 
-import { vectorShown, type InspectorProps } from "./inspector-model.js";
+import { vectorShown } from "./inspector-model.js";
+import type { InspectorProps } from "./inspector-model.js";
 
 const InspectorVector = lazy(() => import("./inspector-vector.js"));
 

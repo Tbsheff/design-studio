@@ -6,8 +6,8 @@ import {
   focalOf,
   focalText,
   imageKindOf,
-  type ImageFit,
 } from "../../../shared/image.js";
+import type { ImageFit } from "../../../shared/image.js";
 import { runCommand } from "../../inspector-slots.js";
 import { Icon } from "../../kit/Icon.js";
 import { AltField } from "./alt-field.js";
@@ -19,8 +19,8 @@ import {
   attrOf,
   currentFit,
   sourceName,
-  type Props,
 } from "./image-model.js";
+import type { Props } from "./image-model.js";
 import { InspectorSection } from "./inspector-fields.js";
 import { useImageSet } from "./use-image-set.js";
 import { usePasteImage } from "./use-paste-image.js";

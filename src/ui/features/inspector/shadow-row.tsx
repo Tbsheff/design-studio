@@ -1,17 +1,13 @@
 import { useMemo } from "react";
 
 import { Icon } from "../../kit/Icon.js";
-import {
-  PARTS,
-  fieldPart,
-  writeShadows,
-  type Field,
-  type ShadowView,
-} from "./effects-model.js";
+import { PARTS, fieldPart, writeShadows } from "./effects-model.js";
+import type { Field, ShadowView } from "./effects-model.js";
 import { ColorField } from "./inspector-fields.js";
 import { NumberField } from "./number-field.js";
 import { proxyEdit } from "./proxy-edit.js";
-import { formatShadows, type Shadow } from "./shadows.js";
+import { formatShadows } from "./shadows.js";
+import type { Shadow } from "./shadows.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 import { TokenUiContext, useTokenUi } from "./use-token-snap.js";
 
@@ -46,8 +42,8 @@ const ShadowRow = ({
       (next) => replace(write(next)),
       ["box-shadow"],
       {
-        part: fieldPart(index, field),
         mixed: view.mixed?.has(`${index}.${field}`) ?? false,
+        part: fieldPart(index, field),
       }
     );
 
@@ -110,12 +106,12 @@ const ShadowRow = ({
             short={short}
             tokens={false}
             spec={{
-              prop: "width",
-              label: `Shadow ${n} ${label.toLowerCase()}`,
-              min,
               edit: fieldEdit(part, shadow[part], (value) => ({
                 [part]: value || "0",
               })),
+              label: `Shadow ${n} ${label.toLowerCase()}`,
+              min,
+              prop: "width",
             }}
           />
         ))}

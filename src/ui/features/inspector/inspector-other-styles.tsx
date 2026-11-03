@@ -1,16 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 
 import { Icon } from "../../kit/Icon.js";
-import {
-  formatCopyCss,
-  otherStyles,
-  type AuthoredCss,
-} from "./authored-css.js";
+import { formatCopyCss, otherStyles } from "./authored-css.js";
+import type { AuthoredCss } from "./authored-css.js";
 import type { AuthoredCssState } from "./use-authored-css.js";
 
 const COPIED_MS = 1500;
 
-export function CopyCssButton({ authored }: { authored: AuthoredCssState }) {
+export const CopyCssButton = ({ authored }: { authored: AuthoredCssState }) => {
   const [state, setState] = useState<"idle" | "copied" | "failed">("idle");
   const timer = useRef<number | null>(null);
   useEffect(
@@ -65,9 +62,9 @@ export function CopyCssButton({ authored }: { authored: AuthoredCssState }) {
       </span>
     </button>
   );
-}
+};
 
-export function InspectorOtherStyles({ css }: { css: AuthoredCss | null }) {
+export const InspectorOtherStyles = ({ css }: { css: AuthoredCss | null }) => {
   const [open, setOpen] = useState(false);
   const rows = css ? otherStyles(css) : [];
 
@@ -106,4 +103,4 @@ export function InspectorOtherStyles({ css }: { css: AuthoredCss | null }) {
       ) : null}
     </section>
   );
-}
+};

@@ -24,7 +24,10 @@ interface Props {
   showBar: boolean;
 }
 
-type Message = { kind: "ok" | "note" | "error"; text: string };
+interface Message {
+  kind: "ok" | "note" | "error";
+  text: string;
+}
 
 interface Tool {
   key: KeyId;
@@ -35,73 +38,73 @@ interface Tool {
 
 const ALIGN_TOOLS: Tool[] = [
   {
+    action: { align: "left" },
+    glyph: "M2.5 2v12M5 4.5h7V7H5zM5 9h4.5v2.5H5z",
     key: "align-left",
     label: "Align left",
-    glyph: "M2.5 2v12M5 4.5h7V7H5zM5 9h4.5v2.5H5z",
-    action: { align: "left" },
   },
   {
+    action: { align: "center" },
+    glyph: "M8 2v12M4 4.5h8V7H4zM5.5 9h5v2.5h-5z",
     key: "align-center",
     label: "Align horizontal centers",
-    glyph: "M8 2v12M4 4.5h8V7H4zM5.5 9h5v2.5h-5z",
-    action: { align: "center" },
   },
   {
+    action: { align: "right" },
+    glyph: "M13.5 2v12M4 4.5h7V7H4zM6.5 9H11v2.5H6.5z",
     key: "align-right",
     label: "Align right",
-    glyph: "M13.5 2v12M4 4.5h7V7H4zM6.5 9H11v2.5H6.5z",
-    action: { align: "right" },
   },
   {
+    action: { align: "top" },
+    glyph: "M2 2.5h12M4.5 5H7v7H4.5zM9 5h2.5v4.5H9z",
     key: "align-top",
     label: "Align top",
-    glyph: "M2 2.5h12M4.5 5H7v7H4.5zM9 5h2.5v4.5H9z",
-    action: { align: "top" },
   },
   {
+    action: { align: "middle" },
+    glyph: "M2 8h12M4.5 4H7v8H4.5zM9 5.5h2.5v5H9z",
     key: "align-middle",
     label: "Align vertical centers",
-    glyph: "M2 8h12M4.5 4H7v8H4.5zM9 5.5h2.5v5H9z",
-    action: { align: "middle" },
   },
   {
+    action: { align: "bottom" },
+    glyph: "M2 13.5h12M4.5 4H7v7H4.5zM9 6.5h2.5V11H9z",
     key: "align-bottom",
     label: "Align bottom",
-    glyph: "M2 13.5h12M4.5 4H7v7H4.5zM9 6.5h2.5V11H9z",
-    action: { align: "bottom" },
   },
 ];
 
 const SPACE_TOOLS: Tool[] = [
   {
+    action: { distribute: "horizontal" },
+    glyph: "M2.5 2v12M13.5 2v12M6.5 5h3v6h-3z",
     key: "distribute-h",
     label: "Distribute horizontal spacing",
-    glyph: "M2.5 2v12M13.5 2v12M6.5 5h3v6h-3z",
-    action: { distribute: "horizontal" },
   },
   {
+    action: { distribute: "vertical" },
+    glyph: "M2 2.5h12M2 13.5h12M5 6.5h6v3H5z",
     key: "distribute-v",
     label: "Distribute vertical spacing",
-    glyph: "M2 2.5h12M2 13.5h12M5 6.5h6v3H5z",
-    action: { distribute: "vertical" },
   },
   {
+    action: { tidy: true },
+    glyph: "M3 3h4v4H3zM9 3h4v4H9zM3 9h4v4H3zM9 9h4v4H9z",
     key: "tidy-up",
     label: "Tidy up",
-    glyph: "M3 3h4v4H3zM9 3h4v4H9zM3 9h4v4H3zM9 9h4v4H9z",
-    action: { tidy: true },
   },
 ];
 
 const OK_MS = 3000;
 
-function isAbsolute(selection: SelectionContext): boolean {
+const isAbsolute = (selection: SelectionContext): boolean => {
   const position = selection.styles.position ?? "";
 
   return position === "absolute" || position === "fixed";
-}
+};
 
-function arrangeShown(selection: SelectionContext[]): boolean {
+const arrangeShown = (selection: SelectionContext[]): boolean => {
   if (selection.length > 1) {
     return true;
   }
@@ -115,12 +118,12 @@ function arrangeShown(selection: SelectionContext[]): boolean {
   const parent = parentLayout(only.styles);
 
   return isAbsolute(only) || parent.flex || parent.grid;
-}
+};
 
-function minCount(
+const minCount = (
   action: ArrangeAction,
   selection: SelectionContext[]
-): number {
+): number => {
   if ("align" in action) {
     return 1;
   }
@@ -130,9 +133,9 @@ function minCount(
   }
 
   return 2;
-}
+};
 
-function successText(result: ArrangeResult): string {
+const successText = (result: ArrangeResult): string => {
   const styles = result.writes.flatMap((w) => Object.entries(w.style));
 
   const set = styles
@@ -159,23 +162,25 @@ function successText(result: ArrangeResult): string {
   ];
 
   return parts.filter(Boolean).join(". ") || "Arranged";
-}
+};
 
-function frameRequest(projectId: string): {
+const frameRequest = (
+  projectId: string
+): {
   path?: string;
   viewport: { width: number; height: number };
-} {
+} => {
   const frame = activeFrame(
     canvasStore.get(projectId) ?? defaultLayout(uiStore.get().viewport)
   );
 
   return {
     ...(frame.path ? { path: frame.path } : {}),
-    viewport: { width: frame.width, height: frame.height },
+    viewport: { height: frame.height, width: frame.width },
   };
-}
+};
 
-function commitWrites(props: Props, result: ArrangeResult): void {
+const commitWrites = (props: Props, result: ArrangeResult): void => {
   const selected = new Set(props.selection.map((s) => s.selector));
 
   for (const entry of result.writes) {
@@ -191,7 +196,7 @@ function commitWrites(props: Props, result: ArrangeResult): void {
   }
 
   props.port.current?.refreshRects();
-}
+};
 
 export {
   ALIGN_TOOLS,

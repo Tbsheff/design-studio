@@ -4,21 +4,18 @@ type Fn = (...args: never[]) => unknown;
 
 type Bag = Record<string, unknown>;
 
-function isPlain(value: unknown): value is Bag {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    Object.getPrototypeOf(value) === Object.prototype
-  );
-}
+const isPlain = (value: unknown): value is Bag =>
+  typeof value === "object" &&
+  value !== null &&
+  Object.getPrototypeOf(value) === Object.prototype;
 
-function sameList(a: unknown, b: unknown): boolean {
+const sameList = (a: unknown, b: unknown): boolean => {
   if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) {
     return false;
   }
 
   return a.every((item, i) => Object.is(item, b[i]));
-}
+};
 
 class Stabilizer {
   private latest: Bag = {};
@@ -116,12 +113,12 @@ class Stabilizer {
   }
 }
 
-export function useStableProps<T extends object>(
+export const useStableProps = <T extends object>(
   next: T,
   nested: ReadonlySet<string> = new Set()
-): T {
+): T => {
   const ref = useRef<Stabilizer | null>(null);
   ref.current ??= new Stabilizer();
 
   return ref.current.run(next, nested);
-}
+};

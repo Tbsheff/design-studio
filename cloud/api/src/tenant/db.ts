@@ -3,7 +3,10 @@ import { Context, Effect, Layer, Schema } from "effect";
 import { NotFound } from "../../../../src/shared/actions/_core/errors/not-found.js";
 import { CloudBindings } from "../platform/bindings.js";
 import { CurrentOrg } from "./current-org.js";
-import { RowOrgMismatch } from "./errors/row-org-mismatch.js";
+import {
+  RowOrgMismatch,
+  WRONG_ORG_MESSAGE,
+} from "./errors/row-org-mismatch.js";
 import type { ParamValues, TenantStatement } from "./sql.js";
 
 type RowSchema<Row> = Schema.Codec<Row, unknown>;
@@ -59,7 +62,7 @@ const checkRows = Effect.fn("TenantDb.checkRows")(function* run(
     const value = (row as OrgRow | null)?.org_id;
 
     if (value !== orgId) {
-      return yield* mismatch(statement, "a row has the wrong org_id");
+      return yield* mismatch(statement, WRONG_ORG_MESSAGE);
     }
   }
 

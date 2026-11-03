@@ -1,3 +1,5 @@
+const OK = 200;
+const ACCEPTED = 202;
 const BAD_REQUEST = 400;
 const UNAUTHORIZED = 401;
 const FORBIDDEN = 403;
@@ -26,6 +28,7 @@ type HttpStatus =
   | typeof UNPROCESSABLE;
 
 export {
+  ACCEPTED,
   BAD_GATEWAY,
   BAD_REQUEST,
   CONFLICT,
@@ -34,6 +37,7 @@ export {
   GONE,
   NOT_FOUND,
   NOT_IMPLEMENTED,
+  OK,
   TOO_MANY_REQUESTS,
   UNAUTHORIZED,
   UNAVAILABLE,

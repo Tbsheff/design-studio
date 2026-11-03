@@ -3,6 +3,8 @@ import { Effect, Schema } from "effect";
 import { requirePerm } from "../http/groups/authorizer.js";
 import { CurrentKey } from "../http/middleware/current-key.js";
 import { BadRequest } from "../shared-actions.js";
+import type { Conflict, Forbidden, NotFound } from "../shared-actions.js";
+import type { CurrentOrg } from "../tenant/current-org.js";
 import { AgentRequestRepo } from "../tenant/repos/agent-request.js";
 import type { AgentRequestKind } from "../tenant/repos/agent-request.js";
 import { CommentRepo } from "../tenant/repos/comments.js";
@@ -46,7 +48,19 @@ const ShareDesignInput = Schema.Struct({
   projectId: Schema.String,
 });
 
-type ToolRun = (args: unknown) => Effect.Effect<unknown, unknown, unknown>;
+type ToolFailure = BadRequest | Conflict | Forbidden | NotFound;
+
+type ToolNeeds =
+  | AgentRequestRepo
+  | CommentRepo
+  | CurrentKey
+  | CurrentOrg
+  | ProjectsRepo
+  | VersionsRepo;
+
+type ToolRun = (
+  args: unknown
+) => Effect.Effect<unknown, ToolFailure, ToolNeeds>;
 
 interface ToolListing {
   readonly description: string;

@@ -33,6 +33,4 @@ CREATE TABLE share_comment (
 
 CREATE INDEX share_comment_share_idx ON share_comment (org_id, share_id, created_at);
 
-CREATE INDEX publication_slug_lookup_idx ON publication (org_id, slug);
-
 CREATE INDEX publication_version_committed_idx ON publication_version (org_id, publication_id, committed_at);

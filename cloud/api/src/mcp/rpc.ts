@@ -1,6 +1,14 @@
 import { Effect } from "effect";
 
 import { requireOrg } from "../http/groups/authorizer.js";
+import {
+  BAD_REQUEST,
+  CONFLICT,
+  FORBIDDEN,
+  NOT_FOUND,
+  OK,
+  UNAUTHORIZED,
+} from "../shared-actions.js";
 import { callTool, listTools } from "./tools.js";
 
 interface RpcRequest {
@@ -22,33 +30,21 @@ const PROTOCOL_VERSION = "2025-03-26";
 
 const RPC_ERROR_CODE = -32_000;
 
-const HTTP_OK = 200;
-
-const HTTP_BAD_REQUEST = 400;
-
-const HTTP_CONFLICT = 409;
-
-const HTTP_FORBIDDEN = 403;
-
-const HTTP_NOT_FOUND = 404;
-
-const HTTP_UNAUTHORIZED = 401;
-
 const ERROR_STATUS = {
-  BadRequest: HTTP_BAD_REQUEST,
-  Conflict: HTTP_CONFLICT,
-  Forbidden: HTTP_FORBIDDEN,
-  NotFound: HTTP_NOT_FOUND,
-  Unauthenticated: HTTP_UNAUTHORIZED,
+  BadRequest: BAD_REQUEST,
+  Conflict: CONFLICT,
+  Forbidden: FORBIDDEN,
+  NotFound: NOT_FOUND,
+  Unauthenticated: UNAUTHORIZED,
 } as const satisfies Readonly<Record<string, number>>;
 
 const toStatus = (tag: string): number =>
   Object.entries(ERROR_STATUS).find(([name]) => name === tag)?.[1] ??
-  HTTP_BAD_REQUEST;
+  BAD_REQUEST;
 
 const toResult = (id: RpcRequest["id"], result: unknown): RpcReply => ({
   body: { id: id ?? null, jsonrpc: "2.0", result },
-  status: HTTP_OK,
+  status: OK,
 });
 
 const toFailure = (

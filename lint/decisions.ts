@@ -266,20 +266,23 @@ export const SCOPED_OFF_REASONS: Record<string, string> = {
 export const decisionOverrides: OxlintOverride[] = [
   {
     files: [
+      "cloud/api/src/http/viewer-routes.ts",
+      "cloud/api/src/mcp/layer.ts",
       "cloud/api/src/mcp/mount.ts",
       "cloud/api/src/mcp/rpc.ts",
       "cloud/api/src/mcp/tools.ts",
       "cloud/api/src/tenant/repos/agent-request.ts",
-      "cloud/api/src/tenant/repos/publication.ts",
-      "cloud/api/src/viewer/mount.ts",
-      "cloud/api/src/viewer/path.ts",
+      "cloud/api/src/viewer/layer.ts",
       "cloud/api/src/viewer/read-site-file.ts",
     ],
+    rules: { "import/no-relative-parent-imports": "off" },
+  },
+  {
+    files: ["cloud/api/src/mcp/rpc.ts", "cloud/api/src/mcp/tools.ts"],
     rules: {
       "anti-slop/no-known-value-widening": "off",
       "anti-slop/no-unknown-parameters": "off",
       "anti-slop/no-unsafe-dictionary-type": "off",
-      "import/no-relative-parent-imports": "off",
     },
   },
   {

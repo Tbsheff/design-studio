@@ -3,19 +3,25 @@ import { Hono } from "hono";
 
 import { AuthGateway } from "./auth/gateway.js";
 import { AuthRateLimit } from "./auth/rate-limit.js";
+import { mountViewer } from "./http/viewer-routes.js";
+import { mcpLayer } from "./mcp/layer.js";
 import { mountMcp } from "./mcp/mount.js";
 import { CloudBindings, configLayer } from "./platform/bindings.js";
 import type { AppEnv } from "./platform/bindings.js";
 import { CloudSettings } from "./platform/env.js";
-import { mountViewer } from "./viewer/mount.js";
+import { viewerLayer } from "./viewer/layer.js";
 
 const platformLayer = Layer.mergeAll(
   CloudBindings.layer,
   CloudSettings.layer
 ).pipe(Layer.provide(configLayer));
 
-const appLayer = Layer.mergeAll(AuthGateway.layer, AuthRateLimit.layer).pipe(
+const authLayer = Layer.mergeAll(AuthGateway.layer, AuthRateLimit.layer).pipe(
   Layer.provideMerge(platformLayer)
+);
+
+const appLayer = Layer.mergeAll(mcpLayer, viewerLayer).pipe(
+  Layer.provideMerge(authLayer)
 );
 
 const runtime = ManagedRuntime.make(appLayer);
@@ -46,9 +52,9 @@ app.on(
   async (context) => await runtime.runPromise(handleAuth(context.req.raw))
 );
 
-mountMcp(app);
+mountMcp(app, runtime);
 
-mountViewer(app);
+mountViewer(app, runtime);
 
 const worker = { fetch: app.fetch } satisfies ExportedHandler;
 

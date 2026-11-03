@@ -1,43 +1,19 @@
-import { Effect, Layer, ManagedRuntime } from "effect";
+import { Effect } from "effect";
+import type { Layer, ManagedRuntime } from "effect";
 import type { Hono } from "hono";
 
-import { AuthGateway } from "../auth/gateway.js";
-import { AuthRateLimit } from "../auth/rate-limit.js";
-import { AgentAuth, withAgent } from "../http/middleware/agent-auth.js";
-import { MemberDirectory } from "../http/middleware/member-directory.js";
-import { CloudBindings, configLayer } from "../platform/bindings.js";
+import { withAgent } from "../http/middleware/agent-auth.js";
 import type { AppEnv } from "../platform/bindings.js";
-import { CloudSettings } from "../platform/env.js";
-import { TenantDb } from "../tenant/db.js";
-import { AgentRequestRepo } from "../tenant/repos/agent-request.js";
-import { CommentRepo } from "../tenant/repos/comments.js";
-import { ProjectsRepo } from "../tenant/repos/projects.js";
-import { VersionsRepo } from "../tenant/repos/versions.js";
+import { ACCEPTED, BAD_REQUEST } from "../shared-actions.js";
+import type { OK } from "../shared-actions.js";
+import type { mcpLayer } from "./layer.js";
 import { runMethod, toFailure, toResult } from "./rpc.js";
 import type { RpcReply, RpcRequest } from "./rpc.js";
 
-const platformLayer = Layer.mergeAll(
-  CloudBindings.layer,
-  CloudSettings.layer
-).pipe(Layer.provide(configLayer));
-
-const authLayer = Layer.mergeAll(AuthGateway.layer, AuthRateLimit.layer).pipe(
-  Layer.provideMerge(platformLayer)
-);
-
-const reposLayer = Layer.mergeAll(
-  ProjectsRepo.layer,
-  VersionsRepo.layer,
-  AgentRequestRepo.layer,
-  CommentRepo.layer
-).pipe(Layer.provide(TenantDb.layer));
-
-const mcpLayer = Layer.mergeAll(
-  AgentAuth.layer.pipe(Layer.provide(MemberDirectory.layer)),
-  reposLayer
-).pipe(Layer.provideMerge(authLayer));
-
-const runtime = ManagedRuntime.make(mcpLayer);
+type McpRuntime = ManagedRuntime.ManagedRuntime<
+  Layer.Success<typeof mcpLayer>,
+  unknown
+>;
 
 const readRpc = async (request: Request): Promise<RpcRequest | null> => {
   const text = await request.text();
@@ -49,17 +25,6 @@ const readRpc = async (request: Request): Promise<RpcRequest | null> => {
   }
 };
 
-interface RpcFailure {
-  readonly _tag?: string;
-  readonly message?: string;
-}
-
-const HTTP_OK = 200;
-
-const HTTP_ACCEPTED = 202;
-
-const HTTP_BAD_REQUEST = 400;
-
 const handleRpc = Effect.fn("McpMount.handle")(function* run(
   orgId: string,
   request: Request,
@@ -68,37 +33,36 @@ const handleRpc = Effect.fn("McpMount.handle")(function* run(
   return yield* runMethod(orgId, rpc).pipe(
     withAgent(request),
     Effect.match({
-      onFailure: (error: RpcFailure): RpcReply =>
-        toFailure(
-          rpc.id,
-          error._tag ?? "BadRequest",
-          error.message ?? "The request failed."
-        ),
+      onFailure: (error): RpcReply =>
+        toFailure(rpc.id, error._tag, error.message),
       onSuccess: (result): RpcReply => toResult(rpc.id, result),
     })
   );
 });
 
-const mountMcp = (app: Hono<{ Bindings: AppEnv }>): void => {
+const mountMcp = (
+  app: Hono<{ Bindings: AppEnv }>,
+  runtime: McpRuntime
+): void => {
   app.post("/v1/o/:org/mcp", async (context) => {
     const rpc = await readRpc(context.req.raw);
 
     if (rpc === null) {
       return context.json(
         toFailure(null, "BadRequest", "The body is not JSON.").body,
-        HTTP_BAD_REQUEST
+        BAD_REQUEST
       );
     }
 
     if (rpc.method?.startsWith("notifications/")) {
-      return new Response(null, { status: HTTP_ACCEPTED });
+      return new Response(null, { status: ACCEPTED });
     }
 
     const reply = await runtime.runPromise(
       handleRpc(context.req.param("org"), context.req.raw, rpc)
     );
 
-    return context.json(reply.body, reply.status as typeof HTTP_OK);
+    return context.json(reply.body, reply.status as typeof OK);
   });
 };
 

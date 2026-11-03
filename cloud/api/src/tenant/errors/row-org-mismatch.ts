@@ -1,5 +1,7 @@
 import { Schema } from "effect";
 
+const WRONG_ORG_MESSAGE = "A row has the wrong org id.";
+
 class RowOrgMismatch extends Schema.TaggedError<RowOrgMismatch>()(
   "RowOrgMismatch",
   {
@@ -8,4 +10,4 @@ class RowOrgMismatch extends Schema.TaggedError<RowOrgMismatch>()(
   }
 ) {}
 
-export { RowOrgMismatch };
+export { RowOrgMismatch, WRONG_ORG_MESSAGE };

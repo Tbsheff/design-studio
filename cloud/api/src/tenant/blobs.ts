@@ -2,18 +2,14 @@ import { Context, Effect, Layer } from "effect";
 
 import { NotFound } from "../../../../src/shared/actions/_core/errors/not-found.js";
 import { CloudBindings } from "../platform/bindings.js";
+import { toBlobKey, toBlobPrefix } from "./blob-key.js";
+import type { BlobKind, BlobRef } from "./blob-key.js";
 import { CurrentOrg } from "./current-org.js";
 import { TenantDb } from "./db.js";
 import type { TenantDbApi } from "./db.js";
 import { BadBlobId } from "./errors/bad-blob-id.js";
 import { tq } from "./sql.js";
-
-type BlobKind = "attachment" | "blob";
-
-interface BlobRef {
-  readonly kind: BlobKind;
-  readonly name: string;
-}
+import { ViewerScope } from "./viewer-scope.js";
 
 interface BlobPage {
   readonly cursor: string | null;
@@ -23,20 +19,6 @@ interface BlobPage {
 type BlobBody = ArrayBuffer | ReadableStream | string;
 
 const LIST_MAX = 100;
-
-const ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/u;
-
-const HASH_PATTERN = /^[0-9a-f]{64}$/u;
-
-const FOLDERS: Readonly<Record<BlobKind, string>> = {
-  attachment: "attachments",
-  blob: "blobs",
-};
-
-const PATTERNS: Readonly<Record<BlobKind, RegExp>> = {
-  attachment: ID_PATTERN,
-  blob: HASH_PATTERN,
-};
 
 const auditBadId = tq<{
   readonly action: string;
@@ -55,6 +37,9 @@ interface TenantBlobsApi {
   readonly get: (
     ref: BlobRef
   ) => Effect.Effect<R2ObjectBody, NotFound, CurrentOrg>;
+  readonly getPublished: (
+    blobId: string
+  ) => Effect.Effect<R2ObjectBody, NotFound, ViewerScope>;
   readonly list: (
     kind: BlobKind,
     cursor: string | null
@@ -65,16 +50,14 @@ interface TenantBlobsApi {
   ) => Effect.Effect<void, never, CurrentOrg>;
 }
 
-const prefixOf = (orgId: string, kind: BlobKind): string =>
-  `org/${orgId}/${FOLDERS[kind]}/`;
-
 const makeKeyOf = (
   db: TenantDbApi
 ): ((ref: BlobRef) => Effect.Effect<string, never, CurrentOrg>) =>
   Effect.fn("TenantBlobs.keyOf")(function* run(ref: BlobRef) {
     const org = yield* CurrentOrg;
+    const key = toBlobKey(org.orgId, ref);
 
-    if (!PATTERNS[ref.kind].test(ref.name)) {
+    if (key === null) {
       yield* db.insert(auditBadId, {
         action: "blob.badId",
         actorKind: "system",
@@ -92,16 +75,8 @@ const makeKeyOf = (
       );
     }
 
-    return `${prefixOf(org.orgId, ref.kind)}${ref.name}`;
+    return key;
   });
-
-const toBlobKey = (orgId: string, hash: string): string | null => {
-  if (!HASH_PATTERN.test(hash)) {
-    return null;
-  }
-
-  return `${prefixOf(orgId, "blob")}${hash}`;
-};
 
 const toPage = (prefix: string, listed: R2Objects): BlobPage => {
   const names = listed.objects.map((object) => object.key.slice(prefix.length));
@@ -132,9 +107,30 @@ const makeBlobs = (files: R2Bucket, db: TenantDbApi): TenantBlobsApi => {
 
       return object;
     }),
+    getPublished: Effect.fn("TenantBlobs.getPublished")(function* run(blobId) {
+      const scope = yield* ViewerScope;
+      const key = toBlobKey(scope.orgId, { kind: "blob", name: blobId });
+
+      if (key === null) {
+        return yield* Effect.die(
+          new BadBlobId({
+            kind: "blob",
+            message: "The blob name is not valid.",
+          })
+        );
+      }
+
+      const object = yield* Effect.promise(() => files.get(key));
+
+      if (object === null) {
+        return yield* new NotFound({ message: "The file does not exist." });
+      }
+
+      return object;
+    }),
     list: Effect.fn("TenantBlobs.list")(function* run(kind, cursor) {
       const org = yield* CurrentOrg;
-      const prefix = prefixOf(org.orgId, kind);
+      const prefix = toBlobPrefix(org.orgId, kind);
       const options: R2ListOptions = { limit: LIST_MAX, prefix };
 
       if (cursor !== null) {
@@ -169,6 +165,6 @@ class TenantBlobs extends Context.Service<TenantBlobs, TenantBlobsApi>()(
   );
 }
 
-export { TenantBlobs, toBlobKey };
+export { TenantBlobs };
 
-export type { BlobBody, BlobKind, BlobPage, BlobRef, TenantBlobsApi };
+export type { BlobBody, BlobPage, TenantBlobsApi };

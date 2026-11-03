@@ -266,7 +266,6 @@ export const SCOPED_OFF_REASONS: Record<string, string> = {
 export const decisionOverrides: OxlintOverride[] = [
   {
     files: [
-      "cloud/api/src/mcp/comment-queries.ts",
       "cloud/api/src/mcp/mount.ts",
       "cloud/api/src/mcp/rpc.ts",
       "cloud/api/src/mcp/tools.ts",
@@ -281,16 +280,17 @@ export const decisionOverrides: OxlintOverride[] = [
   },
   {
     files: [
-      "src/shared/actions/token/*.ts",
+      "cloud/api/src/tenant/repos/comments.ts",
+      "src/shared/actions/token/apply.ts",
+      "src/server/handlers/token/{apply,handlers,live}.ts",
       "src/shared/actions/token/errors/status.ts",
-      "src/server/handlers/token/*.ts",
-      "src/server/token-sweep/*.ts",
+      "src/server/token-sweep/deps.ts",
       "src/ui/features/token-sweep/deps.ts",
-      "src/shared/actions/gallery/*.ts",
+      "src/shared/actions/gallery/{create,inspect}.ts",
+      "src/server/handlers/gallery/{create,handlers,inspect,live}.ts",
       "src/shared/actions/gallery/errors/status.ts",
-      "src/server/handlers/gallery/*.ts",
-      "src/server/gallery/*.ts",
-      "src/server/gallery/engine/*.ts",
+      "src/server/gallery/deps.ts",
+      "src/server/gallery/engine/axes.ts",
       "src/ui/features/gallery/deps.ts",
     ],
     rules: { "import/no-relative-parent-imports": "off" },
@@ -317,10 +317,10 @@ export const decisionOverrides: OxlintOverride[] = [
   },
   {
     files: [
-      "src/shared/actions/image/*.ts",
+      "src/shared/actions/image/{create,inspect}.ts",
       "src/shared/actions/image/errors/status.ts",
-      "src/server/handlers/image/*.ts",
-      "src/server/image-generate/*.ts",
+      "src/server/handlers/image/{create,handlers,inspect,live}.ts",
+      "src/server/image-generate/deps.ts",
       "src/ui/features/image-generate/deps.ts",
     ],
     rules: { "import/no-relative-parent-imports": "off" },
@@ -424,42 +424,9 @@ export const decisionOverrides: OxlintOverride[] = [
   },
   {
     files: [
-      "src/server/direct-edit/direct-edit-props-ops.ts",
-      "src/server/direct-edit/direct-edit-review-ops.ts",
-      "src/server/mcp/props-tools.ts",
-      "src/server/mcp/rules-tools.ts",
-      "src/server/mcp/review-tools.ts",
-      "src/server/mcp/figma-import-tools.ts",
-      "src/server/mcp/{arrange,image,layer-state,move,style,tweak,vector}-tools.ts",
+      "src/server/direct-edit/{direct-edit-props-ops,direct-edit-review-ops}.ts",
     ],
-    rules: {
-      "anti-slop/no-conditional-empty-object-spread": "warn",
-      "anti-slop/no-runtime-typeof": "warn",
-      "anti-slop/no-unknown-parameters": "warn",
-      "anti-slop/require-readable-spacing": "warn",
-      "eslint/max-params": "warn",
-      "eslint/no-console": "warn",
-      "eslint/no-magic-numbers": "warn",
-      "eslint/no-ternary": "warn",
-      "eslint/no-undefined": "warn",
-      "eslint/prefer-destructuring": "warn",
-      "eslint/require-unicode-regexp": "warn",
-      "eslint/sort-keys": "warn",
-      "import/consistent-type-specifier-style": "warn",
-      "import/no-cycle": "warn",
-      "react-doctor/async-defer-await": "warn",
-      "react-doctor/no-barrel-import": "warn",
-      "react-doctor/zod-v4-no-deprecated-schema-apis": "warn",
-      "sonarjs/elseif-without-else": "warn",
-      "sonarjs/no-nested-template-literals": "warn",
-      "sonarjs/shorthand-property-grouping": "warn",
-      "typescript/explicit-function-return-type": "warn",
-      "typescript/explicit-module-boundary-types": "warn",
-      "unicorn/max-nested-calls": "warn",
-      "unicorn/no-array-callback-reference": "warn",
-      "unicorn/no-await-expression-member": "warn",
-      "import/no-relative-parent-imports": "off",
-    },
+    rules: { "import/no-relative-parent-imports": "off" },
   },
   {
     files: ["src/server/direct-edit/direct-edit-core.ts"],
@@ -475,8 +442,8 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/shared/actions/cloud/{get,set,delete}.ts",
       "src/server/canvas/links/link-{ops,runtime,store,writer}.ts",
       "src/server/canvas/canvas-{ops,runtime,store,writer}.ts",
-      "src/server/handlers/canvas/*.ts",
-      "src/shared/actions/canvas/*.ts",
+      "src/server/handlers/canvas/{apply-implicit-link,create-flow,create-link,delete-link,get-doc,handlers,list-flow-links,list-flow-params,list-frame-states,list-implicit-links,list-links,live,set-doc,set-frame-state,set-presence,set-start-link,update-frame-session,update-link}.ts",
+      "src/shared/actions/canvas/{apply-implicit-link,create-flow,create-link,delete-link,get-doc,index,list-flow-links,list-flow-params,list-frame-states,list-implicit-links,list-links,routes,schema,set-doc,set-frame-state,set-presence,set-start-link,update-frame-session,update-link}.ts",
     ],
     rules: { "import/no-relative-parent-imports": "off" },
   },
@@ -508,8 +475,8 @@ export const decisionOverrides: OxlintOverride[] = [
   {
     files: [
       "src/server/app/dev-server-{attempt,ops,runner,runtime,store}.ts",
-      "src/server/handlers/dev-server/*.ts",
-      "src/shared/actions/dev-server/*.ts",
+      "src/server/handlers/dev-server/{create,get,handlers,list-routes,live,run,set,start,stop}.ts",
+      "src/shared/actions/dev-server/{create,get,index,list-routes,routes,run,schema,set,start,stop}.ts",
     ],
     rules: { "import/no-relative-parent-imports": "off" },
   },
@@ -535,9 +502,9 @@ export const decisionOverrides: OxlintOverride[] = [
   },
   {
     files: [
-      "src/server/handlers/connection/*.ts",
-      "src/shared/actions/connection/*.ts",
-      "src/server/mcp-life/*.ts",
+      "src/server/handlers/connection/{get-status,handlers,list-activity,list-approvals,live,set-approval,set-status}.ts",
+      "src/shared/actions/connection/{get-status,index,list-activity,list-approvals,routes,schema,set-approval,set-status}.ts",
+      "src/server/mcp-life/{approval-window-queue,index,mcp-activity-log,mcp-approval-store,mcp-life-runtime,mcp-listener-runner,mcp-settings-store,mcp-settings-writer}.ts",
       "src/server/platform/runtime-slot/index.ts",
     ],
     rules: { "import/no-relative-parent-imports": "off" },
@@ -581,10 +548,6 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/server/{http/mcp-routes,http/stream-routes,main/live-layer}.ts",
       "src/server/cloud/cloud-migration-runner.ts",
     ],
-    rules: { "react-doctor/no-barrel-import": "off" },
-  },
-  {
-    files: ["src/server/handlers/**"],
     rules: { "react-doctor/no-barrel-import": "off" },
   },
   {
@@ -788,10 +751,6 @@ export const decisionOverrides: OxlintOverride[] = [
     rules: { "sonarjs/no-implicit-dependencies": "off" },
   },
   {
-    files: ["src/shared/actions/**", "src/server/**", "cloud/api/**"],
-    rules: { "unicorn/throw-new-error": "off" },
-  },
-  {
     files: [
       "**/*.generated.ts",
       "src/shared/actions/*/index.ts",
@@ -851,12 +810,6 @@ export const decisionOverrides: OxlintOverride[] = [
     files: [
       "src/server/store/projects.ts",
       "src/server/store/project-{core,create,files,helpers,types}.ts",
-      "src/server/store/{project-store,project-writer,project-runtime,project-library-runtime,project-library-store,project-library-writer,workspace-runtime,workspace-store,workspace-writer}.ts",
-      "src/server/handlers/project/live.ts",
-      "src/server/handlers/project/*.ts",
-      "src/server/project-ops/*.ts",
-      "src/server/mcp/legacy/projects-call.ts",
-      "src/shared/actions/project/*.ts",
     ],
     rules: {
       "anti-slop/no-conditional-empty-object-spread": "warn",
@@ -902,5 +855,14 @@ export const decisionOverrides: OxlintOverride[] = [
       "unicorn/prefer-import-meta-properties": "warn",
       "import/no-relative-parent-imports": "off",
     },
+  },
+  {
+    files: [
+      "src/server/store/{project-store,project-writer,project-runtime,project-library-runtime,project-library-store,project-library-writer,workspace-runtime,workspace-store,workspace-writer}.ts",
+      "src/server/handlers/project/{create,create-attachment,delete-command-rule,get,get-design-md,get-file,get-hidden,handlers,import,list,list-command-rules,live,move-hidden,search,set-design-md,update}.ts",
+      "src/server/project-ops/{project-ops-create,project-ops-detail,project-ops-hidden,project-ops-runtime,project-ops-store,project-ops-writer}.ts",
+      "src/shared/actions/project/{create,create-attachment,delete-command-rule,get,get-design-md,get-file,get-hidden,import,list,list-command-rules,move-hidden,schema,search,set-design-md,update}.ts",
+    ],
+    rules: { "import/no-relative-parent-imports": "off" },
   },
 ];

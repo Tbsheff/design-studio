@@ -53,6 +53,16 @@ import {
   mcpOffReason,
   readVerbAccess,
 } from "./studio/spec-rules.js";
+import { cloudToolVerb, noOrgIdParam, repoUsesTq, tenantSqlInRepos } from "./studio/cloud-rules.js";
+import { noNewRuntimeSlot, wideExemption } from "./studio/exemption-rules.js";
+import { derivedTypeName, noHandlerNodeGlobal } from "./studio/handler-shape-rules.js";
+import {
+  bootstrapOffReason,
+  deleteDestructive,
+  descriptionToolName,
+  listPage,
+} from "./studio/spec-shape-rules.js";
+import { noBusyFlag } from "./studio/ui-state-rules.js";
 import { awaitWrite, noAppImport, noDomQuery } from "./studio/surface-rules.js";
 import { noOptionalNull } from "./studio/type-rules.js";
 import {
@@ -84,7 +94,12 @@ const studio = {
     "area-import-index": areaImportIndex,
     "await-write": awaitWrite,
     "boolean-name": booleanName,
+    "bootstrap-off-reason": bootstrapOffReason,
+    "cloud-tool-verb": cloudToolVerb,
+    "delete-destructive": deleteDestructive,
     "derived-tool-name": derivedToolName,
+    "derived-type-name": derivedTypeName,
+    "description-tool-name": descriptionToolName,
     "edit-invalidates": editInvalidates,
     "engine-pure": enginePure,
     "error-name-unique": errorNameUnique,
@@ -92,6 +107,7 @@ const studio = {
     "frozen-exemption": frozenExemption,
     "function-verb": functionVerb,
     "handler-satisfies": handlerSatisfies,
+    "list-page": listPage,
     "live-layer-domain": liveLayerDomain,
     "mcp-off-reason": mcpOffReason,
     "module-function-verb": moduleFunctionVerb,
@@ -100,15 +116,19 @@ const studio = {
     "no-adapter-service": noAdapterService,
     "no-app-import": noAppImport,
     "no-async-in-service": noAsyncInService,
+    "no-busy-flag": noBusyFlag,
     "no-cache-ttl": noCacheTtl,
     "no-deep-area-import": noDeepAreaImport,
     "no-desktop-global": noDesktopGlobal,
     "no-dom-query": noDomQuery,
     "no-feature-async": noFeatureAsync,
     "no-fixable-off": noFixableOff,
+    "no-handler-node-global": noHandlerNodeGlobal,
     "no-input-default": noInputDefault,
     "no-local-error-bridge": noLocalErrorBridge,
+    "no-new-runtime-slot": noNewRuntimeSlot,
     "no-optional-null": noOptionalNull,
+    "no-org-id-param": noOrgIdParam,
     "no-output-guess": noOutputGuess,
     "no-promise-cast": noPromiseCast,
     "no-runtime-map": noRuntimeMap,
@@ -128,6 +148,7 @@ const studio = {
     "read-verb-access": readVerbAccess,
     "read-yields-read-service": readYieldsReadService,
     "readonly-field": readonlyField,
+    "repo-uses-tq": repoUsesTq,
     "service-api-effect": serviceApiEffect,
     "service-effect-only": serviceEffectOnly,
     "service-file-exports": serviceFileExports,
@@ -136,6 +157,8 @@ const studio = {
     "service-role": serviceRole,
     "service-tag-area": serviceTagArea,
     "service-wired": serviceWired,
+    "tenant-sql-in-repos": tenantSqlInRepos,
+    "wide-exemption": wideExemption,
     "write-needs-write-permission": writeNeedsWritePermission,
   },
 };

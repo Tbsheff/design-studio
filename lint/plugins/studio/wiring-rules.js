@@ -28,7 +28,7 @@ const INPUT_DEFAULT_MESSAGE =
   "A default for an action input field with ?? in a handler is banned, because MCP, the agent and the UI do not see it. Use Schema.withDecodingDefault on the field in src/shared/actions/<domain>/<verb>.ts.";
 
 const RUNTIME_CALL_MESSAGE =
-  "An adapter that calls a service runtime getter (directEditCall, *RuntimeOf) is banned, because it skips decode, Authorizer.require, ProjectAccess.visible and action.done. Use mcp { name } on the action so that src/server/handlers/_core/run-action.ts serves it.";
+  "An adapter that calls a service runtime getter or op (directEditCall, *RuntimeOf, *Call, an op that takes a runtime such as createProjectIn) is banned, because it skips decode, Authorizer.require, ProjectAccess.visible and action.done. Use mcp { name } on the action so that src/server/handlers/_core/run-action.ts serves it.";
 
 const isAccessDeclare = (member) =>
   member.type === "PropertyDefinition" &&
@@ -144,7 +144,7 @@ const noInputDefault = rule((context) => ({
   },
 }));
 
-const RUNTIME_GETTER = /^(?:directEditCall|[a-z][A-Za-z]*RuntimeOf)$/u;
+const RUNTIME_GETTER = /^(?:directEditCall|[a-z][A-Za-z]*RuntimeOf|[a-z][A-Za-z]*[a-z]In|(?!studioCall$)[a-z][A-Za-z]*Call)$/u;
 
 const importedName = (specifier) => specifier.imported?.name ?? specifier.local.name;
 

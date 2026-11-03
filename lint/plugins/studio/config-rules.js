@@ -1,5 +1,5 @@
 import { keyName, propertyOf, rule } from "./ast.js";
-import { FROZEN_AREAS, FROZEN_EXEMPTIONS, LEGACY_OVERRIDES } from "./frozen.js";
+import { FROZEN_AREAS, FROZEN_EXEMPTIONS, LEGACY_OVERRIDES, SCOPE_EXEMPTIONS } from "./frozen.js";
 
 const WARN_MAX = 3;
 
@@ -102,17 +102,59 @@ const checkFrozen = (context, node, frozen, message) => {
   }
 };
 
-const frozenExemption = rule((context) => ({
-  Property: (node) => {
-    if (keyName(node) === "areas") {
-      checkFrozen(context, node.value, FROZEN_AREAS, AREA_MESSAGE);
+const CONSTANT = /^[A-Z][A-Z0-9_]*$/u;
+
+const exemptLiterals = (node, lists) => {
+  if (node === null || node.type !== "ArrayExpression") {
+    return [];
+  }
+
+  return node.elements.flatMap((element) => {
+    if (element?.type === "Literal") {
+      return [element];
     }
-  },
-  VariableDeclarator: (node) => {
-    if (node.id.type === "Identifier" && EXEMPTION_LIST.test(node.id.name)) {
-      checkFrozen(context, node.init, FROZEN_EXEMPTIONS, EXEMPTION_MESSAGE);
+
+    const name = element?.argument?.name ?? element?.name ?? null;
+
+    if (name === null || !lists.has(name)) {
+      return [];
     }
-  },
-}));
+
+    return exemptLiterals(lists.get(name), lists);
+  });
+};
+
+const checkExcluded = (context, node, lists) => {
+  for (const literal of exemptLiterals(node.value, lists)) {
+    if (!FROZEN_EXEMPTIONS.has(literal.value) && !SCOPE_EXEMPTIONS.has(literal.value)) {
+      context.report({ message: EXEMPTION_MESSAGE, node: literal });
+    }
+  }
+};
+
+const frozenExemption = rule((context) => {
+  const lists = new Map();
+
+  return {
+    Property: (node) => {
+      if (keyName(node) === "areas") {
+        checkFrozen(context, node.value, FROZEN_AREAS, AREA_MESSAGE);
+      }
+
+      if (keyName(node) === "excludeFiles") {
+        checkExcluded(context, node, lists);
+      }
+    },
+    VariableDeclarator: (node) => {
+      if (node.id.type === "Identifier" && CONSTANT.test(node.id.name)) {
+        lists.set(node.id.name, node.init);
+      }
+
+      if (node.id.type === "Identifier" && EXEMPTION_LIST.test(node.id.name)) {
+        checkFrozen(context, node.init, FROZEN_EXEMPTIONS, EXEMPTION_MESSAGE);
+      }
+    },
+  };
+});
 
 export { frozenExemption, narrowOverride };

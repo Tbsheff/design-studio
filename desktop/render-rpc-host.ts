@@ -3,12 +3,11 @@ import { timingSafeEqual } from "node:crypto";
 import { chmodSync, rmSync } from "node:fs";
 import net from "node:net";
 
-import {
-  isRenderRequest,
-  RENDER_MESSAGE,
-  type RenderOps,
-  type RenderRequest,
-  type RenderResponse,
+import { isRenderRequest, RENDER_MESSAGE } from "../src/shared/render-rpc.js";
+import type {
+  RenderOps,
+  RenderRequest,
+  RenderResponse,
 } from "../src/shared/render-rpc.js";
 import type { PageState, RenderPool } from "./render-pool.js";
 
@@ -91,17 +90,17 @@ export class RenderHost {
   async handle(request: RenderRequest): Promise<RenderResponse> {
     try {
       return {
-        type: RENDER_MESSAGE,
         id: request.id,
         ok: true,
+        type: RENDER_MESSAGE,
         value: await this.dispatch(request),
       };
     } catch (error) {
       return {
-        type: RENDER_MESSAGE,
+        error: error instanceof Error ? error.message : String(error),
         id: request.id,
         ok: false,
-        error: error instanceof Error ? error.message : String(error),
+        type: RENDER_MESSAGE,
       };
     }
   }

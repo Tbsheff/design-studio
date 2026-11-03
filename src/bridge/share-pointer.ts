@@ -34,14 +34,14 @@ export function createSharePointer(post: (body: PointerBody) => void): {
 
   const onMove = (event: PointerEvent): void =>
     queue({
+      inside: true,
       type: "share-pointer",
       x: event.clientX,
       y: event.clientY,
-      inside: true,
     });
 
   const onLeave = (): void =>
-    queue({ type: "share-pointer", x: 0, y: 0, inside: false });
+    queue({ inside: false, type: "share-pointer", x: 0, y: 0 });
 
   return {
     set(next) {
@@ -54,7 +54,6 @@ export function createSharePointer(post: (body: PointerBody) => void): {
       if (on) {
         window.addEventListener("pointermove", onMove, {
           capture: true,
-          passive: true,
         });
         document.documentElement.addEventListener("pointerleave", onLeave);
 

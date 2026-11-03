@@ -95,15 +95,15 @@ export function layoutStyles(
   return {
     ...authoredStyles(element),
     ...declaredMargins(element),
-    "authored-width": sizes.width ?? "",
     "authored-height": sizes.height ?? "",
-    "parent-align-items": parent?.alignItems ?? "",
-    "parent-justify-items": parent?.justifyItems ?? "",
+    "authored-width": sizes.width ?? "",
     "own-justify-self": computed.justifySelf,
-    "used-width": computed.width,
-    "used-height": computed.height,
+    "parent-align-items": parent?.alignItems ?? "",
     "parent-display": parent?.display ?? "",
     "parent-flex-direction": parent?.flexDirection ?? "",
+    "parent-justify-items": parent?.justifyItems ?? "",
+    "used-height": computed.height,
+    "used-width": computed.width,
     ...offsetStyles(element, computed),
     ...(positioned ? constraintStyles(element, computed, sizes) : {}),
   };
@@ -123,8 +123,8 @@ function containerOf(element: HTMLElement, fixed: boolean): Container {
     const box = parent.getBoundingClientRect();
 
     return {
-      width: parent.clientWidth,
       height: parent.clientHeight,
+      width: parent.clientWidth,
       x: box.left + parent.clientLeft,
       y: box.top + parent.clientTop,
     };
@@ -135,8 +135,8 @@ function containerOf(element: HTMLElement, fixed: boolean): Container {
     : { x: -window.scrollX, y: -window.scrollY };
 
   return {
-    width: document.documentElement.clientWidth,
     height: document.documentElement.clientHeight,
+    width: document.documentElement.clientWidth,
     ...scrolled,
   };
 }
@@ -158,22 +158,22 @@ function constraintStyles(
   const rect = element.getBoundingClientRect();
 
   return {
+    "authored-bottom": box.bottom ?? "",
     "authored-left": box.left ?? "",
     "authored-right": box.right ?? "",
     "authored-top": box.top ?? "",
-    "authored-bottom": box.bottom ?? "",
-    "container-width": exact(parent.width),
+    "box-height": exact(rect.height),
+    "box-width": exact(rect.width),
     "container-height": exact(parent.height),
+    "container-width": exact(parent.width),
     "pin-left": exact(
       rect.left - parent.x - (parseFloat(computed.marginLeft) || 0)
     ),
     "pin-top": exact(
       rect.top - parent.y - (parseFloat(computed.marginTop) || 0)
     ),
-    "box-width": exact(rect.width),
-    "box-height": exact(rect.height),
-    "size-width": exact(rect.width - boxExtra(computed, "x")),
     "size-height": exact(rect.height - boxExtra(computed, "y")),
+    "size-width": exact(rect.width - boxExtra(computed, "x")),
   };
 }
 
@@ -187,9 +187,10 @@ function boxExtra(computed: CSSStyleDeclaration, axis: "x" | "y"): number {
   return sides.reduce(
     (sum, side) =>
       sum +
-      (parseFloat(computed.getPropertyValue(`padding-${side.toLowerCase()}`)) ||
-        0) +
-      (parseFloat(
+      (Number.parseFloat(
+        computed.getPropertyValue(`padding-${side.toLowerCase()}`)
+      ) || 0) +
+      (Number.parseFloat(
         computed.getPropertyValue(`border-${side.toLowerCase()}-width`)
       ) || 0),
     0
@@ -204,8 +205,9 @@ function offsetStyles(
     return {};
   }
 
-  const left = element.offsetLeft - (parseFloat(computed.marginLeft) || 0);
-  const top = element.offsetTop - (parseFloat(computed.marginTop) || 0);
+  const left =
+    element.offsetLeft - (Number.parseFloat(computed.marginLeft) || 0);
+  const top = element.offsetTop - (Number.parseFloat(computed.marginTop) || 0);
 
   return {
     "offset-left": `${Math.round(left)}px`,

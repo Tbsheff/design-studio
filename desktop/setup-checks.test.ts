@@ -25,6 +25,7 @@ function fakeClaude(
     `#!/bin/sh\nif [ "$1" = "--version" ]; then printf '%s' '${version}'; else printf '%s' '${auth}'; fi\n`
   );
   chmodSync(file, 0o755);
+
   return { path: file, realPath: file, source: "path" };
 }
 
@@ -32,7 +33,7 @@ const ENV = { PATH: "/usr/bin:/bin" };
 const EXPECTED = "2.1.307";
 
 function setup(location: ClaudeSetup["location"]): ClaudeSetup {
-  return { location, expectedVersion: EXPECTED };
+  return { expectedVersion: EXPECTED, location };
 }
 
 describe("setup checks", () => {
@@ -41,10 +42,11 @@ describe("setup checks", () => {
       setup(fakeClaude('{"loggedIn":false}')),
       ENV
     );
+
     expect(result).toMatchObject({
-      status: "fail",
-      required: true,
       fixes: ["copy-claude", "open-terminal"],
+      required: true,
+      status: "fail",
     });
     expect(needsAttention([result])).toBe(true);
   });
@@ -54,18 +56,19 @@ describe("setup checks", () => {
       setup(fakeClaude('{"loggedIn":true}')),
       ENV
     );
+
     expect(result).toMatchObject({
-      status: "ok",
       detail: "Logged in. Claude Code 2.1.309.",
+      status: "ok",
     });
   });
 
   it("no claude found fails with install instructions", async () => {
     const result = await checkClaude(setup(null), ENV);
     expect(result).toMatchObject({
-      status: "fail",
-      required: true,
       fixes: ["copy-claude-install", "open-terminal"],
+      required: true,
+      status: "fail",
     });
     expect(result.detail).toContain("npm i -g @anthropic-ai/claude-code");
   });
@@ -75,9 +78,10 @@ describe("setup checks", () => {
       setup(fakeClaude('{"loggedIn":true}', "2.0.99 (Claude Code)")),
       ENV
     );
+
     expect(result).toMatchObject({
-      status: "fail",
       fixes: ["copy-claude-install", "open-terminal"],
+      status: "fail",
     });
     expect(result.detail).toMatch(
       /^Update Claude Code: 2\.0\.99 is older than 2\.1\.307\. Run `claude update`/
@@ -89,18 +93,19 @@ describe("setup checks", () => {
       setup(fakeClaude('{"loggedIn":true}', "2.2.0 (Claude Code)")),
       ENV
     );
+
     expect(result.status).toBe("warn");
     expect(needsAttention([result])).toBe(false);
   });
 
   it("missing git fails and offers Command Line Tools; bundled git passes with the same fix", () => {
-    expect(checkGit({ kind: "missing", binary: null, env: {} })).toMatchObject({
-      status: "fail",
+    expect(checkGit({ binary: null, env: {}, kind: "missing" })).toMatchObject({
       fixes: ["install-clt"],
+      status: "fail",
     });
     expect(
-      checkGit({ kind: "bundled", binary: "/x/git", env: {} })
-    ).toMatchObject({ status: "ok", fixes: ["install-clt"] });
+      checkGit({ binary: "/x/git", env: {}, kind: "bundled" })
+    ).toMatchObject({ fixes: ["install-clt"], status: "ok" });
     expect(bundledGit("/nonexistent").kind).toBe("missing");
   });
 
@@ -108,9 +113,11 @@ describe("setup checks", () => {
     const offline = await checkNetwork(() =>
       Promise.reject(new Error("offline"))
     );
+
     const memory = checkDesignMemory({
       DESIGN_MEMORY_HOME: "/nonexistent/design-memory",
     });
+
     const results: CheckResult[] = [offline, memory];
     expect(results.map((result) => result.status)).toEqual(["warn", "warn"]);
     expect(needsAttention(results)).toBe(false);

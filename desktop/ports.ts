@@ -17,8 +17,8 @@ export interface PortSet {
 export const VITE_PORT_RANGE = 200;
 
 export const DEFAULT_PORTS: PortSet = {
-  studio: DEFAULT_STUDIO_PORT,
   preview: DEFAULT_PREVIEW_PORT,
+  studio: DEFAULT_STUDIO_PORT,
   viteBase: DEFAULT_VITE_PORT_BASE,
 };
 
@@ -31,7 +31,7 @@ export function portIsFree(port: number): Promise<boolean> {
     const probe = net.createServer();
     probe.unref();
     probe.once("error", () => resolve(false));
-    probe.listen({ port, host: "127.0.0.1", exclusive: true }, () => {
+    probe.listen({ exclusive: true, host: "127.0.0.1", port }, () => {
       probe.close(() => resolve(true));
     });
   });
@@ -65,8 +65,8 @@ export async function waitForFree(set: PortSet, ms: number): Promise<boolean> {
 
 export function fallbackSets(): PortSet[] {
   return Array.from({ length: FALLBACK_COUNT }, (_, index) => ({
-    studio: FALLBACK_STUDIO_START + index * 10,
     preview: FALLBACK_STUDIO_START + index * 10 + 1,
+    studio: FALLBACK_STUDIO_START + index * 10,
     viteBase: FALLBACK_VITE_START + index * VITE_PORT_RANGE,
   }));
 }

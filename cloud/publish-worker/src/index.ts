@@ -1,5 +1,6 @@
 import { handleApi } from "./api";
-import { ApiError, apiFailure, PAGE_CSP, secure, type Env } from "./http";
+import { ApiError, apiFailure, PAGE_CSP, secure } from "./http";
+import type { Env } from "./http";
 import { messagePage } from "./pages";
 import { handleDesign, robots } from "./viewer";
 
@@ -11,6 +12,7 @@ async function route(
   ctx: ExecutionContext
 ): Promise<Response> {
   const url = new URL(request.url);
+
   if (url.pathname.startsWith("/api/")) {
     try {
       return await handleApi(request, env, ctx);
@@ -18,10 +20,15 @@ async function route(
       return apiFailure(error);
     }
   }
-  if (url.pathname === "/robots.txt") return robots(env);
+
+  if (url.pathname === "/robots.txt") {
+    return robots(env);
+  }
   const match = DESIGN.exec(url.pathname);
-  if (match?.[1])
+
+  if (match?.[1]) {
     return handleDesign(request, env, ctx, match[1], match[2] ?? null);
+  }
   return secure(
     messagePage(
       404,
@@ -41,15 +48,17 @@ export default {
     try {
       return await route(request, env, ctx);
     } catch (error) {
-      if (error instanceof ApiError && error.status < 500)
+      if (error instanceof ApiError && error.status < 500) {
         return secure(
           messagePage(error.status, "This request was refused", error.message),
           { csp: PAGE_CSP, noindex: true }
         );
+      }
       console.error(
         "publish worker error",
         error instanceof Error ? error.stack : String(error)
       );
+
       return secure(
         messagePage(
           500,

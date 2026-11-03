@@ -43,10 +43,10 @@ export function runNotice(
     : (finished.error ?? shortPrompt(finished.run.prompt));
 
   return {
-    title,
     body: detail ? `${where}: ${detail}` : where,
     projectId: finished.run.projectId,
     runId: finished.run.runId,
     status: finished.status,
+    title,
   };
 }

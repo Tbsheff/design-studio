@@ -1,8 +1,5 @@
-import {
-  OWNERS_MAX,
-  OWNER_STACK_MAX,
-  type ComponentOwner,
-} from "../shared/props.js";
+import { OWNERS_MAX, OWNER_STACK_MAX } from "../shared/props.js";
+import type { ComponentOwner } from "../shared/props.js";
 
 interface OwnerFiber {
   tag?: number;

@@ -52,7 +52,7 @@ export function insideTarget(element: Element): boolean {
 
   return (
     element.children.length > 0 &&
-    !Array.from(element.childNodes).some(
+    ![...element.childNodes].some(
       (node) =>
         node.nodeType === Node.TEXT_NODE &&
         (node.textContent ?? "").trim() !== ""

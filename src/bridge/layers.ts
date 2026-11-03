@@ -2,9 +2,8 @@ import {
   LAYER_LABEL_MAX,
   LAYER_TREE_MAX,
   SOURCE_LOC_ATTR,
-  type LayerNode,
-  type SelectMove,
 } from "../shared/contracts.js";
+import type { LayerNode, SelectMove } from "../shared/contracts.js";
 import { layerKey, layerRef } from "../shared/layer-ref.js";
 
 const SKIP_TAGS = new Set([
@@ -31,11 +30,11 @@ export function isLayer(element: Element): boolean {
 }
 
 function layerChildren(element: Element): Element[] {
-  return Array.from(element.children).filter(isLayer);
+  return [...element.children].filter(isLayer);
 }
 
 function nameOf(element: Element): string {
-  const dataName = element.getAttribute("data-name");
+  const dataName = element.dataset.name;
 
   if (dataName) {
     return clip(dataName, LAYER_LABEL_MAX);
@@ -54,9 +53,7 @@ function nameOf(element: Element): string {
 
 function textOf(element: Element): string {
   if (
-    Array.from(element.childNodes).some(
-      (node) => node.nodeType === Node.ELEMENT_NODE
-    )
+    [...element.childNodes].some((node) => node.nodeType === Node.ELEMENT_NODE)
   ) {
     return "";
   }
@@ -129,7 +126,7 @@ export function createLayerIndex(): LayerIndex {
       document.body
     )
       .reverse()
-      .map((element) => ({ element, depth: 0 }));
+      .map((element) => ({ depth: 0, element }));
 
     while (stack.length > 0 && nodes.length < LAYER_TREE_MAX) {
       const { element, depth } = stack.pop() as {
@@ -139,19 +136,19 @@ export function createLayerIndex(): LayerIndex {
 
       const children = layerChildren(element);
       nodes.push({
-        id: idOf(element),
-        depth,
-        tag: element.tagName.toLowerCase(),
-        name: nameOf(element),
-        text: textOf(element),
         childCount: children.length,
+        depth,
         hidden: element.getClientRects().length === 0,
+        id: idOf(element),
+        name: nameOf(element),
+        tag: element.tagName.toLowerCase(),
+        text: textOf(element),
         ...locOf(element, refs),
         ...(locked?.(element) ? { locked: true } : {}),
       });
 
       for (let i = children.length - 1; i >= 0; i -= 1) {
-        stack.push({ element: children[i] as Element, depth: depth + 1 });
+        stack.push({ depth: depth + 1, element: children[i] as Element });
       }
     }
 
@@ -164,7 +161,7 @@ export function createLayerIndex(): LayerIndex {
     return found?.isConnected ? found : null;
   };
 
-  return { build, idOf, element };
+  return { build, element, idOf };
 }
 
 function sibling(element: Element, forward: boolean): Element | null {

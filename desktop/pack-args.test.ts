@@ -13,11 +13,12 @@ describe("desktop pack arguments", () => {
   it("takes a Developer ID name and an http feed only from explicit env", () => {
     const args = toBuilderArgs(
       toPackOptions({
+        STUDIO_PACK_OUT: "/tmp/out",
         STUDIO_SIGN_IDENTITY: "Developer ID Application: Example (TEAM123456)",
         STUDIO_UPDATE_URL: "https://updates.example.com/studio/",
-        STUDIO_PACK_OUT: "/tmp/out",
       })
     );
+
     expect(args).toEqual(
       expect.arrayContaining([
         "-c.mac.identity=Developer ID Application: Example (TEAM123456)",

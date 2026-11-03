@@ -19,15 +19,16 @@ export class ApiError extends Error {
 
 export const bad = (message: string, code = "bad_request") =>
   new ApiError(400, code, message);
+
 export const notFound = (message = "Not found.") =>
   new ApiError(404, "not_found", message);
 
 const API_HEADERS: Record<string, string> = {
   "cache-control": "no-store",
-  "x-content-type-options": "nosniff",
-  "referrer-policy": "no-referrer",
-  "x-robots-tag": "noindex, nofollow",
   "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
+  "referrer-policy": "no-referrer",
+  "x-content-type-options": "nosniff",
+  "x-robots-tag": "noindex, nofollow",
 };
 
 export function json(
@@ -36,30 +37,32 @@ export function json(
   extra: Record<string, string> = {}
 ): Response {
   return new Response(JSON.stringify(value), {
-    status,
     headers: {
       "content-type": "application/json; charset=utf-8",
       ...API_HEADERS,
       ...extra,
     },
+    status,
   });
 }
 
 export function apiFailure(error: unknown): Response {
-  if (error instanceof ApiError)
+  if (error instanceof ApiError) {
     return json(
       { error: error.message, code: error.code } satisfies ApiErrorBody,
       error.status,
       error.headers
     );
+  }
   console.error(
     "publish api error",
     error instanceof Error ? error.stack : String(error)
   );
+
   return json(
     {
-      error: "The publish Worker hit an error.",
       code: "internal",
+      error: "The publish Worker hit an error.",
     } satisfies ApiErrorBody,
     500
   );
@@ -70,11 +73,15 @@ export async function readJson<T>(
   maxBytes = 1024 * 1024
 ): Promise<T> {
   const length = Number(request.headers.get("content-length") ?? "0");
-  if (length > maxBytes)
+
+  if (length > maxBytes) {
     throw new ApiError(413, "too_large", "The request body is too large.");
+  }
   const text = await request.text();
-  if (text.length > maxBytes)
+
+  if (text.length > maxBytes) {
     throw new ApiError(413, "too_large", "The request body is too large.");
+  }
   try {
     return JSON.parse(text) as T;
   } catch {
@@ -130,12 +137,14 @@ export function secure(response: Response, options: SecureOptions): Response {
     "permissions-policy",
     "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
   );
-  if (options.noindex)
+
+  if (options.noindex) {
     headers.set("x-robots-tag", "noindex, nofollow, noarchive");
+  }
   return new Response(response.body, {
+    headers,
     status: response.status,
     statusText: response.statusText,
-    headers,
   });
 }
 

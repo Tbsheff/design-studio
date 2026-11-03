@@ -12,8 +12,8 @@ import { feedSource, installDecision } from "./updater.js";
 describe("deep links", () => {
   it("opens only a valid project id", () => {
     expect(parseDeepLink("designstudio://open?project=AbC_12-x")).toEqual({
-      type: "open-project",
       projectId: "AbC_12-x",
+      type: "open-project",
     });
     expect(parseDeepLink("designstudio://open?project=../../etc")).toBeNull();
     expect(parseDeepLink("designstudio://open")).toBeNull();
@@ -28,15 +28,15 @@ describe("deep links", () => {
   it("accepts only well-formed renderer context", () => {
     expect(
       isDesktopContext({
-        projectId: "abc",
         directionId: "main",
+        projectId: "abc",
         running: false,
       })
     ).toBe(true);
     expect(
-      isDesktopContext({ projectId: "/etc", directionId: null, running: false })
+      isDesktopContext({ directionId: null, projectId: "/etc", running: false })
     ).toBe(false);
-    expect(isDesktopContext({ projectId: null, directionId: null })).toBe(
+    expect(isDesktopContext({ directionId: null, projectId: null })).toBe(
       false
     );
   });
@@ -61,13 +61,14 @@ describe("reveal paths", () => {
 describe("recents", () => {
   it("moves a reopened project to the top and keeps eight", () => {
     let list = Array.from({ length: 8 }, (_, n) => ({
+      folder: `/f${n}`,
       id: `p${n}`,
       name: `P${n}`,
-      folder: `/f${n}`,
     }));
-    list = addRecent(list, { id: "p5", name: "P5", folder: "/f5" });
+
+    list = addRecent(list, { folder: "/f5", id: "p5", name: "P5" });
     expect(list.map((item) => item.id).slice(0, 2)).toEqual(["p5", "p0"]);
-    list = addRecent(list, { id: "new", name: "New", folder: "/new" });
+    list = addRecent(list, { folder: "/new", id: "new", name: "New" });
     expect(list).toHaveLength(8);
     expect(list[0]?.id).toBe("new");
   });
@@ -105,17 +106,17 @@ describe("pick folder requests", () => {
   it("keeps a clean title and an absolute default path only", () => {
     expect(
       parsePickFolderRequest({
-        title: "Choose",
         defaultPath: "/Users/me/Sites",
+        title: "Choose",
       })
-    ).toEqual({ title: "Choose", defaultPath: "/Users/me/Sites" });
+    ).toEqual({ defaultPath: "/Users/me/Sites", title: "Choose" });
     expect(parsePickFolderRequest({})).toEqual({
-      title: "Choose a folder",
       defaultPath: null,
+      title: "Choose a folder",
     });
     expect(
-      parsePickFolderRequest({ title: "a\nb", defaultPath: "relative/dir" })
-    ).toEqual({ title: "a b", defaultPath: null });
+      parsePickFolderRequest({ defaultPath: "relative/dir", title: "a\nb" })
+    ).toEqual({ defaultPath: null, title: "a b" });
     expect(
       parsePickFolderRequest({ title: "x".repeat(500) })?.title
     ).toHaveLength(200);

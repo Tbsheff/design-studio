@@ -1,5 +1,6 @@
 import { APP_SOURCE_PATH } from "../shared/app.js";
-import { SOURCE_LOC_ATTR, type ComponentUse } from "../shared/contracts.js";
+import { SOURCE_LOC_ATTR } from "../shared/contracts.js";
+import type { ComponentUse } from "../shared/contracts.js";
 
 interface DebugType {
   displayName?: unknown;
@@ -163,10 +164,10 @@ function hostElementOf(
 
 async function resolveStacks(stacks: string[]): Promise<(string | null)[]> {
   const response = await fetch(APP_SOURCE_PATH, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
     body: JSON.stringify({ stacks }),
     cache: "no-store",
+    headers: { "content-type": "application/json" },
+    method: "POST",
   });
 
   if (!response.ok) {
@@ -347,7 +348,7 @@ export async function appElementBySource(
   finding = loc;
 
   try {
-    const candidates = Array.from(document.querySelectorAll(tag)).slice(
+    const candidates = [...document.querySelectorAll(tag)].slice(
       0,
       MAX_SOURCE_CANDIDATES
     );

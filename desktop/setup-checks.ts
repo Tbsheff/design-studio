@@ -55,22 +55,22 @@ const DISK_FAIL_BYTES = 1024 ** 3;
 const DISK_WARN_BYTES = 5 * 1024 ** 3;
 
 const GIT_DETAIL: Record<GitChoice["kind"], string> = {
-  system: "Command Line Tools git.",
   bundled:
     "Bundled git. Install Command Line Tools to use the system git instead.",
   missing: "No git found. Install Command Line Tools.",
+  system: "Command Line Tools git.",
 };
 
 export function checkGit(git: GitChoice): CheckResult {
   const fixes: FixAction[] = git.kind === "system" ? [] : ["install-clt"];
 
   return {
-    id: "git",
-    label: "Git",
-    status: git.kind === "missing" ? "fail" : "ok",
-    required: true,
     detail: GIT_DETAIL[git.kind],
     fixes,
+    id: "git",
+    label: "Git",
+    required: true,
+    status: git.kind === "missing" ? "fail" : "ok",
   };
 }
 
@@ -88,9 +88,9 @@ function runAuthStatus(
           Boolean(error) && (error as { killed?: boolean }).killed === true;
 
         resolve({
+          failed: Boolean(error),
           stdout: String(stdout ?? ""),
           timedOut,
-          failed: Boolean(error),
         });
       }
     );
@@ -123,9 +123,9 @@ export async function checkClaude(
   if (!binary || !existsSync(binary)) {
     return {
       ...base,
-      status: "fail",
       detail: INSTALL_DETAIL,
       fixes: ["copy-claude-install", "open-terminal"],
+      status: "fail",
     };
   }
 
@@ -135,9 +135,9 @@ export async function checkClaude(
   if (fit === "older" && found && setup.expectedVersion) {
     return {
       ...base,
-      status: "fail",
       detail: olderDetail(found, setup.expectedVersion),
       fixes: ["copy-claude-install", "open-terminal"],
+      status: "fail",
     };
   }
 
@@ -146,9 +146,9 @@ export async function checkClaude(
   if (result.timedOut) {
     return {
       ...base,
-      status: "warn",
       detail: "No answer in 15 s. A Keychain prompt may be open.",
       fixes: [],
+      status: "warn",
     };
   }
 
@@ -157,10 +157,10 @@ export async function checkClaude(
   if (!loggedIn) {
     return {
       ...base,
-      status: "fail",
       detail:
         "Not logged in. Run `claude` in Terminal and log in, then recheck.",
       fixes: ["copy-claude", "open-terminal"],
+      status: "fail",
     };
   }
 
@@ -169,13 +169,13 @@ export async function checkClaude(
   if (fit === "newer") {
     return {
       ...base,
-      status: "warn",
       detail: `Logged in.${version} It is newer than ${setup.expectedVersion}, the version Design Studio was tested with.`,
       fixes: [],
+      status: "warn",
     };
   }
 
-  return { ...base, status: "ok", detail: `Logged in.${version}`, fixes: [] };
+  return { ...base, detail: `Logged in.${version}`, fixes: [], status: "ok" };
 }
 
 function existingAncestor(dir: string): string {
@@ -197,12 +197,12 @@ export async function checkDisk(dataDir: string): Promise<CheckResult> {
     free < DISK_FAIL_BYTES ? "fail" : free < DISK_WARN_BYTES ? "warn" : "ok";
 
   return {
-    id: "disk",
-    label: "Disk space",
-    status,
-    required: true,
     detail: `${gb} GB free for ${dataDir}.`,
     fixes: ["reveal-data"],
+    id: "disk",
+    label: "Disk space",
+    required: true,
+    status,
   };
 }
 
@@ -210,10 +210,10 @@ export async function checkNetwork(
   fetchFn: typeof fetch = fetch
 ): Promise<CheckResult> {
   const base = {
+    fixes: [],
     id: "network" as const,
     label: "Network to api.anthropic.com",
     required: false,
-    fixes: [],
   };
 
   try {
@@ -222,13 +222,13 @@ export async function checkNetwork(
       signal: AbortSignal.timeout(NETWORK_TIMEOUT_MS),
     });
 
-    return { ...base, status: "ok", detail: "Reachable." };
+    return { ...base, detail: "Reachable.", status: "ok" };
   } catch {
     return {
       ...base,
-      status: "warn",
       detail:
         "Not reachable. Agent runs need it; offline you can still open and edit projects.",
+      status: "warn",
     };
   }
 }
@@ -245,12 +245,12 @@ export function checkDesignMemory(env: NodeJS.ProcessEnv): CheckResult {
     : `Not found at ${dir}. Optional: taste rules stay off.`;
 
   return {
-    id: "design-memory",
-    label: "Design memory library",
-    status: found ? "ok" : "warn",
-    required: false,
     detail,
     fixes: [],
+    id: "design-memory",
+    label: "Design memory library",
+    required: false,
+    status: found ? "ok" : "warn",
   };
 }
 

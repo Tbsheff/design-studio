@@ -1,9 +1,7 @@
 import { dialog } from "electron";
 
-import {
-  liveHolder,
-  type LockInfo,
-} from "../src/server/platform/data-lock/index.js";
+import { liveHolder } from "../src/server/platform/data-lock/index.js";
+import type { LockInfo } from "../src/server/platform/data-lock/index.js";
 
 export interface DataChoiceInput {
   preferred: string;
@@ -43,12 +41,12 @@ export async function chooseDataDir(
   }
 
   const { response } = await dialog.showMessageBox({
-    type: "warning",
-    message: "Studio data folder is in use",
-    detail: `${detail}\n\nUse a separate data folder for this app?\n${input.separate}`,
     buttons: ["Use Separate Folder", "Quit"],
-    defaultId: 0,
     cancelId: 1,
+    defaultId: 0,
+    detail: `${detail}\n\nUse a separate data folder for this app?\n${input.separate}`,
+    message: "Studio data folder is in use",
+    type: "warning",
   });
 
   return response === 0 ? { dir: input.separate } : { quit: "" };

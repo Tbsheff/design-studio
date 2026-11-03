@@ -5,8 +5,8 @@ import { pngSize } from "./png-size.js";
 
 describe(pngSize, () => {
   it("reads width and height from the PNG header", () => {
-    const bytes = PNG.sync.write(new PNG({ width: 1440, height: 8000 }));
-    expect(pngSize(bytes)).toEqual({ width: 1440, height: 8000 });
+    const bytes = PNG.sync.write(new PNG({ height: 8000, width: 1440 }));
+    expect(pngSize(bytes)).toEqual({ height: 8000, width: 1440 });
   });
 
   it("rejects bytes that are not a PNG", () => {

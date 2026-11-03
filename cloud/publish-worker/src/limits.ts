@@ -7,6 +7,7 @@ export async function clientBucket(
   keyHash: string
 ): Promise<string> {
   const day = new Date().toISOString().slice(0, 10);
+
   return `${scope}:${(await sha256Hex(`${keyHash}|${day}|${client}`)).slice(0, 24)}`;
 }
 
@@ -19,6 +20,7 @@ export async function takeToken(
 ): Promise<void> {
   const now = Date.now();
   const start = now - (now % windowMs);
+
   const row = await db
     .prepare(
       `INSERT INTO rate_limits (bucket, window_start, count) VALUES (?1, ?2, 1)
@@ -27,6 +29,7 @@ export async function takeToken(
     )
     .bind(bucket, start)
     .first<{ count: number }>();
+
   if ((row?.count ?? 0) > limit) {
     const retry = Math.ceil((start + windowMs - now) / 1000);
     throw new ApiError(429, "rate_limited", message, {

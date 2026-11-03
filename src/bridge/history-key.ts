@@ -1,4 +1,7 @@
-type HistoryKeyBody = { type: "history-key"; redo: boolean };
+interface HistoryKeyBody {
+  type: "history-key";
+  redo: boolean;
+}
 
 function typingTarget(event: KeyboardEvent): boolean {
   const target = event.composedPath()[0] ?? event.target;
@@ -26,7 +29,7 @@ export function historyKeyBody(event: KeyboardEvent): HistoryKeyBody | null {
     return null;
   }
 
-  return { type: "history-key", redo: event.shiftKey };
+  return { redo: event.shiftKey, type: "history-key" };
 }
 
 export function forwardHistoryKeys(post: (body: HistoryKeyBody) => void): void {

@@ -10,8 +10,10 @@ export function toHex(buffer: ArrayBuffer | Uint8Array): string {
 
 function fromHex(hex: string): Uint8Array {
   const out = new Uint8Array(hex.length / 2);
-  for (let i = 0; i < out.length; i += 1)
+
+  for (let i = 0; i < out.length; i += 1) {
     out[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
+  }
   return out;
 }
 
@@ -22,10 +24,13 @@ export async function sha256Hex(text: string): Promise<string> {
 export function sameBytes(a: string, b: string): boolean {
   const x = enc.encode(a);
   const y = enc.encode(b);
+
   if (x.byteLength !== y.byteLength) {
     crypto.subtle.timingSafeEqual(x, x);
+
     return false;
   }
+
   return crypto.subtle.timingSafeEqual(x, y);
 }
 
@@ -35,24 +40,29 @@ export async function checkKey(
 ): Promise<void> {
   const header = request.headers.get("authorization") ?? "";
   const match = /^Bearer ([A-Za-z0-9_-]{32,128})$/.exec(header);
-  if (!keyHash || !/^[0-9a-f]{64}$/.test(keyHash))
+
+  if (!keyHash || !/^[0-9a-f]{64}$/.test(keyHash)) {
     throw new ApiError(
       503,
       "not_set_up",
       "The publish key is not set on this Worker. Run Set up publishing again."
     );
-  if (!match?.[1])
+  }
+  if (!match?.[1]) {
     throw new ApiError(401, "no_key", "This request needs the publish key.");
-  if (!sameBytes(await sha256Hex(match[1]), keyHash))
+  }
+  if (!sameBytes(await sha256Hex(match[1]), keyHash)) {
     throw new ApiError(401, "bad_key", "The publish key is wrong.");
+  }
 }
 
 export function randomId(bytes = 9): string {
   const raw = crypto.getRandomValues(new Uint8Array(bytes));
+
   return btoa(String.fromCharCode(...raw))
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/, "");
+    .replaceAll("+", "-")
+    .replaceAll("/", "_")
+    .replace(/[=]+$/, "");
 }
 
 export interface PasswordHash {
@@ -66,11 +76,14 @@ export function parsePasswordHash(text: string | null): PasswordHash | null {
     /^pbkdf2-sha256\$(\d{4,7})\$([0-9a-f]{32})\$([0-9a-f]{64})$/.exec(
       text ?? ""
     );
-  if (!match) return null;
+
+  if (!match) {
+    return null;
+  }
   return {
+    hash: match[3] as string,
     iter: Number(match[1]),
     salt: match[2] as string,
-    hash: match[3] as string,
   };
 }
 
@@ -85,16 +98,18 @@ export async function passwordMatches(
     false,
     ["deriveBits"]
   );
+
   const bits = await crypto.subtle.deriveBits(
     {
-      name: "PBKDF2",
       hash: "SHA-256",
-      salt: fromHex(stored.salt),
       iterations: stored.iter,
+      name: "PBKDF2",
+      salt: fromHex(stored.salt),
     },
     key,
     256
   );
+
   return sameBytes(toHex(bits), stored.hash);
 }
 
@@ -103,10 +118,11 @@ async function hmacKey(keyHash: string): Promise<CryptoKey> {
     "SHA-256",
     enc.encode(`design-studio-publish/cookie/${keyHash}`)
   );
+
   return crypto.subtle.importKey(
     "raw",
     material,
-    { name: "HMAC", hash: "SHA-256" },
+    { hash: "SHA-256", name: "HMAC" },
     false,
     ["sign"]
   );
@@ -127,6 +143,7 @@ export async function makePass(
   now = Date.now()
 ): Promise<string> {
   const until = Math.floor(now / 1000) + COOKIE_TTL_S;
+
   return `${until}.${await mac(keyHash, `${publicationId}|${salt}|${until}`)}`;
 }
 
@@ -138,9 +155,15 @@ export async function passValid(
   now = Date.now()
 ): Promise<boolean> {
   const match = /^(\d{9,11})\.([0-9a-f]{64})$/.exec(value ?? "");
-  if (!match) return false;
+
+  if (!match) {
+    return false;
+  }
   const until = Number(match[1]);
-  if (until * 1000 < now) return false;
+
+  if (until * 1000 < now) {
+    return false;
+  }
   return sameBytes(
     await mac(keyHash, `${publicationId}|${salt}|${until}`),
     match[2] as string
@@ -150,7 +173,11 @@ export async function passValid(
 export function cookieValue(request: Request, name: string): string | null {
   for (const part of (request.headers.get("cookie") ?? "").split(";")) {
     const [k, ...rest] = part.trim().split("=");
-    if (k === name) return rest.join("=");
+
+    if (k === name) {
+      return rest.join("=");
+    }
   }
+
   return null;
 }

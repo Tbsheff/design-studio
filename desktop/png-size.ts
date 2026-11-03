@@ -8,5 +8,6 @@ export function pngSize(bytes: Buffer): { width: number; height: number } {
   ) {
     throw new Error("screenshot bytes are not a PNG");
   }
-  return { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) };
+
+  return { height: bytes.readUInt32BE(20), width: bytes.readUInt32BE(16) };
 }

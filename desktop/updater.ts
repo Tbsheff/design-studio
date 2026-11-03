@@ -83,10 +83,10 @@ export class Updater {
 
     const updater = electronUpdater.autoUpdater;
     updater.logger = {
+      debug: () => undefined,
+      error: (m: unknown) => this.log("error", m),
       info: (m: unknown) => this.log("info", m),
       warn: (m: unknown) => this.log("warn", m),
-      error: (m: unknown) => this.log("error", m),
-      debug: () => undefined,
     };
     updater.autoDownload = true;
     updater.autoInstallOnAppQuit = false;
@@ -145,9 +145,9 @@ export class Updater {
     if (!this.updater) {
       if (manual) {
         await dialog.showMessageBox({
-          type: "info",
-          message: "Updates are not set up for this build",
           buttons: ["OK"],
+          message: "Updates are not set up for this build",
+          type: "info",
         });
       }
 
@@ -173,9 +173,9 @@ export class Updater {
 
     if (this.manual) {
       await dialog.showMessageBox({
-        type: "info",
-        message: `Design Studio ${app.getVersion()} is the newest version`,
         buttons: ["OK"],
+        message: `Design Studio ${app.getVersion()} is the newest version`,
+        type: "info",
       });
     }
 
@@ -183,23 +183,23 @@ export class Updater {
   }
 
   private async onError(error: Error): Promise<void> {
-    this.emit({ state: "error", detail: error.message });
+    this.emit({ detail: error.message, state: "error" });
 
     if (this.installing) {
       this.installing = false;
       this.ready = null;
       await dialog.showMessageBox({
-        type: "warning",
-        message: "Design Studio could not install the update",
-        detail: `${error.message}\n\nDesign Studio keeps running the current version.`,
         buttons: ["OK"],
+        detail: `${error.message}\n\nDesign Studio keeps running the current version.`,
+        message: "Design Studio could not install the update",
+        type: "warning",
       });
     } else if (this.manual) {
       await dialog.showMessageBox({
-        type: "warning",
-        message: "Design Studio could not check for updates",
-        detail: error.message,
         buttons: ["OK"],
+        detail: error.message,
+        message: "Design Studio could not check for updates",
+        type: "warning",
       });
     }
 
@@ -227,32 +227,32 @@ export class Updater {
       return;
     }
 
-    const version = this.ready.version;
+    const { version } = this.ready;
     this.prompting = true;
 
     try {
       if (installDecision(this.options.activeRuns()) === "defer") {
         this.waitingForRuns = true;
-        this.emit({ state: "deferred", version, detail: "run active" });
+        this.emit({ detail: "run active", state: "deferred", version });
         await dialog.showMessageBox({
-          type: "info",
-          message: `Design Studio ${version} is ready to install`,
+          buttons: ["OK"],
           detail:
             "A run is in progress. Design Studio asks again when it finishes.",
-          buttons: ["OK"],
+          message: `Design Studio ${version} is ready to install`,
+          type: "info",
         });
 
         return;
       }
 
       const { response } = await dialog.showMessageBox({
-        type: "info",
-        message: `Design Studio ${version} is ready to install`,
+        buttons: ["Restart Now", "Later"],
+        cancelId: 1,
+        defaultId: 0,
         detail:
           "Restart now to update. Your projects and settings stay as they are.",
-        buttons: ["Restart Now", "Later"],
-        defaultId: 0,
-        cancelId: 1,
+        message: `Design Studio ${version} is ready to install`,
+        type: "info",
       });
 
       if (response !== 0) {
@@ -262,9 +262,9 @@ export class Updater {
       if (installDecision(this.options.activeRuns()) === "defer") {
         this.waitingForRuns = true;
         this.emit({
+          detail: "run started before restart",
           state: "deferred",
           version,
-          detail: "run started before restart",
         });
 
         return;

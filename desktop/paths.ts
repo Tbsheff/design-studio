@@ -12,6 +12,7 @@ export interface AppLayout {
 
 export function devLayout(ownDir: string): AppLayout {
   const repoRoot = path.resolve(ownDir, "..", "..");
+
   const loader = path.join(
     repoRoot,
     "node_modules",
@@ -19,17 +20,18 @@ export function devLayout(ownDir: string): AppLayout {
     "dist",
     "loader.mjs"
   );
+
   return {
-    packaged: false,
+    modulesDir: path.join(repoRoot, "node_modules"),
     ownDir,
-    serverCwd: repoRoot,
+    packaged: false,
+    resourcesDir: null,
     serverArgs: [
       "--import",
       pathToFileURL(loader).href,
       path.join(repoRoot, "src", "server", "index.ts"),
     ],
-    resourcesDir: null,
-    modulesDir: path.join(repoRoot, "node_modules"),
+    serverCwd: repoRoot,
   };
 }
 
@@ -38,13 +40,14 @@ export function packagedLayout(
   resourcesPath: string
 ): AppLayout {
   const serverDir = path.join(resourcesPath, "server");
+
   return {
-    packaged: true,
-    ownDir,
-    serverCwd: serverDir,
-    serverArgs: [path.join(serverDir, "index.js")],
-    resourcesDir: resourcesPath,
     modulesDir: path.join(serverDir, "node_modules"),
+    ownDir,
+    packaged: true,
+    resourcesDir: resourcesPath,
+    serverArgs: [path.join(serverDir, "index.js")],
+    serverCwd: serverDir,
   };
 }
 

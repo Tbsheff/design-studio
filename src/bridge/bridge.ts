@@ -39,12 +39,12 @@ import { createThemeControl } from "./theme-control.js";
 import { forwardZoomInput } from "./zoom-forward.js";
 
 const createState = (): BridgeState => ({
+  hoverFrame: 0,
   isAltHeld: false,
   isForcedDark: false,
-  hoverFrame: 0,
   isLastAltHeld: false,
-  lastHover: null,
   isMarqueeOn: false,
+  lastHover: null,
   mode: "none",
   pendingHover: null,
   selected: null,
@@ -155,14 +155,14 @@ const markScopedElement = (): void => {
     ELEMENT_MARK_PARAM
   );
 
-  if (!loc || document.getElementById("studio-element-mark")) {
+  if (!loc || document.querySelector("#studio-element-mark")) {
     return;
   }
 
   const style = document.createElement("style");
   style.id = "studio-element-mark";
   style.textContent = `[${SOURCE_LOC_ATTR}="${CSS.escape(loc)}"]{outline:2px solid oklch(0.62 0.19 255) !important;outline-offset:4px !important;}`;
-  (document.head ?? document.documentElement).appendChild(style);
+  (document.head ?? document.documentElement).append(style);
 };
 
 const marker = "__studioBridgeStarted";

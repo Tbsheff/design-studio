@@ -1,4 +1,5 @@
-import { LIMITS, type RemotePublication, type RemoteVersion } from "./protocol";
+import { LIMITS } from "./protocol";
+import type { RemotePublication, RemoteVersion } from "./protocol";
 
 export interface PublicationRow {
   id: string;
@@ -72,13 +73,13 @@ export function fileOf(
 
 function toVersion(row: VersionRow): RemoteVersion {
   return {
+    bytes: row.bytes,
+    committedAt: row.committed_at,
+    createdAt: row.created_at,
+    fileCount: row.file_count,
     id: row.id,
     label: row.label,
     sourceVersion: row.source_version,
-    fileCount: row.file_count,
-    bytes: row.bytes,
-    createdAt: row.created_at,
-    committedAt: row.committed_at,
   };
 }
 
@@ -110,39 +111,41 @@ export async function describe(
       .prepare("SELECT COUNT(*) AS n FROM comments WHERE publication_id = ?1")
       .bind(row.id),
   ]);
+
   const dayRows = (days?.results ?? []) as { day: string; views: number }[];
   const week = dayKey(6);
+
   return {
+    commentCount: Number(
+      (comments?.results?.[0] as { n?: number } | undefined)?.n ?? 0
+    ),
+    comments: row.comments_enabled === 1,
+    createdAt: row.created_at,
+    currentVersion: row.current_version,
+    expiresAt: row.expires_at,
     id: row.id,
-    slug: row.slug,
+    kind: row.kind,
+    noindex: row.noindex === 1,
+    password: row.password_hash !== null,
+    path: `/d/${row.slug}/`,
     projectId: row.project_id,
     projectName: row.project_name,
-    title: row.title,
-    kind: row.kind,
-    path: `/d/${row.slug}/`,
-    currentVersion: row.current_version,
-    password: row.password_hash !== null,
-    expiresAt: row.expires_at,
-    noindex: row.noindex === 1,
-    comments: row.comments_enabled === 1,
     revokedAt: row.revoked_at,
-    createdAt: row.created_at,
+    slug: row.slug,
+    title: row.title,
     updatedAt: row.updated_at,
     versions: ((versions?.results ?? []) as unknown as VersionRow[]).map(
       toVersion
     ),
     views: {
-      total: Number(
-        (total?.results?.[0] as { n?: number } | undefined)?.n ?? 0
-      ),
+      days: dayRows,
       last7: dayRows
         .filter((d) => d.day >= week)
         .reduce((s, d) => s + d.views, 0),
-      days: dayRows,
+      total: Number(
+        (total?.results?.[0] as { n?: number } | undefined)?.n ?? 0
+      ),
     },
-    commentCount: Number(
-      (comments?.results?.[0] as { n?: number } | undefined)?.n ?? 0
-    ),
   };
 }
 

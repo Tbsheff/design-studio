@@ -9,13 +9,13 @@ function meta(paths: string[]): Metafile {
     outputs: {
       "index.js": {
         bytes: 1,
-        inputs: {},
         exports: [],
         imports: paths.map((path) => ({
           path,
           kind: "import-statement",
           external: true,
         })),
+        inputs: {},
       },
     },
   };
@@ -40,6 +40,7 @@ describe("server package list", () => {
     const dirs = dependencyClosure(["hono"]).map((dir) =>
       dir.split("node_modules/").pop()
     );
+
     expect(dirs).toContain("hono");
     expect(dirs).not.toContain("react");
   });
@@ -48,6 +49,7 @@ describe("server package list", () => {
     const dirs = dependencyClosure(["@anthropic-ai/claude-agent-sdk"]).map(
       (dir) => dir.split("node_modules/").pop()
     );
+
     expect(dirs).toContain("@anthropic-ai/claude-agent-sdk");
     expect(
       dirs.some((dir) => dir?.startsWith("@anthropic-ai/claude-agent-sdk-"))

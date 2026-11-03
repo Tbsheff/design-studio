@@ -76,16 +76,16 @@ function sizeOf(target: string): PruneStats {
   const stat = lstatSync(target);
 
   if (!stat.isDirectory()) {
-    return { files: 1, bytes: stat.size };
+    return { bytes: stat.size, files: 1 };
   }
 
   return readdirSync(target).reduce<PruneStats>(
     (sum, name) => {
       const inner = sizeOf(path.join(target, name));
 
-      return { files: sum.files + inner.files, bytes: sum.bytes + inner.bytes };
+      return { bytes: sum.bytes + inner.bytes, files: sum.files + inner.files };
     },
-    { files: 0, bytes: 0 }
+    { bytes: 0, files: 0 }
   );
 }
 
@@ -93,7 +93,7 @@ function remove(target: string, stats: PruneStats): void {
   const size = sizeOf(target);
   stats.files += size.files;
   stats.bytes += size.bytes;
-  rmSync(target, { recursive: true, force: true });
+  rmSync(target, { force: true, recursive: true });
 }
 
 function childDepth(name: string, depth: number): number {
@@ -139,7 +139,7 @@ export function pruneModules(
   modulesDir: string,
   options: PruneOptions
 ): PruneStats {
-  const stats: PruneStats = { files: 0, bytes: 0 };
+  const stats: PruneStats = { bytes: 0, files: 0 };
   walk(modulesDir, options, stats, 0);
 
   return stats;
@@ -168,16 +168,16 @@ export function linkEsbuildBinary(
     !existsSync(native) ||
     lstatSync(copy).isSymbolicLink()
   ) {
-    return { files: 0, bytes: 0 };
+    return { bytes: 0, files: 0 };
   }
 
   if (digest(copy) !== digest(native)) {
-    return { files: 0, bytes: 0 };
+    return { bytes: 0, files: 0 };
   }
 
   const bytes = lstatSync(copy).size;
   rmSync(copy);
   symlinkSync(path.relative(path.dirname(copy), native), copy);
 
-  return { files: 1, bytes };
+  return { bytes, files: 1 };
 }

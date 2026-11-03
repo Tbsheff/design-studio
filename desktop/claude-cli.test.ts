@@ -35,6 +35,7 @@ describe("claude resolver", () => {
       "/custom/claude": "/custom/claude",
       "/opt/homebrew/bin/claude": "/opt/homebrew/bin/claude",
     });
+
     const found = resolveClaude(
       {
         env: { STUDIO_CLAUDE_PATH: "/custom/claude" },
@@ -43,6 +44,7 @@ describe("claude resolver", () => {
       },
       fs
     );
+
     expect(found).toEqual({
       path: "/custom/claude",
       realPath: "/custom/claude",
@@ -54,6 +56,7 @@ describe("claude resolver", () => {
     const fs = fakeFs({
       "/opt/homebrew/bin/claude": "/opt/homebrew/bin/claude",
     });
+
     expect(
       resolveClaude(
         {
@@ -68,9 +71,10 @@ describe("claude resolver", () => {
 
   it("takes the first login-shell PATH hit before known locations", () => {
     const fs = fakeFs({
-      "/Users/test/.nvm/versions/node/v24/bin/claude": "/x/cli.js",
       "/Users/test/.local/bin/claude": "/y/claude",
+      "/Users/test/.nvm/versions/node/v24/bin/claude": "/x/cli.js",
     });
+
     const found = resolveClaude(
       {
         env: {},
@@ -79,6 +83,7 @@ describe("claude resolver", () => {
       },
       fs
     );
+
     expect(found).toMatchObject({
       path: "/Users/test/.nvm/versions/node/v24/bin/claude",
       realPath: "/x/cli.js",
@@ -92,6 +97,7 @@ describe("claude resolver", () => {
       home: HOME,
       searchPath: ["/opt/homebrew/bin"],
     }).map((candidate) => candidate.file);
+
     expect(candidates).toEqual([
       "/opt/homebrew/bin/claude",
       "/Users/test/.local/bin/claude",
@@ -100,9 +106,11 @@ describe("claude resolver", () => {
       "/Users/test/.npm-global/bin/claude",
       "/npm/bin/claude",
     ]);
+
     const fs = fakeFs({
       "/Users/test/.claude/local/claude": "/Users/test/.claude/local/claude",
     });
+
     expect(
       resolveClaude({ env: {}, home: HOME, searchPath: [] }, fs)?.source
     ).toBe("known");
@@ -128,11 +136,13 @@ describe("claude resolver", () => {
     chmodSync(target, 0o755);
     symlinkSync(target, path.join(bin, "claude"));
     writeFileSync(path.join(root, "claude"), "not executable");
+
     const found = resolveClaude({
       env: {},
       home: path.join(root, "home"),
       searchPath: [root, bin],
     });
+
     expect(found?.path).toBe(path.join(bin, "claude"));
     expect(found?.realPath.endsWith(path.join("versions", "2.1.309"))).toBe(
       true
@@ -162,11 +172,13 @@ describe("claude version", () => {
       expect(file).toBe(
         path.join("/mods", "@anthropic-ai", "claude-agent-sdk", "package.json")
       );
+
       return JSON.stringify({
-        version: "0.3.307",
         claudeCodeVersion: "2.1.307",
+        version: "0.3.307",
       });
     };
+
     expect(expectedClaudeVersion("/mods", read)).toBe("2.1.307");
     expect(expectedClaudeVersion("/nonexistent")).toBeNull();
     expect(expectedClaudeVersion(path.resolve("node_modules"))).toMatch(

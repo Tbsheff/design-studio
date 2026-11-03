@@ -11,8 +11,8 @@ export const THEME_IPC = {
   set: "studio:theme-set",
 } as const;
 
-const STUDIO_PAINT = { light: "#faf9f5", dark: "#1f1e1d" };
-const SETUP_PAINT = { light: "#fbfcfe", dark: "#141619" };
+const STUDIO_PAINT = { dark: "#1f1e1d", light: "#faf9f5" };
+const SETUP_PAINT = { dark: "#141619", light: "#fbfcfe" };
 
 let file: string | null = null;
 let pref: ThemePref = "dark";
@@ -85,8 +85,8 @@ export function initTheme(themeFile: string): void {
     try {
       mkdirSync(path.dirname(themeFile), { recursive: true });
       writeFileSync(themeFile, `${JSON.stringify({ theme: pref })}\n`);
-    } catch (err) {
-      console.warn(`[desktop] theme: could not save ${String(err)}`);
+    } catch (error) {
+      console.warn(`[desktop] theme: could not save ${String(error)}`);
     }
 
     repaint();

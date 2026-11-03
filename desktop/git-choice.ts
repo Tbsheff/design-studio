@@ -32,17 +32,17 @@ export function bundledGit(gitDir: string): GitChoice {
   const binary = path.join(gitDir, "bin", "git");
 
   if (!existsSync(binary)) {
-    return { kind: "missing", binary: null, env: {} };
+    return { binary: null, env: {}, kind: "missing" };
   }
 
   return {
-    kind: "bundled",
     binary,
     env: {
-      STUDIO_GIT: binary,
       GIT_EXEC_PATH: path.join(gitDir, "libexec", "git-core"),
       GIT_TEMPLATE_DIR: path.join(gitDir, "share", "git-core", "templates"),
+      STUDIO_GIT: binary,
     },
+    kind: "bundled",
   };
 }
 
@@ -75,7 +75,7 @@ async function gitBehindXcrunShim(devDir: string | null): Promise<string> {
 }
 
 function systemGit(binary: string): GitChoice {
-  return { kind: "system", binary, env: { STUDIO_GIT: binary } };
+  return { binary, env: { STUDIO_GIT: binary }, kind: "system" };
 }
 
 export async function chooseGit(

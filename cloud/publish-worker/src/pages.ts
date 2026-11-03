@@ -1,7 +1,7 @@
 import type { RemoteComment } from "./protocol";
 
 export function escapeHtml(text: string): string {
-  return text.replace(/[&<>"']/g, (ch) => `&#${ch.charCodeAt(0)};`);
+  return text.replaceAll(/[&<>"']/g, (ch) => `&#${ch.charCodeAt(0)};`);
 }
 
 const STYLE = `:root{color-scheme:light dark;--bg:#faf9f5;--panel:#fff;--line:rgb(28 27 25 / .12);--text:rgb(28 27 25 / .94);--muted:rgb(28 27 25 / .66);--accent:#c96442}
@@ -25,12 +25,12 @@ function html(
   extra: Record<string, string> = {}
 ): Response {
   return new Response(text, {
-    status,
     headers: {
-      "content-type": "text/html; charset=utf-8",
       "cache-control": "no-store",
+      "content-type": "text/html; charset=utf-8",
       ...extra,
     },
+    status,
   });
 }
 
@@ -54,7 +54,9 @@ export function gatePage(
   const err = error
     ? `<p class="err" role="alert">${escapeHtml(error)}</p>`
     : "";
+
   const body = `<h1>${escapeHtml(title)}</h1><p>This design needs a password. Ask the owner for it.</p>${err}<form method="post" action="${escapeHtml(action)}"><label>Password<input type="password" name="password" autocomplete="current-password" required autofocus maxlength="128"></label><button type="submit">Open design</button></form>`;
+
   return html(status, shell(title, body));
 }
 
@@ -74,11 +76,14 @@ export function commentsPage(input: CommentsPageInput, status = 200): Response {
         `<li><span class="who">${escapeHtml(c.author)}</span><span class="when">${new Date(c.createdAt).toISOString().slice(0, 10)}</span><p>${escapeHtml(c.body)}</p></li>`
     )
     .join("");
+
   const note = input.error
     ? `<p class="err" role="alert">${escapeHtml(input.error)}</p>`
     : input.sent
       ? '<p role="status">Thanks. The owner can see your comment now.</p>'
       : "";
+
   const body = `<h1>Comments on ${escapeHtml(input.title)}</h1><p><a href="${escapeHtml(input.designHref)}">Back to the design</a></p>${note}<form method="post" action="${escapeHtml(input.action)}"><label>Your name<input name="author" required maxlength="60"></label><label>Comment<textarea name="body" required maxlength="2000"></textarea></label><button type="submit">Send comment</button></form><ol>${list}</ol>`;
+
   return html(status, shell(`Comments on ${input.title}`, body));
 }

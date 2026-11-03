@@ -17,8 +17,8 @@ describe("agent env allowlist", () => {
   it("keeps only allowlisted keys and drops an empty API key", () => {
     expect(buildEnv(SOURCE, false)).toEqual({
       HOME: "/Users/a",
-      USER: "a",
       PATH: "/usr/bin:/bin",
+      USER: "a",
     });
   });
 

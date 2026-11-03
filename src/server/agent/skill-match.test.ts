@@ -14,13 +14,13 @@ function skill(
   extra: Partial<SkillInfo> = {}
 ): SkillInfo {
   return {
-    id,
-    name: id.split(":")[1] ?? id,
     description,
+    id,
+    modelInvocable: true,
+    name: id.split(":")[1] ?? id,
+    needsBash: false,
     origin: "personal",
     sourcePath: `/skills/${id}`,
-    needsBash: false,
-    modelInvocable: true,
     ...extra,
   };
 }
@@ -54,14 +54,16 @@ const CATALOG: SkillInfo[] = [
     { modelInvocable: false }
   ),
 ];
+
 const ALL_IDS = CATALOG.map((entry) => entry.id);
 
 describe(recommendSkills, () => {
   it("ranks UI skills first and leaves decoys that only share the word design out", () => {
     const ids = recommendSkills(CATALOG, ALL_IDS, {
-      prompt: "A dashboard home for a home-energy monitor",
       mode: "edit",
+      prompt: "A dashboard home for a home-energy monitor",
     });
+
     expect(ids[0]).toBe("personal:atelier");
     expect(ids).toContain("personal:taste-guide");
     expect(ids).not.toContain("personal:abstraction-coach");
@@ -71,15 +73,17 @@ describe(recommendSkills, () => {
 
   it("keeps skills that need Bash, drops manual-only and disabled skills, and caps the list", () => {
     const enabled = ALL_IDS.filter((id) => id !== "personal:palette-kit");
+
     const ids = recommendSkills(
       CATALOG,
       enabled,
-      { prompt: "Restyle the color palette", mode: "critique" },
+      { mode: "critique", prompt: "Restyle the color palette" },
       2
     );
+
     expect(ids).toEqual(["personal:atelier", "personal:taste-guide"]);
     expect(
-      recommendSkills(CATALOG, ALL_IDS, { prompt: "x", mode: "edit" })
+      recommendSkills(CATALOG, ALL_IDS, { mode: "edit", prompt: "x" })
     ).not.toContain("personal:manual-ui");
   });
 
@@ -88,9 +92,10 @@ describe(recommendSkills, () => {
       skill("personal:b-ui", "UI layout typography color interface"),
       skill("personal:a-ui", "UI layout typography color interface"),
     ];
+
     const ids = twins.map((entry) => entry.id);
     expect(
-      recommendSkills(twins, ids, { prompt: "page", mode: "edit" })
+      recommendSkills(twins, ids, { mode: "edit", prompt: "page" })
     ).toEqual(["personal:a-ui", "personal:b-ui"]);
   });
 
@@ -120,11 +125,12 @@ describe("recommendation cap", () => {
         "UI interface design layout typography color critique taste frontend."
       )
     );
+
     expect(
       recommendSkills(
         many,
         many.map((entry) => entry.id),
-        { prompt: "Build a landing page", mode: "edit" }
+        { mode: "edit", prompt: "Build a landing page" }
       )
     ).toEqual(["personal:a-ui", "personal:b-ui", "personal:c-ui"]);
   });

@@ -67,7 +67,7 @@ function finished(
     .join("\n\n");
 
   if (check.passed) {
-    return { ...total, finalText, designSystemCheck: check };
+    return { ...total, designSystemCheck: check, finalText };
   }
 
   const shown = check.problems
@@ -84,10 +84,10 @@ function finished(
 
   return {
     ...total,
-    status: "failed",
+    designSystemCheck: check,
     error,
     finalText,
-    designSystemCheck: check,
+    status: "failed",
   };
 }
 

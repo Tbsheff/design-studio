@@ -8,8 +8,8 @@ import {
   DEFAULT_FRAME_STATE,
   stateLabel,
   withFrameStateHost,
-  type FrameStatesView,
 } from "../../shared/frame-state.js";
+import type { FrameStatesView } from "../../shared/frame-state.js";
 import type { RunTarget, TargetFrame } from "../../shared/run-target.js";
 import { frameStatesView, stateOfFrame } from "../app/frame-state.js";
 import { listAppRoutes, matchRouteFile } from "../app/routes.js";
@@ -73,11 +73,11 @@ function frameOf(
   ref: Pick<RunCanvasRef, "frameId" | "label" | "path" | "width" | "height">
 ): TargetFrame {
   return {
+    height: saved?.height ?? ref.height,
     id: saved?.id ?? ref.frameId,
     label: saved?.label ?? ref.label ?? null,
     path: saved ? (saved.path ?? "") : ref.path,
     width: saved?.width ?? ref.width,
-    height: saved?.height ?? ref.height,
   };
 }
 
@@ -96,9 +96,9 @@ function inViewOf(
       ? [
           frameOf(saved, {
             frameId: id,
+            height: saved.height,
             path: "",
             width: saved.width,
-            height: saved.height,
           }),
         ]
       : [];
@@ -134,12 +134,12 @@ export async function resolveRunTarget(
 
   return {
     ...frame,
-    state,
-    stateName: stateLabel(view, state),
+    inView: inViewOf(frames, ref),
     routeFile: await routeFileOf(project, direction, frame.path).catch(
       () => null
     ),
-    inView: inViewOf(frames, ref),
+    state,
+    stateName: stateLabel(view, state),
   };
 }
 
@@ -174,8 +174,8 @@ function shotOf(
 ): ShotTarget {
   return {
     ...picked,
-    url: pageUrl(base, picked.path, picked.state),
     label: targetLabel(picked),
+    url: pageUrl(base, picked.path, picked.state),
   };
 }
 
@@ -187,22 +187,22 @@ export function defaultShotTarget(
     return null;
   }
 
-  const target = ctx.target;
+  const { target } = ctx;
 
   if (!target) {
     return shotOf(ctx.previewUrl, {
-      path: "",
-      state: state ?? DEFAULT_FRAME_STATE,
       frameId: null,
+      path: "",
       size: null,
+      state: state ?? DEFAULT_FRAME_STATE,
     });
   }
 
   return shotOf(ctx.previewUrl, {
-    path: target.path,
-    state: state ?? target.state,
     frameId: target.id,
-    size: { width: target.width, height: target.height },
+    path: target.path,
+    size: { height: target.height, width: target.width },
+    state: state ?? target.state,
   });
 }
 
@@ -224,15 +224,15 @@ async function namedFrame(
     return {
       frame: frameOf(saved, {
         frameId: saved.id,
+        height: saved.height,
         path: "",
         width: saved.width,
-        height: saved.height,
       }),
       state: view ? stateOfFrame(view, saved.id) : DEFAULT_FRAME_STATE,
     };
   }
 
-  const target = ctx.target;
+  const { target } = ctx;
 
   if (
     target &&
@@ -260,19 +260,19 @@ export async function resolveShotTarget(
     const { frame, state } = await namedFrame(deps, ctx, args.frame);
 
     return shotOf(ctx.previewUrl, {
-      path: args.path === undefined ? frame.path : pathArg(args.path),
-      state: args.state ?? state,
       frameId: frame.id,
-      size: { width: frame.width, height: frame.height },
+      path: args.path === undefined ? frame.path : pathArg(args.path),
+      size: { height: frame.height, width: frame.width },
+      state: args.state ?? state,
     });
   }
 
   if (args.path !== undefined) {
     return shotOf(ctx.previewUrl, {
-      path: pathArg(args.path),
-      state: args.state ?? ctx.target?.state ?? DEFAULT_FRAME_STATE,
       frameId: null,
+      path: pathArg(args.path),
       size: null,
+      state: args.state ?? ctx.target?.state ?? DEFAULT_FRAME_STATE,
     });
   }
 
@@ -295,7 +295,7 @@ export function isContextFrame(
   ctx: Pick<AgentRunContext, "target">,
   ref: string
 ): boolean {
-  const target = ctx.target;
+  const { target } = ctx;
 
   if (!target) {
     return false;
@@ -324,30 +324,30 @@ export function editPage(
     return null;
   }
 
-  const target = ctx.target;
+  const { target } = ctx;
 
   if (page !== undefined) {
     return {
+      frameId: null,
+      path: page,
+      size: null,
       url: pageUrl(
         ctx.previewUrl,
         cleanFramePath(page) ?? page,
         target?.state ?? DEFAULT_FRAME_STATE
       ),
-      path: page,
-      frameId: null,
-      size: null,
     };
   }
 
   if (!target) {
-    return { url: ctx.previewUrl, path: undefined, frameId: null, size: null };
+    return { frameId: null, path: undefined, size: null, url: ctx.previewUrl };
   }
 
   return {
-    url: pageUrl(ctx.previewUrl, target.path, target.state),
-    path: target.path || undefined,
     frameId: target.id,
-    size: { width: target.width, height: target.height },
+    path: target.path || undefined,
+    size: { height: target.height, width: target.width },
+    url: pageUrl(ctx.previewUrl, target.path, target.state),
   };
 }
 
@@ -371,7 +371,7 @@ export async function describeTargetLayout(
     "project" | "direction" | "previewUrl" | "target" | "request"
   >
 ): Promise<void> {
-  const target = ctx.target;
+  const { target } = ctx;
 
   if (
     !target ||

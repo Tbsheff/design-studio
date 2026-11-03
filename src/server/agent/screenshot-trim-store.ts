@@ -35,7 +35,7 @@ function trimToolResult(block: Block): Block {
   return removed
     ? {
         ...block,
-        content: [...content, { type: "text", text: OLD_SCREENSHOT_NOTE }],
+        content: [...content, { text: OLD_SCREENSHOT_NOTE, type: "text" }],
       }
     : block;
 }

@@ -31,7 +31,7 @@ export interface LoopLog {
 }
 
 export function newLoopLog(): LoopLog {
-  return { toolOrder: [], checks: [], shots: [] };
+  return { checks: [], shots: [], toolOrder: [] };
 }
 
 export function isBlocking(finding: QualityFinding): boolean {
@@ -48,8 +48,8 @@ export function recordCheck(
 ): CheckRecord {
   const counts: Record<QualitySeverity, number> = {
     high: 0,
-    medium: 0,
     low: 0,
+    medium: 0,
   };
 
   for (const finding of findings) {
@@ -58,8 +58,8 @@ export function recordCheck(
 
   const record = {
     at: log.toolOrder.length,
-    counts,
     blocking: findings.filter(isBlocking),
+    counts,
   };
 
   log.checks.push(record);
@@ -108,7 +108,7 @@ export function checkSteps(log: LoopLog): CheckStep[] {
 
     previous = check.at;
 
-    return { loop, counts: check.counts, blocking: check.blocking.length };
+    return { blocking: check.blocking.length, counts: check.counts, loop };
   });
 }
 
@@ -167,11 +167,11 @@ export function decideLoop(
   budget: LoopBudget
 ): LoopDecision {
   if (budgetLow(budget)) {
-    return { stop: true, reason: "budget" };
+    return { reason: "budget", stop: true };
   }
 
   if (budget.continuations >= MAX_CONTINUATIONS) {
-    return { stop: true, reason: "continuations" };
+    return { reason: "continuations", stop: true };
   }
 
   const verified = checkedAfterLastEdit(log);
@@ -180,14 +180,14 @@ export function decideLoop(
   const complete = verified && missing.length === 0;
 
   if (complete && blocking.length === 0) {
-    return { stop: true, reason: "clean" };
+    return { reason: "clean", stop: true };
   }
 
   if (complete && loopsDone(log) >= MAX_FIX_LOOPS) {
-    return { stop: true, reason: "loops" };
+    return { reason: "loops", stop: true };
   }
 
-  return { stop: false, missing, blocking, verified };
+  return { blocking, missing, stop: false, verified };
 }
 
 export function wantsLoop(config: ResolvedRunConfig, mode: string): boolean {
@@ -221,13 +221,13 @@ export function continuationPrompt(
     );
   }
 
-  if (decision.missing.length) {
+  if (decision.missing.length > 0) {
     lines.push(
       `- Take screenshots from=0 after your last edit at: ${decision.missing.join(", ")}. Look at every image.`
     );
   }
 
-  if (decision.blocking.length && done < MAX_FIX_LOOPS) {
+  if (decision.blocking.length > 0 && done < MAX_FIX_LOOPS) {
     lines.push(
       `- These high and medium findings remain. Fix them with Edit, then run render_check and all screenshots again:`,
       ...decision.blocking.slice(0, LISTED_FINDINGS).map(findingText)
@@ -250,10 +250,10 @@ function stepLabel(step: CheckStep, index: number): string {
 }
 
 const STOP_TEXT: Record<StopReason, string> = {
-  clean: "no high or medium findings left",
-  loops: `${MAX_FIX_LOOPS} fix loops done`,
   budget: "less than 20% of the spending limit left",
+  clean: "no high or medium findings left",
   continuations: "the studio continued the run the maximum number of times",
+  loops: `${MAX_FIX_LOOPS} fix loops done`,
 };
 
 export function loopReport(

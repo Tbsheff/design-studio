@@ -67,8 +67,10 @@ const CORE_TOOLS = [
   "import_figma_frame",
   HELP_TOOL,
 ];
+
 const TWEAK_TOOLS = ["define_tweaks"];
 const DESIGN_SYSTEM_TOOLS = ["design_system_check"];
+
 const KIT_TOOLS = [
   "list_components",
   "component_preview",
@@ -79,6 +81,7 @@ const KIT_TOOLS = [
   "update_component_variant",
   "swap_instance",
 ];
+
 const LEAN_TOOLS = new Set([
   "screenshot",
   "render_check",
@@ -87,6 +90,7 @@ const LEAN_TOOLS = new Set([
   "measure",
   HELP_TOOL,
 ]);
+
 const APP_TOOLS = [
   "list_frame_states",
   "set_frame_state",
@@ -109,6 +113,7 @@ function withDerived(names: string[], set: AgentSet): string[] {
 
 function scopedTools(project: ToolScopeProject): string[] {
   const app = Boolean(project.app);
+
   return [
     ...withDerived(CORE_TOOLS, "core"),
     ...(app ? [] : withDerived(TWEAK_TOOLS, "tweak")),
@@ -130,6 +135,7 @@ export function studioToolsFor(
   lean = false
 ): Set<string> {
   const names = scopedTools(project).filter((name) => !lean || isLean(name));
+
   return new Set(
     mode === "critique"
       ? names.filter((name) => !blockedInCritique(`mcp__studio__${name}`))

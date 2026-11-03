@@ -5,12 +5,17 @@ import { z } from "zod";
 import { EXPORT_MAX_FRAMES, exportFileStem } from "../../shared/export.js";
 import { pickExportFrames } from "../export/export-frames.js";
 import { writeUnique } from "../export/export-write.js";
-import { canvasFrames, type DirectToolDeps } from "./direct-tools.js";
+import { canvasFrames } from "./direct-tools.js";
+import type { DirectToolDeps } from "./direct-tools.js";
 
 export const EXPORT_FRAME_AGENT_DESCRIPTION =
   "Export canvas frames of this direction as SVG or PPTX with the same server code as Export > SVG and Export > PPTX in the studio and the MCP export_frame tool. SVG: vector boxes, <text> with font names and embedded pictures; selector exports one element. PPTX: one slide per frame (or per .slide / [data-slide] section) with native text boxes, solid and rounded boxes, lines, simple SVG shapes and images over a picture of the rest. Returns the file path in the Design Studio data folder. It changes no design file; use it only when the user asks for an SVG or a deck file.";
 
 export const exportFrameShape = {
+  area: z
+    .enum(["frame", "page"])
+    .optional()
+    .describe("SVG only: frame (default) or page (full page height)."),
   format: z
     .enum(["svg", "pptx"])
     .describe("svg: vector file. pptx: slide deck."),
@@ -31,21 +36,17 @@ export const exportFrameShape = {
     .describe(
       "SVG only: a CSS selector or layer id of one element of the first frame."
     ),
-  area: z
-    .enum(["frame", "page"])
-    .optional()
-    .describe("SVG only: frame (default) or page (full page height)."),
 };
 
 const schema = z.object(exportFrameShape).strict();
 
-type ToolText = {
+interface ToolText {
   content: { type: "text"; text: string }[];
   isError?: boolean;
-};
+}
 
 const text = (message: string, isError = false): ToolText => ({
-  content: [{ type: "text", text: message }],
+  content: [{ text: message, type: "text" }],
   ...(isError ? { isError: true } : {}),
 });
 
@@ -96,9 +97,9 @@ export async function runExportFrame(
     const out = await exportVector(deps.preview, url, {
       format: input.format,
       frames: picked,
+      name: project.name,
       scope: input.area ?? "frame",
       selector: input.selector,
-      name: project.name,
       stem: exportFileStem(project.name),
     });
 
@@ -110,9 +111,9 @@ export async function runExportFrame(
 
     return text(
       JSON.stringify({
+        bytes: out.bytes.byteLength,
         file,
         format: input.format,
-        bytes: out.bytes.byteLength,
         frames: picked.map((frame) => frame.name),
         ...(out.note ? { note: out.note } : {}),
       })

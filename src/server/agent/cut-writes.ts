@@ -29,12 +29,6 @@ export function createCutWriteGuard() {
   const cut = new Map<string, WriteStart>();
 
   return {
-    start(toolUseId: string, relative: string, absolute: string): void {
-      if (!open.has(toolUseId)) {
-        open.set(toolUseId, { relative, absolute, bytes: readStart(absolute) });
-      }
-    },
-
     finish(toolUseId: string, isError: boolean): void {
       const entry = open.get(toolUseId);
 
@@ -80,6 +74,12 @@ export function createCutWriteGuard() {
       }
 
       return restored;
+    },
+
+    start(toolUseId: string, relative: string, absolute: string): void {
+      if (!open.has(toolUseId)) {
+        open.set(toolUseId, { relative, absolute, bytes: readStart(absolute) });
+      }
     },
   };
 }

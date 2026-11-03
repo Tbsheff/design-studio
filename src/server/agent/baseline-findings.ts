@@ -4,8 +4,8 @@ import path from "node:path";
 import {
   baselineFindingsFile,
   checkItems,
-  type BaselineFindings,
 } from "../../shared/final-check-baseline.js";
+import type { BaselineFindings } from "../../shared/final-check-baseline.js";
 import type { AgentRunContext, PreviewService } from "../types.js";
 import { buildCheckReport } from "./check-tool.js";
 import { defaultShotTarget } from "./run-target.js";
@@ -33,15 +33,15 @@ async function capture(
   const state: RunToolState = {
     ...rest,
     baseline: null,
-    lastFindings: [],
     lastChecks: [],
+    lastFindings: [],
   };
 
   const report = await buildCheckReport(preview, ctx, run.config, state);
 
   const body: BaselineFindings = {
     at: Date.now(),
-    url: defaultShotTarget(ctx)?.url ?? null,
+    items: checkItems(report.results),
     screens: [
       ...new Set(
         report.results.flatMap((result) =>
@@ -49,7 +49,7 @@ async function capture(
         )
       ),
     ],
-    items: checkItems(report.results),
+    url: defaultShotTarget(ctx)?.url ?? null,
   };
 
   await mkdir(runsDir, { recursive: true });

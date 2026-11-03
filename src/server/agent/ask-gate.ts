@@ -58,11 +58,11 @@ export function createBashGate(
 
     const decision = await Promise.race([
       ask({
-        toolUseId,
-        toolName: "Bash",
+        detail: command,
         input,
         title: "Run this command?",
-        detail: command,
+        toolName: "Bash",
+        toolUseId,
       }),
       timeout,
     ]);

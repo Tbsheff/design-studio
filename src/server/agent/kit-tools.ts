@@ -10,10 +10,11 @@ import {
   memoPage,
   resolveLayerRef,
   scopeOf,
-  type Viewport,
 } from "../mcp/layer-ref.js";
+import type { Viewport } from "../mcp/layer-ref.js";
 import { layerTreeText } from "../mcp/layer-tools.js";
-import { canvasFrames, type DirectToolDeps } from "./direct-tools.js";
+import { canvasFrames } from "./direct-tools.js";
+import type { DirectToolDeps } from "./direct-tools.js";
 import {
   editPage,
   editPageUrl,
@@ -21,15 +22,27 @@ import {
   pageUrl,
 } from "./run-target.js";
 
-type ToolText = {
+interface ToolText {
   content: { type: "text"; text: string }[];
   isError?: boolean;
-};
+}
 
-const EDIT_VIEWPORT: Viewport = { width: 1440, height: 900 };
+const EDIT_VIEWPORT: Viewport = { height: 900, width: 1440 };
 const SELECTOR_KEYS = ["selector", "targetSelector"] as const;
 
 export const listComponentsShape = {
+  cursor: z
+    .string()
+    .regex(/^\d{1,6}$/)
+    .optional()
+    .describe("nextCursor from the previous page."),
+  limit: z
+    .number()
+    .int()
+    .min(1)
+    .max(COMPONENT_LIST_MAX)
+    .optional()
+    .describe("Components per page. Default 20."),
   query: z
     .string()
     .trim()
@@ -44,21 +57,18 @@ export const listComponentsShape = {
     .describe(
       '"package" for components of shared workspace packages (such as packages/ui), "app" for components in the app, "all" (default) for both. Package components always come first.'
     ),
-  limit: z
-    .number()
-    .int()
-    .min(1)
-    .max(COMPONENT_LIST_MAX)
-    .optional()
-    .describe("Components per page. Default 20."),
-  cursor: z
-    .string()
-    .regex(/^\d{1,6}$/)
-    .optional()
-    .describe("nextCursor from the previous page."),
 };
 
 export const getLayersShape = {
+  depth: z
+    .number()
+    .int()
+    .min(0)
+    .max(30)
+    .default(8)
+    .describe(
+      'Levels below the root to list. Default 8. Deeper children show as "+N inside".'
+    ),
   frame: frameRef
     .optional()
     .describe(
@@ -81,15 +91,6 @@ export const getLayersShape = {
     .describe(
       "Layer id from an earlier get_layers or a CSS selector: list only this element and what is inside it."
     ),
-  depth: z
-    .number()
-    .int()
-    .min(0)
-    .max(30)
-    .default(8)
-    .describe(
-      'Levels below the root to list. Default 8. Deeper children show as "+N inside".'
-    ),
 };
 
 const listSchema = z.object(listComponentsShape).strict();
@@ -97,7 +98,7 @@ const layersSchema = z.object(getLayersShape).strict();
 
 function text(message: string, isError = false): ToolText {
   return {
-    content: [{ type: "text", text: message }],
+    content: [{ text: message, type: "text" }],
     ...(isError ? { isError: true } : {}),
   };
 }
@@ -153,16 +154,16 @@ async function framePage(
   deps: DirectToolDeps,
   ref: string | undefined
 ): Promise<{ path?: string; viewport: Viewport; state: string }> {
-  const target = deps.ctx.target;
+  const { target } = deps.ctx;
 
   if (!ref || isContextFrame(deps.ctx, ref)) {
     return target
       ? {
-          viewport: { width: target.width, height: target.height },
           state: target.state,
+          viewport: { height: target.height, width: target.width },
           ...(target.path ? { path: target.path } : {}),
         }
-      : { viewport: EDIT_VIEWPORT, state: DEFAULT_FRAME_STATE };
+      : { state: DEFAULT_FRAME_STATE, viewport: EDIT_VIEWPORT };
   }
 
   const frames = await canvasFrames(deps);
@@ -177,8 +178,8 @@ async function framePage(
   const state = frame.id === target?.id ? target.state : DEFAULT_FRAME_STATE;
 
   return {
-    viewport: { width: frame.width, height: frame.height },
     state,
+    viewport: { height: frame.height, width: frame.width },
     ...(frame.path ? { path: frame.path } : {}),
   };
 }
@@ -207,12 +208,12 @@ export async function runGetLayers(
     const scope = scopeOf(deps.ctx.project.id, deps.ctx.direction.id);
 
     const tree = await layerTreeText(deps.preview, {
-      url,
-      viewport: frame.viewport,
-      scope,
+      depth: parsed.data.depth,
       page,
       root: parsed.data.root,
-      depth: parsed.data.depth,
+      scope,
+      url,
+      viewport: frame.viewport,
     });
 
     return tree === null

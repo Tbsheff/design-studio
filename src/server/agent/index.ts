@@ -5,7 +5,8 @@ import type { Direction, Project } from "../../shared/contracts.js";
 import type { FrameStateDeps } from "../canvas/app-flow/frame-state-service.js";
 import type { CanvasService } from "../canvas/service.js";
 import { refreshDraftCoverage } from "../design-system/draft-project.js";
-import { packRegistry, type PackRegistry } from "../design-system/packs.js";
+import { packRegistry } from "../design-system/packs.js";
+import type { PackRegistry } from "../design-system/packs.js";
 import { buildErrorMessage, syncDesignSystem } from "../design-system/sync.js";
 import type { StudioRuntime } from "../main/runtime.js";
 import type { CommentStore } from "../store/comments.js";
@@ -107,26 +108,37 @@ function designSystemBeforeCommit(
     }
 
     bus.emit({
-      type: "preview.build-error",
-      projectId: project.id,
       directionId: direction.id,
-      message: buildErrorMessage(result.errors),
       file: TOKENS_FILE,
+      message: buildErrorMessage(result.errors),
+      projectId: project.id,
+      type: "preview.build-error",
     });
   };
 }
 
 export { createAgentRunner, designSystemBeforeCommit, toSdkOptions };
+
 export type { AgentRunParts, AgentRunnerDeps };
+
 export type { RunDriver } from "./lifecycle.js";
+
 export type { RunFibers } from "./run-runner.js";
+
 export type { SdkDriverOptions } from "./sdk-driver.js";
+
 export { askQuestions } from "./clarify.js";
+
 export { COMMENT_STATUSES, describeCommentList } from "./comment-tools.js";
+
 export { isLeanRun, leanContext, leanRunConfig } from "./lean-run.js";
+
 export { AgentSdkClient } from "./agent-sdk-client.js";
+
 export { createRunLifecycle } from "./lifecycle.js";
+
 export { RunRunner } from "./run-runner.js";
+
 export {
   BASH_EDIT_TOOL,
   EDIT_TOOL_NAMES,
@@ -134,6 +146,7 @@ export {
   createCanUseTool,
   createPreToolUseGuard,
 } from "./permissions.js";
+
 export {
   buildFlowPlan,
   buildPortPlan,
@@ -142,15 +155,23 @@ export {
   readSourcePage,
   sourcePagePath,
 } from "./port-plan.js";
+
 export {
   compareToReference,
   mimeOfPath,
   scoreLines,
 } from "./reference-check.js";
+
 export { loadRepoContext } from "./repo-context.js";
+
 export { resolveRunTarget } from "./run-target.js";
+
 export { createSdkDriver } from "./sdk-driver.js";
+
 export { discoverSkills, prepareSkills } from "./skills.js";
+
 export { buildUserText } from "./user-message.js";
+
 export type { PortPlanInput } from "./port-plan.js";
+
 export type { PreparedSkills } from "./skills.js";

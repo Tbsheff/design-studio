@@ -11,33 +11,35 @@ import { EMPTY_USAGE } from "./lifecycle.js";
 import type { DriverOutcome } from "./lifecycle.js";
 
 const PASS: DesignSystemCheckResult = { passed: true, problems: [] };
+
 const FAIL: DesignSystemCheckResult = {
   passed: false,
   problems: [
     {
-      rule: "design-md",
       message: "DESIGN.md still has a to-do line: _To do: x_",
+      rule: "design-md",
     },
     {
-      rule: "contrast",
       message: "--fg-muted on --bg in dark mode is 3.10:1; AA needs 4.5:1.",
+      rule: "contrast",
     },
   ],
 };
 
 const outcome = (extra: Partial<DriverOutcome> = {}): DriverOutcome => ({
-  status: "completed",
-  usage: { ...EMPTY_USAGE },
   costUsd: 0.1,
   durationMs: 10,
-  modelMs: 5,
-  finalText: "Done.",
   error: null,
+  finalText: "Done.",
+  modelMs: 5,
+  status: "completed",
+  usage: { ...EMPTY_USAGE },
   ...extra,
 });
 
 function scripted(results: DesignSystemCheckResult[]) {
   let index = 0;
+
   return async () => results[Math.min(index++, results.length - 1)]!;
 }
 
@@ -47,13 +49,13 @@ describe("design system run enforcement", () => {
     expect(
       wantsDesignSystemCheck({
         project,
-        request: { task: "design-system", mode: "edit" },
+        request: { mode: "edit", task: "design-system" },
       })
     ).toBe(true);
     expect(
       wantsDesignSystemCheck({
         project: { designSystemFor: null },
-        request: { task: "design-system", mode: "edit" },
+        request: { mode: "edit", task: "design-system" },
       })
     ).toBe(false);
     expect(wantsDesignSystemCheck({ project, request: { mode: "edit" } })).toBe(
@@ -62,40 +64,44 @@ describe("design system run enforcement", () => {
     expect(
       wantsDesignSystemCheck({
         project,
-        request: { task: "design-system", mode: "critique" },
+        request: { mode: "critique", task: "design-system" },
       })
     ).toBe(false);
   });
 
   it("finishes done at once when the check passes", async () => {
     const texts: string[] = [];
+
     const result = await enforceDesignSystemCheck({
-      workTree: "/x",
-      first: outcome(),
-      signal: new AbortController().signal,
       check: scripted([PASS]),
       continueWith: async (text) => (texts.push(text), outcome()),
+      first: outcome(),
+      signal: new AbortController().signal,
+      workTree: "/x",
     });
+
     expect(texts).toEqual([]);
     expect(result).toMatchObject({
+      designSystemCheck: { passed: true, problems: [], rounds: 0 },
       status: "completed",
-      designSystemCheck: { passed: true, rounds: 0, problems: [] },
     });
     expect(result.finalText).toBe("Done.\n\nDesign system check: passed.");
   });
 
   it("fail, then retry with the problems, then pass", async () => {
     const texts: string[] = [];
+
     const result = await enforceDesignSystemCheck({
-      workTree: "/x",
-      first: outcome(),
-      signal: new AbortController().signal,
       check: scripted([FAIL, PASS]),
       continueWith: async (text, round, total) => (
         texts.push(`${round}:${text}`),
         { ...total, costUsd: total.costUsd + 0.05, finalText: "Fixed." }
       ),
+      first: outcome(),
+      signal: new AbortController().signal,
+      workTree: "/x",
     });
+
     expect(texts).toHaveLength(1);
     expect(texts[0]).toMatch(
       /^1:<studio-continue>\nThe studio ran mcp__studio__design_system_check and it failed with 2 problem\(s\)\. Fix round 1 of 3\./
@@ -117,13 +123,15 @@ describe("design system run enforcement", () => {
 
   it("fail on every round, then stop after the max rounds with a clear failed status", async () => {
     let rounds = 0;
+
     const result = await enforceDesignSystemCheck({
-      workTree: "/x",
-      first: outcome(),
-      signal: new AbortController().signal,
       check: scripted([FAIL]),
       continueWith: async (_text, _round, total) => (rounds++, total),
+      first: outcome(),
+      signal: new AbortController().signal,
+      workTree: "/x",
     });
+
     expect(rounds).toBe(MAX_DESIGN_SYSTEM_ROUNDS);
     expect(result.status).toBe("failed");
     expect(result.error).toBe(
@@ -140,37 +148,42 @@ describe("design system run enforcement", () => {
 
   it("fails when the session cannot continue, keeps a non-completed status, and stops on cancel", async () => {
     const noSession = await enforceDesignSystemCheck({
-      workTree: "/x",
-      first: outcome(),
-      signal: new AbortController().signal,
       check: scripted([FAIL]),
       continueWith: async () => null,
-    });
-    expect(noSession).toMatchObject({
-      status: "failed",
-      designSystemCheck: { rounds: 0 },
-    });
-    const budget = await enforceDesignSystemCheck({
-      workTree: "/x",
-      first: outcome({ status: "budget_exceeded", error: "budget" }),
+      first: outcome(),
       signal: new AbortController().signal,
+      workTree: "/x",
+    });
+
+    expect(noSession).toMatchObject({
+      designSystemCheck: { rounds: 0 },
+      status: "failed",
+    });
+
+    const budget = await enforceDesignSystemCheck({
       check: scripted([FAIL]),
       continueWith: async () => outcome(),
+      first: outcome({ status: "budget_exceeded", error: "budget" }),
+      signal: new AbortController().signal,
+      workTree: "/x",
     });
+
     expect(budget).toMatchObject({
-      status: "budget_exceeded",
-      error: "budget",
       designSystemCheck: { passed: false, rounds: 0 },
+      error: "budget",
+      status: "budget_exceeded",
     });
     const controller = new AbortController();
     controller.abort();
+
     const canceled = await enforceDesignSystemCheck({
-      workTree: "/x",
-      first: outcome(),
-      signal: controller.signal,
       check: scripted([FAIL]),
       continueWith: async () => outcome(),
+      first: outcome(),
+      signal: controller.signal,
+      workTree: "/x",
     });
+
     expect(canceled.designSystemCheck).toBeUndefined();
   });
 
@@ -178,10 +191,11 @@ describe("design system run enforcement", () => {
     const many: DesignSystemCheckResult = {
       passed: false,
       problems: Array.from({ length: 30 }, (_v, index) => ({
-        rule: "tokens" as const,
         message: `problem ${index}`,
+        rule: "tokens" as const,
       })),
     };
+
     const text = designSystemContinuation(many, 2, 3);
     expect(
       text.split("\n").filter((line) => line.startsWith("- [tokens]"))

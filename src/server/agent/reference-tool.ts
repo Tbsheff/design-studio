@@ -12,13 +12,13 @@ import { compareToReference, referenceAttachment } from "./reference-check.js";
 import { resolveShotTarget } from "./run-target.js";
 import type { TargetDeps } from "./run-target.js";
 
-type ToolResult = {
+interface ToolResult {
   content: (
     | { type: "text"; text: string }
     | { type: "image"; data: string; mimeType: string }
   )[];
   isError?: boolean;
-};
+}
 
 export const compareReferenceShape = {
   attachment: z
@@ -59,7 +59,7 @@ export interface ReferenceToolDeps {
 
 function failed(message: string): ToolResult {
   return {
-    content: [{ type: "text", text: `compare_to_reference: ${message}` }],
+    content: [{ text: `compare_to_reference: ${message}`, type: "text" }],
     isError: true,
   };
 }
@@ -127,7 +127,7 @@ export async function runCompareToReference(
       url: shot.url,
       file: attachment.path,
       mime: attachment.mime,
-      ...(shot.size ? { frameWidth: shot.size.width } : {}),
+      ...(shot.size > 0 ? { frameWidth: shot.size.width } : {}),
       outDir: deps.runsDir,
       stem: `${deps.runId}-compare-${calls}`,
     });
@@ -136,9 +136,8 @@ export async function runCompareToReference(
 
     return {
       content: [
-        { type: "image", data: sheet, mimeType: "image/png" },
+        { data: sheet, mimeType: "image/png", type: "image" },
         {
-          type: "text",
           text: JSON.stringify(
             {
               reference: plainAttachmentName(attachment.name),
@@ -148,6 +147,7 @@ export async function runCompareToReference(
             null,
             2
           ),
+          type: "text",
         },
       ],
     };

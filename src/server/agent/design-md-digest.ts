@@ -17,9 +17,8 @@ function cutSection(section: string): string {
     .filter((line) => /^#{3,4} /.test(line))
     .map((line) => line.replace(/^#+\s*/, ""));
 
-  const rest = subheads.length
-    ? ` It also covers: ${subheads.join("; ")}.`
-    : "";
+  const rest =
+    subheads.length > 0 ? ` It also covers: ${subheads.join("; ")}.` : "";
 
   return `${head}\n\n[The studio cut the rest of "${title}" (${section.length - head.length} characters) to save context. Read DESIGN.md for it when you need it.${rest}]`;
 }

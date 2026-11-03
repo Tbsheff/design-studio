@@ -7,8 +7,8 @@ const BASE_QUERY =
   "ui design interface layout typography color critique taste frontend";
 
 const MODE_QUERY: Record<RunMode, string> = {
-  edit: "build redesign",
   critique: "critique review audit",
+  edit: "build redesign",
 };
 
 const STOPWORDS = new Set(

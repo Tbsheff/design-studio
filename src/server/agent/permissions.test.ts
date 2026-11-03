@@ -18,14 +18,14 @@ let workTree: string;
 let outside: string;
 let skillDir: string;
 
-const signal = new AbortController().signal;
+const { signal } = new AbortController();
 
 function policy(overrides: Partial<ToolPolicy> = {}): ToolPolicy {
   return {
-    workTree,
-    mode: "edit",
     allowBash: false,
     allowInstall: false,
+    mode: "edit",
+    workTree,
     ...overrides,
   };
 }
@@ -79,7 +79,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await rm(root, { recursive: true, force: true });
+  await rm(root, { force: true, recursive: true });
 });
 
 describe("canUseTool", () => {
@@ -94,8 +94,8 @@ describe("canUseTool", () => {
     expect(
       (
         await decide("Write", {
-          file_path: path.join(workTree, "src", "new", "Card.tsx"),
           content: "x",
+          file_path: path.join(workTree, "src", "new", "Card.tsx"),
         })
       ).behavior
     ).toBe("allow");
@@ -103,16 +103,16 @@ describe("canUseTool", () => {
       (
         await decide("Edit", {
           file_path: "src/App.tsx",
-          old_string: "a",
           new_string: "b",
+          old_string: "a",
         })
       ).behavior
     ).toBe("allow");
     expect(
-      (await decide("Glob", { pattern: "**/*.html", path: workTree })).behavior
+      (await decide("Glob", { path: workTree, pattern: "**/*.html" })).behavior
     ).toBe("allow");
     expect(
-      (await decide("Grep", { pattern: "h1", path: "src" })).behavior
+      (await decide("Grep", { path: "src", pattern: "h1" })).behavior
     ).toBe("allow");
   });
 
@@ -133,8 +133,8 @@ describe("canUseTool", () => {
     expect(
       (
         await decide("Write", {
-          file_path: "src/../../outside/x.txt",
           content: "x",
+          file_path: "src/../../outside/x.txt",
         })
       ).behavior
     ).toBe("deny");
@@ -152,7 +152,7 @@ describe("canUseTool", () => {
       "deny"
     );
     expect(
-      (await decide("Grep", { pattern: "x", path: "/etc" })).behavior
+      (await decide("Grep", { path: "/etc", pattern: "x" })).behavior
     ).toBe("deny");
     expect(
       (await decide("Read", { file_path: "~/.ssh/id_rsa" })).behavior
@@ -170,8 +170,8 @@ describe("canUseTool", () => {
     expect(
       (
         await decide("Write", {
-          file_path: path.join(workTree, "escape", "new.txt"),
           content: "x",
+          file_path: path.join(workTree, "escape", "new.txt"),
         })
       ).behavior
     ).toBe("deny");
@@ -192,16 +192,16 @@ describe("canUseTool", () => {
       (
         await decide("Edit", {
           file_path: ".git/config",
-          old_string: "a",
           new_string: "b",
+          old_string: "a",
         })
       ).behavior
     ).toBe("deny");
     expect(
       (
         await decide("Write", {
-          file_path: "node_modules/react/index.js",
           content: "x",
+          file_path: "node_modules/react/index.js",
         })
       ).behavior
     ).toBe("deny");
@@ -221,7 +221,7 @@ describe("canUseTool", () => {
       (
         await decide(
           "Write",
-          { file_path: "index.html", content: "x" },
+          { content: "x", file_path: "index.html" },
           { mode: "critique" }
         )
       ).behavior
@@ -230,7 +230,7 @@ describe("canUseTool", () => {
       (
         await decide(
           "Edit",
-          { file_path: "index.html", old_string: "a", new_string: "b" },
+          { file_path: "index.html", new_string: "b", old_string: "a" },
           { mode: "critique" }
         )
       ).behavior
@@ -240,7 +240,7 @@ describe("canUseTool", () => {
         .behavior
     ).toBe("allow");
     expect(
-      permittedToolNames({ mode: "critique", allowBash: true })
+      permittedToolNames({ allowBash: true, mode: "critique" })
     ).not.toContain("Bash");
   });
 
@@ -308,9 +308,9 @@ describe("canUseTool", () => {
 
     for (const command of bypasses) {
       expect({
-        command,
         behavior: (await decide("Bash", { command }, bash)).behavior,
-      }).toEqual({ command, behavior: "deny" });
+        command,
+      }).toEqual({ behavior: "deny", command });
     }
 
     expect(
@@ -346,16 +346,16 @@ describe("canUseTool", () => {
     for (const file of blocked) {
       for (const tool of ["Write", "Edit", "MultiEdit"]) {
         const result = await decide(tool, {
-          file_path: file,
           content: "x",
-          old_string: "a",
+          file_path: file,
           new_string: "b",
+          old_string: "a",
         });
 
-        expect({ file, tool, behavior: result.behavior }).toEqual({
+        expect({ behavior: result.behavior, file, tool }).toEqual({
+          behavior: "deny",
           file,
           tool,
-          behavior: "deny",
         });
 
         if (tool !== "MultiEdit") {
@@ -370,15 +370,15 @@ describe("canUseTool", () => {
       (await decide("Read", { file_path: "vite.config.ts" })).behavior
     ).toBe("allow");
     expect(
-      (await decide("Write", { file_path: "tsconfig.json", content: "{}" }))
+      (await decide("Write", { content: "{}", file_path: "tsconfig.json" }))
         .behavior
     ).toBe("allow");
     expect(
-      (await decide("Write", { file_path: "tsconfig.app.json", content: "{}" }))
+      (await decide("Write", { content: "{}", file_path: "tsconfig.app.json" }))
         .behavior
     ).toBe("allow");
     expect(
-      (await decide("Write", { file_path: "config-link.ts", content: "x" }))
+      (await decide("Write", { content: "x", file_path: "config-link.ts" }))
         .behavior
     ).toBe("deny");
   });
@@ -397,18 +397,18 @@ describe("the PreToolUse guard", () => {
     const guard = createPreToolUseGuard(policy());
 
     const base = {
-      session_id: "s",
-      transcript_path: "",
       cwd: workTree,
       hook_event_name: "PreToolUse" as const,
+      session_id: "s",
       tool_use_id: "t",
+      transcript_path: "",
     };
 
     const denied = await guard(
       {
         ...base,
-        tool_name: "Read",
         tool_input: { file_path: "/etc/passwd" },
+        tool_name: "Read",
       } as Parameters<typeof guard>[0],
       "t",
       { signal }
@@ -421,8 +421,8 @@ describe("the PreToolUse guard", () => {
     const allowed = await guard(
       {
         ...base,
-        tool_name: "Read",
         tool_input: { file_path: "index.html" },
+        tool_name: "Read",
       } as Parameters<typeof guard>[0],
       "t",
       { signal }
@@ -434,27 +434,27 @@ describe("the PreToolUse guard", () => {
 
 describe("skills", () => {
   const on = (): Partial<ToolPolicy> => ({
-    skills: ["personal:design-kit", "ctx:ctx-stats"],
     skillDirs: [skillDir],
+    skills: ["personal:design-kit", "ctx:ctx-stats"],
   });
 
   it("offers and allows the Skill tool only when skills are on", async () => {
     expect(
       permittedToolNames({
-        mode: "edit",
         allowBash: false,
+        mode: "edit",
         skills: ["personal:design-kit"],
       })
     ).toContain("Skill");
     expect(
       permittedToolNames({
-        mode: "critique",
         allowBash: false,
+        mode: "critique",
         skills: ["personal:design-kit"],
       })
     ).toContain("Skill");
     expect(
-      permittedToolNames({ mode: "edit", allowBash: false })
+      permittedToolNames({ allowBash: false, mode: "edit" })
     ).not.toContain("Skill");
     expect(
       (await decide("Skill", { skill: "personal:design-kit" }, on())).behavior
@@ -493,11 +493,11 @@ describe("skills", () => {
       ).behavior
     ).toBe("allow");
     expect(
-      (await decide("Glob", { pattern: "**/*.md", path: skillDir }, on()))
+      (await decide("Glob", { path: skillDir, pattern: "**/*.md" }, on()))
         .behavior
     ).toBe("allow");
     expect(
-      (await decide("Grep", { pattern: "x", path: skillDir }, on())).behavior
+      (await decide("Grep", { path: skillDir, pattern: "x" }, on())).behavior
     ).toBe("allow");
     expect(
       (
@@ -515,7 +515,7 @@ describe("skills", () => {
       (
         await decide(
           "Write",
-          { file_path: path.join(skillDir, "SKILL.md"), content: "x" },
+          { content: "x", file_path: path.join(skillDir, "SKILL.md") },
           on()
         )
       ).behavior
@@ -526,8 +526,8 @@ describe("skills", () => {
           "Edit",
           {
             file_path: path.join(skillDir, "SKILL.md"),
-            old_string: "a",
             new_string: "b",
+            old_string: "a",
           },
           on()
         )
@@ -566,7 +566,7 @@ describe("skills", () => {
       ).behavior
     ).toBe("deny");
     expect(
-      (await decide("Glob", { pattern: "../**", path: skillDir }, on()))
+      (await decide("Glob", { path: skillDir, pattern: "../**" }, on()))
         .behavior
     ).toBe("deny");
     expect(

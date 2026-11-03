@@ -12,7 +12,7 @@ export type {
   PageOwner,
 } from "../../shared/run-target.js";
 
-const DESKTOP = { width: 1440, height: 900 };
+const DESKTOP = { height: 900, width: 1440 };
 const PROBE_TIMEOUT_MS = 20_000;
 
 const LAYOUT_EXPRESSION = `(() => {
@@ -165,7 +165,7 @@ export async function pageOwner(
   );
 
   return found
-    ? { name, file: found.file, hasMain: /<main\b/.test(found.text) }
+    ? { file: found.file, hasMain: /<main\b/.test(found.text), name }
     : null;
 }
 
@@ -185,7 +185,7 @@ export function layoutLines(
 
   if (region) {
     lines.push(
-      `main content region: ${regionText(region)}${region.owners.length ? `, rendered by <${region.owners[0]}>` : ""}. New UI goes inside it, in the section it belongs to, never above or beside the element that holds <main>.`
+      `main content region: ${regionText(region)}${region.owners.length > 0 ? `, rendered by <${region.owners[0]}>` : ""}. New UI goes inside it, in the section it belongs to, never above or beside the element that holds <main>.`
     );
   }
 
@@ -222,11 +222,11 @@ export function outsideFindings(
     .slice(0, 3)
     .map((element) => ({
       check: "outside-layout",
-      severity: "high",
-      viewport: "desktop",
-      selector: element,
-      source: null,
-      message: `New element ${element} renders outside the main layout box ${regionText(now)}. It sits above or beside the app layout, not in the page content.`,
       fix: `Move it inside ${now.column ?? now.main}${into}, in the section it belongs to.`,
+      message: `New element ${element} renders outside the main layout box ${regionText(now)}. It sits above or beside the app layout, not in the page content.`,
+      selector: element,
+      severity: "high",
+      source: null,
+      viewport: "desktop",
     }));
 }

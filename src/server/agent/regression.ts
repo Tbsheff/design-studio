@@ -38,12 +38,14 @@ export async function desktopRegression(
   const prefix = criticOutPrefix(input.runsDir, input.runId, "regression");
   const screens = await runScreens(input.preview, input.ctx, run.config, run);
   await warmScreens(input.preview, input.ctx.project, screens);
+
   const pairs = await regressionPairs(
     input.preview,
     run.reviewShots ?? [],
     screens,
     prefix
   );
+
   if (pairs.length === 0) {
     run.regressionNote =
       "Desktop regression check: no screen changed on desktop since the last design_review.";
@@ -51,16 +53,20 @@ export async function desktopRegression(
       `${prefix}.json`,
       `${JSON.stringify({ changedScreens: 0, issues: [] }, null, 2)}\n`
     );
+
     return [];
   }
+
   const images = pairs.flatMap((pair) => [pair.before, pair.after]);
+
   const request = {
-    request: input.ctx.request.prompt,
     findings: [],
-    tasteRules: [],
     images,
     kind: "regression" as const,
+    request: input.ctx.request.prompt,
+    tasteRules: [],
   };
+
   const result = await runCritic(
     input.queryFn,
     request,
@@ -68,13 +74,15 @@ export async function desktopRegression(
     run.config.maxBudgetUsd === null ? null : run.config.preset.criticBudgetUsd,
     input.env
   );
+
   run.criticCostUsd += result.costUsd;
   await writeFile(
     `${prefix}.json`,
-    `${JSON.stringify({ model: run.config.criticModel, changedScreens: pairs.map((pair) => pair.after.screen), costUsd: result.costUsd, error: result.error, issues: result.issues, raw: result.raw }, null, 2)}\n`
+    `${JSON.stringify({ changedScreens: pairs.map((pair) => pair.after.screen), costUsd: result.costUsd, error: result.error, issues: result.issues, model: run.config.criticModel, raw: result.raw }, null, 2)}\n`
   );
   const kept = result.issues.filter((issue) => issue.severity !== "low");
   run.regressionNote = `Desktop regression check: ${pairs.length} screen(s) changed on desktop since the last design_review (${pairs.map((pair) => pair.after.screen).join(", ")}); ${result.error ? "the critic reply could not be read" : `${kept.length} high or medium regression(s) found`}.`;
+
   return kept;
 }
 
@@ -83,6 +91,7 @@ export function regressionPrompt(issues: readonly CriticIssue[]): string {
     (issue) =>
       `- [${issue.severity}] ${issue.screen ? `screen "${issue.screen}", ` : ""}${issue.where}: ${issue.problem} Fix: ${issue.fix}`
   );
+
   return [
     "<studio-continue>",
     "Desktop regression check: the studio compared desktop 1440 px before and after your last fixes. These got worse:",

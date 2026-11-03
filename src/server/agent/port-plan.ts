@@ -1,7 +1,8 @@
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 
-import { parse, type DefaultTreeAdapterMap } from "parse5";
+import { parse } from "parse5";
+import type { DefaultTreeAdapterMap } from "parse5";
 
 import { cleanFramePath } from "../../shared/canvas-file.js";
 import type {
@@ -14,18 +15,20 @@ import {
   PORT_FLOW_MAX_PAGES,
   portPageSlug,
   suggestPortRoute,
-  type PortFlowLink,
-  type PortFlowLinkKind,
-  type PortFlowPage,
-  type PortFlowPlan,
-  type PortImage,
-  type PortKitRole,
-  type PortLink,
-  type PortPlan,
-  type PortRepeat,
-  type PortSection,
-  type PortTarget,
-  type PortToken,
+} from "../../shared/port.js";
+import type {
+  PortFlowLink,
+  PortFlowLinkKind,
+  PortFlowPage,
+  PortFlowPlan,
+  PortImage,
+  PortKitRole,
+  PortLink,
+  PortPlan,
+  PortRepeat,
+  PortSection,
+  PortTarget,
+  PortToken,
 } from "../../shared/port.js";
 import { matchColor } from "../../shared/token-match.js";
 import { appRouterDir, listAppRoutes } from "../app/routes.js";
@@ -258,9 +261,9 @@ function sectionsOf(root: Element): PortSection[] {
         : find(el, (child) => HEADING.test(child.tagName) && !isHidden(child));
 
       return {
-        tag: el.tagName,
-        label: labelOf(el),
         heading: heading ? clean(textOf(heading)) : null,
+        label: labelOf(el),
+        tag: el.tagName,
         texts: uniq(ownTexts(el), TEXTS_PER_SECTION),
       };
     });
@@ -275,7 +278,7 @@ function stepsOf(root: Element): { steps: string[]; current: string | null } {
   );
 
   if (!list) {
-    return { steps: [], current: null };
+    return { current: null, steps: [] };
   }
 
   const items = childElements(list).filter(
@@ -285,7 +288,7 @@ function stepsOf(root: Element): { steps: string[]; current: string | null } {
   const texts = items.map((el) => clean(textOf(el)));
 
   if (texts.some((text) => !text || text.length > STEP_TEXT_MAX)) {
-    return { steps: [], current: null };
+    return { current: null, steps: [] };
   }
 
   const current = items.find(
@@ -294,7 +297,7 @@ function stepsOf(root: Element): { steps: string[]; current: string | null } {
       attr(el, "aria-current") !== null
   );
 
-  return { steps: texts, current: current ? clean(textOf(current)) : null };
+  return { current: current ? clean(textOf(current)) : null, steps: texts };
 }
 
 function signature(el: Element): string {
@@ -325,13 +328,13 @@ function repeatOf(items: Element[]): PortRepeat | null {
     first.tagName === "a" ? first : find(first, (el) => el.tagName === "a");
 
   return {
-    role: "card",
-    count: items.length,
-    tag: inner.tagName,
     className: className(inner),
+    count: items.length,
     headings,
-    sample: uniq(ownTexts(first), TEXTS_PER_SECTION),
     link: link ? attr(link, "href") : null,
+    role: "card",
+    sample: uniq(ownTexts(first), TEXTS_PER_SECTION),
+    tag: inner.tagName,
   };
 }
 
@@ -395,10 +398,10 @@ function imagesOf(root: Element, skipped: string[]): PortImage[] {
     } else {
       out.push(
         el.tagName === "img"
-          ? { src: attr(el, "src") ?? "", alt: attr(el, "alt") ?? "" }
+          ? { alt: attr(el, "alt") ?? "", src: attr(el, "src") ?? "" }
           : {
-              src: `inline svg ${attr(el, "width") ?? "?"}x${attr(el, "height") ?? "?"}`,
               alt: clean(textOf(el)),
+              src: `inline svg ${attr(el, "width") ?? "?"}x${attr(el, "height") ?? "?"}`,
             }
       );
     }
@@ -540,7 +543,7 @@ function isShortMeta(el: Element): boolean {
   const texts = ownTexts(el);
 
   return (
-    texts.length >= 1 &&
+    texts.length > 0 &&
     texts.length <= 3 &&
     texts.every((text) => text.length <= META_TEXT_MAX) &&
     find(el, (child) => HEADING.test(child.tagName)) === null
@@ -618,20 +621,20 @@ export function readPageFacts(html: string): PageFacts {
 
   if (!root) {
     return {
-      title,
-      sections: [],
-      steps: [],
-      currentStep: null,
-      repeats: [],
-      headings: [],
       actions: [],
+      currentStep: null,
+      headings: [],
       images: [],
-      links: [],
-      tokens: [],
-      rawColors: 0,
       inlineStyles: 0,
-      skipped: [],
+      links: [],
+      rawColors: 0,
+      repeats: [],
       roles: new Map(),
+      sections: [],
+      skipped: [],
+      steps: [],
+      title,
+      tokens: [],
     };
   }
 
@@ -642,50 +645,50 @@ export function readPageFacts(html: string): PageFacts {
 
   const tokens = [...tokenUses(css)].map(([name, uses]) => ({
     name,
-    value: defs.get(name) ?? null,
-    uses,
     target: null,
+    uses,
+    value: defs.get(name) ?? null,
   }));
 
   return {
-    title,
-    sections: sectionsOf(root),
-    steps,
+    actions: uniq(descendants(root, isAction).map((el) => clean(textOf(el)))),
     currentStep: current,
-    repeats,
     headings: uniq(
       descendants(root, (el) => HEADING.test(el.tagName) && !isHidden(el)).map(
         (el) => `${el.tagName}: ${clean(textOf(el))}`
       )
     ),
-    actions: uniq(descendants(root, isAction).map((el) => clean(textOf(el)))),
     images: imagesOf(root, skipped),
-    links: linksOf(root),
-    tokens,
-    rawColors: rawColorCount(css),
     inlineStyles: descendants(root, (el) => attr(el, "style") !== null).length,
-    skipped,
+    links: linksOf(root),
+    rawColors: rawColorCount(css),
+    repeats,
     roles: roleHints(root, css, repeats),
+    sections: sectionsOf(root),
+    skipped,
+    steps,
+    title,
+    tokens,
   };
 }
 
 const TOKEN_NAMES: Record<string, string[]> = {
-  bg: ["--background"],
-  background: ["--background"],
-  ink: ["--foreground"],
-  fg: ["--foreground"],
-  text: ["--foreground"],
-  mute: ["--muted-foreground"],
-  muted: ["--muted-foreground"],
-  line: ["--border"],
-  border: ["--border"],
   accent: ["--primary", "--accent"],
   "accent-ink": ["--primary-foreground", "--accent-foreground"],
-  primary: ["--primary"],
-  surface: ["--card"],
+  background: ["--background"],
+  bg: ["--background"],
+  border: ["--border"],
   card: ["--card"],
+  fg: ["--foreground"],
+  ink: ["--foreground"],
+  line: ["--border"],
+  mute: ["--muted-foreground"],
+  muted: ["--muted-foreground"],
+  primary: ["--primary"],
   r: ["--radius"],
   radius: ["--radius"],
+  surface: ["--card"],
+  text: ["--foreground"],
 };
 
 function targetToken(
@@ -733,7 +736,7 @@ function list(label: string, values: string[]): string {
 }
 
 export function portPlanText(plan: PortPlan): string {
-  const target = plan.target;
+  const { target } = plan;
 
   const head = [
     `Source: ${plan.source.path}${plan.source.title ? ` ("${plan.source.title}")` : ""}`,
@@ -751,7 +754,7 @@ export function portPlanText(plan: PortPlan): string {
       "Sections",
       plan.sections.map(
         (s) =>
-          `${s.label}${s.heading ? `: ${s.heading}` : ""}${s.texts.length ? ` | ${s.texts.join(" / ")}` : ""}`
+          `${s.label}${s.heading ? `: ${s.heading}` : ""}${s.texts.length > 0 ? ` | ${s.texts.join(" / ")}` : ""}`
       )
     ),
     list(
@@ -765,7 +768,7 @@ export function portPlanText(plan: PortPlan): string {
       "Kit components to use",
       plan.kit.map(
         (k) =>
-          `${k.name} for ${k.reason}. ${k.import}${k.parts.length ? ` (parts: ${k.parts.join(", ")})` : ""}`
+          `${k.name} for ${k.reason}. ${k.import}${k.parts.length > 0 ? ` (parts: ${k.parts.join(", ")})` : ""}`
       )
     ),
     list(
@@ -808,14 +811,14 @@ export interface PortPlanInput {
 }
 
 const KIT_NAMES: Record<PortKitRole, string[]> = {
-  card: ["Card"],
+  avatar: ["Avatar"],
   badge: ["Badge"],
   button: ["Button"],
+  card: ["Card"],
   input: ["Input", "Select", "Textarea"],
+  separator: ["Separator"],
   table: ["Table"],
   tabs: ["Tabs"],
-  avatar: ["Avatar"],
-  separator: ["Separator"],
 };
 
 const SOURCE_MAX = 400_000;
@@ -858,8 +861,8 @@ async function kitFor(
     const names = KIT_NAMES[role];
 
     const found = await searchComponents(project, workTree, {
-      query: role,
       limit: 40,
+      query: role,
     }).then(
       (result) =>
         result.components.find((item) => names.includes(item.name)) ?? null,
@@ -868,17 +871,17 @@ async function kitFor(
 
     if (found) {
       kit.push({
-        role,
-        name: found.name,
-        import: found.import,
         file: found.file,
+        import: found.import,
+        name: found.name,
         parts: found.parts.slice(0, 8),
         reason,
+        role,
       });
     } else {
       missing.push({
-        role,
         reason: `${reason}; the app has no ${names.join(" or ")} component`,
+        role,
       });
     }
   }
@@ -900,12 +903,12 @@ async function targetOf(
   const app = project.app ?? null;
 
   const base: PortTarget = {
-    projectId: project.id,
-    name: project.name,
     framework: app?.framework ?? null,
+    name: project.name,
+    projectId: project.id,
     route,
-    routeFile: null,
     routeExists: false,
+    routeFile: null,
   };
 
   if (!app || !route) {
@@ -919,7 +922,7 @@ async function targetOf(
   const existing = routes.find((item) => item.route === portRouteUrl(route));
 
   if (existing) {
-    return { ...base, routeFile: existing.file, routeExists: true };
+    return { ...base, routeExists: true, routeFile: existing.file };
   }
 
   if (app.framework !== "next") {
@@ -959,9 +962,9 @@ export async function buildPortPlan(input: PortPlanInput): Promise<PortPlan> {
 
   return {
     source: {
-      projectId: source.project.id,
       directionId: source.direction.id,
       path: sourcePagePath(source.path),
+      projectId: source.project.id,
       title,
     },
     target: targetInfo,
@@ -979,9 +982,9 @@ interface PageRef {
 }
 
 const LINK_ATTRS: Record<string, PortFlowLinkKind> = {
-  href: "a",
   action: "form",
   formaction: "form",
+  href: "a",
 };
 
 const PAGE_LITERAL =
@@ -1011,7 +1014,7 @@ function pageRef(
     path.posix.normalize(path.posix.join(path.posix.dirname(from), file))
   );
 
-  return page ? { kind, href, page, rest: split?.[2] ?? "" } : null;
+  return page ? { href, kind, page, rest: split?.[2] ?? "" } : null;
 }
 
 function literals(code: string): string[] {
@@ -1168,11 +1171,11 @@ function flowLinks(
           ? [
               {
                 from: page.path,
-                kind: ref.kind,
                 href: ref.href,
+                kind: ref.kind,
                 page: ref.page,
-                to: `${portRouteUrl(route)}${ref.rest}`,
                 ported: chosen.has(ref.page),
+                to: `${portRouteUrl(route)}${ref.rest}`,
               },
             ]
           : [];
@@ -1198,12 +1201,12 @@ async function flowPage(
 
   return {
     path: page,
-    title: plan.source.title,
-    route,
-    url: portRouteUrl(route),
-    routeFile: plan.target?.routeFile ?? null,
-    routeExists: plan.target?.routeExists ?? false,
     plan,
+    route,
+    routeExists: plan.target?.routeExists ?? false,
+    routeFile: plan.target?.routeFile ?? null,
+    title: plan.source.title,
+    url: portRouteUrl(route),
   };
 }
 
@@ -1227,7 +1230,7 @@ export async function buildFlowPlan(
 ): Promise<PortFlowPlan> {
   const { source, target } = input;
   const entry = sourcePagePath(source.path);
-  const workTree = source.direction.workTree;
+  const { workTree } = source.direction;
   const crawled = await crawlFlow(workTree, entry);
 
   const picked = pickPages(
@@ -1252,10 +1255,13 @@ export async function buildFlowPlan(
   );
 
   return {
+    base,
+    links: flowLinks(crawled, picked, routes),
+    pages,
     source: {
-      projectId: source.project.id,
       directionId: source.direction.id,
       entry,
+      projectId: source.project.id,
     },
     target: target
       ? {
@@ -1264,13 +1270,10 @@ export async function buildFlowPlan(
           framework: target.project.app?.framework ?? null,
         }
       : null,
-    base,
-    pages,
-    links: flowLinks(crawled, picked, routes),
-    unselected: order.filter((page) => !picked.includes(page)),
     unreached: (await rootPages(workTree)).filter(
       (page) => !order.includes(page)
     ),
+    unselected: order.filter((page) => !picked.includes(page)),
   };
 }
 

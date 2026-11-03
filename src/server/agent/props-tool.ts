@@ -9,23 +9,14 @@ import { refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
 import { editPageUrl } from "./run-target.js";
 
-type ToolText = {
+interface ToolText {
   content: { type: "text"; text: string }[];
   isError?: boolean;
-};
+}
 
 const LOC = /^(.+):(\d+):(\d+)$/;
 
 export const setPropsShape = {
-  selector: z
-    .string()
-    .trim()
-    .min(1)
-    .max(2000)
-    .optional()
-    .describe(
-      "CSS selector of an element inside the component instance on the live page. The nearest component with props (such as <Button>) is changed."
-    ),
   path: z
     .string()
     .trim()
@@ -33,14 +24,6 @@ export const setPropsShape = {
     .optional()
     .describe(
       "Page path. Leave out for the page of the frame in <canvas-context> (or the entry page)."
-    ),
-  source: z
-    .string()
-    .trim()
-    .max(1100)
-    .optional()
-    .describe(
-      'Or the use site as file:line:col of the JSX tag, for example "src/App.tsx:14:9".'
     ),
   props: z
     .record(
@@ -55,13 +38,30 @@ export const setPropsShape = {
     .describe(
       `1 to ${PROPS_MAX} props. null removes a prop; a value equal to the default removes the attribute.`
     ),
+  selector: z
+    .string()
+    .trim()
+    .min(1)
+    .max(2000)
+    .optional()
+    .describe(
+      "CSS selector of an element inside the component instance on the live page. The nearest component with props (such as <Button>) is changed."
+    ),
+  source: z
+    .string()
+    .trim()
+    .max(1100)
+    .optional()
+    .describe(
+      'Or the use site as file:line:col of the JSX tag, for example "src/App.tsx:14:9".'
+    ),
 };
 
 const schema = z.object(setPropsShape).strict();
 
 function text(message: string, isError = false): ToolText {
   return {
-    content: [{ type: "text", text: message }],
+    content: [{ text: message, type: "text" }],
     ...(isError ? { isError: true } : {}),
   };
 }
@@ -75,9 +75,9 @@ async function useSite(
 
     return match
       ? {
+          col: Number(match[3]),
           file: match[1] as string,
           line: Number(match[2]),
-          col: Number(match[3]),
         }
       : "source must be file:line:col.";
   }
@@ -102,8 +102,8 @@ async function useSite(
 
   const instance = await resolveInstance(
     {
-      workTree: deps.ctx.direction.workTree,
       previewOrigin: new URL(deps.ctx.previewUrl).origin,
+      workTree: deps.ctx.direction.workTree,
     },
     { owners: probed.owners, usedAt: probed.usedAt }
   );
@@ -139,7 +139,7 @@ export async function runSetProps(
       return text(source, true);
     }
 
-    const request = parseSetProps({ source, props: parsed.data.props });
+    const request = parseSetProps({ props: parsed.data.props, source });
 
     const { target, original, instance, plan } = await planSetProps(
       deps.ctx.direction.workTree,

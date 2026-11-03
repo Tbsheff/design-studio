@@ -10,8 +10,10 @@ import {
   plainAttachmentName,
   REFERENCE_LOW_SCORE,
   REFERENCE_MAX_WIDTH,
-  type ReferenceRecord,
-  type ReferenceScore,
+} from "../../shared/reference.js";
+import type {
+  ReferenceRecord,
+  ReferenceScore,
 } from "../../shared/reference.js";
 import {
   diffPictures,
@@ -32,13 +34,13 @@ interface Size {
 
 function pngSize(bytes: Buffer): Size | null {
   return bytes.length > 24 && bytes.readUInt32BE(12) === 0x49_48_44_52
-    ? { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) }
+    ? { height: bytes.readUInt32BE(20), width: bytes.readUInt32BE(16) }
     : null;
 }
 
 function gifSize(bytes: Buffer): Size | null {
   return bytes.length > 10 && bytes.toString("ascii", 0, 3) === "GIF"
-    ? { width: bytes.readUInt16LE(6), height: bytes.readUInt16LE(8) }
+    ? { height: bytes.readUInt16LE(8), width: bytes.readUInt16LE(6) }
     : null;
 }
 
@@ -77,8 +79,8 @@ function webpSize(bytes: Buffer): Size | null {
 
   if (chunk === "VP8X") {
     return {
-      width: 1 + bytes.readUIntLE(24, 3),
       height: 1 + bytes.readUIntLE(27, 3),
+      width: 1 + bytes.readUIntLE(24, 3),
     };
   }
 
@@ -86,15 +88,15 @@ function webpSize(bytes: Buffer): Size | null {
     const bits = bytes.readUInt32LE(21);
 
     return {
-      width: (bits & 0x3f_ff) + 1,
       height: ((bits >> 14) & 0x3f_ff) + 1,
+      width: (bits & 0x3f_ff) + 1,
     };
   }
 
   if (chunk === "VP8 ") {
     return {
-      width: bytes.readUInt16LE(26) & 0x3f_ff,
       height: bytes.readUInt16LE(28) & 0x3f_ff,
+      width: bytes.readUInt16LE(26) & 0x3f_ff,
     };
   }
 
@@ -125,10 +127,10 @@ export function mimeOfPath(file: string): string | null {
   const ext = path.extname(file).slice(1).toLowerCase();
 
   const map: Record<string, string> = {
-    png: "image/png",
-    jpg: "image/jpeg",
-    jpeg: "image/jpeg",
     gif: "image/gif",
+    jpeg: "image/jpeg",
+    jpg: "image/jpeg",
+    png: "image/png",
     webp: "image/webp",
   };
 
@@ -141,11 +143,11 @@ export function renderSize(natural: Size, frameWidth?: number): Size {
     Math.round(natural.width / Math.ceil(natural.width / REFERENCE_MAX_WIDTH));
 
   return {
-    width,
     height: Math.max(
       1,
       Math.min(MAX_HEIGHT, Math.round((natural.height * width) / natural.width))
     ),
+    width,
   };
 }
 
@@ -229,7 +231,7 @@ export async function compareToReference(
   const renderPath = `${scratch}-render.png`;
   await input.preview.screenshot(
     input.url,
-    { width: reference.width, height: reference.height },
+    { height: reference.height, width: reference.width },
     renderPath
   );
 
@@ -248,16 +250,16 @@ export async function compareToReference(
   await writeFile(diffPath, pictureSheet(reference, render, diff));
 
   return {
-    score: diff.score,
     contentScore: diff.contentScore,
-    edgeScore: diff.edgeScore,
-    width: reference.width,
-    height: reference.height,
-    differsPct: diff.differsPct,
-    regions: diff.regions,
     diffPath,
-    renderPath,
+    differsPct: diff.differsPct,
+    edgeScore: diff.edgeScore,
+    height: reference.height,
     ms: Date.now() - started,
+    regions: diff.regions,
+    renderPath,
+    score: diff.score,
+    width: reference.width,
   };
 }
 
@@ -326,13 +328,13 @@ function passTarget(
 
   const frameWidth = input.ctx.target?.width;
 
-  return { url, attachment, ...(frameWidth ? { frameWidth } : {}) };
+  return { attachment, url, ...(frameWidth ? { frameWidth } : {}) };
 }
 
 async function sheetImage(score: ReferenceScore): Promise<ImagePart> {
   return {
-    mime: "image/png",
     data: (await readFile(score.diffPath)).toString("base64"),
+    mime: "image/png",
     name: "reference-diff.png",
   };
 }
@@ -363,10 +365,10 @@ export async function runReferencePass(
     const first = await compare("reference");
 
     const record: ReferenceRecord = {
-      score: first.score,
-      fixLoop: false,
       diffPath: first.diffPath,
+      fixLoop: false,
       name,
+      score: first.score,
     };
 
     if (first.score >= REFERENCE_LOW_SCORE || !input.continueWith) {
@@ -384,16 +386,16 @@ export async function runReferencePass(
     const second = await compare("reference-after");
 
     return {
-      score: second.score,
       before: first.score,
-      fixLoop: true,
       diffPath: second.diffPath,
+      fixLoop: true,
       name,
+      score: second.score,
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.warn(`[agent] reference check failed: ${message}`);
 
-    return { score: null, fixLoop: false, name, error: message.slice(0, 300) };
+    return { error: message.slice(0, 300), fixLoop: false, name, score: null };
   }
 }

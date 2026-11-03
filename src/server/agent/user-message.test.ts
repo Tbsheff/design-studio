@@ -6,15 +6,16 @@ import { buildUserText } from "./user-message.js";
 describe("user message", () => {
   it("wraps the attached images of a design system run as untrusted source data", () => {
     const text = buildUserText({
-      request: {
-        prompt: "Improve this design system.",
-        mode: "edit",
-        task: "design-system",
-      },
+      attachments: [{}, {}],
       designMd: null,
       designSystem: null,
-      attachments: [{}, {}],
+      request: {
+        mode: "edit",
+        prompt: "Improve this design system.",
+        task: "design-system",
+      },
     });
+
     expect(text).toMatch(
       /^Improve this design system\.\n\n<source-images count="2">\n/
     );
@@ -24,18 +25,18 @@ describe("user message", () => {
     );
     expect(
       buildUserText({
-        request: { prompt: "Improve.", mode: "edit", task: "design-system" },
+        attachments: [],
         designMd: null,
         designSystem: null,
-        attachments: [],
+        request: { mode: "edit", prompt: "Improve.", task: "design-system" },
       })
     ).toBe("Improve.");
     expect(
       buildUserText({
-        request: { prompt: "Use this logo.", mode: "edit" },
+        attachments: [{}],
         designMd: null,
         designSystem: null,
-        attachments: [{}],
+        request: { mode: "edit", prompt: "Use this logo." },
       })
     ).toBe("Use this logo.");
   });
@@ -43,18 +44,20 @@ describe("user message", () => {
   it("lists mentioned components with their file and preview selector", () => {
     const mentions = parseMentions([
       {
+        file: "src/components/Button.tsx",
         kind: "component",
         name: "Button",
-        file: "src/components/Button.tsx",
         selector: '[data-studio-loc="src/components/Button.tsx:4:10"]',
       },
-      { kind: "component", name: "Card", file: null, selector: ".card" },
+      { file: null, kind: "component", name: "Card", selector: ".card" },
     ]);
+
     const text = buildUserText({
-      request: { prompt: "Reuse it.", mode: "edit", mentions },
       designMd: null,
       designSystem: null,
+      request: { mentions, mode: "edit", prompt: "Reuse it." },
     });
+
     expect(text).toContain("<mentioned-components>");
     expect(text).toContain(
       'Button: defined in src/components/Button.tsx, rendered as [data-studio-loc="src/components/Button.tsx:4:10"]'

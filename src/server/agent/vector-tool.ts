@@ -5,20 +5,20 @@ import {
   BOOLEAN_OPS,
   VECTOR_COLOR,
   VECTOR_PATH_MAX,
-  type VectorBox,
-  type VectorRequest,
 } from "../../shared/vector.js";
+import type { VectorBox, VectorRequest } from "../../shared/vector.js";
 import { writeAtomic } from "../direct-edit/index.js";
 import { planVector } from "../direct-edit/vector-ops.js";
 import { describeElements } from "../mcp/element.js";
-import { refusal, writeProblem, type DirectToolDeps } from "./direct-tools.js";
+import { refusal, writeProblem } from "./direct-tools.js";
+import type { DirectToolDeps } from "./direct-tools.js";
 import { targetOf } from "./insert-tool.js";
 import { editPageUrl } from "./run-target.js";
 
-type ToolText = {
+interface ToolText {
   content: { type: "text"; text: string }[];
   isError?: boolean;
-};
+}
 
 const color = z.string().trim().max(100).regex(VECTOR_COLOR);
 
@@ -43,6 +43,14 @@ const paint = {
 };
 
 const where = {
+  path: z
+    .string()
+    .trim()
+    .max(300)
+    .optional()
+    .describe(
+      "Page path. Leave out for the page of the frame in <canvas-context>."
+    ),
   targetSelector: z
     .string()
     .trim()
@@ -56,14 +64,6 @@ const where = {
     .max(1100)
     .optional()
     .describe("Or the element as file:line:col of its tag."),
-  path: z
-    .string()
-    .trim()
-    .max(300)
-    .optional()
-    .describe(
-      "Page path. Leave out for the page of the frame in <canvas-context>."
-    ),
 };
 
 export const VECTOR_DRAW_SHORT =
@@ -77,9 +77,25 @@ export const VECTOR_PAINT_SHORT =
 
 export const drawVectorShape = {
   ...where,
+  d: z
+    .string()
+    .trim()
+    .min(1)
+    .max(VECTOR_PATH_MAX)
+    .optional()
+    .describe(
+      "SVG path data in px from the parent padding box. End with Z to close it."
+    ),
+  height: z.number().min(1).max(100_000).optional(),
+  makeParentRelative: z
+    .boolean()
+    .default(false)
+    .describe("Also set position: relative on the parent."),
+  name: z.string().trim().min(1).max(60).optional(),
   shape: z
     .enum(["rect", "ellipse", "path"])
     .describe("rect or ellipse: pass x, y, width, height. path: pass d."),
+  width: z.number().min(1).max(100_000).optional(),
   x: z
     .number()
     .min(-100_000)
@@ -92,26 +108,14 @@ export const drawVectorShape = {
     .max(100_000)
     .default(0)
     .describe("Top edge in px from the parent padding box."),
-  width: z.number().min(1).max(100_000).optional(),
-  height: z.number().min(1).max(100_000).optional(),
-  d: z
-    .string()
-    .trim()
-    .min(1)
-    .max(VECTOR_PATH_MAX)
-    .optional()
-    .describe(
-      "SVG path data in px from the parent padding box. End with Z to close it."
-    ),
-  name: z.string().trim().min(1).max(60).optional(),
-  makeParentRelative: z
-    .boolean()
-    .default(false)
-    .describe("Also set position: relative on the parent."),
   ...paint,
 };
 
 export const booleanShapesShape = {
+  op: z
+    .enum(BOOLEAN_OPS)
+    .describe("union, subtract (first minus second), intersect or exclude."),
+  path: where.path,
   selectors: z
     .tuple([
       z.string().trim().min(1).max(2000),
@@ -125,10 +129,6 @@ export const booleanShapesShape = {
     .tuple([z.string().trim().max(1100), z.string().trim().max(1100)])
     .optional()
     .describe("Or the two shapes as file:line:col."),
-  path: where.path,
-  op: z
-    .enum(BOOLEAN_OPS)
-    .describe("union, subtract (first minus second), intersect or exclude."),
 };
 
 export const paintShapeShape = { ...where, ...paint };
@@ -139,7 +139,7 @@ const paintSchema = z.object(paintShapeShape).strict();
 
 function text(message: string, isError = false): ToolText {
   return {
-    content: [{ type: "text", text: message }],
+    content: [{ text: message, type: "text" }],
     ...(isError ? { isError: true } : {}),
   };
 }
@@ -178,7 +178,7 @@ async function write(
     previewUrl && project.kind === "react" ? new URL(previewUrl).origin : null;
 
   const plan = await planVector(
-    { project, workTree: direction.workTree, previewOrigin },
+    { previewOrigin, project, workTree: direction.workTree },
     request
   );
 
@@ -258,28 +258,28 @@ export function runDrawVector(
     }
 
     const common = {
-      target,
       relativeParent: input.makeParentRelative,
+      target,
       ...paintOf(input),
     };
 
     const request: VectorRequest =
       input.shape === "path"
         ? {
-            op: "path",
             d: input.d ?? "",
+            op: "path",
             ...(input.name ? { name: input.name } : {}),
             ...common,
           }
         : {
-            op: "shape",
-            shape: input.shape,
             box: {
+              height: input.height ?? 1,
+              width: input.width ?? 1,
               x: input.x,
               y: input.y,
-              width: input.width ?? 1,
-              height: input.height ?? 1,
             },
+            op: "shape",
+            shape: input.shape,
             ...common,
           };
 
@@ -330,8 +330,8 @@ export function runBooleanShapes(
       const found = await targetOf(
         deps,
         input.selectors
-          ? { targetSelector: input.selectors[index], path: input.path }
-          : { targetSource: input.sources?.[index], path: input.path }
+          ? { path: input.path, targetSelector: input.selectors[index] }
+          : { path: input.path, targetSource: input.sources?.[index] }
       );
 
       if (typeof found === "string") {
@@ -346,8 +346,8 @@ export function runBooleanShapes(
       : undefined;
 
     return write(deps, "boolean_shapes", {
-      op: "boolean",
       boolean: input.op,
+      op: "boolean",
       targets: [targets[0] as InsertTarget, targets[1] as InsertTarget],
       ...(rects ? { rects } : {}),
     });

@@ -21,7 +21,7 @@ export async function runMockDirect(
     return "Direct edits need the preview, which this run does not have.";
   }
 
-  const deps = { preview, ctx: input.ctx };
+  const deps = { ctx: input.ctx, preview };
   const heading = { selector: "h1", style: { color: HEADING_COLOR } };
 
   const edited = await mockCanvasTool(session, EDIT_ELEMENT_TOOL, heading, () =>
@@ -30,21 +30,21 @@ export async function runMockDirect(
 
   const token = {
     name: "--primary",
-    value: HEADING_COLOR,
     theme: "light" as const,
+    value: HEADING_COLOR,
   };
 
   const set = await mockCanvasTool(session, SET_TOKEN_TOOL, token, () =>
     runSetToken(deps, token)
   );
 
-  const classes = { selector: "h1", classes: { add: ["mock-direct"] } };
+  const classes = { classes: { add: ["mock-direct"] }, selector: "h1" };
 
   const tagged = await mockCanvasTool(session, EDIT_ELEMENT_TOOL, classes, () =>
     runEditElement(deps, classes)
   );
 
-  const duplicate = { selector: "section p", op: "duplicate" as const };
+  const duplicate = { op: "duplicate" as const, selector: "section p" };
 
   const copied = await mockCanvasTool(
     session,

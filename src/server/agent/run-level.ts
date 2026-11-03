@@ -103,12 +103,12 @@ REQUIRED steps, in this order. Do not skip one:
 }
 
 const CRITIQUE_SCOPE: Record<RunLevel, string> = {
-  wireframe:
-    "Level: WIREFRAME critique. Cover structure only: sections, order, hierarchy, labels, the main flow and mobile layout. Skip color, type and polish. Call render_check once; no screenshots needed.",
-  prototype:
-    "Level: PROTOTYPE critique. Call render_check, then screenshot mobile from=0 and desktop from=0 (and each screen it lists, with screen=<number>), then design_review once. Report the three to six most important issues.",
   polish:
     "Level: POLISH critique. Call render_check (390, 768, 1440 px), screenshot mobile, tablet and desktop from=0, and design_review. Report every high and medium issue with a concrete fix.",
+  prototype:
+    "Level: PROTOTYPE critique. Call render_check, then screenshot mobile from=0 and desktop from=0 (and each screen it lists, with screen=<number>), then design_review once. Report the three to six most important issues.",
+  wireframe:
+    "Level: WIREFRAME critique. Cover structure only: sections, order, hierarchy, labels, the main flow and mobile layout. Skip color, type and polish. Call render_check once; no screenshots needed.",
 };
 
 const STOP_RULE = `Stop when there are no high findings, when the fix loops above are used up, or when the budget line in a tool result says less than 20% is left.`;

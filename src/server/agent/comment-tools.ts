@@ -2,11 +2,8 @@ import path from "node:path";
 
 import { z } from "zod";
 
-import {
-  describeComment,
-  filterComments,
-  type CommentFilter,
-} from "../../shared/comments.js";
+import { describeComment, filterComments } from "../../shared/comments.js";
+import type { CommentFilter } from "../../shared/comments.js";
 import type { CommentStatus, DesignComment } from "../../shared/contracts.js";
 import { canvasFrameOf } from "../comments/frame.js";
 import type { CommentStore } from "../store/comments.js";
@@ -24,10 +21,6 @@ export const COMMENT_STATUSES = [
 ] as const satisfies readonly (CommentFilter | CommentStatus)[];
 
 export const listCommentsShape = {
-  status: z
-    .enum(COMMENT_STATUSES)
-    .optional()
-    .describe("open (default: every status but resolved), all, or one status."),
   frame: z
     .string()
     .trim()
@@ -36,6 +29,10 @@ export const listCommentsShape = {
     .describe(
       "Frame id, @label or page path such as / or /settings. Comments made before frames were recorded count as the entry page."
     ),
+  status: z
+    .enum(COMMENT_STATUSES)
+    .optional()
+    .describe("open (default: every status but resolved), all, or one status."),
 };
 
 export const resolveCommentShape = {
@@ -50,11 +47,14 @@ interface CommentToolDeps {
   comments?: CommentStore;
 }
 
-type Text = { content: { type: "text"; text: string }[]; isError?: boolean };
+interface Text {
+  content: { type: "text"; text: string }[];
+  isError?: boolean;
+}
 
 function text(value: string, isError = false): Text {
   return {
-    content: [{ type: "text", text: value }],
+    content: [{ text: value, type: "text" }],
     ...(isError ? { isError } : {}),
   };
 }

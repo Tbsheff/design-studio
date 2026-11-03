@@ -13,8 +13,8 @@ import type { RunToolState } from "./types.js";
 import type { ImagePart } from "./user-message.js";
 
 const SIZES = [
-  { name: "desktop", box: { width: 1440, height: 900 } },
-  { name: "mobile", box: { width: 390, height: 844 } },
+  { box: { height: 900, width: 1440 }, name: "desktop" },
+  { box: { height: 844, width: 390 }, name: "mobile" },
 ] as const;
 
 const LISTED = 8;
@@ -92,12 +92,12 @@ async function shotsOf(
       );
 
       const tiles = await input.preview.screenshotTiles(screen.url, {
-        viewport: box,
-        tileHeight: box.height,
-        maxTiles: 1,
-        from: 0,
-        outPrefix,
         fresh: true,
+        from: 0,
+        maxTiles: 1,
+        outPrefix,
+        tileHeight: box.height,
+        viewport: box,
         ...(screen.prepare ? { prepare: screen.prepare } : {}),
       });
 
@@ -108,8 +108,8 @@ async function shotsOf(
       }
 
       return {
-        mime: "image/png" as const,
         data: (await readFile(file)).toString("base64"),
+        mime: "image/png" as const,
         name: `${screen.label} ${name}`,
       };
     })
@@ -135,7 +135,7 @@ export async function studioScreenReview(
       labels.has(finding.screen)
   );
 
-  return { screens, images: shots.flat(), findings };
+  return { findings, images: shots.flat(), screens };
 }
 
 function findingLine(finding: QualityFinding): string {
@@ -153,7 +153,7 @@ export function screenReviewPrompt(review: ScreenReview): string | null {
     "<studio-continue>",
     `You finished without a screenshot of ${review.screens.length} screen(s): ${names}. The studio took them at 1440 px and 390 px (attached, one image per size, top of the page).`,
     "Look at every image. Find what is broken or weak on these screens: overlap, clipped or wrapping labels, crowded buttons, empty areas, missing states.",
-    ...(review.findings.length
+    ...(review.findings.length > 0
       ? [
           "render_check findings on these screens:",
           ...review.findings.slice(0, LISTED).map(findingLine),

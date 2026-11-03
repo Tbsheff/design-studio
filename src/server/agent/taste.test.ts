@@ -44,7 +44,7 @@ afterEach(() => {
   delete process.env.STUDIO_TASTE;
 
   for (const dir of dirs.splice(0)) {
-    rmSync(dir, { recursive: true, force: true });
+    rmSync(dir, { force: true, recursive: true });
   }
 });
 
@@ -52,37 +52,37 @@ describe(loadTasteRules, () => {
   it("returns active global rules only, without statements or ids", () => {
     const home = library([
       {
-        id: "a",
-        scope: "global",
         data: {
-          kind: "prefer",
           area: "layout",
+          kind: "prefer",
           rule: "Group with space",
           statement: "private quote",
         },
-      },
-      {
-        id: "b",
+        id: "a",
         scope: "global",
-        data: { kind: "avoid", area: "surfaces", rule: "Heavy borders" },
-        retired: true,
       },
       {
+        data: { area: "surfaces", kind: "avoid", rule: "Heavy borders" },
+        id: "b",
+        retired: true,
+        scope: "global",
+      },
+      {
+        data: { area: "type", kind: "prefer", rule: "Project only" },
         id: "c",
         scope: "project",
-        data: { kind: "prefer", area: "type", rule: "Project only" },
       },
       {
+        data: { kind: "avoid", rule: "Bounce easing" },
         id: "d",
         scope: "global",
-        data: { kind: "avoid", rule: "Bounce easing" },
       },
-      { id: "e", scope: "global", data: { kind: "maybe", rule: "Ignored" } },
+      { data: { kind: "maybe", rule: "Ignored" }, id: "e", scope: "global" },
     ]);
 
     expect(loadTasteRules(home)).toEqual([
-      { kind: "prefer", area: "layout", rule: "Group with space" },
-      { kind: "avoid", area: "general", rule: "Bounce easing" },
+      { area: "layout", kind: "prefer", rule: "Group with space" },
+      { area: "general", kind: "avoid", rule: "Bounce easing" },
     ]);
   });
 
@@ -91,13 +91,13 @@ describe(loadTasteRules, () => {
       loadTasteRules(path.join(os.tmpdir(), "no-such-taste-home"))
     ).toEqual([]);
     expect(
-      loadTasteRules(library([{ id: "x", scope: "global", data: "{not json" }]))
+      loadTasteRules(library([{ data: "{not json", id: "x", scope: "global" }]))
     ).toEqual([]);
     process.env.STUDIO_TASTE = "0";
     expect(
       loadTasteRules(
         library([
-          { id: "y", scope: "global", data: { kind: "prefer", rule: "R" } },
+          { data: { kind: "prefer", rule: "R" }, id: "y", scope: "global" },
         ])
       )
     ).toEqual([]);
@@ -113,13 +113,13 @@ describe(loadTasteRules, () => {
 
 describe("taste prompt block", () => {
   const project = {
-    kind: "html",
     entry: "index.html",
+    kind: "html",
     settings: { allowBash: false, allowInstall: false },
   } as unknown as Project;
 
   const rules = [
-    { kind: "prefer" as const, area: "layout", rule: "Group with space" },
+    { area: "layout", kind: "prefer" as const, rule: "Group with space" },
   ];
 
   it("adds the block in edit and critique, and leaves it out with no rules", () => {

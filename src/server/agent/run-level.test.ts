@@ -96,7 +96,7 @@ describe("run-level block", () => {
 
   it("puts the block before the user text", () => {
     const parts = withRunLevel(
-      { text: "Build it", images: [] },
+      { images: [], text: "Build it" },
       resolveRunConfig(DEFAULT_SETTINGS, "prototype"),
       "edit"
     );
@@ -113,16 +113,16 @@ describe("design system task", () => {
     );
 
     expect(config).toMatchObject({
-      level: "polish",
-      task: "design-system",
-      criticModel: null,
-      maxBudgetUsd: 1,
       agentBudgetUsd: 1,
+      criticModel: null,
+      level: "polish",
+      maxBudgetUsd: 1,
+      task: "design-system",
     });
     expect(config.preset).toMatchObject({
-      skills: false,
-      criticMaxCalls: 0,
       checks: { critic: false, screenshots: true },
+      criticMaxCalls: 0,
+      skills: false,
     });
     const text = buildRunLevelBlock(config, "edit");
     expect(text).toContain("Task: IMPROVE THE DESIGN SYSTEM.");

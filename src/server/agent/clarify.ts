@@ -18,8 +18,8 @@ export const MAX_QUESTIONS = 3;
 const CLARIFY_TIMEOUT_MS = 12_000;
 
 const QuestionSchema = z.object({
-  question: z.string().trim().min(3).max(160),
   options: z.array(z.string().trim().min(1).max(60)).min(2).max(4),
+  question: z.string().trim().min(3).max(160),
 });
 
 const ReplySchema = z.union([
@@ -37,8 +37,8 @@ export function toQuestions(
 ): ClarifyQuestion[] {
   return raw.slice(0, MAX_QUESTIONS).map((item, index) => ({
     id: `q${index + 1}`,
-    question: item.question,
     options: [...new Set(item.options)],
+    question: item.question,
   }));
 }
 
@@ -49,21 +49,21 @@ export function parseClarifyReply(text: string): ClarifyQuestion[] {
 export function fallbackQuestions(): ClarifyQuestion[] {
   return toQuestions([
     {
-      question: "Who is it for?",
       options: ["New customers", "Existing users", "Internal team"],
+      question: "Who is it for?",
     },
     {
-      question: "What is the one main action?",
       options: ["Sign up", "Buy", "Contact us", "Read more"],
+      question: "What is the one main action?",
     },
     {
-      question: "What tone should it have?",
       options: [
         "Calm and minimal",
         "Bold and bright",
         "Warm and friendly",
         "Technical",
       ],
+      question: "What tone should it have?",
     },
   ]);
 }
@@ -77,22 +77,22 @@ function clarifyOptions(
     ...(claudeExecutable
       ? { pathToClaudeCodeExecutable: claudeExecutable }
       : {}),
-    model: WIREFRAME_MODEL,
-    maxTurns: 1,
-    tools: [],
-    settingSources: [],
-    strictMcpConfig: true,
-    mcpServers: {},
-    persistSession: false,
-    permissionMode: "default",
     cwd: os.tmpdir(),
-    systemPrompt: CLARIFY_SYSTEM,
+    maxTurns: 1,
+    mcpServers: {},
+    model: WIREFRAME_MODEL,
+    permissionMode: "default",
+    persistSession: false,
+    settingSources: [],
     settings: {
       disableBundledSkills: true,
-      syncClaudeAiSkills: false,
       syncClaudeAiPlugins: false,
+      syncClaudeAiSkills: false,
     },
     skills: [],
+    strictMcpConfig: true,
+    systemPrompt: CLARIFY_SYSTEM,
+    tools: [],
   };
 }
 
@@ -148,8 +148,8 @@ export async function askQuestions(
   const queryFn = await loadQuery();
 
   const stream = queryFn({
-    prompt: `<brief>\n${prompt.trim()}\n</brief>\nReply with the JSON array only.`,
     options: clarifyOptions(deps.env, deps.claudeExecutable),
+    prompt: `<brief>\n${prompt.trim()}\n</brief>\nReply with the JSON array only.`,
   });
 
   let timer: NodeJS.Timeout | undefined;

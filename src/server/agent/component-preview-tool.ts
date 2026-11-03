@@ -11,10 +11,6 @@ type ToolContent =
   | { type: "image"; data: string; mimeType: string };
 
 export const componentPreviewShape = {
-  name: z
-    .string()
-    .regex(/^[A-Z][A-Za-z0-9_$]{0,63}$/)
-    .describe('Component name from list_components, for example "Button".'),
   file: z
     .string()
     .trim()
@@ -23,6 +19,10 @@ export const componentPreviewShape = {
     .describe(
       "File of the component, relative to the project, when two components have the same name."
     ),
+  name: z
+    .string()
+    .regex(/^[A-Z][A-Za-z0-9_$]{0,63}$/)
+    .describe('Component name from list_components, for example "Button".'),
 };
 
 const schema = z.object(componentPreviewShape).strict();
@@ -32,7 +32,7 @@ function text(
   isError = false
 ): { content: ToolContent[]; isError?: boolean } {
   return {
-    content: [{ type: "text", text: message }],
+    content: [{ text: message, type: "text" }],
     ...(isError ? { isError: true } : {}),
   };
 }
@@ -56,7 +56,7 @@ export async function runComponentPreview(
     const result = await componentPreviewsFor(deps.preview).render(
       project,
       direction,
-      { name: parsed.data.name, file: parsed.data.file }
+      { file: parsed.data.file, name: parsed.data.name }
     );
 
     if (!result.ok) {
@@ -66,17 +66,17 @@ export async function runComponentPreview(
     return {
       content: [
         {
-          type: "image",
           data: result.png.toString("base64"),
           mimeType: "image/png",
+          type: "image",
         },
         {
-          type: "text",
           text: JSON.stringify({
             component: result.component,
             props: result.props,
             text: result.text,
           }),
+          type: "text",
         },
       ],
     };

@@ -3,19 +3,14 @@ import path from "node:path";
 
 import { CANVAS_GAP } from "../../shared/canvas-file.js";
 import { statePrefix } from "../../shared/states.js";
-import {
-  editLinks,
-  listLinks,
-  type LinkProbe,
-} from "../canvas/links/link-tools.js";
+import { editLinks, listLinks } from "../canvas/links/link-tools.js";
+import type { LinkProbe } from "../canvas/links/link-tools.js";
 import type { CanvasService } from "../canvas/service.js";
-import {
-  canvasList,
-  canvasPlace,
-  canvasPoint,
-  type CanvasToolContext,
-  type PlaceSpec,
-  type ToolText,
+import { canvasList, canvasPlace, canvasPoint } from "../canvas/tools.js";
+import type {
+  CanvasToolContext,
+  PlaceSpec,
+  ToolText,
 } from "../canvas/tools.js";
 import type { DriverInput, DriverSink } from "./lifecycle.js";
 import {
@@ -46,10 +41,10 @@ export function mockCanvasContext(
 
   return {
     canvas,
-    project: ctx.project,
     direction: ctx.direction,
     mode: ctx.request.mode,
     plan: ctx.request.plan === true,
+    project: ctx.project,
   };
 }
 
@@ -124,7 +119,7 @@ export async function runMockCanvas(
 
   const placed = await mockPlace(session, ctx, [
     { frame: "f1", label: "Desktop" },
-    { label: "Mobile", viewport: "mobile", rightOf: "@Desktop" },
+    { label: "Mobile", rightOf: "@Desktop", viewport: "mobile" },
     { label: "Tablet", viewport: "tablet", x: 0, y: 0 },
   ]);
 
@@ -148,8 +143,8 @@ const MOCK_STATES = ["empty", "loading", "error", "success"] as const;
 
 const STATE_TEXT: Record<string, string> = {
   empty: "Nothing here yet. Add your first item to get started.",
-  loading: "Loading your items…",
   error: "We could not load this page. Try again in a moment.",
+  loading: "Loading your items…",
   success: "Saved. Your changes are live.",
 };
 
@@ -162,7 +157,7 @@ export interface MockWriteSession extends MockToolSession {
 }
 
 export function wantsMockStates(input: DriverInput): boolean {
-  const request = input.ctx.request;
+  const { request } = input.ctx;
 
   return (
     request.mode === "edit" &&
@@ -231,10 +226,10 @@ export async function runMockStates(
   ctx: CanvasToolContext | null
 ): Promise<string> {
   const source = input.ctx.request.states ?? {
-    path: "",
     frame: "f1",
-    width: 1440,
     height: 900,
+    path: "",
+    width: 1440,
   };
 
   const react = input.ctx.project.kind === "react";
@@ -242,8 +237,8 @@ export async function runMockStates(
   const prefix = statePrefix(source.path);
 
   const files = MOCK_STATES.map((state) => ({
-    state,
     file: `states/${prefix}${state}.html`,
+    state,
   }));
 
   for (const { state, file } of files) {
@@ -261,10 +256,10 @@ export async function runMockStates(
   const labels = files.map(({ state }) => titleOf(state));
 
   const specs: PlaceSpec[] = files.map(({ file }, index) => ({
+    height: source.height,
     label: labels[index],
     path: file,
     width: source.width,
-    height: source.height,
     ...(index === 0
       ? { below: source.frame }
       : { rightOf: `@${labels[index - 1] ?? ""}` }),

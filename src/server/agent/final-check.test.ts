@@ -19,15 +19,9 @@ describe("final check", () => {
 
   it("summarizes errors and quality severities", () => {
     const result: RenderCheckResult = {
-      viewport: "mobile",
-      width: 390,
-      height: 844,
-      ok: false,
       consoleErrors: ["boom"],
-      pageErrors: [],
+      height: 844,
       horizontalOverflow: true,
-      layoutTotal: 1,
-      screenshotPath: "",
       layout: [
         {
           kind: "clipped",
@@ -42,6 +36,9 @@ describe("final check", () => {
           detail: "",
         },
       ],
+      layoutTotal: 1,
+      ok: false,
+      pageErrors: [],
       quality: [
         {
           check: "a11y",
@@ -52,13 +49,17 @@ describe("final check", () => {
           message: "x",
         },
       ],
+      screenshotPath: "",
+      viewport: "mobile",
+      width: 390,
     };
+
     expect(summarizeCheck([result], "studio")).toEqual({
-      ranBy: "studio",
       errors: 3,
       high: 1,
-      medium: 0,
       low: 0,
+      medium: 0,
+      ranBy: "studio",
     });
   });
 });

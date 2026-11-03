@@ -70,7 +70,9 @@ export {
   SET_FRAME_SESSION_TOOL,
   SET_FRAME_STATE_TOOL,
 } from "./legacy/canvas.js";
+
 export { LIST_COMMENTS_TOOL, RESOLVE_COMMENT_TOOL } from "./legacy/comments.js";
+
 export {
   ARRANGE_TOOL,
   CLEAR_TEXT_TOOL,
@@ -91,11 +93,17 @@ export {
   SET_TOKEN_TOOL,
   SWAP_INSTANCE_TOOL,
 } from "./legacy/direct-edit.js";
+
 export { EXPORT_FRAME_TOOL } from "./legacy/export.js";
+
 export { APP_DOCTOR_TOOL, GET_RUN_CONTEXT_TOOL } from "./legacy/mcp-read.js";
+
 export { DESIGN_SYSTEM_CHECK_TOOL } from "./legacy/packs.js";
+
 export { STUDIO_HELP_TOOL } from "./legacy/studio.js";
+
 export { DIFF_VERSIONS_TOOL } from "./legacy/versions.js";
+
 export {
   GENERATED_TOKENS_MESSAGE,
   PLAN_MODE_DENY,
@@ -109,6 +117,7 @@ export {
   isSecretFile,
   permittedToolNames,
 } from "../platform/tool-policy/index.js";
+
 export type { ToolPolicy } from "../platform/tool-policy/index.js";
 
 export const holdsUntrustedInput = (request: {

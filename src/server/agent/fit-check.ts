@@ -113,12 +113,12 @@ function sizeFinding(
 
   return {
     check: "size-request",
-    severity: "high",
-    viewport: "desktop",
-    selector: card.name,
-    source: null,
-    message: `The request asks for a ${word}, but the new element ${cardLabel(card)} is ${fmt(card.box.width)} px wide = ${Math.round(share * 100)}% of the ${fmt(content)} px page content width at 1440 px${tall}. A ${word} must take at most about ${fmt(limit)} px (half the content width).`,
     fix: `Make it at most about ${fmt(limit)} px wide: put it in one grid column beside an existing card (for example a md:grid-cols-2 row) or give it a max width such as max-w-md. Keep its content short.`,
+    message: `The request asks for a ${word}, but the new element ${cardLabel(card)} is ${fmt(card.box.width)} px wide = ${Math.round(share * 100)}% of the ${fmt(content)} px page content width at 1440 px${tall}. A ${word} must take at most about ${fmt(limit)} px (half the content width).`,
+    selector: card.name,
+    severity: "high",
+    source: null,
+    viewport: "desktop",
   };
 }
 
@@ -203,25 +203,25 @@ function duplicateFinding(
 
   const base = {
     check: "duplicate-data" as const,
-    viewport: "desktop" as const,
     selector: card.name,
     source: null,
+    viewport: "desktop" as const,
   };
 
   if (named) {
     return {
       ...base,
-      severity: "medium",
-      message: `The request names this content, so the new element ${cardLabel(card)} must keep it. But it only repeats what the page already shows (${listed}${more}) and adds nothing new.`,
       fix: "Keep the items the request asks for. Make the element a compact summary of them that adds what the page does not show yet: for example the latest 3 items with date and status, a count, or who signed. Do not replace the items with only a count or a button.",
+      message: `The request names this content, so the new element ${cardLabel(card)} must keep it. But it only repeats what the page already shows (${listed}${more}) and adds nothing new.`,
+      severity: "medium",
     };
   }
 
   return {
     ...base,
-    severity: "high",
-    message: `The new element ${cardLabel(card)} repeats ${repeated.length} item(s) the page already shows elsewhere: ${listed}${more}. The same data shows twice on one screen.`,
     fix: "Do not list the same items again. Show facts the page does not show yet (for example a count, the latest date, a status summary) or link to the existing list. Keep the new element.",
+    message: `The new element ${cardLabel(card)} repeats ${repeated.length} item(s) the page already shows elsewhere: ${listed}${more}. The same data shows twice on one screen.`,
+    severity: "high",
   };
 }
 

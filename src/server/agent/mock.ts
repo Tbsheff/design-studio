@@ -47,10 +47,10 @@ import { runReferencePass } from "./reference-check.js";
 import { buildUserMessageParts, buildUserText } from "./user-message.js";
 
 const MOCK_USAGE = {
-  inputTokens: 120,
-  outputTokens: 80,
   cacheReadTokens: 0,
   cacheWriteTokens: 0,
+  inputTokens: 120,
+  outputTokens: 80,
 };
 
 const DELTA_DELAY_MS = 20;
@@ -71,8 +71,8 @@ export const MOCK_CONTEXT_TOKENS = 24_000;
 
 function mockTodos(current: number) {
   return MOCK_TODO_STEPS.map((content, index) => ({
-    content,
     activeForm: `${content}…`,
+    content,
     status:
       index < current
         ? "completed"
@@ -362,12 +362,12 @@ class MockSession {
     if (decision.behavior === "deny") {
       this.sink.toolFinished(toolUseId, true, decision.message);
       this.sink.sent({
-        text: decision.message,
         imageCount: 0,
-        updatedInstructions: false,
-        recommendedSkills: [],
         promptHash: "mock",
+        recommendedSkills: [],
         resume: null,
+        text: decision.message,
+        updatedInstructions: false,
       });
       await this.say(
         `Okay, I will not run \`${command}\`. ${decision.message}`
@@ -393,13 +393,13 @@ class MockSession {
       command: `python3 scripts/patch.py ${files.map((file) => path.basename(file)).join(" ")}`,
     };
 
-    const settings = this.input.ctx.project.settings;
+    const { settings } = this.input.ctx.project;
 
     const policy: ToolPolicy = {
-      workTree: this.workTree,
-      mode: "edit",
       allowBash: settings.allowBash,
       allowInstall: settings.allowInstall,
+      mode: "edit",
+      workTree: this.workTree,
     };
 
     this.sink.toolStarted(toolUseId, "Bash", input);
@@ -934,13 +934,6 @@ const SCREENSHOT = "mcp__studio__screenshot";
 type MockStep = [name: string, input: Record<string, unknown>];
 
 const MOCK_LEVEL_STEPS: Record<RunLevel, MockStep[]> = {
-  wireframe: [[RENDER_CHECK, {}]],
-  prototype: [
-    [RENDER_CHECK, {}],
-    [SCREENSHOT, { viewport: "mobile", from: 0 }],
-    [SCREENSHOT, { viewport: "desktop", from: 0 }],
-    [RENDER_CHECK, {}],
-  ],
   polish: [
     [RENDER_CHECK, {}],
     [SCREENSHOT, { viewport: "mobile", from: 0 }],
@@ -949,6 +942,13 @@ const MOCK_LEVEL_STEPS: Record<RunLevel, MockStep[]> = {
     ["mcp__studio__design_review", {}],
     [RENDER_CHECK, {}],
   ],
+  prototype: [
+    [RENDER_CHECK, {}],
+    [SCREENSHOT, { viewport: "mobile", from: 0 }],
+    [SCREENSHOT, { viewport: "desktop", from: 0 }],
+    [RENDER_CHECK, {}],
+  ],
+  wireframe: [[RENDER_CHECK, {}]],
 };
 
 async function runLevelChecks(
@@ -964,7 +964,7 @@ async function runLevelChecks(
 }
 
 function wantsLevelChecks(input: DriverInput): boolean {
-  const request = input.ctx.request;
+  const { request } = input.ctx;
 
   return (
     request.mode === "edit" &&
@@ -975,7 +975,7 @@ function wantsLevelChecks(input: DriverInput): boolean {
 }
 
 function wantsTweaks(input: DriverInput): boolean {
-  const request = input.ctx.request;
+  const { request } = input.ctx;
 
   return (
     request.mode === "edit" &&
@@ -1052,11 +1052,11 @@ async function runPlan(
   await session.say(`Planning "${text}" before any change.`);
 
   const policy: ToolPolicy = {
-    workTree,
-    mode: "edit",
     allowBash: false,
     allowInstall: false,
+    mode: "edit",
     plan: true,
+    workTree,
   };
 
   const target = { file_path: path.join(workTree, "index.html") };
@@ -1078,31 +1078,31 @@ async function runPlan(
 const ELEMENT_LOOKS = [
   {
     background: "#fef3c7",
-    color: "#422006",
-    radius: "6px",
-    padding: "14px",
     border: "1px solid #f59e0b",
+    color: "#422006",
+    padding: "14px",
+    radius: "6px",
   },
   {
     background: "#1e293b",
-    color: "#f8fafc",
-    radius: "18px",
-    padding: "22px",
     border: "0",
+    color: "#f8fafc",
+    padding: "22px",
+    radius: "18px",
   },
   {
     background: "#ecfeff",
-    color: "#083344",
-    radius: "0",
-    padding: "16px",
     border: "3px solid #0e7490",
+    color: "#083344",
+    padding: "16px",
+    radius: "0",
   },
   {
     background: "#fce7f3",
-    color: "#500724",
-    radius: "28px",
-    padding: "18px 26px",
     border: "2px dashed #db2777",
+    color: "#500724",
+    padding: "18px 26px",
+    radius: "28px",
   },
 ] as const;
 
@@ -1137,8 +1137,8 @@ async function runElementVariantMock(
   workTree: string,
   request: RunRequest
 ): Promise<string> {
-  const scope = request.scope;
-  const variation = request.variation;
+  const { scope } = request;
+  const { variation } = request;
 
   if (!scope || !variation) {
     throw new Error("runElementVariantMock needs a scope and a variation");
@@ -1189,8 +1189,8 @@ function runMockEdit(
   session: MockSession
 ): Promise<string> {
   const { ctx } = input;
-  const prompt = ctx.request.prompt;
-  const workTree = ctx.direction.workTree;
+  const { prompt } = ctx.request;
+  const { workTree } = ctx.direction;
   const text = cleanPrompt(prompt) || "Untitled";
 
   if (ctx.request.mode === "critique") {
@@ -1219,7 +1219,7 @@ function runMockEdit(
     return runCommentEdit(session, workTree, ctx.request.comments);
   }
 
-  const selection = ctx.request.selection;
+  const { selection } = ctx.request;
 
   if (selection?.length) {
     return runSelectionEdit(session, workTree, selection, prompt);
@@ -1251,13 +1251,13 @@ async function withMockReference(
     images: unknown[]
   ): Promise<boolean> => {
     input.sink.sent({
-      text,
-      imageCount: images.length,
-      updatedInstructions: false,
-      recommendedSkills: [],
-      promptHash: "mock",
-      resume: input.ctx.direction.sessionId,
       continuation: 1,
+      imageCount: images.length,
+      promptHash: "mock",
+      recommendedSkills: [],
+      resume: input.ctx.direction.sessionId,
+      text,
+      updatedInstructions: false,
     });
     await session.say(
       "Mock fix loop: compared the frame with the reference picture again."
@@ -1267,11 +1267,11 @@ async function withMockReference(
   };
 
   const reference = await runReferencePass({
-    preview,
-    ctx: input.ctx,
-    runsDir: input.runsDir,
-    runId: input.runId,
     continueWith,
+    ctx: input.ctx,
+    preview,
+    runId: input.runId,
+    runsDir: input.runsDir,
   });
 
   const finalCheck = withReference(outcome.finalCheck, reference);
@@ -1291,11 +1291,11 @@ async function runMock(
   preview: PreviewService | undefined
 ): Promise<DriverOutcome> {
   const startedAt = Date.now();
-  const prompt = input.ctx.request.prompt;
+  const { prompt } = input.ctx.request;
 
   const flags: MockFlags = {
-    slow: prompt.includes("[slow]"),
     fail: prompt.includes("[fail]"),
+    slow: prompt.includes("[slow]"),
   };
 
   const session = new MockSession(input, flags);
@@ -1305,12 +1305,12 @@ async function runMock(
   );
   input.sink.usage(MOCK_CONTEXT_TOKENS);
   input.sink.sent({
-    text: buildUserText(input.ctx),
     imageCount: input.ctx.attachments.length,
-    updatedInstructions: false,
-    recommendedSkills: [],
     promptHash: "mock",
+    recommendedSkills: [],
     resume: input.ctx.direction.sessionId,
+    text: buildUserText(input.ctx),
+    updatedInstructions: false,
   });
 
   for (const skill of mockSkillRequests(prompt)) {
@@ -1405,13 +1405,13 @@ async function runMock(
   }
 
   const outcome: DriverOutcome = {
-    status: prompt.includes("[budget]") ? "budget_exceeded" : "completed",
-    usage: { ...MOCK_USAGE },
     costUsd: 0,
     durationMs: Date.now() - startedAt,
-    modelMs: 0,
-    finalText,
     error: null,
+    finalText,
+    modelMs: 0,
+    status: prompt.includes("[budget]") ? "budget_exceeded" : "completed",
+    usage: { ...MOCK_USAGE },
   };
 
   if (!wantsDesignSystemCheck(input.ctx)) {
@@ -1419,9 +1419,6 @@ async function runMock(
   }
 
   return enforceDesignSystemCheck({
-    workTree: input.ctx.direction.workTree,
-    first: outcome,
-    signal: input.signal,
     continueWith: async (text, round, total) => {
       input.sink.sent({
         text,
@@ -1441,6 +1438,9 @@ async function runMock(
 
       return { ...total, finalText: fixed, durationMs: Date.now() - startedAt };
     },
+    first: outcome,
+    signal: input.signal,
+    workTree: input.ctx.direction.workTree,
   });
 }
 

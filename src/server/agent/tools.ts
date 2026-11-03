@@ -7,13 +7,14 @@ import type {
 } from "@anthropic-ai/claude-agent-sdk";
 import { z } from "zod";
 
-import { FLOW_MAX_DEPTH, type FlowInput } from "../../shared/route-flow.js";
+import { FLOW_MAX_DEPTH } from "../../shared/route-flow.js";
+import type { FlowInput } from "../../shared/route-flow.js";
 import {
   levelOf,
   resolveRunConfig,
   withRunTask,
-  type ResolvedRunConfig,
 } from "../../shared/run-levels.js";
+import type { ResolvedRunConfig } from "../../shared/run-levels.js";
 import { AGENT_OPS, buildAgentTools } from "../agent-tools/registry.js";
 import {
   FRAME_STATES_NOTE,
@@ -21,8 +22,10 @@ import {
   applyFrameState,
   describeFrameStates,
   readFrameStates,
-  type FrameStateDeps,
-  type FrameStateInput,
+} from "../app/frame-state-service.js";
+import type {
+  FrameStateDeps,
+  FrameStateInput,
 } from "../app/frame-state-service.js";
 import {
   buildFlow,
@@ -37,9 +40,8 @@ import {
   editLinksShape,
   listLinks,
   probeWithPreview,
-  type EditLinksArgs,
-  type LinkProbe,
 } from "../canvas/links/link-tools.js";
+import type { EditLinksArgs, LinkProbe } from "../canvas/links/link-tools.js";
 import type { CanvasService } from "../canvas/service.js";
 import {
   canvasList,
@@ -47,9 +49,8 @@ import {
   canvasPoint,
   frameRef,
   placeSchema,
-  type CanvasToolContext,
-  type PlaceSpec,
 } from "../canvas/tools.js";
+import type { CanvasToolContext, PlaceSpec } from "../canvas/tools.js";
 import { checkDesignSystem, describeCheck } from "../design-system/check.js";
 import { prepareShip } from "../git/ship-prepare.js";
 import type { StudioRuntime } from "../main/runtime.js";
@@ -191,18 +192,10 @@ import {
   compareReferenceShape,
   runCompareToReference,
 } from "./reference-tool.js";
-import {
-  resolveShotTarget,
-  type ShotArgs,
-  type ShotTarget,
-  type TargetDeps,
-} from "./run-target.js";
-import {
-  describeScreens,
-  samePage,
-  warmScreens,
-  type RunScreen,
-} from "./screens.js";
+import { resolveShotTarget } from "./run-target.js";
+import type { ShotArgs, ShotTarget, TargetDeps } from "./run-target.js";
+import { describeScreens, samePage, warmScreens } from "./screens.js";
+import type { RunScreen } from "./screens.js";
 import { runSelectMatching, selectMatchingShape } from "./select-tool.js";
 import {
   getSpacingInput,
@@ -245,7 +238,8 @@ import {
   runCreateTextStyle,
   runListTextStyles,
 } from "./text-style-tool.js";
-import { TOOL_HELP, TOOL_SHORT, type StudioToolName } from "./tool-help.js";
+import { TOOL_HELP, TOOL_SHORT } from "./tool-help.js";
+import type { StudioToolName } from "./tool-help.js";
 import { HELP_TOOL, studioToolsFor } from "./tool-sets.js";
 import type { CriticImage, RunToolState } from "./types.js";
 import {
@@ -259,9 +253,9 @@ import {
 import { diffVersionsShape, runDiffVersions } from "./version-diff-tool.js";
 
 const VIEWPORTS = {
-  desktop: { width: 1440, height: 900 },
-  tablet: { width: 768, height: 1024 },
-  mobile: { width: 390, height: 844 },
+  desktop: { height: 900, width: 1440 },
+  mobile: { height: 844, width: 390 },
+  tablet: { height: 1024, width: 768 },
 } as const;
 
 type ViewportName = keyof typeof VIEWPORTS;
@@ -270,9 +264,9 @@ const TILE_PLAN: Record<
   ViewportName,
   { tileHeight: number; maxTiles: number }
 > = {
-  desktop: { tileHeight: 900, maxTiles: 4 },
-  tablet: { tileHeight: 1024, maxTiles: 3 },
-  mobile: { tileHeight: 1560, maxTiles: 4 },
+  desktop: { maxTiles: 4, tileHeight: 900 },
+  mobile: { maxTiles: 4, tileHeight: 1560 },
+  tablet: { maxTiles: 3, tileHeight: 1024 },
 };
 
 type QueryFn = typeof query;
@@ -342,10 +336,10 @@ function canvasContext(
 
   return {
     canvas: deps.canvas,
-    project: deps.ctx.project,
     direction: deps.ctx.direction,
     mode: deps.ctx.request.mode,
     plan: deps.ctx.request.plan === true,
+    project: deps.ctx.project,
   };
 }
 
@@ -447,7 +441,7 @@ async function withFrameStates(
   }
 
   try {
-    return { content: [{ type: "text" as const, text: await run(stateDeps) }] };
+    return { content: [{ text: await run(stateDeps), type: "text" as const }] };
   } catch (error) {
     return errorText(`${name} failed: ${describeError(error)}`);
   }
@@ -498,10 +492,10 @@ export async function runListRouteLinks(
     return {
       content: [
         {
-          type: "text" as const,
           text: describeRouteLinks(
             await listRouteLinks(deps.ctx.project, route)
           ),
+          type: "text" as const,
         },
       ],
     };
@@ -534,10 +528,10 @@ export function runAddFlow(
     return {
       content: [
         {
-          type: "text" as const,
           text: describeFlow(
             await buildFlow(flowDeps, ctx.project, ctx.direction, args, "agent")
           ),
+          type: "text" as const,
         },
       ],
     };
@@ -545,7 +539,7 @@ export function runAddFlow(
 }
 
 function errorText(message: string) {
-  return { content: [{ type: "text" as const, text: message }], isError: true };
+  return { content: [{ text: message, type: "text" as const }], isError: true };
 }
 
 function describeError(error: unknown): string {
@@ -574,9 +568,9 @@ async function tileContent(paths: string[]) {
   );
 
   return images.map((data) => ({
-    type: "image" as const,
     data,
     mimeType: "image/png",
+    type: "image" as const,
   }));
 }
 
@@ -669,14 +663,14 @@ function shotBox(
   viewport: ViewportName | undefined
 ): { name: ViewportName; box: { width: number; height: number } } {
   if (viewport) {
-    return { name: viewport, box: VIEWPORTS[viewport] };
+    return { box: VIEWPORTS[viewport], name: viewport };
   }
 
-  if (target.size) {
-    return { name: viewportName(target.size.width), box: target.size };
+  if (target.size > 0) {
+    return { box: target.size, name: viewportName(target.size.width) };
   }
 
-  return { name: "desktop", box: VIEWPORTS.desktop };
+  return { box: VIEWPORTS.desktop, name: "desktop" };
 }
 
 interface PickedShot {
@@ -717,7 +711,7 @@ async function pickShot(
 
   const { name, box } = shotBox(target, args.viewport);
 
-  return { url: target.url, label: target.label, viewport: name, box };
+  return { box, label: target.label, url: target.url, viewport: name };
 }
 
 export async function takeScreenshot(
@@ -782,8 +776,8 @@ export async function takeScreenshot(
       content: [
         ...(await tileContent(tiles.paths)),
         {
-          type: "text" as const,
           text: `Page ${target.label}. ${dark ? "Dark theme. " : ""}${describeTiles(viewport, tiles, box)}${start.note}`,
+          type: "text" as const,
         },
       ],
     };
@@ -849,8 +843,8 @@ export async function runRenderCheck(
     return {
       content: [
         {
-          type: "text" as const,
           text: note ? `${report.text}\n\n${note}` : report.text,
+          type: "text" as const,
         },
       ],
     };
@@ -868,7 +862,7 @@ async function loadQuery(deps: StudioToolDeps): Promise<QueryFn> {
 }
 
 function criticBlocked(deps: StudioToolDeps): string | null {
-  const run = deps.run;
+  const { run } = deps;
 
   if (
     !run ||
@@ -902,8 +896,8 @@ async function reviewScreens(
   const own: RunScreen = {
     key: target.url,
     label: target.label,
-    url: target.url,
     pagePath: target.path,
+    url: target.url,
   };
 
   const screens = explicitTarget(args)
@@ -931,7 +925,7 @@ async function reviewInput(
   screens: RunScreen[],
   images: CriticImage[]
 ) {
-  const app = deps.ctx.project.app;
+  const { app } = deps.ctx.project;
 
   const changedSource = app
     ? await changedSourceFor(
@@ -947,18 +941,18 @@ async function reviewInput(
       : [];
 
   return {
-    request: deps.ctx.request.prompt,
-    findings: run.lastFindings,
-    tasteRules: deps.tasteRules ?? [],
     designRules: (deps.ctx.designRules ?? []).map((rule) => rule.text),
+    findings: run.lastFindings,
     images,
     kind: run.config.preset.quickCritic
       ? ("quick" as const)
       : ("full" as const),
+    request: deps.ctx.request.prompt,
+    tasteRules: deps.tasteRules ?? [],
     ...(screens.length > 1 ? { screens: describeScreens(screens) } : {}),
     ...(app ? { app: true } : {}),
-    ...(changedSource.length ? { changedSource } : {}),
-    ...(before.length ? { before } : {}),
+    ...(changedSource.length > 0 ? { changedSource } : {}),
+    ...(before.length > 0 ? { before } : {}),
   };
 }
 
@@ -1009,16 +1003,16 @@ export async function runDesignReview(
     run.reviewShots = images;
     await writeFile(
       `${prefix}.json`,
-      `${JSON.stringify({ model: run.config.criticModel, kind: input.kind, screens: screens.map((screen) => screen.label), images: images.map((image) => image.label), before: input.before?.length ?? 0, costUsd: result.costUsd, error: result.error, issues: result.issues, raw: result.raw }, null, 2)}\n`
+      `${JSON.stringify({ before: input.before?.length ?? 0, costUsd: result.costUsd, error: result.error, images: images.map((image) => image.label), issues: result.issues, kind: input.kind, model: run.config.criticModel, raw: result.raw, screens: screens.map((screen) => screen.label) }, null, 2)}\n`
     );
 
     return {
       content: [
         {
-          type: "text" as const,
           text: [describeCriticResult(result, run), budgetLine(run)]
             .filter(Boolean)
             .join("\n"),
+          type: "text" as const,
         },
       ],
     };
@@ -1039,7 +1033,7 @@ export async function runDefineTweaks(
     const result = await defineTweaks(deps.ctx.direction.workTree, controls);
 
     return result.ok
-      ? { content: [{ type: "text" as const, text: result.text }] }
+      ? { content: [{ text: result.text, type: "text" as const }] }
       : errorText(result.text);
   } catch (error) {
     return errorText(`define_tweaks failed: ${describeError(error)}`);
@@ -1057,7 +1051,7 @@ export async function runDesignSystemCheck(deps: Pick<StudioToolDeps, "ctx">) {
     const result = await checkDesignSystem(deps.ctx.direction.workTree);
 
     return {
-      content: [{ type: "text" as const, text: describeCheck(result) }],
+      content: [{ text: describeCheck(result), type: "text" as const }],
     };
   } catch (error) {
     return errorText(`design_system_check failed: ${describeError(error)}`);
@@ -1073,33 +1067,33 @@ export async function runPrepareShip(
 
   try {
     const plan = await prepareShip({
-      projectDir: path.dirname(deps.runsDir),
       project: deps.ctx.project,
+      projectDir: path.dirname(deps.runsDir),
     });
 
     const files = plan.files.map((f) => ({
-      path: f.path,
-      status: f.status,
       additions: f.additions,
-      deletions: f.deletions,
-      refused: f.refused,
       conflict: f.conflict,
+      deletions: f.deletions,
+      path: f.path,
+      refused: f.refused,
+      status: f.status,
     }));
 
     const text = JSON.stringify(
       {
-        blocked: plan.blocked,
         base: plan.base?.title ?? null,
+        blocked: plan.blocked,
         checkedOut: plan.repo?.branch ?? null,
-        files,
         defaults: plan.defaults,
+        files,
         note: "Only the user can ship, with the Ship button in the studio. Tell them what is ready and what blocks it.",
       },
       null,
       2
     );
 
-    return { content: [{ type: "text" as const, text }] };
+    return { content: [{ text, type: "text" as const }] };
   } catch (error) {
     return errorText(`prepare_ship failed: ${describeError(error)}`);
   }
@@ -1112,32 +1106,20 @@ export async function createStudioMcpServer(
     await import("@anthropic-ai/claude-agent-sdk");
 
   const counters: StudioToolCounters = deps.run
-    ? (deps.run.counters ??= { shots: 0, checks: 0 })
-    : { shots: 0, checks: 0 };
+    ? (deps.run.counters ??= { checks: 0, shots: 0 })
+    : { checks: 0, shots: 0 };
 
   const screenshot = tool(
     "screenshot",
     TOOL_SHORT.screenshot,
     {
       ...TARGET_SHAPE,
-      viewport: z
-        .enum(["desktop", "mobile", "tablet"])
-        .optional()
-        .describe(
-          "Render size. Leave out for the frame size (desktop when there is no frame)."
-        ),
       from: z
         .number()
         .int()
         .min(0)
         .default(0)
         .describe("Page y offset in px where the first image starts."),
-      theme: z
-        .enum(["light", "dark"])
-        .default("light")
-        .describe(
-          'dark sets data-theme="dark" and the .dark class on <html> before the shot, so tokens.css uses the dark values.'
-        ),
       screen: z
         .number()
         .int()
@@ -1146,6 +1128,18 @@ export async function createStudioMcpServer(
         .optional()
         .describe(
           "Screen number from the render_check screens list: a view inside a multi-view page, a canvas frame or an app route frame. Overrides frame and path."
+        ),
+      theme: z
+        .enum(["light", "dark"])
+        .default("light")
+        .describe(
+          'dark sets data-theme="dark" and the .dark class on <html> before the shot, so tokens.css uses the dark values.'
+        ),
+      viewport: z
+        .enum(["desktop", "mobile", "tablet"])
+        .optional()
+        .describe(
+          "Render size. Leave out for the frame size (desktop when there is no frame)."
         ),
     },
     (args) => takeScreenshot(deps, counters, args),
@@ -1242,7 +1236,6 @@ export async function createStudioMcpServer(
     TOOL_SHORT.set_frame_state,
     {
       frame: frameRef.describe("Frame id or @label."),
-      state: z.string().regex(/^[a-z][a-z0-9-]{0,23}$/),
       mock: z
         .object({
           name: z.string().max(40).optional(),
@@ -1250,6 +1243,7 @@ export async function createStudioMcpServer(
           signedIn: z.boolean().optional(),
         })
         .optional(),
+      state: z.string().regex(/^[a-z][a-z0-9-]{0,23}$/),
     },
     (args) => runSetFrameState(deps, args)
   );
@@ -1258,10 +1252,10 @@ export async function createStudioMcpServer(
     "set_frame_session",
     TOOL_SHORT.set_frame_session,
     {
+      forgetCookies: z.boolean().optional(),
       user: z
         .object({ name: z.string().max(80), email: z.string().max(120) })
         .optional(),
-      forgetCookies: z.boolean().optional(),
     },
     (args) => runSetFrameSession(deps, args)
   );
@@ -1278,10 +1272,10 @@ export async function createStudioMcpServer(
     "add_flow",
     TOOL_SHORT.add_flow,
     {
-      routes: z.array(z.string().min(1).max(300)).max(12).optional(),
-      from: z.string().min(1).max(300).optional(),
       depth: z.number().int().min(0).max(FLOW_MAX_DEPTH).optional(),
+      from: z.string().min(1).max(300).optional(),
       params: z.record(z.string(), z.string().max(80)).optional(),
+      routes: z.array(z.string().min(1).max(300)).max(12).optional(),
     },
     (args) => runAddFlow(deps, args)
   );
@@ -1367,8 +1361,8 @@ export async function createStudioMcpServer(
     (args) =>
       runDiffVersions(
         {
-          runsDir: deps.runsDir,
           headVersionId: deps.ctx.direction.headVersionId,
+          runsDir: deps.runsDir,
         },
         args
       ),
@@ -1773,7 +1767,7 @@ export async function createStudioMcpServer(
     },
     async (args) => ({
       content: [
-        { type: "text" as const, text: studioHelp(args.tool, allowed) },
+        { text: studioHelp(args.tool, allowed), type: "text" as const },
       ],
     }),
     { annotations: { readOnlyHint: true } }
@@ -1866,8 +1860,8 @@ export async function createStudioMcpServer(
 
   return createSdkMcpServer({
     name: "studio",
-    version: "0.1.0",
     tools: all.filter((entry) => allowed.has(entry.name)),
+    version: "0.1.0",
   });
 }
 

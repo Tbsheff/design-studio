@@ -17,16 +17,17 @@ import {
 } from "../mcp/select-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
 
-type ToolText = {
+interface ToolText {
   content: { type: "text"; text: string }[];
   isError?: boolean;
-};
+}
 
-const DEFAULT_VIEWPORT = { width: 1440, height: 900 };
+const DEFAULT_VIEWPORT = { height: 900, width: 1440 };
 
 export const SELECT_MATCHING_DESCRIPTION = SELECT_MATCHING_TEXT;
 
 export const selectMatchingShape = {
+  by: z.enum(MATCH_KINDS).describe(MATCH_BY_TEXT),
   frame: z
     .string()
     .trim()
@@ -50,14 +51,13 @@ export const selectMatchingShape = {
     .describe(
       "The element to match: a layer id from get_layers or a CSS selector."
     ),
-  by: z.enum(MATCH_KINDS).describe(MATCH_BY_TEXT),
 };
 
 const schema = z.object(selectMatchingShape).strict();
 
 function text(message: string, isError = false): ToolText {
   return {
-    content: [{ type: "text", text: message }],
+    content: [{ text: message, type: "text" }],
     ...(isError ? { isError: true } : {}),
   };
 }
@@ -100,11 +100,11 @@ async function pageOf(
   const page = input.path || remembered || frame?.path || undefined;
 
   return {
+    page,
     url: withPagePath(deps.ctx.previewUrl, page),
     viewport: frame
       ? { width: frame.width, height: frame.height }
       : DEFAULT_VIEWPORT,
-    page,
   };
 }
 
@@ -126,9 +126,9 @@ export async function runSelectMatching(
 
     const report = await selectMatchingOnPage(deps.preview, {
       ...target,
+      by: parsed.data.by,
       scope: scopeOf(deps.ctx.project.id, deps.ctx.direction.id),
       selector: parsed.data.selector,
-      by: parsed.data.by,
     });
 
     return text(JSON.stringify(report, null, 2));

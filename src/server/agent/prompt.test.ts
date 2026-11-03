@@ -9,8 +9,8 @@ import { buildSystemPrompt } from "./prompt.js";
 const roots: string[] = [];
 
 afterEach(async () => {
-  while (roots.length) {
-    await rm(roots.pop() as string, { recursive: true, force: true });
+  while (roots.length > 0) {
+    await rm(roots.pop() as string, { force: true, recursive: true });
   }
 });
 

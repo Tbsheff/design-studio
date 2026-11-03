@@ -33,9 +33,9 @@ function toRule(data: string): TasteRule | null {
   }
 
   return {
-    kind: parsed.kind,
     area:
       typeof parsed.area === "string" && parsed.area ? parsed.area : "general",
+    kind: parsed.kind,
     rule,
   };
 }

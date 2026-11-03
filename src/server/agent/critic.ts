@@ -22,13 +22,13 @@ import type { CriticImage, RunToolState } from "./types.js";
 type QueryFn = typeof query;
 
 const CRITIC_TILES = {
-  desktop: { width: 1440, height: 900, tileHeight: 900, maxTiles: 3 },
-  mobile: { width: 390, height: 844, tileHeight: 1560, maxTiles: 2 },
+  desktop: { height: 900, maxTiles: 3, tileHeight: 900, width: 1440 },
+  mobile: { height: 844, maxTiles: 2, tileHeight: 1560, width: 390 },
 } as const;
 
 const SCREEN_TILES = {
-  desktop: { width: 1440, height: 900, tileHeight: 1200, maxTiles: 1 },
-  mobile: { width: 390, height: 844, tileHeight: 1560, maxTiles: 1 },
+  desktop: { height: 900, maxTiles: 1, tileHeight: 1200, width: 1440 },
+  mobile: { height: 844, maxTiles: 1, tileHeight: 1560, width: 390 },
 } as const;
 
 const CHANGED_FILES = 4;
@@ -37,12 +37,12 @@ const CHANGED_TOTAL_CHARS = 14_000;
 const REGRESSION_MIN_PCT = 0.2;
 
 const CriticIssueSchema = z.object({
-  severity: z.enum(["high", "medium", "low"]),
   area: z.string().min(1),
-  screen: z.string().optional(),
-  where: z.string().min(1),
-  problem: z.string().min(1),
   fix: z.string().min(1),
+  problem: z.string().min(1),
+  screen: z.string().optional(),
+  severity: z.enum(["high", "medium", "low"]),
+  where: z.string().min(1),
 });
 
 export type CriticIssue = z.infer<typeof CriticIssueSchema>;
@@ -159,15 +159,17 @@ function closingLine(input: Omit<CriticInput, "images">): string {
 export function criticText(input: Omit<CriticInput, "images">): string {
   const relevant = criticFindings(input.findings);
 
-  const findings = relevant.length
-    ? relevant.slice(0, 20).map(findingLine).join("\n")
-    : "- none reported yet";
+  const findings =
+    relevant.length > 0
+      ? relevant.slice(0, 20).map(findingLine).join("\n")
+      : "- none reported yet";
 
-  const taste = input.tasteRules.length
-    ? input.tasteRules
-        .map((rule) => `- ${rule.kind} (${rule.area}): ${rule.rule}`)
-        .join("\n")
-    : "- none";
+  const taste =
+    input.tasteRules.length > 0
+      ? input.tasteRules
+          .map((rule) => `- ${rule.kind} (${rule.area}): ${rule.rule}`)
+          .join("\n")
+      : "- none";
 
   const blocks = [
     `<request>\n${input.request}\n</request>`,
@@ -191,14 +193,14 @@ export function mediaType(base64: string): "image/png" | "image/jpeg" {
 
 function imageBlocks(images: CriticImage[]) {
   return images.flatMap((image) => [
-    { type: "text" as const, text: image.label },
+    { text: image.label, type: "text" as const },
     {
-      type: "image" as const,
       source: {
-        type: "base64" as const,
-        media_type: mediaType(image.data),
         data: image.data,
+        media_type: mediaType(image.data),
+        type: "base64" as const,
       },
+      type: "image" as const,
     },
   ]);
 }
@@ -207,13 +209,13 @@ function criticPrompt(input: CriticInput): AsyncIterable<SDKUserMessage> {
   const content = [
     ...imageBlocks(input.images),
     ...imageBlocks(input.before ?? []),
-    { type: "text" as const, text: criticText(input) },
+    { text: criticText(input), type: "text" as const },
   ];
 
   const message: SDKUserMessage = {
-    type: "user",
+    message: { content, role: "user" },
     parent_tool_use_id: null,
-    message: { role: "user", content },
+    type: "user",
   };
 
   return (async function* single() {
@@ -242,8 +244,8 @@ function criticOptions(
     systemPrompt: SYSTEMS[kind],
     settings: {
       disableBundledSkills: true,
-      syncClaudeAiSkills: false,
       syncClaudeAiPlugins: false,
+      syncClaudeAiSkills: false,
     },
     skills: [],
   };
@@ -274,7 +276,7 @@ async function drain(stream: AsyncIterable<SDKMessage>): Promise<CriticStream> {
     }
   }
 
-  return { text, costUsd };
+  return { costUsd, text };
 }
 
 export async function runCritic(
@@ -285,27 +287,27 @@ export async function runCritic(
   env?: Record<string, string | undefined>
 ): Promise<CriticResult> {
   const stream = queryFn({
-    prompt: criticPrompt(input),
     options: criticOptions(input.kind ?? "full", model, budgetUsd, env),
+    prompt: criticPrompt(input),
   });
 
-  let drained: CriticStream = { text: "", costUsd: 0 };
+  let drained: CriticStream = { costUsd: 0, text: "" };
 
   try {
     drained = await drain(stream);
 
     return {
-      issues: parseCriticReply(drained.text),
       costUsd: drained.costUsd,
-      raw: drained.text,
       error: null,
+      issues: parseCriticReply(drained.text),
+      raw: drained.text,
     };
   } catch (error) {
     return {
-      issues: [],
       costUsd: drained.costUsd,
-      raw: drained.text,
       error: error instanceof Error ? error.message : String(error),
+      issues: [],
+      raw: drained.text,
     };
   } finally {
     stream.close();
@@ -338,12 +340,12 @@ async function viewportImages(
   const format = name === "mobile" ? ("jpeg" as const) : ("png" as const);
 
   const tiles = await preview.screenshotTiles(screen.url, {
-    viewport: { width: tile.width, height: tile.height },
-    tileHeight: tile.tileHeight,
-    maxTiles: tile.maxTiles,
-    from: 0,
-    outPrefix: `${outPrefix}-${name}`,
     format,
+    from: 0,
+    maxTiles: tile.maxTiles,
+    outPrefix: `${outPrefix}-${name}`,
+    tileHeight: tile.tileHeight,
+    viewport: { height: tile.height, width: tile.width },
     ...(fresh ? { fresh } : {}),
     ...(screen.prepare ? { prepare: screen.prepare } : {}),
   });
@@ -531,11 +533,11 @@ export async function regressionPairs(
       (await readPng(shot.path).catch(() => null))?.height ?? tile.tileHeight;
 
     const tiles = await preview.screenshotTiles(screen.url, {
-      viewport: { width: tile.width, height: tile.height },
-      tileHeight,
-      maxTiles: 1,
       from: 0,
+      maxTiles: 1,
       outPrefix: `${outPrefix}-s${index + 1}-desktop`,
+      tileHeight,
+      viewport: { height: tile.height, width: tile.width },
       ...(screen.prepare ? { prepare: screen.prepare } : {}),
     });
 
@@ -551,14 +553,14 @@ export async function regressionPairs(
 
     const name = shot.screen ?? screen.label;
     pairs.push({
-      before: { ...shot, label: `BEFORE: screen "${name}", desktop 1440 px` },
       after: {
-        label: `AFTER: screen "${name}", desktop 1440 px`,
         data: (await readFile(afterPath)).toString("base64"),
+        label: `AFTER: screen "${name}", desktop 1440 px`,
+        path: afterPath,
         screen: name,
         viewport: "desktop",
-        path: afterPath,
       },
+      before: { ...shot, label: `BEFORE: screen "${name}", desktop 1440 px` },
     });
   }
 

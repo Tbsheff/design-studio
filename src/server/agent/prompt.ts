@@ -21,7 +21,7 @@ export function buildAppRules(
   project: Pick<Project, "app">,
   workTree: string
 ): string | null {
-  const app = project.app;
+  const { app } = project;
 
   if (!app) {
     return null;

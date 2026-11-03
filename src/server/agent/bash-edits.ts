@@ -77,8 +77,8 @@ export function fileDiff(
   const next = after.kind === "text" ? after.text : "";
 
   return {
-    path: relative,
     created: before.kind === "missing",
+    path: relative,
     ...diffLines(old, next),
   };
 }
@@ -266,40 +266,12 @@ export function createBashEditTracker(deps: BashEditDeps) {
   }
 
   return {
-    prepare(): void {
-      void guardedSnapshot();
-    },
-
     close(): void {
       for (const watch of watches.values()) {
         watch.stop();
       }
 
       watches.clear();
-    },
-
-    remember(relative: string): void {
-      known.set(relative, readBytes(path.join(root, relative)));
-    },
-
-    async start(toolUseId: string): Promise<void> {
-      await guardedSnapshot();
-
-      const watch: Watch = {
-        paths: new Set(),
-        lastEventAt: 0,
-        stop: () => undefined,
-      };
-
-      watch.stop = deps.subscribe((paths) => {
-        for (const entry of paths) {
-          watch.paths.add(entry);
-        }
-
-        watch.lastEventAt = Date.now();
-      });
-      watches.get(toolUseId)?.stop();
-      watches.set(toolUseId, watch);
     },
 
     async finish(
@@ -332,6 +304,34 @@ export function createBashEditTracker(deps: BashEditDeps) {
         reverted: [...problems.keys()],
         message: revertMessage(problems),
       };
+    },
+
+    prepare(): void {
+      void guardedSnapshot();
+    },
+
+    remember(relative: string): void {
+      known.set(relative, readBytes(path.join(root, relative)));
+    },
+
+    async start(toolUseId: string): Promise<void> {
+      await guardedSnapshot();
+
+      const watch: Watch = {
+        paths: new Set(),
+        lastEventAt: 0,
+        stop: () => undefined,
+      };
+
+      watch.stop = deps.subscribe((paths) => {
+        for (const entry of paths) {
+          watch.paths.add(entry);
+        }
+
+        watch.lastEventAt = Date.now();
+      });
+      watches.get(toolUseId)?.stop();
+      watches.set(toolUseId, watch);
     },
   };
 }

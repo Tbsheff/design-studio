@@ -28,21 +28,32 @@ import { refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
 import { editPageUrl } from "./run-target.js";
 
-type ToolText = {
+interface ToolText {
   content: { type: "text"; text: string }[];
   isError?: boolean;
-};
+}
 
 export const LAYER_STATE_TOOL = "set_layer_state";
 export const LIST_LOCKS_TOOL = "list_locked_layers";
 
 export const layerStateShape = {
-  selector: z
+  hidden: z
+    .boolean()
+    .optional()
+    .describe("true writes display: none in the source, false shows it again."),
+  locked: z
+    .boolean()
+    .optional()
+    .describe(
+      "true locks the layer (clicks on the canvas pass through it and its children), false unlocks it. Studio state, not a file change."
+    ),
+  name: z
     .string()
     .trim()
-    .min(1)
-    .max(2000)
-    .describe("Layer id from get_layers or a CSS selector of one element."),
+    .max(80)
+    .nullable()
+    .optional()
+    .describe('New layer name, written as data-name. null or "" removes it.'),
   path: z
     .string()
     .trim()
@@ -51,23 +62,12 @@ export const layerStateShape = {
     .describe(
       "Page path. Leave out for the page of the frame in <canvas-context> (or the entry page)."
     ),
-  locked: z
-    .boolean()
-    .optional()
-    .describe(
-      "true locks the layer (clicks on the canvas pass through it and its children), false unlocks it. Studio state, not a file change."
-    ),
-  hidden: z
-    .boolean()
-    .optional()
-    .describe("true writes display: none in the source, false shows it again."),
-  name: z
+  selector: z
     .string()
     .trim()
-    .max(80)
-    .nullable()
-    .optional()
-    .describe('New layer name, written as data-name. null or "" removes it.'),
+    .min(1)
+    .max(2000)
+    .describe("Layer id from get_layers or a CSS selector of one element."),
 };
 
 export const listLocksShape = { path: layerStateShape.path };
@@ -86,11 +86,11 @@ const layerStateSchema = z
 const RUN_NOTE =
   "The run saves this change in its version, like your file edits.";
 
-const VIEWPORT = { width: 1440, height: 900 };
+const VIEWPORT = { height: 900, width: 1440 };
 
 function text(message: string, isError = false): ToolText {
   return {
-    content: [{ type: "text", text: message }],
+    content: [{ text: message, type: "text" }],
     ...(isError ? { isError: true } : {}),
   };
 }
@@ -114,7 +114,7 @@ async function resolved(
   const url = editPageUrl(deps.ctx, page);
 
   if (!isLayerRef(raw)) {
-    return { url, selector: raw };
+    return { selector: raw, url };
   }
 
   const paths = await resolveLayerRefs(
@@ -126,14 +126,14 @@ async function resolved(
     input.hidden === undefined && input.name === undefined
   );
 
-  return { url, selector: paths.get(raw) ?? raw };
+  return { selector: paths.get(raw) ?? raw, url };
 }
 
 async function writeEdit(
   deps: DirectToolDeps,
   raw: Record<string, unknown>
 ): Promise<string | null> {
-  const workTree = deps.ctx.direction.workTree;
+  const { workTree } = deps.ctx.direction;
 
   const origin = deps.ctx.previewUrl
     ? new URL(deps.ctx.previewUrl).origin
@@ -143,7 +143,7 @@ async function writeEdit(
     workTree,
     parseDirectEditRequest(raw),
     await knownTokenVars(workTree),
-    { projectKind: deps.ctx.project.kind, previewOrigin: async () => origin }
+    { previewOrigin: async () => origin, projectKind: deps.ctx.project.kind }
   );
 
   const problem = writeProblem(deps.ctx, plan.target.relative);
@@ -200,7 +200,7 @@ async function sourceEdits(
     );
   }
 
-  const target = { source: element.source, selector, tag: element.tag };
+  const target = { selector, source: element.source, tag: element.tag };
   const lines: string[] = [];
 
   if (input.name !== undefined) {
@@ -214,11 +214,11 @@ async function sourceEdits(
   return [...lines, RUN_NOTE];
 }
 
-type EditTarget = {
+interface EditTarget {
   source: NonNullable<SelectionContext["source"]>;
   selector: string;
   tag: string;
-};
+}
 
 async function renameEdit(
   deps: DirectToolDeps,

@@ -35,6 +35,10 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - End each new service class name with a role: Store, Writer, Runner, Watcher, Queue, Client or Cache (`McpListenerRunner`). The spec names (`Authorizer`, `LocalPrincipal`, `LocalOrgScope`, `ProjectAccess`, `CfCli`) and the legacy names listed in `lint/studio.ts` keep their names -> `studio/service-role`. (N5c)
 - Never put `data`, `info`, `item`, `obj`, `thing`, `stuff`, `manager`, `helper`, `util`, `handle`, `process`, `misc`, `Shape`, a `Type` or `Interface` suffix or an `I` prefix in a name. Spell words out. Short forms allowed: `id`, `url`, `html`, `css`, `jsx`, `mcp`, `ui`, `db` -> `anti-slop/no-shape-in-symbol-names`, `id-denylist` (lands with M9b), check-actions (lands with W9b). (N6)
 - Use the package test: can someone outside this repo `pnpm add` it and use it without our server, env or secrets? Yes: a package in `packages/ui` or `packages/common/<name>`. No: an app in `apps/<name>`. A package imports only packages, through their `exports` map -> boundaries (a package that imports `apps/**` fails) (lands with the layout wave). (N7)
+- Start every boolean field (type field or `Schema.Boolean` struct field) with `is`, `has`, `can` or `should`: `isBound`, never `bound`. Error payload fields are wire fields and are exempt -> `studio/boolean-name` (the auth files: `src/server/cloud/**`, the store auth files and `src/shared/cloud-contracts.ts`). (N8)
+- Start every function that returns `boolean`, `Promise<boolean>` or `Effect<boolean>` with `is`, `has`, `can` or `should`: `isOrgCapAllowed`, never `orgCapAllows` -> `studio/predicate-name` (auth files, not engines). (N9)
+- Start every top-level function with a verb from N3, or `to`, `from`, `is`, `has`, `can`, `should`: `toSafeSegment`, never `safeSegment` -> `studio/module-function-verb` (auth files, not engines). (N10)
+- Spell out `pid`, `sig`, `cf`, `ctx`, `cfg`, `msg` and a bare `org` in every name: `projectId`, `signature`, `LegacyCloudflareRecord`, `orgId`. Only plan-fixed wire keys (`CloudRefSchema` `pid`, `sig`) and spec names (`CfCli`, `CfFailed`) are exempt -> `studio/no-short-name` (auth files). (N11)
 
 ## 1. Where code goes
 
@@ -59,6 +63,7 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Import with relative paths and a `.js` suffix. Import another area only through its `index.ts` -> `import/extensions`, boundaries public-index rule. (W13)
 - Import a service from another folder only through that folder's `index.ts`. An area `index.ts` may re-export services from its own subfolders -> `studio/service-import-index`. (W13a)
 - Let `handlers/<domain>/**` import only `handlers/_core`, service `index.ts` files, platform and `actions`. A domain never imports another domain -> check-actions (import scan) (lands with S4s). (W14)
+- Import another server area only through `src/server/<area>/index.ts` or `src/server/platform/<module>/index.ts`, also from a file that is not a service -> `studio/area-import-index` (auth files). (W16)
 - Never import a service file past its area `index.ts` from a handler (`../../canvas/canvas-store.js`). Export the service from `src/server/<area>/index.ts` -> `studio/no-deep-area-import`. (W14a)
 
 - Put npm-publishable code only in `packages/ui` or `packages/common/<name>`. Put every app in `apps/<name>`: `apps/desktop` (Electron, local server, UI, bridge), `apps/api` (auth and tenant Worker), `apps/publish` (published-design Worker), `apps/web` (browser app for sign-in, orgs, keys and confirms). Shared code goes in publishable packages: `packages/common/<name>` (shared non-UI code, first `packages/common/actions`) and `packages/ui` (UI kit). A package never imports an app. Today the repo root and `cloud/*` are the old paths; new cloud API code goes in `apps/api` -> review-only. (W15)
@@ -106,6 +111,7 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Use `Effect.die` for storage I/O that no caller can recover from -> review-only. (S13)
 - Never keep a hand-made runtime slot (a `NOT_READY` text, a `Map` keyed by `loadConfig().dataDir`). Use `makeRuntimeSlot` or `requireBound` from `src/server/platform/runtime-slot/index.ts`; an unbound runtime is a defect -> `studio/no-runtime-map`. (S13a)
 - Use zod only in `src/server/agent-tools/sdk-shape.ts`, which bridges `Schema.toJsonSchemaDocument(action.input)` to the SDK shape -> `no-restricted-imports` (`zod` elsewhere in new folders) (lands with M9b). (S14)
+- Never import `zod` in the auth files. Use `Schema` from `effect`, and read a JSON file with `toJsonFileReader` from `src/server/platform/local-file/index.ts` -> `studio/no-zod-import` (auth files). (S15)
 
 ## 4. Errors
 
@@ -183,6 +189,10 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Run `pnpm run typecheck` and `pnpm run typecheck:tsrs`. Never run raw `tsc` -> PreToolUse hook. (L7)
 - Make every restricted rule message say the fix: `<what is banned>. Use <X> from <path>.` Every check script prints `fix: <command>` -> check-coarse (asserts `Use ` in each message) (lands with S4s). (L8)
 - Never add `no-restricted-syntax`. oxlint 1.89 does not have it. Add a check-actions scan instead -> check-coarse (rejects the key) (lands with S4s). (L9)
+- Put exports only in one `export { }` block and one `export type { }` block, as the last statements. No inline export, no default export and no `export ... from` outside `index.ts` -> `studio/export-blocks` (auth files). (L10)
+- Mark every type field `readonly` -> `studio/readonly-field` (auth files). (L11)
+- Never write the `undefined` type, an optional parameter or a default parameter. Use a required `T | null` parameter and pass `null` -> `studio/no-undefined-type` (auth files). (L12)
+- Never import a `*Sync` function from `node:fs`. Use `src/server/platform/local-file/index.ts` or `node:fs/promises` -> `studio/no-sync-fs` (auth files). (L13)
 
 ## 9. Verify
 

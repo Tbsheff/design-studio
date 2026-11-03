@@ -25,6 +25,7 @@ const ADAPTER_FILES = [
 const SPEC_SERVICE_NAMES = [
   "src/server/store/{authorizer,local-org-scope,local-principal,project-access}.ts",
   "src/server/publish/cf-cli.ts",
+  "src/server/store/device-bindings.ts",
 ];
 
 const LEGACY_SERVICE_NAMES = [
@@ -38,6 +39,12 @@ const LEGACY_SERVICE_NAMES = [
 ];
 
 const LEGACY_SERVICE_CODE = ["src/server/publish/local-runtime.ts"];
+
+const AUTH_FILES = [
+  "src/server/cloud/**/*.ts",
+  "src/server/store/{command-rules,device-bindings,local-org-scope,local-principal,org-scope,org-visibility,principal}.ts",
+  "src/shared/cloud-contracts.ts",
+];
 
 const OPTIONAL_NULL_FILES = [
   "src/server/{platform,events,run-log,project-source,page-probe,handlers,main,ship,agent-tools,mcp-life,http}/**/*.ts",
@@ -173,6 +180,28 @@ const studio: OxlintOverride[] = [
     excludeFiles: ["src/ui/platform/**"],
     files: UI_FILES,
     rules: { "studio/no-desktop-global": "error" },
+  },
+  {
+    excludeFiles: SERVER_TESTS,
+    files: AUTH_FILES,
+    rules: {
+      "studio/area-import-index": "error",
+      "studio/boolean-name": "error",
+      "studio/export-blocks": "error",
+      "studio/no-short-name": "error",
+      "studio/no-sync-fs": "error",
+      "studio/no-undefined-type": "error",
+      "studio/no-zod-import": "error",
+      "studio/readonly-field": "error",
+    },
+  },
+  {
+    excludeFiles: [...SERVER_TESTS, "src/server/**/engine/**"],
+    files: AUTH_FILES,
+    rules: {
+      "studio/module-function-verb": "error",
+      "studio/predicate-name": "error",
+    },
   },
 ];
 

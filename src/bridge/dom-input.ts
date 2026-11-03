@@ -12,6 +12,10 @@ function isString(value: unknown): value is string {
   return value === String(value);
 }
 
+function isNumber(value: unknown): value is number {
+  return value === Number(value);
+}
+
 function isObject(value: unknown): value is object {
   return value === Object(value);
 }
@@ -73,6 +77,7 @@ export {
   eventElement,
   holdTextSelection,
   isEditKey,
+  isNumber,
   isObject,
   isString,
   isTypingElement,

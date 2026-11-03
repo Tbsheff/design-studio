@@ -1,4 +1,23 @@
-import type { BridgeToParent, SelectionContext } from "../shared/contracts.js";
+import type {
+  BridgeToParent,
+  ParentToBridge,
+  SelectionContext,
+} from "../shared/contracts.js";
+import type { createAnchorTracker } from "./anchor-tracker.js";
+import type { createForceState } from "./force-state.js";
+import type { createFreeMove } from "./free-move.js";
+import type { LayerIndex } from "./layers.js";
+import type { createLivePreview, createPreviewStyles } from "./live-preview.js";
+import type { LockSet } from "./locks.js";
+import type { createMarquee } from "./marquee.js";
+import type { createOptimistic } from "./optimistic.js";
+import type { createTriggerBridge } from "./play-triggers.js";
+import type { createLinkBridge } from "./play.js";
+import type { createRectTracker } from "./rect-tracker.js";
+import type { BridgeSession } from "./session.js";
+import type { createSharePointer } from "./share-pointer.js";
+import type { createTextEditor } from "./text-edit.js";
+import type { createThemeControl } from "./theme-control.js";
 
 type Rect = SelectionContext["rect"];
 type OutgoingBody = BridgeToParent extends infer Message
@@ -7,4 +26,72 @@ type OutgoingBody = BridgeToParent extends infer Message
     : never
   : never;
 
-export type { OutgoingBody, Rect };
+type Post = (body: OutgoingBody) => void;
+
+interface BridgeState {
+  mode: "select" | "none";
+  marqueeOn: boolean;
+  hoverFrame: number;
+  pendingHover: Element | null;
+  lastHover: Element | null;
+  selected: Element | null;
+  selectedAt: number;
+  tracked: string[];
+  altHeld: boolean;
+  lastAlt: boolean;
+  forcedDark: boolean;
+}
+
+interface SelectionPosts {
+  postHover: (element: Element | null, source?: "tree") => void;
+  postSelect: (
+    element: Element,
+    additive: boolean,
+    point?: { x: number; y: number }
+  ) => void;
+  postSelectMany: (elements: Element[], additive: boolean) => Promise<void>;
+  repostSelected: () => void;
+}
+
+interface BridgeCore extends SelectionPosts {
+  session: BridgeSession;
+  state: BridgeState;
+  post: Post;
+  layers: LayerIndex;
+  locks: LockSet;
+  hitOf: (event: Event) => Element | null;
+  textEditor: ReturnType<typeof createTextEditor>;
+  links: ReturnType<typeof createLinkBridge>;
+  triggers: ReturnType<typeof createTriggerBridge>;
+  anchors: ReturnType<typeof createAnchorTracker>;
+  rects: ReturnType<typeof createRectTracker>;
+  livePreview: ReturnType<typeof createLivePreview>;
+  optimistic: ReturnType<typeof createOptimistic>;
+  previewStyles: ReturnType<typeof createPreviewStyles>;
+  themeControl: ReturnType<typeof createThemeControl>;
+  forceState: ReturnType<typeof createForceState>;
+  sharePointer: ReturnType<typeof createSharePointer>;
+}
+
+interface BridgeContext extends BridgeCore {
+  marquee: ReturnType<typeof createMarquee>;
+  freeMove: ReturnType<typeof createFreeMove>;
+  block: (event: Event) => void;
+}
+
+type MessageHandlers = {
+  [Type in ParentToBridge["type"]]: (
+    message: Extract<ParentToBridge, { type: Type }>
+  ) => void;
+};
+
+export type {
+  BridgeContext,
+  BridgeCore,
+  BridgeState,
+  MessageHandlers,
+  OutgoingBody,
+  Post,
+  Rect,
+  SelectionPosts,
+};

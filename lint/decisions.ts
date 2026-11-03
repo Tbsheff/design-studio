@@ -1402,4 +1402,136 @@ export const decisionOverrides: OxlintOverride[] = [
       "react-doctor/js-combine-iterations": "off",
     },
   },
+  {
+    files: ["src/bridge/bridge.ts"],
+    rules: {
+      "anti-slop/no-chained-type-assertions": "off",
+      "anti-slop/no-unsafe-dictionary-type": "off",
+      "import/max-dependencies": "off",
+      "react-doctor/no-unguarded-browser-global-at-module-scope": "off",
+      "unicorn/prefer-dom-node-append": "off",
+      "unicorn/prefer-query-selector": "off",
+    },
+  },
+  {
+    files: ["src/bridge/hover-select.ts", "src/bridge/message-handlers.ts"],
+    rules: {
+      "anti-slop/no-unknown-parameters": "off",
+      "eslint/prefer-destructuring": "off",
+    },
+  },
+  {
+    files: [
+      "src/bridge/bridge.ts",
+      "src/bridge/hover-select.ts",
+      "src/bridge/keyboard.ts",
+      "src/bridge/message-handlers.ts",
+      "src/bridge/outgoing.ts",
+      "src/bridge/pointer-drag.ts",
+    ],
+    rules: {
+      "anti-slop/require-readable-spacing": "off",
+      "eslint/curly": "off",
+      "eslint/func-style": "off",
+      "unicorn/prefer-global-this": "off",
+    },
+  },
+  {
+    files: ["src/bridge/bridge-types.ts", "src/bridge/hover-select.ts"],
+    rules: {
+      "eslint/id-length": "off",
+    },
+  },
+  {
+    files: ["src/bridge/outgoing.ts"],
+    rules: {
+      "eslint/no-console": "off",
+      "github/prefer-observers": "off",
+      "oxc/no-map-spread": "off",
+    },
+  },
+  {
+    files: [
+      "src/bridge/hover-select.ts",
+      "src/bridge/keyboard.ts",
+      "src/bridge/message-handlers.ts",
+    ],
+    rules: {
+      "eslint/no-unused-vars": "off",
+      "sonarjs/elseif-without-else": "off",
+    },
+  },
+  {
+    files: ["src/bridge/keyboard.ts", "src/bridge/pointer-drag.ts"],
+    rules: {
+      "eslint/no-void": "off",
+    },
+  },
+  {
+    files: [
+      "src/bridge/hover-select.ts",
+      "src/bridge/message-handlers.ts",
+      "src/bridge/outgoing.ts",
+    ],
+    rules: {
+      "github/no-then": "off",
+      "promise/prefer-await-to-then": "off",
+    },
+  },
+  {
+    files: ["src/bridge/hover-select.ts", "src/bridge/outgoing.ts"],
+    rules: {
+      "github/no-useless-passive": "off",
+    },
+  },
+  {
+    files: [
+      "src/bridge/bridge.ts",
+      "src/bridge/keyboard.ts",
+      "src/bridge/message-handlers.ts",
+      "src/bridge/outgoing.ts",
+      "src/bridge/pointer-drag.ts",
+    ],
+    rules: {
+      "import/no-relative-parent-imports": "off",
+    },
+  },
+  {
+    files: ["src/bridge/message-handlers.ts", "src/bridge/outgoing.ts"],
+    rules: {
+      "promise/always-return": "off",
+      "unicorn/no-array-callback-reference": "off",
+    },
+  },
+  {
+    files: ["src/bridge/hover-select.ts", "src/bridge/keyboard.ts"],
+    rules: {
+      "sonarjs/no-dead-store": "off",
+      "sonarjs/no-unused-vars": "off",
+    },
+  },
+  {
+    files: [
+      "src/bridge/bridge.ts",
+      "src/bridge/message-handlers.ts",
+      "src/bridge/outgoing.ts",
+      "src/bridge/pointer-drag.ts",
+    ],
+    rules: {
+      "sonarjs/shorthand-property-grouping": "off",
+    },
+  },
+  {
+    files: ["src/bridge/keyboard.ts"],
+    rules: {
+      "typescript/consistent-type-definitions": "off",
+    },
+  },
+  {
+    files: ["src/bridge/pointer-drag.ts"],
+    rules: {
+      "unicorn/consistent-function-scoping": "off",
+      "unicorn/prefer-spread": "off",
+    },
+  },
 ];

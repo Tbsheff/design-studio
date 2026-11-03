@@ -1,7 +1,7 @@
-import { useCallback } from "react";
+import { Suspense, useCallback } from "react";
 import type { ReactNode } from "react";
 
-import { Home } from "../components/Home";
+import { Home } from "../features/home/index.js";
 import { uiStore, useUi } from "../storage";
 import { Screen } from "./screen";
 import { ScreenBoundary } from "./screen-boundary";
@@ -71,7 +71,9 @@ const AppScreen = (): ReactNode => {
 
   return (
     <ScreenBoundary>
-      <Home onOpen={onOpen} />
+      <Suspense fallback={null}>
+        <Home onOpen={onOpen} />
+      </Suspense>
     </ScreenBoundary>
   );
 };

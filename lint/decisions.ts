@@ -265,46 +265,32 @@ export const SCOPED_OFF_REASONS: Record<string, string> = {
 
 export const decisionOverrides: OxlintOverride[] = [
   {
-    files: [
-      "src/server/viewport/engine/cells.ts",
-      "src/ui/features/viewport/matrix-model.ts",
-    ],
-    rules: { "no-magic-numbers": "off" },
-  },
-  {
     files: ["src/server/viewport/create-matrix.ts"],
     rules: { "id-length": "off" },
   },
   {
     files: [
-      "src/shared/actions/viewport/*.ts",
+      "src/server/handlers/viewport/{create,handlers,live,run}.ts",
+      "src/server/viewport/{deps,probe}.ts",
+      "src/shared/actions/viewport/{create,run}.ts",
       "src/shared/actions/viewport/errors/status.ts",
-      "src/server/handlers/viewport/*.ts",
-      "src/server/viewport/*.ts",
       "src/ui/features/viewport/deps.ts",
-      "src/ui/features/viewport/use-create.ts",
-      "src/ui/features/viewport/use-inspect.ts",
     ],
     rules: { "import/no-relative-parent-imports": "off" },
   },
   {
     files: [
-      "src/shared/actions/content/*.ts",
+      "src/server/content/{content-runtime,content-writer,write-content}.ts",
+      "src/server/handlers/content/{apply,handlers,live}.ts",
+      "src/shared/actions/content/apply.ts",
       "src/shared/actions/content/errors/status.ts",
-      "src/server/handlers/content/*.ts",
-      "src/server/content/*.ts",
       "src/ui/features/content/deps.ts",
-      "src/ui/features/content/use-apply.ts",
     ],
     rules: { "import/no-relative-parent-imports": "off" },
   },
   {
     files: ["src/server/content/engine/random.ts"],
-    rules: {
-      "no-bitwise": "off",
-      "no-magic-numbers": "off",
-      "unicorn/numeric-separators-style": "off",
-    },
+    rules: { "no-bitwise": "off" },
   },
   { files: NODE_RUNTIMES, rules: { "import/no-nodejs-modules": "off" } },
   {
@@ -343,7 +329,7 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/server/direct-edit/planned-feed.ts",
       "src/server/git/user-git.ts",
       "src/server/preview/{ports,render-contract,render-wait}.ts",
-      "src/server/cloud/{cloud-migration-runner,outbox-store,sync-worker}.ts",
+      "src/server/cloud/{cloud-migration-runner,outbox-store,sync-runner}.ts",
       "src/server/store/{device-bindings,authorizer,data-lock,default-folder,events,git-objects,local-principal,principal,mutex,project-access,skill-store,starters,studio-info}.ts",
       "src/{server/handlers/_core/handler,server/handlers/_core/run-action,server/handlers/studio/handlers,server/handlers/studio/health,server/handlers/studio/list-skills,server/handlers/studio/live,shared/actions/studio/health,shared/actions/studio/list-skills}.ts",
       "src/server/{http/mount,http/mount-all,http/wire-error,mcp/registry,agent-tools/registry,agent-tools/sdk-shape}.ts",
@@ -357,47 +343,13 @@ export const decisionOverrides: OxlintOverride[] = [
   },
   {
     files: [
-      "src/{server/handlers/direct-edit/*,server/direct-edit/{direct-edit-core,direct-edit-ops,direct-edit-store,direct-edit-writer,direct-edit-ref},server/http/app-direct-edit-routes,shared/actions/direct-edit/*,shared/actions/direct-edit/errors/*,shared/actions/_core/errors/direct-edit-error}.ts",
+      "src/server/direct-edit/{direct-edit-core,direct-edit-insert-ops,direct-edit-ops}.ts",
+      "src/server/handlers/direct-edit/{apply-swap,apply,create-component,create-token,delete-text,get-component-preview,get-design-system,get-preview,get-tree,get-tweaks,handlers,insert-component,insert-jsx,inspect-tokens,list-component-folders,list-components,list-insertable,list-swap-candidates,live,run,set-image,set-vector,update-tokens,update-tweaks}.ts",
+      "src/server/http/app-direct-edit-routes.ts",
+      "src/shared/actions/direct-edit/{apply-swap,apply,create-component,create-token,delete-text,get-component-preview,get-design-system,get-preview,get-tree,get-tweaks,insert-component,insert-jsx,inspect-tokens,list-component-folders,list-components,list-insertable,list-swap-candidates,run,set-image,set-vector,update-tokens,update-tweaks}.ts",
+      "src/shared/actions/direct-edit/errors/{direct-edit-conflict,direct-edit-failed,direct-edit-not-found,status}.ts",
     ],
     rules: { "import/no-relative-parent-imports": "off" },
-  },
-  {
-    files: [
-      "src/server/direct-edit/direct-edit-insert-ops.ts",
-      "src/server/mcp/direct-edit-call.ts",
-      "src/server/mcp/component-preview-tools.ts",
-      "src/server/http/components-routes.ts",
-    ],
-    rules: {
-      "anti-slop/no-conditional-empty-object-spread": "warn",
-      "anti-slop/no-runtime-typeof": "warn",
-      "anti-slop/no-unknown-parameters": "warn",
-      "eslint/no-magic-numbers": "warn",
-      "eslint/no-ternary": "warn",
-      "eslint/no-undefined": "warn",
-      "eslint/require-unicode-regexp": "warn",
-      "eslint/sort-keys": "warn",
-      "import/consistent-type-specifier-style": "warn",
-      "import/no-relative-parent-imports": "off",
-      "react-doctor/no-barrel-import": "warn",
-      "react-doctor/zod-v4-no-deprecated-schema-apis": "warn",
-      "sonarjs/shorthand-property-grouping": "warn",
-      "typescript/explicit-function-return-type": "warn",
-      "typescript/explicit-module-boundary-types": "warn",
-    },
-  },
-  {
-    files: [
-      "src/server/direct-edit/direct-edit-{store,writer}.ts",
-      "src/shared/actions/direct-edit/set-vector.ts",
-      "src/ui/componentCreateApi.ts",
-    ],
-    rules: {
-      "anti-slop/no-shape-in-symbol-names": "off",
-      "eslint/id-length": "off",
-      "eslint/sort-keys": "warn",
-      "sonarjs/shorthand-property-grouping": "warn",
-    },
   },
   {
     files: ["src/server/direct-edit/direct-edit-core.ts"],
@@ -755,19 +707,15 @@ export const decisionOverrides: OxlintOverride[] = [
     },
   },
   {
-    files: ["src/server/cloud/sync-worker.ts"],
-    rules: {
-      "anti-slop/no-known-value-widening": "warn",
-      "anti-slop/require-readable-spacing": "warn",
-      "eslint/max-lines-per-function": "warn",
-      "max-lines-per-function": "warn",
-      "no-magic-numbers": "warn",
-      "no-ternary": "warn",
-      "no-undefined": "warn",
-      "react-doctor/no-barrel-import": "warn",
-      "sonarjs/max-lines-per-function": "warn",
-      "sonarjs/shorthand-property-grouping": "warn",
-      "unicorn/no-array-callback-reference": "warn",
-    },
+    files: ["src/ui/kit/chip-button.tsx"],
+    rules: { "react/function-component-definition": "off" },
+  },
+  {
+    files: ["src/server/mcp/direct-edit-call.ts"],
+    rules: { "import/no-relative-parent-imports": "off" },
+  },
+  {
+    files: ["cloud/api/src/shared-actions.ts"],
+    rules: { "import/no-relative-parent-imports": "off" },
   },
 ];

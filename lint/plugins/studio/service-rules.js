@@ -14,6 +14,9 @@ const TAG_MESSAGE =
 const ASYNC_MESSAGE =
   "async, await, throw, try, new Promise and .catch are banned in Effect service and handler code. Use Effect.fn with yield*, Effect.promise and Effect.orElseSucceed from effect, and attemptKnown from src/server/platform/attempt/index.ts.";
 
+const FEATURE_MESSAGE =
+  "async, await, throw, try, new Promise and .catch are banned in new feature server code. Use Effect.fn with yield* and return yield* new <Error>({ message }) from effect, and attemptKnown from src/server/platform/attempt/index.ts at the edge of moved async code.";
+
 const ENGINE_MESSAGE =
   "I/O, Effect, async and throw are banned in a pure engine. Use plain sync functions that return { ok: true, value } or { ok: false, code } in <area>/engine/<verb-noun>.ts.";
 
@@ -89,9 +92,9 @@ const serviceTagArea = rule((context) => ({
   ClassDeclaration: (node) => checkTag(context, node),
 }));
 
-const reportAsync = (context, node) => {
+const reportAsync = (context, node, message) => {
   if (node.async) {
-    context.report({ message: ASYNC_MESSAGE, node });
+    context.report({ message, node });
   }
 };
 
@@ -104,15 +107,15 @@ const asyncVisitors = (context, message) => {
   const report = (node) => context.report({ message, node });
 
   return {
-    ArrowFunctionExpression: (node) => reportAsync(context, node),
+    ArrowFunctionExpression: (node) => reportAsync(context, node, message),
     AwaitExpression: report,
     CallExpression: (node) => {
       if (isCatchCall(node)) {
         report(node);
       }
     },
-    FunctionDeclaration: (node) => reportAsync(context, node),
-    FunctionExpression: (node) => reportAsync(context, node),
+    FunctionDeclaration: (node) => reportAsync(context, node, message),
+    FunctionExpression: (node) => reportAsync(context, node, message),
     NewExpression: (node) => {
       if (isNamed(node.callee, "Promise")) {
         report(node);
@@ -197,4 +200,12 @@ const enginePure = rule((context) => {
   };
 });
 
-export { enginePure, noAsyncInService, noRuntimeMap, serviceTagArea };
+const noFeatureAsync = rule((context) => asyncVisitors(context, FEATURE_MESSAGE));
+
+export {
+  enginePure,
+  noAsyncInService,
+  noFeatureAsync,
+  noRuntimeMap,
+  serviceTagArea,
+};

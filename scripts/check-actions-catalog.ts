@@ -49,6 +49,8 @@ const OFF_REASONS = new Set([
 
 const AGENT_OFF_REASONS = new Set([...OFF_REASONS, "legacy-agent"]);
 
+const MCP_OFF_REASONS = new Set([...OFF_REASONS, "legacy-mcp"]);
+
 const LEGACY_AGENT_MAX = 78;
 
 const TOOL_NAME = /^[a-z][a-z0-9_]*$/u;
@@ -191,7 +193,8 @@ const offIn = (
   return off;
 };
 
-const badOff = (binding: Binding): string | null => offIn(OFF_REASONS, binding);
+const badOff = (binding: Binding): string | null =>
+  offIn(MCP_OFF_REASONS, binding);
 
 const badAgentOff = (binding: Binding): string | null =>
   offIn(AGENT_OFF_REASONS, binding);
@@ -235,6 +238,10 @@ const secretField = (row: OpRow): string | null => {
 };
 
 const unpagedList = (row: OpRow): string | null => {
+  if (row.op.access !== "read") {
+    return null;
+  }
+
   const arrays = Object.entries(fieldsOf(row.op.output)).flatMap(
     ([key, schema]) => {
       if (isArray(schema)) {
@@ -320,7 +327,7 @@ const OP_CHECKS: OpCheck[] = [
   {
     bad: (row) => firstOf(badOff(row.op.mcp), badAgentOff(row.op.agent)),
     rule: {
-      fix: "use run-control, secret, stream or ui-bootstrap, and legacy-agent only on agent",
+      fix: "use run-control, secret, stream or ui-bootstrap, legacy-agent only on agent, and legacy-mcp only on mcp",
       id: "O8",
       what: "an off reason is not in the closed set",
     },

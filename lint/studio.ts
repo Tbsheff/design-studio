@@ -26,7 +26,6 @@ const SPEC_SERVICE_NAMES = [
   "src/server/store/{authorizer,local-org-scope,local-principal,project-access}.ts",
   "src/server/publish/cf-cli.ts",
   "src/server/store/device-bindings.ts",
-  "src/server/cloud/sync-worker.ts",
 ];
 
 const LEGACY_SERVICE_NAMES = [
@@ -51,7 +50,80 @@ const OPTIONAL_NULL_FILES = [
   "src/server/{platform,events,run-log,project-source,page-probe,handlers,main,ship,agent-tools,mcp-life,http}/**/*.ts",
 ];
 
+const ACTION_FILES = ["src/shared/actions/**/*.ts"];
+
+const LEGACY_UNTYPED_SCHEMAS = [
+  "src/shared/actions/{canvas,comment,dev-server,pack,workspace}/**/*.ts",
+  "src/shared/actions/direct-edit/**/*.ts",
+];
+
+const LEGACY_DOMAIN_OBJECTS = [
+  "src/shared/actions/publish/{delete-comment,list-comments}.ts",
+  "src/shared/actions/workspace/{get-tokens,list-projects,list-versions,search-projects}.ts",
+  "src/shared/actions/direct-edit/{create-component,create-token,get-component-preview,insert-component,inspect-tokens,list-component-folders,list-components,update-tokens}.ts",
+];
+
+const LEGACY_TOOL_NAMES = [
+  "src/shared/actions/canvas/{list-implicit-links,update-link}.ts",
+  "src/shared/actions/version/list-hunks.ts",
+];
+
+const NO_READ_CHANGES = [
+  "src/shared/actions/canvas/set-presence.ts",
+  "src/shared/actions/share/set-cursor.ts",
+  "src/shared/actions/comment/export.ts",
+  "src/shared/actions/export/{export,export-folder,export-frame,export-handoff}.ts",
+  "src/shared/actions/direct-edit/run.ts",
+  "src/shared/actions/viewport/run.ts",
+];
+
+const LEGACY_DOM_QUERIES = ["src/ui/features/icons/use-icon-host.ts"];
+
+const LEGACY_RUNTIME_CALLS = [
+  "src/server/http/components-routes.ts",
+  "src/server/mcp/{component-create-tools,component-preview-tools,direct-edit-call,insert-tools,jsx-insert-tools}.ts",
+];
+
+const LEGACY_APP_IMPORTS = [
+  "cloud/api/src/http/{errors,groups/wire-errors,middleware/member-auth,groups/authorizer,middleware/viewer,middleware/org-grant,middleware/agent-auth,groups/projects,groups/gates}.ts",
+  "cloud/api/src/tenant/{resolver,viewer-db,repos/projects,db,current-org,blobs}.ts",
+  "cloud/api/src/auth/{rate-limit,permissions}.ts",
+];
+
+const FEATURE_AREA_FILES = [
+  "src/server/viewport/**/*.ts",
+  "src/server/content/**/*.ts",
+];
+
+const FEATURE_FILES = [...FEATURE_AREA_FILES, "src/server/cloud/checkout.ts"];
+
+const FEATURE_HANDLER_FILES = [
+  "src/server/handlers/{content,viewport,direct-edit,cloud}/**/*.ts",
+];
+
+const PROMISE_TASK_FILES = ["src/server/content/write-content.ts"];
+
+const NEW_SERVER_FILES = [
+  ...FEATURE_AREA_FILES,
+  "src/server/cloud/**/*.ts",
+  "src/server/handlers/**/*.ts",
+  "src/server/direct-edit/direct-edit-*.ts",
+];
+
+const CYCLE_DEEP_IMPORTS = ["src/server/direct-edit/direct-edit-ops.ts"];
+
+const AREA_INDEX_FILES = [
+  ...AUTH_FILES,
+  "src/server/http/{app-canvas-routes,app-direct-edit-routes}.ts",
+  ...FEATURE_AREA_FILES,
+  "src/server/direct-edit/direct-edit-*.ts",
+];
+
 const studio: OxlintOverride[] = [
+  {
+    files: SERVER_FILES,
+    rules: { "react-doctor/no-barrel-import": "off" },
+  },
   {
     files: ["lint/plugins/studio/*.js"],
     rules: { "sonarjs/function-name": "off" },
@@ -72,6 +144,93 @@ const studio: OxlintOverride[] = [
       "studio/agent-off-reason": "error",
       "studio/write-needs-write-permission": "error",
     },
+  },
+  {
+    files: ACTION_FILES,
+    rules: {
+      "studio/mcp-off-reason": "error",
+      "studio/read-verb-access": "error",
+    },
+  },
+  {
+    excludeFiles: LEGACY_UNTYPED_SCHEMAS,
+    files: ACTION_FILES,
+    rules: { "studio/action-schema-typed": "error" },
+  },
+  {
+    excludeFiles: LEGACY_DOMAIN_OBJECTS,
+    files: ACTION_FILES,
+    rules: { "studio/action-domain-object": "error" },
+  },
+  {
+    excludeFiles: LEGACY_TOOL_NAMES,
+    files: ACTION_FILES,
+    rules: { "studio/derived-tool-name": "error" },
+  },
+  {
+    excludeFiles: NO_READ_CHANGES,
+    files: ACTION_FILES,
+    rules: { "studio/edit-invalidates": "error" },
+  },
+  {
+    excludeFiles: SERVER_TESTS,
+    files: [...SERVER_FILES, "src/shared/actions/_core/errors/*.ts"],
+    rules: { "studio/error-name-unique": "error" },
+  },
+  {
+    excludeFiles: SERVER_TESTS,
+    files: SERVER_FILES,
+    rules: {
+      "studio/not-ready-unavailable": "error",
+      "studio/read-service-io": "error",
+      "studio/service-wired": "error",
+    },
+  },
+  {
+    excludeFiles: [...SERVER_TESTS, ...LEGACY_RUNTIME_CALLS],
+    files: ADAPTER_FILES,
+    rules: { "studio/no-adapter-runtime-call": "error" },
+  },
+  {
+    files: FEATURE_HANDLER_FILES,
+    rules: { "studio/no-input-default": "error" },
+  },
+  {
+    excludeFiles: [...SERVER_TESTS, ...PROMISE_TASK_FILES],
+    files: FEATURE_FILES,
+    rules: { "studio/no-feature-async": "error" },
+  },
+  {
+    excludeFiles: [...SERVER_TESTS, ...AUTH_FILES],
+    files: NEW_SERVER_FILES,
+    rules: { "studio/no-zod-import": "error" },
+  },
+  {
+    excludeFiles: [...SERVER_TESTS, ...AUTH_FILES, ...CYCLE_DEEP_IMPORTS],
+    files: AREA_INDEX_FILES,
+    rules: { "studio/area-import-index": "error" },
+  },
+  {
+    excludeFiles: LEGACY_DOM_QUERIES,
+    files: ["src/ui/features/**/*.ts", "src/ui/features/**/*.tsx"],
+    rules: { "studio/no-dom-query": "error" },
+  },
+  {
+    files: ["src/ui/features/**/*.ts", "src/ui/features/**/*.tsx"],
+    rules: { "studio/await-write": "error" },
+  },
+  {
+    excludeFiles: [...LEGACY_APP_IMPORTS, "cloud/api/src/shared-actions.ts"],
+    files: ["cloud/api/src/**/*.ts"],
+    rules: { "studio/no-app-import": "error" },
+  },
+  {
+    files: ["lint/decisions.ts"],
+    rules: { "studio/narrow-override": "error" },
+  },
+  {
+    files: ["lint/studio.ts", "lint/boundaries.ts"],
+    rules: { "studio/frozen-exemption": "error" },
   },
   {
     files: ["src/server/handlers/**/*.ts"],

@@ -35,6 +35,8 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - End each new service class name with a role: Store, Writer, Runner, Watcher, Queue, Client or Cache (`McpListenerRunner`). The spec names (`Authorizer`, `LocalPrincipal`, `LocalOrgScope`, `ProjectAccess`, `CfCli`) and the legacy names listed in `lint/studio.ts` keep their names -> `studio/service-role`. (N5c)
 - Never put `data`, `info`, `item`, `obj`, `thing`, `stuff`, `manager`, `helper`, `util`, `handle`, `process`, `misc`, `Shape`, a `Type` or `Interface` suffix or an `I` prefix in a name. Spell words out. Short forms allowed: `id`, `url`, `html`, `css`, `jsx`, `mcp`, `ui`, `db` -> `anti-slop/no-shape-in-symbol-names`, `id-denylist` (lands with M9b), check-actions (lands with W9b). (N6)
 - Use the package test: can someone outside this repo `pnpm add` it and use it without our server, env or secrets? Yes: a package in `packages/ui` or `packages/common/<name>`. No: an app in `apps/<name>`. A package imports only packages, through their `exports` map -> boundaries (a package that imports `apps/**` fails) (lands with the layout wave). (N7)
+- Put an action whose object is another domain noun (`token`, `component`, `project`, `design`, `canvas`, `publication`) in that noun's domain: `token.create`, never `direct-edit.createToken` -> `studio/action-domain-object` (action files; the old direct-edit, publish and workspace ids are frozen). (N1a)
+- Use the derived tool name (`create_viewport` from `viewport.create`) for `mcp.name` and `agent.name`, or a name from `artifacts/mcp-snapshots/*.json` or `mcp/legacy/order.ts`. For another name, rename the action (`viewport.createMatrix`) -> `studio/derived-tool-name`. (N2a)
 - Start every boolean field (type field or `Schema.Boolean` struct field) with `is`, `has`, `can` or `should`: `isBound`, never `bound`. Error payload fields are wire fields and are exempt -> `studio/boolean-name` (the auth files: `src/server/cloud/**`, the store auth files and `src/shared/cloud-contracts.ts`). (N8)
 - Start every function that returns `boolean`, `Promise<boolean>` or `Effect<boolean>` with `is`, `has`, `can` or `should`: `isOrgCapAllowed`, never `orgCapAllows` -> `studio/predicate-name` (auth files, not engines). (N9)
 - Start every top-level function with a verb from N3, or `to`, `from`, `is`, `has`, `can`, `should`: `toSafeSegment`, never `safeSegment` -> `studio/module-function-verb` (auth files, not engines). (N10)
@@ -52,6 +54,8 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Put adapters only in `src/server/http`, `src/server/mcp` and `src/server/agent-tools`. Never create `src/server/adapters` -> `boundaries/dependencies` (the adapter element maps only these 3 folders). (W6)
 - Never put a `Context.Service` class in `http`, `mcp` or `agent-tools`. Put it in `src/server/<area>/` and provide it in `handlers/<domain>/live.ts` -> `studio/no-adapter-service`. (W6a)
 - Put the shared action runner only in `src/server/handlers/_core/run-action.ts`. Adapters call it. They never decode, authorize or check scope themselves -> check-actions (decode and `authorizer.require` allowlist) (lands with S4s). (W7)
+- Never call a service runtime getter (`directEditCall`, `*RuntimeOf`) from `http`, `mcp` or `agent-tools`. Give the action `mcp { name }` so `run-action.ts` serves it -> `studio/no-adapter-runtime-call` (the 6 legacy direct-edit adapter files are frozen). (W7a)
+- Import desktop app code (`src/shared`) in `cloud/api/src` only through `cloud/api/src/shared-actions.ts` -> `studio/no-app-import` (older cloud files are frozen). (N7a)
 - Put pure engines in `<area>/engine/<verb-noun>.ts` as plain functions -> boundaries engine globs, `no-restricted-imports` (`effect`, `node:*`) (lands with M9b). (W8)
 - Keep `<area>/engine/**` pure: no `node:*` or `effect` value import, no `async`, `await`, `throw`, `try`, `new Promise` or `.catch`. Do I/O in a read service that calls the engine -> `studio/engine-pure` (`direct-edit/engine` is out of scope until S5-direct-edit). (W8a)
 - Put UI data code in `src/ui/platform/**` and UI features in `src/ui/features/<f>/**` -> boundaries ui elements, `no-restricted-globals` (lands with S6a). (W9)
@@ -63,7 +67,7 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Import with relative paths and a `.js` suffix. Import another area only through its `index.ts` -> `import/extensions`, boundaries public-index rule. (W13)
 - Import a service from another folder only through that folder's `index.ts`. An area `index.ts` may re-export services from its own subfolders -> `studio/service-import-index`. (W13a)
 - Let `handlers/<domain>/**` import only `handlers/_core`, service `index.ts` files, platform and `actions`. A domain never imports another domain -> check-actions (import scan) (lands with S4s). (W14)
-- Import another server area only through `src/server/<area>/index.ts` or `src/server/platform/<module>/index.ts`, also from a file that is not a service -> `studio/area-import-index` (auth files). (W16)
+- Import another server area only through `src/server/<area>/index.ts` or `src/server/platform/<module>/index.ts`, also from a file that is not a service -> `studio/area-import-index` (auth files, `http/app-canvas-routes.ts`, `http/app-direct-edit-routes.ts`, `viewport`, `content`, `direct-edit/direct-edit-*.ts`). (W16)
 - Never import a service file past its area `index.ts` from a handler (`../../canvas/canvas-store.js`). Export the service from `src/server/<area>/index.ts` -> `studio/no-deep-area-import`. (W14a)
 
 - Put npm-publishable code only in `packages/ui` or `packages/common/<name>`. Put every app in `apps/<name>`: `apps/desktop` (Electron, local server, UI, bridge), `apps/api` (auth and tenant Worker), `apps/publish` (published-design Worker), `apps/web` (browser app for sign-in, orgs, keys and confirms). Shared code goes in publishable packages: `packages/common/<name>` (shared non-UI code, first `packages/common/actions`) and `packages/ui` (UI kit). A package never imports an app. Today the repo root and `cloud/*` are the old paths; new cloud API code goes in `apps/api` -> review-only. (W15)
@@ -88,6 +92,11 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Remove `NotImplemented` from `errors` before you commit. The stamp puts it there so the stub compiles -> check-actions fails while any action lists it (lands with S4s). (E15)
 - Never ship a cloud route that only fails with `NotImplemented`. Leave the route out of its group until it has a handler -> `studio/no-stub-route`. (E15a)
 - Never add a migrated action to `agent/tool-sets.ts`, `agent/tool-help.ts`, the `agent/permissions.ts` name lists or `EDITS_NOTE`. The registries derive the agent allowlist, tool sets, help, edit set, plan and critique blocks, the MCP Allow-edits gate and the MCP annotations from AllActions (`agent/legacy/agent-ops.ts`) -> check-actions (every agent name is in the derived allowlist; no action name is in a legacy list) (lands with S4s). (E16)
+- Never use `Schema.Unknown` in an action input or output. Write typed `Schema.Struct` fields in `actions/<domain>/schema.ts` -> `studio/action-schema-typed` (canvas, comment, dev-server, pack, workspace and direct-edit are frozen). (E3a)
+- Never apply an input default with `??` on `input.<field>` in a handler. Put it in the schema with `Schema.withDecodingDefault` -> `studio/no-input-default` (content, viewport, direct-edit and cloud handlers). (E3b)
+- Use a read verb (`get`, `list`, `search`, `inspect`) only with `access: "read"` and `GET`. A POST that writes takes a write or run verb -> `studio/read-verb-access`. (E5a)
+- Never set `mcp: { off: "ui-bootstrap" }` on an edit or destructive action. Use `mcp { name }`, or `{ off: "legacy-mcp" }` while a legacy tool still serves it -> `studio/mcp-off-reason`. (E8a)
+- Never leave `invalidates: []` on an edit or destructive action. List the read ids whose data it changes -> `studio/edit-invalidates` (pure run and export actions are listed). (E11a)
 
 ## 3. Services and Effect
 
@@ -112,6 +121,10 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Never keep a hand-made runtime slot (a `NOT_READY` text, a `Map` keyed by `loadConfig().dataDir`). Use `makeRuntimeSlot` or `requireBound` from `src/server/platform/runtime-slot/index.ts`; an unbound runtime is a defect -> `studio/no-runtime-map`. (S13a)
 - Use zod only in `src/server/agent-tools/sdk-shape.ts`, which bridges `Schema.toJsonSchemaDocument(action.input)` to the SDK shape -> `no-restricted-imports` (`zod` elsewhere in new folders) (lands with M9b). (S14)
 - Never import `zod` in the auth files. Use `Schema` from `effect`, and read a JSON file with `toJsonFileReader` from `src/server/platform/local-file/index.ts` -> `studio/no-zod-import` (auth files). (S15)
+- Never import `zod` in new server files (cloud, content, viewport, handlers, `direct-edit/direct-edit-*.ts`). Decode with the action schema in `run-action.ts` -> `studio/no-zod-import`. (S14a)
+- Never use `async`, `await`, `throw`, `try`, `new Promise` or `.catch` in new feature server code (`viewport`, `content`, `cloud/checkout.ts`). Use `Effect.fn` and `return yield* new X({ message })` -> `studio/no-feature-async`. (S11c)
+- Mark a service `access: "write"` when its file or local imports write files, remove files, spawn or take screenshots -> `studio/read-service-io`. (S6a)
+- Name every new `Context.Service` class in another server file (a domain `live.ts`), so a live layer provides it -> `studio/service-wired`. (S10a)
 
 ## 4. Errors
 
@@ -124,6 +137,8 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Send a defect as `toWire(null)` (500). The runner logs it with `Effect.logError(action.id, defect)`. Never send stacks or paths -> run-action `tapDefect`, adapter `reply` (lands with S4b). (R7)
 - Never map `Cause.UnknownError` to a 400 in a local bridge. Use `attemptKnown` from `src/server/platform/attempt/index.ts`: it maps only the known store errors and lets the rest die as defects -> `studio/no-local-error-bridge`. (R7a)
 - Write `message` as user text in STE. MCP and the agent show it as it is -> review-only. (R8)
+- Never give a server class the name of a wire error in `src/shared/actions`. Put a domain error in `actions/<domain>/errors/`, never in `_core/errors` -> `studio/error-name-unique`. (R1a)
+- Never fail a "not ready" runtime with `BadRequest`. Use `Unavailable` (503) or `requireBound` from `platform/runtime-slot` -> `studio/not-ready-unavailable`. (R2a)
 
 ## 5. Tenancy
 
@@ -160,6 +175,8 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Refresh data only through `action.invalidates`: `useAction` refetches after its own call, and the `action.done` SSE event (emitted by `run-action.ts`) covers MCP and agent calls (lands with S5-events). No polling, no TTL caches -> check-actions (bans `setInterval` with a fetch in `ui/platform`) (lands with S4s). (U12)
 - Never keep a time-based cache (warm, TTL, max age) in `src/ui/platform/**`. Dedupe in-flight reads only -> `studio/no-cache-ttl`. (U12a)
 - Use `.ui-menu` styles, 28 px rows, `data-tip` tooltips and `tokens.css`. Check dark and light -> review-only, screenshots. (U13)
+- Never use `querySelector`, `getElementById` or a `MutationObserver` in `src/ui/features`. Take a slot, render prop or callback prop from the owner -> `studio/no-dom-query` (icons host is frozen). (U7a)
+- Await every `action.run(...)` write in a feature, inside a transition, before you change state -> `studio/await-write`. (U9a)
 
 ## 7. Performance
 
@@ -189,6 +206,8 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Run `pnpm run typecheck` and `pnpm run typecheck:tsrs`. Never run raw `tsc` -> PreToolUse hook. (L7)
 - Make every restricted rule message say the fix: `<what is banned>. Use <X> from <path>.` Every check script prints `fix: <command>` -> check-coarse (asserts `Use ` in each message) (lands with S4s). (L8)
 - Never add `no-restricted-syntax`. oxlint 1.89 does not have it. Add a check-actions scan instead -> check-coarse (rejects the key) (lands with S4s). (L9)
+- Keep each `decisionOverrides` entry to exact files and at most 3 warn rules. Never turn a fixable style rule off or to warn -> `studio/narrow-override`. (L6c)
+- Never add an entry to a lint exemption list in `lint/studio.ts` or an area to a `lint/boundaries.ts` layer in a slice. The merge step adds it to `lint/plugins/studio/frozen.js` -> `studio/frozen-exemption`. (L6d)
 - Put exports only in one `export { }` block and one `export type { }` block, as the last statements. No inline export, no default export and no `export ... from` outside `index.ts` -> `studio/export-blocks` (auth files). (L10)
 - Mark every type field `readonly` -> `studio/readonly-field` (auth files). (L11)
 - Never write the `undefined` type, an optional parameter or a default parameter. Use a required `T | null` parameter and pass `null` -> `studio/no-undefined-type` (auth files). (L12)

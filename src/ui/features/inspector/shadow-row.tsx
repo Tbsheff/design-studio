@@ -1,10 +1,6 @@
 import { useMemo } from "react";
 
 import { Icon } from "../../kit/Icon.js";
-import { proxyEdit } from "../../proxyEdit.js";
-import { formatShadows, type Shadow } from "../../shadows.js";
-import type { DirectEdit } from "../../useDirectEdit.js";
-import { TokenUiContext, useTokenUi } from "../../useTokenSnap.js";
 import {
   PARTS,
   fieldPart,
@@ -14,6 +10,10 @@ import {
 } from "./effects-model.js";
 import { ColorField } from "./inspector-fields.js";
 import { NumberField } from "./number-field.js";
+import { proxyEdit } from "./proxy-edit.js";
+import { formatShadows, type Shadow } from "./shadows.js";
+import type { DirectEdit } from "./use-direct-edit.js";
+import { TokenUiContext, useTokenUi } from "./use-token-snap.js";
 
 const ShadowRow = ({
   edit,

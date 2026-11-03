@@ -4,9 +4,9 @@ import {
   resolveTokenValue,
   varName,
 } from "../../../shared/token-match.js";
-import { formatNumber, parseNumber } from "../../cssValues.js";
-import { sameEditValues, type DirectEdit } from "../../useDirectEdit.js";
-import { type TokenUi } from "../../useTokenSnap.js";
+import { formatNumber, parseNumber } from "./css-values.js";
+import { sameEditValues, type DirectEdit } from "./use-direct-edit.js";
+import { type TokenUi } from "./use-token-snap.js";
 
 interface NumberSpec {
   prop: DirectStyleProperty;

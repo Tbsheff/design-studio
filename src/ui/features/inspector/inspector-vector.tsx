@@ -11,8 +11,8 @@ import {
   type VectorRequest,
 } from "../../../shared/vector.js";
 import { errorText } from "../../api.js";
-import { colorToHex } from "../../cssValues.js";
 import { runVector } from "../../vectorTool.js";
+import { colorToHex } from "./css-values.js";
 import { InspectorSection } from "./inspector-fields.js";
 
 import "../../styles/vector.css";

@@ -9,13 +9,13 @@ import {
   type VariantSupport,
 } from "../../../shared/variants.js";
 import type { PreviewPort } from "../../bridge.js";
+import { UiSelect } from "../../kit/UiSelect.js";
 import {
   editVariantStore,
   fitFrameTo,
   postForceState,
   useEditVariant,
-} from "../../editVariant.js";
-import { UiSelect } from "../../kit/UiSelect.js";
+} from "./edit-variant.js";
 
 import "../../styles/inspector-variants.css";
 

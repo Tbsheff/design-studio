@@ -3,10 +3,10 @@ import {
   SimpleEditor,
   SimpleMultiEditor,
 } from "../../components/InspectorSimple.js";
-import { useEditVariant } from "../../editVariant.js";
 import { AccessibilitySection } from "./accessibility-section.js";
 import { ComponentSection } from "./component-section.js";
 import { copy } from "./copy.js";
+import { useEditVariant } from "./edit-variant.js";
 import { EmptyState } from "./empty-state.js";
 import { ImageSection } from "./image-section.js";
 import {

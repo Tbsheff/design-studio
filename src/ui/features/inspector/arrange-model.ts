@@ -5,12 +5,9 @@ import type { SelectionContext } from "../../../shared/contracts.js";
 import type { KeyId } from "../../../shared/keymap.js";
 import type { PreviewPort } from "../../bridge.js";
 import { activeFrame, canvasStore, defaultLayout } from "../../canvasFrames.js";
-import { parentLayout } from "../../sizing.js";
 import { uiStore } from "../../storage.js";
-import type {
-  DirectEditCommit,
-  DirectEditControl,
-} from "../../useDirectEdit.js";
+import { parentLayout } from "./sizing.js";
+import type { DirectEditCommit, DirectEditControl } from "./use-direct-edit.js";
 
 interface Props {
   projectId: string;

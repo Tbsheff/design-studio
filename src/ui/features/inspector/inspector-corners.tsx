@@ -1,15 +1,10 @@
 import { useState } from "react";
 
-import {
-  expandBox,
-  SIDES,
-  type ShiftPart,
-  type Side,
-} from "../../cssValues.js";
 import { Icon } from "../../kit/Icon.js";
-import { proxyEdit } from "../../proxyEdit.js";
-import type { DirectEdit } from "../../useDirectEdit.js";
+import { expandBox, SIDES, type ShiftPart, type Side } from "./css-values.js";
 import { NumberField } from "./number-field.js";
+import { proxyEdit } from "./proxy-edit.js";
+import type { DirectEdit } from "./use-direct-edit.js";
 
 const CORNERS: { side: Side; short: string; label: string }[] = [
   { side: "top", short: "TL", label: "Top left radius" },

@@ -11,7 +11,7 @@ import type {
 import { PanelHead } from "../../components/SheetHead.js";
 import { ColorValue } from "../../components/TokenInputs.js";
 import { Icon } from "../../kit/Icon.js";
-import type { TweaksDraft } from "../../useTweaks.js";
+import type { TweaksDraft } from "./use-tweaks.js";
 
 interface Props {
   draft: TweaksDraft;

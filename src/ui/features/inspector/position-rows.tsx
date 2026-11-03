@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 
 import type { SelectionContext } from "../../../shared/contracts.js";
+import { Icon } from "../../kit/Icon.js";
+import { UiSelect } from "../../kit/UiSelect.js";
 import {
   PIN_OPTIONS,
   pinModeOf,
@@ -8,12 +10,10 @@ import {
   type InsetProp,
   type PinAxis,
   type PinMode,
-} from "../../constraints.js";
-import { Icon } from "../../kit/Icon.js";
-import { UiSelect } from "../../kit/UiSelect.js";
-import type { DirectEdit } from "../../useDirectEdit.js";
+} from "./constraints.js";
 import { write } from "./layout-keys.js";
 import { NumberField } from "./number-field.js";
+import type { DirectEdit } from "./use-direct-edit.js";
 
 const IN_FLOW = { position: "", top: "", right: "", bottom: "", left: "" };
 

@@ -15,29 +15,29 @@ import type {
 } from "../../../shared/contracts.js";
 import { colorHex, cssVarFor, varName } from "../../../shared/token-match.js";
 import { api } from "../../api.js";
-import type { AuthoredCss } from "../../authoredCss.js";
 import type { PreviewPort } from "../../bridge.js";
 import {
   CreateTokenDialog,
   type CreateTokenSubmit,
 } from "../../components/CreateTokenDialog.js";
 import { TokenControl } from "../../components/TokenControl.js";
-import type { StyleValues } from "../../cssValues.js";
 import { Icon } from "../../kit/Icon.js";
 import { lintValues, type LintIssue } from "../../tokenLint.js";
 import type { DesignTokens } from "../../useDesignSystemState.js";
+import type { AuthoredCss } from "./authored-css.js";
+import type { StyleValues } from "./css-values.js";
 import {
   buildEditRequest,
   type DirectEdit,
   type DirectEditCommit,
-} from "../../useDirectEdit.js";
+} from "./use-direct-edit.js";
 import {
   useSnapSetting,
   useTokenSnap,
   type CreateRequest,
   type SnapNote,
   type TokenUi,
-} from "../../useTokenSnap.js";
+} from "./use-token-snap.js";
 
 interface ScopeInput {
   projectId: string;

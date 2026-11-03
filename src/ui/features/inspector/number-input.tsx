@@ -1,10 +1,9 @@
 import { memo, useRef, useState, type KeyboardEvent } from "react";
 
-import { normalizeLength, stepValue } from "../../cssValues.js";
-import { useInherited } from "../../editVariant.js";
-import { resolveNumberInput } from "../../mathInput.js";
-import { dependsOnCurrent } from "../../mixedValues.js";
-import { useTokenUi } from "../../useTokenSnap.js";
+import { normalizeLength, stepValue } from "./css-values.js";
+import { useInherited } from "./edit-variant.js";
+import { resolveNumberInput } from "./math-input.js";
+import { dependsOnCurrent } from "./mixed-values.js";
 import {
   plainLength,
   displayLength,
@@ -17,6 +16,7 @@ import {
   sameSpec,
   type NumberSpec,
 } from "./number-field-model.js";
+import { useTokenUi } from "./use-token-snap.js";
 
 interface InputProps {
   spec: NumberSpec;

@@ -1,12 +1,7 @@
 import { useRef, useState } from "react";
 
 import { type SetImageRequest } from "../../../shared/image.js";
-import {
-  fileData,
-  imageApi,
-  imageError,
-  imageTargetOf,
-} from "../../imageApi.js";
+import { fileData, imageApi, imageError, imageTargetOf } from "./image-api.js";
 import { RESELECT_AFTER_MS, type Props } from "./image-model.js";
 
 const useImageSet = (props: Props) => {

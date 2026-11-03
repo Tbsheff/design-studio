@@ -1,7 +1,6 @@
 import { useRef, type MouseEvent, type PointerEvent } from "react";
 
-import { formatNumber, parseNumber } from "../../cssValues.js";
-import { useTokenUi, type TokenUi } from "../../useTokenSnap.js";
+import { formatNumber, parseNumber } from "./css-values.js";
 import {
   SCRUB_PX_PER_STEP,
   plainLength,
@@ -11,6 +10,7 @@ import {
   stepOf,
   type NumberSpec,
 } from "./number-field-model.js";
+import { useTokenUi, type TokenUi } from "./use-token-snap.js";
 
 interface Scrub {
   x: number;

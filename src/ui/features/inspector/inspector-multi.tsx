@@ -12,13 +12,13 @@ import { api } from "../../api.js";
 import type { PreviewPort } from "../../bridge.js";
 import { CreateTokenDialog } from "../../components/CreateTokenDialog.js";
 import type { CreateTokenSubmit } from "../../components/CreateTokenDialog.js";
-import type { StyleValues } from "../../cssValues.js";
 import { Icon } from "../../kit/Icon.js";
 import type { DesignTokens } from "../../useDesignSystemState.js";
-import type { DirectEdit } from "../../useDirectEdit.js";
-import type { CreateRequest } from "../../useTokenSnap.js";
+import type { StyleValues } from "./css-values.js";
 import { InspectorSection } from "./inspector-fields.js";
 import { NumberField } from "./number-field.js";
+import type { DirectEdit } from "./use-direct-edit.js";
+import type { CreateRequest } from "./use-token-snap.js";
 
 export function MultiNote({ reason }: { reason: string | null }) {
   if (!reason) {

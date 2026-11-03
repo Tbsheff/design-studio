@@ -1,8 +1,8 @@
 import { useState } from "react";
 
 import { Icon } from "../../kit/Icon.js";
-import type { TweaksDraft } from "../../useTweaks.js";
 import { TweaksPanel } from "./tweaks-panel.js";
+import type { TweaksDraft } from "./use-tweaks.js";
 
 export interface InspectorTweaksProps {
   draft: TweaksDraft;

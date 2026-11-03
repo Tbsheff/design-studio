@@ -17,8 +17,8 @@ import type {
 } from "../../../shared/style-search.js";
 import { tokenFieldState } from "../../../shared/token-match.js";
 import type { PreviewPort } from "../../bridge.js";
-import { requestAuthoredCss } from "../../useAuthoredCss.js";
 import type { DesignTokens } from "../../useDesignSystemState.js";
+import { requestAuthoredCss } from "./use-authored-css.js";
 
 interface InspectorMatchProps {
   projectId: string;

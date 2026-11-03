@@ -1,10 +1,10 @@
 import type { SelectionContext } from "../../../shared/contracts.js";
-import { parentLayout } from "../../sizing.js";
-import type { DirectEdit } from "../../useDirectEdit.js";
 import { InspectorSection } from "./inspector-fields.js";
 import { isPositioned, PositionRows } from "./position-rows.js";
 import { AlignSelf, MinMaxRows } from "./size-limits.js";
 import { SizeRow } from "./size-row.js";
+import { parentLayout } from "./sizing.js";
+import type { DirectEdit } from "./use-direct-edit.js";
 
 function SizeRows({
   edit,

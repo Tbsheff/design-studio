@@ -4,9 +4,9 @@ import type {
   DirectStyleProperty,
   SelectionContext,
 } from "../../../shared/contracts.js";
-import { textEditability } from "../../cssValues.js";
-import { sameEditValues, type DirectEdit } from "../../useDirectEdit.js";
+import { textEditability } from "./css-values.js";
 import { DataTextNote, useInspectorApp } from "./inspector-shared.js";
+import { sameEditValues, type DirectEdit } from "./use-direct-edit.js";
 
 function useRowKeys(onCommit: () => void, onRevert: () => void) {
   return (event: KeyboardEvent<HTMLInputElement>) => {

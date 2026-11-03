@@ -15,8 +15,6 @@ import type {
 } from "../../../shared/contracts.js";
 import type { PreviewPort } from "../../bridge.js";
 import { CopyCodeMenu } from "../../components/CopyCodeMenu.js";
-import { SIDES } from "../../cssValues.js";
-import { VariantScopeContext, useEditVariant } from "../../editVariant.js";
 import {
   ContentPanel,
   FillSlot,
@@ -25,19 +23,10 @@ import {
   TextStyleSlot,
 } from "../../inspector-slots.js";
 import { Icon } from "../../kit/Icon.js";
-import { useAuthoredCss } from "../../useAuthoredCss.js";
 import type { DesignTokens } from "../../useDesignSystemState.js";
-import {
-  sameEditValues,
-  useDirectEdit,
-  type DirectEdit,
-  type DirectEditCommit,
-  type DirectEditControl,
-  type SaveStatus,
-} from "../../useDirectEdit.js";
-import { useDirectEdits } from "../../useDirectEdits.js";
-import { TokenUiContext, type TokenUi } from "../../useTokenSnap.js";
 import { BoxModel, type DeclaredMargins } from "./box-model.js";
+import { SIDES } from "./css-values.js";
+import { VariantScopeContext, useEditVariant } from "./edit-variant.js";
 import { InspectorBreadcrumb } from "./inspector-breadcrumb.js";
 import {
   ClassLine,
@@ -82,6 +71,17 @@ import {
 } from "./inspector-tokens.js";
 import { InspectorVariantBar } from "./inspector-variant-bar.js";
 import { NumberField } from "./number-field.js";
+import { useAuthoredCss } from "./use-authored-css.js";
+import {
+  sameEditValues,
+  useDirectEdit,
+  type DirectEdit,
+  type DirectEditCommit,
+  type DirectEditControl,
+  type SaveStatus,
+} from "./use-direct-edit.js";
+import { useDirectEdits } from "./use-direct-edits.js";
+import { TokenUiContext, type TokenUi } from "./use-token-snap.js";
 
 export interface EditorProps {
   projectId: string;

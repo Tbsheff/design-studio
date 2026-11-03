@@ -1,6 +1,6 @@
-import type { ShiftPart } from "../../cssValues.js";
-import { formatShadows, parseShadows, type Shadow } from "../../shadows.js";
-import type { DirectEdit } from "../../useDirectEdit.js";
+import type { ShiftPart } from "./css-values.js";
+import { formatShadows, parseShadows, type Shadow } from "./shadows.js";
+import type { DirectEdit } from "./use-direct-edit.js";
 
 type Part = "x" | "y" | "blur" | "spread";
 

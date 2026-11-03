@@ -14,9 +14,9 @@ import {
   runCommand,
 } from "../../inspector-slots.js";
 import { Icon } from "../../kit/Icon.js";
-import type { DirectEditControl } from "../../useDirectEdit.js";
 import { PREVIEW_HISTORY_EVENT } from "../../useUndoShortcut.js";
 import { VECTOR_TOOLS, useVectorTool, vectorTool } from "../../vectorTool.js";
+import type { DirectEditControl } from "./use-direct-edit.js";
 
 interface Props {
   projectId: string;

@@ -1,14 +1,14 @@
 import { useEffect, useRef } from "react";
 
-import type { ShiftPart } from "../../cssValues.js";
-import { proxyEdit } from "../../proxyEdit.js";
-import { NEW_SHADOW, blurOf, withBlur, type Shadow } from "../../shadows.js";
-import type { DirectEdit } from "../../useDirectEdit.js";
+import type { ShiftPart } from "./css-values.js";
 import { writeShadows, shadowView } from "./effects-model.js";
 import { InspectorSection } from "./inspector-fields.js";
 import { AddButton } from "./inspector-shared.js";
 import { NumberField } from "./number-field.js";
+import { proxyEdit } from "./proxy-edit.js";
 import { ShadowRow } from "./shadow-row.js";
+import { NEW_SHADOW, blurOf, withBlur, type Shadow } from "./shadows.js";
+import type { DirectEdit } from "./use-direct-edit.js";
 
 const BLUR_PART: ShiftPart = {
   key: "blur",

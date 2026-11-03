@@ -3,12 +3,12 @@ import { memo, useState, type KeyboardEvent, type ReactNode } from "react";
 import type { DirectStyleProperty } from "../../../shared/contracts.js";
 import { colorHex, resolveTokenValue } from "../../../shared/token-match.js";
 import { TokenControl } from "../../components/TokenControl.js";
-import { colorToHex, displayColor, isValidColor } from "../../cssValues.js";
-import { useInherited } from "../../editVariant.js";
 import { Icon, type IconName } from "../../kit/Icon.js";
 import { UiSelect } from "../../kit/UiSelect.js";
-import { sameEditValues, type DirectEdit } from "../../useDirectEdit.js";
-import { useTokenUi } from "../../useTokenSnap.js";
+import { colorToHex, displayColor, isValidColor } from "./css-values.js";
+import { useInherited } from "./edit-variant.js";
+import { sameEditValues, type DirectEdit } from "./use-direct-edit.js";
+import { useTokenUi } from "./use-token-snap.js";
 
 interface FieldProps {
   prop: DirectStyleProperty;

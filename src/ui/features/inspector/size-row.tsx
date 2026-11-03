@@ -9,6 +9,9 @@ import {
 import type { SelectionContext } from "../../../shared/contracts.js";
 import { UiSelect } from "../../kit/UiSelect.js";
 import { useLive } from "../../platform/live-store.js";
+import { resizeReadout } from "../../useResizeHandles.js";
+import { write } from "./layout-keys.js";
+import { NumberField } from "./number-field.js";
 import {
   SIZE_MODES,
   parentLayout,
@@ -18,11 +21,8 @@ import {
   type Axis,
   type SizeFacts,
   type SizeMode,
-} from "../../sizing.js";
-import type { DirectEdit } from "../../useDirectEdit.js";
-import { resizeReadout } from "../../useResizeHandles.js";
-import { write } from "./layout-keys.js";
-import { NumberField } from "./number-field.js";
+} from "./sizing.js";
+import type { DirectEdit } from "./use-direct-edit.js";
 
 function liveFacts(edit: DirectEdit, selection: SelectionContext): SizeFacts {
   const facts = sizeFacts(selection.styles);

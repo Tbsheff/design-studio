@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 
-import { imageFileOf } from "../../imageApi.js";
 import { isTypingTarget } from "../../platform/typing-target.js";
+import { imageFileOf } from "./image-api.js";
 
 const usePasteImage = (enabled: boolean, onImage: (file: File) => void) => {
   const live = useRef(onImage);

@@ -2,17 +2,17 @@ import { useRef, type ReactNode } from "react";
 
 import { Icon, type IconName } from "../../kit/Icon.js";
 import { UiSelect } from "../../kit/UiSelect.js";
+import { InspectorSection, SelectField } from "./inspector-fields.js";
+import { AddButton } from "./inspector-shared.js";
+import { write, useLayoutKeys } from "./layout-keys.js";
+import { NumberField } from "./number-field.js";
 import {
   activeCell,
   alignCell,
   isFlexDisplay,
   isGridDisplay,
-} from "../../sizing.js";
-import type { DirectEdit } from "../../useDirectEdit.js";
-import { InspectorSection, SelectField } from "./inspector-fields.js";
-import { AddButton } from "./inspector-shared.js";
-import { write, useLayoutKeys } from "./layout-keys.js";
-import { NumberField } from "./number-field.js";
+} from "./sizing.js";
+import type { DirectEdit } from "./use-direct-edit.js";
 
 const DIRECTIONS: { value: string; icon: IconName; label: string }[] = [
   { value: "row", icon: "arrowRight", label: "Horizontal" },

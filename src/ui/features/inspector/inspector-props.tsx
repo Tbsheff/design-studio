@@ -21,8 +21,8 @@ import { ComponentPreviewThumb } from "../../components/ComponentPreviewThumb.js
 import { useProjectEvents } from "../../events.js";
 import { VariantSheet } from "../../inspector-slots.js";
 import { UiSelect } from "../../kit/UiSelect.js";
-import { propsApi } from "../../propsApi.js";
 import { InspectorSection } from "./inspector-fields.js";
+import { propsApi } from "./props-api.js";
 
 import "../../styles/inspector-props.css";
 

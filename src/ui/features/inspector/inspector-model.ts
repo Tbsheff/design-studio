@@ -9,12 +9,9 @@ import type { PreviewPort } from "../../bridge.js";
 import type { ComponentsPanel } from "../../components/ComponentsPanel.js";
 import type { InspectorTweaksProps } from "../../components/InspectorTweaks.js";
 import type { DesignTokens } from "../../useDesignSystemState.js";
-import type {
-  DirectEditCommit,
-  DirectEditControl,
-} from "../../useDirectEdit.js";
-import type { EditSessionHandle, SessionAction } from "../../useEditSession.js";
 import { copy } from "./copy.js";
+import type { DirectEditCommit, DirectEditControl } from "./use-direct-edit.js";
+import type { EditSessionHandle, SessionAction } from "./use-edit-session.js";
 
 type InspectorTab = "simple" | "pro" | "components" | "code" | "tweaks";
 

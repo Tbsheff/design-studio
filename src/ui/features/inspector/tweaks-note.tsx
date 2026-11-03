@@ -1,5 +1,5 @@
-import type { EditSession } from "../../useEditSession.js";
 import { copy } from "./copy.js";
+import type { EditSession } from "./use-edit-session.js";
 
 const TweaksNote = ({ session }: { session: EditSession }) => {
   return (

@@ -16,7 +16,7 @@ import type {
 } from "../../../shared/contracts.js";
 import { api } from "../../api.js";
 import { Icon } from "../../kit/Icon.js";
-import { textHints, type DirectEdit } from "../../useDirectEdit.js";
+import { textHints, type DirectEdit } from "./use-direct-edit.js";
 
 export interface InspectorApp {
   appDir: string | null;

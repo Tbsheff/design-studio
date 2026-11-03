@@ -9,13 +9,13 @@ import {
 } from "react";
 
 import type { SelectionContext } from "../../../shared/contracts.js";
+import type { PreviewPort } from "../../bridge.js";
+import { Icon } from "../../kit/Icon.js";
 import {
   parseSelectionPath,
   pathCrumbs,
   type PathCrumb,
-} from "../../authoredCss.js";
-import type { PreviewPort } from "../../bridge.js";
-import { Icon } from "../../kit/Icon.js";
+} from "./authored-css.js";
 
 interface Props {
   selection: SelectionContext;

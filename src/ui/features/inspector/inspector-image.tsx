@@ -8,11 +8,11 @@ import {
   imageKindOf,
   type ImageFit,
 } from "../../../shared/image.js";
-import { clipboardImage } from "../../imageApi.js";
 import { runCommand } from "../../inspector-slots.js";
 import { Icon } from "../../kit/Icon.js";
 import { AltField } from "./alt-field.js";
 import { FocalPad } from "./focal-pad.js";
+import { clipboardImage } from "./image-api.js";
 import {
   FIT_LABEL,
   FIT_TIP,

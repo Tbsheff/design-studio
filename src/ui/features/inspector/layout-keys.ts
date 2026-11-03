@@ -1,11 +1,11 @@
 import { useEffect, useRef, type RefObject } from "react";
 
 import { isTypingTarget } from "../../platform/typing-target.js";
-import type { DirectEdit } from "../../useDirectEdit.js";
 import {
   PREVIEW_ARRANGE_KEY_EVENT,
   PREVIEW_LAYOUT_KEY_EVENT,
 } from "../../usePreviewFrames.js";
+import type { DirectEdit } from "./use-direct-edit.js";
 
 type Patch = Parameters<DirectEdit["preview"]>[0];
 

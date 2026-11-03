@@ -2,10 +2,9 @@ import { memo, useEffect, useState } from "react";
 
 import { InspectorTools } from "../../components/InspectorTools.js";
 import { InspectorTweaks } from "../../components/InspectorTweaks.js";
-import { resetEditVariant } from "../../editVariant.js";
 import { Icon } from "../../kit/Icon.js";
-import { useEditSession } from "../../useEditSession.js";
 import { ComponentsTab } from "./components-tab.js";
+import { resetEditVariant } from "./edit-variant.js";
 import { InspectorArrange } from "./inspector-arrange.js";
 import { InspectorCode } from "./inspector-code.js";
 import type { InspectorProps, InspectorTab } from "./inspector-model.js";
@@ -17,6 +16,7 @@ import { SessionHeader } from "./session-header.js";
 import { SimpleTab } from "./simple-tab.js";
 import { TabBar } from "./tab-bar.js";
 import { TweaksNote } from "./tweaks-note.js";
+import { useEditSession } from "./use-edit-session.js";
 import { useSessionHandle } from "./use-session-handle.js";
 import { useStableCallbacks } from "./use-stable-callbacks.js";
 

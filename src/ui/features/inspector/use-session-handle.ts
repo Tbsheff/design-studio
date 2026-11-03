@@ -1,6 +1,6 @@
 import { useEffect, type MutableRefObject } from "react";
 
-import type { EditSession, EditSessionHandle } from "../../useEditSession.js";
+import type { EditSession, EditSessionHandle } from "./use-edit-session.js";
 
 const useSessionHandle = (
   ref: MutableRefObject<EditSessionHandle | null> | undefined,

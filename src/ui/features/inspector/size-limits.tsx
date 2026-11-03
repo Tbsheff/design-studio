@@ -1,10 +1,10 @@
 import { useState } from "react";
 
 import { Icon, type IconName } from "../../kit/Icon.js";
-import type { DirectEdit } from "../../useDirectEdit.js";
 import { AddButton } from "./inspector-shared.js";
 import { write } from "./layout-keys.js";
 import { NumberField } from "./number-field.js";
+import type { DirectEdit } from "./use-direct-edit.js";
 
 const SELF: { value: string; icon: IconName; label: string }[] = [
   { value: "flex-start", icon: "selfStart", label: "Align self start" },

@@ -211,7 +211,7 @@ export function projectBadge(project: Project): {
 export function projectPlace(project: Project, homeDir: string | null): string {
   return isFolderProject(project) && project.imported
     ? shortenHome(
-        project.imported.sourcePath.replace(/^\/private(?=\/)/, ""),
+        project.imported.sourcePath.replace(/^\/private(?=\/)/u, ""),
         homeDir
       )
     : "Design Studio";

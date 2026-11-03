@@ -62,14 +62,14 @@ export interface ReferenceDraft {
 export function soleUrl(text: string): ReferenceDraft | null {
   const trimmed = text.trim();
 
-  if (!/^https?:\/\/\S+$/i.test(trimmed)) {
+  if (!/^https?:\/\/\S+$/iu.test(trimmed)) {
     return null;
   }
 
   try {
     const url = new URL(trimmed);
 
-    return { url: url.href, host: url.host.replace(/^www\./, "") };
+    return { url: url.href, host: url.host.replace(/^www\./u, "") };
   } catch {
     return null;
   }

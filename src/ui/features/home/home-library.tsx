@@ -169,7 +169,7 @@ export function ContinueCard({
         <p className="home-continue-last truncate">
           {last
             ? `Last: “${last.prompt}” · ${formatRelative(last.at)}`
-            : `Edited ${formatRelative(project.updatedAt).replace(/^Just/, "just")}`}
+            : `Edited ${formatRelative(project.updatedAt).replace(/^Just/u, "just")}`}
         </p>
         <div className="home-continue-actions">
           <button

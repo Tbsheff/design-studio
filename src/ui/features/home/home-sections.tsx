@@ -116,7 +116,7 @@ function removedText(project: Project, homeDir: string | null): string {
     return `Moved “${project.name}” to Trash`;
   }
 
-  return `Removed “${project.name}” from Design Studio. Its files stay in ${shortenHome(folder.replace(/^\/private(?=\/)/, ""), homeDir)}.`;
+  return `Removed “${project.name}” from Design Studio. Its files stay in ${shortenHome(folder.replace(/^\/private(?=\/)/u, ""), homeDir)}.`;
 }
 
 export function useProjectActions({

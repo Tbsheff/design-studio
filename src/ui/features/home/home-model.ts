@@ -79,7 +79,7 @@ function folderLabel(
 function modelSummary(model: string, count: number): string {
   const extra = count > 1 ? ` · ${count}×` : "";
 
-  return `${modelLabel(model).replace(/^Claude /, "")}${extra}`;
+  return `${modelLabel(model).replace(/^Claude /u, "")}${extra}`;
 }
 
 function homeSendBlocker(
@@ -204,7 +204,7 @@ function homeOf(workspaces: WorkspaceList | null): string | null {
 }
 
 function shortHome(target: string, homeDir: string | null): string {
-  return shortenHome(target.replace(/^\/private(?=\/)/, ""), homeDir);
+  return shortenHome(target.replace(/^\/private(?=\/)/u, ""), homeDir);
 }
 
 export {

@@ -49,7 +49,7 @@ function FoundList({ onUse }: { onUse: (path: string) => void }) {
 
   const roots = found
     ? found.roots
-        .map((root) => shortenHome(root, found.home).replace(/^~\//, ""))
+        .map((root) => shortenHome(root, found.home).replace(/^~\//u, ""))
         .join(", ")
     : "";
 

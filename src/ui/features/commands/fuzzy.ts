@@ -63,7 +63,7 @@ function tokenScore(
     };
   }
 
-  if (extra.split(/\s+/).some((w) => w.startsWith(token))) {
+  if (extra.split(/\s+/u).some((w) => w.startsWith(token))) {
     return { score: 5, marks: [] };
   }
 
@@ -84,7 +84,7 @@ export function rank<T>(
   query: string,
   text: (item: T) => { title: string; keywords?: string }
 ): Ranked<T>[] {
-  const tokens = query.toLowerCase().split(/\s+/).filter(Boolean);
+  const tokens = query.toLowerCase().split(/\s+/u).filter(Boolean);
 
   if (tokens.length === 0) {
     return items.map((item) => ({ item, score: 0, marks: [] }));

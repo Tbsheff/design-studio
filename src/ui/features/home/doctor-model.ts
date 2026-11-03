@@ -13,7 +13,7 @@ interface DoctorGate {
 const INSTALL_DETAIL =
   "Dependencies are not installed. Run the command below, then check again.";
 
-const SHELL_SAFE = /^[\w./-]+$/;
+const SHELL_SAFE = /^[\w./-]+$/u;
 
 function shellPath(dir: string, homeDir: string | null): string {
   const short = shortHome(dir, homeDir);
@@ -35,7 +35,7 @@ function homeCommand(
   command: string | null,
   homeDir: string | null
 ): string | null {
-  const match = command?.match(/^cd ("(?:[^"\\]|\\.)*") && (.+)$/);
+  const match = command?.match(/^cd ("(?:[^"\\]|\\.)*") && (.+)$/u);
 
   if (!match?.[1] || !match[2]) {
     return command;

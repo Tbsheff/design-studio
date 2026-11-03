@@ -262,7 +262,7 @@ function rampColor(step: number, index: number): string {
 
 function fontNames(pack: PackSummary): string {
   const clean = (family: string) =>
-    family.split(",")[0]?.replaceAll(/['"]/g, "").trim() ?? "";
+    family.split(",")[0]?.replaceAll(/['"]/gu, "").trim() ?? "";
 
   const display = clean(pack.fonts.display);
   const body = clean(pack.fonts.body);
@@ -465,7 +465,7 @@ export function ModelPopover({
             tabIndex={settings.model === option.id ? 0 : -1}
             onClick={() => settings.onModel(option.id)}
           >
-            {option.label.replace(/^Claude /, "")}
+            {option.label.replace(/^Claude /u, "")}
           </button>
         ))}
       </div>

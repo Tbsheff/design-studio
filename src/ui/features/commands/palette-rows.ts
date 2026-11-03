@@ -75,7 +75,7 @@ function markRuns(marks: number[]): number {
 }
 
 function clean<T>(list: Ranked<T>[], query: string): Ranked<T>[] {
-  const tokens = query.trim().split(/\s+/).filter(Boolean).length;
+  const tokens = query.trim().split(/\s+/u).filter(Boolean).length;
 
   return list.filter((r) => markRuns(r.marks) <= tokens);
 }
@@ -257,7 +257,7 @@ function routeRow(r: RouteHit, input: RowInput, marks: number[]): Row {
 
 function routeRows(input: RowInput): Scored {
   const usable = input.routes.filter((r) => !r.dynamic);
-  const query = input.query.replace(/^\//, "");
+  const query = input.query.replace(/^\//u, "");
 
   const ranked = clean(
     rank(usable, query, (r) => ({ title: r.route })),
@@ -289,7 +289,7 @@ function routeRows(input: RowInput): Scored {
 function looseMatches(input: RowInput): Row[] {
   const words = input.query
     .toLowerCase()
-    .split(/\s+/)
+    .split(/\s+/u)
     .filter((w) => w.length >= 3);
 
   if (words.length < 2) {

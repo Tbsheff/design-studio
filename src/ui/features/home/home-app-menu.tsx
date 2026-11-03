@@ -286,7 +286,7 @@ export function AppMenu({
       <div className="ui-menu-section">
         <span className="ui-menu-label mono truncate">
           {shortenHome(
-            (found?.path ?? chip.path).replace(/^\/private(?=\/)/, ""),
+            (found?.path ?? chip.path).replace(/^\/private(?=\/)/u, ""),
             homeDir
           )}
         </span>

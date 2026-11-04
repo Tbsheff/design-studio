@@ -2,6 +2,7 @@ import { Suspense, useCallback, useMemo } from "react";
 
 import { ImportPageSlot, importPageItems } from "../page-import/index.js";
 import { ReviewEntry } from "../review/review-entry.js";
+import { ScenarioSection } from "../scenario/index.js";
 import { FindPanelSlot, useFindHost } from "../text-search/index.js";
 import { MatrixSlot } from "../viewport/index.js";
 import type { ChromeImportPage } from "./canvas-chrome-menu.js";
@@ -16,11 +17,21 @@ import {
 import { CanvasLayersPanel } from "./canvas-layers.js";
 import { CanvasStage } from "./canvas-stage.js";
 import type { ViewProps } from "./canvas-types.js";
+import { FrameStateSlotContext } from "./frame-state-slot-context.js";
+import type { FrameStateSlotArgs } from "./frame-state-slot-context.js";
 import { CheckResults } from "./stage-parts.js";
 import { useCanvasEdits } from "./use-canvas-edits.js";
 import { useCanvasPreview } from "./use-canvas-preview.js";
 import { useCanvasStage } from "./use-canvas-stage.js";
 import { useCanvasWiring } from "./use-canvas-wiring.js";
+
+const renderScenarioSlot = (args: FrameStateSlotArgs) => (
+  <ScenarioSection
+    projectId={args.projectId}
+    directionId={args.directionId}
+    frameId={args.frameId}
+  />
+);
 
 const useViewSlots = (
   props: ViewProps,
@@ -193,7 +204,9 @@ const CanvasView = (props: ViewProps) => {
               onClose={hostedClose(props.shell, pane.closeLayers)}
             />
           )}
-        <CanvasStage props={props} s={s} pv={pv} ed={ed} w={w} />
+        <FrameStateSlotContext.Provider value={renderScenarioSlot}>
+          <CanvasStage props={props} s={s} pv={pv} ed={ed} w={w} />
+        </FrameStateSlotContext.Provider>
       </div>
     </div>
   );

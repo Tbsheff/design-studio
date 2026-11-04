@@ -16,6 +16,7 @@ import { PackEntries } from "./pack/handlers.js";
 import { ProjectEntries } from "./project/handlers.js";
 import { PublishEntries } from "./publish/handlers.js";
 import { RunEntries } from "./run/handlers.js";
+import { ScenarioEntries } from "./scenario/handlers.js";
 import { SessionEntries } from "./session/handlers.js";
 import { ShareEntries } from "./share/handlers.js";
 import { ShipEntries } from "./ship/handlers.js";
@@ -43,6 +44,7 @@ const ALL_ENTRIES = {
   project: ProjectEntries,
   publish: PublishEntries,
   run: RunEntries,
+  scenario: ScenarioEntries,
   session: SessionEntries,
   share: ShareEntries,
   ship: ShipEntries,

@@ -74,7 +74,6 @@ export type {
 export {
   answerState,
   captureSessionCookies,
-  isDataPath,
   sendEmptied,
   sessionCookieNames,
   wantsEmpty,
@@ -82,6 +81,17 @@ export {
 } from "./frame-state-proxy.js";
 
 export type { ActiveFrameState } from "./frame-state-proxy.js";
+
+export { isDataPath } from "./frame-state-plan.js";
+
+export { startTrial, stopTrial } from "./frame-state-trial.js";
+
+export type {
+  RecordedBody,
+  RecordedResponse,
+  ResponseRecorder,
+  TrialSpec,
+} from "./frame-state-trial.js";
 
 export { installHint } from "./install-hint.js";
 

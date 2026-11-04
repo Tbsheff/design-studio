@@ -1,6 +1,6 @@
 import type { FrameStatesView } from "@design-studio/contracts/frame-state";
 import { Icon, usePopover } from "@design-studio/ui";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 
 import {
   stop,
@@ -17,6 +17,7 @@ import {
   setFrameState,
   useCurrentFrameStates,
 } from "./frame-states-model.js";
+import { useFrameStateSlot } from "./use-frame-state-slot.js";
 
 function usePanelMenu() {
   const [open, setOpen] = useState(false);
@@ -50,6 +51,7 @@ function usePanelMenu() {
 function MenuBody({
   projectId,
   frameId,
+  directionId,
   view,
   chosen,
   menu,
@@ -57,11 +59,14 @@ function MenuBody({
 }: {
   projectId: string;
   frameId: string;
+  directionId: string | null;
   view: FrameStatesView;
   chosen: string;
   menu: ReturnType<typeof usePanelMenu>;
   onError: (message: string | null) => void;
 }) {
+  const slot = useFrameStateSlot();
+
   const run = (task: Promise<unknown>) => {
     onError(null);
     task
@@ -113,6 +118,9 @@ function MenuBody({
           <span>New mock data…</span>
         </button>
       </div>
+      <Suspense fallback={null}>
+        {slot?.({ directionId, frameId, projectId })}
+      </Suspense>
       <SessionRows
         view={view}
         onPanel={menu.setPanel}
@@ -130,9 +138,11 @@ function MenuBody({
 export function FrameStateMenu({
   frameId,
   frameName,
+  directionId,
 }: {
   frameId: string;
   frameName: string;
+  directionId: string | null;
 }) {
   const states = useCurrentFrameStates();
   const menu = usePanelMenu();
@@ -173,6 +183,7 @@ export function FrameStateMenu({
           <MenuBody
             projectId={states.projectId}
             frameId={frameId}
+            directionId={directionId}
             view={states.view}
             chosen={chosen}
             menu={menu}

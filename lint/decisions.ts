@@ -477,6 +477,17 @@ export const decisionOverrides: OxlintOverride[] = [
     rules: { "import/no-relative-parent-imports": "off" },
   },
   {
+    files: [
+      "packages/common/actions/src/scenario/{apply,create,list,run}.ts",
+      "packages/common/actions/src/scenario/errors/status.ts",
+      "apps/desktop/src/server/handlers/scenario/{apply,create,handlers,list,live,run}.ts",
+      "apps/desktop/src/server/review/scenario/{scenario-apply,scenario-create,scenario-observe,scenario-page,scenario-record,scenario-run,scenario-runner,scenario-saved,scenario-store,scenario-target}.ts",
+      "apps/desktop/src/server/app/frame-state-calls.ts",
+      "apps/desktop/src/ui/features/scenario/deps.ts",
+    ],
+    rules: { "import/no-relative-parent-imports": "off" },
+  },
+  {
     files: ["apps/desktop/src/server/gallery/engine/page.ts"],
     rules: { "github/unescaped-html-literal": "off" },
   },

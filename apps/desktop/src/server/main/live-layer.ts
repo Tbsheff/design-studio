@@ -17,6 +17,7 @@ import { PackLive } from "../handlers/pack/live.js";
 import { ProjectLive } from "../handlers/project/live.js";
 import { PublishLive } from "../handlers/publish/live.js";
 import { RunLive } from "../handlers/run/live.js";
+import { ScenarioLive } from "../handlers/scenario/live.js";
 import { SessionLive } from "../handlers/session/live.js";
 import { ShareLive } from "../handlers/share/live.js";
 import { ShipLive } from "../handlers/ship/live.js";
@@ -54,6 +55,7 @@ const liveLayer = Layer.mergeAll(
   ProjectLive,
   PublishLive,
   RunLive,
+  ScenarioLive,
   SessionLive,
   ShareLive,
   ShipLive,

@@ -16,6 +16,7 @@ import { PackActions } from "./pack/index.js";
 import { ProjectActions } from "./project/index.js";
 import { PublishActions } from "./publish/index.js";
 import { RunActions } from "./run/index.js";
+import { ScenarioActions } from "./scenario/index.js";
 import { SessionActions } from "./session/index.js";
 import { ShareActions } from "./share/index.js";
 import { ShipActions } from "./ship/index.js";
@@ -43,6 +44,7 @@ const ALL_ACTIONS = {
   project: ProjectActions,
   publish: PublishActions,
   run: RunActions,
+  scenario: ScenarioActions,
   session: SessionActions,
   share: ShareActions,
   ship: ShipActions,

@@ -7,6 +7,7 @@ import { GalleryStatus } from "../gallery/errors/status.js";
 import { ImageStatus } from "../image/errors/status.js";
 import { PackStatus } from "../pack/errors/status.js";
 import { PublishStatus } from "../publish/errors/status.js";
+import { ScenarioStatus } from "../scenario/errors/status.js";
 import { TokenStatus } from "../token/errors/status.js";
 import { ViewportStatus } from "../viewport/errors/status.js";
 import type { StudioErrorTag } from "./errors/all.js";
@@ -23,6 +24,7 @@ const HTTP_STATUS = {
   ...ImageStatus,
   ...PackStatus,
   ...PublishStatus,
+  ...ScenarioStatus,
   ...TokenStatus,
   ...ViewportStatus,
   Defect: 500,

@@ -3,10 +3,25 @@ import type http from "node:http";
 import {
   FRAME_STATE_HEADER,
   FRAME_STATE_ID_HEADER,
+  isProcedureRule,
   mockRuleMatches,
   type MockRule,
 } from "@design-studio/contracts/frame-state";
 
+import {
+  applyRecording,
+  applySplice,
+  isBatchCall,
+  isJsonOk,
+  plans,
+  toProcedures,
+} from "./frame-state-calls.js";
+import {
+  applyProcedureReply,
+  isDataPath,
+  toCallPlan,
+  toErrorBody,
+} from "./frame-state-plan.js";
 import {
   captureCookies,
   hasSessionCookie,
@@ -126,31 +141,6 @@ function pathOf(req: http.IncomingMessage): string {
   return (req.url ?? "/").split("?")[0] ?? "/";
 }
 
-export function isDataPath(pathname: string): boolean {
-  if (pathname.startsWith("/api/auth/") || pathname === "/api/auth") {
-    return false;
-  }
-
-  return (
-    pathname.startsWith("/api/") ||
-    pathname === "/api" ||
-    pathname.includes("/trpc/") ||
-    pathname.endsWith("/trpc")
-  );
-}
-
-function trpcProcedures(pathname: string): string[] | null {
-  const at = pathname.indexOf("/trpc/");
-
-  if (at === -1) {
-    return null;
-  }
-
-  const tail = decodeURIComponent(pathname.slice(at + "/trpc/".length));
-
-  return tail ? tail.split(",") : null;
-}
-
 function sendJson(
   res: http.ServerResponse,
   status: number,
@@ -212,40 +202,17 @@ function authMock(
   return mockUserBodies(state)[pathname];
 }
 
-function errorBody(pathname: string): unknown {
-  const message = "Design Studio error state: this call failed on purpose.";
-  const procedures = trpcProcedures(pathname);
-
-  if (!procedures) {
-    return { error: message, message };
-  }
-
-  const one = (procedure: string) => {
-    const data = {
-      code: "INTERNAL_SERVER_ERROR",
-      httpStatus: 500,
-      path: procedure,
-    };
-
-    return {
-      error: {
-        json: { message, code: -32_603, data },
-        message,
-        code: -32_603,
-        data,
-      },
-    };
-  };
-
-  return procedures.length > 1 ? procedures.map(one) : one(procedures[0] ?? "");
-}
-
 function findMock(
   rules: MockRule[] | undefined,
   method: string,
   pathname: string
 ): MockRule | null {
-  return rules?.find((rule) => mockRuleMatches(rule, method, pathname)) ?? null;
+  return (
+    rules?.find(
+      (rule) =>
+        !isProcedureRule(rule) && mockRuleMatches(rule, method, pathname)
+    ) ?? null
+  );
 }
 
 function holdOpen(req: http.IncomingMessage, res: http.ServerResponse): void {
@@ -302,6 +269,10 @@ export function answerState(
     return true;
   }
 
+  if (applyProcedureReply(req, res, state)) {
+    return true;
+  }
+
   if (!isDataPath(pathname)) {
     return false;
   }
@@ -313,7 +284,7 @@ export function answerState(
   }
 
   if (state.resolved.def.kind === "error") {
-    sendJson(res, 500, errorBody(pathname));
+    sendJson(res, 500, toErrorBody(req));
 
     return true;
   }
@@ -341,21 +312,17 @@ export function wantsEmpty(
   state: ActiveFrameState | null,
   req: http.IncomingMessage
 ): boolean {
-  if (state?.resolved.def.kind !== "empty" || !isDataPath(pathOf(req))) {
-    return false;
+  const plan = toCallPlan(state, req);
+
+  if (plan) {
+    plans.set(req, plan);
   }
 
-  return !String(req.headers["trpc-accept"] ?? "").includes("jsonl");
+  return plan !== null;
 }
 
-function isJsonOk(status: number, upstreamRes: http.IncomingMessage): boolean {
-  const type = upstreamRes.headers["content-type"] ?? "";
-
-  return status < 400 && type.includes("json") && !type.includes("jsonl");
-}
-
-function syntheticEmpty(pathname: string): unknown {
-  const procedures = trpcProcedures(pathname);
+function syntheticEmpty(req: http.IncomingMessage, pathname: string): unknown {
+  const procedures = toProcedures(pathname);
 
   if (!procedures) {
     return [];
@@ -363,7 +330,9 @@ function syntheticEmpty(pathname: string): unknown {
 
   const one = () => ({ result: { data: { json: [] } } });
 
-  return procedures.length > 1 ? procedures.map(one) : one();
+  return isBatchCall(req.url ?? "", procedures.length)
+    ? procedures.map(one)
+    : one();
 }
 
 function emptyArrays(value: unknown, depth: number): unknown {
@@ -411,9 +380,25 @@ export function sendEmptied(
   status: number,
   headers: http.OutgoingHttpHeaders
 ): void {
+  const plan = plans.get(req);
+
+  const reply = { headers, req, res, status, upstreamRes };
+
+  if (plan?.mode === "record") {
+    applyRecording(reply, plan.recorder);
+
+    return;
+  }
+
+  if (plan?.mode === "splice") {
+    applySplice(reply, plan);
+
+    return;
+  }
+
   if (!isJsonOk(status, upstreamRes)) {
     upstreamRes.resume();
-    sendJson(res, 200, syntheticEmpty(pathOf(req)));
+    sendJson(res, 200, syntheticEmpty(req, pathOf(req)));
 
     return;
   }
@@ -432,9 +417,7 @@ export function sendEmptied(
       if (size <= MAX_EMPTY_BODY) {
         const parsed: unknown = JSON.parse(text);
         body = JSON.stringify(
-          trpcProcedures(pathOf(req))
-            ? emptyTrpc(parsed)
-            : emptyArrays(parsed, 0)
+          toProcedures(pathOf(req)) ? emptyTrpc(parsed) : emptyArrays(parsed, 0)
         );
       }
     } catch {

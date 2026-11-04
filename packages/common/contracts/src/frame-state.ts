@@ -16,6 +16,8 @@ export const FRAME_STATE_ATTR = "data-studio-state";
 export const MAX_MOCK_RULES = 40;
 export const MAX_CUSTOM_STATES = 12;
 export const MAX_MOCK_BODY = 200_000;
+export const MAX_RULE_DELAY_MS = 30_000;
+export const ID_PATH_SEGMENT = ":id";
 
 const STATE_ID_RE = /^[a-z][a-z0-9-]{0,23}$/;
 const HOST_LABEL_PREFIX = "s-";
@@ -186,10 +188,40 @@ export function cleanMockRule(raw: unknown): MockRule | null {
   }
 
   if (typeof rule.delayMs === "number" && rule.delayMs >= 0) {
-    out.delayMs = Math.min(Math.round(rule.delayMs), 30_000);
+    out.delayMs = Math.min(Math.round(rule.delayMs), MAX_RULE_DELAY_MS);
   }
 
   return out;
+}
+
+const ID_SEGMENT = ID_PATH_SEGMENT;
+const TRPC_SEGMENT = "/trpc/";
+
+function patternOf(rule: MockRule): string {
+  return rule.path.split("?")[0] ?? rule.path;
+}
+
+function matchesSegments(pattern: string, pathname: string): boolean {
+  const want = pattern.split("/");
+  const have = pathname.split("/");
+
+  return (
+    want.length === have.length &&
+    want.every((part, at) =>
+      part === ID_SEGMENT ? (have[at] ?? "") !== "" : part === have[at]
+    )
+  );
+}
+
+export function isProcedureRule(rule: MockRule): boolean {
+  const pattern = patternOf(rule);
+
+  return (
+    pattern.includes(TRPC_SEGMENT) &&
+    !pattern.includes(",") &&
+    !pattern.includes("*") &&
+    !Array.isArray(rule.body)
+  );
 }
 
 export function mockRuleMatches(
@@ -201,9 +233,13 @@ export function mockRuleMatches(
     return false;
   }
 
-  const pattern = rule.path.split("?")[0] ?? rule.path;
+  const pattern = patternOf(rule);
 
-  return pattern.endsWith("*")
-    ? pathname.startsWith(pattern.slice(0, -1))
+  if (pattern.endsWith("*")) {
+    return pathname.startsWith(pattern.slice(0, -1));
+  }
+
+  return pattern.includes(ID_SEGMENT)
+    ? matchesSegments(pattern, pathname)
     : pathname === pattern;
 }

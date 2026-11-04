@@ -1,10 +1,10 @@
+import { Icon } from "@design-studio/ui";
 import type {
   CSSProperties,
   PointerEvent as ReactPointerEvent,
   ReactNode,
 } from "react";
 
-import { Icon } from "@design-studio/ui";
 import { openAppPanel } from "../../platform/app-status.js";
 import { canvasStore, frameName } from "./canvas-frames-model.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";
@@ -150,7 +150,11 @@ export function FrameLabel({
           <span className="frame-size">{size}</span>
         )}
       </button>
-      <FrameStateMenu frameId={frame.id} frameName={name} />
+      <FrameStateMenu
+        frameId={frame.id}
+        frameName={name}
+        directionId={directionId}
+      />
       {!badge && <FlowFromHere frameId={frame.id} frameName={name} />}
       {extras}
       {note}

@@ -18,6 +18,7 @@ import {
 } from "@design-studio/contracts/frame-state";
 
 import { BadRequestError } from "../platform/errors/index.js";
+import { toTrialDef } from "./frame-state-trial.js";
 
 const STATES_FILE = "frame-states.json";
 const JAR_FILE = "frame-session.json";
@@ -267,7 +268,7 @@ export async function resolveFrameState(
   }
 
   const { states, jar } = await load(projectDir);
-  const def = findState(states, stateId);
+  const def = toTrialDef(projectDir, stateId) ?? findState(states, stateId);
 
   if (!def) {
     return null;

@@ -1,3 +1,4 @@
+import type { MockRule } from "@design-studio/contracts/frame-state";
 import type { Effect } from "effect";
 
 import { makeRuntimeSlot } from "./deps.js";
@@ -8,7 +9,21 @@ import type {
   Project,
 } from "./deps.js";
 
+interface FrameStateRequest {
+  readonly frame: string;
+  readonly mock: {
+    readonly name: string;
+    readonly rules: readonly MockRule[];
+    readonly signedIn: boolean;
+  } | null;
+  readonly state: string;
+}
+
 interface ViewportRuntime {
+  readonly applyFrameState: (
+    project: Project,
+    request: FrameStateRequest
+  ) => Promise<void>;
   readonly canvas: CanvasService;
   readonly dataDir: string;
   readonly loadDirection: (
@@ -16,6 +31,7 @@ interface ViewportRuntime {
     directionId: string
   ) => Promise<{ direction: Direction; project: Project }>;
   readonly preview: PreviewService;
+  readonly projectDir: (projectId: string) => string;
 }
 
 const runtimes = makeRuntimeSlot<ViewportRuntime>("Viewport");
@@ -28,4 +44,4 @@ const viewportRuntime: Effect.Effect<ViewportRuntime> = runtimes.read;
 
 export { bindViewportRuntime, viewportRuntime };
 
-export type { ViewportRuntime };
+export type { FrameStateRequest, ViewportRuntime };

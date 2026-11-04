@@ -17,6 +17,8 @@ const ALIASES = {
 
 const DEFAULTS = {
   keep_links: { ids: "all" },
+  list_comments: { limit: 200 },
+  list_design_systems: { limit: 200 },
   list_links: { check: true },
 } as const;
 
@@ -44,10 +46,54 @@ const toKnownArgs = (tool: LegacyTool, args: LegacyArgs): LegacyArgs => {
   );
 };
 
-const toLegacyArgs = (tool: LegacyTool, args: LegacyArgs): LegacyArgs => ({
-  ...toDefaults(tool.name),
-  ...toKnownArgs(tool, toRenamedArgs(tool.name, args)),
-});
+const HIDDEN_ARGS = {
+  add_comment: new Set(["author"]),
+  create_design_system: new Set(["improve", "images", "tokensUpload"]),
+  reply_comment: new Set(["author"]),
+} as const;
+
+const CLIENT_AUTHOR_TOOLS: ReadonlySet<string> = new Set([
+  "add_comment",
+  "reply_comment",
+]);
+
+const NO_HIDDEN: ReadonlySet<string> = new Set();
+
+const toHiddenKeys = (name: string): ReadonlySet<string> =>
+  Object.entries(HIDDEN_ARGS).find(([key]) => key === name)?.[1] ?? NO_HIDDEN;
+
+const toVisibleArgs = (name: string, args: LegacyArgs): LegacyArgs => {
+  const hidden = toHiddenKeys(name);
+
+  return Object.fromEntries(
+    Object.entries(args).filter(([key]) => !hidden.has(key))
+  );
+};
+
+const toClientArgs = (
+  name: string,
+  args: LegacyArgs,
+  client: string | null
+): LegacyArgs => {
+  if (client === null || !CLIENT_AUTHOR_TOOLS.has(name)) {
+    return args;
+  }
+
+  return { ...args, author: client };
+};
+
+const toBaseArgs = (tool: LegacyTool, args: LegacyArgs): LegacyArgs => {
+  const visible = toVisibleArgs(tool.name, args);
+  const renamed = toRenamedArgs(tool.name, visible);
+
+  return { ...toDefaults(tool.name), ...toKnownArgs(tool, renamed) };
+};
+
+const toLegacyArgs = (
+  tool: LegacyTool,
+  args: LegacyArgs,
+  client: string | null
+): LegacyArgs => toClientArgs(tool.name, toBaseArgs(tool, args), client);
 
 const DIRECTION_PROPERTY = {
   description: "Direction id. Leave out for the main direction.",
@@ -155,11 +201,17 @@ const toLegacySchema = (
 
   const optional = new Set(toOptionalKeys(name, takesDirection));
 
+  const hidden = toHiddenKeys(name);
+
   return {
     ...schema,
     properties: {
       ...toExtraProperties(name, takesDirection),
-      ...fields.value.properties,
+      ...Object.fromEntries(
+        Object.entries(fields.value.properties).filter(
+          ([key]) => !hidden.has(key)
+        )
+      ),
     },
     required: fields.value.required.filter((key) => !optional.has(key)),
   };

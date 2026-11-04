@@ -253,7 +253,11 @@ const callActionTool = (
     return refuse(RUNTIME_OFF);
   }
 
-  const legacy = toLegacyArgs({ action: tool.action, name }, args);
+  const legacy = toLegacyArgs(
+    { action: tool.action, name },
+    args,
+    caller.client
+  );
 
   return runActionTool(runtime, tool, toMainDirection(tool, legacy), {
     gate: gateOf(edits, name, caller.client),
@@ -296,10 +300,40 @@ const callerGate = (
   return agentGate(ask, action.id, args);
 };
 
+const SCOPE_KEYS = ["directionId", "projectId"] as const;
+
+interface RunScope {
+  readonly directionId: string;
+  readonly projectId: string;
+}
+
+const toScopedArgs = (
+  action: AnyAction,
+  args: WireArgs,
+  scope: RunScope | null
+): WireArgs => {
+  if (scope === null) {
+    return args;
+  }
+
+  const fields = new Set(Object.keys(action.input.fields));
+
+  const scoped = SCOPE_KEYS.flatMap((key) => {
+    if (!fields.has(key)) {
+      return [];
+    }
+
+    return [[key, scope[key]]];
+  });
+
+  return { ...args, ...Object.fromEntries(scoped) };
+};
+
 const actionCaller = (
   runtime: StudioRuntime | null | undefined,
   principal: Principal = toLegacyPrincipal(),
-  ask: ActionAsk | null = null
+  ask: ActionAsk | null = null,
+  scope: RunScope | null = null
 ): CallById | null => {
   if (!runtime) {
     return null;
@@ -312,8 +346,10 @@ const actionCaller = (
       return refuse(`unknown action ${action.id}`);
     }
 
-    return runActionTool(runtime, runner, args as WireArgs, {
-      gate: callerGate(ask, action, args as WireArgs),
+    const scoped = toScopedArgs(action, args as WireArgs, scope);
+
+    return runActionTool(runtime, runner, scoped, {
+      gate: callerGate(ask, action, scoped),
       principal,
     });
   };
@@ -359,9 +395,25 @@ const ActionTools = {
   list: listActionTools,
 } as const;
 
+interface RunCallerDeps {
+  readonly actionAsk?: ActionAsk | null;
+  readonly ctx: {
+    readonly direction: { readonly id: string };
+    readonly project: { readonly id: string };
+  };
+  readonly runtime?: StudioRuntime | null;
+}
+
+const runActionCaller = (deps: RunCallerDeps): CallById | null =>
+  actionCaller(deps.runtime, toLegacyPrincipal(), deps.actionAsk ?? null, {
+    directionId: deps.ctx.direction.id,
+    projectId: deps.ctx.project.id,
+  });
+
 export {
   ACTION_EDIT_TOOLS,
   actionCaller,
+  runActionCaller,
   ActionTools,
   ACTION_READ_TOOLS,
   buildMcpTools,

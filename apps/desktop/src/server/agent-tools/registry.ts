@@ -2,12 +2,12 @@ import type {
   SdkMcpToolDefinition,
   tool as sdkTool,
 } from "@anthropic-ai/claude-agent-sdk";
-
+import { AllActions } from "@design-studio/actions";
 import type {
   AgentBinding,
   AnyAction,
 } from "@design-studio/actions/_core/action";
-import { AllActions } from "@design-studio/actions";
+
 import { toSdkFields } from "./sdk-shape.js";
 import type { SdkFields } from "./sdk-shape.js";
 
@@ -27,12 +27,27 @@ interface AgentAction {
   readonly fields: SdkFields;
 }
 
+const RUN_SCOPE_FIELDS: ReadonlySet<string> = new Set([
+  "directionId",
+  "projectId",
+]);
+
 const toAgentAction = (action: AnyAction): AgentAction[] => {
   if (!("name" in action.agent)) {
     return [];
   }
 
-  return [{ action, binding: action.agent, fields: toSdkFields(action) }];
+  return [
+    {
+      action,
+      binding: action.agent,
+      fields: Object.fromEntries(
+        Object.entries(toSdkFields(action)).filter(
+          ([key]) => !RUN_SCOPE_FIELDS.has(key)
+        )
+      ),
+    },
+  ];
 };
 
 const AGENT_ACTIONS: readonly AgentAction[] = Object.values(AllActions).flatMap(

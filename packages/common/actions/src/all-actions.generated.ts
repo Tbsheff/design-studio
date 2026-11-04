@@ -1,4 +1,5 @@
 // @generated
+import { AnimationActions } from "./animation/index.js";
 import { CanvasActions } from "./canvas/index.js";
 import { CloudActions } from "./cloud/index.js";
 import { CommentActions } from "./comment/index.js";
@@ -28,6 +29,7 @@ import { ViewportActions } from "./viewport/index.js";
 import { WorkspaceActions } from "./workspace/index.js";
 
 const ALL_ACTIONS = {
+  animation: AnimationActions,
   canvas: CanvasActions,
   cloud: CloudActions,
   comment: CommentActions,

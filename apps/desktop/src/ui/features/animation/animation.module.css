@@ -1,0 +1,285 @@
+.toggle {
+  position: absolute;
+  bottom: var(--s-3);
+  left: var(--s-3);
+  z-index: 30;
+  height: 28px;
+  padding: 0 var(--s-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-control-sm);
+  background: var(--surface-raised);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--t-xs);
+  cursor: pointer;
+}
+
+.toggle:hover {
+  background: var(--surface-hover);
+}
+
+.panel {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 30;
+  display: grid;
+  gap: var(--s-2);
+  max-height: 52%;
+  padding: var(--s-3);
+  overflow: auto;
+  border-top: 1px solid var(--line-strong);
+  background: var(--surface-raised);
+  color: var(--text);
+  font-size: var(--t-xs);
+}
+
+.head,
+.toolbar,
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--s-2);
+}
+
+.head {
+  align-items: center;
+}
+
+.title {
+  margin-right: auto;
+  font-size: var(--t-sm);
+}
+
+.field {
+  display: grid;
+  gap: var(--s-1);
+}
+
+.input {
+  height: 24px;
+  padding: 0 var(--s-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-control-sm);
+  background: var(--surface-inset);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--t-xs);
+}
+
+.small,
+.primary,
+.danger {
+  height: 24px;
+  padding: 0 var(--s-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-control-sm);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: var(--t-xs);
+  cursor: pointer;
+}
+
+.small:hover:not(:disabled) {
+  background: var(--surface-hover);
+}
+
+.primary {
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+.danger {
+  color: var(--danger);
+}
+
+.small:disabled,
+.primary:disabled,
+.danger:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.time {
+  min-width: 56px;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.status {
+  color: var(--text-3);
+}
+
+.timeline {
+  --label: 150px;
+  display: grid;
+  gap: var(--s-1);
+}
+
+.rulerRow,
+.lane {
+  display: grid;
+  grid-template-columns: var(--label) 1fr;
+  align-items: center;
+}
+
+.laneName {
+  overflow: hidden;
+  padding-right: var(--s-2);
+  color: var(--text-3);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ruler {
+  position: relative;
+  height: 38px;
+  border-bottom: 1px solid var(--line-strong);
+}
+
+.tick {
+  position: absolute;
+  bottom: 0;
+  padding-left: 2px;
+  border-left: 1px solid var(--line);
+  color: var(--text-faint);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+.playhead {
+  position: absolute;
+  top: 0;
+  bottom: -1px;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--accent);
+  pointer-events: none;
+}
+
+.tracks {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.track {
+  display: grid;
+  gap: 2px;
+}
+
+.trackName {
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.laneBar {
+  position: relative;
+  height: 20px;
+  border-radius: var(--r-control-sm);
+  background: var(--surface-inset);
+}
+
+.headLine {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--accent-line);
+  pointer-events: none;
+}
+
+.key {
+  position: absolute;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  margin: -6px 0 0 -6px;
+  padding: 0;
+  border: 1px solid var(--accent-text);
+  border-radius: 2px;
+  background: var(--surface-raised);
+  cursor: grab;
+  transform: rotate(45deg);
+  touch-action: none;
+}
+
+.key[aria-pressed="true"] {
+  background: var(--accent);
+}
+
+.form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--s-2);
+  padding-top: var(--s-2);
+  border-top: 1px solid var(--line);
+}
+
+.note {
+  margin: 0;
+  color: var(--text-3);
+}
+
+.error {
+  color: var(--danger);
+}
+
+.exported {
+  display: grid;
+  gap: var(--s-1);
+  padding-top: var(--s-2);
+  border-top: 1px solid var(--line);
+}
+
+.code {
+  width: 100%;
+  height: 96px;
+  padding: var(--s-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-control-sm);
+  background: var(--surface-inset);
+  color: var(--text);
+  font:
+    11px/1.4 ui-monospace,
+    monospace;
+  resize: vertical;
+}
+
+.path {
+  overflow-wrap: anywhere;
+  color: var(--text-2);
+}
+
+.legend {
+  padding: 0;
+  color: var(--text-3);
+}
+
+.scrub {
+  position: absolute;
+  inset: 0 0 auto;
+  width: 100%;
+  height: 22px;
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: col-resize;
+}
+
+.form {
+  margin: 0;
+  padding: var(--s-2) 0 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+}
+
+.tick {
+  bottom: 0;
+}

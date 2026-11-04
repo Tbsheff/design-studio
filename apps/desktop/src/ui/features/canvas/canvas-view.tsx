@@ -1,5 +1,6 @@
 import { Suspense, useCallback, useMemo } from "react";
 
+import { AnimationEntry } from "../animation/index.js";
 import { ImportPageSlot, importPageItems } from "../page-import/index.js";
 import { ReviewEntry } from "../review/review-entry.js";
 import { ScenarioSection } from "../scenario/index.js";
@@ -190,6 +191,16 @@ const CanvasView = (props: ViewProps) => {
         shell={props.shell}
         toolKey={`${protoOn}-${comment.on}-${layersOpen}`}
       />
+      {directionId !== null && (
+        <Suspense fallback={null}>
+          <AnimationEntry
+            directionId={directionId}
+            post={frames.post}
+            projectId={projectId}
+            selector={props.selection[0]?.selector ?? null}
+          />
+        </Suspense>
+      )}
       {previewMenu.menu}
       {CommandsHost && <CommandsHost {...commandsInput} />}
       <div className="canvas-body">

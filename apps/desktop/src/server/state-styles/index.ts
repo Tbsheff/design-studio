@@ -1,3 +1,5 @@
+export { AnimationStore, AnimationWriter } from "./animation/index.js";
+
 export { StateStyleError } from "./errors.js";
 
 export { forcedSummary, setForcedState } from "./forced.js";
@@ -14,6 +16,11 @@ export {
 export { listStateStyles } from "./list.js";
 
 export { planStateStyle, setStateStyle, toStateResult } from "./set.js";
+
+export type {
+  AnimationStoreApi,
+  AnimationWriterApi,
+} from "./animation/index.js";
 
 export type { ForcedStateRequest } from "./forced.js";
 

@@ -505,6 +505,16 @@ export const decisionOverrides: OxlintOverride[] = [
     rules: { "sonarjs/no-implicit-dependencies": "off" },
   },
   {
+    files: [
+      "packages/common/actions/src/animation/{create,delete,export,get,list,schema,update}.ts",
+      "packages/common/actions/src/animation/errors/status.ts",
+      "apps/desktop/src/server/handlers/animation/{create,delete,export,get,handlers,list,live,update}.ts",
+      "apps/desktop/src/server/state-styles/animation/deps.ts",
+      "apps/desktop/src/ui/features/animation/deps.ts",
+    ],
+    rules: { "import/no-relative-parent-imports": "off" },
+  },
+  {
     files: ["apps/desktop/src/server/gallery/engine/page.ts"],
     rules: { "github/unescaped-html-literal": "off" },
   },

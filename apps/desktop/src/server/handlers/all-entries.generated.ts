@@ -1,4 +1,5 @@
 // @generated
+import { AnimationEntries } from "./animation/handlers.js";
 import { CanvasEntries } from "./canvas/handlers.js";
 import { CloudEntries } from "./cloud/handlers.js";
 import { CommentEntries } from "./comment/handlers.js";
@@ -28,6 +29,7 @@ import { ViewportEntries } from "./viewport/handlers.js";
 import { WorkspaceEntries } from "./workspace/handlers.js";
 
 const ALL_ENTRIES = {
+  animation: AnimationEntries,
   canvas: CanvasEntries,
   cloud: CloudEntries,
   comment: CommentEntries,

@@ -1,5 +1,6 @@
 import { Layer } from "effect";
 
+import { AnimationLive } from "../handlers/animation/live.js";
 import { CanvasLive } from "../handlers/canvas/live.js";
 import { CloudLive } from "../handlers/cloud/live.js";
 import { CommentLive } from "../handlers/comment/live.js";
@@ -39,6 +40,7 @@ const liveLayer = Layer.mergeAll(
   LocalOrgScope.layer,
   LocalPrincipal.layer,
   ProjectAccess.layer,
+  AnimationLive,
   CanvasLive,
   CloudLive,
   CommentLive,

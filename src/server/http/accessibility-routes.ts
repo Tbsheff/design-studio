@@ -1,5 +1,4 @@
 import type { Context, Hono } from "hono";
-import { z } from "zod";
 
 import type { AccessibilitySetResult } from "../../shared/accessibility.js";
 import type { CanvasFileFrame } from "../../shared/canvas-file.js";
@@ -21,6 +20,7 @@ import { readDesignSystemState } from "../design-system/state.js";
 import { DirectEditError } from "../direct-edit/engine/errors.js";
 import type { DirectEditDeps } from "../direct-edit/index.js";
 import { setAccessibilityFields } from "../platform/tool-fields/accessibility.js";
+import { z } from "../platform/zod-bridge/index.js";
 import { withPagePath } from "../project-source/source.js";
 import type { PreviewService } from "../types.js";
 

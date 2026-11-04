@@ -9,8 +9,6 @@ import {
 } from "node:fs/promises";
 import path from "node:path";
 
-import { z } from "zod";
-
 import type {
   Direction,
   Project,
@@ -26,6 +24,7 @@ import {
 } from "../../../shared/image.js";
 import { OWNERS_MAX, OWNER_STACK_MAX } from "../../../shared/props.js";
 import { loadLibrary, ownerUseSite } from "../../components/model.js";
+import { z } from "../../platform/zod-bridge/index.js";
 import type { InsertScope } from "../components-ops/insert.js";
 import { DirectEditError } from "../engine/errors.js";
 import {

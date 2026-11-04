@@ -1,7 +1,6 @@
 import { readFile } from "node:fs/promises";
 
 import { parse, type DefaultTreeAdapterMap } from "parse5";
-import { z } from "zod";
 
 import type { Direction, VersionMeta } from "../../../shared/contracts.js";
 import type { InsertTarget } from "../../../shared/insert.js";
@@ -18,6 +17,7 @@ import {
   type VectorRequest,
   type VectorResult,
 } from "../../../shared/vector.js";
+import { z } from "../../platform/zod-bridge/index.js";
 import type { InsertScope } from "../components-ops/insert.js";
 import { DirectEditError } from "../engine/errors.js";
 import { planBoolean } from "../engine/vector-boolean.js";

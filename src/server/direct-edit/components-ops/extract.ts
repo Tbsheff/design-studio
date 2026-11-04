@@ -3,7 +3,6 @@ import { readdir } from "node:fs/promises";
 import path from "node:path";
 
 import type * as t from "@babel/types";
-import { z } from "zod";
 
 import {
   COMPONENT_NAME,
@@ -27,6 +26,7 @@ import {
   parseModuleFile,
   resolveImport,
 } from "../../components/props-schema.js";
+import { z } from "../../platform/zod-bridge/index.js";
 import { writeAndCommitAll, type WrittenFile } from "../commit/batch.js";
 import type { DirectEditDeps, ResolvedSource } from "../commit/edit-types.js";
 import { assertCanEdit, publishVersion } from "../commit/publish.js";

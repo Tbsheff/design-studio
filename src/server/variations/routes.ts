@@ -1,6 +1,5 @@
 import type { Hono } from "hono";
 import { nanoid } from "nanoid";
-import { z } from "zod";
 
 import {
   RUN_LEVELS,
@@ -19,6 +18,7 @@ import {
   ConflictError,
   assertSafeId,
 } from "../platform/errors/index.js";
+import { z } from "../platform/zod-bridge/index.js";
 import { bindMcpReadRuntime } from "../preview/mcp-read-core.js";
 import type { StudioProjectStore } from "../store/projects.js";
 import type { AgentRunner, ServerConfig } from "../types.js";

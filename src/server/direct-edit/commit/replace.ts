@@ -2,7 +2,6 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 
 import type * as t from "@babel/types";
-import { z } from "zod";
 
 import type {
   Direction,
@@ -23,6 +22,7 @@ import {
   type StyleReplaceResult,
   type StyleSkip,
 } from "../../../shared/style-search.js";
+import { z } from "../../platform/zod-bridge/index.js";
 import { DirectEditError } from "../engine/errors.js";
 import { findJsxElement, parseSource } from "../engine/jsx.js";
 import { assertNotMapped, jsxAncestors } from "../engine/structure.js";

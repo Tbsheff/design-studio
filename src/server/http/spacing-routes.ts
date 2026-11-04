@@ -1,5 +1,4 @@
 import type { Context, Hono } from "hono";
-import { z } from "zod";
 
 import type { Direction, Project } from "../../shared/contracts.js";
 import {
@@ -16,6 +15,7 @@ import type {
 import { DirectEditError } from "../direct-edit/engine/errors.js";
 import { lengthToPx } from "../direct-edit/engine/tailwind/units.js";
 import type { DirectEditDeps } from "../direct-edit/index.js";
+import { z } from "../platform/zod-bridge/index.js";
 import type { SpacingScope } from "../spacing/commit.js";
 import { SpacingError } from "../spacing/errors.js";
 import { getSpacing } from "../spacing/get.js";

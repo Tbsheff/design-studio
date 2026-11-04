@@ -5,7 +5,6 @@ import type {
   SDKMessage,
   query,
 } from "@anthropic-ai/claude-agent-sdk";
-import { z } from "zod";
 
 import {
   VARIATION_BRIEF_MAX,
@@ -19,6 +18,7 @@ import {
 import { extractJson } from "../../shared/extract-json.js";
 import { WIREFRAME_MODEL } from "../../shared/run-levels.js";
 import { buildEnv } from "../platform/config/index.js";
+import { z } from "../platform/zod-bridge/index.js";
 
 type QueryFn = typeof query;
 

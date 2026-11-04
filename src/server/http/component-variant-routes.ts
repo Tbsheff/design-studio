@@ -1,5 +1,4 @@
 import type { Context, Hono } from "hono";
-import { z } from "zod";
 
 import {
   VARIANT_CLASSES,
@@ -23,6 +22,7 @@ import {
 } from "../components/variant-write/write.js";
 import { DirectEditError } from "../direct-edit/engine/errors.js";
 import type { DirectEditDeps } from "../direct-edit/index.js";
+import { z } from "../platform/zod-bridge/index.js";
 import type { PreviewService } from "../types.js";
 
 interface ComponentVariantRouteDeps {

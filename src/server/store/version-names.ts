@@ -2,11 +2,10 @@ import { randomBytes } from "node:crypto";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { z } from "zod";
-
 import type { Version } from "../../shared/contracts.js";
 import { BadRequestError, assertSafeId } from "../platform/errors/index.js";
 import { createKeyedMutex } from "../platform/mutex/index.js";
+import { z } from "../platform/zod-bridge/index.js";
 
 export const VERSION_NAME_MAX = 80;
 const FILE = "version-names.json";

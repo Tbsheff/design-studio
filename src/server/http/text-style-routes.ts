@@ -1,5 +1,4 @@
 import type { Context, Hono } from "hono";
-import { z } from "zod";
 
 import type { Direction, Project } from "../../shared/contracts.js";
 import {
@@ -19,6 +18,7 @@ import {
   planDirectEdit,
 } from "../direct-edit/index.js";
 import type { DirectEditDeps } from "../direct-edit/index.js";
+import { z } from "../platform/zod-bridge/index.js";
 import { applyTextStyle } from "../text-styles/apply.js";
 import { commitOne, guardEdit } from "../text-styles/commit.js";
 import type { TextStyleEditScope } from "../text-styles/commit.js";

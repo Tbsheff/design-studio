@@ -1,11 +1,10 @@
-import { z } from "zod";
-
 import {
   TWEAKS_MAX_CONTROLS,
   isSafeCssValue,
   type TweakControl,
   type TweaksFile,
 } from "../../shared/tweaks.js";
+import { z } from "../platform/zod-bridge/index.js";
 
 const cssValue = z
   .string()

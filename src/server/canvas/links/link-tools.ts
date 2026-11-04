@@ -1,5 +1,3 @@
-import { z } from "zod";
-
 import type { CanvasFileFrame } from "../../../shared/canvas-file.js";
 import type { Direction, Project } from "../../../shared/contracts.js";
 import { withFrameStateHost } from "../../../shared/frame-state.js";
@@ -39,6 +37,7 @@ import type {
 } from "../../../shared/links.js";
 import { frameStatesView } from "../../app/frame-state.js";
 import { withPagePath } from "../../export/source.js";
+import { z } from "../../platform/zod-bridge/index.js";
 import { waitForPage } from "../../preview/index.js";
 import type { RenderPage } from "../../preview/render-backend.js";
 import type { PreviewService } from "../../types.js";

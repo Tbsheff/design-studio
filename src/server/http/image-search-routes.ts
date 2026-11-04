@@ -1,5 +1,4 @@
 import type { Context, Hono } from "hono";
-import { z } from "zod";
 
 import type {
   Direction,
@@ -22,6 +21,7 @@ import {
   placeImageFields,
   searchImagesFields,
 } from "../platform/tool-fields/image-search.js";
+import { z } from "../platform/zod-bridge/index.js";
 import type { PreviewService } from "../types.js";
 
 interface ImageSearchProjects {

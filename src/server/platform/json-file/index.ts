@@ -1,12 +1,12 @@
 import { readFile } from "node:fs/promises";
 
-import type { ZodType } from "zod";
+import type { z } from "../zod-bridge/index.js";
 
 type TextWriter = (file: string, text: string) => Promise<void>;
 
 const readJsonFile = async <Value>(
   file: string,
-  schema: ZodType<Value>
+  schema: z.ZodType<Value>
 ): Promise<Value | null> => {
   try {
     const text = await readFile(file, "utf-8");

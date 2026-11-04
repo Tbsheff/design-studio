@@ -1,8 +1,6 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-import { z } from "zod";
-
 import {
   PACK_FILE,
   TOKENS_CSS_FILE,
@@ -24,6 +22,7 @@ import {
   NotFoundError,
   isNodeError,
 } from "../platform/errors/index.js";
+import { z } from "../platform/zod-bridge/index.js";
 import type { StudioProjectStore } from "../store/projects.js";
 import { checkDesignSystem } from "./check.js";
 import { restoreSnapshots } from "./create-token.js";

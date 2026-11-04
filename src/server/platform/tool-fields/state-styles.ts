@@ -1,5 +1,3 @@
-import { z } from "zod";
-
 import {
   BREAKPOINT_NAME,
   BREAKPOINT_VALUE_MAX,
@@ -9,6 +7,7 @@ import {
   STATE_SELECTOR_MAX,
   STYLE_STATES,
 } from "../../../shared/state-styles.js";
+import { z } from "../zod-bridge/index.js";
 
 const FRAME_MAX = 60;
 

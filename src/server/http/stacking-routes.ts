@@ -1,5 +1,4 @@
 import type { Context, Hono } from "hono";
-import { z } from "zod";
 
 import type { Direction, Project } from "../../shared/contracts.js";
 import type { StackingSetResult } from "../../shared/stacking.js";
@@ -9,6 +8,7 @@ import {
   getStackingFields,
   setStackingFields,
 } from "../platform/tool-fields/stacking.js";
+import { z } from "../platform/zod-bridge/index.js";
 import { StackingError } from "../stacking/errors.js";
 import { getStacking } from "../stacking/get.js";
 import { toStackingInput } from "../stacking/input.js";

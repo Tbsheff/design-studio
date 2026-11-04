@@ -1,5 +1,3 @@
-import { z } from "zod";
-
 import type {
   LinkTriggerKind,
   LinkVisibility,
@@ -24,6 +22,7 @@ import type {
   LinkEasing,
   LinkTransition,
 } from "../../../shared/links.js";
+import { z } from "../../platform/zod-bridge/index.js";
 import { frameRef } from "../tools.js";
 
 interface LinkInteractionRequest {

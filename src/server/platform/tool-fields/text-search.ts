@@ -1,11 +1,10 @@
-import { z } from "zod";
-
 import {
   TEXT_SEARCH_GLOB_MAX,
   TEXT_SEARCH_IDS_MAX,
   TEXT_SEARCH_QUERY_MAX,
   TEXT_SEARCH_REPLACE_MAX,
 } from "../../../shared/text-search.js";
+import { z } from "../zod-bridge/index.js";
 
 const HIT_ID_MAX = 1200;
 

@@ -2,8 +2,6 @@ import { randomBytes } from "node:crypto";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { z } from "zod";
-
 import {
   DEFAULT_SHIP_SETTINGS,
   SHIP_MODES,
@@ -11,6 +9,7 @@ import {
   type ShipRecord,
   type ShipSettings,
 } from "../../shared/ship.js";
+import { z } from "../platform/zod-bridge/index.js";
 
 const FILE = "ship.json";
 const HISTORY_KEEP = 20;

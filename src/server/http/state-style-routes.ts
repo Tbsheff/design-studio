@@ -1,5 +1,4 @@
 import type { Context, Hono } from "hono";
-import { z } from "zod";
 
 import type { Direction, Project } from "../../shared/contracts.js";
 import type { StateStyleResult } from "../../shared/state-styles.js";
@@ -10,6 +9,7 @@ import {
   forcedStateFields,
   setStateFields,
 } from "../platform/tool-fields/state-styles.js";
+import { z } from "../platform/zod-bridge/index.js";
 import { StateStyleError } from "../state-styles/errors.js";
 import { setForcedState } from "../state-styles/forced.js";
 import { toStateInput } from "../state-styles/input.js";

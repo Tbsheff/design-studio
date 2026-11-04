@@ -9,10 +9,9 @@ import {
 } from "node:fs/promises";
 import path from "node:path";
 
-import { z } from "zod";
-
 import { BadRequestError, isNodeError } from "../platform/errors/index.js";
 import { createKeyedMutex } from "../platform/mutex/index.js";
+import { z } from "../platform/zod-bridge/index.js";
 import { bindDefaultFolderRuntime } from "./workspace-runtime.js";
 
 export {

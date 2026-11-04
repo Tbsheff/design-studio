@@ -1,11 +1,10 @@
-import { z } from "zod";
-
 import {
   BREAKPOINT_NAME,
   BREAKPOINT_VALUE_MAX,
   BREAKPOINT_WIDTH_MAX,
 } from "../../../shared/breakpoints.js";
 import { DIRECT_STYLE_PROPERTIES } from "../../../shared/contracts.js";
+import { z } from "../zod-bridge/index.js";
 
 const FRAME_MAX = 200;
 

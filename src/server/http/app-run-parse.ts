@@ -1,5 +1,3 @@
-import { z } from "zod";
-
 import { cleanFramePath, isFrameId } from "../../shared/canvas-file.js";
 import { RUN_EFFORTS, RUN_LEVELS, isRunLevel } from "../../shared/contracts.js";
 import type {
@@ -11,6 +9,7 @@ import type {
 import { parseStatesRequest } from "../../shared/states.js";
 import { parseEditScope } from "../../shared/usage-scope.js";
 import { BadRequestError, assertSafeId } from "../platform/errors/index.js";
+import { z } from "../platform/zod-bridge/index.js";
 import { isRecord, requireString } from "./app-request.js";
 import { parseMentions } from "./mentions.js";
 

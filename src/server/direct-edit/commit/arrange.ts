@@ -1,8 +1,6 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-import { z } from "zod";
-
 import {
   planArrangeFacts,
   unchangedNote,
@@ -27,6 +25,7 @@ import type {
 } from "../../../shared/contracts.js";
 import { measureRects } from "../../../shared/measure.js";
 import { withPagePath } from "../../export/source.js";
+import { z } from "../../platform/zod-bridge/index.js";
 import type { PreviewService } from "../../types.js";
 import { DirectEditError } from "../engine/errors.js";
 import { htmlClassInfo } from "../engine/html.js";

@@ -1,5 +1,4 @@
 import type { Context, Hono } from "hono";
-import { z } from "zod";
 
 import type { Direction, Project } from "../../shared/contracts.js";
 import {
@@ -21,6 +20,7 @@ import { applyIconInsert } from "../icons/apply.js";
 import type { IconInsertResult } from "../icons/apply.js";
 import { listIcons } from "../icons/list.js";
 import { IconError } from "../icons/set.js";
+import { z } from "../platform/zod-bridge/index.js";
 import type { PreviewService } from "../types.js";
 
 interface IconRouteDeps {

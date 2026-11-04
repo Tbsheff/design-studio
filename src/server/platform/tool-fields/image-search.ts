@@ -1,5 +1,3 @@
-import { z } from "zod";
-
 import {
   IMAGE_ORIENTATIONS,
   IMAGE_QUERY_MAX,
@@ -10,6 +8,7 @@ import {
   IMAGE_FITS,
   IMAGE_MODES,
 } from "../../../shared/image.js";
+import { z } from "../zod-bridge/index.js";
 
 const FOCAL_MAX = 40;
 

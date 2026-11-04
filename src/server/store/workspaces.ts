@@ -11,7 +11,6 @@ import os from "node:os";
 import path from "node:path";
 
 import { customAlphabet } from "nanoid";
-import { z } from "zod";
 
 import type { WorkspaceFolder, WorkspaceList } from "../../shared/folders.js";
 import {
@@ -21,6 +20,7 @@ import {
   isNodeError,
 } from "../platform/errors/index.js";
 import { createKeyedMutex } from "../platform/mutex/index.js";
+import { z } from "../platform/zod-bridge/index.js";
 import { DEFAULT_FOLDER_NAME } from "./default-folder.js";
 import type { DefaultFolderStore } from "./default-folder.js";
 import { bindWorkspaceRuntime } from "./workspace-runtime.js";

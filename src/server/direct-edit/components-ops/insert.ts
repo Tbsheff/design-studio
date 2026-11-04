@@ -1,7 +1,6 @@
 import { readFile } from "node:fs/promises";
 
 import type * as t from "@babel/types";
-import { z } from "zod";
 
 import type {
   Direction,
@@ -40,6 +39,7 @@ import {
   parseModuleFile,
 } from "../../components/props-schema.js";
 import { ownerUseSite } from "../../components/use-site.js";
+import { z } from "../../platform/zod-bridge/index.js";
 import { writeAndCommitAll } from "../commit/batch.js";
 import { resolveSource } from "../commit/edit-source.js";
 import type { DirectEditDeps, ResolvedSource } from "../commit/edit-types.js";

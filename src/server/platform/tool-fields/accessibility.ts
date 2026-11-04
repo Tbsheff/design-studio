@@ -1,11 +1,10 @@
-import { z } from "zod";
-
 import {
   ACCESSIBILITY_LABEL_MAX,
   ACCESSIBILITY_ROLES,
   TAB_INDEX_MAX,
   TAB_INDEX_MIN,
 } from "../../../shared/accessibility.js";
+import { z } from "../zod-bridge/index.js";
 
 const inspectAccessibilityFields = {
   includePassing: z

@@ -1,10 +1,10 @@
 import type { Context, Hono } from "hono";
-import { z } from "zod";
 
 import { COMMENT_TEXT_MAX } from "../../shared/comments.js";
 import type { Direction, Project } from "../../shared/contracts.js";
 import type { RunWatcher } from "../comments/run-watch.js";
 import { BadRequestError } from "../platform/errors/index.js";
+import { z } from "../platform/zod-bridge/index.js";
 import type { CommentStore } from "../store/comments.js";
 
 export { withCommentInputs } from "../comments/run-payload.js";

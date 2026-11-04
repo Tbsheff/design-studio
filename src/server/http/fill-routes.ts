@@ -1,5 +1,4 @@
 import type { Context, Hono } from "hono";
-import { z } from "zod";
 
 import type { Direction, Project } from "../../shared/contracts.js";
 import {
@@ -21,6 +20,7 @@ import type { FillEditScope } from "../fill/commit.js";
 import { FillError } from "../fill/errors.js";
 import { getFill } from "../fill/get.js";
 import { setFill } from "../fill/set.js";
+import { z } from "../platform/zod-bridge/index.js";
 
 interface FillRouteDeps {
   editDeps: DirectEditDeps;

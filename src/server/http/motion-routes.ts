@@ -1,5 +1,4 @@
 import type { Context, Hono } from "hono";
-import { z } from "zod";
 
 import type { Direction, Project } from "../../shared/contracts.js";
 import {
@@ -21,6 +20,7 @@ import { listMotion } from "../motion/list.js";
 import { setMotion } from "../motion/set.js";
 import { MotionError } from "../motion/site.js";
 import { specOf } from "../motion/spec.js";
+import { z } from "../platform/zod-bridge/index.js";
 
 interface MotionRouteDeps {
   editDeps: DirectEditDeps;

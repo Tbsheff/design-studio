@@ -1,5 +1,4 @@
 import type { Context, Hono } from "hono";
-import { z } from "zod";
 
 import type { Direction, Project } from "../../shared/contracts.js";
 import type { TextUpdateResult } from "../../shared/text-search.js";
@@ -9,6 +8,7 @@ import {
   searchTextFields,
   updateTextFields,
 } from "../platform/tool-fields/text-search.js";
+import { z } from "../platform/zod-bridge/index.js";
 import { TextSearchError } from "../text-search/errors.js";
 import { toSearchQuery, toUpdateRequest } from "../text-search/input.js";
 import type { SearchTarget } from "../text-search/scope.js";

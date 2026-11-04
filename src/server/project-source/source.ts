@@ -1,5 +1,3 @@
-import { z } from "zod";
-
 import type {
   Direction,
   Project,
@@ -18,6 +16,7 @@ import {
   NotFoundError,
   assertSafeId,
 } from "../platform/errors/index.js";
+import { z } from "../platform/zod-bridge/index.js";
 
 interface OpenedPreview {
   url: string;

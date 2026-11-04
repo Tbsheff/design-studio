@@ -1,5 +1,3 @@
-import { z } from "zod";
-
 import {
   PAGE_IMPORT_NAME_MAX,
   PAGE_IMPORT_SELECTOR_MAX,
@@ -8,6 +6,7 @@ import {
   PAGE_IMPORT_WIDTH_MAX,
   PAGE_IMPORT_WIDTH_MIN,
 } from "../../../shared/page-import.js";
+import { z } from "../zod-bridge/index.js";
 
 const importPageFields = {
   name: z

@@ -425,6 +425,7 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/server/platform/tool-fields/stacking.ts",
       "src/server/platform/tool-fields/state-styles.ts",
       "src/server/platform/tool-fields/text-search.ts",
+      "src/server/platform/json-file/index.ts",
     ],
     rules: { "import/no-relative-parent-imports": "off" },
   },

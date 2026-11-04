@@ -3,7 +3,6 @@ import path from "node:path";
 
 import type * as t from "@babel/types";
 import MagicString from "magic-string";
-import { z } from "zod";
 
 import {
   DIRECT_STYLE_PROPERTIES,
@@ -29,6 +28,7 @@ import {
   elementAt,
   readInstance,
 } from "../../components/model.js";
+import { z } from "../../platform/zod-bridge/index.js";
 import { DirectEditError } from "../engine/errors.js";
 import { parseSource } from "../engine/jsx.js";
 import { applySplices } from "../engine/splice.js";

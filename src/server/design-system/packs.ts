@@ -3,8 +3,6 @@ import { mkdir, readFile, readdir, stat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { z } from "zod";
-
 import {
   DESIGN_SYSTEM_DIR,
   PACK_FILE,
@@ -26,6 +24,7 @@ import {
 } from "../design-rules/markdown.js";
 import { writeAtomic } from "../platform/atomic-write/index.js";
 import { resourcePath } from "../platform/resources/index.js";
+import { z } from "../platform/zod-bridge/index.js";
 import { compileTokens, parseTokenFile, resolveEntryValue } from "./compile.js";
 import { composeDesignMd as composeWithNotes } from "./design-md.js";
 

@@ -1,5 +1,3 @@
-import { z } from "zod";
-
 import {
   CANVAS_GAP,
   CANVAS_MAX_COORD,
@@ -12,6 +10,7 @@ import {
 } from "../../shared/canvas-file.js";
 import type { CanvasFile, CanvasFileFrame } from "../../shared/canvas-file.js";
 import type { Direction, Project, RunMode } from "../../shared/contracts.js";
+import { z } from "../platform/zod-bridge/index.js";
 import type { CanvasService } from "./service.js";
 
 export const frameRef = z.string().trim().min(1).max(60);

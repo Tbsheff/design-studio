@@ -3,7 +3,6 @@ import { readFile, rm } from "node:fs/promises";
 import path from "node:path";
 
 import { parse as parseColor } from "culori";
-import { z } from "zod";
 
 import {
   TOKEN_NAME_PATTERN,
@@ -35,6 +34,7 @@ import type {
   EditFileChange,
   PlannedEdit,
 } from "../direct-edit/index.js";
+import { z } from "../platform/zod-bridge/index.js";
 import { compileTokens, cssVarFor, parseTokenFile } from "./compile.js";
 import { DESIGN_MD_FILE, writeFileAtomic } from "./packs.js";
 import { readDesignSystemState } from "./state.js";

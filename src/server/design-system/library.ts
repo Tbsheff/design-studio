@@ -3,8 +3,6 @@ import { existsSync } from "node:fs";
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { z } from "zod";
-
 import type {
   CreateUserPackInput,
   DesignSystemCheckResult,
@@ -23,6 +21,7 @@ import {
   isNodeError,
 } from "../platform/errors/index.js";
 import { createKeyedMutex } from "../platform/mutex/index.js";
+import { z } from "../platform/zod-bridge/index.js";
 import { checkDesignSystemFiles } from "./check.js";
 import { compileTokens, parseTokenFile } from "./compile.js";
 import { removeTokenBlock } from "./design-md.js";

@@ -6,7 +6,6 @@ import { Hono } from "hono";
 import type { Context } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { streamSSE } from "hono/streaming";
-import { z } from "zod";
 
 import type { DesignComment } from "../../shared/contracts.js";
 import {
@@ -14,6 +13,7 @@ import {
   SHARE_LIVE_VIEWERS_MAX,
   SHARE_NAME_MAX,
 } from "../../shared/share.js";
+import { z } from "../platform/zod-bridge/index.js";
 import type { CommentStore } from "../store/comments.js";
 import { FAVICON_PNG_16, FAVICON_PNG_32, FAVICON_SVG } from "./favicon.js";
 import type { LiveHub } from "./live.js";

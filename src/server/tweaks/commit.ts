@@ -1,8 +1,6 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
 
-import { z } from "zod";
-
 import type {
   Direction,
   Project,
@@ -38,6 +36,7 @@ import {
   type DirectEditDeps,
   type EditFileChange,
 } from "../direct-edit/index.js";
+import { z } from "../platform/zod-bridge/index.js";
 import { applyEdits, type CssEdit } from "./css-vars.js";
 import { describeZodError } from "./schema.js";
 import {

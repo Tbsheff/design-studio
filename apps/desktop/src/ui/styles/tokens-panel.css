@@ -459,6 +459,10 @@
   transition: opacity var(--dur-fast) var(--ease-out);
 }
 
+.cmp-insert + .cmp-insert {
+  right: calc(var(--s-2) + 28px + var(--s-1));
+}
+
 .cmp-item:hover .cmp-insert,
 .cmp-insert:focus-visible,
 .cmp-insert[aria-expanded="true"] {

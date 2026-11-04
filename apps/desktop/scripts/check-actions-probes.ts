@@ -83,7 +83,7 @@ const isProbeName = (name: string): name is keyof typeof PROBES =>
   Object.hasOwn(PROBES, name);
 
 const plantProbes = async (): Promise<Planted> => {
-  const temp = await mkdtemp(path.join(ROOT, ".probes-"));
+  const temp = await mkdtemp(path.join(ROOT, "apps/desktop", ".probes-"));
   const target = path.join(temp, "stamp", "probes");
   const listed = await readdir(path.join(ROOT, PROBE_DIR));
   const files = listed.filter((file) => TS_SUFFIX.test(file));

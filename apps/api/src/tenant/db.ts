@@ -1,6 +1,6 @@
+import { NotFound } from "@design-studio/actions/_core/errors/not-found";
 import { Context, Effect, Layer, Schema } from "effect";
 
-import { NotFound } from "@design-studio/actions/_core/errors/not-found";
 import { CloudBindings } from "../platform/bindings.js";
 import { CurrentOrg } from "./current-org.js";
 import {
@@ -8,6 +8,8 @@ import {
   WRONG_ORG_MESSAGE,
 } from "./errors/row-org-mismatch.js";
 import type { ParamValues, TenantStatement } from "./sql.js";
+
+type StatementFacts = Omit<TenantStatement<ParamValues>, "bind">;
 
 type RowSchema<Row> = Schema.Codec<Row, unknown>;
 
@@ -48,13 +50,13 @@ interface TenantDbApi {
 }
 
 const mismatch = (
-  statement: TenantStatement<ParamValues>,
+  statement: StatementFacts,
   message: string
 ): Effect.Effect<never> =>
   Effect.die(new RowOrgMismatch({ message, statement: statement.sql }));
 
 const checkRows = Effect.fn("TenantDb.checkRows")(function* run(
-  statement: TenantStatement<ParamValues>,
+  statement: StatementFacts,
   rows: readonly unknown[],
   orgId: string
 ) {
@@ -77,9 +79,7 @@ const decodeRows = <Row>(
     Effect.all(rows.map((row) => Schema.decodeUnknownEffect(schema)(row)))
   );
 
-const needsReturning = (
-  statement: TenantStatement<ParamValues>
-): Effect.Effect<void> => {
+const needsReturning = (statement: StatementFacts): Effect.Effect<void> => {
   if (statement.kind === "select") {
     return mismatch(statement, "a write statement is needed");
   }
@@ -121,10 +121,9 @@ const makeBatch = (db: D1Database): TenantDbApi["batch"] =>
 const makeDb = (db: D1Database): TenantDbApi => {
   const runBatch = makeBatch(db);
 
-  const rowsOf = Effect.fn("TenantDb.rowsOf")(function* run(
-    statement: TenantStatement<ParamValues>,
-    values: ParamValues
-  ) {
+  const rowsOf = Effect.fn("TenantDb.rowsOf")(function* run<
+    Params extends ParamValues,
+  >(statement: TenantStatement<Params>, values: Params) {
     const org = yield* CurrentOrg;
     const bound = statement.bind(org.orgId, values);
 
@@ -138,10 +137,9 @@ const makeDb = (db: D1Database): TenantDbApi => {
     return yield* checkRows(statement, result.results, org.orgId);
   });
 
-  const writeRows = Effect.fn("TenantDb.writeRows")(function* run(
-    statement: TenantStatement<ParamValues>,
-    values: ParamValues
-  ) {
+  const writeRows = Effect.fn("TenantDb.writeRows")(function* run<
+    Params extends ParamValues,
+  >(statement: TenantStatement<Params>, values: Params) {
     yield* needsReturning(statement);
 
     return yield* rowsOf(statement, values);

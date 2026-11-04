@@ -1,6 +1,6 @@
+import { Unauthenticated } from "@design-studio/actions/_core/errors/unauthenticated";
 import { Context, Effect, Layer } from "effect";
 
-import { Unauthenticated } from "@design-studio/actions/_core/errors/unauthenticated";
 import { AuthGateway } from "../../auth/gateway.js";
 import { CurrentOrg } from "../../tenant/current-org.js";
 import type { CurrentOrgApi } from "../../tenant/current-org.js";
@@ -119,7 +119,7 @@ const withAgent =
   ): Effect.Effect<
     Value,
     Failure | Unauthenticated,
-    Exclude<Needs, CurrentKey | CurrentOrg> | AgentAuth
+    Exclude<Exclude<Needs, CurrentOrg>, CurrentKey> | AgentAuth
   > =>
     Effect.gen(function* run() {
       const auth = yield* AgentAuth;

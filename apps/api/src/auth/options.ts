@@ -1,6 +1,6 @@
 import { apiKey } from "@better-auth/api-key";
 import { passkey } from "@better-auth/passkey";
-import type { BetterAuthOptions, BetterAuthPlugin } from "better-auth";
+import type { BetterAuthOptions } from "better-auth";
 import {
   admin,
   deviceAuthorization,
@@ -44,7 +44,20 @@ const MCP_KEY_RATE = { enabled: true, maxRequests: 600, timeWindow: 60_000 };
 const canCreateOrg = async (user: VerifiedUser): Promise<boolean> =>
   await Promise.resolve(user.emailVerified);
 
-const toPlugins = (input: AuthInput): BetterAuthPlugin[] => [
+type AuthPlugins = [
+  ReturnType<typeof organization>,
+  ReturnType<typeof apiKey>,
+  ReturnType<typeof jwt>,
+  ReturnType<typeof deviceAuthorization>,
+  ReturnType<typeof passkey>,
+  ReturnType<typeof admin<Record<never, never>>>,
+];
+
+type AuthOptions = Omit<BetterAuthOptions, "plugins"> & {
+  plugins: AuthPlugins;
+};
+
+const toPlugins = (input: AuthInput): AuthPlugins => [
   organization({
     ac: accessControl,
     allowUserToCreateOrganization: canCreateOrg,
@@ -82,7 +95,7 @@ const toPlugins = (input: AuthInput): BetterAuthPlugin[] => [
   admin(),
 ];
 
-const toAuthOptions = (input: AuthInput): BetterAuthOptions => ({
+const toAuthOptions = (input: AuthInput): AuthOptions => ({
   account: {
     accountLinking: {
       allowDifferentEmails: false,
@@ -116,4 +129,4 @@ const toAuthOptions = (input: AuthInput): BetterAuthOptions => ({
 
 export { toAuthOptions };
 
-export type { AuthInput, AuthSettings, VerifiedUser };
+export type { AuthInput, AuthOptions, AuthSettings, VerifiedUser };

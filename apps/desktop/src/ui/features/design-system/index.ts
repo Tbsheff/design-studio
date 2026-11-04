@@ -1,15 +1,22 @@
 import { lazy } from "react";
+import type { LazyExoticComponent } from "react";
 
+import type { ComponentsPanel as ComponentsPanelView } from "./components-panel.js";
+import type { CreateComponentDialog as CreateComponentDialogView } from "./create-component-dialog.js";
 import type { DesignSystems as DesignSystemsView } from "./design-systems.js";
 import type { NewDesignSystem as NewDesignSystemView } from "./new-design-system.js";
 
-const ComponentsPanel = lazy(async () => {
-  const loaded = await import("./components-panel.js");
+const ComponentsPanel: LazyExoticComponent<typeof ComponentsPanelView> = lazy(
+  async () => {
+    const loaded = await import("./components-panel.js");
 
-  return { default: loaded.ComponentsPanel };
-});
+    return { default: loaded.ComponentsPanel };
+  }
+);
 
-const CreateComponentDialog = lazy(async () => {
+const CreateComponentDialog: LazyExoticComponent<
+  typeof CreateComponentDialogView
+> = lazy(async () => {
   const loaded = await import("./create-component-dialog.js");
 
   return { default: loaded.CreateComponentDialog };

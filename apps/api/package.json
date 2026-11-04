@@ -9,6 +9,8 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
+    "@better-auth/api-key": "1.7.0",
+    "@better-auth/passkey": "1.7.0",
     "@design-studio/actions": "workspace:*",
     "better-auth": "1.7.0",
     "effect": "4.1.1",

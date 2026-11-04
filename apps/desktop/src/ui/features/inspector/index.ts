@@ -1,4 +1,7 @@
 import { lazy } from "react";
+import type { LazyExoticComponent } from "react";
+
+import type { TweaksPanel as TweaksPanelView } from "./tweaks-panel.js";
 
 const Inspector = lazy(async () => {
   const loaded = await import("./inspector.js");
@@ -6,11 +9,13 @@ const Inspector = lazy(async () => {
   return { default: loaded.Inspector };
 });
 
-const TweaksPanel = lazy(async () => {
-  const loaded = await import("./tweaks-panel.js");
+const TweaksPanel: LazyExoticComponent<typeof TweaksPanelView> = lazy(
+  async () => {
+    const loaded = await import("./tweaks-panel.js");
 
-  return { default: loaded.TweaksPanel };
-});
+    return { default: loaded.TweaksPanel };
+  }
+);
 
 export { Inspector, TweaksPanel };
 

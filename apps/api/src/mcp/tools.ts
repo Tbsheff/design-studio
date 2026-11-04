@@ -92,10 +92,10 @@ const toSchema = (
   type: "object",
 });
 
-const decode = <Fields extends Schema.Struct.Fields>(
-  schema: Schema.Struct<Fields>,
+const decode = <Value>(
+  schema: Schema.Decoder<Value>,
   args: unknown
-): Effect.Effect<Schema.Struct.Type<Fields>, BadRequest> =>
+): Effect.Effect<Value, BadRequest> =>
   Schema.decodeUnknownEffect(schema)(args ?? {}).pipe(
     Effect.mapError(
       () => new BadRequest({ message: "The tool arguments are not valid." })

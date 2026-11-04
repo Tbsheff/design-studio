@@ -1,8 +1,8 @@
-import { Context, Effect, Layer, Option, Schema } from "effect";
-
 import { Forbidden } from "@design-studio/actions/_core/errors/forbidden";
 import { NotFound } from "@design-studio/actions/_core/errors/not-found";
 import { Unauthenticated } from "@design-studio/actions/_core/errors/unauthenticated";
+import { Context, Effect, Layer, Option, Schema } from "effect";
+
 import { AuthGateway } from "../../auth/gateway.js";
 import { CurrentOrg } from "../../tenant/current-org.js";
 import type { CurrentOrgApi, OrgVia } from "../../tenant/current-org.js";
@@ -214,7 +214,7 @@ const withMember =
   ): Effect.Effect<
     Value,
     Failure | MemberAuthError,
-    Exclude<Needs, CurrentOrg | CurrentUser> | MemberAuth
+    Exclude<Exclude<Needs, CurrentOrg>, CurrentUser> | MemberAuth
   > =>
     Effect.gen(function* run() {
       const auth = yield* MemberAuth;

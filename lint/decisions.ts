@@ -281,6 +281,10 @@ export const APP_BUDGET_ZERO_GLOBS = [
 
 export const decisionOverrides: OxlintOverride[] = [
   {
+    files: ["apps/api/src/http/middleware/auth-calls.ts"],
+    rules: { "import/no-relative-parent-imports": "off" },
+  },
+  {
     files: [
       "apps/desktop/src/ui/app/app.tsx",
       "apps/desktop/src/ui/app/app-notice.tsx",

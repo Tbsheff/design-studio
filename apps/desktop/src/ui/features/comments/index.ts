@@ -1,4 +1,7 @@
 import { lazy } from "react";
+import type { LazyExoticComponent } from "react";
+
+import type { CommentsPanel as CommentsPanelView } from "./comments-panel.js";
 
 const CommentLayer = lazy(async () => {
   const loaded = await import("./comment-layer.js");
@@ -6,11 +9,13 @@ const CommentLayer = lazy(async () => {
   return { default: loaded.CommentLayer };
 });
 
-const CommentsPanel = lazy(async () => {
-  const loaded = await import("./comments-panel.js");
+const CommentsPanel: LazyExoticComponent<typeof CommentsPanelView> = lazy(
+  async () => {
+    const loaded = await import("./comments-panel.js");
 
-  return { default: loaded.CommentsPanel };
-});
+    return { default: loaded.CommentsPanel };
+  }
+);
 
 const ComposerComments = lazy(async () => {
   const loaded = await import("./composer-comments.js");

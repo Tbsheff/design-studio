@@ -6,10 +6,10 @@ import { CloudSettings } from "../platform/env.js";
 import { toMemberRoles } from "./member-roles.js";
 import type { MemberRoles } from "./member-roles.js";
 import { toAuthOptions } from "./options.js";
-import type { VerifiedUser } from "./options.js";
+import type { AuthOptions, VerifiedUser } from "./options.js";
 import { toRateClient } from "./rate-limit.js";
 
-type AuthInstance = ReturnType<typeof betterAuth>;
+type AuthInstance = ReturnType<typeof betterAuth<AuthOptions>>;
 
 interface AuthGatewayApi {
   readonly api: AuthInstance["api"];

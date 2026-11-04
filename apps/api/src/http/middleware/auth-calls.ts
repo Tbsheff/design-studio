@@ -1,3 +1,5 @@
+import type { AuthInstance } from "../../auth/gateway.js";
+
 interface SessionUser {
   readonly email: string;
   readonly id: string;
@@ -51,9 +53,21 @@ interface AuthCalls {
   }) => Promise<DeviceResult | null>;
 }
 
-const toAuthCalls = (api: AuthCalls): AuthCalls => ({
+const toAuthCalls = (api: AuthInstance["api"]): AuthCalls => ({
   getSession: async (input) => await api.getSession(input),
-  verifyApiKey: async (input) => await api.verifyApiKey(input),
+  verifyApiKey: async (input) => {
+    const result = await api.verifyApiKey(input);
+    const { key } = result;
+
+    if (key === null) {
+      return { key: null, valid: result.valid };
+    }
+
+    return {
+      key: { ...key, permissions: key.permissions ?? null },
+      valid: result.valid,
+    };
+  },
   verifyJWT: async (input) => await api.verifyJWT(input),
 });
 

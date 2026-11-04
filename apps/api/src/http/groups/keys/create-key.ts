@@ -21,7 +21,7 @@ interface CreateApi {
       readonly configId: string;
       readonly name: string;
       readonly organizationId: string;
-      readonly permissions: Readonly<Record<string, readonly string[]>>;
+      readonly permissions: Record<string, string[]>;
       readonly userId: string;
     };
   }) => Promise<CreatedKey>;

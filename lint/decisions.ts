@@ -403,6 +403,10 @@ export const decisionOverrides: OxlintOverride[] = [
     rules: { "import/no-relative-parent-imports": "off" },
   },
   {
+    files: ["src/server/components/index.ts"],
+    rules: { "import/no-relative-parent-imports": "off" },
+  },
+  {
     files: [
       "src/shared/actions/run/list.ts",
       "src/server/run-log/run-log-reads.ts",
@@ -539,10 +543,7 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/server/project-source/source.ts",
       "src/server/run-log/run-list.ts",
       SERVER_MAIN,
-      "src/server/direct-edit/change-feed.ts",
-      "src/server/direct-edit/planned-feed.ts",
-      "src/server/git/user-git.ts",
-      "src/server/preview/{ports,render-contract,render-wait}.ts",
+      "src/server/preview/{ports,render-contract}.ts",
       "src/server/cloud/{cloud-migration-runner,outbox-store,sync-runner}.ts",
       "src/server/store/{device-bindings,authorizer,data-lock,default-folder,events,git-objects,local-principal,principal,mutex,project-access,project-org,skill-store,starters,studio-info}.ts",
       "src/{server/handlers/_core/handler,server/handlers/_core/run-action,server/handlers/studio/handlers,server/handlers/studio/health,server/handlers/studio/list-skills,server/handlers/studio/live,shared/actions/studio/health,shared/actions/studio/list-skills}.ts",
@@ -881,9 +882,8 @@ export const decisionOverrides: OxlintOverride[] = [
     files: [
       "src/server/direct-edit/{classes,css,errors,html,jsx-snippet,jsx,splice,structure-docs,structure-ops,structure,tokens,validate,variant-css,vector-boolean,vector-geometry,vector-snippet,vector-source}.ts",
       "src/server/direct-edit/tailwind/{classes,color,copy,html-site,index,jsx-site,map,plan,units}.ts",
-      "src/server/direct-edit/commit/imports.ts",
-      "src/server/{components/{insert,swap,extract,extract-file,extract-shape,import-cleanup},direct-edit/components-ops/index,store/version-hunk,agent/usage-scope,export/capture}.ts",
-      "src/server/{mcp/{element,layer-ref,layer-ids,line-map,source-loc},layers/lock-probe,components/owner-probe,page-probe/index,app/{route-eval,route-links,route-flow,frame-state-service},canvas/{index,links/index,app-flow/index}}.ts",
+      "src/server/{direct-edit/components-ops/index,store/version-hunk}.ts",
+      "src/server/{mcp/{element,layer-ref,layer-ids,line-map,source-loc},page-probe/index,canvas/{index,links/index,app-flow/index}}.ts",
       "src/server/direct-edit/{arrange-probe,arrange,batch,class-info,edit-site,follow-moves,history,image-attrs,image-find,image-source,image,imports,jsx-insert,props,replace,run-record,save-queue,structure-apply,style-scan,text-source-files,text-source,text-trace,vector-ops}.ts",
     ],
     rules: {

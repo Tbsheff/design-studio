@@ -11,12 +11,12 @@ import {
 } from "../../shared/frame-state.js";
 import { changedLineRanges } from "../../shared/line-diff.js";
 import type { ScreenPlan } from "../../shared/run-levels.js";
+import { stateOfFrame } from "../app/frame-state.js";
+import { listAppRoutes } from "../app/routes.js";
 import {
   readFrameStates,
   type FrameStateDeps,
-} from "../app/frame-state-service.js";
-import { stateOfFrame } from "../app/frame-state.js";
-import { listAppRoutes } from "../app/routes.js";
+} from "../canvas/app-flow/frame-state-service.js";
 import type { CanvasService } from "../canvas/service.js";
 import { withPagePath } from "../export/source.js";
 import type { RenderPage } from "../preview/render-backend.js";

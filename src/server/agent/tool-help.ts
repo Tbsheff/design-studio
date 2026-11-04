@@ -1,5 +1,5 @@
-import { FRAME_STATES_NOTE } from "../app/frame-state-service.js";
-import { FLOW_NOTE } from "../app/route-flow.js";
+import { FRAME_STATES_NOTE } from "../canvas/app-flow/frame-state-service.js";
+import { FLOW_NOTE } from "../canvas/app-flow/route-flow.js";
 import {
   inspectAccessibilityDescription,
   setAccessibilityDescription,

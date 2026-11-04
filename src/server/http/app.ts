@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 
+import { isRunSummary } from "../run-log/index.js";
 import { registerAppCanvasRoutes } from "./app-canvas-routes.js";
 import { registerAppCommentsRoutes } from "./app-comments-routes.js";
 import { createAppContext, type AppDeps } from "./app-context.js";
@@ -37,7 +38,6 @@ import {
 } from "./app-versions-routes.js";
 import { registerWorkspacesRoutes } from "./app-workspaces-routes.js";
 import { registerLoopbackGuard } from "./loopback-guard.js";
-import { isRunSummary } from "./run-list.js";
 import { renderIndexHtml, serveStatic } from "./static.js";
 
 export { isRunSummary };

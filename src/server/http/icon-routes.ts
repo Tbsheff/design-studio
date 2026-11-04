@@ -15,14 +15,13 @@ import {
   ICON_SOURCES,
   ICON_TARGET_MAX,
 } from "../../shared/icons.js";
-import { DirectEditError } from "../direct-edit/index.js";
+import { DirectEditError, previewOriginOf } from "../direct-edit/index.js";
 import type { DirectEditDeps } from "../direct-edit/index.js";
 import { applyIconInsert } from "../icons/apply.js";
 import type { IconInsertResult } from "../icons/apply.js";
 import { listIcons } from "../icons/list.js";
 import { IconError } from "../icons/set.js";
 import type { PreviewService } from "../types.js";
-import { previewOriginOf } from "./insert-routes.js";
 
 interface IconRouteDeps {
   editDeps: DirectEditDeps;

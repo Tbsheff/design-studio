@@ -20,7 +20,7 @@ import {
 } from "../app/first-version.js";
 import { setAsideLegacyCanvas } from "../canvas/service.js";
 import { warmKit } from "../components/props-service.js";
-import { userGit } from "../git/user-git.js";
+import { userGit } from "../platform/git/user-git.js";
 import { BadRequestError, ConflictError } from "../store/errors.js";
 import type { StudioProjectStore } from "../store/projects.js";
 import type { PreviewService, VersionStore } from "../types.js";

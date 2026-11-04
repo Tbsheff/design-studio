@@ -20,9 +20,9 @@ import {
   ruleDrafts,
 } from "../design-rules/check.js";
 import { readDesignSystemState } from "../design-system/state.js";
-import { waitForPage } from "../export/capture.js";
 import { withPagePath } from "../export/source.js";
 import { loadAxeSource, pickRules } from "../preview/axe.js";
+import { waitForPage } from "../preview/index.js";
 import {
   layoutProbeExpression,
   type LayoutProbeResult,

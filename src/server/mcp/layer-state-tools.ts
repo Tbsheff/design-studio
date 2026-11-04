@@ -12,7 +12,7 @@ import {
   lockDelta,
   lockOutcome,
   probeLock,
-} from "../layers/lock-probe.js";
+} from "../page-probe/lock-probe.js";
 import { callAction } from "./action-call.js";
 import type { ActivityDraft } from "./activity.js";
 import { EditError, loadTarget, refuseWhileRunning } from "./edit-guards.js";

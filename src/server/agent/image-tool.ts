@@ -10,7 +10,6 @@ import {
   IMAGE_MODES,
   imageKindOf,
 } from "../../shared/image.js";
-import { probeOwners } from "../components/owner-probe.js";
 import {
   imageFromPath,
   imageFromUrl,
@@ -23,6 +22,7 @@ import {
   writeImagePlan,
 } from "../direct-edit/commit/image.js";
 import { describeElements } from "../mcp/element.js";
+import { probeOwners } from "../page-probe/owner-probe.js";
 import { refusal, writeProblem, type DirectToolDeps } from "./direct-tools.js";
 import { resolveSelectors } from "./kit-tools.js";
 import { editPageUrl } from "./run-target.js";

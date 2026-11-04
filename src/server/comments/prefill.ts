@@ -17,7 +17,7 @@ import { withFrameStateHost } from "../../shared/frame-state.js";
 import { frameStatesView, stateOfFrame } from "../app/frame-state.js";
 import { readProjectCanvas } from "../canvas/service.js";
 import { findFrame } from "../canvas/tools.js";
-import { captureFrame } from "../export/capture.js";
+import { captureFrame } from "../preview/index.js";
 import { ConflictError, NotFoundError } from "../store/errors.js";
 import type { PreviewService } from "../types.js";
 

@@ -19,7 +19,7 @@ export {
   ICON_PACKAGES,
 } from "../../shared/icons.js";
 
-export type { InsertScope } from "../components/insert.js";
+export type { InsertScope } from "../direct-edit/components-ops/insert.js";
 
 export type { DirectEditDeps } from "../direct-edit/index.js";
 

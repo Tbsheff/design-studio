@@ -11,6 +11,13 @@ import {
   type ShipRequest,
   type ShipResult,
 } from "../../shared/ship.js";
+import {
+  NETWORK_TIMEOUT_MS,
+  WRITE_TIMEOUT_MS,
+  execTool,
+  findOnPath,
+  userGit,
+} from "../platform/git/user-git.js";
 import { BadRequestError, ConflictError } from "../store/errors.js";
 import { createKeyedMutex } from "../store/mutex.js";
 import {
@@ -30,13 +37,6 @@ import {
   type TreeEntry,
 } from "./ship-prepare.js";
 import { addShipRecord } from "./ship-store.js";
-import {
-  NETWORK_TIMEOUT_MS,
-  WRITE_TIMEOUT_MS,
-  execTool,
-  findOnPath,
-  userGit,
-} from "./user-git.js";
 
 const shipLock = createKeyedMutex();
 const PR_URL = /https?:\/\/\S+/g;

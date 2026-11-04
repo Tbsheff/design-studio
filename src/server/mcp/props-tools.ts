@@ -15,7 +15,7 @@ import {
   type PropValue,
   type SetPropsResult,
 } from "../../shared/props.js";
-import { probeOwners } from "../components/owner-probe.js";
+import { probeOwners } from "../page-probe/owner-probe.js";
 import { callAction } from "./action-call.js";
 import {
   EditError,

@@ -1,10 +1,10 @@
 import { z } from "zod";
 
 import { PROP_NAME, PROP_TEXT_MAX, PROPS_MAX } from "../../shared/props.js";
-import { probeOwners } from "../components/owner-probe.js";
 import { resolveInstance } from "../components/use-site.js";
 import { parseSetProps, planSetProps } from "../direct-edit/commit/props.js";
 import { writeAtomic } from "../direct-edit/index.js";
+import { probeOwners } from "../page-probe/owner-probe.js";
 import { refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
 import { editPageUrl } from "./run-target.js";

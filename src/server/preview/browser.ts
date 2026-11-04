@@ -12,12 +12,13 @@ import type {
   RenderCheckResult,
 } from "../../shared/contracts.js";
 import type { RenderClip } from "../../shared/render-rpc.js";
-import { waitForPage } from "../export/capture.js";
+import { projectOfUrl } from "../events/render-wait.js";
 import { dropOutsideApp } from "./app-source-filter.js";
 import { runAxe, runSharedAxe } from "./axe.js";
 import type { AxeViolation } from "./axe.js";
 import { CaptureCache, cacheKey } from "./capture-cache.js";
 import type { Stamps } from "./capture-cache.js";
+import { waitForPage } from "./capture.js";
 import { layoutProbeExpression } from "./layout-probe.js";
 import type { LayoutProbeResult } from "./layout-probe.js";
 import { WarmPages } from "./page-pool.js";
@@ -40,7 +41,6 @@ import {
   tapFindings,
 } from "./quality.js";
 import { createRenderBackend } from "./render-backend.js";
-import { projectOfUrl } from "./render-wait.js";
 import { expandScrollRoot } from "./scroll-root.js";
 
 export type {

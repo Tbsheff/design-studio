@@ -6,12 +6,15 @@ import {
 } from "../../shared/component-create.js";
 import type { SourceLoc } from "../../shared/contracts.js";
 import type { InsertTarget } from "../../shared/insert.js";
+import { resolveInstance } from "../components/use-site.js";
 import {
   componentFolders,
   planCreateComponent,
-} from "../components/extract.js";
-import { planSwap, swapCandidates } from "../components/swap.js";
-import { resolveInstance } from "../components/use-site.js";
+} from "../direct-edit/components-ops/extract.js";
+import {
+  planSwap,
+  swapCandidates,
+} from "../direct-edit/components-ops/swap.js";
 import { writeAtomic, writeNewFile } from "../direct-edit/index.js";
 import { refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";

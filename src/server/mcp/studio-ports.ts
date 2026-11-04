@@ -1,6 +1,6 @@
 import { cleanLockKeys } from "../../shared/layer-locks.js";
 import type { LayerLocksView } from "../../shared/layer-locks.js";
-import { applyDelta } from "../layers/lock-probe.js";
+import { applyDelta } from "../page-probe/lock-probe.js";
 import type { LayerLockStore } from "../store/layer-locks.js";
 import { EditError } from "./edit-guards.js";
 import type { EditDeps } from "./edit-guards.js";

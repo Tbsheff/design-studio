@@ -18,10 +18,10 @@ import {
   type ShipSettings,
   type ShipTemplateVars,
 } from "../../shared/ship.js";
+import { findOnPath, userGit } from "../platform/git/user-git.js";
 import { runGit, runGitBuffer, type GitScope } from "../store/versions.js";
 import { detectShipFormat } from "./ship-format.js";
 import { readShipState } from "./ship-store.js";
-import { findOnPath, userGit } from "./user-git.js";
 
 const DIFF_FILE_MAX = 40 * 1024;
 const DIFF_TOTAL_MAX = 400 * 1024;

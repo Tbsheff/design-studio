@@ -10,6 +10,7 @@ import { IMAGE_SEARCH_LIMIT_MAX } from "../../shared/image-search.js";
 import type { PlaceImageResult } from "../../shared/image-search.js";
 import { DirectEditError } from "../direct-edit/engine/errors.js";
 import type { DirectEditDeps } from "../direct-edit/index.js";
+import { previewOriginOf } from "../direct-edit/index.js";
 import { ImageSearchError } from "../image-search/errors.js";
 import { IMAGE_SEARCH_OFF, isImageSearchOn } from "../image-search/gate.js";
 import {
@@ -23,7 +24,6 @@ import { searchImages } from "../image-search/search.js";
 import type { PlaceTarget } from "../image-search/target.js";
 import { imageSearchEnv } from "../platform/config/index.js";
 import type { PreviewService } from "../types.js";
-import { previewOriginOf } from "./insert-routes.js";
 
 interface ImageSearchProjects {
   readonly get: (projectId: string) => Promise<Project>;

@@ -10,7 +10,7 @@ import {
   type InsertableList,
 } from "../../shared/insert.js";
 import { PROP_NAME, PROP_TEXT_MAX, PROPS_MAX } from "../../shared/props.js";
-import { probeOwners } from "../components/owner-probe.js";
+import { probeOwners } from "../page-probe/owner-probe.js";
 import { callAction } from "./action-call.js";
 import {
   EditError,

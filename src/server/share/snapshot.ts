@@ -4,8 +4,8 @@ import path from "node:path";
 
 import type { ExportFrame } from "../../shared/export.js";
 import type { ShareFrame } from "../../shared/share.js";
-import { captureFrame } from "../export/capture.js";
 import type { ExportSource } from "../export/source.js";
+import { captureFrame } from "../preview/index.js";
 import type { PreviewService } from "../types.js";
 
 const MAX_CSS_HEIGHT = 8000;

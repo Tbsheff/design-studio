@@ -22,11 +22,11 @@ import {
   applyFrameState,
   describeFrameStates,
   readFrameStates,
-} from "../app/frame-state-service.js";
+} from "../canvas/app-flow/frame-state-service.js";
 import type {
   FrameStateDeps,
   FrameStateInput,
-} from "../app/frame-state-service.js";
+} from "../canvas/app-flow/frame-state-service.js";
 import {
   buildFlow,
   describeFlow,
@@ -34,7 +34,7 @@ import {
   FLOW_NOTE,
   listRouteLinks,
   toFlowDeps,
-} from "../app/route-flow.js";
+} from "../canvas/app-flow/route-flow.js";
 import {
   editLinks,
   editLinksShape,

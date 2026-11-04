@@ -1,7 +1,6 @@
 import { z } from "zod";
 
 import type { SourceLoc } from "../../shared/contracts.js";
-import { probeOwners } from "../components/owner-probe.js";
 import {
   PLACE_IMAGE_DESCRIPTION,
   placeImageFields,
@@ -22,6 +21,7 @@ import { searchImages } from "../image-search/search.js";
 import { elementTarget, sourceTarget } from "../image-search/target.js";
 import type { PlaceTarget } from "../image-search/target.js";
 import { describeElements } from "../mcp/element.js";
+import { probeOwners } from "../page-probe/owner-probe.js";
 import { refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
 import { editPageUrl } from "./run-target.js";

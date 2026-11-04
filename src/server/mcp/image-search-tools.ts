@@ -1,7 +1,6 @@
 import { z } from "zod";
 
 import type { Project } from "../../shared/contracts.js";
-import { probeOwners } from "../components/owner-probe.js";
 import {
   PLACE_IMAGE_DESCRIPTION,
   placeImageFields,
@@ -15,6 +14,7 @@ import type { PlaceScope } from "../image-search/place.js";
 import { searchImages } from "../image-search/search.js";
 import { elementTarget, sourceTarget } from "../image-search/target.js";
 import type { PlaceTarget } from "../image-search/target.js";
+import { probeOwners } from "../page-probe/owner-probe.js";
 import { EditError, loadTarget, refuseWhileRunning } from "./edit-guards.js";
 import type { EditDeps } from "./edit-guards.js";
 import {

@@ -1,7 +1,7 @@
 import type { Project } from "../../shared/contracts.js";
+import { noteRenderedPage } from "../events/render-wait.js";
 import type { PreviewService } from "../types.js";
 import { attemptNull, toOptional } from "./attempt-null.js";
-import { noteRenderedPage } from "./render-wait.js";
 
 const WARM_TIMEOUT_MS = 120_000;
 

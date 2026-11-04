@@ -4,7 +4,7 @@ import {
   LAYER_LOCK_KEYS_MAX,
   cleanLockKeys,
 } from "../../shared/layer-locks.js";
-import { applyDelta } from "../layers/lock-probe.js";
+import { applyDelta } from "../page-probe/lock-probe.js";
 import { BadRequestError, NotFoundError } from "../store/errors.js";
 import type { LayerLockStore } from "../store/layer-locks.js";
 import type { StudioProjectStore } from "../store/projects.js";

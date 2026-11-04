@@ -13,8 +13,8 @@ import {
   type SetImageRequest,
   type SetImageResult,
 } from "../../shared/image.js";
-import { probeOwners } from "../components/owner-probe.js";
 import { imageFromPath } from "../direct-edit/commit/image-source.js";
+import { probeOwners } from "../page-probe/owner-probe.js";
 import { callAction } from "./action-call.js";
 import {
   EditError,

@@ -5,14 +5,14 @@ import path from "node:path";
 import { PNG } from "pngjs";
 
 import type { ExportFrame, ExportScope } from "../../shared/export.js";
-import type { RenderPage } from "../preview/render-backend.js";
-import { BadRequestError } from "../store/errors.js";
-import type { PreviewService } from "../types.js";
 import {
   hideDevChrome,
   selectorClipExpression,
   waitForPage,
-} from "./capture.js";
+} from "../preview/index.js";
+import type { RenderPage } from "../preview/render-backend.js";
+import { BadRequestError } from "../store/errors.js";
+import type { PreviewService } from "../types.js";
 import { scanExpression } from "./page-scan.js";
 import type { ScanRect, ScanResult } from "./page-scan.js";
 import { planNative } from "./pptx-plan.js";

@@ -10,13 +10,6 @@ import {
   domPatchOf,
   withdrawPlanned,
 } from "../events/planned-feed.js";
-import {
-  applyDelta,
-  describeLocks,
-  lockDelta,
-  lockOutcome,
-  probeLock,
-} from "../layers/lock-probe.js";
 import { describeElement } from "../mcp/element.js";
 import {
   isLayerRef,
@@ -24,6 +17,13 @@ import {
   resolveLayerRefs,
   scopeOf,
 } from "../mcp/layer-ref.js";
+import {
+  applyDelta,
+  describeLocks,
+  lockDelta,
+  lockOutcome,
+  probeLock,
+} from "../page-probe/lock-probe.js";
 import { refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
 import { editPageUrl } from "./run-target.js";

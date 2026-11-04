@@ -6,7 +6,7 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-import { REPO_ROOT } from "../platform/config/index.js";
+import { WORKSPACE_ROOT } from "../platform/config/index.js";
 import type { EventBus } from "../types.js";
 import type { ParentToRunner, RunnerToParent } from "./vite-runner.js";
 
@@ -23,7 +23,7 @@ const RUNNER_FILE = path.join(
 );
 
 const TSX_LOADER = path.join(
-  REPO_ROOT,
+  WORKSPACE_ROOT,
   "node_modules",
   "tsx",
   "dist",

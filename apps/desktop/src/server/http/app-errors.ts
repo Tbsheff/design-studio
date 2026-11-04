@@ -1,3 +1,5 @@
+import { toWire } from "@design-studio/actions/_core/wire";
+import type { WireBody } from "@design-studio/actions/_core/wire";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 
 import {
@@ -20,7 +22,7 @@ interface TaggedError extends Error {
 }
 
 interface ErrorReply {
-  readonly body: ErrorBody;
+  readonly body: ErrorBody | WireBody;
   readonly status: ContentfulStatusCode;
 }
 
@@ -78,7 +80,13 @@ const toErrorReply = (error: Error): ErrorReply => {
   }
 
   if (!isTaggedError(error)) {
-    return { body: { error: error.message }, status: statusOfClass(error) };
+    const status = statusOfClass(error);
+
+    if (status === DEFECT) {
+      return { body: toWire(null), status };
+    }
+
+    return { body: { error: error.message }, status };
   }
 
   return {

@@ -3,7 +3,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { Worker } from "node:worker_threads";
 import type { Transferable } from "node:worker_threads";
 
-import { REPO_ROOT } from "../config/index.js";
+import { WORKSPACE_ROOT } from "../config/index.js";
 import { logError } from "../logger/index.js";
 import type { WorkerReply, WorkerRequest } from "./worker-protocol.js";
 
@@ -16,7 +16,7 @@ interface WorkerClientOptions<Query, Reply> {
 }
 
 const TSX_LOADER = path.join(
-  REPO_ROOT,
+  WORKSPACE_ROOT,
   "node_modules",
   "tsx",
   "dist",

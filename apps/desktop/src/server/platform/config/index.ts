@@ -25,6 +25,8 @@ interface ServerConfig {
 
 const REPO_ROOT = path.resolve(import.meta.dirname, "..", "..", "..", "..");
 
+const WORKSPACE_ROOT = path.resolve(REPO_ROOT, "..", "..");
+
 const DEFAULT_FOLDER_NAME = "Design Studio";
 const DEV_PROJECTS_FOLDER = "studio-projects";
 const APP_PORT_OFFSET = 400;
@@ -111,7 +113,7 @@ const devProjectsRoot = (): string | null => {
     return null;
   }
 
-  return REPO_ROOT;
+  return WORKSPACE_ROOT;
 };
 
 const toSharePort = (studioPort: number): number => {
@@ -145,7 +147,7 @@ const loadConfig = (): ServerConfig => {
   );
 
   const dataDir = path.resolve(
-    process.env.STUDIO_DATA_DIR || path.join(REPO_ROOT, "studio-data")
+    process.env.STUDIO_DATA_DIR || path.join(WORKSPACE_ROOT, "studio-data")
   );
 
   const projectsDir = projectsDirFromEnv(
@@ -247,6 +249,7 @@ export {
   DEV_PROJECTS_FOLDER,
   LOGIN_SHELL_PATH_ENV,
   REPO_ROOT,
+  WORKSPACE_ROOT,
   buildEnv,
   childEnv,
   gitOverride,

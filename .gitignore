@@ -1,7 +1,7 @@
 node_modules/
 dist/
 build/
-desktop/dist/
+apps/desktop/desktop/dist/
 studio-data/
 studio-projects/
 refs/
@@ -12,8 +12,8 @@ playwright-report/
 *.log
 .DS_Store
 design-review/
-e2e/results/
-verification/*
-!verification/ACCEPTANCE.md
+apps/desktop/e2e/results/
+apps/desktop/verification/*
+!apps/desktop/verification/ACCEPTANCE.md
 .claude/
-artifacts/typecheck-diff.txt
+apps/desktop/artifacts/typecheck-diff.txt

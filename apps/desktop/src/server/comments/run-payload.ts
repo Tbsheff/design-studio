@@ -10,9 +10,10 @@ import type {
 } from "@design-studio/contracts";
 
 import { agentText } from "../../shared/comments.js";
-import { MENTION_MAX } from "../http/mentions.js";
 import type { CommentStore } from "../store/comments.js";
 import { pickComments } from "./prefill.js";
+
+const MENTION_MAX = 10;
 
 type RunPayload = Pick<RunRequest, "attachmentIds" | "comments" | "mentions">;
 
@@ -147,6 +148,6 @@ const withCommentInputs = async (
   return out;
 };
 
-export { toRunPayload, withCommentInputs };
+export { MENTION_MAX, toRunPayload, withCommentInputs };
 
 export type { RunPayload, SelectionContexts };

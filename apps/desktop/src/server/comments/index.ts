@@ -7,3 +7,5 @@ export { CommentRunStarter } from "./comment-run-starter.js";
 export { CommentStore } from "./comment-store.js";
 
 export { CommentThreadStore } from "./comment-thread-store.js";
+
+export { MENTION_MAX } from "./run-payload.js";

@@ -3,11 +3,11 @@ import path from "node:path";
 
 import type { RunMention } from "@design-studio/contracts";
 
+import { MENTION_MAX } from "../comments/index.js";
 import { BadRequestError } from "../platform/errors/index.js";
 import { checkPathInside } from "../platform/paths/index.js";
 import type { MentionFile } from "../types.js";
 
-export const MENTION_MAX = 10;
 const FILE_MAX_BYTES = 20_000;
 
 const COMPONENT_NAME = /^[A-Z][A-Za-z0-9]{0,47}$/;

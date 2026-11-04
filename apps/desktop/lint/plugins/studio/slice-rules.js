@@ -8,9 +8,9 @@ import { isChanged } from "./freeze-rules.js";
 
 const ROOT = fileURLToPath(new URL("../../../", import.meta.url));
 
-const ROADMAP = path.join(ROOT, ".claude/goal/roadmap.md");
+const ROADMAP = path.join(ROOT, "../../.claude/goal/roadmap.md");
 
-const ACTIVE_SLICE = path.join(ROOT, ".claude/goal/active-slice");
+const ACTIVE_SLICE = path.join(ROOT, "../../.claude/goal/active-slice");
 
 const WAVE_TABLE = /```json\n(?<body>[\s\S]*?)\n```/u;
 

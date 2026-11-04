@@ -6,7 +6,7 @@ const SERVER_TESTS = ["src/server/**/*.test.ts"];
 
 const HANDLER_FILES = ["src/server/handlers/**/*.ts"];
 
-const CLOUD_FILES = ["cloud/api/src/**/*.ts"];
+const CLOUD_FILES = ["apps/api/src/**/*.ts"];
 
 const FEATURE_UI_FILES = [
   "src/ui/features/**/*.ts",
@@ -20,34 +20,34 @@ const ADAPTER_IMPORT_FILES = [
   "src/server/variations/**/*.ts",
 ];
 
-const PLATFORM_FILES = "cloud/api/src/platform/**";
+const PLATFORM_FILES = "apps/api/src/platform/**";
 
-const PROBE_FILES = "cloud/api/src/tenant/probes/**";
+const PROBE_FILES = "apps/api/src/tenant/probes/**";
 
-const CLOUD_ENTRY = ["cloud/api/src/index.ts", "cloud/api/src/auth/**"];
+const CLOUD_ENTRY = ["apps/api/src/index.ts", "apps/api/src/auth/**"];
 
 const LEGACY_CLOUD_ASYNC = [
-  "cloud/api/src/mcp/mount.ts",
-  "cloud/api/src/http/middleware/auth-calls.ts",
+  "apps/api/src/mcp/mount.ts",
+  "apps/api/src/http/middleware/auth-calls.ts",
 ];
 
 const TENANT_GATE_FILES = [
-  "cloud/api/src/tenant/{blobs,viewer-db,sql,db}.ts",
-  "cloud/api/src/tenant/{resolver,sweep-db}.ts",
+  "apps/api/src/tenant/{blobs,viewer-db,sql,db}.ts",
+  "apps/api/src/tenant/{resolver,sweep-db}.ts",
   PLATFORM_FILES,
-  "cloud/api/src/tenant/repos/key-perm.ts",
+  "apps/api/src/tenant/repos/key-perm.ts",
   PROBE_FILES,
 ];
 
 const LEGACY_ORG_PROVIDERS = [
-  "cloud/api/src/http/groups/gates.ts",
-  "cloud/api/src/http/sync/sync-gate.ts",
+  "apps/api/src/http/groups/gates.ts",
+  "apps/api/src/http/sync/sync-gate.ts",
 ];
 
-const ORG_MIDDLEWARE = ["cloud/api/src/http/middleware/**", PROBE_FILES];
+const ORG_MIDDLEWARE = ["apps/api/src/http/middleware/**", PROBE_FILES];
 
 const ROUTE_FILES = [
-  "cloud/api/src/http/**/*.ts",
+  "apps/api/src/http/**/*.ts",
   "src/server/publish/**/*.ts",
 ];
 
@@ -65,9 +65,9 @@ const LINKED_FILES = [
 ];
 
 const DEAD_CODE_FILES = [
-  "cloud/api/src/{viewer,share}/**/*.ts",
-  "cloud/api/src/tenant/repos/share.ts",
-  "cloud/api/src/cron.ts",
+  "apps/api/src/{viewer,share}/**/*.ts",
+  "apps/api/src/tenant/repos/share.ts",
+  "apps/api/src/cron.ts",
   "src/server/publish/cloud-links.ts",
   "src/ui/features/share-publish-ship-export/publish-api.ts",
 ];

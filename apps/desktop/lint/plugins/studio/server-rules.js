@@ -31,7 +31,7 @@ const BRIDGE_MESSAGE =
   "Mapping Cause.UnknownError by hand is banned. Use attemptKnown from src/server/platform/attempt/index.ts.";
 
 const STUB_MESSAGE =
-  "A route that fails with NotImplemented is banned. Use a real handler, or leave the route out of the group in cloud/api/src/http/groups.";
+  "A route that fails with NotImplemented is banned. Use a real handler, or leave the route out of the group in apps/api/src/http/groups.";
 
 const GUESS_MESSAGE =
   "Guessing a result kind from the output shape in an aggregator is banned. Use the output schema the action declares, mapped in an owned adapter file such as src/server/mcp/tool-result.ts.";

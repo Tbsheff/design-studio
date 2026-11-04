@@ -6,7 +6,7 @@ import { rule } from "./ast.js";
 
 const ROOT = fileURLToPath(new URL("../../../", import.meta.url));
 
-const SCAN_ROOTS = ["src", "cloud/api/src", "cloud/api/test", "desktop", "scripts", "e2e", "lint"];
+const SCAN_ROOTS = ["src", "../api/src", "../api/test", "desktop", "scripts", "e2e", "lint"];
 
 const SKIP_DIRS = new Set(["node_modules", "dist", "templates", "__fixtures__"]);
 

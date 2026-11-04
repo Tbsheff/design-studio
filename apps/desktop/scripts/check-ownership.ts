@@ -4,7 +4,7 @@ import { matchesGlob } from "node:path";
 
 type Waves = Record<string, Record<string, string[]>>;
 
-const ROADMAP = new URL("../.claude/goal/roadmap.md", import.meta.url);
+const ROADMAP = new URL("../../../.claude/goal/roadmap.md", import.meta.url);
 
 const readWaves = (): Waves | undefined => {
   if (!existsSync(ROADMAP)) {

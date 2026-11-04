@@ -15,7 +15,7 @@ const BARE_SOURCE = /^typescript(?:\/|$)/u;
 
 const EXACT_PIN = /^(?:npm:typescript@)?\d+\.\d+\.\d+$/u;
 
-const MANIFESTS = ["package.json", "cloud/api/package.json"];
+const MANIFESTS = ["package.json", "../api/package.json"];
 
 const PINNED = ["typescript", "typescript-api"];
 
@@ -28,7 +28,7 @@ const BARE_MESSAGE =
   "The bare \"typescript\" specifier (also \"typescript/package.json\") is banned, because \"typescript\" is TS 7, which has no JS compiler API, and its version is not the version of the compiler that runs. Use import type from \"typescript-api\", and loadTypeScript from src/server/platform/ts-compiler/index.ts with .version from the module it returns.";
 
 const PIN_MESSAGE =
-  "A range for \"typescript\" or \"typescript-api\" in package.json or cloud/api/package.json is banned, because a minor compiler release changes the diagnostics that typecheck-diff baselines and the route-graph cache key depend on. Use an exact version such as \"7.0.2\" or \"npm:typescript@6.0.3\" in package.json.";
+  "A range for \"typescript\" or \"typescript-api\" in package.json or apps/api/package.json is banned, because a minor compiler release changes the diagnostics that typecheck-diff baselines and the route-graph cache key depend on. Use an exact version such as \"7.0.2\" or \"npm:typescript@6.0.3\" in package.json.";
 
 const DRIFT_MESSAGE =
   "A compiler API pin in .pnpmfile.mjs that differs from the \"typescript-api\" pin in package.json is banned, because then the lint toolchain loads a different compiler than the app. Use the same \"npm:typescript@x.y.z\" value in .pnpmfile.mjs COMPILER_API and package.json devDependencies.typescript-api.";

@@ -1,7 +1,7 @@
 import { rule } from "./ast.js";
 import { relativeOf } from "./facts.js";
 
-const ENTRY = "cloud/api/src/index.ts";
+const ENTRY = "apps/api/src/index.ts";
 
 const RUN_FOLDERS = /^cloud\/api\/src\/(?:http|mcp)\//u;
 
@@ -26,31 +26,31 @@ const CONSTANT_NAME = /^[A-Z][A-Z0-9_]*$/u;
 const MEASURE_NAME = /(?:BYTES|COUNT|DAYS|HOURS|LENGTH|LIMIT|MAX|MIN|MS|PARTS|RADIX|SECONDS|SIZE|WIDTH)/u;
 
 const VIEWER_SCOPE_MESSAGE =
-  "A viewer-scope import in a tenant repo is banned, because a repo runs under CurrentOrg and a viewer has none. Use a ViewerDb method in cloud/api/src/tenant/viewer-db.ts that yields ViewerScope.";
+  "A viewer-scope import in a tenant repo is banned, because a repo runs under CurrentOrg and a viewer has none. Use a ViewerDb method in apps/api/src/tenant/viewer-db.ts that yields ViewerScope.";
 
 const SCOPE_PARAM_MESSAGE =
-  "A parameter typed as a scope (PublicScope, ShareScope, ViewerScopeApi, CurrentOrgApi) in tenant code is banned, because the caller can pass any orgId. Use yield* ViewerScope from cloud/api/src/tenant/viewer-scope.ts or yield* CurrentOrg from cloud/api/src/tenant/current-org.ts inside the method.";
+  "A parameter typed as a scope (PublicScope, ShareScope, ViewerScopeApi, CurrentOrgApi) in tenant code is banned, because the caller can pass any orgId. Use yield* ViewerScope from apps/api/src/tenant/viewer-scope.ts or yield* CurrentOrg from apps/api/src/tenant/current-org.ts inside the method.";
 
 const RUNTIME_MESSAGE =
-  "A second ManagedRuntime.make in cloud/api is banned, because each runtime builds the layers again. Use the one runtime from cloud/api/src/index.ts and pass it to the mount function.";
+  "A second ManagedRuntime.make in apps/api is banned, because each runtime builds the layers again. Use the one runtime from apps/api/src/index.ts and pass it to the mount function.";
 
 const RUN_MESSAGE =
-  "runPromise, runPromiseExit, runSync and runFork outside the cloud entry and the http and mcp adapters are banned. Use an Effect and let a mount in cloud/api/src/http or cloud/api/src/mcp run it with the runtime from cloud/api/src/index.ts.";
+  "runPromise, runPromiseExit, runSync and runFork outside the cloud entry and the http and mcp adapters are banned. Use an Effect and let a mount in apps/api/src/http or apps/api/src/mcp run it with the runtime from apps/api/src/index.ts.";
 
 const LAYER_MESSAGE =
-  "CloudBindings.layer, CloudSettings.layer and configLayer outside the cloud entry are banned, because each use builds the platform layer again. Use the platform layer that cloud/api/src/index.ts builds once.";
+  "CloudBindings.layer, CloudSettings.layer and configLayer outside the cloud entry are banned, because each use builds the platform layer again. Use the platform layer that apps/api/src/index.ts builds once.";
 
 const ERROR_MESSAGE =
-  "new Error in cloud Effect code is banned. Use a Schema.TaggedError from cloud/api/src/tenant/errors or cloud/api/src/shared-actions.ts, with Effect.die for a defect.";
+  "new Error in cloud Effect code is banned. Use a Schema.TaggedError from apps/api/src/tenant/errors or apps/api/src/shared-actions.ts, with Effect.die for a defect.";
 
 const STATUS_MESSAGE =
-  "A local HTTP status constant in cloud/api is banned. Use the status constants from cloud/api/src/shared-actions.ts, and add a missing one to src/shared/actions/_core/errors/http-status-codes.ts.";
+  "A local HTTP status constant in apps/api is banned. Use the status constants from apps/api/src/shared-actions.ts, and add a missing one to src/shared/actions/_core/errors/http-status-codes.ts.";
 
 const TAG_MESSAGE =
   "An open _tag field (optional or typed string) is banned, because it drops the typed error union. Use the error union that Effect infers and Effect.catchTags from effect.";
 
 const BINDINGS_MESSAGE =
-  "A CloudBindings import outside platform, tenant, auth and http/middleware is banned, because it skips the owner of D1 and R2 access. Use a tenant service (ViewerDb, TenantBlobs or a repo) from cloud/api/src/tenant.";
+  "A CloudBindings import outside platform, tenant, auth and http/middleware is banned, because it skips the owner of D1 and R2 access. Use a tenant service (ViewerDb, TenantBlobs or a repo) from apps/api/src/tenant.";
 
 const isNamed = (node, name) => node?.type === "Identifier" && node.name === name;
 

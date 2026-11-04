@@ -18,19 +18,19 @@ const ASYNC_MESSAGE =
   "async and await in cloud Effect code are banned (S11). Use Effect.fn with Effect.tryPromise from effect, and keep async only in a Durable Object class body.";
 
 const PREPARE_MESSAGE =
-  "Raw db.prepare() outside the tenant gate is banned, because it skips the :org bind and the org_id row check. Use a tq statement in cloud/api/src/tenant/repos/<table>.ts run through TenantDb from cloud/api/src/tenant/db.ts.";
+  "Raw db.prepare() outside the tenant gate is banned, because it skips the :org bind and the org_id row check. Use a tq statement in apps/api/src/tenant/repos/<table>.ts run through TenantDb from apps/api/src/tenant/db.ts.";
 
 const LOOP_MESSAGE =
-  "A query that runs inside a loop or an array callback is banned (T8). Use one db.batch for the rows, through TenantDb.writeAll from cloud/api/src/tenant/db.ts.";
+  "A query that runs inside a loop or an array callback is banned (T8). Use one db.batch for the rows, through TenantDb.writeAll from apps/api/src/tenant/db.ts.";
 
 const ORG_FILTER_MESSAGE =
-  "An UPDATE or DELETE without an org_id = term is banned, because it changes rows of every org. Use WHERE <alias>.org_id = :org in a tq statement in cloud/api/src/tenant/repos/<table>.ts.";
+  "An UPDATE or DELETE without an org_id = term is banned, because it changes rows of every org. Use WHERE <alias>.org_id = :org in a tq statement in apps/api/src/tenant/repos/<table>.ts.";
 
 const CURRENT_ORG_MESSAGE =
-  "Effect.provideService(CurrentOrg, ...) outside cloud/api/src/http/middleware is banned (T1, T9), because the role and via values are made up. Use the group middleware in cloud/api/src/http/middleware (for example withShare in viewer.ts) to provide the scope once per request.";
+  "Effect.provideService(CurrentOrg, ...) outside apps/api/src/http/middleware is banned (T1, T9), because the role and via values are made up. Use the group middleware in apps/api/src/http/middleware (for example withShare in viewer.ts) to provide the scope once per request.";
 
 const STUB_MESSAGE =
-  'A Durable Object stub in a service marked access: "read" is banned (S6), because a stub call can write. Use a write service (access: "write") in its own file, for example cloud/api/src/viewer/unlock-lockout-client.ts.';
+  'A Durable Object stub in a service marked access: "read" is banned (S6), because a stub call can write. Use a write service (access: "write") in its own file, for example apps/api/src/viewer/unlock-lockout-client.ts.';
 
 const IDENTITY_MESSAGE =
   "A map that returns its argument with no change is banned, because it does nothing. Use the value as it is and delete the map.";

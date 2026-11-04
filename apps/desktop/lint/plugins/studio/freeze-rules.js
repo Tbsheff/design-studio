@@ -42,7 +42,7 @@ const runGit = (args) => {
   }
 };
 
-const readCommitted = (relative) => runGit(["show", `HEAD:${relative}`]);
+const readCommitted = (relative) => runGit(["show", `HEAD:./${relative}`]);
 
 const headTree = { files: null, texts: new Map() };
 
@@ -70,7 +70,7 @@ const toNameList = (listing) => (listing ?? "").split("\0").filter(Boolean);
 
 const isChanged = (relative) => {
   if (changedTree.files === null) {
-    const tracked = toNameList(runGit(["diff", "--name-only", "-z", "HEAD"]));
+    const tracked = toNameList(runGit(["diff", "--relative", "--name-only", "-z", "HEAD"]));
     const untracked = toNameList(runGit(["ls-files", "--others", "--exclude-standard", "-z"]));
 
     changedTree.files = new Set([...tracked, ...untracked]);

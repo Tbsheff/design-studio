@@ -14,7 +14,7 @@ const JS_TAIL = /\.(?:js|mjs|cjs|jsx)$/u;
 
 const ASSET_TAIL = /\.(?:css|json|svg|png|jpe?g|gif|webp|woff2?|html|md|txt|wasm)$/u;
 
-const PLATFORM = "cloud/api/src/platform/";
+const PLATFORM = "apps/api/src/platform/";
 
 const PLATFORM_ALLOWED = /^(?:cloud\/api\/src\/platform\/|cloud\/api\/src\/shared-actions\.(?:js|ts)$|src\/shared\/)/u;
 
@@ -30,7 +30,7 @@ const HOOK_MESSAGE =
   "An import of a component file (.tsx or components/) in a hook is banned (U8). Use a model or platform module (for example <thing>-model.ts in the feature, or src/ui/platform) that both the hook and the component import.";
 
 const PLATFORM_MESSAGE =
-  "An import from a feature folder in cloud/api/src/platform is banned, because the platform layer sits under every feature. Use a generic type (for example DurableObjectNamespace) in cloud/api/src/platform/cloud-env.d.ts, or move the module under cloud/api/src/platform.";
+  "An import from a feature folder in apps/api/src/platform is banned, because the platform layer sits under every feature. Use a generic type (for example DurableObjectNamespace) in apps/api/src/platform/cloud-env.d.ts, or move the module under apps/api/src/platform.";
 
 const seen = new Map();
 

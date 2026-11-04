@@ -15,7 +15,7 @@ const AWAIT_MESSAGE =
   "A write that is fired with no await is banned, because state changes before the write ends. Use startTransition(async () => { const result = await action.run(input); ... }) with useTransition from react.";
 
 const APP_IMPORT_MESSAGE =
-  "Importing desktop app code (src/shared) into a cloud file is banned. Use the one bridge file cloud/api/src/shared-actions.ts, and packages/common/actions when the layout wave lands.";
+  "Importing desktop app code (src/shared) into a cloud file is banned. Use the one bridge file apps/api/src/shared-actions.ts, and packages/common/actions when the layout wave lands.";
 
 const RUN_METHODS = new Set(["mutate", "run"]);
 

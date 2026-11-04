@@ -30,13 +30,13 @@ const TOOL_NAME = /^[a-z]+_[a-z0-9_]+$/u;
 const ORG_ID = "orgId";
 
 const TQ_MESSAGE =
-  "A tq tenant query outside cloud/api/src/tenant/repos is banned. Use a repo method in cloud/api/src/tenant/repos/<table>.ts and yield that repo.";
+  "A tq tenant query outside apps/api/src/tenant/repos is banned. Use a repo method in apps/api/src/tenant/repos/<table>.ts and yield that repo.";
 
 const PREPARE_MESSAGE =
-  "Raw db.prepare() in a tenant repo is banned, because it skips the :org bind and the org_id row check. Use tq from cloud/api/src/tenant/sql.ts with TenantDb from cloud/api/src/tenant/db.ts.";
+  "Raw db.prepare() in a tenant repo is banned, because it skips the :org bind and the org_id row check. Use tq from apps/api/src/tenant/sql.ts with TenantDb from apps/api/src/tenant/db.ts.";
 
 const ORG_PARAM_MESSAGE =
-  "An orgId parameter or input field in a tenant repo method is banned, because the caller can pass another org. Use :org in the tq query; TenantDb binds it from CurrentOrg in cloud/api/src/tenant/current-org.ts.";
+  "An orgId parameter or input field in a tenant repo method is banned, because the caller can pass another org. Use :org in the tq query; TenantDb binds it from CurrentOrg in apps/api/src/tenant/current-org.ts.";
 
 const VERB_MESSAGE =
   "A cloud MCP tool name that does not start with an N3 verb (add, fetch, make, remove and edit are banned) is banned. Use <verb>_<noun> with a verb from the N3 list in AGENTS.md, for example create_comment.";

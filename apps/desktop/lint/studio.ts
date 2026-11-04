@@ -23,7 +23,7 @@ const FEATURE_UI_FILES = [
 
 const DECISION_FILES = ["lint/decisions.ts"];
 
-const CLOUD_FILES = ["cloud/api/src/**/*.ts"];
+const CLOUD_FILES = ["apps/api/src/**/*.ts"];
 
 const SERVER_TESTS = ["src/server/**/*.test.ts"];
 
@@ -97,9 +97,9 @@ const LEGACY_DOM_QUERIES = ["src/ui/features/icons/use-icon-host.ts"];
 const LEGACY_CALLS = ["src/server/http/{app-runs,components}-routes.ts"];
 
 const LEGACY_APP_IMPORTS = [
-  "cloud/api/src/http/{errors,groups/wire-errors,middleware/member-auth,groups/authorizer,middleware/viewer,middleware/org-grant,middleware/agent-auth,groups/projects,groups/gates}.ts",
-  "cloud/api/src/tenant/{resolver,viewer-db,repos/projects,db,current-org,blobs}.ts",
-  "cloud/api/src/auth/{rate-limit,permissions}.ts",
+  "apps/api/src/http/{errors,groups/wire-errors,middleware/member-auth,groups/authorizer,middleware/viewer,middleware/org-grant,middleware/agent-auth,groups/projects,groups/gates}.ts",
+  "apps/api/src/tenant/{resolver,viewer-db,repos/projects,db,current-org,blobs}.ts",
+  "apps/api/src/auth/{rate-limit,permissions}.ts",
 ];
 
 const FEATURE_AREA_FILES = [
@@ -151,9 +151,9 @@ const LEGACY_DELETE_ACTIONS = [
 ];
 
 const TENANT_SQL_FILES = [
-  "cloud/api/src/tenant/repos/**",
-  "cloud/api/src/tenant/{blobs,viewer-db,sql,db}.ts",
-  "cloud/api/src/tenant/probes/**",
+  "apps/api/src/tenant/repos/**",
+  "apps/api/src/tenant/{blobs,viewer-db,sql,db}.ts",
+  "apps/api/src/tenant/probes/**",
 ];
 
 const LEGACY_RUNTIME_SLOTS = [
@@ -213,7 +213,7 @@ const studio: OxlintOverride[] = [
     rules: { "node/no-sync": "off" },
   },
   {
-    files: ["src/shared/actions/**", "src/server/**", "cloud/api/**"],
+    files: ["src/shared/actions/**", "src/server/**", "apps/api/**"],
     rules: { "unicorn/throw-new-error": "off" },
   },
   {
@@ -307,7 +307,7 @@ const studio: OxlintOverride[] = [
     rules: { "studio/await-write": "error", "studio/no-busy-flag": "error" },
   },
   {
-    excludeFiles: [...LEGACY_APP_IMPORTS, "cloud/api/src/shared-actions.ts"],
+    excludeFiles: [...LEGACY_APP_IMPORTS, "apps/api/src/shared-actions.ts"],
     files: CLOUD_FILES,
     rules: { "studio/no-app-import": "error" },
   },
@@ -388,7 +388,7 @@ const studio: OxlintOverride[] = [
     rules: { "studio/no-studio-override": "error" },
   },
   {
-    files: ["cloud/api/src/http/**/*.ts"],
+    files: ["apps/api/src/http/**/*.ts"],
     rules: { "studio/no-stub-route": "error" },
   },
   { files: AGGREGATORS, rules: { "studio/no-output-guess": "error" } },
@@ -453,19 +453,19 @@ const studio: OxlintOverride[] = [
     rules: { "studio/tenant-sql-in-repos": "error" },
   },
   {
-    files: ["cloud/api/src/tenant/repos/**/*.ts"],
+    files: ["apps/api/src/tenant/repos/**/*.ts"],
     rules: {
       "studio/no-org-id-param": "error",
       "studio/repo-no-viewer-scope": "error",
     },
   },
   {
-    excludeFiles: ["cloud/api/src/tenant/repos/key-perm.ts"],
-    files: ["cloud/api/src/tenant/repos/**/*.ts"],
+    excludeFiles: ["apps/api/src/tenant/repos/key-perm.ts"],
+    files: ["apps/api/src/tenant/repos/**/*.ts"],
     rules: { "studio/repo-uses-tq": "error" },
   },
   {
-    files: ["cloud/api/src/mcp/**/*.ts"],
+    files: ["apps/api/src/mcp/**/*.ts"],
     rules: { "studio/cloud-tool-verb": "error" },
   },
   {
@@ -478,7 +478,7 @@ const studio: OxlintOverride[] = [
     rules: { "studio/no-new-runtime-slot": "error" },
   },
   {
-    files: ["cloud/api/src/tenant/**/*.ts"],
+    files: ["apps/api/src/tenant/**/*.ts"],
     rules: { "studio/no-scope-param": "error" },
   },
   {

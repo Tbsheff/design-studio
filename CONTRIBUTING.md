@@ -37,7 +37,7 @@ Use `pnpm run new:domain`, `new:error` and `new:feature` for the other kinds. Ne
 
 ## Setup
 
-This repo uses pnpm 11. Do not use npm or npx. Install the dependencies:
+This repo uses pnpm 11. Do not use npm or npx. Install the dependencies (run app scripts from `apps/desktop`, or use `pnpm --filter @design-studio/desktop run <script>`):
 
 ```sh
 pnpm install

@@ -4,7 +4,7 @@ import type {
 } from "../../shared/actions/workspace/schema.js";
 import { describeDoctor } from "../../shared/app-doctor.js";
 import type { AppServerStatus, Project } from "../../shared/contracts.js";
-import { BadRequestError, NotFoundError } from "../store/errors.js";
+import { BadRequestError, NotFoundError } from "../platform/errors/index.js";
 import type { StudioProjectStore } from "../store/projects.js";
 import type { AppControl, PreviewService } from "../types.js";
 

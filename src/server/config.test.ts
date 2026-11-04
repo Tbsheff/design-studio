@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { loadConfig } from "./config.js";
+import { loadConfig } from "./platform/config/index.js";
 
 afterEach(() => {
   vi.unstubAllEnvs();

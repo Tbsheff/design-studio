@@ -21,6 +21,9 @@ import type { BreakpointScope } from "../breakpoints/commit.js";
 import { frameRef } from "../canvas/tools.js";
 import { readDesignSystemState } from "../design-system/state.js";
 import { DirectEditError } from "../direct-edit/engine/errors.js";
+import { describeElement } from "../page-probe/element.js";
+import { scopeOf as refScopeOf } from "../page-probe/layer-ref.js";
+import { resolveSourceLoc } from "../page-probe/source-loc.js";
 import { EditError, loadTarget, refuseWhileRunning } from "./edit-guards.js";
 import type { EditDeps } from "./edit-guards.js";
 import {
@@ -35,9 +38,6 @@ import {
   versionActivity,
 } from "./edit-kit.js";
 import type { Done } from "./edit-kit.js";
-import { describeElement } from "./element.js";
-import { scopeOf as refScopeOf } from "./layer-ref.js";
-import { resolveSourceLoc } from "./source-loc.js";
 
 const SOURCE_MAX = 1100;
 

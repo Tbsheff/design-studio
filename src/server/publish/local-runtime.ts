@@ -5,7 +5,7 @@ import path from "node:path";
 
 import { Context, Effect, Layer } from "effect";
 
-import { BadRequestError } from "../store/errors.js";
+import { BadRequestError } from "../platform/errors/index.js";
 
 interface LocalStart {
   readonly bundle: string;

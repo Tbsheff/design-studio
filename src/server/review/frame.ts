@@ -2,7 +2,7 @@ import type { Direction, Project } from "../../shared/contracts.js";
 import type { ReviewFrame, ReviewRequest } from "../../shared/review.js";
 import type { CanvasService } from "../canvas/service.js";
 import { findFrame } from "../canvas/tools.js";
-import { BadRequestError } from "../store/errors.js";
+import { BadRequestError } from "../platform/errors/index.js";
 import { DEFAULT_REVIEW_FRAME } from "./run.js";
 
 const pageKey = (value: string | undefined): string =>

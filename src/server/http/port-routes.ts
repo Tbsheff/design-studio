@@ -24,12 +24,12 @@ import {
   sourcePagePath,
   type PortPlanInput,
 } from "../agent/index.js";
-import { bindMcpReadRuntime } from "../preview/mcp-read-core.js";
 import {
   BadRequestError,
   ConflictError,
   assertSafeId,
-} from "../store/errors.js";
+} from "../platform/errors/index.js";
+import { bindMcpReadRuntime } from "../preview/mcp-read-core.js";
 import type { StudioProjectStore } from "../store/projects.js";
 
 export interface PortRouteDeps {

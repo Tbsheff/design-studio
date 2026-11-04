@@ -14,15 +14,15 @@ import { customAlphabet } from "nanoid";
 import { z } from "zod";
 
 import type { WorkspaceFolder, WorkspaceList } from "../../shared/folders.js";
-import { DEFAULT_FOLDER_NAME } from "./default-folder.js";
-import type { DefaultFolderStore } from "./default-folder.js";
 import {
   BadRequestError,
   NotFoundError,
   assertSafeId,
   isNodeError,
-} from "./errors.js";
-import { createKeyedMutex } from "./mutex.js";
+} from "../platform/errors/index.js";
+import { createKeyedMutex } from "../platform/mutex/index.js";
+import { DEFAULT_FOLDER_NAME } from "./default-folder.js";
+import type { DefaultFolderStore } from "./default-folder.js";
 import { bindWorkspaceRuntime } from "./workspace-runtime.js";
 
 export const WORKSPACES_FILE = "workspaces.json";

@@ -23,7 +23,7 @@ import {
   BadRequestError,
   NotFoundError,
   isNodeError,
-} from "../store/errors.js";
+} from "../platform/errors/index.js";
 import type { StudioProjectStore } from "../store/projects.js";
 import { checkDesignSystem } from "./check.js";
 import { restoreSnapshots } from "./create-token.js";

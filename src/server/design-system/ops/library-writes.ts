@@ -13,7 +13,7 @@ import type {
   PackSummary,
   SavePackResult,
 } from "../../../shared/contracts.js";
-import { BadRequestError, ConflictError } from "../../store/errors.js";
+import { BadRequestError, ConflictError } from "../../platform/errors/index.js";
 import { MAX_IMPORT_ZIP_BYTES, parseImportMode } from "../pack-import.js";
 import { applyPackToDirection, saveDirectionPack } from "../project-pack.js";
 import type { PackWriteRuntime } from "./library-core.js";

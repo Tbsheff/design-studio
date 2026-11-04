@@ -3,7 +3,7 @@ import path from "node:path";
 
 import type { DirectEditRequest } from "../../../shared/contracts.js";
 import { writeAtomic as platformWriteAtomic } from "../../platform/atomic-write/index.js";
-import { isNodeError } from "../../store/errors.js";
+import { isNodeError } from "../../platform/errors/index.js";
 import { DirectEditError } from "../engine/errors.js";
 import type { PatchResult } from "../engine/errors.js";
 import { patchHtml } from "../engine/html.js";

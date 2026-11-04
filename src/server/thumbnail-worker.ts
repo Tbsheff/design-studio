@@ -1,6 +1,6 @@
 import { parentPort } from "node:worker_threads";
 
-import { halfSize } from "./half-size.js";
+import { halfSize } from "./platform/half-size/index.js";
 import { serveWorker } from "./worker-serve.js";
 
 if (parentPort) {

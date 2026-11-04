@@ -14,7 +14,7 @@ import type {
   ProjectSettings,
 } from "../../shared/contracts.js";
 import { slugify } from "../../shared/folders.js";
-import { BadRequestError } from "./errors.js";
+import { BadRequestError } from "../platform/errors/index.js";
 import type { ProjectCore } from "./project-core.js";
 import {
   MAIN_DIRECTION_ID,

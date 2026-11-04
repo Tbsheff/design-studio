@@ -4,7 +4,7 @@ import path from "node:path";
 import type { Hono } from "hono";
 
 import type { TelemetrySample } from "../../shared/contracts.js";
-import { BadRequestError, assertSafeId } from "../store/errors.js";
+import { BadRequestError, assertSafeId } from "../platform/errors/index.js";
 import type { AppContext } from "./app-context.js";
 import { parseJsonLines, readOptional } from "./app-project-files.js";
 import {

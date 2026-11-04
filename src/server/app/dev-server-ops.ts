@@ -1,5 +1,5 @@
 import type { AttachAppRequest, Project } from "../../shared/contracts.js";
-import { BadRequestError, NotFoundError } from "../store/errors.js";
+import { BadRequestError, NotFoundError } from "../platform/errors/index.js";
 import type { DevServerRuntime } from "./dev-server-runtime.js";
 import { firstVersionState } from "./first-version.js";
 import { listAppRoutes } from "./routes.js";

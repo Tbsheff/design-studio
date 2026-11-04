@@ -6,6 +6,7 @@ import {
   TEXT_STYLE_NAME,
   TEXT_STYLE_QUERY_MAX,
 } from "../../shared/text-styles.js";
+import { describeElement } from "../page-probe/element.js";
 import { applyTextStyle } from "../text-styles/apply.js";
 import type { TextStyleApplyDone } from "../text-styles/apply.js";
 import type { TextStyleEditScope } from "../text-styles/commit.js";
@@ -26,7 +27,6 @@ import {
   versionActivity,
 } from "./edit-kit.js";
 import type { Done } from "./edit-kit.js";
-import { describeElement } from "./element.js";
 import { targetOf } from "./insert-tools.js";
 
 const SOURCE_MAX = 1100;

@@ -1,7 +1,7 @@
 import type { Context } from "hono";
 
 import type { TelemetrySample } from "../../shared/contracts.js";
-import { BadRequestError } from "../store/errors.js";
+import { BadRequestError } from "../platform/errors/index.js";
 
 const HEARTBEAT_MS = 15_000;
 

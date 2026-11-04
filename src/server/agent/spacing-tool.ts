@@ -2,8 +2,8 @@ import { z } from "zod";
 
 import type { WrittenFile } from "../direct-edit/commit/batch.js";
 import { writeAtomic } from "../direct-edit/commit/edit-source.js";
-import { describeElements } from "../mcp/element.js";
 import { spacingFields, spacingInputOf } from "../mcp/spacing-tools.js";
+import { describeElements } from "../page-probe/element.js";
 import type { SpacingScope } from "../spacing/commit.js";
 import { getSpacing } from "../spacing/get.js";
 import type { SpacingElement } from "../spacing/get.js";

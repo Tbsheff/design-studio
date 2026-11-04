@@ -3,7 +3,7 @@ import type { ApprovalCard } from "../../../shared/actions/_core/approval-card.j
 import type { applyPackPack } from "../../../shared/actions/pack/apply-pack.js";
 import type { PackFile } from "../../../shared/actions/pack/schema.js";
 import type { PackProblem, PackSummary } from "../../../shared/contracts.js";
-import { NotFoundError } from "../../store/errors.js";
+import { NotFoundError } from "../../platform/errors/index.js";
 import { packProblems } from "../packs.js";
 import type { PackRuntime } from "./library-core.js";
 import { toSourceLines } from "./library-draft-input.js";

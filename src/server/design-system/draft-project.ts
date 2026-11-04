@@ -6,7 +6,7 @@ import type {
   DesignSystemCoverage,
 } from "../../shared/contracts.js";
 import { TOKENS_FILE } from "../../shared/contracts.js";
-import { isNodeError } from "../store/errors.js";
+import { isNodeError } from "../platform/errors/index.js";
 import { COVERAGE_FILE, META_FILE } from "./extract/draft.js";
 import { gradeOf, scoreOf } from "./extract/map.js";
 import { writeFileAtomic } from "./packs.js";

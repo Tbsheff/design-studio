@@ -10,7 +10,10 @@ import {
   type InsertableList,
 } from "../../shared/insert.js";
 import { PROP_NAME, PROP_TEXT_MAX, PROPS_MAX } from "../../shared/props.js";
+import { describeElement } from "../page-probe/element.js";
+import { scopeOf } from "../page-probe/layer-ref.js";
 import { probeOwners } from "../page-probe/owner-probe.js";
+import { resolveSourceLoc } from "../page-probe/source-loc.js";
 import { callAction } from "./action-call.js";
 import {
   EditError,
@@ -29,9 +32,6 @@ import {
   versionActivity,
   type Done,
 } from "./edit-kit.js";
-import { describeElement } from "./element.js";
-import { scopeOf } from "./layer-ref.js";
-import { resolveSourceLoc } from "./source-loc.js";
 
 type Direction = Project["directions"][number];
 

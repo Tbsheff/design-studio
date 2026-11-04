@@ -21,8 +21,8 @@ import {
   BadRequestError,
   NotFoundError,
   isNodeError,
-} from "../store/errors.js";
-import { createKeyedMutex } from "../store/mutex.js";
+} from "../platform/errors/index.js";
+import { createKeyedMutex } from "../platform/mutex/index.js";
 import { checkDesignSystemFiles } from "./check.js";
 import { compileTokens, parseTokenFile } from "./compile.js";
 import { removeTokenBlock } from "./design-md.js";

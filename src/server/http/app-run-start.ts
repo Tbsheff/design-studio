@@ -3,8 +3,8 @@ import {
   captureReferencePage,
   parseReferenceUrls,
 } from "../design-system/reference-page.js";
+import { ConflictError } from "../platform/errors/index.js";
 import type { StartRunCall } from "../run-log/index.js";
-import { ConflictError } from "../store/errors.js";
 import type { AppContext } from "./app-context.js";
 import { parseRunRequest } from "./app-run-parse.js";
 

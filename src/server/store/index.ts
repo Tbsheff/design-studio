@@ -41,7 +41,7 @@ export { VersionStore } from "./version-store.js";
 
 export { VersionWriter } from "./version-writer.js";
 
-export { BadRequestError, NotFoundError } from "./errors.js";
+export { BadRequestError, NotFoundError } from "../platform/errors/index.js";
 
 export { ProjectLibraryStore } from "./project-library-store.js";
 
@@ -60,3 +60,11 @@ export type { CommandRuleStore } from "./command-rules.js";
 export type { DefaultFolderStore } from "./default-folder.js";
 
 export type { StudioProjectStore } from "./projects.js";
+
+export {
+  SAMPLE_STARTER_ID,
+  STARTERS,
+  applySampleEdit,
+  copyStarter,
+  findStarter,
+} from "./starters.js";

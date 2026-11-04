@@ -17,7 +17,7 @@ import {
   ConflictError,
   NotFoundError,
   isNodeError,
-} from "../../store/errors.js";
+} from "../../platform/errors/index.js";
 import { resolveSource, writeAtomic } from "./edit-source.js";
 import type { DirectEditDeps } from "./edit-types.js";
 import { assertCanEdit, publishVersion, saveDeferred } from "./publish.js";

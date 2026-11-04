@@ -9,8 +9,8 @@ import type {
   ExportScope,
 } from "../../shared/export.js";
 import type { RenderClip } from "../../shared/render-rpc.js";
+import { BadRequestError } from "../platform/errors/index.js";
 import { withPagePath } from "../project-source/index.js";
-import { BadRequestError } from "../store/errors.js";
 import type { PreviewService } from "../types.js";
 import { expandScrollRoot } from "./scroll-root.js";
 

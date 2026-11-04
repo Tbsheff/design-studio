@@ -18,7 +18,7 @@ import { installHint } from "../app/install-hint.js";
 import { nextAppWorkspace } from "../app/workspace-root.js";
 import { findTokenFile } from "../design-system/app-tokens/detect.js";
 import { revealInFinder } from "../export/editors.js";
-import { BadRequestError } from "../store/errors.js";
+import { BadRequestError } from "../platform/errors/index.js";
 import type { StudioProjectStore } from "../store/projects.js";
 import type { PreviewService } from "../types.js";
 

@@ -47,14 +47,14 @@ import {
   domPatchOf,
   withdrawPlanned,
 } from "../events/planned-feed.js";
-import { describeElements, textHintsOf } from "../mcp/element.js";
+import { describeElements, textHintsOf } from "../page-probe/element.js";
 import {
   isLayerRef,
   memoPage,
   resolveLayerRefs,
   scopeOf,
   type Viewport,
-} from "../mcp/layer-ref.js";
+} from "../page-probe/layer-ref.js";
 import type { LayerLockStore } from "../store/layer-locks.js";
 import type { AgentRunContext, PreviewService } from "../types.js";
 import { evaluateToolUse } from "./permissions.js";

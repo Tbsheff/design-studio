@@ -2,8 +2,8 @@ import { cp, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import type { Starter } from "../../shared/contracts.js";
-import { resourcePath } from "../resources.js";
-import { BadRequestError } from "./errors.js";
+import { BadRequestError } from "../platform/errors/index.js";
+import { resourcePath } from "../platform/resources/index.js";
 
 const STARTERS_FALLBACK = path.resolve(
   import.meta.dirname,

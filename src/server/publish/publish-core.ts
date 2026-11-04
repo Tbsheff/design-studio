@@ -1,4 +1,4 @@
-import { createKeyedMutex } from "../store/mutex.js";
+import { createKeyedMutex } from "../platform/mutex/index.js";
 import { createCliSession } from "./session.js";
 import type { CliSession } from "./session.js";
 import { createPublishBackend } from "./setup.js";

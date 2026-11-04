@@ -23,7 +23,7 @@ import {
 import type { RecordedEvent } from "../events/event-log.js";
 import { EventQueue } from "../events/index.js";
 import type { StudioRuntime } from "../main/runtime.js";
-import { BadRequestError, NotFoundError } from "../store/errors.js";
+import { BadRequestError, NotFoundError } from "../platform/errors/index.js";
 import type { ProjectStore } from "../types.js";
 import type { ApprovalFeed } from "./mcp-routes.js";
 

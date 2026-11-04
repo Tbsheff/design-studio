@@ -2,11 +2,11 @@ import { Schema } from "effect";
 import type { Hono } from "hono";
 
 import { publishPublish } from "../../shared/actions/publish/publish.js";
+import { assertSafeId, BadRequestError } from "../platform/errors/index.js";
 import { linkLegacy, planFor } from "../publish/legacy-link.js";
 import { toPlanInput } from "../publish/plan-input.js";
 import { createPublishService } from "../publish/service.js";
 import type { PublishDeps } from "../publish/service.js";
-import { assertSafeId, BadRequestError } from "../store/errors.js";
 import type { AppContext } from "./app-context.js";
 import { readBody } from "./app-request.js";
 

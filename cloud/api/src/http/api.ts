@@ -4,9 +4,10 @@ import { HttpApi, HttpApiBuilder } from "effect/http-api";
 import { GatesLive } from "./groups/gates.js";
 import { KeysGroup, keysHandlers } from "./groups/keys.js";
 import { ProjectsGroup, projectsHandlers } from "./groups/projects.js";
+import { SyncGroup } from "./sync/sync-endpoints.js";
 import { SyncGateLive } from "./sync/sync-gate.js";
+import { syncHandlers } from "./sync/sync-handlers.js";
 import { SyncSigner } from "./sync/sync-signer.js";
-import { SyncGroup, syncHandlers } from "./sync/sync.js";
 
 const StudioApi = HttpApi.make("studio")
   .add(ProjectsGroup)

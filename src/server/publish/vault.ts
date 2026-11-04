@@ -2,12 +2,12 @@ import { randomBytes } from "node:crypto";
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { RENDER_IPC_ENV } from "../../shared/render-rpc.js";
 import {
   isVaultReply,
   VAULT_MESSAGE,
   type VaultRequest,
-} from "../../shared/vault-ipc.js";
+} from "../../shared/actions/vault-ipc.js";
+import { RENDER_IPC_ENV } from "../../shared/render-rpc.js";
 
 export interface KeyVault {
   kind(): Promise<"keychain" | "file">;

@@ -6,7 +6,7 @@ import type {
   QualityFinding,
   QualitySeverity,
 } from "../../shared/contracts.js";
-import { packagedResource } from "../resources.js";
+import { packagedResource } from "../platform/resources/index.js";
 
 const AXE_RULES = [
   "color-contrast",

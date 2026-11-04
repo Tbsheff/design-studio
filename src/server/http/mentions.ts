@@ -2,8 +2,8 @@ import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 
 import type { RunMention } from "../../shared/contracts.js";
+import { BadRequestError } from "../platform/errors/index.js";
 import { checkPathInside } from "../platform/paths/index.js";
-import { BadRequestError } from "../store/errors.js";
 import type { MentionFile } from "../types.js";
 
 export const MENTION_MAX = 10;

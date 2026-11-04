@@ -4,7 +4,7 @@ import type { ExportFrame } from "../../shared/export.js";
 import type { PublishPlanInput } from "../../shared/publish.js";
 import { readProjectCanvas } from "../canvas/service.js";
 import { findFrame } from "../canvas/tools.js";
-import { BadRequestError } from "../store/errors.js";
+import { BadRequestError } from "../platform/errors/index.js";
 import type { LegacyLink } from "./legacy-link.js";
 
 type CanvasFrame = NonNullable<ReturnType<typeof findFrame>>;

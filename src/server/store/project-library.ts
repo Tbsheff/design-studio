@@ -19,18 +19,18 @@ import type {
   TrashItem,
   TrashedProject,
 } from "../../shared/contracts.js";
+import {
+  BadRequestError,
+  ConflictError,
+  NotFoundError,
+  assertSafeId,
+} from "../platform/errors/index.js";
 import type {
   AgentRunner,
   PreviewService,
   ServerConfig,
   VersionStore,
 } from "../types.js";
-import {
-  BadRequestError,
-  ConflictError,
-  NotFoundError,
-  assertSafeId,
-} from "./errors.js";
 import { bindProjectLibraryRuntime } from "./project-library-runtime.js";
 import type { StudioProjectStore } from "./projects.js";
 

@@ -14,7 +14,7 @@ import {
   BadRequestError,
   ConflictError,
   NotFoundError,
-} from "../store/errors.js";
+} from "../platform/errors/index.js";
 
 export interface Endpoint {
   url: string;

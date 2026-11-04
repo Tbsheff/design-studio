@@ -25,7 +25,7 @@ import {
   upsertRulesBlock,
 } from "../design-rules/markdown.js";
 import { writeAtomic } from "../platform/atomic-write/index.js";
-import { resourcePath } from "../resources.js";
+import { resourcePath } from "../platform/resources/index.js";
 import { compileTokens, parseTokenFile, resolveEntryValue } from "./compile.js";
 import { composeDesignMd as composeWithNotes } from "./design-md.js";
 

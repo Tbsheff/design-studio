@@ -20,7 +20,7 @@ import {
   writeAtomic,
   type DirectEditDeps,
 } from "../direct-edit/index.js";
-import { BadRequestError, ConflictError } from "../store/errors.js";
+import { BadRequestError, ConflictError } from "../platform/errors/index.js";
 import type { VersionStore } from "../types.js";
 import { elementOf, hash } from "./scope-check.js";
 

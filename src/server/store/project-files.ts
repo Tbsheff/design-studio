@@ -14,7 +14,7 @@ import {
   NotFoundError,
   assertSafeId,
   isNodeError,
-} from "./errors.js";
+} from "../platform/errors/index.js";
 import type { ProjectCore } from "./project-core.js";
 import {
   DESIGN_MD_FILE,

@@ -3,7 +3,7 @@ import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import type { McpActivity } from "../../shared/contracts.js";
-import { assertSafeId } from "../store/errors.js";
+import { assertSafeId } from "../platform/errors/index.js";
 import type { EventBus } from "../types.js";
 
 export const ACTIVITY_KEEP = 200;

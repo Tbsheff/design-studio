@@ -5,7 +5,7 @@ import type { Direction, Project } from "../../shared/contracts.js";
 import { cleanExportPath } from "../../shared/export.js";
 import { firstVersionWaitText } from "../app/first-version.js";
 import { resolveSource } from "../export/source.js";
-import { NotFoundError } from "../store/errors.js";
+import { NotFoundError } from "../platform/errors/index.js";
 import type { StudioProjectStore } from "../store/projects.js";
 import type { PreviewService, VersionStore } from "../types.js";
 

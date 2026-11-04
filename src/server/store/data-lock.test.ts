@@ -9,7 +9,7 @@ import {
   DataDirLockedError,
   lockPath,
   readLock,
-} from "./data-lock.js";
+} from "../platform/data-lock/index.js";
 
 function tempDir(): string {
   return mkdtempSync(path.join(os.tmpdir(), "studio-lock-"));

@@ -3,7 +3,7 @@ import {
   onSourceChange,
   type SourceFileChange,
 } from "../../events/source-change.js";
-import { lineMapOf, type LineMap } from "../../mcp/line-map.js";
+import { lineMapOf, type LineMap } from "../../page-probe/line-map.js";
 import type { CommentStore } from "../../store/comments.js";
 import type { LayerLockStore } from "../../store/layer-locks.js";
 

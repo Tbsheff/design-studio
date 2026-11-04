@@ -5,7 +5,7 @@ import path from "node:path";
 import { Option, Schema } from "effect";
 
 import { RULE_MAX_CHARS } from "../../shared/permissionRules.js";
-import { createKeyedMutex } from "./mutex.js";
+import { createKeyedMutex } from "../platform/mutex/index.js";
 
 const COMMAND_RULES_MAX = 200;
 const SEGMENT_MAX = 80;

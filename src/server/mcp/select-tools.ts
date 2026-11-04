@@ -6,6 +6,15 @@ import {
   type Project,
 } from "../../shared/contracts.js";
 import { findFrame, frameRef } from "../canvas/tools.js";
+import {
+  isLayerRef,
+  LayerRefError,
+  layersAtPaths,
+  memoPage,
+  resolveLayerRef,
+  scopeOf,
+  type Viewport,
+} from "../page-probe/layer-ref.js";
 import type { PreviewService } from "../types.js";
 import { EditError, loadTarget, type EditDeps } from "./edit-guards.js";
 import {
@@ -18,15 +27,6 @@ import {
   selector,
   type Done,
 } from "./edit-kit.js";
-import {
-  isLayerRef,
-  LayerRefError,
-  layersAtPaths,
-  memoPage,
-  resolveLayerRef,
-  scopeOf,
-  type Viewport,
-} from "./layer-ref.js";
 
 const DEFAULT_VIEWPORT: Viewport = { width: 1440, height: 900 };
 const HEADLESS_MATCH = "window.__studioSelectMatching";

@@ -13,6 +13,8 @@ import {
   type SwapResult,
 } from "../../shared/component-create.js";
 import type { InsertTarget } from "../../shared/insert.js";
+import { scopeOf } from "../page-probe/layer-ref.js";
+import { resolveSourceLoc } from "../page-probe/source-loc.js";
 import { callAction } from "./action-call.js";
 import { EditError, loadTarget, refuseWhileRunning } from "./edit-guards.js";
 import {
@@ -26,9 +28,7 @@ import {
   type Done,
 } from "./edit-kit.js";
 import { targetOf } from "./insert-tools.js";
-import { scopeOf } from "./layer-ref.js";
 import { useSiteOf } from "./props-tools.js";
-import { resolveSourceLoc } from "./source-loc.js";
 
 export const CREATE_COMPONENT_DESCRIPTION =
   'Turn repeated markup into a React component, like Figma "Create component": pass one element, or several look-alike elements written out one by one (for example 3 stat rows or 4 nav links). The studio writes the component file in folder (the kit, such as packages/ui/src/components, or the app components folder; leave out for the app folder), with a prop for each part that differs between the elements (text, href, src, values in { }) and a cva() variant prop when their classes differ. Then it replaces each element with <Name …props /> and adds the import. Names the markup gets from the page (state, handlers) become props too. One version and one undo step; undo also removes the new file. Elements that a .map() draws, that a condition shows, that spread props, or whose structure differs are refused with a reason. Next: set_props to change the variant of one use, swap_instance to change one use to another component.';

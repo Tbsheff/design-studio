@@ -4,6 +4,17 @@ import type { Project } from "../../shared/contracts.js";
 import { readProjectCanvas } from "../canvas/service.js";
 import { findFrame, frameRef } from "../canvas/tools.js";
 import { noteRenderedPage } from "../events/index.js";
+import {
+  isLayerRef,
+  LayerRefError,
+  memoPage,
+  resolveLayerRef,
+  resolveLayerRefs,
+  scanLayers,
+  scopeOf,
+} from "../page-probe/layer-ref.js";
+import type { Layer, Viewport } from "../page-probe/layer-ref.js";
+import { noteShownFiles } from "../page-probe/source-loc.js";
 import type { PreviewService } from "../types.js";
 import { EditError, loadTarget } from "./edit-guards.js";
 import type { EditDeps } from "./edit-guards.js";
@@ -18,17 +29,6 @@ import {
   selector,
 } from "./edit-kit.js";
 import type { Done } from "./edit-kit.js";
-import {
-  isLayerRef,
-  LayerRefError,
-  memoPage,
-  resolveLayerRef,
-  resolveLayerRefs,
-  scanLayers,
-  scopeOf,
-} from "./layer-ref.js";
-import type { Layer, Viewport } from "./layer-ref.js";
-import { noteShownFiles } from "./source-loc.js";
 
 type Direction = Project["directions"][number];
 type Args = Record<string, unknown>;

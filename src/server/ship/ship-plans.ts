@@ -10,7 +10,7 @@ import type {
 } from "../../shared/ship.js";
 import { prepareShip } from "../git/ship-prepare.js";
 import { ship } from "../git/ship.js";
-import { BadRequestError } from "../store/errors.js";
+import { BadRequestError } from "../platform/errors/index.js";
 import type { ShipTarget } from "./ship-core.js";
 
 interface PlanQuery {

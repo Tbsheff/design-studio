@@ -7,9 +7,9 @@ import {
   resolveLayerRef,
   scopeOf,
 } from "../page-probe/layer-ref.js";
+import { BadRequestError } from "../platform/errors/index.js";
 import { withPagePath } from "../project-source/index.js";
 import type { ExportSource } from "../project-source/index.js";
-import { BadRequestError } from "../store/errors.js";
 import type { PreviewService } from "../types.js";
 import { attemptNull, toOptional } from "./attempt-null.js";
 import { captureFrame } from "./capture.js";

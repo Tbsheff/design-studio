@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 
-import { packagedResource } from "../resources.js";
+import { packagedResource } from "../platform/resources/index.js";
 
 let bundlePromise: Promise<string> | null = null;
 

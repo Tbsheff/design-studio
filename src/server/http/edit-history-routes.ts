@@ -21,7 +21,7 @@ import {
   resolveSource,
   type DirectEditDeps,
 } from "../direct-edit/index.js";
-import { BadRequestError } from "../store/errors.js";
+import { BadRequestError } from "../platform/errors/index.js";
 import type { StudioProjectStore } from "../store/projects.js";
 import { bindVersionReadRuntime } from "../store/version-read-core.js";
 

@@ -1,4 +1,4 @@
-import { NotFoundError } from "../store/errors.js";
+import { NotFoundError } from "../platform/errors/index.js";
 import type { StudioProjectStore } from "../store/projects.js";
 import type { VersionStore } from "../types.js";
 

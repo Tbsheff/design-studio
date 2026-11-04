@@ -13,7 +13,7 @@ import type {
   FlowResult,
   RouteLinksResult,
 } from "../../shared/route-flow.js";
-import { BadRequestError } from "../store/errors.js";
+import { BadRequestError } from "../platform/errors/index.js";
 import {
   applyFrameSession,
   applyFrameState,

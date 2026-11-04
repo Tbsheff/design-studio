@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 
 import type { EditorId, EditorInfo } from "../../shared/export.js";
-import { BadRequestError } from "../store/errors.js";
+import { BadRequestError } from "../platform/errors/index.js";
 
 const EDITORS: { id: EditorId; name: string; app: string }[] = [
   { id: "cursor", name: "Cursor", app: "Cursor" },

@@ -4,9 +4,9 @@ import {
   firstVersionState,
   firstVersionWaitText,
 } from "../app/first-version.js";
+import { BadRequestError, NotFoundError } from "../platform/errors/index.js";
 import { resolveSource } from "../project-source/index.js";
 import type { ExportSource, SourceDeps } from "../project-source/index.js";
-import { BadRequestError, NotFoundError } from "../store/errors.js";
 import type { StudioProjectStore } from "../store/projects.js";
 import type { PreviewService, VersionStore } from "../types.js";
 

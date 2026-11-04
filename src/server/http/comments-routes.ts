@@ -4,8 +4,8 @@ import { z } from "zod";
 import { COMMENT_TEXT_MAX } from "../../shared/comments.js";
 import type { Direction, Project } from "../../shared/contracts.js";
 import type { RunWatcher } from "../comments/run-watch.js";
+import { BadRequestError } from "../platform/errors/index.js";
 import type { CommentStore } from "../store/comments.js";
-import { BadRequestError } from "../store/errors.js";
 
 export { withCommentInputs } from "../comments/run-payload.js";
 

@@ -22,7 +22,7 @@ import { readDesignSystemState } from "../design-system/state.js";
 import type { WrittenFile } from "../direct-edit/commit/batch.js";
 import { writeAtomic } from "../direct-edit/commit/edit-source.js";
 import { DirectEditError } from "../direct-edit/engine/errors.js";
-import { describeElements } from "../mcp/element.js";
+import { describeElements } from "../page-probe/element.js";
 import { canvasFrames, refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
 import { editPageUrl } from "./run-target.js";

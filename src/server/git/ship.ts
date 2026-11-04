@@ -11,6 +11,7 @@ import {
   type ShipRequest,
   type ShipResult,
 } from "../../shared/ship.js";
+import { BadRequestError, ConflictError } from "../platform/errors/index.js";
 import {
   NETWORK_TIMEOUT_MS,
   WRITE_TIMEOUT_MS,
@@ -18,8 +19,7 @@ import {
   findOnPath,
   userGit,
 } from "../platform/git/user-git.js";
-import { BadRequestError, ConflictError } from "../store/errors.js";
-import { createKeyedMutex } from "../store/mutex.js";
+import { createKeyedMutex } from "../platform/mutex/index.js";
 import {
   detectShipFormat,
   emptyFormatResult,

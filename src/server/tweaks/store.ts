@@ -11,7 +11,7 @@ import {
 } from "../../shared/tweaks.js";
 import { writeFileAtomic } from "../design-system/packs.js";
 import { readDesignSystemFiles } from "../design-system/sync.js";
-import { isNodeError } from "../store/errors.js";
+import { isNodeError } from "../platform/errors/index.js";
 import { parseControls, parseTweaksText } from "./schema.js";
 import {
   declarationsFor,

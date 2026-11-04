@@ -9,7 +9,7 @@ import type {
   SetupStep,
   SetupStepId,
 } from "../../shared/publish.js";
-import { BadRequestError } from "../store/errors.js";
+import { BadRequestError } from "../platform/errors/index.js";
 import { cfVersion, cliFailure, deployedUrl, newestCf, runCf } from "./cli.js";
 import type { CliResult } from "./cli.js";
 import { createLocalRuntime, LOCAL_D1_ID } from "./local-runtime.js";

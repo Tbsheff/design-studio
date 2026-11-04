@@ -2,7 +2,7 @@ import type { Hono } from "hono";
 
 import { CANVAS_FILE } from "../../shared/canvas-file.js";
 import { invalidateTokenSource } from "../design-system/token-preview.js";
-import { BadRequestError } from "../store/errors.js";
+import { BadRequestError } from "../platform/errors/index.js";
 import { bindVersionReadRuntime } from "../store/version-read-core.js";
 import { bindVersionWriteRuntime } from "../store/version-write-core.js";
 import type { AppContext } from "./app-context.js";

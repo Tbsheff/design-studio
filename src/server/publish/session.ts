@@ -7,7 +7,7 @@ import {
   type PublishCliState,
   type PublishLoginState,
 } from "../../shared/publish.js";
-import { BadRequestError } from "../store/errors.js";
+import { BadRequestError } from "../platform/errors/index.js";
 import type { CfChild } from "./cf-cli.js";
 import {
   cfWhoAmI,

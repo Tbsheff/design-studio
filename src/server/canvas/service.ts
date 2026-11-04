@@ -18,8 +18,8 @@ import type {
 } from "../../shared/contracts.js";
 import type { LinksFile } from "../../shared/links.js";
 import { writeAtomic as platformWriteAtomic } from "../platform/atomic-write/index.js";
-import { ConflictError } from "../store/errors.js";
-import { createKeyedMutex } from "../store/mutex.js";
+import { ConflictError } from "../platform/errors/index.js";
+import { createKeyedMutex } from "../platform/mutex/index.js";
 import type { EventBus } from "../types.js";
 import type { LayoutListener } from "./layout-history.js";
 

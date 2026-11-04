@@ -36,6 +36,12 @@ import {
   isOwnEdit,
   stampOrigin,
 } from "../platform/call-origin/index.js";
+import {
+  BadRequestError,
+  ConflictError,
+  NotFoundError,
+  assertSafeId,
+} from "../platform/errors/index.js";
 import { ObjectStore, gitIdent } from "../platform/git/objects.js";
 import type { CommitInfo, TreeEntry } from "../platform/git/objects.js";
 import {
@@ -45,19 +51,13 @@ import {
   runGitBuffer,
 } from "../platform/git/run-git.js";
 import type { GitScope } from "../platform/git/run-git.js";
+import { createKeyedMutex } from "../platform/mutex/index.js";
 import type {
   ServerConfig,
   SessionEndResult,
   SessionSpan,
   VersionStore,
 } from "../types.js";
-import {
-  BadRequestError,
-  ConflictError,
-  NotFoundError,
-  assertSafeId,
-} from "./errors.js";
-import { createKeyedMutex } from "./mutex.js";
 import { diffVersionFiles } from "./version-diff.js";
 import { createDirectStore } from "./version-direct.js";
 import {

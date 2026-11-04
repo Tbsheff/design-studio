@@ -10,13 +10,13 @@ import {
   domPatchOf,
   withdrawPlanned,
 } from "../events/planned-feed.js";
-import { describeElement } from "../mcp/element.js";
+import { describeElement } from "../page-probe/element.js";
 import {
   isLayerRef,
   memoPage,
   resolveLayerRefs,
   scopeOf,
-} from "../mcp/layer-ref.js";
+} from "../page-probe/layer-ref.js";
 import {
   applyDelta,
   describeLocks,

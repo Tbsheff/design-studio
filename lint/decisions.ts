@@ -408,6 +408,14 @@ export const decisionOverrides: OxlintOverride[] = [
   },
   {
     files: [
+      "src/server/store/data-lock.test.ts",
+      "src/server/store/index.ts",
+      "src/server/store/version-fast.ts",
+    ],
+    rules: { "import/no-relative-parent-imports": "off" },
+  },
+  {
+    files: [
       "src/shared/actions/run/list.ts",
       "src/server/run-log/run-log-reads.ts",
     ],

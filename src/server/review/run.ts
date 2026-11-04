@@ -21,6 +21,7 @@ import {
 } from "../design-rules/check.js";
 import { readDesignSystemState } from "../design-system/state.js";
 import { withPagePath } from "../export/source.js";
+import { BadRequestError } from "../platform/errors/index.js";
 import { loadAxeSource, pickRules } from "../preview/axe.js";
 import { waitForPage } from "../preview/index.js";
 import {
@@ -28,7 +29,6 @@ import {
   type LayoutProbeResult,
 } from "../preview/layout-probe.js";
 import type { RenderPage } from "../preview/render-backend.js";
-import { BadRequestError } from "../store/errors.js";
 import type { PreviewService } from "../types.js";
 import {
   axeDrafts,

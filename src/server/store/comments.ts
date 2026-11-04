@@ -22,14 +22,14 @@ import type {
   SelectionContext,
   SourceLoc,
 } from "../../shared/contracts.js";
-import type { EventBus } from "../types.js";
 import {
   BadRequestError,
   ConflictError,
   NotFoundError,
   assertSafeId,
-} from "./errors.js";
-import { createKeyedMutex } from "./mutex.js";
+} from "../platform/errors/index.js";
+import { createKeyedMutex } from "../platform/mutex/index.js";
+import type { EventBus } from "../types.js";
 
 interface CommentFile {
   nextN: number;

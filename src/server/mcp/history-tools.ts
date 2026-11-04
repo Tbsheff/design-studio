@@ -18,6 +18,7 @@ import {
   siteRequest,
 } from "../direct-edit/commit/edit-site.js";
 import { publishVersion } from "../direct-edit/index.js";
+import { describeElements, textHintsOf } from "../page-probe/element.js";
 import { callAction } from "./action-call.js";
 import { listWords } from "./activity-text.js";
 import { EditError, loadTarget, refuseWhileRunning } from "./edit-guards.js";
@@ -39,7 +40,6 @@ import {
   writeText,
 } from "./edit-kit.js";
 import type { Done } from "./edit-kit.js";
-import { describeElements, textHintsOf } from "./element.js";
 
 const BATCH_MAX = 50;
 const FILES_MAX = 20;

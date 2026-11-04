@@ -6,7 +6,7 @@ import type { Input } from "../../../shared/actions/_core/action.js";
 import type { createDraftPack } from "../../../shared/actions/pack/create-draft.js";
 import type { DraftImage } from "../../../shared/actions/pack/schema.js";
 import { safeFolder } from "../../mcp/folders.js";
-import { BadRequestError } from "../../store/errors.js";
+import { BadRequestError } from "../../platform/errors/index.js";
 import { MAX_TOKENS_FILE_BYTES } from "../extract/draft.js";
 import type { ImageInput } from "./library-backing.js";
 

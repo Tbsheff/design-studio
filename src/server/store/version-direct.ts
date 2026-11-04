@@ -5,8 +5,8 @@ import type {
   Project,
   WorkTreeStatus,
 } from "../../shared/contracts.js";
-import { comparePaths } from "./git-objects.js";
-import type { ObjectStore, TreeEntry } from "./git-objects.js";
+import { comparePaths } from "../platform/git/objects.js";
+import type { ObjectStore, TreeEntry } from "../platform/git/objects.js";
 import {
   FastPathUnavailable,
   checkWritable,

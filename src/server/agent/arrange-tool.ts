@@ -24,7 +24,7 @@ import {
   memoPage,
   resolveLayerRef,
   scopeOf,
-} from "../mcp/layer-ref.js";
+} from "../page-probe/layer-ref.js";
 import { refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
 

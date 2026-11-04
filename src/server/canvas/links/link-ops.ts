@@ -7,7 +7,7 @@ import type {
   LinkTransition,
   PrototypeLink,
 } from "../../../shared/links.js";
-import { NotFoundError } from "../../store/errors.js";
+import { NotFoundError } from "../../platform/errors/index.js";
 import type { CanvasToolContext } from "../tools.js";
 import { implicitLinks, keepImplicit } from "./implicit-links.js";
 import type { LinkRuntime } from "./link-runtime.js";

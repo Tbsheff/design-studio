@@ -12,12 +12,12 @@ import { bindExportRuntime } from "../export/export-core.js";
 import { handoffRoot } from "../export/handoff.js";
 import type { ExportDeps } from "../export/source.js";
 import { loadConfig } from "../platform/config/index.js";
-import type { CommentStore } from "../store/comments.js";
 import {
   BadRequestError,
   NotFoundError,
   assertSafeId,
-} from "../store/errors.js";
+} from "../platform/errors/index.js";
+import type { CommentStore } from "../store/comments.js";
 
 export interface ExportRouteDeps extends ExportDeps {
   canvas?: CanvasService | undefined;

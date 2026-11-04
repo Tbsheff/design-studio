@@ -9,7 +9,7 @@ import {
 } from "../../shared/text-styles.js";
 import type { WrittenFile } from "../direct-edit/commit/batch.js";
 import { writeAtomic } from "../direct-edit/index.js";
-import { describeElements } from "../mcp/element.js";
+import { describeElements } from "../page-probe/element.js";
 import { planTextStyleApply } from "../text-styles/apply.js";
 import type { TextStyleApplyPlan } from "../text-styles/apply.js";
 import {

@@ -9,7 +9,7 @@ import type {
   UsageRoute,
 } from "../../shared/usage-scope.js";
 import { appRouterDir, listAppRoutes } from "../app/routes.js";
-import { BadRequestError, NotFoundError } from "../store/errors.js";
+import { BadRequestError, NotFoundError } from "../platform/errors/index.js";
 import { RouteGraph } from "./route-graph.js";
 
 const SEGMENT_FILES =

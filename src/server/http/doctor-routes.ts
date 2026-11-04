@@ -9,9 +9,9 @@ import type {
   DoctorCauseKind,
 } from "../../shared/app-doctor.js";
 import type { Project } from "../../shared/contracts.js";
+import { BadRequestError, ConflictError } from "../platform/errors/index.js";
 import { appProject, doctorControl } from "../preview/doctor-read.js";
 import { bindMcpReadRuntime } from "../preview/mcp-read-core.js";
-import { BadRequestError, ConflictError } from "../store/errors.js";
 import type { StudioProjectStore } from "../store/projects.js";
 import type { PreviewService } from "../types.js";
 

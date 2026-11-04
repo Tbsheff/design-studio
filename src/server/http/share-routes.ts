@@ -2,6 +2,7 @@ import type { Context, Hono } from "hono";
 import { streamSSE } from "hono/streaming";
 
 import type { ExportDeps } from "../export/source.js";
+import { assertSafeId } from "../platform/errors/index.js";
 import { sharePort } from "../share/frames.js";
 import { createShareListener, type ShareListener } from "../share/listener.js";
 import { createLiveRefresher, type LiveHub } from "../share/live.js";
@@ -9,7 +10,6 @@ import { bindShareRuntime, toShareCore } from "../share/share-core.js";
 import { isLive, type ShareStore } from "../share/store.js";
 import { createViewerApp } from "../share/viewer-app.js";
 import type { CommentStore } from "../store/comments.js";
-import { assertSafeId } from "../store/errors.js";
 
 export interface ShareRouteDeps extends ExportDeps {
   dataDir: string;

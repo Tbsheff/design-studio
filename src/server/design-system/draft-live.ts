@@ -11,7 +11,7 @@ import type {
   Project,
   RunStatus,
 } from "../../shared/contracts.js";
-import { isNodeError } from "../store/errors.js";
+import { isNodeError } from "../platform/errors/index.js";
 import { harvestDesignText } from "./extract/design-md.js";
 import {
   SOURCE_DIR,

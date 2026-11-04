@@ -13,6 +13,7 @@ import type {
   EditSite,
   EditSiteScope,
 } from "../../direct-edit/commit/edit-site.js";
+import { textHintsOf } from "../../page-probe/element.js";
 import { callAction } from "../action-call.js";
 import { editSummary } from "../activity-text.js";
 import { EditError, loadTarget, refuseWhileRunning } from "../edit-guards.js";
@@ -25,7 +26,6 @@ import {
   versionActivity,
 } from "../edit-kit.js";
 import type { Done } from "../edit-kit.js";
-import { textHintsOf } from "../element.js";
 import { editOutput } from "./direct-edit-result.js";
 import type { EditElementInput } from "./direct-edit-schema.js";
 import { structureElement } from "./structure-element.js";

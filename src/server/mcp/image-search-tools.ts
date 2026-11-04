@@ -14,7 +14,10 @@ import type { PlaceScope } from "../image-search/place.js";
 import { searchImages } from "../image-search/search.js";
 import { elementTarget, sourceTarget } from "../image-search/target.js";
 import type { PlaceTarget } from "../image-search/target.js";
+import { describeElement } from "../page-probe/element.js";
+import { scopeOf as layerScopeOf } from "../page-probe/layer-ref.js";
 import { probeOwners } from "../page-probe/owner-probe.js";
+import { resolveSourceLoc } from "../page-probe/source-loc.js";
 import { EditError, loadTarget, refuseWhileRunning } from "./edit-guards.js";
 import type { EditDeps } from "./edit-guards.js";
 import {
@@ -29,9 +32,6 @@ import {
   versionActivity,
 } from "./edit-kit.js";
 import type { Done } from "./edit-kit.js";
-import { describeElement } from "./element.js";
-import { scopeOf as layerScopeOf } from "./layer-ref.js";
-import { resolveSourceLoc } from "./source-loc.js";
 
 const SOURCE_MAX = 1100;
 

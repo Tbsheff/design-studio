@@ -10,7 +10,7 @@ import type {
 } from "../../shared/contracts.js";
 import { parseStatesRequest } from "../../shared/states.js";
 import { parseEditScope } from "../../shared/usage-scope.js";
-import { BadRequestError, assertSafeId } from "../store/errors.js";
+import { BadRequestError, assertSafeId } from "../platform/errors/index.js";
 import { isRecord, requireString } from "./app-request.js";
 import { parseMentions } from "./mentions.js";
 

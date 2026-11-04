@@ -38,11 +38,11 @@ import {
   withFinalText,
 } from "../../shared/run-parts.js";
 import { runTitle } from "../../shared/version-title.js";
+import { BadRequestError } from "../platform/errors/index.js";
 import {
   createCommandRuleStore,
   isOrgCapAllowed,
 } from "../store/command-rules.js";
-import { BadRequestError } from "../store/errors.js";
 import type {
   AgentRunContext,
   AgentRunner,

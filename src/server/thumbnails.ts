@@ -17,14 +17,17 @@ import type {
   StudioEventInput,
   VersionKind,
 } from "../shared/contracts.js";
-import { halfSize } from "./half-size.js";
+import { NotFoundError, assertSafeId } from "./platform/errors/index.js";
+import { halfSize } from "./platform/half-size/index.js";
+import {
+  siblingWorkerFile,
+  WorkerClient,
+} from "./platform/process/worker-client.js";
 import { diffMask } from "./preview/visual-diff.js";
-import { NotFoundError, assertSafeId } from "./store/errors.js";
 import type { StudioProjectStore } from "./store/projects.js";
 import type { EventBus, PreviewService, VersionStore } from "./types.js";
-import { siblingWorkerFile, WorkerClient } from "./worker-client.js";
 
-export { halfSize } from "./half-size.js";
+export { halfSize } from "./platform/half-size/index.js";
 
 export const THUMB_VIEWPORT = { width: 1280, height: 800 };
 export const THUMB_KEEP = 200;

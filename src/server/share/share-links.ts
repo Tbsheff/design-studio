@@ -18,7 +18,7 @@ import {
   BadRequestError,
   NotFoundError,
   assertSafeId,
-} from "../store/errors.js";
+} from "../platform/errors/index.js";
 import { canvasFrames, expiryOf } from "./frames.js";
 import type { ShareListener as ShareServer } from "./listener.js";
 import type { LiveHub } from "./live.js";

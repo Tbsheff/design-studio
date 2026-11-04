@@ -10,7 +10,7 @@ import type {
   PackSummary,
   Project,
 } from "../../../shared/contracts.js";
-import { BadRequestError, NotFoundError } from "../../store/errors.js";
+import { BadRequestError, NotFoundError } from "../../platform/errors/index.js";
 import { checkDesignSystem } from "../check.js";
 import { readCoverage } from "../draft-project.js";
 import type { PackRuntime } from "./library-core.js";

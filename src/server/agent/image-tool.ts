@@ -21,7 +21,7 @@ import {
   planSetImage,
   writeImagePlan,
 } from "../direct-edit/commit/image.js";
-import { describeElements } from "../mcp/element.js";
+import { describeElements } from "../page-probe/element.js";
 import { probeOwners } from "../page-probe/owner-probe.js";
 import { refusal, writeProblem, type DirectToolDeps } from "./direct-tools.js";
 import { resolveSelectors } from "./kit-tools.js";

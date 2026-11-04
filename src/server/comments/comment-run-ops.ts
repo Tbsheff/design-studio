@@ -6,7 +6,7 @@ import type {
   RunLevel,
   RunRequest,
 } from "../../shared/contracts.js";
-import { ConflictError, NotFoundError } from "../store/errors.js";
+import { ConflictError, NotFoundError } from "../platform/errors/index.js";
 import type { CommentRuntime } from "./comment-core.js";
 import { toRunPayload } from "./run-payload.js";
 import type { SelectionContexts } from "./run-payload.js";

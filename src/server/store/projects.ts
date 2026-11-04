@@ -8,8 +8,8 @@ import type {
   ProjectSettings,
 } from "../../shared/contracts.js";
 import { slugify } from "../../shared/folders.js";
+import { BadRequestError, NotFoundError } from "../platform/errors/index.js";
 import type { ServerConfig, VersionStore } from "../types.js";
-import { BadRequestError, NotFoundError } from "./errors.js";
 import { createProjectCore } from "./project-core.js";
 import { createProjectCreation } from "./project-create.js";
 import { createProjectFiles } from "./project-files.js";

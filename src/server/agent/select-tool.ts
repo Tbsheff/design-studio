@@ -5,16 +5,16 @@ import { canvasOwner, readCanvasAt } from "../canvas/service.js";
 import { findFrame } from "../canvas/tools.js";
 import { withPagePath } from "../export/source.js";
 import {
-  isLayerRef,
-  LayerRefError,
-  memoPage,
-  scopeOf,
-} from "../mcp/layer-ref.js";
-import {
   MATCH_BY_TEXT,
   SELECT_MATCHING_TEXT,
   selectMatchingOnPage,
 } from "../mcp/select-tools.js";
+import {
+  isLayerRef,
+  LayerRefError,
+  memoPage,
+  scopeOf,
+} from "../page-probe/layer-ref.js";
 import type { DirectToolDeps } from "./direct-tools.js";
 
 type ToolText = Readonly<{

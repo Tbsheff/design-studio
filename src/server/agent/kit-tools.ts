@@ -4,15 +4,15 @@ import { DEFAULT_FRAME_STATE } from "../../shared/frame-state.js";
 import { COMPONENT_LIST_MAX, COMPONENT_SOURCES } from "../../shared/props.js";
 import { findFrame, frameRef } from "../canvas/tools.js";
 import { listComponentSchemas } from "../components/props-service.js";
+import { layerTreeText } from "../mcp/layer-tools.js";
 import {
   isLayerRef,
   LayerRefError,
   memoPage,
   resolveLayerRef,
   scopeOf,
-} from "../mcp/layer-ref.js";
-import type { Viewport } from "../mcp/layer-ref.js";
-import { layerTreeText } from "../mcp/layer-tools.js";
+} from "../page-probe/layer-ref.js";
+import type { Viewport } from "../page-probe/layer-ref.js";
 import { canvasFrames } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
 import {

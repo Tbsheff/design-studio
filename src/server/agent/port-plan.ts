@@ -34,7 +34,7 @@ import { matchColor } from "../../shared/token-match.js";
 import { appRouterDir, listAppRoutes } from "../app/routes.js";
 import { searchComponents } from "../components/component-search.js";
 import { loadDesignSystemPromptContext } from "../design-system/state.js";
-import { BadRequestError, NotFoundError } from "../store/errors.js";
+import { BadRequestError, NotFoundError } from "../platform/errors/index.js";
 
 type Node = DefaultTreeAdapterMap["node"];
 

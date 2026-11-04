@@ -9,7 +9,7 @@ import {
 import type { VectorBox, VectorRequest } from "../../shared/vector.js";
 import { planVector } from "../direct-edit/commit/vector-ops.js";
 import { writeAtomic } from "../direct-edit/index.js";
-import { describeElements } from "../mcp/element.js";
+import { describeElements } from "../page-probe/element.js";
 import { refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
 import { targetOf } from "./insert-tool.js";

@@ -34,7 +34,7 @@ import type {
   RouteLinksResult,
 } from "../../../shared/route-flow.js";
 import { frameStatesView } from "../../app/frame-state.js";
-import { BadRequestError } from "../../store/errors.js";
+import { BadRequestError } from "../../platform/errors/index.js";
 import type { CanvasService } from "../service.js";
 import { applyPlacement, CANVAS_VIEWPORTS, findFrame } from "../tools.js";
 import type { PlaceSpec } from "../tools.js";

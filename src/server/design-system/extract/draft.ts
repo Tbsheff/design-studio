@@ -3,7 +3,7 @@ import path from "node:path";
 import { z } from "zod";
 
 import type { CreateUserPackInput } from "../../../shared/contracts.js";
-import { BadRequestError } from "../../store/errors.js";
+import { BadRequestError } from "../../platform/errors/index.js";
 import { formatIssues } from "../packs.js";
 import type { LoadedPack, PackRegistry } from "../packs.js";
 import { composeDraftDesignMd, sourceSummary } from "./compose.js";

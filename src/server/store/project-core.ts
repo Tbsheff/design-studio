@@ -4,9 +4,13 @@ import path from "node:path";
 
 import { SETTINGS_VERSION } from "../../shared/contracts.js";
 import type { Project } from "../../shared/contracts.js";
+import {
+  NotFoundError,
+  assertSafeId,
+  isNodeError,
+} from "../platform/errors/index.js";
+import { createKeyedMutex } from "../platform/mutex/index.js";
 import type { ServerConfig } from "../types.js";
-import { NotFoundError, assertSafeId, isNodeError } from "./errors.js";
-import { createKeyedMutex } from "./mutex.js";
 import {
   DEFAULT_TEMPLATE_DIR,
   installTemplateModules,

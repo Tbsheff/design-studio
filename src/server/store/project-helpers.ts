@@ -28,14 +28,14 @@ import type {
 } from "../../shared/contracts.js";
 import { MAX_SLUG_SUFFIX, slugCandidate } from "../../shared/folders.js";
 import { writeAtomic } from "../platform/atomic-write/index.js";
-import { packagedResource, resourcePath } from "../resources.js";
 import {
   BadRequestError,
   ConflictError,
   NotFoundError,
   PickAppError,
   isNodeError,
-} from "./errors.js";
+} from "../platform/errors/index.js";
+import { packagedResource, resourcePath } from "../platform/resources/index.js";
 import type { AppDetection } from "./project-types.js";
 
 export const MAIN_DIRECTION_ID = "main";

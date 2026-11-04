@@ -16,7 +16,7 @@ import {
   REQUIRED_TOKENS,
   TOKENS_FILE,
 } from "../../shared/contracts.js";
-import { isNodeError } from "../store/errors.js";
+import { isNodeError } from "../platform/errors/index.js";
 import { compileTokens, parseTokenFile } from "./compile.js";
 import { splitDesignMd } from "./design-md.js";
 import { DESIGN_MD_SECTIONS, TODO_MARK } from "./extract/compose.js";

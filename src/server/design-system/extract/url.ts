@@ -1,7 +1,7 @@
 import { parse } from "parse5";
 import type { DefaultTreeAdapterMap } from "parse5";
 
-import { resourcesDir } from "../../resources.js";
+import { resourcesDir } from "../../platform/resources/index.js";
 import { computedCandidates } from "./browser-tokens.js";
 import {
   BROWSER_TOTAL_MS,

@@ -8,11 +8,11 @@ import type { NotFound } from "../../shared/actions/_core/errors/not-found.js";
 import type { Project } from "../../shared/contracts.js";
 import { attemptKnown } from "../platform/attempt/index.js";
 import { loadConfig } from "../platform/config/index.js";
+import { assertSafeId } from "../platform/errors/index.js";
 import {
   makeRuntimeSlot,
   requireBound,
 } from "../platform/runtime-slot/index.js";
-import { assertSafeId } from "../store/errors.js";
 import type { StudioProjectStore } from "../store/projects.js";
 
 interface ShipActivityDraft {

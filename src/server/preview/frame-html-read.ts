@@ -3,8 +3,8 @@ import path from "node:path";
 
 import { SOURCE_LOC_ATTR } from "../../shared/contracts.js";
 import { cleanExportPath } from "../../shared/export.js";
+import { BadRequestError, NotFoundError } from "../platform/errors/index.js";
 import { withPagePath } from "../project-source/index.js";
-import { BadRequestError, NotFoundError } from "../store/errors.js";
 import { attemptNull, toOptional } from "./attempt-null.js";
 import { waitForPage } from "./capture.js";
 import { NO_RENDER, resolveFrameSource, toPagePath } from "./frame-source.js";

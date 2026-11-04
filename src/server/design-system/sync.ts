@@ -11,7 +11,7 @@ import type {
   PackManifest,
   TokenFile,
 } from "../../shared/contracts.js";
-import { createKeyedMutex } from "../store/mutex.js";
+import { createKeyedMutex } from "../platform/mutex/index.js";
 import { compileTokens, parseTokenFile } from "./compile.js";
 import type { ThemeMode } from "./compile.js";
 import { upsertTokenBlock } from "./design-md.js";

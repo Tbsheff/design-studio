@@ -7,6 +7,7 @@ import {
   SPACING_TOKEN,
 } from "../../shared/spacing.js";
 import type { SpacingInput } from "../../shared/spacing.js";
+import { describeElement } from "../page-probe/element.js";
 import type { SpacingScope } from "../spacing/commit.js";
 import { SpacingError } from "../spacing/errors.js";
 import { getSpacing } from "../spacing/get.js";
@@ -26,7 +27,6 @@ import {
   versionActivity,
 } from "./edit-kit.js";
 import type { Done } from "./edit-kit.js";
-import { describeElement } from "./element.js";
 import { targetOf } from "./insert-tools.js";
 
 const SOURCE_MAX = 1100;

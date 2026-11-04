@@ -14,12 +14,12 @@ import {
 } from "../../shared/contracts.js";
 import { levelOf, resolveRunConfig } from "../../shared/run-levels.js";
 import { readDesignSystemState } from "../design-system/state.js";
-import { bindMcpReadRuntime } from "../preview/mcp-read-core.js";
 import {
   BadRequestError,
   ConflictError,
   assertSafeId,
-} from "../store/errors.js";
+} from "../platform/errors/index.js";
+import { bindMcpReadRuntime } from "../preview/mcp-read-core.js";
 import type { StudioProjectStore } from "../store/projects.js";
 import type { AgentRunner, ServerConfig } from "../types.js";
 import {

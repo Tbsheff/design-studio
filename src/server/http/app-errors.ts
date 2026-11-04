@@ -5,7 +5,7 @@ import {
   ConflictError,
   NotFoundError,
   PickAppError,
-} from "../store/errors.js";
+} from "../platform/errors/index.js";
 
 interface ErrorBody {
   readonly _tag?: string;

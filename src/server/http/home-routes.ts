@@ -5,6 +5,8 @@ import type { Context, Hono } from "hono";
 import type { Project } from "../../shared/contracts.js";
 import { askQuestions } from "../agent/index.js";
 import { buildEnv } from "../platform/config/index.js";
+import { BadRequestError } from "../platform/errors/index.js";
+import type { DefaultFolderStore } from "../store/default-folder.js";
 import {
   SAMPLE_NAME,
   SAMPLE_STARTER_ID,
@@ -12,9 +14,7 @@ import {
   applySampleEdit,
   copyStarter,
   findStarter,
-} from "../starters.js";
-import type { DefaultFolderStore } from "../store/default-folder.js";
-import { BadRequestError } from "../store/errors.js";
+} from "../store/index.js";
 import type { ProjectLibrary } from "../store/project-library.js";
 import type { StudioProjectStore } from "../store/projects.js";
 import type { ThumbnailService } from "../thumbnails.js";

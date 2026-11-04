@@ -4,7 +4,7 @@ import path from "node:path";
 
 import type { ExportFrame } from "../../shared/export.js";
 import type { Publication, PublishBackendMode } from "../../shared/publish.js";
-import { createKeyedMutex } from "../store/mutex.js";
+import { createKeyedMutex } from "../platform/mutex/index.js";
 
 export interface PublicationRecord extends Omit<Publication, "isLegacy"> {
   frames: ExportFrame[] | null;

@@ -15,7 +15,9 @@ import {
   type PropValue,
   type SetPropsResult,
 } from "../../shared/props.js";
+import { scopeOf } from "../page-probe/layer-ref.js";
 import { probeOwners } from "../page-probe/owner-probe.js";
+import { resolveSourceLoc } from "../page-probe/source-loc.js";
 import { callAction } from "./action-call.js";
 import {
   EditError,
@@ -35,8 +37,6 @@ import {
   versionActivity,
   type Done,
 } from "./edit-kit.js";
-import { scopeOf } from "./layer-ref.js";
-import { resolveSourceLoc } from "./source-loc.js";
 
 type Direction = Project["directions"][number];
 

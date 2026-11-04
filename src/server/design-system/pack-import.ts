@@ -3,7 +3,7 @@ import type {
   PackManifest,
   PackSummary,
 } from "../../shared/contracts.js";
-import { BadRequestError, ConflictError } from "../store/errors.js";
+import { BadRequestError, ConflictError } from "../platform/errors/index.js";
 import { DESIGN_MD_FILE, formatIssues, manifestSchema } from "./packs.js";
 import { ZipError, unzipFiles } from "./zip.js";
 

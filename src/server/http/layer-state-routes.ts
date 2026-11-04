@@ -5,7 +5,7 @@ import {
   cleanLockKeys,
 } from "../../shared/layer-locks.js";
 import { applyDelta } from "../page-probe/lock-probe.js";
-import { BadRequestError, NotFoundError } from "../store/errors.js";
+import { BadRequestError, NotFoundError } from "../platform/errors/index.js";
 import type { LayerLockStore } from "../store/layer-locks.js";
 import type { StudioProjectStore } from "../store/projects.js";
 

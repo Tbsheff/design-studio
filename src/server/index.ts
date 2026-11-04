@@ -1,5 +1,8 @@
 import { createServer } from "./main/public.js";
-import { DataDirLockedError, LOCKED_EXIT_CODE } from "./store/data-lock.js";
+import {
+  DataDirLockedError,
+  LOCKED_EXIT_CODE,
+} from "./platform/data-lock/index.js";
 import {
   createThumbnailService,
   observeBus,

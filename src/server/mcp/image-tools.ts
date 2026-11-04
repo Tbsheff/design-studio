@@ -14,7 +14,10 @@ import {
   type SetImageResult,
 } from "../../shared/image.js";
 import { imageFromPath } from "../direct-edit/commit/image-source.js";
+import { describeElement } from "../page-probe/element.js";
+import { scopeOf } from "../page-probe/layer-ref.js";
 import { probeOwners } from "../page-probe/owner-probe.js";
+import { resolveSourceLoc } from "../page-probe/source-loc.js";
 import { callAction } from "./action-call.js";
 import {
   EditError,
@@ -33,9 +36,6 @@ import {
   versionActivity,
   type Done,
 } from "./edit-kit.js";
-import { describeElement } from "./element.js";
-import { scopeOf } from "./layer-ref.js";
-import { resolveSourceLoc } from "./source-loc.js";
 
 export const SET_IMAGE_DESCRIPTION =
   'Place or change an image, like the Image section of the studio inspector. On an <img> it copies the file into the project (the app public/ folder for Next and Vite, assets/ for HTML) with a content-hashed name and writes src (srcset is removed), alt, fit (object-fit) and focal (object-position). On an element with a background image it writes background-image, background-size and background-position. On any other element it inserts a new <img> inside it (position "after" puts it after). In a Tailwind file fit and focal become classes (object-cover, object-[50%_30%]). One version and one undo step. url must be https, at most 10 MB, and an image content type; path is a local image file. src from a data expression such as {item.image} is refused with a reason.';

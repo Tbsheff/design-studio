@@ -10,6 +10,7 @@ import {
   type VectorRequest,
   type VectorResult,
 } from "../../shared/vector.js";
+import { describeElements } from "../page-probe/element.js";
 import { callAction } from "./action-call.js";
 import {
   EditError,
@@ -28,7 +29,6 @@ import {
   versionActivity,
   type Done,
 } from "./edit-kit.js";
-import { describeElements } from "./element.js";
 import { targetOf } from "./insert-tools.js";
 
 type Direction = Project["directions"][number];

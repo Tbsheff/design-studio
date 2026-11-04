@@ -4,8 +4,8 @@ import type {
   OpenPackEditorResult,
   Project,
 } from "../../../shared/contracts.js";
-import { BadRequestError, NotFoundError } from "../../store/errors.js";
-import { createKeyedMutex } from "../../store/mutex.js";
+import { BadRequestError, NotFoundError } from "../../platform/errors/index.js";
+import { createKeyedMutex } from "../../platform/mutex/index.js";
 import { IMPROVE_IN_APP } from "../draft-live.js";
 import type { LiveDrafts } from "../draft-live.js";
 import {

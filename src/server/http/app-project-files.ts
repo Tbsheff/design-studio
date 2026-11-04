@@ -7,7 +7,7 @@ import {
   BadRequestError,
   NotFoundError,
   isNodeError,
-} from "../store/errors.js";
+} from "../platform/errors/index.js";
 
 function freshSessionPatch(reason: SessionResetReason): Partial<Direction> {
   return { sessionCostUsd: 0, sessionId: null, sessionResetReason: reason };

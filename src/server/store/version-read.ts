@@ -9,7 +9,7 @@ import type {
 import { splitHunks } from "../../shared/hunk.js";
 import type { PatchHunk } from "../../shared/hunk.js";
 import { savesSettled } from "../direct-edit/commit/save-queue.js";
-import { BadRequestError, NotFoundError } from "./errors.js";
+import { BadRequestError, NotFoundError } from "../platform/errors/index.js";
 import { trimListedFiles } from "./version-names.js";
 import type { VersionReadRuntime, VersionTarget } from "./version-read-core.js";
 

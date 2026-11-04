@@ -16,7 +16,7 @@ import {
   type MockRule,
   type MockUser,
 } from "../../shared/frame-state.js";
-import { BadRequestError } from "../store/errors.js";
+import { BadRequestError } from "../platform/errors/index.js";
 
 const STATES_FILE = "frame-states.json";
 const JAR_FILE = "frame-session.json";

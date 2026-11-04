@@ -11,8 +11,8 @@ import path from "node:path";
 
 import { z } from "zod";
 
-import { BadRequestError, isNodeError } from "./errors.js";
-import { createKeyedMutex } from "./mutex.js";
+import { BadRequestError, isNodeError } from "../platform/errors/index.js";
+import { createKeyedMutex } from "../platform/mutex/index.js";
 import { bindDefaultFolderRuntime } from "./workspace-runtime.js";
 
 export {

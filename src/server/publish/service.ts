@@ -24,7 +24,7 @@ import {
   BadRequestError,
   NotFoundError,
   assertSafeId,
-} from "../store/errors.js";
+} from "../platform/errors/index.js";
 import { cliFailure, runCf } from "./cli.js";
 import { hashPassword } from "./password.js";
 import {

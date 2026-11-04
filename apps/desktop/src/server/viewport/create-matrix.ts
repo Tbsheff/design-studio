@@ -83,7 +83,7 @@ const isSameCell = (
   frame: CanvasFileFrame,
   slot: GridSlot,
   page: string
-): boolean => frame.label === slot.cell.label && frame.path === page;
+): boolean => frame.label === slot.cell.label && (frame.path ?? "") === page;
 
 const toSpec = (
   slot: GridSlot,
@@ -119,7 +119,8 @@ const placeCells = (
   const fresh = seeded.frames.filter(
     (frame) =>
       !cells.some(
-        (cell) => cell.label === frame.label && frame.path === command.page
+        (cell) =>
+          cell.label === frame.label && (frame.path ?? "") === command.page
       )
   );
 

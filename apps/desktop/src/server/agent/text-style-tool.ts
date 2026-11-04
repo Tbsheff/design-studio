@@ -1,3 +1,7 @@
+import type {
+  SdkMcpToolDefinition,
+  tool as sdkTool,
+} from "@anthropic-ai/claude-agent-sdk";
 import type { SelectionContext } from "@design-studio/contracts";
 import { Schema } from "effect";
 
@@ -25,11 +29,24 @@ import {
   planTextStyleCreate,
 } from "../text-styles/create.js";
 import type { TextStyleCreatePlan } from "../text-styles/create.js";
+import { createTextStyleDetach } from "../text-styles/detach.js";
 import { listTextStyles } from "../text-styles/list.js";
 import { refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
 import { targetOf } from "./insert-tool.js";
+import { withLayerIds } from "./kit-tools.js";
 import { editPageUrl } from "./run-target.js";
+import { TOOL_SHORT } from "./tool-help.js";
+
+type ToolFn = typeof sdkTool;
+
+type ReadStyleTool =
+  | SdkMcpToolDefinition<typeof applyTextStyleInput>
+  | SdkMcpToolDefinition<typeof listTextStylesInput>;
+
+type WriteStyleTool =
+  | SdkMcpToolDefinition<typeof createTextStyleInput>
+  | SdkMcpToolDefinition<typeof detachTextStyleInput>;
 
 interface ToolContent {
   text: string;
@@ -109,6 +126,16 @@ const createTextStyleFields = {
   }),
 };
 
+const detachTextStyleFields = {
+  path: pathField,
+  targetSelector: toTrimmedText(1, SELECTOR_MAX).annotate({
+    description:
+      "CSS selector or layer id of the text element to detach from its text style.",
+  }),
+};
+
+const detachTextStyleInput = toSdkFieldSet(detachTextStyleFields);
+const detachSchema = toToolInput(detachTextStyleFields);
 const listTextStylesInput = toSdkFieldSet(listTextStylesFields);
 const applyTextStyleInput = toSdkFieldSet(applyTextStyleFields);
 const createTextStyleInput = toSdkFieldSet(createTextStyleFields);
@@ -267,7 +294,7 @@ const runApplyTextStyle = async (
 
 const probeElement = async (
   deps: DirectToolDeps,
-  input: ToolDecoded<typeof createSchema>
+  input: Pick<ToolDecoded<typeof createSchema>, "path" | "targetSelector">
 ): Promise<Probed> => {
   if (!deps.ctx.previewUrl) {
     return {
@@ -344,11 +371,98 @@ const runCreateTextStyle = async (
   }
 };
 
-export {
-  applyTextStyleInput,
-  createTextStyleInput,
-  listTextStylesInput,
-  runApplyTextStyle,
-  runCreateTextStyle,
-  runListTextStyles,
+const runDetachWith = async (
+  deps: DirectToolDeps,
+  input: ToolDecoded<typeof detachSchema>
+): Promise<ToolText> => {
+  const probed = await probeElement(deps, input);
+
+  if (!probed.ok) {
+    return refuse(probed.message);
+  }
+
+  const { source } = probed.element;
+
+  if (!source) {
+    return refuse("The element has no source location.");
+  }
+
+  const { direction, project } = deps.ctx;
+  const { targetSelector: selector } = input;
+
+  const written = await createTextStyleDetach(
+    { project, workTree: direction.workTree },
+    {
+      styles: probed.element.styles,
+      target: { selector, source, tag: null },
+    }
+  );
+
+  const problem = await writeOut(deps, written);
+
+  if (problem) {
+    return refuse(problem);
+  }
+
+  return reply(`Detach text style in ${written.target.relative}. ${RUN_NOTE}`);
 };
+
+const runDetachTextStyle = async (
+  deps: DirectToolDeps,
+  args: ToolArgs<typeof detachSchema>
+): Promise<ToolText> => {
+  const blocked = refusal(deps.ctx, "detach_text_style");
+
+  if (blocked) {
+    return refuse(blocked);
+  }
+
+  const parsed = detachSchema.safeParse(args);
+
+  if (!parsed.success) {
+    return issues("detach_text_style", parsed.error);
+  }
+
+  try {
+    return await runDetachWith(deps, parsed.data);
+  } catch (error) {
+    if (error instanceof Error) {
+      return failure("detach_text_style", error);
+    }
+
+    return failure("detach_text_style", String(error));
+  }
+};
+
+const createTextStyleTools = (
+  deps: DirectToolDeps,
+  toolFn: ToolFn
+): (ReadStyleTool | WriteStyleTool)[] => [
+  toolFn(
+    "list_text_styles",
+    TOOL_SHORT.list_text_styles,
+    listTextStylesInput,
+    (args) => runListTextStyles(deps, args),
+    { annotations: { readOnlyHint: true } }
+  ),
+  toolFn(
+    "apply_text_style",
+    TOOL_SHORT.apply_text_style,
+    applyTextStyleInput,
+    withLayerIds(deps, (args) => runApplyTextStyle(deps, args))
+  ),
+  toolFn(
+    "create_text_style",
+    TOOL_SHORT.create_text_style,
+    createTextStyleInput,
+    withLayerIds(deps, (args) => runCreateTextStyle(deps, args))
+  ),
+  toolFn(
+    "detach_text_style",
+    TOOL_SHORT.detach_text_style,
+    detachTextStyleInput,
+    withLayerIds(deps, (args) => runDetachTextStyle(deps, args))
+  ),
+];
+
+export { createTextStyleTools };

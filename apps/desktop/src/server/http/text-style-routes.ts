@@ -12,17 +12,14 @@ import type {
   TextStyleApplyResult,
   TextStyleCreateResult,
 } from "../../shared/text-styles.js";
-import {
-  DirectEditError,
-  parseDirectEditRequest,
-  planDirectEdit,
-} from "../direct-edit/index.js";
+import { DirectEditError } from "../direct-edit/index.js";
 import type { DirectEditDeps } from "../direct-edit/index.js";
 import { z } from "../platform/zod-bridge/index.js";
 import { applyTextStyle } from "../text-styles/apply.js";
 import { commitOne, guardEdit } from "../text-styles/commit.js";
 import type { TextStyleEditScope } from "../text-styles/commit.js";
 import { computedTextValues, createTextStyle } from "../text-styles/create.js";
+import { createTextStyleDetach } from "../text-styles/detach.js";
 import { listTextStyles, TextStyleError } from "../text-styles/list.js";
 
 interface TextStyleRouteDeps {
@@ -56,14 +53,6 @@ const FILE_MAX = 1000;
 const SELECTOR_MAX = 2000;
 const TAG_MAX = 100;
 const STYLE_KEYS_MAX = 40;
-
-const DETACH_PROPS = [
-  "font-size",
-  "font-weight",
-  "line-height",
-  "letter-spacing",
-  "font-family",
-] as const;
 
 const listQuery = z.strictObject({
   limit: z.coerce
@@ -131,19 +120,6 @@ const failed = (ctx: Context, error: Error): Response => {
   throw error;
 };
 
-const literalStyle = (styles: Record<string, string>): Record<string, string> =>
-  Object.fromEntries(
-    DETACH_PROPS.flatMap((prop) => {
-      const value = styles[prop]?.trim() ?? "";
-
-      if (value === "") {
-        return [];
-      }
-
-      return [[prop, value]];
-    })
-  );
-
 const runApply: Edit<ApplyInput, TextStyleApplyResult> = async (
   deps,
   scope,
@@ -186,29 +162,18 @@ const runDetach: Edit<DetachInput, TextStyleDetachResult> = async (
 ) => {
   guardEdit(deps, scope);
 
-  const request = parseDirectEditRequest({
-    selector: input.target.selector ?? "",
-    source: input.target.source,
-    style: literalStyle(input.styles),
-    tag: input.target.tag,
-  });
-
-  const planned = await planDirectEdit(scope.workTree, request, null, {
-    projectKind: scope.project.kind,
-  });
-
-  const version = await commitOne(
-    deps,
-    scope,
-    {
-      code: planned.patch.code,
-      original: planned.original,
-      target: planned.target,
+  const written = await createTextStyleDetach(scope, {
+    styles: input.styles,
+    target: {
+      selector: input.target.selector ?? null,
+      source: input.target.source,
+      tag: input.target.tag ?? null,
     },
-    "Detach text style"
-  );
+  });
 
-  return { file: planned.target.relative, versionId: version.id };
+  const version = await commitOne(deps, scope, written, "Detach text style");
+
+  return { file: written.target.relative, versionId: version.id };
 };
 
 const registerTextStyleList = (app: Hono, deps: TextStyleRouteDeps): void => {

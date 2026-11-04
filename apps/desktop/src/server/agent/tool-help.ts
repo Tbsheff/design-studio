@@ -73,6 +73,8 @@ export const TOOL_SHORT = {
     "Add a value (or a new key) to the cva variants map of one kit component, with classes or a copy of a value; returns a preview.",
   create_text_style:
     "Add the computed text props of an element as a new text style token in the project token source.",
+  detach_text_style:
+    "Detach an element from its text style: write its computed text props as literal values on the element.",
   define_tweaks:
     "Save the Tweaks panel controls (replaces the list). Each control sets one CSS custom property that is declared in :root and used with var().",
   design_review:
@@ -227,6 +229,8 @@ export const TOOL_HELP: Record<
     "Add a value to the cva() variants map of one kit component with the same server code as the MCP create_component_variant tool. Pass name (from list_components) or file, key (variant, size or another key), value, and classes; copyFrom starts from an existing value of the key, and classes then replace the ones of the same utility. newKey: true adds a key that does not exist, with this value as its default. setDefault: true also sets defaultVariants. Only the cva() call changes. It refuses a component with no cva(). You get the value list and a preview image of the new value.",
   create_text_style:
     "Read the computed font size, weight, line-height, letter-spacing and family of the target on the live page and add them as a new text style named name: --text-<name> with pairs in the Tailwind @theme block, a tokens.json typography entry, or :root CSS vars. Refuses a name that exists.",
+  detach_text_style:
+    "Read the computed font size, weight, line-height, letter-spacing and family of the target on the live page and write them as literal values on the element, with the same server code as the MCP detach_text_style tool. A later change to the text style no longer reaches the element.",
   define_tweaks:
     "Save the Tweaks panel controls for this design (replaces the whole list). Each control sets one CSS custom property: range {min, max, step?, unit?, default: number}, color {default}, toggle {on, off, default: boolean}, select {options: [{label, value}], default}. The user drags them for a live preview with no model call, and Commit writes the values into the :root declaration. Every cssVar must be declared in a top-level :root rule of the page CSS with the default value (a design-system token from tokens.css is already declared; Commit then updates tokens.json) and used with var() in the rules it changes. The result lists any var that is not declared or not used.",
   design_review:

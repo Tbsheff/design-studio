@@ -140,6 +140,7 @@ const INSERT_ICON_TOOL = "mcp__studio__insert_icon";
 const LIST_TEXT_STYLES_TOOL = "mcp__studio__list_text_styles";
 const APPLY_TEXT_STYLE_TOOL = "mcp__studio__apply_text_style";
 const CREATE_TEXT_STYLE_TOOL = "mcp__studio__create_text_style";
+const DETACH_TEXT_STYLE_TOOL = "mcp__studio__detach_text_style";
 const LIST_MOTION_TOOL = "mcp__studio__list_motion";
 const SET_MOTION_TOOL = "mcp__studio__set_motion";
 const GET_FILL_TOOL = "mcp__studio__get_fill";
@@ -170,6 +171,7 @@ const DIRECT_EDIT_TOOLS = new Set<string>([
   INSERT_ICON_TOOL,
   APPLY_TEXT_STYLE_TOOL,
   CREATE_TEXT_STYLE_TOOL,
+  DETACH_TEXT_STYLE_TOOL,
   SET_MOTION_TOOL,
   SET_FILL_TOOL,
   SET_SPACING_TOOL,
@@ -214,6 +216,7 @@ const STUDIO_MCP_TOOLS: readonly string[] = [
   LIST_TEXT_STYLES_TOOL,
   APPLY_TEXT_STYLE_TOOL,
   CREATE_TEXT_STYLE_TOOL,
+  DETACH_TEXT_STYLE_TOOL,
   LIST_MOTION_TOOL,
   SET_MOTION_TOOL,
   GET_FILL_TOOL,

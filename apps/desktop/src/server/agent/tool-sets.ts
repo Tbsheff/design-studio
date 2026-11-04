@@ -35,6 +35,7 @@ const CORE_TOOLS = [
   "list_text_styles",
   "apply_text_style",
   "create_text_style",
+  "detach_text_style",
   "list_motion",
   "set_motion",
   "get_fill",

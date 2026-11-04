@@ -10,7 +10,10 @@ import {
   noteTreeWrite,
   withdrawPlanned,
 } from "../../events/index.js";
-import { isOutsideRequest } from "../../platform/call-origin/index.js";
+import {
+  isOutsideRequest,
+  isOwnAgentRun,
+} from "../../platform/call-origin/index.js";
 import { DirectEditError } from "../engine/errors.js";
 import type { DirectEditDeps } from "./edit-types.js";
 import { isPendingVersion, saveLater } from "./save-queue.js";
@@ -120,7 +123,10 @@ export function assertCanEdit(
   project: Project,
   direction: Direction
 ): string {
-  if (deps.runner.isRunning(project.id, direction.id)) {
+  if (
+    deps.runner.isRunning(project.id, direction.id) &&
+    !isOwnAgentRun(project.id, direction.id)
+  ) {
     throw new DirectEditError(
       "run_in_progress",
       "The agent is editing this direction; wait for the run to finish"

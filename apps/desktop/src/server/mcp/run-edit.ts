@@ -1,5 +1,10 @@
 import { firstVersionBlock } from "../app/first-version.js";
-import { takeSaveFailures } from "../direct-edit/commit/index.js";
+import {
+  PENDING_VERSION,
+  savedVersionId,
+  savesSettled,
+  takeSaveFailures,
+} from "../direct-edit/commit/index.js";
 import {
   renderedSince,
   renderPending,
@@ -164,19 +169,60 @@ const toFailure = (text: string): unknown => ({
   isError: true,
 });
 
+const toResultVersionId = (result: unknown): string | null => {
+  const blocks = (result as { content?: unknown }).content;
+
+  if (!Array.isArray(blocks)) {
+    return null;
+  }
+
+  for (const block of blocks as { text?: unknown }[]) {
+    if (typeof block.text !== "string") {
+      continue;
+    }
+
+    try {
+      const parsed: unknown = JSON.parse(block.text);
+      const id = (parsed as { versionId?: unknown } | null)?.versionId;
+
+      if (typeof id === "string" && id !== "") {
+        return id;
+      }
+    } catch {
+      return null;
+    }
+  }
+
+  return null;
+};
+
 const toActionActivity = (
   name: string,
-  args: Record<string, unknown>
+  args: Record<string, unknown>,
+  result: unknown
 ): ActivityDraft | null => {
   if (typeof args.projectId !== "string") {
     return null;
   }
 
   return {
+    versionId: toResultVersionId(result),
     directionId: typeof args.directionId === "string" ? args.directionId : null,
     projectId: args.projectId,
     summary: `Ran ${name.replaceAll("_", " ")}.`,
   };
+};
+
+const toSettledDraft = async (draft: ActivityDraft): Promise<ActivityDraft> => {
+  const id = draft.versionId ?? null;
+
+  if (id === null || !id.startsWith(PENDING_VERSION)) {
+    return draft;
+  }
+
+  await savesSettled(draft.projectId);
+
+  return { ...draft, versionId: savedVersionId(id) };
 };
 
 interface ActionEditInput {
@@ -217,10 +263,12 @@ async function runActionEdit(input: ActionEditInput): Promise<unknown> {
       return withSaveFailures(result, args.projectId);
     }
 
-    const draft = toActionActivity(name, args);
+    const draft = toActionActivity(name, args, result);
 
     if (draft !== null) {
-      await edits.activity.record(name, client, draft).catch(() => null);
+      const settled = await toSettledDraft(draft);
+
+      await edits.activity.record(name, client, settled).catch(() => null);
     }
 
     const done = wait

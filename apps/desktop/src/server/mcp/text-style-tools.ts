@@ -8,9 +8,12 @@ import { describeElement } from "../page-probe/index.js";
 import { z } from "../platform/zod-bridge/index.js";
 import { applyTextStyle } from "../text-styles/apply.js";
 import type { TextStyleApplyDone } from "../text-styles/apply.js";
+import { commitOne } from "../text-styles/commit.js";
 import type { TextStyleEditScope } from "../text-styles/commit.js";
 import { computedTextValues, createTextStyle } from "../text-styles/create.js";
 import type { TextStyleCreateDone } from "../text-styles/create.js";
+import type { SourceLoc } from "../text-styles/deps.js";
+import { createTextStyleDetach } from "../text-styles/detach.js";
 import { listTextStyles, TextStyleError } from "../text-styles/list.js";
 import { EditError, loadTarget, refuseWhileRunning } from "./edit-guards.js";
 import type { EditDeps } from "./edit-guards.js";
@@ -84,6 +87,17 @@ const createSchema = z.strictObject({
     "CSS selector or layer id of the element whose computed text props become the style."
   ),
 });
+
+const detachSchema = z.strictObject({
+  directionId: directionIdSchema,
+  path: pagePath,
+  projectId: projectIdSchema,
+  targetSelector: selector.describe(
+    "CSS selector or layer id of the text element to detach from its text style."
+  ),
+});
+
+type DetachInput = z.output<typeof detachSchema>;
 
 type ApplyInput = z.output<typeof applySchema>;
 
@@ -214,6 +228,51 @@ const runCreate = async (deps: EditDeps, input: CreateInput): Promise<Done> => {
   return createReply(scope, done);
 };
 
+const runDetach = async (deps: EditDeps, input: DetachInput): Promise<Done> => {
+  const scope = await editScope(deps, input.projectId, input.directionId);
+  const url = await pageUrl(deps, scope.project, scope.direction, input.path);
+
+  const element = await describeElement(
+    deps.preview,
+    url,
+    input.targetSelector
+  );
+
+  if (!element) {
+    throw new EditError(
+      `No element matches ${input.targetSelector} on the page.`
+    );
+  }
+
+  if (!element.source) {
+    throw new EditError("The element has no source location.");
+  }
+
+  const written = await guarded(() =>
+    createTextStyleDetach(scope, {
+      styles: element.styles,
+      target: {
+        selector: input.targetSelector,
+        source: element.source as SourceLoc,
+        tag: null,
+      },
+    })
+  );
+
+  const title = "Detach text style";
+
+  const version = await guarded(() => commitOne(deps, scope, written, title));
+
+  return {
+    activity: versionActivity(scope.project, scope.direction, title, version),
+    result: ok({
+      file: written.target.relative,
+      title: version.title,
+      versionId: version.id,
+    }),
+  };
+};
+
 const listTextStylesTool = defineTool(
   "list_text_styles",
   listSchema,
@@ -258,7 +317,19 @@ const createTextStyleTool = defineTool(
   runCreate
 );
 
+const detachTextStyleTool = defineTool(
+  "detach_text_style",
+  detachSchema,
+  {
+    description:
+      "Detach one text element from its text style: read its computed font size, weight, line-height, letter-spacing and family on the live page and write them as literal values on the element, so a later change to the style no longer reaches it. One version and one undo step.",
+    title: "Detach text style",
+  },
+  runDetach
+);
+
 const TEXT_STYLE_TOOLS = [
+  detachTextStyleTool,
   listTextStylesTool,
   applyTextStyleTool,
   createTextStyleTool,

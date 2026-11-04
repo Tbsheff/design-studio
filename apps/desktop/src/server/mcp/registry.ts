@@ -12,6 +12,7 @@ import { allowAll, makeRunner } from "../handlers/_core/run-action.js";
 import type { Gate, Runner, WireArgs } from "../handlers/_core/run-action.js";
 import { ALL_ENTRIES } from "../handlers/all-entries.generated.js";
 import type { StudioRuntime } from "../main/runtime.js";
+import { runAsAgent } from "../platform/call-origin/index.js";
 import { toLegacyPrincipal } from "../store/principal.js";
 import type { Principal } from "../store/principal.js";
 import type { ApprovalQueue } from "./approvals.js";
@@ -167,12 +168,15 @@ const refuseAll: Gate = () =>
   Effect.fail(new Forbidden({ message: NO_GATE, perm: "confirm" }));
 
 const askGate =
-  (approvals: ApprovalQueue, tool: string, client: string): Gate =>
+  (
+    approvals: ApprovalQueue,
+    tool: string,
+    client: string,
+    projectId: string | null
+  ): Gate =>
   (card) =>
     Effect.flatMap(
-      Effect.promise(() =>
-        approvals.ask({ ...card, client, projectId: null, tool })
-      ),
+      Effect.promise(() => approvals.ask({ ...card, client, projectId, tool })),
       (outcome) => {
         if (outcome === "allow") {
           return Effect.void;
@@ -184,14 +188,29 @@ const askGate =
       }
     );
 
-const gateOf = (gates: GateDeps | null, tool: string, client: string): Gate => {
+const toProjectId = (args: WireArgs): string | null => {
+  const value = args["projectId"] ?? null;
+
+  if (value === null || value === "") {
+    return null;
+  }
+
+  return String(value);
+};
+
+const gateOf = (
+  gates: GateDeps | null,
+  tool: string,
+  client: string,
+  projectId: string | null
+): Gate => {
   const approvals = gates?.approvals ?? null;
 
   if (approvals === null) {
     return refuseAll;
   }
 
-  return askGate(approvals, tool, client);
+  return askGate(approvals, tool, client, projectId);
 };
 
 interface McpCaller {
@@ -260,7 +279,7 @@ const callActionTool = (
   );
 
   return runActionTool(runtime, tool, toMainDirection(tool, legacy), {
-    gate: gateOf(edits, name, caller.client),
+    gate: gateOf(edits, name, caller.client, toProjectId(legacy)),
     principal: caller.principal,
   });
 };
@@ -348,10 +367,17 @@ const actionCaller = (
 
     const scoped = toScopedArgs(action, args as WireArgs, scope);
 
-    return runActionTool(runtime, runner, scoped, {
-      gate: callerGate(ask, action, scoped),
-      principal,
-    });
+    const call = (): Promise<TextResult> =>
+      runActionTool(runtime, runner, scoped, {
+        gate: callerGate(ask, action, scoped),
+        principal,
+      });
+
+    if (scope === null) {
+      return call();
+    }
+
+    return runAsAgent(scope, call);
   };
 };
 

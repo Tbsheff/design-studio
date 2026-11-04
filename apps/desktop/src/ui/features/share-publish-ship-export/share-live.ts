@@ -3,7 +3,7 @@ import type {
   SharePresenceCursor,
   SharePresenceEvent,
   StudioCursorInput,
-} from "../../../shared/share.js";
+} from "../../../shared/actions/_core/share.js";
 import type { BridgeFrame } from "../../platform/bridge.js";
 import { call, getRaw } from "../../platform/http.js";
 import {

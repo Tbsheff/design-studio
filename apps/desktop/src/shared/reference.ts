@@ -1,4 +1,4 @@
-import type { FinalCheck } from "./contracts.js";
+import type { FinalCheck } from "./actions/_core/contracts.js";
 
 export const REFERENCE_NAME_PREFIX = "reference--";
 export const REFERENCE_LOW_SCORE = 80;

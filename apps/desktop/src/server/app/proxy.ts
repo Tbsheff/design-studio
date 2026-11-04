@@ -2,14 +2,14 @@ import http from "node:http";
 import net from "node:net";
 import type { Duplex } from "node:stream";
 
-import { APP_REDIRECT_PARAM, APP_SOURCE_PATH } from "../../shared/app.js";
+import { APP_REDIRECT_PARAM, APP_SOURCE_PATH } from "../../shared/actions/_core/app.js";
 import {
   BRIDGE_CHANGES_PATH,
   BRIDGE_PARENT_ORIGIN_PARAM,
   BRIDGE_SCRIPT_PATH,
   BRIDGE_HEADLESS_PARAM,
-} from "../../shared/contracts.js";
-import { FRAME_STATE_ATTR, stateOfHost } from "../../shared/frame-state.js";
+} from "../../shared/actions/_core/contracts.js";
+import { FRAME_STATE_ATTR, stateOfHost } from "../../shared/actions/_core/frame-state.js";
 import {
   answerState,
   captureSessionCookies,

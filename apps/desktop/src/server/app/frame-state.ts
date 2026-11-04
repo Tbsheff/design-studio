@@ -2,7 +2,7 @@ import { randomBytes } from "node:crypto";
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { isFrameId } from "../../shared/canvas-file.js";
+import { isFrameId } from "../../shared/actions/_core/canvas-file.js";
 import {
   BUILT_IN_STATES,
   DEFAULT_FRAME_STATE,
@@ -15,7 +15,7 @@ import {
   type FrameStatesView,
   type MockRule,
   type MockUser,
-} from "../../shared/frame-state.js";
+} from "../../shared/actions/_core/frame-state.js";
 import { BadRequestError } from "../platform/errors/index.js";
 
 const STATES_FILE = "frame-states.json";

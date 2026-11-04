@@ -1,6 +1,6 @@
 import type { Hono } from "hono";
 
-import type { Direction, Project } from "../../shared/contracts.js";
+import type { Direction, Project } from "../../shared/actions/_core/contracts.js";
 import { bindMcpReadRuntime } from "../preview/mcp-read-core.js";
 import { bindProjectOpsRuntime } from "../project-ops/index.js";
 import { createProjectLibrary } from "../store/project-library.js";

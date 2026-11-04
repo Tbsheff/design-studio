@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import type { ReactNode } from "react";
 
-import type { ToolDiff } from "../../../shared/contracts.js";
+import type { ToolDiff } from "../../../shared/actions/_core/contracts.js";
 import { shortcutLabel } from "../../../shared/keymap.js";
 import {
   Action,

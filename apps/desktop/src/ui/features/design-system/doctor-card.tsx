@@ -2,7 +2,7 @@ import type { ReactElement } from "react";
 import { useEffect, useState, useTransition } from "react";
 
 import { routes as studioRoutes } from "../../../shared/actions/studio/routes.js";
-import type { DoctorCause } from "../../../shared/app-doctor.js";
+import type { DoctorCause } from "../../../shared/actions/_core/app-doctor.js";
 import { api, errorText } from "../../api.js";
 import { CopyButton } from "../../kit/CopyButton.js";
 import { Icon } from "../../kit/Icon.js";

@@ -30,12 +30,12 @@ import type {
   Project,
   StudioEvent,
   StudioEventInput,
-} from "../src/shared/contracts.js";
+} from "../src/shared/actions/_core/contracts.js";
 import {
   BRIDGE_PARENT_ORIGIN_PARAM,
   BRIDGE_TOKEN_PARAM,
   DEFAULT_SETTINGS,
-} from "../src/shared/contracts.js";
+} from "../src/shared/actions/_core/contracts.js";
 
 const REPO_ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),

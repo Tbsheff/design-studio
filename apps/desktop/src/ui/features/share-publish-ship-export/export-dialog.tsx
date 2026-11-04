@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 
-import { EXPORT_SCALES } from "../../../shared/export.js";
+import { EXPORT_SCALES } from "../../../shared/actions/_core/export.js";
 import type {
   EditorInfo,
   ExportFormat,
@@ -10,7 +10,7 @@ import type {
   ExportScope,
   HandoffResult,
   McpStatus,
-} from "../../../shared/export.js";
+} from "../../../shared/actions/_core/export.js";
 import { downloadBlob } from "../../domain/format.js";
 import { Icon } from "../../kit/Icon.js";
 import type { IconName } from "../../kit/Icon.js";

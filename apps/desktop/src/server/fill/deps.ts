@@ -43,7 +43,7 @@ export type {
   Project,
   SourceLoc,
   Version,
-} from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
 
 export type {
   BlendMode,

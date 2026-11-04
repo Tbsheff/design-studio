@@ -5,7 +5,7 @@ import type {
   PermissionDecision,
   Project,
   QueuedMessage,
-} from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
 import type { RepoContextState } from "../../shared/repo-context.js";
 import { makeRuntimeSlot } from "../platform/runtime-slot/index.js";
 

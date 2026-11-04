@@ -1,7 +1,7 @@
 import path from "node:path";
 
-import { CANVAS_DIR } from "../../../shared/canvas-file.js";
-import { TOKENS_CSS_FILE } from "../../../shared/contracts.js";
+import { CANVAS_DIR } from "../../../shared/actions/_core/canvas-file.js";
+import { TOKENS_CSS_FILE } from "../../../shared/actions/_core/contracts.js";
 import { TWEAKS_FILE, TWEAKS_TOOL } from "../../../shared/tweaks.js";
 import {
   checkPathInside,

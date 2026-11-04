@@ -1,4 +1,4 @@
-import type { Version } from "../../../shared/contracts";
+import type { Version } from "../../../shared/actions/_core/contracts";
 import { api } from "../../api";
 import { openCompareInCode } from "../../features/versions-layers-tokens/versions-api";
 import { reviewPair } from "./project-model";

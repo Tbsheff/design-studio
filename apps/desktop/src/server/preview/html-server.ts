@@ -9,7 +9,7 @@ import type { Context } from "hono";
 import {
   BRIDGE_SCRIPT_PATH,
   projectPreviewHost,
-} from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
 import type { AppProxy } from "../app/proxy.js";
 import { injectForPreview } from "../design-system/html-link.js";
 import { annotateHtml } from "./annotate.js";

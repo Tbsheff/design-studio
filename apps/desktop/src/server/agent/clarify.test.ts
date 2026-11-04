@@ -1,7 +1,7 @@
 import type { SDKMessage, query } from "@anthropic-ai/claude-agent-sdk";
 import { describe, expect, it } from "vitest";
 
-import { formatAnswers, needsQuestions } from "../../shared/clarify.js";
+import { formatAnswers, needsQuestions } from "../../shared/actions/_core/clarify.js";
 import { askQuestions, parseClarifyReply } from "./clarify.js";
 
 function fakeQuery(text: string): () => Promise<typeof query> {

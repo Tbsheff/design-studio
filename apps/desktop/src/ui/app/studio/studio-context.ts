@@ -1,4 +1,4 @@
-import type { Project } from "../../../shared/contracts";
+import type { Project } from "../../../shared/actions/_core/contracts";
 import type { StudioCore } from "./studio-core-types";
 import type { StudioRun } from "./studio-run-types";
 import type { StudioPanes, StudioUi } from "./studio-ui-types";

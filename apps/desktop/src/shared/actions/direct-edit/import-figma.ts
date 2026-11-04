@@ -1,6 +1,6 @@
 import { Schema } from "effect";
 
-import { FigmaImportFields } from "../../direct-edit-payload.js";
+import { FigmaImportFields } from "../_core/direct-edit-payload.js";
 import { defineAction } from "../_core/action.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
 import { Conflict } from "../_core/errors/conflict.js";

@@ -10,12 +10,12 @@ import type {
   DesignSystemCheckRule,
   PackManifest,
   TokenFile,
-} from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
 import {
   PACK_FILE,
   REQUIRED_TOKENS,
   TOKENS_FILE,
-} from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
 import { isNodeError } from "../platform/errors/index.js";
 import { compileTokens, parseTokenFile } from "./compile.js";
 import { splitDesignMd } from "./design-md.js";

@@ -8,7 +8,7 @@ import type {
   DrawStroke,
   SelectionContext,
   SourceLoc,
-} from "./contracts.js";
+} from "./actions/_core/contracts.js";
 
 export const COMMENT_TEXT_MAX = 2000;
 export const COMMENT_REPLIES_MAX = 50;

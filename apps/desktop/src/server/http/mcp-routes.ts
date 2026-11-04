@@ -1,6 +1,6 @@
 import type { Hono } from "hono";
 
-import type { McpApprovalPoll } from "../../shared/export.js";
+import type { McpApprovalPoll } from "../../shared/actions/_core/export.js";
 import type { FrameStateDeps } from "../canvas/app-flow/index.js";
 import type { CanvasService } from "../canvas/index.js";
 import type { EditRecorder } from "../direct-edit/index.js";

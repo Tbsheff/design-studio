@@ -1,4 +1,4 @@
-import type { RunPart } from "./contracts.js";
+import type { RunPart } from "./actions/_core/contracts.js";
 
 export type PartEvent =
   | { type: "run.text.delta"; text: string }

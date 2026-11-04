@@ -9,7 +9,7 @@ import type {
   query,
 } from "@anthropic-ai/claude-agent-sdk";
 
-import type { QualityFinding } from "../../shared/contracts.js";
+import type { QualityFinding } from "../../shared/actions/_core/contracts.js";
 import { diffImages, readPng } from "../preview/visual-diff.js";
 import type { PreviewService } from "../types.js";
 import { toCriticIssues } from "./critic-reply.js";

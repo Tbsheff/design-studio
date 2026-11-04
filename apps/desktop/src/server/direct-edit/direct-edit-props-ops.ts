@@ -8,19 +8,19 @@ import type {
   Direction,
   Project,
   VersionMeta,
-} from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
 import type {
   FigmaImportPreview,
   FigmaImportRequest,
   FigmaImportResult,
-} from "../../shared/figma-nodes.js";
-import { COMPONENT_LIST_MAX } from "../../shared/props.js";
+} from "../../shared/actions/_core/figma-nodes.js";
+import { COMPONENT_LIST_MAX } from "../../shared/actions/_core/props.js";
 import type {
   ComponentInstance,
   ComponentListQuery,
   ComponentSchemaList,
   InstanceQuery,
-} from "../../shared/props.js";
+} from "../../shared/actions/_core/props.js";
 import { instanceFor, listComponentSchemas } from "../components/index.js";
 import {
   fetchFigmaNodes,

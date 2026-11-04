@@ -13,7 +13,7 @@ import { fileURLToPath } from "node:url";
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import type { CreateUserPackInput } from "../../shared/contracts.js";
+import type { CreateUserPackInput } from "../../shared/actions/_core/contracts.js";
 import { composeDesignMd, splitDesignMd } from "./design-md.js";
 import { createPackLibrary } from "./library.js";
 import type { PackLibrary } from "./library.js";

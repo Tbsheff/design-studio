@@ -1,10 +1,10 @@
-import { APP_SOURCE_PATH } from "../../shared/app.js";
-import type { SourceLoc } from "../../shared/contracts.js";
+import { APP_SOURCE_PATH } from "../../shared/actions/_core/app.js";
+import type { SourceLoc } from "../../shared/actions/_core/contracts.js";
 import {
   OWNERS_MAX,
   OWNER_STACK_MAX,
   type ComponentOwner,
-} from "../../shared/props.js";
+} from "../../shared/actions/_core/props.js";
 import type { PreviewService } from "../preview/index.js";
 import { probeOnPage } from "../preview/probe-page.js";
 

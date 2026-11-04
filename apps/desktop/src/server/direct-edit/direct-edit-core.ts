@@ -7,8 +7,8 @@ import {
   CONFLICT_CODES,
   NOT_FOUND_CODES,
 } from "../../shared/actions/direct-edit/schema.js";
-import type { Direction, Project, Version } from "../../shared/contracts.js";
-import type { DesignRule } from "../../shared/design-rules.js";
+import type { Direction, Project, Version } from "../../shared/actions/_core/contracts.js";
+import type { DesignRule } from "../../shared/actions/_core/design-rules.js";
 import type { CanvasService } from "../canvas/index.js";
 import type {
   ComponentPreviews,

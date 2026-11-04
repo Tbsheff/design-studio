@@ -1,4 +1,4 @@
-import type { StudioEvent, StudioEventBody } from "../../shared/contracts";
+import type { StudioEvent, StudioEventBody } from "../../shared/actions/_core/contracts";
 
 const EVERY_EVENT_TYPE: Record<StudioEventBody["type"], true> = {
   "app.status": true,

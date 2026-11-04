@@ -1,6 +1,6 @@
 import { Schema } from "effect";
 
-import { RulesTestFields } from "../../direct-edit-payload.js";
+import { RulesTestFields } from "../_core/direct-edit-payload.js";
 import { defineAction } from "../_core/action.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
 import { Conflict } from "../_core/errors/conflict.js";

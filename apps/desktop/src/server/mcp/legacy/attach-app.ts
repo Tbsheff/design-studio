@@ -1,6 +1,6 @@
 import { createDevServer } from "../../../shared/actions/dev-server/create.js";
 import { getDevServer } from "../../../shared/actions/dev-server/get.js";
-import type { AppServerStatus, Project } from "../../../shared/contracts.js";
+import type { AppServerStatus, Project } from "../../../shared/actions/_core/contracts.js";
 import { attachReadiness } from "../../app/first-version.js";
 import type { AttachResponse } from "../../app/first-version.js";
 import { callAction } from "../action-call.js";

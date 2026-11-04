@@ -1,8 +1,8 @@
 import type { Input } from "../../shared/actions/_core/action.js";
 import type { createProject } from "../../shared/actions/project/create.js";
 import type { importProject } from "../../shared/actions/project/import.js";
-import type { Project, ProjectKind, RunLevel } from "../../shared/contracts.js";
-import { nameFromPrompt } from "../../shared/folders.js";
+import type { Project, ProjectKind, RunLevel } from "../../shared/actions/_core/contracts.js";
+import { nameFromPrompt } from "../../shared/actions/_core/folders.js";
 import type { AttachResponse } from "../app/index.js";
 import {
   captureReferencePage,

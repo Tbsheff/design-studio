@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 
-import type { StyleValueRow } from "../../../shared/style-search.js";
+import type { StyleValueRow } from "../../../shared/actions/_core/style-search.js";
 import { shownValue, Swatch } from "./match-candidates.js";
 import type { Candidate } from "./match-candidates.js";
 import { PICK_SHOWN, KIND_EXAMPLE } from "./match-scan.js";

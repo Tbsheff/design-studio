@@ -4,13 +4,13 @@ import {
   DIRECT_STYLE_PROPERTIES,
   INSERT_KINDS,
   STRUCTURE_OPS,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import type {
   DirectEditBatch,
   DirectEditRequest,
   StructureEditRequest,
-} from "../../../shared/contracts.js";
-import { OWNERS_MAX, OWNER_STACK_MAX } from "../../../shared/props.js";
+} from "../../../shared/actions/_core/contracts.js";
+import { OWNERS_MAX, OWNER_STACK_MAX } from "../../../shared/actions/_core/props.js";
 import { normalizeVariant } from "../../../shared/variants.js";
 import { CLASS_NAME, MAX_CLASS_NAME, MAX_CLASS_NAMES } from "./classes.js";
 import { DirectEditError } from "./errors.js";

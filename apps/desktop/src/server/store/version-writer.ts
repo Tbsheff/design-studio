@@ -1,6 +1,6 @@
 import { Context, Effect, Layer } from "effect";
 
-import type { EditSessionEnd, Version } from "../../shared/contracts.js";
+import type { EditSessionEnd, Version } from "../../shared/actions/_core/contracts.js";
 import type { HunkRevertResult } from "../../shared/hunk.js";
 import type { EditStepResult } from "../direct-edit/commit/index.js";
 import { attemptVersionWrite } from "./version-write-core.js";

@@ -4,11 +4,11 @@ import path from "node:path";
 
 import type * as t from "@babel/types";
 
-import type { Project } from "../../shared/contracts.js";
+import type { Project } from "../../shared/actions/_core/contracts.js";
 import type {
   InsertableComponent,
   InsertableList,
-} from "../../shared/insert.js";
+} from "../../shared/actions/_core/insert.js";
 import { treeChangesSince, treeStamp } from "../events/index.js";
 import type { ExportKind } from "./import-plan.js";
 import { listFiles } from "./inventory.js";

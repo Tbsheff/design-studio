@@ -16,7 +16,7 @@ import type {
   LayerNode,
   ReorderMove,
   StructureKey,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import { reorderMoveOf } from "../../../shared/reorder.js";
 import {
   STRUCTURE_KEY_IDS,

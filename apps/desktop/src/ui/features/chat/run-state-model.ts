@@ -8,7 +8,7 @@ import type {
   StudioEvent,
   TodoItem,
   ToolDiff,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import {
   partsText,
   applyPartEvent,

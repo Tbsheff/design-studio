@@ -1,7 +1,7 @@
 import { parse } from "parse5";
 import type { DefaultTreeAdapterMap } from "parse5";
 
-import { BRIDGE_SCRIPT_PATH, SOURCE_LOC_ATTR } from "../../shared/contracts.js";
+import { BRIDGE_SCRIPT_PATH, SOURCE_LOC_ATTR } from "../../shared/actions/_core/contracts.js";
 
 type ParentNode = DefaultTreeAdapterMap["parentNode"];
 

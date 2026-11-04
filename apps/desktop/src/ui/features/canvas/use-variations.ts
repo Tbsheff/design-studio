@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { VARIATION_MIN } from "../../../shared/contracts.js";
+import { VARIATION_MIN } from "../../../shared/actions/_core/contracts.js";
 import type {
   Direction,
   Project,
@@ -9,7 +9,7 @@ import type {
   SelectionContext,
   VariationBrief,
   VariationBriefsResult,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import { resolveRunConfig } from "../../../shared/run-levels.js";
 import { errorText } from "../../api.js";
 import { readStored, writeStored } from "../../platform/storage.js";

@@ -3,7 +3,7 @@ import type { getSettingsShip } from "../../../shared/actions/ship/get-settings.
 import type { publishShip } from "../../../shared/actions/ship/publish.js";
 import { routes } from "../../../shared/actions/ship/routes.js";
 import type { setSettingsShip } from "../../../shared/actions/ship/set-settings.js";
-import type { ShipRequest, ShipSettings } from "../../../shared/ship.js";
+import type { ShipRequest, ShipSettings } from "../../../shared/actions/_core/ship.js";
 import { call } from "../../platform/http.js";
 import type { UiOutput } from "../../platform/http.js";
 

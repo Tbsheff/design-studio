@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
-import type { ProjectKind } from "../../../shared/contracts.js";
+import type { ProjectKind } from "../../../shared/actions/_core/contracts.js";
 import { api } from "../../api.js";
 import type { FilesChange } from "../home/use-studio-data.js";
 import { PREVIEW_PAINTED_EVENT } from "../inspector/use-edit-history.js";

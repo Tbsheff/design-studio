@@ -1,5 +1,5 @@
 import { createProject as createProjectAction } from "../../../shared/actions/project/create.js";
-import type { PackSummary, Project } from "../../../shared/contracts.js";
+import type { PackSummary, Project } from "../../../shared/actions/_core/contracts.js";
 import { callAction } from "../action-call.js";
 import { oneLine } from "../edit-guards.js";
 import type { EditDeps } from "../edit-guards.js";

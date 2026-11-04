@@ -4,7 +4,7 @@ import type {
   CompiledTokenEntry,
   Direction,
   Project,
-} from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
 import {
   FIGMA_LAYERS_MAX,
   type FigmaColor,
@@ -13,13 +13,13 @@ import {
   type FigmaImportStats,
   type FigmaNode,
   type FigmaPaint,
-} from "../../shared/figma-nodes.js";
+} from "../../shared/actions/_core/figma-nodes.js";
 import {
   JSX_SNIPPET_MAX,
   type InsertJsxRequest,
   type InsertTarget,
   type JsxInsertPosition,
-} from "../../shared/insert.js";
+} from "../../shared/actions/_core/insert.js";
 import {
   COLOR_SNAP_DELTA,
   matchColor,

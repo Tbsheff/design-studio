@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import type { SourceLoc } from "../../../shared/contracts.js";
+import type { SourceLoc } from "../../../shared/actions/_core/contracts.js";
 import { api, errorText } from "../../api.js";
 import { Icon } from "../../kit/Icon.js";
 

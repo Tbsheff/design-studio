@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 
-import type { Direction, Project, Version } from "../../../shared/contracts.js";
+import type { Direction, Project, Version } from "../../../shared/actions/_core/contracts.js";
 import { Icon } from "../../kit/Icon.js";
 import { PanelHead } from "../../kit/sheet-head.js";
 import { COPY } from "./copy.js";

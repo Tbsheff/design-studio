@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { RunSummary, StudioEvent } from "../../../shared/contracts.js";
+import type { RunSummary, StudioEvent } from "../../../shared/actions/_core/contracts.js";
 import {
   applyRunEvent,
   emptyRun,

@@ -1,7 +1,7 @@
 import { useEffect, useState, useTransition } from "react";
 import type { FormEvent } from "react";
 
-import type { AppServerStatus, AttachedApp } from "../../../shared/contracts";
+import type { AppServerStatus, AttachedApp } from "../../../shared/actions/_core/contracts";
 import type { FolderInspection } from "../../../shared/open-app";
 import { api, errorText } from "../../api";
 import { CopyButton } from "../../kit/CopyButton";

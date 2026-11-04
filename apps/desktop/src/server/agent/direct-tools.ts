@@ -7,7 +7,7 @@ import {
   type DirectStyleProperty,
   type SelectionContext,
   type StructureOp,
-} from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
 import { kebabKeys } from "../../shared/style-keys.js";
 import {
   toDefaulted,

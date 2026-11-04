@@ -1,4 +1,4 @@
-import type { Project } from "../../../shared/contracts.js";
+import type { Project } from "../../../shared/actions/_core/contracts.js";
 import type { AppHealth } from "../../../shared/found-apps.js";
 import type { DoctorProblem } from "./home-doctor.js";
 import { shortHome } from "./home-model.js";

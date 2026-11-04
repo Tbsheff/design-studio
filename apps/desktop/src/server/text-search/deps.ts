@@ -23,9 +23,9 @@ export type { WrittenFile } from "../direct-edit/commit/index.js";
 
 export type { DirectEditDeps, EditRecorder } from "../direct-edit/index.js";
 
-export type { CanvasFileFrame } from "../../shared/canvas-file.js";
+export type { CanvasFileFrame } from "../../shared/actions/_core/canvas-file.js";
 
-export type { Direction, Project, Version } from "../../shared/contracts.js";
+export type { Direction, Project, Version } from "../../shared/actions/_core/contracts.js";
 
 export type {
   TextHit,

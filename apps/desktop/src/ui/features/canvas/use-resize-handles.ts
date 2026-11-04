@@ -4,7 +4,7 @@ import type { PointerEvent as ReactPointerEvent } from "react";
 import type {
   SelectionContext,
   BridgeToParent,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import { api, errorText } from "../../api.js";
 import type { ParentMessageBody } from "../../platform/bridge.js";
 import { createLiveStore, useLive } from "../../platform/live-store.js";

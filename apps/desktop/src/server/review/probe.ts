@@ -1,5 +1,5 @@
-import { APP_SOURCE_PATH } from "../../shared/app.js";
-import { SOURCE_LOC_ATTR } from "../../shared/contracts.js";
+import { APP_SOURCE_PATH } from "../../shared/actions/_core/app.js";
+import { SOURCE_LOC_ATTR } from "../../shared/actions/_core/contracts.js";
 
 export interface ProbeElement {
   selector: string;

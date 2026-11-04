@@ -1,6 +1,6 @@
 import { Schema } from "effect";
 
-import { SHARE_EXPIRY_HOURS } from "../../share.js";
+import { SHARE_EXPIRY_HOURS } from "../_core/share.js";
 import { defineAction } from "../_core/action.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
 import { Conflict } from "../_core/errors/conflict.js";

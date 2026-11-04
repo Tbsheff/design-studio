@@ -6,8 +6,8 @@ import type {
   SelectionContext,
   SelectMove,
   ZoomKey,
-} from "../../../shared/contracts.js";
-import { TRY_VARIANTS_COMMAND } from "../../../shared/element-variants.js";
+} from "../../../shared/actions/_core/contracts.js";
+import { TRY_VARIANTS_COMMAND } from "../../../shared/actions/_core/element-variants.js";
 import {
   commandBlocker,
   IconSlot,

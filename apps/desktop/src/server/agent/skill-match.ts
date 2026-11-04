@@ -1,4 +1,4 @@
-import type { RunMode, SkillInfo } from "../../shared/contracts.js";
+import type { RunMode, SkillInfo } from "../../shared/actions/_core/contracts.js";
 
 const MAX_RECOMMENDED_SKILLS = 3;
 const MIN_SCORE = 6;

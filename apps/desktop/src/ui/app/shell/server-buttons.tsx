@@ -1,4 +1,4 @@
-import type { AppServerStatus } from "../../../shared/contracts";
+import type { AppServerStatus } from "../../../shared/actions/_core/contracts";
 
 function ServerButtons({
   state,

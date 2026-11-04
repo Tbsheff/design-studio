@@ -1,4 +1,4 @@
-import type { DirectEditRequest } from "../../../shared/contracts.js";
+import type { DirectEditRequest } from "../../../shared/actions/_core/contracts.js";
 import { variantLabel } from "../../../shared/variants.js";
 import type { PatchResult } from "../engine/errors.js";
 

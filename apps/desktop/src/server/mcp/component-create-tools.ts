@@ -10,7 +10,7 @@ import {
   type SwapCandidateList,
   type SwapResult,
 } from "../../shared/component-create.js";
-import type { InsertTarget } from "../../shared/insert.js";
+import type { InsertTarget } from "../../shared/actions/_core/insert.js";
 import { resolveSourceLoc, scopeOf } from "../page-probe/index.js";
 import { z } from "../platform/zod-bridge/index.js";
 import { callAction } from "./action-call.js";

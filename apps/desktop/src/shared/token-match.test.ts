@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { CompiledTokenEntry } from "./contracts";
+import type { CompiledTokenEntry } from "./actions/_core/contracts";
 import {
   COLOR_SNAP_DELTA,
   cssVarFor,

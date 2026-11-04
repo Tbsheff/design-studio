@@ -5,7 +5,7 @@ import type {
   CheckViewport,
   QualityFinding,
   QualitySeverity,
-} from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
 import { packagedResource } from "../platform/resources/index.js";
 
 const AXE_RULES = [

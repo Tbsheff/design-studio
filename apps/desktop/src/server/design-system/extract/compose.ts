@@ -1,5 +1,5 @@
-import { REQUIRED_TOKENS } from "../../../shared/contracts.js";
-import type { PackManifest } from "../../../shared/contracts.js";
+import { REQUIRED_TOKENS } from "../../../shared/actions/_core/contracts.js";
+import type { PackManifest } from "../../../shared/actions/_core/contracts.js";
 import type { Coverage } from "./types.js";
 
 export const TODO_MARK = "_To do:";

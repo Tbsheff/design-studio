@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
-import type { Project, RunLevel } from "../src/shared/contracts";
+import type { Project, RunLevel } from "../src/shared/actions/_core/contracts";
 import {
   chooseRunSetting,
   closeRunSettings,

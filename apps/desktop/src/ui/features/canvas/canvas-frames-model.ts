@@ -6,15 +6,15 @@ import {
   isFrameId,
   normalizeCanvasFile,
   serializeCanvasFile,
-} from "../../../shared/canvas-file.js";
-import type { CanvasFile } from "../../../shared/canvas-file.js";
-import type { StudioEvent } from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/canvas-file.js";
+import type { CanvasFile } from "../../../shared/actions/_core/canvas-file.js";
+import type { StudioEvent } from "../../../shared/actions/_core/contracts.js";
 import { ApiError, api } from "../../api.js";
 import { useProjectEvents } from "../../platform/events.js";
 import { readStored, writeStored } from "../../platform/storage.js";
 import type { Viewport } from "../../platform/storage.js";
 
-export { cleanFramePath } from "../../../shared/canvas-file.js";
+export { cleanFramePath } from "../../../shared/actions/_core/canvas-file.js";
 
 export interface CanvasFrame {
   id: string;

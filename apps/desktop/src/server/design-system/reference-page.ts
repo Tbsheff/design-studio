@@ -1,7 +1,7 @@
 import { parse } from "parse5";
 import type { DefaultTreeAdapterMap } from "parse5";
 
-import type { ReferencePage } from "../../shared/contracts.js";
+import type { ReferencePage } from "../../shared/actions/_core/contracts.js";
 import { BadRequestError } from "../platform/errors/index.js";
 import { checkUrl, safeFetch } from "./extract/safe-fetch.js";
 

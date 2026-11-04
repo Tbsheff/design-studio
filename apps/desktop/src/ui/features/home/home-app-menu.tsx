@@ -1,9 +1,9 @@
 import { useState } from "react";
 import type { KeyboardEvent, RefObject } from "react";
 
-import { parseEnvText } from "../../../shared/app.js";
-import type { RunLevel } from "../../../shared/contracts.js";
-import { shortenHome } from "../../../shared/folders.js";
+import { parseEnvText } from "../../../shared/actions/_core/app.js";
+import type { RunLevel } from "../../../shared/actions/_core/contracts.js";
+import { shortenHome } from "../../../shared/actions/_core/folders.js";
 import { api, ApiError } from "../../api.js";
 import { Icon } from "../../kit/Icon.js";
 import type { AppChip, RunMode } from "./home-app-chip.js";

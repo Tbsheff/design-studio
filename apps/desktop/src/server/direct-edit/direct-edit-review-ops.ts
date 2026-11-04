@@ -3,17 +3,17 @@ import type { applyReviewFixDirectEdit } from "../../shared/actions/direct-edit/
 import type { runReviewDirectEdit } from "../../shared/actions/direct-edit/run-review.js";
 import type { runRulesTestDirectEdit } from "../../shared/actions/direct-edit/run-rules-test.js";
 import type { setRulesDirectEdit } from "../../shared/actions/direct-edit/set-rules.js";
-import type { Direction, Project, Version } from "../../shared/contracts.js";
+import type { Direction, Project, Version } from "../../shared/actions/_core/contracts.js";
 import type {
   DesignRule,
   DesignRulesState,
   DesignRulesTestResult,
-} from "../../shared/design-rules.js";
+} from "../../shared/actions/_core/design-rules.js";
 import type {
   ReviewFinding,
   ReviewFixResult,
   ReviewResult,
-} from "../../shared/review.js";
+} from "../../shared/actions/_core/review.js";
 import {
   isTestable,
   loadDesignRules,

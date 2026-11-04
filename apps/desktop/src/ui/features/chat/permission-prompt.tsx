@@ -3,7 +3,7 @@ import { useState } from "react";
 import type {
   PermissionDecision,
   PermissionRequest,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import {
   RULE_MAX_CHARS,
   ruleForCommand,

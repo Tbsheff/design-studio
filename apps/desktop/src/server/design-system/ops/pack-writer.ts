@@ -17,7 +17,7 @@ import type {
   OpenPackEditorResult,
   PackSummary,
   SavePackResult,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import { attemptPackWrites } from "./library-core.js";
 import type { PackWriteError } from "./library-core.js";
 import type { DraftInput } from "./library-draft-input.js";

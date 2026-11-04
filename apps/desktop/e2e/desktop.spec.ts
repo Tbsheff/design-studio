@@ -17,7 +17,7 @@ import type {
   RunSummary,
   TelemetrySample,
   Version,
-} from "../src/shared/contracts";
+} from "../src/shared/actions/_core/contracts";
 import {
   APP_BINARY,
   desktopEnv,

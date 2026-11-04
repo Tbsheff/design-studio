@@ -4,7 +4,7 @@ import type {
   DirectEditResult,
   Project,
   Version,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import { domPatchOf } from "../../events/index.js";
 import type { PatchResult } from "../engine/errors.js";
 import { knownTokenVars } from "../engine/tokens.js";

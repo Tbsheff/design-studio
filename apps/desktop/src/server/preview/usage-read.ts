@@ -1,5 +1,5 @@
-import type { Direction, Project } from "../../shared/contracts.js";
-import type { ComponentUsage } from "../../shared/usage-scope.js";
+import type { Direction, Project } from "../../shared/actions/_core/contracts.js";
+import type { ComponentUsage } from "../../shared/actions/_core/usage-scope.js";
 import type { StudioProjectStore } from "../store/projects.js";
 import type { PreviewService } from "../types.js";
 import { componentUsage } from "./usage-scope.js";

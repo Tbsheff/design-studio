@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-import type { Project, RunLevel } from "../../../shared/contracts.js";
+import type { Project, RunLevel } from "../../../shared/actions/_core/contracts.js";
 import { api, errorText } from "../../api.js";
 
 interface RunLevelState {

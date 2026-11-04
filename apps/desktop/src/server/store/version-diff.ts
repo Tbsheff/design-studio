@@ -1,7 +1,7 @@
 import type {
   VersionChanges,
   VersionFileDiff,
-} from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
 
 type Git = (args: string[]) => Promise<string>;
 

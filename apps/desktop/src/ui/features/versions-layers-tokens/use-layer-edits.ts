@@ -11,7 +11,7 @@ import type {
   StructureEditRequest,
   StructureKey,
   StructureTarget,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import { shortcutLabel } from "../../../shared/keymap.js";
 import { reorderMoveOf } from "../../../shared/reorder.js";
 import {

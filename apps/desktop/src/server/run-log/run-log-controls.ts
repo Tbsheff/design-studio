@@ -9,7 +9,7 @@ import type {
   AckSchema,
   QueueItemsSchema,
 } from "../../shared/actions/run/schema.js";
-import type { PermissionDecision, RunSummary } from "../../shared/contracts.js";
+import type { PermissionDecision, RunSummary } from "../../shared/actions/_core/contracts.js";
 import { RUN_TITLE_MAX } from "../../shared/rewind.js";
 import { writeAtomic } from "../platform/atomic-write/index.js";
 import { attemptKnown } from "../platform/attempt/index.js";

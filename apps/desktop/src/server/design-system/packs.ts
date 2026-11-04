@@ -8,7 +8,7 @@ import {
   PACK_FILE,
   TOKENS_CSS_FILE,
   TOKENS_FILE,
-} from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
 import type {
   CompiledTokenEntry,
   PackManifest,
@@ -17,7 +17,7 @@ import type {
   PackSummary,
   Project,
   TokenFile,
-} from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
 import {
   extractRulesBlock,
   upsertRulesBlock,

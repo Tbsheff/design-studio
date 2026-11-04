@@ -1,7 +1,7 @@
 import { useEffect, useId, useState } from "react";
 import type { KeyboardEvent } from "react";
 
-import type { RunStatus, RunSummary } from "../../../shared/contracts.js";
+import type { RunStatus, RunSummary } from "../../../shared/actions/_core/contracts.js";
 import { runQueryTerms } from "../../../shared/rewind.js";
 import { formatRelative } from "../../domain/format.js";
 import { Icon } from "../../kit/Icon.js";

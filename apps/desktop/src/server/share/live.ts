@@ -7,7 +7,7 @@ import {
   type SharePresenceCursor,
   type SharePresenceEvent,
   type StudioCursorInput,
-} from "../../shared/share.js";
+} from "../../shared/actions/_core/share.js";
 import { resolveSource, type ExportDeps } from "../export/source.js";
 import { captureShare } from "./snapshot.js";
 import { isLive, type ShareRecord, type ShareStore } from "./store.js";

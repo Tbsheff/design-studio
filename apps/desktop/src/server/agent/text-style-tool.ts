@@ -1,6 +1,6 @@
 import { Schema } from "effect";
 
-import type { SelectionContext } from "../../shared/contracts.js";
+import type { SelectionContext } from "../../shared/actions/_core/contracts.js";
 import {
   TEXT_STYLE_LIST_DEFAULT,
   TEXT_STYLE_LIST_MAX,

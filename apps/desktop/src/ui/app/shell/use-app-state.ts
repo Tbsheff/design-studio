@@ -6,7 +6,7 @@ import type {
   AttachedApp,
   FirstVersionState,
   StudioEvent,
-} from "../../../shared/contracts";
+} from "../../../shared/actions/_core/contracts";
 import { api } from "../../api";
 import { publishAppStatus } from "../../platform/app-status";
 import { useProjectEvents } from "../../platform/events";

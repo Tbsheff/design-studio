@@ -1,7 +1,7 @@
 import type {
   ClassChange,
   TailwindOutcome,
-} from "../../../../shared/contracts.js";
+} from "../../../../shared/actions/_core/contracts.js";
 import { parseVariant } from "../../../../shared/variants.js";
 import { DirectEditError } from "../errors.js";
 import { cssEdits, isMappedProperty } from "./map.js";

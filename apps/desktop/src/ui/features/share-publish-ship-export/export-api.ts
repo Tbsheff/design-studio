@@ -12,7 +12,7 @@ import type {
   ExportScope,
   HandoffRequest,
   HandoffResult,
-} from "../../../shared/export.js";
+} from "../../../shared/actions/_core/export.js";
 import { desktopBridge } from "../../platform/desktop.js";
 import { call as callAction, getJson, sendJson } from "../../platform/http.js";
 import { readStored, uiStore, writeStored } from "../../platform/storage.js";

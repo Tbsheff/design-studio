@@ -4,8 +4,8 @@ import path from "node:path";
 import type {
   CoverageEntry,
   DesignSystemCoverage,
-} from "../../shared/contracts.js";
-import { TOKENS_FILE } from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
+import { TOKENS_FILE } from "../../shared/actions/_core/contracts.js";
 import { isNodeError } from "../platform/errors/index.js";
 import { COVERAGE_FILE, META_FILE } from "./extract/draft.js";
 import { gradeOf, scoreOf } from "./extract/map.js";

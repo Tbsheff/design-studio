@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
-import type { Starter } from "../../../shared/contracts.js";
-import { shortenHome } from "../../../shared/folders.js";
+import type { Starter } from "../../../shared/actions/_core/contracts.js";
+import { shortenHome } from "../../../shared/actions/_core/folders.js";
 import {
   FOUND_KIND_LABEL,
   type FoundApp,

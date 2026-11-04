@@ -1,5 +1,5 @@
-import type { PlayRunOp, PlayTriggerPhase } from "../shared/contracts.js";
-import type { LinkQuery } from "../shared/links.js";
+import type { PlayRunOp, PlayTriggerPhase } from "../shared/actions/_core/contracts.js";
+import type { LinkQuery } from "../shared/actions/_core/links.js";
 import { closestLink, resolveLink } from "./play.js";
 
 const TRIGGER_TYPE = "play-trigger";

@@ -1,6 +1,6 @@
 import { Suspense, useRef, useState, useTransition } from "react";
 
-import type { Project } from "../../../shared/contracts";
+import type { Project } from "../../../shared/actions/_core/contracts";
 import { api, errorText } from "../../api";
 import { CommandRules } from "../../features/commands/command-rules";
 import { KeysPanel } from "../../features/settings";

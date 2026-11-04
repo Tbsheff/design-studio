@@ -1,6 +1,6 @@
 import { useRef } from "react";
 
-import type { StudioEvent } from "../../../shared/contracts.js";
+import type { StudioEvent } from "../../../shared/actions/_core/contracts.js";
 import { useProjectEvents } from "../../platform/events.js";
 import { postToLiveFrames } from "../design-system/token-frames.js";
 

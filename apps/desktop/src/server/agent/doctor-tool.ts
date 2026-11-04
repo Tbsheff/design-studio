@@ -1,4 +1,4 @@
-import { describeDoctor, DOCTOR_NOTE } from "../../shared/app-doctor.js";
+import { describeDoctor, DOCTOR_NOTE } from "../../shared/actions/_core/app-doctor.js";
 import type { AgentRunContext, PreviewService } from "../types.js";
 
 type ToolText = Readonly<{

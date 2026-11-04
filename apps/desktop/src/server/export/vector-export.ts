@@ -2,7 +2,7 @@ import {
   exportFileStem,
   type ExportFrame,
   type ExportScope,
-} from "../../shared/export.js";
+} from "../../shared/actions/_core/export.js";
 import { zipFiles } from "../design-system/zip.js";
 import type { PreviewService } from "../types.js";
 import { buildPptx } from "./pptx.js";

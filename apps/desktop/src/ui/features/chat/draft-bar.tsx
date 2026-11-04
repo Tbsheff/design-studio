@@ -7,7 +7,7 @@ import type {
   CoverageGrade,
   DesignSystemCheckResult,
   DesignSystemCoverage,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import { errorText } from "../../api.js";
 import { useFitPopover } from "../../domain/popoverPlacement.js";
 import { packApi } from "../../platform/pack-api.js";

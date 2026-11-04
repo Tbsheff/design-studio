@@ -1,4 +1,4 @@
-import type { CommentFrame, Project } from "../../shared/contracts.js";
+import type { CommentFrame, Project } from "../../shared/actions/_core/contracts.js";
 import {
   findFrame,
   type ProjectDirOf,

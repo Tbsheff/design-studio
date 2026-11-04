@@ -2,7 +2,7 @@ import type {
   DirectEditRequest,
   DirectStyleProperty,
   SelectionContext,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import {
   changedProps,
   shiftedPart,

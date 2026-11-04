@@ -15,7 +15,7 @@ export {
   Z_SCALE,
 } from "../../../shared/stacking.js";
 
-export type { SelectionContext, SourceLoc } from "../../../shared/contracts.js";
+export type { SelectionContext, SourceLoc } from "../../../shared/actions/_core/contracts.js";
 
 export type {
   StackingInfo,

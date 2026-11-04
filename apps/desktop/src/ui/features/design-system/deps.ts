@@ -9,6 +9,6 @@ export type {
   InsertJsxRequest,
   InsertPosition,
   InsertableComponent,
-} from "../../../shared/insert.js";
+} from "../../../shared/actions/_core/insert.js";
 
 export type { RouteOutput } from "../../platform/http.js";

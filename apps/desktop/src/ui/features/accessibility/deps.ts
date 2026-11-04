@@ -32,8 +32,8 @@ export type {
   BridgeToParent,
   ProjectKind,
   SelectionContext,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 
-export type { LinkQuery, LinkRectReport } from "../../../shared/links.js";
+export type { LinkQuery, LinkRectReport } from "../../../shared/actions/_core/links.js";
 
-export type { StyleReplaceResult } from "../../../shared/style-search.js";
+export type { StyleReplaceResult } from "../../../shared/actions/_core/style-search.js";

@@ -1,4 +1,4 @@
-import type { VersionKind } from "./contracts";
+import type { VersionKind } from "./actions/_core/contracts";
 
 export const RUN_TITLE_MAX = 60;
 

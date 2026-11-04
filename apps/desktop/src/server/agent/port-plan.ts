@@ -4,18 +4,18 @@ import path from "node:path";
 import { parse } from "parse5";
 import type { DefaultTreeAdapterMap } from "parse5";
 
-import { cleanFramePath } from "../../shared/canvas-file.js";
+import { cleanFramePath } from "../../shared/actions/_core/canvas-file.js";
 import type {
   CompiledTokenEntry,
   Direction,
   Project,
-} from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
 import {
   cleanPortRoute,
   PORT_FLOW_MAX_PAGES,
   portPageSlug,
   suggestPortRoute,
-} from "../../shared/port.js";
+} from "../../shared/actions/_core/port.js";
 import type {
   PortFlowLink,
   PortFlowLinkKind,
@@ -29,7 +29,7 @@ import type {
   PortSection,
   PortTarget,
   PortToken,
-} from "../../shared/port.js";
+} from "../../shared/actions/_core/port.js";
 import { matchColor } from "../../shared/token-match.js";
 import { appRouterDir, listAppRoutes } from "../app/routes.js";
 import { searchComponents } from "../components/component-search.js";

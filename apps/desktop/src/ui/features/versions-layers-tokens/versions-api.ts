@@ -9,7 +9,7 @@ import type {
   EditSessionEnd,
   Version,
   VersionChanges,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import type {
   HunkRevertRequest,
   HunkRevertResult,

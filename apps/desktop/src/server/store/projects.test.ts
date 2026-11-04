@@ -12,7 +12,7 @@ import path from "node:path";
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { DEFAULT_SETTINGS } from "../../shared/contracts.js";
+import { DEFAULT_SETTINGS } from "../../shared/actions/_core/contracts.js";
 import { openEventBus } from "../events/index.js";
 import { projectStorePorts } from "../main/project-ports.js";
 import type { ServerConfig, VersionStore } from "../types.js";

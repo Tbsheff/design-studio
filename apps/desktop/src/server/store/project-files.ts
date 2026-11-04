@@ -8,7 +8,7 @@ import type {
   Attachment,
   Project,
   ProjectThumbnail,
-} from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
 import {
   BadRequestError,
   NotFoundError,

@@ -1,4 +1,4 @@
-import type { SelectionContext } from "../../../shared/contracts.js";
+import type { SelectionContext } from "../../../shared/actions/_core/contracts.js";
 import { vectorShown } from "./inspector-model.js";
 
 const UNSHARED_PROPS = new Set([

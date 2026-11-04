@@ -1,6 +1,6 @@
 import { Effect, Schema } from "effect";
 
-import { SourceUseFields } from "./actions/direct-edit/schema.js";
+import { SourceUseFields } from "../direct-edit/schema.js";
 import { DESIGN_RULES_TEXT_MAX } from "./design-rules.js";
 import { FIGMA_NODES_MAX_BYTES } from "./figma-nodes.js";
 import {

@@ -7,7 +7,7 @@ import type {
   SelectionContext,
   TailwindOutcome,
   TextSourceHints,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import type { ApiError } from "../../api.js";
 import { api, errorText } from "../../api.js";
 import type { PreviewPort } from "../../platform/bridge.js";

@@ -1,13 +1,13 @@
 import { insertComponentDirectEdit } from "../../shared/actions/direct-edit/insert-component.js";
 import { listInsertableDirectEdit } from "../../shared/actions/direct-edit/list-insertable.js";
-import type { Project } from "../../shared/contracts.js";
+import type { Project } from "../../shared/actions/_core/contracts.js";
 import {
   INSERT_TEXT_MAX,
   type InsertComponentResult,
   type InsertTarget,
   type InsertableList,
-} from "../../shared/insert.js";
-import { PROP_NAME, PROP_TEXT_MAX, PROPS_MAX } from "../../shared/props.js";
+} from "../../shared/actions/_core/insert.js";
+import { PROP_NAME, PROP_TEXT_MAX, PROPS_MAX } from "../../shared/actions/_core/props.js";
 import {
   describeElement,
   probeOwners,

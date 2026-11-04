@@ -1,11 +1,11 @@
 import { clampChroma, converter, formatHex, formatHex8, parse } from "culori";
 
-import { REQUIRED_TOKENS } from "../../shared/contracts.js";
+import { REQUIRED_TOKENS } from "../../shared/actions/_core/contracts.js";
 import type {
   CompiledTokenEntry,
   TokenFile,
   TokenType,
-} from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
 
 export type ThemeMode = "light" | "dark";
 

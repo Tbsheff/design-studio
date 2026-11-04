@@ -10,7 +10,7 @@ import type {
   ComponentVariantRequest,
   ComponentVariantResult,
 } from "../../shared/component-variant.js";
-import type { Direction, Project } from "../../shared/contracts.js";
+import type { Direction, Project } from "../../shared/actions/_core/contracts.js";
 import { componentPreviewsFor } from "../components/preview.js";
 import type { PreviewTarget } from "../components/preview.js";
 import { ComponentVariantError } from "../components/variant-write/errors.js";

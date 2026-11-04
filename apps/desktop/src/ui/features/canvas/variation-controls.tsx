@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 
-import type { RunStatus, SelectionContext } from "../../../shared/contracts.js";
+import type { RunStatus, SelectionContext } from "../../../shared/actions/_core/contracts.js";
 import { Icon } from "../../kit/Icon.js";
 import { menuKeys, useMenu } from "./frame-resize-handles.js";
 

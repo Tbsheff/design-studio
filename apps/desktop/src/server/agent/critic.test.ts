@@ -8,7 +8,7 @@ import type {
 } from "@anthropic-ai/claude-agent-sdk";
 import { afterEach, describe, expect, it } from "vitest";
 
-import type { RunLevel } from "../../shared/contracts.js";
+import type { RunLevel } from "../../shared/actions/_core/contracts.js";
 import { resolveRunConfig } from "../../shared/run-levels.js";
 import { createFakePreview, createTempProject } from "../testing/fakes.js";
 import { criticText, parseCriticReply } from "./critic.js";

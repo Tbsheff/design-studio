@@ -8,7 +8,7 @@ import type {
   TextSourceInfo,
   Version,
   VersionMeta,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import { domPatchOf } from "../../events/index.js";
 import { DirectEditError } from "../engine/errors.js";
 import { knownTokenVars } from "../engine/tokens.js";

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { DEFAULT_SETTINGS } from "./contracts";
+import { DEFAULT_SETTINGS } from "./actions/_core/contracts";
 import {
   LEVEL_PRESETS,
   levelOf,

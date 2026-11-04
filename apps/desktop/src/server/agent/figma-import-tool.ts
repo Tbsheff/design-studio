@@ -2,8 +2,8 @@ import { readFile, stat } from "node:fs/promises";
 
 import { Effect, Schema } from "effect";
 
-import { FIGMA_NODES_MAX_BYTES } from "../../shared/figma-nodes.js";
-import { JSX_INSERT_POSITIONS } from "../../shared/insert.js";
+import { FIGMA_NODES_MAX_BYTES } from "../../shared/actions/_core/figma-nodes.js";
+import { JSX_INSERT_POSITIONS } from "../../shared/actions/_core/insert.js";
 import {
   toOptionalFlag,
   toOptionalText,

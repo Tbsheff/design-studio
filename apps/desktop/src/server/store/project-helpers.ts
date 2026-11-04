@@ -18,15 +18,15 @@ import {
   DEFAULT_SETTINGS,
   LEGACY_DEFAULT_BUDGET_USD,
   SETTINGS_VERSION,
-} from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
 import type {
   AppFramework,
   Direction,
   Project,
   ProjectKind,
   ProjectSettings,
-} from "../../shared/contracts.js";
-import { MAX_SLUG_SUFFIX, slugCandidate } from "../../shared/folders.js";
+} from "../../shared/actions/_core/contracts.js";
+import { MAX_SLUG_SUFFIX, slugCandidate } from "../../shared/actions/_core/folders.js";
 import { writeAtomic } from "../platform/atomic-write/index.js";
 import {
   BadRequestError,

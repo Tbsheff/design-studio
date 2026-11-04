@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-import type { ProjectKind } from "../../shared/contracts.js";
+import type { ProjectKind } from "../../shared/actions/_core/contracts.js";
 import { TWEAKS_TOOL, type TweakControl } from "../../shared/tweaks.js";
 import { defineTweaks } from "./store.js";
 

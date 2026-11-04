@@ -1,7 +1,7 @@
 import { Schema } from "effect";
 
-import { FRAME_STATE_KINDS } from "../../frame-state.js";
-import { LINK_EXTRA_ACTIONS } from "../../link-interaction.js";
+import { FRAME_STATE_KINDS } from "../_core/frame-state.js";
+import { LINK_EXTRA_ACTIONS } from "../_core/link-interaction.js";
 import {
   LINK_ACTIONS,
   LINK_DURATION_MAX,
@@ -9,7 +9,7 @@ import {
   LINK_EASINGS,
   LINK_SELECTOR_MAX,
   LINK_TRANSITIONS,
-} from "../../links.js";
+} from "../_core/links.js";
 
 const FRAME_REF_MAX = 120;
 

@@ -8,7 +8,7 @@ import type {
   Direction,
   LegacyCanvasNotice,
   Project,
-} from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
 import { bindDevServerRuntime } from "../app/dev-server-runtime.js";
 import {
   firstVersionState,

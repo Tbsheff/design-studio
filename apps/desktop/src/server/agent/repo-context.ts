@@ -3,7 +3,7 @@ import { readFile, realpath, stat } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import type { Project } from "../../shared/contracts.js";
+import type { Project } from "../../shared/actions/_core/contracts.js";
 import {
   REPO_CONTEXT_FILES,
   REPO_CONTEXT_MAX_BYTES,

@@ -1,6 +1,6 @@
 import type { Context, Hono } from "hono";
 
-import type { Project } from "../../shared/contracts.js";
+import type { Project } from "../../shared/actions/_core/contracts.js";
 import type { FrameStateDeps } from "../canvas/app-flow/index.js";
 import type {
   CanvasService,

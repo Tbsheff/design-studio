@@ -1,7 +1,7 @@
 import { useTransition } from "react";
 
-import { envText } from "../../../shared/app";
-import type { AppServerStatus } from "../../../shared/contracts";
+import { envText } from "../../../shared/actions/_core/app";
+import type { AppServerStatus } from "../../../shared/actions/_core/contracts";
 import { api } from "../../api";
 import FlowTab from "../../features/canvas/flow-tab";
 import { Icon } from "../../kit/Icon";

@@ -1,4 +1,4 @@
-import type { TokenChange } from "../../shared/contracts.js";
+import type { TokenChange } from "../../shared/actions/_core/contracts.js";
 import {
   endOfString,
   insertMember,

@@ -1,7 +1,7 @@
 import type { ChildProcess } from "node:child_process";
 import path from "node:path";
 
-import type { Project } from "../src/shared/contracts.js";
+import type { Project } from "../src/shared/actions/_core/contracts.js";
 import {
   isDesktopLinkMessage,
   isProjectId,

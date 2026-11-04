@@ -1,6 +1,6 @@
 import { Context, Effect, Layer } from "effect";
 
-import type { SkillCatalog } from "../../shared/contracts.js";
+import type { SkillCatalog } from "../../shared/actions/_core/contracts.js";
 import { discoverSkills } from "../agent/skills.js";
 
 interface SkillStoreApi {

@@ -6,7 +6,7 @@ import type {
   NudgeBase,
   NudgeItem,
   SelectionContext,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import { nudgeStepOf } from "../../../shared/nudge.js";
 import { api, errorText } from "../../api.js";
 import type { ParentMessageBody } from "../../platform/bridge.js";

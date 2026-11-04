@@ -1,6 +1,6 @@
 import { Schema } from "effect";
 
-import { PORT_FLOW_MAX_PAGES } from "../../port.js";
+import { PORT_FLOW_MAX_PAGES } from "../_core/port.js";
 import { defineAction } from "../_core/action.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
 import { Conflict } from "../_core/errors/conflict.js";

@@ -2,11 +2,11 @@ import { lazy, Suspense, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import { createPortal } from "react-dom";
 
-import type { SelectionContext } from "../../../shared/contracts.js";
+import type { SelectionContext } from "../../../shared/actions/_core/contracts.js";
 import {
   targetFrame,
   TRIGGER_LABELS,
-} from "../../../shared/link-interaction.js";
+} from "../../../shared/actions/_core/link-interaction.js";
 import {
   ACTION_LABELS,
   cleanLinkText,
@@ -20,7 +20,7 @@ import {
   linkAction,
   linkDuration,
   transitionLabel,
-} from "../../../shared/links.js";
+} from "../../../shared/actions/_core/links.js";
 import type {
   LinkEasing,
   LinkMotion,
@@ -28,7 +28,7 @@ import type {
   LinkTarget,
   LinkTransition,
   PrototypeLink,
-} from "../../../shared/links.js";
+} from "../../../shared/actions/_core/links.js";
 import { loadLinkInteraction } from "../../canvas-link-slots.js";
 import { Icon } from "../../kit/Icon.js";
 import { UiSelect } from "../../kit/UiSelect.js";

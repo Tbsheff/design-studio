@@ -3,7 +3,7 @@ import type {
   PointerEvent as ReactPointerEvent,
 } from "react";
 
-import type { AttachedApp, Direction } from "../../../shared/contracts.js";
+import type { AttachedApp, Direction } from "../../../shared/actions/_core/contracts.js";
 import type { CommentTools } from "../comments/comment-layer.js";
 import type { CommentsControl } from "../comments/use-comments.js";
 import { broadcastTheme } from "../design-system/token-frames.js";

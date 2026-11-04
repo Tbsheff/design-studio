@@ -8,7 +8,7 @@ import type {
   RunMention,
   RunRequest,
   SelectionContext,
-} from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
 import { MENTION_MAX } from "../http/mentions.js";
 import type { CommentStore } from "../store/comments.js";
 import { pickComments } from "./prefill.js";

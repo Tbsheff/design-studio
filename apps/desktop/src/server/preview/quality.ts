@@ -5,7 +5,7 @@ import type {
   QualityFinding,
   QualitySeverity,
   RenderCheckResult,
-} from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
 import type { PlaceholderMode } from "../../shared/run-levels.js";
 import type {
   DuplicateHit,

@@ -7,12 +7,12 @@ import type { Context } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { streamSSE } from "hono/streaming";
 
-import type { DesignComment } from "../../shared/contracts.js";
+import type { DesignComment } from "../../shared/actions/_core/contracts.js";
 import {
   SHARE_COMMENT_MAX,
   SHARE_LIVE_VIEWERS_MAX,
   SHARE_NAME_MAX,
-} from "../../shared/share.js";
+} from "../../shared/actions/_core/share.js";
 import { z } from "../platform/zod-bridge/index.js";
 import type { CommentStore } from "../store/comments.js";
 import { FAVICON_PNG_16, FAVICON_PNG_32, FAVICON_SVG } from "./favicon.js";

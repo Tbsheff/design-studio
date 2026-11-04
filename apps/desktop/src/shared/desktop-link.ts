@@ -1,4 +1,4 @@
-import type { RunStatus, ZoomKey } from "./contracts.js";
+import type { RunStatus, ZoomKey } from "./actions/_core/contracts.js";
 
 export const DESKTOP_MESSAGE = "studio-desktop";
 

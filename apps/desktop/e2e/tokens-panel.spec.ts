@@ -5,7 +5,7 @@ import { expect, test } from "@playwright/test";
 import type { FrameLocator, Locator, Page } from "@playwright/test";
 import { differenceEuclidean, parse } from "culori";
 
-import type { Project } from "../src/shared/contracts";
+import type { Project } from "../src/shared/actions/_core/contracts";
 import { ROOT } from "./support/server";
 import {
   frontFrame,

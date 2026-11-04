@@ -4,7 +4,7 @@ import type { KeyboardEvent, MutableRefObject, ReactNode } from "react";
 import type {
   DirectStyleProperty,
   SelectionContext,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import { colorHex, cssVarFor, varName } from "../../../shared/token-match.js";
 import { api } from "../../api.js";
 import { Icon } from "../../kit/Icon.js";

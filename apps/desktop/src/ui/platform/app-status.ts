@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
 
-import type { AppServerStatus } from "../../shared/contracts.js";
+import type { AppServerStatus } from "../../shared/actions/_core/contracts.js";
 
 export const APP_PANEL_EVENT = "studio:app-panel";
 

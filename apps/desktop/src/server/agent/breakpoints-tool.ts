@@ -1,6 +1,6 @@
 import { Schema } from "effect";
 
-import type { SourceLoc } from "../../shared/contracts.js";
+import type { SourceLoc } from "../../shared/actions/_core/contracts.js";
 import {
   toOptionalFlag,
   toOptionalInt,

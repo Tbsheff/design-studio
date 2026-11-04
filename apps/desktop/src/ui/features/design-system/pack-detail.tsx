@@ -4,7 +4,7 @@ import type {
   DesignSystemCheckResult,
   PackDetail,
   PackSummary,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import { Markdown } from "../../ai/components/ai/markdown.js";
 import { errorText } from "../../api.js";
 import { Icon } from "../../kit/Icon.js";

@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import type { SelectionContext } from "../../../shared/contracts.js";
+import type { SelectionContext } from "../../../shared/actions/_core/contracts.js";
 import { matchesKey } from "../../../shared/keymap.js";
 import type {
   EditScope,
   InlineRunExtras,
-} from "../../../shared/usage-scope.js";
+} from "../../../shared/actions/_core/usage-scope.js";
 import { IS_MAC, useCommands } from "../../chat-slots.js";
 import { isTypingTarget } from "../../platform/typing-target.js";
 import { unionRect } from "../canvas/use-canvas-frames.js";

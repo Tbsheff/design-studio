@@ -1,4 +1,4 @@
-import type { DesignToken } from "../../shared/contracts.js";
+import type { DesignToken } from "../../shared/actions/_core/contracts.js";
 
 const CHILD_INDENT = "  ";
 

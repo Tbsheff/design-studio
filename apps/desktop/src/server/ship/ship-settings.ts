@@ -1,4 +1,4 @@
-import type { ShipSettings } from "../../shared/ship.js";
+import type { ShipSettings } from "../../shared/actions/_core/ship.js";
 import { readShipState, saveShipSettings } from "../git/ship-store.js";
 import type { ShipTarget } from "./ship-core.js";
 

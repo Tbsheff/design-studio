@@ -1,4 +1,4 @@
-import type { CheckViewport } from "../../shared/contracts.js";
+import type { CheckViewport } from "../../shared/actions/_core/contracts.js";
 import type { PlaceholderMode } from "../../shared/run-levels.js";
 import type { ProbeRect, QualityProbeResult } from "./quality-probe.js";
 

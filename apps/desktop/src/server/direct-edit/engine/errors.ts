@@ -2,7 +2,7 @@ import type {
   ClassChange,
   TailwindOutcome,
   TextSourceInfo,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 
 type DirectEditErrorCode =
   | "invalid_request"

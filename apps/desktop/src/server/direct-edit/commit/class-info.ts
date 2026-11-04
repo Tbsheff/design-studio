@@ -6,7 +6,7 @@ import type {
   Project,
   SourceLoc,
   TailwindOutcome,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import {
   DEFAULT_BREAKPOINTS,
   normalizeVariant,

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { DesignSystemCheckResult } from "../../shared/contracts.js";
+import type { DesignSystemCheckResult } from "../../shared/actions/_core/contracts.js";
 import {
   designSystemContinuation,
   enforceDesignSystemCheck,

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import type { Direction, Version } from "../../../shared/contracts.js";
+import type { Direction, Version } from "../../../shared/actions/_core/contracts.js";
 import { onOpenExport } from "./export-api.js";
 import type { ExportTarget, OpenExportDetail } from "./export-api.js";
 

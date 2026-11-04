@@ -1,6 +1,6 @@
 import { Context, Effect, Layer } from "effect";
 
-import type { FrameStatesView } from "../../shared/frame-state.js";
+import type { FrameStatesView } from "../../shared/actions/_core/frame-state.js";
 import type { RouteLinksResult } from "../../shared/route-flow.js";
 import {
   readDoc,

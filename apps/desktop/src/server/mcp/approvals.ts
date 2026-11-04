@@ -3,7 +3,7 @@ import { randomBytes } from "node:crypto";
 import type {
   McpApprovalOutcome,
   McpApprovalRecord,
-} from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
 
 export interface ApprovalAsk {
   tool: string;

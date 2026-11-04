@@ -1,12 +1,12 @@
-import type { CanvasFileFrame } from "../../../shared/canvas-file.js";
-import { cleanLinkUrl, targetFits } from "../../../shared/link-interaction.js";
-import type { LinkVisibility } from "../../../shared/link-interaction.js";
-import { cleanLinkSelector, isFrameAction } from "../../../shared/links.js";
+import type { CanvasFileFrame } from "../../../shared/actions/_core/canvas-file.js";
+import { cleanLinkUrl, targetFits } from "../../../shared/actions/_core/link-interaction.js";
+import type { LinkVisibility } from "../../../shared/actions/_core/link-interaction.js";
+import { cleanLinkSelector, isFrameAction } from "../../../shared/actions/_core/links.js";
 import type {
   LinkAction,
   LinkSource,
   LinkTarget,
-} from "../../../shared/links.js";
+} from "../../../shared/actions/_core/links.js";
 import type { LinkInteractionRequest } from "./link-interaction-input.js";
 import { BACK_REF, LinkError, frameOf } from "./link-tools.js";
 

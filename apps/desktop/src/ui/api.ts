@@ -1,5 +1,5 @@
-import type { AppFixResult, DoctorCauseKind } from "../shared/app-doctor";
-import type { CanvasFile } from "../shared/canvas-file";
+import type { AppFixResult, DoctorCauseKind } from "../shared/actions/_core/app-doctor";
+import type { CanvasFile } from "../shared/actions/_core/canvas-file";
 import type {
   AppLogLine,
   AppRoute,
@@ -46,7 +46,7 @@ import type {
   TelemetrySample,
   Version,
   WorkTreeStatus,
-} from "../shared/contracts";
+} from "../shared/actions/_core/contracts";
 import type {
   BlendMode,
   BlendProperty,
@@ -56,9 +56,9 @@ import type {
   FillType,
   RadialForm,
 } from "../shared/fill";
-import type { WorkspaceFolder, WorkspaceList } from "../shared/folders";
+import type { WorkspaceFolder, WorkspaceList } from "../shared/actions/_core/folders";
 import type { IconList, IconPosition, IconSource } from "../shared/icons";
-import type { InsertTarget } from "../shared/insert";
+import type { InsertTarget } from "../shared/actions/_core/insert";
 import type {
   MotionInfo,
   MotionKind,
@@ -80,7 +80,7 @@ import type {
 import type {
   StyleReplaceRequest,
   StyleReplaceResult,
-} from "../shared/style-search";
+} from "../shared/actions/_core/style-search";
 import type {
   TextStyleApplyResult,
   TextStyleCreateResult,
@@ -99,12 +99,12 @@ import { routes as versionsRoutes } from "../shared/actions/version/routes.js";
 import type {
   DesignRulesState,
   DesignRulesTestResult,
-} from "../shared/design-rules";
+} from "../shared/actions/_core/design-rules";
 import type {
   ReviewFixResult,
   ReviewRequest,
   ReviewResult,
-} from "../shared/review";
+} from "../shared/actions/_core/review";
 import type { FlowInput, FlowResult } from "../shared/route-flow";
 import type {
   CommitTweaksResult,

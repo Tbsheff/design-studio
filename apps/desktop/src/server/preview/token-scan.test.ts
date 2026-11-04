@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { CompiledTokenEntry } from "../../shared/contracts.js";
+import type { CompiledTokenEntry } from "../../shared/actions/_core/contracts.js";
 import { scanTokenUse } from "./token-scan.js";
 
 const entries: CompiledTokenEntry[] = [

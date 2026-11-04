@@ -1,4 +1,4 @@
-import type { CanvasFile } from "./canvas-file";
+import type { CanvasFile } from "./actions/_core/canvas-file";
 
 export const LOFI_STYLE_ID = "studio-lofi-preview";
 export const LOFI_FONT_FAMILY = "Studio Lofi Hand";

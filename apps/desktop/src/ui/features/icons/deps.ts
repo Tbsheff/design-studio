@@ -16,7 +16,7 @@ export { isTypingTarget } from "../../platform/typing-target.js";
 
 export { useModalDialog } from "../../kit/use-popover.js";
 
-export type { SelectionContext } from "../../../shared/contracts.js";
+export type { SelectionContext } from "../../../shared/actions/_core/contracts.js";
 
 export {
   ICON_COLOR,
@@ -31,6 +31,6 @@ export type {
   IconSummary,
 } from "../../../shared/icons.js";
 
-export type { InsertTarget } from "../../../shared/insert.js";
+export type { InsertTarget } from "../../../shared/actions/_core/insert.js";
 
 export { matchesKey } from "../../../shared/keymap.js";

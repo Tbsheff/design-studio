@@ -8,9 +8,9 @@ import type {
   FolderExportResult,
   FrameExportResult,
 } from "../../shared/actions/export/schema.js";
-import type { CanvasFileFrame } from "../../shared/canvas-file.js";
-import type { Direction, Project } from "../../shared/contracts.js";
-import type { ExportFrame } from "../../shared/export.js";
+import type { CanvasFileFrame } from "../../shared/actions/_core/canvas-file.js";
+import type { Direction, Project } from "../../shared/actions/_core/contracts.js";
+import type { ExportFrame } from "../../shared/actions/_core/export.js";
 import { EditError } from "../page-probe/index.js";
 import type { ExportRuntime } from "./export-core.js";
 import { buildExportFile } from "./export-file.js";

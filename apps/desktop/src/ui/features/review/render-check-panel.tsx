@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import type {
   LayoutFinding,
   RenderCheckResult,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import {
   consoleKey,
   keyCounts,

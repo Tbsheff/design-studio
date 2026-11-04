@@ -22,7 +22,7 @@ import type {
   Project,
   SourceLoc,
   VersionMeta,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import { measureRects } from "../../../shared/measure.js";
 import { withPagePath } from "../../export/source.js";
 import { z } from "../../platform/zod-bridge/index.js";

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { zoomKeyOf } from "../shared/contracts";
+import { zoomKeyOf } from "../shared/actions/_core/contracts";
 import {
   addFrame,
   boundsOf,

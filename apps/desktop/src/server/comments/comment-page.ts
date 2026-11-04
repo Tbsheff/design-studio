@@ -1,4 +1,4 @@
-import type { DesignComment } from "../../shared/contracts.js";
+import type { DesignComment } from "../../shared/actions/_core/contracts.js";
 
 interface CommentPage {
   readonly items: readonly DesignComment[];

@@ -3,7 +3,7 @@ import path from "node:path";
 
 import { expect, test } from "@playwright/test";
 
-import type { Project, TrashedProject } from "../src/shared/contracts";
+import type { Project, TrashedProject } from "../src/shared/actions/_core/contracts";
 import { readState } from "./support/server";
 import { mainDirection, openHome } from "./support/studio";
 

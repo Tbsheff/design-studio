@@ -5,7 +5,7 @@ import type {
   RunRequest,
   Version,
   WorkTreeStatus,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import { api } from "../../api.js";
 import type { RunView } from "./run-state-model.js";
 

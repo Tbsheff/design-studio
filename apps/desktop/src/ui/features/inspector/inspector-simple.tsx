@@ -1,11 +1,11 @@
 import { Suspense, memo, useEffect, useMemo, useState } from "react";
 import type { MutableRefObject, ReactNode } from "react";
 
-import type { SharedSource } from "../../../shared/app.js";
+import type { SharedSource } from "../../../shared/actions/_core/app.js";
 import type {
   DirectStyleProperty,
   SelectionContext,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import {
   ContentPanel,
   FillSlot,

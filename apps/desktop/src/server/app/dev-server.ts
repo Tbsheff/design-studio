@@ -4,12 +4,12 @@ import { existsSync } from "node:fs";
 import net from "node:net";
 import path from "node:path";
 
-import type { AppDoctorResult } from "../../shared/app-doctor.js";
+import type { AppDoctorResult } from "../../shared/actions/_core/app-doctor.js";
 import type {
   AppLogLine,
   AppServerStatus,
   Project,
-} from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
 import type { EventBus } from "../types.js";
 import { DevServerPids } from "./dev-server-pids.js";
 import { diagnose, probeRoot, sameDoctor } from "./doctor.js";

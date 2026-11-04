@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
 
-import type { Project } from "../../shared/contracts.js";
+import type { Project } from "../../shared/actions/_core/contracts.js";
 import type { AppHealth } from "../../shared/found-apps.js";
 import type { AppControl } from "../types.js";
 import { frameworkOf, readPackage } from "./detect.js";

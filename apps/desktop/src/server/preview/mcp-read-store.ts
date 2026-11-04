@@ -4,11 +4,11 @@ import type {
   DoctorViewText,
   PortPlanView,
 } from "../../shared/actions/workspace/schema.js";
-import type { ElementVariantInfo } from "../../shared/element-variants.js";
+import type { ElementVariantInfo } from "../../shared/actions/_core/element-variants.js";
 import type { FoundApps } from "../../shared/found-apps.js";
 import type { ProjectSearchResult } from "../../shared/project-search.js";
 import type { RepoContextState } from "../../shared/repo-context.js";
-import type { ComponentUsage } from "../../shared/usage-scope.js";
+import type { ComponentUsage } from "../../shared/actions/_core/usage-scope.js";
 import {
   LocalOrgScope,
   isProjectVisible,

@@ -11,8 +11,8 @@ import path from "node:path";
 
 import { afterEach, describe, expect, it } from "vitest";
 
-import type { DesignSystemCoverage } from "../../shared/contracts.js";
-import { TOKENS_FILE } from "../../shared/contracts.js";
+import type { DesignSystemCoverage } from "../../shared/actions/_core/contracts.js";
+import { TOKENS_FILE } from "../../shared/actions/_core/contracts.js";
 import {
   draftAttachmentIds,
   readCoverage,

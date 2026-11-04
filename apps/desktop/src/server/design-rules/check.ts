@@ -1,4 +1,4 @@
-import type { DirectStyleProperty } from "../../shared/contracts.js";
+import type { DirectStyleProperty } from "../../shared/actions/_core/contracts.js";
 import type {
   ClassRule,
   ComponentRule,
@@ -6,8 +6,8 @@ import type {
   DesignRuleHit,
   FontRule,
   TokenRule,
-} from "../../shared/design-rules.js";
-import type { ReviewFix } from "../../shared/review.js";
+} from "../../shared/actions/_core/design-rules.js";
+import type { ReviewFix } from "../../shared/actions/_core/review.js";
 import type { RenderPage } from "../preview/render-backend.js";
 import type { Draft } from "../review/checks.js";
 import { parseLoc } from "../review/checks.js";

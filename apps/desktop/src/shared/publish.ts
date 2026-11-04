@@ -1,4 +1,4 @@
-import type { ExportFrame } from "./export.js";
+import type { ExportFrame } from "./actions/_core/export.js";
 
 export const CF_MIN_VERSION = "1.0.0-beta.26";
 export const CF_INSTALL_COMMAND = "npm i -g cf";

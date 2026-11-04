@@ -1,4 +1,4 @@
-import type { RunStatus, TodoItem } from "../../shared/contracts.js";
+import type { RunStatus, TodoItem } from "../../shared/actions/_core/contracts.js";
 
 export type TodoEvidence =
   | { kind: "write"; paths: string[]; text: string }

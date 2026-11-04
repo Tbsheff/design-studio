@@ -2,7 +2,7 @@ import {
   MATCH_KINDS,
   type MatchKind,
   type Project,
-} from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
 import { findFrame, frameRef } from "../canvas/index.js";
 import {
   isLayerRef,

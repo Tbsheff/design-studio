@@ -9,7 +9,7 @@ import type {
   Direction,
   PackSummary,
   Project,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import { attemptKnown } from "../../platform/attempt/index.js";
 import { loadConfig } from "../../platform/config/index.js";
 import {

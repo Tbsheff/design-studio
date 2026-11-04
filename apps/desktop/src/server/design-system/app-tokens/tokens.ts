@@ -1,7 +1,7 @@
 import type {
   CompiledTokenEntry,
   TokenType,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import { resolveVars } from "../extract/css.js";
 import { normalizeLength, toOklchColor } from "../extract/values.js";
 import type { CssDeclaration, CssTokenSheet } from "./read-css.js";

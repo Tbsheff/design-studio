@@ -1,4 +1,4 @@
-import type { ShareServerState } from "../../shared/share.js";
+import type { ShareServerState } from "../../shared/actions/_core/share.js";
 import type { ShareListener as ShareServer } from "./listener.js";
 import { createLiveHub } from "./live.js";
 import type { LiveHub, LiveRefresher as LiveRefreshLoop } from "./live.js";

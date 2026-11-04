@@ -1,4 +1,4 @@
-import { REQUIRED_TOKENS } from "../../../shared/contracts.js";
+import { REQUIRED_TOKENS } from "../../../shared/actions/_core/contracts.js";
 
 export const KIT_PAGE_FILE = "index.html";
 

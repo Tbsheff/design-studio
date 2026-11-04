@@ -5,7 +5,7 @@ import type {
   DesignSystemCheckRule,
   RunLevel,
   RunRequest,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import { useFitPopover } from "../../domain/popoverPlacement.js";
 import type { RunView } from "./run-state-model.js";
 

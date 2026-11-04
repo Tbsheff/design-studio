@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { DEFAULT_SETTINGS } from "../../shared/contracts.js";
+import { DEFAULT_SETTINGS } from "../../shared/actions/_core/contracts.js";
 import { resolveRunConfig, withRunTask } from "../../shared/run-levels.js";
 import { buildRunLevelBlock, withRunLevel } from "./run-level.js";
 

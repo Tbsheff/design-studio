@@ -15,7 +15,7 @@ import {
   ICON_SOURCES,
   ICON_TARGET_MAX,
 } from "../../shared/icons.js";
-import type { InsertTarget } from "../../shared/insert.js";
+import type { InsertTarget } from "../../shared/actions/_core/insert.js";
 import {
   toDefaulted,
   toOptional,

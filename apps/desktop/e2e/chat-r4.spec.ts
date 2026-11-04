@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import type { Page, Route } from "@playwright/test";
 
-import type { RunSummary, StudioEvent } from "../src/shared/contracts";
+import type { RunSummary, StudioEvent } from "../src/shared/actions/_core/contracts";
 import { createProjectViaUi, frontFrame, openHome } from "./support/studio";
 import type { StudioApi } from "./support/studio";
 

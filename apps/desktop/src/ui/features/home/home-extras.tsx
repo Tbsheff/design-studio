@@ -4,7 +4,7 @@ import {
   shortenHome,
   type WorkspaceFolder,
   type WorkspaceList,
-} from "../../../shared/folders.js";
+} from "../../../shared/actions/_core/folders.js";
 import { api, errorText } from "../../api.js";
 import { Disclosure } from "../../kit/disclosure.js";
 import type { SettingsDraft } from "../chat/settings-draft-model.js";

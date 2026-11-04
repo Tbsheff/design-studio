@@ -1,4 +1,4 @@
-import type { StudioEvent } from "../../../shared/contracts.js";
+import type { StudioEvent } from "../../../shared/actions/_core/contracts.js";
 import { applyRunEvent } from "../chat/run-state-model.js";
 import type { RunMap } from "../chat/run-state-model.js";
 

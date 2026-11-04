@@ -7,8 +7,8 @@ import type {
 } from "@anthropic-ai/claude-agent-sdk";
 import { Schema } from "effect";
 
-import { needsQuestions } from "../../shared/clarify.js";
-import type { ClarifyQuestion } from "../../shared/contracts.js";
+import { needsQuestions } from "../../shared/actions/_core/clarify.js";
+import type { ClarifyQuestion } from "../../shared/actions/_core/contracts.js";
 import { extractJson } from "../../shared/extract-json.js";
 import { WIREFRAME_MODEL } from "../../shared/run-levels.js";
 import { toTrimmedText } from "../agent-tools/index.js";

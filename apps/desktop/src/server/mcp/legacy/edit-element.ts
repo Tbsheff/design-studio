@@ -3,7 +3,7 @@ import type {
   DirectEditResult,
   SelectionContext,
   SourceLoc,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import {
   chooseEditSite,
   siteRequest,

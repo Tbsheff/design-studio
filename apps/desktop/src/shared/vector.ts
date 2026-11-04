@@ -1,5 +1,5 @@
-import type { SourceLoc, Version } from "./contracts.js";
-import type { InsertTarget } from "./insert.js";
+import type { SourceLoc, Version } from "./actions/_core/contracts.js";
+import type { InsertTarget } from "./actions/_core/insert.js";
 
 export const VECTOR_SHAPES = ["rect", "ellipse"] as const;
 

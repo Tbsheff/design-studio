@@ -4,7 +4,7 @@ import { Schema } from "effect";
 
 import { describeComment, filterComments } from "../../shared/comments.js";
 import type { CommentFilter } from "../../shared/comments.js";
-import type { CommentStatus, DesignComment } from "../../shared/contracts.js";
+import type { CommentStatus, DesignComment } from "../../shared/actions/_core/contracts.js";
 import {
   toLooseTool,
   toOptional,

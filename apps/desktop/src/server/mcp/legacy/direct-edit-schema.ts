@@ -1,4 +1,4 @@
-import { STRUCTURE_OPS } from "../../../shared/contracts.js";
+import { STRUCTURE_OPS } from "../../../shared/actions/_core/contracts.js";
 import { EDIT_TARGETS } from "../../direct-edit/commit/index.js";
 import { z } from "../../platform/zod-bridge/index.js";
 import {

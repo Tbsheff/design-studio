@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 
-import type { Project, ProjectSettings } from "../../../shared/contracts.js";
+import type { Project, ProjectSettings } from "../../../shared/actions/_core/contracts.js";
 import { api, errorText } from "../../api.js";
 
 const PRESETS: (number | null)[] = [null, 0.5, 1, 2, 5];

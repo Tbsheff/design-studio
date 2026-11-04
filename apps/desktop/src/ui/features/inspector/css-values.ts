@@ -2,7 +2,7 @@ import {
   DIRECT_STYLE_PROPERTIES,
   type DirectStyleProperty,
   type SelectionContext,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 
 export type StyleValues = Record<DirectStyleProperty, string>;
 

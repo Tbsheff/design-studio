@@ -6,7 +6,7 @@ import {
   DEFAULT_PREVIEW_PORT,
   DEFAULT_STUDIO_PORT,
   DEFAULT_VITE_PORT_BASE,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 
 interface ServerConfig {
   dataDir: string;

@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 
 import type { Input } from "../../shared/actions/_core/action.js";
 import type { updateProject } from "../../shared/actions/project/update.js";
-import type { Project } from "../../shared/contracts.js";
+import type { Project } from "../../shared/actions/_core/contracts.js";
 import type { ProjectOpsRuntime } from "./project-ops-runtime.js";
 
 interface DesignMdSaved {

@@ -3,7 +3,7 @@ import path from "node:path";
 
 import { expect, test, type Page } from "@playwright/test";
 
-import type { TelemetrySample } from "../../../src/shared/contracts";
+import type { TelemetrySample } from "../../../src/shared/actions/_core/contracts";
 import { BASE_URL } from "../../support/server";
 import {
   createProjectViaUi,

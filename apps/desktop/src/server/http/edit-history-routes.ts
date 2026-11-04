@@ -8,7 +8,7 @@ import type {
   EditSessionState,
   Project,
   TextSourceAnswer,
-} from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
 import { firstVersionWaitText } from "../app/first-version.js";
 import {
   elementClassInfo,

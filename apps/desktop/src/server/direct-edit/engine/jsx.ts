@@ -7,7 +7,7 @@ import type {
   ElementSourceInfo,
   TailwindOutcome,
   TextFromData,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import { hasClassChange } from "./classes.js";
 import {
   DirectEditError,

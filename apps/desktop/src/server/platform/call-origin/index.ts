@@ -1,6 +1,6 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 
-import type { VersionMeta } from "../../../shared/contracts.js";
+import type { VersionMeta } from "../../../shared/actions/_core/contracts.js";
 
 interface EditOrigin {
   client: string;

@@ -4,7 +4,7 @@ import path from "node:path";
 
 import { nanoid } from "nanoid";
 
-import type { ShareFrame, ShareLink } from "../../shared/share.js";
+import type { ShareFrame, ShareLink } from "../../shared/actions/_core/share.js";
 import { createKeyedMutex } from "../platform/mutex/index.js";
 
 export interface ShareRecord {

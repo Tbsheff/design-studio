@@ -1,11 +1,11 @@
-import { APP_REDIRECT_PARAM } from "../shared/app.js";
+import { APP_REDIRECT_PARAM } from "../shared/actions/_core/app.js";
 import {
   BRIDGE_HANDSHAKE_TYPE,
   BRIDGE_HEADLESS_PARAM,
   BRIDGE_HELLO_TYPE,
   BRIDGE_PARENT_ORIGIN_PARAM,
   BRIDGE_PASSIVE_PARAM,
-} from "../shared/contracts.js";
+} from "../shared/actions/_core/contracts.js";
 import { appSourceMode } from "./app-source.js";
 import { isObject, isString, tryDom } from "./dom-input.js";
 

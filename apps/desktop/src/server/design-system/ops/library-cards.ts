@@ -2,7 +2,7 @@ import type { Input } from "../../../shared/actions/_core/action.js";
 import type { ApprovalCard } from "../../../shared/actions/_core/approval-card.js";
 import type { applyPackPack } from "../../../shared/actions/pack/apply-pack.js";
 import type { PackFile } from "../../../shared/actions/pack/schema.js";
-import type { PackProblem, PackSummary } from "../../../shared/contracts.js";
+import type { PackProblem, PackSummary } from "../../../shared/actions/_core/contracts.js";
 import { NotFoundError } from "../../platform/errors/index.js";
 import { packProblems } from "../packs.js";
 import type { PackRuntime } from "./library-core.js";

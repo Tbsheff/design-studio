@@ -1,4 +1,4 @@
-import type { Starter } from "../../../shared/contracts.js";
+import type { Starter } from "../../../shared/actions/_core/contracts.js";
 import type { Busy } from "./home-model.js";
 
 function StarterRow({

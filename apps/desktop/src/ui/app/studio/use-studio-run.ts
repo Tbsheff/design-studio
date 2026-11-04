@@ -1,6 +1,6 @@
-import type { Project, RunRequest } from "../../../shared/contracts";
-import { statesPrompt } from "../../../shared/states";
-import type { InlineRunExtras } from "../../../shared/usage-scope";
+import type { Project, RunRequest } from "../../../shared/actions/_core/contracts";
+import { statesPrompt } from "../../../shared/actions/_core/states";
+import type { InlineRunExtras } from "../../../shared/actions/_core/usage-scope";
 import { api } from "../../api";
 import {
   activeFrame,

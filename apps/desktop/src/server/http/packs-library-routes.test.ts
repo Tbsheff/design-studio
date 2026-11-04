@@ -13,8 +13,8 @@ import type {
   PackSummary,
   Project,
   SavePackResult,
-} from "../../shared/contracts.js";
-import { PACK_FILE } from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
+import { PACK_FILE } from "../../shared/actions/_core/contracts.js";
 import { zipFiles, type ZipEntry } from "../design-system/zip.js";
 import { createEventBus } from "../events/index.js";
 import { projectStorePorts } from "../main/project-ports.js";

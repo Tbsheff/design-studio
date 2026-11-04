@@ -13,13 +13,13 @@ import {
 } from "culori/fn";
 import type { Color } from "culori/fn";
 
-import { TOKEN_GROUP_FOR_PROPERTY } from "./contracts";
+import { TOKEN_GROUP_FOR_PROPERTY } from "./actions/_core/contracts";
 import type {
   CompiledTokenEntry,
   DirectStyleProperty,
   TokenGroupName,
   TokenMatch,
-} from "./contracts";
+} from "./actions/_core/contracts";
 
 useMode(modeRgb);
 

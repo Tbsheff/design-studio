@@ -4,7 +4,7 @@ import type { ComponentProps, ReactNode } from "react";
 import type {
   ProjectKind,
   SelectionContext,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import { api } from "../../api.js";
 import type { LiveStore } from "../../platform/live-store.js";
 import type { UiState } from "../../platform/storage.js";

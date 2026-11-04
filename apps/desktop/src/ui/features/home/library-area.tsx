@@ -1,6 +1,6 @@
 import { type ReactNode, Suspense } from "react";
 
-import type { Starter } from "../../../shared/contracts.js";
+import type { Starter } from "../../../shared/actions/_core/contracts.js";
 import { ComposerAlert } from "./home-composer-parts.js";
 import { HomeEmpty } from "./lazy-parts.js";
 

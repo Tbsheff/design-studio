@@ -1,4 +1,4 @@
-import type { Project } from "../../shared/contracts.js";
+import type { Project } from "../../shared/actions/_core/contracts.js";
 import { findFrame, frameRef, readProjectCanvas } from "../canvas/index.js";
 import { noteRenderedPage } from "../events/index.js";
 import {

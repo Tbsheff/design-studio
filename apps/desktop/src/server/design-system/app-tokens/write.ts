@@ -6,7 +6,7 @@ import type {
   UpdateTokensResult,
   Version,
   VersionMeta,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import {
   DirectEditError,
   assertCanEdit,

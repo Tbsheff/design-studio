@@ -4,8 +4,8 @@ import path from "node:path";
 import { parse } from "@babel/parser";
 import type { ParserPlugin } from "@babel/parser";
 
-import { SOURCE_LOC_ATTR } from "../../shared/contracts.js";
-import type { ComponentInfo, ProjectKind } from "../../shared/contracts.js";
+import { SOURCE_LOC_ATTR } from "../../shared/actions/_core/contracts.js";
+import type { ComponentInfo, ProjectKind } from "../../shared/actions/_core/contracts.js";
 
 const SKIP_DIRS = new Set([
   "node_modules",

@@ -3,8 +3,8 @@ import type { FormEvent, KeyboardEvent } from "react";
 
 import { COMPONENT_NAME } from "../../../shared/component-create.js";
 import type { ComponentFolder } from "../../../shared/component-create.js";
-import type { SelectionContext } from "../../../shared/contracts.js";
-import type { InsertTarget } from "../../../shared/insert.js";
+import type { SelectionContext } from "../../../shared/actions/_core/contracts.js";
+import type { InsertTarget } from "../../../shared/actions/_core/insert.js";
 import { UiSelect } from "../../kit/UiSelect.js";
 import { useModalDialog } from "../../kit/use-popover.js";
 import { apiMessage, componentCreateApi } from "./component-create-api.js";

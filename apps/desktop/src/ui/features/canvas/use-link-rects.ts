@@ -1,15 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import type { MutableRefObject } from "react";
 
-import type { BridgeToParent, ProjectKind } from "../../../shared/contracts.js";
-import { staticLinkIssue } from "../../../shared/links.js";
+import type { BridgeToParent, ProjectKind } from "../../../shared/actions/_core/contracts.js";
+import { staticLinkIssue } from "../../../shared/actions/_core/links.js";
 import type {
   LinkIssue,
   LinkQuery,
   LinkRectReport,
   LinksFile,
   PrototypeLink,
-} from "../../../shared/links.js";
+} from "../../../shared/actions/_core/links.js";
 import { postToFrame, useBridge } from "../../platform/bridge.js";
 import type { BridgeFrame } from "../../platform/bridge.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";

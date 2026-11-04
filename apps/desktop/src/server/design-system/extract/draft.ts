@@ -1,6 +1,6 @@
 import path from "node:path";
 
-import type { CreateUserPackInput } from "../../../shared/contracts.js";
+import type { CreateUserPackInput } from "../../../shared/actions/_core/contracts.js";
 import { BadRequestError } from "../../platform/errors/index.js";
 import { z } from "../../platform/zod-bridge/index.js";
 import { formatIssues } from "../packs.js";

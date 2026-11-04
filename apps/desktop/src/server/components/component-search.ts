@@ -1,8 +1,8 @@
 import path from "node:path";
 
-import type { Project } from "../../shared/contracts.js";
-import type { InsertComponentRequest } from "../../shared/insert.js";
-import { COMPONENT_LIST_MAX } from "../../shared/props.js";
+import type { Project } from "../../shared/actions/_core/contracts.js";
+import type { InsertComponentRequest } from "../../shared/actions/_core/insert.js";
+import { COMPONENT_LIST_MAX } from "../../shared/actions/_core/props.js";
 import type {
   ComponentListItem,
   ComponentListQuery,
@@ -11,7 +11,7 @@ import type {
   ComponentSource,
   PropSpec,
   PropValue,
-} from "../../shared/props.js";
+} from "../../shared/actions/_core/props.js";
 import { importResolver, pickSpecifier } from "./import-plan.js";
 import type { ImportNeed } from "./import-plan.js";
 import { loadLibrary } from "./insert-list.js";

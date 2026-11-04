@@ -1,6 +1,6 @@
 import path from "node:path";
 
-import type { AppRoute, Direction, Project } from "../../shared/contracts.js";
+import type { AppRoute, Direction, Project } from "../../shared/actions/_core/contracts.js";
 import { listAppRoutes } from "../app/routes.js";
 import type { Draft } from "./checks.js";
 

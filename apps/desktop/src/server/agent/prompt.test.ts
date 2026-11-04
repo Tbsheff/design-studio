@@ -2,7 +2,7 @@ import { rm } from "node:fs/promises";
 
 import { afterEach, describe, expect, it } from "vitest";
 
-import type { Project } from "../../shared/contracts.js";
+import type { Project } from "../../shared/actions/_core/contracts.js";
 import { createTempProject } from "../testing/fakes.js";
 import { buildSystemPrompt } from "./prompt.js";
 

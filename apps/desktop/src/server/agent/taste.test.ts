@@ -5,7 +5,7 @@ import { DatabaseSync } from "node:sqlite";
 
 import { afterEach, describe, expect, it } from "vitest";
 
-import type { Project } from "../../shared/contracts.js";
+import type { Project } from "../../shared/actions/_core/contracts.js";
 import { buildSystemPrompt, buildTasteBlock } from "./prompt.js";
 import { loadTasteRules, tasteHome } from "./taste.js";
 

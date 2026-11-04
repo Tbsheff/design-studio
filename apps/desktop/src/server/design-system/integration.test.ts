@@ -12,14 +12,14 @@ import {
   PACK_FILE,
   TOKENS_CSS_FILE,
   TOKENS_FILE,
-} from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
 import type {
   DesignSystemState,
   PackSummary,
   Project,
   StudioEvent,
   Version,
-} from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
 import { designSystemBeforeCommit } from "../agent/index.js";
 import { createRunLifecycle } from "../agent/lifecycle.js";
 import type { RunDriver } from "../agent/lifecycle.js";

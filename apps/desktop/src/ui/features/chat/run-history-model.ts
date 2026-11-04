@@ -3,7 +3,7 @@ import { useSyncExternalStore } from "react";
 import type { WireOutput } from "../../../shared/actions/_core/action.js";
 import type { listRun } from "../../../shared/actions/run/list.js";
 import { routes as runsRoutes } from "../../../shared/actions/run/routes.js";
-import type { RunSummary } from "../../../shared/contracts.js";
+import type { RunSummary } from "../../../shared/actions/_core/contracts.js";
 import { call } from "../../platform/http.js";
 
 interface RunHistory {

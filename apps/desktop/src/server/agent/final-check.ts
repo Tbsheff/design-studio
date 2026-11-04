@@ -6,7 +6,7 @@ import type {
   FinalCheck,
   QualityFinding,
   RenderCheckResult,
-} from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
 import {
   baselineFindingsFile,
   checkItems,

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
-import type { RunMention } from "../../../shared/contracts.js";
+import type { RunMention } from "../../../shared/actions/_core/contracts.js";
 import { fuzzyRank } from "../../../shared/fuzzy.js";
 import { Icon } from "../../kit/Icon.js";
 import type { IconName } from "../../kit/Icon.js";

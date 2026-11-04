@@ -1,6 +1,6 @@
 import type { Context, Hono } from "hono";
 
-import type { Direction, Project } from "../../shared/contracts.js";
+import type { Direction, Project } from "../../shared/actions/_core/contracts.js";
 import {
   SPACING_PROPERTIES,
   SPACING_PX_MAX,

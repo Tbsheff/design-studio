@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
 import { BadRequest } from "../../shared/actions/_core/errors/bad-request.js";
-import type { Direction, Project } from "../../shared/contracts.js";
+import type { Direction, Project } from "../../shared/actions/_core/contracts.js";
 import { DirectEditError } from "../direct-edit/index.js";
 import type { DirectEditDeps } from "../direct-edit/index.js";
 import { attemptKnown } from "../platform/attempt/index.js";

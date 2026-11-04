@@ -7,7 +7,7 @@ import type {
   Project,
   SelectionContext,
   Version,
-} from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
 import {
   chooseEditSite,
   EDIT_TARGETS,

@@ -2,7 +2,7 @@ import type {
   CheckViewport,
   QualityFinding,
   QualitySeverity,
-} from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
 import type { ResolvedRunConfig } from "../../shared/run-levels.js";
 import { EDIT_TOOL_NAMES } from "./permissions.js";
 

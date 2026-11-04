@@ -1,8 +1,8 @@
 import path from "node:path";
 
-import { CANVAS_FILE } from "../../../shared/canvas-file.js";
-import type { Direction, Project, Version } from "../../../shared/contracts.js";
-import { LINKS_FILE } from "../../../shared/links.js";
+import { CANVAS_FILE } from "../../../shared/actions/_core/canvas-file.js";
+import type { Direction, Project, Version } from "../../../shared/actions/_core/contracts.js";
+import { LINKS_FILE } from "../../../shared/actions/_core/links.js";
 import type { VersionStore } from "../../types.js";
 import type { EditFileChange } from "./edit-types.js";
 import type { EditHistory } from "./history.js";

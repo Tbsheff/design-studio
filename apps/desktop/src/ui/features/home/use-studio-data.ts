@@ -8,7 +8,7 @@ import type {
   StudioEvent,
   Version,
   WorkTreeStatus,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import { api, errorText } from "../../api.js";
 import { useProjectEvents } from "../../platform/events.js";
 import type { ConnectionState } from "../../platform/events.js";

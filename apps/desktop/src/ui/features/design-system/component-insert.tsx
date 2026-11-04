@@ -2,12 +2,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import { createPortal } from "react-dom";
 
-import type { SelectionContext } from "../../../shared/contracts.js";
+import type { SelectionContext } from "../../../shared/actions/_core/contracts.js";
 import type {
   InsertPosition,
   InsertableComponent,
   InsertableList,
-} from "../../../shared/insert.js";
+} from "../../../shared/actions/_core/insert.js";
 import { PreviewMenu } from "../canvas/preview-menu.js";
 import type { PreviewMenuItem } from "../canvas/preview-menu.js";
 import { NO_SOURCE } from "../inspector/structure-edits.js";

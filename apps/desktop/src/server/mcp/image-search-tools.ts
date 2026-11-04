@@ -1,4 +1,4 @@
-import type { Project } from "../../shared/contracts.js";
+import type { Project } from "../../shared/actions/_core/contracts.js";
 import {
   PLACE_IMAGE_DESCRIPTION,
   SEARCH_IMAGES_DESCRIPTION,

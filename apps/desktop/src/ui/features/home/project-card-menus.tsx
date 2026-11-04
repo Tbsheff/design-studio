@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent, KeyboardEvent } from "react";
 
-import type { Project } from "../../../shared/contracts.js";
+import type { Project } from "../../../shared/actions/_core/contracts.js";
 import { Icon } from "../../kit/Icon.js";
 import type { CardAction, MenuAt } from "./project-grid.js";
 

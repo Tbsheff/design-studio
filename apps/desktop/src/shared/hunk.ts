@@ -1,4 +1,4 @@
-import type { Version } from "./contracts.js";
+import type { Version } from "./actions/_core/contracts.js";
 
 export interface HunkLine {
   sign: "+" | "-" | " ";

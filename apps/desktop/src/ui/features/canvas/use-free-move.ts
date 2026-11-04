@@ -7,7 +7,7 @@ import type {
   FreeMoveStart,
   SelectionContext,
   StructureEditRequest,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import { api, errorText } from "../../api.js";
 import type { ParentMessageBody } from "../../platform/bridge.js";
 import { createLiveStore } from "../../platform/live-store.js";

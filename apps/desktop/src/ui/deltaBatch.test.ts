@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { RunSummary, StudioEvent } from "../shared/contracts";
+import type { RunSummary, StudioEvent } from "../shared/actions/_core/contracts";
 import { applyRunEvent, runText } from "./features/chat/run-state-model";
 import type { RunMap } from "./features/chat/run-state-model";
 import {

@@ -5,8 +5,8 @@ import type {
   ProjectKind,
   ProjectSettings,
   RunLevel,
-} from "../../../shared/contracts.js";
-import { type WorkspaceList, shortenHome } from "../../../shared/folders.js";
+} from "../../../shared/actions/_core/contracts.js";
+import { type WorkspaceList, shortenHome } from "../../../shared/actions/_core/folders.js";
 import { api } from "../../api.js";
 import { homeVariations } from "../../platform/storage.js";
 import { modelLabel } from "../chat/settings-draft-model.js";

@@ -1,6 +1,6 @@
 import { lazy, Suspense, useState, useTransition } from "react";
 
-import type { AttachedApp } from "../../../shared/contracts";
+import type { AttachedApp } from "../../../shared/actions/_core/contracts";
 import { api } from "../../api";
 import { AppBarAccount } from "./app-bar-account.js";
 import { AppFailure } from "./app-failure";

@@ -9,7 +9,7 @@ import type {
   RunSentRecord,
   RunSummary,
   StudioEvent,
-} from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
 import { runQueryTerms } from "../../shared/rewind.js";
 import { attemptKnown } from "../platform/attempt/index.js";
 import type { KnownFailure } from "../platform/attempt/index.js";

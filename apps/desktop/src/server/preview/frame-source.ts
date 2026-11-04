@@ -1,5 +1,5 @@
-import type { Direction, Project, Version } from "../../shared/contracts.js";
-import { cleanExportPath } from "../../shared/export.js";
+import type { Direction, Project, Version } from "../../shared/actions/_core/contracts.js";
+import { cleanExportPath } from "../../shared/actions/_core/export.js";
 import {
   firstVersionState,
   firstVersionWaitText,

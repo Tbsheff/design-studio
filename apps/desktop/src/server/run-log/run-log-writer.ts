@@ -3,7 +3,7 @@ import { Context, Effect, Layer, Semaphore } from "effect";
 import type { BadRequest } from "../../shared/actions/_core/errors/bad-request.js";
 import type { Conflict } from "../../shared/actions/_core/errors/conflict.js";
 import type { NotFound } from "../../shared/actions/_core/errors/not-found.js";
-import type { RunSummary } from "../../shared/contracts.js";
+import type { RunSummary } from "../../shared/actions/_core/contracts.js";
 import {
   answerActiveRun,
   setActiveQueue,

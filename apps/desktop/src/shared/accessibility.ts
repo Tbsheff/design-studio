@@ -1,4 +1,4 @@
-import type { SourceLoc } from "./contracts.js";
+import type { SourceLoc } from "./actions/_core/contracts.js";
 
 const ACCESSIBILITY_ROLES = [
   "alert",

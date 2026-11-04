@@ -1,7 +1,7 @@
 import { useState, useTransition } from "react";
 import type { FormEvent } from "react";
 
-import type { PackSummary } from "../../../shared/contracts.js";
+import type { PackSummary } from "../../../shared/actions/_core/contracts.js";
 import { errorText } from "../../api.js";
 import { Icon } from "../../kit/Icon.js";
 import { useModalDialog } from "../../kit/use-popover.js";

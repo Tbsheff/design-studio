@@ -1,6 +1,6 @@
 import { Context, Effect, Layer } from "effect";
 
-import type { LinksFile, PrototypeLink } from "../../../shared/links.js";
+import type { LinksFile, PrototypeLink } from "../../../shared/actions/_core/links.js";
 import {
   writeCreate,
   writeDelete,

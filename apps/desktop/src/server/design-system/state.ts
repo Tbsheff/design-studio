@@ -7,7 +7,7 @@ import type {
   DesignSystemState,
   Direction,
   Project,
-} from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
 import {
   appTokenState,
   loadAppTokens,

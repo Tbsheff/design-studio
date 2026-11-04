@@ -4,7 +4,7 @@ import type {
   ExportFileResult,
   HandoffFolderResult,
 } from "../../shared/actions/export/schema.js";
-import type { ExportFrame } from "../../shared/export.js";
+import type { ExportFrame } from "../../shared/actions/_core/export.js";
 import type { ExportRuntime } from "./export-core.js";
 import { buildExportFile } from "./export-file.js";
 import type { ExportedBytes, FileRequest } from "./export-file.js";

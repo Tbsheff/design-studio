@@ -1,5 +1,5 @@
-import type { ShareFrame } from "../../shared/share.js";
-import { SHARE_COMMENT_MAX, SHARE_NAME_MAX } from "../../shared/share.js";
+import type { ShareFrame } from "../../shared/actions/_core/share.js";
+import { SHARE_COMMENT_MAX, SHARE_NAME_MAX } from "../../shared/actions/_core/share.js";
 import { FAVICON_LINKS } from "./favicon.js";
 
 export interface ViewerData {

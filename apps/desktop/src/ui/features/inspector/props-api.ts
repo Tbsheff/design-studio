@@ -4,14 +4,14 @@ import type {
   ComponentVariantResult,
   ComponentVariantTarget,
 } from "../../../shared/component-variant.js";
-import type { SourceLoc, Version } from "../../../shared/contracts.js";
+import type { SourceLoc, Version } from "../../../shared/actions/_core/contracts.js";
 import type {
   ComponentInstance,
   InstanceQuery,
   PropValue,
   SetPropsResult,
   VariantClassRequest,
-} from "../../../shared/props.js";
+} from "../../../shared/actions/_core/props.js";
 import { getBlob, json } from "../../api.js";
 import { call } from "../../platform/http.js";
 

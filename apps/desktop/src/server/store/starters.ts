@@ -1,7 +1,7 @@
 import { cp, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import type { Starter } from "../../shared/contracts.js";
+import type { Starter } from "../../shared/actions/_core/contracts.js";
 import { BadRequestError } from "../platform/errors/index.js";
 import { resourcePath } from "../platform/resources/index.js";
 

@@ -8,4 +8,4 @@ export { useAction } from "../../platform/query.js";
 
 export type { ActionState } from "../../platform/query.js";
 
-export type { SelectionContext } from "../../../shared/contracts.js";
+export type { SelectionContext } from "../../../shared/actions/_core/contracts.js";

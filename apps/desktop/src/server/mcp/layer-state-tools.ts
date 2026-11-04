@@ -4,7 +4,7 @@ import type {
   DirectEditResult,
   Direction,
   Project,
-} from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
 import {
   describeLocks,
   lockDelta,

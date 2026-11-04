@@ -7,21 +7,21 @@ import type {
   Project,
   SourceLoc,
   VersionMeta,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import {
   INSERT_POSITIONS,
   INSERT_TEXT_MAX,
   type InsertComponentRequest,
   type InsertComponentResult,
   type InsertTarget,
-} from "../../../shared/insert.js";
+} from "../../../shared/actions/_core/insert.js";
 import {
   OWNERS_MAX,
   OWNER_STACK_MAX,
   PROP_NAME,
   PROP_TEXT_MAX,
   PROPS_MAX,
-} from "../../../shared/props.js";
+} from "../../../shared/actions/_core/props.js";
 import { jsxFor } from "../../components/component-search.js";
 import {
   planImport,

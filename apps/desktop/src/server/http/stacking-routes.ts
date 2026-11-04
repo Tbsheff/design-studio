@@ -1,6 +1,6 @@
 import type { Context, Hono } from "hono";
 
-import type { Direction, Project } from "../../shared/contracts.js";
+import type { Direction, Project } from "../../shared/actions/_core/contracts.js";
 import type { StackingSetResult } from "../../shared/stacking.js";
 import { DirectEditError } from "../direct-edit/engine/index.js";
 import type { DirectEditDeps } from "../direct-edit/index.js";

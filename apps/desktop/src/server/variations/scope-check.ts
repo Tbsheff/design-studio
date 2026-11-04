@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-import type { ElementScope } from "../../shared/element-variants.js";
+import type { ElementScope } from "../../shared/actions/_core/element-variants.js";
 
 export function hash(text: string): string {
   return createHash("sha256").update(text).digest("hex");

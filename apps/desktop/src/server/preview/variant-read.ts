@@ -1,4 +1,4 @@
-import type { ElementVariantInfo } from "../../shared/element-variants.js";
+import type { ElementVariantInfo } from "../../shared/actions/_core/element-variants.js";
 import type { StudioProjectStore } from "../store/projects.js";
 import type { AgentRunner } from "../types.js";
 import { listElementVariants } from "../variations/element-variants.js";

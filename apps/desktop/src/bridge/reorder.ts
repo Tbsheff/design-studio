@@ -1,4 +1,4 @@
-import { SOURCE_LOC_ATTR, type ParentToBridge } from "../shared/contracts.js";
+import { SOURCE_LOC_ATTR, type ParentToBridge } from "../shared/actions/_core/contracts.js";
 
 type SelectSource = Extract<ParentToBridge, { type: "select-source" }>;
 

@@ -4,7 +4,7 @@ import type { MutableRefObject } from "react";
 import type {
   ProjectKind,
   SelectionContext,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import { api } from "../../api.js";
 import {
   canHideFrame,

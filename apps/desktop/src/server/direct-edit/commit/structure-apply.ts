@@ -8,7 +8,7 @@ import type {
   StructureOp,
   StructureTarget,
   VersionMeta,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import { structureDoc, type StructureDoc } from "../engine/structure-docs.js";
 import {
   planStructure,

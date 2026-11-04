@@ -4,7 +4,7 @@ import type {
   StudioEvent,
   StudioEventInput,
   Version,
-} from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
 import { logError } from "../platform/logger/index.js";
 import { readEventFile } from "./event-file.js";
 import type { SeqFloor } from "./event-file.js";

@@ -4,7 +4,7 @@ import path from "node:path";
 import { parse } from "parse5";
 import type { DefaultTreeAdapterMap } from "parse5";
 
-import { TOKENS_CSS_FILE } from "../../shared/contracts.js";
+import { TOKENS_CSS_FILE } from "../../shared/actions/_core/contracts.js";
 import { lastDeclarationOf, rootDeclarations, usesVar } from "./css-vars.js";
 import type { CssDecl } from "./css-vars.js";
 

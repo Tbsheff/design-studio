@@ -6,4 +6,4 @@ export type {
   PermissionCard,
   PermissionDecision,
   PermissionRequest,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";

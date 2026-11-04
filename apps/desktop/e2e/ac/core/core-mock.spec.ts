@@ -18,7 +18,7 @@ import type {
   Project,
   RunSummary,
   Version,
-} from "../../../src/shared/contracts";
+} from "../../../src/shared/actions/_core/contracts";
 import {
   BASE_URL,
   PREVIEW_PORT,

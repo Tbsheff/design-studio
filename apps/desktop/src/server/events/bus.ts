@@ -1,6 +1,6 @@
 import path from "node:path";
 
-import type { StudioEvent, StudioEventInput } from "../../shared/contracts.js";
+import type { StudioEvent, StudioEventInput } from "../../shared/actions/_core/contracts.js";
 import { assertSafeId } from "../platform/errors/index.js";
 import { bindEventBus } from "./event-core.js";
 import { readSeqFloors } from "./event-file.js";

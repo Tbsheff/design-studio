@@ -26,4 +26,4 @@ export type { BoxSide, SpacingSide } from "../../../shared/spacing.js";
 export type {
   BridgeToParent,
   SelectionContext,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";

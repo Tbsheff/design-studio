@@ -1,4 +1,4 @@
-import type { ProjectSettings, RunLevel } from "../../../shared/contracts.js";
+import type { ProjectSettings, RunLevel } from "../../../shared/actions/_core/contracts.js";
 
 export const MODEL_OPTIONS = [
   { id: "claude-haiku-5-5", label: "Claude Haiku 5.5" },

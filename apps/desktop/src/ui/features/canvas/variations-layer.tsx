@@ -5,8 +5,8 @@ import type {
   DirectionVariation,
   Project,
   RunStatus,
-} from "../../../shared/contracts.js";
-import type { ElementScope } from "../../../shared/element-variants.js";
+} from "../../../shared/actions/_core/contracts.js";
+import type { ElementScope } from "../../../shared/actions/_core/element-variants.js";
 import { errorText } from "../../api.js";
 import { Icon } from "../../kit/Icon.js";
 import type { RunMap } from "../chat/run-state-model.js";

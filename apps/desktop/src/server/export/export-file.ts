@@ -1,10 +1,10 @@
-import type { ProjectKind } from "../../shared/contracts.js";
-import { exportFileStem } from "../../shared/export.js";
+import type { ProjectKind } from "../../shared/actions/_core/contracts.js";
+import { exportFileStem } from "../../shared/actions/_core/export.js";
 import type {
   ExportFrame,
   ExportScale,
   ExportScope,
-} from "../../shared/export.js";
+} from "../../shared/actions/_core/export.js";
 import type { ZipEntry } from "../design-system/zip.js";
 import type { Shot } from "../preview/page-capture/index.js";
 import type { ExportRuntime } from "./export-core.js";

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { Project } from "../shared/contracts";
+import type { Project } from "../shared/actions/_core/contracts";
 import {
   toFilteredProjects,
   toNextGridIndex,

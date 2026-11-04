@@ -1,8 +1,8 @@
 import type { Context, Hono } from "hono";
 
 import type { AccessibilitySetResult } from "../../shared/accessibility.js";
-import type { CanvasFileFrame } from "../../shared/canvas-file.js";
-import type { Direction, Project } from "../../shared/contracts.js";
+import type { CanvasFileFrame } from "../../shared/actions/_core/canvas-file.js";
+import type { Direction, Project } from "../../shared/actions/_core/contracts.js";
 import { AccessibilityError } from "../accessibility/errors.js";
 import { frameOf } from "../accessibility/frame.js";
 import type { AccessibilityFrame } from "../accessibility/frame.js";

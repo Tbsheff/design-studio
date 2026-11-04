@@ -17,7 +17,7 @@ import type {
   DesignComment,
   Project,
   RunSummary,
-} from "../src/shared/contracts.js";
+} from "../src/shared/actions/_core/contracts.js";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const PORT = Number(process.env.COMMENTS_REAL_PORT ?? 7170);

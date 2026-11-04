@@ -1,5 +1,5 @@
-import type { Project } from "../../shared/contracts.js";
-import type { ElementVariantInfo } from "../../shared/element-variants.js";
+import type { Project } from "../../shared/actions/_core/contracts.js";
+import type { ElementVariantInfo } from "../../shared/actions/_core/element-variants.js";
 import type { AgentRunner } from "../types.js";
 import { variantInfo } from "./scope.js";
 

@@ -8,7 +8,7 @@ import type {
   ProjectKind,
   SelectionContext,
   ZoomKey,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import type { PreviewPort } from "../../platform/bridge.js";
 import type { LiveStore } from "../../platform/live-store.js";
 import type { CommentsControl } from "../comments/use-comments.js";

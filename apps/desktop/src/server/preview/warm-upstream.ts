@@ -1,4 +1,4 @@
-import type { Project } from "../../shared/contracts.js";
+import type { Project } from "../../shared/actions/_core/contracts.js";
 import { noteRenderedPage } from "../events/index.js";
 import type { PreviewService } from "../types.js";
 import { attemptNull, toOptional } from "./attempt-null.js";

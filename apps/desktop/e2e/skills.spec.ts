@@ -4,7 +4,7 @@ import path from "node:path";
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
-import type { SkillCatalog } from "../src/shared/contracts";
+import type { SkillCatalog } from "../src/shared/actions/_core/contracts";
 import { ROOT, readState } from "./support/server";
 import { claudeHomeFor, FIXTURE_SKILLS } from "./support/skills-fixture";
 import { mainDirection, openHome, clickCreate } from "./support/studio";

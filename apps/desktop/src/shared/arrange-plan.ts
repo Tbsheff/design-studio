@@ -4,7 +4,7 @@ import type {
   ArrangeMode,
   MeasureRect,
 } from "./arrange.js";
-import type { SourceLoc } from "./contracts.js";
+import type { SourceLoc } from "./actions/_core/contracts.js";
 
 export interface Sides {
   top: number;

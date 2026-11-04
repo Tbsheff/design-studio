@@ -2,12 +2,12 @@ import {
   isDirectionRef,
   isFrameId,
   parseCanvasFile,
-} from "../../shared/canvas-file.js";
-import type { CanvasPresence } from "../../shared/contracts.js";
+} from "../../shared/actions/_core/canvas-file.js";
+import type { CanvasPresence } from "../../shared/actions/_core/contracts.js";
 import type {
   FrameStateDef,
   FrameStatesView,
-} from "../../shared/frame-state.js";
+} from "../../shared/actions/_core/frame-state.js";
 import type {
   FlowInput,
   FlowResult,

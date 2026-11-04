@@ -3,7 +3,7 @@ import { Effect } from "effect";
 import type { BadRequest } from "../../shared/actions/_core/errors/bad-request.js";
 import type { Conflict } from "../../shared/actions/_core/errors/conflict.js";
 import type { NotFound } from "../../shared/actions/_core/errors/not-found.js";
-import type { Direction, Project, RunRequest } from "../../shared/contracts.js";
+import type { Direction, Project, RunRequest } from "../../shared/actions/_core/contracts.js";
 import { attemptKnown } from "../platform/attempt/index.js";
 import { loadConfig } from "../platform/config/index.js";
 import {

@@ -5,7 +5,7 @@ import type {
   Project,
   RunLevel,
   RunRequest,
-} from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
 import {
   cleanPortRoute,
   PORT_FLOW_MAX_PAGES,
@@ -14,7 +14,7 @@ import {
   type PortFlowPlan,
   type PortPlan,
   type PortStartResult,
-} from "../../shared/port.js";
+} from "../../shared/actions/_core/port.js";
 import {
   buildFlowPlan,
   buildPortPlan,

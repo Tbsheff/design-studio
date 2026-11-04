@@ -1,7 +1,7 @@
 import { Context, Effect, Layer } from "effect";
 
 import type { NotFound } from "../../shared/actions/_core/errors/not-found.js";
-import type { McpActivity } from "../../shared/contracts.js";
+import type { McpActivity } from "../../shared/actions/_core/contracts.js";
 import { attemptKnown } from "../platform/attempt/index.js";
 import type { KnownFailure } from "../platform/attempt/index.js";
 import { lifeRuntime } from "./mcp-life-runtime.js";

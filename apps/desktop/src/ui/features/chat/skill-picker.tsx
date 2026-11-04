@@ -5,7 +5,7 @@ import type {
   SkillInfo,
   Project,
   ProjectSettings,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import { api, errorText } from "../../api.js";
 import { rank } from "../../chat-slots.js";
 import type { Command } from "../../chat-slots.js";

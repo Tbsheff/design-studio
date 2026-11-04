@@ -1,14 +1,14 @@
 import { expect } from "@playwright/test";
 import type { FrameLocator, Page } from "@playwright/test";
 
-import { needsQuestions } from "../../src/shared/clarify";
+import { needsQuestions } from "../../src/shared/actions/_core/clarify";
 import type {
   Direction,
   Project,
   RunSummary,
   Version,
   WorkTreeStatus,
-} from "../../src/shared/contracts";
+} from "../../src/shared/actions/_core/contracts";
 import { BASE_URL } from "./server";
 
 export class StudioApi {

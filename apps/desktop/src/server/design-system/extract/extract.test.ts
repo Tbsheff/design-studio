@@ -15,7 +15,7 @@ import { fileURLToPath } from "node:url";
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { REQUIRED_TOKENS } from "../../../shared/contracts.js";
+import { REQUIRED_TOKENS } from "../../../shared/actions/_core/contracts.js";
 import { compileTokens, parseTokenFile } from "../compile.js";
 import { buildPackFiles } from "../library.js";
 import { packRegistry } from "../packs.js";

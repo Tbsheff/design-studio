@@ -1,7 +1,7 @@
 import { useLayoutEffect } from "react";
 import type { KeyboardEvent, RefObject } from "react";
 
-import type { RunLevel } from "../../../shared/contracts.js";
+import type { RunLevel } from "../../../shared/actions/_core/contracts.js";
 import { levelGroup, modelGroup } from "../chat/slash-groups.js";
 import { SlashMenu, useSlashMenu } from "../chat/slash-menu.js";
 

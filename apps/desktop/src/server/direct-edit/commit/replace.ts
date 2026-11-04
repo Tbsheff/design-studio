@@ -9,7 +9,7 @@ import type {
   Project,
   SourceLoc,
   VersionMeta,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import {
   SEARCH_PROPERTIES,
   STYLE_REPLACE_MAX,
@@ -21,7 +21,7 @@ import {
   type StyleReplaceRequest,
   type StyleReplaceResult,
   type StyleSkip,
-} from "../../../shared/style-search.js";
+} from "../../../shared/actions/_core/style-search.js";
 import { z } from "../../platform/zod-bridge/index.js";
 import { DirectEditError } from "../engine/errors.js";
 import { findJsxElement, parseSource } from "../engine/jsx.js";

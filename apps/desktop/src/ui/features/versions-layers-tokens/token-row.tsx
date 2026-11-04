@@ -1,6 +1,6 @@
 import { memo } from "react";
 
-import type { CompiledTokenEntry } from "../../../shared/contracts.js";
+import type { CompiledTokenEntry } from "../../../shared/actions/_core/contracts.js";
 import { Icon } from "../../kit/Icon.js";
 import { COPY } from "./copy.js";
 import { aliasPath, varTarget } from "./token-draft.js";

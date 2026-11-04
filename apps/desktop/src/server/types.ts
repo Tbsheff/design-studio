@@ -16,8 +16,8 @@ import type {
   VersionChanges,
   VersionMeta,
   WorkTreeStatus,
-} from "../shared/contracts.js";
-import type { DesignRule } from "../shared/design-rules.js";
+} from "../shared/actions/_core/contracts.js";
+import type { DesignRule } from "../shared/actions/_core/design-rules.js";
 import type { RunTarget } from "./agent/run-target.js";
 import type { DesignSystemPromptContext } from "./design-system/state.js";
 import type {
@@ -205,7 +205,7 @@ export interface AppControl {
   doctor?(
     project: Project,
     fresh?: boolean
-  ): Promise<import("../shared/app-doctor.js").AppDoctorResult>;
+  ): Promise<import("../shared/actions/_core/app-doctor.js").AppDoctorResult>;
 }
 
 export interface PreviewService {

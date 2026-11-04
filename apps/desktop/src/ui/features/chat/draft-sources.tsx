@@ -6,7 +6,7 @@ import type {
   DraftSourcesState,
   Project,
   RunStatus,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import { api } from "../../api.js";
 import { Icon } from "../../kit/Icon.js";
 import { useProjectEvents } from "../../platform/events.js";

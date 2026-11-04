@@ -5,7 +5,7 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import type { Plugin } from "vite";
 
-import { DEFAULT_STUDIO_PORT } from "./src/shared/contracts";
+import { DEFAULT_STUDIO_PORT } from "./src/shared/actions/_core/contracts";
 
 const root = fileURLToPath(new URL(".", import.meta.url));
 

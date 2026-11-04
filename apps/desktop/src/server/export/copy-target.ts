@@ -1,6 +1,6 @@
 import type { CopyCodeResult } from "../../shared/actions/export/schema.js";
-import type { Direction, Project } from "../../shared/contracts.js";
-import type { CopyCodeFormat, ExportFrame } from "../../shared/export.js";
+import type { Direction, Project } from "../../shared/actions/_core/contracts.js";
+import type { CopyCodeFormat, ExportFrame } from "../../shared/actions/_core/export.js";
 import { NotFoundError } from "../platform/errors/index.js";
 import { COPY_FRAME, copyCode } from "./copy-handler.js";
 import type { ExportRuntime } from "./export-core.js";

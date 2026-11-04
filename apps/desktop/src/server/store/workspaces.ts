@@ -12,7 +12,7 @@ import path from "node:path";
 
 import { customAlphabet } from "nanoid";
 
-import type { WorkspaceFolder, WorkspaceList } from "../../shared/folders.js";
+import type { WorkspaceFolder, WorkspaceList } from "../../shared/actions/_core/folders.js";
 import {
   BadRequestError,
   NotFoundError,

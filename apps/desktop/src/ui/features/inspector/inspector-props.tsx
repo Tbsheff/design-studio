@@ -8,14 +8,14 @@ import {
 } from "react";
 import type { KeyboardEvent } from "react";
 
-import type { SelectionContext } from "../../../shared/contracts.js";
+import type { SelectionContext } from "../../../shared/actions/_core/contracts.js";
 import type {
   ComponentInstance,
   ComponentSchema,
   PropSpec,
   PropValue,
   VariantGroup,
-} from "../../../shared/props.js";
+} from "../../../shared/actions/_core/props.js";
 import { ApiError } from "../../api.js";
 import { VariantSheet } from "../../inspector-slots.js";
 import { UiSelect } from "../../kit/UiSelect.js";

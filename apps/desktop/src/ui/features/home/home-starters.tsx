@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import type { Starter } from "../../../shared/contracts.js";
+import type { Starter } from "../../../shared/actions/_core/contracts.js";
 import { api, errorText } from "../../api.js";
 import { Icon } from "../../kit/Icon.js";
 

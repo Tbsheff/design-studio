@@ -1,5 +1,5 @@
-import { APP_SOURCE_PATH, DEV_CHROME_SELECTOR } from "../../shared/app.js";
-import { SOURCE_LOC_ATTR } from "../../shared/contracts.js";
+import { APP_SOURCE_PATH, DEV_CHROME_SELECTOR } from "../../shared/actions/_core/app.js";
+import { SOURCE_LOC_ATTR } from "../../shared/actions/_core/contracts.js";
 import { LAYER_REF, layerKey } from "../../shared/layer-ref.js";
 import { onSourceChange } from "../events/index.js";
 import type { SourceChange } from "../events/index.js";

@@ -1,8 +1,8 @@
 import { readFile, realpath } from "node:fs/promises";
 import path from "node:path";
 
-import { SOURCE_LOC_ATTR } from "../../shared/contracts.js";
-import { cleanExportPath } from "../../shared/export.js";
+import { SOURCE_LOC_ATTR } from "../../shared/actions/_core/contracts.js";
+import { cleanExportPath } from "../../shared/actions/_core/export.js";
 import { BadRequestError, NotFoundError } from "../platform/errors/index.js";
 import { withPagePath } from "../project-source/index.js";
 import { attemptNull, toOptional } from "./attempt-null.js";

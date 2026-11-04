@@ -4,8 +4,8 @@ import type { listShare } from "../../../shared/actions/share/list.js";
 import { routes } from "../../../shared/actions/share/routes.js";
 import type { setLanShare } from "../../../shared/actions/share/set-lan.js";
 import type { updateShare } from "../../../shared/actions/share/update.js";
-import type { ExportFrame } from "../../../shared/export.js";
-import type { ShareExpiryHours } from "../../../shared/share.js";
+import type { ExportFrame } from "../../../shared/actions/_core/export.js";
+import type { ShareExpiryHours } from "../../../shared/actions/_core/share.js";
 import { call } from "../../platform/http.js";
 import type { UiOutput } from "../../platform/http.js";
 

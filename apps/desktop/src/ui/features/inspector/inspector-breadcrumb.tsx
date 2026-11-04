@@ -8,7 +8,7 @@ import {
 } from "react";
 import type { MutableRefObject } from "react";
 
-import type { SelectionContext } from "../../../shared/contracts.js";
+import type { SelectionContext } from "../../../shared/actions/_core/contracts.js";
 import { Icon } from "../../kit/Icon.js";
 import type { PreviewPort } from "../../platform/bridge.js";
 import { parseSelectionPath, pathCrumbs } from "./authored-css.js";

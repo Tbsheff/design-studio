@@ -7,9 +7,9 @@ import {
   cleanFrameLabel,
   cleanFramePath,
   nextFrameId,
-} from "../../shared/canvas-file.js";
-import type { CanvasFile, CanvasFileFrame } from "../../shared/canvas-file.js";
-import type { Direction, Project, RunMode } from "../../shared/contracts.js";
+} from "../../shared/actions/_core/canvas-file.js";
+import type { CanvasFile, CanvasFileFrame } from "../../shared/actions/_core/canvas-file.js";
+import type { Direction, Project, RunMode } from "../../shared/actions/_core/contracts.js";
 import { z } from "../platform/zod-bridge/index.js";
 import type { CanvasService } from "./service.js";
 

@@ -3,7 +3,7 @@ import path from "node:path";
 
 import type * as t from "@babel/types";
 
-import type { Project, SourceLoc } from "../../../shared/contracts.js";
+import type { Project, SourceLoc } from "../../../shared/actions/_core/contracts.js";
 import { parseSource } from "../engine/jsx.js";
 
 const SKIP =

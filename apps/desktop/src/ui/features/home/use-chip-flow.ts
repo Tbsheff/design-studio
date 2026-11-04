@@ -1,6 +1,6 @@
 import { type RefObject, useCallback, useEffect, useState } from "react";
 
-import type { RunLevel } from "../../../shared/contracts.js";
+import type { RunLevel } from "../../../shared/actions/_core/contracts.js";
 import { api, errorText } from "../../api.js";
 import { hasNativePicker, pickFolder } from "../../platform/desktop.js";
 import { installProblem } from "./doctor-model.js";

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-import type { RunStatus } from "../../../shared/contracts.js";
+import type { RunStatus } from "../../../shared/actions/_core/contracts.js";
 import { isDesktop } from "../../platform/desktop.js";
 import type { RunMap } from "./run-state-model.js";
 

@@ -17,8 +17,8 @@ import type {
   Direction,
   Project,
   VersionMeta,
-} from "../../../shared/contracts.js";
-import { OWNERS_MAX, OWNER_STACK_MAX } from "../../../shared/props.js";
+} from "../../../shared/actions/_core/contracts.js";
+import { OWNERS_MAX, OWNER_STACK_MAX } from "../../../shared/actions/_core/props.js";
 import { planImport } from "../../components/import-plan.js";
 import { loadLibrary } from "../../components/insert-list.js";
 import {

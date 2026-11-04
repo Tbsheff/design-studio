@@ -9,7 +9,7 @@ import type {
   Project,
   StudioEvent,
   StudioEventInput,
-} from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
 import type { EventBus, ProjectStore, VersionStore } from "../types.js";
 import { WatcherManager } from "./watcher.js";
 

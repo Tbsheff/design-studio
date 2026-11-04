@@ -1,7 +1,7 @@
 import type {
   DesignSystemCheckResult,
   DesignSystemRunCheck,
-} from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
 import { checkDesignSystem } from "../design-system/check.js";
 import type { DriverOutcome } from "./lifecycle.js";
 

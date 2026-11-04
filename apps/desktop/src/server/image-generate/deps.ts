@@ -32,7 +32,7 @@ export type {
   Direction,
   Project,
   VersionMeta,
-} from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
 
 export type { KnownFailure } from "../platform/attempt/index.js";
 

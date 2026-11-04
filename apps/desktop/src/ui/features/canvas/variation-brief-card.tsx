@@ -1,8 +1,8 @@
 import {
   VARIATION_BRIEF_MAX,
   VARIATION_MIN,
-} from "../../../shared/contracts.js";
-import type { Project, VariationBrief } from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
+import type { Project, VariationBrief } from "../../../shared/actions/_core/contracts.js";
 import { LEVEL_PRESETS } from "../../../shared/run-levels.js";
 import { Icon } from "../../kit/Icon.js";
 import { budgetFor, money } from "./use-variations.js";

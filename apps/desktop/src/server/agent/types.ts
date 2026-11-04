@@ -3,7 +3,7 @@ import type {
   PermissionRequest,
   QualityFinding,
   RenderCheckResult,
-} from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
 import type { ResolvedRunConfig } from "../../shared/run-levels.js";
 import type { FrameStateDeps } from "../canvas/app-flow/index.js";
 import type { CanvasService } from "../canvas/index.js";

@@ -2,7 +2,7 @@ import type {
   FirstVersionState,
   LegacyCanvasNotice,
   Project,
-} from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
 
 const MS_PER_FILE = 1.2;
 const BASE_MS = 4000;

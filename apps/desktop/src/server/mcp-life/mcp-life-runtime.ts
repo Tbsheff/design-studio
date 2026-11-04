@@ -1,7 +1,7 @@
 import type { Effect } from "effect";
 
-import type { McpActivity, McpApprovalRecord } from "../../shared/contracts.js";
-import type { McpStatus } from "../../shared/export.js";
+import type { McpActivity, McpApprovalRecord } from "../../shared/actions/_core/contracts.js";
+import type { McpStatus } from "../../shared/actions/_core/export.js";
 import { makeRuntimeSlot } from "../platform/runtime-slot/index.js";
 
 interface McpLifeService {

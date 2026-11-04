@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import { readdir } from "node:fs/promises";
 import path from "node:path";
 
-import type { AppRoute } from "../../shared/contracts.js";
+import type { AppRoute } from "../../shared/actions/_core/contracts.js";
 
 const PAGE_FILE = /^page\.(tsx|ts|jsx|js|mdx)$/;
 const MAX_ROUTES = 2000;

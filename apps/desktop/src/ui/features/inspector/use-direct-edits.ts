@@ -4,7 +4,7 @@ import type { MutableRefObject } from "react";
 import type {
   DirectStyleProperty,
   SelectionContext,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import { api, errorText } from "../../api.js";
 import type { PreviewPort } from "../../platform/bridge.js";
 import { isApiConflict, isApiError } from "./api-error.js";

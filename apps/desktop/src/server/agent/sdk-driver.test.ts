@@ -14,7 +14,7 @@ import type {
   RunRequest,
   RunSentRecord,
   TelemetrySample,
-} from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
 import { draftDesignMd, writeTestDraft } from "../design-system/test-draft.js";
 import {
   createFakeBus,

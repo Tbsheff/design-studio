@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
-import type { SkillCatalog, SkillInfo } from "../../../shared/contracts.js";
+import type { SkillCatalog, SkillInfo } from "../../../shared/actions/_core/contracts.js";
 import { api, errorText } from "../../api.js";
 
 let request: Promise<SkillCatalog> | null = null;

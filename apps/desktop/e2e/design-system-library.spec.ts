@@ -4,7 +4,7 @@ import path from "node:path";
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
-import type { PackSummary, Project } from "../src/shared/contracts";
+import type { PackSummary, Project } from "../src/shared/actions/_core/contracts";
 import {
   frontFrame,
   mainDirection,

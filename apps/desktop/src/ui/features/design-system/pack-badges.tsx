@@ -1,4 +1,4 @@
-import type { PackSummary } from "../../../shared/contracts.js";
+import type { PackSummary } from "../../../shared/actions/_core/contracts.js";
 
 const PROVENANCE: Record<PackSummary["provenance"], string> = {
   extracted: "From sources",

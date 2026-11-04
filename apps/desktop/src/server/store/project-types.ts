@@ -7,7 +7,7 @@ import type {
   ProjectKind,
   ProjectSettings,
   ProjectThumbnail,
-} from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
 import type { ProjectStore } from "../types.js";
 
 export interface DetectedApp {

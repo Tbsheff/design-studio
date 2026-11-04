@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from "react";
 import type { ReactNode } from "react";
 
-import type { Direction } from "../../../shared/contracts.js";
+import type { Direction } from "../../../shared/actions/_core/contracts.js";
 import {
   Conversation,
   ConversationContent,

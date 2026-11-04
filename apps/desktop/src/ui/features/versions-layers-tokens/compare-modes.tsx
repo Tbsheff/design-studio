@@ -8,7 +8,7 @@ import type {
   RefObject,
 } from "react";
 
-import type { ProjectKind, Version } from "../../../shared/contracts.js";
+import type { ProjectKind, Version } from "../../../shared/actions/_core/contracts.js";
 import { CompareFrame } from "./compare-frame.js";
 import { COPY } from "./copy.js";
 import { versionDiff } from "./versions-api.js";

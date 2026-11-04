@@ -4,7 +4,7 @@ import path from "node:path";
 
 import { expect, test, type Page } from "@playwright/test";
 
-import type { Project, StudioEvent } from "../../../src/shared/contracts";
+import type { Project, StudioEvent } from "../../../src/shared/actions/_core/contracts";
 import { BASE_URL, readState } from "../../support/server";
 import {
   createProjectViaUi,

@@ -5,7 +5,7 @@ import type {
   Project,
   Version,
   VersionMeta,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import { bindSaveLanes } from "../../events/index.js";
 import { logError } from "../../platform/logger/index.js";
 import type { VersionStore } from "../../types.js";

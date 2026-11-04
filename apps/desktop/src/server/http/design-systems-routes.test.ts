@@ -22,8 +22,8 @@ import type {
   Project,
   SavePackResult,
   Version,
-} from "../../shared/contracts.js";
-import { PACK_FILE, TOKENS_FILE } from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
+import { PACK_FILE, TOKENS_FILE } from "../../shared/actions/_core/contracts.js";
 import { normalizeColor } from "../design-system/extract/values.js";
 import { createEventBus } from "../events/index.js";
 import { projectStorePorts } from "../main/project-ports.js";

@@ -12,7 +12,7 @@ export { imageTargetOf } from "../inspector/image-api.js";
 
 export { useModalDialog } from "../../kit/use-popover.js";
 
-export type { SelectionContext } from "../../../shared/contracts.js";
+export type { SelectionContext } from "../../../shared/actions/_core/contracts.js";
 
 export { imageKindOf } from "../../../shared/image.js";
 

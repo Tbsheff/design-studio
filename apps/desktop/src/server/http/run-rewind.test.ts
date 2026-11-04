@@ -10,7 +10,7 @@ import type {
   Project,
   RunSummary,
   Version,
-} from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
 import { forkBaseOf } from "../../shared/rewind.js";
 import { createEventBus } from "../events/index.js";
 import { bootAgentRunner } from "../main/agent-runner.js";

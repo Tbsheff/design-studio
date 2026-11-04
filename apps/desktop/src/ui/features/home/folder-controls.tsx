@@ -1,6 +1,6 @@
 import { useRef, useState, type FormEvent } from "react";
 
-import type { Project } from "../../../shared/contracts.js";
+import type { Project } from "../../../shared/actions/_core/contracts.js";
 import {
   nameFromPrompt,
   projectsInFolder,
@@ -8,7 +8,7 @@ import {
   slugify,
   type WorkspaceFolder,
   type WorkspaceList,
-} from "../../../shared/folders.js";
+} from "../../../shared/actions/_core/folders.js";
 import { Icon } from "../../kit/Icon.js";
 import { LazySelect } from "../../kit/lazy-select.js";
 import type { UiSelectOption } from "../../kit/UiSelect.js";

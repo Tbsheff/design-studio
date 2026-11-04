@@ -4,7 +4,7 @@ import type {
   Version,
   VersionChanges,
   VersionFileDiff,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import { splitHunks } from "../../../shared/hunk.js";
 import type { PatchHunk } from "../../../shared/hunk.js";
 import { Icon } from "../../kit/Icon.js";

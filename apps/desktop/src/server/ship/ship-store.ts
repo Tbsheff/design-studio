@@ -2,7 +2,7 @@ import { Context, Effect, Layer } from "effect";
 
 import type { ApprovalCard } from "../../shared/actions/_core/approval-card.js";
 import type { ShipPlan } from "../../shared/actions/ship/schema.js";
-import type { ShipPrepare, ShipSettings } from "../../shared/ship.js";
+import type { ShipPrepare, ShipSettings } from "../../shared/actions/_core/ship.js";
 import { attemptShip } from "./ship-core.js";
 import type { ShipError } from "./ship-core.js";
 import { inspectPlan, publishCard, readPrepare } from "./ship-plans.js";

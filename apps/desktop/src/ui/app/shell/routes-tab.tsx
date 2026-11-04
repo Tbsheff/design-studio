@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 
-import { cleanRoute } from "../../../shared/app";
-import type { AppRoute } from "../../../shared/contracts";
+import { cleanRoute } from "../../../shared/actions/_core/app";
+import type { AppRoute } from "../../../shared/actions/_core/contracts";
 import { api, errorText } from "../../api";
 import { Icon } from "../../kit/Icon";
 

@@ -1,4 +1,4 @@
-import type { Project } from "../../shared/contracts.js";
+import type { Project } from "../../shared/actions/_core/contracts.js";
 import type { StudioProjectStore } from "../store/projects.js";
 
 interface ProjectSummary {

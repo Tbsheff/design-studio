@@ -4,8 +4,8 @@ import type {
   PortPlan,
   PortStartRequest,
   PortStartResult,
-} from "../../../shared/port.js";
-import { PORT_OPEN_EVENT } from "../../../shared/port.js";
+} from "../../../shared/actions/_core/port.js";
+import { PORT_OPEN_EVENT } from "../../../shared/actions/_core/port.js";
 import { json } from "../../api.js";
 import { call } from "../../platform/http.js";
 import type { RouteOutput } from "../../platform/http.js";

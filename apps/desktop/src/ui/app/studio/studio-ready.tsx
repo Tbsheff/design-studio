@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import type { ReactElement } from "react";
 
-import type { Project } from "../../../shared/contracts";
+import type { Project } from "../../../shared/actions/_core/contracts";
 import { chatWidthStyle } from "../../features/chat/chat-splitter";
 import { focusNewProject } from "../../features/commands";
 import { ProjectRail } from "../../features/home/project-rail";

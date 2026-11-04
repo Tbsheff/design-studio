@@ -4,8 +4,8 @@ import {
   COMPONENT_NAME,
   CREATE_TARGETS_MAX,
 } from "../../shared/component-create.js";
-import type { SourceLoc } from "../../shared/contracts.js";
-import type { InsertTarget } from "../../shared/insert.js";
+import type { SourceLoc } from "../../shared/actions/_core/contracts.js";
+import type { InsertTarget } from "../../shared/actions/_core/insert.js";
 import {
   toOptionalText,
   toSdkFieldSet,

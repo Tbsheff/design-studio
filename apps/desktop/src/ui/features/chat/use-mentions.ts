@@ -5,7 +5,7 @@ import type {
   CompiledTokenEntry,
   ComponentInfo,
   RunMention,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import { api } from "../../api.js";
 import {
   mentionKey,

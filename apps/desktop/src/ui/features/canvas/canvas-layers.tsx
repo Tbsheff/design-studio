@@ -1,10 +1,10 @@
 import { useEffect, useRef, useSyncExternalStore } from "react";
 
-import { selectMoveOf } from "../../../shared/contracts.js";
+import { selectMoveOf } from "../../../shared/actions/_core/contracts.js";
 import type {
   SelectMove,
   SelectionContext,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import { Icon } from "../../kit/Icon.js";
 import type { LiveStore } from "../../platform/live-store.js";
 import { canvasHasKeys } from "../../platform/typing-target.js";

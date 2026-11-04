@@ -1,4 +1,4 @@
-import type { AppRoute } from "../../shared/contracts.js";
+import type { AppRoute } from "../../shared/actions/_core/contracts.js";
 import { listAppRoutes } from "../app/routes.js";
 import type { StudioProjectStore } from "../store/projects.js";
 

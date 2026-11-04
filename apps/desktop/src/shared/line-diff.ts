@@ -1,4 +1,4 @@
-import type { DiffHunk, DiffLine } from "./contracts.js";
+import type { DiffHunk, DiffLine } from "./actions/_core/contracts.js";
 
 const CONTEXT = 3;
 const MAX_CELLS = 4_000_000;

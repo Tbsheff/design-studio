@@ -17,7 +17,7 @@ import type {
   Direction,
   Project,
   Version,
-} from "../../../src/shared/contracts";
+} from "../../../src/shared/actions/_core/contracts";
 import {
   frontFrame,
   headVersion,

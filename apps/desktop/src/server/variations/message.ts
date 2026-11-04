@@ -1,5 +1,5 @@
-import type { ReferenceElement, RunRequest } from "../../shared/contracts.js";
-import type { ElementScope } from "../../shared/element-variants.js";
+import type { ReferenceElement, RunRequest } from "../../shared/actions/_core/contracts.js";
+import type { ElementScope } from "../../shared/actions/_core/element-variants.js";
 
 const OUTER_HTML_MAX = 3000;
 const SNIPPET_MAX = 4000;

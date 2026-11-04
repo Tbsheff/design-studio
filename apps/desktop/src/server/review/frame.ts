@@ -1,5 +1,5 @@
-import type { Direction, Project } from "../../shared/contracts.js";
-import type { ReviewFrame, ReviewRequest } from "../../shared/review.js";
+import type { Direction, Project } from "../../shared/actions/_core/contracts.js";
+import type { ReviewFrame, ReviewRequest } from "../../shared/actions/_core/review.js";
 import type { CanvasService } from "../canvas/index.js";
 import { findFrame } from "../canvas/index.js";
 import { BadRequestError } from "../platform/errors/index.js";

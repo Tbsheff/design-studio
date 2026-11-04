@@ -1,6 +1,6 @@
 import type { RefObject } from "react";
 
-import type { PackSummary, Project } from "../../../shared/contracts.js";
+import type { PackSummary, Project } from "../../../shared/actions/_core/contracts.js";
 import type { AppHealth } from "../../../shared/found-apps.js";
 import { uiStore } from "../../platform/storage.js";
 import { type PacksState, pickable } from "../design-system/packs.js";

@@ -2,7 +2,7 @@ import { userInfo } from "node:os";
 
 import type { Context, Hono } from "hono";
 
-import type { Project } from "../../shared/contracts.js";
+import type { Project } from "../../shared/actions/_core/contracts.js";
 import { askQuestions } from "../agent/index.js";
 import { buildEnv } from "../platform/config/index.js";
 import { BadRequestError } from "../platform/errors/index.js";

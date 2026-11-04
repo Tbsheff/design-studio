@@ -1,4 +1,4 @@
-import type { LayoutFinding } from "../../shared/contracts.js";
+import type { LayoutFinding } from "../../shared/actions/_core/contracts.js";
 import { layoutProbeExpression, SOURCE_LOC_ATTR } from "./deps.js";
 
 interface RawTap {

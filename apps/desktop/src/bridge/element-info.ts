@@ -1,5 +1,5 @@
-import { SOURCE_LOC_ATTR } from "../shared/contracts.js";
-import type { SelectionContext, SourceLoc } from "../shared/contracts.js";
+import { SOURCE_LOC_ATTR } from "../shared/actions/_core/contracts.js";
+import type { SelectionContext, SourceLoc } from "../shared/actions/_core/contracts.js";
 import { USED_AT_ATTR, appSourceFor, componentUseOf } from "./app-source.js";
 import type { Rect } from "./bridge-types.js";
 import { componentOwners } from "./component-owner.js";

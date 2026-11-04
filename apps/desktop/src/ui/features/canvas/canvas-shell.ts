@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import type {
   ProjectKind,
   SelectionContext,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import { uiStore } from "../../platform/storage.js";
 import type { PanelTab } from "../../platform/use-panel-tab.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";

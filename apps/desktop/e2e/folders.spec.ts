@@ -14,8 +14,8 @@ import path from "node:path";
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
-import type { Project } from "../src/shared/contracts";
-import type { WorkspaceFolder, WorkspaceList } from "../src/shared/folders";
+import type { Project } from "../src/shared/actions/_core/contracts";
+import type { WorkspaceFolder, WorkspaceList } from "../src/shared/actions/_core/folders";
 import { projectsDirFor, readState, ROOT } from "./support/server";
 import { openHome, clickCreate } from "./support/studio";
 import type { StudioApi } from "./support/studio";

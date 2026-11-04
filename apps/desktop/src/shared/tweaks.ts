@@ -1,4 +1,4 @@
-import type { Version } from "./contracts";
+import type { Version } from "./actions/_core/contracts";
 
 export const TWEAKS_FILE = "studio/tweaks.json";
 export const TWEAKS_PREVIEW_STYLE_ID = "studio-tweaks-preview";

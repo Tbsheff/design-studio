@@ -4,12 +4,12 @@ import type {
   PointerEvent as ReactPointerEvent,
 } from "react";
 
-import { STATE_HINTS } from "../../../shared/frame-state.js";
+import { STATE_HINTS } from "../../../shared/actions/_core/frame-state.js";
 import type {
   FrameStateDef,
   FrameStatesView,
   MockUser,
-} from "../../../shared/frame-state.js";
+} from "../../../shared/actions/_core/frame-state.js";
 import { Icon } from "../../kit/Icon.js";
 import type { setFrameSession } from "./frame-states-model.js";
 

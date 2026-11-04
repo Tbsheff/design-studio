@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { SelectionContext, Version } from "../shared/contracts";
+import type { SelectionContext, Version } from "../shared/actions/_core/contracts";
 import {
   historyKeyOf,
   routeHistoryCommand,

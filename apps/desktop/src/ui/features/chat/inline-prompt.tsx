@@ -2,12 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 
 import { routes } from "../../../shared/actions/workspace/routes.js";
-import { isSharedLayout } from "../../../shared/usage-scope.js";
+import { isSharedLayout } from "../../../shared/actions/_core/usage-scope.js";
 import type {
   ComponentUsage,
   EditScope,
   EditScopeChoice,
-} from "../../../shared/usage-scope.js";
+} from "../../../shared/actions/_core/usage-scope.js";
 import { Icon } from "../../kit/Icon.js";
 import { call } from "../../platform/http.js";
 import { uiStore } from "../../platform/storage.js";

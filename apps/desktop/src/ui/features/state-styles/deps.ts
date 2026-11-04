@@ -16,7 +16,7 @@ export { parseVariant, variantPrefix } from "../../../shared/variants.js";
 
 export type { ParsedVariant } from "../../../shared/variants.js";
 
-export type { SelectionContext, SourceLoc } from "../../../shared/contracts.js";
+export type { SelectionContext, SourceLoc } from "../../../shared/actions/_core/contracts.js";
 
 export type {
   ForcedFrameState,

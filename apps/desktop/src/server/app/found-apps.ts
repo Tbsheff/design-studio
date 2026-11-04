@@ -3,7 +3,7 @@ import { readdir, realpath } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import type { Project } from "../../shared/contracts.js";
+import type { Project } from "../../shared/actions/_core/contracts.js";
 import type {
   FoundApp,
   FoundAppKind,

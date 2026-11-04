@@ -5,7 +5,7 @@ import path from "node:path";
 import { expect, test } from "@playwright/test";
 import type { Browser, Page } from "@playwright/test";
 
-import type { Project, TelemetrySample } from "../src/shared/contracts";
+import type { Project, TelemetrySample } from "../src/shared/actions/_core/contracts";
 import { ROOT } from "./support/server";
 import {
   createProjectViaUi,

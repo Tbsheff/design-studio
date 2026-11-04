@@ -1,4 +1,4 @@
-import type { Direction, Project } from "../../shared/contracts.js";
+import type { Direction, Project } from "../../shared/actions/_core/contracts.js";
 import { loadRepoContext } from "../agent/index.js";
 import type { StudioProjectStore } from "../store/projects.js";
 

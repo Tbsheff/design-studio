@@ -3,7 +3,7 @@ import type {
   Project,
   Version,
   VersionMeta,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import {
   announcePlanned,
   noteTreeWrite,

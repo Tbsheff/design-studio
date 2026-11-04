@@ -2,7 +2,7 @@ import type * as t from "@babel/types";
 import { parse as parseHtml } from "parse5";
 import type { DefaultTreeAdapterMap } from "parse5";
 
-import type { ReorderMove } from "../../../shared/contracts.js";
+import type { ReorderMove } from "../../../shared/actions/_core/contracts.js";
 import { DirectEditError } from "./errors.js";
 import type { SourcePosition } from "./errors.js";
 import { leadingWhitespaceStart } from "./splice.js";

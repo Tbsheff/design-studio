@@ -4,7 +4,7 @@ import type {
   Project,
   Version,
   VersionMeta,
-} from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
 import type { HunkRevertRequest, HunkRevertResult } from "../../shared/hunk.js";
 import type {
   EditStepResult,

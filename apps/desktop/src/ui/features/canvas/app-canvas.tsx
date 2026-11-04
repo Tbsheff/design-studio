@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import type {
   AppServerStatus,
   AttachedApp,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import { OPEN_ROUTE_EVENT, takePendingRoute } from "../../app/project-nav.js";
 import { Icon } from "../../kit/Icon.js";
 import { openAppPanel, useAppStatus } from "../../platform/app-status.js";

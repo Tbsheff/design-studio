@@ -1,6 +1,6 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 
-import type { Project } from "../../../shared/contracts.js";
+import type { Project } from "../../../shared/actions/_core/contracts.js";
 import type {
   ProjectSearchResult,
   RouteHit,

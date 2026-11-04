@@ -4,12 +4,12 @@ import type { FormEvent, KeyboardEvent } from "react";
 import {
   TOKEN_GROUP_FOR_PROPERTY,
   TOKEN_NAME_PATTERN,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import type {
   CompiledTokenEntry,
   CreateTokenResult,
   TokenGroupName,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import { cssVarFor } from "../../../shared/token-match.js";
 import { ApiError, errorText } from "../../api.js";
 import { useModalDialog } from "../../kit/use-popover.js";

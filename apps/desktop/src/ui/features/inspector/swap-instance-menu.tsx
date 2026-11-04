@@ -4,7 +4,7 @@ import type {
   SwapCandidate,
   SwapCandidateList,
 } from "../../../shared/component-create.js";
-import type { SourceLoc } from "../../../shared/contracts.js";
+import type { SourceLoc } from "../../../shared/actions/_core/contracts.js";
 import { usePopover } from "../../kit/use-popover.js";
 import {
   apiMessage,

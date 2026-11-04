@@ -1,5 +1,5 @@
-import { ELEMENT_MARK_PARAM } from "../../../shared/contracts.js";
-import type { Direction } from "../../../shared/contracts.js";
+import { ELEMENT_MARK_PARAM } from "../../../shared/actions/_core/contracts.js";
+import type { Direction } from "../../../shared/actions/_core/contracts.js";
 
 export function markOf(
   directions: readonly Direction[] | undefined,

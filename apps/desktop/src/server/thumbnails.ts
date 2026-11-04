@@ -16,7 +16,7 @@ import type {
   StudioEvent,
   StudioEventInput,
   VersionKind,
-} from "../shared/contracts.js";
+} from "../shared/actions/_core/contracts.js";
 import { NotFoundError, assertSafeId } from "./platform/errors/index.js";
 import { halfSize } from "./platform/half-size/index.js";
 import { siblingWorkerFile, WorkerClient } from "./platform/process/index.js";

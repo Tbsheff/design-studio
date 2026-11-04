@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import type { ProjectKind, Version } from "../../../shared/contracts.js";
+import type { ProjectKind, Version } from "../../../shared/actions/_core/contracts.js";
 import { api, errorText } from "../../api.js";
 import {
   HTML_FRAME_SANDBOX,

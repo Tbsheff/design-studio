@@ -14,7 +14,7 @@ import {
   type ProjectKind,
   type VariationBrief,
   type VariationBriefsResult,
-} from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
 import { extractJson } from "../../shared/extract-json.js";
 import { WIREFRAME_MODEL } from "../../shared/run-levels.js";
 import { buildEnv } from "../platform/config/index.js";

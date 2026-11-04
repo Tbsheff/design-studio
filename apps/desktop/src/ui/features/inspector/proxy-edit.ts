@@ -1,4 +1,4 @@
-import type { DirectStyleProperty } from "../../../shared/contracts.js";
+import type { DirectStyleProperty } from "../../../shared/actions/_core/contracts.js";
 import type { ShiftPart, StyleValues } from "./css-values.js";
 import type { DirectEdit } from "./use-direct-edit.js";
 

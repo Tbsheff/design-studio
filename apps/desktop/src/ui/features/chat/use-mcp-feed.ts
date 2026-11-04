@@ -4,7 +4,7 @@ import type {
   McpActivity,
   McpApprovalOutcome,
   McpApprovalRecord,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import { useProjectEvents } from "../../platform/events.js";
 import { mcpApi } from "./mcp-model.js";
 

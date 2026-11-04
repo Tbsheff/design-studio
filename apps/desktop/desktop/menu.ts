@@ -1,6 +1,6 @@
 import { app, Menu, type MenuItemConstructorOptions } from "electron";
 
-import type { ZoomKey } from "../src/shared/contracts.js";
+import type { ZoomKey } from "../src/shared/actions/_core/contracts.js";
 import { accelerator, type KeyId } from "../src/shared/keymap.js";
 
 export interface MenuActions {

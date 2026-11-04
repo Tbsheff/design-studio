@@ -2,7 +2,7 @@ import type {
   ClassDelta,
   DomPatch,
   OptimisticOutcome,
-} from "../shared/contracts.js";
+} from "../shared/actions/_core/contracts.js";
 
 type StyledElement = HTMLElement | SVGElement;
 

@@ -10,7 +10,7 @@ import {
   targetFromSelection,
 } from "./comments.js";
 import type { AnchorDom } from "./comments.js";
-import type { AnchorQuery, CommentStatus } from "./contracts.js";
+import type { AnchorQuery, CommentStatus } from "./actions/_core/contracts.js";
 
 interface FakeElement {
   tag: string;

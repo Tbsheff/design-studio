@@ -7,7 +7,7 @@ import type {
   TokenChange,
   Version,
   VersionMeta,
-} from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
 import {
   TWEAKS_FILE,
   parseTweakCss,

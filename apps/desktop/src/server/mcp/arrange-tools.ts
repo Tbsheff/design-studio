@@ -6,7 +6,7 @@ import {
   type ArrangeAction,
   type ArrangeResult,
 } from "../../shared/arrange.js";
-import type { Project } from "../../shared/contracts.js";
+import type { Project } from "../../shared/actions/_core/contracts.js";
 import { findFrame, frameRef } from "../canvas/index.js";
 import {
   ARRANGE_TARGETS_MAX,

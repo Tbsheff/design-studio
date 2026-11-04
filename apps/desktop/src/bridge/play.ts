@@ -1,4 +1,4 @@
-import type { PlayKey } from "../shared/contracts.js";
+import type { PlayKey } from "../shared/actions/_core/contracts.js";
 import {
   isIdSelector,
   LINKS_MAX,
@@ -6,7 +6,7 @@ import {
   textAgrees,
   type LinkQuery,
   type LinkRectReport,
-} from "../shared/links.js";
+} from "../shared/actions/_core/links.js";
 
 type Rect = NonNullable<LinkRectReport["rect"]>;
 

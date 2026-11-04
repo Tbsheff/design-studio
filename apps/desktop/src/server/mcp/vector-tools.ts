@@ -1,5 +1,5 @@
 import { setVectorDirectEdit } from "../../shared/actions/direct-edit/set-vector.js";
-import type { Project } from "../../shared/contracts.js";
+import type { Project } from "../../shared/actions/_core/contracts.js";
 import {
   BOOLEAN_OPS,
   VECTOR_COLOR,

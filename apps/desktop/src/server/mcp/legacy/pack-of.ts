@@ -1,5 +1,5 @@
 import { listPack } from "../../../shared/actions/pack/list.js";
-import type { PackSummary } from "../../../shared/contracts.js";
+import type { PackSummary } from "../../../shared/actions/_core/contracts.js";
 import { callAction } from "../action-call.js";
 import { EditError } from "../edit-guards.js";
 import type { EditDeps } from "../edit-guards.js";

@@ -1,11 +1,11 @@
-import { TOKENS_FILE } from "../../../shared/contracts.js";
+import { TOKENS_FILE } from "../../../shared/actions/_core/contracts.js";
 import type {
   CompiledTokenEntry,
   DirectEditResult,
   StructureEditResult,
   UpdateTokensResult,
   Version,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import {
   editedAtLabel,
   locText,

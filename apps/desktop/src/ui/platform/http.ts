@@ -7,7 +7,7 @@ import type {
 } from "../../shared/actions/_core/action.js";
 import type { WireBody } from "../../shared/actions/_core/wire.js";
 import type { AllActions } from "../../shared/actions/index.js";
-import { STUDIO_TOKEN_HEADER } from "../../shared/contracts";
+import { STUDIO_TOKEN_HEADER } from "../../shared/actions/_core/contracts";
 import { getSession } from "./session";
 
 type HttpMethod = Method;

@@ -15,7 +15,7 @@ import path from "node:path";
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import type { Project, Version } from "../../shared/contracts.js";
+import type { Project, Version } from "../../shared/actions/_core/contracts.js";
 import { projectStorePorts } from "../main/project-ports.js";
 import type { ServerConfig, VersionStore } from "../types.js";
 import { createProjectStore } from "./projects.js";

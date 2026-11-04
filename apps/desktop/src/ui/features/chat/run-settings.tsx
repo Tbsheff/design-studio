@@ -13,7 +13,7 @@ import type {
   RunEffort,
   RunLevel,
   RunMode,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import { placeFixed } from "../../domain/popoverPlacement.js";
 import { Icon } from "../../kit/Icon.js";
 import { usePopover } from "../../kit/use-popover.js";

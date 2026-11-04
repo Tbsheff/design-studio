@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef } from "react";
 
-import type { BridgeToParent } from "../../../shared/contracts.js";
+import type { BridgeToParent } from "../../../shared/actions/_core/contracts.js";
 import type { ParentMessageBody } from "../../platform/bridge.js";
 
 const SETTLE_MS = 250;

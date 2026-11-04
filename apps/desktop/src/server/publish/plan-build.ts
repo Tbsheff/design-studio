@@ -3,13 +3,13 @@ import { createReadStream } from "node:fs";
 import { rm, stat } from "node:fs/promises";
 import path from "node:path";
 
-import type { Direction, Project } from "../../shared/contracts.js";
+import type { Direction, Project } from "../../shared/actions/_core/contracts.js";
 import {
   PUBLISH_MAX_FRAMES,
   type PublishKind,
   type PublishPlanInput,
 } from "../../shared/publish.js";
-import type { ShareFrame } from "../../shared/share.js";
+import type { ShareFrame } from "../../shared/actions/_core/share.js";
 import type { ExportDeps, ExportSource } from "../export/source.js";
 import { BadRequestError } from "../platform/errors/index.js";
 import { framesOf } from "../share/frames.js";

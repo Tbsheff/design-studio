@@ -6,7 +6,7 @@ import type {
   RunLevel,
   RunRequest,
   SelectionContext,
-} from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
 import { levelOf } from "../../shared/run-levels.js";
 import type { CanvasService } from "../canvas/index.js";
 import { probeWithPreview } from "../canvas/links/index.js";

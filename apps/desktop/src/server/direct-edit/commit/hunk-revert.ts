@@ -4,7 +4,7 @@ import type {
   Direction,
   Project,
   VersionFileDiff,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import {
   hunkSides,
   splitHunks,

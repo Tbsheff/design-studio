@@ -12,7 +12,7 @@ import path from "node:path";
 import { expect, test } from "@playwright/test";
 import type { ElectronApplication, Page } from "@playwright/test";
 
-import type { Project, RunSummary, Version } from "../src/shared/contracts";
+import type { Project, RunSummary, Version } from "../src/shared/actions/_core/contracts";
 import { desktopEnv, launchDesktop } from "./support/desktop-app";
 import { clickCreate } from "./support/studio";
 

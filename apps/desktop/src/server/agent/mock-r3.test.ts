@@ -8,7 +8,7 @@ import type {
   RunSummary,
   SelectionContext,
   StudioEvent,
-} from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
 import { bootAgentRunner } from "../main/agent-runner.js";
 import { buildRuntime } from "../main/runtime.js";
 import {

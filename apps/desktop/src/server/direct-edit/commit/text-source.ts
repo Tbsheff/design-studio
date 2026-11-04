@@ -7,7 +7,7 @@ import type {
   SourceLoc,
   TextSourceHints,
   TextSourceInfo,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import { ownerUseSite } from "../../components/use-site.js";
 import {
   dataExpression,

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-import type { AppLogLine } from "../../../shared/contracts";
+import type { AppLogLine } from "../../../shared/actions/_core/contracts";
 
 function LogsTab({ logs, managed }: { logs: AppLogLine[]; managed: boolean }) {
   const ref = useRef<HTMLPreElement>(null);

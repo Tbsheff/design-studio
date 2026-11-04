@@ -2,8 +2,8 @@ import {
   DESIGN_MD_TOKENS_END,
   DESIGN_MD_TOKENS_START,
   TOKENS_FILE,
-} from "../../shared/contracts.js";
-import type { CompiledTokenEntry } from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
+import type { CompiledTokenEntry } from "../../shared/actions/_core/contracts.js";
 
 const EMPTY_CELL = "-";
 

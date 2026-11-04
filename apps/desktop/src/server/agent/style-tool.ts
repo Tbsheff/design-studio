@@ -1,6 +1,6 @@
 import { Schema } from "effect";
 
-import { DEFAULT_FRAME_STATE } from "../../shared/frame-state.js";
+import { DEFAULT_FRAME_STATE } from "../../shared/actions/_core/frame-state.js";
 import {
   SEARCH_PROPERTIES,
   STYLE_KINDS,
@@ -8,8 +8,8 @@ import {
   STYLE_TOKEN_MAX,
   matchesOf,
   replaceSummary,
-} from "../../shared/style-search.js";
-import type { StyleQuery } from "../../shared/style-search.js";
+} from "../../shared/actions/_core/style-search.js";
+import type { StyleQuery } from "../../shared/actions/_core/style-search.js";
 import {
   toOptional,
   toOptionalText,

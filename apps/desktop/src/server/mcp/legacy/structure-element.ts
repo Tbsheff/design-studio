@@ -2,7 +2,7 @@ import { applyDirectEdit } from "../../../shared/actions/direct-edit/apply.js";
 import type {
   SourceLoc,
   StructureEditResult,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import { callAction } from "../action-call.js";
 import { loadTarget, refuseWhileRunning } from "../edit-guards.js";
 import type { EditDeps } from "../edit-guards.js";

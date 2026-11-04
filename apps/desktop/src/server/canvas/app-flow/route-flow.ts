@@ -5,19 +5,19 @@ import {
   CANVAS_GAP,
   CANVAS_MAX_FRAMES,
   cleanFrameLabel,
-} from "../../../shared/canvas-file.js";
+} from "../../../shared/actions/_core/canvas-file.js";
 import type {
   CanvasFile,
   CanvasFileFrame,
-} from "../../../shared/canvas-file.js";
+} from "../../../shared/actions/_core/canvas-file.js";
 import type {
   CanvasWriteSource,
   Direction,
   Project,
-} from "../../../shared/contracts.js";
-import { DEFAULT_FRAME_STATE } from "../../../shared/frame-state.js";
-import { upsertLink } from "../../../shared/links.js";
-import type { LinksFile } from "../../../shared/links.js";
+} from "../../../shared/actions/_core/contracts.js";
+import { DEFAULT_FRAME_STATE } from "../../../shared/actions/_core/frame-state.js";
+import { upsertLink } from "../../../shared/actions/_core/links.js";
+import type { LinksFile } from "../../../shared/actions/_core/links.js";
 import {
   cleanParams,
   dynamicNames,

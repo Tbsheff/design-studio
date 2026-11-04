@@ -2,20 +2,20 @@ import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-import type { CanvasFileFrame } from "../../../shared/canvas-file.js";
-import type { Project } from "../../../shared/contracts.js";
+import type { CanvasFileFrame } from "../../../shared/actions/_core/canvas-file.js";
+import type { Project } from "../../../shared/actions/_core/contracts.js";
 import {
   cleanLinkText,
   coveredBy,
   implicitId,
   upsertLink,
   withMotion,
-} from "../../../shared/links.js";
+} from "../../../shared/actions/_core/links.js";
 import type {
   LinkMotion,
   LinksFile,
   PrototypeLink,
-} from "../../../shared/links.js";
+} from "../../../shared/actions/_core/links.js";
 import { createRouteScanner } from "../app-flow/route-links.js";
 import type { RouteScanner } from "../app-flow/route-links.js";
 import type { CanvasService } from "../service.js";

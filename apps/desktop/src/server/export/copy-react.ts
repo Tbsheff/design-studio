@@ -1,4 +1,4 @@
-import type { Project } from "../../shared/contracts.js";
+import type { Project } from "../../shared/actions/_core/contracts.js";
 import { searchComponents } from "../components/component-search.js";
 import { tailwindClassesFor } from "../direct-edit/engine/index.js";
 import type { TailwindTheme } from "../direct-edit/tailwind/index.js";

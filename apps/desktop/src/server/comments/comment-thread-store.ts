@@ -1,6 +1,6 @@
 import { Context, Effect, Layer } from "effect";
 
-import type { CommentPrefill, DesignComment } from "../../shared/contracts.js";
+import type { CommentPrefill, DesignComment } from "../../shared/actions/_core/contracts.js";
 import type {
   CreateCommentInput,
   UpdateCommentInput,

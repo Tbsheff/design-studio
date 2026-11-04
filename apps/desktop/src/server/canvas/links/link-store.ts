@@ -1,6 +1,6 @@
 import { Context, Effect, Layer } from "effect";
 
-import type { PrototypeLink } from "../../../shared/links.js";
+import type { PrototypeLink } from "../../../shared/actions/_core/links.js";
 import { readImplicitList, readLinkList } from "./link-ops.js";
 import type { LinkListed, LinkListQuery } from "./link-ops.js";
 import { attemptLink } from "./link-runtime.js";

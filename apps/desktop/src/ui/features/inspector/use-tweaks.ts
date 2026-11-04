@@ -4,7 +4,7 @@ import type {
   Project,
   RunRequest,
   Version,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import { tweaksPreviewCss } from "../../../shared/tweaks.js";
 import type {
   TweakControl,

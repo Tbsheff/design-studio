@@ -1,7 +1,7 @@
 import { Schema } from "effect";
 
-import { COPY_CODE_FORMATS } from "../../shared/export.js";
-import type { ExportFrame } from "../../shared/export.js";
+import { COPY_CODE_FORMATS } from "../../shared/actions/_core/export.js";
+import type { ExportFrame } from "../../shared/actions/_core/export.js";
 import {
   toOptionalText,
   toSdkFieldSet,

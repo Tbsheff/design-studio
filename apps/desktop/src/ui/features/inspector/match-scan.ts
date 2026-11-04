@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { MutableRefObject } from "react";
 
-import type { SelectionContext } from "../../../shared/contracts.js";
+import type { SelectionContext } from "../../../shared/actions/_core/contracts.js";
 import type {
   StyleHit,
   StyleKind,
@@ -9,7 +9,7 @@ import type {
   StyleScanResult,
   StyleValueRow,
   TokenLookup,
-} from "../../../shared/style-search.js";
+} from "../../../shared/actions/_core/style-search.js";
 import { tokenFieldState } from "../../../shared/token-match.js";
 import type { PreviewPort } from "../../platform/bridge.js";
 import type { DesignTokens } from "../design-system/use-design-system-state.js";

@@ -1,10 +1,10 @@
 import type { CSSProperties } from "react";
 
-import { REQUIRED_TOKENS } from "../../../shared/contracts.js";
+import { REQUIRED_TOKENS } from "../../../shared/actions/_core/contracts.js";
 import type {
   CompiledTokenEntry,
   PackSummary,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import { COPY } from "./copy.js";
 
 type Mode = "light" | "dark";

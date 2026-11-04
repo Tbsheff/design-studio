@@ -11,7 +11,7 @@ import type {
   EditHistoryState,
   SelectionContext,
   Version,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import { api, errorText } from "../../api.js";
 import { useProjectEvents } from "../../platform/events.js";
 import { historyKeyOf } from "../canvas/use-undo-shortcut.js";

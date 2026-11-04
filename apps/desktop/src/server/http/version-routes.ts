@@ -2,7 +2,7 @@ import path from "node:path";
 
 import type { Hono } from "hono";
 
-import type { VersionThumbs } from "../../shared/contracts.js";
+import type { VersionThumbs } from "../../shared/actions/_core/contracts.js";
 import type { StudioProjectStore } from "../store/projects.js";
 import { bindVersionReadRuntime } from "../store/version-read-core.js";
 import {

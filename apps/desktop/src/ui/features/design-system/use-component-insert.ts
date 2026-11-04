@@ -5,12 +5,12 @@ import type {
   BridgeToParent,
   ProjectKind,
   SelectionContext,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import type {
   InsertPosition,
   InsertableComponent,
   InsertTarget,
-} from "../../../shared/insert.js";
+} from "../../../shared/actions/_core/insert.js";
 import { useBridge } from "../../platform/bridge.js";
 import type { BridgeFrame, ParentMessageBody } from "../../platform/bridge.js";
 import { NO_SOURCE } from "../inspector/structure-edits.js";

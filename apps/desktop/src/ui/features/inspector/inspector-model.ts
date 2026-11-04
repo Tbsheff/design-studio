@@ -3,7 +3,7 @@ import type { MutableRefObject, ReactNode, ComponentProps } from "react";
 import type {
   EditSessionEnd,
   SelectionContext,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import { isSvgShapeTag } from "../../../shared/vector.js";
 import type { ComponentsPanel } from "../../app/components-panel-host.js";
 import type { PreviewPort } from "../../platform/bridge.js";

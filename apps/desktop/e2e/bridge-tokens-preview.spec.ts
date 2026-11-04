@@ -16,7 +16,7 @@ import {
   PACK_FILE,
   TOKEN_PREVIEW_STYLE_ID,
   TOKENS_FILE,
-} from "../src/shared/contracts";
+} from "../src/shared/actions/_core/contracts";
 
 const ORIGIN = "http://bridge-tokens.localhost:4998";
 const TOKEN = "tokens-preview-token";

@@ -1,4 +1,4 @@
-import type { Project } from "../../shared/contracts.js";
+import type { Project } from "../../shared/actions/_core/contracts.js";
 import { makeRuntimeSlot } from "../platform/runtime-slot/index.js";
 import type { StudioProjectStore } from "../store/projects.js";
 import type { PreviewService } from "../types.js";

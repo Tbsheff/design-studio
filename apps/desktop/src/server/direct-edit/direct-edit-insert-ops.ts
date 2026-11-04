@@ -1,4 +1,4 @@
-import type { Direction, Project } from "../../shared/contracts.js";
+import type { Direction, Project } from "../../shared/actions/_core/contracts.js";
 import { listInsertable, PreviewTargetError } from "../components/index.js";
 import type { PreviewResult, PreviewTarget } from "../components/index.js";
 import { BadRequestError, NotFoundError } from "../platform/errors/index.js";

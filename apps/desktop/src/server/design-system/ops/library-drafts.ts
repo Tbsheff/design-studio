@@ -3,7 +3,7 @@ import type {
   DesignSystemDraftResult,
   OpenPackEditorResult,
   Project,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import { BadRequestError, NotFoundError } from "../../platform/errors/index.js";
 import { createKeyedMutex } from "../../platform/mutex/index.js";
 import { IMPROVE_IN_APP } from "../draft-live.js";

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import type { TelemetrySample } from "../../../shared/contracts.js";
+import type { TelemetrySample } from "../../../shared/actions/_core/contracts.js";
 import { api } from "../../api.js";
 import { formatMs } from "../../domain/format.js";
 import type { RunView } from "./run-state-model.js";

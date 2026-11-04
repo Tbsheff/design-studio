@@ -13,8 +13,8 @@ import type {
   Project,
   SourceLoc,
   VersionMeta,
-} from "../../../shared/contracts.js";
-import type { ComponentSchema, PropValue } from "../../../shared/props.js";
+} from "../../../shared/actions/_core/contracts.js";
+import type { ComponentSchema, PropValue } from "../../../shared/actions/_core/props.js";
 import { planImport } from "../../components/import-plan.js";
 import {
   loadLibrary,

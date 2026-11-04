@@ -1,7 +1,7 @@
 import { readdir } from "node:fs/promises";
 import path from "node:path";
 
-import type { AppRoute } from "../../shared/contracts.js";
+import type { AppRoute } from "../../shared/actions/_core/contracts.js";
 import { matchRouteFile } from "../app/index.js";
 import { appRouterDir, listAppRoutes } from "../app/routes.js";
 import { siblingWorkerFile, WorkerClient } from "../platform/process/index.js";

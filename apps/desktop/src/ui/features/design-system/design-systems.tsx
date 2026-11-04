@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 
-import type { PackProblem, PackSummary } from "../../../shared/contracts.js";
+import type { PackProblem, PackSummary } from "../../../shared/actions/_core/contracts.js";
 import { ApiError, errorText } from "../../api.js";
 import { StudioToast } from "../../app/shell/studio-parts.js";
 import { downloadBlob } from "../../domain/format.js";

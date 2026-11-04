@@ -7,7 +7,7 @@ import type {
   PublicationSettings,
   RemotePublication,
 } from "../../shared/actions/publish-remote.js";
-import type { Direction, Project } from "../../shared/contracts.js";
+import type { Direction, Project } from "../../shared/actions/_core/contracts.js";
 import {
   PUBLISH_EXPIRY_DAYS,
   PUBLISH_PASSWORD_MAX,

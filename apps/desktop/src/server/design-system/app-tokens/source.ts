@@ -6,7 +6,7 @@ import type {
   DesignSystemState,
   Direction,
   Project,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import { readDesignSystemFiles } from "../sync.js";
 import { findTokenFile, safeFileInside } from "./detect.js";
 import { readCssTokens } from "./read-css.js";

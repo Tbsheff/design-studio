@@ -1,8 +1,8 @@
 import { readFile, readdir, realpath, stat } from "node:fs/promises";
 import path from "node:path";
 
-import type { Direction, Project } from "../../shared/contracts.js";
-import { cleanExportPath } from "../../shared/export.js";
+import type { Direction, Project } from "../../shared/actions/_core/contracts.js";
+import { cleanExportPath } from "../../shared/actions/_core/export.js";
 import { firstVersionWaitText } from "../app/first-version.js";
 import { resolveSource } from "../export/source.js";
 import { NotFoundError } from "../platform/errors/index.js";

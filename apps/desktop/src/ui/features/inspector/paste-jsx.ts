@@ -1,12 +1,12 @@
-import type { SelectionContext } from "../../../shared/contracts.js";
+import type { SelectionContext } from "../../../shared/actions/_core/contracts.js";
 import {
   looksLikeFigmaLink,
   looksLikeFigmaNodes,
-} from "../../../shared/figma-nodes.js";
+} from "../../../shared/actions/_core/figma-nodes.js";
 import type {
   InsertTarget,
   JsxInsertPosition,
-} from "../../../shared/insert.js";
+} from "../../../shared/actions/_core/insert.js";
 import {
   insertApi,
   insertError,

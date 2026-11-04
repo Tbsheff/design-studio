@@ -17,7 +17,7 @@ import type {
   Project,
   RunSummary,
   Version,
-} from "../../src/shared/contracts.js";
+} from "../../src/shared/actions/_core/contracts.js";
 
 const ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),

@@ -1,9 +1,9 @@
-import { TOKEN_GROUP_FOR_PROPERTY } from "../../../shared/contracts.js";
+import { TOKEN_GROUP_FOR_PROPERTY } from "../../../shared/actions/_core/contracts.js";
 import type {
   CompiledTokenEntry,
   DirectStyleProperty,
   TokenMatch,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import {
   isSnappable,
   isUnsetValue,

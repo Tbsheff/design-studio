@@ -4,7 +4,7 @@ import type {
   CompiledTokenEntry,
   DesignSystemState,
   UpdateTokensResult,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import { callAction } from "../action-call.js";
 import {
   EditError,

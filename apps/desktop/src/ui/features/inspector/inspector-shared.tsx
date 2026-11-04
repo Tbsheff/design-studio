@@ -6,14 +6,14 @@ import {
   type KeyboardEvent,
 } from "react";
 
-import type { SharedSource } from "../../../shared/app.js";
+import type { SharedSource } from "../../../shared/actions/_core/app.js";
 import type {
   ElementSourceInfo,
   SelectionContext,
   TextFromData,
   TextSourceAnswer,
   TextSourceInfo,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import { api } from "../../api.js";
 import { Icon } from "../../kit/Icon.js";
 import { textHints, type DirectEdit } from "./use-direct-edit.js";

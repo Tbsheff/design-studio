@@ -19,6 +19,6 @@ export type {
   CvaInfo,
   VariantGroup,
   VariantOption,
-} from "../../../shared/props.js";
+} from "../../../shared/actions/_core/props.js";
 
 export { UiSelect } from "../../kit/UiSelect.js";

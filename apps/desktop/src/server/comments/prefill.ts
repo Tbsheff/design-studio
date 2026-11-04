@@ -11,9 +11,9 @@ import type {
   DesignComment,
   Direction,
   Project,
-} from "../../shared/contracts.js";
-import type { ExportFrame } from "../../shared/export.js";
-import { withFrameStateHost } from "../../shared/frame-state.js";
+} from "../../shared/actions/_core/contracts.js";
+import type { ExportFrame } from "../../shared/actions/_core/export.js";
+import { withFrameStateHost } from "../../shared/actions/_core/frame-state.js";
 import { frameStatesView, stateOfFrame } from "../app/frame-state.js";
 import { findFrame, readProjectCanvas } from "../canvas/index.js";
 import { ConflictError, NotFoundError } from "../platform/errors/index.js";

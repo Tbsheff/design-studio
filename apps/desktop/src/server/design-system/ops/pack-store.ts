@@ -14,7 +14,7 @@ import type {
   PackDetail,
   PackProblem,
   PackSummary,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import {
   exportZip,
   listProblems,

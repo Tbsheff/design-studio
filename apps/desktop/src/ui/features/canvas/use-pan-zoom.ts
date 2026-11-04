@@ -8,8 +8,8 @@ import {
 } from "react";
 import type { PointerEvent as ReactPointerEvent, RefObject } from "react";
 
-import { isModZoomKey, zoomKeyOf } from "../../../shared/contracts.js";
-import type { ZoomKey } from "../../../shared/contracts.js";
+import { isModZoomKey, zoomKeyOf } from "../../../shared/actions/_core/contracts.js";
+import type { ZoomKey } from "../../../shared/actions/_core/contracts.js";
 import { createLiveStore } from "../../platform/live-store.js";
 import type { LiveStore } from "../../platform/live-store.js";
 import { uiStore } from "../../platform/storage.js";

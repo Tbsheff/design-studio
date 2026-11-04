@@ -2,12 +2,12 @@ import { mkdtemp, readFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { DEV_CHROME_SELECTOR } from "../../shared/app.js";
+import { DEV_CHROME_SELECTOR } from "../../shared/actions/_core/app.js";
 import type {
   ExportFrame,
   ExportScale,
   ExportScope,
-} from "../../shared/export.js";
+} from "../../shared/actions/_core/export.js";
 import type { RenderClip } from "../../shared/render-rpc.js";
 import { BadRequestError } from "../platform/errors/index.js";
 import { withPagePath } from "../project-source/index.js";

@@ -5,7 +5,7 @@ import type {
   QualityFinding,
   QualitySeverity,
   RenderCheckResult,
-} from "./contracts.js";
+} from "./actions/_core/contracts.js";
 
 export type CheckLevel = "error" | QualitySeverity;
 

@@ -1,4 +1,4 @@
-import { appKeyOf, isModZoomKey, zoomKeyOf } from "../shared/contracts.js";
+import { appKeyOf, isModZoomKey, zoomKeyOf } from "../shared/actions/_core/contracts.js";
 import { vectorToolKeyOf } from "../shared/vector.js";
 import type { OutgoingBody } from "./bridge-types.js";
 import { eventElement, isTypingElement } from "./dom-input.js";

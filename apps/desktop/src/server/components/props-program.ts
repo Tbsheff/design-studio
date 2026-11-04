@@ -3,7 +3,7 @@ import path from "node:path";
 
 import type * as TS from "typescript-api";
 
-import type { PropSpec, PropValue } from "../../shared/props.js";
+import type { PropSpec, PropValue } from "../../shared/actions/_core/props.js";
 
 type Ts = typeof TS;
 

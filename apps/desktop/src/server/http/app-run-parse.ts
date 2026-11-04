@@ -1,13 +1,13 @@
-import { cleanFramePath, isFrameId } from "../../shared/canvas-file.js";
-import { RUN_EFFORTS, RUN_LEVELS, isRunLevel } from "../../shared/contracts.js";
+import { cleanFramePath, isFrameId } from "../../shared/actions/_core/canvas-file.js";
+import { RUN_EFFORTS, RUN_LEVELS, isRunLevel } from "../../shared/actions/_core/contracts.js";
 import type {
   ProjectSettings,
   RunLevel,
   RunRequest,
   RunEffort,
-} from "../../shared/contracts.js";
-import { parseStatesRequest } from "../../shared/states.js";
-import { parseEditScope } from "../../shared/usage-scope.js";
+} from "../../shared/actions/_core/contracts.js";
+import { parseStatesRequest } from "../../shared/actions/_core/states.js";
+import { parseEditScope } from "../../shared/actions/_core/usage-scope.js";
 import { BadRequestError, assertSafeId } from "../platform/errors/index.js";
 import { z } from "../platform/zod-bridge/index.js";
 import { isRecord, requireString } from "./app-request.js";

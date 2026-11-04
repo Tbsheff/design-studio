@@ -4,7 +4,7 @@ import type {
   Direction,
   Project,
   SelectionContext,
-} from "../../shared/contracts.js";
+} from "../../shared/actions/_core/contracts.js";
 import { describeElement } from "../page-probe/index.js";
 import { NotFoundError } from "../platform/errors/index.js";
 import { withPagePath } from "../project-source/source.js";

@@ -1,4 +1,4 @@
-import type { SourceLoc, Version } from "./contracts.js";
+import type { SourceLoc, Version } from "./actions/_core/contracts.js";
 import type { ImageFit, ImageMode } from "./image.js";
 
 const IMAGE_ORIENTATIONS = ["any", "wide", "tall", "square"] as const;

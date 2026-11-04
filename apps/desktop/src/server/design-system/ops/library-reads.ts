@@ -9,7 +9,7 @@ import type {
   DraftSourcesState,
   PackSummary,
   Project,
-} from "../../../shared/contracts.js";
+} from "../../../shared/actions/_core/contracts.js";
 import { BadRequestError, NotFoundError } from "../../platform/errors/index.js";
 import { checkDesignSystem } from "../check.js";
 import { readCoverage } from "../draft-project.js";

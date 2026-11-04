@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import type { Project } from "./contracts.js";
+import type { Project } from "./actions/_core/contracts.js";
 import {
   isInsideFolder,
   projectsInFolder,
   shortenHome,
   slugCandidate,
   slugify,
-} from "./folders.js";
+} from "./actions/_core/folders.js";
 
 function project(id: string, sourcePath: string | null): Project {
   return { id, imported: sourcePath ? { sourcePath } : null } as Project;

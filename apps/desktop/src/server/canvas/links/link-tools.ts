@@ -1,10 +1,10 @@
-import type { CanvasFileFrame } from "../../../shared/canvas-file.js";
-import type { Direction, Project } from "../../../shared/contracts.js";
-import { withFrameStateHost } from "../../../shared/frame-state.js";
+import type { CanvasFileFrame } from "../../../shared/actions/_core/canvas-file.js";
+import type { Direction, Project } from "../../../shared/actions/_core/contracts.js";
+import { withFrameStateHost } from "../../../shared/actions/_core/frame-state.js";
 import {
   describeTarget,
   describeTrigger,
-} from "../../../shared/link-interaction.js";
+} from "../../../shared/actions/_core/link-interaction.js";
 import {
   cleanLinkSelector,
   cleanLinkText,
@@ -26,7 +26,7 @@ import {
   startFrameOf,
   staticLinkIssue,
   upsertLink,
-} from "../../../shared/links.js";
+} from "../../../shared/actions/_core/links.js";
 import type {
   LinkIssue,
   LinkMotion,
@@ -34,7 +34,7 @@ import type {
   LinksFile,
   LinkTransition,
   PrototypeLink,
-} from "../../../shared/links.js";
+} from "../../../shared/actions/_core/links.js";
 import { frameStatesView } from "../../app/frame-state.js";
 import { withPagePath } from "../../export/source.js";
 import { z } from "../../platform/zod-bridge/index.js";

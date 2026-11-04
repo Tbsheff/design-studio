@@ -2,8 +2,8 @@ import { randomBytes } from "node:crypto";
 import { mkdir, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import type { ExportFrame } from "../../shared/export.js";
-import type { ShareFrame } from "../../shared/share.js";
+import type { ExportFrame } from "../../shared/actions/_core/export.js";
+import type { ShareFrame } from "../../shared/actions/_core/share.js";
 import type { ExportSource } from "../export/source.js";
 import { captureFrame } from "../preview/page-capture/index.js";
 import type { PreviewService } from "../types.js";

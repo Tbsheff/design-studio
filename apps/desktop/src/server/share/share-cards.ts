@@ -1,5 +1,5 @@
 import type { ApprovalCard } from "../../shared/actions/_core/approval-card.js";
-import type { ShareServerState } from "../../shared/share.js";
+import type { ShareServerState } from "../../shared/actions/_core/share.js";
 import { expiryOf } from "./frames.js";
 import { findLink, framesFor, loadTarget } from "./share-links.js";
 import type { CreateRequest, ShareParts } from "./share-links.js";

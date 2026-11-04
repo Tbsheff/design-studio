@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { routes } from "../../../shared/actions/pack/routes.js";
-import type { PackSummary } from "../../../shared/contracts.js";
+import type { PackSummary } from "../../../shared/actions/_core/contracts.js";
 import { errorText } from "../../api.js";
 import { call } from "../../platform/http.js";
 

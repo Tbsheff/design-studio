@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-import type { SelectionContext } from "../../../shared/contracts.js";
+import type { SelectionContext } from "../../../shared/actions/_core/contracts.js";
 import { api } from "../../api.js";
 
 const PRESENCE_MS = 1500;

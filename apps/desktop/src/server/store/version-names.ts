@@ -2,7 +2,7 @@ import { randomBytes } from "node:crypto";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import type { Version } from "../../shared/contracts.js";
+import type { Version } from "../../shared/actions/_core/contracts.js";
 import { BadRequestError, assertSafeId } from "../platform/errors/index.js";
 import { createKeyedMutex } from "../platform/mutex/index.js";
 import { z } from "../platform/zod-bridge/index.js";

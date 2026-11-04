@@ -3,7 +3,7 @@ import type { ParserPlugin } from "@babel/parser";
 import MagicString from "magic-string";
 import type { SourceMap } from "magic-string";
 
-import { SOURCE_LOC_ATTR } from "../../shared/contracts.js";
+import { SOURCE_LOC_ATTR } from "../../shared/actions/_core/contracts.js";
 
 interface AstNode {
   type: string;

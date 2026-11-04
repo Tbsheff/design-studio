@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 
-import { selectMoveOf } from "../../../shared/contracts.js";
-import type { SelectionContext } from "../../../shared/contracts.js";
+import { selectMoveOf } from "../../../shared/actions/_core/contracts.js";
+import type { SelectionContext } from "../../../shared/actions/_core/contracts.js";
 import { canvasHasKeys } from "../../platform/typing-target.js";
 import type { CanvasShell } from "./canvas-shell.js";
 import type { Props } from "./canvas-types.js";

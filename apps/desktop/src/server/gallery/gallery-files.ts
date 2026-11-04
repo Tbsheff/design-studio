@@ -1,7 +1,18 @@
 import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import type { Direction, Project } from "./deps.js";
+import {
+  assertCanEdit,
+  publishVersion,
+  saveDeferred,
+  savesSettled,
+} from "./deps.js";
+import type {
+  DirectEditDeps,
+  Direction,
+  Project,
+  VersionMeta,
+} from "./deps.js";
 import type { GalleryCell } from "./engine/index.js";
 
 interface GalleryManifest {
@@ -13,12 +24,20 @@ interface GalleryManifest {
   readonly width: number;
 }
 
+interface GalleryVersionScope {
+  readonly deps: DirectEditDeps;
+  readonly direction: Direction;
+  readonly project: Project;
+}
+
 interface GalleryLocation {
   readonly dir: string;
   readonly page: string;
 }
 
 const FOLDER = "studio-gallery";
+
+const VERSION_TITLE = "Create gallery";
 
 const slugOf = (component: string): string =>
   component.replaceAll(/[^A-Za-z0-9]+/gu, "-").toLowerCase();
@@ -57,13 +76,15 @@ const writeGallery = async (
   place: GalleryLocation & { readonly slug: string },
   html: string,
   manifest: GalleryManifest
-): Promise<void> => {
+): Promise<readonly string[]> => {
+  const htmlFile = path.join(place.dir, `${place.slug}.html`);
+  const manifestFile = path.join(place.dir, `${place.slug}.json`);
+
   await mkdir(place.dir, { recursive: true });
-  await writeFile(path.join(place.dir, `${place.slug}.html`), html);
-  await writeFile(
-    path.join(place.dir, `${place.slug}.json`),
-    JSON.stringify(manifest)
-  );
+  await writeFile(htmlFile, html);
+  await writeFile(manifestFile, JSON.stringify(manifest));
+
+  return [htmlFile, manifestFile];
 };
 
 const readManifest = async (
@@ -81,6 +102,35 @@ const readManifest = async (
   }
 };
 
-export { locate, readManifest, writeGallery };
+const createGalleryVersion = async (
+  scope: GalleryVersionScope,
+  place: GalleryLocation & { readonly slug: string },
+  html: string,
+  manifest: GalleryManifest
+): Promise<void> => {
+  const { deps, direction, project } = scope;
+  assertCanEdit(deps, project, direction);
+  await savesSettled(project.id);
 
-export type { GalleryLocation, GalleryManifest };
+  const files = await writeGallery(place, html, manifest);
+
+  const meta: VersionMeta = {
+    kind: "manual",
+    prompt: `${VERSION_TITLE}: ${manifest.component}`,
+  };
+
+  const version = saveDeferred(
+    deps,
+    project,
+    direction,
+    files.map((file) => path.relative(direction.workTree, file)),
+    VERSION_TITLE,
+    meta
+  );
+
+  await publishVersion(deps, project, direction, version);
+};
+
+export { createGalleryVersion, locate, readManifest, writeGallery };
+
+export type { GalleryLocation, GalleryManifest, GalleryVersionScope };

@@ -127,6 +127,7 @@ import {
 import { call, pickMessage, request } from "./platform/http";
 import type { JsonBody } from "./platform/http";
 import { prefetch, readShared } from "./platform/query";
+import { startBody } from "./start-body.js";
 
 export { ApiError } from "./platform/http";
 
@@ -868,7 +869,7 @@ export const api = {
     pid: string,
     did: string,
     req: RunRequest & { referenceUrls?: string[] }
-  ) => json<{ runId: string }>("POST", `${d(pid, did)}/runs`, req),
+  ) => json<{ runId: string }>("POST", `${d(pid, did)}/runs`, startBody(req)),
   starters: () => json<Starter[]>("GET", "/api/starters"),
   status: (pid: string, did: string) =>
     json<WorkTreeStatus>("GET", `${d(pid, did)}/status`),

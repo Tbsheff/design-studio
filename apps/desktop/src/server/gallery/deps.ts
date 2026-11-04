@@ -1,5 +1,12 @@
 export { applyPlacement } from "../canvas/index.js";
 
+export {
+  assertCanEdit,
+  publishVersion,
+  saveDeferred,
+  savesSettled,
+} from "../direct-edit/index.js";
+
 export { BadRequest } from "@design-studio/actions/_core/errors/bad-request";
 
 export { NotFound } from "@design-studio/actions/_core/errors/not-found";
@@ -31,6 +38,8 @@ export { CANVAS_GAP } from "@design-studio/contracts/canvas-file";
 
 export { withForcedParam } from "../../shared/state-styles.js";
 
+export type { DirectEditDeps } from "../direct-edit/index.js";
+
 export type { LibraryEntry, SampleNode } from "../components/index.js";
 
 export type { KnownFailure } from "../platform/attempt/index.js";
@@ -42,7 +51,7 @@ export type {
   CanvasFileFrame,
 } from "@design-studio/contracts/canvas-file";
 
-export type { Direction, Project } from "@design-studio/contracts";
+export type { Direction, Project, VersionMeta } from "@design-studio/contracts";
 
 export type {
   ComponentSchema,

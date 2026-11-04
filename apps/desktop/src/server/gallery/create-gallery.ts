@@ -24,7 +24,7 @@ import {
   toGalleryHtml,
 } from "./engine/index.js";
 import type { GalleryCell, GalleryState } from "./engine/index.js";
-import { locate, writeGallery } from "./gallery-files.js";
+import { createGalleryVersion, locate } from "./gallery-files.js";
 import type { GalleryManifest } from "./gallery-files.js";
 import type { GalleryRuntime } from "./gallery-runtime.js";
 import { resolveComponent } from "./gallery-source.js";
@@ -189,7 +189,14 @@ const buildGallery = async (
     width: size.width,
   };
 
-  await writeGallery(place, html, manifest);
+  const { editDeps: deps } = runtime;
+
+  await createGalleryVersion(
+    { deps, direction, project: scope },
+    place,
+    html,
+    manifest
+  );
 
   return { cells, manifest };
 };

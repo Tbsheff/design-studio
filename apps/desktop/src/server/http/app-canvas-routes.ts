@@ -26,7 +26,7 @@ const registerAppCanvasRoutes = (app: Hono, ctx: AppContext): void => {
     loadDirection,
     preview,
   });
-  bindGalleryRuntime({ canvas, loadDirection, preview });
+  bindGalleryRuntime({ canvas, editDeps, loadDirection, preview });
   bindLinkRuntime({
     canvas,
     frameStates,

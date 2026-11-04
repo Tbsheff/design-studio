@@ -3,6 +3,7 @@ import type { Effect } from "effect";
 import { makeRuntimeSlot } from "./deps.js";
 import type {
   CanvasService,
+  DirectEditDeps,
   Direction,
   PreviewService,
   Project,
@@ -10,6 +11,7 @@ import type {
 
 interface GalleryRuntime {
   readonly canvas: CanvasService;
+  readonly editDeps: DirectEditDeps;
   readonly loadDirection: (
     projectId: string,
     directionId: string

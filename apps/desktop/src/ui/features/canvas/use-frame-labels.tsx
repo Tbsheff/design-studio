@@ -1,10 +1,7 @@
+import type { ProjectKind, SelectionContext } from "@design-studio/contracts";
 import { useCallback, useRef } from "react";
 import type { MutableRefObject } from "react";
 
-import type {
-  ProjectKind,
-  SelectionContext,
-} from "@design-studio/actions/_core/contracts";
 import { api } from "../../api.js";
 import {
   canHideFrame,

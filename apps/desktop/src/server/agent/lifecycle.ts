@@ -1,8 +1,6 @@
 import { appendFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { nanoid } from "nanoid";
-
 import type {
   DesignSystemRunCheck,
   Direction,
@@ -21,7 +19,9 @@ import type {
   StudioEventBody,
   TelemetrySample,
   ToolCallRecord,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { nanoid } from "nanoid";
+
 import {
   anyRuleMatches,
   ruleForCommand,

@@ -1,19 +1,18 @@
+import type {
+  CompiledTokenEntry,
+  DirectStyleProperty,
+} from "@design-studio/contracts";
+import { Icon, useAnchoredPopover } from "@design-studio/ui";
 import { useRef } from "react";
 import type { KeyboardEvent } from "react";
 import { createPortal } from "react-dom";
 
-import type {
-  CompiledTokenEntry,
-  DirectStyleProperty,
-} from "@design-studio/actions/_core/contracts";
 import {
   modeValue,
   tokenFieldState,
   tokensForProperty,
 } from "../../../shared/token-match.js";
 import type { TokenFieldState } from "../../../shared/token-match.js";
-import { Icon } from "@design-studio/ui";
-import { useAnchoredPopover } from "@design-studio/ui";
 import type { DirectEdit } from "../inspector/use-direct-edit.js";
 import { useTokenUi } from "../inspector/use-token-snap.js";
 import type { TokenUi } from "../inspector/use-token-snap.js";

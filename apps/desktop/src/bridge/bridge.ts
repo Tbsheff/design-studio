@@ -1,4 +1,5 @@
-import { ELEMENT_MARK_PARAM, SOURCE_LOC_ATTR } from "@design-studio/actions/_core/contracts";
+import { ELEMENT_MARK_PARAM, SOURCE_LOC_ATTR } from "@design-studio/contracts";
+
 import { FORCE_STATE_PARAM, fromForcedParam } from "../shared/state-styles.js";
 import { createAnchorTracker } from "./anchor-tracker.js";
 import { appSourceFor, primeAppSources } from "./app-source.js";

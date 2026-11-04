@@ -1,7 +1,8 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-import { TOKENS_CSS_FILE } from "@design-studio/actions/_core/contracts";
+import { TOKENS_CSS_FILE } from "@design-studio/contracts";
+
 import { GOOGLE_FONTS_PREFIX } from "./packs.js";
 import { hasTokensFile, readManifest } from "./sync.js";
 

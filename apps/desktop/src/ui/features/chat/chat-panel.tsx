@@ -1,13 +1,13 @@
+import type { Direction } from "@design-studio/contracts";
+import { Icon } from "@design-studio/ui";
 import { useCallback, useMemo } from "react";
 import type { ReactNode } from "react";
 
-import type { Direction } from "@design-studio/actions/_core/contracts";
 import {
   Conversation,
   ConversationContent,
   ConversationScrollButton,
 } from "../../ai/components/ai/conversation.js";
-import { Icon } from "@design-studio/ui";
 import {
   ChatLead,
   RunAnnouncer,

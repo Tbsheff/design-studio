@@ -5,7 +5,7 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import type { Plugin } from "vite";
 
-import { DEFAULT_STUDIO_PORT } from "@design-studio/actions/_core/contracts";
+import { DEFAULT_STUDIO_PORT } from "../../packages/common/contracts/src/contracts.ts";
 
 const root = fileURLToPath(new URL(".", import.meta.url));
 
@@ -94,6 +94,19 @@ export default defineConfig({
       {
         find: /^@design-studio\/ui\//,
         replacement: `${fileURLToPath(new URL("../../packages/ui/src/", import.meta.url))}`,
+      },
+      {
+        find: /^@design-studio\/contracts$/,
+        replacement: fileURLToPath(
+          new URL(
+            "../../packages/common/contracts/src/contracts.ts",
+            import.meta.url
+          )
+        ),
+      },
+      {
+        find: /^@design-studio\/contracts\//,
+        replacement: `${fileURLToPath(new URL("../../packages/common/contracts/src/", import.meta.url))}`,
       },
       {
         find: /^@design-studio\/actions$/,

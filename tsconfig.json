@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.base.json",
+  "files": [],
+  "references": [
+    { "path": "./apps/desktop/tsconfig.server.json" },
+    { "path": "./apps/desktop/tsconfig.bridge.json" },
+    { "path": "./apps/desktop/tsconfig.ui.json" },
+    { "path": "./apps/desktop/tsconfig.ui-test.json" },
+    { "path": "./apps/desktop/tsconfig.server-probe.json" },
+    { "path": "./apps/desktop/tsconfig.desktop-renderer.json" },
+    { "path": "./packages/common/contracts/tsconfig.json" },
+    { "path": "./packages/common/actions/tsconfig.json" },
+    { "path": "./packages/ui/tsconfig.json" }
+  ]
+}

@@ -2,7 +2,8 @@ import type {
   CheckViewport,
   QualityFinding,
   QualitySeverity,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+
 import type { ResolvedRunConfig } from "../../shared/run-levels.js";
 import { EDIT_TOOL_NAMES } from "./permissions.js";
 

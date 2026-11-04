@@ -3,6 +3,11 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import {
+  PACK_FILE,
+  TOKEN_PREVIEW_STYLE_ID,
+  TOKENS_FILE,
+} from "@design-studio/contracts";
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
@@ -12,11 +17,6 @@ import {
   previewTokens,
 } from "../src/server/design-system/model/index";
 import { loadBridgeScript } from "../src/server/preview/index";
-import {
-  PACK_FILE,
-  TOKEN_PREVIEW_STYLE_ID,
-  TOKENS_FILE,
-} from "@design-studio/actions/_core/contracts";
 
 const ORIGIN = "http://bridge-tokens.localhost:4998";
 const TOKEN = "tokens-preview-token";

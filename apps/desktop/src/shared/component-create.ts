@@ -1,5 +1,5 @@
-import type { SourceLoc, Version } from "./actions/_core/contracts.js";
-import type { InsertTarget } from "./actions/_core/insert.js";
+import type { SourceLoc, Version } from "@design-studio/contracts";
+import type { InsertTarget } from "@design-studio/contracts/insert";
 
 export const CREATE_TARGETS_MAX = 24;
 export const COMPONENT_NAME = /^[A-Z][A-Za-z0-9]{0,63}$/;

@@ -1,11 +1,10 @@
+import type { DirectStyleProperty } from "@design-studio/contracts";
+import { Icon, UiSelect } from "@design-studio/ui";
+import type { IconName } from "@design-studio/ui";
 import { memo, useState } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
 
-import type { DirectStyleProperty } from "@design-studio/actions/_core/contracts";
 import { colorHex, resolveTokenValue } from "../../../shared/token-match.js";
-import { Icon } from "@design-studio/ui";
-import type { IconName } from "@design-studio/ui";
-import { UiSelect } from "@design-studio/ui";
 import { readStored, writeStored } from "../../platform/storage.js";
 import { TokenControl } from "../versions-layers-tokens/token-control.js";
 import { colorToHex, displayColor, isValidColor } from "./css-values.js";

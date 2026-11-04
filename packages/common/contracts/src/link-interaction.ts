@@ -1,4 +1,4 @@
-import type { LinkTarget } from "./links.js";
+import type { LinkTarget } from "@design-studio/contracts/links";
 
 const LINK_EXTRA_ACTIONS = [
   "scroll-to",

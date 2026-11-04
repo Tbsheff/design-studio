@@ -1,3 +1,5 @@
+import { isModZoomKey, zoomKeyOf } from "@design-studio/contracts";
+import type { ZoomKey } from "@design-studio/contracts";
 import {
   useCallback,
   useEffect,
@@ -8,8 +10,6 @@ import {
 } from "react";
 import type { PointerEvent as ReactPointerEvent, RefObject } from "react";
 
-import { isModZoomKey, zoomKeyOf } from "@design-studio/actions/_core/contracts";
-import type { ZoomKey } from "@design-studio/actions/_core/contracts";
 import { createLiveStore } from "../../platform/live-store.js";
 import type { LiveStore } from "../../platform/live-store.js";
 import { uiStore } from "../../platform/storage.js";

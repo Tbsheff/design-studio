@@ -1,7 +1,9 @@
+import type { ToolDiff } from "@design-studio/contracts";
+import { Icon } from "@design-studio/ui";
+import type { IconName } from "@design-studio/ui";
 import { useState, useEffect, useMemo } from "react";
 import type { ReactNode } from "react";
 
-import type { ToolDiff } from "@design-studio/actions/_core/contracts";
 import { shortcutLabel } from "../../../shared/keymap.js";
 import {
   Action,
@@ -19,8 +21,6 @@ import {
 import { Chip } from "../../ai/components/ai/chip.js";
 import { IS_MAC } from "../../chat-slots.js";
 import { formatMs } from "../../domain/format.js";
-import { Icon } from "@design-studio/ui";
-import type { IconName } from "@design-studio/ui";
 import type { ToolRow, RunView } from "./run-state-model.js";
 import {
   toolGroupLabel,

@@ -9,13 +9,13 @@ import {
 import os from "node:os";
 import path from "node:path";
 
+import type { Project, RunSummary } from "@design-studio/contracts";
 import { expect } from "@playwright/test";
 import type { Frame, Page } from "@playwright/test";
 
 import { ROOT } from "../../e2e/support/server";
 import { openHome } from "../../e2e/support/studio";
 import type { StudioApi } from "../../e2e/support/studio";
-import type { Project, RunSummary } from "@design-studio/actions/_core/contracts";
 import { BACKUP_STATE } from "./ports";
 
 export function readState(): { dataDir: string; workDir: string; pid: number } {

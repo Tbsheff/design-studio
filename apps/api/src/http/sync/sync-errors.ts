@@ -1,11 +1,11 @@
-import { HttpApiSchema } from "effect/http-api";
-
+import { BadRequest } from "@design-studio/actions/_core/errors/bad-request";
+import { Conflict } from "@design-studio/actions/_core/errors/conflict";
 import {
   BAD_REQUEST,
-  BadRequest,
-  Conflict,
   CONFLICT,
-} from "../../shared-actions.js";
+} from "@design-studio/actions/_core/errors/http-status-codes";
+import { HttpApiSchema } from "effect/http-api";
+
 import { MEMBER_ERRORS } from "../groups/wire-errors.js";
 
 const BadRequestWire = BadRequest.pipe(HttpApiSchema.status(BAD_REQUEST));

@@ -4,7 +4,7 @@ import type {
   CompiledTokenEntry,
   Direction,
   Project,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
 import {
   FIGMA_LAYERS_MAX,
   type FigmaColor,
@@ -13,13 +13,14 @@ import {
   type FigmaImportStats,
   type FigmaNode,
   type FigmaPaint,
-} from "@design-studio/actions/_core/figma-nodes";
+} from "@design-studio/contracts/figma-nodes";
 import {
   JSX_SNIPPET_MAX,
   type InsertJsxRequest,
   type InsertTarget,
   type JsxInsertPosition,
-} from "@design-studio/actions/_core/insert";
+} from "@design-studio/contracts/insert";
+
 import {
   COLOR_SNAP_DELTA,
   matchColor,

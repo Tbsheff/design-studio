@@ -1,7 +1,7 @@
+import { routes } from "@design-studio/actions/pack/routes";
+import type { PackSummary } from "@design-studio/contracts";
 import { useEffect, useState } from "react";
 
-import { routes } from "@design-studio/actions/pack/routes";
-import type { PackSummary } from "@design-studio/actions/_core/contracts";
 import { errorText } from "../../api.js";
 import { call } from "../../platform/http.js";
 

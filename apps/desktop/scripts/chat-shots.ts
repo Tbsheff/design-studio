@@ -53,20 +53,20 @@ async function main(): Promise<void> {
 
   await page.evaluate(() => localStorage.clear());
 
-  const created = await page.evaluate(
-    async (t) =>
-      (
-        await fetch("/api/projects", {
-          method: "POST",
-          headers: { "x-studio-token": t, "content-type": "application/json" },
-          body: JSON.stringify({
-            prompt: "Harbor Lane Coffee [think]",
-            kind: "html",
-          }),
-        })
-      ).json(),
-    token
-  );
+  const created = await page.evaluate(async (t) => {
+    const res = await fetch("/api/projects", {
+      method: "POST",
+      headers: { "x-studio-token": t, "content-type": "application/json" },
+      body: JSON.stringify({
+        prompt: "Harbor Lane Coffee [think]",
+        kind: "html",
+      }),
+    });
+    if (!res.ok) {
+      throw new Error(`fetch failed: ${res.status}`);
+    }
+    return res.json();
+  }, token);
 
   const projectId = created.project.id as string;
   await page.goto(base);

@@ -2,7 +2,8 @@ import type {
   DirectEditRequest,
   DirectStyleProperty,
   SelectionContext,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+
 import {
   changedProps,
   shiftedPart,

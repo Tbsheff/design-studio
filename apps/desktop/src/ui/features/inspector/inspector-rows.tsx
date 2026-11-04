@@ -1,9 +1,9 @@
-import { memo, useState, type KeyboardEvent } from "react";
-
 import type {
   DirectStyleProperty,
   SelectionContext,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { memo, useState, type KeyboardEvent } from "react";
+
 import { textEditability } from "./css-values.js";
 import { DataTextNote, useInspectorApp } from "./inspector-shared.js";
 import { sameEditValues, type DirectEdit } from "./use-direct-edit.js";

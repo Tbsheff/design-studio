@@ -1,7 +1,5 @@
-import type {
-  ClassChange,
-  TailwindOutcome,
-} from "@design-studio/actions/_core/contracts";
+import type { ClassChange, TailwindOutcome } from "@design-studio/contracts";
+
 import { parseVariant } from "../../../../shared/variants.js";
 import { DirectEditError } from "../errors.js";
 import { cssEdits, isMappedProperty } from "./map.js";

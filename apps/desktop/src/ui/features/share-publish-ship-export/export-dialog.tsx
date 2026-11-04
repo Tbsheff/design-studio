@@ -1,7 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import type { KeyboardEvent } from "react";
-
-import { EXPORT_SCALES } from "@design-studio/actions/_core/export";
+import { EXPORT_SCALES } from "@design-studio/contracts/export";
 import type {
   EditorInfo,
   ExportFormat,
@@ -10,11 +7,13 @@ import type {
   ExportScope,
   HandoffResult,
   McpStatus,
-} from "@design-studio/actions/_core/export";
-import { downloadBlob } from "../../domain/format.js";
-import { Icon } from "@design-studio/ui";
+} from "@design-studio/contracts/export";
+import { Icon, useModalDialog } from "@design-studio/ui";
 import type { IconName } from "@design-studio/ui";
-import { useModalDialog } from "@design-studio/ui";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { KeyboardEvent } from "react";
+
+import { downloadBlob } from "../../domain/format.js";
 import { canvasFrameName, framePage } from "../canvas/canvas-frames.js";
 import { mcpApi } from "../chat/mcp-model.js";
 import {

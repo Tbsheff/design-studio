@@ -1,27 +1,27 @@
 import { readFile } from "node:fs/promises";
 
 import type * as t from "@babel/types";
-
 import type {
   Direction,
   Project,
   SourceLoc,
   VersionMeta,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
 import {
   INSERT_POSITIONS,
   INSERT_TEXT_MAX,
   type InsertComponentRequest,
   type InsertComponentResult,
   type InsertTarget,
-} from "@design-studio/actions/_core/insert";
+} from "@design-studio/contracts/insert";
 import {
   OWNERS_MAX,
   OWNER_STACK_MAX,
   PROP_NAME,
   PROP_TEXT_MAX,
   PROPS_MAX,
-} from "@design-studio/actions/_core/props";
+} from "@design-studio/contracts/props";
+
 import { jsxFor } from "../../components/component-search.js";
 import {
   planImport,

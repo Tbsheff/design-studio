@@ -1,8 +1,12 @@
+import { INSERT_TEXT_MAX } from "@design-studio/contracts/insert";
+import type { InsertTarget } from "@design-studio/contracts/insert";
+import {
+  PROP_NAME,
+  PROP_TEXT_MAX,
+  PROPS_MAX,
+} from "@design-studio/contracts/props";
 import { Schema } from "effect";
 
-import { INSERT_TEXT_MAX } from "@design-studio/actions/_core/insert";
-import type { InsertTarget } from "@design-studio/actions/_core/insert";
-import { PROP_NAME, PROP_TEXT_MAX, PROPS_MAX } from "@design-studio/actions/_core/props";
 import {
   toDefaulted,
   toOptional,

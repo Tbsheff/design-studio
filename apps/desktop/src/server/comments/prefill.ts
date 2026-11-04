@@ -1,19 +1,20 @@
 import { readFile } from "node:fs/promises";
 
-import {
-  CHAT_IMAGE_MAX,
-  canPickForChat,
-  chatPrompt,
-} from "../../shared/comments.js";
 import type {
   Attachment,
   CommentPrefill,
   DesignComment,
   Direction,
   Project,
-} from "@design-studio/actions/_core/contracts";
-import type { ExportFrame } from "@design-studio/actions/_core/export";
-import { withFrameStateHost } from "@design-studio/actions/_core/frame-state";
+} from "@design-studio/contracts";
+import type { ExportFrame } from "@design-studio/contracts/export";
+import { withFrameStateHost } from "@design-studio/contracts/frame-state";
+
+import {
+  CHAT_IMAGE_MAX,
+  canPickForChat,
+  chatPrompt,
+} from "../../shared/comments.js";
 import { frameStatesView, stateOfFrame } from "../app/frame-state.js";
 import { findFrame, readProjectCanvas } from "../canvas/index.js";
 import { ConflictError, NotFoundError } from "../platform/errors/index.js";

@@ -8,15 +8,15 @@ import {
 } from "node:fs";
 import path from "node:path";
 
-import { expect, test } from "@playwright/test";
-import type { Frame, Page } from "@playwright/test";
-import { differenceEuclidean, parse } from "culori";
-
 import type {
   DesignSystemState,
   PackSummary,
   Project,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { expect, test } from "@playwright/test";
+import type { Frame, Page } from "@playwright/test";
+import { differenceEuclidean, parse } from "culori";
+
 import { readState } from "./support/server";
 import {
   frontFrame,

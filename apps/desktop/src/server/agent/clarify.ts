@@ -5,10 +5,10 @@ import type {
   SDKMessage,
   query,
 } from "@anthropic-ai/claude-agent-sdk";
+import type { ClarifyQuestion } from "@design-studio/contracts";
+import { needsQuestions } from "@design-studio/contracts/clarify";
 import { Schema } from "effect";
 
-import { needsQuestions } from "@design-studio/actions/_core/clarify";
-import type { ClarifyQuestion } from "@design-studio/actions/_core/contracts";
 import { extractJson } from "../../shared/extract-json.js";
 import { WIREFRAME_MODEL } from "../../shared/run-levels.js";
 import { toTrimmedText } from "../agent-tools/index.js";

@@ -1,4 +1,5 @@
-import type { ShareServerState } from "@design-studio/actions/_core/share";
+import type { ShareServerState } from "@design-studio/contracts/share";
+
 import type { ShareListener as ShareServer } from "./listener.js";
 import { createLiveHub } from "./live.js";
 import type { LiveHub, LiveRefresher as LiveRefreshLoop } from "./live.js";

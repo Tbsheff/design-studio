@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import type { MutableRefObject } from "react";
-
 import type {
   EditSessionEnd,
   EditSessionState,
   Version,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { MutableRefObject } from "react";
+
 import { api, errorText } from "../../api.js";
 import type { PreviewPort } from "../../platform/bridge.js";
 import { useProjectEvents } from "../../platform/events.js";

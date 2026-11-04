@@ -1,8 +1,8 @@
+import { NotFound } from "@design-studio/actions/_core/errors/not-found";
 import { Effect, Layer } from "effect";
 import { HttpServerRequest } from "effect/http";
 import { HttpApiMiddleware } from "effect/http-api";
 
-import { NotFound } from "../../shared-actions.js";
 import { CurrentOrg } from "../../tenant/current-org.js";
 import { MEMBER_ERRORS } from "../groups/wire-errors.js";
 import { CurrentUser } from "../middleware/current-user.js";

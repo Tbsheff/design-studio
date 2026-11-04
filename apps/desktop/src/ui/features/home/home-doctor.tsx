@@ -1,6 +1,4 @@
-import { CopyButton } from "@design-studio/ui";
-import { Icon } from "@design-studio/ui";
-import { useModalDialog } from "@design-studio/ui";
+import { CopyButton, Icon, useModalDialog } from "@design-studio/ui";
 
 export interface DoctorStep {
   ok: boolean;

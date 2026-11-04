@@ -3,6 +3,8 @@ import { readdir } from "node:fs/promises";
 import path from "node:path";
 
 import type * as t from "@babel/types";
+import type { Direction, Project, VersionMeta } from "@design-studio/contracts";
+import { OWNERS_MAX, OWNER_STACK_MAX } from "@design-studio/contracts/props";
 
 import {
   COMPONENT_NAME,
@@ -13,12 +15,6 @@ import {
   type CreateComponentResult,
   type CreatedProp,
 } from "../../../shared/component-create.js";
-import type {
-  Direction,
-  Project,
-  VersionMeta,
-} from "@design-studio/actions/_core/contracts";
-import { OWNERS_MAX, OWNER_STACK_MAX } from "@design-studio/actions/_core/props";
 import { planImport } from "../../components/import-plan.js";
 import { loadLibrary } from "../../components/insert-list.js";
 import {

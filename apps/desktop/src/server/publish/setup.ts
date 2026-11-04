@@ -3,6 +3,7 @@ import { mkdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { WORKER_NAME } from "@design-studio/actions/publish-remote";
+
 import type {
   PublishBackendMode,
   PublishBackendState,
@@ -595,7 +596,7 @@ export function createPublishBackend(
 
     if (mode === "local" && !source.localRunner) {
       throw new BadRequestError(
-        "Local mode needs apps/publish with its packages installed (npm install in that folder)."
+        "Local mode needs apps/publish with its packages installed (pnpm install in that folder)."
       );
     }
 
@@ -603,7 +604,7 @@ export function createPublishBackend(
 
     if (!bin) {
       throw new BadRequestError(
-        "Install the Cloudflare CLI first (npm i -g cf)."
+        "Install the Cloudflare CLI first (pnpm add -g cf)."
       );
     }
 

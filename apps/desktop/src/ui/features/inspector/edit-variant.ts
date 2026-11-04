@@ -1,6 +1,6 @@
+import type { DirectStyleProperty } from "@design-studio/contracts";
 import { createContext, useContext, useSyncExternalStore } from "react";
 
-import type { DirectStyleProperty } from "@design-studio/actions/_core/contracts";
 import { parseVariant } from "../../../shared/variants.js";
 import type { PreviewPort } from "../../platform/bridge.js";
 import { uiStore } from "../../platform/storage.js";

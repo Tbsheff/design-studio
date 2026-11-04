@@ -2,12 +2,13 @@ import { existsSync } from "node:fs";
 import { lstat, stat, symlink } from "node:fs/promises";
 import path from "node:path";
 
-import { TOKENS_FILE, projectPreviewOrigin } from "@design-studio/actions/_core/contracts";
+import { TOKENS_FILE, projectPreviewOrigin } from "@design-studio/contracts";
 import type {
   Direction,
   Project,
   RenderCheckResult,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+
 import { AppServers } from "../app/dev-server.js";
 import { resolveFrameState } from "../app/frame-state.js";
 import { createAppProxy, type AppTarget } from "../app/proxy.js";

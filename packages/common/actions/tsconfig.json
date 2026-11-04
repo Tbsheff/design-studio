@@ -1,10 +1,10 @@
 {
-  "extends": "../../../apps/desktop/tsconfig.base.json",
+  "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "composite": true,
     "tsBuildInfoFile": "./node_modules/.cache/tsbuild/actions.tsbuildinfo",
     "types": [],
-    "rootDir": "."
+    "lib": ["ES2024", "DOM"]
   },
-  "include": ["src"]
+  "include": ["src", "../contracts/src"]
 }

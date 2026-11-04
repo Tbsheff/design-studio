@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
-
 import type {
   ElementSourceInfo,
   SourceLoc,
   TailwindOutcome,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { useEffect, useState } from "react";
+
 import type { VariantSupport } from "../../../shared/variants.js";
 import { api } from "../../api.js";
 import { InspectorSection } from "./inspector-fields.js";

@@ -17,15 +17,16 @@ import {
 } from "node:fs/promises";
 import path from "node:path";
 
-import { CANVAS_FILE } from "@design-studio/actions/_core/canvas-file";
 import type {
   Direction,
   Project,
   Version,
   VersionMeta,
   WorkTreeStatus,
-} from "@design-studio/actions/_core/contracts";
-import { LINKS_FILE } from "@design-studio/actions/_core/links";
+} from "@design-studio/contracts";
+import { CANVAS_FILE } from "@design-studio/contracts/canvas-file";
+import { LINKS_FILE } from "@design-studio/contracts/links";
+
 import {
   baseTitle,
   isRestoreKind,

@@ -1,3 +1,9 @@
+import type {
+  LayerNode,
+  ReorderMove,
+  StructureKey,
+} from "@design-studio/contracts";
+import { Icon, type IconName } from "@design-studio/ui";
 import {
   memo,
   useCallback,
@@ -12,17 +18,11 @@ import {
   type UIEvent,
 } from "react";
 
-import type {
-  LayerNode,
-  ReorderMove,
-  StructureKey,
-} from "@design-studio/actions/_core/contracts";
 import { reorderMoveOf } from "../../../shared/reorder.js";
 import {
   STRUCTURE_KEY_IDS,
   structureKeyOf,
 } from "../../../shared/structure-keys.js";
-import { Icon, type IconName } from "@design-studio/ui";
 import { PreviewMenu, type PreviewMenuItem } from "../canvas/preview-menu.js";
 import { focusStageQuietly } from "../canvas/use-inline-text-edit.js";
 import { IS_MAC, tipWithKey } from "../commands/index.js";

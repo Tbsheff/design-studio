@@ -1,6 +1,6 @@
+import type { CommentPrefill, DesignComment } from "@design-studio/contracts";
 import { Context, Effect, Layer } from "effect";
 
-import type { CommentPrefill, DesignComment } from "@design-studio/actions/_core/contracts";
 import type {
   CreateCommentInput,
   UpdateCommentInput,

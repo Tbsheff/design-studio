@@ -1,4 +1,5 @@
-import type { FirstVersionState } from "@design-studio/actions/_core/contracts";
+import type { FirstVersionState } from "@design-studio/contracts";
+
 import { useNow } from "../../platform/clock";
 
 const SECOND_MS = 1000;

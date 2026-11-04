@@ -5,7 +5,8 @@ import type {
   QualityFinding,
   QualitySeverity,
   RenderCheckResult,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+
 import type { PlaceholderMode } from "../../shared/run-levels.js";
 import type {
   DuplicateHit,

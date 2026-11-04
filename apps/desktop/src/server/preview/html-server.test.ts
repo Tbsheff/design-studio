@@ -3,12 +3,12 @@ import net from "node:net";
 import os from "node:os";
 import path from "node:path";
 
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
-
 import {
   projectPreviewHost,
   projectPreviewOrigin,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+
 import { startHtmlServer } from "./html-server.js";
 import type { HtmlServer } from "./html-server.js";
 

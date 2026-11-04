@@ -11,14 +11,14 @@ import {
 } from "node:fs/promises";
 import path from "node:path";
 
-import { nanoid } from "nanoid";
-
 import type {
   Direction,
   Project,
   TrashItem,
   TrashedProject,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { nanoid } from "nanoid";
+
 import {
   BadRequestError,
   ConflictError,

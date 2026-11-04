@@ -1,13 +1,16 @@
-import { useEffect, useRef } from "react";
-import type { RefObject } from "react";
-
-import { REVIEW_KIND_LABEL, REVIEW_KINDS } from "@design-studio/actions/_core/review";
+import {
+  REVIEW_KIND_LABEL,
+  REVIEW_KINDS,
+} from "@design-studio/contracts/review";
 import type {
   ReviewFinding,
   ReviewKind,
   ReviewSeverity,
-} from "@design-studio/actions/_core/review";
+} from "@design-studio/contracts/review";
 import { Icon } from "@design-studio/ui";
+import { useEffect, useRef } from "react";
+import type { RefObject } from "react";
+
 import { isTypingTarget } from "../../platform/typing-target.js";
 import { PREVIEW_ESCAPE_EVENT } from "../chat/use-escape-stop.js";
 import type { ReviewState } from "./use-review.js";

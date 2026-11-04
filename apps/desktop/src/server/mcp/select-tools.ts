@@ -2,7 +2,8 @@ import {
   MATCH_KINDS,
   type MatchKind,
   type Project,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+
 import { findFrame, frameRef } from "../canvas/index.js";
 import {
   isLayerRef,

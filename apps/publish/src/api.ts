@@ -1,8 +1,3 @@
-import { checkKey, randomId } from "./crypto";
-import { blobKey, describe, publicationById, type PublicationRow } from "./db";
-import { ApiError, bad, json, notFound, readJson, type Env } from "./http";
-import { sweepLimits, takeToken } from "./limits";
-import { contentTypeOf, manifestPathOk } from "./paths";
 import {
   LIMITS,
   PUBLICATION_ID,
@@ -16,7 +11,13 @@ import {
   type ManifestFile,
   type PublicationSettings,
   type RemoteComment,
-} from "./protocol";
+} from "@design-studio/actions/publish-remote";
+
+import { checkKey, randomId } from "./crypto";
+import { blobKey, describe, publicationById, type PublicationRow } from "./db";
+import { ApiError, bad, json, notFound, readJson, type Env } from "./http";
+import { sweepLimits, takeToken } from "./limits";
+import { contentTypeOf, manifestPathOk } from "./paths";
 
 type Handler = (
   request: Request,

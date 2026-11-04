@@ -1,20 +1,21 @@
-import { useState, useTransition, useMemo, useEffect } from "react";
-import type { KeyboardEvent, FormEvent } from "react";
-
-import type { Project } from "@design-studio/actions/_core/contracts";
-import type { FolderInspection } from "../../../shared/open-app.js";
+import type { Project } from "@design-studio/contracts";
 import type {
   PortStartResult,
   PortFlowPage,
   PortFlowPlan,
   PortKitMatch,
-} from "@design-studio/actions/_core/port";
-import { cleanPortRoute, PORT_LEVEL_LABEL } from "@design-studio/actions/_core/port";
-import { errorText, api } from "../../api.js";
-import { Icon } from "@design-studio/ui";
-import { UiSelect } from "@design-studio/ui";
+} from "@design-studio/contracts/port";
+import {
+  cleanPortRoute,
+  PORT_LEVEL_LABEL,
+} from "@design-studio/contracts/port";
+import { Icon, UiSelect, useModalDialog } from "@design-studio/ui";
 import type { UiSelectOption } from "@design-studio/ui";
-import { useModalDialog } from "@design-studio/ui";
+import { useState, useTransition, useMemo, useEffect } from "react";
+import type { KeyboardEvent, FormEvent } from "react";
+
+import type { FolderInspection } from "../../../shared/open-app.js";
+import { errorText, api } from "../../api.js";
 import { hasNativePicker, pickFolder } from "../../platform/desktop.js";
 import { uiStore } from "../../platform/storage.js";
 import { pageName } from "../canvas/frame-controls.js";

@@ -1,16 +1,16 @@
+import { STATE_HINTS } from "@design-studio/contracts/frame-state";
+import type {
+  FrameStateDef,
+  FrameStatesView,
+  MockUser,
+} from "@design-studio/contracts/frame-state";
+import { Icon } from "@design-studio/ui";
 import { useState } from "react";
 import type {
   KeyboardEvent as ReactKeyboardEvent,
   PointerEvent as ReactPointerEvent,
 } from "react";
 
-import { STATE_HINTS } from "@design-studio/actions/_core/frame-state";
-import type {
-  FrameStateDef,
-  FrameStatesView,
-  MockUser,
-} from "@design-studio/actions/_core/frame-state";
-import { Icon } from "@design-studio/ui";
 import type { setFrameSession } from "./frame-states-model.js";
 
 import "../../styles/frame-state.css";

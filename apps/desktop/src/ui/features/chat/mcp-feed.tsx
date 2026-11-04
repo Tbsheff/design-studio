@@ -1,13 +1,10 @@
-import { useEffect, useState, useTransition } from "react";
-
-import type {
-  McpActivity,
-  McpApprovalOutcome,
-} from "@design-studio/actions/_core/contracts";
-import { errorText } from "../../api.js";
-import { formatTime } from "../../domain/format.js";
+import type { McpActivity, McpApprovalOutcome } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 import type { IconName } from "@design-studio/ui";
+import { useEffect, useState, useTransition } from "react";
+
+import { errorText } from "../../api.js";
+import { formatTime } from "../../domain/format.js";
 import { mcpApi } from "./mcp-model.js";
 import type { RunView } from "./run-state-model.js";
 import type { McpApprovalCard, McpFeedState } from "./use-mcp-feed.js";

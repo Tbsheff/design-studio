@@ -1,19 +1,3 @@
 #!/bin/sh
 set -e
-lint_globs="*.ts *.tsx *.js *.mjs *.cjs"
-fmt_globs="*.ts *.tsx *.css *.json"
-staged() {
-  set -f
-  git diff --cached --name-only --diff-filter=ACMR -z -- $1
-  set +f
-}
-root=$(pwd)
-desk=apps/desktop
-bin="$root/node_modules/.bin"
-if [ -n "$(staged "$lint_globs" | tr -d '\0')" ]; then
-  staged "$lint_globs" | grep -z "^$desk/" | sed -z "s#^$desk/##" | (cd $desk && xargs -0 -r "$bin/oxlint" --)
-fi
-if [ -n "$(staged "$fmt_globs" | tr -d '\0')" ]; then
-  staged "$fmt_globs" | grep -z "^$desk/" | sed -z "s#^$desk/##" | (cd $desk && xargs -0 -r "$bin/oxfmt" --check --no-error-on-unmatched-pattern --)
-fi
-(cd $desk && pnpm --config.verify-deps-before-run=false run --silent lint:boundaries)
+exec node "$(git rev-parse --show-toplevel)/apps/desktop/scripts/hooks/run-pre-commit.mjs"

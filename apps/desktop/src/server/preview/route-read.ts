@@ -1,4 +1,5 @@
-import type { AppRoute } from "@design-studio/actions/_core/contracts";
+import type { AppRoute } from "@design-studio/contracts";
+
 import { listAppRoutes } from "../app/routes.js";
 import type { StudioProjectStore } from "../store/projects.js";
 

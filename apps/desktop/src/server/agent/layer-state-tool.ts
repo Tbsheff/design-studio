@@ -1,6 +1,6 @@
+import type { SelectionContext } from "@design-studio/contracts";
 import { Schema } from "effect";
 
-import type { SelectionContext } from "@design-studio/actions/_core/contracts";
 import {
   toOptionalFlag,
   toOptionalText,

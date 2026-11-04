@@ -1,4 +1,8 @@
-import { describeDoctor, DOCTOR_NOTE } from "@design-studio/actions/_core/app-doctor";
+import {
+  describeDoctor,
+  DOCTOR_NOTE,
+} from "@design-studio/contracts/app-doctor";
+
 import type { AgentRunContext, PreviewService } from "../types.js";
 
 type ToolText = Readonly<{

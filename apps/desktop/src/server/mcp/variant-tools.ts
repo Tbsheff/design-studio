@@ -1,5 +1,6 @@
-import type { CanvasFile } from "@design-studio/actions/_core/canvas-file";
-import type { Direction, Project, Version } from "@design-studio/actions/_core/contracts";
+import type { Direction, Project, Version } from "@design-studio/contracts";
+import type { CanvasFile } from "@design-studio/contracts/canvas-file";
+
 import { z } from "../platform/zod-bridge/index.js";
 import { EditError } from "./edit-guards.js";
 import type { EditDeps } from "./edit-guards.js";

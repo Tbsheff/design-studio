@@ -1,9 +1,9 @@
 import { writeFileSync } from "node:fs";
 import path from "node:path";
 
+import type { RenderCheckResult } from "@design-studio/contracts";
 import { expect, test } from "@playwright/test";
 
-import type { RenderCheckResult } from "@design-studio/actions/_core/contracts";
 import {
   createProjectViaUi,
   frontFrame,

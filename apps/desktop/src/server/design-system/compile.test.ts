@@ -2,13 +2,13 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { describe, expect, it } from "vitest";
-
 import {
   DESIGN_MD_TOKENS_END,
   DESIGN_MD_TOKENS_START,
-} from "@design-studio/actions/_core/contracts";
-import type { TokenFile } from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import type { TokenFile } from "@design-studio/contracts";
+import { describe, expect, it } from "vitest";
+
 import {
   OKLCH_SUPPORTS,
   SYSTEM_DARK_MEDIA,

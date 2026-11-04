@@ -5,7 +5,8 @@ import type {
   Project,
   Version,
   VersionMeta,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+
 import { bindSaveLanes } from "../../events/index.js";
 import { logError } from "../../platform/logger/index.js";
 import type { VersionStore } from "../../types.js";

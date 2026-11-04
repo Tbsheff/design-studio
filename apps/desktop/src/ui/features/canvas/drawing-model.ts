@@ -1,4 +1,4 @@
-import type { CommentDrawing, DrawStroke } from "@design-studio/actions/_core/contracts";
+import type { CommentDrawing, DrawStroke } from "@design-studio/contracts";
 
 export const DRAW_COLORS = [
   { id: "red", label: "Red", value: "#ff3b30" },

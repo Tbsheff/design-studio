@@ -1,10 +1,11 @@
-import { APP_SOURCE_PATH } from "@design-studio/actions/_core/app";
-import type { SourceLoc } from "@design-studio/actions/_core/contracts";
+import type { SourceLoc } from "@design-studio/contracts";
+import { APP_SOURCE_PATH } from "@design-studio/contracts/app";
 import {
   OWNERS_MAX,
   OWNER_STACK_MAX,
   type ComponentOwner,
-} from "@design-studio/actions/_core/props";
+} from "@design-studio/contracts/props";
+
 import type { PreviewService } from "../preview/index.js";
 import { probeOnPage } from "../preview/probe-page.js";
 

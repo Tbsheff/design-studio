@@ -2,7 +2,8 @@ import type {
   CreateUserPackInput,
   PackManifest,
   PackSummary,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+
 import { BadRequestError, ConflictError } from "../platform/errors/index.js";
 import { DESIGN_MD_FILE, formatIssues, manifestSchema } from "./packs.js";
 import { ZipError, unzipFiles } from "./zip.js";

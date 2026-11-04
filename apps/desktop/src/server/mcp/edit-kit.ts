@@ -7,7 +7,8 @@ import {
   type DirectStyleProperty,
   type Project,
   type Version,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+
 import { inputIssues } from "../../shared/input-errors.js";
 import { kebabKeys } from "../../shared/style-keys.js";
 import { SOURCE_DIR } from "../design-system/extract/draft.js";

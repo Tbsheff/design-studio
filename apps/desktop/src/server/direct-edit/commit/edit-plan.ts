@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 
-import type { DirectEditRequest } from "@design-studio/actions/_core/contracts";
+import type { DirectEditRequest } from "@design-studio/contracts";
+
 import { hasClassChange } from "../engine/classes.js";
 import { DirectEditError } from "../engine/errors.js";
 import type { PatchResult } from "../engine/errors.js";

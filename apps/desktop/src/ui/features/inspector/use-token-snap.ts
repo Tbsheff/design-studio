@@ -1,3 +1,8 @@
+import { TOKEN_GROUP_FOR_PROPERTY } from "@design-studio/contracts";
+import type {
+  CompiledTokenEntry,
+  DirectStyleProperty,
+} from "@design-studio/contracts";
 import {
   createContext,
   useCallback,
@@ -8,11 +13,6 @@ import {
   useState,
 } from "react";
 
-import { TOKEN_GROUP_FOR_PROPERTY } from "@design-studio/actions/_core/contracts";
-import type {
-  CompiledTokenEntry,
-  DirectStyleProperty,
-} from "@design-studio/actions/_core/contracts";
 import {
   isSnappable,
   isUnsetValue,

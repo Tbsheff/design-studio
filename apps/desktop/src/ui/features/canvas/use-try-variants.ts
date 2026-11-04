@@ -2,11 +2,12 @@ import type {
   Project,
   RunLevel,
   SelectionContext,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
 import {
   TRY_VARIANTS_COMMAND,
   elementVariantsBlocker,
-} from "@design-studio/actions/_core/element-variants";
+} from "@design-studio/contracts/element-variants";
+
 import { useCommands } from "../../canvas-hook-slots.js";
 import type { VariationsState } from "./use-variations.js";
 

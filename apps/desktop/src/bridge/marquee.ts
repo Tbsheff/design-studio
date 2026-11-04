@@ -1,7 +1,8 @@
 import {
   MATCH_SELECT_MAX,
   type SelectionContext,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+
 import { tryDom } from "./dom-input.js";
 import { isLayer } from "./layers.js";
 

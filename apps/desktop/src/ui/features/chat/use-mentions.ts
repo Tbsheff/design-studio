@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
-import type { KeyboardEvent } from "react";
-
 import type {
   CompiledTokenEntry,
   ComponentInfo,
   RunMention,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { useEffect, useMemo, useState } from "react";
+import type { KeyboardEvent } from "react";
+
 import { api } from "../../api.js";
 import {
   mentionKey,

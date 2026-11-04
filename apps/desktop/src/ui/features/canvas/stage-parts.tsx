@@ -1,7 +1,7 @@
+import type { SelectionContext } from "@design-studio/contracts";
 import { useRef } from "react";
 import type { ComponentProps, MutableRefObject, ReactNode } from "react";
 
-import type { SelectionContext } from "@design-studio/actions/_core/contracts";
 import { tagFrame } from "../../platform/bridge.js";
 import { createLiveStore, useLive } from "../../platform/live-store.js";
 import type { LiveStore } from "../../platform/live-store.js";

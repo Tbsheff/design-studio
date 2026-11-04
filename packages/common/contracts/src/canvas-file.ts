@@ -1,4 +1,4 @@
-import type { LinksFile } from "./links.js";
+import type { LinksFile } from "@design-studio/contracts/links";
 
 export const CANVAS_FILE = ".studio/canvas.json";
 export const CANVAS_DIR = ".studio";

@@ -1,8 +1,9 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-import type { Direction, Project } from "@design-studio/actions/_core/contracts";
-import type { DesignRulesState } from "@design-studio/actions/_core/design-rules";
+import type { Direction, Project } from "@design-studio/contracts";
+import type { DesignRulesState } from "@design-studio/contracts/design-rules";
+
 import { writeFileAtomic } from "../design-system/packs.js";
 import { deriveRules } from "./derive.js";
 import { extractRulesBlock, upsertRulesBlock } from "./markdown.js";

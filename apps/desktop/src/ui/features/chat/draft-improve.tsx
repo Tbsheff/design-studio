@@ -1,12 +1,12 @@
-import { useId, useRef, useState } from "react";
-
 import type {
   DesignSystemCheckResult,
   DesignSystemCheckRule,
   RunLevel,
   RunRequest,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
 import { useFitPopover } from "@design-studio/ui";
+import { useId, useRef, useState } from "react";
+
 import type { RunView } from "./run-state-model.js";
 
 export const IMPROVE_PROMPT = "Improve this design system.";

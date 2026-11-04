@@ -1,7 +1,8 @@
 import type {
   DesignSystemCheckResult,
   DesignSystemRunCheck,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+
 import { checkDesignSystem } from "../design-system/check.js";
 import type { DriverOutcome } from "./lifecycle.js";
 

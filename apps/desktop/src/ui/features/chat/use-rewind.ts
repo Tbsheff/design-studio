@@ -1,11 +1,11 @@
-import { useCallback, useMemo, useRef } from "react";
-
 import type {
   Direction,
   RunRequest,
   Version,
   WorkTreeStatus,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { useCallback, useMemo, useRef } from "react";
+
 import { api } from "../../api.js";
 import type { RunView } from "./run-state-model.js";
 

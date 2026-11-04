@@ -1,4 +1,5 @@
-import type { Project } from "@design-studio/actions/_core/contracts";
+import type { Project } from "@design-studio/contracts";
+
 import { findFrame, frameRef, readProjectCanvas } from "../canvas/index.js";
 import { noteRenderedPage } from "../events/index.js";
 import {

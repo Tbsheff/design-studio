@@ -1,7 +1,8 @@
+import type { RunLevel } from "@design-studio/contracts";
+import { CopyButton, Icon } from "@design-studio/ui";
 import { memo, useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 
-import type { RunLevel } from "@design-studio/actions/_core/contracts";
 import {
   Exception,
   ExceptionHeader,
@@ -21,8 +22,6 @@ import {
 } from "../../ai/components/ai/reasoning.js";
 import { formatTime, formatUsd } from "../../domain/format.js";
 import { splitMarkdownBlocks } from "../../domain/markdown-blocks.js";
-import { CopyButton } from "@design-studio/ui";
-import { Icon } from "@design-studio/ui";
 import { contextShare } from "./context-meter.js";
 import { levelLabel, levelHint } from "./level-control.js";
 import type { RunView } from "./run-state-model.js";

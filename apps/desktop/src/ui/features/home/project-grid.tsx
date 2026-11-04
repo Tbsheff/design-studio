@@ -1,3 +1,10 @@
+import type {
+  PackSummary,
+  Project,
+  RunSummary,
+} from "@design-studio/contracts";
+import { shortenHome } from "@design-studio/contracts/folders";
+import { Icon, LazySelect } from "@design-studio/ui";
 import {
   lazy,
   Suspense,
@@ -9,12 +16,6 @@ import {
   type ReactNode,
 } from "react";
 
-import type {
-  PackSummary,
-  Project,
-  RunSummary,
-} from "@design-studio/actions/_core/contracts";
-import { shortenHome } from "@design-studio/actions/_core/folders";
 import type { AppHealth } from "../../../shared/found-apps.js";
 import {
   projectTypeOf,
@@ -24,8 +25,6 @@ import {
 import { api, json, warmProject } from "../../api.js";
 import { prefetchStudio } from "../../app/screen-preload.js";
 import { formatRelative, formatTime } from "../../domain/format.js";
-import { Icon } from "@design-studio/ui";
-import { LazySelect } from "@design-studio/ui";
 import {
   HOME_SORTS,
   uiStore,

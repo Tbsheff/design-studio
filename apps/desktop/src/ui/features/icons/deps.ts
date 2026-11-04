@@ -16,7 +16,7 @@ export { isTypingTarget } from "../../platform/typing-target.js";
 
 export { useModalDialog } from "@design-studio/ui";
 
-export type { SelectionContext } from "@design-studio/actions/_core/contracts";
+export type { SelectionContext } from "@design-studio/contracts";
 
 export {
   ICON_COLOR,
@@ -31,6 +31,6 @@ export type {
   IconSummary,
 } from "../../../shared/icons.js";
 
-export type { InsertTarget } from "@design-studio/actions/_core/insert";
+export type { InsertTarget } from "@design-studio/contracts/insert";
 
 export { matchesKey } from "../../../shared/keymap.js";

@@ -6,6 +6,11 @@ import {
   type Options,
   type SDKMessage,
 } from "@anthropic-ai/claude-agent-sdk";
+import {
+  DEFAULT_PREVIEW_PORT,
+  type RunRequest,
+  type RunSummary,
+} from "@design-studio/contracts";
 
 import {
   createRunLifecycle,
@@ -20,11 +25,6 @@ import {
   createTempProject,
 } from "../src/server/testing/fakes.js";
 import type { AgentRunContext } from "../src/server/types.js";
-import {
-  DEFAULT_PREVIEW_PORT,
-  type RunRequest,
-  type RunSummary,
-} from "@design-studio/actions/_core/contracts";
 
 const MODEL = process.env["SMOKE_MODEL"] ?? "claude-haiku-5-5";
 const SKILL = process.env["SMOKE_SKILL"] ?? "personal:example-skill";
@@ -192,6 +192,9 @@ function report(label: string, capture: Capture, summary: RunSummary) {
   const init = capture.init;
   const expected = capture.prepared?.enabled ?? [];
   const listed = init?.skills ?? [];
+  const listedSet = new Set(listed);
+  const expectedSet = new Set(expected);
+  const builtinSet = new Set<string>(CLI_BUILTIN_SKILLS);
   return {
     label,
     status: summary.status,
@@ -227,16 +230,14 @@ function report(label: string, capture: Capture, summary: RunSummary) {
     hookEvents: capture.hookEvents,
     checks: init && {
       onlyExpectedSkills: listed.every(
-        (name) => expected.includes(name) || CLI_BUILTIN_SKILLS.includes(name)
+        (name) => expectedSet.has(name) || builtinSet.has(name)
       ),
-      missingSkills: expected.filter((name) => !listed.includes(name)),
+      missingSkills: expected.filter((name) => !listedSet.has(name)),
       extraSkills: listed.filter(
-        (name) => !expected.includes(name) && !CLI_BUILTIN_SKILLS.includes(name)
+        (name) => !expectedSet.has(name) && !builtinSet.has(name)
       ),
-      cliBuiltinSkills: listed.filter((name) =>
-        CLI_BUILTIN_SKILLS.includes(name)
-      ),
-      userSkillsListed: listed.filter((name) => expected.includes(name)).length,
+      cliBuiltinSkills: listed.filter((name) => builtinSet.has(name)),
+      userSkillsListed: listed.filter((name) => expectedSet.has(name)).length,
       mcpServersOnlyStudio: init.mcp_servers.every(
         (server) => server.name === "studio"
       ),

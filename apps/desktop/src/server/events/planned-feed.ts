@@ -6,7 +6,8 @@ import type {
   DomPatch,
   StudioEventInput,
   TailwindOutcome,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+
 import { logError } from "../platform/logger/index.js";
 
 interface AppliedPatch {

@@ -1,6 +1,6 @@
+import type { LinksFile, PrototypeLink } from "@design-studio/contracts/links";
 import { Context, Effect, Layer } from "effect";
 
-import type { LinksFile, PrototypeLink } from "@design-studio/actions/_core/links";
 import {
   writeCreate,
   writeDelete,

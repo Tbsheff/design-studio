@@ -13,14 +13,15 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { chromium } from "playwright-core";
-import type { Browser, Page } from "playwright-core";
-
 import type {
   Project,
   RunSummary,
   StudioEvent,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { chromium } from "playwright-core";
+import type { Browser, Page } from "playwright-core";
+
+import { toWorkspaceBin } from "../workspace-root.ts";
 
 const ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -133,26 +134,22 @@ function chunksOf(text: string, wordsPerChunk: number): string[] {
 }
 
 function startServer(dataDir: string, uiDir: string): ChildProcess {
-  const child = spawn(
-    path.join(ROOT, "node_modules", ".bin", "tsx"),
-    ["scripts/perf/server.ts"],
-    {
-      cwd: ROOT,
-      detached: true,
-      env: {
-        ...process.env,
-        STUDIO_AGENT: "mock",
-        STUDIO_DATA_DIR: dataDir,
-        STUDIO_PROJECTS_DIR: `${dataDir} projects`,
-        STUDIO_CLAUDE_HOME: path.join(dataDir, "claude-home"),
-        STUDIO_PORT: String(PORT),
-        STUDIO_PREVIEW_PORT: String(PORT + 1),
-        STUDIO_VITE_PORT_BASE: String(38_000),
-        PERF_UI_DIR: uiDir,
-      },
-      stdio: ["ignore", "ignore", "inherit"],
-    }
-  );
+  const child = spawn(toWorkspaceBin("tsx"), ["scripts/perf/server.ts"], {
+    cwd: ROOT,
+    detached: true,
+    env: {
+      ...process.env,
+      STUDIO_AGENT: "mock",
+      STUDIO_DATA_DIR: dataDir,
+      STUDIO_PROJECTS_DIR: `${dataDir} projects`,
+      STUDIO_CLAUDE_HOME: path.join(dataDir, "claude-home"),
+      STUDIO_PORT: String(PORT),
+      STUDIO_PREVIEW_PORT: String(PORT + 1),
+      STUDIO_VITE_PORT_BASE: String(38_000),
+      PERF_UI_DIR: uiDir,
+    },
+    stdio: ["ignore", "ignore", "inherit"],
+  });
   return child;
 }
 
@@ -209,7 +206,9 @@ async function stopServer(child: ChildProcess): Promise<void> {
 }
 
 async function tokenOf(): Promise<string> {
-  const html = await (await fetch(`${BASE}/`)).text();
+  const page = await fetch(`${BASE}/`);
+  if (!page.ok) throw new Error(`studio page failed: ${page.status}`);
+  const html = await page.text();
   const match = /name="studio-token" content="([^"]+)"/.exec(html);
   if (!match?.[1]) throw new Error("studio token meta tag missing");
   return match[1];

@@ -3,7 +3,8 @@ import type {
   DirectEditResult,
   SelectionContext,
   SourceLoc,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+
 import {
   chooseEditSite,
   siteRequest,

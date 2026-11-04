@@ -1,6 +1,6 @@
+import type { InsertTarget } from "@design-studio/contracts/insert";
 import { Schema } from "effect";
 
-import type { InsertTarget } from "@design-studio/actions/_core/insert";
 import {
   BOOLEAN_OPS,
   VECTOR_COLOR,

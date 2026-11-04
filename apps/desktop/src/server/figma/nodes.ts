@@ -3,7 +3,7 @@ import {
   type FigmaComponentMeta,
   type FigmaFrameInfo,
   type FigmaNode,
-} from "@design-studio/actions/_core/figma-nodes";
+} from "@design-studio/contracts/figma-nodes";
 
 export class FigmaInputError extends Error {}
 

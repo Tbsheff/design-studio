@@ -1,6 +1,6 @@
+import type { EditSessionEnd, Version } from "@design-studio/contracts";
 import { Context, Effect, Layer } from "effect";
 
-import type { EditSessionEnd, Version } from "@design-studio/actions/_core/contracts";
 import type { HunkRevertResult } from "../../shared/hunk.js";
 import type { EditStepResult } from "../direct-edit/commit/index.js";
 import { attemptVersionWrite } from "./version-write-core.js";

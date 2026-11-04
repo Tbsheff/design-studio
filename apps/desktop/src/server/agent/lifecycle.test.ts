@@ -1,9 +1,9 @@
 import { readFile, rm } from "node:fs/promises";
 import path from "node:path";
 
+import type { StudioEvent, TelemetrySample } from "@design-studio/contracts";
 import { afterEach, describe, expect, it } from "vitest";
 
-import type { StudioEvent, TelemetrySample } from "@design-studio/actions/_core/contracts";
 import {
   createFakeBus,
   createFakeProjects,

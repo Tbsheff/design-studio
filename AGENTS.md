@@ -2,9 +2,9 @@
 
 Read this before you write code. Each rule is one line: what to do, then what enforces it after a `->`, then its id.
 "tsc" means `pnpm run typecheck`. "check-actions" means `pnpm exec tsx scripts/check-actions.ts`, which will be part of `pnpm run check:scripts`.
-W8-rename has landed: definitions live in `src/shared/actions/<domain>/`, handlers in `src/server/handlers/<domain>/`, the global list is `src/shared/actions/all-actions.generated.ts`, and the check is `scripts/check-actions.ts` (`pnpm run check:actions`).
+W8-rename and the layout wave have landed: definitions live in `packages/common/actions/src/<domain>/`, handlers in `src/server/handlers/<domain>/`, the global list is `packages/common/actions/src/all-actions.generated.ts`, and the check is `scripts/check-actions.ts` (`pnpm run check:actions`).
 Use pnpm for every command: `pnpm run <script>`, `pnpm exec <bin>`, `pnpm dlx <pkg>`. Run a script file with `pnpm exec tsx scripts/<x>.ts`.
-Layout: the desktop app is `apps/desktop` (its `src`, `desktop`, `scripts`, `lint`, `e2e` live there), the cloud API is `apps/api`, the publish Worker is `apps/publish`. Root `package.json` forwards common scripts. Run other app scripts and every `pnpm exec tsx scripts/<x>.ts` from `apps/desktop`, or as `pnpm --filter @design-studio/desktop run <script>`. Paths in this file that start with `src/`, `scripts/`, `lint/` or `desktop/` are relative to `apps/desktop`; `cloud/api` is now `apps/api`.
+Layout: the desktop app is `apps/desktop` (its `src`, `desktop`, `scripts`, `e2e` live there), the cloud API is `apps/api`, the publish Worker is `apps/publish`, and shared code is `packages/common/actions`, `packages/common/contracts` and `packages/ui`. `lint/`, `oxlint*.config.ts`, `oxfmt.config.ts`, `tsconfig.json` and `tsconfig.base.json` live at the workspace root, and every lint glob starts at the workspace root. Root `package.json` forwards common scripts. Run other app scripts and every `pnpm exec tsx scripts/<x>.ts` from `apps/desktop`, or as `pnpm --filter @design-studio/desktop run <script>`. In this file a path that starts with `src/`, `scripts/` or `desktop/` is relative to `apps/desktop`, and `actions/<domain>/` means `packages/common/actions/src/<domain>/`.
 Copy the golden file for each kind of code. `docs/patterns.md` lists them. Never copy the first similar file you find.
 `review-only` marks a rule that no tool checks. A reviewer checks it.
 `(lands with <wave>)` marks a rule whose check, file or command is not on `main` yet. Follow the rule now. Do not run a command that is marked this way until its wave lands.
@@ -26,7 +26,7 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 | tool, route | the MCP or agent surface, and the HTTP surface, of an action | endpoint |
 
 - Name each action id `<domain>.<verb>`, or `<domain>.<verb><Object>` when the domain has 2 objects (`canvas.moveLayer`) -> new:action (lands with W9b), check-actions (lands with W9b). (N1)
-- Never hand-write a derived name. From `project.create`: const `createProject`, definition `src/shared/actions/project/create.ts`, handler `src/server/handlers/project/create.ts`, tool `create_project`, route `POST /api/projects`, hook `useAction(createProject)`, types `CreateProjectInput` and `CreateProjectOutput` -> new:action, check-actions (lands with W9b). (N2)
+- Never hand-write a derived name. From `project.create`: const `createProject`, definition `packages/common/actions/src/project/create.ts`, handler `src/server/handlers/project/create.ts`, tool `create_project`, route `POST /api/projects`, hook `useAction(createProject)`, types `CreateProjectInput` and `CreateProjectOutput` -> new:action, check-actions (lands with W9b). (N2)
 - Use only these verbs in action ids. Read: `get`, `list`, `search`, `inspect`. Write: `create`, `update`, `set`, `insert`, `rename`, `move`, `duplicate`, `delete`, `restore`. Run: `start`, `stop`, `run`, `apply`, `export`, `import`, `publish`, `unpublish`, `share`. Never `fetch`, `load`, `retrieve`, `make`, `add`, `remove`, `edit`, `handle`, `process`, `do` -> new:action refuses other verbs, check-actions (lands with W9b). (N3)
 - Never use a verb outside the N3 list in an action id, even when a legacy tool name has one (`keep_links`). Keep the old name with `mcp.name` -> `studio/action-verb`. (N3a)
 - Keep every tool name that is in `artifacts/mcp-snapshots/*.json`. Its definition sets `tool: "<old name>"`, and check-actions lists it as a legacy name. A new action never sets `tool` -> check-actions (lands with W9b). (N4)
@@ -39,11 +39,11 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - End each new service class name with a role: Store, Writer, Runner, Watcher, Queue, Client or Cache (`McpListenerRunner`). The spec names (`Authorizer`, `LocalPrincipal`, `LocalOrgScope`, `ProjectAccess`, `CfCli`) and the legacy names listed in `lint/studio.ts` keep their names -> `studio/service-role`. (N5c)
 - Start each top-level function in a new or moved file in `src/server/**` or `scripts/**`, and each new top-level function in a changed file there, with an N3 verb or `to`, `from`, `is`, `has`, `can`, `should`: `toDevChromeExpression`, never `devChromeExpression`. A move is when the old noun name must go -> `studio/new-function-verb`. (N5d)
 - Never put `data`, `info`, `item`, `obj`, `thing`, `stuff`, `manager`, `helper`, `util`, `handle`, `process`, `misc`, `Shape`, a `Type` or `Interface` suffix or an `I` prefix in a name. Spell words out. Short forms allowed: `id`, `url`, `html`, `css`, `jsx`, `mcp`, `ui`, `db` -> `anti-slop/no-shape-in-symbol-names`, `id-denylist` (lands with M9b), check-actions (lands with W9b). (N6)
-- Use the package test: can someone outside this repo `pnpm add` it and use it without our server, env or secrets? Yes: a package in `packages/ui` or `packages/common/<name>`. No: an app in `apps/<name>`. A package imports only packages, through their `exports` map -> boundaries (a package that imports `apps/**` fails) (lands with the layout wave). (N7)
+- Use the package test: can someone outside this repo `pnpm add` it and use it without our server, env or secrets? Yes: a package in `packages/ui` or `packages/common/<name>`. No: an app in `apps/<name>`. A package imports only packages, through their `exports` map -> boundaries (a package that imports `apps/**` fails) . (N7)
 - Name split desktop, bridge and new feature code by N5 and L4: a top-level function starts with a verb, a boolean field starts with `is`, `has`, `can` or `should`, and every field is `readonly` with `| null`, never `?:` -> `studio/module-function-verb`, `studio/boolean-name`, `studio/predicate-name`, `studio/readonly-field`, `studio/no-undefined-type` on `desktop/{boot,pack-args}.ts`, `src/bridge/bridge-types.ts` and `src/ui/features/{home,inspector}/**`. (N8)
 - Never give a server function or const the name of an action const (`stopRun`, `createProject`). Use another verb or noun -> `studio/no-action-name-reuse`. (N8)
 - Never add an `api`, `http` or `use-*` import to a pure `*-model.ts` or `*-values.ts` file. Put request helpers in a hook or an `edit-request-model.ts` that takes its inputs as parameters -> `studio/pure-model-import` (new imports only). (N8b)
-- Use the status constants from `apps/api/src/shared-actions.ts` in cloud code. Never declare a local `HTTP_*` or `*_STATUS` number. Add a missing code to `src/shared/actions/_core/errors/http-status-codes.ts` -> `studio/no-local-http-status`. (N8)
+- Use the status constants from `@design-studio/actions/_core/errors/http-status-codes` in cloud code. Never declare a local `HTTP_*` or `*_STATUS` number. Add a missing code to `packages/common/actions/src/_core/errors/http-status-codes.ts` -> `studio/no-local-http-status`. (N8)
 - Name each handler action type with the derived name: `type GetProjectInput = Input<typeof getProject>`, never a plural or short form -> `studio/derived-type-name`. (N8)
 - Start each cloud MCP tool name in `apps/api/src/mcp` with an N3 verb (`create_comment`, never `add_comment`) -> `studio/cloud-tool-verb`. (N9)
 - Put an action whose object is another domain noun (`token`, `component`, `project`, `design`, `canvas`, `publication`) in that noun's domain: `token.create`, never `direct-edit.createToken` -> `studio/action-domain-object` (action files; the old direct-edit, publish and workspace ids are frozen). (N1a)
@@ -54,10 +54,18 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Spell out `pid`, `sig`, `cf`, `ctx`, `cfg`, `msg` and a bare `org` in every name: `projectId`, `signature`, `LegacyCloudflareRecord`, `orgId`. Only plan-fixed wire keys (`CloudRefSchema` `pid`, `sig`) and spec names (`CfCli`, `CfFailed`) are exempt -> `studio/no-short-name` (auth files). (N11)
 - Type every `*_TYPES` list in `src/shared` and `src/bridge` from the message union (`readonly BridgeMessage['type'][]`), never `string[]`. Mark every field in `src/bridge/session.ts` `readonly` -> `studio/typed-string-list`, `studio/readonly-field`. (N12)
 - Start every boolean field with `is`, `has`, `can` or `should` in `src/server/agent/{index,lifecycle,types}.ts` (`canRunBash`, `isCostEstimated`) -> `studio/boolean-name`. (N13)
+- List named entries only in a package `exports` map, never a wildcard or a `.js` key. `gen-routes` writes the map for actions and contracts -> `studio/package-export-named` (on `lint/anchor.ts`). (N7b)
+- Import a `@design-studio/*` specifier only when it is a key of the package `exports` map -> `studio/package-export-specifier`. (N7c)
+- Write a `@design-studio/*` specifier with no `.js` suffix, also in stamp templates -> `studio/no-package-js-suffix`. (N7d)
+- Extend a package tsconfig only from the root `tsconfig.base.json`, never from a file in `apps/` -> `studio/package-no-app-config` (on `lint/anchor.ts`). (N7e)
+- Never add a file that only forwards a `@design-studio/*` package. Point each caller at the package -> `studio/no-package-forward-shim`. (N7f)
+- Give each package a reference in the root `tsconfig.json` and no `typecheck` script -> `studio/package-typecheck-reference` (on `lint/anchor.ts`). (W11d)
+- Give each package a `lint/boundaries.ts` element and a `lint/ts-resolver.cjs` mapping -> `studio/boundary-package-element` (on `lint/anchor.ts`). (W13b)
+- Put effect-free shared code in `packages/common/contracts/src/<name>.ts`, never in `actions/_core` -> `studio/no-plain-core-module`. (W3a)
 
 ## 1. Where code goes
 
-- Put each action definition in `src/shared/actions/<domain>/<verb>.ts` (the layout wave moves it to `packages/common/actions/src/<domain>/<verb>.ts`), as one `defineAction` const named `<verb><Domain>` -> new:action, check-actions (pair rule) (lands with S4s). (W1)
+- Put each action definition in `packages/common/actions/src/<domain>/<verb>.ts`, as one `defineAction` const named `<verb><Domain>` -> new:action, check-actions (pair rule) (lands with S4s). (W1)
 - Put each action handler in `src/server/handlers/<domain>/<verb>.ts`, with the same path tail. It exports `handle`, and also `preview` when `confirm: "user"` -> new:action, check-actions (pair rule) (lands with S4s), tsc `Entries` (lands with S4b). (W2)
 - Put shared payload schemas in `actions/<domain>/schema.ts`. Put branded ids in `actions/_core/ids.ts` -> review, new:action (it imports ids from there) (lands with S4s). (W3)
 - Put each error class in its own file: `actions/_core/errors/<kebab>.ts` or `actions/<domain>/errors/<kebab>.ts` -> `max-classes-per-file` 1, new:error (lands with S4s). (W4)
@@ -69,7 +77,7 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Put the shared action runner only in `src/server/handlers/_core/run-action.ts`. Adapters call it. They never decode, authorize or check scope themselves -> check-actions (decode and `authorizer.require` allowlist) (lands with S4s). (W7)
 - Never import a service runtime getter or op in an adapter (`directEditCall`, `*RuntimeOf`, `*Call`, an op that takes a runtime such as `createProjectIn`). Serve the tool from the action with `mcp { name }`, or call its HTTP route with `studioCall` -> `studio/no-adapter-runtime-call`. (W16)
 - Never call a service runtime getter (`directEditCall`, `*RuntimeOf`) from `http`, `mcp` or `agent-tools`. Give the action `mcp { name }` so `run-action.ts` serves it -> `studio/no-adapter-runtime-call` (the 6 legacy direct-edit adapter files are frozen). (W7a)
-- Import desktop app code (`src/shared`) in `apps/api/src` only through `apps/api/src/shared-actions.ts` -> `studio/no-app-import` (older cloud files are frozen). (N7a)
+- Never import `apps/desktop` code in `apps/api`, `apps/publish` or a package. Use `@design-studio/actions` or `@design-studio/contracts` -> `studio/no-app-import`. (N7a)
 - Put pure engines in `<area>/engine/<verb-noun>.ts` as plain functions -> boundaries engine globs, `no-restricted-imports` (`effect`, `node:*`) (lands with M9b). (W8)
 - Keep `<area>/engine/**` pure: no `node:*` or `effect` value import, no `async`, `await`, `throw`, `try`, `new Promise` or `.catch`. Do I/O in a read service that calls the engine -> `studio/engine-pure` (`direct-edit/engine` is out of scope until S5-direct-edit). (W8a)
 - Put UI data code in `src/ui/platform/**` and UI features in `src/ui/features/<f>/**` -> boundaries ui elements, `no-restricted-globals` (lands with S6a). (W9)
@@ -96,12 +104,12 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Make a `*.renderer.ts` file only for a typed in-page function. Never leave a stub that holds only a name const -> `studio/renderer-has-function`. (W18)
 - Never `import()` from `src/server` into another app (`desktop/`, `scripts/`). Put code that both apps need in `src/server/platform/<module>/index.ts`, as `platform/bridge-build` does -> `studio/no-dynamic-app-import`. (W19)
 - Import a `src/server/store` or `src/server/preview` file from another server area only through `store/index.ts` or `preview/index.ts`. Old deep imports may stay until the file changes; a new one fails -> `studio/no-deep-store-import`. (W19a)
-- Import `src/shared/actions/**` in `src/bridge/**` only with `import type` (for example `BridgeMessage`), and mark every floating async call in the bridge with `void` -> `studio/bridge-type-import`, `studio/no-floating-async`. (W20)
+- Import `@design-studio/actions` in `src/bridge/**` only with `import type` (for example `BridgeMessage`), value-import plain shared code from `@design-studio/contracts`, and mark every floating async call in the bridge with `void` -> `studio/bridge-type-import`, `studio/no-floating-async`. (W20)
 - Serialize an in-page function only inside an IIFE that first declares `const __name = (target) => target;`, as `scanExpression` in `src/server/export/page-scan.ts` does -> `studio/serialized-fn-name-shim`. (W21)
 - Import another adapter (`http`, `mcp`, `agent-tools`) only through its `index.ts`, and never as a value from `src/server/variations` -> `studio/adapter-import-index`. (W16)
 - Write each relative import as a path that resolves to a file. When you move a file, change its relative imports -> `studio/import-resolves`. (W17)
 - End each relative import in `src/ui/features/**` with `.js` -> `studio/relative-import-js`. (W18)
-- Import only `apps/api/src/platform/**`, `shared-actions.ts` and `src/shared/**` from `apps/api/src/platform`. Type a Durable Object binding as `DurableObjectNamespace` there -> `studio/cloud-platform-import`. (W19)
+- Import only `apps/api/src/platform/**` and the workspace packages from `apps/api/src/platform`. Type a Durable Object binding as `DurableObjectNamespace` there -> `studio/cloud-platform-import`. (W19)
 - Load the TypeScript compiler only with `loadTypeScript` from `src/server/platform/ts-compiler/index.ts`, and read its version from `.version` of the loaded module. Import only types from `typescript-api` elsewhere. Never use the bare `typescript` specifier (TS 7 has no JS API), also not `typescript/package.json` -> `studio/ts-compiler-owner`. (W22)
 ## 2. How to add an action
 
@@ -197,9 +205,9 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Send a defect as `toWire(null)` (500). The runner logs it with `Effect.logError(action.id, defect)`. Never send stacks or paths -> run-action `tapDefect`, adapter `reply` (lands with S4b). (R7)
 - Never map `Cause.UnknownError` to a 400 in a local bridge. Use `attemptKnown` from `src/server/platform/attempt/index.ts`: it maps only the known store errors and lets the rest die as defects -> `studio/no-local-error-bridge`. (R7a)
 - Write `message` as user text in STE. MCP and the agent show it as it is -> review-only. (R8)
-- Never use `new Error` in cloud Effect code. Die or fail with a `Schema.TaggedError` from `apps/api/src/tenant/errors` or `apps/api/src/shared-actions.ts` -> `studio/no-plain-error`. (R9)
+- Never use `new Error` in cloud Effect code. Die or fail with a `Schema.TaggedError` from `apps/api/src/tenant/errors` or `@design-studio/actions/_core/errors` -> `studio/no-plain-error`. (R9)
 - Never declare an open `_tag` field (optional or `string`). Let Effect infer the error union, and map it with `Effect.catchTag` or a switch on `_tag` -> `studio/no-open-tag`. (R10)
-- Never give a server class the name of a wire error in `src/shared/actions`. Put a domain error in `actions/<domain>/errors/`, never in `_core/errors` -> `studio/error-name-unique`. (R1a)
+- Never give a server class the name of a wire error in `packages/common/actions/src`. Put a domain error in `actions/<domain>/errors/`, never in `_core/errors` -> `studio/error-name-unique`. (R1a)
 - Never fail a "not ready" runtime with `BadRequest`. Use `Unavailable` (503) or `requireBound` from `platform/runtime-slot` -> `studio/not-ready-unavailable`. (R2a)
 
 ## 5. Tenancy
@@ -308,7 +316,7 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Use one decision override object per file set, with all its rules -> `studio/one-override-per-files`. (L11)
 - Never add an entry to the frozen lists in `lint/plugins/studio/frozen.js` or to `lint/day-one.ts` `FILES`. They may only shrink against `HEAD` -> `studio/frozen-pin`. (L10)
 - List a file in a `lint/decisions.ts` block only when the file exists and has code that each turned-off rule reports (a `../` import for `no-relative-parent-imports`, `unknown` for `no-unknown-parameters`) -> `studio/override-needs-rule`. (L10)
-- Never put a glob over stamped code (`src/shared/actions/**`, `src/server/handlers/<domain>/*.ts`) in `lint/decisions.ts` or `lint/plugins/studio/frozen.js`. List exact files. Every `excludeFiles` entry in `lint/studio.ts` is in `FROZEN_EXEMPTIONS` or `SCOPE_EXEMPTIONS` -> `studio/wide-exemption`, `studio/frozen-exemption`. (L10)
+- Never put a glob over stamped code (`packages/common/actions/src/**`, `src/server/handlers/<domain>/*.ts`) in `lint/decisions.ts` or `lint/plugins/studio/frozen.js`. List exact files. Every `excludeFiles` entry in `lint/studio.ts` is in `FROZEN_EXEMPTIONS` or `SCOPE_EXEMPTIONS` -> `studio/wide-exemption`, `studio/frozen-exemption`. (L10)
 - Keep each `decisionOverrides` entry to exact files and at most 3 warn rules. Never turn a fixable style rule off or to warn -> `studio/narrow-override`. (L6c)
 - Never add an entry to a lint exemption list in `lint/studio.ts` or an area to a `lint/boundaries.ts` layer in a slice. The merge step adds it to `lint/plugins/studio/frozen.js` -> `studio/frozen-exemption`. (L6d)
 - Put exports only in one `export { }` block and one `export type { }` block, as the last statements. No inline export, no default export and no `export ... from` outside `index.ts` -> `studio/export-blocks` (auth files). (L10)
@@ -327,6 +335,17 @@ The rules are in `docs/naming.md` (D44). One word means one thing. Never use a s
 - Never list one file in two decision overrides -> `studio/override-file-once`. (L20)
 - Never turn `unicorn/filename-case`, `only-export-components` or `jsx-props-no-spreading` off in `lint/decisions.ts`. Rename the file, split it, or pass explicit props -> `studio/no-fixable-off`. (L21)
 - Never add a file to `UI_CROSS_FEATURE_FILES` in `lint/boundaries.ts` or a glob to `WARN_GLOBS` in `lint/server-order.ts`. They may only shrink -> `studio/frozen-pin`. (L22)
+- Resolve a workspace bin only with `toWorkspaceBin` from `scripts/workspace-root.ts`, never a `node_modules/.bin` path -> `studio/no-stale-bin-path`. (L5a)
+- Never parse tool stdout with an empty fallback (`run.stdout || "{}"`). Fail on a spawn error, a bad exit status and empty stdout -> `studio/no-empty-output-fallback`. (L5b)
+- Never skip a rule in a check script and exit 0. Fail with a `fix:` line when a target folder or catalog is missing -> `studio/no-silent-skip`. (L5c)
+- Join a `packages/` or `apps/` path only to `WORKSPACE_ROOT` from `scripts/workspace-root.ts`, never to the app `ROOT` -> `studio/no-app-root-join`. (L5d)
+- Never write an old layout path, plain or escaped (`cloud/api`, the old shared actions folder, a parent path to `packages/`), in `lint/` or `scripts/` -> `studio/no-old-path-form`. (L5e)
+- Start every lint path at the workspace root, and match at least 1 file. A dead glob in a `files`, `excludeFiles` or frozen list fails -> `studio/no-dead-glob`. (L5f)
+- Lint every app and package from the root `oxlint.config.ts`, and keep `packages/common/actions/src` and `packages/ui/src` in `BUDGET_ZERO` -> `studio/lint-covers-workspace` (on `lint/anchor.ts`, which the commit hook always lints). (L5g)
+- Keep a generated file equal to the generator output. Run `pnpm exec tsx scripts/gen-routes.ts`, never `sed` -> `studio/generated-fresh`. (W11c)
+- Use no `npm` or `npx` in tooling text. Use `pnpm` -> `studio/no-npm-text`. (L5h)
+- Keep `packageManager`, `allowScripts` and `pnpm-lock.yaml` at the workspace root -> `studio/root-package-config` (on `lint/anchor.ts`). (L5i)
+- Make every relative link in `docs/patterns.md` and `CONTRIBUTING.md` resolve to a file -> `studio/docs-link-resolves` (on `lint/anchor.ts`). (L5j)
 - Name in `FROZEN_LISTS` only a const that a pinned file declares -> `studio/frozen-list-live`. (L22a)
 - Never edit `lint/day-one.ts` by hand. RULES hold index numbers into FILES, so a deleted FILES entry moves every later row. Run `pnpm run lint:day-one`, and add no new rule and file pair -> `studio/day-one-pairs`. (L23)
 

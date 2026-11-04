@@ -1,3 +1,4 @@
+import { Icon, PanelHead } from "@design-studio/ui";
 import { useMemo } from "react";
 
 import type {
@@ -8,8 +9,6 @@ import type {
   TweakControl,
   TweakValue,
 } from "../../../shared/tweaks.js";
-import { Icon } from "@design-studio/ui";
-import { PanelHead } from "@design-studio/ui";
 import { ColorValue } from "../versions-layers-tokens/token-inputs.js";
 import type { TweaksDraft } from "./use-tweaks.js";
 

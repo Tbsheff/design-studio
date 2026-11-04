@@ -29,7 +29,7 @@ export {
   BREAKPOINT_VALUE_MAX,
 } from "../../shared/breakpoints.js";
 
-export { DIRECT_STYLE_PROPERTIES } from "@design-studio/actions/_core/contracts";
+export { DIRECT_STYLE_PROPERTIES } from "@design-studio/contracts";
 
 export { STATE_SELECTOR_MAX, STYLE_STATES } from "../../shared/state-styles.js";
 
@@ -41,13 +41,13 @@ export type { WrittenFile } from "../direct-edit/commit/index.js";
 
 export type { DirectEditDeps } from "../direct-edit/index.js";
 
-export type { CanvasFileFrame } from "@design-studio/actions/_core/canvas-file";
+export type { CanvasFileFrame } from "@design-studio/contracts/canvas-file";
 
 export type {
   DirectEditRequest,
   SourceLoc,
   Version,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
 
 export type {
   ForcedFrameState,

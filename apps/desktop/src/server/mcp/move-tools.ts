@@ -3,7 +3,8 @@ import type {
   DirectEditResult,
   SourceLoc,
   StructureEditResult,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+
 import { z } from "../platform/zod-bridge/index.js";
 import { callAction } from "./action-call.js";
 import { EditError, loadTarget, refuseWhileRunning } from "./edit-guards.js";

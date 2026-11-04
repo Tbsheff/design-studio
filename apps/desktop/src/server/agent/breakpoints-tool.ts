@@ -1,6 +1,6 @@
+import type { SourceLoc } from "@design-studio/contracts";
 import { Schema } from "effect";
 
-import type { SourceLoc } from "@design-studio/actions/_core/contracts";
 import {
   toOptionalFlag,
   toOptionalInt,

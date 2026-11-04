@@ -1,10 +1,10 @@
+import type { PackProblem, PackSummary } from "@design-studio/contracts";
+import { Icon } from "@design-studio/ui";
 import { useEffect, useRef, useState, useTransition } from "react";
 
-import type { PackProblem, PackSummary } from "@design-studio/actions/_core/contracts";
 import { ApiError, errorText } from "../../api.js";
 import { StudioToast } from "../../app/shell/studio-parts.js";
 import { downloadBlob } from "../../domain/format.js";
-import { Icon } from "@design-studio/ui";
 import { packApi } from "../../platform/pack-api.js";
 import { uiStore } from "../../platform/storage.js";
 import type { LibraryFrom } from "../../platform/storage.js";

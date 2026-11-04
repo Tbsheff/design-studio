@@ -1,4 +1,5 @@
-import { SOURCE_LOC_ATTR } from "@design-studio/actions/_core/contracts";
+import { SOURCE_LOC_ATTR } from "@design-studio/contracts";
+
 import { USED_AT_ATTR } from "./app-source.js";
 import { pathOf } from "./select-match.js";
 

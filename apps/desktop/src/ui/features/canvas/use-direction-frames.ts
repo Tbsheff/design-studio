@@ -1,7 +1,7 @@
+import { BRIDGE_PASSIVE_PARAM } from "@design-studio/contracts";
+import type { Direction, ProjectKind } from "@design-studio/contracts";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { BRIDGE_PASSIVE_PARAM } from "@design-studio/actions/_core/contracts";
-import type { Direction, ProjectKind } from "@design-studio/actions/_core/contracts";
 import { api } from "../../api.js";
 import { frameSrc } from "../../platform/bridge.js";
 import { randomToken } from "../../platform/session.js";

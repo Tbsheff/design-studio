@@ -1,14 +1,15 @@
 import { readdir, readFile, stat } from "node:fs/promises";
 import path from "node:path";
 
-import type { CanvasFileFrame } from "@design-studio/actions/_core/canvas-file";
-import type { AppRoute, Project } from "@design-studio/actions/_core/contracts";
+import type { AppRoute, Project } from "@design-studio/contracts";
+import type { CanvasFileFrame } from "@design-studio/contracts/canvas-file";
 import {
   DEFAULT_FRAME_STATE,
   stateLabel,
   withFrameStateHost,
   type FrameStatesView,
-} from "@design-studio/actions/_core/frame-state";
+} from "@design-studio/contracts/frame-state";
+
 import { changedLineRanges } from "../../shared/line-diff.js";
 import type { ScreenPlan } from "../../shared/run-levels.js";
 import { stateOfFrame } from "../app/frame-state.js";

@@ -1,14 +1,13 @@
-import { useEffect, useState, useTransition } from "react";
-
 import type {
   DesignSystemCheckResult,
   PackDetail,
   PackSummary,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { Icon, useModalDialog } from "@design-studio/ui";
+import { useEffect, useState, useTransition } from "react";
+
 import { Markdown } from "../../ai/components/ai/markdown.js";
 import { errorText } from "../../api.js";
-import { Icon } from "@design-studio/ui";
-import { useModalDialog } from "@design-studio/ui";
 import { packApi } from "../../platform/pack-api.js";
 import { COPY } from "./copy.js";
 import { PackBadges } from "./pack-badges.js";

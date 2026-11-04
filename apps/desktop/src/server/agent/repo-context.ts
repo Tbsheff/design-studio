@@ -3,7 +3,8 @@ import { readFile, realpath, stat } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import type { Project } from "@design-studio/actions/_core/contracts";
+import type { Project } from "@design-studio/contracts";
+
 import {
   REPO_CONTEXT_FILES,
   REPO_CONTEXT_MAX_BYTES,
@@ -45,9 +46,8 @@ function isWorkspaceRoot(dir: string): boolean {
   }
 
   try {
-    const pkg = JSON.parse(
-      readFileSync(path.join(dir, "package.json"), "utf-8")
-    ) as { workspaces?: unknown };
+    const text = readFileSync(path.join(dir, "package.json"), "utf-8");
+    const pkg = JSON.parse(text) as { workspaces?: unknown };
 
     return pkg.workspaces !== undefined;
   } catch {

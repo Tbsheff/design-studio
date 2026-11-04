@@ -1,12 +1,6 @@
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
-import type { MutableRefObject, ReactNode } from "react";
-
-import type {
-  ProjectKind,
-  SelectionContext,
-} from "@design-studio/actions/_core/contracts";
-import { withFrameStateHost } from "@design-studio/actions/_core/frame-state";
-import { targetFrame } from "@design-studio/actions/_core/link-interaction";
+import type { ProjectKind, SelectionContext } from "@design-studio/contracts";
+import { withFrameStateHost } from "@design-studio/contracts/frame-state";
+import { targetFrame } from "@design-studio/contracts/link-interaction";
 import {
   ACTION_LABELS,
   isBackTarget,
@@ -14,8 +8,11 @@ import {
   sourceName,
   startFrameOf,
   withImplicit,
-} from "@design-studio/actions/_core/links";
-import type { PrototypeLink } from "@design-studio/actions/_core/links";
+} from "@design-studio/contracts/links";
+import type { PrototypeLink } from "@design-studio/contracts/links";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import type { MutableRefObject, ReactNode } from "react";
+
 import { api } from "../../api.js";
 import {
   frameDirection,

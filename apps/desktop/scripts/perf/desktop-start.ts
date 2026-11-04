@@ -3,10 +3,10 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import type { TelemetrySample } from "@design-studio/contracts";
 import { _electron as electron } from "@playwright/test";
 
 import { writeSkillsFixture } from "../../e2e/support/skills-fixture.js";
-import type { TelemetrySample } from "@design-studio/actions/_core/contracts";
 
 const ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -96,15 +96,17 @@ async function sample(): Promise<Sample> {
     let appStart: TelemetrySample | null = null;
 
     for (let i = 0; i < 20 && !appStart; i += 1) {
-      const list = await page.evaluate(
-        async (t) =>
-          (
-            await fetch("/api/telemetry?scope=app", {
-              headers: { "x-studio-token": t ?? "" },
-            })
-          ).json() as Promise<TelemetrySample[]>,
-        token
-      );
+      const list = await page.evaluate(async (t) => {
+        const res = await fetch("/api/telemetry?scope=app", {
+          headers: { "x-studio-token": t ?? "" },
+        });
+
+        if (!res.ok) {
+          return [];
+        }
+
+        return res.json() as Promise<TelemetrySample[]>;
+      }, token);
 
       appStart = Array.isArray(list)
         ? (list.find((s) => s.kind === "app.start") ?? null)

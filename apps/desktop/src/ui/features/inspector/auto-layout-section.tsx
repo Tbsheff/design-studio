@@ -1,9 +1,8 @@
+import { Icon, UiSelect } from "@design-studio/ui";
+import type { IconName } from "@design-studio/ui";
 import { useRef } from "react";
 import type { ReactNode } from "react";
 
-import { Icon } from "@design-studio/ui";
-import type { IconName } from "@design-studio/ui";
-import { UiSelect } from "@design-studio/ui";
 import { InspectorSection, SelectField } from "./inspector-fields.js";
 import { AddButton } from "./inspector-shared.js";
 import { write, useLayoutKeys } from "./layout-keys.js";

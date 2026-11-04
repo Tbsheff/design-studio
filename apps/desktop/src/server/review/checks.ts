@@ -1,20 +1,20 @@
-import { converter, formatHex, parse, wcagContrast } from "culori";
-import type { Color } from "culori";
-
 import type {
   CompiledTokenEntry,
   DirectStyleProperty,
   LayoutFinding,
   SourceLoc,
   TokenMatch,
-} from "@design-studio/actions/_core/contracts";
-import { DIRECT_STYLE_PROPERTIES } from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { DIRECT_STYLE_PROPERTIES } from "@design-studio/contracts";
 import type {
   ReviewFinding,
   ReviewFix,
   ReviewKind,
   ReviewSeverity,
-} from "@design-studio/actions/_core/review";
+} from "@design-studio/contracts/review";
+import { converter, formatHex, parse, wcagContrast } from "culori";
+import type { Color } from "culori";
+
 import {
   isSnappable,
   lengthToPx,

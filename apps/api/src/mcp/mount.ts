@@ -1,11 +1,14 @@
+import {
+  ACCEPTED,
+  BAD_REQUEST,
+} from "@design-studio/actions/_core/errors/http-status-codes";
+import type { OK } from "@design-studio/actions/_core/errors/http-status-codes";
 import { Effect } from "effect";
 import type { Layer, ManagedRuntime } from "effect";
 import type { Hono } from "hono";
 
 import { withAgent } from "../http/middleware/agent-auth.js";
 import type { AppEnv } from "../platform/bindings.js";
-import { ACCEPTED, BAD_REQUEST } from "../shared-actions.js";
-import type { OK } from "../shared-actions.js";
 import type { mcpLayer } from "./layer.js";
 import { runMethod, toFailure, toResult } from "./rpc.js";
 import type { RpcReply, RpcRequest } from "./rpc.js";

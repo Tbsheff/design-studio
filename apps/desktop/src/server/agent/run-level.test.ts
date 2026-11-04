@@ -1,6 +1,6 @@
+import { DEFAULT_SETTINGS } from "@design-studio/contracts";
 import { describe, expect, it } from "vitest";
 
-import { DEFAULT_SETTINGS } from "@design-studio/actions/_core/contracts";
 import { resolveRunConfig, withRunTask } from "../../shared/run-levels.js";
 import { buildRunLevelBlock, withRunLevel } from "./run-level.js";
 

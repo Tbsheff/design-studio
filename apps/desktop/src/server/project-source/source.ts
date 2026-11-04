@@ -3,14 +3,15 @@ import type {
   Project,
   Version,
   WorkTreeStatus,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
 import {
   cleanExportPath,
   EXPORT_FRAME_MAX_SIDE,
   EXPORT_MAX_FRAMES,
   EXPORT_SCALES,
-} from "@design-studio/actions/_core/export";
-import type { ExportFrame, ExportScale } from "@design-studio/actions/_core/export";
+} from "@design-studio/contracts/export";
+import type { ExportFrame, ExportScale } from "@design-studio/contracts/export";
+
 import {
   BadRequestError,
   NotFoundError,

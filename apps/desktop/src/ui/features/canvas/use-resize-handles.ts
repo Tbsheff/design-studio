@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import type { PointerEvent as ReactPointerEvent } from "react";
-
 import type {
   SelectionContext,
   BridgeToParent,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { PointerEvent as ReactPointerEvent } from "react";
+
 import { api, errorText } from "../../api.js";
 import type { ParentMessageBody } from "../../platform/bridge.js";
 import { createLiveStore, useLive } from "../../platform/live-store.js";

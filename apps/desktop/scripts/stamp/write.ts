@@ -14,6 +14,7 @@ import { promisify } from "node:util";
 import { ROOT, readOrEmpty } from "../gen-common.js";
 import type { GeneratedFile } from "../gen-common.js";
 import { buildAll, staleFiles, writeAll } from "../gen-routes.js";
+import { toWorkspaceBin } from "../workspace-root.ts";
 import { fail } from "./args.js";
 
 interface StampFile {
@@ -36,9 +37,13 @@ interface StampResult {
 }
 
 const DECISIONS = path.join(ROOT, "lint/decisions.ts");
-const OXLINT = path.join(ROOT, "node_modules/.bin/oxlint");
-const OXFMT = path.join(ROOT, "node_modules/.bin/oxfmt");
-const NEEDED_GLOBS = ["../../packages/common/actions/src/**", "src/server/**"];
+const OXLINT = toWorkspaceBin("oxlint");
+const OXFMT = toWorkspaceBin("oxfmt");
+
+const NEEDED_GLOBS = [
+  "packages/common/actions/src/**",
+  "apps/desktop/src/server/**",
+];
 
 const OVERRIDE_BLOCK =
   /\{\s*files:\s*\[(?<files>[^\]]*)\],\s*rules:\s*\{(?<rules>[^}]*)\}/gu;
@@ -105,7 +110,10 @@ const buildOrFail = async (): Promise<GeneratedFile[]> => {
   const build = await buildAll();
 
   if (build.errors.length > 0) {
-    fail(build.errors.join("\n"), "pnpm exec tsx scripts/gen-routes.ts");
+    fail(
+      build.errors.join("\n"),
+      "pnpm exec tsx apps/desktop/scripts/gen-routes.ts"
+    );
   }
 
   return build.files;
@@ -195,7 +203,7 @@ const guardClean = async (): Promise<void> => {
 
   if (!turnsOffThrowNewError(decisions)) {
     fail(
-      "The clean step does not run: lint/decisions.ts does not turn off unicorn/throw-new-error for ../../packages/common/actions/src/** and src/server/**. Its autofix breaks every TaggedError class.",
+      "The clean step does not run: lint/decisions.ts does not turn off unicorn/throw-new-error for packages/common/actions/src/** and apps/desktop/src/server/**. Its autofix breaks every TaggedError class.",
       "add that override in the merge step, then run the stamp again"
     );
   }

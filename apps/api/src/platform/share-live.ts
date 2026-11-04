@@ -1,6 +1,5 @@
+import { GONE } from "@design-studio/actions/_core/errors/http-status-codes";
 import { DurableObject } from "cloudflare:workers";
-
-import { GONE } from "../shared-actions.js";
 
 const REVOKED_KEY = "revoked";
 

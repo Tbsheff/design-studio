@@ -1,8 +1,8 @@
 import { userInfo } from "node:os";
 
+import type { Project } from "@design-studio/contracts";
 import type { Context, Hono } from "hono";
 
-import type { Project } from "@design-studio/actions/_core/contracts";
 import { askQuestions } from "../agent/index.js";
 import { buildEnv } from "../platform/config/index.js";
 import { BadRequestError } from "../platform/errors/index.js";

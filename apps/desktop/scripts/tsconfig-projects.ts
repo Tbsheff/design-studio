@@ -8,7 +8,7 @@ interface SolutionConfig {
   readonly references: readonly ProjectReference[];
 }
 
-const SOLUTION = new URL("../tsconfig.json", import.meta.url);
+const SOLUTION = new URL("../../../tsconfig.json", import.meta.url);
 
 const isSolutionConfig = (value: unknown): value is SolutionConfig =>
   typeof value === "object" &&

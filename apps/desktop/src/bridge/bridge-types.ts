@@ -2,7 +2,8 @@ import type {
   BridgeToParent,
   ParentToBridge,
   SelectionContext,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+
 import type { createAnchorTracker } from "./anchor-tracker.js";
 import type { createForceState } from "./force-state.js";
 import type { createFreeMove } from "./free-move.js";

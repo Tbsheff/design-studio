@@ -1,7 +1,7 @@
+import type { AppServerStatus } from "@design-studio/contracts";
+import type { AppDoctorResult } from "@design-studio/contracts/app-doctor";
 import { Schema } from "effect";
 
-import type { AppDoctorResult } from "../_core/app-doctor.js";
-import type { AppServerStatus } from "../_core/contracts.js";
 import { ImageOutputSchema } from "../_core/image-output.js";
 
 interface DoctorView {

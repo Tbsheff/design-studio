@@ -1,5 +1,3 @@
-import { Effect } from "effect";
-
 import type {
   Direction,
   Project,
@@ -8,7 +6,9 @@ import type {
   RunRequest,
   Version,
   VersionMeta,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { Effect } from "effect";
+
 import type { AttachResponse } from "../app/index.js";
 import type { LoadedPack, PackRegistry } from "../design-system/index.js";
 import type { EventBus } from "../events/index.js";

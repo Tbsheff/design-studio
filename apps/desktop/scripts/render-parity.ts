@@ -13,6 +13,10 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import type {
+  QualityFinding,
+  RenderCheckResult,
+} from "@design-studio/contracts";
 import {
   _electron as electron,
   type ElectronApplication,
@@ -31,10 +35,6 @@ import {
   type RenderBackend,
   type RenderPage,
 } from "../src/server/preview/index.js";
-import type {
-  QualityFinding,
-  RenderCheckResult,
-} from "@design-studio/actions/_core/contracts";
 import type { RenderErrors } from "../src/shared/render-rpc.js";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");

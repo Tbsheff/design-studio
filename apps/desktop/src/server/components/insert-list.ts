@@ -3,12 +3,12 @@ import { readdir, readFile, realpath, stat } from "node:fs/promises";
 import path from "node:path";
 
 import type * as t from "@babel/types";
-
-import type { Project } from "@design-studio/actions/_core/contracts";
+import type { Project } from "@design-studio/contracts";
 import type {
   InsertableComponent,
   InsertableList,
-} from "@design-studio/actions/_core/insert";
+} from "@design-studio/contracts/insert";
+
 import { treeChangesSince, treeStamp } from "../events/index.js";
 import type { ExportKind } from "./import-plan.js";
 import { listFiles } from "./inventory.js";

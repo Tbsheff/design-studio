@@ -1,9 +1,11 @@
+import type { StudioEvent } from "@design-studio/contracts";
 import type { Hono } from "hono";
 import { streamSSE } from "hono/streaming";
 
-import type { StudioEvent } from "@design-studio/actions/_core/contracts";
 import type { AppContext } from "./app-context.js";
 import { HEARTBEAT_MS } from "./app-request.js";
+
+const toIgnoredFailure = (): void => {};
 
 const registerEventsRoutes = (app: Hono, ctx: AppContext): void => {
   const { bus, projects, streamTracker } = ctx;
@@ -29,7 +31,7 @@ const registerEventsRoutes = (app: Hono, ctx: AppContext): void => {
       });
 
       const heartbeat = setInterval(() => {
-        void stream.write(": ping\n\n").catch(() => {});
+        void stream.write(": ping\n\n").catch(toIgnoredFailure);
       }, HEARTBEAT_MS);
 
       stream.onAbort(() => {

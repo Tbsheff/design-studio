@@ -1,8 +1,11 @@
 import path from "node:path";
 
+import {
+  EXPORT_MAX_FRAMES,
+  exportFileStem,
+} from "@design-studio/contracts/export";
 import { Schema } from "effect";
 
-import { EXPORT_MAX_FRAMES, exportFileStem } from "@design-studio/actions/_core/export";
 import {
   toOptionalText,
   toSdkFieldSet,

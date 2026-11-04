@@ -1,7 +1,7 @@
+import type { StyleValueRow } from "@design-studio/contracts/style-search";
 import { useEffect, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 
-import type { StyleValueRow } from "@design-studio/actions/_core/style-search";
 import { shownValue, Swatch } from "./match-candidates.js";
 import type { Candidate } from "./match-candidates.js";
 import { PICK_SHOWN, KIND_EXAMPLE } from "./match-scan.js";

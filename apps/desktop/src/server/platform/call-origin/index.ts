@@ -1,6 +1,6 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 
-import type { VersionMeta } from "@design-studio/actions/_core/contracts";
+import type { VersionMeta } from "@design-studio/contracts";
 
 interface EditOrigin {
   client: string;

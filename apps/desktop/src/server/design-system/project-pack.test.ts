@@ -2,20 +2,20 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-
 import {
   PACK_FILE,
   TOKENS_CSS_FILE,
   TOKENS_FILE,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
 import type {
   ApplyPackResult,
   PackSummary,
   Project,
   SavePackResult,
   Version,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+
 import { createEventBus } from "../events/index.js";
 import { createApp } from "../http/app.js";
 import { projectStorePorts } from "../main/project-ports.js";

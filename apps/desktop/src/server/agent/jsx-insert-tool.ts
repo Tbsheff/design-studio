@@ -1,10 +1,10 @@
-import { Schema } from "effect";
-
 import {
   JSX_IMPORTS_MAX,
   JSX_INSERT_POSITIONS,
   JSX_SNIPPET_MAX,
-} from "@design-studio/actions/_core/insert";
+} from "@design-studio/contracts/insert";
+import { Schema } from "effect";
+
 import {
   toDefaulted,
   toOptional,

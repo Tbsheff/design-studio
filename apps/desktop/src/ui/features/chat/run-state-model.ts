@@ -8,7 +8,8 @@ import type {
   StudioEvent,
   TodoItem,
   ToolDiff,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+
 import {
   partsText,
   applyPartEvent,

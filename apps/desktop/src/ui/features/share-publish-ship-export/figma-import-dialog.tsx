@@ -1,24 +1,22 @@
-import { useEffect, useState } from "react";
-import type { FormEvent, KeyboardEvent } from "react";
-
 import type {
   FigmaImportPreview,
   FigmaImportResult,
   FigmaImportSource,
   FigmaImportStats,
-} from "@design-studio/actions/_core/figma-nodes";
+} from "@design-studio/contracts/figma-nodes";
 import {
   looksLikeFigmaLink,
   looksLikeFigmaNodes,
-} from "@design-studio/actions/_core/figma-nodes";
+} from "@design-studio/contracts/figma-nodes";
 import type {
   InsertTarget,
   JsxInsertPosition,
-} from "@design-studio/actions/_core/insert";
+} from "@design-studio/contracts/insert";
+import { Icon, UiSelect, useModalDialog } from "@design-studio/ui";
+import { useEffect, useState } from "react";
+import type { FormEvent, KeyboardEvent } from "react";
+
 import { ApiError, json } from "../../api.js";
-import { Icon } from "@design-studio/ui";
-import { UiSelect } from "@design-studio/ui";
-import { useModalDialog } from "@design-studio/ui";
 
 import "../../styles/figma-import.css";
 

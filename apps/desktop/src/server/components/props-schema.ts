@@ -5,15 +5,15 @@ import path from "node:path";
 import { parse } from "@babel/parser";
 import type { ParserPlugin } from "@babel/parser";
 import type * as t from "@babel/types";
-import type * as TS from "typescript-api";
-
 import type {
   ComponentSchema,
   CvaInfo,
   PropSpec,
   PropValue,
   VariantGroup,
-} from "@design-studio/actions/_core/props";
+} from "@design-studio/contracts/props";
+import type * as TS from "typescript-api";
+
 import { loadTypeScript } from "../platform/ts-compiler/index.js";
 import {
   compilerOptionsFor,

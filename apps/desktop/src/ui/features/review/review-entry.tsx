@@ -1,3 +1,9 @@
+import type {
+  ReviewFinding,
+  ReviewResult,
+  ReviewSeverity,
+} from "@design-studio/contracts/review";
+import { Icon } from "@design-studio/ui";
 import {
   lazy,
   Suspense,
@@ -9,12 +15,6 @@ import {
 import type { RefObject } from "react";
 import { createPortal } from "react-dom";
 
-import type {
-  ReviewFinding,
-  ReviewResult,
-  ReviewSeverity,
-} from "@design-studio/actions/_core/review";
-import { Icon } from "@design-studio/ui";
 import type { ParentMessageBody } from "../../platform/bridge.js";
 import { frameName } from "../canvas/canvas-frames-model.js";
 import type { CanvasFrame } from "../canvas/canvas-frames-model.js";

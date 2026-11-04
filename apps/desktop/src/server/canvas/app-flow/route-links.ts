@@ -3,8 +3,8 @@ import { realpath } from "node:fs/promises";
 import path from "node:path";
 
 import type * as t from "@babel/types";
+import type { AppRoute } from "@design-studio/contracts";
 
-import type { AppRoute } from "@design-studio/actions/_core/contracts";
 import type {
   RouteLink,
   RouteLinkElement,

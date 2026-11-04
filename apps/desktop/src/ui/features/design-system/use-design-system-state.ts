@@ -1,12 +1,12 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-
 import type {
   AppTokenSource,
   CompiledTokenEntry,
   DesignSystemState,
   Project,
   TokenFile,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
 import type { TokenMode } from "../../../shared/token-match.js";
 import { api } from "../../api.js";
 import type { FilesChange } from "../home/use-studio-data.js";

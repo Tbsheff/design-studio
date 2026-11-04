@@ -1,11 +1,11 @@
-import type { Effect } from "effect";
-
 import type {
   Direction,
   PermissionDecision,
   Project,
   QueuedMessage,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import type { Effect } from "effect";
+
 import type { RepoContextState } from "../../shared/repo-context.js";
 import { makeRuntimeSlot } from "../platform/runtime-slot/index.js";
 

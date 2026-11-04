@@ -19,6 +19,7 @@ import {
 } from "./gen-common.js";
 import type { GeneratedFile } from "./gen-common.js";
 import { errorFiles } from "./gen-errors.js";
+import { toExportFiles } from "./gen-exports.js";
 
 const ACTION_SKIP = new Set(["index", "routes", "schema"]);
 const HANDLER_SKIP = new Set(["handlers", "live"]);
@@ -204,7 +205,7 @@ const missingFrom = (
   folder: string
 ): string[] =>
   from.flatMap((tail) =>
-    other.includes(tail)
+    new Set(other).has(tail)
       ? []
       : [
           `gen-routes: ${folder}/${tail}.ts has no pair file. fix: add the matching action and handler files, or remove this one`,
@@ -215,12 +216,12 @@ const pairErrors = (scan: ContextScan): string[] => [
   ...missingFrom(
     scan.actions,
     scan.handlers,
-    `../../packages/common/actions/src/${scan.domain}`
+    `packages/common/actions/src/${scan.domain}`
   ),
   ...missingFrom(
     scan.handlers,
     scan.actions,
-    `src/server/handlers/${scan.domain}`
+    `apps/desktop/src/server/handlers/${scan.domain}`
   ),
 ];
 
@@ -255,13 +256,13 @@ const exportNames = (text: string): string[] => [
 ];
 
 const sameNames = (found: string[], allowed: string[]): boolean =>
-  found.every((name) => allowed.includes(name));
+  found.every((name) => new Set(allowed).has(name));
 
 const actionExportError = async (
   ctx: string,
   tail: string
 ): Promise<string[]> => {
-  const file = `../../packages/common/actions/src/${ctx}/${tail}.ts`;
+  const file = `packages/common/actions/src/${ctx}/${tail}.ts`;
   const text = await readOrEmpty(path.join(ROOT, file));
   const name = actionConst(ctx, tail);
   const found = exportNames(text);
@@ -284,7 +285,7 @@ const handlerExportError = async (
   ctx: string,
   tail: string
 ): Promise<string[]> => {
-  const file = `src/server/handlers/${ctx}/${tail}.ts`;
+  const file = `apps/desktop/src/server/handlers/${ctx}/${tail}.ts`;
   const found = exportNames(await readOrEmpty(path.join(ROOT, file)));
 
   if (found.includes("handle") && sameNames(found, ["handle", "preview"])) {
@@ -412,9 +413,11 @@ const buildAll = async (): Promise<Build> => {
 
   const formatted = await Promise.all(files.map((file) => formatFile(file)));
 
+  const manifests = await toExportFiles();
+
   return {
     errors,
-    files: formatted.toSorted((left, right) =>
+    files: [...formatted, ...manifests].toSorted((left, right) =>
       left.path.localeCompare(right.path)
     ),
   };
@@ -450,7 +453,7 @@ const check = async (files: GeneratedFile[]): Promise<void> => {
 
   for (const file of stale) {
     process.stderr.write(
-      `gen-routes: ${file} is stale or edited by hand. fix: pnpm exec tsx scripts/gen-routes.ts\n`
+      `gen-routes: ${file} is stale or edited by hand. fix: pnpm exec tsx apps/desktop/scripts/gen-routes.ts\n`
     );
   }
 

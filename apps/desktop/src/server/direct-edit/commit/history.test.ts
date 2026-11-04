@@ -1,14 +1,14 @@
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-
 import type {
   EditHistoryState,
   Project,
   StudioEvent,
   Version,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+
 import { createEventBus } from "../../events/index.js";
 import { createApp } from "../../http/app.js";
 import { projectStorePorts } from "../../main/project-ports.js";

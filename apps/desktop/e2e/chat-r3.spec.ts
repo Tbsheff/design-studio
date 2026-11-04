@@ -1,14 +1,14 @@
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
-import { expect, test } from "@playwright/test";
-import type { Page } from "@playwright/test";
-
 import type {
   RunSentRecord,
   RunSummary,
   StudioEvent,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { expect, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
+
 import {
   createProjectViaUi,
   frontFrame,

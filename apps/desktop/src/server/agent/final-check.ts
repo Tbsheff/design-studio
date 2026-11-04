@@ -6,7 +6,8 @@ import type {
   FinalCheck,
   QualityFinding,
   RenderCheckResult,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+
 import {
   baselineFindingsFile,
   checkItems,

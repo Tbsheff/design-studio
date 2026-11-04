@@ -4,8 +4,9 @@ import type { listShare } from "@design-studio/actions/share/list";
 import { routes } from "@design-studio/actions/share/routes";
 import type { setLanShare } from "@design-studio/actions/share/set-lan";
 import type { updateShare } from "@design-studio/actions/share/update";
-import type { ExportFrame } from "@design-studio/actions/_core/export";
-import type { ShareExpiryHours } from "@design-studio/actions/_core/share";
+import type { ExportFrame } from "@design-studio/contracts/export";
+import type { ShareExpiryHours } from "@design-studio/contracts/share";
+
 import { call } from "../../platform/http.js";
 import type { UiOutput } from "../../platform/http.js";
 

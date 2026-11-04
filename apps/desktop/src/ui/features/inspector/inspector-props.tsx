@@ -1,3 +1,12 @@
+import type { SelectionContext } from "@design-studio/contracts";
+import type {
+  ComponentInstance,
+  ComponentSchema,
+  PropSpec,
+  PropValue,
+  VariantGroup,
+} from "@design-studio/contracts/props";
+import { UiSelect } from "@design-studio/ui";
 import {
   lazy,
   Suspense,
@@ -8,17 +17,8 @@ import {
 } from "react";
 import type { KeyboardEvent } from "react";
 
-import type { SelectionContext } from "@design-studio/actions/_core/contracts";
-import type {
-  ComponentInstance,
-  ComponentSchema,
-  PropSpec,
-  PropValue,
-  VariantGroup,
-} from "@design-studio/actions/_core/props";
 import { ApiError } from "../../api.js";
 import { VariantSheet } from "../../inspector-slots.js";
-import { UiSelect } from "@design-studio/ui";
 import { useProjectEvents } from "../../platform/events.js";
 import { ComponentPreviewThumb } from "../design-system/component-preview-thumb.js";
 import { InspectorSection } from "./inspector-fields.js";

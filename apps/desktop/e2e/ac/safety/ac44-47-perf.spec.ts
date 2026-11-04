@@ -1,9 +1,9 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
+import type { TelemetrySample } from "@design-studio/contracts";
 import { expect, test, type Page } from "@playwright/test";
 
-import type { TelemetrySample } from "@design-studio/actions/_core/contracts";
 import { BASE_URL } from "../../support/server";
 import {
   createProjectViaUi,

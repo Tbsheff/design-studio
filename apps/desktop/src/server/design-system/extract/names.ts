@@ -1,4 +1,5 @@
-import { REQUIRED_TOKENS } from "@design-studio/actions/_core/contracts";
+import { REQUIRED_TOKENS } from "@design-studio/contracts";
+
 import type { CandidateConfidence } from "./types.js";
 
 export type TokenGroup = keyof typeof REQUIRED_TOKENS;

@@ -1,9 +1,9 @@
-import { Effect } from "effect";
-
 import { BadRequest } from "@design-studio/actions/_core/errors/bad-request";
 import { Conflict } from "@design-studio/actions/_core/errors/conflict";
 import { NotFound } from "@design-studio/actions/_core/errors/not-found";
-import type { Direction, Project, Version } from "@design-studio/actions/_core/contracts";
+import type { Direction, Project, Version } from "@design-studio/contracts";
+import { Effect } from "effect";
+
 import type { EditHistory } from "../direct-edit/commit/index.js";
 import { DirectEditError } from "../direct-edit/engine/index.js";
 import type { DirectEditDeps } from "../direct-edit/index.js";

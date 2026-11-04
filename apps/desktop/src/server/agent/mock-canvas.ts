@@ -1,8 +1,9 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-import { CANVAS_GAP } from "@design-studio/actions/_core/canvas-file";
-import { statePrefix } from "@design-studio/actions/_core/states";
+import { CANVAS_GAP } from "@design-studio/contracts/canvas-file";
+import { statePrefix } from "@design-studio/contracts/states";
+
 import type {
   CanvasService,
   CanvasToolContext,

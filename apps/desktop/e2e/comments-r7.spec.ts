@@ -1,14 +1,14 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
-import { expect, test } from "@playwright/test";
-import type { Locator, Page } from "@playwright/test";
-
 import type {
   Attachment,
   DesignComment,
   Project,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { expect, test } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
+
 import { readState } from "./support/server";
 import {
   createProjectViaUi,

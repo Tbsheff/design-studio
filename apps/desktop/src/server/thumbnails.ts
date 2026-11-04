@@ -9,14 +9,14 @@ import {
 } from "node:fs/promises";
 import path from "node:path";
 
-import { PNG } from "pngjs";
-
 import type {
   Project,
   StudioEvent,
   StudioEventInput,
   VersionKind,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { PNG } from "pngjs";
+
 import { NotFoundError, assertSafeId } from "./platform/errors/index.js";
 import { halfSize } from "./platform/half-size/index.js";
 import { siblingWorkerFile, WorkerClient } from "./platform/process/index.js";

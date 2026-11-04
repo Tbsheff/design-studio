@@ -1,6 +1,10 @@
 import type { CopyCodeResult } from "@design-studio/actions/export/schema";
-import type { Direction, Project } from "@design-studio/actions/_core/contracts";
-import type { CopyCodeFormat, ExportFrame } from "@design-studio/actions/_core/export";
+import type { Direction, Project } from "@design-studio/contracts";
+import type {
+  CopyCodeFormat,
+  ExportFrame,
+} from "@design-studio/contracts/export";
+
 import { NotFoundError } from "../platform/errors/index.js";
 import { COPY_FRAME, copyCode } from "./copy-handler.js";
 import type { ExportRuntime } from "./export-core.js";

@@ -6,7 +6,8 @@ import type {
   QualityFinding,
   RenderCheckResult,
   SelectionContext,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+
 import type { ResolvedRunConfig } from "../../shared/run-levels.js";
 import type { RenderCheckOptions } from "../preview/browser.js";
 import {

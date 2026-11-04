@@ -1,5 +1,6 @@
-import { REQUIRED_TOKENS } from "@design-studio/actions/_core/contracts";
-import type { PackManifest } from "@design-studio/actions/_core/contracts";
+import { REQUIRED_TOKENS } from "@design-studio/contracts";
+import type { PackManifest } from "@design-studio/contracts";
+
 import type { Coverage } from "./types.js";
 
 export const TODO_MARK = "_To do:";

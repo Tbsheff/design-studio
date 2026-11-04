@@ -1,11 +1,11 @@
+import type { RunLevel } from "@design-studio/contracts";
+import { parseEnvText } from "@design-studio/contracts/app";
+import { shortenHome } from "@design-studio/contracts/folders";
+import { Icon } from "@design-studio/ui";
 import { useState } from "react";
 import type { KeyboardEvent, RefObject } from "react";
 
-import { parseEnvText } from "@design-studio/actions/_core/app";
-import type { RunLevel } from "@design-studio/actions/_core/contracts";
-import { shortenHome } from "@design-studio/actions/_core/folders";
 import { api, ApiError } from "../../api.js";
-import { Icon } from "@design-studio/ui";
 import type { AppChip, RunMode } from "./home-app-chip.js";
 import { Pop } from "./home-popovers.js";
 import type { Close } from "./home-popovers.js";

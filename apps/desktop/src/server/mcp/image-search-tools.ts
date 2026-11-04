@@ -1,4 +1,5 @@
-import type { Project } from "@design-studio/actions/_core/contracts";
+import type { Project } from "@design-studio/contracts";
+
 import {
   PLACE_IMAGE_DESCRIPTION,
   SEARCH_IMAGES_DESCRIPTION,

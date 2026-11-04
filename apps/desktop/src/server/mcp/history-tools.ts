@@ -7,7 +7,8 @@ import type {
   Project,
   SelectionContext,
   Version,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+
 import {
   chooseEditSite,
   EDIT_TARGETS,

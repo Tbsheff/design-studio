@@ -1,8 +1,8 @@
+import type { SourceLoc } from "@design-studio/contracts";
+import { Icon } from "@design-studio/ui";
 import { useState } from "react";
 
-import type { SourceLoc } from "@design-studio/actions/_core/contracts";
 import { api, errorText } from "../../api.js";
-import { Icon } from "@design-studio/ui";
 
 export const locText = (source: SourceLoc): string =>
   `${source.file}:${source.line}:${source.col}`;

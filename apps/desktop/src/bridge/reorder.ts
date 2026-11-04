@@ -1,4 +1,4 @@
-import { SOURCE_LOC_ATTR, type ParentToBridge } from "@design-studio/actions/_core/contracts";
+import { SOURCE_LOC_ATTR, type ParentToBridge } from "@design-studio/contracts";
 
 type SelectSource = Extract<ParentToBridge, { type: "select-source" }>;
 

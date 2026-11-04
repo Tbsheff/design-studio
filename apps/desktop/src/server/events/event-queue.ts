@@ -1,7 +1,7 @@
+import type { ActionDone } from "@design-studio/actions/app-stream";
+import type { StudioEvent, StudioEventInput } from "@design-studio/contracts";
 import { Context, Effect, Layer, PubSub, Stream } from "effect";
 
-import type { ActionDone } from "@design-studio/actions/app-stream";
-import type { StudioEvent, StudioEventInput } from "@design-studio/actions/_core/contracts";
 import { boundEventBus } from "./event-core.js";
 import type { BoundEventBus } from "./event-core.js";
 import { lineOf } from "./event-log.js";

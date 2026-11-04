@@ -2,12 +2,11 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 
 import type * as t from "@babel/types";
-
 import type {
   Direction,
   SourceLoc,
   VersionMeta,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
 import {
   JSX_IMPORTS_MAX,
   JSX_INSERT_POSITIONS,
@@ -15,8 +14,9 @@ import {
   type ClearTextRequest,
   type InsertJsxRequest,
   type InsertJsxResult,
-} from "@design-studio/actions/_core/insert";
-import { OWNERS_MAX, OWNER_STACK_MAX } from "@design-studio/actions/_core/props";
+} from "@design-studio/contracts/insert";
+import { OWNERS_MAX, OWNER_STACK_MAX } from "@design-studio/contracts/props";
+
 import { z } from "../../platform/zod-bridge/index.js";
 import {
   resolveTarget,

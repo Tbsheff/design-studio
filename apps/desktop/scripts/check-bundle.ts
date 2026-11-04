@@ -166,7 +166,9 @@ const checkB1 = async (
     );
   }
 
-  for (const name of names.filter((item) => !budget.chunks.includes(item))) {
+  const knownChunks = new Set(budget.chunks);
+
+  for (const name of names.filter((item) => !knownChunks.has(item))) {
     failures.push(
       `B1 chunk "${name}" is new to the Home preload set (not in scripts/perf/baseline.json B1.chunks). fix: lazy-load the import that pulls it in, then ${REBUILD}`
     );

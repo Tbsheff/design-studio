@@ -24,7 +24,7 @@ export {
   matchFontFamily,
 } from "../../shared/token-match.js";
 
-export { CANVAS_FILE } from "@design-studio/actions/_core/canvas-file";
+export { CANVAS_FILE } from "@design-studio/contracts/canvas-file";
 
 export {
   PAGE_IMPORT_ASSET_BYTES_MAX,
@@ -51,14 +51,17 @@ export type { EditRecorder, DirectEditDeps } from "../direct-edit/index.js";
 
 export type { CanvasService } from "../canvas/index.js";
 
-export type { CanvasFile, CanvasFileFrame } from "@design-studio/actions/_core/canvas-file";
+export type {
+  CanvasFile,
+  CanvasFileFrame,
+} from "@design-studio/contracts/canvas-file";
 
 export type {
   CompiledTokenEntry,
   Direction,
   Project,
   Version,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
 
 export type {
   PageImportRequest,

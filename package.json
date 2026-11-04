@@ -17,5 +17,15 @@
     "format": "pnpm --filter @design-studio/desktop run format",
     "e2e": "pnpm --filter @design-studio/desktop run e2e",
     "electron:dev": "pnpm --filter @design-studio/desktop run electron:dev"
+  },
+  "devDependencies": {
+    "oxfmt": "0.74.0",
+    "oxlint": "1.89.0",
+    "ultracite": "8.1.0"
+  },
+  "packageManager": "pnpm@11.1.1",
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "dugite@3.3.1": true
   }
 }

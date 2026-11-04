@@ -5,7 +5,8 @@ import {
   JSX_INSERT_POSITIONS,
   JSX_SNIPPET_MAX,
   type InsertJsxResult,
-} from "@design-studio/actions/_core/insert";
+} from "@design-studio/contracts/insert";
+
 import { z } from "../platform/zod-bridge/index.js";
 import { callAction } from "./action-call.js";
 import { EditError, loadTarget, refuseWhileRunning } from "./edit-guards.js";

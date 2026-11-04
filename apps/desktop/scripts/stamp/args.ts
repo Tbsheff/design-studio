@@ -52,13 +52,19 @@ const runCli = async (main: () => Promise<void>): Promise<void> => {
   }
 };
 
+const toRequiredFlag = (spec: ArgsSpec, name: string): string[] => {
+  if (spec.flags[name]?.required) {
+    return [`--${name} <value>`];
+  }
+
+  return [];
+};
+
 const usage = (spec: ArgsSpec): string =>
   [
     spec.command,
     ...spec.positionals.map((name) => `<${name}>`),
-    ...Object.entries(spec.flags)
-      .filter(([, flag]) => flag.required)
-      .map(([name]) => `--${name} <value>`),
+    ...Object.keys(spec.flags).flatMap((name) => toRequiredFlag(spec, name)),
   ].join(" ");
 
 const splitList = (value: string): string[] =>

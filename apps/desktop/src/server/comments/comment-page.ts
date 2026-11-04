@@ -1,4 +1,4 @@
-import type { DesignComment } from "@design-studio/actions/_core/contracts";
+import type { DesignComment } from "@design-studio/contracts";
 
 interface CommentPage {
   readonly items: readonly DesignComment[];

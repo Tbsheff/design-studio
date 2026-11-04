@@ -1,5 +1,9 @@
-import type { Direction, Project } from "@design-studio/actions/_core/contracts";
-import type { ReviewFrame, ReviewRequest } from "@design-studio/actions/_core/review";
+import type { Direction, Project } from "@design-studio/contracts";
+import type {
+  ReviewFrame,
+  ReviewRequest,
+} from "@design-studio/contracts/review";
+
 import type { CanvasService } from "../canvas/index.js";
 import { findFrame } from "../canvas/index.js";
 import { BadRequestError } from "../platform/errors/index.js";

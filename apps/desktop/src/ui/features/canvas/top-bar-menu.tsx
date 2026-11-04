@@ -1,9 +1,7 @@
+import { Icon, usePopover } from "@design-studio/ui";
+import type { IconName } from "@design-studio/ui";
 import { useRef } from "react";
 import type { KeyboardEvent, RefObject } from "react";
-
-import { Icon } from "@design-studio/ui";
-import type { IconName } from "@design-studio/ui";
-import { usePopover } from "@design-studio/ui";
 
 export type CanvasTool = "select" | "comment" | "edit" | "prototype" | null;
 

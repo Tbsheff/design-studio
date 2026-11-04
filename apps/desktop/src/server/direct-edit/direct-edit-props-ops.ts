@@ -4,23 +4,20 @@ import type { inspectPropsInstanceDirectEdit } from "@design-studio/actions/dire
 import type { listPropsComponentsDirectEdit } from "@design-studio/actions/direct-edit/list-props-components";
 import type { setPropsDirectEdit } from "@design-studio/actions/direct-edit/set-props";
 import type { setVariantClassesDirectEdit } from "@design-studio/actions/direct-edit/set-variant-classes";
-import type {
-  Direction,
-  Project,
-  VersionMeta,
-} from "@design-studio/actions/_core/contracts";
+import type { Direction, Project, VersionMeta } from "@design-studio/contracts";
 import type {
   FigmaImportPreview,
   FigmaImportRequest,
   FigmaImportResult,
-} from "@design-studio/actions/_core/figma-nodes";
-import { COMPONENT_LIST_MAX } from "@design-studio/actions/_core/props";
+} from "@design-studio/contracts/figma-nodes";
+import { COMPONENT_LIST_MAX } from "@design-studio/contracts/props";
 import type {
   ComponentInstance,
   ComponentListQuery,
   ComponentSchemaList,
   InstanceQuery,
-} from "@design-studio/actions/_core/props";
+} from "@design-studio/contracts/props";
+
 import { instanceFor, listComponentSchemas } from "../components/index.js";
 import {
   fetchFigmaNodes,

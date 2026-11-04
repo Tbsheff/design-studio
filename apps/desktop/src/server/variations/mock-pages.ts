@@ -5,7 +5,7 @@ import type {
   ProjectKind,
   ReferenceElement,
   RunRequest,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
 
 type MockVariation = NonNullable<RunRequest["variation"]>;
 

@@ -1,5 +1,6 @@
 import { routes } from "@design-studio/actions/direct-edit/routes";
-import type { SelectionContext } from "@design-studio/actions/_core/contracts";
+import type { SelectionContext } from "@design-studio/contracts";
+
 import { IMAGE_BYTES_MAX, imageKindOf } from "../../../shared/image.js";
 import type { SetImageRequest } from "../../../shared/image.js";
 import { call } from "../../platform/http.js";

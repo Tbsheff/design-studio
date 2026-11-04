@@ -1,6 +1,6 @@
+import type { ProjectKind } from "@design-studio/contracts";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 
-import type { ProjectKind } from "@design-studio/actions/_core/contracts";
 import type { FilesChange } from "../home/use-studio-data.js";
 
 const SWAP_RELEASE_MS = 4000;

@@ -1,9 +1,9 @@
 import path from "node:path";
 
+import type { RunSentRecord, RunSummary } from "@design-studio/contracts";
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
-import type { RunSentRecord, RunSummary } from "@design-studio/actions/_core/contracts";
 import {
   chooseRunSetting,
   closeRunSettings,

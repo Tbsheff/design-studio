@@ -1,6 +1,14 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
+import type {
+  Direction,
+  DirectEditRequest,
+  Project,
+  SourceLoc,
+  VersionMeta,
+} from "@design-studio/contracts";
+
 import {
   planArrangeFacts,
   unchangedNote,
@@ -16,13 +24,6 @@ import {
   type ArrangeWrite,
   type MeasureResult,
 } from "../../../shared/arrange.js";
-import type {
-  Direction,
-  DirectEditRequest,
-  Project,
-  SourceLoc,
-  VersionMeta,
-} from "@design-studio/actions/_core/contracts";
 import { measureRects } from "../../../shared/measure.js";
 import { withPagePath } from "../../export/source.js";
 import { z } from "../../platform/zod-bridge/index.js";

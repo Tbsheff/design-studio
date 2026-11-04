@@ -1,5 +1,6 @@
+import { LIMITS } from "@design-studio/actions/publish-remote";
+
 import { bad } from "./http";
-import { LIMITS } from "./protocol";
 
 const TYPES: Record<string, string> = {
   avif: "image/avif",

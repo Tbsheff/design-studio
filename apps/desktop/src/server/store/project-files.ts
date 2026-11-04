@@ -2,13 +2,13 @@ import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { nanoid } from "nanoid";
-
 import type {
   Attachment,
   Project,
   ProjectThumbnail,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { nanoid } from "nanoid";
+
 import {
   BadRequestError,
   NotFoundError,

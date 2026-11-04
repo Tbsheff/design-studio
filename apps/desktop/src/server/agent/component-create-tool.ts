@@ -1,11 +1,11 @@
+import type { SourceLoc } from "@design-studio/contracts";
+import type { InsertTarget } from "@design-studio/contracts/insert";
 import { Schema } from "effect";
 
 import {
   COMPONENT_NAME,
   CREATE_TARGETS_MAX,
 } from "../../shared/component-create.js";
-import type { SourceLoc } from "@design-studio/actions/_core/contracts";
-import type { InsertTarget } from "@design-studio/actions/_core/insert";
 import {
   toOptionalText,
   toSdkFieldSet,

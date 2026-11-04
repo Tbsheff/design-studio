@@ -1,11 +1,11 @@
-import { useState, useSyncExternalStore } from "react";
-
 import type {
   Project,
   RunCanvasRef,
   SelectionContext,
-} from "@design-studio/actions/_core/contracts";
-import { stateLabel } from "@design-studio/actions/_core/frame-state";
+} from "@design-studio/contracts";
+import { stateLabel } from "@design-studio/contracts/frame-state";
+import { useState, useSyncExternalStore } from "react";
+
 import { uiStore } from "../../platform/storage.js";
 import {
   activeFrame,

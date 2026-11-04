@@ -3,9 +3,8 @@ import { copyFile, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { build } from "esbuild";
-
 import { WORKER_NAME } from "@design-studio/actions/publish-remote";
+import { build } from "esbuild";
 
 export const PUBLISH_BUCKET = WORKER_NAME;
 export const PUBLISH_DATABASE = WORKER_NAME;
@@ -25,7 +24,7 @@ function candidates(): string[] {
 
   return [
     fromEnv,
-    path.resolve(here, "..", "..", "..", "apps", "publish"),
+    path.resolve(here, "..", "..", "..", "..", "publish"),
     path.join(here, "publish-worker"),
   ].filter((d): d is string => Boolean(d));
 }

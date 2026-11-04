@@ -1,5 +1,5 @@
-import type { SourceLoc, Version } from "./contracts.js";
-import type { ComponentOwner, PropValue } from "./props.js";
+import type { SourceLoc, Version } from "@design-studio/contracts";
+import type { ComponentOwner, PropValue } from "@design-studio/contracts/props";
 
 export type InsertPosition = "inside" | "after";
 

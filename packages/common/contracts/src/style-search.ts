@@ -1,4 +1,4 @@
-import type { SourceLoc, Version } from "./contracts.js";
+import type { SourceLoc, Version } from "@design-studio/contracts";
 
 export const STYLE_KINDS = ["color", "font-size", "radius", "spacing"] as const;
 

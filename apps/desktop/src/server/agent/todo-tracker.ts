@@ -1,4 +1,4 @@
-import type { RunStatus, TodoItem } from "@design-studio/actions/_core/contracts";
+import type { RunStatus, TodoItem } from "@design-studio/contracts";
 
 export type TodoEvidence =
   | { kind: "write"; paths: string[]; text: string }

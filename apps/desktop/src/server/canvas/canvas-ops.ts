@@ -1,13 +1,14 @@
+import type { CanvasPresence } from "@design-studio/contracts";
 import {
   isDirectionRef,
   isFrameId,
   parseCanvasFile,
-} from "@design-studio/actions/_core/canvas-file";
-import type { CanvasPresence } from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts/canvas-file";
 import type {
   FrameStateDef,
   FrameStatesView,
-} from "@design-studio/actions/_core/frame-state";
+} from "@design-studio/contracts/frame-state";
+
 import type {
   FlowInput,
   FlowResult,

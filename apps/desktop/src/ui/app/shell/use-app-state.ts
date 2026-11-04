@@ -1,12 +1,12 @@
-import { useCallback, useEffect, useState } from "react";
-
 import type {
   AppLogLine,
   AppServerStatus,
   AttachedApp,
   FirstVersionState,
   StudioEvent,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { useCallback, useEffect, useState } from "react";
+
 import { api } from "../../api";
 import { publishAppStatus } from "../../platform/app-status";
 import { useProjectEvents } from "../../platform/events";

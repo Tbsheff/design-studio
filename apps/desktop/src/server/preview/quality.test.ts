@@ -1,6 +1,6 @@
+import type { NavSummary, QualityFinding } from "@design-studio/contracts";
 import { describe, expect, it } from "vitest";
 
-import type { NavSummary, QualityFinding } from "@design-studio/actions/_core/contracts";
 import {
   capFindings,
   countSeverities,

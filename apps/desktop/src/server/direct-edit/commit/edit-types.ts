@@ -1,9 +1,10 @@
-import type { LayoutChange } from "@design-studio/actions/_core/canvas-file";
 import type {
   Direction,
   DirectEditRequest,
   Project,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import type { LayoutChange } from "@design-studio/contracts/canvas-file";
+
 import type {
   AgentRunner,
   EventBus,

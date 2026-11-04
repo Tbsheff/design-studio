@@ -9,6 +9,9 @@
     "build": "node scripts/build.mjs",
     "local": "node scripts/local.mjs"
   },
+  "dependencies": {
+    "@design-studio/actions": "workspace:*"
+  },
   "devDependencies": {
     "@cloudflare/workers-types": "4.20260702.1",
     "esbuild": "0.28.2",

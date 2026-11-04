@@ -1,14 +1,14 @@
-import { Context, Effect, Layer } from "effect";
-
 import type {
   DoctorViewText,
   PortPlanView,
 } from "@design-studio/actions/workspace/schema";
-import type { ElementVariantInfo } from "@design-studio/actions/_core/element-variants";
+import type { ElementVariantInfo } from "@design-studio/contracts/element-variants";
+import type { ComponentUsage } from "@design-studio/contracts/usage-scope";
+import { Context, Effect, Layer } from "effect";
+
 import type { FoundApps } from "../../shared/found-apps.js";
 import type { ProjectSearchResult } from "../../shared/project-search.js";
 import type { RepoContextState } from "../../shared/repo-context.js";
-import type { ComponentUsage } from "@design-studio/actions/_core/usage-scope";
 import {
   LocalOrgScope,
   isProjectVisible,

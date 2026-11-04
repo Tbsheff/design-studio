@@ -1,9 +1,8 @@
 import { existsSync, statSync } from "node:fs";
 import path from "node:path";
 
+import type { PropSpec, PropValue } from "@design-studio/contracts/props";
 import type * as TS from "typescript-api";
-
-import type { PropSpec, PropValue } from "@design-studio/actions/_core/props";
 
 type Ts = typeof TS;
 

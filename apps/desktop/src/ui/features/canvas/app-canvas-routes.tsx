@@ -1,8 +1,8 @@
+import type { AttachedApp, BridgeToParent } from "@design-studio/contracts";
+import { routeLabel } from "@design-studio/contracts/app";
+import { cleanFrameLabel } from "@design-studio/contracts/canvas-file";
 import { lazy, Suspense, useEffect, useState } from "react";
 
-import { routeLabel } from "@design-studio/actions/_core/app";
-import { cleanFrameLabel } from "@design-studio/actions/_core/canvas-file";
-import type { AttachedApp, BridgeToParent } from "@design-studio/actions/_core/contracts";
 import { api } from "../../api.js";
 import { readStored, writeStored } from "../../platform/storage.js";
 import { addFrame, canAddFrame, setFramePath } from "./canvas-frames-model.js";

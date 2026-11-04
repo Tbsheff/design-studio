@@ -8,4 +8,4 @@ export { useAction } from "../../platform/query.js";
 
 export type { ActionState } from "../../platform/query.js";
 
-export type { SelectionContext } from "@design-studio/actions/_core/contracts";
+export type { SelectionContext } from "@design-studio/contracts";

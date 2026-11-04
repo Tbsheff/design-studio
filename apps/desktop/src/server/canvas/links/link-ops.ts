@@ -1,4 +1,4 @@
-import { withMotion } from "@design-studio/actions/_core/links";
+import { withMotion } from "@design-studio/contracts/links";
 import type {
   LINK_ACTIONS,
   LinkEasing,
@@ -6,7 +6,8 @@ import type {
   LinksFile,
   LinkTransition,
   PrototypeLink,
-} from "@design-studio/actions/_core/links";
+} from "@design-studio/contracts/links";
+
 import { NotFoundError } from "../../platform/errors/index.js";
 import type { CanvasToolContext } from "../tools.js";
 import { implicitLinks, keepImplicit } from "./implicit-links.js";

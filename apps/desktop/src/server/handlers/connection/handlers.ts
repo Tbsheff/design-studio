@@ -1,5 +1,6 @@
 // @generated
 import type { ConnectionActions } from "@design-studio/actions/connection/index";
+
 import type { Entries } from "../_core/handler.js";
 import { handle as getStatusConnectionHandle } from "./get-status.js";
 import { handle as listActivityConnectionHandle } from "./list-activity.js";

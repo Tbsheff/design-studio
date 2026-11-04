@@ -14,10 +14,13 @@
     "paths": {
       "@design-studio/actions": ["../../packages/common/actions/src/index.ts"],
       "@design-studio/actions/*": ["../../packages/common/actions/src/*"],
+      "@design-studio/contracts": [
+        "../../packages/common/contracts/src/contracts.ts"
+      ],
+      "@design-studio/contracts/*": ["../../packages/common/contracts/src/*"],
       "effect": ["../../node_modules/effect"],
       "effect/*": ["../../node_modules/effect/*"]
     }
   },
-  "include": ["src"],
-  "references": [{ "path": "../../packages/common/actions/tsconfig.json" }]
+  "include": ["src"]
 }

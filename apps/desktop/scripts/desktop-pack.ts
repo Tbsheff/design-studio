@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 
 import { stagePackage } from "../desktop/build.js";
 import { toBuilderArgs, toPackOptions } from "../desktop/pack-args.js";
+import { toWorkspaceBin } from "./workspace-root.ts";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -22,7 +23,7 @@ async function main(): Promise<void> {
   );
 
   const result = spawnSync(
-    path.join(ROOT, "..", "..", "node_modules", ".bin", "electron-builder"),
+    toWorkspaceBin("electron-builder"),
     toBuilderArgs(options),
     { cwd: ROOT, env, stdio: "inherit" }
   );

@@ -1,4 +1,4 @@
-import type { DraftSourceKind } from "@design-studio/actions/_core/contracts";
+import type { DraftSourceKind } from "@design-studio/contracts";
 
 export type SourceKind = DraftSourceKind;
 
@@ -52,4 +52,4 @@ export type {
   CoverageGrade,
   DesignSystemCoverage as Coverage,
   DraftSourceReport as SourceReport,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";

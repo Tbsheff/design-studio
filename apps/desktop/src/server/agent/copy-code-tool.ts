@@ -1,7 +1,7 @@
+import { COPY_CODE_FORMATS } from "@design-studio/contracts/export";
+import type { ExportFrame } from "@design-studio/contracts/export";
 import { Schema } from "effect";
 
-import { COPY_CODE_FORMATS } from "@design-studio/actions/_core/export";
-import type { ExportFrame } from "@design-studio/actions/_core/export";
 import {
   toOptionalText,
   toSdkFieldSet,

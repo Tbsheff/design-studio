@@ -1,7 +1,10 @@
+import { DEFAULT_FRAME_STATE } from "@design-studio/contracts/frame-state";
+import {
+  COMPONENT_LIST_MAX,
+  COMPONENT_SOURCES,
+} from "@design-studio/contracts/props";
 import { Schema } from "effect";
 
-import { DEFAULT_FRAME_STATE } from "@design-studio/actions/_core/frame-state";
-import { COMPONENT_LIST_MAX, COMPONENT_SOURCES } from "@design-studio/actions/_core/props";
 import {
   toDefaulted,
   toOptional,

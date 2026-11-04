@@ -2,12 +2,13 @@ import { existsSync } from "node:fs";
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 
-import type { AppRoute, Project } from "@design-studio/actions/_core/contracts";
+import type { AppRoute, Project } from "@design-studio/contracts";
 import type {
   ComponentUsage,
   UsageCallSite,
   UsageRoute,
-} from "@design-studio/actions/_core/usage-scope";
+} from "@design-studio/contracts/usage-scope";
+
 import { appRouterDir, listAppRoutes } from "../app/routes.js";
 import { BadRequestError, NotFoundError } from "../platform/errors/index.js";
 import { RouteGraph } from "./route-graph.js";

@@ -1,4 +1,10 @@
 import {
+  RUN_LEVELS,
+  type PackSummary,
+  type RunLevel,
+} from "@design-studio/contracts";
+import { Icon, useFitPopover, usePopover } from "@design-studio/ui";
+import {
   useEffect,
   useRef,
   type CSSProperties,
@@ -7,14 +13,6 @@ import {
   type RefObject,
 } from "react";
 
-import {
-  RUN_LEVELS,
-  type PackSummary,
-  type RunLevel,
-} from "@design-studio/actions/_core/contracts";
-import { useFitPopover } from "@design-studio/ui";
-import { Icon } from "@design-studio/ui";
-import { usePopover } from "@design-studio/ui";
 import { VariationsControl } from "../canvas/variations-control.js";
 import {
   ChoiceItem,

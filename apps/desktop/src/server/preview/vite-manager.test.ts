@@ -2,10 +2,10 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
+import { BRIDGE_SCRIPT_PATH } from "@design-studio/contracts";
+import type { StudioEventInput } from "@design-studio/contracts";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { BRIDGE_SCRIPT_PATH } from "@design-studio/actions/_core/contracts";
-import type { StudioEventInput } from "@design-studio/actions/_core/contracts";
 import type { EventBus } from "../types.js";
 import { ViteManager } from "./vite-manager.js";
 

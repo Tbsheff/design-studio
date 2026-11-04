@@ -1,13 +1,13 @@
-import { Suspense, lazy, useCallback, useMemo, useState } from "react";
-import type { KeyboardEvent, MutableRefObject, ReactNode } from "react";
-
 import type {
   DirectStyleProperty,
   SelectionContext,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { Icon } from "@design-studio/ui";
+import { Suspense, lazy, useCallback, useMemo, useState } from "react";
+import type { KeyboardEvent, MutableRefObject, ReactNode } from "react";
+
 import { colorHex, cssVarFor, varName } from "../../../shared/token-match.js";
 import { api } from "../../api.js";
-import { Icon } from "@design-studio/ui";
 import type { PreviewPort } from "../../platform/bridge.js";
 import type { DesignTokens } from "../design-system/use-design-system-state.js";
 import { CreateTokenDialog } from "../versions-layers-tokens/create-token-dialog.js";

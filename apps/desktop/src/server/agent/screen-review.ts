@@ -1,7 +1,8 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-import type { QualityFinding } from "@design-studio/actions/_core/contracts";
+import type { QualityFinding } from "@design-studio/contracts";
+
 import type { CanvasService } from "../canvas/index.js";
 import type { AgentRunContext, PreviewService } from "../types.js";
 import { runScreens } from "./check-tool.js";

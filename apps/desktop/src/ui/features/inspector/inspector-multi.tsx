@@ -1,15 +1,15 @@
-import { memo, useSyncExternalStore } from "react";
-import type { MutableRefObject } from "react";
-
 import type {
   BridgeToParent,
   CreateTokenResult,
   MatchKind,
   SelectionContext,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { Icon } from "@design-studio/ui";
+import { memo, useSyncExternalStore } from "react";
+import type { MutableRefObject } from "react";
+
 import { cssVarFor } from "../../../shared/token-match.js";
 import { api } from "../../api.js";
-import { Icon } from "@design-studio/ui";
 import type { PreviewPort } from "../../platform/bridge.js";
 import type { DesignTokens } from "../design-system/use-design-system-state.js";
 import { CreateTokenDialog } from "../versions-layers-tokens/create-token-dialog.js";

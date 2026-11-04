@@ -1,9 +1,9 @@
 import { appendFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 
+import type { TelemetrySample } from "@design-studio/contracts";
 import type { Hono } from "hono";
 
-import type { TelemetrySample } from "@design-studio/actions/_core/contracts";
 import { BadRequestError, assertSafeId } from "../platform/errors/index.js";
 import type { AppContext } from "./app-context.js";
 import { parseJsonLines, readOptional } from "./app-project-files.js";

@@ -2,7 +2,8 @@ import { randomBytes } from "node:crypto";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import type { ExportFrame } from "@design-studio/actions/_core/export";
+import type { ExportFrame } from "@design-studio/contracts/export";
+
 import type { Publication, PublishBackendMode } from "../../shared/publish.js";
 import { createKeyedMutex } from "../platform/mutex/index.js";
 

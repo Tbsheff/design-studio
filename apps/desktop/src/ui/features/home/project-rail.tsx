@@ -1,3 +1,4 @@
+import { BrandMark, Icon } from "@design-studio/ui";
 import {
   useEffect,
   useMemo,
@@ -14,8 +15,6 @@ import {
   type ProjectHit,
 } from "../../../shared/project-search.js";
 import { openProject } from "../../app/project-nav.js";
-import { BrandMark } from "@design-studio/ui";
-import { Icon } from "@design-studio/ui";
 import { readStored, writeStored } from "../../platform/storage.js";
 import { IS_MAC, tipWithKey } from "../commands/keys.js";
 import { useCommands } from "../commands/registry.js";

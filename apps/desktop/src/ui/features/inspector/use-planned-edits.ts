@@ -1,6 +1,6 @@
+import type { StudioEvent } from "@design-studio/contracts";
 import { useRef } from "react";
 
-import type { StudioEvent } from "@design-studio/actions/_core/contracts";
 import { useProjectEvents } from "../../platform/events.js";
 import { postToLiveFrames } from "../design-system/token-frames.js";
 

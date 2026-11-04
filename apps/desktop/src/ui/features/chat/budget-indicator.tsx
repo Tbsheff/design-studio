@@ -1,7 +1,7 @@
+import type { Project, ProjectSettings } from "@design-studio/contracts";
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 
-import type { Project, ProjectSettings } from "@design-studio/actions/_core/contracts";
 import { api, errorText } from "../../api.js";
 
 const PRESETS: (number | null)[] = [null, 0.5, 1, 2, 5];

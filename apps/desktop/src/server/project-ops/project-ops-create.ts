@@ -1,8 +1,9 @@
 import type { Input } from "@design-studio/actions/_core/action";
 import type { createProject } from "@design-studio/actions/project/create";
 import type { importProject } from "@design-studio/actions/project/import";
-import type { Project, ProjectKind, RunLevel } from "@design-studio/actions/_core/contracts";
-import { nameFromPrompt } from "@design-studio/actions/_core/folders";
+import type { Project, ProjectKind, RunLevel } from "@design-studio/contracts";
+import { nameFromPrompt } from "@design-studio/contracts/folders";
+
 import type { AttachResponse } from "../app/index.js";
 import {
   captureReferencePage,

@@ -1,12 +1,19 @@
-import type { CanvasFileFrame } from "@design-studio/actions/_core/canvas-file";
-import { cleanLinkUrl, targetFits } from "@design-studio/actions/_core/link-interaction";
-import type { LinkVisibility } from "@design-studio/actions/_core/link-interaction";
-import { cleanLinkSelector, isFrameAction } from "@design-studio/actions/_core/links";
+import type { CanvasFileFrame } from "@design-studio/contracts/canvas-file";
+import {
+  cleanLinkUrl,
+  targetFits,
+} from "@design-studio/contracts/link-interaction";
+import type { LinkVisibility } from "@design-studio/contracts/link-interaction";
+import {
+  cleanLinkSelector,
+  isFrameAction,
+} from "@design-studio/contracts/links";
 import type {
   LinkAction,
   LinkSource,
   LinkTarget,
-} from "@design-studio/actions/_core/links";
+} from "@design-studio/contracts/links";
+
 import type { LinkInteractionRequest } from "./link-interaction-input.js";
 import { BACK_REF, LinkError, frameOf } from "./link-tools.js";
 

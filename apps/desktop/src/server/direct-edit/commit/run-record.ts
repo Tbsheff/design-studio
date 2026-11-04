@@ -1,8 +1,9 @@
 import path from "node:path";
 
-import { CANVAS_FILE } from "@design-studio/actions/_core/canvas-file";
-import type { Direction, Project, Version } from "@design-studio/actions/_core/contracts";
-import { LINKS_FILE } from "@design-studio/actions/_core/links";
+import type { Direction, Project, Version } from "@design-studio/contracts";
+import { CANVAS_FILE } from "@design-studio/contracts/canvas-file";
+import { LINKS_FILE } from "@design-studio/contracts/links";
+
 import type { VersionStore } from "../../types.js";
 import type { EditFileChange } from "./edit-types.js";
 import type { EditHistory } from "./history.js";

@@ -7,8 +7,9 @@ import {
   BRIDGE_CHANGES_PATH,
   type Direction,
   type Project,
-} from "@design-studio/actions/_core/contracts";
-import type { PropValue } from "@design-studio/actions/_core/props";
+} from "@design-studio/contracts";
+import type { PropValue } from "@design-studio/contracts/props";
+
 import { humanize, propsFor } from "../direct-edit/components-ops/index.js";
 import type { RenderPage } from "../preview/render-backend.js";
 import type { PreviewService } from "../types.js";

@@ -1,7 +1,8 @@
 import { cp, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import type { Starter } from "@design-studio/actions/_core/contracts";
+import type { Starter } from "@design-studio/contracts";
+
 import { BadRequestError } from "../platform/errors/index.js";
 import { resourcePath } from "../platform/resources/index.js";
 

@@ -1,4 +1,4 @@
-import type { DesignToken } from "@design-studio/actions/_core/contracts";
+import type { DesignToken } from "@design-studio/contracts";
 
 const CHILD_INDENT = "  ";
 

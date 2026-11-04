@@ -6,14 +6,16 @@ import { pathToFileURL } from "node:url";
 import { format } from "oxfmt";
 import type { FormatOptions } from "oxfmt";
 
+import { WORKSPACE_ROOT } from "./workspace-root.ts";
+
 interface GeneratedFile {
   path: string;
   text: string;
 }
 
-const ROOT = path.join(import.meta.dirname, "..");
-const ACTIONS = path.join(ROOT, "../../packages/common/actions/src");
-const HANDLERS = path.join(ROOT, "src/server/handlers");
+const ROOT = WORKSPACE_ROOT;
+const ACTIONS = path.join(ROOT, "packages/common/actions/src");
+const HANDLERS = path.join(ROOT, "apps/desktop/src/server/handlers");
 const HEADER = "// @generated";
 const CORE = "_core";
 const CLOSE_CONST = "} as const;";

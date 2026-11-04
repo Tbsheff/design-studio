@@ -10,14 +10,16 @@ import {
 import path from "node:path";
 import { promisify } from "node:util";
 
+import { WORKSPACE_ROOT } from "./workspace-root.ts";
+
 interface Planted {
   readonly names: readonly string[];
   readonly temp: string;
 }
 
-const ROOT = path.join(import.meta.dirname, "..");
+const ROOT = WORKSPACE_ROOT;
 
-const PROBE_DIR = "scripts/stamp/probes";
+const PROBE_DIR = "apps/desktop/scripts/stamp/probes";
 
 const PROBE_TSC = "node_modules/typescript/bin/tsc";
 
@@ -29,13 +31,13 @@ const TS_SUFFIX = /\.ts$/u;
 
 const PATH_SEPARATOR = /[\\/]/u;
 
-const KEYS_FILE = "scripts/check-actions-probes.ts";
+const KEYS_FILE = "apps/desktop/scripts/check-actions-probes.ts";
 
 const ACTION_GUARDS = "packages/common/actions/src/_core/action.ts";
 
-const HANDLER_GUARDS = "src/server/handlers/_core/handler.ts";
+const HANDLER_GUARDS = "apps/desktop/src/server/handlers/_core/handler.ts";
 
-const LAYER_GUARD = "src/server/main/runtime-check.ts";
+const LAYER_GUARD = "apps/desktop/src/server/main/runtime-check.ts";
 
 const PROBES = {
   "action-needs-confirm-user": {
@@ -97,7 +99,7 @@ const plantProbes = async (): Promise<Planted> => {
   await writeFile(
     path.join(temp, "tsconfig.json"),
     JSON.stringify({
-      extends: "../tsconfig.base.json",
+      extends: path.join(WORKSPACE_ROOT, "tsconfig.base.json"),
       include: ["stamp/probes/*.ts"],
     })
   );
@@ -184,12 +186,15 @@ const probeProblem = (name: string, errors: string | null): string | null => {
 };
 
 const missingProbes = (names: readonly string[]): string[] =>
-  Object.keys(PROBES)
-    .filter((name) => !names.includes(name))
-    .map(
-      (name) =>
-        `P3 ${PROBE_DIR}/${name}.ts is missing. fix: restore the probe file`
-    );
+  Object.keys(PROBES).flatMap((name) => {
+    if (new Set(names).has(name)) {
+      return [];
+    }
+
+    return [
+      `P3 ${PROBE_DIR}/${name}.ts is missing. fix: restore the probe file`,
+    ];
+  });
 
 const problemsOf = (planted: Planted, output: string): string[] => {
   const found = errorsByProbe(output);

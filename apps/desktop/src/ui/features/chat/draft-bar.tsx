@@ -1,15 +1,15 @@
-import { useId, useEffect, useRef, useState } from "react";
-import type { ReactNode } from "react";
-
 import type {
   DesignSystemState,
   Project,
   CoverageGrade,
   DesignSystemCheckResult,
   DesignSystemCoverage,
-} from "@design-studio/actions/_core/contracts";
-import { errorText } from "../../api.js";
+} from "@design-studio/contracts";
 import { useFitPopover } from "@design-studio/ui";
+import { useId, useEffect, useRef, useState } from "react";
+import type { ReactNode } from "react";
+
+import { errorText } from "../../api.js";
 import { packApi } from "../../platform/pack-api.js";
 import { findPack, usePacks } from "../design-system/packs.js";
 import { improvePassed, CheckStatus } from "./draft-improve.js";

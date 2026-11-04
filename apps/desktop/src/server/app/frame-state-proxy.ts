@@ -5,7 +5,8 @@ import {
   FRAME_STATE_ID_HEADER,
   mockRuleMatches,
   type MockRule,
-} from "@design-studio/actions/_core/frame-state";
+} from "@design-studio/contracts/frame-state";
+
 import {
   captureCookies,
   hasSessionCookie,

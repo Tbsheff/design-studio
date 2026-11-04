@@ -1,22 +1,22 @@
 import { readFile } from "node:fs/promises";
 
 import type { SDKUserMessage } from "@anthropic-ai/claude-agent-sdk";
-
 import type {
   Attachment,
   ProjectKind,
   RunComment,
   RunMention,
   SelectionContext,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { statesTaskBlock } from "@design-studio/contracts/states";
+import { editScopeOf } from "@design-studio/contracts/usage-scope";
+import type { EditScope } from "@design-studio/contracts/usage-scope";
+
 import {
   isReferenceName,
   plainAttachmentName,
   REFERENCE_LOW_SCORE,
 } from "../../shared/reference.js";
-import { statesTaskBlock } from "@design-studio/actions/_core/states";
-import { editScopeOf } from "@design-studio/actions/_core/usage-scope";
-import type { EditScope } from "@design-studio/actions/_core/usage-scope";
 import { referencePagesBlock } from "../design-system/reference-page.js";
 import type { AgentRunContext, MentionFile } from "../types.js";
 import { referenceBlock, variationBlock } from "../variations/message.js";

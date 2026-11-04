@@ -6,9 +6,9 @@ import type {
   SDKMessage,
   query,
 } from "@anthropic-ai/claude-agent-sdk";
+import type { RunLevel } from "@design-studio/contracts";
 import { afterEach, describe, expect, it } from "vitest";
 
-import type { RunLevel } from "@design-studio/actions/_core/contracts";
 import { resolveRunConfig } from "../../shared/run-levels.js";
 import { createFakePreview, createTempProject } from "../testing/fakes.js";
 import { criticText, parseCriticReply } from "./critic.js";

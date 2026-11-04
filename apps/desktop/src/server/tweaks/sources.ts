@@ -1,10 +1,10 @@
 import { readdir, readFile, stat } from "node:fs/promises";
 import path from "node:path";
 
+import { TOKENS_CSS_FILE } from "@design-studio/contracts";
 import { parse } from "parse5";
 import type { DefaultTreeAdapterMap } from "parse5";
 
-import { TOKENS_CSS_FILE } from "@design-studio/actions/_core/contracts";
 import { lastDeclarationOf, rootDeclarations, usesVar } from "./css-vars.js";
 import type { CssDecl } from "./css-vars.js";
 

@@ -1,9 +1,8 @@
 import { parse } from "@babel/parser";
 import type { ParserPlugin } from "@babel/parser";
+import { SOURCE_LOC_ATTR } from "@design-studio/contracts";
 import MagicString from "magic-string";
 import type { SourceMap } from "magic-string";
-
-import { SOURCE_LOC_ATTR } from "@design-studio/actions/_core/contracts";
 
 interface AstNode {
   type: string;

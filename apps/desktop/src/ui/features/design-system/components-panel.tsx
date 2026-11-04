@@ -1,14 +1,13 @@
-import { useState, useEffect, useMemo, useRef } from "react";
-import type { ReactNode } from "react";
-
 import type {
   ComponentInfo,
   ProjectKind,
   SelectionContext,
-} from "@design-studio/actions/_core/contracts";
-import type { InsertableComponent } from "@design-studio/actions/_core/insert";
-import { Icon } from "@design-studio/ui";
-import { PanelHead } from "@design-studio/ui";
+} from "@design-studio/contracts";
+import type { InsertableComponent } from "@design-studio/contracts/insert";
+import { Icon, PanelHead } from "@design-studio/ui";
+import { useState, useEffect, useMemo, useRef } from "react";
+import type { ReactNode } from "react";
+
 import {
   DragGhost,
   InsertMenu,

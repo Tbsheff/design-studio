@@ -1,14 +1,12 @@
-import { useCallback, useRef, useState, useEffect } from "react";
-
 import type {
   DesignSystemState,
   Project,
   CompiledTokenEntry,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { Icon, useFitPopover, usePopover } from "@design-studio/ui";
+import { useCallback, useRef, useState, useEffect } from "react";
+
 import { api, errorText } from "../../api.js";
-import { useFitPopover } from "@design-studio/ui";
-import { Icon } from "@design-studio/ui";
-import { usePopover } from "@design-studio/ui";
 import { Swatches } from "../inspector/swatches.js";
 import { COPY } from "./copy.js";
 import { ChangePackDialog, SavePackDialog } from "./design-system-dialogs.js";

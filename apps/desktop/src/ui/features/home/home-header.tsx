@@ -1,6 +1,5 @@
-import { BrandMark } from "@design-studio/ui";
-import { Icon } from "@design-studio/ui";
-import { ThemeButton } from "@design-studio/ui";
+import { BrandMark, Icon, ThemeButton } from "@design-studio/ui";
+
 import { loadTrash } from "./lazy-parts.js";
 
 function Header({ onTrash }: { onTrash: () => void }) {

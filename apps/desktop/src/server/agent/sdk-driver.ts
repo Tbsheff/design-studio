@@ -11,8 +11,8 @@ import type {
   SDKResultMessage,
   query,
 } from "@anthropic-ai/claude-agent-sdk";
+import type { RunUsage, AppReviewRecord } from "@design-studio/contracts";
 
-import type { RunUsage, AppReviewRecord } from "@design-studio/actions/_core/contracts";
 import type { ReferenceRecord } from "../../shared/reference.js";
 import {
   levelOf,

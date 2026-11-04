@@ -1,11 +1,12 @@
-import { Suspense, memo, useEffect, useMemo, useState } from "react";
-import type { MutableRefObject, ReactNode } from "react";
-
-import type { SharedSource } from "@design-studio/actions/_core/app";
 import type {
   DirectStyleProperty,
   SelectionContext,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import type { SharedSource } from "@design-studio/contracts/app";
+import { Icon } from "@design-studio/ui";
+import { Suspense, memo, useEffect, useMemo, useState } from "react";
+import type { MutableRefObject, ReactNode } from "react";
+
 import {
   ContentPanel,
   FillSlot,
@@ -13,7 +14,6 @@ import {
   StateStylesSlot,
   TextStyleSlot,
 } from "../../inspector-slots.js";
-import { Icon } from "@design-studio/ui";
 import type { PreviewPort } from "../../platform/bridge.js";
 import type { DesignTokens } from "../design-system/use-design-system-state.js";
 import { CopyCodeMenu } from "../share-publish-ship-export/copy-code-menu.js";

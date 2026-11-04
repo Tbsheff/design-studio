@@ -1,19 +1,19 @@
-import { useEffect, useMemo, useState } from "react";
-import type { Dispatch, FormEvent, SetStateAction } from "react";
-
-import { renderBranchName, renderShipTemplate } from "@design-studio/actions/_core/ship";
+import {
+  renderBranchName,
+  renderShipTemplate,
+} from "@design-studio/contracts/ship";
 import type {
   ShipFile,
   ShipMode,
   ShipPrepare,
   ShipRequest,
   ShipResult,
-} from "@design-studio/actions/_core/ship";
+} from "@design-studio/contracts/ship";
+import { CopyButton, Icon, UiSelect, useModalDialog } from "@design-studio/ui";
+import { useEffect, useMemo, useState } from "react";
+import type { Dispatch, FormEvent, SetStateAction } from "react";
+
 import { errorText } from "../../api.js";
-import { CopyButton } from "@design-studio/ui";
-import { Icon } from "@design-studio/ui";
-import { UiSelect } from "@design-studio/ui";
-import { useModalDialog } from "@design-studio/ui";
 import { shipApi } from "./ship-api.js";
 
 import "../../styles/ship.css";

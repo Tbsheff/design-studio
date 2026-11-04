@@ -1,10 +1,10 @@
-import { useCallback, useMemo, useRef, useState, useTransition } from "react";
-
 import type {
   CommentPrefill,
   SelectionContext,
   Version,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { useCallback, useMemo, useRef, useState, useTransition } from "react";
+
 import { errorText } from "../../api";
 import type { CanvasSource } from "../../features/canvas/canvas-toolbar";
 import type { MentionRequest } from "../../features/chat/use-mentions";

@@ -1,3 +1,9 @@
+import {
+  NOT_FOUND,
+  SEE_OTHER,
+  TOO_MANY_REQUESTS,
+  UNAUTHORIZED,
+} from "@design-studio/actions/_core/errors/http-status-codes";
 import { Effect } from "effect";
 
 import {
@@ -6,12 +12,6 @@ import {
   toHex,
 } from "../platform/pass-cookie-client.js";
 import { UnlockLockoutClient } from "../platform/unlock-lockout-client.js";
-import {
-  NOT_FOUND,
-  SEE_OTHER,
-  TOO_MANY_REQUESTS,
-  UNAUTHORIZED,
-} from "../shared-actions.js";
 import { toCookieName } from "./pass-cookie.js";
 import { toSalt, verifyPassword } from "./password.js";
 import { readPassword } from "./read-password.js";

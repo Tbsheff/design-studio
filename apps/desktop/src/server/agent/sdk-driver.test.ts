@@ -7,14 +7,14 @@ import type {
   SDKMessage,
   query,
 } from "@anthropic-ai/claude-agent-sdk";
-import { afterEach, describe, expect, it } from "vitest";
-
 import type {
   RunLevel,
   RunRequest,
   RunSentRecord,
   TelemetrySample,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { afterEach, describe, expect, it } from "vitest";
+
 import { draftDesignMd, writeTestDraft } from "../design-system/test-draft.js";
 import {
   createFakeBus,

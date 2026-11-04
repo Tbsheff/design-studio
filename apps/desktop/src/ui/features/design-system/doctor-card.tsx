@@ -1,11 +1,10 @@
+import { routes as studioRoutes } from "@design-studio/actions/studio/routes";
+import type { DoctorCause } from "@design-studio/contracts/app-doctor";
+import { CopyButton, Icon } from "@design-studio/ui";
 import type { ReactElement } from "react";
 import { useEffect, useState, useTransition } from "react";
 
-import { routes as studioRoutes } from "@design-studio/actions/studio/routes";
-import type { DoctorCause } from "@design-studio/actions/_core/app-doctor";
 import { api, errorText } from "../../api.js";
-import { CopyButton } from "@design-studio/ui";
-import { Icon } from "@design-studio/ui";
 import { call } from "../../platform/http.js";
 import { COPY } from "./copy.js";
 

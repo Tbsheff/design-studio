@@ -1,6 +1,9 @@
-import { cleanFramePath, isFrameId } from "./canvas-file.js";
-import type { CanvasFileFrame } from "./canvas-file.js";
-import { decodeEntities } from "./html-entities.js";
+import {
+  cleanFramePath,
+  isFrameId,
+} from "@design-studio/contracts/canvas-file";
+import type { CanvasFileFrame } from "@design-studio/contracts/canvas-file";
+import { decodeEntities } from "@design-studio/contracts/html-entities";
 import {
   cleanLinkUrl,
   LINK_EXTRA_ACTIONS,
@@ -9,8 +12,11 @@ import {
   targetFrame,
   targetRef,
   triggerSuffix,
-} from "./link-interaction.js";
-import type { LinkTrigger, LinkVisibility } from "./link-interaction.js";
+} from "@design-studio/contracts/link-interaction";
+import type {
+  LinkTrigger,
+  LinkVisibility,
+} from "@design-studio/contracts/link-interaction";
 
 export const LINKS_FILE = ".studio/links.json";
 export const LINKS_FILE_VERSION = 1;

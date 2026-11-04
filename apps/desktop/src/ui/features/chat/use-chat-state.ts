@@ -1,6 +1,6 @@
+import type { TodoItem } from "@design-studio/contracts";
 import { useMemo } from "react";
 
-import type { TodoItem } from "@design-studio/actions/_core/contracts";
 import type { RunView } from "./run-state-model.js";
 
 export const promptHistoryOf = (

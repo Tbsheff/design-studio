@@ -1,3 +1,10 @@
+import type {
+  AnchorQuery,
+  Direction,
+  EditHistoryState,
+  SelectionContext,
+  Version,
+} from "@design-studio/contracts";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Dispatch, MutableRefObject, SetStateAction } from "react";
 
@@ -5,13 +12,6 @@ import {
   anchorQueryOf,
   targetFromSelection,
 } from "../../../shared/comments.js";
-import type {
-  AnchorQuery,
-  Direction,
-  EditHistoryState,
-  SelectionContext,
-  Version,
-} from "@design-studio/actions/_core/contracts";
 import { api, errorText } from "../../api.js";
 import { useProjectEvents } from "../../platform/events.js";
 import { historyKeyOf } from "../canvas/use-undo-shortcut.js";

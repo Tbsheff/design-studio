@@ -27,7 +27,7 @@ export {
   propsFor,
 } from "../components/index.js";
 
-export { CANVAS_GAP } from "@design-studio/actions/_core/canvas-file";
+export { CANVAS_GAP } from "@design-studio/contracts/canvas-file";
 
 export { withForcedParam } from "../../shared/state-styles.js";
 
@@ -37,10 +37,16 @@ export type { KnownFailure } from "../platform/attempt/index.js";
 
 export type { CanvasService, PlaceSpec } from "../canvas/index.js";
 
-export type { CanvasFile, CanvasFileFrame } from "@design-studio/actions/_core/canvas-file";
+export type {
+  CanvasFile,
+  CanvasFileFrame,
+} from "@design-studio/contracts/canvas-file";
 
-export type { Direction, Project } from "@design-studio/actions/_core/contracts";
+export type { Direction, Project } from "@design-studio/contracts";
 
-export type { ComponentSchema, PropValue } from "@design-studio/actions/_core/props";
+export type {
+  ComponentSchema,
+  PropValue,
+} from "@design-studio/contracts/props";
 
 export type { PreviewService } from "../preview/index.js";

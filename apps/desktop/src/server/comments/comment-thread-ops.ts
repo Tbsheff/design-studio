@@ -1,4 +1,5 @@
-import type { CommentPrefill, DesignComment } from "@design-studio/actions/_core/contracts";
+import type { CommentPrefill, DesignComment } from "@design-studio/contracts";
+
 import { BadRequestError, NotFoundError } from "../platform/errors/index.js";
 import type { CreateCommentInput } from "../store/comments.js";
 import type { CommentRuntime } from "./comment-core.js";

@@ -1,8 +1,8 @@
+import type { RunStatus, SelectionContext } from "@design-studio/contracts";
+import { Icon } from "@design-studio/ui";
 import { useEffect, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 
-import type { RunStatus, SelectionContext } from "@design-studio/actions/_core/contracts";
-import { Icon } from "@design-studio/ui";
 import { menuKeys, useMenu } from "./frame-resize-handles.js";
 
 const STATUS_TEXT: Record<RunStatus, string> = {

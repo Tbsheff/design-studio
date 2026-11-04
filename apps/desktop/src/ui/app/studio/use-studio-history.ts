@@ -1,4 +1,5 @@
-import type { Version } from "@design-studio/actions/_core/contracts";
+import type { Version } from "@design-studio/contracts";
+
 import { api } from "../../api";
 import { openCompareInCode } from "../../features/versions-layers-tokens/versions-api";
 import { reviewPair } from "./project-model";

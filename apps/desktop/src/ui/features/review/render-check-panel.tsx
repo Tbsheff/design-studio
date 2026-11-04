@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
-
 import type {
   LayoutFinding,
   RenderCheckResult,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { Icon } from "@design-studio/ui";
+import { useEffect, useState } from "react";
+
 import {
   consoleKey,
   keyCounts,
@@ -12,7 +13,6 @@ import {
 } from "../../../shared/final-check-baseline.js";
 import type { FinalCheckWithBaseline } from "../../../shared/final-check-baseline.js";
 import { api } from "../../api.js";
-import { Icon } from "@design-studio/ui";
 
 interface Props {
   projectId: string;

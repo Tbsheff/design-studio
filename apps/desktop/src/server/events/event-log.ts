@@ -4,7 +4,8 @@ import type {
   StudioEvent,
   StudioEventInput,
   Version,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+
 import { logError } from "../platform/logger/index.js";
 import { readEventFile } from "./event-file.js";
 import type { SeqFloor } from "./event-file.js";

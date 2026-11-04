@@ -43,17 +43,17 @@ async function main(): Promise<void> {
 
   await page.evaluate(() => localStorage.clear());
 
-  const project = await page.evaluate(
-    async (t) =>
-      (
-        await fetch("/api/projects/from-starter", {
-          body: JSON.stringify({ starterId: "landing" }),
-          headers: { "content-type": "application/json", "x-studio-token": t },
-          method: "POST",
-        })
-      ).json(),
-    token
-  );
+  const project = await page.evaluate(async (t) => {
+    const res = await fetch("/api/projects/from-starter", {
+      body: JSON.stringify({ starterId: "landing" }),
+      headers: { "content-type": "application/json", "x-studio-token": t },
+      method: "POST",
+    });
+    if (!res.ok) {
+      throw new Error(`fetch failed: ${res.status}`);
+    }
+    return res.json();
+  }, token);
 
   await page.goto(base);
   await page

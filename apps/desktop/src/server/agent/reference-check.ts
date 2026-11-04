@@ -2,9 +2,9 @@ import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
+import type { Attachment } from "@design-studio/contracts";
 import { PNG } from "pngjs";
 
-import type { Attachment } from "@design-studio/actions/_core/contracts";
 import {
   isReferenceName,
   plainAttachmentName,

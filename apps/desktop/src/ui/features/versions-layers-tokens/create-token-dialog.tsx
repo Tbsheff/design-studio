@@ -1,18 +1,18 @@
-import { useState, useTransition } from "react";
-import type { FormEvent, KeyboardEvent } from "react";
-
 import {
   TOKEN_GROUP_FOR_PROPERTY,
   TOKEN_NAME_PATTERN,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
 import type {
   CompiledTokenEntry,
   CreateTokenResult,
   TokenGroupName,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { useModalDialog } from "@design-studio/ui";
+import { useState, useTransition } from "react";
+import type { FormEvent, KeyboardEvent } from "react";
+
 import { cssVarFor } from "../../../shared/token-match.js";
 import { ApiError, errorText } from "../../api.js";
-import { useModalDialog } from "@design-studio/ui";
 import { displayColor, isValidColor } from "../inspector/css-values.js";
 import type { CreateRequest } from "../inspector/use-token-snap.js";
 import { COPY } from "./copy.js";

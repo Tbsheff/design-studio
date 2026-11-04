@@ -1,9 +1,8 @@
+import type { RunStatus } from "@design-studio/contracts";
+import { CopyButton, Icon } from "@design-studio/ui";
 import { memo, useMemo } from "react";
 
-import type { RunStatus } from "@design-studio/actions/_core/contracts";
 import { baseName, formatMs, formatUsd } from "../../domain/format.js";
-import { CopyButton } from "@design-studio/ui";
-import { Icon } from "@design-studio/ui";
 import { useRunFeedback } from "./run-feedback-model.js";
 import type { Thumb } from "./run-feedback-model.js";
 import type { RunView } from "./run-state-model.js";

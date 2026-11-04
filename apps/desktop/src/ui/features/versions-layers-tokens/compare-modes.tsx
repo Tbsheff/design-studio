@@ -1,3 +1,4 @@
+import type { ProjectKind, Version } from "@design-studio/contracts";
 import { useEffect, useRef, useState } from "react";
 import type {
   ChangeEvent,
@@ -8,7 +9,6 @@ import type {
   RefObject,
 } from "react";
 
-import type { ProjectKind, Version } from "@design-studio/actions/_core/contracts";
 import { CompareFrame } from "./compare-frame.js";
 import { COPY } from "./copy.js";
 import { versionDiff } from "./versions-api.js";

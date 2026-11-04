@@ -1,6 +1,3 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { MutableRefObject } from "react";
-
 import type {
   BridgeToParent,
   DirectEditRequest,
@@ -11,7 +8,10 @@ import type {
   StructureEditRequest,
   StructureKey,
   StructureTarget,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { MutableRefObject } from "react";
+
 import { shortcutLabel } from "../../../shared/keymap.js";
 import { reorderMoveOf } from "../../../shared/reorder.js";
 import {

@@ -2,16 +2,16 @@ import { readFile, realpath } from "node:fs/promises";
 import path from "node:path";
 
 import type * as t from "@babel/types";
-import { SourceMapConsumer } from "source-map-js";
-import type { RawSourceMap } from "source-map-js";
-
-import type { SourceLoc } from "@design-studio/actions/_core/contracts";
+import type { SourceLoc } from "@design-studio/contracts";
 import type {
   ComponentInstance,
   ComponentOwner,
   InstanceQuery,
   PropValue,
-} from "@design-studio/actions/_core/props";
+} from "@design-studio/contracts/props";
+import { SourceMapConsumer } from "source-map-js";
+import type { RawSourceMap } from "source-map-js";
+
 import { parseStack } from "../app/source-map.js";
 import {
   componentSchema,

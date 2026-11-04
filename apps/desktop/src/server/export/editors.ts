@@ -3,7 +3,8 @@ import { existsSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-import type { EditorId, EditorInfo } from "@design-studio/actions/_core/export";
+import type { EditorId, EditorInfo } from "@design-studio/contracts/export";
+
 import { BadRequestError } from "../platform/errors/index.js";
 
 const EDITORS: { id: EditorId; name: string; app: string }[] = [

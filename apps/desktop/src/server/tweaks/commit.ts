@@ -7,7 +7,8 @@ import type {
   TokenChange,
   Version,
   VersionMeta,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+
 import {
   TWEAKS_FILE,
   parseTweakCss,

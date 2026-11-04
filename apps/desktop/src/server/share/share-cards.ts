@@ -1,5 +1,6 @@
 import type { ApprovalCard } from "@design-studio/actions/_core/approval-card";
-import type { ShareServerState } from "@design-studio/actions/_core/share";
+import type { ShareServerState } from "@design-studio/contracts/share";
+
 import { expiryOf } from "./frames.js";
 import { findLink, framesFor, loadTarget } from "./share-links.js";
 import type { CreateRequest, ShareParts } from "./share-links.js";

@@ -1,5 +1,6 @@
-import type { Direction, Project } from "@design-studio/actions/_core/contracts";
-import type { ExportFrame } from "@design-studio/actions/_core/export";
+import type { Direction, Project } from "@design-studio/contracts";
+import type { ExportFrame } from "@design-studio/contracts/export";
+
 import {
   EditError,
   isLayerRef,

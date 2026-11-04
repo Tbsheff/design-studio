@@ -7,7 +7,8 @@ import type {
   ProjectKind,
   ProjectSettings,
   ProjectThumbnail,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+
 import type { ProjectStore } from "../types.js";
 
 export interface DetectedApp {

@@ -1,6 +1,6 @@
+import type { RenderCheckResult } from "@design-studio/contracts";
 import { describe, expect, it } from "vitest";
 
-import type { RenderCheckResult } from "@design-studio/actions/_core/contracts";
 import { summarizeCheck, verifiedAfterLastEdit } from "./final-check.js";
 
 describe("final check", () => {

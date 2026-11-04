@@ -6,4 +6,4 @@ export type {
   PermissionCard,
   PermissionDecision,
   PermissionRequest,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";

@@ -8,7 +8,8 @@ import {
   SHIP_TEXT_MAX,
   type ShipRecord,
   type ShipSettings,
-} from "@design-studio/actions/_core/ship";
+} from "@design-studio/contracts/ship";
+
 import { z } from "../platform/zod-bridge/index.js";
 
 const FILE = "ship.json";

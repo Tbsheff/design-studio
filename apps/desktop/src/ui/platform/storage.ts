@@ -1,6 +1,5 @@
+import type { RunLevel } from "@design-studio/contracts";
 import { useSyncExternalStore } from "react";
-
-import type { RunLevel } from "@design-studio/actions/_core/contracts";
 
 export interface Viewport {
   preset: "desktop" | "tablet" | "mobile" | "custom";

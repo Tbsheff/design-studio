@@ -1,5 +1,5 @@
-import { withoutAnswers } from "./clarify.js";
-import type { Project } from "./contracts.js";
+import type { Project } from "@design-studio/contracts";
+import { withoutAnswers } from "@design-studio/contracts/clarify";
 
 const SLUG_MAX_LENGTH = 48;
 const SLUG_FALLBACK = "untitled";

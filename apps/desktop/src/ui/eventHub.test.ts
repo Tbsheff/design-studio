@@ -1,6 +1,6 @@
+import type { StudioEvent } from "@design-studio/contracts";
 import { describe, expect, it } from "vitest";
 
-import type { StudioEvent } from "@design-studio/actions/_core/contracts";
 import { createEventHub } from "./platform/event-hub";
 import type { EventSourceLike } from "./platform/event-hub";
 

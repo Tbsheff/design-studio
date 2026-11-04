@@ -1,6 +1,6 @@
+import type { McpStatus } from "@design-studio/contracts/export";
 import { Context, Effect, Layer } from "effect";
 
-import type { McpStatus } from "@design-studio/actions/_core/export";
 import { lifeRuntime } from "./mcp-life-runtime.js";
 
 const toRedactedStatus = (status: McpStatus): McpStatus => {

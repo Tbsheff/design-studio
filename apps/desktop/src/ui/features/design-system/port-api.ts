@@ -4,8 +4,9 @@ import type {
   PortPlan,
   PortStartRequest,
   PortStartResult,
-} from "@design-studio/actions/_core/port";
-import { PORT_OPEN_EVENT } from "@design-studio/actions/_core/port";
+} from "@design-studio/contracts/port";
+import { PORT_OPEN_EVENT } from "@design-studio/contracts/port";
+
 import { json } from "../../api.js";
 import { call } from "../../platform/http.js";
 import type { RouteOutput } from "../../platform/http.js";

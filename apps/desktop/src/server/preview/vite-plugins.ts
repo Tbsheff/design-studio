@@ -2,12 +2,12 @@ import { existsSync, realpathSync } from "node:fs";
 import { realpath, stat } from "node:fs/promises";
 import path from "node:path";
 
-import type { Plugin, ViteDevServer } from "vite";
-
 import {
   BRIDGE_CHANGES_PATH,
   BRIDGE_SCRIPT_PATH,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import type { Plugin, ViteDevServer } from "vite";
+
 import { tagJsxSource } from "./source-tags.js";
 
 const CONFIG_FILES = [

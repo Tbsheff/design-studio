@@ -1,6 +1,6 @@
 import path from "node:path";
 
-import { ROOT, readOrEmpty } from "./gen-common.js";
+import { readOrEmpty } from "./gen-common.js";
 import {
   fail,
   hasFlag,
@@ -19,6 +19,7 @@ import { report } from "./stamp/report.js";
 import { domainStatus, error as errorClass } from "./stamp/templates.js";
 import { exists, stampPlan } from "./stamp/write.js";
 import type { StampFile, StampPlan } from "./stamp/write.js";
+import { WORKSPACE_ROOT } from "./workspace-root.ts";
 
 const SPEC: ArgsSpec = {
   command: "pnpm run new:error",
@@ -45,16 +46,20 @@ const STATUSES: ReadonlySet<string> = new Set([
 ]);
 
 const errorsDir = (domain: string): string =>
-  `../../packages/common/actions/src/${domain}/errors`;
+  `packages/common/actions/src/${domain}/errors`;
 
 const checkOwner = async (domain: string): Promise<void> => {
   if (domain !== CORE) {
     checkKebab("domain", domain);
   }
 
-  if (!(await exists(path.join(ROOT, "../../packages/common/actions/src", domain)))) {
+  if (
+    !(await exists(
+      path.join(WORKSPACE_ROOT, "packages/common/actions/src", domain)
+    ))
+  ) {
     fail(
-      `The domain ${domain} has no folder ../../packages/common/actions/src/${domain}.`,
+      `The domain ${domain} has no folder packages/common/actions/src/${domain}.`,
       `pnpm run new:domain ${domain}`
     );
   }
@@ -75,7 +80,7 @@ const statusSource = async (
   domain: string,
   file: string
 ): Promise<{ readonly isNew: boolean; readonly text: string }> => {
-  const text = await readOrEmpty(path.join(ROOT, file));
+  const text = await readOrEmpty(path.join(WORKSPACE_ROOT, file));
 
   if (text !== "") {
     return { isNew: false, text };
@@ -107,7 +112,7 @@ const errorPlan = async (
   const source = await statusSource(domain, statusPath);
 
   if (
-    (await exists(path.join(ROOT, errorPath))) ||
+    (await exists(path.join(WORKSPACE_ROOT, errorPath))) ||
     hasStatusRow(source.text, className)
   ) {
     fail(`The error ${className} exists in ${domain}.`, "pick another name");

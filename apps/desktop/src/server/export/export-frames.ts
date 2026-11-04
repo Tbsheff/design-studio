@@ -1,6 +1,7 @@
-import type { CanvasFileFrame } from "@design-studio/actions/_core/canvas-file";
-import { EXPORT_MAX_FRAMES } from "@design-studio/actions/_core/export";
-import type { ExportFrame } from "@design-studio/actions/_core/export";
+import type { CanvasFileFrame } from "@design-studio/contracts/canvas-file";
+import { EXPORT_MAX_FRAMES } from "@design-studio/contracts/export";
+import type { ExportFrame } from "@design-studio/contracts/export";
+
 import { findFrame } from "../canvas/index.js";
 
 type FramePick =

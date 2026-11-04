@@ -2,9 +2,9 @@ import { readdir, readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 
-const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
+const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "../../..");
 const CLOUD = "apps/api/src";
-const SERVER = "src/server";
+const SERVER = "apps/desktop/src/server";
 const GLOB_TAIL = "/**";
 const SOURCE_FILE = /\.(?<ext>ts|tsx|mts|mjs|js)$/u;
 const SKIPPED_FILE = /\.(?<kind>test|spec)\.(?<ext>ts|tsx)$/u;
@@ -174,7 +174,7 @@ const RULES = [
   },
   {
     allowed: [`${SERVER}/store/**`, `${SERVER}/cloud/migrate.ts`],
-    fix: "Read bindings through the store. Only src/server/store and cloud/migrate.ts import store/bindings.",
+    fix: "Read bindings through the store. Only apps/desktop/src/server/store and cloud/migrate.ts import store/bindings.",
     id: "B8",
     matches: importsTarget(`${SERVER}/store/bindings`),
     message: "import of store/bindings",
@@ -244,22 +244,39 @@ const scanRule = async (rule) => {
   const present = await Promise.all(rule.roots.map((root) => isDirectory(root)));
   const roots = rule.roots.filter((_root, index) => present[index]);
 
-  if (roots.length === 0) {
-    return { failures: [], id: rule.id, isSkipped: true };
+  if (roots.length < rule.roots.length) {
+    return {
+      failures: rule.roots.flatMap((root, index) => {
+        if (present[index]) {
+          return [];
+        }
+
+        return [
+          {
+            filePath: root,
+            fix: "Repoint the rule root in scripts/check-tenant-boundary.mjs to the folder that holds this code.",
+            id: rule.id,
+            isPending: false,
+            line: 0,
+            message: "target folder is missing",
+          },
+        ];
+      }),
+      id: rule.id,
+    };
   }
 
   const files = await Promise.all(roots.map((root) => listFiles(root)));
   const scanned = files.flat().filter((filePath) => !isAllowed(filePath, rule.allowed));
   const failures = await Promise.all(scanned.map((filePath) => scanFile(rule, filePath)));
 
-  return { failures: failures.flat(), id: rule.id, isSkipped: false };
+  return { failures: failures.flat(), id: rule.id };
 };
 
 const writeLine = (line) => process.stdout.write(`${line}\n`);
 
 const run = async () => {
   const results = await Promise.all(RULES.map((rule) => scanRule(rule)));
-  const skipped = results.flatMap((result) => [result.id].filter(() => result.isSkipped));
   const found = results.flatMap((result) => result.failures);
   const failures = found.filter((failure) => !failure.isPending);
 
@@ -272,10 +289,6 @@ const run = async () => {
     writeLine(`  fix: ${failure.fix}`);
   }
 
-  if (skipped.length > 0) {
-    writeLine(`check-tenant-boundary: skipped ${skipped.join(", ")} (no target folder)`);
-  }
-
   if (failures.length > 0) {
     writeLine(`check-tenant-boundary: ${failures.length} failure(s)`);
     writeLine("fix: move the code to its allowed path, then run pnpm run check:tenant");
@@ -284,7 +297,7 @@ const run = async () => {
     return;
   }
 
-  writeLine(`check-tenant-boundary: ok (${RULES.length - skipped.length} rules)`);
+  writeLine(`check-tenant-boundary: ok (${RULES.length} rules)`);
 };
 
 await run();

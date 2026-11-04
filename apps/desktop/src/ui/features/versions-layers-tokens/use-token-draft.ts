@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-
 import type {
   CompiledTokenEntry,
   TokenChange,
   Version,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
 import { ApiError, api, errorText } from "../../api.js";
 import {
   broadcastTheme,

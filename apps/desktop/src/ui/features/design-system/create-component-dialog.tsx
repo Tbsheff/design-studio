@@ -1,12 +1,11 @@
+import type { SelectionContext } from "@design-studio/contracts";
+import type { InsertTarget } from "@design-studio/contracts/insert";
+import { UiSelect, useModalDialog } from "@design-studio/ui";
 import { useEffect, useState, useTransition } from "react";
 import type { FormEvent, KeyboardEvent } from "react";
 
 import { COMPONENT_NAME } from "../../../shared/component-create.js";
 import type { ComponentFolder } from "../../../shared/component-create.js";
-import type { SelectionContext } from "@design-studio/actions/_core/contracts";
-import type { InsertTarget } from "@design-studio/actions/_core/insert";
-import { UiSelect } from "@design-studio/ui";
-import { useModalDialog } from "@design-studio/ui";
 import { apiMessage, componentCreateApi } from "./component-create-api.js";
 import { COPY } from "./copy.js";
 

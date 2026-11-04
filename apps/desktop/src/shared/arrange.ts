@@ -1,4 +1,4 @@
-import type { SourceLoc, Version } from "./actions/_core/contracts.js";
+import type { SourceLoc, Version } from "@design-studio/contracts";
 
 export const ALIGN_OPS = [
   "left",

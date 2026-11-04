@@ -1,15 +1,15 @@
-import { useEffect, useRef, useState } from "react";
-import type { MutableRefObject } from "react";
-
-import type { BridgeToParent, ProjectKind } from "@design-studio/actions/_core/contracts";
-import { staticLinkIssue } from "@design-studio/actions/_core/links";
+import type { BridgeToParent, ProjectKind } from "@design-studio/contracts";
+import { staticLinkIssue } from "@design-studio/contracts/links";
 import type {
   LinkIssue,
   LinkQuery,
   LinkRectReport,
   LinksFile,
   PrototypeLink,
-} from "@design-studio/actions/_core/links";
+} from "@design-studio/contracts/links";
+import { useEffect, useRef, useState } from "react";
+import type { MutableRefObject } from "react";
+
 import { postToFrame, useBridge } from "../../platform/bridge.js";
 import type { BridgeFrame } from "../../platform/bridge.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";

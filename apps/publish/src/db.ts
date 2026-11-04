@@ -1,5 +1,8 @@
-import { LIMITS } from "./protocol";
-import type { RemotePublication, RemoteVersion } from "./protocol";
+import { LIMITS } from "@design-studio/actions/publish-remote";
+import type {
+  RemotePublication,
+  RemoteVersion,
+} from "@design-studio/actions/publish-remote";
 
 export interface PublicationRow {
   id: string;

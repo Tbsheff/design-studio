@@ -1,4 +1,5 @@
-import type { ElementVariantInfo } from "@design-studio/actions/_core/element-variants";
+import type { ElementVariantInfo } from "@design-studio/contracts/element-variants";
+
 import type { StudioProjectStore } from "../store/projects.js";
 import type { AgentRunner } from "../types.js";
 import { listElementVariants } from "../variations/element-variants.js";

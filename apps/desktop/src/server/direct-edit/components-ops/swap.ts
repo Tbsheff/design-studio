@@ -1,6 +1,16 @@
 import { readFile } from "node:fs/promises";
 
 import type * as t from "@babel/types";
+import type {
+  Direction,
+  Project,
+  SourceLoc,
+  VersionMeta,
+} from "@design-studio/contracts";
+import type {
+  ComponentSchema,
+  PropValue,
+} from "@design-studio/contracts/props";
 
 import type {
   SwapCandidate,
@@ -8,13 +18,6 @@ import type {
   SwapRequest,
   SwapResult,
 } from "../../../shared/component-create.js";
-import type {
-  Direction,
-  Project,
-  SourceLoc,
-  VersionMeta,
-} from "@design-studio/actions/_core/contracts";
-import type { ComponentSchema, PropValue } from "@design-studio/actions/_core/props";
 import { planImport } from "../../components/import-plan.js";
 import {
   loadLibrary,

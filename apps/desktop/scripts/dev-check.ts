@@ -15,6 +15,17 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import type {
+  Direction,
+  Project,
+  StudioEvent,
+  StudioEventInput,
+} from "@design-studio/contracts";
+import {
+  BRIDGE_PARENT_ORIGIN_PARAM,
+  BRIDGE_TOKEN_PARAM,
+  DEFAULT_SETTINGS,
+} from "@design-studio/contracts";
 import { chromium } from "playwright-core";
 import type { Frame, Page } from "playwright-core";
 
@@ -25,17 +36,6 @@ import type {
   ServerConfig,
   VersionStore,
 } from "../src/server/types.js";
-import type {
-  Direction,
-  Project,
-  StudioEvent,
-  StudioEventInput,
-} from "@design-studio/actions/_core/contracts";
-import {
-  BRIDGE_PARENT_ORIGIN_PARAM,
-  BRIDGE_TOKEN_PARAM,
-  DEFAULT_SETTINGS,
-} from "@design-studio/actions/_core/contracts";
 
 const REPO_ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -495,6 +495,10 @@ async function main(): Promise<void> {
     const htmlUrl = await service.directionUrl(htmlProject, htmlDirection);
     report.push(`html url ${htmlUrl}`);
     const htmlResponse = await fetch(htmlUrl);
+    if (!htmlResponse.ok) {
+      throw new Error(`html url failed: ${htmlResponse.status}`);
+    }
+
     const htmlBody = await htmlResponse.text();
     check(
       htmlResponse.headers
@@ -792,9 +796,9 @@ async function main(): Promise<void> {
       );
     }
 
-    const reactFiles = (await readdir(reactTree, { recursive: true }))
-      .map(String)
-      .filter((file) => !file.startsWith("node_modules"))
+    const reactTreeFiles = await readdir(reactTree, { recursive: true });
+    const reactFiles = reactTreeFiles
+      .filter((file) => !String(file).startsWith("node_modules"))
       .sort();
 
     check(

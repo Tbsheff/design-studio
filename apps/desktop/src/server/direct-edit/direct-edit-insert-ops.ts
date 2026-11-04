@@ -1,4 +1,5 @@
-import type { Direction, Project } from "@design-studio/actions/_core/contracts";
+import type { Direction, Project } from "@design-studio/contracts";
+
 import { listInsertable, PreviewTargetError } from "../components/index.js";
 import type { PreviewResult, PreviewTarget } from "../components/index.js";
 import { BadRequestError, NotFoundError } from "../platform/errors/index.js";

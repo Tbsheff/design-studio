@@ -1,5 +1,6 @@
 import { setVectorDirectEdit } from "@design-studio/actions/direct-edit/set-vector";
-import type { Project } from "@design-studio/actions/_core/contracts";
+import type { Project } from "@design-studio/contracts";
+
 import {
   BOOLEAN_OPS,
   VECTOR_COLOR,

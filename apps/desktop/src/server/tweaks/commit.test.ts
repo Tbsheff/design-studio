@@ -2,10 +2,10 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { TOKENS_CSS_FILE, TOKENS_FILE } from "@design-studio/contracts";
+import type { Project, Version } from "@design-studio/contracts";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { TOKENS_CSS_FILE, TOKENS_FILE } from "@design-studio/actions/_core/contracts";
-import type { Project, Version } from "@design-studio/actions/_core/contracts";
 import {
   TWEAKS_FILE,
   type CommitTweaksResult,

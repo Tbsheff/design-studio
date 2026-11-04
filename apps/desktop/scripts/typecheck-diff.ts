@@ -2,6 +2,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 
 import { toTsconfigProjects } from "./tsconfig-projects.ts";
+import { WORKSPACE_ROOT, toWorkspaceBin } from "./workspace-root.ts";
 
 const OUT_DIR = new URL("../artifacts/", import.meta.url);
 const OUT = new URL("typecheck-diff.txt", OUT_DIR);
@@ -12,6 +13,7 @@ const ERROR_LINE =
 
 const toErrorKeys = (command: string, args: string[]) => {
   const run = spawnSync(command, args, {
+    cwd: WORKSPACE_ROOT,
     encoding: "utf-8",
     maxBuffer: 2 ** 31 - 1,
   });
@@ -26,7 +28,7 @@ const toErrorKeys = (command: string, args: string[]) => {
 };
 
 const toOnlyLines = (left: Set<string>, right: Set<string>, mark: string) =>
-  [...left].filter((key) => !right.has(key)).map((key) => `${mark} ${key}`);
+  [...left].flatMap((key) => (right.has(key) ? [] : [`${mark} ${key}`]));
 
 const toProjectErrors = (
   projects: readonly string[],
@@ -55,9 +57,7 @@ const runTypecheckDiff = async () => {
     "false",
   ]);
 
-  const tsrs = toProjectErrors(projects, "node_modules/.bin/tsrs", [
-    "--noEmit",
-  ]);
+  const tsrs = toProjectErrors(projects, toWorkspaceBin("tsrs"), ["--noEmit"]);
 
   const lines = [
     ...toOnlyLines(tsc, tsrs, "tsc-only"),

@@ -32,8 +32,8 @@ export type {
   BridgeToParent,
   ProjectKind,
   SelectionContext,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
 
-export type { LinkQuery, LinkRectReport } from "@design-studio/actions/_core/links";
+export type { LinkQuery, LinkRectReport } from "@design-studio/contracts/links";
 
-export type { StyleReplaceResult } from "@design-studio/actions/_core/style-search";
+export type { StyleReplaceResult } from "@design-studio/contracts/style-search";

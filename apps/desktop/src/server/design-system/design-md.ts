@@ -2,8 +2,8 @@ import {
   DESIGN_MD_TOKENS_END,
   DESIGN_MD_TOKENS_START,
   TOKENS_FILE,
-} from "@design-studio/actions/_core/contracts";
-import type { CompiledTokenEntry } from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import type { CompiledTokenEntry } from "@design-studio/contracts";
 
 const EMPTY_CELL = "-";
 

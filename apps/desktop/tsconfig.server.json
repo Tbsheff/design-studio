@@ -1,19 +1,23 @@
 {
-  "extends": "./tsconfig.base.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "composite": true,
     "tsBuildInfoFile": "./node_modules/.cache/tsbuild/server.tsbuildinfo",
-    "lib": ["ES2024", "DOM", "DOM.Iterable"]
+    "lib": ["ES2024", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx"
   },
   "include": [
     "src/server",
     "src/shared",
     "scripts",
     "e2e",
-    "lint",
     "desktop/**/*.ts",
     "desktop/**/*.cts",
-    "*.ts"
+    "*.ts",
+    "../../lint",
+    "../../*.ts",
+    "../../packages/common/actions/src",
+    "../../packages/common/contracts/src"
   ],
   "exclude": ["scripts/stamp/probes", "src/server/templates", "desktop/dist"]
 }

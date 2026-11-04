@@ -1,6 +1,5 @@
 import { Schema } from "effect";
 
-import { PropsComponentQueryFields } from "../_core/direct-edit-payload.js";
 import { defineAction } from "../_core/action.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
 import { Conflict } from "../_core/errors/conflict.js";
@@ -10,6 +9,7 @@ import { PageFields, pageOf } from "../_core/list-page.js";
 import { DirectEditConflict } from "./errors/direct-edit-conflict.js";
 import { DirectEditFailed } from "./errors/direct-edit-failed.js";
 import { DirectEditNotFound } from "./errors/direct-edit-not-found.js";
+import { PropsComponentQueryFields } from "./payload/schema.js";
 import { PropsComponentSchema } from "./schema.js";
 
 const listPropsComponentsDirectEdit = defineAction({

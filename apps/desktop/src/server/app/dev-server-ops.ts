@@ -1,4 +1,5 @@
-import type { AttachAppRequest, Project } from "@design-studio/actions/_core/contracts";
+import type { AttachAppRequest, Project } from "@design-studio/contracts";
+
 import { BadRequestError, NotFoundError } from "../platform/errors/index.js";
 import type { DevServerRuntime } from "./dev-server-runtime.js";
 import { firstVersionState } from "./first-version.js";

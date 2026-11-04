@@ -13,7 +13,9 @@ import type {
   DesignSystemDraftInfo,
   DesignSystemDraftResult,
   RunSummary,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+
+import { toWorkspaceBin } from "./workspace-root.ts";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const PORT = 4480;
@@ -63,23 +65,19 @@ async function main(): Promise<void> {
   const dataDir = path.join(work, "data");
   const log = createWriteStream(path.join(work, "server.log"));
 
-  const server = spawn(
-    path.join(ROOT, "node_modules", ".bin", "tsx"),
-    ["src/server/index.ts"],
-    {
-      cwd: ROOT,
-      env: {
-        ...process.env,
-        STUDIO_AGENT: "sdk",
-        STUDIO_DATA_DIR: dataDir,
-        STUDIO_PROJECTS_DIR: path.join(work, "Design Studio"),
-        STUDIO_PORT: String(PORT),
-        STUDIO_PREVIEW_PORT: String(PORT + 1),
-        STUDIO_VITE_PORT_BASE: "5700",
-      },
-      stdio: ["ignore", "pipe", "pipe"],
-    }
-  );
+  const server = spawn(toWorkspaceBin("tsx"), ["src/server/index.ts"], {
+    cwd: ROOT,
+    env: {
+      ...process.env,
+      STUDIO_AGENT: "sdk",
+      STUDIO_DATA_DIR: dataDir,
+      STUDIO_PROJECTS_DIR: path.join(work, "Design Studio"),
+      STUDIO_PORT: String(PORT),
+      STUDIO_PREVIEW_PORT: String(PORT + 1),
+      STUDIO_VITE_PORT_BASE: "5700",
+    },
+    stdio: ["ignore", "pipe", "pipe"],
+  });
 
   server.stdout.pipe(log);
   server.stderr.pipe(log);

@@ -1,20 +1,20 @@
-import { useEffect, useSyncExternalStore } from "react";
-
+import type { StudioEvent } from "@design-studio/contracts";
 import {
   CANVAS_MAX_FRAMES,
   cleanFramePath,
   isFrameId,
   normalizeCanvasFile,
   serializeCanvasFile,
-} from "@design-studio/actions/_core/canvas-file";
-import type { CanvasFile } from "@design-studio/actions/_core/canvas-file";
-import type { StudioEvent } from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts/canvas-file";
+import type { CanvasFile } from "@design-studio/contracts/canvas-file";
+import { useEffect, useSyncExternalStore } from "react";
+
 import { ApiError, api } from "../../api.js";
 import { useProjectEvents } from "../../platform/events.js";
 import { readStored, writeStored } from "../../platform/storage.js";
 import type { Viewport } from "../../platform/storage.js";
 
-export { cleanFramePath } from "@design-studio/actions/_core/canvas-file";
+export { cleanFramePath } from "@design-studio/contracts/canvas-file";
 
 export interface CanvasFrame {
   id: string;

@@ -1,10 +1,6 @@
+import type { Project, RunRequest, Version } from "@design-studio/contracts";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import type {
-  Project,
-  RunRequest,
-  Version,
-} from "@design-studio/actions/_core/contracts";
 import { tweaksPreviewCss } from "../../../shared/tweaks.js";
 import type {
   TweakControl,

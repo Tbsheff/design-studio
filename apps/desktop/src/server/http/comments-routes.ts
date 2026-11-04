@@ -1,7 +1,7 @@
+import type { Direction, Project } from "@design-studio/contracts";
 import type { Context, Hono } from "hono";
 
 import { COMMENT_TEXT_MAX } from "../../shared/comments.js";
-import type { Direction, Project } from "@design-studio/actions/_core/contracts";
 import type { RunWatcher } from "../comments/run-watch.js";
 import { BadRequestError } from "../platform/errors/index.js";
 import { z } from "../platform/zod-bridge/index.js";

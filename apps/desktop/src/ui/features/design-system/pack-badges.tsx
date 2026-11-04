@@ -1,4 +1,4 @@
-import type { PackSummary } from "@design-studio/actions/_core/contracts";
+import type { PackSummary } from "@design-studio/contracts";
 
 const PROVENANCE: Record<PackSummary["provenance"], string> = {
   extracted: "From sources",

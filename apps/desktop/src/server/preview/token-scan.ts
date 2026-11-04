@@ -6,8 +6,9 @@ import type {
   DirectStyleProperty,
   QualityFinding,
   TokenMatch,
-} from "@design-studio/actions/_core/contracts";
-import { TOKEN_GROUP_FOR_PROPERTY } from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { TOKEN_GROUP_FOR_PROPERTY } from "@design-studio/contracts";
+
 import {
   isSnappable,
   matchColor,

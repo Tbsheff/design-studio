@@ -1,8 +1,6 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-import { parse as parseColor } from "culori";
-
 import type {
   CompiledTokenEntry,
   DesignSystemCheckProblem,
@@ -10,12 +8,14 @@ import type {
   DesignSystemCheckRule,
   PackManifest,
   TokenFile,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
 import {
   PACK_FILE,
   REQUIRED_TOKENS,
   TOKENS_FILE,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { parse as parseColor } from "culori";
+
 import { isNodeError } from "../platform/errors/index.js";
 import { compileTokens, parseTokenFile } from "./compile.js";
 import { splitDesignMd } from "./design-md.js";

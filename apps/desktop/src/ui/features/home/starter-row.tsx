@@ -1,4 +1,5 @@
-import type { Starter } from "@design-studio/actions/_core/contracts";
+import type { Starter } from "@design-studio/contracts";
+
 import type { Busy } from "./home-model.js";
 
 function StarterRow({

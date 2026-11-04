@@ -1,3 +1,10 @@
+import {
+  BAD_REQUEST,
+  CREATED,
+  GONE,
+  NOT_FOUND,
+  OK,
+} from "@design-studio/actions/_core/errors/http-status-codes";
 import { Effect, Option, Schema } from "effect";
 import type { Layer, ManagedRuntime } from "effect";
 import type { Hono } from "hono";
@@ -8,13 +15,6 @@ import { addComment } from "../share/add-comment.js";
 import type { CommentInput } from "../share/add-comment.js";
 import type { shareLayer } from "../share/layer.js";
 import { readShare } from "../share/read-share.js";
-import {
-  BAD_REQUEST,
-  CREATED,
-  GONE,
-  NOT_FOUND,
-  OK,
-} from "../shared-actions.js";
 import { ViewerScope } from "../tenant/viewer-scope.js";
 import type { viewerLayer } from "../viewer/layer.js";
 import { withShare } from "./middleware/viewer.js";

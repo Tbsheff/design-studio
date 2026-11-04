@@ -31,7 +31,7 @@ export type {
   Project,
   SourceLoc,
   Version,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
 
 export type {
   IconList,
@@ -41,6 +41,6 @@ export type {
   IconSummary,
 } from "../../shared/icons.js";
 
-export type { InsertTarget } from "@design-studio/actions/_core/insert";
+export type { InsertTarget } from "@design-studio/contracts/insert";
 
 export { toDecoder } from "../platform/decode/index.js";

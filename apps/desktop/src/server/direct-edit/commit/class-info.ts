@@ -6,7 +6,8 @@ import type {
   Project,
   SourceLoc,
   TailwindOutcome,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+
 import {
   DEFAULT_BREAKPOINTS,
   normalizeVariant,

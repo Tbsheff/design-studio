@@ -1,7 +1,6 @@
-import { memo, useState } from "react";
-
-import type { TodoItem } from "@design-studio/actions/_core/contracts";
+import type { TodoItem } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
+import { memo, useState } from "react";
 
 export const todoProgress = (
   todos: TodoItem[]

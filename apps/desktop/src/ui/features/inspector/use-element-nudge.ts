@@ -1,12 +1,12 @@
-import { useEffect, useRef } from "react";
-
 import type {
   BridgeToParent,
   DirectEditRequest,
   NudgeBase,
   NudgeItem,
   SelectionContext,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { useEffect, useRef } from "react";
+
 import { nudgeStepOf } from "../../../shared/nudge.js";
 import { api, errorText } from "../../api.js";
 import type { ParentMessageBody } from "../../platform/bridge.js";

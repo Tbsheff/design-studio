@@ -1,3 +1,12 @@
+import type {
+  ElementSourceInfo,
+  SelectionContext,
+  TextFromData,
+  TextSourceAnswer,
+  TextSourceInfo,
+} from "@design-studio/contracts";
+import type { SharedSource } from "@design-studio/contracts/app";
+import { Icon } from "@design-studio/ui";
 import {
   createContext,
   useContext,
@@ -6,16 +15,7 @@ import {
   type KeyboardEvent,
 } from "react";
 
-import type { SharedSource } from "@design-studio/actions/_core/app";
-import type {
-  ElementSourceInfo,
-  SelectionContext,
-  TextFromData,
-  TextSourceAnswer,
-  TextSourceInfo,
-} from "@design-studio/actions/_core/contracts";
 import { api } from "../../api.js";
-import { Icon } from "@design-studio/ui";
 import { textHints, type DirectEdit } from "./use-direct-edit.js";
 
 export interface InspectorApp {

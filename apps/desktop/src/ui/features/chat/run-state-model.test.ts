@@ -1,6 +1,6 @@
+import type { RunSummary, StudioEvent } from "@design-studio/contracts";
 import { describe, expect, it } from "vitest";
 
-import type { RunSummary, StudioEvent } from "@design-studio/actions/_core/contracts";
 import {
   applyRunEvent,
   emptyRun,

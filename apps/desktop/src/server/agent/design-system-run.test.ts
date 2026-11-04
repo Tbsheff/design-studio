@@ -1,6 +1,6 @@
+import type { DesignSystemCheckResult } from "@design-studio/contracts";
 import { describe, expect, it } from "vitest";
 
-import type { DesignSystemCheckResult } from "@design-studio/actions/_core/contracts";
 import {
   designSystemContinuation,
   enforceDesignSystemCheck,

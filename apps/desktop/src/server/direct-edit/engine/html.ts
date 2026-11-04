@@ -1,7 +1,7 @@
+import type { TailwindOutcome } from "@design-studio/contracts";
 import { parse } from "parse5";
 import type { DefaultTreeAdapterMap } from "parse5";
 
-import type { TailwindOutcome } from "@design-studio/actions/_core/contracts";
 import { hasClassChange } from "./classes.js";
 import {
   applyDeclarationChanges,

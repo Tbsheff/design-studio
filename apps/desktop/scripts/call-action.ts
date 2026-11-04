@@ -42,7 +42,7 @@ const RESERVED_PORTS: ReadonlySet<number> = new Set([VIEWER_PORT, TOOL_PORT]);
 const TOKEN_META = /<meta name="studio-token" content="(?<token>[^"]*)">/u;
 
 const USAGE =
-  "pnpm exec tsx scripts/call-action.ts <action id> '<json>' [--port N]";
+  "pnpm exec tsx apps/desktop/scripts/call-action.ts <action id> '<json>' [--port N]";
 
 const START =
   "STUDIO_AGENT=mock STUDIO_DATA_DIR=$(mktemp -d) pnpm run dev, then run call-action with the same STUDIO_DATA_DIR";
@@ -114,9 +114,12 @@ const loadAction = async (id: string): Promise<CallableAction> => {
 const fetchHome = async (base: string): Promise<string> => {
   try {
     const res = await fetch(`${base}/`);
-    const html = await res.text();
 
-    return html;
+    if (!res.ok) {
+      return fail(`The studio at ${base} answered ${res.status}.`, START);
+    }
+
+    return await res.text();
   } catch {
     return fail(`No studio answers at ${base}.`, START);
   }

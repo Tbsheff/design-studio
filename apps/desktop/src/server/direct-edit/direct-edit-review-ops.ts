@@ -3,17 +3,18 @@ import type { applyReviewFixDirectEdit } from "@design-studio/actions/direct-edi
 import type { runReviewDirectEdit } from "@design-studio/actions/direct-edit/run-review";
 import type { runRulesTestDirectEdit } from "@design-studio/actions/direct-edit/run-rules-test";
 import type { setRulesDirectEdit } from "@design-studio/actions/direct-edit/set-rules";
-import type { Direction, Project, Version } from "@design-studio/actions/_core/contracts";
+import type { Direction, Project, Version } from "@design-studio/contracts";
 import type {
   DesignRule,
   DesignRulesState,
   DesignRulesTestResult,
-} from "@design-studio/actions/_core/design-rules";
+} from "@design-studio/contracts/design-rules";
 import type {
   ReviewFinding,
   ReviewFixResult,
   ReviewResult,
-} from "@design-studio/actions/_core/review";
+} from "@design-studio/contracts/review";
+
 import {
   isTestable,
   loadDesignRules,

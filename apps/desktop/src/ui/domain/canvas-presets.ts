@@ -1,4 +1,4 @@
-import type { IconName } from "./deps.js";
+import type { IconName } from "@design-studio/ui";
 
 type PresetId = "custom" | "desktop" | "mobile" | "tablet";
 

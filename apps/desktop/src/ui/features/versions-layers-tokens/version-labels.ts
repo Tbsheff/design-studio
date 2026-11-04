@@ -1,11 +1,12 @@
-import type { Version } from "@design-studio/actions/_core/contracts";
+import type { Version } from "@design-studio/contracts";
+import type { IconName } from "@design-studio/ui";
+
 import {
   baseTitle,
   isRestoreKind,
   restoreTitle,
   runTitle,
 } from "../../../shared/version-title.js";
-import type { IconName } from "@design-studio/ui";
 
 export type VersionIndex = ReadonlyMap<string, Version>;
 

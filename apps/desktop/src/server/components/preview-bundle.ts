@@ -1,9 +1,8 @@
 import { createRequire } from "node:module";
 import path from "node:path";
 
+import type { PropValue } from "@design-studio/contracts/props";
 import type { Plugin } from "esbuild";
-
-import type { PropValue } from "@design-studio/actions/_core/props";
 
 export interface SampleNode {
   exportName: string;

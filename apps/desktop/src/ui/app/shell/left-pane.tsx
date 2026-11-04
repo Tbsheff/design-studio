@@ -1,3 +1,4 @@
+import { Icon, SheetSlot } from "@design-studio/ui";
 import { Suspense, useMemo, useState } from "react";
 import type { ComponentProps, ReactNode, RefObject } from "react";
 
@@ -16,8 +17,6 @@ import { Inspector, TweaksPanel } from "../../features/inspector";
 import { ErrorsPanel } from "../../features/review/errors-panel";
 import { TokensPanel } from "../../features/versions-layers-tokens/tokens-panel";
 import { VersionsPanel } from "../../features/versions-layers-tokens/versions-panel";
-import { Icon } from "@design-studio/ui";
-import { SheetSlot } from "@design-studio/ui";
 import type { PanelTab } from "../../platform/use-panel-tab";
 import { ComponentsPanel } from "../components-panel-host";
 

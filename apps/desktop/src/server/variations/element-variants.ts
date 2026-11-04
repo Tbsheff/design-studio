@@ -1,5 +1,6 @@
-import type { Project } from "@design-studio/actions/_core/contracts";
-import type { ElementVariantInfo } from "@design-studio/actions/_core/element-variants";
+import type { Project } from "@design-studio/contracts";
+import type { ElementVariantInfo } from "@design-studio/contracts/element-variants";
+
 import type { AgentRunner } from "../types.js";
 import { variantInfo } from "./scope.js";
 

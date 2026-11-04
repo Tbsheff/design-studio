@@ -12,10 +12,11 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { afterEach, describe, expect, it } from "vitest";
 
+import { toWorkspaceBin } from "../../scripts/workspace-root.ts";
 import { alive } from "./processes";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const TSX = path.join(HERE, "..", "..", "node_modules", ".bin", "tsx");
+const TSX = toWorkspaceBin("tsx");
 const LINES = 30;
 
 let dir = "";

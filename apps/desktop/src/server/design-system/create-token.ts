@@ -2,13 +2,11 @@ import { existsSync } from "node:fs";
 import { readFile, rm } from "node:fs/promises";
 import path from "node:path";
 
-import { parse as parseColor } from "culori";
-
 import {
   TOKEN_NAME_PATTERN,
   TOKENS_CSS_FILE,
   TOKENS_FILE,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
 import type {
   CreateTokenRequest,
   CreateTokenResult,
@@ -19,7 +17,9 @@ import type {
   TokenGroupName,
   Version,
   VersionMeta,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { parse as parseColor } from "culori";
+
 import {
   DirectEditError,
   assertCanEdit,

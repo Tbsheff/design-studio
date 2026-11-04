@@ -1,13 +1,17 @@
-import { cleanFramePath, isFrameId } from "@design-studio/actions/_core/canvas-file";
-import { RUN_EFFORTS, RUN_LEVELS, isRunLevel } from "@design-studio/actions/_core/contracts";
+import { RUN_EFFORTS, RUN_LEVELS, isRunLevel } from "@design-studio/contracts";
 import type {
   ProjectSettings,
   RunLevel,
   RunRequest,
   RunEffort,
-} from "@design-studio/actions/_core/contracts";
-import { parseStatesRequest } from "@design-studio/actions/_core/states";
-import { parseEditScope } from "@design-studio/actions/_core/usage-scope";
+} from "@design-studio/contracts";
+import {
+  cleanFramePath,
+  isFrameId,
+} from "@design-studio/contracts/canvas-file";
+import { parseStatesRequest } from "@design-studio/contracts/states";
+import { parseEditScope } from "@design-studio/contracts/usage-scope";
+
 import { BadRequestError, assertSafeId } from "../platform/errors/index.js";
 import { z } from "../platform/zod-bridge/index.js";
 import { isRecord, requireString } from "./app-request.js";

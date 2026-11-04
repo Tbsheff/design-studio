@@ -1,12 +1,15 @@
-import type { DragEvent } from "react";
-
 import type {
   Project,
   ProjectKind,
   ProjectSettings,
   RunLevel,
-} from "@design-studio/actions/_core/contracts";
-import { type WorkspaceList, shortenHome } from "@design-studio/actions/_core/folders";
+} from "@design-studio/contracts";
+import {
+  type WorkspaceList,
+  shortenHome,
+} from "@design-studio/contracts/folders";
+import type { DragEvent } from "react";
+
 import { api } from "../../api.js";
 import { homeVariations } from "../../platform/storage.js";
 import { modelLabel } from "../chat/settings-draft-model.js";

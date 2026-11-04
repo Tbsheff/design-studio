@@ -1,5 +1,6 @@
 import type { BridgeMessage } from "@design-studio/actions/bridge-protocol";
-import { SOURCE_LOC_ATTR } from "@design-studio/actions/_core/contracts";
+import { SOURCE_LOC_ATTR } from "@design-studio/contracts";
+
 import { appSourceFor } from "./app-source.js";
 import { ancestorPath } from "./authored.js";
 import type {

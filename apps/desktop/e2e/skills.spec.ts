@@ -1,10 +1,10 @@
 import { mkdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
+import type { SkillCatalog } from "@design-studio/contracts";
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
-import type { SkillCatalog } from "@design-studio/actions/_core/contracts";
 import { ROOT, readState } from "./support/server";
 import { claudeHomeFor, FIXTURE_SKILLS } from "./support/skills-fixture";
 import { mainDirection, openHome, clickCreate } from "./support/studio";

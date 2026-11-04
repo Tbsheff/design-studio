@@ -1,14 +1,14 @@
 import { readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { afterEach, describe, expect, it } from "vitest";
-
 import type {
   RunRequest,
   RunSummary,
   SelectionContext,
   StudioEvent,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { afterEach, describe, expect, it } from "vitest";
+
 import { bootAgentRunner } from "../main/agent-runner.js";
 import { buildRuntime } from "../main/runtime.js";
 import {

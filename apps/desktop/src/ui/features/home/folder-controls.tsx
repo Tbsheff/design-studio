@@ -1,6 +1,4 @@
-import { useRef, useState, type FormEvent } from "react";
-
-import type { Project } from "@design-studio/actions/_core/contracts";
+import type { Project } from "@design-studio/contracts";
 import {
   nameFromPrompt,
   projectsInFolder,
@@ -8,10 +6,11 @@ import {
   slugify,
   type WorkspaceFolder,
   type WorkspaceList,
-} from "@design-studio/actions/_core/folders";
-import { Icon } from "@design-studio/ui";
-import { LazySelect } from "@design-studio/ui";
+} from "@design-studio/contracts/folders";
+import { Icon, LazySelect } from "@design-studio/ui";
 import type { UiSelectOption } from "@design-studio/ui";
+import { useRef, useState, type FormEvent } from "react";
+
 import type { FolderChooser } from "./use-folder-chooser.js";
 
 function FolderPath({

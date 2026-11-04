@@ -20,9 +20,9 @@ const quote = (value: string): string => JSON.stringify(value);
 
 const uiHookRead = (names: DerivedNames): string =>
   text(
-    `import type { ${names.constName} } from "${SHARED}/${names.domain}/${names.tail}.js";`,
-    `import type { WireInput } from "${SHARED}/_core/action.js";`,
-    `import { routes } from "${SHARED}/${names.domain}/routes.js";`,
+    `import type { ${names.constName} } from "${SHARED}/${names.domain}/${names.tail}";`,
+    `import type { WireInput } from "${SHARED}/_core/action";`,
+    `import { routes } from "${SHARED}/${names.domain}/routes";`,
     `import type { CallOutput } from "../../platform/http.js";`,
     `import { useAction } from "../../platform/query.js";`,
     `import type { QueryState } from "../../platform/query.js";`,
@@ -37,7 +37,7 @@ const uiHookRead = (names: DerivedNames): string =>
 
 const uiHookWrite = (names: DerivedNames): string =>
   text(
-    `import { routes } from "${SHARED}/${names.domain}/routes.js";`,
+    `import { routes } from "${SHARED}/${names.domain}/routes";`,
     `import { useAction } from "../../platform/query.js";`,
     `import type { ActionCall } from "../../platform/query.js";`,
     "",

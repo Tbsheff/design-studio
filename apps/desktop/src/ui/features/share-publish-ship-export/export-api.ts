@@ -12,7 +12,8 @@ import type {
   ExportScope,
   HandoffRequest,
   HandoffResult,
-} from "@design-studio/actions/_core/export";
+} from "@design-studio/contracts/export";
+
 import { desktopBridge } from "../../platform/desktop.js";
 import { call as callAction, getJson, sendJson } from "../../platform/http.js";
 import { readStored, uiStore, writeStored } from "../../platform/storage.js";

@@ -2,9 +2,9 @@ import { mkdtemp, readFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
+import type { ExportFrame, ExportScope } from "@design-studio/contracts/export";
 import { PNG } from "pngjs";
 
-import type { ExportFrame, ExportScope } from "@design-studio/actions/_core/export";
 import { BadRequestError } from "../platform/errors/index.js";
 import {
   hideDevChrome,

@@ -1,7 +1,8 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-import type { ProjectKind } from "@design-studio/actions/_core/contracts";
+import type { ProjectKind } from "@design-studio/contracts";
+
 import { TWEAKS_TOOL, type TweakControl } from "../../shared/tweaks.js";
 import { defineTweaks } from "./store.js";
 

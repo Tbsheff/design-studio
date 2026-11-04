@@ -1,9 +1,10 @@
-import { useState } from "react";
-
 import type {
   Attachment as UploadedAttachment,
   SelectionContext,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { Icon } from "@design-studio/ui";
+import { useState } from "react";
+
 import { asReferenceName, isReferenceName } from "../../../shared/reference.js";
 import {
   Attachment,
@@ -14,7 +15,6 @@ import {
 import { Chip } from "../../ai/components/ai/chip.js";
 import { api } from "../../api.js";
 import type { PendingAttachment } from "../../domain/pending-attachment.js";
-import { Icon } from "@design-studio/ui";
 import { readBlob } from "../../platform/http.js";
 import { projectFromPath } from "../../platform/router.js";
 import { modelLabel } from "./settings-draft-model.js";

@@ -2,9 +2,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-
-import { TOKENS_CSS_FILE, TOKENS_FILE } from "@design-studio/actions/_core/contracts";
+import { TOKENS_CSS_FILE, TOKENS_FILE } from "@design-studio/contracts";
 import type {
   Project,
   StudioEvent,
@@ -12,7 +10,9 @@ import type {
   TokenPreviewResult,
   UpdateTokensResult,
   Version,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+
 import { createEventBus } from "../events/index.js";
 import { createApp } from "../http/app.js";
 import { projectStorePorts } from "../main/project-ports.js";

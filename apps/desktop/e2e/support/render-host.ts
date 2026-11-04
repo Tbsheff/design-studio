@@ -2,6 +2,7 @@ import { execFileSync, spawn } from "node:child_process";
 import type { ChildProcess } from "node:child_process";
 import path from "node:path";
 
+import { toWorkspaceBin } from "../../scripts/workspace-root.ts";
 import {
   RENDER_BACKEND_ENV,
   RENDER_SOCKET_ENV,
@@ -32,7 +33,7 @@ function hostCommand(): {
   env: NodeJS.ProcessEnv;
 } {
   return {
-    file: path.join(ROOT, "node_modules", ".bin", "electron"),
+    file: toWorkspaceBin("electron"),
     args: [path.join(ROOT, "desktop", "dist", "render-host.js")],
     env: hostEnv(),
   };

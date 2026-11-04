@@ -1,6 +1,6 @@
+import type { SelectionContext } from "@design-studio/contracts";
 import { describe, expect, it } from "vitest";
 
-import type { SelectionContext } from "@design-studio/actions/_core/contracts";
 import { nextSelection } from "./features/canvas/use-preview-frames";
 import { valuesFromStyles } from "./features/inspector/css-values";
 import {

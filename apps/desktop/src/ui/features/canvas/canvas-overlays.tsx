@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-
 import type {
   BridgeToParent,
   SelectionContext,
-} from "@design-studio/actions/_core/contracts";
-import { formatMeasure } from "../../../shared/measure.js";
+} from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+
+import { formatMeasure } from "../../../shared/measure.js";
 import { guideStyle } from "./artboard-overlay.js";
 import type { SpacingBadge } from "./snap-model.js";
 import { frameSnapStore } from "./use-frame-resize.js";

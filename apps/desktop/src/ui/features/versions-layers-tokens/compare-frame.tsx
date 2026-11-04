@@ -1,6 +1,6 @@
+import type { ProjectKind, Version } from "@design-studio/contracts";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import type { ProjectKind, Version } from "@design-studio/actions/_core/contracts";
 import { api, errorText } from "../../api.js";
 import {
   HTML_FRAME_SANDBOX,

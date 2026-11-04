@@ -1,7 +1,7 @@
+import type { BridgeToParent, ProjectKind } from "@design-studio/contracts";
 import { useRef } from "react";
 import type { MutableRefObject } from "react";
 
-import type { BridgeToParent, ProjectKind } from "@design-studio/actions/_core/contracts";
 import { imageKindOf } from "../../../shared/image.js";
 import type { SetImageRequest } from "../../../shared/image.js";
 import { useBridge } from "../../platform/bridge.js";

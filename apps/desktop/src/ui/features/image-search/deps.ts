@@ -12,7 +12,7 @@ export { imageTargetOf } from "../inspector/image-api.js";
 
 export { useModalDialog } from "@design-studio/ui";
 
-export type { SelectionContext } from "@design-studio/actions/_core/contracts";
+export type { SelectionContext } from "@design-studio/contracts";
 
 export { imageKindOf } from "../../../shared/image.js";
 

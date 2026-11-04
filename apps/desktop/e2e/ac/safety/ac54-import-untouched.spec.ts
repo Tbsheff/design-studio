@@ -10,9 +10,9 @@ import {
 import os from "node:os";
 import path from "node:path";
 
+import type { Project, Version } from "@design-studio/contracts";
 import { expect, test } from "@playwright/test";
 
-import type { Project, Version } from "@design-studio/actions/_core/contracts";
 import { BASE_URL, ROOT } from "../../support/server";
 import {
   frontFrame,

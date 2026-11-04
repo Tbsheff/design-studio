@@ -1,6 +1,6 @@
+import type { NotFound } from "@design-studio/actions/_core/errors/not-found";
 import { Context, Effect, Layer, Schema } from "effect";
 
-import type { NotFound } from "../../shared-actions.js";
 import type { CurrentOrg } from "../current-org.js";
 import { TenantDb, toBatchEntry } from "../db.js";
 import { tq } from "../sql.js";

@@ -1,12 +1,8 @@
-import { lazy, Suspense, useRef, useState } from "react";
-import type { PointerEvent as ReactPointerEvent } from "react";
-import { createPortal } from "react-dom";
-
-import type { SelectionContext } from "@design-studio/actions/_core/contracts";
+import type { SelectionContext } from "@design-studio/contracts";
 import {
   targetFrame,
   TRIGGER_LABELS,
-} from "@design-studio/actions/_core/link-interaction";
+} from "@design-studio/contracts/link-interaction";
 import {
   ACTION_LABELS,
   cleanLinkText,
@@ -20,7 +16,7 @@ import {
   linkAction,
   linkDuration,
   transitionLabel,
-} from "@design-studio/actions/_core/links";
+} from "@design-studio/contracts/links";
 import type {
   LinkEasing,
   LinkMotion,
@@ -28,11 +24,14 @@ import type {
   LinkTarget,
   LinkTransition,
   PrototypeLink,
-} from "@design-studio/actions/_core/links";
-import { loadLinkInteraction } from "../../canvas-link-slots.js";
-import { Icon } from "@design-studio/ui";
-import { UiSelect } from "@design-studio/ui";
+} from "@design-studio/contracts/links";
+import { Icon, UiSelect } from "@design-studio/ui";
 import type { UiSelectOption } from "@design-studio/ui";
+import { lazy, Suspense, useRef, useState } from "react";
+import type { PointerEvent as ReactPointerEvent } from "react";
+import { createPortal } from "react-dom";
+
+import { loadLinkInteraction } from "../../canvas-link-slots.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";
 import { framePage, frameTitle } from "./canvas-frames.js";
 import { linksApi } from "./links-api.js";

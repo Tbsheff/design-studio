@@ -1,4 +1,5 @@
-import { REQUIRED_TOKENS } from "@design-studio/actions/_core/contracts";
+import { REQUIRED_TOKENS } from "@design-studio/contracts";
+
 import { figmaToDtcg, isFigmaVariables } from "./figma-variables.js";
 import {
   isCanonicalName,

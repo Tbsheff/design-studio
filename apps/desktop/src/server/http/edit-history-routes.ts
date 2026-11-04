@@ -1,14 +1,14 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-import type { Context, Hono } from "hono";
-
 import type {
   Direction,
   EditSessionState,
   Project,
   TextSourceAnswer,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import type { Context, Hono } from "hono";
+
 import { firstVersionWaitText } from "../app/first-version.js";
 import {
   elementClassInfo,

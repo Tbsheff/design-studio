@@ -1,6 +1,6 @@
+import { DEFAULT_SETTINGS } from "@design-studio/contracts";
 import { describe, expect, it } from "vitest";
 
-import { DEFAULT_SETTINGS } from "./actions/_core/contracts";
 import {
   LEVEL_PRESETS,
   levelOf,

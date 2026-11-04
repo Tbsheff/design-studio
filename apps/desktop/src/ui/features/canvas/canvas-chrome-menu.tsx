@@ -1,10 +1,7 @@
+import type { ProjectKind, SelectionContext } from "@design-studio/contracts";
 import { useState } from "react";
 import type { ComponentProps, ReactNode } from "react";
 
-import type {
-  ProjectKind,
-  SelectionContext,
-} from "@design-studio/actions/_core/contracts";
 import { api } from "../../api.js";
 import type { LiveStore } from "../../platform/live-store.js";
 import type { UiState } from "../../platform/storage.js";

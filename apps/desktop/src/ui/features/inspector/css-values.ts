@@ -2,7 +2,7 @@ import {
   DIRECT_STYLE_PROPERTIES,
   type DirectStyleProperty,
   type SelectionContext,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
 
 export type StyleValues = Record<DirectStyleProperty, string>;
 

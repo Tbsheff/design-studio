@@ -6,7 +6,8 @@ import type {
   RunLevel,
   RunRequest,
   SelectionContext,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+
 import { levelOf } from "../../shared/run-levels.js";
 import type { CanvasService } from "../canvas/index.js";
 import { probeWithPreview } from "../canvas/links/index.js";

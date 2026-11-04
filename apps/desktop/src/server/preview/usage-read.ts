@@ -1,5 +1,6 @@
-import type { Direction, Project } from "@design-studio/actions/_core/contracts";
-import type { ComponentUsage } from "@design-studio/actions/_core/usage-scope";
+import type { Direction, Project } from "@design-studio/contracts";
+import type { ComponentUsage } from "@design-studio/contracts/usage-scope";
+
 import type { StudioProjectStore } from "../store/projects.js";
 import type { PreviewService } from "../types.js";
 import { componentUsage } from "./usage-scope.js";

@@ -1,6 +1,6 @@
+import type { Version, VersionMeta } from "@design-studio/contracts";
 import { describe, expect, it } from "vitest";
 
-import type { Version, VersionMeta } from "@design-studio/actions/_core/contracts";
 import {
   displayTitle,
   indexVersions,

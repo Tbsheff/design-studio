@@ -1,4 +1,5 @@
-import type { Direction, Project } from "@design-studio/actions/_core/contracts";
+import type { Direction, Project } from "@design-studio/contracts";
+
 import { loadRepoContext } from "../agent/index.js";
 import type { StudioProjectStore } from "../store/projects.js";
 

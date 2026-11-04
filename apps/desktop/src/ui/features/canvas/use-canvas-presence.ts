@@ -1,6 +1,6 @@
+import type { SelectionContext } from "@design-studio/contracts";
 import { useEffect, useRef } from "react";
 
-import type { SelectionContext } from "@design-studio/actions/_core/contracts";
 import { api } from "../../api.js";
 
 const PRESENCE_MS = 1500;

@@ -1,4 +1,5 @@
-import type { Project } from "@design-studio/actions/_core/contracts";
+import type { Project } from "@design-studio/contracts";
+
 import { searchComponents } from "../components/component-search.js";
 import { tailwindClassesFor } from "../direct-edit/engine/index.js";
 import type { TailwindTheme } from "../direct-edit/tailwind/index.js";

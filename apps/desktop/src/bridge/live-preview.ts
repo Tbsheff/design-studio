@@ -1,7 +1,8 @@
 import {
   DIRECT_STYLE_PROPERTIES,
   TOKEN_PREVIEW_STYLE_ID,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+
 import { LOFI_STYLE_ID } from "../shared/lofi.js";
 import { TWEAKS_PREVIEW_STYLE_ID } from "../shared/tweaks.js";
 import { isObject, isString } from "./dom-input.js";

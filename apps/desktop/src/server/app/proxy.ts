@@ -2,14 +2,21 @@ import http from "node:http";
 import net from "node:net";
 import type { Duplex } from "node:stream";
 
-import { APP_REDIRECT_PARAM, APP_SOURCE_PATH } from "@design-studio/actions/_core/app";
 import {
   BRIDGE_CHANGES_PATH,
   BRIDGE_PARENT_ORIGIN_PARAM,
   BRIDGE_SCRIPT_PATH,
   BRIDGE_HEADLESS_PARAM,
-} from "@design-studio/actions/_core/contracts";
-import { FRAME_STATE_ATTR, stateOfHost } from "@design-studio/actions/_core/frame-state";
+} from "@design-studio/contracts";
+import {
+  APP_REDIRECT_PARAM,
+  APP_SOURCE_PATH,
+} from "@design-studio/contracts/app";
+import {
+  FRAME_STATE_ATTR,
+  stateOfHost,
+} from "@design-studio/contracts/frame-state";
+
 import {
   answerState,
   captureSessionCookies,

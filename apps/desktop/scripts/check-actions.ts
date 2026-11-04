@@ -4,6 +4,15 @@ import path from "node:path";
 import { promisify } from "node:util";
 
 import { runChecks } from "./check-actions-catalog.js";
+import {
+  ALL,
+  EFFECT_FOLDERS,
+  NEW_FOLDERS,
+  ROOTS,
+  RUNTIME_ENTRIES,
+  SERVER_MAIN,
+} from "./check-actions-scope.ts";
+import { WORKSPACE_ROOT } from "./workspace-root.ts";
 
 interface RuleText {
   fix: string;
@@ -35,46 +44,14 @@ interface Entry extends Pick<Hit, "file" | "rule"> {
 
 const run = promisify(execFile);
 const BASELINE = new URL("check-actions-baseline.json", import.meta.url);
-const ROOTS = ["src/server", "../../packages/common/actions/src", "src/ui", "apps/api"];
 const TEST_FILE = /\.test\.tsx?$/u;
 const CODE_FILE = /\.(?:ts|tsx|mts|cts)$/u;
 const COMMENT_LINE = /^\s*(?:\/\/|\/\*|\*).*$/u;
 const MAX_BUFFER = 67_108_864;
 const WINDOW_LINES = 12;
-const SERVER_MAIN = "src/server/main/**";
-const RUN_ACTION = "src/server/handlers/_core/run-action.ts";
-const MCP_REGISTRY = "src/server/mcp/registry.ts";
-const AGENT_REGISTRY = "src/server/agent-tools/registry.ts";
-
-const EFFECT_FOLDERS = [
-  ..."platform events run-log project-source page-probe handlers ship"
-    .split(" ")
-    .map((dir) => `src/server/${dir}/**`),
-  "../../packages/common/actions/src/**",
-  "apps/api/**",
-];
-
-const NEW_FOLDERS = [
-  ...EFFECT_FOLDERS,
-  SERVER_MAIN,
-  "src/server/agent-tools/**",
-  ..."kit domain platform features app"
-    .split(" ")
-    .map((dir) => `src/ui/${dir}/**`),
-];
-
-const RUNTIME_ENTRIES = [
-  "src/server/http/**",
-  "src/server/mcp/**",
-  "src/server/agent-tools/**",
-  SERVER_MAIN,
-  "src/server/thumbnail-worker.ts",
-  "src/server/worker-serve.ts",
-  "src/server/preview/route-graph-worker.ts",
-  "src/server/publish/worker-build.ts",
-];
-
-const ALL = ROOTS.map((root) => `${root}/**`);
+const RUN_ACTION = "apps/desktop/src/server/handlers/_core/run-action.ts";
+const MCP_REGISTRY = "apps/desktop/src/server/mcp/registry.ts";
+const AGENT_REGISTRY = "apps/desktop/src/server/agent-tools/registry.ts";
 
 const LINE_RULES: LineRule[] = [
   {
@@ -87,7 +64,7 @@ const LINE_RULES: LineRule[] = [
   },
   {
     allowed: RUNTIME_ENTRIES,
-    fix: "return the Effect and let an adapter run it with the runtime from src/server/main/runtime.ts",
+    fix: "return the Effect and let an adapter run it with the runtime from apps/desktop/src/server/main/runtime.ts",
     id: "S3",
     re: /\b(?:runPromiseExit|runPromise|runSync|runFork|ManagedRuntime\.make)\b/u,
     scope: ALL,
@@ -95,15 +72,15 @@ const LINE_RULES: LineRule[] = [
   },
   {
     allowed: [SERVER_MAIN],
-    fix: "add the Layer to src/server/main/live-layer.ts",
+    fix: "add the Layer to apps/desktop/src/server/main/live-layer.ts",
     id: "S4",
     re: /\bLayer\.build\b|\bLayer\.fresh\b|\bEffect\.provide\([^)]*(?:\bLayer\b|\.layer\b|Live\b|\.Default\b)/u,
     scope: ALL,
-    what: "building or providing a Layer outside src/server/main is banned",
+    what: "building or providing a Layer outside apps/desktop/src/server/main is banned",
   },
   {
     allowed: [RUN_ACTION, "apps/api/**/middleware/**"],
-    fix: "let src/server/handlers/_core/run-action.ts provide the principal and org scope",
+    fix: "let apps/desktop/src/server/handlers/_core/run-action.ts provide the principal and org scope",
     id: "T1",
     re: /\bprovideService\(\s*(?:LocalPrincipal|LocalOrgScope|CurrentOrg)\b/u,
     scope: ALL,
@@ -114,16 +91,20 @@ const LINE_RULES: LineRule[] = [
       RUN_ACTION,
       MCP_REGISTRY,
       AGENT_REGISTRY,
-      "src/server/{agent-tools/sdk-shape,platform/decode/index,platform/local-file/index}.ts",
+      "apps/desktop/src/server/{agent-tools/sdk-shape,platform/decode/index,platform/local-file/index}.ts",
     ],
-    fix: "call the action through src/server/handlers/_core/run-action.ts",
+    fix: "call the action through apps/desktop/src/server/handlers/_core/run-action.ts",
     id: "W7",
     re: /\bauthorizer\.require\b|\bSchema\.decodeUnknown\w*|\btoCodecStringTree\b|\btoJsonSchemaDocument\b/u,
     scope: ALL,
     what: "decoding, authorizing or building a schema document outside run-action.ts and the registries is banned",
   },
   {
-    allowed: ["src/server/http/mount.ts", MCP_REGISTRY, AGENT_REGISTRY],
+    allowed: [
+      "apps/desktop/src/server/http/mount.ts",
+      MCP_REGISTRY,
+      AGENT_REGISTRY,
+    ],
     fix: "pnpm run new:op <ctx> <opKey>",
     id: "E1",
     re: /\bapp\.(?:get|post|put|patch|delete)\(|\bregisterTool\(|\btool\(/u,
@@ -153,7 +134,7 @@ const TEXT = {
     what: "a Context.Service class with no access declaration is banned",
   },
   import: {
-    fix: "move the shared code to src/server/handlers/_core or a domain index.ts",
+    fix: "move the shared code to apps/desktop/src/server/handlers/_core or a domain index.ts",
     id: "W14",
     what: "a service context that imports another service context is banned",
   },
@@ -168,7 +149,7 @@ const TEXT = {
     what: "a status field in an error class is banned",
   },
   wire: {
-    fix: "build the error body with toWire from ../../packages/common/actions/src/_core/wire.ts",
+    fix: "build the error body with toWire from packages/common/actions/src/_core/wire.ts",
     id: "R6",
     what: "ctx.json with an _tag or error key is banned",
   },
@@ -183,7 +164,9 @@ const ERRORS_FILE = "**/errors/*.ts";
 const STATUS_FIELD = /\bstatus\s*[:=?(]/u;
 const SERVICE_CLASS = /\bextends\s+Context\.Service\b/u;
 const ACCESS_FIELD = /\baccess\s*[:=?]/u;
-const HANDLER_DOMAIN = /^src\/server\/handlers\/(?<ctx>[^/]+)\//u;
+
+const HANDLER_DOMAIN =
+  /^apps\/desktop\/src\/server\/handlers\/(?<ctx>[^/]+)\//u;
 
 const IMPORT_FROM =
   /(?:\bfrom\s+|\bimport\s*\(\s*|^\s*import\s+)["'](?<spec>\.[^"']*)["']/u;
@@ -201,7 +184,7 @@ const listFiles = async (): Promise<string[]> => {
   const { stdout } = await run(
     "git",
     ["ls-files", "--cached", "--others", "--exclude-standard", "--", ...ROOTS],
-    { encoding: "utf-8", maxBuffer: MAX_BUFFER }
+    { cwd: WORKSPACE_ROOT, encoding: "utf-8", maxBuffer: MAX_BUFFER }
   );
 
   return stdout.split("\n").filter((file) => isCode(file));
@@ -216,7 +199,7 @@ const readText = async (file: string | URL): Promise<string | null> => {
 };
 
 const readSource = async (file: string): Promise<Source> => {
-  const text = (await readText(file)) ?? "";
+  const text = (await readText(path.join(WORKSPACE_ROOT, file))) ?? "";
 
   return {
     file,
@@ -329,7 +312,7 @@ const importHits = (source: Source): Hit[] => {
 
 const pollHits = (source: Source): Hit[] => {
   const polls =
-    path.matchesGlob(source.file, "src/ui/platform/**") &&
+    path.matchesGlob(source.file, "apps/desktop/src/ui/platform/**") &&
     source.lines.some((line) => FETCH_CALL.test(line));
 
   return matching(
@@ -413,27 +396,37 @@ const riseLines = (entry: Entry, before: Baseline, hits: Hit[]): string[] => [
 const rises = (now: Baseline, before: Baseline, hits: Hit[]): string[] => {
   const groups = Object.groupBy(hits, (hit) => keyOf(hit));
 
-  return entries(now)
-    .filter((entry) => entry.count > countOf(before, entry))
-    .flatMap((entry) => riseLines(entry, before, groups[keyOf(entry)] ?? []));
+  return entries(now).flatMap((entry) => {
+    if (entry.count <= countOf(before, entry)) {
+      return [];
+    }
+
+    return riseLines(entry, before, groups[keyOf(entry)] ?? []);
+  });
 };
 
 const drops = (now: Baseline, before: Baseline): string[] =>
-  entries(before)
-    .filter((entry) => countOf(now, entry) < entry.count)
-    .flatMap((entry) => [
+  entries(before).flatMap((entry) => {
+    if (countOf(now, entry) >= entry.count) {
+      return [];
+    }
+
+    return [
       `note: ${entry.rule} ${entry.file}: ${entry.count} -> ${countOf(now, entry)} hits. fix: pnpm run check:actions --update`,
-    ]);
+    ];
+  });
 
 const lowerOf = (now: Baseline, before: Baseline): Baseline =>
   countEntries(
-    entries(before)
-      .map((entry) => ({
-        count: Math.min(entry.count, countOf(now, entry)),
-        file: entry.file,
-        rule: entry.rule,
-      }))
-      .filter((entry) => entry.count > 0)
+    entries(before).flatMap((entry) => {
+      const count = Math.min(entry.count, countOf(now, entry));
+
+      if (count === 0) {
+        return [];
+      }
+
+      return [{ count, file: entry.file, rule: entry.rule }];
+    })
   );
 
 const print = (lines: string[]): void => {

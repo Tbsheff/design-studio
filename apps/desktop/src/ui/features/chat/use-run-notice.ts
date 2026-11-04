@@ -1,6 +1,6 @@
+import type { RunStatus } from "@design-studio/contracts";
 import { useEffect, useRef } from "react";
 
-import type { RunStatus } from "@design-studio/actions/_core/contracts";
 import { isDesktop } from "../../platform/desktop.js";
 import type { RunMap } from "./run-state-model.js";
 

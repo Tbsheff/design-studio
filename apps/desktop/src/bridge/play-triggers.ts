@@ -1,5 +1,6 @@
-import type { PlayRunOp, PlayTriggerPhase } from "@design-studio/actions/_core/contracts";
-import type { LinkQuery } from "@design-studio/actions/_core/links";
+import type { PlayRunOp, PlayTriggerPhase } from "@design-studio/contracts";
+import type { LinkQuery } from "@design-studio/contracts/links";
+
 import { closestLink, resolveLink } from "./play.js";
 
 const TRIGGER_TYPE = "play-trigger";

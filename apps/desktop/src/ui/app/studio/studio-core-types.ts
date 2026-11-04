@@ -1,4 +1,5 @@
-import type { Project, Version } from "@design-studio/actions/_core/contracts";
+import type { Project, Version } from "@design-studio/contracts";
+
 import type { useTryVariants } from "../../features/canvas/use-try-variants";
 import type { useVariations } from "../../features/canvas/use-variations";
 import type { useDraftChrome } from "../../features/chat/draft-sources";

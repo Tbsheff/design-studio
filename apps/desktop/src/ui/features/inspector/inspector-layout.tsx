@@ -1,4 +1,5 @@
-import type { SelectionContext } from "@design-studio/actions/_core/contracts";
+import type { SelectionContext } from "@design-studio/contracts";
+
 import { InspectorSection } from "./inspector-fields.js";
 import { isPositioned, PositionRows } from "./position-rows.js";
 import { AlignSelf, MinMaxRows } from "./size-limits.js";

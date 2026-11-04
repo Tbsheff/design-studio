@@ -1,6 +1,6 @@
+import type { Project } from "@design-studio/contracts";
 import { useEffect, useState, useSyncExternalStore } from "react";
 
-import type { Project } from "@design-studio/actions/_core/contracts";
 import type {
   ProjectSearchResult,
   RouteHit,

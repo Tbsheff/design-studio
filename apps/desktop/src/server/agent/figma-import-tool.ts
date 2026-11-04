@@ -1,9 +1,9 @@
 import { readFile, stat } from "node:fs/promises";
 
+import { FIGMA_NODES_MAX_BYTES } from "@design-studio/contracts/figma-nodes";
+import { JSX_INSERT_POSITIONS } from "@design-studio/contracts/insert";
 import { Effect, Schema } from "effect";
 
-import { FIGMA_NODES_MAX_BYTES } from "@design-studio/actions/_core/figma-nodes";
-import { JSX_INSERT_POSITIONS } from "@design-studio/actions/_core/insert";
 import {
   toOptionalFlag,
   toOptionalText,

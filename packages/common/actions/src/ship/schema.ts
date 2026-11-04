@@ -1,6 +1,5 @@
+import { SHIP_TEXT_MAX } from "@design-studio/contracts/ship";
 import { Schema } from "effect";
-
-import { SHIP_TEXT_MAX } from "../_core/ship.js";
 
 const SHIP_NOTE =
   "Ship works on an attached app project whose folder is in a git repository. The studio makes a new branch from the repo HEAD in a separate git worktree, so the checked-out branch, the working tree and the index of the user stay as they are. It never force pushes, and it never commits .env files, secrets or node_modules. Repo commit hooks do not run; when the repo has a biome or prettier config, the studio formats the shipped files with it in that worktree first (format says which, and the ship result lists the files it reformatted with their diffs).";

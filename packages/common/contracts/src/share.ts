@@ -1,4 +1,4 @@
-import type { ExportFrame } from "./export.js";
+import type { ExportFrame } from "@design-studio/contracts/export";
 
 export const SHARE_EXPIRY_HOURS = [1, 24, 168] as const;
 

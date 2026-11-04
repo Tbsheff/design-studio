@@ -3,7 +3,8 @@ import type { getSettingsShip } from "@design-studio/actions/ship/get-settings";
 import type { publishShip } from "@design-studio/actions/ship/publish";
 import { routes } from "@design-studio/actions/ship/routes";
 import type { setSettingsShip } from "@design-studio/actions/ship/set-settings";
-import type { ShipRequest, ShipSettings } from "@design-studio/actions/_core/ship";
+import type { ShipRequest, ShipSettings } from "@design-studio/contracts/ship";
+
 import { call } from "../../platform/http.js";
 import type { UiOutput } from "../../platform/http.js";
 

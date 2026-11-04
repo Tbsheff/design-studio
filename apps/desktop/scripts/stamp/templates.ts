@@ -245,9 +245,9 @@ const handlerImports = (spec: ActionHandlerSpec): ImportLine[] => {
   const { names } = spec;
 
   const list: ImportLine[] = [
-    { from: `${SHARED}/_core/action.js`, names: ["Input"], typeOnly: true },
+    { from: `${SHARED}/_core/action`, names: ["Input"], typeOnly: true },
     {
-      from: `${SHARED}/${names.domain}/${names.tail}.js`,
+      from: `${SHARED}/${names.domain}/${names.tail}`,
       names: [names.constName],
       typeOnly: true,
     },
@@ -261,7 +261,7 @@ const handlerImports = (spec: ActionHandlerSpec): ImportLine[] => {
 
   if (spec.body === null || spec.preview) {
     list.push({
-      from: `${SHARED}/_core/errors/not-implemented.js`,
+      from: `${SHARED}/_core/errors/not-implemented`,
       names: ["NotImplemented"],
       typeOnly: false,
     });

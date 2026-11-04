@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ES2024"],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "allowImportingTsExtensions": true,
+    "types": ["node"],
+    "noEmit": true,
+    "rootDir": ".",
+    "paths": {
+      "@design-studio/actions": ["./packages/common/actions/src/index.ts"],
+      "@design-studio/actions/*": ["./packages/common/actions/src/*"],
+      "@design-studio/contracts": [
+        "./packages/common/contracts/src/contracts.ts"
+      ],
+      "@design-studio/contracts/*": ["./packages/common/contracts/src/*"],
+      "@design-studio/ui": ["./packages/ui/src/index.ts"],
+      "@design-studio/ui/*": ["./packages/ui/src/*"]
+    }
+  }
+}

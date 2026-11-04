@@ -1,9 +1,9 @@
+import type { AttachedApp, Direction } from "@design-studio/contracts";
 import type {
   FocusEvent as ReactFocusEvent,
   PointerEvent as ReactPointerEvent,
 } from "react";
 
-import type { AttachedApp, Direction } from "@design-studio/actions/_core/contracts";
 import type { CommentTools } from "../comments/comment-layer.js";
 import type { CommentsControl } from "../comments/use-comments.js";
 import { broadcastTheme } from "../design-system/token-frames.js";

@@ -1,6 +1,5 @@
+import type { AppServerStatus } from "@design-studio/contracts";
 import { useSyncExternalStore } from "react";
-
-import type { AppServerStatus } from "@design-studio/actions/_core/contracts";
 
 export const APP_PANEL_EVENT = "studio:app-panel";
 

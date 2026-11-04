@@ -1,10 +1,9 @@
+import type { TrashItem } from "@design-studio/contracts";
+import { Icon, useModalDialog } from "@design-studio/ui";
 import { useEffect, useState } from "react";
 
-import type { TrashItem } from "@design-studio/actions/_core/contracts";
 import { api, errorText, json } from "../../api.js";
 import { formatRelative, formatTime } from "../../domain/format.js";
-import { Icon } from "@design-studio/ui";
-import { useModalDialog } from "@design-studio/ui";
 import { getBlob } from "../../platform/http.js";
 
 type Confirm =

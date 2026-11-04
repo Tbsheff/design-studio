@@ -258,17 +258,17 @@ async function main(): Promise<void> {
     (await page.locator('meta[name="studio-token"]').getAttribute("content")) ??
     "";
   await page.evaluate(() => localStorage.clear());
-  const project = await page.evaluate(
-    async (t) =>
-      (
-        await fetch("/api/projects/from-starter", {
-          method: "POST",
-          headers: { "x-studio-token": t, "content-type": "application/json" },
-          body: JSON.stringify({ starterId: "landing" }),
-        })
-      ).json(),
-    token
-  );
+  const project = await page.evaluate(async (t) => {
+    const res = await fetch("/api/projects/from-starter", {
+      method: "POST",
+      headers: { "x-studio-token": t, "content-type": "application/json" },
+      body: JSON.stringify({ starterId: "landing" }),
+    });
+    if (!res.ok) {
+      throw new Error(`fetch failed: ${res.status}`);
+    }
+    return res.json();
+  }, token);
   await page.goto(base);
   await page
     .locator(
@@ -304,8 +304,8 @@ async function main(): Promise<void> {
           has: page
             .frameLocator("iframe.frame.front")
             .locator("h1, h2, h3, p, a, button"),
+          hasNot: h1,
         })
-        .filter({ hasNot: h1 })
         .first();
       await container.waitFor(SHORT);
       await container.scrollIntoViewIfNeeded();

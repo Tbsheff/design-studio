@@ -1,5 +1,4 @@
-import { nearColor } from "../shared/color-near.js";
-import { SOURCE_LOC_ATTR, type SourceLoc } from "@design-studio/actions/_core/contracts";
+import { SOURCE_LOC_ATTR, type SourceLoc } from "@design-studio/contracts";
 import {
   INHERITED_PROPERTIES,
   STYLE_SCAN_MAX_HITS,
@@ -14,7 +13,9 @@ import {
   type StyleHit,
   type StyleQuery,
   type StyleScanResult,
-} from "@design-studio/actions/_core/style-search";
+} from "@design-studio/contracts/style-search";
+
+import { nearColor } from "../shared/color-near.js";
 import { appSourceFor, appSourceMode } from "./app-source.js";
 
 const SKIP_TAGS = new Set([

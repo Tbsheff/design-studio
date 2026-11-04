@@ -6,7 +6,8 @@ import type {
   DesignSystemState,
   Direction,
   Project,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+
 import { readDesignSystemFiles } from "../sync.js";
 import { findTokenFile, safeFileInside } from "./detect.js";
 import { readCssTokens } from "./read-css.js";

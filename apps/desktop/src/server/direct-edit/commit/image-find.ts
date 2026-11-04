@@ -2,8 +2,8 @@ import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 
 import type * as t from "@babel/types";
+import type { Project, SourceLoc } from "@design-studio/contracts";
 
-import type { Project, SourceLoc } from "@design-studio/actions/_core/contracts";
 import { parseSource } from "../engine/jsx.js";
 
 const SKIP =

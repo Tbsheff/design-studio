@@ -1,6 +1,3 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import type { Dispatch, SetStateAction } from "react";
-
 import type {
   Project,
   RunRequest,
@@ -8,7 +5,10 @@ import type {
   StudioEvent,
   Version,
   WorkTreeStatus,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { Dispatch, SetStateAction } from "react";
+
 import { api, errorText } from "../../api.js";
 import { useProjectEvents } from "../../platform/events.js";
 import type { ConnectionState } from "../../platform/events.js";

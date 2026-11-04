@@ -9,10 +9,10 @@ import {
 import os from "node:os";
 import path from "node:path";
 
+import type { Project, RunSummary, Version } from "@design-studio/contracts";
 import { expect, test } from "@playwright/test";
 import type { ElectronApplication, Page } from "@playwright/test";
 
-import type { Project, RunSummary, Version } from "@design-studio/actions/_core/contracts";
 import { desktopEnv, launchDesktop } from "./support/desktop-app";
 import { clickCreate } from "./support/studio";
 

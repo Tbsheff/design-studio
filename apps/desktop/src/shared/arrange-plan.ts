@@ -1,10 +1,11 @@
+import type { SourceLoc } from "@design-studio/contracts";
+
 import type {
   AlignOp,
   ArrangeAction,
   ArrangeMode,
   MeasureRect,
 } from "./arrange.js";
-import type { SourceLoc } from "./actions/_core/contracts.js";
 
 export interface Sides {
   top: number;

@@ -1,23 +1,24 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import {
-  CANVAS_GAP,
-  CANVAS_MAX_FRAMES,
-  cleanFrameLabel,
-} from "@design-studio/actions/_core/canvas-file";
-import type {
-  CanvasFile,
-  CanvasFileFrame,
-} from "@design-studio/actions/_core/canvas-file";
 import type {
   CanvasWriteSource,
   Direction,
   Project,
-} from "@design-studio/actions/_core/contracts";
-import { DEFAULT_FRAME_STATE } from "@design-studio/actions/_core/frame-state";
-import { upsertLink } from "@design-studio/actions/_core/links";
-import type { LinksFile } from "@design-studio/actions/_core/links";
+} from "@design-studio/contracts";
+import {
+  CANVAS_GAP,
+  CANVAS_MAX_FRAMES,
+  cleanFrameLabel,
+} from "@design-studio/contracts/canvas-file";
+import type {
+  CanvasFile,
+  CanvasFileFrame,
+} from "@design-studio/contracts/canvas-file";
+import { DEFAULT_FRAME_STATE } from "@design-studio/contracts/frame-state";
+import { upsertLink } from "@design-studio/contracts/links";
+import type { LinksFile } from "@design-studio/contracts/links";
+
 import {
   cleanParams,
   dynamicNames,

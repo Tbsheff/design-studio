@@ -9,7 +9,8 @@ import type {
   EditSessionEnd,
   Version,
   VersionChanges,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+
 import type {
   HunkRevertRequest,
   HunkRevertResult,

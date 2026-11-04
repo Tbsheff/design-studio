@@ -1,4 +1,4 @@
-import type { NavSummary } from "@design-studio/actions/_core/contracts";
+import type { NavSummary } from "@design-studio/contracts";
 
 const PLACEHOLDER_PATTERN = String.raw`\b(lorem|ipsum|todo|tbd|to come|will be added|placeholder|sample (data|timings))\b|example\.(com|org)|@[\w.-]+\.example\b`;
 

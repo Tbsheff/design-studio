@@ -28,11 +28,7 @@ export type {
   InsertScope,
 } from "../direct-edit/index.js";
 
-export type {
-  Direction,
-  Project,
-  VersionMeta,
-} from "@design-studio/actions/_core/contracts";
+export type { Direction, Project, VersionMeta } from "@design-studio/contracts";
 
 export type { KnownFailure } from "../platform/attempt/index.js";
 

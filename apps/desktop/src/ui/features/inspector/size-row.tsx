@@ -1,8 +1,8 @@
+import type { SelectionContext } from "@design-studio/contracts";
+import { UiSelect } from "@design-studio/ui";
 import { useEffect, useRef, useState } from "react";
 import type { FocusEvent, PointerEvent as ReactPointerEvent } from "react";
 
-import type { SelectionContext } from "@design-studio/actions/_core/contracts";
-import { UiSelect } from "@design-studio/ui";
 import { useLive } from "../../platform/live-store.js";
 import { resizeReadout } from "../canvas/use-resize-handles.js";
 import { write } from "./layout-keys.js";

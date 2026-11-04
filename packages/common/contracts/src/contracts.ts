@@ -1,11 +1,18 @@
-import type { AppDoctorResult } from "./app-doctor.js";
-import type { CanvasFile } from "./canvas-file";
-import type { ElementScope } from "./element-variants";
-import type { FrameStatesView } from "./frame-state.js";
-import type { LinkQuery, LinkRectReport, LinksFile } from "./links";
-import type { StatesRequest } from "./states";
-import type { StyleQuery, StyleScanResult } from "./style-search";
-import type { EditScope } from "./usage-scope";
+import type { AppDoctorResult } from "@design-studio/contracts/app-doctor";
+import type { CanvasFile } from "@design-studio/contracts/canvas-file";
+import type { ElementScope } from "@design-studio/contracts/element-variants";
+import type { FrameStatesView } from "@design-studio/contracts/frame-state";
+import type {
+  LinkQuery,
+  LinkRectReport,
+  LinksFile,
+} from "@design-studio/contracts/links";
+import type { StatesRequest } from "@design-studio/contracts/states";
+import type {
+  StyleQuery,
+  StyleScanResult,
+} from "@design-studio/contracts/style-search";
+import type { EditScope } from "@design-studio/contracts/usage-scope";
 
 export type LegacyBinding<T> = T;
 

@@ -1,6 +1,6 @@
+import type { SelectionContext } from "@design-studio/contracts";
 import type { MutableRefObject } from "react";
 
-import type { SelectionContext } from "@design-studio/actions/_core/contracts";
 import type { ImageFit } from "../../../shared/image.js";
 import type { PreviewPort } from "../../platform/bridge.js";
 

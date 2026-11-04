@@ -1,10 +1,10 @@
-import type { Dispatch, RefObject, SetStateAction } from "react";
-
 import type {
   CommentPrefill,
   SelectionContext,
   Version,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import type { Dispatch, RefObject, SetStateAction } from "react";
+
 import type { CanvasSource } from "../../features/canvas/canvas-toolbar";
 import type { MentionRequest } from "../../features/chat/use-mentions";
 import type { PrefillRequest } from "../../features/comments";

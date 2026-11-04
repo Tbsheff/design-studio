@@ -2,14 +2,12 @@ import { readFile, realpath } from "node:fs/promises";
 import path from "node:path";
 
 import type * as t from "@babel/types";
-import MagicString from "magic-string";
-
 import {
   DIRECT_STYLE_PROPERTIES,
   type Direction,
   type Project,
   type Version,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
 import {
   PROP_NAME,
   PROP_TEXT_MAX,
@@ -19,7 +17,9 @@ import {
   type PropValue,
   type SetPropsResult,
   type VariantClassResult,
-} from "@design-studio/actions/_core/props";
+} from "@design-studio/contracts/props";
+import MagicString from "magic-string";
+
 import { cvaCalls, parseModuleFile } from "../../components/props-schema.js";
 import { sourceFiles, usesIn } from "../../components/props-service.js";
 import { elementAt, readInstance } from "../../components/use-site.js";

@@ -1,4 +1,4 @@
-import type { DirectStyleProperty } from "@design-studio/actions/_core/contracts";
+import type { DirectStyleProperty } from "@design-studio/contracts";
 import type {
   ClassRule,
   ComponentRule,
@@ -6,8 +6,9 @@ import type {
   DesignRuleHit,
   FontRule,
   TokenRule,
-} from "@design-studio/actions/_core/design-rules";
-import type { ReviewFix } from "@design-studio/actions/_core/review";
+} from "@design-studio/contracts/design-rules";
+import type { ReviewFix } from "@design-studio/contracts/review";
+
 import type { RenderPage } from "../preview/render-backend.js";
 import type { Draft } from "../review/checks.js";
 import { parseLoc } from "../review/checks.js";

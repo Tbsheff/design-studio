@@ -1,8 +1,8 @@
+import type { ClarifyQuestion } from "@design-studio/contracts";
+import { Icon } from "@design-studio/ui";
 import { useEffect, useId, useRef, useState } from "react";
 import type { FormEvent } from "react";
 
-import type { ClarifyQuestion } from "@design-studio/actions/_core/contracts";
-import { Icon } from "@design-studio/ui";
 import { useRovingRadioGroup } from "./level-control.js";
 
 const ClarifyQuestionField = ({

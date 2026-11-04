@@ -1,8 +1,9 @@
 import { readFile, realpath } from "node:fs/promises";
 import path from "node:path";
 
-import { SOURCE_LOC_ATTR } from "@design-studio/actions/_core/contracts";
-import { cleanExportPath } from "@design-studio/actions/_core/export";
+import { SOURCE_LOC_ATTR } from "@design-studio/contracts";
+import { cleanExportPath } from "@design-studio/contracts/export";
+
 import { BadRequestError, NotFoundError } from "../platform/errors/index.js";
 import { withPagePath } from "../project-source/index.js";
 import { attemptNull, toOptional } from "./attempt-null.js";

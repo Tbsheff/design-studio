@@ -1,16 +1,15 @@
-import { Effect, Schema } from "effect";
-
-import { SourceUseFields } from "../direct-edit/schema.js";
-import { DESIGN_RULES_TEXT_MAX } from "./design-rules.js";
-import { FIGMA_NODES_MAX_BYTES } from "./figma-nodes.js";
+import { SourceUseFields } from "@design-studio/actions/direct-edit/schema";
+import { DESIGN_RULES_TEXT_MAX } from "@design-studio/contracts/design-rules";
+import { FIGMA_NODES_MAX_BYTES } from "@design-studio/contracts/figma-nodes";
 import {
   OWNERS_MAX,
   OWNER_STACK_MAX,
   PROPS_MAX,
   PROP_NAME,
   PROP_TEXT_MAX,
-} from "./props.js";
-import { REVIEW_FIX_MAX } from "./review.js";
+} from "@design-studio/contracts/props";
+import { REVIEW_FIX_MAX } from "@design-studio/contracts/review";
+import { Effect, Schema } from "effect";
 
 const SIDE_MIN = 200;
 

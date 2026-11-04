@@ -1,5 +1,3 @@
-import type { ComponentType, MutableRefObject } from "react";
-
 import type {
   AttachedApp,
   CompiledTokenEntry,
@@ -8,7 +6,9 @@ import type {
   ProjectKind,
   SelectionContext,
   ZoomKey,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import type { ComponentType, MutableRefObject } from "react";
+
 import type { PreviewPort } from "../../platform/bridge.js";
 import type { LiveStore } from "../../platform/live-store.js";
 import type { CommentsControl } from "../comments/use-comments.js";

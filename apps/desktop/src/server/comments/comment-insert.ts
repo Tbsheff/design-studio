@@ -1,10 +1,11 @@
-import { targetFromSelection } from "../../shared/comments.js";
 import type {
   DesignComment,
   Direction,
   Project,
   SelectionContext,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+
+import { targetFromSelection } from "../../shared/comments.js";
 import { describeElement } from "../page-probe/index.js";
 import { NotFoundError } from "../platform/errors/index.js";
 import { withPagePath } from "../project-source/source.js";

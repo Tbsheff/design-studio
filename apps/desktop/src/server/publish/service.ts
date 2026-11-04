@@ -1,13 +1,13 @@
 import { mkdir, rm } from "node:fs/promises";
 import path from "node:path";
 
-import { nanoid } from "nanoid";
-
 import type {
   PublicationSettings,
   RemotePublication,
 } from "@design-studio/actions/publish-remote";
-import type { Direction, Project } from "@design-studio/actions/_core/contracts";
+import type { Direction, Project } from "@design-studio/contracts";
+import { nanoid } from "nanoid";
+
 import {
   PUBLISH_EXPIRY_DAYS,
   PUBLISH_PASSWORD_MAX,

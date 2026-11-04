@@ -4,7 +4,8 @@ import type {
   Direction,
   Project,
   VersionFileDiff,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+
 import {
   hunkSides,
   splitHunks,

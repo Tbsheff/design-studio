@@ -9,6 +9,6 @@ export type {
   InsertJsxRequest,
   InsertPosition,
   InsertableComponent,
-} from "@design-studio/actions/_core/insert";
+} from "@design-studio/contracts/insert";
 
 export type { RouteOutput } from "../../platform/http.js";

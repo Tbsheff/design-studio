@@ -1,10 +1,10 @@
+import type { AppRoute } from "@design-studio/contracts";
+import { Icon } from "@design-studio/ui";
 import { useEffect, useMemo, useState } from "react";
 
-import type { AppRoute } from "@design-studio/actions/_core/contracts";
 import { dynamicNames } from "../../../shared/route-flow.js";
 import type { FlowResult } from "../../../shared/route-flow.js";
 import { api, errorText } from "../../api.js";
-import { Icon } from "@design-studio/ui";
 
 import "../../styles/route-flow.css";
 

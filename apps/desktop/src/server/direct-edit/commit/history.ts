@@ -2,7 +2,6 @@ import { existsSync } from "node:fs";
 import { readFile, realpath, rm } from "node:fs/promises";
 import path from "node:path";
 
-import type { LayoutChange } from "@design-studio/actions/_core/canvas-file";
 import type {
   Direction,
   EditHistoryEntry,
@@ -11,7 +10,9 @@ import type {
   Project,
   Version,
   VersionMeta,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import type { LayoutChange } from "@design-studio/contracts/canvas-file";
+
 import { emitSourceChange } from "../../events/index.js";
 import { isNodeError } from "../../platform/errors/index.js";
 import type { EventBus } from "../../types.js";

@@ -1,10 +1,10 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
+import type { RunSummary } from "@design-studio/contracts";
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
-import type { RunSummary } from "@design-studio/actions/_core/contracts";
 import {
   createProjectViaUi,
   frontFrame,

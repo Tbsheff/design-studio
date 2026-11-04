@@ -5,7 +5,8 @@ import {
   type ReviewFinding,
   type ReviewFixResult,
   type ReviewResult,
-} from "@design-studio/actions/_core/review";
+} from "@design-studio/contracts/review";
+
 import { frameRef } from "../canvas/index.js";
 import { z } from "../platform/zod-bridge/index.js";
 import { callAction } from "./action-call.js";

@@ -3,7 +3,8 @@ import { readdir, realpath } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import type { Project } from "@design-studio/actions/_core/contracts";
+import type { Project } from "@design-studio/contracts";
+
 import type {
   FoundApp,
   FoundAppKind,

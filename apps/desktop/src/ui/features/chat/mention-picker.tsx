@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
-
-import type { RunMention } from "@design-studio/actions/_core/contracts";
-import { fuzzyRank } from "../../../shared/fuzzy.js";
+import type { RunMention } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 import type { IconName } from "@design-studio/ui";
+import { useEffect, useMemo, useState } from "react";
+
+import { fuzzyRank } from "../../../shared/fuzzy.js";
 
 export interface MentionOption {
   key: string;

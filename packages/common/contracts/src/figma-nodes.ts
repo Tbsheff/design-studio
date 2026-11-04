@@ -2,7 +2,7 @@ import type {
   InsertJsxResult,
   InsertTarget,
   JsxInsertPosition,
-} from "./insert.js";
+} from "@design-studio/contracts/insert";
 
 export interface FigmaColor {
   r: number;

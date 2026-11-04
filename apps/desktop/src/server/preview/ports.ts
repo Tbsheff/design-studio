@@ -1,4 +1,5 @@
-import type { CheckViewport } from "@design-studio/actions/_core/contracts";
+import type { CheckViewport } from "@design-studio/contracts";
+
 import type { PlaceholderMode } from "../../shared/run-levels.js";
 import type { ProbeRect, QualityProbeResult } from "./quality-probe.js";
 

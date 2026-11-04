@@ -1,4 +1,4 @@
-import type { ReorderMove } from "./actions/_core/contracts.js";
+import type { ReorderMove } from "@design-studio/contracts";
 
 export function reorderMoveOf(event: {
   key: string;

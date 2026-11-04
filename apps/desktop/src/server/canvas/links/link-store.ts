@@ -1,6 +1,6 @@
+import type { PrototypeLink } from "@design-studio/contracts/links";
 import { Context, Effect, Layer } from "effect";
 
-import type { PrototypeLink } from "@design-studio/actions/_core/links";
 import { readImplicitList, readLinkList } from "./link-ops.js";
 import type { LinkListed, LinkListQuery } from "./link-ops.js";
 import { attemptLink } from "./link-runtime.js";

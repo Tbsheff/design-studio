@@ -1,6 +1,7 @@
 import type { PublishInput } from "@design-studio/actions/publish/schema";
-import type { Project } from "@design-studio/actions/_core/contracts";
-import type { ExportFrame } from "@design-studio/actions/_core/export";
+import type { Project } from "@design-studio/contracts";
+import type { ExportFrame } from "@design-studio/contracts/export";
+
 import type { PublishPlanInput } from "../../shared/publish.js";
 import { findFrame, readProjectCanvas } from "../canvas/index.js";
 import { BadRequestError } from "../platform/errors/index.js";

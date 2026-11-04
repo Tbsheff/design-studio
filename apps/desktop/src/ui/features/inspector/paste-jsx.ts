@@ -1,12 +1,13 @@
-import type { SelectionContext } from "@design-studio/actions/_core/contracts";
+import type { SelectionContext } from "@design-studio/contracts";
 import {
   looksLikeFigmaLink,
   looksLikeFigmaNodes,
-} from "@design-studio/actions/_core/figma-nodes";
+} from "@design-studio/contracts/figma-nodes";
 import type {
   InsertTarget,
   JsxInsertPosition,
-} from "@design-studio/actions/_core/insert";
+} from "@design-studio/contracts/insert";
+
 import {
   insertApi,
   insertError,

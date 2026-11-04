@@ -1,3 +1,7 @@
+import { RUN_LEVELS } from "@design-studio/contracts";
+import type { RunLevel } from "@design-studio/contracts";
+import { Icon, usePopover } from "@design-studio/ui";
+import type { IconName } from "@design-studio/ui";
 import {
   useEffect,
   useId,
@@ -9,11 +13,6 @@ import {
 import type { KeyboardEvent, ReactNode, CSSProperties, RefObject } from "react";
 import { createPortal } from "react-dom";
 
-import { RUN_LEVELS } from "@design-studio/actions/_core/contracts";
-import type { RunLevel } from "@design-studio/actions/_core/contracts";
-import { Icon } from "@design-studio/ui";
-import type { IconName } from "@design-studio/ui";
-import { usePopover } from "@design-studio/ui";
 import {
   ChoiceItem,
   levelGist,

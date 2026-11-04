@@ -1,7 +1,6 @@
+import { BRIDGE_SCRIPT_PATH, SOURCE_LOC_ATTR } from "@design-studio/contracts";
 import { parse } from "parse5";
 import type { DefaultTreeAdapterMap } from "parse5";
-
-import { BRIDGE_SCRIPT_PATH, SOURCE_LOC_ATTR } from "@design-studio/actions/_core/contracts";
 
 type ParentNode = DefaultTreeAdapterMap["parentNode"];
 

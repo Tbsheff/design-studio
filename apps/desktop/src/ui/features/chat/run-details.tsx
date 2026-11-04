@@ -1,10 +1,9 @@
+import type { RunStatus } from "@design-studio/contracts";
+import { Icon, useReturnFocusOnUnmount } from "@design-studio/ui";
 import { useEffect, useRef } from "react";
 import type { KeyboardEvent } from "react";
 
-import type { RunStatus } from "@design-studio/actions/_core/contracts";
 import { formatMs, formatTime, formatUsd } from "../../domain/format.js";
-import { Icon } from "@design-studio/ui";
-import { useReturnFocusOnUnmount } from "@design-studio/ui";
 import { LatencyBreakdown } from "./latency-breakdown.js";
 import type { RunView } from "./run-state-model.js";
 import {

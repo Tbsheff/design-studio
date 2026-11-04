@@ -6,7 +6,8 @@ import type {
   RunRequest,
   SelectionContext,
   SourceLoc,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+
 import type { ResolvedRunConfig } from "../../shared/run-levels.js";
 import { loadAppTokens } from "../design-system/app-tokens/source.js";
 import type { AppToken } from "../design-system/app-tokens/tokens.js";

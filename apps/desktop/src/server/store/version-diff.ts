@@ -1,7 +1,4 @@
-import type {
-  VersionChanges,
-  VersionFileDiff,
-} from "@design-studio/actions/_core/contracts";
+import type { VersionChanges, VersionFileDiff } from "@design-studio/contracts";
 
 type Git = (args: string[]) => Promise<string>;
 

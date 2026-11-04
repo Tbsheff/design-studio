@@ -8,7 +8,7 @@ import {
   PACK_FILE,
   TOKENS_CSS_FILE,
   TOKENS_FILE,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
 import type {
   CompiledTokenEntry,
   PackManifest,
@@ -17,7 +17,8 @@ import type {
   PackSummary,
   Project,
   TokenFile,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+
 import {
   extractRulesBlock,
   upsertRulesBlock,

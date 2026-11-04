@@ -1,4 +1,5 @@
-import type { Project, Version } from "@design-studio/actions/_core/contracts";
+import type { Project, Version } from "@design-studio/contracts";
+
 import { projectTypeOf, TYPE_LABELS } from "../../../shared/project-search";
 
 const shipOpener = (

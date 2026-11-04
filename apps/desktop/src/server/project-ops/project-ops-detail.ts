@@ -2,7 +2,8 @@ import { readFile } from "node:fs/promises";
 
 import type { Input } from "@design-studio/actions/_core/action";
 import type { updateProject } from "@design-studio/actions/project/update";
-import type { Project } from "@design-studio/actions/_core/contracts";
+import type { Project } from "@design-studio/contracts";
+
 import type { ProjectOpsRuntime } from "./project-ops-runtime.js";
 
 interface DesignMdSaved {

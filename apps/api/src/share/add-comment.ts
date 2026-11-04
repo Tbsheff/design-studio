@@ -1,6 +1,6 @@
+import { NotFound } from "@design-studio/actions/_core/errors/not-found";
 import { Effect } from "effect";
 
-import { NotFound } from "../shared-actions.js";
 import { ShareRepo } from "../tenant/repos/share.js";
 import { ViewerScope } from "../tenant/viewer-scope.js";
 

@@ -1,13 +1,13 @@
 import { parse } from "@babel/parser";
 import type { ParserPlugin } from "@babel/parser";
 import type * as t from "@babel/types";
-import MagicString from "magic-string";
-
 import type {
   ElementSourceInfo,
   TailwindOutcome,
   TextFromData,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import MagicString from "magic-string";
+
 import { hasClassChange } from "./classes.js";
 import {
   DirectEditError,

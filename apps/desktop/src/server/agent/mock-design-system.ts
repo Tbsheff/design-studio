@@ -1,7 +1,8 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-import { TOKENS_FILE } from "@design-studio/actions/_core/contracts";
+import { TOKENS_FILE } from "@design-studio/contracts";
+
 import { TODO_MARK } from "../design-system/extract/compose.js";
 import { DESIGN_MD_FILE } from "../design-system/packs.js";
 import { DESIGN_SYSTEM_CHECK_TOOL } from "./permissions.js";

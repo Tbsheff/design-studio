@@ -3,7 +3,7 @@ import type {
   DirectStyleProperty,
   SourceLoc,
   Version,
-} from "./contracts.js";
+} from "@design-studio/contracts";
 
 export type PropValue = string | number | boolean;
 

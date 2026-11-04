@@ -1,9 +1,9 @@
 import type { PermissionResult } from "@anthropic-ai/claude-agent-sdk";
-
 import type {
   PermissionCard,
   PermissionDecision,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+
 import type { CommandRules, PermissionAsk } from "./types.js";
 
 export const ASK_TIMEOUT_MS = 280_000;

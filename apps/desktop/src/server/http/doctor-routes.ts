@@ -1,14 +1,14 @@
 import { constants } from "node:fs";
 import { copyFile } from "node:fs/promises";
 
-import type { Context, Hono } from "hono";
-
+import type { Project } from "@design-studio/contracts";
 import type {
   AppFixResult,
   DoctorCause,
   DoctorCauseKind,
-} from "@design-studio/actions/_core/app-doctor";
-import type { Project } from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts/app-doctor";
+import type { Context, Hono } from "hono";
+
 import { BadRequestError, ConflictError } from "../platform/errors/index.js";
 import { appProject, doctorControl } from "../preview/doctor-read.js";
 import { bindMcpReadRuntime } from "../preview/mcp-read-core.js";

@@ -2,8 +2,9 @@ import { existsSync } from "node:fs";
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { SETTINGS_VERSION } from "@design-studio/actions/_core/contracts";
-import type { Project } from "@design-studio/actions/_core/contracts";
+import { SETTINGS_VERSION } from "@design-studio/contracts";
+import type { Project } from "@design-studio/contracts";
+
 import {
   NotFoundError,
   assertSafeId,

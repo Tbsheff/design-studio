@@ -6,7 +6,8 @@ import type {
   ReferenceElement,
   SelectionContext,
   SourceLoc,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+
 import { checkPathInside } from "../platform/paths/index.js";
 
 const SNIPPET_LINES = 40;

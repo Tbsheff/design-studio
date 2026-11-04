@@ -1,4 +1,4 @@
-import type { McpActivity, McpApprovalRecord } from "./contracts.js";
+import type { McpActivity, McpApprovalRecord } from "@design-studio/contracts";
 
 export type ExportFormat =
   | "png"

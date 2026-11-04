@@ -1,18 +1,15 @@
+import type { InsertKind, SelectionContext } from "@design-studio/contracts";
+import { TRY_VARIANTS_COMMAND } from "@design-studio/contracts/element-variants";
+import { Icon } from "@design-studio/ui";
 import { useState } from "react";
 import type { MutableRefObject, ReactNode } from "react";
 
-import type {
-  InsertKind,
-  SelectionContext,
-} from "@design-studio/actions/_core/contracts";
-import { TRY_VARIANTS_COMMAND } from "@design-studio/actions/_core/element-variants";
 import { api, errorText } from "../../api.js";
 import {
   collectCommands,
   commandBlocker,
   runCommand,
 } from "../../inspector-slots.js";
-import { Icon } from "@design-studio/ui";
 import type { PreviewPort } from "../../platform/bridge.js";
 import { PREVIEW_HISTORY_EVENT } from "../canvas/use-undo-shortcut.js";
 import {

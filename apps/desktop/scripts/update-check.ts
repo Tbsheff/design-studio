@@ -12,10 +12,9 @@ import { createServer } from "node:http";
 import os from "node:os";
 import path from "node:path";
 
+import type { Project, RunSummary } from "@design-studio/contracts";
 import { _electron as electron } from "@playwright/test";
 import type { ElectronApplication } from "@playwright/test";
-
-import type { Project, RunSummary } from "@design-studio/actions/_core/contracts";
 
 const [sourceArg, feedArg, portArg] = process.argv.slice(2);
 

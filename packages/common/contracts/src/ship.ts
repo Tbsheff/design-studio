@@ -1,4 +1,4 @@
-import { slugify } from "./folders.js";
+import { slugify } from "@design-studio/contracts/folders";
 
 export type ShipMode = "branch" | "push" | "pr";
 

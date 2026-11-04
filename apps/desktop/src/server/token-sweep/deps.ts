@@ -27,6 +27,6 @@ export type {
   Direction,
   Project,
   VersionMeta,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
 
 export type { KnownFailure } from "../platform/attempt/index.js";

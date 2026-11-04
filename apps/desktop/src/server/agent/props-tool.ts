@@ -1,6 +1,10 @@
+import {
+  PROP_NAME,
+  PROP_TEXT_MAX,
+  PROPS_MAX,
+} from "@design-studio/contracts/props";
 import { Schema } from "effect";
 
-import { PROP_NAME, PROP_TEXT_MAX, PROPS_MAX } from "@design-studio/actions/_core/props";
 import {
   toOptionalText,
   toSdkFieldSet,

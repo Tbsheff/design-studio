@@ -1,4 +1,5 @@
-import type { TelemetrySample } from "@design-studio/actions/_core/contracts";
+import type { TelemetrySample } from "@design-studio/contracts";
+
 import { sendTelemetry } from "../api";
 import { desktopBridge } from "./desktop";
 

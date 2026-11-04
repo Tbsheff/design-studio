@@ -2,21 +2,22 @@ import { createHash } from "node:crypto";
 import { readFile, rename } from "node:fs/promises";
 import path from "node:path";
 
-import {
-  CANVAS_FILE,
-  emptyCanvasFile,
-  parseCanvasText,
-  serializeCanvasFile,
-} from "@design-studio/actions/_core/canvas-file";
-import type { CanvasFile } from "@design-studio/actions/_core/canvas-file";
 import type {
   CanvasPresence,
   CanvasWriteSource,
   Direction,
   LegacyCanvasNotice,
   Project,
-} from "@design-studio/actions/_core/contracts";
-import type { LinksFile } from "@design-studio/actions/_core/links";
+} from "@design-studio/contracts";
+import {
+  CANVAS_FILE,
+  emptyCanvasFile,
+  parseCanvasText,
+  serializeCanvasFile,
+} from "@design-studio/contracts/canvas-file";
+import type { CanvasFile } from "@design-studio/contracts/canvas-file";
+import type { LinksFile } from "@design-studio/contracts/links";
+
 import { writeAtomic as platformWriteAtomic } from "../platform/atomic-write/index.js";
 import { ConflictError } from "../platform/errors/index.js";
 import { createKeyedMutex } from "../platform/mutex/index.js";

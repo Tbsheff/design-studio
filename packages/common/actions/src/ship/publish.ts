@@ -1,6 +1,6 @@
+import { SHIP_TEXT_MAX } from "@design-studio/contracts/ship";
 import { Schema } from "effect";
 
-import { SHIP_TEXT_MAX } from "../_core/ship.js";
 import { defineAction } from "../_core/action.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
 import { Conflict } from "../_core/errors/conflict.js";

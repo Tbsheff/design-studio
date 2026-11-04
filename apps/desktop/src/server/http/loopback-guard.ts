@@ -1,7 +1,7 @@
+import { STUDIO_TOKEN_HEADER } from "@design-studio/contracts";
 import type { Context, Hono, Next } from "hono";
 
 import { APP_STREAM_PATH } from "../../shared/app-stream.js";
-import { STUDIO_TOKEN_HEADER } from "@design-studio/actions/_core/contracts";
 import type { AppContext } from "./app-context.js";
 
 const FORBIDDEN_STATUS = 403;

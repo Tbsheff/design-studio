@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState } from "react";
-import type { CSSProperties, PointerEvent } from "react";
-
 import type {
   BridgeToParent,
   SelectionContext,
-} from "@design-studio/actions/_core/contracts";
-import type { InsertTarget } from "@design-studio/actions/_core/insert";
+} from "@design-studio/contracts";
+import type { InsertTarget } from "@design-studio/contracts/insert";
+import { useEffect, useRef, useState } from "react";
+import type { CSSProperties, PointerEvent } from "react";
+
 import type { VectorRequest, VectorResult } from "../../../shared/vector.js";
 import { errorText } from "../../api.js";
 import type { ParentMessageBody } from "../../platform/bridge.js";

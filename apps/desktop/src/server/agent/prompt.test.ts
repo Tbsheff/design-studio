@@ -1,8 +1,8 @@
 import { rm } from "node:fs/promises";
 
+import type { Project } from "@design-studio/contracts";
 import { afterEach, describe, expect, it } from "vitest";
 
-import type { Project } from "@design-studio/actions/_core/contracts";
 import { createTempProject } from "../testing/fakes.js";
 import { buildSystemPrompt } from "./prompt.js";
 

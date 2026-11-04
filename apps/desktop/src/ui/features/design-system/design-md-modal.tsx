@@ -1,3 +1,4 @@
+import { Icon, useModalDialog } from "@design-studio/ui";
 import {
   useDeferredValue,
   useEffect,
@@ -9,8 +10,6 @@ import {
 
 import { Markdown } from "../../ai/components/ai/markdown.js";
 import { api, errorText } from "../../api.js";
-import { Icon } from "@design-studio/ui";
-import { useModalDialog } from "@design-studio/ui";
 import { MOD_LABEL } from "../comments/comment-popover.js";
 import { COPY } from "./copy.js";
 import { outlineOf } from "./design-md-outline.js";

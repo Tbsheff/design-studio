@@ -1,3 +1,5 @@
+import type { RunEffort, RunLevel, RunMode } from "@design-studio/contracts";
+import { Icon, placeFixed, usePopover } from "@design-studio/ui";
 import {
   useCallback,
   useEffect,
@@ -9,14 +11,6 @@ import {
 import type { CSSProperties, KeyboardEvent } from "react";
 import { createPortal } from "react-dom";
 
-import type {
-  RunEffort,
-  RunLevel,
-  RunMode,
-} from "@design-studio/actions/_core/contracts";
-import { placeFixed } from "@design-studio/ui";
-import { Icon } from "@design-studio/ui";
-import { usePopover } from "@design-studio/ui";
 import { VariationsControl } from "../canvas/variations-control.js";
 import {
   LevelControl,

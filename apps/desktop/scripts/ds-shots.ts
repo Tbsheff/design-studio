@@ -57,6 +57,10 @@ async function call<T>(
         method: m,
       });
 
+      if (!res.ok) {
+        throw new Error(`fetch failed: ${res.status}`);
+      }
+
       return res.json();
     },
     { b: body, m: method, t: token, u: url }

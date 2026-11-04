@@ -1,5 +1,5 @@
 {
-  "extends": "./tsconfig.base.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "composite": true,
     "tsBuildInfoFile": "./node_modules/.cache/tsbuild/ui-test.tsbuildinfo",
@@ -7,5 +7,11 @@
     "lib": ["ES2024", "DOM", "DOM.Iterable"],
     "types": ["node", "vite/client"]
   },
-  "include": ["src/ui", "src/shared"]
+  "include": [
+    "src/ui",
+    "src/shared",
+    "../../packages/common/actions/src",
+    "../../packages/common/contracts/src",
+    "../../packages/ui/src"
+  ]
 }

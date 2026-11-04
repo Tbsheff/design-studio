@@ -1,4 +1,4 @@
-import type { ApiErrorBody } from "./protocol";
+import type { ApiErrorBody } from "@design-studio/actions/publish-remote";
 
 export interface Env {
   DB: D1Database;

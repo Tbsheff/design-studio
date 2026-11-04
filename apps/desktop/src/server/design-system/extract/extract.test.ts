@@ -13,9 +13,9 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { REQUIRED_TOKENS } from "@design-studio/contracts";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { REQUIRED_TOKENS } from "@design-studio/actions/_core/contracts";
 import { compileTokens, parseTokenFile } from "../compile.js";
 import { buildPackFiles } from "../library.js";
 import { packRegistry } from "../packs.js";

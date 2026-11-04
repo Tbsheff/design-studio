@@ -1,6 +1,8 @@
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 
+import { WORKSPACE_ROOT, toWorkspaceBin } from "./workspace-root.ts";
+
 interface Diagnostic {
   code: string;
   filename: string;
@@ -17,41 +19,74 @@ interface Baseline {
 const BASELINE = new URL("lint-baseline.json", import.meta.url);
 
 const BUDGET_ZERO = [
-  "src/server/platform/",
-  "src/server/events/",
-  "src/server/run-log/",
-  "src/server/project-source/",
-  "src/server/page-probe/",
-  "src/server/handlers/",
-  "src/server/main/",
-  "src/server/ship/",
-  "src/server/agent-tools/",
+  "apps/desktop/src/server/platform/",
+  "apps/desktop/src/server/events/",
+  "apps/desktop/src/server/run-log/",
+  "apps/desktop/src/server/project-source/",
+  "apps/desktop/src/server/page-probe/",
+  "apps/desktop/src/server/handlers/",
+  "apps/desktop/src/server/main/",
+  "apps/desktop/src/server/ship/",
+  "apps/desktop/src/server/agent-tools/",
   "packages/common/actions/src/",
-  "../../packages/ui/src/",
-  "src/ui/domain/",
-  "src/ui/platform/",
-  "src/ui/features/",
-  "src/ui/app/",
+  "packages/ui/src/",
+  "apps/desktop/src/ui/domain/",
+  "apps/desktop/src/ui/platform/",
+  "apps/desktop/src/ui/features/",
+  "apps/desktop/src/ui/app/",
 ];
+
+const toGateFailure = (reason: string): never => {
+  throw new Error(`lint-gate: ${reason}\nfix: pnpm run lint:gate\n`);
+};
+
+const LINT_EXIT_CODES = new Set([0, 1]);
 
 const lint = (): Diagnostic[] => {
   const run = spawnSync(
-    "node_modules/.bin/oxlint",
+    toWorkspaceBin("oxlint"),
     ["-c", "oxlint.config.ts", "--format=json"],
-    { encoding: "utf-8", maxBuffer: 2 ** 31 - 1 }
+    { cwd: WORKSPACE_ROOT, encoding: "utf-8", maxBuffer: 2 ** 31 - 1 }
   );
 
-  const parsed: { diagnostics?: Diagnostic[] } = JSON.parse(run.stdout || "{}");
+  if (run.error) {
+    return toGateFailure(`oxlint did not start: ${run.error.message}`);
+  }
 
-  return parsed.diagnostics ?? [];
+  if (run.status === null || !LINT_EXIT_CODES.has(run.status)) {
+    return toGateFailure(`oxlint exit status ${run.status}: ${run.stderr}`);
+  }
+
+  if (run.stdout.trim() === "") {
+    return toGateFailure("oxlint wrote no output");
+  }
+
+  const parsed: { diagnostics?: Diagnostic[] } = JSON.parse(run.stdout);
+
+  if (parsed.diagnostics === undefined) {
+    return toGateFailure("oxlint output has no diagnostics list");
+  }
+
+  return parsed.diagnostics;
 };
 
 const bump = (counts: Counts, key: string) => {
   counts[key] = (counts[key] ?? 0) + 1;
 };
 
-const dirOf = (file: string) =>
-  file.includes("/") ? (file.split("/")[0] ?? file) : ".";
+const CLOUD_APP = /^apps\/(?:api|publish)\//u;
+
+const DESKTOP_APP = /^apps\/desktop\//u;
+
+const dirOf = (file: string) => {
+  if (CLOUD_APP.test(file)) {
+    return "cloud";
+  }
+
+  const tail = file.replace(DESKTOP_APP, "");
+
+  return tail.includes("/") ? (tail.split("/")[0] ?? tail) : ".";
+};
 
 const countAll = (diagnostics: Diagnostic[]): Baseline => {
   const rules: Counts = {};
@@ -75,16 +110,25 @@ const sortKeys = (counts: Counts): Counts =>
   );
 
 const rises = (label: string, now: Counts, before: Counts) =>
-  Object.entries(now)
-    .filter(([key, count]) => count > (before[key] ?? 0))
-    .map(([key, count]) => `${label} ${key}: ${before[key] ?? 0} -> ${count}`);
+  Object.entries(now).flatMap(([key, count]) => {
+    if (count <= (before[key] ?? 0)) {
+      return [];
+    }
+
+    return [`${label} ${key}: ${before[key] ?? 0} -> ${count}`];
+  });
+
+const isBudgetZero = (file: string) =>
+  BUDGET_ZERO.some((prefix) => file.startsWith(prefix));
 
 const budgetBreaks = (diagnostics: Diagnostic[]) =>
-  diagnostics
-    .filter((diagnostic) =>
-      BUDGET_ZERO.some((prefix) => diagnostic.filename.startsWith(prefix))
-    )
-    .map((diagnostic) => `budget-0 ${diagnostic.filename}: ${diagnostic.code}`);
+  diagnostics.flatMap((diagnostic) => {
+    if (!isBudgetZero(diagnostic.filename)) {
+      return [];
+    }
+
+    return [`budget-0 ${diagnostic.filename}: ${diagnostic.code}`];
+  });
 
 const readBaseline = (): Baseline | undefined =>
   existsSync(BASELINE)
@@ -129,4 +173,14 @@ const main = () => {
   );
 };
 
-process.exitCode = main();
+const toExitCode = (): number => {
+  try {
+    return main();
+  } catch (error) {
+    process.stderr.write(String(error));
+
+    return 2;
+  }
+};
+
+process.exitCode = toExitCode();

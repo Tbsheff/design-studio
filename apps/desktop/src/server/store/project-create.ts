@@ -2,9 +2,7 @@ import { existsSync } from "node:fs";
 import { cp, mkdir, rm } from "node:fs/promises";
 import path from "node:path";
 
-import { nanoid } from "nanoid";
-
-import { DEFAULT_SETTINGS } from "@design-studio/actions/_core/contracts";
+import { DEFAULT_SETTINGS } from "@design-studio/contracts";
 import type {
   AttachAppRequest,
   AttachedApp,
@@ -12,8 +10,10 @@ import type {
   Project,
   ProjectKind,
   ProjectSettings,
-} from "@design-studio/actions/_core/contracts";
-import { slugify } from "@design-studio/actions/_core/folders";
+} from "@design-studio/contracts";
+import { slugify } from "@design-studio/contracts/folders";
+import { nanoid } from "nanoid";
+
 import { BadRequestError } from "../platform/errors/index.js";
 import type { ProjectCore } from "./project-core.js";
 import {

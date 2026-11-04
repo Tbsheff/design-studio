@@ -1,4 +1,4 @@
-import type { ProjectSettings, RunLevel } from "@design-studio/actions/_core/contracts";
+import type { ProjectSettings, RunLevel } from "@design-studio/contracts";
 
 export const MODEL_OPTIONS = [
   { id: "claude-haiku-5-5", label: "Claude Haiku 5.5" },

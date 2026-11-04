@@ -1,11 +1,11 @@
 import { mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 
+import type { Project } from "@design-studio/contracts";
 import { expect, test } from "@playwright/test";
 import type { FrameLocator, Locator, Page } from "@playwright/test";
 import { differenceEuclidean, parse } from "culori";
 
-import type { Project } from "@design-studio/actions/_core/contracts";
 import { ROOT } from "./support/server";
 import {
   frontFrame,

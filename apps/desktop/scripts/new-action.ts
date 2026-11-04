@@ -1,7 +1,6 @@
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 
-import { ROOT } from "./gen-common.js";
 import { exists, planAction } from "./stamp/action-checks.js";
 import type { ActionPlan } from "./stamp/action-checks.js";
 import { readActionIndex } from "./stamp/action-index.js";
@@ -12,6 +11,7 @@ import type { DerivedNames } from "./stamp/names.js";
 import { actionDefinition, actionHandler, uiHook } from "./stamp/templates.js";
 import { stamp, unstamp } from "./stamp/write.js";
 import type { StampFile, StampResult } from "./stamp/write.js";
+import { WORKSPACE_ROOT } from "./workspace-root.ts";
 
 const COMMAND = "pnpm run new:action";
 
@@ -65,7 +65,7 @@ const refuse = (error: string | null): void => {
 };
 
 const hookFile = (feature: string, names: DerivedNames): string =>
-  `src/ui/features/${feature}/use-${names.tail}.ts`;
+  `apps/desktop/src/ui/features/${feature}/use-${names.tail}.ts`;
 
 const stampFiles = (plan: ActionPlan): StampFile[] => {
   const { definition, feature } = plan;
@@ -106,7 +106,7 @@ const readNames = async (
   const names = deriveNames(domain, verb);
 
   const isRestamp =
-    isDryRun && (await exists(path.join(ROOT, names.definitionFile)));
+    isDryRun && (await exists(path.join(WORKSPACE_ROOT, names.definitionFile)));
 
   if (!isRestamp) {
     refuse(checkVerb(verb).error);
@@ -131,7 +131,7 @@ const nextSteps = (names: DerivedNames): string[] => [
   "  4. For an edit action, check invalidates.",
   "  5. Run pnpm run typecheck, pnpm run typecheck:tsrs and pnpm run lint:gate.",
   "  6. Start the app: STUDIO_AGENT=mock STUDIO_DATA_DIR=$(mktemp -d) pnpm run dev.",
-  `  7. Run pnpm exec tsx scripts/call-action.ts ${names.id} '<json>'.`,
+  `  7. Run pnpm exec tsx apps/desktop/scripts/call-action.ts ${names.id} '<json>'.`,
   "  8. Click the action in the UI, and send one agent prompt.",
 ];
 
@@ -159,28 +159,37 @@ const runStamp = async (argv: readonly string[]): Promise<void> => {
     process.stderr.write(`${warning}\n`);
   }
 
-  const result = await stamp(stampFiles(plan), { isDryRun });
-
   if (isDryRun) {
+    await stamp(stampFiles(plan), { isDryRun });
+
     return;
   }
+
+  const result = await stamp(stampFiles(plan), { isDryRun });
 
   report(result, "Wrote:", nextSteps(names));
 };
 
 const hookFiles = async (names: DerivedNames): Promise<string[]> => {
-  const features = await readdir(path.join(ROOT, "src/ui/features"), {
-    withFileTypes: true,
-  });
+  const features = await readdir(
+    path.join(WORKSPACE_ROOT, "apps/desktop/src/ui/features"),
+    {
+      withFileTypes: true,
+    }
+  );
 
-  const candidates = features
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => hookFile(entry.name, names));
+  const candidates = features.flatMap((entry) => {
+    if (!entry.isDirectory()) {
+      return [];
+    }
+
+    return [hookFile(entry.name, names)];
+  });
 
   const sources = await Promise.all(
     candidates.map(async (file) => {
-      if (await exists(path.join(ROOT, file))) {
-        return readFile(path.join(ROOT, file), "utf-8");
+      if (await exists(path.join(WORKSPACE_ROOT, file))) {
+        return readFile(path.join(WORKSPACE_ROOT, file), "utf-8");
       }
 
       return "";
@@ -200,7 +209,7 @@ const runRemove = async (argv: readonly string[]): Promise<void> => {
 
   const names = deriveNames(domain, verb);
 
-  if (!(await exists(path.join(ROOT, names.definitionFile)))) {
+  if (!(await exists(path.join(WORKSPACE_ROOT, names.definitionFile)))) {
     fail(
       `The action ${names.id} has no file ${names.definitionFile}.`,
       "check the domain and the verb"

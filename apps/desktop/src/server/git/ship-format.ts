@@ -6,7 +6,8 @@ import type {
   ShipFormat,
   ShipFormatResult,
   ShipFormatTool,
-} from "@design-studio/actions/_core/ship";
+} from "@design-studio/contracts/ship";
+
 import { WRITE_TIMEOUT_MS, execTool } from "../platform/git/index.js";
 
 const BIOME_CONFIGS = ["biome.json", "biome.jsonc"];

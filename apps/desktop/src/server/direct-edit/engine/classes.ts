@@ -1,4 +1,4 @@
-import type { ClassChange } from "@design-studio/actions/_core/contracts";
+import type { ClassChange } from "@design-studio/contracts";
 
 export const MAX_CLASS_NAMES = 30;
 export const MAX_CLASS_NAME = 100;

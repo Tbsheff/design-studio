@@ -19,7 +19,10 @@ const readWaves = (): Waves | undefined => {
 };
 
 const tracked = () =>
-  execFileSync("git", ["ls-files"], { encoding: "utf-8" })
+  execFileSync("git", ["ls-files"], {
+    cwd: new URL("../../../", import.meta.url),
+    encoding: "utf-8",
+  })
     .split("\n")
     .filter(Boolean);
 
@@ -49,9 +52,9 @@ const overlapsOf = (
   files: string[]
 ) =>
   universe(slices, files).flatMap((file) => {
-    const owners = Object.entries(slices)
-      .filter(([, globs]) => owns(globs, file))
-      .map(([name]) => name);
+    const owners = Object.entries(slices).flatMap(([name, globs]) =>
+      owns(globs, file) ? [name] : []
+    );
 
     return owners.length > 1 ? [`${wave} ${file}: ${owners.join(" + ")}`] : [];
   });
@@ -70,9 +73,9 @@ const main = () => {
   const wanted = process.argv[2];
   const files = tracked();
 
-  const overlaps = Object.entries(waves)
-    .filter(([wave]) => !wanted || wave === wanted)
-    .flatMap(([wave, slices]) => overlapsOf(wave, slices, files));
+  const overlaps = Object.entries(waves).flatMap(([wave, slices]) =>
+    !wanted || wave === wanted ? overlapsOf(wave, slices, files) : []
+  );
 
   process.stdout.write(
     overlaps.length > 0

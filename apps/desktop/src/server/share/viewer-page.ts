@@ -1,5 +1,9 @@
-import type { ShareFrame } from "@design-studio/actions/_core/share";
-import { SHARE_COMMENT_MAX, SHARE_NAME_MAX } from "@design-studio/actions/_core/share";
+import type { ShareFrame } from "@design-studio/contracts/share";
+import {
+  SHARE_COMMENT_MAX,
+  SHARE_NAME_MAX,
+} from "@design-studio/contracts/share";
+
 import { FAVICON_LINKS } from "./favicon.js";
 
 export interface ViewerData {

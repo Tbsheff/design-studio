@@ -1,5 +1,4 @@
 import type { SelectionContextsSchema } from "@design-studio/actions/comment/schema";
-import { agentText } from "../../shared/comments.js";
 import type {
   DesignComment,
   Direction,
@@ -8,7 +7,9 @@ import type {
   RunMention,
   RunRequest,
   SelectionContext,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+
+import { agentText } from "../../shared/comments.js";
 import { MENTION_MAX } from "../http/mentions.js";
 import type { CommentStore } from "../store/comments.js";
 import { pickComments } from "./prefill.js";

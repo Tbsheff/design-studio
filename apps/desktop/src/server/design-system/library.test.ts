@@ -11,9 +11,9 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import type { CreateUserPackInput } from "@design-studio/contracts";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import type { CreateUserPackInput } from "@design-studio/actions/_core/contracts";
 import { composeDesignMd, splitDesignMd } from "./design-md.js";
 import { createPackLibrary } from "./library.js";
 import type { PackLibrary } from "./library.js";

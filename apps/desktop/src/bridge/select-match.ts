@@ -1,10 +1,11 @@
-import { DEV_CHROME_SELECTOR } from "@design-studio/actions/_core/app";
 import {
   MATCH_KINDS,
   MATCH_SELECT_MAX,
   SOURCE_LOC_ATTR,
   type MatchKind,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { DEV_CHROME_SELECTOR } from "@design-studio/contracts/app";
+
 import { isLayer } from "./layers.js";
 
 const TEXT_KEYS = [

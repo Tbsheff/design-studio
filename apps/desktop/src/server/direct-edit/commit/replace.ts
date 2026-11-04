@@ -2,14 +2,13 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 
 import type * as t from "@babel/types";
-
 import type {
   Direction,
   DirectEditRequest,
   Project,
   SourceLoc,
   VersionMeta,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
 import {
   SEARCH_PROPERTIES,
   STYLE_REPLACE_MAX,
@@ -21,7 +20,8 @@ import {
   type StyleReplaceRequest,
   type StyleReplaceResult,
   type StyleSkip,
-} from "@design-studio/actions/_core/style-search";
+} from "@design-studio/contracts/style-search";
+
 import { z } from "../../platform/zod-bridge/index.js";
 import { DirectEditError } from "../engine/errors.js";
 import { findJsxElement, parseSource } from "../engine/jsx.js";

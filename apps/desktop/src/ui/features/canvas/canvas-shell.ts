@@ -1,11 +1,8 @@
+import type { ProjectKind, SelectionContext } from "@design-studio/contracts";
 import { useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
 
-import type {
-  ProjectKind,
-  SelectionContext,
-} from "@design-studio/actions/_core/contracts";
 import { uiStore } from "../../platform/storage.js";
 import type { PanelTab } from "../../platform/use-panel-tab.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";

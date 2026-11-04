@@ -174,7 +174,7 @@ const checkNeeds = async (
 
   if (!permissions.all.has(needs)) {
     fail(
-      `The permission "${needs}" is not in ../../packages/common/actions/src/_core/permissions.ts.`,
+      `The permission "${needs}" is not in packages/common/actions/src/_core/permissions.ts.`,
       "use a member of PERMISSIONS"
     );
   }
@@ -390,11 +390,11 @@ const checkFeature = async (args: ParsedArgs): Promise<string | null> => {
     return null;
   }
 
-  const dir = path.join(STAMP_ROOT, "src/ui/features", feature);
+  const dir = path.join(STAMP_ROOT, "apps/desktop/src/ui/features", feature);
 
   if (!(await exists(dir))) {
     fail(
-      `The feature src/ui/features/${feature}/ does not exist.`,
+      `The feature apps/desktop/src/ui/features/${feature}/ does not exist.`,
       `pnpm run new:feature ${feature}`
     );
   }

@@ -1,10 +1,7 @@
 import { readFile } from "node:fs/promises";
 
-import type {
-  Direction,
-  Project,
-  VersionMeta,
-} from "@design-studio/actions/_core/contracts";
+import type { Direction, Project, VersionMeta } from "@design-studio/contracts";
+
 import {
   announceWhile,
   assertCanEdit,

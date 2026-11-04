@@ -1,4 +1,4 @@
-import type { StudioEvent, StudioEventBody } from "@design-studio/actions/_core/contracts";
+import type { StudioEvent, StudioEventBody } from "@design-studio/contracts";
 
 const EVERY_EVENT_TYPE: Record<StudioEventBody["type"], true> = {
   "app.status": true,

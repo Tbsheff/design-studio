@@ -1,15 +1,15 @@
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-
 import type {
   Project,
   RunSentRecord,
   RunSummary,
   VariationBrief,
   VariationStartResult,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+
 import {
   createRunLifecycle,
   EMPTY_USAGE,

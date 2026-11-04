@@ -1,9 +1,11 @@
+import { isRawClass } from "@design-studio/contracts/style-search";
+import type {
+  StyleKind,
+  StyleValueRow,
+} from "@design-studio/contracts/style-search";
+import { Icon, usePopover } from "@design-studio/ui";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { isRawClass } from "@design-studio/actions/_core/style-search";
-import type { StyleKind, StyleValueRow } from "@design-studio/actions/_core/style-search";
-import { Icon } from "@design-studio/ui";
-import { usePopover } from "@design-studio/ui";
 import { shownValue, StateTag, Swatch } from "./match-candidates.js";
 import { ROWS_SHOWN, KIND_LABEL, rowKey } from "./match-scan.js";
 import type { Scope, Status } from "./match-scan.js";

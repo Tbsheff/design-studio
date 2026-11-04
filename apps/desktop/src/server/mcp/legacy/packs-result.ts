@@ -1,4 +1,4 @@
-import type { Version } from "@design-studio/actions/_core/contracts";
+import type { Version } from "@design-studio/contracts";
 
 interface ApplyResult {
   version: Version | null;

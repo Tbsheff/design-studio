@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { toWorkspaceBin } from "../../scripts/workspace-root.ts";
 import { spawnDetachedToLog } from "./logged-spawn";
 import { claudeHomeFor, writeSkillsFixture } from "./skills-fixture";
 
@@ -86,7 +87,7 @@ function serverCommand(): {
 
   if (!packagedApp) {
     return {
-      file: path.join(ROOT, "node_modules", ".bin", "tsx"),
+      file: toWorkspaceBin("tsx"),
       args: ["src/server/index.ts"],
       env: {},
     };

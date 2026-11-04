@@ -2,9 +2,9 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
+import { DEFAULT_SETTINGS } from "@design-studio/contracts";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { DEFAULT_SETTINGS } from "@design-studio/actions/_core/contracts";
 import { withRunTask, resolveRunConfig } from "../../shared/run-levels.js";
 import {
   TWEAKS_FILE,

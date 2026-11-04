@@ -3,9 +3,8 @@ import path from "node:path";
 
 import { parse } from "@babel/parser";
 import type { ParserPlugin } from "@babel/parser";
-
-import { SOURCE_LOC_ATTR } from "@design-studio/actions/_core/contracts";
-import type { ComponentInfo, ProjectKind } from "@design-studio/actions/_core/contracts";
+import { SOURCE_LOC_ATTR } from "@design-studio/contracts";
+import type { ComponentInfo, ProjectKind } from "@design-studio/contracts";
 
 const SKIP_DIRS = new Set([
   "node_modules",

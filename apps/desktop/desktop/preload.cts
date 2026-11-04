@@ -83,7 +83,9 @@ function openDropped(folder: unknown): void {
   if (typeof folder === 'string' && folder) { ipcRenderer.send(DROP_FOLDER_CHANNEL, folder); }
 }
 
-const ACCOUNT_STATES = ['signed-out', 'pending', 'needs-confirm', 'signed-in'];
+const SIGNED_OUT = 'signed-out';
+
+const ACCOUNT_STATES = [SIGNED_OUT, 'pending', 'needs-confirm', 'signed-in'];
 
 interface AccountView {
   user: { id: string; email: string; name: string } | null;
@@ -92,12 +94,12 @@ interface AccountView {
 }
 
 function toAccountView(value: unknown): AccountView {
-  const empty: AccountView = { user: null, orgs: [], state: 'signed-out' };
+  const empty: AccountView = { user: null, orgs: [], state: SIGNED_OUT };
 
   if (typeof value !== 'object' || value === null) { return empty; }
 
   const record = value as Record<string, unknown>;
-  const state = typeof record.state === 'string' && ACCOUNT_STATES.includes(record.state) ? record.state : 'signed-out';
+  const state = typeof record.state === 'string' && ACCOUNT_STATES.includes(record.state) ? record.state : SIGNED_OUT;
   const user = record.user as AccountView['user'];
   const orgs = Array.isArray(record.orgs) ? (record.orgs as AccountView['orgs']) : [];
 
@@ -113,7 +115,7 @@ async function accountCall(channel: string): Promise<AccountView> {
 }
 
 function onAccountChange(handler: (view: AccountView) => void): () => void {
-  if (typeof handler !== 'function') { return () => undefined; }
+  if (typeof handler !== 'function') { return () => false; }
 
   const listener = (_event: unknown, view: unknown): void => handler(toAccountView(view));
 

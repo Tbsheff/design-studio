@@ -1,10 +1,10 @@
 import path from "node:path";
 
+import type { CommentStatus, DesignComment } from "@design-studio/contracts";
 import { Schema } from "effect";
 
 import { describeComment, filterComments } from "../../shared/comments.js";
 import type { CommentFilter } from "../../shared/comments.js";
-import type { CommentStatus, DesignComment } from "@design-studio/actions/_core/contracts";
 import {
   toLooseTool,
   toOptional,

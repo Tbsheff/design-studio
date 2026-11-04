@@ -1,4 +1,4 @@
-import type { PlayKey } from "@design-studio/actions/_core/contracts";
+import type { PlayKey } from "@design-studio/contracts";
 import {
   isIdSelector,
   LINKS_MAX,
@@ -6,7 +6,7 @@ import {
   textAgrees,
   type LinkQuery,
   type LinkRectReport,
-} from "@design-studio/actions/_core/links";
+} from "@design-studio/contracts/links";
 
 type Rect = NonNullable<LinkRectReport["rect"]>;
 

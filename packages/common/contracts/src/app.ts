@@ -1,4 +1,8 @@
-import type { Project, SelectionContext, SourceLoc } from "./contracts.js";
+import type {
+  Project,
+  SelectionContext,
+  SourceLoc,
+} from "@design-studio/contracts";
 
 export const APP_SOURCE_PATH = "/__studio/source";
 export const APP_REDIRECT_PARAM = "__studio_redirected_from";

@@ -2,10 +2,10 @@ import type { Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import os from "node:os";
 
+import type { ShareServerState } from "@design-studio/contracts/share";
 import { createAdaptorServer } from "@hono/node-server";
 import type { Hono } from "hono";
 
-import type { ShareServerState } from "@design-studio/actions/_core/share";
 import type { ShareStore } from "./store.js";
 
 export interface ShareListener {

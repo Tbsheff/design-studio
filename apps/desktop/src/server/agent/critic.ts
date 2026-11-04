@@ -8,8 +8,8 @@ import type {
   SDKUserMessage,
   query,
 } from "@anthropic-ai/claude-agent-sdk";
+import type { QualityFinding } from "@design-studio/contracts";
 
-import type { QualityFinding } from "@design-studio/actions/_core/contracts";
 import { diffImages, readPng } from "../preview/visual-diff.js";
 import type { PreviewService } from "../types.js";
 import { toCriticIssues } from "./critic-reply.js";

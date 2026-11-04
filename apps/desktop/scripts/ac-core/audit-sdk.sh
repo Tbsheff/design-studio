@@ -28,6 +28,6 @@ grep -rnE "import\\(['\"]@anthropic-ai/claude-agent-sdk|^import \\{[^}]*\\} from
 section "agent driver selection"
 grep -nE "agentMode|createSdkDriver|createMockDriver" src/server/agent/index.ts src/server/config.ts
 section "installed SDK version"
-node -e "console.log(require('./node_modules/@anthropic-ai/claude-agent-sdk/package.json').version)"
+node -e "console.log(require('../../node_modules/@anthropic-ai/claude-agent-sdk/package.json').version)"
 printf '\nresult: %s\n' "$([ $status -eq 0 ] && echo PASS || echo FAIL)"
 exit $status

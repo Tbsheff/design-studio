@@ -13,9 +13,9 @@ import {
 import os from "node:os";
 import path from "node:path";
 
+import type { Project, Version } from "@design-studio/contracts";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import type { Project, Version } from "@design-studio/actions/_core/contracts";
 import { projectStorePorts } from "../main/project-ports.js";
 import type { ServerConfig, VersionStore } from "../types.js";
 import { createProjectStore } from "./projects.js";

@@ -1,4 +1,4 @@
-import type { SelectionContext } from "./actions/_core/contracts.js";
+import type { SelectionContext } from "@design-studio/contracts";
 
 const SPACING_PROPERTIES = [
   "padding",

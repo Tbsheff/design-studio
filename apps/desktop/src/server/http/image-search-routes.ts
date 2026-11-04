@@ -1,10 +1,10 @@
-import type { Context, Hono } from "hono";
-
 import type {
   Direction,
   Project,
   ProjectSettings,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import type { Context, Hono } from "hono";
+
 import { IMAGE_SEARCH_LIMIT_MAX } from "../../shared/image-search.js";
 import type { PlaceImageResult } from "../../shared/image-search.js";
 import { DirectEditError } from "../direct-edit/engine/index.js";

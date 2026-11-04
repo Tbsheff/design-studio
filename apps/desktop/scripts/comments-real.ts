@@ -11,13 +11,14 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { chromium } from "playwright-core";
-
 import type {
   DesignComment,
   Project,
   RunSummary,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { chromium } from "playwright-core";
+
+import { toWorkspaceBin } from "./workspace-root.ts";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const PORT = Number(process.env.COMMENTS_REAL_PORT ?? 7170);
@@ -92,23 +93,19 @@ async function main(): Promise<void> {
   writeFileSync(path.join(site, "index.html"), PAGE);
   const log = createWriteStream(path.join(work, "server.log"));
 
-  const server = spawn(
-    path.join(ROOT, "node_modules", ".bin", "tsx"),
-    ["src/server/index.ts"],
-    {
-      cwd: ROOT,
-      env: {
-        ...process.env,
-        STUDIO_AGENT: "sdk",
-        STUDIO_DATA_DIR: dataDir,
-        STUDIO_PROJECTS_DIR: path.join(work, "Design Studio"),
-        STUDIO_PORT: String(PORT),
-        STUDIO_PREVIEW_PORT: String(PORT + 1),
-        STUDIO_VITE_PORT_BASE: "27600",
-      },
-      stdio: ["ignore", "pipe", "pipe"],
-    }
-  );
+  const server = spawn(toWorkspaceBin("tsx"), ["src/server/index.ts"], {
+    cwd: ROOT,
+    env: {
+      ...process.env,
+      STUDIO_AGENT: "sdk",
+      STUDIO_DATA_DIR: dataDir,
+      STUDIO_PROJECTS_DIR: path.join(work, "Design Studio"),
+      STUDIO_PORT: String(PORT),
+      STUDIO_PREVIEW_PORT: String(PORT + 1),
+      STUDIO_VITE_PORT_BASE: "27600",
+    },
+    stdio: ["ignore", "pipe", "pipe"],
+  });
 
   server.stdout.pipe(log);
   server.stderr.pipe(log);

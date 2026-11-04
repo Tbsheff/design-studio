@@ -2,6 +2,8 @@ import type { Dirent } from "node:fs";
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 
+import { WORKSPACE_ROOT } from "../workspace-root.ts";
+
 interface KnownAction {
   readonly agent: string | null;
   readonly file: string;
@@ -16,11 +18,11 @@ interface ActionIndex {
   readonly snapshotNames: ReadonlySet<string>;
 }
 
-const STAMP_ROOT = path.join(import.meta.dirname, "..", "..");
+const STAMP_ROOT = WORKSPACE_ROOT;
 
-const ACTION_ROOT = path.join(STAMP_ROOT, "../../packages/common/actions/src");
+const ACTION_ROOT = path.join(STAMP_ROOT, "packages/common/actions/src");
 
-const SNAPSHOTS = path.join(STAMP_ROOT, "artifacts/mcp-snapshots");
+const SNAPSHOTS = path.join(STAMP_ROOT, "apps/desktop/artifacts/mcp-snapshots");
 
 const SKIP_FILES = new Set(["index.ts", "routes.ts", "schema.ts"]);
 
@@ -78,14 +80,18 @@ const toKnown = (file: string, source: string): KnownAction | null => {
 const domainFiles = async (domain: string): Promise<string[]> => {
   const entries = await listDir(path.join(ACTION_ROOT, domain));
 
-  return entries
-    .filter(
-      (entry) =>
-        entry.isFile() &&
-        entry.name.endsWith(".ts") &&
-        !SKIP_FILES.has(entry.name)
-    )
-    .map((entry) => path.join(ACTION_ROOT, domain, entry.name));
+  return entries.flatMap((entry) => {
+    const isAction =
+      entry.isFile() &&
+      entry.name.endsWith(".ts") &&
+      !SKIP_FILES.has(entry.name);
+
+    if (!isAction) {
+      return [];
+    }
+
+    return [path.join(ACTION_ROOT, domain, entry.name)];
+  });
 };
 
 const readActions = async (): Promise<KnownAction[]> => {

@@ -1,3 +1,4 @@
+import type { Direction, Project, RunMode } from "@design-studio/contracts";
 import {
   CANVAS_GAP,
   CANVAS_MAX_COORD,
@@ -7,9 +8,12 @@ import {
   cleanFrameLabel,
   cleanFramePath,
   nextFrameId,
-} from "@design-studio/actions/_core/canvas-file";
-import type { CanvasFile, CanvasFileFrame } from "@design-studio/actions/_core/canvas-file";
-import type { Direction, Project, RunMode } from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts/canvas-file";
+import type {
+  CanvasFile,
+  CanvasFileFrame,
+} from "@design-studio/contracts/canvas-file";
+
 import { z } from "../platform/zod-bridge/index.js";
 import type { CanvasService } from "./service.js";
 

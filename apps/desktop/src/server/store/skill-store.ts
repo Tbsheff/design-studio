@@ -1,6 +1,6 @@
+import type { SkillCatalog } from "@design-studio/contracts";
 import { Context, Effect, Layer } from "effect";
 
-import type { SkillCatalog } from "@design-studio/actions/_core/contracts";
 import { discoverSkills } from "../agent/skills.js";
 
 interface SkillStoreApi {

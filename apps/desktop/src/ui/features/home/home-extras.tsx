@@ -1,12 +1,12 @@
-import { useEffect, useState } from "react";
-
 import {
   shortenHome,
   type WorkspaceFolder,
   type WorkspaceList,
-} from "@design-studio/actions/_core/folders";
-import { api, errorText } from "../../api.js";
+} from "@design-studio/contracts/folders";
 import { Disclosure } from "@design-studio/ui";
+import { useEffect, useState } from "react";
+
+import { api, errorText } from "../../api.js";
 import type { SettingsDraft } from "../chat/settings-draft-model.js";
 import { LocationField } from "./folder-controls.js";
 import { NewProjectAdvanced } from "./new-project-advanced.js";

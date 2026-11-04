@@ -43,6 +43,10 @@ async function api<T>(
         method,
       });
 
+      if (!res.ok) {
+        throw new Error(`fetch failed: ${res.status}`);
+      }
+
       return res.json();
     },
     { body, method, url }

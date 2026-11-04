@@ -4,22 +4,22 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-
 import {
   DESIGN_MD_TOKENS_END,
   DESIGN_MD_TOKENS_START,
   PACK_FILE,
   TOKENS_CSS_FILE,
   TOKENS_FILE,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
 import type {
   DesignSystemState,
   PackSummary,
   Project,
   StudioEvent,
   Version,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+
 import { designSystemBeforeCommit } from "../agent/index.js";
 import { createRunLifecycle } from "../agent/lifecycle.js";
 import type { RunDriver } from "../agent/lifecycle.js";

@@ -1,7 +1,8 @@
 import path from "node:path";
 
-import { CANVAS_DIR } from "@design-studio/actions/_core/canvas-file";
-import { TOKENS_CSS_FILE } from "@design-studio/actions/_core/contracts";
+import { TOKENS_CSS_FILE } from "@design-studio/contracts";
+import { CANVAS_DIR } from "@design-studio/contracts/canvas-file";
+
 import { TWEAKS_FILE, TWEAKS_TOOL } from "../../../shared/tweaks.js";
 import {
   checkPathInside,

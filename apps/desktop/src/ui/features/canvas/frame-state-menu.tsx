@@ -1,8 +1,7 @@
+import type { FrameStatesView } from "@design-studio/contracts/frame-state";
+import { Icon, usePopover } from "@design-studio/ui";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import type { FrameStatesView } from "@design-studio/actions/_core/frame-state";
-import { Icon } from "@design-studio/ui";
-import { usePopover } from "@design-studio/ui";
 import {
   stop,
   menuKeys,

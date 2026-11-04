@@ -1,7 +1,7 @@
+import { NotFound } from "@design-studio/actions/_core/errors/not-found";
 import { Context, Effect, Layer } from "effect";
 
 import { CloudBindings } from "../../platform/bindings.js";
-import { NotFound } from "../../shared-actions.js";
 import { CurrentOrg } from "../current-org.js";
 
 interface KeyRow {

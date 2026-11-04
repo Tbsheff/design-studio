@@ -1,4 +1,4 @@
-import type { DirectEditRequest, Version } from "./contracts.js";
+import type { DirectEditRequest, Version } from "@design-studio/contracts";
 
 export const REVIEW_KINDS = [
   "contrast",

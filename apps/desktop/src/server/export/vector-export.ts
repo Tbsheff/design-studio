@@ -2,7 +2,8 @@ import {
   exportFileStem,
   type ExportFrame,
   type ExportScope,
-} from "@design-studio/actions/_core/export";
+} from "@design-studio/contracts/export";
+
 import { zipFiles } from "../design-system/zip.js";
 import type { PreviewService } from "../types.js";
 import { buildPptx } from "./pptx.js";

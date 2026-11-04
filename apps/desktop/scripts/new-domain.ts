@@ -22,11 +22,14 @@ const SPEC: ArgsSpec = {
   positionals: ["domain"],
 };
 
-const actionsDir = (domain: string): string => `../../packages/common/actions/src/${domain}`;
+const actionsDir = (domain: string): string =>
+  `packages/common/actions/src/${domain}`;
 
-const handlersDir = (domain: string): string => `src/server/handlers/${domain}`;
+const handlersDir = (domain: string): string =>
+  `apps/desktop/src/server/handlers/${domain}`;
 
-const featureDir = (domain: string): string => `src/ui/features/${domain}`;
+const featureDir = (domain: string): string =>
+  `apps/desktop/src/ui/features/${domain}`;
 
 const refuseTaken = async (domain: string, hasUi: boolean): Promise<void> => {
   const dirs = [actionsDir(domain), handlersDir(domain)];

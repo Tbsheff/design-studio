@@ -12,7 +12,8 @@ import type {
   ImportPackResult,
   PackSummary,
   SavePackResult,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+
 import { BadRequestError, ConflictError } from "../../platform/errors/index.js";
 import { MAX_IMPORT_ZIP_BYTES, parseImportMode } from "../pack-import.js";
 import { applyPackToDirection, saveDirectionPack } from "../project-pack.js";

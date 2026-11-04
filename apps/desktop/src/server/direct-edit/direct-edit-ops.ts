@@ -1,4 +1,3 @@
-import type { ArrangeResult } from "../../shared/arrange.js";
 import type {
   CreateTokenResult,
   DesignSystemState,
@@ -8,9 +7,11 @@ import type {
   StructureEditResult,
   TokenPreviewResult,
   UpdateTokensResult,
-} from "@design-studio/actions/_core/contracts";
-import { isStyleReplaceBody } from "@design-studio/actions/_core/style-search";
-import type { StyleReplaceResult } from "@design-studio/actions/_core/style-search";
+} from "@design-studio/contracts";
+import { isStyleReplaceBody } from "@design-studio/contracts/style-search";
+import type { StyleReplaceResult } from "@design-studio/contracts/style-search";
+
+import type { ArrangeResult } from "../../shared/arrange.js";
 import type { CommitTweaksResult, TweaksState } from "../../shared/tweaks.js";
 import { warmPropsTypes } from "../components/index.js";
 import { appTokensFor } from "../design-system/app-tokens/source.js";

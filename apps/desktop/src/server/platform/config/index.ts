@@ -6,7 +6,7 @@ import {
   DEFAULT_PREVIEW_PORT,
   DEFAULT_STUDIO_PORT,
   DEFAULT_VITE_PORT_BASE,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
 
 interface ServerConfig {
   dataDir: string;

@@ -1,6 +1,6 @@
+import type { SelectionContext } from "@design-studio/contracts";
 import type { ComponentProps } from "react";
 
-import type { SelectionContext } from "@design-studio/actions/_core/contracts";
 import { api } from "../../api";
 import { shownPending } from "../../features/chat/run-state-model";
 import { toggleRail } from "../../features/home/project-rail";

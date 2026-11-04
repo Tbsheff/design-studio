@@ -1,5 +1,6 @@
-import { SOURCE_LOC_ATTR } from "@design-studio/actions/_core/contracts";
-import type { SelectionContext, SourceLoc } from "@design-studio/actions/_core/contracts";
+import { SOURCE_LOC_ATTR } from "@design-studio/contracts";
+import type { SelectionContext, SourceLoc } from "@design-studio/contracts";
+
 import { USED_AT_ATTR, appSourceFor, componentUseOf } from "./app-source.js";
 import type { Rect } from "./bridge-types.js";
 import { componentOwners } from "./component-owner.js";

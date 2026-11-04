@@ -1,14 +1,15 @@
+import {
+  SOURCE_LOC_ATTR,
+  type ComponentUse,
+  type SourceLoc,
+} from "@design-studio/contracts";
+
 import type {
   ArrangeFacts,
   ArrangeParentFacts,
   ArrangeTargetFacts,
 } from "../../../shared/arrange-plan.js";
 import type { MeasureRect } from "../../../shared/arrange.js";
-import {
-  SOURCE_LOC_ATTR,
-  type ComponentUse,
-  type SourceLoc,
-} from "@design-studio/actions/_core/contracts";
 import { appSourceBody, parseLoc } from "../../page-probe/index.js";
 import { probeOnPage } from "../../preview/probe-page.js";
 import type { PreviewService } from "../../types.js";

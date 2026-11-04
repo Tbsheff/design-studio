@@ -1,14 +1,14 @@
-import { useEffect, useRef, useState } from "react";
-import type { KeyboardEvent } from "react";
-
 import { routes } from "@design-studio/actions/workspace/routes";
-import { isSharedLayout } from "@design-studio/actions/_core/usage-scope";
+import { isSharedLayout } from "@design-studio/contracts/usage-scope";
 import type {
   ComponentUsage,
   EditScope,
   EditScopeChoice,
-} from "@design-studio/actions/_core/usage-scope";
+} from "@design-studio/contracts/usage-scope";
 import { Icon } from "@design-studio/ui";
+import { useEffect, useRef, useState } from "react";
+import type { KeyboardEvent } from "react";
+
 import { call } from "../../platform/http.js";
 import { uiStore } from "../../platform/storage.js";
 import type { InlinePromptView } from "./use-inline-prompt.js";

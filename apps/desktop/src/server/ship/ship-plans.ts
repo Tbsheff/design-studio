@@ -7,7 +7,8 @@ import type {
   ShipRepoInfo,
   ShipRequest,
   ShipResult,
-} from "@design-studio/actions/_core/ship";
+} from "@design-studio/contracts/ship";
+
 import { prepareShip } from "../git/ship-prepare.js";
 import { ship } from "../git/ship.js";
 import { BadRequestError } from "../platform/errors/index.js";

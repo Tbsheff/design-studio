@@ -2,14 +2,14 @@ import { readFile, realpath, stat } from "node:fs/promises";
 import http from "node:http";
 import path from "node:path";
 
+import {
+  BRIDGE_SCRIPT_PATH,
+  projectPreviewHost,
+} from "@design-studio/contracts";
 import { getRequestListener } from "@hono/node-server";
 import { Hono } from "hono";
 import type { Context } from "hono";
 
-import {
-  BRIDGE_SCRIPT_PATH,
-  projectPreviewHost,
-} from "@design-studio/actions/_core/contracts";
 import type { AppProxy } from "../app/proxy.js";
 import { injectForPreview } from "../design-system/html-link.js";
 import { annotateHtml } from "./annotate.js";

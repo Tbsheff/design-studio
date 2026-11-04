@@ -1,5 +1,6 @@
-import type { Project, RunMode } from "@design-studio/actions/_core/contracts";
-import type { DesignRule } from "@design-studio/actions/_core/design-rules";
+import type { Project, RunMode } from "@design-studio/contracts";
+import type { DesignRule } from "@design-studio/contracts/design-rules";
+
 import { tokenTable } from "../design-system/design-md.js";
 import type { DesignSystemPromptContext } from "../design-system/state.js";
 import type { TasteRule } from "./taste.js";

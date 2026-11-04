@@ -1,4 +1,4 @@
-import type { AppCandidate } from "./actions/_core/contracts";
+import type { AppCandidate } from "@design-studio/contracts";
 
 export type FolderKind = "next" | "vite" | "html" | "tokens";
 

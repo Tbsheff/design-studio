@@ -8,23 +8,24 @@ import {
 } from "node:fs/promises";
 import path from "node:path";
 
-import {
-  CANVAS_FILE,
-  parseCanvasText,
-  type CanvasFile,
-} from "@design-studio/actions/_core/canvas-file";
 import type {
   CompiledTokenEntry,
   ComponentInfo,
   DesignComment,
   Version,
-} from "@design-studio/actions/_core/contracts";
-import { TOKENS_CSS_FILE, TOKENS_FILE } from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { TOKENS_CSS_FILE, TOKENS_FILE } from "@design-studio/contracts";
+import {
+  CANVAS_FILE,
+  parseCanvasText,
+  type CanvasFile,
+} from "@design-studio/contracts/canvas-file";
 import {
   exportFileStem,
   type ExportFrame,
   type HandoffResult,
-} from "@design-studio/actions/_core/export";
+} from "@design-studio/contracts/export";
+
 import { listComponents } from "../components/inventory.js";
 import { findTokenFile } from "../design-system/app-tokens/detect.js";
 import {

@@ -1,6 +1,6 @@
+import type { AppServerStatus } from "@design-studio/contracts";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import type { AppServerStatus } from "@design-studio/actions/_core/contracts";
 import { focusStageQuietly } from "../../features/canvas/use-inline-text-edit";
 import { APP_PANEL_EVENT } from "../../platform/app-status";
 import type { Tab } from "./app-tabs";

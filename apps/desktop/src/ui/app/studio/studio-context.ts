@@ -1,4 +1,5 @@
-import type { Project } from "@design-studio/actions/_core/contracts";
+import type { Project } from "@design-studio/contracts";
+
 import type { StudioCore } from "./studio-core-types";
 import type { StudioRun } from "./studio-run-types";
 import type { StudioPanes, StudioUi } from "./studio-ui-types";

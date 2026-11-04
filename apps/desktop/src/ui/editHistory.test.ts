@@ -1,6 +1,6 @@
+import type { SelectionContext, Version } from "@design-studio/contracts";
 import { describe, expect, it } from "vitest";
 
-import type { SelectionContext, Version } from "@design-studio/actions/_core/contracts";
 import {
   historyKeyOf,
   routeHistoryCommand,

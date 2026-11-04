@@ -1,11 +1,7 @@
+import type { ProjectKind, RunLevel, Starter } from "@design-studio/contracts";
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 
-import type {
-  ProjectKind,
-  RunLevel,
-  Starter,
-} from "@design-studio/actions/_core/contracts";
 import { api } from "../../api.js";
 
 export interface HomeTemplate {

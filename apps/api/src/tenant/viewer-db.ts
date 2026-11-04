@@ -1,7 +1,7 @@
+import { NotFound } from "@design-studio/actions/_core/errors/not-found";
 import { Context, Effect, Layer, Schema } from "effect";
 
 import { CloudBindings } from "../platform/bindings.js";
-import { NotFound } from "../shared-actions.js";
 import type { RowSchema } from "./db.js";
 import {
   RowOrgMismatch,

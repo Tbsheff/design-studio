@@ -1,3 +1,4 @@
+import type { InsertTarget } from "@design-studio/contracts/insert";
 import { Schema } from "effect";
 
 import {
@@ -15,7 +16,6 @@ import {
   ICON_SOURCES,
   ICON_TARGET_MAX,
 } from "../../shared/icons.js";
-import type { InsertTarget } from "@design-studio/actions/_core/insert";
 import {
   toDefaulted,
   toOptional,

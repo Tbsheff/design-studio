@@ -1,6 +1,6 @@
+import type { Project } from "@design-studio/contracts";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 
-import type { Project } from "@design-studio/actions/_core/contracts";
 import type { AppHealth, FoundApps } from "../../../shared/found-apps.js";
 import { api, errorText, json } from "../../api.js";
 import { isThumbnailPending } from "./project-list-model.js";

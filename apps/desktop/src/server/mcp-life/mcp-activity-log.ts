@@ -1,7 +1,7 @@
+import type { NotFound } from "@design-studio/actions/_core/errors/not-found";
+import type { McpActivity } from "@design-studio/contracts";
 import { Context, Effect, Layer } from "effect";
 
-import type { NotFound } from "@design-studio/actions/_core/errors/not-found";
-import type { McpActivity } from "@design-studio/actions/_core/contracts";
 import { attemptKnown } from "../platform/attempt/index.js";
 import type { KnownFailure } from "../platform/attempt/index.js";
 import { lifeRuntime } from "./mcp-life-runtime.js";

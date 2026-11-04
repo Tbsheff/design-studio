@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-import { ROOT, readOrEmpty } from "./gen-common.js";
+import { readOrEmpty } from "./gen-common.js";
 import {
   fail,
   hasFlag,
@@ -19,6 +19,7 @@ import { report } from "./stamp/report.js";
 import { service } from "./stamp/templates.js";
 import { exists, stampPlan } from "./stamp/write.js";
 import type { StampPlan } from "./stamp/write.js";
+import { WORKSPACE_ROOT } from "./workspace-root.ts";
 
 const SPEC: ArgsSpec = {
   command: "pnpm run new:service",
@@ -32,11 +33,15 @@ const SPEC: ArgsSpec = {
 
 const LAYERS_BLOCK = /export const LAYERS[^=]*=\s*\[(?<body>[\s\S]*?)\n\];/u;
 const AREAS_LIST = /areas:\s*\[(?<list>[^\]]*)\]/gu;
-const SERVER_PATH = /"src\/server\/(?<area>[a-z-]+)"/gu;
+const SERVER_PATH = /"apps\/desktop\/src\/server\/(?<area>[a-z-]+)"/gu;
 const QUOTED = /"(?<word>[a-z-]+)"/gu;
 
 const layerAreas = async (): Promise<Set<string>> => {
-  const source = await readFile(path.join(ROOT, "lint/boundaries.ts"), "utf-8");
+  const source = await readFile(
+    path.join(WORKSPACE_ROOT, "lint/boundaries.ts"),
+    "utf-8"
+  );
+
   const body = LAYERS_BLOCK.exec(source)?.groups?.["body"] ?? "";
   const areas = new Set<string>();
 
@@ -56,9 +61,11 @@ const layerAreas = async (): Promise<Set<string>> => {
 const checkArea = async (area: string): Promise<void> => {
   checkKebab("area", area);
 
-  if (!(await exists(path.join(ROOT, "src/server", area)))) {
+  if (
+    !(await exists(path.join(WORKSPACE_ROOT, "apps/desktop/src/server", area)))
+  ) {
     fail(
-      `The folder src/server/${area} does not exist.`,
+      `The folder apps/desktop/src/server/${area} does not exist.`,
       "pick an area folder"
     );
   }
@@ -90,14 +97,14 @@ const servicePlan = async (
   spec: { readonly access: "read" | "write"; readonly test: boolean }
 ): Promise<StampPlan> => {
   const file = kebab(className);
-  const servicePath = `src/server/${area}/${file}.ts`;
-  const indexPath = `src/server/${area}/index.ts`;
+  const servicePath = `apps/desktop/src/server/${area}/${file}.ts`;
+  const indexPath = `apps/desktop/src/server/${area}/index.ts`;
 
-  if (await exists(path.join(ROOT, servicePath))) {
+  if (await exists(path.join(WORKSPACE_ROOT, servicePath))) {
     fail(`The file ${servicePath} exists.`, "pick another class name");
   }
 
-  const index = await readOrEmpty(path.join(ROOT, indexPath));
+  const index = await readOrEmpty(path.join(WORKSPACE_ROOT, indexPath));
 
   return {
     created: [
@@ -130,7 +137,7 @@ const main = async (): Promise<void> => {
 
   if (!isDryRun) {
     report(result, [
-      `Add ${className}.layer to src/server/handlers/<domain>/live.ts.`,
+      `Add ${className}.layer to apps/desktop/src/server/handlers/<domain>/live.ts.`,
     ]);
   }
 };

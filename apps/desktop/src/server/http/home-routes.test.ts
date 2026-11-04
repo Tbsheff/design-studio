@@ -4,9 +4,6 @@ import http from "node:http";
 import type { AddressInfo } from "node:net";
 import path from "node:path";
 
-import { PNG } from "pngjs";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-
 import type {
   ClarifyQuestion,
   DesignComment,
@@ -16,7 +13,10 @@ import type {
   TrashItem,
   TrashedProject,
   Version,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { PNG } from "pngjs";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+
 import { buildUserText } from "../agent/user-message.js";
 import { createEventBus } from "../events/index.js";
 import { projectStorePorts } from "../main/project-ports.js";

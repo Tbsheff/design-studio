@@ -1,4 +1,5 @@
-import type { ShipSettings } from "@design-studio/actions/_core/ship";
+import type { ShipSettings } from "@design-studio/contracts/ship";
+
 import { readShipState, saveShipSettings } from "../git/ship-store.js";
 import type { ShipTarget } from "./ship-core.js";
 

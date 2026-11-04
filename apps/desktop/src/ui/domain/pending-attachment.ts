@@ -1,4 +1,4 @@
-import type { Attachment } from "./deps.js";
+import type { Attachment } from "@design-studio/contracts";
 
 interface PendingAttachment {
   attachment: Attachment | null;

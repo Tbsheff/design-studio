@@ -5,7 +5,7 @@ import {
   PACK_FILE,
   TOKENS_CSS_FILE,
   TOKENS_FILE,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
 import type {
   ApplyPackResult,
   Direction,
@@ -14,7 +14,8 @@ import type {
   SavePackResult,
   Version,
   VersionMeta,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+
 import { DirectEditError, publishVersion } from "../direct-edit/index.js";
 import type { DirectEditDeps } from "../direct-edit/index.js";
 import {

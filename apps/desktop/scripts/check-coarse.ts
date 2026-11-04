@@ -3,10 +3,11 @@ import { matchesGlob } from "node:path";
 
 import type { OxlintOverride } from "oxlint";
 
-import { COARSE_FOLDERS, coarse } from "../lint/coarse.ts";
-import boundariesConfig from "../oxlint.boundaries.config.ts";
-import mainConfig from "../oxlint.config.ts";
-import fastConfig from "../oxlint.fast.config.ts";
+import { COARSE_FOLDERS, coarse } from "../../../lint/coarse.ts";
+import boundariesConfig from "../../../oxlint.boundaries.config.ts";
+import mainConfig from "../../../oxlint.config.ts";
+import fastConfig from "../../../oxlint.fast.config.ts";
+import { WORKSPACE_ROOT } from "./workspace-root.ts";
 
 interface Pattern {
   group: string[];
@@ -15,7 +16,10 @@ interface Pattern {
 const TEST_ONLY_GROUPS = new Set(["node:*", "**/test-fakes*", "**/testing/**"]);
 const TEST_FILE = /\.test\.tsx?$/u;
 
-const tracked = execFileSync("git", ["ls-files", "src"], { encoding: "utf-8" })
+const tracked = execFileSync("git", ["ls-files", "apps/desktop/src"], {
+  cwd: WORKSPACE_ROOT,
+  encoding: "utf-8",
+})
   .split("\n")
   .filter(Boolean);
 
@@ -73,12 +77,15 @@ const problemsOf = (file: string) => {
     .slice(0, -1)
     .flatMap((entry) => [...groupsOf(entry)]);
 
-  return [...required, ...earlier]
-    .filter((group) => !effective.has(group) && !exempt(file, group))
-    .map(
-      (group) =>
-        `${file}: the last coarse override drops ${group}\nfix: add ${group} to the last override that matches ${file} in lint/coarse.ts`
-    );
+  return [...required, ...earlier].flatMap((group) => {
+    if (effective.has(group) || exempt(file, group)) {
+      return [];
+    }
+
+    return [
+      `${file}: the last coarse override drops ${group}\nfix: add ${group} to the last override that matches ${file} in lint/coarse.ts`,
+    ];
+  });
 };
 
 interface RuleHolder {
@@ -149,20 +156,32 @@ const messageProblem = (name: string, entry: Entry): string =>
 
 const messageProblems = ([name, config]: [string, Config]): string[] =>
   ruleSetsOf(config).flatMap((rules): string[] =>
-    Object.entries(rules)
-      .filter(([key]): boolean => RESTRICTED.has(key))
-      .flatMap(([key, setting]): Entry[] => entriesOf(key, setting))
-      .filter((entry): boolean => !messageOf(entry).includes("Use "))
-      .map((entry): string => messageProblem(name, entry))
+    Object.entries(rules).flatMap(([key, setting]): string[] => {
+      if (!RESTRICTED.has(key)) {
+        return [];
+      }
+
+      return entriesOf(key, setting).flatMap((entry): string[] => {
+        if (messageOf(entry).includes("Use ")) {
+          return [];
+        }
+
+        return [messageProblem(name, entry)];
+      });
+    })
   );
 
 const L9_FIX =
   "fix: grep -rn no-restricted-syntax lint oxlint.config.ts oxlint.fast.config.ts oxlint.boundaries.config.ts and move the ban to no-restricted-imports, no-restricted-globals or no-restricted-properties";
 
 const syntaxProblems = ([name, config]: [string, Config]): string[] =>
-  ruleSetsOf(config)
-    .filter((rules): boolean => "no-restricted-syntax" in rules)
-    .map((): string => `${name}: L9 has a no-restricted-syntax key\n${L9_FIX}`);
+  ruleSetsOf(config).flatMap((rules): string[] => {
+    if (!("no-restricted-syntax" in rules)) {
+      return [];
+    }
+
+    return [`${name}: L9 has a no-restricted-syntax key\n${L9_FIX}`];
+  });
 
 const problems = [
   ...new Set([

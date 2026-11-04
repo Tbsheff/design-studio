@@ -1,6 +1,6 @@
+import type { RunLevel } from "@design-studio/contracts";
 import { type RefObject, useCallback, useEffect, useState } from "react";
 
-import type { RunLevel } from "@design-studio/actions/_core/contracts";
 import { api, errorText } from "../../api.js";
 import { hasNativePicker, pickFolder } from "../../platform/desktop.js";
 import { installProblem } from "./doctor-model.js";

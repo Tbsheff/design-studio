@@ -9,10 +9,10 @@ import {
 import os from "node:os";
 import path from "node:path";
 
+import type { DesignSystemCoverage } from "@design-studio/contracts";
+import { TOKENS_FILE } from "@design-studio/contracts";
 import { afterEach, describe, expect, it } from "vitest";
 
-import type { DesignSystemCoverage } from "@design-studio/actions/_core/contracts";
-import { TOKENS_FILE } from "@design-studio/actions/_core/contracts";
 import {
   draftAttachmentIds,
   readCoverage,

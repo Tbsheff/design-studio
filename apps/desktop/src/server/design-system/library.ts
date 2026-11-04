@@ -9,12 +9,13 @@ import type {
   PackDetail,
   PackManifest,
   UpdateUserPackInput,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
 import {
   MAX_SLUG_SUFFIX,
   slugCandidate,
   slugify,
-} from "@design-studio/actions/_core/folders";
+} from "@design-studio/contracts/folders";
+
 import {
   BadRequestError,
   NotFoundError,

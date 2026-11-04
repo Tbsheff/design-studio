@@ -1,10 +1,7 @@
+import type { ProjectKind, RenderCheckResult } from "@design-studio/contracts";
 import { useEffect, useState } from "react";
 import type { MutableRefObject } from "react";
 
-import type {
-  ProjectKind,
-  RenderCheckResult,
-} from "@design-studio/actions/_core/contracts";
 import { api, errorText } from "../../api.js";
 import type { PreviewPort } from "../../platform/bridge.js";
 import type { FilesChange } from "../home/use-studio-data.js";

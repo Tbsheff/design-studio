@@ -1,6 +1,7 @@
+import { BadRequest } from "@design-studio/actions/_core/errors/bad-request";
+import { Conflict } from "@design-studio/actions/_core/errors/conflict";
 import { Effect } from "effect";
 
-import { BadRequest, Conflict } from "../../shared-actions.js";
 import { ProjectsRepo } from "../../tenant/repos/projects.js";
 import { requireOrg } from "../groups/authorizer.js";
 import { findRefusedFile } from "./manifest-guard.js";

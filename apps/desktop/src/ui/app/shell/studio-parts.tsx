@@ -1,11 +1,11 @@
-import type { ComponentProps } from "react";
-
 import type {
   Project,
   ProjectKind,
   RunStatus,
   Version,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import type { ComponentProps } from "react";
+
 import { Canvas } from "../../features/canvas/canvas";
 import { UnfinishedBanner } from "../../features/chat/unfinished-banner";
 import { DesignMdModal } from "../../features/design-system/design-md-modal";

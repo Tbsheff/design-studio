@@ -203,7 +203,7 @@ const isLegacyAgent = (row: OpRow): boolean =>
   row.op.agent.off === "legacy-agent";
 
 const LEGACY_AGENT: RuleText = {
-  fix: `give the action agent { lean, name, set, short }, or lower LEGACY_AGENT_MAX in scripts/check-actions-catalog.ts when the count drops`,
+  fix: `give the action agent { lean, name, set, short }, or lower LEGACY_AGENT_MAX in apps/desktop/scripts/check-actions-catalog.ts when the count drops`,
   id: "E8",
   what: `more than ${String(LEGACY_AGENT_MAX)} actions set agent off legacy-agent`,
 };

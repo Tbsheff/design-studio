@@ -3,15 +3,6 @@ import { existsSync } from "node:fs";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { nanoid } from "nanoid";
-
-import {
-  COMMENT_REPLIES_MAX,
-  canTransition,
-  isSendable,
-  statusAfterRun,
-} from "../../shared/comments.js";
-import type { CommentActor } from "../../shared/comments.js";
 import type {
   CommentDrawing,
   CommentFrame,
@@ -21,7 +12,16 @@ import type {
   RunMention,
   SelectionContext,
   SourceLoc,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { nanoid } from "nanoid";
+
+import {
+  COMMENT_REPLIES_MAX,
+  canTransition,
+  isSendable,
+  statusAfterRun,
+} from "../../shared/comments.js";
+import type { CommentActor } from "../../shared/comments.js";
 import {
   BadRequestError,
   ConflictError,

@@ -1,6 +1,6 @@
+import type { TelemetrySample } from "@design-studio/contracts";
 import type { Context } from "hono";
 
-import type { TelemetrySample } from "@design-studio/actions/_core/contracts";
 import { BadRequestError } from "../platform/errors/index.js";
 
 const HEARTBEAT_MS = 15_000;

@@ -1,14 +1,14 @@
-import { expect } from "@playwright/test";
-import type { FrameLocator, Page } from "@playwright/test";
-
-import { needsQuestions } from "@design-studio/actions/_core/clarify";
 import type {
   Direction,
   Project,
   RunSummary,
   Version,
   WorkTreeStatus,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { needsQuestions } from "@design-studio/contracts/clarify";
+import { expect } from "@playwright/test";
+import type { FrameLocator, Page } from "@playwright/test";
+
 import { BASE_URL } from "./server";
 
 export class StudioApi {

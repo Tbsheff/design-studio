@@ -1,13 +1,13 @@
-import { lazy, Suspense, useCallback, useRef, useState } from "react";
-import type { MutableRefObject } from "react";
-
 import type {
   ProjectKind,
   SelectionContext,
   SelectMove,
   ZoomKey,
-} from "@design-studio/actions/_core/contracts";
-import { TRY_VARIANTS_COMMAND } from "@design-studio/actions/_core/element-variants";
+} from "@design-studio/contracts";
+import { TRY_VARIANTS_COMMAND } from "@design-studio/contracts/element-variants";
+import { lazy, Suspense, useCallback, useRef, useState } from "react";
+import type { MutableRefObject } from "react";
+
 import {
   commandBlocker,
   IconSlot,

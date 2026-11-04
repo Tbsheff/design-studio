@@ -10,7 +10,8 @@ import type {
   DraftSourcesState,
   Project,
   RunStatus,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+
 import { isNodeError } from "../platform/errors/index.js";
 import { harvestDesignText } from "./extract/design-md.js";
 import {

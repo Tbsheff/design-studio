@@ -1,4 +1,5 @@
-import { DOCTOR_NOTE } from "@design-studio/actions/_core/app-doctor";
+import { DOCTOR_NOTE } from "@design-studio/contracts/app-doctor";
+
 import { z } from "../platform/zod-bridge/index.js";
 import { loadTarget } from "./edit-guards.js";
 import { defineTool, projectId } from "./edit-kit.js";

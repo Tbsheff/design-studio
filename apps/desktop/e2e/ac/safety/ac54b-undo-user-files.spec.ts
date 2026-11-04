@@ -8,9 +8,9 @@ import {
 import os from "node:os";
 import path from "node:path";
 
+import type { Project } from "@design-studio/contracts";
 import { expect, test } from "@playwright/test";
 
-import type { Project } from "@design-studio/actions/_core/contracts";
 import { openHome } from "../../support/studio";
 import { saveResult } from "./helpers";
 

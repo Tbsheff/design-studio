@@ -2,7 +2,7 @@ import type {
   ClassChange,
   TailwindOutcome,
   TextSourceInfo,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
 
 type DirectEditErrorCode =
   | "invalid_request"

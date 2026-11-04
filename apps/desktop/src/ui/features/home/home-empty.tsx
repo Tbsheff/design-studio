@@ -1,14 +1,14 @@
+import type { Starter } from "@design-studio/contracts";
+import { shortenHome } from "@design-studio/contracts/folders";
+import { Icon } from "@design-studio/ui";
 import { useEffect, useState } from "react";
 
-import type { Starter } from "@design-studio/actions/_core/contracts";
-import { shortenHome } from "@design-studio/actions/_core/folders";
 import {
   FOUND_KIND_LABEL,
   type FoundApp,
   type FoundApps,
 } from "../../../shared/found-apps.js";
 import { api } from "../../api.js";
-import { Icon } from "@design-studio/ui";
 import { projectsApi } from "./projects-store-model.js";
 
 const MAX_FOUND = 6;

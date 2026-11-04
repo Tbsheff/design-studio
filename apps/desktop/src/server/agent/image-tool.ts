@@ -1,9 +1,9 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
+import type { SourceLoc } from "@design-studio/contracts";
 import { Schema } from "effect";
 
-import type { SourceLoc } from "@design-studio/actions/_core/contracts";
 import {
   IMAGE_ALT_MAX,
   IMAGE_FITS,

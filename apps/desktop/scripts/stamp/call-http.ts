@@ -76,9 +76,12 @@ const requestOf = (context: Context): HttpRequest => {
 
 const sendHttp = async (request: HttpRequest): Promise<HttpReply> => {
   const res = await fetch(request.url, request.init);
-  const text = await res.text();
 
-  return { isOk: res.ok, text };
+  if (!res.ok) {
+    return { isOk: false, text: await res.text() };
+  }
+
+  return { isOk: true, text: await res.text() };
 };
 
 const callHttp = async (context: Context): Promise<SurfaceResult> => {

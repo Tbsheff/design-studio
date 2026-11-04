@@ -1,5 +1,6 @@
-import type { Direction, Project, Version } from "@design-studio/actions/_core/contracts";
-import { cleanExportPath } from "@design-studio/actions/_core/export";
+import type { Direction, Project, Version } from "@design-studio/contracts";
+import { cleanExportPath } from "@design-studio/contracts/export";
+
 import {
   firstVersionState,
   firstVersionWaitText,

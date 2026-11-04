@@ -1,4 +1,5 @@
-import type { StructureKey } from "./actions/_core/contracts.js";
+import type { StructureKey } from "@design-studio/contracts";
+
 import { matchesKey } from "./keymap.js";
 import type { KeyId, KeyInput } from "./keymap.js";
 

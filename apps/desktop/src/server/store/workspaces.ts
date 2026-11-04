@@ -10,9 +10,12 @@ import {
 import os from "node:os";
 import path from "node:path";
 
+import type {
+  WorkspaceFolder,
+  WorkspaceList,
+} from "@design-studio/contracts/folders";
 import { customAlphabet } from "nanoid";
 
-import type { WorkspaceFolder, WorkspaceList } from "@design-studio/actions/_core/folders";
 import {
   BadRequestError,
   NotFoundError,

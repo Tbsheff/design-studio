@@ -4,7 +4,8 @@ import type {
   CompiledTokenEntry,
   DesignSystemState,
   UpdateTokensResult,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+
 import { callAction } from "../action-call.js";
 import {
   EditError,

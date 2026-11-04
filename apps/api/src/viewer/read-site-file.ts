@@ -1,6 +1,7 @@
+import { NotFound } from "@design-studio/actions/_core/errors/not-found";
+import { Unauthenticated } from "@design-studio/actions/_core/errors/unauthenticated";
 import { Effect } from "effect";
 
-import { NotFound, Unauthenticated } from "../shared-actions.js";
 import { TenantBlobs } from "../tenant/blobs.js";
 import { ViewerDb } from "../tenant/viewer-db.js";
 import { isPassed } from "./gate.js";

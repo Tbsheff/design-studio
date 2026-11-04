@@ -1,3 +1,10 @@
+import { TOKEN_GROUP_FOR_PROPERTY } from "@design-studio/contracts";
+import type {
+  CompiledTokenEntry,
+  DirectStyleProperty,
+  TokenGroupName,
+  TokenMatch,
+} from "@design-studio/contracts";
 import {
   differenceEuclidean,
   formatHex,
@@ -12,14 +19,6 @@ import {
   useMode,
 } from "culori/fn";
 import type { Color } from "culori/fn";
-
-import { TOKEN_GROUP_FOR_PROPERTY } from "./actions/_core/contracts";
-import type {
-  CompiledTokenEntry,
-  DirectStyleProperty,
-  TokenGroupName,
-  TokenMatch,
-} from "./actions/_core/contracts";
 
 useMode(modeRgb);
 

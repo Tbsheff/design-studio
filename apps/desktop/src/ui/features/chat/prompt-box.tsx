@@ -1,3 +1,17 @@
+import type {
+  CompiledTokenEntry,
+  ComponentInfo,
+  Project,
+  ProjectSettings,
+  QueuedMessage,
+  RunEffort,
+  RunLevel,
+  RunMention,
+  RunMode,
+  SelectionContext,
+} from "@design-studio/contracts";
+import { elementVariantsIntent } from "@design-studio/contracts/element-variants";
+import { Disclosure, Icon, type IconName } from "@design-studio/ui";
 import {
   lazy,
   Suspense,
@@ -11,19 +25,6 @@ import {
   type ReactNode,
 } from "react";
 
-import type {
-  CompiledTokenEntry,
-  ComponentInfo,
-  Project,
-  ProjectSettings,
-  QueuedMessage,
-  RunEffort,
-  RunLevel,
-  RunMention,
-  RunMode,
-  SelectionContext,
-} from "@design-studio/actions/_core/contracts";
-import { elementVariantsIntent } from "@design-studio/actions/_core/element-variants";
 import { shortcutLabel } from "../../../shared/keymap.js";
 import {
   Composer,
@@ -41,8 +42,6 @@ import {
   useCommands,
   type Command,
 } from "../../chat-slots.js";
-import { Disclosure } from "@design-studio/ui";
-import { Icon, type IconName } from "@design-studio/ui";
 import { useDesktopCommand } from "../../platform/desktop.js";
 import { useDraft, type DraftStore } from "../../platform/storage.js";
 import { MOD_LABEL } from "../comments/comment-popover.js";

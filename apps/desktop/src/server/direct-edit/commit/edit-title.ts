@@ -1,4 +1,5 @@
-import type { DirectEditRequest } from "@design-studio/actions/_core/contracts";
+import type { DirectEditRequest } from "@design-studio/contracts";
+
 import { variantLabel } from "../../../shared/variants.js";
 import type { PatchResult } from "../engine/errors.js";
 

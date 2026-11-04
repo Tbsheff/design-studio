@@ -8,9 +8,10 @@ import type {
   FolderExportResult,
   FrameExportResult,
 } from "@design-studio/actions/export/schema";
-import type { CanvasFileFrame } from "@design-studio/actions/_core/canvas-file";
-import type { Direction, Project } from "@design-studio/actions/_core/contracts";
-import type { ExportFrame } from "@design-studio/actions/_core/export";
+import type { Direction, Project } from "@design-studio/contracts";
+import type { CanvasFileFrame } from "@design-studio/contracts/canvas-file";
+import type { ExportFrame } from "@design-studio/contracts/export";
+
 import { EditError } from "../page-probe/index.js";
 import type { ExportRuntime } from "./export-core.js";
 import { buildExportFile } from "./export-file.js";

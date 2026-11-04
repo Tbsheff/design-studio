@@ -1,14 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import type { CSSProperties } from "react";
-
-import { BRIDGE_PASSIVE_PARAM } from "@design-studio/actions/_core/contracts";
+import { BRIDGE_PASSIVE_PARAM } from "@design-studio/contracts";
 import type {
   BridgeToParent,
   LinkRect,
   PlayRunOp,
   ProjectKind,
-} from "@design-studio/actions/_core/contracts";
-import { targetFrame } from "@design-studio/actions/_core/link-interaction";
+} from "@design-studio/contracts";
+import { targetFrame } from "@design-studio/contracts/link-interaction";
 import {
   easingCss,
   isBackTarget,
@@ -16,19 +13,22 @@ import {
   LINK_DURATION_DEFAULT,
   reverseTransition,
   staticLinkIssue,
-} from "@design-studio/actions/_core/links";
+} from "@design-studio/contracts/links";
 import type {
   LinksFile,
   LinkTransition,
   PrototypeLink,
-} from "@design-studio/actions/_core/links";
+} from "@design-studio/contracts/links";
+import { Icon } from "@design-studio/ui";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { CSSProperties } from "react";
+
 import {
   bridgeTrigger,
   runLink,
   usePlayTriggers,
 } from "../../canvas-link-slots.js";
 import type { PlayHandlers } from "../../canvas-link-slots.js";
-import { Icon } from "@design-studio/ui";
 import {
   frameSrc,
   postToFrame,

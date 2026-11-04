@@ -1,4 +1,9 @@
 import {
+  LIMITS,
+  type RemoteComment,
+} from "@design-studio/actions/publish-remote";
+
+import {
   cookieValue,
   COOKIE_TTL_S,
   makePass,
@@ -27,7 +32,6 @@ import {
 import { clientBucket, takeToken } from "./limits";
 import { commentsPage, gatePage, messagePage } from "./pages";
 import { candidates, decodeRest } from "./paths";
-import { LIMITS, type RemoteComment } from "./protocol";
 
 interface Ctx {
   request: Request;

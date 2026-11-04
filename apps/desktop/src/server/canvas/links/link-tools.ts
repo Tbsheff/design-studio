@@ -1,10 +1,10 @@
-import type { CanvasFileFrame } from "@design-studio/actions/_core/canvas-file";
-import type { Direction, Project } from "@design-studio/actions/_core/contracts";
-import { withFrameStateHost } from "@design-studio/actions/_core/frame-state";
+import type { Direction, Project } from "@design-studio/contracts";
+import type { CanvasFileFrame } from "@design-studio/contracts/canvas-file";
+import { withFrameStateHost } from "@design-studio/contracts/frame-state";
 import {
   describeTarget,
   describeTrigger,
-} from "@design-studio/actions/_core/link-interaction";
+} from "@design-studio/contracts/link-interaction";
 import {
   cleanLinkSelector,
   cleanLinkText,
@@ -26,7 +26,7 @@ import {
   startFrameOf,
   staticLinkIssue,
   upsertLink,
-} from "@design-studio/actions/_core/links";
+} from "@design-studio/contracts/links";
 import type {
   LinkIssue,
   LinkMotion,
@@ -34,7 +34,8 @@ import type {
   LinksFile,
   LinkTransition,
   PrototypeLink,
-} from "@design-studio/actions/_core/links";
+} from "@design-studio/contracts/links";
+
 import { frameStatesView } from "../../app/frame-state.js";
 import { withPagePath } from "../../export/source.js";
 import { z } from "../../platform/zod-bridge/index.js";

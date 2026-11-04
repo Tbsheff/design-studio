@@ -1,4 +1,5 @@
-import { selectMoveOf } from "@design-studio/actions/_core/contracts";
+import { selectMoveOf } from "@design-studio/contracts";
+
 import { nudgeStepOf } from "../shared/nudge.js";
 import { reorderMoveOf } from "../shared/reorder.js";
 import { structureKeyOf } from "../shared/structure-keys.js";

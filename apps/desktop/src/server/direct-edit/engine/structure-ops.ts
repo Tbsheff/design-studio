@@ -1,4 +1,5 @@
-import type { StructureOp } from "@design-studio/actions/_core/contracts";
+import type { StructureOp } from "@design-studio/contracts";
+
 import { DirectEditError } from "./errors.js";
 
 export interface Range {

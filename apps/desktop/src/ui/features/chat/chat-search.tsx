@@ -1,10 +1,10 @@
+import type { RunStatus, RunSummary } from "@design-studio/contracts";
+import { Icon } from "@design-studio/ui";
 import { useEffect, useId, useState } from "react";
 import type { KeyboardEvent } from "react";
 
-import type { RunStatus, RunSummary } from "@design-studio/actions/_core/contracts";
 import { runQueryTerms } from "../../../shared/rewind.js";
 import { formatRelative } from "../../domain/format.js";
-import { Icon } from "@design-studio/ui";
 import { searchRunPage, SEARCH_LIMIT } from "./run-history-model.js";
 
 interface Props {

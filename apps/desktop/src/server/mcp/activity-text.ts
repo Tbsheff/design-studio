@@ -1,5 +1,6 @@
-import type { CanvasFileFrame } from "@design-studio/actions/_core/canvas-file";
-import type { Version } from "@design-studio/actions/_core/contracts";
+import type { Version } from "@design-studio/contracts";
+import type { CanvasFileFrame } from "@design-studio/contracts/canvas-file";
+
 import { findFrame, type PlaceSpec } from "../canvas/index.js";
 
 const RELATION_WORDS = {

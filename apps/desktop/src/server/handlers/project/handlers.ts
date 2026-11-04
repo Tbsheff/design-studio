@@ -1,5 +1,6 @@
 // @generated
 import type { ProjectActions } from "@design-studio/actions/project/index";
+
 import type { Entries } from "../_core/handler.js";
 import { handle as createAttachmentProjectHandle } from "./create-attachment.js";
 import { handle as createProjectHandle } from "./create.js";

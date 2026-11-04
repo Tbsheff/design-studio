@@ -1,3 +1,11 @@
+import type {
+  AppKey,
+  BridgeToParent,
+  ProjectKind,
+  SelectMove,
+  SelectionContext,
+  ZoomKey,
+} from "@design-studio/contracts";
 import {
   startTransition,
   useCallback,
@@ -7,14 +15,6 @@ import {
   useState,
 } from "react";
 
-import type {
-  AppKey,
-  BridgeToParent,
-  ProjectKind,
-  SelectMove,
-  SelectionContext,
-  ZoomKey,
-} from "@design-studio/actions/_core/contracts";
 import { sendTelemetry } from "../../api.js";
 import { frameSrc, postToFrame, useBridge } from "../../platform/bridge.js";
 import type { BridgeFrame, ParentMessageBody } from "../../platform/bridge.js";

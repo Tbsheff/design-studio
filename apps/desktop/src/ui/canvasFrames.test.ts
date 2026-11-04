@@ -1,6 +1,6 @@
+import { zoomKeyOf } from "@design-studio/contracts";
 import { describe, expect, it } from "vitest";
 
-import { zoomKeyOf } from "@design-studio/actions/_core/contracts";
 import {
   addFrame,
   boundsOf,

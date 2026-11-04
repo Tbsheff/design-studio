@@ -1,5 +1,3 @@
-import { Schema } from "effect";
-
 import {
   DIRECT_STYLE_PROPERTIES,
   STRUCTURE_OPS,
@@ -7,7 +5,9 @@ import {
   type DirectStyleProperty,
   type SelectionContext,
   type StructureOp,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { Schema } from "effect";
+
 import { kebabKeys } from "../../shared/style-keys.js";
 import {
   toDefaulted,

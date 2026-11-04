@@ -13,7 +13,8 @@ import type {
   PackProblem,
   PackSummary,
   SavePackResult,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+
 import { call } from "./http";
 
 const getPack = async (packId: string): Promise<PackDetail> =>

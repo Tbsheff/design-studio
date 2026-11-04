@@ -3,14 +3,14 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
 
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-
 import type {
   Direction,
   Project,
   RunSummary,
   Version,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+
 import { forkBaseOf } from "../../shared/rewind.js";
 import { createEventBus } from "../events/index.js";
 import { bootAgentRunner } from "../main/agent-runner.js";

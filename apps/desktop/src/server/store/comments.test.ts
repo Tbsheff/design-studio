@@ -3,9 +3,9 @@ import { mkdtemp, readFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
+import type { CommentTarget, StudioEvent } from "@design-studio/contracts";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import type { CommentTarget, StudioEvent } from "@design-studio/actions/_core/contracts";
 import { createEventBus } from "../events/index.js";
 import { createCommentStore, reorderSubset } from "./comments.js";
 import type { CommentStore } from "./comments.js";

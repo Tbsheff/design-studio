@@ -1,5 +1,5 @@
-import { ELEMENT_MARK_PARAM } from "@design-studio/actions/_core/contracts";
-import type { Direction } from "@design-studio/actions/_core/contracts";
+import { ELEMENT_MARK_PARAM } from "@design-studio/contracts";
+import type { Direction } from "@design-studio/contracts";
 
 export function markOf(
   directions: readonly Direction[] | undefined,

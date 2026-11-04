@@ -3,8 +3,6 @@ import { existsSync, readdirSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-
 import type {
   DesignSystemCheckResult,
   ImportPackResult,
@@ -13,8 +11,10 @@ import type {
   PackSummary,
   Project,
   SavePackResult,
-} from "@design-studio/actions/_core/contracts";
-import { PACK_FILE } from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { PACK_FILE } from "@design-studio/contracts";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+
 import { zipFiles, type ZipEntry } from "../design-system/zip.js";
 import { createEventBus } from "../events/index.js";
 import { projectStorePorts } from "../main/project-ports.js";

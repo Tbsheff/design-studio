@@ -1,5 +1,3 @@
-import type { AppFixResult, DoctorCauseKind } from "@design-studio/actions/_core/app-doctor";
-import type { CanvasFile } from "@design-studio/actions/_core/canvas-file";
 import type {
   AppLogLine,
   AppRoute,
@@ -46,7 +44,22 @@ import type {
   TelemetrySample,
   Version,
   WorkTreeStatus,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import type {
+  AppFixResult,
+  DoctorCauseKind,
+} from "@design-studio/contracts/app-doctor";
+import type { CanvasFile } from "@design-studio/contracts/canvas-file";
+import type {
+  WorkspaceFolder,
+  WorkspaceList,
+} from "@design-studio/contracts/folders";
+import type { InsertTarget } from "@design-studio/contracts/insert";
+import type {
+  StyleReplaceRequest,
+  StyleReplaceResult,
+} from "@design-studio/contracts/style-search";
+
 import type {
   BlendMode,
   BlendProperty,
@@ -56,9 +69,7 @@ import type {
   FillType,
   RadialForm,
 } from "../shared/fill";
-import type { WorkspaceFolder, WorkspaceList } from "@design-studio/actions/_core/folders";
 import type { IconList, IconPosition, IconSource } from "../shared/icons";
-import type { InsertTarget } from "@design-studio/actions/_core/insert";
 import type {
   MotionInfo,
   MotionKind,
@@ -78,10 +89,6 @@ import type {
   SpacingSide,
 } from "../shared/spacing";
 import type {
-  StyleReplaceRequest,
-  StyleReplaceResult,
-} from "@design-studio/actions/_core/style-search";
-import type {
   TextStyleApplyResult,
   TextStyleCreateResult,
   TextStyleList,
@@ -99,12 +106,13 @@ import { routes as versionsRoutes } from "@design-studio/actions/version/routes"
 import type {
   DesignRulesState,
   DesignRulesTestResult,
-} from "@design-studio/actions/_core/design-rules";
+} from "@design-studio/contracts/design-rules";
 import type {
   ReviewFixResult,
   ReviewRequest,
   ReviewResult,
-} from "@design-studio/actions/_core/review";
+} from "@design-studio/contracts/review";
+
 import type { FlowInput, FlowResult } from "../shared/route-flow";
 import type {
   CommitTweaksResult,

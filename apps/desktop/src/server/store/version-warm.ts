@@ -1,4 +1,4 @@
-import type { Direction, Project } from "@design-studio/actions/_core/contracts";
+import type { Direction, Project } from "@design-studio/contracts";
 
 interface Job {
   run: Promise<void> | null;

@@ -1,10 +1,8 @@
-import {
-  VARIATION_BRIEF_MAX,
-  VARIATION_MIN,
-} from "@design-studio/actions/_core/contracts";
-import type { Project, VariationBrief } from "@design-studio/actions/_core/contracts";
-import { LEVEL_PRESETS } from "../../../shared/run-levels.js";
+import { VARIATION_BRIEF_MAX, VARIATION_MIN } from "@design-studio/contracts";
+import type { Project, VariationBrief } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
+
+import { LEVEL_PRESETS } from "../../../shared/run-levels.js";
 import { budgetFor, money } from "./use-variations.js";
 import type { BriefDraft } from "./use-variations.js";
 

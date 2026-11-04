@@ -1,6 +1,6 @@
+import type { DesignSystemCheckRule } from "@design-studio/contracts";
 import { beforeAll, describe, expect, it } from "vitest";
 
-import type { DesignSystemCheckRule } from "@design-studio/actions/_core/contracts";
 import { checkDesignSystemFiles, familiesInFontLinks } from "./check.js";
 import type { DesignSystemFiles } from "./check.js";
 import { DESIGN_MD_SECTIONS } from "./extract/compose.js";

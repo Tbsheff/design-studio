@@ -1,11 +1,11 @@
+import type { SourceLoc } from "@design-studio/contracts";
+import { usePopover } from "@design-studio/ui";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import type {
   SwapCandidate,
   SwapCandidateList,
 } from "../../../shared/component-create.js";
-import type { SourceLoc } from "@design-studio/actions/_core/contracts";
-import { usePopover } from "@design-studio/ui";
 import {
   apiMessage,
   componentCreateApi,

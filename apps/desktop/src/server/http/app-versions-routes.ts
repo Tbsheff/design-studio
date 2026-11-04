@@ -1,6 +1,6 @@
+import { CANVAS_FILE } from "@design-studio/contracts/canvas-file";
 import type { Hono } from "hono";
 
-import { CANVAS_FILE } from "@design-studio/actions/_core/canvas-file";
 import { invalidateTokenSource } from "../design-system/token-preview.js";
 import { BadRequestError } from "../platform/errors/index.js";
 import { bindVersionReadRuntime } from "../store/version-read-core.js";

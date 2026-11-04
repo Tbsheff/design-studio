@@ -1,6 +1,6 @@
+import type { SelectionContext, Version } from "@design-studio/contracts";
 import type { ComponentProps } from "react";
 
-import type { SelectionContext, Version } from "@design-studio/actions/_core/contracts";
 import { api } from "../../api";
 import { componentMention } from "../../features/chat/use-mentions";
 import { runCommand } from "../../features/commands";

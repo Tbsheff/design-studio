@@ -1,7 +1,7 @@
+import type { StudioEvent } from "@design-studio/contracts";
 import { serve } from "@hono/node-server";
 import { Effect } from "effect";
 
-import type { StudioEvent } from "@design-studio/actions/_core/contracts";
 import { createCanvasService } from "../canvas/index.js";
 import {
   followSourceMoves,

@@ -1,7 +1,8 @@
 import { appendFile, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import type { StudioEventInput } from "@design-studio/actions/_core/contracts";
+import type { StudioEventInput } from "@design-studio/contracts";
+
 import { report, toRecorded, trimRing } from "./event-log.js";
 import type { ProjectLog, RecordedEvent } from "./event-log.js";
 

@@ -1,8 +1,8 @@
 import path from "node:path";
 
-import type { Project } from "@design-studio/actions/_core/contracts";
-import type { InsertComponentRequest } from "@design-studio/actions/_core/insert";
-import { COMPONENT_LIST_MAX } from "@design-studio/actions/_core/props";
+import type { Project } from "@design-studio/contracts";
+import type { InsertComponentRequest } from "@design-studio/contracts/insert";
+import { COMPONENT_LIST_MAX } from "@design-studio/contracts/props";
 import type {
   ComponentListItem,
   ComponentListQuery,
@@ -11,7 +11,8 @@ import type {
   ComponentSource,
   PropSpec,
   PropValue,
-} from "@design-studio/actions/_core/props";
+} from "@design-studio/contracts/props";
+
 import { importResolver, pickSpecifier } from "./import-plan.js";
 import type { ImportNeed } from "./import-plan.js";
 import { loadLibrary } from "./insert-list.js";

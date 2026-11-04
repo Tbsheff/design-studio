@@ -1,10 +1,10 @@
-import { Effect } from "effect";
-
 import type {
   Direction,
   Project,
   VersionThumbs,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { Effect } from "effect";
+
 import type { EditHistory } from "../direct-edit/commit/index.js";
 import { attemptKnown } from "../platform/attempt/index.js";
 import type { KnownFailure } from "../platform/attempt/index.js";

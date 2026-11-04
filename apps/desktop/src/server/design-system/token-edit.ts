@@ -1,4 +1,5 @@
-import type { TokenChange } from "@design-studio/actions/_core/contracts";
+import type { TokenChange } from "@design-studio/contracts";
+
 import {
   endOfString,
   insertMember,

@@ -4,9 +4,10 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import type { Project, RunSummary, Version } from "@design-studio/contracts";
 import { chromium } from "playwright-core";
 
-import type { Project, RunSummary, Version } from "@design-studio/actions/_core/contracts";
+import { toWorkspaceBin } from "./workspace-root.ts";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const PORT = 4470;
@@ -48,23 +49,19 @@ async function main(): Promise<void> {
   const dataDir = path.join(work, "data");
   const log = createWriteStream(path.join(work, "server.log"));
 
-  const server = spawn(
-    path.join(ROOT, "node_modules", ".bin", "tsx"),
-    ["src/server/index.ts"],
-    {
-      cwd: ROOT,
-      env: {
-        ...process.env,
-        STUDIO_AGENT: "sdk",
-        STUDIO_DATA_DIR: dataDir,
-        STUDIO_PROJECTS_DIR: path.join(work, "Design Studio"),
-        STUDIO_PORT: String(PORT),
-        STUDIO_PREVIEW_PORT: String(PORT + 1),
-        STUDIO_VITE_PORT_BASE: "5600",
-      },
-      stdio: ["ignore", "pipe", "pipe"],
-    }
-  );
+  const server = spawn(toWorkspaceBin("tsx"), ["src/server/index.ts"], {
+    cwd: ROOT,
+    env: {
+      ...process.env,
+      STUDIO_AGENT: "sdk",
+      STUDIO_DATA_DIR: dataDir,
+      STUDIO_PROJECTS_DIR: path.join(work, "Design Studio"),
+      STUDIO_PORT: String(PORT),
+      STUDIO_PREVIEW_PORT: String(PORT + 1),
+      STUDIO_VITE_PORT_BASE: "5600",
+    },
+    stdio: ["ignore", "pipe", "pipe"],
+  });
 
   server.stdout.pipe(log);
   server.stderr.pipe(log);
@@ -175,12 +172,15 @@ async function main(): Promise<void> {
     console.log(`[smoke] h1 after: ${h1After}`);
 
     for (const run of [...runs].sort((a, b) => a.startedAt - b.startedAt)) {
-      const writes = run.toolCalls
-        .filter((tool) => ["Write", "Edit", "MultiEdit"].includes(tool.name))
-        .map(
-          (tool) =>
-            `${tool.name}:${path.relative(project.directions[0]?.workTree ?? "", String((tool.input as { file_path?: unknown }).file_path ?? ""))}`
-        );
+      const writes = run.toolCalls.flatMap((tool) => {
+        if (!["Write", "Edit", "MultiEdit"].includes(tool.name)) {
+          return [];
+        }
+
+        return [
+          `${tool.name}:${path.relative(project.directions[0]?.workTree ?? "", String((tool.input as { file_path?: unknown }).file_path ?? ""))}`,
+        ];
+      });
 
       console.log(
         `[smoke] run "${run.request.prompt}" status=${run.status} cost=$${run.costUsd.toFixed(4)} turns-tools=${run.toolCalls.length} durationMs=${run.durationMs} writes=${JSON.stringify(writes)} selection=${run.request.selection?.length ?? 0} error=${run.error}`

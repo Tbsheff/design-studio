@@ -1,4 +1,4 @@
-import { REQUIRED_TOKENS } from "@design-studio/actions/_core/contracts";
+import { REQUIRED_TOKENS } from "@design-studio/contracts";
 
 export const KIT_PAGE_FILE = "index.html";
 

@@ -26,11 +26,11 @@ Follow [AGENTS.md section 2](AGENTS.md#2-how-to-add-an-action). [docs/patterns.m
      --mcp list_skills --agent list_skills --agent-set core --agent-short "<STE text>"
    ```
 
-2. Fill `input` and `output` in the definition. Put shared schemas in `src/shared/actions/<domain>/schema.ts`.
+2. Fill `input` and `output` in the definition. Put shared schemas in `packages/common/actions/src/<domain>/schema.ts`.
 3. Fill the handler. Yield one service. If no service fits, stamp one: `pnpm run new:service <area> <Name> --access read|write`, then add its layer to `src/server/handlers/<domain>/live.ts`.
 4. Remove `NotImplemented` from `errors`, and list the real error tags.
 5. Delete the legacy route, if one exists. The mounted action serves the path.
-6. In the UI, call the action with `call(routes.<name>, input)` from `src/ui/platform/http.ts`.
+6. In the UI, call the action with `call(routes.<name>, input)` from `apps/desktop/src/ui/platform/http.ts`.
 7. Prove it: `pnpm exec tsx scripts/call-action.ts <action id> '<json>'`.
 
 Use `pnpm run new:domain`, `new:error` and `new:feature` for the other kinds. Never copy an action, route, tool or handler by hand.
@@ -55,7 +55,7 @@ pnpm run build:ui
 pnpm run e2e
 ```
 
-Run `pnpm run e2e:desktop` too when you change `desktop/`.
+Run `pnpm run e2e:desktop` too when you change `apps/desktop/desktop/`.
 
 ## Pull requests
 

@@ -1,4 +1,4 @@
-import type { AppServerStatus } from "@design-studio/actions/_core/contracts";
+import type { AppServerStatus } from "@design-studio/contracts";
 
 function ServerButtons({
   state,

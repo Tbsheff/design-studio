@@ -1,6 +1,4 @@
-import { memo, useCallback, useMemo, useState } from "react";
-
-import type { SelectionContext } from "@design-studio/actions/_core/contracts";
+import type { SelectionContext } from "@design-studio/contracts";
 import {
   STYLE_KINDS,
   hitsForRow,
@@ -8,12 +6,14 @@ import {
   replaceSummary,
   summarizeHits,
   unlocatedCount,
-} from "@design-studio/actions/_core/style-search";
+} from "@design-studio/contracts/style-search";
 import type {
   StyleHit,
   StyleQuery,
   StyleValueRow,
-} from "@design-studio/actions/_core/style-search";
+} from "@design-studio/contracts/style-search";
+import { memo, useCallback, useMemo, useState } from "react";
+
 import { errorText, replaceStyle } from "../../api.js";
 import { InspectorSection } from "./inspector-fields.js";
 

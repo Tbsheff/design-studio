@@ -1,13 +1,13 @@
 import { realpath } from "node:fs/promises";
 
 import type * as t from "@babel/types";
-import MagicString from "magic-string";
-
 import type {
   SourceLoc,
   TextSourceHints,
   TextSourceInfo,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import MagicString from "magic-string";
+
 import { ownerUseSite } from "../../components/use-site.js";
 import {
   dataExpression,

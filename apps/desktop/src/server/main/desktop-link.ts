@@ -1,4 +1,5 @@
-import type { StudioEvent } from "@design-studio/actions/_core/contracts";
+import type { StudioEvent } from "@design-studio/contracts";
+
 import type {
   DesktopLinkMessage,
   DesktopRunInfo,

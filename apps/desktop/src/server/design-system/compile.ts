@@ -1,11 +1,10 @@
-import { clampChroma, converter, formatHex, formatHex8, parse } from "culori";
-
-import { REQUIRED_TOKENS } from "@design-studio/actions/_core/contracts";
+import { REQUIRED_TOKENS } from "@design-studio/contracts";
 import type {
   CompiledTokenEntry,
   TokenFile,
   TokenType,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { clampChroma, converter, formatHex, formatHex8, parse } from "culori";
 
 export type ThemeMode = "light" | "dark";
 

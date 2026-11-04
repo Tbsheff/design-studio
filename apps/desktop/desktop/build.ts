@@ -13,7 +13,7 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { build } from "esbuild";
-import type { BuildOptions, Metafile } from "esbuild";
+import type { BuildOptions, Metafile, Plugin } from "esbuild";
 
 import { buildBridge } from "../src/server/platform/bridge-build/index.js";
 import { linkEsbuildBinary, pruneModules } from "./prune.js";
@@ -140,12 +140,27 @@ export async function buildDesktopApp(
     cpSync(path.join(desktop, file), path.join(outDir, file));
 }
 
+const WORKSPACE_PACKAGE = /^@design-studio\//;
+const BARE_SPECIFIER = /^[^./]/;
+
+const externalizeBare: Plugin = {
+  name: "externalize-bare",
+  setup: (pluginBuild) => {
+    pluginBuild.onResolve({ filter: BARE_SPECIFIER }, (args) =>
+      WORKSPACE_PACKAGE.test(args.path) || path.isAbsolute(args.path)
+        ? null
+        : { external: true, path: args.path }
+    );
+  },
+};
+
 async function buildServer(serverDir: string): Promise<Metafile[]> {
   const common: BuildOptions = {
     ...NODE_COMMON,
     format: "esm",
-    packages: "external",
     metafile: true,
+    plugins: [externalizeBare],
+    tsconfig: path.join(ROOT, "tsconfig.server.json"),
   };
   const server = await build({
     ...common,

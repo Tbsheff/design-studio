@@ -1,7 +1,8 @@
+import { SOURCE_LOC_ATTR } from "@design-studio/contracts";
+import type { AnchorQuery, AnchorReport } from "@design-studio/contracts";
+
 import { resolveAnchor } from "../shared/comments.js";
 import type { AnchorDom } from "../shared/comments.js";
-import { SOURCE_LOC_ATTR } from "@design-studio/actions/_core/contracts";
-import type { AnchorQuery, AnchorReport } from "@design-studio/actions/_core/contracts";
 import type { OutgoingBody } from "./bridge-types.js";
 import { isObject, isString } from "./dom-input.js";
 import { queryElement, rectOf, selectorFor } from "./element-info.js";

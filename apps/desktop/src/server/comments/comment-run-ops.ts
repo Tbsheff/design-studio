@@ -1,11 +1,12 @@
-import { commentPrompt, isSendable } from "../../shared/comments.js";
 import type {
   DesignComment,
   Direction,
   Project,
   RunLevel,
   RunRequest,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+
+import { commentPrompt, isSendable } from "../../shared/comments.js";
 import { ConflictError, NotFoundError } from "../platform/errors/index.js";
 import type { CommentRuntime } from "./comment-core.js";
 import { toRunPayload } from "./run-payload.js";

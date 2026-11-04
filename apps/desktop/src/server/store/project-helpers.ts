@@ -12,21 +12,24 @@ import {
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { customAlphabet } from "nanoid";
-
 import {
   DEFAULT_SETTINGS,
   LEGACY_DEFAULT_BUDGET_USD,
   SETTINGS_VERSION,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
 import type {
   AppFramework,
   Direction,
   Project,
   ProjectKind,
   ProjectSettings,
-} from "@design-studio/actions/_core/contracts";
-import { MAX_SLUG_SUFFIX, slugCandidate } from "@design-studio/actions/_core/folders";
+} from "@design-studio/contracts";
+import {
+  MAX_SLUG_SUFFIX,
+  slugCandidate,
+} from "@design-studio/contracts/folders";
+import { customAlphabet } from "nanoid";
+
 import { writeAtomic } from "../platform/atomic-write/index.js";
 import {
   BadRequestError,

@@ -1,14 +1,14 @@
+import type { CompiledTokenEntry } from "@design-studio/contracts";
+import { Icon } from "@design-studio/ui";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 
-import type { CompiledTokenEntry } from "@design-studio/actions/_core/contracts";
 import {
   colorHex,
   lengthToPx,
   modeValue,
 } from "../../../shared/token-match.js";
 import type { TokenMode } from "../../../shared/token-match.js";
-import { Icon } from "@design-studio/ui";
 import { COPY } from "./copy.js";
 import { findElement } from "./find-element.js";
 

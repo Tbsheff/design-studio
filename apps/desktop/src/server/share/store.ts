@@ -2,9 +2,9 @@ import { createHash, randomBytes } from "node:crypto";
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
+import type { ShareFrame, ShareLink } from "@design-studio/contracts/share";
 import { nanoid } from "nanoid";
 
-import type { ShareFrame, ShareLink } from "@design-studio/actions/_core/share";
 import { createKeyedMutex } from "../platform/mutex/index.js";
 
 export interface ShareRecord {

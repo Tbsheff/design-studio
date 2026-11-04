@@ -1,6 +1,7 @@
 import path from "node:path";
 
-import type { Project } from "@design-studio/actions/_core/contracts";
+import type { Project } from "@design-studio/contracts";
+
 import { nextAppWorkspace, type WorkspaceRoot } from "../app/workspace-root.js";
 
 export interface WorkspaceFields {

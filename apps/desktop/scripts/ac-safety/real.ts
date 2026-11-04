@@ -13,16 +13,17 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-import { chromium } from "playwright-core";
-import type { Browser } from "playwright-core";
-
-import { diffTrees, treeHash } from "../../e2e/ac/safety/helpers.js";
 import type {
   Project,
   RunSummary,
   StudioEvent,
   Version,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { chromium } from "playwright-core";
+import type { Browser } from "playwright-core";
+
+import { diffTrees, treeHash } from "../../e2e/ac/safety/helpers.js";
+import { toWorkspaceBin } from "../workspace-root.ts";
 
 const ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -266,24 +267,20 @@ const dataDir = path.join(work, "data");
 async function main(): Promise<void> {
   const log = createWriteStream(path.join(work, "server.log"));
 
-  const server = spawn(
-    path.join(ROOT, "node_modules", ".bin", "tsx"),
-    ["src/server/index.ts"],
-    {
-      cwd: ROOT,
-      detached: true,
-      env: {
-        ...process.env,
-        STUDIO_AGENT: "sdk",
-        STUDIO_DATA_DIR: dataDir,
-        STUDIO_PROJECTS_DIR: path.join(work, "Design Studio"),
-        STUDIO_PORT: String(PORT),
-        STUDIO_PREVIEW_PORT: String(PORT + 1),
-        STUDIO_VITE_PORT_BASE: "8400",
-      },
-      stdio: ["ignore", "pipe", "pipe"],
-    }
-  );
+  const server = spawn(toWorkspaceBin("tsx"), ["src/server/index.ts"], {
+    cwd: ROOT,
+    detached: true,
+    env: {
+      ...process.env,
+      STUDIO_AGENT: "sdk",
+      STUDIO_DATA_DIR: dataDir,
+      STUDIO_PROJECTS_DIR: path.join(work, "Design Studio"),
+      STUDIO_PORT: String(PORT),
+      STUDIO_PREVIEW_PORT: String(PORT + 1),
+      STUDIO_VITE_PORT_BASE: "8400",
+    },
+    stdio: ["ignore", "pipe", "pipe"],
+  });
 
   server.stdout.pipe(log);
   server.stderr.pipe(log);
@@ -371,11 +368,15 @@ async function main(): Promise<void> {
         run: runView(run.summary, run.events),
         h1: h1Of(path.join(folder, "index.html")),
         attachmentFiles: readdirSync(attachmentsDir),
-        attachmentMeta: readdirSync(attachmentsDir)
-          .filter((f) => f.endsWith(".json"))
-          .map((f) =>
-            JSON.parse(readFileSync(path.join(attachmentsDir, f), "utf-8"))
-          ),
+        attachmentMeta: readdirSync(attachmentsDir).flatMap((f) => {
+          if (!f.endsWith(".json")) {
+            return [];
+          }
+
+          return [
+            JSON.parse(readFileSync(path.join(attachmentsDir, f), "utf-8")),
+          ];
+        }),
       };
       save();
     }
@@ -567,6 +568,10 @@ async function main(): Promise<void> {
         `${BASE}/api/projects/${design.id}/versions/${head.id}/export`,
         { headers: { "x-studio-token": token } }
       );
+
+      if (!exportRes.ok) {
+        throw new Error(`export failed: ${exportRes.status}`);
+      }
 
       const exportDir = realpathSync(
         mkdtempSync(path.join(os.tmpdir(), "ac real export "))

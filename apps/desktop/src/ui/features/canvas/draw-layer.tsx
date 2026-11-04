@@ -1,9 +1,9 @@
+import type { CommentDrawing, DrawStroke } from "@design-studio/contracts";
+import { Icon } from "@design-studio/ui";
 import { useEffect, useRef, useState } from "react";
 import type { KeyboardEvent, PointerEvent } from "react";
 
 import { strokesBox } from "../../../shared/comments.js";
-import type { CommentDrawing, DrawStroke } from "@design-studio/actions/_core/contracts";
-import { Icon } from "@design-studio/ui";
 import { CommentComposer } from "../comments/comment-composer.js";
 import type { ComposerSubmit } from "../comments/comment-composer.js";
 import type { CommentTools } from "../comments/comment-layer.js";

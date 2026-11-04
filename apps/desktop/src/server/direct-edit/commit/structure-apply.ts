@@ -8,7 +8,8 @@ import type {
   StructureOp,
   StructureTarget,
   VersionMeta,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+
 import { structureDoc, type StructureDoc } from "../engine/structure-docs.js";
 import {
   planStructure,

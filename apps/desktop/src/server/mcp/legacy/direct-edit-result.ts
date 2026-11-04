@@ -1,11 +1,12 @@
-import { TOKENS_FILE } from "@design-studio/actions/_core/contracts";
+import { TOKENS_FILE } from "@design-studio/contracts";
 import type {
   CompiledTokenEntry,
   DirectEditResult,
   StructureEditResult,
   UpdateTokensResult,
   Version,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+
 import {
   editedAtLabel,
   locText,

@@ -7,8 +7,9 @@ import {
   FIGMA_NODES_MAX_BYTES,
   type FigmaImportPreview,
   type FigmaImportResult,
-} from "@design-studio/actions/_core/figma-nodes";
-import { JSX_INSERT_POSITIONS } from "@design-studio/actions/_core/insert";
+} from "@design-studio/contracts/figma-nodes";
+import { JSX_INSERT_POSITIONS } from "@design-studio/contracts/insert";
+
 import { z } from "../platform/zod-bridge/index.js";
 import { callAction } from "./action-call.js";
 import {

@@ -116,8 +116,8 @@ const deriveNames = (domain: string, verb: string): DerivedNames => {
   const constName = actionConst(domain, tail);
   const typeBase = pascal(constName);
 
-  const definitionFile = `../../packages/common/actions/src/${domain}/${tail}.ts`;
-  const handlerFile = `src/server/handlers/${domain}/${tail}.ts`;
+  const definitionFile = `packages/common/actions/src/${domain}/${tail}.ts`;
+  const handlerFile = `apps/desktop/src/server/handlers/${domain}/${tail}.ts`;
   const hook = `useAction(${constName})`;
   const hookName = `use${typeBase}`;
   const id = `${domain}.${verb}`;

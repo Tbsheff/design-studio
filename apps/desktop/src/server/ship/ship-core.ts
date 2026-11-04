@@ -1,11 +1,11 @@
 import path from "node:path";
 
-import { Effect } from "effect";
-
 import type { BadRequest } from "@design-studio/actions/_core/errors/bad-request";
 import type { Conflict } from "@design-studio/actions/_core/errors/conflict";
 import type { NotFound } from "@design-studio/actions/_core/errors/not-found";
-import type { Project } from "@design-studio/actions/_core/contracts";
+import type { Project } from "@design-studio/contracts";
+import { Effect } from "effect";
+
 import { attemptKnown } from "../platform/attempt/index.js";
 import { loadConfig } from "../platform/config/index.js";
 import { assertSafeId } from "../platform/errors/index.js";

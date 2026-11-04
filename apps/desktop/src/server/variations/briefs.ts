@@ -5,7 +5,6 @@ import type {
   SDKMessage,
   query,
 } from "@anthropic-ai/claude-agent-sdk";
-
 import {
   VARIATION_BRIEF_MAX,
   VARIATION_MAX,
@@ -14,7 +13,8 @@ import {
   type ProjectKind,
   type VariationBrief,
   type VariationBriefsResult,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+
 import { extractJson } from "../../shared/extract-json.js";
 import { WIREFRAME_MODEL } from "../../shared/run-levels.js";
 import { buildEnv } from "../platform/config/index.js";

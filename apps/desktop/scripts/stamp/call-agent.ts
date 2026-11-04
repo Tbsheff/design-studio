@@ -4,6 +4,7 @@ import { pathToFileURL } from "node:url";
 
 import type { tool } from "@anthropic-ai/claude-agent-sdk";
 
+import { WORKSPACE_ROOT } from "../workspace-root.ts";
 import { firstText, parseText, timed } from "./call-types.js";
 import type {
   CallableAction,
@@ -82,7 +83,7 @@ interface LoadedAgent {
   readonly tools: readonly AgentTool[];
 }
 
-const ROOT = path.join(import.meta.dirname, "..", "..");
+const ROOT = WORKSPACE_ROOT;
 
 const GIT_NAME = /(?:^|[\\/])git(?:\.exe)?$/u;
 
@@ -138,19 +139,19 @@ const countGitSpawns = (): SpawnCounter => {
 
 const loadAgentTools = async (): Promise<LoadedAgent> => {
   const runtimeModule = await importSource<RuntimeModule>(
-    "src/server/main/runtime.ts"
+    "apps/desktop/src/server/main/runtime.ts"
   );
 
   const configModule = await importSource<ConfigModule>(
-    "src/server/platform/config/index.ts"
+    "apps/desktop/src/server/platform/config/index.ts"
   );
 
   const mcpRegistry = await importSource<McpRegistryModule>(
-    "src/server/mcp/registry.ts"
+    "apps/desktop/src/server/mcp/registry.ts"
   );
 
   const agentRegistry = await importSource<AgentRegistryModule>(
-    "src/server/agent-tools/registry.ts"
+    "apps/desktop/src/server/agent-tools/registry.ts"
   );
 
   const sdk = await import("@anthropic-ai/claude-agent-sdk");

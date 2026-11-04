@@ -1,4 +1,11 @@
 import {
+  type ClarifyQuestion,
+  DEFAULT_SETTINGS,
+  type ProjectKind,
+  type Starter,
+} from "@design-studio/contracts";
+import { needsQuestions } from "@design-studio/contracts/clarify";
+import {
   type FormEvent,
   type KeyboardEvent,
   type ReactNode,
@@ -8,13 +15,6 @@ import {
   useState,
 } from "react";
 
-import { needsQuestions } from "@design-studio/actions/_core/clarify";
-import {
-  type ClarifyQuestion,
-  DEFAULT_SETTINGS,
-  type ProjectKind,
-  type Starter,
-} from "@design-studio/actions/_core/contracts";
 import { api, errorText } from "../../api.js";
 import { prefetchScreensWhenIdle } from "../../app/screen-preload.js";
 import { uiStore, useUi } from "../../platform/storage.js";

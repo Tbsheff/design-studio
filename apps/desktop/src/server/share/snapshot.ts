@@ -2,8 +2,9 @@ import { randomBytes } from "node:crypto";
 import { mkdir, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import type { ExportFrame } from "@design-studio/actions/_core/export";
-import type { ShareFrame } from "@design-studio/actions/_core/share";
+import type { ExportFrame } from "@design-studio/contracts/export";
+import type { ShareFrame } from "@design-studio/contracts/share";
+
 import type { ExportSource } from "../export/source.js";
 import { captureFrame } from "../preview/page-capture/index.js";
 import type { PreviewService } from "../types.js";

@@ -10,14 +10,11 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import type { Project, RunSummary, Version } from "@design-studio/contracts";
 import { chromium } from "playwright-core";
 import type { Frame, Page } from "playwright-core";
 
-import type {
-  Project,
-  RunSummary,
-  Version,
-} from "@design-studio/actions/_core/contracts";
+import { toWorkspaceBin } from "../workspace-root.ts";
 
 const ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -87,13 +84,17 @@ async function colorMap(page: Page): Promise<ElementColor[]> {
   const frame = await previewFrame(page);
 
   return frame.evaluate(() =>
-    [...document.body.querySelectorAll("*")]
-      .filter((el) => !["SCRIPT", "STYLE"].includes(el.tagName))
-      .map((el) => ({
-        tag: el.tagName.toLowerCase(),
-        text: (el.textContent ?? "").trim().slice(0, 40),
-        color: getComputedStyle(el).color,
-      }))
+    [...document.body.querySelectorAll("*")].flatMap((el) =>
+      ["SCRIPT", "STYLE"].includes(el.tagName)
+        ? []
+        : [
+            {
+              tag: el.tagName.toLowerCase(),
+              text: (el.textContent ?? "").trim().slice(0, 40),
+              color: getComputedStyle(el).color,
+            },
+          ]
+    )
   );
 }
 
@@ -129,24 +130,20 @@ async function main(): Promise<void> {
   const dataDir = path.join(work, "data");
   const log = createWriteStream(path.join(work, "server.log"));
 
-  const server = spawn(
-    path.join(ROOT, "node_modules", ".bin", "tsx"),
-    ["src/server/index.ts"],
-    {
-      cwd: ROOT,
-      detached: true,
-      env: {
-        ...process.env,
-        STUDIO_AGENT: "sdk",
-        STUDIO_DATA_DIR: dataDir,
-        STUDIO_PROJECTS_DIR: path.join(work, "Design Studio"),
-        STUDIO_PORT: String(PORT),
-        STUDIO_PREVIEW_PORT: String(PREVIEW_PORT),
-        STUDIO_VITE_PORT_BASE: "7400",
-      },
-      stdio: ["ignore", "pipe", "pipe"],
-    }
-  );
+  const server = spawn(toWorkspaceBin("tsx"), ["src/server/index.ts"], {
+    cwd: ROOT,
+    detached: true,
+    env: {
+      ...process.env,
+      STUDIO_AGENT: "sdk",
+      STUDIO_DATA_DIR: dataDir,
+      STUDIO_PROJECTS_DIR: path.join(work, "Design Studio"),
+      STUDIO_PORT: String(PORT),
+      STUDIO_PREVIEW_PORT: String(PREVIEW_PORT),
+      STUDIO_VITE_PORT_BASE: "7400",
+    },
+    stdio: ["ignore", "pipe", "pipe"],
+  });
 
   server.stdout.pipe(log);
   server.stderr.pipe(log);

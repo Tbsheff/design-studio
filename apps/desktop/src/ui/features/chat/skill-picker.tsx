@@ -1,15 +1,15 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import type { RefObject } from "react";
-
 import type {
   SkillInfo,
   Project,
   ProjectSettings,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { Icon } from "@design-studio/ui";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import type { RefObject } from "react";
+
 import { api, errorText } from "../../api.js";
 import { rank } from "../../chat-slots.js";
 import type { Command } from "../../chat-slots.js";
-import { Icon } from "@design-studio/ui";
 import { SkillsChecklist } from "./skills-checklist.js";
 import {
   NO_SKILLS_TEXT,

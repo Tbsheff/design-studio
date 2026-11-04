@@ -1,4 +1,5 @@
-import type { Project } from "@design-studio/actions/_core/contracts";
+import type { Project } from "@design-studio/contracts";
+
 import type { StudioProjectStore } from "../store/projects.js";
 
 interface ProjectSummary {

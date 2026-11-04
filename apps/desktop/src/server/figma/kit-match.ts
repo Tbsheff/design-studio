@@ -1,7 +1,11 @@
 import { readFileSync } from "node:fs";
 
-import type { Project } from "@design-studio/actions/_core/contracts";
-import type { FigmaKitUse, FigmaNode } from "@design-studio/actions/_core/figma-nodes";
+import type { Project } from "@design-studio/contracts";
+import type {
+  FigmaKitUse,
+  FigmaNode,
+} from "@design-studio/contracts/figma-nodes";
+
 import { loadLibrary, type LibraryEntry } from "../components/insert-list.js";
 import type { FigmaDocument } from "./nodes.js";
 

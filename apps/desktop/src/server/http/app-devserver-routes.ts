@@ -1,6 +1,6 @@
+import type { Direction, Project } from "@design-studio/contracts";
 import type { Hono } from "hono";
 
-import type { Direction, Project } from "@design-studio/actions/_core/contracts";
 import type { AppContext } from "./app-context.js";
 import { readBody } from "./app-request.js";
 import { registerAppRoutes } from "./app-routes.js";

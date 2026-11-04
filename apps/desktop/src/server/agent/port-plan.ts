@@ -1,21 +1,18 @@
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 
-import { parse } from "parse5";
-import type { DefaultTreeAdapterMap } from "parse5";
-
-import { cleanFramePath } from "@design-studio/actions/_core/canvas-file";
 import type {
   CompiledTokenEntry,
   Direction,
   Project,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { cleanFramePath } from "@design-studio/contracts/canvas-file";
 import {
   cleanPortRoute,
   PORT_FLOW_MAX_PAGES,
   portPageSlug,
   suggestPortRoute,
-} from "@design-studio/actions/_core/port";
+} from "@design-studio/contracts/port";
 import type {
   PortFlowLink,
   PortFlowLinkKind,
@@ -29,7 +26,10 @@ import type {
   PortSection,
   PortTarget,
   PortToken,
-} from "@design-studio/actions/_core/port";
+} from "@design-studio/contracts/port";
+import { parse } from "parse5";
+import type { DefaultTreeAdapterMap } from "parse5";
+
 import { matchColor } from "../../shared/token-match.js";
 import { appRouterDir, listAppRoutes } from "../app/routes.js";
 import { searchComponents } from "../components/component-search.js";

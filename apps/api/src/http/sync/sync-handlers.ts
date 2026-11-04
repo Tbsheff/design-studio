@@ -1,7 +1,8 @@
+import { BadRequest } from "@design-studio/actions/_core/errors/bad-request";
+import { Conflict } from "@design-studio/actions/_core/errors/conflict";
 import { Effect } from "effect";
 import type { HttpApiBuilder } from "effect/http-api";
 
-import { BadRequest, Conflict } from "../../shared-actions.js";
 import { TenantBlobs } from "../../tenant/blobs.js";
 import { ChangesRepo } from "../../tenant/repos/changes.js";
 import { ProjectsRepo } from "../../tenant/repos/projects.js";

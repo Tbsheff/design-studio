@@ -1,6 +1,3 @@
-import type { Hono } from "hono";
-import { nanoid } from "nanoid";
-
 import {
   RUN_LEVELS,
   VARIATION_DEFAULT,
@@ -10,7 +7,10 @@ import {
   type RunRequest,
   type VariationBriefsResult,
   type VariationStartResult,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import type { Hono } from "hono";
+import { nanoid } from "nanoid";
+
 import { levelOf, resolveRunConfig } from "../../shared/run-levels.js";
 import { readDesignSystemState } from "../design-system/state.js";
 import {

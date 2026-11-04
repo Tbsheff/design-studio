@@ -1,7 +1,5 @@
-import type {
-  CompiledTokenEntry,
-  TokenType,
-} from "@design-studio/actions/_core/contracts";
+import type { CompiledTokenEntry, TokenType } from "@design-studio/contracts";
+
 import { resolveVars } from "../extract/css.js";
 import { normalizeLength, toOklchColor } from "../extract/values.js";
 import type { CssDeclaration, CssTokenSheet } from "./read-css.js";

@@ -1,3 +1,4 @@
+import type { Direction, Project } from "@design-studio/contracts";
 import type { Context, Hono } from "hono";
 
 import {
@@ -10,7 +11,6 @@ import type {
   ComponentVariantRequest,
   ComponentVariantResult,
 } from "../../shared/component-variant.js";
-import type { Direction, Project } from "@design-studio/actions/_core/contracts";
 import { componentPreviewsFor } from "../components/preview.js";
 import type { PreviewTarget } from "../components/preview.js";
 import { ComponentVariantError } from "../components/variant-write/errors.js";

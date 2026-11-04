@@ -1,16 +1,15 @@
-import { useEffect, useRef } from "react";
-
 import {
   BRIDGE_HANDSHAKE_TYPE,
   BRIDGE_HELLO_TYPE,
   BRIDGE_PARENT_ORIGIN_PARAM,
   CLOUD_BLOCKED_BRIDGE_TYPES,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
 import type {
   BridgeToParent,
   ParentToBridge,
   ProjectKind,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { useEffect, useRef } from "react";
 
 export interface BridgeFrame {
   key: string;

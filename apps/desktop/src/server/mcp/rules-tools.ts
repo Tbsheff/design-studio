@@ -1,13 +1,14 @@
 import { getRulesDirectEdit } from "@design-studio/actions/direct-edit/get-rules";
 import { runRulesTestDirectEdit } from "@design-studio/actions/direct-edit/run-rules-test";
 import { setRulesDirectEdit } from "@design-studio/actions/direct-edit/set-rules";
-import type { Version } from "@design-studio/actions/_core/contracts";
+import type { Version } from "@design-studio/contracts";
 import {
   DESIGN_RULES_TEXT_MAX,
   type DesignRule,
   type DesignRulesState,
   type DesignRulesTestResult,
-} from "@design-studio/actions/_core/design-rules";
+} from "@design-studio/contracts/design-rules";
+
 import { frameRef } from "../canvas/index.js";
 import { z } from "../platform/zod-bridge/index.js";
 import { callAction } from "./action-call.js";

@@ -1,14 +1,14 @@
-import { useState, useSyncExternalStore } from "react";
-
 import type {
   Direction,
   DirectionVariation,
   Project,
   RunStatus,
-} from "@design-studio/actions/_core/contracts";
-import type { ElementScope } from "@design-studio/actions/_core/element-variants";
-import { errorText } from "../../api.js";
+} from "@design-studio/contracts";
+import type { ElementScope } from "@design-studio/contracts/element-variants";
 import { Icon } from "@design-studio/ui";
+import { useState, useSyncExternalStore } from "react";
+
+import { errorText } from "../../api.js";
 import type { RunMap } from "../chat/run-state-model.js";
 import { ElementVariantsDialog } from "../inspector/element-variants-dialog.js";
 import { canvasStore } from "./canvas-frames-model.js";

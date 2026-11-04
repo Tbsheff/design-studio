@@ -1,5 +1,5 @@
-import type { SourceLoc, Version } from "./actions/_core/contracts.js";
-import type { ComponentOwner } from "./actions/_core/props.js";
+import type { SourceLoc, Version } from "@design-studio/contracts";
+import type { ComponentOwner } from "@design-studio/contracts/props";
 
 export const IMAGE_BYTES_MAX = 10 * 1024 * 1024;
 export const IMAGE_FITS = ["cover", "contain", "fill"] as const;

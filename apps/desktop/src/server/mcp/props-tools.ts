@@ -1,7 +1,7 @@
 import { inspectPropsInstanceDirectEdit } from "@design-studio/actions/direct-edit/inspect-props-instance";
 import { listPropsComponentsDirectEdit } from "@design-studio/actions/direct-edit/list-props-components";
 import { setPropsDirectEdit } from "@design-studio/actions/direct-edit/set-props";
-import type { Project, SourceLoc } from "@design-studio/actions/_core/contracts";
+import type { Project, SourceLoc } from "@design-studio/contracts";
 import {
   COMPONENT_LIST_MAX,
   COMPONENT_SOURCES,
@@ -12,7 +12,8 @@ import {
   type ComponentSchemaList,
   type PropValue,
   type SetPropsResult,
-} from "@design-studio/actions/_core/props";
+} from "@design-studio/contracts/props";
+
 import { probeOwners, resolveSourceLoc, scopeOf } from "../page-probe/index.js";
 import { z } from "../platform/zod-bridge/index.js";
 import { callAction } from "./action-call.js";

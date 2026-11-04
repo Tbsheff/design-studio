@@ -4,8 +4,9 @@ import path from "node:path";
 import type {
   CoverageEntry,
   DesignSystemCoverage,
-} from "@design-studio/actions/_core/contracts";
-import { TOKENS_FILE } from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { TOKENS_FILE } from "@design-studio/contracts";
+
 import { isNodeError } from "../platform/errors/index.js";
 import { COVERAGE_FILE, META_FILE } from "./extract/draft.js";
 import { gradeOf, scoreOf } from "./extract/map.js";

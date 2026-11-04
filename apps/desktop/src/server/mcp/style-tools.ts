@@ -1,5 +1,5 @@
 import { applyDirectEdit } from "@design-studio/actions/direct-edit/apply";
-import type { Project } from "@design-studio/actions/_core/contracts";
+import type { Project } from "@design-studio/contracts";
 import {
   SEARCH_PROPERTIES,
   STYLE_KINDS,
@@ -9,7 +9,8 @@ import {
   replaceSummary,
   type StyleQuery,
   type StyleReplaceResult,
-} from "@design-studio/actions/_core/style-search";
+} from "@design-studio/contracts/style-search";
+
 import { findFrame, frameRef } from "../canvas/index.js";
 import {
   scanPageStyles,

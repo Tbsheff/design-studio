@@ -1,15 +1,15 @@
-import { useState } from "react";
-
 import type {
   PermissionDecision,
   PermissionRequest,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { Icon } from "@design-studio/ui";
+import { useState } from "react";
+
 import {
   RULE_MAX_CHARS,
   ruleForCommand,
 } from "../../../shared/permissionRules.js";
 import { api, errorText } from "../../api.js";
-import { Icon } from "@design-studio/ui";
 
 export const PermissionPrompt = ({
   projectId,

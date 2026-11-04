@@ -1,7 +1,8 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
 
-import type { AppServerStatus, Project } from "@design-studio/actions/_core/contracts";
+import type { AppServerStatus, Project } from "@design-studio/contracts";
+
 import { fuzzyScore } from "../../shared/fuzzy.js";
 import { projectTypeOf, TYPE_LABELS } from "../../shared/project-search.js";
 import type {

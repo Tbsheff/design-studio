@@ -3,7 +3,8 @@ import type {
   DesignSystemDraftResult,
   OpenPackEditorResult,
   Project,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+
 import { BadRequestError, NotFoundError } from "../../platform/errors/index.js";
 import { createKeyedMutex } from "../../platform/mutex/index.js";
 import { IMPROVE_IN_APP } from "../draft-live.js";

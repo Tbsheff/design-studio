@@ -1,10 +1,10 @@
+import type { AppRoute } from "@design-studio/contracts";
+import { cleanRoute } from "@design-studio/contracts/app";
+import { Icon } from "@design-studio/ui";
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 
-import { cleanRoute } from "@design-studio/actions/_core/app";
-import type { AppRoute } from "@design-studio/actions/_core/contracts";
 import { api, errorText } from "../../api";
-import { Icon } from "@design-studio/ui";
 
 function RoutesTab({
   projectId,

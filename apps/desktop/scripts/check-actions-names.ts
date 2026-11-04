@@ -2,6 +2,8 @@ import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
+import { WORKSPACE_ROOT } from "./workspace-root.ts";
+
 interface RuleText {
   fix: string;
   id: string;
@@ -72,9 +74,9 @@ interface Policy {
   skills: string[];
 }
 
-const ROOT = path.join(import.meta.dirname, "..");
+const ROOT = WORKSPACE_ROOT;
 
-const SNAPSHOTS = "artifacts/mcp-snapshots";
+const SNAPSHOTS = "apps/desktop/artifacts/mcp-snapshots";
 
 const CLOUD_PERMISSIONS = "apps/api/src/auth/permissions.ts";
 
@@ -131,13 +133,13 @@ const quotedNames = (text: string): string[] =>
 const agentLegacy = async (): Promise<Set<string>> => {
   const [legacy, help, ...texts] = await Promise.all([
     loadModule<{ LEGACY_AGENT_TOOLS: readonly string[] }>(
-      "src/server/agent/legacy/all.ts"
+      "apps/desktop/src/server/agent/legacy/all.ts"
     ),
     loadModule<{ TOOL_SHORT: Readonly<Record<string, string>> }>(
-      "src/server/agent/tool-help.ts"
+      "apps/desktop/src/server/agent/tool-help.ts"
     ),
-    readText("src/server/agent/tool-sets.ts"),
-    readText("src/server/agent/permissions.ts"),
+    readText("apps/desktop/src/server/agent/tool-sets.ts"),
+    readText("apps/desktop/src/server/agent/permissions.ts"),
   ]);
 
   return new Set([
@@ -149,14 +151,14 @@ const agentLegacy = async (): Promise<Set<string>> => {
 
 const mcpLegacy = async (): Promise<Set<string>> => {
   const edit = await loadModule<{ EDIT_NAMES: ReadonlySet<string> }>(
-    "src/server/mcp/edit-tools.ts"
+    "apps/desktop/src/server/mcp/edit-tools.ts"
   );
 
   return new Set(edit.EDIT_NAMES);
 };
 
 const editsNote = async (): Promise<string> => {
-  const text = (await readText("src/server/mcp/server.ts")) ?? "";
+  const text = (await readText("apps/desktop/src/server/mcp/server.ts")) ?? "";
 
   return EDITS_NOTE.exec(text)?.groups?.["text"] ?? "";
 };
@@ -164,7 +166,7 @@ const editsNote = async (): Promise<string> => {
 const permitted = async (): Promise<Set<string>> => {
   const permissions = await loadModule<{
     permittedToolNames: (policy: Policy) => string[];
-  }>("src/server/agent/permissions.ts");
+  }>("apps/desktop/src/server/agent/permissions.ts");
 
   return new Set(
     permissions.permittedToolNames({

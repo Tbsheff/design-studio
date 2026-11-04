@@ -1,5 +1,5 @@
-import { isAttachedApp } from "./app.js";
-import type { Project, SelectionContext } from "./contracts.js";
+import type { Project, SelectionContext } from "@design-studio/contracts";
+import { isAttachedApp } from "@design-studio/contracts/app";
 
 export interface ElementScope {
   sourceDirectionId: string;

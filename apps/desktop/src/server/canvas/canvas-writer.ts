@@ -1,6 +1,6 @@
+import type { FrameStatesView } from "@design-studio/contracts/frame-state";
 import { Context, Effect, Layer } from "effect";
 
-import type { FrameStatesView } from "@design-studio/actions/_core/frame-state";
 import type { FlowResult } from "../../shared/route-flow.js";
 import {
   writeDoc,

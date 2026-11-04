@@ -1,6 +1,6 @@
+import type { Direction, Project } from "@design-studio/contracts";
 import type { Context, Hono } from "hono";
 
-import type { Direction, Project } from "@design-studio/actions/_core/contracts";
 import {
   ICON_COLOR,
   ICON_LIST_DEFAULT,

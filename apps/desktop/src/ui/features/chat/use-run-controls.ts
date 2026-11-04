@@ -1,6 +1,6 @@
+import type { QueuedMessage } from "@design-studio/contracts";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import type { QueuedMessage } from "@design-studio/actions/_core/contracts";
 import { api } from "../../api.js";
 import type { DraftStore } from "../../platform/storage.js";
 import type { RunView } from "./run-state-model.js";

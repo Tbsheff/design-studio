@@ -2,7 +2,8 @@ import type {
   TokenChange,
   TokenFile,
   TokenGroupName,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+
 import { DirectEditError } from "../direct-edit/index.js";
 import { z } from "../platform/zod-bridge/index.js";
 import { cssVarFor } from "./compile.js";

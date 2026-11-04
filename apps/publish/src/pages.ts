@@ -1,4 +1,4 @@
-import type { RemoteComment } from "./protocol";
+import type { RemoteComment } from "@design-studio/actions/publish-remote";
 
 export function escapeHtml(text: string): string {
   return text.replaceAll(/[&<>"']/g, (ch) => `&#${ch.charCodeAt(0)};`);

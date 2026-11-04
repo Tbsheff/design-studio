@@ -6,4 +6,4 @@ export { useAction } from "../../platform/query.js";
 
 export type { ActionState } from "../../platform/query.js";
 
-export type { SourceLoc } from "@design-studio/actions/_core/contracts";
+export type { SourceLoc } from "@design-studio/contracts";

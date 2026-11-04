@@ -1,6 +1,6 @@
+import type { Direction, Version } from "@design-studio/contracts";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import type { Direction, Version } from "@design-studio/actions/_core/contracts";
 import { onOpenExport } from "./export-api.js";
 import type { ExportTarget, OpenExportDetail } from "./export-api.js";
 

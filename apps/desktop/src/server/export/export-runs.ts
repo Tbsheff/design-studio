@@ -4,7 +4,8 @@ import type {
   ExportFileResult,
   HandoffFolderResult,
 } from "@design-studio/actions/export/schema";
-import type { ExportFrame } from "@design-studio/actions/_core/export";
+import type { ExportFrame } from "@design-studio/contracts/export";
+
 import type { ExportRuntime } from "./export-core.js";
 import { buildExportFile } from "./export-file.js";
 import type { ExportedBytes, FileRequest } from "./export-file.js";

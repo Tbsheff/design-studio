@@ -1,8 +1,8 @@
 import path from "node:path";
 
+import type { VersionThumbs } from "@design-studio/contracts";
 import type { Hono } from "hono";
 
-import type { VersionThumbs } from "@design-studio/actions/_core/contracts";
 import type { StudioProjectStore } from "../store/projects.js";
 import { bindVersionReadRuntime } from "../store/version-read-core.js";
 import {

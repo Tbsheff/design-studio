@@ -1,7 +1,8 @@
 import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 
-import type { RunMention } from "@design-studio/actions/_core/contracts";
+import type { RunMention } from "@design-studio/contracts";
+
 import { BadRequestError } from "../platform/errors/index.js";
 import { checkPathInside } from "../platform/paths/index.js";
 import type { MentionFile } from "../types.js";

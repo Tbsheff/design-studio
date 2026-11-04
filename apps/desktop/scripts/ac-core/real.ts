@@ -15,8 +15,6 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { chromium } from "playwright-core";
-
 import type {
   Direction,
   Project,
@@ -24,7 +22,10 @@ import type {
   StudioEvent,
   Version,
   WorkTreeStatus,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { chromium } from "playwright-core";
+
+import { toWorkspaceBin } from "../workspace-root.ts";
 
 const ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -48,12 +49,29 @@ const ONLY = new Set((process.env.AC_PHASES ?? "").split(",").filter(Boolean));
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const results: Record<string, unknown> = {
-  startedAt: new Date().toISOString(),
-  model: MODEL,
-};
+const results: Record<string, unknown> = { model: MODEL };
 
 const allRuns = new Map<string, RunSummary>();
+
+const toWriteCalls = (
+  toolCalls: RunSummary["toolCalls"],
+  names: readonly string[]
+) =>
+  toolCalls.flatMap((tool) =>
+    new Set(names).has(tool.name)
+      ? [
+          {
+            input: (tool.input as { file_path?: string }).file_path,
+            isError: tool.isError,
+          },
+        ]
+      : []
+  );
+
+const toDenials = (events: readonly StudioEvent[]): string[] =>
+  events.flatMap((event) =>
+    event.type === "run.tool.finished" && event.isError ? [event.summary] : []
+  );
 
 function save(): void {
   mkdirSync(path.dirname(OUT), { recursive: true });
@@ -145,9 +163,9 @@ function processTree(rootPid: number): { pid: number; command: string }[] {
     }
   }
 
-  return rows
-    .filter((row) => keep.has(row.pid) && row.pid !== rootPid)
-    .map(({ pid, command }) => ({ pid, command }));
+  return rows.flatMap(({ pid, command }) =>
+    keep.has(pid) && pid !== rootPid ? [{ pid, command }] : []
+  );
 }
 
 function agentProcesses(rootPid: number): { pid: number; command: string }[] {
@@ -157,6 +175,7 @@ function agentProcesses(rootPid: number): { pid: number; command: string }[] {
 }
 
 async function main(): Promise<void> {
+  results["startedAt"] = new Date().toISOString();
   const work = realpathSync(
     mkdtempSync(path.join(os.tmpdir(), "studio ac core real "))
   );
@@ -179,11 +198,11 @@ async function main(): Promise<void> {
 
   delete env.ANTHROPIC_API_KEY;
 
-  const server = spawn(
-    path.join(ROOT, "node_modules", ".bin", "tsx"),
-    ["src/server/index.ts"],
-    { cwd: ROOT, env, stdio: ["ignore", "pipe", "pipe"] }
-  );
+  const server = spawn(toWorkspaceBin("tsx"), ["src/server/index.ts"], {
+    cwd: ROOT,
+    env,
+    stdio: ["ignore", "pipe", "pipe"],
+  });
 
   server.stdout.pipe(logStream);
   server.stderr.pipe(logStream);
@@ -750,13 +769,11 @@ async function main(): Promise<void> {
         await sleep(Math.max(0, cancelAt + 6000 - Date.now()));
         const hashAt6s = hashTree(mainTree);
 
-        const toolFinished = run.events
-          .filter((event) => event.type === "run.tool.finished")
-          .map((event) =>
-            event.type === "run.tool.finished"
-              ? `${event.isError ? "error" : "ok"}:${event.summary}`
-              : ""
-          );
+        const toolFinished = run.events.flatMap((event) =>
+          event.type === "run.tool.finished"
+            ? [`${event.isError ? "error" : "ok"}:${event.summary}`]
+            : []
+        );
 
         const status = await call<WorkTreeStatus>(
           "GET",
@@ -878,19 +895,8 @@ async function main(): Promise<void> {
         escapeTarget,
         escapeTargetExists: existsSync(escapeTarget),
         escapeFilesFound: found ? found.split("\n") : [],
-        writeCalls: escape.summary.toolCalls
-          .filter((tool) => tool.name === "Write")
-          .map((tool) => ({
-            input: (tool.input as { file_path?: string }).file_path,
-            isError: tool.isError,
-          })),
-        denials: escape.events
-          .filter(
-            (event) => event.type === "run.tool.finished" && event.isError
-          )
-          .map((event) =>
-            event.type === "run.tool.finished" ? event.summary : ""
-          ),
+        writeCalls: toWriteCalls(escape.summary.toolCalls, ["Write"]),
+        denials: toDenials(escape.events),
       };
       log(`ac16 escape ${JSON.stringify(results.ac16_escape)}`);
     });
@@ -913,19 +919,8 @@ async function main(): Promise<void> {
         cases.push({
           prompt,
           ...runBrief(run.summary),
-          writeCalls: run.summary.toolCalls
-            .filter((tool) => tool.name === "Write" || tool.name === "Edit")
-            .map((tool) => ({
-              input: (tool.input as { file_path?: string }).file_path,
-              isError: tool.isError,
-            })),
-          denials: run.events
-            .filter(
-              (event) => event.type === "run.tool.finished" && event.isError
-            )
-            .map((event) =>
-              event.type === "run.tool.finished" ? event.summary : ""
-            ),
+          writeCalls: toWriteCalls(run.summary.toolCalls, ["Write", "Edit"]),
+          denials: toDenials(run.events),
         });
 
         const status = await call<WorkTreeStatus>(

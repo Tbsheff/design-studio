@@ -1,6 +1,3 @@
-import { Effect } from "effect";
-
-import { requireOrg } from "../http/groups/authorizer.js";
 import {
   BAD_REQUEST,
   CONFLICT,
@@ -8,7 +5,10 @@ import {
   NOT_FOUND,
   OK,
   UNAUTHORIZED,
-} from "../shared-actions.js";
+} from "@design-studio/actions/_core/errors/http-status-codes";
+import { Effect } from "effect";
+
+import { requireOrg } from "../http/groups/authorizer.js";
 import { callTool, listTools } from "./tools.js";
 
 interface RpcRequest {

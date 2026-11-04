@@ -1,9 +1,8 @@
-import { hexOf } from "../../../shared/color-near.js";
 import type {
   CompiledTokenEntry,
   Direction,
   Project,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
 import {
   locKey,
   matchesOf,
@@ -15,7 +14,9 @@ import {
   type StyleScanResult,
   type StyleValueRow,
   type TokenLookup,
-} from "@design-studio/actions/_core/style-search";
+} from "@design-studio/contracts/style-search";
+
+import { hexOf } from "../../../shared/color-near.js";
 import { tokenFieldState } from "../../../shared/token-match.js";
 import { readDesignSystemState } from "../../design-system/state.js";
 import { onProbePage } from "../../preview/probe-page.js";

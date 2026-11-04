@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-
 import type {
   McpActivity,
   McpApprovalOutcome,
   McpApprovalRecord,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { useCallback, useEffect, useMemo, useState } from "react";
+
 import { useProjectEvents } from "../../platform/events.js";
 import { mcpApi } from "./mcp-model.js";
 

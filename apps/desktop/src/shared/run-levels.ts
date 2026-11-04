@@ -4,9 +4,9 @@ import type {
   QualitySeverity,
   RunLevel,
   RunTask,
-} from "./actions/_core/contracts";
-import { PORT_LEVEL_LABEL, PORT_TASK } from "./actions/_core/port";
-import type { PortTask } from "./actions/_core/port";
+} from "@design-studio/contracts";
+import { PORT_LEVEL_LABEL, PORT_TASK } from "@design-studio/contracts/port";
+import type { PortTask } from "@design-studio/contracts/port";
 
 export type PlaceholderMode = "off" | QualitySeverity;
 

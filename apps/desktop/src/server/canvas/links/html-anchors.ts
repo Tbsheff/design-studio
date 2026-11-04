@@ -1,11 +1,11 @@
-import { parse } from "parse5";
-import type { DefaultTreeAdapterMap } from "parse5";
-
 import {
   cleanLinkSelector,
   cleanLinkText,
   LINK_TEXT_MAX,
-} from "@design-studio/actions/_core/links";
+} from "@design-studio/contracts/links";
+import { parse } from "parse5";
+import type { DefaultTreeAdapterMap } from "parse5";
+
 import { scriptTargets } from "./script-links.js";
 import type { ScriptTargets } from "./script-links.js";
 

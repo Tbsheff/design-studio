@@ -1,5 +1,5 @@
-import { LAYER_LABEL_MAX, LAYER_TREE_MAX } from "@design-studio/actions/_core/contracts";
-import type { LayerNode, ReorderMove } from "@design-studio/actions/_core/contracts";
+import { LAYER_LABEL_MAX, LAYER_TREE_MAX } from "@design-studio/contracts";
+import type { LayerNode, ReorderMove } from "@design-studio/contracts";
 
 const LOC_MAX = 1100;
 

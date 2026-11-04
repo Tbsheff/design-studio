@@ -5,6 +5,15 @@ import type { AddressInfo } from "node:net";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import type {
+  DesignSystemDraftInfo,
+  DesignSystemDraftResult,
+  PackSummary,
+  Project,
+  SavePackResult,
+  Version,
+} from "@design-studio/contracts";
+import { PACK_FILE, TOKENS_FILE } from "@design-studio/contracts";
 import {
   afterAll,
   afterEach,
@@ -15,15 +24,6 @@ import {
   it,
 } from "vitest";
 
-import type {
-  DesignSystemDraftInfo,
-  DesignSystemDraftResult,
-  PackSummary,
-  Project,
-  SavePackResult,
-  Version,
-} from "@design-studio/actions/_core/contracts";
-import { PACK_FILE, TOKENS_FILE } from "@design-studio/actions/_core/contracts";
 import { normalizeColor } from "../design-system/extract/values.js";
 import { createEventBus } from "../events/index.js";
 import { projectStorePorts } from "../main/project-ports.js";

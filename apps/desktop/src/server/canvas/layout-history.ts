@@ -1,10 +1,10 @@
+import type { CanvasWriteSource, Project } from "@design-studio/contracts";
 import type {
   CanvasFile,
   CanvasFileFrame,
   LayoutChange,
-} from "@design-studio/actions/_core/canvas-file";
-import type { CanvasWriteSource, Project } from "@design-studio/actions/_core/contracts";
-import type { LinksFile } from "@design-studio/actions/_core/links";
+} from "@design-studio/contracts/canvas-file";
+import type { LinksFile } from "@design-studio/contracts/links";
 
 export type LayoutListener = (
   project: Project,

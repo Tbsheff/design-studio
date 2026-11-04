@@ -1,0 +1,33 @@
+{
+  "name": "@design-studio/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Plain TypeScript contracts shared by the studio server, UI, page bridge and action definitions. It has no runtime dependencies.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/contracts.ts",
+    "./app": "./src/app.ts",
+    "./app-doctor": "./src/app-doctor.ts",
+    "./canvas-file": "./src/canvas-file.ts",
+    "./clarify": "./src/clarify.ts",
+    "./design-rules": "./src/design-rules.ts",
+    "./element-variants": "./src/element-variants.ts",
+    "./export": "./src/export.ts",
+    "./figma-nodes": "./src/figma-nodes.ts",
+    "./folders": "./src/folders.ts",
+    "./frame-state": "./src/frame-state.ts",
+    "./html-entities": "./src/html-entities.ts",
+    "./insert": "./src/insert.ts",
+    "./link-interaction": "./src/link-interaction.ts",
+    "./links": "./src/links.ts",
+    "./port": "./src/port.ts",
+    "./props": "./src/props.ts",
+    "./review": "./src/review.ts",
+    "./share": "./src/share.ts",
+    "./ship": "./src/ship.ts",
+    "./states": "./src/states.ts",
+    "./style-search": "./src/style-search.ts",
+    "./usage-scope": "./src/usage-scope.ts"
+  }
+}

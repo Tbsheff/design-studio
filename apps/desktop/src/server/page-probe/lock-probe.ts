@@ -1,5 +1,6 @@
-import { APP_SOURCE_PATH } from "@design-studio/actions/_core/app";
-import { SOURCE_LOC_ATTR } from "@design-studio/actions/_core/contracts";
+import { SOURCE_LOC_ATTR } from "@design-studio/contracts";
+import { APP_SOURCE_PATH } from "@design-studio/contracts/app";
+
 import type { PreviewService } from "../preview/index.js";
 import { probeOnPage } from "../preview/probe-page.js";
 

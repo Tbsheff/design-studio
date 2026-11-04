@@ -1,16 +1,16 @@
-import { useCallback, useEffect, useMemo, useRef } from "react";
-import type { MutableRefObject } from "react";
-
 import type {
   BridgeToParent,
   ProjectKind,
   SelectionContext,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
 import type {
   InsertPosition,
   InsertableComponent,
   InsertTarget,
-} from "@design-studio/actions/_core/insert";
+} from "@design-studio/contracts/insert";
+import { useCallback, useEffect, useMemo, useRef } from "react";
+import type { MutableRefObject } from "react";
+
 import { useBridge } from "../../platform/bridge.js";
 import type { BridgeFrame, ParentMessageBody } from "../../platform/bridge.js";
 import { NO_SOURCE } from "../inspector/structure-edits.js";

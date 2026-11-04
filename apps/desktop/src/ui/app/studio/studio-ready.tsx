@@ -1,7 +1,7 @@
+import type { Project } from "@design-studio/contracts";
 import { useMemo } from "react";
 import type { ReactElement } from "react";
 
-import type { Project } from "@design-studio/actions/_core/contracts";
 import { chatWidthStyle } from "../../features/chat/chat-splitter";
 import { focusNewProject } from "../../features/commands";
 import { ProjectRail } from "../../features/home/project-rail";

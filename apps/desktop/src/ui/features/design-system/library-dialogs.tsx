@@ -1,10 +1,9 @@
+import type { PackSummary } from "@design-studio/contracts";
+import { Icon, useModalDialog } from "@design-studio/ui";
 import { useState, useTransition } from "react";
 import type { FormEvent } from "react";
 
-import type { PackSummary } from "@design-studio/actions/_core/contracts";
 import { errorText } from "../../api.js";
-import { Icon } from "@design-studio/ui";
-import { useModalDialog } from "@design-studio/ui";
 import { COPY } from "./copy.js";
 
 const useBusyAction = (onClose: () => void) => {

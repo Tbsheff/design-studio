@@ -2,7 +2,8 @@ import { readFileSync, statSync } from "node:fs";
 import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import type { ToolDiff } from "@design-studio/actions/_core/contracts";
+import type { ToolDiff } from "@design-studio/contracts";
+
 import { diffLines } from "../../shared/line-diff.js";
 import { isExecutedConfigFile, isSecretFile } from "./permissions.js";
 

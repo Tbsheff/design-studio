@@ -2,13 +2,13 @@ import { spawn } from "node:child_process";
 import { realpath, stat } from "node:fs/promises";
 import path from "node:path";
 
-import type { Context, Hono } from "hono";
-
 import type {
   Direction,
   LegacyCanvasNotice,
   Project,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import type { Context, Hono } from "hono";
+
 import { bindDevServerRuntime } from "../app/dev-server-runtime.js";
 import {
   firstVersionState,

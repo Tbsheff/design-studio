@@ -1,16 +1,16 @@
-import { z } from "zod";
-
 import {
   DIRECT_STYLE_PROPERTIES,
   INSERT_KINDS,
   STRUCTURE_OPS,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
 import type {
   DirectEditBatch,
   DirectEditRequest,
   StructureEditRequest,
-} from "@design-studio/actions/_core/contracts";
-import { OWNERS_MAX, OWNER_STACK_MAX } from "@design-studio/actions/_core/props";
+} from "@design-studio/contracts";
+import { OWNERS_MAX, OWNER_STACK_MAX } from "@design-studio/contracts/props";
+import { z } from "zod";
+
 import { normalizeVariant } from "../../../shared/variants.js";
 import { CLASS_NAME, MAX_CLASS_NAME, MAX_CLASS_NAMES } from "./classes.js";
 import { DirectEditError } from "./errors.js";

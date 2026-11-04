@@ -1,9 +1,9 @@
-import type { MutableRefObject, ReactNode, ComponentProps } from "react";
-
 import type {
   EditSessionEnd,
   SelectionContext,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import type { MutableRefObject, ReactNode, ComponentProps } from "react";
+
 import { isSvgShapeTag } from "../../../shared/vector.js";
 import type { ComponentsPanel } from "../../app/components-panel-host.js";
 import type { PreviewPort } from "../../platform/bridge.js";

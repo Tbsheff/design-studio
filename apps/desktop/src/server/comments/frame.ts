@@ -1,4 +1,5 @@
-import type { CommentFrame, Project } from "@design-studio/actions/_core/contracts";
+import type { CommentFrame, Project } from "@design-studio/contracts";
+
 import {
   findFrame,
   type ProjectDirOf,

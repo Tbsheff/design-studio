@@ -1,14 +1,15 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-import type { CanvasWriteSource, Project } from "@design-studio/actions/_core/contracts";
+import type { CanvasWriteSource, Project } from "@design-studio/contracts";
 import {
   emptyLinksFile,
   LINKS_FILE,
   parseLinksText,
   serializeLinksFile,
-} from "@design-studio/actions/_core/links";
-import type { LinksFile } from "@design-studio/actions/_core/links";
+} from "@design-studio/contracts/links";
+import type { LinksFile } from "@design-studio/contracts/links";
+
 import { createKeyedMutex } from "../../platform/mutex/index.js";
 import type { EventBus } from "../../types.js";
 import { canvasOwner, writeAtomic } from "../service.js";

@@ -1,8 +1,8 @@
+import type { Direction, Project } from "@design-studio/contracts";
+import type { CanvasFileFrame } from "@design-studio/contracts/canvas-file";
 import type { Context, Hono } from "hono";
 
 import type { AccessibilitySetResult } from "../../shared/accessibility.js";
-import type { CanvasFileFrame } from "@design-studio/actions/_core/canvas-file";
-import type { Direction, Project } from "@design-studio/actions/_core/contracts";
 import { AccessibilityError } from "../accessibility/errors.js";
 import { frameOf } from "../accessibility/frame.js";
 import type { AccessibilityFrame } from "../accessibility/frame.js";

@@ -31,6 +31,26 @@ async function token(page: Page): Promise<string> {
   );
 }
 
+const toRouteCall =
+  (page: Page, studioToken: string) => (route: string, body: unknown) =>
+    page.evaluate(
+      async ([r, b, t]) => {
+        const res = await fetch(r as string, {
+          body: JSON.stringify(b),
+          headers: {
+            "content-type": "application/json",
+            "x-studio-token": t as string,
+          },
+          method: "POST",
+        });
+        if (!res.ok) {
+          throw new Error(`fetch failed: ${res.status}`);
+        }
+        return res.json();
+      },
+      [route, body, studioToken] as const
+    );
+
 async function main(): Promise<void> {
   const browser = await chromium.launch({ channel: "chrome", headless: true });
 
@@ -75,21 +95,7 @@ async function main(): Promise<void> {
 
   const studioToken = await token(page);
 
-  const call = (route: string, body: unknown) =>
-    page.evaluate(
-      async ([r, b, t]) =>
-        (
-          await fetch(r as string, {
-            body: JSON.stringify(b),
-            headers: {
-              "content-type": "application/json",
-              "x-studio-token": t as string,
-            },
-            method: "POST",
-          })
-        ).json(),
-      [route, body, studioToken] as const
-    );
+  const call = toRouteCall(page, studioToken);
 
   for (const starterId of [
     "landing",

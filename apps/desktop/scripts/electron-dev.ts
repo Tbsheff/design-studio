@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { buildDesktopApp, ensureUi } from "../desktop/build.js";
+import { toWorkspaceBin } from "./workspace-root.ts";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const DESKTOP_OUT = path.join(ROOT, "desktop", "dist");
@@ -15,7 +16,7 @@ function electronEnv(): NodeJS.ProcessEnv {
 }
 
 function runElectron(): void {
-  const electron = path.join(ROOT, "..", "..", "node_modules", ".bin", "electron");
+  const electron = toWorkspaceBin("electron");
 
   const child = spawn(electron, ["."], {
     cwd: ROOT,

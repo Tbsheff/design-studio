@@ -1,5 +1,3 @@
-import { useEffect, useRef, useState } from "react";
-
 import type {
   BridgeToParent,
   FreeMoveDrag,
@@ -7,7 +5,9 @@ import type {
   FreeMoveStart,
   SelectionContext,
   StructureEditRequest,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { useEffect, useRef, useState } from "react";
+
 import { api, errorText } from "../../api.js";
 import type { ParentMessageBody } from "../../platform/bridge.js";
 import { createLiveStore } from "../../platform/live-store.js";

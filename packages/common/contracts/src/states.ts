@@ -1,4 +1,7 @@
-import { cleanFramePath, isFrameId } from "./canvas-file";
+import {
+  cleanFramePath,
+  isFrameId,
+} from "@design-studio/contracts/canvas-file";
 
 export interface StatesRequest {
   path: string;

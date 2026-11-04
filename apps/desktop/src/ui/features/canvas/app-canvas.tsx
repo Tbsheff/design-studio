@@ -1,12 +1,9 @@
+import type { AppServerStatus, AttachedApp } from "@design-studio/contracts";
+import { Icon } from "@design-studio/ui";
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
-import type {
-  AppServerStatus,
-  AttachedApp,
-} from "@design-studio/actions/_core/contracts";
 import { OPEN_ROUTE_EVENT, takePendingRoute } from "../../app/project-nav.js";
-import { Icon } from "@design-studio/ui";
 import { openAppPanel, useAppStatus } from "../../platform/app-status.js";
 import {
   routeFrameId,

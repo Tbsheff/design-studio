@@ -1,6 +1,6 @@
+import type { ProjectKind } from "@design-studio/contracts";
 import { useCallback, useEffect, useState } from "react";
 
-import type { ProjectKind } from "@design-studio/actions/_core/contracts";
 import { api } from "../../api.js";
 import type { FilesChange } from "../home/use-studio-data.js";
 import { PREVIEW_PAINTED_EVENT } from "../inspector/use-edit-history.js";

@@ -8,16 +8,16 @@ import {
 import os from "node:os";
 import path from "node:path";
 
-import { expect, test } from "@playwright/test";
-import type { ElectronApplication, Frame, Page } from "@playwright/test";
-
 import type {
   Project,
   RenderCheckResult,
   RunSummary,
   TelemetrySample,
   Version,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { expect, test } from "@playwright/test";
+import type { ElectronApplication, Frame, Page } from "@playwright/test";
+
 import {
   APP_BINARY,
   desktopEnv,

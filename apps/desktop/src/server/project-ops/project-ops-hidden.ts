@@ -1,4 +1,5 @@
-import type { Project } from "@design-studio/actions/_core/contracts";
+import type { Project } from "@design-studio/contracts";
+
 import { ConflictError } from "../platform/errors/index.js";
 import { logError } from "../platform/logger/index.js";
 import type { ProjectOpsRuntime } from "./project-ops-runtime.js";

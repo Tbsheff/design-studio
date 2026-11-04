@@ -27,7 +27,7 @@ export type {
   RunMention,
   SelectionContext,
   SourceLoc,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
 
 export { ApiError, api, errorText, json } from "../../api.js";
 

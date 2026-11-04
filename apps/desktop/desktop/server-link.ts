@@ -1,7 +1,8 @@
 import type { ChildProcess } from "node:child_process";
 import path from "node:path";
 
-import type { Project } from "@design-studio/actions/_core/contracts";
+import type { Project } from "@design-studio/contracts";
+
 import {
   isDesktopLinkMessage,
   isProjectId,

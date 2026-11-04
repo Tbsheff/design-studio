@@ -1,4 +1,4 @@
-import { LINK_TEXT_MAX } from "@design-studio/actions/_core/links";
+import { LINK_TEXT_MAX } from "@design-studio/contracts/links";
 
 const CLICK_MAX = 30;
 

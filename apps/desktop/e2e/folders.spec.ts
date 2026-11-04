@@ -11,11 +11,14 @@ import {
 } from "node:fs";
 import path from "node:path";
 
+import type { Project } from "@design-studio/contracts";
+import type {
+  WorkspaceFolder,
+  WorkspaceList,
+} from "@design-studio/contracts/folders";
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
-import type { Project } from "@design-studio/actions/_core/contracts";
-import type { WorkspaceFolder, WorkspaceList } from "@design-studio/actions/_core/folders";
 import { projectsDirFor, readState, ROOT } from "./support/server";
 import { openHome, clickCreate } from "./support/studio";
 import type { StudioApi } from "./support/studio";

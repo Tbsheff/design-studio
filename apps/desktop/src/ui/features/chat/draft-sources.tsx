@@ -1,14 +1,14 @@
-import { useEffect, useId, useState } from "react";
-import type { ReactNode } from "react";
-
 import type {
   DraftSourceStatus,
   DraftSourcesState,
   Project,
   RunStatus,
-} from "@design-studio/actions/_core/contracts";
-import { api } from "../../api.js";
+} from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
+import { useEffect, useId, useState } from "react";
+import type { ReactNode } from "react";
+
+import { api } from "../../api.js";
 import { useProjectEvents } from "../../platform/events.js";
 import { packApi } from "../../platform/pack-api.js";
 

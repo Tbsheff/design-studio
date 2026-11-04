@@ -5,12 +5,13 @@ import type {
   Direction,
   Project,
   SelectionContext,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
 import {
   elementVariantsBlocker,
   type ElementScope,
   type ElementVariantInfo,
-} from "@design-studio/actions/_core/element-variants";
+} from "@design-studio/contracts/element-variants";
+
 import {
   htmlElementSpan,
   jsxElementSpan,

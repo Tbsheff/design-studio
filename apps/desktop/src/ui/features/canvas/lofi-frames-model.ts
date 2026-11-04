@@ -1,7 +1,7 @@
+import type { BridgeToParent, ProjectKind } from "@design-studio/contracts";
 import { useEffect, useRef } from "react";
 import type { RefObject } from "react";
 
-import type { BridgeToParent, ProjectKind } from "@design-studio/actions/_core/contracts";
 import { lofiCss } from "../../../shared/lofi.js";
 import { frameTokenOf, postToFrame, useBridge } from "../../platform/bridge.js";
 import type { BridgeFrame } from "../../platform/bridge.js";

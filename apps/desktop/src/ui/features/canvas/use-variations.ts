@@ -1,6 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-
-import { VARIATION_MIN } from "@design-studio/actions/_core/contracts";
+import { VARIATION_MIN } from "@design-studio/contracts";
 import type {
   Direction,
   Project,
@@ -9,7 +7,9 @@ import type {
   SelectionContext,
   VariationBrief,
   VariationBriefsResult,
-} from "@design-studio/actions/_core/contracts";
+} from "@design-studio/contracts";
+import { useCallback, useEffect, useRef, useState } from "react";
+
 import { resolveRunConfig } from "../../../shared/run-levels.js";
 import { errorText } from "../../api.js";
 import { readStored, writeStored } from "../../platform/storage.js";

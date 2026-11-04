@@ -1,3 +1,9 @@
+import { zoomKeyOf } from "@design-studio/contracts";
+import type {
+  ProjectKind,
+  SelectionContext,
+  ZoomKey,
+} from "@design-studio/contracts";
 import {
   useCallback,
   useEffect,
@@ -7,12 +13,6 @@ import {
 } from "react";
 import type { PointerEvent as ReactPointerEvent, RefObject } from "react";
 
-import { zoomKeyOf } from "@design-studio/actions/_core/contracts";
-import type {
-  ProjectKind,
-  SelectionContext,
-  ZoomKey,
-} from "@design-studio/actions/_core/contracts";
 import { useDesktopCommand } from "../../platform/desktop.js";
 import { uiStore, useUi } from "../../platform/storage.js";
 import type { FilesChange } from "../home/use-studio-data.js";

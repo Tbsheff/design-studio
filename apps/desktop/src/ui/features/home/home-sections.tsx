@@ -1,9 +1,9 @@
+import type { Project } from "@design-studio/contracts";
+import { shortenHome } from "@design-studio/contracts/folders";
+import { Icon } from "@design-studio/ui";
 import { useEffect, useRef, useState } from "react";
 
-import type { Project } from "@design-studio/actions/_core/contracts";
-import { shortenHome } from "@design-studio/actions/_core/folders";
 import { api, errorText } from "../../api.js";
-import { Icon } from "@design-studio/ui";
 import type { CardActions } from "./project-grid.js";
 import { projectsApi, useProjects } from "./projects-store-model.js";
 

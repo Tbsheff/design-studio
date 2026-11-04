@@ -1,7 +1,7 @@
+import { BadRequest } from "@design-studio/actions/_core/errors/bad-request";
+import type { Direction, Project } from "@design-studio/contracts";
 import { Effect } from "effect";
 
-import { BadRequest } from "@design-studio/actions/_core/errors/bad-request";
-import type { Direction, Project } from "@design-studio/actions/_core/contracts";
 import { DirectEditError } from "../direct-edit/index.js";
 import type { DirectEditDeps } from "../direct-edit/index.js";
 import { attemptKnown } from "../platform/attempt/index.js";

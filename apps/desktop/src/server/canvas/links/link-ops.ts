@@ -8,7 +8,7 @@ import type {
   PrototypeLink,
 } from "@design-studio/contracts/links";
 
-import { NotFoundError } from "../../platform/errors/index.js";
+import { ConflictError, NotFoundError } from "../../platform/errors/index.js";
 import type { CanvasToolContext } from "../tools.js";
 import { implicitLinks, keepImplicit } from "./implicit-links.js";
 import type { LinkRuntime } from "./link-runtime.js";
@@ -92,6 +92,21 @@ const contextOf = async (
   };
 };
 
+const toWritableContext = async (
+  runtime: LinkRuntime,
+  projectId: string
+): Promise<CanvasToolContext> => {
+  const context = await contextOf(runtime, projectId);
+
+  if (runtime.runner.isRunning(context.project.id, context.direction.id)) {
+    throw new ConflictError(
+      "The agent is editing this direction; wait for the run to finish"
+    );
+  }
+
+  return context;
+};
+
 const probeOf = (
   runtime: LinkRuntime,
   context: CanvasToolContext
@@ -147,7 +162,7 @@ const writeCreate = async (
   runtime: LinkRuntime,
   query: LinkCreateQuery
 ): Promise<LinkSaved> => {
-  const context = await contextOf(runtime, query.projectId);
+  const context = await toWritableContext(runtime, query.projectId);
 
   const given =
     query.tag || query.text
@@ -180,7 +195,7 @@ const writeUpdate = async (
   runtime: LinkRuntime,
   query: LinkUpdateQuery
 ): Promise<LinkSaved> => {
-  const context = await contextOf(runtime, query.projectId);
+  const context = await toWritableContext(runtime, query.projectId);
   const frames = await framesOf(context);
   let to: PrototypeLink["to"] | null = null;
 
@@ -233,7 +248,7 @@ const writeDelete = async (
   projectId: string,
   linkId: string
 ): Promise<LinkSaved> => {
-  const context = await contextOf(runtime, projectId);
+  const context = await toWritableContext(runtime, projectId);
   const frames = await framesOf(context);
   let removed: PrototypeLink | null = null;
 
@@ -262,7 +277,7 @@ const writeKeep = async (
   runtime: LinkRuntime,
   query: LinkKeepQuery
 ): Promise<{ kept: readonly PrototypeLink[]; links: LinksFile }> => {
-  const context = await contextOf(runtime, query.projectId);
+  const context = await toWritableContext(runtime, query.projectId);
 
   const done = await keepImplicit(
     implicitDeps(runtime.canvas, context.project, probeOf(runtime, context)),
@@ -283,7 +298,7 @@ const writeStart = async (
   projectId: string,
   frameRef: string
 ): Promise<LinksFile> => {
-  const context = await contextOf(runtime, projectId);
+  const context = await toWritableContext(runtime, projectId);
   const frame = frameOf(await framesOf(context), frameRef);
 
   return runtime.canvas.links.update(

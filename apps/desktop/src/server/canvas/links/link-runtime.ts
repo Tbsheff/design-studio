@@ -1,6 +1,6 @@
+import { BadRequest } from "@design-studio/actions/_core/errors/bad-request";
 import { Effect } from "effect";
 
-import { BadRequest } from "@design-studio/actions/_core/errors/bad-request";
 import { attemptKnown } from "../../platform/attempt/index.js";
 import type { KnownFailure } from "../../platform/attempt/index.js";
 import {
@@ -8,7 +8,7 @@ import {
   requireBound,
 } from "../../platform/runtime-slot/index.js";
 import type { StudioProjectStore } from "../../store/projects.js";
-import type { PreviewService } from "../../types.js";
+import type { AgentRunner, PreviewService } from "../../types.js";
 import type { FrameStateDeps } from "../app-flow/frame-state-service.js";
 import type { CanvasService } from "../service.js";
 import { LinkError } from "./link-tools.js";
@@ -17,6 +17,7 @@ interface LinkRuntime {
   readonly canvas: CanvasService;
   readonly frameStates: FrameStateDeps;
   readonly preview: Pick<PreviewService, "directionUrl" | "withPage"> | null;
+  readonly runner: Pick<AgentRunner, "isRunning">;
   readonly projects: Pick<StudioProjectStore, "get" | "projectDir">;
 }
 

@@ -281,6 +281,10 @@ export const APP_BUDGET_ZERO_GLOBS = [
 
 export const decisionOverrides: OxlintOverride[] = [
   {
+    files: ["apps/desktop/src/server/mcp/legacy-args.ts"],
+    rules: { "import/no-relative-parent-imports": "off" },
+  },
+  {
     files: ["apps/api/src/http/middleware/auth-calls.ts"],
     rules: { "import/no-relative-parent-imports": "off" },
   },

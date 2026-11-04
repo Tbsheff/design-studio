@@ -135,6 +135,12 @@ const writeRestore = (
     query.projectId,
     query.directionId,
     async (project, direction) => {
+      if (runtime.editDeps.runner.isRunning(project.id, direction.id)) {
+        throw new ConflictError(
+          "The agent is editing this direction; wait for the run to finish"
+        );
+      }
+
       const restored = await runtime.versions.restore(
         project,
         direction,

@@ -1,6 +1,7 @@
 import type { AppRoute } from "@design-studio/contracts";
 
 import { listAppRoutes } from "../app/routes.js";
+import { BadRequestError, NotFoundError } from "../platform/errors/index.js";
 import type { StudioProjectStore } from "../store/projects.js";
 
 const ROUTE_LIMIT_DEFAULT = 50;
@@ -62,13 +63,13 @@ const readRouteList = async (
   const project = await projects.get(query.projectId);
 
   if (!project.app) {
-    throw new Error("this project is not an attached app");
+    throw new BadRequestError("this project is not an attached app");
   }
 
   const [main] = project.directions;
 
   if (!main) {
-    throw new Error("project has no direction");
+    throw new NotFoundError("project has no direction");
   }
 
   const found = matchRoutes(

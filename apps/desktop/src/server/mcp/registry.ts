@@ -15,6 +15,7 @@ import type { StudioRuntime } from "../main/runtime.js";
 import { toLegacyPrincipal } from "../store/principal.js";
 import type { Principal } from "../store/principal.js";
 import type { ApprovalQueue } from "./approvals.js";
+import { toLegacyArgs } from "./legacy-args.js";
 import { toToolResult } from "./tool-result.js";
 import type { ActionExit, TextResult } from "./tool-result.js";
 import type { ToolDef } from "./tool-types.js";
@@ -242,7 +243,9 @@ const callActionTool = (
     return refuse(RUNTIME_OFF);
   }
 
-  return runActionTool(runtime, tool, toMainDirection(tool, args), {
+  const legacy = toLegacyArgs({ action: tool.action, name }, args);
+
+  return runActionTool(runtime, tool, toMainDirection(tool, legacy), {
     gate: gateOf(edits, name, caller.client),
     principal: caller.principal,
   });

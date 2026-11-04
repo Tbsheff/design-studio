@@ -5,7 +5,10 @@ import type { Entries } from "../_core/handler.js";
 import { handle as applyImplicitLinkCanvasHandle } from "./apply-implicit-link.js";
 import { handle as createFlowCanvasHandle } from "./create-flow.js";
 import { handle as createLinkCanvasHandle } from "./create-link.js";
-import { handle as deleteLinkCanvasHandle } from "./delete-link.js";
+import {
+  handle as deleteLinkCanvasHandle,
+  preview as deleteLinkCanvasPreview,
+} from "./delete-link.js";
 import { handle as getDocCanvasHandle } from "./get-doc.js";
 import { handle as listFlowLinksCanvasHandle } from "./list-flow-links.js";
 import { handle as listFlowParamsCanvasHandle } from "./list-flow-params.js";
@@ -23,7 +26,10 @@ const CanvasEntries = {
   applyImplicitLinkCanvas: { handle: applyImplicitLinkCanvasHandle },
   createFlowCanvas: { handle: createFlowCanvasHandle },
   createLinkCanvas: { handle: createLinkCanvasHandle },
-  deleteLinkCanvas: { handle: deleteLinkCanvasHandle },
+  deleteLinkCanvas: {
+    handle: deleteLinkCanvasHandle,
+    preview: deleteLinkCanvasPreview,
+  },
   getDocCanvas: { handle: getDocCanvasHandle },
   listFlowLinksCanvas: { handle: listFlowLinksCanvasHandle },
   listFlowParamsCanvas: { handle: listFlowParamsCanvasHandle },

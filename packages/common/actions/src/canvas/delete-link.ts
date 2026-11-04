@@ -8,9 +8,9 @@ import { ProjectIdSchema } from "../_core/ids.js";
 import { LinkIdSchema, LinkSavedSchema } from "./schema.js";
 
 const deleteLinkCanvas = defineAction({
-  access: "edit",
+  access: "destructive",
   agent: { off: "legacy-agent" },
-  confirm: "none",
+  confirm: "user",
   description:
     "Remove one saved prototype link. The page and the frames stay. The change is one step in the edit history, so undo brings the link back.",
   errors: [BadRequest, Conflict, NotFound],

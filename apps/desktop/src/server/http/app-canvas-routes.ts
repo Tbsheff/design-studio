@@ -32,6 +32,7 @@ const registerAppCanvasRoutes = (app: Hono, ctx: AppContext): void => {
     frameStates,
     preview: preview ?? null,
     projects,
+    runner: editDeps.runner,
   });
   registerLinkInteractionRoutes(app, {
     canvas,

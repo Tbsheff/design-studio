@@ -7,10 +7,13 @@ staged() {
   git diff --cached --name-only --diff-filter=ACMR -z -- $1
   set +f
 }
+root=$(pwd)
+desk=apps/desktop
+bin="$root/node_modules/.bin"
 if [ -n "$(staged "$lint_globs" | tr -d '\0')" ]; then
-  staged "$lint_globs" | xargs -0 node_modules/.bin/oxlint --
+  staged "$lint_globs" | grep -z "^$desk/" | sed -z "s#^$desk/##" | (cd $desk && xargs -0 -r "$bin/oxlint" --)
 fi
 if [ -n "$(staged "$fmt_globs" | tr -d '\0')" ]; then
-  staged "$fmt_globs" | xargs -0 node_modules/.bin/oxfmt --check --no-error-on-unmatched-pattern --
+  staged "$fmt_globs" | grep -z "^$desk/" | sed -z "s#^$desk/##" | (cd $desk && xargs -0 -r "$bin/oxfmt" --check --no-error-on-unmatched-pattern --)
 fi
-pnpm run --silent lint:boundaries
+(cd $desk && pnpm --config.verify-deps-before-run=false run --silent lint:boundaries)

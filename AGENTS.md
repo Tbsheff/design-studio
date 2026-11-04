@@ -4,6 +4,7 @@ Read this before you write code. Each rule is one line: what to do, then what en
 "tsc" means `pnpm run typecheck`. "check-actions" means `pnpm exec tsx scripts/check-actions.ts`, which will be part of `pnpm run check:scripts`.
 W8-rename has landed: definitions live in `src/shared/actions/<domain>/`, handlers in `src/server/handlers/<domain>/`, the global list is `src/shared/actions/all-actions.generated.ts`, and the check is `scripts/check-actions.ts` (`pnpm run check:actions`).
 Use pnpm for every command: `pnpm run <script>`, `pnpm exec <bin>`, `pnpm dlx <pkg>`. Run a script file with `pnpm exec tsx scripts/<x>.ts`.
+Layout: the desktop app is `apps/desktop` (its `src`, `desktop`, `scripts`, `lint`, `e2e` live there), the cloud API is `apps/api`, the publish Worker is `apps/publish`. Root `package.json` forwards common scripts. Run other app scripts and every `pnpm exec tsx scripts/<x>.ts` from `apps/desktop`, or as `pnpm --filter @design-studio/desktop run <script>`. Paths in this file that start with `src/`, `scripts/`, `lint/` or `desktop/` are relative to `apps/desktop`; `cloud/api` is now `apps/api`.
 Copy the golden file for each kind of code. `docs/patterns.md` lists them. Never copy the first similar file you find.
 `review-only` marks a rule that no tool checks. A reviewer checks it.
 `(lands with <wave>)` marks a rule whose check, file or command is not on `main` yet. Follow the rule now. Do not run a command that is marked this way until its wave lands.

@@ -275,7 +275,7 @@ export const APP_BUDGET_ZERO_GLOBS = [
   "src/ui/app/**",
   "src/ui/domain/**",
   "src/ui/features/**",
-  "src/ui/kit/**",
+  "../../packages/ui/src/**",
   "src/ui/platform/**",
 ];
 
@@ -875,7 +875,7 @@ export const decisionOverrides: OxlintOverride[] = [
     ),
   },
   {
-    files: ["src/ui/kit/**", "src/ui/domain/**"],
+    files: ["../../packages/ui/src/**", "src/ui/domain/**"],
     rules: Object.fromEntries(
       "anti-slop/no-known-value-widening anti-slop/no-runtime-typeof eslint/func-style eslint/id-length eslint/max-lines-per-function eslint/no-magic-numbers eslint/no-nested-ternary eslint/no-plusplus eslint/no-ternary eslint/no-undefined eslint/prefer-arrow-callback eslint/prefer-destructuring eslint/sort-keys github/filenames-match-regex github/prefer-observers import/exports-last import/group-exports import/no-relative-parent-imports jsx-a11y/click-events-have-key-events jsx-a11y/interactive-supports-focus jsx-a11y/prefer-tag-over-role react-doctor/advanced-event-handler-refs react-doctor/only-export-components react-perf/jsx-no-new-function-as-prop react/jsx-max-depth react/only-export-components react/refs sonarjs/no-nested-conditional typescript/explicit-function-return-type typescript/explicit-module-boundary-types unicorn/consistent-existence-index-check unicorn/filename-case unicorn/no-nested-ternary unicorn/prefer-global-this react/function-component-definition"
         .split(" ")
@@ -1004,7 +1004,7 @@ export const decisionOverrides: OxlintOverride[] = [
     },
   },
   {
-    files: ["src/ui/kit/chip-button.tsx"],
+    files: ["../../packages/ui/src/chip-button.tsx"],
     rules: { "react/function-component-definition": "off" },
   },
   {
@@ -1705,7 +1705,7 @@ export const decisionOverrides: OxlintOverride[] = [
   {
     files: [
       "src/ui/app/shell/**",
-      "src/ui/kit/{brand-mark,theme-button,theme-menu,disclosure,lazy-select}.tsx",
+      "../../packages/ui/src/{brand-mark,theme-button,theme-menu,disclosure,lazy-select}.tsx",
     ],
     rules: Object.fromEntries(
       "anti-slop/no-chained-type-assertions anti-slop/no-unknown-parameters anti-slop/require-readable-spacing eslint/func-style eslint/id-length eslint/max-lines-per-function eslint/no-continue eslint/no-magic-numbers eslint/no-nested-ternary eslint/no-ternary eslint/no-undefined eslint/no-void eslint/prefer-destructuring eslint/prefer-named-capture-group eslint/require-unicode-regexp eslint/sort-keys github/a11y-role-supports-aria-props github/a11y-svg-has-accessible-name github/no-then import/consistent-type-specifier-style import/exports-last import/group-exports import/no-default-export import/no-relative-parent-imports import/no-unassigned-import oxc/no-barrel-file promise/always-return promise/catch-or-return promise/prefer-await-to-callbacks promise/prefer-await-to-then react-doctor/form-control-requires-name react-doctor/no-enter-submit-without-ime-composition-guard react-doctor/no-ref-current-in-render react-doctor/only-export-components react-doctor/prefer-html-dialog react-doctor/prefer-use-effect-event react-perf/jsx-no-jsx-as-prop react-perf/jsx-no-new-array-as-prop react-perf/jsx-no-new-function-as-prop react/button-has-type react/exhaustive-effect-dependencies react/function-component-definition react/jsx-handler-names react/jsx-max-depth react/jsx-no-literals react/jsx-props-no-spreading react/no-array-index-key react/no-multi-comp react/only-export-components react/refs react/todo sonarjs/elseif-without-else sonarjs/expression-complexity sonarjs/function-name sonarjs/no-nested-conditional sonarjs/no-wildcard-import sonarjs/shorthand-property-grouping sonarjs/super-linear-regex studio/no-then typescript/consistent-type-definitions typescript/explicit-function-return-type typescript/explicit-module-boundary-types unicorn/catch-error-name unicorn/no-array-reduce unicorn/no-nested-ternary unicorn/no-useless-undefined unicorn/prefer-global-this unicorn/prefer-spread jsx-a11y/interactive-supports-focus jsx-a11y/no-autofocus jsx-a11y/prefer-tag-over-role jsx-a11y/no-interactive-element-to-noninteractive-role jsx-a11y/no-noninteractive-element-interactions jsx-a11y/role-has-required-aria-props react-doctor/no-derived-useState"
@@ -1813,8 +1813,8 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/ui/features/design-system/token-frames.ts",
       "src/ui/platform/bridge.ts",
       "src/ui/platform/tip-guard.ts",
-      "src/ui/kit/use-popover.ts",
-      "src/ui/kit/use-anchored-popover.ts",
+      "../../packages/ui/src/use-popover.ts",
+      "../../packages/ui/src/use-anchored-popover.ts",
       "src/ui/features/canvas/use-undo-shortcut.ts",
       "src/ui/features/canvas/use-inline-text-edit.ts",
       "src/ui/domain/format.ts",
@@ -1823,7 +1823,7 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/ui/domain/markdown-blocks.ts",
       "src/ui/platform/events.ts",
       "src/ui/platform/app-status.ts",
-      "src/ui/kit/sheet-head.tsx",
+      "../../packages/ui/src/sheet-head.tsx",
       "src/ui/app/components-panel-host.tsx",
     ],
     rules: Object.fromEntries(

@@ -3,7 +3,7 @@ import type { KeyboardEvent, ReactNode } from "react";
 
 import { PRESETS } from "../../domain/canvas-presets.js";
 import type { CanvasSource } from "../../domain/canvas-presets.js";
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import { uiStore } from "../../platform/storage.js";
 import type { Viewport } from "../../platform/storage.js";
 

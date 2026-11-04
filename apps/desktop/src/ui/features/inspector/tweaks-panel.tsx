@@ -8,8 +8,8 @@ import type {
   TweakControl,
   TweakValue,
 } from "../../../shared/tweaks.js";
-import { Icon } from "../../kit/Icon.js";
-import { PanelHead } from "../../kit/sheet-head.js";
+import { Icon } from "@design-studio/ui";
+import { PanelHead } from "@design-studio/ui";
 import { ColorValue } from "../versions-layers-tokens/token-inputs.js";
 import type { TweaksDraft } from "./use-tweaks.js";
 

@@ -14,7 +14,7 @@ export { insertError } from "../design-system/component-insert-api.js";
 
 export { isTypingTarget } from "../../platform/typing-target.js";
 
-export { useModalDialog } from "../../kit/use-popover.js";
+export { useModalDialog } from "@design-studio/ui";
 
 export type { SelectionContext } from "@design-studio/actions/_core/contracts";
 

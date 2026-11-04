@@ -24,8 +24,8 @@ import {
 import { api, json, warmProject } from "../../api.js";
 import { prefetchStudio } from "../../app/screen-preload.js";
 import { formatRelative, formatTime } from "../../domain/format.js";
-import { Icon } from "../../kit/Icon.js";
-import { LazySelect } from "../../kit/lazy-select.js";
+import { Icon } from "@design-studio/ui";
+import { LazySelect } from "@design-studio/ui";
 import {
   HOME_SORTS,
   uiStore,

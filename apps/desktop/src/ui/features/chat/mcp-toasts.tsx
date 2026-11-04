@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import type { McpApprovalOutcome } from "@design-studio/actions/_core/contracts";
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import { appStream } from "../../platform/stream.js";
 import { useInlineApprovalProject } from "./approval-spot-model.js";
 import { McpApproval } from "./mcp-feed.js";

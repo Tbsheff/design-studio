@@ -6,7 +6,7 @@ import type {
   AttachedApp,
 } from "@design-studio/actions/_core/contracts";
 import { OPEN_ROUTE_EVENT, takePendingRoute } from "../../app/project-nav.js";
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import { openAppPanel, useAppStatus } from "../../platform/app-status.js";
 import {
   routeFrameId,

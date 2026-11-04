@@ -1,4 +1,4 @@
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import { copy } from "./copy.js";
 import { EMPTY_HINT } from "./inspector-model.js";
 

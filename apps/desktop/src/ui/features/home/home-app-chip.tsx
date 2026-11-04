@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import type { FolderInspection } from "../../../shared/open-app.js";
 import { api, errorText } from "../../api.js";
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import { desktopBridge } from "../../platform/desktop.js";
 
 export type RunMode = "start" | "url";

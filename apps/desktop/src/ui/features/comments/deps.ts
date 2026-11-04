@@ -53,7 +53,7 @@ export type { PendingAttachment } from "../../domain/pending-attachment.js";
 
 export { useProjectEvents } from "../../platform/events.js";
 
-export { Icon } from "../../kit/Icon.js";
+export { Icon } from "@design-studio/ui";
 
 export { findElement, findElements } from "../../platform/find-element.js";
 

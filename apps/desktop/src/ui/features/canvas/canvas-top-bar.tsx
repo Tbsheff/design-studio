@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import type { ReactNode } from "react";
 
 import { tipWithKey } from "../../canvas-toolbar-slots.js";
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import type { LiveStore } from "../../platform/live-store.js";
 import type { ZoomSetting } from "../../platform/storage.js";
 import {

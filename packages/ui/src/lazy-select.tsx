@@ -2,11 +2,11 @@ import { lazy, Suspense } from "react";
 import type { JSX } from "react";
 
 import { Icon } from "./Icon";
-import type { UiSelectProps } from "./UiSelect";
+import type { UiSelectProps } from "./UiSelect.js";
 
 const UiSelect = lazy(() =>
   (async () => {
-    const loaded = await import("./UiSelect");
+    const loaded = await import("./UiSelect.js");
     return {
       default: loaded.UiSelect as (p: UiSelectProps<string>) => JSX.Element,
     };

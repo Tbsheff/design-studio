@@ -9,9 +9,9 @@ import {
   type WorkspaceFolder,
   type WorkspaceList,
 } from "@design-studio/actions/_core/folders";
-import { Icon } from "../../kit/Icon.js";
-import { LazySelect } from "../../kit/lazy-select.js";
-import type { UiSelectOption } from "../../kit/UiSelect.js";
+import { Icon } from "@design-studio/ui";
+import { LazySelect } from "@design-studio/ui";
+import type { UiSelectOption } from "@design-studio/ui";
 import type { FolderChooser } from "./use-folder-chooser.js";
 
 function FolderPath({

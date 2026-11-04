@@ -9,7 +9,7 @@ import {
 import type { CSSProperties, KeyboardEvent, ReactNode, RefObject } from "react";
 import { createPortal } from "react-dom";
 
-import { placeFixed } from "../domain/popoverPlacement";
+import { placeFixed } from "./popover-placement.js";
 import { Icon } from "./Icon";
 
 export interface UiSelectOption<V extends string = string> {

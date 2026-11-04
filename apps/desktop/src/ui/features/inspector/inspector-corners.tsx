@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import { expandBox, SIDES } from "./css-values.js";
 import type { ShiftPart, Side } from "./css-values.js";
 import { NumberField } from "./number-field.js";

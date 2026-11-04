@@ -1,6 +1,6 @@
 export { api, errorText } from "../../api.js";
 
-export { Icon } from "../../kit/Icon.js";
+export { Icon } from "@design-studio/ui";
 
 export type {
   PermissionCard,

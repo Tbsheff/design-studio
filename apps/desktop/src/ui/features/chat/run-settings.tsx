@@ -14,9 +14,9 @@ import type {
   RunLevel,
   RunMode,
 } from "@design-studio/actions/_core/contracts";
-import { placeFixed } from "../../domain/popoverPlacement.js";
-import { Icon } from "../../kit/Icon.js";
-import { usePopover } from "../../kit/use-popover.js";
+import { placeFixed } from "@design-studio/ui";
+import { Icon } from "@design-studio/ui";
+import { usePopover } from "@design-studio/ui";
 import { VariationsControl } from "../canvas/variations-control.js";
 import {
   LevelControl,

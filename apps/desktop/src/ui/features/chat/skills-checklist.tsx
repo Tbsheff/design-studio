@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import type { SkillInfo } from "@design-studio/actions/_core/contracts";
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import { NO_SKILLS_TEXT, plural, useSkillCatalog } from "./skills-model.js";
 
 interface Props {

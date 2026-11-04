@@ -13,9 +13,9 @@ import type {
   ShareServerState,
 } from "@design-studio/actions/_core/share";
 import { errorText } from "../../api.js";
-import { CopyButton, copyText } from "../../kit/CopyButton.js";
-import { Icon } from "../../kit/Icon.js";
-import { useModalDialog } from "../../kit/use-popover.js";
+import { CopyButton, copyText } from "@design-studio/ui";
+import { Icon } from "@design-studio/ui";
+import { useModalDialog } from "@design-studio/ui";
 import { canvasFrameName, framePage } from "../canvas/canvas-frames.js";
 import { canvasFrameChoices, frameRoute } from "./export-api.js";
 import { PublishPane } from "./publish-pane.js";

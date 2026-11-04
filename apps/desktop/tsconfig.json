@@ -7,6 +7,7 @@
     { "path": "./tsconfig.ui-test.json" },
     { "path": "./tsconfig.server-probe.json" },
     { "path": "./tsconfig.desktop-renderer.json" },
-    { "path": "../../packages/common/actions/tsconfig.json" }
+    { "path": "../../packages/common/actions/tsconfig.json" },
+    { "path": "../../packages/ui/tsconfig.json" }
   ]
 }

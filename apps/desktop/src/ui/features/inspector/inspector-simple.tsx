@@ -13,7 +13,7 @@ import {
   StateStylesSlot,
   TextStyleSlot,
 } from "../../inspector-slots.js";
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import type { PreviewPort } from "../../platform/bridge.js";
 import type { DesignTokens } from "../design-system/use-design-system-state.js";
 import { CopyCodeMenu } from "../share-publish-ship-export/copy-code-menu.js";

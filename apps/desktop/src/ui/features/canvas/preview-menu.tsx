@@ -3,8 +3,8 @@ import type { KeyboardEvent } from "react";
 
 import type { KeyId } from "../../../shared/keymap.js";
 import { KeyHint } from "../../canvas-preview-slots.js";
-import { Icon } from "../../kit/Icon.js";
-import type { IconName } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
+import type { IconName } from "@design-studio/ui";
 
 export interface PreviewMenuItem {
   id: string;

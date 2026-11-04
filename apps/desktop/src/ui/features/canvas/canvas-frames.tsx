@@ -4,7 +4,7 @@ import type {
   ReactNode,
 } from "react";
 
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import { openAppPanel } from "../../platform/app-status.js";
 import { canvasStore, frameName } from "./canvas-frames-model.js";
 import type { CanvasFrame } from "./canvas-frames-model.js";

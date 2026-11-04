@@ -5,7 +5,7 @@ import type {
   SelectionContext,
 } from "@design-studio/actions/_core/contracts";
 import { formatMeasure } from "../../../shared/measure.js";
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import { guideStyle } from "./artboard-overlay.js";
 import type { SpacingBadge } from "./snap-model.js";
 import { frameSnapStore } from "./use-frame-resize.js";

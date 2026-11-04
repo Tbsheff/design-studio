@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 
-import { Icon } from "../../kit/Icon.js";
-import type { IconName } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
+import type { IconName } from "@design-studio/ui";
 import { openPortDialog, portAvailable } from "../design-system/port-api.js";
 import { menuKeys, useMenu } from "./frame-resize-handles.js";
 import { stop } from "./variation-controls.js";

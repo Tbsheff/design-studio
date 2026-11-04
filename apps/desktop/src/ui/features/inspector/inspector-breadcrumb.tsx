@@ -9,7 +9,7 @@ import {
 import type { MutableRefObject } from "react";
 
 import type { SelectionContext } from "@design-studio/actions/_core/contracts";
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import type { PreviewPort } from "../../platform/bridge.js";
 import { parseSelectionPath, pathCrumbs } from "./authored-css.js";
 import type { PathCrumb } from "./authored-css.js";

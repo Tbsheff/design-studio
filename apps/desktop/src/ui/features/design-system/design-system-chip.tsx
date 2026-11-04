@@ -6,9 +6,9 @@ import type {
   CompiledTokenEntry,
 } from "@design-studio/actions/_core/contracts";
 import { api, errorText } from "../../api.js";
-import { useFitPopover } from "../../domain/popoverPlacement.js";
-import { Icon } from "../../kit/Icon.js";
-import { usePopover } from "../../kit/use-popover.js";
+import { useFitPopover } from "@design-studio/ui";
+import { Icon } from "@design-studio/ui";
+import { usePopover } from "@design-studio/ui";
 import { Swatches } from "../inspector/swatches.js";
 import { COPY } from "./copy.js";
 import { ChangePackDialog, SavePackDialog } from "./design-system-dialogs.js";

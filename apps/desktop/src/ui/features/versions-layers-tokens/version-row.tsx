@@ -9,9 +9,9 @@ import type { KeyboardEvent, RefObject } from "react";
 
 import type { Version } from "@design-studio/actions/_core/contracts";
 import { formatRelative, formatTime } from "../../domain/format.js";
-import { Icon } from "../../kit/Icon.js";
-import type { IconName } from "../../kit/Icon.js";
-import { usePopover } from "../../kit/use-popover.js";
+import { Icon } from "@design-studio/ui";
+import type { IconName } from "@design-studio/ui";
+import { usePopover } from "@design-studio/ui";
 import { levelLabel } from "../chat/level-control.js";
 import { COPY } from "./copy.js";
 import { findElement, findElements } from "./find-element.js";

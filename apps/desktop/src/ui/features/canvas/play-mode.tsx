@@ -28,7 +28,7 @@ import {
   usePlayTriggers,
 } from "../../canvas-link-slots.js";
 import type { PlayHandlers } from "../../canvas-link-slots.js";
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import {
   frameSrc,
   postToFrame,

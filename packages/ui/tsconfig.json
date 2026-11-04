@@ -1,0 +1,12 @@
+{
+  "extends": "../../apps/desktop/tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "tsBuildInfoFile": "./node_modules/.cache/tsbuild/ui.tsbuildinfo",
+    "jsx": "react-jsx",
+    "lib": ["ES2024", "DOM", "DOM.Iterable"],
+    "types": [],
+    "rootDir": "."
+  },
+  "include": ["src"]
+}

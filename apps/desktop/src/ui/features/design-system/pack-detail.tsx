@@ -7,8 +7,8 @@ import type {
 } from "@design-studio/actions/_core/contracts";
 import { Markdown } from "../../ai/components/ai/markdown.js";
 import { errorText } from "../../api.js";
-import { Icon } from "../../kit/Icon.js";
-import { useModalDialog } from "../../kit/use-popover.js";
+import { Icon } from "@design-studio/ui";
+import { useModalDialog } from "@design-studio/ui";
 import { packApi } from "../../platform/pack-api.js";
 import { COPY } from "./copy.js";
 import { PackBadges } from "./pack-badges.js";

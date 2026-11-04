@@ -2,9 +2,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 
 import type { CopyCodeFormat } from "@design-studio/actions/_core/export";
-import { Icon } from "../../kit/Icon.js";
-import type { IconName } from "../../kit/Icon.js";
-import { usePopover } from "../../kit/use-popover.js";
+import { Icon } from "@design-studio/ui";
+import type { IconName } from "@design-studio/ui";
+import { usePopover } from "@design-studio/ui";
 import { activeExportFrame, exportApi, openExport } from "./export-api.js";
 
 import "../../styles/export.css";

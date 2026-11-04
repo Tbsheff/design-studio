@@ -10,7 +10,7 @@ export { insertError } from "../design-system/component-insert-api.js";
 
 export { imageTargetOf } from "../inspector/image-api.js";
 
-export { useModalDialog } from "../../kit/use-popover.js";
+export { useModalDialog } from "@design-studio/ui";
 
 export type { SelectionContext } from "@design-studio/actions/_core/contracts";
 

@@ -1,6 +1,6 @@
 import { shortcutLabel } from "../../../shared/keymap.js";
 import { IS_MAC, tipWithKey } from "../../canvas-toolbar-slots.js";
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import { useLive } from "../../platform/live-store.js";
 import type { LiveStore } from "../../platform/live-store.js";
 import type { ZoomSetting } from "../../platform/storage.js";

@@ -8,7 +8,7 @@ import {
   type FoundApps,
 } from "../../../shared/found-apps.js";
 import { api } from "../../api.js";
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import { projectsApi } from "./projects-store-model.js";
 
 const MAX_FOUND = 6;

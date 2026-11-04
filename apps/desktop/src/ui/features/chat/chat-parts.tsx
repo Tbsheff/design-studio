@@ -21,8 +21,8 @@ import {
 } from "../../ai/components/ai/reasoning.js";
 import { formatTime, formatUsd } from "../../domain/format.js";
 import { splitMarkdownBlocks } from "../../domain/markdown-blocks.js";
-import { CopyButton } from "../../kit/CopyButton.js";
-import { Icon } from "../../kit/Icon.js";
+import { CopyButton } from "@design-studio/ui";
+import { Icon } from "@design-studio/ui";
 import { contextShare } from "./context-meter.js";
 import { levelLabel, levelHint } from "./level-control.js";
 import type { RunView } from "./run-state-model.js";

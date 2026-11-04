@@ -14,7 +14,7 @@ import {
 import { Chip } from "../../ai/components/ai/chip.js";
 import { api } from "../../api.js";
 import type { PendingAttachment } from "../../domain/pending-attachment.js";
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import { readBlob } from "../../platform/http.js";
 import { projectFromPath } from "../../platform/router.js";
 import { modelLabel } from "./settings-draft-model.js";

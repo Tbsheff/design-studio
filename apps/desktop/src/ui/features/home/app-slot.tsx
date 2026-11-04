@@ -1,6 +1,6 @@
 import type { RefObject } from "react";
 
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import {
   type AppChip,
   chipBlocker,

@@ -1,8 +1,8 @@
 import { useCallback, useMemo, useState } from "react";
 
 import type { CompiledTokenEntry } from "@design-studio/actions/_core/contracts";
-import { Icon } from "../../kit/Icon.js";
-import { PanelHead } from "../../kit/sheet-head.js";
+import { Icon } from "@design-studio/ui";
+import { PanelHead } from "@design-studio/ui";
 import type { ThemeChoice } from "../design-system/token-frames.js";
 import type { DesignTokens } from "../design-system/use-design-system-state.js";
 import { TokenSweepSlot, tokenSweepCopy } from "../token-sweep/index.js";

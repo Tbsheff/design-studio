@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import { PARTS, fieldPart, writeShadows } from "./effects-model.js";
 import type { Field, ShadowView } from "./effects-model.js";
 import { ColorField } from "./inspector-fields.js";

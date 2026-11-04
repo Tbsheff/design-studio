@@ -6,7 +6,7 @@ import {
   type WorkspaceList,
 } from "@design-studio/actions/_core/folders";
 import { api, errorText } from "../../api.js";
-import { Disclosure } from "../../kit/disclosure.js";
+import { Disclosure } from "@design-studio/ui";
 import type { SettingsDraft } from "../chat/settings-draft-model.js";
 import { LocationField } from "./folder-controls.js";
 import { NewProjectAdvanced } from "./new-project-advanced.js";

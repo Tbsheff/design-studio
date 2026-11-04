@@ -3,7 +3,7 @@ import type { PointerEvent as ReactPointerEvent } from "react";
 
 import type { FlowResult } from "../../../shared/route-flow.js";
 import { api, errorText } from "../../api.js";
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import { useCurrentFrameStates } from "./frame-states-model.js";
 
 import "../../styles/route-flow.css";

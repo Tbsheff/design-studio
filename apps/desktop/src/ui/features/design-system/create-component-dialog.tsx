@@ -5,8 +5,8 @@ import { COMPONENT_NAME } from "../../../shared/component-create.js";
 import type { ComponentFolder } from "../../../shared/component-create.js";
 import type { SelectionContext } from "@design-studio/actions/_core/contracts";
 import type { InsertTarget } from "@design-studio/actions/_core/insert";
-import { UiSelect } from "../../kit/UiSelect.js";
-import { useModalDialog } from "../../kit/use-popover.js";
+import { UiSelect } from "@design-studio/ui";
+import { useModalDialog } from "@design-studio/ui";
 import { apiMessage, componentCreateApi } from "./component-create-api.js";
 import { COPY } from "./copy.js";
 

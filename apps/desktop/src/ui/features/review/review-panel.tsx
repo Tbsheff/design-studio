@@ -7,7 +7,7 @@ import type {
   ReviewKind,
   ReviewSeverity,
 } from "@design-studio/actions/_core/review";
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import { isTypingTarget } from "../../platform/typing-target.js";
 import { PREVIEW_ESCAPE_EVENT } from "../chat/use-escape-stop.js";
 import type { ReviewState } from "./use-review.js";

@@ -4,7 +4,7 @@ import { envText } from "@design-studio/actions/_core/app";
 import type { AppServerStatus } from "@design-studio/actions/_core/contracts";
 import { api } from "../../api";
 import FlowTab from "../../features/canvas/flow-tab";
-import { Icon } from "../../kit/Icon";
+import { Icon } from "@design-studio/ui";
 import type { AppBarProps } from "./app-bar";
 import { envSuggestion, SettingsTab } from "./app-settings-tab";
 import { statusLine } from "./app-state-text";

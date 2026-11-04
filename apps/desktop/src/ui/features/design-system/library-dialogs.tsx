@@ -3,8 +3,8 @@ import type { FormEvent } from "react";
 
 import type { PackSummary } from "@design-studio/actions/_core/contracts";
 import { errorText } from "../../api.js";
-import { Icon } from "../../kit/Icon.js";
-import { useModalDialog } from "../../kit/use-popover.js";
+import { Icon } from "@design-studio/ui";
+import { useModalDialog } from "@design-studio/ui";
 import { COPY } from "./copy.js";
 
 const useBusyAction = (onClose: () => void) => {

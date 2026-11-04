@@ -5,7 +5,7 @@ import {
   restoreTitle,
   runTitle,
 } from "../../../shared/version-title.js";
-import type { IconName } from "../../kit/Icon.js";
+import type { IconName } from "@design-studio/ui";
 
 export type VersionIndex = ReadonlyMap<string, Version>;
 

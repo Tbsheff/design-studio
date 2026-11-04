@@ -2,7 +2,7 @@ import { createContext, useContext, useState } from "react";
 
 import { commentsDone } from "../../../shared/comments.js";
 import type { DesignComment, RunRequest } from "@design-studio/actions/_core/contracts";
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import type { CommentsControl } from "../comments/use-comments.js";
 import type { RunView } from "./run-state-model.js";
 

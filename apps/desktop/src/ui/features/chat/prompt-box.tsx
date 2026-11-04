@@ -41,8 +41,8 @@ import {
   useCommands,
   type Command,
 } from "../../chat-slots.js";
-import { Disclosure } from "../../kit/disclosure.js";
-import { Icon, type IconName } from "../../kit/Icon.js";
+import { Disclosure } from "@design-studio/ui";
+import { Icon, type IconName } from "@design-studio/ui";
 import { useDesktopCommand } from "../../platform/desktop.js";
 import { useDraft, type DraftStore } from "../../platform/storage.js";
 import { MOD_LABEL } from "../comments/comment-popover.js";

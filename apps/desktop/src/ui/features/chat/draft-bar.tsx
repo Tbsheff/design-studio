@@ -9,7 +9,7 @@ import type {
   DesignSystemCoverage,
 } from "@design-studio/actions/_core/contracts";
 import { errorText } from "../../api.js";
-import { useFitPopover } from "../../domain/popoverPlacement.js";
+import { useFitPopover } from "@design-studio/ui";
 import { packApi } from "../../platform/pack-api.js";
 import { findPack, usePacks } from "../design-system/packs.js";
 import { improvePassed, CheckStatus } from "./draft-improve.js";

@@ -41,9 +41,9 @@ export type {
 
 export { pickFolder } from "../../platform/desktop.js";
 
-export { Icon } from "../../kit/Icon.js";
+export { Icon } from "@design-studio/ui";
 
-export type { IconName } from "../../kit/Icon.js";
+export type { IconName } from "@design-studio/ui";
 
 export { requestOpenApp } from "../../platform/app-events.js";
 

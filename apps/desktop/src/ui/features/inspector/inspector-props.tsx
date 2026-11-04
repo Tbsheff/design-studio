@@ -18,7 +18,7 @@ import type {
 } from "@design-studio/actions/_core/props";
 import { ApiError } from "../../api.js";
 import { VariantSheet } from "../../inspector-slots.js";
-import { UiSelect } from "../../kit/UiSelect.js";
+import { UiSelect } from "@design-studio/ui";
 import { useProjectEvents } from "../../platform/events.js";
 import { ComponentPreviewThumb } from "../design-system/component-preview-thumb.js";
 import { InspectorSection } from "./inspector-fields.js";

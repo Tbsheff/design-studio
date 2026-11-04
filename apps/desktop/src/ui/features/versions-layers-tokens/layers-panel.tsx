@@ -22,7 +22,7 @@ import {
   STRUCTURE_KEY_IDS,
   structureKeyOf,
 } from "../../../shared/structure-keys.js";
-import { Icon, type IconName } from "../../kit/Icon.js";
+import { Icon, type IconName } from "@design-studio/ui";
 import { PreviewMenu, type PreviewMenuItem } from "../canvas/preview-menu.js";
 import { focusStageQuietly } from "../canvas/use-inline-text-edit.js";
 import { IS_MAC, tipWithKey } from "../commands/index.js";

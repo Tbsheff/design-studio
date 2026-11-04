@@ -4,7 +4,7 @@ import type {
   PointerEvent as ReactPointerEvent,
 } from "react";
 
-import { usePopover } from "../../kit/use-popover.js";
+import { usePopover } from "@design-studio/ui";
 
 export type ResizeEdge = "right" | "bottom" | "corner";
 

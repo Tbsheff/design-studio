@@ -1,7 +1,7 @@
 import { memo } from "react";
 
 import type { CompiledTokenEntry } from "@design-studio/actions/_core/contracts";
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import { COPY } from "./copy.js";
 import { aliasPath, varTarget } from "./token-draft.js";
 import type { PendingToken, RawToken, TokenField } from "./token-draft.js";

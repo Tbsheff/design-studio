@@ -1,8 +1,8 @@
 import { useState, useTransition } from "react";
 
 import { errorText } from "../../api.js";
-import { Icon } from "../../kit/Icon.js";
-import { useModalDialog } from "../../kit/use-popover.js";
+import { Icon } from "@design-studio/ui";
+import { useModalDialog } from "@design-studio/ui";
 import { uiStore } from "../../platform/storage.js";
 import type { LibraryFrom } from "../../platform/storage.js";
 import { COPY } from "./copy.js";

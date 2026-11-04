@@ -7,7 +7,7 @@ import {
   ConversationContent,
   ConversationScrollButton,
 } from "../../ai/components/ai/conversation.js";
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import {
   ChatLead,
   RunAnnouncer,

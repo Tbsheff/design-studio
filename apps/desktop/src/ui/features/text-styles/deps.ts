@@ -4,7 +4,7 @@ export type { TextStyleTargetBody } from "../../api.js";
 
 export { insertError } from "../design-system/component-insert-api.js";
 
-export { usePopover } from "../../kit/use-popover.js";
+export { usePopover } from "@design-studio/ui";
 
 export type { SelectionContext } from "@design-studio/actions/_core/contracts";
 

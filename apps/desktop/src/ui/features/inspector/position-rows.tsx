@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 
 import type { SelectionContext } from "@design-studio/actions/_core/contracts";
-import { Icon } from "../../kit/Icon.js";
-import { UiSelect } from "../../kit/UiSelect.js";
+import { Icon } from "@design-studio/ui";
+import { UiSelect } from "@design-studio/ui";
 import { PIN_OPTIONS, pinFields, pinModeOf, pinPatch } from "./constraints.js";
 import type { InsetProp, PinAxis, PinMode } from "./constraints.js";
 import { write } from "./layout-keys.js";

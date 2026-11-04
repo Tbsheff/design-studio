@@ -16,8 +16,8 @@ import { Inspector, TweaksPanel } from "../../features/inspector";
 import { ErrorsPanel } from "../../features/review/errors-panel";
 import { TokensPanel } from "../../features/versions-layers-tokens/tokens-panel";
 import { VersionsPanel } from "../../features/versions-layers-tokens/versions-panel";
-import { Icon } from "../../kit/Icon";
-import { SheetSlot } from "../../kit/sheet-head";
+import { Icon } from "@design-studio/ui";
+import { SheetSlot } from "@design-studio/ui";
 import type { PanelTab } from "../../platform/use-panel-tab";
 import { ComponentsPanel } from "../components-panel-host";
 

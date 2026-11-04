@@ -27,7 +27,7 @@ const BUDGET_ZERO = [
   "src/server/ship/",
   "src/server/agent-tools/",
   "packages/common/actions/src/",
-  "src/ui/kit/",
+  "../../packages/ui/src/",
   "src/ui/domain/",
   "src/ui/platform/",
   "src/ui/features/",

@@ -4,7 +4,7 @@ import type { DragEvent, KeyboardEvent, FormEvent, ReactNode } from "react";
 import type { PackSummary } from "@design-studio/actions/_core/contracts";
 import { Markdown } from "../../ai/components/ai/markdown.js";
 import { errorText } from "../../api.js";
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import { hasNativePicker, pickFolder } from "../../platform/desktop.js";
 import { packApi } from "../../platform/pack-api.js";
 import { COPY } from "./copy.js";

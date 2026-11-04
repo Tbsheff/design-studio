@@ -3,8 +3,8 @@ import type { KeyboardEvent } from "react";
 
 import type { RunStatus } from "@design-studio/actions/_core/contracts";
 import { formatMs, formatTime, formatUsd } from "../../domain/format.js";
-import { Icon } from "../../kit/Icon.js";
-import { useReturnFocusOnUnmount } from "../../kit/use-popover.js";
+import { Icon } from "@design-studio/ui";
+import { useReturnFocusOnUnmount } from "@design-studio/ui";
 import { LatencyBreakdown } from "./latency-breakdown.js";
 import type { RunView } from "./run-state-model.js";
 import {

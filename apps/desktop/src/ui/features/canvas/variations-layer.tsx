@@ -8,7 +8,7 @@ import type {
 } from "@design-studio/actions/_core/contracts";
 import type { ElementScope } from "@design-studio/actions/_core/element-variants";
 import { errorText } from "../../api.js";
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import type { RunMap } from "../chat/run-state-model.js";
 import { ElementVariantsDialog } from "../inspector/element-variants-dialog.js";
 import { canvasStore } from "./canvas-frames-model.js";

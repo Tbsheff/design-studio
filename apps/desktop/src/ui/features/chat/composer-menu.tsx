@@ -11,9 +11,9 @@ import { createPortal } from "react-dom";
 
 import { RUN_LEVELS } from "@design-studio/actions/_core/contracts";
 import type { RunLevel } from "@design-studio/actions/_core/contracts";
-import { Icon } from "../../kit/Icon.js";
-import type { IconName } from "../../kit/Icon.js";
-import { usePopover } from "../../kit/use-popover.js";
+import { Icon } from "@design-studio/ui";
+import type { IconName } from "@design-studio/ui";
+import { usePopover } from "@design-studio/ui";
 import {
   ChoiceItem,
   levelGist,

@@ -2,8 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import type { KeyboardEvent } from "react";
 
 import { RUN_TITLE_MAX } from "../../../shared/rewind.js";
-import { Icon } from "../../kit/Icon.js";
-import type { IconName } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
+import type { IconName } from "@design-studio/ui";
 import { UserMessage } from "./chat-parts.js";
 import type { RunView } from "./run-state-model.js";
 

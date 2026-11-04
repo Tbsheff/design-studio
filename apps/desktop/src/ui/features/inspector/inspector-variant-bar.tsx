@@ -11,7 +11,7 @@ import type {
   VariantState,
   VariantSupport,
 } from "../../../shared/variants.js";
-import { UiSelect } from "../../kit/UiSelect.js";
+import { UiSelect } from "@design-studio/ui";
 import type { PreviewPort } from "../../platform/bridge.js";
 import {
   editVariantStore,

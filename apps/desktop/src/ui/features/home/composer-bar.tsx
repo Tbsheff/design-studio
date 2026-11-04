@@ -8,7 +8,7 @@ import {
 } from "react";
 
 import type { PackSummary, ProjectKind } from "@design-studio/actions/_core/contracts";
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import { uiStore } from "../../platform/storage.js";
 import { usePresence } from "../chat/use-presence.js";
 import { type PacksState, pickable } from "../design-system/packs.js";

@@ -1,6 +1,6 @@
 import { memo, useEffect, useState } from "react";
 
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import { ComponentsTab } from "./components-tab.js";
 import { resetEditVariant } from "./edit-variant.js";
 import { InspectorArrange } from "./inspector-arrange.js";

@@ -1,4 +1,4 @@
-import { useModalDialog } from "../../kit/use-popover.js";
+import { useModalDialog } from "@design-studio/ui";
 import { copy } from "./copy.js";
 import { unsavedLabel } from "./use-edit-session.js";
 import type { EditSession } from "./use-edit-session.js";

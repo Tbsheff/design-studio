@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import { cleanFramePath } from "./canvas-frames-model.js";
 import { menuKeys, useMenu } from "./frame-resize-handles.js";
 import { stop } from "./variation-controls.js";

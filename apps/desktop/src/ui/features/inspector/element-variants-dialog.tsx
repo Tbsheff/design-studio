@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import type { Project, SelectionContext } from "@design-studio/actions/_core/contracts";
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import { budgetFor, money } from "../canvas/use-variations.js";
 import { maxVariationsFor } from "../canvas/variations-api.js";
 

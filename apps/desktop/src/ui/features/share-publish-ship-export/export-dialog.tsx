@@ -12,9 +12,9 @@ import type {
   McpStatus,
 } from "@design-studio/actions/_core/export";
 import { downloadBlob } from "../../domain/format.js";
-import { Icon } from "../../kit/Icon.js";
-import type { IconName } from "../../kit/Icon.js";
-import { useModalDialog } from "../../kit/use-popover.js";
+import { Icon } from "@design-studio/ui";
+import type { IconName } from "@design-studio/ui";
+import { useModalDialog } from "@design-studio/ui";
 import { canvasFrameName, framePage } from "../canvas/canvas-frames.js";
 import { mcpApi } from "../chat/mcp-model.js";
 import {

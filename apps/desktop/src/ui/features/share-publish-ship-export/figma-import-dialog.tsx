@@ -16,9 +16,9 @@ import type {
   JsxInsertPosition,
 } from "@design-studio/actions/_core/insert";
 import { ApiError, json } from "../../api.js";
-import { Icon } from "../../kit/Icon.js";
-import { UiSelect } from "../../kit/UiSelect.js";
-import { useModalDialog } from "../../kit/use-popover.js";
+import { Icon } from "@design-studio/ui";
+import { UiSelect } from "@design-studio/ui";
+import { useModalDialog } from "@design-studio/ui";
 
 import "../../styles/figma-import.css";
 

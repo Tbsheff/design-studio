@@ -109,7 +109,7 @@ flowchart BT
   end
 
   subgraph ui["src/ui"]
-    kit["ui/kit"]
+    kit["packages/ui"]
     udomain["ui/domain"]
     uplatform["ui/platform"]
     features["ui/features/*"]

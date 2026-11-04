@@ -4,7 +4,7 @@ import type { ArrangeAction } from "../../../shared/arrange.js";
 import type { SelectionContext } from "@design-studio/actions/_core/contracts";
 import { shortcutLabel } from "../../../shared/keymap.js";
 import { IS_MAC } from "../../inspector-slots.js";
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import {
   ALIGN_TOOLS,
   SPACE_TOOLS,

@@ -11,10 +11,10 @@ import type {
 } from "@design-studio/actions/_core/port";
 import { cleanPortRoute, PORT_LEVEL_LABEL } from "@design-studio/actions/_core/port";
 import { errorText, api } from "../../api.js";
-import { Icon } from "../../kit/Icon.js";
-import { UiSelect } from "../../kit/UiSelect.js";
-import type { UiSelectOption } from "../../kit/UiSelect.js";
-import { useModalDialog } from "../../kit/use-popover.js";
+import { Icon } from "@design-studio/ui";
+import { UiSelect } from "@design-studio/ui";
+import type { UiSelectOption } from "@design-studio/ui";
+import { useModalDialog } from "@design-studio/ui";
 import { hasNativePicker, pickFolder } from "../../platform/desktop.js";
 import { uiStore } from "../../platform/storage.js";
 import { pageName } from "../canvas/frame-controls.js";

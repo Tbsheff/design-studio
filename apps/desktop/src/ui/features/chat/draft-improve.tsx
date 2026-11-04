@@ -6,7 +6,7 @@ import type {
   RunLevel,
   RunRequest,
 } from "@design-studio/actions/_core/contracts";
-import { useFitPopover } from "../../domain/popoverPlacement.js";
+import { useFitPopover } from "@design-studio/ui";
 import type { RunView } from "./run-state-model.js";
 
 export const IMPROVE_PROMPT = "Improve this design system.";

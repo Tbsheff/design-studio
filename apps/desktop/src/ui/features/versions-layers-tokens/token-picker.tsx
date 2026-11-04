@@ -8,7 +8,7 @@ import {
   modeValue,
 } from "../../../shared/token-match.js";
 import type { TokenMode } from "../../../shared/token-match.js";
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import { COPY } from "./copy.js";
 import { findElement } from "./find-element.js";
 

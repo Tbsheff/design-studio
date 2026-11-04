@@ -5,8 +5,8 @@ import type {
   ProjectType,
 } from "../../../shared/project-search.js";
 import { api } from "../../api.js";
-import { Icon } from "../../kit/Icon.js";
-import type { IconName } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
+import type { IconName } from "@design-studio/ui";
 
 import "../../styles/project-nav.css";
 

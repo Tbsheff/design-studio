@@ -6,8 +6,8 @@ import type {
 } from "@design-studio/actions/_core/contracts";
 import { errorText } from "../../api.js";
 import { formatTime } from "../../domain/format.js";
-import { Icon } from "../../kit/Icon.js";
-import type { IconName } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
+import type { IconName } from "@design-studio/ui";
 import { mcpApi } from "./mcp-model.js";
 import type { RunView } from "./run-state-model.js";
 import type { McpApprovalCard, McpFeedState } from "./use-mcp-feed.js";

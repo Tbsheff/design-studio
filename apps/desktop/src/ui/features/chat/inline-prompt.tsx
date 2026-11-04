@@ -8,7 +8,7 @@ import type {
   EditScope,
   EditScopeChoice,
 } from "@design-studio/actions/_core/usage-scope";
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import { call } from "../../platform/http.js";
 import { uiStore } from "../../platform/storage.js";
 import type { InlinePromptView } from "./use-inline-prompt.js";

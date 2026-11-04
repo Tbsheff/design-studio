@@ -37,6 +37,11 @@ const NO_DESKTOP = ban(
   "Importing desktop from this side is banned. Use the desktop helpers from src/ui/platform."
 );
 
+const NO_APPS = ban(
+  ["**/apps/**"],
+  "Packages importing apps is banned. Use only package imports through their exports map."
+);
+
 const NO_NODE = ban(
   ["node:*"],
   "Node built-ins on this platform are banned. Use Web APIs or the helpers from src/shared."
@@ -102,7 +107,7 @@ const UI_KIT_PORTAL: Pattern = {
     "findDOMNode",
   ],
   message:
-    "Other react-dom APIs in ui/kit are banned. Use createPortal from react-dom.",
+    "Other react-dom APIs in packages/ui are banned. Use createPortal from react-dom.",
 };
 
 const FEATURE_TARGETS = [
@@ -217,7 +222,10 @@ const uiRows = [
   restrict(["src/ui/**"], [...UI, NO_NODE]),
   restrict(["src/ui/**/*.test.ts", "src/ui/**/*.test.tsx"], UI),
   restrict(["src/ui/domain/**"], [...UI, NO_NODE, UI_DOMAIN]),
-  restrict(["src/ui/kit/**"], [...UI, NO_NODE, UI_KIT_PORTAL]),
+  restrict(
+    ["../../packages/ui/src/**"],
+    [...UI, NO_NODE, UI_KIT_PORTAL, NO_APPS]
+  ),
   restrict(["src/ui/features/**"], [...UI, NO_NODE]),
   {
     files: ["src/ui/features/**"],

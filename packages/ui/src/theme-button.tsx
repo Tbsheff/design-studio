@@ -2,7 +2,7 @@ import { lazy, Suspense, useRef, useState } from "react";
 
 import { Icon } from "./Icon";
 
-const ThemeMenu = lazy(() => import("./theme-menu"));
+const ThemeMenu = lazy(() => import("./theme-menu.js"));
 
 export function ThemeButton() {
   const [open, setOpen] = useState(false);

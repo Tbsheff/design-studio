@@ -15,7 +15,7 @@ import type {
   TextSourceInfo,
 } from "@design-studio/actions/_core/contracts";
 import { api } from "../../api.js";
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import { textHints, type DirectEdit } from "./use-direct-edit.js";
 
 export interface InspectorApp {

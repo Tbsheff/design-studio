@@ -1,7 +1,7 @@
 import { useState } from "react";
 
-import { Icon } from "../../kit/Icon.js";
-import type { IconName } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
+import type { IconName } from "@design-studio/ui";
 import { AddButton } from "./inspector-shared.js";
 import { write } from "./layout-keys.js";
 import { NumberField } from "./number-field.js";

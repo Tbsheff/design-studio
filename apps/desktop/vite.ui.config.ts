@@ -86,6 +86,16 @@ export default defineConfig({
   resolve: {
     alias: [
       {
+        find: /^@design-studio\/ui$/,
+        replacement: fileURLToPath(
+          new URL("../../packages/ui/src/index.ts", import.meta.url)
+        ),
+      },
+      {
+        find: /^@design-studio\/ui\//,
+        replacement: `${fileURLToPath(new URL("../../packages/ui/src/", import.meta.url))}`,
+      },
+      {
         find: /^@design-studio\/actions$/,
         replacement: fileURLToPath(
           new URL("../../packages/common/actions/src/index.ts", import.meta.url)

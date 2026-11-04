@@ -1,5 +1,5 @@
 import type { Starter } from "@design-studio/actions/_core/contracts";
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import { homePrefs } from "./home-prefs-model.js";
 import type { HomeTemplate } from "./home-templates.js";
 import type { TemplatesModule } from "./lazy-parts.js";

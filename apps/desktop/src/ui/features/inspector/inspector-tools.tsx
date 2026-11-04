@@ -12,7 +12,7 @@ import {
   commandBlocker,
   runCommand,
 } from "../../inspector-slots.js";
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import type { PreviewPort } from "../../platform/bridge.js";
 import { PREVIEW_HISTORY_EVENT } from "../canvas/use-undo-shortcut.js";
 import {

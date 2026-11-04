@@ -6,7 +6,7 @@ import type {
   PublicationComment,
 } from "../../../shared/publish.js";
 import { errorText } from "../../api.js";
-import { CopyButton } from "../../kit/CopyButton.js";
+import { CopyButton } from "@design-studio/ui";
 import { copy } from "./copy.js";
 import { isReadOnlyPublication, publishApi } from "./publish-api.js";
 

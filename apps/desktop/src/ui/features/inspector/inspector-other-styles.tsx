@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import { formatCopyCss, otherStyles } from "./authored-css.js";
 import type { AuthoredCss } from "./authored-css.js";
 import type { AuthoredCssState } from "./use-authored-css.js";

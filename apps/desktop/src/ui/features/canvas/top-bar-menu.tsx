@@ -1,9 +1,9 @@
 import { useRef } from "react";
 import type { KeyboardEvent, RefObject } from "react";
 
-import { Icon } from "../../kit/Icon.js";
-import type { IconName } from "../../kit/Icon.js";
-import { usePopover } from "../../kit/use-popover.js";
+import { Icon } from "@design-studio/ui";
+import type { IconName } from "@design-studio/ui";
+import { usePopover } from "@design-studio/ui";
 
 export type CanvasTool = "select" | "comment" | "edit" | "prototype" | null;
 

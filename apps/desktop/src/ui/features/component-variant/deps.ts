@@ -21,4 +21,4 @@ export type {
   VariantOption,
 } from "@design-studio/actions/_core/props";
 
-export { UiSelect } from "../../kit/UiSelect.js";
+export { UiSelect } from "@design-studio/ui";

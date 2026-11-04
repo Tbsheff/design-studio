@@ -2,8 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 
 import type { Direction, Project, Version } from "@design-studio/actions/_core/contracts";
-import { Icon } from "../../kit/Icon.js";
-import { PanelHead } from "../../kit/sheet-head.js";
+import { Icon } from "@design-studio/ui";
+import { PanelHead } from "@design-studio/ui";
 import { COPY } from "./copy.js";
 import { findElement } from "./find-element.js";
 import { displayTitle, indexVersions } from "./version-labels.js";

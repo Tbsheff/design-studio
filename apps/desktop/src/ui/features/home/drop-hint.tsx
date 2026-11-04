@@ -1,4 +1,4 @@
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 
 function DropHint({ on }: { on: boolean }) {
   if (!on) {

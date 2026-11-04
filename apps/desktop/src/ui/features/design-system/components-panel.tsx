@@ -7,8 +7,8 @@ import type {
   SelectionContext,
 } from "@design-studio/actions/_core/contracts";
 import type { InsertableComponent } from "@design-studio/actions/_core/insert";
-import { Icon } from "../../kit/Icon.js";
-import { PanelHead } from "../../kit/sheet-head.js";
+import { Icon } from "@design-studio/ui";
+import { PanelHead } from "@design-studio/ui";
 import {
   DragGhost,
   InsertMenu,

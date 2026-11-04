@@ -15,7 +15,9 @@
     "rootDir": ".",
     "paths": {
       "@design-studio/actions": ["../../packages/common/actions/src/index.ts"],
-      "@design-studio/actions/*": ["../../packages/common/actions/src/*"]
+      "@design-studio/actions/*": ["../../packages/common/actions/src/*"],
+      "@design-studio/ui": ["../../packages/ui/src/index.ts"],
+      "@design-studio/ui/*": ["../../packages/ui/src/*"]
     }
   }
 }

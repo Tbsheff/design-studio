@@ -5,7 +5,7 @@ import type {
   SelectMove,
   SelectionContext,
 } from "@design-studio/actions/_core/contracts";
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import type { LiveStore } from "../../platform/live-store.js";
 import { canvasHasKeys } from "../../platform/typing-target.js";
 import {

@@ -10,7 +10,7 @@ import type {
   FrameStatesView,
   MockUser,
 } from "@design-studio/actions/_core/frame-state";
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import type { setFrameSession } from "./frame-states-model.js";
 
 import "../../styles/frame-state.css";

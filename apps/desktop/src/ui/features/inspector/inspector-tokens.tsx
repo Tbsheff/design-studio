@@ -7,7 +7,7 @@ import type {
 } from "@design-studio/actions/_core/contracts";
 import { colorHex, cssVarFor, varName } from "../../../shared/token-match.js";
 import { api } from "../../api.js";
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import type { PreviewPort } from "../../platform/bridge.js";
 import type { DesignTokens } from "../design-system/use-design-system-state.js";
 import { CreateTokenDialog } from "../versions-layers-tokens/create-token-dialog.js";

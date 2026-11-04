@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import { TweaksPanel } from "./tweaks-panel.js";
 import type { TweaksDraft } from "./use-tweaks.js";
 

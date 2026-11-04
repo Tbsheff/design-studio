@@ -53,6 +53,7 @@
     "@babel/parser": "^7.26.0",
     "@base-ui/react": "^1.9.0",
     "@design-studio/actions": "workspace:*",
+    "@design-studio/ui": "workspace:*",
     "@hono/node-server": "^1.13.0",
     "@vitejs/plugin-react": "^5.0.0",
     "axe-core": "^4.14.0",

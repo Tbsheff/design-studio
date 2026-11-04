@@ -7,7 +7,7 @@ import type {
 } from "@design-studio/actions/_core/contracts";
 import { splitHunks } from "../../../shared/hunk.js";
 import type { PatchHunk } from "../../../shared/hunk.js";
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import { COPY } from "./copy.js";
 import { hunkKey, useHunkReview } from "./use-hunk-review.js";
 import type { HunkState, HunkReview } from "./use-hunk-review.js";

@@ -19,8 +19,8 @@ import {
 import { Chip } from "../../ai/components/ai/chip.js";
 import { IS_MAC } from "../../chat-slots.js";
 import { formatMs } from "../../domain/format.js";
-import { Icon } from "../../kit/Icon.js";
-import type { IconName } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
+import type { IconName } from "@design-studio/ui";
 import type { ToolRow, RunView } from "./run-state-model.js";
 import {
   toolGroupLabel,

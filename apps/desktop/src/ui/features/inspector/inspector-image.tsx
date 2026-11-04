@@ -9,7 +9,7 @@ import {
 } from "../../../shared/image.js";
 import type { ImageFit } from "../../../shared/image.js";
 import { runCommand } from "../../inspector-slots.js";
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import { AltField } from "./alt-field.js";
 import { FocalPad } from "./focal-pad.js";
 import { clipboardImage } from "./image-api.js";

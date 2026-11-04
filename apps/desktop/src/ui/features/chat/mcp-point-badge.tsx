@@ -1,4 +1,4 @@
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import type { McpPointBadge as Badge } from "../canvas/use-canvas-point.js";
 import { authorInitial } from "../comments/comment-avatar.js";
 

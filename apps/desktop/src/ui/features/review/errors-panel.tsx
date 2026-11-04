@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import type { BuildError } from "../home/use-studio-data.js";
 
 interface Props {

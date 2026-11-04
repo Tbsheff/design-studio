@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import type { SelectionContext } from "@design-studio/actions/_core/contracts";
 import type { EditorInfo } from "@design-studio/actions/_core/export";
 import { api, errorText } from "../../api.js";
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import { useProjectEvents } from "../../platform/events.js";
 import { exportApi } from "../share-publish-ship-export/export-api.js";
 

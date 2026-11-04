@@ -6,7 +6,7 @@ import { relativeOf } from "./facts.js";
 import { committedTextOf } from "./freeze-rules.js";
 
 const CASE_MESSAGE =
-  "A relative import whose case differs from the file name on disk is banned (N5), because a Linux build cannot find the module. Use the exact kebab-case file name, for example ../../kit/disclosure.js for src/ui/kit/disclosure.tsx.";
+  "A relative import whose case differs from the file name on disk is banned (N5), because a Linux build cannot find the module. Use the exact kebab-case file name, for example @design-studio/ui for packages/ui/src/disclosure.tsx.";
 
 const GROWTH_MESSAGE =
   "Growing a file that is over 500 lines is banned (L2). Use new files that are lint clean from the start (use-<thing>.ts, <thing>-model.ts, one component per kebab-case .tsx), or leave the split for a later slice.";

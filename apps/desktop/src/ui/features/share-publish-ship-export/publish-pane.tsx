@@ -14,7 +14,7 @@ import type {
   PublishPlan,
 } from "../../../shared/publish.js";
 import { errorText } from "../../api.js";
-import { CopyButton } from "../../kit/CopyButton.js";
+import { CopyButton } from "@design-studio/ui";
 import { canvasFrameName } from "../canvas/canvas-frames.js";
 import { canvasFrameChoices } from "./export-api.js";
 import { PublicationRow } from "./publication-row.js";

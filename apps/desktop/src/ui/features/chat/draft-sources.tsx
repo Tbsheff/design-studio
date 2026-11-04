@@ -8,7 +8,7 @@ import type {
   RunStatus,
 } from "@design-studio/actions/_core/contracts";
 import { api } from "../../api.js";
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import { useProjectEvents } from "../../platform/events.js";
 import { packApi } from "../../platform/pack-api.js";
 

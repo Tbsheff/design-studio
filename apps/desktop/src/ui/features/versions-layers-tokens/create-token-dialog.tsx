@@ -12,7 +12,7 @@ import type {
 } from "@design-studio/actions/_core/contracts";
 import { cssVarFor } from "../../../shared/token-match.js";
 import { ApiError, errorText } from "../../api.js";
-import { useModalDialog } from "../../kit/use-popover.js";
+import { useModalDialog } from "@design-studio/ui";
 import { displayColor, isValidColor } from "../inspector/css-values.js";
 import type { CreateRequest } from "../inspector/use-token-snap.js";
 import { COPY } from "./copy.js";

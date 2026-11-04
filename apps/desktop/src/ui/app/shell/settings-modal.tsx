@@ -6,8 +6,8 @@ import { CommandRules } from "../../features/commands/command-rules";
 import { KeysPanel } from "../../features/settings";
 import { PublishSetup } from "../../features/share-publish-ship-export/index.js";
 import { ShipTemplates } from "../../features/share-publish-ship-export/ship-templates";
-import { Icon } from "../../kit/Icon";
-import { useModalDialog } from "../../kit/use-popover";
+import { Icon } from "@design-studio/ui";
+import { useModalDialog } from "@design-studio/ui";
 import { parseDraft, SettingsFields, toDraft } from "./settings-fields";
 
 interface Props {

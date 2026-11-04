@@ -30,9 +30,9 @@ import type {
   PrototypeLink,
 } from "@design-studio/actions/_core/links";
 import { loadLinkInteraction } from "../../canvas-link-slots.js";
-import { Icon } from "../../kit/Icon.js";
-import { UiSelect } from "../../kit/UiSelect.js";
-import type { UiSelectOption } from "../../kit/UiSelect.js";
+import { Icon } from "@design-studio/ui";
+import { UiSelect } from "@design-studio/ui";
+import type { UiSelectOption } from "@design-studio/ui";
 import type { CanvasFrame } from "./canvas-frames-model.js";
 import { framePage, frameTitle } from "./canvas-frames.js";
 import { linksApi } from "./links-api.js";

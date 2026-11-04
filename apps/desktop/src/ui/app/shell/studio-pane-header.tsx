@@ -7,9 +7,9 @@ import {
   chatSearchOpen,
 } from "../../features/chat/chat-search-model";
 import { IS_MAC } from "../../features/commands/keys";
-import { Icon } from "../../kit/Icon";
-import type { IconName } from "../../kit/Icon";
-import { usePopover } from "../../kit/use-popover";
+import { Icon } from "@design-studio/ui";
+import type { IconName } from "@design-studio/ui";
+import { usePopover } from "@design-studio/ui";
 import { findElements } from "../../platform/find-element";
 import { useLive } from "../../platform/live-store";
 import type { PanelTab } from "../../platform/use-panel-tab";

@@ -4,7 +4,7 @@ import type { FormEvent } from "react";
 import { cleanRoute } from "@design-studio/actions/_core/app";
 import type { AppRoute } from "@design-studio/actions/_core/contracts";
 import { api, errorText } from "../../api";
-import { Icon } from "../../kit/Icon";
+import { Icon } from "@design-studio/ui";
 
 function RoutesTab({
   projectId,

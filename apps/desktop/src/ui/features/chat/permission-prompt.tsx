@@ -9,7 +9,7 @@ import {
   ruleForCommand,
 } from "../../../shared/permissionRules.js";
 import { api, errorText } from "../../api.js";
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 
 export const PermissionPrompt = ({
   projectId,

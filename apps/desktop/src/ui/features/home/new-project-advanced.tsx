@@ -1,7 +1,7 @@
 import { lazy, Suspense, useState } from "react";
 import type { ChangeEvent } from "react";
 
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import type { SettingsDraft } from "../chat/settings-draft-model.js";
 
 const loadFields = () => import("../../app/shell/settings-fields.js");

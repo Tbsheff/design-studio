@@ -1,8 +1,8 @@
 import { lazy, Suspense, useCallback, useRef, useState } from "react";
 
 import type { PackSummary } from "@design-studio/actions/_core/contracts";
-import { Icon } from "../../kit/Icon.js";
-import { usePopover } from "../../kit/use-popover.js";
+import { Icon } from "@design-studio/ui";
+import { usePopover } from "@design-studio/ui";
 import { Swatches } from "../inspector/swatches.js";
 import { COPY } from "./copy.js";
 import { findPack, keySwatches } from "./packs.js";

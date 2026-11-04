@@ -9,7 +9,7 @@ import type {
 import { api, errorText } from "../../api.js";
 import { rank } from "../../chat-slots.js";
 import type { Command } from "../../chat-slots.js";
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import { SkillsChecklist } from "./skills-checklist.js";
 import {
   NO_SKILLS_TEXT,

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState, useTransition } from "react";
 
 import type { PublishCliState } from "../../../shared/publish.js";
 import { errorText } from "../../api.js";
-import { CopyButton } from "../../kit/CopyButton.js";
+import { CopyButton } from "@design-studio/ui";
 import { publishApi } from "./publish-api.js";
 import { BackendSetup, usePublishBackend } from "./publish-backend-setup.js";
 import type { BackendHook } from "./publish-backend-setup.js";

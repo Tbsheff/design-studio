@@ -12,8 +12,8 @@ import {
   tokensForProperty,
 } from "../../../shared/token-match.js";
 import type { TokenFieldState } from "../../../shared/token-match.js";
-import { Icon } from "../../kit/Icon.js";
-import { useAnchoredPopover } from "../../kit/use-anchored-popover.js";
+import { Icon } from "@design-studio/ui";
+import { useAnchoredPopover } from "@design-studio/ui";
 import type { DirectEdit } from "../inspector/use-direct-edit.js";
 import { useTokenUi } from "../inspector/use-token-snap.js";
 import type { TokenUi } from "../inspector/use-token-snap.js";

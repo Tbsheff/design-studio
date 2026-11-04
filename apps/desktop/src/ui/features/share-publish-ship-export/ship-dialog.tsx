@@ -10,10 +10,10 @@ import type {
   ShipResult,
 } from "@design-studio/actions/_core/ship";
 import { errorText } from "../../api.js";
-import { CopyButton } from "../../kit/CopyButton.js";
-import { Icon } from "../../kit/Icon.js";
-import { UiSelect } from "../../kit/UiSelect.js";
-import { useModalDialog } from "../../kit/use-popover.js";
+import { CopyButton } from "@design-studio/ui";
+import { Icon } from "@design-studio/ui";
+import { UiSelect } from "@design-studio/ui";
+import { useModalDialog } from "@design-studio/ui";
 import { shipApi } from "./ship-api.js";
 
 import "../../styles/ship.css";

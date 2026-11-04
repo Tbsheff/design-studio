@@ -2,9 +2,9 @@ export { linksApi } from "../canvas/links-api.js";
 
 export type { LinkInteractionChange } from "../canvas/links-api.js";
 
-export { UiSelect } from "../../kit/UiSelect.js";
+export { UiSelect } from "@design-studio/ui";
 
-export type { UiSelectOption } from "../../kit/UiSelect.js";
+export type { UiSelectOption } from "@design-studio/ui";
 
 export type { CanvasFrame } from "../canvas/canvas-frames-model.js";
 

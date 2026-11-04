@@ -4,7 +4,7 @@ import type { Project, RunSummary } from "@design-studio/actions/_core/contracts
 import type { AppHealth } from "../../../shared/found-apps.js";
 import { json } from "../../api.js";
 import { formatRelative } from "../../domain/format.js";
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import { homePrefs, type HomeFilter } from "./home-prefs-model.js";
 import { isFolderProject, projectBadge, useThumbnail } from "./project-grid.js";
 

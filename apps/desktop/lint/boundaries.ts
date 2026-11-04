@@ -43,7 +43,6 @@ export const ELEMENTS: Element[] = [
   element("main", "src/server/main"),
   element("domain", "src/server/*", ["area"]),
   element("server", "src/server"),
-  element("ui-kit", "src/ui/kit"),
   element("ui-kit", "src/ui/ai"),
   element("ui-domain", "src/ui/domain"),
   element("ui-platform", "src/ui/platform"),

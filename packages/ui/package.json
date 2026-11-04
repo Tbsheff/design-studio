@@ -1,0 +1,27 @@
+{
+  "name": "@design-studio/ui",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Shared React UI kit for Design Studio: icons, selects, popovers, buttons and theme controls.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "exports": {
+    ".": "./src/index.ts",
+    "./chip-button.module.css": "./src/chip-button.module.css",
+    "./*": "./src/*"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0"
+  }
+}

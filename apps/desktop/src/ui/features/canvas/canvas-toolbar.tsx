@@ -1,7 +1,7 @@
 import { runCommand, TabOrderToggle } from "../../canvas-toolbar-slots.js";
 import { PRESETS } from "../../domain/canvas-presets.js";
 import type { CanvasSource } from "../../domain/canvas-presets.js";
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import type { ZoomSetting } from "../../platform/storage.js";
 import { PenIcon } from "./draw-layer.js";
 import { ViewportControls, SourceControls } from "./toolbar-viewport.js";

@@ -4,7 +4,7 @@ import {
 } from "@design-studio/actions/_core/contracts";
 import type { Project, VariationBrief } from "@design-studio/actions/_core/contracts";
 import { LEVEL_PRESETS } from "../../../shared/run-levels.js";
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import { budgetFor, money } from "./use-variations.js";
 import type { BriefDraft } from "./use-variations.js";
 

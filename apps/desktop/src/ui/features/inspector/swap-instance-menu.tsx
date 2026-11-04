@@ -5,7 +5,7 @@ import type {
   SwapCandidateList,
 } from "../../../shared/component-create.js";
 import type { SourceLoc } from "@design-studio/actions/_core/contracts";
-import { usePopover } from "../../kit/use-popover.js";
+import { usePopover } from "@design-studio/ui";
 import {
   apiMessage,
   componentCreateApi,

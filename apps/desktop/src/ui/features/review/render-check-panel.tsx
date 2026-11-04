@@ -12,7 +12,7 @@ import {
 } from "../../../shared/final-check-baseline.js";
 import type { FinalCheckWithBaseline } from "../../../shared/final-check-baseline.js";
 import { api } from "../../api.js";
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 
 interface Props {
   projectId: string;

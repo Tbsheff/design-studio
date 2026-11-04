@@ -14,7 +14,7 @@ import type {
   ReviewResult,
   ReviewSeverity,
 } from "@design-studio/actions/_core/review";
-import { Icon } from "../../kit/Icon.js";
+import { Icon } from "@design-studio/ui";
 import type { ParentMessageBody } from "../../platform/bridge.js";
 import { frameName } from "../canvas/canvas-frames-model.js";
 import type { CanvasFrame } from "../canvas/canvas-frames-model.js";

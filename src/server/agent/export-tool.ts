@@ -3,13 +3,17 @@ import path from "node:path";
 import { Schema } from "effect";
 
 import { EXPORT_MAX_FRAMES, exportFileStem } from "../../shared/export.js";
-import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
+import {
+  toOptionalText,
+  toSdkFieldSet,
+  toToolInput,
+  toTrimmedText,
+} from "../agent-tools/index.js";
+import type { ToolArgs } from "../agent-tools/index.js";
 import { pickExportFrames } from "../export/export-frames.js";
 import { writeUnique } from "../export/export-write.js";
 import { canvasFrames } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
-import { toOptionalText, toToolInput, toTrimmedText } from "./tool-input.js";
-import type { ToolArgs } from "./tool-input.js";
 
 export const EXPORT_FRAME_AGENT_DESCRIPTION =
   "Export canvas frames of this direction as SVG or PPTX with the same server code as Export > SVG and Export > PPTX in the studio and the MCP export_frame tool. SVG: vector boxes, <text> with font names and embedded pictures; selector exports one element. PPTX: one slide per frame (or per .slide / [data-slide] section) with native text boxes, solid and rounded boxes, lines, simple SVG shapes and images over a picture of the rest. Returns the file path in the Design Studio data folder. It changes no design file; use it only when the user asks for an SVG or a deck file.";

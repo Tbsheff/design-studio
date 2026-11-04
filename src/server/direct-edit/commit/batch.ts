@@ -9,7 +9,7 @@ import type {
   Version,
   VersionMeta,
 } from "../../../shared/contracts.js";
-import { domPatchOf } from "../../events/planned-feed.js";
+import { domPatchOf } from "../../events/index.js";
 import { DirectEditError } from "../engine/errors.js";
 import { knownTokenVars } from "../engine/tokens.js";
 import { parseDirectEditBatch } from "../engine/validate.js";

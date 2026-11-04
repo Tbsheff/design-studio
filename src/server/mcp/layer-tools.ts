@@ -1,18 +1,17 @@
 import type { Project } from "../../shared/contracts.js";
-import { readProjectCanvas } from "../canvas/service.js";
-import { findFrame, frameRef } from "../canvas/tools.js";
+import { findFrame, frameRef, readProjectCanvas } from "../canvas/index.js";
 import { noteRenderedPage } from "../events/index.js";
 import {
   isLayerRef,
   LayerRefError,
   memoPage,
+  noteShownFiles,
   resolveLayerRef,
   resolveLayerRefs,
   scanLayers,
   scopeOf,
-} from "../page-probe/layer-ref.js";
-import type { Layer, Viewport } from "../page-probe/layer-ref.js";
-import { noteShownFiles } from "../page-probe/source-loc.js";
+} from "../page-probe/index.js";
+import type { Layer, Viewport } from "../page-probe/index.js";
 import { z } from "../platform/zod-bridge/index.js";
 import type { PreviewService } from "../types.js";
 import { EditError, loadTarget } from "./edit-guards.js";

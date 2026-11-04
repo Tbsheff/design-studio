@@ -13,9 +13,7 @@ import {
   type PropValue,
   type SetPropsResult,
 } from "../../shared/props.js";
-import { scopeOf } from "../page-probe/layer-ref.js";
-import { probeOwners } from "../page-probe/owner-probe.js";
-import { resolveSourceLoc } from "../page-probe/source-loc.js";
+import { probeOwners, resolveSourceLoc, scopeOf } from "../page-probe/index.js";
 import { z } from "../platform/zod-bridge/index.js";
 import { callAction } from "./action-call.js";
 import {

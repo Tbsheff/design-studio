@@ -12,8 +12,14 @@ import {
   FILL_TYPES,
   RADIAL_FORMS,
 } from "../../shared/fill.js";
-import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
-import type { WrittenFile } from "../direct-edit/commit/batch.js";
+import {
+  toOptionalText,
+  toSdkFieldSet,
+  toToolInput,
+  toTrimmedText,
+} from "../agent-tools/index.js";
+import type { ToolArgs, ToolDecoded } from "../agent-tools/index.js";
+import type { WrittenFile } from "../direct-edit/commit/index.js";
 import { writeAtomic } from "../direct-edit/index.js";
 import { getFill } from "../fill/get.js";
 import { planFillSet } from "../fill/set.js";
@@ -22,8 +28,6 @@ import type { FillInput } from "../fill/spec.js";
 import { refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
 import { targetOf } from "./insert-tool.js";
-import { toOptionalText, toToolInput, toTrimmedText } from "./tool-input.js";
-import type { ToolArgs, ToolData } from "./tool-input.js";
 
 interface ToolContent {
   text: string;
@@ -82,7 +86,7 @@ const tokenField = Schema.optionalKey(
 
 const percentRange = Schema.isBetween({ maximum: PERCENT_MAX, minimum: 0 });
 
-const percentValue = Schema.Number.check(percentRange);
+const percentValue = Schema.Finite.check(percentRange);
 
 const stop = Schema.Struct({
   color: colorField,
@@ -94,7 +98,7 @@ const stop = Schema.Struct({
 
 const fillFields = {
   angle: Schema.optionalKey(
-    Schema.Number.check(
+    Schema.Finite.check(
       Schema.isBetween({ maximum: FILL_ANGLE_MAX, minimum: -FILL_ANGLE_MAX })
     ).annotate({
       description:
@@ -151,7 +155,7 @@ const setFillInput = toSdkFieldSet(setFillFields);
 const listSchema = toToolInput(getFillFields);
 const setSchema = toToolInput(setFillFields);
 
-const fillInputOf = (input: ToolData<typeof setSchema>): FillInput => ({
+const fillInputOf = (input: ToolDecoded<typeof setSchema>): FillInput => ({
   angle: input.angle,
   at: input.at,
   blendMode: input.blendMode,
@@ -234,7 +238,7 @@ const setText = (plan: FillSetPlan): string => {
 
 const sourceOf = async (
   deps: DirectToolDeps,
-  input: ToolData<typeof listSchema>
+  input: ToolDecoded<typeof listSchema>
 ): Promise<Located> => {
   const target = await targetOf(deps, input);
 
@@ -261,7 +265,7 @@ const sourceOf = async (
 
 const listWith = async (
   deps: DirectToolDeps,
-  input: ToolData<typeof listSchema>
+  input: ToolDecoded<typeof listSchema>
 ): Promise<ToolText> => {
   const located = await sourceOf(deps, input);
 
@@ -302,7 +306,7 @@ const runGetFill = async (
 
 const setWith = async (
   deps: DirectToolDeps,
-  input: ToolData<typeof setSchema>
+  input: ToolDecoded<typeof setSchema>
 ): Promise<ToolText> => {
   const located = await sourceOf(deps, input);
 

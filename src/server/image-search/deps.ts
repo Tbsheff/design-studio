@@ -1,4 +1,4 @@
-export type { InsertScope } from "../direct-edit/components-ops/insert.js";
+export type { InsertScope } from "../direct-edit/components-ops/index.js";
 
 export {
   assertCanEdit,
@@ -10,22 +10,18 @@ export {
 
 export type { DirectEditDeps } from "../direct-edit/index.js";
 
-export { DirectEditError } from "../direct-edit/engine/errors.js";
+export { DirectEditError } from "../direct-edit/engine/index.js";
 
 export {
+  imageFromUrl,
   parseSetImage,
   planChanged,
   planSetImage,
+  savesSettled,
   writeImagePlan,
-} from "../direct-edit/commit/image.js";
+} from "../direct-edit/commit/index.js";
 
-export type { ImagePlan } from "../direct-edit/commit/image.js";
-
-export { imageFromUrl } from "../direct-edit/commit/image-source.js";
-
-export type { ImageBytes } from "../direct-edit/commit/image-source.js";
-
-export { savesSettled } from "../direct-edit/commit/save-queue.js";
+export type { ImageBytes, ImagePlan } from "../direct-edit/commit/index.js";
 
 export { imageSearchEnv } from "../platform/config/index.js";
 
@@ -68,3 +64,7 @@ export type {
   Version,
   VersionMeta,
 } from "../../shared/contracts.js";
+
+export { toDecoder } from "../platform/decode/index.js";
+
+export { z } from "../platform/zod-bridge/index.js";

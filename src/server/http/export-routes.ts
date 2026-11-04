@@ -2,7 +2,7 @@ import path from "node:path";
 
 import type { Context, Hono } from "hono";
 
-import type { CanvasService } from "../canvas/service.js";
+import type { CanvasService } from "../canvas/index.js";
 import {
   listEditors,
   openInEditor,

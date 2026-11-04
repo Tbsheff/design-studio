@@ -1,9 +1,6 @@
 import type { MessagePort, Transferable } from "node:worker_threads";
 
-import type {
-  WorkerReply,
-  WorkerRequest,
-} from "./platform/process/worker-protocol.js";
+import type { WorkerReply, WorkerRequest } from "./platform/process/index.js";
 
 export interface WorkerAnswer<R> {
   result: R;

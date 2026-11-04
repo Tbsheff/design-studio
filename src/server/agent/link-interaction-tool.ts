@@ -1,15 +1,12 @@
+import type { CanvasToolContext, ToolText } from "../canvas/index.js";
 import {
   linkInteractionFields,
-  listLinkInteractionsFields,
-  toInteractionRequest,
-} from "../canvas/links/link-interaction-input.js";
-import type { LinkInteractionInput } from "../canvas/links/link-interaction-input.js";
-import {
   listLinkInteractions,
+  listLinkInteractionsFields,
   setLinkInteraction,
-} from "../canvas/links/link-interaction.js";
-import type { LinkProbe } from "../canvas/links/link-tools.js";
-import type { CanvasToolContext, ToolText } from "../canvas/tools.js";
+  toInteractionRequest,
+} from "../canvas/links/index.js";
+import type { LinkInteractionInput, LinkProbe } from "../canvas/links/index.js";
 
 const setLinkInteractionInput = linkInteractionFields;
 

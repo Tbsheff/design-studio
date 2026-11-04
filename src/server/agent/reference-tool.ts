@@ -4,13 +4,16 @@ import {
   COMPARE_TO_REFERENCE_TEXT,
   plainAttachmentName,
 } from "../../shared/reference.js";
-import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
+import {
+  toOptionalText,
+  toSdkFieldSet,
+  toToolInput,
+} from "../agent-tools/index.js";
 import { scoreOutput } from "../mcp/reference-tools.js";
 import type { AgentRunContext, PreviewService } from "../types.js";
 import { compareToReference, referenceAttachment } from "./reference-check.js";
 import { resolveShotTarget } from "./run-target.js";
 import type { TargetDeps } from "./run-target.js";
-import { toOptionalText, toToolInput } from "./tool-input.js";
 
 type ToolResult = Readonly<{
   content: (

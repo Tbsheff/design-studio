@@ -4,6 +4,7 @@ import type {
   ClassDelta,
   DirectEditRequest,
   DomPatch,
+  StudioEventInput,
   TailwindOutcome,
 } from "../../shared/contracts.js";
 import { logError } from "../platform/logger/index.js";
@@ -158,6 +159,24 @@ const withdrawPlanned = (
   }
 };
 
-export { announcePlanned, domPatchOf, onPlannedEdit, withdrawPlanned };
+const toEditEvent = (edit: PlannedEdit): StudioEventInput => {
+  if (edit.kind === "planned") {
+    const { directionId, id, patches, projectId } = edit;
+
+    return { directionId, id, patches, projectId, type: "edit.planned" };
+  }
+
+  const { directionId, id, projectId } = edit;
+
+  return { directionId, id, projectId, type: "edit.unplanned" };
+};
+
+export {
+  announcePlanned,
+  domPatchOf,
+  onPlannedEdit,
+  toEditEvent,
+  withdrawPlanned,
+};
 
 export type { PlannedEdit };

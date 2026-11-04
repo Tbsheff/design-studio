@@ -5,7 +5,7 @@ import type {
   Project,
   Version,
 } from "../../../shared/contracts.js";
-import { domPatchOf } from "../../events/planned-feed.js";
+import { domPatchOf } from "../../events/index.js";
 import type { PatchResult } from "../engine/errors.js";
 import { knownTokenVars } from "../engine/tokens.js";
 import { parseDirectEditRequest } from "../engine/validate.js";

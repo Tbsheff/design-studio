@@ -1,7 +1,7 @@
 import type { CanvasFileFrame } from "../../shared/canvas-file.js";
 import { EXPORT_MAX_FRAMES } from "../../shared/export.js";
 import type { ExportFrame } from "../../shared/export.js";
-import { findFrame } from "../canvas/tools.js";
+import { findFrame } from "../canvas/index.js";
 
 type FramePick =
   | { readonly frames: ExportFrame[]; readonly ok: true }

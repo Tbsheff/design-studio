@@ -17,15 +17,6 @@ import {
   type InsertJsxResult,
 } from "../../../shared/insert.js";
 import { OWNERS_MAX, OWNER_STACK_MAX } from "../../../shared/props.js";
-import {
-  loadLibrary,
-  type LibraryEntry,
-  loadTypeScript,
-  parseModuleFile,
-  planImports,
-  type ImportItem,
-  type ImportNeed,
-} from "../../components/model.js";
 import { z } from "../../platform/zod-bridge/index.js";
 import {
   resolveTarget,
@@ -56,6 +47,15 @@ import {
 } from "../engine/structure-ops.js";
 import { jsxElementAt } from "../engine/structure.js";
 import { writeAndCommitAll } from "./batch.js";
+import {
+  type ImportItem,
+  type ImportNeed,
+  type LibraryEntry,
+  loadLibrary,
+  loadTypeScript,
+  parseModuleFile,
+  planImports,
+} from "./deps.js";
 import { resolveSource } from "./edit-source.js";
 import type { DirectEditDeps, ResolvedSource } from "./edit-types.js";
 import { assertCanEdit, publishVersion } from "./publish.js";

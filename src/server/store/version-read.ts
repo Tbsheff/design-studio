@@ -8,7 +8,7 @@ import type {
 } from "../../shared/contracts.js";
 import { splitHunks } from "../../shared/hunk.js";
 import type { PatchHunk } from "../../shared/hunk.js";
-import { savesSettled } from "../direct-edit/commit/save-queue.js";
+import { savesSettled } from "../direct-edit/commit/index.js";
 import { BadRequestError, NotFoundError } from "../platform/errors/index.js";
 import { trimListedFiles } from "./version-names.js";
 import type { VersionReadRuntime, VersionTarget } from "./version-read-core.js";

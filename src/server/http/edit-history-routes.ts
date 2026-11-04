@@ -10,11 +10,15 @@ import type {
   TextSourceAnswer,
 } from "../../shared/contracts.js";
 import { firstVersionWaitText } from "../app/first-version.js";
-import { elementClassInfo } from "../direct-edit/commit/class-info.js";
-import type { EditHistory } from "../direct-edit/commit/history.js";
-import { findTextSource } from "../direct-edit/commit/text-source.js";
-import { htmlElementSpan } from "../direct-edit/engine/html.js";
-import { jsxElementSpan } from "../direct-edit/engine/jsx.js";
+import {
+  elementClassInfo,
+  findTextSource,
+} from "../direct-edit/commit/index.js";
+import type { EditHistory } from "../direct-edit/commit/index.js";
+import {
+  htmlElementSpan,
+  jsxElementSpan,
+} from "../direct-edit/engine/index.js";
 import {
   DirectEditError,
   parseDirectEditRequest,

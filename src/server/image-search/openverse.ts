@@ -1,5 +1,6 @@
 import { Schema } from "effect";
 
+import { toDecoder } from "./deps.js";
 import type {
   ImageSearchHit,
   ImageSearchRequest,
@@ -45,14 +46,14 @@ const rawImageSchema = Schema.Struct({
 });
 
 const pageSchema = Schema.Struct({
-  results: Schema.Array(Schema.Unknown),
+  results: Schema.Array(Schema.Json),
 });
 
 type RawImage = typeof rawImageSchema.Type;
 
 type Page = typeof pageSchema.Type;
 
-const decodeRawImage = Schema.decodeUnknownResult(rawImageSchema);
+const decodeRawImage = toDecoder(rawImageSchema, "ignore");
 
 const textOf = (value: string | null | undefined): string | null => {
   const trimmed = (value ?? "").trim();
@@ -144,7 +145,7 @@ const getJson = async <Output>(
     );
   }
 
-  const parsed = Schema.decodeUnknownResult(schema)(await response.json());
+  const parsed = toDecoder(schema, "ignore")(await response.json());
 
   if (parsed._tag === "Failure") {
     throw new ImageSearchError(

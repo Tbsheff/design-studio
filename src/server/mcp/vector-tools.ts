@@ -8,7 +8,7 @@ import {
   type VectorRequest,
   type VectorResult,
 } from "../../shared/vector.js";
-import { describeElements } from "../page-probe/element.js";
+import { describeElements } from "../page-probe/index.js";
 import { z } from "../platform/zod-bridge/index.js";
 import { callAction } from "./action-call.js";
 import {

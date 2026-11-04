@@ -1,16 +1,19 @@
 import { Schema } from "effect";
 
 import { PROP_NAME, PROP_TEXT_MAX, PROPS_MAX } from "../../shared/props.js";
-import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
+import {
+  toOptionalText,
+  toSdkFieldSet,
+  toToolInput,
+} from "../agent-tools/index.js";
+import type { ToolArgs, ToolDecoded } from "../agent-tools/index.js";
 import { resolveInstance } from "../components/use-site.js";
-import { parseSetProps, planSetProps } from "../direct-edit/commit/props.js";
+import { parseSetProps, planSetProps } from "../direct-edit/commit/index.js";
 import { writeAtomic } from "../direct-edit/index.js";
-import { probeOwners } from "../page-probe/owner-probe.js";
+import { probeOwners } from "../page-probe/index.js";
 import { refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
 import { editPageUrl } from "./run-target.js";
-import { toOptionalText, toToolInput } from "./tool-input.js";
-import type { ToolArgs, ToolData } from "./tool-input.js";
 
 type ToolText = Readonly<{
   content: { type: "text"; text: string }[];
@@ -21,7 +24,7 @@ const LOC = /^(.+):(\d+):(\d+)$/;
 
 const propValue = Schema.Union([
   Schema.String.check(Schema.isMaxLength(PROP_TEXT_MAX)),
-  Schema.Number,
+  Schema.Finite,
   Schema.Boolean,
   Schema.Null,
 ]);
@@ -62,7 +65,7 @@ function text(message: string, isError = false): ToolText {
 
 async function useSite(
   deps: DirectToolDeps,
-  input: ToolData<typeof schema>
+  input: ToolDecoded<typeof schema>
 ): Promise<{ file: string; line: number; col: number } | string> {
   if (input.source) {
     const match = LOC.exec(input.source);

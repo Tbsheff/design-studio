@@ -5,8 +5,8 @@ import {
   PAGE_IMPORT_WIDTH_DEFAULT,
   PAGE_IMPORT_WIDTH_MAX,
   PAGE_IMPORT_WIDTH_MIN,
-} from "../../../shared/page-import.js";
-import { z } from "../zod-bridge/index.js";
+  z,
+} from "./deps.js";
 
 const importPageFields = {
   name: z

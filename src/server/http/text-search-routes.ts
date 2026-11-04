@@ -2,17 +2,17 @@ import type { Context, Hono } from "hono";
 
 import type { Direction, Project } from "../../shared/contracts.js";
 import type { TextUpdateResult } from "../../shared/text-search.js";
-import type { CanvasService } from "../canvas/service.js";
+import type { CanvasService } from "../canvas/index.js";
 import type { DirectEditDeps } from "../direct-edit/index.js";
-import {
-  searchTextFields,
-  updateTextFields,
-} from "../platform/tool-fields/text-search.js";
 import { z } from "../platform/zod-bridge/index.js";
 import { TextSearchError } from "../text-search/errors.js";
 import { toSearchQuery, toUpdateRequest } from "../text-search/input.js";
 import type { SearchTarget } from "../text-search/scope.js";
 import { searchText } from "../text-search/search-text.js";
+import {
+  searchTextFields,
+  updateTextFields,
+} from "../text-search/tool-fields.js";
 import { updateText } from "../text-search/update-text.js";
 
 interface Located {

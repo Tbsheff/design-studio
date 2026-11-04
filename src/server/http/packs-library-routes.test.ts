@@ -16,8 +16,8 @@ import type {
 } from "../../shared/contracts.js";
 import { PACK_FILE } from "../../shared/contracts.js";
 import { zipFiles, type ZipEntry } from "../design-system/zip.js";
+import { createEventBus } from "../events/index.js";
 import { projectStorePorts } from "../main/project-ports.js";
-import { createEventBus } from "../store/events.js";
 import { createProjectStore } from "../store/projects.js";
 import { makeTempConfig } from "../store/testConfig.js";
 import { createVersionStore } from "../store/versions.js";

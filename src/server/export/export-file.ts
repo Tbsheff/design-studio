@@ -6,7 +6,7 @@ import type {
   ExportScope,
 } from "../../shared/export.js";
 import type { ZipEntry } from "../design-system/zip.js";
-import type { Shot } from "../preview/index.js";
+import type { Shot } from "../preview/page-capture/index.js";
 import type { ExportRuntime } from "./export-core.js";
 import { parseFrames, parseScale, resolveSource } from "./source.js";
 import type { VectorRequest } from "./vector-export.js";
@@ -168,7 +168,7 @@ const captureAll = async (
   job: ImageJob,
   scale: ExportScale
 ): Promise<Shot[]> => {
-  const { captureFrame } = await import("../preview/index.js");
+  const { captureFrame } = await import("../preview/page-capture/index.js");
 
   return mapInOrder(job.frames, (frame) =>
     captureFrame(

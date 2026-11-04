@@ -3,21 +3,20 @@ import { Schema } from "effect";
 import { INSERT_TEXT_MAX } from "../../shared/insert.js";
 import type { InsertTarget } from "../../shared/insert.js";
 import { PROP_NAME, PROP_TEXT_MAX, PROPS_MAX } from "../../shared/props.js";
-import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
-import { planInsertComponent } from "../direct-edit/components-ops/insert.js";
-import { writeAtomic } from "../direct-edit/index.js";
-import { describeElements } from "../page-probe/element.js";
-import { probeOwners } from "../page-probe/owner-probe.js";
-import { refusal, writeProblem } from "./direct-tools.js";
-import type { DirectToolDeps } from "./direct-tools.js";
-import { editPageUrl } from "./run-target.js";
 import {
   toDefaulted,
   toOptional,
   toOptionalText,
+  toSdkFieldSet,
   toToolInput,
-} from "./tool-input.js";
-import type { ToolArgs } from "./tool-input.js";
+} from "../agent-tools/index.js";
+import type { ToolArgs } from "../agent-tools/index.js";
+import { planInsertComponent } from "../direct-edit/components-ops/index.js";
+import { writeAtomic } from "../direct-edit/index.js";
+import { describeElements, probeOwners } from "../page-probe/index.js";
+import { refusal, writeProblem } from "./direct-tools.js";
+import type { DirectToolDeps } from "./direct-tools.js";
+import { editPageUrl } from "./run-target.js";
 
 type ToolText = Readonly<{
   content: { type: "text"; text: string }[];
@@ -30,7 +29,7 @@ const propName = Schema.String.check(Schema.isPattern(PROP_NAME));
 
 const propText = Schema.String.check(Schema.isMaxLength(PROP_TEXT_MAX));
 
-const propValue = Schema.Union([propText, Schema.Number, Schema.Boolean]);
+const propValue = Schema.Union([propText, Schema.Finite, Schema.Boolean]);
 
 const insertComponentFields = {
   file: toOptionalText(

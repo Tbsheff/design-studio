@@ -1,18 +1,6 @@
-export {
-  applyCreateComponent,
-  componentFolders,
-} from "../direct-edit/components-ops/extract.js";
-
 export { listInsertable, loadLibrary } from "./insert-list.js";
 
-export { applyInsertComponent } from "../direct-edit/components-ops/insert.js";
-
 export { componentPreviewsFor, PreviewTargetError } from "./preview.js";
-
-export {
-  applySwap,
-  swapCandidates,
-} from "../direct-edit/components-ops/swap.js";
 
 export {
   instanceFor,

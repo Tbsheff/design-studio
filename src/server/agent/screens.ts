@@ -16,8 +16,8 @@ import { listAppRoutes } from "../app/routes.js";
 import {
   readFrameStates,
   type FrameStateDeps,
-} from "../canvas/app-flow/frame-state-service.js";
-import type { CanvasService } from "../canvas/service.js";
+} from "../canvas/app-flow/index.js";
+import type { CanvasService } from "../canvas/index.js";
 import { withPagePath } from "../export/source.js";
 import type { RenderPage } from "../preview/render-backend.js";
 import { screenSignatureExpression } from "../preview/screens-probe.js";

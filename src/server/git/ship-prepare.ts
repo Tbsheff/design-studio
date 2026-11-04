@@ -18,7 +18,7 @@ import {
   type ShipSettings,
   type ShipTemplateVars,
 } from "../../shared/ship.js";
-import { findOnPath, userGit } from "../platform/git/user-git.js";
+import { findOnPath, userGit } from "../platform/git/index.js";
 import { runGit, runGitBuffer, type GitScope } from "../store/versions.js";
 import { detectShipFormat } from "./ship-format.js";
 import { readShipState } from "./ship-store.js";

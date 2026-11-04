@@ -15,11 +15,11 @@ import {
   setAccessibility,
   toAccessibilityResult,
 } from "../accessibility/set.js";
-import type { CanvasService } from "../canvas/service.js";
+import { setAccessibilityFields } from "../accessibility/tool-fields.js";
+import type { CanvasService } from "../canvas/index.js";
 import { readDesignSystemState } from "../design-system/state.js";
-import { DirectEditError } from "../direct-edit/engine/errors.js";
+import { DirectEditError } from "../direct-edit/engine/index.js";
 import type { DirectEditDeps } from "../direct-edit/index.js";
-import { setAccessibilityFields } from "../platform/tool-fields/accessibility.js";
 import { z } from "../platform/zod-bridge/index.js";
 import { withPagePath } from "../project-source/source.js";
 import type { PreviewService } from "../types.js";

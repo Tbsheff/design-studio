@@ -6,11 +6,19 @@ import {
   SPACING_SIDES,
   SPACING_TOKEN,
 } from "../../shared/spacing.js";
-import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
-import type { WrittenFile } from "../direct-edit/commit/batch.js";
-import { writeAtomic } from "../direct-edit/commit/edit-source.js";
+import {
+  toDefaulted,
+  toOptional,
+  toOptionalText,
+  toSdkFieldSet,
+  toToolInput,
+  toTrimmedText,
+} from "../agent-tools/index.js";
+import type { ToolArgs, ToolDecoded } from "../agent-tools/index.js";
+import type { WrittenFile } from "../direct-edit/commit/index.js";
+import { writeAtomic } from "../direct-edit/commit/index.js";
 import { spacingInputOf } from "../mcp/spacing-tools.js";
-import { describeElements } from "../page-probe/element.js";
+import { describeElements } from "../page-probe/index.js";
 import type { SpacingScope } from "../spacing/commit.js";
 import { getSpacing } from "../spacing/get.js";
 import type { SpacingElement } from "../spacing/get.js";
@@ -20,14 +28,6 @@ import { refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
 import { targetOf } from "./insert-tool.js";
 import { editPageUrl } from "./run-target.js";
-import {
-  toDefaulted,
-  toOptional,
-  toOptionalText,
-  toToolInput,
-  toTrimmedText,
-} from "./tool-input.js";
-import type { ToolArgs, ToolData } from "./tool-input.js";
 
 interface ToolContent {
   text: string;
@@ -94,7 +94,7 @@ const spacingFields = {
       })
   ),
   value: toOptional(
-    Schema.Number.check(
+    Schema.Finite.check(
       Schema.isBetween({ maximum: SPACING_PX_MAX, minimum: -SPACING_PX_MAX })
     ),
     "Value in px. Negative only for margin."
@@ -145,7 +145,7 @@ const scopeOf = (deps: DirectToolDeps): SpacingScope => ({
 
 const sourceOf = async (
   deps: DirectToolDeps,
-  input: ToolData<typeof getSchema>
+  input: ToolDecoded<typeof getSchema>
 ): Promise<Located> => {
   const target = await targetOf(deps, input);
 
@@ -172,7 +172,7 @@ const sourceOf = async (
 
 const elementOf = async (
   deps: DirectToolDeps,
-  input: ToolData<typeof getSchema>
+  input: ToolDecoded<typeof getSchema>
 ): Promise<SpacingElement | null> => {
   if (!input.targetSelector || !deps.ctx.previewUrl) {
     return null;
@@ -193,7 +193,7 @@ const elementOf = async (
 
 const getWith = async (
   deps: DirectToolDeps,
-  input: ToolData<typeof getSchema>
+  input: ToolDecoded<typeof getSchema>
 ): Promise<ToolText> => {
   const located = await sourceOf(deps, input);
 
@@ -249,7 +249,7 @@ const writeAll = async (
 
 const setWith = async (
   deps: DirectToolDeps,
-  input: ToolData<typeof setSchema>
+  input: ToolDecoded<typeof setSchema>
 ): Promise<ToolText> => {
   const located = await sourceOf(deps, input);
 

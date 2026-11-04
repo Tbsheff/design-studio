@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 
 import type { QualityFinding } from "../../shared/contracts.js";
-import type { CanvasService } from "../canvas/service.js";
+import type { CanvasService } from "../canvas/index.js";
 import type { AgentRunContext, PreviewService } from "../types.js";
 import { runScreens } from "./check-tool.js";
 import { EDIT_TOOL_NAMES } from "./permissions.js";

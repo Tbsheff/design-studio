@@ -19,10 +19,7 @@ import type {
 } from "../shared/contracts.js";
 import { NotFoundError, assertSafeId } from "./platform/errors/index.js";
 import { halfSize } from "./platform/half-size/index.js";
-import {
-  siblingWorkerFile,
-  WorkerClient,
-} from "./platform/process/worker-client.js";
+import { siblingWorkerFile, WorkerClient } from "./platform/process/index.js";
 import { diffMask } from "./preview/visual-diff.js";
 import type { StudioProjectStore } from "./store/projects.js";
 import type { EventBus, PreviewService, VersionStore } from "./types.js";

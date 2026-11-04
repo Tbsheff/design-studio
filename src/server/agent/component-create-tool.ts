@@ -6,23 +6,24 @@ import {
 } from "../../shared/component-create.js";
 import type { SourceLoc } from "../../shared/contracts.js";
 import type { InsertTarget } from "../../shared/insert.js";
-import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
+import {
+  toOptionalText,
+  toSdkFieldSet,
+  toToolInput,
+} from "../agent-tools/index.js";
+import type { ToolArgs, ToolDecoded } from "../agent-tools/index.js";
 import { resolveInstance } from "../components/use-site.js";
 import {
   componentFolders,
   planCreateComponent,
-} from "../direct-edit/components-ops/extract.js";
-import {
   planSwap,
   swapCandidates,
-} from "../direct-edit/components-ops/swap.js";
+} from "../direct-edit/components-ops/index.js";
 import { writeAtomic, writeNewFile } from "../direct-edit/index.js";
 import { refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
 import { targetOf } from "./insert-tool.js";
 import { resolveSelectors } from "./kit-tools.js";
-import { toOptionalText, toToolInput } from "./tool-input.js";
-import type { ToolArgs, ToolData } from "./tool-input.js";
 
 type ToolText = Readonly<{
   content: { type: "text"; text: string }[];
@@ -136,7 +137,7 @@ function scopeOf(deps: DirectToolDeps) {
 
 async function targetsOf(
   deps: DirectToolDeps,
-  input: ToolData<typeof createSchema>
+  input: ToolDecoded<typeof createSchema>
 ): Promise<InsertTarget[] | string> {
   const out: InsertTarget[] = [];
 
@@ -231,7 +232,7 @@ export async function runCreateComponent(
 
 async function useOf(
   deps: DirectToolDeps,
-  input: ToolData<typeof swapSchema>
+  input: ToolDecoded<typeof swapSchema>
 ): Promise<SourceLoc | string> {
   if (input.targetSource) {
     const match = LOC.exec(input.targetSource);

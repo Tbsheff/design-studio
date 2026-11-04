@@ -282,7 +282,7 @@ export function stateOfFrame(view: FrameStatesView, frameId: string): string {
 export interface FrameStateChange {
   frameId: string;
   state: string;
-  custom?: { name?: string; mocks?: unknown[]; signedIn?: boolean };
+  custom?: { name?: string; mocks?: readonly unknown[]; signedIn?: boolean };
 }
 
 function nextCustomId(states: StatesFile): string {

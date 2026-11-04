@@ -2,7 +2,7 @@ import { Context, Effect, Layer } from "effect";
 
 import type { EditSessionEnd, Version } from "../../shared/contracts.js";
 import type { HunkRevertResult } from "../../shared/hunk.js";
-import type { EditStepResult } from "../direct-edit/commit/history.js";
+import type { EditStepResult } from "../direct-edit/commit/index.js";
 import { attemptVersionWrite } from "./version-write-core.js";
 import type { VersionWriteError } from "./version-write-core.js";
 import {

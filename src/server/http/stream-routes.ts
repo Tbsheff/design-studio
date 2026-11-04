@@ -20,7 +20,7 @@ import {
   STREAM_APPROVALS,
   STREAM_HELLO,
 } from "../../shared/app-stream.js";
-import type { RecordedEvent } from "../events/event-log.js";
+import type { RecordedEvent } from "../events/index.js";
 import { EventQueue } from "../events/index.js";
 import type { StudioRuntime } from "../main/runtime.js";
 import { BadRequestError, NotFoundError } from "../platform/errors/index.js";

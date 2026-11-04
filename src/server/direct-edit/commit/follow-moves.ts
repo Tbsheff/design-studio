@@ -1,9 +1,6 @@
 import type { SourceLoc } from "../../../shared/contracts.js";
-import {
-  onSourceChange,
-  type SourceFileChange,
-} from "../../events/source-change.js";
-import { lineMapOf, type LineMap } from "../../page-probe/line-map.js";
+import { onSourceChange, type SourceFileChange } from "../../events/index.js";
+import { lineMapOf, type LineMap } from "../../page-probe/index.js";
 import type { CommentStore } from "../../store/comments.js";
 import type { LayerLockStore } from "../../store/layer-locks.js";
 

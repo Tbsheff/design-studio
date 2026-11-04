@@ -11,8 +11,10 @@ import {
   type ElementScope,
   type ElementVariantInfo,
 } from "../../shared/element-variants.js";
-import { htmlElementSpan } from "../direct-edit/engine/html.js";
-import { jsxElementSpan } from "../direct-edit/engine/jsx.js";
+import {
+  htmlElementSpan,
+  jsxElementSpan,
+} from "../direct-edit/engine/index.js";
 import {
   assertCanEdit,
   publishVersion,

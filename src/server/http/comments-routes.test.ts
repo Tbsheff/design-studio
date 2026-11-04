@@ -10,8 +10,8 @@ import type {
   SelectionContext,
 } from "../../shared/contracts.js";
 import { buildUserText } from "../agent/user-message.js";
+import { createEventBus } from "../events/index.js";
 import { projectStorePorts } from "../main/project-ports.js";
-import { createEventBus } from "../store/events.js";
 import {
   createProjectStore,
   type StudioProjectStore,

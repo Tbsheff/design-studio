@@ -25,7 +25,7 @@ export interface FrameStateDeps {
 export interface FrameStateInput {
   frame: string;
   state: string;
-  mock?: { name?: string; rules?: unknown[]; signedIn?: boolean };
+  mock?: { name?: string; rules?: readonly unknown[]; signedIn?: boolean };
 }
 
 export const FRAME_STATES_NOTE =

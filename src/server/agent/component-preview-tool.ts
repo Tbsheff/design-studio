@@ -1,13 +1,16 @@
 import { Schema } from "effect";
 
-import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
+import {
+  toOptionalText,
+  toSdkFieldSet,
+  toToolInput,
+} from "../agent-tools/index.js";
+import type { ToolArgs } from "../agent-tools/index.js";
 import {
   componentPreviewsFor,
   PreviewTargetError,
 } from "../components/preview.js";
 import type { DirectToolDeps } from "./direct-tools.js";
-import { toOptionalText, toToolInput } from "./tool-input.js";
-import type { ToolArgs } from "./tool-input.js";
 
 type ToolContent =
   | { type: "text"; text: string }

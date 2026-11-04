@@ -1,10 +1,16 @@
 import { Schema } from "effect";
 
-import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
+import {
+  toOptionalText,
+  toSdkFieldSet,
+  toToolInput,
+  toTrimmedText,
+} from "../agent-tools/index.js";
+import type { ToolArgs, ToolDecoded } from "../agent-tools/index.js";
 import type { BreakpointScope } from "../breakpoints/commit.js";
-import type { WrittenFile } from "../direct-edit/commit/batch.js";
-import { writeAtomic } from "../direct-edit/commit/edit-source.js";
-import { DirectEditError } from "../direct-edit/engine/errors.js";
+import type { WrittenFile } from "../direct-edit/commit/index.js";
+import { writeAtomic } from "../direct-edit/commit/index.js";
+import { DirectEditError } from "../direct-edit/engine/index.js";
 import {
   BREAKPOINT_NAME,
   STACKING_OVERFLOWS,
@@ -23,8 +29,6 @@ import type { StackingTarget } from "../stacking/set.js";
 import { refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
 import { targetOf } from "./insert-tool.js";
-import { toOptionalText, toToolInput, toTrimmedText } from "./tool-input.js";
-import type { ToolArgs, ToolData } from "./tool-input.js";
 
 interface ToolContent {
   text: string;
@@ -165,12 +169,12 @@ const scopeOf = (deps: DirectToolDeps): BreakpointScope => ({
   workTree: deps.ctx.direction.workTree,
 });
 
-const hasOneTarget = (input: ToolData<typeof getSchema>): boolean =>
+const hasOneTarget = (input: ToolDecoded<typeof getSchema>): boolean =>
   Boolean(input.targetSelector) !== Boolean(input.targetSource);
 
 const locate = async (
   deps: DirectToolDeps,
-  input: ToolData<typeof getSchema>
+  input: ToolDecoded<typeof getSchema>
 ): Promise<Located> => {
   const target = await targetOf(deps, input);
 
@@ -194,7 +198,7 @@ const locate = async (
 
 const getWith = async (
   deps: DirectToolDeps,
-  input: ToolData<typeof getSchema>
+  input: ToolDecoded<typeof getSchema>
 ): Promise<ToolText> => {
   const located = await locate(deps, input);
 
@@ -252,7 +256,7 @@ const writeAll = async (
 
 const setWith = async (
   deps: DirectToolDeps,
-  input: ToolData<typeof setSchema>
+  input: ToolDecoded<typeof setSchema>
 ): Promise<ToolText> => {
   const stacking = toStackingInput(input);
 

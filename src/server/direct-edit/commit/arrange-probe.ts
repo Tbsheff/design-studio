@@ -9,7 +9,7 @@ import {
   type ComponentUse,
   type SourceLoc,
 } from "../../../shared/contracts.js";
-import { appSourceBody, parseLoc } from "../../page-probe/owner-probe.js";
+import { appSourceBody, parseLoc } from "../../page-probe/index.js";
 import { probeOnPage } from "../../preview/probe-page.js";
 import type { PreviewService } from "../../types.js";
 

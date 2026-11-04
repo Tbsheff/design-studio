@@ -20,10 +20,13 @@ import {
   loadRepoContext,
   resolveRunTarget,
 } from "../agent/index.js";
-import type { FrameStateDeps } from "../canvas/app-flow/frame-state-service.js";
-import { createCanvasService } from "../canvas/index.js";
+import type { FrameStateDeps } from "../canvas/app-flow/index.js";
+import {
+  createCanvasService,
+  recordLayout,
+  stepLayout,
+} from "../canvas/index.js";
 import type { CanvasService } from "../canvas/index.js";
-import { recordLayout, stepLayout } from "../canvas/layout-steps.js";
 import { previewOrigin } from "../components/props-service.js";
 import { createLiveDrafts } from "../design-system/draft-live.js";
 import type { ImproveStarted } from "../design-system/draft-live.js";
@@ -40,10 +43,12 @@ import {
   invalidateTokenSource,
   invalidateTokenSourceOnChange,
 } from "../design-system/token-preview.js";
-import { createEditHistory } from "../direct-edit/commit/history.js";
-import type { EditHistory } from "../direct-edit/commit/history.js";
-import { recordRunInHistory } from "../direct-edit/commit/run-record.js";
-import { onPlannedEdit } from "../events/planned-feed.js";
+import {
+  createEditHistory,
+  recordRunInHistory,
+} from "../direct-edit/commit/index.js";
+import type { EditHistory } from "../direct-edit/commit/index.js";
+import { onPlannedEdit, toEditEvent } from "../events/index.js";
 import type { StudioRuntime } from "../main/runtime.js";
 import type { McpListenerRunnerApi } from "../mcp-life/index.js";
 import { REPO_ROOT } from "../platform/config/index.js";
@@ -151,24 +156,7 @@ const createAppContext = (deps: AppDeps) => {
     versions,
   };
 
-  onPlannedEdit((edit) =>
-    bus.emit(
-      edit.kind === "planned"
-        ? {
-            directionId: edit.directionId,
-            id: edit.id,
-            patches: edit.patches,
-            projectId: edit.projectId,
-            type: "edit.planned",
-          }
-        : {
-            directionId: edit.directionId,
-            id: edit.id,
-            projectId: edit.projectId,
-            type: "edit.unplanned",
-          }
-    )
-  );
+  onPlannedEdit((edit) => bus.emit(toEditEvent(edit)));
 
   const canvas =
     deps.canvas ??

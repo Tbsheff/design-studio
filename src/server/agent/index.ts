@@ -2,8 +2,8 @@ import path from "node:path";
 
 import { TOKENS_FILE } from "../../shared/contracts.js";
 import type { Direction, Project } from "../../shared/contracts.js";
-import type { FrameStateDeps } from "../canvas/app-flow/frame-state-service.js";
-import type { CanvasService } from "../canvas/service.js";
+import type { FrameStateDeps } from "../canvas/app-flow/index.js";
+import type { CanvasService } from "../canvas/index.js";
 import { refreshDraftCoverage } from "../design-system/draft-project.js";
 import { packRegistry } from "../design-system/packs.js";
 import type { PackRegistry } from "../design-system/packs.js";

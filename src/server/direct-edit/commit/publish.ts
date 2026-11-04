@@ -4,8 +4,11 @@ import type {
   Version,
   VersionMeta,
 } from "../../../shared/contracts.js";
-import { announcePlanned, withdrawPlanned } from "../../events/planned-feed.js";
-import { noteTreeWrite } from "../../events/source-change.js";
+import {
+  announcePlanned,
+  noteTreeWrite,
+  withdrawPlanned,
+} from "../../events/index.js";
 import { isOutsideRequest } from "../../platform/call-origin/index.js";
 import { DirectEditError } from "../engine/errors.js";
 import type { DirectEditDeps } from "./edit-types.js";

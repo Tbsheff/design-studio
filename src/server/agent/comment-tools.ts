@@ -5,11 +5,14 @@ import { Schema } from "effect";
 import { describeComment, filterComments } from "../../shared/comments.js";
 import type { CommentFilter } from "../../shared/comments.js";
 import type { CommentStatus, DesignComment } from "../../shared/contracts.js";
-import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
+import {
+  toLooseTool,
+  toOptional,
+  toOptionalText,
+} from "../agent-tools/index.js";
 import { canvasFrameOf } from "../comments/frame.js";
 import type { CommentStore } from "../store/comments.js";
 import type { AgentRunContext } from "../types.js";
-import { toOptional, toOptionalText } from "./tool-input.js";
 import { wrapUntrusted } from "./user-message.js";
 
 export const COMMENT_STATUSES = [
@@ -41,9 +44,9 @@ const resolveCommentFields = {
   ]).annotate({ description: "Comment id, or its number (#3 is 3)." }),
 };
 
-export const listCommentsShape = toSdkFieldSet(listCommentsFields);
+export const listCommentsInput = toLooseTool(listCommentsFields);
 
-export const resolveCommentShape = toSdkFieldSet(resolveCommentFields);
+export const resolveCommentInput = toLooseTool(resolveCommentFields);
 
 interface CommentToolDeps {
   ctx: AgentRunContext;

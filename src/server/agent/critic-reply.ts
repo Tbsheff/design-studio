@@ -1,6 +1,7 @@
 import { Schema } from "effect";
 
 import { extractJson } from "../../shared/extract-json.js";
+import { toDecoder } from "../platform/decode/index.js";
 
 const nonEmptyText = Schema.String.check(Schema.isMinLength(1));
 
@@ -17,8 +18,9 @@ type CriticIssue = typeof criticIssueSchema.Type;
 
 const issueList = Schema.Array(criticIssueSchema);
 
-const decodeIssueReply = Schema.decodeUnknownResult(
-  Schema.Union([issueList, Schema.Struct({ issues: issueList })])
+const decodeIssueReply = toDecoder(
+  Schema.Union([issueList, Schema.Struct({ issues: issueList })]),
+  "ignore"
 );
 
 const toCriticIssues = (text: string): CriticIssue[] => {

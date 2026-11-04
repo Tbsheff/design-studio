@@ -9,12 +9,21 @@ import {
   type StructureOp,
 } from "../../shared/contracts.js";
 import { kebabKeys } from "../../shared/style-keys.js";
-import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
+import {
+  toDefaulted,
+  toErrorText,
+  toOptional,
+  toOptionalText,
+  toSdkFieldSet,
+  toToolInput,
+  toTrimmedText,
+} from "../agent-tools/index.js";
+import type { ToolArgs, ToolDecoded } from "../agent-tools/index.js";
 import {
   canvasOwner,
   readCanvasAt,
   type CanvasService,
-} from "../canvas/service.js";
+} from "../canvas/index.js";
 import {
   appTokensFor,
   readAppTokensAt,
@@ -28,46 +37,41 @@ import {
   plannedTokensText,
   writeTokensText,
 } from "../design-system/update-tokens.js";
-import { planDirectEdit } from "../direct-edit/commit/edit-plan.js";
 import {
   chooseEditSite,
   EDIT_TARGETS,
+  type EditSite,
+  planDirectEdit,
+  planStructureEdit,
   siteNote,
   siteRequest,
   textComesFromData,
-  type EditSite,
-} from "../direct-edit/commit/edit-site.js";
-import { writeAtomic } from "../direct-edit/commit/edit-source.js";
-import type { PlannedEdit } from "../direct-edit/commit/edit-types.js";
-import { planStructureEdit } from "../direct-edit/commit/structure-apply.js";
-import { DirectEditError } from "../direct-edit/engine/errors.js";
-import { knownTokenVars } from "../direct-edit/engine/tokens.js";
-import { parseDirectEditRequest } from "../direct-edit/engine/validate.js";
+  type PlannedEdit,
+  writeAtomic,
+} from "../direct-edit/commit/index.js";
+import {
+  DirectEditError,
+  knownTokenVars,
+  parseDirectEditRequest,
+} from "../direct-edit/engine/index.js";
 import {
   announcePlanned,
   domPatchOf,
   withdrawPlanned,
-} from "../events/planned-feed.js";
-import { describeElements, textHintsOf } from "../page-probe/element.js";
+} from "../events/index.js";
 import {
+  describeElements,
   isLayerRef,
   memoPage,
   resolveLayerRefs,
   scopeOf,
+  textHintsOf,
   type Viewport,
-} from "../page-probe/layer-ref.js";
+} from "../page-probe/index.js";
 import type { LayerLockStore } from "../store/layer-locks.js";
 import type { AgentRunContext, PreviewService } from "../types.js";
 import { evaluateToolUse } from "./permissions.js";
 import { editPageUrl } from "./run-target.js";
-import {
-  toDefaulted,
-  toOptional,
-  toOptionalText,
-  toToolInput,
-  toTrimmedText,
-} from "./tool-input.js";
-import type { ToolArgs, ToolData } from "./tool-input.js";
 
 export interface DirectToolDeps {
   preview: PreviewService;
@@ -248,16 +252,12 @@ async function findElements(
   });
 }
 
-function describeError(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
-}
-
 const EDIT_VIEWPORT: Viewport = { width: 1440, height: 900 };
 
 async function alsoSelectors(
   deps: DirectToolDeps,
-  input: ToolData<typeof editElementSchema>
-): Promise<string[]> {
+  input: ToolDecoded<typeof editElementSchema>
+): Promise<readonly string[]> {
   const list = input.also ?? [];
   if (!list.some((item) => isLayerRef(item)) || !deps.ctx.previewUrl)
     return list;
@@ -281,7 +281,7 @@ async function alsoSelectors(
 }
 
 function placeOf(
-  input: ToolData<typeof editElementSchema>
+  input: ToolDecoded<typeof editElementSchema>
 ): { key: "into" | "before" | "after"; selector: string } | null {
   if (input.targetSelector)
     return { key: "into", selector: input.targetSelector };
@@ -294,7 +294,7 @@ function placeOf(
 
 async function structureEdit(
   deps: DirectToolDeps,
-  input: ToolData<typeof editElementSchema>,
+  input: ToolDecoded<typeof editElementSchema>,
   op: StructureOp
 ): Promise<ToolText> {
   const also = await alsoSelectors(deps, input);
@@ -303,7 +303,7 @@ async function structureEdit(
   const [element, parent] = await findElements(deps, input.path, selectors);
   if (!element?.source) return failure(`No element matches ${input.selector}.`);
   const more =
-    also.length > 0 ? await findElements(deps, input.path, also) : [];
+    also.length > 0 ? await findElements(deps, input.path, [...also]) : [];
   const targets = [element, ...more].map((found, index) => ({
     source: found.source as NonNullable<SelectionContext["source"]>,
     selector: [input.selector, ...also][index] as string,
@@ -338,7 +338,7 @@ async function structureEdit(
   );
 }
 
-type EditInput = ToolData<typeof editElementSchema>;
+type EditInput = ToolDecoded<typeof editElementSchema>;
 type Sourced = SelectionContext & {
   source: NonNullable<SelectionContext["source"]>;
 };
@@ -478,7 +478,7 @@ async function styleEdit(
   );
 }
 
-function placesFit(input: ToolData<typeof editElementSchema>): boolean {
+function placesFit(input: ToolDecoded<typeof editElementSchema>): boolean {
   const places = [
     input.targetSelector,
     input.beforeSelector,
@@ -492,7 +492,7 @@ function placesFit(input: ToolData<typeof editElementSchema>): boolean {
 }
 
 function editShapeError(
-  input: ToolData<typeof editElementSchema>
+  input: ToolDecoded<typeof editElementSchema>
 ): string | null {
   const hasChange =
     input.text !== undefined ||
@@ -534,7 +534,7 @@ export async function runEditElement(
       ? await structureEdit(deps, input, input.op)
       : await styleEdit(deps, input);
   } catch (error) {
-    return failure(`edit_element failed: ${describeError(error)}`);
+    return failure(`edit_element failed: ${toErrorText(error)}`);
   }
 }
 
@@ -588,7 +588,7 @@ export async function runSetToken(
       `Set ${entry.cssVar}${input.theme === "dark" ? " (dark)" : ""} to ${input.value} in ${TOKENS_FILE}; tokens.css was rebuilt. ${RUN_NOTE}`
     );
   } catch (error) {
-    return failure(`set_token failed: ${describeError(error)}`);
+    return failure(`set_token failed: ${toErrorText(error)}`);
   } finally {
     invalidateTokenSource(workTree);
   }

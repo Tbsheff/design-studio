@@ -10,7 +10,7 @@ import {
   hideDevChrome,
   selectorClipExpression,
   waitForPage,
-} from "../preview/index.js";
+} from "../preview/page-capture/index.js";
 import type { RenderPage } from "../preview/render-backend.js";
 import type { PreviewService } from "../types.js";
 import { scanExpression } from "./page-scan.js";

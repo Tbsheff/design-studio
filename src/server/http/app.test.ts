@@ -4,8 +4,8 @@ import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import type { Project, Version } from "../../shared/contracts.js";
+import { createEventBus } from "../events/index.js";
 import { projectStorePorts } from "../main/project-ports.js";
-import { createEventBus } from "../store/events.js";
 import {
   createProjectStore,
   type StudioProjectStore,

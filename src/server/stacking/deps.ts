@@ -5,9 +5,9 @@ export {
 
 export { loadBreakpointSite as loadStackingSite } from "../breakpoints/site.js";
 
-export { elementClassInfo } from "../direct-edit/commit/class-info.js";
+export { elementClassInfo } from "../direct-edit/commit/index.js";
 
-export { htmlVariantProps } from "../direct-edit/engine/html.js";
+export { htmlVariantProps } from "../direct-edit/engine/index.js";
 
 export { planDirectEdit } from "../direct-edit/index.js";
 
@@ -25,7 +25,7 @@ export type { BreakpointScope as StackingScope } from "../breakpoints/commit.js"
 
 export type { BreakpointSite as StackingSite } from "../breakpoints/site.js";
 
-export type { WrittenFile } from "../direct-edit/commit/batch.js";
+export type { WrittenFile } from "../direct-edit/commit/index.js";
 
 export type { DirectEditDeps } from "../direct-edit/index.js";
 
@@ -43,3 +43,5 @@ export type {
   StackingSetResult,
   StackingValues,
 } from "../../shared/stacking.js";
+
+export { z } from "../platform/zod-bridge/index.js";

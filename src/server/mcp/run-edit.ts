@@ -1,5 +1,5 @@
 import { firstVersionBlock } from "../app/first-version.js";
-import { takeSaveFailures } from "../direct-edit/commit/save-queue.js";
+import { takeSaveFailures } from "../direct-edit/commit/index.js";
 import {
   renderedSince,
   renderPending,

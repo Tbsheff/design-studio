@@ -1,9 +1,5 @@
 import type { BreakpointScope } from "../breakpoints/commit.js";
-import { DirectEditError } from "../direct-edit/engine/errors.js";
-import {
-  forcedStateFields,
-  setStateFields,
-} from "../platform/tool-fields/state-styles.js";
+import { DirectEditError } from "../direct-edit/engine/index.js";
 import { z } from "../platform/zod-bridge/index.js";
 import { StateStyleError } from "../state-styles/errors.js";
 import { forcedSummary, setForcedState } from "../state-styles/forced.js";
@@ -16,6 +12,10 @@ import {
 import { listStateStyles } from "../state-styles/list.js";
 import { setStateStyle, toStateResult } from "../state-styles/set.js";
 import type { StateTarget } from "../state-styles/set.js";
+import {
+  forcedStateFields,
+  setStateFields,
+} from "../state-styles/tool-fields.js";
 import { EditError, loadTarget, refuseWhileRunning } from "./edit-guards.js";
 import type { EditDeps } from "./edit-guards.js";
 import {

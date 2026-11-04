@@ -42,15 +42,15 @@ import {
   NotFoundError,
   assertSafeId,
 } from "../platform/errors/index.js";
-import { ObjectStore, gitIdent } from "../platform/git/objects.js";
-import type { CommitInfo, TreeEntry } from "../platform/git/objects.js";
 import {
+  ObjectStore,
   gitEnv,
+  gitIdent,
   resolveGitBinary,
   runGit,
   runGitBuffer,
-} from "../platform/git/run-git.js";
-import type { GitScope } from "../platform/git/run-git.js";
+} from "../platform/git/index.js";
+import type { CommitInfo, GitScope, TreeEntry } from "../platform/git/index.js";
 import { createKeyedMutex } from "../platform/mutex/index.js";
 import type {
   ServerConfig,
@@ -70,8 +70,8 @@ import { seedFromUserRepo } from "./version-seed.js";
 import { createChangeTracker } from "./version-tracker.js";
 import { createWarmQueue } from "./version-warm.js";
 
-export { runGit, runGitBuffer } from "../platform/git/run-git.js";
-export type { GitScope } from "../platform/git/run-git.js";
+export { runGit, runGitBuffer } from "../platform/git/index.js";
+export type { GitScope } from "../platform/git/index.js";
 
 export const GIT_EXCLUDES = [
   "node_modules",

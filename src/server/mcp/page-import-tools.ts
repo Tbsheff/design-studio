@@ -5,7 +5,7 @@ import {
   toImportRequest,
 } from "../page-import/index.js";
 import type { ImportCommit } from "../page-import/index.js";
-import { importPageFields } from "../platform/tool-fields/page-import.js";
+import { importPageFields } from "../page-import/tool-fields.js";
 import { z } from "../platform/zod-bridge/index.js";
 import { EditError, loadTarget, refuseWhileRunning } from "./edit-guards.js";
 import type { EditDeps } from "./edit-guards.js";

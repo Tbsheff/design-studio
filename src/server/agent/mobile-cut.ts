@@ -1,4 +1,4 @@
-import { appSourceBody } from "../page-probe/owner-probe.js";
+import { appSourceBody } from "../page-probe/index.js";
 import { onProbePage } from "../preview/probe-page.js";
 import type { PreviewService } from "../types.js";
 

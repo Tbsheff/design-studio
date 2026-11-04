@@ -2,7 +2,7 @@ import {
   PENDING_VERSION,
   savedVersionId,
   savesSettled,
-} from "../direct-edit/commit/save-queue.js";
+} from "../direct-edit/commit/index.js";
 import { isKnownError } from "../platform/errors/index.js";
 import { z } from "../platform/zod-bridge/index.js";
 import type { ActivityDraft } from "./activity.js";

@@ -2,11 +2,15 @@ import { Schema } from "effect";
 
 import { COPY_CODE_FORMATS } from "../../shared/export.js";
 import type { ExportFrame } from "../../shared/export.js";
-import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
+import {
+  toOptionalText,
+  toSdkFieldSet,
+  toToolInput,
+  toTrimmedText,
+} from "../agent-tools/index.js";
+import type { ToolArgs, ToolDecoded } from "../agent-tools/index.js";
 import { COPY_FRAME, copyCode } from "../export/copy-handler.js";
 import type { DirectToolDeps } from "./direct-tools.js";
-import { toOptionalText, toToolInput, toTrimmedText } from "./tool-input.js";
-import type { ToolArgs, ToolData } from "./tool-input.js";
 
 interface ToolContent {
   text: string;
@@ -68,7 +72,7 @@ const messageOf = (error: Error | string | null): string => {
 
 const copyWith = async (
   deps: DirectToolDeps,
-  input: ToolData<typeof schema>
+  input: ToolDecoded<typeof schema>
 ): Promise<ToolText> => {
   const { direction, project } = deps.ctx;
   const format = input.format ?? "html";

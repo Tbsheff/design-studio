@@ -10,7 +10,7 @@ import {
   parseModuleFile,
   resolveImport,
 } from "../../components/props-schema.js";
-import { walkNodes } from "../../direct-edit/commit/text-source-files.js";
+import { walkNodes } from "../../direct-edit/commit/index.js";
 
 export const UNKNOWN = "[*]";
 const MAX_EVAL_DEPTH = 48;

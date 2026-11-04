@@ -1,7 +1,15 @@
 import { Schema } from "effect";
 
 import type { SourceLoc } from "../../shared/contracts.js";
-import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
+import {
+  toOptional,
+  toOptionalInt,
+  toOptionalText,
+  toSdkFieldSet,
+  toToolInput,
+  toTrimmedText,
+} from "../agent-tools/index.js";
+import type { ToolArgs, ToolDecoded } from "../agent-tools/index.js";
 import {
   IMAGE_ALT_MAX,
   IMAGE_FITS,
@@ -27,19 +35,10 @@ import {
 import { searchImages } from "../image-search/search.js";
 import { elementTarget, sourceTarget } from "../image-search/target.js";
 import type { PlaceTarget } from "../image-search/target.js";
-import { describeElements } from "../page-probe/element.js";
-import { probeOwners } from "../page-probe/owner-probe.js";
+import { describeElements, probeOwners } from "../page-probe/index.js";
 import { refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
 import { editPageUrl } from "./run-target.js";
-import {
-  toOptional,
-  toOptionalInt,
-  toOptionalText,
-  toToolInput,
-  toTrimmedText,
-} from "./tool-input.js";
-import type { ToolArgs, ToolData } from "./tool-input.js";
 
 interface ToolContent {
   text: string;
@@ -131,7 +130,7 @@ const placeImageInput = toSdkFieldSet(placeImageFieldSet);
 const searchSchema = toToolInput(searchImagesFieldSet);
 const placeSchema = toToolInput(placeImageFieldSet);
 
-type PlaceArgs = ToolData<typeof placeSchema>;
+type PlaceArgs = ToolDecoded<typeof placeSchema>;
 
 type Located =
   | { message: string; ok: false }

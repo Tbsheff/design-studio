@@ -8,11 +8,11 @@ import {
 } from "../breakpoints/input.js";
 import { listBreakpoints } from "../breakpoints/list.js";
 import { setBreakpointStyle, toBreakpointResult } from "../breakpoints/set.js";
-import { DirectEditError } from "../direct-edit/engine/errors.js";
 import {
   listBreakpointFields,
   setBreakpointFields,
-} from "../platform/tool-fields/breakpoints.js";
+} from "../breakpoints/tool-fields.js";
+import { DirectEditError } from "../direct-edit/engine/index.js";
 import { z } from "../platform/zod-bridge/index.js";
 import { EditError, loadTarget, refuseWhileRunning } from "./edit-guards.js";
 import type { EditDeps } from "./edit-guards.js";

@@ -4,10 +4,7 @@ import path from "node:path";
 import type { AppRoute } from "../../shared/contracts.js";
 import { matchRouteFile } from "../app/index.js";
 import { appRouterDir, listAppRoutes } from "../app/routes.js";
-import {
-  siblingWorkerFile,
-  WorkerClient,
-} from "../platform/process/worker-client.js";
+import { siblingWorkerFile, WorkerClient } from "../platform/process/index.js";
 import { answerGraph, RouteGraph } from "./route-graph.js";
 import type {
   ContentStamp,

@@ -6,7 +6,7 @@ import {
   LayerRefError,
   resolveLayerRef,
   scopeOf,
-} from "../page-probe/layer-ref.js";
+} from "../page-probe/index.js";
 import { BadRequestError } from "../platform/errors/index.js";
 import { withPagePath } from "../project-source/index.js";
 import type { ExportSource } from "../project-source/index.js";

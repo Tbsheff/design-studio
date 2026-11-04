@@ -27,7 +27,7 @@ export interface RouteLinksResult {
 }
 
 export interface FlowInput {
-  routes?: string[];
+  routes?: readonly string[];
   from?: string;
   depth?: number;
   params?: Record<string, string>;

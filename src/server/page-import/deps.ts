@@ -5,15 +5,16 @@ export {
   safeRequest,
 } from "../design-system/extract/safe-fetch.js";
 
-export { sniffImage } from "../direct-edit/commit/image-source.js";
-
-export { tokenEntriesFor } from "../direct-edit/commit/style-scan.js";
+export { sniffImage, tokenEntriesFor } from "../direct-edit/commit/index.js";
 
 export { publishVersion, writeNewFile } from "../direct-edit/index.js";
 
-export { applyPlacement, CANVAS_VIEWPORTS } from "../canvas/tools.js";
-
-export { canvasOwner, canvasPath } from "../canvas/service.js";
+export {
+  applyPlacement,
+  CANVAS_VIEWPORTS,
+  canvasOwner,
+  canvasPath,
+} from "../canvas/index.js";
 
 export { firstVersionBlock } from "../app/first-version.js";
 
@@ -48,7 +49,7 @@ export type {
 
 export type { EditRecorder, DirectEditDeps } from "../direct-edit/index.js";
 
-export type { CanvasService } from "../canvas/service.js";
+export type { CanvasService } from "../canvas/index.js";
 
 export type { CanvasFile, CanvasFileFrame } from "../../shared/canvas-file.js";
 
@@ -63,3 +64,5 @@ export type {
   PageImportRequest,
   PageImportResult,
 } from "../../shared/page-import.js";
+
+export { z } from "../platform/zod-bridge/index.js";

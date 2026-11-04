@@ -1,6 +1,11 @@
 import { Schema } from "effect";
 
-import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
+import {
+  toLooseTool,
+  toOptional,
+  toOptionalFlag,
+  toOptionalText,
+} from "../agent-tools/index.js";
 import {
   TEXT_SEARCH_GLOB_MAX,
   TEXT_SEARCH_IDS_MAX,
@@ -24,7 +29,6 @@ import {
 } from "../text-search/update-text.js";
 import { canvasFrames, refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
-import { toOptional, toOptionalFlag, toOptionalText } from "./tool-input.js";
 
 type ToolText = Readonly<{
   content: { type: "text"; text: string }[];
@@ -82,9 +86,9 @@ const updateTextFields = {
   }),
 };
 
-const searchTextInput = toSdkFieldSet(searchTextFields);
+const searchTextInput = toLooseTool(searchTextFields);
 
-const updateTextInput = toSdkFieldSet(updateTextFields);
+const updateTextInput = toLooseTool(updateTextFields);
 
 const searchTextDescription = SEARCH_TEXT_DESCRIPTION;
 

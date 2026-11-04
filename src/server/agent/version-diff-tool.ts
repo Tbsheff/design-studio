@@ -3,11 +3,14 @@ import path from "node:path";
 
 import { Schema } from "effect";
 
-import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
+import {
+  toOptional,
+  toSdkFieldSet,
+  toToolInput,
+} from "../agent-tools/index.js";
 import { diffVersionFiles } from "../store/version-diff.js";
 import { runGit } from "../store/versions.js";
 import { versionThumbName } from "../thumbnails.js";
-import { toOptional, toToolInput } from "./tool-input.js";
 
 const DIFF_VERSIONS_TEXT =
   "Compare two saved versions, the same as Compare in the studio Versions panel. Returns each changed file (path, oldPath for a rename, status added, removed, modified or renamed, additions, deletions, binary) with its unified git diff (cut at 64 KB a file, 512 KB in all, and 100 files; truncated says so). With thumbnails (default) it also returns thumbs: absolute PNG paths of a 1280x800 screenshot of each version, a mask PNG of the changed pixels and changedPct. Read only.";

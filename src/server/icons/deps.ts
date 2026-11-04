@@ -1,6 +1,9 @@
 export { parseModuleFile } from "../components/props-schema.js";
 
-export { writeAndCommitAll } from "../direct-edit/commit/batch.js";
+export {
+  planInsertJsx,
+  writeAndCommitAll,
+} from "../direct-edit/commit/index.js";
 
 export {
   assertCanEdit,
@@ -8,9 +11,7 @@ export {
   resolveSource,
 } from "../direct-edit/index.js";
 
-export { planInsertJsx } from "../direct-edit/commit/jsx-insert.js";
-
-export { positionAt } from "../direct-edit/engine/structure-ops.js";
+export { positionAt } from "../direct-edit/engine/index.js";
 
 export {
   ICON_BUNDLED,
@@ -19,11 +20,11 @@ export {
   ICON_PACKAGES,
 } from "../../shared/icons.js";
 
-export type { InsertScope } from "../direct-edit/components-ops/insert.js";
+export type { InsertScope } from "../direct-edit/components-ops/index.js";
 
 export type { DirectEditDeps } from "../direct-edit/index.js";
 
-export type { JsxInsertPlan } from "../direct-edit/commit/jsx-insert.js";
+export type { JsxInsertPlan } from "../direct-edit/commit/index.js";
 
 export type {
   Direction,
@@ -41,3 +42,5 @@ export type {
 } from "../../shared/icons.js";
 
 export type { InsertTarget } from "../../shared/insert.js";
+
+export { toDecoder } from "../platform/decode/index.js";

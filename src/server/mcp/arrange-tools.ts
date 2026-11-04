@@ -7,13 +7,13 @@ import {
   type ArrangeResult,
 } from "../../shared/arrange.js";
 import type { Project } from "../../shared/contracts.js";
-import { findFrame, frameRef } from "../canvas/tools.js";
+import { findFrame, frameRef } from "../canvas/index.js";
 import {
   ARRANGE_TARGETS_MAX,
   DEFAULT_ARRANGE_VIEWPORT,
   measureTargets,
-} from "../direct-edit/commit/arrange.js";
-import { DirectEditError } from "../direct-edit/engine/errors.js";
+} from "../direct-edit/commit/index.js";
+import { DirectEditError } from "../direct-edit/engine/index.js";
 import { z } from "../platform/zod-bridge/index.js";
 import { callAction } from "./action-call.js";
 import {

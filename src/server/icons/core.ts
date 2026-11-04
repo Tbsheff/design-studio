@@ -1,6 +1,6 @@
 import { Schema } from "effect";
 
-import { ICON_BUNDLED } from "./deps.js";
+import { ICON_BUNDLED, toDecoder } from "./deps.js";
 import { nameKey } from "./set.js";
 import type { IconSet } from "./set.js";
 import type { IconNode, SvgFrame } from "./svg.js";
@@ -25,7 +25,7 @@ interface Core {
   readonly source: string;
 }
 
-const decodeCore = Schema.decodeUnknownResult(coreSchema);
+const decodeCore = toDecoder(coreSchema, "ignore");
 
 const toNodes = (nodes: (typeof coreSchema.Type.icons)[string]): IconNode[] =>
   nodes.map(([tag, attrs]): IconNode => [tag, Object.entries(attrs)]);

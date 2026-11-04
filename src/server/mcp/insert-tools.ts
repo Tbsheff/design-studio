@@ -8,10 +8,12 @@ import {
   type InsertableList,
 } from "../../shared/insert.js";
 import { PROP_NAME, PROP_TEXT_MAX, PROPS_MAX } from "../../shared/props.js";
-import { describeElement } from "../page-probe/element.js";
-import { scopeOf } from "../page-probe/layer-ref.js";
-import { probeOwners } from "../page-probe/owner-probe.js";
-import { resolveSourceLoc } from "../page-probe/source-loc.js";
+import {
+  describeElement,
+  probeOwners,
+  resolveSourceLoc,
+  scopeOf,
+} from "../page-probe/index.js";
 import { z } from "../platform/zod-bridge/index.js";
 import { callAction } from "./action-call.js";
 import {

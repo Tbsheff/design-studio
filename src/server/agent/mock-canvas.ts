@@ -3,15 +3,15 @@ import path from "node:path";
 
 import { CANVAS_GAP } from "../../shared/canvas-file.js";
 import { statePrefix } from "../../shared/states.js";
-import { editLinks, listLinks } from "../canvas/links/link-tools.js";
-import type { LinkProbe } from "../canvas/links/link-tools.js";
-import type { CanvasService } from "../canvas/service.js";
-import { canvasList, canvasPlace, canvasPoint } from "../canvas/tools.js";
 import type {
+  CanvasService,
   CanvasToolContext,
   PlaceSpec,
   ToolText,
-} from "../canvas/tools.js";
+} from "../canvas/index.js";
+import { canvasList, canvasPlace, canvasPoint } from "../canvas/index.js";
+import { editLinks, listLinks } from "../canvas/links/index.js";
+import type { LinkProbe } from "../canvas/links/index.js";
 import type { DriverInput, DriverSink } from "./lifecycle.js";
 import {
   CANVAS_LIST_TOOL,

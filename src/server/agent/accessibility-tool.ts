@@ -21,18 +21,21 @@ import {
   toAccessibilityResult,
 } from "../accessibility/set.js";
 import type { AccessibilityTarget } from "../accessibility/set.js";
-import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
+import {
+  toSdkFieldSet,
+  toToolInput,
+  toTrimmedText,
+} from "../agent-tools/index.js";
+import type { ToolArgs, ToolDecoded } from "../agent-tools/index.js";
 import type { BreakpointScope } from "../breakpoints/commit.js";
 import { readDesignSystemState } from "../design-system/state.js";
-import type { WrittenFile } from "../direct-edit/commit/batch.js";
-import { writeAtomic } from "../direct-edit/commit/edit-source.js";
-import { DirectEditError } from "../direct-edit/engine/errors.js";
-import { describeElements } from "../page-probe/element.js";
+import type { WrittenFile } from "../direct-edit/commit/index.js";
+import { writeAtomic } from "../direct-edit/commit/index.js";
+import { DirectEditError } from "../direct-edit/engine/index.js";
+import { describeElements } from "../page-probe/index.js";
 import { canvasFrames, refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
 import { editPageUrl } from "./run-target.js";
-import { toToolInput, toTrimmedText } from "./tool-input.js";
-import type { ToolArgs, ToolData } from "./tool-input.js";
 
 interface ToolContent {
   text: string;
@@ -73,7 +76,9 @@ const pathField = Schema.optionalKey(
   })
 );
 
-const selectorField = (description: string): Schema.optionalKey<Schema.Trim> =>
+const toSelectorField = (
+  description: string
+): Schema.optionalKey<Schema.Trim> =>
   Schema.optionalKey(toTrimmedText(1, SELECTOR_MAX).annotate({ description }));
 
 const tabIndexRange = Schema.isBetween({
@@ -100,7 +105,7 @@ const inspectAccessibilityFieldSet = {
     })
   ),
   path: pathField,
-  targetSelector: selectorField(
+  targetSelector: toSelectorField(
     "CSS selector or layer id of one layer. Leave out to check the whole page."
   ),
 };
@@ -127,7 +132,7 @@ const setAccessibilityFieldSet = {
         "tabIndex: 0 puts the layer in the tab order, -1 takes it out. null removes it.",
     })
   ),
-  targetSelector: selectorField(
+  targetSelector: toSelectorField(
     "CSS selector or layer id of the layer on the live page."
   ),
   targetSource: Schema.optionalKey(
@@ -191,7 +196,7 @@ const frameFor = async (
 
 const inspectWith = async (
   deps: DirectToolDeps,
-  input: ToolData<typeof inspectSchema>
+  input: ToolDecoded<typeof inspectSchema>
 ): Promise<ToolText> => {
   if (!deps.ctx.previewUrl) {
     return refuse("Preview is not running for this direction.");
@@ -258,7 +263,7 @@ const fromSource = (raw: string): Located => {
 
 const locate = async (
   deps: DirectToolDeps,
-  input: ToolData<typeof setSchema>
+  input: ToolDecoded<typeof setSchema>
 ): Promise<Located> => {
   if (input.targetSource) {
     return fromSource(input.targetSource);
@@ -311,7 +316,7 @@ const writeAll = async (
 
 const setWith = async (
   deps: DirectToolDeps,
-  input: ToolData<typeof setSchema>
+  input: ToolDecoded<typeof setSchema>
 ): Promise<ToolText> => {
   const changes = toAccessibilityChanges(input);
 

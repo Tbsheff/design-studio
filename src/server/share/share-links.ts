@@ -10,8 +10,7 @@ import type {
   ShareServerState,
   StudioCursorInput,
 } from "../../shared/share.js";
-import { readProjectCanvas } from "../canvas/service.js";
-import { findFrame } from "../canvas/tools.js";
+import { findFrame, readProjectCanvas } from "../canvas/index.js";
 import { resolveSource } from "../export/source.js";
 import type { ExportDeps } from "../export/source.js";
 import {

@@ -1,14 +1,12 @@
 import {
-  IMAGE_ORIENTATIONS,
-  IMAGE_QUERY_MAX,
-  IMAGE_SEARCH_LIMIT_MAX,
-} from "../../../shared/image-search.js";
-import {
   IMAGE_ALT_MAX,
   IMAGE_FITS,
   IMAGE_MODES,
-} from "../../../shared/image.js";
-import { z } from "../zod-bridge/index.js";
+  IMAGE_ORIENTATIONS,
+  IMAGE_QUERY_MAX,
+  IMAGE_SEARCH_LIMIT_MAX,
+  z,
+} from "./deps.js";
 
 const FOCAL_MAX = 40;
 

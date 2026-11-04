@@ -1,7 +1,6 @@
 import type { ForcedStateWire } from "../../shared/state-styles.js";
 import { frameStatesView, stateOfFrame } from "../app/frame-state.js";
-import { readProjectCanvas } from "../canvas/service.js";
-import { findFrame } from "../canvas/tools.js";
+import { findFrame, readProjectCanvas } from "../canvas/index.js";
 import { NotFoundError } from "../platform/errors/index.js";
 import { forcedOf } from "../state-styles/forced-store.js";
 import type { StudioProjectStore } from "../store/projects.js";

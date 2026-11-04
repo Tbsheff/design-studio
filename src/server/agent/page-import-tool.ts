@@ -1,4 +1,9 @@
-import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
+import {
+  toLooseTool,
+  toOptionalInt,
+  toOptionalText,
+  toTrimmedText,
+} from "../agent-tools/index.js";
 import {
   PAGE_IMPORT_NAME_MAX,
   PAGE_IMPORT_SELECTOR_MAX,
@@ -16,7 +21,6 @@ import {
 import type { ImportPageInput } from "../page-import/input.js";
 import { refusal } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
-import { toOptionalInt, toOptionalText, toTrimmedText } from "./tool-input.js";
 
 type ToolText = Readonly<{
   content: { type: "text"; text: string }[];
@@ -47,7 +51,7 @@ const importPageFields = {
   ),
 };
 
-const importPageInput = toSdkFieldSet(importPageFields);
+const importPageInput = toLooseTool(importPageFields);
 
 const importPageDescription = IMPORT_PAGE_DESCRIPTION;
 

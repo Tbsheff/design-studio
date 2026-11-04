@@ -1,7 +1,3 @@
-import {
-  searchTextFields,
-  updateTextFields,
-} from "../platform/tool-fields/text-search.js";
 import { z } from "../platform/zod-bridge/index.js";
 import { TextSearchError } from "../text-search/errors.js";
 import {
@@ -12,6 +8,10 @@ import {
 } from "../text-search/input.js";
 import type { SearchTarget } from "../text-search/scope.js";
 import { searchText } from "../text-search/search-text.js";
+import {
+  searchTextFields,
+  updateTextFields,
+} from "../text-search/tool-fields.js";
 import { updateText } from "../text-search/update-text.js";
 import type { UpdateCommit } from "../text-search/update-text.js";
 import { EditError, loadTarget, refuseWhileRunning } from "./edit-guards.js";

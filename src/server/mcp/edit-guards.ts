@@ -3,13 +3,13 @@ import path from "node:path";
 
 import type { AppFixResult } from "../../shared/app-doctor.js";
 import type { Direction, Project } from "../../shared/contracts.js";
-import type { FrameStateDeps } from "../canvas/app-flow/frame-state-service.js";
-import type { CanvasService } from "../canvas/service.js";
+import type { FrameStateDeps } from "../canvas/app-flow/index.js";
+import type { CanvasService } from "../canvas/index.js";
 import { warmKit } from "../components/props-service.js";
-import type { EditHistory } from "../direct-edit/commit/history.js";
+import type { EditHistory } from "../direct-edit/commit/index.js";
 import type { EditRecorder } from "../direct-edit/index.js";
 import type { ExportDeps } from "../export/source.js";
-import { EditError } from "../page-probe/edit-error.js";
+import { EditError } from "../page-probe/index.js";
 import { LOCAL_ORG_ID, isOrgInScope, toOrgScope } from "../store/index.js";
 import type { LayerLockStore } from "../store/layer-locks.js";
 import type { AgentRunner, EventBus } from "../types.js";
@@ -40,7 +40,7 @@ export type FixApp = (
   kind: unknown
 ) => Promise<AppFixResult>;
 
-export { EditError } from "../page-probe/edit-error.js";
+export { EditError } from "../page-probe/index.js";
 
 export const RUN_BUSY =
   "A studio run is editing this design. Try again when it finishes.";

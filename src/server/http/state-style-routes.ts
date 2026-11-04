@@ -3,18 +3,18 @@ import type { Context, Hono } from "hono";
 import type { Direction, Project } from "../../shared/contracts.js";
 import type { StateStyleResult } from "../../shared/state-styles.js";
 import type { CanvasService } from "../canvas/index.js";
-import { DirectEditError } from "../direct-edit/engine/errors.js";
+import { DirectEditError } from "../direct-edit/engine/index.js";
 import type { DirectEditDeps } from "../direct-edit/index.js";
-import {
-  forcedStateFields,
-  setStateFields,
-} from "../platform/tool-fields/state-styles.js";
 import { z } from "../platform/zod-bridge/index.js";
 import { StateStyleError } from "../state-styles/errors.js";
 import { setForcedState } from "../state-styles/forced.js";
 import { toStateInput } from "../state-styles/input.js";
 import { listStateStyles } from "../state-styles/list.js";
 import { setStateStyle, toStateResult } from "../state-styles/set.js";
+import {
+  forcedStateFields,
+  setStateFields,
+} from "../state-styles/tool-fields.js";
 
 interface StateStyleRouteDeps {
   canvas: CanvasService;

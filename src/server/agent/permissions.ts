@@ -4,7 +4,6 @@ import type {
   PermissionResult,
 } from "@anthropic-ai/claude-agent-sdk";
 
-import { AGENT_OPS } from "../agent-tools/registry.js";
 import {
   READ_TOOLS,
   SKILL_TOOL,
@@ -14,6 +13,7 @@ import {
 } from "../platform/tool-policy/index.js";
 import type { ToolPolicy } from "../platform/tool-policy/index.js";
 import type { ToolGate } from "./ask-gate.js";
+import { AGENT_OPS } from "./legacy/agent-ops.js";
 import { LEGACY_AGENT_TOOLS } from "./legacy/all.js";
 import {
   ADD_FLOW_TOOL,

@@ -5,7 +5,7 @@ import {
   SPACING_TOKEN,
 } from "../../shared/spacing.js";
 import type { SpacingInput } from "../../shared/spacing.js";
-import { describeElement } from "../page-probe/element.js";
+import { describeElement } from "../page-probe/index.js";
 import { z } from "../platform/zod-bridge/index.js";
 import type { SpacingScope } from "../spacing/commit.js";
 import { SpacingError } from "../spacing/errors.js";

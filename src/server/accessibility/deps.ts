@@ -5,7 +5,7 @@ export {
 
 export { loadBreakpointSite as loadAccessibilitySite } from "../breakpoints/site.js";
 
-export { findFrame } from "../canvas/tools.js";
+export { findFrame } from "../canvas/index.js";
 
 export { readDesignSystemState } from "../design-system/state.js";
 
@@ -14,9 +14,9 @@ export {
   jsxTagName,
   setHtmlAttrs,
   setJsxAttrs,
-} from "../direct-edit/commit/image-attrs.js";
+} from "../direct-edit/commit/index.js";
 
-export { appSourceBody, parseLoc } from "../page-probe/owner-probe.js";
+export { appSourceBody, parseLoc } from "../page-probe/index.js";
 
 export { probeOnPage } from "../preview/probe-page.js";
 
@@ -36,9 +36,7 @@ export type { BreakpointScope as AccessibilityScope } from "../breakpoints/commi
 
 export type { CanvasFileFrame } from "../../shared/canvas-file.js";
 
-export type { AttrChanges } from "../direct-edit/commit/image-attrs.js";
-
-export type { WrittenFile } from "../direct-edit/commit/batch.js";
+export type { AttrChanges, WrittenFile } from "../direct-edit/commit/index.js";
 
 export type { DirectEditDeps } from "../direct-edit/index.js";
 
@@ -62,3 +60,5 @@ export type {
   NameSource,
   TabStop,
 } from "../../shared/accessibility.js";
+
+export { z } from "../platform/zod-bridge/index.js";

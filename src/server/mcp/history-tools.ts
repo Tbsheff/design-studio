@@ -14,9 +14,9 @@ import {
   editedAtLabel,
   locText,
   siteRequest,
-} from "../direct-edit/commit/edit-site.js";
+} from "../direct-edit/commit/index.js";
 import { publishVersion } from "../direct-edit/index.js";
-import { describeElements, textHintsOf } from "../page-probe/element.js";
+import { describeElements, textHintsOf } from "../page-probe/index.js";
 import { z } from "../platform/zod-bridge/index.js";
 import { callAction } from "./action-call.js";
 import { listWords } from "./activity-text.js";

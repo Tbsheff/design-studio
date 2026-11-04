@@ -10,30 +10,27 @@ import {
   IMAGE_MODES,
   imageKindOf,
 } from "../../shared/image.js";
-import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
 import {
+  toOptional,
+  toOptionalText,
+  toSdkFieldSet,
+  toToolInput,
+  toTrimmedText,
+} from "../agent-tools/index.js";
+import type { ToolArgs, ToolDecoded } from "../agent-tools/index.js";
+import {
+  type ImageBytes,
   imageFromPath,
   imageFromUrl,
-  type ImageBytes,
-} from "../direct-edit/commit/image-source.js";
-import {
   parseSetImage,
   planChanged,
   planSetImage,
   writeImagePlan,
-} from "../direct-edit/commit/image.js";
-import { describeElements } from "../page-probe/element.js";
-import { probeOwners } from "../page-probe/owner-probe.js";
+} from "../direct-edit/commit/index.js";
+import { describeElements, probeOwners } from "../page-probe/index.js";
 import { refusal, writeProblem, type DirectToolDeps } from "./direct-tools.js";
 import { resolveSelectors } from "./kit-tools.js";
 import { editPageUrl } from "./run-target.js";
-import {
-  toOptional,
-  toOptionalText,
-  toToolInput,
-  toTrimmedText,
-} from "./tool-input.js";
-import type { ToolArgs, ToolData } from "./tool-input.js";
 
 type ToolText = {
   content: { type: "text"; text: string }[];
@@ -93,7 +90,7 @@ const setImageFields = {
 export const setImageShape = toSdkFieldSet(setImageFields);
 
 const schema = toToolInput(setImageFields);
-type Input = ToolData<typeof schema>;
+type Input = ToolDecoded<typeof schema>;
 
 function text(message: string, isError = false): ToolText {
   return {

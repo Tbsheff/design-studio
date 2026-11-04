@@ -7,7 +7,7 @@ import {
 } from "../../shared/reference.js";
 import type { ReferenceScore } from "../../shared/reference.js";
 import { compareToReference, mimeOfPath, scoreLines } from "../agent/index.js";
-import { findFrame, frameRef } from "../canvas/tools.js";
+import { findFrame, frameRef } from "../canvas/index.js";
 import { z } from "../platform/zod-bridge/index.js";
 import { EditError, loadTarget } from "./edit-guards.js";
 import type { EditDeps } from "./edit-guards.js";

@@ -19,7 +19,7 @@ import type {
   FinalCheckWithReference,
   ReferenceRecord,
 } from "../../shared/reference.js";
-import type { CanvasService } from "../canvas/service.js";
+import type { CanvasService } from "../canvas/index.js";
 import { countSeverities } from "../preview/quality.js";
 import { runReviewFrameTool } from "../review/agent-tool.js";
 import type { PreviewService, AgentRunContext } from "../types.js";

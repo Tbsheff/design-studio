@@ -2,8 +2,7 @@ import type { PublishInput } from "../../shared/actions/publish/schema.js";
 import type { Project } from "../../shared/contracts.js";
 import type { ExportFrame } from "../../shared/export.js";
 import type { PublishPlanInput } from "../../shared/publish.js";
-import { readProjectCanvas } from "../canvas/service.js";
-import { findFrame } from "../canvas/tools.js";
+import { findFrame, readProjectCanvas } from "../canvas/index.js";
 import { BadRequestError } from "../platform/errors/index.js";
 import type { LegacyLink } from "./legacy-link.js";
 

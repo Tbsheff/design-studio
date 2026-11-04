@@ -13,3 +13,26 @@ export * from "./link-store.js";
 export * from "./link-writer.js";
 
 export * from "./link-runtime.js";
+
+export {
+  listLinkInteractions,
+  setLinkInteraction,
+} from "./link-interaction.js";
+
+export {
+  linkInteractionFields,
+  linkInteractionSchema,
+  listLinkInteractionsFields,
+  toInteractionRequest,
+} from "./link-interaction-input.js";
+
+export type { LinkInteractionInput } from "./link-interaction-input.js";
+
+export {
+  editLinks,
+  editLinksFields,
+  listLinks,
+  probeWithPreview,
+} from "./link-tools.js";
+
+export type { EditLinksArgs, LinkProbe } from "./link-tools.js";

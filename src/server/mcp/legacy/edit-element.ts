@@ -8,12 +8,12 @@ import {
   chooseEditSite,
   siteRequest,
   textComesFromData,
-} from "../../direct-edit/commit/edit-site.js";
+} from "../../direct-edit/commit/index.js";
 import type {
   EditSite,
   EditSiteScope,
-} from "../../direct-edit/commit/edit-site.js";
-import { textHintsOf } from "../../page-probe/element.js";
+} from "../../direct-edit/commit/index.js";
+import { textHintsOf } from "../../page-probe/index.js";
 import { callAction } from "../action-call.js";
 import { editSummary } from "../activity-text.js";
 import { EditError, loadTarget, refuseWhileRunning } from "../edit-guards.js";

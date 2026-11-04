@@ -1,14 +1,12 @@
+import type { CanvasToolContext } from "../canvas/index.js";
 import {
   linkInteractionFields,
-  listLinkInteractionsFields,
-  toInteractionRequest,
-} from "../canvas/links/link-interaction-input.js";
-import {
   listLinkInteractions,
+  listLinkInteractionsFields,
+  probeWithPreview,
   setLinkInteraction,
-} from "../canvas/links/link-interaction.js";
-import { probeWithPreview } from "../canvas/links/link-tools.js";
-import type { CanvasToolContext } from "../canvas/tools.js";
+  toInteractionRequest,
+} from "../canvas/links/index.js";
 import { z } from "../platform/zod-bridge/index.js";
 import { loadTarget, refuseWhileRunning } from "./edit-guards.js";
 import type { EditDeps } from "./edit-guards.js";

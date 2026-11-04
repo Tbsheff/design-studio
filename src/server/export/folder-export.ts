@@ -11,7 +11,7 @@ import type {
 import type { CanvasFileFrame } from "../../shared/canvas-file.js";
 import type { Direction, Project } from "../../shared/contracts.js";
 import type { ExportFrame } from "../../shared/export.js";
-import { EditError } from "../page-probe/edit-error.js";
+import { EditError } from "../page-probe/index.js";
 import type { ExportRuntime } from "./export-core.js";
 import { buildExportFile } from "./export-file.js";
 import { pickExportFrames } from "./export-frames.js";

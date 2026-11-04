@@ -1,6 +1,9 @@
 import type { CommentFrame, Project } from "../../shared/contracts.js";
-import { readProjectCanvas, type ProjectDirOf } from "../canvas/service.js";
-import { findFrame } from "../canvas/tools.js";
+import {
+  findFrame,
+  type ProjectDirOf,
+  readProjectCanvas,
+} from "../canvas/index.js";
 
 export async function canvasFrameOf(
   project: Project,

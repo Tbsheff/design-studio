@@ -3,8 +3,8 @@ import {
   ACCESSIBILITY_ROLES,
   TAB_INDEX_MAX,
   TAB_INDEX_MIN,
-} from "../../../shared/accessibility.js";
-import { z } from "../zod-bridge/index.js";
+  z,
+} from "./deps.js";
 
 const inspectAccessibilityFields = {
   includePassing: z

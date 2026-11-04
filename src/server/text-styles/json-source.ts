@@ -1,5 +1,6 @@
 import { Schema } from "effect";
 
+import { toDecoder } from "./deps.js";
 import type { TextStyle, TextStyleProp } from "./deps.js";
 import { tokenJsonFiles } from "./files.js";
 import type { SourceFile } from "./files.js";
@@ -10,7 +11,7 @@ type JsonValue =
   | number
   | string
   | readonly JsonValue[]
-  | { [key: string]: JsonValue }
+  | { readonly [key: string]: JsonValue }
   | null;
 
 type JsonObject = Record<string, JsonValue>;
@@ -30,11 +31,16 @@ const MAX_DEPTH = 4;
 const isText = Schema.is(Schema.String);
 const isNumber = Schema.is(Schema.Number);
 const isTextList = Schema.is(Schema.Array(Schema.String));
-const isRecord = Schema.is(Schema.Record(Schema.String, Schema.Unknown));
+const isRecord = Schema.is(Schema.Record(Schema.String, Schema.Json));
+
+const decodeJsonText = toDecoder(Schema.fromJsonString(Schema.Json), "ignore");
+
+const isJsonObject = (raw: JsonValue | null): raw is JsonObject =>
+  isRecord(raw) && !Array.isArray(raw);
 
 const toObject = (raw: JsonValue | null): JsonObject | null => {
-  if (isRecord(raw) && !Array.isArray(raw)) {
-    return raw as JsonObject;
+  if (isJsonObject(raw)) {
+    return raw;
   }
 
   return null;
@@ -202,11 +208,13 @@ const typographyOf = (root: JsonObject | null): JsonObject | null => {
 };
 
 const parseJson = (text: string): JsonObject | null => {
-  try {
-    return toObject(JSON.parse(text) as JsonValue);
-  } catch {
+  const parsed = decodeJsonText(text);
+
+  if (parsed._tag === "Failure") {
     return null;
   }
+
+  return toObject(parsed.success);
 };
 
 const fileStyles = (source: SourceFile): TextStyle[] => {

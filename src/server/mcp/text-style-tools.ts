@@ -4,7 +4,7 @@ import {
   TEXT_STYLE_NAME,
   TEXT_STYLE_QUERY_MAX,
 } from "../../shared/text-styles.js";
-import { describeElement } from "../page-probe/element.js";
+import { describeElement } from "../page-probe/index.js";
 import { z } from "../platform/zod-bridge/index.js";
 import { applyTextStyle } from "../text-styles/apply.js";
 import type { TextStyleApplyDone } from "../text-styles/apply.js";

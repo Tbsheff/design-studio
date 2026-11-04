@@ -29,6 +29,7 @@ import {
 } from "../agent/permissions.js";
 import { buildSystemPrompt } from "../agent/prompt.js";
 import { buildUserText } from "../agent/user-message.js";
+import { createEventBus } from "../events/index.js";
 import { createApp } from "../http/app.js";
 import { projectStorePorts } from "../main/project-ports.js";
 import {
@@ -36,7 +37,6 @@ import {
   withDesignSystemWarning,
 } from "../preview/index.js";
 import { WatcherManager } from "../preview/watcher.js";
-import { createEventBus } from "../store/events.js";
 import {
   createProjectStore,
   type StudioProjectStore,

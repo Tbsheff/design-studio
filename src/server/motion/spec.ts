@@ -14,7 +14,7 @@ interface MotionInput {
   end?: Record<string, string> | undefined;
   kind: MotionKind;
   preset?: EntrancePreset | undefined;
-  properties?: string[] | undefined;
+  properties?: readonly string[] | undefined;
   staggerMs?: number | undefined;
   state?: MotionTransition["state"] | undefined;
 }
@@ -56,7 +56,7 @@ const easingOf = (raw: string | undefined): string => {
 
 const propertiesOf = (input: MotionInput): string[] => {
   if (input.properties && input.properties.length > 0) {
-    return input.properties;
+    return [...input.properties];
   }
 
   const fromEnd = Object.keys(input.end ?? {});

@@ -7,9 +7,9 @@ type Statement = ModuleAst["program"]["body"][number];
 
 type ImportDecl = Extract<Statement, { type: "ImportDeclaration" }>;
 
-type ImportItem = ImportDecl["specifiers"][number];
+type ImportEntry = ImportDecl["specifiers"][number];
 
-type NamedItem = Extract<ImportItem, { type: "ImportSpecifier" }>;
+type NamedEntry = Extract<ImportEntry, { type: "ImportSpecifier" }>;
 
 interface Splice {
   end: number;
@@ -31,7 +31,7 @@ interface ImportNeed {
 const isImport = (node: Statement): node is ImportDecl =>
   node.type === "ImportDeclaration";
 
-const isNamed = (item: ImportItem): item is NamedItem =>
+const isNamed = (item: ImportEntry): item is NamedEntry =>
   item.type === "ImportSpecifier";
 
 const quoteOf = (decls: readonly ImportDecl[], code: string): string => {

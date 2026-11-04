@@ -14,7 +14,7 @@ interface SearchTextInput {
 }
 
 interface UpdateTextInput extends SearchTextInput {
-  readonly ids?: string[] | undefined;
+  readonly ids?: readonly string[] | undefined;
   readonly replace: string;
 }
 

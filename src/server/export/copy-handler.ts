@@ -3,8 +3,8 @@ import type { CopyCodeFormat, ExportFrame } from "../../shared/export.js";
 import {
   defaultTailwindTheme,
   projectTailwindTheme,
-} from "../direct-edit/tailwind/theme.js";
-import type { TailwindTheme } from "../direct-edit/tailwind/theme.js";
+} from "../direct-edit/tailwind/index.js";
+import type { TailwindTheme } from "../direct-edit/tailwind/index.js";
 import type { PreviewService } from "../types.js";
 import { compact, readTree, renderHtml, renderTailwind } from "./copy-code.js";
 import type { StyledNode } from "./copy-code.js";

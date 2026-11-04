@@ -1,7 +1,7 @@
 import type { Project } from "../../shared/contracts.js";
 import { searchComponents } from "../components/component-search.js";
-import { tailwindClassesFor } from "../direct-edit/engine/tailwind/copy.js";
-import type { TailwindTheme } from "../direct-edit/tailwind/theme.js";
+import { tailwindClassesFor } from "../direct-edit/engine/index.js";
+import type { TailwindTheme } from "../direct-edit/tailwind/index.js";
 import { kitCandidates, loadKitNames } from "../figma/kit-match.js";
 import type { StyledNode } from "./copy-code.js";
 

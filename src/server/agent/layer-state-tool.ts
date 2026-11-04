@@ -1,40 +1,39 @@
 import { Schema } from "effect";
 
 import type { SelectionContext } from "../../shared/contracts.js";
-import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
-import { planDirectEdit } from "../direct-edit/commit/edit-plan.js";
-import { writeAtomic } from "../direct-edit/commit/edit-source.js";
-import { knownTokenVars } from "../direct-edit/engine/tokens.js";
-import { parseDirectEditRequest } from "../direct-edit/engine/validate.js";
-import {
-  announcePlanned,
-  domPatchOf,
-  withdrawPlanned,
-} from "../events/planned-feed.js";
-import { describeElement } from "../page-probe/element.js";
-import {
-  isLayerRef,
-  memoPage,
-  resolveLayerRefs,
-  scopeOf,
-} from "../page-probe/layer-ref.js";
-import {
-  applyDelta,
-  describeLocks,
-  lockDelta,
-  lockOutcome,
-  probeLock,
-} from "../page-probe/lock-probe.js";
-import { refusal, writeProblem } from "./direct-tools.js";
-import type { DirectToolDeps } from "./direct-tools.js";
-import { editPageUrl } from "./run-target.js";
 import {
   toOptionalFlag,
   toOptionalText,
   toRefinedToolInput,
+  toSdkFieldSet,
   toTrimmedText,
-} from "./tool-input.js";
-import type { ToolArgs, ToolData } from "./tool-input.js";
+} from "../agent-tools/index.js";
+import type { ToolArgs, ToolDecoded } from "../agent-tools/index.js";
+import { planDirectEdit, writeAtomic } from "../direct-edit/commit/index.js";
+import {
+  knownTokenVars,
+  parseDirectEditRequest,
+} from "../direct-edit/engine/index.js";
+import {
+  announcePlanned,
+  domPatchOf,
+  withdrawPlanned,
+} from "../events/index.js";
+import {
+  applyDelta,
+  describeElement,
+  describeLocks,
+  isLayerRef,
+  lockDelta,
+  lockOutcome,
+  memoPage,
+  probeLock,
+  resolveLayerRefs,
+  scopeOf,
+} from "../page-probe/index.js";
+import { refusal, writeProblem } from "./direct-tools.js";
+import type { DirectToolDeps } from "./direct-tools.js";
+import { editPageUrl } from "./run-target.js";
 
 type ToolText = Readonly<{
   content: { type: "text"; text: string }[];
@@ -99,7 +98,7 @@ function describeError(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-type Input = ToolData<typeof layerStateSchema>;
+type Input = ToolDecoded<typeof layerStateSchema>;
 
 async function resolved(
   deps: DirectToolDeps,

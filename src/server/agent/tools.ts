@@ -7,7 +7,6 @@ import type {
 } from "@anthropic-ai/claude-agent-sdk";
 import { Schema } from "effect";
 
-import { FLOW_MAX_DEPTH } from "../../shared/route-flow.js";
 import type { FlowInput } from "../../shared/route-flow.js";
 import {
   levelOf,
@@ -15,37 +14,39 @@ import {
   withRunTask,
 } from "../../shared/run-levels.js";
 import type { ResolvedRunConfig } from "../../shared/run-levels.js";
-import { AGENT_OPS, buildAgentTools } from "../agent-tools/registry.js";
-import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
+import { toOptional, toSdkFieldSet, toToolRun } from "../agent-tools/index.js";
+import type { ToolFields, ToolInput } from "../agent-tools/index.js";
+import { buildAgentTools } from "../agent-tools/registry.js";
 import {
-  FRAME_STATES_NOTE,
   applyFrameSession,
   applyFrameState,
+  buildFlow,
+  describeFlow,
   describeFrameStates,
+  describeRouteLinks,
+  FLOW_NOTE,
+  FRAME_STATES_NOTE,
+  listRouteLinks,
   readFrameStates,
-} from "../canvas/app-flow/frame-state-service.js";
+  toFlowDeps,
+} from "../canvas/app-flow/index.js";
 import type {
   FrameStateDeps,
   FrameStateInput,
-} from "../canvas/app-flow/frame-state-service.js";
-import {
-  buildFlow,
-  describeFlow,
-  describeRouteLinks,
-  FLOW_NOTE,
-  listRouteLinks,
-  toFlowDeps,
-} from "../canvas/app-flow/route-flow.js";
+} from "../canvas/app-flow/index.js";
+import type {
+  CanvasService,
+  CanvasToolContext,
+  PlaceSpec,
+} from "../canvas/index.js";
+import { canvasList, canvasPlace, canvasPoint } from "../canvas/index.js";
 import {
   editLinks,
-  editLinksShape,
+  editLinksFields,
   listLinks,
   probeWithPreview,
-} from "../canvas/links/link-tools.js";
-import type { EditLinksArgs, LinkProbe } from "../canvas/links/link-tools.js";
-import type { CanvasService } from "../canvas/service.js";
-import { canvasList, canvasPlace, canvasPoint } from "../canvas/tools.js";
-import type { CanvasToolContext, PlaceSpec } from "../canvas/tools.js";
+} from "../canvas/links/index.js";
+import type { EditLinksArgs, LinkProbe } from "../canvas/links/index.js";
 import { checkDesignSystem, describeCheck } from "../design-system/check.js";
 import { prepareShip } from "../git/ship-prepare.js";
 import type { StudioRuntime } from "../main/runtime.js";
@@ -77,14 +78,17 @@ import {
   setBreakpointStyleInput,
 } from "./breakpoints-tool.js";
 import {
+  HELP_INPUT,
+  SCREENSHOT_TOOL,
+  TARGET_TOOL,
+  FLOW_TOOL,
+  TWEAKS_TOOL,
   canvasPlaceInput,
   canvasPointInput,
   doctorInput,
   frameSessionInput,
   frameStateInput,
   routeLinkInput,
-  toFlowInput,
-  toTweaksInput,
 } from "./canvas-tool-fields.js";
 import {
   budgetLine,
@@ -94,8 +98,8 @@ import {
   saveCheck,
 } from "./check-tool.js";
 import {
-  listCommentsShape,
-  resolveCommentShape,
+  listCommentsInput,
+  resolveCommentInput,
   runListComments,
   runResolveComment,
 } from "./comment-tools.js";
@@ -177,6 +181,7 @@ import {
   runSetLayerState,
 } from "./layer-state-tool.js";
 import { isLeanRun } from "./lean-run.js";
+import { AGENT_OPS } from "./legacy/agent-ops.js";
 import {
   listLinkInteractionsInput,
   runListLinkInteractions,
@@ -245,14 +250,6 @@ import {
 } from "./text-style-tool.js";
 import { TOOL_HELP, TOOL_SHORT } from "./tool-help.js";
 import type { StudioToolName } from "./tool-help.js";
-import {
-  toDefaulted,
-  toOptional,
-  toOptionalInt,
-  toOptionalFlag,
-  toOptionalText,
-  toTrimmedText,
-} from "./tool-input.js";
 import { HELP_TOOL, studioToolsFor } from "./tool-sets.js";
 import type { CriticImage, RunToolState } from "./types.js";
 import {
@@ -284,61 +281,14 @@ const TILE_PLAN: Record<
 
 type QueryFn = typeof query;
 
-const TWEAK_CONTROLS_NOTE =
-  "Each control: {id, label, cssVar, type: range {min, max, step?, unit?, default: number} | color {default} | toggle {on, off, default: boolean} | select {options: [{label, value}], default}}.";
-
 const agentEditElementShape = toSdkFieldSet({
   ...editElementFields,
   style: toOptional(
     Schema.Record(
       Schema.String,
-      Schema.Union([Schema.String, Schema.Number, Schema.Null])
+      Schema.Union([Schema.String, Schema.Finite, Schema.Null])
     ),
     "CSS properties to set, kebab-case or camelCase keys; null removes one. Tailwind projects get theme classes."
-  ),
-});
-
-const TARGET_FIELDS = {
-  frame: toOptionalText(
-    1,
-    60,
-    "Canvas frame id or @label: render its page with its frame state. Leave out for the frame from <canvas-context>."
-  ),
-  path: toOptionalText(
-    0,
-    300,
-    "Page path instead of the frame page, such as /settings or about.html."
-  ),
-  state: Schema.optionalKey(
-    Schema.String.check(Schema.isPattern(/^[a-z][a-z0-9-]{0,23}$/u)).annotate({
-      description:
-        "Attached apps: frame state id (default, session, empty, loading, error or a mock id) instead of the frame state.",
-    })
-  ),
-};
-
-const TARGET_SHAPE = toSdkFieldSet(TARGET_FIELDS);
-
-const SCREENSHOT_SHAPE = toSdkFieldSet({
-  ...TARGET_FIELDS,
-  from: toDefaulted(
-    Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
-    0,
-    "Page y offset in px where the first image starts."
-  ),
-  screen: toOptionalInt(
-    1,
-    12,
-    "Screen number from the render_check screens list: a view inside a multi-view page, a canvas frame or an app route frame. Overrides frame and path."
-  ),
-  theme: toDefaulted(
-    Schema.Literals(["light", "dark"]),
-    "light" as const,
-    'dark sets data-theme="dark" and the .dark class on <html> before the shot, so tokens.css uses the dark values.'
-  ),
-  viewport: toOptional(
-    Schema.Literals(["desktop", "mobile", "tablet"]),
-    "Render size. Leave out for the frame size (desktop when there is no frame)."
   ),
 });
 
@@ -404,7 +354,7 @@ export function runCanvasList(deps: Pick<StudioToolDeps, "ctx" | "canvas">) {
 
 export function runCanvasPlace(
   deps: Pick<StudioToolDeps, "ctx" | "canvas">,
-  frames: PlaceSpec[]
+  frames: readonly PlaceSpec[]
 ) {
   return withCanvas(deps, "canvas_place", (ctx) => canvasPlace(ctx, frames));
 }
@@ -1134,6 +1084,11 @@ export async function runPrepareShip(
   }
 }
 
+const toDecodedRun = <Fields extends ToolFields, Reply>(
+  input: ToolInput<Fields>,
+  run: (data: Schema.Struct.Type<Fields>) => Promise<Reply>
+) => toToolRun(input, errorText, run);
+
 export async function createStudioMcpServer(
   deps: StudioToolDeps
 ): Promise<McpSdkServerConfigWithInstance> {
@@ -1147,32 +1102,38 @@ export async function createStudioMcpServer(
   const screenshot = tool(
     "screenshot",
     TOOL_SHORT.screenshot,
-    SCREENSHOT_SHAPE,
-    (args) => takeScreenshot(deps, counters, args),
+    SCREENSHOT_TOOL.sdkFields,
+    toDecodedRun(SCREENSHOT_TOOL.input, (args) =>
+      takeScreenshot(deps, counters, args)
+    ),
     { annotations: { readOnlyHint: true } }
   );
 
   const renderCheck = tool(
     "render_check",
     TOOL_SHORT.render_check,
-    TARGET_SHAPE,
-    (args) => runRenderCheck(deps, counters, args),
+    TARGET_TOOL.sdkFields,
+    toDecodedRun(TARGET_TOOL.input, (args) =>
+      runRenderCheck(deps, counters, args)
+    ),
     { annotations: { readOnlyHint: true } }
   );
 
   const designReview = tool(
     "design_review",
     TOOL_SHORT.design_review,
-    TARGET_SHAPE,
-    (args) => runDesignReview(deps, args),
+    TARGET_TOOL.sdkFields,
+    toDecodedRun(TARGET_TOOL.input, (args) => runDesignReview(deps, args)),
     { annotations: { readOnlyHint: true } }
   );
 
   const defineTweaksTool = tool(
     "define_tweaks",
     TOOL_SHORT.define_tweaks,
-    toTweaksInput(TWEAK_CONTROLS_NOTE),
-    (args) => runDefineTweaks(deps, args.controls)
+    TWEAKS_TOOL.sdkFields,
+    toDecodedRun(TWEAKS_TOOL.input, (args) =>
+      runDefineTweaks(deps, args.controls)
+    )
   );
 
   const designSystemCheck = tool(
@@ -1194,15 +1155,17 @@ export async function createStudioMcpServer(
   const canvasPlaceTool = tool(
     "canvas_place",
     TOOL_SHORT.canvas_place,
-    canvasPlaceInput,
-    (args) => runCanvasPlace(deps, args.frames)
+    canvasPlaceInput.sdkFields,
+    toDecodedRun(canvasPlaceInput.input, (args) =>
+      runCanvasPlace(deps, args.frames)
+    )
   );
 
   const canvasPointTool = tool(
     "canvas_point",
     TOOL_SHORT.canvas_point,
-    canvasPointInput,
-    (args) => runCanvasPoint(deps, args),
+    canvasPointInput.sdkFields,
+    toDecodedRun(canvasPointInput.input, (args) => runCanvasPoint(deps, args)),
     { annotations: { readOnlyHint: true } }
   );
 
@@ -1217,7 +1180,7 @@ export async function createStudioMcpServer(
   const editLinksTool = tool(
     "edit_links",
     TOOL_SHORT.edit_links,
-    editLinksShape,
+    editLinksFields,
     (args) => runEditLinks(deps, args)
   );
 
@@ -1232,30 +1195,34 @@ export async function createStudioMcpServer(
   const setFrameStateTool = tool(
     "set_frame_state",
     TOOL_SHORT.set_frame_state,
-    frameStateInput,
-    (args) => runSetFrameState(deps, args)
+    frameStateInput.sdkFields,
+    toDecodedRun(frameStateInput.input, (args) => runSetFrameState(deps, args))
   );
 
   const setFrameSessionTool = tool(
     "set_frame_session",
     TOOL_SHORT.set_frame_session,
-    frameSessionInput,
-    (args) => runSetFrameSession(deps, args)
+    frameSessionInput.sdkFields,
+    toDecodedRun(frameSessionInput.input, (args) =>
+      runSetFrameSession(deps, args)
+    )
   );
 
   const listRouteLinksTool = tool(
     "list_route_links",
     TOOL_SHORT.list_route_links,
-    routeLinkInput,
-    (args) => runListRouteLinks(deps, args.route),
+    routeLinkInput.sdkFields,
+    toDecodedRun(routeLinkInput.input, (args) =>
+      runListRouteLinks(deps, args.route)
+    ),
     { annotations: { readOnlyHint: true } }
   );
 
   const addFlowTool = tool(
     "add_flow",
     TOOL_SHORT.add_flow,
-    toFlowInput(FLOW_MAX_DEPTH),
-    (args) => runAddFlow(deps, args)
+    FLOW_TOOL.sdkFields,
+    toDecodedRun(FLOW_TOOL.input, (args) => runAddFlow(deps, args))
   );
 
   const editElementTool = tool(
@@ -1305,16 +1272,16 @@ export async function createStudioMcpServer(
   const searchTextTool = tool(
     "search_text",
     TOOL_SHORT.search_text,
-    searchTextInput,
-    (args) => runSearchText(deps, args),
+    searchTextInput.sdkFields,
+    toDecodedRun(searchTextInput.input, (args) => runSearchText(deps, args)),
     { annotations: { readOnlyHint: true } }
   );
 
   const updateTextTool = tool(
     "update_text",
     TOOL_SHORT.update_text,
-    updateTextInput,
-    (args) => runUpdateText(deps, args)
+    updateTextInput.sdkFields,
+    toDecodedRun(updateTextInput.input, (args) => runUpdateText(deps, args))
   );
 
   const arrangeTool = tool(
@@ -1560,16 +1527,20 @@ export async function createStudioMcpServer(
   const listCommentsTool = tool(
     "list_comments",
     TOOL_SHORT.list_comments,
-    listCommentsShape,
-    (args) => runListComments(deps, args),
+    listCommentsInput.sdkFields,
+    toDecodedRun(listCommentsInput.input, (args) =>
+      runListComments(deps, args)
+    ),
     { annotations: { readOnlyHint: true } }
   );
 
   const resolveCommentTool = tool(
     "resolve_comment",
     TOOL_SHORT.resolve_comment,
-    resolveCommentShape,
-    (args) => runResolveComment(deps, args)
+    resolveCommentInput.sdkFields,
+    toDecodedRun(resolveCommentInput.input, (args) =>
+      runResolveComment(deps, args)
+    )
   );
 
   const getRunContextTool = tool(
@@ -1583,8 +1554,10 @@ export async function createStudioMcpServer(
   const appDoctorTool = tool(
     "app_doctor",
     TOOL_SHORT.app_doctor,
-    doctorInput,
-    (args) => runAppDoctor(deps, args.fresh === true),
+    doctorInput.sdkFields,
+    toDecodedRun(doctorInput.input, (args) =>
+      runAppDoctor(deps, args.fresh === true)
+    ),
     { annotations: { readOnlyHint: true } }
   );
 
@@ -1634,8 +1607,8 @@ export async function createStudioMcpServer(
   const importPageTool = tool(
     "import_page",
     TOOL_SHORT.import_page,
-    importPageInput,
-    (args) => runImportPage(deps, args)
+    importPageInput.sdkFields,
+    toDecodedRun(importPageInput.input, (args) => runImportPage(deps, args))
   );
 
   const setImageTool = tool(
@@ -1736,18 +1709,12 @@ export async function createStudioMcpServer(
   const helpTool = tool(
     HELP_TOOL,
     TOOL_SHORT.studio_help,
-    {
-      tool: z
-        .string()
-        .trim()
-        .max(40)
-        .describe("Tool name without the mcp__studio__ prefix."),
-    },
-    async (args) => ({
+    HELP_INPUT.sdkFields,
+    toDecodedRun(HELP_INPUT.input, async (args) => ({
       content: [
         { text: studioHelp(args.tool, allowed), type: "text" as const },
       ],
-    }),
+    })),
     { annotations: { readOnlyHint: true } }
   );
 

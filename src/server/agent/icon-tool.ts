@@ -16,7 +16,15 @@ import {
   ICON_TARGET_MAX,
 } from "../../shared/icons.js";
 import type { InsertTarget } from "../../shared/insert.js";
-import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
+import {
+  toDefaulted,
+  toOptional,
+  toOptionalText,
+  toSdkFieldSet,
+  toToolInput,
+  toTrimmedText,
+} from "../agent-tools/index.js";
+import type { ToolArgs, ToolDecoded } from "../agent-tools/index.js";
 import { writeAtomic } from "../direct-edit/index.js";
 import { planIconInsert } from "../icons/insert.js";
 import type { IconInsertPlan } from "../icons/insert.js";
@@ -24,14 +32,6 @@ import { listIcons } from "../icons/list.js";
 import { refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
 import { targetOf } from "./insert-tool.js";
-import {
-  toDefaulted,
-  toOptional,
-  toOptionalText,
-  toToolInput,
-  toTrimmedText,
-} from "./tool-input.js";
-import type { ToolArgs, ToolData } from "./tool-input.js";
 
 interface ToolContent {
   text: string;
@@ -117,7 +117,7 @@ const insertIconInput = toSdkFieldSet(insertIconFields);
 const listSchema = toToolInput(listIconsFields);
 const insertSchema = toToolInput(insertIconFields);
 
-type InsertInput = ToolData<typeof insertSchema>;
+type InsertInput = ToolDecoded<typeof insertSchema>;
 
 const reply = (message: string): ToolText => ({
   content: [{ text: message, type: "text" }],

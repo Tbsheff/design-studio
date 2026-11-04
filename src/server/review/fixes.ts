@@ -5,13 +5,13 @@ import type {
   Version,
 } from "../../shared/contracts.js";
 import type { ReviewFinding, ReviewFixResult } from "../../shared/review.js";
-import { applyDirectEditBatch } from "../direct-edit/commit/batch.js";
 import {
+  applyDirectEditBatch,
   commitDirectEdit,
-  planDirectEdit,
   type DirectEditDeps,
+  planDirectEdit,
 } from "../direct-edit/commit/index.js";
-import { knownTokenVars } from "../direct-edit/engine/tokens.js";
+import { knownTokenVars } from "../direct-edit/engine/index.js";
 import type { Draft, FixGuard } from "./checks.js";
 
 const VERIFY_MAX = 60;

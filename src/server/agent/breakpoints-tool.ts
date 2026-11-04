@@ -1,7 +1,15 @@
 import { Schema } from "effect";
 
 import type { SourceLoc } from "../../shared/contracts.js";
-import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
+import {
+  toOptionalFlag,
+  toOptionalInt,
+  toOptionalText,
+  toSdkFieldSet,
+  toToolInput,
+  toTrimmedText,
+} from "../agent-tools/index.js";
+import type { ToolArgs, ToolDecoded } from "../agent-tools/index.js";
 import type { BreakpointScope } from "../breakpoints/commit.js";
 import {
   BREAKPOINT_NAME,
@@ -18,20 +26,12 @@ import {
 import { listBreakpoints } from "../breakpoints/list.js";
 import { planBreakpointStyle, toBreakpointResult } from "../breakpoints/set.js";
 import type { BreakpointTarget } from "../breakpoints/set.js";
-import type { WrittenFile } from "../direct-edit/commit/batch.js";
-import { writeAtomic } from "../direct-edit/commit/edit-source.js";
-import { DirectEditError } from "../direct-edit/engine/errors.js";
+import type { WrittenFile } from "../direct-edit/commit/index.js";
+import { writeAtomic } from "../direct-edit/commit/index.js";
+import { DirectEditError } from "../direct-edit/engine/index.js";
 import { canvasFrames, refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
 import { targetOf } from "./insert-tool.js";
-import {
-  toOptionalFlag,
-  toOptionalInt,
-  toOptionalText,
-  toToolInput,
-  toTrimmedText,
-} from "./tool-input.js";
-import type { ToolArgs, ToolData } from "./tool-input.js";
 
 interface ToolContent {
   text: string;
@@ -152,7 +152,7 @@ const scopeOf = (deps: DirectToolDeps): BreakpointScope => ({
 
 const locate = async (
   deps: DirectToolDeps,
-  input: ToolData<typeof listSchema>
+  input: ToolDecoded<typeof listSchema>
 ): Promise<Located> => {
   const target = await targetOf(deps, input);
 
@@ -174,12 +174,12 @@ const locate = async (
   };
 };
 
-const hasTarget = (input: ToolData<typeof listSchema>): boolean =>
+const hasTarget = (input: ToolDecoded<typeof listSchema>): boolean =>
   Boolean(input.targetSelector) || Boolean(input.targetSource);
 
 const listWith = async (
   deps: DirectToolDeps,
-  input: ToolData<typeof listSchema>
+  input: ToolDecoded<typeof listSchema>
 ): Promise<ToolText> => {
   let located: SourceLoc | null = null;
 
@@ -247,7 +247,7 @@ const writeAll = async (
 
 const setWith = async (
   deps: DirectToolDeps,
-  input: ToolData<typeof setSchema>
+  input: ToolDecoded<typeof setSchema>
 ): Promise<ToolText> => {
   const located = await locate(deps, input);
 

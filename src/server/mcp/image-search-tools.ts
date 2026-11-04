@@ -10,14 +10,16 @@ import type { PlaceScope } from "../image-search/place.js";
 import { searchImages } from "../image-search/search.js";
 import { elementTarget, sourceTarget } from "../image-search/target.js";
 import type { PlaceTarget } from "../image-search/target.js";
-import { describeElement } from "../page-probe/element.js";
-import { scopeOf as layerScopeOf } from "../page-probe/layer-ref.js";
-import { probeOwners } from "../page-probe/owner-probe.js";
-import { resolveSourceLoc } from "../page-probe/source-loc.js";
 import {
   placeImageFields,
   searchImagesFields,
-} from "../platform/tool-fields/image-search.js";
+} from "../image-search/tool-fields.js";
+import {
+  describeElement,
+  probeOwners,
+  resolveSourceLoc,
+  scopeOf as layerScopeOf,
+} from "../page-probe/index.js";
 import { z } from "../platform/zod-bridge/index.js";
 import { EditError, loadTarget, refuseWhileRunning } from "./edit-guards.js";
 import type { EditDeps } from "./edit-guards.js";

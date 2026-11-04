@@ -8,7 +8,7 @@ import type {
   TextSourceHints,
   TextSourceInfo,
 } from "../../../shared/contracts.js";
-import { ownerUseSite } from "../../components/model.js";
+import { ownerUseSite } from "../../components/use-site.js";
 import {
   dataExpression,
   findJsxElement,

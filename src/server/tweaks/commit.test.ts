@@ -13,9 +13,9 @@ import {
   type TweaksState,
 } from "../../shared/tweaks.js";
 import { createPackRegistry } from "../design-system/packs.js";
+import { createEventBus } from "../events/index.js";
 import { createApp } from "../http/app.js";
 import { projectStorePorts } from "../main/project-ports.js";
-import { createEventBus } from "../store/events.js";
 import {
   createProjectStore,
   type StudioProjectStore,

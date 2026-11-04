@@ -12,7 +12,7 @@ import type {
   Version,
   VersionMeta,
 } from "../../../shared/contracts.js";
-import { emitSourceChange } from "../../events/source-change.js";
+import { emitSourceChange } from "../../events/index.js";
 import { isNodeError } from "../../platform/errors/index.js";
 import type { EventBus } from "../../types.js";
 import { DirectEditError } from "../engine/errors.js";

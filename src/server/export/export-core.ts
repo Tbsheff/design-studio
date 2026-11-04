@@ -1,6 +1,6 @@
 import { Effect } from "effect";
 
-import type { CanvasService } from "../canvas/service.js";
+import type { CanvasService } from "../canvas/index.js";
 import { attemptKnown } from "../platform/attempt/index.js";
 import type { KnownFailure } from "../platform/attempt/index.js";
 import { loadConfig } from "../platform/config/index.js";

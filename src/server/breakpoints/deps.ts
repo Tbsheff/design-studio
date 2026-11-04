@@ -1,8 +1,9 @@
-export { writeAndCommitAll } from "../direct-edit/commit/batch.js";
+export {
+  elementClassInfo,
+  writeAndCommitAll,
+} from "../direct-edit/commit/index.js";
 
-export { elementClassInfo } from "../direct-edit/commit/class-info.js";
-
-export { htmlVariantProps } from "../direct-edit/engine/html.js";
+export { htmlVariantProps } from "../direct-edit/engine/index.js";
 
 export {
   assertCanEdit,
@@ -14,7 +15,7 @@ export {
   themeForFile,
 } from "../direct-edit/index.js";
 
-export { projectTailwindTheme } from "../direct-edit/tailwind/theme.js";
+export { projectTailwindTheme } from "../direct-edit/tailwind/index.js";
 
 export {
   activeOf,
@@ -34,11 +35,11 @@ export {
 
 export { DIRECT_STYLE_PROPERTIES } from "../../shared/contracts.js";
 
-export type { WrittenFile } from "../direct-edit/commit/batch.js";
+export type { WrittenFile } from "../direct-edit/commit/index.js";
 
 export type { DirectEditDeps } from "../direct-edit/index.js";
 
-export type { TailwindTheme } from "../direct-edit/tailwind/theme.js";
+export type { TailwindTheme } from "../direct-edit/tailwind/index.js";
 
 export type { BreakpointSet } from "../style-scope/engine/index.js";
 
@@ -59,3 +60,5 @@ export type {
   BreakpointStyleInput,
   BreakpointStyleResult,
 } from "../../shared/breakpoints.js";
+
+export { z } from "../platform/zod-bridge/index.js";

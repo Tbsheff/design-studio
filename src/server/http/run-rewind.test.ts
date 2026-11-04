@@ -12,10 +12,10 @@ import type {
   Version,
 } from "../../shared/contracts.js";
 import { forkBaseOf } from "../../shared/rewind.js";
+import { createEventBus } from "../events/index.js";
 import { bootAgentRunner } from "../main/agent-runner.js";
 import { projectStorePorts } from "../main/project-ports.js";
 import { buildRuntime } from "../main/runtime.js";
-import { createEventBus } from "../store/events.js";
 import {
   createProjectStore,
   type StudioProjectStore,

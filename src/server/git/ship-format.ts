@@ -7,7 +7,7 @@ import type {
   ShipFormatResult,
   ShipFormatTool,
 } from "../../shared/ship.js";
-import { WRITE_TIMEOUT_MS, execTool } from "../platform/git/user-git.js";
+import { WRITE_TIMEOUT_MS, execTool } from "../platform/git/index.js";
 
 const BIOME_CONFIGS = ["biome.json", "biome.jsonc"];
 

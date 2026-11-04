@@ -22,7 +22,7 @@ interface FillInput extends PaintInput {
   blendMode?: BlendMode | undefined;
   blendProperty?: BlendProperty | undefined;
   form?: RadialForm | undefined;
-  stops?: StopInput[] | undefined;
+  stops?: readonly StopInput[] | undefined;
   type: FillSpec["type"];
 }
 

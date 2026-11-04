@@ -7,7 +7,7 @@ import type {
 } from "../../shared/contracts.js";
 import { IMAGE_SEARCH_LIMIT_MAX } from "../../shared/image-search.js";
 import type { PlaceImageResult } from "../../shared/image-search.js";
-import { DirectEditError } from "../direct-edit/engine/errors.js";
+import { DirectEditError } from "../direct-edit/engine/index.js";
 import type { DirectEditDeps } from "../direct-edit/index.js";
 import { previewOriginOf } from "../direct-edit/index.js";
 import { ImageSearchError } from "../image-search/errors.js";
@@ -16,11 +16,11 @@ import { toPlaceInput, toSearchRequest } from "../image-search/input.js";
 import { placeImage } from "../image-search/place.js";
 import { searchImages } from "../image-search/search.js";
 import type { PlaceTarget } from "../image-search/target.js";
-import { imageSearchEnv } from "../platform/config/index.js";
 import {
   placeImageFields,
   searchImagesFields,
-} from "../platform/tool-fields/image-search.js";
+} from "../image-search/tool-fields.js";
+import { imageSearchEnv } from "../platform/config/index.js";
 import { z } from "../platform/zod-bridge/index.js";
 import type { PreviewService } from "../types.js";
 

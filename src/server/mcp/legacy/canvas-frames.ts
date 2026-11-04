@@ -1,7 +1,7 @@
 import { cleanRoute, routeLabel } from "../../../shared/app.js";
 import type { CanvasFileFrame } from "../../../shared/canvas-file.js";
-import { canvasPlace, findFrame } from "../../canvas/tools.js";
-import type { CanvasToolContext, PlaceSpec } from "../../canvas/tools.js";
+import { canvasPlace, findFrame } from "../../canvas/index.js";
+import type { CanvasToolContext, PlaceSpec } from "../../canvas/index.js";
 import { frameStepText, placedFrames, placeSummary } from "../activity-text.js";
 import { EditError, loadTarget, refuseWhileRunning } from "../edit-guards.js";
 import type { EditDeps } from "../edit-guards.js";

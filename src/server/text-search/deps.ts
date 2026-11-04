@@ -1,4 +1,4 @@
-export { writeAndCommitAll } from "../direct-edit/commit/batch.js";
+export { writeAndCommitAll } from "../direct-edit/commit/index.js";
 
 export {
   assertCanEdit,
@@ -19,7 +19,7 @@ export {
   TEXT_SEARCH_REPLACE_MAX,
 } from "../../shared/text-search.js";
 
-export type { WrittenFile } from "../direct-edit/commit/batch.js";
+export type { WrittenFile } from "../direct-edit/commit/index.js";
 
 export type { DirectEditDeps, EditRecorder } from "../direct-edit/index.js";
 
@@ -37,3 +37,5 @@ export type {
   TextUpdateRequest,
   TextUpdateResult,
 } from "../../shared/text-search.js";
+
+export { z } from "../platform/zod-bridge/index.js";

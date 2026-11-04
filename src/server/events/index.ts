@@ -1,4 +1,4 @@
-export { openEventBus } from "./bus.js";
+export { createEventBus, openEventBus } from "./bus.js";
 
 export { ChangeFeed } from "./change-feed.js";
 
@@ -15,6 +15,7 @@ export {
   announcePlanned,
   domPatchOf,
   onPlannedEdit,
+  toEditEvent,
   withdrawPlanned,
 } from "./planned-feed.js";
 
@@ -42,3 +43,5 @@ export { EventQueue } from "./event-queue.js";
 export { RenderTracker } from "./render-tracker.js";
 
 export { SaveQueue } from "./save-queue.js";
+
+export { bindSaveLanes } from "./save-lanes.js";

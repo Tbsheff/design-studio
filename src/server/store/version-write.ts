@@ -9,13 +9,13 @@ import type { HunkRevertRequest, HunkRevertResult } from "../../shared/hunk.js";
 import type {
   EditStepResult,
   HistoryStep,
-} from "../direct-edit/commit/history.js";
-import { revertHunk } from "../direct-edit/commit/hunk-revert.js";
+} from "../direct-edit/commit/index.js";
 import {
   assertCanEdit,
   publishVersion,
-} from "../direct-edit/commit/publish.js";
-import { recordRunInHistory } from "../direct-edit/commit/run-record.js";
+  recordRunInHistory,
+  revertHunk,
+} from "../direct-edit/commit/index.js";
 import { BadRequestError, ConflictError } from "../platform/errors/index.js";
 import { parseVersionName } from "./version-names.js";
 import type { VersionWriteRuntime } from "./version-write-core.js";

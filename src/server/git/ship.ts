@@ -18,7 +18,7 @@ import {
   execTool,
   findOnPath,
   userGit,
-} from "../platform/git/user-git.js";
+} from "../platform/git/index.js";
 import { createKeyedMutex } from "../platform/mutex/index.js";
 import {
   detectShipFormat,

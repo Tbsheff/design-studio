@@ -6,7 +6,13 @@ import {
   VARIANT_VALUE,
 } from "../../shared/component-variant.js";
 import type { ComponentVariantChange } from "../../shared/component-variant.js";
-import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
+import {
+  toOptionalText,
+  toSdkFieldSet,
+  toToolInput,
+  toTrimmedText,
+} from "../agent-tools/index.js";
+import type { ToolArgs, ToolParse } from "../agent-tools/index.js";
 import type { VariantScope } from "../components/variant-write/locate.js";
 import type { VariantPlan } from "../components/variant-write/plan.js";
 import { planVariantWrite } from "../components/variant-write/plan.js";
@@ -15,7 +21,7 @@ import {
   toVariantResult,
 } from "../components/variant-write/write.js";
 import type { VariantPreview } from "../components/variant-write/write.js";
-import { writeAtomic } from "../direct-edit/commit/edit-source.js";
+import { writeAtomic } from "../direct-edit/commit/index.js";
 import {
   createChange,
   hasComponent,
@@ -24,8 +30,6 @@ import {
 } from "../mcp/component-variant-tools.js";
 import { refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
-import { toOptionalText, toToolInput, toTrimmedText } from "./tool-input.js";
-import type { ToolArgs, ToolParse } from "./tool-input.js";
 
 type ToolContent =
   | { data: string; mimeType: string; type: "image" }
@@ -84,6 +88,7 @@ const classes = toTrimmedText(1, CLASSES_MAX)
   });
 
 const setDefault = Schema.Boolean.annotate({
+  default: false,
   description: "Also make this value the default in defaultVariants.",
 }).pipe(Schema.withDecodingDefaultKey(Effect.succeed(false)));
 
@@ -98,6 +103,7 @@ const createFields = {
   ),
   key,
   newKey: Schema.Boolean.annotate({
+    default: false,
     description:
       "Add the key when the variants map does not have it. The new value becomes its default.",
   }).pipe(Schema.withDecodingDefaultKey(Effect.succeed(false))),

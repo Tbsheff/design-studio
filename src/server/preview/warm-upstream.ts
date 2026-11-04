@@ -1,5 +1,5 @@
 import type { Project } from "../../shared/contracts.js";
-import { noteRenderedPage } from "../events/render-wait.js";
+import { noteRenderedPage } from "../events/index.js";
 import type { PreviewService } from "../types.js";
 import { attemptNull, toOptional } from "./attempt-null.js";
 

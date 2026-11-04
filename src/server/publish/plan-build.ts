@@ -76,9 +76,7 @@ export async function buildViewer(
   const ids = a.input.frameIds ?? a.prior?.frameIds ?? undefined;
 
   const { frames, ids: frameIds } = await framesOf(
-    deps,
-    a.source.project,
-    a.direction,
+    { deps, direction: a.direction, project: a.source.project },
     given,
     ids
   );

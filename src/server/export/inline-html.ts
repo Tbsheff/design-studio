@@ -5,7 +5,7 @@ import {
   SOURCE_LOC_ATTR,
 } from "../../shared/contracts.js";
 import type { ExportFrame } from "../../shared/export.js";
-import { waitForPage } from "../preview/index.js";
+import { waitForPage } from "../preview/page-capture/index.js";
 import type { PreviewService } from "../types.js";
 import { withPagePath } from "./source.js";
 

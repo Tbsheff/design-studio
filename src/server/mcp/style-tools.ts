@@ -10,13 +10,13 @@ import {
   type StyleQuery,
   type StyleReplaceResult,
 } from "../../shared/style-search.js";
-import { findFrame, frameRef } from "../canvas/tools.js";
+import { findFrame, frameRef } from "../canvas/index.js";
 import {
   scanPageStyles,
   styleReport,
   tokenEntriesFor,
   tokenLookupFor,
-} from "../direct-edit/commit/style-scan.js";
+} from "../direct-edit/commit/index.js";
 import { z } from "../platform/zod-bridge/index.js";
 import { callAction } from "./action-call.js";
 import {

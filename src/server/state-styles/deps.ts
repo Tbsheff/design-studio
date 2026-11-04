@@ -5,11 +5,11 @@ export {
 
 export { loadBreakpointSite as loadStyleSite } from "../breakpoints/site.js";
 
-export { findFrame } from "../canvas/tools.js";
+export { findFrame } from "../canvas/index.js";
 
-export { elementClassInfo } from "../direct-edit/commit/class-info.js";
+export { elementClassInfo } from "../direct-edit/commit/index.js";
 
-export { htmlVariantProps } from "../direct-edit/engine/html.js";
+export { htmlVariantProps } from "../direct-edit/engine/index.js";
 
 export {
   parseDirectEditRequest,
@@ -37,7 +37,7 @@ export type { BreakpointScope as StyleScope } from "../breakpoints/commit.js";
 
 export type { BreakpointSite as StyleSite } from "../breakpoints/site.js";
 
-export type { WrittenFile } from "../direct-edit/commit/batch.js";
+export type { WrittenFile } from "../direct-edit/commit/index.js";
 
 export type { DirectEditDeps } from "../direct-edit/index.js";
 
@@ -58,3 +58,5 @@ export type {
   StateStyleResult,
   StyleState,
 } from "../../shared/state-styles.js";
+
+export { z } from "../platform/zod-bridge/index.js";

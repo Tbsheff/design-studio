@@ -7,15 +7,20 @@ import {
   arrangeLabel,
 } from "../../shared/arrange.js";
 import type { ArrangeAction } from "../../shared/arrange.js";
-import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
-import { canvasOwner, readCanvasAt } from "../canvas/service.js";
-import { findFrame } from "../canvas/tools.js";
+import {
+  toRefinedToolInput,
+  toSdkFieldSet,
+  toToolInput,
+  toTrimmedText,
+} from "../agent-tools/index.js";
+import type { ToolArgs, ToolDecoded } from "../agent-tools/index.js";
+import { canvasOwner, findFrame, readCanvasAt } from "../canvas/index.js";
 import {
   ARRANGE_TARGETS_MAX,
   DEFAULT_ARRANGE_VIEWPORT,
   measureTargets,
   planArrange,
-} from "../direct-edit/commit/arrange.js";
+} from "../direct-edit/commit/index.js";
 import { writeAtomic } from "../direct-edit/index.js";
 import { withPagePath } from "../export/source.js";
 import {
@@ -24,15 +29,9 @@ import {
   memoPage,
   resolveLayerRef,
   scopeOf,
-} from "../page-probe/layer-ref.js";
+} from "../page-probe/index.js";
 import { refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
-import {
-  toRefinedToolInput,
-  toToolInput,
-  toTrimmedText,
-} from "./tool-input.js";
-import type { ToolArgs, ToolData } from "./tool-input.js";
 
 type ToolText = Readonly<{
   content: { type: "text"; text: string }[];
@@ -173,7 +172,7 @@ async function resolveSelector(
   );
 }
 
-function actionOf(input: ToolData<typeof arrangeSchema>): ArrangeAction {
+function actionOf(input: ToolDecoded<typeof arrangeSchema>): ArrangeAction {
   if (input.align) {
     return { align: input.align };
   }

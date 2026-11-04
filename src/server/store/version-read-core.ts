@@ -5,7 +5,7 @@ import type {
   Project,
   VersionThumbs,
 } from "../../shared/contracts.js";
-import type { EditHistory } from "../direct-edit/commit/history.js";
+import type { EditHistory } from "../direct-edit/commit/index.js";
 import { attemptKnown } from "../platform/attempt/index.js";
 import type { KnownFailure } from "../platform/attempt/index.js";
 import {

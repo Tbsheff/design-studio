@@ -16,9 +16,9 @@ import type {
   SavePackResult,
   Version,
 } from "../../shared/contracts.js";
+import { createEventBus } from "../events/index.js";
 import { createApp } from "../http/app.js";
 import { projectStorePorts } from "../main/project-ports.js";
-import { createEventBus } from "../store/events.js";
 import { createProjectStore } from "../store/projects.js";
 import type { StudioProjectStore } from "../store/projects.js";
 import { makeTempConfig } from "../store/testConfig.js";

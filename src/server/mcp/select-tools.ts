@@ -3,7 +3,7 @@ import {
   type MatchKind,
   type Project,
 } from "../../shared/contracts.js";
-import { findFrame, frameRef } from "../canvas/tools.js";
+import { findFrame, frameRef } from "../canvas/index.js";
 import {
   isLayerRef,
   LayerRefError,
@@ -12,7 +12,7 @@ import {
   resolveLayerRef,
   scopeOf,
   type Viewport,
-} from "../page-probe/layer-ref.js";
+} from "../page-probe/index.js";
 import { z } from "../platform/zod-bridge/index.js";
 import type { PreviewService } from "../types.js";
 import { EditError, loadTarget, type EditDeps } from "./edit-guards.js";

@@ -10,27 +10,27 @@ import {
   replaceSummary,
 } from "../../shared/style-search.js";
 import type { StyleQuery } from "../../shared/style-search.js";
-import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
-import { findFrame } from "../canvas/tools.js";
-import { planStyleReplace } from "../direct-edit/commit/replace.js";
-import {
-  scanPageStyles,
-  styleReport,
-  tokenEntriesFor,
-  tokenLookupFor,
-} from "../direct-edit/commit/style-scan.js";
-import { writeAtomic } from "../direct-edit/index.js";
-import { canvasFrames, refusal, writeProblem } from "./direct-tools.js";
-import type { DirectToolDeps } from "./direct-tools.js";
-import { isContextFrame, pageUrl } from "./run-target.js";
 import {
   toOptional,
   toOptionalText,
   toRefinedToolInput,
+  toSdkFieldSet,
   toToolInput,
   toTrimmedText,
-} from "./tool-input.js";
-import type { ToolArgs } from "./tool-input.js";
+} from "../agent-tools/index.js";
+import type { ToolArgs } from "../agent-tools/index.js";
+import { findFrame } from "../canvas/index.js";
+import {
+  planStyleReplace,
+  scanPageStyles,
+  styleReport,
+  tokenEntriesFor,
+  tokenLookupFor,
+} from "../direct-edit/commit/index.js";
+import { writeAtomic } from "../direct-edit/index.js";
+import { canvasFrames, refusal, writeProblem } from "./direct-tools.js";
+import type { DirectToolDeps } from "./direct-tools.js";
+import { isContextFrame, pageUrl } from "./run-target.js";
 
 type ToolText = Readonly<{
   content: { type: "text"; text: string }[];

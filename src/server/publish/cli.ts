@@ -2,7 +2,7 @@ import path from "node:path";
 
 import { compareCfVersion, type PublishAccount } from "../../shared/publish.js";
 import { LOGIN_SHELL_PATH_ENV } from "../platform/config/index.js";
-import { findOnPath } from "../platform/git/user-git.js";
+import { findOnPath } from "../platform/git/index.js";
 import type { CfChild, CliResult } from "./cf-cli.js";
 import { spawnCf } from "./cf-spawn.js";
 import { scrubCliText } from "./scrub.js";

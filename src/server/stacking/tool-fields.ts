@@ -1,10 +1,10 @@
-import { BREAKPOINT_NAME } from "../../../shared/breakpoints.js";
 import {
+  BREAKPOINT_NAME,
   STACKING_OVERFLOWS,
   STACKING_POSITIONS,
   STACKING_VALUE_MAX,
-} from "../../../shared/stacking.js";
-import { z } from "../zod-bridge/index.js";
+  z,
+} from "./deps.js";
 
 const offset = z
   .string()

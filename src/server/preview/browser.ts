@@ -12,7 +12,7 @@ import type {
   RenderCheckResult,
 } from "../../shared/contracts.js";
 import type { RenderClip } from "../../shared/render-rpc.js";
-import { projectOfUrl } from "../events/render-wait.js";
+import { projectOfUrl } from "../events/index.js";
 import { dropOutsideApp } from "./app-source-filter.js";
 import { runAxe, runSharedAxe } from "./axe.js";
 import type { AxeViolation } from "./axe.js";

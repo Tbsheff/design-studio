@@ -2,8 +2,8 @@ import type { Context, Hono } from "hono";
 import { streamSSE } from "hono/streaming";
 
 import type { ExportDeps } from "../export/source.js";
+import { toSharePort } from "../platform/config/index.js";
 import { assertSafeId } from "../platform/errors/index.js";
-import { sharePort } from "../share/frames.js";
 import { createShareListener, type ShareListener } from "../share/listener.js";
 import { createLiveRefresher, type LiveHub } from "../share/live.js";
 import { bindShareRuntime, toShareCore } from "../share/share-core.js";
@@ -28,7 +28,7 @@ export function registerShareRoutes(
   const listener = createShareListener(
     createViewerApp({ shares: store, comments: deps.comments, hub }),
     store,
-    sharePort(deps.studioPort)
+    toSharePort(deps.studioPort)
   );
   const refresher = createLiveRefresher(
     deps,

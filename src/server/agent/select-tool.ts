@@ -1,9 +1,14 @@
 import { Schema } from "effect";
 
 import { MATCH_KINDS } from "../../shared/contracts.js";
-import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
-import { canvasOwner, readCanvasAt } from "../canvas/service.js";
-import { findFrame } from "../canvas/tools.js";
+import {
+  toOptionalText,
+  toSdkFieldSet,
+  toToolInput,
+  toTrimmedText,
+} from "../agent-tools/index.js";
+import type { ToolArgs, ToolDecoded } from "../agent-tools/index.js";
+import { canvasOwner, findFrame, readCanvasAt } from "../canvas/index.js";
 import { withPagePath } from "../export/source.js";
 import {
   MATCH_BY_TEXT,
@@ -15,10 +20,8 @@ import {
   LayerRefError,
   memoPage,
   scopeOf,
-} from "../page-probe/layer-ref.js";
+} from "../page-probe/index.js";
 import type { DirectToolDeps } from "./direct-tools.js";
-import { toOptionalText, toToolInput, toTrimmedText } from "./tool-input.js";
-import type { ToolArgs, ToolData } from "./tool-input.js";
 
 type ToolText = Readonly<{
   content: { type: "text"; text: string }[];
@@ -56,7 +59,7 @@ function text(message: string, isError = false): ToolText {
 
 async function pageOf(
   deps: DirectToolDeps,
-  input: ToolData<typeof schema>
+  input: ToolDecoded<typeof schema>
 ): Promise<{
   url: string;
   viewport: { width: number; height: number };

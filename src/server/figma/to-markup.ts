@@ -30,13 +30,12 @@ import {
   appTokenEntries,
   buildAppTokens,
 } from "../design-system/app-tokens/tokens.js";
-import { resolveSource } from "../direct-edit/commit/index.js";
-import { tokenEntriesFor } from "../direct-edit/commit/style-scan.js";
-import { tailwindClassesFor } from "../direct-edit/engine/tailwind/copy.js";
+import { resolveSource, tokenEntriesFor } from "../direct-edit/commit/index.js";
+import { tailwindClassesFor } from "../direct-edit/engine/index.js";
 import {
   tailwindThemeFor,
   type TailwindTheme,
-} from "../direct-edit/tailwind/theme.js";
+} from "../direct-edit/tailwind/index.js";
 import { loadKit, type KitMatch, type KitMatcher } from "./kit-match.js";
 import {
   FigmaInputError,

@@ -11,9 +11,8 @@ import {
 } from "node:fs/promises";
 import path from "node:path";
 
-import { runGit } from "../platform/git/run-git.js";
-import type { GitScope } from "../platform/git/run-git.js";
-import { userGit } from "../platform/git/user-git.js";
+import { runGit, userGit } from "../platform/git/index.js";
+import type { GitScope } from "../platform/git/index.js";
 
 const STAT_BATCH = 256;
 const REGULAR_MODES = new Set(["100644", "100755", "120000"]);

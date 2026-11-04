@@ -73,8 +73,6 @@ const buildAgentTools = (
   return AGENT_ACTIONS.map((entry) => toAgentTool(call, toolFn, entry));
 };
 
-export { AGENT_OPS } from "../agent/legacy/agent-ops.js";
-
 export { AGENT_ACTION_NAMES, buildAgentTools };
 
 export type { AgentArgs, AgentResult, AgentTool, CallAction };

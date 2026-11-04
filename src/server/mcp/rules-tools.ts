@@ -8,7 +8,7 @@ import {
   type DesignRulesState,
   type DesignRulesTestResult,
 } from "../../shared/design-rules.js";
-import { frameRef } from "../canvas/tools.js";
+import { frameRef } from "../canvas/index.js";
 import { z } from "../platform/zod-bridge/index.js";
 import { callAction } from "./action-call.js";
 import { loadTarget, refuseWhileRunning } from "./edit-guards.js";

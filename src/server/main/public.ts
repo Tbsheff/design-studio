@@ -3,8 +3,10 @@ import { Effect } from "effect";
 
 import type { StudioEvent } from "../../shared/contracts.js";
 import { createCanvasService } from "../canvas/index.js";
-import { followSourceMoves } from "../direct-edit/commit/follow-moves.js";
-import { withSaveQueue } from "../direct-edit/commit/save-queue.js";
+import {
+  followSourceMoves,
+  withSaveQueue,
+} from "../direct-edit/commit/index.js";
 import { openEventBus } from "../events/index.js";
 import type { EventBus, FlushableEventBus } from "../events/index.js";
 import { createApp } from "../http/app.js";

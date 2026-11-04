@@ -6,7 +6,7 @@ import type {
   Version,
   VersionMeta,
 } from "../../../shared/contracts.js";
-import { bindSaveLanes } from "../../events/save-lanes.js";
+import { bindSaveLanes } from "../../events/index.js";
 import { logError } from "../../platform/logger/index.js";
 import type { VersionStore } from "../../types.js";
 

@@ -5,7 +5,7 @@ import path from "node:path";
 import type { ExportFrame } from "../../shared/export.js";
 import type { ShareFrame } from "../../shared/share.js";
 import type { ExportSource } from "../export/source.js";
-import { captureFrame } from "../preview/index.js";
+import { captureFrame } from "../preview/page-capture/index.js";
 import type { PreviewService } from "../types.js";
 
 const MAX_CSS_HEIGHT = 8000;
@@ -25,7 +25,7 @@ export async function captureShare(
   source: ExportSource,
   frames: ExportFrame[],
   dir: string,
-  ids: (string | undefined)[] = []
+  ids: (string | null | undefined)[] = []
 ): Promise<ShareFrame[]> {
   await mkdir(dir, { recursive: true, mode: 0o700 });
   const opened = await source.open();

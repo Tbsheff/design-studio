@@ -2,12 +2,12 @@ import type { Context, Hono } from "hono";
 
 import type { Direction, Project } from "../../shared/contracts.js";
 import type { PageImportResult } from "../../shared/page-import.js";
-import type { CanvasService } from "../canvas/service.js";
+import type { CanvasService } from "../canvas/index.js";
 import type { DirectEditDeps } from "../direct-edit/index.js";
 import { PageImportError } from "../page-import/errors.js";
 import { importPage } from "../page-import/import-page.js";
 import { toImportRequest } from "../page-import/input.js";
-import { importPageFields } from "../platform/tool-fields/page-import.js";
+import { importPageFields } from "../page-import/tool-fields.js";
 import { z } from "../platform/zod-bridge/index.js";
 
 interface PageImportRouteDeps {

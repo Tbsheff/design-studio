@@ -11,8 +11,15 @@ import {
   MOTION_STATES,
   MOTION_VALUE,
 } from "../../shared/motion.js";
-import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
-import type { WrittenFile } from "../direct-edit/commit/batch.js";
+import {
+  toOptional,
+  toOptionalInt,
+  toOptionalText,
+  toSdkFieldSet,
+  toToolInput,
+} from "../agent-tools/index.js";
+import type { ToolArgs, ToolDecoded } from "../agent-tools/index.js";
+import type { WrittenFile } from "../direct-edit/commit/index.js";
 import { writeAtomic } from "../direct-edit/index.js";
 import { listMotion } from "../motion/list.js";
 import { planMotionSet } from "../motion/set.js";
@@ -21,13 +28,6 @@ import { specOf } from "../motion/spec.js";
 import { refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
 import { targetOf } from "./insert-tool.js";
-import {
-  toOptional,
-  toOptionalInt,
-  toOptionalText,
-  toToolInput,
-} from "./tool-input.js";
-import type { ToolArgs, ToolData } from "./tool-input.js";
 
 interface ToolContent {
   text: string;
@@ -206,7 +206,7 @@ const setText = (plan: MotionSetPlan): string => {
 
 const sourceOf = async (
   deps: DirectToolDeps,
-  input: ToolData<typeof listSchema>
+  input: ToolDecoded<typeof listSchema>
 ): Promise<Located> => {
   const target = await targetOf(deps, input);
 
@@ -233,7 +233,7 @@ const sourceOf = async (
 
 const listWith = async (
   deps: DirectToolDeps,
-  input: ToolData<typeof listSchema>
+  input: ToolDecoded<typeof listSchema>
 ): Promise<ToolText> => {
   const located = await sourceOf(deps, input);
 
@@ -274,7 +274,7 @@ const runListMotion = async (
 
 const setWith = async (
   deps: DirectToolDeps,
-  input: ToolData<typeof setSchema>
+  input: ToolDecoded<typeof setSchema>
 ): Promise<ToolText> => {
   const located = await sourceOf(deps, input);
 

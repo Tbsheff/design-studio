@@ -1,6 +1,6 @@
 import type { CanvasFileFrame } from "../../shared/canvas-file.js";
 import type { Version } from "../../shared/contracts.js";
-import { findFrame, type PlaceSpec } from "../canvas/tools.js";
+import { findFrame, type PlaceSpec } from "../canvas/index.js";
 
 const RELATION_WORDS = {
   below: "below",

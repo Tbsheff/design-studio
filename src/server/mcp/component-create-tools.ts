@@ -11,8 +11,7 @@ import {
   type SwapResult,
 } from "../../shared/component-create.js";
 import type { InsertTarget } from "../../shared/insert.js";
-import { scopeOf } from "../page-probe/layer-ref.js";
-import { resolveSourceLoc } from "../page-probe/source-loc.js";
+import { resolveSourceLoc, scopeOf } from "../page-probe/index.js";
 import { z } from "../platform/zod-bridge/index.js";
 import { callAction } from "./action-call.js";
 import { EditError, loadTarget, refuseWhileRunning } from "./edit-guards.js";

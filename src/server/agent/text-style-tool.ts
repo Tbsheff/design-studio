@@ -7,10 +7,17 @@ import {
   TEXT_STYLE_NAME,
   TEXT_STYLE_QUERY_MAX,
 } from "../../shared/text-styles.js";
-import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
-import type { WrittenFile } from "../direct-edit/commit/batch.js";
+import {
+  toDefaulted,
+  toOptionalText,
+  toSdkFieldSet,
+  toToolInput,
+  toTrimmedText,
+} from "../agent-tools/index.js";
+import type { ToolArgs, ToolDecoded } from "../agent-tools/index.js";
+import type { WrittenFile } from "../direct-edit/commit/index.js";
 import { writeAtomic } from "../direct-edit/index.js";
-import { describeElements } from "../page-probe/element.js";
+import { describeElements } from "../page-probe/index.js";
 import { planTextStyleApply } from "../text-styles/apply.js";
 import type { TextStyleApplyPlan } from "../text-styles/apply.js";
 import {
@@ -23,13 +30,6 @@ import { refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
 import { targetOf } from "./insert-tool.js";
 import { editPageUrl } from "./run-target.js";
-import {
-  toDefaulted,
-  toOptionalText,
-  toToolInput,
-  toTrimmedText,
-} from "./tool-input.js";
-import type { ToolArgs, ToolData } from "./tool-input.js";
 
 interface ToolContent {
   text: string;
@@ -197,7 +197,7 @@ const runListTextStyles = async (
 
 const applyWith = async (
   deps: DirectToolDeps,
-  input: ToolData<typeof applySchema>
+  input: ToolDecoded<typeof applySchema>
 ): Promise<ToolText> => {
   const target = await targetOf(deps, input);
 
@@ -267,7 +267,7 @@ const runApplyTextStyle = async (
 
 const probeElement = async (
   deps: DirectToolDeps,
-  input: ToolData<typeof createSchema>
+  input: ToolDecoded<typeof createSchema>
 ): Promise<Probed> => {
   if (!deps.ctx.previewUrl) {
     return {
@@ -295,7 +295,7 @@ const probeElement = async (
 
 const createWith = async (
   deps: DirectToolDeps,
-  input: ToolData<typeof createSchema>
+  input: ToolDecoded<typeof createSchema>
 ): Promise<ToolText> => {
   const probed = await probeElement(deps, input);
 

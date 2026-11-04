@@ -1,6 +1,15 @@
 import { Effect, Schema } from "effect";
 
-type ToolFields = Schema.Struct.Fields;
+import { toDecoder } from "../platform/decode/index.js";
+import type { ExcessProperty } from "../platform/decode/index.js";
+import { toSdkFieldSet } from "./sdk-shape.js";
+import type { SdkFieldSet } from "./sdk-shape.js";
+
+type ToolField = Schema.Struct.Fields[string] & {
+  readonly DecodingServices: never;
+};
+
+type ToolFields = Readonly<Record<string, ToolField>>;
 
 type ToolArgValue =
   | boolean
@@ -8,7 +17,8 @@ type ToolArgValue =
   | string
   | readonly ToolArgValue[]
   | { readonly [key: string]: ToolArgValue }
-  | null;
+  | null
+  | undefined;
 
 type RawToolArgs = Readonly<Record<string, ToolArgValue>>;
 
@@ -23,13 +33,20 @@ interface ToolInput<Fields extends ToolFields> {
   ) => ToolParse<Schema.Struct.Type<Fields>>;
 }
 
+interface LooseTool<Fields extends ToolFields> {
+  readonly input: ToolInput<Fields>;
+  readonly sdkFields: SdkFieldSet<Fields>;
+}
+
 type AnyToolInput = ToolInput<ToolFields>;
 
 type ToolArgs<Input extends AnyToolInput> = Schema.Struct.Encoded<
   Input["fields"]
 >;
 
-type ToolData<Input extends AnyToolInput> = Schema.Struct.Type<Input["fields"]>;
+type ToolDecoded<Input extends AnyToolInput> = Schema.Struct.Type<
+  Input["fields"]
+>;
 
 const toTrimmedText = (min: number, max: number): Schema.Trim =>
   Schema.Trim.check(Schema.isMinLength(min), Schema.isMaxLength(max));
@@ -37,15 +54,15 @@ const toTrimmedText = (min: number, max: number): Schema.Trim =>
 const toOptional = <Field extends Schema.Top>(
   schema: Field,
   description: string
-): Schema.optionalKey<Field> =>
-  Schema.optionalKey(schema.annotate({ description }) as Field);
+): Schema.optionalKey<Field["Rebuild"]> =>
+  Schema.optionalKey(schema.annotate({ description }));
 
 const toDefaulted = <Field extends Schema.Top>(
   schema: Field,
   value: Field["Encoded"],
   description: string
 ): Schema.withDecodingDefaultKey<Field> =>
-  (schema.annotate({ description }) as Field).pipe(
+  (schema.annotate({ default: value, description }) as Field).pipe(
     Schema.withDecodingDefaultKey(Effect.succeed(value))
   );
 
@@ -72,14 +89,12 @@ const toOptionalInt = (
     )
   );
 
-const toRefinedToolInput = <Fields extends ToolFields>(
+const toCheckedInput = <Fields extends ToolFields>(
   fields: Fields,
+  excess: ExcessProperty,
   refine: (data: Schema.Struct.Type<Fields>) => string | null
 ): ToolInput<Fields> => {
-  const decode = Schema.decodeUnknownResult(Schema.Struct(fields), {
-    errors: "all",
-    onExcessProperty: "error",
-  });
+  const decode = toDecoder(Schema.Struct(fields), excess);
 
   const safeParse = (
     args: RawToolArgs
@@ -105,25 +120,69 @@ const toRefinedToolInput = <Fields extends ToolFields>(
   return { fields, safeParse };
 };
 
+const toRefinedToolInput = <Fields extends ToolFields>(
+  fields: Fields,
+  refine: (data: Schema.Struct.Type<Fields>) => string | null
+): ToolInput<Fields> => toCheckedInput(fields, "error", refine);
+
 const toToolInput = <Fields extends ToolFields>(
   fields: Fields
-): ToolInput<Fields> => toRefinedToolInput(fields, () => null);
+): ToolInput<Fields> => toCheckedInput(fields, "error", () => null);
+
+const toLooseToolInput = <Fields extends ToolFields>(
+  fields: Fields
+): ToolInput<Fields> => toCheckedInput(fields, "ignore", () => null);
+
+const toLooseTool = <Fields extends ToolFields>(
+  fields: Fields
+): LooseTool<Fields> => ({
+  input: toLooseToolInput(fields),
+  sdkFields: toSdkFieldSet(fields),
+});
+
+const toErrorText = <Failure>(error: Failure): string => {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return String(error);
+};
+
+const toToolRun =
+  <Fields extends ToolFields, Refusal, Reply>(
+    input: ToolInput<Fields>,
+    refuse: (message: string) => Refusal,
+    run: (data: Schema.Struct.Type<Fields>) => Promise<Reply>
+  ) =>
+  (args: RawToolArgs): Promise<Refusal | Reply> => {
+    const parsed = input.safeParse(args);
+
+    if (!parsed.success) {
+      return Promise.resolve(refuse(parsed.error));
+    }
+
+    return run(parsed.data);
+  };
 
 export {
   toDefaulted,
+  toErrorText,
+  toLooseTool,
   toOptional,
   toOptionalFlag,
   toOptionalInt,
   toOptionalText,
   toRefinedToolInput,
   toToolInput,
+  toToolRun,
   toTrimmedText,
 };
 
 export type {
   AnyToolInput,
   ToolArgs,
-  ToolData,
+  ToolDecoded,
+  LooseTool,
   ToolFields,
   ToolInput,
   ToolParse,

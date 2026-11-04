@@ -13,17 +13,19 @@ import {
   toAccessibilityResult,
 } from "../accessibility/set.js";
 import type { AccessibilityTarget } from "../accessibility/set.js";
-import type { BreakpointScope } from "../breakpoints/commit.js";
-import { frameRef } from "../canvas/tools.js";
-import { readDesignSystemState } from "../design-system/state.js";
-import { DirectEditError } from "../direct-edit/engine/errors.js";
-import { describeElement } from "../page-probe/element.js";
-import { scopeOf as refScopeOf } from "../page-probe/layer-ref.js";
-import { resolveSourceLoc } from "../page-probe/source-loc.js";
 import {
   inspectAccessibilityFields,
   setAccessibilityFields,
-} from "../platform/tool-fields/accessibility.js";
+} from "../accessibility/tool-fields.js";
+import type { BreakpointScope } from "../breakpoints/commit.js";
+import { frameRef } from "../canvas/index.js";
+import { readDesignSystemState } from "../design-system/state.js";
+import { DirectEditError } from "../direct-edit/engine/index.js";
+import {
+  describeElement,
+  resolveSourceLoc,
+  scopeOf as refScopeOf,
+} from "../page-probe/index.js";
 import { z } from "../platform/zod-bridge/index.js";
 import { EditError, loadTarget, refuseWhileRunning } from "./edit-guards.js";
 import type { EditDeps } from "./edit-guards.js";

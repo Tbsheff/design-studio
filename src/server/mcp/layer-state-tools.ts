@@ -10,7 +10,7 @@ import {
   lockDelta,
   lockOutcome,
   probeLock,
-} from "../page-probe/lock-probe.js";
+} from "../page-probe/index.js";
 import { z } from "../platform/zod-bridge/index.js";
 import { callAction } from "./action-call.js";
 import type { ActivityDraft } from "./activity.js";

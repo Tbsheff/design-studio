@@ -1,15 +1,18 @@
 import { Schema } from "effect";
 
-import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
-import type { SdkFields } from "../agent-tools/sdk-shape.js";
+import { FLOW_MAX_DEPTH } from "../../shared/route-flow.js";
 import {
+  toDefaulted,
+  toLooseTool,
   toOptional,
   toOptionalFlag,
   toOptionalInt,
   toOptionalText,
   toTrimmedText,
-} from "./tool-input.js";
+} from "../agent-tools/index.js";
 
+const X_KEY = "x";
+const Y_KEY = "y";
 const FRAME_REF_MAX = 60;
 const FRAME_LABEL_MAX = 40;
 const FRAME_PATH_MAX = 200;
@@ -29,7 +32,7 @@ const STATE_ID = /^[a-z][a-z0-9-]{0,23}$/u;
 const toTextLimit = (max: number): Schema.String =>
   Schema.String.check(Schema.isMaxLength(max));
 
-const jsonRecord = Schema.Record(Schema.String, Schema.Unknown);
+const jsonRecord = Schema.Record(Schema.String, Schema.Json);
 
 const frameRefField = toTrimmedText(1, FRAME_REF_MAX).annotate({
   description: "Frame id or @label.",
@@ -38,6 +41,14 @@ const frameRefField = toTrimmedText(1, FRAME_REF_MAX).annotate({
 const frameSizes = ["desktop", "tablet", "mobile"] as const;
 
 const placeFrameFields = {
+  [X_KEY]: toOptional(
+    Schema.Int,
+    "Absolute canvas x. Overrides the relative x."
+  ),
+  [Y_KEY]: toOptional(
+    Schema.Int,
+    "Absolute canvas y. Overrides the relative y."
+  ),
   above: toOptionalText(1, FRAME_REF_MAX, "Put the frame above this frame."),
   below: toOptionalText(
     1,
@@ -79,8 +90,6 @@ const placeFrameFields = {
     "Frame size preset: desktop 1440x900, tablet 768x1024, mobile 390x844."
   ),
   width: toOptionalInt(FRAME_SIZE_MIN, FRAME_SIZE_MAX, "Frame width in px."),
-  x: toOptional(Schema.Int, "Absolute canvas x. Overrides the relative x."),
-  y: toOptional(Schema.Int, "Absolute canvas y. Overrides the relative y."),
 };
 
 const placeFrameList = Schema.Array(Schema.Struct(placeFrameFields)).check(
@@ -88,9 +97,9 @@ const placeFrameList = Schema.Array(Schema.Struct(placeFrameFields)).check(
   Schema.isMaxLength(FRAME_LIST_MAX)
 );
 
-const canvasPlaceInput: SdkFields = toSdkFieldSet({ frames: placeFrameList });
+const canvasPlaceInput = toLooseTool({ frames: placeFrameList });
 
-const canvasPointInput: SdkFields = toSdkFieldSet({
+const canvasPointInput = toLooseTool({
   frame: frameRefField,
   selector: toOptional(
     toTextLimit(POINT_SELECTOR_MAX),
@@ -108,7 +117,7 @@ const mockFields = Schema.Struct({
   signedIn: Schema.optionalKey(Schema.Boolean),
 });
 
-const frameStateInput: SdkFields = toSdkFieldSet({
+const frameStateInput = toLooseTool({
   frame: frameRefField,
   mock: Schema.optionalKey(mockFields),
   state: Schema.String.check(Schema.isPattern(STATE_ID)),
@@ -119,49 +128,109 @@ const sessionUser = Schema.Struct({
   name: toTextLimit(USER_NAME_MAX),
 });
 
-const frameSessionInput: SdkFields = toSdkFieldSet({
+const frameSessionInput = toLooseTool({
   forgetCookies: Schema.optionalKey(Schema.Boolean),
   user: Schema.optionalKey(sessionUser),
 });
 
-const routeLinkInput: SdkFields = toSdkFieldSet({
+const routeLinkInput = toLooseTool({
   route: toTrimmedText(1, ROUTE_MAX),
 });
 
-const doctorInput: SdkFields = toSdkFieldSet({
+const doctorInput = toLooseTool({
   fresh: Schema.optionalKey(Schema.Boolean),
 });
 
-const toTweaksInput = (description: string): SdkFields => {
-  const controls = Schema.Array(jsonRecord).check(
-    Schema.isMaxLength(TWEAK_CONTROLS_MAX)
-  );
+const TWEAK_CONTROLS_NOTE =
+  "Each control: {id, label, cssVar, type: range {min, max, step?, unit?, default: number} | color {default} | toggle {on, off, default: boolean} | select {options: [{label, value}], default}}.";
 
-  return toSdkFieldSet({ controls: controls.annotate({ description }) });
+const tweakControls = Schema.Array(jsonRecord)
+  .check(Schema.isMaxLength(TWEAK_CONTROLS_MAX))
+  .annotate({ description: TWEAK_CONTROLS_NOTE });
+
+const TWEAKS_TOOL = toLooseTool({ controls: tweakControls });
+
+const flowParams = Schema.Record(Schema.String, toTextLimit(FLOW_PARAM_MAX));
+
+const flowRoutes = Schema.Array(toTrimmedText(1, ROUTE_MAX)).check(
+  Schema.isMaxLength(FRAME_LIST_MAX)
+);
+
+const FLOW_TOOL = toLooseTool({
+  depth: toOptionalInt(0, FLOW_MAX_DEPTH, "How many links deep to follow."),
+  from: toOptionalText(1, ROUTE_MAX, "Route to start from."),
+  params: Schema.optionalKey(flowParams),
+  routes: Schema.optionalKey(flowRoutes),
+});
+
+const TARGET_STATE = /^[a-z][a-z0-9-]{0,23}$/u;
+
+const targetState = Schema.String.check(
+  Schema.isPattern(TARGET_STATE)
+).annotate({
+  description:
+    "Attached apps: frame state id (default, session, empty, loading, error or a mock id) instead of the frame state.",
+});
+
+const TARGET_FIELDS = {
+  frame: toOptionalText(
+    1,
+    FRAME_REF_MAX,
+    "Canvas frame id or @label: render its page with its frame state. Leave out for the frame from <canvas-context>."
+  ),
+  path: toOptionalText(
+    0,
+    ROUTE_MAX,
+    "Page path instead of the frame page, such as /settings or about.html."
+  ),
+  state: Schema.optionalKey(targetState),
 };
 
-const toFlowInput = (depthMax: number): SdkFields => {
-  const params = Schema.Record(Schema.String, toTextLimit(FLOW_PARAM_MAX));
+const TARGET_TOOL = toLooseTool(TARGET_FIELDS);
 
-  const routes = Schema.Array(toTrimmedText(1, ROUTE_MAX)).check(
-    Schema.isMaxLength(FRAME_LIST_MAX)
-  );
+const pageOffset = Schema.Int.check(Schema.isGreaterThanOrEqualTo(0));
 
-  return toSdkFieldSet({
-    depth: toOptionalInt(0, depthMax, "How many links deep to follow."),
-    from: toOptionalText(1, ROUTE_MAX, "Route to start from."),
-    params: Schema.optionalKey(params),
-    routes: Schema.optionalKey(routes),
-  });
+const SCREENSHOT_TOOL = toLooseTool({
+  ...TARGET_FIELDS,
+  from: toDefaulted(
+    pageOffset,
+    0,
+    "Page y offset in px where the first image starts."
+  ),
+  screen: toOptionalInt(
+    1,
+    FRAME_LIST_MAX,
+    "Screen number from the render_check screens list: a view inside a multi-view page, a canvas frame or an app route frame. Overrides frame and path."
+  ),
+  theme: toDefaulted(
+    Schema.Literals(["light", "dark"]),
+    "light" as const,
+    'dark sets data-theme="dark" and the .dark class on <html> before the shot, so tokens.css uses the dark values.'
+  ),
+  viewport: toOptional(
+    Schema.Literals(["desktop", "mobile", "tablet"]),
+    "Render size. Leave out for the frame size (desktop when there is no frame)."
+  ),
+});
+
+const HELP_FIELDS = {
+  tool: toTrimmedText(0, FRAME_LABEL_MAX).annotate({
+    description: "Tool name without the mcp__studio__ prefix.",
+  }),
 };
+
+const HELP_INPUT = toLooseTool(HELP_FIELDS);
 
 export {
+  FLOW_TOOL,
+  HELP_INPUT,
+  SCREENSHOT_TOOL,
+  TARGET_TOOL,
+  TWEAKS_TOOL,
   canvasPlaceInput,
   canvasPointInput,
   doctorInput,
   frameSessionInput,
   frameStateInput,
   routeLinkInput,
-  toFlowInput,
-  toTweaksInput,
 };

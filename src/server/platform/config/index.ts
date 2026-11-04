@@ -28,6 +28,7 @@ const REPO_ROOT = path.resolve(import.meta.dirname, "..", "..", "..", "..");
 const DEFAULT_FOLDER_NAME = "Design Studio";
 const DEV_PROJECTS_FOLDER = "studio-projects";
 const APP_PORT_OFFSET = 400;
+const SHARE_PORT_OFFSET = 5;
 const DEFAULT_APP_PORT_COUNT = 200;
 const MAX_PORT = 65_535;
 const MAX_PORT_COUNT = 10_000;
@@ -111,6 +112,16 @@ const devProjectsRoot = (): string | null => {
   }
 
   return REPO_ROOT;
+};
+
+const toSharePort = (studioPort: number): number => {
+  const raw = Number(process.env.STUDIO_SHARE_PORT);
+
+  if (Number.isInteger(raw) && raw > 0 && raw <= MAX_PORT) {
+    return raw;
+  }
+
+  return studioPort + SHARE_PORT_OFFSET;
 };
 
 const loadConfig = (): ServerConfig => {
@@ -243,6 +254,7 @@ export {
   loadConfig,
   projectsDirFromEnv,
   resourcesDir,
+  toSharePort,
 };
 
 export type { ServerConfig };

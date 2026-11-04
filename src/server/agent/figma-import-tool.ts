@@ -4,21 +4,21 @@ import { Effect, Schema } from "effect";
 
 import { FIGMA_NODES_MAX_BYTES } from "../../shared/figma-nodes.js";
 import { JSX_INSERT_POSITIONS } from "../../shared/insert.js";
-import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
-import { planInsertJsx } from "../direct-edit/commit/jsx-insert.js";
+import {
+  toOptionalFlag,
+  toOptionalText,
+  toSdkFieldSet,
+  toToolInput,
+  toTrimmedText,
+} from "../agent-tools/index.js";
+import type { ToolArgs } from "../agent-tools/index.js";
+import { planInsertJsx } from "../direct-edit/commit/index.js";
 import { resolveSource, writeAtomic } from "../direct-edit/index.js";
 import { parseFigmaNodes } from "../figma/nodes.js";
 import { prepareFigmaImport } from "../figma/to-markup.js";
 import { refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
 import { targetOf } from "./insert-tool.js";
-import {
-  toOptionalFlag,
-  toOptionalText,
-  toToolInput,
-  toTrimmedText,
-} from "./tool-input.js";
-import type { ToolArgs } from "./tool-input.js";
 
 type ToolText = {
   content: { type: "text"; text: string }[];
@@ -55,6 +55,7 @@ const figmaImportFields = {
   ),
   position: Schema.Literals(JSX_INSERT_POSITIONS)
     .annotate({
+      default: "inside",
       description:
         "inside: after the last child. before / after: a sibling. replace: in place of the target.",
     })

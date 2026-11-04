@@ -1,13 +1,11 @@
 import {
   BREAKPOINT_NAME,
   BREAKPOINT_VALUE_MAX,
-} from "../../../shared/breakpoints.js";
-import { DIRECT_STYLE_PROPERTIES } from "../../../shared/contracts.js";
-import {
+  DIRECT_STYLE_PROPERTIES,
   STATE_SELECTOR_MAX,
   STYLE_STATES,
-} from "../../../shared/state-styles.js";
-import { z } from "../zod-bridge/index.js";
+  z,
+} from "./deps.js";
 
 const FRAME_MAX = 60;
 

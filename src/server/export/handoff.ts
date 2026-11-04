@@ -36,7 +36,7 @@ import { APP_VAR_EXTENSION } from "../design-system/extract/map.js";
 import { DESIGN_MD_FILE } from "../design-system/packs.js";
 import { readDesignSystemFiles } from "../design-system/sync.js";
 import { zipFiles, type ZipEntry } from "../design-system/zip.js";
-import { captureFrame } from "../preview/index.js";
+import { captureFrame } from "../preview/page-capture/index.js";
 import type { CommentStore } from "../store/comments.js";
 import { inlineHtml } from "./inline-html.js";
 import type { ExportDeps, ExportSource } from "./source.js";

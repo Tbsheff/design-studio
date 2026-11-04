@@ -7,22 +7,22 @@ import {
   VECTOR_PATH_MAX,
 } from "../../shared/vector.js";
 import type { VectorBox, VectorRequest } from "../../shared/vector.js";
-import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
-import { planVector } from "../direct-edit/commit/vector-ops.js";
-import { writeAtomic } from "../direct-edit/index.js";
-import { describeElements } from "../page-probe/element.js";
-import { refusal, writeProblem } from "./direct-tools.js";
-import type { DirectToolDeps } from "./direct-tools.js";
-import { targetOf } from "./insert-tool.js";
-import { editPageUrl } from "./run-target.js";
 import {
   toDefaulted,
   toOptional,
   toOptionalText,
+  toSdkFieldSet,
   toToolInput,
   toTrimmedText,
-} from "./tool-input.js";
-import type { ToolArgs } from "./tool-input.js";
+} from "../agent-tools/index.js";
+import type { ToolArgs } from "../agent-tools/index.js";
+import { planVector } from "../direct-edit/commit/index.js";
+import { writeAtomic } from "../direct-edit/index.js";
+import { describeElements } from "../page-probe/index.js";
+import { refusal, writeProblem } from "./direct-tools.js";
+import type { DirectToolDeps } from "./direct-tools.js";
+import { targetOf } from "./insert-tool.js";
+import { editPageUrl } from "./run-target.js";
 
 type ToolText = Readonly<{
   content: { type: "text"; text: string }[];
@@ -44,7 +44,7 @@ const paint = {
   ),
   stroke: toNullableColor("Stroke color. null removes the stroke."),
   strokeWidth: Schema.optionalKey(
-    Schema.NullOr(Schema.Number.check(strokeWidthRange)).annotate({
+    Schema.NullOr(Schema.Finite.check(strokeWidthRange)).annotate({
       description: "Stroke width in px.",
     })
   ),
@@ -68,11 +68,11 @@ const where = {
   ),
 };
 
-const sizeNumber = Schema.Number.check(
+const sizeNumber = Schema.Finite.check(
   Schema.isBetween({ maximum: 100_000, minimum: 1 })
 );
 
-const offsetNumber = Schema.Number.check(
+const offsetNumber = Schema.Finite.check(
   Schema.isBetween({ maximum: 100_000, minimum: -100_000 })
 );
 
@@ -291,7 +291,7 @@ export function runDrawVector(
 async function rectsOf(
   deps: DirectToolDeps,
   page: string | undefined,
-  selectors: [string, string]
+  selectors: readonly [string, string]
 ): Promise<[VectorBox, VectorBox] | undefined> {
   if (!deps.ctx.previewUrl) {
     return undefined;
@@ -300,7 +300,7 @@ async function rectsOf(
   const found = await describeElements(
     deps.preview,
     editPageUrl(deps.ctx, page),
-    selectors
+    [...selectors]
   ).catch(() => []);
 
   const [a, b] = found;

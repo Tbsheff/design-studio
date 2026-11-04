@@ -1,12 +1,12 @@
 import type { Direction, Project } from "../../shared/contracts.js";
 import type { ExportFrame } from "../../shared/export.js";
-import { EditError } from "../page-probe/edit-error.js";
 import {
+  EditError,
   isLayerRef,
   LayerRefError,
   resolveLayerRef,
   scopeOf,
-} from "../page-probe/layer-ref.js";
+} from "../page-probe/index.js";
 import type { ExportRuntime } from "./export-core.js";
 import { withPagePath } from "./source.js";
 

@@ -1,4 +1,4 @@
-import { canvasList } from "../../canvas/tools.js";
+import { canvasList } from "../../canvas/index.js";
 import { defineTool, plain } from "../edit-kit.js";
 import type { ToolSpec } from "../edit-kit.js";
 import { LINK_INTERACTION_TOOLS } from "../link-interaction-tools.js";

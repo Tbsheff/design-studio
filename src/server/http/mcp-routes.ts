@@ -1,11 +1,10 @@
 import type { Hono } from "hono";
 
 import type { McpApprovalPoll } from "../../shared/export.js";
-import type { FrameStateDeps } from "../canvas/app-flow/frame-state-service.js";
-import type { CanvasService } from "../canvas/service.js";
+import type { FrameStateDeps } from "../canvas/app-flow/index.js";
+import type { CanvasService } from "../canvas/index.js";
 import type { EditRecorder } from "../direct-edit/index.js";
-import { recentPages, startRender } from "../events/index.js";
-import { onSourceChange } from "../events/source-change.js";
+import { onSourceChange, recentPages, startRender } from "../events/index.js";
 import type { ExportDeps } from "../export/source.js";
 import { bindMcpLifeRuntime } from "../mcp-life/index.js";
 import type { McpListenerRunnerApi } from "../mcp-life/index.js";

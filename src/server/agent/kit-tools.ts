@@ -2,8 +2,16 @@ import { Schema } from "effect";
 
 import { DEFAULT_FRAME_STATE } from "../../shared/frame-state.js";
 import { COMPONENT_LIST_MAX, COMPONENT_SOURCES } from "../../shared/props.js";
-import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
-import { findFrame } from "../canvas/tools.js";
+import {
+  toDefaulted,
+  toOptional,
+  toOptionalInt,
+  toOptionalText,
+  toSdkFieldSet,
+  toToolInput,
+} from "../agent-tools/index.js";
+import type { ToolArgs } from "../agent-tools/index.js";
+import { findFrame } from "../canvas/index.js";
 import { listComponentSchemas } from "../components/props-service.js";
 import { layerTreeText } from "../mcp/layer-tools.js";
 import {
@@ -12,8 +20,8 @@ import {
   memoPage,
   resolveLayerRef,
   scopeOf,
-} from "../page-probe/layer-ref.js";
-import type { Viewport } from "../page-probe/layer-ref.js";
+} from "../page-probe/index.js";
+import type { Viewport } from "../page-probe/index.js";
 import { canvasFrames } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
 import {
@@ -22,14 +30,6 @@ import {
   isContextFrame,
   pageUrl,
 } from "./run-target.js";
-import {
-  toDefaulted,
-  toOptional,
-  toOptionalInt,
-  toOptionalText,
-  toToolInput,
-} from "./tool-input.js";
-import type { ToolArgs } from "./tool-input.js";
 
 type ToolText = Readonly<{
   content: { type: "text"; text: string }[];

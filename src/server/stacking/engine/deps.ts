@@ -1,4 +1,4 @@
-export { parseClass } from "../../direct-edit/engine/tailwind/classes.js";
+export { parseClass } from "../../direct-edit/engine/index.js";
 
 export {
   STACKING_OVERFLOWS,
@@ -7,7 +7,7 @@ export {
   Z_SCALE,
 } from "../../../shared/stacking.js";
 
-export type { TailwindTheme } from "../../direct-edit/engine/tailwind/theme-model.js";
+export type { TailwindTheme } from "../../direct-edit/engine/index.js";
 
 export type {
   StackingChanges,

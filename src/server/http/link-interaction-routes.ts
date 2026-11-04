@@ -1,16 +1,19 @@
 import type { Context, Hono } from "hono";
 
 import type { Project } from "../../shared/contracts.js";
-import type { FrameStateDeps } from "../canvas/app-flow/frame-state-service.js";
+import type { FrameStateDeps } from "../canvas/app-flow/index.js";
+import type {
+  CanvasService,
+  CanvasToolContext,
+  ToolText,
+} from "../canvas/index.js";
 import {
   linkInteractionSchema,
+  probeWithPreview,
+  setLinkInteraction,
   toInteractionRequest,
-} from "../canvas/links/link-interaction-input.js";
-import { setLinkInteraction } from "../canvas/links/link-interaction.js";
-import { probeWithPreview } from "../canvas/links/link-tools.js";
-import type { LinkProbe } from "../canvas/links/link-tools.js";
-import type { CanvasService } from "../canvas/service.js";
-import type { CanvasToolContext, ToolText } from "../canvas/tools.js";
+} from "../canvas/links/index.js";
+import type { LinkProbe } from "../canvas/links/index.js";
 import type { z } from "../platform/zod-bridge/index.js";
 import type { StudioProjectStore } from "../store/projects.js";
 import type { PreviewService } from "../types.js";

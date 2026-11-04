@@ -1,19 +1,18 @@
 import type { Direction, Project } from "../../shared/contracts.js";
+import { listInsertable, PreviewTargetError } from "../components/index.js";
+import type { PreviewResult, PreviewTarget } from "../components/index.js";
+import { BadRequestError, NotFoundError } from "../platform/errors/index.js";
+import type { PreviewService } from "../types.js";
+import { applySetImage } from "./commit/image.js";
+import { applyClearText, applyInsertJsx } from "./commit/jsx-insert.js";
+import { applyVector } from "./commit/vector-ops.js";
 import {
   applyCreateComponent,
   applyInsertComponent,
   applySwap,
   componentFolders,
-  listInsertable,
-  PreviewTargetError,
   swapCandidates,
-} from "../components/index.js";
-import type { PreviewResult, PreviewTarget } from "../components/index.js";
-import { BadRequestError, NotFoundError } from "../store/index.js";
-import type { PreviewService } from "../types.js";
-import { applySetImage } from "./commit/image.js";
-import { applyClearText, applyInsertJsx } from "./commit/jsx-insert.js";
-import { applyVector } from "./commit/vector-ops.js";
+} from "./components-ops/index.js";
 import type { DirectEditRuntime } from "./direct-edit-core.js";
 import type { DirectionRef, EditBody } from "./direct-edit-ops.js";
 import { DirectEditError } from "./engine/errors.js";

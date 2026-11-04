@@ -11,7 +11,8 @@ import { needsQuestions } from "../../shared/clarify.js";
 import type { ClarifyQuestion } from "../../shared/contracts.js";
 import { extractJson } from "../../shared/extract-json.js";
 import { WIREFRAME_MODEL } from "../../shared/run-levels.js";
-import { toTrimmedText } from "./tool-input.js";
+import { toTrimmedText } from "../agent-tools/index.js";
+import { toDecoder } from "../platform/decode/index.js";
 
 type QueryFn = typeof query;
 
@@ -26,12 +27,11 @@ const QuestionSchema = Schema.Struct({
   question: toTrimmedText(3, 160),
 });
 
-const decodeQuestionList = Schema.decodeUnknownResult(
-  Schema.Array(QuestionSchema)
-);
+const decodeQuestionList = toDecoder(Schema.Array(QuestionSchema), "ignore");
 
-const decodeQuestionWrapper = Schema.decodeUnknownResult(
-  Schema.Struct({ questions: Schema.Array(QuestionSchema) })
+const decodeQuestionWrapper = toDecoder(
+  Schema.Struct({ questions: Schema.Array(QuestionSchema) }),
+  "ignore"
 );
 
 const CLARIFY_SYSTEM = `You help a designer start a design from a short brief. Before the build starts, ask the few questions whose answers change the design the most: audience, the one main action, content or sections, visual tone, data to show. Never ask about things the brief already says. Never ask about tech stack, budget or deadlines.

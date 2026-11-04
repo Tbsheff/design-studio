@@ -5,7 +5,7 @@ import type {
   Project,
   SelectionContext,
 } from "../../shared/contracts.js";
-import { describeElement } from "../page-probe/element.js";
+import { describeElement } from "../page-probe/index.js";
 import { NotFoundError } from "../platform/errors/index.js";
 import { withPagePath } from "../project-source/source.js";
 import type { CreateCommentInput } from "../store/comments.js";

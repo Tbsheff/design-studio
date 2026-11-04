@@ -9,7 +9,7 @@ import {
   type Project,
 } from "../../shared/contracts.js";
 import type { PropValue } from "../../shared/props.js";
-import { humanize, propsFor } from "../direct-edit/components-ops/insert.js";
+import { humanize, propsFor } from "../direct-edit/components-ops/index.js";
 import type { RenderPage } from "../preview/render-backend.js";
 import type { PreviewService } from "../types.js";
 import { loadLibrary, type LibraryEntry } from "./insert-list.js";

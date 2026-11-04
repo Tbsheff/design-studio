@@ -4,7 +4,7 @@ import path from "node:path";
 import type * as t from "@babel/types";
 import type * as TS from "typescript-api";
 
-import { refuse } from "../direct-edit/engine/structure-ops.js";
+import { refuse } from "../direct-edit/engine/index.js";
 import { compilerOptionsFor } from "./props-program.js";
 
 export type ExportKind = "named" | "default";

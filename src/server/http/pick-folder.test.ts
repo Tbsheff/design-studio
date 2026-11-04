@@ -5,8 +5,8 @@ import path from "node:path";
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import { createEventBus } from "../events/index.js";
 import { projectStorePorts } from "../main/project-ports.js";
-import { createEventBus } from "../store/events.js";
 import { createProjectStore } from "../store/projects.js";
 import { makeTempConfig } from "../store/testConfig.js";
 import { createVersionStore } from "../store/versions.js";

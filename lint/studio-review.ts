@@ -389,10 +389,6 @@ const studioReview: OxlintOverride[] = [
     rules: { "studio/override-file-once": "error" },
   },
   {
-    files: ["lint/legacy.ts"],
-    rules: { "studio/frozen-pin": "error" },
-  },
-  {
     files: COMPILER_IMPORT_FILES,
     rules: { "studio/ts-compiler-owner": "error" },
   },

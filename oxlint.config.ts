@@ -1,7 +1,12 @@
 import { defineConfig } from "oxlint";
 import type { OxlintConfig, OxlintOverride } from "oxlint";
 
-import { ELEMENTS, ROOT_POLICIES, dependencies } from "./lint/boundaries.ts";
+import {
+  ELEMENTS,
+  ROOT_POLICIES,
+  UI_CROSS_FEATURE_OVERRIDES,
+  dependencies,
+} from "./lint/boundaries.ts";
 import { coarse } from "./lint/coarse.ts";
 import { dayOne } from "./lint/day-one.ts";
 import {
@@ -11,12 +16,11 @@ import {
   vitestAll,
 } from "./lint/decisions.ts";
 import { toKeptOptions } from "./lint/keep-options.ts";
-import { legacy } from "./lint/legacy.ts";
 import { antiSlop, core, js, jsPluginSettings, react } from "./lint/presets.ts";
 import { serverOrder } from "./lint/server-order.ts";
 import { STUDIO_PLUGIN, studio } from "./lint/studio.ts";
 
-export const LINT_IGNORES = [
+const LINT_IGNORES = [
   ...(core.ignorePatterns ?? []),
   ".claude/**",
   "dist/**",
@@ -34,14 +38,14 @@ export const LINT_IGNORES = [
   "lint/day-one.ts",
 ];
 
-export const BOUNDARY_SETTINGS = {
+const BOUNDARY_SETTINGS = {
   "import/resolver": {
     [new URL("lint/ts-resolver.cjs", import.meta.url).pathname]: {},
   },
   "boundaries/elements": ELEMENTS,
 };
 
-export const TEST_OVERRIDES: OxlintOverride[] = [
+const TEST_OVERRIDES: OxlintOverride[] = [
   {
     files: [
       "src/**/*.test.ts",
@@ -58,10 +62,10 @@ export const TEST_OVERRIDES: OxlintOverride[] = [
   },
 ];
 
-export const BOUNDARY_OVERRIDES: OxlintOverride[] = [
+const BOUNDARY_OVERRIDES: OxlintOverride[] = [
   ...coarse,
   ...serverOrder,
-  ...legacy,
+  ...UI_CROSS_FEATURE_OVERRIDES,
   {
     files: ["src/ui/**"],
     rules: { "import/no-cycle": ["error", { ignoreTypes: true }] },
@@ -76,7 +80,7 @@ export const BOUNDARY_OVERRIDES: OxlintOverride[] = [
   },
 ];
 
-export default defineConfig<OxlintConfig>({
+const config = defineConfig<OxlintConfig>({
   env: core.env,
   extends: [core, react, js, antiSlop],
   jsPlugins: [
@@ -102,3 +106,7 @@ export default defineConfig<OxlintConfig>({
     ...dayOne,
   ],
 });
+
+export { BOUNDARY_OVERRIDES, BOUNDARY_SETTINGS, LINT_IGNORES, TEST_OVERRIDES };
+
+export default config;

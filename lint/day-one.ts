@@ -135,7 +135,6 @@ const FILES = [
   "lint/coarse.ts",
   "lint/decisions.ts",
   "lint/gen-day-one.ts",
-  "lint/legacy.ts",
   "lint/presets.ts",
   "lint/server-order.ts",
   "lint/ts-resolver.cjs",

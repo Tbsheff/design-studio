@@ -1,7 +1,6 @@
 import type { OxlintOverride } from "oxlint";
 
-import { dependencies } from "./boundaries.ts";
-import { LEGACY_GLOBS, SHARED_DOM } from "./legacy.ts";
+import { SHARED_DOM, UI_IO_OVERRIDES, dependencies } from "./boundaries.ts";
 
 type Pattern = {
   group: string[];
@@ -188,22 +187,16 @@ const NEW_DOMAIN_AREAS = [
   "ship",
 ];
 
-const domainRows = NEW_DOMAIN_AREAS.flatMap((area) => {
-  if (LEGACY_GLOBS.includes(`src/server/${area}/**`)) {
-    return [];
-  }
-
-  return [
-    restrict(
-      [`src/server/${area}/**`],
-      [...SERVER, SERVER_ONLY_TEST, DOMAIN_ADAPTERS, CHILD_PROCESS]
-    ),
-    restrict(
-      [`src/server/${area}/**/*.test.ts`],
-      [...SERVER, DOMAIN_ADAPTERS, CHILD_PROCESS]
-    ),
-  ];
-});
+const domainRows = NEW_DOMAIN_AREAS.flatMap((area) => [
+  restrict(
+    [`src/server/${area}/**`],
+    [...SERVER, SERVER_ONLY_TEST, DOMAIN_ADAPTERS, CHILD_PROCESS]
+  ),
+  restrict(
+    [`src/server/${area}/**/*.test.ts`],
+    [...SERVER, DOMAIN_ADAPTERS, CHILD_PROCESS]
+  ),
+]);
 
 const serverRows = [
   restrict(["src/server/**"], [...SERVER, SERVER_ONLY_TEST]),
@@ -264,6 +257,7 @@ export const coarse: OxlintOverride[] = [
   ),
   ...serverRows,
   ...engineRows,
+  ...UI_IO_OVERRIDES,
   {
     files: ["src/shared/**"],
     rules: { "no-restricted-globals": ["error", ...SHARED_DOM] },

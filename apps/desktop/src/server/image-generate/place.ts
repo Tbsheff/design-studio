@@ -55,17 +55,39 @@ const writeOnce = async (file: string, bytes: Buffer): Promise<void> => {
 };
 
 const saveOnly = async (
+  deps: DirectEditDeps,
   scope: PlaceScope,
   image: ImageBytes
 ): Promise<PlaceResult> => {
-  const asset = await planAsset(scope.project, scope.workTree, null, image);
+  const { direction, project } = scope;
+  const asset = await planAsset(project, scope.workTree, null, image);
 
-  if (!asset.exists) {
-    await mkdir(path.dirname(asset.file), { recursive: true });
-    await writeOnce(asset.file, asset.bytes);
+  if (asset.exists) {
+    return { asset: asset.relative, src: asset.src, versionId: null };
   }
 
-  return { asset: asset.relative, src: asset.src, versionId: null };
+  assertCanEdit(deps, project, direction);
+  await savesSettled(project.id);
+  await mkdir(path.dirname(asset.file), { recursive: true });
+  await writeOnce(asset.file, asset.bytes);
+
+  const meta: VersionMeta = {
+    kind: "manual",
+    prompt: `${TITLE}: saved ${asset.relative}`,
+  };
+
+  const version = saveDeferred(
+    deps,
+    project,
+    direction,
+    [asset.relative],
+    TITLE,
+    meta
+  );
+
+  await publishVersion(deps, project, direction, version);
+
+  return { asset: asset.relative, src: asset.src, versionId: version.id };
 };
 
 const commitPlan = async (
@@ -129,7 +151,7 @@ const placeGenerated = (
   image: ImageBytes
 ): Promise<PlaceResult> => {
   if (command === null) {
-    return saveOnly(scope, image);
+    return saveOnly(deps, scope, image);
   }
 
   return commitPlan(deps, scope, command, image);

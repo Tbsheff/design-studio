@@ -6,7 +6,7 @@ import { cleanExportPath } from "@design-studio/contracts/export";
 
 import { firstVersionWaitText } from "../app/first-version.js";
 import { resolveSource } from "../export/source.js";
-import { NotFoundError } from "../platform/errors/index.js";
+import { ConflictError, NotFoundError } from "../platform/errors/index.js";
 import type { StudioProjectStore } from "../store/projects.js";
 import type { PreviewService, VersionStore } from "../types.js";
 
@@ -125,7 +125,7 @@ const resolveFileSource = async (
   }
 
   if (!direction.headVersionId) {
-    throw new Error(firstVersionWaitText(project.id));
+    throw new ConflictError(firstVersionWaitText(project.id));
   }
 
   const source = await resolveSource(

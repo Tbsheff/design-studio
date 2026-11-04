@@ -5,7 +5,11 @@ import {
   firstVersionState,
   firstVersionWaitText,
 } from "../app/first-version.js";
-import { BadRequestError, NotFoundError } from "../platform/errors/index.js";
+import {
+  BadRequestError,
+  ConflictError,
+  NotFoundError,
+} from "../platform/errors/index.js";
 import { resolveSource } from "../project-source/index.js";
 import type { ExportSource, SourceDeps } from "../project-source/index.js";
 import type { StudioProjectStore } from "../store/projects.js";
@@ -156,7 +160,7 @@ const resolveFrameSource = async (
   }
 
   if (!head) {
-    throw new Error(firstVersionWaitText(project.id));
+    throw new ConflictError(firstVersionWaitText(project.id));
   }
 
   if (isWorkTree) {

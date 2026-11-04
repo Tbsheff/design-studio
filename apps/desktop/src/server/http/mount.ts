@@ -1,8 +1,8 @@
+import type { AnyAction } from "@design-studio/actions/_core/action";
+import type { StudioError } from "@design-studio/actions/_core/errors/all";
 import { Exit } from "effect";
 import type { Context, Hono } from "hono";
 
-import type { AnyAction } from "@design-studio/actions/_core/action";
-import type { StudioError } from "@design-studio/actions/_core/errors/all";
 import type { Entries } from "../handlers/_core/handler.js";
 import { allowAll, makeRunner } from "../handlers/_core/run-action.js";
 import type {
@@ -71,6 +71,19 @@ const reply = (
   return ctx.json(wire.body, wire.status);
 };
 
+const runWith = (
+  runtime: StudioRuntime,
+  program: ReturnType<Runner>,
+  action: AnyAction,
+  ctx: Context
+): Promise<Exit.Exit<object, StudioError>> => {
+  if (action.access === "read") {
+    return runtime.runPromiseExit(program, { signal: ctx.req.raw.signal });
+  }
+
+  return runtime.runPromiseExit(program);
+};
+
 const mountOne = (
   app: Hono,
   action: AnyAction,
@@ -80,9 +93,7 @@ const mountOne = (
   app.on(action.http.method, action.http.path, async (ctx) => {
     const program = run(await wireArgs(ctx), toLegacyPrincipal(), formOf(ctx));
 
-    const exit = await runtime.runPromiseExit(program, {
-      signal: ctx.req.raw.signal,
-    });
+    const exit = await runWith(runtime, program, action, ctx);
 
     return reply(ctx, exit);
   });

@@ -79,12 +79,18 @@ const originOf = (frames: readonly CanvasFileFrame[]): GridOrigin => {
   return { gap, left, top: bottom + gap * ROW_GAP_FACTOR };
 };
 
+const isSameCell = (
+  frame: CanvasFileFrame,
+  slot: GridSlot,
+  page: string
+): boolean => frame.label === slot.cell.label && frame.path === page;
+
 const toSpec = (
   slot: GridSlot,
   page: string,
   frames: readonly CanvasFileFrame[]
 ): PlaceSpec => {
-  const existing = frames.find((frame) => frame.label === slot.cell.label);
+  const existing = frames.find((frame) => isSameCell(frame, slot, page));
 
   const spec: PlaceSpec = {
     height: slot.cell.height,
@@ -108,7 +114,16 @@ const placeCells = (
   directionId: string
 ): Placement => {
   const seeded = seedFrames(file);
-  const slots = toGrid(toCells(command), originOf(seeded.frames));
+  const cells = toCells(command);
+
+  const fresh = seeded.frames.filter(
+    (frame) =>
+      !cells.some(
+        (cell) => cell.label === frame.label && frame.path === command.page
+      )
+  );
+
+  const slots = toGrid(cells, originOf(fresh));
   const specs = slots.map((slot) => toSpec(slot, command.page, seeded.frames));
   const next = applyPlacement(seeded, specs, directionId);
 

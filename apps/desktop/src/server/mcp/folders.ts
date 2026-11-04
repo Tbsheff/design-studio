@@ -25,7 +25,11 @@ const SYSTEM_TREES = [
 
 const SYSTEM_ROOTS = ["/", "/private", "/Users", "/Volumes"];
 
-export class FolderError extends Error {}
+const BAD_REQUEST = 400;
+
+export class FolderError extends Error {
+  public readonly status = BAD_REQUEST;
+}
 
 export function isInside(target: string, folder: string): boolean {
   return (

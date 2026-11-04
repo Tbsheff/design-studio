@@ -9,8 +9,8 @@ type ZodJsonSchema = Parameters<typeof z.fromJSONSchema>[0];
 
 const DROPPED_KEYS: ReadonlySet<string> = new Set(["$schema", "not"]);
 
-const toSdkFields = (action: AnyAction): SdkFields => {
-  const document = Schema.toJsonSchemaDocument(action.input);
+const toSdkFromSchema = (input: Schema.Top): SdkFields => {
+  const document = Schema.toJsonSchemaDocument(input);
 
   const kept = Object.entries(document.schema).filter(
     ([key]) => !DROPPED_KEYS.has(key)
@@ -30,6 +30,12 @@ const toSdkFields = (action: AnyAction): SdkFields => {
   return z.object({}).shape;
 };
 
-export { toSdkFields };
+const toSdkFields = (action: AnyAction): SdkFields =>
+  toSdkFromSchema(action.input);
+
+const toSdkFieldSet = (fields: Schema.Struct.Fields): SdkFields =>
+  toSdkFromSchema(Schema.Struct(fields));
+
+export { toSdkFields, toSdkFieldSet };
 
 export type { SdkFields };

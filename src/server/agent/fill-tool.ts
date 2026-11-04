@@ -1,15 +1,29 @@
-import { z } from "zod";
+import { Schema } from "effect";
 
+import {
+  BLEND_MODES,
+  BLEND_PROPERTIES,
+  FILL_ANGLE_MAX,
+  FILL_AT,
+  FILL_COLOR,
+  FILL_STOPS_MAX,
+  FILL_STOPS_MIN,
+  FILL_TOKEN,
+  FILL_TYPES,
+  RADIAL_FORMS,
+} from "../../shared/fill.js";
+import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
 import type { WrittenFile } from "../direct-edit/commit/batch.js";
 import { writeAtomic } from "../direct-edit/index.js";
 import { getFill } from "../fill/get.js";
 import { planFillSet } from "../fill/set.js";
 import type { FillSetPlan, FillTarget } from "../fill/set.js";
 import type { FillInput } from "../fill/spec.js";
-import { fillFields } from "../mcp/fill-tools.js";
 import { refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
 import { targetOf } from "./insert-tool.js";
+import { toOptionalText, toToolInput, toTrimmedText } from "./tool-input.js";
+import type { ToolArgs, ToolData } from "./tool-input.js";
 
 interface ToolContent {
   text: string;
@@ -28,45 +42,116 @@ type Located =
 
 const SELECTOR_MAX = 2000;
 const SOURCE_MAX = 1100;
+const PERCENT_MAX = 100;
+const FILL_TEXT_MAX = 200;
 const PATH_MAX = 300;
 
 const RUN_NOTE =
   "The run saves this change in its version, like your file edits.";
 
 const targetInput = {
-  path: z
-    .string()
-    .trim()
-    .max(PATH_MAX)
-    .optional()
-    .describe(
-      "Page path. Leave out for the page of the frame in <canvas-context> (or the entry page)."
-    ),
-  targetSelector: z
-    .string()
-    .trim()
-    .min(1)
-    .max(SELECTOR_MAX)
-    .optional()
-    .describe("CSS selector or layer id of the element on the live page."),
-  targetSource: z
-    .string()
-    .trim()
-    .max(SOURCE_MAX)
-    .optional()
-    .describe(
-      'Or the element as file:line:col, for example "src/App.tsx:12:7".'
-    ),
+  path: toOptionalText(
+    0,
+    PATH_MAX,
+    "Page path. Leave out for the page of the frame in <canvas-context> (or the entry page)."
+  ),
+  targetSelector: toOptionalText(
+    1,
+    SELECTOR_MAX,
+    "CSS selector or layer id of the element on the live page."
+  ),
+  targetSource: toOptionalText(
+    0,
+    SOURCE_MAX,
+    'Or the element as file:line:col, for example "src/App.tsx:12:7".'
+  ),
 };
 
-const getFillInput = { ...targetInput };
+const colorField = Schema.optionalKey(
+  toTrimmedText(0, FILL_TEXT_MAX).check(Schema.isPattern(FILL_COLOR)).annotate({
+    description: 'CSS color, for example "#2563eb" or "oklch(0.6 0.2 260)".',
+  })
+);
 
-const setFillInput = { ...targetInput, ...fillFields };
+const tokenField = Schema.optionalKey(
+  toTrimmedText(0, FILL_TEXT_MAX).check(Schema.isPattern(FILL_TOKEN)).annotate({
+    description:
+      'Color token name, for example "primary" or "--color-primary".',
+  })
+);
 
-const listSchema = z.strictObject(getFillInput);
-const setSchema = z.strictObject(setFillInput);
+const percentRange = Schema.isBetween({ maximum: PERCENT_MAX, minimum: 0 });
 
-const fillInputOf = (input: z.output<typeof setSchema>): FillInput => ({
+const percentValue = Schema.Number.check(percentRange);
+
+const stop = Schema.Struct({
+  color: colorField,
+  position: Schema.optionalKey(
+    percentValue.annotate({ description: "Stop position in %." })
+  ),
+  token: tokenField,
+});
+
+const fillFields = {
+  angle: Schema.optionalKey(
+    Schema.Number.check(
+      Schema.isBetween({ maximum: FILL_ANGLE_MAX, minimum: -FILL_ANGLE_MAX })
+    ).annotate({
+      description:
+        "Linear only: angle in degrees. 0 is to top, 90 to right. Default 180.",
+    })
+  ),
+  at: Schema.optionalKey(
+    toTrimmedText(0, FILL_TEXT_MAX).check(Schema.isPattern(FILL_AT)).annotate({
+      description:
+        'Radial only: center, for example "center", "top left" or "25% 75%".',
+    })
+  ),
+  blendMode: Schema.optionalKey(
+    Schema.Literals(BLEND_MODES).annotate({
+      description: "Blend mode, for example multiply, screen or overlay.",
+    })
+  ),
+  blendProperty: Schema.optionalKey(
+    Schema.Literals(BLEND_PROPERTIES).annotate({
+      description:
+        "mix-blend-mode (blend the element with what is under it, default) or background-blend-mode (blend the background layers).",
+    })
+  ),
+  color: colorField,
+  form: Schema.optionalKey(
+    Schema.Literals(RADIAL_FORMS).annotate({
+      description: "Radial only: circle or ellipse. Default ellipse.",
+    })
+  ),
+  stops: Schema.optionalKey(
+    Schema.Array(stop)
+      .check(
+        Schema.isMinLength(FILL_STOPS_MIN),
+        Schema.isMaxLength(FILL_STOPS_MAX)
+      )
+      .annotate({
+        description: `Gradient stops (${FILL_STOPS_MIN}-${FILL_STOPS_MAX}): each {color | token, position %}.`,
+      })
+  ),
+  token: tokenField,
+  type: Schema.Literals(FILL_TYPES).annotate({
+    description: "solid (color or token), linear or radial (stops).",
+  }),
+};
+
+const getFillFields = { ...targetInput };
+
+const setFillFields = { ...targetInput, ...fillFields };
+
+const getFillInput = toSdkFieldSet(getFillFields);
+
+const setFillInput = toSdkFieldSet(setFillFields);
+
+const listSchema = toToolInput(getFillFields);
+const setSchema = toToolInput(setFillFields);
+
+const fillInputOf = (input: ToolData<typeof setSchema>): FillInput => ({
   angle: input.angle,
   at: input.at,
   blendMode: input.blendMode,
@@ -87,13 +172,8 @@ const refuse = (message: string): ToolText => ({
   isError: true,
 });
 
-const issues = (tool: string, error: z.ZodError): ToolText => {
-  const lines = error.issues.map(
-    (issue) => `${issue.path.join(".") || "input"}: ${issue.message}`
-  );
-
-  return refuse(`${tool}: ${lines.join("; ")}`);
-};
+const issues = (tool: string, error: string): ToolText =>
+  refuse(`${tool}: ${error}`);
 
 const failure = (tool: string, error: Error | string): ToolText => {
   if (error instanceof Error) {
@@ -154,7 +234,7 @@ const setText = (plan: FillSetPlan): string => {
 
 const sourceOf = async (
   deps: DirectToolDeps,
-  input: z.output<typeof listSchema>
+  input: ToolData<typeof listSchema>
 ): Promise<Located> => {
   const target = await targetOf(deps, input);
 
@@ -181,7 +261,7 @@ const sourceOf = async (
 
 const listWith = async (
   deps: DirectToolDeps,
-  input: z.output<typeof listSchema>
+  input: ToolData<typeof listSchema>
 ): Promise<ToolText> => {
   const located = await sourceOf(deps, input);
 
@@ -201,7 +281,7 @@ const listWith = async (
 
 const runGetFill = async (
   deps: DirectToolDeps,
-  args: z.input<typeof listSchema>
+  args: ToolArgs<typeof listSchema>
 ): Promise<ToolText> => {
   const parsed = listSchema.safeParse(args);
 
@@ -222,7 +302,7 @@ const runGetFill = async (
 
 const setWith = async (
   deps: DirectToolDeps,
-  input: z.output<typeof setSchema>
+  input: ToolData<typeof setSchema>
 ): Promise<ToolText> => {
   const located = await sourceOf(deps, input);
 
@@ -248,7 +328,7 @@ const setWith = async (
 
 const runSetFill = async (
   deps: DirectToolDeps,
-  args: z.input<typeof setSchema>
+  args: ToolArgs<typeof setSchema>
 ): Promise<ToolText> => {
   const blocked = refusal(deps.ctx, "set_fill");
 

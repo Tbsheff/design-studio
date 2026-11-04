@@ -1,13 +1,18 @@
-import { z } from "zod";
+import { Schema } from "effect";
 
 import type { SourceLoc } from "../../shared/contracts.js";
+import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
 import type { BreakpointScope } from "../breakpoints/commit.js";
+import {
+  BREAKPOINT_NAME,
+  BREAKPOINT_VALUE_MAX,
+  BREAKPOINT_WIDTH_MAX,
+  DIRECT_STYLE_PROPERTIES,
+} from "../breakpoints/deps.js";
 import { BreakpointError } from "../breakpoints/errors.js";
 import {
   LIST_BREAKPOINTS_DESCRIPTION,
-  listBreakpointFields,
   SET_BREAKPOINT_STYLE_DESCRIPTION,
-  setBreakpointFields,
   toStyleInput,
 } from "../breakpoints/input.js";
 import { listBreakpoints } from "../breakpoints/list.js";
@@ -19,6 +24,14 @@ import { DirectEditError } from "../direct-edit/engine/errors.js";
 import { canvasFrames, refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
 import { targetOf } from "./insert-tool.js";
+import {
+  toOptionalFlag,
+  toOptionalInt,
+  toOptionalText,
+  toToolInput,
+  toTrimmedText,
+} from "./tool-input.js";
+import type { ToolArgs, ToolData } from "./tool-input.js";
 
 interface ToolContent {
   text: string;
@@ -38,6 +51,8 @@ type Located =
 const SELECTOR_MAX = 2000;
 const SOURCE_MAX = 1100;
 const PATH_MAX = 300;
+const FRAME_MAX = 200;
+const BREAKPOINT_NAME_MAX = 64;
 
 const RUN_NOTE =
   "The run saves this change in its version, like your file edits.";
@@ -45,35 +60,61 @@ const RUN_NOTE =
 const NO_SOURCE = "The layer has no source location. Pass targetSource.";
 
 const targetInput = {
-  path: z
-    .string()
-    .trim()
-    .max(PATH_MAX)
-    .optional()
-    .describe(
-      "Page path. Leave out for the page of the frame in <canvas-context> (or the entry page)."
-    ),
-  targetSelector: z
-    .string()
-    .trim()
-    .min(1)
-    .max(SELECTOR_MAX)
-    .optional()
-    .describe("CSS selector or layer id of the layer on the live page."),
-  targetSource: z
-    .string()
-    .trim()
-    .max(SOURCE_MAX)
-    .optional()
-    .describe('Or the layer as file:line:col, for example "src/App.tsx:12:7".'),
+  path: toOptionalText(
+    0,
+    PATH_MAX,
+    "Page path. Leave out for the page of the frame in <canvas-context> (or the entry page)."
+  ),
+  targetSelector: toOptionalText(
+    1,
+    SELECTOR_MAX,
+    "CSS selector or layer id of the layer on the live page."
+  ),
+  targetSource: toOptionalText(
+    0,
+    SOURCE_MAX,
+    'Or the layer as file:line:col, for example "src/App.tsx:12:7".'
+  ),
 };
 
-const listBreakpointsInput = { ...targetInput, ...listBreakpointFields };
+const listBreakpointFieldSet = {
+  ...targetInput,
+  frame: toOptionalText(
+    1,
+    FRAME_MAX,
+    "Canvas frame id or label. Its width picks the active breakpoint."
+  ),
+  width: toOptionalInt(
+    1,
+    BREAKPOINT_WIDTH_MAX,
+    "Or a frame width in px, for example 390 or 1440."
+  ),
+};
 
-const setBreakpointStyleInput = { ...targetInput, ...setBreakpointFields };
+const setBreakpointFieldSet = {
+  ...targetInput,
+  breakpoint: toTrimmedText(0, BREAKPOINT_NAME_MAX)
+    .check(Schema.isPattern(BREAKPOINT_NAME))
+    .annotate({
+      description: '"base" or a breakpoint name, for example "md" or "lg".',
+    }),
+  property: Schema.Literals(DIRECT_STYLE_PROPERTIES).annotate({
+    description: "CSS property, for example padding-top, font-size or display.",
+  }),
+  reset: toOptionalFlag("Remove the value at this breakpoint. Default false."),
+  value: toOptionalText(
+    1,
+    BREAKPOINT_VALUE_MAX,
+    'CSS value, for example "24px", "1.25rem", "none" or "#0f172a".'
+  ),
+};
 
-const listSchema = z.strictObject(listBreakpointsInput);
-const setSchema = z.strictObject(setBreakpointStyleInput);
+const listBreakpointsInput = toSdkFieldSet(listBreakpointFieldSet);
+
+const setBreakpointStyleInput = toSdkFieldSet(setBreakpointFieldSet);
+
+const listSchema = toToolInput(listBreakpointFieldSet);
+const setSchema = toToolInput(setBreakpointFieldSet);
 
 const listBreakpointsDescription = LIST_BREAKPOINTS_DESCRIPTION;
 
@@ -88,13 +129,8 @@ const refuse = (message: string): ToolText => ({
   isError: true,
 });
 
-const issues = (tool: string, error: z.ZodError): ToolText => {
-  const lines = error.issues.map(
-    (issue) => `${issue.path.join(".") || "input"}: ${issue.message}`
-  );
-
-  return refuse(`${tool}: ${lines.join("; ")}`);
-};
+const issues = (tool: string, error: string): ToolText =>
+  refuse(`${tool}: ${error}`);
 
 const caught = (tool: string, error: Error | null): ToolText => {
   if (error instanceof BreakpointError || error instanceof DirectEditError) {
@@ -116,7 +152,7 @@ const scopeOf = (deps: DirectToolDeps): BreakpointScope => ({
 
 const locate = async (
   deps: DirectToolDeps,
-  input: z.output<typeof listSchema>
+  input: ToolData<typeof listSchema>
 ): Promise<Located> => {
   const target = await targetOf(deps, input);
 
@@ -138,12 +174,12 @@ const locate = async (
   };
 };
 
-const hasTarget = (input: z.output<typeof listSchema>): boolean =>
+const hasTarget = (input: ToolData<typeof listSchema>): boolean =>
   Boolean(input.targetSelector) || Boolean(input.targetSource);
 
 const listWith = async (
   deps: DirectToolDeps,
-  input: z.output<typeof listSchema>
+  input: ToolData<typeof listSchema>
 ): Promise<ToolText> => {
   let located: SourceLoc | null = null;
 
@@ -171,7 +207,7 @@ const listWith = async (
 
 const runListBreakpoints = async (
   deps: DirectToolDeps,
-  args: z.input<typeof listSchema>
+  args: ToolArgs<typeof listSchema>
 ): Promise<ToolText> => {
   const parsed = listSchema.safeParse(args);
 
@@ -211,7 +247,7 @@ const writeAll = async (
 
 const setWith = async (
   deps: DirectToolDeps,
-  input: z.output<typeof setSchema>
+  input: ToolData<typeof setSchema>
 ): Promise<ToolText> => {
   const located = await locate(deps, input);
 
@@ -237,7 +273,7 @@ const setWith = async (
 
 const runSetBreakpointStyle = async (
   deps: DirectToolDeps,
-  args: z.input<typeof setSchema>
+  args: ToolArgs<typeof setSchema>
 ): Promise<ToolText> => {
   const blocked = refusal(deps.ctx, "set_breakpoint_style");
 

@@ -1,6 +1,12 @@
-import { z } from "zod";
+import { Effect, Schema } from "effect";
 
+import {
+  VARIANT_CLASSES,
+  VARIANT_KEY,
+  VARIANT_VALUE,
+} from "../../shared/component-variant.js";
 import type { ComponentVariantChange } from "../../shared/component-variant.js";
+import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
 import type { VariantScope } from "../components/variant-write/locate.js";
 import type { VariantPlan } from "../components/variant-write/plan.js";
 import { planVariantWrite } from "../components/variant-write/plan.js";
@@ -12,18 +18,14 @@ import type { VariantPreview } from "../components/variant-write/write.js";
 import { writeAtomic } from "../direct-edit/commit/edit-source.js";
 import {
   createChange,
-  createFields,
   hasComponent,
   targetOf,
   updateChange,
-  updateFields,
 } from "../mcp/component-variant-tools.js";
 import { refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
-
-type CreateFields = z.output<z.ZodObject<typeof createFields>>;
-
-type UpdateFields = z.output<z.ZodObject<typeof updateFields>>;
+import { toOptionalText, toToolInput, toTrimmedText } from "./tool-input.js";
+import type { ToolArgs, ToolParse } from "./tool-input.js";
 
 type ToolContent =
   | { data: string; mimeType: string; type: "image" }
@@ -35,28 +37,111 @@ interface ToolReply {
   isError?: boolean;
 }
 
+const CVA_NAME_MAX = 64;
+const FILE_MAX = 1000;
+const CLASSES_MAX = 10_000;
+
 const RUN_NOTE =
   "The run saves this change in its version, like your file edits.";
 
-const createVariantInput = { ...createFields };
+const componentFields = {
+  cva: Schema.optionalKey(
+    toTrimmedText(0, CVA_NAME_MAX)
+      .check(Schema.isPattern(/^[A-Za-z_$][\w$]{0,63}$/u))
+      .annotate({
+        description:
+          "Name of the cva() const, for example buttonVariants, when the file has more than one.",
+      })
+  ),
+  file: toOptionalText(
+    0,
+    FILE_MAX,
+    "File of the component, relative to the project, when two components have the same name."
+  ),
+  name: Schema.optionalKey(
+    Schema.String.check(
+      Schema.isPattern(/^[A-Z][A-Za-z0-9_$]{0,63}$/u)
+    ).annotate({
+      description: 'Component name from list_components, for example "Button".',
+    })
+  ),
+};
 
-const updateVariantInput = { ...updateFields };
+const key = Schema.String.check(Schema.isPattern(VARIANT_KEY)).annotate({
+  description:
+    'Variant key of the cva() variants map, for example "variant" or "size".',
+});
 
-const createSchema = z.strictObject(createVariantInput);
-const updateSchema = z.strictObject(updateVariantInput);
+const value = Schema.String.check(Schema.isPattern(VARIANT_VALUE)).annotate({
+  description: 'Value name in that key, for example "danger" or "xl".',
+});
+
+const classes = toTrimmedText(1, CLASSES_MAX)
+  .check(Schema.isPattern(VARIANT_CLASSES))
+  .annotate({
+    description:
+      'Tailwind classes of the value, for example "bg-red-600 text-white hover:bg-red-700".',
+  });
+
+const setDefault = Schema.Boolean.annotate({
+  description: "Also make this value the default in defaultVariants.",
+}).pipe(Schema.withDecodingDefaultKey(Effect.succeed(false)));
+
+const createFields = {
+  ...componentFields,
+  classes: Schema.optionalKey(classes),
+  copyFrom: Schema.optionalKey(
+    value.annotate({
+      description:
+        "Existing value in the same key to copy. Its classes come first; classes then replace the ones of the same utility.",
+    })
+  ),
+  key,
+  newKey: Schema.Boolean.annotate({
+    description:
+      "Add the key when the variants map does not have it. The new value becomes its default.",
+  }).pipe(Schema.withDecodingDefaultKey(Effect.succeed(false))),
+  setDefault,
+  value,
+};
+
+const updateFields = {
+  ...componentFields,
+  classes: Schema.optionalKey(
+    classes.annotate({
+      description:
+        "New classes for the value. They replace all of its classes.",
+    })
+  ),
+  key,
+  rename: Schema.optionalKey(
+    value.annotate({
+      description:
+        "New name for the value. defaultVariants and compoundVariants follow it.",
+    })
+  ),
+  setDefault,
+  value,
+};
+
+type CreateFields = Schema.Struct.Type<typeof createFields>;
+
+type UpdateFields = Schema.Struct.Type<typeof updateFields>;
+
+const createVariantInput = toSdkFieldSet(createFields);
+
+const updateVariantInput = toSdkFieldSet(updateFields);
+
+const createSchema = toToolInput(createFields);
+const updateSchema = toToolInput(updateFields);
 
 const refuse = (message: string): ToolReply => ({
   content: [{ text: message, type: "text" }],
   isError: true,
 });
 
-const issues = (tool: string, error: z.ZodError): ToolReply => {
-  const lines = error.issues.map(
-    (issue) => `${issue.path.join(".") || "input"}: ${issue.message}`
-  );
-
-  return refuse(`${tool}: ${lines.join("; ")}`);
-};
+const issues = (tool: string, error: string): ToolReply =>
+  refuse(`${tool}: ${error}`);
 
 const caught = (tool: string, error: Error | null): ToolReply => {
   if (error instanceof Error) {
@@ -151,7 +236,7 @@ const preflight = (deps: DirectToolDeps, tool: string): string | null => {
 const runVariantWrite = async <Fields extends CreateFields | UpdateFields>(
   deps: DirectToolDeps,
   tool: string,
-  parsed: z.ZodSafeParseResult<Fields>,
+  parsed: ToolParse<Fields>,
   changeOf: (input: Fields) => ComponentVariantChange
 ): Promise<ToolReply> => {
   const blocked = preflight(deps, tool);
@@ -177,7 +262,7 @@ const runVariantWrite = async <Fields extends CreateFields | UpdateFields>(
 
 const runCreateComponentVariant = (
   deps: DirectToolDeps,
-  args: z.input<typeof createSchema>
+  args: ToolArgs<typeof createSchema>
 ): Promise<ToolReply> =>
   runVariantWrite(
     deps,
@@ -188,7 +273,7 @@ const runCreateComponentVariant = (
 
 const runUpdateComponentVariant = (
   deps: DirectToolDeps,
-  args: z.input<typeof updateSchema>
+  args: ToolArgs<typeof updateSchema>
 ): Promise<ToolReply> =>
   runVariantWrite(
     deps,

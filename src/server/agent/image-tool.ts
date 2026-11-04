@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-import { z } from "zod";
+import { Schema } from "effect";
 
 import type { SourceLoc } from "../../shared/contracts.js";
 import {
@@ -10,6 +10,7 @@ import {
   IMAGE_MODES,
   imageKindOf,
 } from "../../shared/image.js";
+import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
 import {
   imageFromPath,
   imageFromUrl,
@@ -26,6 +27,13 @@ import { probeOwners } from "../page-probe/owner-probe.js";
 import { refusal, writeProblem, type DirectToolDeps } from "./direct-tools.js";
 import { resolveSelectors } from "./kit-tools.js";
 import { editPageUrl } from "./run-target.js";
+import {
+  toOptional,
+  toOptionalText,
+  toToolInput,
+  toTrimmedText,
+} from "./tool-input.js";
+import type { ToolArgs, ToolData } from "./tool-input.js";
 
 type ToolText = {
   content: { type: "text"; text: string }[];
@@ -37,66 +45,55 @@ const LOC = /^(.+):(\d+):(\d+)$/;
 export const SET_IMAGE_AGENT_DESCRIPTION =
   "Place or change an image with the same server code as the MCP set_image tool and the inspector Image section. On an <img> it copies the file into the project (the app public/ folder for Next and Vite, assets/ for HTML) with a content-hashed name and writes src, alt, fit (object-fit) and focal (object-position); on an element with a background image it writes background-image, size and position; on other elements it inserts an <img> inside (or after). path is an image file in the project or an attached image; url must be https, 10 MB at most, an image type. page is the page path. Use it instead of writing image files or src by hand.";
 
-export const setImageShape = {
-  selector: z
-    .string()
-    .trim()
-    .min(1)
-    .max(2000)
-    .optional()
-    .describe("CSS selector or layer id of the element on the live page."),
-  source: z
-    .string()
-    .trim()
-    .max(1100)
-    .optional()
-    .describe("Or the element as file:line:col of its tag."),
-  page: z
-    .string()
-    .trim()
-    .max(300)
-    .optional()
-    .describe(
-      "Page path. Leave out for the page of the frame in <canvas-context> (or the entry page)."
-    ),
-  path: z
-    .string()
-    .trim()
-    .min(1)
-    .max(1000)
-    .optional()
-    .describe(
-      "Image file: a path in the project, or the path or name of an image the user attached."
-    ),
-  url: z
-    .string()
-    .trim()
-    .url()
-    .max(2000)
-    .optional()
-    .describe("https URL of the image (10 MB at most, image types only)."),
-  fit: z.enum(IMAGE_FITS).optional(),
-  focal: z
-    .string()
-    .trim()
-    .max(40)
-    .optional()
-    .describe('Focal point "x% y%", for example "50% 30%".'),
-  alt: z
-    .string()
-    .max(IMAGE_ALT_MAX)
-    .nullable()
-    .optional()
-    .describe('Alt text of an <img>; "" marks it as decorative.'),
-  mode: z.enum(IMAGE_MODES).optional(),
-  position: z
-    .enum(["inside", "after"])
-    .optional()
-    .describe("For insert: inside (default) or after the element."),
+const altText = Schema.String.check(Schema.isMaxLength(IMAGE_ALT_MAX));
+
+const setImageFields = {
+  selector: toOptionalText(
+    1,
+    2000,
+    "CSS selector or layer id of the element on the live page."
+  ),
+  source: toOptionalText(
+    0,
+    1100,
+    "Or the element as file:line:col of its tag."
+  ),
+  page: toOptionalText(
+    0,
+    300,
+    "Page path. Leave out for the page of the frame in <canvas-context> (or the entry page)."
+  ),
+  path: toOptionalText(
+    1,
+    1000,
+    "Image file: a path in the project, or the path or name of an image the user attached."
+  ),
+  url: Schema.optionalKey(
+    toTrimmedText(0, 2000)
+      .check(Schema.isPattern(/^https?:\/\/\S+$/u))
+      .annotate({
+        description:
+          "https URL of the image (10 MB at most, image types only).",
+      })
+  ),
+  fit: Schema.optionalKey(Schema.Literals(IMAGE_FITS)),
+  focal: toOptionalText(0, 40, 'Focal point "x% y%", for example "50% 30%".'),
+  alt: Schema.optionalKey(
+    Schema.NullOr(altText).annotate({
+      description: 'Alt text of an <img>; "" marks it as decorative.',
+    })
+  ),
+  mode: Schema.optionalKey(Schema.Literals(IMAGE_MODES)),
+  position: toOptional(
+    Schema.Literals(["inside", "after"]),
+    "For insert: inside (default) or after the element."
+  ),
 };
 
-const schema = z.object(setImageShape).strict();
-type Input = z.output<typeof schema>;
+export const setImageShape = toSdkFieldSet(setImageFields);
+
+const schema = toToolInput(setImageFields);
+type Input = ToolData<typeof schema>;
 
 function text(message: string, isError = false): ToolText {
   return {
@@ -183,16 +180,12 @@ async function resolved(deps: DirectToolDeps, input: Input): Promise<Input> {
 
 export async function runSetImage(
   deps: DirectToolDeps,
-  args: z.input<typeof schema>
+  args: ToolArgs<typeof schema>
 ): Promise<ToolText> {
   const blocked = refusal(deps.ctx, "set_image");
   if (blocked) return text(blocked, true);
   const parsed = schema.safeParse(args);
-  if (!parsed.success)
-    return text(
-      `set_image: ${parsed.error.issues.map((issue) => `${issue.path.join(".") || "input"}: ${issue.message}`).join("; ")}`,
-      true
-    );
+  if (!parsed.success) return text(`set_image: ${parsed.error}`, true);
   if (
     (parsed.data.selector === undefined) ===
     (parsed.data.source === undefined)

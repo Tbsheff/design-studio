@@ -1,31 +1,34 @@
-import { z } from "zod";
+import { Schema } from "effect";
 
+import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
 import {
   componentPreviewsFor,
   PreviewTargetError,
 } from "../components/preview.js";
 import type { DirectToolDeps } from "./direct-tools.js";
+import { toOptionalText, toToolInput } from "./tool-input.js";
+import type { ToolArgs } from "./tool-input.js";
 
 type ToolContent =
   | { type: "text"; text: string }
   | { type: "image"; data: string; mimeType: string };
 
-export const componentPreviewShape = {
-  file: z
-    .string()
-    .trim()
-    .max(1000)
-    .optional()
-    .describe(
-      "File of the component, relative to the project, when two components have the same name."
-    ),
-  name: z
-    .string()
-    .regex(/^[A-Z][A-Za-z0-9_$]{0,63}$/)
-    .describe('Component name from list_components, for example "Button".'),
+const componentPreviewFields = {
+  file: toOptionalText(
+    0,
+    1000,
+    "File of the component, relative to the project, when two components have the same name."
+  ),
+  name: Schema.String.check(
+    Schema.isPattern(/^[A-Z][A-Za-z0-9_$]{0,63}$/u)
+  ).annotate({
+    description: 'Component name from list_components, for example "Button".',
+  }),
 };
 
-const schema = z.object(componentPreviewShape).strict();
+export const componentPreviewShape = toSdkFieldSet(componentPreviewFields);
+
+const schema = toToolInput(componentPreviewFields);
 
 function text(
   message: string,
@@ -39,15 +42,12 @@ function text(
 
 export async function runComponentPreview(
   deps: DirectToolDeps,
-  args: z.input<typeof schema>
+  args: ToolArgs<typeof schema>
 ): Promise<{ content: ToolContent[]; isError?: boolean }> {
   const parsed = schema.safeParse(args);
 
   if (!parsed.success) {
-    return text(
-      `component_preview: ${parsed.error.issues.map((issue) => `${issue.path.join(".") || "input"}: ${issue.message}`).join("; ")}`,
-      true
-    );
+    return text(`component_preview: ${parsed.error}`, true);
   }
 
   const { project, direction } = deps.ctx;

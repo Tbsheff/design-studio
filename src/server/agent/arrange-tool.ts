@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { Schema } from "effect";
 
 import { unchangedNote } from "../../shared/arrange-plan.js";
 import {
@@ -7,7 +7,7 @@ import {
   arrangeLabel,
 } from "../../shared/arrange.js";
 import type { ArrangeAction } from "../../shared/arrange.js";
-import { inputIssues } from "../../shared/input-errors.js";
+import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
 import { canvasOwner, readCanvasAt } from "../canvas/service.js";
 import { findFrame } from "../canvas/tools.js";
 import {
@@ -27,67 +27,71 @@ import {
 } from "../page-probe/layer-ref.js";
 import { refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
+import {
+  toRefinedToolInput,
+  toToolInput,
+  toTrimmedText,
+} from "./tool-input.js";
+import type { ToolArgs, ToolData } from "./tool-input.js";
 
 type ToolText = Readonly<{
   content: { type: "text"; text: string }[];
   isError?: boolean;
 }>;
 
-const selector = z
-  .string()
-  .trim()
-  .min(1)
-  .max(2000)
-  .describe("CSS selector or layer id from get_layers.");
+const selector = toTrimmedText(1, 2000).annotate({
+  description: "CSS selector or layer id from get_layers.",
+});
+
+const selectorTarget = Schema.Struct({ selector });
 
 const page = {
-  frame: z
-    .string()
-    .trim()
-    .min(1)
-    .max(60)
-    .optional()
-    .describe(
-      "Canvas frame id or @label; its page and size are used. Leave out for the entry page at 1440x900."
-    ),
-  path: z
-    .string()
-    .trim()
-    .max(300)
-    .optional()
-    .describe("Page path instead of the frame page."),
+  frame: Schema.optionalKey(
+    toTrimmedText(1, 60).annotate({
+      description:
+        "Canvas frame id or @label; its page and size are used. Leave out for the entry page at 1440x900.",
+    })
+  ),
+  path: Schema.optionalKey(
+    toTrimmedText(0, 300).annotate({
+      description: "Page path instead of the frame page.",
+    })
+  ),
 };
 
-export const arrangeShape = {
+const arrangeFields = {
   ...page,
-  align: z.enum(ALIGN_OPS).optional(),
-  distribute: z.enum(DISTRIBUTE_OPS).optional(),
-  targets: z
-    .array(z.object({ selector }).strict())
-    .min(1)
-    .max(ARRANGE_TARGETS_MAX)
-    .describe("Sibling elements to arrange (one parent)."),
-  tidy: z.literal(true).optional(),
+  align: Schema.optionalKey(Schema.Literals(ALIGN_OPS)),
+  distribute: Schema.optionalKey(Schema.Literals(DISTRIBUTE_OPS)),
+  targets: Schema.Array(selectorTarget)
+    .check(Schema.isMinLength(1), Schema.isMaxLength(ARRANGE_TARGETS_MAX))
+    .annotate({ description: "Sibling elements to arrange (one parent)." }),
+  tidy: Schema.optionalKey(Schema.Literal(true)),
 };
 
-export const measureShape = {
+const measureFields = {
   ...page,
-  a: z.object({ selector }).strict(),
-  b: z.object({ selector }).strict(),
+  a: selectorTarget,
+  b: selectorTarget,
 };
 
-const arrangeSchema = z
-  .object(arrangeShape)
-  .strict()
-  .refine(
-    (input) =>
-      [input.align, input.distribute, input.tidy].filter(
-        (value) => value !== undefined
-      ).length === 1,
-    "pass one of align, distribute or tidy"
-  );
+const arrangeShape = toSdkFieldSet(arrangeFields);
 
-const measureSchema = z.object(measureShape).strict();
+const measureShape = toSdkFieldSet(measureFields);
+
+const arrangeSchema = toRefinedToolInput(arrangeFields, (input) => {
+  const count = [input.align, input.distribute, input.tidy].filter(
+    (value) => value !== undefined
+  ).length;
+
+  if (count === 1) {
+    return null;
+  }
+
+  return "pass one of align, distribute or tidy";
+});
+
+const measureSchema = toToolInput(measureFields);
 
 const RUN_NOTE =
   "The run saves this change in its version, like your file edits.";
@@ -169,7 +173,7 @@ async function resolveSelector(
   );
 }
 
-function actionOf(input: z.output<typeof arrangeSchema>): ArrangeAction {
+function actionOf(input: ToolData<typeof arrangeSchema>): ArrangeAction {
   if (input.align) {
     return { align: input.align };
   }
@@ -181,7 +185,7 @@ function actionOf(input: z.output<typeof arrangeSchema>): ArrangeAction {
 
 export async function runArrange(
   deps: DirectToolDeps,
-  args: z.input<typeof arrangeSchema>
+  args: ToolArgs<typeof arrangeSchema>
 ): Promise<ToolText> {
   const blocked = refusal(deps.ctx, "arrange");
 
@@ -191,7 +195,7 @@ export async function runArrange(
   const parsed = arrangeSchema.safeParse(args);
 
   if (!parsed.success) {
-    return text(`arrange: ${inputIssues(arrangeSchema, parsed.error)}`, true);
+    return text(`arrange: ${parsed.error}`, true);
   }
   try {
     const target = await pageOf(deps, {
@@ -259,12 +263,12 @@ export async function runArrange(
 
 export async function runMeasure(
   deps: DirectToolDeps,
-  args: z.input<typeof measureSchema>
+  args: ToolArgs<typeof measureSchema>
 ): Promise<ToolText> {
   const parsed = measureSchema.safeParse(args);
 
   if (!parsed.success) {
-    return text(`measure: ${inputIssues(measureSchema, parsed.error)}`, true);
+    return text(`measure: ${parsed.error}`, true);
   }
   try {
     const target = await pageOf(deps, {
@@ -296,3 +300,5 @@ export async function runMeasure(
     );
   }
 }
+
+export { arrangeShape, measureShape };

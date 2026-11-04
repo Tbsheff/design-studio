@@ -1,8 +1,19 @@
-import { z } from "zod";
+import { Schema } from "effect";
 
+import {
+  ENTRANCE_PRESETS,
+  MOTION_DELAY_MAX,
+  MOTION_DURATION_MAX,
+  MOTION_KINDS,
+  MOTION_PROPERTIES_MAX,
+  MOTION_PROPERTY,
+  MOTION_STAGGER_MAX,
+  MOTION_STATES,
+  MOTION_VALUE,
+} from "../../shared/motion.js";
+import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
 import type { WrittenFile } from "../direct-edit/commit/batch.js";
 import { writeAtomic } from "../direct-edit/index.js";
-import { motionFields } from "../mcp/motion-tools.js";
 import { listMotion } from "../motion/list.js";
 import { planMotionSet } from "../motion/set.js";
 import type { MotionSetPlan, MotionTarget } from "../motion/set.js";
@@ -10,6 +21,13 @@ import { specOf } from "../motion/spec.js";
 import { refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
 import { targetOf } from "./insert-tool.js";
+import {
+  toOptional,
+  toOptionalInt,
+  toOptionalText,
+  toToolInput,
+} from "./tool-input.js";
+import type { ToolArgs, ToolData } from "./tool-input.js";
 
 interface ToolContent {
   text: string;
@@ -29,42 +47,93 @@ type Located =
 const SELECTOR_MAX = 2000;
 const SOURCE_MAX = 1100;
 const PATH_MAX = 300;
+const EASING_MAX = 80;
 
 const RUN_NOTE =
   "The run saves this change in its version, like your file edits.";
 
 const targetInput = {
-  path: z
-    .string()
-    .trim()
-    .max(PATH_MAX)
-    .optional()
-    .describe(
-      "Page path. Leave out for the page of the frame in <canvas-context> (or the entry page)."
-    ),
-  targetSelector: z
-    .string()
-    .trim()
-    .min(1)
-    .max(SELECTOR_MAX)
-    .optional()
-    .describe("CSS selector or layer id of the element on the live page."),
-  targetSource: z
-    .string()
-    .trim()
-    .max(SOURCE_MAX)
-    .optional()
-    .describe(
-      'Or the element as file:line:col, for example "src/App.tsx:12:7".'
-    ),
+  path: toOptionalText(
+    0,
+    PATH_MAX,
+    "Page path. Leave out for the page of the frame in <canvas-context> (or the entry page)."
+  ),
+  targetSelector: toOptionalText(
+    1,
+    SELECTOR_MAX,
+    "CSS selector or layer id of the element on the live page."
+  ),
+  targetSource: toOptionalText(
+    0,
+    SOURCE_MAX,
+    'Or the element as file:line:col, for example "src/App.tsx:12:7".'
+  ),
 };
 
-const listMotionInput = { ...targetInput };
+const propertyName = Schema.String.check(Schema.isPattern(MOTION_PROPERTY));
 
-const setMotionInput = { ...targetInput, ...motionFields };
+const endRecord = Schema.Record(
+  propertyName,
+  Schema.String.check(Schema.isPattern(MOTION_VALUE))
+);
 
-const listSchema = z.strictObject(listMotionInput);
-const setSchema = z.strictObject(setMotionInput);
+const propertyList = Schema.Array(propertyName).check(
+  Schema.isMaxLength(MOTION_PROPERTIES_MAX)
+);
+
+const motionFields = {
+  delayMs: toOptionalInt(
+    0,
+    MOTION_DELAY_MAX,
+    "Delay before the motion starts, in ms. Default 0."
+  ),
+  durationMs: toOptionalInt(
+    0,
+    MOTION_DURATION_MAX,
+    "Duration in ms. Default 200 for a transition and 400 for an entrance."
+  ),
+  easing: toOptionalText(
+    0,
+    EASING_MAX,
+    'Transition easing: linear, ease, ease-in, ease-out (default), ease-in-out or "cubic-bezier(0.4,0,0.2,1)".'
+  ),
+  end: toOptional(
+    endRecord,
+    'Transition end values for state, for example {"opacity": "0.8", "transform": "translateY(-2px)"}.'
+  ),
+  kind: Schema.Literals(MOTION_KINDS).annotate({
+    description:
+      "transition (state change), entrance (on mount) or none (remove motion).",
+  }),
+  preset: toOptional(
+    Schema.Literals(ENTRANCE_PRESETS),
+    "Entrance preset. Default fade."
+  ),
+  properties: toOptional(
+    propertyList,
+    'CSS properties to transition, or ["all"]. Default: the end keys, else opacity and transform.'
+  ),
+  staggerMs: toOptionalInt(
+    0,
+    MOTION_STAGGER_MAX,
+    "Entrance only: extra delay for each child, in ms, so the children enter one after another. Default 0."
+  ),
+  state: toOptional(
+    Schema.Literals(MOTION_STATES),
+    "Transition only: the state whose end values the element animates to."
+  ),
+};
+
+const listMotionFields = { ...targetInput };
+
+const setMotionFields = { ...targetInput, ...motionFields };
+
+const listMotionInput = toSdkFieldSet(listMotionFields);
+
+const setMotionInput = toSdkFieldSet(setMotionFields);
+
+const listSchema = toToolInput(listMotionFields);
+const setSchema = toToolInput(setMotionFields);
 
 const reply = (message: string): ToolText => ({
   content: [{ text: message, type: "text" }],
@@ -75,13 +144,8 @@ const refuse = (message: string): ToolText => ({
   isError: true,
 });
 
-const issues = (tool: string, error: z.ZodError): ToolText => {
-  const lines = error.issues.map(
-    (issue) => `${issue.path.join(".") || "input"}: ${issue.message}`
-  );
-
-  return refuse(`${tool}: ${lines.join("; ")}`);
-};
+const issues = (tool: string, error: string): ToolText =>
+  refuse(`${tool}: ${error}`);
 
 const failure = (tool: string, error: Error | string): ToolText => {
   if (error instanceof Error) {
@@ -142,7 +206,7 @@ const setText = (plan: MotionSetPlan): string => {
 
 const sourceOf = async (
   deps: DirectToolDeps,
-  input: z.output<typeof listSchema>
+  input: ToolData<typeof listSchema>
 ): Promise<Located> => {
   const target = await targetOf(deps, input);
 
@@ -169,7 +233,7 @@ const sourceOf = async (
 
 const listWith = async (
   deps: DirectToolDeps,
-  input: z.output<typeof listSchema>
+  input: ToolData<typeof listSchema>
 ): Promise<ToolText> => {
   const located = await sourceOf(deps, input);
 
@@ -189,7 +253,7 @@ const listWith = async (
 
 const runListMotion = async (
   deps: DirectToolDeps,
-  args: z.input<typeof listSchema>
+  args: ToolArgs<typeof listSchema>
 ): Promise<ToolText> => {
   const parsed = listSchema.safeParse(args);
 
@@ -210,7 +274,7 @@ const runListMotion = async (
 
 const setWith = async (
   deps: DirectToolDeps,
-  input: z.output<typeof setSchema>
+  input: ToolData<typeof setSchema>
 ): Promise<ToolText> => {
   const located = await sourceOf(deps, input);
 
@@ -236,7 +300,7 @@ const setWith = async (
 
 const runSetMotion = async (
   deps: DirectToolDeps,
-  args: z.input<typeof setSchema>
+  args: ToolArgs<typeof setSchema>
 ): Promise<ToolText> => {
   const blocked = refusal(deps.ctx, "set_motion");
 

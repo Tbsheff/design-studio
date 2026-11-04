@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { Schema } from "effect";
 
 import {
   COMPONENT_NAME,
@@ -6,6 +6,7 @@ import {
 } from "../../shared/component-create.js";
 import type { SourceLoc } from "../../shared/contracts.js";
 import type { InsertTarget } from "../../shared/insert.js";
+import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
 import { resolveInstance } from "../components/use-site.js";
 import {
   componentFolders,
@@ -20,6 +21,8 @@ import { refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
 import { targetOf } from "./insert-tool.js";
 import { resolveSelectors } from "./kit-tools.js";
+import { toOptionalText, toToolInput } from "./tool-input.js";
+import type { ToolArgs, ToolData } from "./tool-input.js";
 
 type ToolText = Readonly<{
   content: { type: "text"; text: string }[];
@@ -34,96 +37,78 @@ export const CREATE_COMPONENT_AGENT_DESCRIPTION =
 export const SWAP_INSTANCE_AGENT_DESCRIPTION =
   "Replace one component use with another library component, with the same server code as the MCP swap_instance tool and the inspector Swap button: shared props stay, props the new component lacks are dropped, required props get defaults, imports are fixed. Leave out name to list the components that fit.";
 
-export const createComponentShape = {
-  folder: z
-    .string()
-    .trim()
-    .min(1)
-    .max(500)
-    .optional()
-    .describe(
-      "Folder for the file, relative to the project. Leave out for the app components folder."
-    ),
-  name: z
-    .string()
-    .regex(COMPONENT_NAME)
-    .describe('PascalCase component name, for example "StatRow".'),
-  path: z
-    .string()
-    .trim()
-    .max(300)
-    .optional()
-    .describe(
-      "Page path. Leave out for the page of the frame in <canvas-context> (or the entry page)."
-    ),
-  targets: z
-    .array(
-      z
-        .object({
-          targetSelector: z
-            .string()
-            .trim()
-            .min(1)
-            .max(2000)
-            .optional()
-            .describe("CSS selector or layer id on the live page."),
-          targetSource: z
-            .string()
-            .trim()
-            .max(1100)
-            .optional()
-            .describe("Or file:line:col of the JSX tag."),
-        })
-        .strict()
-    )
-    .min(1)
-    .max(CREATE_TARGETS_MAX)
-    .describe(
-      'The elements, one item per element, for example [{"targetSelector": "e0k3pz"}, {"targetSelector": "e0k4a1"}].'
-    ),
+const pageFields = {
+  path: toOptionalText(
+    0,
+    300,
+    "Page path. Leave out for the page of the frame in <canvas-context> (or the entry page)."
+  ),
 };
 
-export const swapInstanceShape = {
-  file: z
-    .string()
-    .trim()
-    .max(1000)
-    .optional()
-    .describe("File of that component when two have the same name."),
-  name: z
-    .string()
-    .regex(/^[A-Z][A-Za-z0-9_$]{0,63}$/)
-    .optional()
-    .describe(
-      "Component to swap to. Leave out to list the components that fit."
-    ),
-  path: z
-    .string()
-    .trim()
-    .max(300)
-    .optional()
-    .describe(
-      "Page path. Leave out for the page of the frame in <canvas-context>."
-    ),
-  targetSelector: z
-    .string()
-    .trim()
-    .min(1)
-    .max(2000)
-    .optional()
-    .describe(
-      "CSS selector or layer id of an element of the component use on the live page."
-    ),
-  targetSource: z
-    .string()
-    .trim()
-    .max(1100)
-    .optional()
-    .describe("Or the use site as file:line:col of its JSX tag."),
+const createComponentFields = {
+  ...pageFields,
+  folder: toOptionalText(
+    1,
+    500,
+    "Folder for the file, relative to the project. Leave out for the app components folder."
+  ),
+  name: Schema.String.check(Schema.isPattern(COMPONENT_NAME)).annotate({
+    description: 'PascalCase component name, for example "StatRow".',
+  }),
+  targets: Schema.Array(
+    Schema.Struct({
+      targetSelector: toOptionalText(
+        1,
+        2000,
+        "CSS selector or layer id on the live page."
+      ),
+      targetSource: toOptionalText(0, 1100, "Or file:line:col of the JSX tag."),
+    })
+  )
+    .check(Schema.isMinLength(1), Schema.isMaxLength(CREATE_TARGETS_MAX))
+    .annotate({
+      description:
+        'The elements, one item per element, for example [{"targetSelector": "e0k3pz"}, {"targetSelector": "e0k4a1"}].',
+    }),
 };
 
-const createSchema = z.object(createComponentShape).strict();
-const swapSchema = z.object(swapInstanceShape).strict();
+const swapInstanceFields = {
+  file: toOptionalText(
+    0,
+    1000,
+    "File of that component when two have the same name."
+  ),
+  name: Schema.optionalKey(
+    Schema.String.check(
+      Schema.isPattern(/^[A-Z][A-Za-z0-9_$]{0,63}$/u)
+    ).annotate({
+      description:
+        "Component to swap to. Leave out to list the components that fit.",
+    })
+  ),
+  path: toOptionalText(
+    0,
+    300,
+    "Page path. Leave out for the page of the frame in <canvas-context>."
+  ),
+  targetSelector: toOptionalText(
+    1,
+    2000,
+    "CSS selector or layer id of an element of the component use on the live page."
+  ),
+  targetSource: toOptionalText(
+    0,
+    1100,
+    "Or the use site as file:line:col of its JSX tag."
+  ),
+};
+
+export const createComponentShape = toSdkFieldSet(createComponentFields);
+
+export const swapInstanceShape = toSdkFieldSet(swapInstanceFields);
+
+const createSchema = toToolInput(createComponentFields);
+const swapSchema = toToolInput(swapInstanceFields);
 
 function text(message: string, isError = false): ToolText {
   return {
@@ -132,11 +117,8 @@ function text(message: string, isError = false): ToolText {
   };
 }
 
-function issues(tool: string, error: z.ZodError): ToolText {
-  return text(
-    `${tool}: ${error.issues.map((issue) => `${issue.path.join(".") || "input"}: ${issue.message}`).join("; ")}`,
-    true
-  );
+function issues(tool: string, error: string): ToolText {
+  return text(`${tool}: ${error}`, true);
 }
 
 function scopeOf(deps: DirectToolDeps) {
@@ -154,7 +136,7 @@ function scopeOf(deps: DirectToolDeps) {
 
 async function targetsOf(
   deps: DirectToolDeps,
-  input: z.output<typeof createSchema>
+  input: ToolData<typeof createSchema>
 ): Promise<InsertTarget[] | string> {
   const out: InsertTarget[] = [];
 
@@ -181,7 +163,7 @@ async function targetsOf(
 
 export async function runCreateComponent(
   deps: DirectToolDeps,
-  args: z.input<typeof createSchema>
+  args: ToolArgs<typeof createSchema>
 ): Promise<ToolText> {
   const blocked = refusal(deps.ctx, "create_component");
 
@@ -249,7 +231,7 @@ export async function runCreateComponent(
 
 async function useOf(
   deps: DirectToolDeps,
-  input: z.output<typeof swapSchema>
+  input: ToolData<typeof swapSchema>
 ): Promise<SourceLoc | string> {
   if (input.targetSource) {
     const match = LOC.exec(input.targetSource);
@@ -284,7 +266,7 @@ async function useOf(
 
 export async function runSwapInstance(
   deps: DirectToolDeps,
-  args: z.input<typeof swapSchema>
+  args: ToolArgs<typeof swapSchema>
 ): Promise<ToolText> {
   const parsed = swapSchema.safeParse(args);
 

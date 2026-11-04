@@ -1,6 +1,7 @@
-import { z } from "zod";
+import { Schema } from "effect";
 
 import type { SelectionContext } from "../../shared/contracts.js";
+import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
 import { planDirectEdit } from "../direct-edit/commit/edit-plan.js";
 import { writeAtomic } from "../direct-edit/commit/edit-source.js";
 import { knownTokenVars } from "../direct-edit/engine/tokens.js";
@@ -27,6 +28,13 @@ import {
 import { refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
 import { editPageUrl } from "./run-target.js";
+import {
+  toOptionalFlag,
+  toOptionalText,
+  toRefinedToolInput,
+  toTrimmedText,
+} from "./tool-input.js";
+import type { ToolArgs, ToolData } from "./tool-input.js";
 
 type ToolText = Readonly<{
   content: { type: "text"; text: string }[];
@@ -36,52 +44,44 @@ type ToolText = Readonly<{
 export const LAYER_STATE_TOOL = "set_layer_state";
 export const LIST_LOCKS_TOOL = "list_locked_layers";
 
-export const layerStateShape = {
-  hidden: z
-    .boolean()
-    .optional()
-    .describe("true writes display: none in the source, false shows it again."),
-  locked: z
-    .boolean()
-    .optional()
-    .describe(
-      "true locks the layer (clicks on the canvas pass through it and its children), false unlocks it. Studio state, not a file change."
-    ),
-  name: z
-    .string()
-    .trim()
-    .max(80)
-    .nullable()
-    .optional()
-    .describe('New layer name, written as data-name. null or "" removes it.'),
-  path: z
-    .string()
-    .trim()
-    .max(300)
-    .optional()
-    .describe(
-      "Page path. Leave out for the page of the frame in <canvas-context> (or the entry page)."
-    ),
-  selector: z
-    .string()
-    .trim()
-    .min(1)
-    .max(2000)
-    .describe("Layer id from get_layers or a CSS selector of one element."),
+const layerStateFields = {
+  hidden: toOptionalFlag(
+    "true writes display: none in the source, false shows it again."
+  ),
+  locked: toOptionalFlag(
+    "true locks the layer (clicks on the canvas pass through it and its children), false unlocks it. Studio state, not a file change."
+  ),
+  name: Schema.optionalKey(
+    Schema.NullOr(toTrimmedText(0, 80)).annotate({
+      description:
+        'New layer name, written as data-name. null or "" removes it.',
+    })
+  ),
+  path: toOptionalText(
+    0,
+    300,
+    "Page path. Leave out for the page of the frame in <canvas-context> (or the entry page)."
+  ),
+  selector: toTrimmedText(1, 2000).annotate({
+    description: "Layer id from get_layers or a CSS selector of one element.",
+  }),
 };
 
-export const listLocksShape = { path: layerStateShape.path };
+export const layerStateShape = toSdkFieldSet(layerStateFields);
 
-const layerStateSchema = z
-  .object(layerStateShape)
-  .strict()
-  .refine(
-    (input) =>
-      input.locked !== undefined ||
-      input.hidden !== undefined ||
-      input.name !== undefined,
-    "pass locked, hidden or name"
-  );
+export const listLocksShape = toSdkFieldSet({ path: layerStateFields.path });
+
+const layerStateSchema = toRefinedToolInput(layerStateFields, (input) => {
+  if (
+    input.locked !== undefined ||
+    input.hidden !== undefined ||
+    input.name !== undefined
+  ) {
+    return null;
+  }
+
+  return "pass locked, hidden or name";
+});
 
 const RUN_NOTE =
   "The run saves this change in its version, like your file edits.";
@@ -99,7 +99,7 @@ function describeError(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-type Input = z.output<typeof layerStateSchema>;
+type Input = ToolData<typeof layerStateSchema>;
 
 async function resolved(
   deps: DirectToolDeps,
@@ -281,15 +281,12 @@ async function lockEdit(
 
 export async function runSetLayerState(
   deps: DirectToolDeps,
-  args: z.input<typeof layerStateSchema>
+  args: ToolArgs<typeof layerStateSchema>
 ): Promise<ToolText> {
   const parsed = layerStateSchema.safeParse(args);
 
   if (!parsed.success) {
-    return text(
-      `${LAYER_STATE_TOOL}: ${parsed.error.issues.map((issue) => `${issue.path.join(".") || "input"}: ${issue.message}`).join("; ")}`,
-      true
-    );
+    return text(`${LAYER_STATE_TOOL}: ${parsed.error}`, true);
   }
 
   if (!deps.ctx.previewUrl) {

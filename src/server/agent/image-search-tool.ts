@@ -1,11 +1,18 @@
-import { z } from "zod";
+import { Schema } from "effect";
 
 import type { SourceLoc } from "../../shared/contracts.js";
+import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
+import {
+  IMAGE_ALT_MAX,
+  IMAGE_FITS,
+  IMAGE_MODES,
+  IMAGE_ORIENTATIONS,
+  IMAGE_QUERY_MAX,
+  IMAGE_SEARCH_LIMIT_MAX,
+} from "../image-search/deps.js";
 import {
   PLACE_IMAGE_DESCRIPTION,
-  placeImageFields,
   SEARCH_IMAGES_DESCRIPTION,
-  searchImagesFields,
   toPlaceInput,
   toSearchRequest,
 } from "../image-search/input.js";
@@ -25,6 +32,14 @@ import { probeOwners } from "../page-probe/owner-probe.js";
 import { refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
 import { editPageUrl } from "./run-target.js";
+import {
+  toOptional,
+  toOptionalInt,
+  toOptionalText,
+  toToolInput,
+  toTrimmedText,
+} from "./tool-input.js";
+import type { ToolArgs, ToolData } from "./tool-input.js";
 
 interface ToolContent {
   text: string;
@@ -40,6 +55,8 @@ interface ToolText {
 const SELECTOR_MAX = 2000;
 const SOURCE_MAX = 1100;
 const PATH_MAX = 300;
+const FOCAL_MAX = 40;
+const IMAGE_ID_MAX = 64;
 
 const LOC = /^(?<file>.+):(?<line>\d+):(?<col>\d+)$/u;
 
@@ -51,37 +68,70 @@ const ONE_TARGET = "Pass targetSelector or targetSource, not both.";
 const NO_PREVIEW =
   "Preview is not running for this direction. Pass targetSource instead.";
 
-const searchImagesInput = { ...searchImagesFields };
-
-const placeImageInput = {
-  path: z
-    .string()
-    .trim()
-    .max(PATH_MAX)
-    .optional()
-    .describe(
-      "Page path. Leave out for the page of the frame in <canvas-context> (or the entry page)."
-    ),
-  targetSelector: z
-    .string()
-    .trim()
-    .min(1)
-    .max(SELECTOR_MAX)
-    .optional()
-    .describe("CSS selector or layer id of the layer on the live page."),
-  targetSource: z
-    .string()
-    .trim()
-    .max(SOURCE_MAX)
-    .optional()
-    .describe('Or the layer as file:line:col, for example "src/App.tsx:12:7".'),
-  ...placeImageFields,
+const searchImagesFieldSet = {
+  limit: toOptionalInt(
+    1,
+    IMAGE_SEARCH_LIMIT_MAX,
+    `Number of results, 1 to ${IMAGE_SEARCH_LIMIT_MAX}.`
+  ),
+  orientation: toOptional(
+    Schema.Literals(IMAGE_ORIENTATIONS),
+    "any (default), wide, tall or square."
+  ),
+  query: toTrimmedText(1, IMAGE_QUERY_MAX).annotate({
+    description: 'Search words only, for example "mountain lake sunrise".',
+  }),
 };
 
-const searchSchema = z.strictObject(searchImagesInput);
-const placeSchema = z.strictObject(placeImageInput);
+const placeImageFieldSet = {
+  alt: Schema.String.check(Schema.isMaxLength(IMAGE_ALT_MAX)).annotate({
+    description: 'Alt text of the photo. "" marks it as decorative.',
+  }),
+  fit: toOptional(
+    Schema.Literals(IMAGE_FITS),
+    "cover crops to fill, contain shows all of it, fill stretches."
+  ),
+  focal: toOptionalText(
+    0,
+    FOCAL_MAX,
+    'Focal point as "x% y%", for example "50% 30%".'
+  ),
+  imageId: toTrimmedText(1, IMAGE_ID_MAX).annotate({
+    description: "The id of one search_images result.",
+  }),
+  mode: toOptional(
+    Schema.Literals(IMAGE_MODES),
+    "auto (default): img for an <img>, background for an element with a background image, insert for others. background sets a background image on any element."
+  ),
+  path: toOptionalText(
+    0,
+    PATH_MAX,
+    "Page path. Leave out for the page of the frame in <canvas-context> (or the entry page)."
+  ),
+  position: toOptional(
+    Schema.Literals(["inside", "after"]),
+    "For insert: inside the element (default) or after it."
+  ),
+  targetSelector: toOptionalText(
+    1,
+    SELECTOR_MAX,
+    "CSS selector or layer id of the layer on the live page."
+  ),
+  targetSource: toOptionalText(
+    0,
+    SOURCE_MAX,
+    'Or the layer as file:line:col, for example "src/App.tsx:12:7".'
+  ),
+};
 
-type PlaceArgs = z.output<typeof placeSchema>;
+const searchImagesInput = toSdkFieldSet(searchImagesFieldSet);
+
+const placeImageInput = toSdkFieldSet(placeImageFieldSet);
+
+const searchSchema = toToolInput(searchImagesFieldSet);
+const placeSchema = toToolInput(placeImageFieldSet);
+
+type PlaceArgs = ToolData<typeof placeSchema>;
 
 type Located =
   | { message: string; ok: false }
@@ -100,13 +150,8 @@ const refuse = (message: string): ToolText => ({
   isError: true,
 });
 
-const issues = (tool: string, error: z.ZodError): ToolText => {
-  const lines = error.issues.map(
-    (issue) => `${issue.path.join(".") || "input"}: ${issue.message}`
-  );
-
-  return refuse(`${tool}: ${lines.join("; ")}`);
-};
+const issues = (tool: string, error: string): ToolText =>
+  refuse(`${tool}: ${error}`);
 
 const caught = (tool: string, error: Error | null): ToolText => {
   if (error instanceof Error && isPlaceError(error)) {
@@ -122,7 +167,7 @@ const caught = (tool: string, error: Error | null): ToolText => {
 
 const runSearchImages = async (
   deps: DirectToolDeps,
-  args: z.input<typeof searchSchema>
+  args: ToolArgs<typeof searchSchema>
 ): Promise<ToolText> => {
   const parsed = searchSchema.safeParse(args);
 
@@ -267,7 +312,7 @@ const placeWith = async (
 
 const runPlaceImage = async (
   deps: DirectToolDeps,
-  args: z.input<typeof placeSchema>
+  args: ToolArgs<typeof placeSchema>
 ): Promise<ToolText> => {
   const blocked = refusal(deps.ctx, "place_image");
 

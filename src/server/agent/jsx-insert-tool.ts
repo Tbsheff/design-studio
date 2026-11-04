@@ -1,10 +1,11 @@
-import { z } from "zod";
+import { Schema } from "effect";
 
 import {
   JSX_IMPORTS_MAX,
   JSX_INSERT_POSITIONS,
   JSX_SNIPPET_MAX,
 } from "../../shared/insert.js";
+import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
 import {
   planClearText,
   planInsertJsx,
@@ -13,62 +14,72 @@ import { writeAtomic } from "../direct-edit/index.js";
 import { refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
 import { targetOf } from "./insert-tool.js";
+import {
+  toDefaulted,
+  toOptional,
+  toOptionalText,
+  toToolInput,
+  toTrimmedText,
+} from "./tool-input.js";
+import type { ToolArgs } from "./tool-input.js";
+
+const IMPORT_FILE_MAX = 1000;
 
 type ToolText = Readonly<{
   content: { type: "text"; text: string }[];
   isError?: boolean;
 }>;
 
-export const insertJsxShape = {
-  imports: z
-    .record(
-      z.string().regex(/^[A-Z][A-Za-z0-9_$]{0,63}$/),
-      z.string().trim().min(1).max(1000)
-    )
-    .refine((value) => Object.keys(value).length <= JSX_IMPORTS_MAX)
-    .optional()
-    .describe(
-      "Only when two library components have the same name: name to component file."
-    ),
-  jsx: z
-    .string()
-    .min(1)
-    .max(JSX_SNIPPET_MAX)
-    .describe(
-      "JSX snippet: one or more elements with library components and token classes, for example <Card><CardHeader><CardTitle>Title</CardTitle></CardHeader></Card>. HTML in an HTML project."
-    ),
-  path: z
-    .string()
-    .trim()
-    .max(300)
-    .optional()
-    .describe(
-      "Page path. Leave out for the page of the frame in <canvas-context> (or the entry page)."
-    ),
-  position: z
-    .enum(JSX_INSERT_POSITIONS as ["inside", "before", "after", "replace"])
-    .default("inside")
-    .describe(
-      "inside: after the last child. before / after: a sibling. replace: in place of the target."
-    ),
-  targetSelector: z
-    .string()
-    .trim()
-    .min(1)
-    .max(2000)
-    .optional()
-    .describe("CSS selector of the target element on the live page."),
-  targetSource: z
-    .string()
-    .trim()
-    .max(1100)
-    .optional()
-    .describe(
-      'Or the target as file:line:col of its JSX tag, for example "src/App.tsx:12:7".'
-    ),
+const importName = Schema.String.check(
+  Schema.isPattern(/^[A-Z][A-Za-z0-9_$]{0,63}$/u)
+);
+
+const importFile = toTrimmedText(1, IMPORT_FILE_MAX);
+
+const importCount = Schema.makeFilter(
+  (value: Readonly<Record<string, string>>) =>
+    Object.keys(value).length <= JSX_IMPORTS_MAX
+);
+
+const importRecord = Schema.Record(importName, importFile).check(importCount);
+
+const insertJsxFields = {
+  imports: toOptional(
+    importRecord,
+    "Only when two library components have the same name: name to component file."
+  ),
+  jsx: Schema.String.check(
+    Schema.isMinLength(1),
+    Schema.isMaxLength(JSX_SNIPPET_MAX)
+  ).annotate({
+    description:
+      "JSX snippet: one or more elements with library components and token classes, for example <Card><CardHeader><CardTitle>Title</CardTitle></CardHeader></Card>. HTML in an HTML project.",
+  }),
+  path: toOptionalText(
+    0,
+    300,
+    "Page path. Leave out for the page of the frame in <canvas-context> (or the entry page)."
+  ),
+  position: toDefaulted(
+    Schema.Literals(JSX_INSERT_POSITIONS),
+    "inside" as const,
+    "inside: after the last child. before / after: a sibling. replace: in place of the target."
+  ),
+  targetSelector: toOptionalText(
+    1,
+    2000,
+    "CSS selector of the target element on the live page."
+  ),
+  targetSource: toOptionalText(
+    0,
+    1100,
+    'Or the target as file:line:col of its JSX tag, for example "src/App.tsx:12:7".'
+  ),
 };
 
-const schema = z.object(insertJsxShape).strict();
+export const insertJsxShape = toSdkFieldSet(insertJsxFields);
+
+const schema = toToolInput(insertJsxFields);
 
 function text(message: string, isError = false): ToolText {
   return {
@@ -79,7 +90,7 @@ function text(message: string, isError = false): ToolText {
 
 export async function runInsertJsx(
   deps: DirectToolDeps,
-  args: z.input<typeof schema>
+  args: ToolArgs<typeof schema>
 ): Promise<ToolText> {
   const blocked = refusal(deps.ctx, "insert_jsx");
 
@@ -89,10 +100,7 @@ export async function runInsertJsx(
   const parsed = schema.safeParse(args);
 
   if (!parsed.success) {
-    return text(
-      `insert_jsx: ${parsed.error.issues.map((issue) => `${issue.path.join(".") || "input"}: ${issue.message}`).join("; ")}`,
-      true
-    );
+    return text(`insert_jsx: ${parsed.error}`, true);
   }
   const input = parsed.data;
 
@@ -154,17 +162,19 @@ export async function runInsertJsx(
   }
 }
 
-export const clearTextShape = {
-  path: insertJsxShape.path,
-  targetSelector: insertJsxShape.targetSelector,
-  targetSource: insertJsxShape.targetSource,
+const clearTextFields = {
+  path: insertJsxFields.path,
+  targetSelector: insertJsxFields.targetSelector,
+  targetSource: insertJsxFields.targetSource,
 };
 
-const clearSchema = z.object(clearTextShape).strict();
+export const clearTextShape = toSdkFieldSet(clearTextFields);
+
+const clearSchema = toToolInput(clearTextFields);
 
 export async function runClearText(
   deps: DirectToolDeps,
-  args: z.input<typeof clearSchema>
+  args: ToolArgs<typeof clearSchema>
 ): Promise<ToolText> {
   const blocked = refusal(deps.ctx, "clear_text");
 
@@ -174,10 +184,7 @@ export async function runClearText(
   const parsed = clearSchema.safeParse(args);
 
   if (!parsed.success) {
-    return text(
-      `clear_text: ${parsed.error.issues.map((issue) => `${issue.path.join(".") || "input"}: ${issue.message}`).join("; ")}`,
-      true
-    );
+    return text(`clear_text: ${parsed.error}`, true);
   }
   if (
     (parsed.data.targetSelector === undefined) ===

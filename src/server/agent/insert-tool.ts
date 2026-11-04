@@ -1,8 +1,9 @@
-import { z } from "zod";
+import { Schema } from "effect";
 
 import { INSERT_TEXT_MAX } from "../../shared/insert.js";
 import type { InsertTarget } from "../../shared/insert.js";
 import { PROP_NAME, PROP_TEXT_MAX, PROPS_MAX } from "../../shared/props.js";
+import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
 import { planInsertComponent } from "../direct-edit/components-ops/insert.js";
 import { writeAtomic } from "../direct-edit/index.js";
 import { describeElements } from "../page-probe/element.js";
@@ -10,6 +11,13 @@ import { probeOwners } from "../page-probe/owner-probe.js";
 import { refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
 import { editPageUrl } from "./run-target.js";
+import {
+  toDefaulted,
+  toOptional,
+  toOptionalText,
+  toToolInput,
+} from "./tool-input.js";
+import type { ToolArgs } from "./tool-input.js";
 
 type ToolText = Readonly<{
   content: { type: "text"; text: string }[];
@@ -18,61 +26,57 @@ type ToolText = Readonly<{
 
 const LOC = /^(.+):(\d+):(\d+)$/;
 
-export const insertComponentShape = {
-  file: z
-    .string()
-    .trim()
-    .max(1000)
-    .optional()
-    .describe("File of the component when two components have the same name."),
-  name: z
-    .string()
-    .regex(/^[A-Z][A-Za-z0-9_$]{0,63}$/)
-    .describe('Component name from the project library, for example "Button".'),
-  path: z
-    .string()
-    .trim()
-    .max(300)
-    .optional()
-    .describe(
-      "Page path. Leave out for the page of the frame in <canvas-context> (or the entry page)."
-    ),
-  position: z
-    .enum(["inside", "after"])
-    .default("inside")
-    .describe("inside: last child of the target. after: next sibling."),
-  props: z
-    .record(
-      z.string().regex(PROP_NAME),
-      z.union([z.string().max(PROP_TEXT_MAX), z.number(), z.boolean()])
-    )
-    .optional()
-    .describe(`Up to ${PROPS_MAX} props, for example {"variant": "outline"}.`),
-  targetSelector: z
-    .string()
-    .trim()
-    .min(1)
-    .max(2000)
-    .optional()
-    .describe(
-      "CSS selector of the element on the live page to insert inside or after."
-    ),
-  targetSource: z
-    .string()
-    .trim()
-    .max(1100)
-    .optional()
-    .describe(
-      'Or the target as file:line:col of its JSX tag, for example "src/App.tsx:12:7".'
-    ),
-  text: z
-    .string()
-    .max(INSERT_TEXT_MAX)
-    .optional()
-    .describe('Child text, for example "Save".'),
+const propName = Schema.String.check(Schema.isPattern(PROP_NAME));
+
+const propText = Schema.String.check(Schema.isMaxLength(PROP_TEXT_MAX));
+
+const propValue = Schema.Union([propText, Schema.Number, Schema.Boolean]);
+
+const insertComponentFields = {
+  file: toOptionalText(
+    0,
+    1000,
+    "File of the component when two components have the same name."
+  ),
+  name: Schema.String.check(
+    Schema.isPattern(/^[A-Z][A-Za-z0-9_$]{0,63}$/u)
+  ).annotate({
+    description:
+      'Component name from the project library, for example "Button".',
+  }),
+  path: toOptionalText(
+    0,
+    300,
+    "Page path. Leave out for the page of the frame in <canvas-context> (or the entry page)."
+  ),
+  position: toDefaulted(
+    Schema.Literals(["inside", "after"]),
+    "inside" as const,
+    "inside: last child of the target. after: next sibling."
+  ),
+  props: toOptional(
+    Schema.Record(propName, propValue),
+    `Up to ${PROPS_MAX} props, for example {"variant": "outline"}.`
+  ),
+  targetSelector: toOptionalText(
+    1,
+    2000,
+    "CSS selector of the element on the live page to insert inside or after."
+  ),
+  targetSource: toOptionalText(
+    0,
+    1100,
+    'Or the target as file:line:col of its JSX tag, for example "src/App.tsx:12:7".'
+  ),
+  text: toOptional(
+    Schema.String.check(Schema.isMaxLength(INSERT_TEXT_MAX)),
+    'Child text, for example "Save".'
+  ),
 };
 
-const schema = z.object(insertComponentShape).strict();
+export const insertComponentShape = toSdkFieldSet(insertComponentFields);
+
+const schema = toToolInput(insertComponentFields);
 
 function text(message: string, isError = false): ToolText {
   return {
@@ -136,7 +140,7 @@ export async function targetOf(
 
 export async function runInsertComponent(
   deps: DirectToolDeps,
-  args: z.input<typeof schema>
+  args: ToolArgs<typeof schema>
 ): Promise<ToolText> {
   const blocked = refusal(deps.ctx, "insert_component");
 
@@ -146,10 +150,7 @@ export async function runInsertComponent(
   const parsed = schema.safeParse(args);
 
   if (!parsed.success) {
-    return text(
-      `insert_component: ${parsed.error.issues.map((issue) => `${issue.path.join(".") || "input"}: ${issue.message}`).join("; ")}`,
-      true
-    );
+    return text(`insert_component: ${parsed.error}`, true);
   }
   const input = parsed.data;
 

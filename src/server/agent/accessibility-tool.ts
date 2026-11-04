@@ -1,14 +1,18 @@
-import { z } from "zod";
+import { Schema } from "effect";
 
+import {
+  ACCESSIBILITY_LABEL_MAX,
+  ACCESSIBILITY_ROLES,
+  TAB_INDEX_MAX,
+  TAB_INDEX_MIN,
+} from "../accessibility/deps.js";
 import { AccessibilityError } from "../accessibility/errors.js";
 import { DEFAULT_VIEWPORT, frameOf } from "../accessibility/frame.js";
 import type { AccessibilityFrame } from "../accessibility/frame.js";
 import {
   INSPECT_ACCESSIBILITY_DESCRIPTION,
-  inspectAccessibilityFields,
   NO_ACCESSIBILITY_CHANGE,
   SET_ACCESSIBILITY_DESCRIPTION,
-  setAccessibilityFields,
   toAccessibilityChanges,
 } from "../accessibility/input.js";
 import { inspectAccessibility } from "../accessibility/inspect.js";
@@ -17,6 +21,7 @@ import {
   toAccessibilityResult,
 } from "../accessibility/set.js";
 import type { AccessibilityTarget } from "../accessibility/set.js";
+import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
 import type { BreakpointScope } from "../breakpoints/commit.js";
 import { readDesignSystemState } from "../design-system/state.js";
 import type { WrittenFile } from "../direct-edit/commit/batch.js";
@@ -26,6 +31,8 @@ import { describeElements } from "../page-probe/element.js";
 import { canvasFrames, refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
 import { editPageUrl } from "./run-target.js";
+import { toToolInput, toTrimmedText } from "./tool-input.js";
+import type { ToolArgs, ToolData } from "./tool-input.js";
 
 interface ToolContent {
   text: string;
@@ -59,50 +66,83 @@ const ONE_TARGET = "Pass targetSelector or targetSource, not both.";
 const NO_PREVIEW =
   "Preview is not running for this direction. Pass targetSource instead.";
 
-const pathField = z
-  .string()
-  .trim()
-  .max(PATH_MAX)
-  .optional()
-  .describe(
-    "Page path. Leave out for the page of the frame in <canvas-context> (or the entry page)."
-  );
+const pathField = Schema.optionalKey(
+  toTrimmedText(0, PATH_MAX).annotate({
+    description:
+      "Page path. Leave out for the page of the frame in <canvas-context> (or the entry page).",
+  })
+);
 
-const selectorField = z.string().trim().min(1).max(SELECTOR_MAX).optional();
+const selectorField = (description: string): Schema.optionalKey<Schema.Trim> =>
+  Schema.optionalKey(toTrimmedText(1, SELECTOR_MAX).annotate({ description }));
 
-const inspectAccessibilityInput = {
-  frame: z
-    .string()
-    .trim()
-    .min(1)
-    .max(FRAME_MAX)
-    .optional()
-    .describe(
-      "Canvas frame id or @label. Its page and size are used. Leave out for path."
-    ),
+const tabIndexRange = Schema.isBetween({
+  maximum: TAB_INDEX_MAX,
+  minimum: TAB_INDEX_MIN,
+});
+
+const tabIndexValue = Schema.Int.check(tabIndexRange);
+
+const accessibilityText = Schema.optionalKey(
+  Schema.NullOr(toTrimmedText(0, ACCESSIBILITY_LABEL_MAX))
+);
+
+const inspectAccessibilityFieldSet = {
+  frame: Schema.optionalKey(
+    toTrimmedText(1, FRAME_MAX).annotate({
+      description:
+        "Canvas frame id or @label. Its page and size are used. Leave out for path.",
+    })
+  ),
+  includePassing: Schema.optionalKey(
+    Schema.Boolean.annotate({
+      description: "Also list the contrast pairs that pass. Default false.",
+    })
+  ),
   path: pathField,
-  targetSelector: selectorField.describe(
+  targetSelector: selectorField(
     "CSS selector or layer id of one layer. Leave out to check the whole page."
   ),
-  ...inspectAccessibilityFields,
 };
 
-const setAccessibilityInput = {
+const setAccessibilityFieldSet = {
+  alt: accessibilityText.annotate({
+    description:
+      'Alt text of an image. "" marks a decorative image. null removes it.',
+  }),
+  ariaLabel: Schema.optionalKey(
+    Schema.NullOr(toTrimmedText(1, ACCESSIBILITY_LABEL_MAX)).annotate({
+      description: 'aria-label, for example "Close dialog". null removes it.',
+    })
+  ),
   path: pathField,
-  targetSelector: selectorField.describe(
+  role: Schema.optionalKey(
+    Schema.NullOr(Schema.Literals(ACCESSIBILITY_ROLES)).annotate({
+      description: "ARIA role, for example button. null removes it.",
+    })
+  ),
+  tabIndex: Schema.optionalKey(
+    Schema.NullOr(tabIndexValue).annotate({
+      description:
+        "tabIndex: 0 puts the layer in the tab order, -1 takes it out. null removes it.",
+    })
+  ),
+  targetSelector: selectorField(
     "CSS selector or layer id of the layer on the live page."
   ),
-  targetSource: z
-    .string()
-    .trim()
-    .max(SOURCE_MAX)
-    .optional()
-    .describe('Or the layer as file:line:col, for example "src/App.tsx:12:7".'),
-  ...setAccessibilityFields,
+  targetSource: Schema.optionalKey(
+    toTrimmedText(0, SOURCE_MAX).annotate({
+      description:
+        'Or the layer as file:line:col, for example "src/App.tsx:12:7".',
+    })
+  ),
 };
 
-const inspectSchema = z.strictObject(inspectAccessibilityInput);
-const setSchema = z.strictObject(setAccessibilityInput);
+const inspectAccessibilityInput = toSdkFieldSet(inspectAccessibilityFieldSet);
+const setAccessibilityInput = toSdkFieldSet(setAccessibilityFieldSet);
+
+const inspectSchema = toToolInput(inspectAccessibilityFieldSet);
+const setSchema = toToolInput(setAccessibilityFieldSet);
 
 const inspectAccessibilityDescription = INSPECT_ACCESSIBILITY_DESCRIPTION;
 
@@ -117,13 +157,8 @@ const refuse = (message: string): ToolText => ({
   isError: true,
 });
 
-const issues = (tool: string, error: z.ZodError): ToolText => {
-  const lines = error.issues.map(
-    (issue) => `${issue.path.join(".") || "input"}: ${issue.message}`
-  );
-
-  return refuse(`${tool}: ${lines.join("; ")}`);
-};
+const issues = (tool: string, error: string): ToolText =>
+  refuse(`${tool}: ${error}`);
 
 const caught = (tool: string, error: Error | null): ToolText => {
   if (error instanceof AccessibilityError || error instanceof DirectEditError) {
@@ -156,7 +191,7 @@ const frameFor = async (
 
 const inspectWith = async (
   deps: DirectToolDeps,
-  input: z.output<typeof inspectSchema>
+  input: ToolData<typeof inspectSchema>
 ): Promise<ToolText> => {
   if (!deps.ctx.previewUrl) {
     return refuse("Preview is not running for this direction.");
@@ -185,7 +220,7 @@ const inspectWith = async (
 
 const runInspectAccessibility = async (
   deps: DirectToolDeps,
-  args: z.input<typeof inspectSchema>
+  args: ToolArgs<typeof inspectSchema>
 ): Promise<ToolText> => {
   const parsed = inspectSchema.safeParse(args);
 
@@ -223,7 +258,7 @@ const fromSource = (raw: string): Located => {
 
 const locate = async (
   deps: DirectToolDeps,
-  input: z.output<typeof setSchema>
+  input: ToolData<typeof setSchema>
 ): Promise<Located> => {
   if (input.targetSource) {
     return fromSource(input.targetSource);
@@ -276,7 +311,7 @@ const writeAll = async (
 
 const setWith = async (
   deps: DirectToolDeps,
-  input: z.output<typeof setSchema>
+  input: ToolData<typeof setSchema>
 ): Promise<ToolText> => {
   const changes = toAccessibilityChanges(input);
 
@@ -308,7 +343,7 @@ const setWith = async (
 
 const runSetAccessibility = async (
   deps: DirectToolDeps,
-  args: z.input<typeof setSchema>
+  args: ToolArgs<typeof setSchema>
 ): Promise<ToolText> => {
   const blocked = refusal(deps.ctx, "set_accessibility");
 

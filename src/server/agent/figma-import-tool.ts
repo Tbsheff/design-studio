@@ -1,9 +1,10 @@
 import { readFile, stat } from "node:fs/promises";
 
-import { z } from "zod";
+import { Effect, Schema } from "effect";
 
 import { FIGMA_NODES_MAX_BYTES } from "../../shared/figma-nodes.js";
 import { JSX_INSERT_POSITIONS } from "../../shared/insert.js";
+import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
 import { planInsertJsx } from "../direct-edit/commit/jsx-insert.js";
 import { resolveSource, writeAtomic } from "../direct-edit/index.js";
 import { parseFigmaNodes } from "../figma/nodes.js";
@@ -11,6 +12,13 @@ import { prepareFigmaImport } from "../figma/to-markup.js";
 import { refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
 import { targetOf } from "./insert-tool.js";
+import {
+  toOptionalFlag,
+  toOptionalText,
+  toToolInput,
+  toTrimmedText,
+} from "./tool-input.js";
+import type { ToolArgs } from "./tool-input.js";
 
 type ToolText = {
   content: { type: "text"; text: string }[];
@@ -20,58 +28,43 @@ type ToolText = {
 export const FIGMA_IMPORT_TOOL_DESCRIPTION =
   "Turn one Figma frame into editable markup on the page: auto layout becomes flex with gap and padding, sizing becomes widths or flex, text stays live, colors that match a project token use the token, and instances named like a kit component (Button, Badge, Card) become that component with its import. nodesFile is a JSON file with the body of the Figma REST call GET /v1/files/:key/nodes: an attachment of this run or a file in the project. It never calls Figma. Image fills become placeholder <img> elements. Use dryRun to see the markup first.";
 
-export const figmaImportShape = {
-  nodesFile: z
-    .string()
-    .trim()
-    .min(1)
-    .max(1000)
-    .describe(
-      "The Figma nodes JSON: the name or path of an attachment of this run, or a file path in the project."
-    ),
-  nodeId: z
-    .string()
-    .trim()
-    .min(1)
-    .max(200)
-    .optional()
-    .describe(
-      'Figma node id of the frame, for example "12:345". Leave out for the first frame.'
-    ),
-  targetSelector: z
-    .string()
-    .trim()
-    .min(1)
-    .max(2000)
-    .optional()
-    .describe("CSS selector of the target element on the live page."),
-  targetSource: z
-    .string()
-    .trim()
-    .max(1100)
-    .optional()
-    .describe("Or the target as file:line:col of its tag."),
-  path: z
-    .string()
-    .trim()
-    .max(300)
-    .optional()
-    .describe(
-      "Page path. Leave out for the page of the frame in <canvas-context> (or the entry page)."
-    ),
-  position: z
-    .enum(JSX_INSERT_POSITIONS as ["inside", "before", "after", "replace"])
-    .default("inside")
-    .describe(
-      "inside: after the last child. before / after: a sibling. replace: in place of the target."
-    ),
-  dryRun: z
-    .boolean()
-    .optional()
-    .describe("true: return the markup and write nothing."),
+const figmaImportFields = {
+  nodesFile: toTrimmedText(1, 1000).annotate({
+    description:
+      "The Figma nodes JSON: the name or path of an attachment of this run, or a file path in the project.",
+  }),
+  nodeId: toOptionalText(
+    1,
+    200,
+    'Figma node id of the frame, for example "12:345". Leave out for the first frame.'
+  ),
+  targetSelector: toOptionalText(
+    1,
+    2000,
+    "CSS selector of the target element on the live page."
+  ),
+  targetSource: toOptionalText(
+    0,
+    1100,
+    "Or the target as file:line:col of its tag."
+  ),
+  path: toOptionalText(
+    0,
+    300,
+    "Page path. Leave out for the page of the frame in <canvas-context> (or the entry page)."
+  ),
+  position: Schema.Literals(JSX_INSERT_POSITIONS)
+    .annotate({
+      description:
+        "inside: after the last child. before / after: a sibling. replace: in place of the target.",
+    })
+    .pipe(Schema.withDecodingDefaultKey(Effect.succeed("inside" as const))),
+  dryRun: toOptionalFlag("true: return the markup and write nothing."),
 };
 
-const schema = z.object(figmaImportShape).strict();
+export const figmaImportShape = toSdkFieldSet(figmaImportFields);
+
+const schema = toToolInput(figmaImportFields);
 
 function text(message: string, isError = false): ToolText {
   return {
@@ -95,16 +88,12 @@ async function nodesText(deps: DirectToolDeps, file: string): Promise<string> {
 
 export async function runFigmaImport(
   deps: DirectToolDeps,
-  args: z.input<typeof schema>
+  args: ToolArgs<typeof schema>
 ): Promise<ToolText> {
   const blocked = refusal(deps.ctx, "import_figma_frame");
   if (blocked) return text(blocked, true);
   const parsed = schema.safeParse(args);
-  if (!parsed.success)
-    return text(
-      `import_figma_frame: ${parsed.error.issues.map((issue) => `${issue.path.join(".") || "input"}: ${issue.message}`).join("; ")}`,
-      true
-    );
+  if (!parsed.success) return text(`import_figma_frame: ${parsed.error}`, true);
   const input = parsed.data;
   if (
     (input.targetSelector === undefined) ===

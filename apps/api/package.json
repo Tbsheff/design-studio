@@ -1,5 +1,5 @@
 {
-  "name": "@design-studio/cloud-api",
+  "name": "@design-studio/api",
   "version": "0.1.0",
   "private": true,
   "description": "The hosted Design Studio API Worker: auth, orgs and tenant data on one D1 database and one R2 bucket.",

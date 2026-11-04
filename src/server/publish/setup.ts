@@ -403,7 +403,7 @@ export function createPublishBackend(
     return {
       status: "done",
       detail: `Local Worker runs at ${run.url}`,
-      command: `node cloud/publish-worker/scripts/local.mjs --port ${runtime.port}`,
+      command: `node apps/publish/scripts/local.mjs --port ${runtime.port}`,
     };
   };
 
@@ -595,7 +595,7 @@ export function createPublishBackend(
 
     if (mode === "local" && !source.localRunner) {
       throw new BadRequestError(
-        "Local mode needs cloud/publish-worker with its packages installed (npm install in that folder)."
+        "Local mode needs apps/publish with its packages installed (npm install in that folder)."
       );
     }
 

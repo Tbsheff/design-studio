@@ -403,7 +403,7 @@ function describePrune(stats: PruneStats[]): string {
 }
 
 async function stagePublishWorker(serverDir: string): Promise<void> {
-  const source = path.join(ROOT, "cloud", "publish-worker");
+  const source = path.join(ROOT, "apps", "publish");
   const target = path.join(serverDir, "publish-worker");
   mkdirSync(target, { recursive: true });
   await build({

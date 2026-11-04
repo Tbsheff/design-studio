@@ -39,4 +39,4 @@ The first real stamped actions are `studio.health` (`GET /api/health`) and `stud
 | UI copy | [`ui-copy.ts`](patterns/golden/ui-copy.ts) (real file lands with S4c) | `uiCopy` (new:feature, new:domain `--ui`) |
 | UI component | [`ui-component.tsx`](patterns/golden/ui-component.tsx) (real file lands with S4c) | `uiComponent` (new:feature, new:domain `--ui`) |
 | UI model | none on main yet; the stamp writes it | `uiModel` (new:feature) |
-| Tenant repo query | [`tenant-query.ts`](patterns/golden/tenant-query.ts) (real file lands with Auth S1 at `cloud/api/src/tenant/repos/projects.ts`) | none |
+| Tenant repo query | [`tenant-query.ts`](patterns/golden/tenant-query.ts) (real file lands with Auth S1 at `apps/api/src/tenant/repos/projects.ts`) | none |

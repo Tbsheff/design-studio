@@ -24,7 +24,7 @@ Two designs were judged: (A) one shared D1 with `org_id` on every row and one `T
 
 ## Decision
 
-1. **Host one multi-tenant plane.** One Worker `cloud/api`, one D1 `studio`, one R2 bucket `studio-files`, Durable Objects for rate limits and live pings. Orgs are rows. Every user gets a personal org after email verification.
+1. **Host one multi-tenant plane.** One Worker `apps/api`, one D1 `studio`, one R2 bucket `studio-files`, Durable Objects for rate limits and live pings. Orgs are rows. Every user gets a personal org after email verification.
 2. **Use Better Auth 1.7.x** with the organization, api-key, jwt, bearer and electron plugins. Roles: owner, admin, member, viewer. Agents are org API keys whose perms are the key perms intersected with the acting member's current role. Agents can never hold publication, member, apiKey or policy perms. An agent publish or share waits for a user to confirm it.
 3. **Enforce isolation in one gate, fail closed.**
    - `TenantDb` binds `org_id` from `CurrentOrg`. Repo methods never take an org id.

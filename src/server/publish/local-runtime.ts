@@ -53,7 +53,7 @@ const toLastErrorLine = (seen: string): string =>
 const inspectStart = (input: LocalStart): BadRequestError | null => {
   if (!input.runner) {
     return new BadRequestError(
-      "Local mode needs cloud/publish-worker with its packages installed."
+      "Local mode needs apps/publish with its packages installed."
     );
   }
 

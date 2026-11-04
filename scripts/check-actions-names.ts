@@ -76,7 +76,7 @@ const ROOT = path.join(import.meta.dirname, "..");
 
 const SNAPSHOTS = "artifacts/mcp-snapshots";
 
-const CLOUD_PERMISSIONS = "cloud/api/src/auth/permissions.ts";
+const CLOUD_PERMISSIONS = "apps/api/src/auth/permissions.ts";
 
 const AGENT_PREFIX = "mcp__studio__";
 

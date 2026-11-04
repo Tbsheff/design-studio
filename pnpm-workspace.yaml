@@ -1,6 +1,11 @@
+packages:
+  - apps/*
+  - packages/ui
+  - packages/common/*
 nodeLinker: hoisted
 allowBuilds:
   dugite: true
   electron: true
   electron-winstaller: false
   esbuild: true
+  workerd: true

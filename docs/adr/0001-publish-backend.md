@@ -37,7 +37,7 @@ flowchart LR
 
 ### Worker
 
-- Source: `cloud/publish-worker/` (TypeScript, own `package.json` and `tsconfig.json`, own typecheck).
+- Source: `apps/publish/` (TypeScript, own `package.json` and `tsconfig.json`, own typecheck).
 - The studio bundles `src/index.ts` with esbuild into Build Output (`.cloudflare/output/v0/workers/default/bundle/worker.js` plus `worker.config.json`) and runs `cf deploy --prebuilt`. We do not use `wrangler.jsonc`: cf ignores Wrangler config, and without `cloudflare.config.ts` cf auto-configures the folder and installs packages. A prebuilt deploy needs no Node toolchain on the user's Mac.
 - Bindings: `DB` (D1, by id), `FILES` (R2, by name), `PUBLISH_KEY_HASH` (secret).
 - Routes:
@@ -49,7 +49,7 @@ flowchart LR
 - R2 keys are content-addressed per publication: `designs/<publicationId>/blobs/<sha256>`. A blob is immutable once uploaded. The upload passes `sha256` to `R2Bucket.put`, so R2 rejects a body that does not match.
 - D1 table `files(version_id, path, sha256, size, content_type)` maps each path of a version to a blob. Per-version prefixes would force a full upload on each republish, and the R2 binding cannot copy objects.
 - The viewer looks a path up in `files` by exact match. A path can never reach an R2 key that is not in that version. The Worker also refuses `..`, `\`, NUL, encoded slashes and dot segments with 400 before the lookup.
-- Migrations: `cloud/publish-worker/migrations/*.sql`, applied by `cf d1 migrations apply` (same bookkeeping table as Wrangler).
+- Migrations: `apps/publish/migrations/*.sql`, applied by `cf d1 migrations apply` (same bookkeeping table as Wrangler).
 
 ### Upload flow
 

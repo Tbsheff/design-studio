@@ -35,7 +35,7 @@ interface Entry extends Pick<Hit, "file" | "rule"> {
 
 const run = promisify(execFile);
 const BASELINE = new URL("check-actions-baseline.json", import.meta.url);
-const ROOTS = ["src/server", "src/shared/actions", "src/ui", "cloud/api"];
+const ROOTS = ["src/server", "src/shared/actions", "src/ui", "apps/api"];
 const TEST_FILE = /\.test\.tsx?$/u;
 const CODE_FILE = /\.(?:ts|tsx|mts|cts)$/u;
 const COMMENT_LINE = /^\s*(?:\/\/|\/\*|\*).*$/u;
@@ -51,7 +51,7 @@ const EFFECT_FOLDERS = [
     .split(" ")
     .map((dir) => `src/server/${dir}/**`),
   "src/shared/actions/**",
-  "cloud/api/**",
+  "apps/api/**",
 ];
 
 const NEW_FOLDERS = [
@@ -78,7 +78,7 @@ const ALL = ROOTS.map((root) => `${root}/**`);
 
 const LINE_RULES: LineRule[] = [
   {
-    allowed: ["cloud/api/src/platform/{share-live,unlock-lockout}.ts"],
+    allowed: ["apps/api/src/platform/{share-live,unlock-lockout}.ts"],
     fix: "use Effect.gen with yield*, and fail with return yield* new X({ message })",
     id: "S11",
     re: /\bthrow\b|\btry\s*\{|\basync\s|\bawait\s|\bnew Promise\b/u,
@@ -102,7 +102,7 @@ const LINE_RULES: LineRule[] = [
     what: "building or providing a Layer outside src/server/main is banned",
   },
   {
-    allowed: [RUN_ACTION, "cloud/api/**/middleware/**"],
+    allowed: [RUN_ACTION, "apps/api/**/middleware/**"],
     fix: "let src/server/handlers/_core/run-action.ts provide the principal and org scope",
     id: "T1",
     re: /\bprovideService\(\s*(?:LocalPrincipal|LocalOrgScope|CurrentOrg)\b/u,

@@ -3,7 +3,7 @@ import path from "node:path";
 import process from "node:process";
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
-const CLOUD = "cloud/api/src";
+const CLOUD = "apps/api/src";
 const SERVER = "src/server";
 const GLOB_TAIL = "/**";
 const SOURCE_FILE = /\.(?<ext>ts|tsx|mts|mjs|js)$/u;
@@ -123,7 +123,7 @@ const RULES = [
   },
   {
     allowed: [`${CLOUD}/tenant/repos/**`, `${CLOUD}/tenant/probes/**`],
-    fix: "Move the tq statement into cloud/api/src/tenant/repos/<table>.ts.",
+    fix: "Move the tq statement into apps/api/src/tenant/repos/<table>.ts.",
     id: "B2",
     matches: matchesAny([/\btq`/u]),
     message: "tq statement outside tenant/repos",
@@ -139,7 +139,7 @@ const RULES = [
   },
   {
     allowed: [`${CLOUD}/tenant/blobs.ts`, `${CLOUD}/platform/**`],
-    fix: "Use TenantBlobs from cloud/api/src/tenant/blobs.ts.",
+    fix: "Use TenantBlobs from apps/api/src/tenant/blobs.ts.",
     id: "B4",
     matches: matchesAny([
       /\b(?:files|FILES|bucket|r2)\.(?:get|put|delete|list|head)\(/u,

@@ -25,7 +25,7 @@ function candidates(): string[] {
 
   return [
     fromEnv,
-    path.resolve(here, "..", "..", "..", "cloud", "publish-worker"),
+    path.resolve(here, "..", "..", "..", "apps", "publish"),
     path.join(here, "publish-worker"),
   ].filter((d): d is string => Boolean(d));
 }

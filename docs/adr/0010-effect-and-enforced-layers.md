@@ -123,8 +123,8 @@ flowchart BT
   bridge["src/bridge (iframe IIFE)"]
   desktop["desktop (Electron main)"]
   tooling["scripts, e2e"]
-  cloudapi["cloud/api (ADR 0011 Worker)"]
-  cloudpub["cloud/publish-worker"]
+  cloudapi["apps/api (ADR 0011 Worker)"]
+  cloudpub["apps/publish"]
 
   platform --> contract
   udomain --> pure

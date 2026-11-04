@@ -130,7 +130,7 @@ const toFrameInput = (frame: FrameInput): ExportFrame => {
 const toFolderCard = async (
   runtime: ExportRuntime,
   query: FolderQuery
-): Promise<ApprovalCard> => {
+): Promise<ApprovalCard | null> => {
   const project = await runtime.projects.get(query.projectId);
 
   const target = await resolveExportTarget(
@@ -138,6 +138,10 @@ const toFolderCard = async (
     project.id,
     query.folder ?? null
   );
+
+  if (target.trusted) {
+    return null;
+  }
 
   const format = query.format.toUpperCase();
 

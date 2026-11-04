@@ -44,7 +44,7 @@ interface PackStoreApi {
   ) => Effect.Effect<DesignSystemDraftInfo, PackError>;
   readonly draftCard: (
     input: DraftInput
-  ) => Effect.Effect<ApprovalCard, PackError>;
+  ) => Effect.Effect<ApprovalCard | null, PackError>;
   readonly draftStatus: (
     projectId: string
   ) => Effect.Effect<DraftStatus, PackError>;
@@ -90,7 +90,7 @@ class PackStore extends Context.Service<PackStore, PackStoreApi>()(
       draftCard: Effect.fn("PackStore.draftCard")(function* run(
         input: DraftInput
       ) {
-        return yield* attemptPacks(() => Promise.resolve(toDraftCard(input)));
+        return yield* attemptPacks((runtime) => toDraftCard(runtime, input));
       }),
       draftStatus: Effect.fn("PackStore.draftStatus")(function* run(
         projectId: string

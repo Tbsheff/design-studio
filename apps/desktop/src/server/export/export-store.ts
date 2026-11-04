@@ -1,10 +1,10 @@
-import { Context, Effect, Layer } from "effect";
-
 import type { ApprovalCard } from "@design-studio/actions/_core/approval-card";
 import type {
   CopyCodeResult,
   ExportFileResult,
 } from "@design-studio/actions/export/schema";
+import { Context, Effect, Layer } from "effect";
+
 import { readCode } from "./copy-target.js";
 import type { CopyQuery } from "./copy-target.js";
 import { attemptExport } from "./export-core.js";
@@ -24,7 +24,7 @@ interface ExportStoreApi {
   ) => Effect.Effect<CopyCodeResult, ExportError>;
   readonly folderCard: (
     query: FolderQuery
-  ) => Effect.Effect<ApprovalCard, ExportError>;
+  ) => Effect.Effect<ApprovalCard | null, ExportError>;
   readonly handoffZip: (
     query: HandoffQuery
   ) => Effect.Effect<ExportFileResult, ExportError>;

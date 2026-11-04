@@ -7,7 +7,7 @@ import type { PackProblem, PackSummary } from "@design-studio/contracts";
 import { NotFoundError } from "../../platform/errors/index.js";
 import { packProblems } from "../packs.js";
 import type { PackRuntime } from "./library-core.js";
-import { toSourceLines } from "./library-draft-input.js";
+import { isDraftSourceTrusted, toSourceLines } from "./library-draft-input.js";
 import type { DraftInput } from "./library-draft-input.js";
 
 type ApplyInput = Input<typeof applyPackPack>;
@@ -80,7 +80,30 @@ const toApplyCard = async (
   };
 };
 
-const toDraftCard = (input: DraftInput): ApprovalCard => {
+const toProjectsFolder = async (
+  runtime: PackRuntime
+): Promise<string | null> => {
+  if (runtime.drafts === null) {
+    return null;
+  }
+
+  try {
+    return await runtime.drafts.projectsFolder();
+  } catch {
+    return null;
+  }
+};
+
+const toDraftCard = async (
+  runtime: PackRuntime,
+  input: DraftInput
+): Promise<ApprovalCard | null> => {
+  const projects = await toProjectsFolder(runtime);
+
+  if (await isDraftSourceTrusted(input, projects)) {
+    return null;
+  }
+
   const sources = toSourceLines(input);
   const name = toLine(input.name ?? "a new design system");
 

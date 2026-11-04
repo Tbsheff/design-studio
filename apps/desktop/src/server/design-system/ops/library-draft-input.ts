@@ -5,7 +5,8 @@ import path from "node:path";
 import type { Input } from "@design-studio/actions/_core/action";
 import type { createDraftPack } from "@design-studio/actions/pack/create-draft";
 import type { DraftImage } from "@design-studio/actions/pack/schema";
-import { safeFolder } from "../../mcp/folders.js";
+
+import { isInside, safeFolder } from "../../mcp/folders.js";
 import { BadRequestError } from "../../platform/errors/index.js";
 import { MAX_TOKENS_FILE_BYTES } from "../extract/draft.js";
 import type { ImageInput } from "./library-backing.js";
@@ -122,6 +123,63 @@ const resolveTokensFile = async (
   return file;
 };
 
+const isSourceInside = async (
+  raw: string,
+  projects: string,
+  isFile: boolean
+): Promise<boolean> => {
+  try {
+    const real = await toRealPath(toAbsolute(raw));
+    const base = (await toRealPath(projects)) ?? path.resolve(projects);
+
+    if (real === null) {
+      return false;
+    }
+
+    if (isFile) {
+      return isInside(path.dirname(real), base);
+    }
+
+    return isInside(real, base);
+  } catch {
+    return false;
+  }
+};
+
+const isSourceOk = (
+  raw: string | undefined,
+  projects: string,
+  isFile: boolean
+): Promise<boolean> => {
+  if (!raw) {
+    return Promise.resolve(true);
+  }
+
+  return isSourceInside(raw, projects, isFile);
+};
+
+const isDraftSourceTrusted = async (
+  input: DraftInput,
+  projects: string | null
+): Promise<boolean> => {
+  const { folderPath, tokensFile } = input;
+
+  if (!folderPath && !tokensFile) {
+    return true;
+  }
+
+  if (projects === null) {
+    return false;
+  }
+
+  const results = await Promise.all([
+    isSourceOk(folderPath, projects, false),
+    isSourceOk(tokensFile, projects, true),
+  ]);
+
+  return results.every(Boolean);
+};
+
 const readTokens = async (
   input: DraftInput,
   dataDir: string
@@ -223,6 +281,12 @@ const toSourceLines = (input: DraftInput): string[] => {
   return lines;
 };
 
-export { MAX_DRAFT_IMAGES, toDraftRaw, toImages, toSourceLines };
+export {
+  MAX_DRAFT_IMAGES,
+  isDraftSourceTrusted,
+  toDraftRaw,
+  toImages,
+  toSourceLines,
+};
 
 export type { DraftInput };

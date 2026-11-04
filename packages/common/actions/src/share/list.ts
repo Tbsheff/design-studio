@@ -9,7 +9,7 @@ const listShare = defineAction({
   agent: {
     lean: false,
     name: "list_share_links",
-    set: "app",
+    set: "core",
     short:
       "List the share links of a project with their title, frames, expiry, state and viewer comment count.",
   },

@@ -30,7 +30,7 @@ const EDITOR_TIMEOUT_MS = 5000;
 const EDIT_WAIT_MS = 20_000;
 
 const EDIT_ROUTES =
-  /\/d\/[^/]+\/(direct-edit|discard|keep|undo|restore|insert|props|props\/variant-classes|review\/fix|tweaks\/commit|(edit-history|edit-session)\/\w+|design-system\/(apply|save|tokens|tokens\/update))$/;
+  /\/d\/[^/]+\/(direct-edit|discard|keep|undo|restore|insert|props|props\/variant-classes|review\/fix|tweaks\/commit|(edit-history|edit-session)\/\w+|design-system\/(apply|save|tokens|tokens\/update)|(fill|motion|spacing|stacking|accessibility|state-styles|state-styles\/forced|component-variant|import-page|update-text|image-search\/place|icons\/insert|text-styles\/\w+))$/;
 
 export interface AppRouteDeps {
   projects: StudioProjectStore;

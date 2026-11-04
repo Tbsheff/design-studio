@@ -10,7 +10,7 @@ const listPublish = defineAction({
   agent: {
     lean: false,
     name: "list_publications",
-    set: "app",
+    set: "core",
     short:
       "List the publications of a project with their URL, status, view counts and published versions.",
   },

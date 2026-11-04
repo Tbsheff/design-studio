@@ -12,7 +12,7 @@ const applyToken = defineAction({
   agent: {
     lean: false,
     name: "apply_token",
-    set: "design-system",
+    set: "kit",
     short:
       "Find hard-coded colors, spacing, radii and font sizes near a design token and rewrite them to the token, as one version.",
   },

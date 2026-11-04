@@ -55,7 +55,7 @@ const createShare = defineAction({
   agent: {
     lean: false,
     name: "create_share_link",
-    set: "app",
+    set: "core",
     short:
       "Make a read-only share link of canvas frames as PNG snapshots. The user must click Allow in Design Studio first.",
   },

@@ -14,7 +14,7 @@ const deleteShare = defineAction({
   agent: {
     lean: false,
     name: "revoke_share_link",
-    set: "app",
+    set: "core",
     short:
       "Turn off a share link now. Its images and comment form stop working at once.",
   },

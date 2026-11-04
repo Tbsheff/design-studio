@@ -11,7 +11,7 @@ const publishPublish = defineAction({
   agent: {
     lean: false,
     name: "publish_design",
-    set: "app",
+    set: "core",
     short:
       "Publish a saved version of a design to a public URL. The user must click Allow first.",
   },

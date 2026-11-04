@@ -12,7 +12,7 @@ const inspectGallery = defineAction({
   agent: {
     lean: false,
     name: "inspect_gallery",
-    set: "design-system",
+    set: "kit",
     short:
       "List the cells of a component gallery with their prop combos, render errors and contrast failures.",
   },

@@ -17,6 +17,8 @@ import type { KeyboardEvent, FormEvent } from "react";
 import type { FolderInspection } from "../../../shared/open-app.js";
 import { errorText, api } from "../../api.js";
 import { hasNativePicker, pickFolder } from "../../platform/desktop.js";
+
+import "../../styles/port.css";
 import { uiStore } from "../../platform/storage.js";
 import { pageName } from "../canvas/frame-controls.js";
 import { canvasFrameChoices } from "../share-publish-ship-export/export-api.js";

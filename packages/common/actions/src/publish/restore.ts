@@ -16,7 +16,7 @@ const restorePublish = defineAction({
   agent: {
     lean: false,
     name: "rollback_publication",
-    set: "app",
+    set: "core",
     short:
       "Make an older published version live again at the same URL. The user must click Allow first.",
   },

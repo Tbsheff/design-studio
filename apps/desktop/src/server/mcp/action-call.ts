@@ -8,7 +8,7 @@ import { EditError, RUN_BUSY } from "./edit-guards.js";
 import type { EditDeps } from "./edit-guards.js";
 import { mcpErrorText } from "./error-copy.js";
 import { legacyCaller } from "./legacy/caller-scope.js";
-import { runActionExit } from "./registry.js";
+import { gateOf, runActionExit, toProjectId } from "./registry.js";
 
 const RUNTIME_OFF =
   "The studio runtime is not ready, so this tool is not available. Restart Design Studio.";
@@ -29,8 +29,16 @@ const roundTrip = <Value, Source>(value: Source): Value => {
   return JSON.parse(text) as Value;
 };
 
+const toToolName = (action: AnyAction): string => {
+  if ("name" in action.mcp) {
+    return action.mcp.name;
+  }
+
+  return action.id;
+};
+
 const callAction = async <Output, Input extends object = object>(
-  deps: Pick<EditDeps, "runtime">,
+  deps: Pick<EditDeps, "approvals" | "runtime">,
   action: AnyAction,
   input: Input
 ): Promise<Output> => {
@@ -40,12 +48,17 @@ const callAction = async <Output, Input extends object = object>(
     throw new EditError(RUNTIME_OFF);
   }
 
-  const exit = await runActionExit(
-    runtime,
-    action,
-    roundTrip<WireArgs, Input>(input),
-    legacyCaller()
-  );
+  const args = roundTrip<WireArgs, Input>(input);
+
+  const exit = await runActionExit(runtime, action, args, {
+    gate: gateOf(
+      { approvals: deps.approvals },
+      toToolName(action),
+      "mcp",
+      toProjectId(args)
+    ),
+    principal: legacyCaller(),
+  });
 
   if (Exit.isSuccess(exit)) {
     return roundTrip<Output, object>(exit.value);

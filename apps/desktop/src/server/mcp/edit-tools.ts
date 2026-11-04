@@ -89,6 +89,26 @@ export const RENDER_WAIT_TOOLS = new Set([
   "move_element",
   "revert_hunk",
   "import_figma_frame",
+  "set_motion",
+  "set_fill",
+  "set_spacing",
+  "set_stacking",
+  "set_breakpoint_style",
+  "set_state_style",
+  "set_accessibility",
+  "apply_text_style",
+  "detach_text_style",
+  "create_text_style",
+  "update_text",
+  "insert_icon",
+  "place_image",
+  "apply_content",
+  "apply_token",
+  "create_image",
+  "create_component_variant",
+  "update_component_variant",
+  "import_page",
+  "arrange",
 ]);
 const WAIT_PROPERTY = {
   type: "string",
@@ -126,9 +146,22 @@ function toolDef(name: string, schema: z.ZodType, meta: Meta): ToolDef {
   };
 }
 
+function toWaitDef(tool: ToolDef): ToolDef {
+  return {
+    name: tool.name,
+    title: tool.title,
+    description: tool.description,
+    inputSchema: withWait(
+      tool.name,
+      tool.inputSchema as Record<string, unknown>
+    ),
+    annotations: tool.annotations,
+  };
+}
+
 export const EDIT_TOOLS: ToolDef[] = [
   ...ORDERED_TOOLS.map((tool) => toolDef(tool.name, tool.schema, tool.meta)),
-  ...ACTION_EDIT_TOOLS,
+  ...ACTION_EDIT_TOOLS.map((tool) => toWaitDef(tool)),
 ];
 
 export const EDIT_NAMES = new Set<string>(TOOLS_BY_NAME.keys());

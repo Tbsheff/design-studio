@@ -14,7 +14,7 @@ const unpublishPublish = defineAction({
   agent: {
     lean: false,
     name: "unpublish_design",
-    set: "app",
+    set: "core",
     short:
       "Turn off one publication so its URL answers 410. The user must click Allow first.",
   },

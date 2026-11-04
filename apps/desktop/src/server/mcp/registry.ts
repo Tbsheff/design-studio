@@ -385,7 +385,7 @@ const runActionExit = (
   runtime: StudioRuntime,
   action: AnyAction,
   args: WireArgs,
-  principal: Principal
+  context: ActionRun
 ): Promise<ActionExit> => {
   const runner = RUNNERS_BY_ID.get(action.id);
 
@@ -393,7 +393,9 @@ const runActionExit = (
     return Promise.reject(new Error(`unknown action ${action.id}`));
   }
 
-  return runtime.runPromiseExit(runner.run(args, principal, "json"));
+  return runtime.runPromiseExit(
+    runner.run(args, context.principal, "json", context.gate)
+  );
 };
 
 const isKnownTool = (tools: readonly ToolDef[], name: string): boolean =>
@@ -448,8 +450,10 @@ export {
   isKnownTool,
   isReadActionTool,
   listActionTools,
+  gateOf,
   runActionExit,
   toInputSchema,
+  toProjectId,
 };
 
 export type {

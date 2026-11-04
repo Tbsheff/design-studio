@@ -12,7 +12,7 @@ const createGallery = defineAction({
   agent: {
     lean: false,
     name: "create_gallery",
-    set: "design-system",
+    set: "kit",
     short:
       "Place canvas frames with a labeled grid of every variant, size and state of one component, in light and dark.",
   },

@@ -73,7 +73,14 @@ const toLegacyValue = (value: Schema.Json): Schema.Json => {
   const page = readLastPage(value);
 
   if (Option.isSome(page)) {
-    return page.value.items;
+    const { items } = page.value;
+    const next = page.value.next ?? null;
+
+    if (next === null) {
+      return items;
+    }
+
+    return { items, next };
   }
 
   return value;

@@ -36,7 +36,7 @@ interface StampResult {
   readonly written: readonly string[];
 }
 
-const DECISIONS = path.join(ROOT, "lint/decisions.ts");
+const DECISIONS = path.join(ROOT, "lint/studio.ts");
 const OXLINT = toWorkspaceBin("oxlint");
 const OXFMT = toWorkspaceBin("oxfmt");
 
@@ -203,7 +203,7 @@ const guardClean = async (): Promise<void> => {
 
   if (!turnsOffThrowNewError(decisions)) {
     fail(
-      "The clean step does not run: lint/decisions.ts does not turn off unicorn/throw-new-error for packages/common/actions/src/** and apps/desktop/src/server/**. Its autofix breaks every TaggedError class.",
+      "The clean step does not run: lint/studio.ts does not turn off unicorn/throw-new-error for packages/common/actions/src/** and apps/desktop/src/server/**. Its autofix breaks every TaggedError class.",
       "add that override in the merge step, then run the stamp again"
     );
   }

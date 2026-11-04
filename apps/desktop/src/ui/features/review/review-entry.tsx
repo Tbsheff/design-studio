@@ -7,6 +7,7 @@ import { Icon } from "@design-studio/ui";
 import {
   lazy,
   Suspense,
+  useCallback,
   useEffect,
   useLayoutEffect,
   useRef,
@@ -18,6 +19,7 @@ import { createPortal } from "react-dom";
 import type { ParentMessageBody } from "../../platform/bridge.js";
 import { frameName } from "../canvas/canvas-frames-model.js";
 import type { CanvasFrame } from "../canvas/canvas-frames-model.js";
+import { CritiquePanel } from "../critique/index.js";
 import type { FilesChange } from "../home/use-studio-data.js";
 import { useReview } from "./use-review.js";
 
@@ -133,6 +135,13 @@ export function ReviewEntry(p: Props) {
     }
   };
 
+  const { post } = p;
+
+  const selectSelector = useCallback(
+    (selector: string) => post({ selector, type: "select-selector" }),
+    [post]
+  );
+
   const sev = worst(review.result);
 
   const button = (
@@ -178,7 +187,17 @@ export function ReviewEntry(p: Props) {
             onSelect={select}
             onAsk={(finding) => ask?.(finding.ask)}
             onClose={() => setOpen(false)}
-          />
+          >
+            <Suspense fallback={null}>
+              <CritiquePanel
+                directionId={p.directionId}
+                frameId={p.frame.id}
+                isLive={p.live}
+                onSelect={selectSelector}
+                projectId={p.projectId}
+              />
+            </Suspense>
+          </ReviewPanel>
         </Suspense>
       )}
     </>

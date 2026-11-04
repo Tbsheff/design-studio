@@ -466,6 +466,17 @@ export const decisionOverrides: OxlintOverride[] = [
     rules: { "import/no-relative-parent-imports": "off" },
   },
   {
+    files: [
+      "packages/common/actions/src/critique/{get,run}.ts",
+      "packages/common/actions/src/critique/errors/status.ts",
+      "apps/desktop/src/server/handlers/critique/{get,handlers,live,run}.ts",
+      "apps/desktop/src/server/review/{critique-capture,critique-frame,critique-json,critique-reply,critique-runner,critique-saved,critique-store,critique-target,critique-taste}.ts",
+      "apps/desktop/src/server/agent/mock.ts",
+      "apps/desktop/src/ui/features/critique/deps.ts",
+    ],
+    rules: { "import/no-relative-parent-imports": "off" },
+  },
+  {
     files: ["apps/desktop/src/server/gallery/engine/page.ts"],
     rules: { "github/unescaped-html-literal": "off" },
   },

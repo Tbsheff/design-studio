@@ -9,7 +9,7 @@ import type {
 } from "@design-studio/contracts/review";
 import { Icon } from "@design-studio/ui";
 import { useEffect, useRef } from "react";
-import type { RefObject } from "react";
+import type { ReactNode, RefObject } from "react";
 
 import { isTypingTarget } from "../../platform/typing-target.js";
 import { PREVIEW_ESCAPE_EVENT } from "../chat/use-escape-stop.js";
@@ -17,6 +17,7 @@ import type { ReviewState } from "./use-review.js";
 
 interface Props {
   review: ReviewState;
+  children: ReactNode;
   frameLabel: string;
   live: boolean;
   running: boolean;
@@ -200,10 +201,12 @@ function Body({
   review,
   live,
   a,
+  children,
 }: {
   review: ReviewState;
   live: boolean;
   a: Actions;
+  children: ReactNode;
 }) {
   const { result } = review;
 
@@ -227,6 +230,7 @@ function Body({
         grouped(result.findings).map(([kind, list]) => (
           <Group key={kind} kind={kind} list={list} a={a} />
         ))}
+      {children}
     </div>
   );
 }
@@ -310,7 +314,9 @@ function ReviewPanel(p: Props) {
         </button>
       </div>
       <Summary review={p.review} />
-      <Body review={p.review} live={p.live} a={a} />
+      <Body review={p.review} live={p.live} a={a}>
+        {p.children}
+      </Body>
     </div>
   );
 }

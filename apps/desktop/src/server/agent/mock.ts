@@ -700,7 +700,7 @@ function compareSelectionsBottomUp(
   );
 }
 
-async function runCritique(session: MockSession): Promise<string> {
+async function startMockCritique(session: MockSession): Promise<string> {
   const finalText = `Critique: tighten the hierarchy, check contrast on secondary text, and test the layout at 375px.`;
   await session.say(finalText);
 
@@ -1195,7 +1195,7 @@ function runMockEdit(
   const text = cleanPrompt(prompt) || "Untitled";
 
   if (ctx.request.mode === "critique") {
-    return runCritique(session);
+    return startMockCritique(session);
   }
 
   if (ctx.request.plan) {

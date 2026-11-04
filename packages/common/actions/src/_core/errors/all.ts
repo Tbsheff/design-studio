@@ -1,6 +1,7 @@
 // @generated
 import type { CommentError } from "../../comment/errors/index.js";
 import type { ContentError } from "../../content/errors/index.js";
+import type { CritiqueError } from "../../critique/errors/index.js";
 import type { DirectEditError } from "../../direct-edit/errors/index.js";
 import type { GalleryError } from "../../gallery/errors/index.js";
 import type { ImageError } from "../../image/errors/index.js";
@@ -14,6 +15,7 @@ type StudioError =
   | CoreError
   | CommentError
   | ContentError
+  | CritiqueError
   | DirectEditError
   | GalleryError
   | ImageError

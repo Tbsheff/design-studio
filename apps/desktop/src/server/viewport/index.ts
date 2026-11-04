@@ -1,4 +1,4 @@
-export { bindViewportRuntime } from "./viewport-runtime.js";
+export { bindViewportRuntime, viewportRuntime } from "./viewport-runtime.js";
 
 export { ViewportRunner } from "./viewport-runner.js";
 

@@ -1,4 +1,4 @@
-import { desktopBridge } from "./deps.js";
+import { desktopBridge } from "../../platform/desktop.js";
 
 interface KeyView {
   readonly createdAt: number;

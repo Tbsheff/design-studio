@@ -22,6 +22,7 @@ import { api, errorText } from "../../api.js";
 import { useBridge } from "../../platform/bridge.js";
 import type { BridgeFrame, ParentMessageBody } from "../../platform/bridge.js";
 import { canvasHasKeys, isTypingTarget } from "../../platform/typing-target.js";
+import { IS_MAC } from "../commands/index.js";
 import { pasteJsx } from "../inspector/paste-jsx.js";
 import {
   NO_SOURCE,
@@ -29,7 +30,6 @@ import {
   selectionTargets,
 } from "../inspector/structure-edits.js";
 import type { LayerDrop, SelectionOp } from "../inspector/structure-edits.js";
-import { IS_MAC } from "./deps.js";
 import type { LayerTree } from "./layers-tree.js";
 import { useLayerLocks } from "./use-layer-locks.js";
 

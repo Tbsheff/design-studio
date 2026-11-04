@@ -2,8 +2,10 @@ import { useCallback } from "react";
 import type { ReactElement } from "react";
 
 import { StudioModals, StudioToast } from "../shell/studio-parts";
-import { ExportLayer, ShareLayer, ShipLayer } from "./layers";
+import { ExportLayer } from "./export-layer";
 import { firstText } from "./request-model";
+import { ShareLayer } from "./share-layer";
+import { ShipLayer } from "./ship-layer";
 import type { StudioCtxProps } from "./studio-context";
 
 const StudioRight = ({ ctx }: StudioCtxProps): ReactElement => {

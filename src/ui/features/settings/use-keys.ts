@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState, useTransition } from "react";
 
+import { routes as cloudRoutes } from "../../../shared/actions/cloud/routes.js";
+import { useAction } from "../../platform/query.js";
 import { copy } from "./copy.js";
-import { cloudRoutes, useAction } from "./deps.js";
 import { readDesktopKeys, toActive, toPerms } from "./keys-model.js";
 import type { CreatedKey, KeyView } from "./keys-model.js";
 

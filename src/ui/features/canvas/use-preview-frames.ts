@@ -16,12 +16,6 @@ import type {
   ZoomKey,
 } from "../../../shared/contracts.js";
 import { sendTelemetry } from "../../api.js";
-import {
-  runCommand,
-  openLayer,
-  moveRegion,
-  IS_MAC,
-} from "../../canvas-hook-slots.js";
 import { frameSrc, postToFrame, useBridge } from "../../platform/bridge.js";
 import type { BridgeFrame, ParentMessageBody } from "../../platform/bridge.js";
 import { createLiveStore } from "../../platform/live-store.js";
@@ -32,6 +26,12 @@ import {
   PREVIEW_ESCAPE_EVENT,
   PREVIEW_STOP_EVENT,
 } from "../chat/use-escape-stop.js";
+import {
+  IS_MAC,
+  moveRegion,
+  openLayer,
+  runCommand,
+} from "../commands/index.js";
 import type { BuildError, FilesChange } from "../home/use-studio-data.js";
 import { textEditability } from "../inspector/css-values.js";
 import { PREVIEW_PAINTED_EVENT } from "../inspector/use-edit-history.js";
@@ -80,7 +80,7 @@ function forwardAppKey(id: AppKey): void {
   } else if (id === "palette" || id === "shortcuts") {
     openLayer(id);
   } else {
-    moveRegion(id === "next-region" ? 1 : -1);
+    void moveRegion(id === "next-region" ? 1 : -1);
   }
 }
 

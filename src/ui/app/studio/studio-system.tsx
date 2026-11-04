@@ -6,7 +6,7 @@ import {
   designSystemRef,
 } from "../../features/design-system";
 import { EDIT_DESIGN_LABEL, SYSTEM_TEXT } from "./copy";
-import { RulesSlot } from "./layers";
+import { RulesSlot } from "./rules-slot";
 import type { StudioCtxProps } from "./studio-context";
 
 const StudioSystem = ({ ctx }: StudioCtxProps): ReactElement => {

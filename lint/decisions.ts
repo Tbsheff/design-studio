@@ -347,7 +347,9 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/ui/features/design-system/deps.ts",
       "src/ui/features/home/deps.ts",
       "src/ui/features/inspector/deps.ts",
-      "src/ui/features/versions-layers-tokens/deps.ts",
+      "src/ui/features/settings/keys-model.ts",
+      "src/ui/features/settings/use-keys.ts",
+      "src/ui/measure.test.ts",
     ],
     rules: {
       "import/no-relative-parent-imports": "off",

@@ -93,3 +93,5 @@ export function listenForCommands(): void {
     }
   });
 }
+
+export { IS_MAC, tipWithKey } from "./keys.js";

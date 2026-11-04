@@ -16,11 +16,23 @@ const CommandRules = lazy(async () => {
   return { default: loaded.CommandRules };
 });
 
-export { CommandLayer, CommandRules, loadCommandLayer };
+const moveRegion = async (step: 1 | -1): Promise<void> => {
+  const loaded = await import("./use-studio-commands.js");
+
+  loaded.moveRegion(step);
+};
+
+export { CommandLayer, CommandRules, loadCommandLayer, moveRegion };
 
 export { focusNewProject } from "./global-commands.js";
 
-export { runCommand } from "./registry.js";
+export {
+  IS_MAC,
+  openLayer,
+  runCommand,
+  tipWithKey,
+  useCommands,
+} from "./registry.js";
 
 export { useStudioCommands } from "./use-studio-commands.js";
 

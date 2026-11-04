@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { formatMeasure, measureBetween } from "./features/canvas/measure-model";
+import { formatMeasure, measureBetween } from "../shared/measure";
 
 describe(measureBetween, () => {
   it("measures the gap to a sibling on the right and below", () => {

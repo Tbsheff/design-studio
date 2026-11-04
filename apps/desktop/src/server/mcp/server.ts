@@ -17,7 +17,7 @@ import type { FolderRootsLookup, LegacyCall } from "./legacy/caller-scope.js";
 import { getFreePort, isPortFree, isSameText } from "./port-probe.js";
 import { ActionTools } from "./registry.js";
 import type { McpCaller } from "./registry.js";
-import { argsOf, runEdit } from "./run-edit.js";
+import { argsOf, runActionEdit, runEdit } from "./run-edit.js";
 import { newToken, readMcpSettings, writeMcpSettings } from "./settings.js";
 import type { McpSettings } from "./settings.js";
 
@@ -95,14 +95,24 @@ async function callAny(
     principal: ctx.key?.principal ?? toLegacyPrincipal(),
   };
   if (ActionTools.isAction(name))
-    return withLegacyCaller(call, async () =>
-      ActionTools.call(
-        ctx.deps,
-        name,
-        argsOf(args) as WireArgs,
-        callerOf(ctx, edits)
-      )
-    );
+    return withLegacyCaller(call, async () => {
+      const run = async (next: Record<string, unknown>): Promise<unknown> =>
+        ActionTools.call(
+          ctx.deps,
+          name,
+          next as WireArgs,
+          callerOf(ctx, edits)
+        );
+      if (edits !== null && !ActionTools.isRead(name))
+        return runActionEdit({
+          call: run,
+          client: ctx.client,
+          edits,
+          name,
+          raw: args,
+        });
+      return run(argsOf(args));
+    });
   if (!EDIT_NAMES.has(name))
     return {
       content: [{ type: "text", text: `unknown tool ${name}` }],

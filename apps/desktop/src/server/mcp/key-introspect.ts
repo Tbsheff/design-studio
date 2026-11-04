@@ -1,6 +1,6 @@
+import type { Permission } from "@design-studio/actions/_core/permissions";
 import { Effect } from "effect";
 
-import type { Permission } from "@design-studio/actions/_core/permissions";
 import { CLOUD_ORIGIN, CloudSession } from "../cloud/index.js";
 import type { StudioRuntime } from "../main/runtime.js";
 import type { Introspect, IntrospectResult } from "./key-auth.js";

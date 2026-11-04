@@ -1,9 +1,9 @@
+import { AllActions } from "@design-studio/actions";
+import type { AnyAction } from "@design-studio/actions/_core/action";
+import { Forbidden } from "@design-studio/actions/_core/errors/forbidden";
 import { Effect, Schema } from "effect";
 import type { JsonSchema } from "effect";
 
-import type { AnyAction } from "@design-studio/actions/_core/action";
-import { Forbidden } from "@design-studio/actions/_core/errors/forbidden";
-import { AllActions } from "@design-studio/actions";
 import type { AgentArgs } from "../agent-tools/registry.js";
 import { actionDeniedMessage } from "../agent/ask-gate.js";
 import type { ActionAsk } from "../agent/ask-gate.js";
@@ -208,6 +208,18 @@ const runActionTool = async (
 const refuse = (text: string): Promise<TextResult> =>
   Promise.resolve({ content: [{ text, type: "text" }], isError: true });
 
+const MAIN_DIRECTION = "main";
+
+const toMainDirection = (tool: ActionRunner, args: WireArgs): WireArgs => {
+  const takesDirection = tool.action.http.path.includes(":directionId");
+
+  if (!takesDirection || "directionId" in args) {
+    return args;
+  }
+
+  return { ...args, directionId: MAIN_DIRECTION };
+};
+
 const callActionTool = (
   deps: RuntimeDeps,
   name: string,
@@ -230,7 +242,7 @@ const callActionTool = (
     return refuse(RUNTIME_OFF);
   }
 
-  return runActionTool(runtime, tool, args, {
+  return runActionTool(runtime, tool, toMainDirection(tool, args), {
     gate: gateOf(edits, name, caller.client),
     principal: caller.principal,
   });

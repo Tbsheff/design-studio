@@ -16,7 +16,9 @@ const LimitSchema = Schema.Int.check(
 ).pipe(Schema.withDecodingDefaultKey(Effect.succeed(PAGE_DEFAULT)));
 
 const PageFields = {
-  cursor: Schema.NullOr(Schema.String),
+  cursor: Schema.NullOr(Schema.String).pipe(
+    Schema.withDecodingDefaultKey(Effect.succeed(null))
+  ),
   limit: LimitSchema,
 };
 

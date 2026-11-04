@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Effect, Schema } from "effect";
 
 import { defineAction } from "../_core/action.js";
 import { BadRequest } from "../_core/errors/bad-request.js";
@@ -10,23 +10,30 @@ import { CommentFilterSchema, CommentSchema } from "./schema.js";
 
 const FRAME_REF_MAX = 300;
 
-const DirectionFieldSchema = Schema.NullOr(DirectionIdSchema).annotate({
-  description: "Direction id. Leave out for the main direction.",
-});
+const DirectionFieldSchema = Schema.NullOr(DirectionIdSchema)
+  .annotate({
+    description: "Direction id. Leave out for the main direction.",
+  })
+  .pipe(Schema.withDecodingDefaultKey(Effect.succeed(null)));
 
 const FrameFieldSchema = Schema.NullOr(
   Schema.String.check(Schema.isMaxLength(FRAME_REF_MAX))
-).annotate({
-  description: "Frame id, @label or page path such as / or /settings.",
-});
+)
+  .annotate({
+    description: "Frame id, @label or page path such as / or /settings.",
+  })
+  .pipe(Schema.withDecodingDefaultKey(Effect.succeed(null)));
 
 const ProjectFieldSchema = ProjectIdSchema.annotate({
   description: "Project id from list_projects.",
 });
 
-const StatusFieldSchema = Schema.NullOr(CommentFilterSchema).annotate({
-  description: "open (default: every status but resolved), all, or one status.",
-});
+const StatusFieldSchema = Schema.NullOr(CommentFilterSchema)
+  .annotate({
+    description:
+      "open (default: every status but resolved), all, or one status.",
+  })
+  .pipe(Schema.withDecodingDefaultKey(Effect.succeed(null)));
 
 const listComment = defineAction({
   access: "read",

@@ -1,12 +1,12 @@
-import type { Project, RunSummary } from "@design-studio/contracts";
+import type { Project } from "@design-studio/contracts";
 import { Icon } from "@design-studio/ui";
 import { useEffect, useState } from "react";
 
 import type { AppHealth } from "../../../shared/found-apps.js";
-import { json } from "../../api.js";
 import { formatRelative } from "../../domain/format.js";
 import { homePrefs, type HomeFilter } from "./home-prefs-model.js";
 import { isFolderProject, projectBadge, useThumbnail } from "./project-grid.js";
+import { listRecentRuns } from "./use-last-runs.js";
 
 export { ProjectGrid } from "./project-grid.js";
 
@@ -84,12 +84,9 @@ function useLastRun(project: Project): LastRun | null {
   const [last, setLast] = useState<LastRun | null>(null);
   useEffect(() => {
     let live = true;
-    json<{ runs: RunSummary[] }>(
-      "GET",
-      `/api/projects/${encodeURIComponent(project.id)}/runs?limit=5&light=1`
-    )
-      .then(({ runs }) => {
-        const run = [...runs].sort((a, b) => b.startedAt - a.startedAt)[0];
+    listRecentRuns(project.id, 5)
+      .then((items) => {
+        const run = [...items].sort((a, b) => b.startedAt - a.startedAt)[0];
 
         if (live && run) {
           setLast({

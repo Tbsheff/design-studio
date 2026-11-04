@@ -1,8 +1,4 @@
-import type {
-  PackSummary,
-  Project,
-  RunSummary,
-} from "@design-studio/contracts";
+import type { PackSummary, Project } from "@design-studio/contracts";
 import { shortenHome } from "@design-studio/contracts/folders";
 import { Icon, LazySelect } from "@design-studio/ui";
 import {
@@ -22,7 +18,7 @@ import {
   TYPE_LABELS,
   type ProjectType,
 } from "../../../shared/project-search.js";
-import { api, json, warmProject } from "../../api.js";
+import { api, warmProject } from "../../api.js";
 import { prefetchStudio } from "../../app/screen-preload.js";
 import { formatRelative, formatTime } from "../../domain/format.js";
 import {
@@ -40,6 +36,7 @@ import {
   toNextGridIndex,
   toSortedProjects,
 } from "./index.js";
+import { listRecentRuns } from "./use-last-runs.js";
 
 const SORT_LABELS: Record<HomeSort, string> = {
   recent: "Recent",
@@ -67,10 +64,9 @@ export function useLastRunFailed(project: Project): boolean {
     let pending = runCache.get(key);
 
     if (!pending) {
-      pending = json<{ runs: RunSummary[] }>(
-        "GET",
-        `/api/projects/${encodeURIComponent(project.id)}/runs?limit=1&light=1`
-      ).then(({ runs }) => runs[0]?.status === "failed");
+      pending = listRecentRuns(project.id, 1).then(
+        (items) => items[0]?.status === "failed"
+      );
       pending.catch(() => runCache.delete(key));
       runCache.set(key, pending);
     }

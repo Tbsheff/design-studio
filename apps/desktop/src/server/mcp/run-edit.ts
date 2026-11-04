@@ -7,6 +7,7 @@ import {
 } from "../events/index.js";
 import { withCallOrigin } from "../platform/call-origin/index.js";
 import { isKnownError } from "../platform/errors/index.js";
+import type { ActivityDraft } from "./activity.js";
 import { EditError } from "./edit-guards.js";
 import type { EditDeps } from "./edit-guards.js";
 import { callEditTool, EDIT_TOOLS, RENDER_WAIT_TOOLS } from "./edit-tools.js";
@@ -148,4 +149,92 @@ async function runEdit(
   }
 }
 
-export { argsOf, runEdit };
+const ACTION_WAIT_TOOLS = new Set([
+  ...RENDER_WAIT_TOOLS,
+  "redo",
+  "revert_hunk",
+  "undo",
+]);
+
+const isFailure = (result: unknown): boolean =>
+  (result as { isError?: boolean }).isError === true;
+
+const toFailure = (text: string): unknown => ({
+  content: [{ text, type: "text" }],
+  isError: true,
+});
+
+const toActionActivity = (
+  name: string,
+  args: Record<string, unknown>
+): ActivityDraft | null => {
+  if (typeof args.projectId !== "string") {
+    return null;
+  }
+
+  return {
+    directionId: typeof args.directionId === "string" ? args.directionId : null,
+    projectId: args.projectId,
+    summary: `Ran ${name.replaceAll("_", " ")}.`,
+  };
+};
+
+interface ActionEditInput {
+  readonly call: (args: Record<string, unknown>) => Promise<unknown>;
+  readonly client: string;
+  readonly edits: EditDeps;
+  readonly name: string;
+  readonly raw: unknown;
+}
+
+async function runActionEdit(input: ActionEditInput): Promise<unknown> {
+  const { call, client, edits, name, raw } = input;
+
+  try {
+    const started = Date.now();
+    const split = ACTION_WAIT_TOOLS.has(name)
+      ? splitWait(name, raw)
+      : { args: argsOf(raw), wait: false };
+    const { args, wait } = split;
+    const blocked = await firstVersionRefusal(edits, name, args.projectId);
+
+    if (blocked) {
+      return toFailure(blocked);
+    }
+
+    const result = await withCallOrigin(client, async () =>
+      call(
+        await withLayerSelectors(
+          edits,
+          args,
+          "path" in args,
+          lockOnly(name, args)
+        )
+      )
+    );
+
+    if (isFailure(result)) {
+      return withSaveFailures(result, args.projectId);
+    }
+
+    const draft = toActionActivity(name, args);
+
+    if (draft !== null) {
+      await edits.activity.record(name, client, draft).catch(() => null);
+    }
+
+    const done = wait
+      ? await withRender(result, args.projectId, started)
+      : result;
+
+    return withSaveFailures(done, args.projectId);
+  } catch (error) {
+    if (error instanceof EditError || isKnownError(error)) {
+      return toFailure((error as Error).message);
+    }
+
+    throw error;
+  }
+}
+
+export { argsOf, runActionEdit, runEdit };

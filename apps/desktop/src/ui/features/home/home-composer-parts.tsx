@@ -1,7 +1,6 @@
+import { Icon } from "@design-studio/ui";
 import { useEffect, useId, useRef, useState } from "react";
 import type { ClipboardEvent, DragEvent, FormEvent, ReactNode } from "react";
-
-import { Icon } from "@design-studio/ui";
 
 export const IMAGE_TYPES = [
   "image/png",

@@ -1,3 +1,5 @@
+import { Icon } from "@design-studio/ui";
+import type { IconName } from "@design-studio/ui";
 import { useEffect, useState } from "react";
 
 import type {
@@ -5,8 +7,6 @@ import type {
   ProjectType,
 } from "../../../shared/project-search.js";
 import { api } from "../../api.js";
-import { Icon } from "@design-studio/ui";
-import type { IconName } from "@design-studio/ui";
 
 import "../../styles/project-nav.css";
 

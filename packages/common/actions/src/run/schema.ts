@@ -36,11 +36,17 @@ const AckSchema = Schema.Struct({ ok: Schema.Boolean });
 
 const RunStartedSchema = Schema.Struct({ runId: Schema.String });
 
+const RunRequestSummarySchema = Schema.Struct({
+  canvas: Schema.optionalKey(Schema.Struct({ path: Schema.String })),
+  prompt: Schema.String,
+});
+
 const RunSummarySchema = Schema.Struct({
   directionId: Schema.String,
   finishedAt: Schema.NullOr(Schema.Number),
   id: Schema.String,
   projectId: Schema.String,
+  request: RunRequestSummarySchema,
   startedAt: Schema.Number,
   status: Schema.String,
   title: Schema.optionalKey(Schema.String),

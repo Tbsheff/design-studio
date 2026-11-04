@@ -1,4 +1,5 @@
 import type { Permission } from "@design-studio/actions/_core/permissions";
+
 import { toKeyPrincipal } from "../store/principal.js";
 import type { KeyPrincipal } from "../store/principal.js";
 

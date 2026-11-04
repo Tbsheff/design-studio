@@ -1,6 +1,6 @@
+import { Icon } from "@design-studio/ui";
 import type { RefObject } from "react";
 
-import { Icon } from "@design-studio/ui";
 import {
   type AppChip,
   chipBlocker,

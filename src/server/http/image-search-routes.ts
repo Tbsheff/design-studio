@@ -13,16 +13,15 @@ import type { DirectEditDeps } from "../direct-edit/index.js";
 import { previewOriginOf } from "../direct-edit/index.js";
 import { ImageSearchError } from "../image-search/errors.js";
 import { IMAGE_SEARCH_OFF, isImageSearchOn } from "../image-search/gate.js";
-import {
-  placeImageFields,
-  searchImagesFields,
-  toPlaceInput,
-  toSearchRequest,
-} from "../image-search/input.js";
+import { toPlaceInput, toSearchRequest } from "../image-search/input.js";
 import { placeImage } from "../image-search/place.js";
 import { searchImages } from "../image-search/search.js";
 import type { PlaceTarget } from "../image-search/target.js";
 import { imageSearchEnv } from "../platform/config/index.js";
+import {
+  placeImageFields,
+  searchImagesFields,
+} from "../platform/tool-fields/image-search.js";
 import type { PreviewService } from "../types.js";
 
 interface ImageSearchProjects {

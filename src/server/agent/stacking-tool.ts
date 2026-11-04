@@ -1,16 +1,21 @@
-import { z } from "zod";
+import { Schema } from "effect";
 
+import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
 import type { BreakpointScope } from "../breakpoints/commit.js";
 import type { WrittenFile } from "../direct-edit/commit/batch.js";
 import { writeAtomic } from "../direct-edit/commit/edit-source.js";
 import { DirectEditError } from "../direct-edit/engine/errors.js";
+import {
+  BREAKPOINT_NAME,
+  STACKING_OVERFLOWS,
+  STACKING_POSITIONS,
+  STACKING_VALUE_MAX,
+} from "../stacking/deps.js";
 import { StackingError } from "../stacking/errors.js";
 import { getStacking } from "../stacking/get.js";
 import {
   GET_STACKING_DESCRIPTION,
-  getStackingFields,
   SET_STACKING_DESCRIPTION,
-  setStackingFields,
   toStackingInput,
 } from "../stacking/input.js";
 import { planStacking, toStackingResult } from "../stacking/set.js";
@@ -18,6 +23,8 @@ import type { StackingTarget } from "../stacking/set.js";
 import { refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
 import { targetOf } from "./insert-tool.js";
+import { toOptionalText, toToolInput, toTrimmedText } from "./tool-input.js";
+import type { ToolArgs, ToolData } from "./tool-input.js";
 
 interface ToolContent {
   text: string;
@@ -48,40 +55,85 @@ const ONE_TARGET = "Pass targetSelector or targetSource, not both.";
 const NO_CHANGE =
   "Pass at least one of position, top, right, bottom, left, overflow, overflowX, overflowY or zIndex.";
 
+const BREAKPOINT_NAME_MAX = 64;
+
 const targetInput = {
-  path: z
-    .string()
-    .trim()
-    .max(PATH_MAX)
-    .optional()
-    .describe(
-      "Page path. Leave out for the page of the frame in <canvas-context> (or the entry page)."
-    ),
-  targetSelector: z
-    .string()
-    .trim()
-    .min(1)
-    .max(SELECTOR_MAX)
-    .optional()
-    .describe("CSS selector or layer id of the layer on the live page."),
-  targetSource: z
-    .string()
-    .trim()
-    .max(SOURCE_MAX)
-    .optional()
-    .describe('Or the layer as file:line:col, for example "src/App.tsx:12:7".'),
+  path: toOptionalText(
+    0,
+    PATH_MAX,
+    "Page path. Leave out for the page of the frame in <canvas-context> (or the entry page)."
+  ),
+  targetSelector: toOptionalText(
+    1,
+    SELECTOR_MAX,
+    "CSS selector or layer id of the layer on the live page."
+  ),
+  targetSource: toOptionalText(
+    0,
+    SOURCE_MAX,
+    'Or the layer as file:line:col, for example "src/App.tsx:12:7".'
+  ),
 };
 
-const getStackingInput = { ...targetInput, ...getStackingFields };
+const toOffset = (
+  description: string
+): Schema.optionalKey<Schema.NullOr<Schema.Trim>> =>
+  Schema.optionalKey(
+    Schema.NullOr(toTrimmedText(1, STACKING_VALUE_MAX)).annotate({
+      description,
+    })
+  );
 
-const setStackingInput = { ...targetInput, ...setStackingFields };
+const toOverflow = (
+  description: string
+): Schema.optionalKey<
+  Schema.NullOr<Schema.Literals<typeof STACKING_OVERFLOWS>>
+> =>
+  Schema.optionalKey(
+    Schema.NullOr(Schema.Literals(STACKING_OVERFLOWS)).annotate({ description })
+  );
 
-const getSchema = z.strictObject(getStackingInput);
-const setSchema = z.strictObject(setStackingInput);
+const breakpointField = Schema.optionalKey(
+  toTrimmedText(0, BREAKPOINT_NAME_MAX)
+    .check(Schema.isPattern(BREAKPOINT_NAME))
+    .annotate({
+      description: '"base" (default) or a breakpoint name, for example "md".',
+    })
+);
+
+const getStackingFieldSet = { ...targetInput, breakpoint: breakpointField };
+
+const setStackingFieldSet = {
+  ...targetInput,
+  bottom: toOffset("Bottom offset, for example 0 or 16px. null removes it."),
+  breakpoint: breakpointField,
+  left: toOffset("Left offset, for example 0 or 16px. null removes it."),
+  overflow: toOverflow("Overflow for both axes. null removes it."),
+  overflowX: toOverflow("Overflow on the x axis. null removes it."),
+  overflowY: toOverflow(
+    "Overflow on the y axis, for example auto. null removes it."
+  ),
+  position: Schema.optionalKey(
+    Schema.NullOr(Schema.Literals(STACKING_POSITIONS)).annotate({
+      description: "Position, for example sticky. null removes it.",
+    })
+  ),
+  right: toOffset("Right offset, for example 0 or 16px. null removes it."),
+  top: toOffset("Top offset, for example 0 or 16px. null removes it."),
+  zIndex: toOffset(
+    'z-index: an integer, "auto" or a project token like "--z-header". null removes it.'
+  ),
+};
+
+const getStackingInput = toSdkFieldSet(getStackingFieldSet);
+
+const setStackingInput = toSdkFieldSet(setStackingFieldSet);
 
 const getStackingDescription = GET_STACKING_DESCRIPTION;
-
 const setStackingDescription = SET_STACKING_DESCRIPTION;
+
+const getSchema = toToolInput(getStackingFieldSet);
+const setSchema = toToolInput(setStackingFieldSet);
 
 const reply = (message: string): ToolText => ({
   content: [{ text: message, type: "text" }],
@@ -92,13 +144,8 @@ const refuse = (message: string): ToolText => ({
   isError: true,
 });
 
-const issues = (tool: string, error: z.ZodError): ToolText => {
-  const lines = error.issues.map(
-    (issue) => `${issue.path.join(".") || "input"}: ${issue.message}`
-  );
-
-  return refuse(`${tool}: ${lines.join("; ")}`);
-};
+const issues = (tool: string, error: string): ToolText =>
+  refuse(`${tool}: ${error}`);
 
 const caught = (tool: string, error: Error | null): ToolText => {
   if (error instanceof StackingError || error instanceof DirectEditError) {
@@ -118,12 +165,12 @@ const scopeOf = (deps: DirectToolDeps): BreakpointScope => ({
   workTree: deps.ctx.direction.workTree,
 });
 
-const hasOneTarget = (input: z.output<typeof getSchema>): boolean =>
+const hasOneTarget = (input: ToolData<typeof getSchema>): boolean =>
   Boolean(input.targetSelector) !== Boolean(input.targetSource);
 
 const locate = async (
   deps: DirectToolDeps,
-  input: z.output<typeof getSchema>
+  input: ToolData<typeof getSchema>
 ): Promise<Located> => {
   const target = await targetOf(deps, input);
 
@@ -147,7 +194,7 @@ const locate = async (
 
 const getWith = async (
   deps: DirectToolDeps,
-  input: z.output<typeof getSchema>
+  input: ToolData<typeof getSchema>
 ): Promise<ToolText> => {
   const located = await locate(deps, input);
 
@@ -165,7 +212,7 @@ const getWith = async (
 
 const runGetStacking = async (
   deps: DirectToolDeps,
-  args: z.input<typeof getSchema>
+  args: ToolArgs<typeof getSchema>
 ): Promise<ToolText> => {
   const parsed = getSchema.safeParse(args);
 
@@ -205,7 +252,7 @@ const writeAll = async (
 
 const setWith = async (
   deps: DirectToolDeps,
-  input: z.output<typeof setSchema>
+  input: ToolData<typeof setSchema>
 ): Promise<ToolText> => {
   const stacking = toStackingInput(input);
 
@@ -237,7 +284,7 @@ const setWith = async (
 
 const runSetStacking = async (
   deps: DirectToolDeps,
-  args: z.input<typeof setSchema>
+  args: ToolArgs<typeof setSchema>
 ): Promise<ToolText> => {
   const blocked = refusal(deps.ctx, "set_stacking");
 

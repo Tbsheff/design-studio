@@ -5,35 +5,40 @@ import type {
   SDKMessage,
   query,
 } from "@anthropic-ai/claude-agent-sdk";
-import { z } from "zod";
+import { Schema } from "effect";
 
 import { needsQuestions } from "../../shared/clarify.js";
 import type { ClarifyQuestion } from "../../shared/contracts.js";
 import { extractJson } from "../../shared/extract-json.js";
 import { WIREFRAME_MODEL } from "../../shared/run-levels.js";
+import { toTrimmedText } from "./tool-input.js";
 
 type QueryFn = typeof query;
 
 export const MAX_QUESTIONS = 3;
 const CLARIFY_TIMEOUT_MS = 12_000;
 
-const QuestionSchema = z.object({
-  options: z.array(z.string().trim().min(1).max(60)).min(2).max(4),
-  question: z.string().trim().min(3).max(160),
+const QuestionSchema = Schema.Struct({
+  options: Schema.Array(toTrimmedText(1, 60)).check(
+    Schema.isMinLength(2),
+    Schema.isMaxLength(4)
+  ),
+  question: toTrimmedText(3, 160),
 });
 
-const ReplySchema = z.union([
-  z.array(QuestionSchema),
-  z
-    .object({ questions: z.array(QuestionSchema) })
-    .transform((value) => value.questions),
-]);
+const decodeQuestionList = Schema.decodeUnknownResult(
+  Schema.Array(QuestionSchema)
+);
+
+const decodeQuestionWrapper = Schema.decodeUnknownResult(
+  Schema.Struct({ questions: Schema.Array(QuestionSchema) })
+);
 
 const CLARIFY_SYSTEM = `You help a designer start a design from a short brief. Before the build starts, ask the few questions whose answers change the design the most: audience, the one main action, content or sections, visual tone, data to show. Never ask about things the brief already says. Never ask about tech stack, budget or deadlines.
 Answer with JSON only: an array of at most 3 items, each {"question": "short question", "options": ["2 to 4 short likely answers"]}. Questions under 12 words, options under 5 words, sentence case, no numbering.`;
 
 export function toQuestions(
-  raw: { question: string; options: string[] }[]
+  raw: readonly { question: string; options: readonly string[] }[]
 ): ClarifyQuestion[] {
   return raw.slice(0, MAX_QUESTIONS).map((item, index) => ({
     id: `q${index + 1}`,
@@ -43,7 +48,20 @@ export function toQuestions(
 }
 
 export function parseClarifyReply(text: string): ClarifyQuestion[] {
-  return toQuestions(ReplySchema.parse(extractJson(text)));
+  const json = extractJson(text);
+  const list = decodeQuestionList(json);
+
+  if (list._tag === "Success") {
+    return toQuestions(list.success);
+  }
+
+  const wrapped = decodeQuestionWrapper(json);
+
+  if (wrapped._tag === "Failure") {
+    throw new Error("The clarify reply is not valid.");
+  }
+
+  return toQuestions(wrapped.success.questions);
 }
 
 export function fallbackQuestions(): ClarifyQuestion[] {

@@ -1,6 +1,7 @@
-import { z } from "zod";
+import { Schema } from "effect";
 
 import { MATCH_KINDS } from "../../shared/contracts.js";
+import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
 import { canvasOwner, readCanvasAt } from "../canvas/service.js";
 import { findFrame } from "../canvas/tools.js";
 import { withPagePath } from "../export/source.js";
@@ -16,6 +17,8 @@ import {
   scopeOf,
 } from "../page-probe/layer-ref.js";
 import type { DirectToolDeps } from "./direct-tools.js";
+import { toOptionalText, toToolInput, toTrimmedText } from "./tool-input.js";
+import type { ToolArgs, ToolData } from "./tool-input.js";
 
 type ToolText = Readonly<{
   content: { type: "text"; text: string }[];
@@ -26,34 +29,23 @@ const DEFAULT_VIEWPORT = { height: 900, width: 1440 };
 
 export const SELECT_MATCHING_DESCRIPTION = SELECT_MATCHING_TEXT;
 
-export const selectMatchingShape = {
-  by: z.enum(MATCH_KINDS).describe(MATCH_BY_TEXT),
-  frame: z
-    .string()
-    .trim()
-    .min(1)
-    .max(60)
-    .optional()
-    .describe(
-      "Canvas frame id or @label; its page and size are used. Leave out for the entry page at 1440x900."
-    ),
-  path: z
-    .string()
-    .trim()
-    .max(300)
-    .optional()
-    .describe("Page path instead of the frame page."),
-  selector: z
-    .string()
-    .trim()
-    .min(1)
-    .max(2000)
-    .describe(
-      "The element to match: a layer id from get_layers or a CSS selector."
-    ),
+const selectMatchingFields = {
+  by: Schema.Literals(MATCH_KINDS).annotate({ description: MATCH_BY_TEXT }),
+  frame: toOptionalText(
+    1,
+    60,
+    "Canvas frame id or @label; its page and size are used. Leave out for the entry page at 1440x900."
+  ),
+  path: toOptionalText(0, 300, "Page path instead of the frame page."),
+  selector: toTrimmedText(1, 2000).annotate({
+    description:
+      "The element to match: a layer id from get_layers or a CSS selector.",
+  }),
 };
 
-const schema = z.object(selectMatchingShape).strict();
+export const selectMatchingShape = toSdkFieldSet(selectMatchingFields);
+
+const schema = toToolInput(selectMatchingFields);
 
 function text(message: string, isError = false): ToolText {
   return {
@@ -64,7 +56,7 @@ function text(message: string, isError = false): ToolText {
 
 async function pageOf(
   deps: DirectToolDeps,
-  input: z.output<typeof schema>
+  input: ToolData<typeof schema>
 ): Promise<{
   url: string;
   viewport: { width: number; height: number };
@@ -110,15 +102,12 @@ async function pageOf(
 
 export async function runSelectMatching(
   deps: DirectToolDeps,
-  args: z.input<typeof schema>
+  args: ToolArgs<typeof schema>
 ): Promise<ToolText> {
   const parsed = schema.safeParse(args);
 
   if (!parsed.success) {
-    return text(
-      `select_matching: ${parsed.error.issues.map((issue) => `${issue.path.join(".") || "input"}: ${issue.message}`).join("; ")}`,
-      true
-    );
+    return text(`select_matching: ${parsed.error}`, true);
   }
 
   try {

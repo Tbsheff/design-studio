@@ -7,7 +7,8 @@ import type { CanvasService } from "../canvas/service.js";
 import type { DirectEditDeps } from "../direct-edit/index.js";
 import { PageImportError } from "../page-import/errors.js";
 import { importPage } from "../page-import/import-page.js";
-import { importPageFields, toImportRequest } from "../page-import/input.js";
+import { toImportRequest } from "../page-import/input.js";
+import { importPageFields } from "../platform/tool-fields/page-import.js";
 
 interface PageImportRouteDeps {
   readonly canvas: CanvasService;

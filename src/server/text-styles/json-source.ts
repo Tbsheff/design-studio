@@ -1,13 +1,17 @@
-import { z } from "zod";
+import { Schema } from "effect";
 
 import type { TextStyle, TextStyleProp } from "./deps.js";
 import { tokenJsonFiles } from "./files.js";
 import type { SourceFile } from "./files.js";
 import { makeStyle } from "./style.js";
 
-const jsonValue = z.json();
-
-type JsonValue = z.infer<typeof jsonValue>;
+type JsonValue =
+  | boolean
+  | number
+  | string
+  | readonly JsonValue[]
+  | { [key: string]: JsonValue }
+  | null;
 
 type JsonObject = Record<string, JsonValue>;
 
@@ -23,33 +27,70 @@ const KEYS: [TextStyleProp, string[]][] = [
 
 const MAX_DEPTH = 4;
 
-const objectSchema = z.record(z.string(), jsonValue);
+const isText = Schema.is(Schema.String);
+const isNumber = Schema.is(Schema.Number);
+const isTextList = Schema.is(Schema.Array(Schema.String));
+const isRecord = Schema.is(Schema.Record(Schema.String, Schema.Unknown));
 
-const scalarSchema = z.union([
-  z.string(),
-  z.number().transform(String),
-  z.array(z.string()).transform((parts) => parts.join(", ")),
-]);
+const toObject = (raw: JsonValue | null): JsonObject | null => {
+  if (isRecord(raw) && !Array.isArray(raw)) {
+    return raw as JsonObject;
+  }
 
-const leafSchema = z.union([
-  scalarSchema,
-  z.object({ $value: scalarSchema }).transform((leaf) => leaf.$value),
-  z.object({ value: scalarSchema }).transform((leaf) => leaf.value),
-]);
+  return null;
+};
 
-const groupWithTypography = z.object({ typography: objectSchema });
+const toScalar = (raw: JsonValue | null): string | null => {
+  if (isText(raw)) {
+    return raw;
+  }
 
-const rootSchema = z.union([
-  z.object({ typography: objectSchema }).transform((root) => root.typography),
-  z.object({ font: objectSchema }).transform((root) => root.font),
-  z.object({ text: objectSchema }).transform((root) => root.text),
-]);
+  if (isNumber(raw)) {
+    return String(raw);
+  }
+
+  if (isTextList(raw)) {
+    return raw.join(", ");
+  }
+
+  return null;
+};
+
+const toLeaf = (raw: JsonValue | null): string | null => {
+  const scalar = toScalar(raw);
+
+  if (scalar !== null) {
+    return scalar;
+  }
+
+  const entry = toObject(raw);
+
+  if (entry === null) {
+    return null;
+  }
+
+  return toScalar(entry["$value"] ?? null) ?? toScalar(entry["value"] ?? null);
+};
+
+const ROOT_KEYS = ["typography", "font", "text"] as const;
+
+const toRoot = (raw: JsonObject): JsonObject | null => {
+  for (const key of ROOT_KEYS) {
+    const found = toObject(raw[key] ?? null);
+
+    if (found) {
+      return found;
+    }
+  }
+
+  return null;
+};
 
 const unwrap = (raw: JsonObject): JsonObject => {
-  const inner = objectSchema.safeParse(raw["$value"] ?? raw["value"]);
+  const inner = toObject(raw["$value"] ?? raw["value"] ?? null);
 
-  if (inner.success) {
-    return inner.data;
+  if (inner) {
+    return inner;
   }
 
   return raw;
@@ -61,10 +102,10 @@ const valuesOf = (raw: JsonObject): StyleValues => {
 
   for (const [prop, keys] of KEYS) {
     const key = keys.find((candidate) => candidate in entry) ?? "";
-    const parsed = leafSchema.safeParse(entry[key]);
+    const parsed = toLeaf(entry[key] ?? null);
 
-    if (parsed.success) {
-      values[prop] = parsed.data;
+    if (parsed !== null) {
+      values[prop] = parsed;
     }
   }
 
@@ -87,14 +128,14 @@ interface Walk {
 }
 
 const visit = (walk: Walk, at: Pending, key: string, raw: JsonValue): void => {
-  const value = objectSchema.safeParse(raw);
+  const value = toObject(raw);
 
-  if (!value.success || key.startsWith("$")) {
+  if (value === null || key.startsWith("$")) {
     return;
   }
 
   const entryName = [at.prefix, key].filter((part) => part !== "").join("-");
-  const values = valuesOf(value.data);
+  const values = valuesOf(value);
 
   if (hasText(values)) {
     walk.styles.push(
@@ -112,7 +153,7 @@ const visit = (walk: Walk, at: Pending, key: string, raw: JsonValue): void => {
   if (at.depth < MAX_DEPTH) {
     walk.pending.push({
       depth: at.depth + 1,
-      group: value.data,
+      group: value,
       prefix: entryName,
     });
   }
@@ -136,10 +177,10 @@ const collect = (file: SourceFile, root: JsonObject): TextStyle[] => {
 
 const nestedTypography = (root: JsonObject): JsonObject | null => {
   for (const value of Object.values(root)) {
-    const nested = groupWithTypography.safeParse(value);
+    const typography = toObject(toObject(value)?.["typography"] ?? null);
 
-    if (nested.success) {
-      return nested.data.typography;
+    if (typography) {
+      return typography;
     }
   }
 
@@ -151,10 +192,10 @@ const typographyOf = (root: JsonObject | null): JsonObject | null => {
     return null;
   }
 
-  const direct = rootSchema.safeParse(root);
+  const direct = toRoot(root);
 
-  if (direct.success) {
-    return direct.data;
+  if (direct) {
+    return direct;
   }
 
   return nestedTypography(root);
@@ -162,13 +203,7 @@ const typographyOf = (root: JsonObject | null): JsonObject | null => {
 
 const parseJson = (text: string): JsonObject | null => {
   try {
-    const parsed = objectSchema.safeParse(JSON.parse(text));
-
-    if (parsed.success) {
-      return parsed.data;
-    }
-
-    return null;
+    return toObject(JSON.parse(text) as JsonValue);
   } catch {
     return null;
   }
@@ -190,6 +225,6 @@ const tokenJsonStyles = async (workTree: string): Promise<TextStyle[]> => {
   return files.flatMap((file) => fileStyles(file));
 };
 
-export { objectSchema, parseJson, tokenJsonStyles };
+export { parseJson, toObject, tokenJsonStyles };
 
 export type { JsonObject };

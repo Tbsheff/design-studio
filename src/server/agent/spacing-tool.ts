@@ -1,8 +1,15 @@
-import { z } from "zod";
+import { Schema } from "effect";
 
+import {
+  SPACING_PROPERTIES,
+  SPACING_PX_MAX,
+  SPACING_SIDES,
+  SPACING_TOKEN,
+} from "../../shared/spacing.js";
+import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
 import type { WrittenFile } from "../direct-edit/commit/batch.js";
 import { writeAtomic } from "../direct-edit/commit/edit-source.js";
-import { spacingFields, spacingInputOf } from "../mcp/spacing-tools.js";
+import { spacingInputOf } from "../mcp/spacing-tools.js";
 import { describeElements } from "../page-probe/element.js";
 import type { SpacingScope } from "../spacing/commit.js";
 import { getSpacing } from "../spacing/get.js";
@@ -13,6 +20,14 @@ import { refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
 import { targetOf } from "./insert-tool.js";
 import { editPageUrl } from "./run-target.js";
+import {
+  toDefaulted,
+  toOptional,
+  toOptionalText,
+  toToolInput,
+  toTrimmedText,
+} from "./tool-input.js";
+import type { ToolArgs, ToolData } from "./tool-input.js";
 
 interface ToolContent {
   text: string;
@@ -36,38 +51,66 @@ const PATH_MAX = 300;
 const RUN_NOTE =
   "The run saves this change in its version, like your file edits.";
 
+const TOKEN_MAX = 64;
+
 const targetInput = {
-  path: z
-    .string()
-    .trim()
-    .max(PATH_MAX)
-    .optional()
-    .describe(
-      "Page path. Leave out for the page of the frame in <canvas-context> (or the entry page)."
-    ),
-  targetSelector: z
-    .string()
-    .trim()
-    .min(1)
-    .max(SELECTOR_MAX)
-    .optional()
-    .describe("CSS selector or layer id of the element on the live page."),
-  targetSource: z
-    .string()
-    .trim()
-    .max(SOURCE_MAX)
-    .optional()
-    .describe(
-      'Or the element as file:line:col, for example "src/App.tsx:12:7".'
-    ),
+  path: toOptionalText(
+    0,
+    PATH_MAX,
+    "Page path. Leave out for the page of the frame in <canvas-context> (or the entry page)."
+  ),
+  targetSelector: toOptionalText(
+    1,
+    SELECTOR_MAX,
+    "CSS selector or layer id of the element on the live page."
+  ),
+  targetSource: toOptionalText(
+    0,
+    SOURCE_MAX,
+    'Or the element as file:line:col, for example "src/App.tsx:12:7".'
+  ),
 };
 
-const getSpacingInput = { ...targetInput };
+const spacingFields = {
+  property: Schema.Literals(SPACING_PROPERTIES).annotate({
+    description: "padding, margin, gap, row-gap or column-gap.",
+  }),
+  side: toDefaulted(
+    Schema.Literals(SPACING_SIDES),
+    "all" as const,
+    "all, x, y, top, right, bottom or left. gap takes all, x (column) or y (row). row-gap and column-gap take all."
+  ),
+  snap: toDefaulted(
+    Schema.Boolean,
+    false,
+    "Snap value to the nearest spacing token or scale step."
+  ),
+  token: Schema.optionalKey(
+    toTrimmedText(0, TOKEN_MAX)
+      .check(Schema.isPattern(SPACING_TOKEN))
+      .annotate({
+        description:
+          'Spacing token, for example "4" (Tailwind scale step), "md" or "--spacing-md".',
+      })
+  ),
+  value: toOptional(
+    Schema.Number.check(
+      Schema.isBetween({ maximum: SPACING_PX_MAX, minimum: -SPACING_PX_MAX })
+    ),
+    "Value in px. Negative only for margin."
+  ),
+};
 
-const setSpacingInput = { ...targetInput, ...spacingFields };
+const getSpacingFields = { ...targetInput };
 
-const getSchema = z.strictObject(getSpacingInput);
-const setSchema = z.strictObject(setSpacingInput);
+const setSpacingFields = { ...targetInput, ...spacingFields };
+
+const getSpacingInput = toSdkFieldSet(getSpacingFields);
+
+const setSpacingInput = toSdkFieldSet(setSpacingFields);
+
+const getSchema = toToolInput(getSpacingFields);
+const setSchema = toToolInput(setSpacingFields);
 
 const reply = (message: string): ToolText => ({
   content: [{ text: message, type: "text" }],
@@ -78,13 +121,8 @@ const refuse = (message: string): ToolText => ({
   isError: true,
 });
 
-const issues = (tool: string, error: z.ZodError): ToolText => {
-  const lines = error.issues.map(
-    (issue) => `${issue.path.join(".") || "input"}: ${issue.message}`
-  );
-
-  return refuse(`${tool}: ${lines.join("; ")}`);
-};
+const issues = (tool: string, error: string): ToolText =>
+  refuse(`${tool}: ${error}`);
 
 const caught = (tool: string, error: Error | null): ToolText => {
   if (error instanceof Error) {
@@ -107,7 +145,7 @@ const scopeOf = (deps: DirectToolDeps): SpacingScope => ({
 
 const sourceOf = async (
   deps: DirectToolDeps,
-  input: z.output<typeof getSchema>
+  input: ToolData<typeof getSchema>
 ): Promise<Located> => {
   const target = await targetOf(deps, input);
 
@@ -134,7 +172,7 @@ const sourceOf = async (
 
 const elementOf = async (
   deps: DirectToolDeps,
-  input: z.output<typeof getSchema>
+  input: ToolData<typeof getSchema>
 ): Promise<SpacingElement | null> => {
   if (!input.targetSelector || !deps.ctx.previewUrl) {
     return null;
@@ -155,7 +193,7 @@ const elementOf = async (
 
 const getWith = async (
   deps: DirectToolDeps,
-  input: z.output<typeof getSchema>
+  input: ToolData<typeof getSchema>
 ): Promise<ToolText> => {
   const located = await sourceOf(deps, input);
 
@@ -171,7 +209,7 @@ const getWith = async (
 
 const runGetSpacing = async (
   deps: DirectToolDeps,
-  args: z.input<typeof getSchema>
+  args: ToolArgs<typeof getSchema>
 ): Promise<ToolText> => {
   const parsed = getSchema.safeParse(args);
 
@@ -211,7 +249,7 @@ const writeAll = async (
 
 const setWith = async (
   deps: DirectToolDeps,
-  input: z.output<typeof setSchema>
+  input: ToolData<typeof setSchema>
 ): Promise<ToolText> => {
   const located = await sourceOf(deps, input);
 
@@ -237,7 +275,7 @@ const setWith = async (
 
 const runSetSpacing = async (
   deps: DirectToolDeps,
-  args: z.input<typeof setSchema>
+  args: ToolArgs<typeof setSchema>
 ): Promise<ToolText> => {
   const blocked = refusal(deps.ctx, "set_spacing");
 

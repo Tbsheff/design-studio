@@ -1,16 +1,16 @@
 import { readFile } from "node:fs/promises";
 
-import { z } from "zod";
-
 import {
   COMPARE_TO_REFERENCE_TEXT,
   plainAttachmentName,
 } from "../../shared/reference.js";
+import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
 import { scoreOutput } from "../mcp/reference-tools.js";
 import type { AgentRunContext, PreviewService } from "../types.js";
 import { compareToReference, referenceAttachment } from "./reference-check.js";
 import { resolveShotTarget } from "./run-target.js";
 import type { TargetDeps } from "./run-target.js";
+import { toOptionalText, toToolInput } from "./tool-input.js";
 
 type ToolResult = Readonly<{
   content: (
@@ -20,32 +20,23 @@ type ToolResult = Readonly<{
   isError?: boolean;
 }>;
 
-export const compareReferenceShape = {
-  attachment: z
-    .string()
-    .trim()
-    .min(1)
-    .max(300)
-    .optional()
-    .describe(
-      "Name of an attached image to compare with. Leave out for the image the user marked as the reference."
-    ),
-  frame: z
-    .string()
-    .trim()
-    .min(1)
-    .max(80)
-    .optional()
-    .describe(
-      "Frame id or @label from canvas_list. Leave out for the frame of this run."
-    ),
-  path: z
-    .string()
-    .trim()
-    .max(500)
-    .optional()
-    .describe("Page path instead of the frame page."),
+const compareReferenceFields = {
+  attachment: toOptionalText(
+    1,
+    300,
+    "Name of an attached image to compare with. Leave out for the image the user marked as the reference."
+  ),
+  frame: toOptionalText(
+    1,
+    80,
+    "Frame id or @label from canvas_list. Leave out for the frame of this run."
+  ),
+  path: toOptionalText(0, 500, "Page path instead of the frame page."),
 };
+
+export const compareReferenceShape = toSdkFieldSet(compareReferenceFields);
+
+const compareReferenceInput = toToolInput(compareReferenceFields);
 
 export const COMPARE_REFERENCE_DESCRIPTION = `${COMPARE_TO_REFERENCE_TEXT.replace("Compare a canvas frame with a reference picture", "Compare a canvas frame with the reference picture the user attached")} Returns the diff sheet as an image too. Use it after you rebuild a screenshot or mock, and again after each fix.`;
 
@@ -90,14 +81,10 @@ export async function runCompareToReference(
     path?: string | undefined;
   }
 ): Promise<ToolResult> {
-  const parsed = z.object(compareReferenceShape).strict().safeParse(args);
+  const parsed = compareReferenceInput.safeParse(args);
 
   if (!parsed.success) {
-    return failed(
-      parsed.error.issues
-        .map((issue) => `${issue.path.join(".") || "input"}: ${issue.message}`)
-        .join("; ")
-    );
+    return failed(parsed.error);
   }
 
   const attachment = pickAttachment(deps.ctx, parsed.data.attachment);

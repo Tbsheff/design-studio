@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { Schema } from "effect";
 
 import type { SelectionContext } from "../../shared/contracts.js";
 import {
@@ -7,6 +7,7 @@ import {
   TEXT_STYLE_NAME,
   TEXT_STYLE_QUERY_MAX,
 } from "../../shared/text-styles.js";
+import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
 import type { WrittenFile } from "../direct-edit/commit/batch.js";
 import { writeAtomic } from "../direct-edit/index.js";
 import { describeElements } from "../page-probe/element.js";
@@ -22,6 +23,13 @@ import { refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
 import { targetOf } from "./insert-tool.js";
 import { editPageUrl } from "./run-target.js";
+import {
+  toDefaulted,
+  toOptionalText,
+  toToolInput,
+  toTrimmedText,
+} from "./tool-input.js";
+import type { ToolArgs, ToolData } from "./tool-input.js";
 
 interface ToolContent {
   text: string;
@@ -41,81 +49,73 @@ type Probed =
 const SELECTOR_MAX = 2000;
 const SOURCE_MAX = 1100;
 const PATH_MAX = 300;
+const STYLE_NAME_MAX = 64;
 
 const RUN_NOTE =
   "The run saves this change in its version, like your file edits.";
 
-const pathField = z
-  .string()
-  .trim()
-  .max(PATH_MAX)
-  .optional()
-  .describe(
-    "Page path. Leave out for the page of the frame in <canvas-context> (or the entry page)."
-  );
+const pathField = toOptionalText(
+  0,
+  PATH_MAX,
+  "Page path. Leave out for the page of the frame in <canvas-context> (or the entry page)."
+);
 
-const selectorField = z
-  .string()
-  .trim()
-  .min(1)
-  .max(SELECTOR_MAX)
-  .optional()
-  .describe("CSS selector or layer id of the text element on the live page.");
+const selectorField = toOptionalText(
+  1,
+  SELECTOR_MAX,
+  "CSS selector or layer id of the text element on the live page."
+);
 
-const listTextStylesInput = {
-  limit: z
-    .number()
-    .int()
-    .min(1)
-    .max(TEXT_STYLE_LIST_MAX)
-    .default(TEXT_STYLE_LIST_DEFAULT)
-    .describe(`Most styles to return, up to ${TEXT_STYLE_LIST_MAX}.`),
-  query: z
-    .string()
-    .trim()
-    .max(TEXT_STYLE_QUERY_MAX)
-    .optional()
-    .describe('Part of a style name, for example "heading".'),
+const styleNameText = toTrimmedText(0, STYLE_NAME_MAX).check(
+  Schema.isPattern(TEXT_STYLE_NAME)
+);
+
+const listTextStylesFields = {
+  limit: toDefaulted(
+    Schema.Int.check(
+      Schema.isBetween({ maximum: TEXT_STYLE_LIST_MAX, minimum: 1 })
+    ),
+    TEXT_STYLE_LIST_DEFAULT,
+    `Most styles to return, up to ${TEXT_STYLE_LIST_MAX}.`
+  ),
+  query: toOptionalText(
+    0,
+    TEXT_STYLE_QUERY_MAX,
+    'Part of a style name, for example "heading".'
+  ),
 };
 
-const applyTextStyleInput = {
+const applyTextStyleFields = {
   path: pathField,
-  style: z
-    .string()
-    .trim()
-    .regex(TEXT_STYLE_NAME)
-    .describe('Text style name from list_text_styles, for example "xl".'),
+  style: styleNameText.annotate({
+    description: 'Text style name from list_text_styles, for example "xl".',
+  }),
   targetSelector: selectorField,
-  targetSource: z
-    .string()
-    .trim()
-    .max(SOURCE_MAX)
-    .optional()
-    .describe(
-      'Or the element as file:line:col, for example "src/App.tsx:12:7".'
-    ),
+  targetSource: toOptionalText(
+    0,
+    SOURCE_MAX,
+    'Or the element as file:line:col, for example "src/App.tsx:12:7".'
+  ),
 };
 
-const createTextStyleInput = {
-  name: z
-    .string()
-    .trim()
-    .regex(TEXT_STYLE_NAME)
-    .describe('New style name, for example "card-title".'),
+const createTextStyleFields = {
+  name: styleNameText.annotate({
+    description: 'New style name, for example "card-title".',
+  }),
   path: pathField,
-  targetSelector: z
-    .string()
-    .trim()
-    .min(1)
-    .max(SELECTOR_MAX)
-    .describe(
-      "CSS selector or layer id of the element to copy text props from."
-    ),
+  targetSelector: toTrimmedText(1, SELECTOR_MAX).annotate({
+    description:
+      "CSS selector or layer id of the element to copy text props from.",
+  }),
 };
 
-const listSchema = z.strictObject(listTextStylesInput);
-const applySchema = z.strictObject(applyTextStyleInput);
-const createSchema = z.strictObject(createTextStyleInput);
+const listTextStylesInput = toSdkFieldSet(listTextStylesFields);
+const applyTextStyleInput = toSdkFieldSet(applyTextStyleFields);
+const createTextStyleInput = toSdkFieldSet(createTextStyleFields);
+
+const listSchema = toToolInput(listTextStylesFields);
+const applySchema = toToolInput(applyTextStyleFields);
+const createSchema = toToolInput(createTextStyleFields);
 
 const reply = (message: string): ToolText => ({
   content: [{ text: message, type: "text" }],
@@ -126,13 +126,8 @@ const refuse = (message: string): ToolText => ({
   isError: true,
 });
 
-const issues = (tool: string, error: z.ZodError): ToolText => {
-  const lines = error.issues.map(
-    (issue) => `${issue.path.join(".") || "input"}: ${issue.message}`
-  );
-
-  return refuse(`${tool}: ${lines.join("; ")}`);
-};
+const issues = (tool: string, error: string): ToolText =>
+  refuse(`${tool}: ${error}`);
 
 const failure = (tool: string, error: Error | string): ToolText => {
   if (error instanceof Error) {
@@ -176,7 +171,7 @@ const createdText = (plan: TextStyleCreatePlan): string =>
 
 const runListTextStyles = async (
   deps: DirectToolDeps,
-  args: z.input<typeof listSchema>
+  args: ToolArgs<typeof listSchema>
 ): Promise<ToolText> => {
   const parsed = listSchema.safeParse(args);
 
@@ -202,7 +197,7 @@ const runListTextStyles = async (
 
 const applyWith = async (
   deps: DirectToolDeps,
-  input: z.output<typeof applySchema>
+  input: ToolData<typeof applySchema>
 ): Promise<ToolText> => {
   const target = await targetOf(deps, input);
 
@@ -239,7 +234,7 @@ const applyWith = async (
 
 const runApplyTextStyle = async (
   deps: DirectToolDeps,
-  args: z.input<typeof applySchema>
+  args: ToolArgs<typeof applySchema>
 ): Promise<ToolText> => {
   const blocked = refusal(deps.ctx, "apply_text_style");
 
@@ -272,7 +267,7 @@ const runApplyTextStyle = async (
 
 const probeElement = async (
   deps: DirectToolDeps,
-  input: z.output<typeof createSchema>
+  input: ToolData<typeof createSchema>
 ): Promise<Probed> => {
   if (!deps.ctx.previewUrl) {
     return {
@@ -300,7 +295,7 @@ const probeElement = async (
 
 const createWith = async (
   deps: DirectToolDeps,
-  input: z.output<typeof createSchema>
+  input: ToolData<typeof createSchema>
 ): Promise<ToolText> => {
   const probed = await probeElement(deps, input);
 
@@ -324,7 +319,7 @@ const createWith = async (
 
 const runCreateTextStyle = async (
   deps: DirectToolDeps,
-  args: z.input<typeof createSchema>
+  args: ToolArgs<typeof createSchema>
 ): Promise<ToolText> => {
   const blocked = refusal(deps.ctx, "create_text_style");
 

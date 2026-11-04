@@ -1,13 +1,15 @@
 import path from "node:path";
 
-import { z } from "zod";
+import { Schema } from "effect";
 
 import { describeComment, filterComments } from "../../shared/comments.js";
 import type { CommentFilter } from "../../shared/comments.js";
 import type { CommentStatus, DesignComment } from "../../shared/contracts.js";
+import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
 import { canvasFrameOf } from "../comments/frame.js";
 import type { CommentStore } from "../store/comments.js";
 import type { AgentRunContext } from "../types.js";
+import { toOptional, toOptionalText } from "./tool-input.js";
 import { wrapUntrusted } from "./user-message.js";
 
 export const COMMENT_STATUSES = [
@@ -20,26 +22,28 @@ export const COMMENT_STATUSES = [
   "orphaned",
 ] as const satisfies readonly (CommentFilter | CommentStatus)[];
 
-export const listCommentsShape = {
-  frame: z
-    .string()
-    .trim()
-    .max(300)
-    .optional()
-    .describe(
-      "Frame id, @label or page path such as / or /settings. Comments made before frames were recorded count as the entry page."
-    ),
-  status: z
-    .enum(COMMENT_STATUSES)
-    .optional()
-    .describe("open (default: every status but resolved), all, or one status."),
+const listCommentsFields = {
+  frame: toOptionalText(
+    0,
+    300,
+    "Frame id, @label or page path such as / or /settings. Comments made before frames were recorded count as the entry page."
+  ),
+  status: toOptional(
+    Schema.Literals(COMMENT_STATUSES),
+    "open (default: every status but resolved), all, or one status."
+  ),
 };
 
-export const resolveCommentShape = {
-  comment: z
-    .union([z.string().regex(/^[A-Za-z0-9_-]{1,64}$/), z.number().int().min(1)])
-    .describe("Comment id, or its number (#3 is 3)."),
+const resolveCommentFields = {
+  comment: Schema.Union([
+    Schema.String.check(Schema.isPattern(/^[A-Za-z0-9_-]{1,64}$/u)),
+    Schema.Int.check(Schema.isGreaterThanOrEqualTo(1)),
+  ]).annotate({ description: "Comment id, or its number (#3 is 3)." }),
 };
+
+export const listCommentsShape = toSdkFieldSet(listCommentsFields);
+
+export const resolveCommentShape = toSdkFieldSet(resolveCommentFields);
 
 interface CommentToolDeps {
   ctx: AgentRunContext;

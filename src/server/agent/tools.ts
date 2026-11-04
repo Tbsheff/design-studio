@@ -5,7 +5,7 @@ import type {
   McpSdkServerConfigWithInstance,
   query,
 } from "@anthropic-ai/claude-agent-sdk";
-import { z } from "zod";
+import { Schema } from "effect";
 
 import { FLOW_MAX_DEPTH } from "../../shared/route-flow.js";
 import type { FlowInput } from "../../shared/route-flow.js";
@@ -16,6 +16,7 @@ import {
 } from "../../shared/run-levels.js";
 import type { ResolvedRunConfig } from "../../shared/run-levels.js";
 import { AGENT_OPS, buildAgentTools } from "../agent-tools/registry.js";
+import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
 import {
   FRAME_STATES_NOTE,
   applyFrameSession,
@@ -43,13 +44,7 @@ import {
 } from "../canvas/links/link-tools.js";
 import type { EditLinksArgs, LinkProbe } from "../canvas/links/link-tools.js";
 import type { CanvasService } from "../canvas/service.js";
-import {
-  canvasList,
-  canvasPlace,
-  canvasPoint,
-  frameRef,
-  placeSchema,
-} from "../canvas/tools.js";
+import { canvasList, canvasPlace, canvasPoint } from "../canvas/tools.js";
 import type { CanvasToolContext, PlaceSpec } from "../canvas/tools.js";
 import { checkDesignSystem, describeCheck } from "../design-system/check.js";
 import { prepareShip } from "../git/ship-prepare.js";
@@ -81,6 +76,16 @@ import {
   runSetBreakpointStyle,
   setBreakpointStyleInput,
 } from "./breakpoints-tool.js";
+import {
+  canvasPlaceInput,
+  canvasPointInput,
+  doctorInput,
+  frameSessionInput,
+  frameStateInput,
+  routeLinkInput,
+  toFlowInput,
+  toTweaksInput,
+} from "./canvas-tool-fields.js";
 import {
   budgetLine,
   buildCheckReport,
@@ -121,7 +126,7 @@ import {
   runCritic,
 } from "./critic.js";
 import {
-  editElementShape,
+  editElementFields,
   runEditElement,
   runSetToken,
   setTokenShape,
@@ -240,6 +245,14 @@ import {
 } from "./text-style-tool.js";
 import { TOOL_HELP, TOOL_SHORT } from "./tool-help.js";
 import type { StudioToolName } from "./tool-help.js";
+import {
+  toDefaulted,
+  toOptional,
+  toOptionalInt,
+  toOptionalFlag,
+  toOptionalText,
+  toTrimmedText,
+} from "./tool-input.js";
 import { HELP_TOOL, studioToolsFor } from "./tool-sets.js";
 import type { CriticImage, RunToolState } from "./types.js";
 import {
@@ -274,38 +287,60 @@ type QueryFn = typeof query;
 const TWEAK_CONTROLS_NOTE =
   "Each control: {id, label, cssVar, type: range {min, max, step?, unit?, default: number} | color {default} | toggle {on, off, default: boolean} | select {options: [{label, value}], default}}.";
 
-const agentEditElementShape = {
-  ...editElementShape,
-  style: z
-    .record(z.string(), z.union([z.string(), z.number(), z.null()]))
-    .optional()
-    .describe(
-      "CSS properties to set, kebab-case or camelCase keys; null removes one. Tailwind projects get theme classes."
+const agentEditElementShape = toSdkFieldSet({
+  ...editElementFields,
+  style: toOptional(
+    Schema.Record(
+      Schema.String,
+      Schema.Union([Schema.String, Schema.Number, Schema.Null])
     ),
+    "CSS properties to set, kebab-case or camelCase keys; null removes one. Tailwind projects get theme classes."
+  ),
+});
+
+const TARGET_FIELDS = {
+  frame: toOptionalText(
+    1,
+    60,
+    "Canvas frame id or @label: render its page with its frame state. Leave out for the frame from <canvas-context>."
+  ),
+  path: toOptionalText(
+    0,
+    300,
+    "Page path instead of the frame page, such as /settings or about.html."
+  ),
+  state: Schema.optionalKey(
+    Schema.String.check(Schema.isPattern(/^[a-z][a-z0-9-]{0,23}$/u)).annotate({
+      description:
+        "Attached apps: frame state id (default, session, empty, loading, error or a mock id) instead of the frame state.",
+    })
+  ),
 };
 
-const TARGET_SHAPE = {
-  frame: frameRef
-    .optional()
-    .describe(
-      "Canvas frame id or @label: render its page with its frame state. Leave out for the frame from <canvas-context>."
-    ),
-  path: z
-    .string()
-    .trim()
-    .max(300)
-    .optional()
-    .describe(
-      "Page path instead of the frame page, such as /settings or about.html."
-    ),
-  state: z
-    .string()
-    .regex(/^[a-z][a-z0-9-]{0,23}$/)
-    .optional()
-    .describe(
-      "Attached apps: frame state id (default, session, empty, loading, error or a mock id) instead of the frame state."
-    ),
-};
+const TARGET_SHAPE = toSdkFieldSet(TARGET_FIELDS);
+
+const SCREENSHOT_SHAPE = toSdkFieldSet({
+  ...TARGET_FIELDS,
+  from: toDefaulted(
+    Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
+    0,
+    "Page y offset in px where the first image starts."
+  ),
+  screen: toOptionalInt(
+    1,
+    12,
+    "Screen number from the render_check screens list: a view inside a multi-view page, a canvas frame or an app route frame. Overrides frame and path."
+  ),
+  theme: toDefaulted(
+    Schema.Literals(["light", "dark"]),
+    "light" as const,
+    'dark sets data-theme="dark" and the .dark class on <html> before the shot, so tokens.css uses the dark values.'
+  ),
+  viewport: toOptional(
+    Schema.Literals(["desktop", "mobile", "tablet"]),
+    "Render size. Leave out for the frame size (desktop when there is no frame)."
+  ),
+});
 
 export interface StudioToolDeps {
   preview: PreviewService;
@@ -1112,36 +1147,7 @@ export async function createStudioMcpServer(
   const screenshot = tool(
     "screenshot",
     TOOL_SHORT.screenshot,
-    {
-      ...TARGET_SHAPE,
-      from: z
-        .number()
-        .int()
-        .min(0)
-        .default(0)
-        .describe("Page y offset in px where the first image starts."),
-      screen: z
-        .number()
-        .int()
-        .min(1)
-        .max(12)
-        .optional()
-        .describe(
-          "Screen number from the render_check screens list: a view inside a multi-view page, a canvas frame or an app route frame. Overrides frame and path."
-        ),
-      theme: z
-        .enum(["light", "dark"])
-        .default("light")
-        .describe(
-          'dark sets data-theme="dark" and the .dark class on <html> before the shot, so tokens.css uses the dark values.'
-        ),
-      viewport: z
-        .enum(["desktop", "mobile", "tablet"])
-        .optional()
-        .describe(
-          "Render size. Leave out for the frame size (desktop when there is no frame)."
-        ),
-    },
+    SCREENSHOT_SHAPE,
     (args) => takeScreenshot(deps, counters, args),
     { annotations: { readOnlyHint: true } }
   );
@@ -1165,12 +1171,7 @@ export async function createStudioMcpServer(
   const defineTweaksTool = tool(
     "define_tweaks",
     TOOL_SHORT.define_tweaks,
-    {
-      controls: z
-        .array(z.record(z.string(), z.unknown()))
-        .max(12)
-        .describe(TWEAK_CONTROLS_NOTE),
-    },
+    toTweaksInput(TWEAK_CONTROLS_NOTE),
     (args) => runDefineTweaks(deps, args.controls)
   );
 
@@ -1193,17 +1194,14 @@ export async function createStudioMcpServer(
   const canvasPlaceTool = tool(
     "canvas_place",
     TOOL_SHORT.canvas_place,
-    { frames: z.array(placeSchema).min(1).max(12) },
+    canvasPlaceInput,
     (args) => runCanvasPlace(deps, args.frames)
   );
 
   const canvasPointTool = tool(
     "canvas_point",
     TOOL_SHORT.canvas_point,
-    {
-      frame: frameRef.describe("Frame id or @label."),
-      selector: z.string().max(400).optional(),
-    },
+    canvasPointInput,
     (args) => runCanvasPoint(deps, args),
     { annotations: { readOnlyHint: true } }
   );
@@ -1234,36 +1232,21 @@ export async function createStudioMcpServer(
   const setFrameStateTool = tool(
     "set_frame_state",
     TOOL_SHORT.set_frame_state,
-    {
-      frame: frameRef.describe("Frame id or @label."),
-      mock: z
-        .object({
-          name: z.string().max(40).optional(),
-          rules: z.array(z.record(z.string(), z.unknown())).max(40).optional(),
-          signedIn: z.boolean().optional(),
-        })
-        .optional(),
-      state: z.string().regex(/^[a-z][a-z0-9-]{0,23}$/),
-    },
+    frameStateInput,
     (args) => runSetFrameState(deps, args)
   );
 
   const setFrameSessionTool = tool(
     "set_frame_session",
     TOOL_SHORT.set_frame_session,
-    {
-      forgetCookies: z.boolean().optional(),
-      user: z
-        .object({ name: z.string().max(80), email: z.string().max(120) })
-        .optional(),
-    },
+    frameSessionInput,
     (args) => runSetFrameSession(deps, args)
   );
 
   const listRouteLinksTool = tool(
     "list_route_links",
     TOOL_SHORT.list_route_links,
-    { route: z.string().min(1).max(300) },
+    routeLinkInput,
     (args) => runListRouteLinks(deps, args.route),
     { annotations: { readOnlyHint: true } }
   );
@@ -1271,12 +1254,7 @@ export async function createStudioMcpServer(
   const addFlowTool = tool(
     "add_flow",
     TOOL_SHORT.add_flow,
-    {
-      depth: z.number().int().min(0).max(FLOW_MAX_DEPTH).optional(),
-      from: z.string().min(1).max(300).optional(),
-      params: z.record(z.string(), z.string().max(80)).optional(),
-      routes: z.array(z.string().min(1).max(300)).max(12).optional(),
-    },
+    toFlowInput(FLOW_MAX_DEPTH),
     (args) => runAddFlow(deps, args)
   );
 
@@ -1605,7 +1583,7 @@ export async function createStudioMcpServer(
   const appDoctorTool = tool(
     "app_doctor",
     TOOL_SHORT.app_doctor,
-    { fresh: z.boolean().optional() },
+    doctorInput,
     (args) => runAppDoctor(deps, args.fresh === true),
     { annotations: { readOnlyHint: true } }
   );

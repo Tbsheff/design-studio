@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { Schema } from "effect";
 
 import type { InsertTarget } from "../../shared/insert.js";
 import {
@@ -7,6 +7,7 @@ import {
   VECTOR_PATH_MAX,
 } from "../../shared/vector.js";
 import type { VectorBox, VectorRequest } from "../../shared/vector.js";
+import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
 import { planVector } from "../direct-edit/commit/vector-ops.js";
 import { writeAtomic } from "../direct-edit/index.js";
 import { describeElements } from "../page-probe/element.js";
@@ -14,57 +15,66 @@ import { refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
 import { targetOf } from "./insert-tool.js";
 import { editPageUrl } from "./run-target.js";
+import {
+  toDefaulted,
+  toOptional,
+  toOptionalText,
+  toToolInput,
+  toTrimmedText,
+} from "./tool-input.js";
+import type { ToolArgs } from "./tool-input.js";
 
 type ToolText = Readonly<{
   content: { type: "text"; text: string }[];
   isError?: boolean;
 }>;
 
-const color = z.string().trim().max(100).regex(VECTOR_COLOR);
+const color = toTrimmedText(0, 100).check(Schema.isPattern(VECTOR_COLOR));
+
+const toNullableColor = (
+  description: string
+): Schema.optionalKey<Schema.NullOr<Schema.Trim>> =>
+  Schema.optionalKey(Schema.NullOr(color).annotate({ description }));
+
+const strokeWidthRange = Schema.isBetween({ maximum: 1000, minimum: 0 });
 
 const paint = {
-  fill: color
-    .nullable()
-    .optional()
-    .describe(
-      'Fill color, for example "#3b82f6" or "var(--primary)". null for no fill.'
-    ),
-  stroke: color
-    .nullable()
-    .optional()
-    .describe("Stroke color. null removes the stroke."),
-  strokeWidth: z
-    .number()
-    .min(0)
-    .max(1000)
-    .nullable()
-    .optional()
-    .describe("Stroke width in px."),
+  fill: toNullableColor(
+    'Fill color, for example "#3b82f6" or "var(--primary)". null for no fill.'
+  ),
+  stroke: toNullableColor("Stroke color. null removes the stroke."),
+  strokeWidth: Schema.optionalKey(
+    Schema.NullOr(Schema.Number.check(strokeWidthRange)).annotate({
+      description: "Stroke width in px.",
+    })
+  ),
 };
 
 const where = {
-  path: z
-    .string()
-    .trim()
-    .max(300)
-    .optional()
-    .describe(
-      "Page path. Leave out for the page of the frame in <canvas-context>."
-    ),
-  targetSelector: z
-    .string()
-    .trim()
-    .min(1)
-    .max(2000)
-    .optional()
-    .describe("CSS selector of the element on the live page."),
-  targetSource: z
-    .string()
-    .trim()
-    .max(1100)
-    .optional()
-    .describe("Or the element as file:line:col of its tag."),
+  path: toOptionalText(
+    0,
+    300,
+    "Page path. Leave out for the page of the frame in <canvas-context>."
+  ),
+  targetSelector: toOptionalText(
+    1,
+    2000,
+    "CSS selector of the element on the live page."
+  ),
+  targetSource: toOptionalText(
+    0,
+    1100,
+    "Or the element as file:line:col of its tag."
+  ),
 };
+
+const sizeNumber = Schema.Number.check(
+  Schema.isBetween({ maximum: 100_000, minimum: 1 })
+);
+
+const offsetNumber = Schema.Number.check(
+  Schema.isBetween({ maximum: 100_000, minimum: -100_000 })
+);
 
 export const VECTOR_DRAW_SHORT =
   "Draw a rectangle, ellipse or pen path as an inline <svg> placed at x, y in a parent element (one undo step).";
@@ -75,67 +85,61 @@ export const VECTOR_BOOLEAN_SHORT =
 export const VECTOR_PAINT_SHORT =
   "Set fill, stroke or stroke width of an SVG shape.";
 
-export const drawVectorShape = {
+const drawVectorFields = {
   ...where,
-  d: z
-    .string()
-    .trim()
-    .min(1)
-    .max(VECTOR_PATH_MAX)
-    .optional()
-    .describe(
-      "SVG path data in px from the parent padding box. End with Z to close it."
-    ),
-  height: z.number().min(1).max(100_000).optional(),
-  makeParentRelative: z
-    .boolean()
-    .default(false)
-    .describe("Also set position: relative on the parent."),
-  name: z.string().trim().min(1).max(60).optional(),
-  shape: z
-    .enum(["rect", "ellipse", "path"])
-    .describe("rect or ellipse: pass x, y, width, height. path: pass d."),
-  width: z.number().min(1).max(100_000).optional(),
-  x: z
-    .number()
-    .min(-100_000)
-    .max(100_000)
-    .default(0)
-    .describe("Left edge in px from the parent padding box."),
-  y: z
-    .number()
-    .min(-100_000)
-    .max(100_000)
-    .default(0)
-    .describe("Top edge in px from the parent padding box."),
+  d: toOptionalText(
+    1,
+    VECTOR_PATH_MAX,
+    "SVG path data in px from the parent padding box. End with Z to close it."
+  ),
+  height: Schema.optionalKey(sizeNumber),
+  makeParentRelative: toDefaulted(
+    Schema.Boolean,
+    false,
+    "Also set position: relative on the parent."
+  ),
+  name: Schema.optionalKey(toTrimmedText(1, 60)),
+  shape: Schema.Literals(["rect", "ellipse", "path"]).annotate({
+    description: "rect or ellipse: pass x, y, width, height. path: pass d.",
+  }),
+  width: Schema.optionalKey(sizeNumber),
+  x: toDefaulted(
+    offsetNumber,
+    0,
+    "Left edge in px from the parent padding box."
+  ),
+  y: toDefaulted(
+    offsetNumber,
+    0,
+    "Top edge in px from the parent padding box."
+  ),
   ...paint,
 };
 
-export const booleanShapesShape = {
-  op: z
-    .enum(BOOLEAN_OPS)
-    .describe("union, subtract (first minus second), intersect or exclude."),
+const booleanShapesFields = {
+  op: Schema.Literals(BOOLEAN_OPS).annotate({
+    description: "union, subtract (first minus second), intersect or exclude.",
+  }),
   path: where.path,
-  selectors: z
-    .tuple([
-      z.string().trim().min(1).max(2000),
-      z.string().trim().min(1).max(2000),
-    ])
-    .optional()
-    .describe(
-      "Two CSS selectors of SVG shapes. The first keeps its place and paint."
-    ),
-  sources: z
-    .tuple([z.string().trim().max(1100), z.string().trim().max(1100)])
-    .optional()
-    .describe("Or the two shapes as file:line:col."),
+  selectors: toOptional(
+    Schema.Tuple([toTrimmedText(1, 2000), toTrimmedText(1, 2000)]),
+    "Two CSS selectors of SVG shapes. The first keeps its place and paint."
+  ),
+  sources: toOptional(
+    Schema.Tuple([toTrimmedText(0, 1100), toTrimmedText(0, 1100)]),
+    "Or the two shapes as file:line:col."
+  ),
 };
 
-export const paintShapeShape = { ...where, ...paint };
+const paintShapeFields = { ...where, ...paint };
 
-const drawSchema = z.object(drawVectorShape).strict();
-const booleanSchema = z.object(booleanShapesShape).strict();
-const paintSchema = z.object(paintShapeShape).strict();
+export const drawVectorShape = toSdkFieldSet(drawVectorFields);
+export const booleanShapesShape = toSdkFieldSet(booleanShapesFields);
+export const paintShapeShape = toSdkFieldSet(paintShapeFields);
+
+const drawSchema = toToolInput(drawVectorFields);
+const booleanSchema = toToolInput(booleanShapesFields);
+const paintSchema = toToolInput(paintShapeFields);
 
 function text(message: string, isError = false): ToolText {
   return {
@@ -144,11 +148,8 @@ function text(message: string, isError = false): ToolText {
   };
 }
 
-function issues(name: string, error: z.ZodError): ToolText {
-  return text(
-    `${name}: ${error.issues.map((issue) => `${issue.path.join(".") || "input"}: ${issue.message}`).join("; ")}`,
-    true
-  );
+function issues(name: string, error: string): ToolText {
+  return text(`${name}: ${error}`, true);
 }
 
 function paintOf(input: {
@@ -222,7 +223,7 @@ async function guarded(
 
 export function runDrawVector(
   deps: DirectToolDeps,
-  args: z.input<typeof drawSchema>
+  args: ToolArgs<typeof drawSchema>
 ): Promise<ToolText> {
   return guarded(deps, "draw_vector", async () => {
     const parsed = drawSchema.safeParse(args);
@@ -309,7 +310,7 @@ async function rectsOf(
 
 export function runBooleanShapes(
   deps: DirectToolDeps,
-  args: z.input<typeof booleanSchema>
+  args: ToolArgs<typeof booleanSchema>
 ): Promise<ToolText> {
   return guarded(deps, "boolean_shapes", async () => {
     const parsed = booleanSchema.safeParse(args);
@@ -356,7 +357,7 @@ export function runBooleanShapes(
 
 export function runPaintShape(
   deps: DirectToolDeps,
-  args: z.input<typeof paintSchema>
+  args: ToolArgs<typeof paintSchema>
 ): Promise<ToolText> {
   return guarded(deps, "paint_shape", async () => {
     const parsed = paintSchema.safeParse(args);

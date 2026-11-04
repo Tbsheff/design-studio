@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { Schema } from "effect";
 
 import {
   DIRECT_STYLE_PROPERTIES,
@@ -9,6 +9,7 @@ import {
   type StructureOp,
 } from "../../shared/contracts.js";
 import { kebabKeys } from "../../shared/style-keys.js";
+import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
 import {
   canvasOwner,
   readCanvasAt,
@@ -59,6 +60,14 @@ import type { LayerLockStore } from "../store/layer-locks.js";
 import type { AgentRunContext, PreviewService } from "../types.js";
 import { evaluateToolUse } from "./permissions.js";
 import { editPageUrl } from "./run-target.js";
+import {
+  toDefaulted,
+  toOptional,
+  toOptionalText,
+  toToolInput,
+  toTrimmedText,
+} from "./tool-input.js";
+import type { ToolArgs, ToolData } from "./tool-input.js";
 
 export interface DirectToolDeps {
   preview: PreviewService;
@@ -81,132 +90,101 @@ type ToolText = {
 
 const RUN_NOTE =
   "The run saves this change in its version, like your file edits.";
-const styleValue = z.string().max(200).nullable();
-const classNames = z.array(z.string().trim().min(1).max(100)).max(30);
+const styleValue = Schema.NullOr(Schema.String.check(Schema.isMaxLength(200)));
+const classNames = Schema.Array(toTrimmedText(1, 100)).check(
+  Schema.isMaxLength(30)
+);
 
-export const editElementShape = {
-  selector: z
-    .string()
-    .trim()
-    .min(1)
-    .max(2000)
-    .describe(
-      'CSS selector of one element on the page, for example "h1" or "[data-name=\'Hero\'] button".'
+const styleFields = Object.fromEntries(
+  DIRECT_STYLE_PROPERTIES.map((prop) => [prop, Schema.optionalKey(styleValue)])
+) as Record<DirectStyleProperty, Schema.optionalKey<typeof styleValue>>;
+
+export const editElementFields = {
+  selector: toTrimmedText(1, 2000).annotate({
+    description:
+      'CSS selector of one element on the page, for example "h1" or "[data-name=\'Hero\'] button".',
+  }),
+  path: toOptionalText(
+    0,
+    300,
+    'Page path, for example "about.html". Leave out for the page of the frame in <canvas-context> (or the entry page).'
+  ),
+  style: toOptional(
+    Schema.Struct(styleFields),
+    "CSS properties to set inline, as kebab-case (margin-left) or camelCase (marginLeft) keys. null removes the property."
+  ),
+  text: toOptional(
+    Schema.String.check(Schema.isMaxLength(5000)),
+    "New text of a leaf element."
+  ),
+  classes: toOptional(
+    Schema.Struct({
+      add: Schema.optionalKey(classNames),
+      remove: Schema.optionalKey(classNames),
+    }),
+    "Tailwind classes to add or remove, with any variant prefix. An added class replaces the class of the same utility and variant (p-6 replaces p-4). Works on a plain class or className string and on string arguments of cn(), clsx() or twMerge()."
+  ),
+  variant: toOptionalText(
+    0,
+    60,
+    'Breakpoint and state for style: "md:", "lg:", "hover:", "focus:", "active:", "dark:" or a mix such as "md:hover:". In Tailwind it writes prefixed classes (md:p-6); in a plain HTML page a media query or :hover rule. Leave out for the base style.'
+  ),
+  target: toOptional(
+    Schema.Literals(EDIT_TARGETS),
+    'Attached apps only. Leave out: the outer element of a shared component use (such as <Button> or <CardTitle> from packages/ui) is edited where it is used (its className prop and text in the page file), so only this use changes. "component" edits the shared component file, which changes every use.'
+  ),
+  op: toOptional(
+    Schema.Literals(STRUCTURE_OPS),
+    'Structure edit instead: delete, duplicate, wrap (in a flex column frame), group (in a plain <div data-name="Group"> with no layout, like Cmd+G), unwrap (also ungroups) or move (into targetSelector, as its last child).'
+  ),
+  targetSelector: toOptionalText(
+    1,
+    2000,
+    "For op move: CSS selector of the new parent."
+  ),
+  beforeSelector: toOptionalText(
+    1,
+    2000,
+    "For op move or duplicate: put the element (or the copy) just before this sibling, like a drag on the canvas. Use instead of targetSelector."
+  ),
+  afterSelector: toOptionalText(
+    1,
+    2000,
+    "For op move or duplicate: put the element (or the copy) just after this sibling. Use instead of targetSelector."
+  ),
+  also: toOptional(
+    Schema.Array(toTrimmedText(1, 2000)).check(
+      Schema.isMinLength(1),
+      Schema.isMaxLength(49)
     ),
-  path: z
-    .string()
-    .trim()
-    .max(300)
-    .optional()
-    .describe(
-      'Page path, for example "about.html". Leave out for the page of the frame in <canvas-context> (or the entry page).'
-    ),
-  style: z
-    .preprocess(
-      kebabKeys,
-      z
-        .object(
-          Object.fromEntries(
-            DIRECT_STYLE_PROPERTIES.map((prop) => [prop, styleValue.optional()])
-          ) as Record<DirectStyleProperty, z.ZodOptional<typeof styleValue>>
-        )
-        .strict()
-    )
-    .optional()
-    .describe(
-      "CSS properties to set inline, as kebab-case (margin-left) or camelCase (marginLeft) keys. null removes the property."
-    ),
-  text: z.string().max(5000).optional().describe("New text of a leaf element."),
-  classes: z
-    .object({ add: classNames.optional(), remove: classNames.optional() })
-    .strict()
-    .optional()
-    .describe(
-      "Tailwind classes to add or remove, with any variant prefix. An added class replaces the class of the same utility and variant (p-6 replaces p-4). Works on a plain class or className string and on string arguments of cn(), clsx() or twMerge()."
-    ),
-  variant: z
-    .string()
-    .trim()
-    .max(60)
-    .optional()
-    .describe(
-      'Breakpoint and state for style: "md:", "lg:", "hover:", "focus:", "active:", "dark:" or a mix such as "md:hover:". In Tailwind it writes prefixed classes (md:p-6); in a plain HTML page a media query or :hover rule. Leave out for the base style.'
-    ),
-  target: z
-    .enum(EDIT_TARGETS)
-    .optional()
-    .describe(
-      'Attached apps only. Leave out: the outer element of a shared component use (such as <Button> or <CardTitle> from packages/ui) is edited where it is used (its className prop and text in the page file), so only this use changes. "component" edits the shared component file, which changes every use.'
-    ),
-  op: z
-    .enum(STRUCTURE_OPS)
-    .optional()
-    .describe(
-      'Structure edit instead: delete, duplicate, wrap (in a flex column frame), group (in a plain <div data-name="Group"> with no layout, like Cmd+G), unwrap (also ungroups) or move (into targetSelector, as its last child).'
-    ),
-  targetSelector: z
-    .string()
-    .trim()
-    .min(1)
-    .max(2000)
-    .optional()
-    .describe("For op move: CSS selector of the new parent."),
-  beforeSelector: z
-    .string()
-    .trim()
-    .min(1)
-    .max(2000)
-    .optional()
-    .describe(
-      "For op move or duplicate: put the element (or the copy) just before this sibling, like a drag on the canvas. Use instead of targetSelector."
-    ),
-  afterSelector: z
-    .string()
-    .trim()
-    .min(1)
-    .max(2000)
-    .optional()
-    .describe(
-      "For op move or duplicate: put the element (or the copy) just after this sibling. Use instead of targetSelector."
-    ),
-  also: z
-    .array(z.string().trim().min(1).max(2000))
-    .min(1)
-    .max(49)
-    .optional()
-    .describe(
-      "With op: more elements (CSS selectors or layer ids) to change in the same edit, like a multi-select in the studio. For group and wrap they must be siblings in one file. Ids from select_matching work here."
-    ),
+    "With op: more elements (CSS selectors or layer ids) to change in the same edit, like a multi-select in the studio. For group and wrap they must be siblings in one file. Ids from select_matching work here."
+  ),
 };
 
-export const setTokenShape = {
-  name: z
-    .string()
-    .trim()
-    .min(3)
-    .max(120)
-    .describe(
-      'Token CSS variable, for example "--primary", or its path, for example "color.primary".'
-    ),
-  value: z
-    .string()
-    .trim()
-    .min(1)
-    .max(400)
-    .describe(
-      'New value, for example "#015A5D" or "var(--color-brand-teal-500)".'
-    ),
-  theme: z
-    .enum(["light", "dark"])
-    .default("light")
-    .describe("light changes the main value, dark the dark value."),
+export const setTokenFields = {
+  name: toTrimmedText(3, 120).annotate({
+    description:
+      'Token CSS variable, for example "--primary", or its path, for example "color.primary".',
+  }),
+  value: toTrimmedText(1, 400).annotate({
+    description:
+      'New value, for example "#015A5D" or "var(--color-brand-teal-500)".',
+  }),
+  theme: toDefaulted(
+    Schema.Literals(["light", "dark"]),
+    "light" as const,
+    "light changes the main value, dark the dark value."
+  ),
 };
 
-const editElementSchema = z.object(editElementShape).strict();
-const setTokenSchema = z.object(setTokenShape).strict();
+export const editElementShape = toSdkFieldSet(editElementFields);
+export const setTokenShape = toSdkFieldSet(setTokenFields);
 
-type EditElementArgs = z.input<typeof editElementSchema>;
-type SetTokenArgs = z.input<typeof setTokenSchema>;
+const editElementSchema = toToolInput(editElementFields);
+const setTokenSchema = toToolInput(setTokenFields);
+
+type EditElementArgs = ToolArgs<typeof editElementSchema>;
+type SetTokenArgs = ToolArgs<typeof setTokenSchema>;
 
 function text(message: string): ToolText {
   return { content: [{ type: "text", text: message }] };
@@ -278,7 +256,7 @@ const EDIT_VIEWPORT: Viewport = { width: 1440, height: 900 };
 
 async function alsoSelectors(
   deps: DirectToolDeps,
-  input: z.output<typeof editElementSchema>
+  input: ToolData<typeof editElementSchema>
 ): Promise<string[]> {
   const list = input.also ?? [];
   if (!list.some((item) => isLayerRef(item)) || !deps.ctx.previewUrl)
@@ -303,7 +281,7 @@ async function alsoSelectors(
 }
 
 function placeOf(
-  input: z.output<typeof editElementSchema>
+  input: ToolData<typeof editElementSchema>
 ): { key: "into" | "before" | "after"; selector: string } | null {
   if (input.targetSelector)
     return { key: "into", selector: input.targetSelector };
@@ -316,7 +294,7 @@ function placeOf(
 
 async function structureEdit(
   deps: DirectToolDeps,
-  input: z.output<typeof editElementSchema>,
+  input: ToolData<typeof editElementSchema>,
   op: StructureOp
 ): Promise<ToolText> {
   const also = await alsoSelectors(deps, input);
@@ -360,7 +338,7 @@ async function structureEdit(
   );
 }
 
-type EditInput = z.output<typeof editElementSchema>;
+type EditInput = ToolData<typeof editElementSchema>;
 type Sourced = SelectionContext & {
   source: NonNullable<SelectionContext["source"]>;
 };
@@ -500,7 +478,7 @@ async function styleEdit(
   );
 }
 
-function placesFit(input: z.output<typeof editElementSchema>): boolean {
+function placesFit(input: ToolData<typeof editElementSchema>): boolean {
   const places = [
     input.targetSelector,
     input.beforeSelector,
@@ -514,7 +492,7 @@ function placesFit(input: z.output<typeof editElementSchema>): boolean {
 }
 
 function editShapeError(
-  input: z.output<typeof editElementSchema>
+  input: ToolData<typeof editElementSchema>
 ): string | null {
   const hasChange =
     input.text !== undefined ||
@@ -532,17 +510,22 @@ function editShapeError(
   return null;
 }
 
+const toKebabStyle = (args: EditElementArgs): EditElementArgs => {
+  if (args.style === undefined) {
+    return args;
+  }
+
+  return { ...args, style: kebabKeys(args.style) as typeof args.style };
+};
+
 export async function runEditElement(
   deps: DirectToolDeps,
   args: EditElementArgs
 ): Promise<ToolText> {
   const blocked = refusal(deps.ctx, "edit_element");
   if (blocked) return failure(blocked);
-  const parsed = editElementSchema.safeParse(args);
-  if (!parsed.success)
-    return failure(
-      `edit_element: ${parsed.error.issues.map((issue) => `${issue.path.join(".") || "input"}: ${issue.message}`).join("; ")}`
-    );
+  const parsed = editElementSchema.safeParse(toKebabStyle(args));
+  if (!parsed.success) return failure(`edit_element: ${parsed.error}`);
   const input = parsed.data;
   const invalid = editShapeError(input);
   if (invalid) return failure(invalid);
@@ -562,10 +545,7 @@ export async function runSetToken(
   const blocked = refusal(deps.ctx, "set_token");
   if (blocked) return failure(blocked);
   const parsed = setTokenSchema.safeParse(args);
-  if (!parsed.success)
-    return failure(
-      `set_token: ${parsed.error.issues.map((issue) => issue.message).join("; ")}`
-    );
+  if (!parsed.success) return failure(`set_token: ${parsed.error}`);
   const input = parsed.data;
   const { project, direction } = deps.ctx;
   const workTree = direction.workTree;

@@ -1,8 +1,9 @@
-import { z } from "zod";
+import { Schema } from "effect";
 
 import { DEFAULT_FRAME_STATE } from "../../shared/frame-state.js";
 import { COMPONENT_LIST_MAX, COMPONENT_SOURCES } from "../../shared/props.js";
-import { findFrame, frameRef } from "../canvas/tools.js";
+import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
+import { findFrame } from "../canvas/tools.js";
 import { listComponentSchemas } from "../components/props-service.js";
 import { layerTreeText } from "../mcp/layer-tools.js";
 import {
@@ -21,6 +22,14 @@ import {
   isContextFrame,
   pageUrl,
 } from "./run-target.js";
+import {
+  toDefaulted,
+  toOptional,
+  toOptionalInt,
+  toOptionalText,
+  toToolInput,
+} from "./tool-input.js";
+import type { ToolArgs } from "./tool-input.js";
 
 type ToolText = Readonly<{
   content: { type: "text"; text: string }[];
@@ -30,71 +39,57 @@ type ToolText = Readonly<{
 const EDIT_VIEWPORT: Viewport = { height: 900, width: 1440 };
 const SELECTOR_KEYS = ["selector", "targetSelector"] as const;
 
-export const listComponentsShape = {
-  cursor: z
-    .string()
-    .regex(/^\d{1,6}$/)
-    .optional()
-    .describe("nextCursor from the previous page."),
-  limit: z
-    .number()
-    .int()
-    .min(1)
-    .max(COMPONENT_LIST_MAX)
-    .optional()
-    .describe("Components per page. Default 20."),
-  query: z
-    .string()
-    .trim()
-    .max(100)
-    .optional()
-    .describe(
-      'Search text: matches the component name first (exact, then prefix, then part), then its folder or file, then the props, variants and other text of its file. For example "badge" or "card".'
-    ),
-  source: z
-    .enum(COMPONENT_SOURCES)
-    .optional()
-    .describe(
-      '"package" for components of shared workspace packages (such as packages/ui), "app" for components in the app, "all" (default) for both. Package components always come first.'
-    ),
+const listComponentsFields = {
+  cursor: Schema.optionalKey(
+    Schema.String.check(Schema.isPattern(/^\d{1,6}$/u)).annotate({
+      description: "nextCursor from the previous page.",
+    })
+  ),
+  limit: toOptionalInt(
+    1,
+    COMPONENT_LIST_MAX,
+    "Components per page. Default 20."
+  ),
+  query: toOptionalText(
+    0,
+    100,
+    'Search text: matches the component name first (exact, then prefix, then part), then its folder or file, then the props, variants and other text of its file. For example "badge" or "card".'
+  ),
+  source: toOptional(
+    Schema.Literals(COMPONENT_SOURCES),
+    '"package" for components of shared workspace packages (such as packages/ui), "app" for components in the app, "all" (default) for both. Package components always come first.'
+  ),
 };
 
-export const getLayersShape = {
-  depth: z
-    .number()
-    .int()
-    .min(0)
-    .max(30)
-    .default(8)
-    .describe(
-      'Levels below the root to list. Default 8. Deeper children show as "+N inside".'
-    ),
-  frame: frameRef
-    .optional()
-    .describe(
-      "Canvas frame id or @label from canvas_list. It sets the page and the size. Leave out for the frame in <canvas-context>."
-    ),
-  path: z
-    .string()
-    .trim()
-    .max(300)
-    .optional()
-    .describe(
-      "Page path instead of the frame page. Leave out for the page of the frame in <canvas-context> (or the entry page)."
-    ),
-  root: z
-    .string()
-    .trim()
-    .min(1)
-    .max(2000)
-    .optional()
-    .describe(
-      "Layer id from an earlier get_layers or a CSS selector: list only this element and what is inside it."
-    ),
+const getLayersFields = {
+  depth: toDefaulted(
+    Schema.Int.check(Schema.isBetween({ maximum: 30, minimum: 0 })),
+    8,
+    'Levels below the root to list. Default 8. Deeper children show as "+N inside".'
+  ),
+  frame: toOptionalText(
+    1,
+    60,
+    "Canvas frame id or @label from canvas_list. It sets the page and the size. Leave out for the frame in <canvas-context>."
+  ),
+  path: toOptionalText(
+    0,
+    300,
+    "Page path instead of the frame page. Leave out for the page of the frame in <canvas-context> (or the entry page)."
+  ),
+  root: toOptionalText(
+    1,
+    2000,
+    "Layer id from an earlier get_layers or a CSS selector: list only this element and what is inside it."
+  ),
 };
 
-const listSchema = z.object(listComponentsShape).strict();
-const layersSchema = z.object(getLayersShape).strict();
+export const listComponentsShape = toSdkFieldSet(listComponentsFields);
+
+export const getLayersShape = toSdkFieldSet(getLayersFields);
+
+const listSchema = toToolInput(listComponentsFields);
+const layersSchema = toToolInput(getLayersFields);
 
 function text(message: string, isError = false): ToolText {
   return {
@@ -103,24 +98,18 @@ function text(message: string, isError = false): ToolText {
   };
 }
 
-function issues(error: z.ZodError): string {
-  return error.issues
-    .map((issue) => `${issue.path.join(".") || "input"}: ${issue.message}`)
-    .join("; ");
-}
-
 function describeError(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
 export async function runListComponents(
   deps: DirectToolDeps,
-  args: z.input<typeof listSchema>
+  args: ToolArgs<typeof listSchema>
 ): Promise<ToolText> {
   const parsed = listSchema.safeParse(args);
 
   if (!parsed.success) {
-    return text(`list_components: ${issues(parsed.error)}`, true);
+    return text(`list_components: ${parsed.error}`, true);
   }
 
   const { project, direction } = deps.ctx;
@@ -186,12 +175,12 @@ async function framePage(
 
 export async function runGetLayers(
   deps: DirectToolDeps,
-  args: z.input<typeof layersSchema>
+  args: ToolArgs<typeof layersSchema>
 ): Promise<ToolText> {
   const parsed = layersSchema.safeParse(args);
 
   if (!parsed.success) {
-    return text(`get_layers: ${issues(parsed.error)}`, true);
+    return text(`get_layers: ${parsed.error}`, true);
   }
 
   if (!deps.ctx.previewUrl) {

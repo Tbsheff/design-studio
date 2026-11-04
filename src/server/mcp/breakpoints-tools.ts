@@ -5,14 +5,16 @@ import type { BreakpointScope } from "../breakpoints/commit.js";
 import { BreakpointError } from "../breakpoints/errors.js";
 import {
   LIST_BREAKPOINTS_DESCRIPTION,
-  listBreakpointFields,
   SET_BREAKPOINT_STYLE_DESCRIPTION,
-  setBreakpointFields,
   toStyleInput,
 } from "../breakpoints/input.js";
 import { listBreakpoints } from "../breakpoints/list.js";
 import { setBreakpointStyle, toBreakpointResult } from "../breakpoints/set.js";
 import { DirectEditError } from "../direct-edit/engine/errors.js";
+import {
+  listBreakpointFields,
+  setBreakpointFields,
+} from "../platform/tool-fields/breakpoints.js";
 import { EditError, loadTarget, refuseWhileRunning } from "./edit-guards.js";
 import type { EditDeps } from "./edit-guards.js";
 import {

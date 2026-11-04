@@ -5,13 +5,12 @@ import type { Direction, Project } from "../../shared/contracts.js";
 import type { TextUpdateResult } from "../../shared/text-search.js";
 import type { CanvasService } from "../canvas/service.js";
 import type { DirectEditDeps } from "../direct-edit/index.js";
-import { TextSearchError } from "../text-search/errors.js";
 import {
   searchTextFields,
-  toSearchQuery,
-  toUpdateRequest,
   updateTextFields,
-} from "../text-search/input.js";
+} from "../platform/tool-fields/text-search.js";
+import { TextSearchError } from "../text-search/errors.js";
+import { toSearchQuery, toUpdateRequest } from "../text-search/input.js";
 import type { SearchTarget } from "../text-search/scope.js";
 import { searchText } from "../text-search/search-text.js";
 import { updateText } from "../text-search/update-text.js";

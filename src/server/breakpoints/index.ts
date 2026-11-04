@@ -2,9 +2,7 @@ export { BreakpointError } from "./errors.js";
 
 export {
   LIST_BREAKPOINTS_DESCRIPTION,
-  listBreakpointFields,
   SET_BREAKPOINT_STYLE_DESCRIPTION,
-  setBreakpointFields,
   toStyleInput,
 } from "./input.js";
 

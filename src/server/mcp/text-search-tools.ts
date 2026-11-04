@@ -1,13 +1,15 @@
 import { z } from "zod";
 
+import {
+  searchTextFields,
+  updateTextFields,
+} from "../platform/tool-fields/text-search.js";
 import { TextSearchError } from "../text-search/errors.js";
 import {
   SEARCH_TEXT_DESCRIPTION,
-  searchTextFields,
   toSearchQuery,
   toUpdateRequest,
   UPDATE_TEXT_DESCRIPTION,
-  updateTextFields,
 } from "../text-search/input.js";
 import type { SearchTarget } from "../text-search/scope.js";
 import { searchText } from "../text-search/search-text.js";

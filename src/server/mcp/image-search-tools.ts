@@ -3,9 +3,7 @@ import { z } from "zod";
 import type { Project } from "../../shared/contracts.js";
 import {
   PLACE_IMAGE_DESCRIPTION,
-  placeImageFields,
   SEARCH_IMAGES_DESCRIPTION,
-  searchImagesFields,
   toPlaceInput,
   toSearchRequest,
 } from "../image-search/input.js";
@@ -18,6 +16,10 @@ import { describeElement } from "../page-probe/element.js";
 import { scopeOf as layerScopeOf } from "../page-probe/layer-ref.js";
 import { probeOwners } from "../page-probe/owner-probe.js";
 import { resolveSourceLoc } from "../page-probe/source-loc.js";
+import {
+  placeImageFields,
+  searchImagesFields,
+} from "../platform/tool-fields/image-search.js";
 import { EditError, loadTarget, refuseWhileRunning } from "./edit-guards.js";
 import type { EditDeps } from "./edit-guards.js";
 import {

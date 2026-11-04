@@ -9,7 +9,6 @@ import { frameOf } from "../accessibility/frame.js";
 import type { AccessibilityFrame } from "../accessibility/frame.js";
 import {
   NO_ACCESSIBILITY_CHANGE,
-  setAccessibilityFields,
   toAccessibilityChanges,
 } from "../accessibility/input.js";
 import { inspectAccessibility } from "../accessibility/inspect.js";
@@ -21,6 +20,7 @@ import type { CanvasService } from "../canvas/service.js";
 import { readDesignSystemState } from "../design-system/state.js";
 import { DirectEditError } from "../direct-edit/engine/errors.js";
 import type { DirectEditDeps } from "../direct-edit/index.js";
+import { setAccessibilityFields } from "../platform/tool-fields/accessibility.js";
 import { withPagePath } from "../project-source/source.js";
 import type { PreviewService } from "../types.js";
 

@@ -2,13 +2,15 @@ import { z } from "zod";
 
 import type { BreakpointScope } from "../breakpoints/commit.js";
 import { DirectEditError } from "../direct-edit/engine/errors.js";
+import {
+  getStackingFields,
+  setStackingFields,
+} from "../platform/tool-fields/stacking.js";
 import { StackingError } from "../stacking/errors.js";
 import { getStacking } from "../stacking/get.js";
 import {
   GET_STACKING_DESCRIPTION,
-  getStackingFields,
   SET_STACKING_DESCRIPTION,
-  setStackingFields,
   toStackingInput,
 } from "../stacking/input.js";
 import { setStacking, toStackingResult } from "../stacking/set.js";

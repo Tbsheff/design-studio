@@ -3,11 +3,11 @@ import { z } from "zod";
 import {
   IMPORT_PAGE_DESCRIPTION,
   importPage,
-  importPageFields,
   PageImportError,
   toImportRequest,
 } from "../page-import/index.js";
 import type { ImportCommit } from "../page-import/index.js";
+import { importPageFields } from "../platform/tool-fields/page-import.js";
 import { EditError, loadTarget, refuseWhileRunning } from "./edit-guards.js";
 import type { EditDeps } from "./edit-guards.js";
 import {

@@ -2,11 +2,7 @@ export { PageImportError } from "./errors.js";
 
 export { importPage } from "./import-page.js";
 
-export {
-  IMPORT_PAGE_DESCRIPTION,
-  importPageFields,
-  toImportRequest,
-} from "./input.js";
+export { IMPORT_PAGE_DESCRIPTION, toImportRequest } from "./input.js";
 
 export type {
   ImportCommit,

@@ -1,25 +1,47 @@
-import { z } from "zod";
+import { Schema } from "effect";
 
 import { ICON_BUNDLED } from "./deps.js";
 import { nameKey } from "./set.js";
 import type { IconSet } from "./set.js";
 import type { IconNode, SvgFrame } from "./svg.js";
 
-const attrsSchema = z
-  .record(z.string(), z.string())
-  .transform((attrs) => Object.entries(attrs));
+const rawAttrs = Schema.Record(Schema.String, Schema.String);
 
-const nodeSchema = z.tuple([z.string(), attrsSchema]);
+const rawNode = Schema.Tuple([Schema.String, rawAttrs]);
 
-const coreSchema = z.object({
-  aliases: z.record(z.string(), z.string()),
-  icons: z.record(z.string(), z.array(nodeSchema)),
-  license: z.string(),
-  licenseText: z.string(),
-  source: z.string(),
+const coreSchema = Schema.Struct({
+  aliases: Schema.Record(Schema.String, Schema.String),
+  icons: Schema.Record(Schema.String, Schema.Array(rawNode)),
+  license: Schema.String,
+  licenseText: Schema.String,
+  source: Schema.String,
 });
 
-type Core = z.infer<typeof coreSchema>;
+interface Core {
+  readonly aliases: Readonly<Record<string, string>>;
+  readonly icons: Readonly<Record<string, IconNode[]>>;
+  readonly license: string;
+  readonly licenseText: string;
+  readonly source: string;
+}
+
+const decodeCore = Schema.decodeUnknownResult(coreSchema);
+
+const toNodes = (nodes: (typeof coreSchema.Type.icons)[string]): IconNode[] =>
+  nodes.map(([tag, attrs]): IconNode => [tag, Object.entries(attrs)]);
+
+const toCore = (decoded: typeof coreSchema.Type): Core => {
+  const entries = Object.entries(decoded.icons);
+  const icons = entries.map(([name, nodes]) => [name, toNodes(nodes)]);
+
+  return {
+    aliases: decoded.aliases,
+    icons: Object.fromEntries(icons),
+    license: decoded.license,
+    licenseText: decoded.licenseText,
+    source: decoded.source,
+  };
+};
 
 const CORE_FRAME: SvgFrame = {
   fill: "none",
@@ -37,7 +59,13 @@ const loaded: CoreCache = { core: null };
 const readCore = async (): Promise<Core> => {
   const json = await import("./lucide-core.json", { with: { type: "json" } });
 
-  return coreSchema.parse(json.default);
+  const decoded = decodeCore(json.default);
+
+  if (decoded._tag === "Failure") {
+    throw new Error("The bundled icon set is not valid.");
+  }
+
+  return toCore(decoded.success);
 };
 
 const core = (): Promise<Core> => {

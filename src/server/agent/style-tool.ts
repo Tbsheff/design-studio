@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { Schema } from "effect";
 
 import { DEFAULT_FRAME_STATE } from "../../shared/frame-state.js";
 import {
@@ -10,6 +10,7 @@ import {
   replaceSummary,
 } from "../../shared/style-search.js";
 import type { StyleQuery } from "../../shared/style-search.js";
+import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
 import { findFrame } from "../canvas/tools.js";
 import { planStyleReplace } from "../direct-edit/commit/replace.js";
 import {
@@ -22,84 +23,74 @@ import { writeAtomic } from "../direct-edit/index.js";
 import { canvasFrames, refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
 import { isContextFrame, pageUrl } from "./run-target.js";
+import {
+  toOptional,
+  toOptionalText,
+  toRefinedToolInput,
+  toToolInput,
+  toTrimmedText,
+} from "./tool-input.js";
+import type { ToolArgs } from "./tool-input.js";
 
 type ToolText = Readonly<{
   content: { type: "text"; text: string }[];
   isError?: boolean;
 }>;
 
-const property = z
-  .enum([...STYLE_KINDS, ...SEARCH_PROPERTIES] as [string, ...string[]])
-  .optional()
-  .describe(
-    "color, font-size, radius, spacing, or one CSS property such as background-color or padding-top. Leave out for all."
-  );
-
-const value = z
-  .string()
-  .trim()
-  .min(1)
-  .max(200)
-  .optional()
-  .describe(
-    'Value to match, for example "#1c1f23" or "14px". Compared with the computed value.'
-  );
+const property = toOptional(
+  Schema.Literals([...STYLE_KINDS, ...SEARCH_PROPERTIES] as [
+    string,
+    ...string[],
+  ]),
+  "color, font-size, radius, spacing, or one CSS property such as background-color or padding-top. Leave out for all."
+);
 
 const scope = {
-  frame: z
-    .string()
-    .trim()
-    .min(1)
-    .max(60)
-    .optional()
-    .describe(
-      "Canvas frame id or @label; its page and size are used. Leave out for the frame from <canvas-context> (or the entry page at 1440x900)."
-    ),
+  frame: toOptionalText(
+    1,
+    60,
+    "Canvas frame id or @label; its page and size are used. Leave out for the frame from <canvas-context> (or the entry page at 1440x900)."
+  ),
+  value: toOptionalText(
+    1,
+    200,
+    'Value to match, for example "#1c1f23" or "14px". Compared with the computed value.'
+  ),
   property,
-  value,
 };
 
-export const findStylesShape = {
+const findStylesFields = {
   ...scope,
-  className: z
-    .string()
-    .trim()
-    .min(1)
-    .max(120)
-    .optional()
-    .describe("Only elements with this class."),
+  className: toOptionalText(1, 120, "Only elements with this class."),
 };
 
-export const replaceStyleShape = {
+const replaceStyleFields = {
   ...scope,
-  token: z
-    .string()
-    .trim()
-    .min(1)
-    .max(STYLE_TOKEN_MAX)
-    .describe(
-      'A CSS variable ("--primary") or, in a Tailwind project, a theme class ("bg-primary", "text-sm", "rounded-lg", "p-4").'
-    ),
+  token: toTrimmedText(1, STYLE_TOKEN_MAX).annotate({
+    description:
+      'A CSS variable ("--primary") or, in a Tailwind project, a theme class ("bg-primary", "text-sm", "rounded-lg", "p-4").',
+  }),
 };
 
-const findSchema = z.object(findStylesShape).strict();
+export const findStylesShape = toSdkFieldSet(findStylesFields);
 
-const replaceSchema = z
-  .object(replaceStyleShape)
-  .strict()
-  .refine((input) => input.value !== undefined, "replace_style needs value");
+export const replaceStyleShape = toSdkFieldSet(replaceStyleFields);
+
+const findSchema = toToolInput(findStylesFields);
+
+const replaceSchema = toRefinedToolInput(replaceStyleFields, (input) => {
+  if (input.value === undefined) {
+    return "replace_style needs value";
+  }
+
+  return null;
+});
 
 function text(message: string, isError = false): ToolText {
   return {
     content: [{ text: message, type: "text" }],
     ...(isError ? { isError: true } : {}),
   };
-}
-
-function issues(error: z.ZodError): string {
-  return error.issues
-    .map((issue) => `${issue.path.join(".") || "input"}: ${issue.message}`)
-    .join("; ");
 }
 
 async function pageOf(
@@ -155,12 +146,12 @@ function queryOf(input: {
 
 export async function runFindStyles(
   deps: DirectToolDeps,
-  args: z.input<typeof findSchema>
+  args: ToolArgs<typeof findSchema>
 ): Promise<ToolText> {
   const parsed = findSchema.safeParse(args);
 
   if (!parsed.success) {
-    return text(`find_styles: ${issues(parsed.error)}`, true);
+    return text(`find_styles: ${parsed.error}`, true);
   }
 
   try {
@@ -191,7 +182,7 @@ export async function runFindStyles(
 
 export async function runReplaceStyle(
   deps: DirectToolDeps,
-  args: z.input<typeof replaceSchema>
+  args: ToolArgs<typeof replaceSchema>
 ): Promise<ToolText> {
   const blocked = refusal(deps.ctx, "replace_style");
 
@@ -202,7 +193,7 @@ export async function runReplaceStyle(
   const parsed = replaceSchema.safeParse(args);
 
   if (!parsed.success) {
-    return text(`replace_style: ${issues(parsed.error)}`, true);
+    return text(`replace_style: ${parsed.error}`, true);
   }
 
   try {

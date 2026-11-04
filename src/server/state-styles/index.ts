@@ -5,11 +5,9 @@ export { forcedSummary, setForcedState } from "./forced.js";
 export { forcedOf } from "./forced-store.js";
 
 export {
-  forcedStateFields,
   LIST_STATE_STYLES_DESCRIPTION,
   SET_FORCED_STATE_DESCRIPTION,
   SET_STATE_STYLE_DESCRIPTION,
-  setStateFields,
   toStateInput,
 } from "./input.js";
 

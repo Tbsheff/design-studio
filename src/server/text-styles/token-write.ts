@@ -7,7 +7,7 @@ import type {
 } from "./deps.js";
 import { cssFiles, tokenJsonFiles } from "./files.js";
 import type { SourceFile } from "./files.js";
-import { objectSchema, parseJson } from "./json-source.js";
+import { parseJson, toObject } from "./json-source.js";
 import type { JsonObject } from "./json-source.js";
 
 interface TokenWrite {
@@ -153,10 +153,10 @@ const withGroupEntry = (
   entry: JsonObject
 ): JsonObject | null => {
   for (const key of GROUP_KEYS) {
-    const group = objectSchema.safeParse(holder[key]);
+    const group = toObject(holder[key] ?? null);
 
-    if (group.success) {
-      return { ...holder, [key]: { ...group.data, [name]: entry } };
+    if (group) {
+      return { ...holder, [key]: { ...group, [name]: entry } };
     }
   }
 
@@ -175,8 +175,8 @@ const withEntry = (
   }
 
   for (const [key, value] of Object.entries(root)) {
-    const nested = objectSchema.safeParse(value);
-    const changed = nested.success && withGroupEntry(nested.data, name, entry);
+    const nested = toObject(value);
+    const changed = nested !== null && withGroupEntry(nested, name, entry);
 
     if (changed) {
       return { ...root, [key]: changed };

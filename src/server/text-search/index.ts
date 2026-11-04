@@ -2,11 +2,9 @@ export { TextSearchError } from "./errors.js";
 
 export {
   SEARCH_TEXT_DESCRIPTION,
-  searchTextFields,
   toSearchQuery,
   toUpdateRequest,
   UPDATE_TEXT_DESCRIPTION,
-  updateTextFields,
 } from "./input.js";
 
 export { searchText } from "./search-text.js";

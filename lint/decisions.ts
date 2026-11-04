@@ -409,6 +409,26 @@ export const decisionOverrides: OxlintOverride[] = [
     rules: { "import/no-relative-parent-imports": "off" },
   },
   {
+    files: ["src/server/agent/canvas-tool-fields.ts"],
+    rules: { "id-length": "off", "import/no-relative-parent-imports": "off" },
+  },
+  {
+    files: ["src/server/agent/critic-reply.ts"],
+    rules: { "import/no-relative-parent-imports": "off" },
+  },
+  {
+    files: [
+      "src/server/platform/tool-fields/accessibility.ts",
+      "src/server/platform/tool-fields/breakpoints.ts",
+      "src/server/platform/tool-fields/image-search.ts",
+      "src/server/platform/tool-fields/page-import.ts",
+      "src/server/platform/tool-fields/stacking.ts",
+      "src/server/platform/tool-fields/state-styles.ts",
+      "src/server/platform/tool-fields/text-search.ts",
+    ],
+    rules: { "import/no-relative-parent-imports": "off" },
+  },
+  {
     files: [
       "src/server/store/data-lock.test.ts",
       "src/server/store/index.ts",

@@ -6,10 +6,8 @@ export { DEFAULT_VIEWPORT, frameOf } from "./frame.js";
 
 export {
   INSPECT_ACCESSIBILITY_DESCRIPTION,
-  inspectAccessibilityFields,
   NO_ACCESSIBILITY_CHANGE,
   SET_ACCESSIBILITY_DESCRIPTION,
-  setAccessibilityFields,
   toAccessibilityChanges,
 } from "./input.js";
 

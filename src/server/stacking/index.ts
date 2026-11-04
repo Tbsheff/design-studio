@@ -4,9 +4,7 @@ export { getStacking } from "./get.js";
 
 export {
   GET_STACKING_DESCRIPTION,
-  getStackingFields,
   SET_STACKING_DESCRIPTION,
-  setStackingFields,
   toStackingInput,
 } from "./input.js";
 

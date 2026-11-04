@@ -1,11 +1,18 @@
+import { Schema } from "effect";
+
+import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
+import {
+  TEXT_SEARCH_GLOB_MAX,
+  TEXT_SEARCH_IDS_MAX,
+  TEXT_SEARCH_QUERY_MAX,
+  TEXT_SEARCH_REPLACE_MAX,
+} from "../text-search/deps.js";
 import { TextSearchError } from "../text-search/errors.js";
 import {
   SEARCH_TEXT_DESCRIPTION,
-  searchTextFields,
   toSearchQuery,
   toUpdateRequest,
   UPDATE_TEXT_DESCRIPTION,
-  updateTextFields,
 } from "../text-search/input.js";
 import type { SearchTextInput, UpdateTextInput } from "../text-search/input.js";
 import type { SearchTarget } from "../text-search/scope.js";
@@ -17,6 +24,7 @@ import {
 } from "../text-search/update-text.js";
 import { canvasFrames, refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
+import { toOptional, toOptionalFlag, toOptionalText } from "./tool-input.js";
 
 type ToolText = Readonly<{
   content: { type: "text"; text: string }[];
@@ -26,9 +34,57 @@ type ToolText = Readonly<{
 const RUN_SAVES =
   "The run saves this change in its version, like your file edits.";
 
-const searchTextInput = searchTextFields;
+const HIT_ID_MAX = 1200;
 
-const updateTextInput = updateTextFields;
+const searchTextFields = {
+  caseSensitive: toOptionalFlag(
+    "Match upper and lower case exactly. Default false."
+  ),
+  glob: toOptionalText(
+    1,
+    TEXT_SEARCH_GLOB_MAX,
+    'A folder or glob in the project to search too, for example "src/components" or "src/**/*.tsx".'
+  ),
+  query: Schema.String.check(
+    Schema.isMinLength(1),
+    Schema.isMaxLength(TEXT_SEARCH_QUERY_MAX)
+  ).annotate({
+    description:
+      "The text to find, or a regular expression when regex is true.",
+  }),
+  regex: toOptionalFlag(
+    "Read query as a JavaScript regular expression. Default false."
+  ),
+  wholeWord: toOptionalFlag("Match only whole words. Default false."),
+};
+
+const hitIdText = Schema.String.check(
+  Schema.isMinLength(1),
+  Schema.isMaxLength(HIT_ID_MAX)
+);
+
+const hitIdList = Schema.Array(hitIdText).check(
+  Schema.isMinLength(1),
+  Schema.isMaxLength(TEXT_SEARCH_IDS_MAX)
+);
+
+const updateTextFields = {
+  ...searchTextFields,
+  ids: toOptional(
+    hitIdList,
+    "The hit ids from search_text to change. Leave out to change all hits."
+  ),
+  replace: Schema.String.check(
+    Schema.isMaxLength(TEXT_SEARCH_REPLACE_MAX)
+  ).annotate({
+    description:
+      "The new text for each matched part. An empty string deletes the match.",
+  }),
+};
+
+const searchTextInput = toSdkFieldSet(searchTextFields);
+
+const updateTextInput = toSdkFieldSet(updateTextFields);
 
 const searchTextDescription = SEARCH_TEXT_DESCRIPTION;
 

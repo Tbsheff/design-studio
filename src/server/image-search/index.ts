@@ -8,9 +8,7 @@ export {
 
 export {
   PLACE_IMAGE_DESCRIPTION,
-  placeImageFields,
   SEARCH_IMAGES_DESCRIPTION,
-  searchImagesFields,
   toPlaceInput,
   toSearchRequest,
 } from "./input.js";

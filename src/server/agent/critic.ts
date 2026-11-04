@@ -8,12 +8,12 @@ import type {
   SDKUserMessage,
   query,
 } from "@anthropic-ai/claude-agent-sdk";
-import { z } from "zod";
 
 import type { QualityFinding } from "../../shared/contracts.js";
-import { extractJson } from "../../shared/extract-json.js";
 import { diffImages, readPng } from "../preview/visual-diff.js";
 import type { PreviewService } from "../types.js";
+import { toCriticIssues } from "./critic-reply.js";
+import type { CriticIssue } from "./critic-reply.js";
 import { changedSince } from "./screens.js";
 import type { RunScreen } from "./screens.js";
 import type { TasteRule } from "./taste.js";
@@ -35,24 +35,6 @@ const CHANGED_FILES = 4;
 const CHANGED_FILE_CHARS = 6000;
 const CHANGED_TOTAL_CHARS = 14_000;
 const REGRESSION_MIN_PCT = 0.2;
-
-const CriticIssueSchema = z.object({
-  area: z.string().min(1),
-  fix: z.string().min(1),
-  problem: z.string().min(1),
-  screen: z.string().optional(),
-  severity: z.enum(["high", "medium", "low"]),
-  where: z.string().min(1),
-});
-
-export type CriticIssue = z.infer<typeof CriticIssueSchema>;
-
-const CriticReplySchema = z.union([
-  z.array(CriticIssueSchema),
-  z
-    .object({ issues: z.array(CriticIssueSchema) })
-    .transform((value) => value.issues),
-]);
 
 const SCREEN_RULE = `- The images can show several screens of one flow (views of one page, canvas frames or app routes). Review EVERY screen, not only the first, and set "screen" in each issue to the screen name from the image label. A screen marked "opened by the studio without its click path" can have empty text that a script fills in the real flow: do not file empty dynamic text on it.`;
 
@@ -125,7 +107,7 @@ interface CriticResult {
 }
 
 export function parseCriticReply(text: string): CriticIssue[] {
-  return CriticReplySchema.parse(extractJson(text));
+  return toCriticIssues(text);
 }
 
 function findingLine(finding: QualityFinding): string {
@@ -606,3 +588,5 @@ export function criticOutPrefix(
 ): string {
   return path.join(runsDir, `${runId}-critic-${call}`);
 }
+
+export type { CriticIssue } from "./critic-reply.js";

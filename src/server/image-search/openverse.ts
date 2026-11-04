@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { Schema } from "effect";
 
 import type {
   ImageSearchHit,
@@ -25,14 +25,14 @@ const HEADERS = {
   "user-agent": "design-studio (https://openverse.org/)",
 };
 
-const text = z.string().nullish();
+const text = Schema.NullishOr(Schema.String);
 
-const rawImageSchema = z.object({
+const rawImageSchema = Schema.Struct({
   creator: text,
   creator_url: text,
   foreign_landing_url: text,
-  height: z.number().nullish(),
-  id: z.string().trim().min(1),
+  height: Schema.NullishOr(Schema.Number),
+  id: Schema.Trim.check(Schema.isMinLength(1)),
   license: text,
   license_url: text,
   license_version: text,
@@ -40,17 +40,19 @@ const rawImageSchema = z.object({
   source: text,
   thumbnail: text,
   title: text,
-  url: z.string().trim().min(1),
-  width: z.number().nullish(),
+  url: Schema.Trim.check(Schema.isMinLength(1)),
+  width: Schema.NullishOr(Schema.Number),
 });
 
-const pageSchema = z.object({
-  results: z.array(z.unknown()),
+const pageSchema = Schema.Struct({
+  results: Schema.Array(Schema.Unknown),
 });
 
-type RawImage = z.output<typeof rawImageSchema>;
+type RawImage = typeof rawImageSchema.Type;
 
-type Page = z.output<typeof pageSchema>;
+type Page = typeof pageSchema.Type;
+
+const decodeRawImage = Schema.decodeUnknownResult(rawImageSchema);
 
 const textOf = (value: string | null | undefined): string | null => {
   const trimmed = (value ?? "").trim();
@@ -128,7 +130,7 @@ const fetchWithRetry = async (url: URL): Promise<Response> => {
 
 const getJson = async <Output>(
   url: URL,
-  schema: z.ZodType<Output>
+  schema: Schema.Decoder<Output>
 ): Promise<Output> => {
   const response = await fetchWithRetry(url);
 
@@ -142,15 +144,15 @@ const getJson = async <Output>(
     );
   }
 
-  const parsed = schema.safeParse(await response.json());
+  const parsed = Schema.decodeUnknownResult(schema)(await response.json());
 
-  if (!parsed.success) {
+  if (parsed._tag === "Failure") {
     throw new ImageSearchError(
       "The image service sent an answer that is not valid."
     );
   }
 
-  return parsed.data;
+  return parsed.success;
 };
 
 const pageUrl = (request: ImageSearchRequest, page: number): URL => {
@@ -175,10 +177,10 @@ const hitsOf = (pages: readonly Page[], limit: number): ImageSearchHit[] => {
   const hits: ImageSearchHit[] = [];
 
   for (const entry of pages.flatMap((page) => page.results)) {
-    const parsed = rawImageSchema.safeParse(entry);
+    const parsed = decodeRawImage(entry);
 
-    if (parsed.success && hits.length < limit) {
-      hits.push(toHit(parsed.data));
+    if (parsed._tag === "Success" && hits.length < limit) {
+      hits.push(toHit(parsed.success));
     }
   }
 

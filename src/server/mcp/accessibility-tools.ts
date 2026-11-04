@@ -5,10 +5,8 @@ import { frameOf } from "../accessibility/frame.js";
 import type { AccessibilityFrame } from "../accessibility/frame.js";
 import {
   INSPECT_ACCESSIBILITY_DESCRIPTION,
-  inspectAccessibilityFields,
   NO_ACCESSIBILITY_CHANGE,
   SET_ACCESSIBILITY_DESCRIPTION,
-  setAccessibilityFields,
   toAccessibilityChanges,
 } from "../accessibility/input.js";
 import { inspectAccessibility } from "../accessibility/inspect.js";
@@ -24,6 +22,10 @@ import { DirectEditError } from "../direct-edit/engine/errors.js";
 import { describeElement } from "../page-probe/element.js";
 import { scopeOf as refScopeOf } from "../page-probe/layer-ref.js";
 import { resolveSourceLoc } from "../page-probe/source-loc.js";
+import {
+  inspectAccessibilityFields,
+  setAccessibilityFields,
+} from "../platform/tool-fields/accessibility.js";
 import { EditError, loadTarget, refuseWhileRunning } from "./edit-guards.js";
 import type { EditDeps } from "./edit-guards.js";
 import {

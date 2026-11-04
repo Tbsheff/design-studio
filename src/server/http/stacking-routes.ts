@@ -5,13 +5,13 @@ import type { Direction, Project } from "../../shared/contracts.js";
 import type { StackingSetResult } from "../../shared/stacking.js";
 import { DirectEditError } from "../direct-edit/engine/errors.js";
 import type { DirectEditDeps } from "../direct-edit/index.js";
-import { StackingError } from "../stacking/errors.js";
-import { getStacking } from "../stacking/get.js";
 import {
   getStackingFields,
   setStackingFields,
-  toStackingInput,
-} from "../stacking/input.js";
+} from "../platform/tool-fields/stacking.js";
+import { StackingError } from "../stacking/errors.js";
+import { getStacking } from "../stacking/get.js";
+import { toStackingInput } from "../stacking/input.js";
 import { setStacking, toStackingResult } from "../stacking/set.js";
 
 interface StackingRouteDeps {

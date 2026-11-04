@@ -2,14 +2,16 @@ import { z } from "zod";
 
 import type { BreakpointScope } from "../breakpoints/commit.js";
 import { DirectEditError } from "../direct-edit/engine/errors.js";
+import {
+  forcedStateFields,
+  setStateFields,
+} from "../platform/tool-fields/state-styles.js";
 import { StateStyleError } from "../state-styles/errors.js";
 import { forcedSummary, setForcedState } from "../state-styles/forced.js";
 import {
-  forcedStateFields,
   LIST_STATE_STYLES_DESCRIPTION,
   SET_FORCED_STATE_DESCRIPTION,
   SET_STATE_STYLE_DESCRIPTION,
-  setStateFields,
   toStateInput,
 } from "../state-styles/input.js";
 import { listStateStyles } from "../state-styles/list.js";

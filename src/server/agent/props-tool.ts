@@ -1,6 +1,7 @@
-import { z } from "zod";
+import { Schema } from "effect";
 
 import { PROP_NAME, PROP_TEXT_MAX, PROPS_MAX } from "../../shared/props.js";
+import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
 import { resolveInstance } from "../components/use-site.js";
 import { parseSetProps, planSetProps } from "../direct-edit/commit/props.js";
 import { writeAtomic } from "../direct-edit/index.js";
@@ -8,6 +9,8 @@ import { probeOwners } from "../page-probe/owner-probe.js";
 import { refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
 import { editPageUrl } from "./run-target.js";
+import { toOptionalText, toToolInput } from "./tool-input.js";
+import type { ToolArgs, ToolData } from "./tool-input.js";
 
 type ToolText = Readonly<{
   content: { type: "text"; text: string }[];
@@ -16,48 +19,39 @@ type ToolText = Readonly<{
 
 const LOC = /^(.+):(\d+):(\d+)$/;
 
-export const setPropsShape = {
-  path: z
-    .string()
-    .trim()
-    .max(300)
-    .optional()
-    .describe(
-      "Page path. Leave out for the page of the frame in <canvas-context> (or the entry page)."
-    ),
-  props: z
-    .record(
-      z.string().regex(PROP_NAME),
-      z.union([
-        z.string().max(PROP_TEXT_MAX),
-        z.number(),
-        z.boolean(),
-        z.null(),
-      ])
-    )
-    .describe(
-      `1 to ${PROPS_MAX} props. null removes a prop; a value equal to the default removes the attribute.`
-    ),
-  selector: z
-    .string()
-    .trim()
-    .min(1)
-    .max(2000)
-    .optional()
-    .describe(
-      "CSS selector of an element inside the component instance on the live page. The nearest component with props (such as <Button>) is changed."
-    ),
-  source: z
-    .string()
-    .trim()
-    .max(1100)
-    .optional()
-    .describe(
-      'Or the use site as file:line:col of the JSX tag, for example "src/App.tsx:14:9".'
-    ),
+const propValue = Schema.Union([
+  Schema.String.check(Schema.isMaxLength(PROP_TEXT_MAX)),
+  Schema.Number,
+  Schema.Boolean,
+  Schema.Null,
+]);
+
+const propName = Schema.String.check(Schema.isPattern(PROP_NAME));
+
+const setPropsFields = {
+  path: toOptionalText(
+    0,
+    300,
+    "Page path. Leave out for the page of the frame in <canvas-context> (or the entry page)."
+  ),
+  props: Schema.Record(propName, propValue).annotate({
+    description: `1 to ${PROPS_MAX} props. null removes a prop; a value equal to the default removes the attribute.`,
+  }),
+  selector: toOptionalText(
+    1,
+    2000,
+    "CSS selector of an element inside the component instance on the live page. The nearest component with props (such as <Button>) is changed."
+  ),
+  source: toOptionalText(
+    0,
+    1100,
+    'Or the use site as file:line:col of the JSX tag, for example "src/App.tsx:14:9".'
+  ),
 };
 
-const schema = z.object(setPropsShape).strict();
+export const setPropsShape = toSdkFieldSet(setPropsFields);
+
+const schema = toToolInput(setPropsFields);
 
 function text(message: string, isError = false): ToolText {
   return {
@@ -68,7 +62,7 @@ function text(message: string, isError = false): ToolText {
 
 async function useSite(
   deps: DirectToolDeps,
-  input: z.output<typeof schema>
+  input: ToolData<typeof schema>
 ): Promise<{ file: string; line: number; col: number } | string> {
   if (input.source) {
     const match = LOC.exec(input.source);
@@ -115,7 +109,7 @@ async function useSite(
 
 export async function runSetProps(
   deps: DirectToolDeps,
-  args: z.input<typeof schema>
+  args: ToolArgs<typeof schema>
 ): Promise<ToolText> {
   const blocked = refusal(deps.ctx, "set_props");
 
@@ -126,10 +120,7 @@ export async function runSetProps(
   const parsed = schema.safeParse(args);
 
   if (!parsed.success) {
-    return text(
-      `set_props: ${parsed.error.issues.map((issue) => `${issue.path.join(".") || "input"}: ${issue.message}`).join("; ")}`,
-      true
-    );
+    return text(`set_props: ${parsed.error}`, true);
   }
 
   try {

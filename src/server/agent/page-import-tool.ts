@@ -1,13 +1,22 @@
+import { toSdkFieldSet } from "../agent-tools/sdk-shape.js";
+import {
+  PAGE_IMPORT_NAME_MAX,
+  PAGE_IMPORT_SELECTOR_MAX,
+  PAGE_IMPORT_URL_MAX,
+  PAGE_IMPORT_WIDTH_DEFAULT,
+  PAGE_IMPORT_WIDTH_MAX,
+  PAGE_IMPORT_WIDTH_MIN,
+} from "../page-import/deps.js";
 import { PageImportError } from "../page-import/errors.js";
 import { importPage } from "../page-import/import-page.js";
 import {
   IMPORT_PAGE_DESCRIPTION,
-  importPageFields,
   toImportRequest,
 } from "../page-import/input.js";
 import type { ImportPageInput } from "../page-import/input.js";
 import { refusal } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
+import { toOptionalInt, toOptionalText, toTrimmedText } from "./tool-input.js";
 
 type ToolText = Readonly<{
   content: { type: "text"; text: string }[];
@@ -16,7 +25,29 @@ type ToolText = Readonly<{
 
 const RUN_SAVES = "The run saves the new page and frame in its version.";
 
-const importPageInput = importPageFields;
+const importPageFields = {
+  name: toOptionalText(
+    1,
+    PAGE_IMPORT_NAME_MAX,
+    "Name of the new page; it becomes the file name <slug>.html. Leave out to use the page title."
+  ),
+  selector: toOptionalText(
+    1,
+    PAGE_IMPORT_SELECTOR_MAX,
+    'CSS selector of one region to copy, for example "header" or "main > section:nth-of-type(2)". Leave out for the whole page.'
+  ),
+  url: toTrimmedText(1, PAGE_IMPORT_URL_MAX).annotate({
+    description:
+      "The page to copy: an https URL, or http://localhost:<port>/... for the dev server of an attached app.",
+  }),
+  width: toOptionalInt(
+    PAGE_IMPORT_WIDTH_MIN,
+    PAGE_IMPORT_WIDTH_MAX,
+    `Viewport width in px (${PAGE_IMPORT_WIDTH_MIN} to ${PAGE_IMPORT_WIDTH_MAX}). Default ${PAGE_IMPORT_WIDTH_DEFAULT}.`
+  ),
+};
+
+const importPageInput = toSdkFieldSet(importPageFields);
 
 const importPageDescription = IMPORT_PAGE_DESCRIPTION;
 

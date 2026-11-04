@@ -6,13 +6,13 @@ import type { StateStyleResult } from "../../shared/state-styles.js";
 import type { CanvasService } from "../canvas/index.js";
 import { DirectEditError } from "../direct-edit/engine/errors.js";
 import type { DirectEditDeps } from "../direct-edit/index.js";
-import { StateStyleError } from "../state-styles/errors.js";
-import { setForcedState } from "../state-styles/forced.js";
 import {
   forcedStateFields,
   setStateFields,
-  toStateInput,
-} from "../state-styles/input.js";
+} from "../platform/tool-fields/state-styles.js";
+import { StateStyleError } from "../state-styles/errors.js";
+import { setForcedState } from "../state-styles/forced.js";
+import { toStateInput } from "../state-styles/input.js";
 import { listStateStyles } from "../state-styles/list.js";
 import { setStateStyle, toStateResult } from "../state-styles/set.js";
 

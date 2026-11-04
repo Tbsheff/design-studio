@@ -40,7 +40,7 @@ const NATIVE_ON: Record<string, unknown> = {
   "new-cap": [
     "error",
     {
-      capIsNewExceptionPattern: String.raw`^(Schema|Context|Data|Layer|Effect|Stream|PubSub|Option)\.`,
+      capIsNewExceptionPattern: String.raw`^(Schema|Context|Data|Layer|Effect|Stream|PubSub|Option|HttpApiMiddleware)\.`,
     },
   ],
   "no-console": "error",

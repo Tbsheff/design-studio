@@ -119,6 +119,8 @@ const toExportFrame = (found: CanvasFileFrame): ExportFrame => {
   return frame;
 };
 
+const DEFAULT_FRAME_ID = "f1";
+
 const readFrames = async (
   deps: ShareLinkDeps,
   project: Project
@@ -165,6 +167,16 @@ const pickOrAll = async (
   direction: Direction,
   refs: readonly string[]
 ): Promise<PickedFrames> => {
+  const isDefaultOnly = refs.every((ref) => ref.trim() === DEFAULT_FRAME_ID);
+
+  if (refs.length > 0 && isDefaultOnly) {
+    const saved = await readFrames(deps, project);
+
+    if (saved.length === 0) {
+      return await canvasFrames(deps, project, direction);
+    }
+  }
+
   if (refs.length > 0) {
     return await pickFrames(deps, project, refs);
   }

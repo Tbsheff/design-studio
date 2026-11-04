@@ -48,24 +48,46 @@ const toExportFrame = (frame: CanvasFrame): ExportFrame => {
   return out;
 };
 
+interface PickedFrame {
+  readonly exportFrame: ExportFrame;
+  readonly id: string;
+}
+
+const DEFAULT_FRAME_ID = "f1";
+
+const DEFAULT_FRAME: ExportFrame = {
+  height: 900,
+  name: "Desktop",
+  width: 1440,
+};
+
+const toPickedFrame = (frame: CanvasFrame): PickedFrame => ({
+  exportFrame: toExportFrame(frame),
+  id: frame.id,
+});
+
 const pickFrames = async (
   link: LegacyLink,
   projectId: string,
   refs: readonly string[]
-): Promise<readonly CanvasFrame[]> => {
+): Promise<readonly PickedFrame[]> => {
   const project = await link.deps.projects.get(projectId);
   const all = await readFrames(link, project);
 
   return refs.map((ref) => {
     const found = findFrame(all, ref.trim());
 
-    if (!found) {
-      throw new BadRequestError(
-        `No frame ${ref} on the canvas. Call canvas_list for frame ids.`
-      );
+    if (found) {
+      return toPickedFrame(found);
     }
 
-    return found;
+    if (all.length === 0 && ref.trim() === DEFAULT_FRAME_ID) {
+      return { exportFrame: DEFAULT_FRAME, id: DEFAULT_FRAME_ID };
+    }
+
+    throw new BadRequestError(
+      `No frame ${ref} on the canvas. Call canvas_list for frame ids.`
+    );
   });
 };
 
@@ -108,7 +130,7 @@ const toPlanInput = async (
 
   const picked = await pickFrames(link, input.projectId, input.frames);
 
-  out.frames = picked.map((frame) => toExportFrame(frame));
+  out.frames = picked.map((frame) => frame.exportFrame);
   out.frameIds = picked.map((frame) => frame.id);
 
   return out;

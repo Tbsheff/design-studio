@@ -1,6 +1,6 @@
 import { Context, Effect, Layer } from "effect";
 
-import type { ShipResult, ShipSettings } from "../../shared/actions/_core/ship.js";
+import type { ShipResult, ShipSettings } from "@design-studio/actions/_core/ship";
 import { attemptShip } from "./ship-core.js";
 import type { ShipError } from "./ship-core.js";
 import { publishPlan } from "./ship-plans.js";

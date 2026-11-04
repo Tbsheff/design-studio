@@ -1,6 +1,6 @@
-import type { Project, RunRequest } from "../../../shared/actions/_core/contracts";
-import { statesPrompt } from "../../../shared/actions/_core/states";
-import type { InlineRunExtras } from "../../../shared/actions/_core/usage-scope";
+import type { Project, RunRequest } from "@design-studio/actions/_core/contracts";
+import { statesPrompt } from "@design-studio/actions/_core/states";
+import type { InlineRunExtras } from "@design-studio/actions/_core/usage-scope";
 import { api } from "../../api";
 import {
   activeFrame,

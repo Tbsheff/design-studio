@@ -97,7 +97,7 @@ const parseOptions = (args: readonly string[]): Options => {
 
 const loadAction = async (id: string): Promise<CallableAction> => {
   const { AllActions } = await importSource<ActionsModule>(
-    "src/shared/actions/index.ts"
+    "packages/common/actions/src/index.ts"
   );
 
   const found = Object.values(AllActions)

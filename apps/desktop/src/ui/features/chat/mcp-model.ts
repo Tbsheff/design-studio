@@ -1,4 +1,4 @@
-import { routes } from "../../../shared/actions/connection/routes.js";
+import { routes } from "@design-studio/actions/connection/routes";
 import { call } from "../../platform/http.js";
 import type { RouteOutput } from "../../platform/http.js";
 

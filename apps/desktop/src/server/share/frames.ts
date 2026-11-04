@@ -1,12 +1,12 @@
-import { isFrameId } from "../../shared/actions/_core/canvas-file.js";
-import type { Direction, Project } from "../../shared/actions/_core/contracts.js";
-import type { ExportFrame } from "../../shared/actions/_core/export.js";
+import { isFrameId } from "@design-studio/actions/_core/canvas-file";
+import type { Direction, Project } from "@design-studio/actions/_core/contracts";
+import type { ExportFrame } from "@design-studio/actions/_core/export";
 import {
   SHARE_DEFAULT_EXPIRY_HOURS,
   SHARE_EXPIRY_HOURS,
   SHARE_MAX_FRAMES,
-} from "../../shared/actions/_core/share.js";
-import type { ShareExpiryHours } from "../../shared/actions/_core/share.js";
+} from "@design-studio/actions/_core/share";
+import type { ShareExpiryHours } from "@design-studio/actions/_core/share";
 import { readProjectCanvas } from "../canvas/index.js";
 import { parseFrames } from "../export/source.js";
 import type { ExportDeps } from "../export/source.js";

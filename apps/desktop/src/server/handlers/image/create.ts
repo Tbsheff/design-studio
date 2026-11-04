@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { createImage } from "../../../shared/actions/image/create.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { createImage } from "@design-studio/actions/image/create";
 import { ImageGeneratorRunner } from "../../image-generate/index.js";
 import type { Handle } from "../_core/handler.js";
 

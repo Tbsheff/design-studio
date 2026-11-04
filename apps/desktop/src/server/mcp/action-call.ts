@@ -1,7 +1,7 @@
 import { Exit } from "effect";
 
-import type { AnyAction } from "../../shared/actions/_core/action.js";
-import type { WireBody } from "../../shared/actions/_core/wire.js";
+import type { AnyAction } from "@design-studio/actions/_core/action";
+import type { WireBody } from "@design-studio/actions/_core/wire";
 import type { WireArgs } from "../handlers/_core/run-action.js";
 import { failureOf, toWireError } from "../handlers/_core/wire-error.js";
 import { EditError, RUN_BUSY } from "./edit-guards.js";

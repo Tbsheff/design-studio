@@ -1,17 +1,17 @@
 import { useCallback, useEffect, useSyncExternalStore } from "react";
 
-import { routes } from "../../../shared/actions/canvas/routes.js";
-import type { StudioEvent } from "../../../shared/actions/_core/contracts.js";
+import { routes } from "@design-studio/actions/canvas/routes";
+import type { StudioEvent } from "@design-studio/actions/_core/contracts";
 import {
   DEFAULT_FRAME_STATE,
   DEFAULT_MOCK_USER,
   withFrameStateHost,
-} from "../../../shared/actions/_core/frame-state.js";
+} from "@design-studio/actions/_core/frame-state";
 import type {
   FrameStateDef,
   FrameStatesView,
   MockUser,
-} from "../../../shared/actions/_core/frame-state.js";
+} from "@design-studio/actions/_core/frame-state";
 import { useProjectEvents } from "../../platform/events.js";
 import { call } from "../../platform/http.js";
 import type { RouteInput } from "../../platform/http.js";

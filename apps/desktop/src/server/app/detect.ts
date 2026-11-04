@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 
-import type { AppCandidate, AppFramework } from "../../shared/actions/_core/contracts.js";
+import type { AppCandidate, AppFramework } from "@design-studio/actions/_core/contracts";
 
 const DEP_FIELDS = [
   "dependencies",

@@ -1,6 +1,6 @@
 import { Context, Effect, Layer } from "effect";
 
-import { CfFailed } from "../../shared/actions/publish/errors/cf-failed.js";
+import { CfFailed } from "@design-studio/actions/publish/errors/cf-failed";
 import {
   bufferOutput,
   killChild,

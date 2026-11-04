@@ -2,7 +2,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { WORKER_NAME } from "../../shared/actions/publish-remote.js";
+import { WORKER_NAME } from "@design-studio/actions/publish-remote";
 import type {
   PublishBackendMode,
   PublishBackendState,

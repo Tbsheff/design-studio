@@ -10,7 +10,7 @@ export { postForceState, useEditVariant } from "../inspector/edit-variant.js";
 
 export { InspectorSection } from "../inspector/inspector-fields.js";
 
-export type { SelectionContext } from "../../../shared/actions/_core/contracts.js";
+export type { SelectionContext } from "@design-studio/actions/_core/contracts";
 
 export {
   EASING_PRESETS,

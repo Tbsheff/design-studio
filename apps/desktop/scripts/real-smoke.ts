@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 import { chromium } from "playwright-core";
 
-import type { Project, RunSummary, Version } from "../src/shared/actions/_core/contracts.js";
+import type { Project, RunSummary, Version } from "@design-studio/actions/_core/contracts";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const PORT = 4470;

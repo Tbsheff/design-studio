@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import type { Project, RunSummary } from "../../../shared/actions/_core/contracts.js";
+import type { Project, RunSummary } from "@design-studio/actions/_core/contracts";
 import type { AppHealth } from "../../../shared/found-apps.js";
 import { json } from "../../api.js";
 import { formatRelative } from "../../domain/format.js";

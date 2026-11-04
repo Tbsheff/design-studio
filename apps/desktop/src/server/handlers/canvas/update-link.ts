@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { updateLinkCanvas } from "../../../shared/actions/canvas/update-link.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { updateLinkCanvas } from "@design-studio/actions/canvas/update-link";
 import { LinkWriter } from "../../canvas/index.js";
 import type { Handle } from "../_core/handler.js";
 

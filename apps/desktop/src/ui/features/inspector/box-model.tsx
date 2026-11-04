@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
 
-import type { DirectStyleProperty } from "../../../shared/actions/_core/contracts.js";
+import type { DirectStyleProperty } from "@design-studio/actions/_core/contracts";
 import { Icon } from "../../kit/Icon.js";
 import { TokenControl } from "../versions-layers-tokens/token-control.js";
 import { SIDES } from "./css-values.js";

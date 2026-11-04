@@ -1,9 +1,9 @@
 import { Effect } from "effect";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import { BadRequest } from "../../../shared/actions/_core/errors/bad-request.js";
-import { RunInProgress } from "../../../shared/actions/comment/errors/run-in-progress.js";
-import type { startComment } from "../../../shared/actions/comment/start.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import { BadRequest } from "@design-studio/actions/_core/errors/bad-request";
+import { RunInProgress } from "@design-studio/actions/comment/errors/run-in-progress";
+import type { startComment } from "@design-studio/actions/comment/start";
 import { CommentRunStarter } from "../../comments/index.js";
 import type { Handle } from "../_core/handler.js";
 

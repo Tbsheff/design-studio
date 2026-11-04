@@ -3,7 +3,7 @@ import type {
   DirectEditRequest,
   DomPatch,
   TailwindOutcome,
-} from "../../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import type { PreviewPort } from "../../platform/bridge.js";
 
 const RESULT_WAIT_MS = 30_000;

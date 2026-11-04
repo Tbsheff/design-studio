@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { KeyboardEvent } from "react";
 
-import type { QueuedMessage } from "../../../shared/actions/_core/contracts.js";
+import type { QueuedMessage } from "@design-studio/actions/_core/contracts";
 import { Icon } from "../../kit/Icon.js";
 
 const move = (

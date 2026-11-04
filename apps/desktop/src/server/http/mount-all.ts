@@ -1,7 +1,7 @@
 import type { Hono } from "hono";
 
-import type { AnyAction } from "../../shared/actions/_core/action.js";
-import { AllActions } from "../../shared/actions/index.js";
+import type { AnyAction } from "@design-studio/actions/_core/action";
+import { AllActions } from "@design-studio/actions";
 import type { Entries } from "../handlers/_core/handler.js";
 import { ALL_ENTRIES } from "../handlers/all-entries.generated.js";
 import type { StudioRuntime } from "../main/runtime.js";

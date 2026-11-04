@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { listVersion } from "../../../shared/actions/version/list.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { listVersion } from "@design-studio/actions/version/list";
 import { VersionStore } from "../../store/index.js";
 import type { Handle } from "../_core/handler.js";
 

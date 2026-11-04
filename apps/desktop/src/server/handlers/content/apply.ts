@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { applyContent } from "../../../shared/actions/content/apply.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { applyContent } from "@design-studio/actions/content/apply";
 import { ContentWriter } from "../../content/index.js";
 import type { Handle } from "../_core/handler.js";
 

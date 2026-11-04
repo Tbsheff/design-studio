@@ -1,9 +1,9 @@
-import { routes } from "../../../shared/actions/share/routes.js";
+import { routes } from "@design-studio/actions/share/routes";
 import type {
   SharePresenceCursor,
   SharePresenceEvent,
   StudioCursorInput,
-} from "../../../shared/actions/_core/share.js";
+} from "@design-studio/actions/_core/share";
 import type { BridgeFrame } from "../../platform/bridge.js";
 import { call, getRaw } from "../../platform/http.js";
 import {

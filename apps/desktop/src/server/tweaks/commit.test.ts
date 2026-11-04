@@ -4,8 +4,8 @@ import { fileURLToPath } from "node:url";
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { TOKENS_CSS_FILE, TOKENS_FILE } from "../../shared/actions/_core/contracts.js";
-import type { Project, Version } from "../../shared/actions/_core/contracts.js";
+import { TOKENS_CSS_FILE, TOKENS_FILE } from "@design-studio/actions/_core/contracts";
+import type { Project, Version } from "@design-studio/actions/_core/contracts";
 import {
   TWEAKS_FILE,
   type CommitTweaksResult,

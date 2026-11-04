@@ -1,6 +1,6 @@
 import { Context, Effect, Layer } from "effect";
 
-import type { PublicationList } from "../../shared/actions/publish/schema.js";
+import type { PublicationList } from "@design-studio/actions/publish/schema";
 import { CloudListClient } from "../cloud/index.js";
 import type { CloudFailure } from "../cloud/index.js";
 import { DeviceBindings } from "../store/index.js";

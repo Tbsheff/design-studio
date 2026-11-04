@@ -1,4 +1,4 @@
-export { routes as viewportRoutes } from "../../../shared/actions/viewport/routes.js";
+export { routes as viewportRoutes } from "@design-studio/actions/viewport/routes";
 
 export { ChipButton } from "../../kit/chip-button.js";
 

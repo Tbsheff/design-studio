@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-import type { ComponentInfo } from "../../../shared/actions/_core/contracts.js";
+import type { ComponentInfo } from "@design-studio/actions/_core/contracts";
 import { json } from "../../api.js";
 import type { FilesChange } from "../home/use-studio-data.js";
 import { getBlob } from "./deps.js";

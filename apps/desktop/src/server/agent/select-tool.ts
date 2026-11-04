@@ -1,6 +1,6 @@
 import { Schema } from "effect";
 
-import { MATCH_KINDS } from "../../shared/actions/_core/contracts.js";
+import { MATCH_KINDS } from "@design-studio/actions/_core/contracts";
 import {
   toOptionalText,
   toSdkFieldSet,

@@ -1,5 +1,5 @@
 // @generated
-import type { CommentActions } from "../../../shared/actions/comment/index.js";
+import type { CommentActions } from "@design-studio/actions/comment/index";
 import type { Entries } from "../_core/handler.js";
 import { handle as createReplyCommentHandle } from "./create-reply.js";
 import { handle as createCommentHandle } from "./create.js";

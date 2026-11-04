@@ -1,4 +1,4 @@
-import type { ComponentSchema } from "../../../shared/actions/_core/props.js";
+import type { ComponentSchema } from "@design-studio/actions/_core/props";
 
 interface GalleryAxes {
   readonly hasDisabled: boolean;

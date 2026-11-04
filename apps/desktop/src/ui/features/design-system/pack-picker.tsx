@@ -1,6 +1,6 @@
 import { lazy, Suspense, useCallback, useRef, useState } from "react";
 
-import type { PackSummary } from "../../../shared/actions/_core/contracts.js";
+import type { PackSummary } from "@design-studio/actions/_core/contracts";
 import { Icon } from "../../kit/Icon.js";
 import { usePopover } from "../../kit/use-popover.js";
 import { Swatches } from "../inspector/swatches.js";

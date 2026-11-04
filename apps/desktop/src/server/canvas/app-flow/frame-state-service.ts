@@ -1,9 +1,9 @@
-import type { Project } from "../../../shared/actions/_core/contracts.js";
-import { STATE_HINTS } from "../../../shared/actions/_core/frame-state.js";
+import type { Project } from "@design-studio/actions/_core/contracts";
+import { STATE_HINTS } from "@design-studio/actions/_core/frame-state";
 import type {
   FrameStateDef,
   FrameStatesView,
-} from "../../../shared/actions/_core/frame-state.js";
+} from "@design-studio/actions/_core/frame-state";
 import { sessionCookieNames } from "../../app/frame-state-proxy.js";
 import {
   frameStatesView,

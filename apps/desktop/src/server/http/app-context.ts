@@ -11,7 +11,7 @@ import type {
   RunRequest,
   SessionResetReason,
   Version,
-} from "../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import { withLofi } from "../../shared/lofi.js";
 import { levelOf } from "../../shared/run-levels.js";
 import {

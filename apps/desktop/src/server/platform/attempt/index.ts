@@ -1,13 +1,13 @@
 import { Effect } from "effect";
 
-import { BadRequest } from "../../../shared/actions/_core/errors/bad-request.js";
-import { Conflict } from "../../../shared/actions/_core/errors/conflict.js";
+import { BadRequest } from "@design-studio/actions/_core/errors/bad-request";
+import { Conflict } from "@design-studio/actions/_core/errors/conflict";
 import {
   BAD_REQUEST,
   CONFLICT,
   NOT_FOUND,
-} from "../../../shared/actions/_core/errors/http-status-codes.js";
-import { NotFound } from "../../../shared/actions/_core/errors/not-found.js";
+} from "@design-studio/actions/_core/errors/http-status-codes";
+import { NotFound } from "@design-studio/actions/_core/errors/not-found";
 import { BadRequestError } from "../errors/bad-request.js";
 import { ConflictError } from "../errors/conflict.js";
 import { NotFoundError } from "../errors/not-found.js";

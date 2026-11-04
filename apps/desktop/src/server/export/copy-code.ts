@@ -1,5 +1,5 @@
-import { SOURCE_LOC_ATTR } from "../../shared/actions/_core/contracts.js";
-import type { ExportFrame } from "../../shared/actions/_core/export.js";
+import { SOURCE_LOC_ATTR } from "@design-studio/actions/_core/contracts";
+import type { ExportFrame } from "@design-studio/actions/_core/export";
 import { tailwindClassesFor } from "../direct-edit/engine/index.js";
 import type { TailwindTheme } from "../direct-edit/tailwind/index.js";
 import { BadRequestError } from "../platform/errors/index.js";

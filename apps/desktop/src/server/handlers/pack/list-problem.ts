@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { listProblemPack } from "../../../shared/actions/pack/list-problem.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { listProblemPack } from "@design-studio/actions/pack/list-problem";
 import { PackStore, toPage } from "../../design-system/index.js";
 import type { Handle } from "../_core/handler.js";
 

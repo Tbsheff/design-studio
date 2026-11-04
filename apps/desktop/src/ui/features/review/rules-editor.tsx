@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 
-import { DESIGN_RULE_KIND_LABEL } from "../../../shared/actions/_core/design-rules.js";
+import { DESIGN_RULE_KIND_LABEL } from "@design-studio/actions/_core/design-rules";
 import type {
   DesignRule,
   DesignRuleHit,
   DesignRulesState,
   DesignRulesTestResult,
-} from "../../../shared/actions/_core/design-rules.js";
+} from "@design-studio/actions/_core/design-rules";
 import { errorText, rulesApi } from "../../api.js";
 import { activeFrame, canvasStore } from "../canvas/canvas-frames-model.js";
 

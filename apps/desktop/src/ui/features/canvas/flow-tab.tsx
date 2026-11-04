@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
-import type { AppRoute } from "../../../shared/actions/_core/contracts.js";
+import type { AppRoute } from "@design-studio/actions/_core/contracts";
 import { dynamicNames } from "../../../shared/route-flow.js";
 import type { FlowResult } from "../../../shared/route-flow.js";
 import { api, errorText } from "../../api.js";

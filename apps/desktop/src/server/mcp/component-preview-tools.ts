@@ -1,4 +1,4 @@
-import { getComponentPreviewDirectEdit } from "../../shared/actions/direct-edit/get-component-preview.js";
+import { getComponentPreviewDirectEdit } from "@design-studio/actions/direct-edit/get-component-preview";
 import { z } from "../platform/zod-bridge/index.js";
 import { callAction } from "./action-call.js";
 import { EditError, loadTarget } from "./edit-guards.js";

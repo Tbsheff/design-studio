@@ -1,4 +1,4 @@
-export type { RunLevel, ZoomKey } from "../../../shared/actions/_core/contracts.js";
+export type { RunLevel, ZoomKey } from "@design-studio/actions/_core/contracts";
 
 export {
   KEYMAP,

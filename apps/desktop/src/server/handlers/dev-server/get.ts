@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { getDevServer } from "../../../shared/actions/dev-server/get.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { getDevServer } from "@design-studio/actions/dev-server/get";
 import { DevServerStore } from "../../app/index.js";
 import type { Handle } from "../_core/handler.js";
 

@@ -1,4 +1,4 @@
-import type { AppServerStatus } from "../../../shared/actions/_core/contracts";
+import type { AppServerStatus } from "@design-studio/actions/_core/contracts";
 
 const STATE_TEXT: Record<AppServerStatus["state"], string> = {
   failed: "Failed",

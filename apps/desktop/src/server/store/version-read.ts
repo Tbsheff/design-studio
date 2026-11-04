@@ -5,7 +5,7 @@ import type {
   Project,
   Version,
   VersionChanges,
-} from "../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import { splitHunks } from "../../shared/hunk.js";
 import type { PatchHunk } from "../../shared/hunk.js";
 import { savesSettled } from "../direct-edit/commit/index.js";

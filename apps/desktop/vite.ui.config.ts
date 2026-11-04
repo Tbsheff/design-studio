@@ -5,7 +5,7 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import type { Plugin } from "vite";
 
-import { DEFAULT_STUDIO_PORT } from "./src/shared/actions/_core/contracts";
+import { DEFAULT_STUDIO_PORT } from "@design-studio/actions/_core/contracts";
 
 const root = fileURLToPath(new URL(".", import.meta.url));
 
@@ -83,6 +83,20 @@ function moduleList(): Plugin {
 
 export default defineConfig({
   root,
+  resolve: {
+    alias: [
+      {
+        find: /^@design-studio\/actions$/,
+        replacement: fileURLToPath(
+          new URL("../../packages/common/actions/src/index.ts", import.meta.url)
+        ),
+      },
+      {
+        find: /^@design-studio\/actions\//,
+        replacement: `${fileURLToPath(new URL("../../packages/common/actions/src/", import.meta.url))}`,
+      },
+    ],
+  },
   plugins: [react(), tailwindcss(), preloadFonts(), moduleList()],
   build: {
     outDir: "dist/ui",

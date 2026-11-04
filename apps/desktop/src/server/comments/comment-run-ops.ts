@@ -5,7 +5,7 @@ import type {
   Project,
   RunLevel,
   RunRequest,
-} from "../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import { ConflictError, NotFoundError } from "../platform/errors/index.js";
 import type { CommentRuntime } from "./comment-core.js";
 import { toRunPayload } from "./run-payload.js";

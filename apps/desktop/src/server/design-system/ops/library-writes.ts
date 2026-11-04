@@ -1,18 +1,18 @@
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { applyPackPack } from "../../../shared/actions/pack/apply-pack.js";
-import type { createPackPack } from "../../../shared/actions/pack/create-pack.js";
-import type { importPackPack } from "../../../shared/actions/pack/import-pack.js";
-import type { publishDraftPack } from "../../../shared/actions/pack/publish-draft.js";
-import type { PublishedDraft } from "../../../shared/actions/pack/schema.js";
-import type { setPackPack } from "../../../shared/actions/pack/set-pack.js";
-import type { updatePackPack } from "../../../shared/actions/pack/update-pack.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { applyPackPack } from "@design-studio/actions/pack/apply-pack";
+import type { createPackPack } from "@design-studio/actions/pack/create-pack";
+import type { importPackPack } from "@design-studio/actions/pack/import-pack";
+import type { publishDraftPack } from "@design-studio/actions/pack/publish-draft";
+import type { PublishedDraft } from "@design-studio/actions/pack/schema";
+import type { setPackPack } from "@design-studio/actions/pack/set-pack";
+import type { updatePackPack } from "@design-studio/actions/pack/update-pack";
 import type {
   ApplyPackResult,
   DesignSystemCheckResult,
   ImportPackResult,
   PackSummary,
   SavePackResult,
-} from "../../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import { BadRequestError, ConflictError } from "../../platform/errors/index.js";
 import { MAX_IMPORT_ZIP_BYTES, parseImportMode } from "../pack-import.js";
 import { applyPackToDirection, saveDirectionPack } from "../project-pack.js";

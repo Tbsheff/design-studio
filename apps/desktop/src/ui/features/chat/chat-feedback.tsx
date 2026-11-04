@@ -1,6 +1,6 @@
 import { memo, useMemo } from "react";
 
-import type { RunStatus } from "../../../shared/actions/_core/contracts.js";
+import type { RunStatus } from "@design-studio/actions/_core/contracts";
 import { baseName, formatMs, formatUsd } from "../../domain/format.js";
 import { CopyButton } from "../../kit/CopyButton.js";
 import { Icon } from "../../kit/Icon.js";

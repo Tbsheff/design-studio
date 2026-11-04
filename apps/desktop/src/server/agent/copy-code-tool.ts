@@ -1,7 +1,7 @@
 import { Schema } from "effect";
 
-import { COPY_CODE_FORMATS } from "../../shared/actions/_core/export.js";
-import type { ExportFrame } from "../../shared/actions/_core/export.js";
+import { COPY_CODE_FORMATS } from "@design-studio/actions/_core/export";
+import type { ExportFrame } from "@design-studio/actions/_core/export";
 import {
   toOptionalText,
   toSdkFieldSet,

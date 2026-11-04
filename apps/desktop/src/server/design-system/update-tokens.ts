@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 
-import { TOKENS_FILE } from "../../shared/actions/_core/contracts.js";
+import { TOKENS_FILE } from "@design-studio/actions/_core/contracts";
 import type {
   Direction,
   Project,
@@ -11,7 +11,7 @@ import type {
   UpdateTokensResult,
   Version,
   VersionMeta,
-} from "../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import {
   DirectEditError,
   assertCanEdit,

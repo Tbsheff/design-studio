@@ -1,5 +1,5 @@
-import type { Project } from "../../shared/actions/_core/contracts.js";
-import type { CopyCodeFormat, ExportFrame } from "../../shared/actions/_core/export.js";
+import type { Project } from "@design-studio/actions/_core/contracts";
+import type { CopyCodeFormat, ExportFrame } from "@design-studio/actions/_core/export";
 import {
   defaultTailwindTheme,
   projectTailwindTheme,

@@ -1,14 +1,14 @@
 import type {
   LinkTriggerKind,
   LinkVisibility,
-} from "../../../shared/actions/_core/link-interaction.js";
+} from "@design-studio/actions/_core/link-interaction";
 import {
   LINK_DELAY_MAX,
   LINK_KEY_RE,
   LINK_TRIGGERS,
   LINK_URL_MAX,
   LINK_VISIBILITIES,
-} from "../../../shared/actions/_core/link-interaction.js";
+} from "@design-studio/actions/_core/link-interaction";
 import {
   LINK_DURATION_MAX,
   LINK_DURATION_MIN,
@@ -16,12 +16,12 @@ import {
   LINK_INTERACTION_ACTIONS,
   LINK_SELECTOR_MAX,
   LINK_TRANSITIONS,
-} from "../../../shared/actions/_core/links.js";
+} from "@design-studio/actions/_core/links";
 import type {
   LinkAction,
   LinkEasing,
   LinkTransition,
-} from "../../../shared/actions/_core/links.js";
+} from "@design-studio/actions/_core/links";
 import { z } from "../../platform/zod-bridge/index.js";
 import { frameRef } from "../tools.js";
 

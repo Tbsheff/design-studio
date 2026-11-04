@@ -1,5 +1,5 @@
-import { routes as exportRoutes } from "../../../shared/actions/export/routes.js";
-import type { ExportFileResultWire } from "../../../shared/actions/export/schema.js";
+import { routes as exportRoutes } from "@design-studio/actions/export/routes";
+import type { ExportFileResultWire } from "@design-studio/actions/export/schema";
 import type {
   CopyCodeRequest,
   CopyCodeResult,
@@ -12,7 +12,7 @@ import type {
   ExportScope,
   HandoffRequest,
   HandoffResult,
-} from "../../../shared/actions/_core/export.js";
+} from "@design-studio/actions/_core/export";
 import { desktopBridge } from "../../platform/desktop.js";
 import { call as callAction, getJson, sendJson } from "../../platform/http.js";
 import { readStored, uiStore, writeStored } from "../../platform/storage.js";

@@ -4,7 +4,7 @@ import type {
   CommentPrefill,
   SelectionContext,
   Version,
-} from "../../../shared/actions/_core/contracts";
+} from "@design-studio/actions/_core/contracts";
 import { errorText } from "../../api";
 import type { CanvasSource } from "../../features/canvas/canvas-toolbar";
 import type { MentionRequest } from "../../features/chat/use-mentions";

@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import { _electron as electron } from "@playwright/test";
 
 import { writeSkillsFixture } from "../../e2e/support/skills-fixture.js";
-import type { TelemetrySample } from "../../src/shared/actions/_core/contracts.js";
+import type { TelemetrySample } from "@design-studio/actions/_core/contracts";
 
 const ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),

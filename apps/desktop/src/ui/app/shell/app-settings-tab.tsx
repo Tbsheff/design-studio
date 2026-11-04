@@ -1,8 +1,8 @@
 import { useState, useTransition } from "react";
 import type { FormEvent } from "react";
 
-import { envText, parseEnvText } from "../../../shared/actions/_core/app";
-import type { AppServerStatus, AttachedApp } from "../../../shared/actions/_core/contracts";
+import { envText, parseEnvText } from "@design-studio/actions/_core/app";
+import type { AppServerStatus, AttachedApp } from "@design-studio/actions/_core/contracts";
 import { api, errorText } from "../../api";
 
 function envSuggestion(

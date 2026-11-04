@@ -7,16 +7,16 @@ import {
   emptyCanvasFile,
   parseCanvasText,
   serializeCanvasFile,
-} from "../../shared/actions/_core/canvas-file.js";
-import type { CanvasFile } from "../../shared/actions/_core/canvas-file.js";
+} from "@design-studio/actions/_core/canvas-file";
+import type { CanvasFile } from "@design-studio/actions/_core/canvas-file";
 import type {
   CanvasPresence,
   CanvasWriteSource,
   Direction,
   LegacyCanvasNotice,
   Project,
-} from "../../shared/actions/_core/contracts.js";
-import type { LinksFile } from "../../shared/actions/_core/links.js";
+} from "@design-studio/actions/_core/contracts";
+import type { LinksFile } from "@design-studio/actions/_core/links";
 import { writeAtomic as platformWriteAtomic } from "../platform/atomic-write/index.js";
 import { ConflictError } from "../platform/errors/index.js";
 import { createKeyedMutex } from "../platform/mutex/index.js";

@@ -2,10 +2,10 @@ import path from "node:path";
 
 import { Effect } from "effect";
 
-import type { BadRequest } from "../../shared/actions/_core/errors/bad-request.js";
-import type { Conflict } from "../../shared/actions/_core/errors/conflict.js";
-import type { NotFound } from "../../shared/actions/_core/errors/not-found.js";
-import type { Project } from "../../shared/actions/_core/contracts.js";
+import type { BadRequest } from "@design-studio/actions/_core/errors/bad-request";
+import type { Conflict } from "@design-studio/actions/_core/errors/conflict";
+import type { NotFound } from "@design-studio/actions/_core/errors/not-found";
+import type { Project } from "@design-studio/actions/_core/contracts";
 import { attemptKnown } from "../platform/attempt/index.js";
 import { loadConfig } from "../platform/config/index.js";
 import { assertSafeId } from "../platform/errors/index.js";

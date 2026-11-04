@@ -1,6 +1,6 @@
-import { routes } from "../../../shared/actions/direct-edit/routes.js";
+import { routes } from "@design-studio/actions/direct-edit/routes";
 import type { CreateComponentRequest } from "../../../shared/component-create.js";
-import type { SourceLoc } from "../../../shared/actions/_core/contracts.js";
+import type { SourceLoc } from "@design-studio/actions/_core/contracts";
 import { ApiError } from "../../api.js";
 import { call } from "../../platform/http.js";
 

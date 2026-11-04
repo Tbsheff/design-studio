@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 
 import { build } from "esbuild";
 
-import { WORKER_NAME } from "../../shared/actions/publish-remote.js";
+import { WORKER_NAME } from "@design-studio/actions/publish-remote";
 
 export const PUBLISH_BUCKET = WORKER_NAME;
 export const PUBLISH_DATABASE = WORKER_NAME;

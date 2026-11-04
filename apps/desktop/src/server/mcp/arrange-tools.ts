@@ -1,4 +1,4 @@
-import { applyDirectEdit } from "../../shared/actions/direct-edit/apply.js";
+import { applyDirectEdit } from "@design-studio/actions/direct-edit/apply";
 import {
   ALIGN_OPS,
   DISTRIBUTE_OPS,
@@ -6,7 +6,7 @@ import {
   type ArrangeAction,
   type ArrangeResult,
 } from "../../shared/arrange.js";
-import type { Project } from "../../shared/actions/_core/contracts.js";
+import type { Project } from "@design-studio/actions/_core/contracts";
 import { findFrame, frameRef } from "../canvas/index.js";
 import {
   ARRANGE_TARGETS_MAX,

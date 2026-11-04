@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { PACK_FILE, TOKENS_FILE } from "../../shared/actions/_core/contracts.js";
+import { PACK_FILE, TOKENS_FILE } from "@design-studio/actions/_core/contracts";
 import { DESIGN_MD_SECTIONS, TODO_MARK } from "./extract/compose.js";
 import { KIT_PAGE_FILE, renderKitPage } from "./extract/kit-page.js";
 import { DESIGN_MD_FILE, packRegistry } from "./packs.js";

@@ -4,8 +4,8 @@ import type { MutableRefObject, ReactNode } from "react";
 import type {
   InsertKind,
   SelectionContext,
-} from "../../../shared/actions/_core/contracts.js";
-import { TRY_VARIANTS_COMMAND } from "../../../shared/actions/_core/element-variants.js";
+} from "@design-studio/actions/_core/contracts";
+import { TRY_VARIANTS_COMMAND } from "@design-studio/actions/_core/element-variants";
 import { api, errorText } from "../../api.js";
 import {
   collectCommands,

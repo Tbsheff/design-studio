@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { listComponentFoldersDirectEdit } from "../../../shared/actions/direct-edit/list-component-folders.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { listComponentFoldersDirectEdit } from "@design-studio/actions/direct-edit/list-component-folders";
 import { DirectEditStore, toRef } from "../../direct-edit/index.js";
 import type { Handle } from "../_core/handler.js";
 

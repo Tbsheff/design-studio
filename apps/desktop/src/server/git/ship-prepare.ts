@@ -3,7 +3,7 @@ import { lstat, readdir, readFile, readlink, stat } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import type { Direction, Project, RunSummary } from "../../shared/actions/_core/contracts.js";
+import type { Direction, Project, RunSummary } from "@design-studio/actions/_core/contracts";
 import {
   PRIVATE_KEY_PATTERN,
   refusedPath,
@@ -17,7 +17,7 @@ import {
   type ShipRepoInfo,
   type ShipSettings,
   type ShipTemplateVars,
-} from "../../shared/actions/_core/ship.js";
+} from "@design-studio/actions/_core/ship";
 import { findOnPath, userGit } from "../platform/git/index.js";
 import { runGit, runGitBuffer, type GitScope } from "../store/versions.js";
 import { detectShipFormat } from "./ship-format.js";

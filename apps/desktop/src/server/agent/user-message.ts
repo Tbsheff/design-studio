@@ -8,15 +8,15 @@ import type {
   RunComment,
   RunMention,
   SelectionContext,
-} from "../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import {
   isReferenceName,
   plainAttachmentName,
   REFERENCE_LOW_SCORE,
 } from "../../shared/reference.js";
-import { statesTaskBlock } from "../../shared/actions/_core/states.js";
-import { editScopeOf } from "../../shared/actions/_core/usage-scope.js";
-import type { EditScope } from "../../shared/actions/_core/usage-scope.js";
+import { statesTaskBlock } from "@design-studio/actions/_core/states";
+import { editScopeOf } from "@design-studio/actions/_core/usage-scope";
+import type { EditScope } from "@design-studio/actions/_core/usage-scope";
 import { referencePagesBlock } from "../design-system/reference-page.js";
 import type { AgentRunContext, MentionFile } from "../types.js";
 import { referenceBlock, variationBlock } from "../variations/message.js";

@@ -12,6 +12,8 @@
     "noEmit": true,
     "rootDir": "../..",
     "paths": {
+      "@design-studio/actions": ["../../packages/common/actions/src/index.ts"],
+      "@design-studio/actions/*": ["../../packages/common/actions/src/*"],
       "effect": ["../../node_modules/effect"],
       "effect/*": ["../../node_modules/effect/*"]
     }

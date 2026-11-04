@@ -18,15 +18,15 @@ import {
   DEFAULT_SETTINGS,
   LEGACY_DEFAULT_BUDGET_USD,
   SETTINGS_VERSION,
-} from "../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import type {
   AppFramework,
   Direction,
   Project,
   ProjectKind,
   ProjectSettings,
-} from "../../shared/actions/_core/contracts.js";
-import { MAX_SLUG_SUFFIX, slugCandidate } from "../../shared/actions/_core/folders.js";
+} from "@design-studio/actions/_core/contracts";
+import { MAX_SLUG_SUFFIX, slugCandidate } from "@design-studio/actions/_core/folders";
 import { writeAtomic } from "../platform/atomic-write/index.js";
 import {
   BadRequestError,

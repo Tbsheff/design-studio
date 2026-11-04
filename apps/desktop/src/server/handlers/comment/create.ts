@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { createComment } from "../../../shared/actions/comment/create.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { createComment } from "@design-studio/actions/comment/create";
 import { CommentThreadStore } from "../../comments/index.js";
 import type { CreateCommentInput as CommentCreateBody } from "../../store/index.js";
 import type { Handle } from "../_core/handler.js";

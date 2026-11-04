@@ -1,3 +1,3 @@
-export type { Attachment } from "../../shared/actions/_core/contracts.js";
+export type { Attachment } from "@design-studio/actions/_core/contracts";
 
 export type { IconName } from "../kit/Icon.js";

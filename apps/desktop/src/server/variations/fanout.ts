@@ -6,8 +6,8 @@ import type {
   RunRequest,
   VariationBrief,
   VariationStartItem,
-} from "../../shared/actions/_core/contracts.js";
-import type { ElementScope } from "../../shared/actions/_core/element-variants.js";
+} from "@design-studio/actions/_core/contracts";
+import type { ElementScope } from "@design-studio/actions/_core/element-variants";
 
 interface FanOutDeps {
   createDirection(

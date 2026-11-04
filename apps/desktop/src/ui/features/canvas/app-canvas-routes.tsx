@@ -1,8 +1,8 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 
-import { routeLabel } from "../../../shared/actions/_core/app.js";
-import { cleanFrameLabel } from "../../../shared/actions/_core/canvas-file.js";
-import type { AttachedApp, BridgeToParent } from "../../../shared/actions/_core/contracts.js";
+import { routeLabel } from "@design-studio/actions/_core/app";
+import { cleanFrameLabel } from "@design-studio/actions/_core/canvas-file";
+import type { AttachedApp, BridgeToParent } from "@design-studio/actions/_core/contracts";
 import { api } from "../../api.js";
 import { readStored, writeStored } from "../../platform/storage.js";
 import { addFrame, canAddFrame, setFramePath } from "./canvas-frames-model.js";

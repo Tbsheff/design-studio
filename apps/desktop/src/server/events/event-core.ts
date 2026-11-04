@@ -1,4 +1,4 @@
-import type { StudioEvent, StudioEventInput } from "../../shared/actions/_core/contracts.js";
+import type { StudioEvent, StudioEventInput } from "@design-studio/actions/_core/contracts";
 import type { EventListener } from "./event-log.js";
 
 interface BoundEventBus {

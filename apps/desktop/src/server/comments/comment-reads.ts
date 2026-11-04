@@ -1,4 +1,4 @@
-import type { MentionFiles } from "../../shared/actions/comment/schema.js";
+import type { MentionFiles } from "@design-studio/actions/comment/schema";
 import { filterComments } from "../../shared/comments.js";
 import type { CommentFilter } from "../../shared/comments.js";
 import type { CommentRuntime } from "./comment-core.js";

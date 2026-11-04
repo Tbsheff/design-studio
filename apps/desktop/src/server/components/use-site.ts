@@ -5,13 +5,13 @@ import type * as t from "@babel/types";
 import { SourceMapConsumer } from "source-map-js";
 import type { RawSourceMap } from "source-map-js";
 
-import type { SourceLoc } from "../../shared/actions/_core/contracts.js";
+import type { SourceLoc } from "@design-studio/actions/_core/contracts";
 import type {
   ComponentInstance,
   ComponentOwner,
   InstanceQuery,
   PropValue,
-} from "../../shared/actions/_core/props.js";
+} from "@design-studio/actions/_core/props";
 import { parseStack } from "../app/source-map.js";
 import {
   componentSchema,

@@ -1,5 +1,5 @@
-import { createProject as createProjectAction } from "../../../shared/actions/project/create.js";
-import type { PackSummary, Project } from "../../../shared/actions/_core/contracts.js";
+import { createProject as createProjectAction } from "@design-studio/actions/project/create";
+import type { PackSummary, Project } from "@design-studio/actions/_core/contracts";
 import { callAction } from "../action-call.js";
 import { oneLine } from "../edit-guards.js";
 import type { EditDeps } from "../edit-guards.js";

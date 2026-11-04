@@ -4,10 +4,10 @@ import { propertyOf, rule } from "./ast.js";
 import { relativeOf } from "./facts.js";
 
 const TYPE_IMPORT_MESSAGE =
-  "A value import from src/shared/actions in the bridge is banned (S7a, U5), because it puts effect Schema code in the page bundle. Use `import type { BridgeMessage } from \"../shared/actions/bridge-protocol.js\"` and decode on the server side.";
+  "A value import from @design-studio/actions in the bridge is banned (S7a, U5), because it puts effect Schema code in the page bundle. Use `import type { BridgeMessage } from \"@design-studio/actions/bridge-protocol\"` and decode on the server side.";
 
 const CATCH_ALL_MESSAGE =
-  "A Schema.Union member with `type: Schema.String` next to members with `type: Schema.Literal(...)` is banned, because the catch-all matches every message and the union does not discriminate. Use only Schema.Literal type members in the union in src/shared/actions/bridge-protocol.ts.";
+  "A Schema.Union member with `type: Schema.String` next to members with `type: Schema.Literal(...)` is banned, because the catch-all matches every message and the union does not discriminate. Use only Schema.Literal type members in the union in packages/common/actions/src/bridge-protocol.ts.";
 
 const FLOATING_MESSAGE =
   "A call to an async function as a bare statement is banned, because a rejection then has no owner. Use `void name()` to mark it on purpose, or await it in an async function.";
@@ -22,7 +22,7 @@ const isActionsSource = (context, source) => {
 
   const target = relativeOf(path.resolve(path.dirname(context.filename), source));
 
-  return target.startsWith("src/shared/actions/");
+  return target.startsWith("packages/common/actions/src/");
 };
 
 const isValueImport = (node) =>

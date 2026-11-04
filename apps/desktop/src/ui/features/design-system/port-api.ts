@@ -1,11 +1,11 @@
-import { routes } from "../../../shared/actions/workspace/routes.js";
+import { routes } from "@design-studio/actions/workspace/routes";
 import type {
   PortFlowPlan,
   PortPlan,
   PortStartRequest,
   PortStartResult,
-} from "../../../shared/actions/_core/port.js";
-import { PORT_OPEN_EVENT } from "../../../shared/actions/_core/port.js";
+} from "@design-studio/actions/_core/port";
+import { PORT_OPEN_EVENT } from "@design-studio/actions/_core/port";
 import { json } from "../../api.js";
 import { call } from "../../platform/http.js";
 import type { RouteOutput } from "../../platform/http.js";

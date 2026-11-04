@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import type { KeyboardEvent } from "react";
 
-import type { QueuedMessage } from "../../../shared/actions/_core/contracts.js";
+import type { QueuedMessage } from "@design-studio/actions/_core/contracts";
 
 export const QUEUE_MAX = 20;
 

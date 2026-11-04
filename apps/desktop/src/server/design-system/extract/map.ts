@@ -1,4 +1,4 @@
-import type { PackManifest } from "../../../shared/actions/_core/contracts.js";
+import type { PackManifest } from "@design-studio/actions/_core/contracts";
 import type { LoadedPack } from "../packs.js";
 import { applyAliases } from "./aliases.js";
 import type { AliasLink } from "./aliases.js";

@@ -6,8 +6,8 @@ import type {
 import type {
   AgentBinding,
   AnyAction,
-} from "../../shared/actions/_core/action.js";
-import { AllActions } from "../../shared/actions/index.js";
+} from "@design-studio/actions/_core/action";
+import { AllActions } from "@design-studio/actions";
 import { toSdkFields } from "./sdk-shape.js";
 import type { SdkFields } from "./sdk-shape.js";
 

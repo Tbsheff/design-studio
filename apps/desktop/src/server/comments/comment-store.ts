@@ -1,6 +1,6 @@
 import { Context, Effect, Layer } from "effect";
 
-import type { MentionFiles } from "../../shared/actions/comment/schema.js";
+import type { MentionFiles } from "@design-studio/actions/comment/schema";
 import { attemptComments } from "./comment-core.js";
 import type { CommentError } from "./comment-core.js";
 import type { CommentPage } from "./comment-page.js";

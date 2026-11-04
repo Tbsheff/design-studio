@@ -8,7 +8,7 @@ import type {
   Attachment,
   DesignComment,
   Project,
-} from "../src/shared/actions/_core/contracts";
+} from "@design-studio/actions/_core/contracts";
 import { readState } from "./support/server";
 import {
   createProjectViaUi,

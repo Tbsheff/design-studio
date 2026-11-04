@@ -4,7 +4,7 @@ import type {
   CompiledTokenEntry,
   TokenChange,
   Version,
-} from "../../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import { ApiError, api, errorText } from "../../api.js";
 import {
   broadcastTheme,

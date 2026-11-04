@@ -1,10 +1,10 @@
-import { getDesignSystemDirectEdit } from "../../../shared/actions/direct-edit/get-design-system.js";
-import { updateTokensDirectEdit } from "../../../shared/actions/direct-edit/update-tokens.js";
+import { getDesignSystemDirectEdit } from "@design-studio/actions/direct-edit/get-design-system";
+import { updateTokensDirectEdit } from "@design-studio/actions/direct-edit/update-tokens";
 import type {
   CompiledTokenEntry,
   DesignSystemState,
   UpdateTokensResult,
-} from "../../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import { callAction } from "../action-call.js";
 import {
   EditError,

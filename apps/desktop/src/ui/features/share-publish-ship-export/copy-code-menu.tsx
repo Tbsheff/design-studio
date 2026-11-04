@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 
-import type { CopyCodeFormat } from "../../../shared/actions/_core/export.js";
+import type { CopyCodeFormat } from "@design-studio/actions/_core/export";
 import { Icon } from "../../kit/Icon.js";
 import type { IconName } from "../../kit/Icon.js";
 import { usePopover } from "../../kit/use-popover.js";

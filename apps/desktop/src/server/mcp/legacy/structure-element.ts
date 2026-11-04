@@ -1,8 +1,8 @@
-import { applyDirectEdit } from "../../../shared/actions/direct-edit/apply.js";
+import { applyDirectEdit } from "@design-studio/actions/direct-edit/apply";
 import type {
   SourceLoc,
   StructureEditResult,
-} from "../../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import { callAction } from "../action-call.js";
 import { loadTarget, refuseWhileRunning } from "../edit-guards.js";
 import type { EditDeps } from "../edit-guards.js";

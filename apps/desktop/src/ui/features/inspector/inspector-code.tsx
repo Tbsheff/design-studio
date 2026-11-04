@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 
-import type { SelectionContext } from "../../../shared/actions/_core/contracts.js";
-import type { EditorInfo } from "../../../shared/actions/_core/export.js";
+import type { SelectionContext } from "@design-studio/actions/_core/contracts";
+import type { EditorInfo } from "@design-studio/actions/_core/export";
 import { api, errorText } from "../../api.js";
 import { Icon } from "../../kit/Icon.js";
 import { useProjectEvents } from "../../platform/events.js";

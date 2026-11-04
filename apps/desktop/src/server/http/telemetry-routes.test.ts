@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import type { Project, TelemetrySample } from "../../shared/actions/_core/contracts.js";
+import type { Project, TelemetrySample } from "@design-studio/actions/_core/contracts";
 import { createEventBus } from "../events/index.js";
 import { projectStorePorts } from "../main/project-ports.js";
 import {

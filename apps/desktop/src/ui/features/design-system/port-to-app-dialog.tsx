@@ -1,15 +1,15 @@
 import { useState, useTransition, useMemo, useEffect } from "react";
 import type { KeyboardEvent, FormEvent } from "react";
 
-import type { Project } from "../../../shared/actions/_core/contracts.js";
+import type { Project } from "@design-studio/actions/_core/contracts";
 import type { FolderInspection } from "../../../shared/open-app.js";
 import type {
   PortStartResult,
   PortFlowPage,
   PortFlowPlan,
   PortKitMatch,
-} from "../../../shared/actions/_core/port.js";
-import { cleanPortRoute, PORT_LEVEL_LABEL } from "../../../shared/actions/_core/port.js";
+} from "@design-studio/actions/_core/port";
+import { cleanPortRoute, PORT_LEVEL_LABEL } from "@design-studio/actions/_core/port";
 import { errorText, api } from "../../api.js";
 import { Icon } from "../../kit/Icon.js";
 import { UiSelect } from "../../kit/UiSelect.js";

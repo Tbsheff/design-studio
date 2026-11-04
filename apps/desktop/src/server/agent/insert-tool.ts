@@ -1,8 +1,8 @@
 import { Schema } from "effect";
 
-import { INSERT_TEXT_MAX } from "../../shared/actions/_core/insert.js";
-import type { InsertTarget } from "../../shared/actions/_core/insert.js";
-import { PROP_NAME, PROP_TEXT_MAX, PROPS_MAX } from "../../shared/actions/_core/props.js";
+import { INSERT_TEXT_MAX } from "@design-studio/actions/_core/insert";
+import type { InsertTarget } from "@design-studio/actions/_core/insert";
+import { PROP_NAME, PROP_TEXT_MAX, PROPS_MAX } from "@design-studio/actions/_core/props";
 import {
   toDefaulted,
   toOptional,

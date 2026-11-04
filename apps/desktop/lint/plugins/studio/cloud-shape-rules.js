@@ -44,7 +44,7 @@ const ERROR_MESSAGE =
   "new Error in cloud Effect code is banned. Use a Schema.TaggedError from apps/api/src/tenant/errors or apps/api/src/shared-actions.ts, with Effect.die for a defect.";
 
 const STATUS_MESSAGE =
-  "A local HTTP status constant in apps/api is banned. Use the status constants from apps/api/src/shared-actions.ts, and add a missing one to src/shared/actions/_core/errors/http-status-codes.ts.";
+  "A local HTTP status constant in apps/api is banned. Use the status constants from apps/api/src/shared-actions.ts, and add a missing one to packages/common/actions/src/_core/errors/http-status-codes.ts.";
 
 const TAG_MESSAGE =
   "An open _tag field (optional or typed string) is banned, because it drops the typed error union. Use the error union that Effect infers and Effect.catchTags from effect.";

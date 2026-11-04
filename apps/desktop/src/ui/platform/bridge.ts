@@ -5,12 +5,12 @@ import {
   BRIDGE_HELLO_TYPE,
   BRIDGE_PARENT_ORIGIN_PARAM,
   CLOUD_BLOCKED_BRIDGE_TYPES,
-} from "../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import type {
   BridgeToParent,
   ParentToBridge,
   ProjectKind,
-} from "../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 
 export interface BridgeFrame {
   key: string;

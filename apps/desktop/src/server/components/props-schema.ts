@@ -13,7 +13,7 @@ import type {
   PropSpec,
   PropValue,
   VariantGroup,
-} from "../../shared/actions/_core/props.js";
+} from "@design-studio/actions/_core/props";
 import { loadTypeScript } from "../platform/ts-compiler/index.js";
 import {
   compilerOptionsFor,

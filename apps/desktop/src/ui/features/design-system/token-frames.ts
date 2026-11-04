@@ -1,7 +1,7 @@
 import { useEffect, useSyncExternalStore } from "react";
 import type { MutableRefObject } from "react";
 
-import type { BridgeToParent, ProjectKind } from "../../../shared/actions/_core/contracts.js";
+import type { BridgeToParent, ProjectKind } from "@design-studio/actions/_core/contracts";
 import { postToFrame, useBridge } from "../../platform/bridge.js";
 import type { BridgeFrame, ParentMessageBody } from "../../platform/bridge.js";
 

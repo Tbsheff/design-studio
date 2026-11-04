@@ -5,7 +5,7 @@ import type {
   ProjectKind,
   RunLevel,
   Starter,
-} from "../../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import { api } from "../../api.js";
 
 export interface HomeTemplate {

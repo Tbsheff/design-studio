@@ -1,4 +1,4 @@
-import type { CanvasFileFrame } from "../../../shared/actions/_core/canvas-file.js";
+import type { CanvasFileFrame } from "@design-studio/actions/_core/canvas-file";
 
 interface PointResult {
   badge: boolean;

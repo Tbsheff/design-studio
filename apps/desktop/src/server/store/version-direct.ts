@@ -4,7 +4,7 @@ import type {
   Direction,
   Project,
   WorkTreeStatus,
-} from "../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import { comparePaths } from "../platform/git/index.js";
 import type { ObjectStore, TreeEntry } from "../platform/git/index.js";
 import {

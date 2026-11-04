@@ -1,4 +1,4 @@
-import type { Permission } from "../../../../../src/shared/actions/_core/permissions.js";
+import type { Permission } from "@design-studio/actions/_core/permissions";
 import { ROLE_GRANTS, toPermissions } from "../../auth/permissions.js";
 import type { RoleName } from "../../auth/permissions.js";
 import type { OrgRole } from "../../tenant/current-org.js";

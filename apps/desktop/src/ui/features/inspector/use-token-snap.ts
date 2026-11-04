@@ -8,11 +8,11 @@ import {
   useState,
 } from "react";
 
-import { TOKEN_GROUP_FOR_PROPERTY } from "../../../shared/actions/_core/contracts.js";
+import { TOKEN_GROUP_FOR_PROPERTY } from "@design-studio/actions/_core/contracts";
 import type {
   CompiledTokenEntry,
   DirectStyleProperty,
-} from "../../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import {
   isSnappable,
   isUnsetValue,

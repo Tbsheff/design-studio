@@ -3,7 +3,7 @@ import path from "node:path";
 
 import { Context, Effect, Layer } from "effect";
 
-import { NotFound } from "../../shared/actions/_core/errors/not-found.js";
+import { NotFound } from "@design-studio/actions/_core/errors/not-found";
 import { loadConfig } from "../platform/config/index.js";
 
 interface ProjectAccessApi {

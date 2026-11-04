@@ -1,5 +1,5 @@
 // @generated
-import type { ShipActions } from "../../../shared/actions/ship/index.js";
+import type { ShipActions } from "@design-studio/actions/ship/index";
 import type { Entries } from "../_core/handler.js";
 import { handle as getPlanShipHandle } from "./get-plan.js";
 import { handle as getSettingsShipHandle } from "./get-settings.js";

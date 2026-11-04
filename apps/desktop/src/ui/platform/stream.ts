@@ -5,7 +5,7 @@ import {
   type StreamHello,
   type StreamWatchRequest,
 } from "../../shared/app-stream";
-import type { McpApprovalPoll } from "../../shared/actions/_core/export";
+import type { McpApprovalPoll } from "@design-studio/actions/_core/export";
 import { json } from "../api";
 import {
   EVENT_TYPES,

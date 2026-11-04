@@ -1,10 +1,10 @@
-import { applyDirectEdit } from "../../shared/actions/direct-edit/apply.js";
+import { applyDirectEdit } from "@design-studio/actions/direct-edit/apply";
 import type {
   DirectEditRequest,
   DirectEditResult,
   Direction,
   Project,
-} from "../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import {
   describeLocks,
   lockDelta,

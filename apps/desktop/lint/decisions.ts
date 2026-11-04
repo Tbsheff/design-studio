@@ -392,15 +392,15 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/server/run-log/run-log-store.ts",
       "src/server/run-log/run-log-writer.ts",
       "src/server/http/app-run-start.ts",
-      "src/shared/actions/run/get-context.ts",
-      "src/shared/actions/run/get.ts",
-      "src/shared/actions/run/list.ts",
-      "src/shared/actions/run/rename.ts",
-      "src/shared/actions/run/set-permission.ts",
-      "src/shared/actions/run/set-queue.ts",
-      "src/shared/actions/run/set-steer.ts",
-      "src/shared/actions/run/start.ts",
-      "src/shared/actions/run/stop.ts",
+      "../../packages/common/actions/src/run/get-context.ts",
+      "../../packages/common/actions/src/run/get.ts",
+      "../../packages/common/actions/src/run/list.ts",
+      "../../packages/common/actions/src/run/rename.ts",
+      "../../packages/common/actions/src/run/set-permission.ts",
+      "../../packages/common/actions/src/run/set-queue.ts",
+      "../../packages/common/actions/src/run/set-steer.ts",
+      "../../packages/common/actions/src/run/start.ts",
+      "../../packages/common/actions/src/run/stop.ts",
     ],
     rules: { "import/no-relative-parent-imports": "off" },
   },
@@ -434,7 +434,7 @@ export const decisionOverrides: OxlintOverride[] = [
   },
   {
     files: [
-      "src/shared/actions/run/list.ts",
+      "../../packages/common/actions/src/run/list.ts",
       "src/server/run-log/run-log-reads.ts",
     ],
     rules: { "id-length": "off" },
@@ -450,14 +450,14 @@ export const decisionOverrides: OxlintOverride[] = [
   {
     files: [
       "apps/api/src/tenant/repos/comments.ts",
-      "src/shared/actions/token/apply.ts",
+      "../../packages/common/actions/src/token/apply.ts",
       "src/server/handlers/token/{apply,handlers,live}.ts",
-      "src/shared/actions/token/errors/status.ts",
+      "../../packages/common/actions/src/token/errors/status.ts",
       "src/server/token-sweep/deps.ts",
       "src/ui/features/token-sweep/deps.ts",
-      "src/shared/actions/gallery/{create,inspect}.ts",
+      "../../packages/common/actions/src/gallery/{create,inspect}.ts",
       "src/server/handlers/gallery/{create,handlers,inspect,live}.ts",
-      "src/shared/actions/gallery/errors/status.ts",
+      "../../packages/common/actions/src/gallery/errors/status.ts",
       "src/server/gallery/deps.ts",
       "src/server/gallery/engine/axes.ts",
       "src/ui/features/gallery/deps.ts",
@@ -490,8 +490,8 @@ export const decisionOverrides: OxlintOverride[] = [
   },
   {
     files: [
-      "src/shared/actions/image/{create,inspect}.ts",
-      "src/shared/actions/image/errors/status.ts",
+      "../../packages/common/actions/src/image/{create,inspect}.ts",
+      "../../packages/common/actions/src/image/errors/status.ts",
       "src/server/handlers/image/{create,handlers,inspect,live}.ts",
       "src/server/image-generate/deps.ts",
       "src/ui/features/image-generate/deps.ts",
@@ -516,8 +516,8 @@ export const decisionOverrides: OxlintOverride[] = [
     files: [
       "src/server/handlers/viewport/{create,handlers,live,run}.ts",
       "src/server/viewport/{deps,probe}.ts",
-      "src/shared/actions/viewport/{create,run}.ts",
-      "src/shared/actions/viewport/errors/status.ts",
+      "../../packages/common/actions/src/viewport/{create,run}.ts",
+      "../../packages/common/actions/src/viewport/errors/status.ts",
       "src/ui/features/viewport/deps.ts",
     ],
     rules: { "import/no-relative-parent-imports": "off" },
@@ -526,8 +526,8 @@ export const decisionOverrides: OxlintOverride[] = [
     files: [
       "src/server/content/{content-runtime,content-writer,write-content}.ts",
       "src/server/handlers/content/{apply,handlers,live}.ts",
-      "src/shared/actions/content/apply.ts",
-      "src/shared/actions/content/errors/status.ts",
+      "../../packages/common/actions/src/content/apply.ts",
+      "../../packages/common/actions/src/content/errors/status.ts",
       "src/ui/features/content/deps.ts",
     ],
     rules: { "import/no-relative-parent-imports": "off" },
@@ -572,9 +572,10 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/server/preview/{ports,render-contract}.ts",
       "src/server/cloud/{cloud-migration-runner,outbox-store,sync-runner}.ts",
       "src/server/store/{device-bindings,authorizer,data-lock,default-folder,events,git-objects,local-principal,principal,mutex,project-access,project-org,skill-store,starters,studio-info}.ts",
-      "src/{server/handlers/_core/handler,server/handlers/_core/run-action,server/handlers/studio/handlers,server/handlers/studio/health,server/handlers/studio/list-skills,server/handlers/studio/live,shared/actions/studio/health,shared/actions/studio/list-skills}.ts",
+      "src/{server/handlers/_core/handler,server/handlers/_core/run-action,server/handlers/studio/handlers,server/handlers/studio/health,server/handlers/studio/list-skills,server/handlers/studio/live}.ts",
+      "../../packages/common/actions/src/studio/{health,list-skills}.ts",
       "src/server/{http/mount,http/mount-all,handlers/_core/wire-error,mcp/registry,agent-tools/registry,agent-tools/sdk-shape}.ts",
-      "{apps/publish/src/protocol,src/server/handlers/version/{live,handlers,list,get,inspect-diff,list-history,list-hunks,apply-history,apply-hunk,create-session,delete-session,rename,restore,restore-history},src/server/store/version-{read,read-core,store,write,write-core,writer},src/shared/actions/version/{schema,list,get,inspect-diff,list-history,list-hunks,apply-history,apply-hunk,create-session,delete-session,rename,restore,restore-history},src/server/handlers/publish/{live,get,handlers,inspect,list,list-comments,publish,unpublish,restore,delete-comment,start,stop,delete,set,apply},src/server/publish/{cf-cli,publish-service,publish-core,publish-store,legacy-link,plan-card,plan-input,plan-legacy,publish-planner,publish-remote-reads,publish-remote-writes},src/shared/actions/_core/http-status,src/shared/actions/_core/errors/all,src/shared/actions/publish/{errors/status,get,inspect,list,list-comments,publish,unpublish,restore,delete-comment,start,stop,delete,set,apply},src/server/handlers/share/{live,handlers,list,create,delete,update,set-cursor,set-lan},src/server/share/{share-core,share-store,share-listener,live-refresher,share-attempt,share-cards,share-link-store,share-links},src/shared/actions/share/{list,create,delete,update,set-cursor,set-lan},src/server/handlers/comment/{live,handlers,list,search-mention,create,update,delete,delete-reply,create-reply,export,insert,move,set-resolved,start},src/server/comments/{comment-core,comment-reads,comment-run-ops,comment-store,comment-thread-ops,comment-thread-store,comment-page,work-tree,index,comment-insert,frame-target,comment-run-starter,run-payload,run-watch},src/shared/actions/comment/{schema,errors/status,list,search-mention,create,update,delete,delete-reply,create-reply,export,insert,move,set-resolved,start},src/server/handlers/ship/{live,handlers,get-plan,inspect,publish,get-settings,set-settings},src/server/ship/{ship-core,ship-plans,ship-settings,ship-store,ship-runner},src/shared/actions/ship/{schema,get-plan,inspect,publish,get-settings,set-settings},src/server/handlers/export/{live,handlers,get-code,export,export-frame,export-folder,export-handoff,get-handoff},src/server/export/{export-core,export-store,copy-target,export-writer,export-file,export-runs,export-frames,export-write,folder-export,frame-selector},src/shared/actions/export/{schema,get-code,export,export-frame,export-folder,export-handoff,get-handoff},src/server/handlers/pack/{live,handlers,list,get-pack,inspect-pack,get-draft,inspect-draft,apply-pack,create-draft,create-pack,delete-pack,duplicate-pack,export-pack,import-pack,list-summary,list-problem,publish-draft,set-pack,start-editor,update-pack},src/server/design-system/ops/{library-core,library-reads,pack-store,library-backing,library-cards,library-draft-input,library-drafts,library-writes,pack-writer},src/shared/actions/pack/{schema,list,get-pack,inspect-pack,get-draft,inspect-draft,errors/status,errors/pack-exists,apply-pack,create-draft,create-pack,delete-pack,duplicate-pack,export-pack,import-pack,list-summary,list-problem,publish-draft,set-pack,start-editor,update-pack},src/server/handlers/workspace/{live,handlers,get-doctor,get-port-plan,get-usage,list-projects,search-projects,list-found-apps,list-versions,list-files,get-file,list-variants,list-routes,get-frame-html,get-tokens,get-design-md,get-screenshot,get-run-context},src/server/variations/element-variants,src/server/preview/{mcp-read-core,mcp-read-store,doctor-read,usage-read,project-list-read,project-search-read,found-apps-read,version-list-read,file-read,variant-read,route-read,frame-source,frame-html-read,frame-shot-pick,frame-shot-read,token-read,warm-upstream,run-context-read},src/server/mcp/tool-result,src/server/platform/attempt/index,src/shared/actions/workspace/{schema,get-doctor,get-port-plan,get-usage,list-projects,search-projects,list-found-apps,list-versions,list-files,get-file,list-variants,list-routes,get-frame-html,get-tokens,get-design-md,get-screenshot,get-run-context}}.ts",
+      "{apps/publish/src/protocol,src/server/handlers/version/{live,handlers,list,get,inspect-diff,list-history,list-hunks,apply-history,apply-hunk,create-session,delete-session,rename,restore,restore-history},src/server/store/version-{read,read-core,store,write,write-core,writer},packages/common/actions/src/version/{schema,list,get,inspect-diff,list-history,list-hunks,apply-history,apply-hunk,create-session,delete-session,rename,restore,restore-history},src/server/handlers/publish/{live,get,handlers,inspect,list,list-comments,publish,unpublish,restore,delete-comment,start,stop,delete,set,apply},src/server/publish/{cf-cli,publish-service,publish-core,publish-store,legacy-link,plan-card,plan-input,plan-legacy,publish-planner,publish-remote-reads,publish-remote-writes},packages/common/actions/src/_core/http-status,packages/common/actions/src/_core/errors/all,packages/common/actions/src/publish/{errors/status,get,inspect,list,list-comments,publish,unpublish,restore,delete-comment,start,stop,delete,set,apply},src/server/handlers/share/{live,handlers,list,create,delete,update,set-cursor,set-lan},src/server/share/{share-core,share-store,share-listener,live-refresher,share-attempt,share-cards,share-link-store,share-links},packages/common/actions/src/share/{list,create,delete,update,set-cursor,set-lan},src/server/handlers/comment/{live,handlers,list,search-mention,create,update,delete,delete-reply,create-reply,export,insert,move,set-resolved,start},src/server/comments/{comment-core,comment-reads,comment-run-ops,comment-store,comment-thread-ops,comment-thread-store,comment-page,work-tree,index,comment-insert,frame-target,comment-run-starter,run-payload,run-watch},packages/common/actions/src/comment/{schema,errors/status,list,search-mention,create,update,delete,delete-reply,create-reply,export,insert,move,set-resolved,start},src/server/handlers/ship/{live,handlers,get-plan,inspect,publish,get-settings,set-settings},src/server/ship/{ship-core,ship-plans,ship-settings,ship-store,ship-runner},packages/common/actions/src/ship/{schema,get-plan,inspect,publish,get-settings,set-settings},src/server/handlers/export/{live,handlers,get-code,export,export-frame,export-folder,export-handoff,get-handoff},src/server/export/{export-core,export-store,copy-target,export-writer,export-file,export-runs,export-frames,export-write,folder-export,frame-selector},packages/common/actions/src/export/{schema,get-code,export,export-frame,export-folder,export-handoff,get-handoff},src/server/handlers/pack/{live,handlers,list,get-pack,inspect-pack,get-draft,inspect-draft,apply-pack,create-draft,create-pack,delete-pack,duplicate-pack,export-pack,import-pack,list-summary,list-problem,publish-draft,set-pack,start-editor,update-pack},src/server/design-system/ops/{library-core,library-reads,pack-store,library-backing,library-cards,library-draft-input,library-drafts,library-writes,pack-writer},packages/common/actions/src/pack/{schema,list,get-pack,inspect-pack,get-draft,inspect-draft,errors/status,errors/pack-exists,apply-pack,create-draft,create-pack,delete-pack,duplicate-pack,export-pack,import-pack,list-summary,list-problem,publish-draft,set-pack,start-editor,update-pack},src/server/handlers/workspace/{live,handlers,get-doctor,get-port-plan,get-usage,list-projects,search-projects,list-found-apps,list-versions,list-files,get-file,list-variants,list-routes,get-frame-html,get-tokens,get-design-md,get-screenshot,get-run-context},src/server/variations/element-variants,src/server/preview/{mcp-read-core,mcp-read-store,doctor-read,usage-read,project-list-read,project-search-read,found-apps-read,version-list-read,file-read,variant-read,route-read,frame-source,frame-html-read,frame-shot-pick,frame-shot-read,token-read,warm-upstream,run-context-read},src/server/mcp/tool-result,src/server/platform/attempt/index,packages/common/actions/src/workspace/{schema,get-doctor,get-port-plan,get-usage,list-projects,search-projects,list-found-apps,list-versions,list-files,get-file,list-variants,list-routes,get-frame-html,get-tokens,get-design-md,get-screenshot,get-run-context}}.ts",
       "src/server/agent/legacy/agent-ops.ts",
       "src/server/agent/legacy/direct-edit.ts",
       "scripts/stamp/{names,templates,templates-ui,write}.ts",
@@ -587,8 +588,8 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/server/direct-edit/{direct-edit-core,direct-edit-insert-ops,direct-edit-ops}.ts",
       "src/server/handlers/direct-edit/{get-review,get-rules,import-figma,inspect-props-instance,list-props-components,run-review,run-rules-test,set-props,set-rules,set-variant-classes,apply-review-fix,apply-swap,apply,create-component,create-token,delete-text,get-component-preview,get-design-system,get-preview,get-tree,get-tweaks,handlers,insert-component,insert-jsx,inspect-tokens,list-component-folders,list-components,list-insertable,list-swap-candidates,live,run,set-image,set-vector,update-tokens,update-tweaks}.ts",
       "src/server/http/app-direct-edit-routes.ts",
-      "src/shared/actions/direct-edit/{get-review,get-rules,import-figma,inspect-props-instance,list-props-components,run-review,run-rules-test,set-props,set-rules,set-variant-classes,apply-review-fix,apply-swap,apply,create-component,create-token,delete-text,get-component-preview,get-design-system,get-preview,get-tree,get-tweaks,insert-component,insert-jsx,inspect-tokens,list-component-folders,list-components,list-insertable,list-swap-candidates,run,set-image,set-vector,update-tokens,update-tweaks}.ts",
-      "src/shared/actions/direct-edit/errors/{direct-edit-conflict,direct-edit-failed,direct-edit-not-found,status}.ts",
+      "../../packages/common/actions/src/direct-edit/{get-review,get-rules,import-figma,inspect-props-instance,list-props-components,run-review,run-rules-test,set-props,set-rules,set-variant-classes,apply-review-fix,apply-swap,apply,create-component,create-token,delete-text,get-component-preview,get-design-system,get-preview,get-tree,get-tweaks,insert-component,insert-jsx,inspect-tokens,list-component-folders,list-components,list-insertable,list-swap-candidates,run,set-image,set-vector,update-tokens,update-tweaks}.ts",
+      "../../packages/common/actions/src/direct-edit/errors/{direct-edit-conflict,direct-edit-failed,direct-edit-not-found,status}.ts",
     ],
     rules: { "import/no-relative-parent-imports": "off" },
   },
@@ -613,11 +614,11 @@ export const decisionOverrides: OxlintOverride[] = [
   {
     files: [
       "src/server/{cloud/{cloud-session,cloud-session-store,cloud-client,cloud-session-writer},handlers/cloud/{get,set,delete,live,handlers}}.ts",
-      "src/shared/actions/cloud/{get,set,delete}.ts",
+      "../../packages/common/actions/src/cloud/{get,set,delete}.ts",
       "src/server/canvas/links/link-{ops,runtime,store,writer}.ts",
       "src/server/canvas/canvas-{ops,runtime,store,writer}.ts",
       "src/server/handlers/canvas/{apply-implicit-link,create-flow,create-link,delete-link,get-doc,handlers,list-flow-links,list-flow-params,list-frame-states,list-implicit-links,list-links,live,set-doc,set-frame-state,set-presence,set-start-link,update-frame-session,update-link}.ts",
-      "src/shared/actions/canvas/{apply-implicit-link,create-flow,create-link,delete-link,get-doc,index,list-flow-links,list-flow-params,list-frame-states,list-implicit-links,list-links,routes,schema,set-doc,set-frame-state,set-presence,set-start-link,update-frame-session,update-link}.ts",
+      "../../packages/common/actions/src/canvas/{apply-implicit-link,create-flow,create-link,delete-link,get-doc,index,list-flow-links,list-flow-params,list-frame-states,list-implicit-links,list-links,routes,schema,set-doc,set-frame-state,set-presence,set-start-link,update-frame-session,update-link}.ts",
     ],
     rules: { "import/no-relative-parent-imports": "off" },
   },
@@ -638,7 +639,7 @@ export const decisionOverrides: OxlintOverride[] = [
   },
   {
     files: [
-      "src/shared/actions/canvas/{schema,create-flow,set-frame-state,update-frame-session}.ts",
+      "../../packages/common/actions/src/canvas/{schema,create-flow,set-frame-state,update-frame-session}.ts",
     ],
     rules: {
       "eslint/no-magic-numbers": "off",
@@ -649,12 +650,12 @@ export const decisionOverrides: OxlintOverride[] = [
     files: [
       "src/server/app/dev-server-{attempt,ops,runner,runtime,store}.ts",
       "src/server/handlers/dev-server/{create,get,handlers,list-routes,live,run,set,start,stop}.ts",
-      "src/shared/actions/dev-server/{create,get,index,list-routes,routes,run,schema,set,start,stop}.ts",
+      "../../packages/common/actions/src/dev-server/{create,get,index,list-routes,routes,run,schema,set,start,stop}.ts",
     ],
     rules: { "import/no-relative-parent-imports": "off" },
   },
   {
-    files: ["src/shared/actions/dev-server/{create,set}.ts"],
+    files: ["../../packages/common/actions/src/dev-server/{create,set}.ts"],
     rules: { "unicorn/max-nested-calls": "off" },
   },
   {
@@ -676,7 +677,7 @@ export const decisionOverrides: OxlintOverride[] = [
   {
     files: [
       "src/server/handlers/connection/{get-status,handlers,list-activity,list-approvals,live,set-approval,set-status}.ts",
-      "src/shared/actions/connection/{get-status,index,list-activity,list-approvals,routes,schema,set-approval,set-status}.ts",
+      "../../packages/common/actions/src/connection/{get-status,index,list-activity,list-approvals,routes,schema,set-approval,set-status}.ts",
       "src/server/mcp-life/{approval-window-queue,index,mcp-activity-log,mcp-approval-store,mcp-life-runtime,mcp-listener-runner,mcp-settings-store,mcp-settings-writer}.ts",
       "src/server/platform/runtime-slot/index.ts",
     ],
@@ -684,7 +685,7 @@ export const decisionOverrides: OxlintOverride[] = [
   },
   {
     files: [
-      "src/shared/actions/connection/{set-approval,get-status,list-activity,list-approvals,set-status}.ts",
+      "../../packages/common/actions/src/connection/{set-approval,get-status,list-activity,list-approvals,set-status}.ts",
     ],
     rules: { "unicorn/max-nested-calls": "off" },
   },
@@ -828,7 +829,8 @@ export const decisionOverrides: OxlintOverride[] = [
   },
   {
     files: [
-      "src/{server/comments/frame-target,server/comments/run-payload,shared/run-target,server/http/spacing-routes,ui/features/spacing/spacing-bands,server/share/share-links,shared/actions/comment/schema}.ts",
+      "src/{server/comments/frame-target,server/comments/run-payload,shared/run-target,server/http/spacing-routes,ui/features/spacing/spacing-bands,server/share/share-links}.ts",
+      "../../packages/common/actions/src/comment/schema.ts",
     ],
     rules: { "eslint/id-length": "off" },
   },
@@ -836,7 +838,7 @@ export const decisionOverrides: OxlintOverride[] = [
     files: [
       "src/server/http/app-{context,project-files,request,run-parse,*-routes}.ts",
       "apps/api/src/http/{api,groups/*,groups/keys/*,sync/*}.ts",
-      "{src/ui/api,lint/decisions,src/shared/actions/version/{index,routes},src/server/handlers/version/handlers}.ts",
+      "{src/ui/api,lint/decisions,packages/common/actions/src/version/{index,routes},src/server/handlers/version/handlers}.ts",
       "src/server/mcp/run-edit.ts",
     ],
     rules: Object.fromEntries(
@@ -943,8 +945,8 @@ export const decisionOverrides: OxlintOverride[] = [
   {
     files: [
       "**/*.generated.ts",
-      "src/shared/actions/*/index.ts",
-      "src/shared/actions/*/routes.ts",
+      "../../packages/common/actions/src/*/index.ts",
+      "../../packages/common/actions/src/*/routes.ts",
       "src/server/handlers/*/handlers.ts",
       "src/server/main/{live-layer,runtime-check}.ts",
       "src/server/preview/mcp-read-store.ts",
@@ -1064,7 +1066,7 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/server/store/{project-store,project-writer,project-runtime,project-library-runtime,project-library-store,project-library-writer,workspace-runtime,workspace-store,workspace-writer}.ts",
       "src/server/handlers/project/{create,create-attachment,delete-command-rule,get,get-design-md,get-file,get-hidden,handlers,import,list,list-command-rules,live,move-hidden,search,set-design-md,update}.ts",
       "src/server/project-ops/{project-ops-create,project-ops-detail,project-ops-hidden,project-ops-runtime,project-ops-store,project-ops-writer}.ts",
-      "src/shared/actions/project/{create,create-attachment,delete-command-rule,get,get-design-md,get-file,get-hidden,import,list,list-command-rules,move-hidden,schema,search,set-design-md,update}.ts",
+      "../../packages/common/actions/src/project/{create,create-attachment,delete-command-rule,get,get-design-md,get-file,get-hidden,import,list,list-command-rules,move-hidden,schema,search,set-design-md,update}.ts",
     ],
     rules: { "import/no-relative-parent-imports": "off" },
   },

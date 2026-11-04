@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { getPortPlanWorkspace } from "../../../shared/actions/workspace/get-port-plan.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { getPortPlanWorkspace } from "@design-studio/actions/workspace/get-port-plan";
 import { McpReadStore } from "../../preview/index.js";
 import type { Handle } from "../_core/handler.js";
 

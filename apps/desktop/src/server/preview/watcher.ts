@@ -5,7 +5,7 @@ import path from "node:path";
 import { watch } from "chokidar";
 import type { FSWatcher } from "chokidar";
 
-import type { Direction, Project } from "../../shared/actions/_core/contracts.js";
+import type { Direction, Project } from "@design-studio/actions/_core/contracts";
 import type { EventBus, ProjectStore, VersionStore } from "../types.js";
 
 const IGNORED_SEGMENTS = new Set([

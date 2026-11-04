@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { sharedSourceOf } from "../../../shared/actions/_core/app.js";
+import { sharedSourceOf } from "@design-studio/actions/_core/app";
 import { useElementClasses } from "./inspector-classes.js";
 import type { InspectorProps } from "./inspector-model.js";
 

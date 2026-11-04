@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { createViewport } from "../../../shared/actions/viewport/create.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { createViewport } from "@design-studio/actions/viewport/create";
 import { ViewportWriter } from "../../viewport/index.js";
 import type { Handle } from "../_core/handler.js";
 

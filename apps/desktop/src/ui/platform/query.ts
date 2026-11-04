@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 
-import type { ActionId } from "../../shared/actions/_core/action.js";
-import type { ActionDone } from "../../shared/actions/app-stream.js";
+import type { ActionId } from "@design-studio/actions/_core/action";
+import type { ActionDone } from "@design-studio/actions/app-stream";
 import { call } from "./http";
 import type { ActionRoute, RouteInput, RouteOutput } from "./http";
 import { subscribeActionDone } from "./stream";

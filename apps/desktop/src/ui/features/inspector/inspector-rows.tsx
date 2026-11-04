@@ -3,7 +3,7 @@ import { memo, useState, type KeyboardEvent } from "react";
 import type {
   DirectStyleProperty,
   SelectionContext,
-} from "../../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import { textEditability } from "./css-values.js";
 import { DataTextNote, useInspectorApp } from "./inspector-shared.js";
 import { sameEditValues, type DirectEdit } from "./use-direct-edit.js";

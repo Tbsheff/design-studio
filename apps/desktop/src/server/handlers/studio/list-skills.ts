@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { listSkillsStudio } from "../../../shared/actions/studio/list-skills.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { listSkillsStudio } from "@design-studio/actions/studio/list-skills";
 import { SkillStore } from "../../store/index.js";
 import type { Handle } from "../_core/handler.js";
 

@@ -1,3 +1,3 @@
-export type { Project } from "../../../shared/actions/_core/contracts.js";
+export type { Project } from "@design-studio/actions/_core/contracts";
 
 export type { HomeSort } from "../../platform/storage.js";

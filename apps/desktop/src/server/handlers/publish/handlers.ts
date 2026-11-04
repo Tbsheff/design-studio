@@ -1,5 +1,5 @@
 // @generated
-import type { PublishActions } from "../../../shared/actions/publish/index.js";
+import type { PublishActions } from "@design-studio/actions/publish/index";
 import type { Entries } from "../_core/handler.js";
 import { handle as applyPublishHandle } from "./apply.js";
 import { handle as deleteCommentPublishHandle } from "./delete-comment.js";

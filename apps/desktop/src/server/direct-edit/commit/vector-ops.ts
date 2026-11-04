@@ -2,9 +2,9 @@ import { readFile } from "node:fs/promises";
 
 import { parse, type DefaultTreeAdapterMap } from "parse5";
 
-import type { Direction, VersionMeta } from "../../../shared/actions/_core/contracts.js";
-import type { InsertTarget } from "../../../shared/actions/_core/insert.js";
-import { OWNERS_MAX, OWNER_STACK_MAX } from "../../../shared/actions/_core/props.js";
+import type { Direction, VersionMeta } from "@design-studio/actions/_core/contracts";
+import type { InsertTarget } from "@design-studio/actions/_core/insert";
+import { OWNERS_MAX, OWNER_STACK_MAX } from "@design-studio/actions/_core/props";
 import {
   BOOLEAN_OPS,
   DEFAULT_PEN_STROKE,

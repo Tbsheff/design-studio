@@ -8,7 +8,7 @@ import {
   SOURCE_LOC_ATTR,
   type ComponentUse,
   type SourceLoc,
-} from "../../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import { appSourceBody, parseLoc } from "../../page-probe/index.js";
 import { probeOnPage } from "../../preview/probe-page.js";
 import type { PreviewService } from "../../types.js";

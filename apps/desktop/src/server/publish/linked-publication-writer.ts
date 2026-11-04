@@ -1,8 +1,8 @@
 import { Context, Effect, Layer } from "effect";
 
-import type { CfFailed } from "../../shared/actions/publish/errors/cf-failed.js";
-import { isCloudId } from "../../shared/actions/publish/schema.js";
-import type { PublishInput } from "../../shared/actions/publish/schema.js";
+import type { CfFailed } from "@design-studio/actions/publish/errors/cf-failed";
+import { isCloudId } from "@design-studio/actions/publish/schema";
+import type { PublishInput } from "@design-studio/actions/publish/schema";
 import type { Publication } from "../../shared/publish.js";
 import { CloudLinkClient } from "../cloud/index.js";
 import type { CloudFailure } from "../cloud/index.js";

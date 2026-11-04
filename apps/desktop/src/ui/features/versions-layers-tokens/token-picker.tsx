@@ -1,7 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 
-import type { CompiledTokenEntry } from "../../../shared/actions/_core/contracts.js";
+import type { CompiledTokenEntry } from "@design-studio/actions/_core/contracts";
 import {
   colorHex,
   lengthToPx,

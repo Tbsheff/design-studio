@@ -1,5 +1,5 @@
-import { OWNERS_MAX, OWNER_STACK_MAX } from "../shared/actions/_core/props.js";
-import type { ComponentOwner } from "../shared/actions/_core/props.js";
+import { OWNERS_MAX, OWNER_STACK_MAX } from "@design-studio/actions/_core/props";
+import type { ComponentOwner } from "@design-studio/actions/_core/props";
 
 interface OwnerFiber {
   tag?: number;

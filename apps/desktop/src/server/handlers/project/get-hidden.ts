@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { getHiddenProject } from "../../../shared/actions/project/get-hidden.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { getHiddenProject } from "@design-studio/actions/project/get-hidden";
 import { ProjectOpsStore } from "../../project-ops/index.js";
 import type { Handle } from "../_core/handler.js";
 

@@ -7,7 +7,7 @@ import {
   type DesignRule,
   type FontRule,
   type TokenRule,
-} from "../../shared/actions/_core/design-rules.js";
+} from "@design-studio/actions/_core/design-rules";
 
 const FIELD =
   'input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="range"]):not([type="file"]):not([type="color"]):not([type="submit"]):not([type="button"])';

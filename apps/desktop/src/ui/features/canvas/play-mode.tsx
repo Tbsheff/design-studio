@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 
-import { BRIDGE_PASSIVE_PARAM } from "../../../shared/actions/_core/contracts.js";
+import { BRIDGE_PASSIVE_PARAM } from "@design-studio/actions/_core/contracts";
 import type {
   BridgeToParent,
   LinkRect,
   PlayRunOp,
   ProjectKind,
-} from "../../../shared/actions/_core/contracts.js";
-import { targetFrame } from "../../../shared/actions/_core/link-interaction.js";
+} from "@design-studio/actions/_core/contracts";
+import { targetFrame } from "@design-studio/actions/_core/link-interaction";
 import {
   easingCss,
   isBackTarget,
@@ -16,12 +16,12 @@ import {
   LINK_DURATION_DEFAULT,
   reverseTransition,
   staticLinkIssue,
-} from "../../../shared/actions/_core/links.js";
+} from "@design-studio/actions/_core/links";
 import type {
   LinksFile,
   LinkTransition,
   PrototypeLink,
-} from "../../../shared/actions/_core/links.js";
+} from "@design-studio/actions/_core/links";
 import {
   bridgeTrigger,
   runLink,

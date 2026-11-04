@@ -2,9 +2,9 @@ import { realpath, readFile, stat } from "node:fs/promises";
 import { homedir } from "node:os";
 import path from "node:path";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { createDraftPack } from "../../../shared/actions/pack/create-draft.js";
-import type { DraftImage } from "../../../shared/actions/pack/schema.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { createDraftPack } from "@design-studio/actions/pack/create-draft";
+import type { DraftImage } from "@design-studio/actions/pack/schema";
 import { safeFolder } from "../../mcp/folders.js";
 import { BadRequestError } from "../../platform/errors/index.js";
 import { MAX_TOKENS_FILE_BYTES } from "../extract/draft.js";

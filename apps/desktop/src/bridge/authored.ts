@@ -1,4 +1,4 @@
-import type { AuthoredRule } from "../shared/actions/_core/contracts.js";
+import type { AuthoredRule } from "@design-studio/actions/_core/contracts";
 
 export const AUTHORED_MAX_RULES = 60;
 export const AUTHORED_MAX_BYTES = 20_000;

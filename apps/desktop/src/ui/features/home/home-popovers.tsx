@@ -11,7 +11,7 @@ import {
   RUN_LEVELS,
   type PackSummary,
   type RunLevel,
-} from "../../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import { useFitPopover } from "../../domain/popoverPlacement.js";
 import { Icon } from "../../kit/Icon.js";
 import { usePopover } from "../../kit/use-popover.js";

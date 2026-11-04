@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import type { Project } from "../../../shared/actions/_core/contracts";
+import type { Project } from "@design-studio/actions/_core/contracts";
 import type { DesktopCommand } from "../../../shared/desktop-link";
 import { api, errorText } from "../../api";
 import { COMMAND_EVENT, LAYER_EVENT } from "../../features/commands/registry";

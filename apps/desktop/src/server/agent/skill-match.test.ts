@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { SkillInfo } from "../../shared/actions/_core/contracts.js";
+import type { SkillInfo } from "@design-studio/actions/_core/contracts";
 import {
   LOAD_ORDER,
   recommendedSkillsBlock,

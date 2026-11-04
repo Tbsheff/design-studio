@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import type { Project } from "../../../shared/actions/_core/contracts.js";
+import type { Project } from "@design-studio/actions/_core/contracts";
 import { packApi } from "../../platform/pack-api.js";
 import type { DesignSystemActions } from "./design-system-model.js";
 import { refreshPacks } from "./packs.js";

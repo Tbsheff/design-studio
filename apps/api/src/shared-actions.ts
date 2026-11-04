@@ -1,10 +1,10 @@
-export { BadRequest } from "../../../src/shared/actions/_core/errors/bad-request.js";
+export { BadRequest } from "@design-studio/actions/_core/errors/bad-request";
 
-export { Conflict } from "../../../src/shared/actions/_core/errors/conflict.js";
+export { Conflict } from "@design-studio/actions/_core/errors/conflict";
 
-export { Forbidden } from "../../../src/shared/actions/_core/errors/forbidden.js";
+export { Forbidden } from "@design-studio/actions/_core/errors/forbidden";
 
-export { Gone } from "../../../src/shared/actions/_core/errors/gone.js";
+export { Gone } from "@design-studio/actions/_core/errors/gone";
 
 export {
   ACCEPTED,
@@ -18,8 +18,8 @@ export {
   SEE_OTHER,
   TOO_MANY_REQUESTS,
   UNAUTHORIZED,
-} from "../../../src/shared/actions/_core/errors/http-status-codes.js";
+} from "@design-studio/actions/_core/errors/http-status-codes";
 
-export { NotFound } from "../../../src/shared/actions/_core/errors/not-found.js";
+export { NotFound } from "@design-studio/actions/_core/errors/not-found";
 
-export { Unauthenticated } from "../../../src/shared/actions/_core/errors/unauthenticated.js";
+export { Unauthenticated } from "@design-studio/actions/_core/errors/unauthenticated";

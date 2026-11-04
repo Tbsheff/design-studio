@@ -1,11 +1,11 @@
-import { deleteTextDirectEdit } from "../../shared/actions/direct-edit/delete-text.js";
-import { insertJsxDirectEdit } from "../../shared/actions/direct-edit/insert-jsx.js";
+import { deleteTextDirectEdit } from "@design-studio/actions/direct-edit/delete-text";
+import { insertJsxDirectEdit } from "@design-studio/actions/direct-edit/insert-jsx";
 import {
   JSX_IMPORTS_MAX,
   JSX_INSERT_POSITIONS,
   JSX_SNIPPET_MAX,
   type InsertJsxResult,
-} from "../../shared/actions/_core/insert.js";
+} from "@design-studio/actions/_core/insert";
 import { z } from "../platform/zod-bridge/index.js";
 import { callAction } from "./action-call.js";
 import { EditError, loadTarget, refuseWhileRunning } from "./edit-guards.js";

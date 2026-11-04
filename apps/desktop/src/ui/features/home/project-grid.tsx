@@ -13,8 +13,8 @@ import type {
   PackSummary,
   Project,
   RunSummary,
-} from "../../../shared/actions/_core/contracts.js";
-import { shortenHome } from "../../../shared/actions/_core/folders.js";
+} from "@design-studio/actions/_core/contracts";
+import { shortenHome } from "@design-studio/actions/_core/folders";
 import type { AppHealth } from "../../../shared/found-apps.js";
 import {
   projectTypeOf,

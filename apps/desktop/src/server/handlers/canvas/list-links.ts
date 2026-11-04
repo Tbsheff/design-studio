@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { listLinksCanvas } from "../../../shared/actions/canvas/list-links.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { listLinksCanvas } from "@design-studio/actions/canvas/list-links";
 import { LinkStore } from "../../canvas/index.js";
 import type { Handle } from "../_core/handler.js";
 

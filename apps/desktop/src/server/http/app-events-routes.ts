@@ -1,7 +1,7 @@
 import type { Hono } from "hono";
 import { streamSSE } from "hono/streaming";
 
-import type { StudioEvent } from "../../shared/actions/_core/contracts.js";
+import type { StudioEvent } from "@design-studio/actions/_core/contracts";
 import type { AppContext } from "./app-context.js";
 import { HEARTBEAT_MS } from "./app-request.js";
 

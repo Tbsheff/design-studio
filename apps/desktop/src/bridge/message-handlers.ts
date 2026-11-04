@@ -1,4 +1,4 @@
-import type { ParentToBridge } from "../shared/actions/_core/contracts.js";
+import type { ParentToBridge } from "@design-studio/actions/_core/contracts";
 import { anchorQueries, resolveAnchorElement } from "./anchor-tracker.js";
 import { AUTHORED_MAX_BYTES, authoredRules } from "./authored.js";
 import type { BridgeContext, MessageHandlers } from "./bridge-types.js";

@@ -1,5 +1,5 @@
-import { getTweaksDirectEdit } from "../../shared/actions/direct-edit/get-tweaks.js";
-import { updateTweaksDirectEdit } from "../../shared/actions/direct-edit/update-tweaks.js";
+import { getTweaksDirectEdit } from "@design-studio/actions/direct-edit/get-tweaks";
+import { updateTweaksDirectEdit } from "@design-studio/actions/direct-edit/update-tweaks";
 import type { CommitTweaksResult, TweaksState } from "../../shared/tweaks.js";
 import { z } from "../platform/zod-bridge/index.js";
 import { callAction } from "./action-call.js";

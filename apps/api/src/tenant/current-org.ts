@@ -1,6 +1,6 @@
 import { Context } from "effect";
 
-import type { Permission } from "../../../../src/shared/actions/_core/permissions.js";
+import type { Permission } from "@design-studio/actions/_core/permissions";
 
 type OrgRole = "admin" | "member" | "owner" | "viewer";
 

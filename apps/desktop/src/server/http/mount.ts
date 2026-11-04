@@ -1,8 +1,8 @@
 import { Exit } from "effect";
 import type { Context, Hono } from "hono";
 
-import type { AnyAction } from "../../shared/actions/_core/action.js";
-import type { StudioError } from "../../shared/actions/_core/errors/all.js";
+import type { AnyAction } from "@design-studio/actions/_core/action";
+import type { StudioError } from "@design-studio/actions/_core/errors/all";
 import type { Entries } from "../handlers/_core/handler.js";
 import { allowAll, makeRunner } from "../handlers/_core/run-action.js";
 import type {

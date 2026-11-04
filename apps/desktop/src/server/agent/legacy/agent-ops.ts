@@ -1,4 +1,4 @@
-import { AllActions } from "../../../shared/actions/index.js";
+import { AllActions } from "@design-studio/actions";
 
 interface AgentToolBinding {
   readonly lean: boolean;

@@ -2,7 +2,7 @@ import type {
   AppServerStatus,
   PackSummary,
   Project,
-} from "../../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import type { attachReadiness } from "../../app/first-version.js";
 import type { workspaceFields } from "../workspace-tools.js";
 

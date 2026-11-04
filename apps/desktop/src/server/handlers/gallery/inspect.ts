@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { inspectGallery } from "../../../shared/actions/gallery/inspect.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { inspectGallery } from "@design-studio/actions/gallery/inspect";
 import { GalleryStore } from "../../gallery/index.js";
 import type { Handle } from "../_core/handler.js";
 

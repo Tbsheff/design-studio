@@ -1,4 +1,4 @@
-import type { RunMode } from "../../../shared/actions/_core/contracts.js";
+import type { RunMode } from "@design-studio/actions/_core/contracts";
 import { TWEAKS_TOOL } from "../../../shared/tweaks.js";
 import { toolCatalog } from "./tool-catalog.js";
 

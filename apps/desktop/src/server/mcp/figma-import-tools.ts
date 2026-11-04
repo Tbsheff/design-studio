@@ -2,13 +2,13 @@ import { readFile, realpath, stat } from "node:fs/promises";
 import { homedir } from "node:os";
 import path from "node:path";
 
-import { importFigmaDirectEdit } from "../../shared/actions/direct-edit/import-figma.js";
+import { importFigmaDirectEdit } from "@design-studio/actions/direct-edit/import-figma";
 import {
   FIGMA_NODES_MAX_BYTES,
   type FigmaImportPreview,
   type FigmaImportResult,
-} from "../../shared/actions/_core/figma-nodes.js";
-import { JSX_INSERT_POSITIONS } from "../../shared/actions/_core/insert.js";
+} from "@design-studio/actions/_core/figma-nodes";
+import { JSX_INSERT_POSITIONS } from "@design-studio/actions/_core/insert";
 import { z } from "../platform/zod-bridge/index.js";
 import { callAction } from "./action-call.js";
 import {

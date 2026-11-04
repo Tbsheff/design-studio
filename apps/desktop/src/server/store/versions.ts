@@ -17,15 +17,15 @@ import {
 } from "node:fs/promises";
 import path from "node:path";
 
-import { CANVAS_FILE } from "../../shared/actions/_core/canvas-file.js";
+import { CANVAS_FILE } from "@design-studio/actions/_core/canvas-file";
 import type {
   Direction,
   Project,
   Version,
   VersionMeta,
   WorkTreeStatus,
-} from "../../shared/actions/_core/contracts.js";
-import { LINKS_FILE } from "../../shared/actions/_core/links.js";
+} from "@design-studio/actions/_core/contracts";
+import { LINKS_FILE } from "@design-studio/actions/_core/links";
 import {
   baseTitle,
   isRestoreKind,

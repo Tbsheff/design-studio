@@ -1,7 +1,7 @@
 import { readFile, realpath } from "node:fs/promises";
 import path from "node:path";
 
-import type { Direction, SessionResetReason } from "../../shared/actions/_core/contracts.js";
+import type { Direction, SessionResetReason } from "@design-studio/actions/_core/contracts";
 import type { LoadedPack, PackRegistry } from "../design-system/packs.js";
 import {
   BadRequestError,

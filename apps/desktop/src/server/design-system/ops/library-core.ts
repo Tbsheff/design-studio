@@ -1,15 +1,15 @@
 import { Effect } from "effect";
 
-import type { BadRequest } from "../../../shared/actions/_core/errors/bad-request.js";
-import type { Conflict } from "../../../shared/actions/_core/errors/conflict.js";
-import type { NotFound } from "../../../shared/actions/_core/errors/not-found.js";
-import { CheckFailed } from "../../../shared/actions/pack/errors/check-failed.js";
-import { PackExists } from "../../../shared/actions/pack/errors/pack-exists.js";
+import type { BadRequest } from "@design-studio/actions/_core/errors/bad-request";
+import type { Conflict } from "@design-studio/actions/_core/errors/conflict";
+import type { NotFound } from "@design-studio/actions/_core/errors/not-found";
+import { CheckFailed } from "@design-studio/actions/pack/errors/check-failed";
+import { PackExists } from "@design-studio/actions/pack/errors/pack-exists";
 import type {
   Direction,
   PackSummary,
   Project,
-} from "../../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import { attemptKnown } from "../../platform/attempt/index.js";
 import { loadConfig } from "../../platform/config/index.js";
 import {

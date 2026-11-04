@@ -10,7 +10,7 @@ import {
   type RunRequest,
   type VariationBriefsResult,
   type VariationStartResult,
-} from "../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import { levelOf, resolveRunConfig } from "../../shared/run-levels.js";
 import { readDesignSystemState } from "../design-system/state.js";
 import {

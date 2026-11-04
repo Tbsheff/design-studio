@@ -1,14 +1,14 @@
 import { Effect } from "effect";
 
-import { DirectEditConflict } from "../../shared/actions/direct-edit/errors/direct-edit-conflict.js";
-import { DirectEditFailed } from "../../shared/actions/direct-edit/errors/direct-edit-failed.js";
-import { DirectEditNotFound } from "../../shared/actions/direct-edit/errors/direct-edit-not-found.js";
+import { DirectEditConflict } from "@design-studio/actions/direct-edit/errors/direct-edit-conflict";
+import { DirectEditFailed } from "@design-studio/actions/direct-edit/errors/direct-edit-failed";
+import { DirectEditNotFound } from "@design-studio/actions/direct-edit/errors/direct-edit-not-found";
 import {
   CONFLICT_CODES,
   NOT_FOUND_CODES,
-} from "../../shared/actions/direct-edit/schema.js";
-import type { Direction, Project, Version } from "../../shared/actions/_core/contracts.js";
-import type { DesignRule } from "../../shared/actions/_core/design-rules.js";
+} from "@design-studio/actions/direct-edit/schema";
+import type { Direction, Project, Version } from "@design-studio/actions/_core/contracts";
+import type { DesignRule } from "@design-studio/actions/_core/design-rules";
 import type { CanvasService } from "../canvas/index.js";
 import type {
   ComponentPreviews,

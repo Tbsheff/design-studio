@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import type { FrameStatesView } from "../../../shared/actions/_core/frame-state.js";
+import type { FrameStatesView } from "@design-studio/actions/_core/frame-state";
 import { Icon } from "../../kit/Icon.js";
 import { usePopover } from "../../kit/use-popover.js";
 import {

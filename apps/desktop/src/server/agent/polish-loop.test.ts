@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import type { QualityFinding } from "../../shared/actions/_core/contracts.js";
-import { DEFAULT_SETTINGS } from "../../shared/actions/_core/contracts.js";
+import type { QualityFinding } from "@design-studio/actions/_core/contracts";
+import { DEFAULT_SETTINGS } from "@design-studio/actions/_core/contracts";
 import { resolveRunConfig } from "../../shared/run-levels.js";
 import {
   checkSteps,

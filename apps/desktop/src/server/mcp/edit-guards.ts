@@ -1,8 +1,8 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import type { AppFixResult } from "../../shared/actions/_core/app-doctor.js";
-import type { Direction, Project } from "../../shared/actions/_core/contracts.js";
+import type { AppFixResult } from "@design-studio/actions/_core/app-doctor";
+import type { Direction, Project } from "@design-studio/actions/_core/contracts";
 import type { FrameStateDeps } from "../canvas/app-flow/index.js";
 import type { CanvasService } from "../canvas/index.js";
 import { warmKit } from "../components/props-service.js";

@@ -18,7 +18,7 @@ import type {
   SkillCatalog,
   SkillInfo,
   SkillProblem,
-} from "../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 
 const PERSONAL_PLUGIN = "personal";
 

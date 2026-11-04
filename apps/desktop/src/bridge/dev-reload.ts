@@ -1,4 +1,4 @@
-import { BRIDGE_CHANGES_PATH } from "../shared/actions/_core/contracts.js";
+import { BRIDGE_CHANGES_PATH } from "@design-studio/actions/_core/contracts";
 
 interface ChangesReply {
   readonly changedAt: number | null;

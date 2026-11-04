@@ -1,4 +1,4 @@
-import { APP_SOURCE_PATH, DEV_CHROME_SELECTOR } from "../../shared/actions/_core/app.js";
+import { APP_SOURCE_PATH, DEV_CHROME_SELECTOR } from "@design-studio/actions/_core/app";
 import { toDevChromeExpression } from "./dev-chrome-expression.js";
 import type { RenderPage } from "./render-backend.js";
 

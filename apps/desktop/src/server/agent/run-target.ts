@@ -1,15 +1,15 @@
-import { cleanFramePath } from "../../shared/actions/_core/canvas-file.js";
+import { cleanFramePath } from "@design-studio/actions/_core/canvas-file";
 import type {
   Direction,
   Project,
   RunCanvasRef,
-} from "../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import {
   DEFAULT_FRAME_STATE,
   stateLabel,
   withFrameStateHost,
-} from "../../shared/actions/_core/frame-state.js";
-import type { FrameStatesView } from "../../shared/actions/_core/frame-state.js";
+} from "@design-studio/actions/_core/frame-state";
+import type { FrameStatesView } from "@design-studio/actions/_core/frame-state";
 import type { RunTarget, TargetFrame } from "../../shared/run-target.js";
 import { frameStatesView, stateOfFrame } from "../app/frame-state.js";
 import { listAppRoutes, matchRouteFile } from "../app/routes.js";

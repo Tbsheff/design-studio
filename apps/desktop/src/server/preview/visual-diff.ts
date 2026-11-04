@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import pixelmatch from "pixelmatch";
 import { PNG } from "pngjs";
 
-import type { CheckViewport, QualityFinding } from "../../shared/actions/_core/contracts.js";
+import type { CheckViewport, QualityFinding } from "@design-studio/actions/_core/contracts";
 import type { ProbeRect } from "./quality-probe.js";
 
 const BAND_HEIGHT = 200;

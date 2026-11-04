@@ -5,12 +5,12 @@ import {
   PACK_FILE,
   TOKENS_CSS_FILE,
   TOKENS_FILE,
-} from "../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import type {
   CompiledTokenEntry,
   PackManifest,
   TokenFile,
-} from "../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import { createKeyedMutex } from "../platform/mutex/index.js";
 import { compileTokens, parseTokenFile } from "./compile.js";
 import type { ThemeMode } from "./compile.js";

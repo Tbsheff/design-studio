@@ -8,7 +8,7 @@ import {
   TOKEN_NAME_PATTERN,
   TOKENS_CSS_FILE,
   TOKENS_FILE,
-} from "../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import type {
   CreateTokenRequest,
   CreateTokenResult,
@@ -19,7 +19,7 @@ import type {
   TokenGroupName,
   Version,
   VersionMeta,
-} from "../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import {
   DirectEditError,
   assertCanEdit,

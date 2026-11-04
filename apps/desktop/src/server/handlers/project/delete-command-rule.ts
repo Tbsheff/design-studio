@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { deleteCommandRuleProject } from "../../../shared/actions/project/delete-command-rule.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { deleteCommandRuleProject } from "@design-studio/actions/project/delete-command-rule";
 import { ProjectOpsWriter } from "../../project-ops/index.js";
 import type { Handle, Preview } from "../_core/handler.js";
 

@@ -1,4 +1,4 @@
-import type { Version } from "../../../shared/actions/_core/contracts.js";
+import type { Version } from "@design-studio/actions/_core/contracts";
 import {
   baseTitle,
   isRestoreKind,

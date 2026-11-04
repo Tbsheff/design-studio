@@ -22,7 +22,7 @@ export { probeOnPage } from "../preview/probe-page.js";
 
 export { nearestPassingToken } from "../review/checks.js";
 
-export { SOURCE_LOC_ATTR } from "../../shared/actions/_core/contracts.js";
+export { SOURCE_LOC_ATTR } from "@design-studio/actions/_core/contracts";
 
 export {
   ACCESSIBILITY_LABEL_MAX,
@@ -34,7 +34,7 @@ export {
 
 export type { BreakpointScope as AccessibilityScope } from "../breakpoints/commit.js";
 
-export type { CanvasFileFrame } from "../../shared/actions/_core/canvas-file.js";
+export type { CanvasFileFrame } from "@design-studio/actions/_core/canvas-file";
 
 export type { AttrChanges, WrittenFile } from "../direct-edit/commit/index.js";
 
@@ -46,7 +46,7 @@ export type {
   CompiledTokenEntry,
   SourceLoc,
   Version,
-} from "../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 
 export type {
   AccessibilityChanges,

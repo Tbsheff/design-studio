@@ -4,8 +4,8 @@ import {
   type SelectionContext,
   type SourceLoc,
   type TextSourceHints,
-} from "../../shared/actions/_core/contracts.js";
-import type { ComponentOwner } from "../../shared/actions/_core/props.js";
+} from "@design-studio/actions/_core/contracts";
+import type { ComponentOwner } from "@design-studio/actions/_core/props";
 import type { PreviewService } from "../preview/index.js";
 import { probeOnPage } from "../preview/probe-page.js";
 import { appSourceBody, ownerWalk, parseLoc } from "./owner-probe.js";

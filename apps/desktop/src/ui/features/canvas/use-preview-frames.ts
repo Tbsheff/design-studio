@@ -14,7 +14,7 @@ import type {
   SelectMove,
   SelectionContext,
   ZoomKey,
-} from "../../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import { sendTelemetry } from "../../api.js";
 import { frameSrc, postToFrame, useBridge } from "../../platform/bridge.js";
 import type { BridgeFrame, ParentMessageBody } from "../../platform/bridge.js";

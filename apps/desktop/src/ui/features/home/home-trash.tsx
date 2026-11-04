@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import type { TrashItem } from "../../../shared/actions/_core/contracts.js";
+import type { TrashItem } from "@design-studio/actions/_core/contracts";
 import { api, errorText, json } from "../../api.js";
 import { formatRelative, formatTime } from "../../domain/format.js";
 import { Icon } from "../../kit/Icon.js";

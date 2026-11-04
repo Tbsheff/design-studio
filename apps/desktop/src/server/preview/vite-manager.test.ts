@@ -4,8 +4,8 @@ import path from "node:path";
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { BRIDGE_SCRIPT_PATH } from "../../shared/actions/_core/contracts.js";
-import type { StudioEventInput } from "../../shared/actions/_core/contracts.js";
+import { BRIDGE_SCRIPT_PATH } from "@design-studio/actions/_core/contracts";
+import type { StudioEventInput } from "@design-studio/actions/_core/contracts";
 import type { EventBus } from "../types.js";
 import { ViteManager } from "./vite-manager.js";
 

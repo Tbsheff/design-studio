@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { runDirectEdit } from "../../../shared/actions/direct-edit/run.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { runDirectEdit } from "@design-studio/actions/direct-edit/run";
 import { DirectEditWriter, toRef } from "../../direct-edit/index.js";
 import type { Handle } from "../_core/handler.js";
 

@@ -1,7 +1,7 @@
 import { Context, Effect, Layer, Option } from "effect";
 
-import { Forbidden } from "../../shared/actions/_core/errors/forbidden.js";
-import type { Permission } from "../../shared/actions/_core/permissions.js";
+import { Forbidden } from "@design-studio/actions/_core/errors/forbidden";
+import type { Permission } from "@design-studio/actions/_core/permissions";
 import { LocalPrincipal } from "./local-principal.js";
 import { isPermitted } from "./principal.js";
 

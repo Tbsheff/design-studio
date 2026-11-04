@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import type {
   BridgeToParent,
   SelectionContext,
-} from "../../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import { formatMeasure } from "../../../shared/measure.js";
 import { Icon } from "../../kit/Icon.js";
 import { guideStyle } from "./artboard-overlay.js";

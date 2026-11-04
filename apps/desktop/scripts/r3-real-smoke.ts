@@ -10,7 +10,7 @@ import type {
   Project,
   RunSentRecord,
   RunSummary,
-} from "../src/shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const PORT = 4480;

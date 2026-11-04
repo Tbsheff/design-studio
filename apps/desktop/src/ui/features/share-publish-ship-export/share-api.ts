@@ -1,11 +1,11 @@
-import type { createShare } from "../../../shared/actions/share/create.js";
-import type { deleteShare } from "../../../shared/actions/share/delete.js";
-import type { listShare } from "../../../shared/actions/share/list.js";
-import { routes } from "../../../shared/actions/share/routes.js";
-import type { setLanShare } from "../../../shared/actions/share/set-lan.js";
-import type { updateShare } from "../../../shared/actions/share/update.js";
-import type { ExportFrame } from "../../../shared/actions/_core/export.js";
-import type { ShareExpiryHours } from "../../../shared/actions/_core/share.js";
+import type { createShare } from "@design-studio/actions/share/create";
+import type { deleteShare } from "@design-studio/actions/share/delete";
+import type { listShare } from "@design-studio/actions/share/list";
+import { routes } from "@design-studio/actions/share/routes";
+import type { setLanShare } from "@design-studio/actions/share/set-lan";
+import type { updateShare } from "@design-studio/actions/share/update";
+import type { ExportFrame } from "@design-studio/actions/_core/export";
+import type { ShareExpiryHours } from "@design-studio/actions/_core/share";
 import { call } from "../../platform/http.js";
 import type { UiOutput } from "../../platform/http.js";
 

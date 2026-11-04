@@ -1,8 +1,8 @@
 import { Context, Effect, Layer } from "effect";
 
-import type { ApprovalCard } from "../../shared/actions/_core/approval-card.js";
-import type { ShipPlan } from "../../shared/actions/ship/schema.js";
-import type { ShipPrepare, ShipSettings } from "../../shared/actions/_core/ship.js";
+import type { ApprovalCard } from "@design-studio/actions/_core/approval-card";
+import type { ShipPlan } from "@design-studio/actions/ship/schema";
+import type { ShipPrepare, ShipSettings } from "@design-studio/actions/_core/ship";
 import { attemptShip } from "./ship-core.js";
 import type { ShipError } from "./ship-core.js";
 import { inspectPlan, publishCard, readPrepare } from "./ship-plans.js";

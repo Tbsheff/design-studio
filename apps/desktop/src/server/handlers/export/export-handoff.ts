@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { exportHandoffExport } from "../../../shared/actions/export/export-handoff.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { exportHandoffExport } from "@design-studio/actions/export/export-handoff";
 import { ExportWriter } from "../../export/index.js";
 import type { Handle } from "../_core/handler.js";
 

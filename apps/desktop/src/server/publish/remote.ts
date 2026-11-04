@@ -9,7 +9,7 @@ import type {
   PublicationSettings,
   RemoteComment,
   RemotePublication,
-} from "../../shared/actions/publish-remote.js";
+} from "@design-studio/actions/publish-remote";
 import {
   BadRequestError,
   ConflictError,

@@ -8,7 +8,7 @@ import type {
   RunSummary,
   SelectionContext,
   StudioEvent,
-} from "../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import { writeTestDraft } from "../design-system/test-draft.js";
 import { bootAgentRunner } from "../main/agent-runner.js";
 import { buildRuntime } from "../main/runtime.js";

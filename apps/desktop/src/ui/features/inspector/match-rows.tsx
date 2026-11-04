@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { isRawClass } from "../../../shared/actions/_core/style-search.js";
-import type { StyleKind, StyleValueRow } from "../../../shared/actions/_core/style-search.js";
+import { isRawClass } from "@design-studio/actions/_core/style-search";
+import type { StyleKind, StyleValueRow } from "@design-studio/actions/_core/style-search";
 import { Icon } from "../../kit/Icon.js";
 import { usePopover } from "../../kit/use-popover.js";
 import { shownValue, StateTag, Swatch } from "./match-candidates.js";

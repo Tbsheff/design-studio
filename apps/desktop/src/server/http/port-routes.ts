@@ -5,7 +5,7 @@ import type {
   Project,
   RunLevel,
   RunRequest,
-} from "../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import {
   cleanPortRoute,
   PORT_FLOW_MAX_PAGES,
@@ -14,7 +14,7 @@ import {
   type PortFlowPlan,
   type PortPlan,
   type PortStartResult,
-} from "../../shared/actions/_core/port.js";
+} from "@design-studio/actions/_core/port";
 import {
   buildFlowPlan,
   buildPortPlan,

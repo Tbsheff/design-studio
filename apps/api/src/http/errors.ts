@@ -1,5 +1,5 @@
-import type { Forbidden } from "../../../../src/shared/actions/_core/errors/forbidden.js";
-import type { Gone } from "../../../../src/shared/actions/_core/errors/gone.js";
+import type { Forbidden } from "@design-studio/actions/_core/errors/forbidden";
+import type { Gone } from "@design-studio/actions/_core/errors/gone";
 import {
   DEFECT,
   FORBIDDEN,
@@ -7,16 +7,16 @@ import {
   NOT_FOUND,
   TOO_MANY_REQUESTS,
   UNAUTHORIZED,
-} from "../../../../src/shared/actions/_core/errors/http-status-codes.js";
-import type { HttpStatus } from "../../../../src/shared/actions/_core/errors/http-status-codes.js";
-import type { NotFound } from "../../../../src/shared/actions/_core/errors/not-found.js";
-import type { RateLimited } from "../../../../src/shared/actions/_core/errors/rate-limited.js";
-import type { Unauthenticated } from "../../../../src/shared/actions/_core/errors/unauthenticated.js";
-import { toWire } from "../../../../src/shared/actions/_core/wire.js";
+} from "@design-studio/actions/_core/errors/http-status-codes";
+import type { HttpStatus } from "@design-studio/actions/_core/errors/http-status-codes";
+import type { NotFound } from "@design-studio/actions/_core/errors/not-found";
+import type { RateLimited } from "@design-studio/actions/_core/errors/rate-limited";
+import type { Unauthenticated } from "@design-studio/actions/_core/errors/unauthenticated";
+import { toWire } from "@design-studio/actions/_core/wire";
 import type {
   WireBody,
   WireData,
-} from "../../../../src/shared/actions/_core/wire.js";
+} from "@design-studio/actions/_core/wire";
 
 type AuthError = Forbidden | Gone | NotFound | RateLimited | Unauthenticated;
 

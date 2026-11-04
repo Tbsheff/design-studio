@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   projectPreviewHost,
   projectPreviewOrigin,
-} from "../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import { startHtmlServer } from "./html-server.js";
 import type { HtmlServer } from "./html-server.js";
 

@@ -1,5 +1,5 @@
-import { DIRECT_STYLE_PROPERTIES } from "../../../shared/actions/_core/contracts.js";
-import type { AuthoredRule } from "../../../shared/actions/_core/contracts.js";
+import { DIRECT_STYLE_PROPERTIES } from "@design-studio/actions/_core/contracts";
+import type { AuthoredRule } from "@design-studio/actions/_core/contracts";
 
 export interface AuthoredCss {
   rules: AuthoredRule[];

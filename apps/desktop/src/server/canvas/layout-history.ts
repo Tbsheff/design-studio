@@ -2,9 +2,9 @@ import type {
   CanvasFile,
   CanvasFileFrame,
   LayoutChange,
-} from "../../shared/actions/_core/canvas-file.js";
-import type { CanvasWriteSource, Project } from "../../shared/actions/_core/contracts.js";
-import type { LinksFile } from "../../shared/actions/_core/links.js";
+} from "@design-studio/actions/_core/canvas-file";
+import type { CanvasWriteSource, Project } from "@design-studio/actions/_core/contracts";
+import type { LinksFile } from "@design-studio/actions/_core/links";
 
 export type LayoutListener = (
   project: Project,

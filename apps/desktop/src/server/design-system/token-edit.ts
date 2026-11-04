@@ -1,4 +1,4 @@
-import type { TokenChange } from "../../shared/actions/_core/contracts.js";
+import type { TokenChange } from "@design-studio/actions/_core/contracts";
 import {
   endOfString,
   insertMember,

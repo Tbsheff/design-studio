@@ -6,7 +6,7 @@ import type {
   NudgeBase,
   SelectionContext,
   SourceLoc,
-} from "../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import { authoredBox, authoredMargins } from "./authored.js";
 import { tryDom } from "./dom-input.js";
 import { isLayer } from "./layers.js";

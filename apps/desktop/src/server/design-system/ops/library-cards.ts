@@ -1,8 +1,8 @@
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { ApprovalCard } from "../../../shared/actions/_core/approval-card.js";
-import type { applyPackPack } from "../../../shared/actions/pack/apply-pack.js";
-import type { PackFile } from "../../../shared/actions/pack/schema.js";
-import type { PackProblem, PackSummary } from "../../../shared/actions/_core/contracts.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { ApprovalCard } from "@design-studio/actions/_core/approval-card";
+import type { applyPackPack } from "@design-studio/actions/pack/apply-pack";
+import type { PackFile } from "@design-studio/actions/pack/schema";
+import type { PackProblem, PackSummary } from "@design-studio/actions/_core/contracts";
 import { NotFoundError } from "../../platform/errors/index.js";
 import { packProblems } from "../packs.js";
 import type { PackRuntime } from "./library-core.js";

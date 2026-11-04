@@ -6,8 +6,8 @@ import { nanoid } from "nanoid";
 import type {
   PublicationSettings,
   RemotePublication,
-} from "../../shared/actions/publish-remote.js";
-import type { Direction, Project } from "../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/publish-remote";
+import type { Direction, Project } from "@design-studio/actions/_core/contracts";
 import {
   PUBLISH_EXPIRY_DAYS,
   PUBLISH_PASSWORD_MAX,

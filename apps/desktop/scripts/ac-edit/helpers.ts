@@ -15,7 +15,7 @@ import type { Frame, Page } from "@playwright/test";
 import { ROOT } from "../../e2e/support/server";
 import { openHome } from "../../e2e/support/studio";
 import type { StudioApi } from "../../e2e/support/studio";
-import type { Project, RunSummary } from "../../src/shared/actions/_core/contracts";
+import type { Project, RunSummary } from "@design-studio/actions/_core/contracts";
 import { BACKUP_STATE } from "./ports";
 
 export function readState(): { dataDir: string; workDir: string; pid: number } {

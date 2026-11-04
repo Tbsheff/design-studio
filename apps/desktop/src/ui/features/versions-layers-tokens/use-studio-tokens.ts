@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 
-import type { Version } from "../../../shared/actions/_core/contracts.js";
+import type { Version } from "@design-studio/actions/_core/contracts";
 import { useUndoShortcut } from "../canvas/use-undo-shortcut.js";
 import type { RedoShortcut } from "../canvas/use-undo-shortcut.js";
 import { useTokenFrameSync } from "../design-system/token-frames.js";

@@ -3,7 +3,7 @@ import { useState } from "react";
 import type {
   Attachment as UploadedAttachment,
   SelectionContext,
-} from "../../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import { asReferenceName, isReferenceName } from "../../../shared/reference.js";
 import {
   Attachment,

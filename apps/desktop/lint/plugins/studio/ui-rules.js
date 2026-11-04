@@ -15,7 +15,7 @@ const READ_MESSAGE =
   "useAction on a read action with no input is banned, because the read never runs. Use useAction(action, input) from src/ui/platform/query.ts.";
 
 const CAST_MESSAGE =
-  "Casting an action call with as Promise<...> is banned. Use WireOutput<typeof action> from src/shared/actions/_core/action.ts and the typed call from src/ui/platform/http.ts.";
+  "Casting an action call with as Promise<...> is banned. Use WireOutput<typeof action> from packages/common/actions/src/_core/action.ts and the typed call from src/ui/platform/http.ts.";
 
 const BARREL_MESSAGE =
   "A wildcard re-export (export * from) is banned in the UI. Use a named import from the real module, for example from src/ui/platform/<module>.ts.";
@@ -90,7 +90,7 @@ const THEN_MESSAGE =
   "A .then chain on an action call or in a platform, feature, app, kit or domain file is banned. Use await in an async function, or startTransition from react.";
 
 const WIRE_CAST_MESSAGE =
-  "A type cast on action data in the UI is banned. Use WireOutput<typeof action> from src/shared/actions/_core/action.ts and the typed call from src/ui/platform/http.ts.";
+  "A type cast on action data in the UI is banned. Use WireOutput<typeof action> from packages/common/actions/src/_core/action.ts and the typed call from src/ui/platform/http.ts.";
 
 const NEW_UI = /^src\/ui\/(?:app|domain|features|kit|platform)\//u;
 

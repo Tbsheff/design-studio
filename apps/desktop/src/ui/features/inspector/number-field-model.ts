@@ -1,4 +1,4 @@
-import type { DirectStyleProperty } from "../../../shared/actions/_core/contracts.js";
+import type { DirectStyleProperty } from "@design-studio/actions/_core/contracts";
 import {
   lengthToPx,
   resolveTokenValue,

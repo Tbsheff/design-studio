@@ -22,8 +22,8 @@ import type {
   RunMention,
   RunMode,
   SelectionContext,
-} from "../../../shared/actions/_core/contracts.js";
-import { elementVariantsIntent } from "../../../shared/actions/_core/element-variants.js";
+} from "@design-studio/actions/_core/contracts";
+import { elementVariantsIntent } from "@design-studio/actions/_core/element-variants";
 import { shortcutLabel } from "../../../shared/keymap.js";
 import {
   Composer,

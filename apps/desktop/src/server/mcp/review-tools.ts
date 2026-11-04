@@ -1,11 +1,11 @@
-import { applyReviewFixDirectEdit } from "../../shared/actions/direct-edit/apply-review-fix.js";
-import { runReviewDirectEdit } from "../../shared/actions/direct-edit/run-review.js";
+import { applyReviewFixDirectEdit } from "@design-studio/actions/direct-edit/apply-review-fix";
+import { runReviewDirectEdit } from "@design-studio/actions/direct-edit/run-review";
 import {
   REVIEW_FIX_MAX,
   type ReviewFinding,
   type ReviewFixResult,
   type ReviewResult,
-} from "../../shared/actions/_core/review.js";
+} from "@design-studio/actions/_core/review";
 import { frameRef } from "../canvas/index.js";
 import { z } from "../platform/zod-bridge/index.js";
 import { callAction } from "./action-call.js";

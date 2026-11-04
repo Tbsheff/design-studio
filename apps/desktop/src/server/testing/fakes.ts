@@ -12,7 +12,7 @@ import {
   type StudioEventInput,
   type Version,
   type VersionMeta,
-} from "../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import type {
   EventBus,
   PreviewService,

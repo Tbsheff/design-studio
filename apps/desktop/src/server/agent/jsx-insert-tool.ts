@@ -4,7 +4,7 @@ import {
   JSX_IMPORTS_MAX,
   JSX_INSERT_POSITIONS,
   JSX_SNIPPET_MAX,
-} from "../../shared/actions/_core/insert.js";
+} from "@design-studio/actions/_core/insert";
 import {
   toDefaulted,
   toOptional,

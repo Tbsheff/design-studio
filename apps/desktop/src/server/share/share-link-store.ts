@@ -4,7 +4,7 @@ import type {
   ShareCreated,
   ShareLinkResult,
   ShareRevoked,
-} from "../../shared/actions/share/schema.js";
+} from "@design-studio/actions/share/schema";
 import { attemptShare } from "./share-attempt.js";
 import type { ShareError } from "./share-attempt.js";
 import {

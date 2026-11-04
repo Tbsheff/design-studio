@@ -4,10 +4,10 @@ import type {
   Method,
   WireInput,
   WireOutput,
-} from "../../shared/actions/_core/action.js";
-import type { WireBody } from "../../shared/actions/_core/wire.js";
-import type { AllActions } from "../../shared/actions/index.js";
-import { STUDIO_TOKEN_HEADER } from "../../shared/actions/_core/contracts";
+} from "@design-studio/actions/_core/action";
+import type { WireBody } from "@design-studio/actions/_core/wire";
+import type { AllActions } from "@design-studio/actions";
+import { STUDIO_TOKEN_HEADER } from "@design-studio/actions/_core/contracts";
 import { getSession } from "./session";
 
 type HttpMethod = Method;

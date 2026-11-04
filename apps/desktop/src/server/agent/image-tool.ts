@@ -3,7 +3,7 @@ import path from "node:path";
 
 import { Schema } from "effect";
 
-import type { SourceLoc } from "../../shared/actions/_core/contracts.js";
+import type { SourceLoc } from "@design-studio/actions/_core/contracts";
 import {
   IMAGE_ALT_MAX,
   IMAGE_FITS,

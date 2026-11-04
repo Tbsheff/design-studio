@@ -24,7 +24,7 @@ import {
   DEFAULT_PREVIEW_PORT,
   type RunRequest,
   type RunSummary,
-} from "../src/shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 
 const MODEL = process.env["SMOKE_MODEL"] ?? "claude-haiku-5-5";
 const SKILL = process.env["SMOKE_SKILL"] ?? "personal:example-skill";

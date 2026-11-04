@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { listInsertableDirectEdit } from "../../../shared/actions/direct-edit/list-insertable.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { listInsertableDirectEdit } from "@design-studio/actions/direct-edit/list-insertable";
 import { DirectEditStore, toRef } from "../../direct-edit/index.js";
 import type { Handle } from "../_core/handler.js";
 

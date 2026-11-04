@@ -9,8 +9,8 @@ import {
 import type { KeyboardEvent, ReactNode, CSSProperties, RefObject } from "react";
 import { createPortal } from "react-dom";
 
-import { RUN_LEVELS } from "../../../shared/actions/_core/contracts.js";
-import type { RunLevel } from "../../../shared/actions/_core/contracts.js";
+import { RUN_LEVELS } from "@design-studio/actions/_core/contracts";
+import type { RunLevel } from "@design-studio/actions/_core/contracts";
 import { Icon } from "../../kit/Icon.js";
 import type { IconName } from "../../kit/Icon.js";
 import { usePopover } from "../../kit/use-popover.js";

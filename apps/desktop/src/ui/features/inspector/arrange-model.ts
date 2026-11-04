@@ -1,7 +1,7 @@
 import type { MutableRefObject } from "react";
 
 import type { ArrangeAction, ArrangeResult } from "../../../shared/arrange.js";
-import type { SelectionContext } from "../../../shared/actions/_core/contracts.js";
+import type { SelectionContext } from "@design-studio/actions/_core/contracts";
 import type { KeyId } from "../../../shared/keymap.js";
 import type { PreviewPort } from "../../platform/bridge.js";
 import { uiStore } from "../../platform/storage.js";

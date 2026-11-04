@@ -3,7 +3,7 @@ import path from "node:path";
 
 import type * as t from "@babel/types";
 
-import type { SourceLoc } from "../../shared/actions/_core/contracts.js";
+import type { SourceLoc } from "@design-studio/actions/_core/contracts";
 import { parseSource } from "../direct-edit/engine/index.js";
 import { EditError } from "./edit-error.js";
 

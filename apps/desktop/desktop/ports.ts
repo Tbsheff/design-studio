@@ -6,7 +6,7 @@ import {
   DEFAULT_PREVIEW_PORT,
   DEFAULT_STUDIO_PORT,
   DEFAULT_VITE_PORT_BASE,
-} from "../src/shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 
 export interface PortSet {
   studio: number;

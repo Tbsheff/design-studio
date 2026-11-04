@@ -1,8 +1,8 @@
 export { applyPlacement } from "../canvas/index.js";
 
-export { BadRequest } from "../../shared/actions/_core/errors/bad-request.js";
+export { BadRequest } from "@design-studio/actions/_core/errors/bad-request";
 
-export { NotFound } from "../../shared/actions/_core/errors/not-found.js";
+export { NotFound } from "@design-studio/actions/_core/errors/not-found";
 
 export { BadRequestError } from "../platform/errors/index.js";
 
@@ -27,7 +27,7 @@ export {
   propsFor,
 } from "../components/index.js";
 
-export { CANVAS_GAP } from "../../shared/actions/_core/canvas-file.js";
+export { CANVAS_GAP } from "@design-studio/actions/_core/canvas-file";
 
 export { withForcedParam } from "../../shared/state-styles.js";
 
@@ -37,10 +37,10 @@ export type { KnownFailure } from "../platform/attempt/index.js";
 
 export type { CanvasService, PlaceSpec } from "../canvas/index.js";
 
-export type { CanvasFile, CanvasFileFrame } from "../../shared/actions/_core/canvas-file.js";
+export type { CanvasFile, CanvasFileFrame } from "@design-studio/actions/_core/canvas-file";
 
-export type { Direction, Project } from "../../shared/actions/_core/contracts.js";
+export type { Direction, Project } from "@design-studio/actions/_core/contracts";
 
-export type { ComponentSchema, PropValue } from "../../shared/actions/_core/props.js";
+export type { ComponentSchema, PropValue } from "@design-studio/actions/_core/props";
 
 export type { PreviewService } from "../preview/index.js";

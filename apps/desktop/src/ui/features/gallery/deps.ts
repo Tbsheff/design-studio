@@ -1,9 +1,9 @@
-export { routes as galleryRoutes } from "../../../shared/actions/gallery/routes.js";
+export { routes as galleryRoutes } from "@design-studio/actions/gallery/routes";
 
-export { routes as directEditRoutes } from "../../../shared/actions/direct-edit/routes.js";
+export { routes as directEditRoutes } from "@design-studio/actions/direct-edit/routes";
 
 export { useAction } from "../../platform/query.js";
 
 export type { ActionState } from "../../platform/query.js";
 
-export type { SourceLoc } from "../../../shared/actions/_core/contracts.js";
+export type { SourceLoc } from "@design-studio/actions/_core/contracts";

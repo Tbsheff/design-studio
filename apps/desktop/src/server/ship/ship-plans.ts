@@ -1,13 +1,13 @@
-import type { ApprovalCard } from "../../shared/actions/_core/approval-card.js";
-import { SHIP_NOTE } from "../../shared/actions/ship/schema.js";
-import type { ShipPlan } from "../../shared/actions/ship/schema.js";
+import type { ApprovalCard } from "@design-studio/actions/_core/approval-card";
+import { SHIP_NOTE } from "@design-studio/actions/ship/schema";
+import type { ShipPlan } from "@design-studio/actions/ship/schema";
 import type {
   ShipMode,
   ShipPrepare,
   ShipRepoInfo,
   ShipRequest,
   ShipResult,
-} from "../../shared/actions/_core/ship.js";
+} from "@design-studio/actions/_core/ship";
 import { prepareShip } from "../git/ship-prepare.js";
 import { ship } from "../git/ship.js";
 import { BadRequestError } from "../platform/errors/index.js";

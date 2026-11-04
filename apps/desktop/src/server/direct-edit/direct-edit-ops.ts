@@ -8,9 +8,9 @@ import type {
   StructureEditResult,
   TokenPreviewResult,
   UpdateTokensResult,
-} from "../../shared/actions/_core/contracts.js";
-import { isStyleReplaceBody } from "../../shared/actions/_core/style-search.js";
-import type { StyleReplaceResult } from "../../shared/actions/_core/style-search.js";
+} from "@design-studio/actions/_core/contracts";
+import { isStyleReplaceBody } from "@design-studio/actions/_core/style-search";
+import type { StyleReplaceResult } from "@design-studio/actions/_core/style-search";
 import type { CommitTweaksResult, TweaksState } from "../../shared/tweaks.js";
 import { warmPropsTypes } from "../components/index.js";
 import { appTokensFor } from "../design-system/app-tokens/source.js";

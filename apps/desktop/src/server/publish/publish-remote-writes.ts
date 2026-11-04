@@ -1,4 +1,4 @@
-import type { PublishInput } from "../../shared/actions/publish/schema.js";
+import type { PublishInput } from "@design-studio/actions/publish/schema";
 import type { Publication } from "../../shared/publish.js";
 import { planFor, takePlan } from "./legacy-link.js";
 import type { LegacyLink } from "./legacy-link.js";

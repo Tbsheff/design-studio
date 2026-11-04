@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { setDocCanvas } from "../../../shared/actions/canvas/set-doc.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { setDocCanvas } from "@design-studio/actions/canvas/set-doc";
 import { CanvasWriter } from "../../canvas/index.js";
 import type { Handle } from "../_core/handler.js";
 

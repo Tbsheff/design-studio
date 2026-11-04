@@ -5,7 +5,7 @@ import type {
   FolderExportResult,
   FrameExportResult,
   HandoffFolderResult,
-} from "../../shared/actions/export/schema.js";
+} from "@design-studio/actions/export/schema";
 import { attemptExport } from "./export-core.js";
 import type { ExportError } from "./export-core.js";
 import type { FileRequest } from "./export-file.js";

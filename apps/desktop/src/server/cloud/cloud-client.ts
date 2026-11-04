@@ -1,11 +1,11 @@
 import { Context, Effect, Layer, Schema } from "effect";
 
-import type { Unauthenticated } from "../../shared/actions/_core/errors/unauthenticated.js";
-import type { Unavailable } from "../../shared/actions/_core/errors/unavailable.js";
+import type { Unauthenticated } from "@design-studio/actions/_core/errors/unauthenticated";
+import type { Unavailable } from "@design-studio/actions/_core/errors/unavailable";
 import {
   CloudOrgSchema,
   CloudUserSchema,
-} from "../../shared/actions/cloud/schema.js";
+} from "@design-studio/actions/cloud/schema";
 import { getJsonResponse } from "./cloud-fetch.js";
 import { CloudSession } from "./cloud-session.js";
 import type { CloudProfile } from "./cloud-session.js";

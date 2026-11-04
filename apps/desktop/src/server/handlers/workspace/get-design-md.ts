@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { getDesignMdWorkspace } from "../../../shared/actions/workspace/get-design-md.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { getDesignMdWorkspace } from "@design-studio/actions/workspace/get-design-md";
 import { McpReadStore } from "../../preview/index.js";
 import type { Handle } from "../_core/handler.js";
 

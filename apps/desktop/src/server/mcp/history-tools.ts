@@ -1,13 +1,13 @@
 import { readFile, rm } from "node:fs/promises";
 import path from "node:path";
 
-import { applyDirectEdit } from "../../shared/actions/direct-edit/apply.js";
+import { applyDirectEdit } from "@design-studio/actions/direct-edit/apply";
 import type {
   DirectEditBatchResult,
   Project,
   SelectionContext,
   Version,
-} from "../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import {
   chooseEditSite,
   EDIT_TARGETS,

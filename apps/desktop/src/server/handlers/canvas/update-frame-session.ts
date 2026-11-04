@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { updateFrameSessionCanvas } from "../../../shared/actions/canvas/update-frame-session.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { updateFrameSessionCanvas } from "@design-studio/actions/canvas/update-frame-session";
 import { CanvasWriter } from "../../canvas/index.js";
 import type { Handle } from "../_core/handler.js";
 

@@ -4,7 +4,7 @@ import type {
   StructureEditRequest,
   StructureKey,
   StructureTarget,
-} from "../../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import { STRUCTURE_KEY_IDS } from "../../../shared/structure-keys.js";
 import type { PreviewMenuItem } from "../canvas/preview-menu.js";
 import { parseLoc } from "../comments/comment-anchors.js";

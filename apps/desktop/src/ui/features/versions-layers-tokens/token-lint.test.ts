@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { CompiledTokenEntry } from "../../../shared/actions/_core/contracts.js";
+import type { CompiledTokenEntry } from "@design-studio/actions/_core/contracts";
 import { valuesFromStyles } from "../inspector/css-values.js";
 import { lintValues } from "./token-lint.js";
 

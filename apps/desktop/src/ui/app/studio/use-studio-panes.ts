@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-import type { CommentPrefill } from "../../../shared/actions/_core/contracts";
+import type { CommentPrefill } from "@design-studio/actions/_core/contracts";
 import {
   isDirectEditable,
   inspectorEmptyReason,

@@ -1,5 +1,5 @@
-import type { ExportFrame } from "../../shared/actions/_core/export.js";
-import { withFrameStateHost } from "../../shared/actions/_core/frame-state.js";
+import type { ExportFrame } from "@design-studio/actions/_core/export";
+import { withFrameStateHost } from "@design-studio/actions/_core/frame-state";
 import { withForcedParam } from "../../shared/state-styles.js";
 import {
   isLayerRef,

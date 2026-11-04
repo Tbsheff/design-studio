@@ -1,7 +1,7 @@
 import { Schema } from "effect";
 import { z } from "zod";
 
-import type { AnyAction } from "../../shared/actions/_core/action.js";
+import type { AnyAction } from "@design-studio/actions/_core/action";
 
 type SdkFields = Readonly<Record<string, z.ZodType>>;
 

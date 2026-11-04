@@ -1,8 +1,8 @@
 import { Context, Effect, Layer, Option, Schema } from "effect";
 
-import { Forbidden } from "../../../../../src/shared/actions/_core/errors/forbidden.js";
-import { NotFound } from "../../../../../src/shared/actions/_core/errors/not-found.js";
-import { Unauthenticated } from "../../../../../src/shared/actions/_core/errors/unauthenticated.js";
+import { Forbidden } from "@design-studio/actions/_core/errors/forbidden";
+import { NotFound } from "@design-studio/actions/_core/errors/not-found";
+import { Unauthenticated } from "@design-studio/actions/_core/errors/unauthenticated";
 import { AuthGateway } from "../../auth/gateway.js";
 import { CurrentOrg } from "../../tenant/current-org.js";
 import type { CurrentOrgApi, OrgVia } from "../../tenant/current-org.js";

@@ -1,7 +1,7 @@
 import { useEffect, useState, useTransition, useRef } from "react";
 import type { DragEvent, KeyboardEvent, FormEvent, ReactNode } from "react";
 
-import type { PackSummary } from "../../../shared/actions/_core/contracts.js";
+import type { PackSummary } from "@design-studio/actions/_core/contracts";
 import { Markdown } from "../../ai/components/ai/markdown.js";
 import { errorText } from "../../api.js";
 import { Icon } from "../../kit/Icon.js";

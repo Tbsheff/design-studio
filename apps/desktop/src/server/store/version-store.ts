@@ -1,6 +1,6 @@
 import { Context, Effect, Layer } from "effect";
 
-import type { Version, VersionChanges } from "../../shared/actions/_core/contracts.js";
+import type { Version, VersionChanges } from "@design-studio/actions/_core/contracts";
 import { attemptVersionRead } from "./version-read-core.js";
 import type { VersionReadError } from "./version-read-core.js";
 import {

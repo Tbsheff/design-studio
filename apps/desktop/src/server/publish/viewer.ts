@@ -1,8 +1,8 @@
 import { mkdir, rename, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import type { DesignComment } from "../../shared/actions/_core/contracts.js";
-import type { ShareFrame } from "../../shared/actions/_core/share.js";
+import type { DesignComment } from "@design-studio/actions/_core/contracts";
+import type { ShareFrame } from "@design-studio/actions/_core/share";
 import { frameFile } from "../share/snapshot.js";
 
 export interface ViewerComment {

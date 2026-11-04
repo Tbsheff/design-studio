@@ -1,4 +1,4 @@
-import type { BridgeToParent } from "../shared/actions/_core/contracts.js";
+import type { BridgeToParent } from "@design-studio/actions/_core/contracts";
 
 type PointerBody = Omit<
   Extract<BridgeToParent, { type: "share-pointer" }>,

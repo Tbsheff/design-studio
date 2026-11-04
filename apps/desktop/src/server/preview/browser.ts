@@ -5,12 +5,12 @@ import path from "node:path";
 import {
   BRIDGE_PARENT_ORIGIN_PARAM,
   BRIDGE_HEADLESS_PARAM,
-} from "../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import type {
   CheckViewport,
   QualityFinding,
   RenderCheckResult,
-} from "../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import type { RenderClip } from "../../shared/render-rpc.js";
 import { projectOfUrl } from "../events/index.js";
 import { dropOutsideApp } from "./app-source-filter.js";

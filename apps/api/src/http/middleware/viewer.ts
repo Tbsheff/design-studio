@@ -1,7 +1,7 @@
 import { Context, Effect, Layer } from "effect";
 
-import type { Gone } from "../../../../../src/shared/actions/_core/errors/gone.js";
-import type { NotFound } from "../../../../../src/shared/actions/_core/errors/not-found.js";
+import type { Gone } from "@design-studio/actions/_core/errors/gone";
+import type { NotFound } from "@design-studio/actions/_core/errors/not-found";
 import { CurrentOrg } from "../../tenant/current-org.js";
 import { Resolver } from "../../tenant/resolver.js";
 import { ViewerScope } from "../../tenant/viewer-scope.js";

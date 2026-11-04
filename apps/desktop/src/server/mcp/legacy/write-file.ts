@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-import type { Direction, Project, Version } from "../../../shared/actions/_core/contracts.js";
+import type { Direction, Project, Version } from "@design-studio/actions/_core/contracts";
 import { firstVersionBlock } from "../../app/first-version.js";
 import { publishVersion } from "../../direct-edit/index.js";
 import { EditError, loadTarget, refuseWhileRunning } from "../edit-guards.js";

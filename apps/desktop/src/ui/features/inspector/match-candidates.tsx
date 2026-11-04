@@ -1,11 +1,11 @@
-import type { CompiledTokenEntry } from "../../../shared/actions/_core/contracts.js";
-import { TOKEN_GROUP_FOR_PROPERTY } from "../../../shared/actions/_core/contracts.js";
-import { isRawClass, kindOf } from "../../../shared/actions/_core/style-search.js";
+import type { CompiledTokenEntry } from "@design-studio/actions/_core/contracts";
+import { TOKEN_GROUP_FOR_PROPERTY } from "@design-studio/actions/_core/contracts";
+import { isRawClass, kindOf } from "@design-studio/actions/_core/style-search";
 import type {
   StyleHit,
   StyleKind,
   StyleValueRow,
-} from "../../../shared/actions/_core/style-search.js";
+} from "@design-studio/actions/_core/style-search";
 import {
   colorHex,
   lengthToPx,

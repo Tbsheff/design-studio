@@ -1,4 +1,4 @@
-import { SOURCE_LOC_ATTR } from "../shared/actions/_core/contracts.js";
+import { SOURCE_LOC_ATTR } from "@design-studio/actions/_core/contracts";
 import { appSourceFor, componentUseOf } from "./app-source.js";
 import type { BridgeContext, BridgeCore } from "./bridge-types.js";
 import { eventElement, holdTextSelection } from "./dom-input.js";

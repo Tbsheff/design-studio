@@ -1,5 +1,5 @@
-import type { LayoutChange } from "../../shared/actions/_core/canvas-file.js";
-import type { CanvasWriteSource, Project } from "../../shared/actions/_core/contracts.js";
+import type { LayoutChange } from "@design-studio/actions/_core/canvas-file";
+import type { CanvasWriteSource, Project } from "@design-studio/actions/_core/contracts";
 import type { EditRecorder } from "../direct-edit/index.js";
 import {
   layoutLabel,

@@ -1,5 +1,5 @@
 // @generated
-import type { DirectEditActions } from "../../../shared/actions/direct-edit/index.js";
+import type { DirectEditActions } from "@design-studio/actions/direct-edit/index";
 import type { Entries } from "../_core/handler.js";
 import { handle as applyReviewFixDirectEditHandle } from "./apply-review-fix.js";
 import { handle as applySwapDirectEditHandle } from "./apply-swap.js";

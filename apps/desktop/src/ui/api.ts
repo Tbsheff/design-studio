@@ -1,5 +1,5 @@
-import type { AppFixResult, DoctorCauseKind } from "../shared/actions/_core/app-doctor";
-import type { CanvasFile } from "../shared/actions/_core/canvas-file";
+import type { AppFixResult, DoctorCauseKind } from "@design-studio/actions/_core/app-doctor";
+import type { CanvasFile } from "@design-studio/actions/_core/canvas-file";
 import type {
   AppLogLine,
   AppRoute,
@@ -46,7 +46,7 @@ import type {
   TelemetrySample,
   Version,
   WorkTreeStatus,
-} from "../shared/actions/_core/contracts";
+} from "@design-studio/actions/_core/contracts";
 import type {
   BlendMode,
   BlendProperty,
@@ -56,9 +56,9 @@ import type {
   FillType,
   RadialForm,
 } from "../shared/fill";
-import type { WorkspaceFolder, WorkspaceList } from "../shared/actions/_core/folders";
+import type { WorkspaceFolder, WorkspaceList } from "@design-studio/actions/_core/folders";
 import type { IconList, IconPosition, IconSource } from "../shared/icons";
-import type { InsertTarget } from "../shared/actions/_core/insert";
+import type { InsertTarget } from "@design-studio/actions/_core/insert";
 import type {
   MotionInfo,
   MotionKind,
@@ -80,7 +80,7 @@ import type {
 import type {
   StyleReplaceRequest,
   StyleReplaceResult,
-} from "../shared/actions/_core/style-search";
+} from "@design-studio/actions/_core/style-search";
 import type {
   TextStyleApplyResult,
   TextStyleCreateResult,
@@ -93,18 +93,18 @@ export interface CanvasSnapshot {
   hash: string | null;
 }
 
-import { routes as projectsRoutes } from "../shared/actions/project/routes.js";
-import { routes } from "../shared/actions/studio/routes.js";
-import { routes as versionsRoutes } from "../shared/actions/version/routes.js";
+import { routes as projectsRoutes } from "@design-studio/actions/project/routes";
+import { routes } from "@design-studio/actions/studio/routes";
+import { routes as versionsRoutes } from "@design-studio/actions/version/routes";
 import type {
   DesignRulesState,
   DesignRulesTestResult,
-} from "../shared/actions/_core/design-rules";
+} from "@design-studio/actions/_core/design-rules";
 import type {
   ReviewFixResult,
   ReviewRequest,
   ReviewResult,
-} from "../shared/actions/_core/review";
+} from "@design-studio/actions/_core/review";
 import type { FlowInput, FlowResult } from "../shared/route-flow";
 import type {
   CommitTweaksResult,
@@ -753,7 +753,7 @@ export const api = {
     changes: TokenChange[]
   ): Promise<TokenPreviewResult> => {
     const { routes: directEditRoutes } =
-      await import("../shared/actions/direct-edit/routes.js");
+      await import("@design-studio/actions/direct-edit/routes");
 
     return call(directEditRoutes.inspectTokensDirectEdit, {
       changes: JSON.stringify(changes),

@@ -1,7 +1,7 @@
 import { Context, Effect, Layer } from "effect";
 
-import type { BadRequest } from "../../shared/actions/_core/errors/bad-request.js";
-import type { NotFound } from "../../shared/actions/_core/errors/not-found.js";
+import type { BadRequest } from "@design-studio/actions/_core/errors/bad-request";
+import type { NotFound } from "@design-studio/actions/_core/errors/not-found";
 import type { RepoContextState } from "../../shared/repo-context.js";
 import type { RunPage } from "./run-list.js";
 import { getRunContext, getRunDetail, listRunPage } from "./run-log-reads.js";

@@ -1,8 +1,8 @@
 import { Exit } from "effect";
 
-import type { AnyAction } from "../../shared/actions/_core/action.js";
-import type { StudioError } from "../../shared/actions/_core/errors/all.js";
-import { ImageOutputSchema } from "../../shared/actions/_core/image-output.js";
+import type { AnyAction } from "@design-studio/actions/_core/action";
+import type { StudioError } from "@design-studio/actions/_core/errors/all";
+import { ImageOutputSchema } from "@design-studio/actions/_core/image-output";
 import { failureOf, toWireError } from "../handlers/_core/wire-error.js";
 
 type ResultBlock =

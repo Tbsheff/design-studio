@@ -4,7 +4,7 @@ import type {
   Direction,
   Project,
   ProjectSettings,
-} from "../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import { IMAGE_SEARCH_LIMIT_MAX } from "../../shared/image-search.js";
 import type { PlaceImageResult } from "../../shared/image-search.js";
 import { DirectEditError } from "../direct-edit/engine/index.js";

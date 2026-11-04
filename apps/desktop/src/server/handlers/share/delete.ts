@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { deleteShare } from "../../../shared/actions/share/delete.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { deleteShare } from "@design-studio/actions/share/delete";
 import { LinkedShareWriter, ShareStore } from "../../share/index.js";
 import type { Handle, Preview } from "../_core/handler.js";
 

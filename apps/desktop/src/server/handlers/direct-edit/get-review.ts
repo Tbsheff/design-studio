@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { getReviewDirectEdit } from "../../../shared/actions/direct-edit/get-review.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { getReviewDirectEdit } from "@design-studio/actions/direct-edit/get-review";
 import { DirectEditStore, toRef } from "../../direct-edit/index.js";
 import type { Handle } from "../_core/handler.js";
 

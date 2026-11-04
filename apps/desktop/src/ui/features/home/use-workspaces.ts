@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 
-import type { Project } from "../../../shared/actions/_core/contracts.js";
+import type { Project } from "@design-studio/actions/_core/contracts";
 import {
   projectsInFolder,
   type WorkspaceFolder,
   type WorkspaceList,
-} from "../../../shared/actions/_core/folders.js";
+} from "@design-studio/actions/_core/folders";
 import { api, errorText } from "../../api.js";
 
 export function locationFor(

@@ -17,7 +17,7 @@ import type {
   RunSummary,
   TelemetrySample,
   Version,
-} from "../src/shared/actions/_core/contracts";
+} from "@design-studio/actions/_core/contracts";
 import {
   APP_BINARY,
   desktopEnv,

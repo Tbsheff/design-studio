@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { setPermissionRun } from "../../../shared/actions/run/set-permission.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { setPermissionRun } from "@design-studio/actions/run/set-permission";
 import { RunLogWriter } from "../../run-log/index.js";
 import type { Handle } from "../_core/handler.js";
 

@@ -4,7 +4,7 @@ import path from "node:path";
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
-import type { RunSummary } from "../src/shared/actions/_core/contracts";
+import type { RunSummary } from "@design-studio/actions/_core/contracts";
 import {
   createProjectViaUi,
   frontFrame,

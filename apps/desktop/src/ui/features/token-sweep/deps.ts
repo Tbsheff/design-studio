@@ -1,4 +1,4 @@
-export { routes as tokenRoutes } from "../../../shared/actions/token/routes.js";
+export { routes as tokenRoutes } from "@design-studio/actions/token/routes";
 
 export { useAction } from "../../platform/query.js";
 

@@ -2,13 +2,13 @@ import { existsSync } from "node:fs";
 import { realpath } from "node:fs/promises";
 import path from "node:path";
 
-import type { Direction, Project } from "../../shared/actions/_core/contracts.js";
+import type { Direction, Project } from "@design-studio/actions/_core/contracts";
 import type {
   ComponentInstance,
   ComponentListQuery,
   ComponentSchemaList,
   InstanceQuery,
-} from "../../shared/actions/_core/props.js";
+} from "@design-studio/actions/_core/props";
 import { searchComponents } from "./component-search.js";
 import { listFiles } from "./inventory.js";
 import { warmProgram } from "./props-program.js";

@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 
-import { formatAnswers } from "../../../shared/actions/_core/clarify.js";
+import { formatAnswers } from "@design-studio/actions/_core/clarify";
 import { uiStore } from "../../platform/storage.js";
 import { ChipMenuSlot } from "./chip-menu-slot.js";
 import { ComposerBar } from "./composer-bar.js";

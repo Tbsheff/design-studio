@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { TOKENS_CSS_FILE, TOKENS_FILE } from "../../shared/actions/_core/contracts.js";
+import { TOKENS_CSS_FILE, TOKENS_FILE } from "@design-studio/actions/_core/contracts";
 import type {
   CreateTokenResult,
   DirectEditResult,
@@ -12,7 +12,7 @@ import type {
   StudioEvent,
   TokenFile,
   Version,
-} from "../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import { createEventBus } from "../events/index.js";
 import { createApp } from "../http/app.js";
 import { projectStorePorts } from "../main/project-ports.js";

@@ -1,5 +1,5 @@
 // @generated
-import type { WorkspaceActions } from "../../../shared/actions/workspace/index.js";
+import type { WorkspaceActions } from "@design-studio/actions/workspace/index";
 import type { Entries } from "../_core/handler.js";
 import { handle as getDesignMdWorkspaceHandle } from "./get-design-md.js";
 import { handle as getDoctorWorkspaceHandle } from "./get-doctor.js";

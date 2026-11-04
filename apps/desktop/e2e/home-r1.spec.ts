@@ -10,7 +10,7 @@ import type {
   Project,
   RunSentRecord,
   TrashedProject,
-} from "../src/shared/actions/_core/contracts";
+} from "@design-studio/actions/_core/contracts";
 import { projectsDirFor, readState } from "./support/server";
 import type { StudioApi } from "./support/studio";
 import {

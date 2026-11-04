@@ -1,15 +1,15 @@
-import { routes } from "../../../shared/actions/version/routes.js";
+import { routes } from "@design-studio/actions/version/routes";
 import type {
   SessionEndSchema,
   VersionChangesSchema,
   VersionSchema,
-} from "../../../shared/actions/version/schema.js";
+} from "@design-studio/actions/version/schema";
 import type {
   EditHistoryState,
   EditSessionEnd,
   Version,
   VersionChanges,
-} from "../../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import type {
   HunkRevertRequest,
   HunkRevertResult,

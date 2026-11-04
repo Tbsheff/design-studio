@@ -13,13 +13,13 @@ export {
   LINK_INTERACTION_ACTIONS,
   isFrameAction,
   linkAction,
-} from "../../../shared/actions/_core/links.js";
+} from "@design-studio/actions/_core/links";
 
 export type {
   LinkAction,
   LinkTarget,
   PrototypeLink,
-} from "../../../shared/actions/_core/links.js";
+} from "@design-studio/actions/_core/links";
 
 export {
   LINK_DELAY_MAX,
@@ -30,12 +30,12 @@ export {
   cleanLinkKey,
   cleanLinkUrl,
   targetFrame,
-} from "../../../shared/actions/_core/link-interaction.js";
+} from "@design-studio/actions/_core/link-interaction";
 
 export type {
   LinkTrigger,
   LinkTriggerKind,
   LinkVisibility,
-} from "../../../shared/actions/_core/link-interaction.js";
+} from "@design-studio/actions/_core/link-interaction";
 
-export type { PlayRunOp } from "../../../shared/actions/_core/contracts.js";
+export type { PlayRunOp } from "@design-studio/actions/_core/contracts";

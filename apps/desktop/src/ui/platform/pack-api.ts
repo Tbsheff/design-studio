@@ -1,6 +1,6 @@
-import type { WireInput } from "../../shared/actions/_core/action.js";
-import type { createDraftPack } from "../../shared/actions/pack/create-draft.js";
-import { routes } from "../../shared/actions/pack/routes.js";
+import type { WireInput } from "@design-studio/actions/_core/action";
+import type { createDraftPack } from "@design-studio/actions/pack/create-draft";
+import { routes } from "@design-studio/actions/pack/routes";
 import type {
   ApplyPackResult,
   DesignSystemCheckResult,
@@ -13,7 +13,7 @@ import type {
   PackProblem,
   PackSummary,
   SavePackResult,
-} from "../../shared/actions/_core/contracts";
+} from "@design-studio/actions/_core/contracts";
 import { call } from "./http";
 
 const getPack = async (packId: string): Promise<PackDetail> =>

@@ -1,5 +1,5 @@
 // @generated
-import type { PackActions } from "../../../shared/actions/pack/index.js";
+import type { PackActions } from "@design-studio/actions/pack/index";
 import type { Entries } from "../_core/handler.js";
 import {
   handle as applyPackPackHandle,

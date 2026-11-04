@@ -38,7 +38,7 @@ interface OpFlags {
   readonly warnStub: boolean;
 }
 
-const DEFAULT_CATALOG = "src/shared/actions/index.ts";
+const DEFAULT_CATALOG = "packages/common/actions/src/index.ts";
 
 const OFF_REASONS = new Set([
   "run-control",
@@ -84,7 +84,7 @@ const rowsOf = (catalog: Catalog): OpRow[] =>
   Object.entries(catalog).flatMap(([context, group]) =>
     Object.entries(group).map(([opKey, definition]) => ({
       ctx: context,
-      file: `src/shared/actions/${kebab(context)}/${kebab(definition.id.split(".").at(1) ?? opKey)}.ts`,
+      file: `packages/common/actions/src/${kebab(context)}/${kebab(definition.id.split(".").at(1) ?? opKey)}.ts`,
       key: opKey,
       op: definition,
     }))

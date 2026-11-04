@@ -1,9 +1,9 @@
-import type { getPlanShip } from "../../../shared/actions/ship/get-plan.js";
-import type { getSettingsShip } from "../../../shared/actions/ship/get-settings.js";
-import type { publishShip } from "../../../shared/actions/ship/publish.js";
-import { routes } from "../../../shared/actions/ship/routes.js";
-import type { setSettingsShip } from "../../../shared/actions/ship/set-settings.js";
-import type { ShipRequest, ShipSettings } from "../../../shared/actions/_core/ship.js";
+import type { getPlanShip } from "@design-studio/actions/ship/get-plan";
+import type { getSettingsShip } from "@design-studio/actions/ship/get-settings";
+import type { publishShip } from "@design-studio/actions/ship/publish";
+import { routes } from "@design-studio/actions/ship/routes";
+import type { setSettingsShip } from "@design-studio/actions/ship/set-settings";
+import type { ShipRequest, ShipSettings } from "@design-studio/actions/_core/ship";
 import { call } from "../../platform/http.js";
 import type { UiOutput } from "../../platform/http.js";
 

@@ -1,7 +1,7 @@
 import { Schema } from "effect";
 import type { Hono } from "hono";
 
-import { publishPublish } from "../../shared/actions/publish/publish.js";
+import { publishPublish } from "@design-studio/actions/publish/publish";
 import { assertSafeId, BadRequestError } from "../platform/errors/index.js";
 import { linkLegacy, planFor } from "../publish/legacy-link.js";
 import { toPlanInput } from "../publish/plan-input.js";

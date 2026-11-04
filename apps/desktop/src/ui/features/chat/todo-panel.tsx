@@ -1,6 +1,6 @@
 import { memo, useState } from "react";
 
-import type { TodoItem } from "../../../shared/actions/_core/contracts.js";
+import type { TodoItem } from "@design-studio/actions/_core/contracts";
 import { Icon } from "../../kit/Icon.js";
 
 export const todoProgress = (

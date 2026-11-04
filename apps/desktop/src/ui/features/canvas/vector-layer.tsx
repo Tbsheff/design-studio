@@ -4,8 +4,8 @@ import type { CSSProperties, PointerEvent } from "react";
 import type {
   BridgeToParent,
   SelectionContext,
-} from "../../../shared/actions/_core/contracts.js";
-import type { InsertTarget } from "../../../shared/actions/_core/insert.js";
+} from "@design-studio/actions/_core/contracts";
+import type { InsertTarget } from "@design-studio/actions/_core/insert";
 import type { VectorRequest, VectorResult } from "../../../shared/vector.js";
 import { errorText } from "../../api.js";
 import type { ParentMessageBody } from "../../platform/bridge.js";

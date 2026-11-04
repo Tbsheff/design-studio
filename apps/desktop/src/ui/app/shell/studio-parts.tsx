@@ -5,7 +5,7 @@ import type {
   ProjectKind,
   RunStatus,
   Version,
-} from "../../../shared/actions/_core/contracts";
+} from "@design-studio/actions/_core/contracts";
 import { Canvas } from "../../features/canvas/canvas";
 import { UnfinishedBanner } from "../../features/chat/unfinished-banner";
 import { DesignMdModal } from "../../features/design-system/design-md-modal";

@@ -1,8 +1,8 @@
-import type { Input } from "../../shared/actions/_core/action.js";
-import type { createProject } from "../../shared/actions/project/create.js";
-import type { importProject } from "../../shared/actions/project/import.js";
-import type { Project, ProjectKind, RunLevel } from "../../shared/actions/_core/contracts.js";
-import { nameFromPrompt } from "../../shared/actions/_core/folders.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { createProject } from "@design-studio/actions/project/create";
+import type { importProject } from "@design-studio/actions/project/import";
+import type { Project, ProjectKind, RunLevel } from "@design-studio/actions/_core/contracts";
+import { nameFromPrompt } from "@design-studio/actions/_core/folders";
 import type { AttachResponse } from "../app/index.js";
 import {
   captureReferencePage,

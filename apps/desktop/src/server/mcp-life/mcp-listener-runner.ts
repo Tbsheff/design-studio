@@ -3,7 +3,7 @@ import type { Server } from "node:http";
 import { serve } from "@hono/node-server";
 import { Context, Effect, Layer, Ref } from "effect";
 
-import { Unavailable } from "../../shared/actions/_core/errors/unavailable.js";
+import { Unavailable } from "@design-studio/actions/_core/errors/unavailable";
 
 type McpFetch = (request: Request) => Response | Promise<Response>;
 

@@ -1,9 +1,9 @@
-import type { DraftResult } from "../../../shared/actions/pack/schema.js";
+import type { DraftResult } from "@design-studio/actions/pack/schema";
 import type {
   DesignSystemDraftResult,
   OpenPackEditorResult,
   Project,
-} from "../../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import { BadRequestError, NotFoundError } from "../../platform/errors/index.js";
 import { createKeyedMutex } from "../../platform/mutex/index.js";
 import { IMPROVE_IN_APP } from "../draft-live.js";

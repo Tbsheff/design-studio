@@ -7,7 +7,7 @@ import {
 } from "react";
 import type { KeyboardEvent, RefObject } from "react";
 
-import type { Version } from "../../../shared/actions/_core/contracts.js";
+import type { Version } from "@design-studio/actions/_core/contracts";
 import { formatRelative, formatTime } from "../../domain/format.js";
 import { Icon } from "../../kit/Icon.js";
 import type { IconName } from "../../kit/Icon.js";

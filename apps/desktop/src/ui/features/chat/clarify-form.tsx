@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import type { FormEvent } from "react";
 
-import type { ClarifyQuestion } from "../../../shared/actions/_core/contracts.js";
+import type { ClarifyQuestion } from "@design-studio/actions/_core/contracts";
 import { Icon } from "../../kit/Icon.js";
 import { useRovingRadioGroup } from "./level-control.js";
 

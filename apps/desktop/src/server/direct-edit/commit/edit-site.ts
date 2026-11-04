@@ -1,9 +1,9 @@
-import { sharedSourceOf, type SharedSource } from "../../../shared/actions/_core/app.js";
+import { sharedSourceOf, type SharedSource } from "@design-studio/actions/_core/app";
 import type {
   Project,
   SelectionContext,
   SourceLoc,
-} from "../../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import { elementClassInfo } from "./class-info.js";
 
 export const EDIT_TARGETS = ["use", "component", "element"] as const;

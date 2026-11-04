@@ -3,7 +3,7 @@ import type {
   CompiledTokenEntry,
   Direction,
   Project,
-} from "../../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import {
   locKey,
   matchesOf,
@@ -15,7 +15,7 @@ import {
   type StyleScanResult,
   type StyleValueRow,
   type TokenLookup,
-} from "../../../shared/actions/_core/style-search.js";
+} from "@design-studio/actions/_core/style-search";
 import { tokenFieldState } from "../../../shared/token-match.js";
 import { readDesignSystemState } from "../../design-system/state.js";
 import { onProbePage } from "../../preview/probe-page.js";

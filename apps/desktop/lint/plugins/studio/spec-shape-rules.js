@@ -42,7 +42,7 @@ const TOOL_VERBS = new Set([
 ]);
 
 const PAGE_MESSAGE =
-  "A list or search action without PageFields in its input and pageOf in its output is banned. Use ...PageFields in the input Schema.Struct and output: pageOf(<Item>Schema) from src/shared/actions/_core/list-page.ts.";
+  "A list or search action without PageFields in its input and pageOf in its output is banned. Use ...PageFields in the input Schema.Struct and output: pageOf(<Item>Schema) from packages/common/actions/src/_core/list-page.ts.";
 
 const DELETE_MESSAGE =
   'A delete action that is not access "destructive" with confirm "user" is banned. Use access: "destructive", confirm: "user" and a preview export in src/server/handlers/<domain>/<verb>.ts.';
@@ -51,7 +51,7 @@ const TOOL_TEXT_MESSAGE =
   "A tool name in an action description or short text that no action or legacy tool has is banned. Use the derived tool name of the action from scripts/stamp/names.ts, or a name in artifacts/mcp-snapshots/*.json.";
 
 const BOOTSTRAP_MESSAGE =
-  'mcp off "ui-bootstrap" on an action whose HTTP path a hand-written MCP tool in src/server/mcp still calls is banned. Use { off: "legacy-mcp" } from src/shared/actions/_core/action.ts until the legacy tool moves to mcp { name }.';
+  'mcp off "ui-bootstrap" on an action whose HTTP path a hand-written MCP tool in src/server/mcp still calls is banned. Use { off: "legacy-mcp" } from packages/common/actions/src/_core/action.ts until the legacy tool moves to mcp { name }.';
 
 const isPageCall = (node) =>
   node !== null &&

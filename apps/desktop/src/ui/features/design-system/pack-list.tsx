@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 
-import type { PackSummary } from "../../../shared/actions/_core/contracts.js";
+import type { PackSummary } from "@design-studio/actions/_core/contracts";
 import { Icon } from "../../kit/Icon.js";
 import { Swatches } from "../inspector/swatches.js";
 import { COPY } from "./copy.js";

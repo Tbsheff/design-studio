@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { readdir, stat } from "node:fs/promises";
 import path from "node:path";
 
-import { stateOfHost } from "../../shared/actions/_core/frame-state.js";
+import { stateOfHost } from "@design-studio/actions/_core/frame-state";
 import type { ImportEdges } from "./route-graph.js";
 import { RouteStamps } from "./route-stamp.js";
 

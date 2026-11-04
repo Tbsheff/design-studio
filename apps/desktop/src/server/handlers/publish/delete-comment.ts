@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { deleteCommentPublish } from "../../../shared/actions/publish/delete-comment.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { deleteCommentPublish } from "@design-studio/actions/publish/delete-comment";
 import { PublishService } from "../../publish/index.js";
 import type { Handle } from "../_core/handler.js";
 

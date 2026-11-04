@@ -1,10 +1,10 @@
 import { Effect, Schema } from "effect";
 
-import type { AnyAction } from "../../../shared/actions/_core/action.js";
-import type { ApprovalCard } from "../../../shared/actions/_core/approval-card.js";
-import type { StudioError } from "../../../shared/actions/_core/errors/all.js";
-import { BadRequest } from "../../../shared/actions/_core/errors/bad-request.js";
-import type { NotFound } from "../../../shared/actions/_core/errors/not-found.js";
+import type { AnyAction } from "@design-studio/actions/_core/action";
+import type { ApprovalCard } from "@design-studio/actions/_core/approval-card";
+import type { StudioError } from "@design-studio/actions/_core/errors/all";
+import { BadRequest } from "@design-studio/actions/_core/errors/bad-request";
+import type { NotFound } from "@design-studio/actions/_core/errors/not-found";
 import { EventQueue } from "../../events/index.js";
 import {
   Authorizer,

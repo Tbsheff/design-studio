@@ -4,7 +4,7 @@ import path from "node:path";
 
 import type * as t from "@babel/types";
 
-import type { AppRoute } from "../../../shared/actions/_core/contracts.js";
+import type { AppRoute } from "@design-studio/actions/_core/contracts";
 import type {
   RouteLink,
   RouteLinkElement,

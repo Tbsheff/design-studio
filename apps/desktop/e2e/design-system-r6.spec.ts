@@ -16,7 +16,7 @@ import type {
   DesignSystemState,
   PackSummary,
   Project,
-} from "../src/shared/actions/_core/contracts";
+} from "@design-studio/actions/_core/contracts";
 import { readState } from "./support/server";
 import {
   frontFrame,

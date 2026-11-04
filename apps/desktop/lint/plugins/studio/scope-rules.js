@@ -3,12 +3,12 @@ import { keyName, rule, specOf, stringAt, fieldOf } from "./ast.js";
 const OWN_IDS = new Set(["orgId", "projectId"]);
 
 const SCOPE_MESSAGE =
-  'An action with needs "project.*" and scope "org" whose input names a project-owned id (runId, directionId, versionId) is banned (T3), because the runner never calls ProjectAccess.visible for the owning project. Use scope: "project" with projectId in the input from src/shared/actions/_core/ids.ts.';
+  'An action with needs "project.*" and scope "org" whose input names a project-owned id (runId, directionId, versionId) is banned (T3), because the runner never calls ProjectAccess.visible for the owning project. Use scope: "project" with projectId in the input from packages/common/actions/src/_core/ids.ts.';
 
 const SCHEMA_NAME = /Schema$/u;
 
 const JSON_MESSAGE =
-  "Schema.Json in an action output is banned (E12), because the runner decode, the MCP JSON Schema and WireOutput check nothing. Use a typed Schema.Struct in src/shared/actions/<domain>/schema.ts.";
+  "Schema.Json in an action output is banned (E12), because the runner decode, the MCP JSON Schema and WireOutput check nothing. Use a typed Schema.Struct in packages/common/actions/src/<domain>/schema.ts.";
 
 const isNamed = (node, name) => node.type === "Identifier" && node.name === name;
 

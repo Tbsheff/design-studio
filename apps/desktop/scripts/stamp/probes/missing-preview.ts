@@ -4,8 +4,8 @@ import type {
   Entries,
   Handle,
 } from "../../../src/server/handlers/_core/handler.js";
-import { defineAction } from "../../../src/shared/actions/_core/action.js";
-import type { Input } from "../../../src/shared/actions/_core/action.js";
+import { defineAction } from "@design-studio/actions/_core/action";
+import type { Input } from "@design-studio/actions/_core/action";
 
 const deleteProbe = defineAction({
   access: "destructive",

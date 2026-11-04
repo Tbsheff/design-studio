@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
-import type { Project } from "../../../shared/actions/_core/contracts.js";
-import { shortenHome } from "../../../shared/actions/_core/folders.js";
+import type { Project } from "@design-studio/actions/_core/contracts";
+import { shortenHome } from "@design-studio/actions/_core/folders";
 import { api, errorText } from "../../api.js";
 import { Icon } from "../../kit/Icon.js";
 import type { CardActions } from "./project-grid.js";

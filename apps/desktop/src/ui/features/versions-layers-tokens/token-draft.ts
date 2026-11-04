@@ -2,7 +2,7 @@ import type {
   CompiledTokenEntry,
   TokenChange,
   TokenFile,
-} from "../../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import type { DesignTokens } from "../design-system/use-design-system-state.js";
 
 export interface PendingToken {

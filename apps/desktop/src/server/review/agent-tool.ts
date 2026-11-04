@@ -1,8 +1,8 @@
 import {
   DEFAULT_FRAME_STATE,
   withFrameStateHost,
-} from "../../shared/actions/_core/frame-state.js";
-import type { ReviewFrame } from "../../shared/actions/_core/review.js";
+} from "@design-studio/actions/_core/frame-state";
+import type { ReviewFrame } from "@design-studio/actions/_core/review";
 import type { RunTarget } from "../../shared/run-target.js";
 import type { CanvasService } from "../canvas/index.js";
 import { frameRef } from "../canvas/index.js";

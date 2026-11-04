@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
-import { routes } from "../../../shared/actions/canvas/routes.js";
-import type { StudioEvent } from "../../../shared/actions/_core/contracts.js";
+import { routes } from "@design-studio/actions/canvas/routes";
+import type { StudioEvent } from "@design-studio/actions/_core/contracts";
 import type {
   LinkTriggerKind,
   LinkVisibility,
-} from "../../../shared/actions/_core/link-interaction.js";
-import { emptyLinksFile, LINK_ACTIONS } from "../../../shared/actions/_core/links.js";
+} from "@design-studio/actions/_core/link-interaction";
+import { emptyLinksFile, LINK_ACTIONS } from "@design-studio/actions/_core/links";
 import type {
   LinkAction,
   LinkMotion,
@@ -15,7 +15,7 @@ import type {
   LinkTarget,
   LinkTransition,
   PrototypeLink,
-} from "../../../shared/actions/_core/links.js";
+} from "@design-studio/actions/_core/links";
 import { useProjectEvents } from "../../platform/events.js";
 import { call as callAction, sendJson } from "../../platform/http.js";
 

@@ -1,4 +1,4 @@
-import type { ApprovalCard } from "../../shared/actions/_core/approval-card.js";
+import type { ApprovalCard } from "@design-studio/actions/_core/approval-card";
 import { publishExpiryText, publishSize } from "../../shared/publish.js";
 import type { Publication, PublishPlan } from "../../shared/publish.js";
 

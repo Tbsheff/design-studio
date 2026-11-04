@@ -1,7 +1,7 @@
 import { Context, Effect, Layer } from "effect";
 
-import { NotFound } from "../../shared/actions/_core/errors/not-found.js";
-import type { McpApprovalRecord } from "../../shared/actions/_core/contracts.js";
+import { NotFound } from "@design-studio/actions/_core/errors/not-found";
+import type { McpApprovalRecord } from "@design-studio/actions/_core/contracts";
 import { lifeRuntime } from "./mcp-life-runtime.js";
 
 interface ApprovalPoll {

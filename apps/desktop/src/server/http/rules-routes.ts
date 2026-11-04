@@ -1,5 +1,5 @@
-import type { Direction, Project } from "../../shared/actions/_core/contracts.js";
-import type { DesignRule } from "../../shared/actions/_core/design-rules.js";
+import type { Direction, Project } from "@design-studio/actions/_core/contracts";
+import type { DesignRule } from "@design-studio/actions/_core/design-rules";
 import { loadDesignRules } from "../design-rules/store.js";
 
 const rulesLoader =

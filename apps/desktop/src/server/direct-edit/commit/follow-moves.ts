@@ -1,4 +1,4 @@
-import type { SourceLoc } from "../../../shared/actions/_core/contracts.js";
+import type { SourceLoc } from "@design-studio/actions/_core/contracts";
 import { onSourceChange, type SourceFileChange } from "../../events/index.js";
 import { lineMapOf, type LineMap } from "../../page-probe/index.js";
 import type { CommentStore } from "../../store/comments.js";

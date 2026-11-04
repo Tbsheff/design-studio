@@ -10,7 +10,7 @@ import type {
   RenderCheckResult,
   RunSummary,
   Version,
-} from "../src/shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 
 const CLEAN_PATH = "/usr/bin:/bin:/usr/sbin:/sbin";
 const KEPT_ENV = ["HOME", "USER", "LOGNAME", "SHELL", "TMPDIR", "LANG"];

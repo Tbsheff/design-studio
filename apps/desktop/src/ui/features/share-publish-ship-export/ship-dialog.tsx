@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Dispatch, FormEvent, SetStateAction } from "react";
 
-import { renderBranchName, renderShipTemplate } from "../../../shared/actions/_core/ship.js";
+import { renderBranchName, renderShipTemplate } from "@design-studio/actions/_core/ship";
 import type {
   ShipFile,
   ShipMode,
   ShipPrepare,
   ShipRequest,
   ShipResult,
-} from "../../../shared/actions/_core/ship.js";
+} from "@design-studio/actions/_core/ship";
 import { errorText } from "../../api.js";
 import { CopyButton } from "../../kit/CopyButton.js";
 import { Icon } from "../../kit/Icon.js";

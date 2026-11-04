@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { unpublishPublish } from "../../../shared/actions/publish/unpublish.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { unpublishPublish } from "@design-studio/actions/publish/unpublish";
 import {
   LinkedPublicationWriter,
   PublishPlanner,

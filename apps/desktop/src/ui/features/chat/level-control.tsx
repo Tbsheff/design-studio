@@ -1,8 +1,8 @@
 import { useId, useRef } from "react";
 import type { KeyboardEvent } from "react";
 
-import { RUN_LEVELS } from "../../../shared/actions/_core/contracts.js";
-import type { RunLevel } from "../../../shared/actions/_core/contracts.js";
+import { RUN_LEVELS } from "@design-studio/actions/_core/contracts";
+import type { RunLevel } from "@design-studio/actions/_core/contracts";
 import { LEVEL_PRESETS } from "../../../shared/run-levels.js";
 
 const STEP: Record<string, number> = {

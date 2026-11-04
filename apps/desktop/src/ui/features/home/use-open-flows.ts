@@ -1,4 +1,4 @@
-import type { Project, Starter } from "../../../shared/actions/_core/contracts.js";
+import type { Project, Starter } from "@design-studio/actions/_core/contracts";
 import type { AppHealth } from "../../../shared/found-apps.js";
 import { api, errorText } from "../../api.js";
 import { healthProblem } from "./doctor-model.js";

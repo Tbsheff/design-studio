@@ -5,7 +5,7 @@ import type {
   ComponentInfo,
   Direction,
   Project,
-} from "../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import type { PreviewService } from "../types.js";
 import { listComponents } from "./inventory.js";
 

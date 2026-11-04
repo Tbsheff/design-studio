@@ -1,6 +1,6 @@
 import { Context, Effect, Layer } from "effect";
 
-import { Unauthenticated } from "../../../../../src/shared/actions/_core/errors/unauthenticated.js";
+import { Unauthenticated } from "@design-studio/actions/_core/errors/unauthenticated";
 import { AuthGateway } from "../../auth/gateway.js";
 import { CurrentOrg } from "../../tenant/current-org.js";
 import type { CurrentOrgApi } from "../../tenant/current-org.js";

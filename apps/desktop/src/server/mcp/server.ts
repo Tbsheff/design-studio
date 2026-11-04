@@ -3,7 +3,7 @@ import { randomBytes } from "node:crypto";
 import { Effect } from "effect";
 import { Hono } from "hono";
 
-import type { McpStatus } from "../../shared/actions/_core/export.js";
+import type { McpStatus } from "@design-studio/actions/_core/export";
 import type { ExportDeps } from "../export/source.js";
 import type { WireArgs } from "../handlers/_core/run-action.js";
 import type { McpListenerRunnerApi } from "../mcp-life/index.js";

@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { deleteReplyComment } from "../../../shared/actions/comment/delete-reply.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { deleteReplyComment } from "@design-studio/actions/comment/delete-reply";
 import { CommentThreadStore } from "../../comments/index.js";
 import type { Handle } from "../_core/handler.js";
 

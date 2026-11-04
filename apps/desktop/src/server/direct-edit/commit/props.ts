@@ -9,7 +9,7 @@ import {
   type Direction,
   type Project,
   type Version,
-} from "../../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import {
   PROP_NAME,
   PROP_TEXT_MAX,
@@ -19,7 +19,7 @@ import {
   type PropValue,
   type SetPropsResult,
   type VariantClassResult,
-} from "../../../shared/actions/_core/props.js";
+} from "@design-studio/actions/_core/props";
 import { cvaCalls, parseModuleFile } from "../../components/props-schema.js";
 import { sourceFiles, usesIn } from "../../components/props-service.js";
 import { elementAt, readInstance } from "../../components/use-site.js";

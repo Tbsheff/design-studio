@@ -6,12 +6,12 @@ import {
   SHARE_DEFAULT_EXPIRY_HOURS,
   SHARE_MAX_FRAMES,
   shareUrl,
-} from "../../../shared/actions/_core/share.js";
+} from "@design-studio/actions/_core/share";
 import type {
   ShareExpiryHours,
   ShareLink,
   ShareServerState,
-} from "../../../shared/actions/_core/share.js";
+} from "@design-studio/actions/_core/share";
 import { errorText } from "../../api.js";
 import { CopyButton, copyText } from "../../kit/CopyButton.js";
 import { Icon } from "../../kit/Icon.js";

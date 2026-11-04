@@ -1,5 +1,5 @@
 // @generated
-import type { TokenActions } from "../../../shared/actions/token/index.js";
+import type { TokenActions } from "@design-studio/actions/token/index";
 import type { Entries } from "../_core/handler.js";
 import { handle as applyTokenHandle } from "./apply.js";
 

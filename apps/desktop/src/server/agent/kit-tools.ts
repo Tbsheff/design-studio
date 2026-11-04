@@ -1,7 +1,7 @@
 import { Schema } from "effect";
 
-import { DEFAULT_FRAME_STATE } from "../../shared/actions/_core/frame-state.js";
-import { COMPONENT_LIST_MAX, COMPONENT_SOURCES } from "../../shared/actions/_core/props.js";
+import { DEFAULT_FRAME_STATE } from "@design-studio/actions/_core/frame-state";
+import { COMPONENT_LIST_MAX, COMPONENT_SOURCES } from "@design-studio/actions/_core/props";
 import {
   toDefaulted,
   toOptional,

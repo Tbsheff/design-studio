@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { Version, VersionMeta } from "../../../shared/actions/_core/contracts.js";
+import type { Version, VersionMeta } from "@design-studio/actions/_core/contracts";
 import {
   displayTitle,
   indexVersions,

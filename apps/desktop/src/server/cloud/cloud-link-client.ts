@@ -1,14 +1,14 @@
 import { Context, Effect, Layer } from "effect";
 import type { Schema } from "effect";
 
-import type { Unauthenticated } from "../../shared/actions/_core/errors/unauthenticated.js";
-import type { Unavailable } from "../../shared/actions/_core/errors/unavailable.js";
-import { fromCloudId } from "../../shared/actions/publish/schema.js";
-import type { PublishInput } from "../../shared/actions/publish/schema.js";
+import type { Unauthenticated } from "@design-studio/actions/_core/errors/unauthenticated";
+import type { Unavailable } from "@design-studio/actions/_core/errors/unavailable";
+import { fromCloudId } from "@design-studio/actions/publish/schema";
+import type { PublishInput } from "@design-studio/actions/publish/schema";
 import type {
   ShareCreated,
   ShareRevoked,
-} from "../../shared/actions/share/schema.js";
+} from "@design-studio/actions/share/schema";
 import type { Publication } from "../../shared/publish.js";
 import { getJsonResponse } from "./cloud-fetch.js";
 import {

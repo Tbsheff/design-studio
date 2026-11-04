@@ -1,7 +1,7 @@
 import { lazy, useCallback, useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
-import { PORT_OPEN_EVENT } from "../../../shared/actions/_core/port.js";
+import { PORT_OPEN_EVENT } from "@design-studio/actions/_core/port";
 import { uiStore } from "../../platform/storage.js";
 import { setPortAvailable } from "../design-system/port-api.js";
 import type { PortOpenDetail } from "../design-system/port-api.js";

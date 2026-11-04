@@ -1,6 +1,6 @@
 import { Context, Effect, Layer } from "effect";
 
-import { BadRequest } from "../../shared/actions/_core/errors/bad-request.js";
+import { BadRequest } from "@design-studio/actions/_core/errors/bad-request";
 import type { KnownFailure } from "../platform/attempt/index.js";
 import { attemptContent } from "./content-runtime.js";
 import { runContent } from "./write-content.js";

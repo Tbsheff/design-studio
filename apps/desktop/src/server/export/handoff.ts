@@ -12,19 +12,19 @@ import {
   CANVAS_FILE,
   parseCanvasText,
   type CanvasFile,
-} from "../../shared/actions/_core/canvas-file.js";
+} from "@design-studio/actions/_core/canvas-file";
 import type {
   CompiledTokenEntry,
   ComponentInfo,
   DesignComment,
   Version,
-} from "../../shared/actions/_core/contracts.js";
-import { TOKENS_CSS_FILE, TOKENS_FILE } from "../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
+import { TOKENS_CSS_FILE, TOKENS_FILE } from "@design-studio/actions/_core/contracts";
 import {
   exportFileStem,
   type ExportFrame,
   type HandoffResult,
-} from "../../shared/actions/_core/export.js";
+} from "@design-studio/actions/_core/export";
 import { listComponents } from "../components/inventory.js";
 import { findTokenFile } from "../design-system/app-tokens/detect.js";
 import {

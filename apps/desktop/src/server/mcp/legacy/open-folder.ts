@@ -1,7 +1,7 @@
 import path from "node:path";
 
-import { importProject } from "../../../shared/actions/project/import.js";
-import type { Direction, Project } from "../../../shared/actions/_core/contracts.js";
+import { importProject } from "@design-studio/actions/project/import";
+import type { Direction, Project } from "@design-studio/actions/_core/contracts";
 import { z } from "../../platform/zod-bridge/index.js";
 import { callAction } from "../action-call.js";
 import { approve, oneLine } from "../edit-guards.js";

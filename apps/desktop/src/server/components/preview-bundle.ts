@@ -3,7 +3,7 @@ import path from "node:path";
 
 import type { Plugin } from "esbuild";
 
-import type { PropValue } from "../../shared/actions/_core/props.js";
+import type { PropValue } from "@design-studio/actions/_core/props";
 
 export interface SampleNode {
   exportName: string;

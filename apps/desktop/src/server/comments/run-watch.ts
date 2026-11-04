@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-import type { DesignComment, RunSummary } from "../../shared/actions/_core/contracts.js";
+import type { DesignComment, RunSummary } from "@design-studio/actions/_core/contracts";
 import { logError } from "../platform/logger/index.js";
 import type { CommentStore } from "../store/comments.js";
 import type { AgentRunner, RunHandle } from "../types.js";

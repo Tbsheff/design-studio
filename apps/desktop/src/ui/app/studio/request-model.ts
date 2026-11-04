@@ -5,7 +5,7 @@ import type {
   RunMention,
   RunRequest,
   SelectionContext,
-} from "../../../shared/actions/_core/contracts";
+} from "@design-studio/actions/_core/contracts";
 import type { ComposerMode } from "../../features/chat/run-settings";
 import type { RunView } from "../../features/chat/run-state-model";
 

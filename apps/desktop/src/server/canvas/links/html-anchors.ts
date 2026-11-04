@@ -5,7 +5,7 @@ import {
   cleanLinkSelector,
   cleanLinkText,
   LINK_TEXT_MAX,
-} from "../../../shared/actions/_core/links.js";
+} from "@design-studio/actions/_core/links";
 import { scriptTargets } from "./script-links.js";
 import type { ScriptTargets } from "./script-links.js";
 

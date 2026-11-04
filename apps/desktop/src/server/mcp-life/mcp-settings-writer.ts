@@ -1,6 +1,6 @@
 import { Context, Effect, Layer } from "effect";
 
-import type { McpStatus } from "../../shared/actions/_core/export.js";
+import type { McpStatus } from "@design-studio/actions/_core/export";
 import { lifeRuntime } from "./mcp-life-runtime.js";
 import type { McpLifeApprovals, McpLifeRuntime } from "./mcp-life-runtime.js";
 

@@ -33,7 +33,7 @@ export {
   BREAKPOINT_WIDTH_MAX,
 } from "../../shared/breakpoints.js";
 
-export { DIRECT_STYLE_PROPERTIES } from "../../shared/actions/_core/contracts.js";
+export { DIRECT_STYLE_PROPERTIES } from "@design-studio/actions/_core/contracts";
 
 export type { WrittenFile } from "../direct-edit/commit/index.js";
 
@@ -43,7 +43,7 @@ export type { TailwindTheme } from "../direct-edit/tailwind/index.js";
 
 export type { BreakpointSet } from "../style-scope/engine/index.js";
 
-export type { CanvasFileFrame } from "../../shared/actions/_core/canvas-file.js";
+export type { CanvasFileFrame } from "@design-studio/actions/_core/canvas-file";
 
 export type {
   Direction,
@@ -51,7 +51,7 @@ export type {
   Project,
   SourceLoc,
   Version,
-} from "../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 
 export type {
   BreakpointActive,

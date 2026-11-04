@@ -1,9 +1,9 @@
 import { Context, Effect, Layer } from "effect";
 
-import type { ApprovalCard } from "../../shared/actions/_core/approval-card.js";
-import { BadRequest } from "../../shared/actions/_core/errors/bad-request.js";
-import { NotFound } from "../../shared/actions/_core/errors/not-found.js";
-import type { PublishInput } from "../../shared/actions/publish/schema.js";
+import type { ApprovalCard } from "@design-studio/actions/_core/approval-card";
+import { BadRequest } from "@design-studio/actions/_core/errors/bad-request";
+import { NotFound } from "@design-studio/actions/_core/errors/not-found";
+import type { PublishInput } from "@design-studio/actions/publish/schema";
 import type { Publication, PublishPlan } from "../../shared/publish.js";
 import type { KnownFailure } from "../platform/attempt/index.js";
 import { attemptLegacy } from "./legacy-link.js";

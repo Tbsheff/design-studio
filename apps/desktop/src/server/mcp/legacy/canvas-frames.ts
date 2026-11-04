@@ -1,5 +1,5 @@
-import { cleanRoute, routeLabel } from "../../../shared/actions/_core/app.js";
-import type { CanvasFileFrame } from "../../../shared/actions/_core/canvas-file.js";
+import { cleanRoute, routeLabel } from "@design-studio/actions/_core/app";
+import type { CanvasFileFrame } from "@design-studio/actions/_core/canvas-file";
 import { canvasPlace, findFrame } from "../../canvas/index.js";
 import type { CanvasToolContext, PlaceSpec } from "../../canvas/index.js";
 import { frameStepText, placedFrames, placeSummary } from "../activity-text.js";

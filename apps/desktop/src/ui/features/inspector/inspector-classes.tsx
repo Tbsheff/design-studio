@@ -4,7 +4,7 @@ import type {
   ElementSourceInfo,
   SourceLoc,
   TailwindOutcome,
-} from "../../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import type { VariantSupport } from "../../../shared/variants.js";
 import { api } from "../../api.js";
 import { InspectorSection } from "./inspector-fields.js";

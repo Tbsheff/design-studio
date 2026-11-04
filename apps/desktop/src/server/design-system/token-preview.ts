@@ -1,8 +1,8 @@
 import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 
-import { PACK_FILE, TOKENS_FILE } from "../../shared/actions/_core/contracts.js";
-import type { TokenFile, TokenPreviewResult } from "../../shared/actions/_core/contracts.js";
+import { PACK_FILE, TOKENS_FILE } from "@design-studio/actions/_core/contracts";
+import type { TokenFile, TokenPreviewResult } from "@design-studio/actions/_core/contracts";
 import { DirectEditError } from "../direct-edit/index.js";
 import { compileTokens, parseTokenFile } from "./compile.js";
 import type { ThemeMode } from "./compile.js";

@@ -4,7 +4,7 @@ import path from "node:path";
 
 import { PNG } from "pngjs";
 
-import type { ExportFrame, ExportScope } from "../../shared/actions/_core/export.js";
+import type { ExportFrame, ExportScope } from "@design-studio/actions/_core/export";
 import { BadRequestError } from "../platform/errors/index.js";
 import {
   hideDevChrome,

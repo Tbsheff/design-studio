@@ -6,7 +6,7 @@ const ROOT = fileURLToPath(new URL("../../../", import.meta.url));
 
 const SERVER = path.join(ROOT, "src/server");
 
-const ACTIONS = path.join(ROOT, "src/shared/actions");
+const ACTIONS = path.join(ROOT, "packages/common/actions/src");
 
 const SERVICE_CLASS =
   /class (?<name>[A-Z]\w*) extends Context\.Service<[\s\S]*?declare public readonly access: "(?<access>read|write)"/gu;

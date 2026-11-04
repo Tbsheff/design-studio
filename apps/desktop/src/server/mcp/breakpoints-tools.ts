@@ -1,4 +1,4 @@
-import type { SourceLoc } from "../../shared/actions/_core/contracts.js";
+import type { SourceLoc } from "@design-studio/actions/_core/contracts";
 import type { BreakpointScope } from "../breakpoints/commit.js";
 import { BreakpointError } from "../breakpoints/errors.js";
 import {

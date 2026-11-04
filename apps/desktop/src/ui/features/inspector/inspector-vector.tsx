@@ -1,8 +1,8 @@
 import { useState } from "react";
 import type { KeyboardEvent } from "react";
 
-import type { SelectionContext } from "../../../shared/actions/_core/contracts.js";
-import type { InsertTarget } from "../../../shared/actions/_core/insert.js";
+import type { SelectionContext } from "@design-studio/actions/_core/contracts";
+import type { InsertTarget } from "@design-studio/actions/_core/insert";
 import {
   BOOLEAN_OPS,
   VECTOR_COLOR,

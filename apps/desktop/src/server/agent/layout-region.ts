@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-import type { QualityFinding } from "../../shared/actions/_core/contracts.js";
+import type { QualityFinding } from "@design-studio/actions/_core/contracts";
 import type { LayoutRegion, PageOwner } from "../../shared/run-target.js";
 import type { PreviewService } from "../types.js";
 

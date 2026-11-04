@@ -10,7 +10,7 @@ import {
   type ShipRepoInfo,
   type ShipRequest,
   type ShipResult,
-} from "../../shared/actions/_core/ship.js";
+} from "@design-studio/actions/_core/ship";
 import { BadRequestError, ConflictError } from "../platform/errors/index.js";
 import {
   NETWORK_TIMEOUT_MS,

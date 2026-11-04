@@ -2,7 +2,7 @@ import { Effect, Schema } from "effect";
 import { HttpApiEndpoint, HttpApiGroup } from "effect/http-api";
 import type { HttpApiBuilder } from "effect/http-api";
 
-import type { Permission } from "../../../../../src/shared/actions/_core/permissions.js";
+import type { Permission } from "@design-studio/actions/_core/permissions";
 import { ProjectsRepo } from "../../tenant/repos/projects.js";
 import { requireOrg, requirePerm } from "./authorizer.js";
 import { MemberGate } from "./gates.js";

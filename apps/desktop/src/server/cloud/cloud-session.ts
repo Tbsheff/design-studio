@@ -1,11 +1,11 @@
 import { Context, Effect, Layer, Ref } from "effect";
 
-import { Unauthenticated } from "../../shared/actions/_core/errors/unauthenticated.js";
+import { Unauthenticated } from "@design-studio/actions/_core/errors/unauthenticated";
 import type {
   CloudOrg,
   CloudUser,
   CloudView,
-} from "../../shared/actions/cloud/schema.js";
+} from "@design-studio/actions/cloud/schema";
 
 interface CloudToken {
   readonly expiresAt: number;

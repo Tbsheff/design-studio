@@ -3,7 +3,7 @@ import type { PermissionResult } from "@anthropic-ai/claude-agent-sdk";
 import type {
   PermissionCard,
   PermissionDecision,
-} from "../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import type { CommandRules, PermissionAsk } from "./types.js";
 
 export const ASK_TIMEOUT_MS = 280_000;

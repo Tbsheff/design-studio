@@ -34,7 +34,7 @@ export type { PreviewService } from "../../types.js";
 
 export type { CvaCall } from "../props-schema.js";
 
-export type { Direction, Project, Version } from "../../../shared/actions/_core/contracts.js";
+export type { Direction, Project, Version } from "@design-studio/actions/_core/contracts";
 
 export type {
   ComponentVariantChange,

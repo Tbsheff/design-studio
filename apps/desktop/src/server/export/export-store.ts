@@ -1,10 +1,10 @@
 import { Context, Effect, Layer } from "effect";
 
-import type { ApprovalCard } from "../../shared/actions/_core/approval-card.js";
+import type { ApprovalCard } from "@design-studio/actions/_core/approval-card";
 import type {
   CopyCodeResult,
   ExportFileResult,
-} from "../../shared/actions/export/schema.js";
+} from "@design-studio/actions/export/schema";
 import { readCode } from "./copy-target.js";
 import type { CopyQuery } from "./copy-target.js";
 import { attemptExport } from "./export-core.js";

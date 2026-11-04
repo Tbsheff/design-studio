@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { createAttachmentProject } from "../../../shared/actions/project/create-attachment.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { createAttachmentProject } from "@design-studio/actions/project/create-attachment";
 import { ProjectWriter } from "../../store/index.js";
 import type { Handle } from "../_core/handler.js";
 

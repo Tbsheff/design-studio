@@ -1,14 +1,14 @@
 import { Context, Effect, Layer } from "effect";
 
-import { BadRequest } from "../../shared/actions/_core/errors/bad-request.js";
-import { NotFound } from "../../shared/actions/_core/errors/not-found.js";
-import type { CfFailed } from "../../shared/actions/publish/errors/cf-failed.js";
+import { BadRequest } from "@design-studio/actions/_core/errors/bad-request";
+import { NotFound } from "@design-studio/actions/_core/errors/not-found";
+import type { CfFailed } from "@design-studio/actions/publish/errors/cf-failed";
 import type {
   PublishBackendMode,
   PublishBackendState,
   PublishCliState,
   PublishInput,
-} from "../../shared/actions/publish/schema.js";
+} from "@design-studio/actions/publish/schema";
 import type { Publication } from "../../shared/publish.js";
 import { attemptKnown } from "../platform/attempt/index.js";
 import type { KnownFailure } from "../platform/attempt/index.js";

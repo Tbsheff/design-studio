@@ -10,11 +10,11 @@ import {
   ACTION_DONE,
   MAX_WATCH,
   StreamWatchSchema,
-} from "../../shared/actions/app-stream.js";
+} from "@design-studio/actions/app-stream";
 import type {
   ActionDone,
   StreamWatch,
-} from "../../shared/actions/app-stream.js";
+} from "@design-studio/actions/app-stream";
 import {
   APP_STREAM_PATH,
   STREAM_APPROVALS,

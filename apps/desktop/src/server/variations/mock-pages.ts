@@ -5,7 +5,7 @@ import type {
   ProjectKind,
   ReferenceElement,
   RunRequest,
-} from "../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 
 type MockVariation = NonNullable<RunRequest["variation"]>;
 

@@ -1,4 +1,4 @@
-import type { PackSummary } from "../../../shared/actions/_core/contracts.js";
+import type { PackSummary } from "@design-studio/actions/_core/contracts";
 
 interface Props {
   swatches: PackSummary["swatches"];

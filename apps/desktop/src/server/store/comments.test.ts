@@ -5,7 +5,7 @@ import path from "node:path";
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import type { CommentTarget, StudioEvent } from "../../shared/actions/_core/contracts.js";
+import type { CommentTarget, StudioEvent } from "@design-studio/actions/_core/contracts";
 import { createEventBus } from "../events/index.js";
 import { createCommentStore, reorderSubset } from "./comments.js";
 import type { CommentStore } from "./comments.js";

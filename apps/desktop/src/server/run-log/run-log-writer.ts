@@ -1,9 +1,9 @@
 import { Context, Effect, Layer, Semaphore } from "effect";
 
-import type { BadRequest } from "../../shared/actions/_core/errors/bad-request.js";
-import type { Conflict } from "../../shared/actions/_core/errors/conflict.js";
-import type { NotFound } from "../../shared/actions/_core/errors/not-found.js";
-import type { RunSummary } from "../../shared/actions/_core/contracts.js";
+import type { BadRequest } from "@design-studio/actions/_core/errors/bad-request";
+import type { Conflict } from "@design-studio/actions/_core/errors/conflict";
+import type { NotFound } from "@design-studio/actions/_core/errors/not-found";
+import type { RunSummary } from "@design-studio/actions/_core/contracts";
 import {
   answerActiveRun,
   setActiveQueue,

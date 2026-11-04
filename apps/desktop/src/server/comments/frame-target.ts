@@ -1,4 +1,4 @@
-import type { DesignComment } from "../../shared/actions/_core/contracts.js";
+import type { DesignComment } from "@design-studio/actions/_core/contracts";
 
 const FRAME_WIDTH = 1440;
 const FRAME_HEIGHT = 900;

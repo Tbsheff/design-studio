@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = fileURLToPath(new URL("../../../", import.meta.url));
 
-const TOOL_DIRS = ["src/server/mcp", "src/server/agent", "src/server/agent-tools", "src/shared/actions"];
+const TOOL_DIRS = ["src/server/mcp", "src/server/agent", "src/server/agent-tools", "packages/common/actions/src"];
 
 const SNAPSHOTS = path.join(ROOT, "artifacts/mcp-snapshots");
 

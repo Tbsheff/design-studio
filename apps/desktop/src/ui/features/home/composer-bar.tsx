@@ -7,7 +7,7 @@ import {
   useState,
 } from "react";
 
-import type { PackSummary, ProjectKind } from "../../../shared/actions/_core/contracts.js";
+import type { PackSummary, ProjectKind } from "@design-studio/actions/_core/contracts";
 import { Icon } from "../../kit/Icon.js";
 import { uiStore } from "../../platform/storage.js";
 import { usePresence } from "../chat/use-presence.js";

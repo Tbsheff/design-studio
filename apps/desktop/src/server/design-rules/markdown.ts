@@ -1,7 +1,7 @@
 import {
   DESIGN_MD_RULES_END,
   DESIGN_MD_RULES_START,
-} from "../../shared/actions/_core/design-rules.js";
+} from "@design-studio/actions/_core/design-rules";
 
 const FENCE = /^(\s*)(```|~~~)\s*rules\s*$/i;
 

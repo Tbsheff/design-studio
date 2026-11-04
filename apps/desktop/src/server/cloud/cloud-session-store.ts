@@ -1,6 +1,6 @@
 import { Context, Effect, Layer } from "effect";
 
-import type { CloudView } from "../../shared/actions/cloud/schema.js";
+import type { CloudView } from "@design-studio/actions/cloud/schema";
 import { CloudSession } from "./cloud-session.js";
 
 interface CloudSessionStoreApi {

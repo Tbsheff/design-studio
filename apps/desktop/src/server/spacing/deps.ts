@@ -41,7 +41,7 @@ export type {
   Project,
   SourceLoc,
   Version,
-} from "../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 
 export type {
   BoxSide,

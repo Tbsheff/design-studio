@@ -1,6 +1,6 @@
 import { Effect, Schema } from "effect";
 
-import { Unavailable } from "../../shared/actions/_core/errors/unavailable.js";
+import { Unavailable } from "@design-studio/actions/_core/errors/unavailable";
 
 const CLOUD_ORIGIN = "https://api.designstudio.app";
 

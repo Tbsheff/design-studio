@@ -1,7 +1,7 @@
 import type {
   DesignSystemItem,
   DraftStatus,
-} from "../../../shared/actions/pack/schema.js";
+} from "@design-studio/actions/pack/schema";
 import type {
   DesignSystemCoverage,
   DesignSystemDraftInfo,
@@ -9,7 +9,7 @@ import type {
   DraftSourcesState,
   PackSummary,
   Project,
-} from "../../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import { BadRequestError, NotFoundError } from "../../platform/errors/index.js";
 import { checkDesignSystem } from "../check.js";
 import { readCoverage } from "../draft-project.js";

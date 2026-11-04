@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { listRun } from "../../../shared/actions/run/list.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { listRun } from "@design-studio/actions/run/list";
 import { RunLogStore } from "../../run-log/index.js";
 import type { Handle } from "../_core/handler.js";
 

@@ -1,10 +1,10 @@
 import { Context, Effect, Layer } from "effect";
 
-import { isCloudId } from "../../shared/actions/publish/schema.js";
+import { isCloudId } from "@design-studio/actions/publish/schema";
 import type {
   ShareCreated,
   ShareRevoked,
-} from "../../shared/actions/share/schema.js";
+} from "@design-studio/actions/share/schema";
 import { CloudLinkClient } from "../cloud/index.js";
 import type { CloudFailure, CloudShareInput } from "../cloud/index.js";
 import { DeviceBindings } from "../store/index.js";

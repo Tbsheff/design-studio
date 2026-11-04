@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { updateTweaksDirectEdit } from "../../../shared/actions/direct-edit/update-tweaks.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { updateTweaksDirectEdit } from "@design-studio/actions/direct-edit/update-tweaks";
 import { DirectEditWriter, toBody, toRef } from "../../direct-edit/index.js";
 import type { Handle } from "../_core/handler.js";
 

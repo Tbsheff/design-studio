@@ -1,5 +1,5 @@
-import type { RunLevel, RunMode } from "../../shared/actions/_core/contracts.js";
-import { PORT_LEVEL_LABEL, PORT_TASK } from "../../shared/actions/_core/port.js";
+import type { RunLevel, RunMode } from "@design-studio/actions/_core/contracts";
+import { PORT_LEVEL_LABEL, PORT_TASK } from "@design-studio/actions/_core/port";
 import type { ResolvedRunConfig } from "../../shared/run-levels.js";
 import { PORT_RULES } from "./prompt.js";
 import type { UserMessageParts } from "./user-message.js";

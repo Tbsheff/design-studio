@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { setLanShare } from "../../../shared/actions/share/set-lan.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { setLanShare } from "@design-studio/actions/share/set-lan";
 import { ShareListener } from "../../share/index.js";
 import type { Handle } from "../_core/handler.js";
 

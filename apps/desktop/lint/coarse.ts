@@ -133,12 +133,12 @@ const FEATURE_POLICIES = [
 
 const UI_ACTIONS = typeOnly(
   [
-    "**/shared/actions",
-    "**/shared/actions/**",
-    "!**/shared/actions/**/routes.js",
-    "!**/shared/actions/_core/{app,app-doctor,canvas-file,clarify,contracts,design-rules,element-variants,export,figma-nodes,folders,frame-state,html-entities,insert,link-interaction,links,port,props,review,share,ship,states,style-search,usage-scope}{,.js,.ts}",
+    "@design-studio/actions",
+    "@design-studio/actions/**",
+    "!@design-studio/actions/*/routes",
+    "!@design-studio/actions/_core/{app,app-doctor,canvas-file,clarify,contracts,design-rules,element-variants,export,figma-nodes,folders,frame-state,html-entities,insert,link-interaction,links,port,props,review,share,ship,states,style-search,usage-scope}",
   ],
-  "Value imports from shared/actions in src/ui are banned. Use import type, or the routes from shared/actions/<domain>/routes.js."
+  "Value imports from @design-studio/actions in src/ui are banned. Use import type, or the routes from @design-studio/actions/<domain>/routes."
 );
 
 const SERVICE_LIBS = ban(

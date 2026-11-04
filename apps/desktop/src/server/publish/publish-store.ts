@@ -1,12 +1,12 @@
 import { Context, Effect, Layer } from "effect";
 
-import { NotFound } from "../../shared/actions/_core/errors/not-found.js";
+import { NotFound } from "@design-studio/actions/_core/errors/not-found";
 import type {
   PublicationCommentList,
   PublicationList,
   PublishBackendState,
   PublishCliState,
-} from "../../shared/actions/publish/schema.js";
+} from "@design-studio/actions/publish/schema";
 import { attemptKnown } from "../platform/attempt/index.js";
 import type { KnownFailure } from "../platform/attempt/index.js";
 import { loadConfig } from "../platform/config/index.js";

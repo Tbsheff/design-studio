@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { runRulesTestDirectEdit } from "../../../shared/actions/direct-edit/run-rules-test.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { runRulesTestDirectEdit } from "@design-studio/actions/direct-edit/run-rules-test";
 import { DirectEditWriter, toFields, toRef } from "../../direct-edit/index.js";
 import type { Handle } from "../_core/handler.js";
 

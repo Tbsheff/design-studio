@@ -1,7 +1,7 @@
 import { mkdir, realpath, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import type { DirectEditRequest } from "../../../shared/actions/_core/contracts.js";
+import type { DirectEditRequest } from "@design-studio/actions/_core/contracts";
 import { writeAtomic as platformWriteAtomic } from "../../platform/atomic-write/index.js";
 import { isNodeError } from "../../platform/errors/index.js";
 import { DirectEditError } from "../engine/errors.js";

@@ -5,7 +5,7 @@ import type {
   AppDoctorResult,
   DoctorCause,
   DoctorFix,
-} from "../../shared/actions/_core/app-doctor.js";
+} from "@design-studio/actions/_core/app-doctor";
 import { installHint } from "./install-hint.js";
 import { buildCommand, findWorkspacePackage } from "./workspace-package.js";
 

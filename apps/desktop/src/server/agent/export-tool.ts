@@ -2,7 +2,7 @@ import path from "node:path";
 
 import { Schema } from "effect";
 
-import { EXPORT_MAX_FRAMES, exportFileStem } from "../../shared/actions/_core/export.js";
+import { EXPORT_MAX_FRAMES, exportFileStem } from "@design-studio/actions/_core/export";
 import {
   toOptionalText,
   toSdkFieldSet,

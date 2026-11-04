@@ -1,5 +1,5 @@
-import { DEV_CHROME_SELECTOR } from "../../shared/actions/_core/app.js";
-import type { LayoutFinding } from "../../shared/actions/_core/contracts.js";
+import { DEV_CHROME_SELECTOR } from "@design-studio/actions/_core/app";
+import type { LayoutFinding } from "@design-studio/actions/_core/contracts";
 import { toDevChromeExpression } from "./dev-chrome-expression.js";
 
 const MAX_LAYOUT_FINDINGS = 10;

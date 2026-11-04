@@ -3,7 +3,7 @@ import path from "node:path";
 
 import { afterEach, describe, expect, it } from "vitest";
 
-import type { StudioEvent, TelemetrySample } from "../../shared/actions/_core/contracts.js";
+import type { StudioEvent, TelemetrySample } from "@design-studio/actions/_core/contracts";
 import {
   createFakeBus,
   createFakeProjects,

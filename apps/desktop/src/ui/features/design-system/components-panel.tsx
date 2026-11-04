@@ -5,8 +5,8 @@ import type {
   ComponentInfo,
   ProjectKind,
   SelectionContext,
-} from "../../../shared/actions/_core/contracts.js";
-import type { InsertableComponent } from "../../../shared/actions/_core/insert.js";
+} from "@design-studio/actions/_core/contracts";
+import type { InsertableComponent } from "@design-studio/actions/_core/insert";
 import { Icon } from "../../kit/Icon.js";
 import { PanelHead } from "../../kit/sheet-head.js";
 import {

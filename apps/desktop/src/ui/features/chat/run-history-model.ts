@@ -1,9 +1,9 @@
 import { useSyncExternalStore } from "react";
 
-import type { WireOutput } from "../../../shared/actions/_core/action.js";
-import type { listRun } from "../../../shared/actions/run/list.js";
-import { routes as runsRoutes } from "../../../shared/actions/run/routes.js";
-import type { RunSummary } from "../../../shared/actions/_core/contracts.js";
+import type { WireOutput } from "@design-studio/actions/_core/action";
+import type { listRun } from "@design-studio/actions/run/list";
+import { routes as runsRoutes } from "@design-studio/actions/run/routes";
+import type { RunSummary } from "@design-studio/actions/_core/contracts";
 import { call } from "../../platform/http.js";
 
 interface RunHistory {

@@ -3,8 +3,8 @@ import type {
   RunLevel,
   RunMention,
   RunRequest,
-} from "../../../shared/actions/_core/contracts";
-import type { InlineRunExtras } from "../../../shared/actions/_core/usage-scope";
+} from "@design-studio/actions/_core/contracts";
+import type { InlineRunExtras } from "@design-studio/actions/_core/usage-scope";
 import type { CanvasFrame } from "../../features/canvas/canvas-frames-model";
 import type { ComposerMode } from "../../features/chat/run-settings";
 import type { RunView } from "../../features/chat/run-state-model";

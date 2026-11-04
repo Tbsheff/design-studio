@@ -6,7 +6,7 @@ import type {
   DesignSystemState,
   Project,
   TokenFile,
-} from "../../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import type { TokenMode } from "../../../shared/token-match.js";
 import { api } from "../../api.js";
 import type { FilesChange } from "../home/use-studio-data.js";

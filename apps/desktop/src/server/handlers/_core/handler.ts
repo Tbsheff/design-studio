@@ -5,8 +5,8 @@ import type {
   ErrorOf,
   Input,
   Output,
-} from "../../../shared/actions/_core/action.js";
-import type { ApprovalCard } from "../../../shared/actions/_core/approval-card.js";
+} from "@design-studio/actions/_core/action";
+import type { ApprovalCard } from "@design-studio/actions/_core/approval-card";
 
 interface ReadAccess {
   readonly access: "read";

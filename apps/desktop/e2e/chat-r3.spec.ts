@@ -8,7 +8,7 @@ import type {
   RunSentRecord,
   RunSummary,
   StudioEvent,
-} from "../src/shared/actions/_core/contracts";
+} from "@design-studio/actions/_core/contracts";
 import {
   createProjectViaUi,
   frontFrame,

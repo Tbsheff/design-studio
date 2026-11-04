@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { inspectShip } from "../../../shared/actions/ship/inspect.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { inspectShip } from "@design-studio/actions/ship/inspect";
 import { ShipStore } from "../../ship/index.js";
 import type { Handle } from "../_core/handler.js";
 

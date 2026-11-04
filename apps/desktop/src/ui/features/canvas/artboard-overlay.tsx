@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import type { SelectionContext } from "../../../shared/actions/_core/contracts.js";
+import type { SelectionContext } from "@design-studio/actions/_core/contracts";
 import { formatMeasure, measureBetween } from "../../../shared/measure.js";
 import type { MeasureLine } from "../../../shared/measure.js";
 import { unionBox } from "./snap-model.js";

@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { applyToken } from "../../../shared/actions/token/apply.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { applyToken } from "@design-studio/actions/token/apply";
 import { TokenSweepRunner } from "../../token-sweep/index.js";
 import type { Handle } from "../_core/handler.js";
 

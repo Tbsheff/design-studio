@@ -4,7 +4,7 @@ import { pathToFileURL } from "node:url";
 
 import { PNG } from "pngjs";
 
-import type { Attachment } from "../../shared/actions/_core/contracts.js";
+import type { Attachment } from "@design-studio/actions/_core/contracts";
 import {
   isReferenceName,
   plainAttachmentName,

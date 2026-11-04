@@ -6,15 +6,15 @@ import type {
   FigmaImportResult,
   FigmaImportSource,
   FigmaImportStats,
-} from "../../../shared/actions/_core/figma-nodes.js";
+} from "@design-studio/actions/_core/figma-nodes";
 import {
   looksLikeFigmaLink,
   looksLikeFigmaNodes,
-} from "../../../shared/actions/_core/figma-nodes.js";
+} from "@design-studio/actions/_core/figma-nodes";
 import type {
   InsertTarget,
   JsxInsertPosition,
-} from "../../../shared/actions/_core/insert.js";
+} from "@design-studio/actions/_core/insert";
 import { ApiError, json } from "../../api.js";
 import { Icon } from "../../kit/Icon.js";
 import { UiSelect } from "../../kit/UiSelect.js";

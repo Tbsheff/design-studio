@@ -1,10 +1,10 @@
-import type { ProjectKind } from "../../shared/actions/_core/contracts.js";
+import type { ProjectKind } from "@design-studio/actions/_core/contracts";
 import {
   BRIDGE_SCRIPT_PATH,
   BRIDGE_TOKEN_PARAM,
   SOURCE_LOC_ATTR,
-} from "../../shared/actions/_core/contracts.js";
-import type { ExportFrame } from "../../shared/actions/_core/export.js";
+} from "@design-studio/actions/_core/contracts";
+import type { ExportFrame } from "@design-studio/actions/_core/export";
 import { waitForPage } from "../preview/page-capture/index.js";
 import type { PreviewService } from "../types.js";
 import { withPagePath } from "./source.js";

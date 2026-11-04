@@ -14,7 +14,7 @@ import type {
   Project,
   SourceLoc,
   VersionMeta,
-} from "../../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import {
   IMAGE_ALT_MAX,
   IMAGE_FITS,
@@ -22,7 +22,7 @@ import {
   type ImageFit,
   type SetImageResult,
 } from "../../../shared/image.js";
-import { OWNERS_MAX, OWNER_STACK_MAX } from "../../../shared/actions/_core/props.js";
+import { OWNERS_MAX, OWNER_STACK_MAX } from "@design-studio/actions/_core/props";
 import { z } from "../../platform/zod-bridge/index.js";
 import type { InsertScope } from "../components-ops/insert.js";
 import { DirectEditError } from "../engine/errors.js";

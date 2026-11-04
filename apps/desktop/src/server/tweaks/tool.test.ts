@@ -4,7 +4,7 @@ import path from "node:path";
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { DEFAULT_SETTINGS } from "../../shared/actions/_core/contracts.js";
+import { DEFAULT_SETTINGS } from "@design-studio/actions/_core/contracts";
 import { withRunTask, resolveRunConfig } from "../../shared/run-levels.js";
 import {
   TWEAKS_FILE,

@@ -2,8 +2,8 @@ import {
   LAYER_LABEL_MAX,
   LAYER_TREE_MAX,
   SOURCE_LOC_ATTR,
-} from "../shared/actions/_core/contracts.js";
-import type { LayerNode, SelectMove } from "../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
+import type { LayerNode, SelectMove } from "@design-studio/actions/_core/contracts";
 import { layerKey, layerRef } from "../shared/layer-ref.js";
 
 const SKIP_TAGS = new Set([

@@ -1,13 +1,13 @@
 import { HttpApiSchema } from "effect/http-api";
 
-import { Forbidden } from "../../../../../src/shared/actions/_core/errors/forbidden.js";
+import { Forbidden } from "@design-studio/actions/_core/errors/forbidden";
 import {
   FORBIDDEN,
   NOT_FOUND,
   UNAUTHORIZED,
-} from "../../../../../src/shared/actions/_core/errors/http-status-codes.js";
-import { NotFound } from "../../../../../src/shared/actions/_core/errors/not-found.js";
-import { Unauthenticated } from "../../../../../src/shared/actions/_core/errors/unauthenticated.js";
+} from "@design-studio/actions/_core/errors/http-status-codes";
+import { NotFound } from "@design-studio/actions/_core/errors/not-found";
+import { Unauthenticated } from "@design-studio/actions/_core/errors/unauthenticated";
 
 const ForbiddenWire = Forbidden.pipe(HttpApiSchema.status(FORBIDDEN));
 

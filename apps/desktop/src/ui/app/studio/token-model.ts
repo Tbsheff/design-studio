@@ -1,4 +1,4 @@
-import type { CompiledTokenEntry } from "../../../shared/actions/_core/contracts";
+import type { CompiledTokenEntry } from "@design-studio/actions/_core/contracts";
 
 const hasDarkValue = (entry: CompiledTokenEntry): boolean =>
   (entry.darkValue ?? null) !== null;

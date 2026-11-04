@@ -3,8 +3,8 @@ import type {
   Direction,
   Project,
   Version,
-} from "../../shared/actions/_core/contracts.js";
-import type { ReviewFinding, ReviewFixResult } from "../../shared/actions/_core/review.js";
+} from "@design-studio/actions/_core/contracts";
+import type { ReviewFinding, ReviewFixResult } from "@design-studio/actions/_core/review";
 import {
   applyDirectEditBatch,
   commitDirectEdit,

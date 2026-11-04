@@ -5,7 +5,7 @@ import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 import { formatHex, parse } from "culori";
 
-import type { CompiledTokenEntry, Project } from "../src/shared/actions/_core/contracts";
+import type { CompiledTokenEntry, Project } from "@design-studio/actions/_core/contracts";
 import {
   COLOR_EXACT_DELTA,
   COLOR_SNAP_DELTA,

@@ -1,7 +1,7 @@
-import { applySwapDirectEdit } from "../../shared/actions/direct-edit/apply-swap.js";
-import { createComponentDirectEdit } from "../../shared/actions/direct-edit/create-component.js";
-import { listComponentFoldersDirectEdit } from "../../shared/actions/direct-edit/list-component-folders.js";
-import { listSwapCandidatesDirectEdit } from "../../shared/actions/direct-edit/list-swap-candidates.js";
+import { applySwapDirectEdit } from "@design-studio/actions/direct-edit/apply-swap";
+import { createComponentDirectEdit } from "@design-studio/actions/direct-edit/create-component";
+import { listComponentFoldersDirectEdit } from "@design-studio/actions/direct-edit/list-component-folders";
+import { listSwapCandidatesDirectEdit } from "@design-studio/actions/direct-edit/list-swap-candidates";
 import {
   COMPONENT_NAME,
   CREATE_TARGETS_MAX,
@@ -10,7 +10,7 @@ import {
   type SwapCandidateList,
   type SwapResult,
 } from "../../shared/component-create.js";
-import type { InsertTarget } from "../../shared/actions/_core/insert.js";
+import type { InsertTarget } from "@design-studio/actions/_core/insert";
 import { resolveSourceLoc, scopeOf } from "../page-probe/index.js";
 import { z } from "../platform/zod-bridge/index.js";
 import { callAction } from "./action-call.js";

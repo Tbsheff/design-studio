@@ -16,7 +16,7 @@ import type {
   TrashItem,
   TrashedProject,
   Version,
-} from "../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import { buildUserText } from "../agent/user-message.js";
 import { createEventBus } from "../events/index.js";
 import { projectStorePorts } from "../main/project-ports.js";

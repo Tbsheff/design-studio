@@ -13,7 +13,7 @@ import type {
   ReviewFinding,
   ReviewResult,
   ReviewSeverity,
-} from "../../../shared/actions/_core/review.js";
+} from "@design-studio/actions/_core/review";
 import { Icon } from "../../kit/Icon.js";
 import type { ParentMessageBody } from "../../platform/bridge.js";
 import { frameName } from "../canvas/canvas-frames-model.js";

@@ -12,7 +12,7 @@ import path from "node:path";
 
 import { expect, test } from "@playwright/test";
 
-import type { Project, Version } from "../../../src/shared/actions/_core/contracts";
+import type { Project, Version } from "@design-studio/actions/_core/contracts";
 import { BASE_URL, ROOT } from "../../support/server";
 import {
   frontFrame,

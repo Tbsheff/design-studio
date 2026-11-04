@@ -7,7 +7,7 @@ import { relativeOf } from "./facts.js";
 
 const ROOT = fileURLToPath(new URL("../../../", import.meta.url));
 
-const ACTIONS = path.join(ROOT, "src/shared/actions");
+const ACTIONS = path.join(ROOT, "packages/common/actions/src");
 
 const ACTION_CONST = /^const (?<name>[a-z]\w*) = defineAction\(/gmu;
 
@@ -19,10 +19,10 @@ const ADAPTER_MESSAGE =
   "A value import past another adapter's index.ts (http, mcp, agent-tools) is banned (W6, W13), because it couples two surfaces through a hidden module. Use a service from the one runtime, or the export from src/server/<adapter>/index.ts.";
 
 const NAME_REUSE_MESSAGE =
-  "A server function or const with the name of an action const (for example stopRun) is banned (N2), because one name must mean one thing. Use a name with a different verb or noun, and keep the derived name for src/shared/actions/<domain>/<verb>.ts.";
+  "A server function or const with the name of an action const (for example stopRun) is banned (N2), because one name must mean one thing. Use a name with a different verb or noun, and keep the derived name for packages/common/actions/src/<domain>/<verb>.ts.";
 
 const AWAITED_MESSAGE =
-  "Awaited<ReturnType<...>> in a type is banned (S9), because it hides the output type behind the implementation. Use Schema.Type of the schema from src/shared/actions/<domain>/schema.ts, or a named interface.";
+  "Awaited<ReturnType<...>> in a type is banned (S9), because it hides the output type behind the implementation. Use Schema.Type of the schema from packages/common/actions/src/<domain>/schema.ts, or a named interface.";
 
 const cache = { actionNames: null };
 

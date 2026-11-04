@@ -4,7 +4,7 @@ import type {
   DesignSystemState,
   Project,
   CompiledTokenEntry,
-} from "../../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import { api, errorText } from "../../api.js";
 import { useFitPopover } from "../../domain/popoverPlacement.js";
 import { Icon } from "../../kit/Icon.js";

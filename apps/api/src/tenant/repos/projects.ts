@@ -1,6 +1,6 @@
 import { Context, Effect, Layer, Schema } from "effect";
 
-import type { NotFound } from "../../../../../src/shared/actions/_core/errors/not-found.js";
+import type { NotFound } from "@design-studio/actions/_core/errors/not-found";
 import type { CurrentOrg } from "../current-org.js";
 import { TenantDb } from "../db.js";
 import { tq } from "../sql.js";

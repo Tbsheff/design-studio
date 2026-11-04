@@ -7,7 +7,7 @@ import {
   VAULT_MESSAGE,
   type VaultReply,
   type VaultRequest,
-} from "../src/shared/actions/vault-ipc.js";
+} from "@design-studio/actions/vault-ipc";
 
 function answer(request: VaultRequest): VaultReply {
   const reply = (

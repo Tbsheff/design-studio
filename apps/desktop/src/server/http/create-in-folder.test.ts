@@ -20,8 +20,8 @@ import path from "node:path";
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import type { Project, Version } from "../../shared/actions/_core/contracts.js";
-import type { WorkspaceList } from "../../shared/actions/_core/folders.js";
+import type { Project, Version } from "@design-studio/actions/_core/contracts";
+import type { WorkspaceList } from "@design-studio/actions/_core/folders";
 import { createEventBus } from "../events/index.js";
 import { projectStorePorts } from "../main/project-ports.js";
 import {

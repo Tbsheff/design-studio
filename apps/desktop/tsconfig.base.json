@@ -12,6 +12,10 @@
     "allowImportingTsExtensions": true,
     "types": ["node"],
     "noEmit": true,
-    "rootDir": "."
+    "rootDir": ".",
+    "paths": {
+      "@design-studio/actions": ["../../packages/common/actions/src/index.ts"],
+      "@design-studio/actions/*": ["../../packages/common/actions/src/*"]
+    }
   }
 }

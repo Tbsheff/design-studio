@@ -1,5 +1,5 @@
 // @generated
-import type { ExportActions } from "../../../shared/actions/export/index.js";
+import type { ExportActions } from "@design-studio/actions/export/index";
 import type { Entries } from "../_core/handler.js";
 import {
   handle as exportFolderExportHandle,

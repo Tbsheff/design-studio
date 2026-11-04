@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import type { McpPoint, ZoomKey } from "../../../shared/actions/_core/contracts.js";
+import type { McpPoint, ZoomKey } from "@design-studio/actions/_core/contracts";
 import type { ParentMessageBody } from "../../platform/bridge.js";
 import { useProjectEvents } from "../../platform/events.js";
 import { setFrameHidden } from "./canvas-frames-model.js";

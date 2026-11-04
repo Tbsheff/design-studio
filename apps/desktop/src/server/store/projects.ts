@@ -6,8 +6,8 @@ import type {
   Direction,
   Project,
   ProjectSettings,
-} from "../../shared/actions/_core/contracts.js";
-import { slugify } from "../../shared/actions/_core/folders.js";
+} from "@design-studio/actions/_core/contracts";
+import { slugify } from "@design-studio/actions/_core/folders";
 import { BadRequestError, NotFoundError } from "../platform/errors/index.js";
 import type { ServerConfig, VersionStore } from "../types.js";
 import { createProjectCore } from "./project-core.js";

@@ -31,7 +31,7 @@ const PATH_SEPARATOR = /[\\/]/u;
 
 const KEYS_FILE = "scripts/check-actions-probes.ts";
 
-const ACTION_GUARDS = "src/shared/actions/_core/action.ts";
+const ACTION_GUARDS = "packages/common/actions/src/_core/action.ts";
 
 const HANDLER_GUARDS = "src/server/handlers/_core/handler.ts";
 

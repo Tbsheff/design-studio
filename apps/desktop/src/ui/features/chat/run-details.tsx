@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import type { KeyboardEvent } from "react";
 
-import type { RunStatus } from "../../../shared/actions/_core/contracts.js";
+import type { RunStatus } from "@design-studio/actions/_core/contracts";
 import { formatMs, formatTime, formatUsd } from "../../domain/format.js";
 import { Icon } from "../../kit/Icon.js";
 import { useReturnFocusOnUnmount } from "../../kit/use-popover.js";

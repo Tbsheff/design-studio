@@ -1,8 +1,8 @@
 import type {
   RemoteComment,
   RemotePublication,
-} from "../../shared/actions/publish-remote.js";
-import type { PublicationList } from "../../shared/actions/publish/schema.js";
+} from "@design-studio/actions/publish-remote";
+import type { PublicationList } from "@design-studio/actions/publish/schema";
 import type { PublishCore } from "./publish-core.js";
 import { remoteClient } from "./remote.js";
 import { mergeRemote } from "./service.js";

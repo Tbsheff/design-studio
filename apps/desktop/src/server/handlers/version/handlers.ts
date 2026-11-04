@@ -1,5 +1,5 @@
 // @generated
-import type { VersionActions } from "../../../shared/actions/version/index.js";
+import type { VersionActions } from "@design-studio/actions/version/index";
 import type { Entries } from "../_core/handler.js";
 import { handle as applyHistoryVersionHandle } from "./apply-history.js";
 import { handle as applyHunkVersionHandle } from "./apply-hunk.js";

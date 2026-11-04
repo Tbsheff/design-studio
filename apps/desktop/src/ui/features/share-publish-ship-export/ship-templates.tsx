@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { MutableRefObject } from "react";
 
-import type { ShipSettings } from "../../../shared/actions/_core/ship.js";
+import type { ShipSettings } from "@design-studio/actions/_core/ship";
 import { shipApi } from "./ship-api.js";
 
 import "../../styles/ship.css";

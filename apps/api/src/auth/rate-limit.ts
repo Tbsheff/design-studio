@@ -1,6 +1,6 @@
 import { Context, Effect, Layer } from "effect";
 
-import { RateLimited } from "../../../../src/shared/actions/_core/errors/rate-limited.js";
+import { RateLimited } from "@design-studio/actions/_core/errors/rate-limited";
 import { CloudBindings } from "../platform/bindings.js";
 import type { RateLimiter, RateVerdict } from "../platform/rate-limiter.js";
 

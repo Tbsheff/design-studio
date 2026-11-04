@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { createTokenDirectEdit } from "../../../shared/actions/direct-edit/create-token.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { createTokenDirectEdit } from "@design-studio/actions/direct-edit/create-token";
 import { DirectEditWriter, toBody, toRef } from "../../direct-edit/index.js";
 import type { Handle } from "../_core/handler.js";
 

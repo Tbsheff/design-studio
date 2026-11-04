@@ -1,4 +1,4 @@
-import type { Permission } from "../../shared/actions/_core/permissions.js";
+import type { Permission } from "@design-studio/actions/_core/permissions";
 
 interface UiPrincipal {
   readonly kind: "ui";

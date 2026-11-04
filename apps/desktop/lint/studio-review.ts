@@ -58,7 +58,7 @@ const UI_BUDGET_FILES = [
 
 const LINKED_FILES = [
   "src/shared/publish.ts",
-  "src/shared/actions/{publish,share}/**/*.ts",
+  "packages/common/actions/src/{publish,share}/**/*.ts",
   "src/server/publish/**/*.ts",
   ...HANDLER_FILES,
   ...FEATURE_UI_FILES,
@@ -251,7 +251,7 @@ const studioReview: OxlintOverride[] = [
     rules: { "studio/adapter-import-index": "error" },
   },
   {
-    files: ["src/shared/actions/**/*.ts"],
+    files: ["packages/common/actions/src/**/*.ts"],
     rules: {
       "studio/no-json-schema": "error",
       "studio/project-scope-needs": "error",
@@ -340,7 +340,7 @@ const studioReview: OxlintOverride[] = [
     },
   },
   {
-    files: ["src/shared/actions/**/*.ts"],
+    files: ["packages/common/actions/src/**/*.ts"],
     rules: { "studio/no-catch-all-union": "error" },
   },
   {

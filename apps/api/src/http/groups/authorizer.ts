@@ -1,8 +1,8 @@
 import { Effect } from "effect";
 
-import { Forbidden } from "../../../../../src/shared/actions/_core/errors/forbidden.js";
-import { NotFound } from "../../../../../src/shared/actions/_core/errors/not-found.js";
-import type { Permission } from "../../../../../src/shared/actions/_core/permissions.js";
+import { Forbidden } from "@design-studio/actions/_core/errors/forbidden";
+import { NotFound } from "@design-studio/actions/_core/errors/not-found";
+import type { Permission } from "@design-studio/actions/_core/permissions";
 import { CurrentOrg } from "../../tenant/current-org.js";
 
 const requirePerm = Effect.fn("CloudAuthorizer.require")(function* run(

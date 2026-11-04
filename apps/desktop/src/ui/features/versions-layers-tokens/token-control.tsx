@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import type {
   CompiledTokenEntry,
   DirectStyleProperty,
-} from "../../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import {
   modeValue,
   tokenFieldState,

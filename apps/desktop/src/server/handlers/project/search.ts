@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { searchProject } from "../../../shared/actions/project/search.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { searchProject } from "@design-studio/actions/project/search";
 import { McpReadStore } from "../../preview/index.js";
 import type { Handle } from "../_core/handler.js";
 

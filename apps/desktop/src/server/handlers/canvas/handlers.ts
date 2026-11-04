@@ -1,5 +1,5 @@
 // @generated
-import type { CanvasActions } from "../../../shared/actions/canvas/index.js";
+import type { CanvasActions } from "@design-studio/actions/canvas/index";
 import type { Entries } from "../_core/handler.js";
 import { handle as applyImplicitLinkCanvasHandle } from "./apply-implicit-link.js";
 import { handle as createFlowCanvasHandle } from "./create-flow.js";

@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { getTreeDirectEdit } from "../../../shared/actions/direct-edit/get-tree.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { getTreeDirectEdit } from "@design-studio/actions/direct-edit/get-tree";
 import { DirectEditStore, toRef } from "../../direct-edit/index.js";
 import type { Handle } from "../_core/handler.js";
 

@@ -4,8 +4,8 @@ import type {
   Direction,
   LayoutFinding,
   Project,
-} from "../../shared/actions/_core/contracts.js";
-import type { DesignRule } from "../../shared/actions/_core/design-rules.js";
+} from "@design-studio/actions/_core/contracts";
+import type { DesignRule } from "@design-studio/actions/_core/design-rules";
 import {
   REVIEW_KIND_LABEL,
   REVIEW_KINDS,
@@ -13,7 +13,7 @@ import {
   type ReviewFrame,
   type ReviewResult,
   type ReviewSeverity,
-} from "../../shared/actions/_core/review.js";
+} from "@design-studio/actions/_core/review";
 import {
   applyTokenRules,
   probeRules,

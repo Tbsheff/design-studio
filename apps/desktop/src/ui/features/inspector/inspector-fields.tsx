@@ -1,7 +1,7 @@
 import { memo, useState } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
 
-import type { DirectStyleProperty } from "../../../shared/actions/_core/contracts.js";
+import type { DirectStyleProperty } from "@design-studio/actions/_core/contracts";
 import { colorHex, resolveTokenValue } from "../../../shared/token-match.js";
 import { Icon } from "../../kit/Icon.js";
 import type { IconName } from "../../kit/Icon.js";

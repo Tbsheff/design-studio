@@ -63,7 +63,7 @@ export type {
   SourceLoc,
   Version,
   VersionMeta,
-} from "../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 
 export { toDecoder } from "../platform/decode/index.js";
 

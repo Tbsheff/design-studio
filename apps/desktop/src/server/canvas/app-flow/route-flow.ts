@@ -5,19 +5,19 @@ import {
   CANVAS_GAP,
   CANVAS_MAX_FRAMES,
   cleanFrameLabel,
-} from "../../../shared/actions/_core/canvas-file.js";
+} from "@design-studio/actions/_core/canvas-file";
 import type {
   CanvasFile,
   CanvasFileFrame,
-} from "../../../shared/actions/_core/canvas-file.js";
+} from "@design-studio/actions/_core/canvas-file";
 import type {
   CanvasWriteSource,
   Direction,
   Project,
-} from "../../../shared/actions/_core/contracts.js";
-import { DEFAULT_FRAME_STATE } from "../../../shared/actions/_core/frame-state.js";
-import { upsertLink } from "../../../shared/actions/_core/links.js";
-import type { LinksFile } from "../../../shared/actions/_core/links.js";
+} from "@design-studio/actions/_core/contracts";
+import { DEFAULT_FRAME_STATE } from "@design-studio/actions/_core/frame-state";
+import { upsertLink } from "@design-studio/actions/_core/links";
+import type { LinksFile } from "@design-studio/actions/_core/links";
 import {
   cleanParams,
   dynamicNames,

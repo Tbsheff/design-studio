@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { listCommandRulesProject } from "../../../shared/actions/project/list-command-rules.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { listCommandRulesProject } from "@design-studio/actions/project/list-command-rules";
 import { toPage } from "../../platform/page/index.js";
 import { ProjectOpsStore } from "../../project-ops/index.js";
 import type { Handle } from "../_core/handler.js";

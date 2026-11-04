@@ -1,6 +1,6 @@
 import { Effect } from "effect";
 
-import { BadRequest } from "../../../shared/actions/_core/errors/bad-request.js";
+import { BadRequest } from "@design-studio/actions/_core/errors/bad-request";
 import { attemptKnown } from "../../platform/attempt/index.js";
 import type { KnownFailure } from "../../platform/attempt/index.js";
 import {

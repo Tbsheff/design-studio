@@ -6,7 +6,7 @@ import {
   isVaultReply,
   VAULT_MESSAGE,
   type VaultRequest,
-} from "../../shared/actions/vault-ipc.js";
+} from "@design-studio/actions/vault-ipc";
 import { RENDER_IPC_ENV } from "../../shared/render-rpc.js";
 
 export interface KeyVault {

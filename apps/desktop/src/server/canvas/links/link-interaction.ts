@@ -1,9 +1,9 @@
-import type { CanvasFileFrame } from "../../../shared/actions/_core/canvas-file.js";
-import { triggerOf } from "../../../shared/actions/_core/link-interaction.js";
+import type { CanvasFileFrame } from "@design-studio/actions/_core/canvas-file";
+import { triggerOf } from "@design-studio/actions/_core/link-interaction";
 import type {
   LinkTrigger,
   LinkTriggerKind,
-} from "../../../shared/actions/_core/link-interaction.js";
+} from "@design-studio/actions/_core/link-interaction";
 import {
   cleanLinkSelector,
   cleanLinkText,
@@ -11,7 +11,7 @@ import {
   linkAction,
   upsertLink,
   withMotion,
-} from "../../../shared/actions/_core/links.js";
+} from "@design-studio/actions/_core/links";
 import type {
   LinkAction,
   LinkMotion,
@@ -19,7 +19,7 @@ import type {
   LinkTarget,
   LinksFile,
   PrototypeLink,
-} from "../../../shared/actions/_core/links.js";
+} from "@design-studio/actions/_core/links";
 import type { CanvasToolContext, ToolText } from "../tools.js";
 import type { LinkInteractionRequest } from "./link-interaction-input.js";
 import { resolveTarget } from "./link-target.js";

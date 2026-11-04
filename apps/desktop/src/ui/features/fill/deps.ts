@@ -10,7 +10,7 @@ export { ColorField } from "../inspector/inspector-fields.js";
 
 export type { DirectEdit } from "../inspector/use-direct-edit.js";
 
-export type { SelectionContext } from "../../../shared/actions/_core/contracts.js";
+export type { SelectionContext } from "@design-studio/actions/_core/contracts";
 
 export {
   BLEND_MODES,

@@ -1,6 +1,6 @@
 import type { Context, Hono } from "hono";
 
-import type { Direction, Project } from "../../shared/actions/_core/contracts.js";
+import type { Direction, Project } from "@design-studio/actions/_core/contracts";
 import type { PageImportResult } from "../../shared/page-import.js";
 import type { CanvasService } from "../canvas/index.js";
 import type { DirectEditDeps } from "../direct-edit/index.js";

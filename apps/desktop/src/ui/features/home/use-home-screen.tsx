@@ -8,13 +8,13 @@ import {
   useState,
 } from "react";
 
-import { needsQuestions } from "../../../shared/actions/_core/clarify.js";
+import { needsQuestions } from "@design-studio/actions/_core/clarify";
 import {
   type ClarifyQuestion,
   DEFAULT_SETTINGS,
   type ProjectKind,
   type Starter,
-} from "../../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import { api, errorText } from "../../api.js";
 import { prefetchScreensWhenIdle } from "../../app/screen-preload.js";
 import { uiStore, useUi } from "../../platform/storage.js";

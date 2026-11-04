@@ -5,7 +5,7 @@ import { studioReview } from "./studio-review.ts";
 const STUDIO_PLUGIN = "./lint/plugins/studio.js";
 
 const AGGREGATORS = [
-  "src/shared/actions/index.ts",
+  "packages/common/actions/src/index.ts",
   "src/server/main/live-layer.ts",
   "src/server/http/mount-all.ts",
   "src/server/mcp/registry.ts",
@@ -63,33 +63,33 @@ const OPTIONAL_NULL_FILES = [
   "src/server/{platform,events,run-log,project-source,page-probe,handlers,main,ship,agent-tools,mcp-life,http}/**/*.ts",
 ];
 
-const ACTION_FILES = ["src/shared/actions/**/*.ts"];
+const ACTION_FILES = ["packages/common/actions/src/**/*.ts"];
 
 const LEGACY_UNTYPED_SCHEMAS = [
-  "src/shared/actions/{canvas,comment,dev-server,pack,workspace}/schema.ts",
-  "src/shared/actions/canvas/set-doc.ts",
-  "src/shared/actions/direct-edit/{schema,apply-swap,create-component,delete-text,insert-component,insert-jsx,set-image,set-vector}.ts",
+  "packages/common/actions/src/{canvas,comment,dev-server,pack,workspace}/schema.ts",
+  "packages/common/actions/src/canvas/set-doc.ts",
+  "packages/common/actions/src/direct-edit/{schema,apply-swap,create-component,delete-text,insert-component,insert-jsx,set-image,set-vector}.ts",
 ];
 
 const LEGACY_DOMAIN_OBJECTS = [
-  "src/shared/actions/publish/{delete-comment,list-comments}.ts",
-  "src/shared/actions/workspace/{get-tokens,list-projects,list-versions,search-projects}.ts",
-  "src/shared/actions/direct-edit/{create-component,create-token,get-component-preview,insert-component,inspect-tokens,list-component-folders,list-components,update-tokens}.ts",
+  "packages/common/actions/src/publish/{delete-comment,list-comments}.ts",
+  "packages/common/actions/src/workspace/{get-tokens,list-projects,list-versions,search-projects}.ts",
+  "packages/common/actions/src/direct-edit/{create-component,create-token,get-component-preview,insert-component,inspect-tokens,list-component-folders,list-components,update-tokens}.ts",
 ];
 
 const LEGACY_TOOL_NAMES = [
-  "src/shared/actions/canvas/{list-implicit-links,update-link}.ts",
-  "src/shared/actions/version/list-hunks.ts",
+  "packages/common/actions/src/canvas/{list-implicit-links,update-link}.ts",
+  "packages/common/actions/src/version/list-hunks.ts",
 ];
 
 const NO_READ_CHANGES = [
-  "src/shared/actions/canvas/set-presence.ts",
-  "src/shared/actions/share/set-cursor.ts",
-  "src/shared/actions/comment/export.ts",
-  "src/shared/actions/export/{export,export-folder,export-frame,export-handoff}.ts",
-  "src/shared/actions/direct-edit/run.ts",
-  "src/shared/actions/direct-edit/run-rules-test.ts",
-  "src/shared/actions/viewport/run.ts",
+  "packages/common/actions/src/canvas/set-presence.ts",
+  "packages/common/actions/src/share/set-cursor.ts",
+  "packages/common/actions/src/comment/export.ts",
+  "packages/common/actions/src/export/{export,export-folder,export-frame,export-handoff}.ts",
+  "packages/common/actions/src/direct-edit/run.ts",
+  "packages/common/actions/src/direct-edit/run-rules-test.ts",
+  "packages/common/actions/src/viewport/run.ts",
 ];
 
 const LEGACY_DOM_QUERIES = ["src/ui/features/icons/use-icon-host.ts"];
@@ -130,24 +130,24 @@ const NEW_SERVER_FILES = [
 const LEGACY_DEEP_IMPORTS = ["src/server/direct-edit/direct-edit-ops.ts"];
 
 const LEGACY_LIST_PAGES = [
-  "src/shared/actions/canvas/{list-flow-links,list-flow-params,list-frame-states,list-implicit-links,list-links}.ts",
-  "src/shared/actions/comment/search-mention.ts",
-  "src/shared/actions/connection/{list-activity,list-approvals}.ts",
-  "src/shared/actions/dev-server/list-routes.ts",
-  "src/shared/actions/direct-edit/{list-component-folders,list-components,list-insertable,list-swap-candidates}.ts",
-  "src/shared/actions/publish/{list,list-comments}.ts",
-  "src/shared/actions/share/list.ts",
-  "src/shared/actions/studio/list-skills.ts",
-  "src/shared/actions/version/{list,list-history,list-hunks}.ts",
-  "src/shared/actions/workspace/{list-files,list-found-apps,list-projects,list-routes,list-variants,list-versions,search-projects}.ts",
+  "packages/common/actions/src/canvas/{list-flow-links,list-flow-params,list-frame-states,list-implicit-links,list-links}.ts",
+  "packages/common/actions/src/comment/search-mention.ts",
+  "packages/common/actions/src/connection/{list-activity,list-approvals}.ts",
+  "packages/common/actions/src/dev-server/list-routes.ts",
+  "packages/common/actions/src/direct-edit/{list-component-folders,list-components,list-insertable,list-swap-candidates}.ts",
+  "packages/common/actions/src/publish/{list,list-comments}.ts",
+  "packages/common/actions/src/share/list.ts",
+  "packages/common/actions/src/studio/list-skills.ts",
+  "packages/common/actions/src/version/{list,list-history,list-hunks}.ts",
+  "packages/common/actions/src/workspace/{list-files,list-found-apps,list-projects,list-routes,list-variants,list-versions,search-projects}.ts",
 ];
 
 const LEGACY_DELETE_ACTIONS = [
-  "src/shared/actions/canvas/delete-link.ts",
-  "src/shared/actions/cloud/delete.ts",
-  "src/shared/actions/comment/{delete,delete-reply}.ts",
-  "src/shared/actions/direct-edit/delete-text.ts",
-  "src/shared/actions/publish/{delete,delete-comment}.ts",
+  "packages/common/actions/src/canvas/delete-link.ts",
+  "packages/common/actions/src/cloud/delete.ts",
+  "packages/common/actions/src/comment/{delete,delete-reply}.ts",
+  "packages/common/actions/src/direct-edit/delete-text.ts",
+  "packages/common/actions/src/publish/{delete,delete-comment}.ts",
 ];
 
 const TENANT_SQL_FILES = [
@@ -213,7 +213,7 @@ const studio: OxlintOverride[] = [
     rules: { "node/no-sync": "off" },
   },
   {
-    files: ["src/shared/actions/**", "src/server/**", "apps/api/**"],
+    files: ["packages/common/actions/src/**", "src/server/**", "apps/api/**"],
     rules: { "unicorn/throw-new-error": "off" },
   },
   {
@@ -251,7 +251,7 @@ const studio: OxlintOverride[] = [
   },
   {
     excludeFiles: SERVER_TESTS,
-    files: [...SERVER_FILES, "src/shared/actions/_core/errors/*.ts"],
+    files: [...SERVER_FILES, "packages/common/actions/src/_core/errors/*.ts"],
     rules: { "studio/error-name-unique": "error" },
   },
   {

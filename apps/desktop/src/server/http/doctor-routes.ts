@@ -7,8 +7,8 @@ import type {
   AppFixResult,
   DoctorCause,
   DoctorCauseKind,
-} from "../../shared/actions/_core/app-doctor.js";
-import type { Project } from "../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/app-doctor";
+import type { Project } from "@design-studio/actions/_core/contracts";
 import { BadRequestError, ConflictError } from "../platform/errors/index.js";
 import { appProject, doctorControl } from "../preview/doctor-read.js";
 import { bindMcpReadRuntime } from "../preview/mcp-read-core.js";

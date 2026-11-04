@@ -1,6 +1,6 @@
 import { Context, Effect, Layer, Schema } from "effect";
 
-import { NotFound } from "../../../../src/shared/actions/_core/errors/not-found.js";
+import { NotFound } from "@design-studio/actions/_core/errors/not-found";
 import { CloudBindings } from "../platform/bindings.js";
 import { CurrentOrg } from "./current-org.js";
 import {

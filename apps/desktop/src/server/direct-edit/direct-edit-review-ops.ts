@@ -1,19 +1,19 @@
-import type { Input } from "../../shared/actions/_core/action.js";
-import type { applyReviewFixDirectEdit } from "../../shared/actions/direct-edit/apply-review-fix.js";
-import type { runReviewDirectEdit } from "../../shared/actions/direct-edit/run-review.js";
-import type { runRulesTestDirectEdit } from "../../shared/actions/direct-edit/run-rules-test.js";
-import type { setRulesDirectEdit } from "../../shared/actions/direct-edit/set-rules.js";
-import type { Direction, Project, Version } from "../../shared/actions/_core/contracts.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { applyReviewFixDirectEdit } from "@design-studio/actions/direct-edit/apply-review-fix";
+import type { runReviewDirectEdit } from "@design-studio/actions/direct-edit/run-review";
+import type { runRulesTestDirectEdit } from "@design-studio/actions/direct-edit/run-rules-test";
+import type { setRulesDirectEdit } from "@design-studio/actions/direct-edit/set-rules";
+import type { Direction, Project, Version } from "@design-studio/actions/_core/contracts";
 import type {
   DesignRule,
   DesignRulesState,
   DesignRulesTestResult,
-} from "../../shared/actions/_core/design-rules.js";
+} from "@design-studio/actions/_core/design-rules";
 import type {
   ReviewFinding,
   ReviewFixResult,
   ReviewResult,
-} from "../../shared/actions/_core/review.js";
+} from "@design-studio/actions/_core/review";
 import {
   isTestable,
   loadDesignRules,

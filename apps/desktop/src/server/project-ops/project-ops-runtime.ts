@@ -8,7 +8,7 @@ import type {
   RunRequest,
   Version,
   VersionMeta,
-} from "../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import type { AttachResponse } from "../app/index.js";
 import type { LoadedPack, PackRegistry } from "../design-system/index.js";
 import type { EventBus } from "../events/index.js";

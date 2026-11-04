@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import type { ReviewFinding, ReviewResult } from "../../../shared/actions/_core/review.js";
+import type { ReviewFinding, ReviewResult } from "@design-studio/actions/_core/review";
 import { api, errorText } from "../../api.js";
 import type { CanvasFrame } from "../canvas/canvas-frames-model.js";
 import type { FilesChange } from "../home/use-studio-data.js";

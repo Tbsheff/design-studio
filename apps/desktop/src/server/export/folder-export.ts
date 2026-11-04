@@ -1,16 +1,16 @@
 import path from "node:path";
 
-import type { Input } from "../../shared/actions/_core/action.js";
-import type { ApprovalCard } from "../../shared/actions/_core/approval-card.js";
-import type { exportFolderExport } from "../../shared/actions/export/export-folder.js";
-import type { exportFrameExport } from "../../shared/actions/export/export-frame.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { ApprovalCard } from "@design-studio/actions/_core/approval-card";
+import type { exportFolderExport } from "@design-studio/actions/export/export-folder";
+import type { exportFrameExport } from "@design-studio/actions/export/export-frame";
 import type {
   FolderExportResult,
   FrameExportResult,
-} from "../../shared/actions/export/schema.js";
-import type { CanvasFileFrame } from "../../shared/actions/_core/canvas-file.js";
-import type { Direction, Project } from "../../shared/actions/_core/contracts.js";
-import type { ExportFrame } from "../../shared/actions/_core/export.js";
+} from "@design-studio/actions/export/schema";
+import type { CanvasFileFrame } from "@design-studio/actions/_core/canvas-file";
+import type { Direction, Project } from "@design-studio/actions/_core/contracts";
+import type { ExportFrame } from "@design-studio/actions/_core/export";
 import { EditError } from "../page-probe/index.js";
 import type { ExportRuntime } from "./export-core.js";
 import { buildExportFile } from "./export-file.js";

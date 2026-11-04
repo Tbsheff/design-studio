@@ -14,10 +14,10 @@ const VERBS = new Set(
 const PILOT_IDS = new Set(["studio.health"]);
 
 const VERB_MESSAGE =
-  "An action id verb outside the N3 list is banned. Use a verb from the N3 list in AGENTS.md, and keep the old tool name with mcp.name in src/shared/actions/<domain>/<verb>.ts.";
+  "An action id verb outside the N3 list is banned. Use a verb from the N3 list in AGENTS.md, and keep the old tool name with mcp.name in packages/common/actions/src/<domain>/<verb>.ts.";
 
 const AGENT_MESSAGE =
-  'agent off "ui-bootstrap" on a write or an MCP action is banned. Use agent { lean, name, set, short } or { off: "legacy-agent" } from src/shared/actions/_core/action.ts.';
+  'agent off "ui-bootstrap" on a write or an MCP action is banned. Use agent { lean, name, set, short } or { off: "legacy-agent" } from packages/common/actions/src/_core/action.ts.';
 
 const actionVerb = rule((context) => ({
   CallExpression: (node) => {
@@ -71,10 +71,10 @@ const WRITE_ACCESS = new Set(["destructive", "edit"]);
 const READ_ONLY_PERMISSION = "studio.read";
 
 const PERMISSION_MESSAGE =
-  'An edit or destructive action with needs "studio.read" is banned. Use a write permission such as "studio.write" from src/shared/actions/_core/permissions.ts.';
+  'An edit or destructive action with needs "studio.read" is banned. Use a write permission such as "studio.write" from packages/common/actions/src/_core/permissions.ts.';
 
 const DOMAIN_MESSAGE =
-  "An action domain that is not one singular kebab-case noun, or that differs from its folder, is banned. Use src/shared/actions/<domain>/<verb>.ts with id <domain>.<verb>, for example project, version, dev-server.";
+  "An action domain that is not one singular kebab-case noun, or that differs from its folder, is banned. Use packages/common/actions/src/<domain>/<verb>.ts with id <domain>.<verb>, for example project, version, dev-server.";
 
 const DOMAIN_PATTERN = /^[a-z]+(?:-[a-z]+)*$/u;
 

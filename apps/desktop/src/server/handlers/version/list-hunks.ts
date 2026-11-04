@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { listHunksVersion } from "../../../shared/actions/version/list-hunks.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { listHunksVersion } from "@design-studio/actions/version/list-hunks";
 import { VersionStore } from "../../store/index.js";
 import type { Handle } from "../_core/handler.js";
 

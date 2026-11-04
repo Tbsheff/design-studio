@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { setPropsDirectEdit } from "../../../shared/actions/direct-edit/set-props.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { setPropsDirectEdit } from "@design-studio/actions/direct-edit/set-props";
 import { DirectEditWriter, toFields, toRef } from "../../direct-edit/index.js";
 import type { Handle } from "../_core/handler.js";
 

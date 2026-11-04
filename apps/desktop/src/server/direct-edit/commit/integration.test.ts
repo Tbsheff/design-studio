@@ -9,7 +9,7 @@ import type {
   Project,
   StudioEvent,
   Version,
-} from "../../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import { createEventBus } from "../../events/index.js";
 import { createApp } from "../../http/app.js";
 import { projectStorePorts } from "../../main/project-ports.js";

@@ -2,8 +2,8 @@ import { existsSync } from "node:fs";
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { SETTINGS_VERSION } from "../../shared/actions/_core/contracts.js";
-import type { Project } from "../../shared/actions/_core/contracts.js";
+import { SETTINGS_VERSION } from "@design-studio/actions/_core/contracts";
+import type { Project } from "@design-studio/actions/_core/contracts";
 import {
   NotFoundError,
   assertSafeId,

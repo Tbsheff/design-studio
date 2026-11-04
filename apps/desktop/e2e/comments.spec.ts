@@ -4,7 +4,7 @@ import path from "node:path";
 import { expect, test } from "@playwright/test";
 import type { Locator, Page } from "@playwright/test";
 
-import type { DesignComment, Project } from "../src/shared/actions/_core/contracts";
+import type { DesignComment, Project } from "@design-studio/actions/_core/contracts";
 import { ROOT } from "./support/server";
 import {
   createProjectViaUi,

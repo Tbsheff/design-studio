@@ -1,5 +1,5 @@
-import type { Direction, Project } from "../../shared/actions/_core/contracts.js";
-import type { ExportFrame } from "../../shared/actions/_core/export.js";
+import type { Direction, Project } from "@design-studio/actions/_core/contracts";
+import type { ExportFrame } from "@design-studio/actions/_core/export";
 import {
   EditError,
   isLayerRef,

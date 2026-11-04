@@ -7,14 +7,14 @@ import type {
   LayoutFinding,
   SourceLoc,
   TokenMatch,
-} from "../../shared/actions/_core/contracts.js";
-import { DIRECT_STYLE_PROPERTIES } from "../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
+import { DIRECT_STYLE_PROPERTIES } from "@design-studio/actions/_core/contracts";
 import type {
   ReviewFinding,
   ReviewFix,
   ReviewKind,
   ReviewSeverity,
-} from "../../shared/actions/_core/review.js";
+} from "@design-studio/actions/_core/review";
 import {
   isSnappable,
   lengthToPx,

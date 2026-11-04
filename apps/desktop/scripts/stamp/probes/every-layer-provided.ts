@@ -5,8 +5,8 @@ import type { Entries } from "../../../src/server/handlers/_core/handler.js";
 import type { liveLayer } from "../../../src/server/main/live-layer.js";
 import type { LocalOrgScope } from "../../../src/server/store/local-org-scope.js";
 import type { LocalPrincipal } from "../../../src/server/store/local-principal.js";
-import { defineAction } from "../../../src/shared/actions/_core/action.js";
-import type { Input } from "../../../src/shared/actions/_core/action.js";
+import { defineAction } from "@design-studio/actions/_core/action";
+import type { Input } from "@design-studio/actions/_core/action";
 
 interface ProbeUnwiredApi {
   readonly ok: boolean;

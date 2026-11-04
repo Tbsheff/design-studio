@@ -16,16 +16,16 @@ const WIRED_MESSAGE =
   "A Context.Service class that no other server file names is banned, because no live layer provides it. Use the service in a domain live layer: src/server/handlers/<domain>/live.ts.";
 
 const ERROR_NAME_MESSAGE =
-  "A server class with the same name as a wire error class in src/shared/actions is banned. Use one name for one thing: rename one class, for example <Noun>Failed for the wire error.";
+  "A server class with the same name as a wire error class in packages/common/actions/src is banned. Use one name for one thing: rename one class, for example <Noun>Failed for the wire error.";
 
 const CORE_ERROR_MESSAGE =
-  "A domain error in src/shared/actions/_core/errors is banned. Use src/shared/actions/<domain>/errors/<kebab>.ts for an error that only one domain fails with.";
+  "A domain error in packages/common/actions/src/_core/errors is banned. Use packages/common/actions/src/<domain>/errors/<kebab>.ts for an error that only one domain fails with.";
 
 const NOT_READY_MESSAGE =
-  'A "not ready" failure as a BadRequest error is banned, because the client did nothing wrong. Use Unavailable from src/shared/actions/_core/errors/unavailable.ts (503), or requireBound from src/server/platform/runtime-slot/index.ts.';
+  'A "not ready" failure as a BadRequest error is banned, because the client did nothing wrong. Use Unavailable from packages/common/actions/src/_core/errors/unavailable.ts (503), or requireBound from src/server/platform/runtime-slot/index.ts.';
 
 const INPUT_DEFAULT_MESSAGE =
-  "A default for an action input field with ?? in a handler is banned, because MCP, the agent and the UI do not see it. Use Schema.withDecodingDefault on the field in src/shared/actions/<domain>/<verb>.ts.";
+  "A default for an action input field with ?? in a handler is banned, because MCP, the agent and the UI do not see it. Use Schema.withDecodingDefault on the field in packages/common/actions/src/<domain>/<verb>.ts.";
 
 const RUNTIME_CALL_MESSAGE =
   "An adapter that calls a service runtime getter or op (directEditCall, *RuntimeOf, *Call, an op that takes a runtime such as createProjectIn) is banned, because it skips decode, Authorizer.require, ProjectAccess.visible and action.done. Use mcp { name } on the action so that src/server/handlers/_core/run-action.ts serves it.";

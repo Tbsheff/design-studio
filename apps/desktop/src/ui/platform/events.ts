@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useSyncExternalStore } from "react";
 
-import type { StudioEvent } from "../../shared/actions/_core/contracts.js";
+import type { StudioEvent } from "@design-studio/actions/_core/contracts";
 import { createEventHub } from "./event-hub.js";
 import type { ConnectionState } from "./event-hub.js";
 import { appStream } from "./stream.js";

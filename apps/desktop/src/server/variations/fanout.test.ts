@@ -9,7 +9,7 @@ import type {
   RunSummary,
   VariationBrief,
   VariationStartResult,
-} from "../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import {
   createRunLifecycle,
   EMPTY_USAGE,

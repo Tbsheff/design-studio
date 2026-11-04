@@ -1,4 +1,4 @@
-import type { Direction, Project } from "../../shared/actions/_core/contracts.js";
+import type { Direction, Project } from "@design-studio/actions/_core/contracts";
 
 interface Job {
   run: Promise<void> | null;

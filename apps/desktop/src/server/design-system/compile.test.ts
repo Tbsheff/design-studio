@@ -7,8 +7,8 @@ import { describe, expect, it } from "vitest";
 import {
   DESIGN_MD_TOKENS_END,
   DESIGN_MD_TOKENS_START,
-} from "../../shared/actions/_core/contracts.js";
-import type { TokenFile } from "../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
+import type { TokenFile } from "@design-studio/actions/_core/contracts";
 import {
   OKLCH_SUPPORTS,
   SYSTEM_DARK_MEDIA,

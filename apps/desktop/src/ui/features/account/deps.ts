@@ -1,12 +1,12 @@
-import { routes } from "../../../shared/actions/cloud/routes.js";
+import { routes } from "@design-studio/actions/cloud/routes";
 
 const getCloudRoute = routes.getCloud;
 
 export { getCloudRoute };
 
-export type { WireOutput } from "../../../shared/actions/_core/action.js";
+export type { WireOutput } from "@design-studio/actions/_core/action";
 
-export type { getCloud } from "../../../shared/actions/cloud/get.js";
+export type { getCloud } from "@design-studio/actions/cloud/get";
 
 export { desktopBridge } from "../../platform/desktop.js";
 

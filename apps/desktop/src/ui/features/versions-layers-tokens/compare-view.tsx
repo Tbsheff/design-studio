@@ -8,7 +8,7 @@ import {
 } from "react";
 import type { KeyboardEvent } from "react";
 
-import type { ProjectKind, Version } from "../../../shared/actions/_core/contracts.js";
+import type { ProjectKind, Version } from "@design-studio/actions/_core/contracts";
 import { Icon } from "../../kit/Icon.js";
 import { readStored, useUi, writeStored } from "../../platform/storage.js";
 import { CompareFrame } from "./compare-frame.js";

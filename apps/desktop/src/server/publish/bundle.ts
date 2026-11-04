@@ -12,7 +12,7 @@ import {
   BRIDGE_SCRIPT_PATH,
   BRIDGE_TOKEN_PARAM,
   SOURCE_LOC_ATTR,
-} from "../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import {
   PUBLISH_MAX_BYTES,
   PUBLISH_MAX_FILE_BYTES,

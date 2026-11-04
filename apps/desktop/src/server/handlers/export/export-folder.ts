@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { exportFolderExport } from "../../../shared/actions/export/export-folder.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { exportFolderExport } from "@design-studio/actions/export/export-folder";
 import { ExportStore, ExportWriter } from "../../export/index.js";
 import type { Handle, Preview } from "../_core/handler.js";
 

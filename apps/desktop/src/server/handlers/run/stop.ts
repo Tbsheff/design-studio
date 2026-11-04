@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { stopRun } from "../../../shared/actions/run/stop.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { stopRun } from "@design-studio/actions/run/stop";
 import { RunLogWriter } from "../../run-log/index.js";
 import type { Handle } from "../_core/handler.js";
 

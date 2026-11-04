@@ -1,5 +1,5 @@
 // @generated
-import type { ShareActions } from "../../../shared/actions/share/index.js";
+import type { ShareActions } from "@design-studio/actions/share/index";
 import type { Entries } from "../_core/handler.js";
 import {
   handle as createShareHandle,

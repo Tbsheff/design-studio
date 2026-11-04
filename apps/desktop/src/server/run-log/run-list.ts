@@ -2,7 +2,7 @@ import type { Stats } from "node:fs";
 import { readdir, readFile, stat } from "node:fs/promises";
 import path from "node:path";
 
-import type { RunSummary } from "../../shared/actions/_core/contracts.js";
+import type { RunSummary } from "@design-studio/actions/_core/contracts";
 import { runMatches } from "../../shared/rewind.js";
 import { isNodeError } from "../platform/errors/index.js";
 

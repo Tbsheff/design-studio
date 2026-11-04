@@ -2,7 +2,7 @@ import { Effect, Layer } from "effect";
 import { HttpServerRequest } from "effect/http";
 import { HttpApiMiddleware } from "effect/http-api";
 
-import { NotFound } from "../../../../../src/shared/actions/_core/errors/not-found.js";
+import { NotFound } from "@design-studio/actions/_core/errors/not-found";
 import { CurrentOrg } from "../../tenant/current-org.js";
 import { ViewerScope } from "../../tenant/viewer-scope.js";
 import { AgentAuth } from "../middleware/agent-auth.js";

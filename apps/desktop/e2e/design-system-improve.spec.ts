@@ -8,7 +8,7 @@ import type {
   DesignSystemCoverage,
   PackSummary,
   Project,
-} from "../src/shared/actions/_core/contracts";
+} from "@design-studio/actions/_core/contracts";
 import { ROOT } from "./support/server";
 import { mainDirection, openHome } from "./support/studio";
 import type { StudioApi } from "./support/studio";

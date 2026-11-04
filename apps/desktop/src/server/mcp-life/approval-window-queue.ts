@@ -1,6 +1,6 @@
 import { Context, Effect, Layer } from "effect";
 
-import { NotFound } from "../../shared/actions/_core/errors/not-found.js";
+import { NotFound } from "@design-studio/actions/_core/errors/not-found";
 import { lifeRuntime } from "./mcp-life-runtime.js";
 
 interface ApprovalWindowQueueApi {

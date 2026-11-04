@@ -1,4 +1,4 @@
-import type { Project, RunMode } from "../../shared/actions/_core/contracts.js";
+import type { Project, RunMode } from "@design-studio/actions/_core/contracts";
 import type { AgentSet } from "./legacy/agent-ops.js";
 import { AGENT_OPS } from "./legacy/agent-ops.js";
 import { blockedInCritique } from "./permissions.js";

@@ -1,9 +1,9 @@
 import { Effect, Schema } from "effect";
 
 import type { Handle } from "../../../src/server/handlers/_core/handler.js";
-import { defineAction } from "../../../src/shared/actions/_core/action.js";
-import type { Input } from "../../../src/shared/actions/_core/action.js";
-import { NotFound } from "../../../src/shared/actions/_core/errors/not-found.js";
+import { defineAction } from "@design-studio/actions/_core/action";
+import type { Input } from "@design-studio/actions/_core/action";
+import { NotFound } from "@design-studio/actions/_core/errors/not-found";
 
 const getProbe = defineAction({
   access: "read",

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
-import type { SkillInfo } from "../../../shared/actions/_core/contracts.js";
+import type { SkillInfo } from "@design-studio/actions/_core/contracts";
 import { Icon } from "../../kit/Icon.js";
 import { NO_SKILLS_TEXT, plural, useSkillCatalog } from "./skills-model.js";
 

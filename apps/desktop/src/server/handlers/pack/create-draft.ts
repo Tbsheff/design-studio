@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { createDraftPack } from "../../../shared/actions/pack/create-draft.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { createDraftPack } from "@design-studio/actions/pack/create-draft";
 import { PackStore, PackWriter } from "../../design-system/index.js";
 import type { Handle, Preview } from "../_core/handler.js";
 

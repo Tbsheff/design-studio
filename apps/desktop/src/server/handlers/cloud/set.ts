@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { setCloud } from "../../../shared/actions/cloud/set.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { setCloud } from "@design-studio/actions/cloud/set";
 import { CloudSessionWriter } from "../../cloud/index.js";
 import type { Handle } from "../_core/handler.js";
 

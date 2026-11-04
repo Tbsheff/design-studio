@@ -1,6 +1,6 @@
 import path from "node:path";
 
-import type { Direction, Project, Version } from "../../shared/actions/_core/contracts.js";
+import type { Direction, Project, Version } from "@design-studio/actions/_core/contracts";
 import type { DirectEditDeps, EditFileChange } from "../direct-edit/index.js";
 import { readSnapshot } from "./token-snapshot.js";
 import type { FileSnapshot } from "./token-snapshot.js";

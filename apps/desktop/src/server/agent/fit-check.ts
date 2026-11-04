@@ -1,4 +1,4 @@
-import type { QualityFinding } from "../../shared/actions/_core/contracts.js";
+import type { QualityFinding } from "@design-studio/actions/_core/contracts";
 import { outsideFindings } from "./layout-region.js";
 import type { LayoutCard, LayoutRegion, PageOwner } from "./layout-region.js";
 

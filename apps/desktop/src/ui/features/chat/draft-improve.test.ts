@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { RunSummary } from "../../../shared/actions/_core/contracts.js";
+import type { RunSummary } from "@design-studio/actions/_core/contracts";
 import {
   improvePassed,
   improveRequest,

@@ -4,7 +4,7 @@ import type {
   Direction,
   Project,
   VersionThumbs,
-} from "../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import type { EditHistory } from "../direct-edit/commit/index.js";
 import { attemptKnown } from "../platform/attempt/index.js";
 import type { KnownFailure } from "../platform/attempt/index.js";

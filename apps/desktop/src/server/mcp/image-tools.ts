@@ -1,8 +1,8 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-import { setImageDirectEdit } from "../../shared/actions/direct-edit/set-image.js";
-import type { Direction, Project } from "../../shared/actions/_core/contracts.js";
+import { setImageDirectEdit } from "@design-studio/actions/direct-edit/set-image";
+import type { Direction, Project } from "@design-studio/actions/_core/contracts";
 import {
   IMAGE_ALT_MAX,
   IMAGE_FITS,

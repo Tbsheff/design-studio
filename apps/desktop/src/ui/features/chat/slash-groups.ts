@@ -1,5 +1,5 @@
-import { RUN_EFFORTS, RUN_LEVELS } from "../../../shared/actions/_core/contracts.js";
-import type { RunEffort, RunLevel } from "../../../shared/actions/_core/contracts.js";
+import { RUN_EFFORTS, RUN_LEVELS } from "@design-studio/actions/_core/contracts";
+import type { RunEffort, RunLevel } from "@design-studio/actions/_core/contracts";
 import { LEVEL_PRESETS } from "../../../shared/run-levels.js";
 import { levelGist, levelHint, levelLabel } from "./level-control.js";
 import { MODEL_OPTIONS, modelLabel } from "./settings-draft-model.js";

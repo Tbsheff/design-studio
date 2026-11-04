@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { setCursorShare } from "../../../shared/actions/share/set-cursor.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { setCursorShare } from "@design-studio/actions/share/set-cursor";
 import { ShareLinkStore } from "../../share/index.js";
 import type { Handle } from "../_core/handler.js";
 

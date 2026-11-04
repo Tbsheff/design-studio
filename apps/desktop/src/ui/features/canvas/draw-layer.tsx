@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { KeyboardEvent, PointerEvent } from "react";
 
 import { strokesBox } from "../../../shared/comments.js";
-import type { CommentDrawing, DrawStroke } from "../../../shared/actions/_core/contracts.js";
+import type { CommentDrawing, DrawStroke } from "@design-studio/actions/_core/contracts";
 import { Icon } from "../../kit/Icon.js";
 import { CommentComposer } from "../comments/comment-composer.js";
 import type { ComposerSubmit } from "../comments/comment-composer.js";

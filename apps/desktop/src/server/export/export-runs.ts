@@ -3,8 +3,8 @@ import path from "node:path";
 import type {
   ExportFileResult,
   HandoffFolderResult,
-} from "../../shared/actions/export/schema.js";
-import type { ExportFrame } from "../../shared/actions/_core/export.js";
+} from "@design-studio/actions/export/schema";
+import type { ExportFrame } from "@design-studio/actions/_core/export";
 import type { ExportRuntime } from "./export-core.js";
 import { buildExportFile } from "./export-file.js";
 import type { ExportedBytes, FileRequest } from "./export-file.js";

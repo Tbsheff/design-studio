@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { renameRun } from "../../../shared/actions/run/rename.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { renameRun } from "@design-studio/actions/run/rename";
 import { RunLogWriter } from "../../run-log/index.js";
 import type { Handle } from "../_core/handler.js";
 

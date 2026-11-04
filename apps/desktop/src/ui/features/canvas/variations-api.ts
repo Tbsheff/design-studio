@@ -1,7 +1,7 @@
 import {
   VARIATION_MAX,
   VARIATION_MAX_REACT,
-} from "../../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import type {
   Direction,
   Project,
@@ -11,7 +11,7 @@ import type {
   VariationMixRequest,
   VariationStartRequest,
   VariationStartResult,
-} from "../../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import { sendJson } from "../../platform/http.js";
 import type { JsonBody } from "../../platform/http.js";
 

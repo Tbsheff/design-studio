@@ -34,7 +34,7 @@ import {
 import type {
   QualityFinding,
   RenderCheckResult,
-} from "../src/shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import type { RenderErrors } from "../src/shared/render-rpc.js";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");

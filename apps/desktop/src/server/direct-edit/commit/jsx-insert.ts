@@ -7,7 +7,7 @@ import type {
   Direction,
   SourceLoc,
   VersionMeta,
-} from "../../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import {
   JSX_IMPORTS_MAX,
   JSX_INSERT_POSITIONS,
@@ -15,8 +15,8 @@ import {
   type ClearTextRequest,
   type InsertJsxRequest,
   type InsertJsxResult,
-} from "../../../shared/actions/_core/insert.js";
-import { OWNERS_MAX, OWNER_STACK_MAX } from "../../../shared/actions/_core/props.js";
+} from "@design-studio/actions/_core/insert";
+import { OWNERS_MAX, OWNER_STACK_MAX } from "@design-studio/actions/_core/props";
 import { z } from "../../platform/zod-bridge/index.js";
 import {
   resolveTarget,

@@ -1,7 +1,7 @@
 import { createElement, useCallback } from "react";
 import type { ReactElement } from "react";
 
-import type { Version } from "../../../shared/actions/_core/contracts";
+import type { Version } from "@design-studio/actions/_core/contracts";
 import { VariationsTop } from "../../features/canvas/variations-layer";
 import { DraftBar } from "../../features/chat/draft-bar";
 import { ImproveControl } from "../../features/chat/draft-improve";

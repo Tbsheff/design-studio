@@ -10,13 +10,13 @@ const PILOT_IDS = new Set(["studio.health", "studio.listSkills"]);
 const DOMAIN_NOUNS = new Set(["canvas", "component", "design", "project", "publication", "token"]);
 
 const UNKNOWN_MESSAGE =
-  "Schema.Unknown in an action schema is banned, because the runner decode, the MCP JSON Schema and WireInput check nothing. Use a typed Schema.Struct field in src/shared/actions/<domain>/schema.ts.";
+  "Schema.Unknown in an action schema is banned, because the runner decode, the MCP JSON Schema and WireInput check nothing. Use a typed Schema.Struct field in packages/common/actions/src/<domain>/schema.ts.";
 
 const MCP_OFF_MESSAGE =
-  'mcp off "ui-bootstrap" on an edit or destructive action is banned. Use mcp { name } with the snapshot or legacy tool name, or { off: "legacy-mcp" } from src/shared/actions/_core/action.ts while a legacy tool still serves it.';
+  'mcp off "ui-bootstrap" on an edit or destructive action is banned. Use mcp { name } with the snapshot or legacy tool name, or { off: "legacy-mcp" } from packages/common/actions/src/_core/action.ts while a legacy tool still serves it.';
 
 const INVALIDATES_MESSAGE =
-  "An edit or destructive action with invalidates: [] is banned, because useAction and action.done refresh nothing. Use the read action ids whose data it changes, for example version.list, in src/shared/actions/<domain>/<verb>.ts.";
+  "An edit or destructive action with invalidates: [] is banned, because useAction and action.done refresh nothing. Use the read action ids whose data it changes, for example version.list, in packages/common/actions/src/<domain>/<verb>.ts.";
 
 const READ_VERB_MESSAGE =
   'A read verb (get, list, search, inspect) on an action that is not access "read" with GET is banned. Use access "read" and method "GET" with a flat query input, or a write or run verb from the N3 list in AGENTS.md.';
@@ -25,7 +25,7 @@ const TOOL_NAME_MESSAGE =
   "A hand-written MCP or agent tool name is banned. Use the derived name <verb>_<domain> from scripts/stamp/names.ts, or a legacy name from artifacts/mcp-snapshots/*.json or src/server/mcp/legacy/order.ts.";
 
 const OBJECT_MESSAGE =
-  "An action object that names another domain noun (token, component, project, design, canvas, publication) is banned. Use the noun domain: src/shared/actions/<noun>/<verb>.ts with id <noun>.<verb>.";
+  "An action object that names another domain noun (token, component, project, design, canvas, publication) is banned. Use the noun domain: packages/common/actions/src/<noun>/<verb>.ts with id <noun>.<verb>.";
 
 const isNamed = (node, name) => node.type === "Identifier" && node.name === name;
 

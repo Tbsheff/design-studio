@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import type { Attachment, Project } from "../../../shared/actions/_core/contracts.js";
+import type { Attachment, Project } from "@design-studio/actions/_core/contracts";
 import { logError } from "../../platform/logger/index.js";
 import { COVERAGE_FILE, META_FILE } from "../extract/draft.js";
 import type { Draft, DraftFile } from "../extract/draft.js";

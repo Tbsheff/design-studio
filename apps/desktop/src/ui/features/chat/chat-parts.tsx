@@ -1,7 +1,7 @@
 import { memo, useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 
-import type { RunLevel } from "../../../shared/actions/_core/contracts.js";
+import type { RunLevel } from "@design-studio/actions/_core/contracts";
 import {
   Exception,
   ExceptionHeader,

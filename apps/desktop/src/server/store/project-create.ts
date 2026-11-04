@@ -4,7 +4,7 @@ import path from "node:path";
 
 import { nanoid } from "nanoid";
 
-import { DEFAULT_SETTINGS } from "../../shared/actions/_core/contracts.js";
+import { DEFAULT_SETTINGS } from "@design-studio/actions/_core/contracts";
 import type {
   AttachAppRequest,
   AttachedApp,
@@ -12,8 +12,8 @@ import type {
   Project,
   ProjectKind,
   ProjectSettings,
-} from "../../shared/actions/_core/contracts.js";
-import { slugify } from "../../shared/actions/_core/folders.js";
+} from "@design-studio/actions/_core/contracts";
+import { slugify } from "@design-studio/actions/_core/folders";
 import { BadRequestError } from "../platform/errors/index.js";
 import type { ProjectCore } from "./project-core.js";
 import {

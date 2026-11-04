@@ -2,13 +2,13 @@ import { readdirSync, readFileSync, existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { REQUIRED_TOKENS } from "../src/shared/actions/_core/contracts.js";
+import { REQUIRED_TOKENS } from "@design-studio/actions/_core/contracts";
 import type {
   DesignToken,
   PackManifest,
   TokenFile,
   TokenGroup,
-} from "../src/shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 
 type Rgb = { r: number; g: number; b: number; inGamut: boolean };
 

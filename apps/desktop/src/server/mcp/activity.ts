@@ -2,7 +2,7 @@ import { randomBytes } from "node:crypto";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import type { McpActivity } from "../../shared/actions/_core/contracts.js";
+import type { McpActivity } from "@design-studio/actions/_core/contracts";
 import { assertSafeId } from "../platform/errors/index.js";
 import type { EventBus } from "../types.js";
 

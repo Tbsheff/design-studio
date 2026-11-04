@@ -4,7 +4,7 @@ export {
   SCHEMA_VERSION,
   SHA256_HEX,
   WORKER_NAME,
-} from "../../../src/shared/actions/publish-remote.js";
+} from "@design-studio/actions/publish-remote";
 
 export type {
   ApiErrorBody,
@@ -18,4 +18,4 @@ export type {
   RemoteComment,
   RemotePublication,
   RemoteVersion,
-} from "../../../src/shared/actions/publish-remote.js";
+} from "@design-studio/actions/publish-remote";

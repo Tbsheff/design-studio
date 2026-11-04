@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { listFrameStatesCanvas } from "../../../shared/actions/canvas/list-frame-states.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { listFrameStatesCanvas } from "@design-studio/actions/canvas/list-frame-states";
 import { CanvasStore } from "../../canvas/index.js";
 import type { Handle } from "../_core/handler.js";
 

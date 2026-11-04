@@ -4,9 +4,9 @@ import type { MutableRefObject, ReactNode } from "react";
 import type {
   ProjectKind,
   SelectionContext,
-} from "../../../shared/actions/_core/contracts.js";
-import { withFrameStateHost } from "../../../shared/actions/_core/frame-state.js";
-import { targetFrame } from "../../../shared/actions/_core/link-interaction.js";
+} from "@design-studio/actions/_core/contracts";
+import { withFrameStateHost } from "@design-studio/actions/_core/frame-state";
+import { targetFrame } from "@design-studio/actions/_core/link-interaction";
 import {
   ACTION_LABELS,
   isBackTarget,
@@ -14,8 +14,8 @@ import {
   sourceName,
   startFrameOf,
   withImplicit,
-} from "../../../shared/actions/_core/links.js";
-import type { PrototypeLink } from "../../../shared/actions/_core/links.js";
+} from "@design-studio/actions/_core/links";
+import type { PrototypeLink } from "@design-studio/actions/_core/links";
 import { api } from "../../api.js";
 import {
   frameDirection,

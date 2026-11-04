@@ -5,7 +5,7 @@ import type {
   EditSessionEnd,
   EditSessionState,
   Version,
-} from "../../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import { api, errorText } from "../../api.js";
 import type { PreviewPort } from "../../platform/bridge.js";
 import { useProjectEvents } from "../../platform/events.js";

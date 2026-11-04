@@ -1,26 +1,26 @@
-import type { Input } from "../../shared/actions/_core/action.js";
-import type { importFigmaDirectEdit } from "../../shared/actions/direct-edit/import-figma.js";
-import type { inspectPropsInstanceDirectEdit } from "../../shared/actions/direct-edit/inspect-props-instance.js";
-import type { listPropsComponentsDirectEdit } from "../../shared/actions/direct-edit/list-props-components.js";
-import type { setPropsDirectEdit } from "../../shared/actions/direct-edit/set-props.js";
-import type { setVariantClassesDirectEdit } from "../../shared/actions/direct-edit/set-variant-classes.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { importFigmaDirectEdit } from "@design-studio/actions/direct-edit/import-figma";
+import type { inspectPropsInstanceDirectEdit } from "@design-studio/actions/direct-edit/inspect-props-instance";
+import type { listPropsComponentsDirectEdit } from "@design-studio/actions/direct-edit/list-props-components";
+import type { setPropsDirectEdit } from "@design-studio/actions/direct-edit/set-props";
+import type { setVariantClassesDirectEdit } from "@design-studio/actions/direct-edit/set-variant-classes";
 import type {
   Direction,
   Project,
   VersionMeta,
-} from "../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/_core/contracts";
 import type {
   FigmaImportPreview,
   FigmaImportRequest,
   FigmaImportResult,
-} from "../../shared/actions/_core/figma-nodes.js";
-import { COMPONENT_LIST_MAX } from "../../shared/actions/_core/props.js";
+} from "@design-studio/actions/_core/figma-nodes";
+import { COMPONENT_LIST_MAX } from "@design-studio/actions/_core/props";
 import type {
   ComponentInstance,
   ComponentListQuery,
   ComponentSchemaList,
   InstanceQuery,
-} from "../../shared/actions/_core/props.js";
+} from "@design-studio/actions/_core/props";
 import { instanceFor, listComponentSchemas } from "../components/index.js";
 import {
   fetchFigmaNodes,

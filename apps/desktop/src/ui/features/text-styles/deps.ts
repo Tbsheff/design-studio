@@ -6,7 +6,7 @@ export { insertError } from "../design-system/component-insert-api.js";
 
 export { usePopover } from "../../kit/use-popover.js";
 
-export type { SelectionContext } from "../../../shared/actions/_core/contracts.js";
+export type { SelectionContext } from "@design-studio/actions/_core/contracts";
 
 export { TEXT_STYLE_NAME } from "../../../shared/text-styles.js";
 

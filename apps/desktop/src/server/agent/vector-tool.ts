@@ -1,6 +1,6 @@
 import { Schema } from "effect";
 
-import type { InsertTarget } from "../../shared/actions/_core/insert.js";
+import type { InsertTarget } from "@design-studio/actions/_core/insert";
 import {
   BOOLEAN_OPS,
   VECTOR_COLOR,

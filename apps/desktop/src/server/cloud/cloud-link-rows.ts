@@ -1,10 +1,10 @@
 import { Schema } from "effect";
 
-import { toCloudId } from "../../shared/actions/publish/schema.js";
+import { toCloudId } from "@design-studio/actions/publish/schema";
 import type {
   ShareCreated,
   ShareRevoked,
-} from "../../shared/actions/share/schema.js";
+} from "@design-studio/actions/share/schema";
 import type { Publication } from "../../shared/publish.js";
 
 const CloudPublicationSchema = Schema.Struct({

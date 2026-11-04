@@ -1,9 +1,9 @@
 import type {
   DoctorView,
   DoctorViewText,
-} from "../../shared/actions/workspace/schema.js";
-import { describeDoctor } from "../../shared/actions/_core/app-doctor.js";
-import type { AppServerStatus, Project } from "../../shared/actions/_core/contracts.js";
+} from "@design-studio/actions/workspace/schema";
+import { describeDoctor } from "@design-studio/actions/_core/app-doctor";
+import type { AppServerStatus, Project } from "@design-studio/actions/_core/contracts";
 import { BadRequestError, NotFoundError } from "../platform/errors/index.js";
 import type { StudioProjectStore } from "../store/projects.js";
 import type { AppControl, PreviewService } from "../types.js";

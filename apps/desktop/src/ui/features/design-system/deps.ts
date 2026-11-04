@@ -1,4 +1,4 @@
-export { routes as directEditRoutes } from "../../../shared/actions/direct-edit/routes.js";
+export { routes as directEditRoutes } from "@design-studio/actions/direct-edit/routes";
 
 export { ApiError, call, getBlob } from "../../platform/http.js";
 
@@ -9,6 +9,6 @@ export type {
   InsertJsxRequest,
   InsertPosition,
   InsertableComponent,
-} from "../../../shared/actions/_core/insert.js";
+} from "@design-studio/actions/_core/insert";
 
 export type { RouteOutput } from "../../platform/http.js";

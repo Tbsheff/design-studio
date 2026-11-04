@@ -1,7 +1,7 @@
 import { Context, Effect, Layer, Schema } from "effect";
 
-import { Gone } from "../../../../src/shared/actions/_core/errors/gone.js";
-import { NotFound } from "../../../../src/shared/actions/_core/errors/not-found.js";
+import { Gone } from "@design-studio/actions/_core/errors/gone";
+import { NotFound } from "@design-studio/actions/_core/errors/not-found";
 import { CloudBindings } from "../platform/bindings.js";
 import type { PublicScope, ShareScope } from "./viewer-scope.js";
 

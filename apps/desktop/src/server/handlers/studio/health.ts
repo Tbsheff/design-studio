@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import type { Input } from "../../../shared/actions/_core/action.js";
-import type { healthStudio } from "../../../shared/actions/studio/health.js";
+import type { Input } from "@design-studio/actions/_core/action";
+import type { healthStudio } from "@design-studio/actions/studio/health";
 import { StudioInfo } from "../../store/index.js";
 import type { Handle } from "../_core/handler.js";
 

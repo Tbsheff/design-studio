@@ -1,8 +1,8 @@
 import { Effect } from "effect";
 
-import type { BadRequest } from "../../shared/actions/_core/errors/bad-request.js";
-import type { Conflict } from "../../shared/actions/_core/errors/conflict.js";
-import type { NotFound } from "../../shared/actions/_core/errors/not-found.js";
+import type { BadRequest } from "@design-studio/actions/_core/errors/bad-request";
+import type { Conflict } from "@design-studio/actions/_core/errors/conflict";
+import type { NotFound } from "@design-studio/actions/_core/errors/not-found";
 import { attemptKnown } from "../platform/attempt/index.js";
 import { requireBound } from "../platform/runtime-slot/index.js";
 import { runtimeOf } from "./links/link-runtime.js";

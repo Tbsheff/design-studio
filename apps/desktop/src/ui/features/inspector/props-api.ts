@@ -1,17 +1,17 @@
-import { routes } from "../../../shared/actions/direct-edit/routes.js";
+import { routes } from "@design-studio/actions/direct-edit/routes";
 import type {
   ComponentVariantChange,
   ComponentVariantResult,
   ComponentVariantTarget,
 } from "../../../shared/component-variant.js";
-import type { SourceLoc, Version } from "../../../shared/actions/_core/contracts.js";
+import type { SourceLoc, Version } from "@design-studio/actions/_core/contracts";
 import type {
   ComponentInstance,
   InstanceQuery,
   PropValue,
   SetPropsResult,
   VariantClassRequest,
-} from "../../../shared/actions/_core/props.js";
+} from "@design-studio/actions/_core/props";
 import { getBlob, json } from "../../api.js";
 import { call } from "../../platform/http.js";
 

@@ -1,6 +1,6 @@
 import { Schema } from "effect";
 
-import { defineAction } from "../../../src/shared/actions/_core/action.js";
+import { defineAction } from "@design-studio/actions/_core/action";
 
 const deleteProbe = defineAction({
   access: "destructive",

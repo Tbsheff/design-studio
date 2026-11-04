@@ -5,7 +5,7 @@ import os from "node:os";
 import { createAdaptorServer } from "@hono/node-server";
 import type { Hono } from "hono";
 
-import type { ShareServerState } from "../../shared/actions/_core/share.js";
+import type { ShareServerState } from "@design-studio/actions/_core/share";
 import type { ShareStore } from "./store.js";
 
 export interface ShareListener {

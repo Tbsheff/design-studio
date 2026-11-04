@@ -1,15 +1,15 @@
 import { rm } from "node:fs/promises";
 
-import { isFrameId } from "../../shared/actions/_core/canvas-file.js";
-import type { CanvasFileFrame } from "../../shared/actions/_core/canvas-file.js";
-import type { Direction, Project } from "../../shared/actions/_core/contracts.js";
-import type { ExportFrame } from "../../shared/actions/_core/export.js";
-import { SHARE_MAX_FRAMES, shareUrl } from "../../shared/actions/_core/share.js";
+import { isFrameId } from "@design-studio/actions/_core/canvas-file";
+import type { CanvasFileFrame } from "@design-studio/actions/_core/canvas-file";
+import type { Direction, Project } from "@design-studio/actions/_core/contracts";
+import type { ExportFrame } from "@design-studio/actions/_core/export";
+import { SHARE_MAX_FRAMES, shareUrl } from "@design-studio/actions/_core/share";
 import type {
   ShareLink,
   ShareServerState,
   StudioCursorInput,
-} from "../../shared/actions/_core/share.js";
+} from "@design-studio/actions/_core/share";
 import { findFrame, readProjectCanvas } from "../canvas/index.js";
 import { resolveSource } from "../export/source.js";
 import type { ExportDeps } from "../export/source.js";

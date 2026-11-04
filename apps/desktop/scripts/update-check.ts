@@ -15,7 +15,7 @@ import path from "node:path";
 import { _electron as electron } from "@playwright/test";
 import type { ElectronApplication } from "@playwright/test";
 
-import type { Project, RunSummary } from "../src/shared/actions/_core/contracts.js";
+import type { Project, RunSummary } from "@design-studio/actions/_core/contracts";
 
 const [sourceArg, feedArg, portArg] = process.argv.slice(2);
 

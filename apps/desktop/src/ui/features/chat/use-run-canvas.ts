@@ -4,8 +4,8 @@ import type {
   Project,
   RunCanvasRef,
   SelectionContext,
-} from "../../../shared/actions/_core/contracts.js";
-import { stateLabel } from "../../../shared/actions/_core/frame-state.js";
+} from "@design-studio/actions/_core/contracts";
+import { stateLabel } from "@design-studio/actions/_core/frame-state";
 import { uiStore } from "../../platform/storage.js";
 import {
   activeFrame,

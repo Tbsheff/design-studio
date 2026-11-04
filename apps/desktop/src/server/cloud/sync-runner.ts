@@ -3,9 +3,9 @@ import path from "node:path";
 
 import { Context, Effect, Layer, Schema, Semaphore } from "effect";
 
-import { Conflict } from "../../shared/actions/_core/errors/conflict.js";
-import type { Unauthenticated } from "../../shared/actions/_core/errors/unauthenticated.js";
-import type { Unavailable } from "../../shared/actions/_core/errors/unavailable.js";
+import { Conflict } from "@design-studio/actions/_core/errors/conflict";
+import type { Unauthenticated } from "@design-studio/actions/_core/errors/unauthenticated";
+import type { Unavailable } from "@design-studio/actions/_core/errors/unavailable";
 import type { CloudRef } from "../../shared/cloud-contracts.js";
 import { setPrivateJson } from "../platform/atomic-write/index.js";
 import { loadConfig } from "../platform/config/index.js";

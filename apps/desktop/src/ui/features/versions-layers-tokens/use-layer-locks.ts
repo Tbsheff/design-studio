@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef } from "react";
 
-import type { BridgeToParent, StudioEvent } from "../../../shared/actions/_core/contracts.js";
+import type { BridgeToParent, StudioEvent } from "@design-studio/actions/_core/contracts";
 import { cleanLockKeys } from "../../../shared/layer-locks.js";
 import type { LayerLocksView } from "../../../shared/layer-locks.js";
 import { json } from "../../api.js";

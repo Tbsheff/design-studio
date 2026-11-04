@@ -24,6 +24,7 @@ import { BadRequestError, ConflictError } from "../platform/errors/index.js";
 import { userGit } from "../platform/git/index.js";
 import type { StudioProjectStore } from "../store/projects.js";
 import type { PreviewService, VersionStore } from "../types.js";
+import { isHeldActionPath } from "./first-version-routes.js";
 
 const SOURCE_PATTERN = /^(.+):(\d+):(\d+)$/;
 const EDITOR_TIMEOUT_MS = 5000;
@@ -226,7 +227,10 @@ export function registerAppRoutes(app: Hono, deps: AppRouteDeps): void {
   });
 
   app.use("/api/projects/:pid/d/:did/*", async (c, next) => {
-    if (c.req.method !== "GET" && EDIT_ROUTES.test(c.req.path)) {
+    if (
+      c.req.method !== "GET" &&
+      (EDIT_ROUTES.test(c.req.path) || isHeldActionPath(c.req.path))
+    ) {
       await holdEditsForFirstVersion(deps, c.req.param("pid"));
     }
 

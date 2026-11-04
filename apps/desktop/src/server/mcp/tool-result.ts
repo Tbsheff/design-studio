@@ -4,6 +4,10 @@ import { ImageOutputSchema } from "@design-studio/actions/_core/image-output";
 import { Exit, Option, Schema } from "effect";
 
 import { failureOf, toWireError } from "../handlers/_core/wire-error.js";
+import { RUN_BUSY } from "./edit-guards.js";
+import { mcpErrorText } from "./error-copy.js";
+
+const RUN_IN_PROGRESS = "run_in_progress";
 
 type ResultBlock =
   | { readonly text: string; readonly type: "text" }
@@ -140,7 +144,11 @@ const toToolResult = (action: AnyAction, exit: ActionExit): TextResult => {
 
   const wire = toWireError(failureOf(exit));
 
-  return textResult(JSON.stringify(wire.body), true);
+  if (wire.body.error === RUN_IN_PROGRESS) {
+    return textResult(RUN_BUSY, true);
+  }
+
+  return textResult(mcpErrorText(wire.body.message), true);
 };
 
 export { textResult, toToolResult };

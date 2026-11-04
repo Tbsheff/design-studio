@@ -109,6 +109,9 @@ export const RENDER_WAIT_TOOLS = new Set([
   "update_component_variant",
   "import_page",
   "arrange",
+  "create_gallery",
+  "create_viewport",
+  "run_viewport",
 ]);
 const WAIT_PROPERTY = {
   type: "string",

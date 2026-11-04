@@ -1,5 +1,3 @@
-import { z } from "zod";
-
 import { applyDirectEdit } from "../../shared/actions/direct-edit/apply.js";
 import type { Project } from "../../shared/contracts.js";
 import {
@@ -19,6 +17,7 @@ import {
   tokenEntriesFor,
   tokenLookupFor,
 } from "../direct-edit/commit/style-scan.js";
+import { z } from "../platform/zod-bridge/index.js";
 import { callAction } from "./action-call.js";
 import {
   EditError,

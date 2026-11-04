@@ -1,8 +1,6 @@
 import { readFile, rm } from "node:fs/promises";
 import path from "node:path";
 
-import { z } from "zod";
-
 import { applyDirectEdit } from "../../shared/actions/direct-edit/apply.js";
 import type {
   DirectEditBatchResult,
@@ -19,6 +17,7 @@ import {
 } from "../direct-edit/commit/edit-site.js";
 import { publishVersion } from "../direct-edit/index.js";
 import { describeElements, textHintsOf } from "../page-probe/element.js";
+import { z } from "../platform/zod-bridge/index.js";
 import { callAction } from "./action-call.js";
 import { listWords } from "./activity-text.js";
 import { EditError, loadTarget, refuseWhileRunning } from "./edit-guards.js";

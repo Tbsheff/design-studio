@@ -1,5 +1,3 @@
-import { z } from "zod";
-
 import { applyReviewFixDirectEdit } from "../../shared/actions/direct-edit/apply-review-fix.js";
 import { runReviewDirectEdit } from "../../shared/actions/direct-edit/run-review.js";
 import {
@@ -9,6 +7,7 @@ import {
   type ReviewResult,
 } from "../../shared/review.js";
 import { frameRef } from "../canvas/tools.js";
+import { z } from "../platform/zod-bridge/index.js";
 import { callAction } from "./action-call.js";
 import { loadTarget, refuseWhileRunning } from "./edit-guards.js";
 import {

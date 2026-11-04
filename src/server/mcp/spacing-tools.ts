@@ -1,5 +1,3 @@
-import { z } from "zod";
-
 import {
   SPACING_PROPERTIES,
   SPACING_PX_MAX,
@@ -8,6 +6,7 @@ import {
 } from "../../shared/spacing.js";
 import type { SpacingInput } from "../../shared/spacing.js";
 import { describeElement } from "../page-probe/element.js";
+import { z } from "../platform/zod-bridge/index.js";
 import type { SpacingScope } from "../spacing/commit.js";
 import { SpacingError } from "../spacing/errors.js";
 import { getSpacing } from "../spacing/get.js";

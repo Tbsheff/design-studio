@@ -1,5 +1,3 @@
-import { z } from "zod";
-
 import {
   BLEND_MODES,
   BLEND_PROPERTIES,
@@ -18,6 +16,7 @@ import { getFill } from "../fill/get.js";
 import { setFill } from "../fill/set.js";
 import type { FillSetDone } from "../fill/set.js";
 import type { FillInput } from "../fill/spec.js";
+import { z } from "../platform/zod-bridge/index.js";
 import { EditError, loadTarget, refuseWhileRunning } from "./edit-guards.js";
 import type { EditDeps } from "./edit-guards.js";
 import {

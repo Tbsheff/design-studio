@@ -1,5 +1,3 @@
-import { z } from "zod";
-
 import type { Project } from "../../shared/contracts.js";
 import { readProjectCanvas } from "../canvas/service.js";
 import { findFrame, frameRef } from "../canvas/tools.js";
@@ -15,6 +13,7 @@ import {
 } from "../page-probe/layer-ref.js";
 import type { Layer, Viewport } from "../page-probe/layer-ref.js";
 import { noteShownFiles } from "../page-probe/source-loc.js";
+import { z } from "../platform/zod-bridge/index.js";
 import type { PreviewService } from "../types.js";
 import { EditError, loadTarget } from "./edit-guards.js";
 import type { EditDeps } from "./edit-guards.js";

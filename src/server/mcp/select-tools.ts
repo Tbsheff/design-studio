@@ -1,5 +1,3 @@
-import { z } from "zod";
-
 import {
   MATCH_KINDS,
   type MatchKind,
@@ -15,6 +13,7 @@ import {
   scopeOf,
   type Viewport,
 } from "../page-probe/layer-ref.js";
+import { z } from "../platform/zod-bridge/index.js";
 import type { PreviewService } from "../types.js";
 import { EditError, loadTarget, type EditDeps } from "./edit-guards.js";
 import {

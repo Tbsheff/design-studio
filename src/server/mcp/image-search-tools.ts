@@ -1,5 +1,3 @@
-import { z } from "zod";
-
 import type { Project } from "../../shared/contracts.js";
 import {
   PLACE_IMAGE_DESCRIPTION,
@@ -20,6 +18,7 @@ import {
   placeImageFields,
   searchImagesFields,
 } from "../platform/tool-fields/image-search.js";
+import { z } from "../platform/zod-bridge/index.js";
 import { EditError, loadTarget, refuseWhileRunning } from "./edit-guards.js";
 import type { EditDeps } from "./edit-guards.js";
 import {

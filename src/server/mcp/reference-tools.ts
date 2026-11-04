@@ -1,8 +1,6 @@
 import { stat } from "node:fs/promises";
 import path from "node:path";
 
-import { z } from "zod";
-
 import {
   COMPARE_TO_REFERENCE_TEXT,
   REFERENCE_LOW_SCORE,
@@ -10,6 +8,7 @@ import {
 import type { ReferenceScore } from "../../shared/reference.js";
 import { compareToReference, mimeOfPath, scoreLines } from "../agent/index.js";
 import { findFrame, frameRef } from "../canvas/tools.js";
+import { z } from "../platform/zod-bridge/index.js";
 import { EditError, loadTarget } from "./edit-guards.js";
 import type { EditDeps } from "./edit-guards.js";
 import {

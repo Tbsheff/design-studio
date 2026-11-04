@@ -2,8 +2,6 @@ import { randomBytes } from "node:crypto";
 import { mkdir, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { z } from "zod";
-
 import {
   DIRECT_STYLE_PROPERTIES,
   type DirectStyleProperty,
@@ -16,6 +14,7 @@ import { SOURCE_DIR } from "../design-system/extract/draft.js";
 import { withPagePath } from "../export/source.js";
 import { describeElement } from "../page-probe/element.js";
 import { evaluateToolUse } from "../platform/tool-policy/index.js";
+import { z } from "../platform/zod-bridge/index.js";
 import type { ActivityDraft } from "./activity.js";
 import { EditError, type EditDeps } from "./edit-guards.js";
 import type { ToolResult } from "./tool-types.js";

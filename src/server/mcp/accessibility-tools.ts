@@ -1,5 +1,3 @@
-import { z } from "zod";
-
 import { AccessibilityError } from "../accessibility/errors.js";
 import { frameOf } from "../accessibility/frame.js";
 import type { AccessibilityFrame } from "../accessibility/frame.js";
@@ -26,6 +24,7 @@ import {
   inspectAccessibilityFields,
   setAccessibilityFields,
 } from "../platform/tool-fields/accessibility.js";
+import { z } from "../platform/zod-bridge/index.js";
 import { EditError, loadTarget, refuseWhileRunning } from "./edit-guards.js";
 import type { EditDeps } from "./edit-guards.js";
 import {

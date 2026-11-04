@@ -1,5 +1,3 @@
-import { z } from "zod";
-
 import {
   VARIANT_CLASSES,
   VARIANT_KEY,
@@ -17,6 +15,7 @@ import {
   writeVariant,
 } from "../components/variant-write/write.js";
 import type { VariantPreview } from "../components/variant-write/write.js";
+import { z } from "../platform/zod-bridge/index.js";
 import { EditError, loadTarget, refuseWhileRunning } from "./edit-guards.js";
 import type { EditDeps } from "./edit-guards.js";
 import {

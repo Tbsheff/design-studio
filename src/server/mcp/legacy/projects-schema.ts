@@ -1,5 +1,4 @@
-import { z } from "zod";
-
+import { z } from "../../platform/zod-bridge/index.js";
 import { packId } from "../edit-kit.js";
 
 const NAME_MAX = 120;

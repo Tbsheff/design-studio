@@ -1,5 +1,3 @@
-import { z } from "zod";
-
 import {
   ICON_COLOR,
   ICON_LIST_DEFAULT,
@@ -18,6 +16,7 @@ import type { IconEditScope, IconInsertResult } from "../icons/apply.js";
 import type { IconInsertRequest } from "../icons/insert.js";
 import { listIcons } from "../icons/list.js";
 import { IconError } from "../icons/set.js";
+import { z } from "../platform/zod-bridge/index.js";
 import { EditError, loadTarget, refuseWhileRunning } from "./edit-guards.js";
 import type { EditDeps } from "./edit-guards.js";
 import {

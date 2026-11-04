@@ -1,7 +1,6 @@
-import { z } from "zod";
-
 import { STRUCTURE_OPS } from "../../../shared/contracts.js";
 import { EDIT_TARGETS } from "../../direct-edit/commit/edit-site.js";
+import { z } from "../../platform/zod-bridge/index.js";
 import {
   classes,
   directionId,

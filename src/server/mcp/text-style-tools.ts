@@ -1,5 +1,3 @@
-import { z } from "zod";
-
 import {
   TEXT_STYLE_LIST_DEFAULT,
   TEXT_STYLE_LIST_MAX,
@@ -7,6 +5,7 @@ import {
   TEXT_STYLE_QUERY_MAX,
 } from "../../shared/text-styles.js";
 import { describeElement } from "../page-probe/element.js";
+import { z } from "../platform/zod-bridge/index.js";
 import { applyTextStyle } from "../text-styles/apply.js";
 import type { TextStyleApplyDone } from "../text-styles/apply.js";
 import type { TextStyleEditScope } from "../text-styles/commit.js";

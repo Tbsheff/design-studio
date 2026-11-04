@@ -1,8 +1,6 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-import { z } from "zod";
-
 import { setImageDirectEdit } from "../../shared/actions/direct-edit/set-image.js";
 import type { Direction, Project } from "../../shared/contracts.js";
 import {
@@ -18,6 +16,7 @@ import { describeElement } from "../page-probe/element.js";
 import { scopeOf } from "../page-probe/layer-ref.js";
 import { probeOwners } from "../page-probe/owner-probe.js";
 import { resolveSourceLoc } from "../page-probe/source-loc.js";
+import { z } from "../platform/zod-bridge/index.js";
 import { callAction } from "./action-call.js";
 import {
   EditError,

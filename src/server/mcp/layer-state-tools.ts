@@ -1,5 +1,3 @@
-import { z } from "zod";
-
 import { applyDirectEdit } from "../../shared/actions/direct-edit/apply.js";
 import type {
   DirectEditRequest,
@@ -13,6 +11,7 @@ import {
   lockOutcome,
   probeLock,
 } from "../page-probe/lock-probe.js";
+import { z } from "../platform/zod-bridge/index.js";
 import { callAction } from "./action-call.js";
 import type { ActivityDraft } from "./activity.js";
 import { EditError, loadTarget, refuseWhileRunning } from "./edit-guards.js";

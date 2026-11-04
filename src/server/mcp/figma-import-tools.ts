@@ -2,8 +2,6 @@ import { readFile, realpath, stat } from "node:fs/promises";
 import { homedir } from "node:os";
 import path from "node:path";
 
-import { z } from "zod";
-
 import { importFigmaDirectEdit } from "../../shared/actions/direct-edit/import-figma.js";
 import {
   FIGMA_NODES_MAX_BYTES,
@@ -11,6 +9,7 @@ import {
   type FigmaImportResult,
 } from "../../shared/figma-nodes.js";
 import { JSX_INSERT_POSITIONS } from "../../shared/insert.js";
+import { z } from "../platform/zod-bridge/index.js";
 import { callAction } from "./action-call.js";
 import {
   approve,

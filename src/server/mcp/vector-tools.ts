@@ -1,5 +1,3 @@
-import { z } from "zod";
-
 import { setVectorDirectEdit } from "../../shared/actions/direct-edit/set-vector.js";
 import type { Project } from "../../shared/contracts.js";
 import {
@@ -11,6 +9,7 @@ import {
   type VectorResult,
 } from "../../shared/vector.js";
 import { describeElements } from "../page-probe/element.js";
+import { z } from "../platform/zod-bridge/index.js";
 import { callAction } from "./action-call.js";
 import {
   EditError,

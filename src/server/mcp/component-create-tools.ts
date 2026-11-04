@@ -1,5 +1,3 @@
-import { z } from "zod";
-
 import { applySwapDirectEdit } from "../../shared/actions/direct-edit/apply-swap.js";
 import { createComponentDirectEdit } from "../../shared/actions/direct-edit/create-component.js";
 import { listComponentFoldersDirectEdit } from "../../shared/actions/direct-edit/list-component-folders.js";
@@ -15,6 +13,7 @@ import {
 import type { InsertTarget } from "../../shared/insert.js";
 import { scopeOf } from "../page-probe/layer-ref.js";
 import { resolveSourceLoc } from "../page-probe/source-loc.js";
+import { z } from "../platform/zod-bridge/index.js";
 import { callAction } from "./action-call.js";
 import { EditError, loadTarget, refuseWhileRunning } from "./edit-guards.js";
 import {

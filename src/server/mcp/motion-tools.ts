@@ -1,5 +1,3 @@
-import { z } from "zod";
-
 import {
   ENTRANCE_PRESETS,
   MOTION_DELAY_MAX,
@@ -17,6 +15,7 @@ import { setMotion } from "../motion/set.js";
 import type { MotionSetDone } from "../motion/set.js";
 import { MotionError } from "../motion/site.js";
 import { specOf } from "../motion/spec.js";
+import { z } from "../platform/zod-bridge/index.js";
 import { EditError, loadTarget, refuseWhileRunning } from "./edit-guards.js";
 import type { EditDeps } from "./edit-guards.js";
 import {

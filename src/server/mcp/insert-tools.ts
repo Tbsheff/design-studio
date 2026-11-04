@@ -1,5 +1,3 @@
-import { z } from "zod";
-
 import { insertComponentDirectEdit } from "../../shared/actions/direct-edit/insert-component.js";
 import { listInsertableDirectEdit } from "../../shared/actions/direct-edit/list-insertable.js";
 import type { Project } from "../../shared/contracts.js";
@@ -14,6 +12,7 @@ import { describeElement } from "../page-probe/element.js";
 import { scopeOf } from "../page-probe/layer-ref.js";
 import { probeOwners } from "../page-probe/owner-probe.js";
 import { resolveSourceLoc } from "../page-probe/source-loc.js";
+import { z } from "../platform/zod-bridge/index.js";
 import { callAction } from "./action-call.js";
 import {
   EditError,

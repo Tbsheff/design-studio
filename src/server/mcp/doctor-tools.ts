@@ -1,6 +1,5 @@
-import { z } from "zod";
-
 import { DOCTOR_NOTE } from "../../shared/app-doctor.js";
+import { z } from "../platform/zod-bridge/index.js";
 import { loadTarget } from "./edit-guards.js";
 import { defineTool, projectId } from "./edit-kit.js";
 

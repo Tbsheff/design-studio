@@ -1,6 +1,5 @@
-import { z } from "zod";
-
 import { frameRef, placeSchema } from "../../canvas/tools.js";
+import { z } from "../../platform/zod-bridge/index.js";
 import { directionId, pagePath, PATH_MAX, projectId } from "../edit-kit.js";
 
 const FRAMES_MAX = 12;

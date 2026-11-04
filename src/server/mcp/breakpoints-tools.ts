@@ -1,5 +1,3 @@
-import { z } from "zod";
-
 import type { SourceLoc } from "../../shared/contracts.js";
 import type { BreakpointScope } from "../breakpoints/commit.js";
 import { BreakpointError } from "../breakpoints/errors.js";
@@ -15,6 +13,7 @@ import {
   listBreakpointFields,
   setBreakpointFields,
 } from "../platform/tool-fields/breakpoints.js";
+import { z } from "../platform/zod-bridge/index.js";
 import { EditError, loadTarget, refuseWhileRunning } from "./edit-guards.js";
 import type { EditDeps } from "./edit-guards.js";
 import {

@@ -1,7 +1,6 @@
-import { z } from "zod";
-
 import type { CanvasFile } from "../../shared/canvas-file.js";
 import type { Direction, Project, Version } from "../../shared/contracts.js";
+import { z } from "../platform/zod-bridge/index.js";
 import { EditError } from "./edit-guards.js";
 import type { EditDeps } from "./edit-guards.js";
 import { defineTool, id, ok, projectId, versionActivity } from "./edit-kit.js";

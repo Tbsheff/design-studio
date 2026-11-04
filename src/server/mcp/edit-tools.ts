@@ -1,11 +1,10 @@
-import { z } from "zod";
-
 import {
   PENDING_VERSION,
   savedVersionId,
   savesSettled,
 } from "../direct-edit/commit/save-queue.js";
 import { isKnownError } from "../platform/errors/index.js";
+import { z } from "../platform/zod-bridge/index.js";
 import type { ActivityDraft } from "./activity.js";
 import { EditError, type EditDeps } from "./edit-guards.js";
 import type { Done, Meta, ToolSpec } from "./edit-kit.js";

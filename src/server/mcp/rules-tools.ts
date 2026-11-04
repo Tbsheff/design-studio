@@ -1,5 +1,3 @@
-import { z } from "zod";
-
 import { getRulesDirectEdit } from "../../shared/actions/direct-edit/get-rules.js";
 import { runRulesTestDirectEdit } from "../../shared/actions/direct-edit/run-rules-test.js";
 import { setRulesDirectEdit } from "../../shared/actions/direct-edit/set-rules.js";
@@ -11,6 +9,7 @@ import {
   type DesignRulesTestResult,
 } from "../../shared/design-rules.js";
 import { frameRef } from "../canvas/tools.js";
+import { z } from "../platform/zod-bridge/index.js";
 import { callAction } from "./action-call.js";
 import { loadTarget, refuseWhileRunning } from "./edit-guards.js";
 import {

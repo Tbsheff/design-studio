@@ -1,9 +1,8 @@
-import { z } from "zod";
-
 import {
   searchTextFields,
   updateTextFields,
 } from "../platform/tool-fields/text-search.js";
+import { z } from "../platform/zod-bridge/index.js";
 import { TextSearchError } from "../text-search/errors.js";
 import {
   SEARCH_TEXT_DESCRIPTION,

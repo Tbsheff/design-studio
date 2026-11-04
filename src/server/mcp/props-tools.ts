@@ -1,5 +1,3 @@
-import { z } from "zod";
-
 import { inspectPropsInstanceDirectEdit } from "../../shared/actions/direct-edit/inspect-props-instance.js";
 import { listPropsComponentsDirectEdit } from "../../shared/actions/direct-edit/list-props-components.js";
 import { setPropsDirectEdit } from "../../shared/actions/direct-edit/set-props.js";
@@ -18,6 +16,7 @@ import {
 import { scopeOf } from "../page-probe/layer-ref.js";
 import { probeOwners } from "../page-probe/owner-probe.js";
 import { resolveSourceLoc } from "../page-probe/source-loc.js";
+import { z } from "../platform/zod-bridge/index.js";
 import { callAction } from "./action-call.js";
 import {
   EditError,

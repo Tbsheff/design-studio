@@ -1,5 +1,4 @@
-import { z } from "zod";
-
+import { z } from "../../platform/zod-bridge/index.js";
 import { directionId, packId, projectId } from "../edit-kit.js";
 
 const applyDesignSystemSchema = z.strictObject({

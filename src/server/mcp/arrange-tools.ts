@@ -1,5 +1,3 @@
-import { z } from "zod";
-
 import { applyDirectEdit } from "../../shared/actions/direct-edit/apply.js";
 import {
   ALIGN_OPS,
@@ -16,6 +14,7 @@ import {
   measureTargets,
 } from "../direct-edit/commit/arrange.js";
 import { DirectEditError } from "../direct-edit/engine/errors.js";
+import { z } from "../platform/zod-bridge/index.js";
 import { callAction } from "./action-call.js";
 import {
   EditError,

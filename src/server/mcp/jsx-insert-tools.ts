@@ -1,5 +1,3 @@
-import { z } from "zod";
-
 import { deleteTextDirectEdit } from "../../shared/actions/direct-edit/delete-text.js";
 import { insertJsxDirectEdit } from "../../shared/actions/direct-edit/insert-jsx.js";
 import {
@@ -8,6 +6,7 @@ import {
   JSX_SNIPPET_MAX,
   type InsertJsxResult,
 } from "../../shared/insert.js";
+import { z } from "../platform/zod-bridge/index.js";
 import { callAction } from "./action-call.js";
 import { EditError, loadTarget, refuseWhileRunning } from "./edit-guards.js";
 import {

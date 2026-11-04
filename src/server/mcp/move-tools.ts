@@ -1,11 +1,10 @@
-import { z } from "zod";
-
 import { applyDirectEdit } from "../../shared/actions/direct-edit/apply.js";
 import type {
   DirectEditResult,
   SourceLoc,
   StructureEditResult,
 } from "../../shared/contracts.js";
+import { z } from "../platform/zod-bridge/index.js";
 import { callAction } from "./action-call.js";
 import { EditError, loadTarget, refuseWhileRunning } from "./edit-guards.js";
 import type { EditDeps } from "./edit-guards.js";

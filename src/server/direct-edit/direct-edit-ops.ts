@@ -24,13 +24,13 @@ import { previewTokens } from "../design-system/token-preview.js";
 import { updateTokens } from "../design-system/update-tokens.js";
 import { commitTweaks } from "../tweaks/commit.js";
 import { readTweaksState } from "../tweaks/store.js";
-import { applyArrange, isArrangeBody } from "./arrange.js";
-import { applyDirectEditBatch } from "./batch.js";
 import { commitDirectEdit } from "./commit/apply.js";
+import { applyArrange, isArrangeBody } from "./commit/arrange.js";
+import { applyDirectEditBatch } from "./commit/batch.js";
+import { applyStyleReplace } from "./commit/replace.js";
+import { applyStructureEdit } from "./commit/structure-apply.js";
 import type { DirectEditRuntime } from "./direct-edit-core.js";
-import { applyStyleReplace } from "./replace.js";
-import { applyStructureEdit } from "./structure-apply.js";
-import { isDirectEditBatch, isStructureEdit } from "./validate.js";
+import { isDirectEditBatch, isStructureEdit } from "./engine/validate.js";
 
 interface DirectionRef {
   readonly directionId: string;

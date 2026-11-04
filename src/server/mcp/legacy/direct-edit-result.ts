@@ -10,8 +10,8 @@ import {
   editedAtLabel,
   locText,
   siteNote,
-} from "../../direct-edit/edit-site.js";
-import type { EditSite } from "../../direct-edit/edit-site.js";
+} from "../../direct-edit/commit/edit-site.js";
+import type { EditSite } from "../../direct-edit/commit/edit-site.js";
 
 type Theme = "dark" | "light";
 

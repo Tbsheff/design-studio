@@ -18,7 +18,7 @@ import {
   styleReport,
   tokenEntriesFor,
   tokenLookupFor,
-} from "../direct-edit/style-scan.js";
+} from "../direct-edit/commit/style-scan.js";
 import { callAction } from "./action-call.js";
 import {
   EditError,

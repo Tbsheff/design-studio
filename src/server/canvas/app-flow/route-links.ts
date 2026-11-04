@@ -12,7 +12,7 @@ import type {
   RouteLinksResult,
 } from "../../../shared/route-flow.js";
 import { appRouterDir, listAppRoutes } from "../../app/routes.js";
-import { walkNodes } from "../../direct-edit/text-source-files.js";
+import { walkNodes } from "../../direct-edit/commit/text-source-files.js";
 import {
   createSourceProject,
   lineOf,

@@ -2,7 +2,7 @@ import type { Dirent } from "node:fs";
 import { readdir } from "node:fs/promises";
 import path from "node:path";
 
-import { treeStamp } from "../direct-edit/change-feed.js";
+import { treeStamp } from "../events/source-change.js";
 
 interface TreeEntry {
   readonly at: number;

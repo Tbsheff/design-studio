@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import type { WrittenFile } from "../direct-edit/batch.js";
+import type { WrittenFile } from "../direct-edit/commit/batch.js";
 import { writeAtomic } from "../direct-edit/commit/edit-source.js";
 import { describeElements } from "../mcp/element.js";
 import { spacingFields, spacingInputOf } from "../mcp/spacing-tools.js";

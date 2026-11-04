@@ -11,14 +11,14 @@ import {
 } from "../../shared/style-search.js";
 import type { StyleQuery } from "../../shared/style-search.js";
 import { findFrame } from "../canvas/tools.js";
-import { writeAtomic } from "../direct-edit/index.js";
-import { planStyleReplace } from "../direct-edit/replace.js";
+import { planStyleReplace } from "../direct-edit/commit/replace.js";
 import {
   scanPageStyles,
   styleReport,
   tokenEntriesFor,
   tokenLookupFor,
-} from "../direct-edit/style-scan.js";
+} from "../direct-edit/commit/style-scan.js";
+import { writeAtomic } from "../direct-edit/index.js";
 import { canvasFrames, refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
 import { isContextFrame, pageUrl } from "./run-target.js";

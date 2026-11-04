@@ -20,6 +20,7 @@ import type {
   VersionMeta,
 } from "../../../shared/contracts.js";
 import { OWNERS_MAX, OWNER_STACK_MAX } from "../../../shared/props.js";
+import { planImport } from "../../components/import-plan.js";
 import { loadLibrary } from "../../components/insert-list.js";
 import {
   loadTypeScript,
@@ -28,7 +29,6 @@ import {
 } from "../../components/props-schema.js";
 import { writeAndCommitAll, type WrittenFile } from "../commit/batch.js";
 import type { DirectEditDeps, ResolvedSource } from "../commit/edit-types.js";
-import { planImport } from "../commit/imports.js";
 import { assertCanEdit, publishVersion } from "../commit/publish.js";
 import { DirectEditError } from "../engine/errors.js";
 import { findJsxElement } from "../engine/jsx.js";

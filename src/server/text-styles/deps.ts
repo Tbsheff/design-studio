@@ -1,6 +1,6 @@
-export { writeAndCommitAll } from "../direct-edit/batch.js";
+export { writeAndCommitAll } from "../direct-edit/commit/batch.js";
 
-export { elementClassInfo } from "../direct-edit/class-info.js";
+export { elementClassInfo } from "../direct-edit/commit/class-info.js";
 
 export {
   assertCanEdit,
@@ -11,14 +11,14 @@ export {
   themeForFile,
 } from "../direct-edit/index.js";
 
-export { parseClass } from "../direct-edit/tailwind/classes.js";
+export { parseClass } from "../direct-edit/engine/tailwind/classes.js";
 
 export {
   TEXT_STYLE_LIST_DEFAULT,
   TEXT_STYLE_PROPS,
 } from "../../shared/text-styles.js";
 
-export type { WrittenFile } from "../direct-edit/batch.js";
+export type { WrittenFile } from "../direct-edit/commit/batch.js";
 
 export type { DirectEditDeps } from "../direct-edit/index.js";
 

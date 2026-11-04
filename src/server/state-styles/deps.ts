@@ -7,7 +7,7 @@ export { loadBreakpointSite as loadStyleSite } from "../breakpoints/site.js";
 
 export { findFrame } from "../canvas/tools.js";
 
-export { elementClassInfo } from "../direct-edit/class-info.js";
+export { elementClassInfo } from "../direct-edit/commit/class-info.js";
 
 export { htmlVariantProps } from "../direct-edit/engine/html.js";
 
@@ -37,7 +37,7 @@ export type { BreakpointScope as StyleScope } from "../breakpoints/commit.js";
 
 export type { BreakpointSite as StyleSite } from "../breakpoints/site.js";
 
-export type { WrittenFile } from "../direct-edit/batch.js";
+export type { WrittenFile } from "../direct-edit/commit/batch.js";
 
 export type { DirectEditDeps } from "../direct-edit/index.js";
 

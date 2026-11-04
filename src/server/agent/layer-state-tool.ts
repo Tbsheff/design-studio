@@ -3,13 +3,13 @@ import { z } from "zod";
 import type { SelectionContext } from "../../shared/contracts.js";
 import { planDirectEdit } from "../direct-edit/commit/edit-plan.js";
 import { writeAtomic } from "../direct-edit/commit/edit-source.js";
+import { knownTokenVars } from "../direct-edit/engine/tokens.js";
 import { parseDirectEditRequest } from "../direct-edit/engine/validate.js";
 import {
   announcePlanned,
   domPatchOf,
   withdrawPlanned,
-} from "../direct-edit/planned-feed.js";
-import { knownTokenVars } from "../direct-edit/tokens.js";
+} from "../events/planned-feed.js";
 import {
   applyDelta,
   describeLocks,

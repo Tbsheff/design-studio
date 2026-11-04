@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import type { BreakpointScope } from "../breakpoints/commit.js";
-import type { WrittenFile } from "../direct-edit/batch.js";
+import type { WrittenFile } from "../direct-edit/commit/batch.js";
 import { writeAtomic } from "../direct-edit/commit/edit-source.js";
 import { DirectEditError } from "../direct-edit/engine/errors.js";
 import { StackingError } from "../stacking/errors.js";

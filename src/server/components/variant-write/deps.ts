@@ -1,4 +1,4 @@
-export { writeAndCommitAll } from "../../direct-edit/batch.js";
+export { writeAndCommitAll } from "../../direct-edit/commit/batch.js";
 
 export {
   assertCanEdit,
@@ -6,7 +6,10 @@ export {
   resolveSource,
 } from "../../direct-edit/index.js";
 
-export { classify, parseClass } from "../../direct-edit/tailwind/classes.js";
+export {
+  classify,
+  parseClass,
+} from "../../direct-edit/engine/tailwind/classes.js";
 
 export { listComponents } from "../inventory.js";
 
@@ -26,7 +29,7 @@ export {
   VARIANT_VALUE,
 } from "../../../shared/component-variant.js";
 
-export type { WrittenFile } from "../../direct-edit/batch.js";
+export type { WrittenFile } from "../../direct-edit/commit/batch.js";
 
 export type { DirectEditDeps } from "../../direct-edit/index.js";
 

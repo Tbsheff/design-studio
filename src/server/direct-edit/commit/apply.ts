@@ -5,10 +5,10 @@ import type {
   Project,
   Version,
 } from "../../../shared/contracts.js";
+import { domPatchOf } from "../../events/planned-feed.js";
 import type { PatchResult } from "../engine/errors.js";
 import { knownTokenVars } from "../engine/tokens.js";
 import { parseDirectEditRequest } from "../engine/validate.js";
-import { domPatchOf } from "../planned-feed.js";
 import { planDirectEdit } from "./edit-plan.js";
 import { writeAtomic } from "./edit-source.js";
 import { editSummary, editTitle } from "./edit-title.js";

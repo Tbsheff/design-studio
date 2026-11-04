@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import type { WrittenFile } from "../direct-edit/batch.js";
+import type { WrittenFile } from "../direct-edit/commit/batch.js";
 import { writeAtomic } from "../direct-edit/index.js";
 import { getFill } from "../fill/get.js";
 import { planFillSet } from "../fill/set.js";

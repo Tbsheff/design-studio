@@ -10,17 +10,17 @@ import type {
   TextSourceAnswer,
 } from "../../shared/contracts.js";
 import { firstVersionWaitText } from "../app/first-version.js";
-import { elementClassInfo } from "../direct-edit/class-info.js";
-import type { EditHistory } from "../direct-edit/history.js";
-import { htmlElementSpan } from "../direct-edit/html.js";
+import { elementClassInfo } from "../direct-edit/commit/class-info.js";
+import type { EditHistory } from "../direct-edit/commit/history.js";
+import { findTextSource } from "../direct-edit/commit/text-source.js";
+import { htmlElementSpan } from "../direct-edit/engine/html.js";
+import { jsxElementSpan } from "../direct-edit/engine/jsx.js";
 import {
   DirectEditError,
   parseDirectEditRequest,
   resolveSource,
   type DirectEditDeps,
 } from "../direct-edit/index.js";
-import { jsxElementSpan } from "../direct-edit/jsx.js";
-import { findTextSource } from "../direct-edit/text-source.js";
 import { BadRequestError } from "../store/errors.js";
 import type { StudioProjectStore } from "../store/projects.js";
 import { bindVersionReadRuntime } from "../store/version-read-core.js";

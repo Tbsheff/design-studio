@@ -4,7 +4,7 @@ import {
   PENDING_VERSION,
   savedVersionId,
   savesSettled,
-} from "../direct-edit/save-queue.js";
+} from "../direct-edit/commit/save-queue.js";
 import { isKnownError } from "../platform/errors/index.js";
 import type { ActivityDraft } from "./activity.js";
 import { EditError, type EditDeps } from "./edit-guards.js";

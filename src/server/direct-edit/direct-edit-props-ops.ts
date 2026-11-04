@@ -30,14 +30,14 @@ import {
   prepareFigmaImport,
 } from "../figma/index.js";
 import { BadRequestError } from "../platform/errors/index.js";
-import { writeAndCommitAll } from "./batch.js";
+import { writeAndCommitAll } from "./commit/batch.js";
 import { assertCanEdit, publishVersion } from "./commit/index.js";
+import { planInsertJsx } from "./commit/jsx-insert.js";
+import { applySetProps, applyVariantClasses } from "./commit/props.js";
 import type { DirectEditRuntime } from "./direct-edit-core.js";
 import { previewOriginOf } from "./direct-edit-insert-ops.js";
 import type { DirectionRef } from "./direct-edit-ops.js";
 import { DirectEditError } from "./engine/errors.js";
-import { planInsertJsx } from "./jsx-insert.js";
-import { applySetProps, applyVariantClasses } from "./props.js";
 
 type RefKeys = "directionId" | "projectId";
 

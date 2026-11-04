@@ -16,7 +16,7 @@ import {
   editedAtLabel,
   locText,
   siteRequest,
-} from "../direct-edit/edit-site.js";
+} from "../direct-edit/commit/edit-site.js";
 import { publishVersion } from "../direct-edit/index.js";
 import { callAction } from "./action-call.js";
 import { listWords } from "./activity-text.js";

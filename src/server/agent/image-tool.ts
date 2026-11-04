@@ -15,13 +15,13 @@ import {
   imageFromPath,
   imageFromUrl,
   type ImageBytes,
-} from "../direct-edit/image-source.js";
+} from "../direct-edit/commit/image-source.js";
 import {
   parseSetImage,
   planChanged,
   planSetImage,
   writeImagePlan,
-} from "../direct-edit/image.js";
+} from "../direct-edit/commit/image.js";
 import { describeElements } from "../mcp/element.js";
 import { refusal, writeProblem, type DirectToolDeps } from "./direct-tools.js";
 import { resolveSelectors } from "./kit-tools.js";

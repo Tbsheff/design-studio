@@ -4,8 +4,8 @@ import { z } from "zod";
 
 import { FIGMA_NODES_MAX_BYTES } from "../../shared/figma-nodes.js";
 import { JSX_INSERT_POSITIONS } from "../../shared/insert.js";
+import { planInsertJsx } from "../direct-edit/commit/jsx-insert.js";
 import { resolveSource, writeAtomic } from "../direct-edit/index.js";
-import { planInsertJsx } from "../direct-edit/jsx-insert.js";
 import { parseFigmaNodes } from "../figma/nodes.js";
 import { prepareFigmaImport } from "../figma/to-markup.js";
 import { refusal, writeProblem } from "./direct-tools.js";

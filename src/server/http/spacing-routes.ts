@@ -14,8 +14,8 @@ import type {
   SpacingSetResult,
 } from "../../shared/spacing.js";
 import { DirectEditError } from "../direct-edit/engine/errors.js";
+import { lengthToPx } from "../direct-edit/engine/tailwind/units.js";
 import type { DirectEditDeps } from "../direct-edit/index.js";
-import { lengthToPx } from "../direct-edit/tailwind/units.js";
 import type { SpacingScope } from "../spacing/commit.js";
 import { SpacingError } from "../spacing/errors.js";
 import { getSpacing } from "../spacing/get.js";

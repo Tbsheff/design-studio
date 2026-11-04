@@ -7,7 +7,7 @@ import {
   TEXT_STYLE_NAME,
   TEXT_STYLE_QUERY_MAX,
 } from "../../shared/text-styles.js";
-import type { WrittenFile } from "../direct-edit/batch.js";
+import type { WrittenFile } from "../direct-edit/commit/batch.js";
 import { writeAtomic } from "../direct-edit/index.js";
 import { describeElements } from "../mcp/element.js";
 import { planTextStyleApply } from "../text-styles/apply.js";

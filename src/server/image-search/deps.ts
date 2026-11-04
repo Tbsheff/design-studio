@@ -17,15 +17,15 @@ export {
   planChanged,
   planSetImage,
   writeImagePlan,
-} from "../direct-edit/image.js";
+} from "../direct-edit/commit/image.js";
 
-export type { ImagePlan } from "../direct-edit/image.js";
+export type { ImagePlan } from "../direct-edit/commit/image.js";
 
-export { imageFromUrl } from "../direct-edit/image-source.js";
+export { imageFromUrl } from "../direct-edit/commit/image-source.js";
 
-export type { ImageBytes } from "../direct-edit/image-source.js";
+export type { ImageBytes } from "../direct-edit/commit/image-source.js";
 
-export { savesSettled } from "../direct-edit/save-queue.js";
+export { savesSettled } from "../direct-edit/commit/save-queue.js";
 
 export { imageSearchEnv } from "../platform/config/index.js";
 

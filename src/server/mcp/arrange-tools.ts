@@ -14,8 +14,8 @@ import {
   ARRANGE_TARGETS_MAX,
   DEFAULT_ARRANGE_VIEWPORT,
   measureTargets,
-} from "../direct-edit/arrange.js";
-import { DirectEditError } from "../direct-edit/errors.js";
+} from "../direct-edit/commit/arrange.js";
+import { DirectEditError } from "../direct-edit/engine/errors.js";
 import { callAction } from "./action-call.js";
 import {
   EditError,

@@ -24,10 +24,10 @@ export {
   planChanged,
   planSetImage,
   writeImagePlan,
-} from "./image.js";
+} from "./commit/image.js";
 
-export type { ImageBytes } from "./image-source.js";
+export type { ImageBytes } from "./commit/image-source.js";
 
 export type { InsertScope } from "./components-ops/insert.js";
 
-export { savesSettled } from "./save-queue.js";
+export { savesSettled } from "./commit/save-queue.js";

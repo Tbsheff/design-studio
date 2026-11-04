@@ -9,10 +9,10 @@ import type {
   Version,
   VersionMeta,
 } from "../../../shared/contracts.js";
+import { domPatchOf } from "../../events/planned-feed.js";
 import { DirectEditError } from "../engine/errors.js";
 import { knownTokenVars } from "../engine/tokens.js";
 import { parseDirectEditBatch } from "../engine/validate.js";
-import { domPatchOf } from "../planned-feed.js";
 import type { TailwindTheme } from "../tailwind/theme.js";
 import { planDirectEdit } from "./edit-plan.js";
 import {

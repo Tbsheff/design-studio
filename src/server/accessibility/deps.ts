@@ -38,7 +38,7 @@ export type { CanvasFileFrame } from "../../shared/canvas-file.js";
 
 export type { AttrChanges } from "../direct-edit/commit/image-attrs.js";
 
-export type { WrittenFile } from "../direct-edit/batch.js";
+export type { WrittenFile } from "../direct-edit/commit/batch.js";
 
 export type { DirectEditDeps } from "../direct-edit/index.js";
 

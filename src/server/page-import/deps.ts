@@ -5,9 +5,9 @@ export {
   safeRequest,
 } from "../design-system/extract/safe-fetch.js";
 
-export { sniffImage } from "../direct-edit/image-source.js";
+export { sniffImage } from "../direct-edit/commit/image-source.js";
 
-export { tokenEntriesFor } from "../direct-edit/style-scan.js";
+export { tokenEntriesFor } from "../direct-edit/commit/style-scan.js";
 
 export { publishVersion, writeNewFile } from "../direct-edit/index.js";
 

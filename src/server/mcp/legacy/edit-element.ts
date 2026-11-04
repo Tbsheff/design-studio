@@ -8,8 +8,11 @@ import {
   chooseEditSite,
   siteRequest,
   textComesFromData,
-} from "../../direct-edit/edit-site.js";
-import type { EditSite, EditSiteScope } from "../../direct-edit/edit-site.js";
+} from "../../direct-edit/commit/edit-site.js";
+import type {
+  EditSite,
+  EditSiteScope,
+} from "../../direct-edit/commit/edit-site.js";
 import { callAction } from "../action-call.js";
 import { editSummary } from "../activity-text.js";
 import { EditError, loadTarget, refuseWhileRunning } from "../edit-guards.js";

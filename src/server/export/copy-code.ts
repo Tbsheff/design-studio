@@ -1,6 +1,6 @@
 import { SOURCE_LOC_ATTR } from "../../shared/contracts.js";
 import type { ExportFrame } from "../../shared/export.js";
-import { tailwindClassesFor } from "../direct-edit/tailwind/copy.js";
+import { tailwindClassesFor } from "../direct-edit/engine/tailwind/copy.js";
 import type { TailwindTheme } from "../direct-edit/tailwind/theme.js";
 import { BadRequestError } from "../store/errors.js";
 import type { PreviewService } from "../types.js";

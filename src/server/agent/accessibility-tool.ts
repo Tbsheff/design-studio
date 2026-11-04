@@ -19,7 +19,7 @@ import {
 import type { AccessibilityTarget } from "../accessibility/set.js";
 import type { BreakpointScope } from "../breakpoints/commit.js";
 import { readDesignSystemState } from "../design-system/state.js";
-import type { WrittenFile } from "../direct-edit/batch.js";
+import type { WrittenFile } from "../direct-edit/commit/batch.js";
 import { writeAtomic } from "../direct-edit/commit/edit-source.js";
 import { DirectEditError } from "../direct-edit/engine/errors.js";
 import { describeElements } from "../mcp/element.js";

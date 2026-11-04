@@ -15,7 +15,7 @@ import {
   DEFAULT_ARRANGE_VIEWPORT,
   measureTargets,
   planArrange,
-} from "../direct-edit/arrange.js";
+} from "../direct-edit/commit/arrange.js";
 import { writeAtomic } from "../direct-edit/index.js";
 import { withPagePath } from "../export/source.js";
 import {

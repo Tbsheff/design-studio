@@ -9,7 +9,7 @@ import type {
   InsertableComponent,
   InsertableList,
 } from "../../shared/insert.js";
-import { treeChangesSince, treeStamp } from "../direct-edit/change-feed.js";
+import { treeChangesSince, treeStamp } from "../events/source-change.js";
 import type { ExportKind } from "./import-plan.js";
 import { listFiles } from "./inventory.js";
 import { declaredComponents, parseModuleFile } from "./props-schema.js";

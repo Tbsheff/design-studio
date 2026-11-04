@@ -4,10 +4,10 @@ import type {
   Version,
   VersionMeta,
 } from "../../../shared/contracts.js";
+import { announcePlanned, withdrawPlanned } from "../../events/planned-feed.js";
+import { noteTreeWrite } from "../../events/source-change.js";
 import { isOutsideRequest } from "../../platform/call-origin/index.js";
-import { noteTreeWrite } from "../change-feed.js";
 import { DirectEditError } from "../engine/errors.js";
-import { announcePlanned, withdrawPlanned } from "../planned-feed.js";
 import type { DirectEditDeps } from "./edit-types.js";
 import { isPendingVersion, saveLater } from "./save-queue.js";
 

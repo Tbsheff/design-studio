@@ -1,6 +1,6 @@
-export { writeAndCommitAll } from "../direct-edit/batch.js";
+export { writeAndCommitAll } from "../direct-edit/commit/batch.js";
 
-export { elementClassInfo } from "../direct-edit/class-info.js";
+export { elementClassInfo } from "../direct-edit/commit/class-info.js";
 
 export {
   assertCanEdit,
@@ -16,7 +16,7 @@ export {
   MOTION_STAGGER_CHILDREN,
 } from "../../shared/motion.js";
 
-export type { WrittenFile } from "../direct-edit/batch.js";
+export type { WrittenFile } from "../direct-edit/commit/batch.js";
 
 export type { DirectEditDeps } from "../direct-edit/index.js";
 

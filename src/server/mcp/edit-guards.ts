@@ -6,7 +6,7 @@ import type { Direction, Project } from "../../shared/contracts.js";
 import type { FrameStateDeps } from "../canvas/app-flow/frame-state-service.js";
 import type { CanvasService } from "../canvas/service.js";
 import { warmKit } from "../components/props-service.js";
-import type { EditHistory } from "../direct-edit/history.js";
+import type { EditHistory } from "../direct-edit/commit/history.js";
 import type { EditRecorder } from "../direct-edit/index.js";
 import type { ExportDeps } from "../export/source.js";
 import { EditError } from "../page-probe/edit-error.js";

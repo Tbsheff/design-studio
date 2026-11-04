@@ -41,10 +41,10 @@ import {
   invalidateTokenSource,
   invalidateTokenSourceOnChange,
 } from "../design-system/token-preview.js";
-import { createEditHistory } from "../direct-edit/history.js";
-import type { EditHistory } from "../direct-edit/history.js";
-import { onPlannedEdit } from "../direct-edit/planned-feed.js";
-import { recordRunInHistory } from "../direct-edit/run-record.js";
+import { createEditHistory } from "../direct-edit/commit/history.js";
+import type { EditHistory } from "../direct-edit/commit/history.js";
+import { recordRunInHistory } from "../direct-edit/commit/run-record.js";
+import { onPlannedEdit } from "../events/planned-feed.js";
 import type { StudioRuntime } from "../main/runtime.js";
 import type { McpListenerRunnerApi } from "../mcp-life/index.js";
 import { resourcePath, resourcesDir } from "../resources.js";

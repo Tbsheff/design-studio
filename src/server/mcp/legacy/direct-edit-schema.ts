@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { STRUCTURE_OPS } from "../../../shared/contracts.js";
-import { EDIT_TARGETS } from "../../direct-edit/edit-site.js";
+import { EDIT_TARGETS } from "../../direct-edit/commit/edit-site.js";
 import {
   classes,
   directionId,

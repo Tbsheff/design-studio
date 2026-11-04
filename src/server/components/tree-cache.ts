@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-import { treeChangesSince, treeStamp } from "../direct-edit/change-feed.js";
+import { treeChangesSince, treeStamp } from "../events/source-change.js";
 
 const TTL_MS = 120_000;
 const MAX_ROOTS = 8;

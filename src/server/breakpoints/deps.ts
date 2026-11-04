@@ -1,6 +1,6 @@
-export { writeAndCommitAll } from "../direct-edit/batch.js";
+export { writeAndCommitAll } from "../direct-edit/commit/batch.js";
 
-export { elementClassInfo } from "../direct-edit/class-info.js";
+export { elementClassInfo } from "../direct-edit/commit/class-info.js";
 
 export { htmlVariantProps } from "../direct-edit/engine/html.js";
 
@@ -34,7 +34,7 @@ export {
 
 export { DIRECT_STYLE_PROPERTIES } from "../../shared/contracts.js";
 
-export type { WrittenFile } from "../direct-edit/batch.js";
+export type { WrittenFile } from "../direct-edit/commit/batch.js";
 
 export type { DirectEditDeps } from "../direct-edit/index.js";
 

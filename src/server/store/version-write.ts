@@ -6,12 +6,15 @@ import type {
   VersionMeta,
 } from "../../shared/contracts.js";
 import type { HunkRevertRequest, HunkRevertResult } from "../../shared/hunk.js";
+import type {
+  EditStepResult,
+  HistoryStep,
+} from "../direct-edit/commit/history.js";
 import {
   assertCanEdit,
   publishVersion,
 } from "../direct-edit/commit/publish.js";
-import type { EditStepResult, HistoryStep } from "../direct-edit/history.js";
-import { recordRunInHistory } from "../direct-edit/run-record.js";
+import { recordRunInHistory } from "../direct-edit/commit/run-record.js";
 import { BadRequestError, ConflictError } from "./errors.js";
 import { revertHunk } from "./version-hunk.js";
 import { parseVersionName } from "./version-names.js";

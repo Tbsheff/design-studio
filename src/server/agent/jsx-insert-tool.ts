@@ -5,8 +5,11 @@ import {
   JSX_INSERT_POSITIONS,
   JSX_SNIPPET_MAX,
 } from "../../shared/insert.js";
+import {
+  planClearText,
+  planInsertJsx,
+} from "../direct-edit/commit/jsx-insert.js";
 import { writeAtomic } from "../direct-edit/index.js";
-import { planClearText, planInsertJsx } from "../direct-edit/jsx-insert.js";
 import { refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";
 import { targetOf } from "./insert-tool.js";

@@ -7,8 +7,8 @@ import {
   VECTOR_PATH_MAX,
 } from "../../shared/vector.js";
 import type { VectorBox, VectorRequest } from "../../shared/vector.js";
+import { planVector } from "../direct-edit/commit/vector-ops.js";
 import { writeAtomic } from "../direct-edit/index.js";
-import { planVector } from "../direct-edit/vector-ops.js";
 import { describeElements } from "../mcp/element.js";
 import { refusal, writeProblem } from "./direct-tools.js";
 import type { DirectToolDeps } from "./direct-tools.js";

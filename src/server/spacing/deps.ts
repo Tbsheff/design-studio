@@ -1,6 +1,6 @@
-export { writeAndCommitAll } from "../direct-edit/batch.js";
+export { writeAndCommitAll } from "../direct-edit/commit/batch.js";
 
-export { elementClassInfo } from "../direct-edit/class-info.js";
+export { elementClassInfo } from "../direct-edit/commit/class-info.js";
 
 export {
   assertCanEdit,
@@ -11,11 +11,14 @@ export {
   themeForFile,
 } from "../direct-edit/index.js";
 
-export { tokenEntriesFor } from "../direct-edit/style-scan.js";
+export { tokenEntriesFor } from "../direct-edit/commit/style-scan.js";
 
-export { classify, parseClass } from "../direct-edit/tailwind/classes.js";
+export {
+  classify,
+  parseClass,
+} from "../direct-edit/engine/tailwind/classes.js";
 
-export { lengthToPx } from "../direct-edit/tailwind/units.js";
+export { lengthToPx } from "../direct-edit/engine/tailwind/units.js";
 
 export {
   BOX_SIDES,
@@ -25,7 +28,7 @@ export {
   SPACING_TOKEN,
 } from "../../shared/spacing.js";
 
-export type { WrittenFile } from "../direct-edit/batch.js";
+export type { WrittenFile } from "../direct-edit/commit/batch.js";
 
 export type { DirectEditDeps } from "../direct-edit/index.js";
 

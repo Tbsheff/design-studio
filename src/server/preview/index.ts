@@ -14,7 +14,7 @@ import { createAppProxy, type AppTarget } from "../app/proxy.js";
 import { sourcesShifted } from "../app/source-map.js";
 import { designSystemLinkProblem } from "../design-system/html-link.js";
 import { buildErrorMessage, syncDesignSystem } from "../design-system/sync.js";
-import { noteTreeChange, onSourceChange } from "../direct-edit/change-feed.js";
+import { noteTreeChange, onSourceChange } from "../events/source-change.js";
 import type {
   EventBus,
   PreviewService,

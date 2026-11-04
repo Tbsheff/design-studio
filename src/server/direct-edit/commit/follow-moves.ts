@@ -1,8 +1,11 @@
 import type { SourceLoc } from "../../../shared/contracts.js";
+import {
+  onSourceChange,
+  type SourceFileChange,
+} from "../../events/source-change.js";
 import { lineMapOf, type LineMap } from "../../mcp/line-map.js";
 import type { CommentStore } from "../../store/comments.js";
 import type { LayerLockStore } from "../../store/layer-locks.js";
-import { onSourceChange, type SourceFileChange } from "../change-feed.js";
 
 const LOCK_KEY = /^(.*?\|)(?:use:([^|]+)\|)?loc:(.+)(#\d+)$/;
 const LOC = /^(.+):(\d+):(\d+)$/;

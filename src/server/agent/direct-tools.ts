@@ -28,8 +28,6 @@ import {
   writeTokensText,
 } from "../design-system/update-tokens.js";
 import { planDirectEdit } from "../direct-edit/commit/edit-plan.js";
-import { writeAtomic } from "../direct-edit/commit/edit-source.js";
-import type { PlannedEdit } from "../direct-edit/commit/edit-types.js";
 import {
   chooseEditSite,
   EDIT_TARGETS,
@@ -37,16 +35,18 @@ import {
   siteRequest,
   textComesFromData,
   type EditSite,
-} from "../direct-edit/edit-site.js";
+} from "../direct-edit/commit/edit-site.js";
+import { writeAtomic } from "../direct-edit/commit/edit-source.js";
+import type { PlannedEdit } from "../direct-edit/commit/edit-types.js";
+import { planStructureEdit } from "../direct-edit/commit/structure-apply.js";
 import { DirectEditError } from "../direct-edit/engine/errors.js";
+import { knownTokenVars } from "../direct-edit/engine/tokens.js";
 import { parseDirectEditRequest } from "../direct-edit/engine/validate.js";
 import {
   announcePlanned,
   domPatchOf,
   withdrawPlanned,
-} from "../direct-edit/planned-feed.js";
-import { planStructureEdit } from "../direct-edit/structure-apply.js";
-import { knownTokenVars } from "../direct-edit/tokens.js";
+} from "../events/planned-feed.js";
 import { describeElements, textHintsOf } from "../mcp/element.js";
 import {
   isLayerRef,

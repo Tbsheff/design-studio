@@ -16,6 +16,7 @@ import type {
   VersionMeta,
 } from "../../../shared/contracts.js";
 import type { ComponentSchema, PropValue } from "../../../shared/props.js";
+import { planImport } from "../../components/import-plan.js";
 import {
   loadLibrary,
   type LibraryEntry,
@@ -29,7 +30,6 @@ import { elementAt } from "../../components/use-site.js";
 import { writeAndCommitAll } from "../commit/batch.js";
 import { resolveSource } from "../commit/edit-source.js";
 import type { DirectEditDeps, ResolvedSource } from "../commit/edit-types.js";
-import { planImport } from "../commit/imports.js";
 import { assertCanEdit, publishVersion } from "../commit/publish.js";
 import { DirectEditError } from "../engine/errors.js";
 import { leadingWhitespaceStart } from "../engine/splice.js";

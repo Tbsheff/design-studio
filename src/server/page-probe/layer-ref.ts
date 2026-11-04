@@ -1,8 +1,8 @@
 import { APP_SOURCE_PATH, DEV_CHROME_SELECTOR } from "../../shared/app.js";
 import { SOURCE_LOC_ATTR } from "../../shared/contracts.js";
 import { LAYER_REF, layerKey } from "../../shared/layer-ref.js";
-import { onSourceChange } from "../direct-edit/change-feed.js";
-import type { SourceChange } from "../direct-edit/change-feed.js";
+import { onSourceChange } from "../events/source-change.js";
+import type { SourceChange } from "../events/source-change.js";
 import type { PreviewService } from "../preview/index.js";
 import { onProbePage } from "../preview/probe-page.js";
 import { isGoneRef, refForKey, remapIds } from "./layer-ids.js";

@@ -11,7 +11,8 @@ import {
   type ElementScope,
   type ElementVariantInfo,
 } from "../../shared/element-variants.js";
-import { htmlElementSpan } from "../direct-edit/html.js";
+import { htmlElementSpan } from "../direct-edit/engine/html.js";
+import { jsxElementSpan } from "../direct-edit/engine/jsx.js";
 import {
   assertCanEdit,
   publishVersion,
@@ -19,7 +20,6 @@ import {
   writeAtomic,
   type DirectEditDeps,
 } from "../direct-edit/index.js";
-import { jsxElementSpan } from "../direct-edit/jsx.js";
 import { BadRequestError, ConflictError } from "../store/errors.js";
 import type { VersionStore } from "../types.js";
 import { elementOf, hash } from "./scope-check.js";

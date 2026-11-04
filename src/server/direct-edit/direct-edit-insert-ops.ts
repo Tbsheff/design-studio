@@ -11,12 +11,12 @@ import {
 import type { PreviewResult, PreviewTarget } from "../components/index.js";
 import { BadRequestError, NotFoundError } from "../store/index.js";
 import type { PreviewService } from "../types.js";
+import { applySetImage } from "./commit/image.js";
+import { applyClearText, applyInsertJsx } from "./commit/jsx-insert.js";
+import { applyVector } from "./commit/vector-ops.js";
 import type { DirectEditRuntime } from "./direct-edit-core.js";
 import type { DirectionRef, EditBody } from "./direct-edit-ops.js";
 import { DirectEditError } from "./engine/errors.js";
-import { applySetImage } from "./image.js";
-import { applyClearText, applyInsertJsx } from "./jsx-insert.js";
-import { applyVector } from "./vector-ops.js";
 
 const NAME_RE = /^[A-Z][A-Za-z0-9_$]{0,63}$/u;
 

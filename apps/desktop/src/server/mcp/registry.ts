@@ -15,7 +15,7 @@ import type { StudioRuntime } from "../main/runtime.js";
 import { toLegacyPrincipal } from "../store/principal.js";
 import type { Principal } from "../store/principal.js";
 import type { ApprovalQueue } from "./approvals.js";
-import { toLegacyArgs } from "./legacy-args.js";
+import { toLegacyArgs, toLegacySchema } from "./legacy-args.js";
 import { toToolResult } from "./tool-result.js";
 import type { ActionExit, TextResult } from "./tool-result.js";
 import type { ToolDef } from "./tool-types.js";
@@ -69,15 +69,25 @@ const toInputSchema = (action: AnyAction): JsonSchema.JsonSchema => {
   return { ...base, $defs: jsonSchemaDocument.definitions };
 };
 
+const LEGACY_DESTRUCTIVE: ReadonlySet<string> = new Set([
+  "remove_link",
+  "restore_version",
+]);
+
 const toToolDef = (action: AnyAction, toolName: string): ToolDef => ({
   annotations: {
-    destructiveHint: action.access === "destructive",
+    destructiveHint:
+      action.access === "destructive" || LEGACY_DESTRUCTIVE.has(toolName),
     idempotentHint: action.access === "read",
     openWorldHint: false,
     readOnlyHint: action.access === "read",
   },
   description: action.description,
-  inputSchema: toInputSchema(action),
+  inputSchema: toLegacySchema(
+    toolName,
+    action.http.path.includes(":directionId"),
+    toInputSchema(action)
+  ),
   name: toolName,
   title: action.id,
 });

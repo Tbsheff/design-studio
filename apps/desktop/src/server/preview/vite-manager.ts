@@ -30,6 +30,8 @@ const TSX_LOADER = path.join(
   "loader.mjs"
 );
 
+const TSX_TSCONFIG = path.join(WORKSPACE_ROOT, "tsconfig.base.json");
+
 export interface ViteTarget {
   key: string;
   root: string;
@@ -343,7 +345,7 @@ export class ViteManager {
 
     const child = fork(RUNNER_FILE, [], {
       cwd: path.resolve(target.root),
-      env: childEnv(home),
+      env: { ...childEnv(home), TSX_TSCONFIG_PATH: TSX_TSCONFIG },
       execArgv: runnerExecArgv(),
       stdio: ["ignore", "inherit", "inherit", "ipc"],
       serialization: "json",
@@ -358,9 +360,10 @@ export class ViteManager {
     };
 
     try {
-      const ready = waitForReady(child);
-      child.send(init);
-      await ready;
+      await Promise.all([
+        waitForReady(child),
+        Promise.resolve().then(() => child.send(init)),
+      ]);
     } catch (error) {
       await stopChild(child);
       rmSync(home, { recursive: true, force: true });

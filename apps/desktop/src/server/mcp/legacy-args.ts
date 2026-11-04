@@ -1,3 +1,6 @@
+import { Option, Schema } from "effect";
+import type { JsonSchema } from "effect";
+
 import type { WireArgs } from "../handlers/_core/run-action.js";
 
 type LegacyArgs = WireArgs;
@@ -46,4 +49,120 @@ const toLegacyArgs = (tool: LegacyTool, args: LegacyArgs): LegacyArgs => ({
   ...toKnownArgs(tool, toRenamedArgs(tool.name, args)),
 });
 
-export { toLegacyArgs };
+const DIRECTION_PROPERTY = {
+  description: "Direction id. Leave out for the main direction.",
+  pattern: "^[A-Za-z0-9_-]{1,64}$",
+  type: "string",
+} satisfies Schema.Json;
+
+const DIRECTION_TOOLS: ReadonlySet<string> = new Set([
+  "add_flow",
+  "add_link",
+  "keep_links",
+  "list_links",
+  "remove_link",
+  "set_start_frame",
+]);
+
+const LINK_IDS_PROPERTY = {
+  description:
+    "Implicit link ids from list_links (implicit: true). Omit to keep all.",
+  items: { pattern: "^i[0-9a-z]{1,12}$", type: "string" },
+  maxItems: 50,
+  type: "array",
+} satisfies Schema.Json;
+
+const FORGET_PROPERTY = {
+  description: "Forget the cookies kept from a real sign-in.",
+  type: "boolean",
+} satisfies Schema.Json;
+
+const ALIAS_PROPERTIES = {
+  forgetCookies: FORGET_PROPERTY,
+  linkIds: LINK_IDS_PROPERTY,
+} satisfies Record<string, Schema.Json>;
+
+const toAliasProperty = (alias: string): Schema.Json =>
+  Object.entries(ALIAS_PROPERTIES).find(([key]) => key === alias)?.[1] ??
+  FORGET_PROPERTY;
+
+const WAIT_TOOLS: ReadonlySet<string> = new Set([
+  "redo",
+  "revert_hunk",
+  "undo",
+]);
+
+const WAIT_PROPERTY = {
+  description:
+    'Leave out to get the result as soon as the file is written and saved. "render": also wait until the dev server has rebuilt the page.',
+  enum: ["render"],
+  type: "string",
+} satisfies Schema.Json;
+
+const InputFieldsSchema = Schema.Struct({
+  properties: Schema.Record(Schema.String, Schema.Json),
+  required: Schema.Array(Schema.String),
+});
+
+const readInputFields = Schema.decodeUnknownOption(InputFieldsSchema);
+
+const toOptionalKeys = (name: string, takesDirection: boolean): string[] => {
+  const keys = Object.keys(toDefaults(name));
+
+  if (takesDirection) {
+    return [...keys, "directionId"];
+  }
+
+  return keys;
+};
+
+const toExtraProperties = (
+  name: string,
+  takesDirection: boolean
+): Readonly<Record<string, Schema.Json>> => {
+  const aliases = Object.keys(toAliases(name)).map(
+    (alias) => [alias, toAliasProperty(alias)] as const
+  );
+
+  const direction: (readonly [string, Schema.Json])[] = [];
+
+  if (takesDirection || DIRECTION_TOOLS.has(name)) {
+    direction.push(["directionId", DIRECTION_PROPERTY]);
+  }
+
+  const wait: (readonly [string, Schema.Json])[] = [];
+
+  if (WAIT_TOOLS.has(name)) {
+    wait.push(["wait", WAIT_PROPERTY]);
+  }
+
+  return Object.fromEntries([...direction, ...aliases, ...wait]);
+};
+
+const toLegacySchema = (
+  name: string,
+  takesDirection: boolean,
+  schema: JsonSchema.JsonSchema
+): JsonSchema.JsonSchema => {
+  const fields = readInputFields({
+    properties: schema.properties ?? {},
+    required: schema.required ?? [],
+  });
+
+  if (Option.isNone(fields)) {
+    return schema;
+  }
+
+  const optional = new Set(toOptionalKeys(name, takesDirection));
+
+  return {
+    ...schema,
+    properties: {
+      ...toExtraProperties(name, takesDirection),
+      ...fields.value.properties,
+    },
+    required: fields.value.required.filter((key) => !optional.has(key)),
+  };
+};
+
+export { toLegacyArgs, toLegacySchema };

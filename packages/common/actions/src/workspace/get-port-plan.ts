@@ -26,13 +26,12 @@ const PageFieldSchema = PathTextSchema.annotate({
     'HTML page in the prototype project, for example "index.html". Leave out for index.html. With flow or paths it is the first page of the flow, which gets the base route.',
 });
 
-const PathsFieldSchema = Schema.Union([
-  Schema.Array(PathTextSchema).check(Schema.isMaxLength(PORT_FLOW_MAX_PAGES)),
-  PathTextSchema,
-]).annotate({
-  description:
-    'Port these pages of the prototype as one flow, for example ["index.html", "time.html"]. They come back in flow order.',
-});
+const PathsFieldSchema = Schema.Array(PathTextSchema)
+  .check(Schema.isMaxLength(PORT_FLOW_MAX_PAGES))
+  .annotate({
+    description:
+      'Port these pages of the prototype as one flow, for example ["index.html", "time.html"]. They come back in flow order.',
+  });
 
 const FlowFieldSchema = Schema.Boolean.annotate({
   description:

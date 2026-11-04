@@ -14,6 +14,7 @@ import { ImageLive } from "./image/live.js";
 import { OrgScopeLive } from "./org-scope/live.js";
 import { PackLive } from "./pack/live.js";
 import { ProjectLive } from "./project/live.js";
+import { PropLive } from "./prop/live.js";
 import { PublishLive } from "./publish/live.js";
 import { RunLive } from "./run/live.js";
 import { ScenarioLive } from "./scenario/live.js";
@@ -42,6 +43,7 @@ const ALL_LIVE = {
   orgScope: OrgScopeLive,
   pack: PackLive,
   project: ProjectLive,
+  prop: PropLive,
   publish: PublishLive,
   run: RunLive,
   scenario: ScenarioLive,

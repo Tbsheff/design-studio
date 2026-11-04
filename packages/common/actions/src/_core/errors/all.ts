@@ -6,6 +6,7 @@ import type { DirectEditError } from "../../direct-edit/errors/index.js";
 import type { GalleryError } from "../../gallery/errors/index.js";
 import type { ImageError } from "../../image/errors/index.js";
 import type { PackError } from "../../pack/errors/index.js";
+import type { PropError } from "../../prop/errors/index.js";
 import type { PublishError } from "../../publish/errors/index.js";
 import type { ScenarioError } from "../../scenario/errors/index.js";
 import type { TokenError } from "../../token/errors/index.js";
@@ -21,6 +22,7 @@ type StudioError =
   | GalleryError
   | ImageError
   | PackError
+  | PropError
   | PublishError
   | ScenarioError
   | TokenError

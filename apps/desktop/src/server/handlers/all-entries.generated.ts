@@ -14,6 +14,7 @@ import { ImageEntries } from "./image/handlers.js";
 import { OrgScopeEntries } from "./org-scope/handlers.js";
 import { PackEntries } from "./pack/handlers.js";
 import { ProjectEntries } from "./project/handlers.js";
+import { PropEntries } from "./prop/handlers.js";
 import { PublishEntries } from "./publish/handlers.js";
 import { RunEntries } from "./run/handlers.js";
 import { ScenarioEntries } from "./scenario/handlers.js";
@@ -42,6 +43,7 @@ const ALL_ENTRIES = {
   orgScope: OrgScopeEntries,
   pack: PackEntries,
   project: ProjectEntries,
+  prop: PropEntries,
   publish: PublishEntries,
   run: RunEntries,
   scenario: ScenarioEntries,

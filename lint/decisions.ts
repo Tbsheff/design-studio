@@ -488,6 +488,23 @@ export const decisionOverrides: OxlintOverride[] = [
     rules: { "import/no-relative-parent-imports": "off" },
   },
   {
+    files: [
+      "packages/common/actions/src/prop/{create,delete,list,rename,schema}.ts",
+      "packages/common/actions/src/prop/errors/status.ts",
+      "apps/desktop/src/server/handlers/prop/{create,delete,handlers,list,live,rename}.ts",
+      "apps/desktop/src/server/components/prop/deps.ts",
+      "apps/desktop/src/ui/features/prop/deps.ts",
+    ],
+    rules: { "import/no-relative-parent-imports": "off" },
+  },
+  {
+    files: [
+      "apps/desktop/src/server/components/prop/engine/{ast,change,component,create,edits,refs,sites,type-host,types}.ts",
+      "apps/desktop/src/server/components/prop/prop-sites.ts",
+    ],
+    rules: { "sonarjs/no-implicit-dependencies": "off" },
+  },
+  {
     files: ["apps/desktop/src/server/gallery/engine/page.ts"],
     rules: { "github/unescaped-html-literal": "off" },
   },

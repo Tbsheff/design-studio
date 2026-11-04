@@ -12,7 +12,7 @@ interface GeneratedFile {
 }
 
 const ROOT = path.join(import.meta.dirname, "..");
-const ACTIONS = path.join(ROOT, "src/shared/actions");
+const ACTIONS = path.join(ROOT, "../../packages/common/actions/src");
 const HANDLERS = path.join(ROOT, "src/server/handlers");
 const HEADER = "// @generated";
 const CORE = "_core";

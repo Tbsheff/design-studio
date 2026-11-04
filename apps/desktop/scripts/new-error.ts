@@ -45,16 +45,16 @@ const STATUSES: ReadonlySet<string> = new Set([
 ]);
 
 const errorsDir = (domain: string): string =>
-  `src/shared/actions/${domain}/errors`;
+  `../../packages/common/actions/src/${domain}/errors`;
 
 const checkOwner = async (domain: string): Promise<void> => {
   if (domain !== CORE) {
     checkKebab("domain", domain);
   }
 
-  if (!(await exists(path.join(ROOT, "src/shared/actions", domain)))) {
+  if (!(await exists(path.join(ROOT, "../../packages/common/actions/src", domain)))) {
     fail(
-      `The domain ${domain} has no folder src/shared/actions/${domain}.`,
+      `The domain ${domain} has no folder ../../packages/common/actions/src/${domain}.`,
       `pnpm run new:domain ${domain}`
     );
   }

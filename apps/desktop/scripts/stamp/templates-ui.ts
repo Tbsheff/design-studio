@@ -12,7 +12,7 @@ interface CopyEntry {
   readonly text: string;
 }
 
-const SHARED = "../../../shared/actions";
+const SHARED = "@design-studio/actions";
 
 const text = (...rows: string[]): string => `${rows.join("\n")}\n`;
 

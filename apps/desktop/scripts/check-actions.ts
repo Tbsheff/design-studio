@@ -35,7 +35,7 @@ interface Entry extends Pick<Hit, "file" | "rule"> {
 
 const run = promisify(execFile);
 const BASELINE = new URL("check-actions-baseline.json", import.meta.url);
-const ROOTS = ["src/server", "src/shared/actions", "src/ui", "apps/api"];
+const ROOTS = ["src/server", "../../packages/common/actions/src", "src/ui", "apps/api"];
 const TEST_FILE = /\.test\.tsx?$/u;
 const CODE_FILE = /\.(?:ts|tsx|mts|cts)$/u;
 const COMMENT_LINE = /^\s*(?:\/\/|\/\*|\*).*$/u;
@@ -50,7 +50,7 @@ const EFFECT_FOLDERS = [
   ..."platform events run-log project-source page-probe handlers ship"
     .split(" ")
     .map((dir) => `src/server/${dir}/**`),
-  "src/shared/actions/**",
+  "../../packages/common/actions/src/**",
   "apps/api/**",
 ];
 
@@ -168,7 +168,7 @@ const TEXT = {
     what: "a status field in an error class is banned",
   },
   wire: {
-    fix: "build the error body with toWire from src/shared/actions/_core/wire.ts",
+    fix: "build the error body with toWire from ../../packages/common/actions/src/_core/wire.ts",
     id: "R6",
     what: "ctx.json with an _tag or error key is banned",
   },

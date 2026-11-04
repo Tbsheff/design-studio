@@ -80,7 +80,7 @@ const handlersFile = async (ctx: string, tails: string[]): Promise<string> => {
   );
 
   return lines(
-    `import type { ${pascal(ctx)}Actions } from "../../../shared/actions/${ctx}/index.js";`,
+    `import type { ${pascal(ctx)}Actions } from "@design-studio/actions/${ctx}/index";`,
     `import type { Entries } from "../_core/handler.js";`,
     ...tails.map((tail, index) =>
       entryImport(ctx, tail, Boolean(previews[index]))
@@ -215,7 +215,7 @@ const pairErrors = (scan: ContextScan): string[] => [
   ...missingFrom(
     scan.actions,
     scan.handlers,
-    `src/shared/actions/${scan.domain}`
+    `../../packages/common/actions/src/${scan.domain}`
   ),
   ...missingFrom(
     scan.handlers,
@@ -261,7 +261,7 @@ const actionExportError = async (
   ctx: string,
   tail: string
 ): Promise<string[]> => {
-  const file = `src/shared/actions/${ctx}/${tail}.ts`;
+  const file = `../../packages/common/actions/src/${ctx}/${tail}.ts`;
   const text = await readOrEmpty(path.join(ROOT, file));
   const name = actionConst(ctx, tail);
   const found = exportNames(text);

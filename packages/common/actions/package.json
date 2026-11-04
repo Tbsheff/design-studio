@@ -1,0 +1,22 @@
+{
+  "name": "@design-studio/actions",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Action definitions, schemas, ids and errors shared by the studio server, UI and cloud API.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./all-actions": "./src/all-actions.generated.ts",
+    "./errors": "./src/_core/errors/all.ts",
+    "./*/routes": "./src/*/routes.ts",
+    "./*.js": "./src/*.ts",
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "effect": "4.1.1"
+  }
+}

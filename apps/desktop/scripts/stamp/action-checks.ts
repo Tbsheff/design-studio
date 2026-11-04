@@ -174,7 +174,7 @@ const checkNeeds = async (
 
   if (!permissions.all.has(needs)) {
     fail(
-      `The permission "${needs}" is not in src/shared/actions/_core/permissions.ts.`,
+      `The permission "${needs}" is not in ../../packages/common/actions/src/_core/permissions.ts.`,
       "use a member of PERMISSIONS"
     );
   }

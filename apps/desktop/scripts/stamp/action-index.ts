@@ -18,7 +18,7 @@ interface ActionIndex {
 
 const STAMP_ROOT = path.join(import.meta.dirname, "..", "..");
 
-const ACTION_ROOT = path.join(STAMP_ROOT, "src/shared/actions");
+const ACTION_ROOT = path.join(STAMP_ROOT, "../../packages/common/actions/src");
 
 const SNAPSHOTS = path.join(STAMP_ROOT, "artifacts/mcp-snapshots");
 

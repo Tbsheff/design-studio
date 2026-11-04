@@ -16,5 +16,6 @@
       "effect/*": ["../../node_modules/effect/*"]
     }
   },
-  "include": ["src", "../../src/shared/actions/_core"]
+  "include": ["src"],
+  "references": [{ "path": "../../packages/common/actions/tsconfig.json" }]
 }

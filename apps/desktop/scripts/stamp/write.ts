@@ -38,7 +38,7 @@ interface StampResult {
 const DECISIONS = path.join(ROOT, "lint/decisions.ts");
 const OXLINT = path.join(ROOT, "node_modules/.bin/oxlint");
 const OXFMT = path.join(ROOT, "node_modules/.bin/oxfmt");
-const NEEDED_GLOBS = ["src/shared/actions/**", "src/server/**"];
+const NEEDED_GLOBS = ["../../packages/common/actions/src/**", "src/server/**"];
 
 const OVERRIDE_BLOCK =
   /\{\s*files:\s*\[(?<files>[^\]]*)\],\s*rules:\s*\{(?<rules>[^}]*)\}/gu;
@@ -195,7 +195,7 @@ const guardClean = async (): Promise<void> => {
 
   if (!turnsOffThrowNewError(decisions)) {
     fail(
-      "The clean step does not run: lint/decisions.ts does not turn off unicorn/throw-new-error for src/shared/actions/** and src/server/**. Its autofix breaks every TaggedError class.",
+      "The clean step does not run: lint/decisions.ts does not turn off unicorn/throw-new-error for ../../packages/common/actions/src/** and src/server/**. Its autofix breaks every TaggedError class.",
       "add that override in the merge step, then run the stamp again"
     );
   }

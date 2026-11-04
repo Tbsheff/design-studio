@@ -66,7 +66,7 @@ interface ErrorSpec {
   readonly fields: readonly Field[];
 }
 
-const SHARED = "../../../shared/actions";
+const SHARED = "@design-studio/actions";
 
 const ID_SCHEMA = /\b(?<name>[A-Z]\w*IdSchema)\b/gu;
 

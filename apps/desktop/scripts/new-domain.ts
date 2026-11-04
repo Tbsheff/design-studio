@@ -22,7 +22,7 @@ const SPEC: ArgsSpec = {
   positionals: ["domain"],
 };
 
-const actionsDir = (domain: string): string => `src/shared/actions/${domain}`;
+const actionsDir = (domain: string): string => `../../packages/common/actions/src/${domain}`;
 
 const handlersDir = (domain: string): string => `src/server/handlers/${domain}`;
 

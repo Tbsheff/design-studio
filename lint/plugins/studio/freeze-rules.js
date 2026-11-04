@@ -14,7 +14,10 @@ const FROZEN_LISTS = new Set([
   "FROZEN_EXEMPTIONS",
   "LEGACY_OVERRIDES",
   "SCOPE_EXEMPTIONS",
+  "SHIM_FILES",
   "UI_CROSS_FEATURE_FILES",
+  "WARN_GLOBS",
+  "ZOD_BRIDGE_FILES",
 ]);
 
 const QUOTED = /"(?<value>[^"\n]+)"/gu;

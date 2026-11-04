@@ -337,6 +337,8 @@ const noServerScopeParam = rule((context) => ({
   },
 }));
 
+const SUB_INDEX = /^src\/server\/[a-z-]+\/(?:[a-z-]+\/)?index\.js$/u;
+
 const CORE_AREAS = new Set(["preview", "store"]);
 
 const SERVER_ROOT = /^src\/server\/(?<area>[a-z0-9-]+)\//u;
@@ -351,7 +353,7 @@ const deepTargetOf = (context, source) => {
   const target = relativeOf(path.resolve(path.dirname(context.filename), source));
   const area = areaOf(target);
 
-  if (area === null || !CORE_AREAS.has(area) || target === `src/server/${area}/index.js`) {
+  if (area === null || !CORE_AREAS.has(area) || SUB_INDEX.test(target)) {
     return null;
   }
 

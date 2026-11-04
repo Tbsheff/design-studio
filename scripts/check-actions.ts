@@ -114,7 +114,7 @@ const LINE_RULES: LineRule[] = [
       RUN_ACTION,
       MCP_REGISTRY,
       AGENT_REGISTRY,
-      "src/server/{agent-tools/sdk-shape,platform/local-file/index}.ts",
+      "src/server/{agent-tools/sdk-shape,platform/decode/index,platform/local-file/index}.ts",
     ],
     fix: "call the action through src/server/handlers/_core/run-action.ts",
     id: "W7",

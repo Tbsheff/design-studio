@@ -74,9 +74,9 @@ import {
   descriptionToolName,
   listPage,
 } from "./studio/spec-shape-rules.js";
+import { reachRules } from "./studio/reach-rules.js";
 import { reviewRules } from "./studio/review-rules.js";
 import { awaitWrite, noAppImport, noDomQuery } from "./studio/surface-rules.js";
-import { noOptionalNull } from "./studio/type-rules.js";
 import {
   noCacheTtl,
   noDesktopGlobal,
@@ -98,6 +98,7 @@ import {
 const studio = {
   meta: { name: "studio" },
   rules: {
+    ...reachRules,
     ...reviewRules,
     "action-domain-name": actionDomainName,
     "action-domain-object": actionDomainObject,
@@ -146,7 +147,6 @@ const studio = {
     "no-local-http-status": noLocalHttpStatus,
     "no-new-runtime-slot": noNewRuntimeSlot,
     "no-open-tag": noOpenTag,
-    "no-optional-null": noOptionalNull,
     "no-org-id-param": noOrgIdParam,
     "no-output-guess": noOutputGuess,
     "no-plain-error": noPlainError,

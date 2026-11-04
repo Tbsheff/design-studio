@@ -405,12 +405,8 @@ export const decisionOverrides: OxlintOverride[] = [
     rules: { "import/no-relative-parent-imports": "off" },
   },
   {
-    files: ["src/server/components/index.ts"],
-    rules: { "import/no-relative-parent-imports": "off" },
-  },
-  {
     files: ["src/server/agent/canvas-tool-fields.ts"],
-    rules: { "id-length": "off", "import/no-relative-parent-imports": "off" },
+    rules: { "import/no-relative-parent-imports": "off" },
   },
   {
     files: ["src/server/agent/critic-reply.ts"],
@@ -418,21 +414,20 @@ export const decisionOverrides: OxlintOverride[] = [
   },
   {
     files: [
-      "src/server/platform/tool-fields/accessibility.ts",
-      "src/server/platform/tool-fields/breakpoints.ts",
-      "src/server/platform/tool-fields/image-search.ts",
-      "src/server/platform/tool-fields/page-import.ts",
-      "src/server/platform/tool-fields/stacking.ts",
-      "src/server/platform/tool-fields/state-styles.ts",
-      "src/server/platform/tool-fields/text-search.ts",
-      "src/server/platform/json-file/index.ts",
+      "src/server/agent-tools/tool-input.ts",
+      "src/server/direct-edit/commit/deps.ts",
+      "src/server/preview/page-capture/index.ts",
+      "src/server/share/frames.ts",
     ],
+    rules: { "import/no-relative-parent-imports": "off" },
+  },
+  {
+    files: ["src/server/platform/json-file/index.ts"],
     rules: { "import/no-relative-parent-imports": "off" },
   },
   {
     files: [
       "src/server/store/data-lock.test.ts",
-      "src/server/store/index.ts",
       "src/server/store/version-fast.ts",
     ],
     rules: { "import/no-relative-parent-imports": "off" },

@@ -113,6 +113,25 @@ const TSCONFIG_OWNER = ["scripts/tsconfig-projects.ts"];
 
 const NEW_VERB_FILES = ["src/server/**/*.ts", "scripts/**/*.ts"];
 
+const AGENT_TOOL_FILES = "src/server/agent/*-{tool,tools,tool-fields}.ts";
+
+const LOWER_AREA_FILES = [
+  "src/server/{canvas,comments,components,design-system,direct-edit}/**/*.ts",
+  "src/server/{events,export,layers,page-probe,review,share,store}/**/*.ts",
+];
+
+const PORT_FILES = [
+  AGENT_TOOL_FILES,
+  "src/server/agent-tools/*.ts",
+  "src/server/{icons,image-search,text-styles}/*.ts",
+];
+
+const DECODE_OWNER_FILES = [
+  "src/server/agent/{clarify,critic-reply}.ts",
+  AGENT_TOOL_FILES,
+  "src/server/{icons,image-search,text-styles}/*.ts",
+];
+
 const LINTED_FILES = ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.mjs", "**/*.cjs"];
 
 const studioReview: OxlintOverride[] = [
@@ -146,6 +165,7 @@ const studioReview: OxlintOverride[] = [
       "oxc/no-map-spread": "off",
       "sonarjs/max-lines": "off",
       "studio/day-one-frozen": "error",
+      "studio/day-one-pairs": "error",
     },
   },
   {
@@ -245,7 +265,13 @@ const studioReview: OxlintOverride[] = [
     },
   },
   {
-    files: ["lint/plugins/studio/frozen.js", "lint/day-one.ts"],
+    files: [
+      "lint/plugins/studio/frozen.js",
+      "lint/plugins/studio/frozen-port.js",
+      "lint/day-one.ts",
+      "lint/boundaries.ts",
+      "lint/server-order.ts",
+    ],
     rules: { "studio/frozen-pin": "error" },
   },
   {
@@ -415,6 +441,57 @@ const studioReview: OxlintOverride[] = [
   { files: STATE_FILES, rules: { "studio/no-module-box": "error" } },
   { files: SERVER_FILES, rules: { "studio/no-boot-file-read": "error" } },
   { files: ["e2e/**/*.ts"], rules: { "studio/no-soft-expect": "error" } },
+  {
+    files: APP_SOURCE_FILES,
+    rules: { "studio/import-name-exported": "error" },
+  },
+  { files: LINTED_FILES, rules: { "studio/typecheck-clean": "error" } },
+  {
+    files: ["lint/plugins/studio/freeze-rules.js"],
+    rules: { "studio/frozen-list-live": "error" },
+  },
+  {
+    excludeFiles: SERVER_TESTS,
+    files: SERVER_FILES,
+    rules: {
+      "studio/area-target-index": "error",
+      "studio/no-zod-bridge": "error",
+    },
+  },
+  {
+    excludeFiles: SERVER_TESTS,
+    files: [...SERVER_FILES, ...GUARD_UI_FILES],
+    rules: { "studio/no-export-only-file": "error" },
+  },
+  {
+    excludeFiles: SERVER_TESTS,
+    files: LOWER_AREA_FILES,
+    rules: { "studio/no-preview-barrel": "error" },
+  },
+  {
+    excludeFiles: SERVER_TESTS,
+    files: SERVER_FILES,
+    rules: { "studio/no-unbound-name": "error" },
+  },
+  {
+    excludeFiles: SERVER_TESTS,
+    files: [AGENT_TOOL_FILES],
+    rules: { "studio/no-erased-sdk-fields": "error" },
+  },
+  {
+    excludeFiles: SERVER_TESTS,
+    files: DECODE_OWNER_FILES,
+    rules: { "studio/decode-owner": "error" },
+  },
+  {
+    excludeFiles: SERVER_TESTS,
+    files: PORT_FILES,
+    rules: {
+      "studio/field-builder-verb": "error",
+      "studio/no-banned-type-word": "error",
+      "studio/no-loose-tool-type": "error",
+    },
+  },
 ];
 
 export { studioReview };

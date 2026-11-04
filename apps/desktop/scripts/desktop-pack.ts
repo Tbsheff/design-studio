@@ -22,7 +22,7 @@ async function main(): Promise<void> {
   );
 
   const result = spawnSync(
-    path.join(ROOT, "node_modules", ".bin", "electron-builder"),
+    path.join(ROOT, "..", "..", "node_modules", ".bin", "electron-builder"),
     toBuilderArgs(options),
     { cwd: ROOT, env, stdio: "inherit" }
   );

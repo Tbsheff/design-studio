@@ -12,9 +12,10 @@ export interface AppLayout {
 
 export function devLayout(ownDir: string): AppLayout {
   const repoRoot = path.resolve(ownDir, "..", "..");
+  const workspaceRoot = path.resolve(repoRoot, "..", "..");
 
   const loader = path.join(
-    repoRoot,
+    workspaceRoot,
     "node_modules",
     "tsx",
     "dist",
@@ -22,7 +23,7 @@ export function devLayout(ownDir: string): AppLayout {
   );
 
   return {
-    modulesDir: path.join(repoRoot, "node_modules"),
+    modulesDir: path.join(workspaceRoot, "node_modules"),
     ownDir,
     packaged: false,
     resourcesDir: null,

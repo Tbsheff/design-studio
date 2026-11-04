@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import { toTsconfigProjects } from "./tsconfig-projects.ts";
 
 const TSRS = fileURLToPath(
-  new URL("../node_modules/.bin/tsrs", import.meta.url)
+  new URL("../../../node_modules/.bin/tsrs", import.meta.url)
 );
 
 const isProjectClean = async (project: string): Promise<boolean> => {

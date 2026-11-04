@@ -20,6 +20,7 @@ import { linkEsbuildBinary, pruneModules } from "./prune.js";
 import type { PruneStats } from "./prune.js";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const WORKSPACE_ROOT = path.resolve(ROOT, "..", "..");
 const STAGE = path.join(ROOT, "build", "desktop");
 const UI_MARKER = path.join(ROOT, "dist", "ui", "index.html");
 const UI_SOURCES = ["src/ui", "src/shared", "index.html", "vite.ui.config.ts"];
@@ -213,7 +214,7 @@ function resolvePackageDir(name: string, fromDir: string): string | null {
   for (;;) {
     const candidate = path.join(dir, "node_modules", name);
     if (existsSync(path.join(candidate, "package.json"))) return candidate;
-    if (dir === ROOT || path.dirname(dir) === dir) return null;
+    if (dir === WORKSPACE_ROOT || path.dirname(dir) === dir) return null;
     dir = path.dirname(dir);
   }
 }
@@ -298,7 +299,7 @@ function copyWebsiteReader(serverDir: string, modulesRoot: string): number {
 }
 
 function copyServerModules(serverDir: string, metafiles: Metafile[]): number {
-  const modulesRoot = path.join(ROOT, "node_modules");
+  const modulesRoot = path.join(WORKSPACE_ROOT, "node_modules");
   const dirs = dependencyClosure(importedPackages(metafiles));
   for (const dir of dirs)
     copyPackage(
@@ -309,7 +310,7 @@ function copyServerModules(serverDir: string, metafiles: Metafile[]): number {
 }
 
 function copySlimGit(target: string): void {
-  const source = path.join(ROOT, "node_modules", "dugite", "git");
+  const source = path.join(WORKSPACE_ROOT, "node_modules", "dugite", "git");
   for (const file of SLIM_GIT_FILES)
     cpSync(path.join(source, file), path.join(target, file), {
       recursive: true,
@@ -367,7 +368,7 @@ function copyStatic(resources: string): void {
     { recursive: true }
   );
   cpSync(
-    path.join(ROOT, "node_modules", "axe-core", "axe.min.js"),
+    path.join(WORKSPACE_ROOT, "node_modules", "axe-core", "axe.min.js"),
     path.join(resources, "axe.min.js")
   );
 }
@@ -403,7 +404,7 @@ function describePrune(stats: PruneStats[]): string {
 }
 
 async function stagePublishWorker(serverDir: string): Promise<void> {
-  const source = path.join(ROOT, "apps", "publish");
+  const source = path.join(WORKSPACE_ROOT, "apps", "publish");
   const target = path.join(serverDir, "publish-worker");
   mkdirSync(target, { recursive: true });
   await build({

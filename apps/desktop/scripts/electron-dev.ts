@@ -15,7 +15,7 @@ function electronEnv(): NodeJS.ProcessEnv {
 }
 
 function runElectron(): void {
-  const electron = path.join(ROOT, "node_modules", ".bin", "electron");
+  const electron = path.join(ROOT, "..", "..", "node_modules", ".bin", "electron");
 
   const child = spawn(electron, ["."], {
     cwd: ROOT,

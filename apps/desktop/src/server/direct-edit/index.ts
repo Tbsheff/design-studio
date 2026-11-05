@@ -32,7 +32,11 @@ export type { InsertScope } from "./components-ops/insert.js";
 
 export { savesSettled } from "./commit/save-queue.js";
 
+export { toDirectEditStatusFailure } from "./direct-edit-status-failure.js";
+
 export { runDirectionRead, runDirectionWrite } from "./direction-task.js";
+
+export type { DirectEditStatusFailure } from "./direct-edit-status-failure.js";
 
 export type { DirectionIds, DirectionRun } from "./direction-task.js";
 

@@ -195,14 +195,6 @@ import { describeScreens, samePage, warmScreens } from "./screens.js";
 import type { RunScreen } from "./screens.js";
 import { runSelectMatching, selectMatchingShape } from "./select-tool.js";
 import {
-  listStateStylesInput,
-  runListStateStyles,
-  runSetForcedState,
-  runSetStateStyle,
-  setForcedStateInput,
-  setStateStyleInput,
-} from "./state-styles-tool.js";
-import {
   findStylesShape,
   replaceStyleShape,
   runFindStyles,
@@ -1350,28 +1342,6 @@ export async function createStudioMcpServer(
     withLayerIds(deps, (args) => runSetBreakpointStyle(deps, args))
   );
 
-  const listStateStylesTool = tool(
-    "list_state_styles",
-    TOOL_SHORT.list_state_styles,
-    listStateStylesInput,
-    withLayerIds(deps, (args) => runListStateStyles(deps, args)),
-    { annotations: { readOnlyHint: true } }
-  );
-
-  const setStateStyleTool = tool(
-    "set_state_style",
-    TOOL_SHORT.set_state_style,
-    setStateStyleInput,
-    withLayerIds(deps, (args) => runSetStateStyle(deps, args))
-  );
-
-  const setForcedStateTool = tool(
-    "set_forced_state",
-    TOOL_SHORT.set_forced_state,
-    setForcedStateInput,
-    (args) => runSetForcedState(deps, args)
-  );
-
   const copyCodeTool = tool(
     "copy_code",
     TOOL_SHORT.copy_code,
@@ -1634,9 +1604,6 @@ export async function createStudioMcpServer(
     ...createTextStyleTools(deps, tool),
     listBreakpointsTool,
     setBreakpointStyleTool,
-    listStateStylesTool,
-    setStateStyleTool,
-    setForcedStateTool,
     copyCodeTool,
     clearTextTool,
     listComponentsTool,

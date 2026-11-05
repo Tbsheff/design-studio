@@ -2,6 +2,10 @@ export { AnimationStore, AnimationWriter } from "./animation/index.js";
 
 export { StateStyleError } from "./errors.js";
 
+export { StateStyleStore } from "./state-style-store.js";
+
+export { StateStyleWriter } from "./state-style-writer.js";
+
 export { forcedSummary, setForcedState } from "./forced.js";
 
 export { forcedOf } from "./forced-store.js";
@@ -30,3 +34,13 @@ export type {
   StateStyleRequest,
   StateTarget,
 } from "./set.js";
+
+export type {
+  InspectStateStyleCommand,
+  SetForcedStateStyleCommand,
+  SetStateStyleCommand,
+} from "./state-style-run.js";
+
+export type { StateStyleStoreApi } from "./state-style-store.js";
+
+export type { StateStyleWriterApi } from "./state-style-writer.js";

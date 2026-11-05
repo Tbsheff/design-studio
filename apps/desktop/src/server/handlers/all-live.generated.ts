@@ -26,6 +26,7 @@ import { ShareLive } from "./share/live.js";
 import { ShipLive } from "./ship/live.js";
 import { SpacingLive } from "./spacing/live.js";
 import { StackingLive } from "./stacking/live.js";
+import { StateStyleLive } from "./state-style/live.js";
 import { StudioLive } from "./studio/live.js";
 import { TokenLive } from "./token/live.js";
 import { VersionLive } from "./version/live.js";
@@ -60,6 +61,7 @@ const ALL_LIVE = {
   ship: ShipLive,
   spacing: SpacingLive,
   stacking: StackingLive,
+  stateStyle: StateStyleLive,
   studio: StudioLive,
   token: TokenLive,
   version: VersionLive,

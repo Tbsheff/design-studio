@@ -24,11 +24,6 @@ import { importPageDescription } from "./page-import-tool.js";
 import { COMPARE_REFERENCE_DESCRIPTION } from "./reference-tool.js";
 import { SELECT_MATCHING_DESCRIPTION } from "./select-tool.js";
 import {
-  listStateStylesDescription,
-  setForcedStateDescription,
-  setStateStyleDescription,
-} from "./state-styles-tool.js";
-import {
   searchTextDescription,
   updateTextDescription,
 } from "./text-search-tool.js";
@@ -121,8 +116,6 @@ export const TOOL_SHORT = {
   list_locked_layers: "List the locked layers of the design with their page.",
   list_route_links:
     "Attached apps only. Read only. Links in the source of one app route.",
-  list_state_styles:
-    "Read only. The hover, focus-visible, active, disabled and dark values of one layer, per breakpoint, and the forced frame states.",
   list_text_styles:
     "Read only. The project type scale: Tailwind @theme, tokens.json, CSS vars, DESIGN.md. Name, size, weight, line-height, letter-spacing, family, source.",
   measure:
@@ -151,8 +144,6 @@ export const TOOL_SHORT = {
     "Set aria-label, role, alt or tabIndex on one layer as one version; on a kit component it sets the prop at the call site.",
   set_breakpoint_style:
     "Set or reset one style property of one layer at base or one breakpoint: md:/lg: classes in Tailwind, @media rules in HTML.",
-  set_forced_state:
-    "Show a frame in hover, focus-visible, active, disabled or dark without a pointer, so get_screenshot shows that state.",
   set_frame_session:
     "Attached apps only. Change the mock user of signed-in frame states, or forget app cookies. Changes no file.",
   set_frame_state:
@@ -165,8 +156,6 @@ export const TOOL_SHORT = {
     "Set the trigger, action and target of one link, or make one from an element: scroll-to, open-url, close-overlay, toggle.",
   set_props:
     "Change props of one React component instance (by selector or source file:line:col), such as variant or size.",
-  set_state_style:
-    "Set or reset one style property of one layer in one state (hover, focus-visible, active, disabled, dark), optionally at a breakpoint.",
   set_token:
     "Change one design token value (tokens.json, or the app token CSS declaration). theme dark changes the dark value.",
   studio_help:
@@ -254,7 +243,6 @@ export const TOOL_HELP: Record<
   list_locked_layers:
     "List the locked layers of the design, with the page of each and whether it is on the page now. Changes nothing.",
   list_route_links: `Attached apps only. Read only. List the links found in the source of one app route (route pattern or concrete path): kind, href, target route, element and file:line. ${FLOW_NOTE}`,
-  list_state_styles: listStateStylesDescription,
   list_text_styles:
     "Read only. List the text styles that apply_text_style can use, with the same server code as the MCP list_text_styles tool. It reads Tailwind v4 @theme --text-* vars with their --line-height, --font-weight and --letter-spacing pairs and --font-* families, then tokens.json typography, then size, weight and line-height vars in :root, then the DESIGN.md typography section; the first source wins for a name. Returns name, size, weight, lineHeight, letterSpacing, family, source and file.",
   measure:
@@ -278,7 +266,6 @@ export const TOOL_HELP: Record<
   select_matching: SELECT_MATCHING_DESCRIPTION,
   set_accessibility: setAccessibilityDescription,
   set_breakpoint_style: setBreakpointStyleDescription,
-  set_forced_state: setForcedStateDescription,
   set_frame_session: `Attached apps only. Change the session that signed-in frame states use, with the same code as the frame state menu: user {name, email} sets the mock user; forgetCookies drops the cookies the app set in signed-in frames. Changes no file. ${FRAME_STATES_NOTE}`,
   set_frame_state: `Attached apps only. Show one canvas frame in a preview state with the same code as the frame state menu: state is default, session, empty, loading, error, a mock state id, or mock with mock {name?, rules: [{path, method?, status?, body?, delayMs?}], signedIn?} to make one. Changes no file. ${FRAME_STATES_NOTE}`,
   set_image: SET_IMAGE_AGENT_DESCRIPTION,
@@ -288,7 +275,6 @@ export const TOOL_HELP: Record<
     'Set the trigger, action and target of one prototype link with the same server code as the MCP set_link_interaction tool. Pass linkId to change a saved link, or fromFrame and selector to make one (the element must exist on the rendered page; use "body" for a delay trigger). trigger: click (default), hover, press, delay (delayMs) or key (key, for example "Escape" or "k"). action: navigate, modal or drawer with toFrame ("back" for navigate), scroll-to with target (a CSS selector in the same frame), open-url with url (https only), close-overlay, or toggle with target and visibility (toggle, show or hide). One element has one link per trigger. Each change is one undo step.',
   set_props:
     'Change the props of one React component instance with the same code as the studio inspector Component section: it adds, replaces or removes JSX attributes at the use site, such as <Button variant="outline"> to variant="destructive" or size="sm", and leaves every other byte as it was. Find the instance by selector (an element inside it on the live page) or source (file:line:col of the JSX tag). Use it for a variant, size or flag change on a component; use Edit for new markup.',
-  set_state_style: setStateStyleDescription,
   set_token:
     "Change one design token value with the same code as the studio Tokens panel: design-system/tokens.json (tokens.css is rebuilt) in a studio design system, or only that declaration in the app token CSS file of an imported app (Tailwind @theme, :root or .dark). theme dark changes the dark value. Use it instead of editing tokens.json or the token CSS by hand when you change a token value.",
   swap_instance: SWAP_INSTANCE_AGENT_DESCRIPTION,

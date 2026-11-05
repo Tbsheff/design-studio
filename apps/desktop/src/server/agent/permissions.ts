@@ -151,9 +151,6 @@ const SEARCH_TEXT_TOOL = "mcp__studio__search_text";
 const UPDATE_TEXT_TOOL = "mcp__studio__update_text";
 const LIST_BREAKPOINTS_TOOL = "mcp__studio__list_breakpoints";
 const SET_BREAKPOINT_STYLE_TOOL = "mcp__studio__set_breakpoint_style";
-const LIST_STATE_STYLES_TOOL = "mcp__studio__list_state_styles";
-const SET_STATE_STYLE_TOOL = "mcp__studio__set_state_style";
-const SET_FORCED_STATE_TOOL = "mcp__studio__set_forced_state";
 const SEARCH_IMAGES_TOOL = "mcp__studio__search_images";
 const PLACE_IMAGE_TOOL = "mcp__studio__place_image";
 const INSPECT_ACCESSIBILITY_TOOL = "mcp__studio__inspect_accessibility";
@@ -180,7 +177,6 @@ const DIRECT_EDIT_TOOLS = new Set<string>([
   IMPORT_PAGE_TOOL,
   UPDATE_TEXT_TOOL,
   SET_BREAKPOINT_STYLE_TOOL,
-  SET_STATE_STYLE_TOOL,
   PLACE_IMAGE_TOOL,
   SET_ACCESSIBILITY_TOOL,
   ...STUDIO_EDIT_TOOLS_R13,
@@ -215,9 +211,6 @@ const STUDIO_MCP_TOOLS: readonly string[] = [
   UPDATE_TEXT_TOOL,
   LIST_BREAKPOINTS_TOOL,
   SET_BREAKPOINT_STYLE_TOOL,
-  LIST_STATE_STYLES_TOOL,
-  SET_STATE_STYLE_TOOL,
-  SET_FORCED_STATE_TOOL,
   SEARCH_IMAGES_TOOL,
   PLACE_IMAGE_TOOL,
   INSPECT_ACCESSIBILITY_TOOL,

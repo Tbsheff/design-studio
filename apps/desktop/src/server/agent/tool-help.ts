@@ -96,8 +96,6 @@ export const TOOL_SHORT = {
     "Read only. The rendered page as a tree of layer ids with tag, component and source line. Layer ids work as selectors in the edit tools.",
   get_run_context:
     "Read only. The repo context (AGENTS.md, CLAUDE.md, DESIGN.md, PRODUCT.md) again. The message already has it as <repo_context>.",
-  get_spacing:
-    "Read only. The box model of one element: padding, margin and gap per side with css, px, token and class, and its rect.",
   get_stacking:
     "Read only. Position, offsets, overflow-x, overflow-y and z-index of one layer, with the class, scale or token source of each value.",
   import_figma_frame:
@@ -173,8 +171,6 @@ export const TOOL_SHORT = {
     "Set the trigger, action and target of one link, or make one from an element: scroll-to, open-url, close-overlay, toggle.",
   set_props:
     "Change props of one React component instance (by selector or source file:line:col), such as variant or size.",
-  set_spacing:
-    "Set padding, margin, gap, row-gap or column-gap for one side, an axis or all sides to px or a token, as scale classes or CSS.",
   set_stacking:
     "Set position, offsets, overflow and z-index of one layer in one version: sticky top-0 z-10 classes in Tailwind, declarations in CSS.",
   set_state_style:
@@ -242,8 +238,6 @@ export const TOOL_HELP: Record<
     'Read only. List the elements of the rendered page (or one canvas frame) as a compact tree with the same server code as the MCP get_layers tool: one line per element with a layer id, tag, <Component> when the element is the root of a component use, source file:line, a text preview and "+N inside" when deeper levels are cut. A layer id (such as "e0k3pz") works in place of a CSS selector in selector or targetSelector of edit_element, set_props, insert_component, insert_jsx, clear_text and review_frame; the page of the id is used when you leave out path. Ids come from the source location, so they stay the same after edits while that JSX stays on the same line. Use root to list one part of the page.',
   get_run_context:
     "Read only. Read the repo context of this run again with the same server code as the MCP get_run_context tool: the app folder and workspace root AGENTS.md, CLAUDE.md, DESIGN.md and PRODUCT.md, cut to about 8 KB, secret-looking lines left out. The run message already has it as <repo_context>; call this only when you need the file list or a fresh copy.",
-  get_spacing:
-    "Read only. Read the box model of the target with the same server code as the MCP get_spacing tool: padding and margin on each side and the row and column gap, each with its css value, px, spacing token and Tailwind class, and the element rect on the live page when you pass targetSelector.",
   get_stacking: getStackingDescription,
   import_figma_frame: FIGMA_IMPORT_TOOL_DESCRIPTION,
   import_page: importPageDescription,
@@ -303,8 +297,6 @@ export const TOOL_HELP: Record<
     'Set the trigger, action and target of one prototype link with the same server code as the MCP set_link_interaction tool. Pass linkId to change a saved link, or fromFrame and selector to make one (the element must exist on the rendered page; use "body" for a delay trigger). trigger: click (default), hover, press, delay (delayMs) or key (key, for example "Escape" or "k"). action: navigate, modal or drawer with toFrame ("back" for navigate), scroll-to with target (a CSS selector in the same frame), open-url with url (https only), close-overlay, or toggle with target and visibility (toggle, show or hide). One element has one link per trigger. Each change is one undo step.',
   set_props:
     'Change the props of one React component instance with the same code as the studio inspector Component section: it adds, replaces or removes JSX attributes at the use site, such as <Button variant="outline"> to variant="destructive" or size="sm", and leaves every other byte as it was. Find the instance by selector (an element inside it on the live page) or source (file:line:col of the JSX tag). Use it for a variant, size or flag change on a component; use Edit for new markup.',
-  set_spacing:
-    "Set one spacing value on the target with the same server code as the MCP set_spacing tool. property is padding, margin, gap, row-gap or column-gap; side is all, x, y, top, right, bottom or left (gap takes all, x or y); pass value in px (negative only for margin) or token (a scale step such as 4, or a theme token such as md). snap: true snaps value to the nearest token. In Tailwind it writes scale classes (p-4, px-6, gap-3, -mt-2) and an arbitrary value only when no step matches; otherwise it writes CSS with var() for tokens.",
   set_stacking: setStackingDescription,
   set_state_style: setStateStyleDescription,
   set_token:

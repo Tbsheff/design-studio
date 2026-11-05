@@ -36,8 +36,6 @@ const CORE_TOOLS = [
   "apply_text_style",
   "create_text_style",
   "detach_text_style",
-  "get_spacing",
-  "set_spacing",
   "list_breakpoints",
   "set_breakpoint_style",
   "list_state_styles",

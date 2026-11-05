@@ -69,7 +69,6 @@ import type {
 import type {
   SpacingInfo,
   SpacingProperty,
-  SpacingSetResult,
   SpacingSide,
 } from "@design-studio/contracts/spacing";
 import type {
@@ -98,6 +97,7 @@ export interface CanvasSnapshot {
 import { routes as fillRoutes } from "@design-studio/actions/fill/routes";
 import { routes as motionRoutes } from "@design-studio/actions/motion/routes";
 import { routes as projectsRoutes } from "@design-studio/actions/project/routes";
+import { routes as spacingRoutes } from "@design-studio/actions/spacing/routes";
 import { routes } from "@design-studio/actions/studio/routes";
 import { routes as versionsRoutes } from "@design-studio/actions/version/routes";
 import type {
@@ -622,17 +622,10 @@ export const api = {
     source: SourceLoc,
     computed: SpacingComputed
   ) =>
-    json<SpacingBox>(
-      "GET",
-      `${d(pid, did)}/spacing?${new URLSearchParams({
-        file: source.file,
-        line: String(source.line),
-        col: String(source.col),
-        gap: computed.gap,
-        margin: computed.margin,
-        padding: computed.padding,
-      }).toString()}`
-    ),
+    call(spacingRoutes.getSpacing, {
+      ...toStyleQuery(pid, did, source),
+      ...computed,
+    }),
   getTelemetry: (pid: string) =>
     json<TelemetrySample[]>("GET", `/api/telemetry?projectId=${enc(pid)}`),
   getTweaks: (pid: string, did: string) =>
@@ -852,7 +845,11 @@ export const api = {
     }),
   setSpacing: (pid: string, did: string, body: SpacingSetBody) =>
     timedEdit(pid, did, "spacing", 1, () =>
-      json<SpacingSetResult>("POST", `${d(pid, did)}/spacing`, body)
+      call(spacingRoutes.setSpacing, {
+        ...body,
+        directionId: did,
+        projectId: pid,
+      })
     ),
   startRun: (
     pid: string,

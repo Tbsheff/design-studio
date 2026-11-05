@@ -141,8 +141,6 @@ const LIST_TEXT_STYLES_TOOL = "mcp__studio__list_text_styles";
 const APPLY_TEXT_STYLE_TOOL = "mcp__studio__apply_text_style";
 const CREATE_TEXT_STYLE_TOOL = "mcp__studio__create_text_style";
 const DETACH_TEXT_STYLE_TOOL = "mcp__studio__detach_text_style";
-const GET_SPACING_TOOL = "mcp__studio__get_spacing";
-const SET_SPACING_TOOL = "mcp__studio__set_spacing";
 const CREATE_COMPONENT_VARIANT_TOOL = "mcp__studio__create_component_variant";
 const UPDATE_COMPONENT_VARIANT_TOOL = "mcp__studio__update_component_variant";
 const COPY_CODE_TOOL = "mcp__studio__copy_code";
@@ -168,7 +166,6 @@ const DIRECT_EDIT_TOOLS = new Set<string>([
   APPLY_TEXT_STYLE_TOOL,
   CREATE_TEXT_STYLE_TOOL,
   DETACH_TEXT_STYLE_TOOL,
-  SET_SPACING_TOOL,
   CREATE_COMPONENT_VARIANT_TOOL,
   UPDATE_COMPONENT_VARIANT_TOOL,
   EDIT_ELEMENT_TOOL,
@@ -211,8 +208,6 @@ const STUDIO_MCP_TOOLS: readonly string[] = [
   APPLY_TEXT_STYLE_TOOL,
   CREATE_TEXT_STYLE_TOOL,
   DETACH_TEXT_STYLE_TOOL,
-  GET_SPACING_TOOL,
-  SET_SPACING_TOOL,
   CREATE_COMPONENT_VARIANT_TOOL,
   UPDATE_COMPONENT_VARIANT_TOOL,
   COPY_CODE_TOOL,

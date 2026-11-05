@@ -55,3 +55,15 @@ export type {
   MotionWriterApi,
   SetMotionCommand,
 } from "../motion/index.js";
+
+export { SpacingStore, SpacingWriter } from "../spacing/index.js";
+
+export type {
+  GetSpacingCommand,
+  SetSpacingCommand,
+  SpacingBox,
+  SpacingChange,
+  SpacingStep,
+  SpacingStoreApi,
+  SpacingWriterApi,
+} from "../spacing/index.js";

@@ -195,12 +195,6 @@ import { describeScreens, samePage, warmScreens } from "./screens.js";
 import type { RunScreen } from "./screens.js";
 import { runSelectMatching, selectMatchingShape } from "./select-tool.js";
 import {
-  getSpacingInput,
-  runGetSpacing,
-  runSetSpacing,
-  setSpacingInput,
-} from "./spacing-tool.js";
-import {
   getStackingInput,
   runGetStacking,
   runSetStacking,
@@ -1347,21 +1341,6 @@ export async function createStudioMcpServer(
     (args) => runSetLinkInteractionTool(deps, args)
   );
 
-  const getSpacingTool = tool(
-    "get_spacing",
-    TOOL_SHORT.get_spacing,
-    getSpacingInput,
-    withLayerIds(deps, (args) => runGetSpacing(deps, args)),
-    { annotations: { readOnlyHint: true } }
-  );
-
-  const setSpacingTool = tool(
-    "set_spacing",
-    TOOL_SHORT.set_spacing,
-    setSpacingInput,
-    withLayerIds(deps, (args) => runSetSpacing(deps, args))
-  );
-
   const listBreakpointsTool = tool(
     "list_breakpoints",
     TOOL_SHORT.list_breakpoints,
@@ -1674,8 +1653,6 @@ export async function createStudioMcpServer(
     listIconsTool,
     insertIconTool,
     ...createTextStyleTools(deps, tool),
-    getSpacingTool,
-    setSpacingTool,
     listBreakpointsTool,
     setBreakpointStyleTool,
     listStateStylesTool,

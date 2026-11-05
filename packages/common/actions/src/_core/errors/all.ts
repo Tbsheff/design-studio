@@ -12,6 +12,7 @@ import type { PackError } from "../../pack/errors/index.js";
 import type { PropError } from "../../prop/errors/index.js";
 import type { PublishError } from "../../publish/errors/index.js";
 import type { ScenarioError } from "../../scenario/errors/index.js";
+import type { SpacingError } from "../../spacing/errors/index.js";
 import type { TokenError } from "../../token/errors/index.js";
 import type { ViewportError } from "../../viewport/errors/index.js";
 import type { CoreError } from "./index.js";
@@ -31,6 +32,7 @@ type StudioError =
   | PropError
   | PublishError
   | ScenarioError
+  | SpacingError
   | TokenError
   | ViewportError;
 

@@ -4,7 +4,6 @@ import { COMPONENT_VARIANT_TOOLS } from "../component-variant-tools.js";
 import { defineTool } from "../edit-kit.js";
 import type { ToolSpec } from "../edit-kit.js";
 import { IMAGE_SEARCH_TOOLS } from "../image-search-tools.js";
-import { SPACING_TOOLS } from "../spacing-tools.js";
 import { STACKING_TOOLS } from "../stacking-tools.js";
 import { STATE_STYLE_TOOLS } from "../state-styles-tools.js";
 import { TEXT_SEARCH_TOOLS } from "../text-search-tools.js";
@@ -56,7 +55,6 @@ const DIRECT_EDIT_INLINE_TOOLS: ToolSpec[] = [
   editElementTool,
   setTokenTool,
   ...TEXT_STYLE_TOOLS,
-  ...SPACING_TOOLS,
   ...COMPONENT_VARIANT_TOOLS,
   ...TEXT_SEARCH_TOOLS,
   ...BREAKPOINT_TOOLS,

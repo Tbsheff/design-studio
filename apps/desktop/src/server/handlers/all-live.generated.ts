@@ -24,6 +24,7 @@ import { ScenarioLive } from "./scenario/live.js";
 import { SessionLive } from "./session/live.js";
 import { ShareLive } from "./share/live.js";
 import { ShipLive } from "./ship/live.js";
+import { SpacingLive } from "./spacing/live.js";
 import { StudioLive } from "./studio/live.js";
 import { TokenLive } from "./token/live.js";
 import { VersionLive } from "./version/live.js";
@@ -56,6 +57,7 @@ const ALL_LIVE = {
   session: SessionLive,
   share: ShareLive,
   ship: ShipLive,
+  spacing: SpacingLive,
   studio: StudioLive,
   token: TokenLive,
   version: VersionLive,

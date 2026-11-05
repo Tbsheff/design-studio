@@ -24,6 +24,7 @@ import { ScenarioEntries } from "./scenario/handlers.js";
 import { SessionEntries } from "./session/handlers.js";
 import { ShareEntries } from "./share/handlers.js";
 import { ShipEntries } from "./ship/handlers.js";
+import { SpacingEntries } from "./spacing/handlers.js";
 import { StudioEntries } from "./studio/handlers.js";
 import { TokenEntries } from "./token/handlers.js";
 import { VersionEntries } from "./version/handlers.js";
@@ -56,6 +57,7 @@ const ALL_ENTRIES = {
   session: SessionEntries,
   share: ShareEntries,
   ship: ShipEntries,
+  spacing: SpacingEntries,
   studio: StudioEntries,
   token: TokenEntries,
   version: VersionEntries,

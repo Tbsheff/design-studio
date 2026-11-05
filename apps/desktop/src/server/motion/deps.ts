@@ -15,7 +15,7 @@ export {
   CUBIC_BEZIER,
   EASING_PRESETS,
   MOTION_STAGGER_CHILDREN,
-} from "../../shared/motion.js";
+} from "@design-studio/contracts/motion";
 
 export type { WrittenFile } from "../direct-edit/commit/index.js";
 
@@ -37,4 +37,4 @@ export type {
   MotionSpec,
   MotionState,
   MotionTransition,
-} from "../../shared/motion.js";
+} from "@design-studio/contracts/motion";

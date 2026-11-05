@@ -51,7 +51,7 @@ const valuesOf = (
   return emptyStacking();
 };
 
-const getStacking = async (
+const inspectStacking = async (
   scope: StackingScope,
   request: StackingGetRequest
 ): Promise<StackingInfo> => {
@@ -71,6 +71,6 @@ const getStacking = async (
   };
 };
 
-export { getStacking };
+export { inspectStacking };
 
 export type { StackingGetRequest };

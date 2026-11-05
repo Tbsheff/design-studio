@@ -4,6 +4,7 @@ import type { CommentError } from "../../comment/errors/index.js";
 import type { ContentError } from "../../content/errors/index.js";
 import type { CritiqueError } from "../../critique/errors/index.js";
 import type { DirectEditError } from "../../direct-edit/errors/index.js";
+import type { FillError } from "../../fill/errors/index.js";
 import type { GalleryError } from "../../gallery/errors/index.js";
 import type { ImageError } from "../../image/errors/index.js";
 import type { PackError } from "../../pack/errors/index.js";
@@ -21,6 +22,7 @@ type StudioError =
   | ContentError
   | CritiqueError
   | DirectEditError
+  | FillError
   | GalleryError
   | ImageError
   | PackError

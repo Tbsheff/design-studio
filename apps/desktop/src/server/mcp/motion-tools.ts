@@ -8,10 +8,11 @@ import {
   MOTION_STAGGER_MAX,
   MOTION_STATES,
   MOTION_VALUE,
-} from "../../shared/motion.js";
+} from "@design-studio/contracts/motion";
+
 import type { MotionEditScope } from "../motion/commit.js";
-import { listMotion } from "../motion/list.js";
-import { setMotion } from "../motion/set.js";
+import { inspectMotion } from "../motion/list.js";
+import { applyMotion } from "../motion/set.js";
 import type { MotionSetDone } from "../motion/set.js";
 import { MotionError } from "../motion/site.js";
 import { specOf } from "../motion/spec.js";
@@ -193,7 +194,7 @@ const runSet = async (deps: EditDeps, input: SetInput): Promise<Done> => {
   }
 
   const done = await guarded(() =>
-    setMotion(deps, scope, {
+    applyMotion(deps, scope, {
       spec: specOf(input),
       target: { selector: target.selector, source: loc, tag: target.tag },
     })
@@ -220,7 +221,7 @@ const runList = async (deps: EditDeps, input: ListInput): Promise<Done> => {
   const loc = target.source;
 
   const info = await guarded(() =>
-    listMotion({ project, workTree: direction.workTree }, loc)
+    inspectMotion({ project, workTree: direction.workTree }, loc)
   );
 
   return plain(ok(info));

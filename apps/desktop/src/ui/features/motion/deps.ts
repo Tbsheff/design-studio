@@ -19,13 +19,13 @@ export {
   MOTION_DURATION_MAX,
   MOTION_STAGGER_MAX,
   MOTION_STATES,
-} from "../../../shared/motion.js";
+} from "@design-studio/contracts/motion";
 
 export type {
   EntrancePreset,
   MotionInfo,
   MotionKind,
   MotionState,
-} from "../../../shared/motion.js";
+} from "@design-studio/contracts/motion";
 
 export { parseVariant } from "../../../shared/variants.js";

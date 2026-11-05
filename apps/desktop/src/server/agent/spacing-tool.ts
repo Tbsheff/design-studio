@@ -1,11 +1,11 @@
-import { Schema } from "effect";
-
 import {
   SPACING_PROPERTIES,
   SPACING_PX_MAX,
   SPACING_SIDES,
   SPACING_TOKEN,
-} from "../../shared/spacing.js";
+} from "@design-studio/contracts/spacing";
+import { Schema } from "effect";
+
 import {
   toDefaulted,
   toOptional,
@@ -20,7 +20,7 @@ import { writeAtomic } from "../direct-edit/commit/index.js";
 import { spacingInputOf } from "../mcp/spacing-tools.js";
 import { describeElements } from "../page-probe/index.js";
 import type { SpacingScope } from "../spacing/commit.js";
-import { getSpacing } from "../spacing/get.js";
+import { inspectSpacing } from "../spacing/get.js";
 import type { SpacingElement } from "../spacing/get.js";
 import { planSpacingSet, toSpacingResult } from "../spacing/set.js";
 import type { SpacingTarget } from "../spacing/set.js";
@@ -202,7 +202,12 @@ const getWith = async (
   }
 
   const element = await elementOf(deps, input);
-  const info = await getSpacing(scopeOf(deps), located.target.source, element);
+
+  const info = await inspectSpacing(
+    scopeOf(deps),
+    located.target.source,
+    element
+  );
 
   return reply(JSON.stringify(info, null, 2));
 };

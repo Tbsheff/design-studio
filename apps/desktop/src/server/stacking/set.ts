@@ -171,7 +171,7 @@ const planStacking = async (
   };
 };
 
-const setStacking = async (
+const applyStacking = async (
   deps: DirectEditDeps,
   scope: StackingScope,
   request: StackingSetRequest
@@ -204,6 +204,6 @@ const toStackingResult = (
   versionId: version?.id ?? null,
 });
 
-export { planStacking, setStacking, toStackingResult };
+export { planStacking, applyStacking, toStackingResult };
 
 export type { StackingDone, StackingPlan, StackingSetRequest, StackingTarget };

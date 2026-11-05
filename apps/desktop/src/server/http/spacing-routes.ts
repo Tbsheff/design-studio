@@ -1,25 +1,25 @@
 import type { Direction, Project } from "@design-studio/contracts";
-import type { Context, Hono } from "hono";
-
 import {
   SPACING_PROPERTIES,
   SPACING_PX_MAX,
   SPACING_SIDES,
   SPACING_TOKEN,
-} from "../../shared/spacing.js";
+} from "@design-studio/contracts/spacing";
 import type {
   SpacingInfo,
   SpacingInput,
   SpacingSetResult,
-} from "../../shared/spacing.js";
+} from "@design-studio/contracts/spacing";
+import type { Context, Hono } from "hono";
+
 import { DirectEditError, lengthToPx } from "../direct-edit/engine/index.js";
 import type { DirectEditDeps } from "../direct-edit/index.js";
 import { z } from "../platform/zod-bridge/index.js";
 import type { SpacingScope } from "../spacing/commit.js";
 import { SpacingError } from "../spacing/errors.js";
-import { getSpacing } from "../spacing/get.js";
+import { inspectSpacing } from "../spacing/get.js";
 import type { SpacingElement } from "../spacing/get.js";
-import { setSpacing, toSpacingResult } from "../spacing/set.js";
+import { applySpacing, toSpacingResult } from "../spacing/set.js";
 import { loadSpacingSite } from "../spacing/site.js";
 import type { SpacingSite } from "../spacing/site.js";
 
@@ -183,7 +183,7 @@ const readBox = async (
   const source = { col: query.col, file: query.file, line: query.line };
 
   const [info, site] = await Promise.all([
-    getSpacing(scope, source, elementOf(query)),
+    inspectSpacing(scope, source, elementOf(query)),
     loadSpacingSite(scope, source),
   ]);
 
@@ -237,7 +237,7 @@ const writeBox = (
       workTree: direction.workTree,
     };
 
-    const done = await setSpacing(deps.editDeps, scope, {
+    const done = await applySpacing(deps.editDeps, scope, {
       input: inputOf(body),
       target: {
         selector: body.target.selector ?? null,

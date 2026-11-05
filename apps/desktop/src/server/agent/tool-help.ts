@@ -92,8 +92,6 @@ export const TOOL_SHORT = {
     "Export canvas frames as SVG or PPTX into the studio data folder. Changes no design file. Only when the user asks for an SVG or a deck.",
   find_styles:
     "Read only. Colors, font sizes, radii and spacing on the page with counts and token/raw status; with value, the elements that use it.",
-  get_fill:
-    "Read only. The fill of one element: solid color or linear or radial gradient stops {color, token, position}, with blend modes.",
   get_layers:
     "Read only. The rendered page as a tree of layer ids with tag, component and source line. Layer ids work as selectors in the edit tools.",
   get_run_context:
@@ -163,8 +161,6 @@ export const TOOL_SHORT = {
     "Set aria-label, role, alt or tabIndex on one layer as one version; on a kit component it sets the prop at the call site.",
   set_breakpoint_style:
     "Set or reset one style property of one layer at base or one breakpoint: md:/lg: classes in Tailwind, @media rules in HTML.",
-  set_fill:
-    "Set a solid, linear or radial fill (2-6 stops, color or token) with an optional blend mode on one element.",
   set_forced_state:
     "Show a frame in hover, focus-visible, active, disabled or dark without a pointer, so get_screenshot shows that state.",
   set_frame_session:
@@ -246,8 +242,6 @@ export const TOOL_HELP: Record<
   export_frame: EXPORT_FRAME_AGENT_DESCRIPTION,
   find_styles:
     "Read only. List the colors, font sizes, radii and spacing used on the page (or one canvas frame) with element counts and whether each value is a token, raw or mixed, like the inspector Selection colors panel. With value (and property) it lists the elements that use that computed value; inherited values count only on the element that sets them.",
-  get_fill:
-    "Read only. Read the fill of the target with the same server code as the MCP get_fill tool: a solid color or a linear or radial gradient parsed into stops {color, token, position %}, the angle or form and center, and any mix-blend-mode or background-blend-mode, from its Tailwind classes or its inline style.",
   get_layers:
     'Read only. List the elements of the rendered page (or one canvas frame) as a compact tree with the same server code as the MCP get_layers tool: one line per element with a layer id, tag, <Component> when the element is the root of a component use, source file:line, a text preview and "+N inside" when deeper levels are cut. A layer id (such as "e0k3pz") works in place of a CSS selector in selector or targetSelector of edit_element, set_props, insert_component, insert_jsx, clear_text and review_frame; the page of the id is used when you leave out path. Ids come from the source location, so they stay the same after edits while that JSX stays on the same line. Use root to list one part of the page.',
   get_run_context:
@@ -305,8 +299,6 @@ export const TOOL_HELP: Record<
   select_matching: SELECT_MATCHING_DESCRIPTION,
   set_accessibility: setAccessibilityDescription,
   set_breakpoint_style: setBreakpointStyleDescription,
-  set_fill:
-    "Set the fill of the target with the same server code as the MCP set_fill tool. type solid takes color or token; type linear takes angle (degrees, default 180) and 2-6 stops; type radial takes form (circle or ellipse), at and 2-6 stops; each stop is {color | token, position %}. blendMode with blendProperty (mix-blend-mode by default, or background-blend-mode) sets a blend. In Tailwind v4 it writes bg-linear-<angle> or bg-radial with from-*, via-* and to-* classes and positions, with token names when a stop matches a color token (more stops or Tailwind v3: one bg-[linear-gradient(..)] class); otherwise it writes background-image linear-gradient() or radial-gradient() with var() for token stops.",
   set_forced_state: setForcedStateDescription,
   set_frame_session: `Attached apps only. Change the session that signed-in frame states use, with the same code as the frame state menu: user {name, email} sets the mock user; forgetCookies drops the cookies the app set in signed-in frames. Changes no file. ${FRAME_STATES_NOTE}`,
   set_frame_state: `Attached apps only. Show one canvas frame in a preview state with the same code as the frame state menu: state is default, session, empty, loading, error, a mock state id, or mock with mock {name?, rules: [{path, method?, status?, body?, delayMs?}], signedIn?} to make one. Changes no file. ${FRAME_STATES_NOTE}`,

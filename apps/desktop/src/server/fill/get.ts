@@ -145,7 +145,10 @@ const classInfo = (site: FillSite, theme: TailwindTheme): FillInfo => ({
   mode: "classes",
 });
 
-const getFill = async (scope: FillScope, loc: SourceLoc): Promise<FillInfo> => {
+const inspectFill = async (
+  scope: FillScope,
+  loc: SourceLoc
+): Promise<FillInfo> => {
   const site = await loadFillSite(scope, loc);
 
   if (site.mode === "classes" && site.theme) {
@@ -164,4 +167,4 @@ const getFill = async (scope: FillScope, loc: SourceLoc): Promise<FillInfo> => {
   };
 };
 
-export { getFill };
+export { inspectFill };

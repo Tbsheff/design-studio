@@ -36,7 +36,7 @@ export {
 
 export { CANVAS_GAP } from "@design-studio/contracts/canvas-file";
 
-export { withForcedParam } from "../../shared/state-styles.js";
+export { withForcedParam } from "@design-studio/contracts/state-styles";
 
 export type { DirectEditDeps } from "../direct-edit/index.js";
 

@@ -1,6 +1,4 @@
 import type { Direction, Project } from "@design-studio/contracts";
-import type { Context, Hono } from "hono";
-
 import {
   ENTRANCE_PRESETS,
   MOTION_DELAY_MAX,
@@ -11,13 +9,15 @@ import {
   MOTION_STAGGER_MAX,
   MOTION_STATES,
   MOTION_VALUE,
-} from "../../shared/motion.js";
-import type { MotionSetResult } from "../../shared/motion.js";
+} from "@design-studio/contracts/motion";
+import type { MotionSetResult } from "@design-studio/contracts/motion";
+import type { Context, Hono } from "hono";
+
 import { DirectEditError } from "../direct-edit/index.js";
 import type { DirectEditDeps } from "../direct-edit/index.js";
 import type { MotionEditScope } from "../motion/commit.js";
-import { listMotion } from "../motion/list.js";
-import { setMotion } from "../motion/set.js";
+import { inspectMotion } from "../motion/list.js";
+import { applyMotion } from "../motion/set.js";
 import { MotionError } from "../motion/site.js";
 import { specOf } from "../motion/spec.js";
 import { z } from "../platform/zod-bridge/index.js";
@@ -123,7 +123,7 @@ const registerMotionList = (app: Hono, deps: MotionRouteDeps): void => {
     );
 
     try {
-      const info = await listMotion(
+      const info = await inspectMotion(
         { project, workTree: direction.workTree },
         parsed.data
       );
@@ -158,7 +158,7 @@ const registerMotionSet = (app: Hono, deps: MotionRouteDeps): void => {
             workTree: direction.workTree,
           };
 
-          const done = await setMotion(deps.editDeps, scope, {
+          const done = await applyMotion(deps.editDeps, scope, {
             spec: specOf(parsed.data.spec),
             target: parsed.data.target,
           });

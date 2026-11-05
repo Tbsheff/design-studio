@@ -9,8 +9,8 @@ import {
   SET_STATE_STYLE_DESCRIPTION,
   toStateInput,
 } from "../state-styles/input.js";
-import { listStateStyles } from "../state-styles/list.js";
-import { setStateStyle, toStateResult } from "../state-styles/set.js";
+import { inspectStateStyle } from "../state-styles/list.js";
+import { applyStateStyle, toStateResult } from "../state-styles/set.js";
 import type { StateTarget } from "../state-styles/set.js";
 import {
   forcedStateFields,
@@ -148,7 +148,7 @@ const runList = async (deps: EditDeps, input: ListInput): Promise<Done> => {
   const scope = await scopeOf(deps, input.projectId, input.directionId);
   const target = await locate(deps, scope, input);
 
-  const result = await guarded(() => listStateStyles(scope, target.source));
+  const result = await guarded(() => inspectStateStyle(scope, target.source));
 
   return plain(ok(result));
 };
@@ -161,7 +161,7 @@ const runSet = async (deps: EditDeps, input: SetInput): Promise<Done> => {
   const target = await locate(deps, scope, input);
 
   const { plan, version } = await guarded(() =>
-    setStateStyle(deps, scope, { input: toStateInput(input), target })
+    applyStateStyle(deps, scope, { input: toStateInput(input), target })
   );
 
   return {

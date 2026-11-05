@@ -38,8 +38,6 @@ const CORE_TOOLS = [
   "detach_text_style",
   "list_motion",
   "set_motion",
-  "get_fill",
-  "set_fill",
   "get_spacing",
   "set_spacing",
   "list_breakpoints",

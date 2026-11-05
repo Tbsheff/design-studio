@@ -1,6 +1,6 @@
 export { StackingError } from "./errors.js";
 
-export { getStacking } from "./get.js";
+export { inspectStacking } from "./get.js";
 
 export {
   GET_STACKING_DESCRIPTION,
@@ -8,7 +8,7 @@ export {
   toStackingInput,
 } from "./input.js";
 
-export { planStacking, setStacking, toStackingResult } from "./set.js";
+export { planStacking, applyStacking, toStackingResult } from "./set.js";
 
 export type { StackingGetRequest } from "./get.js";
 

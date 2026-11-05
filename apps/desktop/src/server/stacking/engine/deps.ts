@@ -5,7 +5,7 @@ export {
   STACKING_POSITIONS,
   STACKING_SIDES,
   Z_SCALE,
-} from "../../../shared/stacking.js";
+} from "@design-studio/contracts/stacking";
 
 export type { TailwindTheme } from "../../direct-edit/engine/index.js";
 
@@ -16,4 +16,4 @@ export type {
   StackingSource,
   StackingValue,
   StackingValues,
-} from "../../../shared/stacking.js";
+} from "@design-studio/contracts/stacking";

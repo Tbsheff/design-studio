@@ -206,7 +206,7 @@ const sideRecord = (
   };
 };
 
-const getSpacing = async (
+const inspectSpacing = async (
   scope: SpacingScope,
   loc: SourceLoc,
   element: SpacingElement | null
@@ -232,6 +232,6 @@ const getSpacing = async (
   };
 };
 
-export { getSpacing };
+export { inspectSpacing };
 
 export type { SpacingElement };

@@ -173,7 +173,7 @@ const planFillSet = async (
   };
 };
 
-const setFill = async (
+const applyFill = async (
   deps: DirectEditDeps,
   scope: FillEditScope,
   request: FillSetRequest
@@ -185,6 +185,6 @@ const setFill = async (
   return { plan, version };
 };
 
-export { planFillSet, setFill };
+export { planFillSet, applyFill };
 
 export type { FillSetDone, FillSetPlan, FillSetRequest, FillTarget };

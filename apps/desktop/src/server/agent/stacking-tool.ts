@@ -18,7 +18,7 @@ import {
   STACKING_VALUE_MAX,
 } from "../stacking/deps.js";
 import { StackingError } from "../stacking/errors.js";
-import { getStacking } from "../stacking/get.js";
+import { inspectStacking } from "../stacking/get.js";
 import {
   GET_STACKING_DESCRIPTION,
   SET_STACKING_DESCRIPTION,
@@ -206,7 +206,7 @@ const getWith = async (
     return refuse(located.message);
   }
 
-  const result = await getStacking(scopeOf(deps), {
+  const result = await inspectStacking(scopeOf(deps), {
     breakpoint: input.breakpoint ?? "base",
     source: located.target.source,
   });

@@ -51,43 +51,40 @@ import type {
 } from "@design-studio/contracts/app-doctor";
 import type { CanvasFile } from "@design-studio/contracts/canvas-file";
 import type {
+  BlendMode,
+  BlendProperty,
+  FillType,
+  RadialForm,
+} from "@design-studio/contracts/fill";
+import type {
   WorkspaceFolder,
   WorkspaceList,
 } from "@design-studio/contracts/folders";
 import type { InsertTarget } from "@design-studio/contracts/insert";
-import type {
-  StyleReplaceRequest,
-  StyleReplaceResult,
-} from "@design-studio/contracts/style-search";
-
-import type {
-  BlendMode,
-  BlendProperty,
-  FillBlend,
-  FillInfo,
-  FillSpec,
-  FillType,
-  RadialForm,
-} from "../shared/fill";
-import type { IconList, IconPosition, IconSource } from "../shared/icons";
 import type {
   MotionInfo,
   MotionKind,
   MotionSetResult,
   MotionState,
   EntrancePreset,
-} from "../shared/motion";
-import type { FolderInspection } from "../shared/open-app";
-import type {
-  PageImportRequest,
-  PageImportResult,
-} from "../shared/page-import";
+} from "@design-studio/contracts/motion";
 import type {
   SpacingInfo,
   SpacingProperty,
   SpacingSetResult,
   SpacingSide,
-} from "../shared/spacing";
+} from "@design-studio/contracts/spacing";
+import type {
+  StyleReplaceRequest,
+  StyleReplaceResult,
+} from "@design-studio/contracts/style-search";
+
+import type { IconList, IconPosition, IconSource } from "../shared/icons";
+import type { FolderInspection } from "../shared/open-app";
+import type {
+  PageImportRequest,
+  PageImportResult,
+} from "../shared/page-import";
 import type {
   TextStyleApplyResult,
   TextStyleCreateResult,
@@ -100,6 +97,7 @@ export interface CanvasSnapshot {
   hash: string | null;
 }
 
+import { routes as fillRoutes } from "@design-studio/actions/fill/routes";
 import { routes as projectsRoutes } from "@design-studio/actions/project/routes";
 import { routes } from "@design-studio/actions/studio/routes";
 import { routes as versionsRoutes } from "@design-studio/actions/version/routes";
@@ -176,14 +174,6 @@ export interface FillInputBody {
 export interface FillSetBody {
   fill: FillInputBody;
   target: TextStyleTargetBody;
-}
-
-export interface FillSetReply {
-  blend: FillBlend | null;
-  files: string[];
-  fill: FillSpec;
-  mode: "classes" | "css";
-  versionId: string;
 }
 
 export interface SpacingStep {
@@ -609,14 +599,13 @@ export const api = {
   getDesignSystem: (pid: string, did: string) =>
     json<DesignSystemState>("GET", `${d(pid, did)}/design-system`),
   getFill: (pid: string, did: string, source: SourceLoc) =>
-    json<FillInfo>(
-      "GET",
-      `${d(pid, did)}/fill?${new URLSearchParams({
-        file: source.file,
-        line: String(source.line),
-        col: String(source.col),
-      }).toString()}`
-    ),
+    call(fillRoutes.getFill, {
+      col: source.col,
+      directionId: did,
+      file: source.file,
+      line: source.line,
+      projectId: pid,
+    }),
   getProject: async (pid: string) =>
     toProject(await call(projectsRoutes.getProject, { projectId: pid })),
   getRun: (pid: string, runId: string) =>
@@ -851,7 +840,12 @@ export const api = {
     json<WorkspaceList>("PUT", "/api/workspaces/default", { path }),
   setFill: (pid: string, did: string, body: FillSetBody) =>
     timedEdit(pid, did, "fill", 1, () =>
-      json<FillSetReply>("POST", `${d(pid, did)}/fill`, body)
+      call(fillRoutes.setFill, {
+        directionId: did,
+        fill: body.fill,
+        projectId: pid,
+        target: body.target,
+      })
     ),
   setMotion: (pid: string, did: string, body: MotionSetBody) =>
     timedEdit(pid, did, "motion", 1, () =>

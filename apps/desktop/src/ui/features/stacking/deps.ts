@@ -13,7 +13,7 @@ export {
   STACKING_POSITIONS,
   STACKING_SIDES,
   Z_SCALE,
-} from "../../../shared/stacking.js";
+} from "@design-studio/contracts/stacking";
 
 export type { SelectionContext, SourceLoc } from "@design-studio/contracts";
 
@@ -24,4 +24,4 @@ export type {
   StackingSetResult,
   StackingSide,
   StackingValue,
-} from "../../../shared/stacking.js";
+} from "@design-studio/contracts/stacking";

@@ -26,7 +26,7 @@ export {
   BLEND_PROPERTIES,
   FILL_STOPS_MAX,
   FILL_STOPS_MIN,
-} from "../../shared/fill.js";
+} from "@design-studio/contracts/fill";
 
 export type { WrittenFile } from "../direct-edit/commit/index.js";
 
@@ -56,4 +56,4 @@ export type {
   LinearFill,
   RadialFill,
   RadialForm,
-} from "../../shared/fill.js";
+} from "@design-studio/contracts/fill";

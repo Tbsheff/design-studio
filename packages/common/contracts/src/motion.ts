@@ -1,6 +1,3 @@
-import { VARIANT_STATES } from "./variants.js";
-import type { VariantState } from "./variants.js";
-
 const MOTION_KINDS = ["transition", "entrance", "none"] as const;
 
 type MotionKind = (typeof MOTION_KINDS)[number];
@@ -36,9 +33,9 @@ const MOTION_STAGGER_MAX = 2000;
 const MOTION_PROPERTIES_MAX = 8;
 const MOTION_STAGGER_CHILDREN = 12;
 
-const MOTION_STATES = VARIANT_STATES;
+const MOTION_STATES = ["hover", "focus", "active"] as const;
 
-type MotionState = VariantState;
+type MotionState = (typeof MOTION_STATES)[number];
 
 type MotionMode = "classes" | "css";
 

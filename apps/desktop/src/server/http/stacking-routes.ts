@@ -1,14 +1,14 @@
 import type { Direction, Project } from "@design-studio/contracts";
+import type { StackingSetResult } from "@design-studio/contracts/stacking";
 import type { Context, Hono } from "hono";
 
-import type { StackingSetResult } from "../../shared/stacking.js";
 import { DirectEditError } from "../direct-edit/engine/index.js";
 import type { DirectEditDeps } from "../direct-edit/index.js";
 import { z } from "../platform/zod-bridge/index.js";
 import { StackingError } from "../stacking/errors.js";
-import { getStacking } from "../stacking/get.js";
+import { inspectStacking } from "../stacking/get.js";
 import { toStackingInput } from "../stacking/input.js";
-import { setStacking, toStackingResult } from "../stacking/set.js";
+import { applyStacking, toStackingResult } from "../stacking/set.js";
 import {
   getStackingFields,
   setStackingFields,
@@ -106,7 +106,7 @@ const registerStackingGet = (app: Hono, deps: StackingRouteDeps): void => {
     const { breakpoint, col, file, line } = parsed.data;
 
     try {
-      const info = await getStacking(
+      const info = await inspectStacking(
         { direction, project, workTree: direction.workTree },
         { breakpoint: breakpoint ?? "base", source: { col, file, line } }
       );
@@ -142,7 +142,7 @@ const registerStackingSet = (app: Hono, deps: StackingRouteDeps): void => {
         ctx.req.param("pid"),
         ctx.req.param("did"),
         async (project, direction): Promise<StackingSetResult> => {
-          const done = await setStacking(
+          const done = await applyStacking(
             deps.editDeps,
             { direction, project, workTree: direction.workTree },
             {

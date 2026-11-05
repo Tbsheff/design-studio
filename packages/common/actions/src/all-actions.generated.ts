@@ -10,6 +10,7 @@ import { DevServerActions } from "./dev-server/index.js";
 import { DirectEditActions } from "./direct-edit/index.js";
 import { EventsActions } from "./events/index.js";
 import { ExportActions } from "./export/index.js";
+import { FillActions } from "./fill/index.js";
 import { GalleryActions } from "./gallery/index.js";
 import { ImageActions } from "./image/index.js";
 import { OrgScopeActions } from "./org-scope/index.js";
@@ -40,6 +41,7 @@ const ALL_ACTIONS = {
   directEdit: DirectEditActions,
   events: EventsActions,
   export: ExportActions,
+  fill: FillActions,
   gallery: GalleryActions,
   image: ImageActions,
   orgScope: OrgScopeActions,

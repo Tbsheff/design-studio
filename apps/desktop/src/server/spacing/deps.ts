@@ -25,7 +25,7 @@ export {
   SPACING_PX_MAX,
   SPACING_SIDES,
   SPACING_TOKEN,
-} from "../../shared/spacing.js";
+} from "@design-studio/contracts/spacing";
 
 export type { WrittenFile } from "../direct-edit/commit/index.js";
 
@@ -52,4 +52,4 @@ export type {
   SpacingSetResult,
   SpacingSide,
   SpacingValue,
-} from "../../shared/spacing.js";
+} from "@design-studio/contracts/spacing";

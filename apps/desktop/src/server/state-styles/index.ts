@@ -13,9 +13,9 @@ export {
   toStateInput,
 } from "./input.js";
 
-export { listStateStyles } from "./list.js";
+export { inspectStateStyle } from "./list.js";
 
-export { planStateStyle, setStateStyle, toStateResult } from "./set.js";
+export { planStateStyle, applyStateStyle, toStateResult } from "./set.js";
 
 export type {
   AnimationStoreApi,

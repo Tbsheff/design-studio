@@ -10,6 +10,7 @@ import { DevServerLive } from "./dev-server/live.js";
 import { DirectEditLive } from "./direct-edit/live.js";
 import { EventsLive } from "./events/live.js";
 import { ExportLive } from "./export/live.js";
+import { FillLive } from "./fill/live.js";
 import { GalleryLive } from "./gallery/live.js";
 import { ImageLive } from "./image/live.js";
 import { OrgScopeLive } from "./org-scope/live.js";
@@ -40,6 +41,7 @@ const ALL_LIVE = {
   directEdit: DirectEditLive,
   events: EventsLive,
   export: ExportLive,
+  fill: FillLive,
   gallery: GalleryLive,
   image: ImageLive,
   orgScope: OrgScopeLive,

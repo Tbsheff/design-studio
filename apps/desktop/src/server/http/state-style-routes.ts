@@ -1,7 +1,7 @@
 import type { Direction, Project } from "@design-studio/contracts";
+import type { StateStyleResult } from "@design-studio/contracts/state-styles";
 import type { Context, Hono } from "hono";
 
-import type { StateStyleResult } from "../../shared/state-styles.js";
 import type { CanvasService } from "../canvas/index.js";
 import { DirectEditError } from "../direct-edit/engine/index.js";
 import type { DirectEditDeps } from "../direct-edit/index.js";
@@ -9,8 +9,8 @@ import { z } from "../platform/zod-bridge/index.js";
 import { StateStyleError } from "../state-styles/errors.js";
 import { setForcedState } from "../state-styles/forced.js";
 import { toStateInput } from "../state-styles/input.js";
-import { listStateStyles } from "../state-styles/list.js";
-import { setStateStyle, toStateResult } from "../state-styles/set.js";
+import { inspectStateStyle } from "../state-styles/list.js";
+import { applyStateStyle, toStateResult } from "../state-styles/set.js";
 import {
   forcedStateFields,
   setStateFields,
@@ -105,7 +105,7 @@ const registerStateList = (app: Hono, deps: StateStyleRouteDeps): void => {
     );
 
     try {
-      const info = await listStateStyles(
+      const info = await inspectStateStyle(
         { direction, project, workTree: direction.workTree },
         parsed.data
       );
@@ -136,7 +136,7 @@ const registerStateSet = (app: Hono, deps: StateStyleRouteDeps): void => {
         ctx.req.param("pid"),
         ctx.req.param("did"),
         async (project, direction): Promise<StateStyleResult> => {
-          const done = await setStateStyle(
+          const done = await applyStateStyle(
             deps.editDeps,
             { direction, project, workTree: direction.workTree },
             {

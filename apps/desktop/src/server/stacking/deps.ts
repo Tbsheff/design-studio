@@ -19,7 +19,7 @@ export {
   STACKING_OVERFLOWS,
   STACKING_POSITIONS,
   STACKING_VALUE_MAX,
-} from "../../shared/stacking.js";
+} from "@design-studio/contracts/stacking";
 
 export type { BreakpointScope as StackingScope } from "../breakpoints/commit.js";
 
@@ -42,6 +42,6 @@ export type {
   StackingMode,
   StackingSetResult,
   StackingValues,
-} from "../../shared/stacking.js";
+} from "@design-studio/contracts/stacking";
 
 export { z } from "../platform/zod-bridge/index.js";

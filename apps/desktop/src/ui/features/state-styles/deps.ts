@@ -22,6 +22,6 @@ export type {
   ForcedFrameState,
   StateListResult,
   StyleState,
-} from "../../../shared/state-styles.js";
+} from "@design-studio/contracts/state-styles";
 
 export type { SaveStatus } from "../inspector/use-direct-edit.js";

@@ -19,9 +19,9 @@ export { useLive } from "../../platform/live-store.js";
 
 export { buildEditRequest, mergeCommit } from "../inspector/use-direct-edit.js";
 
-export { BOX_SIDES } from "../../../shared/spacing.js";
+export { BOX_SIDES } from "@design-studio/contracts/spacing";
 
-export type { BoxSide, SpacingSide } from "../../../shared/spacing.js";
+export type { BoxSide, SpacingSide } from "@design-studio/contracts/spacing";
 
 export type {
   BridgeToParent,

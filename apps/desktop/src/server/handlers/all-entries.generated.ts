@@ -10,6 +10,7 @@ import { DevServerEntries } from "./dev-server/handlers.js";
 import { DirectEditEntries } from "./direct-edit/handlers.js";
 import { EventsEntries } from "./events/handlers.js";
 import { ExportEntries } from "./export/handlers.js";
+import { FillEntries } from "./fill/handlers.js";
 import { GalleryEntries } from "./gallery/handlers.js";
 import { ImageEntries } from "./image/handlers.js";
 import { OrgScopeEntries } from "./org-scope/handlers.js";
@@ -40,6 +41,7 @@ const ALL_ENTRIES = {
   directEdit: DirectEditEntries,
   events: EventsEntries,
   export: ExportEntries,
+  fill: FillEntries,
   gallery: GalleryEntries,
   image: ImageEntries,
   orgScope: OrgScopeEntries,

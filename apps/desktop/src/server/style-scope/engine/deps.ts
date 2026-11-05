@@ -9,7 +9,7 @@ export {
   parseClass,
 } from "../../direct-edit/engine/index.js";
 
-export { STYLE_STATES } from "../../../shared/state-styles.js";
+export { STYLE_STATES } from "@design-studio/contracts/state-styles";
 
 export { parseVariant } from "../../../shared/variants.js";
 
@@ -23,6 +23,6 @@ export type {
 export type {
   StateOverride,
   StyleState,
-} from "../../../shared/state-styles.js";
+} from "@design-studio/contracts/state-styles";
 
 export type { TailwindTheme } from "../../direct-edit/engine/index.js";

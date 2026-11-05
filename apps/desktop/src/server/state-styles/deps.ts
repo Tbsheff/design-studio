@@ -31,7 +31,10 @@ export {
 
 export { DIRECT_STYLE_PROPERTIES } from "@design-studio/contracts";
 
-export { STATE_SELECTOR_MAX, STYLE_STATES } from "../../shared/state-styles.js";
+export {
+  STATE_SELECTOR_MAX,
+  STYLE_STATES,
+} from "@design-studio/contracts/state-styles";
 
 export type { BreakpointScope as StyleScope } from "../breakpoints/commit.js";
 
@@ -57,6 +60,6 @@ export type {
   StateStyleInput,
   StateStyleResult,
   StyleState,
-} from "../../shared/state-styles.js";
+} from "@design-studio/contracts/state-styles";
 
 export { z } from "../platform/zod-bridge/index.js";

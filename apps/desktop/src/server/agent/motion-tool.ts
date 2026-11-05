@@ -1,5 +1,3 @@
-import { Schema } from "effect";
-
 import {
   ENTRANCE_PRESETS,
   MOTION_DELAY_MAX,
@@ -10,7 +8,9 @@ import {
   MOTION_STAGGER_MAX,
   MOTION_STATES,
   MOTION_VALUE,
-} from "../../shared/motion.js";
+} from "@design-studio/contracts/motion";
+import { Schema } from "effect";
+
 import {
   toOptional,
   toOptionalInt,
@@ -21,7 +21,7 @@ import {
 import type { ToolArgs, ToolDecoded } from "../agent-tools/index.js";
 import type { WrittenFile } from "../direct-edit/commit/index.js";
 import { writeAtomic } from "../direct-edit/index.js";
-import { listMotion } from "../motion/list.js";
+import { inspectMotion } from "../motion/list.js";
 import { planMotionSet } from "../motion/set.js";
 import type { MotionSetPlan, MotionTarget } from "../motion/set.js";
 import { specOf } from "../motion/spec.js";
@@ -243,7 +243,7 @@ const listWith = async (
 
   const { direction, project } = deps.ctx;
 
-  const info = await listMotion(
+  const info = await inspectMotion(
     { project, workTree: direction.workTree },
     located.target.source
   );

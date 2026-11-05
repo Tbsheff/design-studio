@@ -515,6 +515,23 @@ export const decisionOverrides: OxlintOverride[] = [
     rules: { "import/no-relative-parent-imports": "off" },
   },
   {
+    files: [
+      "apps/desktop/src/server/direct-edit/direction-task.ts",
+      "apps/desktop/src/server/fill/fill-run.ts",
+      "apps/desktop/src/server/fill/fill-store.ts",
+      "apps/desktop/src/server/fill/fill-writer.ts",
+      "apps/desktop/src/server/handlers/fill/get.ts",
+      "apps/desktop/src/server/handlers/fill/handlers.ts",
+      "apps/desktop/src/server/handlers/fill/live.ts",
+      "apps/desktop/src/server/handlers/fill/set.ts",
+      "packages/common/actions/src/fill/errors/status.ts",
+      "packages/common/actions/src/fill/get.ts",
+      "packages/common/actions/src/fill/schema.ts",
+      "packages/common/actions/src/fill/set.ts",
+    ],
+    rules: { "import/no-relative-parent-imports": "off" },
+  },
+  {
     files: ["apps/desktop/src/server/gallery/engine/page.ts"],
     rules: { "github/unescaped-html-literal": "off" },
   },
@@ -889,7 +906,7 @@ export const decisionOverrides: OxlintOverride[] = [
       "apps/desktop/src/server/{agent/icon-tool,http/icon-routes,icons/deps,mcp/icon-tools}.ts",
       "apps/desktop/src/server/{mcp/text-style-tools,agent/text-style-tool,text-styles/deps}.ts",
       "apps/desktop/src/server/{mcp/motion-tools,agent/motion-tool,motion/deps}.ts",
-      "apps/desktop/src/server/{mcp/fill-tools,agent/fill-tool,fill/deps}.ts",
+      "apps/desktop/src/server/fill/deps.ts",
       "apps/desktop/src/server/{design-system/model/index,design-system/ops/index,spacing/deps,mcp/spacing-tools,agent/spacing-tool,components/variant-write/deps,mcp/component-variant-tools,agent/component-variant-tool,canvas/links/link-interaction,canvas/links/link-interaction-input,canvas/links/link-target,mcp/link-interaction-tools,agent/link-interaction-tool,page-import/deps,mcp/page-import-tools,agent/page-import-tool,text-search/deps,mcp/text-search-tools,agent/text-search-tool,breakpoints/deps,mcp/breakpoints-tools,agent/breakpoints-tool,state-styles/deps,mcp/state-styles-tools,agent/state-styles-tool,style-scope/engine/deps,stacking/deps,stacking/engine/deps,mcp/stacking-tools,agent/stacking-tool,image-search/deps,mcp/image-search-tools,agent/image-search-tool,accessibility/deps,mcp/accessibility-tools,agent/accessibility-tool}.ts",
       "apps/desktop/src/server/{mcp/copy-code-tools,agent/copy-code-tool}.ts",
       "apps/api/src/http/{api,groups/*,groups/keys/*,sync/*}.ts",
@@ -900,7 +917,7 @@ export const decisionOverrides: OxlintOverride[] = [
       "apps/desktop/src/ui/features/icons/deps.ts",
       "apps/desktop/src/ui/features/text-styles/deps.ts",
       "apps/desktop/src/ui/features/motion/deps.ts",
-      "apps/desktop/src/server/http/{{fill,spacing,component-variant,link-interaction,page-import,text-search,motion,state-style,stacking,image-search,accessibility}-routes,app-{context,errors,project-files,request,run-parse,*-routes},loopback-guard}.ts",
+      "apps/desktop/src/server/http/{{spacing,component-variant,link-interaction,page-import,text-search,motion,state-style,stacking,image-search,accessibility}-routes,app-{context,errors,project-files,request,run-parse,*-routes},loopback-guard}.ts",
       "apps/desktop/src/{ui/features/{account,settings,fill,spacing,component-variant,link-interaction,page-import,text-search,state-styles,stacking,image-search,accessibility,agent-approval}/deps,bridge/play-triggers}.ts",
     ],
     rules: { "import/no-relative-parent-imports": "off" },
@@ -1402,10 +1419,7 @@ export const decisionOverrides: OxlintOverride[] = [
     },
   },
   {
-    files: [
-      "apps/desktop/src/bridge/bridge.ts",
-      "apps/desktop/src/bridge/keyboard.ts",
-    ],
+    files: ["apps/desktop/src/bridge/keyboard.ts"],
     rules: {
       "import/no-relative-parent-imports": "off",
     },

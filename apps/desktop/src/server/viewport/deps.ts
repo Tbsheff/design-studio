@@ -19,7 +19,7 @@ export { CANVAS_GAP } from "@design-studio/contracts/canvas-file";
 
 export { SOURCE_LOC_ATTR } from "@design-studio/contracts";
 
-export { withForcedParam } from "../../shared/state-styles.js";
+export { withForcedParam } from "@design-studio/contracts/state-styles";
 
 export type { KnownFailure } from "../platform/attempt/index.js";
 

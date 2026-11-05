@@ -11,6 +11,7 @@ import { DevServerLive } from "../handlers/dev-server/live.js";
 import { DirectEditLive } from "../handlers/direct-edit/live.js";
 import { EventsLive } from "../handlers/events/live.js";
 import { ExportLive } from "../handlers/export/live.js";
+import { FillLive } from "../handlers/fill/live.js";
 import { GalleryLive } from "../handlers/gallery/live.js";
 import { ImageLive } from "../handlers/image/live.js";
 import { OrgScopeLive } from "../handlers/org-scope/live.js";
@@ -51,6 +52,7 @@ const liveLayer = Layer.mergeAll(
   DirectEditLive,
   EventsLive,
   ExportLive,
+  FillLive,
   GalleryLive,
   ImageLive,
   OrgScopeLive,

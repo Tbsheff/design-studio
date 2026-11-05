@@ -143,8 +143,6 @@ const CREATE_TEXT_STYLE_TOOL = "mcp__studio__create_text_style";
 const DETACH_TEXT_STYLE_TOOL = "mcp__studio__detach_text_style";
 const LIST_MOTION_TOOL = "mcp__studio__list_motion";
 const SET_MOTION_TOOL = "mcp__studio__set_motion";
-const GET_FILL_TOOL = "mcp__studio__get_fill";
-const SET_FILL_TOOL = "mcp__studio__set_fill";
 const GET_SPACING_TOOL = "mcp__studio__get_spacing";
 const SET_SPACING_TOOL = "mcp__studio__set_spacing";
 const CREATE_COMPONENT_VARIANT_TOOL = "mcp__studio__create_component_variant";
@@ -173,7 +171,6 @@ const DIRECT_EDIT_TOOLS = new Set<string>([
   CREATE_TEXT_STYLE_TOOL,
   DETACH_TEXT_STYLE_TOOL,
   SET_MOTION_TOOL,
-  SET_FILL_TOOL,
   SET_SPACING_TOOL,
   CREATE_COMPONENT_VARIANT_TOOL,
   UPDATE_COMPONENT_VARIANT_TOOL,
@@ -219,8 +216,6 @@ const STUDIO_MCP_TOOLS: readonly string[] = [
   DETACH_TEXT_STYLE_TOOL,
   LIST_MOTION_TOOL,
   SET_MOTION_TOOL,
-  GET_FILL_TOOL,
-  SET_FILL_TOOL,
   GET_SPACING_TOOL,
   SET_SPACING_TOOL,
   CREATE_COMPONENT_VARIANT_TOOL,

@@ -52,7 +52,7 @@ const layerOf = async (
   };
 };
 
-const listStateStyles = async (
+const inspectStateStyle = async (
   scope: StyleScope,
   source: SourceLoc
 ): Promise<StateListResult> => {
@@ -66,4 +66,4 @@ const listStateStyles = async (
   };
 };
 
-export { listStateStyles };
+export { inspectStateStyle };

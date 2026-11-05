@@ -18,7 +18,7 @@ export {
   FILL_STOPS_MIN,
   FILL_TYPES,
   RADIAL_FORMS,
-} from "../../../shared/fill.js";
+} from "@design-studio/contracts/fill";
 
 export type {
   BlendMode,
@@ -28,4 +28,4 @@ export type {
   FillStop,
   FillType,
   RadialForm,
-} from "../../../shared/fill.js";
+} from "@design-studio/contracts/fill";

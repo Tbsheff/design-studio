@@ -147,7 +147,7 @@ const planStateStyle = async (
   };
 };
 
-const setStateStyle = async (
+const applyStateStyle = async (
   deps: DirectEditDeps,
   scope: StyleScope,
   request: StateStyleRequest
@@ -181,6 +181,6 @@ const toStateResult = (
   versionId: version?.id ?? null,
 });
 
-export { planStateStyle, setStateStyle, toStateResult };
+export { planStateStyle, applyStateStyle, toStateResult };
 
 export type { StateStyleDone, StateStylePlan, StateStyleRequest, StateTarget };

@@ -298,7 +298,7 @@ const planMotionSet = async (
   };
 };
 
-const setMotion = async (
+const applyMotion = async (
   deps: DirectEditDeps,
   scope: MotionEditScope,
   request: MotionSetRequest
@@ -310,6 +310,6 @@ const setMotion = async (
   return { plan, version };
 };
 
-export { planMotionSet, setMotion };
+export { planMotionSet, applyMotion };
 
 export type { MotionSetDone, MotionSetPlan, MotionSetRequest, MotionTarget };

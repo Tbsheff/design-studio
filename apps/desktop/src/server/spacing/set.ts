@@ -126,7 +126,7 @@ const planSpacingSet = async (
   };
 };
 
-const setSpacing = async (
+const applySpacing = async (
   deps: DirectEditDeps,
   scope: SpacingScope,
   request: SpacingSetRequest
@@ -151,7 +151,7 @@ const toSpacingResult = (
   versionId: version?.id ?? null,
 });
 
-export { planSpacingSet, setSpacing, toSpacingResult };
+export { planSpacingSet, applySpacing, toSpacingResult };
 
 export type {
   SpacingSetDone,

@@ -1,7 +1,7 @@
 import type { ExportFrame } from "@design-studio/contracts/export";
 import { withFrameStateHost } from "@design-studio/contracts/frame-state";
+import { withForcedParam } from "@design-studio/contracts/state-styles";
 
-import { withForcedParam } from "../../shared/state-styles.js";
 import {
   isLayerRef,
   LayerRefError,

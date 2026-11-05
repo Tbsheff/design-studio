@@ -4,6 +4,7 @@ import { CommentStatus } from "../comment/errors/status.js";
 import { ContentStatus } from "../content/errors/status.js";
 import { CritiqueStatus } from "../critique/errors/status.js";
 import { DirectEditStatus } from "../direct-edit/errors/status.js";
+import { FillStatus } from "../fill/errors/status.js";
 import { GalleryStatus } from "../gallery/errors/status.js";
 import { ImageStatus } from "../image/errors/status.js";
 import { PackStatus } from "../pack/errors/status.js";
@@ -23,6 +24,7 @@ const HTTP_STATUS = {
   ...ContentStatus,
   ...CritiqueStatus,
   ...DirectEditStatus,
+  ...FillStatus,
   ...GalleryStatus,
   ...ImageStatus,
   ...PackStatus,

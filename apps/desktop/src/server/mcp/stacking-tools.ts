@@ -2,13 +2,13 @@ import type { BreakpointScope } from "../breakpoints/commit.js";
 import { DirectEditError } from "../direct-edit/engine/index.js";
 import { z } from "../platform/zod-bridge/index.js";
 import { StackingError } from "../stacking/errors.js";
-import { getStacking } from "../stacking/get.js";
+import { inspectStacking } from "../stacking/get.js";
 import {
   GET_STACKING_DESCRIPTION,
   SET_STACKING_DESCRIPTION,
   toStackingInput,
 } from "../stacking/input.js";
-import { setStacking, toStackingResult } from "../stacking/set.js";
+import { applyStacking, toStackingResult } from "../stacking/set.js";
 import type { StackingTarget } from "../stacking/set.js";
 import {
   getStackingFields,
@@ -132,7 +132,7 @@ const runGet = async (deps: EditDeps, input: GetInput): Promise<Done> => {
   const target = await locate(deps, scope, input);
 
   const result = await guarded(() =>
-    getStacking(scope, {
+    inspectStacking(scope, {
       breakpoint: input.breakpoint ?? "base",
       source: target.source,
     })
@@ -155,7 +155,7 @@ const runSet = async (deps: EditDeps, input: SetInput): Promise<Done> => {
   const target = await locate(deps, scope, input);
 
   const { plan, version } = await guarded(() =>
-    setStacking(deps, scope, { input: stacking, target })
+    applyStacking(deps, scope, { input: stacking, target })
   );
 
   return {

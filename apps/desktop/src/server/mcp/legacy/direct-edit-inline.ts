@@ -3,7 +3,6 @@ import { BREAKPOINT_TOOLS } from "../breakpoints-tools.js";
 import { COMPONENT_VARIANT_TOOLS } from "../component-variant-tools.js";
 import { defineTool } from "../edit-kit.js";
 import type { ToolSpec } from "../edit-kit.js";
-import { FILL_TOOLS } from "../fill-tools.js";
 import { IMAGE_SEARCH_TOOLS } from "../image-search-tools.js";
 import { MOTION_TOOLS } from "../motion-tools.js";
 import { SPACING_TOOLS } from "../spacing-tools.js";
@@ -59,7 +58,6 @@ const DIRECT_EDIT_INLINE_TOOLS: ToolSpec[] = [
   setTokenTool,
   ...TEXT_STYLE_TOOLS,
   ...MOTION_TOOLS,
-  ...FILL_TOOLS,
   ...SPACING_TOOLS,
   ...COMPONENT_VARIANT_TOOLS,
   ...TEXT_SEARCH_TOOLS,

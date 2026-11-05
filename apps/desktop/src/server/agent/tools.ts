@@ -137,12 +137,6 @@ import {
 import { runAppDoctor } from "./doctor-tool.js";
 import { exportFrameShape, runExportFrame } from "./export-tool.js";
 import { figmaImportShape, runFigmaImport } from "./figma-import-tool.js";
-import {
-  getFillInput,
-  runGetFill,
-  runSetFill,
-  setFillInput,
-} from "./fill-tool.js";
 import { baselineNote } from "./final-check.js";
 import {
   insertIconInput,
@@ -1359,14 +1353,6 @@ export async function createStudioMcpServer(
     withLayerIds(deps, (args) => runSetMotion(deps, args))
   );
 
-  const getFillTool = tool(
-    "get_fill",
-    TOOL_SHORT.get_fill,
-    getFillInput,
-    withLayerIds(deps, (args) => runGetFill(deps, args)),
-    { annotations: { readOnlyHint: true } }
-  );
-
   const listLinkInteractionsTool = tool(
     "list_link_interactions",
     TOOL_SHORT.list_link_interactions,
@@ -1380,13 +1366,6 @@ export async function createStudioMcpServer(
     TOOL_SHORT.set_link_interaction,
     setLinkInteractionInput,
     (args) => runSetLinkInteractionTool(deps, args)
-  );
-
-  const setFillTool = tool(
-    "set_fill",
-    TOOL_SHORT.set_fill,
-    setFillInput,
-    withLayerIds(deps, (args) => runSetFill(deps, args))
   );
 
   const getSpacingTool = tool(
@@ -1718,8 +1697,6 @@ export async function createStudioMcpServer(
     ...createTextStyleTools(deps, tool),
     listMotionTool,
     setMotionTool,
-    getFillTool,
-    setFillTool,
     getSpacingTool,
     setSpacingTool,
     listBreakpointsTool,

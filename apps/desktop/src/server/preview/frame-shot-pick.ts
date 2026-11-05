@@ -1,4 +1,5 @@
-import type { ForcedStateWire } from "../../shared/state-styles.js";
+import type { ForcedStateWire } from "@design-studio/contracts/state-styles";
+
 import { frameStatesView, stateOfFrame } from "../app/frame-state.js";
 import { findFrame, readProjectCanvas } from "../canvas/index.js";
 import { NotFoundError } from "../platform/errors/index.js";

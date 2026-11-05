@@ -31,3 +31,17 @@ export type { ImageBytes } from "./commit/image-source.js";
 export type { InsertScope } from "./components-ops/insert.js";
 
 export { savesSettled } from "./commit/save-queue.js";
+
+export { runDirectionRead, runDirectionWrite } from "./direction-task.js";
+
+export type { DirectionIds, DirectionRun } from "./direction-task.js";
+
+export { FillStore, FillWriter } from "../fill/index.js";
+
+export type {
+  FillChange,
+  FillStoreApi,
+  FillWriterApi,
+  GetFillCommand,
+  SetFillCommand,
+} from "../fill/index.js";

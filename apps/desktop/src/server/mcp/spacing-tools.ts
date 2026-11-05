@@ -3,15 +3,16 @@ import {
   SPACING_PX_MAX,
   SPACING_SIDES,
   SPACING_TOKEN,
-} from "../../shared/spacing.js";
-import type { SpacingInput } from "../../shared/spacing.js";
+} from "@design-studio/contracts/spacing";
+import type { SpacingInput } from "@design-studio/contracts/spacing";
+
 import { describeElement } from "../page-probe/index.js";
 import { z } from "../platform/zod-bridge/index.js";
 import type { SpacingScope } from "../spacing/commit.js";
 import { SpacingError } from "../spacing/errors.js";
-import { getSpacing } from "../spacing/get.js";
+import { inspectSpacing } from "../spacing/get.js";
 import type { SpacingElement } from "../spacing/get.js";
-import { setSpacing, toSpacingResult } from "../spacing/set.js";
+import { applySpacing, toSpacingResult } from "../spacing/set.js";
 import { EditError, loadTarget, refuseWhileRunning } from "./edit-guards.js";
 import type { EditDeps } from "./edit-guards.js";
 import {
@@ -160,7 +161,7 @@ const runSet = async (deps: EditDeps, input: SetInput): Promise<Done> => {
   }
 
   const { plan, version } = await guarded(() =>
-    setSpacing(deps, scope, {
+    applySpacing(deps, scope, {
       input: spacingInputOf(input),
       target: {
         selector: target.selector ?? null,
@@ -221,7 +222,7 @@ const runGet = async (deps: EditDeps, input: GetInput): Promise<Done> => {
   }
 
   const element = await elementOf(deps, scope, input);
-  const info = await guarded(() => getSpacing(scope, loc, element));
+  const info = await guarded(() => inspectSpacing(scope, loc, element));
 
   return plain(ok(info));
 };

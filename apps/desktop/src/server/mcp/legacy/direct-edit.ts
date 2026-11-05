@@ -2,7 +2,6 @@ import { ARRANGE_TOOLS } from "../arrange-tools.js";
 import { COMPONENT_CREATE_TOOLS } from "../component-create-tools.js";
 import { COMPONENT_PREVIEW_TOOLS } from "../component-preview-tools.js";
 import { FIGMA_IMPORT_TOOLS } from "../figma-import-tools.js";
-import { ICON_TOOLS } from "../icon-tools.js";
 import { IMAGE_TOOLS } from "../image-tools.js";
 import { INSERT_TOOLS } from "../insert-tools.js";
 import { JSX_INSERT_TOOLS } from "../jsx-insert-tools.js";
@@ -40,7 +39,6 @@ const DIRECT_EDIT_LEGACY_TOOLS_UNGUARDED = [
   ...LAYER_STATE_TOOLS,
   ...MOVE_TOOLS,
   ...FIGMA_IMPORT_TOOLS,
-  ...ICON_TOOLS,
 ];
 
 const DIRECT_EDIT_LEGACY_TOOLS = guardTools(DIRECT_EDIT_LEGACY_TOOLS_UNGUARDED);

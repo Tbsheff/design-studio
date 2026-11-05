@@ -85,8 +85,6 @@ export const TOOL_SHORT = {
     "Copy a live page (https or localhost URL) into a new static HTML page and canvas frame: a copy for redesign, not a live link.",
   insert_component:
     "Insert one library component inside or after a target, with required props and the import line. .map() and condition targets are refused.",
-  insert_icon:
-    "Insert an icon inside, before or after a target: a library component with its import, or an inline SVG. An icon target is swapped in place.",
   insert_jsx:
     "Insert a JSX snippet (HTML in an HTML project) inside, before, after or in place of a target; adds kit imports. Markup only: no functions, hooks, conditions, .map() or spreads.",
   list_breakpoints:
@@ -97,8 +95,6 @@ export const TOOL_SHORT = {
     "Read only. Project components, the shared kit first, with import line, JSX example, parts and cva variants. Use query; pages of 20.",
   list_frame_states:
     "Attached apps only. Read only. Frame preview states, which frame shows which, and the session in use.",
-  list_icons:
-    "Read only. Search icons for insert_icon: the project icon library (lucide-react, heroicons, tabler) or the bundled lucide set. Name, component and SVG preview.",
   list_link_interactions:
     "Read only. Saved prototype links with trigger (click, hover, press, delay, key), action and target (frame, selector or url).",
   list_links:
@@ -207,8 +203,6 @@ export const TOOL_HELP: Record<
   import_page: importPageDescription,
   insert_component:
     "Insert one instance of a React component from the project library with the same code as the studio Components panel: it writes <Name …>Text</Name> inside (as the last child) or after the target element, fills required props from the props type, and adds or extends the import line with the path the project uses (workspace package such as @workspace/ui/components/button, tsconfig path, or relative). Find the target by targetSelector on the live page or targetSource (file:line:col). Targets made by .map() or shown by a condition, and the top element of a component, are refused. Use it to add a library component; use Edit for other new markup.",
-  insert_icon:
-    'Insert an icon inside, before or after the target with the same server code as the MCP insert_icon tool. In a React project with an icon library it writes <SearchIcon className="size-4" /> (size-N from size, text-<token> from color) and adds or extends the import line; otherwise it writes an inline <svg> with stroke="currentColor". When the target is already an icon (an <svg> or an icon component), the new icon replaces it. Find names with list_icons.',
   insert_jsx:
     "Insert a group of elements in one step with the same server code as the MCP insert_jsx tool and the studio Paste JSX menu: a JSX snippet (HTML in an HTML project) inside, before, after or in place of the target. Component tags that the file does not import are found in the project library and their import lines are added or extended. The snippet keeps its line breaks and gets the file indent. Markup only: text, string props, numbers, style objects and references to names the file has; functions, calls (hooks), conditions, .map() and spreads are refused. Targets made by .map() are refused; before or after the one element of a ? : or && branch wraps the branch in a <> fragment. Use it to build a card, row or section from library components; clear_text removes stray text next to child elements.",
   list_breakpoints: listBreakpointsDescription,
@@ -217,8 +211,6 @@ export const TOOL_HELP: Record<
   list_components:
     "Read only. Find the React components of the project with the same server code as the MCP list_components tool and the studio Components panel: shared workspace packages (the kit, such as packages/ui) first, then app components by use count. Each item has source (package or app), file, folder, parts (other components of the same file, such as CardHeader for Card), a ready import line, a minimal JSX example, the use count and the props schema with cva variants and their options. query searches names, then folders and files, then props and variants. Pages hold 20 items; pass nextCursor as cursor for the next page. Use the names in insert_jsx or insert_component and the variant options in set_props.",
   list_frame_states: `Attached apps only. Read only. List the frame preview states (signed in, empty, loading, error, mock), which frame shows which, and the session in use. ${FRAME_STATES_NOTE}`,
-  list_icons:
-    "Read only. Search the icons that insert_icon can add, with the same server code as the MCP list_icons tool. In a React project it reads the icon library the project has installed (lucide-react, @heroicons/react or @tabler/icons-react) from node_modules; HTML projects and projects with no icon library get a bundled set of about 360 lucide icons. Returns name, library, the component name (null for inline SVG) and an SVG preview. query matches parts of names; limit is at most 50.",
   list_link_interactions:
     "Read only. List the saved prototype links with the same server code as the MCP list_link_interactions tool: id, frame, selector, trigger (shown only when it is not click: hover, press, delay with delayMs, key with key), action (navigate, modal, drawer, scroll-to, open-url, close-overlay, toggle), target (toFrame, target selector with visibility, or url), transition and broken. fromFrame limits the list to one frame.",
   list_links:

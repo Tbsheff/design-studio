@@ -133,12 +133,6 @@ import { exportFrameShape, runExportFrame } from "./export-tool.js";
 import { figmaImportShape, runFigmaImport } from "./figma-import-tool.js";
 import { baselineNote } from "./final-check.js";
 import {
-  insertIconInput,
-  listIconsInput,
-  runInsertIcon,
-  runListIcons,
-} from "./icon-tool.js";
-import {
   placeImageInput,
   runPlaceImage,
   runSearchImages,
@@ -1270,21 +1264,6 @@ export async function createStudioMcpServer(
     withLayerIds(deps, (args) => runInsertComponent(deps, args))
   );
 
-  const listIconsTool = tool(
-    "list_icons",
-    TOOL_SHORT.list_icons,
-    listIconsInput,
-    (args) => runListIcons(deps, args),
-    { annotations: { readOnlyHint: true } }
-  );
-
-  const insertIconTool = tool(
-    "insert_icon",
-    TOOL_SHORT.insert_icon,
-    insertIconInput,
-    withLayerIds(deps, (args) => runInsertIcon(deps, args))
-  );
-
   const listLinkInteractionsTool = tool(
     "list_link_interactions",
     TOOL_SHORT.list_link_interactions,
@@ -1557,8 +1536,6 @@ export async function createStudioMcpServer(
     reviewFrameTool,
     insertComponentTool,
     insertJsxTool,
-    listIconsTool,
-    insertIconTool,
     ...createTextStyleTools(deps, tool),
     listBreakpointsTool,
     setBreakpointStyleTool,

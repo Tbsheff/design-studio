@@ -23,13 +23,13 @@ export {
   ICON_SIZE_DEFAULT,
   ICON_SIZE_MAX,
   ICON_SIZE_MIN,
-} from "../../../shared/icons.js";
+} from "@design-studio/contracts/icons";
 
 export type {
   IconList,
   IconPosition,
   IconSummary,
-} from "../../../shared/icons.js";
+} from "@design-studio/contracts/icons";
 
 export type { InsertTarget } from "@design-studio/contracts/insert";
 

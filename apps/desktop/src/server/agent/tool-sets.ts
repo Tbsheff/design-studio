@@ -28,8 +28,6 @@ const CORE_TOOLS = [
   "select_matching",
   "insert_jsx",
   "clear_text",
-  "list_icons",
-  "insert_icon",
   "list_text_styles",
   "apply_text_style",
   "create_text_style",

@@ -18,7 +18,7 @@ export {
   ICON_LIST_DEFAULT,
   ICON_LIST_MAX,
   ICON_PACKAGES,
-} from "../../shared/icons.js";
+} from "@design-studio/contracts/icons";
 
 export type { InsertScope } from "../direct-edit/components-ops/index.js";
 
@@ -39,7 +39,7 @@ export type {
   IconPosition,
   IconSource,
   IconSummary,
-} from "../../shared/icons.js";
+} from "@design-studio/contracts/icons";
 
 export type { InsertTarget } from "@design-studio/contracts/insert";
 

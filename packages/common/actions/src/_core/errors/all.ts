@@ -7,6 +7,7 @@ import type { CritiqueError } from "../../critique/errors/index.js";
 import type { DirectEditError } from "../../direct-edit/errors/index.js";
 import type { FillError } from "../../fill/errors/index.js";
 import type { GalleryError } from "../../gallery/errors/index.js";
+import type { IconError } from "../../icon/errors/index.js";
 import type { ImageError } from "../../image/errors/index.js";
 import type { MotionError } from "../../motion/errors/index.js";
 import type { PackError } from "../../pack/errors/index.js";
@@ -31,6 +32,7 @@ type StudioError =
   | DirectEditError
   | FillError
   | GalleryError
+  | IconError
   | ImageError
   | MotionError
   | PackError

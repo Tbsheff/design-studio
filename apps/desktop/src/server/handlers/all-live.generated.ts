@@ -13,6 +13,7 @@ import { EventsLive } from "./events/live.js";
 import { ExportLive } from "./export/live.js";
 import { FillLive } from "./fill/live.js";
 import { GalleryLive } from "./gallery/live.js";
+import { IconLive } from "./icon/live.js";
 import { ImageLive } from "./image/live.js";
 import { MotionLive } from "./motion/live.js";
 import { OrgScopeLive } from "./org-scope/live.js";
@@ -50,6 +51,7 @@ const ALL_LIVE = {
   export: ExportLive,
   fill: FillLive,
   gallery: GalleryLive,
+  icon: IconLive,
   image: ImageLive,
   motion: MotionLive,
   orgScope: OrgScopeLive,

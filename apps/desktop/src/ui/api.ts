@@ -60,7 +60,6 @@ import type {
   WorkspaceFolder,
   WorkspaceList,
 } from "@design-studio/contracts/folders";
-import type { InsertTarget } from "@design-studio/contracts/insert";
 import type {
   MotionKind,
   MotionState,
@@ -83,7 +82,6 @@ import type {
   TextUpdateResult,
 } from "@design-studio/contracts/text-search";
 
-import type { IconList, IconPosition, IconSource } from "../shared/icons";
 import type { FolderInspection } from "../shared/open-app";
 import type {
   PageImportRequest,
@@ -131,16 +129,18 @@ import {
 } from "./features/versions-layers-tokens/versions-api";
 import { call, pickMessage, request } from "./platform/http";
 import type { JsonBody } from "./platform/http";
+import { insertIconAt, listIconsAt } from "./platform/icon-api";
+import type { IconInsertBody, IconListQuery } from "./platform/icon-api";
 import { prefetch, readShared } from "./platform/query";
 import { startBody } from "./start-body.js";
 
 export { ApiError } from "./platform/http";
 
-export interface IconListQuery {
-  query: string;
-  library?: IconSource;
-  limit?: number;
-}
+export type {
+  IconInsertBody,
+  IconInsertReply,
+  IconListQuery,
+} from "./platform/icon-api";
 
 export interface TextStyleTargetBody {
   selector?: string;
@@ -227,25 +227,6 @@ export interface TextStyleCreateBody {
 export interface TextStyleDetachBody {
   styles: Record<string, string>;
   target: TextStyleTargetBody;
-}
-
-export interface IconInsertBody {
-  name: string;
-  size: number;
-  color?: string;
-  library?: IconSource;
-  position: IconPosition;
-  target: InsertTarget;
-}
-
-export interface IconInsertReply {
-  file: string;
-  icon: string;
-  importAdded: boolean;
-  select: (SourceLoc & { tag: string })[];
-  swapped: boolean;
-  title: string;
-  versionId: string;
 }
 
 const sendPresence = async (
@@ -668,9 +649,7 @@ export const api = {
     return { project: toProject(imported.project) };
   },
   insertIcon: (pid: string, did: string, body: IconInsertBody) =>
-    timedEdit(pid, did, "icon", 1, () =>
-      json<IconInsertReply>("POST", `${d(pid, did)}/icons/insert`, body)
-    ),
+    timedEdit(pid, did, "icon", 1, () => insertIconAt(pid, did, body)),
   inspectFolder: (path: string, appDir?: string) =>
     json<FolderInspection>("POST", "/api/folders/inspect", {
       path,
@@ -679,14 +658,7 @@ export const api = {
   keep: (pid: string, did: string) =>
     json<Version>("POST", `${d(pid, did)}/keep`),
   listIcons: (pid: string, did: string, q: IconListQuery) =>
-    json<IconList>(
-      "GET",
-      `${d(pid, did)}/icons?${new URLSearchParams({
-        query: q.query,
-        limit: String(q.limit ?? 48),
-        ...(q.library ? { library: q.library } : {}),
-      }).toString()}`
-    ),
+    listIconsAt(pid, did, q),
   listMotion: (pid: string, did: string, source: SourceLoc) =>
     call(motionRoutes.inspectMotion, toStyleQuery(pid, did, source)),
   listProjects: async (): Promise<Project[]> => {

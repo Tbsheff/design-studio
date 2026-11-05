@@ -29,17 +29,17 @@ const ICON_NAME = /^[A-Za-z][A-Za-z0-9-]{0,79}$/u;
 const ICON_COLOR = /^[a-z][a-z0-9-]{0,63}$/u;
 
 interface IconSummary {
-  component: string | null;
-  library: IconSource;
-  name: string;
-  svg: string;
+  readonly component: string | null;
+  readonly library: IconSource;
+  readonly name: string;
+  readonly svg: string;
 }
 
 interface IconList {
-  icons: IconSummary[];
-  importFrom: string | null;
-  library: IconSource;
-  total: number;
+  readonly icons: readonly IconSummary[];
+  readonly importFrom: string | null;
+  readonly library: IconSource;
+  readonly total: number;
 }
 
 export {

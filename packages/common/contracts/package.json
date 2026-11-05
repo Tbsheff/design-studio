@@ -20,6 +20,7 @@
     "./folders": "./src/folders.ts",
     "./frame-state": "./src/frame-state.ts",
     "./html-entities": "./src/html-entities.ts",
+    "./icons": "./src/icons.ts",
     "./insert": "./src/insert.ts",
     "./link-interaction": "./src/link-interaction.ts",
     "./links": "./src/links.ts",

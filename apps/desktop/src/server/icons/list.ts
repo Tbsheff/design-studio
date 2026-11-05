@@ -1,4 +1,4 @@
-import { ICON_LIST_DEFAULT, ICON_LIST_MAX } from "./deps.js";
+import { ICON_LIST_MAX } from "./deps.js";
 import type { IconList, IconSource, IconSummary } from "./deps.js";
 import { appRoot, iconSetFor } from "./library.js";
 import type { IconScope } from "./library.js";
@@ -7,9 +7,9 @@ import type { IconSet } from "./set.js";
 import { svgMarkup } from "./svg.js";
 
 interface ListIconsRequest {
-  library?: IconSource | undefined;
-  limit?: number | undefined;
-  query?: string | undefined;
+  readonly library: IconSource | null;
+  readonly limit: number;
+  readonly query: string;
 }
 
 interface Ranked {
@@ -93,9 +93,9 @@ const listIcons = async (
   scope: IconScope,
   request: ListIconsRequest
 ): Promise<IconList> => {
-  const set = await iconSetFor(scope, appRoot(scope), request.library ?? null);
-  const limit = Math.min(request.limit ?? ICON_LIST_DEFAULT, ICON_LIST_MAX);
-  const names = matchNames(await set.names(), request.query ?? "");
+  const set = await iconSetFor(scope, appRoot(scope), request.library);
+  const limit = Math.min(request.limit, ICON_LIST_MAX);
+  const names = matchNames(await set.names(), request.query);
 
   const icons = await Promise.all(
     names.slice(0, limit).map((name) => summary(set, name))

@@ -8,6 +8,7 @@ import { CritiqueStatus } from "../critique/errors/status.js";
 import { DirectEditStatus } from "../direct-edit/errors/status.js";
 import { FillStatus } from "../fill/errors/status.js";
 import { GalleryStatus } from "../gallery/errors/status.js";
+import { GridStatus } from "../grid/errors/status.js";
 import { IconStatus } from "../icon/errors/status.js";
 import { ImageSearchStatus } from "../image-search/errors/status.js";
 import { ImageStatus } from "../image/errors/status.js";
@@ -39,6 +40,7 @@ const HTTP_STATUS = {
   ...DirectEditStatus,
   ...FillStatus,
   ...GalleryStatus,
+  ...GridStatus,
   ...IconStatus,
   ...ImageStatus,
   ...ImageSearchStatus,

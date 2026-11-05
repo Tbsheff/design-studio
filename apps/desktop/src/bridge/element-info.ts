@@ -59,6 +59,8 @@ const STYLE_KEYS = [
   "background-size",
   "background-position",
   "background-repeat",
+  "grid-template-columns",
+  "grid-template-rows",
 ];
 
 const MAX_SELECTOR_DEPTH = 8;

@@ -12,6 +12,12 @@ const AccessibilitySlot = lazy(async () => {
   return { default: loaded.AccessibilitySlot };
 });
 
+const GridSlot = lazy(async () => {
+  const loaded = await import("./features/grid/index.js");
+
+  return { default: loaded.GridSlot };
+});
+
 const StackingSlot = lazy(async () => {
   const loaded = await import("./features/stacking/index.js");
 
@@ -34,6 +40,7 @@ export {
   AccessibilitySlot,
   ContentPanel,
   FillSlot,
+  GridSlot,
   MotionSlot,
   StackingSlot,
   StateStylesSlot,

@@ -14,6 +14,7 @@ import { EventsLive } from "./events/live.js";
 import { ExportLive } from "./export/live.js";
 import { FillLive } from "./fill/live.js";
 import { GalleryLive } from "./gallery/live.js";
+import { GridLive } from "./grid/live.js";
 import { IconLive } from "./icon/live.js";
 import { ImageSearchLive } from "./image-search/live.js";
 import { ImageLive } from "./image/live.js";
@@ -56,6 +57,7 @@ const ALL_LIVE = {
   export: ExportLive,
   fill: FillLive,
   gallery: GalleryLive,
+  grid: GridLive,
   icon: IconLive,
   image: ImageLive,
   imageSearch: ImageSearchLive,

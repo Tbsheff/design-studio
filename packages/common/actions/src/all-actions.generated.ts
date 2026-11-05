@@ -14,6 +14,7 @@ import { EventsActions } from "./events/index.js";
 import { ExportActions } from "./export/index.js";
 import { FillActions } from "./fill/index.js";
 import { GalleryActions } from "./gallery/index.js";
+import { GridActions } from "./grid/index.js";
 import { IconActions } from "./icon/index.js";
 import { ImageSearchActions } from "./image-search/index.js";
 import { ImageActions } from "./image/index.js";
@@ -56,6 +57,7 @@ const ALL_ACTIONS = {
   export: ExportActions,
   fill: FillActions,
   gallery: GalleryActions,
+  grid: GridActions,
   icon: IconActions,
   image: ImageActions,
   imageSearch: ImageSearchActions,

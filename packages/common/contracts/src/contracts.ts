@@ -1852,6 +1852,10 @@ export const DIRECT_STYLE_PROPERTIES = [
   "background-repeat",
   "mix-blend-mode",
   "background-blend-mode",
+  "grid-template-columns",
+  "grid-template-rows",
+  "grid-column",
+  "grid-row",
 ] as const;
 
 export type DirectStyleProperty = (typeof DIRECT_STYLE_PROPERTIES)[number];

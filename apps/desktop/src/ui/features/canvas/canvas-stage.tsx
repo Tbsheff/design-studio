@@ -3,6 +3,8 @@ import { Suspense, lazy } from "react";
 import { TabOrderSlot } from "../accessibility/index.js";
 import { McpPointBadge } from "../chat/index.js";
 import { CommentModePill } from "../comments/comment-layer.js";
+import type { GridOverlayProps } from "../grid/index.js";
+import { useEditVariant } from "../inspector/index.js";
 import type { SpacingHandlesProps } from "../spacing/index.js";
 import { FrameUndoBar } from "./add-frame-menu.js";
 import { frameDirection, frameName } from "./canvas-frames-model.js";
@@ -52,6 +54,23 @@ const SpacingLayer = ({ host, selection, zoom }: SpacingHandlesProps) => (
   </Suspense>
 );
 
+const LazyGridOverlay = lazy(async () => {
+  const loaded = await import("../grid/index.js");
+
+  return { default: loaded.GridOverlay };
+});
+
+const GridLayer = ({ host, selection, variant, zoom }: GridOverlayProps) => (
+  <Suspense fallback={null}>
+    <LazyGridOverlay
+      host={host}
+      selection={selection}
+      variant={variant}
+      zoom={zoom}
+    />
+  </Suspense>
+);
+
 interface CanvasStageProps {
   props: ViewProps;
   s: ReturnType<typeof useCanvasStage>;
@@ -61,6 +80,8 @@ interface CanvasStageProps {
 }
 
 const CanvasStage = ({ props, s, pv, ed, w }: CanvasStageProps) => {
+  const editVariant = useEditVariant();
+
   const { projectId, directionId, kind } = props;
 
   const {
@@ -182,6 +203,12 @@ const CanvasStage = ({ props, s, pv, ed, w }: CanvasStageProps) => {
               activeFrame={activeFrameOf(active, layout.frames)}
             />
           }
+        />
+        <GridLayer
+          host={spacingHost}
+          selection={props.selection}
+          variant={editVariant}
+          zoom={pz.zoom}
         />
         <InlinePromptSlot view={inlinePrompt} zoom={pz.zoom} frame={viewport} />
         <MarqueeLayer listen={frames.listen} />

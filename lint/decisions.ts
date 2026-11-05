@@ -499,6 +499,18 @@ export const decisionOverrides: OxlintOverride[] = [
   },
   {
     files: [
+      "packages/common/actions/src/grid/{get,schema,set,set-grid-item}.ts",
+      "packages/common/actions/src/grid/errors/status.ts",
+      "apps/desktop/src/server/handlers/grid/{get,handlers,live,set,set-grid-item}.ts",
+      "apps/desktop/src/server/grid/{deps,grid-failure,grid-run,grid-store,grid-writer}.ts",
+      "apps/desktop/src/server/grid/engine/deps.ts",
+      "apps/desktop/src/ui/features/grid/deps.ts",
+      "apps/desktop/src/ui/features/inspector/grid-section.tsx",
+    ],
+    rules: { "import/no-relative-parent-imports": "off" },
+  },
+  {
+    files: [
       "apps/desktop/src/server/components/prop/engine/{ast,change,component,create,edits,refs,sites,type-host,types}.ts",
       "apps/desktop/src/server/components/prop/prop-sites.ts",
     ],

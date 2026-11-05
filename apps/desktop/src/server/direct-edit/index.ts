@@ -50,6 +50,17 @@ export type {
   SetFillCommand,
 } from "../fill/index.js";
 
+export { GridStore, GridWriter } from "../grid/index.js";
+
+export type {
+  GetGridCommand,
+  GridChange,
+  GridStoreApi,
+  GridWriterApi,
+  SetGridCommand,
+  SetGridItemCommand,
+} from "../grid/index.js";
+
 export { MotionStore, MotionWriter } from "../motion/index.js";
 
 export type {

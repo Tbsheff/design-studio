@@ -8,7 +8,6 @@ import { registerComponentRoutes } from "./components-routes.js";
 import { registerIconRoutes } from "./icon-routes.js";
 import { registerImageSearchRoutes } from "./image-search-routes.js";
 import { registerLayerStateRoutes } from "./layer-state-routes.js";
-import { registerMotionRoutes } from "./motion-routes.js";
 import { registerSpacingRoutes } from "./spacing-routes.js";
 import { registerStackingRoutes } from "./stacking-routes.js";
 import { registerStateStyleRoutes } from "./state-style-routes.js";
@@ -31,7 +30,6 @@ const registerStylePanelRoutes = (app: Hono, ctx: AppContext): void => {
   const plain = { editDeps, readBody, loadDirection, withDirection };
   registerIconRoutes(app, withPreview);
   registerTextStyleRoutes(app, plain);
-  registerMotionRoutes(app, plain);
   registerSpacingRoutes(app, plain);
   registerStateStyleRoutes(app, { ...plain, canvas });
   registerStackingRoutes(app, plain);

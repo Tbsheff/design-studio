@@ -181,12 +181,6 @@ import {
   runSetLinkInteraction,
   setLinkInteractionInput,
 } from "./link-interaction-tool.js";
-import {
-  listMotionInput,
-  runListMotion,
-  runSetMotion,
-  setMotionInput,
-} from "./motion-tool.js";
 import { importPageInput, runImportPage } from "./page-import-tool.js";
 import { recordShot } from "./polish-loop.js";
 import { runSetProps, setPropsShape } from "./props-tool.js";
@@ -1338,21 +1332,6 @@ export async function createStudioMcpServer(
     withLayerIds(deps, (args) => runInsertIcon(deps, args))
   );
 
-  const listMotionTool = tool(
-    "list_motion",
-    TOOL_SHORT.list_motion,
-    listMotionInput,
-    withLayerIds(deps, (args) => runListMotion(deps, args)),
-    { annotations: { readOnlyHint: true } }
-  );
-
-  const setMotionTool = tool(
-    "set_motion",
-    TOOL_SHORT.set_motion,
-    setMotionInput,
-    withLayerIds(deps, (args) => runSetMotion(deps, args))
-  );
-
   const listLinkInteractionsTool = tool(
     "list_link_interactions",
     TOOL_SHORT.list_link_interactions,
@@ -1695,8 +1674,6 @@ export async function createStudioMcpServer(
     listIconsTool,
     insertIconTool,
     ...createTextStyleTools(deps, tool),
-    listMotionTool,
-    setMotionTool,
     getSpacingTool,
     setSpacingTool,
     listBreakpointsTool,

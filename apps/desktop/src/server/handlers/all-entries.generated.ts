@@ -13,6 +13,7 @@ import { ExportEntries } from "./export/handlers.js";
 import { FillEntries } from "./fill/handlers.js";
 import { GalleryEntries } from "./gallery/handlers.js";
 import { ImageEntries } from "./image/handlers.js";
+import { MotionEntries } from "./motion/handlers.js";
 import { OrgScopeEntries } from "./org-scope/handlers.js";
 import { PackEntries } from "./pack/handlers.js";
 import { ProjectEntries } from "./project/handlers.js";
@@ -44,6 +45,7 @@ const ALL_ENTRIES = {
   fill: FillEntries,
   gallery: GalleryEntries,
   image: ImageEntries,
+  motion: MotionEntries,
   orgScope: OrgScopeEntries,
   pack: PackEntries,
   project: ProjectEntries,

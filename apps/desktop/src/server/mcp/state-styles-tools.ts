@@ -9,7 +9,7 @@ import {
   SET_STATE_STYLE_DESCRIPTION,
   toStateInput,
 } from "../state-styles/input.js";
-import { inspectStateStyle } from "../state-styles/list.js";
+import { getStateStyleInfo } from "../state-styles/list.js";
 import { applyStateStyle, toStateResult } from "../state-styles/set.js";
 import type { StateTarget } from "../state-styles/set.js";
 import {
@@ -148,7 +148,7 @@ const runList = async (deps: EditDeps, input: ListInput): Promise<Done> => {
   const scope = await scopeOf(deps, input.projectId, input.directionId);
   const target = await locate(deps, scope, input);
 
-  const result = await guarded(() => inspectStateStyle(scope, target.source));
+  const result = await guarded(() => getStateStyleInfo(scope, target.source));
 
   return plain(ok(result));
 };

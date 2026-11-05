@@ -7,6 +7,7 @@ import { DirectEditStatus } from "../direct-edit/errors/status.js";
 import { FillStatus } from "../fill/errors/status.js";
 import { GalleryStatus } from "../gallery/errors/status.js";
 import { ImageStatus } from "../image/errors/status.js";
+import { MotionStatus } from "../motion/errors/status.js";
 import { PackStatus } from "../pack/errors/status.js";
 import { PropStatus } from "../prop/errors/status.js";
 import { PublishStatus } from "../publish/errors/status.js";
@@ -27,6 +28,7 @@ const HTTP_STATUS = {
   ...FillStatus,
   ...GalleryStatus,
   ...ImageStatus,
+  ...MotionStatus,
   ...PackStatus,
   ...PropStatus,
   ...PublishStatus,

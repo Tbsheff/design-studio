@@ -45,3 +45,13 @@ export type {
   GetFillCommand,
   SetFillCommand,
 } from "../fill/index.js";
+
+export { MotionStore, MotionWriter } from "../motion/index.js";
+
+export type {
+  GetMotionCommand,
+  MotionChange,
+  MotionStoreApi,
+  MotionWriterApi,
+  SetMotionCommand,
+} from "../motion/index.js";

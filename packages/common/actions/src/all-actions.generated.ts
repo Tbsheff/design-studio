@@ -13,6 +13,7 @@ import { ExportActions } from "./export/index.js";
 import { FillActions } from "./fill/index.js";
 import { GalleryActions } from "./gallery/index.js";
 import { ImageActions } from "./image/index.js";
+import { MotionActions } from "./motion/index.js";
 import { OrgScopeActions } from "./org-scope/index.js";
 import { PackActions } from "./pack/index.js";
 import { ProjectActions } from "./project/index.js";
@@ -44,6 +45,7 @@ const ALL_ACTIONS = {
   fill: FillActions,
   gallery: GalleryActions,
   image: ImageActions,
+  motion: MotionActions,
   orgScope: OrgScopeActions,
   pack: PackActions,
   project: ProjectActions,

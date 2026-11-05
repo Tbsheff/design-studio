@@ -27,7 +27,7 @@ import {
   SET_STATE_STYLE_DESCRIPTION,
   toStateInput,
 } from "../state-styles/input.js";
-import { inspectStateStyle } from "../state-styles/list.js";
+import { getStateStyleInfo } from "../state-styles/list.js";
 import { planStateStyle, toStateResult } from "../state-styles/set.js";
 import type { StateTarget } from "../state-styles/set.js";
 import { canvasFrames, refusal, writeProblem } from "./direct-tools.js";
@@ -205,7 +205,7 @@ const listWith = async (
     return refuse(located.message);
   }
 
-  const result = await inspectStateStyle(scopeOf(deps), located.target.source);
+  const result = await getStateStyleInfo(scopeOf(deps), located.target.source);
 
   return reply(JSON.stringify(result, null, 2));
 };

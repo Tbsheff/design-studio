@@ -87,6 +87,9 @@ const LEGACY_ORDER: readonly string[] = [
   "get_port_plan",
   "import_figma_frame",
   "get_component_usage",
+  "list_motion",
+  "list_state_styles",
+  "set_forced_state",
 ];
 
 export { LEGACY_ORDER };

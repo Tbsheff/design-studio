@@ -13,7 +13,7 @@ export {
   toStateInput,
 } from "./input.js";
 
-export { inspectStateStyle } from "./list.js";
+export { getStateStyleInfo } from "./list.js";
 
 export { planStateStyle, applyStateStyle, toStateResult } from "./set.js";
 

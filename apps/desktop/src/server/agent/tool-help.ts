@@ -127,8 +127,6 @@ export const TOOL_SHORT = {
   list_links:
     "Read only. Prototype links of Play mode: id, frame, selector, target, transition, broken, startFrame.",
   list_locked_layers: "List the locked layers of the design with their page.",
-  list_motion:
-    "Read only. The transitions and entrance animations on one element: Tailwind motion classes and studio motion CSS rules, with the reduced-motion guard.",
   list_route_links:
     "Attached apps only. Read only. Links in the source of one app route.",
   list_state_styles:
@@ -173,8 +171,6 @@ export const TOOL_SHORT = {
     "Lock or unlock, hide or show, or rename one layer. Locks live in the studio; hide and rename change the source.",
   set_link_interaction:
     "Set the trigger, action and target of one link, or make one from an element: scroll-to, open-url, close-overlay, toggle.",
-  set_motion:
-    "Set a transition (props, duration, easing, delay, hover/focus/active end values), an entrance animation with stagger, or none on one element.",
   set_props:
     "Change props of one React component instance (by selector or source file:line:col), such as variant or size.",
   set_spacing:
@@ -272,8 +268,6 @@ export const TOOL_HELP: Record<
     'List the prototype links (on click of an element, go to a frame) used by Play mode: id, frame, selector, target frame or "back", transition, broken (null or why the link no longer works) and startFrame. Each page with links is rendered to check the elements.',
   list_locked_layers:
     "List the locked layers of the design, with the page of each and whether it is on the page now. Changes nothing.",
-  list_motion:
-    "Read only. List the motion on the target with the same server code as the MCP list_motion tool: the Tailwind transition, duration, ease, delay and animate classes (with motion-safe and motion-reduce forms), the studio motion CSS rules for the element in the page style block or the app CSS entry, and whether a prefers-reduced-motion guard is there.",
   list_route_links: `Attached apps only. Read only. List the links found in the source of one app route (route pattern or concrete path): kind, href, target route, element and file:line. ${FLOW_NOTE}`,
   list_state_styles: listStateStylesDescription,
   list_text_styles:
@@ -307,8 +301,6 @@ export const TOOL_HELP: Record<
     "Lock or unlock, hide or show, or rename one layer, like the lock, eye and name in the Layers panel. A locked layer ignores canvas clicks. Locks are stored in the studio data folder, not in the source; hide writes display:none and rename writes data-name in the source as one version.",
   set_link_interaction:
     'Set the trigger, action and target of one prototype link with the same server code as the MCP set_link_interaction tool. Pass linkId to change a saved link, or fromFrame and selector to make one (the element must exist on the rendered page; use "body" for a delay trigger). trigger: click (default), hover, press, delay (delayMs) or key (key, for example "Escape" or "k"). action: navigate, modal or drawer with toFrame ("back" for navigate), scroll-to with target (a CSS selector in the same frame), open-url with url (https only), close-overlay, or toggle with target and visibility (toggle, show or hide). One element has one link per trigger. Each change is one undo step.',
-  set_motion:
-    "Set the motion of the target with the same server code as the MCP set_motion tool. kind transition takes properties, durationMs, easing (linear, ease, ease-in, ease-out, ease-in-out or cubic-bezier(..)), delayMs, and state (hover, focus or active) with end values. kind entrance takes preset (fade, slide-up, slide-down, scale-in, blur-in), durationMs, delayMs and staggerMs for children. kind none removes the motion. In Tailwind it writes motion-safe classes (tw-animate-css or tailwindcss-animate classes when the project has one); otherwise it writes @keyframes once and the rules in a studio motion style block (HTML) or the app CSS entry. Every rule has a prefers-reduced-motion guard.",
   set_props:
     'Change the props of one React component instance with the same code as the studio inspector Component section: it adds, replaces or removes JSX attributes at the use site, such as <Button variant="outline"> to variant="destructive" or size="sm", and leaves every other byte as it was. Find the instance by selector (an element inside it on the live page) or source (file:line:col of the JSX tag). Use it for a variant, size or flag change on a component; use Edit for new markup.',
   set_spacing:

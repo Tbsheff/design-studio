@@ -9,7 +9,7 @@ import { z } from "../platform/zod-bridge/index.js";
 import { StateStyleError } from "../state-styles/errors.js";
 import { setForcedState } from "../state-styles/forced.js";
 import { toStateInput } from "../state-styles/input.js";
-import { inspectStateStyle } from "../state-styles/list.js";
+import { getStateStyleInfo } from "../state-styles/list.js";
 import { applyStateStyle, toStateResult } from "../state-styles/set.js";
 import {
   forcedStateFields,
@@ -105,7 +105,7 @@ const registerStateList = (app: Hono, deps: StateStyleRouteDeps): void => {
     );
 
     try {
-      const info = await inspectStateStyle(
+      const info = await getStateStyleInfo(
         { direction, project, workTree: direction.workTree },
         parsed.data
       );

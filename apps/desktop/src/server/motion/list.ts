@@ -39,7 +39,7 @@ const hasGuard = (
   classes.some((token) => GUARD.test(token)) ||
   rules.some((rule) => rule.includes("prefers-reduced-motion"));
 
-const inspectMotion = async (
+const getMotionInfo = async (
   scope: MotionScope,
   loc: SourceLoc
 ): Promise<MotionInfo> => {
@@ -65,4 +65,4 @@ const inspectMotion = async (
   };
 };
 
-export { inspectMotion };
+export { getMotionInfo };

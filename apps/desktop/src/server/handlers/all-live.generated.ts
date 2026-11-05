@@ -13,6 +13,7 @@ import { ExportLive } from "./export/live.js";
 import { FillLive } from "./fill/live.js";
 import { GalleryLive } from "./gallery/live.js";
 import { ImageLive } from "./image/live.js";
+import { MotionLive } from "./motion/live.js";
 import { OrgScopeLive } from "./org-scope/live.js";
 import { PackLive } from "./pack/live.js";
 import { ProjectLive } from "./project/live.js";
@@ -44,6 +45,7 @@ const ALL_LIVE = {
   fill: FillLive,
   gallery: GalleryLive,
   image: ImageLive,
+  motion: MotionLive,
   orgScope: OrgScopeLive,
   pack: PackLive,
   project: ProjectLive,

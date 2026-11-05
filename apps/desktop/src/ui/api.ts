@@ -62,9 +62,7 @@ import type {
 } from "@design-studio/contracts/folders";
 import type { InsertTarget } from "@design-studio/contracts/insert";
 import type {
-  MotionInfo,
   MotionKind,
-  MotionSetResult,
   MotionState,
   EntrancePreset,
 } from "@design-studio/contracts/motion";
@@ -98,6 +96,7 @@ export interface CanvasSnapshot {
 }
 
 import { routes as fillRoutes } from "@design-studio/actions/fill/routes";
+import { routes as motionRoutes } from "@design-studio/actions/motion/routes";
 import { routes as projectsRoutes } from "@design-studio/actions/project/routes";
 import { routes } from "@design-studio/actions/studio/routes";
 import { routes as versionsRoutes } from "@design-studio/actions/version/routes";
@@ -390,6 +389,16 @@ const toAttachment = (wire: AttachmentWire): Attachment => {
   return wire;
 };
 
+const toStyleQuery = (
+  projectId: string,
+  directionId: string,
+  source: SourceLoc
+): SourceLoc & { directionId: string; projectId: string } => ({
+  ...source,
+  directionId,
+  projectId,
+});
+
 export const api = {
   addWorkspace: (path: string, label?: string) =>
     json<WorkspaceFolder>("POST", "/api/workspaces", {
@@ -599,13 +608,7 @@ export const api = {
   getDesignSystem: (pid: string, did: string) =>
     json<DesignSystemState>("GET", `${d(pid, did)}/design-system`),
   getFill: (pid: string, did: string, source: SourceLoc) =>
-    call(fillRoutes.getFill, {
-      col: source.col,
-      directionId: did,
-      file: source.file,
-      line: source.line,
-      projectId: pid,
-    }),
+    call(fillRoutes.getFill, toStyleQuery(pid, did, source)),
   getProject: async (pid: string) =>
     toProject(await call(projectsRoutes.getProject, { projectId: pid })),
   getRun: (pid: string, runId: string) =>
@@ -684,14 +687,7 @@ export const api = {
       }).toString()}`
     ),
   listMotion: (pid: string, did: string, source: SourceLoc) =>
-    json<MotionInfo>(
-      "GET",
-      `${d(pid, did)}/motion?${new URLSearchParams({
-        file: source.file,
-        line: String(source.line),
-        col: String(source.col),
-      }).toString()}`
-    ),
+    call(motionRoutes.inspectMotion, toStyleQuery(pid, did, source)),
   listProjects: async (): Promise<Project[]> => {
     const all: ProjectWire[] = [];
     let cursor: string | null = null;
@@ -840,16 +836,15 @@ export const api = {
     json<WorkspaceList>("PUT", "/api/workspaces/default", { path }),
   setFill: (pid: string, did: string, body: FillSetBody) =>
     timedEdit(pid, did, "fill", 1, () =>
-      call(fillRoutes.setFill, {
-        directionId: did,
-        fill: body.fill,
-        projectId: pid,
-        target: body.target,
-      })
+      call(fillRoutes.setFill, { ...body, directionId: did, projectId: pid })
     ),
   setMotion: (pid: string, did: string, body: MotionSetBody) =>
     timedEdit(pid, did, "motion", 1, () =>
-      json<MotionSetResult>("POST", `${d(pid, did)}/motion`, body)
+      call(motionRoutes.setMotion, {
+        ...body,
+        directionId: did,
+        projectId: pid,
+      })
     ),
   setQueue: (pid: string, runId: string, items: QueuedMessage[]) =>
     json<{ ok: boolean }>("PUT", `${p(pid)}/runs/${enc(runId)}/queue`, {

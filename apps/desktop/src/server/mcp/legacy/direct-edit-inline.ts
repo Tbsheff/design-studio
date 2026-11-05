@@ -2,7 +2,6 @@ import { BREAKPOINT_TOOLS } from "../breakpoints-tools.js";
 import { COMPONENT_VARIANT_TOOLS } from "../component-variant-tools.js";
 import { defineTool } from "../edit-kit.js";
 import type { ToolSpec } from "../edit-kit.js";
-import { IMAGE_SEARCH_TOOLS } from "../image-search-tools.js";
 import {
   editElementSchema,
   setTokenSchema,
@@ -51,7 +50,6 @@ const DIRECT_EDIT_INLINE_TOOLS: ToolSpec[] = [
   setTokenTool,
   ...COMPONENT_VARIANT_TOOLS,
   ...BREAKPOINT_TOOLS,
-  ...IMAGE_SEARCH_TOOLS,
 ];
 
 export { DIRECT_EDIT_INLINE_TOOLS };

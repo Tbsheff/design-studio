@@ -140,8 +140,6 @@ const UPDATE_COMPONENT_VARIANT_TOOL = "mcp__studio__update_component_variant";
 const COPY_CODE_TOOL = "mcp__studio__copy_code";
 const LIST_BREAKPOINTS_TOOL = "mcp__studio__list_breakpoints";
 const SET_BREAKPOINT_STYLE_TOOL = "mcp__studio__set_breakpoint_style";
-const SEARCH_IMAGES_TOOL = "mcp__studio__search_images";
-const PLACE_IMAGE_TOOL = "mcp__studio__place_image";
 
 const DIRECT_EDIT_TOOLS = new Set<string>([
   CREATE_COMPONENT_VARIANT_TOOL,
@@ -158,7 +156,6 @@ const DIRECT_EDIT_TOOLS = new Set<string>([
   SWAP_INSTANCE_TOOL,
   SET_IMAGE_TOOL,
   SET_BREAKPOINT_STYLE_TOOL,
-  PLACE_IMAGE_TOOL,
   ...STUDIO_EDIT_TOOLS_R13,
 ]);
 
@@ -180,8 +177,6 @@ const STUDIO_MCP_TOOLS: readonly string[] = [
   COPY_CODE_TOOL,
   LIST_BREAKPOINTS_TOOL,
   SET_BREAKPOINT_STYLE_TOOL,
-  SEARCH_IMAGES_TOOL,
-  PLACE_IMAGE_TOOL,
   ...AGENT_OPS.toolIds,
 ];
 

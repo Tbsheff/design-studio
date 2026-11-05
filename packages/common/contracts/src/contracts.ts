@@ -27,6 +27,7 @@ export interface ProjectSettings {
   autoApprove: boolean;
   disabledSkills: string[];
   defaultLevel: RunLevel;
+  imageSearch?: boolean;
 }
 
 export type RunLevel = "wireframe" | "prototype" | "polish";

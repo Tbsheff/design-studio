@@ -1,5 +1,3 @@
-export { json } from "../../api.js";
-
 export { useCommands } from "../commands/registry.js";
 
 export type { Command } from "../commands/registry.js";
@@ -16,11 +14,17 @@ export type { SelectionContext } from "@design-studio/contracts";
 
 export { imageKindOf } from "../../../shared/image.js";
 
-export { IMAGE_ORIENTATIONS } from "../../../shared/image-search.js";
+export { IMAGE_ORIENTATIONS } from "@design-studio/contracts/image-search";
 
 export type {
   ImageOrientation,
   ImageSearchHit,
   ImageSearchResult,
   PlaceImageResult,
-} from "../../../shared/image-search.js";
+} from "@design-studio/contracts/image-search";
+
+export { call } from "../../platform/http.js";
+
+export { routes as imageSearchRoutes } from "@design-studio/actions/image-search/routes";
+
+export { routes as projectRoutes } from "@design-studio/actions/project/routes";

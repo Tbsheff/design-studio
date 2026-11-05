@@ -117,3 +117,11 @@ export type {
 export { PageWriter } from "../page-import/index.js";
 
 export type { ImportPageCommand, PageWriterApi } from "../page-import/index.js";
+
+export { ImageSearchStore, ImageSearchWriter } from "../image-search/index.js";
+
+export type {
+  ImageSearchStoreApi,
+  ImageSearchWriterApi,
+  InsertImageSearchCommand,
+} from "../image-search/index.js";

@@ -73,6 +73,7 @@ const SettingsFields = {
   autoApprove: Schema.optionalKey(Schema.Boolean),
   defaultLevel: Schema.optionalKey(Schema.String),
   disabledSkills: Schema.optionalKey(Schema.Array(Schema.String)),
+  imageSearch: Schema.optionalKey(Schema.Boolean),
   maxBudgetUsd: Schema.optionalKey(Schema.NullOr(Schema.Number)),
   maxTurns: Schema.optionalKey(Schema.Number),
   model: Schema.optionalKey(Schema.String),

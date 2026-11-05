@@ -21,6 +21,8 @@
     "./frame-state": "./src/frame-state.ts",
     "./html-entities": "./src/html-entities.ts",
     "./icons": "./src/icons.ts",
+    "./image": "./src/image.ts",
+    "./image-search": "./src/image-search.ts",
     "./insert": "./src/insert.ts",
     "./link-interaction": "./src/link-interaction.ts",
     "./links": "./src/links.ts",

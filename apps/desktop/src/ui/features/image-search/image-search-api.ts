@@ -1,4 +1,9 @@
-import { imageTargetOf, json } from "./deps.js";
+import {
+  call,
+  imageSearchRoutes,
+  imageTargetOf,
+  projectRoutes,
+} from "./deps.js";
 import type {
   ImageOrientation,
   ImageSearchResult,
@@ -24,41 +29,46 @@ interface PlaceRequest {
   readonly target: SelectionContext;
 }
 
-const projectPath = (ids: PhotoIds): string =>
-  `/api/projects/${encodeURIComponent(ids.projectId)}/image-search`;
+const PHOTO_LIMIT = 24;
 
 const readStatus = (ids: PhotoIds): Promise<SearchStatus> =>
-  json<SearchStatus>("GET", projectPath(ids));
+  call(imageSearchRoutes.getImageSearch, { projectId: ids.projectId });
 
-const writeSetting = (ids: PhotoIds, isOn: boolean): Promise<SearchStatus> =>
-  json<SearchStatus>("POST", `${projectPath(ids)}/setting`, { on: isOn });
+const writeSetting = async (
+  ids: PhotoIds,
+  isOn: boolean
+): Promise<SearchStatus> => {
+  await call(projectRoutes.updateProject, {
+    imageSearch: isOn,
+    projectId: ids.projectId,
+  });
+
+  return readStatus(ids);
+};
 
 const searchPhotos = (
   ids: PhotoIds,
   query: string,
-  orientation: ImageOrientation
-): Promise<ImageSearchResult> => {
-  const params = new URLSearchParams({ limit: "24", orientation, query });
-
-  return json<ImageSearchResult>(
-    "GET",
-    `${projectPath(ids)}/photos?${params.toString()}`
-  );
-};
+  kind: ImageOrientation
+): Promise<ImageSearchResult> =>
+  call(imageSearchRoutes.inspectImageSearch, {
+    limit: PHOTO_LIMIT,
+    orientation: kind,
+    projectId: ids.projectId,
+    query,
+  });
 
 const placePhoto = (
   ids: PhotoIds,
   request: PlaceRequest
 ): Promise<PlaceImageResult> =>
-  json<PlaceImageResult>(
-    "POST",
-    `/api/projects/${encodeURIComponent(ids.projectId)}/d/${encodeURIComponent(ids.directionId)}/image-search/place`,
-    {
-      alt: request.alt,
-      imageId: request.imageId,
-      target: imageTargetOf(request.target),
-    }
-  );
+  call(imageSearchRoutes.insertImageSearch, {
+    alt: request.alt,
+    directionId: ids.directionId,
+    imageId: request.imageId,
+    projectId: ids.projectId,
+    target: imageTargetOf(request.target),
+  });
 
 export { placePhoto, readStatus, searchPhotos, writeSetting };
 

@@ -80,7 +80,7 @@ const routes = {
   },
   updateProject: {
     id: "project.update",
-    invalidates: ["project.get", "project.list"],
+    invalidates: ["image-search.get", "project.get", "project.list"],
     method: "PATCH",
     path: "/api/projects/:projectId/settings",
   },

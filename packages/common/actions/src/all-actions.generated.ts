@@ -14,6 +14,7 @@ import { ExportActions } from "./export/index.js";
 import { FillActions } from "./fill/index.js";
 import { GalleryActions } from "./gallery/index.js";
 import { IconActions } from "./icon/index.js";
+import { ImageSearchActions } from "./image-search/index.js";
 import { ImageActions } from "./image/index.js";
 import { MotionActions } from "./motion/index.js";
 import { OrgScopeActions } from "./org-scope/index.js";
@@ -55,6 +56,7 @@ const ALL_ACTIONS = {
   gallery: GalleryActions,
   icon: IconActions,
   image: ImageActions,
+  imageSearch: ImageSearchActions,
   motion: MotionActions,
   orgScope: OrgScopeActions,
   pack: PackActions,

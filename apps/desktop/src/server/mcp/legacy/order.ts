@@ -96,6 +96,8 @@ const LEGACY_ORDER: readonly string[] = [
   "list_icons",
   "list_link_interactions",
   "set_link_interaction",
+  "search_images",
+  "place_image",
 ];
 
 export { LEGACY_ORDER };

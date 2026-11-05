@@ -19,7 +19,7 @@ const updateProject = defineAction({
     ...SettingsFields,
     projectId: ProjectIdSchema,
   }),
-  invalidates: ["project.get", "project.list"],
+  invalidates: ["image-search.get", "project.get", "project.list"],
   mcp: { off: "legacy-mcp" },
   needs: "project.update",
   output: ProjectSchema,

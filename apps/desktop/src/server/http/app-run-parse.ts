@@ -239,6 +239,7 @@ const settingsSchema = z
       )
       .max(1000)
       .transform((ids) => [...new Set(ids)]),
+    imageSearch: z.boolean(),
     maxBudgetUsd: z.number().min(0.01).max(50).nullable(),
     maxTurns: z.number().int().min(1).max(200),
     model: z.string().trim().min(1).max(200),

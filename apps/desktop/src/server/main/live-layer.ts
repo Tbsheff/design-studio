@@ -15,6 +15,7 @@ import { ExportLive } from "../handlers/export/live.js";
 import { FillLive } from "../handlers/fill/live.js";
 import { GalleryLive } from "../handlers/gallery/live.js";
 import { IconLive } from "../handlers/icon/live.js";
+import { ImageSearchLive } from "../handlers/image-search/live.js";
 import { ImageLive } from "../handlers/image/live.js";
 import { MotionLive } from "../handlers/motion/live.js";
 import { OrgScopeLive } from "../handlers/org-scope/live.js";
@@ -66,6 +67,7 @@ const liveLayer = Layer.mergeAll(
   GalleryLive,
   IconLive,
   ImageLive,
+  ImageSearchLive,
   MotionLive,
   OrgScopeLive,
   PackLive,

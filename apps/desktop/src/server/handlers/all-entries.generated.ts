@@ -14,6 +14,7 @@ import { ExportEntries } from "./export/handlers.js";
 import { FillEntries } from "./fill/handlers.js";
 import { GalleryEntries } from "./gallery/handlers.js";
 import { IconEntries } from "./icon/handlers.js";
+import { ImageSearchEntries } from "./image-search/handlers.js";
 import { ImageEntries } from "./image/handlers.js";
 import { MotionEntries } from "./motion/handlers.js";
 import { OrgScopeEntries } from "./org-scope/handlers.js";
@@ -55,6 +56,7 @@ const ALL_ENTRIES = {
   gallery: GalleryEntries,
   icon: IconEntries,
   image: ImageEntries,
+  imageSearch: ImageSearchEntries,
   motion: MotionEntries,
   orgScope: OrgScopeEntries,
   pack: PackEntries,

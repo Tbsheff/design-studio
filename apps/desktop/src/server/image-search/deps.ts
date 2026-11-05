@@ -46,7 +46,7 @@ export {
   IMAGE_SEARCH_LIMIT_DEFAULT,
   IMAGE_SEARCH_LIMIT_MAX,
   IMAGE_SEARCH_SETTING,
-} from "../../shared/image-search.js";
+} from "@design-studio/contracts/image-search";
 
 export type {
   ImageSearchHit,
@@ -55,7 +55,7 @@ export type {
   PlaceImageDone,
   PlaceImageInput,
   PlaceImageResult,
-} from "../../shared/image-search.js";
+} from "@design-studio/contracts/image-search";
 
 export type {
   Direction,

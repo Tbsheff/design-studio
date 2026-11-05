@@ -11,10 +11,6 @@ import { COPY_CODE_AGENT_DESCRIPTION } from "./copy-code-tool.js";
 import { APP_DOCTOR_DESCRIPTION } from "./doctor-tool.js";
 import { EXPORT_FRAME_AGENT_DESCRIPTION } from "./export-tool.js";
 import { FIGMA_IMPORT_TOOL_DESCRIPTION } from "./figma-import-tool.js";
-import {
-  placeImageDescription,
-  searchImagesDescription,
-} from "./image-search-tool.js";
 import { SET_IMAGE_AGENT_DESCRIPTION } from "./image-tool.js";
 import { COMPARE_REFERENCE_DESCRIPTION } from "./reference-tool.js";
 import { SELECT_MATCHING_DESCRIPTION } from "./select-tool.js";
@@ -94,8 +90,6 @@ export const TOOL_SHORT = {
   measure:
     "Read only. Distance, gaps and insets between two elements on the live page.",
   paint_shape: VECTOR_PAINT_SHORT,
-  place_image:
-    "Download one search_images result into the project assets, set it on an <img> or background with alt text, and credit it in ASSETS.md.",
   prepare_ship:
     "Attached apps only. Read only. Files changed since the last ship and the draft PR text. Only the user can ship.",
   render_check:
@@ -107,8 +101,6 @@ export const TOOL_SHORT = {
     "Read only. Review panel checks on one frame: contrast, tap targets, axe rules, off-token values, clipping. Findings have a directFix for edit_element or null.",
   screenshot:
     "PNG screenshots of one page (default: the <canvas-context> frame), up to four images from y offset `from`. The text says if more of the page is below.",
-  search_images:
-    "Read only. Search free Creative Commons stock photos by words, orientation and limit; returns thumbnail, full url, size, author and license.",
   select_matching:
     "Read only. Find elements that match one element (same component, classes or style). Returns ids for edit_element `also`.",
   set_breakpoint_style:
@@ -197,7 +189,6 @@ export const TOOL_HELP: Record<
   measure:
     "Read only. Measure the distance between two elements on the live page, like holding Alt in the studio: boxes, relation, horizontal and vertical gap, inset when one is inside the other, center offset and guide lines.",
   paint_shape: VECTOR_PAINT_SHORT,
-  place_image: placeImageDescription,
   prepare_ship:
     "Attached app projects only. Read only. Lists the files the studio changed since the last ship (or since the app was attached), the files that cannot ship (secrets, .env, conflicts with the user's own changes) and the default branch name and pull request text. You cannot ship; only the user can, with the Ship button.",
   render_check:
@@ -210,7 +201,6 @@ export const TOOL_HELP: Record<
     "Run the studio Review panel checks on one canvas frame of the live page: color contrast with the nearest passing color token, tap target size, missing alt text and other axe-core rules, off-token values (raw colors or spacing that are not project tokens, Tailwind arbitrary values) and clipped or overflowing content. Returns JSON findings with severity, element, selector, source, message and directFix (the exact style for edit_element) or null when the fix needs judgment. Read only.",
   screenshot:
     "Take PNG screenshots of one page of the live preview. With no frame or path it shows the frame from <canvas-context> (its page, size and frame state), or the entry page. Returns up to four images, top to bottom, starting at the y offset `from`. The text names the page and says whether more of it is below.",
-  search_images: searchImagesDescription,
   select_matching: SELECT_MATCHING_DESCRIPTION,
   set_breakpoint_style: setBreakpointStyleDescription,
   set_frame_session: `Attached apps only. Change the session that signed-in frame states use, with the same code as the frame state menu: user {name, email} sets the mock user; forgetCookies drops the cookies the app set in signed-in frames. Changes no file. ${FRAME_STATES_NOTE}`,

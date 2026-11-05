@@ -1,16 +1,15 @@
 import type { SourceLoc, Version } from "@design-studio/contracts";
+import type { ImageFit, ImageMode } from "@design-studio/contracts/image";
 import type { ComponentOwner } from "@design-studio/contracts/props";
 
 export const IMAGE_BYTES_MAX = 10 * 1024 * 1024;
-export const IMAGE_FITS = ["cover", "contain", "fill"] as const;
+export {
+  IMAGE_ALT_MAX,
+  IMAGE_FITS,
+  IMAGE_MODES,
+} from "@design-studio/contracts/image";
 
-export type ImageFit = (typeof IMAGE_FITS)[number];
-
-export const IMAGE_MODES = ["auto", "img", "background", "insert"] as const;
-
-export type ImageMode = (typeof IMAGE_MODES)[number];
-
-export const IMAGE_ALT_MAX = 500;
+export type { ImageFit, ImageMode } from "@design-studio/contracts/image";
 
 export const IMAGE_ACCEPT =
   "image/png,image/jpeg,image/gif,image/webp,image/avif,image/svg+xml";

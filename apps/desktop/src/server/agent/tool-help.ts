@@ -86,8 +86,6 @@ export const TOOL_SHORT = {
     "Read only. Project components, the shared kit first, with import line, JSX example, parts and cva variants. Use query; pages of 20.",
   list_frame_states:
     "Attached apps only. Read only. Frame preview states, which frame shows which, and the session in use.",
-  list_link_interactions:
-    "Read only. Saved prototype links with trigger (click, hover, press, delay, key), action and target (frame, selector or url).",
   list_links:
     "Read only. Prototype links of Play mode: id, frame, selector, target, transition, broken, startFrame.",
   list_locked_layers: "List the locked layers of the design with their page.",
@@ -123,8 +121,6 @@ export const TOOL_SHORT = {
     "Place or replace an image (project file, attached image or https url) with src, alt, fit and focal point; copies the file into the project assets.",
   set_layer_state:
     "Lock or unlock, hide or show, or rename one layer. Locks live in the studio; hide and rename change the source.",
-  set_link_interaction:
-    "Set the trigger, action and target of one link, or make one from an element: scroll-to, open-url, close-overlay, toggle.",
   set_props:
     "Change props of one React component instance (by selector or source file:line:col), such as variant or size.",
   set_token:
@@ -193,8 +189,6 @@ export const TOOL_HELP: Record<
   list_components:
     "Read only. Find the React components of the project with the same server code as the MCP list_components tool and the studio Components panel: shared workspace packages (the kit, such as packages/ui) first, then app components by use count. Each item has source (package or app), file, folder, parts (other components of the same file, such as CardHeader for Card), a ready import line, a minimal JSX example, the use count and the props schema with cva variants and their options. query searches names, then folders and files, then props and variants. Pages hold 20 items; pass nextCursor as cursor for the next page. Use the names in insert_jsx or insert_component and the variant options in set_props.",
   list_frame_states: `Attached apps only. Read only. List the frame preview states (signed in, empty, loading, error, mock), which frame shows which, and the session in use. ${FRAME_STATES_NOTE}`,
-  list_link_interactions:
-    "Read only. List the saved prototype links with the same server code as the MCP list_link_interactions tool: id, frame, selector, trigger (shown only when it is not click: hover, press, delay with delayMs, key with key), action (navigate, modal, drawer, scroll-to, open-url, close-overlay, toggle), target (toFrame, target selector with visibility, or url), transition and broken. fromFrame limits the list to one frame.",
   list_links:
     'List the prototype links (on click of an element, go to a frame) used by Play mode: id, frame, selector, target frame or "back", transition, broken (null or why the link no longer works) and startFrame. Each page with links is rendered to check the elements.',
   list_locked_layers:
@@ -224,8 +218,6 @@ export const TOOL_HELP: Record<
   set_image: SET_IMAGE_AGENT_DESCRIPTION,
   set_layer_state:
     "Lock or unlock, hide or show, or rename one layer, like the lock, eye and name in the Layers panel. A locked layer ignores canvas clicks. Locks are stored in the studio data folder, not in the source; hide writes display:none and rename writes data-name in the source as one version.",
-  set_link_interaction:
-    'Set the trigger, action and target of one prototype link with the same server code as the MCP set_link_interaction tool. Pass linkId to change a saved link, or fromFrame and selector to make one (the element must exist on the rendered page; use "body" for a delay trigger). trigger: click (default), hover, press, delay (delayMs) or key (key, for example "Escape" or "k"). action: navigate, modal or drawer with toFrame ("back" for navigate), scroll-to with target (a CSS selector in the same frame), open-url with url (https only), close-overlay, or toggle with target and visibility (toggle, show or hide). One element has one link per trigger. Each change is one undo step.',
   set_props:
     'Change the props of one React component instance with the same code as the studio inspector Component section: it adds, replaces or removes JSX attributes at the use site, such as <Button variant="outline"> to variant="destructive" or size="sm", and leaves every other byte as it was. Find the instance by selector (an element inside it on the live page) or source (file:line:col of the JSX tag). Use it for a variant, size or flag change on a component; use Edit for new markup.',
   set_token:

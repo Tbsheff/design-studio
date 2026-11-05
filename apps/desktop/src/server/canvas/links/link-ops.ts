@@ -11,8 +11,14 @@ import type {
 import { ConflictError, NotFoundError } from "../../platform/errors/index.js";
 import type { CanvasToolContext } from "../tools.js";
 import { implicitLinks, keepImplicit } from "./implicit-links.js";
+import type { LinkInteractionRequest } from "./link-interaction-input.js";
+import {
+  listLinkInteractions,
+  setLinkInteraction,
+} from "./link-interaction.js";
 import type { LinkRuntime } from "./link-runtime.js";
 import {
+  LinkError,
   frameOf,
   framesOf,
   implicitDeps,
@@ -67,6 +73,15 @@ interface LinkKeepQuery {
   readonly ids: readonly string[] | "all";
   readonly projectId: string;
   readonly transition?: LinkTransition;
+}
+
+interface LinkInteractionListQuery {
+  readonly fromFrame: string | null;
+  readonly projectId: string;
+}
+
+interface LinkInteractionSetQuery extends LinkInteractionRequest {
+  readonly projectId: string;
 }
 
 interface LinkSaved {
@@ -156,6 +171,46 @@ const readImplicitList = async (
   return implicitLinks(
     implicitDeps(runtime.canvas, context.project, probeOf(runtime, context))
   );
+};
+
+const inspectInteractions = async (
+  runtime: LinkRuntime,
+  query: LinkInteractionListQuery
+): Promise<LinkListed> => {
+  const context = await contextOf(runtime, query.projectId);
+  const listing = await listLinkInteractions(context, query.fromFrame);
+
+  return {
+    items: listing.items,
+    links: listing.file,
+    note: listing.note,
+    startFrame: listing.startFrame,
+  };
+};
+
+const setInteraction = async (
+  runtime: LinkRuntime,
+  query: LinkInteractionSetQuery
+): Promise<LinkSaved> => {
+  const context = await toWritableContext(runtime, query.projectId);
+
+  const done = await setLinkInteraction(
+    context,
+    query,
+    probeOf(runtime, context) ?? null
+  );
+
+  if (done.result.isError || !done.link) {
+    throw new LinkError(
+      done.result.content.map((part) => part.text).join("\n")
+    );
+  }
+
+  return {
+    link: done.link,
+    links: await runtime.canvas.links.read(context.project),
+    title: done.title,
+  };
 };
 
 const writeCreate = async (
@@ -310,9 +365,11 @@ const writeStart = async (
 
 export {
   readImplicitList,
+  inspectInteractions,
   readLinkList,
   writeCreate,
   writeDelete,
+  setInteraction,
   writeKeep,
   writeStart,
   writeUpdate,
@@ -320,6 +377,8 @@ export {
 
 export type {
   LinkCreateQuery,
+  LinkInteractionListQuery,
+  LinkInteractionSetQuery,
   LinkKeepQuery,
   LinkListed,
   LinkListQuery,

@@ -1,7 +1,6 @@
 import { canvasList } from "../../canvas/index.js";
 import { defineTool, plain } from "../edit-kit.js";
 import type { ToolSpec } from "../edit-kit.js";
-import { LINK_INTERACTION_TOOLS } from "../link-interaction-tools.js";
 import {
   addFrame,
   addRouteFrame,
@@ -111,7 +110,6 @@ const CANVAS_LEGACY_TOOLS_UNGUARDED: ToolSpec[] = [
   addFrameTool,
   removeFrameTool,
   addRouteFrameTool,
-  ...LINK_INTERACTION_TOOLS,
 ];
 
 const CANVAS_LEGACY_TOOLS = guardTools(CANVAS_LEGACY_TOOLS_UNGUARDED);

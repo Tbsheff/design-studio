@@ -7,6 +7,7 @@ import { handle as createFlowCanvasHandle } from "./create-flow.js";
 import { handle as createLinkCanvasHandle } from "./create-link.js";
 import { handle as deleteLinkCanvasHandle } from "./delete-link.js";
 import { handle as getDocCanvasHandle } from "./get-doc.js";
+import { handle as inspectLinkInteractionCanvasHandle } from "./inspect-link-interaction.js";
 import { handle as listFlowLinksCanvasHandle } from "./list-flow-links.js";
 import { handle as listFlowParamsCanvasHandle } from "./list-flow-params.js";
 import { handle as listFrameStatesCanvasHandle } from "./list-frame-states.js";
@@ -14,6 +15,7 @@ import { handle as listImplicitLinksCanvasHandle } from "./list-implicit-links.j
 import { handle as listLinksCanvasHandle } from "./list-links.js";
 import { handle as setDocCanvasHandle } from "./set-doc.js";
 import { handle as setFrameStateCanvasHandle } from "./set-frame-state.js";
+import { handle as setLinkInteractionCanvasHandle } from "./set-link-interaction.js";
 import { handle as setPresenceCanvasHandle } from "./set-presence.js";
 import { handle as setStartLinkCanvasHandle } from "./set-start-link.js";
 import { handle as updateFrameSessionCanvasHandle } from "./update-frame-session.js";
@@ -25,6 +27,7 @@ const CanvasEntries = {
   createLinkCanvas: { handle: createLinkCanvasHandle },
   deleteLinkCanvas: { handle: deleteLinkCanvasHandle },
   getDocCanvas: { handle: getDocCanvasHandle },
+  inspectLinkInteractionCanvas: { handle: inspectLinkInteractionCanvasHandle },
   listFlowLinksCanvas: { handle: listFlowLinksCanvasHandle },
   listFlowParamsCanvas: { handle: listFlowParamsCanvasHandle },
   listFrameStatesCanvas: { handle: listFrameStatesCanvasHandle },
@@ -32,6 +35,7 @@ const CanvasEntries = {
   listLinksCanvas: { handle: listLinksCanvasHandle },
   setDocCanvas: { handle: setDocCanvasHandle },
   setFrameStateCanvas: { handle: setFrameStateCanvasHandle },
+  setLinkInteractionCanvas: { handle: setLinkInteractionCanvasHandle },
   setPresenceCanvas: { handle: setPresenceCanvasHandle },
   setStartLinkCanvas: { handle: setStartLinkCanvasHandle },
   updateFrameSessionCanvas: { handle: updateFrameSessionCanvasHandle },

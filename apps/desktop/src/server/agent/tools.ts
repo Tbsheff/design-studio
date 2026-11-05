@@ -163,12 +163,6 @@ import {
 } from "./layer-state-tool.js";
 import { isLeanRun } from "./lean-run.js";
 import { AGENT_OPS } from "./legacy/agent-ops.js";
-import {
-  listLinkInteractionsInput,
-  runListLinkInteractions,
-  runSetLinkInteraction,
-  setLinkInteractionInput,
-} from "./link-interaction-tool.js";
 import { recordShot } from "./polish-loop.js";
 import { runSetProps, setPropsShape } from "./props-tool.js";
 import {
@@ -322,26 +316,6 @@ export function runListLinks(
 ) {
   return withCanvas(deps, "list_links", (ctx) =>
     listLinks(ctx, agentLinkProbe(deps))
-  );
-}
-
-type LinkToolDeps = Pick<StudioToolDeps, "ctx" | "canvas" | "preview">;
-
-export function runSetLinkInteractionTool(
-  deps: LinkToolDeps,
-  args: Parameters<typeof runSetLinkInteraction>[1]
-) {
-  return withCanvas(deps, "set_link_interaction", (ctx) =>
-    runSetLinkInteraction(ctx, args, agentLinkProbe(deps) ?? null)
-  );
-}
-
-export function runListLinkInteractionsTool(
-  deps: LinkToolDeps,
-  args: { fromFrame?: string }
-) {
-  return withCanvas(deps, "list_link_interactions", (ctx) =>
-    runListLinkInteractions(ctx, args.fromFrame ?? null)
   );
 }
 
@@ -1262,21 +1236,6 @@ export async function createStudioMcpServer(
     withLayerIds(deps, (args) => runInsertComponent(deps, args))
   );
 
-  const listLinkInteractionsTool = tool(
-    "list_link_interactions",
-    TOOL_SHORT.list_link_interactions,
-    listLinkInteractionsInput,
-    (args) => runListLinkInteractionsTool(deps, args),
-    { annotations: { readOnlyHint: true } }
-  );
-
-  const setLinkInteractionTool = tool(
-    "set_link_interaction",
-    TOOL_SHORT.set_link_interaction,
-    setLinkInteractionInput,
-    (args) => runSetLinkInteractionTool(deps, args)
-  );
-
   const listBreakpointsTool = tool(
     "list_breakpoints",
     TOOL_SHORT.list_breakpoints,
@@ -1513,8 +1472,6 @@ export async function createStudioMcpServer(
     canvasPointTool,
     listLinksTool,
     editLinksTool,
-    listLinkInteractionsTool,
-    setLinkInteractionTool,
     listFrameStatesTool,
     setFrameStateTool,
     setFrameSessionTool,

@@ -30,6 +30,12 @@ const routes = {
     method: "GET",
     path: "/api/projects/:projectId/canvas",
   },
+  inspectLinkInteractionCanvas: {
+    id: "canvas.inspectLinkInteraction",
+    invalidates: [],
+    method: "GET",
+    path: "/api/projects/:projectId/link-interactions",
+  },
   listFlowLinksCanvas: {
     id: "canvas.listFlowLinks",
     invalidates: [],
@@ -71,6 +77,16 @@ const routes = {
     invalidates: ["canvas.listFrameStates"],
     method: "PUT",
     path: "/api/projects/:projectId/frame-states/frames/:frame",
+  },
+  setLinkInteractionCanvas: {
+    id: "canvas.setLinkInteraction",
+    invalidates: [
+      "canvas.listLinks",
+      "canvas.listLinkInteractions",
+      "canvas.listImplicitLinks",
+    ],
+    method: "POST",
+    path: "/api/projects/:projectId/links/interaction",
   },
   setPresenceCanvas: {
     id: "canvas.setPresence",

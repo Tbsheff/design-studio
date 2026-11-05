@@ -1,10 +1,18 @@
 import { FRAME_STATE_KINDS } from "@design-studio/contracts/frame-state";
-import { LINK_EXTRA_ACTIONS } from "@design-studio/contracts/link-interaction";
+import {
+  LINK_DELAY_MAX,
+  LINK_EXTRA_ACTIONS,
+  LINK_KEY_RE,
+  LINK_TRIGGERS,
+  LINK_URL_MAX,
+  LINK_VISIBILITIES,
+} from "@design-studio/contracts/link-interaction";
 import {
   LINK_ACTIONS,
   LINK_DURATION_MAX,
   LINK_DURATION_MIN,
   LINK_EASINGS,
+  LINK_INTERACTION_ACTIONS,
   LINK_SELECTOR_MAX,
   LINK_TRANSITIONS,
 } from "@design-studio/contracts/links";
@@ -49,6 +57,92 @@ const LinkMotionFields = {
   duration: Schema.optionalKey(LinkDurationSchema),
   easing: Schema.optionalKey(LinkEasingSchema),
   transition: Schema.optionalKey(LinkTransitionSchema),
+} as const;
+
+const LinkInteractionFields = {
+  action: Schema.optionalKey(
+    Schema.Literals(LINK_INTERACTION_ACTIONS).annotate({
+      description:
+        "navigate, modal or drawer go to toFrame; scroll-to scrolls target into view in the same frame; open-url opens url (https only) in a new tab; close-overlay closes the open modal or drawer; toggle shows or hides target.",
+    })
+  ),
+  delayMs: Schema.optionalKey(
+    Schema.Int.check(
+      Schema.isBetween({ maximum: LINK_DELAY_MAX, minimum: 0 })
+    ).annotate({ description: "Wait in ms for trigger delay." })
+  ),
+  duration: Schema.optionalKey(
+    LinkDurationSchema.annotate({
+      description: "Transition length in ms for navigate, modal and drawer.",
+    })
+  ),
+  easing: Schema.optionalKey(
+    LinkEasingSchema.annotate({ description: "Transition easing." })
+  ),
+  fromFrame: Schema.optionalKey(
+    FrameRefSchema.annotate({
+      description: "Frame id or @label of the frame that has the element.",
+    })
+  ),
+  key: Schema.optionalKey(
+    Schema.String.check(Schema.isPattern(LINK_KEY_RE)).annotate({
+      description:
+        'Key name for trigger key: one character ("k", "/") or a name ("Enter", "Escape", "ArrowRight", "Space").',
+    })
+  ),
+  linkId: Schema.optionalKey(
+    LinkIdSchema.annotate({
+      description:
+        'Id of a saved link from list_link_interactions, for example "l2". Leave out to make a link from fromFrame and selector.',
+    })
+  ),
+  selector: Schema.optionalKey(
+    LinkSelectorSchema.annotate({
+      description:
+        'CSS selector of the source element, for example "#menu-button". Use "body" for a delay trigger on the whole frame.',
+    })
+  ),
+  target: Schema.optionalKey(
+    LinkSelectorSchema.annotate({
+      description: "CSS selector in the same frame for scroll-to and toggle.",
+    })
+  ),
+  toFrame: Schema.optionalKey(
+    FrameRefSchema.annotate({
+      description:
+        'Frame id or @label for navigate, modal and drawer, or "back" for navigate.',
+    })
+  ),
+  transition: Schema.optionalKey(
+    LinkTransitionSchema.annotate({
+      description: "Transition for navigate, modal and drawer.",
+    })
+  ),
+  trigger: Schema.optionalKey(
+    Schema.Literals(LINK_TRIGGERS).annotate({
+      description:
+        "click (default), hover (pointer enters), press (pointer down), delay (delayMs after the frame shows) or key (a key press while the frame shows). One element has one link for each trigger.",
+    })
+  ),
+  url: Schema.optionalKey(
+    Schema.String.check(Schema.isMaxLength(LINK_URL_MAX)).annotate({
+      description: "https URL for open-url.",
+    })
+  ),
+  visibility: Schema.optionalKey(
+    Schema.Literals(LINK_VISIBILITIES).annotate({
+      description: "For toggle: toggle (default), show or hide the target.",
+    })
+  ),
+} as const;
+
+const LinkInteractionListFields = {
+  fromFrame: Schema.optionalKey(
+    FrameRefSchema.annotate({
+      description:
+        "Frame id or @label. Leave out for the links of every frame.",
+    })
+  ),
 } as const;
 
 const LinkSourceSchema = Schema.Struct({
@@ -302,6 +396,8 @@ export {
   ImplicitLinkListSchema,
   LinkFileSchema,
   LinkIdSchema,
+  LinkInteractionFields,
+  LinkInteractionListFields,
   LinkKeptSchema,
   LinkListSchema,
   LinkMotionFields,

@@ -4,10 +4,8 @@ import { applyFrameState, bindLinkRuntime } from "../canvas/index.js";
 import { bindGalleryRuntime } from "../gallery/index.js";
 import { bindViewportRuntime } from "../viewport/index.js";
 import type { AppContext } from "./app-context.js";
-import { readBody } from "./app-request.js";
-import { registerLinkInteractionRoutes } from "./link-interaction-routes.js";
 
-const registerAppCanvasRoutes = (app: Hono, ctx: AppContext): void => {
+const registerAppCanvasRoutes = (_app: Hono, ctx: AppContext): void => {
   const {
     canvas,
     config,
@@ -42,13 +40,6 @@ const registerAppCanvasRoutes = (app: Hono, ctx: AppContext): void => {
     preview: preview ?? null,
     projects,
     runner: editDeps.runner,
-  });
-  registerLinkInteractionRoutes(app, {
-    canvas,
-    frameStates,
-    preview,
-    projects,
-    readBody,
   });
 };
 

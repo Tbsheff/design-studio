@@ -4,12 +4,14 @@ import { Context, Effect, Layer } from "effect";
 import {
   writeCreate,
   writeDelete,
+  setInteraction,
   writeKeep,
   writeStart,
   writeUpdate,
 } from "./link-ops.js";
 import type {
   LinkCreateQuery,
+  LinkInteractionSetQuery,
   LinkKeepQuery,
   LinkSaved,
   LinkUpdateQuery,
@@ -24,6 +26,9 @@ interface LinkWriterApi {
   readonly delete: (
     projectId: string,
     linkId: string
+  ) => Effect.Effect<LinkSaved, LinkFailure>;
+  readonly interact: (
+    query: LinkInteractionSetQuery
   ) => Effect.Effect<LinkSaved, LinkFailure>;
   readonly keep: (
     query: LinkKeepQuery
@@ -60,6 +65,11 @@ class LinkWriter extends Context.Service<LinkWriter, LinkWriterApi>()(
         return yield* attemptLink((runtime) =>
           writeDelete(runtime, projectId, linkId)
         );
+      }),
+      interact: Effect.fn("LinkWriter.interact")(function* run(
+        query: LinkInteractionSetQuery
+      ) {
+        return yield* attemptLink((runtime) => setInteraction(runtime, query));
       }),
       keep: Effect.fn("LinkWriter.keep")(function* run(query: LinkKeepQuery) {
         return yield* attemptLink((runtime) => writeKeep(runtime, query));

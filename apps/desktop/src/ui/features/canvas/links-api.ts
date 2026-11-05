@@ -17,7 +17,7 @@ import type {
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import { useProjectEvents } from "../../platform/events.js";
-import { call as callAction, sendJson } from "../../platform/http.js";
+import { call as callAction } from "../../platform/http.js";
 
 type FrameAction = (typeof LINK_ACTIONS)[number];
 
@@ -40,9 +40,6 @@ export interface LinkInteractionChange {
   readonly url?: string;
   readonly visibility?: LinkVisibility;
 }
-
-const base = (projectId: string) =>
-  `/api/projects/${encodeURIComponent(projectId)}/links`;
 
 interface Entry {
   file: LinksFile;
@@ -173,10 +170,10 @@ export const linksApi = {
     projectId: string,
     change: LinkInteractionChange
   ): Promise<PrototypeLink | null> => {
-    const { links, link } = await sendJson<{
-      links: LinksFile;
-      link: PrototypeLink | null;
-    }>("POST", `${base(projectId)}/interaction`, { ...change });
+    const { links, link } = await callAction(routes.setLinkInteractionCanvas, {
+      ...change,
+      projectId,
+    });
 
     setFile(projectId, links);
 

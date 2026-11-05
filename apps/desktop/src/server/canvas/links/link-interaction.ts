@@ -9,6 +9,8 @@ import {
   cleanLinkText,
   interactionKey,
   linkAction,
+  startFrameOf,
+  staticLinkIssue,
   upsertLink,
   withMotion,
 } from "@design-studio/contracts/links";
@@ -26,10 +28,10 @@ import type { LinkInteractionRequest } from "./link-interaction-input.js";
 import { resolveTarget } from "./link-target.js";
 import {
   LinkError,
+  describeLink,
   failure,
   frameOf,
   framesOf,
-  linkListText,
   linkTitle,
   savedLinkText,
 } from "./link-tools.js";
@@ -367,10 +369,17 @@ const setLinkInteraction = async (
   }
 };
 
-const runList = async (
+interface LinkInteractionListing {
+  readonly file: LinksFile;
+  readonly items: ReturnType<typeof describeLink>[];
+  readonly note: string;
+  readonly startFrame: string;
+}
+
+const listLinkInteractions = async (
   ctx: CanvasToolContext,
   fromFrame: string | null
-): Promise<ToolText> => {
+): Promise<LinkInteractionListing> => {
   const [frames, file] = await Promise.all([
     framesOf(ctx),
     ctx.canvas.links.read(ctx.project),
@@ -391,24 +400,15 @@ const runList = async (
     note = "No saved links. set_link_interaction makes one.";
   }
 
-  return linkListText(links, frames, file, note);
-};
+  const startFrame = startFrameOf(file, frames);
 
-const listLinkInteractions = async (
-  ctx: CanvasToolContext,
-  fromFrame: string | null
-): Promise<ToolText> => {
-  try {
-    return await runList(ctx, fromFrame);
-  } catch (error) {
-    if (error instanceof LinkError) {
-      return failure(error.message);
-    }
+  const items = links.map((link) =>
+    describeLink(link, frames, staticLinkIssue(link, frames), startFrame)
+  );
 
-    throw error;
-  }
+  return { file, items, note, startFrame };
 };
 
 export { listLinkInteractions, setLinkInteraction };
 
-export type { LinkInteractionDone };
+export type { LinkInteractionDone, LinkInteractionListing };

@@ -20,15 +20,6 @@ export {
 } from "./link-interaction.js";
 
 export {
-  linkInteractionFields,
-  linkInteractionSchema,
-  listLinkInteractionsFields,
-  toInteractionRequest,
-} from "./link-interaction-input.js";
-
-export type { LinkInteractionInput } from "./link-interaction-input.js";
-
-export {
   editLinks,
   editLinksFields,
   listLinks,

@@ -1,9 +1,5 @@
 import { FLOW_NOTE, FRAME_STATES_NOTE } from "../canvas/app-flow/index.js";
 import {
-  inspectAccessibilityDescription,
-  setAccessibilityDescription,
-} from "./accessibility-tool.js";
-import {
   listBreakpointsDescription,
   setBreakpointStyleDescription,
 } from "./breakpoints-tool.js";
@@ -93,8 +89,6 @@ export const TOOL_SHORT = {
     "Insert an icon inside, before or after a target: a library component with its import, or an inline SVG. An icon target is swapped in place.",
   insert_jsx:
     "Insert a JSX snippet (HTML in an HTML project) inside, before, after or in place of a target; adds kit imports. Markup only: no functions, hooks, conditions, .map() or spreads.",
-  inspect_accessibility:
-    "Read only. List the role and name of a layer, the tab order, unnamed controls, images with no alt and low contrast pairs with a token that passes.",
   list_breakpoints:
     "Read only. Project breakpoints, the active one for a frame width, and the values each breakpoint overrides on a layer.",
   list_comments:
@@ -134,8 +128,6 @@ export const TOOL_SHORT = {
     "Read only. Search free Creative Commons stock photos by words, orientation and limit; returns thumbnail, full url, size, author and license.",
   select_matching:
     "Read only. Find elements that match one element (same component, classes or style). Returns ids for edit_element `also`.",
-  set_accessibility:
-    "Set aria-label, role, alt or tabIndex on one layer as one version; on a kit component it sets the prop at the call site.",
   set_breakpoint_style:
     "Set or reset one style property of one layer at base or one breakpoint: md:/lg: classes in Tailwind, @media rules in HTML.",
   set_frame_session:
@@ -219,7 +211,6 @@ export const TOOL_HELP: Record<
     'Insert an icon inside, before or after the target with the same server code as the MCP insert_icon tool. In a React project with an icon library it writes <SearchIcon className="size-4" /> (size-N from size, text-<token> from color) and adds or extends the import line; otherwise it writes an inline <svg> with stroke="currentColor". When the target is already an icon (an <svg> or an icon component), the new icon replaces it. Find names with list_icons.',
   insert_jsx:
     "Insert a group of elements in one step with the same server code as the MCP insert_jsx tool and the studio Paste JSX menu: a JSX snippet (HTML in an HTML project) inside, before, after or in place of the target. Component tags that the file does not import are found in the project library and their import lines are added or extended. The snippet keeps its line breaks and gets the file indent. Markup only: text, string props, numbers, style objects and references to names the file has; functions, calls (hooks), conditions, .map() and spreads are refused. Targets made by .map() are refused; before or after the one element of a ? : or && branch wraps the branch in a <> fragment. Use it to build a card, row or section from library components; clear_text removes stray text next to child elements.",
-  inspect_accessibility: inspectAccessibilityDescription,
   list_breakpoints: listBreakpointsDescription,
   list_comments:
     "Read only. List the comments pinned on this direction with the same server code as the studio Comments pane and the MCP list_comments tool: number, author (an outside agent or the user), text, replies, element (selector, source file:line, component), frame and status. status: open (default), all or one status; frame: frame id, @label or page path.",
@@ -255,7 +246,6 @@ export const TOOL_HELP: Record<
     "Take PNG screenshots of one page of the live preview. With no frame or path it shows the frame from <canvas-context> (its page, size and frame state), or the entry page. Returns up to four images, top to bottom, starting at the y offset `from`. The text names the page and says whether more of it is below.",
   search_images: searchImagesDescription,
   select_matching: SELECT_MATCHING_DESCRIPTION,
-  set_accessibility: setAccessibilityDescription,
   set_breakpoint_style: setBreakpointStyleDescription,
   set_frame_session: `Attached apps only. Change the session that signed-in frame states use, with the same code as the frame state menu: user {name, email} sets the mock user; forgetCookies drops the cookies the app set in signed-in frames. Changes no file. ${FRAME_STATES_NOTE}`,
   set_frame_state: `Attached apps only. Show one canvas frame in a preview state with the same code as the frame state menu: state is default, session, empty, loading, error, a mock state id, or mock with mock {name?, rules: [{path, method?, status?, body?, delayMs?}], signedIn?} to make one. Changes no file. ${FRAME_STATES_NOTE}`,

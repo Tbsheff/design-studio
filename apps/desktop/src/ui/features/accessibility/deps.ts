@@ -1,4 +1,8 @@
-export { json, replaceStyle } from "../../api.js";
+export { routes as accessibilityRoutes } from "@design-studio/actions/accessibility/routes";
+
+export { replaceStyle } from "../../api.js";
+
+export { call } from "../../platform/http.js";
 
 export { postToFrame, useBridge } from "../../platform/bridge.js";
 
@@ -12,10 +16,11 @@ export { InspectorSection } from "../inspector/inspector-fields.js";
 
 export {
   ACCESSIBILITY_LABEL_MAX,
+  ACCESSIBILITY_LIST_MAX,
   ACCESSIBILITY_ROLES,
   TAB_INDEX_MAX,
   TAB_INDEX_MIN,
-} from "../../../shared/accessibility.js";
+} from "@design-studio/contracts/accessibility";
 
 export type {
   AccessibilityChanges,
@@ -26,7 +31,7 @@ export type {
   ContrastFix,
   ContrastPair,
   TabStop,
-} from "../../../shared/accessibility.js";
+} from "@design-studio/contracts/accessibility";
 
 export type {
   BridgeToParent,

@@ -1,4 +1,5 @@
 // @generated
+import { AccessibilityLive } from "./accessibility/live.js";
 import { AnimationLive } from "./animation/live.js";
 import { CanvasLive } from "./canvas/live.js";
 import { CloudLive } from "./cloud/live.js";
@@ -35,6 +36,7 @@ import { ViewportLive } from "./viewport/live.js";
 import { WorkspaceLive } from "./workspace/live.js";
 
 const ALL_LIVE = {
+  accessibility: AccessibilityLive,
   animation: AnimationLive,
   canvas: CanvasLive,
   cloud: CloudLive,

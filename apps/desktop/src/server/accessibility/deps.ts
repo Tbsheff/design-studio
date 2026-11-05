@@ -18,6 +18,8 @@ export {
 
 export { appSourceBody, parseLoc } from "../page-probe/index.js";
 
+export { withPagePath } from "../project-source/index.js";
+
 export { probeOnPage } from "../preview/probe-page.js";
 
 export { nearestPassingToken } from "../review/checks.js";
@@ -30,7 +32,7 @@ export {
   ACCESSIBILITY_ROLES,
   TAB_INDEX_MAX,
   TAB_INDEX_MIN,
-} from "../../shared/accessibility.js";
+} from "@design-studio/contracts/accessibility";
 
 export type { BreakpointScope as AccessibilityScope } from "../breakpoints/commit.js";
 
@@ -44,6 +46,8 @@ export type { PreviewService } from "../preview/index.js";
 
 export type {
   CompiledTokenEntry,
+  Direction,
+  Project,
   SourceLoc,
   Version,
 } from "@design-studio/contracts";
@@ -59,6 +63,4 @@ export type {
   MissingAlt,
   NameSource,
   TabStop,
-} from "../../shared/accessibility.js";
-
-export { z } from "../platform/zod-bridge/index.js";
+} from "@design-studio/contracts/accessibility";

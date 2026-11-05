@@ -1,4 +1,9 @@
-import { json, replaceStyle } from "./deps.js";
+import {
+  ACCESSIBILITY_LIST_MAX,
+  accessibilityRoutes,
+  call,
+  replaceStyle,
+} from "./deps.js";
 import type {
   AccessibilityChanges,
   AccessibilityReport,
@@ -19,38 +24,34 @@ interface InspectQuery {
   readonly selector: string | null;
 }
 
-const pathOf = (ids: AccessibilityIds): string =>
-  `/api/projects/${encodeURIComponent(ids.projectId)}/d/${encodeURIComponent(ids.directionId)}/accessibility`;
+const NO_SOURCE = "The layer has no source location.";
 
 const readAccessibility = (
   ids: AccessibilityIds,
   query: InspectQuery
-): Promise<AccessibilityReport> => {
-  const params = new URLSearchParams({
-    includePassing: String(query.passing),
+): Promise<AccessibilityReport> =>
+  call(accessibilityRoutes.inspectAccessibility, {
+    directionId: ids.directionId,
+    frame: query.frame,
+    includePassing: query.passing,
+    limit: ACCESSIBILITY_LIST_MAX,
+    projectId: ids.projectId,
+    selector: query.selector,
   });
-
-  if (query.frame !== null) {
-    params.set("frame", query.frame);
-  }
-
-  if (query.selector !== null) {
-    params.set("selector", query.selector);
-  }
-
-  return json<AccessibilityReport>(
-    "GET",
-    `${pathOf(ids)}?${params.toString()}`
-  );
-};
 
 const writeAccessibility = (
   ids: AccessibilityIds,
   target: SelectionContext,
   changes: AccessibilityChanges
-): Promise<AccessibilitySetResult> =>
-  json<AccessibilitySetResult>("POST", pathOf(ids), {
+): Promise<AccessibilitySetResult> => {
+  if (target.source === null) {
+    return Promise.reject(new Error(NO_SOURCE));
+  }
+
+  return call(accessibilityRoutes.setAccessibility, {
     ...changes,
+    directionId: ids.directionId,
+    projectId: ids.projectId,
     target: {
       selector: target.selector,
       source: target.source,
@@ -58,6 +59,7 @@ const writeAccessibility = (
       usedAt: target.usedAt ?? null,
     },
   });
+};
 
 const applyContrastFix = (
   ids: AccessibilityIds,

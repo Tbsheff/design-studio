@@ -1,6 +1,5 @@
 import type { Hono } from "hono";
 
-import { registerAccessibilityRoutes } from "./accessibility-routes.js";
 import type { AppContext } from "./app-context.js";
 import { readBody } from "./app-request.js";
 import { registerComponentVariantRoutes } from "./component-variant-routes.js";
@@ -15,8 +14,7 @@ const registerComponentPanelRoutes = (app: Hono): void => {
 };
 
 const registerStylePanelRoutes = (app: Hono, ctx: AppContext): void => {
-  const { canvas, editDeps, loadDirection, preview, projects, withDirection } =
-    ctx;
+  const { editDeps, loadDirection, preview, projects, withDirection } = ctx;
   const withPreview = {
     editDeps,
     preview,
@@ -27,7 +25,6 @@ const registerStylePanelRoutes = (app: Hono, ctx: AppContext): void => {
   const plain = { editDeps, readBody, loadDirection, withDirection };
   registerIconRoutes(app, withPreview);
   registerTextStyleRoutes(app, plain);
-  registerAccessibilityRoutes(app, { ...withPreview, canvas });
   registerImageSearchRoutes(app, { ...withPreview, projects });
   registerComponentVariantRoutes(app, withPreview);
 };

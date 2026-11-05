@@ -151,8 +151,6 @@ const LIST_BREAKPOINTS_TOOL = "mcp__studio__list_breakpoints";
 const SET_BREAKPOINT_STYLE_TOOL = "mcp__studio__set_breakpoint_style";
 const SEARCH_IMAGES_TOOL = "mcp__studio__search_images";
 const PLACE_IMAGE_TOOL = "mcp__studio__place_image";
-const INSPECT_ACCESSIBILITY_TOOL = "mcp__studio__inspect_accessibility";
-const SET_ACCESSIBILITY_TOOL = "mcp__studio__set_accessibility";
 
 const DIRECT_EDIT_TOOLS = new Set<string>([
   INSERT_ICON_TOOL,
@@ -175,7 +173,6 @@ const DIRECT_EDIT_TOOLS = new Set<string>([
   IMPORT_PAGE_TOOL,
   SET_BREAKPOINT_STYLE_TOOL,
   PLACE_IMAGE_TOOL,
-  SET_ACCESSIBILITY_TOOL,
   ...STUDIO_EDIT_TOOLS_R13,
 ]);
 
@@ -208,8 +205,6 @@ const STUDIO_MCP_TOOLS: readonly string[] = [
   SET_BREAKPOINT_STYLE_TOOL,
   SEARCH_IMAGES_TOOL,
   PLACE_IMAGE_TOOL,
-  INSPECT_ACCESSIBILITY_TOOL,
-  SET_ACCESSIBILITY_TOOL,
   ...AGENT_OPS.toolIds,
 ];
 

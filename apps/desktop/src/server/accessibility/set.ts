@@ -219,7 +219,7 @@ const planAccessibility = async (
   };
 };
 
-const setAccessibility = async (
+const setAccessibilityAttributes = async (
   deps: DirectEditDeps,
   scope: AccessibilityScope,
   request: AccessibilitySetRequest
@@ -250,7 +250,7 @@ const toAccessibilityResult = (
   versionId: version?.id ?? null,
 });
 
-export { planAccessibility, setAccessibility, toAccessibilityResult };
+export { planAccessibility, setAccessibilityAttributes, toAccessibilityResult };
 
 export type {
   AccessibilityDone,

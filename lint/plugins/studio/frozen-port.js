@@ -1,5 +1,4 @@
 const ZOD_BRIDGE_FILES = new Set([
-  "apps/desktop/src/server/accessibility/deps.ts",
   "apps/desktop/src/server/breakpoints/deps.ts",
   "apps/desktop/src/server/canvas/links/link-interaction-input.ts",
   "apps/desktop/src/server/canvas/links/link-tools.ts",
@@ -20,7 +19,6 @@ const ZOD_BRIDGE_FILES = new Set([
   "apps/desktop/src/server/direct-edit/components-ops/insert.ts",
   "apps/desktop/src/server/direct-edit/components-ops/swap.ts",
   "apps/desktop/src/server/git/ship-store.ts",
-  "apps/desktop/src/server/http/accessibility-routes.ts",
   "apps/desktop/src/server/http/app-run-parse.ts",
   "apps/desktop/src/server/http/comments-routes.ts",
   "apps/desktop/src/server/http/component-variant-routes.ts",
@@ -32,7 +30,6 @@ const ZOD_BRIDGE_FILES = new Set([
   "apps/desktop/src/server/http/state-style-routes.ts",
   "apps/desktop/src/server/http/text-style-routes.ts",
   "apps/desktop/src/server/image-search/deps.ts",
-  "apps/desktop/src/server/mcp/accessibility-tools.ts",
   "apps/desktop/src/server/mcp/arrange-tools.ts",
   "apps/desktop/src/server/mcp/breakpoints-tools.ts",
   "apps/desktop/src/server/mcp/component-create-tools.ts",

@@ -90,3 +90,15 @@ export type {
   TextSearchWriterApi,
   UpdateTextCommand,
 } from "../text-search/index.js";
+
+export {
+  AccessibilityStore,
+  AccessibilityWriter,
+} from "../accessibility/index.js";
+
+export type {
+  AccessibilityStoreApi,
+  AccessibilityWriterApi,
+  InspectAccessibilityCommand,
+  SetAccessibilityCommand,
+} from "../accessibility/index.js";

@@ -1,4 +1,5 @@
 // @generated
+import { AccessibilityStatus } from "../accessibility/errors/status.js";
 import { AnimationStatus } from "../animation/errors/status.js";
 import { CommentStatus } from "../comment/errors/status.js";
 import { ContentStatus } from "../content/errors/status.js";
@@ -24,6 +25,7 @@ import { CoreStatus } from "./errors/status.js";
 
 const HTTP_STATUS = {
   ...CoreStatus,
+  ...AccessibilityStatus,
   ...AnimationStatus,
   ...CommentStatus,
   ...ContentStatus,

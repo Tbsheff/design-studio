@@ -52,7 +52,7 @@ const rootOf = (raw: RawProbe): AccessibleNode | null => {
   return toNode(raw.root);
 };
 
-const inspectAccessibility = async (
+const inspectAccessibilityPage = async (
   preview: Pick<PreviewService, "peekPage" | "withPage">,
   entries: readonly CompiledTokenEntry[],
   request: InspectRequest
@@ -91,6 +91,6 @@ const inspectAccessibility = async (
   };
 };
 
-export { inspectAccessibility };
+export { inspectAccessibilityPage };
 
 export type { InspectRequest };

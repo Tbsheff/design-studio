@@ -1,4 +1,5 @@
 // @generated
+import type { AccessibilityError } from "../../accessibility/errors/index.js";
 import type { AnimationError } from "../../animation/errors/index.js";
 import type { CommentError } from "../../comment/errors/index.js";
 import type { ContentError } from "../../content/errors/index.js";
@@ -22,6 +23,7 @@ import type { CoreError } from "./index.js";
 
 type StudioError =
   | CoreError
+  | AccessibilityError
   | AnimationError
   | CommentError
   | ContentError

@@ -58,12 +58,6 @@ import type { LayerLockStore } from "../store/layer-locks.js";
 import { defineTweaks } from "../tweaks/store.js";
 import type { AgentRunContext, PreviewService } from "../types.js";
 import {
-  inspectAccessibilityInput,
-  runInspectAccessibility,
-  runSetAccessibility,
-  setAccessibilityInput,
-} from "./accessibility-tool.js";
-import {
   arrangeShape,
   measureShape,
   runArrange,
@@ -1468,21 +1462,6 @@ export async function createStudioMcpServer(
     withLayerIds(deps, (args) => runPlaceImage(deps, args))
   );
 
-  const inspectAccessibilityTool = tool(
-    "inspect_accessibility",
-    TOOL_SHORT.inspect_accessibility,
-    inspectAccessibilityInput,
-    withLayerIds(deps, (args) => runInspectAccessibility(deps, args)),
-    { annotations: { readOnlyHint: true } }
-  );
-
-  const setAccessibilityTool = tool(
-    "set_accessibility",
-    TOOL_SHORT.set_accessibility,
-    setAccessibilityInput,
-    withLayerIds(deps, (args) => runSetAccessibility(deps, args))
-  );
-
   const drawVectorTool = tool(
     "draw_vector",
     TOOL_SHORT.draw_vector,
@@ -1606,8 +1585,6 @@ export async function createStudioMcpServer(
     setImageTool,
     searchImagesTool,
     placeImageTool,
-    inspectAccessibilityTool,
-    setAccessibilityTool,
     importPageTool,
     drawVectorTool,
     booleanShapesTool,

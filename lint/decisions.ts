@@ -515,6 +515,19 @@ export const decisionOverrides: OxlintOverride[] = [
     rules: { "import/no-relative-parent-imports": "off" },
   },
   {
+    files: ["packages/common/actions/src/spacing/schema.ts"],
+    rules: {
+      "eslint/id-length": "off",
+      "import/no-relative-parent-imports": "off",
+    },
+  },
+  {
+    files: ["apps/desktop/src/server/spacing/spacing-scale.ts"],
+    rules: {
+      "eslint/id-length": "off",
+    },
+  },
+  {
     files: [
       "apps/desktop/src/server/direct-edit/direction-task.ts",
       "apps/desktop/src/server/fill/fill-run.ts",
@@ -532,12 +545,19 @@ export const decisionOverrides: OxlintOverride[] = [
       "apps/desktop/src/server/handlers/spacing/handlers.ts",
       "apps/desktop/src/server/handlers/spacing/live.ts",
       "apps/desktop/src/server/handlers/spacing/set.ts",
+      "apps/desktop/src/server/handlers/stacking/get.ts",
+      "apps/desktop/src/server/handlers/stacking/handlers.ts",
+      "apps/desktop/src/server/handlers/stacking/live.ts",
+      "apps/desktop/src/server/handlers/stacking/set.ts",
       "apps/desktop/src/server/motion/motion-run.ts",
       "apps/desktop/src/server/motion/motion-store.ts",
       "apps/desktop/src/server/motion/motion-writer.ts",
       "apps/desktop/src/server/spacing/spacing-run.ts",
       "apps/desktop/src/server/spacing/spacing-store.ts",
       "apps/desktop/src/server/spacing/spacing-writer.ts",
+      "apps/desktop/src/server/stacking/stacking-run.ts",
+      "apps/desktop/src/server/stacking/stacking-store.ts",
+      "apps/desktop/src/server/stacking/stacking-writer.ts",
       "packages/common/actions/src/fill/errors/status.ts",
       "packages/common/actions/src/fill/get.ts",
       "packages/common/actions/src/fill/schema.ts",
@@ -549,22 +569,13 @@ export const decisionOverrides: OxlintOverride[] = [
       "packages/common/actions/src/spacing/errors/status.ts",
       "packages/common/actions/src/spacing/get.ts",
       "packages/common/actions/src/spacing/set.ts",
+      "packages/common/actions/src/stacking/errors/status.ts",
+      "packages/common/actions/src/stacking/get.ts",
+      "packages/common/actions/src/stacking/schema.ts",
+      "packages/common/actions/src/stacking/set.ts",
     ],
     rules: {
       "import/no-relative-parent-imports": "off",
-    },
-  },
-  {
-    files: ["packages/common/actions/src/spacing/schema.ts"],
-    rules: {
-      "eslint/id-length": "off",
-      "import/no-relative-parent-imports": "off",
-    },
-  },
-  {
-    files: ["apps/desktop/src/server/spacing/spacing-scale.ts"],
-    rules: {
-      "eslint/id-length": "off",
     },
   },
   {

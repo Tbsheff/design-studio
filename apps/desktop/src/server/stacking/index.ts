@@ -1,22 +1,13 @@
-export { StackingError } from "./errors.js";
+export { StackingStore } from "./stacking-store.js";
 
-export { inspectStacking } from "./get.js";
-
-export {
-  GET_STACKING_DESCRIPTION,
-  SET_STACKING_DESCRIPTION,
-  toStackingInput,
-} from "./input.js";
-
-export { planStacking, applyStacking, toStackingResult } from "./set.js";
-
-export type { StackingGetRequest } from "./get.js";
-
-export type { StackingFieldsInput } from "./input.js";
+export { StackingWriter } from "./stacking-writer.js";
 
 export type {
-  StackingDone,
-  StackingPlan,
-  StackingSetRequest,
-  StackingTarget,
-} from "./set.js";
+  GetStackingCommand,
+  SetStackingCommand,
+  StackingChange,
+} from "./stacking-run.js";
+
+export type { StackingStoreApi } from "./stacking-store.js";
+
+export type { StackingWriterApi } from "./stacking-writer.js";

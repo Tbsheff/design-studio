@@ -8,7 +8,6 @@ import { registerComponentRoutes } from "./components-routes.js";
 import { registerIconRoutes } from "./icon-routes.js";
 import { registerImageSearchRoutes } from "./image-search-routes.js";
 import { registerLayerStateRoutes } from "./layer-state-routes.js";
-import { registerStackingRoutes } from "./stacking-routes.js";
 import { registerStateStyleRoutes } from "./state-style-routes.js";
 import { registerTextStyleRoutes } from "./text-style-routes.js";
 
@@ -30,7 +29,6 @@ const registerStylePanelRoutes = (app: Hono, ctx: AppContext): void => {
   registerIconRoutes(app, withPreview);
   registerTextStyleRoutes(app, plain);
   registerStateStyleRoutes(app, { ...plain, canvas });
-  registerStackingRoutes(app, plain);
   registerAccessibilityRoutes(app, { ...withPreview, canvas });
   registerImageSearchRoutes(app, { ...withPreview, projects });
   registerComponentVariantRoutes(app, withPreview);

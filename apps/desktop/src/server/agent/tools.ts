@@ -195,12 +195,6 @@ import { describeScreens, samePage, warmScreens } from "./screens.js";
 import type { RunScreen } from "./screens.js";
 import { runSelectMatching, selectMatchingShape } from "./select-tool.js";
 import {
-  getStackingInput,
-  runGetStacking,
-  runSetStacking,
-  setStackingInput,
-} from "./stacking-tool.js";
-import {
   listStateStylesInput,
   runListStateStyles,
   runSetForcedState,
@@ -1378,21 +1372,6 @@ export async function createStudioMcpServer(
     (args) => runSetForcedState(deps, args)
   );
 
-  const getStackingTool = tool(
-    "get_stacking",
-    TOOL_SHORT.get_stacking,
-    getStackingInput,
-    withLayerIds(deps, (args) => runGetStacking(deps, args)),
-    { annotations: { readOnlyHint: true } }
-  );
-
-  const setStackingTool = tool(
-    "set_stacking",
-    TOOL_SHORT.set_stacking,
-    setStackingInput,
-    withLayerIds(deps, (args) => runSetStacking(deps, args))
-  );
-
   const copyCodeTool = tool(
     "copy_code",
     TOOL_SHORT.copy_code,
@@ -1658,8 +1637,6 @@ export async function createStudioMcpServer(
     listStateStylesTool,
     setStateStyleTool,
     setForcedStateTool,
-    getStackingTool,
-    setStackingTool,
     copyCodeTool,
     clearTextTool,
     listComponentsTool,

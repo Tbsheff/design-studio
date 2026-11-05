@@ -67,3 +67,13 @@ export type {
   SpacingStoreApi,
   SpacingWriterApi,
 } from "../spacing/index.js";
+
+export { StackingStore, StackingWriter } from "../stacking/index.js";
+
+export type {
+  GetStackingCommand,
+  SetStackingCommand,
+  StackingChange,
+  StackingStoreApi,
+  StackingWriterApi,
+} from "../stacking/index.js";

@@ -26,6 +26,7 @@ import { SessionLive } from "../handlers/session/live.js";
 import { ShareLive } from "../handlers/share/live.js";
 import { ShipLive } from "../handlers/ship/live.js";
 import { SpacingLive } from "../handlers/spacing/live.js";
+import { StackingLive } from "../handlers/stacking/live.js";
 import { StudioLive } from "../handlers/studio/live.js";
 import { TokenLive } from "../handlers/token/live.js";
 import { VersionLive } from "../handlers/version/live.js";
@@ -69,6 +70,7 @@ const liveLayer = Layer.mergeAll(
   ShareLive,
   ShipLive,
   SpacingLive,
+  StackingLive,
   StudioLive,
   TokenLive,
   VersionLive,

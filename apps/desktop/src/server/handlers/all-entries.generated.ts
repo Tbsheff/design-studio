@@ -25,6 +25,7 @@ import { SessionEntries } from "./session/handlers.js";
 import { ShareEntries } from "./share/handlers.js";
 import { ShipEntries } from "./ship/handlers.js";
 import { SpacingEntries } from "./spacing/handlers.js";
+import { StackingEntries } from "./stacking/handlers.js";
 import { StudioEntries } from "./studio/handlers.js";
 import { TokenEntries } from "./token/handlers.js";
 import { VersionEntries } from "./version/handlers.js";
@@ -58,6 +59,7 @@ const ALL_ENTRIES = {
   share: ShareEntries,
   ship: ShipEntries,
   spacing: SpacingEntries,
+  stacking: StackingEntries,
   studio: StudioEntries,
   token: TokenEntries,
   version: VersionEntries,

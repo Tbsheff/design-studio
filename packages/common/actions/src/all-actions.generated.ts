@@ -25,6 +25,7 @@ import { SessionActions } from "./session/index.js";
 import { ShareActions } from "./share/index.js";
 import { ShipActions } from "./ship/index.js";
 import { SpacingActions } from "./spacing/index.js";
+import { StackingActions } from "./stacking/index.js";
 import { StudioActions } from "./studio/index.js";
 import { TokenActions } from "./token/index.js";
 import { VersionActions } from "./version/index.js";
@@ -58,6 +59,7 @@ const ALL_ACTIONS = {
   share: ShareActions,
   ship: ShipActions,
   spacing: SpacingActions,
+  stacking: StackingActions,
   studio: StudioActions,
   token: TokenActions,
   version: VersionActions,

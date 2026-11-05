@@ -4,6 +4,7 @@ import { AnimationEntries } from "./animation/handlers.js";
 import { CanvasEntries } from "./canvas/handlers.js";
 import { CloudEntries } from "./cloud/handlers.js";
 import { CommentEntries } from "./comment/handlers.js";
+import { ComponentVariantEntries } from "./component-variant/handlers.js";
 import { ConnectionEntries } from "./connection/handlers.js";
 import { ContentEntries } from "./content/handlers.js";
 import { CritiqueEntries } from "./critique/handlers.js";
@@ -45,6 +46,7 @@ const ALL_ENTRIES = {
   canvas: CanvasEntries,
   cloud: CloudEntries,
   comment: CommentEntries,
+  componentVariant: ComponentVariantEntries,
   connection: ConnectionEntries,
   content: ContentEntries,
   critique: CritiqueEntries,

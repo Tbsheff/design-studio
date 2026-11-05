@@ -10,6 +10,10 @@ export {
 
 export { PropStore, PropWriter } from "./prop/index.js";
 
+export { ComponentVariantStore } from "./variant-write/component-variant-store.js";
+
+export { ComponentVariantWriter } from "./variant-write/component-variant-writer.js";
+
 export { createComponentService } from "./thumbs.js";
 
 export { humanize, propsFor } from "./component-search.js";
@@ -34,6 +38,15 @@ export type {
 export type { ComponentService } from "./thumbs.js";
 
 export type { PropStoreApi, PropWriterApi } from "./prop/index.js";
+
+export type {
+  GetComponentVariantCommand,
+  WriteComponentVariantCommand,
+} from "./variant-write/component-variant-run.js";
+
+export type { ComponentVariantStoreApi } from "./variant-write/component-variant-store.js";
+
+export type { ComponentVariantWriterApi } from "./variant-write/component-variant-writer.js";
 
 export type { LibraryEntry } from "./insert-list.js";
 

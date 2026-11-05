@@ -135,15 +135,11 @@ export const withUntrustedLimits = (
   return policy;
 };
 
-const CREATE_COMPONENT_VARIANT_TOOL = "mcp__studio__create_component_variant";
-const UPDATE_COMPONENT_VARIANT_TOOL = "mcp__studio__update_component_variant";
 const COPY_CODE_TOOL = "mcp__studio__copy_code";
 const LIST_BREAKPOINTS_TOOL = "mcp__studio__list_breakpoints";
 const SET_BREAKPOINT_STYLE_TOOL = "mcp__studio__set_breakpoint_style";
 
 const DIRECT_EDIT_TOOLS = new Set<string>([
-  CREATE_COMPONENT_VARIANT_TOOL,
-  UPDATE_COMPONENT_VARIANT_TOOL,
   EDIT_ELEMENT_TOOL,
   SET_TOKEN_TOOL,
   SET_PROPS_TOOL,
@@ -172,8 +168,6 @@ export const EDIT_TOOL_NAMES: ReadonlySet<string> = new Set<string>([
 
 const STUDIO_MCP_TOOLS: readonly string[] = [
   ...LEGACY_AGENT_TOOLS,
-  CREATE_COMPONENT_VARIANT_TOOL,
-  UPDATE_COMPONENT_VARIANT_TOOL,
   COPY_CODE_TOOL,
   LIST_BREAKPOINTS_TOOL,
   SET_BREAKPOINT_STYLE_TOOL,

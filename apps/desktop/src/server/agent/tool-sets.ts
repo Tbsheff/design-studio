@@ -53,8 +53,6 @@ const KIT_TOOLS = [
   "insert_component",
   "set_props",
   "create_component",
-  "create_component_variant",
-  "update_component_variant",
   "swap_instance",
 ];
 

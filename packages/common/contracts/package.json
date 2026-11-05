@@ -12,6 +12,7 @@
     "./app-doctor": "./src/app-doctor.ts",
     "./canvas-file": "./src/canvas-file.ts",
     "./clarify": "./src/clarify.ts",
+    "./component-variant": "./src/component-variant.ts",
     "./design-rules": "./src/design-rules.ts",
     "./element-variants": "./src/element-variants.ts",
     "./export": "./src/export.ts",

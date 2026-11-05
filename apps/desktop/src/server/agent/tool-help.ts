@@ -45,8 +45,6 @@ export const TOOL_SHORT = {
     "Read only. Copy one element as html, tailwind or a react JSX component with kit components and import lines.",
   create_component:
     "Turn one element into a reusable React component file with inferred props and cva variants, and use it at the old place.",
-  create_component_variant:
-    "Add a value (or a new key) to the cva variants map of one kit component, with classes or a copy of a value; returns a preview.",
   define_tweaks:
     "Save the Tweaks panel controls (replaces the list). Each control sets one CSS custom property that is declared in :root and used with var().",
   design_review:
@@ -121,8 +119,6 @@ export const TOOL_SHORT = {
     "Full description of one studio tool: when to use it, what it refuses, and the fields of its result.",
   swap_instance:
     "Replace one component instance with another library component, keeping matching props.",
-  update_component_variant:
-    "Rename a cva variant value of one kit component, replace its classes, or make it the default; returns a preview.",
 } as const;
 
 export type StudioToolName = keyof typeof TOOL_SHORT;
@@ -149,8 +145,6 @@ export const TOOL_HELP: Record<
     "Read only. Render one component of the project library alone with its default props, with the same server code as the studio Components panel tiles and the MCP component_preview tool, and see it as an image. Use it to check what a kit component looks like before you use it. Components that need data, server code or an open state return the reason.",
   copy_code: COPY_CODE_AGENT_DESCRIPTION,
   create_component: CREATE_COMPONENT_AGENT_DESCRIPTION,
-  create_component_variant:
-    "Add a value to the cva() variants map of one kit component with the same server code as the MCP create_component_variant tool. Pass name (from list_components) or file, key (variant, size or another key), value, and classes; copyFrom starts from an existing value of the key, and classes then replace the ones of the same utility. newKey: true adds a key that does not exist, with this value as its default. setDefault: true also sets defaultVariants. Only the cva() call changes. It refuses a component with no cva(). You get the value list and a preview image of the new value.",
   define_tweaks:
     "Save the Tweaks panel controls for this design (replaces the whole list). Each control sets one CSS custom property: range {min, max, step?, unit?, default: number}, color {default}, toggle {on, off, default: boolean}, select {options: [{label, value}], default}. The user drags them for a live preview with no model call, and Commit writes the values into the :root declaration. Every cssVar must be declared in a top-level :root rule of the page CSS with the default value (a design-system token from tokens.css is already declared; Commit then updates tokens.json) and used with var() in the rules it changes. The result lists any var that is not declared or not used.",
   design_review:
@@ -213,6 +207,4 @@ export const TOOL_HELP: Record<
   set_token:
     "Change one design token value with the same code as the studio Tokens panel: design-system/tokens.json (tokens.css is rebuilt) in a studio design system, or only that declaration in the app token CSS file of an imported app (Tailwind @theme, :root or .dark). theme dark changes the dark value. Use it instead of editing tokens.json or the token CSS by hand when you change a token value.",
   swap_instance: SWAP_INSTANCE_AGENT_DESCRIPTION,
-  update_component_variant:
-    "Change one value of the cva() variants map of one kit component with the same server code as the MCP update_component_variant tool. rename gives the value a new name (defaultVariants and compoundVariants follow; page uses of the old name do not), classes replaces all of its classes, and setDefault: true makes it the default. Only the cva() call changes. You get the value list and a preview image.",
 };

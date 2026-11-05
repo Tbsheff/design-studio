@@ -2,6 +2,7 @@
 import type { AccessibilityError } from "../../accessibility/errors/index.js";
 import type { AnimationError } from "../../animation/errors/index.js";
 import type { CommentError } from "../../comment/errors/index.js";
+import type { ComponentVariantError } from "../../component-variant/errors/index.js";
 import type { ContentError } from "../../content/errors/index.js";
 import type { CritiqueError } from "../../critique/errors/index.js";
 import type { DirectEditError } from "../../direct-edit/errors/index.js";
@@ -30,6 +31,7 @@ type StudioError =
   | AccessibilityError
   | AnimationError
   | CommentError
+  | ComponentVariantError
   | ContentError
   | CritiqueError
   | DirectEditError

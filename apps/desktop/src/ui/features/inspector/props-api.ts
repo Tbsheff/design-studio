@@ -1,6 +1,10 @@
 import { routes } from "@design-studio/actions/direct-edit/routes";
 import type { SourceLoc, Version } from "@design-studio/contracts";
 import type {
+  ComponentVariantChange,
+  ComponentVariantTarget,
+} from "@design-studio/contracts/component-variant";
+import type {
   ComponentInstance,
   InstanceQuery,
   PropValue,
@@ -8,12 +12,10 @@ import type {
   VariantClassRequest,
 } from "@design-studio/contracts/props";
 
-import type {
-  ComponentVariantChange,
-  ComponentVariantResult,
-  ComponentVariantTarget,
-} from "../../../shared/component-variant.js";
-import { getBlob, json } from "../../api.js";
+import {
+  getVariantPreviewAt,
+  writeVariantAt,
+} from "../../platform/component-variant-api.js";
 import { call } from "../../platform/http.js";
 
 interface VariantPreviewQuery {
@@ -47,9 +49,6 @@ const toVersion = <Value>(value: Value): Version | null => {
 
   return null;
 };
-
-const d = (pid: string, did: string) =>
-  `/api/projects/${encodeURIComponent(pid)}/d/${encodeURIComponent(did)}`;
 
 export const propsApi = {
   components: (pid: string, did: string) =>
@@ -102,24 +101,13 @@ export const propsApi = {
       projectId: pid,
     }),
   variantPreview: (pid: string, did: string, query: VariantPreviewQuery) =>
-    getBlob(
-      `${d(pid, did)}/component-variant/preview?${new URLSearchParams(
-        Object.entries(query).filter(
-          (entry): entry is [string, string] => typeof entry[1] === "string"
-        )
-      ).toString()}`
-    ),
+    getVariantPreviewAt(pid, did, query),
   writeVariant: (
     pid: string,
     did: string,
     target: ComponentVariantTarget,
     change: ComponentVariantChange
-  ) =>
-    json<ComponentVariantResult & { png: string | null }>(
-      "POST",
-      `${d(pid, did)}/component-variant`,
-      { change, target }
-    ),
+  ) => writeVariantAt(pid, did, target, change),
 };
 
 export type { VariantPreviewQuery };

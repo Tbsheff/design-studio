@@ -1,5 +1,4 @@
 import { BREAKPOINT_TOOLS } from "../breakpoints-tools.js";
-import { COMPONENT_VARIANT_TOOLS } from "../component-variant-tools.js";
 import { defineTool } from "../edit-kit.js";
 import type { ToolSpec } from "../edit-kit.js";
 import {
@@ -48,7 +47,6 @@ const DIRECT_EDIT_INLINE_TOOLS: ToolSpec[] = [
   writeFileTool,
   editElementTool,
   setTokenTool,
-  ...COMPONENT_VARIANT_TOOLS,
   ...BREAKPOINT_TOOLS,
 ];
 

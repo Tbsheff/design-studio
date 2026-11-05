@@ -24,7 +24,7 @@ export {
   VARIANT_CLASSES,
   VARIANT_KEY,
   VARIANT_VALUE,
-} from "../../../shared/component-variant.js";
+} from "@design-studio/contracts/component-variant";
 
 export type { WrittenFile } from "../../direct-edit/commit/index.js";
 
@@ -44,4 +44,4 @@ export type {
   ComponentVariantTarget,
   ComponentVariantUpdate,
   ComponentVariantValue,
-} from "../../../shared/component-variant.js";
+} from "@design-studio/contracts/component-variant";

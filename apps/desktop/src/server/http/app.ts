@@ -68,7 +68,7 @@ export function createApp(deps: AppDeps): Hono {
   registerRunsRoutes(app, ctx);
   registerAppExportRoutes(app, ctx);
   registerAppCommentsRoutes(app, ctx);
-  registerDirectEditPanelRoutes(app, ctx);
+  registerDirectEditPanelRoutes(app);
   registerAppPacksRoutes(app, ctx);
   registerHomeProjectRoutes(app, ctx);
   registerVersionsHistoryRoutes(app, ctx, mcpSlot);

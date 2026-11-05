@@ -106,12 +106,6 @@ import {
   componentPreviewShape,
   runComponentPreview,
 } from "./component-preview-tool.js";
-import {
-  createVariantInput,
-  runCreateComponentVariant,
-  runUpdateComponentVariant,
-  updateVariantInput,
-} from "./component-variant-tool.js";
 import { getRunContextShape, runGetRunContext } from "./context-tool.js";
 import { copyCodeInput, runCopyCode } from "./copy-code-tool.js";
 import {
@@ -1335,20 +1329,6 @@ export async function createStudioMcpServer(
     (args) => runCreateComponent(deps, args)
   );
 
-  const createComponentVariantTool = tool(
-    "create_component_variant",
-    TOOL_SHORT.create_component_variant,
-    createVariantInput,
-    (args) => runCreateComponentVariant(deps, args)
-  );
-
-  const updateComponentVariantTool = tool(
-    "update_component_variant",
-    TOOL_SHORT.update_component_variant,
-    updateVariantInput,
-    (args) => runUpdateComponentVariant(deps, args)
-  );
-
   const swapInstanceTool = tool(
     "swap_instance",
     TOOL_SHORT.swap_instance,
@@ -1479,8 +1459,6 @@ export async function createStudioMcpServer(
     appDoctorTool,
     componentPreviewTool,
     createComponentTool,
-    createComponentVariantTool,
-    updateComponentVariantTool,
     swapInstanceTool,
     selectMatchingTool,
     diffVersionsTool,

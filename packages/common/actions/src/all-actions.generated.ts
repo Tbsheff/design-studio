@@ -4,6 +4,7 @@ import { AnimationActions } from "./animation/index.js";
 import { CanvasActions } from "./canvas/index.js";
 import { CloudActions } from "./cloud/index.js";
 import { CommentActions } from "./comment/index.js";
+import { ComponentVariantActions } from "./component-variant/index.js";
 import { ConnectionActions } from "./connection/index.js";
 import { ContentActions } from "./content/index.js";
 import { CritiqueActions } from "./critique/index.js";
@@ -45,6 +46,7 @@ const ALL_ACTIONS = {
   canvas: CanvasActions,
   cloud: CloudActions,
   comment: CommentActions,
+  componentVariant: ComponentVariantActions,
   connection: ConnectionActions,
   content: ContentActions,
   critique: CritiqueActions,

@@ -7,12 +7,12 @@ export type { VariantPreviewQuery } from "../inspector/props-api.js";
 export {
   VARIANT_CLASSES,
   VARIANT_VALUE,
-} from "../../../shared/component-variant.js";
+} from "@design-studio/contracts/component-variant";
 
 export type {
   ComponentVariantChange,
   ComponentVariantTarget,
-} from "../../../shared/component-variant.js";
+} from "@design-studio/contracts/component-variant";
 
 export type {
   ComponentSchema,

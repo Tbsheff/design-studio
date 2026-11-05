@@ -24,10 +24,6 @@ import { importPageDescription } from "./page-import-tool.js";
 import { COMPARE_REFERENCE_DESCRIPTION } from "./reference-tool.js";
 import { SELECT_MATCHING_DESCRIPTION } from "./select-tool.js";
 import {
-  searchTextDescription,
-  updateTextDescription,
-} from "./text-search-tool.js";
-import {
   VECTOR_BOOLEAN_SHORT,
   VECTOR_DRAW_SHORT,
   VECTOR_PAINT_SHORT,
@@ -136,8 +132,6 @@ export const TOOL_SHORT = {
     "PNG screenshots of one page (default: the <canvas-context> frame), up to four images from y offset `from`. The text says if more of the page is below.",
   search_images:
     "Read only. Search free Creative Commons stock photos by words, orientation and limit; returns thumbnail, full url, size, author and license.",
-  search_text:
-    "Read only. Find visible text (text, alt, placeholder, title, aria-label, rendered string literals) in HTML and JSX pages with file:line:col and frame.",
   select_matching:
     "Read only. Find elements that match one element (same component, classes or style). Returns ids for edit_element `also`.",
   set_accessibility:
@@ -164,8 +158,6 @@ export const TOOL_SHORT = {
     "Replace one component instance with another library component, keeping matching props.",
   update_component_variant:
     "Rename a cva variant value of one kit component, replace its classes, or make it the default; returns a preview.",
-  update_text:
-    "Replace text from search_text hits (chosen ids or all) in every file as one change. Keeps entities; never changes dynamic expressions.",
 } as const;
 
 export type StudioToolName = keyof typeof TOOL_SHORT;
@@ -262,7 +254,6 @@ export const TOOL_HELP: Record<
   screenshot:
     "Take PNG screenshots of one page of the live preview. With no frame or path it shows the frame from <canvas-context> (its page, size and frame state), or the entry page. Returns up to four images, top to bottom, starting at the y offset `from`. The text names the page and says whether more of it is below.",
   search_images: searchImagesDescription,
-  search_text: searchTextDescription,
   select_matching: SELECT_MATCHING_DESCRIPTION,
   set_accessibility: setAccessibilityDescription,
   set_breakpoint_style: setBreakpointStyleDescription,
@@ -280,5 +271,4 @@ export const TOOL_HELP: Record<
   swap_instance: SWAP_INSTANCE_AGENT_DESCRIPTION,
   update_component_variant:
     "Change one value of the cva() variants map of one kit component with the same server code as the MCP update_component_variant tool. rename gives the value a new name (defaultVariants and compoundVariants follow; page uses of the old name do not), classes replaces all of its classes, and setDefault: true makes it the default. Only the cva() call changes. You get the value list and a preview image.",
-  update_text: updateTextDescription,
 };

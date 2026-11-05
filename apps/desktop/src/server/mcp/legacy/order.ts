@@ -90,6 +90,10 @@ const LEGACY_ORDER: readonly string[] = [
   "list_motion",
   "list_state_styles",
   "set_forced_state",
+  "search_text",
+  "list_text_styles",
+  "detach_text_style",
+  "list_icons",
 ];
 
 export { LEGACY_ORDER };

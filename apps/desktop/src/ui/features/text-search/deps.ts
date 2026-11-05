@@ -15,4 +15,4 @@ export type {
   TextSearchQuery,
   TextSearchResult,
   TextUpdateResult,
-} from "../../../shared/text-search.js";
+} from "@design-studio/contracts/text-search";

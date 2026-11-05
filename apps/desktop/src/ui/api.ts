@@ -75,6 +75,13 @@ import type {
   StyleReplaceRequest,
   StyleReplaceResult,
 } from "@design-studio/contracts/style-search";
+import { TEXT_SEARCH_HITS_MAX } from "@design-studio/contracts/text-search";
+import type {
+  TextSearchQuery,
+  TextSearchResult,
+  TextUpdateRequest,
+  TextUpdateResult,
+} from "@design-studio/contracts/text-search";
 
 import type { IconList, IconPosition, IconSource } from "../shared/icons";
 import type { FolderInspection } from "../shared/open-app";
@@ -99,6 +106,7 @@ import { routes as motionRoutes } from "@design-studio/actions/motion/routes";
 import { routes as projectsRoutes } from "@design-studio/actions/project/routes";
 import { routes as spacingRoutes } from "@design-studio/actions/spacing/routes";
 import { routes } from "@design-studio/actions/studio/routes";
+import { routes as textRoutes } from "@design-studio/actions/text/routes";
 import { routes as versionsRoutes } from "@design-studio/actions/version/routes";
 import type {
   DesignRulesState,
@@ -803,28 +811,21 @@ export const api = {
 
     return toSearchResult(q, found.items);
   },
-  searchText: async (
+  searchText: (
     pid: string,
     did: string,
-    q: import("../shared/text-search").TextSearchQuery
-  ) => {
-    const params = new URLSearchParams({
-      caseSensitive: String(q.caseSensitive),
+    q: TextSearchQuery
+  ): Promise<TextSearchResult> =>
+    call(textRoutes.inspectText, {
+      caseSensitive: q.caseSensitive,
+      directionId: did,
+      glob: q.glob,
+      limit: TEXT_SEARCH_HITS_MAX,
+      projectId: pid,
       query: q.query,
-      regex: String(q.regex),
-      wholeWord: String(q.wholeWord),
-      ...(q.glob ? { glob: q.glob } : {}),
-    });
-
-    return (await (
-      await request(
-        "GET",
-        `${d(pid, did)}/search-text?${params.toString()}`,
-        undefined,
-        pickMessage
-      )
-    ).json()) as import("../shared/text-search").TextSearchResult;
-  },
+      regex: q.regex,
+      wholeWord: q.wholeWord,
+    }),
   setDefaultFolder: (path: string) =>
     json<WorkspaceList>("PUT", "/api/workspaces/default", { path }),
   setFill: (pid: string, did: string, body: FillSetBody) =>
@@ -896,27 +897,22 @@ export const api = {
         projectId: pid,
       })
     ),
-  updateText: async (
+  updateText: (
     pid: string,
     did: string,
-    req: import("../shared/text-search").TextUpdateRequest
-  ) =>
-    (await (
-      await request(
-        "POST",
-        `${d(pid, did)}/update-text`,
-        {
-          caseSensitive: req.caseSensitive,
-          query: req.query,
-          regex: req.regex,
-          replace: req.replace,
-          wholeWord: req.wholeWord,
-          ...(req.glob ? { glob: req.glob } : {}),
-          ...(req.ids ? { ids: req.ids } : {}),
-        },
-        pickMessage
-      )
-    ).json()) as import("../shared/text-search").TextUpdateResult,
+    req: TextUpdateRequest
+  ): Promise<TextUpdateResult> =>
+    call(textRoutes.updateText, {
+      caseSensitive: req.caseSensitive,
+      directionId: did,
+      glob: req.glob,
+      ids: req.ids,
+      projectId: pid,
+      query: req.query,
+      regex: req.regex,
+      replace: req.replace,
+      wholeWord: req.wholeWord,
+    }),
   updateTokens: async (pid: string, did: string, changes: TokenChange[]) => {
     const res = await request(
       "POST",

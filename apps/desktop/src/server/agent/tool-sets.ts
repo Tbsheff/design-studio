@@ -23,8 +23,6 @@ const CORE_TOOLS = [
   "set_token",
   "find_styles",
   "replace_style",
-  "search_text",
-  "update_text",
   "arrange",
   "measure",
   "select_matching",

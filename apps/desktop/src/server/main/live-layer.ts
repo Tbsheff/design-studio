@@ -29,6 +29,7 @@ import { SpacingLive } from "../handlers/spacing/live.js";
 import { StackingLive } from "../handlers/stacking/live.js";
 import { StateStyleLive } from "../handlers/state-style/live.js";
 import { StudioLive } from "../handlers/studio/live.js";
+import { TextLive } from "../handlers/text/live.js";
 import { TokenLive } from "../handlers/token/live.js";
 import { VersionLive } from "../handlers/version/live.js";
 import { ViewportLive } from "../handlers/viewport/live.js";
@@ -74,6 +75,7 @@ const liveLayer = Layer.mergeAll(
   StackingLive,
   StateStyleLive,
   StudioLive,
+  TextLive,
   TokenLive,
   VersionLive,
   ViewportLive,

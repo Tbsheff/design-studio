@@ -1,23 +1,27 @@
 export { TextSearchError } from "./errors.js";
 
-export {
-  SEARCH_TEXT_DESCRIPTION,
-  toSearchQuery,
-  toUpdateRequest,
-  UPDATE_TEXT_DESCRIPTION,
-} from "./input.js";
+export { TextSearchStore } from "./text-search-store.js";
+
+export { TextSearchWriter } from "./text-search-writer.js";
 
 export { searchText } from "./search-text.js";
 
 export {
+  applyTextUpdate,
   planTextUpdate,
   resultOf,
-  updateText,
   writeTextUpdate,
 } from "./update-text.js";
 
 export type { SearchTarget } from "./scope.js";
 
-export type { SearchTextInput, UpdateTextInput } from "./input.js";
+export type {
+  InspectTextCommand,
+  UpdateTextCommand,
+} from "./text-search-run.js";
+
+export type { TextSearchStoreApi } from "./text-search-store.js";
+
+export type { TextSearchWriterApi } from "./text-search-writer.js";
 
 export type { UpdateCommit, UpdateOutcome, UpdatePlan } from "./update-text.js";

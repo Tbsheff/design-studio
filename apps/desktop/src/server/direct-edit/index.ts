@@ -81,3 +81,12 @@ export type {
   StackingStoreApi,
   StackingWriterApi,
 } from "../stacking/index.js";
+
+export { TextSearchStore, TextSearchWriter } from "../text-search/index.js";
+
+export type {
+  InspectTextCommand,
+  TextSearchStoreApi,
+  TextSearchWriterApi,
+  UpdateTextCommand,
+} from "../text-search/index.js";

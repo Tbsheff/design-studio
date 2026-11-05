@@ -201,12 +201,6 @@ import {
   runReplaceStyle,
 } from "./style-tool.js";
 import type { TasteRule } from "./taste.js";
-import {
-  runSearchText,
-  runUpdateText,
-  searchTextInput,
-  updateTextInput,
-} from "./text-search-tool.js";
 import { createTextStyleTools } from "./text-style-tool.js";
 import { TOOL_HELP, TOOL_SHORT } from "./tool-help.js";
 import type { StudioToolName } from "./tool-help.js";
@@ -1229,21 +1223,6 @@ export async function createStudioMcpServer(
     (args) => runReplaceStyle(deps, args)
   );
 
-  const searchTextTool = tool(
-    "search_text",
-    TOOL_SHORT.search_text,
-    searchTextInput.sdkFields,
-    toDecodedRun(searchTextInput.input, (args) => runSearchText(deps, args)),
-    { annotations: { readOnlyHint: true } }
-  );
-
-  const updateTextTool = tool(
-    "update_text",
-    TOOL_SHORT.update_text,
-    updateTextInput.sdkFields,
-    toDecodedRun(updateTextInput.input, (args) => runUpdateText(deps, args))
-  );
-
   const arrangeTool = tool(
     "arrange",
     TOOL_SHORT.arrange,
@@ -1630,8 +1609,6 @@ export async function createStudioMcpServer(
     inspectAccessibilityTool,
     setAccessibilityTool,
     importPageTool,
-    searchTextTool,
-    updateTextTool,
     drawVectorTool,
     booleanShapesTool,
     paintShapeTool,

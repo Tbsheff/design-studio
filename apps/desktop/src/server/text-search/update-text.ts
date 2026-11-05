@@ -200,7 +200,7 @@ const commitUpdate = async (
   return version;
 };
 
-const updateText = async (
+const applyTextUpdate = async (
   target: SearchTarget,
   request: TextUpdateRequest,
   commit: UpdateCommit
@@ -217,6 +217,6 @@ const updateText = async (
   return { result: resultOf(plan, version), version };
 };
 
-export { planTextUpdate, resultOf, updateText, writeTextUpdate };
+export { applyTextUpdate, planTextUpdate, resultOf, writeTextUpdate };
 
 export type { ChangedFile, UpdateCommit, UpdateOutcome, UpdatePlan };

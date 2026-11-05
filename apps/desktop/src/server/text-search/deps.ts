@@ -17,7 +17,7 @@ export {
   TEXT_SEARCH_IDS_MAX,
   TEXT_SEARCH_QUERY_MAX,
   TEXT_SEARCH_REPLACE_MAX,
-} from "../../shared/text-search.js";
+} from "@design-studio/contracts/text-search";
 
 export type { WrittenFile } from "../direct-edit/commit/index.js";
 
@@ -36,6 +36,4 @@ export type {
   TextSkip,
   TextUpdateRequest,
   TextUpdateResult,
-} from "../../shared/text-search.js";
-
-export { z } from "../platform/zod-bridge/index.js";
+} from "@design-studio/contracts/text-search";

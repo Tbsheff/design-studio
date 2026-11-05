@@ -28,6 +28,7 @@ import { SpacingActions } from "./spacing/index.js";
 import { StackingActions } from "./stacking/index.js";
 import { StateStyleActions } from "./state-style/index.js";
 import { StudioActions } from "./studio/index.js";
+import { TextActions } from "./text/index.js";
 import { TokenActions } from "./token/index.js";
 import { VersionActions } from "./version/index.js";
 import { ViewportActions } from "./viewport/index.js";
@@ -63,6 +64,7 @@ const ALL_ACTIONS = {
   stacking: StackingActions,
   stateStyle: StateStyleActions,
   studio: StudioActions,
+  text: TextActions,
   token: TokenActions,
   version: VersionActions,
   viewport: ViewportActions,
